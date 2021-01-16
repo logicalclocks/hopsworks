@@ -26,6 +26,9 @@ import java.util.Objects;
 
 @XmlRootElement
 public class QueryDTO {
+  private Integer featureStoreId;
+  private String featureStoreName;
+
   private FeaturegroupDTO leftFeatureGroup;
   private List<FeatureGroupFeatureDTO> leftFeatures;
   private String leftFeatureGroupStartTime;
@@ -67,6 +70,22 @@ public class QueryDTO {
   }
 
   public QueryDTO() {
+  }
+
+  public Integer getFeatureStoreId() {
+    return featureStoreId;
+  }
+
+  public void setFeatureStoreId(Integer featureStoreId) {
+    this.featureStoreId = featureStoreId;
+  }
+
+  public String getFeatureStoreName() {
+    return featureStoreName;
+  }
+
+  public void setFeatureStoreName(String featureStoreName) {
+    this.featureStoreName = featureStoreName;
   }
 
   public FeaturegroupDTO getLeftFeatureGroup() {

@@ -17,16 +17,14 @@ package io.hops.hopsworks.common.featurestore;
 
 import com.logicalclocks.servicediscoverclient.exceptions.ServiceDiscoveryException;
 import io.hops.hopsworks.common.dao.user.activity.ActivityFacade;
-import io.hops.hopsworks.common.featurestore.app.FeaturestoreUtilJobDTO;
-import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupFacade;
 import io.hops.hopsworks.common.featurestore.online.OnlineFeaturestoreController;
+import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupFacade;
 import io.hops.hopsworks.common.featurestore.storageconnectors.FeaturestoreConnectorFacade;
 import io.hops.hopsworks.common.featurestore.storageconnectors.FeaturestoreStorageConnectorController;
 import io.hops.hopsworks.common.featurestore.storageconnectors.FeaturestoreStorageConnectorDTO;
 import io.hops.hopsworks.common.featurestore.storageconnectors.hopsfs.FeaturestoreHopsfsConnectorDTO;
 import io.hops.hopsworks.common.featurestore.storageconnectors.jdbc.FeaturestoreJdbcConnectorDTO;
 import io.hops.hopsworks.common.featurestore.trainingdatasets.TrainingDatasetFacade;
-import io.hops.hopsworks.common.featurestore.utils.FeaturestoreUtils;
 import io.hops.hopsworks.common.hive.HiveController;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
@@ -41,20 +39,11 @@ import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.persistence.entity.user.activity.ActivityFlag;
 import io.hops.hopsworks.restutils.RESTCodes;
-import org.apache.hadoop.fs.Path;
-import org.eclipse.persistence.jaxb.JAXBContextFactory;
-import org.eclipse.persistence.jaxb.MarshallerProperties;
 
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
-import javax.ws.rs.core.MediaType;
-import javax.xml.bind.JAXBContext;
-import javax.xml.bind.JAXBException;
-import javax.xml.bind.Marshaller;
-import java.io.IOException;
-import java.io.StringWriter;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
@@ -77,8 +66,6 @@ public class FeaturestoreController {
   @EJB
   private OnlineFeaturestoreController onlineFeaturestoreController;
   @EJB
-  private FeaturestoreUtils featurestoreUtils;
-  @EJB
   private HiveController hiveController;
   @EJB
   private FeaturegroupFacade featuregroupFacade;
@@ -89,12 +76,6 @@ public class FeaturestoreController {
   @EJB
   private FeaturestoreStorageConnectorController featurestoreStorageConnectorController;
   
-  private JAXBContext featurestoreUtilJobArgsJaxbContext = null;
-  private Marshaller featurestoreUtilJobArgsMarshaller = null;
-
-  private static final String FEATURESTORE_UTIL_ARGS_PATH = Path.SEPARATOR + Settings.DIR_ROOT + Path.SEPARATOR
-      + "%s" + Path.SEPARATOR + FeaturestoreConstants.FEATURESTORE_UTIL_4J_ARGS_DATASET + Path.SEPARATOR + "%s";
-  private static final String HDFS_FILE_PATH = "hdfs://%s";
 
   /*
    * Retrieves a list of all featurestores for a particular project
@@ -351,44 +332,5 @@ public class FeaturestoreController {
    */
   public String getOfflineFeaturestoreDbName(Project project) {
     return project.getName().toLowerCase() + FeaturestoreConstants.FEATURESTORE_HIVE_DB_SUFFIX;
-  }
-
-  /**
-   * Writes JSON input for featurestore Util Job to HDFS as a JSON file
-   *
-   * @param user user making the request
-   * @param project project of the user
-   * @param featurestoreUtilJobDTO the JSON DTO
-   * @return HDFS path where the JSON file was written
-   * @throws FeaturestoreException
-   * @throws JAXBException
-   */
-  public String writeUtilArgsToHdfs(Users user, Project project, FeaturestoreUtilJobDTO featurestoreUtilJobDTO)
-      throws FeaturestoreException, JAXBException {
-    if (featurestoreUtilJobArgsMarshaller == null) {
-      try {
-        featurestoreUtilJobArgsJaxbContext =
-            JAXBContextFactory.createContext(new Class[]{FeaturestoreUtilJobDTO.class}, null);
-        featurestoreUtilJobArgsMarshaller = featurestoreUtilJobArgsJaxbContext.createMarshaller();
-        featurestoreUtilJobArgsMarshaller.setProperty(MarshallerProperties.JSON_INCLUDE_ROOT, false);
-        featurestoreUtilJobArgsMarshaller.setProperty(MarshallerProperties.MEDIA_TYPE, MediaType.APPLICATION_JSON);
-      } catch (JAXBException e) {
-        throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.FEATURESTORE_INITIALIZATION_ERROR,
-            Level.SEVERE, "Error initialization feature store controller");
-      }
-    }
-    StringWriter sw = new StringWriter();
-    featurestoreUtilJobArgsMarshaller.marshal(featurestoreUtilJobDTO, sw);
-    Path hdfsPath = new Path(String.format(FEATURESTORE_UTIL_ARGS_PATH, project.getName(),
-        featurestoreUtilJobDTO.getFileName()));
-
-    try {
-      featurestoreUtils.writeToHDFS(project, user, hdfsPath, sw.toString());
-    } catch (IOException ex) {
-      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.FEATURESTORE_UTIL_ARGS_FAILURE,
-          Level.WARNING, "Failed to write featurestore util args to HDFS", ex.getMessage(), ex);
-    }
-
-    return String.format(HDFS_FILE_PATH, hdfsPath.toString());
   }
 }

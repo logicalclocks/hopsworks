@@ -71,7 +71,6 @@ public class TestConstructorController {
 
   private List<FeatureGroupFeatureDTO> fg1FeaturesDTO = new ArrayList<>();
   private List<FeatureGroupFeatureDTO> fg2FeaturesDTO = new ArrayList<>();
-  private List<FeatureGroupFeatureDTO> fg4FeaturesDTO = new ArrayList<>();
 
   private FeaturegroupController featuregroupController;
   private FeaturestoreFacade featurestoreFacade;
@@ -219,6 +218,52 @@ public class TestConstructorController {
       project, user);
     Query query = constructorController.convertQueryDTO(queryDTO, fgAliasLookup, fgLookup, availableFeatureLookup);
     
+    List<Feature> extractedFeatures = constructorController.collectFeatures(query);
+    // Make sure both features have been returned.
+    // It's going to be 3 as the feature "pr" will be identified as primary key and joining key
+    // so it's not going to be duplicated
+    Assert.assertEquals(3, extractedFeatures.size());
+    // Make sure the method sets the feature group name
+    Assert.assertTrue(extractedFeatures.get(0).getFgAlias().equals("fg1") ||
+        extractedFeatures.get(0).getFgAlias().equals("fg2") );
+  }
+
+  @Test
+  public void testHandleJoiningKeyRightSide() throws Exception {
+    // When specifying the "on" condition we remove the duplicates for the joining condition
+    // there was a bug for which if the joining feature was selected only on the right side of the join,
+    // it was removed. The joining feature should be removed only if it's present on both side,
+    // i.e. it's a duplicate. This test make sure we don't regress.
+    Mockito.when(featuregroupController.getFeatures(Mockito.any(), Mockito.any(), Mockito.any()))
+        .thenReturn(fg1FeaturesDTO, fg2FeaturesDTO);
+    Mockito.when(featuregroupFacade.findById(Mockito.any())).thenReturn(Optional.of(fg1), Optional.of(fg2));
+    Mockito.when(featurestoreFacade.getHiveDbName(Mockito.any())).thenReturn("fg1", "fg2");
+
+    FeaturegroupDTO fg1 = new FeaturegroupDTO();
+    fg1.setId(1);
+    FeaturegroupDTO fg2 = new FeaturegroupDTO();
+    fg2.setId(2);
+
+    List<FeatureGroupFeatureDTO> leftRequestedFeatures = new ArrayList<>();
+    leftRequestedFeatures.add(new FeatureGroupFeatureDTO("fg1_ft2"));
+
+    List<FeatureGroupFeatureDTO> rightRequestedFeatures = new ArrayList<>();
+    rightRequestedFeatures.addAll(
+        Arrays.asList(new FeatureGroupFeatureDTO("fg2_ft2"), new FeatureGroupFeatureDTO("pr")));
+
+    QueryDTO rightQueryDTO = new QueryDTO(fg2, rightRequestedFeatures);
+    JoinDTO joinDTO = new JoinDTO(rightQueryDTO, null, null);
+
+    QueryDTO queryDTO = new QueryDTO(fg1, leftRequestedFeatures, Arrays.asList(joinDTO));
+
+    Map<Integer, String> fgAliasLookup = new HashMap<>();
+    Map<Integer, Featuregroup> fgLookup = new HashMap<>();
+    Map<Integer, List<Feature>> availableFeatureLookup = new HashMap<>();
+
+    constructorController.populateFgLookupTables(queryDTO, 1, fgAliasLookup, fgLookup, availableFeatureLookup,
+        project, user);
+    Query query = constructorController.convertQueryDTO(queryDTO, fgAliasLookup, fgLookup, availableFeatureLookup);
+
     List<Feature> extractedFeatures = constructorController.collectFeatures(query);
     // Make sure both features have been returned.
     // It's going to be 3 as the feature "pr" will be identified as primary key and joining key

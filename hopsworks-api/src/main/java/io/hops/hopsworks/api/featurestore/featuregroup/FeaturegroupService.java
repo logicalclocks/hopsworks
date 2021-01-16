@@ -28,6 +28,9 @@ import io.hops.hopsworks.api.filter.NoCacheResponse;
 import io.hops.hopsworks.api.filter.apiKey.ApiKeyRequired;
 import io.hops.hopsworks.api.jwt.JWTHelper;
 import io.hops.hopsworks.api.provenance.ProvArtifactResource;
+import io.hops.hopsworks.common.featurestore.OptionDTO;
+import io.hops.hopsworks.common.featurestore.app.FsJobManagerController;
+import io.hops.hopsworks.common.featurestore.featuregroup.IngestionJob;
 import io.hops.hopsworks.common.featurestore.tag.FeaturegroupTagControllerIface;
 import io.hops.hopsworks.audit.logger.LogLevel;
 import io.hops.hopsworks.audit.logger.annotation.Logged;
@@ -40,6 +43,7 @@ import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupDTO;
 import io.hops.hopsworks.exceptions.DatasetException;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.exceptions.HopsSecurityException;
+import io.hops.hopsworks.exceptions.JobException;
 import io.hops.hopsworks.exceptions.MetadataException;
 import io.hops.hopsworks.exceptions.ProvenanceException;
 import io.hops.hopsworks.exceptions.ServiceException;
@@ -86,6 +90,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 /**
  * A Stateless RESTful service for the featuregroups in a featurestore on Hopsworks.
@@ -123,6 +128,10 @@ public class FeaturegroupService {
   private CommitResource commitResource;
   @Inject
   private ProvArtifactResource provenanceResource;
+  @Inject
+  private FsJobManagerController fsJobManagerController;
+  @Inject
+  private IngestionJobBuilder ingestionJobBuilder;
   @Inject
   private FeaturestoreKeywordResource featurestoreKeywordResource;
 
@@ -569,6 +578,44 @@ public class FeaturegroupService {
     tagController.deleteSingle(project, user, featurestore, featuregroupId, name);
 
     return Response.noContent().build();
+  }
+
+  @POST
+  @Path("/{featuregroupId}/ingestion")
+  @Consumes(MediaType.APPLICATION_JSON)
+  @Produces(MediaType.APPLICATION_JSON)
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
+  @JWTRequired(acceptedTokens={Audience.API, Audience.JOB}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
+  @ApiKeyRequired( acceptedScopes = {ApiScope.FEATURESTORE}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
+  @ApiOperation(value = "Prepares environment for uploading data to ingest into the feature group",
+      response = IngestionJobDTO.class)
+  public Response ingestionJob(@Context SecurityContext sc,
+                               @Context UriInfo uriInfo,
+                               @ApiParam(value = "Id of the featuregroup", required = true)
+                               @PathParam("featuregroupId") Integer featuregroupId,
+                               IngestionJobConf ingestionJobConf)
+      throws DatasetException, HopsSecurityException, FeaturestoreException, JobException {
+    Users user = jWTHelper.getUserPrincipal(sc);
+    verifyIdProvided(featuregroupId);
+
+    Featuregroup featuregroup = featuregroupController.getFeaturegroupById(featurestore, featuregroupId);
+    Map<String, String> dataOptions = null;
+    if (ingestionJobConf.getDataOptions() != null) {
+      dataOptions = ingestionJobConf.getDataOptions().stream()
+          .collect(Collectors.toMap(OptionDTO::getName, OptionDTO::getValue));
+    }
+
+    Map<String, String> writeOptions = null;
+    if (ingestionJobConf.getWriteOptions() != null) {
+      dataOptions = ingestionJobConf.getWriteOptions().stream()
+          .collect(Collectors.toMap(OptionDTO::getName, OptionDTO::getValue));
+    }
+
+    IngestionJob ingestionJob = fsJobManagerController.setupIngestionJob(project, user, featuregroup,
+        ingestionJobConf.getSparkJobConfiguration(), ingestionJobConf.getDataFormat(),
+        writeOptions, dataOptions);
+    IngestionJobDTO ingestionJobDTO = ingestionJobBuilder.build(uriInfo, project, featuregroup, ingestionJob);
+    return Response.ok().entity(ingestionJobDTO).build();
   }
 
   @Path("/{featuregroupId}/details")

@@ -375,7 +375,7 @@ describe "On #{ENV['OS']}" do
         update_s3_connector(project.id, featurestore_id, s3_connector_name,
                             access_key: "testdifferent", secret_key: "test",
                             bucket: "testbucket1")
-        expect_status_details(400)
+        expect_status_details(404)
         json_result = get_storage_connector(project.id, featurestore_id, connector_name)
         expect_status_details(200)
         json_body = JSON.parse(json_result)

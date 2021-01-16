@@ -408,15 +408,21 @@ public class ConstructorController {
         continue;
       }
 
-      List<Feature> rightFeatureList = join.getRightQuery().getFeatures();
-
       // Extract join feature names
       List<String> joinFeatureNames = join.getOn().stream().map(Feature::getName).collect(Collectors.toList());
 
-      // Remove all features which are on the join condition. This means that they are also on the other side of the
-      // query
-      List<Feature> filteredRightFeatures =
-          rightFeatureList.stream().filter(f -> !joinFeatureNames.contains(f.getName())).collect(Collectors.toList());
+      // Remove all features which are on the join condition and are not already present in the left side of the join
+      List<Feature> filteredRightFeatures = new ArrayList<>();
+      for (Feature rightFeature : join.getRightQuery().getFeatures()) {
+        if (joinFeatureNames.contains(rightFeature.getName()) &&
+            join.getLeftQuery().getFeatures().stream().anyMatch(lf -> lf.getName().equals(rightFeature.getName()))) {
+          // The feature is part of the joining condition and it's also part of the features list in the left query
+          // no need to pass it here.
+          continue;
+        }
+
+        filteredRightFeatures.add(rightFeature);
+      }
 
       // replace the features for the right query
       join.getRightQuery().setFeatures(filteredRightFeatures);

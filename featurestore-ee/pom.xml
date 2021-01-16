@@ -75,11 +75,6 @@
       <version>7.0</version>
       <scope>provided</scope>
     </dependency>
-    <dependency>
-      <groupId>org.eclipse.persistence</groupId>
-      <artifactId>eclipselink</artifactId>
-      <version>${persistence.version}</version>
-    </dependency>
 
     <dependency>
       <groupId>commons-collections</groupId>

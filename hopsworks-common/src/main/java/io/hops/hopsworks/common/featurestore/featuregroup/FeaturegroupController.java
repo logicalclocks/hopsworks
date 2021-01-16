@@ -230,7 +230,7 @@ public class FeaturegroupController {
     DistributedFileSystemOps udfso = dfs.getDfsOps(hdfsUsername);
     try {
       String fgPath = Utils.getFeaturestorePath(featurestore.getProject(), settings)
-          + "/" + Utils.getFeaturegroupName(featuregroup.getName(), featuregroup.getVersion());
+          + "/" + Utils.getFeaturegroupName(featuregroup);
       fsController.featuregroupAttachXAttrs(fgPath, completeFeaturegroupDTO, udfso);
     } finally {
       dfs.closeDfsClient(udfso);
@@ -369,7 +369,7 @@ public class FeaturegroupController {
     DistributedFileSystemOps udfso = dfs.getDfsOps(hdfsUsername);
     try {
       String fgPath = Utils.getFeaturestorePath(featurestore.getProject(), settings)
-          + "/" + Utils.getFeaturegroupName(featuregroupDTO.getName(), featuregroupDTO.getVersion());
+          + "/" + Utils.getFeaturegroupName(featuregroup);
       fsController.featuregroupAttachXAttrs(fgPath, featuregroupDTO, udfso);
     } finally {
       dfs.closeDfsClient(udfso);

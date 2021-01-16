@@ -311,6 +311,7 @@ public class Settings implements Serializable {
   private static final String VARIABLE_ONLINE_FEATURESTORE_TS = "featurestore_online_tablespace";
 
   private static final String VARIABLE_HIVE_CONF_PATH = "hive_conf_path";
+  private static final String VARIABLE_FS_JOB_UTIL_PATH = "fs_job_util";
 
   //Elastic OpenDistro
   private static final String VARIABLE_ELASTIC_OPENDISTRO_SECURITY_ENABLED = "elastic_opendistro_security_enabled";
@@ -734,6 +735,8 @@ public class Settings implements Serializable {
 
       FG_PREVIEW_LIMIT = setIntVar(VARIABLE_FG_PREVIEW_LIMIT, FG_PREVIEW_LIMIT);
       HIVE_CONF_PATH = setStrVar(VARIABLE_HIVE_CONF_PATH, HIVE_CONF_PATH);
+      FS_JOB_UTIL_PATH = setStrVar(VARIABLE_FS_JOB_UTIL_PATH, FS_JOB_UTIL_PATH);
+
       
       YARN_RUNTIME = setStrVar(VARIABLE_YARN_RUNTIME, YARN_RUNTIME);
       DOCKER_MOUNTS = setStrVar(VARIABLE_DOCKER_MOUNTS, DOCKER_MOUNTS);
@@ -2074,8 +2077,8 @@ public class Settings implements Serializable {
     EXPERIMENTS("Experiments", "Contains experiments from using the hops python api"),
     TRAININGDATASETS("Training_Datasets", "Contains curated training datasets created from the feature store"),
     STATISTICS("Statistics", "Contains the statistics for feature groups and training datasets"),
-    DATAVALIDATION("DataValidation",
-        "Contains rules and results for Features validation");
+    DATAVALIDATION("DataValidation", "Contains rules and results for Features validation"),
+    INGESTION("Ingestion", "Temporary dataset to store feature data ready for ingestion");
 
     private final String name;
     private final String description;
@@ -2398,16 +2401,6 @@ public class Settings implements Serializable {
   public synchronized String getHopsExamplesFeaturestoreTourFilename() {
     checkCache();
     return "hops-examples-featurestore-tour-" + HOPS_EXAMPLES_VERSION + ".jar";
-  }
-
-  public synchronized String getHopsExamplesFeaturestoreUtil4JFilename() {
-    checkCache();
-    return "hops-examples-featurestore-util4j-" + HOPS_EXAMPLES_VERSION + ".jar";
-  }
-
-  public synchronized String getHopsExamplesFeaturestoreUtilPythonFilename() {
-    checkCache();
-    return "featurestore_util.py";
   }
 
   private String VERIFICATION_PATH = "/hopsworks-admin/security/validate_account.xhtml";
@@ -3526,6 +3519,12 @@ public class Settings implements Serializable {
   public synchronized String getHiveConfPath() {
     checkCache();
     return HIVE_CONF_PATH;
+  }
+
+  private String FS_JOB_UTIL_PATH = "hdfs:///user/spark/hsfs_util-2.1.0-SNAPSHOT.py";
+  public synchronized String getFSJobUtilPath() {
+    checkCache();
+    return FS_JOB_UTIL_PATH;
   }
 
   public String getHiveSiteSparkHdfsPath() {

@@ -1,6 +1,6 @@
 /*
  * This file is part of Hopsworks
- * Copyright (C) 2019, Logical Clocks AB. All rights reserved
+ * Copyright (C) 2020, Logical Clocks AB. All rights reserved
  *
  * Hopsworks is free software: you can redistribute it and/or modify it under the terms of
  * the GNU Affero General Public License as published by the Free Software Foundation,
@@ -14,14 +14,31 @@
  * If not, see <https://www.gnu.org/licenses/>.
  */
 
-package io.hops.hopsworks.common.featurestore.trainingdatasetjob;
+package io.hops.hopsworks.api.featurestore.featuregroup;
 
-import io.hops.hopsworks.common.integrations.CommunityStereotype;
+import io.hops.hopsworks.api.jobs.JobDTO;
+import io.hops.hopsworks.common.api.RestDTO;
 
-import javax.ejb.Stateless;
+public class IngestionJobDTO extends RestDTO<IngestionJobDTO> {
 
-@Stateless
-@CommunityStereotype
-public class TrainingDatasetJobController implements TrainingDatasetJobControllerIface {
+  private String dataPath;
+  private JobDTO job;
 
+  public IngestionJobDTO() {};
+
+  public String getDataPath() {
+    return dataPath;
+  }
+
+  public void setDataPath(String dataPath) {
+    this.dataPath = dataPath;
+  }
+
+  public JobDTO getJob() {
+    return job;
+  }
+
+  public void setJob(JobDTO job) {
+    this.job = job;
+  }
 }

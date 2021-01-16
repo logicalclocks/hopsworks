@@ -522,6 +522,28 @@ describe "On #{ENV['OS']}" do
           expect(td_features.select{|feature| feature['index'] == 1}[0]['label']).to be false
         end
 
+        it "should be able to create a training dataset from a query object with missing label" do
+          # create feature group
+          featurestore_id = get_featurestore_id(@project.id)
+          features = [
+            {type: "INT", name: "testfeature", primary: true},
+            {type: "INT", name: "testfeature1"},
+          ]
+          fg_id = create_cached_featuregroup_checked(@project.id, featurestore_id, "test_fg_#{short_random_id}", features: features)
+          # create queryDTO object
+          query = {
+            leftFeatureGroup: {
+              id: fg_id
+            },
+            leftFeatures: [{name: 'testfeature'}, {name: 'testfeature1'}]
+          }
+          features = [
+            {type: "INT", name: "does_not_exists", label: true},
+          ]
+          create_hopsfs_training_dataset(@project.id, featurestore_id, nil, query: query, features: features)
+          expect_status_details(404)
+        end
+
         it "should fail to create a training dataset with invalid query" do
           # create feature group
           featurestore_id = get_featurestore_id(@project.id)
@@ -696,7 +718,7 @@ describe "On #{ENV['OS']}" do
           expect_status_details(200)
           query = JSON.parse(json_result)
 
-          expect(query['query']).to eql("SELECT `fg0`.`anotherfeature`\n" +
+          expect(query['query']).to eql("SELECT `fg0`.`anotherfeature`, `fg1`.`testfeature`\n" +
                                         "FROM `#{featurestore_name}`.`#{fg_name}_1` `fg0`\n" +
                                         "INNER JOIN `fg1` ON `fg0`.`testfeature` = `fg1`.`testfeature`")
           expect(query.key?('onDemandFeatureGroups')).to be true

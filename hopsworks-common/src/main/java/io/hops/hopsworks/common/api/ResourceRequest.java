@@ -193,6 +193,7 @@ public class ResourceRequest {
     SPARK,
     CONFIGURATION,
     KEYWORDS,
+    INGESTION,
     CONFLICTS;
 
     public static Name fromString(String name) {
