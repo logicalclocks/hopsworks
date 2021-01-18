@@ -401,14 +401,14 @@ public class LibraryInstaller {
                   (cc.getUserId(), cc.getGitApiKeyName()).getPlaintext();
               URL repoUrl = new URL(cc.getArg());
               if(cc.getGitBackend().equals(GitBackend.GITHUB)) {
-                writer.write(anaconda_project_dir + "/bin/pip install --upgrade git+https://"
-                    + apiToken + ":x-oauth-basic@" + repoUrl.getHost() + repoUrl.getPath());
+                writer.write(anaconda_project_dir + "/bin/pip install --upgrade 'git+https://"
+                    + apiToken + ":x-oauth-basic@" + repoUrl.getHost() + repoUrl.getPath() + "'");
               } else if(cc.getGitBackend().equals(GitBackend.GITLAB)) {
-                writer.write(anaconda_project_dir + "/bin/pip install --upgrade git+https://oauth2:"
-                    + apiToken  + "@" + repoUrl.getHost() + repoUrl.getPath());
+                writer.write(anaconda_project_dir + "/bin/pip install --upgrade 'git+https://oauth2:"
+                    + apiToken  + "@" + repoUrl.getHost() + repoUrl.getPath() + "'");
               }
             } else {
-              writer.write(anaconda_project_dir + "/bin/pip install --upgrade git+" + cc.getArg());
+              writer.write(anaconda_project_dir + "/bin/pip install --upgrade 'git+" + cc.getArg() + "'");
             }
             break;
           case ENVIRONMENT:
