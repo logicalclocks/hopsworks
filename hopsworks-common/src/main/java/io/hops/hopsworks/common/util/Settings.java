@@ -1452,7 +1452,7 @@ public class Settings implements Serializable {
   // also be added in the documentation in:
   // https://hopsworks.readthedocs.io/en/<hopsworksDocVersion>/user_guide/hopsworks/newProject.html
   private final static String DEFAULT_RESERVED_PROJECT_NAMES = "hops-system,hopsworks,information_schema,airflow," +
-    "glassfish_timers,grafana,hops,metastore,mysql,ndbinfo,performance_schema,sqoop,sys";
+    "glassfish_timers,grafana,hops,metastore,mysql,ndbinfo,performance_schema,sqoop,sys,base,python37,filebeat";
   //Hive reserved words can be found at:
   //https://cwiki.apache.org/confluence/display/hive/LanguageManual+DDL#LanguageManualDDL-Keywords,Non-
   //reservedKeywordsandReservedKeywords

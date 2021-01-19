@@ -69,10 +69,42 @@ public class ProjectUtils {
     return false;
   }
 
+  /**
+   * Checks if given docker image follows the format of base:2.1.0 or base:2.1.0-SNAPSHOT.
+   * This check does not validate that the hopsworks version of the tag is the same as the installed hopsworks version
+   * as projects may use images with older versions.
+   * @param image
+   * @return
+   */
   private static boolean isBaseDockerImage(String image) {
     Pattern basePattern = Pattern.compile("^(base:\\d+[.]\\d+[.]\\d+(|-SNAPSHOT))$");
     Matcher baseMatcher = basePattern.matcher(image);
     return baseMatcher.matches();
+  }
+
+  /**
+   * Checks if given docker image follows the format of python37:2.1.0 or python37:2.1.0-SNAPSHOT.
+   * This check does not validate that the hopsworks version of the tag is the same as the installed hopsworks version
+   * as projects may use images with older versions.
+   * @param image
+   * @return
+   */
+  private static boolean isPythonDockerImage(String image) {
+    //Docker images tagged for projects are on the form python37:1611136370296-2.1.0-SNAPSHOT.0
+    //Base docker images are on the form python37:2.1.0-SNAPSHOT
+    //This regex will not match the project-specific ones as there is a timestamp and a dash in those
+    Pattern pythonPattern = Pattern.compile("^(python\\d{2}:\\d+[.]\\d+[.]\\d+(|-SNAPSHOT))$");
+    Matcher pythonMatcher = pythonPattern.matcher(image);
+    return pythonMatcher.matches();
+  }
+
+  /**
+   * Check if the image and tag is one of the preinstalled docker images
+   * @param image
+   * @return
+   */
+  public boolean dockerImageIsPreinstalled(String image) {
+    return isBaseDockerImage(image) || isPythonDockerImage(image);
   }
 
   public String getFullDockerImageName(Project project, boolean useBase) throws ServiceDiscoveryException {
