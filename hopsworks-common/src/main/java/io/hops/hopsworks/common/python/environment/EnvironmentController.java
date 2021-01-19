@@ -234,8 +234,7 @@ public class EnvironmentController {
   public void condaEnvironmentRemove(Project project, Users user) {
     // Do not remove conda env if project is using the base
     if (Strings.isNullOrEmpty(project.getDockerImage()) ||
-        project.getDockerImage().equals(settings.getBaseDockerImagePythonName()) ||
-        project.getDockerImage().equals(settings.getBaseNonPythonDockerImage())) {
+        projectUtils.dockerImageIsPreinstalled(project.getDockerImage())) {
       LOGGER.log(Level.INFO, "Will not remove conda env " + project.getDockerImage()
           + " for project: " + project.getName());
       return;
