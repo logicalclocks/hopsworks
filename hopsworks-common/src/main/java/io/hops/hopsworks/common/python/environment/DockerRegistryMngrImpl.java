@@ -86,10 +86,7 @@ public abstract class DockerRegistryMngrImpl implements DockerRegistryMngr {
         // We do not want to remove the base image! Get arguments from command as project may have already been deleted.
         String projectDockerImage = cc.getArg();
         String projectDockerRepoName = projectUtils.getProjectDockerRepoName(projectDockerImage);
-        if (!projectDockerImage
-            .equals(settings.getBaseDockerImagePythonName()) &&
-            !projectDockerImage
-                .equals(settings.getBaseNonPythonDockerImage())) {
+        if (!projectUtils.dockerImageIsPreinstalled(projectDockerImage)) {
           try {
             // 1. Get and delete all the tags for each repository(project)
             List<String> projectTags =
