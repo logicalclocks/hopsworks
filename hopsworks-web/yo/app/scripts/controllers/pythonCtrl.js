@@ -671,9 +671,7 @@ angular.module('hopsWorksApp')
               ModalService.selectFile('lg',  self.projectId,  self.selectDepRegexes[reason],
                       "Please select a .whl or .egg file", false).then(
                       function (success) {
-                          if(self.getInferredCustomDependency(success)) {
-                              self.uploadDepPath = success;
-                          }
+                          self.uploadDepPath = success;
                       }, function (error) {
                 //The user changed their mind.
               });
