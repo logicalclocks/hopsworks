@@ -23,14 +23,13 @@ import io.hops.hopsworks.common.featurestore.FeaturestoreEntityDTO;
 import io.hops.hopsworks.common.featurestore.feature.FeatureGroupFeatureDTO;
 import io.hops.hopsworks.common.featurestore.featuregroup.cached.CachedFeaturegroupDTO;
 import io.hops.hopsworks.common.featurestore.featuregroup.ondemand.OnDemandFeaturegroupDTO;
-import io.hops.hopsworks.persistence.entity.featurestore.StatisticColumn;
+import io.hops.hopsworks.common.featurestore.statistics.StatisticsConfigDTO;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.Featuregroup;
 
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlSeeAlso;
 import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * DTO containing the human-readable information of a featuregroup, can be converted to JSON or XML representation
@@ -46,14 +45,6 @@ import java.util.stream.Collectors;
 public class FeaturegroupDTO extends FeaturestoreEntityDTO {
 
   @XmlElement
-  private Boolean descStatsEnabled;
-  @XmlElement
-  private Boolean featCorrEnabled;
-  @XmlElement
-  private Boolean featHistEnabled;
-  @XmlElement
-  private List<String> statisticColumns;
-  @XmlElement
   private List<FeatureGroupFeatureDTO> features;
 
   public FeaturegroupDTO() {
@@ -66,46 +57,7 @@ public class FeaturegroupDTO extends FeaturestoreEntityDTO {
   public FeaturegroupDTO(Featuregroup featuregroup) {
     super(featuregroup.getFeaturestore().getId(), featuregroup.getName(), featuregroup.getCreated(),
         featuregroup.getCreator(), featuregroup.getVersion(), (List) featuregroup.getJobs(),
-        featuregroup.getId());
-    this.descStatsEnabled = featuregroup.isDescStatsEnabled();
-    this.featCorrEnabled = featuregroup.isFeatCorrEnabled();
-    this.featHistEnabled = featuregroup.isFeatHistEnabled();
-    List<StatisticColumn> statColumns = (List) featuregroup.getStatisticColumns();
-    this.statisticColumns = statColumns.stream()
-      .map(sc -> sc.getName())
-      .collect(Collectors.toList());
-  }
-  
-  public Boolean isDescStatsEnabled() {
-    return descStatsEnabled;
-  }
-  
-  public void setDescStatsEnabled(boolean descStatsEnabled) {
-    this.descStatsEnabled = descStatsEnabled;
-  }
-  
-  public Boolean isFeatCorrEnabled() {
-    return featCorrEnabled;
-  }
-  
-  public void setFeatCorrEnabled(boolean featCorrEnabled) {
-    this.featCorrEnabled = featCorrEnabled;
-  }
-  
-  public Boolean isFeatHistEnabled() {
-    return featHistEnabled;
-  }
-  
-  public void setFeatHistEnabled(boolean featHistEnabled) {
-    this.featHistEnabled = featHistEnabled;
-  }
-  
-  public List<String> getStatisticColumns() {
-    return statisticColumns;
-  }
-  
-  public void setStatisticColumns(List<String> statisticColumns) {
-    this.statisticColumns = statisticColumns;
+        featuregroup.getId(), new StatisticsConfigDTO(featuregroup.getStatisticsConfig()));
   }
 
   public List<FeatureGroupFeatureDTO> getFeatures() {
@@ -119,10 +71,7 @@ public class FeaturegroupDTO extends FeaturestoreEntityDTO {
   @Override
   public String toString() {
     return "FeaturegroupDTO{" +
-      ", descStatsEnabled=" + descStatsEnabled +
-      ", featCorrEnabled=" + featCorrEnabled +
-      ", featHistEnabled=" + featHistEnabled +
-      ", statisticColumns=" + statisticColumns + '\'' +
+      "features=" + features +
       '}';
   }
 }

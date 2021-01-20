@@ -14,9 +14,7 @@
  * If not, see <https://www.gnu.org/licenses/>.
  */
 
-package io.hops.hopsworks.persistence.entity.featurestore;
-
-import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.Featuregroup;
+package io.hops.hopsworks.persistence.entity.featurestore.statistics;
 
 import javax.persistence.Basic;
 import javax.persistence.Column;
@@ -44,8 +42,8 @@ import java.util.Objects;
     @NamedQuery(name = "StatisticColumn.findAll", query = "SELECT statscolumn FROM StatisticColumn statscolumn"),
     @NamedQuery(name = "StatisticColumn.findById",
         query = "SELECT statscolumn FROM StatisticColumn statscolumn WHERE statscolumn.id = :id"),
-    @NamedQuery(name = "StatisticColumn.findByFeaturegroup",
-        query = "SELECT statscolumn FROM StatisticColumn statscolumn WHERE statscolumn.featuregroup =" +
+    @NamedQuery(name = "StatisticColumn.findByConfig",
+        query = "SELECT statscolumn FROM StatisticColumn statscolumn WHERE statscolumn.statisticsConfig =" +
             ":feature_group")})
 public class StatisticColumn implements Serializable {
   private static final long serialVersionUID = 1L;
@@ -54,12 +52,19 @@ public class StatisticColumn implements Serializable {
   @Basic(optional = false)
   @Column(name = "id")
   private Integer id;
-  @JoinColumn(name = "feature_group_id", referencedColumnName = "id")
-  private Featuregroup featuregroup;
+  @JoinColumn(name = "statistics_config_id", referencedColumnName = "id")
+  private StatisticsConfig statisticsConfig;
   @Null
   @Column(name = "name")
   @Basic(optional = false)
   private String name;
+
+  public StatisticColumn() {}
+
+  public StatisticColumn(StatisticsConfig statisticsConfig, String name) {
+    this.statisticsConfig = statisticsConfig;
+    this.name = name;
+  }
 
   public static long getSerialVersionUID() {
     return serialVersionUID;
@@ -73,12 +78,12 @@ public class StatisticColumn implements Serializable {
     this.id = id;
   }
 
-  public Featuregroup getFeaturegroup() {
-    return featuregroup;
+  public StatisticsConfig getStatisticsConfig() {
+    return statisticsConfig;
   }
-
-  public void setFeaturegroup(Featuregroup featuregroup) {
-    this.featuregroup = featuregroup;
+  
+  public void setStatisticsConfig(StatisticsConfig statisticsConfig) {
+    this.statisticsConfig = statisticsConfig;
   }
 
   public String getName() {
@@ -99,13 +104,16 @@ public class StatisticColumn implements Serializable {
     }
     StatisticColumn that = (StatisticColumn) o;
     return Objects.equals(id, that.id) &&
-        Objects.equals(featuregroup, that.featuregroup) &&
-        Objects.equals(name, that.name);
+      Objects.equals(statisticsConfig, that.statisticsConfig) &&
+      Objects.equals(name, that.name);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(id, featuregroup, name);
+    int result = id.hashCode();
+    result = 31 * result + statisticsConfig.hashCode();
+    result = 31 * result + name.hashCode();
+    return result;
   }
 }
 

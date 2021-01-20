@@ -33,6 +33,7 @@ import io.hops.hopsworks.common.featurestore.query.Feature;
 import io.hops.hopsworks.common.featurestore.query.Join;
 import io.hops.hopsworks.common.featurestore.query.Query;
 import io.hops.hopsworks.common.featurestore.query.QueryDTO;
+import io.hops.hopsworks.common.featurestore.statistics.columns.StatisticColumnController;
 import io.hops.hopsworks.common.featurestore.storageconnectors.FeaturestoreConnectorFacade;
 import io.hops.hopsworks.common.featurestore.trainingdatasets.external.ExternalTrainingDatasetController;
 import io.hops.hopsworks.common.featurestore.trainingdatasets.external.ExternalTrainingDatasetFacade;
@@ -51,9 +52,11 @@ import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.exceptions.ServiceException;
 import io.hops.hopsworks.persistence.entity.dataset.Dataset;
 import io.hops.hopsworks.persistence.entity.featurestore.Featurestore;
+import io.hops.hopsworks.persistence.entity.featurestore.statistics.StatisticColumn;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.Featuregroup;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.FeaturegroupType;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.cached.TimeTravelFormat;
+import io.hops.hopsworks.persistence.entity.featurestore.statistics.StatisticsConfig;
 import io.hops.hopsworks.persistence.entity.featurestore.storageconnector.FeaturestoreConnector;
 import io.hops.hopsworks.persistence.entity.featurestore.storageconnector.FeaturestoreConnectorType;
 import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.TrainingDataset;
@@ -135,6 +138,8 @@ public class TrainingDatasetController {
   private FeaturegroupController featuregroupController;
   @EJB
   private FeaturestoreConnectorFacade featurestoreConnectorFacade;
+  @EJB
+  private StatisticColumnController statisticColumnController;
 
   /**
    * Gets all trainingDatasets for a particular featurestore and project
@@ -328,6 +333,14 @@ public class TrainingDatasetController {
       .map(tdDTO -> new TrainingDatasetSplit(trainingDataset, tdDTO.getName(), tdDTO.getPercentage())).collect(
         Collectors.toList()));
 
+    StatisticsConfig statisticsConfig = new StatisticsConfig(trainingDatasetDTO.getStatisticsConfig().getEnabled(),
+      trainingDatasetDTO.getStatisticsConfig().getCorrelations(),
+      trainingDatasetDTO.getStatisticsConfig().getHistograms());
+    statisticsConfig.setTrainingDataset(trainingDataset);
+    statisticsConfig.setStatisticColumns(trainingDatasetDTO.getStatisticsConfig().getColumns().stream()
+      .map(sc -> new StatisticColumn(statisticsConfig, sc)).collect(Collectors.toList()));
+    trainingDataset.setStatisticsConfig(statisticsConfig);
+
     // set features/query
     trainingDataset.setQuery(trainingDatasetDTO.getQueryDTO() != null);
     if (trainingDataset.isQuery()) {
@@ -349,6 +362,7 @@ public class TrainingDatasetController {
     return getTrainingDatasetWithNameVersionAndFeaturestore(featurestore, trainingDataset.getName(),
         trainingDataset.getVersion());
   }
+
 
   private Query constructQuery(QueryDTO queryDTO, Project project, Users user) throws FeaturestoreException {
     // Convert the queryDTO to the internal representation
@@ -605,6 +619,29 @@ public class TrainingDatasetController {
 
     return convertTrainingDatasetToDTO(updatedTrainingDataset);
   }
+  
+  public TrainingDatasetDTO updateTrainingDatasetStatsConfig(Featurestore featurestore,
+    TrainingDatasetDTO trainingDatasetDTO)
+    throws FeaturestoreException, ServiceException {
+    TrainingDataset trainingDataset = getTrainingDatasetById(featurestore, trainingDatasetDTO.getId());
+    if (trainingDatasetDTO.getStatisticsConfig().getEnabled() != null) {
+      trainingDataset.getStatisticsConfig().setDescriptive(trainingDatasetDTO.getStatisticsConfig().getEnabled());
+    }
+    if (trainingDatasetDTO.getStatisticsConfig().getHistograms() != null) {
+      trainingDataset.getStatisticsConfig().setHistograms(trainingDatasetDTO.getStatisticsConfig().getHistograms());
+    }
+    if (trainingDatasetDTO.getStatisticsConfig().getCorrelations() != null) {
+      trainingDataset.getStatisticsConfig().setCorrelations(trainingDatasetDTO.getStatisticsConfig().getCorrelations());
+    }
+    // compare against schema from database, as client doesn't need to send schema in update request
+    statisticColumnController.verifyStatisticColumnsExist(trainingDatasetDTO, trainingDataset);
+    trainingDataset = trainingDatasetFacade.updateTrainingDatasetMetadata(trainingDataset);
+    statisticColumnController
+      .persistStatisticColumns(trainingDataset, trainingDatasetDTO.getStatisticsConfig().getColumns());
+    // get feature group again with persisted columns - this trip to the database can be saved
+    trainingDataset = getTrainingDatasetById(featurestore, trainingDatasetDTO.getId());
+    return convertTrainingDatasetToDTO(trainingDataset);
+  }
 
   /**
    * Returns the training dataset folder name of a project (projectname_Training_Datasets)
@@ -766,6 +803,7 @@ public class TrainingDatasetController {
       throws FeaturestoreException {
     // Verify general entity related information
     featurestoreInputValidation.verifyUserInput(trainingDatasetDTO);
+    statisticColumnController.verifyStatisticColumnsExist(trainingDatasetDTO, query);
     verifyTrainingDatasetType(trainingDatasetDTO.getTrainingDatasetType());
     verifyTrainingDatasetVersion(trainingDatasetDTO.getVersion());
     verifyTrainingDatasetDataFormat(trainingDatasetDTO.getDataFormat());

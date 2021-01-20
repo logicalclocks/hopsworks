@@ -647,76 +647,62 @@ describe "On #{ENV['OS']}" do
       it "should be able to add a cached feature group without statistics settings to the feature store to test the defaults" do
         project = get_project
         featurestore_id = get_featurestore_id(project.id)
-        json_result, featuregroup_name = create_cached_featuregroup(project.id, featurestore_id)
+        json_result, _ = create_cached_featuregroup(project.id, featurestore_id)
         expect_status_details(201)
         parsed_json = JSON.parse(json_result)
-        expect(parsed_json.key?("featHistEnabled")).to be true
-        expect(parsed_json.key?("featCorrEnabled")).to be true
-        expect(parsed_json.key?("descStatsEnabled")).to be true
-        expect(parsed_json.key?("statisticColumns")).to be true
-        expect(parsed_json["statisticColumns"].length == 0).to be true
-        expect(parsed_json["featHistEnabled"]).to be true
-        expect(parsed_json["featCorrEnabled"]).to be true
-        expect(parsed_json["descStatsEnabled"]).to be true
+        expect(parsed_json.key?("statisticsConfig")).to be true
+        expect(parsed_json["statisticsConfig"].key?("histograms")).to be true
+        expect(parsed_json["statisticsConfig"].key?("correlations")).to be true
+        expect(parsed_json["statisticsConfig"].key?("enabled")).to be true
+        expect(parsed_json["statisticsConfig"].key?("columns")).to be true
+        expect(parsed_json["statisticsConfig"]["columns"].length).to eql(0)
+        expect(parsed_json["statisticsConfig"]["enabled"]).to be true
+        expect(parsed_json["statisticsConfig"]["correlations"]).to be false
+        expect(parsed_json["statisticsConfig"]["histograms"]).to be false
       end
 
       it "should be able to add a cached featuregroup with non default statistics settings to the featurestore" do
         project = get_project
         featurestore_id = get_featurestore_id(project.id)
-        json_result, featuregroup_name = create_cached_featuregroup(project.id, featurestore_id, desc_stats: false,
-                                                                    histograms: false,  correlations: false,
-                                                                    statistic_columns: ["testfeature"])
+        stats_config = {enabled: false, histograms: false, correlations: false, columns: ["testfeature"]}
+        json_result, featuregroup_name = create_cached_featuregroup(project.id, featurestore_id, statistics_config:
+            stats_config)
         expect_status_details(201)
         parsed_json = JSON.parse(json_result)
         expect(parsed_json.key?("id")).to be true
         expect(parsed_json.key?("featurestoreName")).to be true
         expect(parsed_json.key?("name")).to be true
-        expect(parsed_json.key?("statisticColumns")).to be true
-        expect(parsed_json.key?("featHistEnabled")).to be true
-        expect(parsed_json.key?("featCorrEnabled")).to be true
-        expect(parsed_json.key?("descStatsEnabled")).to be true
+        expect(parsed_json["statisticsConfig"].key?("histograms")).to be true
+        expect(parsed_json["statisticsConfig"].key?("correlations")).to be true
+        expect(parsed_json["statisticsConfig"].key?("enabled")).to be true
+        expect(parsed_json["statisticsConfig"].key?("columns")).to be true
         expect(parsed_json["featurestoreName"] == project.projectname.downcase + "_featurestore").to be true
         expect(parsed_json["name"] == featuregroup_name).to be true
         expect(parsed_json["type"] == "cachedFeaturegroupDTO").to be true
-        expect(parsed_json["statisticColumns"].length == 1).to be true
-        expect(parsed_json["statisticColumns"][0] == "testfeature").to be true
-        expect(parsed_json["featHistEnabled"]).to be false
-        expect(parsed_json["featCorrEnabled"]).to be false
-        expect(parsed_json["descStatsEnabled"]).to be false
-      end
-
-      it "should not be able to add a cached feature group with illegal statistics settings to the feature store" do
-        project = get_project
-        featurestore_id = get_featurestore_id(project.id)
-        json_result, featuregroup_name = create_cached_featuregroup(project.id, featurestore_id, desc_stats: false,
-                                                                    histograms: true,  correlations: true,
-                                                                    statistic_columns: ["testfeature"])
-        expect_status_details(400)
-        parsed_json = JSON.parse(json_result)
-        expect(parsed_json.key?("errorCode")).to be true
-        expect(parsed_json.key?("errorMsg")).to be true
-        expect(parsed_json.key?("usrMsg")).to be true
-        expect(parsed_json["errorCode"] == 270108).to be true
+        expect(parsed_json["statisticsConfig"]["columns"].length).to eql(1)
+        expect(parsed_json["statisticsConfig"]["columns"][0]).to eql("testfeature")
+        expect(parsed_json["statisticsConfig"]["enabled"]).to be false
+        expect(parsed_json["statisticsConfig"]["correlations"]).to be false
+        expect(parsed_json["statisticsConfig"]["histograms"]).to be false
       end
 
       it "should not be able to add a cached feature group with non-existing statistic column to the feature store" do
         project = get_project
         featurestore_id = get_featurestore_id(project.id)
-        json_result, featuregroup_name = create_cached_featuregroup(project.id, featurestore_id, desc_stats: true,
-                                                                    histograms: true,  correlations: true,
-                                                                    statistic_columns: ["wrongname"])
+        stats_config = {enabled: false, histograms: false, correlations: false, columns: ["wrongname"]}
+        json_result, _ = create_cached_featuregroup(project.id, featurestore_id, statistics_config: stats_config)
         expect_status_details(400)
         parsed_json = JSON.parse(json_result)
         expect(parsed_json.key?("errorCode")).to be true
         expect(parsed_json.key?("errorMsg")).to be true
         expect(parsed_json.key?("usrMsg")).to be true
-        expect(parsed_json["errorCode"] == 270108).to be true
+        expect(parsed_json["errorCode"]).to eql(270108)
       end
 
       it "should be able to update the statistics settings of a cached featuregroup" do
         project = get_project
         featurestore_id = get_featurestore_id(project.id)
-        json_result, featuregroup_name = create_cached_featuregroup(project.id, featurestore_id)
+        json_result, _ = create_cached_featuregroup(project.id, featurestore_id)
         expect_status(201)
         parsed_json = JSON.parse(json_result)
         featuregroup_id = parsed_json["id"]
@@ -725,35 +711,17 @@ describe "On #{ENV['OS']}" do
                                                                 featuregroup_version)
         expect_status_details(200)
         parsed_json = JSON.parse(json_result)
-        expect(parsed_json["statisticColumns"].length == 1).to be true
-        expect(parsed_json["statisticColumns"][0] == "testfeature").to be true
-        expect(parsed_json["featHistEnabled"]).to be false
-        expect(parsed_json["featCorrEnabled"]).to be false
-        expect(parsed_json["descStatsEnabled"]).to be false
-      end
-
-      it "should not be able to update the statistics setting of a cached feature group with illegal settings" do
-        project = get_project
-        featurestore_id = get_featurestore_id(project.id)
-        json_result, featuregroup_name = create_cached_featuregroup(project.id, featurestore_id)
-        expect_status(201)
-        parsed_json = JSON.parse(json_result)
-        featuregroup_id = parsed_json["id"]
-        featuregroup_version = parsed_json["version"]
-        json_result = update_cached_featuregroup_stats_settings(project.id, featurestore_id, featuregroup_id,
-                                                                featuregroup_version, illegal: true)
-        expect_status_details(400)
-        parsed_json = JSON.parse(json_result)
-        expect(parsed_json.key?("errorCode")).to be true
-        expect(parsed_json.key?("errorMsg")).to be true
-        expect(parsed_json.key?("usrMsg")).to be true
-        expect(parsed_json["errorCode"] == 270108).to be true
+        expect(parsed_json["statisticsConfig"]["columns"].length).to eql(1)
+        expect(parsed_json["statisticsConfig"]["columns"][0]).to eql("testfeature")
+        expect(parsed_json["statisticsConfig"]["enabled"]).to be false
+        expect(parsed_json["statisticsConfig"]["correlations"]).to be false
+        expect(parsed_json["statisticsConfig"]["histograms"]).to be false
       end
 
       it "should not be able to update the statistics setting of a cached feature group with a non-existing statistic column" do
         project = get_project
         featurestore_id = get_featurestore_id(project.id)
-        json_result, featuregroup_name = create_cached_featuregroup(project.id, featurestore_id)
+        json_result, _ = create_cached_featuregroup(project.id, featurestore_id)
         expect_status(201)
         parsed_json = JSON.parse(json_result)
         featuregroup_id = parsed_json["id"]
@@ -766,7 +734,7 @@ describe "On #{ENV['OS']}" do
         expect(parsed_json.key?("errorCode")).to be true
         expect(parsed_json.key?("errorMsg")).to be true
         expect(parsed_json.key?("usrMsg")).to be true
-        expect(parsed_json["errorCode"] == 270108).to be true
+        expect(parsed_json["errorCode"]).to eql(270108)
       end
 
       it "should be able to add a hudi enabled offline cached featuregroup to the featurestore" do

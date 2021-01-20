@@ -59,8 +59,8 @@ module FeaturestoreHelper
   end
 
   def create_cached_featuregroup(project_id, featurestore_id, features: nil, featuregroup_name: nil, online:false,
-                                 version: 1, featuregroup_description: nil, desc_stats: nil, histograms: true,
-                                 correlations: true, statistic_columns: [], time_travel_format: "NONE")
+                                 version: 1, featuregroup_description: nil, statistics_config: nil, time_travel_format:
+                                     "NONE")
     type = "cachedFeaturegroupDTO"
     features = features == nil ? [{type: "INT", name: "testfeature", description: "testfeaturedescription",
                                    primary: true, onlineType: "INT", partition: false}] : features
@@ -76,11 +76,8 @@ module FeaturestoreHelper
         onlineEnabled: online,
         timeTravelFormat: time_travel_format
     }
-    if desc_stats != nil
-      json_data["featHistEnabled"] = histograms
-      json_data["descStatsEnabled"] = desc_stats
-      json_data["featCorrEnabled"] = correlations
-      json_data["statisticColumns"] = statistic_columns
+    unless statistics_config == nil
+      json_data[:statisticsConfig] = statistics_config
     end
     json_data = json_data.to_json
 
@@ -192,23 +189,48 @@ module FeaturestoreHelper
                                                 illegal: false, statisticColumns: ["testfeature"])
     type = "cachedFeaturegroupDTO"
     featuregroupType = "CACHED_FEATURE_GROUP"
-    update_featuregroup_metadata_endpoint = "#{ENV['HOPSWORKS_API']}/project/" + project_id.to_s + "/featurestores/" + featurestore_id.to_s + "/featuregroups/" + featuregroup_id.to_s + "?updateStatsSettings=true"
+    update_featuregroup_metadata_endpoint = "#{ENV['HOPSWORKS_API']}/project/#{project_id}/featurestores/#{featurestore_id}/featuregroups/#{featuregroup_id}?updateStatsConfig=true"
     json_data = {
         type: type,
         featuregroupType: featuregroupType,
         version: featuregroup_version,
-        featHistEnabled: false,
-        featCorrEnabled: false,
-        statisticColumns: statisticColumns,
-        descStatsEnabled: false
+        statisticsConfig: {
+            histograms: false,
+            correlations: false,
+            columns: statisticColumns,
+            enabled: false
+        }
     }
     if illegal
-      json_data["descStatsEnabled"] = false
-      json_data["featHistEnabled"] = true
-      json_data["featCorrEnabled"] = true
+      json_data[:statisticsConfig][:enabled] = false
+      json_data[:statisticsConfig][:histograms] = true
+      json_data[:statisticsConfig][:correlations] = true
     end
     json_data = json_data.to_json
     json_result = put update_featuregroup_metadata_endpoint, json_data
+    return json_result
+  end
+
+  def update_training_dataset_stats_config(project_id, featurestore_id, training_dataset_id, training_dataset_version,
+                                                illegal: false, statisticColumns: ["testfeature"])
+    update_trainingdataset_metadata_endpoint =
+        "#{ENV['HOPSWORKS_API']}/project/#{project_id}/featurestores/#{featurestore_id}/trainingdatasets/#{training_dataset_id}?updateStatsConfig=true"
+    json_data = {
+        version: training_dataset_version,
+        statisticsConfig: {
+            histograms: false,
+            correlations: false,
+            columns: statisticColumns,
+            enabled: false
+        }
+    }
+    if illegal
+      json_data[:statisticsConfig][:enabled] = false
+      json_data[:statisticsConfig][:histograms] = true
+      json_data[:statisticsConfig][:correlations] = true
+    end
+    json_data = json_data.to_json
+    json_result = put update_trainingdataset_metadata_endpoint, json_data
     return json_result
   end
 
@@ -305,7 +327,8 @@ module FeaturestoreHelper
   end
 
   def create_hopsfs_training_dataset(project_id, featurestore_id, hopsfs_connector, name:nil, data_format: nil,
-                                     version: 1, splits: [], features: nil, description: nil, query: nil)
+                                     version: 1, splits: [], features: nil, description: nil, query: nil,
+                                     statistics_config: nil)
     trainingDatasetType = "HOPSFS_TRAINING_DATASET"
     create_training_dataset_endpoint = "#{ENV['HOPSWORKS_API']}/project/" + project_id.to_s + "/featurestores/" + featurestore_id.to_s + "/trainingdatasets"
     name = name == nil ? "training_dataset_#{random_id}" : name
@@ -335,6 +358,10 @@ module FeaturestoreHelper
         seed: 1234,
         queryDTO: query
     }
+
+    unless statistics_config == nil
+      json_data[:statisticsConfig] = statistics_config
+    end
 
     unless hopsfs_connector.nil?
       json_data["storageConnector"] = {

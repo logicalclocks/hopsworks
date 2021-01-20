@@ -327,8 +327,11 @@ public class TrainingDatasetService {
                                         @PathParam("trainingdatasetid") Integer trainingdatasetid,
                                         @ApiParam(value = "updateMetadata", example = "true")
                                         @QueryParam("updateMetadata") @DefaultValue("false") Boolean updateMetadata,
+                                        @ApiParam(value = "updateStatsConfig", example = "true")
+                                        @QueryParam("updateStatsConfig") @DefaultValue("false")
+                                          Boolean updateStatsConfig,
                                         TrainingDatasetDTO trainingDatasetDTO)
-    throws FeaturestoreException, ServiceException {
+      throws FeaturestoreException, ServiceException {
     if(trainingDatasetDTO == null){
       throw new IllegalArgumentException("Input JSON for updating a Training Dataset cannot be null");
     }
@@ -342,6 +345,10 @@ public class TrainingDatasetService {
       oldTrainingDatasetDTO = trainingDatasetController.updateTrainingDatasetMetadata(featurestore, trainingDatasetDTO);
       activityFacade.persistActivity(ActivityFacade.EDITED_TRAINING_DATASET + trainingDatasetDTO.getName(),
           project, user, ActivityFlag.SERVICE);
+    }
+    if (updateStatsConfig) {
+      oldTrainingDatasetDTO = trainingDatasetController.updateTrainingDatasetStatsConfig(featurestore,
+        trainingDatasetDTO);
     }
     GenericEntity<TrainingDatasetDTO> trainingDatasetDTOGenericEntity =
       new GenericEntity<TrainingDatasetDTO>(oldTrainingDatasetDTO) {};

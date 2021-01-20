@@ -384,8 +384,8 @@ public class FeaturegroupService {
       @QueryParam("enableOnline") @DefaultValue("false") Boolean enableOnline,
       @ApiParam(value = "disableOnline", example = "true")
       @QueryParam("disableOnline") @DefaultValue("false") Boolean disableOnline,
-      @ApiParam(value = "updateStatsSettings", example = "true")
-      @QueryParam("updateStatsSettings") @DefaultValue("false") Boolean updateStatsSettings,
+      @ApiParam(value = "updateStatsConfig", example = "true")
+      @QueryParam("updateStatsConfig") @DefaultValue("false") Boolean updateStatsConfig,
       @ApiParam(value = "updateJob") @DefaultValue("false") @QueryParam("updateJob") Boolean updateJob,
       FeaturegroupDTO featuregroupDTO)
       throws FeaturestoreException, SQLException, ProvenanceException, ServiceException {
@@ -410,8 +410,8 @@ public class FeaturegroupService {
         featuregroup.getCachedFeaturegroup().isOnlineEnabled()){
       updatedFeaturegroupDTO = featuregroupController.disableFeaturegroupOnline(featuregroup, project, user);
     }
-    if(updateStatsSettings) {
-      updatedFeaturegroupDTO = featuregroupController.updateFeaturegroupStatsSettings(
+    if(updateStatsConfig) {
+      updatedFeaturegroupDTO = featuregroupController.updateFeatureGroupStatsConfig(
         featurestore, featuregroupDTO, project, user);
     }
     if (updateJob) {

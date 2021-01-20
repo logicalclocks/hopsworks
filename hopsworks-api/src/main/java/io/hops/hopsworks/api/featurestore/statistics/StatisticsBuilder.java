@@ -21,7 +21,7 @@ import io.hops.hopsworks.common.dao.AbstractFacade;
 import io.hops.hopsworks.common.featurestore.statistics.FeaturestoreStatisticFacade;
 import io.hops.hopsworks.common.featurestore.statistics.StatisticsController;
 import io.hops.hopsworks.persistence.entity.featurestore.Featurestore;
-import io.hops.hopsworks.persistence.entity.featurestore.FeaturestoreStatistic;
+import io.hops.hopsworks.persistence.entity.featurestore.statistics.FeaturestoreStatistic;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.Featuregroup;
 import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.TrainingDataset;
 import io.hops.hopsworks.persistence.entity.project.Project;

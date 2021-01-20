@@ -476,5 +476,71 @@
                 </table>
             </div>
         </div>
+
+        <div uib-accordion-group class="panel-default">
+            <div uib-accordion-heading>
+                <i class="fa fa-info-circle" tooltip-placement="auto left"
+                   uib-tooltip='Details about the configuration of statistics computation of this feature group.'></i>
+                <span style="margin-left: 20px">
+                    Statistics Configuration
+                </span>
+            </div>
+
+            <table class="table table-hover fs-table" style="margin-left: 10px; overflow: auto"
+                   ng-if="featuregroupViewInfoCtrl.selectedFeaturegroup.statisticsConfig.enabled">
+                <thead style="border:none;" class="fs-table">
+                <th class="fs-table" style="width: 20%">Statistics</th>
+                <th class="fs-table" style="width: 20%">Enabled</th>
+                </thead>
+                <tbody class="fs-table">
+                <tr class="fs-table">
+                    <td style="font-weight:700;" class="fs-table">
+                        Descriptive
+                    </td>
+                    <td class="fs-table">
+                        {{featuregroupViewInfoCtrl.selectedFeaturegroup.statisticsConfig.enabled ? "yes" : "no"}}
+                    </td>
+                </tr>
+                <tr class="fs-table">
+                    <td style="font-weight:700;" class="fs-table">
+                        Correlations
+                    </td>
+                    <td class="fs-table">
+                        {{featuregroupViewInfoCtrl.selectedFeaturegroup.statisticsConfig.correlations ? "yes" : "no"}}
+                    </td>
+                </tr>
+                <tr class="fs-table">
+                    <td style="font-weight:700;" class="fs-table">
+                        Histograms
+                    </td>
+                    <td class="fs-table">
+                        {{featuregroupViewInfoCtrl.selectedFeaturegroup.statisticsConfig.histograms ? "yes" : "no"}}
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+
+            <table class="table table-hover fs-table" style="margin-left: 10px; overflow: auto"
+                   ng-if="featuregroupViewInfoCtrl.selectedFeaturegroup.statisticsConfig.columns.length > 0">
+                <thead style="border:none;" class="fs-table">
+                <th class="fs-table" style="width: 20%">For Features:</th>
+                </thead>
+                <tbody>
+                <tr class="fs-table"
+                    data-ng-repeat="column in featuregroupViewInfoCtrl.selectedFeaturegroup.statisticsConfig.columns">
+                    <td class="fs-table"> {{column}}</td>
+                </tr>
+                </tbody>
+            </table>
+
+            <h4 style="margin-left: 10px"
+                ng-if="featuregroupViewInfoCtrl.selectedFeaturegroup.statisticsConfig.columns.length == 0 &&
+                    featuregroupViewInfoCtrl.selectedFeaturegroup.statisticsConfig.enabled">
+                Statistics are enabled for all features.</h4>
+
+            <h4 style="margin-left: 10px"
+                ng-if="!featuregroupViewInfoCtrl.selectedFeaturegroup.statisticsConfig.enabled">
+                Statistics are currently disabled for this feature group.</h4>
+        </div>
     </div>
 </div>
