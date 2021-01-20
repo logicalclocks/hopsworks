@@ -16,13 +16,14 @@
 
 package io.hops.hopsworks.common.featurestore.trainingdatasets;
 
+import io.hops.hopsworks.common.featurestore.FeaturestoreEntityDTO;
 import io.hops.hopsworks.common.featurestore.feature.TrainingDatasetFeatureDTO;
 import io.hops.hopsworks.common.featurestore.query.QueryDTO;
+import io.hops.hopsworks.common.featurestore.statistics.StatisticsConfigDTO;
 import io.hops.hopsworks.common.featurestore.storageconnectors.FeaturestoreStorageConnectorDTO;
 import io.hops.hopsworks.common.featurestore.trainingdatasets.split.TrainingDatasetSplitDTO;
 import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.TrainingDataset;
 import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.TrainingDatasetType;
-import io.hops.hopsworks.common.featurestore.FeaturestoreEntityDTO;
 
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
@@ -58,11 +59,9 @@ public class TrainingDatasetDTO extends FeaturestoreEntityDTO {
   }
 
   public TrainingDatasetDTO(TrainingDataset trainingDataset) {
-    super(trainingDataset.getFeaturestore().getId(),
-        trainingDataset.getName(),
-        trainingDataset.getCreated(),
-        trainingDataset.getCreator(), trainingDataset.getVersion(),
-        (List) trainingDataset.getJobs(), trainingDataset.getId());
+    super(trainingDataset.getFeaturestore().getId(), trainingDataset.getName(), trainingDataset.getCreated(),
+      trainingDataset.getCreator(), trainingDataset.getVersion(), (List) trainingDataset.getJobs(),
+      trainingDataset.getId(), new StatisticsConfigDTO(trainingDataset.getStatisticsConfig()));
     setDescription(trainingDataset.getDescription());
     this.dataFormat = trainingDataset.getDataFormat();
     this.trainingDatasetType = trainingDataset.getTrainingDatasetType();

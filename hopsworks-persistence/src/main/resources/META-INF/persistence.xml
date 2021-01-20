@@ -72,8 +72,9 @@
     <class>io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.TrainingDatasetJoinCondition</class>
     <class>io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.split.TrainingDatasetSplit</class>
     <class>io.hops.hopsworks.persistence.entity.featurestore.jobs.FeaturestoreJob</class>
-    <class>io.hops.hopsworks.persistence.entity.featurestore.StatisticColumn</class>
-    <class>io.hops.hopsworks.persistence.entity.featurestore.FeaturestoreStatistic</class>
+    <class>io.hops.hopsworks.persistence.entity.featurestore.statistics.StatisticsConfig</class>
+    <class>io.hops.hopsworks.persistence.entity.featurestore.statistics.StatisticColumn</class>
+    <class>io.hops.hopsworks.persistence.entity.featurestore.statistics.FeaturestoreStatistic</class>
     <class>io.hops.hopsworks.persistence.entity.hdfs.HdfsDirectoryWithQuotaFeature</class>
     <class>io.hops.hopsworks.persistence.entity.hdfs.HdfsLeDescriptors</class>
     <class>io.hops.hopsworks.persistence.entity.hdfs.user.HdfsGroups</class>

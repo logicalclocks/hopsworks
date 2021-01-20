@@ -17,10 +17,10 @@
 package io.hops.hopsworks.persistence.entity.featurestore.featuregroup;
 
 import io.hops.hopsworks.persistence.entity.featurestore.Featurestore;
-import io.hops.hopsworks.persistence.entity.featurestore.StatisticColumn;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.cached.CachedFeaturegroup;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.ondemand.OnDemandFeaturegroup;
 import io.hops.hopsworks.persistence.entity.featurestore.jobs.FeaturestoreJob;
+import io.hops.hopsworks.persistence.entity.featurestore.statistics.StatisticsConfig;
 import io.hops.hopsworks.persistence.entity.user.Users;
 
 import javax.persistence.Basic;
@@ -95,18 +95,6 @@ public class Featuregroup implements Serializable {
   @NotNull
   @Column(name = "version")
   private Integer version;
-  @Basic(optional = false)
-  @NotNull
-  @Column(name = "desc_stats_enabled")
-  private boolean descStatsEnabled = true;
-  @Basic(optional = false)
-  @NotNull
-  @Column(name = "feat_corr_enabled")
-  private boolean featCorrEnabled = true;
-  @Basic(optional = false)
-  @NotNull
-  @Column(name = "feat_hist_enabled")
-  private boolean featHistEnabled = true;
   @NotNull
   @Enumerated(EnumType.ORDINAL)
   @Column(name = "feature_group_type")
@@ -119,8 +107,8 @@ public class Featuregroup implements Serializable {
   private CachedFeaturegroup cachedFeaturegroup;
   @OneToMany(cascade = CascadeType.ALL, mappedBy = "featuregroup")
   private Collection<FeaturestoreJob> jobs;
-  @OneToMany(cascade = CascadeType.ALL, mappedBy = "featuregroup")
-  private Collection<StatisticColumn> statisticColumns;
+  @OneToOne(cascade = CascadeType.ALL, mappedBy = "featuregroup")
+  private StatisticsConfig statisticsConfig;
 
   public Featuregroup() { }
 
@@ -180,30 +168,6 @@ public class Featuregroup implements Serializable {
     this.version = version;
   }
 
-  public boolean isDescStatsEnabled() {
-    return descStatsEnabled;
-  }
-
-  public void setDescStatsEnabled(boolean descStatsEnabled) {
-    this.descStatsEnabled = descStatsEnabled;
-  }
-
-  public boolean isFeatCorrEnabled() {
-    return featCorrEnabled;
-  }
-
-  public void setFeatCorrEnabled(boolean featCorrEnabled) {
-    this.featCorrEnabled = featCorrEnabled;
-  }
-
-  public boolean isFeatHistEnabled() {
-    return featHistEnabled;
-  }
-
-  public void setFeatHistEnabled(boolean featHistEnabled) {
-    this.featHistEnabled = featHistEnabled;
-  }
-
   public FeaturegroupType getFeaturegroupType() {
     return featuregroupType;
   }
@@ -235,13 +199,13 @@ public class Featuregroup implements Serializable {
   public void setJobs(Collection<FeaturestoreJob> jobs) {
     this.jobs = jobs;
   }
-
-  public Collection<StatisticColumn> getStatisticColumns() {
-    return statisticColumns;
+  
+  public StatisticsConfig getStatisticsConfig() {
+    return statisticsConfig;
   }
   
-  public void setStatisticColumns(Collection<StatisticColumn> statisticColumns) {
-    this.statisticColumns = statisticColumns;
+  public void setStatisticsConfig(StatisticsConfig statisticsConfig) {
+    this.statisticsConfig = statisticsConfig;
   }
 
   @Override
@@ -251,9 +215,6 @@ public class Featuregroup implements Serializable {
 
     Featuregroup that = (Featuregroup) o;
 
-    if (descStatsEnabled != that.descStatsEnabled) return false;
-    if (featCorrEnabled != that.featCorrEnabled) return false;
-    if (featHistEnabled != that.featHistEnabled) return false;
     if (!Objects.equals(id, that.id)) return false;
     if (!Objects.equals(name, that.name)) return false;
     if (!Objects.equals(featurestore, that.featurestore)) return false;
@@ -261,12 +222,10 @@ public class Featuregroup implements Serializable {
     if (!Objects.equals(creator, that.creator)) return false;
     if (!Objects.equals(version, that.version)) return false;
     if (featuregroupType != that.featuregroupType) return false;
-    if (!Objects.equals(onDemandFeaturegroup, that.onDemandFeaturegroup))
-      return false;
-    if (!Objects.equals(cachedFeaturegroup, that.cachedFeaturegroup))
-      return false;
+    if (!Objects.equals(onDemandFeaturegroup, that.onDemandFeaturegroup)) return false;
+    if (!Objects.equals(cachedFeaturegroup, that.cachedFeaturegroup)) return false;
     if (!Objects.equals(jobs, that.jobs)) return false;
-    return Objects.equals(statisticColumns, that.statisticColumns);
+    return Objects.equals(statisticsConfig, that.statisticsConfig);
   }
 
   @Override
@@ -277,14 +236,11 @@ public class Featuregroup implements Serializable {
     result = 31 * result + (created != null ? created.hashCode() : 0);
     result = 31 * result + (creator != null ? creator.hashCode() : 0);
     result = 31 * result + (version != null ? version.hashCode() : 0);
-    result = 31 * result + (descStatsEnabled ? 1 : 0);
-    result = 31 * result + (featCorrEnabled ? 1 : 0);
-    result = 31 * result + (featHistEnabled ? 1 : 0);
     result = 31 * result + (featuregroupType != null ? featuregroupType.hashCode() : 0);
     result = 31 * result + (onDemandFeaturegroup != null ? onDemandFeaturegroup.hashCode() : 0);
     result = 31 * result + (cachedFeaturegroup != null ? cachedFeaturegroup.hashCode() : 0);
     result = 31 * result + (jobs != null ? jobs.hashCode() : 0);
-    result = 31 * result + (statisticColumns != null ? statisticColumns.hashCode() : 0);
+    result = 31 * result + (statisticsConfig != null ? statisticsConfig.hashCode() : 0);
     return result;
   }
 }

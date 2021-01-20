@@ -18,7 +18,7 @@ package io.hops.hopsworks.persistence.entity.featurestore.trainingdataset;
 
 import io.hops.hopsworks.persistence.entity.featurestore.Featurestore;
 import io.hops.hopsworks.persistence.entity.featurestore.jobs.FeaturestoreJob;
-
+import io.hops.hopsworks.persistence.entity.featurestore.statistics.StatisticsConfig;
 import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.external.ExternalTrainingDataset;
 import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.hopsfs.HopsfsTrainingDataset;
 import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.split.TrainingDatasetSplit;
@@ -109,6 +109,8 @@ public class TrainingDataset implements Serializable {
   @Basic
   @Column(name = "query")
   private boolean query;
+  @OneToOne(cascade = CascadeType.ALL, mappedBy = "trainingDataset")
+  private StatisticsConfig statisticsConfig;
   @OneToMany(cascade = CascadeType.ALL, mappedBy = "trainingDataset")
   private Collection<TrainingDatasetFeature> features;
   @OneToMany(cascade = CascadeType.ALL, mappedBy = "trainingDataset")
@@ -272,6 +274,14 @@ public class TrainingDataset implements Serializable {
     this.joins = joins;
   }
 
+  public StatisticsConfig getStatisticsConfig() {
+    return statisticsConfig;
+  }
+
+  public void setStatisticsConfig(StatisticsConfig statisticsConfig) {
+    this.statisticsConfig = statisticsConfig;
+  }
+
   @Override
   public boolean equals(Object o) {
     if (this == o) return true;
@@ -293,10 +303,8 @@ public class TrainingDataset implements Serializable {
     if (!Objects.equals(joins, that.joins)) return false;
     if (!Objects.equals(jobs, that.jobs)) return false;
     if (trainingDatasetType != that.trainingDatasetType) return false;
-    if (!Objects.equals(hopsfsTrainingDataset, that.hopsfsTrainingDataset))
-      return false;
-    if (!Objects.equals(externalTrainingDataset, that.externalTrainingDataset))
-      return false;
+    if (!Objects.equals(hopsfsTrainingDataset, that.hopsfsTrainingDataset)) return false;
+    if (!Objects.equals(externalTrainingDataset, that.externalTrainingDataset)) return false;
     return Objects.equals(splits, that.splits);
   }
 
