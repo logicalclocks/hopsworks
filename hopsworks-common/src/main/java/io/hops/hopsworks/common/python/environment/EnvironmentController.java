@@ -207,6 +207,7 @@ public class EnvironmentController {
     project.setPythonDepCollection(new ArrayList<>());
     condaEnvironmentRemove(project, project.getOwner());
     project.setPythonEnvironment(null);
+    project.setDockerImage(settings.getBaseNonPythonDockerImage());
     projectFacade.update(project);
     projectFacade.flushEm();
   }
