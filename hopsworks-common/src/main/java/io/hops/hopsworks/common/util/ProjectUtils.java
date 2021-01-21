@@ -47,6 +47,8 @@ import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 @Stateless
 @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
@@ -67,6 +69,12 @@ public class ProjectUtils {
     return false;
   }
 
+  private static boolean isBaseDockerImage(String image) {
+    Pattern basePattern = Pattern.compile("^(base:\\d+[.]\\d+[.]\\d+(|-SNAPSHOT))$");
+    Matcher baseMatcher = basePattern.matcher(image);
+    return baseMatcher.matches();
+  }
+
   public String getFullDockerImageName(Project project, boolean useBase) throws ServiceDiscoveryException {
     return getFullDockerImageName(project, settings, serviceDiscoveryController, useBase);
   }
@@ -82,6 +90,8 @@ public class ProjectUtils {
       // if conda enabled is true and usebase is true
       // or as a fall back in case the project image name hasn't been set (i.e. during upgrades)
       return settings.getBaseDockerImagePythonName();
+    } else if(project.getPythonEnvironment() == null && isBaseDockerImage(project.getDockerImage())) {
+      return project.getDockerImage();
     } else if(project.getPythonEnvironment() == null) {
       throw new IllegalArgumentException("Error. Python has not been enabled for this project.");
     } else {
