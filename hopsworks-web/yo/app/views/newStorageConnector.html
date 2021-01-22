@@ -166,6 +166,19 @@
                                                        tooltip-placement="left" style="margin-left: 10px">
                                                     </i>
                                                 </label>
+
+                                                <label class="btn btn-default btn-md" id="adls_connection_lbl"
+                                                       ng-click="newStorageConnectorCtrl.setStorageConnectorType(4);"
+                                                       ng-class="{unset: newStorageConnectorCtrl.storageConnectorType !== 4}"
+                                                       style="margin:2px; background:rgb(108, 117, 125); color:white; z-index:2">
+                                                    <input type="radio" value="ADLS_CONNECTION_BTN"
+                                                           id="ADLS_CONNECTION_BTN">
+                                                    Azure Data Lake
+                                                    <i class="fa fa-info-circle"
+                                                       uib-tooltip="Define an Azure Data Lake Storage connector"
+                                                       tooltip-placement="left" style="margin-left: 10px">
+                                                    </i>
+                                                </label>
                                             </div>
                                         </div>
                                     </div>
@@ -696,6 +709,98 @@
                             </div>
                         </div>
                         </form>
+                    </div>
+
+                    <div class="view-info" ng-if="newStorageConnectorCtrl.storageConnectorType === 4">
+                        <div class="col-md-12">
+                            <div class="col-sm-12" style="margin-bottom: 20px">
+                                <div class="col-sm-3">
+                                    <label class="control-label">Generation</label>
+                                    <i class="fa fa-info-circle" tooltip-placement="auto right"
+                                       uib-tooltip='Azure Data Lake Storage Generation'
+                                       style="margin-left: 10px"></i>
+                                </div>
+                                <div class="col-sm-4">
+                                    <input type="radio" id="gen1" name="generation" value="1" ng-model="newStorageConnectorCtrl.generation">
+                                    <label for="gen1" style="margin-right: 20px;">1</label>
+                                    <input type="radio" id="gen2" name="generation" value="2"
+                                    ng-model="newStorageConnectorCtrl.generation">
+                                    <label for="gen2">2</label>   
+                                </div>
+                            </div>
+                            <div class="col-sm-12" style="margin-bottom: 20px">
+                                <div class="col-sm-3">
+                                    <label class="control-label">Directory Id</label>
+                                    <i class="fa fa-info-circle" tooltip-placement="auto right"
+                                       uib-tooltip='ID that uniquely identifies the Azure AD instance'
+                                       style="margin-left: 10px"></i>
+                                </div>
+                                <div class="col-sm-4">
+                                    <input type="text" class="form-control"
+                                           placeholder="Enter Directory ID"
+                                           ng-model="newStorageConnectorCtrl.directoryId"
+                                           required>
+                                </div>
+                            </div>
+                            <div class="col-sm-12" style="margin-bottom: 20px">
+                                <div class="col-sm-3">
+                                    <label class="control-label">Application Id</label>
+                                    <i class="fa fa-info-circle" tooltip-placement="auto right"
+                                       uib-tooltip='ID that uniquely identifies the application'
+                                       style="margin-left: 10px"></i>
+                                </div>
+                                <div class="col-sm-4">
+                                    <input type="text" class="form-control"
+                                           placeholder="Enter Application ID"
+                                           ng-model="newStorageConnectorCtrl.applicationId"
+                                           required>
+                                </div>
+                            </div>
+                            <div class="col-sm-12" style="margin-bottom: 20px">
+                                <div class="col-sm-3">
+                                    <label class="control-label">Service Credential</label>
+                                    <i class="fa fa-info-circle" tooltip-placement="auto right"
+                                       uib-tooltip='String that the application uses to prove its identity'
+                                       style="margin-left: 10px"></i>
+                                </div>
+                                <div class="col-sm-4">
+                                    <input type="text" class="form-control"
+                                           placeholder="Enter Service Credential"
+                                           ng-model="newStorageConnectorCtrl.serviceCredential"
+                                           required>
+                                </div>
+                            </div>
+
+                            <div class="col-sm-12" style="margin-bottom: 20px">
+                                <div class="col-sm-3">
+                                    <label class="control-label">Account Name</label>
+                                    <i class="fa fa-info-circle" tooltip-placement="auto right"
+                                       uib-tooltip='The name of the storage account'
+                                       style="margin-left: 10px"></i>
+                                </div>
+                                <div class="col-sm-4">
+                                    <input type="text" class="form-control"
+                                           placeholder="Enter Account Name"
+                                           ng-model="newStorageConnectorCtrl.accountName"
+                                           required>
+                                </div>
+                            </div>
+
+                            <div class="col-sm-12" style="margin-bottom: 20px" ng-show="newStorageConnectorCtrl.generation === '2'">
+                                <div class="col-sm-3">
+                                    <label class="control-label">Container Name</label>
+                                    <i class="fa fa-info-circle" tooltip-placement="auto right"
+                                       uib-tooltip='The name of the container where to store the data'
+                                       style="margin-left: 10px"></i>
+                                </div>
+                                <div class="col-sm-4">
+                                    <input type="text" class="form-control"
+                                           placeholder="Enter Container Name"
+                                           ng-model="newStorageConnectorCtrl.containerName"
+                                           required>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
 

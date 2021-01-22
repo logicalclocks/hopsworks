@@ -17,6 +17,7 @@
 package io.hops.hopsworks.persistence.entity.featurestore.storageconnector;
 
 import io.hops.hopsworks.persistence.entity.featurestore.Featurestore;
+import io.hops.hopsworks.persistence.entity.featurestore.storageconnector.adls.FeaturestoreADLSConnector;
 import io.hops.hopsworks.persistence.entity.featurestore.storageconnector.hopsfs.FeaturestoreHopsfsConnector;
 import io.hops.hopsworks.persistence.entity.featurestore.storageconnector.jdbc.FeaturestoreJdbcConnector;
 import io.hops.hopsworks.persistence.entity.featurestore.storageconnector.redshift.FeatureStoreRedshiftConnector;
@@ -96,6 +97,9 @@ public class FeaturestoreConnector implements Serializable {
   @JoinColumn(name = "redshift_id", referencedColumnName = "id")
   @ManyToOne(cascade = CascadeType.ALL)
   private FeatureStoreRedshiftConnector redshiftConnector;
+  @JoinColumn(name = "adls_id", referencedColumnName = "id")
+  @ManyToOne(cascade = CascadeType.ALL)
+  private FeaturestoreADLSConnector adlsConnector;
 
   public static long getSerialVersionUID() {
     return serialVersionUID;
@@ -171,6 +175,14 @@ public class FeaturestoreConnector implements Serializable {
 
   public void setRedshiftConnector(FeatureStoreRedshiftConnector redshiftConnector) {
     this.redshiftConnector = redshiftConnector;
+  }
+
+  public FeaturestoreADLSConnector getAdlsConnector() {
+    return adlsConnector;
+  }
+
+  public void setAdlsConnector(FeaturestoreADLSConnector adlsConnector) {
+    this.adlsConnector = adlsConnector;
   }
 
   @Override

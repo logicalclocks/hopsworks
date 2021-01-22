@@ -19,6 +19,7 @@ package io.hops.hopsworks.common.featurestore.storageconnectors;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import io.hops.hopsworks.common.featurestore.storageconnectors.adls.FeaturestoreADLSConnectorDTO;
 import io.hops.hopsworks.common.featurestore.storageconnectors.hopsfs.FeaturestoreHopsfsConnectorDTO;
 import io.hops.hopsworks.common.featurestore.storageconnectors.jdbc.FeaturestoreJdbcConnectorDTO;
 import io.hops.hopsworks.common.featurestore.storageconnectors.redshift.FeaturestoreRedshiftConnectorDTO;
@@ -34,15 +35,19 @@ import javax.xml.bind.annotation.XmlSeeAlso;
  * types of storage connectors
  */
 @XmlRootElement
-@XmlSeeAlso({FeaturestoreHopsfsConnectorDTO.class, FeaturestoreJdbcConnectorDTO.class,
-  FeaturestoreRedshiftConnectorDTO.class, FeaturestoreS3ConnectorDTO.class})
+@XmlSeeAlso({FeaturestoreHopsfsConnectorDTO.class,
+    FeaturestoreJdbcConnectorDTO.class,
+    FeaturestoreRedshiftConnectorDTO.class,
+    FeaturestoreS3ConnectorDTO.class,
+    FeaturestoreADLSConnectorDTO.class})
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY)
 @JsonSubTypes({
     @JsonSubTypes.Type(value = FeaturestoreHopsfsConnectorDTO.class, name = "FeaturestoreHopsfsConnectorDTO"),
     @JsonSubTypes.Type(value = FeaturestoreJdbcConnectorDTO.class, name = "FeaturestoreJdbcConnectorDTO"),
     @JsonSubTypes.Type(value = FeaturestoreRedshiftConnectorDTO.class, name = "FeaturestoreRedshiftConnectorDTO"),
-    @JsonSubTypes.Type(value = FeaturestoreS3ConnectorDTO.class, name = "FeaturestoreS3ConnectorDTO")}
+    @JsonSubTypes.Type(value = FeaturestoreS3ConnectorDTO.class, name = "FeaturestoreS3ConnectorDTO"),
+    @JsonSubTypes.Type(value = FeaturestoreADLSConnectorDTO.class, name = "FeaturestoreADLSConnectorDTO")}
 )
 public class FeaturestoreStorageConnectorDTO {
   private Integer id;

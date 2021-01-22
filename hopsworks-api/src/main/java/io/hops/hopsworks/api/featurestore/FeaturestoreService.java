@@ -240,7 +240,7 @@ public class FeaturestoreService {
     List<FeaturegroupDTO> featuregroups = featuregroupController.getFeaturegroupsForFeaturestore(featurestore,
       project, user);
     List<TrainingDatasetDTO> trainingDatasets =
-      trainingDatasetController.getTrainingDatasetsForFeaturestore(featurestore);
+      trainingDatasetController.getTrainingDatasetsForFeaturestore(user, project, featurestore);
     List<FeaturestoreStorageConnectorDTO> storageConnectors =
       featurestoreStorageConnectorController.getConnectorsForFeaturestore(user, project, featurestore);
     FeaturestoreClientSettingsDTO featurestoreClientSettingsDTO = new FeaturestoreClientSettingsDTO();

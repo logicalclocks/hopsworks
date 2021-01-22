@@ -20,5 +20,6 @@ public enum FeaturestoreConnectorType {
   JDBC,
   HOPSFS,
   S3,
-  REDSHIFT;
+  REDSHIFT,
+  ADLS;
 }

@@ -270,14 +270,14 @@ public class SecretsController {
           "Error decrypting Secret", "Could not decrypt Secret " + secretName, ex);
     }
   }
-  
+
   /**
    * Gets a decrypted shared secret depending on its Visibility. It will throw an exception
    * if the Visibility was set to PRIVATE or the caller is not member of the Project
    * the Secret is shared with.
    *
    * @param caller The user who requested the Secret
-   * @param ownerUsername Username of the owner of the Secret
+   * @param ownerUsername the username of the user owning the secret
    * @param secretName Identifier of the Secret
    * @return The decrypted Secret
    * @throws UserException
@@ -286,14 +286,27 @@ public class SecretsController {
    */
   public SecretPlaintext getShared(Users caller, String ownerUsername, String secretName)
       throws UserException, ServiceException, ProjectException {
+    Users ownerUser = userFacade.findByUsername(ownerUsername);
+    return getShared(caller, ownerUser, secretName);
+  }
+
+  /**
+   * Gets a decrypted shared secret depending on its Visibility. It will throw an exception
+   * if the Visibility was set to PRIVATE or the caller is not member of the Project
+   * the Secret is shared with.
+   *
+   * @param caller The user who requested the Secret
+   * @param ownerUser the user owner of the secret
+   * @param secretName Identifier of the Secret
+   * @return The decrypted Secret
+   * @throws UserException
+   * @throws ServiceException
+   * @throws ProjectException
+   */
+  public SecretPlaintext getShared(Users caller, Users ownerUser, String secretName)
+      throws UserException, ServiceException, ProjectException {
     checkIfUserIsNull(caller);
     checkIfNameIsNullOrEmpty(secretName);
-    if (Strings.isNullOrEmpty(ownerUsername)) {
-      throw new UserException(RESTCodes.UserErrorCode.USER_DOES_NOT_EXIST, Level.FINE,
-          "Owner of Secret is empty", caller.getUsername() + " did not provide Owner for shared secret " + secretName);
-    }
-    
-    Users ownerUser = userFacade.findByUsername(ownerUsername);
     checkIfUserIsNull(ownerUser);
     
     Secret storedSecret = secretsFacade.findById(new SecretId(ownerUser.getUid(), secretName));
