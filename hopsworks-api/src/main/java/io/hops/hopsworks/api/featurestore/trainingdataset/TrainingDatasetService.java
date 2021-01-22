@@ -348,8 +348,8 @@ public class TrainingDatasetService {
           project, user, ActivityFlag.SERVICE);
     }
     if (updateStatsConfig) {
-      oldTrainingDatasetDTO = trainingDatasetController.updateTrainingDatasetStatsConfig(featurestore,
-        trainingDatasetDTO);
+      oldTrainingDatasetDTO =
+          trainingDatasetController.updateTrainingDatasetStatsConfig(user, project, featurestore, trainingDatasetDTO);
     }
     GenericEntity<TrainingDatasetDTO> trainingDatasetDTOGenericEntity =
       new GenericEntity<TrainingDatasetDTO>(oldTrainingDatasetDTO) {};
