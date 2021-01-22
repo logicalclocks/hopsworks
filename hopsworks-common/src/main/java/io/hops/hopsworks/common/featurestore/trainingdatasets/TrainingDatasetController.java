@@ -602,9 +602,9 @@ public class TrainingDatasetController {
     return convertTrainingDatasetToDTO(user, project, updatedTrainingDataset);
   }
   
-  public TrainingDatasetDTO updateTrainingDatasetStatsConfig(Featurestore featurestore,
-    TrainingDatasetDTO trainingDatasetDTO)
-    throws FeaturestoreException, ServiceException {
+  public TrainingDatasetDTO updateTrainingDatasetStatsConfig(Users user, Project project, Featurestore featurestore,
+                                                             TrainingDatasetDTO trainingDatasetDTO)
+      throws FeaturestoreException, ServiceException {
     TrainingDataset trainingDataset = getTrainingDatasetById(featurestore, trainingDatasetDTO.getId());
     if (trainingDatasetDTO.getStatisticsConfig().getEnabled() != null) {
       trainingDataset.getStatisticsConfig().setDescriptive(trainingDatasetDTO.getStatisticsConfig().getEnabled());
@@ -622,7 +622,7 @@ public class TrainingDatasetController {
       .persistStatisticColumns(trainingDataset, trainingDatasetDTO.getStatisticsConfig().getColumns());
     // get feature group again with persisted columns - this trip to the database can be saved
     trainingDataset = getTrainingDatasetById(featurestore, trainingDatasetDTO.getId());
-    return convertTrainingDatasetToDTO(trainingDataset);
+    return convertTrainingDatasetToDTO(user, project, trainingDataset);
   }
 
   /**
