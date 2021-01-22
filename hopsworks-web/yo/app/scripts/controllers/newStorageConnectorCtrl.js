@@ -62,6 +62,13 @@ angular.module('hopsWorksApp')
             self.redshiftDatabasePassword = undefined;
             self.redshiftIAMRole = undefined;
 
+            self.generation = "2";
+            self.directoryId = undefined;
+            self.applicationId = undefined;
+            self.serviceCredential = undefined;
+            self.accountName = undefined;
+            self.containerName = undefined;
+
             //State
             self.working = false;
             self.hopsFsDataset = undefined;
@@ -85,6 +92,7 @@ angular.module('hopsWorksApp')
             self.s3ConnectorType = self.settings.s3ConnectorType;
             self.jdbcConnectorType = self.settings.jdbcConnectorType;
             self.redshiftConnectorType = self.settings.redshiftConnectorType;
+            self.adlsConnectorType = "ADLS";
             self.s3ConnectorDTOType = self.settings.s3ConnectorDtoType;
             self.jdbcConnectorDTOType = self.settings.jdbcConnectorDtoType;
             self.redshiftConnectorDTOType = self.settings.redshiftConnectorDtoType;
@@ -205,6 +213,7 @@ angular.module('hopsWorksApp')
                             }
                         }
                     }
+
                     if (self.storageConnector.storageConnectorType === self.redshiftConnectorType) {
                         self.storageConnectorType = 3
                         var args = self.storageConnector.arguments
@@ -220,6 +229,16 @@ angular.module('hopsWorksApp')
                         self.redshiftDatabaseUserName = self.storageConnector.databaseUserName;
                         self.redshiftDatabasePassword = self.storageConnector.databasePassword;
                         self.redshiftIAMRole = self.storageConnector.iamRole;
+                    }
+
+                    if (self.storageConnector.storageConnectorType === self.adlsConnectorType) {
+                        self.storageConnectorType = 4
+                        self.generation = self.storageConnector.generation.toString();
+                        self.directoryId = self.storageConnector.directoryId;
+                        self.applicationId = self.storageConnector.applicationId;
+                        self.serviceCredential = self.storageConnector.serviceCredential;
+                        self.accountName = self.storageConnector.accountName;
+                        self.containerName = self.storageConnector.containerName;
                     }
                 }
 
@@ -517,6 +536,21 @@ angular.module('hopsWorksApp')
                 return storageConnectorJson;
             };
 
+            var getADLSConnector = function() {
+                var storageConnectorJson = createStorageConnectorJson();
+                storageConnectorJson["type"] = "featurestoreADLSConnectorDTO";
+                storageConnectorJson["storageConnectorType"] = "ADLS";
+                storageConnectorJson["generation"] = parseInt(self.generation);
+                storageConnectorJson["directoryId"] = self.directoryId;
+                storageConnectorJson["applicationId"] = self.applicationId;
+                storageConnectorJson["serviceCredential"] = self.serviceCredential;
+                storageConnectorJson["accountName"] = self.accountName;
+                if (self.generation === "2") {
+                    storageConnectorJson["containerName"] = self.containerName;
+                }
+                return storageConnectorJson;
+            }
+
             /**
              * Updates an existing storage connector
              */
@@ -534,6 +568,9 @@ angular.module('hopsWorksApp')
                 }
                 if (self.storageConnectorType === 2) {
                     updateStorageConnector(self.hopsfsConnectorType, getHdfsStorageConnector());
+                }
+                if (self.storageConnectorType === 4) {
+                    updateStorageConnector("ADLS", getADLSConnector());
                 }
                 growl.info("Updating Storage Connector... wait", { title: 'Updating..', ttl: 1000 })
             }
@@ -555,6 +592,9 @@ angular.module('hopsWorksApp')
                 }
                 if (self.storageConnectorType === 2) {
                     createStorageConnector(self.hopsfsConnectorType, getHdfsStorageConnector());
+                }
+                if (self.storageConnectorType === 4) {
+                    createStorageConnector("ADLS", getADLSConnector());
                 }
                 growl.info("Creating Storage Connector... wait", { title: 'Creating', ttl: 1000 })
             };

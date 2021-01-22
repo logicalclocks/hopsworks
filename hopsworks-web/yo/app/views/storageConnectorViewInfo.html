@@ -226,6 +226,82 @@
         </div>
 
         <div uib-accordion-group class="panel-default"
+             ng-if="storageConnectorViewInfoCtrl.storageConnector.storageConnectorType == 'ADLS'">
+            <div uib-accordion-heading>
+                <i class="fa fa-info-circle" tooltip-placement="auto left"
+                   uib-tooltip='HopsFS Connector Details'></i>
+                <span style="margin-left: 20px">
+                    Azure Data Lake Storage Connector 
+                </span>
+            </div>
+
+            <table class="table table-hover fs-table" style="margin-left: 10px; overflow: auto">
+                <tbody class="fs-table">
+                <tr class="fs-table">
+                    <td style="font-weight:700;" class="fs-table">
+                        Generation 
+                    </td>
+                    <td class="fs-table">
+                        {{storageConnectorViewInfoCtrl.storageConnector.generation}}
+                    </td>
+                </tr>
+                <tr class="fs-table">
+                    <td style="font-weight:700;" class="fs-table">
+                        Directory ID 
+                    </td>
+                    <td class="fs-table">
+                        {{storageConnectorViewInfoCtrl.storageConnector.directoryId}}
+                    </td>
+                </tr>
+                <tr class="fs-table">
+                    <td style="font-weight:700;" class="fs-table">
+                        Application ID
+                    </td>
+                    <td class="fs-table">
+                        {{storageConnectorViewInfoCtrl.storageConnector.applicationId}}
+                    </td>
+                </tr>
+                <tr class="fs-table">
+                    <td style="font-weight:700;" class="fs-table">
+                        Service Credential  
+                    </td>
+                    <td class="fs-table">
+                        <input id="connector_password" 
+                                   value="{{storageConnectorViewInfoCtrl.storageConnector.serviceCredential}}"
+                                   placeholder="Password"
+                                   type="{{storageConnectorViewInfoCtrl.pwdType}}" 
+                                   readonly
+                                   style="border:none; background: transparent; 
+                                          outline: 0; width: 280px; margin-right: 20px;"/>
+
+                        <button class="btn btn-primary btn-sm"  
+                                ng-click="storageConnectorViewInfoCtrl.showPlainConnectorPassword()">
+                            <span ng-if="storageConnectorViewInfoCtrl.showPwd == true" class="fa fa-eye-slash"></span>
+                            <span ng-if="storageConnectorViewInfoCtrl.showPwd == false" class="fa fa-eye"></span>
+                        </button>
+                    </td>
+                </tr>
+                <tr class="fs-table">
+                    <td style="font-weight:700;" class="fs-table">
+                        Account Name
+                    </td>
+                    <td class="fs-table">
+                        {{storageConnectorViewInfoCtrl.storageConnector.accountName}}
+                    </td>
+                </tr>
+                <tr class="fs-table" ng-show="storageConnectorViewInfoCtrl.storageConnector.generation === 2">
+                    <td style="font-weight:700;" class="fs-table">
+                        Container Name 
+                    </td>
+                    <td class="fs-table">
+                        {{storageConnectorViewInfoCtrl.storageConnector.containerName}}
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div uib-accordion-group class="panel-default"
              ng-if="storageConnectorViewInfoCtrl.storageConnector.storageConnectorType == storageConnectorViewInfoCtrl.redshiftConnectorType">
             <div uib-accordion-heading>
                 <i class="fa fa-info-circle" tooltip-placement="auto left"

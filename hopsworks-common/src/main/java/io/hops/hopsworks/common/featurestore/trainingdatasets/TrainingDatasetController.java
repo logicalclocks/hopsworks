@@ -147,11 +147,12 @@ public class TrainingDatasetController {
    * @param featurestore featurestore to query trainingDatasets for
    * @return list of XML/JSON DTOs of the trainingDatasets
    */
-  public List<TrainingDatasetDTO> getTrainingDatasetsForFeaturestore(Featurestore featurestore)
-      throws ServiceException {
+  public List<TrainingDatasetDTO> getTrainingDatasetsForFeaturestore(Users user, Project project,
+                                                                     Featurestore featurestore)
+      throws ServiceException, FeaturestoreException {
     List<TrainingDatasetDTO> trainingDatasets = new ArrayList<>();
     for (TrainingDataset td : trainingDatasetFacade.findByFeaturestore(featurestore)) {
-      trainingDatasets.add(convertTrainingDatasetToDTO(td));
+      trainingDatasets.add(convertTrainingDatasetToDTO(user, project, td));
     }
 
     return trainingDatasets;
@@ -164,8 +165,8 @@ public class TrainingDatasetController {
    * @return JSON/XML DTO of the trainingDataset
    * @throws ServiceException
    */
-  private TrainingDatasetDTO convertTrainingDatasetToDTO(TrainingDataset trainingDataset)
-      throws ServiceException {
+  private TrainingDatasetDTO convertTrainingDatasetToDTO(Users user, Project project, TrainingDataset trainingDataset)
+      throws ServiceException, FeaturestoreException {
     TrainingDatasetDTO trainingDatasetDTO = new TrainingDatasetDTO(trainingDataset);
 
     String featurestoreName = featurestoreFacade.getHiveDbName(trainingDataset.getFeaturestore().getHiveDbId());
@@ -190,8 +191,8 @@ public class TrainingDatasetController {
       case HOPSFS_TRAINING_DATASET:
         return hopsfsTrainingDatasetController.convertHopsfsTrainingDatasetToDTO(trainingDatasetDTO, trainingDataset);
       case EXTERNAL_TRAINING_DATASET:
-        return externalTrainingDatasetController.convertExternalTrainingDatasetToDTO(trainingDatasetDTO,
-            trainingDataset);
+        return externalTrainingDatasetController.convertExternalTrainingDatasetToDTO(user, project,
+            trainingDatasetDTO, trainingDataset);
       default:
         throw new IllegalArgumentException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_TRAINING_DATASET_TYPE.getMessage() +
           ", Recognized training dataset types are: " + TrainingDatasetType.HOPSFS_TRAINING_DATASET + ", and: " +
@@ -266,8 +267,8 @@ public class TrainingDatasetController {
         udfso.mkdir(trainingDatasetPath);
 
         inode = inodeController.getInodeAtPath(trainingDatasetPath);
-        TrainingDatasetDTO completeTrainingDatasetDTO =
-            createTrainingDatasetMetadata(user, featurestore, trainingDatasetDTO, query, featurestoreConnector, inode);
+        TrainingDatasetDTO completeTrainingDatasetDTO = createTrainingDatasetMetadata(user, project,
+            featurestore, trainingDatasetDTO, query, featurestoreConnector, inode);
         fsProvenanceController.trainingDatasetAttachXAttr(trainingDatasetPath, completeTrainingDatasetDTO, udfso);
         return completeTrainingDatasetDTO;
       } finally {
@@ -277,15 +278,16 @@ public class TrainingDatasetController {
       }
     } else {
       if (trainingDatasetDTO.getStorageConnector() == null) {
-        throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.S3_CONNECTOR_NOT_FOUND,
+        throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.CONNECTOR_NOT_FOUND,
             Level.FINE, "Storage connector is empty");
       }
 
       featurestoreConnector = featurestoreConnectorFacade
-          .findByIdType(trainingDatasetDTO.getStorageConnector().getId(), FeaturestoreConnectorType.S3)
-          .orElseThrow(() -> new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.S3_CONNECTOR_NOT_FOUND,
-              Level.FINE, "S3 connector: " + trainingDatasetDTO.getStorageConnector().getId()));
-      return createTrainingDatasetMetadata(user, featurestore, trainingDatasetDTO, query, featurestoreConnector, null);
+          .findById(trainingDatasetDTO.getStorageConnector().getId())
+          .orElseThrow(() -> new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.CONNECTOR_NOT_FOUND,
+              Level.FINE, "Connector: " + trainingDatasetDTO.getStorageConnector().getId()));
+      return createTrainingDatasetMetadata(user, project, featurestore, trainingDatasetDTO,
+          query, featurestoreConnector, null);
     }
   }
 
@@ -293,7 +295,7 @@ public class TrainingDatasetController {
    * Creates the metadata structure in DB for the training dataset
    */
   @TransactionAttribute(TransactionAttributeType.REQUIRED)
-  private TrainingDatasetDTO createTrainingDatasetMetadata(Users user, Featurestore featurestore,
+  private TrainingDatasetDTO createTrainingDatasetMetadata(Users user, Project project, Featurestore featurestore,
                                                            TrainingDatasetDTO trainingDatasetDTO, Query query,
                                                            FeaturestoreConnector featurestoreConnector, Inode inode)
       throws FeaturestoreException, ServiceException {
@@ -359,7 +361,7 @@ public class TrainingDatasetController {
     featurestoreJobFacade.insertJobs(trainingDataset, jobs);
 
     //Get final entity from the database
-    return getTrainingDatasetWithNameVersionAndFeaturestore(featurestore, trainingDataset.getName(),
+    return getWithNameVersionAndFeaturestore(user, project, featurestore, trainingDataset.getName(),
         trainingDataset.getVersion());
   }
 
@@ -490,18 +492,11 @@ public class TrainingDatasetController {
     }
   }
 
-  /**
-   * Retrieves a trainingDataset with a particular id from a particular featurestore
-   *
-   * @param id           if of the trainingDataset
-   * @param featurestore the featurestore that the trainingDataset belongs to
-   * @return XML/JSON DTO of the trainingDataset
-   * @throws FeaturestoreException
-   */
-  public TrainingDatasetDTO getTrainingDatasetWithIdAndFeaturestore(Featurestore featurestore, Integer id)
+  public TrainingDatasetDTO getTrainingDatasetWithIdAndFeaturestore(Users user, Project project,
+                                                                    Featurestore featurestore, Integer id)
     throws FeaturestoreException, ServiceException {
     TrainingDataset trainingDataset = getTrainingDatasetById(featurestore, id);
-    return convertTrainingDatasetToDTO(trainingDataset);
+    return convertTrainingDatasetToDTO(user, project, trainingDataset);
   }
 
   public TrainingDataset getTrainingDatasetById(Featurestore featurestore, Integer id) throws FeaturestoreException {
@@ -510,16 +505,8 @@ public class TrainingDatasetController {
             Level.FINE, "trainingDatasetId: " + id));
   }
 
-  /**
-   * Retrieves a list of trainingDataset with a particular name from a particular feature store
-   *
-   * @param name name of the trainingDataset
-   * @param featurestore the featurestore that the trainingDataset belongs to
-   * @return XML/JSON DTO of the trainingDataset
-   * @throws FeaturestoreException
-   * @throws ServiceException
-   */
-  public List<TrainingDatasetDTO> getTrainingDatasetWithNameAndFeaturestore(Featurestore featurestore, String name)
+  public List<TrainingDatasetDTO> getWithNameAndFeaturestore(Users user, Project project,
+                                                             Featurestore featurestore, String name)
       throws FeaturestoreException, ServiceException {
     List<TrainingDataset> trainingDatasetList = trainingDatasetFacade.findByNameAndFeaturestore(name, featurestore);
     if (trainingDatasetList == null || trainingDatasetList.isEmpty()) {
@@ -529,26 +516,19 @@ public class TrainingDatasetController {
 
     List<TrainingDatasetDTO> trainingDatasetDTOS = new ArrayList<>();
     for (TrainingDataset td : trainingDatasetList) {
-      trainingDatasetDTOS.add(convertTrainingDatasetToDTO(td));
+      trainingDatasetDTOS.add(convertTrainingDatasetToDTO(user, project, td));
     }
 
     return trainingDatasetDTOS;
   }
 
-  /**
-   * Retrieves a trainingDataset with a particular name and version from a particular feature store
-   *
-   * @param name name of the trainingDataset
-   * @param featurestore the featurestore that the trainingDataset belongs to
-   * @return XML/JSON DTO of the trainingDataset
-   * @throws FeaturestoreException
-   */
-  public TrainingDatasetDTO getTrainingDatasetWithNameVersionAndFeaturestore(Featurestore featurestore,
-        String name, Integer version) throws FeaturestoreException, ServiceException {
+  public TrainingDatasetDTO getWithNameVersionAndFeaturestore(Users user, Project project, Featurestore featurestore,
+                                                              String name, Integer version)
+      throws FeaturestoreException, ServiceException {
 
     Optional<TrainingDataset> trainingDataset =
         trainingDatasetFacade.findByNameVersionAndFeaturestore(name, version, featurestore);
-    return convertTrainingDatasetToDTO(trainingDataset
+    return convertTrainingDatasetToDTO(user, project, trainingDataset
         .orElseThrow(() -> new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.TRAINING_DATASET_NOT_FOUND,
             Level.FINE, "training dataset name : " + name)));
   }
@@ -595,8 +575,10 @@ public class TrainingDatasetController {
    * @return a JSON/XML DTO of the updated training dataset
    * @throws FeaturestoreException
    */
-  public TrainingDatasetDTO updateTrainingDatasetMetadata(
-      Featurestore featurestore, TrainingDatasetDTO trainingDatasetDTO) throws FeaturestoreException, ServiceException {
+  public TrainingDatasetDTO updateTrainingDatasetMetadata(Users user, Project project,
+                                                          Featurestore featurestore,
+                                                          TrainingDatasetDTO trainingDatasetDTO)
+      throws FeaturestoreException, ServiceException {
     TrainingDataset trainingDataset = verifyTrainingDatasetId(trainingDatasetDTO.getId(), featurestore);
   
     // Verify general entity related information
@@ -617,7 +599,7 @@ public class TrainingDatasetController {
             .orElseThrow(() -> new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.TRAINING_DATASET_NOT_FOUND,
                 Level.FINE, "training dataset id: " + trainingDatasetDTO.getId()));
 
-    return convertTrainingDatasetToDTO(updatedTrainingDataset);
+    return convertTrainingDatasetToDTO(user, project, updatedTrainingDataset);
   }
   
   public TrainingDatasetDTO updateTrainingDatasetStatsConfig(Featurestore featurestore,

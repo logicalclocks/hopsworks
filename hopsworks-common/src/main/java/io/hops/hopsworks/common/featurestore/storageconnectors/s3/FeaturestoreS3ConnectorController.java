@@ -391,7 +391,7 @@ public class FeaturestoreS3ConnectorController {
     if (secret != null) {
       try {
         Users owner = userFacade.find(secret.getId().getUid());
-        SecretPlaintext plainText = secretsController.getShared(user, owner.getUsername(), secret.getId().getName());
+        SecretPlaintext plainText = secretsController.getShared(user, owner, secret.getId().getName());
         featurestoreS3ConnectorAccessAndSecretKey = new ObjectMapper().readValue(plainText.getPlaintext(),
           FeaturestoreS3ConnectorAccessAndSecretKey.class);
       } catch (UserException | IOException | ServiceException | ProjectException e) {

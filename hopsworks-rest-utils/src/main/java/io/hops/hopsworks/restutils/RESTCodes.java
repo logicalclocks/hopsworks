@@ -1356,7 +1356,6 @@ public class RESTCodes {
     CONNECTOR_NOT_FOUND(42, "Connector not found", Response.Status.NOT_FOUND),
     CONNECTOR_ID_NOT_PROVIDED(43, "Connector Id was not provided", Response.Status.BAD_REQUEST),
     INVALID_SQL_QUERY(44, "Invalid SQL query", Response.Status.BAD_REQUEST),
-    S3_CONNECTOR_NOT_FOUND(45, "S3 Connector not found", Response.Status.NOT_FOUND),
     HOPSFS_CONNECTOR_NOT_FOUND(46, "HopsFs Connector not found", Response.Status.NOT_FOUND),
     STORAGE_CONNECTOR_TYPE_NOT_PROVIDED(47, "Storage Connector Type was not provided", Response.Status.BAD_REQUEST),
     COULD_NOT_CLEAR_FEATUREGROUP(48, "Could not clear contents of feature group",

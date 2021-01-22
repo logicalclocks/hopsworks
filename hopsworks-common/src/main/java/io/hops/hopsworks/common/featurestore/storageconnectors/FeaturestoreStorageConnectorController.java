@@ -22,6 +22,8 @@ import io.hops.hopsworks.common.dao.project.team.ProjectTeamFacade;
 import io.hops.hopsworks.common.dao.user.activity.ActivityFacade;
 import io.hops.hopsworks.common.featurestore.FeaturestoreConstants;
 import io.hops.hopsworks.common.featurestore.online.OnlineFeaturestoreController;
+import io.hops.hopsworks.common.featurestore.storageconnectors.adls.FeaturestoreADLSConnectorController;
+import io.hops.hopsworks.common.featurestore.storageconnectors.adls.FeaturestoreADLSConnectorDTO;
 import io.hops.hopsworks.common.featurestore.storageconnectors.hopsfs.FeaturestoreHopsfsConnectorController;
 import io.hops.hopsworks.common.featurestore.storageconnectors.hopsfs.FeaturestoreHopsfsConnectorDTO;
 import io.hops.hopsworks.common.featurestore.storageconnectors.jdbc.FeaturestoreJdbcConnectorController;
@@ -72,6 +74,8 @@ public class FeaturestoreStorageConnectorController {
   @EJB
   private OnlineFeaturestoreController onlineFeaturestoreController;
   @EJB
+  private FeaturestoreADLSConnectorController adlsConnectorController;
+  @EJB
   private ActivityFacade activityFacade;
 
   /**
@@ -120,6 +124,8 @@ public class FeaturestoreStorageConnectorController {
         return hopsfsConnectorController.getHopsfsConnectorDTO(featurestoreConnector);
       case REDSHIFT:
         return redshiftConnectorController.getRedshiftConnectorDTO(user, featurestoreConnector);
+      case ADLS:
+        return adlsConnectorController.getADLConnectorDTO(user, featurestoreConnector);
       default:
         // We should not reach this point
         throw new IllegalArgumentException("Feature Store connector type not recognized");
@@ -175,6 +181,11 @@ public class FeaturestoreStorageConnectorController {
         featurestoreConnector.setRedshiftConnector(redshiftConnectorController.createFeaturestoreRedshiftConnector(
             user, featurestore, (FeaturestoreRedshiftConnectorDTO) featurestoreStorageConnectorDTO));
         break;
+      case ADLS:
+        featurestoreConnector.setConnectorType(FeaturestoreConnectorType.ADLS);
+        featurestoreConnector.setAdlsConnector(adlsConnectorController.createADLConnector(
+            user, project, featurestore, (FeaturestoreADLSConnectorDTO) featurestoreStorageConnectorDTO));
+        break;
       default:
         // We should not reach this point
         throw new IllegalArgumentException("Feature Store connector type not recognized");
@@ -229,6 +240,10 @@ public class FeaturestoreStorageConnectorController {
         featurestoreConnector.setRedshiftConnector(redshiftConnectorController.updateFeaturestoreRedshiftConnector(
             user, featurestore, (FeaturestoreRedshiftConnectorDTO) featurestoreStorageConnectorDTO,
             featurestoreConnector.getRedshiftConnector()));
+        break;
+      case ADLS:
+        featurestoreConnector.setAdlsConnector(adlsConnectorController.updateAdlConnector(user,
+            (FeaturestoreADLSConnectorDTO) featurestoreStorageConnectorDTO, featurestoreConnector.getAdlsConnector()));
         break;
       default:
         // We should not reach this point

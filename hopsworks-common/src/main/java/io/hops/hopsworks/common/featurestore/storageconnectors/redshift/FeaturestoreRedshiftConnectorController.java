@@ -253,7 +253,7 @@ public class FeaturestoreRedshiftConnectorController {
     Users owner = userFacade.find(featureStoreRedshiftConnector.getSecret().getId().getUid());
     try {
       return secretsController
-          .getShared(user, owner.getUsername(), featureStoreRedshiftConnector.getSecret().getId().getName())
+          .getShared(user, owner, featureStoreRedshiftConnector.getSecret().getId().getName())
           .getPlaintext();
     } catch (UserException | ServiceException | ProjectException e) {
       //user can't access secret

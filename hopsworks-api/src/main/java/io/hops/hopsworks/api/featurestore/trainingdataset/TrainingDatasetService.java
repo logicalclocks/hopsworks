@@ -172,9 +172,10 @@ public class TrainingDatasetService {
   @ApiKeyRequired( acceptedScopes = {ApiScope.FEATURESTORE}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   @ApiOperation(value = "Get the list of training datasets for a featurestore",
       response = TrainingDatasetDTO.class, responseContainer = "List")
-  public Response getAll(@Context SecurityContext sc) throws ServiceException {
+  public Response getAll(@Context SecurityContext sc) throws ServiceException, FeaturestoreException {
+    Users user = jWTHelper.getUserPrincipal(sc);
     List<TrainingDatasetDTO> trainingDatasetDTOs =
-        trainingDatasetController.getTrainingDatasetsForFeaturestore(featurestore);
+        trainingDatasetController.getTrainingDatasetsForFeaturestore(user, project, featurestore);
     GenericEntity<List<TrainingDatasetDTO>> trainingDatasetsGeneric =
         new GenericEntity<List<TrainingDatasetDTO>>(trainingDatasetDTOs) {};
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(trainingDatasetsGeneric).build();
@@ -232,8 +233,10 @@ public class TrainingDatasetService {
       @PathParam("trainingdatasetid") Integer trainingdatasetid, @Context SecurityContext sc)
       throws FeaturestoreException, ServiceException {
     verifyIdProvided(trainingdatasetid);
-    TrainingDatasetDTO trainingDatasetDTO =
-        trainingDatasetController.getTrainingDatasetWithIdAndFeaturestore(featurestore, trainingdatasetid);
+
+    Users user = jWTHelper.getUserPrincipal(sc);
+    TrainingDatasetDTO trainingDatasetDTO = trainingDatasetController
+        .getTrainingDatasetWithIdAndFeaturestore(user, project, featurestore, trainingdatasetid);
     GenericEntity<TrainingDatasetDTO> trainingDatasetGeneric =
         new GenericEntity<TrainingDatasetDTO>(trainingDatasetDTO) {};
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(trainingDatasetGeneric).build();
@@ -260,13 +263,15 @@ public class TrainingDatasetService {
                                            @QueryParam("version") Integer version, @Context SecurityContext sc)
       throws FeaturestoreException, ServiceException {
     verifyNameProvided(name);
+
+    Users user = jWTHelper.getUserPrincipal(sc);
     List<TrainingDatasetDTO> trainingDatasetDTO;
     if (version == null) {
       trainingDatasetDTO =
-          trainingDatasetController.getTrainingDatasetWithNameAndFeaturestore(featurestore, name);
+          trainingDatasetController.getWithNameAndFeaturestore(user, project, featurestore, name);
     } else {
       trainingDatasetDTO = Arrays.asList(trainingDatasetController
-          .getTrainingDatasetWithNameVersionAndFeaturestore(featurestore, name, version));
+          .getWithNameVersionAndFeaturestore(user, project, featurestore, name, version));
     }
 
     GenericEntity<List<TrainingDatasetDTO>> trainingDatasetGeneric =
@@ -338,11 +343,12 @@ public class TrainingDatasetService {
     verifyIdProvided(trainingdatasetid);
     trainingDatasetDTO.setId(trainingdatasetid);
     Users user = jWTHelper.getUserPrincipal(sc);
-    TrainingDatasetDTO oldTrainingDatasetDTO =
-      trainingDatasetController.getTrainingDatasetWithIdAndFeaturestore(featurestore, trainingdatasetid);
+    TrainingDatasetDTO oldTrainingDatasetDTO = trainingDatasetController
+        .getTrainingDatasetWithIdAndFeaturestore(user, project, featurestore, trainingdatasetid);
 
     if(updateMetadata){
-      oldTrainingDatasetDTO = trainingDatasetController.updateTrainingDatasetMetadata(featurestore, trainingDatasetDTO);
+      oldTrainingDatasetDTO =
+          trainingDatasetController.updateTrainingDatasetMetadata(user, project, featurestore, trainingDatasetDTO);
       activityFacade.persistActivity(ActivityFacade.EDITED_TRAINING_DATASET + trainingDatasetDTO.getName(),
           project, user, ActivityFlag.SERVICE);
     }
