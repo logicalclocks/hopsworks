@@ -26,6 +26,7 @@ import javax.security.auth.login.LoginException;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.Set;
 
 @NullRemoteAuthStereotype
 @Stateless
@@ -37,7 +38,7 @@ public class NullOAuthHelper implements OAuthHelper {
   }
   
   @Override
-  public RemoteUserStateDTO login(String code, String state, boolean consent, String chosenEmail)
+  public RemoteUserStateDTO login(String sessionId, String code, String state, boolean consent, String chosenEmail)
     throws LoginException {
     return null;
   }
@@ -49,7 +50,8 @@ public class NullOAuthHelper implements OAuthHelper {
   }
   
   @Override
-  public URI getAuthenticationRequestURL(String providerName) throws URISyntaxException {
+  public URI getAuthenticationRequestURL(String sessionId, String providerName, URI redirectURI, Set<String> scopes)
+    throws URISyntaxException {
     return null;
   }
   

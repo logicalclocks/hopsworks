@@ -142,8 +142,8 @@ public class VariablesService {
     List<OauthClient> oauthClients = oauthClientFacade.findAll();
     List<OpenIdProvider> providers = new ArrayList<>();
     for (OauthClient client : oauthClients) {
-      providers.add(
-        new OpenIdProvider(client.getProviderName(), client.getProviderDisplayName(), client.getProviderLogoURI()));
+      providers.add(new OpenIdProvider(client.getProviderName(), client.getProviderDisplayName(),
+        client.getProviderLogoURI()));
     }
     AuthStatus authStatus = new AuthStatus(settings.getTwoFactorAuth(), settings.getLDAPAuthStatus(), settings.
       getKRBAuthStatus(), settings.isPasswordLoginDisabled(), settings.isRegistrationUIDisabled(), providers);

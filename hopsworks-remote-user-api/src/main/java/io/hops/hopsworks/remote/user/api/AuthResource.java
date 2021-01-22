@@ -149,7 +149,8 @@ public class AuthResource {
     if (!settings.isOAuthEnabled()) {
       return Response.status(Response.Status.METHOD_NOT_ALLOWED).build();
     }
-    RemoteUserStateDTO oAuthUserState = oAuthController.login(code, state, consent, chosenEmail);
+    RemoteUserStateDTO oAuthUserState = oAuthController.login(req.getSession().getId(), code, state, consent,
+      chosenEmail);
     return remoteUserLogin(oAuthUserState, req);
   }
 

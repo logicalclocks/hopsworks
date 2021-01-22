@@ -22,13 +22,17 @@ import javax.security.auth.login.LoginException;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.Set;
 
 public interface OAuthHelper {
   
   boolean oauthAvailable();
-  RemoteUserStateDTO login(String code, String state, boolean consent, String chosenEmail) throws LoginException;
-  OpenIdProviderConfig getOpenIdProviderConfiguration(String providerURI) throws IOException, URISyntaxException;
-  URI getAuthenticationRequestURL(String providerName) throws URISyntaxException;
+  RemoteUserStateDTO login(String sessionId, String code, String state, boolean consent, String chosenEmail)
+    throws LoginException;
+  OpenIdProviderConfig getOpenIdProviderConfiguration(String providerURI) throws IOException,
+    URISyntaxException;
+  URI getAuthenticationRequestURL(String sessionId, String providerName, URI redirectURI, Set<String> scopes)
+    throws URISyntaxException;
   void registerClient(OpenIdProviderConfig openidConf) throws URISyntaxException, IOException;
   void saveClient(OauthClient  oauthClient);
   void updateClient(OauthClient  oauthClient);

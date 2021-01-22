@@ -28,7 +28,10 @@
                     <div class="alert alert-danger" role="alert">
                         <p id="error-msg">Error: {{errorCtrl.errorMsg}}</p>
                     </div>
-                    <a href="#!/login" class="btn btn-block btn-default">Go back to login page</a>
+                    <a ng-if="!errorCtrl.close" href="#!/login" class="btn btn-block btn-default">Go back to login
+                        page</a>
+                    <a ng-if="errorCtrl.close" ng-click="errorCtrl.closeWindow()" class="btn btn-block btn-default">
+                        Close</a>
                 </div>
             </div>
         </div>

@@ -215,65 +215,125 @@
 
                         <p:column>
                             <h3 style="color: rgba(0, 0, 0, 0.54);">
-                                <p:outputLabel for="providerMetadataEndpointSupported"
-                                               value="Provider Metadata Endpoint Supported: "/></h3>
+                                <p:outputLabel for="offline_access" value="Offline access: "/></h3>
                         </p:column>
                         <p:column>
-                            <p:selectBooleanCheckbox id="providerMetadataEndpointSupported"
-                                                     value="#{oAuthClientRegistration.providerMetadataEndpointSupported}">
-                                <f:ajax event="change" render="@form"/>
+                            <p:selectBooleanCheckbox id="offline_access"
+                                                     value="#{oAuthClientRegistration.offlineAccess}">
+                            </p:selectBooleanCheckbox>
+                        </p:column>
+
+                        <p:column>
+                            <h3 style="color: rgba(0, 0, 0, 0.54);">
+                                <p:outputLabel for="verify_email" value="Verify email: "/></h3>
+                        </p:column>
+                        <p:column>
+                            <p:selectBooleanCheckbox id="verify_email"
+                                                     value="#{oAuthClientRegistration.verifyEmail}">
                             </p:selectBooleanCheckbox>
                         </p:column>
                     </p:panelGrid>
                 </p:outputPanel>
-                <p:outputPanel id="providerEndpoints" autoUpdate="true" style="display:block"
-                               rendered="#{!oAuthClientRegistration.providerMetadataEndpointSupported}">
+                <p:outputPanel style="display:block">
+                    <p:panelGrid columns="2">
+                        <p:column>
+                            <h3 style="color: rgba(0, 0, 0, 0.54);padding-right: 65px;">
+                                <p:outputLabel for="code_challenge"
+                                               value="Code challenge: "/></h3>
+                        </p:column>
+                        <p:column>
+                            <p:selectBooleanCheckbox id="code_challenge" style="padding-right: 400px;"
+                                                     value="#{oAuthClientRegistration.codeChallenge}">
+                                <f:ajax event="change" render="code_challenge_panel"/>
+                            </p:selectBooleanCheckbox>
+                        </p:column>
+                    </p:panelGrid>
+                    <h:panelGroup id="code_challenge_panel">
+                        <p:outputPanel autoUpdate="true" style="display:block">
+                            <p:panelGrid columns="2">
+                                <p:column rendered="#{oAuthClientRegistration.codeChallenge}">
+                                    <h3 style="color: rgba(0, 0, 0, 0.54);">
+                                        <p:outputLabel for="code_challenge_method"
+                                                       value="Code challenge method: "/></h3>
+                                </p:column>
+                                <p:column rendered="#{oAuthClientRegistration.codeChallenge}">
+                                    <div style="padding-right: 300px;">
+                                        <p:selectOneMenu id="code_challenge_method"
+                                                         value="#{oAuthClientRegistration.codeChallengeMethod}">
+                                            <f:selectItem itemLabel="Select One" itemValue="#{null}" noSelectionOption="true" />
+                                            <f:selectItems value="#{oAuthClientRegistration.codeChallengeMethods}" var="method"
+                                                           itemLabel="#{method}"
+                                                           itemValue="#{method}" />
+                                        </p:selectOneMenu>
+                                    </div>
+                                </p:column>
+                            </p:panelGrid>
+                        </p:outputPanel>
+                    </h:panelGroup>
                     <p:panelGrid columns="2">
                         <p:column>
                             <h3 style="color: rgba(0, 0, 0, 0.54);">
-                                <p:outputLabel for="providerURI" value="Authorisation Endpoint: "/></h3>
+                                <p:outputLabel for="providerMetadataEndpointSupported"
+                                               value="Provider Metadata Endpoint Supported: "/></h3>
                         </p:column>
                         <p:column>
-                            <p:inputTextarea rows="1" cols="50" id="authorisationEndpoint"
-                                             value="#{oAuthClientRegistration.authorisationEndpoint}"
-                                             required="true">
-                                <f:validator validatorId="io.hops.hopsworks.admin.remote.user.oauth.UrlValidator"/>
-                            </p:inputTextarea>
-                        </p:column>
-
-                        <p:column>
-                            <h3 style="color: rgba(0, 0, 0, 0.54);">
-                                <p:outputLabel for="providerURI" value="Token Endpoint: "/></h3>
-                        </p:column>
-                        <p:column>
-                            <p:inputTextarea rows="1" cols="50" id="tokenEndpoint"
-                                             value="#{oAuthClientRegistration.tokenEndpoint}" required="true">
-                                <f:validator validatorId="io.hops.hopsworks.admin.remote.user.oauth.UrlValidator"/>
-                            </p:inputTextarea>
-                        </p:column>
-
-                        <p:column>
-                            <h3 style="color: rgba(0, 0, 0, 0.54);">
-                                <p:outputLabel for="providerURI" value="UserInfo Endpoint: "/></h3>
-                        </p:column>
-                        <p:column>
-                            <p:inputTextarea rows="1" cols="50" id="userInfoEndpoint"
-                                             value="#{oAuthClientRegistration.userInfoEndpoint}" required="true">
-                                <f:validator validatorId="io.hops.hopsworks.admin.remote.user.oauth.UrlValidator"/>
-                            </p:inputTextarea>
-                        </p:column>
-
-                        <p:column>
-                            <h3 style="color: rgba(0, 0, 0, 0.54);">
-                                <p:outputLabel for="providerURI" value="JWKS URI: "/></h3>
-                        </p:column>
-                        <p:column>
-                            <p:inputTextarea rows="1" cols="50" id="jwksURI"
-                                             value="#{oAuthClientRegistration.jwksURI}" required="true">
-                                <f:validator validatorId="io.hops.hopsworks.admin.remote.user.oauth.UrlValidator"/>
-                            </p:inputTextarea>
+                            <p:selectBooleanCheckbox id="providerMetadataEndpointSupported" style="padding-right: 300px;"
+                                                     value="#{oAuthClientRegistration.providerMetadataEndpointSupported}">
+                                <f:ajax event="change" render="provider_panel"/>
+                            </p:selectBooleanCheckbox>
                         </p:column>
                     </p:panelGrid>
+                    <h:panelGroup id="provider_panel">
+                        <p:outputPanel autoUpdate="true" style="display:block"
+                                   rendered="#{!oAuthClientRegistration.providerMetadataEndpointSupported}">
+                          <p:panelGrid columns="2">
+                            <p:column>
+                                <h3 style="color: rgba(0, 0, 0, 0.54);">
+                                    <p:outputLabel for="providerURI" value="Authorisation Endpoint: "/></h3>
+                            </p:column>
+                            <p:column>
+                                <p:inputTextarea rows="1" cols="50" id="authorisationEndpoint"
+                                                 value="#{oAuthClientRegistration.authorisationEndpoint}"
+                                                 required="true">
+                                    <f:validator validatorId="io.hops.hopsworks.admin.remote.user.oauth.UrlValidator"/>
+                                </p:inputTextarea>
+                            </p:column>
+
+                            <p:column>
+                                <h3 style="color: rgba(0, 0, 0, 0.54);">
+                                    <p:outputLabel for="providerURI" value="Token Endpoint: "/></h3>
+                            </p:column>
+                            <p:column>
+                                <p:inputTextarea rows="1" cols="50" id="tokenEndpoint"
+                                                 value="#{oAuthClientRegistration.tokenEndpoint}" required="true">
+                                    <f:validator validatorId="io.hops.hopsworks.admin.remote.user.oauth.UrlValidator"/>
+                                </p:inputTextarea>
+                            </p:column>
+
+                            <p:column>
+                                <h3 style="color: rgba(0, 0, 0, 0.54);">
+                                    <p:outputLabel for="providerURI" value="UserInfo Endpoint: "/></h3>
+                            </p:column>
+                            <p:column>
+                                <p:inputTextarea rows="1" cols="50" id="userInfoEndpoint"
+                                                 value="#{oAuthClientRegistration.userInfoEndpoint}" required="true">
+                                    <f:validator validatorId="io.hops.hopsworks.admin.remote.user.oauth.UrlValidator"/>
+                                </p:inputTextarea>
+                            </p:column>
+
+                            <p:column>
+                                <h3 style="color: rgba(0, 0, 0, 0.54);">
+                                    <p:outputLabel for="providerURI" value="JWKS URI: "/></h3>
+                            </p:column>
+                            <p:column>
+                                <p:inputTextarea rows="1" cols="50" id="jwksURI"
+                                                 value="#{oAuthClientRegistration.jwksURI}" required="true">
+                                    <f:validator validatorId="io.hops.hopsworks.admin.remote.user.oauth.UrlValidator"/>
+                                </p:inputTextarea>
+                            </p:column>
+                        </p:panelGrid>
+                        </p:outputPanel>
+                    </h:panelGroup>
                 </p:outputPanel>
                 <p:commandButton value="Save" update="oauth-form oauth-registered-form" icon="ui-icon-check"
                                  action="#{oAuthClientRegistration.saveClient}"/>
@@ -351,6 +411,57 @@
                                              label="Server request URI">
                                     <f:validator validatorId="io.hops.hopsworks.admin.remote.user.oauth.UrlValidator"/>
                                 </p:inputText>
+                            </f:facet>
+                        </p:cellEditor>
+                    </p:column>
+
+                    <p:column headerText="Offline access">
+                        <p:cellEditor>
+                            <f:facet name="output"><h:outputText
+                                    value="#{oauthClient.offlineAccess}"/></f:facet>
+                            <f:facet name="input">
+                                <p:selectBooleanCheckbox value="#{oauthClient.offlineAccess}"
+                                                         style="width:100%" label="Offline access">
+                                </p:selectBooleanCheckbox>
+                            </f:facet>
+                        </p:cellEditor>
+                    </p:column>
+
+                    <p:column headerText="Code challeng">
+                        <p:cellEditor>
+                            <f:facet name="output"><h:outputText
+                                    value="#{oauthClient.codeChallenge}"/></f:facet>
+                            <f:facet name="input">
+                                <p:selectBooleanCheckbox value="#{oauthClient.codeChallenge}"
+                                                         style="width:100%" label="Code challeng">
+                                </p:selectBooleanCheckbox>
+                            </f:facet>
+                        </p:cellEditor>
+                    </p:column>
+
+                    <p:column headerText="Code challeng method">
+                        <p:cellEditor>
+                            <f:facet name="output"><h:outputText
+                                    value="#{oauthClient.codeChallengeMethod}"/></f:facet>
+                            <f:facet name="input">
+                                <p:selectOneMenu value="#{oauthClient.codeChallengeMethod}">
+                                    <f:selectItem itemLabel="Select One" itemValue="#{null}" noSelectionOption="true" />
+                                    <f:selectItems value="#{oAuthClientRegistration.codeChallengeMethods}" var="method"
+                                                   itemLabel="#{method}"
+                                                   itemValue="#{method}" />
+                                </p:selectOneMenu>
+                            </f:facet>
+                        </p:cellEditor>
+                    </p:column>
+
+                    <p:column headerText="Verify email">
+                        <p:cellEditor>
+                            <f:facet name="output"><h:outputText
+                                    value="#{oauthClient.verifyEmail}"/></f:facet>
+                            <f:facet name="input">
+                                <p:selectBooleanCheckbox value="#{oauthClient.verifyEmail}"
+                                                         style="width:100%" label="Verify email">
+                                </p:selectBooleanCheckbox>
                             </f:facet>
                         </p:cellEditor>
                     </p:column>

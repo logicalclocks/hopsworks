@@ -1,6 +1,6 @@
 /*
  * This file is part of Hopsworks
- * Copyright (C) 2020, Logical Clocks AB. All rights reserved
+ * Copyright (C) 2021, Logical Clocks AB. All rights reserved
  *
  * Hopsworks is free software: you can redistribute it and/or modify it under the terms of
  * the GNU Affero General Public License as published by the Free Software Foundation,
@@ -13,19 +13,15 @@
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see <https://www.gnu.org/licenses/>.
  */
-package io.hops.hopsworks.admin.remote.user.oauth;
+package io.hops.hopsworks.persistence.entity.remote.oauth;
 
-import io.hops.hopsworks.common.remote.oauth.OAuthHelper;
-
-import javax.ejb.Stateless;
-import javax.inject.Inject;
-
-@Stateless
-public class OAuthClientHelper {
-  @Inject
-  private OAuthHelper oAuthHelper;
+public enum CodeChallengeMethod {
+  PLAIN("plain"),
+  S256("S256");
   
-  public OAuthHelper getOauthHelper() {
-    return oAuthHelper;
+  private final String name;
+  
+  CodeChallengeMethod(String name) {
+    this.name = name;
   }
 }

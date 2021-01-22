@@ -18,7 +18,7 @@ package io.hops.hopsworks.common.remote.oauth;
 public class OpenIdConstant {
   
   public static final String OPENID_CONFIGURATION_URL = "/.well-known/openid-configuration";
-
+  public static final String DEFAULT_EMAIL_DOMAIN = "@hopsworks.ai";
   public static final String RESPONSE_TYPE = "response_type";
   public static final String CLIENT_ID = "client_id";
   public static final String SCOPE = "scope";
@@ -54,6 +54,7 @@ public class OpenIdConstant {
   public static final String OPENID_SCOPE = "openid";
   public static final String PROFILE_SCOPE = "profile";
   public static final String EMAIL_SCOPE = "email";
+  public static final String OFFLINE_ACCESS_SCOPE = "offline_access";
   public static final String ROLES_SCOPE = "roles";
   public static final String GROUPS_SCOPE = "groups";
 
@@ -79,4 +80,8 @@ public class OpenIdConstant {
   public static final String PHONE_NUMBER = "phone_number";
   public static final String PHONE_NUMBER_VERIFIED = "phone_number_verified";
   
+  public static final String AD_UNIQUE_NAME_CLAIM = "unique_name";
+  public static final String AD_PREFERRED_NAME_CLAIM = "preferred_username";
+  //User Principal Name
+  public static final String AD_USER_PRINCIPAL_NAME_CLAIM = "upn";
 }

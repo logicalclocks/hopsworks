@@ -6,6 +6,7 @@ package io.hops.hopsworks.remote.user.rest.application.config;
 import io.hops.hopsworks.remote.user.api.AuthResource;
 import io.hops.hopsworks.remote.user.api.exception.mapper.RESTApiThrowableMapper;
 import io.hops.hopsworks.remote.user.api.oauth2.OAuthClientResource;
+import io.hops.hopsworks.remote.user.jwt.AuthFilter;
 import io.swagger.annotations.Api;
 import org.glassfish.jersey.server.ResourceConfig;
 
@@ -20,6 +21,7 @@ public class ApplicationConfig extends ResourceConfig {
     register(AuthResource.class);
     register(OAuthClientResource.class);
     register(RESTApiThrowableMapper.class);
+    register(AuthFilter.class);
   
     register(org.glassfish.jersey.media.multipart.MultiPartFeature.class);
     //swagger

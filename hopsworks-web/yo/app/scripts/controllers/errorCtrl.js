@@ -21,4 +21,9 @@ angular.module('hopsWorksApp')
             var self = this;
             self.working = false;
             self.errorMsg = $location.search()['e'];
+            self.close = $location.search()['close'] === 'true';
+
+            self.closeWindow = function () {
+                window.close();
+            }
         }]);

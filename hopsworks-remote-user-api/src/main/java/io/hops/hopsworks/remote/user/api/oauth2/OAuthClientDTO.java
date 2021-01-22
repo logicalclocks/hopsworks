@@ -4,6 +4,7 @@
 package io.hops.hopsworks.remote.user.api.oauth2;
 
 import io.hops.hopsworks.common.api.RestDTO;
+import io.hops.hopsworks.persistence.entity.remote.oauth.CodeChallengeMethod;
 
 import javax.xml.bind.annotation.XmlRootElement;
 
@@ -17,6 +18,10 @@ public class OAuthClientDTO extends RestDTO<OAuthClientDTO> {
   private String authorizationEndpoint;
   private String providerName;
   private String providerDisplayName;
+  private boolean offlineAccess;
+  private boolean codeChallenge;
+  private CodeChallengeMethod codeChallengeMethod;
+  private boolean verifyEmail;
   
   public String getClientId() {
     return clientId;
@@ -72,5 +77,37 @@ public class OAuthClientDTO extends RestDTO<OAuthClientDTO> {
   
   public void setProviderDisplayName(String authServerDisplayname) {
     this.providerDisplayName = authServerDisplayname;
+  }
+  
+  public boolean isOfflineAccess() {
+    return offlineAccess;
+  }
+  
+  public void setOfflineAccess(boolean offlineAccess) {
+    this.offlineAccess = offlineAccess;
+  }
+  
+  public boolean isCodeChallenge() {
+    return codeChallenge;
+  }
+  
+  public void setCodeChallenge(boolean codeChallenge) {
+    this.codeChallenge = codeChallenge;
+  }
+  
+  public CodeChallengeMethod getCodeChallengeMethod() {
+    return codeChallengeMethod;
+  }
+  
+  public void setCodeChallengeMethod(CodeChallengeMethod codeChallengeMethod) {
+    this.codeChallengeMethod = codeChallengeMethod;
+  }
+  
+  public boolean isVerifyEmail() {
+    return verifyEmail;
+  }
+  
+  public void setVerifyEmail(boolean verifyEmail) {
+    this.verifyEmail = verifyEmail;
   }
 }

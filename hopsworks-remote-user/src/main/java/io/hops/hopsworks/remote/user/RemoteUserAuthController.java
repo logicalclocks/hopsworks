@@ -248,10 +248,10 @@ public class RemoteUserAuthController {
       throw new LoginException("Could not register user. Chosen email not in user email list.");
     }
     if (user.getGivenName() == null || user.getGivenName().isEmpty()) {
-      throw new LoginException("Could not find givenName for Ldap user.");
+      throw new LoginException("Could not find givenName for remote user.");
     }
     if (user.getSurname() == null || user.getSurname().isEmpty()) {
-      throw new LoginException("Could not find surname for Ldap user.");
+      throw new LoginException("Could not find surname for remote user.");
     }
     if (!user.isEmailVerified() && settings.shouldValidateEmailVerified()) {
       throw new LoginException("User email not yet verified.");

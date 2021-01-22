@@ -21,6 +21,8 @@ import javax.persistence.Basic;
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
@@ -125,6 +127,17 @@ public class OauthClient implements Serializable {
   @NotNull
   @Column(name = "provider_metadata_endpoint_supported")
   private boolean providerMetadataEndpointSupported;
+  @Basic(optional = false)
+  @NotNull
+  @Column(name = "offline_access")
+  private boolean offlineAccess;
+  @Column(name = "code_challenge")
+  private boolean codeChallenge;
+  @Column(name = "code_challenge_method")
+  @Enumerated(EnumType.STRING)
+  private CodeChallengeMethod codeChallengeMethod;
+  @Column(name = "verify_email")
+  private boolean verifyEmail;
   @OneToMany(cascade = CascadeType.ALL,
     mappedBy = "clientId")
   private Collection<OauthLoginState> oauthLoginStateCollection;
@@ -138,7 +151,8 @@ public class OauthClient implements Serializable {
   
   public OauthClient(String clientId, String clientSecret, String providerURI, String providerName,
     String providerLogoURI, String providerDisplayName, boolean providerMetadataEndpointSupported,
-    String authorisationEndpoint, String tokenEndpoint, String userInfoEndpoint, String jwksURI) {
+    String authorisationEndpoint, String tokenEndpoint, String userInfoEndpoint, String jwksURI,
+    boolean offlineAccess, boolean codeChallenge, CodeChallengeMethod codeChallengeMethod, boolean verifyEmail) {
     this.clientId = clientId;
     this.clientSecret = clientSecret;
     this.providerURI = providerURI;
@@ -150,6 +164,10 @@ public class OauthClient implements Serializable {
     this.tokenEndpoint = tokenEndpoint;
     this.userInfoEndpoint = userInfoEndpoint;
     this.jwksURI = jwksURI;
+    this.offlineAccess = offlineAccess;
+    this.codeChallenge = codeChallenge;
+    this.codeChallengeMethod = codeChallengeMethod;
+    this.verifyEmail = verifyEmail;
   }
   
   public Integer getId() {
@@ -247,6 +265,38 @@ public class OauthClient implements Serializable {
   
   public void setProviderMetadataEndpointSupported(boolean providerMetadataEndpointSupported) {
     this.providerMetadataEndpointSupported = providerMetadataEndpointSupported;
+  }
+  
+  public CodeChallengeMethod getCodeChallengeMethod() {
+    return codeChallengeMethod;
+  }
+  
+  public void setCodeChallengeMethod(CodeChallengeMethod codeChallengeMethod) {
+    this.codeChallengeMethod = codeChallengeMethod;
+  }
+  
+  public boolean isOfflineAccess() {
+    return offlineAccess;
+  }
+  
+  public void setOfflineAccess(boolean offlineAccess) {
+    this.offlineAccess = offlineAccess;
+  }
+  
+  public boolean isCodeChallenge() {
+    return codeChallenge;
+  }
+  
+  public void setCodeChallenge(boolean codeChallenge) {
+    this.codeChallenge = codeChallenge;
+  }
+  
+  public boolean isVerifyEmail() {
+    return verifyEmail;
+  }
+  
+  public void setVerifyEmail(boolean verifyEmail) {
+    this.verifyEmail = verifyEmail;
   }
   
   @XmlTransient

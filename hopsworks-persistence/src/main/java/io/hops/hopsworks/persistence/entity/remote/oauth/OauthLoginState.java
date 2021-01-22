@@ -15,8 +15,6 @@
  */
 package io.hops.hopsworks.persistence.entity.remote.oauth;
 
-import java.io.Serializable;
-import java.util.Date;
 import javax.persistence.Basic;
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -33,6 +31,8 @@ import javax.persistence.TemporalType;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import javax.xml.bind.annotation.XmlRootElement;
+import java.io.Serializable;
+import java.util.Date;
 
 @Entity
 @Table(name = "oauth_login_state",
@@ -48,6 +48,9 @@ import javax.xml.bind.annotation.XmlRootElement;
   ,
     @NamedQuery(name = "OauthLoginState.findByState",
       query = "SELECT o FROM OauthLoginState o WHERE o.state = :state")
+  ,
+    @NamedQuery(name = "OauthLoginState.findByStateAndSession",
+      query = "SELECT o FROM OauthLoginState o WHERE o.state = :state AND o.sessionId = :sessionId")
   ,
   @NamedQuery(name = "OauthLoginState.findByLoginTimeBefore",
     query = "SELECT o FROM OauthLoginState o WHERE o.loginTime < :loginTime")
@@ -73,16 +76,33 @@ public class OauthLoginState implements Serializable {
   @NotNull
   @Size(min = 1,
     max = 128)
+  @Column(name = "session_id")
+  private String sessionId;
+  @Basic(optional = false)
+  @NotNull
+  @Size(min = 1,
+    max = 128)
   @Column(name = "nonce")
   private String nonce;
+  @Column(name = "code_challenge")
+  private String codeChallenge;
   @Basic(optional = false)
   @NotNull
   @Column(name = "login_time")
   @Temporal(TemporalType.TIMESTAMP)
   private Date loginTime;
-  @Size(max = 2048)
+  @Size(max = 8000)
   @Column(name = "token")
   private String token;
+  @Basic(optional = false)
+  @NotNull
+  @Size(min = 1,
+    max = 1024)
+  @Column(name = "redirect_uri")
+  private String redirectURI;
+  @Size(max = 2048)
+  @Column(name = "scopes")
+  private String scopes;
   @JoinColumn(name = "client_id",
       referencedColumnName = "client_id")
   @ManyToOne(optional = false)
@@ -95,10 +115,13 @@ public class OauthLoginState implements Serializable {
     this.id = id;
   }
 
-  public OauthLoginState(String state, OauthClient clientId) {
+  public OauthLoginState(String state, OauthClient clientId, String sessionId, String redirectURI, String scopes) {
     this.state = state;
     this.clientId = clientId;
+    this.sessionId = sessionId;
     this.loginTime = new Date();
+    this.redirectURI = redirectURI;
+    this.scopes = scopes;
   }
 
   public Integer getId() {
@@ -117,12 +140,28 @@ public class OauthLoginState implements Serializable {
     this.state = state;
   }
   
+  public String getSessionId() {
+    return sessionId;
+  }
+  
+  public void setSessionId(String sessionId) {
+    this.sessionId = sessionId;
+  }
+  
   public String getNonce() {
     return nonce;
   }
   
   public void setNonce(String nonce) {
     this.nonce = nonce;
+  }
+  
+  public String getCodeChallenge() {
+    return codeChallenge;
+  }
+  
+  public void setCodeChallenge(String codeChallenge) {
+    this.codeChallenge = codeChallenge;
   }
   
   public Date getLoginTime() {
@@ -132,7 +171,15 @@ public class OauthLoginState implements Serializable {
   public void setLoginTime(Date loginTime) {
     this.loginTime = loginTime;
   }
-
+  
+  public String getScopes() {
+    return scopes;
+  }
+  
+  public void setScopes(String scopes) {
+    this.scopes = scopes;
+  }
+  
   public OauthClient getClientId() {
     return clientId;
   }
@@ -140,7 +187,15 @@ public class OauthLoginState implements Serializable {
   public void setClientId(OauthClient clientId) {
     this.clientId = clientId;
   }
-
+  
+  public String getRedirectURI() {
+    return redirectURI;
+  }
+  
+  public void setRedirectURI(String redirectURI) {
+    this.redirectURI = redirectURI;
+  }
+  
   @Override
   public int hashCode() {
     int hash = 0;

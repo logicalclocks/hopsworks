@@ -24,6 +24,7 @@ import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
 import java.util.Date;
 import java.util.List;
+import java.util.Optional;
 
 
 @Stateless
@@ -47,6 +48,17 @@ public class OauthLoginStateFacade extends AbstractFacade<OauthLoginState> {
         .getSingleResult();
     } catch (NoResultException e) {
       return null;
+    }
+  }
+  
+  public Optional<OauthLoginState> findByStateAndSession(String state, String sessionId) {
+    try {
+      return Optional.of(em.createNamedQuery("OauthLoginState.findByStateAndSession", OauthLoginState.class)
+        .setParameter("state", state)
+        .setParameter("sessionId", sessionId)
+        .getSingleResult());
+    } catch (NoResultException e) {
+      return Optional.empty();
     }
   }
   

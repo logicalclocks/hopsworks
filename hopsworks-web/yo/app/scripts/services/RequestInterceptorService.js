@@ -51,7 +51,9 @@ angular.module('hopsWorksApp')
                 }
                 //remove Authorization header for kerberos
                 if(config.url.indexOf('/api/remote/user') !== -1){
-                  delete config.headers['Authorization'];
+                  if (config.url.indexOf('/api/remote/user/auth') !== -1) {
+                    delete config.headers['Authorization'];
+                  }
                   RESOURCE_SERVER = getRemoteUserAuthApiLocationBase();
                 }
                 var RESOURCE_NAME = '/api/';

@@ -18,6 +18,7 @@ package io.hops.hopsworks.admin.remote.user.oauth;
 import io.hops.hopsworks.admin.maintenance.MessagesController;
 import io.hops.hopsworks.common.dao.remote.oauth.OauthClientFacade;
 import io.hops.hopsworks.common.remote.oauth.OpenIdProviderConfig;
+import io.hops.hopsworks.persistence.entity.remote.oauth.CodeChallengeMethod;
 import io.hops.hopsworks.persistence.entity.remote.oauth.OauthClient;
 import org.primefaces.context.RequestContext;
 import org.primefaces.event.RowEditEvent;
@@ -29,6 +30,7 @@ import javax.faces.bean.ViewScoped;
 import java.io.IOException;
 import java.io.Serializable;
 import java.net.URISyntaxException;
+import java.util.Arrays;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -55,6 +57,11 @@ public class OAuthClientRegistration implements Serializable {
   private OpenIdProviderConfig openIdProviderConfig;
   private boolean registrationDisabled;
   private boolean oauthEnabled;
+  private boolean offlineAccess;
+  private boolean codeChallenge;
+  private CodeChallengeMethod codeChallengeMethod;
+  private boolean verifyEmail;
+  private List<CodeChallengeMethod> codeChallengeMethods;
   
   @EJB
   private OauthClientFacade oauthClientFacade;
@@ -75,8 +82,13 @@ public class OAuthClientRegistration implements Serializable {
     this.userInfoEndpoint = "";
     this.jwksURI = "";
     this.autoProviderURI = "";
+    this.offlineAccess = false;
+    this.codeChallenge = false;
+    this.verifyEmail = false;
+    this.codeChallengeMethod = null;
+    this.codeChallengeMethods = Arrays.asList(CodeChallengeMethod.values());
     this.oauthClients = oauthClientFacade.findAll();
-    this.oauthEnabled = oAuthClientHelper.getoAuthHelper().oauthAvailable();
+    this.oauthEnabled = oAuthClientHelper.getOauthHelper().oauthAvailable();
   }
   
   public String getClientId() {
@@ -205,12 +217,53 @@ public class OAuthClientRegistration implements Serializable {
     this.oauthEnabled = oauthEnabled;
   }
   
+  public boolean isOfflineAccess() {
+    return offlineAccess;
+  }
+  
+  public void setOfflineAccess(boolean offlineAccess) {
+    this.offlineAccess = offlineAccess;
+  }
+  
+  public boolean isCodeChallenge() {
+    return codeChallenge;
+  }
+  
+  public void setCodeChallenge(boolean codeChallenge) {
+    this.codeChallenge = codeChallenge;
+  }
+  
+  public CodeChallengeMethod getCodeChallengeMethod() {
+    return codeChallengeMethod;
+  }
+  
+  public void setCodeChallengeMethod(CodeChallengeMethod codeChallengeMethod) {
+    this.codeChallengeMethod = codeChallengeMethod;
+  }
+  
+  public List<CodeChallengeMethod> getCodeChallengeMethods() {
+    return codeChallengeMethods;
+  }
+  
+  public void setCodeChallengeMethods(
+    List<CodeChallengeMethod> codeChallengeMethods) {
+    this.codeChallengeMethods = codeChallengeMethods;
+  }
+  
+  public boolean isVerifyEmail() {
+    return verifyEmail;
+  }
+  
+  public void setVerifyEmail(boolean verifyEmail) {
+    this.verifyEmail = verifyEmail;
+  }
+  
   public void fetchOpenIdProviderConfig() {
     if (!checkOAuthHelper() || autoProviderURI == null || autoProviderURI.isEmpty()) {
       return;
     }
     try {
-      this.setOpenIdProviderConfig(oAuthClientHelper.getoAuthHelper().getOpenIdProviderConfiguration(autoProviderURI));
+      this.setOpenIdProviderConfig(oAuthClientHelper.getOauthHelper().getOpenIdProviderConfiguration(autoProviderURI));
       if (this.getAuthorisationEndpoint() != null) {
         setRegistrationDisabled(registrationDisabled());
         RequestContext context = RequestContext.getCurrentInstance();
@@ -227,7 +280,7 @@ public class OAuthClientRegistration implements Serializable {
       return;
     }
     try {
-      oAuthClientHelper.getoAuthHelper().registerClient(openIdProviderConfig);
+      oAuthClientHelper.getOauthHelper().registerClient(openIdProviderConfig);
     } catch (IOException | URISyntaxException e) {
       LOGGER.log(Level.WARNING,"Failed to register client. {0}", e.getMessage());
       MessagesController.addErrorMessage(e.getMessage(), getRootCause(e));
@@ -235,7 +288,7 @@ public class OAuthClientRegistration implements Serializable {
   }
   
   private boolean checkOAuthHelper() {
-    if (oAuthClientHelper.getoAuthHelper() == null || oAuthClientHelper.getoAuthHelper().oauthAvailable()) {
+    if (oAuthClientHelper.getOauthHelper() == null || !oAuthClientHelper.getOauthHelper().oauthAvailable()) {
       MessagesController.addErrorMessage("Not supported", "OAuth is not available.");
       return false;
     }
@@ -261,8 +314,9 @@ public class OAuthClientRegistration implements Serializable {
     try {
       OauthClient oauthClient = new OauthClient(this.clientId, this.clientSecret, this.providerURI, this.providerName,
         this.providerLogoURI, this.providerDisplayName, this.providerMetadataEndpointSupported,
-        this.authorisationEndpoint, this.tokenEndpoint, this.userInfoEndpoint, this.jwksURI);
-      oAuthClientHelper.getoAuthHelper().saveClient(oauthClient);
+        this.authorisationEndpoint, this.tokenEndpoint, this.userInfoEndpoint, this.jwksURI, this.offlineAccess,
+        this.codeChallenge, this.codeChallengeMethod, this.verifyEmail);
+      oAuthClientHelper.getOauthHelper().saveClient(oauthClient);
       MessagesController.addInfoMessage("Added new OAuth server.");
       init();
     } catch (Exception e) {
@@ -277,7 +331,7 @@ public class OAuthClientRegistration implements Serializable {
     }
     OauthClient oauthClient = (OauthClient) event.getObject();
     try {
-      oAuthClientHelper.getoAuthHelper().updateClient(oauthClient);
+      oAuthClientHelper.getOauthHelper().updateClient(oauthClient);
       MessagesController.addInfoMessage("Updated OAuth server.");
     } catch (Exception e) {
       MessagesController.addErrorMessage(e.getMessage(), getRootCause(e));
@@ -286,7 +340,7 @@ public class OAuthClientRegistration implements Serializable {
   
   public void delete(OauthClient oauthClient) {
     try {
-      oAuthClientHelper.getoAuthHelper().removeClient(oauthClient);
+      oAuthClientHelper.getOauthHelper().removeClient(oauthClient);
       MessagesController.addInfoMessage("Deleted OAuth server.");
       init();
     } catch (Exception e) {

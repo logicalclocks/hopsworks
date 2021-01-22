@@ -58,7 +58,7 @@
     <dependency>
       <groupId>com.nimbusds</groupId>
       <artifactId>oauth2-oidc-sdk</artifactId>
-      <version>6.5</version>
+      <version>8.28.3</version>
     </dependency>
     <dependency>
       <groupId>org.ehcache</groupId>

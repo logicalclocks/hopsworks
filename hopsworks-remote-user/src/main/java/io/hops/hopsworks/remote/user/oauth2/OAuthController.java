@@ -4,12 +4,12 @@
 package io.hops.hopsworks.remote.user.oauth2;
 
 import com.nimbusds.oauth2.sdk.ParseException;
-import com.nimbusds.oauth2.sdk.token.AccessToken;
+import com.nimbusds.oauth2.sdk.token.BearerAccessToken;
 import io.hops.hopsworks.common.dao.remote.oauth.OauthLoginStateFacade;
 import io.hops.hopsworks.common.dao.remote.user.RemoteUserFacade;
-import io.hops.hopsworks.common.remote.oauth.OpenIdProviderConfig;
 import io.hops.hopsworks.common.remote.RemoteUserDTO;
 import io.hops.hopsworks.common.remote.RemoteUserStateDTO;
+import io.hops.hopsworks.common.remote.oauth.OpenIdProviderConfig;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.HopsSecurityException;
 import io.hops.hopsworks.jwt.exception.VerificationException;
@@ -34,7 +34,9 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URLEncoder;
 import java.util.Calendar;
+import java.util.Date;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -43,7 +45,7 @@ import java.util.logging.Logger;
 public class OAuthController {
   
   private final static Logger LOGGER = Logger.getLogger(OAuthController.class.getName());
-  private final static int LOGIN_STATE_TTL_MIN = 15;
+  private final static int LOGIN_STATE_TTL_SEC = 3600;
   
   @EJB
   private OauthLoginStateFacade oauthLoginStateFacade;
@@ -58,6 +60,7 @@ public class OAuthController {
   
   /**
    *
+   * @param sessionId
    * @param code
    * @param state
    * @param consent
@@ -65,21 +68,16 @@ public class OAuthController {
    * @return
    * @throws LoginException
    */
-  public RemoteUserStateDTO login(String code, String state, boolean consent, String chosenEmail)
+  public RemoteUserStateDTO login(String sessionId, String code, String state, boolean consent, String chosenEmail)
     throws LoginException {
-    OauthLoginState oauthLoginState = oauthLoginStateFacade.findByState(state);
-    if (oauthLoginState == null) {
-      throw new IllegalStateException("No login request found for the given state.");
-    }
+    OauthLoginState oauthLoginState = getClient(state, sessionId);
     OauthClient client = oauthLoginState.getClientId();
-    if (client == null) {
-      throw new IllegalStateException("No client found for the given id.");
-    }
   
-    RemoteUserDTO remoteUserDTO = null;
+    RemoteUserDTO remoteUserDTO;
     try {
       OpenIdProviderConfig providerConfig = oidAuthorizationCodeFlowHelper.getOpenIdProviderConfig(client, false);
-      AccessToken accessToken = oidAuthorizationCodeFlowHelper.getAccessToken(code, oauthLoginState, providerConfig);
+      BearerAccessToken
+        accessToken = oidAuthorizationCodeFlowHelper.getAccessToken(code, oauthLoginState, providerConfig);
       remoteUserDTO = oidAuthorizationCodeFlowHelper.getRemoteUser(accessToken, providerConfig, client);
     } catch (URISyntaxException | VerificationException | IOException | ParseException e) {
       LOGGER.log(Level.SEVERE, "Error getting user info from {0}: {1}",
@@ -95,10 +93,22 @@ public class OAuthController {
     return remoteUserStateDTO;
   }
   
+  private OauthLoginState getClient(String state, String sessionId) {
+    OauthLoginState oauthLoginState = oauthLoginStateFacade.findByStateAndSession(state, sessionId)
+      .orElseThrow(() -> new IllegalStateException("No login request found for the given state."));
+    Date currTime = new Date();
+    long diffInSeconds = TimeUnit.MILLISECONDS.toSeconds(currTime.getTime() - oauthLoginState.getLoginTime().getTime());
+    if (diffInSeconds > LOGIN_STATE_TTL_SEC) {
+      oauthLoginStateFacade.remove(oauthLoginState);
+      throw new IllegalStateException("No login request found for the given state.");
+    }
+    return oauthLoginState;
+  }
+  
   @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
   public int cleanupLoginStates() {
     final Calendar cal = Calendar.getInstance();
-    cal.add(Calendar.MINUTE, -LOGIN_STATE_TTL_MIN);
+    cal.add(Calendar.SECOND, -LOGIN_STATE_TTL_SEC);
     List<OauthLoginState> expiredStates = oauthLoginStateFacade.findByLoginTimeBefore(cal.getTime());
     int count = 0;
     for (OauthLoginState expiredState : expiredStates) {
