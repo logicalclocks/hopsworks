@@ -27,12 +27,14 @@ import io.hops.hopsworks.api.filter.apiKey.ApiKeyRequired;
 import io.hops.hopsworks.api.jwt.JWTHelper;
 import io.hops.hopsworks.audit.logger.LogLevel;
 import io.hops.hopsworks.audit.logger.annotation.Logged;
+import io.hops.hopsworks.common.api.ResourceRequest;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
 import io.hops.hopsworks.common.featurestore.FeaturestoreController;
 import io.hops.hopsworks.common.featurestore.FeaturestoreDTO;
 import io.hops.hopsworks.common.featurestore.app.FeaturestoreMetadataDTO;
 import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupController;
 import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupDTO;
+import io.hops.hopsworks.common.featurestore.keyword.KeywordControllerIface;
 import io.hops.hopsworks.common.featurestore.settings.FeaturestoreClientSettingsDTO;
 import io.hops.hopsworks.common.featurestore.storageconnectors.FeaturestoreStorageConnectorController;
 import io.hops.hopsworks.common.featurestore.storageconnectors.FeaturestoreStorageConnectorDTO;
@@ -65,6 +67,7 @@ import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
+import javax.ws.rs.core.UriInfo;
 import java.util.List;
 
 /**
@@ -103,6 +106,10 @@ public class FeaturestoreService {
   private DataValidationResource dataValidationService;
   @Inject
   private FsQueryConstructorResource fsQueryConstructorResource;
+  @Inject
+  private KeywordControllerIface keywordControllerIface;
+  @EJB
+  private FeaturestoreKeywordBuilder featurestoreKeywordBuilder;
 
   private Project project;
 
@@ -331,6 +338,20 @@ public class FeaturestoreService {
   @Logged(logLevel = LogLevel.OFF)
   public FsQueryConstructorResource constructQuery() {
     return fsQueryConstructorResource.setProject(project);
+  }
+
+  @Path("keywords")
+  @GET
+  @Produces(MediaType.APPLICATION_JSON)
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
+  @ApiKeyRequired( acceptedScopes = {ApiScope.FEATURESTORE}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
+  @JWTRequired(acceptedTokens = {Audience.API, Audience.JOB}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
+  @ApiOperation(value = "Get available keywords for the featurestore", response = KeywordDTO.class)
+  public Response getUsedKeywords(@Context SecurityContext sc, @Context UriInfo uriInfo) throws FeaturestoreException {
+    List<String> keywords = keywordControllerIface.getUsedKeywords();
+    ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.KEYWORDS);
+    KeywordDTO dto = featurestoreKeywordBuilder.build(uriInfo, resourceRequest, project, keywords);
+    return Response.ok().entity(dto).build();
   }
 
   /**

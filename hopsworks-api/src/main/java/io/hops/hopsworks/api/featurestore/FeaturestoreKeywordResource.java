@@ -119,15 +119,15 @@ public class FeaturestoreKeywordResource {
   @POST
   @Consumes(MediaType.APPLICATION_JSON)
   @Produces(MediaType.APPLICATION_JSON)
-  @ApiOperation(value = "Add new keywords")
+  @ApiOperation(value = "Replace existing keywords")
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   @JWTRequired(acceptedTokens = {Audience.API, Audience.JOB}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   @ApiKeyRequired(acceptedScopes = {ApiScope.FEATURESTORE}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
-  public Response addKeyword(@Context SecurityContext sc, @Context UriInfo uriInfo, KeywordDTO keywordDTO)
+  public Response replaceKeywords(@Context SecurityContext sc, @Context UriInfo uriInfo, KeywordDTO keywordDTO)
       throws FeaturestoreException, MetadataException {
     Users user = jwtHelper.getUserPrincipal(sc);
     List<String> updatedKeywords =
-        keywordControllerIface.addKeywords(project, user, featuregroup, trainingDataset, keywordDTO.getKeywords());
+        keywordControllerIface.replaceKeywords(project, user, featuregroup, trainingDataset, keywordDTO.getKeywords());
 
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.KEYWORDS);
     KeywordDTO dto = featurestoreKeywordBuilder.build(uriInfo, resourceRequest, project,
@@ -140,7 +140,7 @@ public class FeaturestoreKeywordResource {
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   @JWTRequired(acceptedTokens = {Audience.API, Audience.JOB}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   @ApiKeyRequired(acceptedScopes = {ApiScope.FEATURESTORE}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
-  public Response deleteKeyword(@Context SecurityContext sc, @Context UriInfo uriInfo,
+  public Response deleteKeywords(@Context SecurityContext sc, @Context UriInfo uriInfo,
                                 @QueryParam("keyword") String keyword)
       throws FeaturestoreException, MetadataException {
     Users user = jwtHelper.getUserPrincipal(sc);

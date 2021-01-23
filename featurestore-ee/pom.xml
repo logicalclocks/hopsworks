@@ -64,6 +64,19 @@
     </dependency>
 
     <dependency>
+      <groupId>io.hops.hopsworks</groupId>
+      <artifactId>provenance-ee</artifactId>
+      <version>${project.version}</version>
+      <scope>provided</scope>
+      <exclusions>
+        <exclusion>
+          <groupId>*</groupId>
+          <artifactId>*</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+
+    <dependency>
       <groupId>javax</groupId>
       <artifactId>javaee-web-api</artifactId>
       <version>7.0</version>

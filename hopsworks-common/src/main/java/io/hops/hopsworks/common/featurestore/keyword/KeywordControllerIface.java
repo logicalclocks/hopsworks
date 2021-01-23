@@ -42,8 +42,8 @@ public interface KeywordControllerIface {
   }
 
 
-  default List<String> addKeywords(Project project, Users user, Featuregroup featureGroup,
-                                  TrainingDataset trainingDataset, List<String> keywords)
+  default List<String> replaceKeywords(Project project, Users user, Featuregroup featureGroup,
+                                       TrainingDataset trainingDataset, List<String> keywords)
       throws FeaturestoreException, MetadataException {
     throw new IllegalArgumentException("API not supported in the community edition");
   }
@@ -51,6 +51,10 @@ public interface KeywordControllerIface {
   default List<String> deleteKeywords(Project project, Users user, Featuregroup featureGroup,
                                      TrainingDataset trainingDataset, List<String> keywords)
       throws FeaturestoreException, MetadataException {
+    throw new IllegalArgumentException("API not supported in the community edition");
+  }
+
+  default List<String> getUsedKeywords() throws FeaturestoreException {
     throw new IllegalArgumentException("API not supported in the community edition");
   }
 }

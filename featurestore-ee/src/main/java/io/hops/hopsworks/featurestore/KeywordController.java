@@ -34,6 +34,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.ExecutionException;
 import java.util.logging.Level;
 
 @Stateless
@@ -51,6 +52,8 @@ public class KeywordController implements KeywordControllerIface {
   private HdfsUsersController hdfsUsersController;
   @EJB
   private FeaturegroupController featuregroupController;
+  @EJB
+  private KeywordsUsedCache keywordsUsedCache;
 
   private ObjectMapper objectMapper = new ObjectMapper();
 
@@ -99,15 +102,14 @@ public class KeywordController implements KeywordControllerIface {
     }
   }
 
-  public List<String> addKeywords(Project project, Users user, Featuregroup featureGroup,
-                                  TrainingDataset trainingDataset, List<String> keywords)
+  public List<String> replaceKeywords(Project project, Users user, Featuregroup featureGroup,
+                                      TrainingDataset trainingDataset, List<String> keywords)
       throws FeaturestoreException, MetadataException {
     validateKeywords(keywords);
     Set<String> currentKeywords;
     DistributedFileSystemOps udfso = dfs.getDfsOps(hdfsUsersController.getHdfsUserName(project, user));
     try {
-      currentKeywords = new HashSet<>(getAll(featureGroup, trainingDataset, udfso));
-      currentKeywords.addAll(keywords);
+      currentKeywords = new HashSet<>(keywords);
 
       if (featureGroup != null) {
         addFeatureGroupKeywords(featureGroup, currentKeywords, udfso);
@@ -118,6 +120,9 @@ public class KeywordController implements KeywordControllerIface {
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.KEYWORD_ERROR, Level.FINE,
           "Error adding keywords", e.getMessage(), e);
     } finally {
+      // Invalidate used keywords cache
+      keywordsUsedCache.invalidateCache();
+
       dfs.closeDfsClient(udfso);
     }
 
@@ -142,6 +147,9 @@ public class KeywordController implements KeywordControllerIface {
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.KEYWORD_ERROR, Level.FINE,
           "Error deleting keywords", e.getMessage(), e);
     } finally {
+      // Invalidate used keywords cache
+      keywordsUsedCache.invalidateCache();
+
       dfs.closeDfsClient(udfso);
     }
 
@@ -161,6 +169,15 @@ public class KeywordController implements KeywordControllerIface {
     String keywordsStr = objectMapper.writeValueAsString(keywords);
     String path = getTrainingDatasetLocation(trainingDataset);
     xAttrsController.addStrXAttr(path, FeaturestoreXAttrsConstants.KEYWORDS, keywordsStr, udfso);
+  }
+
+  public List<String> getUsedKeywords() throws FeaturestoreException {
+    try {
+      return keywordsUsedCache.getUsedKeywords();
+    } catch (ExecutionException e) {
+      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.KEYWORD_ERROR, Level.FINE,
+          "Error fetching used keywords");
+    }
   }
 
   private String getTrainingDatasetLocation(TrainingDataset trainingDataset) throws FeaturestoreException {

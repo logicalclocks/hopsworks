@@ -1036,6 +1036,25 @@ describe "On #{ENV['OS']}" do
         expect(parsed_json['keywords']).to include('keyword123')
       end
 
+      it "should be able to find the attached keywords in the list of used keywords" do
+        featurestore_id = get_featurestore_id(@project[:id])
+        json_result, _ = create_cached_featuregroup_with_partition(@project[:id], featurestore_id)
+        parsed_json = JSON.parse(json_result)
+        featuregroup_id = parsed_json["id"]
+        post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/featurestores/#{featurestore_id}/featuregroups/#{featuregroup_id}/keywords",
+             {keywords: ['test', 'lololo']}.to_json
+        expect_status_details(200)
+
+        # wait for epipe has time for processing
+        epipe_wait_on_mutations(wait_time:5, repeat: 2)
+
+        json_result = get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/featurestores/keywords"
+        expect_status_details(200)
+        parsed_json = JSON.parse(json_result)
+        expect(parsed_json['keywords']).to include('test')
+        expect(parsed_json['keywords']).to include('lololo')
+      end
+
       it "should fail to attach invalid keywords" do
         featurestore_id = get_featurestore_id(@project[:id])
         json_result, _ = create_cached_featuregroup_with_partition(@project[:id], featurestore_id)
