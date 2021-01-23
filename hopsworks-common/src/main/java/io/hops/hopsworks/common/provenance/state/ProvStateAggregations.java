@@ -14,7 +14,7 @@
  * If not, see <https://www.gnu.org/licenses/>.
  */
 
-package io.hops.hopsworks.common.provenance.ops;
+package io.hops.hopsworks.common.provenance.state;
 
 import io.hops.hopsworks.common.provenance.core.elastic.ElasticAggregation;
 

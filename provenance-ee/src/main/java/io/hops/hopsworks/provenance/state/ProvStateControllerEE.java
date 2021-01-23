@@ -7,7 +7,7 @@ package io.hops.hopsworks.provenance.state;
 import io.hops.hopsworks.common.provenance.core.elastic.ElasticAggregationParser;
 import io.hops.hopsworks.common.provenance.core.elastic.ElasticHelper;
 import io.hops.hopsworks.common.provenance.core.elastic.ProvElasticController;
-import io.hops.hopsworks.common.provenance.ops.ProvStateAggregations;
+import io.hops.hopsworks.common.provenance.state.ProvStateAggregations;
 import io.hops.hopsworks.common.provenance.util.ProvHelper;
 import io.hops.hopsworks.common.provenance.util.functional.CheckedSupplier;
 import io.hops.hopsworks.common.util.Settings;
