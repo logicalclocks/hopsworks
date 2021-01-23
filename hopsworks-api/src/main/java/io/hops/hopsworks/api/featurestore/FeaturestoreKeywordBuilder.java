@@ -34,6 +34,14 @@ import java.util.List;
 @TransactionAttribute(TransactionAttributeType.NEVER)
 public class FeaturestoreKeywordBuilder {
 
+  private URI uri(UriInfo uriInfo, Project project) {
+    return uriInfo.getBaseUriBuilder().path(ResourceRequest.Name.PROJECT.toString().toLowerCase())
+        .path(Integer.toString(project.getId()))
+        .path(ResourceRequest.Name.FEATURESTORES.toString().toLowerCase())
+        .path(ResourceRequest.Name.KEYWORDS.toString().toLowerCase())
+        .build();
+  }
+
   private UriBuilder uri(UriInfo uriInfo, Project project, Featurestore featurestore) {
     return uriInfo.getBaseUriBuilder().path(ResourceRequest.Name.PROJECT.toString().toLowerCase())
         .path(Integer.toString(project.getId()))
@@ -61,6 +69,17 @@ public class FeaturestoreKeywordBuilder {
 
   private boolean expand(ResourceRequest resourceRequest) {
     return resourceRequest != null && resourceRequest.contains(ResourceRequest.Name.KEYWORDS);
+  }
+
+  public KeywordDTO build(UriInfo uriInfo, ResourceRequest resourceRequest, Project project, List<String> keywords) {
+    KeywordDTO dto = new KeywordDTO();
+    dto.setHref(uri(uriInfo, project));
+
+    dto.setExpand(expand(resourceRequest));
+    if (dto.isExpand()) {
+      dto.setKeywords(keywords);
+    }
+    return dto;
   }
 
   public KeywordDTO build(UriInfo uriInfo, ResourceRequest resourceRequest, Project project,
