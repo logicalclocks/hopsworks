@@ -67,9 +67,7 @@ angular.module('hopsWorksApp')
             self.cloak = true;
             self.isClosed = true;
             self.versions = [];
-
             self.role = "";
-
             self.endpoint = '...';
 
             self.disableTours = function() {
@@ -228,7 +226,6 @@ angular.module('hopsWorksApp')
                       self.loadedProjectData = true
                   }
               );
-
             };
 
             self.pageSize = 8;
@@ -412,7 +409,6 @@ angular.module('hopsWorksApp')
             };
 
             self.goToPython = function () {
-              self.toggleKibanaNavBar();
               self.goToUrl('python');
             };
 
