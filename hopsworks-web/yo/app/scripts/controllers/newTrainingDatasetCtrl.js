@@ -20,9 +20,8 @@
  */
 angular.module('hopsWorksApp')
     .controller('newTrainingDatasetCtrl', ['$routeParams', '$scope', 'growl',
-        '$location', 'StorageService', 'FeaturestoreService', 'ModalService',
-        function ($routeParams, $scope, growl, $location, StorageService, FeaturestoreService, ModalService) {
-
+        '$location', 'StorageService', 'FeaturestoreService',
+        function ($routeParams, $scope, growl, $location, StorageService, FeaturestoreService) {
             var self = this;
 
             //Controller Input
@@ -35,26 +34,19 @@ angular.module('hopsWorksApp')
             self.version = StorageService.get(self.projectId + "_trainingDataset_version");
             self.storageConnectors = StorageService.get(self.projectId + "_storageconnectors")
             self.settings = StorageService.get(self.projectId + "_fssettings")
-            self.newJobName = self.projectId + "_newjob";
 
             //State
             self.showCart = true
-            self.configureJob = true;
-            self.selectFeatureStage = true;
             self.phase = 0
+            self.selectFeatureStage = true;
             self.working = false
-            self.queryPlan = {
-                "features": [],
-                "featuregroups": [],
-                "featuregroupToFeatures": {},
-                "joinKey": [],
-                "possibleJoinKeys": []
-            }
 
             self.s3Connectors = []
             self.hopsfsConnectors = []
+            self.adlsConnectors = []
             self.selectedS3Connector = null
             self.selectedHopsfsConnector = null
+            self.selectedADLSConnector= null
             self.sinkType = 0
             self.path = ""
 
@@ -65,18 +57,18 @@ angular.module('hopsWorksApp')
             self.dataFormats = self.settings.trainingDatasetDataFormats
             self.hopsfsTrainingDatasetType = self.settings.hopsfsTrainingDatasetType
             self.externalTrainingDatasetType = self.settings.externalTrainingDatasetType
+            self.trainingDatasetType = self.settings.trainingDatasetType
             self.s3ConnectorType = self.settings.s3ConnectorType
             self.hopsfsConnectorType = self.settings.hopsfsConnectorType
-            self.trainingDatasetType = self.settings.trainingDatasetType
-            self.featurestoreUtilPythonMainClass = self.settings.featurestoreUtilPythonMainClass
-            self.featurestoreUtilPythonExecutable = self.settings.featurestoreUtilPythonExecutable
-            self.pySparkJobType = "PYSPARK"
+            self.adlsConnectorType = "ADLS"
 
             //Input Variables
             self.trainingDatasetName = ""
             self.trainingDatasetDoc = ""
             self.trainingDatasetFormat = null;
             self.featureBasket = []
+
+            self.query = undefined;
 
             /**
              * Input validation
@@ -85,9 +77,6 @@ angular.module('hopsWorksApp')
             //Name and Description Flags
             self.trainingDatasetNameWrongValue = 1;
             self.trainingDatasetDocWrongValue = 1;
-            //Query Plan Flags
-            self.queryPlanWrongValue = 1;
-            self.joinKeyWrongValue = 1;
             //Data format flags
             self.trainingDatasetDataFormatWrongValue = 1
             //Output sink flags
@@ -95,44 +84,13 @@ angular.module('hopsWorksApp')
             self.trainingDatasetSinkNotSelected = 1
 
             //front-end variables
-            self.td_accordion0 = {
-                "isOpen": false,
-                "value": "",
-                "title": "Query Plan"
-            };
-
-            self.td_accordion1 = {
-                "isOpen": true,
-                "value": "",
-                "title": "Training Dataset Name"
-            };
-            self.td_accordion2 = {
-                "isOpen": false,
-                "value": "",
-                "title": "Training Dataset Description"
-            };
-            self.td_accordion3 = {
-                "isOpen": true,
-                "value": "",
-                "title": "Training Dataset Format"
-            };
-            self.td_accordion4 = {
-                "isOpen": true,
-                "value": "",
-                "title": "Create"
-            };
-
-            self.td_accordion5 = {
-                "isOpen": true,
-                "value": "",
-                "title": "Output Location"
-            };
-
-            self.td_accordion6 = {
-                "isOpen": false,
-                "value": "",
-                "title": "Schema"
-            };
+            self.td_accordion0 = {"isOpen": true, "value": "", "title": "Query Plan"};
+            self.td_accordion1 = {"isOpen": true, "value": "", "title": "Training Dataset Name"};
+            self.td_accordion2 = {"isOpen": false, "value": "", "title": "Training Dataset Description"};
+            self.td_accordion3 = {"isOpen": true, "value": "", "title": "Training Dataset Format"};
+            self.td_accordion4 = {"isOpen": true, "value": "", "title": "Create"};
+            self.td_accordion5 = {"isOpen": true, "value": "", "title": "Output Location"};
+            self.td_accordion6 = {"isOpen": false, "value": "", "title": "Schema"};
 
             /**
              * Perform initialization of variables that require it
@@ -143,11 +101,16 @@ angular.module('hopsWorksApp')
                 self.selectedS3Connector = null
                 self.hopsfsConnectors = []
                 self.selectedHopsfsConnector = null;
+
+                self.adlsConnectors = []
+                self.selectedADLSConnector = null;
+
                 for (var i = 0; i < self.storageConnectors.length; i++) {
                     if (self.storageConnectors[i].storageConnectorType == self.s3ConnectorType) {
                         self.s3Connectors.push(self.storageConnectors[i])
-                    }
-                    if (self.storageConnectors[i].storageConnectorType == self.hopsfsConnectorType) {
+                    } else if (self.storageConnectors[i].storageConnectorType == self.adlsConnectorType) {
+                        self.adlsConnectors.push(self.storageConnectors[i])
+                    } else if (self.storageConnectors[i].storageConnectorType == self.hopsfsConnectorType) {
                         self.hopsfsConnectors.push(self.storageConnectors[i])
                         if (self.storageConnectors[i].name === self.projectName + "_Training_Datasets") {
                             self.selectedHopsfsConnector = self.storageConnectors[i]
@@ -185,8 +148,6 @@ angular.module('hopsWorksApp')
                     self.td_accordion6.visible = true
                     self.td_accordion6.isOpen = false
                 }
-
-
             }
 
             /**
@@ -196,8 +157,6 @@ angular.module('hopsWorksApp')
                 self.trainingDatasetNameWrongValue = 1
                 self.trainingDatasetDataFormatWrongValue = 1
                 self.trainingDatasetDocWrongValue = 1;
-                self.queryPlanWrongValue = 1;
-                self.joinKeyWrongValue = 1
                 self.trainingDatasetWrong_values = 1;
                 self.trainingDatasetSinkNotSelected = 1
                 self.sinkWrongValue = 1
@@ -224,11 +183,6 @@ angular.module('hopsWorksApp')
                     self.trainingDatasetDocWrongValue = 1;
                 }
                 if(self.trainingDatasetOperation !== 'UPDATE') {
-                    if (self.queryPlan.possibleJoinKeys.length === 0) {
-                        self.trainingDatasetWrong_values = -1;
-                        self.queryPlanWrongValue = -1;
-                        self.joinKeyWrongValue = -1;
-                    }
                     if (self.sinkType === 1 && (self.selectedS3Connector === null || !self.selectedS3Connector)) {
                         self.trainingDatasetSinkNotSelected = -1
                         self.sinkWrongValue = -1
@@ -313,37 +267,6 @@ angular.module('hopsWorksApp')
             }
 
             /**
-             * The list of feature groups of the features.
-             *
-             * @returns {Array}
-             */
-            self.basketFeaturegroups = function () {
-                var featuregroups = []
-                for (var j = 0; j < self.featureBasket.length; j++) {
-                    if (!self.featuregroupsIncludes(featuregroups, self.featureBasket[j].featuregroup)) {
-                        featuregroups.push(self.featureBasket[j].featuregroup)
-                    }
-                }
-                return featuregroups
-            }
-
-            /**
-             * Checks whether a featuregroup exists in a list of feature groups
-             *
-             * @param featuregroups the list of feature groups
-             * @param fg the feature group to look for
-             * @returns {boolean}
-             */
-            self.featuregroupsIncludes = function (featuregroups, fg) {
-                for (var i = 0; i < featuregroups.length; i++) {
-                    if (featuregroups[i] === fg || (featuregroups[i].name === fg.name && featuregroups[i].version === fg.version)) {
-                        return true
-                    }
-                }
-                return false
-            }
-
-            /**
              * Exit the "create new training dataset page" and go back to the featurestore page
              */
             self.exitToFeaturestore = function () {
@@ -358,7 +281,6 @@ angular.module('hopsWorksApp')
                 self.selectFeatureStage = true;
             };
 
-
             /**
              * Helper function for redirecting to another project page
              *
@@ -369,100 +291,6 @@ angular.module('hopsWorksApp')
             };
 
             /**
-             * Sets up the query plan for a new training dataset
-             */
-            self.setupQueryPlan = function () {
-                if (self.featureBasket.length == 0) {
-                    var title = 'You must select at least one feature to create a training dataset'
-                    if (self.trainingDatasetOperation === 'UPDATE') {
-                        title = 'You must select at least one feature to update the training dataset'
-                    }
-                    growl.error("", {
-                        title: title,
-                        ttl: 15000
-                    });
-                } else {
-                    self.queryPlan.features = self.featureBasket
-                    self.queryPlan.featuregroups = self.basketFeaturegroups()
-                    self.inferJoinCol(self.queryPlan.featuregroups)
-                    var featuregroupToFeatures = {}
-                    for (var i = 0; i < self.queryPlan.features.length; i++) {
-                        var key = self.queryPlan.features[i].featuregroup.name + "_" +
-                            self.queryPlan.features[i].featuregroup.version
-                        if (key in featuregroupToFeatures) {
-                            featuregroupToFeatures[key].push(self.queryPlan.features[i])
-                        } else {
-                            featuregroupToFeatures[key] = [self.queryPlan.features[i]]
-                        }
-                    }
-                    self.queryPlan.featuregroupToFeatures = featuregroupToFeatures
-                    self.trainingDatasetNameWrongValue = 1
-                    self.trainingDatasetDataFormatWrongValue = 1
-                    self.trainingDatasetDocWrongValue = 1;
-                    self.queryPlanWrongValue = 1;
-                    self.joinKeyWrongValue = 1
-                    self.trainingDatasetWrong_values = 1;
-                    self.working = false;
-                    if (self.queryPlan.possibleJoinKeys.length === 0) {
-                        self.trainingDatasetWrong_values = -1;
-                        self.queryPlanWrongValue = -1;
-                        self.joinKeyWrongValue = -1;
-                    }
-                    self.selectFeatureStage = false;
-                }
-            };
-
-            /**
-             * Get a SQL string to display in the UI to select a bunch of features from a feature group
-             *
-             * @param featuregroup the feature group
-             * @returns SELECT feature1,feature2,... FROM featuregroup_version
-             */
-            self.getSelectStr = function (featuregroup) {
-                var features = self.queryPlan.featuregroupToFeatures[featuregroup.name + "_" + featuregroup.version]
-                var featureNames = []
-                for (var i = 0; i < features.length; i++) {
-                    featureNames.push(features[i].name)
-                }
-                return "SELECT " + featureNames.join(",") + " FROM " + featuregroup.name + "_" + featuregroup.version
-            }
-
-            /**
-             * Infer the join column for the query planner
-             * Currently only supports single join column and not composite keys
-             *
-             * @param featuregroups
-             */
-            self.inferJoinCol = function (featuregroups) {
-                var featureSets = new Set()
-                var features = new Set()
-                for (var j = 0; j < featuregroups.length; j++) {
-                    var fSet = new Set()
-                    for (var k = 0; k < featuregroups[j].features.length; k++) {
-                        fSet.add(featuregroups[j].features[k].name)
-                        features.add(featuregroups[j].features[k].name)
-                    }
-                    featureSets.add(fSet)
-                }
-                var intersection = []
-                var featuresList = Array.from(features)
-                var featureSetsList = Array.from(featureSets)
-                for (var j = 0; j < featuresList.length; j++) {
-                    var existInAll = true;
-                    for (var k = 0; k < featureSetsList.length; k++) {
-                        if (!featureSetsList[k].has(featuresList[j])) {
-                            existInAll = false;
-                        }
-                    }
-                    if (existInAll) {
-                        intersection.push(featuresList[j])
-                    }
-                }
-                self.queryPlan.joinKey = intersection[0]
-                self.queryPlan.possibleJoinKeys = intersection
-            }
-
-            /**
              * Updates a training dataset
              */
             self.updateTrainingDatasetMetadata = function () {
@@ -471,17 +299,19 @@ angular.module('hopsWorksApp')
                     self.working = false;
                     return;
                 }
-                var jobName = "update_training_dataset_" + self.trainingDatasetName + "_" + new Date().getTime()
                 var trainingDatasetJson = {
                     "name": self.trainingDatasetName,
-                    "jobName": jobName,
                     "version": self.version,
                     "description": self.trainingDatasetDoc,
                     "dataFormat": self.trainingDatasetFormat,
-                    "features": self.trainingDataset.features,
-                    "updateStats": false,
-                    "trainingDatasetType": self.hopsfsTrainingDatasetType,
-                    "jobs": []
+                    "trainingDatasetType": self.getTrainingDatasetType(),
+                    "statisticsConfig": {
+                        "enabled": true,
+                        "histograms": true,
+                        "correlations": true,
+                    },
+                    "storageConnector": self.getStorageConnector(),
+                    "type": "trainingDatasetDTO"
                 }
                 FeaturestoreService.updateTrainingDatasetMetadata(self.projectId, self.trainingDataset.id,
                     trainingDatasetJson, self.featurestore).then(
@@ -508,123 +338,118 @@ angular.module('hopsWorksApp')
                     self.working = false;
                     return;
                 }
-                var jobName = "create_training_dataset_" + self.trainingDatasetName + "_" + new Date().getTime()
+                var query = self.buildQueryObject();
+
                 var trainingDatasetJson = {
                     "name": self.trainingDatasetName,
                     "version": self.version,
                     "description": self.trainingDatasetDoc,
                     "dataFormat": self.trainingDatasetFormat,
-                    "features": self.featureBasket,
-                    "trainingDatasetType": self.sinkType === 0 ? self.hopsfsTrainingDatasetType : self.externalTrainingDatasetType,
-                    "storageConnector": {
-                        "id": self.sinkType === 0 ? self.selectedHopsfsConnector.id : self.selectedS3Connector.id
+                    "queryDTO": query,
+                    "trainingDatasetType": self.getTrainingDatasetType(),
+                    "statisticsConfig": {
+                        "enabled": true,
+                        "histograms": true,
+                        "correlations": true,
                     },
-                    "location": self.path,
+                    "storageConnector": self.getStorageConnector(),
+                    "type": "trainingDatasetDTO"
                 }
-                if(self.configureJob){
-                    var utilArgs = self.setupJobArgs(jobName + "_args.json");
-                    FeaturestoreService.writeUtilArgstoHdfs(self.projectId, utilArgs).then(
-                        function (success) {
-                            var hdfsPath = success.data.successMessage;
-                            var runConfig = self.setupHopsworksCreateTdJob(jobName, hdfsPath);
-                            FeaturestoreService.createTrainingDataset(self.projectId, trainingDatasetJson, self.featurestore).then(
-                                function (success) {
-                                    self.working = false;
-                                    growl.success("New training dataset created", {title: 'Success', ttl: 1000});
-                                    var jobState = self.setupJobState(runConfig);
-                                    StorageService.store(self.newJobName, jobState);
-                                    self.goToUrl("newjob")
-                                }, function (error) {
-                                    growl.error(error.data.errorMsg, {
-                                        title: 'Failed to create training dataset',
-                                        ttl: 15000
-                                    });
-                                    self.working = false;
-                                });
-                            growl.info("Creating new training dataset... wait", {title: 'Creating', ttl: 1000})
-                        }, function (error) {
-                            growl.error(error.data.errorMsg, {
-                                title: 'Failed to setup featurestore util job arguments',
-                                ttl: 15000
-                            });
-                            self.working = false;
+
+                FeaturestoreService.createTrainingDataset(self.projectId, trainingDatasetJson, self.featurestore).then(
+                    function(success) {
+                        self.working = false;
+                        growl.success("New training dataset created", {title: 'Success', ttl: 1000});
+                        var trainingDatasetId = success.data.id;
+                        var trainingDatasetJobConf = {
+                            "query": query,
+                            "overwrite": false,
+                        };
+                        FeaturestoreService.computeTrainingDataset(self.projectId, self.featurestore, trainingDatasetId, trainingDatasetJobConf).then(
+                            function(success) {
+                                growl.success("Job created successfully", {title: 'Success', ttl: 1000});
+                                self.goToUrl("jobs");
+                            },function(error) {
+                                growl.error(error.data.errorMsg, {
+                                    title: 'Failed to create job to compute training dataset',
+                                    ttl: 15000
+                                });       
+                            }
+                        );
+                    }, function(error) {
+                        self.working = false;
+                        growl.error(error.data.errorMsg, {
+                            title: 'Failed to create training dataset',
+                            ttl: 15000
                         });
-                    growl.info("Settings up job arguments... wait", {title: 'Creating', ttl: 1000})
-                } else {
-                    FeaturestoreService.createTrainingDataset(self.projectId, trainingDatasetJson, self.featurestore).then(
-                        function (success) {
-                            self.working = false;
-                            growl.success("New training dataset created", {title: 'Success', ttl: 1000});
-                            self.exitToFeaturestore()
-                        }, function (error) {
-                            growl.error(error.data.errorMsg, {
-                                title: 'Failed to create training dataset',
-                                ttl: 15000
-                            });
-                            self.working = false;
-                        });
-                    growl.info("Creating new training dataset... wait", {title: 'Creating', ttl: 1000})
+                    }
+                )
+            };
+
+            self.buildQueryObject = function() {
+                var featuresGrouped = {}
+
+                var topQueryFg = undefined;
+                var joinFgs = [];
+
+                self.featureBasket.forEach(function(feature) {
+                    if (feature.featuregroup.id in featuresGrouped) {
+                        featuresGrouped[feature.featuregroup.id].push(feature);
+                    } else {
+                        featuresGrouped[feature.featuregroup.id] = [feature]
+                        if (topQueryFg === undefined) {
+                            topQueryFg = feature.featuregroup.id;
+                        } else {
+                            joinFgs.push(feature.featuregroup.id);
+                        }
+                    }
+                });
+                return {
+                    'featureStoreName': self.featurestore.featurestoreName,
+                    'featureStoreId': self.featurestore.featurestoreId,
+                    'leftFeatureGroup': {'id': topQueryFg},
+                    'leftFeatures': self.getLeftFeatureNames(featuresGrouped[topQueryFg]),
+                    'joins': self.getJoins(joinFgs, featuresGrouped)
                 }
             };
 
-            /**
-             * Setup jobState for redirecting to 'newjob' page
-             *
-             * @param runConfig the job runConfig
-             * @returns the jobState
-             */
-            self.setupJobState = function (runConfig) {
-                var jobState = {}
-                jobState.accordion1 = {//Contains the job name
-                    "isOpen": false,
-                    "visible": true,
-                    "value": "",
-                    "title": "Job name - " + runConfig.appName
-                };
-                jobState.accordion2 = {//Contains the job type
-                    "isOpen": false,
-                    "visible": true,
-                    "value": "",
-                    "title": "Job type - " + runConfig.jobType
-                };
-                if (runConfig.jobType === self.sparkJobType) {
-                    jobState.accordion3 = {// Contains the main execution file (jar, workflow,...)
-                        "isOpen": false,
-                        "visible": false,
-                        "value": "",
-                        "title": "App file (.jar, .py or .ipynb) - " + runConfig.appPath
-                    };
-                    jobState.jobtype = 1
+            self.getLeftFeatureNames = function(features) {
+                var featureNames = [];
+                features.forEach(function(feature){
+                    featureNames.push({'name': feature.name});
+                });
+
+                return featureNames;
+            };
+
+            self.getJoins = function(joinFgs, featuresGrouped) {
+                var joins = [];
+                joinFgs.forEach(function(joinFg){
+                    joins.push({'query': {
+                        'leftFeatureGroup': {'id': joinFg},
+                        'leftFeatures': self.getLeftFeatureNames(featuresGrouped[joinFg])
+                    }});
+                });
+                return joins;
+            };
+
+            self.getTrainingDatasetType = function() {
+                if (self.sinkType == 0) {
+                    return "HOPSFS_TRAINING_DATASET";
+                } else { 
+                    return "EXTERNAL_TRAINING_DATASET";
                 }
-                if (runConfig.jobType === self.pySparkJobType) {
-                    jobState.accordion3 = {// Contains the main execution file (jar, workflow,...)
-                        "isOpen": false,
-                        "visible": false,
-                        "value": "",
-                        "title": "App file (.py or .ipynb) - " + runConfig.appPath
-                    };
-                    jobState.jobtype = 2
+            };
+            
+            self.getStorageConnector = function() {
+                if (self.sinkType == 0) {
+                    return self.selectedHopsfsConnector;
+                } else if (self.sinkType == 1) {
+                    return self.selectedS3Connector;
+                } else if (self.sinkType == 2) {
+                    return self.selectedADLSConnector;
                 }
-                jobState.accordion4 = {// Contains the job setup (main class, input variables,...)
-                    "isOpen": false,
-                    "visible": true,
-                    "value": "",
-                    "title": "Job details"
-                };
-                jobState.accordion5 = {//Contains the configuration and creation
-                    "isOpen": true,
-                    "visible": true,
-                    "value": "",
-                    "title": "Configure and create"
-                };
-                jobState.phase = 5
-                jobState.jobname = runConfig.appName
-                jobState.runConfig = runConfig
-                jobState.sparkState = {
-                    "selectedJar": runConfig.appPath
-                }
-                return jobState
-            }
+            };
 
             /**
              * Utility function to get the name of the selected connector
@@ -635,63 +460,6 @@ angular.module('hopsWorksApp')
                 } else { 
                     return self.selectedS3Connector.name;
                 }
-            };
-
-            /**
-             * Sets up the JSON input arguments for a job to create a new training dataset using the Feature Store API
-             * and Spark
-             *
-             * @param fileName name of the file to save the JSON
-             * @returns the configured JSON
-             */
-            self.setupJobArgs = function (fileName) {
-                return {
-                    "fileName": fileName,
-                    "operation": "insert_into_td",
-                    "featurestore": self.featurestore.featurestoreName,
-                    "features": self.featureBasket,
-                    "featuregroups": self.queryPlan.featuregroups,
-                    "trainingDataset": self.trainingDatasetName,
-                    "dataFormat": self.trainingDatasetFormat,
-                    "version": self.version,
-                    "joinKey": self.queryPlan.joinKey,
-                    "description": self.trainingDatasetDoc,
-                    "descriptiveStats": false,
-                    "featureCorrelation": false,
-                    "clusterAnalysis": false,
-                    "featureHistograms": false,
-                    "statColumns": [],
-                };
-            };
-
-            /**
-             * Sets up the job configuration for creating a training dataset using Spark and the Featurestore API
-             *
-             * @param jobName name of the job
-             * @returns the configured json
-             */
-            self.setupHopsworksCreateTdJob = function (jobName, hdfsPath) {
-                return {
-                    type: "sparkJobConfiguration",
-                    appName: jobName,
-                    defaultArgs: '--input ' + hdfsPath,
-                    amQueue: "default",
-                    amMemory: 4000,
-                    amVCores: 1,
-                    jobType: self.pySparkJobType,
-                    appPath: self.featurestoreUtilPythonExecutable,
-                    mainClass: self.settings.featurestoreUtilPythonMainClass,
-                    "spark.blacklist.enabled": false,
-                    "spark.dynamicAllocation.enabled": true,
-                    "spark.dynamicAllocation.initialExecutors": 1,
-                    "spark.dynamicAllocation.maxExecutors": 10,
-                    "spark.dynamicAllocation.minExecutors": 1,
-                    "spark.executor.cores": 1,
-                    "spark.executor.gpus": 0,
-                    "spark.executor.instances": 1,
-                    "spark.executor.memory": 4000,
-                    "spark.tensorflow.num.ps": 0
-                };
             };
 
             /**
@@ -708,14 +476,6 @@ angular.module('hopsWorksApp')
              */
             self.init = function () {
                 self.initVariables()
-            };
-
-            /**
-             * Boolean parameter indicating whether a spark job should be configured for creating the new training
-             * dataset
-             */
-            self.setConfigureJob = function() {
-                self.configureJob = !self.configureJob;
             };
 
             /**
@@ -738,22 +498,17 @@ angular.module('hopsWorksApp')
                 self.trainingDataset.features.splice(index, 1);
             };
 
-            /**
-             * Function called when the user clicks the "Feature type" button, opens up a modal where the user
-             * can select a pre-defined Hive type or define a custom type.
-             *
-             * @param feature the feature to define the type for
-             */
-            self.selectFeatureType = function (feature) {
-                ModalService.selectFeatureType('lg', false, self.settings).then(
-                    function (success) {
-                        feature.type = success
-                    },
-                    function (error) {
-                        // Users changed their minds.
-                    });
+            self.toggleSelectFeatureStage = function() { 
+                self.selectFeatureStage = !self.selectFeatureStage;
+                var queryJson = self.buildQueryObject();
+                FeaturestoreService.constructQuery(self.projectId, queryJson).then(
+                    function(success) {
+                        self.query = success.data.query;
+                    }, function(error) {
+                        self.query = undefined;
+                    }
+                );
             };
-
 
             /**
              * Remove entries from local storage
