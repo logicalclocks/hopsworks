@@ -2009,7 +2009,8 @@ public class ProjectController {
     QuotasDTO quotas = getQuotasInternal(project);
 
     return new ProjectDTO(project, inode.getId(), services, projectTeam, quotas,
-      settings.getHopsExamplesSparkFilename(), projectUtils.dockerImageIsPreinstalled(project.getDockerImage()));
+      settings.getHopsExamplesSparkFilename(), projectUtils.dockerImageIsPreinstalled(project.getDockerImage()),
+        projectUtils.isOldDockerImage(project.getDockerImage()));
   }
 
   /**
@@ -2051,7 +2052,8 @@ public class ProjectController {
 
     //send the project back to client
     return new ProjectDTO(project, inode.getId(), services, projectTeam, kids,
-        projectUtils.dockerImageIsPreinstalled(project.getDockerImage()));
+        projectUtils.dockerImageIsPreinstalled(project.getDockerImage()),
+            projectUtils.isOldDockerImage(project.getDockerImage()));
   }
 
   public void setProjectOwnerAndQuotas(Project project, long diskspaceQuotaInMB,
