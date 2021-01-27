@@ -354,17 +354,6 @@ angular.module('hopsWorksApp')
                         featurestore.featurestoreId + "/storageconnectors/" + storageConnectorName);
                 },
                 /**
-                 * Sends a POST request to the backend for writing args for featurestore util job to HDFS
-                 *
-                 * @param projectId project of the featurestore
-                 * @param utilArgsJson the JSON payload
-                 * @returns {HttpPromise}
-                 */
-                writeUtilArgstoHdfs: function(projectId, utilArgsJson) {
-                    return $http.post('/api/project/' + projectId + '/featurestores/util',
-                        JSON.stringify(utilArgsJson), {headers: {'Content-Type': 'application/json'}});
-                },
-                /**
                  * GET request for the tags that can be attached to featuregroups or training datasets
                  *
                  * @param query string for the request
@@ -377,6 +366,15 @@ angular.module('hopsWorksApp')
                 getTdQuery: function(projectId, featureStore, td) {
                     return $http.get("/api/project/" + projectId + "/featurestores/" + featureStore.featurestoreId + "/trainingdatasets/" + td.id + "/query");
                 },
-            
+
+                constructQuery: function(projectId, queryJson) {
+                    return $http.put("/api/project/" + projectId + "/featurestores/query",
+                        JSON.stringify(queryJson), {headers: {'Content-Type': 'application/json'}});
+                },
+
+                computeTrainingDataset: function(projectId, featureStore, trainingDatasetId, computeJson) {
+                    return $http.post("/api/project/" + projectId + "/featurestores/" + featureStore.featurestoreId + "/trainingdatasets/" + trainingDatasetId + "/compute",
+                        JSON.stringify(computeJson), {headers: {'Content-Type': 'application/json'}});
+                },
             };
           }]);
