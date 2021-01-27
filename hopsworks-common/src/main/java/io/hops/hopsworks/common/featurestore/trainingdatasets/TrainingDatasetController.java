@@ -240,17 +240,18 @@ public class TrainingDatasetController {
     Inode inode = null;
     FeaturestoreConnector featurestoreConnector;
     if(trainingDatasetDTO.getTrainingDatasetType() == TrainingDatasetType.HOPSFS_TRAINING_DATASET) {
-      if (trainingDatasetDTO.getStorageConnector() == null) {
+      if (trainingDatasetDTO.getStorageConnector() != null &&
+          trainingDatasetDTO.getStorageConnector().getId() != null) {
+        featurestoreConnector = featurestoreConnectorFacade
+            .findByIdType(trainingDatasetDTO.getStorageConnector().getId(), FeaturestoreConnectorType.HOPSFS)
+            .orElseThrow(() -> new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.HOPSFS_CONNECTOR_NOT_FOUND,
+                Level.FINE, "HOPSFS Connector: " + trainingDatasetDTO.getStorageConnector().getId()));
+      } else {
         String connectorName =
             featurestore.getProject().getName() + "_" + Settings.ServiceDataset.TRAININGDATASETS.getName();
         featurestoreConnector = featurestoreConnectorFacade.findByFeaturestoreName(featurestore, connectorName)
             .orElseThrow(() -> new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.HOPSFS_CONNECTOR_NOT_FOUND,
                 Level.FINE, "HOPSFS Connector: " + connectorName));
-      } else {
-        featurestoreConnector = featurestoreConnectorFacade
-            .findByIdType(trainingDatasetDTO.getStorageConnector().getId(), FeaturestoreConnectorType.HOPSFS)
-            .orElseThrow(() -> new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.HOPSFS_CONNECTOR_NOT_FOUND,
-                Level.FINE, "HOPSFS Connector: " + trainingDatasetDTO.getStorageConnector().getId()));
       }
 
       Dataset trainingDatasetsFolder = featurestoreConnector.getHopsfsConnector().getHopsfsDataset();
