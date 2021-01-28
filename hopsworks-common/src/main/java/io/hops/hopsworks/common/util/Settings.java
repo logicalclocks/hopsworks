@@ -126,6 +126,8 @@ public class Settings implements Serializable {
    */
   private static final String VARIABLE_ADMIN_EMAIL = "admin_email";
   private static final String VARIABLE_PYPI_REST_ENDPOINT = "pypi_rest_endpoint";
+  private static final String VARIABLE_PYPI_INDEXER_TIMER_INTERVAL = "pypi_indexer_timer_interval";
+  private static final String VARIABLE_PYPI_SIMPLE_ENDPOINT = "pypi_simple_endpoint";
   private static final String VARIABLE_PYTHON_KERNEL = "python_kernel";
   private static final String VARIABLE_HADOOP_VERSION = "hadoop_version";
   private static final String VARIABLE_JAVA_HOME = "JAVA_HOME";
@@ -653,6 +655,9 @@ public class Settings implements Serializable {
       HOPSWORKS_REST_LOG_LEVEL = setLogLevelVar(VARIABLE_HOPSWORKS_REST_LOG_LEVEL, HOPSWORKS_REST_LOG_LEVEL);
 
       PYPI_REST_ENDPOINT = setStrVar(VARIABLE_PYPI_REST_ENDPOINT, PYPI_REST_ENDPOINT);
+      PYPI_SIMPLE_ENDPOINT = setStrVar(VARIABLE_PYPI_SIMPLE_ENDPOINT, PYPI_SIMPLE_ENDPOINT);
+      PYPI_INDEXER_TIMER_INTERVAL = setStrVar(VARIABLE_PYPI_INDEXER_TIMER_INTERVAL, PYPI_INDEXER_TIMER_INTERVAL);
+
       IMMUTABLE_PYTHON_LIBRARY_NAMES = toSetFromCsv(
           setStrVar(VARIABLE_IMMUTABLE_PYTHON_LIBRARY_NAMES, DEFAULT_IMMUTABLE_PYTHON_LIBRARY_NAMES),
           ",");
@@ -1983,6 +1988,7 @@ public class Settings implements Serializable {
   public static final String ELASTIC_LOGS_INDEX = "logs";
   public static final String ELASTIC_BEAMJOBSERVER = "beamjobserver";
   public static final String ELASTIC_BEAMSDKWORKER = "beamsdkworker";
+  public static final String ELASTIC_PYPI_LIBRARIES_INDEX_PATTERN_PREFIX = "pypi_libraries_";
   public static final String ELASTIC_LOGS_INDEX_PATTERN = "_" + Settings.ELASTIC_LOGS_INDEX + "-*";
   public static final String ELASTIC_SERVING_INDEX = "serving";
   public static final String ELASTIC_SERVING_INDEX_PATTERN = "_" + ELASTIC_SERVING_INDEX + "-*";
@@ -1997,9 +2003,14 @@ public class Settings implements Serializable {
     ".*_" + ELASTIC_BEAMJOBSERVER + "-\\d{4}.\\d{2}.\\d{2}";
   public static final String ELASTIC_BEAMSDKWORKER_INDEX_REGEX =
     ".*_" + ELASTIC_BEAMSDKWORKER + "-\\d{4}.\\d{2}.\\d{2}";
+  public static final String ELASTIC_PYPI_LIBRARIES_INDEX_REGEX = ELASTIC_PYPI_LIBRARIES_INDEX_PATTERN_PREFIX +
+    "\\d+";
 
   //Other Elastic indexes
   public static final String ELASTIC_INDEX_APP_PROVENANCE = "app_provenance";
+
+  //Elastic aliases
+  public static final String ELASTIC_PYPI_LIBRARIES_ALIAS = "pypi_libraries";
   
   public String getHopsworksTmpCertDir() {
     return Paths.get(getCertsDir(), "transient").toString();
@@ -2387,6 +2398,20 @@ public class Settings implements Serializable {
   public synchronized String getPyPiRESTEndpoint() {
     checkCache();
     return PYPI_REST_ENDPOINT;
+  }
+
+  private String PYPI_INDEXER_TIMER_INTERVAL = "1d";
+
+  public synchronized String getPyPiIndexerTimerInterval() {
+    checkCache();
+    return PYPI_INDEXER_TIMER_INTERVAL;
+  }
+
+  private String PYPI_SIMPLE_ENDPOINT = "https://pypi.org/simple/";
+
+  public synchronized String getPyPiSimpleEndpoint() {
+    checkCache();
+    return PYPI_SIMPLE_ENDPOINT;
   }
 
   private String HOPS_EXAMPLES_VERSION = "0.3.0";

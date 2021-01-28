@@ -15,14 +15,22 @@
  */
 package io.hops.hopsworks.common.python.library;
 
+import com.lambdista.util.Try;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
 import io.hops.hopsworks.common.dao.python.LibraryFacade;
+import io.hops.hopsworks.common.provenance.core.elastic.BasicElasticHit;
+import io.hops.hopsworks.common.provenance.core.elastic.ElasticHelper;
+import io.hops.hopsworks.common.provenance.core.elastic.ElasticHits;
+import io.hops.hopsworks.common.provenance.core.elastic.ProvElasticController;
+import io.hops.hopsworks.common.provenance.util.functional.CheckedSupplier;
 import io.hops.hopsworks.common.python.commands.CommandsController;
 import io.hops.hopsworks.common.util.OSProcessExecutor;
 import io.hops.hopsworks.common.util.ProcessDescriptor;
 import io.hops.hopsworks.common.util.ProcessResult;
 import io.hops.hopsworks.common.util.Settings;
+import io.hops.hopsworks.exceptions.ElasticException;
 import io.hops.hopsworks.exceptions.GenericException;
+import io.hops.hopsworks.exceptions.ProvenanceException;
 import io.hops.hopsworks.exceptions.ServiceException;
 import io.hops.hopsworks.persistence.entity.jupyter.config.GitBackend;
 import io.hops.hopsworks.persistence.entity.project.Project;
@@ -33,6 +41,9 @@ import io.hops.hopsworks.persistence.entity.python.CondaOp;
 import io.hops.hopsworks.persistence.entity.python.PythonDep;
 import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.restutils.RESTCodes;
+import org.elasticsearch.action.search.SearchRequest;
+import org.elasticsearch.search.builder.SearchSourceBuilder;
+import org.javatuples.Pair;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -59,7 +70,7 @@ import java.util.logging.Logger;
 @Stateless
 @TransactionAttribute(TransactionAttributeType.NEVER)
 public class LibraryController {
-  
+
   private static final Logger LOGGER = Logger.getLogger(LibraryController.class.getName());
   @EJB
   private ProjectFacade projectFacade;
@@ -71,6 +82,8 @@ public class LibraryController {
   private LibraryFacade libraryFacade;
   @EJB
   private OSProcessExecutor osProcessExecutor;
+  @EJB
+  private ProvElasticController provElasticController;
 
   public PythonDep getPythonDep(String dependency, Project project) {
     return libraryFacade.findByDependencyAndProject(dependency, project);
@@ -85,7 +98,7 @@ public class LibraryController {
       }
     }
   }
-  
+
   public Project syncProjectPythonDepsWithEnv(Project proj, Collection<PythonDep> newDeps) {
     proj.setPythonDepCollection(newDeps);
     proj = projectFacade.update(proj);
@@ -99,17 +112,17 @@ public class LibraryController {
     return commandsController.condaOp(CondaOp.INSTALL, user, installType, proj,
       channelUrl, dependency, version, arg, gitBackend, apiKeyName);
   }
-  
+
   public void uninstallLibrary(Project proj, Users user, CondaInstallType installType, String channelUrl,
                                String dependency, String version) throws GenericException {
     commandsController.condaOp(CondaOp.UNINSTALL, user, installType, proj, channelUrl,
       dependency, version, "", null, null);
   }
-  
+
   public HashMap<String, List<LibraryVersionDTO>> condaSearch(String library, String url) throws ServiceException {
     HashMap<String, List<LibraryVersionDTO>> libVersions = new HashMap<>();
     String prog = settings.getHopsworksDomainDir() + "/bin/condasearch.sh";
-    String[] lines = search(prog, library, url);
+    String[] lines = condaList(prog, library, url);
     String[] libVersion;
     String foundLib = "";
     String foundVersion;
@@ -160,7 +173,7 @@ public class LibraryController {
     }
     return libVersions;
   }
-  
+
   private void findPipLibPyPi(String libName, HashMap<String, List<LibraryVersionDTO>> versions) {
     Response resp = null;
     try {
@@ -173,19 +186,19 @@ public class LibraryController {
         "\\{package}", libName), e);
       return;
     }
-    
+
     if (resp.getStatusInfo().getStatusCode() != Response.Status.OK.getStatusCode()) {
       return;
     }
-    
+
     JSONObject jsonObject = new JSONObject(resp.readEntity(String.class));
-    
+
     if (jsonObject.has("releases")) {
       JSONObject releases = jsonObject.getJSONObject("releases");
       versions.put(libName, getVersions(releases));
     }
   }
-  
+
   private List<LibraryVersionDTO> getVersions(JSONObject releases) {
     List<LibraryVersionDTO> versions = new ArrayList<>();
     Iterator<String> keys = releases.keys();
@@ -209,39 +222,15 @@ public class LibraryController {
     }
     return versions;
   }
-  
-  public HashMap<String, List<LibraryVersionDTO>> pipSearch(String library) throws ServiceException {
+
+  public HashMap<String, List<LibraryVersionDTO>> pipSearch(String query)
+    throws ServiceException {
 
     HashMap<String, List<LibraryVersionDTO>> versions = new HashMap<>();
-    
-    String prog = settings.getHopsworksDomainDir() + "/bin/pipsearch.sh";
-    String[] lines = search(prog, library, null);
-    library = library.toLowerCase();
-    String[] lineSplit;
-    for (String line : lines) {
-      lineSplit = line.split(" +");
-      if (line.length() == 0 || lineSplit.length < 2) {
-        continue;
-      }
-      String libName = lineSplit[0];
-      if (!libName.toLowerCase().startsWith(library)) {
-        continue;
-      }
-      findPipLibPyPi(libName, versions);
-      if (!versions.containsKey(libName) || versions.get(libName).isEmpty()) {
-        //This may happen when the version is (), i.e pip search does not return a version
-        String version = lineSplit[1];
-        if (version.equals("()")) {
-          List<LibraryVersionDTO> versionList = new ArrayList<>();
-          versionList.add(new LibraryVersionDTO(""));
-          versions.put(libName, versionList);
-        } else {
-          version = version.replaceAll("[()]", "").trim();
-          List<LibraryVersionDTO> versionList = new ArrayList<>();
-          versionList.add(new LibraryVersionDTO(version));
-          versions.put(libName, versionList);
-        }
-      }
+
+    String[] lines = pipList(query, new HandlerFactory.BaseList(), Settings.ELASTIC_PYPI_LIBRARIES_ALIAS);
+    for (String library : lines) {
+      findPipLibPyPi(library, versions);
     }
     // if empty
     if (versions.isEmpty()) {
@@ -249,8 +238,8 @@ public class LibraryController {
     }
     return versions;
   }
-  
-  private String[] search(String program, String library, String url)
+
+  private String[] condaList(String program, String library, String url)
     throws ServiceException {
     ProcessDescriptor.Builder pdBuilder = new ProcessDescriptor.Builder();
     pdBuilder.addCommand(program);
@@ -285,6 +274,78 @@ public class LibraryController {
     }
     String result = processResult.getStdout();
     return (result != null && !result.isEmpty())? result.split("\n") : new String[0];
+  }
+
+  /**
+   * @param <R> parsed elastic item
+   * @param <S1> intermediate result wrapped in Try
+   * @param <S2> final result
+   * @return
+   * @throws ProvenanceException
+   */
+  public <R, S1, S2> S2 pipList(String query, LibraryController.HandlerFactory<R, S1, S2> handlerFactory,
+                                String index)
+    throws ServiceException {
+    return pipList(query, 0, 10, handlerFactory, index);
+  }
+
+  /**
+   * @param <R> parsed elastic item
+   * @param <S1> intermediate result wrapped in Try
+   * @param <S2> final result
+   * @return
+   * @throws ProvenanceException
+   */
+  private <R, S1, S2> S2 pipList(String query, Integer offset, Integer limit,
+                                 LibraryController.HandlerFactory<R, S1, S2> handlerFactory, String index)
+    throws ServiceException {
+    Pair<Long, Try<S1>> searchResult;
+    try {
+      CheckedSupplier<SearchRequest, ProvenanceException> srF =
+        ElasticHelper.baseSearchRequest(
+          index,
+          settings.getElasticDefaultScrollPageSize())
+          .andThen(ElasticHelper.withPagination(offset, limit, settings.getElasticDefaultScrollPageSize()));
+      SearchRequest request = srF.get();
+      SearchSourceBuilder sourceBuilder = new SearchSourceBuilder();
+      sourceBuilder.query(ElasticHelper.fullTextSearch("library", query));
+      request.source(sourceBuilder);
+      searchResult = provElasticController.search(request, handlerFactory.getHandler());
+    } catch(ElasticException | ProvenanceException pe) {
+      throw new ServiceException(RESTCodes.ServiceErrorCode.ANACONDA_LIST_LIB_ERROR, Level.FINE,
+        "Unable to list python libraries", pe.getMessage(), pe);
+    }
+    return handlerFactory.checkedResult(searchResult);
+  }
+
+  public interface HandlerFactory<R, S1, S2> {
+    ElasticHits.Handler<R, S1> getHandler();
+    S2 checkedResult(Pair<Long, Try<S1>> result) throws ServiceException;
+
+    class BaseList implements LibraryController.HandlerFactory<String[], List<String[]>, String[]> {
+      public ElasticHits.Handler<String[], List<String[]>> getHandler() {
+        ElasticHits.Parser<String[]> parser =
+          hit -> LibraryController.tryInstance(BasicElasticHit.instance(hit));
+        return ElasticHits.handlerAddToList(parser);
+      }
+
+      public String[] checkedResult(Pair<Long, Try<List<String[]>>> result) throws ServiceException {
+        try {
+          ArrayList<String> hits = new ArrayList<>();
+          for(String[] lib: result.getValue1().checkedGet()) {
+            hits.add(lib[0]);
+          }
+          return hits.toArray(new String[0]);
+        } catch (Throwable t) {
+          throw new ServiceException(RESTCodes.ServiceErrorCode.ANACONDA_LIST_LIB_ERROR, Level.WARNING,
+            "Failed to list libraries");
+        }
+      }
+    }
+  }
+
+  public static Try<String[]> tryInstance(BasicElasticHit hit) {
+    return Try.apply(() -> new String[] {hit.getSource().get("library").toString()});
   }
   
   public Collection<PythonDep> listLibraries(String imageName) throws ServiceException {
