@@ -30,67 +30,59 @@ describe "On #{ENV['OS']}" do
         end
         with_admin_session
         @tags.each do |tag|
-          createFeatureStoreTag(tag, "STRING")
+          create_featurestore_tag(tag, string_schema)
         end
         reset_session
         create_session(@usermail1, "Pass123")
+        @fg_name = "epipe_fg0"
       end
 
       after :all do
         with_admin_session
         @tags.each do |tag|
-          deleteFeatureStoreTag(tag)
+          delete_featurestore_Tag(tag)
         end
         reset_session
         create_session(@usermail1, "Pass123")
       end
 
-      def featuregroups_setup(project)
-        fgs = Array.new
-        featurestore_id = get_featurestore_id(project[:id])
-        fgs[0] = {}
-        fgs[0][:name] = "epipe_fg0"
-        fgs[0][:id] = create_cached_featuregroup_checked(project[:id], featurestore_id, fgs[0][:name])
-        fgs
-      end
-
-      def cleanup(project, fgs)
-        featurestore_id = get_featurestore_id(project[:id])
-        fgs.each do |fg|
-          delete_featuregroup_checked(project[:id], featurestore_id, fg[:id])
-        end if defined?(fgs) && !fgs.nil?
-      end
-
       it "large xattr(2+ rows) processing" do
-        fgs = featuregroups_setup(@project1)
         featurestore_id = get_featurestore_id(@project1[:id])
-
+        if featuregroup_exists(@project1[:id], @fg_name)
+          f = get_featuregroup(@project1[:id], @fg_name)[0]
+          delete_featuregroup_checked(@project1[:id], featurestore_id, f["id"])
+        end
+        fg_id = create_cached_featuregroup_checked(@project1[:id], featurestore_id, @fg_name)
         tag_value = "test_tag" + ("x" * 992)
-        add_featuregroup_tag_checked(@project1[:id], featurestore_id,  fgs[0][:id], @tags[0], value: tag_value)
+        add_featuregroup_tag_checked(@project1[:id], featurestore_id, fg_id, @tags[0], value: tag_value)
         15.times do |i|
-          update_featuregroup_tag_checked(@project1[:id], featurestore_id,  fgs[0][:id], @tags[i+1], value: tag_value)
+          add_featuregroup_tag_checked(@project1[:id], featurestore_id, fg_id, @tags[i+1], value: tag_value)
         end
         wait_result = epipe_wait_on_mutations
         expect(wait_result["success"]).to be(true), wait_result["msg"]
 
         epipe_stop_restart do
-          update_featuregroup_tag_checked(@project1[:id], featurestore_id,  fgs[0][:id], @tags[16], value: tag_value)
+          add_featuregroup_tag_checked(@project1[:id], featurestore_id, fg_id, @tags[16], value: tag_value)
         end
         wait_result = epipe_wait_on_mutations
         expect(wait_result["success"]).to be(true), wait_result["msg"]
 
-        expected_hits1 = [{:name => fgs[0][:name], :highlight => "tags", :parent_project => @project1[:projectname]}]
+        expected_hits1 = [{:name => @fg_name, :highlight => "tags", :parent_project => @project1[:projectname]}]
         project_search_test(@project1, "test_tag", "featuregroup", expected_hits1)
 
-        cleanup(@project1, fgs)
+        delete_featuregroup_checked(@project1[:id], featurestore_id, fg_id)
       end
 
       it "late process with updates on same tag - leading to different size (parts) compared to current" do
-        fgs = featuregroups_setup(@project1)
         featurestore_id = get_featurestore_id(@project1[:id])
+        if featuregroup_exists(@project1[:id], @fg_name)
+          f = get_featuregroup(@project1[:id], @fg_name)[0]
+          delete_featuregroup_checked(@project1[:id], featurestore_id, f["id"])
+        end
+        fg_id = create_cached_featuregroup_checked(@project1[:id], featurestore_id, @fg_name)
 
         tag_value = "test_tag" + ("x" * 992)
-        add_featuregroup_tag_checked(@project1[:id], featurestore_id,  fgs[0][:id], @tags[0], value: tag_value)
+        add_featuregroup_tag_checked(@project1[:id], featurestore_id, fg_id, @tags[0], value: tag_value)
         wait_result = epipe_wait_on_mutations
         expect(wait_result["success"]).to be(true), wait_result["msg"]
 
@@ -98,30 +90,34 @@ describe "On #{ENV['OS']}" do
         # we got from 1,2,3,2,1,2 parts in log, whereas the current one has 2 parts
         epipe_stop_restart do
           40.times do |i|
-            update_featuregroup_tag_checked(@project1[:id], featurestore_id, fgs[0][:id], @tags[i+1], value: tag_value)
+            add_featuregroup_tag_checked(@project1[:id], featurestore_id, fg_id, @tags[i+1], value: tag_value)
           end
           40.times do |i|
-            delete_featuregroup_tag_checked(@project1[:id], featurestore_id, fgs[0][:id], @tags[i+1])
+            delete_featuregroup_tag_checked(@project1[:id], featurestore_id, fg_id, @tags[i+1])
           end
           20.times do |i|
-            update_featuregroup_tag_checked(@project1[:id], featurestore_id, fgs[0][:id], @tags[i+1], value: tag_value)
+            add_featuregroup_tag_checked(@project1[:id], featurestore_id, fg_id, @tags[i+1], value: tag_value)
           end
         end
         wait_result = epipe_wait_on_mutations
         expect(wait_result["success"]).to be(true), wait_result["msg"]
 
-        expected_hits1 = [{:name => fgs[0][:name], :highlight => "tags", :parent_project => @project1[:projectname]}]
+        expected_hits1 = [{:name => @fg_name, :highlight => "tags", :parent_project => @project1[:projectname]}]
         project_search_test(@project1, "test_tag", "featuregroup", expected_hits1)
 
-        cleanup(@project1, fgs)
+        delete_featuregroup_checked(@project1[:id], featurestore_id, fg_id)
       end
 
       it "late process with updates on same tag - leading to xattr being removed before log processing" do
-        fgs = featuregroups_setup(@project1)
         featurestore_id = get_featurestore_id(@project1[:id])
+        if featuregroup_exists(@project1[:id], @fg_name)
+          f = get_featuregroup(@project1[:id], @fg_name)[0]
+          delete_featuregroup_checked(@project1[:id], featurestore_id, f["id"])
+        end
+        fg_id = create_cached_featuregroup_checked(@project1[:id], featurestore_id, @fg_name)
 
         tag_value = "test_tag" + ("x" * 992)
-        add_featuregroup_tag_checked(@project1[:id], featurestore_id,  fgs[0][:id], @tags[0], value: tag_value)
+        add_featuregroup_tag_checked(@project1[:id], featurestore_id,  fg_id, @tags[0], value: tag_value)
         wait_result = epipe_wait_on_mutations
         expect(wait_result["success"]).to be(true), wait_result["msg"]
 
@@ -129,9 +125,9 @@ describe "On #{ENV['OS']}" do
         #before processing of logs starts, the xattrs is actually deleted as the inode is deleted
         epipe_stop_restart do
           40.times do |i|
-            update_featuregroup_tag_checked(@project1[:id], featurestore_id, fgs[0][:id], @tags[i+1], value: tag_value)
+            add_featuregroup_tag_checked(@project1[:id], featurestore_id, fg_id, @tags[i+1], value: tag_value)
           end
-          cleanup(@project1, fgs)
+          delete_featuregroup_checked(@project1[:id], featurestore_id, fg_id)
         end
         wait_result = epipe_wait_on_mutations
         expect(wait_result["success"]).to be(true), wait_result["msg"]

@@ -211,6 +211,10 @@
               <token>io.hops.hopsworks.common.integrations.NullRemoteAuthStereotype</token>
               <value>${remote-auth.stereotype}</value>
             </replacement>
+            <replacement>
+              <token>io.hops.hopsworks.common.integrations.CommunityStereotype</token>
+              <value>io.hops.hopsworks.common.integrations.EnterpriseStereotype</value>
+            </replacement>
           </replacements>
         </configuration>
       </plugin>

@@ -30,10 +30,10 @@ describe "On #{ENV['OS']}" do
 
       with_admin_session
       @tags.each do |tag|
-        createFeatureStoreTag(tag, "STRING")
+        create_featurestore_tag(tag, string_schema)
       end
       @large_tags.each do |tag|
-        createFeatureStoreTag(tag, "STRING")
+        create_featurestore_tag(tag, string_schema)
       end
       reset_session
     end
@@ -41,10 +41,10 @@ describe "On #{ENV['OS']}" do
     after :all do
       with_admin_session
       @tags.each do |tag|
-        deleteFeatureStoreTag(tag)
+        delete_featurestore_Tag(tag)
       end
       @large_tags.each do |tag|
-        deleteFeatureStoreTag(tag)
+        delete_featurestore_Tag(tag)
       end
       reset_session
     end
@@ -59,14 +59,12 @@ describe "On #{ENV['OS']}" do
       fgs[1][:name] = "fg1"
       fgs[1][:id] = create_cached_featuregroup_checked(project[:id], featurestore_id, fgs[1][:name])
       add_featuregroup_tag_checked(project[:id], featurestore_id,  fgs[1][:id], @tags[0], value: "some")
-      #currently adding a new tag is seen as updating the tags object
-      update_featuregroup_tag_checked(project[:id], featurestore_id,  fgs[1][:id], @tags[1], value: "val")
+      add_featuregroup_tag_checked(project[:id], featurestore_id,  fgs[1][:id], @tags[1], value: "val")
       fgs[2] = {}
       fgs[2][:name] = "fg2"
       fgs[2][:id] = create_cached_featuregroup_checked(project[:id], featurestore_id, fgs[2][:name])
       add_featuregroup_tag_checked(project[:id], featurestore_id, fgs[2][:id], @tags[1], value: "dog")
-      #currently adding a new tag is seen as updating the tags object
-      update_featuregroup_tag_checked(project[:id], featurestore_id, fgs[2][:id], @tags[2], value: "val")
+      add_featuregroup_tag_checked(project[:id], featurestore_id, fgs[2][:id], @tags[2], value: "val")
       fgs[3] = {}
       fgs[3][:name] = "fg3"
       fgs[3][:id] = create_cached_featuregroup_checked(project[:id], featurestore_id, fgs[3][:name])
@@ -89,16 +87,14 @@ describe "On #{ENV['OS']}" do
       td_json, _ = create_hopsfs_training_dataset_checked(project[:id], featurestore_id, connector, name: tds[1][:name])
       tds[1][:id] = td_json[:id]
       add_training_dataset_tag_checked(project[:id], featurestore_id, tds[1][:id], @tags[0], value: "some")
-      #currently adding a new tag is seen as updating the tags object
-      update_training_dataset_tag_checked(project[:id], featurestore_id, tds[1][:id], @tags[1], value: "val")
+      add_training_dataset_tag_checked(project[:id], featurestore_id, tds[1][:id], @tags[1], value: "val")
       tds[2] = {}
       tds[2][:name] = "td2"
       td_json, _ = create_hopsfs_training_dataset_checked(project[:id], featurestore_id, connector, name:
               tds[2][:name])
       tds[2][:id] = td_json[:id]
       add_training_dataset_tag_checked(project[:id], featurestore_id, tds[2][:id], @tags[1], value: "dog")
-      #currently adding a new tag is seen as updating the tags object
-      update_training_dataset_tag_checked(project[:id], featurestore_id, tds[2][:id], @tags[2], value: "val")
+      add_training_dataset_tag_checked(project[:id], featurestore_id, tds[2][:id], @tags[2], value: "val")
       tds[3] = {}
       tds[3][:name] = "td3"
       td_json, _ = create_hopsfs_training_dataset_checked(project[:id], featurestore_id, connector, name: tds[3][:name])
@@ -180,13 +176,8 @@ describe "On #{ENV['OS']}" do
 
           expect(local_featurestore_search(@project, "FEATUREGROUP", "dog")["featuregroups"].length).to eq(0)
 
-          #add tag - no value
-          # fake update - first tag only is an add
-          update_featuregroup_tag_checked(@project[:id], featurestore_id, @featuregroup_id, @tags[1])
-          #remove tag
-          delete_featuregroup_tag_checked(@project[:id], featurestore_id, @featuregroup_id, @tags[1])
-          #update tag - with value
-          update_featuregroup_tag_checked(@project[:id], featurestore_id, @featuregroup_id, @tags[1], value:"val")
+          #add tag - with value
+          add_featuregroup_tag_checked(@project[:id], featurestore_id, @featuregroup_id, @tags[1], value:"val")
           #update tag - with value - value is search hit
           update_featuregroup_tag_checked(@project[:id], featurestore_id, @featuregroup_id, @tags[1], value:"dog")
           #search
@@ -211,7 +202,7 @@ describe "On #{ENV['OS']}" do
           tag_val = "x" * 1000
           add_featuregroup_tag_checked(@project[:id], featurestore_id, @featuregroup_id, @large_tags[0], value: tag_val)
           14.times do |i|
-            update_featuregroup_tag_checked(@project[:id], featurestore_id, @featuregroup_id, @large_tags[i+1], value: tag_val)
+            add_featuregroup_tag_checked(@project[:id], featurestore_id, @featuregroup_id, @large_tags[i+1], value: tag_val)
           end
 
           wait_result = epipe_wait_on_mutations(wait_time:30, repeat: 2)
@@ -252,13 +243,8 @@ describe "On #{ENV['OS']}" do
         @project2 = create_project
       end
 
-      context 'group' do
-        after :each do
-          cleanup(@project1, @fgs1, @tds1)
-          cleanup(@project2, @fgs2, @tds2)
-        end
-
-        it "ee project search featuregroup, training datasets with tags with shared training datasets" do
+      context "project search with shared fs" do
+        before :all do
           #share featurestore (with training dataset)
           featurestore_name = @project1[:projectname].downcase + "_featurestore.db"
           featurestore1 = get_dataset(@project1, featurestore_name)
@@ -268,6 +254,13 @@ describe "On #{ENV['OS']}" do
           @fgs2 = featuregroups_setup(@project2)
           @tds1 = trainingdataset_setup(@project1)
           @tds2 = trainingdataset_setup(@project2)
+        end
+
+        after :all do
+          cleanup(@project1, @fgs1, @tds1)
+          cleanup(@project2, @fgs2, @tds2)
+        end
+        it "featuregroup, training datasets with tags" do
           #search
           wait_result = epipe_wait_on_mutations(wait_time:30, repeat: 2)
           expect(wait_result["success"]).to be(true), wait_result["msg"]
@@ -300,12 +293,20 @@ describe "On #{ENV['OS']}" do
                             {:name => @tds1[3][:name], :highlight => "tags", :parent_project => @project1[:projectname]}]
           project_search_test(@project2, "dog", "trainingdataset", expected_hits4)
         end
-        it "ee global search featuregroup, training datasets with tags" do
+      end
+
+      context "global search" do
+        before :all do
           @fgs1 = featuregroups_setup(@project1)
           @fgs2 = featuregroups_setup(@project2)
           @tds1 = trainingdataset_setup(@project1)
           @tds2 = trainingdataset_setup(@project2)
-
+        end
+        after :all do
+          cleanup(@project1, @fgs1, @tds1)
+          cleanup(@project2, @fgs2, @tds2)
+        end
+        it "featuregroup, training datasets with tags" do
           wait_result = epipe_wait_on_mutations(wait_time:30, repeat: 2)
           expect(wait_result["success"]).to be(true), wait_result["msg"]
 

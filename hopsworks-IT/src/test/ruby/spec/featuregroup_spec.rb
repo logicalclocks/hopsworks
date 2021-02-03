@@ -1472,7 +1472,7 @@ describe "On #{ENV['OS']}" do
         with_admin_session
         @pre_created_tags = Array.new(1)
         @pre_created_tags[0] = "created_#{0}"
-        createFeatureStoreTag(@pre_created_tags[0], "STRING")
+        create_featurestore_tag(@pre_created_tags[0], string_schema)
 
         reset_session
 
@@ -1730,8 +1730,7 @@ describe "On #{ENV['OS']}" do
         json_result, _ = create_on_demand_featuregroup(@project[:id], featurestore_id, get_jdbc_connector_id)
         expect_status(201)
         fg_json = JSON.parse(json_result)
-        add_featuregroup_tag(@project[:id], featurestore_id, fg_json["id"], @pre_created_tags[0], value: "daily")
-        expect_status_details(201)
+        add_featuregroup_tag_checked(@project[:id], featurestore_id, fg_json["id"], @pre_created_tags[0], value: "daily")
         json_result = get_featuregroup_tags(@project[:id], featurestore_id, fg_json["id"])
         expect_status_details(200)
         tags_json = JSON.parse(json_result)

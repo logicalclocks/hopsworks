@@ -26,8 +26,8 @@
     <div align="center">
         <h:form id="tags_form" style="margin-top: 50px; width: 800px;">
             <p:growl id="msgs" showDetail="true"/>
-            <p:dataTable id="tags" widgetVar="tags" var="tag" value="#{createTagsBean.featureStoreTagList}"
-                         editable="true"
+            <p:dataTable id="tags" widgetVar="tags" var="tag" value="#{createTagsBean.tags}"
+                         editable="false"
                          rows="25"
                          paginator="true"
                          paginatorPosition="top"
@@ -39,46 +39,37 @@
                     Feature store tags.
                 </f:facet>
 
-                <p:ajax event="rowEdit" listener="#{createTagsBean.onRowEdit}"
-                        update=":tags_form:msgs"/>
-                <p:ajax event="rowEditCancel" listener="#{createTagsBean.onRowCancel}"
-                        update=":tags_form:msgs"/>
-
                 <p:column headerText="Name"
                           filterBy="#{tag.name}"
                           filterMatchMode="contains"
-                          sortBy="#{tag.name}">
+                          sortBy="#{tag.name}"
+                          style="width: 43%">
                     <p:cellEditor>
                         <f:facet name="output"><h:outputText value="#{tag.name}"/></f:facet>
-                        <f:facet
-                                name="input"><p:inputText id="tagValueInput" value="#{tag.name}" style="width:100%"/></f:facet>
+                        <f:facet name="input"><p:inputText id="tagNameInput" value="#{tag.name}"
+                                                           style="width:100%"/></f:facet>
                     </p:cellEditor>
                 </p:column>
 
-                <p:column headerText="Type" sortBy="#{tag.type}">
+                <p:column headerText="Schema" style="width: 43%">
                     <p:cellEditor>
-                        <f:facet name="output"><h:outputText value="#{tag.type}"/></f:facet>
-                        <f:facet name="input">
-                            <h:selectOneMenu value="#{tag.type}" style="width:100%">
-                                <f:selectItems value="#{createTagsBean.tagTypes}" var="type" itemLabel="#{type}"
-                                               itemValue="#{type}"/>
-                            </h:selectOneMenu>
-                        </f:facet>
+                        <f:facet name="output"><h:outputText value="#{tag.schema}"/></f:facet>
+                        <f:facet name="input"><p:inputText id="tagSchemaInput" value="#{tag.schema}"
+                                                           style="width:100%"/></f:facet>
                     </p:cellEditor>
                 </p:column>
-                <p:column headerText="Action" style="width: 35px;">
-                    <p:commandButton icon="ui-icon-trash" disabled="#{tag.id == null}"
+                <p:column headerText="Action" style="width: 14%">
+                    <p:commandButton icon="ui-icon-trash"
                                      title="Delete tag"
-                                     action="#{createTagsBean.remove(tag)}"
-                                     update=":tags_form :tags_form:msgs">
+                                     action="#{createTagsBean.delete(tag.name)}"
+                                     update=":tags_form :tags_form:msgs"
+                                     style="width: 100%">
                         <p:confirm header="Remove tag"
                                    message="Are you sure you want to remove this tag?"
                                    icon="ui-icon-alert"/>
                     </p:commandButton>
                 </p:column>
-                <p:column style="width:32px">
-                    <p:rowEditor/>
-                </p:column>
+
             </p:dataTable>
             <p:confirmDialog global="true" severity="alert" showEffect="fade">
                 <p:commandButton value="Yes" icon="ui-icon-check" styleClass="ui-confirmdialog-yes" type="submit"/>
@@ -100,7 +91,7 @@
                             <td class="ui-editable-column" style="padding: 4px 10px">
                                 <div class="ui-cell-editor">
                                     <div class="ui-cell-editor-input">
-                                        <p:inputText id="value_input"
+                                        <p:inputText id="tag_name_input"
                                                      style="width: 96%;" value="#{createTagsBean.name}"
                                                      required="true" validator="#{createTagsBean.noSpaceValidator}"/>
                                     </div>
@@ -109,10 +100,7 @@
                             <td class="ui-editable-column" style="padding: 4px 10px">
                                 <div class="ui-cell-editor">
                                     <div class="ui-cell-editor-input">
-                                        <h:selectOneMenu value="#{createTagsBean.type}" required="true" style="width: 100%;">
-                                            <f:selectItems value="#{createTagsBean.tagTypes}" var="type" itemLabel="#{type}"
-                                                           itemValue="#{type}"/>
-                                        </h:selectOneMenu>
+                                        <p:inputText id="tag_schema_input" style="width: 96%;" value="#{createTagsBean.schema}" required="true"/>
                                     </div>
                                 </div>
                             </td>
@@ -121,7 +109,7 @@
                                     <div class="ui-g-12">
                                         <p:commandButton icon="ui-icon-plus" style="width: 100%;"
                                                          update=":add_tags_form :tags_form"
-                                                         action="#{createTagsBean.onAddNew()}"/>
+                                                         action="#{createTagsBean.save()}"/>
                                     </div>
                                 </div>
                             </td>

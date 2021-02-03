@@ -208,6 +208,46 @@ describe "On #{ENV['OS']}" do
         expect_status_details(400, error_code: 180005)
       end
     end
+    context "share datasets" do
+      before :all do
+        @user1_params = {email: "user1_#{random_id}@email.com", first_name: "User", last_name: "1", password: "Pass123"}
+        @user1 = create_user_with_role(@user1_params, "HOPS_ADMIN")
+        pp "user email: #{@user1[:email]}" if defined?(@debugOpt) && @debugOpt
+
+        create_session(@user1[:email], @user1_params[:password])
+        @project1 = create_project
+        pp @project1[:projectname] if defined?(@debugOpt) && @debugOpt
+        @dataset = create_dataset_by_name_checked(@project1, "ds_#{random_id}")
+
+        @user2_params = {email: "user2_#{random_id}@email.com", first_name: "User", last_name: "2", password: "Pass123"}
+        @user2 = create_user_with_role(@user2_params, "HOPS_ADMIN")
+        pp "user email: #{@user2[:email]}" if defined?(@debugOpt) && @debugOpt
+
+        create_session(@user2[:email], @user2_params[:password])
+        @project2 = create_project
+        pp @project2[:projectname] if defined?(@debugOpt) && @debugOpt
+
+        create_session(@user1_params[:email], @user1_params[:password])
+        share_dataset_checked(@project1, "#{@project1[:projectname].downcase}_featurestore.db", @project2[:projectname], datasetType: "FEATURESTORE")
+        share_dataset_checked(@project1, @dataset[:inode_name], @project2[:projectname], datasetType: "DATASET")
+
+        create_session(@user2_params[:email], @user2_params[:password])
+        accept_dataset_checked(@project2, "#{@project1[:projectname]}::#{@project1[:projectname].downcase}_featurestore.db", datasetType: "FEATURESTORE")
+        accept_dataset_checked(@project2, "#{@project1[:projectname]}::#{@dataset[:inode_name]}", datasetType: "DATASET")
+      end
+      after :all do
+        create_session(@user1[:email], @user1_params[:password])
+        # delete_project(@project1)
+        create_session(@user2[:email], @user2_params[:password])
+        # delete_project(@project2)
+      end
+
+      it 'attach xattr to shared dataset' do
+        create_session(@user2[:email], @user2_params[:password])
+        path = "/Projects/#{@project2[:projectname]}/#{@project1[:projectname]}::#{@dataset[:inode_name]}"
+        add_xattr_checked(@project2, path, "xattr_#{random_id}", "some value")
+      end
+    end
   end
   context "share project" do
     before :all do

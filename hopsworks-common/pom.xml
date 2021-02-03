@@ -391,6 +391,12 @@
       <artifactId>try</artifactId>
       <version>0.3.1</version>
     </dependency>
+    <!-- json schema validation - used by tags -->
+    <dependency>
+      <groupId>com.github.everit-org.json-schema</groupId>
+      <artifactId>org.everit.json.schema</artifactId>
+      <version>1.12.1</version>
+    </dependency>
   </dependencies>
 
   <build>

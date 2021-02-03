@@ -4,50 +4,44 @@
 package io.hops.hopsworks.admin.featurestore.tag;
 
 import io.hops.hopsworks.admin.maintenance.MessagesController;
-import io.hops.hopsworks.common.featurestore.tag.FeatureStoreTagController;
-import io.hops.hopsworks.persistence.entity.featurestore.tag.FeatureStoreTag;
-import io.hops.hopsworks.common.dao.featurestore.tag.FeatureStoreTagFacade;
-import io.hops.hopsworks.persistence.entity.featurestore.tag.TagType;
+import io.hops.hopsworks.common.featurestore.tag.FeatureStoreTagSchemaControllerIface;
 import io.hops.hopsworks.restutils.RESTException;
-import org.primefaces.event.RowEditEvent;
 
 import javax.annotation.PostConstruct;
-import javax.ejb.EJB;
+import javax.enterprise.context.RequestScoped;
 import javax.faces.application.FacesMessage;
 import javax.faces.bean.ManagedBean;
-import javax.faces.bean.ViewScoped;
 import javax.faces.component.UIComponent;
 import javax.faces.component.UIInput;
 import javax.faces.context.FacesContext;
 import javax.faces.validator.ValidatorException;
-import java.util.ArrayList;
+import javax.inject.Inject;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 @ManagedBean
-@ViewScoped
+@RequestScoped
 public class CreateTagsBean {
   private static final Logger LOGGER = Logger.getLogger(CreateTagsBean.class.getName());
   
   private String name;
-  private TagType type;
-  private TagType[] tagTypes;
+  private String schema;
   
-  private List<FeatureStoreTag> featureStoreTagList;
+  private List<Tag> tags;
   
-  @EJB
-  private FeatureStoreTagFacade featureStoreTagFacade;
-  @EJB
-  private FeatureStoreTagController featureStoreTagController;
+  @Inject
+  private FeatureStoreTagSchemaControllerIface featureStoreTagSchemaController;
   
   @PostConstruct
   public void init() {
-    tagTypes = TagType.values();
-    this.featureStoreTagList = featureStoreTagFacade.findAll();
-    if (this.featureStoreTagList == null) {
-      this.featureStoreTagList = new ArrayList<>();
-    }
+    tags = getAllTagsAsList();
+  }
+  
+  private List<Tag> getAllTagsAsList() {
+    return featureStoreTagSchemaController.getAll().entrySet().stream()
+      .map(tag -> new Tag(tag.getKey(), tag.getValue())).collect(Collectors.toList());
   }
   
   public String getName() {
@@ -58,43 +52,26 @@ public class CreateTagsBean {
     this.name = name;
   }
   
-  public TagType getType() {
-    return type;
+  public String getSchema() {
+    return schema;
   }
   
-  public void setType(TagType type) {
-    this.type = type;
+  public void setSchema(String schema) {
+    this.schema = schema;
   }
   
-  public TagType[] getTagTypes() {
-    return tagTypes;
+  public List<Tag> getTags() {
+    return tags;
   }
   
-  public void setTagTypes(TagType[] tagTypes) {
-    this.tagTypes = tagTypes;
+  public void setTags(List<Tag> tags) {
+    this.tags = tags;
   }
   
-  public List<FeatureStoreTag> getFeatureStoreTagList() {
-    return featureStoreTagList;
-  }
-  
-  public void setFeatureStoreTagList(
-    List<FeatureStoreTag> featureStoreTagList) {
-    this.featureStoreTagList = featureStoreTagList;
-  }
-  
-  public void save(FeatureStoreTag featureStoreTag) {
-    if (featureStoreTag == null) {
-      return;
-    }
+  public void save() {
     try {
-      if (featureStoreTag.getId() == null) {
-        featureStoreTagController.create(featureStoreTag.getName(), featureStoreTag.getType());
-        MessagesController.addInfoMessage("Added new tag: ", featureStoreTag.getName());
-      } else {
-        featureStoreTagController.update(featureStoreTag.getId(), featureStoreTag.getName(), featureStoreTag.getType());
-        MessagesController.addInfoMessage("Edited tag: ", featureStoreTag.getName());
-      }
+      featureStoreTagSchemaController.create(name.trim(), schema);
+      MessagesController.addInfoMessage("Added new tag: ", name);
     } catch(RESTException re) {
       String detail = getRestMsg(re);
       MessagesController.addErrorMessage("Failed to save tag", detail);
@@ -103,49 +80,27 @@ public class CreateTagsBean {
       String detail = getCause(e);
       MessagesController.addErrorMessage("Failed to save tag", detail);
       LOGGER.log(Level.FINE, detail);
+    } finally {
+      this.tags = getAllTagsAsList();
+      this.name = null;
+      this.schema = null;
     }
   }
   
-  public void delete(FeatureStoreTag featureStoreTag) {
-    if (featureStoreTag == null) {
+  public void delete(String tagName) {
+    if (tagName == null) {
       return;
     }
     try {
-      featureStoreTagController.delete(featureStoreTag.getName());
+      featureStoreTagSchemaController.delete(tagName);
+      MessagesController.addInfoMessage("Deleted tag: ", tagName);
     } catch (Exception e) {
       String detail = getCause(e);
       MessagesController.addErrorMessage("Failed to delete tag", detail);
       LOGGER.log(Level.FINE, detail);
+    } finally {
+      this.tags = getAllTagsAsList();
     }
-    MessagesController.addInfoMessage("Deleted tag: ", featureStoreTag.getName());
-  }
-  
-  public void onRowEdit(RowEditEvent event) {
-    FeatureStoreTag featureStoreTag = (FeatureStoreTag) event.getObject();
-    save(featureStoreTag);
-    this.featureStoreTagList = featureStoreTagFacade.findAll();
-  }
-  
-  public void onRowCancel(RowEditEvent event) {
-    FeatureStoreTag featureStoreTag = (FeatureStoreTag) event.getObject();
-    MessagesController.addInfoMessage("Tag Edit Cancelled", featureStoreTag.getName());
-  }
-  
-  public void onAddNew() {
-    FeatureStoreTag featureStoreTag = new FeatureStoreTag(this.name.trim(), this.type);
-    save(featureStoreTag);
-    this.featureStoreTagList = featureStoreTagFacade.findAll();
-    this.setName(null);
-    this.setType(null);
-  }
-  
-  public void remove(FeatureStoreTag featureStoreTag) {
-    if (featureStoreTag != null && featureStoreTag.getId() == null) {
-      this.featureStoreTagList.remove(featureStoreTag);
-      return;
-    }
-    delete(featureStoreTag);
-    this.featureStoreTagList = featureStoreTagFacade.findAll();
   }
   
   public void noSpaceValidator(FacesContext ctx, UIComponent uc, Object object) throws ValidatorException {

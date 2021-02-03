@@ -1,5 +1,17 @@
 /*
+ * This file is part of Hopsworks
  * Copyright (C) 2020, Logical Clocks AB. All rights reserved
+ *
+ * Hopsworks is free software: you can redistribute it and/or modify it under the terms of
+ * the GNU Affero General Public License as published by the Free Software Foundation,
+ * either version 3 of the License, or (at your option) any later version.
+ *
+ * Hopsworks is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+ * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+ * PURPOSE.  See the GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License along with this program.
+ * If not, see <https://www.gnu.org/licenses/>.
  */
 package io.hops.hopsworks.api.tags;
 
@@ -13,7 +25,7 @@ public class TagsBeanParam {
   
   @QueryParam("sort_by")
   @ApiParam(value = "ex. sort_by=id:desc,type:asc",
-    allowableValues = "id:asc,id:desc,value:asc,value:desc,type:asc,type:desc,")
+    allowableValues = "id:asc,id:desc,name:asc,name:desc,")
   private String sortBy;
   private final Set<SortBy> sortBySet;
   @QueryParam("filter_by")

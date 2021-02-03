@@ -1,5 +1,17 @@
 /*
+ * This file is part of Hopsworks
  * Copyright (C) 2020, Logical Clocks AB. All rights reserved
+ *
+ * Hopsworks is free software: you can redistribute it and/or modify it under the terms of
+ * the GNU Affero General Public License as published by the Free Software Foundation,
+ * either version 3 of the License, or (at your option) any later version.
+ *
+ * Hopsworks is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+ * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+ * PURPOSE.  See the GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License along with this program.
+ * If not, see <https://www.gnu.org/licenses/>.
  */
 package io.hops.hopsworks.persistence.entity.featurestore.tag;
 
@@ -7,11 +19,10 @@ import java.io.Serializable;
 import javax.persistence.Basic;
 import javax.persistence.Column;
 import javax.persistence.Entity;
-import javax.persistence.EnumType;
-import javax.persistence.Enumerated;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.Lob;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
 import javax.persistence.Table;
@@ -23,17 +34,9 @@ import javax.xml.bind.annotation.XmlRootElement;
 @Table(name = "feature_store_tag", catalog = "hopsworks")
 @XmlRootElement
 @NamedQueries({
-  @NamedQuery(name = "FeatureStoreTag.findAll",
-      query = "SELECT f FROM FeatureStoreTag f")
-  ,
-    @NamedQuery(name = "FeatureStoreTag.findById",
-      query = "SELECT f FROM FeatureStoreTag f WHERE f.id = :id")
-  ,
-    @NamedQuery(name = "FeatureStoreTag.findByName",
-      query = "SELECT f FROM FeatureStoreTag f WHERE f.name = :name")
-  ,
-    @NamedQuery(name = "FeatureStoreTag.findByType",
-      query = "SELECT f FROM FeatureStoreTag f WHERE f.type = :type")})
+  @NamedQuery(name = "FeatureStoreTag.findAll", query = "SELECT f FROM FeatureStoreTag f"),
+  @NamedQuery(name = "FeatureStoreTag.findById", query = "SELECT f FROM FeatureStoreTag f WHERE f.id = :id"),
+  @NamedQuery(name = "FeatureStoreTag.findByName", query = "SELECT f FROM FeatureStoreTag f WHERE f.name = :name")})
 public class FeatureStoreTag implements Serializable {
 
   private static final long serialVersionUID = 1L;
@@ -48,22 +51,16 @@ public class FeatureStoreTag implements Serializable {
       max = 255)
   @Column(name = "name")
   private String name;
-  @Basic(optional = false)
-  @NotNull
-  @Column(name = "type")
-  @Enumerated(EnumType.STRING)
-  private TagType type;
+  @Lob
+  @Column(name = "tag_schema")
+  private String schema;
 
   public FeatureStoreTag() {
   }
 
-  public FeatureStoreTag(Integer id) {
-    this.id = id;
-  }
-
-  public FeatureStoreTag(String name, TagType type) {
+  public FeatureStoreTag(String name, String schema) {
     this.name = name;
-    this.type = type;
+    this.schema = schema;
   }
 
   public Integer getId() {
@@ -82,14 +79,14 @@ public class FeatureStoreTag implements Serializable {
     this.name = name;
   }
   
-  public TagType getType() {
-    return type;
+  public String getSchema() {
+    return schema;
   }
-
-  public void setType(TagType type) {
-    this.type = type;
+  
+  public void setSchema(String schema) {
+    this.schema = schema;
   }
-
+  
   @Override
   public int hashCode() {
     int hash = 0;

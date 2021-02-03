@@ -5,7 +5,6 @@ package io.hops.hopsworks.common.dao.featurestore.tag;
 
 import io.hops.hopsworks.common.dao.AbstractFacade;
 import io.hops.hopsworks.persistence.entity.featurestore.tag.FeatureStoreTag;
-import io.hops.hopsworks.persistence.entity.featurestore.tag.TagType;
 
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
@@ -71,16 +70,12 @@ public class FeatureStoreTagFacade extends AbstractFacade<FeatureStoreTag> {
       case NAME_LIKE:
         q.setParameter(filterBy.getField(), filterBy.getParam());
         break;
-      case TYPE:
-        q.setParameter(filterBy.getField(), getEnumValue(filterBy.getField(), filterBy.getParam(), TagType.class));
-        break;
     }
   }
   
   public enum Sorts {
     ID("ID", " f.id ", "ASC"),
-    NAME("NAME", " LOWER(f.name) ", "ASC"),
-    TYPE("TYPE", " LOWER(f.type) ", "ASC");
+    NAME("NAME", " LOWER(f.name) ", "ASC");
     
     private final String value;
     private final String sql;
@@ -113,8 +108,7 @@ public class FeatureStoreTagFacade extends AbstractFacade<FeatureStoreTag> {
   public enum Filters {
     ID("ID", " f.id = :id", "id" , ""),
     NAME("NAME", " f.name = :name", "name" , ""),
-    NAME_LIKE("NAME_LIKE", " UPPER(f.name) LIKE CONCAT(:name_like, '%')", "name_like" , ""),
-    TYPE("TYPE", " f.type = :type", "type", "");
+    NAME_LIKE("NAME_LIKE", " UPPER(f.name) LIKE CONCAT(:name_like, '%')", "name_like" , "");
     
     private final String value;
     private final String sql;

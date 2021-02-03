@@ -182,6 +182,7 @@ public class ResourceRequest {
     MODELS,
     HOSTS,
     QUERY,
+    TAG_SCHEMAS,
     TAGS,
     SERVICES,
     TRAININGDATASETS,

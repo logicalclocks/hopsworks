@@ -1970,9 +1970,12 @@ public class RESTCodes {
   }
   
   public enum FeatureStoreTagErrorCode implements RESTErrorCode {
-    TAG_NOT_FOUND(0, "No tag found for provided name.", Response.Status.NOT_FOUND),
-    TAG_ALREADY_EXISTS(1, "Tag with the same name already exists.", Response.Status.CONFLICT),
-    INVALID_TAG_NAME(2, "Invalid tag name.", Response.Status.BAD_REQUEST);
+    TAG_SCHEMA_NOT_FOUND(0, "No schema found for provided name", Response.Status.NOT_FOUND),
+    INVALID_TAG_SCHEMA(1, "Invalid tag schema.", Response.Status.BAD_REQUEST),
+    TAG_NOT_FOUND(2, "No tag found for provided name.", Response.Status.NOT_FOUND),
+    TAG_ALREADY_EXISTS(3, "Tag with the same name already exists.", Response.Status.CONFLICT),
+    INVALID_TAG_NAME(4, "Invalid tag name.", Response.Status.BAD_REQUEST),
+    INVALID_TAG_VALUE(5, "Invalid tag value.", Response.Status.BAD_REQUEST);
     
     private int code;
     private String message;

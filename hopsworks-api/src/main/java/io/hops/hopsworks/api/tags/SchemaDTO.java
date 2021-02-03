@@ -16,23 +16,13 @@
 package io.hops.hopsworks.api.tags;
 
 import io.hops.hopsworks.common.api.RestDTO;
-import io.hops.hopsworks.persistence.entity.featurestore.tag.TagType;
 
 import javax.xml.bind.annotation.XmlRootElement;
 
 @XmlRootElement
-public class TagsDTO extends RestDTO<TagsDTO> {
-  private Integer id;
+public class SchemaDTO extends RestDTO<SchemaDTO> {
   private String name;
-  private TagType type;
-  
-  public Integer getId() {
-    return id;
-  }
-  
-  public void setId(Integer id) {
-    this.id = id;
-  }
+  private String value;
   
   public String getName() {
     return name;
@@ -42,20 +32,19 @@ public class TagsDTO extends RestDTO<TagsDTO> {
     this.name = name;
   }
   
-  public TagType getType() {
-    return type;
+  public String getValue() {
+    return value;
   }
   
-  public void setType(TagType type) {
-    this.type = type;
+  public void setValue(String value) {
+    this.value = value;
   }
   
   @Override
   public String toString() {
     return "TagsDTO{" +
-      "id=" + id +
-      ", name='" + name + '\'' +
-      ", type=" + type +
+      "name='" + name + '\'' +
+      ", value=" + value +
       '}';
   }
 }
