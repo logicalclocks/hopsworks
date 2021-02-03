@@ -13,41 +13,38 @@
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see <https://www.gnu.org/licenses/>.
  */
+package io.hops.hopsworks.api.tags;
 
-package io.hops.hopsworks.api.featurestore.tag;
-
-import io.hops.hopsworks.api.tags.SchemaDTO;
 import io.hops.hopsworks.common.api.RestDTO;
 
 import javax.xml.bind.annotation.XmlRootElement;
 
 @XmlRootElement
-public class TagsDTO extends RestDTO<TagsDTO> {
+public class SchemaDTO extends RestDTO<SchemaDTO> {
   private String name;
   private String value;
-  private SchemaDTO schema;
-
+  
   public String getName() {
     return name;
   }
-
+  
   public void setName(String name) {
     this.name = name;
   }
-
+  
   public String getValue() {
     return value;
   }
-
+  
   public void setValue(String value) {
     this.value = value;
   }
   
-  public SchemaDTO getSchema() {
-    return schema;
-  }
-  
-  public void setSchema(SchemaDTO schema) {
-    this.schema = schema;
+  @Override
+  public String toString() {
+    return "TagsDTO{" +
+      "name='" + name + '\'' +
+      ", value=" + value +
+      '}';
   }
 }

@@ -1374,9 +1374,6 @@ describe "On #{ENV['OS']}" do
     context 'with valid project, featurestore service enabled, and a jdbc connector' do
       before :all do
         with_admin_session
-        @pre_created_tags = Array.new(1)
-        @pre_created_tags[0] = "created_#{0}"
-        createFeatureStoreTag(@pre_created_tags[0], "STRING")
 
         reset_session
 
@@ -1627,20 +1624,6 @@ describe "On #{ENV['OS']}" do
                                           "FROM `#{featurestore_name}`.`#{fg_name}_1` `fg1`\n" +
                                           "INNER JOIN `fg0` ON `fg1`.`testfeature` = `fg0`.`testfeature`\n" +
                                           "WHERE `fg1`.`anotherfeature` = 10 AND `fg0`.`testfeature` = 10")
-      end
-
-      it "should be able to attach a tag to a on-demand feature group" do
-        featurestore_id = get_featurestore_id(@project[:id])
-        json_result, _ = create_on_demand_featuregroup(@project[:id], featurestore_id, get_jdbc_connector_id)
-        expect_status(201)
-        fg_json = JSON.parse(json_result)
-        add_featuregroup_tag(@project[:id], featurestore_id, fg_json["id"], @pre_created_tags[0], value: "daily")
-        expect_status_details(201)
-        json_result = get_featuregroup_tags(@project[:id], featurestore_id, fg_json["id"])
-        expect_status_details(200)
-        tags_json = JSON.parse(json_result)
-        expect(tags_json["items"][0]["name"]).to eq(@pre_created_tags[0])
-        expect(tags_json["items"][0]["value"]).to eq("daily")
       end
     end
   end

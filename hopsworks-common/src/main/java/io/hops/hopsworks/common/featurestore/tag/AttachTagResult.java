@@ -13,14 +13,32 @@
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see <https://www.gnu.org/licenses/>.
  */
-
 package io.hops.hopsworks.common.featurestore.tag;
 
-import io.hops.hopsworks.common.integrations.CommunityStereotype;
+import java.util.Map;
 
-import javax.ejb.Stateless;
-
-@Stateless
-@CommunityStereotype
-public class FeaturegroupTagController implements FeaturegroupTagControllerIface {
+public class AttachTagResult {
+  private boolean created;
+  private Map<String, String> items;
+  
+  public AttachTagResult(Map<String, String> items, boolean created) {
+    this.created = created;
+    this.items = items;
+  }
+  
+  public boolean isCreated() {
+    return created;
+  }
+  
+  public void setCreated(boolean created) {
+    this.created = created;
+  }
+  
+  public Map<String, String> getItems() {
+    return items;
+  }
+  
+  public void setItems(Map<String, String> items) {
+    this.items = items;
+  }
 }
