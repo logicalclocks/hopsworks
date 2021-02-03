@@ -32,6 +32,8 @@ import io.hops.hopsworks.common.featurestore.storageconnectors.redshift.Features
 import io.hops.hopsworks.common.featurestore.storageconnectors.redshift.FeaturestoreRedshiftConnectorDTO;
 import io.hops.hopsworks.common.featurestore.storageconnectors.s3.FeaturestoreS3ConnectorController;
 import io.hops.hopsworks.common.featurestore.storageconnectors.s3.FeaturestoreS3ConnectorDTO;
+import io.hops.hopsworks.common.featurestore.storageconnectors.snowflake.FeaturestoreSnowflakeConnectorController;
+import io.hops.hopsworks.common.featurestore.storageconnectors.snowflake.FeaturestoreSnowflakeConnectorDTO;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.exceptions.ProjectException;
 import io.hops.hopsworks.exceptions.UserException;
@@ -75,6 +77,8 @@ public class FeaturestoreStorageConnectorController {
   private OnlineFeaturestoreController onlineFeaturestoreController;
   @EJB
   private FeaturestoreADLSConnectorController adlsConnectorController;
+  @EJB
+  private FeaturestoreSnowflakeConnectorController snowflakeConnectorController;
   @EJB
   private ActivityFacade activityFacade;
 
@@ -126,6 +130,8 @@ public class FeaturestoreStorageConnectorController {
         return redshiftConnectorController.getRedshiftConnectorDTO(user, featurestoreConnector);
       case ADLS:
         return adlsConnectorController.getADLConnectorDTO(user, featurestoreConnector);
+      case SNOWFLAKE:
+        return snowflakeConnectorController.getConnector(user, featurestoreConnector);
       default:
         // We should not reach this point
         throw new IllegalArgumentException("Feature Store connector type not recognized");
@@ -186,6 +192,11 @@ public class FeaturestoreStorageConnectorController {
         featurestoreConnector.setAdlsConnector(adlsConnectorController.createADLConnector(
             user, project, featurestore, (FeaturestoreADLSConnectorDTO) featurestoreStorageConnectorDTO));
         break;
+      case SNOWFLAKE:
+        featurestoreConnector.setConnectorType(FeaturestoreConnectorType.SNOWFLAKE);
+        featurestoreConnector.setSnowflakeConnector(snowflakeConnectorController.createConnector(user, featurestore,
+          (FeaturestoreSnowflakeConnectorDTO) featurestoreStorageConnectorDTO));
+        break;
       default:
         // We should not reach this point
         throw new IllegalArgumentException("Feature Store connector type not recognized");
@@ -244,6 +255,11 @@ public class FeaturestoreStorageConnectorController {
       case ADLS:
         featurestoreConnector.setAdlsConnector(adlsConnectorController.updateAdlConnector(user,
             (FeaturestoreADLSConnectorDTO) featurestoreStorageConnectorDTO, featurestoreConnector.getAdlsConnector()));
+        break;
+      case SNOWFLAKE:
+        featurestoreConnector.setSnowflakeConnector(snowflakeConnectorController.updateConnector(user,
+          (FeaturestoreSnowflakeConnectorDTO) featurestoreStorageConnectorDTO,
+          featurestoreConnector.getSnowflakeConnector()));
         break;
       default:
         // We should not reach this point

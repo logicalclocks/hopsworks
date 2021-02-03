@@ -243,4 +243,18 @@ module StorageConnectorHelper
     expect(json_body[:iamRole]).to eq connector[:iamRole]
     expect(json_body[:databasePassword]).to eq connector[:databasePassword]
   end
+
+  def check_snowflake_connector_update(json_body, connector)
+    expect(json_body[:name]).to eq connector[:name]
+    expect(json_body[:description]).to eq connector[:description]
+    expect(json_body[:url]).to eq connector[:url]
+    expect(json_body[:warehouse]).to eq connector[:warehouse]
+    expect(json_body[:schema]).to eq connector[:schema]
+    expect(json_body[:database]).to eq connector[:database]
+    expect(json_body[:user]).to eq connector[:user]
+    expect(json_body[:password]).to eq connector[:password]
+    expect(json_body[:token]).to eq connector[:token]
+    expect(json_body[:tableName]).to eq connector[:tableName]
+    expect(json_body[:arguments]).to eq connector[:arguments]
+  end
 end

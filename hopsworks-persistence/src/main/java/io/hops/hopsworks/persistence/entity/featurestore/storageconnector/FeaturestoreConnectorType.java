@@ -21,5 +21,6 @@ public enum FeaturestoreConnectorType {
   HOPSFS,
   S3,
   REDSHIFT,
-  ADLS;
+  ADLS,
+  SNOWFLAKE;
 }
