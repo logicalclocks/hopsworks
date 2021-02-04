@@ -259,4 +259,10 @@ module ProjectHelper
   def remove_member_from_table(project, user)
     ProjectTeam.where(project_id: project[:id], team_member: user[:email]).delete_all
   end
+
+  def set_docker_image(project, docker_image)
+    project.docker_image = docker_image
+    project.save()
+  end
+  
 end
