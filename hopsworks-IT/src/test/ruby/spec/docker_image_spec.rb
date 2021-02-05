@@ -26,52 +26,175 @@ describe "On #{ENV['OS']}" do
     setVar('cloud', @cloud)
   end
   context 'docker image and tags' do
-    context 'default' do
+    context 'on default installation' do
       before :all do
         setVar('managed_docker_registry', "false")
         setVar('cloud', "")
         with_valid_project
       end
-      it 'default docker base image format should be recognized as preinstalled' do
-        set_docker_image(@project, "base:2.1.0")
+
+      it 'docker base image release format should be recognized as preinstalled' do
+        set_docker_image(@project, "base:2.0.0")
         get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}"
         expect(json_body[:isPreinstalledDockerImage]).to be true
       end
 
-      it 'default docker python37 image format should be recognized as preinstalled' do
-        set_docker_image(@project, "python37:2.1.0")
+      it 'docker base image snapshot format should be recognized as preinstalled' do
+        set_docker_image(@project, "base:2.0.0-SNAPSHOT")
         get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}"
         expect(json_body[:isPreinstalledDockerImage]).to be true
       end
 
-      it 'default project unique docker image and tag format should not be recognized as preinstalled' do
-        set_docker_image(@project, @project[:projectname].downcase + ":1611136370296-2.1.0.0")
+      it 'docker python37 image release format should be recognized as preinstalled' do
+        set_docker_image(@project, "python37:2.0.0")
+        get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}"
+        expect(json_body[:isPreinstalledDockerImage]).to be true
+      end
+
+      it 'docker python37 image snapshot format should be recognized as preinstalled' do
+        set_docker_image(@project, "python37:2.0.0-SNAPSHOT")
+        get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}"
+        expect(json_body[:isPreinstalledDockerImage]).to be true
+      end
+
+      it 'project unique docker image and tag release format should not be recognized as preinstalled' do
+        set_docker_image(@project, @project[:projectname].downcase + ":1611136370296-2.0.0.0")
         get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}"
         expect(json_body[:isPreinstalledDockerImage]).to be false
       end
+
+      it 'project unique docker image and tag snapshot format should not be recognized as preinstalled' do
+        set_docker_image(@project, @project[:projectname].downcase + ":1611136370296-2.0.0-SNAPSHOT.0")
+        get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}"
+        expect(json_body[:isPreinstalledDockerImage]).to be false
+      end
+
+      it 'default docker base image format should not be old for this installation' do
+        create_env(@project, python_version, wait_for_sync_complete=false)
+        get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}"
+        expect(json_body[:isOldDockerImage]).to be false
+      end
+
+      it 'older base docker image release format should be old for this installation' do
+        set_docker_image(@project, "base:2.0.0")
+        get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}"
+        expect(json_body[:isOldDockerImage]).to be true
+      end
+
+      it 'older base docker image snapshot format should be old for this installation' do
+        set_docker_image(@project, "base:2.0.0-SNAPSHOT")
+        get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}"
+        expect(json_body[:isOldDockerImage]).to be true
+      end
+
+      it 'older python37 docker image release format should be old for this installation' do
+        set_docker_image(@project, "python37:2.0.0")
+        get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}"
+        expect(json_body[:isOldDockerImage]).to be true
+      end
+
+      it 'older python37 docker image snapshot format should be old for this installation' do
+        set_docker_image(@project, "python37:2.0.0-SNAPSHOT")
+        get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}"
+        expect(json_body[:isOldDockerImage]).to be true
+      end
+
+      it 'older project docker image release format should be old for this installation' do
+        set_docker_image(@project, @project[:projectname].downcase + ":" + "1611925525557-2.0.0.1")
+        get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}"
+        expect(json_body[:isOldDockerImage]).to be true
+      end
+
+      it 'older project docker image snapshot format should be old for this installation' do
+        set_docker_image(@project, @project[:projectname].downcase + ":" + "1611925525557-2.0.0-SNAPSHOT.1")
+        get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}"
+        expect(json_body[:isOldDockerImage]).to be true
+      end
     end
-    context 'ecr' do
+
+    context 'on cloud installation' do
       before :all do
         setVar('managed_docker_registry', "true")
         setVar('cloud', "AWS")
         with_valid_project
       end
-      it 'ecr docker base image format should be recognized as preinstalled' do
-        set_docker_image(@project, "base:2.1.0")
+
+      it 'docker base image release format should be recognized as preinstalled' do
+        set_docker_image(@project, "base:2.0.0")
         get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}"
         expect(json_body[:isPreinstalledDockerImage]).to be true
       end
 
-      it 'ecr docker python37 image format should be recognized as preinstalled' do
-        set_docker_image(@project, "base:python37_2.1.0")
+      it 'docker base image snapshot format should be recognized as preinstalled' do
+        set_docker_image(@project, "base:2.0.0-SNAPSHOT")
         get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}"
         expect(json_body[:isPreinstalledDockerImage]).to be true
       end
 
-      it 'ecr project unique docker image and tag format should not be recognized as preinstalled' do
-        set_docker_image(@project, "base:" + @project[:projectname].downcase + "_" + "1611136370296-2.1.0.0")
+      it 'docker python37 image release format should be recognized as preinstalled' do
+        set_docker_image(@project, "base:python37_2.0.0")
+        get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}"
+        expect(json_body[:isPreinstalledDockerImage]).to be true
+      end
+
+      it 'docker python37 image snapshot format should be recognized as preinstalled' do
+        set_docker_image(@project, "base:python37_2.0.0-SNAPSHOT")
+        get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}"
+        expect(json_body[:isPreinstalledDockerImage]).to be true
+      end
+
+      it 'project unique docker image and tag release format should not be recognized as preinstalled' do
+        set_docker_image(@project, "base:" + @project[:projectname].downcase + "_" + "1611136370296-2.0.0.0")
         get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}"
         expect(json_body[:isPreinstalledDockerImage]).to be false
+      end
+
+      it 'project unique docker image and tag snapshot format should not be recognized as preinstalled' do
+        set_docker_image(@project, "base:" + @project[:projectname].downcase + "_" + "1611136370296-2.0.0-SNAPSHOT.0")
+        get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}"
+        expect(json_body[:isPreinstalledDockerImage]).to be false
+      end
+
+      it 'default docker base image format should not be old for this installation' do
+        create_env(@project, python_version, wait_for_sync_complete=false)
+        get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}"
+        expect(json_body[:isOldDockerImage]).to be false
+      end
+
+      it 'older base docker image release format should be old for this installation' do
+        set_docker_image(@project, "base:2.0.0")
+        get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}"
+        expect(json_body[:isOldDockerImage]).to be true
+      end
+
+      it 'older base docker image snapshot format should be old for this installation' do
+        set_docker_image(@project, "base:2.0.0-SNAPSHOT")
+        get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}"
+        expect(json_body[:isOldDockerImage]).to be true
+      end
+
+      it 'older python37 docker image release format should be old for this installation' do
+        set_docker_image(@project, "base:python37_2.0.0")
+        get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}"
+        expect(json_body[:isOldDockerImage]).to be true
+      end
+
+      it 'older python37 docker image snapshot format should be old for this installation' do
+        set_docker_image(@project, "base:python37_2.0.0-SNAPSHOT")
+        get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}"
+        expect(json_body[:isOldDockerImage]).to be true
+      end
+
+      it 'older project docker image release format should be old for this installation' do
+        set_docker_image(@project, "base:" + @project[:projectname].downcase + "_" + "1611136370296-2.0.0.0")
+        get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}"
+        expect(json_body[:isOldDockerImage]).to be true
+      end
+
+      it 'older project docker image snapshot format should be old for this installation' do
+        set_docker_image(@project, "base:" + @project[:projectname].downcase + "_" + "1611136370296-2.0.0-SNAPSHOT.0")
+        get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}"
+        expect(json_body[:isOldDockerImage]).to be true
       end
     end
   end

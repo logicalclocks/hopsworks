@@ -107,6 +107,13 @@
 
             <div ng-show="pythonCtrl.enabled">
 
+              <div class="alert alert-warning" style="padding: 10px;" ng-show="projectCtrl.currentProject.isOldDockerImage">
+                  <span style="font-size: 1.1em !important; margin-left:100px;">
+                    <i class="fa fa-warning" uib-tooltip="The docker image currently in use by this project is for an older version of Hopsworks. This means that python environment may be outdated and applications may stop working." style="color:orange;">
+                    </i> This project is using an old project environment which may not be compatible with the current installation, to upgrade please remove and recreate the environment.
+                  </span>
+              </div>
+
             <uib-tabset active="indextab">
               <div class="pull-right">
                 <a href="http://hops-py.logicalclocks.com/" target="_blank">See hops python docs</a>
@@ -557,8 +564,8 @@
               </uib-tab>
               <uib-tab index="1" heading="Manage Environment" ng-show="pythonCtrl.enabled && pythonCtrl.installed"
                 ng-click="pythonCtrl.loadLibraries()">
-                <div class="alert alert-warning" style="padding: 10px;" ng-show="!pythonCtrl.loadingLibs && pythonCtrl.pythonConflicts">
-                  <span style="font-size: 1.2em !important; margin-left:150px;">
+                <div class="alert alert-warning" style="padding: 10px; margin-bottom: 10px;" ng-show="!pythonCtrl.loadingLibs && pythonCtrl.pythonConflicts">
+                  <span style="font-size: 1.1em !important; margin-left:100px;">
                     <i class="fa fa-warning" uib-tooltip="pip check detected unsatisfied dependency constraints in the environment. If possible please resolve them." style="color:orange;">
                     </i> <a ng-click="pythonCtrl.showConflicts()" style="cursor: pointer;">Conflicts</a> detected in this environment
                   </span>

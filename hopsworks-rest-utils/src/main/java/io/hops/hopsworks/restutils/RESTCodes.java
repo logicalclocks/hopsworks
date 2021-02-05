@@ -185,7 +185,10 @@ public class RESTCodes {
         Response.Status.BAD_REQUEST),
     PROJECT_ANACONDA_ENABLE_ERROR(74, "Failed to enable conda.", Response.Status.INTERNAL_SERVER_ERROR),
     PROJECT_NAME_TOO_LONG(75, "Project name is too long - cannot be longer than 25 characters.",
-        Response.Status.BAD_REQUEST);
+        Response.Status.BAD_REQUEST),
+    PROJECT_DOCKER_VERSION_EXTRACT_ERROR(76,
+        "Failed to extract the hopsworks version of the docker image for this project.",
+        Response.Status.INTERNAL_SERVER_ERROR);
 
 
 
