@@ -41,12 +41,16 @@ package io.hops.hopsworks.common.util;
 import com.google.common.base.Strings;
 import com.logicalclocks.servicediscoverclient.exceptions.ServiceDiscoveryException;
 import io.hops.hopsworks.common.hosts.ServiceDiscoveryController;
+import io.hops.hopsworks.exceptions.ProjectException;
 import io.hops.hopsworks.persistence.entity.project.Project;
+import io.hops.hopsworks.restutils.RESTCodes;
 
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -59,10 +63,40 @@ public class ProjectUtils {
   
   @EJB
   private ServiceDiscoveryController serviceDiscoveryController;
+
+  private final static Logger LOGGER = Logger.getLogger(ProjectUtils.class.getName());
   
   public boolean isReservedProjectName(String projectName) {
     for (String name : settings.getReservedProjectNames()) {
       if (name.equalsIgnoreCase(projectName)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  public boolean isOldDockerImage(String dockerImage) throws ProjectException {
+    Pattern versionPattern = Pattern.compile("(\\d+[.]\\d+[.]\\d+)");
+
+    //Extract the version number as NUMBER.NUMBER.NUMBER and ignore the -SNAPSHOT part
+    Matcher projectDockerImageMatcher = versionPattern.matcher(dockerImage);
+    String hopsworksVersion = settings.getHopsworksVersion();
+    Matcher installationVersionMatcher = versionPattern.matcher(hopsworksVersion);
+
+    if(!projectDockerImageMatcher.find()) {
+      throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_DOCKER_VERSION_EXTRACT_ERROR,
+          Level.SEVERE, "dockerImage: " + dockerImage + " version: " + hopsworksVersion);
+    }
+
+    if(!installationVersionMatcher.find()) {
+      throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_DOCKER_VERSION_EXTRACT_ERROR,
+          Level.SEVERE, "dockerImage: " + dockerImage + " version: " + hopsworksVersion);
+    }
+
+    String[] projectDockerImageParts = projectDockerImageMatcher.group().split("\\.");
+    String[] installationDockerImageParts = installationVersionMatcher.group().split("\\.");
+    for(int i = 0; i < installationDockerImageParts.length; i++) {
+      if(Integer.parseInt(installationDockerImageParts[i]) > Integer.parseInt(projectDockerImageParts[i])) {
         return true;
       }
     }
