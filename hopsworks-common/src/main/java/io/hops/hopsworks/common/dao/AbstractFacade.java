@@ -43,10 +43,7 @@ import io.hops.hopsworks.exceptions.InvalidQueryException;
 
 import javax.persistence.EntityManager;
 import javax.persistence.Query;
-import java.text.DateFormat;
-import java.text.FieldPosition;
 import java.text.ParseException;
-import java.text.ParsePosition;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -162,31 +159,26 @@ public abstract class AbstractFacade<T> {
   }
   
   public Date getDate(String field, String value) {
-    DateFormat dateFormat = new DateFormat() {
-      static final String FORMAT1 = "yyyy-MM-dd'T'HH:mm:ss.SS";
-      static final String FORMAT2 = "yyyy-MM-dd";
-      final SimpleDateFormat sdf1 = new SimpleDateFormat(FORMAT1);
-      final SimpleDateFormat sdf2 = new SimpleDateFormat(FORMAT2);
-      
-      @Override
-      public StringBuffer format(Date date, StringBuffer toAppendTo, FieldPosition fieldPosition) {
-        throw new UnsupportedOperationException();
-      }
-    
-      @Override
-      public Date parse(String source, ParsePosition pos) {
-        if (source.length() - pos.getIndex() == FORMAT1.length()) {
-          return sdf1.parse(source, pos);
-        } else {
-          return sdf2.parse(source, pos);
-        }
-      }
-    };
-    try {
-      return dateFormat.parse(value);
-    } catch (ParseException e) {
+    String[] formats = {"yyyy-MM-dd'T'HH:mm:ss.SSSX", "yyyy-MM-dd'T'HH:mm:ss.SSSZ", "yyyy-MM-dd'T'HH:mm:ssX",
+      "yyyy-MM-dd'T'HH:mm:ssZ", "yyyy-MM-dd"};
+    Date date = null;
+    for (int i = 0; i < formats.length && date == null; i++ ) {
+      date = getDateByFormat(value, formats[i]);
+    }
+    if (date == null) {
       throw new InvalidQueryException(
-        "Filter value for " + field + " needs to set valid format. Expected:yyyy-mm-dd hh:mm:ss but found: " + value);
+        "Filter value for " + field + " needs to set valid format. Expected:yyyy-MM-dd hh:mm:ss.SSSX but found: " +
+          value);
+    }
+    return date;
+  }
+
+  private Date getDateByFormat(String value, String format) {
+    SimpleDateFormat sdf = new SimpleDateFormat(format);
+    try {
+      return sdf.parse(value);
+    } catch (ParseException e) {
+      return null;
     }
   }
   
