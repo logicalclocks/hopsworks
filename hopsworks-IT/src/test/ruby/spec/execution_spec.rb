@@ -556,7 +556,7 @@ describe "On #{ENV['OS']}" do
               #get submissiontime of last execution
               get_execution(@project[:id], $job_spark_1, $execution_ids[0])
               submissiontime = json_body[:submissionTime]
-              get_executions(@project[:id], $job_spark_1, "?filter_by=submissiontime:#{submissiontime.gsub('Z','')}.000Z")
+              get_executions(@project[:id], $job_spark_1, "?filter_by=submissiontime:#{submissiontime}")
               expect_status_details(200)
               expect(json_body[:items].count).to eq 1
             end
@@ -564,7 +564,7 @@ describe "On #{ENV['OS']}" do
               #get submissiontime of last execution
               get_execution(@project[:id], $job_spark_1, $execution_ids[0])
               submissiontime = json_body[:submissionTime]
-              get_executions(@project[:id], $job_spark_1, "?filter_by=submissiontime_gt:#{submissiontime.gsub('Z','')}.000Z")
+              get_executions(@project[:id], $job_spark_1, "?filter_by=submissiontime_gt:#{submissiontime}")
               expect_status_details(200)
               expect(json_body[:items].count).to eq 2
             end
@@ -572,7 +572,7 @@ describe "On #{ENV['OS']}" do
               #get submissiontime of last execution
               get_execution(@project[:id], $job_spark_1, $execution_ids[1])
               submissiontime = json_body[:submissionTime]
-              get_executions(@project[:id], $job_spark_1, "?filter_by=submissiontime_lt:#{submissiontime.gsub('Z','')}.000Z")
+              get_executions(@project[:id], $job_spark_1, "?filter_by=submissiontime_lt:#{submissiontime}")
               expect_status_details(200)
               expect(json_body[:items].count).to eq 1
             end
