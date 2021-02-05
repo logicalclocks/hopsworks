@@ -125,14 +125,16 @@ module CondaHelper
     end
   end
 
-  def create_env(project, version)
+  def create_env(project, version, wait_for_sync_complete=true)
     env = get_project_env_by_id(project[:id])
     project = get_project_by_name(project[:projectname])
     if not env.nil?
       delete_env(project[:id], version)
     end
     project = post "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/python/environments/#{version}?action=create"
-    wait_for_sync
+    if wait_for_sync_complete
+      wait_for_sync
+    end
     project
   end
 

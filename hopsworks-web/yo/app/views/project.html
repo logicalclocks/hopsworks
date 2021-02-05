@@ -55,6 +55,12 @@
                   <div ng-include="'views/search/search.html'"></div>
                 </div>
               </div>
+              <div class="alert alert-warning" style="padding: 10px;" ng-show="projectCtrl.currentProject.isOldDockerImage">
+                  <span style="font-size: 1.1em !important; margin-left:100px;">
+                    <i class="fa fa-warning" uib-tooltip="The docker image currently in use by this project is for an older version of Hopsworks. This means that python environment may be outdated and applications may stop working." style="color:orange;">
+                    </i> This project is using an old project environment which may not be compatible with the current installation, to upgrade go to the <a ng-click="projectCtrl.goToPython()" style="cursor: pointer;">Python</a> service.
+                  </span>
+              </div>
               <div ng-if="!mainCtrl.showSearchPage">
                 <div class="widget-body col-md-10 thin-scrollbar" style="height: 90%; overflow-y: auto;">
                   <div class="timeline clearfix">

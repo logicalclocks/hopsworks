@@ -264,5 +264,5 @@ module ProjectHelper
     project.docker_image = docker_image
     project.save()
   end
-  
+
 end
