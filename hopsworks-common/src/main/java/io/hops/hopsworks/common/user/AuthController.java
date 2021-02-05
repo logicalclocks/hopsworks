@@ -47,7 +47,6 @@ import io.hops.hopsworks.common.dao.user.BbcGroupFacade;
 import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.common.dao.user.security.audit.AccountAuditFacade;
-import io.hops.hopsworks.persistence.entity.user.security.ua.SecurityQuestion;
 import io.hops.hopsworks.persistence.entity.user.security.ua.UserAccountStatus;
 import io.hops.hopsworks.persistence.entity.user.security.ua.UserAccountType;
 import io.hops.hopsworks.common.dao.user.security.ua.UserAccountsEmailMessages;
@@ -169,28 +168,6 @@ public class AuthController {
   }
 
   /**
-   * Validate security question and update false login attempts
-   *
-   * @param user
-   * @param securityQ
-   * @param securityAnswer
-   * @return
-   */
-  public boolean validateSecurityQA(Users user, String securityQ, String securityAnswer) {
-    validateUser(user);
-    if (securityQ == null || securityQ.isEmpty() || securityAnswer == null || securityAnswer.isEmpty()) {
-      return false;
-    }
-    if (!user.getSecurityQuestion().getValue().equalsIgnoreCase(securityQ)
-        || !user.getSecurityAnswer().equals(securityUtils.getHash(securityAnswer.toLowerCase()))) {
-      registerFalseLogin(user);
-      LOGGER.log(Level.FINEST, "False Security Question attempt by user: {0}", user.getEmail());
-      return false;
-    }
-    return true;
-  }
-
-  /**
    * Checks password and user status. Also updates false login attempts.
    * throws UserException with rest code Unauthorized
    * @param user
@@ -217,20 +194,6 @@ public class AuthController {
   public boolean checkUserPasswordAndStatus(Users user, String password) throws UserException {
     checkUserStatus(user, false);
     return validatePassword(user, password);
-  }
-  
-  /**
-   * Check security question and user status
-   * @param user
-   * @param securityQ
-   * @param securityAnswer
-   * @return
-   * @throws UserException
-   */
-  public boolean validateSecurityQAndStatus(Users user, String securityQ, String securityAnswer)
-    throws UserException {
-    checkUserStatus(user, false);
-    return validateSecurityQA(user, securityQ, securityAnswer);
   }
   
   private Users getUserFromKey(String key) {
@@ -473,18 +436,6 @@ public class AuthController {
     changePassword(user, secret);
   }
 
-  /**
-   * Change security question and adds account audit for the operation.
-   *
-   * @param user
-   * @param securityQuestion
-   * @param securityAnswer
-   */
-  public void changeSecQA(Users user, String securityQuestion, String securityAnswer) {
-    user.setSecurityQuestion(SecurityQuestion.getQuestion(securityQuestion));
-    user.setSecurityAnswer(securityUtils.getHash(securityAnswer.toLowerCase()));
-    userFacade.update(user);
-  }
 
   /**
    * Concatenates password and salt

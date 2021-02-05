@@ -37,12 +37,9 @@ public class User {
   private String validationKey;
   private Date validationKeyUpdated;
   private String validationKeyType;
-  private String securityQuestion;
-  private String securityAnswer;
   private String mode;
   private Date passwordChanged;
   private String notes;
-  private String mobile;
   private Integer maxNumProjects;
   private Integer numCreatedProjects = 0;
   private Integer numActiveProjects = 0;
@@ -67,12 +64,9 @@ public class User {
     this.validationKey = rs.getString("validation_key");
     this.validationKeyUpdated = rs.getDate("validation_key_updated");
     this.validationKeyType = rs.getString("validation_key_type");
-    this.securityQuestion = rs.getString("security_question");
-    this.securityAnswer = rs.getString("security_answer");
     this.mode = rs.getString("mode");
     this.passwordChanged = rs.getDate("password_changed");
     this.notes = rs.getString("notes");
-    this.mobile = rs.getString("mobile");
     this.maxNumProjects = rs.getInt("max_num_projects");
     this.numCreatedProjects = rs.getInt("num_created_projects");
     this.numActiveProjects = rs.getInt("num_active_projects");
@@ -209,22 +203,6 @@ public class User {
     this.validationKeyType = validationKeyType;
   }
   
-  public String getSecurityQuestion() {
-    return securityQuestion;
-  }
-  
-  public void setSecurityQuestion(String securityQuestion) {
-    this.securityQuestion = securityQuestion;
-  }
-  
-  public String getSecurityAnswer() {
-    return securityAnswer;
-  }
-  
-  public void setSecurityAnswer(String securityAnswer) {
-    this.securityAnswer = securityAnswer;
-  }
-  
   public String getMode() {
     return mode;
   }
@@ -248,15 +226,7 @@ public class User {
   public void setNotes(String notes) {
     this.notes = notes;
   }
-  
-  public String getMobile() {
-    return mobile;
-  }
-  
-  public void setMobile(String mobile) {
-    this.mobile = mobile;
-  }
-  
+
   public Integer getMaxNumProjects() {
     return maxNumProjects;
   }
@@ -324,12 +294,9 @@ public class User {
       ", validationKey='" + validationKey + '\'' +
       ", validationKeyUpdated=" + validationKeyUpdated +
       ", validationKeyType='" + validationKeyType + '\'' +
-      ", securityQuestion='" + securityQuestion + '\'' +
-      ", securityAnswer='" + securityAnswer + '\'' +
       ", mode='" + mode + '\'' +
       ", passwordChanged=" + passwordChanged +
       ", notes='" + notes + '\'' +
-      ", mobile='" + mobile + '\'' +
       ", maxNumProjects=" + maxNumProjects +
       ", numCreatedProjects=" + numCreatedProjects +
       ", numActiveProjects=" + numActiveProjects +

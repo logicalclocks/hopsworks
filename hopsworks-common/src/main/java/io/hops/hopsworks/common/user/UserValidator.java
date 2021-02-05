@@ -42,7 +42,6 @@ package io.hops.hopsworks.common.user;
 import com.google.common.base.Strings;
 import io.hops.hopsworks.common.dao.user.UserDTO;
 import io.hops.hopsworks.common.dao.user.UserFacade;
-import io.hops.hopsworks.persistence.entity.user.security.ua.SecurityQuestion;
 import io.hops.hopsworks.restutils.RESTCodes;
 import io.hops.hopsworks.exceptions.UserException;
 
@@ -96,24 +95,9 @@ public class UserValidator {
     return true;
   }
 
-  public boolean isValidsecurityQA(String question, String answer) throws UserException {
-
-    if (question == null || question.isEmpty()) {
-      throw new IllegalArgumentException(RESTCodes.UserErrorCode.SEC_Q_EMPTY.getMessage());
-    } else if (SecurityQuestion.getQuestion(question) == null) {
-      throw new UserException(RESTCodes.UserErrorCode.SEC_Q_NOT_IN_LIST, Level.FINE);
-    }
-    if (answer == null || answer.isEmpty()) {
-      throw new IllegalArgumentException(RESTCodes.UserErrorCode.SEC_A_EMPTY.getMessage());
-    }
-
-    return true;
-  }
-
   public boolean isValidNewUser(UserDTO newUser) throws UserException {
     isValidEmail(newUser.getEmail());
     isValidPassword(newUser.getChosenPassword(), newUser.getRepeatedPassword());
-    isValidsecurityQA(newUser.getSecurityQuestion(), newUser.getSecurityAnswer());
     if (userBean.findByEmail(newUser.getEmail()) != null) {
       throw new UserException(RESTCodes.UserErrorCode.USER_EXISTS, Level.FINE);
     }
@@ -128,7 +112,6 @@ public class UserValidator {
     if (checkPassword) {
       isValidPassword(newUser.getChosenPassword(), newUser.getRepeatedPassword());
     }
-    isValidsecurityQA(newUser.getSecurityQuestion(), newUser.getSecurityAnswer());
     if (userBean.findByEmail(newUser.getEmail()) != null) {
       throw new UserException(RESTCodes.UserErrorCode.USER_EXISTS, Level.FINE);
     }

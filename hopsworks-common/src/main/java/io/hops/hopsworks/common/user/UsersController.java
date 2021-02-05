@@ -46,20 +46,13 @@ import io.hops.hopsworks.common.dao.user.BbcGroupFacade;
 import io.hops.hopsworks.common.dao.user.UserDTO;
 import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.persistence.entity.user.Users;
-import io.hops.hopsworks.persistence.entity.user.security.Address;
-import io.hops.hopsworks.persistence.entity.user.security.Organization;
 import io.hops.hopsworks.persistence.entity.user.security.audit.AccountAudit;
 import io.hops.hopsworks.common.dao.user.security.audit.AccountAuditFacade;
 import io.hops.hopsworks.persistence.entity.user.security.audit.RolesAudit;
 import io.hops.hopsworks.common.dao.user.security.audit.RolesAuditFacade;
-import io.hops.hopsworks.persistence.entity.user.security.ua.SecurityQuestion;
 import io.hops.hopsworks.persistence.entity.user.security.ua.UserAccountStatus;
 import io.hops.hopsworks.persistence.entity.user.security.ua.UserAccountType;
 import io.hops.hopsworks.common.dao.user.security.ua.UserAccountsEmailMessages;
-import io.hops.hopsworks.common.dao.user.sshkey.SshKeyDTO;
-import io.hops.hopsworks.persistence.entity.user.sshkey.SshKeys;
-import io.hops.hopsworks.persistence.entity.user.sshkey.SshKeysPK;
-import io.hops.hopsworks.common.dao.user.sshkey.SshkeysFacade;
 import io.hops.hopsworks.common.security.utils.Secret;
 import io.hops.hopsworks.common.security.utils.SecurityUtils;
 import io.hops.hopsworks.exceptions.ServiceException;
@@ -76,11 +69,9 @@ import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
-import javax.inject.Inject;
 import javax.mail.Message;
 import javax.mail.MessagingException;
 import javax.validation.ConstraintViolationException;
-import javax.ws.rs.core.GenericEntity;
 import java.io.IOException;
 import java.sql.Timestamp;
 import java.util.ArrayList;
@@ -107,8 +98,6 @@ public class UsersController {
   @EJB
   private BbcGroupFacade bbcGroupFacade;
   @EJB
-  private SshkeysFacade sshKeysBean;
-  @EJB
   private UserValidator userValidator;
   @EJB
   private EmailBean emailBean;
@@ -118,8 +107,8 @@ public class UsersController {
   private AuthController authController;
   @EJB
   private SecurityUtils securityUtils;
-  @Inject
-  private PasswordRecovery passwordRecovery;
+  @EJB
+  private UserStatusValidator userStatusValidator;
 
   // To send the user the QR code image
   private byte[] qrCode;
@@ -131,8 +120,6 @@ public class UsersController {
     userValidator.isValidNewUser(newUser);
     newUser.setMaxNumProjects(0);//should not allow setting max project
     Users user = createNewUser(newUser, UserAccountStatus.NEW_MOBILE_ACCOUNT, UserAccountType.M_ACCOUNT_TYPE);
-    addAddress(user);
-    addOrg(user);
     //to prevent sending email for test user emails
     try {
       if (!newUser.isTestUser()) {
@@ -163,8 +150,6 @@ public class UsersController {
     if (group != null) {
       user.getBbcGroupCollection().add(group);
     }
-    addAddress(user);
-    addOrg(user);
     userFacade.persist(user);
     return user;
   }
@@ -237,38 +222,16 @@ public class UsersController {
     List<BbcGroup> groups = new ArrayList<>();
     Secret secret = securityUtils.generateSecret(newUser.getChosenPassword());
     Timestamp now = new Timestamp(new Date().getTime());
-    SecurityQuestion secQuestion = SecurityQuestion.getQuestion(newUser.getSecurityQuestion());
-    String secAnswer = securityUtils.getHash(newUser.getSecurityAnswer().toLowerCase());
     int maxNumProjects = newUser.getMaxNumProjects() > 0? newUser.getMaxNumProjects() : settings.getMaxNumProjPerUser();
+
     Users user = new Users(uname, secret.getSha256HexDigest(), newUser.getEmail(), newUser.getFirstName(),
-      newUser.getLastName(), now, "-", "-", accountStatus, otpSecret, activationKey, now, ValidationKeyType.EMAIL,
-      secQuestion, secAnswer, accountType, now, newUser.getTelephoneNum(), maxNumProjects, newUser.isTwoFactor(),
-      secret.getSalt(), newUser.getToursState());
+        newUser.getLastName(), now, "-", "-", accountStatus, otpSecret, activationKey,
+        now, ValidationKeyType.EMAIL, accountType, now, maxNumProjects, newUser.isTwoFactor(),
+        secret.getSalt(), newUser.getToursState());
     user.setBbcGroupCollection(groups);
     return user;
   }
 
-  /**
-   * Creates new agent user with only the not null values set
-   *
-   * @param email
-   * @param fname
-   * @param lname
-   * @param pwd
-   * @param title
-   * @return
-   */
-  public Users createNewAgent(String email, String fname, String lname, String pwd, String title) {
-    String uname = generateUsername(email);
-    List<BbcGroup> groups = new ArrayList<>();
-    Secret secret = securityUtils.generateSecret(pwd);
-    Users user = new Users(uname, secret.getSha256HexDigest(), email, fname, lname, new Timestamp(new Date().getTime()),
-      title, "-", UserAccountStatus.NEW_MOBILE_ACCOUNT, UserAccountType.M_ACCOUNT_TYPE,
-      new Timestamp(new Date().getTime()), 0, secret.getSalt());
-    user.setBbcGroupCollection(groups);
-    return user;
-  }
-     
   /**
    * Remote user
    * @param email
@@ -286,38 +249,9 @@ public class UsersController {
       "-", "-", accStatus, UserAccountType.REMOTE_ACCOUNT_TYPE, new Timestamp(new Date().getTime()),
       settings.getMaxNumProjPerUser(), secret.getSalt());
     user.setBbcGroupCollection(groups);
-    addAddress(user);
-    addOrg(user);
     return user;
   }
 
-  public void addAddress(Users user) {
-    Address a = new Address();
-    a.setUid(user);
-    // default '-' in sql file did not add these values!
-    a.setAddress1("-");
-    a.setAddress2("-");
-    a.setAddress3("-");
-    a.setCity("Stockholm");
-    a.setCountry("SE");
-    a.setPostalcode("-");
-    a.setState("-");
-    user.setAddress(a);
-  }
-
-  public void addOrg(Users user) {
-    Organization org = new Organization();
-    org.setUid(user);
-    org.setContactEmail("-");
-    org.setContactPerson("-");
-    org.setDepartment("-");
-    org.setFax("-");
-    org.setOrgName("-");
-    org.setWebsite("-");
-    org.setPhone("-");
-    user.setOrganization(org);
-  }
-  
   public void sendQRRecoveryEmail(String email, String password, String reqUrl)
     throws UserException, MessagingException {
     Users user = userFacade.findByEmail(email);
@@ -330,12 +264,18 @@ public class UsersController {
     authController.sendNewRecoveryValidationKey(user, reqUrl, false);
   }
   
-  public void sendPasswordRecoveryEmail(String email, String securityQuestion, String securityAnswer,
-    String reqUrl) throws UserException, MessagingException {
+  public void sendPasswordRecoveryEmail(String email, String reqUrl) throws UserException, MessagingException {
     Users user = userFacade.findByEmail(email);
+    if (user == null) {
+      throw new UserException(RESTCodes.UserErrorCode.USER_WAS_NOT_FOUND, Level.FINE);
+    }
 
-    passwordRecovery.validateSecurityQAndStatus(user, securityQuestion, securityAnswer);
-
+    try {
+      userStatusValidator.checkStatus(user.getStatus());
+    } catch (UserException e) {
+      //Needed to not map account exceptions to Unauthorized rest response.
+      throw new UserException(RESTCodes.UserErrorCode.ACCOUNT_NOT_ACTIVE, Level.FINE, e.getErrorCode().getMessage());
+    }
     authController.sendNewRecoveryValidationKey(user, reqUrl, true);
   }
   
@@ -450,18 +390,7 @@ public class UsersController {
     }
   }
 
-  public void changeSecQA(Users user, String oldPassword, String securityQuestion, String securityAnswer)
-    throws UserException {
-    if (!authController.validatePassword(user, oldPassword)) {
-      throw new UserException(RESTCodes.UserErrorCode.PASSWORD_INCORRECT, Level.FINE);
-    }
-
-    if (userValidator.isValidsecurityQA(securityQuestion, securityAnswer)) {
-      authController.changeSecQA(user, securityQuestion, securityAnswer);
-    }
-  }
-
-  public Users updateProfile(Users user, String firstName, String lastName, String telephoneNum, Integer toursState)
+  public Users updateProfile(Users user, String firstName, String lastName, Integer toursState)
     throws UserException {
 
     if (user == null) {
@@ -474,35 +403,11 @@ public class UsersController {
     if (lastName != null) {
       user.setLname(lastName);
     }
-    if (telephoneNum != null) {
-      user.setMobile(telephoneNum);
-    }
     if (toursState != null) {
       user.setToursState(toursState);
     }
     userFacade.update(user);
     return user;
-  }
-
-  public SshKeyDTO addSshKey(int id, String name, String sshKey) {
-    SshKeys key = new SshKeys();
-    key.setSshKeysPK(new SshKeysPK(id, name));
-    key.setPublicKey(sshKey);
-    sshKeysBean.persist(key);
-    return new SshKeyDTO(key);
-  }
-
-  public void removeSshKey(int id, String name) {
-    sshKeysBean.removeByIdName(id, name);
-  }
-
-  public List<SshKeyDTO> getSshKeys(int id) {
-    List<SshKeys> keys = sshKeysBean.findAllById(id);
-    List<SshKeyDTO> dtos = new ArrayList<>();
-    for (SshKeys sshKey : keys) {
-      dtos.add(new SshKeyDTO(sshKey));
-    }
-    return dtos;
   }
 
   public String generateUsername(String email) {
@@ -613,46 +518,6 @@ public class UsersController {
     userFacade.update(uid);
   }
 
-  /**
-   * Register an address for new mobile users.
-   *
-   * @param user
-   */
-  public void registerAddress(Users user) {
-    Address add = new Address();
-    add.setAddress1("-");
-    add.setAddress2("-");
-    add.setAddress3("-");
-    add.setState("-");
-    add.setCity("-");
-    add.setCountry("-");
-    add.setPostalcode("-");
-    user.setAddress(add);
-    userFacade.persist(user);
-  }
-
-  public void increaseLockNum(int id, int val) {
-    Users p = userFacade.find(id);
-    if (p != null) {
-      p.setFalseLogin(val);
-      userFacade.update(p);
-    }
-
-  }
-
-  public void setOnline(int id, int val) {
-    Users p = userFacade.find(id);
-    p.setIsonline(val);
-    userFacade.update(p);
-  }
-
-  public void resetLock(int id) {
-    Users p = userFacade.find(id);
-    p.setFalseLogin(0);
-    userFacade.update(p);
-
-  }
-
   public void changeAccountStatus(int id, String note, UserAccountStatus status) throws UserException {
     Users p = userFacade.find(id);
     if (p != null) {
@@ -678,11 +543,6 @@ public class UsersController {
       throw new UserException(RESTCodes.UserErrorCode.USER_WAS_NOT_FOUND, Level.FINE);
     }
 
-  }
-
-  public void updateStatus(Users id, UserAccountStatus stat) {
-    id.setStatus(stat);
-    userFacade.update(id);
   }
 
   public void updateSecret(Users user, String sec) {
@@ -785,11 +645,5 @@ public class UsersController {
       throw new UserException(RESTCodes.UserErrorCode.USER_WAS_NOT_FOUND, Level.FINE);
     }
     return user;
-  }
-  
-  public GenericEntity<List<BbcGroup>> getAllGroups() {
-    List<BbcGroup> list = bbcGroupFacade.findAll();
-    return new GenericEntity<List<BbcGroup>>(list) {
-    };
   }
 }

@@ -48,7 +48,6 @@ import io.hops.hopsworks.common.user.UsersController;
 import io.hops.hopsworks.exceptions.UserException;
 import io.hops.hopsworks.persistence.entity.user.BbcGroup;
 import io.hops.hopsworks.persistence.entity.user.Users;
-import io.hops.hopsworks.persistence.entity.user.security.Address;
 import io.hops.hopsworks.persistence.entity.user.security.audit.Userlogins;
 import io.hops.hopsworks.persistence.entity.user.security.ua.UserAccountStatus;
 import org.primefaces.context.RequestContext;
@@ -119,17 +118,7 @@ public class AdminProfileAdministration implements Serializable {
 
   private Userlogins login;
 
-  private Address address;
-  
   private String newPassword;
-
-  public Address getAddress() {
-    return address;
-  }
-
-  public void setAddress(Address address) {
-    this.address = address;
-  }
 
   public Userlogins getLogin() {
     return login;
@@ -257,7 +246,6 @@ public class AdminProfileAdministration implements Serializable {
 
     editingUser = (Users) FacesContext.getCurrentInstance().getExternalContext().getSessionMap().get("editinguser");
     if (editingUser != null) {
-      address = editingUser.getAddress();
       login = (Userlogins) FacesContext.getCurrentInstance().getExternalContext().getSessionMap().get(
           "editinguser_logins");
     } else {

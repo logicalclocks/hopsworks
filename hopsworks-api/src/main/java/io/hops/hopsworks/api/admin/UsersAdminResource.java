@@ -42,7 +42,6 @@ import io.hops.hopsworks.persistence.entity.remote.user.RemoteUser;
 import io.hops.hopsworks.persistence.entity.remote.user.RemoteUserType;
 import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.persistence.entity.user.security.apiKey.ApiScope;
-import io.hops.hopsworks.persistence.entity.user.security.ua.SecurityQuestion;
 import io.hops.hopsworks.persistence.entity.user.security.ua.UserAccountStatus;
 import io.hops.hopsworks.persistence.entity.user.security.ua.UserAccountType;
 import io.hops.hopsworks.persistence.entity.util.FormatUtils;
@@ -222,14 +221,12 @@ public class UsersAdminResource {
   public Response registerUser(@QueryParam("accountType") UserAccountType accountType,
     @QueryParam("uuid") String uuid, @QueryParam("email") String email, @QueryParam("password") String password,
     @QueryParam("givenName") String givenName, @QueryParam("surname") String surname,
-    @QueryParam("maxNumProjects") int maxNumProjects, @QueryParam("securityQuestion") SecurityQuestion securityQuestion,
-    @QueryParam("securityAnswer") String securityAnswer, @QueryParam("type") RemoteUserType type,
+    @QueryParam("maxNumProjects") int maxNumProjects, @QueryParam("type") RemoteUserType type,
     @QueryParam("status") UserAccountStatus status, @Context SecurityContext sc, @Context UriInfo uriInfo)
     throws GenericException, UserException {
     switch (accountType) {
       case M_ACCOUNT_TYPE:
-        return createUser(email, password, givenName, surname,  maxNumProjects, securityQuestion, securityAnswer,
-          status, uriInfo);
+        return createUser(email, password, givenName, surname,  maxNumProjects, status, uriInfo);
       case REMOTE_ACCOUNT_TYPE:
         return createRemoteUser(uuid, email, givenName, surname, type, status, uriInfo);
       default:
@@ -238,8 +235,8 @@ public class UsersAdminResource {
   }
   
   private Response createUser(String email, String password, String givenName, String surname, int maxNumProjects,
-    SecurityQuestion securityQuestion, String securityAnswer, UserAccountStatus status, UriInfo uriInfo)
-    throws UserException {
+                              UserAccountStatus status, UriInfo uriInfo)
+      throws UserException {
     UserDTO newUser = new UserDTO();
     newUser.setEmail(email);
     newUser.setFirstName(givenName);
@@ -249,12 +246,6 @@ public class UsersAdminResource {
       securityUtils.generateRandomString(UserValidator.TEMP_PASSWORD_LENGTH);
     newUser.setChosenPassword(passwordGen);
     newUser.setRepeatedPassword(passwordGen);
-    SecurityQuestion securityQuestionGen = securityQuestion != null? securityQuestion :
-      SecurityQuestion.randomQuestion();
-    newUser.setSecurityQuestion(securityQuestionGen.getValue());
-    String securityAnswerGen = securityAnswer != null && !securityAnswer.isEmpty()? securityAnswer :
-      securityUtils.generateSecureRandomString(Settings.DEFAULT_SECURITY_ANSWER_LEN);
-    newUser.setSecurityAnswer(securityAnswerGen);
     newUser.setTos(true);
     userValidator.isValidNewUser(newUser, passwordGen.equals(password));
     UserAccountStatus statusDefault = status != null ? status : UserAccountStatus.NEW_MOBILE_ACCOUNT;
@@ -264,10 +255,6 @@ public class UsersAdminResource {
     URI href = uriInfo.getAbsolutePathBuilder().path(user.getUid().toString()).build();
     if (!passwordGen.equals(password)) {
       newUserDTO.setPassword(passwordGen);
-    }
-    if (!securityQuestionGen.equals(securityQuestion) || !securityAnswerGen.equals(securityAnswer)) {
-      newUserDTO.setSecurityQuestion(securityQuestionGen);
-      newUserDTO.setSecurityAnswer(securityAnswerGen);
     }
     return Response.created(href).entity(newUserDTO).build();
   }

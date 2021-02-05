@@ -18,7 +18,6 @@ package io.hops.hopsworks.admin.user.account;
 import io.hops.hopsworks.common.user.UsersController;
 import io.hops.hopsworks.exceptions.UserException;
 import io.hops.hopsworks.persistence.entity.user.Users;
-import io.hops.hopsworks.persistence.entity.user.security.ua.SecurityQuestion;
 import io.hops.hopsworks.persistence.entity.util.FormatUtils;
 
 import javax.ejb.EJB;
@@ -41,10 +40,10 @@ public class AuditedUserAccountAction {
     usersController.validateKey(key);
   }
 
-  public void sendPasswordRecoveryEmail(String username, SecurityQuestion question, String answer,
-    HttpServletRequest req) throws MessagingException, UserException {
+  public void sendPasswordRecoveryEmail(String username, HttpServletRequest req)
+      throws MessagingException, UserException {
     String reqUrl = FormatUtils.getUserURL(req);
-    usersController.sendPasswordRecoveryEmail(username, question.getValue(), answer, reqUrl);
+    usersController.sendPasswordRecoveryEmail(username, reqUrl);
   }
   
   public void checkRecoveryKey(String key, HttpServletRequest req) throws UserException {

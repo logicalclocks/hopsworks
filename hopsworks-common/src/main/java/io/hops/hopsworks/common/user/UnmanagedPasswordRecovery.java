@@ -19,9 +19,7 @@ import io.hops.hopsworks.common.dao.user.security.ua.UserAccountsEmailMessages;
 import io.hops.hopsworks.common.integrations.UnmanagedStereotype;
 import io.hops.hopsworks.common.security.utils.SecurityUtils;
 import io.hops.hopsworks.common.util.EmailBean;
-import io.hops.hopsworks.exceptions.UserException;
 import io.hops.hopsworks.persistence.entity.user.Users;
-import io.hops.hopsworks.restutils.RESTCodes;
 
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
@@ -29,7 +27,6 @@ import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.mail.Message;
 import javax.mail.MessagingException;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 @UnmanagedStereotype
@@ -39,19 +36,9 @@ public class UnmanagedPasswordRecovery implements PasswordRecovery {
   private static final Logger LOG = Logger.getLogger(UnmanagedPasswordRecovery.class.getName());
 
   @EJB
-  private AuthController authController;
-  @EJB
   private SecurityUtils securityUtils;
   @EJB
   private EmailBean emailBean;
-
-  @Override
-  public void validateSecurityQAndStatus(Users user, String securityQuestion, String securityAnswer)
-          throws UserException {
-    if (!authController.validateSecurityQAndStatus(user, securityQuestion, securityAnswer)) {
-      throw new UserException(RESTCodes.UserErrorCode.SEC_QA_INCORRECT, Level.FINE);
-    }
-  }
 
   @Override
   public void sendRecoveryNotification(Users user, String url, boolean isPassword,

@@ -40,8 +40,8 @@
 'use strict'
 
 angular.module('hopsWorksApp')
-        .controller('ProfileCtrl', ['UserService', '$location', '$scope', 'md5', 'growl', '$cookies', 'ProjectService', 'SecurityQuestions', 'ModalService', 'ApiKeyService',
-          function (UserService, $location, $scope, md5, growl, $cookies, ProjectService, SecurityQuestions, ModalService, ApiKeyService) {
+        .controller('ProfileCtrl', ['UserService', '$location', '$scope', 'md5', 'growl', '$cookies', 'ProjectService', 'ModalService', 'ApiKeyService',
+          function (UserService, $location, $scope, md5, growl, $cookies, ProjectService, ModalService, ApiKeyService) {
 
             var self = this;
             self.pageLoading = true;
@@ -49,7 +49,6 @@ angular.module('hopsWorksApp')
             self.credentialWorking = false;
             self.twoFactorWorking = false;
             self.secretsWorking = false;
-            self.securityQAWorking = false;
             self.qrCodeWorking = false;
             self.apiKeyWorking = false;
             self.noPassword = false;
@@ -62,7 +61,6 @@ angular.module('hopsWorksApp')
               firstname: '',
               lastname: '',
               email: '',
-              phoneNumber: '',
               twoFactor: ''
             };
 
@@ -72,12 +70,6 @@ angular.module('hopsWorksApp')
               confirmedPassword: ''
             };
 
-            self.securityQA = {
-                oldPassword: '',
-                securityQuestion: '',
-                securityAnswer: ''
-            };
-            
             self.secrets = [];
 
             self.secret = {
@@ -96,9 +88,6 @@ angular.module('hopsWorksApp')
             self.keyScopes = [];
             self.keys = [];
 
-            SecurityQuestions.getQuestions().then(function(success) {
-               self.securityQuestions = success.data;
-            });
             var showError = function(error) {
                 var errorMsg = (typeof error.data.usrMsg !== 'undefined')? error.data.usrMsg : "";
                 growl.error(errorMsg, {title: error.data.errorMsg, ttl: 5000, referenceId: 1});
@@ -257,32 +246,6 @@ angular.module('hopsWorksApp')
                     showError(error);
                 }
               );
-            };
-
-            self.securityQAMsg = {
-                successMessage: '',
-                errorMessage:''
-            };
-            self.changeSecurityQA = function (form) {
-                self.securityQAMsg = {
-                    successMessage: '',
-                    errorMessage:''
-                };
-                self.securityQAWorking = true;
-                if (form.$valid) {
-                    UserService.changeSecurityQA(self.securityQA).then(
-                      function (success) {
-                          self.securityQAWorking = false;
-                          self.securityQA.oldPassword = '';
-                          self.securityQA.securityQuestion= '';
-                          self.securityQA.securityAnswer= '';
-                          form.$setPristine();
-                          self.securityQAMsg.successMessage = success.data.successMessage;
-                      }, function (error) {
-                          self.securityQAWorking = false;
-                          showError(error);
-                      });
-                }
             };
 
             self.twoFactorAuthMsg = {

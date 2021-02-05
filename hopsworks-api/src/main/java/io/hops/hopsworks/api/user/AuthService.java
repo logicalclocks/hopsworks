@@ -332,12 +332,11 @@ public class AuthService {
   @Produces(MediaType.APPLICATION_JSON)
   @JWTNotRequired
   public Response recoverPassword(@FormParam("email") String email,
-    @FormParam("securityQuestion") String securityQuestion, @FormParam("securityAnswer") String securityAnswer,
-    @Context HttpServletRequest req) throws UserException,
-    MessagingException {
+                                  @Context HttpServletRequest req) throws UserException,
+      MessagingException {
     RESTApiJsonResponse json = new RESTApiJsonResponse();
     String reqUrl = FormatUtils.getUserURL(req);
-    userController.sendPasswordRecoveryEmail(email, securityQuestion, securityAnswer, reqUrl);
+    userController.sendPasswordRecoveryEmail(email, reqUrl);
     json.setSuccessMessage(ResponseMessages.PASSWORD_RESET);
     return Response.ok(json).build();
   }

@@ -24,7 +24,6 @@ import org.junit.Before;
 import org.junit.Test;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
-import org.openqa.selenium.support.ui.Select;
 
 import static org.junit.Assert.fail;
 
@@ -48,9 +47,6 @@ public class RecoveryIT {
   private final static By FORGOT_PASSWORD_SELECT = By.id("forgot_pwd");
   private final static By PASSWORD_RECOVERY_FORM = By.name("recoveryForm");
   private final static By FORGOT_PASSWORD_EMAIL = By.id("recover_inputEmail");
-  private final static By SECURITY_QUESTION = By.name("sec_question");
-  private final static By SECURITY_ANSWER = By.id("sec-answer-field");
-  private final static By SECURITY_ANSWER_TYPE = By.xpath("(.//input[@name='sec_answer'])/following::span");
   private final static By PASSWORD_RECOVERY_SUCCESS = By.id("recovery-success-msg");
   private final static By PASSWORD_RECOVERY_ERROR = By.id("recovery-error-msg");
   // password reset
@@ -96,16 +92,7 @@ public class RecoveryIT {
   private void testTogglePassword(By element, By xpath) {
     Helpers.testTogglePassword(element, xpath, verificationErrors, driver);
   }
-  
-  @Test
-  public void testSecurityAnswerTypeToggle() {
-    gotoPasswordRecovery();
-    driver.findElement(SECURITY_ANSWER).click();
-    driver.findElement(SECURITY_ANSWER).clear();
-    driver.findElement(SECURITY_ANSWER).sendKeys("Some answer");
-    testTogglePassword(SECURITY_ANSWER, SECURITY_ANSWER_TYPE);
-  }
-  
+
   @Test
   public void testPasswordTypeToggle() {
     gotoQRCodeRecovery();
@@ -122,15 +109,6 @@ public class RecoveryIT {
     driver.findElement(FORGOT_PASSWORD_EMAIL).click();
     driver.findElement(FORGOT_PASSWORD_EMAIL).clear();
     driver.findElement(FORGOT_PASSWORD_EMAIL).sendKeys(user.getEmail());
-    new Select(driver.findElement(SECURITY_QUESTION)).selectByVisibleText("Name of your first pet?");
-    driver.findElement(SECURITY_QUESTION).click();
-    driver.findElement(SECURITY_ANSWER).click();
-    driver.findElement(SECURITY_ANSWER).clear();
-    driver.findElement(SECURITY_ANSWER).sendKeys("pets");
-    driver.findElement(PASSWORD_RECOVERY_FORM).submit();
-    assertEqualsElementText("Security question or answer did not match", PASSWORD_RECOVERY_ERROR);
-    driver.findElement(SECURITY_ANSWER).clear();
-    driver.findElement(SECURITY_ANSWER).sendKeys("pet");
     driver.findElement(PASSWORD_RECOVERY_FORM).submit();
     assertEqualsElementText("Your password reset email has been sent. Please check your inbox.",
       PASSWORD_RECOVERY_SUCCESS);

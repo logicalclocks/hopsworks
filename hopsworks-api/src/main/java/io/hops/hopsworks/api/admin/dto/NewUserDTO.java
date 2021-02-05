@@ -17,15 +17,13 @@ package io.hops.hopsworks.api.admin.dto;
 
 import io.hops.hopsworks.api.user.UserProfileDTO;
 import io.hops.hopsworks.persistence.entity.user.Users;
-import io.hops.hopsworks.persistence.entity.user.security.ua.SecurityQuestion;
 
 import javax.xml.bind.annotation.XmlRootElement;
 
 @XmlRootElement
 public class NewUserDTO extends UserProfileDTO {
+
   private String password;
-  private SecurityQuestion securityQuestion;
-  private String securityAnswer;
 
   public NewUserDTO() {
   }
@@ -42,19 +40,4 @@ public class NewUserDTO extends UserProfileDTO {
     this.password = password;
   }
 
-  public SecurityQuestion getSecurityQuestion() {
-    return securityQuestion;
-  }
-
-  public void setSecurityQuestion(SecurityQuestion securityQuestion) {
-    this.securityQuestion = securityQuestion;
-  }
-
-  public String getSecurityAnswer() {
-    return securityAnswer;
-  }
-
-  public void setSecurityAnswer(String securityAnswer) {
-    this.securityAnswer = securityAnswer;
-  }
 }
