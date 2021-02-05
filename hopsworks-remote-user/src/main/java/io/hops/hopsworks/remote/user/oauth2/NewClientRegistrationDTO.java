@@ -48,7 +48,7 @@ public class NewClientRegistrationDTO {
     this.redirectUris = new HashSet<>();
     this.redirectUris.add(settings.getOauthRedirectUri());
     this.contacts = new HashSet<>();
-    this.contacts.add(settings.getSupportEmailAddr());
+    this.contacts.add("");
   }
   
   public String getApplicationType() {

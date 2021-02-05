@@ -29,8 +29,6 @@
                ng-click="profileCtrl.activeTab = 'profile'">Profile</a>
             <a class="list-group-item" ng-class="{active: profileCtrl.activeTab === 'credentials', disabled: profileCtrl.externalAccountType()}"
                ng-click="profileCtrl.activeTab = 'credentials'">Login credentials</a>
-            <a class="list-group-item" ng-class="{active: profileCtrl.activeTab === 'security', disabled: profileCtrl.externalAccountType()}"
-               ng-click="profileCtrl.activeTab = 'security'">Security question</a>
             <a class="list-group-item"
                ng-class="{active: profileCtrl.activeTab === 'twoFactor', disabled: (profileCtrl.otp !== 'true' || profileCtrl.externalAccountType())}"
                ng-click="profileCtrl.activeTab = 'twoFactor'">Two-factor</a>
@@ -80,16 +78,6 @@
                                            required class="form-control" type="text" ng-disabled="true">
                                 </div>
                             </div>
-                            <div class="col-xs-6 col-sm-6 col-md-6">
-                                <label class="text-muted">Phone Number</label>
-                                <input name="phone_number" placeholder="Phone" autocomplete="on" ng-model="profileCtrl.user.phoneNumber"
-                                       ng-pattern="/^[\+]?[(]?[0-9]{3}[)]?[-\s\.]?[0-9]{3}[-\s\.]?[0-9]{4,6}$/" class="form-control "
-                                       type="text" ng-disabled="profileCtrl.externalAccountType()">
-                                <span ng-show="profileForm.phone_number.$dirty && profileForm.phone_number.$error.pattern"
-                                      class="text-danger ng-hide">Phone number should be in (+00-000-000000) format.</span>
-                            </div>
-                        </div>
-                        <div class="form-group has-feedback row">
                             <div class="col-xs-6 col-sm-6 col-md-6">
                                 <label class="text-muted">Email address</label>
                                 <input name="user_email" placeholder="Email" autocomplete="off"
@@ -215,86 +203,6 @@
                 </form>
             </div>
             <!-- End of Login credentials -->
-            <!-- Security question -->
-            <div class="row" id="tab2" ng-show="profileCtrl.activeTab === 'security'">
-                <div class="breadcrumb">
-                    <p class="active">Security question</p>
-                </div>
-                <form method="post"
-                      name="securityQAForm"
-                      ng-submit="profileCtrl.changeSecurityQA(securityQAForm)"
-                      class="form-validate"
-                      novalidate>
-                    <div class="row">
-                        <div class="col-xs-6 col-sm-6 col-md-6">
-                            <div class="form-group has-feedback">
-                                <label class="text-muted">Current Password</label>
-                                <input name="user_old_password" ng-model="profileCtrl.securityQA.oldPassword"
-                                       class="form-control"
-                                       ng-minlength="4" required type="password" show-hide-password/>
-                                <span ng-show="(securityQAForm.$submitted || securityQAForm.user_old_password.$dirty) && securityQAForm.user_old_password.$error.required"
-                                      class="text-danger ng-hide">You have to enter your current password.</span>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="row">
-                        <div class="col-xs-6 col-sm-6 col-md-6">
-                            <div class="form-group has-feedback">
-                                <label class="text-muted">Security question</label>
-                                <select name="sec_question" placeholder="Security question"
-                                        ng-model="profileCtrl.securityQA.securityQuestion"
-                                        required class="form-control ">
-                                    <option value="">Select security question</option>
-                                    <option ng-repeat="question in profileCtrl.securityQuestions" value="{{question.value}}">
-                                        {{question.value}}
-                                    </option>
-                                </select>
-                            </div>
-                        </div>
-                        <div class="col-xs-6 col-sm-6 col-md-6">
-                            <div class="form-group has-feedback">
-                                <label class="text-muted">Security answer</label>
-                                <input name="sec_answer" placeholder="Security answer" autocomplete="off"
-                                       ng-model="profileCtrl.securityQA.securityAnswer" required class="form-control"
-                                       type="password"
-                                       show-hide-password/>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="row">
-                        <div class="col-xs-12 col-sm-12 col-md-12">
-                  <span ng-show="(securityQAForm.$submitted || securityQAForm.sec_answer.$dirty) &amp;&amp; securityQAForm.sec_answer.$error.required"
-                        class="text-danger ng-hide">This field is required</span>
-                        </div>
-                    </div>
-                    <div ng-show="profileCtrl.securityQAMsg.successMessage"
-                         class="alert  alert-success text-center ng-binding ng-hide">
-                        <button type="button" class="close" aria-label="Close"
-                                ng-click="profileCtrl.securityQAMsg.successMessage = ''">
-                            <span aria-hidden="true">&times;</span>
-                        </button>
-                        {{profileCtrl.securityQAMsg.successMessage}}
-                    </div>
-                    <div ng-show="profileCtrl.securityQAMsg.errorMessage"
-                         class="alert alert-danger text-center ng-binding ng-hide">
-                        <button type="button" class="close" aria-label="Close"
-                                ng-click="profileCtrl.securityQAMsg.errorMessage = ''">
-                            <span aria-hidden="true">&times;</span>
-                        </button>
-                        {{profileCtrl.securityQAMsg.errorMessage}}
-                    </div>
-                    <div class="row form-actions">
-                        <div class="col-xs-3 col-sm-3 col-md-3 pull-right">
-                            <button class="btn btn-block btn-primary" type="submit" ng-disabled="securityQAForm.$invalid || profileCtrl.securityQAWorking">
-                                <i ng-if="profileCtrl.securityQAWorking" style="margin-top: 2px"
-                                   class="fa fa-spinner fa-spin pull-right"></i>
-                                Save
-                            </button>
-                        </div>
-                    </div>
-                </form>
-            </div>
-            <!-- End of Security question -->
             <!-- Two factor -->
             <div class="row" id="tab3" ng-show="profileCtrl.activeTab === 'twoFactor'">
                 <div class="breadcrumb">

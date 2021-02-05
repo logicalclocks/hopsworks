@@ -86,18 +86,6 @@
                         class="text-danger ng-hide">This field must be a valid email address</span>
                 </div>
                 </div>
-                <div class="col-xs-12 col-sm-6 col-md-6">
-                <div class="form-group has-feedback">
-                  <label class="text-muted">Phone Number</label>
-                  <input name="phone_number" placeholder="Phone" autocomplete="on"
-                         ng-model="regCtrl.newUser.telephoneNum"
-                         ng-pattern="/^[\+]?[(]?[0-9]{3}[)]?[-\s\.]?[0-9]{3}[-\s\.]?[0-9]{4,6}$/"
-                         class="form-control "
-                         type="text">
-                  <span ng-show="registerForm.phone_number.$dirty &amp;&amp; registerForm.phone_number.$error.pattern"
-                        class="text-danger ng-hide">Phone number should be in the format: 000-000 000000.</span>
-                </div>
-                  </div>
             </div>
             
             <div class="row">
@@ -135,35 +123,6 @@
                     <span ng-show="(registerForm.$submitted || registerForm.user_password_confirm.$dirty) &amp;&amp; registerForm.user_password_confirm.$error.pwmatch &amp;&amp; !(registerForm.user_password.$error.minlength || registerForm.user_password.$error.pattern)"
                           class="text-danger ng-hide">The two passwords you entered do not match</span>
                   </div>
-            </div>
-             <div class="row">
-              <div class="col-xs-12 col-sm-6 col-md-6">
-                <div class="form-group has-feedback">
-                    <label class="text-muted">Security question</label>
-                    <select name="sec_question" placeholder="Security question"
-                          ng-model="regCtrl.newUser.securityQuestion" required
-                          class="form-control ">
-                    <option value="">Select security question</option>
-                    <option ng-repeat="question in regCtrl.securityQuestions" value="{{question.value}}">{{question.value}}</option>
-                    </select>
-                    <span ng-show="(registerForm.$submitted || registerForm.sec_question.$dirty) &amp;&amp; registerForm.sec_question.$error.required"
-                        class="text-danger ng-hide">This field is required</span>
-                </div>
-              </div>
-               <div class="col-xs-12 col-sm-6 col-md-6">
-                <div class="form-group has-feedback">
-                  <label class="text-muted">Security answer</label>
-                  <input name="sec_answer" placeholder="Security answer"
-                         autocomplete="off"
-                         ng-model="regCtrl.newUser.securityAnswer" required
-                         class="form-control"
-                         type="password" show-hide-password/>
-                  <span ng-show="(registerForm.$submitted || registerForm.sec_answer.$dirty) &amp;&amp; registerForm.sec_answer.$error.required"
-                        class="text-danger ng-hide">This field is required</span>
-                </div>
-              </div>
-            </div>
-            <div ng-if="regCtrl.otp === 'true'">
             </div>
             <div class="row"> 
               <div class="col-md-6">

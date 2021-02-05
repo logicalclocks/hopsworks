@@ -358,12 +358,11 @@ public class AuthService {
   @JWTNotRequired
   @Audited(type = AuditType.ACCOUNT_AUDIT, action = AuditAction.RECOVERY, message = "Start password recovery")
   public Response recoverPassword(@Caller @AuditTarget @FormParam("email") String email,
-    @Secret @FormParam("securityQuestion") String securityQuestion,
-    @Secret @FormParam("securityAnswer") String securityAnswer, @Context HttpServletRequest req) throws UserException,
-    MessagingException {
+                                  @Context HttpServletRequest req) throws UserException,
+      MessagingException {
     RESTApiJsonResponse json = new RESTApiJsonResponse();
     String reqUrl = FormatUtils.getUserURL(req);
-    userController.sendPasswordRecoveryEmail(email, securityQuestion, securityAnswer, reqUrl);
+    userController.sendPasswordRecoveryEmail(email, reqUrl);
     json.setSuccessMessage(ResponseMessages.PASSWORD_RESET);
     return Response.ok(json).build();
   }

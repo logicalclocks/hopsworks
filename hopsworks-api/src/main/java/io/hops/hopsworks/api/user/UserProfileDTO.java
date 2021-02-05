@@ -52,7 +52,6 @@ public class UserProfileDTO extends RestDTO<UserProfileDTO> {
   private String lastname;
   private String email;
   private String username;
-  private String phoneNumber;
   private String accountType;
   private Boolean twoFactor;
   private Integer toursState;
@@ -71,7 +70,6 @@ public class UserProfileDTO extends RestDTO<UserProfileDTO> {
     this.lastname = user.getLname();
     this.email = user.getEmail();
     this.username = user.getUsername();
-    this.phoneNumber = user.getMobile();
     this.accountType = user.getMode().toString();
     this.twoFactor = user.getTwoFactor();
     this.toursState = user.getToursState();
@@ -112,14 +110,6 @@ public class UserProfileDTO extends RestDTO<UserProfileDTO> {
 
   public void setEmail(String email) {
     this.email = email;
-  }
-
-  public String getPhoneNumber() {
-    return phoneNumber;
-  }
-
-  public void setPhoneNumber(String phoneNumber) {
-    this.phoneNumber = phoneNumber;
   }
 
   public String getAccountType() {

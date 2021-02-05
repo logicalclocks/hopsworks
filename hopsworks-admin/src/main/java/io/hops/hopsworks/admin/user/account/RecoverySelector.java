@@ -49,7 +49,6 @@ import javax.faces.context.FacesContext;
 import javax.mail.MessagingException;
 import javax.servlet.http.HttpServletRequest;
 import java.io.Serializable;
-import java.net.SocketException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -95,24 +94,32 @@ public class RecoverySelector implements Serializable {
   }
 
   public String redirect() {
-
     if (console.equals("Password")) {
-      return "sec_question";
-    }
-
-    if (console.equals("Mobile")) {
+      return "password_recovery";
+    } else {
       return "mobile_recovery";
     }
-    
-    return "";
   }
 
-  /**
-   * Register lost mobile lost device.
-   * <p>
-   * @return
-   * @throws SocketException
-   */
+  public String sendPasswordResetEmail() {
+    FacesContext ctx = FacesContext.getCurrentInstance();
+    HttpServletRequest req = (HttpServletRequest) ctx.getExternalContext().getRequest();
+    try {
+      auditedUserAccountAction.sendPasswordRecoveryEmail(uname, req);
+    } catch (MessagingException ex) {
+      String detail = ex.getCause() != null? ex.getCause().getMessage() : "Failed to send recovery email.";
+      MessagesController.addSecurityErrorMessage(detail);
+      LOGGER.log(Level.FINE, null, detail);
+      return ("");
+    }  catch (UserException ue) {
+      String detail = ue.getUsrMsg() != null ? ue.getUsrMsg() : ue.getErrorCode().getMessage();
+      MessagesController.addSecurityErrorMessage(detail);
+      LOGGER.log(Level.FINE, null, detail);
+      return ("");
+    }
+    return ("password_sent");
+  }
+
   public String sendQrCode() {
     HttpServletRequest httpServletRequest = (HttpServletRequest) FacesContext.getCurrentInstance().getExternalContext()
       .getRequest();

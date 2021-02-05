@@ -26,7 +26,6 @@ import io.hops.hopsworks.audit.logger.annotation.Secret;
 import io.hops.hopsworks.common.user.UsersController;
 import io.hops.hopsworks.exceptions.UserException;
 import io.hops.hopsworks.persistence.entity.user.Users;
-import io.hops.hopsworks.persistence.entity.user.security.ua.SecurityQuestion;
 import io.hops.hopsworks.persistence.entity.util.FormatUtils;
 
 import javax.ejb.EJB;
@@ -55,10 +54,10 @@ public class AuditedUserAccountAction {
   
   @Audited(type = AuditType.ACCOUNT_AUDIT, action = AuditAction.PASSWORD, message = "User requested password recovery")
   public void sendPasswordRecoveryEmail(@Caller(UserIdentifier.USERNAME) @AuditTarget(UserIdentifier.USERNAME)
-    String username, @Secret SecurityQuestion question, @Secret String answer, HttpServletRequest req)
+                                              String username, HttpServletRequest req)
     throws MessagingException, UserException {
     String reqUrl = FormatUtils.getUserURL(req);
-    usersController.sendPasswordRecoveryEmail(username, question.getValue(), answer, reqUrl);
+    usersController.sendPasswordRecoveryEmail(username, reqUrl);
   }
   
   @Audited(type = AuditType.ACCOUNT_AUDIT, action = AuditAction.PASSWORD, message = "User verified password recovery " +

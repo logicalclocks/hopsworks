@@ -53,7 +53,6 @@ import io.hops.hopsworks.exceptions.ServiceException;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
 import io.hops.hopsworks.persistence.entity.remote.oauth.OauthClient;
 import io.hops.hopsworks.persistence.entity.user.security.apiKey.ApiScope;
-import io.hops.hopsworks.persistence.entity.user.security.ua.SecurityQuestion;
 import io.hops.hopsworks.persistence.entity.util.Variables;
 import io.hops.hopsworks.persistence.entity.util.VariablesVisibility;
 import io.hops.hopsworks.restutils.RESTCodes;
@@ -74,7 +73,6 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.logging.Level;
@@ -175,19 +173,7 @@ public class VariablesService {
     }
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.SERVICE_UNAVAILABLE).build();
   }
-  
-  @GET
-  @Path("securityQuestions")
-  @Produces(MediaType.APPLICATION_JSON)
-  @JWTNotRequired
-  public Response getSecurityQuestions() {
-    List<SecurityQuestion> securityQuestions = Arrays.asList(SecurityQuestion.values());
-    Collections.shuffle(securityQuestions);
-    GenericEntity<List<SecurityQuestion>> questions = new GenericEntity<List<SecurityQuestion>>(securityQuestions) {
-    };
-    return Response.ok().entity(questions).build();
-  }
-  
+
   @GET
   @Path("filename-regex")
   @Produces(MediaType.APPLICATION_JSON)

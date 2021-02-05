@@ -71,18 +71,6 @@
     </navigation-case>
 
     <navigation-case>
-      <from-outcome>sec_question</from-outcome>
-      <to-view-id>/security/sec_question.xhtml</to-view-id>
-      <redirect/>
-    </navigation-case>
-
-    <navigation-case>
-      <from-outcome>sec_question_changed</from-outcome>
-      <to-view-id>/security/sec_question_changed.xhtml</to-view-id>
-      <redirect/>
-    </navigation-case>
-
-    <navigation-case>
       <from-outcome>reset</from-outcome>
       <to-view-id>/security/reset.xhtml</to-view-id>
       <redirect/>
@@ -91,6 +79,12 @@
     <navigation-case>
       <from-outcome>mobile_recovery</from-outcome>
       <to-view-id>/security/mobile_recovery.xhtml</to-view-id>
+      <redirect/>
+    </navigation-case>
+
+    <navigation-case>
+      <from-outcome>password_recovery</from-outcome>
+      <to-view-id>/security/password_recovery.xhtml</to-view-id>
       <redirect/>
     </navigation-case>
     

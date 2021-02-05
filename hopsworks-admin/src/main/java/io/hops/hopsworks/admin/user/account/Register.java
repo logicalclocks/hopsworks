@@ -28,7 +28,6 @@ import io.hops.hopsworks.exceptions.GenericException;
 import io.hops.hopsworks.exceptions.UserException;
 import io.hops.hopsworks.persistence.entity.remote.user.RemoteUserType;
 import io.hops.hopsworks.persistence.entity.user.BbcGroup;
-import io.hops.hopsworks.persistence.entity.user.security.ua.SecurityQuestion;
 import io.hops.hopsworks.persistence.entity.user.security.ua.UserAccountStatus;
 import io.hops.hopsworks.persistence.entity.user.security.ua.UserAccountType;
 import io.hops.hopsworks.restutils.RESTCodes;
@@ -60,7 +59,6 @@ public class Register implements Serializable {
   private String firstName;
   private String lastName;
   private String role;
-  private String phone;
   private Integer status;
   private Integer maxNumProjects;
   private Integer remoteUserType;
@@ -127,7 +125,6 @@ public class Register implements Serializable {
     this.firstName = null;
     this.lastName = null;
     this.role = null;
-    this.phone = null;
     this.role = Settings.DEFAULT_ROLE;
     this.status = UserAccountStatus.TEMP_PASSWORD.getValue();
     this.maxNumProjects = settings.getMaxNumProjPerUser();
@@ -171,14 +168,6 @@ public class Register implements Serializable {
   
   public void setRole(String role) {
     this.role = role;
-  }
-  
-  public String getPhone() {
-    return phone;
-  }
-  
-  public void setPhone(String phone) {
-    this.phone = phone;
   }
   
   public Integer getStatus() {
@@ -281,8 +270,6 @@ public class Register implements Serializable {
       this.password = securityUtils.generateRandomString(UserValidator.TEMP_PASSWORD_LENGTH);
       newUser.setChosenPassword(this.password);
       newUser.setRepeatedPassword(this.password);
-      newUser.setSecurityQuestion(SecurityQuestion.randomQuestion().getValue());
-      newUser.setSecurityAnswer(securityUtils.generateSecureRandomString(Settings.DEFAULT_SECURITY_ANSWER_LEN));
       auditedUserAdministration.createUser(newUser, this.role, UserAccountStatus.fromValue(status),
         UserAccountType.M_ACCOUNT_TYPE, httpServletRequest);
       showDialog();

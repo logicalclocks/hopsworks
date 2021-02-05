@@ -188,13 +188,12 @@ public class UsersResource {
   @ApiOperation(value = "Updates logged in User\'s info.", response = UserProfileDTO.class)
   public Response updateProfile(@FormParam("firstname") String firstName,
       @FormParam("lastname") String lastName,
-      @FormParam("phoneNumber") String phoneNumber,
       @FormParam("toursState") Integer toursState,
       @Context UriInfo uriInfo,
       @AuditTarget(UserIdentifier.REQ) @Context HttpServletRequest req,
       @Context SecurityContext sc) throws UserException {
     Users user = jWTHelper.getUserPrincipal(sc);
-    user = userController.updateProfile(user, firstName, lastName, phoneNumber, toursState);
+    user = userController.updateProfile(user, firstName, lastName, toursState);
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.USERS);
     UserProfileDTO userDTO = usersBuilder.buildFull(uriInfo, resourceRequest, user);
     return Response.created(userDTO.getHref()).entity(userDTO).build();
@@ -292,24 +291,6 @@ public class UsersResource {
     Users user = jWTHelper.getUserPrincipal(sc);
     secretsController.deleteAll(user);
     return Response.ok().build();
-  }
-
-  @POST
-  @Path("securityQA")
-  @Produces(MediaType.APPLICATION_JSON)
-  @Audited(type = AuditType.ACCOUNT_AUDIT, action = AuditAction.SECURITY_QUESTION_CHANGE, message = "User changed " +
-    "security question and answer")
-  @ApiOperation(value = "Updates logedin User\'s security question and answer.", response = RESTApiJsonResponse.class)
-  public Response changeSecurityQA(@Secret @FormParam("oldPassword") String oldPassword,
-    @Secret @FormParam("securityQuestion") String securityQuestion,
-    @Secret @FormParam("securityAnswer") String securityAnswer,
-    @AuditTarget(UserIdentifier.REQ) @Context HttpServletRequest req,
-    @Context SecurityContext sc) throws UserException {
-    RESTApiJsonResponse json = new RESTApiJsonResponse();
-    Users user = jWTHelper.getUserPrincipal(sc);
-    userController.changeSecQA(user, oldPassword, securityQuestion, securityAnswer);
-    json.setSuccessMessage(ResponseMessages.SEC_QA_CHANGED);
-    return Response.ok().entity(json).build();
   }
 
   @POST

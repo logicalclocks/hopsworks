@@ -60,7 +60,6 @@ import javax.persistence.ManyToMany;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
 import javax.persistence.OneToMany;
-import javax.persistence.OneToOne;
 import javax.persistence.Table;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
@@ -71,9 +70,6 @@ import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
 
 import io.hops.hopsworks.persistence.entity.tensorflow.TensorBoard;
-import io.hops.hopsworks.persistence.entity.user.security.Address;
-import io.hops.hopsworks.persistence.entity.user.security.Organization;
-import io.hops.hopsworks.persistence.entity.user.security.ua.SecurityQuestion;
 import io.hops.hopsworks.persistence.entity.user.security.ua.UserAccountStatus;
 import io.hops.hopsworks.persistence.entity.user.security.ua.UserAccountType;
 import io.hops.hopsworks.persistence.entity.user.security.ua.ValidationKeyType;
@@ -125,14 +121,6 @@ import org.codehaus.jackson.annotate.JsonIgnore;
   @NamedQuery(name = "Users.findByValidationKey",
       query = "SELECT u FROM Users u WHERE u.validationKey = :validationKey")
   ,
-  @NamedQuery(name = "Users.findBySecurityQuestion",
-      query
-      = "SELECT u FROM Users u WHERE u.securityQuestion = :securityQuestion")
-  ,
-  @NamedQuery(name = "Users.findBySecurityAnswer",
-      query
-      = "SELECT u FROM Users u WHERE u.securityAnswer = :securityAnswer")
-  ,
   @NamedQuery(name = "Users.findByMode",
       query = "SELECT u FROM Users u WHERE u.mode = :mode")
   ,
@@ -142,9 +130,6 @@ import org.codehaus.jackson.annotate.JsonIgnore;
   ,
   @NamedQuery(name = "Users.findByNotes",
       query = "SELECT u FROM Users u WHERE u.notes = :notes")
-  ,
-  @NamedQuery(name = "Users.findByMobile",
-      query = "SELECT u FROM Users u WHERE u.mobile = :mobile")
   ,
   @NamedQuery(name = "Users.findByStatus",
       query = "SELECT u FROM Users u WHERE u.status = :status")
@@ -228,12 +213,6 @@ public class Users implements Serializable {
   @Enumerated(EnumType.STRING)
   @Column(name = "validation_key_type")
   private ValidationKeyType validationKeyType;
-  @Enumerated(EnumType.STRING)
-  @Column(name = "security_question")
-  private SecurityQuestion securityQuestion;
-  @Size(max = 128)
-  @Column(name = "security_answer")
-  private String securityAnswer;
   @Basic(optional = false)
   @NotNull
   @Enumerated(EnumType.ORDINAL)
@@ -247,9 +226,6 @@ public class Users implements Serializable {
   @Size(max = 500)
   @Column(name = "notes")
   private String notes;
-  @Size(max = 15)
-  @Column(name = "mobile")
-  private String mobile;
   @Basic(optional = false)
   @Column(name = "max_num_projects")
   private Integer maxNumProjects;
@@ -283,14 +259,6 @@ public class Users implements Serializable {
             referencedColumnName = "gid")})
   @ManyToMany
   private Collection<BbcGroup> bbcGroupCollection;
-
-  @OneToOne(cascade = CascadeType.ALL,
-      mappedBy = "uid")
-  private Address address;
-
-  @OneToOne(cascade = CascadeType.ALL,
-      mappedBy = "uid")
-  private Organization organization;
 
   @OneToMany(cascade = CascadeType.ALL,
       mappedBy = "users")
@@ -347,9 +315,9 @@ public class Users implements Serializable {
   }
 
   public Users(String username, String password, String email, String fname, String lname, Date activated, String title,
-    String orcid, UserAccountStatus status, String secret, String validationKey, Date validationKeyUpdated,
-    ValidationKeyType validationKeyType, SecurityQuestion securityQuestion, String securityAnswer, UserAccountType mode,
-    Date passwordChanged, String mobile, Integer maxNumProjects, boolean twoFactor, String salt, int toursState) {
+               String orcid, UserAccountStatus status, String secret, String validationKey, Date validationKeyUpdated,
+               ValidationKeyType validationKeyType, UserAccountType mode, Date passwordChanged,
+               Integer maxNumProjects, boolean twoFactor, String salt, int toursState) {
     this.username = username;
     this.password = password;
     this.email = email;
@@ -363,11 +331,8 @@ public class Users implements Serializable {
     this.validationKey = validationKey;
     this.validationKeyUpdated = validationKeyUpdated;
     this.validationKeyType = validationKeyType;
-    this.securityQuestion = securityQuestion;
-    this.securityAnswer = securityAnswer;
     this.mode = mode;
     this.passwordChanged = passwordChanged;
-    this.mobile = mobile;
     this.maxNumProjects = maxNumProjects;
     this.twoFactor = twoFactor;
     this.salt = salt;
@@ -402,22 +367,6 @@ public class Users implements Serializable {
 
   public void setUid(Integer uid) {
     this.uid = uid;
-  }
-
-  public Address getAddress() {
-    return address;
-  }
-
-  public void setAddress(Address address) {
-    this.address = address;
-  }
-
-  public Organization getOrganization() {
-    return organization;
-  }
-
-  public void setOrganization(Organization organization) {
-    this.organization = organization;
   }
 
   public String getUsername() {
@@ -555,26 +504,6 @@ public class Users implements Serializable {
     this.validationKeyType = validationKeyType;
   }
 
-  @XmlTransient
-  @JsonIgnore
-  public SecurityQuestion getSecurityQuestion() {
-    return securityQuestion;
-  }
-
-  public void setSecurityQuestion(SecurityQuestion securityQuestion) {
-    this.securityQuestion = securityQuestion;
-  }
-
-  @XmlTransient
-  @JsonIgnore
-  public String getSecurityAnswer() {
-    return securityAnswer;
-  }
-
-  public void setSecurityAnswer(String securityAnswer) {
-    this.securityAnswer = securityAnswer;
-  }
-
   public UserAccountType getMode() {
     return mode;
   }
@@ -597,14 +526,6 @@ public class Users implements Serializable {
 
   public void setNotes(String notes) {
     this.notes = notes;
-  }
-
-  public String getMobile() {
-    return mobile;
-  }
-
-  public void setMobile(String mobile) {
-    this.mobile = mobile;
   }
 
   public UserAccountStatus getStatus() {

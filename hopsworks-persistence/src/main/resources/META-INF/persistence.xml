@@ -143,13 +143,9 @@
     <class>io.hops.hopsworks.persistence.entity.user.Users</class>
     <class>io.hops.hopsworks.persistence.entity.user.cluster.ClusterCert</class>
     <class>io.hops.hopsworks.persistence.entity.user.activity.Activity</class>
-    <class>io.hops.hopsworks.persistence.entity.user.security.Address</class>
-    <class>io.hops.hopsworks.persistence.entity.user.security.Organization</class>
     <class>io.hops.hopsworks.persistence.entity.user.security.audit.AccountAudit</class>
     <class>io.hops.hopsworks.persistence.entity.user.security.audit.RolesAudit</class>
     <class>io.hops.hopsworks.persistence.entity.user.security.audit.Userlogins</class>
-    <class>io.hops.hopsworks.persistence.entity.user.sshkey.AuthorizedSshkeys</class>
-    <class>io.hops.hopsworks.persistence.entity.user.sshkey.SshKeys</class>
     <class>io.hops.hopsworks.persistence.entity.user.security.secrets.Secret</class>
     <class>io.hops.hopsworks.persistence.entity.util.Variables</class>
     <class>io.hops.hopsworks.persistence.entity.yarn.YarnContainersLog</class>

@@ -40,8 +40,8 @@
 'use strict';
 
 angular.module('hopsWorksApp')
-        .controller('RegCtrl', ['AuthService', '$location', '$scope', '$window', 'SecurityQuestions', '$routeParams', '$cookies',
-          function (AuthService, $location, $scope, $window, SecurityQuestions, $routeParams, $cookies) {
+        .controller('RegCtrl', ['AuthService', '$location', '$scope', '$window', '$routeParams', '$cookies',
+          function (AuthService, $location, $scope, $window, $routeParams, $cookies) {
           
             var self = this;
             self.working = false;
@@ -50,11 +50,8 @@ angular.module('hopsWorksApp')
               firstName: '',
               lastName: '',
               email: '',
-              telephoneNum: '',
               chosenPassword: '',
               repeatedPassword: '',
-              securityQuestion: '',
-              securityAnswer: '',
               tos: '',
               authType: 'Mobile',
               twoFactor: false,
@@ -67,10 +64,6 @@ angular.module('hopsWorksApp')
               country: '',
               testUser: false
             };
-
-            SecurityQuestions.getQuestions().then(function(success) {
-              self.securityQuestions = success.data;
-            });
 
             self.userEmail ='';
             

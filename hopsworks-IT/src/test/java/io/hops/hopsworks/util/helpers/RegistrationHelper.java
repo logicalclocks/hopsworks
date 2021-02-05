@@ -58,12 +58,8 @@ public class RegistrationHelper {
     driver.findElement(By.name("first_name")).sendKeys(firstName);
     driver.findElement(By.name("last_name")).sendKeys(lastName);
     driver.findElement(By.name("user_email")).sendKeys(email);
-    driver.findElement(By.name("phone_number")).sendKeys("1234567890");
     driver.findElement(By.id("id-password")).sendKeys(password);
     driver.findElement(By.name("user_password_confirm")).sendKeys(password);
-    Select seqQA = new Select(driver.findElement(By.name("sec_question")));
-    seqQA.selectByVisibleText("Name of your first pet?");
-    driver.findElement(By.name("sec_answer")).sendKeys("pet");
     driver.findElement(By.name("user_agreed")).click();
     WebElement testUserElement = driver.findElement(By.name("test_user"));
     JavascriptExec.jsClick(driver, testUserElement);

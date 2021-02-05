@@ -163,10 +163,10 @@ describe "On #{ENV['OS']}" do
         first_name = "name"
         last_name = "last"
         password = "Pass123"
-        post "#{ENV['HOPSWORKS_API']}/auth/register", {email: email, chosenPassword: password, repeatedPassword:
-            password, firstName: first_name, lastName: last_name, securityQuestion: "Name of your first pet?",
-                                                       securityAnswer: "example_answer", tos: true, authType:
-                                                           "Mobile", twoFactor: false, testUser: true}
+        post "#{ENV['HOPSWORKS_API']}/auth/register", { email: email, chosenPassword: password,
+                                                        repeatedPassword: password, firstName: first_name,
+                                                        lastName: last_name, tos: true, authType: "Mobile",
+                                                        twoFactor: false, testUser: true }
         expect_json(errorMsg: ->(value) {expect(value).to be_nil})
         expect_json(successMessage: ->(value) {expect(value).to include("We registered your account request")})
         expect_status(200)
@@ -178,10 +178,9 @@ describe "On #{ENV['OS']}" do
         last_name = "last"
         password = "Pass123"
         register_user(email: email)
-        post "#{ENV['HOPSWORKS_API']}/auth/register", {email: email, chosenPassword: password, repeatedPassword:
-            password, firstName: first_name, lastName: last_name, securityQuestion: "Name of your first pet?",
-                                                       securityAnswer: "example_answer", tos: true, authType:
-                                                           "Mobile", testUser: true}
+        post "#{ENV['HOPSWORKS_API']}/auth/register", {email: email, chosenPassword: password,
+                                                       repeatedPassword: password, firstName: first_name,
+                                                       lastName: last_name, tos: true, authType: "Mobile", testUser: true}
         expect_json(successMessage: ->(value) {expect(value).to be_nil})
         expect_json(errorCode: 160003)
         expect_status(409)
@@ -297,7 +296,7 @@ describe "On #{ENV['OS']}" do
         end
         it "should create password reset key" do
           user = create_user()
-          start_password_reset(user.email, "Name of your first pet?", "example_answer")
+          start_password_reset(user.email)
           expect_status(200)
           user = User.find_by(email: user.email)
           type = user.validation_key_type
@@ -306,7 +305,7 @@ describe "On #{ENV['OS']}" do
 
         it "should verify password reset key" do
           user = create_user()
-          start_password_reset(user.email, "Name of your first pet?", "example_answer")
+          start_password_reset(user.email)
           expect_status(200)
           user = User.find_by(email: user.email)
           key = user.username + user.validation_key
@@ -321,7 +320,7 @@ describe "On #{ENV['OS']}" do
 
         it "should reset password" do
           user = create_user()
-          start_password_reset(user.email, "Name of your first pet?", "example_answer")
+          start_password_reset(user.email)
           expect_status(200)
           user = User.find_by(email: user.email)
           key = user.username + user.validation_key
@@ -340,7 +339,7 @@ describe "On #{ENV['OS']}" do
 
         it "should fail to reset qr code with password key" do
           user = create_user()
-          start_password_reset(user.email, "Name of your first pet?", "example_answer")
+          start_password_reset(user.email)
           expect_status(200)
           user = User.find_by(email: user.email)
           key = user.username + user.validation_key
@@ -353,7 +352,7 @@ describe "On #{ENV['OS']}" do
 
         it "should fail to reset qr code with password reset key" do
           user = create_user()
-          start_password_reset(user.email, "Name of your first pet?", "example_answer")
+          start_password_reset(user.email)
           expect_status(200)
           user = User.find_by(email: user.email)
           key = user.username + user.validation_key
@@ -367,28 +366,6 @@ describe "On #{ENV['OS']}" do
           reset_qr_code(key)
           expect_json(errorCode: 160041)
           expect_status(400)
-        end
-
-        it "should fail to reset password if security question is wrong" do
-          user = create_user()
-          start_password_reset(user.email, "Name of your first love?", "example_answer")
-          expect_status(400)
-          user = User.find_by(email: user.email)
-          key = user.validation_key
-          type = user.validation_key_type
-          expect(type).to be_nil
-          expect(key).to be_nil
-        end
-
-        it "should fail to reset password if security answer is wrong" do
-          user = create_user()
-          start_password_reset(user.email, "Name of your first pet?", "example")
-          expect_status(400)
-          user = User.find_by(email: user.email)
-          key = user.validation_key
-          type = user.validation_key_type
-          expect(type).to be_nil
-          expect(key).to be_nil
         end
 
         it "should fail to create qr reset key if 2 factor not enabled" do
@@ -516,7 +493,7 @@ describe "On #{ENV['OS']}" do
 
         it "should fail to validate wrong password reset key" do
           user = create_user()
-          start_password_reset(user.email, "Name of your first pet?", "example_answer")
+          start_password_reset(user.email)
           expect_status(200)
           user = User.find_by(email: user.email)
           false_logins = user.false_login
@@ -547,7 +524,7 @@ describe "On #{ENV['OS']}" do
 
         it "should fail to reset password with wrong validation key" do
           user = create_user()
-          start_password_reset(user.email, "Name of your first pet?", "example_answer")
+          start_password_reset(user.email)
           expect_status(200)
           user = User.find_by(email: user.email)
           false_logins = user.false_login
@@ -571,7 +548,7 @@ describe "On #{ENV['OS']}" do
           user = User.find_by(email: email)
           type = user.validation_key_type
           expect(type).to eq("EMAIL")
-          start_password_reset(user.email, "Name of your first pet?", "example_answer")
+          start_password_reset(user.email)
           expect_status(400)
         end
 
@@ -592,7 +569,7 @@ describe "On #{ENV['OS']}" do
         it "should change validation key type if a request is resubmitted" do
           set_two_factor("true")
           user = create_2factor_user()
-          start_password_reset(user.email, "Name of your first pet?", "example_answer")
+          start_password_reset(user.email)
           expect_status(200)
           user = User.find_by(email: user.email)
           key1 = user.username + user.validation_key
@@ -610,7 +587,7 @@ describe "On #{ENV['OS']}" do
         it "should change validation key type if a request is resubmitted (password to qr)" do
           set_two_factor("true")
           user = create_2factor_user()
-          start_password_reset(user.email, "Name of your first pet?", "example_answer")
+          start_password_reset(user.email)
           expect_status(200)
           user = User.find_by(email: user.email)
           key1 = user.username + user.validation_key
@@ -639,7 +616,7 @@ describe "On #{ENV['OS']}" do
           key1 = user.username + user.validation_key
           type = user.validation_key_type
           expect(type).to eq("QR_RESET")
-          start_password_reset(user.email, "Name of your first pet?", "example_answer")
+          start_password_reset(user.email)
           expect_status(200)
           user = User.find_by(email: user.email)
           key2 = user.username + user.validation_key
@@ -667,13 +644,13 @@ describe "On #{ENV['OS']}" do
 
         it "should resend the same key if request is sent again (password)" do
           user = create_user()
-          start_password_reset(user.email, "Name of your first pet?", "example_answer")
+          start_password_reset(user.email)
           expect_status(200)
           user = User.find_by(email: user.email)
           key1 = user.username + user.validation_key
           type = user.validation_key_type
           expect(type).to eq("PASSWORD")
-          start_password_reset(user.email, "Name of your first pet?", "example_answer")
+          start_password_reset(user.email)
           expect_status(200)
           user = User.find_by(email: user.email)
           key2 = user.username + user.validation_key
@@ -684,7 +661,7 @@ describe "On #{ENV['OS']}" do
 
         it "should resend the same key if request is sent again (password)" do
           user = create_user()
-          start_password_reset(user.email, "Name of your first pet?", "example_answer")
+          start_password_reset(user.email)
           expect_status(200)
           user = User.find_by(email: user.email)
           key1 = user.username + user.validation_key
@@ -695,7 +672,7 @@ describe "On #{ENV['OS']}" do
           user = User.find_by(email: user.email)
           type = user.validation_key_type
           expect(type).to eq("PASSWORD_RESET")
-          start_password_reset(user.email, "Name of your first pet?", "example_answer")
+          start_password_reset(user.email)
           expect_status(200)
           user = User.find_by(email: user.email)
           key2 = user.username + user.validation_key
