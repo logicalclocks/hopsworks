@@ -82,7 +82,6 @@ import io.hops.hopsworks.common.project.TourProjectType;
 import io.hops.hopsworks.common.provenance.core.HopsFSProvenanceController;
 import io.hops.hopsworks.common.provenance.core.dto.ProvTypeDTO;
 import io.hops.hopsworks.common.user.AuthController;
-import io.hops.hopsworks.common.user.UsersController;
 import io.hops.hopsworks.common.util.AccessController;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.DatasetException;
@@ -188,8 +187,6 @@ public class ProjectService {
   private InodeController inodeController;
   @EJB
   private HdfsUsersController hdfsUsersBean;
-  @EJB
-  private UsersController usersController;
   @EJB
   private UserFacade userFacade;
   @EJB
@@ -681,15 +678,8 @@ public class ProjectService {
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
   public Response quotasByProjectID(@PathParam("projectId") Integer id) throws ProjectException {
-
-    QuotasDTO quotas = projectController.getQuotas(id);
-
-    // If YARN quota or HDFS quota for project directory is null, something is wrong with the project
-    // throw a ProjectException
-    if (quotas.getHdfsQuotaInBytes() == null || quotas.getYarnQuotaInSecs() == null) {
-      throw new ProjectException(RESTCodes.ProjectErrorCode.QUOTA_NOT_FOUND, Level.FINE, "projectId: " + id);
-    }
-
+    Project project = projectController.findProjectById(id);
+    QuotasDTO quotas = projectController.getQuotasInternal(project);
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(quotas).build();
   }
 

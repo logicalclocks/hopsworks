@@ -206,10 +206,14 @@ public class HiveController {
       // Set the default quota
       switch (datasetType) {
         case HIVEDB:
-          dfso.setHdfsSpaceQuotaInMBs(dbPath, settings.getHiveDbDefaultQuota());
+          if (settings.getHiveDbDefaultQuota() > -1) {
+            dfso.setHdfsSpaceQuotaInMBs(dbPath, settings.getHiveDbDefaultQuota());
+          }
           break;
         case FEATURESTORE:
-          dfso.setHdfsSpaceQuotaInMBs(dbPath, settings.getFeaturestoreDbDefaultQuota());
+          if (settings.getFeaturestoreDbDefaultQuota() > -1) {
+            dfso.setHdfsSpaceQuotaInMBs(dbPath, settings.getFeaturestoreDbDefaultQuota());
+          }
           break;
       }
       projectFacade.setTimestampQuotaUpdate(project, new Date());
