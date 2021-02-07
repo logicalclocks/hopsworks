@@ -40,6 +40,7 @@ package io.hops.hopsworks.common.util;
 
 import com.google.common.base.Splitter;
 import com.google.common.base.Strings;
+import io.hops.hopsworks.persistence.entity.project.PaymentType;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.persistence.entity.user.Users;
@@ -161,6 +162,7 @@ public class Settings implements Serializable {
   private static final String VARIABLE_SUDOERS_DIR = "sudoers_dir";
   private static final String VARIABLE_YARN_DEFAULT_QUOTA = "yarn_default_quota";
   private static final String VARIABLE_HDFS_DEFAULT_QUOTA = "hdfs_default_quota";
+  private static final String VARIABLE_PROJECT_PAYMENT_TYPE = "yarn_default_payment_type";
   private static final String VARIABLE_HDFS_BASE_STORAGE_POLICY = "hdfs_base_storage_policy";
   private static final String VARIABLE_HDFS_LOG_STORAGE_POLICY = "hdfs_log_storage_policy";
   private static final String VARIABLE_MAX_NUM_PROJ_PER_USER
@@ -484,12 +486,18 @@ public class Settings implements Serializable {
 
     return defaultValue;
   }
-  
-  private Set<String> setStringHashSet(String varName, String defaultValue, String separator) {
-    String value = setStrVar(varName, defaultValue);
-    return setStringHashSetLowerCase(value, separator, false);
+
+  private PaymentType setPaymentType(String varName, PaymentType defaultValue) {
+    Optional<Variables> variable = findById(varName);
+    if (variable.isPresent()) {
+      String value = variable.get().getValue();
+      if (!Strings.isNullOrEmpty(value)) {
+        return PaymentType.valueOf(value);
+      }
+    }
+    return defaultValue;
   }
-  
+
   private Set<String> setStringHashSetLowerCase(String varName, String defaultValue, String separator) {
     RESERVED_PROJECT_NAMES_STR = setStrVar(varName, defaultValue);
     return setStringHashSetLowerCase(RESERVED_PROJECT_NAMES_STR, separator, true);
@@ -536,7 +544,7 @@ public class Settings implements Serializable {
       HIVE_SCRATCHDIR_DELAY = setStrVar(VARIABLE_HIVE_SCRATCHDIR_DELAY, HIVE_SCRATCHDIR_DELAY);
       HIVE_SCRATCHDIR_CLEANER_INTERVAL = setStrVar(VARIABLE_HIVE_SCRATCHDIR_CLEANER_INTERVAL,
           HIVE_SCRATCHDIR_CLEANER_INTERVAL);
-      HIVE_DB_DEFAULT_QUOTA = setStrVar(VARIABLE_HIVE_DEFAULT_QUOTA, HIVE_DB_DEFAULT_QUOTA);
+      HIVE_DB_DEFAULT_QUOTA = setLongVar(VARIABLE_HIVE_DEFAULT_QUOTA, HIVE_DB_DEFAULT_QUOTA);
       ALERT_EMAIL_ADDRS = setStrVar(VARIABLE_ALERT_EMAIL_ADDRS, "");
       HADOOP_VERSION = setVar(VARIABLE_HADOOP_VERSION, HADOOP_VERSION);
       JUPYTER_DIR = setDirVar(VARIABLE_JUPYTER_DIR, JUPYTER_DIR);
@@ -586,14 +594,11 @@ public class Settings implements Serializable {
           HOPSWORKS_DEFAULT_SSL_MASTER_PASSWORD);
       KAFKA_USER = setVar(VARIABLE_KAFKA_USER, KAFKA_USER);
       KAFKA_DIR = setDirVar(VARIABLE_KAFKA_DIR, KAFKA_DIR);
-      KAFKA_DEFAULT_NUM_PARTITIONS = setIntVar(VARIABLE_KAFKA_NUM_PARTITIONS,
-          KAFKA_DEFAULT_NUM_PARTITIONS);
-      KAFKA_DEFAULT_NUM_REPLICAS = setIntVar(VARIABLE_KAFKA_NUM_REPLICAS,
-          KAFKA_DEFAULT_NUM_REPLICAS);
-      YARN_DEFAULT_QUOTA = setIntVar(VARIABLE_YARN_DEFAULT_QUOTA,
-          YARN_DEFAULT_QUOTA);
-      HDFS_DEFAULT_QUOTA_MBs = setDirVar(VARIABLE_HDFS_DEFAULT_QUOTA,
-          HDFS_DEFAULT_QUOTA_MBs);
+      KAFKA_DEFAULT_NUM_PARTITIONS = setIntVar(VARIABLE_KAFKA_NUM_PARTITIONS, KAFKA_DEFAULT_NUM_PARTITIONS);
+      KAFKA_DEFAULT_NUM_REPLICAS = setIntVar(VARIABLE_KAFKA_NUM_REPLICAS, KAFKA_DEFAULT_NUM_REPLICAS);
+      YARN_DEFAULT_QUOTA = setIntVar(VARIABLE_YARN_DEFAULT_QUOTA, YARN_DEFAULT_QUOTA);
+      DEFAULT_PAYMENT_TYPE = setPaymentType(VARIABLE_PROJECT_PAYMENT_TYPE, DEFAULT_PAYMENT_TYPE);
+      HDFS_DEFAULT_QUOTA_MBs = setLongVar(VARIABLE_HDFS_DEFAULT_QUOTA, HDFS_DEFAULT_QUOTA_MBs);
       HDFS_BASE_STORAGE_POLICY = setHdfsStoragePolicy(VARIABLE_HDFS_BASE_STORAGE_POLICY, HDFS_BASE_STORAGE_POLICY);
       HDFS_LOG_STORAGE_POLICY = setHdfsStoragePolicy(VARIABLE_HDFS_LOG_STORAGE_POLICY, HDFS_LOG_STORAGE_POLICY);
       MAX_NUM_PROJ_PER_USER = setIntVar(VARIABLE_MAX_NUM_PROJ_PER_USER, MAX_NUM_PROJ_PER_USER);
@@ -704,7 +709,7 @@ public class Settings implements Serializable {
 
       CONNECTION_KEEPALIVE_TIMEOUT = setIntVar(VARIABLE_CONNECTION_KEEPALIVE_TIMEOUT, CONNECTION_KEEPALIVE_TIMEOUT);
 
-      FEATURESTORE_DB_DEFAULT_QUOTA = setStrVar(VARIABLE_FEATURESTORE_DEFAULT_QUOTA, FEATURESTORE_DB_DEFAULT_QUOTA);
+      FEATURESTORE_DB_DEFAULT_QUOTA = setLongVar(VARIABLE_FEATURESTORE_DEFAULT_QUOTA, FEATURESTORE_DB_DEFAULT_QUOTA);
       FEATURESTORE_DB_DEFAULT_STORAGE_FORMAT =
           setStrVar(VARIABLE_FEATURESTORE_DEFAULT_STORAGE_FORMAT, FEATURESTORE_DB_DEFAULT_STORAGE_FORMAT);
       FEATURESTORE_JDBC_URL = setStrVar(VARIABLE_FEATURESTORE_JDBC_URL, FEATURESTORE_JDBC_URL);
@@ -1108,11 +1113,10 @@ public class Settings implements Serializable {
     return HIVE_SCRATCHDIR_CLEANER_INTERVAL;
   }
 
-  private String HIVE_DB_DEFAULT_QUOTA = "50000";
-
-  public synchronized Long getHiveDbDefaultQuota() {
+  private long HIVE_DB_DEFAULT_QUOTA = -1;
+  public synchronized long getHiveDbDefaultQuota() {
     checkCache();
-    return Long.parseLong(HIVE_DB_DEFAULT_QUOTA);
+    return HIVE_DB_DEFAULT_QUOTA;
   }
 
   private String HOPSWORKS_IP = "127.0.0.1";
@@ -1188,18 +1192,21 @@ public class Settings implements Serializable {
   }
 
   private Integer YARN_DEFAULT_QUOTA = 60000;
-
   public synchronized Integer getYarnDefaultQuota() {
     checkCache();
     return YARN_DEFAULT_QUOTA;
   }
 
+  private PaymentType DEFAULT_PAYMENT_TYPE = PaymentType.NOLIMIT;
+  public synchronized PaymentType getDefaultPaymentType() {
+    checkCache();
+    return DEFAULT_PAYMENT_TYPE;
+  }
 
-  private String HDFS_DEFAULT_QUOTA_MBs = "200000";
-
+  private long HDFS_DEFAULT_QUOTA_MBs = -1;
   public synchronized long getHdfsDefaultQuotaInMBs() {
     checkCache();
-    return Long.parseLong(HDFS_DEFAULT_QUOTA_MBs);
+    return HDFS_DEFAULT_QUOTA_MBs;
   }
 
   // Set the DIR_ROOT (/Projects) to have DB storage policy, i.e. - small files stored on db
@@ -3517,11 +3524,10 @@ public class Settings implements Serializable {
     return "hdfs:///user/" + getSparkUser() + "/hive-site.xml";
   }
 
-  private String FEATURESTORE_DB_DEFAULT_QUOTA = "50000";
-
-  public synchronized Long getFeaturestoreDbDefaultQuota() {
+  private long FEATURESTORE_DB_DEFAULT_QUOTA = -1;
+  public synchronized long getFeaturestoreDbDefaultQuota() {
     checkCache();
-    return Long.parseLong(FEATURESTORE_DB_DEFAULT_QUOTA);
+    return FEATURESTORE_DB_DEFAULT_QUOTA;
   }
 
   private String FEATURESTORE_DB_DEFAULT_STORAGE_FORMAT = "ORC";

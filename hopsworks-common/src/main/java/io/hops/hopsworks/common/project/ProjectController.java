@@ -177,6 +177,7 @@ import java.util.Date;
 import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
@@ -406,7 +407,7 @@ public class ProjectController {
 
       //set payment and quotas
       try {
-        setProjectOwnerAndQuotas(project, settings.getHdfsDefaultQuotaInMBs(), dfso, owner);
+        setProjectOwnerAndQuotas(project, dfso, owner);
       } catch (IOException | EJBException ex) {
         cleanup(project, sessionId, projectCreationFutures, true, owner);
         throw new ProjectException(RESTCodes.ProjectErrorCode.QUOTA_ERROR, Level.SEVERE, "project: " + project.getName()
@@ -542,7 +543,7 @@ public class ProjectController {
     }
     //Create a new project object
     Date now = new Date();
-    Project project = new Project(projectName, user, now, PaymentType.PREPAID);
+    Project project = new Project(projectName, user, now, settings.getDefaultPaymentType());
     project.setKafkaMaxNumTopics(settings.getKafkaMaxNumTopics());
     project.setDescription(projectDescription);
 
@@ -1301,7 +1302,7 @@ public class ProjectController {
         cleanupLogger.logSuccess("Project is *NOT* in the database, going to remove as much as possible");
         Date now = DateUtils.localDateTime2Date(DateUtils.getNow());
         Users user = userFacade.findByEmail(userEmail);
-        Project toDeleteProject = new Project(projectName, user, now, PaymentType.PREPAID);
+        Project toDeleteProject = new Project(projectName, user, now, settings.getDefaultPaymentType());
         toDeleteProject.setKafkaMaxNumTopics(settings.getKafkaMaxNumTopics());
         Path tmpInodePath = new Path(File.separator + "tmp" + File.separator + projectName);
         try {
@@ -2053,41 +2054,24 @@ public class ProjectController {
             projectUtils.isOldDockerImage(project.getDockerImage()));
   }
 
-  public void setProjectOwnerAndQuotas(Project project, long diskspaceQuotaInMB,
-    DistributedFileSystemOps dfso, Users user)
+  public void setProjectOwnerAndQuotas(Project project, DistributedFileSystemOps dfso, Users user)
     throws IOException {
     this.yarnProjectsQuotaFacade.persistYarnProjectsQuota(
       new YarnProjectsQuota(project.getName(), settings.getYarnDefaultQuota(), 0));
     this.yarnProjectsQuotaFacade.flushEm();
-    setHdfsSpaceQuotasInMBs(project, diskspaceQuotaInMB, null, null, dfso);
+
+    // Here we set only the project quota. The HiveDB and Feature Store quotas are set in the HiveController
+    if (settings.getHdfsDefaultQuotaInMBs() > -1) {
+      dfso.setHdfsSpaceQuotaInMBs(
+          new Path(Utils.getProjectPath(project.getName())), settings.getHdfsDefaultQuotaInMBs());
+    }
+
     projectFacade.setTimestampQuotaUpdate(project, new Date());
     //Add the activity information
     logActivity(ActivityFacade.NEW_PROJECT + project.getName(), user, project, ActivityFlag.PROJECT);
     //update role information in project
     addProjectOwner(project, user);
-    LOGGER.log(Level.FINE, "{0} - project created successfully.", project.
-      getName());
-  }
-
-  public void setHdfsSpaceQuotasInMBs(Project project, Long diskspaceQuotaInMB,
-    Long hiveDbSpaceQuotaInMb, Long featurestoreDbSpaceQuotaInMb,
-    DistributedFileSystemOps dfso)
-    throws IOException {
-
-    dfso.setHdfsSpaceQuotaInMBs(new Path(Utils.getProjectPath(project.getName())), diskspaceQuotaInMB);
-
-    if (hiveDbSpaceQuotaInMb != null && projectServicesFacade.isServiceEnabledForProject(project,
-      ProjectServiceEnum.HIVE)) {
-      dfso.setHdfsSpaceQuotaInMBs(hiveController.getDbPath(project.getName()),
-        hiveDbSpaceQuotaInMb);
-    }
-
-    if (featurestoreDbSpaceQuotaInMb != null && projectServicesFacade.isServiceEnabledForProject(project,
-      ProjectServiceEnum.FEATURESTORE)) {
-      dfso.setHdfsSpaceQuotaInMBs(hiveController.getDbPath(
-        featurestoreController.getOfflineFeaturestoreDbName(project)),
-        featurestoreDbSpaceQuotaInMb);
-    }
+    LOGGER.log(Level.FINE, "{0} - project created successfully.", project.getName());
   }
 
   public void setPaymentType(Project project, PaymentType paymentType) {
@@ -2096,21 +2080,11 @@ public class ProjectController {
     this.projectFacade.flushEm();
   }
 
-  /**
-   * @param projectId
-   * @return
-   */
-  public QuotasDTO getQuotas(Integer projectId) {
-    Project project = projectFacade.find(projectId);
-    return getQuotasInternal(project);
-  }
-
   public QuotasDTO getQuotasInternal(Project project) {
-    Long hdfsQuota = -1L, hdfsUsage = -1L, hdfsNsQuota = -1L, hdfsNsCount = -1L,
+    long hdfsQuota = -1L, hdfsUsage = -1L, hdfsNsQuota = -1L, hdfsNsCount = -1L,
       dbhdfsQuota = -1L, dbhdfsUsage = -1L, dbhdfsNsQuota = -1L, dbhdfsNsCount = -1L,
       fshdfsQuota = -1L, fshdfsUsage = -1L, fshdfsNsQuota = -1L, fshdfsNsCount = -1L;
-    Integer kafkaQuota = project.getKafkaMaxNumTopics();
-    Float yarnRemainingQuota = 0f, yarnTotalQuota = 0f;
+    float yarnRemainingQuota = 0f, yarnTotalQuota = 0f;
 
     // Yarn Quota
     YarnProjectsQuota yarnQuota = yarnProjectsQuotaFacade.
@@ -2123,54 +2097,40 @@ public class ProjectController {
     }
 
     // HDFS project directory quota
-    HdfsDirectoryWithQuotaFeature projectInodeAttrs = hdfsDirectoryWithQuotaFeatureFacade.
-      getByInodeId(project.getInode().getId());
-    if (projectInodeAttrs == null) {
-      LOGGER.log(Level.SEVERE, "Cannot find HDFS quota information for project: " + project.getName());
-    } else {
-      hdfsQuota = projectInodeAttrs.getSsquota().longValue();
-      hdfsUsage = projectInodeAttrs.getStorageSpace().longValue();
-      hdfsNsQuota = projectInodeAttrs.getNsquota().longValue();
-      hdfsNsCount = projectInodeAttrs.getNscount().longValue();
+    Optional<HdfsDirectoryWithQuotaFeature> projectInodeAttrsOptional =
+        hdfsDirectoryWithQuotaFeatureFacade.getByInodeId(project.getInode().getId());
+    if (projectInodeAttrsOptional.isPresent()) {
+      hdfsQuota = projectInodeAttrsOptional.get().getSsquota().longValue();
+      hdfsUsage = projectInodeAttrsOptional.get().getStorageSpace().longValue();
+      hdfsNsQuota = projectInodeAttrsOptional.get().getNsquota().longValue();
+      hdfsNsCount = projectInodeAttrsOptional.get().getNscount().longValue();
     }
 
     // If the Hive service is enabled, get the quota information for the db directory
-    if (projectServicesFacade.isServiceEnabledForProject(project, ProjectServiceEnum.HIVE)) {
-      List<Dataset> datasets = (List<Dataset>) project.getDatasetCollection();
-      for (Dataset ds : datasets) {
-        if (ds.getDsType() == DatasetType.HIVEDB) {
-          HdfsDirectoryWithQuotaFeature dbInodeAttrs = hdfsDirectoryWithQuotaFeatureFacade
-            .getByInodeId(ds.getInodeId());
-          if (dbInodeAttrs == null) {
-            LOGGER.log(Level.SEVERE, "Cannot find HiveDB quota information for project: " + project.getName());
-          } else {
-            dbhdfsQuota = dbInodeAttrs.getSsquota().longValue();
-            dbhdfsUsage = dbInodeAttrs.getStorageSpace().longValue();
-            dbhdfsNsQuota = dbInodeAttrs.getNsquota().longValue();
-            dbhdfsNsCount = dbInodeAttrs.getNscount().longValue();
-          }
+    List<Dataset> datasets = (List<Dataset>) project.getDatasetCollection();
+    for (Dataset ds : datasets) {
+      if (ds.getDsType() == DatasetType.HIVEDB) {
+        Optional<HdfsDirectoryWithQuotaFeature> dbInodeAttrsOptional =
+            hdfsDirectoryWithQuotaFeatureFacade.getByInodeId(ds.getInodeId());
+        if (dbInodeAttrsOptional.isPresent()) {
+          dbhdfsQuota = dbInodeAttrsOptional.get().getSsquota().longValue();
+          dbhdfsUsage = dbInodeAttrsOptional.get().getStorageSpace().longValue();
+          dbhdfsNsQuota = dbInodeAttrsOptional.get().getNsquota().longValue();
+          dbhdfsNsCount = dbInodeAttrsOptional.get().getNscount().longValue();
+        }
+      } else if (ds.getDsType() == DatasetType.FEATURESTORE) {
+        Optional<HdfsDirectoryWithQuotaFeature> fsInodeAttrsOptional =
+            hdfsDirectoryWithQuotaFeatureFacade.getByInodeId(ds.getInodeId());
+        if (fsInodeAttrsOptional.isPresent()) {
+          fshdfsQuota = fsInodeAttrsOptional.get().getSsquota().longValue();
+          fshdfsUsage = fsInodeAttrsOptional.get().getStorageSpace().longValue();
+          fshdfsNsQuota = fsInodeAttrsOptional.get().getNsquota().longValue();
+          fshdfsNsCount = fsInodeAttrsOptional.get().getNscount().longValue();
         }
       }
     }
 
-    // If the Featurestore service is enabled, get the quota information for the featurestore db directory
-    if (projectServicesFacade.isServiceEnabledForProject(project, ProjectServiceEnum.FEATURESTORE)) {
-      List<Dataset> datasets = (List<Dataset>) project.getDatasetCollection();
-      for (Dataset ds : datasets) {
-        if (ds.getDsType() == DatasetType.FEATURESTORE) {
-          HdfsDirectoryWithQuotaFeature dbInodeAttrs = hdfsDirectoryWithQuotaFeatureFacade
-            .getByInodeId(ds.getInodeId());
-          if (dbInodeAttrs == null) {
-            LOGGER.log(Level.SEVERE, "Cannot find FeaturestoreDb quota information for project: " + project.getName());
-          } else {
-            fshdfsQuota = dbInodeAttrs.getSsquota().longValue();
-            fshdfsUsage = dbInodeAttrs.getStorageSpace().longValue();
-            fshdfsNsQuota = dbInodeAttrs.getNsquota().longValue();
-            fshdfsNsCount = dbInodeAttrs.getNscount().longValue();
-          }
-        }
-      }
-    }
+    Integer kafkaQuota = project.getKafkaMaxNumTopics();
 
     return new QuotasDTO(yarnRemainingQuota, yarnTotalQuota, hdfsQuota, hdfsUsage, hdfsNsQuota, hdfsNsCount,
       dbhdfsQuota, dbhdfsUsage, dbhdfsNsQuota, dbhdfsNsCount, fshdfsQuota, fshdfsUsage, fshdfsNsQuota,
