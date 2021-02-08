@@ -456,6 +456,7 @@ public class FeaturegroupService {
   @ApiOperation( value = "Create or update one tag for a featuregroup", response = TagsDTO.class)
   @PUT
   @Path("/{featuregroupId}/tags/{name}")
+  @Consumes(MediaType.APPLICATION_JSON)
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
   @JWTRequired(acceptedTokens={Audience.API, Audience.JOB}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
@@ -487,6 +488,7 @@ public class FeaturegroupService {
   @ApiOperation( value = "Create or update tags(bulk) for a featuregroup", response = TagsDTO.class)
   @PUT
   @Path("/{featuregroupId}/tags")
+  @Consumes(MediaType.APPLICATION_JSON)
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
   @JWTRequired(acceptedTokens={Audience.API, Audience.JOB}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
