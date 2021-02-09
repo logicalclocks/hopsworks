@@ -370,6 +370,7 @@ public class TrainingDatasetService {
   @ApiOperation( value = "Create or update tags(bulk) for a training dataset", response = TagsDTO.class)
   @PUT
   @Path("/{trainingdatasetId}/tags/{name}")
+  @Consumes(MediaType.APPLICATION_JSON)
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
   @JWTRequired(acceptedTokens={Audience.API, Audience.JOB}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
@@ -403,6 +404,7 @@ public class TrainingDatasetService {
   @ApiOperation( value = "Create or update tags(bulk) for a training dataset", response = TagsDTO.class)
   @PUT
   @Path("/{trainingDatasetId}/tags")
+  @Consumes(MediaType.APPLICATION_JSON)
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
   @JWTRequired(acceptedTokens={Audience.API, Audience.JOB}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})

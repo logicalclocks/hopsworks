@@ -208,7 +208,7 @@ angular.module('hopsWorksApp')
                 updateFeaturegroupTag: function(projectId, featurestore, featuregroup, name, value) {
                     return $http.put('/api/project/' + projectId + '/featurestores/' +
                         featurestore.featurestoreId + '/featuregroups/' + featuregroup.id + '/tags/' + name,
-                        JSON.stringify(value), {headers: {'Content-Type': 'application/json'}});
+                        value, {headers: {'Content-Type': 'application/json'}});
                 },
 
                 deleteFeaturegroupTag: function(projectId, featurestore, featuregroup, tagName) {
@@ -246,7 +246,8 @@ angular.module('hopsWorksApp')
 
                 updateTrainingDatasetTag: function(projectId, featurestore, td, name, value) {
                     return $http.put('/api/project/' + projectId + '/featurestores/' +
-                        featurestore.featurestoreId + "/trainingdatasets/" + td.id + "/tags/" + name + "?value=" + value);
+                        featurestore.featurestoreId + "/trainingdatasets/" + td.id + "/tags/" + name,
+                        value, {headers: {'Content-Type': 'application/json'}});
                 },
 
                 deleteTrainingDatasetTag: function(projectId, featurestore, td, tagName) {
