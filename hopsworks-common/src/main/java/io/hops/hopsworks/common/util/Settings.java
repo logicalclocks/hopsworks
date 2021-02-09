@@ -237,7 +237,6 @@ public class Settings implements Serializable {
   private static final String VARIABLE_ELASTIC_VERSION = "elastic_version";
   private static final String VARIABLE_TENSORFLOW_VERSION = "tensorflow_version";
   private static final String VARIABLE_HOPSWORKS_VERSION = "hopsworks_version";
-  private static final String VARIABLE_HOPS_VERIFICATION_VERSION = "hops_verification_version";
 
   //Used by RESTException to include devMsg or not in response
   private static final String VARIABLE_HOPSWORKS_REST_LOG_LEVEL = "hopsworks_rest_log_level";
@@ -652,7 +651,6 @@ public class Settings implements Serializable {
       TENSORFLOW_VERSION = setStrVar(VARIABLE_TENSORFLOW_VERSION, TENSORFLOW_VERSION);
       HOPSWORKS_VERSION = setStrVar(VARIABLE_HOPSWORKS_VERSION, HOPSWORKS_VERSION);
       HOPSWORKS_REST_LOG_LEVEL = setLogLevelVar(VARIABLE_HOPSWORKS_REST_LOG_LEVEL, HOPSWORKS_REST_LOG_LEVEL);
-      HOPS_VERIFICATION_VERSION = setStrVar(VARIABLE_HOPS_VERIFICATION_VERSION, HOPS_VERIFICATION_VERSION);
 
       PYPI_REST_ENDPOINT = setStrVar(VARIABLE_PYPI_REST_ENDPOINT, PYPI_REST_ENDPOINT);
       IMMUTABLE_PYTHON_LIBRARY_NAMES = toSetFromCsv(
@@ -3414,15 +3412,6 @@ public class Settings implements Serializable {
     }
   }
   
-  public String getHopsVerificationMainClass() {
-    if (HOPS_VERIFICATION_MAIN_CLASS == null) {
-      synchronized (Settings.class) {
-        return HOPS_VERIFICATION_MAIN_CLASS;
-      }
-    }
-    return HOPS_VERIFICATION_MAIN_CLASS;
-  }
-
   private String JWT_SIGNATURE_ALGORITHM = "HS512";
   private String JWT_SIGNING_KEY_NAME = "apiKey";
   private String JWT_ISSUER = "hopsworks@logicalclocks.com";

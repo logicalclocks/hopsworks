@@ -179,6 +179,7 @@ public class ResourceRequest {
     EXPERIMENTS,
     TENSORBOARD,
     RESULTS,
+    VALIDATIONS,
     MODELS,
     HOSTS,
     QUERY,
@@ -195,7 +196,9 @@ public class ResourceRequest {
     CONFIGURATION,
     KEYWORDS,
     INGESTION,
-    CONFLICTS;
+    CONFLICTS,
+    RULES,
+    EXPECTATIONS;
 
     public static Name fromString(String name) {
       return valueOf(name.toUpperCase());

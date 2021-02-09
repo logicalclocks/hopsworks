@@ -17,31 +17,29 @@
 package io.hops.hopsworks.common.featurestore.featuregroup.cached;
 
 import io.hops.hopsworks.common.dao.AbstractFacade;
-import io.hops.hopsworks.common.featurestore.FeaturestoreController;
+import io.hops.hopsworks.common.dao.AbstractFacade.CollectionInfo;
+import io.hops.hopsworks.common.featurestore.datavalidation.deequ.FeatureGroupValidationFacade;
 import io.hops.hopsworks.common.hdfs.inode.InodeController;
-import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.Featuregroup;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.cached.FeatureGroupCommit;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.cached.HiveTbls;
 import io.hops.hopsworks.persistence.entity.hdfs.inode.Inode;
 import io.hops.hopsworks.restutils.RESTCodes;
-
 import org.apache.hadoop.fs.Path;
 
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
-
 import java.sql.Timestamp;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.HashMap;
 import java.util.Optional;
 import java.util.Set;
-import java.util.logging.Logger;
 import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.regex.Pattern;
 
 /**
@@ -51,13 +49,11 @@ import java.util.regex.Pattern;
 @TransactionAttribute(TransactionAttributeType.NEVER)
 public class FeatureGroupCommitController {
   @EJB
-  private Settings settings;
-  @EJB
   private FeatureGroupCommitFacade featureGroupCommitFacade;
   @EJB
-  private InodeController inodeController;
+  private FeatureGroupValidationFacade featureGroupValidationFacade;
   @EJB
-  private FeaturestoreController featurestoreController;
+  private InodeController inodeController;
 
   private static final String HOODIE_METADATA_DIR = ".hoodie";
   private static final String HOODIE_COMMIT_METADATA_FILE = ".commit";
@@ -70,7 +66,8 @@ public class FeatureGroupCommitController {
     }};
 
   public FeatureGroupCommit createHudiFeatureGroupCommit(Featuregroup featuregroup, String commitDateString,
-                                                         Long rowsUpdated, Long rowsInserted, Long rowsDeleted)
+                                                         Long rowsUpdated, Long rowsInserted, Long rowsDeleted,
+                                                         Integer validationId)
       throws FeaturestoreException {
     // Compute HUDI commit path
     String commitPath = computeHudiCommitPath(featuregroup, commitDateString);
@@ -84,6 +81,10 @@ public class FeatureGroupCommitController {
     featureGroupCommit.setNumRowsUpdated(rowsUpdated);
     featureGroupCommit.setNumRowsInserted(rowsInserted);
     featureGroupCommit.setNumRowsDeleted(rowsDeleted);
+    // Find validation
+    if (validationId != null && validationId > 0) {
+      featureGroupCommit.setValidation(featureGroupValidationFacade.findById(validationId));
+    }
     featureGroupCommitFacade.createFeatureGroupCommit(featureGroupCommit);
 
     return featureGroupCommit;
@@ -104,12 +105,12 @@ public class FeatureGroupCommitController {
         + featuregroup.getName() + " version " + featuregroup.getVersion()));
   }
 
-  public AbstractFacade.CollectionInfo getCommitDetails(Integer featureGroupId, Integer limit, Integer offset,
+  public CollectionInfo getCommitDetails(Integer featureGroupId, Integer limit, Integer offset,
                                                         Set<? extends AbstractFacade.SortBy> sort) {
     return featureGroupCommitFacade.getCommitDetails(featureGroupId, limit, offset, sort);
   }
 
-  protected Long getTimeStampFromDateString(String inputDate) throws FeaturestoreException {
+  public Long getTimeStampFromDateString(String inputDate) throws FeaturestoreException {
     String tempDate = inputDate.replace("/", "")
         .replace("-", "").replace(" ", "")
         .replace(":","");
@@ -153,4 +154,5 @@ public class FeatureGroupCommitController {
     Path commitPath = new Path(dbLocation, commitMetadataPath);
     return commitPath.toString();
   }
+
 }

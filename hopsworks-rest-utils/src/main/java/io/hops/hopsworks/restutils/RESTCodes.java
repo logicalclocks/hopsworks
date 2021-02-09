@@ -1506,8 +1506,23 @@ public class RESTCodes {
     ILLEGAL_ON_DEMAND_DATA_FORMAT(140, "Illegal on-demand feature group data format",
         Response.Status.BAD_REQUEST),
     ERROR_JOB_SETUP(141, "Error setting up feature store job", Response.Status.INTERNAL_SERVER_ERROR),
-    LABEL_NOT_FOUND(142, "Could not find label in training dataset schema", Response.Status.NOT_FOUND);
-
+    LABEL_NOT_FOUND(142, "Could not find label in training dataset schema", Response.Status.NOT_FOUND),
+    DATA_VALIDATION_RESULTS_NOT_FOUND(143,
+      "Could not find feature group validation results. " +
+        "Make sure the results file was not manually removed from the dataset",
+      Response.Status.NOT_FOUND),
+    DATA_VALIDATION_NOT_FOUND(144, "Could not find feature group validation.", Response.Status.NOT_FOUND),
+    FEATURE_STORE_EXPECTATION_NOT_FOUND(145, "Could not find feature store expectation.", Response.Status.NOT_FOUND),
+    FEATURE_GROUP_EXPECTATION_NOT_FOUND(146, "Could not find feature group expectation.", Response.Status.NOT_FOUND),
+    FEATURE_GROUP_EXPECTATION_FEATURE_NOT_FOUND(147,
+                       "Could not find expectation feature(s) in feature group expectation.",
+      Response.Status.NOT_FOUND),
+    FEATURE_STORE_RULE_NOT_FOUND(148, "Could not find feature store data validation rule.",
+      Response.Status.NOT_FOUND),
+    FEATURE_GROUP_CHECKS_FAILED(149,
+                       "Feature group validation checks did not pass, will not persist validation results.",
+                                Response.Status.EXPECTATION_FAILED),
+    RULE_NOT_FOUND(150, "Rule with provided name was not found.", Response.Status.NOT_FOUND);
 
     private int code;
     private String message;

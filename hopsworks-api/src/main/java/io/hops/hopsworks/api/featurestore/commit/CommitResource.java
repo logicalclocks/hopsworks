@@ -96,7 +96,7 @@ public class CommitResource {
       throws FeaturestoreException {
     FeatureGroupCommit featureGroupCommit = featureGroupCommitController.createHudiFeatureGroupCommit(featuregroup,
         commitDTO.getCommitDateString(), commitDTO.getRowsUpdated(), commitDTO.getRowsInserted(),
-        commitDTO.getRowsDeleted());
+        commitDTO.getRowsDeleted(), commitDTO.getValidationId());
     CommitDTO builtCommitDTO = commitBuilder.build(uriInfo, new ResourceRequest(ResourceRequest.Name.COMMITS),
             project, featuregroup, featureGroupCommit);
     return Response.ok().entity(builtCommitDTO).build();

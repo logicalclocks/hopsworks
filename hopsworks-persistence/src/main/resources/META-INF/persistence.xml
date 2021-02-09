@@ -78,6 +78,10 @@
     <class>io.hops.hopsworks.persistence.entity.featurestore.statistics.StatisticsConfig</class>
     <class>io.hops.hopsworks.persistence.entity.featurestore.statistics.StatisticColumn</class>
     <class>io.hops.hopsworks.persistence.entity.featurestore.statistics.FeaturestoreStatistic</class>
+    <class>io.hops.hopsworks.persistence.entity.featurestore.featuregroup.datavalidation.ValidationRule</class>
+    <class>io.hops.hopsworks.persistence.entity.featurestore.featuregroup.datavalidation.FeatureStoreExpectation</class>
+    <class>io.hops.hopsworks.persistence.entity.featurestore.featuregroup.datavalidation.FeatureGroupExpectation</class>
+    <class>io.hops.hopsworks.persistence.entity.featurestore.featuregroup.datavalidation.FeatureGroupValidation</class>
     <class>io.hops.hopsworks.persistence.entity.hdfs.HdfsDirectoryWithQuotaFeature</class>
     <class>io.hops.hopsworks.persistence.entity.hdfs.HdfsLeDescriptors</class>
     <class>io.hops.hopsworks.persistence.entity.hdfs.user.HdfsGroups</class>
@@ -166,6 +170,7 @@
     <class>io.hops.hopsworks.persistence.entity.jobs.configuration.JobConfigurationConverter</class>
     <class>io.hops.hopsworks.persistence.entity.jupyter.config.JupyterConfigurationConverter</class>
     <class>io.hops.hopsworks.persistence.entity.jupyter.config.DockerConfigurationConverter</class>
+    <class>io.hops.hopsworks.persistence.entity.featurestore.featuregroup.datavalidation.RuleAssertionsConverter</class>
 
     <exclude-unlisted-classes>true</exclude-unlisted-classes>
     <shared-cache-mode>NONE</shared-cache-mode>

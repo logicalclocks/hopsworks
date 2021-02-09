@@ -18,6 +18,8 @@ package io.hops.hopsworks.persistence.entity.featurestore.featuregroup;
 
 import io.hops.hopsworks.persistence.entity.featurestore.Featurestore;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.cached.CachedFeaturegroup;
+import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.cached.ValidationType;
+import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.datavalidation.FeatureGroupExpectation;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.ondemand.OnDemandFeaturegroup;
 import io.hops.hopsworks.persistence.entity.featurestore.jobs.FeaturestoreJob;
 import io.hops.hopsworks.persistence.entity.featurestore.statistics.StatisticsConfig;
@@ -95,6 +97,11 @@ public class Featuregroup implements Serializable {
   @NotNull
   @Column(name = "version")
   private Integer version;
+  @Basic(optional = false)
+  @NotNull
+  @Enumerated(EnumType.ORDINAL)
+  @Column(name = "validation_type")
+  private ValidationType validationType = ValidationType.NONE;
   @NotNull
   @Enumerated(EnumType.ORDINAL)
   @Column(name = "feature_group_type")
@@ -109,6 +116,8 @@ public class Featuregroup implements Serializable {
   private Collection<FeaturestoreJob> jobs;
   @OneToOne(cascade = CascadeType.ALL, mappedBy = "featuregroup")
   private StatisticsConfig statisticsConfig;
+  @OneToMany(cascade = CascadeType.ALL, mappedBy = "featuregroup")
+  private Collection<FeatureGroupExpectation> expectations;
 
   public Featuregroup() { }
 
@@ -206,6 +215,22 @@ public class Featuregroup implements Serializable {
   
   public void setStatisticsConfig(StatisticsConfig statisticsConfig) {
     this.statisticsConfig = statisticsConfig;
+  }
+
+  public ValidationType getValidationType() {
+    return validationType;
+  }
+
+  public void setValidationType(ValidationType validationType) {
+    this.validationType = validationType;
+  }
+
+  public Collection<FeatureGroupExpectation> getExpectations() {
+    return expectations;
+  }
+
+  public void setExpectations(Collection<FeatureGroupExpectation> expectations) {
+    this.expectations = expectations;
   }
 
   @Override

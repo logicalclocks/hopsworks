@@ -18,6 +18,8 @@ package io.hops.hopsworks.api.featurestore.featuregroup;
 
 import com.google.common.base.Strings;
 import io.hops.hopsworks.api.featurestore.FeaturestoreKeywordResource;
+import io.hops.hopsworks.api.featurestore.datavalidation.expectations.fg.FeatureGroupExpectationsResource;
+import io.hops.hopsworks.api.featurestore.datavalidation.validations.FeatureGroupValidationsResource;
 import io.hops.hopsworks.api.featurestore.tag.TagsBuilder;
 import io.hops.hopsworks.api.featurestore.tag.TagsDTO;
 import io.hops.hopsworks.api.featurestore.statistics.StatisticsResource;
@@ -55,6 +57,7 @@ import io.hops.hopsworks.persistence.entity.dataset.Dataset;
 import io.hops.hopsworks.persistence.entity.featurestore.Featurestore;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.Featuregroup;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.FeaturegroupType;
+import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.cached.ValidationType;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.persistence.entity.user.activity.ActivityFlag;
@@ -139,6 +142,10 @@ public class FeaturegroupService {
   private IngestionJobBuilder ingestionJobBuilder;
   @Inject
   private FeaturestoreKeywordResource featurestoreKeywordResource;
+  @Inject
+  private FeatureGroupExpectationsResource featureGroupExpectationsResource;
+  @Inject
+  private FeatureGroupValidationsResource featureGroupValidationsResource;
 
   private Project project;
   private Featurestore featurestore;
@@ -391,6 +398,8 @@ public class FeaturegroupService {
       @QueryParam("disableOnline") @DefaultValue("false") Boolean disableOnline,
       @ApiParam(value = "updateStatsConfig", example = "true")
       @QueryParam("updateStatsConfig") @DefaultValue("false") Boolean updateStatsConfig,
+      @ApiParam(value = "validationType", example = "NONE")
+      @QueryParam("validationType") ValidationType validationType,
       @ApiParam(value = "updateJob") @DefaultValue("false") @QueryParam("updateJob") Boolean updateJob,
       FeaturegroupDTO featuregroupDTO)
       throws FeaturestoreException, SQLException, ProvenanceException, ServiceException {
@@ -418,6 +427,9 @@ public class FeaturegroupService {
     if(updateStatsConfig) {
       updatedFeaturegroupDTO = featuregroupController.updateFeatureGroupStatsConfig(
         featurestore, featuregroupDTO, project, user);
+    }
+    if(validationType != null) {
+      updatedFeaturegroupDTO = featuregroupController.updateValidationType(featuregroup, validationType, project, user);
     }
     if (updateJob) {
       updatedFeaturegroupDTO = featuregroupController.updateFeaturegroupJob(
@@ -713,6 +725,26 @@ public class FeaturegroupService {
     Featuregroup fg = featuregroupController.getFeaturegroupById(featurestore, featureGroupId);
     this.provenanceResource.setArtifactId(fg.getName(), fg.getVersion());
     return provenanceResource;
+  }
+  
+  @Path("/{featureGroupId}/expectations")
+  @Logged(logLevel = LogLevel.OFF)
+  public FeatureGroupExpectationsResource expectations(@PathParam("featureGroupId") Integer featureGroupId)
+    throws FeaturestoreException {
+    this.featureGroupExpectationsResource.setProject(project);
+    this.featureGroupExpectationsResource.setFeaturestore(featurestore);
+    this.featureGroupExpectationsResource.setFeatureGroup(featureGroupId);
+    return featureGroupExpectationsResource;
+  }
+  
+  @Path("/{featureGroupId}/validations")
+  @Logged(logLevel = LogLevel.OFF)
+  public FeatureGroupValidationsResource validationResults(@PathParam("featureGroupId") Integer featureGroupId)
+    throws FeaturestoreException {
+    this.featureGroupValidationsResource.setProject(project);
+    this.featureGroupValidationsResource.setFeaturestore(featurestore);
+    this.featureGroupValidationsResource.setFeatureGroupId(featureGroupId);
+    return featureGroupValidationsResource;
   }
 
   @Path("/{featureGroupId}/commits")

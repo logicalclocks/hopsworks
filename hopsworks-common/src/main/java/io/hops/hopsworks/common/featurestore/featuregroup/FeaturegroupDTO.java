@@ -25,6 +25,7 @@ import io.hops.hopsworks.common.featurestore.featuregroup.cached.CachedFeaturegr
 import io.hops.hopsworks.common.featurestore.featuregroup.ondemand.OnDemandFeaturegroupDTO;
 import io.hops.hopsworks.common.featurestore.statistics.StatisticsConfigDTO;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.Featuregroup;
+import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.cached.ValidationType;
 
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
@@ -46,6 +47,10 @@ public class FeaturegroupDTO extends FeaturestoreEntityDTO {
 
   @XmlElement
   private List<FeatureGroupFeatureDTO> features;
+  @XmlElement
+  private List<String> expectationsNames; // List of expectation names
+  @XmlElement
+  private ValidationType validationType;
 
   public FeaturegroupDTO() {
   }
@@ -66,6 +71,22 @@ public class FeaturegroupDTO extends FeaturestoreEntityDTO {
 
   public void setFeatures(List<FeatureGroupFeatureDTO> features) {
     this.features = features;
+  }
+
+  public List<String> getExpectationsNames() {
+    return expectationsNames;
+  }
+
+  public void setExpectationsNames(List<String> expectationsNames) {
+    this.expectationsNames = expectationsNames;
+  }
+
+  public ValidationType getValidationType() {
+    return validationType;
+  }
+
+  public void setValidationType(ValidationType validationType) {
+    this.validationType = validationType;
   }
 
   @Override

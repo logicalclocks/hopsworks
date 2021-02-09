@@ -31,6 +31,7 @@ public class CommitDTO extends RestDTO<CommitDTO> {
   private Long rowsInserted;
   private Long rowsUpdated;
   private Long rowsDeleted;
+  private Integer validationId;
 
   public CommitDTO() {
   }
@@ -43,6 +44,12 @@ public class CommitDTO extends RestDTO<CommitDTO> {
     this.rowsInserted = rowsInserted;
     this.rowsUpdated = rowsUpdated;
     this.rowsDeleted = rowsDeleted;
+  }
+
+  public CommitDTO(Long commitID, String commitDateString, Long committime, Long rowsInserted,
+                   Long rowsUpdated, Long rowsDeleted, Integer validationId) {
+    this(commitID, commitDateString, committime, rowsInserted, rowsUpdated, rowsDeleted);
+    this.validationId = validationId;
   }
 
   public Long getCommitID() {
@@ -93,9 +100,18 @@ public class CommitDTO extends RestDTO<CommitDTO> {
     this.rowsDeleted = rowsDeleted;
   }
 
+  public Integer getValidationId() {
+    return validationId;
+  }
+
+  public void setValidationId(Integer validationId) {
+    this.validationId = validationId;
+  }
+
   @Override
   public String toString() {
     return "CommitDTO{" + "commitID=" + commitID + ", commitDateString=" + commitDateString + ", rowsInserted="
-        + rowsInserted + ", rowsUpdated=" + rowsUpdated + ", rowsDeleted=" + rowsDeleted + "}";
+        + rowsInserted + ", rowsUpdated=" + rowsUpdated + ", rowsDeleted=" + rowsDeleted
+        + ", validationId=" + validationId + "}";
   }
 }

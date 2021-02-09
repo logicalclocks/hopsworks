@@ -17,6 +17,7 @@
 package io.hops.hopsworks.api.featurestore;
 
 import com.google.common.base.Strings;
+import io.hops.hopsworks.api.featurestore.datavalidation.expectations.fs.FeatureStoreExpectationsResource;
 import io.hops.hopsworks.api.featurestore.featuregroup.FeaturegroupService;
 import io.hops.hopsworks.api.featurestore.storageconnector.FeaturestoreStorageConnectorService;
 import io.hops.hopsworks.api.featurestore.trainingdataset.TrainingDatasetService;
@@ -102,14 +103,14 @@ public class FeaturestoreService {
   private TrainingDatasetService trainingDatasetService;
   @Inject
   private FeaturestoreStorageConnectorService featurestoreStorageConnectorService;
-  @EJB
-  private DataValidationResource dataValidationService;
   @Inject
   private FsQueryConstructorResource fsQueryConstructorResource;
   @Inject
   private KeywordControllerIface keywordControllerIface;
   @EJB
   private FeaturestoreKeywordBuilder featurestoreKeywordBuilder;
+  @Inject
+  private FeatureStoreExpectationsResource featureGroupExpectationsResource;
 
   private Project project;
 
@@ -268,14 +269,6 @@ public class FeaturestoreService {
         .entity(featurestoreMetadataGeneric)
         .build();
   }
-  
-  
-  @Logged(logLevel = LogLevel.OFF)
-  @Path("{featureStoreId}/datavalidation")
-  public DataValidationResource dataValidation(@PathParam("featureStoreId") Integer featureStoreId) {
-    dataValidationService.setProject(project);
-    return this.dataValidationService.setFeatureStore(featureStoreId);
-  }
 
   /**
    * Feature Groups sub-resource
@@ -332,6 +325,25 @@ public class FeaturestoreService {
     }
     featurestoreStorageConnectorService.setFeaturestoreId(featurestoreId);
     return featurestoreStorageConnectorService;
+  }
+  
+  /**
+   * Expectations sub-resource
+   *
+   * @param featurestoreId id of the featurestore
+   * @return the feature store expectations service
+   * @throws FeaturestoreException
+   */
+  @Logged(logLevel = LogLevel.OFF)
+  @Path("/{featurestoreId}/expectations")
+  public FeatureStoreExpectationsResource expectationsResource(@PathParam("featurestoreId") Integer featurestoreId)
+    throws FeaturestoreException {
+    this.featureGroupExpectationsResource.setProject(project);
+    if (featurestoreId == null) {
+      throw new IllegalArgumentException(RESTCodes.FeaturestoreErrorCode.FEATURESTORE_ID_NOT_PROVIDED.getMessage());
+    }
+    this.featureGroupExpectationsResource.setFeaturestoreId(featurestoreId);
+    return featureGroupExpectationsResource;
   }
 
   @Path("/query")
