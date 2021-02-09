@@ -1,6 +1,6 @@
 /*
  * This file is part of Hopsworks
- * Copyright (C) 2019, Logical Clocks AB. All rights reserved
+ * Copyright (C) 2021, Logical Clocks AB. All rights reserved
  *
  * Hopsworks is free software: you can redistribute it and/or modify it under the terms of
  * the GNU Affero General Public License as published by the Free Software Foundation,
@@ -16,15 +16,22 @@
 
 package io.hops.hopsworks.common.featurestore.datavalidation;
 
+import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.datavalidation.Rule;
+
+import javax.xml.bind.annotation.XmlElement;
 import java.util.List;
 
-public class ConstraintGroup {
+public class Expectation {
+  
   private String name;
   private String description;
-  private ConstraintGroupLevel level;
-  private List<Constraint> constraints;
+  @XmlElement(name = "features")
+  private List<String> features;
+  @XmlElement(name = "rules")
+  private List<Rule> rules;
   
-  public ConstraintGroup() {}
+  public Expectation() {
+  }
   
   public String getName() {
     return name;
@@ -33,28 +40,37 @@ public class ConstraintGroup {
   public void setName(String name) {
     this.name = name;
   }
-  
+
   public String getDescription() {
     return description;
   }
-  
+
   public void setDescription(String description) {
     this.description = description;
   }
-  
-  public ConstraintGroupLevel getLevel() {
-    return level;
+
+  public List<String> getFeatures() {
+    return features;
   }
   
-  public void setLevel(ConstraintGroupLevel level) {
-    this.level = level;
+  public void setFeatures(List<String> features) {
+    this.features = features;
   }
   
-  public List<Constraint> getConstraints() {
-    return constraints;
+  public List<Rule> getRules() {
+    return rules;
+  }
+
+  public void setRules(List<Rule> rules) {
+    this.rules = rules;
   }
   
-  public void setConstraints(List<Constraint> constraints) {
-    this.constraints = constraints;
+  @Override
+  public String toString() {
+    return "Expectation{" +
+      "name='" + name + '\'' +
+      ", features=" + features +
+      ", rules=" + rules +
+      '}';
   }
 }
