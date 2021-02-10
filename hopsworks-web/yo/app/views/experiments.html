@@ -45,7 +45,7 @@
                 </div>
 
                 <div class="row">
-                    <div class="col-sm-9 col-md-9 col-lg-9 form-inline">
+                    <div class="col-xs-12 col-sm-12 col-md-7 col-lg-7 col-xl-7 form-inline">
                         <label>Search
                             <input class="form-control" style="margin-left: 10px;" ng-model="experimentCtrl.experimentsFilter"
                                    ng-model-options="{debounce: 800}" ng-change="experimentCtrl.getExperiments()" placeholder="Experiment name">
@@ -57,32 +57,40 @@
                                            md-placeholder="To"></md-datepicker>
                         </label>
                     </div>
-
-
-                    <div class="col-sm-2 col-md-2 col-lg-2">
-                            <ui-select ng-model="experimentCtrl.memberSelected" theme="bootstrap"
-                                       on-select="experimentCtrl.updateMember(); experimentCtrl.getExperiments();" style="z-index: 1;" id="memberList">
-                                <ui-select-match >
-                                    <span ng-bind="experimentCtrl.memberSelected.name"></span>
-                                </ui-select-match>
-                                <ui-select-choices repeat="member in (experimentCtrl.membersList | filter: $select.search) track by member.name">
-                                    <span ng-bind="member.name | highlight: $select.search"></span>
-                                </ui-select-choices>
-                            </ui-select>
+                    <div class="col-xs-5 col-sm-5 col-md-2 col-lg-2 pull-left form-inline">
+                        <label class="col-xs-12 no-padding" for="max-items-per-page">
+                            Experiments/Page
+                            <input type="number" class="form-control" id="max-items-per-page"
+                                   min="1"
+                                   max="{{experimentCtrl.MAX_ITEMS_PER_PAGE}}"
+                                   ng-model="experimentCtrl.browserNumberOfItemsPerPage"
+                                   ng-model-options="{debounce: 300}">
+                        </label>
                     </div>
-                    <div class="col-sm-1 col-md-1 col-lg-1">
-                    <div class="pull-right btn-group">
-                        <span style="float: right; margin-right:30px; " class="glyphicon glyphicon-refresh fa-2x" ng-click="experimentCtrl.getExperiments()" role="button" tabindex="0" ng-class="{'spin-icon':experimentCtrl.updating}"> </span>
+                    <div class="col-xs-5 col-sm-5 col-md-2 col-lg-2 no-padding">
+                        <ui-select ng-model="experimentCtrl.memberSelected" theme="bootstrap"
+                                   on-select="experimentCtrl.updateMember(); experimentCtrl.getExperiments();" style="z-index: 1;" id="memberList">
+                            <ui-select-match >
+                                <span ng-bind-html="experimentCtrl.memberSelected.name"></span>
+                            </ui-select-match>
+                            <ui-select-choices repeat="member in (experimentCtrl.membersList | filter: $select.search) track by member.name">
+                                <span ng-bind-html="member.name | highlight: $select.search"></span>
+                            </ui-select-choices>
+                        </ui-select>
                     </div>
+                    <div class="col-xs-1 col-sm-1 col-md-1 col-lg-1 no-padding pull-right">
+                        <div class="pull-right btn-group">
+                            <span class="glyphicon glyphicon-refresh fa-2x" ng-click="experimentCtrl.getExperiments()" role="button" tabindex="0" ng-class="{'spin-icon':experimentCtrl.updating}"> </span>
+                        </div>
                     </div>
-
                 </div>
             <div>
             <table class="table table-hover">
                 <thead style="border:none;">
                 <th style="width: 16%" ng-click="experimentCtrl.sortByExperiments('name')">
                     Name
-                    <span class="glyphicon sort-icon" ng-show="experimentCtrl.sortType == 'name'" ng-class="{'glyphicon-chevron-up':!experimentCtrl.reverse,'glyphicon-chevron-down':experimentCtrl.reverse}"></span></th>
+                    <span class="glyphicon sort-icon" ng-show="experimentCtrl.sortType == 'name'"
+                          ng-class="{'glyphicon-chevron-up':!experimentCtrl.reverse,'glyphicon-chevron-down':experimentCtrl.reverse}"></span></th>
                 <th style="width: 11%" ng-click="experimentCtrl.sortByExperiments('metric')">
                     Metric
                     <span class="glyphicon sort-icon" ng-show="experimentCtrl.sortType == 'metric'" ng-class="{'glyphicon-chevron-up':!experimentCtrl.reverse,'glyphicon-chevron-down':experimentCtrl.reverse}"></span>

@@ -146,9 +146,10 @@
                       </tr>
                     </tbody>
                     <tbody ng-show="datasetsCtrl.sortedDataset.length > 0">
-                    <tr dir-paginate="dataset in datasetsCtrl.sortedDataset | itemsPerPage:datasetsCtrl.datasetPagination.itemsPerPage"
+                    <tr
+                            dir-paginate="dataset in datasetsCtrl.sortedDataset | itemsPerPage:datasetsCtrl.datasetPreferences.itemsPerPage"
                         pagination-id="dataset_pagination"
-                        current-page="datasetsCtrl.datasetPagination.currentPage"
+                        current-page="datasetsCtrl.datasetPreferences.currentPage"
                         total-items="datasetsCtrl.filesCount"
                         id="table-row-{{ dataset.name}}"
                         context-menu data-target="table-menu-{{ dataset.name}}"
@@ -247,9 +248,10 @@
                            No result found.</div>
                     </div>
                     <div class="row row-no-margin" ng-show="datasetsCtrl.sortedDataset.length > 0">
-                      <div dir-paginate="dataset in datasetsCtrl.sortedDataset | itemsPerPage:datasetsCtrl.datasetPagination.itemsPerPage"
+                      <div
+                              dir-paginate="dataset in datasetsCtrl.sortedDataset | itemsPerPage:datasetsCtrl.datasetPreferences.itemsPerPage"
                            pagination-id="dataset_pagination"
-                           current-page="datasetsCtrl.datasetPagination.currentPage"
+                           current-page="datasetsCtrl.datasetPreferences.currentPage"
                            total-items="datasetsCtrl.filesCount">
                         <div>
                           <div ng-init="(iscollapsed$index) = true"
