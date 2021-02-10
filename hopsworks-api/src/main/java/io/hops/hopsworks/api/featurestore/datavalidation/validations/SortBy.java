@@ -17,7 +17,7 @@
 package io.hops.hopsworks.api.featurestore.datavalidation.validations;
 
 import io.hops.hopsworks.common.dao.AbstractFacade;
-import io.hops.hopsworks.common.featurestore.datavalidation.deequ.FeatureGroupValidationFacade;
+import io.hops.hopsworks.common.featurestore.datavalidation.FeatureGroupValidationFacade;
 
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response;

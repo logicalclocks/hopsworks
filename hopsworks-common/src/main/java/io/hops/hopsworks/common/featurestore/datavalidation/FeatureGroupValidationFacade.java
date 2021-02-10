@@ -14,7 +14,7 @@
  * If not, see <https://www.gnu.org/licenses/>.
  */
 
-package io.hops.hopsworks.common.featurestore.datavalidation.deequ;
+package io.hops.hopsworks.common.featurestore.datavalidation;
 
 import com.google.common.base.Strings;
 import io.hops.hopsworks.common.dao.AbstractFacade;

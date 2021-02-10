@@ -19,7 +19,7 @@ package io.hops.hopsworks.api.featurestore.datavalidation.validations;
 import io.hops.hopsworks.common.api.ResourceRequest;
 import io.hops.hopsworks.common.dao.AbstractFacade.CollectionInfo;
 import io.hops.hopsworks.common.featurestore.datavalidation.FeatureGroupValidationsController;
-import io.hops.hopsworks.common.featurestore.datavalidation.deequ.FeatureGroupValidationFacade;
+import io.hops.hopsworks.common.featurestore.datavalidation.FeatureGroupValidationFacade;
 import io.hops.hopsworks.common.featurestore.featuregroup.ExpectationResult;
 import io.hops.hopsworks.common.hdfs.inode.InodeController;
 import io.hops.hopsworks.exceptions.FeaturestoreException;

@@ -3398,20 +3398,6 @@ public class Settings implements Serializable {
     return dependencies;
   }
   
-  private String HOPS_VERIFICATION_VERSION = "1.0.0-SNAPSHOT";
-  
-  public synchronized String getHopsVerificationVersion() {
-    checkCache();
-    return HOPS_VERIFICATION_VERSION;
-  }
-  
-  private volatile String HOPS_VERIFICATION_MAIN_CLASS = null;
-  public void setHopsVerificationMainClass(String mainClass) {
-    synchronized (Settings.class) {
-      HOPS_VERIFICATION_MAIN_CLASS = mainClass;
-    }
-  }
-  
   private String JWT_SIGNATURE_ALGORITHM = "HS512";
   private String JWT_SIGNING_KEY_NAME = "apiKey";
   private String JWT_ISSUER = "hopsworks@logicalclocks.com";

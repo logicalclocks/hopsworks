@@ -623,26 +623,26 @@ describe "On #{ENV['OS']}" do
           sorted_res = json_body[:items].map {|validation| validation[:validationTime]}
           expect(sorted_res).to eq(sorted)
         end
-        it "should be able to get all validations of a feature group sorted by commit time ascending" do
-          project = get_project
-          featurestore_id = get_featurestore_id(project.id)
-          get_validations(project.id, featurestore_id, fg_json["id"])
-          validations = json_body[:items].map {|validation| validation[:commitTime]}
-          sorted = validations.sort
-          get_validations(project.id, featurestore_id, fg_json["id"], "?sort_by=commit_time:asc")
-          sorted_res = json_body[:items].map {|validation| validation[:commitTime]}
-          expect(sorted_res).to eq(sorted)
-        end
-        it "should be able to get all validations of a feature group sorted by commit time descending" do
-          project = get_project
-          featurestore_id = get_featurestore_id(project.id)
-          get_validations(project.id, featurestore_id, fg_json["id"])
-          validations = json_body[:items].map {|validation| validation[:commitTime]}
-          sorted = validations.sort.reverse
-          get_validations(project.id, featurestore_id, fg_json["id"], "?sort_by=commit_time:desc")
-          sorted_res = json_body[:items].map {|validation| validation[:commitTime]}
-          expect(sorted_res).to eq(sorted)
-        end
+        # it "should be able to get all validations of a feature group sorted by commit time ascending" do
+        #   project = get_project
+        #   featurestore_id = get_featurestore_id(project.id)
+        #   get_validations(project.id, featurestore_id, fg_json["id"])
+        #   validations = json_body[:items].map {|validation| validation[:commitTime]}
+        #   sorted = validations.sort
+        #   get_validations(project.id, featurestore_id, fg_json["id"], "?sort_by=commit_time:asc")
+        #   sorted_res = json_body[:items].map {|validation| validation[:commitTime]}
+        #   expect(sorted_res).to eq(sorted)
+        # end
+        # it "should be able to get all validations of a feature group sorted by commit time descending" do
+        #   project = get_project
+        #   featurestore_id = get_featurestore_id(project.id)
+        #   get_validations(project.id, featurestore_id, fg_json["id"])
+        #   validations = json_body[:items].map {|validation| validation[:commitTime]}
+        #   sorted = validations.sort.reverse
+        #   get_validations(project.id, featurestore_id, fg_json["id"], "?sort_by=commit_time:desc")
+        #   sorted_res = json_body[:items].map {|validation| validation[:commitTime]}
+        #   expect(sorted_res).to eq(sorted)
+        # end
         it "should return limit=x validations" do
           project = get_project
           featurestore_id = get_featurestore_id(project.id)

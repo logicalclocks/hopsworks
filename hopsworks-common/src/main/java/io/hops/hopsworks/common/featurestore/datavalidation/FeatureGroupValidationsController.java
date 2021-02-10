@@ -21,7 +21,6 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
-import io.hops.hopsworks.common.featurestore.datavalidation.deequ.FeatureGroupValidationFacade;
 import io.hops.hopsworks.common.featurestore.feature.FeatureGroupFeatureDTO;
 import io.hops.hopsworks.common.featurestore.featuregroup.ExpectationResult;
 import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupController;

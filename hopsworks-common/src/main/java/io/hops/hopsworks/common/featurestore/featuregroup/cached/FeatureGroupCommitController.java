@@ -18,7 +18,7 @@ package io.hops.hopsworks.common.featurestore.featuregroup.cached;
 
 import io.hops.hopsworks.common.dao.AbstractFacade;
 import io.hops.hopsworks.common.dao.AbstractFacade.CollectionInfo;
-import io.hops.hopsworks.common.featurestore.datavalidation.deequ.FeatureGroupValidationFacade;
+import io.hops.hopsworks.common.featurestore.datavalidation.FeatureGroupValidationFacade;
 import io.hops.hopsworks.common.hdfs.inode.InodeController;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.Featuregroup;
