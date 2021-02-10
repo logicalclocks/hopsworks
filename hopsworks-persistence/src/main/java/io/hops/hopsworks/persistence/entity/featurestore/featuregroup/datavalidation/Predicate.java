@@ -1,6 +1,6 @@
 /*
  * This file is part of Hopsworks
- * Copyright (C) 2019, Logical Clocks AB. All rights reserved
+ * Copyright (C) 2021, Logical Clocks AB. All rights reserved
  *
  * Hopsworks is free software: you can redistribute it and/or modify it under the terms of
  * the GNU Affero General Public License as published by the Free Software Foundation,
@@ -14,12 +14,8 @@
  * If not, see <https://www.gnu.org/licenses/>.
  */
 
-package io.hops.hopsworks.common.featurestore.datavalidation;
+package io.hops.hopsworks.persistence.entity.featurestore.featuregroup.datavalidation;
 
-import javax.xml.bind.annotation.XmlEnum;
-
-@XmlEnum
-public enum ConstraintGroupLevel {
-  Warning,
-  Error
+public enum Predicate {
+  VALUE, LEGAL_VALUES, ACCEPTED_TYPE, PATTERN
 }

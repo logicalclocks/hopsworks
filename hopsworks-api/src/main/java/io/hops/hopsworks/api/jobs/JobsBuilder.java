@@ -95,7 +95,9 @@ public class JobsBuilder {
         resourceRequest.getFilter(),
         resourceRequest.getSort(), project);
       //set the count
-      dto.setCount(collectionInfo.getCount());
+      if (collectionInfo.getCount() > 0) {
+        dto.setCount(collectionInfo.getCount());
+      }
       collectionInfo.getItems().forEach((job) -> dto.addItem(build(uriInfo, resourceRequest, (Jobs) job)));
     }
     return dto;

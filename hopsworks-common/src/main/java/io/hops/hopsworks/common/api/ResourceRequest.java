@@ -23,7 +23,7 @@ import java.util.List;
 import java.util.Set;
 
 public class ResourceRequest {
-  private ResourceRequest.Name name;
+  private Name name;
   private Integer offset;
   private Integer limit;
   private Set<? extends AbstractFacade.SortBy> sort;
@@ -179,6 +179,7 @@ public class ResourceRequest {
     EXPERIMENTS,
     TENSORBOARD,
     RESULTS,
+    VALIDATIONS,
     MODELS,
     HOSTS,
     QUERY,
@@ -189,9 +190,15 @@ public class ResourceRequest {
     STATISTICS,
     COMMITS,
     CLOUD,
+    INTEGRATIONS,
+    DATABRICKS,
+    SPARK,
+    CONFIGURATION,
     KEYWORDS,
     INGESTION,
-    CONFLICTS;
+    CONFLICTS,
+    RULES,
+    EXPECTATIONS;
 
     public static Name fromString(String name) {
       return valueOf(name.toUpperCase());

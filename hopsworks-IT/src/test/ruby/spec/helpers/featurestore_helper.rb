@@ -22,6 +22,163 @@ module FeaturestoreHelper
     JSON.parse(response.body)
   end
 
+  def get_rule_definitions(query="")
+    get "#{ENV['HOPSWORKS_API']}/rules/" + query
+    JSON.parse(response.body)
+  end
+
+  def get_rule_definition_by_name(name)
+    get "#{ENV['HOPSWORKS_API']}/rules/" + name
+    JSON.parse(response.body)
+  end
+
+  def json_data_expectation
+    {
+      "description": "validate year correctness",
+      "features": [
+        "testfeature"
+      ],
+      "name": "exp0",
+      "rules": [
+        {
+          "legalValues": [
+            "a"
+          ],
+          "level": "ERROR",
+          "min": 2018.0,
+          "name": "HAS_MIN"
+        },
+        {
+          "level": "WARNING",
+          "max": 2021.0,
+          "name": "HAS_MAX"
+        }
+      ]
+    }
+  end
+
+  def json_data_validation
+    {
+      "validationTime": 1612285461346,
+      "commitTime": 1612285461347,
+      "expectationResults": [
+        {
+          "expectation": {
+            "features": [
+              "salary",
+              "commission"
+            ],
+            "rules": [
+              {
+                "level": "WARNING",
+                "min": 0.0,
+                "name": "HAS_MIN"
+              },
+              {
+                "level": "ERROR",
+                "max": 1000000.0,
+                "name": "HAS_MAX"
+              }
+            ],
+            "description": "min and max sales limits",
+            "name": "sales"
+          },
+          "results": [
+            {
+              "feature": "salary",
+              "message": "Success",
+              "rule": {
+                "level": "ERROR",
+                "max": 1000000.0,
+                "name": "HAS_MAX"
+              },
+              "status": "SUCCESS",
+              "value": "140893.765625"
+            },
+            {
+              "feature": "commission",
+              "message": "Success",
+              "rule": {
+                "level": "ERROR",
+                "max": 1000000.0,
+                "name": "HAS_MAX"
+              },
+              "status": "SUCCESS",
+              "value": "52593.62890625"
+            },
+            {
+              "feature": "salary",
+              "message": "Success",
+              "rule": {
+                "level": "WARNING",
+                "min": 0.0,
+                "name": "HAS_MIN"
+              },
+              "status": "SUCCESS",
+              "value": "20000.0"
+            },
+            {
+              "feature": "commission",
+              "message": "Success",
+              "rule": {
+                "level": "WARNING",
+                "min": 0.0,
+                "name": "HAS_MIN"
+              },
+              "status": "SUCCESS",
+              "value": "0.0"
+            }
+          ],
+          "status": "SUCCESS"
+        }
+      ]
+    }
+  end
+
+  def create_expectation(project_id, featurestore_id, name, feature="testfeature")
+    json_data = json_data_expectation
+    json_data[:name] = name
+    json_data[:features][0] = feature
+    json_data = json_data.to_json
+    endpoint = "#{ENV['HOPSWORKS_API']}/project/" + project_id.to_s + "/featurestores/" + featurestore_id.to_s + "/expectations"
+    put endpoint, json_data
+  end
+
+  def delete_expectation(project_id, featurestore_id, name)
+    delete "#{ENV['HOPSWORKS_API']}/project/" + project_id.to_s + "/featurestores/" + featurestore_id.to_s + "/expectations/" + name
+  end
+
+  def get_feature_store_expectations(project_id, featurestore_id, name="", query="")
+    get "#{ENV['HOPSWORKS_API']}/project/" + project_id.to_s + "/featurestores/" + featurestore_id.to_s + "/expectations/" + name + query
+    JSON.parse(response.body)
+  end
+
+  def get_feature_group_expectations(project_id, featurestore_id, featuregroup_id, name="", query="")
+    get "#{ENV['HOPSWORKS_API']}/project/" + project_id.to_s + "/featurestores/" + featurestore_id.to_s + "/featuregroups/" + featuregroup_id.to_s + "/expectations/" + name + query
+    JSON.parse(response.body)
+  end
+
+  def attach_expectation(project_id, featurestore_id, featuregroup_id, name)
+    put "#{ENV['HOPSWORKS_API']}/project/" + project_id.to_s + "/featurestores/" + featurestore_id.to_s + "/featuregroups/" + featuregroup_id.to_s + "/expectations/" + name
+  end
+
+  def detach_expectation(project_id, featurestore_id, featuregroup_id, name)
+    delete "#{ENV['HOPSWORKS_API']}/project/" + project_id.to_s + "/featurestores/" + featurestore_id.to_s + "/featuregroups/" + featuregroup_id.to_s + "/expectations/" + name
+  end
+
+  def create_validation(project_id, featurestore_id, featuregroup_id, validation_time=json_data_validation[:validationTime])
+    json_data = json_data_validation
+    json_data[:validationTime] = validation_time
+    json_data = json_data.to_json
+    endpoint = "#{ENV['HOPSWORKS_API']}/project/" + project_id.to_s + "/featurestores/" + featurestore_id.to_s + "/featuregroups/" + featuregroup_id.to_s + "/validations"
+    put endpoint, json_data
+  end
+
+  def get_validations(project_id, featurestore_id, featuregroup_id, id="")
+    get "#{ENV['HOPSWORKS_API']}/project/" + project_id.to_s + "/featurestores/" + featurestore_id.to_s + "/featuregroups/" + featuregroup_id.to_s + "/validations/" + id.to_s
+    JSON.parse(response.body)
+  end
+
   def get_featurestores_checked(project_id)
     result = get_featurestores(project_id)
     expect_status_details(200)

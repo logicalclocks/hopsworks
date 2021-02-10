@@ -1409,33 +1409,6 @@ angular.module('hopsWorksApp')
                 });
                 return modalInstance.result;
             },
-            addDataValidationPredicate: function (size, features, rule, groups) {
-                var modalInstance = $uibModal.open({
-                    templateUrl: 'views/addDataValidationPredicate.html',
-                    controller: 'DataValidationModalsCtrl as dataValidationModalsCtrl',
-                    size: size,
-                    resolve: {
-                        auth: ['$q','AuthGuardService',
-                            function ($q, AuthGuardService) {
-                                return AuthGuardService.guardSession($q).then(
-                                    function(success){
-                                    }, function (error) {
-                                        return $q.reject(error)
-                                    });
-                            }],
-                            features: function() {
-                                return features;
-                            },
-                            rule: function() {
-                                return rule;
-                            },
-                            groups: function() {
-                                return groups;
-                            }
-                    }
-                });
-                return modalInstance.result;
-            },
             addOperator2AirflowDag: function(size, operator, jobs, addedOperators) {
                 var modalInstance = $uibModal.open({
                     templateUrl: 'views/airflowDagOperatorProperties.html',

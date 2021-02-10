@@ -20,6 +20,8 @@ import com.google.common.base.Strings;
 import io.hops.hopsworks.common.dao.jobs.description.JobFacade;
 import io.hops.hopsworks.common.dao.user.activity.ActivityFacade;
 import io.hops.hopsworks.common.featurestore.FeaturestoreFacade;
+import io.hops.hopsworks.common.featurestore.datavalidation.FeatureGroupExpectationFacade;
+import io.hops.hopsworks.common.featurestore.datavalidation.FeatureGroupValidationsController;
 import io.hops.hopsworks.common.featurestore.feature.FeatureGroupFeatureDTO;
 import io.hops.hopsworks.common.featurestore.featuregroup.cached.CachedFeaturegroupController;
 import io.hops.hopsworks.common.featurestore.featuregroup.cached.CachedFeaturegroupDTO;
@@ -47,12 +49,15 @@ import io.hops.hopsworks.exceptions.HopsSecurityException;
 import io.hops.hopsworks.exceptions.ProvenanceException;
 import io.hops.hopsworks.exceptions.ServiceException;
 import io.hops.hopsworks.persistence.entity.featurestore.Featurestore;
-import io.hops.hopsworks.persistence.entity.featurestore.statistics.StatisticColumn;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.Featuregroup;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.FeaturegroupType;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.cached.CachedFeaturegroup;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.cached.HivePartitions;
+import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.cached.ValidationType;
+import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.datavalidation.FeatureGroupExpectation;
+import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.datavalidation.FeatureStoreExpectation;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.ondemand.OnDemandFeaturegroup;
+import io.hops.hopsworks.persistence.entity.featurestore.statistics.StatisticColumn;
 import io.hops.hopsworks.persistence.entity.featurestore.statistics.StatisticsConfig;
 import io.hops.hopsworks.persistence.entity.jobs.description.Jobs;
 import io.hops.hopsworks.persistence.entity.project.Project;
@@ -69,6 +74,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Optional;
 import java.util.logging.Level;
 import java.util.stream.Collectors;
 
@@ -105,6 +111,8 @@ public class FeaturegroupController {
   @EJB
   private StatisticsController statisticsController;
   @EJB
+  private FeatureGroupValidationsController featureGroupValidationsController;
+  @EJB
   private DistributedFsService dfs;
   @EJB
   private Settings settings;
@@ -114,6 +122,8 @@ public class FeaturegroupController {
   private InodeController inodeController;
   @EJB
   private FeaturestoreStorageConnectorController featurestoreStorageConnectorController;
+  @EJB
+  private FeatureGroupExpectationFacade featureGroupExpectationFacade;
 
   /**
    * Gets all featuregroups for a particular featurestore and project, using the userCerts to query Hive
@@ -469,6 +479,25 @@ public class FeaturegroupController {
   }
 
   /**
+   * Updated validation type for a featuregroup
+   *
+   * @param featuregroup    the feature group to update
+   * @return DTO of the updated feature group
+   * @throws FeaturestoreException
+   */
+  public FeaturegroupDTO updateValidationType(Featuregroup featuregroup,
+                                              ValidationType validationType, Project project,
+                                              Users user) throws FeaturestoreException, ServiceException {
+    Featuregroup toUpdate = featuregroupFacade.findByNameVersionAndFeaturestore(featuregroup.getName(),
+            featuregroup.getVersion(), featuregroup.getFeaturestore()).orElseThrow(() ->
+            new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.FEATUREGROUP_NOT_FOUND, Level.FINE,
+                    "featuregroup: " + featuregroup.getName()));
+    toUpdate.setValidationType(validationType);
+    featuregroupFacade.updateFeaturegroupMetadata(toUpdate);
+    return convertFeaturegrouptoDTO(featuregroup, project, user);
+  }
+
+  /**
    * Check if the feature group described by the DTO exists
    *
    * @param featurestore    the featurestore that the featuregroup belongs to
@@ -638,14 +667,17 @@ public class FeaturegroupController {
   private Featuregroup persistFeaturegroupMetadata(Featurestore featurestore, Users user,
                                                    FeaturegroupDTO featuregroupDTO,
                                                    CachedFeaturegroup cachedFeaturegroup,
-                                                   OnDemandFeaturegroup onDemandFeaturegroup) {
+                                                   OnDemandFeaturegroup onDemandFeaturegroup)
+                                                   throws FeaturestoreException {
     Featuregroup featuregroup = new Featuregroup();
     featuregroup.setName(featuregroupDTO.getName());
     featuregroup.setFeaturestore(featurestore);
     featuregroup.setCreated(new Date());
     featuregroup.setCreator(user);
     featuregroup.setVersion(featuregroupDTO.getVersion());
-
+    if (featuregroupDTO.getValidationType() != null) {
+      featuregroup.setValidationType(featuregroupDTO.getValidationType());
+    }
     featuregroup.setFeaturegroupType(
       featuregroupDTO instanceof CachedFeaturegroupDTO ?
         FeaturegroupType.CACHED_FEATURE_GROUP :
@@ -653,13 +685,34 @@ public class FeaturegroupController {
 
     featuregroup.setCachedFeaturegroup(cachedFeaturegroup);
     featuregroup.setOnDemandFeaturegroup(onDemandFeaturegroup);
-    
+
     StatisticsConfig statisticsConfig = new StatisticsConfig(featuregroupDTO.getStatisticsConfig().getEnabled(),
       featuregroupDTO.getStatisticsConfig().getCorrelations(), featuregroupDTO.getStatisticsConfig().getHistograms());
     statisticsConfig.setFeaturegroup(featuregroup);
     statisticsConfig.setStatisticColumns(featuregroupDTO.getStatisticsConfig().getColumns().stream()
       .map(sc -> new StatisticColumn(statisticsConfig, sc)).collect(Collectors.toList()));
     featuregroup.setStatisticsConfig(statisticsConfig);
+    if (featuregroupDTO.getExpectationsNames() != null ) {
+      List<FeatureGroupExpectation> featureGroupExpectations = new ArrayList<>();
+      for (String name : featuregroupDTO.getExpectationsNames()) {
+        FeatureStoreExpectation featureStoreExpectation =
+                featureGroupValidationsController.getFeatureStoreExpectation(featuregroup.getFeaturestore(), name);
+        FeatureGroupExpectation featureGroupExpectation;
+        Optional<FeatureGroupExpectation> e =
+                featureGroupExpectationFacade.findByFeaturegroupAndExpectation(featuregroup, featureStoreExpectation);
+        featureGroupValidationsController.checkFeaturesExist(featureStoreExpectation, featuregroup, name,
+                featurestore.getProject(), user);
+        if (!e.isPresent()) {
+          featureGroupExpectation = new FeatureGroupExpectation();
+          featureGroupExpectation.setFeaturegroup(featuregroup);
+          featureGroupExpectation.setFeatureStoreExpectation(featureStoreExpectation);
+        } else {
+          featureGroupExpectation = e.get();
+        }
+        featureGroupExpectations.add(featureGroupExpectation);
+      }
+      featuregroup.setExpectations(featureGroupExpectations);
+    }
 
     featuregroupFacade.persist(featuregroup);
     return featuregroup;

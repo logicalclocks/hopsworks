@@ -280,11 +280,6 @@ angular.module('hopsWorksApp')
                 $location.path('project/' + self.projectId + '/' + serviceName);
             };
 
-            self.goToDataValidation = function () {
-                StorageService.store("dv_featuregroup", self.selectedFeaturegroup);
-                $location.path('project/' + self.projectId + "/featurestore/datavalidation");
-            };
-
             self.goToStorageConnector = function () {
                 var connParam = {
                     "storageConnector": self.selectedFeaturegroup.storageConnector.name

@@ -16,17 +16,19 @@
 
 package io.hops.hopsworks.persistence.entity.featurestore.featuregroup.cached;
 
+import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.datavalidation.FeatureGroupValidation;
 import io.hops.hopsworks.persistence.entity.hdfs.inode.Inode;
 
 import javax.persistence.Column;
+import javax.persistence.EmbeddedId;
+import javax.persistence.Entity;
 import javax.persistence.JoinColumn;
 import javax.persistence.JoinColumns;
 import javax.persistence.ManyToOne;
-import javax.persistence.NamedQuery;
 import javax.persistence.NamedQueries;
+import javax.persistence.NamedQuery;
+import javax.persistence.OneToOne;
 import javax.persistence.Table;
-import javax.persistence.EmbeddedId;
-import javax.persistence.Entity;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 import javax.validation.constraints.NotNull;
@@ -53,6 +55,8 @@ import java.util.Date;
         query = "SELECT fgc FROM FeatureGroupCommit fgc WHERE fgc.committedOn IN (SELECT MAX(fgc.committedOn) FROM " +
             "FeatureGroupCommit fgc WHERE fgc.featureGroupCommitPK.featureGroupId = :featureGroupId) " +
             "AND fgc.featureGroupCommitPK.featureGroupId = :featureGroupId"),
+    @NamedQuery(name = "FeatureGroupCommit.findByValidation",
+            query = "SELECT fgc FROM FeatureGroupCommit fgc WHERE fgc.validation = :validation"),
     @NamedQuery(name = "FeatureGroupCommit.findByCommittedOn",
         query = "SELECT fgc FROM FeatureGroupCommit fgc WHERE fgc.featureGroupCommitPK.featureGroupId = " +
             ":featureGroupId AND fgc.committedOn <= :requestedPointInTime ORDER BY fgc.committedOn DESC")
@@ -87,6 +91,9 @@ public class FeatureGroupCommit implements Serializable {
           referencedColumnName = "partition_id")})
   @ManyToOne(optional = false)
   private Inode inode;
+  @JoinColumn(name = "validation_id", referencedColumnName = "id")
+  @OneToOne
+  private FeatureGroupValidation validation;
 
   public FeatureGroupCommit() {}
 
@@ -143,6 +150,14 @@ public class FeatureGroupCommit implements Serializable {
 
   public void setNumRowsDeleted(Long numRowsDeleted) {
     this.numRowsDeleted = numRowsDeleted;
+  }
+
+  public FeatureGroupValidation getValidation() {
+    return validation;
+  }
+
+  public void setValidation(FeatureGroupValidation validation) {
+    this.validation = validation;
   }
 
   @Override
