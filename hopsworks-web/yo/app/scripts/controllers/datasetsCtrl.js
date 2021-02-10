@@ -43,10 +43,11 @@ angular.module('hopsWorksApp')
         .controller('DatasetsCtrl', ['$scope', '$window', '$mdSidenav', '$mdUtil',
           'DataSetService', 'JupyterService', '$routeParams', 'ModalService', 'growl', '$location',
           'MetadataHelperService', '$rootScope', 'DelaProjectService', 'UtilsService', 'UserService', '$mdToast',
-          'TourService', 'ProjectService',
+          'TourService', 'ProjectService', 'StorageService',
           function ($scope, $window, $mdSidenav, $mdUtil, DataSetService, JupyterService, $routeParams,
                   ModalService, growl, $location, MetadataHelperService,
-                  $rootScope, DelaProjectService, UtilsService, UserService, $mdToast, TourService, ProjectService) {
+                  $rootScope, DelaProjectService, UtilsService, UserService, $mdToast, TourService, ProjectService,
+                    StorageService) {
 
             var self = this;
             var SHARED_DATASET_SEPARATOR = '::';
@@ -64,6 +65,7 @@ angular.module('hopsWorksApp')
             self.files = []; //A list of files currently displayed to the user.
             self.pagenatedFiles = [];
             self.filesCount = 0;
+            self.defaultItemsPerPage = 20;
 
             self.projectId = $routeParams.projectID; //The id of the project we're currently working in.
             self.basePath = '/project/' + self.projectId + '/datasets';
@@ -116,32 +118,49 @@ angular.module('hopsWorksApp')
               return pathArray.join("/");
             };
 
-            function pagination(page, itemsPerPage, currentPage) {
+            function preferences(page, itemsPerPage, currentPage, sortBy, reverse) {
                 this.page = page;
-                this.itemsPerPage = itemsPerPage;
+                this.itemsPerPage = itemsPerPage
                 this.currentPage = currentPage;
+                this.sortBy = sortBy
+                this.reverse = reverse
                 console.assert(this.itemsPerPage % 10 === 0 && this.itemsPerPage < MAX_NUM_FILES,
                      "items per page should be < " + MAX_NUM_FILES + " and a multiple of 10");
             };
 
-            var getPaginationFromSessionStorage = function (id) {
-                var value = sessionStorage.getItem(id);
-                if (typeof value === "undefined" || value === "null" || value === null) {
-                    return new pagination(1, 20, 1);
+            var getPreferencesFromLocalStorage = function (id) {
+                if (!StorageService.contains(self.projectId + "_" + id)) {
+                    return new preferences(1, self.defaultItemsPerPage, 1, 'ID', false);
                 }
                 try {
-                    return JSON.parse(value);
+                    var storedPreferences = JSON.parse(StorageService.get(self.projectId + "_" + id));
+                    if(typeof storedPreferences.sortBy === "undefined") {
+                        storedPreferences.sortBy = 'ID'
+                    }
+                    if(typeof storedPreferences.reverse === "undefined") {
+                        storedPreferences.reverse = false
+                    }
+                    if(typeof storedPreferences.page === "undefined") {
+                        storedPreferences.page = 1
+                    }
+                    if(typeof storedPreferences.currentPage === "undefined") {
+                        storedPreferences.currentPage = 1
+                    }
+                    if(typeof storedPreferences.itemsPerPage === "undefined") {
+                        storedPreferences.itemsPerPage = self.defaultItemsPerPage
+                    }
+                    return storedPreferences;
                 } catch (e) {
-                    return new pagination(1, 20, 1);
+                    return new preferences(1, self.defaultItemsPerPage, 1, 'ID', false);
                 }
             };
 
-            var setPaginationInSessionStorage = function (id, pagination) {
-                sessionStorage.setItem(id, JSON.stringify(pagination));
+            var setPreferencesInLocalStorage = function (id, preferences) {
+                StorageService.store(self.projectId + "_" + id, JSON.stringify(preferences));
             };
 
-            self.datasetPagination = getPaginationFromSessionStorage("datasetPagination");
-            self.datasetBrowserPagination = getPaginationFromSessionStorage("datasetBrowserPagination");
+            self.datasetPreferences = getPreferencesFromLocalStorage( "datasetPagination");
+            self.datasetBrowserPreferences = getPreferencesFromLocalStorage("datasetBrowserPagination");
 
               /**
                * Checks whether a dataset is a Hive database or not (featurestore or regular hive db will match here)
@@ -230,7 +249,7 @@ angular.module('hopsWorksApp')
                   pinnedDatasets = pinnedDatasets.concat(traningDatasets);
                   pinnedDatasets = pinnedDatasets.concat(system);
                   pinnedDatasets = pinnedDatasets.concat(regularDatasets);
-                  return getPaginated(self.datasetPagination, pinnedDatasets);
+                  return getPaginated(self.datasetPreferences, pinnedDatasets);
               };
 
               self.paginatedFiles = [];
@@ -238,13 +257,13 @@ angular.module('hopsWorksApp')
               var getPaginatedSubDir = function () {
                   var filtered = $scope.$eval("datasetsCtrl.files | orderBy:sortKey:reverse | filter:datasetsCtrl.searchTerm");
                   self.filesCount = filtered.length;
-                  return getPaginated(self.datasetBrowserPagination, filtered);
+                  return getPaginated(self.datasetBrowserPreferences, filtered);
               }
 
               var getPaginatedDataset = function () {
                   var filtered = $scope.$eval("datasetsCtrl.files | filter:{shared: datasetsCtrl.shared, accepted:datasetsCtrl.status, publicDataset: datasetsCtrl.isPublic} | filter:datasetsCtrl.searchTerm");
                   self.filesCount = filtered.length;
-                  return getPaginated(self.datasetPagination, filtered);
+                  return getPaginated(self.datasetPreferences, filtered);
               }
 
               self.getPaginatedItems = function () {
@@ -274,29 +293,41 @@ angular.module('hopsWorksApp')
                 if (getMore) {
                     self.offset = MAX_NUM_FILES*(pagination.page - 1);
                     getDirContents();
-                    setPaginationInSessionStorage(id, pagination);
+                    setPreferencesInLocalStorage(id, pagination);
                 } else {
                     setPaginated();
                 }
             };
 
-            $scope.$watch('datasetsCtrl.datasetPagination', function() {
-                setPaginationInSessionStorage("datasetPagination", self.datasetPagination);
+            $scope.$watch('datasetsCtrl.datasetPreferences', function() {
+                setPreferencesInLocalStorage("datasetPagination", self.datasetPreferences);
             }, true);
 
-            $scope.$watch('datasetsCtrl.datasetBrowserPagination', function() {
-                setPaginationInSessionStorage("datasetBrowserPagination", self.datasetBrowserPagination);
+            $scope.$watch('sortKey', function (newValue) {
+                if(typeof newValue !== "undefined") {
+                    self.datasetBrowserPreferences.sortKey = newValue
+                }
+            });
+
+            $scope.$watch('reverse', function (newVal) {
+                if(typeof newVal !== "undefined") {
+                    self.datasetBrowserPreferences.reverse = newVal
+                }
+            })
+
+            $scope.$watch('datasetsCtrl.datasetBrowserPreferences', function() {
+                setPreferencesInLocalStorage("datasetBrowserPagination", self.datasetBrowserPreferences);
             }, true);
 
             self.pageChange = function (newPageNumber) {
                 self.currentPage = newPageNumber;
                 self.resetSelected();
                 if ($routeParams.datasetName) {
-                    self.datasetBrowserPagination.currentPage = newPageNumber;
-                    getFromServer(self.datasetBrowserPagination, "datasetBrowserPagination");
+                    self.datasetBrowserPreferences.currentPage = newPageNumber;
+                    getFromServer(self.datasetBrowserPreferences, "datasetBrowserPagination");
                 } else {
-                    self.datasetPagination.currentPage = newPageNumber;
-                    getFromServer(self.datasetPagination, "datasetPagination");
+                    self.datasetPreferences.currentPage = newPageNumber;
+                    getFromServer(self.datasetPreferences, "datasetPagination");
                 }
             };
 
@@ -313,13 +344,22 @@ angular.module('hopsWorksApp')
             };
 
             var getSortOrder = function () {
-              return typeof $scope.reverse === "undefined" || $scope.reverse === true ?  ':desc' : ':asc';
+              var reverse = self.datasetBrowserPreferences.reverse
+              if(typeof reverse !== "undefined") {
+                  reverse = $scope.reverse
+              }
+              return typeof reverse === "undefined" || reverse === true ?  ':desc' : ':asc';
             };
 
             var getSortBy = function () {
               var sortBy = [];
-              if (typeof $scope.sortKey !== "undefined" && $scope.sortKey.length > 0) {
-                  switch($scope.sortKey) {
+              if ((typeof self.datasetBrowserPreferences.sortKey !== "undefined")
+                  || (typeof $scope.sortKey !== "undefined" && $scope.sortKey.length > 0)) {
+                  var sortKey = self.datasetBrowserPreferences.sortKey
+                  if(typeof sortKey === "undefined") {
+                      sortKey = $scope.sortKey
+                  }
+                  switch(sortKey) {
                       case 'dir':
                       case 'type':
                       case 'attributes.dir':

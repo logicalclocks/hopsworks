@@ -28,7 +28,10 @@ angular.module('hopsWorksApp')
 
             self.deleted = {}
             self.maxPaginationLinks = 10;
-            self.pageSize = 10;
+            self.defaultBrowserNumberOfItemsPerPage = 20
+            self.pageSize = self.defaultBrowserNumberOfItemsPerPage;
+            self.browserNumberOfItemsPerPage = self.defaultBrowserNumberOfItemsPerPage
+            self.MAX_ITEMS_PER_PAGE = 1000
             self.currentPage = 1;
             self.totalItems = 0;
 
@@ -76,6 +79,97 @@ angular.module('hopsWorksApp')
             self.experimentsToDate.setMinutes(self.experimentsToDate.getMinutes() + 60*24);
             self.experimentsFromDate = new Date();
             self.experimentsFromDate.setMinutes(self.experimentsToDate.getMinutes() - 60*24*30);
+
+            self.experimentsPreferencesStorageId = self.projectId + "_experimentsPreferences"
+
+            function preferences(reverseSort, sortType, orderBy, currentPage, totalPerPage) {
+                this.reverse = reverseSort
+                this.sortType = sortType
+                this.orderBy = orderBy
+                this.currentPage = currentPage
+                this.browserNumberOfItemsPerPage = totalPerPage
+            }
+
+            self.getPreferencesFromLocalStorage = function () {
+                if (!StorageService.contains(self.experimentsPreferencesStorageId)) {
+                    return new preferences(false, 'start', 'desc', 1, self.browserNumberOfItemsPerPage)
+                }
+                try {
+                    var storedPreferences = JSON.parse(StorageService.get(self.experimentsPreferencesStorageId));
+                    if(isNaN(storedPreferences.browserNumberOfItemsPerPage) || storedPreferences.browserNumberOfItemsPerPage < 1) {
+                        storedPreferences.browserNumberOfItemsPerPage = self.defaultBrowserNumberOfItemsPerPage
+                    }
+                    if(!storedPreferences.sortType || storedPreferences.sortType == null || storedPreferences.orderBy == '') {
+                        storedPreferences.orderBy = 'start'
+                    }
+                    if(!storedPreferences.orderBy || storedPreferences.orderBy == null || storedPreferences.orderBy == '') {
+                        storedPreferences.sortType = 'desc'
+                    }
+                    if(!storedPreferences.currentPage || isNaN(storedPreferences.currentPage)) {
+                        storedPreferences.currentPage = 1
+                    }
+                    if(storedPreferences.reverse === undefined) {
+                        storedPreferences.reverse = false
+                    }
+                    return storedPreferences
+                } catch (e) {
+                    return new preferences(false, 'start', 'desc', 1, self.browserNumberOfItemsPerPage)
+                }
+            }
+
+            self.initBrowserPreferenceValues = function () {
+                self.currentPage = self.preferences.currentPage
+                self.orderBy = self.preferences.orderBy
+                self.reverse = self.preferences.reverse
+                self.browserNumberOfItemsPerPage = self.preferences.browserNumberOfItemsPerPage
+                self.sortType = self.preferences.sortType
+            }
+
+            self.storeBrowserPreferencesInLocalStorage = function () {
+                StorageService.store(self.experimentsPreferencesStorageId, JSON.stringify(self.preferences))
+            }
+
+            self.preferences = self.getPreferencesFromLocalStorage();
+            self.initBrowserPreferenceValues()
+            self.storeBrowserPreferencesInLocalStorage()
+
+            $scope.$watch("experimentCtrl.browserNumberOfItemsPerPage", function (newValue) {
+                if(newValue > self.MAX_ITEMS_PER_PAGE) {
+                    self.preferences.browserNumberOfItemsPerPage = self.MAX_ITEMS_PER_PAGE
+                } else if(isNaN(newValue) || newValue < 1) {
+                    self.preferences.browserNumberOfItemsPerPage = null
+                } else {
+                    self.preferences.browserNumberOfItemsPerPage = newValue
+                }
+
+                if(self.preferences.browserNumberOfItemsPerPage == null) {
+                    self.pageSize = self.defaultBrowserNumberOfItemsPerPage
+                } else {
+                    self.pageSize = self.preferences.browserNumberOfItemsPerPage
+                }
+                self.preferences.browserNumberOfItemsPerPage = self.browserNumberOfItemsPerPage
+                self.storeBrowserPreferencesInLocalStorage()
+            })
+
+            $scope.$watch("experimentCtrl.sortType", function (newValue) {
+                self.preferences.sortType = newValue
+                self.storeBrowserPreferencesInLocalStorage()
+            })
+
+            $scope.$watch("experimentCtrl.orderBy", function (newValue) {
+                self.preferences.orderBy = newValue
+                self.storeBrowserPreferencesInLocalStorage()
+            })
+
+            $scope.$watch("experimentCtrl.reverse", function (newValue){
+                self.preferences.reverse = newValue
+                self.storeBrowserPreferencesInLocalStorage()
+            })
+
+            $scope.$watch("experimentCtrl.currentPage", function (newValue){
+                self.preferences.currentPage = newValue
+                self.storeBrowserPreferencesInLocalStorage()
+            })
 
             var startLoading = function(label) {
                 self.loading = true;

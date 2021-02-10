@@ -215,9 +215,10 @@
                       </tr>
                       </thead>
                       <tbody class="datasets-jobs-table">
-                        <tr dir-paginate="file in datasetsCtrl.paginatedFiles | itemsPerPage:datasetsCtrl.datasetBrowserPagination.itemsPerPage"
+                        <tr
+                                dir-paginate="file in datasetsCtrl.paginatedFiles | itemsPerPage:datasetsCtrl.datasetBrowserPreferences.itemsPerPage"
                             pagination-id="dataset_browser_pagination"
-                            current-page="datasetsCtrl.datasetBrowserPagination.currentPage"
+                            current-page="datasetsCtrl.datasetBrowserPreferences.currentPage"
                             total-items="datasetsCtrl.filesCount"
                             context-menu
                             data-target="menu-{{ file.attributes.name}}"
