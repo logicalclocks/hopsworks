@@ -151,6 +151,10 @@ angular.module('hopsWorksApp', [
                           }]
                       }
                     })
+                    .when('/autoOauth', {
+                      templateUrl: 'views/auto_oauth.html',
+                      controller: 'autoOAuthCtrl as autoOAuthCtrl'
+                    })
                     .when('/ldapLogin', {
                       templateUrl: 'views/ldapLogin.html',
                       controller: 'LdapLoginCtrl as loginCtrl',

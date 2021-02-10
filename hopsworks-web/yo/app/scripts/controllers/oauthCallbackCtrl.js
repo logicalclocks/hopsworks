@@ -49,7 +49,7 @@ angular.module('hopsWorksApp')
                             $location.path('/login');
                         });
                     } else {
-                        $rootScope.oauthLoginErrorMsg = (typeof error.data.usrMsg !== 'undefined')? error.data.usrMsg : "";
+                        $rootScope.oauthLoginErrorMsg = (typeof error.data.usrMsg !== 'undefined')? error.data.usrMsg : error.data.errorMsg;
                         $location.path('/login');
                     }
                 })

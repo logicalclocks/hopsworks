@@ -31,6 +31,7 @@ import static io.hops.hopsworks.common.remote.oauth.OpenIdConstant.ID_TOKEN_ENCR
 import static io.hops.hopsworks.common.remote.oauth.OpenIdConstant.ID_TOKEN_SIGNING_ALG_VALUES_SUPPORTED;
 import static io.hops.hopsworks.common.remote.oauth.OpenIdConstant.ISSUER;
 import static io.hops.hopsworks.common.remote.oauth.OpenIdConstant.JWKS_URI;
+import static io.hops.hopsworks.common.remote.oauth.OpenIdConstant.LOGOUT_ENDPOINT;
 import static io.hops.hopsworks.common.remote.oauth.OpenIdConstant.REGISTRATION_ENDPOINT;
 import static io.hops.hopsworks.common.remote.oauth.OpenIdConstant.RESPONSE_TYPES_SUPPORTED;
 import static io.hops.hopsworks.common.remote.oauth.OpenIdConstant.REVOCATION_ENDPOINT;
@@ -54,6 +55,8 @@ public class OpenIdProviderConfig implements Serializable {
   private String revocationEndpoint;
   private String jwkSetURI;
   private String registrationEndpointURI;
+  private String endSessionEndpoint;
+  private String logoutRedirectParam;
   private Set<String> responseTypesSupported;
   private Set<String> scopesSupported;
   private Set<String> claimsSupported;
@@ -70,6 +73,7 @@ public class OpenIdProviderConfig implements Serializable {
     this.userInfoEndpoint = getStrOrNull(document, USERINFO_ENDPOINT);
     this.revocationEndpoint = getStrOrNull(document, REVOCATION_ENDPOINT);
     this.registrationEndpointURI = getStrOrNull(document, REGISTRATION_ENDPOINT);
+    this.endSessionEndpoint = getStrOrNull(document, LOGOUT_ENDPOINT);
     this.jwkSetURI = getStrOrNull(document, JWKS_URI);
     this.scopesSupported = getValues(SCOPES_SUPPORTED);
     this.claimsSupported = getValues(CLAIMS_SUPPORTED);
@@ -85,6 +89,8 @@ public class OpenIdProviderConfig implements Serializable {
     this.authorizationEndpoint = client.getAuthorisationEndpoint();
     this.tokenEndpoint = client.getTokenEndpoint();
     this.userInfoEndpoint = client.getUserInfoEndpoint();
+    this.endSessionEndpoint = client.getEndSessionEndpoint();
+    this.logoutRedirectParam = client.getLogoutRedirectParam();
   }
   
   public String getIssuerURI() {
@@ -142,6 +148,22 @@ public class OpenIdProviderConfig implements Serializable {
   
   public void setRegistrationEndpointURI(String registrationEndpointURI) {
     this.registrationEndpointURI = registrationEndpointURI;
+  }
+  
+  public String getEndSessionEndpoint() {
+    return endSessionEndpoint;
+  }
+  
+  public void setEndSessionEndpoint(String endSessionEndpoint) {
+    this.endSessionEndpoint = endSessionEndpoint;
+  }
+  
+  public String getLogoutRedirectParam() {
+    return logoutRedirectParam;
+  }
+  
+  public void setLogoutRedirectParam(String logoutRedirectParam) {
+    this.logoutRedirectParam = logoutRedirectParam;
   }
   
   public JsonObject getDocument() {

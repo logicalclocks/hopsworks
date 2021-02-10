@@ -32,6 +32,7 @@ public class RemoteUserDTO {
   private List<String> email;
   private List<String> groups;
   private boolean emailVerified;
+  private boolean consentRequired;
 
   public RemoteUserDTO() {
   }
@@ -103,7 +104,19 @@ public class RemoteUserDTO {
   public void setEmailVerified(boolean emailVerified) {
     this.emailVerified = emailVerified;
   }
-
+  
+  public boolean isConsentRequired() {
+    return consentRequired;
+  }
+  
+  public void setConsentRequired(boolean consentRequired) {
+    this.consentRequired = consentRequired;
+  }
+  
+  public boolean needToChooseEmail() {
+    return this.email != null && this.email.size() > 1;
+  }
+  
   @Override
   public String toString() {
     return uuid;

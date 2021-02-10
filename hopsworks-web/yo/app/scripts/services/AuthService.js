@@ -77,6 +77,16 @@ angular.module('hopsWorksApp')
                           return response;
                         });
               },
+              oauthLogout: function (providerName) {
+                $cookies.remove("providerName");
+                return $http.get('/api/remote/user/auth/logout?providerName=' + providerName)
+                    .then(function (response) {
+                      if (response.data.value) {
+                        $window.location.href = response.data.value;
+                      }
+                      return response;
+                    });
+              },
               register: function (user) {
 
                 var regReq = {

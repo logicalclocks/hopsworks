@@ -121,6 +121,12 @@ public class OauthClient implements Serializable {
   @Column(name = "userinfo_endpoint")
   private String userInfoEndpoint;
   @Size(max = 1024)
+  @Column(name = "end_session_endpoint")
+  private String endSessionEndpoint;
+  @Size(max = 45)
+  @Column(name = "logout_redirect_param")
+  private String logoutRedirectParam;
+  @Size(max = 1024)
   @Column(name = "jwks_uri")
   private String jwksURI;
   @Basic(optional = false)
@@ -151,8 +157,9 @@ public class OauthClient implements Serializable {
   
   public OauthClient(String clientId, String clientSecret, String providerURI, String providerName,
     String providerLogoURI, String providerDisplayName, boolean providerMetadataEndpointSupported,
-    String authorisationEndpoint, String tokenEndpoint, String userInfoEndpoint, String jwksURI,
-    boolean offlineAccess, boolean codeChallenge, CodeChallengeMethod codeChallengeMethod, boolean verifyEmail) {
+    String authorisationEndpoint, String tokenEndpoint, String userInfoEndpoint, String endSessionEndpoint,
+    String logoutRedirectParam, String jwksURI, boolean offlineAccess, boolean codeChallenge,
+    CodeChallengeMethod codeChallengeMethod, boolean verifyEmail) {
     this.clientId = clientId;
     this.clientSecret = clientSecret;
     this.providerURI = providerURI;
@@ -163,6 +170,8 @@ public class OauthClient implements Serializable {
     this.authorisationEndpoint = authorisationEndpoint;
     this.tokenEndpoint = tokenEndpoint;
     this.userInfoEndpoint = userInfoEndpoint;
+    this.endSessionEndpoint = endSessionEndpoint;
+    this.logoutRedirectParam = logoutRedirectParam;
     this.jwksURI = jwksURI;
     this.offlineAccess = offlineAccess;
     this.codeChallenge = codeChallenge;
@@ -226,6 +235,13 @@ public class OauthClient implements Serializable {
     this.providerDisplayName = authServerDisplayname;
   }
   
+  public String getLogoutRedirectParam() {
+    return logoutRedirectParam;
+  }
+  
+  public void setLogoutRedirectParam(String logoutRedirectParam) {
+    this.logoutRedirectParam = logoutRedirectParam;
+  }
   
   public String getAuthorisationEndpoint() {
     return authorisationEndpoint;
@@ -245,6 +261,14 @@ public class OauthClient implements Serializable {
   
   public String getUserInfoEndpoint() {
     return userInfoEndpoint;
+  }
+  
+  public String getEndSessionEndpoint() {
+    return endSessionEndpoint;
+  }
+  
+  public void setEndSessionEndpoint(String endSessionEndpoint) {
+    this.endSessionEndpoint = endSessionEndpoint;
   }
   
   public String getJwksURI() {

@@ -45,7 +45,7 @@ angular.module('hopsWorksApp')
 
       var self = this;
       self.data = data;
-      self.user = {givenName: '', surname: '', chosenEmail: data.email[0], consent: ''};
+      self.user = {givenName: '', surname: '', chosenEmail: data.email[0], consent: !data.consentRequired};
 
       self.ok = function () {
         $uibModalInstance.close({val: self.user});

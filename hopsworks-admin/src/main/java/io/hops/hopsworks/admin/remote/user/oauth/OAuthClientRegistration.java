@@ -50,6 +50,8 @@ public class OAuthClientRegistration implements Serializable {
   private String authorisationEndpoint;
   private String tokenEndpoint;
   private String userInfoEndpoint;
+  private String endSessionEndpoint;
+  private String logoutRedirectParam;
   private String jwksURI;
   private boolean providerMetadataEndpointSupported;
   private List<OauthClient> oauthClients;
@@ -80,6 +82,8 @@ public class OAuthClientRegistration implements Serializable {
     this.authorisationEndpoint = "";
     this.tokenEndpoint = "";
     this.userInfoEndpoint = "";
+    this.endSessionEndpoint = "";
+    this.logoutRedirectParam = "";
     this.jwksURI = "";
     this.autoProviderURI = "";
     this.offlineAccess = false;
@@ -169,6 +173,22 @@ public class OAuthClientRegistration implements Serializable {
   
   public void setUserInfoEndpoint(String userInfoEndpoint) {
     this.userInfoEndpoint = userInfoEndpoint;
+  }
+  
+  public String getEndSessionEndpoint() {
+    return endSessionEndpoint;
+  }
+  
+  public void setEndSessionEndpoint(String endSessionEndpoint) {
+    this.endSessionEndpoint = endSessionEndpoint;
+  }
+  
+  public String getLogoutRedirectParam() {
+    return logoutRedirectParam;
+  }
+  
+  public void setLogoutRedirectParam(String logoutRedirectParam) {
+    this.logoutRedirectParam = logoutRedirectParam;
   }
   
   public String getJwksURI() {
@@ -314,8 +334,9 @@ public class OAuthClientRegistration implements Serializable {
     try {
       OauthClient oauthClient = new OauthClient(this.clientId, this.clientSecret, this.providerURI, this.providerName,
         this.providerLogoURI, this.providerDisplayName, this.providerMetadataEndpointSupported,
-        this.authorisationEndpoint, this.tokenEndpoint, this.userInfoEndpoint, this.jwksURI, this.offlineAccess,
-        this.codeChallenge, this.codeChallengeMethod, this.verifyEmail);
+        this.authorisationEndpoint, this.tokenEndpoint, this.userInfoEndpoint, this.endSessionEndpoint,
+        this.logoutRedirectParam, this.jwksURI, this.offlineAccess, this.codeChallenge, this.codeChallengeMethod,
+        this.verifyEmail);
       oAuthClientHelper.getOauthHelper().saveClient(oauthClient);
       MessagesController.addInfoMessage("Added new OAuth server.");
       init();

@@ -93,6 +93,14 @@ public class OAuthController {
     return remoteUserStateDTO;
   }
   
+  public URI getLogoutURI(String providerName, String redirectURI) {
+    try {
+      return oidAuthorizationCodeFlowHelper.getLogoutUrl(providerName, redirectURI);
+    } catch (URISyntaxException e) {
+    }
+    return null;
+  }
+  
   private OauthLoginState getClient(String state, String sessionId) {
     OauthLoginState oauthLoginState = oauthLoginStateFacade.findByStateAndSession(state, sessionId)
       .orElseThrow(() -> new IllegalStateException("No login request found for the given state."));

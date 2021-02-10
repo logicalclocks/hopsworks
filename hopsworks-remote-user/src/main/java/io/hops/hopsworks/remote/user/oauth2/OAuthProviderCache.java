@@ -10,6 +10,7 @@ import io.hops.hopsworks.common.remote.oauth.OpenIdProviderConfig;
 import io.hops.hopsworks.persistence.entity.remote.oauth.OauthClient;
 import net.minidev.json.JSONArray;
 import net.minidev.json.JSONObject;
+import org.apache.parquet.Strings;
 import org.ehcache.Cache;
 import org.ehcache.CacheManager;
 import org.ehcache.config.builders.CacheConfigurationBuilder;
@@ -96,6 +97,10 @@ public class OAuthProviderCache {
     if (client.getProviderMetadataEndpointSupported()) {
       try {
         providerConfig = getProviderConfigFromCacheOrURI(client, invalidateCache);
+        if (!Strings.isNullOrEmpty(client.getEndSessionEndpoint())) {
+          providerConfig.setEndSessionEndpoint(client.getEndSessionEndpoint());
+          providerConfig.setLogoutRedirectParam(client.getLogoutRedirectParam());
+        }
       } catch (Exception e) {
         LOGGER.log(Level.SEVERE, "Could not get provider configuration from URI {0}.", client.getProviderURI());
         throw new IllegalStateException("Could not get provider configuration from URI " + client.getProviderURI() +
@@ -103,6 +108,7 @@ public class OAuthProviderCache {
       }
     } else {
       providerConfig = new OpenIdProviderConfig(client);
+      
     }
     return providerConfig;
   }

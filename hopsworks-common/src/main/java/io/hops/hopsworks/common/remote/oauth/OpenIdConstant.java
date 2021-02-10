@@ -34,6 +34,7 @@ public class OpenIdConstant {
   public static final String REVOCATION_ENDPOINT = "revocation_endpoint";
   public static final String REGISTRATION_ENDPOINT = "registration_endpoint";
   public static final String JWKS_URI = "jwks_uri";
+  public static final String LOGOUT_ENDPOINT = "end_session_endpoint";
   
   public static final String ISSUER = "issuer";
   public static final String SCOPES_SUPPORTED = "scopes_supported";

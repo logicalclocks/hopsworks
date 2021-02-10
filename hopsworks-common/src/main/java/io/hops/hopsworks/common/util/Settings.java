@@ -2712,8 +2712,11 @@ public class Settings implements Serializable {
   private static final String VARIABLE_LDAP_GROUPS_TARGET = "ldap_groups_target";
   private static final String VARIABLE_OAUTH_ENABLED = "oauth_enabled";
   private static final String VARIABLE_OAUTH_REDIRECT_URI = "oauth_redirect_uri";
+  private static final String VARIABLE_OAUTH_LOGOUT_REDIRECT_URI = "oauth_logout_redirect_uri";
   private static final String VARIABLE_OAUTH_ACCOUNT_STATUS = "oauth_account_status";
   private static final String VARIABLE_OAUTH_GROUP_MAPPING = "oauth_group_mapping";
+  
+  private static final String VARIABLE_REMOTE_AUTH_NEED_CONSENT = "remote_auth_need_consent";
   
   private static final String VARIABLE_DISABLE_PASSWORD_LOGIN = "disable_password_login";
   private static final String VARIABLE_DISABLE_REGISTRATION = "disable_registration";
@@ -2749,8 +2752,11 @@ public class Settings implements Serializable {
   private boolean IS_OAUTH_ENABLED = false;
   private String OAUTH_GROUP_MAPPING = "";
   private String OAUTH_REDIRECT_URI = "hopsworks/callback";
+  private String OAUTH_LOGOUT_REDIRECT_URI = "hopsworks/logout";
   private int OAUTH_ACCOUNT_STATUS = 1;
   private long LDAP_GROUP_MAPPING_SYNC_INTERVAL = 0;
+  
+  private boolean REMOTE_AUTH_NEED_CONSENT = true;
   
   private boolean DISABLE_PASSWORD_LOGIN = false;
   private boolean DISABLE_REGISTRATION = false;
@@ -2782,9 +2788,12 @@ public class Settings implements Serializable {
     OAUTH_ENABLED = setStrVar(VARIABLE_OAUTH_ENABLED, OAUTH_ENABLED);
     IS_OAUTH_ENABLED = setBoolVar(VARIABLE_OAUTH_ENABLED, IS_OAUTH_ENABLED);
     OAUTH_REDIRECT_URI = setStrVar(VARIABLE_OAUTH_REDIRECT_URI, OAUTH_REDIRECT_URI);
+    OAUTH_LOGOUT_REDIRECT_URI = setStrVar(VARIABLE_OAUTH_LOGOUT_REDIRECT_URI, OAUTH_LOGOUT_REDIRECT_URI);
     OAUTH_ACCOUNT_STATUS = setIntVar(VARIABLE_OAUTH_ACCOUNT_STATUS, OAUTH_ACCOUNT_STATUS);
     OAUTH_GROUP_MAPPING = setStrVar(VARIABLE_OAUTH_GROUP_MAPPING, OAUTH_GROUP_MAPPING);
   
+    REMOTE_AUTH_NEED_CONSENT = setBoolVar(VARIABLE_REMOTE_AUTH_NEED_CONSENT, REMOTE_AUTH_NEED_CONSENT);
+    
     DISABLE_PASSWORD_LOGIN = setBoolVar(VARIABLE_DISABLE_PASSWORD_LOGIN, DISABLE_PASSWORD_LOGIN);
     DISABLE_REGISTRATION = setBoolVar(VARIABLE_DISABLE_REGISTRATION, DISABLE_REGISTRATION);
     DISABLE_REGISTRATION_UI = setBoolVar(VARIABLE_DISABLE_REGISTRATION_UI, DISABLE_REGISTRATION_UI);
@@ -2920,7 +2929,12 @@ public class Settings implements Serializable {
     checkCache();
     return OAUTH_REDIRECT_URI;
   }
-
+  
+  public synchronized String getOauthLogoutRedirectUri() {
+    checkCache();
+    return OAUTH_LOGOUT_REDIRECT_URI;
+  }
+  
   public synchronized int getOAuthAccountStatus() {
     checkCache();
     return OAUTH_ACCOUNT_STATUS;
@@ -2929,6 +2943,11 @@ public class Settings implements Serializable {
   public synchronized  boolean shouldValidateEmailVerified() {
     checkCache();
     return VALIDATE_REMOTE_USER_EMAIL_VERIFIED;
+  }
+  
+  public synchronized  boolean remoteAuthNeedConsent() {
+    checkCache();
+    return REMOTE_AUTH_NEED_CONSENT;
   }
 
   public synchronized String getVarLdapAccountStatus() {

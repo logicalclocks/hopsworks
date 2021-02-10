@@ -87,15 +87,27 @@ angular.module('hopsWorksApp')
 
             self.logout = function () {
               AirflowService.logout();
-
-              AuthService.logout(self.user).then(
+              var providerName = $cookies.get("providerName");
+              if (providerName) {
+                  AuthService.oauthLogout(providerName).then(
                       function (success) {
-                        AuthService.cleanSession();
-                        AuthService.removeToken();
-                        $location.url('/login');
+                          AuthService.cleanSession();
+                          AuthService.removeToken();
+                          $location.url('/login');
                       }, function (error) {
-                self.errorMessage = error.data.msg;
-              });
+                          self.errorMessage = error.data.msg;
+                      });
+              } else {
+                  AuthService.logout(self.user).then(
+                      function (success) {
+                          AuthService.cleanSession();
+                          AuthService.removeToken();
+                          $location.url('/login');
+                      }, function (error) {
+                          self.errorMessage = error.data.msg;
+                      });
+              }
+
             };
 
             var checkDelaEnabled = function () {

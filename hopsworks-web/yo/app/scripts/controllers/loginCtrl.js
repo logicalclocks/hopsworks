@@ -176,6 +176,7 @@ angular.module('hopsWorksApp')
 
             self.oauthLogin = function (providerName) {
                 AuthService.oauthLoginURI(providerName);
+                $cookies.put("providerName", providerName);
             };
 
             self.resetOAuthLoginErrorMsg = function () {

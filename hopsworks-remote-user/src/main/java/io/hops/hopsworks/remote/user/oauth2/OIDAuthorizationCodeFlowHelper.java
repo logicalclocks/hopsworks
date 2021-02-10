@@ -176,6 +176,22 @@ public class OIDAuthorizationCodeFlowHelper {
     return authReqURI;
   }
   
+  public URI getLogoutUrl(String providerName, String redirectURI) throws URISyntaxException {
+    OauthClient client = oauthClientFacade.findByProviderName(providerName);
+    if (client == null) {
+      throw new NotFoundException("Client not found.");
+    }
+    OpenIdProviderConfig providerConfig = oAuthProviderCache.getProviderConfig(client, false);
+    if (!Strings.isNullOrEmpty(providerConfig.getEndSessionEndpoint())) {
+      URI postLogoutRedirectURI = new URI(redirectURI);
+      URI logoutURI = new URI(providerConfig.getEndSessionEndpoint());
+      LogoutReq.Builder logoutRequestBuilder = new LogoutReq.Builder(logoutURI, new ClientID(client.getClientId()),
+        postLogoutRedirectURI).postLogoutRedirectParam(providerConfig.getLogoutRedirectParam());
+      return logoutRequestBuilder.build().toURI();
+    }
+    return null;
+  }
+  
   private State saveOauthLoginState(String sessionId, OauthClient client, Nonce nonce, CodeVerifier codeVerifier,
     URI redirectURI, String scopes) {
     State state = new State();

@@ -215,6 +215,28 @@
 
                         <p:column>
                             <h3 style="color: rgba(0, 0, 0, 0.54);">
+                                <p:outputLabel for="endSessionURI" value="End session URI: "/></h3>
+                        </p:column>
+                        <p:column>
+                            <p:inputTextarea rows="1" cols="50" id="endSessionURI"
+                                             value="#{oAuthClientRegistration.endSessionEndpoint}">
+                                <f:validator validatorId="io.hops.hopsworks.admin.remote.user.oauth.UrlValidator"/>
+                            </p:inputTextarea>
+                        </p:column>
+
+                        <p:column>
+                            <h3 style="color: rgba(0, 0, 0, 0.54);">
+                                <p:outputLabel for="endSessionRedirectURI" value="End session redirect URI param: "/>
+                            </h3>
+                        </p:column>
+                        <p:column>
+                            <p:inputTextarea rows="1" cols="50" id="endSessionRedirectURI"
+                                             value="#{oAuthClientRegistration.logoutRedirectParam}">
+                            </p:inputTextarea>
+                        </p:column>
+
+                        <p:column>
+                            <h3 style="color: rgba(0, 0, 0, 0.54);">
                                 <p:outputLabel for="offline_access" value="Offline access: "/></h3>
                         </p:column>
                         <p:column>
@@ -388,6 +410,31 @@
                             <f:facet name="input"><p:inputText value="#{oauthClient.providerDisplayName}"
                                                                style="width:100%"
                                                                label="Server display name"/></f:facet>
+                        </p:cellEditor>
+                    </p:column>
+
+                    <p:column headerText="End session URI">
+                        <p:cellEditor>
+                            <f:facet name="output"><h:outputText
+                                    value="#{oauthClient.endSessionEndpoint}"/></f:facet>
+                            <f:facet name="input">
+                                <p:inputText value="#{oauthClient.endSessionEndpoint}" style="width:100%"
+                                             label="End session URI">
+                                    <f:validator validatorId="io.hops.hopsworks.admin.remote.user.oauth.UrlValidator"/>
+                                </p:inputText>
+                            </f:facet>
+                        </p:cellEditor>
+                    </p:column>
+
+                    <p:column headerText="End session Redirect URI param">
+                        <p:cellEditor>
+                            <f:facet name="output"><h:outputText
+                                    value="#{oauthClient.logoutRedirectParam}"/></f:facet>
+                            <f:facet name="input">
+                                <p:inputText value="#{oauthClient.logoutRedirectParam}" style="width:100%"
+                                             label="End session Redirect URI param">
+                                </p:inputText>
+                            </f:facet>
                         </p:cellEditor>
                     </p:column>
 

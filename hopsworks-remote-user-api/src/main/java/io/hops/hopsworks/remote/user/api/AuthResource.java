@@ -3,32 +3,34 @@
  */
 package io.hops.hopsworks.remote.user.api;
 
+import io.hops.hadoop.shaded.com.google.common.base.Strings;
 import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.project.AccessCredentialsDTO;
-import io.hops.hopsworks.exceptions.DatasetException;
-import io.hops.hopsworks.exceptions.HopsSecurityException;
-import io.hops.hopsworks.exceptions.ProjectException;
-import io.hops.hopsworks.exceptions.UserException;
-import io.hops.hopsworks.persistence.entity.remote.user.RemoteUser;
-import io.hops.hopsworks.persistence.entity.user.Users;
-import io.hops.hopsworks.persistence.entity.user.security.ua.UserAccountType;
-import io.hops.hopsworks.restutils.RESTCodes;
-import io.hops.hopsworks.restutils.RESTException;
 import io.hops.hopsworks.common.project.ProjectController;
 import io.hops.hopsworks.common.remote.RemoteUserStateDTO;
 import io.hops.hopsworks.common.user.AuthController;
 import io.hops.hopsworks.common.user.UserStatusValidator;
 import io.hops.hopsworks.common.util.Settings;
+import io.hops.hopsworks.exceptions.DatasetException;
+import io.hops.hopsworks.exceptions.HopsSecurityException;
+import io.hops.hopsworks.exceptions.ProjectException;
+import io.hops.hopsworks.exceptions.UserException;
 import io.hops.hopsworks.jwt.Constants;
 import io.hops.hopsworks.jwt.exception.DuplicateSigningKeyException;
 import io.hops.hopsworks.jwt.exception.InvalidationException;
 import io.hops.hopsworks.jwt.exception.SigningKeyNotFoundException;
 import io.hops.hopsworks.jwt.exception.VerificationException;
+import io.hops.hopsworks.persistence.entity.remote.user.RemoteUser;
+import io.hops.hopsworks.persistence.entity.user.Users;
+import io.hops.hopsworks.persistence.entity.user.security.ua.UserAccountType;
 import io.hops.hopsworks.remote.user.RemoteUserAuthController;
 import io.hops.hopsworks.remote.user.jwt.JWTHelper;
 import io.hops.hopsworks.remote.user.ldap.LdapUserController;
 import io.hops.hopsworks.remote.user.oauth2.OAuthController;
+import io.hops.hopsworks.restutils.RESTCodes;
+import io.hops.hopsworks.restutils.RESTException;
 import io.swagger.annotations.Api;
+
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
@@ -40,17 +42,20 @@ import javax.ws.rs.FormParam;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.SecurityContext;
+import java.net.URI;
 import java.security.NoSuchAlgorithmException;
 import java.util.HashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.ws.rs.PathParam;
+
 import static javax.ws.rs.core.HttpHeaders.AUTHORIZATION;
-import javax.ws.rs.core.SecurityContext;
 
 @Path("/auth")
 @Stateless
@@ -105,6 +110,14 @@ public class AuthResource {
       throw new IllegalArgumentException("Password can not be empty.");
     }
     RemoteUserStateDTO ldapUserState = ldapUserController.login(username, password, consent, chosenEmail);
+    if (!ldapUserState.isSaved() &&
+      (settings.remoteAuthNeedConsent() || ldapUserState.getRemoteUserDTO().needToChooseEmail())) {
+      ldapUserState.getRemoteUserDTO().setConsentRequired(settings.remoteAuthNeedConsent());
+      return Response.status(Response.Status.PRECONDITION_FAILED).entity(ldapUserState.getRemoteUserDTO()).build();
+    } else if (!ldapUserState.isSaved()) {
+      ldapUserState = ldapUserController.login(username, password, true,
+        ldapUserState.getRemoteUserDTO().getEmail().get(0));
+    }
     return remoteUserLogin(ldapUserState, req);
   }
 
@@ -122,6 +135,14 @@ public class AuthResource {
     }
     try {
       RemoteUserStateDTO krbLdapUserState = ldapUserController.getKrbLdapUser(principalName, consent, chosenEmail);
+      if (!krbLdapUserState.isSaved() &&
+        (settings.remoteAuthNeedConsent() || krbLdapUserState.getRemoteUserDTO().needToChooseEmail())) {
+        krbLdapUserState.getRemoteUserDTO().setConsentRequired(settings.remoteAuthNeedConsent());
+        return Response.status(Response.Status.PRECONDITION_FAILED).entity(krbLdapUserState.getRemoteUserDTO()).build();
+      } else if (!krbLdapUserState.isSaved()) {
+        krbLdapUserState =
+          ldapUserController.getKrbLdapUser(principalName, true, krbLdapUserState.getRemoteUserDTO().getEmail().get(0));
+      }
       return remoteUserLogin(krbLdapUserState, req);
     } catch (NoSuchAlgorithmException | SigningKeyNotFoundException | DuplicateSigningKeyException | LoginException e) {
       RESTException ex =
@@ -151,6 +172,14 @@ public class AuthResource {
     }
     RemoteUserStateDTO oAuthUserState = oAuthController.login(req.getSession().getId(), code, state, consent,
       chosenEmail);
+    if (!oAuthUserState.isSaved() &&
+      (settings.remoteAuthNeedConsent() || oAuthUserState.getRemoteUserDTO().needToChooseEmail())) {
+      oAuthUserState.getRemoteUserDTO().setConsentRequired(settings.remoteAuthNeedConsent());
+      return Response.status(Response.Status.PRECONDITION_FAILED).entity(oAuthUserState.getRemoteUserDTO()).build();
+    } else if (!oAuthUserState.isSaved()) {
+      oAuthUserState = oAuthController.login(req.getSession().getId(), code, state,true,
+        oAuthUserState.getRemoteUserDTO().getEmail().get(0));
+    }
     return remoteUserLogin(oAuthUserState, req);
   }
 
@@ -205,8 +234,15 @@ public class AuthResource {
   @GET
   @Path("logout")
   @Produces(MediaType.APPLICATION_JSON)
-  public Response logout(@Context HttpServletRequest req) throws UserException, InvalidationException {
+  public Response logout(@QueryParam("providerName") String providerName, @Context HttpServletRequest req)
+    throws UserException, InvalidationException {
     logoutAndInvalidateSession(req);
+    if (settings.isOAuthEnabled() && !Strings.isNullOrEmpty(providerName)) {
+      URI uri = oAuthController.getLogoutURI(providerName, settings.getOauthLogoutRedirectUri());
+      if (uri != null) {
+        return Response.ok(uri).build();
+      }
+    }
     return Response.ok().build();
   }
 
@@ -256,9 +292,6 @@ public class AuthResource {
       NoSuchAlgorithmException, SigningKeyNotFoundException, UserException, DuplicateSigningKeyException {
     if (remoteUserState.isSaved() && !needLogin(req, remoteUserState.getRemoteUser().getUid())) {
       return Response.ok().build();
-    }
-    if (!remoteUserState.isSaved()) {
-      return Response.status(Response.Status.PRECONDITION_FAILED).entity(remoteUserState.getRemoteUserDTO()).build();
     }
     RemoteUser remoteUser = remoteUserState.getRemoteUser();
     if (remoteUser == null || remoteUser.getUid() == null) {

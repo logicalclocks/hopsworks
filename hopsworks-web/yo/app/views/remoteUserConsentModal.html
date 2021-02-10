@@ -42,30 +42,46 @@
   <h3 class="modal-title">Remote user profile</h3>
 </div>
 <div class="modal-body">
-  <h4>To use this system we need to save the following information about you.</h4>
-  <div>
-    <label for="givenName">Given name</label>
-    <input type="text" class="form-control" id="givenName" ng-model="remoteUserConsentModalCtrl.data.givenName" disabled>
+  <div ng-if="remoteUserConsentModalCtrl.data.consentRequired">
+    <h4>To use this system we need to save the following information about you.</h4>
+    <div>
+      <label for="givenName">Given name</label>
+      <input type="text" class="form-control" id="givenName" ng-model="remoteUserConsentModalCtrl.data.givenName" disabled>
+    </div>
+    <div>
+      <label for="sureName">Surname</label>
+      <input type="text" class="form-control" id="sureName" ng-model="remoteUserConsentModalCtrl.data.surname" disabled>
+    </div>
+    <div class="form-group">
+      <label for="email" ng-if="remoteUserConsentModalCtrl.data.email.length > 1">Email (choose another email from the list)</label>
+      <label for="email" ng-if="remoteUserConsentModalCtrl.data.email.length <= 1">Email</label>
+      <select id="email"
+              name="email"
+              class="form-control"
+              ng-model="remoteUserConsentModalCtrl.user.chosenEmail"
+              ng-options="option for option in remoteUserConsentModalCtrl.data.email">
+      </select>
+    </div>
+    <div class="checkbox c-checkbox">
+      <label>
+        <input required name="user_agreed" ng-model="remoteUserConsentModalCtrl.user.consent" type="checkbox">
+        <span class="fa fa-check"></span>I approve
+      </label>
+    </div>
   </div>
-  <div>
-    <label for="sureName">Surname</label>
-    <input type="text" class="form-control" id="sureName" ng-model="remoteUserConsentModalCtrl.data.surname" disabled>
-  </div>
-  <div class="form-group">
-    <label for="email" ng-if="remoteUserConsentModalCtrl.data.email.length > 1">Email (choose another email from the list)</label>
-    <label for="email" ng-if="remoteUserConsentModalCtrl.data.email.length <= 1">Email</label>
-    <select id="email"
-            name="email"
-            class="form-control"
-            ng-model="remoteUserConsentModalCtrl.user.chosenEmail"
-            ng-options="option for option in remoteUserConsentModalCtrl.data.email">
-    </select>
-  </div>
-  <div class="checkbox c-checkbox">
-    <label>
-      <input required name="user_agreed" ng-model="remoteUserConsentModalCtrl.user.consent" type="checkbox">
-      <span class="fa fa-check"></span>I approve 
-    </label>
+  <div ng-if="!remoteUserConsentModalCtrl.data.consentRequired">
+    <h4>Choose an email to be used in hopsworks.</h4>
+    <div class="form-group">
+      <label for="email1" ng-if="remoteUserConsentModalCtrl.data.email.length > 1">Email (choose another email from
+        the list)</label>
+      <label for="email1" ng-if="remoteUserConsentModalCtrl.data.email.length <= 1">Email</label>
+      <select id="email1"
+              name="email1"
+              class="form-control"
+              ng-model="remoteUserConsentModalCtrl.user.chosenEmail"
+              ng-options="option for option in remoteUserConsentModalCtrl.data.email">
+      </select>
+    </div>
   </div>
 </div>
 <div class="modal-footer">

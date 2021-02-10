@@ -51,14 +51,14 @@ angular.module('hopsWorksApp')
                 }
                 //remove Authorization header for kerberos
                 if(config.url.indexOf('/api/remote/user') !== -1){
-                  if (config.url.indexOf('/api/remote/user/auth') !== -1) {
+                  if (config.url.indexOf('/api/remote/user/auth/krb') !== -1) {
                     delete config.headers['Authorization'];
                   }
                   RESOURCE_SERVER = getRemoteUserAuthApiLocationBase();
                 }
                 var RESOURCE_NAME = '/api/';
                 var KIBANA_NAME = "/kibana";
-		var FLINK_HISTORYSERVER_NAME = 'flinkhistoryserver';
+		        var FLINK_HISTORYSERVER_NAME = 'flinkhistoryserver';
                 var FLINK_MASTER_NAME = 'flinkmaster';
 
                 var isApi = config.url.startsWith(RESOURCE_NAME) ||
