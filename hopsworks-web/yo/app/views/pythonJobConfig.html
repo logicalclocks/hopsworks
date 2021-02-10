@@ -36,7 +36,7 @@
             </select>
         </div>
     </div>
-    <div class="form-group" ng-show="newJobCtrl.hasDockerGpus && newJobCtrl.maxDockerGpus > 0">
+    <div class="form-group" ng-show="newJobCtrl.hasDockerGpus">
         <label class="control-label col-sm-5" for="gpus" uib-tooltip="GPUs to allocate for this Job">GPUs:</label>
         <div class="col-sm-2">
             <select class="form-control" id="gpus" ng-model="newJobCtrl.runConfig.gpus" required>
