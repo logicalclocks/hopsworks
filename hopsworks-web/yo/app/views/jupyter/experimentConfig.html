@@ -17,7 +17,7 @@
  -->
 <form class="form-horizontal">
     <div ng-include="'views/jupyter/commonConfig.html'"></div>
-    <div ng-if="clusterUtilCtrl.allocatedGPUs !== 0 || clusterUtilCtrl.availableGPUs !== 0">
+    <div>
         <div class="form-group" ng-if="sparkConfigCtrl.jobConfig.experimentType === 'EXPERIMENT'">
             <label class="control-label col-sm-3" for="num-gpus" uib-tooltip='Number of GPUs to allocate for the experiment'>Number of GPUs: </label>
             <div class="col-sm-6">
