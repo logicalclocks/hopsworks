@@ -15,10 +15,12 @@
  */
 package io.hops.hopsworks.common.featurestore.storageconnectors.snowflake;
 
+import io.hops.hopsworks.common.featurestore.OptionDTO;
 import io.hops.hopsworks.common.featurestore.storageconnectors.FeaturestoreStorageConnectorDTO;
 import io.hops.hopsworks.persistence.entity.featurestore.storageconnector.FeaturestoreConnector;
 
 import javax.xml.bind.annotation.XmlRootElement;
+import java.util.List;
 
 @XmlRootElement
 public class FeaturestoreSnowflakeConnectorDTO extends FeaturestoreStorageConnectorDTO {
@@ -31,7 +33,7 @@ public class FeaturestoreSnowflakeConnectorDTO extends FeaturestoreStorageConnec
   private String warehouse;
   private String role;
   private String table;
-  private String arguments;
+  private List<OptionDTO> sfOptions;
 
   public FeaturestoreSnowflakeConnectorDTO() {
   }
@@ -45,7 +47,6 @@ public class FeaturestoreSnowflakeConnectorDTO extends FeaturestoreStorageConnec
     this.warehouse = featurestoreConnector.getSnowflakeConnector().getWarehouse();
     this.role = featurestoreConnector.getSnowflakeConnector().getRole();
     this.table = featurestoreConnector.getSnowflakeConnector().getTableName();
-    this.arguments = featurestoreConnector.getSnowflakeConnector().getArguments();
   }
 
   public String getUrl() {
@@ -120,11 +121,11 @@ public class FeaturestoreSnowflakeConnectorDTO extends FeaturestoreStorageConnec
     this.table = table;
   }
 
-  public String getArguments() {
-    return arguments;
+  public List<OptionDTO> getSfOptions() {
+    return sfOptions;
   }
 
-  public void setArguments(String arguments) {
-    this.arguments = arguments;
+  public void setSfOptions(List<OptionDTO> sfOptions) {
+    this.sfOptions = sfOptions;
   }
 }

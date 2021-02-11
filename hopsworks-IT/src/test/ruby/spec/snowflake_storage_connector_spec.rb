@@ -27,7 +27,7 @@ describe "On #{ENV['OS']}" do
                    description: "test snowflake connector",
                    type: type,
                    storageConnectorType: storageConnectorType,
-                   arguments: "sfTimezone=spark;sfCompress=true;",
+                   sfOptions: [{name:"sfTimezone", value:"spark"}, {name: "sfCompress", value: "true"}],
                    database: "test",
                    password: "123456PWD",
                    role: "role",
@@ -115,7 +115,9 @@ describe "On #{ENV['OS']}" do
       connector[:user] = "user1"
       connector[:password] = "123456 Pwd"
       connector[:role] = "role1"
-      connector[:arguments] = "sfTimezone=spark;sfCompress=true;s3MaxFileSize=10MB"
+      connector[:sfOptions] = [{name:"sfTimezone", value:"spark"},
+                               {name: "sfCompress", value: "true"},
+                               {name: "s3MaxFileSize", value: "10MB"}]
       put "#{@connector_endpoint}/#{@connector[:name]}", connector.to_json
       expect_status_details(200)
       check_snowflake_connector_update(json_body, connector)
@@ -131,7 +133,9 @@ describe "On #{ENV['OS']}" do
       connector[:password] = nil
       connector[:token] = "123456token"
       connector[:role] = "role2"
-      connector[:arguments] = "sfTimezone=spark;sfCompress=true;s3MaxFileSize=100MB"
+      connector[:sfOptions] = [{name:"sfTimezone", value:"spark"},
+                               {name: "sfCompress", value: "true"},
+                               {name: "s3MaxFileSize", value: "100MB"}]
       put "#{@connector_endpoint}/#{@connector[:name]}", connector.to_json
       expect_status_details(200)
       check_snowflake_connector_update(json_body, connector)
@@ -147,7 +151,9 @@ describe "On #{ENV['OS']}" do
       connector[:password] = "123456Pwd"
       connector[:token] = nil
       connector[:role] = "role3"
-      connector[:arguments] = "sfTimezone=spark;sfCompress=true;s3MaxFileSize=1000MB"
+      connector[:sfOptions] = [{name:"sfTimezone", value:"spark"},
+                               {name: "sfCompress", value: "true"},
+                               {name: "s3MaxFileSize", value: "1000MB"}]
       put "#{@connector_endpoint}/#{@connector[:name]}", connector.to_json
       expect_status_details(200)
       check_snowflake_connector_update(json_body, connector)

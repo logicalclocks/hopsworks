@@ -13,9 +13,11 @@
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see <https://www.gnu.org/licenses/>.
  */
+
 package io.hops.hopsworks.common.featurestore.storageconnectors.snowflake;
 
 import io.hops.hopsworks.common.dao.user.UserFacade;
+import io.hops.hopsworks.common.featurestore.OptionDTO;
 import io.hops.hopsworks.common.security.secrets.SecretsController;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.exceptions.ProjectException;
@@ -36,8 +38,11 @@ import javax.ejb.TransactionAttributeType;
 import javax.transaction.Transactional;
 import java.io.IOException;
 import java.security.GeneralSecurityException;
+import java.util.Arrays;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 @Stateless
 @TransactionAttribute(TransactionAttributeType.NEVER)
@@ -52,15 +57,16 @@ public class FeaturestoreSnowflakeConnectorController {
 
   public FeaturestoreSnowflakeConnectorDTO getConnector(Users user, FeaturestoreConnector featurestoreConnector) {
     FeaturestoreSnowflakeConnectorDTO snowflakeConnectorDTO =
-      new FeaturestoreSnowflakeConnectorDTO(featurestoreConnector);
+        new FeaturestoreSnowflakeConnectorDTO(featurestoreConnector);
+    snowflakeConnectorDTO.setSfOptions(toOptions(featurestoreConnector.getSnowflakeConnector().getArguments()));
     snowflakeConnectorDTO.setPassword(getSecret(user, featurestoreConnector.getSnowflakeConnector().getPwdSecret()));
     snowflakeConnectorDTO.setToken(getSecret(user, featurestoreConnector.getSnowflakeConnector().getTokenSecret()));
     return snowflakeConnectorDTO;
   }
 
   public FeaturestoreSnowflakeConnector createConnector(Users user, Featurestore featurestore,
-    FeaturestoreSnowflakeConnectorDTO featurestoreSnowflakeConnectorDTO) throws FeaturestoreException, UserException,
-    ProjectException {
+      FeaturestoreSnowflakeConnectorDTO featurestoreSnowflakeConnectorDTO) throws FeaturestoreException, UserException,
+      ProjectException {
     verifyConnectorDTO(featurestoreSnowflakeConnectorDTO);
     Secret secret = createSecret(user, featurestore, featurestoreSnowflakeConnectorDTO);
     FeaturestoreSnowflakeConnector snowflakeConnector = new FeaturestoreSnowflakeConnector();
@@ -71,9 +77,9 @@ public class FeaturestoreSnowflakeConnectorController {
   @TransactionAttribute(TransactionAttributeType.REQUIRED)
   @Transactional(rollbackOn = FeaturestoreException.class)
   public FeaturestoreSnowflakeConnector updateConnector(Users user,
-    FeaturestoreSnowflakeConnectorDTO featurestoreSnowflakeConnectorDTO,
-    FeaturestoreSnowflakeConnector snowflakeConnector) throws FeaturestoreException, UserException,
-    ProjectException {
+      FeaturestoreSnowflakeConnectorDTO featurestoreSnowflakeConnectorDTO,
+      FeaturestoreSnowflakeConnector snowflakeConnector) throws FeaturestoreException, UserException,
+      ProjectException {
     verifyConnectorDTO(featurestoreSnowflakeConnectorDTO);
     Secret secret = updateSecret(user, featurestoreSnowflakeConnectorDTO, snowflakeConnector);
     setConnector(snowflakeConnector, secret, featurestoreSnowflakeConnectorDTO);
@@ -81,7 +87,7 @@ public class FeaturestoreSnowflakeConnectorController {
   }
 
   private void setConnector(FeaturestoreSnowflakeConnector snowflakeConnector, Secret secret,
-    FeaturestoreSnowflakeConnectorDTO featurestoreSnowflakeConnectorDTO) {
+      FeaturestoreSnowflakeConnectorDTO featurestoreSnowflakeConnectorDTO) {
     snowflakeConnector.setUrl(featurestoreSnowflakeConnectorDTO.getUrl());
     snowflakeConnector.setDatabaseUser(featurestoreSnowflakeConnectorDTO.getUser());
     snowflakeConnector.setDatabaseName(featurestoreSnowflakeConnectorDTO.getDatabase());
@@ -89,7 +95,7 @@ public class FeaturestoreSnowflakeConnectorController {
     snowflakeConnector.setTableName(featurestoreSnowflakeConnectorDTO.getTable());
     snowflakeConnector.setRole(featurestoreSnowflakeConnectorDTO.getRole());
     snowflakeConnector.setWarehouse(featurestoreSnowflakeConnectorDTO.getWarehouse());
-    snowflakeConnector.setArguments(featurestoreSnowflakeConnectorDTO.getArguments());
+    snowflakeConnector.setArguments(fromOptions(featurestoreSnowflakeConnectorDTO.getSfOptions()));
     if (!Strings.isNullOrEmpty(featurestoreSnowflakeConnectorDTO.getPassword())) {
       snowflakeConnector.setPwdSecret(secret);
       snowflakeConnector.setTokenSecret(null);
@@ -97,6 +103,30 @@ public class FeaturestoreSnowflakeConnectorController {
       snowflakeConnector.setTokenSecret(secret);
       snowflakeConnector.setPwdSecret(null);
     }
+  }
+
+  private List<OptionDTO> toOptions(String arguments) {
+    if (Strings.isNullOrEmpty(arguments)) {
+      return null;
+    }
+    return Arrays.stream(arguments.split(";"))
+        .map(arg -> arg.split("="))
+        .map(a -> new OptionDTO(a[0], a[1]))
+        .collect(Collectors.toList());
+  }
+
+  private String fromOptions(List<OptionDTO> options) {
+    if (options == null || options.isEmpty()) {
+      return null;
+    }
+    StringBuilder arguments = new StringBuilder();
+    for (OptionDTO option : options) {
+      arguments.append(arguments.length() > 0? ";" : "")
+          .append(option.getName())
+          .append("=")
+          .append(option.getValue());
+    }
+    return arguments.toString();
   }
 
   private Secret getSecret(FeaturestoreSnowflakeConnector snowflakeConnector) {
@@ -124,21 +154,21 @@ public class FeaturestoreSnowflakeConnectorController {
   }
 
   private Secret createSecret(Users user, Featurestore featurestore,
-    FeaturestoreSnowflakeConnectorDTO featurestoreSnowflakeConnectorDTO) throws ProjectException, UserException {
+      FeaturestoreSnowflakeConnectorDTO featurestoreSnowflakeConnectorDTO) throws ProjectException, UserException {
     String secretName = createSecretName(featurestore.getId(), featurestoreSnowflakeConnectorDTO.getName());
     Secret secret;
     if (!Strings.isNullOrEmpty(featurestoreSnowflakeConnectorDTO.getPassword())) {
       secret = secretsController.createSecretForProject(user, secretName,
-        featurestoreSnowflakeConnectorDTO.getPassword(), featurestore.getProject().getId());
+          featurestoreSnowflakeConnectorDTO.getPassword(), featurestore.getProject().getId());
     } else {
       secret = secretsController.createSecretForProject(user, secretName,
-        featurestoreSnowflakeConnectorDTO.getToken(), featurestore.getProject().getId());
+          featurestoreSnowflakeConnectorDTO.getToken(), featurestore.getProject().getId());
     }
     return secret;
   }
 
   private Secret updateSecret(Users user, FeaturestoreSnowflakeConnectorDTO featurestoreSnowflakeConnectorDTO,
-    FeaturestoreSnowflakeConnector snowflakeConnector) throws UserException, ProjectException {
+      FeaturestoreSnowflakeConnector snowflakeConnector) throws UserException, ProjectException {
     String secret;
     Secret existingSecret = getSecret(snowflakeConnector);
     secretsController.checkCanAccessSecret(existingSecret, user);
@@ -151,38 +181,38 @@ public class FeaturestoreSnowflakeConnectorController {
       existingSecret.setSecret(secretsController.encryptSecret(secret));
     } catch (IOException | GeneralSecurityException e) {
       throw new UserException(RESTCodes.UserErrorCode.SECRET_ENCRYPTION_ERROR, Level.SEVERE,
-        "Error encrypting secret", "Could not encrypt Secret " + existingSecret.getId().getName(), e);
+          "Error encrypting secret", "Could not encrypt Secret " + existingSecret.getId().getName(), e);
     }
     return existingSecret;
   }
 
   private void verifyConnectorDTO(FeaturestoreSnowflakeConnectorDTO featurestoreSnowflakeConnectorDTO)
-    throws FeaturestoreException {
+      throws FeaturestoreException {
     if (Strings.isNullOrEmpty(featurestoreSnowflakeConnectorDTO.getUrl())) {
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_STORAGE_CONNECTOR_ARG, Level.FINE,
-        "Url can not be empty");
+          "Url can not be empty");
     }
     if (Strings.isNullOrEmpty(featurestoreSnowflakeConnectorDTO.getUser())) {
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_STORAGE_CONNECTOR_ARG, Level.FINE,
-        "User can not be empty");
+          "User can not be empty");
     }
     if (Strings.isNullOrEmpty(featurestoreSnowflakeConnectorDTO.getSchema())) {
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_STORAGE_CONNECTOR_ARG, Level.FINE,
-        "Schema can not be empty");
+          "Schema can not be empty");
     }
     if (Strings.isNullOrEmpty(featurestoreSnowflakeConnectorDTO.getDatabase())) {
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_STORAGE_CONNECTOR_ARG, Level.FINE,
-        "Database can not be empty");
+          "Database can not be empty");
     }
     if (Strings.isNullOrEmpty(featurestoreSnowflakeConnectorDTO.getPassword()) &&
-      Strings.isNullOrEmpty(featurestoreSnowflakeConnectorDTO.getToken())) {
+        Strings.isNullOrEmpty(featurestoreSnowflakeConnectorDTO.getToken())) {
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_STORAGE_CONNECTOR_ARG, Level.FINE,
-        "Password or OAuth token must be set");
+          "Password or OAuth token must be set");
     }
     if (!Strings.isNullOrEmpty(featurestoreSnowflakeConnectorDTO.getPassword()) &&
-      !Strings.isNullOrEmpty(featurestoreSnowflakeConnectorDTO.getToken())) {
+        !Strings.isNullOrEmpty(featurestoreSnowflakeConnectorDTO.getToken())) {
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_STORAGE_CONNECTOR_ARG, Level.FINE,
-        "Only one authentication method is allowed");
+          "Only one authentication method is allowed");
     }
   }
 }

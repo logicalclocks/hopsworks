@@ -192,8 +192,7 @@ public class FeaturestoreConnector implements Serializable {
     return snowflakeConnector;
   }
 
-  public void setSnowflakeConnector(
-    FeaturestoreSnowflakeConnector snowflakeConnector) {
+  public void setSnowflakeConnector(FeaturestoreSnowflakeConnector snowflakeConnector) {
     this.snowflakeConnector = snowflakeConnector;
   }
 

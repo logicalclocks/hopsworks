@@ -255,6 +255,6 @@ module StorageConnectorHelper
     expect(json_body[:password]).to eq connector[:password]
     expect(json_body[:token]).to eq connector[:token]
     expect(json_body[:tableName]).to eq connector[:tableName]
-    expect(json_body[:arguments]).to eq connector[:arguments]
+    expect(json_body[:sfOptions]).to eq connector[:sfOptions]
   end
 end
