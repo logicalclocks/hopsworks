@@ -24,10 +24,16 @@ public enum CondaOp {
   IMPORT,
   SYNC_BASE_ENV;
 
-  public static boolean isEnvOp(CondaOp arg) {
-    return arg.compareTo(CondaOp.CREATE) == 0 ||
-           arg.compareTo(CondaOp.REMOVE) == 0 ||
-           arg.compareTo(CondaOp.EXPORT) == 0 ||
-           arg.compareTo(CondaOp.SYNC_BASE_ENV) == 0;
+  public static boolean isEnvOp(CondaOp op) {
+    return op.compareTo(CondaOp.CREATE) == 0 ||
+           op.compareTo(CondaOp.REMOVE) == 0 ||
+           op.compareTo(CondaOp.EXPORT) == 0 ||
+           op.compareTo(CondaOp.IMPORT) == 0 ||
+           op.compareTo(CondaOp.SYNC_BASE_ENV) == 0;
+  }
+
+  public static boolean isLibraryOp(CondaOp op) {
+    return op.compareTo(CondaOp.INSTALL) == 0 ||
+           op.compareTo(CondaOp.UNINSTALL) == 0;
   }
 }
