@@ -46,7 +46,7 @@ public class ManagedDockerRegistryMngr extends DockerRegistryMngrImpl implements
       final String projectNameTagPrefix =
           projectUtils.getProjectNameFromDockerImageName(projectDockerImage) + "_";
 
-      if (settings.getKubeType() == Settings.AKS) {
+      if (settings.getKubeType() == Settings.KubeType.AKS) {
         return acrClient.deleteImagesWithTagPrefix(repoName, projectNameTagPrefix);
       } else {
         return ecrClient.deleteImagesWithTagPrefix(repoName, projectNameTagPrefix);

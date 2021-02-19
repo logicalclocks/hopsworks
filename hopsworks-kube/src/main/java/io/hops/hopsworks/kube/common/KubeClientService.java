@@ -621,10 +621,10 @@ public class KubeClientService {
         updateEKSCoreDNSToUseConsul();
         break;
       case AKS:
-        Config config = new ConfigBuilder()
+        Config aksConfig = new ConfigBuilder()
             .withKeyStorePassphrase(settings.getKubeKeystoreKey())
-            .withKeyStoreFile(settings.getKubeKeystorePath());
-        client = new DefaultKubernetesClient(config);
+            .withKeyStoreFile(settings.getKubeKeystorePath()).build();
+        client = new DefaultKubernetesClient(aksConfig);
         break;
       default:
     }
