@@ -32,6 +32,8 @@ public class ManagedDockerRegistryMngr extends DockerRegistryMngrImpl implements
   private ProjectUtils projectUtils;
   @EJB
   private ECRClientService ecrClient;
+  @EJB
+  private ACRClientService acrClient;
   
   @Override
   public List<String> deleteProjectImagesOnRegistry(String projectDockerImage)
@@ -43,9 +45,12 @@ public class ManagedDockerRegistryMngr extends DockerRegistryMngrImpl implements
       
       final String projectNameTagPrefix =
           projectUtils.getProjectNameFromDockerImageName(projectDockerImage) + "_";
-      
-      return ecrClient.deleteImagesWithTagPrefix(repoName, projectNameTagPrefix);
-      
+
+      if (settings.getKubeType() == Settings.AKS) {
+        return acrClient.deleteImagesWithTagPrefix(repoName, projectNameTagPrefix);
+      } else {
+        return ecrClient.deleteImagesWithTagPrefix(repoName, projectNameTagPrefix);
+      }
     } else {
       return super.deleteProjectImagesOnRegistry(projectDockerImage);
     }
