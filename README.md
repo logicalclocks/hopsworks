@@ -17,6 +17,7 @@
 
 [ What is Hopsworks? ](#what)  
 [ Quick Start ](#quick)  
+[ Development and Operational ML on Hopsworks ](#mlops)  
 [ Docs ](#docs)  
 [ Who’s behind Hopsworks? ](#who)  
 [ Open-Source](#open)  
@@ -66,6 +67,10 @@ You can also build Hopsworks without the frontend (for Java EE development and t
 ```sh
 mvn install -P-web
 ```
+
+<a name="mlops"></a>
+## Development and Operational ML on Hopsworks
+You can develop and run Python, Spark, and Flink applications on Hopsworks - in Jupyter notebooks, as jobs, or even notebooks as jobs. You can build production pipelines with the bundled Airflow, and even run ML training pipelines with GPUs in notebooks on Airflow. You can train models on as many GPUs as are installed in a Hopsworks cluster and easily share them among users.
 
 <a name="docs"></a>
 ## Docs
