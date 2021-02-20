@@ -24,16 +24,12 @@ import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.Trainin
 
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
-import javax.ejb.TransactionAttribute;
-import javax.ejb.TransactionAttributeType;
 import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
 import javax.persistence.TypedQuery;
-import javax.validation.ConstraintViolationException;
 import java.util.List;
 import java.util.Optional;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
@@ -170,21 +166,6 @@ public class TrainingDatasetFacade extends AbstractFacade<TrainingDataset> {
   }
 
   /**
-   * Transaction to create a new trainingDataset in the database
-   *
-   * @param trainingDataset the trainingDataset to persist
-   */
-  @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
-  public void persist(TrainingDataset trainingDataset) {
-    try {
-      em.persist(trainingDataset);
-      em.flush();
-    } catch (ConstraintViolationException cve) {
-      LOGGER.log(Level.WARNING, "Could not persist the new TrainingDataset", cve);
-    }
-  }
-
-  /**
    * Gets the entity manager of the facade
    *
    * @return entity manager
@@ -192,16 +173,6 @@ public class TrainingDatasetFacade extends AbstractFacade<TrainingDataset> {
   @Override
   protected EntityManager getEntityManager() {
     return em;
-  }
-
-  /**
-   * Updates metadata about a training dataset
-   *
-   * @param trainingDataset      the training dataset to update
-   * @return
-   */
-  public TrainingDataset updateTrainingDatasetMetadata(TrainingDataset trainingDataset) {
-    return em.merge(trainingDataset);
   }
 
   public void removeTrainingDataset(TrainingDataset trainingDataset) {

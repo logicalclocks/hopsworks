@@ -47,16 +47,6 @@ public class FeatureGroupCommitFacade extends AbstractFacade<FeatureGroupCommit>
     super(FeatureGroupCommit.class);
   }
 
-  /**
-   * Persist FeatureGroup Commit
-   * @param featureGroupCommit
-   * @return
-   */
-  public void createFeatureGroupCommit(FeatureGroupCommit featureGroupCommit) {
-    em.persist(featureGroupCommit);
-    em.flush();
-  }
-
   public Optional<FeatureGroupCommit> findClosestDateCommit(Integer featureGroupId, Long wallclocktime) {
     Date requestedPointInTime = new Timestamp(wallclocktime);
     Query fgcQuery =  em.createNamedQuery("FeatureGroupCommit.findByLatestCommittedOn", FeatureGroupCommit.class)

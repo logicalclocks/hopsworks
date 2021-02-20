@@ -2052,7 +2052,7 @@ describe "On #{ENV['OS']}" do
         expect_status(201)
         featuregroup_id = parsed_json["id"]
         featuregroup_version = parsed_json["version"]
-        enable_cached_featuregroup_online(project.id, featurestore_id, featuregroup_id, featuregroup_version)
+        enable_cached_featuregroup_online(project.id, featurestore_id, featuregroup_id)
         expect_status(200)
         new_description = "changed description"
         new_schema = [
@@ -2122,7 +2122,7 @@ describe "On #{ENV['OS']}" do
         expect(parsed_json["description"]).to eql("changed description")
         expect(parsed_json["features"].select{ |f| f["name"] == "testfeature"}.first["defaultValue"]).to be nil
         expect(parsed_json["features"].select{ |f| f["name"] == "testfeature2"}.first["defaultValue"]).to eql("10.0")
-        enable_cached_featuregroup_online(project.id, featurestore_id, featuregroup_id, featuregroup_version)
+        enable_cached_featuregroup_online(project.id, featurestore_id, featuregroup_id)
         expect_status(200)
       end
 
@@ -2134,7 +2134,7 @@ describe "On #{ENV['OS']}" do
         expect_status(201)
         featuregroup_id = parsed_json["id"]
         featuregroup_version = parsed_json["version"]
-        enable_cached_featuregroup_online(project.id, featurestore_id, featuregroup_id, featuregroup_version)
+        enable_cached_featuregroup_online(project.id, featurestore_id, featuregroup_id)
         expect_status(200)
       end
 

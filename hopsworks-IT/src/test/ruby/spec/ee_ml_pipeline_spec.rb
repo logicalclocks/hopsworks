@@ -194,6 +194,25 @@ describe "On #{ENV['OS']}" do
         check_trainingdataset_usage(@project1[:id], td1["id"], check, type: usage_type)
       end
     end
+
+    context "get job activity" do
+      it "fg" do
+        create_session(@user1_params[:email], @user1_params[:password])
+        #make sure fgs exist
+        @base_fg_count.times do |i|
+          expect(featuregroup_exists(@project1[:id], @base_fgs[i])).to be(true)
+        end
+        fg0 = get_featuregroup_checked(@project1[:id], @base_fgs[0])[0]
+        featurestore_id = get_featurestore_id(@project1[:id])
+
+        get "#{ENV['HOPSWORKS_API']}/project/#{@project1[:id]}/featurestores/#{featurestore_id}/featuregroups/#{fg0["id"]}/activity?filter_by=type:job"
+        expect_status(200)
+        activity = JSON.parse(response.body)
+        expect(activity["items"].count).to eql(1)
+        expect(activity["items"][0]["type"]).to eql("JOB")
+      end
+    end
+
     context 'view shared usage of' do
       #depends on setup context
       it 'fg' do

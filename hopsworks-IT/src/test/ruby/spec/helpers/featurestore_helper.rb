@@ -391,12 +391,9 @@ module FeaturestoreHelper
     return json_result
   end
 
-  def enable_cached_featuregroup_online(project_id, featurestore_id, featuregroup_id, featuregroup_version)
-    type = "cachedFeaturegroupDTO"
-    enable_featuregroup_online_endpoint = "#{ENV['HOPSWORKS_API']}/project/" + project_id.to_s + "/featurestores/" + featurestore_id.to_s + "/featuregroups/" + featuregroup_id.to_s + "?enableOnline=true"
+  def enable_cached_featuregroup_online(project_id, featurestore_id, featuregroup_id)
+    enable_featuregroup_online_endpoint = "#{ENV['HOPSWORKS_API']}/project/#{project_id}/featurestores/#{featurestore_id}/featuregroups/#{featuregroup_id}?enableOnline=true"
     json_data = {
-        name: "",
-        jobs: [],
         features: [
             {
                 type: "INT",
@@ -408,13 +405,11 @@ module FeaturestoreHelper
             }
         ],
         description: "",
-        version: featuregroup_version,
+        id: featuregroup_id,
         onlineEnabled: true,
-        type: type
+        type: "cachedFeaturegroupDTO"
     }
-    json_data = json_data.to_json
-    json_result = put enable_featuregroup_online_endpoint, json_data
-    return json_result
+    put enable_featuregroup_online_endpoint, json_data.to_json
   end
 
   def disable_cached_featuregroup_online(project_id, featurestore_id, featuregroup_id, featuregroup_version)

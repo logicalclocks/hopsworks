@@ -17,7 +17,7 @@
 package io.hops.hopsworks.persistence.entity.featurestore.trainingdataset;
 
 import io.hops.hopsworks.persistence.entity.featurestore.Featurestore;
-import io.hops.hopsworks.persistence.entity.featurestore.jobs.FeaturestoreJob;
+import io.hops.hopsworks.persistence.entity.featurestore.activity.FeaturestoreActivity;
 import io.hops.hopsworks.persistence.entity.featurestore.statistics.StatisticsConfig;
 import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.external.ExternalTrainingDataset;
 import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.hopsfs.HopsfsTrainingDataset;
@@ -115,8 +115,6 @@ public class TrainingDataset implements Serializable {
   private Collection<TrainingDatasetFeature> features;
   @OneToMany(cascade = CascadeType.ALL, mappedBy = "trainingDataset")
   private Collection<TrainingDatasetJoin> joins;
-  @OneToMany(cascade = CascadeType.ALL, mappedBy = "trainingDataset")
-  private Collection<FeaturestoreJob> jobs;
   @NotNull
   @Enumerated(EnumType.ORDINAL)
   @Column(name = "training_dataset_type")
@@ -129,6 +127,8 @@ public class TrainingDataset implements Serializable {
   private ExternalTrainingDataset externalTrainingDataset;
   @OneToMany(cascade = CascadeType.ALL, mappedBy = "trainingDataset")
   private Collection<TrainingDatasetSplit> splits;
+  @OneToMany(cascade = CascadeType.ALL, mappedBy = "trainingDataset")
+  private Collection<FeaturestoreActivity> activities;
 
   public static long getSerialVersionUID() {
     return serialVersionUID;
@@ -225,14 +225,6 @@ public class TrainingDataset implements Serializable {
     this.trainingDatasetType = trainingDatasetType;
   }
   
-  public Collection<FeaturestoreJob> getJobs() {
-    return jobs;
-  }
-  
-  public void setJobs(Collection<FeaturestoreJob> jobs) {
-    this.jobs = jobs;
-  }
-
   public String getName() {
     return name;
   }
@@ -274,6 +266,14 @@ public class TrainingDataset implements Serializable {
     this.joins = joins;
   }
 
+  public Collection<FeaturestoreActivity> getActivities() {
+    return activities;
+  }
+
+  public void setActivities(Collection<FeaturestoreActivity> activities) {
+    this.activities = activities;
+  }
+
   public StatisticsConfig getStatisticsConfig() {
     return statisticsConfig;
   }
@@ -301,7 +301,6 @@ public class TrainingDataset implements Serializable {
     if (!Objects.equals(seed, that.seed)) return false;
     if (!Objects.equals(features, that.features)) return false;
     if (!Objects.equals(joins, that.joins)) return false;
-    if (!Objects.equals(jobs, that.jobs)) return false;
     if (trainingDatasetType != that.trainingDatasetType) return false;
     if (!Objects.equals(hopsfsTrainingDataset, that.hopsfsTrainingDataset)) return false;
     if (!Objects.equals(externalTrainingDataset, that.externalTrainingDataset)) return false;
@@ -322,7 +321,6 @@ public class TrainingDataset implements Serializable {
     result = 31 * result + (query ? 1 : 0);
     result = 31 * result + (features != null ? features.hashCode() : 0);
     result = 31 * result + (joins != null ? joins.hashCode() : 0);
-    result = 31 * result + (jobs != null ? jobs.hashCode() : 0);
     result = 31 * result + (trainingDatasetType != null ? trainingDatasetType.hashCode() : 0);
     result = 31 * result + (hopsfsTrainingDataset != null ? hopsfsTrainingDataset.hashCode() : 0);
     result = 31 * result + (externalTrainingDataset != null ? externalTrainingDataset.hashCode() : 0);

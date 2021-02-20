@@ -17,9 +17,8 @@
 package io.hops.hopsworks.common.featurestore.featuregroup;
 
 import com.google.common.base.Strings;
-import io.hops.hopsworks.common.dao.jobs.description.JobFacade;
-import io.hops.hopsworks.common.dao.user.activity.ActivityFacade;
 import io.hops.hopsworks.common.featurestore.FeaturestoreFacade;
+import io.hops.hopsworks.common.featurestore.activity.FeaturestoreActivityFacade;
 import io.hops.hopsworks.common.featurestore.datavalidation.FeatureGroupExpectationFacade;
 import io.hops.hopsworks.common.featurestore.datavalidation.FeatureGroupValidationsController;
 import io.hops.hopsworks.common.featurestore.feature.FeatureGroupFeatureDTO;
@@ -29,11 +28,8 @@ import io.hops.hopsworks.common.featurestore.featuregroup.cached.CachedFeaturegr
 import io.hops.hopsworks.common.featurestore.featuregroup.cached.FeaturegroupPreview;
 import io.hops.hopsworks.common.featurestore.featuregroup.ondemand.OnDemandFeaturegroupController;
 import io.hops.hopsworks.common.featurestore.featuregroup.ondemand.OnDemandFeaturegroupDTO;
-import io.hops.hopsworks.common.featurestore.jobs.FeaturestoreJobDTO;
-import io.hops.hopsworks.common.featurestore.jobs.FeaturestoreJobFacade;
 import io.hops.hopsworks.common.featurestore.statistics.StatisticsController;
 import io.hops.hopsworks.common.featurestore.statistics.columns.StatisticColumnController;
-import io.hops.hopsworks.common.featurestore.statistics.columns.StatisticColumnFacade;
 import io.hops.hopsworks.common.featurestore.storageconnectors.FeaturestoreStorageConnectorController;
 import io.hops.hopsworks.common.featurestore.storageconnectors.FeaturestoreStorageConnectorDTO;
 import io.hops.hopsworks.common.featurestore.utils.FeaturestoreInputValidation;
@@ -49,6 +45,7 @@ import io.hops.hopsworks.exceptions.HopsSecurityException;
 import io.hops.hopsworks.exceptions.ProvenanceException;
 import io.hops.hopsworks.exceptions.ServiceException;
 import io.hops.hopsworks.persistence.entity.featurestore.Featurestore;
+import io.hops.hopsworks.persistence.entity.featurestore.activity.FeaturestoreActivityMeta;
 import io.hops.hopsworks.persistence.entity.featurestore.statistics.StatisticColumn;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.Featuregroup;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.FeaturegroupType;
@@ -59,10 +56,8 @@ import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.datavalida
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.datavalidation.FeatureStoreExpectation;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.ondemand.OnDemandFeaturegroup;
 import io.hops.hopsworks.persistence.entity.featurestore.statistics.StatisticsConfig;
-import io.hops.hopsworks.persistence.entity.jobs.description.Jobs;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.user.Users;
-import io.hops.hopsworks.persistence.entity.user.activity.ActivityFlag;
 import io.hops.hopsworks.restutils.RESTCodes;
 
 import javax.ejb.EJB;
@@ -93,21 +88,13 @@ public class FeaturegroupController {
   @EJB
   private FeaturestoreFacade featurestoreFacade;
   @EJB
-  private FeaturestoreJobFacade featurestoreJobFacade;
-  @EJB
-  private JobFacade jobFacade;
-  @EJB
   private StatisticColumnController statisticColumnController;
-  @EJB
-  private StatisticColumnFacade statisticColumnFacade;
   @EJB
   private FeaturestoreInputValidation featurestoreInputValidation;
   @EJB
   private CachedFeaturegroupFacade cachedFeaturegroupFacade;
   @EJB
   private HopsFSProvenanceController fsController;
-  @EJB
-  private ActivityFacade activityFacade;
   @EJB
   private StatisticsController statisticsController;
   @EJB
@@ -121,7 +108,9 @@ public class FeaturegroupController {
   @EJB
   private InodeController inodeController;
   @EJB
-  private FeaturestoreStorageConnectorController featurestoreStorageConnectorController;
+  private FeaturestoreActivityFacade fsActivityFacade;
+  @EJB
+  private FeaturestoreStorageConnectorController connectorController;
   @EJB
   private FeatureGroupExpectationFacade featureGroupExpectationFacade;
 
@@ -182,12 +171,11 @@ public class FeaturegroupController {
    * @throws FeaturestoreException
    * @throws SQLException
    * @throws ProvenanceException
-   * @throws IOException
    * @throws ServiceException
    */
   public FeaturegroupDTO createFeaturegroup(Featurestore featurestore, FeaturegroupDTO featuregroupDTO,
                                             Project project, Users user)
-      throws FeaturestoreException, ServiceException, SQLException, ProvenanceException, IOException {
+      throws FeaturestoreException, ServiceException, SQLException, ProvenanceException {
 
     // if version not provided, get latest and increment
     if (featuregroupDTO.getVersion() == null) {
@@ -225,12 +213,6 @@ public class FeaturegroupController {
     Featuregroup featuregroup = persistFeaturegroupMetadata(featurestore, user, featuregroupDTO,
       cachedFeaturegroup, onDemandFeaturegroup);
 
-    //Get jobs
-    List<Jobs> jobs = getJobs(featuregroupDTO.getJobs(), featurestore.getProject());
-
-    //Store jobs
-    featurestoreJobFacade.insertJobs(featuregroup, jobs);
-
     FeaturegroupDTO completeFeaturegroupDTO = convertFeaturegrouptoDTO(featuregroup, project, user);
 
     //Extract metadata
@@ -244,24 +226,10 @@ public class FeaturegroupController {
       dfs.closeDfsClient(udfso);
     }
 
-    return completeFeaturegroupDTO;
-  }
+    // Log activity
+    fsActivityFacade.logMetadataActivity(user, featuregroup, FeaturestoreActivityMeta.FG_CREATED, null);
 
-  /**
-   * Lookup jobs by list of jobNames
-   *
-   * @param jobDTOs the DTOs with the job names
-   * @param project the project that owns the jobs
-   * @return a list of job entities
-   */
-  private List<Jobs> getJobs(List<FeaturestoreJobDTO> jobDTOs, Project project) {
-    if(jobDTOs != null) {
-      return jobDTOs.stream().filter(jobDTO -> jobDTO != null && !Strings.isNullOrEmpty(jobDTO.getJobName()))
-          .map(jobDTO -> jobDTO.getJobName()).distinct().map(jobName ->
-          jobFacade.findByProjectAndName(project, jobName)).collect(Collectors.toList());
-    } else {
-      return new ArrayList<>();
-    }
+    return completeFeaturegroupDTO;
   }
 
   /**
@@ -281,7 +249,7 @@ public class FeaturegroupController {
         return cachedFeaturegroupDTO;
       case ON_DEMAND_FEATURE_GROUP:
         FeaturestoreStorageConnectorDTO storageConnectorDTO =
-            featurestoreStorageConnectorController.convertToConnectorDTO(user, project,
+            connectorController.convertToConnectorDTO(user, project,
                     featuregroup.getOnDemandFeaturegroup().getFeaturestoreConnector());
         return new OnDemandFeaturegroupDTO(featurestoreName, featuregroup, storageConnectorDTO);
       default:
@@ -356,18 +324,12 @@ public class FeaturegroupController {
 
     // Update on-demand feature group metadata
     if (featuregroup.getFeaturegroupType() == FeaturegroupType.CACHED_FEATURE_GROUP) {
-      cachedFeaturegroupController.updateMetadata(project, user, featuregroup, (CachedFeaturegroupDTO) featuregroupDTO);
+      cachedFeaturegroupController
+          .updateMetadata(project, user, featuregroup, (CachedFeaturegroupDTO) featuregroupDTO);
     } else if (featuregroup.getFeaturegroupType() == FeaturegroupType.ON_DEMAND_FEATURE_GROUP) {
       onDemandFeaturegroupController.updateOnDemandFeaturegroupMetadata(featuregroup.getOnDemandFeaturegroup(),
         (OnDemandFeaturegroupDTO) featuregroupDTO);
     }
-
-    // also in this case we should update the jobs. just in case there is a client relying on the fact that the
-    // updateMetadata queryparam is also updating the jobs
-    //Get jobs
-    List<Jobs> jobs = getJobs(featuregroupDTO.getJobs(), featurestore.getProject());
-    //Store jobs
-    featurestoreJobFacade.insertJobs(featuregroup, jobs);
 
     // get feature group object again after alter table
     featuregroup = getFeaturegroupById(featurestore, featuregroupDTO.getId());
@@ -384,24 +346,6 @@ public class FeaturegroupController {
     }
 
     return featuregroupDTO;
-  }
-
-  /**
-   * Updates jobs for a featuregroup
-   *
-   * @param featurestore    the featurestore where the featuregroup resides
-   * @param featuregroupDTO the updated featuregroup metadata
-   */
-  public FeaturegroupDTO updateFeaturegroupJob(Featurestore featurestore, FeaturegroupDTO featuregroupDTO,
-    Project project, Users user)
-      throws FeaturestoreException, ServiceException {
-    Featuregroup featuregroup = getFeaturegroupById(featurestore, featuregroupDTO.getId());
-    //Get jobs
-    List<Jobs> jobs = getJobs(featuregroupDTO.getJobs(), featurestore.getProject());
-    //Store jobs
-    featurestoreJobFacade.insertJobs(featuregroup, jobs);
-
-    return convertFeaturegrouptoDTO(featuregroup, project, user);
   }
 
   /**
@@ -424,6 +368,10 @@ public class FeaturegroupController {
           "featuregroup with type:" + FeaturegroupType.ON_DEMAND_FEATURE_GROUP);
     }
     cachedFeaturegroupController.enableFeaturegroupOnline(featurestore, featuregroup, project, user);
+
+    // Log activity
+    fsActivityFacade.logMetadataActivity(user, featuregroup, FeaturestoreActivityMeta.ONLINE_ENABLED, null);
+
     return convertFeaturegrouptoDTO(featuregroup, project, user);
   }
 
@@ -445,6 +393,10 @@ public class FeaturegroupController {
           "featuregroup with type:" + FeaturegroupType.ON_DEMAND_FEATURE_GROUP);
     }
     cachedFeaturegroupController.disableFeaturegroupOnline(featuregroup, project, user);
+
+    // Log activity
+    fsActivityFacade.logMetadataActivity(user, featuregroup, FeaturestoreActivityMeta.ONLINE_DISABLED, null);
+
     return convertFeaturegrouptoDTO(featuregroup, project, user);
   }
 
@@ -546,9 +498,6 @@ public class FeaturegroupController {
 
     // Statistics files need to be deleted explicitly
     statisticsController.deleteStatistics(project, user, featuregroup);
-
-    activityFacade.persistActivity(ActivityFacade.DELETED_FEATUREGROUP + featuregroup.getName(),
-        project, user, ActivityFlag.SERVICE);
   }
 
 

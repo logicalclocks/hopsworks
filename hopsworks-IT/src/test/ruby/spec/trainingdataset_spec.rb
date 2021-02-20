@@ -376,30 +376,6 @@ describe "On #{ENV['OS']}" do
           expect(parsed_json2["name"]).to eql(training_dataset_name)
         end
 
-        it "should be able to update the jobs of a training dataset" do
-          project = get_project
-          featurestore_id = get_featurestore_id(project.id)
-          connector = get_hopsfs_training_datasets_connector(@project[:projectname])
-          json_result1, training_dataset_name = create_hopsfs_training_dataset(project.id, featurestore_id, connector)
-          parsed_json1 = JSON.parse(json_result1)
-          expect_status(201)
-
-          # Create a fake job
-          create_sparktour_job(project, "ingestion_job", "jar", nil)
-
-          jobs = [{"jobName" => "ingestion_job"}]
-
-          training_dataset_id = parsed_json1["id"]
-          json_result2 = update_hopsfs_training_dataset_metadata(project.id, featurestore_id,
-                                                                 training_dataset_id, "tfrecords", connector, jobs: jobs)
-          parsed_json2 = JSON.parse(json_result2)
-          expect_status(200)
-
-          # make sure the name didn't change
-          expect(parsed_json2["jobs"].count).to eql(1)
-          expect(parsed_json2["jobs"][0]["jobName"]).to eql("ingestion_job")
-        end
-
         it "should be able to get a list of training dataset versions based on the name" do
           project = get_project
           featurestore_id = get_featurestore_id(project.id)

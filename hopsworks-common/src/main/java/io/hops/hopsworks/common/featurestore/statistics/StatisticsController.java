@@ -17,6 +17,7 @@
 package io.hops.hopsworks.common.featurestore.statistics;
 
 import io.hops.hopsworks.common.dataset.DatasetController;
+import io.hops.hopsworks.common.featurestore.activity.FeaturestoreActivityFacade;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.hdfs.DistributedFsService;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
@@ -44,12 +45,17 @@ import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import java.io.IOException;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.Optional;
 import java.util.logging.Level;
 
 @Stateless
 @TransactionAttribute(TransactionAttributeType.NEVER)
 public class StatisticsController {
+
+  public static final SimpleDateFormat COMMIT_DATE_FORMAT = new SimpleDateFormat("yyyyMMddHHmmss");
 
   @EJB
   private InodeController inodeController;
@@ -61,6 +67,8 @@ public class StatisticsController {
   private HdfsUsersController hdfsUsersController;
   @EJB
   private FeaturestoreStatisticFacade featurestoreStatisticFacade;
+  @EJB
+  private FeaturestoreActivityFacade fsActivityFacade;
 
   public String readStatisticsContent(Project project, Users user, FeaturestoreStatistic statistic)
       throws FeaturestoreException {
@@ -92,11 +100,19 @@ public class StatisticsController {
           Level.WARNING, "Not a valid JSON", jex.getMessage(), jex);
     }
 
+    Date commitTimeDate = null;
+    try {
+      commitTimeDate = COMMIT_DATE_FORMAT.parse(commitTime);
+    } catch (ParseException pex) {
+      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ERROR_SAVING_STATISTICS,
+          Level.WARNING, "Not a valid JSON", pex.getMessage(), pex);
+    }
+
     Inode statisticsInode = registerStatistics(project, user, commitTime, statisticsJson.toString(),
         featuregroup.getName(), "FeatureGroups", featuregroup.getVersion());
     FeaturestoreStatistic featurestoreStatistic =
-      new FeaturestoreStatistic(commitTime, statisticsInode, featuregroup);
-    featurestoreStatisticFacade.persist(featurestoreStatistic);
+        featurestoreStatisticFacade.update(new FeaturestoreStatistic(commitTime, statisticsInode, featuregroup));
+    fsActivityFacade.logStatisticsActivity(user, featuregroup, commitTimeDate, featurestoreStatistic);
     return featurestoreStatistic;
   }
 
@@ -114,11 +130,21 @@ public class StatisticsController {
           Level.WARNING, "Not a valid JSON", jex.getMessage(), jex);
     }
 
+    Date commitTimeDate = null;
+    try {
+      commitTimeDate = COMMIT_DATE_FORMAT.parse(commitTime);
+    } catch (ParseException pex) {
+      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ERROR_SAVING_STATISTICS,
+          Level.WARNING, "Not a valid JSON", pex.getMessage(), pex);
+    }
+
     Inode statisticsInode = registerStatistics(project, user, commitTime, statisticsJson.toString(),
         trainingDataset.getName(), "TrainingDatasets", trainingDataset.getVersion());
     FeaturestoreStatistic featurestoreStatistic =
-      new FeaturestoreStatistic(commitTime, statisticsInode, trainingDataset);
-    featurestoreStatisticFacade.persist(featurestoreStatistic);
+        featurestoreStatisticFacade.update(new FeaturestoreStatistic(commitTime, statisticsInode, trainingDataset));
+
+    fsActivityFacade.logStatisticsActivity(user, trainingDataset, commitTimeDate, featurestoreStatistic);
+
     return featurestoreStatistic;
   }
 

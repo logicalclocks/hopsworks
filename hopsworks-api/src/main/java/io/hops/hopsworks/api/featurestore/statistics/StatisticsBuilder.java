@@ -61,12 +61,34 @@ public class StatisticsBuilder {
         .build();
   }
 
+  private URI uri(UriInfo uriInfo, Project project, Featurestore featurestore,
+                  Featuregroup featuregroup, FeaturestoreStatistic statistics) {
+    return uri(uriInfo, project, featurestore)
+        .path(ResourceRequest.Name.FEATUREGROUPS.toString().toLowerCase())
+        .path(Integer.toString(featuregroup.getId()))
+        .path(ResourceRequest.Name.STATISTICS.toString().toLowerCase())
+        .queryParam("filter_by", "commit_time_eq:" + statistics.getCommitTime())
+        .queryParam("fields", "content")
+        .build();
+  }
+
   private URI uri(UriInfo uriInfo, Project project,
                   Featurestore featurestore, TrainingDataset trainingDataset) {
     return uri(uriInfo, project, featurestore)
         .path(ResourceRequest.Name.FEATUREGROUPS.toString().toLowerCase())
         .path(Integer.toString(trainingDataset.getId()))
         .path(ResourceRequest.Name.STATISTICS.toString().toLowerCase())
+        .build();
+  }
+
+  private URI uri(UriInfo uriInfo, Project project, Featurestore featurestore,
+                  TrainingDataset trainingDataset, FeaturestoreStatistic statistics) {
+    return uri(uriInfo, project, featurestore)
+        .path(ResourceRequest.Name.FEATUREGROUPS.toString().toLowerCase())
+        .path(Integer.toString(trainingDataset.getId()))
+        .path(ResourceRequest.Name.STATISTICS.toString().toLowerCase())
+        .queryParam("filter_by", "commit_time_eq:" + statistics.getCommitTime())
+        .queryParam("fields", "content")
         .build();
   }
 
@@ -79,7 +101,7 @@ public class StatisticsBuilder {
                              Featuregroup featuregroup,
                              FeaturestoreStatistic featurestoreStatistic) throws FeaturestoreException {
     StatisticsDTO dto = new StatisticsDTO();
-    dto.setHref(uri(uriInfo, project, featuregroup.getFeaturestore(), featuregroup));
+    dto.setHref(uri(uriInfo, project, featuregroup.getFeaturestore(), featuregroup, featurestoreStatistic));
     dto.setExpand(expand(resourceRequest));
     if (dto.isExpand()) {
       dto.setCommitTime(featurestoreStatistic.getCommitTime());
@@ -96,7 +118,7 @@ public class StatisticsBuilder {
                              TrainingDataset trainingDataset,
                              FeaturestoreStatistic featurestoreStatistic) throws FeaturestoreException {
     StatisticsDTO dto = new StatisticsDTO();
-    dto.setHref(uri(uriInfo, project, trainingDataset.getFeaturestore(), trainingDataset));
+    dto.setHref(uri(uriInfo, project, trainingDataset.getFeaturestore(), trainingDataset, featurestoreStatistic));
     dto.setExpand(expand(resourceRequest));
     if (dto.isExpand()) {
       dto.setCommitTime(featurestoreStatistic.getCommitTime());

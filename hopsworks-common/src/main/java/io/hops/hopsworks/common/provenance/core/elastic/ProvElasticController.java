@@ -17,7 +17,6 @@ package io.hops.hopsworks.common.provenance.core.elastic;
 
 import com.lambdista.util.Try;
 import io.hops.hopsworks.common.elastic.ElasticClient;
-import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.ElasticException;
 import io.hops.hopsworks.restutils.RESTCodes;
 import org.elasticsearch.ElasticsearchStatusException;
@@ -61,8 +60,6 @@ import java.util.logging.Logger;
 public class ProvElasticController {
   private static final Logger LOG = Logger.getLogger(ProvElasticController.class.getName());
   
-  @EJB
-  private Settings settings;
   @EJB
   private ElasticClient client;
 

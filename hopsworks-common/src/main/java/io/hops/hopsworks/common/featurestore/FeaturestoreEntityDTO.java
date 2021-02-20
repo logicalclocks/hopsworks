@@ -20,18 +20,14 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupDTO;
-import io.hops.hopsworks.common.featurestore.jobs.FeaturestoreJobDTO;
 import io.hops.hopsworks.common.featurestore.statistics.StatisticsConfigDTO;
 import io.hops.hopsworks.common.featurestore.trainingdatasets.TrainingDatasetDTO;
-import io.hops.hopsworks.persistence.entity.featurestore.jobs.FeaturestoreJob;
 import io.hops.hopsworks.persistence.entity.user.Users;
 
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlSeeAlso;
 import java.util.Date;
-import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * Abstract storage entity in the featurestore. Contains the common fields and functionality between feature groups
@@ -55,22 +51,19 @@ public abstract class FeaturestoreEntityDTO {
   private String name;
   private Integer id;
   private String location = null;
-  private List<FeaturestoreJobDTO> jobs;
   private StatisticsConfigDTO statisticsConfig = new StatisticsConfigDTO();
   
   public FeaturestoreEntityDTO() {
   }
   
   public FeaturestoreEntityDTO(Integer featurestoreId, String name, Date created, Users creator,
-                               Integer version, List<FeaturestoreJob> featurestoreJobs, Integer id,
-                               StatisticsConfigDTO statisticsConfig) {
+                               Integer version, Integer id, StatisticsConfigDTO statisticsConfig) {
     this.featurestoreId = featurestoreId;
     this.created = created;
     this.creator = creator.getEmail();
     this.version = version;
     this.name = name;
     this.id = id;
-    this.jobs = featurestoreJobs.stream().map(FeaturestoreJobDTO::new).collect(Collectors.toList());
     this.statisticsConfig = statisticsConfig;
   }
 
@@ -127,12 +120,7 @@ public abstract class FeaturestoreEntityDTO {
   public String getLocation() {
     return location;
   }
-  
-  @XmlElement(nillable = true)
-  public List<FeaturestoreJobDTO> getJobs() {
-    return jobs;
-  }
-  
+
   @XmlElement
   public StatisticsConfigDTO getStatisticsConfig() {
     return statisticsConfig;
@@ -174,10 +162,6 @@ public abstract class FeaturestoreEntityDTO {
     this.version = version;
   }
   
-  public void setJobs(List<FeaturestoreJobDTO> jobs) {
-    this.jobs = jobs;
-  }
-
   public void setStatisticsConfig(StatisticsConfigDTO statisticsConfig) {
     this.statisticsConfig = statisticsConfig;
   }

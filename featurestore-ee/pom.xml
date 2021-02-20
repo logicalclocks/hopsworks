@@ -68,6 +68,7 @@
       <artifactId>provenance-ee</artifactId>
       <version>${project.version}</version>
       <scope>provided</scope>
+        <!-- exclude all transitive dependencies -->
       <exclusions>
         <exclusion>
           <groupId>*</groupId>
@@ -82,6 +83,7 @@
       <version>7.0</version>
       <scope>provided</scope>
     </dependency>
+
     <dependency>
       <groupId>javax</groupId>
       <artifactId>javaee-api</artifactId>

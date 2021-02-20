@@ -287,11 +287,11 @@ public abstract class AbstractFacade<T> {
 
   }
   
-  public class CollectionInfo {
+  public static class CollectionInfo<A> {
     private Long count;
-    private List<T> items;
+    private List<A> items;
   
-    public CollectionInfo(Long count, List<T> items) {
+    public CollectionInfo(Long count, List<A> items) {
       this.count = count;
       this.items = items;
     }
@@ -300,11 +300,11 @@ public abstract class AbstractFacade<T> {
       return count;
     }
     
-    public List<T> getItems() {
+    public List<A> getItems() {
       return items;
     }
     
-    public void setItems(List<T> items) {
+    public void setItems(List<A> items) {
       this.items = items;
     }
     

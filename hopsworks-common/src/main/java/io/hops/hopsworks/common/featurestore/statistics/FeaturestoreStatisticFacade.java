@@ -45,15 +45,6 @@ public class FeaturestoreStatisticFacade extends AbstractFacade<FeaturestoreStat
   }
 
   /**
-   * A transaction to persist a featurestore-statistic in the database
-   *
-   * @param featurestoreStatistic the featurestore statistic to persist
-   */
-  public void persist(FeaturestoreStatistic featurestoreStatistic) {
-    em.persist(featurestoreStatistic);
-  }
-
-  /**
    * Gets the entity manager of the facade
    *
    * @return entity manager

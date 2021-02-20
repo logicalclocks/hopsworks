@@ -21,6 +21,7 @@ import io.hops.hopsworks.common.api.ResourceRequest;
 import io.hops.hopsworks.common.dao.AbstractFacade;
 import io.hops.hopsworks.common.dao.jobs.description.JobFacade;
 import io.hops.hopsworks.persistence.entity.jobs.description.Jobs;
+import io.hops.hopsworks.persistence.entity.jobs.history.Execution;
 import io.hops.hopsworks.persistence.entity.project.Project;
 
 import javax.ejb.EJB;
@@ -81,6 +82,23 @@ public class JobsBuilder {
       dto.setJobType(job.getJobType());
       dto.setCreator(usersBuilder.build(uriInfo, resourceRequest.get(ResourceRequest.Name.CREATOR), job.getCreator()));
       dto.setExecutions(executionsBuilder.build(uriInfo, resourceRequest.get(ResourceRequest.Name.EXECUTIONS), job));
+    }
+    return dto;
+  }
+
+  public JobDTO build(UriInfo uriInfo, ResourceRequest resourceRequest, Jobs job, Execution execution) {
+    JobDTO dto = new JobDTO();
+    uri(dto, uriInfo, job);
+    expand(dto, resourceRequest);
+    if (dto.isExpand()) {
+      dto.setId(job.getId());
+      dto.setName(job.getName());
+      dto.setCreationTime(job.getCreationTime());
+      dto.setConfig(job.getJobConfig());
+      dto.setJobType(job.getJobType());
+      dto.setCreator(usersBuilder.build(uriInfo, resourceRequest.get(ResourceRequest.Name.CREATOR), job.getCreator()));
+      dto.setExecutions(
+          executionsBuilder.build(uriInfo, resourceRequest.get(ResourceRequest.Name.EXECUTIONS), execution));
     }
     return dto;
   }

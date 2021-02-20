@@ -19,6 +19,7 @@ package io.hops.hopsworks.common.featurestore.featuregroup.cached;
 import com.google.common.base.Strings;
 import com.logicalclocks.servicediscoverclient.exceptions.ServiceDiscoveryException;
 import io.hops.hopsworks.common.featurestore.FeaturestoreController;
+import io.hops.hopsworks.common.featurestore.activity.FeaturestoreActivityFacade;
 import io.hops.hopsworks.common.featurestore.feature.FeatureGroupFeatureDTO;
 import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupDTO;
 import io.hops.hopsworks.common.featurestore.featuregroup.online.OnlineFeaturegroupController;
@@ -34,6 +35,7 @@ import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.exceptions.HopsSecurityException;
 import io.hops.hopsworks.exceptions.ServiceException;
 import io.hops.hopsworks.persistence.entity.featurestore.Featurestore;
+import io.hops.hopsworks.persistence.entity.featurestore.activity.FeaturestoreActivityMeta;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.Featuregroup;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.cached.CachedFeatureExtraConstraints;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.cached.CachedFeaturegroup;
@@ -105,6 +107,8 @@ public class CachedFeaturegroupController {
   private ConstructorController constructorController;
   @EJB
   private FeaturestoreUtils featurestoreUtils;
+  @EJB
+  private FeaturestoreActivityFacade fsActivityFacade;
 
   private static final Logger LOGGER = Logger.getLogger(CachedFeaturegroupController.class.getName());
   private static final String HIVE_DRIVER = "org.apache.hive.jdbc.HiveDriver";
@@ -692,7 +696,6 @@ public class CachedFeaturegroupController {
   public void updateMetadata(Project project, Users user, Featuregroup featuregroup,
                              CachedFeaturegroupDTO cachedFeaturegroupDTO)
       throws FeaturestoreException, SQLException {
-    CachedFeaturegroup cachedFeaturegroup = featuregroup.getCachedFeaturegroup();
     List<FeatureGroupFeatureDTO> previousSchema = getFeaturesDTO(featuregroup, project, user);
     String tableName = getTblName(featuregroup.getName(), featuregroup.getVersion());
 
@@ -718,6 +721,11 @@ public class CachedFeaturegroupController {
         onlineFeaturegroupController.alterMySQLTableColumns(
           featuregroup.getFeaturestore(), tableName, newFeatures, project, user);
       }
+
+      // Log schema change
+      String newFeaturesStr = "New features: " + newFeatures.stream().map(FeatureGroupFeatureDTO::getName)
+          .collect(Collectors.joining(","));
+      fsActivityFacade.logMetadataActivity(user, featuregroup, FeaturestoreActivityMeta.FG_ALTERED, newFeaturesStr);
     }
   }
 

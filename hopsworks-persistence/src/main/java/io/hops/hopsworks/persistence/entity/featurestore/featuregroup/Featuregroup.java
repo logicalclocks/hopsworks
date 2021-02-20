@@ -17,11 +17,11 @@
 package io.hops.hopsworks.persistence.entity.featurestore.featuregroup;
 
 import io.hops.hopsworks.persistence.entity.featurestore.Featurestore;
+import io.hops.hopsworks.persistence.entity.featurestore.activity.FeaturestoreActivity;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.cached.CachedFeaturegroup;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.cached.ValidationType;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.datavalidation.FeatureGroupExpectation;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.ondemand.OnDemandFeaturegroup;
-import io.hops.hopsworks.persistence.entity.featurestore.jobs.FeaturestoreJob;
 import io.hops.hopsworks.persistence.entity.featurestore.statistics.StatisticsConfig;
 import io.hops.hopsworks.persistence.entity.user.Users;
 
@@ -112,8 +112,8 @@ public class Featuregroup implements Serializable {
   @JoinColumn(name = "cached_feature_group_id", referencedColumnName = "id")
   @OneToOne
   private CachedFeaturegroup cachedFeaturegroup;
-  @OneToMany(cascade = CascadeType.ALL, mappedBy = "featuregroup")
-  private Collection<FeaturestoreJob> jobs;
+  @OneToMany(cascade = CascadeType.ALL, mappedBy = "featureGroup")
+  private Collection<FeaturestoreActivity> activities;
   @OneToOne(cascade = CascadeType.ALL, mappedBy = "featuregroup")
   private StatisticsConfig statisticsConfig;
   @OneToMany(cascade = CascadeType.ALL, mappedBy = "featuregroup")
@@ -200,21 +200,21 @@ public class Featuregroup implements Serializable {
   public void setCachedFeaturegroup(CachedFeaturegroup cachedFeaturegroup) {
     this.cachedFeaturegroup = cachedFeaturegroup;
   }
-  
-  public Collection<FeaturestoreJob> getJobs() {
-    return jobs;
-  }
-  
-  public void setJobs(Collection<FeaturestoreJob> jobs) {
-    this.jobs = jobs;
-  }
-  
+
   public StatisticsConfig getStatisticsConfig() {
     return statisticsConfig;
   }
-  
+
   public void setStatisticsConfig(StatisticsConfig statisticsConfig) {
     this.statisticsConfig = statisticsConfig;
+  }
+
+  public Collection<FeaturestoreActivity> getActivities() {
+    return activities;
+  }
+
+  public void setActivities(Collection<FeaturestoreActivity> activities) {
+    this.activities = activities;
   }
 
   public ValidationType getValidationType() {
@@ -249,7 +249,6 @@ public class Featuregroup implements Serializable {
     if (featuregroupType != that.featuregroupType) return false;
     if (!Objects.equals(onDemandFeaturegroup, that.onDemandFeaturegroup)) return false;
     if (!Objects.equals(cachedFeaturegroup, that.cachedFeaturegroup)) return false;
-    if (!Objects.equals(jobs, that.jobs)) return false;
     return Objects.equals(statisticsConfig, that.statisticsConfig);
   }
 
@@ -264,7 +263,6 @@ public class Featuregroup implements Serializable {
     result = 31 * result + (featuregroupType != null ? featuregroupType.hashCode() : 0);
     result = 31 * result + (onDemandFeaturegroup != null ? onDemandFeaturegroup.hashCode() : 0);
     result = 31 * result + (cachedFeaturegroup != null ? cachedFeaturegroup.hashCode() : 0);
-    result = 31 * result + (jobs != null ? jobs.hashCode() : 0);
     result = 31 * result + (statisticsConfig != null ? statisticsConfig.hashCode() : 0);
     return result;
   }
