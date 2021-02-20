@@ -43,7 +43,6 @@ import io.hops.hopsworks.exceptions.GenericException;
 import io.hops.hopsworks.exceptions.ProvenanceException;
 import io.hops.hopsworks.persistence.entity.dataset.Dataset;
 import io.hops.hopsworks.persistence.entity.hdfs.user.HdfsUsers;
-import io.hops.hopsworks.persistence.entity.jobs.description.Jobs;
 import io.hops.hopsworks.persistence.entity.jobs.history.Execution;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.user.Users;
@@ -155,8 +154,8 @@ public class ProvUsageBuilder {
       .filter( //filter only running application
         app -> {
           if (runningJob) {
-            Execution ex = executionFacade.findByAppId(app.getAppId());
-            return ex != null && !ex.getState().isFinalState();
+            Optional<Execution> ex = executionFacade.findByAppId(app.getAppId());
+            return ex.isPresent() && !ex.get().getState().isFinalState();
           } else {
             return true;
           }
@@ -187,19 +186,17 @@ public class ProvUsageBuilder {
   private DatasetDTO getDataset(UriInfo uriInfo, Integer datasetId) {
     Dataset dataset = datasetFacade.find(datasetId);
     if (dataset != null) {
-      DatasetDTO datasetDTO
-        = datasetBuilder.build(uriInfo, new ResourceRequest(ResourceRequest.Name.DATASETS), dataset);
-      return datasetDTO;
+      return datasetBuilder.build(uriInfo, new ResourceRequest(ResourceRequest.Name.DATASETS), dataset);
     }
     return null;
   }
   
   private ExecutionDTO getExecution(UriInfo uriInfo, String appId) {
     if(appId != null && !appId.equals("none")) {
-      Execution ex = executionFacade.findByAppId(appId);
-      if(ex != null) {
-        ExecutionDTO exDTO = executionsBuilder.build(uriInfo, new ResourceRequest(ResourceRequest.Name.EXECUTIONS), ex);
-        return exDTO;
+      Optional<Execution> execOptional = executionFacade.findByAppId(appId);
+      if (execOptional.isPresent()) {
+        return executionsBuilder
+            .build(uriInfo, new ResourceRequest(ResourceRequest.Name.EXECUTIONS), execOptional.get());
       }
     }
     return null;
@@ -207,11 +204,9 @@ public class ProvUsageBuilder {
   
   private JobDTO getJob(UriInfo uriInfo, String appId) {
     if(appId != null && !appId.equals("none")) {
-      Execution ex = executionFacade.findByAppId(appId);
-      if(ex != null) {
-        Jobs job = ex.getJob();
-        JobDTO jobDTO = jobsBuilder.build(uriInfo, new ResourceRequest(ResourceRequest.Name.JOBS), job);
-        return jobDTO;
+      Optional<Execution> execOptional = executionFacade.findByAppId(appId);
+      if (execOptional.isPresent()) {
+        return jobsBuilder.build(uriInfo, new ResourceRequest(ResourceRequest.Name.JOBS), execOptional.get().getJob());
       }
     }
     return null;
@@ -219,11 +214,10 @@ public class ProvUsageBuilder {
   
   private UserDTO getUser(UriInfo uriInfo, Integer hdfsUserId) {
     HdfsUsers hdfsUser = hdfsUserFacade.findById(hdfsUserId);
-    if(hdfsUser != null) {
+    if (hdfsUser != null) {
       Users user = userFacade.findByUsername(hdfsUser.getUsername());
-      if(user != null) {
-        UserDTO userDTO = usersBuilder.build(uriInfo, new ResourceRequest(ResourceRequest.Name.USERS), user);
-        return userDTO;
+      if (user != null) {
+        return usersBuilder.build(uriInfo, new ResourceRequest(ResourceRequest.Name.USERS), user);
       }
     }
     return null;

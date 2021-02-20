@@ -19,6 +19,7 @@ package io.hops.hopsworks.api.featurestore.commit;
 import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.api.filter.Audience;
 import io.hops.hopsworks.api.filter.apiKey.ApiKeyRequired;
+import io.hops.hopsworks.api.jwt.JWTHelper;
 import io.hops.hopsworks.api.util.Pagination;
 import io.hops.hopsworks.common.api.ResourceRequest;
 import io.hops.hopsworks.common.dao.AbstractFacade;
@@ -31,6 +32,7 @@ import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupController
 
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.cached.FeatureGroupCommit;
 import io.hops.hopsworks.persistence.entity.project.Project;
+import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.persistence.entity.user.security.apiKey.ApiScope;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -61,6 +63,8 @@ public class CommitResource {
   private FeaturegroupController featuregroupController;
   @EJB
   private FeatureGroupCommitController featureGroupCommitController;
+  @EJB
+  private JWTHelper jwtHelper;
 
   private Project project;
   private Featurestore featurestore;
@@ -88,9 +92,11 @@ public class CommitResource {
   @ApiKeyRequired( acceptedScopes = {ApiScope.FEATURESTORE}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   public Response commitFeatureGroup(@Context UriInfo uriInfo, CommitDTO commitDTO, @Context SecurityContext sc)
       throws FeaturestoreException {
-    FeatureGroupCommit featureGroupCommit = featureGroupCommitController.createHudiFeatureGroupCommit(featuregroup,
-        commitDTO.getCommitDateString(), commitDTO.getRowsUpdated(), commitDTO.getRowsInserted(),
-        commitDTO.getRowsDeleted(), commitDTO.getValidationId());
+    Users user = jwtHelper.getUserPrincipal(sc);
+    FeatureGroupCommit featureGroupCommit =
+        featureGroupCommitController.createHudiFeatureGroupCommit(user, featuregroup,
+            commitDTO.getCommitDateString(), commitDTO.getRowsUpdated(), commitDTO.getRowsInserted(),
+            commitDTO.getRowsDeleted(), commitDTO.getValidationId());
     CommitDTO builtCommitDTO = commitBuilder.build(uriInfo, new ResourceRequest(ResourceRequest.Name.COMMITS),
             project, featuregroup, featureGroupCommit);
     return Response.ok().entity(builtCommitDTO).build();

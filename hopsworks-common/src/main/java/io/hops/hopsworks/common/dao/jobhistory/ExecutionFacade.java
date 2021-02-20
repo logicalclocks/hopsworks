@@ -83,12 +83,13 @@ public class ExecutionFacade extends AbstractFacade<Execution> {
     return em;
   }
 
-  public Execution findByAppId(String appId) {
+  public Optional<Execution> findByAppId(String appId) {
     try {
-      return em.createNamedQuery("Execution.findByAppId",
-              Execution.class).setParameter("appId", appId).getSingleResult();
+      return Optional.of(em.createNamedQuery("Execution.findByAppId", Execution.class)
+          .setParameter("appId", appId)
+          .getSingleResult());
     } catch (NoResultException e) {
-      return null;
+      return Optional.empty();
     }
   }
   

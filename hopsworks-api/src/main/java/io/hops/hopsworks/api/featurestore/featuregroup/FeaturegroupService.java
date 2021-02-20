@@ -19,6 +19,7 @@ package io.hops.hopsworks.api.featurestore.featuregroup;
 import com.google.common.base.Strings;
 import io.hops.hopsworks.api.featurestore.FeaturestoreKeywordResource;
 import io.hops.hopsworks.api.featurestore.commit.CommitResource;
+import io.hops.hopsworks.api.featurestore.activities.ActivityResource;
 import io.hops.hopsworks.api.featurestore.datavalidation.expectations.fg.FeatureGroupExpectationsResource;
 import io.hops.hopsworks.api.featurestore.datavalidation.validations.FeatureGroupValidationsResource;
 import io.hops.hopsworks.api.featurestore.statistics.StatisticsResource;
@@ -32,7 +33,6 @@ import io.hops.hopsworks.api.filter.apiKey.ApiKeyRequired;
 import io.hops.hopsworks.api.jwt.JWTHelper;
 import io.hops.hopsworks.api.provenance.ProvArtifactResource;
 import io.hops.hopsworks.common.api.ResourceRequest;
-import io.hops.hopsworks.common.dao.user.activity.ActivityFacade;
 import io.hops.hopsworks.common.featurestore.FeaturestoreController;
 import io.hops.hopsworks.common.featurestore.FeaturestoreDTO;
 import io.hops.hopsworks.common.featurestore.OptionDTO;
@@ -58,7 +58,6 @@ import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.Featuregro
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.cached.ValidationType;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.user.Users;
-import io.hops.hopsworks.persistence.entity.user.activity.ActivityFlag;
 import io.hops.hopsworks.persistence.entity.user.security.apiKey.ApiScope;
 import io.hops.hopsworks.restutils.RESTCodes;
 import io.swagger.annotations.Api;
@@ -114,8 +113,6 @@ public class FeaturegroupService {
   @EJB
   private FeaturegroupController featuregroupController;
   @EJB
-  private ActivityFacade activityFacade;
-  @EJB
   private JWTHelper jWTHelper;
   @EJB
   private TagsBuilder tagBuilder;
@@ -139,6 +136,8 @@ public class FeaturegroupService {
   private IngestionJobBuilder ingestionJobBuilder;
   @Inject
   private FeaturestoreKeywordResource featurestoreKeywordResource;
+  @Inject
+  private ActivityResource activityResource;
   @Inject
   private FeatureGroupExpectationsResource featureGroupExpectationsResource;
   @Inject
@@ -220,12 +219,10 @@ public class FeaturegroupService {
       }
       FeaturegroupDTO createdFeaturegroup = featuregroupController.createFeaturegroup(featurestore, featuregroupDTO,
         project, user);
-      activityFacade.persistActivity(ActivityFacade.CREATED_FEATUREGROUP + createdFeaturegroup.getName(),
-          project, user, ActivityFlag.SERVICE);
       GenericEntity<FeaturegroupDTO> featuregroupGeneric =
           new GenericEntity<FeaturegroupDTO>(createdFeaturegroup) {};
       return noCacheResponse.getNoCacheResponseBuilder(Response.Status.CREATED).entity(featuregroupGeneric).build();
-    } catch (SQLException | IOException | ProvenanceException e) {
+    } catch (SQLException | ProvenanceException e) {
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.COULD_NOT_CREATE_FEATUREGROUP, Level.SEVERE,
           "project: " + project.getName() + ", featurestoreId: " + featurestore.getId(), e.getMessage(), e);
     }
@@ -395,7 +392,6 @@ public class FeaturegroupService {
       @QueryParam("updateStatsConfig") @DefaultValue("false") Boolean updateStatsConfig,
       @ApiParam(value = "validationType", example = "NONE")
       @QueryParam("validationType") ValidationType validationType,
-      @ApiParam(value = "updateJob") @DefaultValue("false") @QueryParam("updateJob") Boolean updateJob,
       FeaturegroupDTO featuregroupDTO)
       throws FeaturestoreException, SQLException, ProvenanceException, ServiceException {
     if(featuregroupDTO == null) {
@@ -426,14 +422,7 @@ public class FeaturegroupService {
     if(validationType != null) {
       updatedFeaturegroupDTO = featuregroupController.updateValidationType(featuregroup, validationType, project, user);
     }
-    if (updateJob) {
-      updatedFeaturegroupDTO = featuregroupController.updateFeaturegroupJob(
-        featurestore, featuregroupDTO, project, user);
-    }
-
     if(updatedFeaturegroupDTO != null) {
-      activityFacade.persistActivity(ActivityFacade.EDITED_FEATUREGROUP + updatedFeaturegroupDTO.getName(),
-        project, user, ActivityFlag.SERVICE);
       GenericEntity<FeaturegroupDTO> featuregroupGeneric =
         new GenericEntity<FeaturegroupDTO>(updatedFeaturegroupDTO) {};
       return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(featuregroupGeneric).build();
@@ -754,5 +743,15 @@ public class FeaturegroupService {
     this.featurestoreKeywordResource.setFeaturestore(featurestore);
     this.featurestoreKeywordResource.setFeatureGroupId(featureGroupId);
     return featurestoreKeywordResource;
+  }
+
+  @Path("/{featureGroupId}/activity")
+  public ActivityResource activity(@ApiParam(value = "Id of the feature group")
+                                     @PathParam("featureGroupId") Integer featureGroupId)
+      throws FeaturestoreException {
+    this.activityResource.setProject(project);
+    this.activityResource.setFeaturestore(featurestore);
+    this.activityResource.setFeatureGroupId(featureGroupId);
+    return this.activityResource;
   }
 }

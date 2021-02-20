@@ -16,16 +16,13 @@
 
 package io.hops.hopsworks.common.featurestore.trainingdatasets;
 
-import com.google.common.base.Strings;
 import com.logicalclocks.shaded.com.google.common.collect.Streams;
-import io.hops.hopsworks.common.dao.jobs.description.JobFacade;
 import io.hops.hopsworks.common.featurestore.FeaturestoreConstants;
 import io.hops.hopsworks.common.featurestore.FeaturestoreFacade;
+import io.hops.hopsworks.common.featurestore.activity.FeaturestoreActivityFacade;
 import io.hops.hopsworks.common.featurestore.feature.TrainingDatasetFeatureDTO;
 import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupController;
 import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupDTO;
-import io.hops.hopsworks.common.featurestore.jobs.FeaturestoreJobDTO;
-import io.hops.hopsworks.common.featurestore.jobs.FeaturestoreJobFacade;
 import io.hops.hopsworks.common.featurestore.statistics.StatisticsController;
 import io.hops.hopsworks.common.featurestore.online.OnlineFeaturestoreController;
 import io.hops.hopsworks.common.featurestore.query.ConstructorController;
@@ -52,6 +49,7 @@ import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.exceptions.ServiceException;
 import io.hops.hopsworks.persistence.entity.dataset.Dataset;
 import io.hops.hopsworks.persistence.entity.featurestore.Featurestore;
+import io.hops.hopsworks.persistence.entity.featurestore.activity.FeaturestoreActivityMeta;
 import io.hops.hopsworks.persistence.entity.featurestore.statistics.StatisticColumn;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.Featuregroup;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.FeaturegroupType;
@@ -68,7 +66,6 @@ import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.externa
 import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.hopsfs.HopsfsTrainingDataset;
 import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.split.TrainingDatasetSplit;
 import io.hops.hopsworks.persistence.entity.hdfs.inode.Inode;
-import io.hops.hopsworks.persistence.entity.jobs.description.Jobs;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.exceptions.ProvenanceException;
@@ -105,8 +102,6 @@ public class TrainingDatasetController {
   @EJB
   private FeaturestoreFacade featurestoreFacade;
   @EJB
-  private JobFacade jobFacade;
-  @EJB
   private HopsfsTrainingDatasetController hopsfsTrainingDatasetController;
   @EJB
   private HopsfsTrainingDatasetFacade hopsfsTrainingDatasetFacade;
@@ -114,8 +109,6 @@ public class TrainingDatasetController {
   private ExternalTrainingDatasetController externalTrainingDatasetController;
   @EJB
   private ExternalTrainingDatasetFacade externalTrainingDatasetFacade;
-  @EJB
-  private FeaturestoreJobFacade featurestoreJobFacade;
   @EJB
   private FeaturestoreInputValidation featurestoreInputValidation;
   @EJB
@@ -138,6 +131,8 @@ public class TrainingDatasetController {
   private FeaturegroupController featuregroupController;
   @EJB
   private FeaturestoreConnectorFacade featurestoreConnectorFacade;
+  @EJB
+  private FeaturestoreActivityFacade fsActivityFacade;
   @EJB
   private StatisticColumnController statisticColumnController;
 
@@ -352,18 +347,13 @@ public class TrainingDatasetController {
       trainingDataset.setFeatures(getTrainingDatasetFeatures(trainingDatasetDTO.getFeatures(), trainingDataset));
     }
 
-    // write to the database
-    trainingDatasetFacade.persist(trainingDataset);
-  
-    //Get jobs
-    List<Jobs> jobs = getJobs(trainingDatasetDTO.getJobs(), featurestore.getProject());
+    TrainingDataset dbTrainingDataset = trainingDatasetFacade.update(trainingDataset);
 
-    //Store jobs
-    featurestoreJobFacade.insertJobs(trainingDataset, jobs);
+    // Log the metadata operation
+    fsActivityFacade.logMetadataActivity(user, dbTrainingDataset, FeaturestoreActivityMeta.TD_CREATED);
 
     //Get final entity from the database
-    return getWithNameVersionAndFeaturestore(user, project, featurestore, trainingDataset.getName(),
-        trainingDataset.getVersion());
+    return convertTrainingDatasetToDTO(user, project, dbTrainingDataset);
   }
 
 
@@ -472,26 +462,6 @@ public class TrainingDatasetController {
 
     return trainingDatasetFeatureList;
   }
-  
-  /**
-   * Lookup jobs by list of jobNames
-   *
-   * @param jobDTOs the DTOs with the job names
-   * @param project the project that owns the jobs
-   * @return a list of job entities
-   */
-  private List<Jobs> getJobs(List<FeaturestoreJobDTO> jobDTOs, Project project) {
-    if(jobDTOs != null){
-      return jobDTOs.stream()
-          .filter(jobDTO -> jobDTO != null && !Strings.isNullOrEmpty(jobDTO.getJobName()))
-          .map(FeaturestoreJobDTO::getJobName)
-          .distinct()
-          .map(jobName -> jobFacade.findByProjectAndName(project, jobName))
-          .collect(Collectors.toList());
-    } else {
-      return new ArrayList<>();
-    }
-  }
 
   public TrainingDatasetDTO getTrainingDatasetWithIdAndFeaturestore(Users user, Project project,
                                                                     Featurestore featurestore, Integer id)
@@ -585,14 +555,9 @@ public class TrainingDatasetController {
     // Verify general entity related information
     featurestoreInputValidation.verifyUserInput(trainingDatasetDTO);
 
-    //Get jobs
-    List<Jobs> jobs = getJobs(trainingDatasetDTO.getJobs(), featurestore.getProject());
-    //Store jobs
-    featurestoreJobFacade.insertJobs(trainingDataset, jobs);
-
     // Update metadata
     trainingDataset.setDescription(trainingDatasetDTO.getDescription());
-    trainingDatasetFacade.updateTrainingDatasetMetadata(trainingDataset);
+    trainingDatasetFacade.update(trainingDataset);
 
     // Refetch the updated entry from the database
     TrainingDataset updatedTrainingDataset =
@@ -618,7 +583,7 @@ public class TrainingDatasetController {
     }
     // compare against schema from database, as client doesn't need to send schema in update request
     statisticColumnController.verifyStatisticColumnsExist(trainingDatasetDTO, trainingDataset);
-    trainingDataset = trainingDatasetFacade.updateTrainingDatasetMetadata(trainingDataset);
+    trainingDataset = trainingDatasetFacade.update(trainingDataset);
     statisticColumnController
       .persistStatisticColumns(trainingDataset, trainingDatasetDTO.getStatisticsConfig().getColumns());
     // get feature group again with persisted columns - this trip to the database can be saved

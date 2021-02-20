@@ -304,6 +304,7 @@ public class Settings implements Serializable {
   private static final String VARIABLE_ONLINE_FEATURESTORE = "featurestore_online_enabled";
   private static final String VARIABLE_FG_PREVIEW_LIMIT = "fg_preview_limit";
   private static final String VARIABLE_ONLINE_FEATURESTORE_TS = "featurestore_online_tablespace";
+  private static final String VARIABLE_FS_JOB_ACTIVITY_TIME = "fs_job_activity_time";
 
   private static final String VARIABLE_HIVE_CONF_PATH = "hive_conf_path";
   private static final String VARIABLE_FS_JOB_UTIL_PATH = "fs_job_util";
@@ -708,6 +709,7 @@ public class Settings implements Serializable {
       FEATURESTORE_JDBC_URL = setStrVar(VARIABLE_FEATURESTORE_JDBC_URL, FEATURESTORE_JDBC_URL);
       ONLINE_FEATURESTORE = setBoolVar(VARIABLE_ONLINE_FEATURESTORE, ONLINE_FEATURESTORE);
       ONLINE_FEATURESTORE_TS = setStrVar(VARIABLE_ONLINE_FEATURESTORE_TS, ONLINE_FEATURESTORE_TS);
+      FS_JOB_ACTIVITY_TIME = setStrVar(VARIABLE_FS_JOB_ACTIVITY_TIME, FS_JOB_ACTIVITY_TIME);
 
       KIBANA_HTTPS_ENABELED = setBoolVar(VARIABLE_KIBANA_HTTPS_ENABLED,
           KIBANA_HTTPS_ENABELED);
@@ -2130,6 +2132,12 @@ public class Settings implements Serializable {
     } else {
       return "hdfs:///user" + Path.SEPARATOR + getSparkUser() + Path.SEPARATOR + FEATURESTORE_TRAININGDATASET_JOB_NAME;
     }
+  }
+
+  private String FS_JOB_ACTIVITY_TIME = "5m";
+  public synchronized String getFsJobActivityTime() {
+    checkCache();
+    return FS_JOB_ACTIVITY_TIME;
   }
   
   public Settings() {

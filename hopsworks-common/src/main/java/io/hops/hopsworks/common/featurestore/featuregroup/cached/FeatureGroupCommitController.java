@@ -17,6 +17,7 @@
 package io.hops.hopsworks.common.featurestore.featuregroup.cached;
 
 import io.hops.hopsworks.common.dao.AbstractFacade;
+import io.hops.hopsworks.common.featurestore.activity.FeaturestoreActivityFacade;
 import io.hops.hopsworks.common.dao.AbstractFacade.CollectionInfo;
 import io.hops.hopsworks.common.featurestore.datavalidation.FeatureGroupValidationFacade;
 import io.hops.hopsworks.common.hdfs.inode.InodeController;
@@ -25,6 +26,7 @@ import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.Featuregro
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.cached.FeatureGroupCommit;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.cached.HiveTbls;
 import io.hops.hopsworks.persistence.entity.hdfs.inode.Inode;
+import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.restutils.RESTCodes;
 import org.apache.hadoop.fs.Path;
 
@@ -53,6 +55,8 @@ public class FeatureGroupCommitController {
   @EJB
   private FeatureGroupValidationFacade featureGroupValidationFacade;
   @EJB
+  private FeaturestoreActivityFacade fsActivityFacade;
+  @EJB
   private InodeController inodeController;
 
   private static final String HOODIE_METADATA_DIR = ".hoodie";
@@ -65,7 +69,7 @@ public class FeatureGroupCommitController {
       put(Pattern.compile("^([0-9]{4})([0-9]{2})([0-9]{2})([0-9]{2})([0-9]{2})([0-9]{2})$"), "yyyyMMddHHmmss");
     }};
 
-  public FeatureGroupCommit createHudiFeatureGroupCommit(Featuregroup featuregroup, String commitDateString,
+  public FeatureGroupCommit createHudiFeatureGroupCommit(Users user, Featuregroup featuregroup, String commitDateString,
                                                          Long rowsUpdated, Long rowsInserted, Long rowsDeleted,
                                                          Integer validationId)
       throws FeaturestoreException {
@@ -81,11 +85,14 @@ public class FeatureGroupCommitController {
     featureGroupCommit.setNumRowsUpdated(rowsUpdated);
     featureGroupCommit.setNumRowsInserted(rowsInserted);
     featureGroupCommit.setNumRowsDeleted(rowsDeleted);
+
     // Find validation
     if (validationId != null && validationId > 0) {
       featureGroupCommit.setValidation(featureGroupValidationFacade.findById(validationId));
     }
-    featureGroupCommitFacade.createFeatureGroupCommit(featureGroupCommit);
+
+    featureGroupCommit = featureGroupCommitFacade.update(featureGroupCommit);
+    fsActivityFacade.logCommitActivity(user, featuregroup, featureGroupCommit);
 
     return featureGroupCommit;
   }
