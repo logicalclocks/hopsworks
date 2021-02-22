@@ -38,6 +38,7 @@ import io.hops.hopsworks.common.featurestore.app.FsJobManagerController;
 import io.hops.hopsworks.common.featurestore.query.FsQueryDTO;
 import io.hops.hopsworks.common.featurestore.tag.AttachTagResult;
 import io.hops.hopsworks.common.featurestore.tag.FeatureStoreTagControllerIface;
+import io.hops.hopsworks.common.featurestore.query.ServingPreparedStatementDTO;
 import io.hops.hopsworks.audit.logger.LogLevel;
 import io.hops.hopsworks.audit.logger.annotation.Logged;
 import io.hops.hopsworks.common.api.ResourceRequest;
@@ -141,6 +142,8 @@ public class TrainingDatasetService {
   private FsJobManagerController fsJobManagerController;
   @EJB
   private JobsBuilder jobsBuilder;
+  @EJB
+  private PreparedStatementBuilder preparedStatementBuilder;
 
   private Project project;
   private Featurestore featurestore;
@@ -385,17 +388,17 @@ public class TrainingDatasetService {
                          @PathParam("name") String name,
                          @ApiParam(value = "Value to set for the tag") String value)
     throws MetadataException, FeaturestoreException, FeatureStoreTagException {
-    
+
     verifyIdProvided(trainingdatasetId);
     Users user = jWTHelper.getUserPrincipal(sc);
-  
+
     TrainingDataset trainingDataset = trainingDatasetController.getTrainingDatasetById(featurestore, trainingdatasetId);
     AttachTagResult result = tagController.upsert(project, user, featurestore, trainingDataset, name, value);
-  
+
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.TAGS);
     TagsDTO dto = tagBuilder.build(uriInfo, resourceRequest, project,
       featurestore.getId(), ResourceRequest.Name.TRAININGDATASETS.name(), trainingdatasetId, result.getItems());
-  
+
     UriBuilder builder = uriInfo.getAbsolutePathBuilder();
     if(result.isCreated()) {
       return Response.created(builder.build()).entity(dto).build();
@@ -403,7 +406,7 @@ public class TrainingDatasetService {
       return Response.ok(builder.build()).entity(dto).build();
     }
   }
-  
+
   @ApiOperation( value = "Create or update tags(bulk) for a training dataset", response = TagsDTO.class)
   @PUT
   @Path("/{trainingDatasetId}/tags")
@@ -417,12 +420,12 @@ public class TrainingDatasetService {
                               @PathParam("trainingDatasetId") Integer trainingDatasetId,
                               TagsDTO tags)
     throws MetadataException, FeaturestoreException, FeatureStoreTagException {
-    
+
     verifyIdProvided(trainingDatasetId);
     Users user = jWTHelper.getUserPrincipal(sc);
     TrainingDataset trainingDataset = trainingDatasetController.getTrainingDatasetById(featurestore, trainingDatasetId);
     AttachTagResult result;
-    
+
     if(tags.getItems().size() == 0) {
       result
         = tagController.upsert(project, user, featurestore, trainingDataset, tags.getName(), tags.getValue());
@@ -433,11 +436,11 @@ public class TrainingDatasetService {
       }
       result = tagController.upsert(project, user, featurestore, trainingDataset, newTags);
     }
-    
+
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.TAGS);
     TagsDTO dto = tagBuilder.build(uriInfo, resourceRequest, project,
       featurestore.getId(), ResourceRequest.Name.TRAININGDATASETS.name(), trainingDatasetId, result.getItems());
-    
+
     UriBuilder builder = uriInfo.getAbsolutePathBuilder();
     if(result.isCreated()) {
       return Response.created(builder.build()).entity(dto).build();
@@ -458,7 +461,7 @@ public class TrainingDatasetService {
                           @PathParam("trainingDatasetId") Integer trainingDatasetId,
                           @BeanParam TagsExpansionBeanParam tagsExpansionBeanParam)
     throws DatasetException, MetadataException, FeaturestoreException, FeatureStoreTagException {
-    
+
     verifyIdProvided(trainingDatasetId);
     Users user = jWTHelper.getUserPrincipal(sc);
     TrainingDataset trainingDataset = trainingDatasetController.getTrainingDatasetById(featurestore, trainingDatasetId);
@@ -484,7 +487,7 @@ public class TrainingDatasetService {
                          @PathParam("name") String name,
                          @BeanParam TagsExpansionBeanParam tagsExpansionBeanParam)
     throws DatasetException, MetadataException, FeaturestoreException, FeatureStoreTagException {
-    
+
     verifyIdProvided(trainingDatasetId);
     Users user = jWTHelper.getUserPrincipal(sc);
     TrainingDataset trainingDataset = trainingDatasetController.getTrainingDatasetById(featurestore, trainingDatasetId);
@@ -507,7 +510,7 @@ public class TrainingDatasetService {
                              @ApiParam(value = "Id of the training dataset", required = true)
                              @PathParam("trainingDatasetId") Integer trainingDatasetId)
     throws DatasetException, MetadataException, FeaturestoreException {
-    
+
     verifyIdProvided(trainingDatasetId);
     Users user = jWTHelper.getUserPrincipal(sc);
     TrainingDataset trainingDataset = trainingDatasetController.getTrainingDatasetById(featurestore, trainingDatasetId);
@@ -529,7 +532,7 @@ public class TrainingDatasetService {
                             @ApiParam(value = "Name of the tag", required = true)
                             @PathParam("name") String name)
     throws DatasetException, MetadataException, FeaturestoreException {
-    
+
     verifyIdProvided(trainingDatasetId);
     Users user = jWTHelper.getUserPrincipal(sc);
     TrainingDataset trainingDataset = trainingDatasetController.getTrainingDatasetById(featurestore, trainingDatasetId);
@@ -663,6 +666,27 @@ public class TrainingDatasetService {
       throw new IllegalArgumentException(RESTCodes.FeaturestoreErrorCode.
           TRAINING_DATASET_NAME_NOT_PROVIDED.getMessage());
     }
+  }
+
+  @ApiOperation(value = "Get prepared statements used to generate model serving vector from training dataset query",
+      response = ServingPreparedStatementDTO.class)
+  @GET
+  @Path("/{trainingdatasetid}/preparedstatements")
+  @Produces(MediaType.APPLICATION_JSON)
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
+  @JWTRequired(acceptedTokens={Audience.API, Audience.JOB}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
+  @ApiKeyRequired( acceptedScopes = {ApiScope.FEATURESTORE}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
+  public Response getQuery(@Context SecurityContext sc,
+                           @Context UriInfo uriInfo,
+                           @ApiParam(value = "Id of the trainingdatasetid", required = true)
+                           @PathParam("trainingdatasetid") Integer trainingdatasetid)
+      throws FeaturestoreException {
+    verifyIdProvided(trainingdatasetid);
+    Users user = jWTHelper.getUserPrincipal(sc);
+
+    ServingPreparedStatementDTO servingPreparedStatementDTO = preparedStatementBuilder.build(uriInfo,
+        new ResourceRequest(ResourceRequest.Name.PREPAREDSTATEMENTS), project, user, featurestore, trainingdatasetid);
+    return Response.ok().entity(servingPreparedStatementDTO).build();
   }
 }
 

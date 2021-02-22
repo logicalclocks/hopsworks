@@ -28,7 +28,44 @@ public class FilterLogic {
   public FilterLogic(SqlFilterLogic type) {
     this.type = type;
   }
-  
+
+  public FilterLogic(Filter leftFilter) {
+    this.type = SqlFilterLogic.SINGLE;
+    this.leftFilter = leftFilter;
+  }
+
+  public FilterLogic(SqlFilterLogic type, Filter leftFilter, Filter rightFilter) {
+    this.type = type;
+    this.leftFilter = leftFilter;
+    this.rightFilter = rightFilter;
+  }
+
+  public FilterLogic(SqlFilterLogic type, Filter leftFilter, FilterLogic rightLogic) {
+    this.type = type;
+    this.leftFilter = leftFilter;
+    this.rightLogic = rightLogic;
+  }
+
+  public FilterLogic(SqlFilterLogic type, FilterLogic leftLogic, Filter rightFilter) {
+    this.type = type;
+    this.leftLogic = leftLogic;
+    this.rightFilter = rightFilter;
+  }
+
+  public FilterLogic(SqlFilterLogic type, FilterLogic leftLogic, FilterLogic rightLogic) {
+    this.type = type;
+    this.leftLogic = leftLogic;
+    this.rightLogic = rightLogic;
+  }
+
+  public FilterLogic and(Filter other) {
+    return new FilterLogic(SqlFilterLogic.AND, this, other);
+  }
+
+  public FilterLogic and(FilterLogic other) {
+    return new FilterLogic(SqlFilterLogic.AND, this, other);
+  }
+
   public SqlFilterLogic getType() {
     return type;
   }

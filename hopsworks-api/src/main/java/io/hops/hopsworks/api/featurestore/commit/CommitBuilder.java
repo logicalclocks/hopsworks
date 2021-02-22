@@ -72,7 +72,6 @@ public class CommitBuilder {
     commitDTO.setHref(uri(uriInfo, project, featuregroup));
     commitDTO.setExpand(expand(resourceRequest));
     if (commitDTO.isExpand()) {
-
       commitDTO.setItems((List<CommitDTO>) featureGroupCommits.getItems().stream()
           .map(c -> build(uriInfo, resourceRequest, project, featuregroup, (FeatureGroupCommit) c))
           .collect(Collectors.toList()));
