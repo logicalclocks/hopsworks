@@ -198,7 +198,8 @@ public class ResourceRequest {
     INGESTION,
     CONFLICTS,
     RULES,
-    EXPECTATIONS;
+    EXPECTATIONS,
+    PREPAREDSTATEMENTS;
 
     public static Name fromString(String name) {
       return valueOf(name.toUpperCase());

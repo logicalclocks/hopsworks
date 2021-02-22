@@ -1356,6 +1356,133 @@ describe "On #{ENV['OS']}" do
           expect(parsed_json2["name"] == training_dataset_name).to be true
           expect(parsed_json2["id"] == training_dataset_id).to be true
         end
+
+        it "should be able to get a training dataset serving vector in correct order" do
+          # create first feature group
+          featurestore_id = get_featurestore_id(@project.id)
+          project_name = @project.projectname
+          features = [
+              {type: "INT", name: "a_testfeature", primary: true},
+              {type: "INT", name: "a_testfeature1"},
+          ]
+          json_result, fg_name = create_cached_featuregroup(@project.id, featurestore_id, features: features, featuregroup_name: "test_fg_a_#{short_random_id}", online:true)
+          parsed_json = JSON.parse(json_result)
+          fg_id = parsed_json["id"]
+          # create second feature group
+          features = [
+              {type: "INT", name: "a_testfeature", primary: true},
+              {type: "INT", name: "b_testfeature1"},
+          ]
+          json_result_b, fg_name_b = create_cached_featuregroup(@project.id, featurestore_id, features: features, featuregroup_name: "test_fg_b_#{short_random_id}", online:true)
+          parsed_json_b = JSON.parse(json_result_b)
+          fg_id_b = parsed_json_b["id"]
+          # create queryDTO object
+          query = {
+              leftFeatureGroup: {
+                  id: fg_id
+              },
+              leftFeatures: [{name: 'a_testfeature1'}],
+              joins: [{
+                       query: {
+                           leftFeatureGroup: {
+                               id: fg_id_b
+                           },
+                           leftFeatures: [{name: 'b_testfeature1'}]
+                       }
+                  }
+              ]
+          }
+
+          json_result, _ = create_hopsfs_training_dataset(@project.id, featurestore_id, nil, query:query)
+          parsed_json = JSON.parse(json_result)
+          expect_status(201)
+          training_dataset_id = parsed_json["id"]
+          get_prep_statement_endpoint = "#{ENV['HOPSWORKS_API']}/project/" + @project.id.to_s + "/featurestores/" + featurestore_id.to_s + "/trainingdatasets/" + training_dataset_id.to_s + "/preparedstatements"
+          json_result = get get_prep_statement_endpoint
+          parsed_json = JSON.parse(json_result)
+          expect(parsed_json["items"].first["preparedStatementParameters"].first["index"]).to eql(1)
+          expect(parsed_json["items"].first["preparedStatementParameters"].first["name"]).to eql("a_testfeature")
+          expect(parsed_json["items"].first["queryOnline"]).to eql("SELECT `fg0`.`a_testfeature1`\nFROM `#{project_name.downcase}`.`#{fg_name}_1` `fg0`\nWHERE `fg0`.`a_testfeature` = ?")
+          expect(parsed_json["items"].second["preparedStatementParameters"].first["index"]).to eql(1)
+          expect(parsed_json["items"].second["preparedStatementParameters"].first["name"]).to eql("a_testfeature")
+          expect(parsed_json["items"].second["queryOnline"]).to eql("SELECT `fg0`.`b_testfeature1`\nFROM `#{project_name.downcase}`.`#{fg_name_b}_1` `fg0`\nWHERE `fg0`.`a_testfeature` = ?")
+          expect_status(200)
+        end
+
+        it "should fail when calling get serving vector from training dataset created from offline fg" do
+          # create first feature group
+          featurestore_id = get_featurestore_id(@project.id)
+          project_name = @project.projectname
+          features = [
+              {type: "INT", name: "a_testfeature", primary: true},
+              {type: "INT", name: "a_testfeature1"},
+          ]
+          json_result, fg_name = create_cached_featuregroup(@project.id, featurestore_id, features: features, featuregroup_name: "test_fg_a_#{short_random_id}", online:true)
+          parsed_json = JSON.parse(json_result)
+          fg_id = parsed_json["id"]
+          # create second feature group
+          features = [
+              {type: "INT", name: "a_testfeature", primary: true},
+              {type: "INT", name: "b_testfeature1"},
+          ]
+          json_result_b, fg_name_b = create_cached_featuregroup(@project.id, featurestore_id, features: features, featuregroup_name: "test_fg_b_#{short_random_id}", online:false)
+          parsed_json_b = JSON.parse(json_result_b)
+          fg_id_b = parsed_json_b["id"]
+          # create queryDTO object
+          query = {
+              leftFeatureGroup: {
+                  id: fg_id
+              },
+              leftFeatures: [{name: 'a_testfeature1'}],
+              joins: [{
+                       query: {
+                           leftFeatureGroup: {
+                               id: fg_id_b
+                           },
+                           leftFeatures: [{name: 'b_testfeature1'}]
+                       }
+                  }
+              ]
+          }
+
+          json_result, _ = create_hopsfs_training_dataset(@project.id, featurestore_id, nil, query:query)
+          parsed_json = JSON.parse(json_result)
+          expect_status(201)
+          training_dataset_id = parsed_json["id"]
+          get_prep_statement_endpoint = "#{ENV['HOPSWORKS_API']}/project/" + @project.id.to_s + "/featurestores/" + featurestore_id.to_s + "/trainingdatasets/" + training_dataset_id.to_s + "/preparedstatements"
+          json_result = get get_prep_statement_endpoint
+          expect_status(400)
+        end
+
+        it "should fail when calling get serving vector from training dataset created from fg without primary key" do
+          # create feature group without primary key
+          featurestore_id = get_featurestore_id(@project.id)
+          project_name = @project.projectname
+          features = [
+              {type: "INT", name: "a_testfeature"},
+              {type: "INT", name: "a_testfeature1"},
+          ]
+          json_result, fg_name = create_cached_featuregroup(@project.id, featurestore_id, features: features, featuregroup_name: "test_fg_a_#{short_random_id}", online:true)
+          parsed_json = JSON.parse(json_result)
+          fg_id = parsed_json["id"]
+
+
+          # create queryDTO object
+          query = {
+              leftFeatureGroup: {
+                  id: fg_id
+              },
+              leftFeatures: [{name: 'a_testfeature1'}],
+          }
+
+          json_result, _ = create_hopsfs_training_dataset(@project.id, featurestore_id, nil, query:query)
+          parsed_json = JSON.parse(json_result)
+          expect_status(201)
+          training_dataset_id = parsed_json["id"]
+          get_prep_statement_endpoint = "#{ENV['HOPSWORKS_API']}/project/" + @project.id.to_s + "/featurestores/" + featurestore_id.to_s + "/trainingdatasets/" + training_dataset_id.to_s + "/preparedstatements"
+          json_result = get get_prep_statement_endpoint
+          expect_status(400)
+        end
       end
     end
   end
