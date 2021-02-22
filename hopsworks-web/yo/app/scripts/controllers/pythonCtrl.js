@@ -72,7 +72,7 @@ angular.module('hopsWorksApp')
             self.errorOp = "";
             self.showLogs = false;
 
-            $scope.sortType = 'preinstalled';
+            $scope.sortType = 'library';
 
             self.pipSearching = false;
             self.condaSearching = false;
@@ -96,6 +96,8 @@ angular.module('hopsWorksApp')
 
             //https://repo.continuum.io/pkgs/free/linux-64/
             self.condaChannel = "defaults";
+
+            self.pipSearchEnabled = false;
 
             self.condaSelectedLibs = {};
             self.pipSelectedLibs = {};
@@ -370,6 +372,7 @@ angular.module('hopsWorksApp')
                         self.enabled = true;
                         self.pythonVersion = success.data.items[0].pythonVersion;
                         self.pythonConflicts = success.data.items[0].pythonConflicts;
+                        self.pipSearchEnabled = success.data.items[0].pipSearchEnabled;
                         self.getSyncStatus(self.pythonVersion);
                     },
                     function (error) {
@@ -388,6 +391,7 @@ angular.module('hopsWorksApp')
                         self.enabling = false;
                         self.getSyncStatus(version);
                         self.pythonVersion = version;
+                        self.pipSearchEnabled = success.data.pipSearchEnabled;
                         growl.success("Anaconda initializing for this project...", {
                             title: 'Done',
                             ttl: 5000

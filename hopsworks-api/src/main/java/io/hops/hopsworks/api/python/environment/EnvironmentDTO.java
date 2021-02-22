@@ -27,6 +27,7 @@ public class EnvironmentDTO extends RestDTO<EnvironmentDTO> {
 
   private String pythonVersion;
   private Boolean pythonConflicts;
+  private Boolean pipSearchEnabled;
   private ConflictDTO conflicts;
   private String condaChannel;
   private LibraryDTO libraries;
@@ -78,6 +79,14 @@ public class EnvironmentDTO extends RestDTO<EnvironmentDTO> {
 
   public void setConflicts(ConflictDTO conflicts) {
     this.conflicts = conflicts;
+  }
+
+  public Boolean getPipSearchEnabled() {
+    return pipSearchEnabled;
+  }
+
+  public void setPipSearchEnabled(Boolean pipSearchEnabled) {
+    this.pipSearchEnabled = pipSearchEnabled;
   }
 
   public enum Operation {

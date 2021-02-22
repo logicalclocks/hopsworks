@@ -20,6 +20,10 @@ import io.hops.hopsworks.common.elastic.ElasticClient;
 import io.hops.hopsworks.exceptions.ElasticException;
 import io.hops.hopsworks.restutils.RESTCodes;
 import org.elasticsearch.ElasticsearchStatusException;
+import org.elasticsearch.action.admin.cluster.health.ClusterHealthRequest;
+import org.elasticsearch.action.admin.cluster.health.ClusterHealthResponse;
+import org.elasticsearch.action.admin.indices.alias.IndicesAliasesRequest;
+import org.elasticsearch.action.admin.indices.alias.get.GetAliasesRequest;
 import org.elasticsearch.action.admin.indices.delete.DeleteIndexRequest;
 import org.elasticsearch.action.bulk.BulkRequest;
 import org.elasticsearch.action.bulk.BulkResponse;
@@ -31,11 +35,14 @@ import org.elasticsearch.action.search.SearchScrollRequest;
 import org.elasticsearch.action.support.master.AcknowledgedResponse;
 import org.elasticsearch.action.update.UpdateRequest;
 import org.elasticsearch.action.update.UpdateResponse;
+import org.elasticsearch.client.GetAliasesResponse;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.indices.CreateIndexRequest;
 import org.elasticsearch.client.indices.CreateIndexResponse;
 import org.elasticsearch.client.indices.GetIndexRequest;
 import org.elasticsearch.client.indices.GetIndexResponse;
+import org.elasticsearch.client.indices.GetIndexTemplatesRequest;
+import org.elasticsearch.client.indices.GetIndexTemplatesResponse;
 import org.elasticsearch.client.indices.GetMappingsRequest;
 import org.elasticsearch.client.indices.GetMappingsResponse;
 import org.elasticsearch.cluster.metadata.MappingMetaData;
@@ -197,10 +204,10 @@ public class ProvElasticController {
       throw new ElasticException(RESTCodes.ElasticErrorCode.ELASTIC_QUERY_ERROR, Level.INFO, msg);
     }
   }
-  
+
   public void indexDoc(IndexRequest request) throws ElasticException {
     IndexResponse response;
-    
+
     try {
       LOG.log(Level.FINE, "request:{0}", request.toString());
       response = client.getClient().index(request, RequestOptions.DEFAULT);
@@ -214,10 +221,10 @@ public class ProvElasticController {
       throw new ElasticException(RESTCodes.ElasticErrorCode.ELASTIC_QUERY_ERROR, Level.INFO, msg);
     }
   }
-  
+
   public void updateDoc(UpdateRequest request) throws ElasticException {
     UpdateResponse response;
-    
+
     try {
       LOG.log(Level.FINE, "request:{0}", request.toString());
       response = client.getClient().update(request, RequestOptions.DEFAULT);
@@ -338,5 +345,116 @@ public class ProvElasticController {
       throw new ElasticException(RESTCodes.ElasticErrorCode.ELASTIC_QUERY_ERROR, Level.INFO, msg);
     }
     return response;
+  }
+
+  public BulkResponse bulkUpdateDoc(BulkRequest request) throws ElasticException {
+    BulkResponse response;
+
+    try {
+      LOG.log(Level.FINE, "request:{0}", request.toString());
+      response = client.getClient().bulk(request, RequestOptions.DEFAULT);
+    } catch (IOException e) {
+      String msg = "error during update doc:" + request.getDescription();
+      throw new ElasticException(RESTCodes.ElasticErrorCode.ELASTIC_INTERNAL_REQ_ERROR, Level.WARNING,
+          msg, e.getMessage(), e);
+    }
+    if (response.status().getStatus() != 200) {
+      String msg = "doc update - bad status response:" + response.status().getStatus();
+      throw new ElasticException(RESTCodes.ElasticErrorCode.ELASTIC_QUERY_ERROR, Level.INFO, msg);
+    }
+    return response;
+  }
+
+  public AcknowledgedResponse aliasUpdate(IndicesAliasesRequest request) throws ElasticException {
+    String msg = "alias switch:" + request.toString();
+    LOG.log(Level.FINE, "request:{0}", msg);
+    AcknowledgedResponse response;
+    try {
+      response = client.getClient().indices().updateAliases(request, RequestOptions.DEFAULT);
+    } catch (IOException e) {
+      throw new ElasticException(RESTCodes.ElasticErrorCode.ELASTIC_INTERNAL_REQ_ERROR, Level.WARNING,
+          "error:" + msg, e.getMessage(), e);
+    }
+    if(response.isAcknowledged()) {
+      return response;
+    } else {
+      throw new ElasticException(RESTCodes.ElasticErrorCode.ELASTIC_QUERY_ERROR, Level.INFO, msg);
+    }
+  }
+
+  public AcknowledgedResponse aliasSwitchIndex(String alias, String fromIndex, String toIndex)
+      throws ElasticException {
+    IndicesAliasesRequest request = new IndicesAliasesRequest()
+        .addAliasAction(new IndicesAliasesRequest.AliasActions(
+          IndicesAliasesRequest.AliasActions.Type.REMOVE).index(fromIndex).alias(alias))
+        .addAliasAction(new IndicesAliasesRequest.AliasActions(
+          IndicesAliasesRequest.AliasActions.Type.ADD).index(toIndex).alias(alias));
+    return aliasUpdate(request);
+  }
+
+  public GetAliasesResponse aliasGet(GetAliasesRequest request) throws ElasticException {
+    String msg = "alias get:" + request.toString();
+    LOG.log(Level.FINE, "request:{0}", msg);
+    GetAliasesResponse response;
+    try {
+      response = client.getClient().indices().getAlias(request, RequestOptions.DEFAULT);
+    } catch (IOException e) {
+      throw new ElasticException(RESTCodes.ElasticErrorCode.ELASTIC_INTERNAL_REQ_ERROR, Level.WARNING,
+        "error:" + msg, e.getMessage(), e);
+    }
+    if(response.status().equals(RestStatus.OK) || response.status().equals(RestStatus.NOT_FOUND)) {
+      return response;
+    } else {
+      throw new ElasticException(RESTCodes.ElasticErrorCode.ELASTIC_QUERY_ERROR, Level.INFO, msg);
+    }
+  }
+
+  public GetAliasesResponse getAliases(String alias)
+    throws ElasticException {
+    GetAliasesRequest request = new GetAliasesRequest().aliases(alias);
+    return aliasGet(request);
+  }
+
+  public AcknowledgedResponse createAlias(String alias, String index) throws ElasticException {
+    IndicesAliasesRequest request = new IndicesAliasesRequest()
+      .addAliasAction(new IndicesAliasesRequest.AliasActions(
+        IndicesAliasesRequest.AliasActions.Type.ADD).index(index).alias(alias));
+    return aliasUpdate(request);
+  }
+
+  public ClusterHealthResponse clusterHealthGet() throws ElasticException {
+    ClusterHealthRequest request = new ClusterHealthRequest();
+    String msg = "cluster health get:" + request.toString();
+    LOG.log(Level.FINE, "request:{0}", msg);
+    ClusterHealthResponse response;
+    try {
+      response = client.getClient().cluster().health(request, RequestOptions.DEFAULT);
+    } catch (IOException e) {
+      throw new ElasticException(RESTCodes.ElasticErrorCode.ELASTIC_INTERNAL_REQ_ERROR, Level.WARNING,
+        "error:" + msg, e.getMessage(), e);
+    }
+    if(response.status().equals(RestStatus.OK) || response.status().equals(RestStatus.NOT_FOUND)) {
+      return response;
+    } else {
+      throw new ElasticException(RESTCodes.ElasticErrorCode.ELASTIC_QUERY_ERROR, Level.INFO, msg);
+    }
+  }
+
+  public GetIndexTemplatesResponse templateGet(String template) throws ElasticException {
+    GetIndexTemplatesRequest request = new GetIndexTemplatesRequest(template);
+    String msg = "cluster health get:" + request.toString();
+    LOG.log(Level.FINE, "request:{0}", msg);
+    GetIndexTemplatesResponse response;
+    try {
+      response = client.getClient().indices().getIndexTemplate(request, RequestOptions.DEFAULT);
+    } catch (IOException e) {
+      throw new ElasticException(RESTCodes.ElasticErrorCode.ELASTIC_INTERNAL_REQ_ERROR, Level.WARNING,
+        "error:" + msg, e.getMessage(), e);
+    }
+    if(response != null) {
+      return response;
+    } else {
+      throw new ElasticException(RESTCodes.ElasticErrorCode.ELASTIC_QUERY_ERROR, Level.INFO, msg);
+    }
   }
 }

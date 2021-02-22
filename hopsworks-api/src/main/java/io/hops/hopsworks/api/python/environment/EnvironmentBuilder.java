@@ -20,6 +20,7 @@ import io.hops.hopsworks.api.python.command.CommandBuilder;
 import io.hops.hopsworks.api.python.conflicts.ConflictBuilder;
 import io.hops.hopsworks.api.python.library.LibraryBuilder;
 import io.hops.hopsworks.common.api.ResourceRequest;
+import io.hops.hopsworks.common.python.PyPiLibraryElasticIndexer;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.persistence.entity.project.Project;
 
@@ -44,6 +45,8 @@ public class EnvironmentBuilder {
   private ConflictBuilder conflictBuilder;
   @EJB
   private Settings settings;
+  @EJB
+  private PyPiLibraryElasticIndexer pypiIndexer;
 
   public EnvironmentDTO uri(EnvironmentDTO dto, UriInfo uriInfo) {
     dto.setHref(uriInfo.getAbsolutePathBuilder().build());
@@ -73,6 +76,7 @@ public class EnvironmentBuilder {
     uri(dto, uriInfo, project, version);
     expand(dto, resourceRequest);
     if (dto.isExpand()) {
+      dto.setPipSearchEnabled(pypiIndexer.isIndexed());
       dto.setPythonConflicts(project.getPythonEnvironment().getConflicts() != null);
       dto.setCondaChannel(settings.getCondaDefaultRepo());
       dto.setPythonVersion(version);
