@@ -25,5 +25,7 @@ public enum ServingType {
   @JsonProperty("TENSORFLOW")
   TENSORFLOW,
   @JsonProperty("SKLEARN")
-  SKLEARN; //Note: since we map enum directly to the DB the order is important!
+  SKLEARN, //Note: since we map enum directly to the DB the order is important!
+  @JsonProperty("KFSERVING_TENSORFLOW")
+  KFSERVING_TENSORFLOW
 }

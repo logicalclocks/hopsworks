@@ -45,6 +45,7 @@ import io.hops.hopsworks.kube.project.KubeProjectConfigMaps;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.serving.Serving;
 import io.hops.hopsworks.persistence.entity.user.Users;
+import org.json.JSONObject;
 
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
@@ -96,6 +97,10 @@ public class KubeTfServingController {
 
   public String getServiceName(String servingId) {
     return "tf-serving-ser-" + servingId;
+  }
+
+  public String getInferenceServiceName(String servingId) {
+    return "tf-serving-inf-" + servingId;
   }
 
   public Deployment buildServingDeployment(Project project, Users user,
@@ -255,6 +260,22 @@ public class KubeTfServingController {
         .withMetadata(getServiceMetadata(servingIdStr))
         .withSpec(tfServingServiceSpec)
         .build();
+  }
+  
+  public JSONObject buildInferenceServicePredictor(String artifactPath) {
+    return new JSONObject() {
+      {
+        put("predictor", new JSONObject() {
+          {
+            put("tensorflow", new JSONObject() {
+              {
+                put("storageUri", artifactPath);
+              }
+            });
+          }
+        });
+      }
+    };
   }
   
   private String getLogstashURL() throws ServiceDiscoveryException {

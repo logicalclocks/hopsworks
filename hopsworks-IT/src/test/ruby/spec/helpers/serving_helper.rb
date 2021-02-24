@@ -26,6 +26,15 @@ SKLEARN_SCRIPT_TOUR_FILE_LOCATION = "/user/hdfs/tensorflow_demo/notebooks/End_To
 
 module ServingHelper
 
+  def with_kfserving_tensorflow(project_id, project_name, user)
+    # Copy model to the project directory
+    mkdir("/Projects/#{project_name}/Models/mnist/", "#{project_name}__#{user}", "#{project_name}__Models", 750)
+    copy(TF_MODEL_TOUR_FILE_LOCATION, "/Projects/#{project_name}/Models/mnist/", "#{user}", "#{project_name}__Models", 750, "#{project_name}")
+
+    @serving ||= create_kfserving_tensorflow(project_id, project_name)
+    @topic = ProjectTopics.find(@serving[:kafka_topic_id])
+  end
+
   def with_tf_serving(project_id, project_name, user)
     # Copy model to the project directory
     mkdir("/Projects/#{project_name}/Models/mnist/", "#{project_name}__#{user}", "#{project_name}__Models", 750)
@@ -55,6 +64,26 @@ module ServingHelper
     @topic = ProjectTopics.find(@serving[:kafka_topic_id])
   end
 
+  def create_kfserving_tensorflow(project_id, project_name)
+    serving_name = "testModel#{short_random_id}"
+    put "#{ENV['HOPSWORKS_API']}/project/#{project_id}/serving/",
+              {name: serving_name,
+               artifactPath: "/Projects/#{project_name}/Models/mnist/",
+               modelVersion: 1,
+               batchingEnabled: true,
+               kafkaTopicDTO: {
+                  name: "CREATE",
+                  numOfPartitions: 1,
+                  numOfReplicas: 1
+               },
+               servingType: "KFSERVING_TENSORFLOW",
+               availableInstances: 1,
+               requestedInstances: 1
+              }
+    expect_status(201)
+    Serving.find_by(project_id: project_id, name: serving_name)
+  end
+
   def create_tf_serving(project_id, project_name)
     serving_name = "testModel#{short_random_id}"
     put "#{ENV['HOPSWORKS_API']}/project/#{project_id}/serving/",
@@ -73,6 +102,46 @@ module ServingHelper
               }
     expect_status(201)
     Serving.find_by(project_id: project_id, name: serving_name)
+  end
+
+  def purge_all_kfserving_instances(project_name, should_exist=true)
+    namespace = project_name.gsub("_","-").downcase
+    output = nil
+    inf_services = nil
+
+    if kubernetes_installed
+      kube_user = Variables.find_by(id: "kube_user").value
+
+      #Get all inference services
+      cmd = "sudo su #{kube_user} /bin/bash -c \"kubectl get inferenceservices --namespace=#{namespace} -o=jsonpath='{.items[*].metadata.name}'\""
+      Open3.popen3(cmd) do |_, stdout, _, wait_thr|
+        inf_services = stdout.read.split("\n")
+      end
+      if should_exist
+        expect(inf_services).not_to be_empty
+      end
+
+      #Remove all inference services
+      cmd = "sudo su #{kube_user} /bin/bash -c \"kubectl delete --all inferenceservices --namespace=#{namespace}\""
+      Open3.popen3(cmd) do |_, stdout, _, wait_thr|
+        output = stdout.read
+      end
+
+      if should_exist
+        output != "No resources in #{namespace} namespace." and output != ""
+      else
+        output == "No resources in #{namespace} namespace." or output == ""
+      end
+      if should_exist
+        inf_services.each do |name|
+          expect(output).to include(name)
+        end
+      else
+        inf_services.each do |name|
+          expect(output).not_to include(name)
+        end
+      end
+    end
   end
 
   def purge_all_tf_serving_instances()

@@ -84,11 +84,16 @@ public class ServingUtil {
       throw new IllegalArgumentException("Serving name must follow regex: \"[a-zA-Z0-9]+\"");
     }
     //Serving-type-specific validations
-    if(servingWrapper.getServing().getServingType() == ServingType.TENSORFLOW){
-      validateTfUserInput(servingWrapper, project);
-    }
-    if(servingWrapper.getServing().getServingType() == ServingType.SKLEARN){
-      validateSKLearnUserInput(servingWrapper, project);
+    switch (servingWrapper.getServing().getServingType()){
+      case KFSERVING_TENSORFLOW:
+        validateKFServingUserInput(servingWrapper);
+        break;
+      case TENSORFLOW:
+        validateTfUserInput(servingWrapper);
+        break;
+      case SKLEARN:
+        validateSKLearnUserInput(servingWrapper, project);
+        break;
     }
   }
   
@@ -121,15 +126,26 @@ public class ServingUtil {
     }
   }
   
+  /**
+   * Validates user data for creating or updating a KFServing Serving Instance
+   *
+   * @param servingWrapper the user data
+   * @throws ServingException
+   */
+  public void validateKFServingUserInput(ServingWrapper servingWrapper) {
+    if (servingWrapper.getServing().getServingType() == ServingType.KFSERVING_TENSORFLOW) {
+      // Check that the modelPath respects the TensorFlow standard
+      validateTfModelPath(servingWrapper.getServing().getArtifactPath(), servingWrapper.getServing().getVersion());
+    }
+  }
   
   /**
    * Validates user data for creating or updating a Tensorflow Serving Instance
    *
    * @param servingWrapper the user data
-   * @param project the project to create the serving for
    * @throws ServingException if the python environment is not activated for the project
    */
-  public void validateTfUserInput(ServingWrapper servingWrapper, Project project) {
+  public void validateTfUserInput(ServingWrapper servingWrapper) {
     // Check that the modelPath respects the TensorFlow standard
     validateTfModelPath(servingWrapper.getServing().getArtifactPath(),
       servingWrapper.getServing().getVersion());
