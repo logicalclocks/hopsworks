@@ -10,7 +10,6 @@ import io.fabric8.kubernetes.api.model.SecurityContextBuilder;
 import io.hops.hopsworks.common.hosts.ServiceDiscoveryController;
 import io.fabric8.kubernetes.api.model.Container;
 import io.fabric8.kubernetes.api.model.ContainerBuilder;
-import io.fabric8.kubernetes.api.model.EmptyDirVolumeSource;
 import io.fabric8.kubernetes.api.model.EnvVar;
 import io.fabric8.kubernetes.api.model.EnvVarBuilder;
 import io.fabric8.kubernetes.api.model.IntOrString;
@@ -140,10 +139,6 @@ public class KubeTfServingController {
     tfServingEnv.add(new EnvVarBuilder().withName("RESTPORT")
         .withValue("1234").build());
 
-    List<EnvVar> fileBeatEnv = new ArrayList<>();
-    fileBeatEnv.add(new EnvVarBuilder().withName("LOGPATH").withValue("/logs/*").build());
-    fileBeatEnv.add(new EnvVarBuilder().withName("LOGSTASH").withValue(getLogstashURL()).build());
-
     SecretVolumeSource secretVolume = new SecretVolumeSourceBuilder()
         .withSecretName(kubeClientService.getKubeDeploymentName(project, user))
         .build();
@@ -151,11 +146,6 @@ public class KubeTfServingController {
     Volume secretVol = new VolumeBuilder()
         .withName("certs")
         .withSecret(secretVolume)
-        .build();
-
-    Volume logs = new VolumeBuilder()
-        .withName("logs")
-        .withEmptyDir(new EmptyDirVolumeSource())
         .build();
 
     Volume hadoopConf = new VolumeBuilder()
@@ -172,11 +162,6 @@ public class KubeTfServingController {
         .withMountPath("/certs")
         .build();
 
-    VolumeMount logMount = new VolumeMountBuilder()
-        .withName("logs")
-        .withMountPath("/logs")
-        .build();
-
     VolumeMount hadoopConfMount = new VolumeMountBuilder()
         .withName("hadoopconf")
         .withReadOnly(true)
@@ -190,20 +175,10 @@ public class KubeTfServingController {
         .withEnv(tfServingEnv)
         .withSecurityContext(new SecurityContextBuilder().withRunAsUser(settings.getYarnAppUID()).build())
         .withCommand("tfserving-launcher.sh")
-        .withVolumeMounts(secretMount, logMount, hadoopConfMount)
+        .withVolumeMounts(secretMount, hadoopConfMount)
         .build();
 
-    Container fileBeatContainer = new ContainerBuilder()
-        .withName("filebeat")
-        .withImage(ProjectUtils.getRegistryURL(settings,
-            serviceDiscoveryController) + "/filebeat:" + settings.
-            getHopsworksVersion())
-        .withImagePullPolicy(settings.getKubeImagePullPolicy())
-        .withEnv(fileBeatEnv)
-        .withVolumeMounts(logMount)
-        .build();
-
-    List<Container> containerList = Arrays.asList(tfContainer, fileBeatContainer);
+    List<Container> containerList = Arrays.asList(tfContainer);
 
     LabelSelector labelSelector = new LabelSelectorBuilder()
         .addToMatchLabels("model", servingIdStr)
@@ -218,7 +193,7 @@ public class KubeTfServingController {
 
     PodSpec podSpec = new PodSpecBuilder()
         .withContainers(containerList)
-        .withVolumes(secretVol, logs, hadoopConf)
+        .withVolumes(secretVol, hadoopConf)
         .build();
 
     PodTemplateSpec podTemplateSpec = new PodTemplateSpecBuilder()
@@ -276,12 +251,5 @@ public class KubeTfServingController {
         });
       }
     };
-  }
-  
-  private String getLogstashURL() throws ServiceDiscoveryException {
-    com.logicalclocks.servicediscoverclient.service.Service logstash =
-        serviceDiscoveryController
-            .getAnyAddressOfServiceWithDNS(ServiceDiscoveryController.HopsworksService.TF_SERVING_LOGSTASH);
-    return logstash.getAddress() + ":" + logstash.getPort();
   }
 }

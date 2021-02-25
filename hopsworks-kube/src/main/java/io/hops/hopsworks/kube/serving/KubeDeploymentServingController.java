@@ -42,11 +42,15 @@ public class KubeDeploymentServingController extends KubeToolServingController {
   @EJB
   private KubeSkLearnServingController kubeSkLearnServingController;
   
+  public KubeDeploymentServingController() {
+    super("deployment");
+  }
+  
   @Override
   public void createInstance(Project project, Users user, Serving serving) throws ServingException {
     try {
       kubeClientService.createOrReplaceDeployment(project, buildDeployment(project, user, serving));
-      kubeClientService.createOrReplaceService(project, buildService(serving));
+      kubeClientService.createOrReplaceService(project, buildService(project, serving));
     } catch (ServiceDiscoveryException e) {
       throw new ServingException(RESTCodes.ServingErrorCode.LIFECYCLEERRORINT, Level.SEVERE, null, e.getMessage(), e);
     }
@@ -151,27 +155,44 @@ public class KubeDeploymentServingController extends KubeToolServingController {
     return kubeClientService.getPodList(project, labelMap);
   }
   
-  private Deployment buildDeployment(Project project, Users user,
-    Serving serving) throws ServiceDiscoveryException {
+  private Deployment buildDeployment(Project project, Users user, Serving serving) throws ServiceDiscoveryException {
+    Deployment deployment;
     switch (serving.getServingType()) {
       case TENSORFLOW:
-        return kubeTfServingController.buildServingDeployment(project, user, serving);
+        deployment = kubeTfServingController.buildServingDeployment(project, user, serving);
+        break;
       case SKLEARN:
-        return kubeSkLearnServingController.buildServingDeployment(project, user, serving);
+        deployment = kubeSkLearnServingController.buildServingDeployment(project, user, serving);
+        break;
       default:
         throw new NotSupportedException("Serving type not supported for kubernetes deployments");
     }
+    
+    // Add service.hops.works labels
+    addHopsworksServingLabels(deployment.getMetadata(), project, serving);
+    // TODO: Add labels to pods included in the deployment
+    addHopsworksServingLabels(deployment.getSpec().getTemplate().getMetadata(), project, serving);
+    
+    return deployment;
   }
   
-  private Service buildService(Serving serving) {
+  private Service buildService(Project project, Serving serving) {
+    Service service;
     switch (serving.getServingType()) {
       case TENSORFLOW:
-        return kubeTfServingController.buildServingService(serving);
+        service = kubeTfServingController.buildServingService(serving);
+        break;
       case SKLEARN:
-        return kubeSkLearnServingController.buildServingService(serving);
+        service = kubeSkLearnServingController.buildServingService(serving);
+        break;
       default:
         throw new NotSupportedException("Serving type not supported for kubernetes services");
     }
+    
+    // Add service.hops.works labels
+    addHopsworksServingLabels(service.getMetadata(), project, serving);
+    
+    return service;
   }
   
   private ObjectMeta getDeploymentMetadata(String servingId, ServingType servingType) {
@@ -205,6 +226,22 @@ public class KubeDeploymentServingController extends KubeToolServingController {
         return kubeSkLearnServingController.getServiceName(servingId);
       default:
         throw new NotSupportedException("Serving type not supported for kubernetes services");
+    }
+  }
+  
+  private void addHopsworksServingLabels(ObjectMeta metadata, Project project, Serving serving) {
+    String servingId = String.valueOf(serving.getId());
+    Integer projectId = project.getId();
+    ServingType servingType = serving.getServingType();
+    
+    Map<String, String> labels = metadata.getLabels();
+    Map<String, String> servingLabels = KubeServingUtils.getHopsworksServingLabels(projectId, servingId,
+      serving.getName(), KubeServingUtils.getModelName(serving), serving.getVersion(), servingType, SERVING_TOOL_NAME);
+    
+    if (labels == null) {
+      metadata.setLabels(servingLabels);
+    } else {
+      labels.putAll(servingLabels);
     }
   }
 }

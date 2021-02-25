@@ -238,6 +238,7 @@ angular.module('hopsWorksApp')
                 self.editServing.kafkaTopicDTO = self.projectKafkaTopics[0];
                 self.editServing.kafkaTopicDTO.numOfPartitions = self.kafkaDefaultNumPartitions;
                 self.editServing.kafkaTopicDTO.numOfReplicas = self.kafkaDefaultNumReplicas;
+                self.editServing.kfserving = false;
                 self.editServing.batchingEnabled = false;
                 self.editServing.servingType = "TENSORFLOW";
             };
@@ -570,9 +571,9 @@ angular.module('hopsWorksApp')
                  function (success) {
                     var kibanaUrl = success.data.kibanaUrl;
                      self.kibanaUI = kibanaUrl + "projectId=" + self.projectId +
-                                        "#/discover?_g=()&_a=(columns:!(modelname,log_message,'@timestamp')," +
+                                        "#/discover?_g=()&_a=(columns:!(serving_name,log_message,'@timestamp')," +
                                         "index:'" + projectName.toLowerCase() + "_serving-*',interval:auto," +
-                                        "query:(language:lucene,query:'modelname:" + serving.name + "'),sort:!('@timestamp',desc))";
+                                        "query:(language:lucene,query:'serving_name:" + serving.name + "'),sort:!('@timestamp',desc))";
                      self.showLogs = true;
 
                  }, function (error) {

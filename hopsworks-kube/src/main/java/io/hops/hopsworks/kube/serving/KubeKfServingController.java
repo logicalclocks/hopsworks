@@ -52,11 +52,6 @@ public class KubeKfServingController extends KubeToolServingController {
   private final static String MODEL_SERVING_SECRET_SUFFIX = "--serving";
   private final static String MODEL_SERVING_SECRET_APIKEY_NAME = "apiKey";
   
-  private final static String LABEL_PREFIX = "serving.hops.works";
-  private final static String SERVING_LABEL_NAME = LABEL_PREFIX + "/serving";
-  private final static String PROJECT_LABEL_NAME = LABEL_PREFIX + "/project";
-  private final static String FRAMEWORK_LABEL_NAME = LABEL_PREFIX + "/framework";
-  
   @EJB
   private KubeClientService kubeClientService;
   @EJB
@@ -72,6 +67,10 @@ public class KubeKfServingController extends KubeToolServingController {
   @EJB
   private DatasetHelper datasetHelper;
   
+  public KubeKfServingController() {
+    super("kfserving");
+  }
+  
   @Override
   public void createInstance(Project project, Users user, Serving serving) throws ServingException {
     try {
@@ -85,9 +84,8 @@ public class KubeKfServingController extends KubeToolServingController {
   
   @Override
   public void updateInstance(Project project, Users user, Serving serving) throws ServingException {
-    String servingId = String.valueOf(serving.getId());
     try {
-      DeploymentStatus deploymentStatus = getDeploymentStatus(project, servingId);
+      DeploymentStatus deploymentStatus = getDeploymentStatus(project, serving);
       if (deploymentStatus != null) {
         createInstance(project, user, serving);
       }
@@ -98,14 +96,11 @@ public class KubeKfServingController extends KubeToolServingController {
   
   @Override
   public void deleteInstance(Project project, Serving serving) throws ServingException {
-    String servingId = String.valueOf(serving.getId());
-    
     try {
-      DeploymentStatus deploymentStatus = getDeploymentStatus(project, servingId);
+      DeploymentStatus deploymentStatus = getDeploymentStatus(project, serving);
       if (deploymentStatus != null) {
         kubeKfServingClientService
-          .deleteInferenceService(project, getInferenceServiceMetadataObject(project.getId(), servingId,
-            serving.getServingType()));
+          .deleteInferenceService(project, getInferenceServiceMetadataObject(project, serving));
       }
     } catch (KubernetesClientException e) {
       throw new ServingException(RESTCodes.ServingErrorCode.DELETIONERROR, Level.SEVERE, null, e.getMessage(), e);
@@ -114,14 +109,12 @@ public class KubeKfServingController extends KubeToolServingController {
   
   @Override
   public KubeServingInternalStatus getInternalStatus(Project project, Serving serving) throws ServingException {
-    String servingId = String.valueOf(serving.getId());
-    
     DeploymentStatus deploymentStatus;
     List<Pod> podList;
     Integer nodePort;
     try {
-      deploymentStatus = getDeploymentStatus(project, servingId);
-      podList = getPodList(project, servingId);
+      deploymentStatus = getDeploymentStatus(project, serving);
+      podList = getPodList(project, serving);
       nodePort = kubeIstioClientService.getIstioIngressNodePort();
     } catch (KubernetesClientException e) {
       throw new ServingException(RESTCodes.ServingErrorCode.STATUSERROR, Level.SEVERE, null, e.getMessage(), e);
@@ -198,15 +191,15 @@ public class KubeKfServingController extends KubeToolServingController {
     datasetController.zip(project, user, artifactPath, artifactPath);
   }
   
-  private DeploymentStatus getDeploymentStatus(Project project, String servingId) {
+  private DeploymentStatus getDeploymentStatus(Project project, Serving serving) {
     Map<String, String> labelMap = new HashMap<>();
-    labelMap.put(SERVING_LABEL_NAME, servingId);
+    labelMap.put(KubeServingUtils.SERVING_ID_LABEL_NAME, String.valueOf(serving.getId()));
     return kubeClientService.getDeploymentStatus(project, labelMap);
   }
   
-  private List<Pod> getPodList(Project project, String servingId) {
+  private List<Pod> getPodList(Project project, Serving serving) {
     Map<String, String> labelMap = new HashMap<>();
-    labelMap.put(SERVING_LABEL_NAME, servingId);
+    labelMap.put(KubeServingUtils.SERVING_ID_LABEL_NAME, String.valueOf(serving.getId()));
     return kubeClientService.getPodList(project, labelMap);
   }
   
@@ -219,7 +212,7 @@ public class KubeKfServingController extends KubeToolServingController {
   }
   
   private JSONObject buildInferenceService(Project project, Serving serving) {
-    String servingId = String.valueOf(serving.getId());
+    
     String versionedArtifactPath = getVersionedArtifactPath(serving);
     
     JSONObject predictor;
@@ -238,7 +231,7 @@ public class KubeKfServingController extends KubeToolServingController {
         put("apiVersion", String.format("%s/%s", KubeKfServingClientService.INFERENCESERVICE_GROUP,
           KubeKfServingClientService.INFERENCESERVICE_VERSION));
         put("kind", KubeKfServingClientService.INFERENCESERVICE_KIND);
-        put("metadata", getInferenceServingMetadataJSON(project.getId(), servingId, serving.getServingType()));
+        put("metadata", getInferenceServingMetadataJSON(project, serving));
         put("spec", new JSONObject() {
           {
             put("default", predictor);
@@ -248,21 +241,18 @@ public class KubeKfServingController extends KubeToolServingController {
     };
   }
   
-  private ObjectMeta getInferenceServiceMetadataObject(Integer projectId, String servingId, ServingType servingType) {
+  private ObjectMeta getInferenceServiceMetadataObject(Project project, Serving serving) {
+    String servingId = String.valueOf(serving.getId());
+    
     return new ObjectMetaBuilder()
-      .withName(getInferenceServiceName(servingId, servingType))
-      .withLabels(new HashMap<String, String>() {
-        {
-          put(SERVING_LABEL_NAME, servingId);
-          put(PROJECT_LABEL_NAME, projectId.toString());
-          put(FRAMEWORK_LABEL_NAME, getFramework(servingType));
-        }
-      })
+      .withName(getInferenceServiceName(servingId, serving.getServingType()))
+      .withLabels(KubeServingUtils.getHopsworksServingLabels(project.getId(), servingId, serving.getName(),
+        KubeServingUtils.getModelName(serving), serving.getVersion(), serving.getServingType(), SERVING_TOOL_NAME))
       .build();
   }
   
-  private JSONObject getInferenceServingMetadataJSON(Integer projectId, String servingId, ServingType servingType) {
-    ObjectMeta metadata = getInferenceServiceMetadataObject(projectId, servingId, servingType);
+  private JSONObject getInferenceServingMetadataJSON(Project project, Serving serving) {
+    ObjectMeta metadata = getInferenceServiceMetadataObject(project, serving);
     return new JSONObject() {
       {
         put("name", metadata.getName());
@@ -284,9 +274,5 @@ public class KubeKfServingController extends KubeToolServingController {
       default:
         throw new NotSupportedException("Serving type not supported for KFServing inference services");
     }
-  }
-  
-  private String getFramework(ServingType servingType) {
-    return servingType.toString().split("_")[1].toLowerCase();
   }
 }

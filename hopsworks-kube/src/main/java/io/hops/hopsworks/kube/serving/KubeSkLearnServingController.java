@@ -20,7 +20,6 @@ import com.logicalclocks.servicediscoverclient.exceptions.ServiceDiscoveryExcept
 import io.fabric8.kubernetes.api.model.ConfigMapVolumeSourceBuilder;
 import io.fabric8.kubernetes.api.model.Container;
 import io.fabric8.kubernetes.api.model.ContainerBuilder;
-import io.fabric8.kubernetes.api.model.EmptyDirVolumeSource;
 import io.fabric8.kubernetes.api.model.EnvVar;
 import io.fabric8.kubernetes.api.model.EnvVarBuilder;
 import io.fabric8.kubernetes.api.model.IntOrString;
@@ -137,15 +136,6 @@ public class KubeSkLearnServingController {
       settings.getAnacondaProjectDir()+ "/bin/python").build());
     servingEnv.add(new EnvVarBuilder().withName("SCRIPT_NAME").withValue("predict.py").build());
     servingEnv.add(new EnvVarBuilder().withName("IS_KUBE").withValue("true").build());
-    servingEnv.add(new EnvVarBuilder().withName("LOGFILE").withValue("/logs/model.log").build());
-    
-    List<EnvVar> fileBeatEnv = new ArrayList<>();
-    fileBeatEnv.add(new EnvVarBuilder().withName("LOGPATH").withValue("/logs/*").build());
-    fileBeatEnv.add(new EnvVarBuilder().withName("LOGSTASH").withValue(getLogstashURL()).build());
-    fileBeatEnv.add(new EnvVarBuilder().withName("PROJECT").withValue(project.getName().toLowerCase()).build());
-    fileBeatEnv.add(new EnvVarBuilder().withName("MODEL").withValue(serving.getName().toLowerCase()).build());
-    fileBeatEnv.add(new EnvVarBuilder().withName("SKLEARN").withValue("true").build());
-
     SecretVolumeSource secretVolume = new SecretVolumeSourceBuilder()
         .withSecretName(kubeClientService.getKubeDeploymentName(project, user))
         .build();
@@ -154,12 +144,7 @@ public class KubeSkLearnServingController {
         .withName("certs")
         .withSecret(secretVolume)
         .build();
-
-    Volume logs = new VolumeBuilder()
-        .withName("logs")
-        .withEmptyDir(new EmptyDirVolumeSource())
-        .build();
-
+    
     Volume pythonEnv = new VolumeBuilder()
       .withName("hadoopconf")
       .withConfigMap(
@@ -173,12 +158,7 @@ public class KubeSkLearnServingController {
         .withReadOnly(true)
         .withMountPath("/certs")
         .build();
-
-    VolumeMount logMount = new VolumeMountBuilder()
-        .withName("logs")
-        .withMountPath("/logs")
-        .build();
-
+    
     VolumeMount hadoopConfEnvMount = new VolumeMountBuilder()
       .withName("hadoopconf")
       .withReadOnly(true)
@@ -192,20 +172,10 @@ public class KubeSkLearnServingController {
         .withEnv(servingEnv)
         .withSecurityContext(new SecurityContextBuilder().withRunAsUser(settings.getYarnAppUID()).build())
         .withCommand("sklearn_serving-launcher.sh")
-        .withVolumeMounts(secretMount, logMount, hadoopConfEnvMount)
+        .withVolumeMounts(secretMount, hadoopConfEnvMount)
         .build();
 
-    Container fileBeatContainer = new ContainerBuilder()
-        .withName("filebeat")
-        .withImage(ProjectUtils.getRegistryURL(settings,
-            serviceDiscoveryController) + "/filebeat:" + settings.
-            getHopsworksVersion())
-        .withImagePullPolicy(settings.getKubeImagePullPolicy())
-        .withEnv(fileBeatEnv)
-        .withVolumeMounts(logMount)
-        .build();
-
-    List<Container> containerList = Arrays.asList(skLeanContainer, fileBeatContainer);
+    List<Container> containerList = Arrays.asList(skLeanContainer);
 
     LabelSelector labelSelector = new LabelSelectorBuilder()
         .addToMatchLabels("model", servingIdStr)
@@ -220,7 +190,7 @@ public class KubeSkLearnServingController {
 
     PodSpec podSpec = new PodSpecBuilder()
         .withContainers(containerList)
-        .withVolumes(secretVol, logs, pythonEnv)
+        .withVolumes(secretVol, pythonEnv)
         .build();
 
     PodTemplateSpec podTemplateSpec = new PodTemplateSpecBuilder()
@@ -262,12 +232,5 @@ public class KubeSkLearnServingController {
         .withMetadata(getServiceMetadata(servingIdStr))
         .withSpec(tfServingServiceSpec)
         .build();
-  }
-  
-  private String getLogstashURL() throws ServiceDiscoveryException {
-    com.logicalclocks.servicediscoverclient.service.Service logstash =
-        serviceDiscoveryController
-            .getAnyAddressOfServiceWithDNS(ServiceDiscoveryController.HopsworksService.SKLEARN_SERVING_LOGSTASH);
-    return logstash.getAddress() + ":" + logstash.getPort();
   }
 }

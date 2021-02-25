@@ -286,14 +286,13 @@ describe "On #{ENV['OS']}" do
           # Sleep a bit to make sure that logs are propagated correctly to the index
           sleep(30)
 
-          # TODO: Elasticsearch logs not supported yet
           # Check that the logs are written in the elastic index.
-          #elastic_rest do
-          #  response = elastic_get "#{@project[:projectname].downcase}_serving*/_search?q=modelname:#{@serving[:name]}"
-          #  index = response.body
-          #  parsed_index = JSON.parse(index)
-          #  expect(parsed_index['hits']['total']['value']).to be > 0
-          #end
+          elastic_rest do
+            response = elastic_get "#{@project[:projectname].downcase}_serving*/_search?q=serving_name:#{@serving[:name]}"
+            index = response.body
+            parsed_index = JSON.parse(index)
+            expect(parsed_index['hits']['total']['value']).to be > 0
+          end
         end
 
         it "should create a zipped model artifact when starting a serving instance" do

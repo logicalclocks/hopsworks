@@ -56,6 +56,7 @@ public class ServiceDiscoveryController {
     HIVE_SERVER_TLS("hiveserver2-tls.hive"),
     HIVE_METASTORE("metastore.hive"),
     RPC_NAMENODE("rpc.namenode"),
+    SERVING_LOGSTASH("serving.logstash"),
     TF_SERVING_LOGSTASH("tfserving.logstash"),
     SKLEARN_SERVING_LOGSTASH("sklearnserving.logstash"),
     PYTHON_JOBS_LOGSTASH("pythonjobs.logstash"),
