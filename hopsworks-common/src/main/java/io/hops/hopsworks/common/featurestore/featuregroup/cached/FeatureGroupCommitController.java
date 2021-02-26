@@ -37,12 +37,10 @@ import javax.ejb.TransactionAttributeType;
 import java.sql.Timestamp;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.HashMap;
 import java.util.Optional;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.regex.Pattern;
 
 /**
  * Class controlling the interaction with the training_dataset table and required business logic
@@ -62,26 +60,19 @@ public class FeatureGroupCommitController {
   private static final String HOODIE_METADATA_DIR = ".hoodie";
   private static final String HOODIE_COMMIT_METADATA_FILE = ".commit";
   private static final Logger LOGGER = Logger.getLogger(FeatureGroupCommitController.class.getName());
-  private static final HashMap<Pattern, String> DATE_FORMAT_PATTERNS = new HashMap<Pattern, String>() {{
-      put(Pattern.compile("^([0-9]{4})([0-9]{2})([0-9]{2})$"), "yyyyMMdd");
-      put(Pattern.compile("^([0-9]{4})([0-9]{2})([0-9]{2})([0-9]{2})$"), "yyyyMMddHH");
-      put(Pattern.compile("^([0-9]{4})([0-9]{2})([0-9]{2})([0-9]{2})([0-9]{2})$"), "yyyyMMddHHmm");
-      put(Pattern.compile("^([0-9]{4})([0-9]{2})([0-9]{2})([0-9]{2})([0-9]{2})([0-9]{2})$"), "yyyyMMddHHmmss");
-    }};
 
   public FeatureGroupCommit createHudiFeatureGroupCommit(Users user, Featuregroup featuregroup, String commitDateString,
-                                                         Long rowsUpdated, Long rowsInserted, Long rowsDeleted,
-                                                         Integer validationId)
+                                                         Long commitTime, Long rowsUpdated, Long rowsInserted,
+                                                         Long rowsDeleted, Integer validationId)
       throws FeaturestoreException {
     // Compute HUDI commit path
     String commitPath = computeHudiCommitPath(featuregroup, commitDateString);
 
     Inode inode = inodeController.getInodeAtPath(commitPath);
     // commit id will be timestamp
-    FeatureGroupCommit featureGroupCommit = new FeatureGroupCommit(featuregroup.getId(),
-        getTimeStampFromDateString(commitDateString));
+    FeatureGroupCommit featureGroupCommit = new FeatureGroupCommit(featuregroup.getId(), commitTime);
     featureGroupCommit.setInode(inode);
-    featureGroupCommit.setCommittedOn(new Timestamp(getTimeStampFromDateString(commitDateString)));
+    featureGroupCommit.setCommittedOn(new Timestamp(commitTime));
     featureGroupCommit.setNumRowsUpdated(rowsUpdated);
     featureGroupCommit.setNumRowsInserted(rowsInserted);
     featureGroupCommit.setNumRowsDeleted(rowsDeleted);
@@ -97,12 +88,11 @@ public class FeatureGroupCommitController {
     return featureGroupCommit;
   }
 
-  public FeatureGroupCommit findCommitByDate(Featuregroup featuregroup, String wallclocktime)
+  public FeatureGroupCommit findCommitByDate(Featuregroup featuregroup, Long commitTimestamp)
       throws FeaturestoreException {
     Optional<FeatureGroupCommit> featureGroupCommit;
-    if (wallclocktime != null){
-      Long wallclockTimestamp =  getTimeStampFromDateString(wallclocktime);
-      featureGroupCommit = featureGroupCommitFacade.findClosestDateCommit(featuregroup.getId(),  wallclockTimestamp);
+    if (commitTimestamp != null){
+      featureGroupCommit = featureGroupCommitFacade.findClosestDateCommit(featuregroup.getId(),  commitTimestamp);
     } else {
       featureGroupCommit = featureGroupCommitFacade.findLatestDateCommit(featuregroup.getId());
     }
@@ -113,36 +103,14 @@ public class FeatureGroupCommitController {
   }
 
   public CollectionInfo getCommitDetails(Integer featureGroupId, Integer limit, Integer offset,
-                                                        Set<? extends AbstractFacade.SortBy> sort) {
-    return featureGroupCommitFacade.getCommitDetails(featureGroupId, limit, offset, sort);
-  }
+                                         Set<? extends AbstractFacade.SortBy> sort,
+                                         Set<? extends AbstractFacade.FilterBy> filters) {
 
-  public Long getTimeStampFromDateString(String inputDate) throws FeaturestoreException {
-    String tempDate = inputDate.replace("/", "")
-        .replace("-", "").replace(" ", "")
-        .replace(":","");
-    String dateFormatPattern = null;
-
-    for (Pattern pattern : DATE_FORMAT_PATTERNS.keySet()) {
-      if (pattern.matcher(tempDate).matches()) {
-        dateFormatPattern = DATE_FORMAT_PATTERNS.get(pattern);
-      }
+    if (filters == null || filters.isEmpty()) {
+      return featureGroupCommitFacade.getCommitDetails(featureGroupId, limit, offset, sort);
+    } else {
+      return featureGroupCommitFacade.getCommitDetailsByDate(featureGroupId, limit, offset, sort, filters);
     }
-
-    if (dateFormatPattern == null) {
-      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.PROVIDED_DATE_FORMAT_NOT_SUPPORTED,
-          Level.FINE, "Unable to identify format of the provided date value : " + inputDate);
-    }
-
-    SimpleDateFormat dateFormat = new SimpleDateFormat(dateFormatPattern);
-    Long commitTimeStamp = null;
-    try {
-      commitTimeStamp = dateFormat.parse(tempDate).getTime();
-    } catch (ParseException e) {
-      LOGGER.log(Level.FINE, "Unable to convert provided date value : " + tempDate + " to timestamp", e);
-    }
-
-    return commitTimeStamp;
   }
 
   protected String computeHudiCommitPath(Featuregroup featuregroup, String commitDateString) {

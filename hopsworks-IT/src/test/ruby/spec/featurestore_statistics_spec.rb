@@ -63,7 +63,7 @@ describe "On #{ENV['OS']}" do
           expect(parsed_json["count"] == 1).to be true
           expect(parsed_json["items"][0].key?("content")).to be true
           expect(JSON.parse(parsed_json["items"][0]["content"])).to eql({"columns" => ["a", "b", "c"]})
-          expect(parsed_json["items"][0]["commitTime"] == "20200820080808").to be true
+          expect(parsed_json["items"][0]["commitTime"]).to eql(1597903688000)
         end
 
         it "should be able to get a specific statistics commit with content field of a training dataset" do
@@ -84,7 +84,7 @@ describe "On #{ENV['OS']}" do
           expect(parsed_json["count"] == 1).to be true
           expect(parsed_json["items"][0].key?("content")).to be true
           expect(JSON.parse(parsed_json["items"][0]["content"])).to eql({"columns" => ["a", "b", "c"]})
-          expect(parsed_json["items"][0]["commitTime"] == "20200820080808").to be true
+          expect(parsed_json["items"][0]["commitTime"]).to eql(1597903688000)
         end
 
         it "should be able to get the latest statistics commit for a feature group" do
@@ -96,7 +96,7 @@ describe "On #{ENV['OS']}" do
           create_statistics_commit(project.id, featurestore_id, "featuregroups", parsed_json["id"])
           expect_status(200)
           create_statistics_commit(project.id, featurestore_id, "featuregroups", parsed_json["id"],
-                                                 commit_time: "20200821080808")
+                                                 commit_time: 1597990088000)
           expect_status(200)
           json_result = get_last_statistics_commit(project.id, featurestore_id, "featuregroups", parsed_json["id"])
           expect_status_details(200)
@@ -108,7 +108,7 @@ describe "On #{ENV['OS']}" do
           expect(parsed_json["items"].length == 1).to be true
           expect(parsed_json["items"][0].key?("content")).to be true
           expect(JSON.parse(parsed_json["items"][0]["content"])).to eql({"columns" => ["a", "b", "c"]})
-          expect(parsed_json["items"][0]["commitTime"] == "20200821080808").to be true
+          expect(parsed_json["items"][0]["commitTime"]).to eql(1597990088000)
         end
 
         it "should be able to get the latest statistics commit for a training dataset" do
@@ -121,7 +121,7 @@ describe "On #{ENV['OS']}" do
           create_statistics_commit(project.id, featurestore_id, "trainingdatasets", parsed_json["id"])
           expect_status(200)
           create_statistics_commit(project.id, featurestore_id, "trainingdatasets", parsed_json["id"],
-                                                 commit_time: "20200821080808")
+                                                 commit_time: 1597990088000)
           expect_status(200)
           json_result = get_last_statistics_commit(project.id, featurestore_id, "trainingdatasets", parsed_json["id"])
           expect_status_details(200)
@@ -133,7 +133,7 @@ describe "On #{ENV['OS']}" do
           expect(parsed_json["items"].length == 1).to be true
           expect(parsed_json["items"][0].key?("content")).to be true
           expect(JSON.parse(parsed_json["items"][0]["content"])).to eql({"columns" => ["a", "b", "c"]})
-          expect(parsed_json["items"][0]["commitTime"] == "20200821080808").to be true
+          expect(parsed_json["items"][0]["commitTime"]).to eql(1597990088000)
         end
 
         it "deleting a cached feature group should delete all associated statistics commit files from hopsfs" do
@@ -145,7 +145,7 @@ describe "On #{ENV['OS']}" do
           create_statistics_commit(project.id, featurestore_id, "featuregroups", parsed_json["id"])
           expect_status(200)
           create_statistics_commit(project.id, featurestore_id, "featuregroups", parsed_json["id"],
-                                                 commit_time: "20200821080808")
+                                                 commit_time: 1597990088000)
           expect_status(200)
           delete_featuregroup_checked(project.id, featurestore_id, parsed_json["id"])
           path = "/Projects/#{project[:projectname]}//Statistics/FeatureGroups/#{featuregroup_name}_1"
@@ -162,7 +162,7 @@ describe "On #{ENV['OS']}" do
           create_statistics_commit(project.id, featurestore_id, "trainingdatasets", parsed_json["id"])
           expect_status(200)
           create_statistics_commit(project.id, featurestore_id, "trainingdatasets", parsed_json["id"],
-                                                 commit_time: "20200821080808")
+                                                 commit_time: 1597990088000)
           expect_status(200)
           delete_trainingdataset_checked(project.id, featurestore_id, parsed_json["id"])
           path = "/Projects/#{project[:projectname]}/Statistics/TrainingDatasets/#{training_dataset_name}_1"

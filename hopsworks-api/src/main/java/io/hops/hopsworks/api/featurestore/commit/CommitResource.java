@@ -24,7 +24,6 @@ import io.hops.hopsworks.api.util.Pagination;
 import io.hops.hopsworks.audit.logger.LogLevel;
 import io.hops.hopsworks.audit.logger.annotation.Logged;
 import io.hops.hopsworks.common.api.ResourceRequest;
-import io.hops.hopsworks.common.dao.AbstractFacade;
 import io.hops.hopsworks.common.featurestore.featuregroup.cached.FeatureGroupCommitController;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
@@ -100,8 +99,8 @@ public class CommitResource {
       throws FeaturestoreException {
     Users user = jwtHelper.getUserPrincipal(sc);
     FeatureGroupCommit featureGroupCommit =
-        featureGroupCommitController.createHudiFeatureGroupCommit(user, featuregroup,
-            commitDTO.getCommitDateString(), commitDTO.getRowsUpdated(), commitDTO.getRowsInserted(),
+        featureGroupCommitController.createHudiFeatureGroupCommit(user, featuregroup, commitDTO.getCommitDateString(),
+            commitDTO.getCommitTime(), commitDTO.getRowsUpdated(), commitDTO.getRowsInserted(),
             commitDTO.getRowsDeleted(), commitDTO.getValidationId());
     CommitDTO builtCommitDTO = commitBuilder.build(uriInfo, new ResourceRequest(ResourceRequest.Name.COMMITS),
             project, featuregroup, featureGroupCommit);
@@ -120,13 +119,10 @@ public class CommitResource {
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.COMMITS);
     resourceRequest.setOffset(pagination.getOffset());
     resourceRequest.setLimit(pagination.getLimit());
+    resourceRequest.setSort(commitBeanParam.getSortBySet());
+    resourceRequest.setFilter(commitBeanParam.getFilter());
 
-    AbstractFacade.CollectionInfo featureGroupCommits =
-        featureGroupCommitController.getCommitDetails(featuregroup.getId(), pagination.getLimit(),
-            pagination.getOffset(), commitBeanParam.getSortBySet());
-
-    CommitDTO builtCommitDTO = commitBuilder.build(uriInfo, new ResourceRequest(ResourceRequest.Name.COMMITS), project,
-        featuregroup, featureGroupCommits);
+    CommitDTO builtCommitDTO = commitBuilder.build(uriInfo, resourceRequest, project, featuregroup);
 
     return Response.ok().entity(builtCommitDTO).build();
   }

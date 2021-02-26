@@ -67,20 +67,6 @@ public class TestFeatureGroupCommitController {
   }
 
   @Test
-  public void testGetTimeStampFromDateString() throws Exception {
-    Long expected = 1603231200000L;
-    Long timeStamp1 = featureGroupCommitController.getTimeStampFromDateString("2020-10-21");
-    Long timeStamp2 = featureGroupCommitController.getTimeStampFromDateString("2020-10-21 00");
-    Long timeStamp3 = featureGroupCommitController.getTimeStampFromDateString("2020-10-21 00:00");
-    Long timeStamp4 = featureGroupCommitController.getTimeStampFromDateString("2020-10-21 00:00:00");
-
-    Assert.assertEquals(expected, timeStamp1);
-    Assert.assertEquals(expected, timeStamp2);
-    Assert.assertEquals(expected, timeStamp3);
-    Assert.assertEquals(expected, timeStamp4);
-  }
-
-  @Test
   public void testComputeHudiCommitPath() {
     String expected =
         "hopsfs://namenode.service.consul:8020/apps/hive/warehouse/test_proj_featurestore.db/fg1_1/.hoodie/20201021000000.commit";

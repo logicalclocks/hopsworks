@@ -160,7 +160,7 @@ public class StatisticsResource {
     StatisticsDTO dto;
     if (featuregroup != null) {
       statistics = statisticsController.registerStatistics(project, user, statisticsDTO.getCommitTime(),
-        statisticsDTO.getContent(), featuregroup);
+          statisticsDTO.getFeatureGroupCommitId(), statisticsDTO.getContent(), featuregroup);
       dto = statisticsBuilder.build(uriInfo, new ResourceRequest(ResourceRequest.Name.STATISTICS),
           project, user, featuregroup, statistics);
     } else {

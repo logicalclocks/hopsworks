@@ -28,7 +28,6 @@ angular.module('hopsWorksApp')
             self.commitTime = null;
             self.stats = null;
             self.commitTimePrintFormat = "MMM D, YYYY hh:mm:ss A";
-            self.commitTimeFormat = "YYYYMMDDHHmmss";
             self.entity = null;
             self.entityType = null;
 
@@ -148,7 +147,7 @@ angular.module('hopsWorksApp')
                     self.entity.featurestoreId,
                     self.entity,
                     self.entityType,
-                    moment(self.commitTime, self.commitTimePrintFormat).format(self.commitTimeFormat).toString())
+                    new moment(self.commitTime, self.commitTimePrintFormat).valueOf())
                 .then(
                     function (success) {
                         self.prepareData(success.data.items[0].content)
@@ -190,7 +189,7 @@ angular.module('hopsWorksApp')
                         function (success) {
                             if (success.data.count > 0) {
                                 self.commitTimes = success.data.items.map(function(item) {
-                                    return moment(item.commitTime, self.commitTimeFormat).format(self.commitTimePrintFormat).toString();
+                                    return moment(item.commitTime).format(self.commitTimePrintFormat).toString();
                                 });
                             }
                         },
@@ -210,7 +209,7 @@ angular.module('hopsWorksApp')
                         function (success) {
                             // should return only one item
                             if (success.data.count > 0) {
-                                self.commitTime = moment(success.data.items[0].commitTime, self.commitTimeFormat).format(self.commitTimePrintFormat).toString();
+                                self.commitTime = moment(success.data.items[0].commitTime).format(self.commitTimePrintFormat).toString();
                                 self.prepareData(success.data.items[0].content)
                             }
                         },

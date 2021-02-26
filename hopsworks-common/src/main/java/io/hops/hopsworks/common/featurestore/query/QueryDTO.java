@@ -31,15 +31,15 @@ public class QueryDTO {
 
   private FeaturegroupDTO leftFeatureGroup;
   private List<FeatureGroupFeatureDTO> leftFeatures;
-  private String leftFeatureGroupStartTime;
-  private String leftFeatureGroupEndTime;
+  private Long leftFeatureGroupStartTime;
+  private Long leftFeatureGroupEndTime;
   private FilterLogicDTO filter;
 
   // Recursively merge QueryDTOs
   private List<JoinDTO> joins;
 
   public QueryDTO(FeaturegroupDTO leftFeatureGroup, List<FeatureGroupFeatureDTO> leftFeatures,
-                  String leftFeatureGroupStartTime, String leftFeatureGroupEndTime, List<JoinDTO> joins,
+                  Long leftFeatureGroupStartTime, Long leftFeatureGroupEndTime, List<JoinDTO> joins,
                   FilterLogicDTO filter) {
     this.leftFeatureGroup = leftFeatureGroup;
     this.leftFeatures = leftFeatures;
@@ -50,7 +50,7 @@ public class QueryDTO {
   }
 
   public QueryDTO(FeaturegroupDTO leftFeatureGroup, List<FeatureGroupFeatureDTO> leftFeatures,
-                  String leftFeatureGroupEndTime, List<JoinDTO> joins) {
+                  Long leftFeatureGroupEndTime, List<JoinDTO> joins) {
     this.leftFeatureGroup = leftFeatureGroup;
     this.leftFeatures = leftFeatures;
     this.leftFeatureGroupEndTime = leftFeatureGroupEndTime;
@@ -104,19 +104,19 @@ public class QueryDTO {
     this.leftFeatures = leftFeatures;
   }
 
-  public String getLeftFeatureGroupStartTime() {
+  public Long getLeftFeatureGroupStartTime() {
     return leftFeatureGroupStartTime;
   }
 
-  public void setLeftFeatureGroupStartTime(String leftFeatureGroupStartTime) {
+  public void setLeftFeatureGroupStartTime(Long leftFeatureGroupStartTime) {
     this.leftFeatureGroupStartTime = leftFeatureGroupStartTime;
   }
 
-  public String getLeftFeatureGroupEndTime() {
+  public Long getLeftFeatureGroupEndTime() {
     return leftFeatureGroupEndTime;
   }
 
-  public void setLeftFeatureGroupEndTime(String leftFeatureGroupEndTime) {
+  public void setLeftFeatureGroupEndTime(Long leftFeatureGroupEndTime) {
     this.leftFeatureGroupEndTime = leftFeatureGroupEndTime;
   }
 

@@ -795,14 +795,13 @@ describe "On #{ENV['OS']}" do
         hoodie_path = path + "/.hoodie"
         mkdir(hoodie_path, getHopsworksUser, getHopsworksUser, 777)
         touchz(hoodie_path + "/20201024221125.commit", getHopsworksUser, getHopsworksUser)
-        commit_metadata = {commitDateString:20201024221125,rowsInserted:4,rowsUpdated:0,rowsDeleted:0}
+        commit_metadata = {commitDateString:20201024221125,commitTime:1603577485000,rowsInserted:4,rowsUpdated:0,rowsDeleted:0}
         json_result = commit_cached_featuregroup(@project[:id], featurestore_id, featuregroup_id, commit_metadata: commit_metadata)
         parsed_json = JSON.parse(json_result)
         expect_status(200)
         expect(parsed_json.key?("commitID")).to be true
         expect(parsed_json["commitID"] == 1603577485000).to be true
-        expect(parsed_json["commitDateString"] == "1603577485000").to be true
-        expect(parsed_json["committime"] == 1603577485000).to be true
+        expect(parsed_json["commitTime"] == 1603577485000).to be true
         expect(parsed_json["rowsInserted"] == 4).to be true
         expect(parsed_json["rowsUpdated"] == 0).to be true
         expect(parsed_json["rowsDeleted"] == 0).to be true
@@ -818,18 +817,17 @@ describe "On #{ENV['OS']}" do
         hoodie_path = path + "/.hoodie"
         mkdir(hoodie_path, getHopsworksUser, getHopsworksUser, 777)
         touchz(hoodie_path + "/20201024221125.commit", getHopsworksUser, getHopsworksUser)
-        commit_metadata = {commitDateString:20201024221125,rowsInserted:3,rowsUpdated:1,rowsDeleted:0}
+        commit_metadata = {commitDateString:20201024221125,commitTime:1603577485000,rowsInserted:3,rowsUpdated:1,rowsDeleted:0}
         _ = commit_cached_featuregroup(@project[:id], featurestore_id, featuregroup_id, commit_metadata: commit_metadata)
         touchz(hoodie_path + "/20201025182256.commit", getHopsworksUser, getHopsworksUser)
-        commit_metadata = {commitDateString:20201025182256,rowsInserted:3,rowsUpdated:1,rowsDeleted:0}
+        commit_metadata = {commitDateString:20201025182256,commitTime:1603650176000,rowsInserted:3,rowsUpdated:1,rowsDeleted:0}
         json_result = commit_cached_featuregroup(@project[:id], featurestore_id, featuregroup_id, commit_metadata: commit_metadata)
         parsed_json = JSON.parse(json_result)
 
         expect_status(200)
         expect(parsed_json.key?("commitID")).to be true
         expect(parsed_json["commitID"] == 1603650176000).to be true
-        expect(parsed_json["commitDateString"] == "1603650176000").to be true
-        expect(parsed_json["committime"] == 1603650176000).to be true
+        expect(parsed_json["commitTime"] == 1603650176000).to be true
         expect(parsed_json["rowsInserted"] == 3).to be true
         expect(parsed_json["rowsUpdated"] == 1).to be true
         expect(parsed_json["rowsDeleted"] == 0).to be true
@@ -847,11 +845,11 @@ describe "On #{ENV['OS']}" do
         mkdir(hoodie_path, getHopsworksUser, getHopsworksUser, 777)
 
         touchz(hoodie_path + "/20201024221125.commit", getHopsworksUser, getHopsworksUser)
-        commit_metadata = {commitDateString:20201024221125,rowsInserted:3,rowsUpdated:0,rowsDeleted:0}
+        commit_metadata = {commitDateString:20201024221125,commitTime:1603577485000,rowsInserted:3,rowsUpdated:0,rowsDeleted:0}
         _ = commit_cached_featuregroup(@project[:id], featurestore_id, featuregroup_id, commit_metadata: commit_metadata)
 
         touchz(hoodie_path + "/20201025182256.commit", getHopsworksUser, getHopsworksUser)
-        commit_metadata = {commitDateString:20201025182256,rowsInserted:3,rowsUpdated:1,rowsDeleted:0}
+        commit_metadata = {commitDateString:20201025182256,commitTime:1603650176000,rowsInserted:3,rowsUpdated:1,rowsDeleted:0}
         _ = commit_cached_featuregroup(@project[:id], featurestore_id, featuregroup_id, commit_metadata: commit_metadata)
         create_query_endpoint = "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/featurestores/query"
 
@@ -873,7 +871,7 @@ describe "On #{ENV['OS']}" do
         hoodie_path = path + "/.hoodie"
         mkdir(hoodie_path, getHopsworksUser, getHopsworksUser, 777)
         touchz(hoodie_path + "/20201024221125.commit", getHopsworksUser, getHopsworksUser)
-        commit_metadata = {commitDateString:20201024221125,rowsInserted:3,rowsUpdated:0,rowsDeleted:0}
+        commit_metadata = {commitDateString:20201024221125,commitTime:1603577485000,rowsInserted:3,rowsUpdated:0,rowsDeleted:0}
         _ = commit_cached_featuregroup(@project[:id], featurestore_id, featuregroup_id, commit_metadata: commit_metadata)
         create_query_endpoint = "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/featurestores/query"
         json_fs_query = '{"leftFeatureGroup":' +  json_result + ',"leftFeatures":' + parsed_json["features"].to_json + ',"joins":[]}'
@@ -893,10 +891,10 @@ describe "On #{ENV['OS']}" do
         hoodie_path = path + "/.hoodie"
         mkdir(hoodie_path, getHopsworksUser, getHopsworksUser, 777)
         touchz(hoodie_path + "/20201024221125.commit", getHopsworksUser, getHopsworksUser)
-        commit_metadata = {commitDateString:20201024221125,rowsInserted:3,rowsUpdated:0,rowsDeleted:0}
+        commit_metadata = {commitDateString:20201024221125,commitTime:1603577485000,rowsInserted:3,rowsUpdated:0,rowsDeleted:0}
         _ = commit_cached_featuregroup(@project[:id], featurestore_id, featuregroup_id, commit_metadata: commit_metadata)
         touchz(hoodie_path + "/20201025182256.commit", getHopsworksUser, getHopsworksUser)
-        commit_metadata = {commitDateString:20201025182256,rowsInserted:3,rowsUpdated:1,rowsDeleted:0}
+        commit_metadata = {commitDateString:20201025182256,commitTime:1603650176000,rowsInserted:3,rowsUpdated:1,rowsDeleted:0}
         _ = commit_cached_featuregroup(@project[:id], featurestore_id, featuregroup_id, commit_metadata: commit_metadata)
         create_query_endpoint = "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/featurestores/query"
         json_fs_query = {
@@ -904,8 +902,8 @@ describe "On #{ENV['OS']}" do
                 id: parsed_json["id"]
             },
             leftFeatures: parsed_json["features"],
-            leftFeatureGroupStartTime: "20201024221125",
-            leftFeatureGroupEndTime: "20201025182256",
+            leftFeatureGroupStartTime: 1603577485000,
+            leftFeatureGroupEndTime: 1603650176000,
         }
         json_result = put create_query_endpoint, json_fs_query
         parsed_json = JSON.parse(json_result)
@@ -926,11 +924,12 @@ describe "On #{ENV['OS']}" do
         mkdir(hoodie_path, getHopsworksUser, getHopsworksUser, 777)
 
         touchz(hoodie_path + "/20201024221125.commit", getHopsworksUser, getHopsworksUser)
-        commit_metadata = {commitDateString: 20201024221125, rowsInserted:3,rowsUpdated:0,rowsDeleted:0}
+        commit_metadata = {commitDateString: 20201024221125, commitTime:1603577485000, rowsInserted:3,rowsUpdated:0,rowsDeleted:0}
         _ = commit_cached_featuregroup(@project[:id], featurestore_id, featuregroup_id, commit_metadata: commit_metadata)
 
         touchz(hoodie_path + "/20201025182256.commit", getHopsworksUser, getHopsworksUser)
-        commit_metadata = {commitDateString:20201025182256,rowsInserted:3,rowsUpdated:1,rowsDeleted:0}
+        commit_metadata = {commitDateString:20201025182256,commitTime:1603650176000,rowsInserted:3,rowsUpdated:1,rowsDeleted:0}
+
         _ = commit_cached_featuregroup(@project[:id], featurestore_id, featuregroup_id, commit_metadata: commit_metadata)
 
         json_result = get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/featurestores/#{featurestore_id}/featuregroups/#{featuregroup_id}/commits?sort_by=committed_on:desc&offset=0"
@@ -951,7 +950,7 @@ describe "On #{ENV['OS']}" do
         hoodie_path = path + "/.hoodie"
         mkdir(hoodie_path, getHopsworksUser, getHopsworksUser, 777)
         touchz(hoodie_path + "/20201024221125.commit", getHopsworksUser, getHopsworksUser)
-        commit_metadata = {commitDateString: 20201024221125, rowsInserted:3,rowsUpdated:0,rowsDeleted:0}
+        commit_metadata = {commitDateString: 20201024221125, commitTime:1603577485000, rowsInserted:3,rowsUpdated:0,rowsDeleted:0}
         _ = commit_cached_featuregroup(@project[:id], featurestore_id, fg_1_id, commit_metadata: commit_metadata)
 
         json_result, featuregroup_name = create_cached_featuregroup_with_partition(@project[:id], featurestore_id, time_travel_format: "HUDI")
@@ -962,14 +961,14 @@ describe "On #{ENV['OS']}" do
         hoodie_path = path + "/.hoodie"
         mkdir(hoodie_path, getHopsworksUser, getHopsworksUser, 777)
         touchz(hoodie_path + "/20201024221126.commit", getHopsworksUser, getHopsworksUser)
-        commit_metadata = {commitDateString: 20201024221126, rowsInserted:3,rowsUpdated:0,rowsDeleted:0}
+        commit_metadata = {commitDateString: 20201024221126,commitTime:1603570286000,rowsInserted:3,rowsUpdated:0,rowsDeleted:0}
         _ = commit_cached_featuregroup(@project[:id], featurestore_id, fg_2_id, commit_metadata: commit_metadata)
 
         create_query_endpoint = "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/featurestores/query"
         json_fs_query = {
-            leftFeatureGroup: {id: fg_1_id}, leftFeatures: fg_1_features, leftFeatureGroupEndTime: "20201024221125",
+            leftFeatureGroup: {id: fg_1_id}, leftFeatures: fg_1_features, leftFeatureGroupEndTime: 1603577485000,
             joins: {
-                query: {leftFeatureGroup: {id: fg_2_id}, leftFeatures: fg_2_features, leftFeatureGroupEndTime: "20201024221126"}
+                query: {leftFeatureGroup: {id: fg_2_id}, leftFeatures: fg_2_features, leftFeatureGroupEndTime: 1603570286000}
             }
         }
         json_result = put create_query_endpoint, json_fs_query
@@ -978,7 +977,7 @@ describe "On #{ENV['OS']}" do
         expect(parsed_json["hudiCachedFeatureGroups"].length).to eql(2)
         expect(parsed_json["hudiCachedFeatureGroups"][0]["leftFeatureGroupEndTimestamp"]).to eql(1603577485000)
         expect(parsed_json["hudiCachedFeatureGroups"][0]["alias"]).to eql("fg1")
-        expect(parsed_json["hudiCachedFeatureGroups"][1]["leftFeatureGroupEndTimestamp"]).to eql(1603577486000)
+        expect(parsed_json["hudiCachedFeatureGroups"][1]["leftFeatureGroupEndTimestamp"]).to eql(1603570286000)
         expect(parsed_json["hudiCachedFeatureGroups"][1]["alias"]).to eql("fg0")
       end
 
@@ -994,7 +993,7 @@ describe "On #{ENV['OS']}" do
         hoodie_path = path + "/.hoodie"
         mkdir(hoodie_path, getHopsworksUser, getHopsworksUser, 777)
         touchz(hoodie_path + "/20201024221125.commit", getHopsworksUser, getHopsworksUser)
-        commit_metadata = {commitDateString: 20201024221125, rowsInserted:3,rowsUpdated:0,rowsDeleted:0}
+        commit_metadata = {commitDateString: 20201024221125, commitTime:1603577485000, rowsInserted:3,rowsUpdated:0,rowsDeleted:0}
         _ = commit_cached_featuregroup(@project[:id], featurestore_id, fg_1_id, commit_metadata: commit_metadata)
 
         json_result, featuregroup_name = create_cached_featuregroup_with_partition(@project[:id], featurestore_id, time_travel_format: "HUDI")
@@ -1005,18 +1004,89 @@ describe "On #{ENV['OS']}" do
         hoodie_path = path + "/.hoodie"
         mkdir(hoodie_path, getHopsworksUser, getHopsworksUser, 777)
         touchz(hoodie_path + "/20201024221126.commit", getHopsworksUser, getHopsworksUser)
-        commit_metadata = {commitDateString: 20201024221126, rowsInserted:3,rowsUpdated:0,rowsDeleted:0}
+        commit_metadata = {commitDateString: 20201024221126,commitTime:1603570286000,rowsInserted:3,rowsUpdated:0,rowsDeleted:0}
         _ = commit_cached_featuregroup(@project[:id], featurestore_id, fg_2_id, commit_metadata: commit_metadata)
 
         create_query_endpoint = "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/featurestores/query"
         json_fs_query = {
-            leftFeatureGroup: {id: fg_1_id}, leftFeatures: fg_1_features, leftFeatureGroupStartTime: "20201024221125", leftFeatureGroupEndTime: "20201024221125",
+            leftFeatureGroup: {id: fg_1_id}, leftFeatures: fg_1_features, leftFeatureGroupStartTime: 1603577485000, leftFeatureGroupEndTime: 1603577485000,
             joins: {
-                query: {leftFeatureGroup: {id: fg_2_id}, leftFeatures: fg_2_features, leftFeatureGroupEndTime: "20201024221126"}
+                query: {leftFeatureGroup: {id: fg_2_id}, leftFeatures: fg_2_features, leftFeatureGroupEndTime:1603570286000}
             }
         }
         put create_query_endpoint, json_fs_query
         expect_status(422)
+      end
+
+      it "should be able to add correct statistics commit timestamps on time travel enabled feature groups" do
+        featurestore_id = get_featurestore_id(@project[:id])
+        featurestore_name = @project['projectname'].downcase + "_featurestore"
+        stats_config = {enabled: true, histograms: false, correlations: false, columns: ["testfeature"]}
+        json_result, featuregroup_name = create_cached_featuregroup(@project[:id], featurestore_id, time_travel_format: "HUDI", statistics_config: stats_config)
+        parsed_json = JSON.parse(json_result)
+        featuregroup_id = parsed_json["id"]
+        featuregroup_version = parsed_json["version"]
+
+        path = "/apps/hive/warehouse/#{featurestore_name}.db/#{featuregroup_name}_#{featuregroup_version}"
+        hoodie_path = path + "/.hoodie"
+        mkdir(hoodie_path, getHopsworksUser, getHopsworksUser, 777)
+
+        touchz(hoodie_path + "/20201024221125.commit", getHopsworksUser, getHopsworksUser)
+        commit_metadata = {commitDateString:20201024221125,commitTime:1603577485000,rowsInserted:3,rowsUpdated:0,rowsDeleted:0}
+        _ = commit_cached_featuregroup(@project[:id], featurestore_id, featuregroup_id, commit_metadata: commit_metadata)
+
+        touchz(hoodie_path + "/20201025182256.commit", getHopsworksUser, getHopsworksUser)
+        commit_metadata = {commitDateString:20201025182256,commitTime:1603650176000,rowsInserted:3,rowsUpdated:1,rowsDeleted:0}
+        _ = commit_cached_featuregroup(@project[:id], featurestore_id, featuregroup_id, commit_metadata: commit_metadata)
+
+        statistics_content = {
+            columns:[
+                    { column:"testfeature",
+                      dataType:"Integral",
+                      isDataTypeInferred:false,
+                      completeness:1.0,
+                      distinctness:1.0,
+                      entropy:1.3862943611198906,
+                      uniqueness:1.0,
+                      approximateNumDistinctValues:4,
+                      mean:2.5,
+                      maximum:4.0,
+                      minimum:1.0,
+                      sum:10.0,
+                      stdDev:1.118033988749895,
+                      approxPercentiles:[]
+                    }
+            ]
+        }
+
+        create_statistic_endpoint = "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/featurestores/#{featurestore_id}/featuregroups/#{featuregroup_id}/statistics"
+
+        system_time_1st_statistic_commit = (Time.now.to_f * 1000).to_i
+        json_data = {
+            items:[],
+            featureGroupCommitId: nil,
+            commitTime:system_time_1st_statistic_commit,
+            content: statistics_content.to_json
+        }
+
+        json_data_str = json_data.to_json
+        _ = post create_statistic_endpoint, json_data_str
+
+        json_result = get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/featurestores/#{featurestore_id}/featuregroups/#{featuregroup_id}/statistics?fields=content&sort_by=commit_time%3Adesc&offset=0&limit=1"
+        parsed_json = JSON.parse(json_result)
+        expect(parsed_json["items"].first["featureGroupCommitId"]).to eql(1603650176000)
+        expect(parsed_json["items"].first["commitTime"]).to eql(1603650176000)
+
+        system_time_2nd_statistic_commit = (Time.now.to_f * 1000).to_i
+        json_data[:featureGroupCommitId] = 1603650176000
+        json_data[:commitTime] = system_time_2nd_statistic_commit
+        json_data_str = json_data.to_json
+        _ = post create_statistic_endpoint, json_data_str
+
+        json_result = get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/featurestores/#{featurestore_id}/featuregroups/#{featuregroup_id}/statistics?fields=content&sort_by=commit_time%3Adesc&offset=0&limit=1"
+        parsed_json = JSON.parse(json_result)
+        expect(parsed_json["items"].first["featureGroupCommitId"]).to eql(1603650176000)
+        expect(parsed_json["items"].first["commitTime"]).to eql(system_time_2nd_statistic_commit)
       end
 
       it "should be able to attach keywords" do
