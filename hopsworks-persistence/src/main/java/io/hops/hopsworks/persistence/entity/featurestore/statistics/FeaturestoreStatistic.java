@@ -17,6 +17,7 @@
 package io.hops.hopsworks.persistence.entity.featurestore.statistics;
 
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.Featuregroup;
+import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.cached.FeatureGroupCommit;
 import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.TrainingDataset;
 import io.hops.hopsworks.persistence.entity.hdfs.inode.Inode;
 
@@ -34,6 +35,7 @@ import javax.persistence.NamedQuery;
 import javax.persistence.Table;
 import javax.xml.bind.annotation.XmlRootElement;
 import java.io.Serializable;
+import java.util.Date;
 
 /**
  * Entity class representing the featurestore_statistic table in Hopsworks database.
@@ -45,7 +47,10 @@ import java.io.Serializable;
 @NamedQueries({
     @NamedQuery(name = "FeaturestoreStatistic.findAll", query = "SELECT fss FROM FeaturestoreStatistic fss"),
     @NamedQuery(name = "FeaturestoreStatistic.findById",
-        query = "SELECT fss FROM FeaturestoreStatistic fss WHERE fss.id = :id")})
+        query = "SELECT fss FROM FeaturestoreStatistic fss WHERE fss.id = :id"),
+    @NamedQuery(name = "FeaturestoreStatistic.commitTime",
+        query = "SELECT fss FROM FeaturestoreStatistic fss WHERE fss.featureGroup = :featureGroup "
+            + "AND fss.commitTime = :commitTime")})
 public class FeaturestoreStatistic implements Serializable {
   private static final long serialVersionUID = 1L;
   @Id
@@ -56,7 +61,7 @@ public class FeaturestoreStatistic implements Serializable {
 
   @Basic(optional = false)
   @Column(name = "commit_time")
-  private String commitTime;
+  private Date commitTime;
 
   @JoinColumns({
       @JoinColumn(name = "inode_pid",
@@ -70,23 +75,39 @@ public class FeaturestoreStatistic implements Serializable {
 
   @JoinColumn(name = "feature_group_id", referencedColumnName = "id")
   private Featuregroup featureGroup;
+
+  @JoinColumns({
+      @JoinColumn(name = "feature_group_id",
+          referencedColumnName = "feature_group_id", insertable=false, updatable=false),
+      @JoinColumn(name = "feature_group_commit_id",
+          referencedColumnName = "commit_id")})
+  @ManyToOne(optional = false)
+  private FeatureGroupCommit featureGroupCommit;
+
   @JoinColumn(name = "training_dataset_id", referencedColumnName = "id")
   private TrainingDataset trainingDataset;
 
   public FeaturestoreStatistic() {
-
   }
 
-  public FeaturestoreStatistic(String commitTime, Inode inode, TrainingDataset trainingDataset) {
+  public FeaturestoreStatistic(Date commitTime, Inode inode, TrainingDataset trainingDataset) {
     this.commitTime = commitTime;
     this.inode = inode;
     this.trainingDataset = trainingDataset;
   }
   
-  public FeaturestoreStatistic(String commitTime, Inode inode, Featuregroup featureGroup) {
+  public FeaturestoreStatistic(Date commitTime, Inode inode, Featuregroup featureGroup) {
     this.commitTime = commitTime;
     this.inode = inode;
     this.featureGroup = featureGroup;
+  }
+
+  public FeaturestoreStatistic(Date commitTime, Inode inode, Featuregroup featureGroup,
+                               FeatureGroupCommit featureGroupCommit) {
+    this.commitTime = commitTime;
+    this.inode = inode;
+    this.featureGroup = featureGroup;
+    this.featureGroupCommit = featureGroupCommit;
   }
 
   public static long getSerialVersionUID() {
@@ -101,11 +122,11 @@ public class FeaturestoreStatistic implements Serializable {
     this.id = id;
   }
 
-  public String getCommitTime() {
+  public Date getCommitTime() {
     return this.commitTime;
   }
 
-  public void setCommitTime(String commitTime) {
+  public void setCommitTime(Date commitTime) {
     this.commitTime = commitTime;
   }
 
@@ -123,6 +144,14 @@ public class FeaturestoreStatistic implements Serializable {
 
   public void setFeatureGroup(Featuregroup featureGroup) {
     this.featureGroup = featureGroup;
+  }
+
+  public FeatureGroupCommit getFeatureGroupCommit() {
+    return featureGroupCommit;
+  }
+
+  public void setFeatureGroupCommit(FeatureGroupCommit featureGroupCommit) {
+    this.featureGroupCommit = featureGroupCommit;
   }
 
   public TrainingDataset getTrainingDataset() {
@@ -156,6 +185,10 @@ public class FeaturestoreStatistic implements Serializable {
     if (featureGroup != null ? !featureGroup.equals(that.featureGroup) : that.featureGroup != null) {
       return false;
     }
+    if (featureGroupCommit != null ? !featureGroupCommit.equals(that.featureGroupCommit)
+        : that.featureGroupCommit != null) {
+      return false;
+    }
     return trainingDataset != null ? trainingDataset.equals(that.trainingDataset) : that.trainingDataset == null;
   }
   
@@ -165,6 +198,7 @@ public class FeaturestoreStatistic implements Serializable {
     result = 31 * result + commitTime.hashCode();
     result = 31 * result + inode.hashCode();
     result = 31 * result + (featureGroup != null ? featureGroup.hashCode() : 0);
+    result = 31 * result + (featureGroupCommit != null ? featureGroupCommit.hashCode() : 0);
     result = 31 * result + (trainingDataset != null ? trainingDataset.hashCode() : 0);
     return result;
   }

@@ -23,15 +23,24 @@ import javax.xml.bind.annotation.XmlRootElement;
 @XmlRootElement
 public class StatisticsDTO extends RestDTO<StatisticsDTO> {
 
-  private String commitTime;
+  private Long commitTime;
+  private Long featureGroupCommitId;
   private String content;
 
-  public String getCommitTime() {
+  public Long getCommitTime() {
     return commitTime;
   }
 
-  public void setCommitTime(String commitTime) {
+  public void setCommitTime(Long commitTime) {
     this.commitTime = commitTime;
+  }
+
+  public Long getFeatureGroupCommitId() {
+    return featureGroupCommitId;
+  }
+
+  public void setFeatureGroupCommitId(Long featureGroupCommitId) {
+    this.featureGroupCommitId = featureGroupCommitId;
   }
 
   public String getContent() {

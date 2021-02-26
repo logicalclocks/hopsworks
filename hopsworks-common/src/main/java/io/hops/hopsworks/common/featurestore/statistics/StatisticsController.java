@@ -17,6 +17,7 @@
 package io.hops.hopsworks.common.featurestore.statistics;
 
 import io.hops.hopsworks.common.dataset.DatasetController;
+import io.hops.hopsworks.common.featurestore.featuregroup.cached.FeatureGroupCommitController;
 import io.hops.hopsworks.common.featurestore.activity.FeaturestoreActivityFacade;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.hdfs.DistributedFsService;
@@ -30,7 +31,10 @@ import io.hops.hopsworks.exceptions.HopsSecurityException;
 import io.hops.hopsworks.persistence.entity.dataset.Dataset;
 import io.hops.hopsworks.persistence.entity.dataset.DatasetAccessPermission;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.Featuregroup;
+import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.FeaturegroupType;
 import io.hops.hopsworks.persistence.entity.featurestore.statistics.FeaturestoreStatistic;
+import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.cached.FeatureGroupCommit;
+import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.cached.TimeTravelFormat;
 import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.TrainingDataset;
 import io.hops.hopsworks.persistence.entity.hdfs.inode.Inode;
 import io.hops.hopsworks.persistence.entity.project.Project;
@@ -45,17 +49,13 @@ import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import java.io.IOException;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.util.Date;
+import java.sql.Timestamp;
 import java.util.Optional;
 import java.util.logging.Level;
 
 @Stateless
 @TransactionAttribute(TransactionAttributeType.NEVER)
 public class StatisticsController {
-
-  public static final SimpleDateFormat COMMIT_DATE_FORMAT = new SimpleDateFormat("yyyyMMddHHmmss");
 
   @EJB
   private InodeController inodeController;
@@ -67,6 +67,8 @@ public class StatisticsController {
   private HdfsUsersController hdfsUsersController;
   @EJB
   private FeaturestoreStatisticFacade featurestoreStatisticFacade;
+  @EJB
+  private FeatureGroupCommitController featureGroupCommitCommitController;
   @EJB
   private FeaturestoreActivityFacade fsActivityFacade;
 
@@ -86,8 +88,8 @@ public class StatisticsController {
     }
   }
 
-  public FeaturestoreStatistic registerStatistics(Project project, Users user, String commitTime, String content,
-                                                  Featuregroup featuregroup)
+  public FeaturestoreStatistic registerStatistics(Project project, Users user, Long statisticsCommitTimeStamp,
+                                                  Long fgCommitId, String content, Featuregroup featuregroup)
       throws FeaturestoreException, DatasetException, HopsSecurityException, IOException {
     // In some cases Deequ returns NaN. Having NaNs in the frontend causes issue to the display
     // By converting the string to JSONObject and back to string, JSONObject is going to fix them and
@@ -100,23 +102,38 @@ public class StatisticsController {
           Level.WARNING, "Not a valid JSON", jex.getMessage(), jex);
     }
 
-    Date commitTimeDate = null;
-    try {
-      commitTimeDate = COMMIT_DATE_FORMAT.parse(commitTime);
-    } catch (ParseException pex) {
-      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ERROR_SAVING_STATISTICS,
-          Level.WARNING, "Not a valid JSON", pex.getMessage(), pex);
+    FeatureGroupCommit featureGroupCommit = null;
+    if (featuregroup.getFeaturegroupType() == FeaturegroupType.CACHED_FEATURE_GROUP &&
+        featuregroup.getCachedFeaturegroup().getTimeTravelFormat() == TimeTravelFormat.HUDI) {
+      featureGroupCommit = featureGroupCommitCommitController.findCommitByDate(featuregroup, fgCommitId);
+      // Statistics commitTimeStamp will be always system time sent from client if user wants to recompute
+      // statistics on particular commit id (i.e. fgCommitId was provided). If fgCommitId is null it means its
+      // it means: 1) client issued save or insert method; here statistics commitTimeStamp will be featureGroupCommit;
+      // 2) Or it is recomputing statistics of existing time travel enabled feature group. Here latest fg commit
+      // timestamp will be used to read dataset and as statistics commit time client system time will be provided.
+
+      // if statistics was never saved for this commit then it will return null
+      FeaturestoreStatistic statisticsFgCommit = featurestoreStatisticFacade.findFGStatisticsByCommitTime(
+          featuregroup, featureGroupCommit.getCommittedOn()).orElse(null);
+
+      statisticsCommitTimeStamp = statisticsFgCommit == null
+           ? featureGroupCommit.getCommittedOn()
+           : statisticsCommitTimeStamp;
     }
 
-    Inode statisticsInode = registerStatistics(project, user, commitTime, statisticsJson.toString(),
+    Inode statisticsInode = registerStatistics(project, user, statisticsCommitTimeStamp, statisticsJson.toString(),
         featuregroup.getName(), "FeatureGroups", featuregroup.getVersion());
-    FeaturestoreStatistic featurestoreStatistic =
-        featurestoreStatisticFacade.update(new FeaturestoreStatistic(commitTime, statisticsInode, featuregroup));
-    fsActivityFacade.logStatisticsActivity(user, featuregroup, commitTimeDate, featurestoreStatistic);
+    Timestamp commitTime = new Timestamp(statisticsCommitTimeStamp);
+    FeaturestoreStatistic featurestoreStatistic = new FeaturestoreStatistic(commitTime, statisticsInode, featuregroup);
+    if (featuregroup.getFeaturegroupType() == FeaturegroupType.CACHED_FEATURE_GROUP &&
+        featuregroup.getCachedFeaturegroup().getTimeTravelFormat() == TimeTravelFormat.HUDI)  {
+      featurestoreStatistic.setFeatureGroupCommit(featureGroupCommit);
+    }
+    featurestoreStatisticFacade.update(featurestoreStatistic);
     return featurestoreStatistic;
   }
 
-  public FeaturestoreStatistic registerStatistics(Project project, Users user, String commitTime, String content,
+  public FeaturestoreStatistic registerStatistics(Project project, Users user, Long commitTimeStamp, String content,
                                                   TrainingDataset trainingDataset)
       throws FeaturestoreException, DatasetException, HopsSecurityException, IOException {
     // In some cases Deequ returns NaN. Having NaNs in the frontend causes issue to the display
@@ -130,25 +147,16 @@ public class StatisticsController {
           Level.WARNING, "Not a valid JSON", jex.getMessage(), jex);
     }
 
-    Date commitTimeDate = null;
-    try {
-      commitTimeDate = COMMIT_DATE_FORMAT.parse(commitTime);
-    } catch (ParseException pex) {
-      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ERROR_SAVING_STATISTICS,
-          Level.WARNING, "Not a valid JSON", pex.getMessage(), pex);
-    }
-
-    Inode statisticsInode = registerStatistics(project, user, commitTime, statisticsJson.toString(),
+    Inode statisticsInode = registerStatistics(project, user, commitTimeStamp, statisticsJson.toString(),
         trainingDataset.getName(), "TrainingDatasets", trainingDataset.getVersion());
+    Timestamp commitTime = new Timestamp(commitTimeStamp);
     FeaturestoreStatistic featurestoreStatistic =
-        featurestoreStatisticFacade.update(new FeaturestoreStatistic(commitTime, statisticsInode, trainingDataset));
-
-    fsActivityFacade.logStatisticsActivity(user, trainingDataset, commitTimeDate, featurestoreStatistic);
-
+      new FeaturestoreStatistic(commitTime, statisticsInode, trainingDataset);
+    featurestoreStatisticFacade.update(featurestoreStatistic);
     return featurestoreStatistic;
   }
 
-  private Inode registerStatistics(Project project, Users user, String commitTime, String content, String entityName,
+  private Inode registerStatistics(Project project, Users user, Long commitTime, String content, String entityName,
                                   String entitySubDir, Integer version)
       throws DatasetException, HopsSecurityException, IOException {
 

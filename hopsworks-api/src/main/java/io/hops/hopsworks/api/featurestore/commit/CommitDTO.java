@@ -27,7 +27,7 @@ public class CommitDTO extends RestDTO<CommitDTO> {
 
   private Long commitID;
   private String commitDateString;
-  private Long committime;
+  private Long commitTime;
   private Long rowsInserted;
   private Long rowsUpdated;
   private Long rowsDeleted;
@@ -36,19 +36,19 @@ public class CommitDTO extends RestDTO<CommitDTO> {
   public CommitDTO() {
   }
 
-  public CommitDTO(Long commitID, String commitDateString, Long committime, Long rowsInserted,
+  public CommitDTO(Long commitID, String commitDateString, Long commitTime, Long rowsInserted,
                    Long rowsUpdated, Long rowsDeleted) {
     this.commitID = commitID;
     this.commitDateString = commitDateString;
-    this.committime = committime;
+    this.commitTime = commitTime;
     this.rowsInserted = rowsInserted;
     this.rowsUpdated = rowsUpdated;
     this.rowsDeleted = rowsDeleted;
   }
 
-  public CommitDTO(Long commitID, String commitDateString, Long committime, Long rowsInserted,
+  public CommitDTO(Long commitID, String commitDateString, Long commitTime, Long rowsInserted,
                    Long rowsUpdated, Long rowsDeleted, Integer validationId) {
-    this(commitID, commitDateString, committime, rowsInserted, rowsUpdated, rowsDeleted);
+    this(commitID, commitDateString, commitTime, rowsInserted, rowsUpdated, rowsDeleted);
     this.validationId = validationId;
   }
 
@@ -68,12 +68,12 @@ public class CommitDTO extends RestDTO<CommitDTO> {
     this.commitDateString = commitDateString;
   }
 
-  public Long getCommittime() {
-    return committime;
+  public Long getCommitTime() {
+    return commitTime;
   }
 
-  public void setCommittime(Long committime) {
-    this.committime = committime;
+  public void setCommitTime(Long commitTime) {
+    this.commitTime = commitTime;
   }
 
   public Long getRowsInserted() {

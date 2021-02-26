@@ -104,7 +104,11 @@ public class StatisticsBuilder {
     dto.setHref(uri(uriInfo, project, featuregroup.getFeaturestore(), featuregroup, featurestoreStatistic));
     dto.setExpand(expand(resourceRequest));
     if (dto.isExpand()) {
-      dto.setCommitTime(featurestoreStatistic.getCommitTime());
+      dto.setCommitTime(featurestoreStatistic.getCommitTime().getTime());
+      if (featurestoreStatistic.getFeatureGroupCommit() != null) {
+        dto.setFeatureGroupCommitId(
+            featurestoreStatistic.getFeatureGroupCommit().getFeatureGroupCommitPK().getCommitId());
+      }
       if (resourceRequest.getField() != null && resourceRequest.getField().contains("content")) {
         dto.setContent(statisticsController.readStatisticsContent(project, user, featurestoreStatistic));
       }
@@ -121,7 +125,7 @@ public class StatisticsBuilder {
     dto.setHref(uri(uriInfo, project, trainingDataset.getFeaturestore(), trainingDataset, featurestoreStatistic));
     dto.setExpand(expand(resourceRequest));
     if (dto.isExpand()) {
-      dto.setCommitTime(featurestoreStatistic.getCommitTime());
+      dto.setCommitTime(featurestoreStatistic.getCommitTime().getTime());
       if (resourceRequest.getField() != null && resourceRequest.getField().contains("content")) {
         dto.setContent(statisticsController.readStatisticsContent(project, user, featurestoreStatistic));
       }

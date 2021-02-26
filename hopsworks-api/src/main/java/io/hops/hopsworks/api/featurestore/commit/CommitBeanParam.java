@@ -28,9 +28,17 @@ public class CommitBeanParam {
   private String sortBy;
   private final Set<SortBy> sortBySet;
 
-  public CommitBeanParam(@QueryParam("sort_by") String sortBy) {
+  @QueryParam("filter_by")
+  @ApiParam(value = "ex. filter_by=commited_on_ltoeq:1610471222000",
+      allowableValues = "filter_by=commited_on_ltoeq:1610471222000,",
+      allowMultiple = true)
+  private Set<FilterBy> filter;
+
+  public CommitBeanParam(@QueryParam("sort_by") String sortBy,
+                         @QueryParam("filter_by") Set<FilterBy> filter) {
     this.sortBy = sortBy;
     this.sortBySet = getSortBy(sortBy);
+    this.filter = filter;
   }
 
   private Set<SortBy> getSortBy(String param) {
@@ -58,5 +66,13 @@ public class CommitBeanParam {
 
   public Set<SortBy> getSortBySet() {
     return sortBySet;
+  }
+
+  public Set<FilterBy> getFilter() {
+    return filter;
+  }
+
+  public void setFilter(Set<FilterBy> filter) {
+    this.filter = filter;
   }
 }
