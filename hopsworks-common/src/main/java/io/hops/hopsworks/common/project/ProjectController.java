@@ -181,7 +181,6 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
-import java.util.concurrent.TimeoutException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -665,7 +664,7 @@ public class ProjectController {
     DatasetException, HopsSecurityException {
 
     for (Settings.BaseDataset ds : Settings.BaseDataset.values()) {
-      datasetController.createDataset(user, project, ds.getName(), ds.getDescription(), -1,
+      datasetController.createDataset(user, project, ds.getName(), ds.getDescription(),
         Provenance.Type.DISABLED.dto, false, DatasetAccessPermission.EDITABLE, dfso);
 
       Path dsPath = new Path(Utils.getProjectPath(project.getName()) + ds.getName());
@@ -676,7 +675,7 @@ public class ProjectController {
         String[] subResources = settings.getResourceDirs().split(";");
         for (String sub : subResources) {
           Path subDirPath = new Path(dsPath, sub);
-          datasetController.createSubDirectory(project, subDirPath, -1, "", false, dfso);
+          datasetController.createSubDirectory(project, subDirPath, dfso);
           dfso.setOwner(subDirPath, fstatus.getOwner(), fstatus.getGroup());
         }
       } else if (ds.equals(Settings.BaseDataset.LOGS)) {
@@ -684,7 +683,7 @@ public class ProjectController {
         JobType[] jobTypes = new JobType[]{JobType.SPARK, JobType.PYSPARK, JobType.FLINK};
         for (JobType jobType : jobTypes) {
           Path subDirPath = new Path(dsPath, jobType.getName());
-          datasetController.createSubDirectory(project, subDirPath, -1, "", false, dfso);
+          datasetController.createSubDirectory(project, subDirPath, dfso);
           dfso.setOwner(subDirPath, fstatus.getOwner(), fstatus.getGroup());
         }
       }
@@ -808,7 +807,7 @@ public class ProjectController {
       if (ds == Settings.ServiceDataset.TRAININGDATASETS) {
         datasetName = project.getName() + "_" + datasetName;
       }
-      datasetController.createDataset(user, project, datasetName, ds.getDescription(), -1, datasetProvCore,
+      datasetController.createDataset(user, project, datasetName, ds.getDescription(), datasetProvCore,
         false, DatasetAccessPermission.EDITABLE, dfso);
       datasetController.generateReadme(udfso, datasetName, ds.getDescription(), project.getName());
 
@@ -1642,8 +1641,7 @@ public class ProjectController {
       boolean decreaseCreatedProj, Users owner)
     throws IOException, InterruptedException, HopsSecurityException,
     ServiceException, ProjectException,
-    GenericException, TensorBoardException, FeaturestoreException,
-    ElasticException, TimeoutException, ExecutionException {
+    GenericException, TensorBoardException, FeaturestoreException {
     DistributedFileSystemOps dfso = null;
     try {
       dfso = dfs.getDfsOps();
@@ -2373,7 +2371,7 @@ public class ProjectController {
 
       switch (projectType) {
         case SPARK:
-          datasetController.createDataset(user, project, tourFilesDataset, "files for guide projects", -1,
+          datasetController.createDataset(user, project, tourFilesDataset, "files for guide projects",
             Provenance.getDatasetProvCore(projectProvCore, Provenance.MLType.DATASET),
               false, DatasetAccessPermission.EDITABLE, dfso);
           String exampleDir = settings.getSparkDir() + Settings.SPARK_EXAMPLES_DIR + "/";
@@ -2404,7 +2402,7 @@ public class ProjectController {
           }
           break;
         case KAFKA:
-          datasetController.createDataset(user, project, tourFilesDataset, "files for guide projects", -1,
+          datasetController.createDataset(user, project, tourFilesDataset, "files for guide projects",
             Provenance.getDatasetProvCore(projectProvCore, Provenance.MLType.DATASET),
               false, DatasetAccessPermission.EDITABLE, dfso);
           // Get the JAR from /user/<super user>
@@ -2425,7 +2423,7 @@ public class ProjectController {
           break;
         case ML:
           tourFilesDataset = Settings.HOPS_DL_TOUR_DATASET;
-          datasetController.createDataset(user, project, tourFilesDataset, "sample training data for notebooks", -1,
+          datasetController.createDataset(user, project, tourFilesDataset, "sample training data for notebooks",
             Provenance.getDatasetProvCore(projectProvCore, Provenance.MLType.DATASET)
             , false, DatasetAccessPermission.EDITABLE, dfso);
           String DLDataSrc = "/user/" + settings.getHdfsSuperUser() + "/" + Settings.HOPS_DEEP_LEARNING_TOUR_DATA
@@ -2454,7 +2452,7 @@ public class ProjectController {
           }
           break;
         case FS:
-          datasetController.createDataset(user, project, tourFilesDataset, "files for guide projects", -1,
+          datasetController.createDataset(user, project, tourFilesDataset, "files for guide projects",
             Provenance.getDatasetProvCore(projectProvCore, Provenance.MLType.DATASET),
             false, DatasetAccessPermission.EDITABLE, dfso);
           // Get the JAR from /user/<super user>
@@ -2585,8 +2583,7 @@ public class ProjectController {
     }
   }
 
-  public void removeElasticsearch(Project project)
-      throws ServiceException, ElasticException {
+  public void removeElasticsearch(Project project) throws ElasticException {
     List<ProjectServiceEnum> projectServices = projectServicesFacade.
       findEnabledServicesForProject(project);
 

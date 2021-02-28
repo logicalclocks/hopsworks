@@ -155,7 +155,6 @@ public class FsJobManagerController {
       datasetController.createDataset(user, project,
           Settings.ServiceDataset.INGESTION.getName(),
           Settings.ServiceDataset.INGESTION.getDescription(),
-          -1,
           Provenance.Type.DISABLED.dto, false, DatasetAccessPermission.EDITABLE, dfso);
     } finally {
       dfs.closeDfsClient(dfso);

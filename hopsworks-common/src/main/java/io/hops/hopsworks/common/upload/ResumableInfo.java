@@ -49,7 +49,6 @@ public class ResumableInfo {
   private String resumableIdentifier;
   private String resumableFilename;
   private String resumableRelativePath;
-  private int resumableTemplateId;
   private long uploadedContentLength = 0;
   private String resumableFilePath;
 
@@ -149,10 +148,6 @@ public class ResumableInfo {
     return this.resumableRelativePath;
   }
 
-  public int getResumableTemplateId() {
-    return this.resumableTemplateId;
-  }
-
   public long getUploadedContentLength() {
     return this.uploadedContentLength;
   }
@@ -182,10 +177,6 @@ public class ResumableInfo {
 
   public void setResumableRelativePath(String resumableRelativePath) {
     this.resumableRelativePath = resumableRelativePath;
-  }
-
-  public void setResumableTemplateId(int resumableTemplateId) {
-    this.resumableTemplateId = resumableTemplateId;
   }
 
   public void setUploadedContentLength(long uploadedContentLength) {
