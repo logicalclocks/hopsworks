@@ -43,7 +43,7 @@
     <div id="wrapper" ngCloak
          ng-class="{'toggled': projectCtrl.isClosed}"
          ng-controller="DatasetsCtrl as datasetsCtrl">
-      <div ng-controller="MetadataCtrl as metadataCtrl">
+      <div>
         <div ng-if="jupyterCtrl.loading" class="loadingwrap">
           <div class="loading-content">
             <div class="loader-in-wrap"></div>
@@ -65,9 +65,9 @@
                   <a ng-click="datasetsCtrl.goToDataSetsDir()">DataSets</a>
                   <span ng-show="datasetsCtrl.pathArray.length > 10">...</span>
                   <span data-ng-repeat="path in datasetsCtrl.pathArray.slice(datasetsCtrl.pathArray.length - 1 - datasetsCtrl.breadcrumbLen()) track by $index">
-                  <span> / </span><a ng-click="datasetsCtrl.goToFolder($index + 1)">{{path| limitTo: 16 }}{{path.length > 16 ? '..' : ' '}}</a>
-                </span>
-                   <span> &nbsp; <a ng-click="datasetsCtrl.refresh()"> <span class="fa fa-refresh"></span></a></span>
+                    <span> / </span><a ng-click="datasetsCtrl.goToFolder($index + 1)">{{path| limitTo: 16 }}{{path.length > 16 ? '..' : ' '}}</a>
+                  </span>
+                  <span> &nbsp; <a ng-click="datasetsCtrl.refresh()"> <span class="fa fa-refresh"></span></a></span>
                 </div>
                 <div class="pull-right" style="margin-right:30px;  margin-top:-25px;">
                   <hamburger-toggle state="datasetsCtrl.tgState" class="hamburger-toggle" ng-click="datasetsCtrl.deselectAll()"></hamburger-toggle>
@@ -84,24 +84,21 @@
                           <div class=" input-group" ng-show="datasetsCtrl.isSelectedFiles() === 1">
                             <input id="fileRef" type="text" class="form-control"
                                    value="{{datasetsCtrl.getSelectedPath(datasetsCtrl.selectedFiles[datasetsCtrl.selected])}}">
-
                             <span class="input-group-btn">
-                              <button class="btn btn-default fa fa-clipboard icon-resize-small" type="button"
-                                      ngclipboard ngclipboard-success="datasetsCtrl.onSuccess(e);"
-                                      data-clipboard-target="#fileRef" title="Copy hdfs path">
-                              </button>
-                            </span>
-
-
+                                <button class="btn btn-default fa fa-clipboard icon-resize-small" type="button"
+                                        ngclipboard ngclipboard-success="datasetsCtrl.onSuccess(e);"
+                                        data-clipboard-target="#fileRef" title="Copy hdfs path">
+                                </button>
+                              </span>
                           </div>
                           <div class="input-group">
                             <input type="text" class="form-control" ng-model="datasetsCtrl.searchTerm" placeholder="Filter..."
                                    ng-change="datasetsCtrl.resetSelected(); datasetsCtrl.doFilter()">
                             <span class="input-group-btn">
-                              <button class="btn btn-default fa fa-filter icon-resize-small" type="button"
-                                      title="Filter"
-                                      ng-click="datasetsCtrl.search()"></button>
-                            </span>
+                                <button class="btn btn-default fa fa-filter icon-resize-small" type="button"
+                                        title="Filter"
+                                        ng-click="datasetsCtrl.search()"></button>
+                              </span>
                           </div>
                         </div>
                       </div>
@@ -133,7 +130,7 @@
 
                         </div>
                         <div class="btn-group" role="group" aria-label="Third group" ng-show="datasetsCtrl.isSelectedFiles() === 1 &&
-                                                                          !datasetsCtrl.selectedFiles[datasetsCtrl.selected].attributes.dir">
+                                                                            !datasetsCtrl.selectedFiles[datasetsCtrl.selected].attributes.dir">
                           <button type="button" class="btn btn-default fa fa-cloud-download" title="Download file"
                                   id="toolbar-open"
                                   ng-click="datasetsCtrl.openDir(datasetsCtrl.selectedFiles[datasetsCtrl.selected])"></button>
@@ -143,7 +140,7 @@
                           <button type="button" class="btn btn-default fa fa-file-archive-o" title="Extract"
                                   ng-hide="datasetsCtrl.isZippedfile() === false" id="toolbar-unzip"
                                   ng-click="datasetsCtrl.unzip(datasetsCtrl.selectedFiles[datasetsCtrl.selected]);
-                                  datasetsCtrl.select(-1, datasetsCtrl.selectedFiles[datasetsCtrl.selected], undefined);"></button>
+                                    datasetsCtrl.select(-1, datasetsCtrl.selectedFiles[datasetsCtrl.selected], undefined);"></button>
                           <button type="button" class="btn btn-default" title="Convert .ipynb file to .py file"
                                   ng-hide="datasetsCtrl.isIPythonNotebook() === false" id="toolbar-convert"
                                   ng-click="datasetsCtrl.convertIPythonNotebook(datasetsCtrl.selected)">
@@ -155,7 +152,7 @@
                           <button type="button" class="btn btn-default fa fa-file-archive-o" title="Compress"
                                   id="toolbar-zip"
                                   ng-click="datasetsCtrl.zip(datasetsCtrl.selectedFiles[datasetsCtrl.selected]);
-                                  datasetsCtrl.select(-1, datasetsCtrl.selectedFiles[datasetsCtrl.selected], undefined);"></button>
+                                    datasetsCtrl.select(-1, datasetsCtrl.selectedFiles[datasetsCtrl.selected], undefined);"></button>
                         </div>
                       </div>
                     </div>
@@ -168,255 +165,236 @@
                     <div class="table-responsive" style="overflow: hidden; padding-right: 30px;">
                       <table class="table table-hover dataset-table" style="margin-bottom: 0px;">
                         <thead>
-                          <tr>
-                            <th style="width: 1%; min-width: 1%">
-                              <md-checkbox md-no-ink class="md-primary"
+                        <tr>
+                          <th style="width: 1%; min-width: 1%">
+                            <md-checkbox md-no-ink class="md-primary"
                                          ng-show="datasetsCtrl.isSelectedFiles() === 0"
                                          aria-label="Select All"
                                          ng-click="datasetsCtrl.all_selected = true; datasetsCtrl.selectAll();"
                                          ng-checked="false"
                                          style="margin-bottom: 0px" id="select_all">
-                                <md-tooltip md-direction="right">
-                                  Select All
-                                </md-tooltip>
-                              </md-checkbox>
-                              <md-checkbox md-no-ink class="md-primary"
+                              <md-tooltip md-direction="right">
+                                Select All
+                              </md-tooltip>
+                            </md-checkbox>
+                            <md-checkbox md-no-ink class="md-primary"
                                          ng-show="datasetsCtrl.isSelectedFiles() > 0 && !datasetsCtrl.allSelected()"
                                          aria-label="De-Select All"
                                          ng-click="datasetsCtrl.resetSelected();"
                                          md-indeterminate="isIndeterminate()"
                                          style="margin-bottom: 0px">
-                                <md-tooltip md-direction="right">
-                                  De-Select All
-                                </md-tooltip>
-                              </md-checkbox>
-                              <md-checkbox md-no-ink class="md-primary"
+                              <md-tooltip md-direction="right">
+                                De-Select All
+                              </md-tooltip>
+                            </md-checkbox>
+                            <md-checkbox md-no-ink class="md-primary"
                                          ng-show="datasetsCtrl.allSelected()"
                                          aria-label="De-Select All"
                                          ng-click="datasetsCtrl.resetSelected();"
                                          ng-checked="true"
                                          style="margin-bottom: 0px;margin-right: 16px">
-                                <md-tooltip md-direction="right">
-                                  De-Select All
-                                </md-tooltip>
-                              </md-checkbox>
-                            </th>
-                            <th ng-click="sort('attributes.dir'); datasetsCtrl.resetSelected(); datasetsCtrl.doFilter()"
-                                style="width: 4%; min-width: 4%">Type
-                              <span class="glyphicon sort-icon" ng-show="sortKey === 'attributes.dir'"
-                                    ng-class="{'glyphicon-chevron-up':!reverse,'glyphicon-chevron-down':reverse}"></span></th>
-                            <th ng-click="sort('attributes.name'); datasetsCtrl.resetSelected(); datasetsCtrl.doFilter()"
-                                style="width: 50%; min-width: 50%">Name
-                              <span class="glyphicon sort-icon" ng-show="sortKey === 'attributes.name'"
-                                    ng-class="{'glyphicon-chevron-up':!reverse,'glyphicon-chevron-down':reverse}"></span></th>
-                            <th ng-click="sort('attributes.owner'); datasetsCtrl.resetSelected(); datasetsCtrl.doFilter()"
-                                style="width: 16%; min-width: 16%">Owner
-                              <span class="glyphicon sort-icon" ng-show="sortKey === 'attributes.owner'"
-                                    ng-class="{'glyphicon-chevron-up':!reverse,'glyphicon-chevron-down':reverse}"></span></th>
-                            <th ng-click="sort('attributes.modificationTime'); datasetsCtrl.resetSelected(); datasetsCtrl.doFilter()"
-                                style="width: 18%; min-width: 18%">Last modified
-                              <span class="glyphicon sort-icon" ng-show="sortKey === 'attributes.modificationTime'"
-                                    ng-class="{'glyphicon-chevron-up':!reverse,'glyphicon-chevron-down':reverse}"></span></th>
-                            <th ng-click="sort('attributes.size'); datasetsCtrl.resetSelected(); datasetsCtrl.doFilter()"
-                                style="width: 4%; min-width: 4%" align="center" class="text-center">File size
-                              <span class="glyphicon sort-icon" ng-show="sortKey === 'attributes.size'"
-                                    ng-class="{'glyphicon-chevron-up':!reverse,'glyphicon-chevron-down':reverse}"></span></th>
-                            <th style="width: 2%; min-width: 2%"></th>
-                          </tr>
+                              <md-tooltip md-direction="right">
+                                De-Select All
+                              </md-tooltip>
+                            </md-checkbox>
+                          </th>
+                          <th ng-click="sort('attributes.dir'); datasetsCtrl.resetSelected(); datasetsCtrl.doFilter()"
+                              style="width: 4%; min-width: 4%">Type
+                            <span class="glyphicon sort-icon" ng-show="sortKey === 'attributes.dir'"
+                                  ng-class="{'glyphicon-chevron-up':!reverse,'glyphicon-chevron-down':reverse}"></span></th>
+                          <th ng-click="sort('attributes.name'); datasetsCtrl.resetSelected(); datasetsCtrl.doFilter()"
+                              style="width: 50%; min-width: 50%">Name
+                            <span class="glyphicon sort-icon" ng-show="sortKey === 'attributes.name'"
+                                  ng-class="{'glyphicon-chevron-up':!reverse,'glyphicon-chevron-down':reverse}"></span></th>
+                          <th ng-click="sort('attributes.owner'); datasetsCtrl.resetSelected(); datasetsCtrl.doFilter()"
+                              style="width: 16%; min-width: 16%">Owner
+                            <span class="glyphicon sort-icon" ng-show="sortKey === 'attributes.owner'"
+                                  ng-class="{'glyphicon-chevron-up':!reverse,'glyphicon-chevron-down':reverse}"></span></th>
+                          <th ng-click="sort('attributes.modificationTime'); datasetsCtrl.resetSelected(); datasetsCtrl.doFilter()"
+                              style="width: 18%; min-width: 18%">Last modified
+                            <span class="glyphicon sort-icon" ng-show="sortKey === 'attributes.modificationTime'"
+                                  ng-class="{'glyphicon-chevron-up':!reverse,'glyphicon-chevron-down':reverse}"></span></th>
+                          <th ng-click="sort('attributes.size'); datasetsCtrl.resetSelected(); datasetsCtrl.doFilter()"
+                              style="width: 4%; min-width: 4%" align="center" class="text-center">File size
+                            <span class="glyphicon sort-icon" ng-show="sortKey === 'attributes.size'"
+                                  ng-class="{'glyphicon-chevron-up':!reverse,'glyphicon-chevron-down':reverse}"></span></th>
+                          <th style="width: 2%; min-width: 2%"></th>
+                        </tr>
                         </thead>
                         <tbody class="datasets-jobs-table">
-                          <tr dir-paginate="file in datasetsCtrl.paginatedFiles | itemsPerPage:datasetsCtrl.datasetBrowserPreferences.itemsPerPage"
-                              pagination-id="dataset_browser_pagination"
-                              current-page="datasetsCtrl.datasetBrowserPreferences.currentPage"
-                              total-items="datasetsCtrl.filesCount"
-                              context-menu
-                              data-target="menu-{{ file.attributes.name}}"
-                              id="table-row-{{ file.attributes.name}}"
-                              ng-class="{'highlight': datasetsCtrl.selected === file.attributes.name}">
-                            <td>
-                              <md-checkbox md-no-ink class="md-primary" aria-label="Select File"
-                                           ng-checked="false"
-                                           ng-show="!datasetsCtrl.haveSelected(file)"
-                                           ng-click="datasetsCtrl.select($index, file, $event); metadataCtrl.setMetadataTemplate(file.attributes); datasetsCtrl.sharedDatasetPath(); datasetsCtrl.getStat(file); datasetsCtrl.getFileAttachedJupyterConfig(file)"
-                                           style="margin-top: 5px; margin-bottom: 5px">
-                                <md-tooltip md-direction="right">
-                                  Select
-                                </md-tooltip>
-                              </md-checkbox>
-                              <md-checkbox md-no-ink class="md-primary" aria-label="De-Select File"
-                                           ng-checked="true"
-                                           ng-show="datasetsCtrl.haveSelected(file)"
-                                           ng-click="datasetsCtrl.deselect($index, file, $event);"
-                                           style="margin-top: 5px; margin-bottom: 5px">
-                                <md-tooltip md-direction="right">
-                                  De-Select
-                                </md-tooltip>
-                              </md-checkbox>
-                            </td>
-                            <td ng-click="datasetsCtrl.openDir(file)" align="center">
-                              <div style="font-size: 20px">
-                                <i uib-tooltip="Click on folder icon to enter folder" tooltip-placement="right"
-                                   ng-show="file.attributes.dir" class="fa"
-                                   ng-class="{ 'fa-folder': datasetsCtrl.selected !== file.attributes.name, 'fa-folder-open': datasetsCtrl.selected === file.attributes.name}"
-                                   style="padding-right: 5px; color: #757575; float: left;"></i>
-                                <i uib-tooltip="Download file" tooltip-placement="right"
-                                   ng-show="!file.attributes.dir && !datasetsCtrl.isZipped(file.attributes.name)"
-                                   class="fa fa-file"
-                                   style="padding-right: 5px; color: #757575;float: left;"></i>
-                                <i uib-tooltip="Download file" tooltip-placement="right"
-                                   ng-show="datasetsCtrl.isZipped(file.attributes.name)"
-                                   class="fa fa-archive"
-                                   style="padding-right: 5px; color: #757575;float: left;"></i>
-                              </div>
-                            </td>
-                            <td ng-click="datasetsCtrl.openDir(file)"
-                                title="{{file.attributes.name.length > 170 ? file.attributes.name: ''}}"><div>
-                              {{file.attributes.name| cut:true:170:'...'}}</div></td>
-                            <td ng-click="datasetsCtrl.openDir(file)">{{file.attributes.owner}}</td>
-                            <td ng-click="datasetsCtrl.openDir(file)" ng-if="file.owningProjectName">{{file.owningProjectName}}</td>
-                            <td ng-click="datasetsCtrl.openDir(file)">{{file.attributes.modificationTime| date:'medium'}} <span style=" color: #757575; font-size: 12px; padding-left: 5px;"></span></td>
-                            <td style="width: 12%;" ng-click="datasetsCtrl.openDir(file)" align="center">
-                              {{(file.attributes.size == 0? '_': projectCtrl.sizeOnDisk(file.attributes.size))}}</td>
-                            <td ng-click="datasetsCtrl.openDir(file)">
-                              <i class="glyphicon"
-                                 ng-class="{ 'glyphicon-hourglass': file.attributes.underConstruction === true}"
-                                 title="Under construction"></i>
-                            </td>
-                            <td uib-dropdown class="position-fixed" id="menu-{{ file.attributes.name}}" style="border-top: none;">
-                              <ul uib-dropdown-menu class="dropdown-amore" role="menu">
-                                <li ng-show="datasetsCtrl.isSelectedFiles() <= 1"
-                                    ng-hide="datasetsCtrl.isZipped(file.attributes.name) === false">
-                                  <a class="pointer"
-                                     role="menuitem"
-                                     tabindex="10"
-                                     ng-click="datasetsCtrl.unzip(file); datasetsCtrl.select(-1, file, undefined);"
-                                     data-toggle="uib-tooltip" title="Decompress this archive file using the staging directory
+                        <tr dir-paginate="file in datasetsCtrl.paginatedFiles | itemsPerPage:datasetsCtrl.datasetBrowserPreferences.itemsPerPage"
+                            pagination-id="dataset_browser_pagination"
+                            current-page="datasetsCtrl.datasetBrowserPreferences.currentPage"
+                            total-items="datasetsCtrl.filesCount"
+                            context-menu
+                            data-target="menu-{{ file.attributes.name}}"
+                            id="table-row-{{ file.attributes.name}}"
+                            ng-class="{'highlight': datasetsCtrl.selected === file.attributes.name}">
+                          <td>
+                            <md-checkbox md-no-ink class="md-primary" aria-label="Select File"
+                                         ng-checked="false"
+                                         ng-show="!datasetsCtrl.haveSelected(file)"
+                                         ng-click="datasetsCtrl.select($index, file, $event); datasetsCtrl.sharedDatasetPath(); datasetsCtrl.getStat(file) datasetsCtrl.getFileAttachedJupyterConfig(file)"
+                                         style="margin-top: 5px; margin-bottom: 5px">
+                              <md-tooltip md-direction="right">
+                                Select
+                              </md-tooltip>
+                            </md-checkbox>
+                            <md-checkbox md-no-ink class="md-primary" aria-label="De-Select File"
+                                         ng-checked="true"
+                                         ng-show="datasetsCtrl.haveSelected(file)"
+                                         ng-click="datasetsCtrl.deselect($index, file, $event);"
+                                         style="margin-top: 5px; margin-bottom: 5px">
+                              <md-tooltip md-direction="right">
+                                De-Select
+                              </md-tooltip>
+                            </md-checkbox>
+                          </td>
+                          <td ng-click="datasetsCtrl.openDir(file)" align="center">
+                            <div style="font-size: 20px">
+                              <i uib-tooltip="Click on folder icon to enter folder" tooltip-placement="right"
+                                 ng-show="file.attributes.dir" class="fa"
+                                 ng-class="{ 'fa-folder': datasetsCtrl.selected !== file.attributes.name, 'fa-folder-open': datasetsCtrl.selected === file.attributes.name}"
+                                 style="padding-right: 5px; color: #757575; float: left;"></i>
+                              <i uib-tooltip="Download file" tooltip-placement="right"
+                                 ng-show="!file.attributes.dir && !datasetsCtrl.isZipped(file.attributes.name)"
+                                 class="fa fa-file"
+                                 style="padding-right: 5px; color: #757575;float: left;"></i>
+                              <i uib-tooltip="Download file" tooltip-placement="right"
+                                 ng-show="datasetsCtrl.isZipped(file.attributes.name)"
+                                 class="fa fa-archive"
+                                 style="padding-right: 5px; color: #757575;float: left;"></i>
+                            </div>
+                          </td>
+                          <td ng-click="datasetsCtrl.openDir(file)"
+                              title="{{file.attributes.name.length > 170 ? file.attributes.name: ''}}"><div>
+                            {{file.attributes.name| cut:true:170:'...'}}</div></td>
+                          <td ng-click="datasetsCtrl.openDir(file)">{{file.attributes.owner}}</td>
+                          <td ng-click="datasetsCtrl.openDir(file)" ng-if="file.owningProjectName">{{file.owningProjectName}}</td>
+                          <td ng-click="datasetsCtrl.openDir(file)">{{file.attributes.modificationTime| date:'medium'}} <span style=" color: #757575; font-size: 12px; padding-left: 5px;"></span></td>
+                          <td style="width: 12%;" ng-click="datasetsCtrl.openDir(file)" align="center">
+                            {{(file.attributes.size == 0? '_': projectCtrl.sizeOnDisk(file.attributes.size))}}</td>
+                          <td ng-click="datasetsCtrl.openDir(file)">
+                            <i class="glyphicon"
+                               ng-class="{ 'glyphicon-hourglass': file.attributes.underConstruction === true}"
+                               title="Under construction"></i>
+                          </td>
+                          <td uib-dropdown class="position-fixed" id="menu-{{ file.attributes.name}}" style="border-top: none;">
+                            <ul uib-dropdown-menu class="dropdown-amore" role="menu">
+                              <li ng-show="datasetsCtrl.isSelectedFiles() <= 1"
+                                  ng-hide="datasetsCtrl.isZipped(file.attributes.name) === false">
+                                <a class="pointer"
+                                   role="menuitem"
+                                   tabindex="10"
+                                   ng-click="datasetsCtrl.unzip(file); datasetsCtrl.select(-1, file, undefined);"
+                                   data-toggle="uib-tooltip" title="Decompress this archive file using the staging directory
                                  on the scratch disk of the webserver.">
                                 <span><i class="fa fa-file-archive-o" ></i>
                                   Extract</span>
-                                  </a>
-                                </li>
-                                <li ng-show="datasetsCtrl.isSelectedFiles() <= 1 && datasetsCtrl.isZippedfile() === false">
-                                  <a class="pointer"
-                                     role="menuitem"
-                                     tabindex="10"
-                                     ng-click="datasetsCtrl.zip(file); datasetsCtrl.select(-1, file, undefined);"
-                                     data-toggle="uib-tooltip"
-                                     title="Compress this directory using the staging directory on the scratch disk of the webserver.">
+                                </a>
+                              </li>
+                              <li ng-show="datasetsCtrl.isSelectedFiles() <= 1 && datasetsCtrl.isZippedfile() === false">
+                                <a class="pointer"
+                                   role="menuitem"
+                                   tabindex="10"
+                                   ng-click="datasetsCtrl.zip(file); datasetsCtrl.select(-1, file, undefined);"
+                                   data-toggle="uib-tooltip"
+                                   title="Compress this directory using the staging directory on the scratch disk of the webserver.">
                                 <span><i class="fa fa-file-archive-o" ></i>
                                   Compress</span>
-                                  </a>
-                                </li>
-                                <li ng-show="datasetsCtrl.isSelectedFiles() <= 1" ng-hide="file.attributes.dir">
-                                  <a class="pointer"
-                                     role="menuitem"
-                                     tabindex="1"
-                                     ng-click="datasetsCtrl.filePreview(file, true, false)"
-                                     data-toggle="uib-tooltip" title="Click to display a preview of a text file.">
+                                </a>
+                              </li>
+                              <li ng-show="datasetsCtrl.isSelectedFiles() <= 1" ng-hide="file.attributes.dir">
+                                <a class="pointer"
+                                   role="menuitem"
+                                   tabindex="1"
+                                   ng-click="datasetsCtrl.filePreview(file, true, false)"
+                                   data-toggle="uib-tooltip" title="Click to display a preview of a text file.">
                                 <span><i class="fa fa-camera-retro" ></i>
                                   Preview</span>
-                                  </a>
-                                </li>
-                                <li ng-if="datasetsCtrl.isSelectedFiles() === 0">
-                                  <a class="pointer"
-                                     role="menuitem"
-                                     tabindex="2"
-                                     ng-click="datasetsCtrl.copy(file, file.attributes.name)">
+                                </a>
+                              </li>
+                              <li ng-if="datasetsCtrl.isSelectedFiles() === 0">
+                                <a class="pointer"
+                                   role="menuitem"
+                                   tabindex="2"
+                                   ng-click="datasetsCtrl.copy(file, file.attributes.name)">
                                 <span><i class="fa fa-files-o"></i>
                                   Copy</span>
-                                  </a>
-                                </li>
-                                <li ng-if="datasetsCtrl.isSelectedFiles() > 0">
-                                  <a class="pointer"
-                                     role="menuitem"
-                                     tabindex="2"
-                                     ng-click="datasetsCtrl.copySelected()">
+                                </a>
+                              </li>
+                              <li ng-if="datasetsCtrl.isSelectedFiles() > 0">
+                                <a class="pointer"
+                                   role="menuitem"
+                                   tabindex="2"
+                                   ng-click="datasetsCtrl.copySelected()">
                                 <span><i class="fa fa-files-o"></i>
                                   Copy</span>
-                                  </a>
-                                </li>
-                                <li class="divider" ng-if="datasetsCtrl.isSelectedFiles() <= 1"
-                                    ng-hide="datasetsCtrl.parentDS.publicDs !== 0 && isDelaEnabled"></li>
-                                <li ng-if="datasetsCtrl.isSelectedFiles() === 0"
-                                    ng-hide="datasetsCtrl.parentDS.publicDs !== 0 && isDelaEnabled" id="remove">
-                                  <a class="pointer"
-                                     role="menuitem"
-                                     tabindex="3"
-                                     ng-click="datasetsCtrl.deleteFile(file)">
+                                </a>
+                              </li>
+                              <li class="divider" ng-if="datasetsCtrl.isSelectedFiles() <= 1"
+                                  ng-hide="datasetsCtrl.parentDS.publicDs !== 0 && isDelaEnabled"></li>
+                              <li ng-if="datasetsCtrl.isSelectedFiles() === 0"
+                                  ng-hide="datasetsCtrl.parentDS.publicDs !== 0 && isDelaEnabled" id="remove">
+                                <a class="pointer"
+                                   role="menuitem"
+                                   tabindex="3"
+                                   ng-click="datasetsCtrl.deleteFile(file)">
                                 <span><i class="fa fa-trash"></i>
                                   Remove</span>
-                                  </a>
-                                </li>
-                                <li ng-if="datasetsCtrl.isSelectedFiles() > 0" ng-hide="datasetsCtrl.parentDS.publicDs !== 0 && isDelaEnabled">
-                                  <a class="pointer"
-                                     role="menuitem"
-                                     tabindex="3"
-                                     ng-click="datasetsCtrl.deleteSelected()">
+                                </a>
+                              </li>
+                              <li ng-if="datasetsCtrl.isSelectedFiles() > 0" ng-hide="datasetsCtrl.parentDS.publicDs !== 0 && isDelaEnabled">
+                                <a class="pointer"
+                                   role="menuitem"
+                                   tabindex="3"
+                                   ng-click="datasetsCtrl.deleteSelected()">
                                 <span><i class="fa fa-trash"></i>
                                   Remove</span>
-                                  </a>
-                                </li>
-                                <li class="divider" ng-show="datasetsCtrl.isSelectedFiles() <= 1"
-                                    ng-hide="datasetsCtrl.parentDS.publicDs !== 0 && isDelaEnabled"></li>
-                                <li ng-if="datasetsCtrl.isSelectedFiles() === 0" ng-hide="datasetsCtrl.parentDS.publicDs !== 0 && isDelaEnabled">
-                                  <a class="pointer"
-                                     role="menuitem"
-                                     tabindex="4"
-                                     ng-click="datasetsCtrl.move(file, file.attributes.name)">
+                                </a>
+                              </li>
+                              <li class="divider" ng-show="datasetsCtrl.isSelectedFiles() <= 1"
+                                  ng-hide="datasetsCtrl.parentDS.publicDs !== 0 && isDelaEnabled"></li>
+                              <li ng-if="datasetsCtrl.isSelectedFiles() === 0" ng-hide="datasetsCtrl.parentDS.publicDs !== 0 && isDelaEnabled">
+                                <a class="pointer"
+                                   role="menuitem"
+                                   tabindex="4"
+                                   ng-click="datasetsCtrl.move(file, file.attributes.name)">
                                 <span><i class="fa fa-arrows"></i>
                                   Move</span>
-                                  </a>
-                                </li>
-                                <li ng-if="datasetsCtrl.isSelectedFiles() > 0" ng-hide="datasetsCtrl.parentDS.publicDs !== 0 && isDelaEnabled">
-                                  <a class="pointer"
-                                     role="menuitem"
-                                     tabindex="4"
-                                     ng-click="datasetsCtrl.moveSelected()">
+                                </a>
+                              </li>
+                              <li ng-if="datasetsCtrl.isSelectedFiles() > 0" ng-hide="datasetsCtrl.parentDS.publicDs !== 0 && isDelaEnabled">
+                                <a class="pointer"
+                                   role="menuitem"
+                                   tabindex="4"
+                                   ng-click="datasetsCtrl.moveSelected()">
                                 <span><i class="fa fa-arrows"></i>
                                   Move</span>
-                                  </a>
-                                </li>
-                                <li ng-show="datasetsCtrl.isSelectedFiles() <= 1"
-                                    ng-hide="datasetsCtrl.parentDS.publicDs !== 0 && isDelaEnabled" id="rename">
-                                  <a class="pointer"
-                                     role="menuitem"
-                                     tabindex="5"
-                                     ng-click="datasetsCtrl.rename(file, file.attributes.name)">
+                                </a>
+                              </li>
+                              <li ng-show="datasetsCtrl.isSelectedFiles() <= 1"
+                                  ng-hide="datasetsCtrl.parentDS.publicDs !== 0 && isDelaEnabled" id="rename">
+                                <a class="pointer"
+                                   role="menuitem"
+                                   tabindex="5"
+                                   ng-click="datasetsCtrl.rename(file, file.attributes.name)">
                                 <span><i class="fa fa-edit"></i>
                                   Rename</span>
-                                  </a>
-                                </li>
-                                <!--li>
-                                  <a class="pointer"
-                                     role="menuitem"
-                                     tabindex="1"
-                                     ng-click="panel.highlight = true; datasetsCtrl.compress(file); $event.stopPropagation();">
-                                    <span><i class="fa fa-file-archive-o"></i>
-                                      Compress</span>
-                                  </a>
-                                </li-->
-                                <li class="divider" ng-if="datasetsCtrl.isSelectedFiles() <= 1"></li>
-                                <li ng-show="datasetsCtrl.isSelectedFiles() <= 1" id="add_metadata">
-                                  <a class="pointer"
-                                     role="menuitem"
-                                     tabindex="6"
-                                     ng-click="metadataCtrl.attachTemplate(file.attributes); $event.stopPropagation();">
-                                <span><i class="fa fa-upload"></i>
-                                  Add metadata</span>
-                                  </a>
-                                </li>
-                                <li ng-show="datasetsCtrl.isSelectedFiles() <= 1" id="remove_metadata">
-                                  <a class="pointer"
-                                     role="menuitem"
-                                     tabindex="7"
-                                     ng-click="metadataCtrl.detachTemplate(file.attributes); $event.stopPropagation();">
-                                <span><i class="fa fa-download"></i>
-                                  Remove metadata</span>
-                                  </a>
-                                </li>
-                              </ul>
-                            </td>
-                          </tr>
+                                </a>
+                              </li>
+                              <!--li>
+                                <a class="pointer"
+                                   role="menuitem"
+                                   tabindex="1"
+                                   ng-click="panel.highlight = true; datasetsCtrl.compress(file); $event.stopPropagation();">
+                                  <span><i class="fa fa-file-archive-o"></i>
+                                    Compress</span>
+                                </a>
+                              </li-->
+                            </ul>
+                          </td>
+                        </tr>
                         </tbody>
                         <tfoot><tr><td colspan="100"><div class="loader loader-sm" ng-show="datasetsCtrl.working"></div></td></tr></tfoot>
                       </table>
@@ -511,10 +489,6 @@
                               </td>
                             </tr>
                           </table>
-                          <!--METADATA PRESENTATION SECTION-->
-                          <div id="board"  style="font-family: Times New Roman;"
-                               ng-include="'views/metadata/extendedMetadata.html'">
-                          </div>
                           <!--Attached Jupyter Configuration-->
                           <div id="attachedJupyterConfig"
                                ng-if="datasetsCtrl.canStartJupyterFromMetadata === true && datasetsCtrl.selected !== null && datasetsCtrl.selected !== undefined"
@@ -526,9 +500,9 @@
                                       class="fa fa-eye"></span>&nbsp;Notebook Configuration</button>
                               <button type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"
                                       style="border-top-right-radius: 0px; border-bottom-right-radius: 0px; border-right: 1px
-                            solid black;
-                            padding-left: 4px;
-                            margin-left: 10px;">
+                              solid black;
+                              padding-left: 4px;
+                              margin-left: 10px;">
                                 <span class="caret"></span>
                                 <span class="sr-only">Toggle Dropdown</span>
                               </button>

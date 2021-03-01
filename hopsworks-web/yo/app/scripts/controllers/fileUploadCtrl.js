@@ -43,41 +43,26 @@
 'use strict';
 
 angular.module('hopsWorksApp')
-        .controller('FileUploadCtrl', ['$uibModalInstance', '$scope', 'growl', 'flowFactory', 'DataSetService', 'AuthService', 'projectId', 'path', 'templateId', 'datasetType',
-          function ($uibModalInstance, $scope, growl, flowFactory, DataSetService, AuthService, projectId, path, templateId, datasetType) {
+        .controller('FileUploadCtrl', ['$uibModalInstance', '$scope', 'growl', 'flowFactory', 'DataSetService', 'AuthService', 'projectId', 'path', 'datasetType',
+          function ($uibModalInstance, $scope, growl, flowFactory, DataSetService, AuthService, projectId, path, datasetType) {
 
             var self = this;
-            self.model = {};
             self.projectId = projectId;
             self.path = path;
             self.datasetType = datasetType;
-            self.templateId = templateId;
             self.errorMsg;
             self.files = {};
             
-            self.datasets = [];
-            self.selectedTemplate = {};
-            self.temps = [{'temp': "temp"}];
-
             self.target = getApiPath() + '/project/' + self.projectId + '/dataset/upload/' + self.path;
             var dataSetService = DataSetService(self.projectId); //The datasetservice for the current project.
             self.size = function (fileSizeInBytes) {
               return convertSize (fileSizeInBytes);
             };
-                     
 
             self.existingFlowObject = flowFactory.create({
               target: self.target,
-              query: {templateId: self.templateId}
+              query: {}
             });
-
-            self.update = function () {
-              console.log("NEW TEMPLATE SELECTED " + JSON.stringify(self.selectedTemplate));
-            };
-
-            self.target = function (FlowFile, FlowChunk, isTest) {
-              return getApiPath() + '/project/' + self.projectId + '/dataset/upload/' + self.path + '/' + self.selectedTemplate.id;
-            };
 
             self.existingFlowObject.on('fileProgress', function (file, chunk) {
               var token = chunk.xhr.getResponseHeader('Authorization');
