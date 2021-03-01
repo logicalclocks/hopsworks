@@ -50,7 +50,13 @@ public class NullJupyterNbVCSController implements JupyterNbVCSController {
     throws ServiceException {
     return Collections.emptySet();
   }
-  
+
+  @Override
+  public boolean hasWriteAccess(Users user, String apiKeyName, String remoteURI, GitBackend gitBackend)
+    throws ServiceException {
+    return false;
+  }
+
   @Override
   public String getGitApiKey(String hdfsUser, String apiKeyName) throws ServiceException{
     return "";
