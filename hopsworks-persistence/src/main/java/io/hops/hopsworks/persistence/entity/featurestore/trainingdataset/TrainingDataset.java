@@ -100,6 +100,9 @@ public class TrainingDataset implements Serializable {
   @NotNull
   @Column(name = "data_format")
   private String dataFormat;
+  @Basic
+  @Column(name = "coalesce")
+  private Boolean coalesce;
   @Basic(optional = false)
   @Column(name = "description")
   private String description;
@@ -180,6 +183,14 @@ public class TrainingDataset implements Serializable {
 
   public void setDataFormat(String dataFormat) {
     this.dataFormat = dataFormat;
+  }
+
+  public Boolean getCoalesce() {
+    return coalesce;
+  }
+
+  public void setCoalesce(Boolean coalesce) {
+    this.coalesce = coalesce;
   }
 
   public String getDescription() {

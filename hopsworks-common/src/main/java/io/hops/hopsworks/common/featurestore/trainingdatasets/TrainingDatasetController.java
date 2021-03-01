@@ -342,6 +342,7 @@ public class TrainingDatasetController {
     trainingDataset.setSplits(trainingDatasetDTO.getSplits().stream()
       .map(tdDTO -> new TrainingDatasetSplit(trainingDataset, tdDTO.getName(), tdDTO.getPercentage())).collect(
         Collectors.toList()));
+    trainingDataset.setCoalesce(trainingDatasetDTO.getCoalesce() != null ? trainingDatasetDTO.getCoalesce() : false);
 
     StatisticsConfig statisticsConfig = new StatisticsConfig(trainingDatasetDTO.getStatisticsConfig().getEnabled(),
       trainingDatasetDTO.getStatisticsConfig().getCorrelations(),
