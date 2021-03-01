@@ -20,7 +20,6 @@ import io.hops.hopsworks.util.Helpers;
 import io.hops.hopsworks.util.models.Dataset;
 import io.hops.hopsworks.util.models.Project;
 import org.openqa.selenium.By;
-import org.openqa.selenium.TimeoutException;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.interactions.Actions;
@@ -36,7 +35,6 @@ import java.util.logging.Logger;
 public class DatasetHelper {
   private static final Logger LOGGER = Logger.getLogger(DatasetHelper.class.getName());
   public final static By DATASETS_BTN = By.id("datasetsTab");
-  public final static By METADATA_TAB = By.id("metadataTab");
   public final static By CREATE_DATASET = By.id("creat_dataset");
   public final static By CREATE_NEW_DATASET = By.id("creat_new_dataset");
   public final static By DATASET_NAME = By.id("dataSetName");
@@ -62,7 +60,6 @@ public class DatasetHelper {
   public final static By SELECT_DIR_LOADING = By.id("select_dir_loading");
   public final static By SELECT_FILE_LOADING = By.id("select_file_loading");
   
-  public final static By UPLOAD_METADATA = By.id("upload-metadata");
   public final static By UPLOAD_BTN = By.id("file-upload");
   public final static By UPLOAD_BTN_FOLDER = By.id("folder-upload");
   public final static By UPLOAD_ALL = By.id("upload-all");
@@ -72,7 +69,7 @@ public class DatasetHelper {
   public final static By RESUME_FILE_UPLOAD = By.id("resume-file-upload");
   public final static By RETRY_FILE_UPLOAD = By.id("retry-file-upload");
   
-  public final static String METADATA_DIR = "../tools/metadata_designer";
+  public final static String UPLOAD_DIR = "../tools/upload_example";
   
   public static String getRandomName(String prefix) {
     Random rand = new Random();
@@ -195,7 +192,7 @@ public class DatasetHelper {
   public static File[] uploadFolder(WebDriver driver) {
     driver.findElement(TOOLBAR_BTN_UPLOAD).click();
     Helpers.waitForElementVisibility(UPLOAD_BTN, driver);
-    File file = new File(METADATA_DIR);
+    File file = new File(UPLOAD_DIR);
     uploadFolder(driver, file);
     return file.listFiles();
   }
@@ -204,35 +201,8 @@ public class DatasetHelper {
     gotoDataset(driver, dataset);
     driver.findElement(TOOLBAR_BTN_UPLOAD).click();
     Helpers.waitForElementVisibility(UPLOAD_BTN, driver);
-    File file = new File(METADATA_DIR + "/Sample.json");
+    File file = new File(UPLOAD_DIR + "/Sample.json");
     return uploadFile(driver, file);
-  }
-  
-  public static String uploadMetadata(WebDriver driver) {
-    Helpers.waitForElementToBeClickable(METADATA_TAB, driver);
-    driver.findElement(METADATA_TAB).click();
-    Helpers.waitForElement(UPLOAD_METADATA, driver);
-    driver.findElement(UPLOAD_METADATA).click();
-    Helpers.waitForElementVisibility(UPLOAD_BTN, driver);
-    File file = new File(METADATA_DIR + "/Study.json");
-    WebElement uploadButtons = driver.findElement(UPLOAD_BTN);
-    String fileStr = "";
-    try {
-      fileStr = file.getCanonicalPath();
-    } catch (IOException e) {
-    }
-    uploadButtons.findElement(By.tagName("input")).sendKeys(fileStr);
-    try {
-      Helpers.waitForModal(driver, 60);
-    } catch (TimeoutException te) {
-      WebElement retry = driver.findElement(By.id("retry_template"));
-      if (retry.isEnabled()) {
-        driver.findElement(By.className("modal-footer")).findElement(By.tagName("button")).click();
-      }
-      Helpers.waitForModal(driver, 60);
-    }
-    Helpers.pause(driver, 2);
-    return file.getName();
   }
   
   public static void datasetShortCutMenu(WebDriver driver, Dataset dataset, String menu, String subMenu) {
@@ -270,25 +240,6 @@ public class DatasetHelper {
     Helpers.waitForElementInvisibility(By.className("loading-dots-sm"), driver);
     templateSelect.findElements(By.tagName("span")).stream().filter(i -> i.getText().equals(value)).findAny().get()
       .click();
-  }
-  
-  public static void attachMetadata(WebDriver driver, Dataset dataset, String template) {
-    datasetShortCutMenu(driver, dataset, "add_metadata", null);
-    selectDropdown(driver, "template_select", template);
-    Helpers.modalFooterClick(driver, "OK");
-    Helpers.waitForModal(driver, 60);
-    Helpers.pause(driver, 5);
-  }
-  
-  public static void detachMetadata(WebDriver driver, Dataset dataset, String template) {
-    datasetShortCutMenu(driver, dataset, "remove_metadata", null);
-    WebElement templateSelect = driver.findElement(By.id("template_select"));
-    templateSelect.click();
-    templateSelect.findElements(By.tagName("span")).stream().filter(i -> i.getText().endsWith(template)).findAny().get()
-      .click();
-    Helpers.modalFooterClick(driver, "Remove template");
-    Helpers.waitForModal(driver, 60);
-    Helpers.pause(driver, 5);
   }
   
   public static void deleteSelected(WebDriver driver) {
