@@ -25,8 +25,12 @@ import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.persistence.EntityManager;
+import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
 import javax.persistence.Query;
+
+import java.sql.Timestamp;
+import java.util.Optional;
 import java.util.Set;
 
 /**
@@ -91,12 +95,23 @@ public class FeaturestoreStatisticFacade extends AbstractFacade<FeaturestoreStat
     return new CollectionInfo((Long) queryCount.getSingleResult(), query.getResultList());
   }
 
+  public Optional<FeaturestoreStatistic> findFGStatisticsByCommitTime(Featuregroup featureGroup, Long commitTime) {
+    Query fssQuery =  em.createNamedQuery("FeaturestoreStatistic.commitTime", FeaturestoreStatistic.class)
+        .setParameter("featureGroup", featureGroup)
+        .setParameter("commitTime", new Timestamp(commitTime));
+    try {
+      return Optional.of((FeaturestoreStatistic) fssQuery.getSingleResult());
+    } catch (NoResultException e) {
+      return Optional.empty();
+    }
+  }
+
   private void setFilter(Set<? extends AbstractFacade.FilterBy> filter, Query q) {
     if (filter == null || filter.isEmpty()) {
       return;
     }
     for (FilterBy aFilter : filter) {
-      q.setParameter(aFilter.getField(), aFilter.getParam());
+      q.setParameter(aFilter.getField(), new Timestamp(Long.parseLong(aFilter.getParam())));
     }
   }
 
@@ -169,5 +184,4 @@ public class FeaturestoreStatisticFacade extends AbstractFacade<FeaturestoreStat
       return value;
     }
   }
-
 }

@@ -15,7 +15,7 @@
 
 module FeatureStoreStatisticsHelper
 
-  def create_statistics_commit(project_id, featurestore_id, entity_type, entity_id, commit_time: "20200820080808")
+  def create_statistics_commit(project_id, featurestore_id, entity_type, entity_id, commit_time: 1597903688000)
     post_statistics_endpoint = "#{ENV['HOPSWORKS_API']}/project/#{project_id}/featurestores/#{featurestore_id}/#{entity_type}/#{entity_id}/statistics"
     json_data = {
         commitTime: commit_time,
@@ -24,7 +24,7 @@ module FeatureStoreStatisticsHelper
     post post_statistics_endpoint, json_data.to_json
   end
 
-  def get_statistics_commit(project_id, featurestore_id, entity_type, entity_id, commit_time: "20200820080808")
+  def get_statistics_commit(project_id, featurestore_id, entity_type, entity_id, commit_time: 1597903688000)
     get "#{ENV['HOPSWORKS_API']}/project/#{project_id}/featurestores/#{featurestore_id}/#{entity_type}/#{entity_id}/statistics?filter_by=commit_time_eq:#{commit_time}&fields=content"
   end
 
