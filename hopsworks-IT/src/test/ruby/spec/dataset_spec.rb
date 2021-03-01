@@ -1462,10 +1462,10 @@ describe "On #{ENV['OS']}" do
           test_sort_by_str(@project, @datasets, "", "name", "desc", "name")
         end
         it 'should return sorted datasets by searchable (asc)' do
-          test_sort_by(@project, @datasets, "", "searchable", "asc", "searchable")
+          test_sort_by_str(@project, @datasets, "", "searchable", "asc", "searchable")
         end
         it 'should return sorted datasets by searchable (desc)' do
-          test_sort_by(@project, @datasets, "", "searchable", "desc", "searchable")
+          test_sort_by_str(@project, @datasets, "", "searchable", "desc", "searchable")
         end
         it 'should return sorted datasets by size (asc)' do
           test_sort_by_attr(@project, @datasets, "", "size", "asc", "size")# dataset size is not set

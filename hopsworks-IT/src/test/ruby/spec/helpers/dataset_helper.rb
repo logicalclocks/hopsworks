@@ -459,6 +459,14 @@ module DatasetHelper
     get "#{ENV['HOPSWORKS_API']}/metadata/#{project[:id]}/detachtemplate/#{inodeid}/#{templateid}"
   end
 
+  def get_list_from_json(json_body, field)
+    json_body[:items].map { |o| o[:"#{field}"] }
+  end
+
+  def get_list_from_json_attr(json_body, field)
+    json_body[:items].map { |o| o[:attributes][:"#{field}"] }
+  end
+
   def test_sort_by_str(project, datasets, path, sort_by, order, sort_by_query)
     get_datasets_in_path(project, path, query: "&sort_by=#{sort_by_query}:#{order}")
     expect_status(200)
@@ -486,7 +494,7 @@ module DatasetHelper
   def test_sort_by(project, datasets, path, sort_by, order, sort_by_query)
     get_datasets_in_path(project, path, query: "&sort_by=#{sort_by_query}:#{order}")
     expect_status(200)
-    sortedRes = json_body[:items].map { |o| "#{o[:"#{sort_by}"]}" }
+    sortedRes = get_list_from_json(json_body, sort_by)
     if order == 'asc'
       sorted = sortedRes.sort
     else
@@ -498,7 +506,7 @@ module DatasetHelper
   def test_sort_by_attr(project, datasets, path, sort_by, order, sort_by_query)
     get_datasets_in_path(project, path, query: "&sort_by=#{sort_by_query}:#{order}")
     expect_status(200)
-    sortedRes = json_body[:items].map { |o| "#{o[:attributes][:"#{sort_by}"]}" }
+    sortedRes = get_list_from_json_attr(json_body, sort_by)
     if order == 'asc'
       sorted = sortedRes.sort
     else
@@ -510,7 +518,7 @@ module DatasetHelper
   def test_sort_by_date_attr(project, datasets, path, sort_by, order, sort_by_query)
     get_datasets_in_path(project, path, query: "&sort_by=#{sort_by_query}:#{order}")
     expect_status(200)
-    sortedRes = json_body[:items].map { |o| "#{o[:attributes][:"#{sort_by}"]}" }
+    sortedRes = get_list_from_json_attr(json_body, sort_by)
     if order == 'asc'
       sorted = sortedRes.sort
     else
@@ -524,7 +532,7 @@ module DatasetHelper
     datasetTypes[:DATASET] = 0
     datasetTypes[:HIVEDB] = 1
     datasetTypes[:FEATURESTORE] = 2
-    ds = datasets.map { |o| "#{o[:"#{sort_by}"]}"}
+    ds = datasets.map { |o| o[:"#{sort_by}"]}
     if order == 'asc'
       sorted = ds.sort do |a, b|
         datasetTypes[:"#{a}"] <=> datasetTypes[:"#{b}"]
@@ -536,93 +544,93 @@ module DatasetHelper
     end
     get_datasets_in_path(project, path, query: "&sort_by=#{sort_by_query}:#{order}")
     expect_status(200)
-    sortedRes = json_body[:items].map { |o| "#{o[:"#{sort_by}"]}"}
+    sortedRes = get_list_from_json(json_body, sort_by)
     expect(sortedRes).to eq(sorted)
   end
 
   def test_filter_by(project, excluded, path, filter_by, filter_by_query)
     get_datasets_in_path(project, path, query: "&filter_by=#{filter_by_query}")
     expect_status(200)
-    filteredRes = json_body[:items].map { |o| "#{o[:"#{filter_by}"]}" }
+    filteredRes = get_list_from_json(json_body, filter_by)
     expect(filteredRes & excluded).to be_empty
   end
 
   def test_filter_by_attr(project, excluded, path, filter_by, filter_by_query)
     get_datasets_in_path(project, path, query: "&filter_by=#{filter_by_query}")
     expect_status(200)
-    filteredRes = json_body[:items].map { |o| "#{o[:attributes][:"#{filter_by}"]}" }
+    filteredRes = get_list_from_json_attr(json_body, filter_by)
     expect(filteredRes & excluded).to be_empty
   end
 
   def test_filter_by_starts_with(project, datasets, path, filter_by, filter_by_query, filter_val)
-    ds = datasets.map { |o| "#{o[:id]}" if o[:"#{filter_by}"].start_with?("#{filter_val}")}.compact
+    ds = datasets.map { |o| o[:id] if o[:"#{filter_by}"].start_with?("#{filter_val}")}.compact
     sorted = ds.sort
     get_datasets_in_path(project, path, query: "&sort_by=id:asc&filter_by=#{filter_by_query}:#{filter_val}")
     expect_status(200)
-    filteredRes = json_body[:items].map { |o| "#{o[:id]}" }
+    filteredRes = get_list_from_json(json_body, "id")
     expect(filteredRes).to eq(sorted)
   end
 
   def test_filter_by_starts_with_attr(project, datasets, path, filter_by, filter_by_query, filter_val)
     if path == ""
-      ds = datasets.map { |o| "#{o[:id]}" if o[:attributes][:"#{filter_by}"].start_with?("#{filter_val}")}.compact
+      ds = datasets.map { |o| o[:id] if o[:attributes][:"#{filter_by}"].start_with?("#{filter_val}")}.compact
     else
-      ds = datasets.map { |o| "#{o[:attributes][:id]}" if o[:attributes][:"#{filter_by}"].start_with?("#{filter_val}")}.compact
+      ds = datasets.map { |o| o[:attributes][:id] if o[:attributes][:"#{filter_by}"].start_with?("#{filter_val}")}.compact
     end
     sorted = ds.sort
     get_datasets_in_path(project, path, query: "&sort_by=id:asc&filter_by=#{filter_by_query}:#{filter_val}")
     expect_status(200)
     if path == ""
-      filteredRes = json_body[:items].map { |o| "#{o[:id]}" }
+      filteredRes = get_list_from_json(json_body, "id")
     else
-      filteredRes = json_body[:items].map { |o| "#{o[:attributes][:id]}" }
+      filteredRes = get_list_from_json_attr(json_body, "id")
     end
     expect(filteredRes).to eq(sorted)
   end
 
   def test_filter_by_eq(project, datasets, path, filter_by, filter_by_query, filter_val)
-    ds = datasets.map { |o| "#{o[:id]}" if o[:"#{filter_by}"]==filter_val}.compact
+    ds = datasets.map { |o| o[:id] if o[:"#{filter_by}"]==filter_val}.compact
     sorted = ds.sort
     get_datasets_in_path(project, path, query: "&sort_by=id:asc&filter_by=#{filter_by_query}:#{filter_val}")
     expect_status(200)
-    filteredRes = json_body[:items].map { |o| "#{o[:id]}" }
+    filteredRes = get_list_from_json(json_body, "id")
     expect(filteredRes).to eq(sorted)
   end
 
   def test_filter_by_eq_attr(project, datasets, path, filter_by, filter_by_val, filter_by_query, filter_by_query_val)
     if path == ""
-      ds = datasets.map { |o| "#{o[:id]}" if o[:attributes][:"#{filter_by}"]==filter_by_val}.compact
+      ds = datasets.map { |o| o[:id] if o[:attributes][:"#{filter_by}"]==filter_by_val}.compact
     else
-      ds = datasets.map { |o| "#{o[:attributes][:id]}" if o[:attributes][:"#{filter_by}"]==filter_by_val}.compact
+      ds = datasets.map { |o| o[:attributes][:id] if o[:attributes][:"#{filter_by}"]==filter_by_val}.compact
     end
     sorted = ds.sort
     get_datasets_in_path(project, path, query: "&sort_by=id:asc&filter_by=#{filter_by_query}:#{filter_by_query_val}")
     expect_status(200)
     if path == ""
-      filteredRes = json_body[:items].map { |o| "#{o[:id]}" }
+      filteredRes = get_list_from_json(json_body, "id")
     else
-      filteredRes = json_body[:items].map { |o| "#{o[:attributes][:id]}" }
+      filteredRes = get_list_from_json_attr(json_body, "id")
     end
     expect(filteredRes).to eq(sorted)
   end
 
   def test_filter_by_lt(project, datasets, path, filter_by, filter_by_query, filter_val)
-    ds = datasets.map { |o| "#{o[:id]}" if o[:"#{filter_by}"]<filter_val}.compact
+    ds = datasets.map { |o| o[:id] if o[:"#{filter_by}"]<filter_val}.compact
     sorted = ds.sort
     get_datasets_in_path(project, path, query: "&sort_by=id:asc&filter_by=#{filter_by_query}:#{filter_val}")
     expect_status(200)
     filteredRes = []
     if json_body[:items]
-      filteredRes = json_body[:items].map { |o| "#{o[:id]}" }
+      filteredRes = get_list_from_json(json_body, "id")
     end
     expect(filteredRes).to eq(sorted)
   end
 
   def test_filter_by_lt_attr(project, datasets, path, filter_by, filter_by_val, filter_by_query, filter_by_query_val)
     if path == ""
-      ds = datasets.map { |o| "#{o[:id]}" if o[:attributes][:"#{filter_by}"]<filter_by_val}.compact
+      ds = datasets.map { |o| o[:id] if o[:attributes][:"#{filter_by}"]<filter_by_val}.compact
     else
-      ds = datasets.map { |o| "#{o[:attributes][:id]}" if o[:attributes][:"#{filter_by}"]<filter_by_val}.compact
+      ds = datasets.map { |o| o[:attributes][:id] if o[:attributes][:"#{filter_by}"]<filter_by_val}.compact
     end
     sorted = ds.sort
     get_datasets_in_path(project, path, query: "&sort_by=id:asc&filter_by=#{filter_by_query}:#{filter_by_query_val}")
@@ -630,31 +638,31 @@ module DatasetHelper
     filteredRes = []
     if json_body[:items]
       if path == ""
-        filteredRes = json_body[:items].map { |o| "#{o[:id]}" }
+        filteredRes = get_list_from_json(json_body, "id")
       else
-        filteredRes = json_body[:items].map { |o| "#{o[:attributes][:id]}" }
+        filteredRes = get_list_from_json_attr(json_body, "id")
       end
     end
     expect(filteredRes).to eq(sorted)
   end
 
   def test_filter_by_gt(project, datasets, path, filter_by, filter_by_query, filter_val)
-    ds = datasets.map { |o| "#{o[:id]}" if o[:"#{filter_by}"]>filter_val}.compact
+    ds = datasets.map { |o| o[:id] if o[:"#{filter_by}"]>filter_val}.compact
     sorted = ds.sort
     get_datasets_in_path(project, path, query: "&sort_by=id:asc&filter_by=#{filter_by_query}:#{filter_val}")
     expect_status(200)
     filteredRes = []
     if json_body[:items]
-      filteredRes = json_body[:items].map { |o| "#{o[:id]}" }
+      filteredRes = get_list_from_json(json_body, "id")
     end
     expect(filteredRes).to eq(sorted)
   end
 
   def test_filter_by_gt_attr(project, datasets, path, filter_by, filter_by_val, filter_by_query, filter_by_query_val)
     if path == ""
-      ds = datasets.map { |o| "#{o[:id]}" if o[:attributes][:"#{filter_by}"]>filter_by_val}.compact
+      ds = datasets.map { |o| o[:id] if o[:attributes][:"#{filter_by}"]>filter_by_val}.compact
     else
-      ds = datasets.map { |o| "#{o[:attributes][:id]}" if o[:attributes][:"#{filter_by}"]>filter_by_val}.compact
+      ds = datasets.map { |o| o[:attributes][:id] if o[:attributes][:"#{filter_by}"]>filter_by_val}.compact
     end
     sorted = ds.sort
     get_datasets_in_path(project, path, query: "&sort_by=id:asc&filter_by=#{filter_by_query}:#{filter_by_query_val}")
@@ -662,9 +670,9 @@ module DatasetHelper
     filteredRes = []
     if json_body[:items]
       if path == ""
-        filteredRes = json_body[:items].map { |o| "#{o[:id]}" }
+        filteredRes = get_list_from_json(json_body, "id")
       else
-        filteredRes = json_body[:items].map { |o| "#{o[:attributes][:id]}" }
+        filteredRes = get_list_from_json_attr(json_body, "id")
       end
     end
     expect(filteredRes).to eq(sorted)
@@ -684,28 +692,28 @@ module DatasetHelper
   end
 
   def test_offset_limit(project, datasets, path, offset, limit)
-    ds = datasets.map { |o| "#{o[:id]}"}
+    ds = datasets.map { |o| o[:id]}
     sorted = ds.sort
     get_datasets_in_path(project, path, query: "&sort_by=id:asc&limit=#{limit}&offset=#{offset}")
     expect_status(200)
-    filteredRes = json_body[:items].map { |o| "#{o[:id]}" }
+    filteredRes = get_list_from_json(json_body, "id")
     offset, limit = check_offset_limit(offset, limit, sorted.length)
     expect(filteredRes).to eq(sorted.drop(offset).take(limit))
   end
 
   def test_offset_limit_attr(project, datasets, path, offset, limit)
     if path == ""
-      ds = datasets.map { |o| "#{o[:id]}"}
+      ds = datasets.map { |o| o[:id]}
     else
-      ds = datasets.map { |o| "#{o[:attributes][:id]}"}
+      ds = datasets.map { |o| o[:attributes][:id]}
     end
     sorted = ds.sort
     get_datasets_in_path(project, path, query: "&sort_by=id:asc&limit=#{limit}&offset=#{offset}")
     expect_status(200)
     if path == ""
-      filteredRes = json_body[:items].map { |o| "#{o[:id]}" }
+      filteredRes = get_list_from_json(json_body, "id")
     else
-      filteredRes = json_body[:items].map { |o| "#{o[:attributes][:id]}" }
+      filteredRes = get_list_from_json_attr(json_body, "id")
     end
     offset, limit = check_offset_limit(offset, limit, sorted.length)
     expect(filteredRes).to eq(sorted.drop(offset).take(limit))
