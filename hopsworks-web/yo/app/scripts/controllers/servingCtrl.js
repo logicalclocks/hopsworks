@@ -57,10 +57,6 @@ angular.module('hopsWorksApp')
             self.loading = false;
             self.loadingText = "";
 
-            self.editServing = {};
-            self.kfserving = false;
-            self.editServing.batchingEnabled = false;
-
             // Configuration to create a new Kafka topic for the serving
             self.createKafkaTopicDTO = {};
             self.createKafkaTopicDTO.name = "CREATE";
@@ -93,13 +89,19 @@ angular.module('hopsWorksApp')
             self.ignorePoll = false;
             self.createNewServingMode = false;
 
-            self.editServing.servingType = "TENSORFLOW"
             self.sklearnScriptRegex = /(.py|.ipynb)\b/
             self.sklearnSelectScriptErrorMsg = "Please select a .py or .ipynb file."
             self.nameRegex = /^[a-zA-Z0-9]+$/;
 
+            self.kfserving = false;
+
+            self.editServing = {};
+            self.editServing.batchingEnabled = false;
+            self.editServing.modelServer = "TENSORFLOW_SERVING";
+            self.editServing.servingTool = "DEFAULT";
+
             this.selectFile = function () {
-                if (self.editServing.servingType === "TENSORFLOW") {
+                if (self.editServing.modelServer === "TENSORFLOW_SERVING") {
                     ModalService.selectDir('lg', self.projectId, '*', '').then(
                         function (success) {
                             self.onDirSelected(success);
@@ -108,7 +110,7 @@ angular.module('hopsWorksApp')
                             // Users changed their minds.
                         });
                 }
-                if (self.editServing.servingType === "SKLEARN") {
+                if (self.editServing.modelServer === "FLASK") {
                     ModalService.selectFile('lg', self.projectId, self.sklearnScriptRegex, self.sklearnSelectScriptErrorMsg,
                         false).then(
                         function (success) {
@@ -181,7 +183,7 @@ angular.module('hopsWorksApp')
              * @param artifactPath the directory HDFS path
              */
             self.onDirSelected = function (artifactPath) {
-                if (self.editServing.servingType === "TENSORFLOW") {
+                if (self.editServing.modelServer === "TENSORFLOW_SERVING") {
                     self.validateTfModelPath(artifactPath, undefined);
                 }
             };
@@ -215,7 +217,7 @@ angular.module('hopsWorksApp')
              * @param path the selected path
              */
             self.onFileSelected = function (path) {
-                if (self.editServing.servingType === "SKLEARN") {
+                if (self.editServing.modelServer === "FLASK") {
                     self.validateSkLearnScriptPath(path, self.editServing.name)
                 }
             }
@@ -238,9 +240,12 @@ angular.module('hopsWorksApp')
                 self.editServing.kafkaTopicDTO = self.projectKafkaTopics[0];
                 self.editServing.kafkaTopicDTO.numOfPartitions = self.kafkaDefaultNumPartitions;
                 self.editServing.kafkaTopicDTO.numOfReplicas = self.kafkaDefaultNumReplicas;
-                self.editServing.kfserving = false;
                 self.editServing.batchingEnabled = false;
-                self.editServing.servingType = "TENSORFLOW";
+                self.editServing.modelServer = "TENSORFLOW_SERVING";
+                self.editServing.servingTool = "DEFAULT";
+                self.versions = [];
+                self.sliderOptions.value = 1;
+                self.showAdvancedForm = false;
             };
 
             self.getAllServings = function () {
@@ -279,14 +284,23 @@ angular.module('hopsWorksApp')
             };
 
             self.setKFServing = function(){
-                if (!self.isKubernetes) {
+                // KFServing currently not supported with Flask model server.
+                if (self.editServing.modelServer === "FLASK") {
                     self.kfserving = false;
-                } else if (self.kfserving) {
+                }
+                if (self.kfserving) {
+                    self.editServing.servingTool = "KFSERVING";
+                    // Request batching not supported in KFServing v0.3
                     self.editServing.batchingEnabled = false;
-                    self.sliderOptions.value = 1;
-                    self.sliderOptions.options.disabled = true;
                 } else {
-                    self.sliderOptions.options.disabled = false;
+                    self.editServing.servingTool = "DEFAULT";
+                }
+            }
+
+            self.setIsKubernetes = function(isKubernetes) {
+                self.isKubernetes = isKubernetes;
+                if (!self.isKubernetes){
+                    self.sliderOptions.options.disabled = true;
                 }
             }
 
@@ -298,8 +312,6 @@ angular.module('hopsWorksApp')
 
                 KafkaService.getTopicDetails(self.projectId, self.editServing.kafkaTopicDTO.name).then(
                     function (success) {
-                        console.log("GET TOPIC DETAILS");
-                        console.log(success.data);
                         self.editServing.kafkaTopicDTO.numOfPartitions = success.data.length;
                         if (success.data.length > 0) {
                             self.editServing.kafkaTopicDTO.numOfReplicas = success.data[0].replicas.length
@@ -391,7 +403,7 @@ angular.module('hopsWorksApp')
 
                 // Check that python kernel is enabled if it is a sklearn serving, as the flask serving will be launched
                 // inside the project anaconda environment
-                if (self.editServing.servingType === "SKLEARN") {
+                if (self.editServing.modelServer === "FLASK") {
                     PythonService.enabled(self.projectId).then(
                         function (success) {
                             self.doCreateOrUpdate()
@@ -405,12 +417,6 @@ angular.module('hopsWorksApp')
 
                         });
                 } else {
-
-                    // If KFServing is enabled, change servingType to use KFServing
-                    if (self.kfserving && !self.editServing.servingType.startsWith("KFSERVING_")) {
-                        self.editServing.servingType = "KFSERVING_" + self.editServing.servingType;
-                    }
-
                     self.doCreateOrUpdate()
                 }
             };
@@ -444,13 +450,8 @@ angular.module('hopsWorksApp')
                 angular.copy(serving, self.editServing);
                 self.editServing.modelVersion = self.editServing.modelVersion.toString();
                 self.sliderOptions.value = serving.requestedInstances;
-                if (self.editServing.servingType.startsWith("KFSERVING_")) {
-                    self.kfserving = true;
-                    self.editServing.servingType = self.editServing.servingType.replace("KFSERVING_", "");
-                } else {
-                    self.kfserving = false;
-                }
-                if (self.editServing.servingType === "TENSORFLOW") {
+                self.kfserving = self.editServing.servingTool === "KFSERVING";
+                if (self.editServing.modelServer === "TENSORFLOW_SERVING") {
                     self.validateTfModelPath(serving.artifactPath, serving.name);
                 }
                 self.showCreateServingForm();
@@ -519,9 +520,7 @@ angular.module('hopsWorksApp')
                             for(var i = 0; i < success.data.items.length; i < i++) {
                                 modelNames.add(success.data.items[i].name)
                             }
-                            console.log(modelNames)
                             self.models = Array.from(modelNames);
-                            console.log(self.models)
                         } else {
                             self.models = [];
                         }
@@ -538,20 +537,23 @@ angular.module('hopsWorksApp')
             };
 
             /**
-             * Function called when the user is switching between the form for creating a TFServing vs a SkLearnServing
+             * Function called when the user is switching between the form for creating a TF Serving or Flask
              *
-             * @param servingType the selected serving type
+             * @param modelServer the selected model server
              */
-            self.setServingType = function (servingType) {
+            self.setModelServer = function (modelServer) {
                 self.editServing.artifactPath = ""
                 self.editServing.name = ""
                 self.editServing.modelVersion = ""
-                self.editServing.servingType = servingType
+                self.editServing.modelServer = modelServer
 
-                if (servingType === "SKLEARN" && self.kfserving) {
-                    self.kfserving = false;
-                    self.setKFServing();
+                if (modelServer === "FLASK") {
+                    // request batching is not supported with Flask
+                    self.editServing.batchingEnabled = false;
                 }
+
+                // refresh kfserving settings
+                self.setKFServing()
             }
 
             self.setFullModelPath = function() {
@@ -600,6 +602,11 @@ angular.module('hopsWorksApp')
                 $interval.cancel(self.poller);
             });
 
+            $scope.showTooltip = function (mouseOverEvent) {
+                console.log("SHOW TOOLTIP!!!")
+                console.log(mouseOverEvent)
+            }
+
             self.poller = $interval(function () {
                 self.getAllServings();
             }, 5000);
@@ -639,8 +646,7 @@ angular.module('hopsWorksApp')
 
                 VariablesService.isKubernetes().then(
                     function(success) {
-                        self.isKubernetes = success.data.successMessage === "true";
-                        self.setKFServing();
+                        self.setIsKubernetes(success.data.successMessage === "true")
                     },
                     function (error) {
                         growl.error(error.data.errorMsg, {

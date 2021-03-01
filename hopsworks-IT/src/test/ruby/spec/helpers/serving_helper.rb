@@ -65,18 +65,19 @@ module ServingHelper
   end
 
   def create_kfserving_tensorflow(project_id, project_name)
-    serving_name = "testModel#{short_random_id}"
+    serving_name = "testmodel#{short_random_id}"
     put "#{ENV['HOPSWORKS_API']}/project/#{project_id}/serving/",
               {name: serving_name,
                artifactPath: "/Projects/#{project_name}/Models/mnist/",
                modelVersion: 1,
-               batchingEnabled: true,
+               batchingEnabled: false,
                kafkaTopicDTO: {
                   name: "CREATE",
                   numOfPartitions: 1,
                   numOfReplicas: 1
                },
-               servingType: "KFSERVING_TENSORFLOW",
+               modelServer: "TENSORFLOW_SERVING",
+               servingTool: "KFSERVING",
                availableInstances: 1,
                requestedInstances: 1
               }
@@ -96,7 +97,8 @@ module ServingHelper
                   numOfPartitions: 1,
                   numOfReplicas: 1
                },
-               servingType: "TENSORFLOW",
+               modelServer: "TENSORFLOW_SERVING",
+               servingTool: "DEFAULT",
                availableInstances: 1,
                requestedInstances: 1
               }
@@ -104,42 +106,52 @@ module ServingHelper
     Serving.find_by(project_id: project_id, name: serving_name)
   end
 
-  def purge_all_kfserving_instances(project_name, should_exist=true)
-    namespace = project_name.gsub("_","-").downcase
-    output = nil
-    inf_services = nil
+  def purge_all_kfserving_instances(project_name="", should_exist=true)
 
-    if kubernetes_installed
-      kube_user = Variables.find_by(id: "kube_user").value
+    if !project_name.empty?
+      # Purge all inferenceservices in a namespace
+      namespace = project_name.gsub("_","-").downcase
+      output = nil
+      inf_services = nil
 
-      #Get all inference services
-      cmd = "sudo su #{kube_user} /bin/bash -c \"kubectl get inferenceservices --namespace=#{namespace} -o=jsonpath='{.items[*].metadata.name}'\""
-      Open3.popen3(cmd) do |_, stdout, _, wait_thr|
-        inf_services = stdout.read.split("\n")
+      if kubernetes_installed
+        kube_user = Variables.find_by(id: "kube_user").value
+
+        #Get all inference services
+        cmd = "sudo su #{kube_user} /bin/bash -c \"kubectl get inferenceservices --namespace=#{namespace} -o=jsonpath='{.items[*].metadata.name}'\""
+        Open3.popen3(cmd) do |_, stdout, _, wait_thr|
+          inf_services = stdout.read.split("\n")
+        end
+        if should_exist
+          expect(inf_services).not_to be_empty
+        end
+
+        #Remove all inference services
+        cmd = "sudo su #{kube_user} /bin/bash -c \"kubectl delete --all inferenceservices --namespace=#{namespace}\""
+        Open3.popen3(cmd) do |_, stdout, _, wait_thr|
+          output = stdout.read
+        end
+
+        if should_exist
+          output != "No resources in #{namespace} namespace." and output != ""
+        else
+          output == "No resources in #{namespace} namespace." or output == ""
+        end
+        if should_exist
+          inf_services.each do |name|
+            expect(output).to include(name)
+          end
+        else
+          inf_services.each do |name|
+            expect(output).not_to include(name)
+          end
+        end
       end
-      if should_exist
-        expect(inf_services).not_to be_empty
-      end
-
-      #Remove all inference services
-      cmd = "sudo su #{kube_user} /bin/bash -c \"kubectl delete --all inferenceservices --namespace=#{namespace}\""
+    else
+      # Purge all inferenceservices
+      cmd = "sudo su #{kube_user} /bin/bash -c \"kubectl delete --all inferenceservices --all-namespaces\""
       Open3.popen3(cmd) do |_, stdout, _, wait_thr|
         output = stdout.read
-      end
-
-      if should_exist
-        output != "No resources in #{namespace} namespace." and output != ""
-      else
-        output == "No resources in #{namespace} namespace." or output == ""
-      end
-      if should_exist
-        inf_services.each do |name|
-          expect(output).to include(name)
-        end
-      else
-        inf_services.each do |name|
-          expect(output).not_to include(name)
-        end
       end
     end
   end
@@ -161,7 +173,8 @@ module ServingHelper
              numOfPartitions: 1,
              numOfReplicas: 1
          },
-         servingType: "SKLEARN",
+         modelServer: "FLASK",
+         servingTool: "DEFAULT",
          availableInstances: 1,
          requestedInstances: 1
         }
@@ -215,4 +228,10 @@ module ServingHelper
       sleep(120)
     end
   end
+
+  def get_kube_service_host(project, service)
+    project.gsub! '_', '-'
+    "#{service}.#{project}.logicalclocks.com"
+  end
+
 end

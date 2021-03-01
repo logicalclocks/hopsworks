@@ -130,7 +130,7 @@ public class LocalhostSkLearnServingController {
    *
    * @param project the project to start the serving in
    * @param user the user starting the serving
-   * @param serving the serving instance to start (sklearn servingtype)
+   * @param serving the serving instance to start (flask server)
    * @throws ServingException
    */
   public void startServingInstance(Project project, Users user, Serving serving) throws ServingException {

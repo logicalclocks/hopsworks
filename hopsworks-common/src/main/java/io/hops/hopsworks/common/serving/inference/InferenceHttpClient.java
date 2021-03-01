@@ -55,7 +55,7 @@ public class InferenceHttpClient {
   @EJB
   private Settings settings;
   
-  private static final Logger logger = Logger.getLogger(LocalhostSkLearnInferenceController.class.getName());
+  private static final Logger logger = Logger.getLogger(InferenceHttpClient.class.getName());
   
   private CloseableHttpClient httpClient = null;
   private PoolingHttpClientConnectionManager cm = null;

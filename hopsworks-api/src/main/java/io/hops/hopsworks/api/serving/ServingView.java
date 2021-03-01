@@ -21,8 +21,9 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.hops.hopsworks.common.dao.kafka.TopicDTO;
 import io.hops.hopsworks.common.serving.ServingStatusEnum;
 import io.hops.hopsworks.common.serving.ServingWrapper;
+import io.hops.hopsworks.persistence.entity.serving.ModelServer;
 import io.hops.hopsworks.persistence.entity.serving.Serving;
-import io.hops.hopsworks.persistence.entity.serving.ServingType;
+import io.hops.hopsworks.persistence.entity.serving.ServingTool;
 import io.hops.hopsworks.persistence.entity.user.Users;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
@@ -37,7 +38,7 @@ import java.util.Date;
 public class ServingView implements Serializable {
 
   private static final long serialVersionUID = 1L;
-
+  
   private Integer id;
   private String name;
   private String artifactPath;
@@ -47,7 +48,8 @@ public class ServingView implements Serializable {
   private Integer nodePort;
   private Date created;
   private Boolean batchingEnabled;
-  private ServingType servingType;
+  private ModelServer modelServer;
+  private ServingTool servingTool;
 
   // TODO(Fabio): use expansions here
   private String creator;
@@ -72,7 +74,8 @@ public class ServingView implements Serializable {
     this.status = servingWrapper.getStatus();
     this.kafkaTopicDTO = servingWrapper.getKafkaTopicDTO();
     this.batchingEnabled = servingWrapper.getServing().isBatchingEnabled();
-    this.servingType = servingWrapper.getServing().getServingType();
+    this.modelServer = servingWrapper.getServing().getModelServer();
+    this.servingTool = servingWrapper.getServing().getServingTool();
     Users user = servingWrapper.getServing().getCreator();
     this.creator = user.getFname() + " " + user.getLname();
   }
@@ -180,13 +183,22 @@ public class ServingView implements Serializable {
     this.kafkaTopicDTO = kafkaTopicDTO;
   }
   
-  @ApiModelProperty(value = "Type of serving, sklearn or tfserving")
-  public ServingType getServingType() {
-    return servingType;
+  @ApiModelProperty(value = "Model server, tf serving or flask")
+  public ModelServer getModelServer() {
+    return modelServer;
   }
   
-  public void setServingType(ServingType servingType) {
-    this.servingType = servingType;
+  public void setModelServer(ModelServer modelServer) {
+    this.modelServer = modelServer;
+  }
+  
+  @ApiModelProperty(value = "Serving tool, default or kfserving")
+  public ServingTool getServingTool() {
+    return servingTool;
+  }
+  
+  public void setServingTool(ServingTool servingTool) {
+    this.servingTool = servingTool;
   }
   
   @JsonIgnore
@@ -194,7 +206,7 @@ public class ServingView implements Serializable {
 
     ServingWrapper servingWrapper = new ServingWrapper(
         new Serving(id, name, artifactPath, modelVersion, requestedInstances, batchingEnabled,
-            servingType));
+          modelServer, servingTool));
     servingWrapper.setKafkaTopicDTO(kafkaTopicDTO);
 
     return servingWrapper;

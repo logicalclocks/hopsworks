@@ -4,6 +4,8 @@
 
 package io.hops.hopsworks.kube.common;
 
+import io.hops.common.Pair;
+
 import io.fabric8.kubernetes.api.model.Service;
 import io.fabric8.kubernetes.api.model.ServicePort;
 import io.fabric8.kubernetes.client.KubernetesClientException;
@@ -16,7 +18,7 @@ import java.util.Optional;
 import java.util.logging.Logger;
 
 @Stateless
-@TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
+@TransactionAttribute(TransactionAttributeType.NEVER)
 public class KubeIstioClientService {
   
   private static final Logger LOGGER = Logger.getLogger(KubeIstioClientService.class.getName());
@@ -28,18 +30,29 @@ public class KubeIstioClientService {
   @EJB
   private KubeClientService kubeClientService;
   
-  public Integer getIstioIngressNodePort(String name) throws KubernetesClientException {
-    Service ingressService =
-      kubeClientService.handleClientOp(
-        (client) -> client.services().inNamespace(ISTIOSYSTEM_NS).withName(ISTIOSYSTEM_INGRESSSERVICE)
-          .get());
-    Optional<ServicePort> nodePort =
-      ingressService.getSpec().getPorts().stream().filter(port -> port.getName().equals(name)).findFirst();
-    
-    return nodePort.map(ServicePort::getNodePort).orElse(null);
+  public Pair<String, Integer> getIstioIngressHostPort() {
+    return getIstioIngressHostPort("http2");
   }
   
-  public Integer getIstioIngressNodePort() throws KubernetesClientException {
-    return getIstioIngressNodePort("http2");
+  public Pair<String, Integer> getIstioIngressHostPort(String name) {
+    Service ingressService = getIstioIngressService();
+    return new Pair<>(getIstioIngressClusterIp(ingressService), getIstioIngressNodePort(ingressService, name));
+  }
+  
+  private Service getIstioIngressService() throws KubernetesClientException {
+    return kubeClientService.handleClientOp(
+      (client) -> client.services().inNamespace(ISTIOSYSTEM_NS).withName(ISTIOSYSTEM_INGRESSSERVICE)
+        .get());
+  }
+  
+  private String getIstioIngressClusterIp(Service ingressService) throws KubernetesClientException {
+    return ingressService.getSpec().getClusterIP();
+  }
+  
+  private Integer getIstioIngressNodePort(Service ingressService, String name) throws KubernetesClientException {
+    Optional<ServicePort> servicePort =
+      ingressService.getSpec().getPorts().stream().filter(port -> port.getName().equals(name)).findFirst();
+    
+    return servicePort.map(ServicePort::getPort).orElse(null);
   }
 }

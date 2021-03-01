@@ -19,13 +19,11 @@ package io.hops.hopsworks.persistence.entity.serving;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 /**
- * Type of Model Serving
+ * Model Server
  */
-public enum ServingType {
-  @JsonProperty("TENSORFLOW")
-  TENSORFLOW,
-  @JsonProperty("SKLEARN")
-  SKLEARN, //Note: since we map enum directly to the DB the order is important!
-  @JsonProperty("KFSERVING_TENSORFLOW")
-  KFSERVING_TENSORFLOW
+public enum ModelServer {
+  @JsonProperty("TENSORFLOW_SERVING")
+  TENSORFLOW_SERVING,
+  @JsonProperty("FLASK")
+  FLASK, //Note: since we map enum directly to the DB the order is important!
 }

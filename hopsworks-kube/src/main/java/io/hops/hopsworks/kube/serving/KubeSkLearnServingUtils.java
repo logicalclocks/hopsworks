@@ -71,7 +71,7 @@ import static io.hops.hopsworks.common.util.Settings.HOPS_USERNAME_SEPARATOR;
 
 @Stateless
 @TransactionAttribute(TransactionAttributeType.NEVER)
-public class KubeSkLearnServingController {
+public class KubeSkLearnServingUtils {
 
   private final static String SERVING_ID = "SERVING_ID";
   private final static String ARTIFACT_PATH = "ARTIFACT_PATH";
@@ -102,6 +102,11 @@ public class KubeSkLearnServingController {
     return new ObjectMetaBuilder()
         .withName(getDeploymentName(servingId))
         .build();
+  }
+  
+  public String getDeploymentPath(String verb) {
+    StringBuilder pathBuilder = new StringBuilder().append("/").append(verb.replaceFirst(":", ""));
+    return pathBuilder.toString();
   }
 
   private ObjectMeta getServiceMetadata(String servingId) {

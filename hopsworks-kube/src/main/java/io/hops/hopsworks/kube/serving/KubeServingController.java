@@ -18,6 +18,7 @@ import io.hops.hopsworks.exceptions.UserException;
 import io.hops.hopsworks.kube.common.KubeStereotype;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.serving.Serving;
+import io.hops.hopsworks.persistence.entity.serving.ServingTool;
 import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.restutils.RESTCodes;
 
@@ -160,7 +161,19 @@ public class KubeServingController implements ServingController {
 
       // If pods are currently running for this serving instance, submit a new deployment to update them
       try {
-        toolServingController.updateInstance(project, user, dbServing);
+        ServingStatusEnum status = toolServingController.getInternalStatus(project, serving).getServingStatus();
+        if (status == ServingStatusEnum.STARTING || status == ServingStatusEnum.RUNNING ||
+          status == ServingStatusEnum.UPDATING) {
+          // If serving tool doesn't change, update current instance.
+          // Otherwise, delete old instance and create the new one.
+          if (serving.getServingTool() == oldDbServing.getServingTool()) {
+            toolServingController.updateInstance(project, user, dbServing);
+          } else {
+            KubeToolServingController newToolServingController = getServingController(serving);
+            toolServingController.deleteInstance(project, oldDbServing);
+            newToolServingController.createInstance(project, user, serving);
+          }
+        }
       } finally {
         servingFacade.releaseLock(project, serving.getId());
       }
@@ -194,7 +207,7 @@ public class KubeServingController implements ServingController {
   }
 
   private KubeToolServingController getServingController(Serving serving) {
-    return serving.getServingType().toString().startsWith("KFSERVING")
+    return serving.getServingTool() == ServingTool.KFSERVING
       ? kubeKfServingController
       : kubeDeploymentServingController;
   }

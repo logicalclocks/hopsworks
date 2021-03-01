@@ -16,9 +16,9 @@
 
 package io.hops.hopsworks.common.serving.monitor;
 
+import io.hops.hopsworks.persistence.entity.serving.ModelServer;
 import io.hops.hopsworks.persistence.entity.serving.Serving;
 import io.hops.hopsworks.common.dao.serving.ServingFacade;
-import io.hops.hopsworks.persistence.entity.serving.ServingType;
 import io.hops.hopsworks.common.serving.LocalhostServingController;
 import io.hops.hopsworks.common.serving.ServingController;
 import io.hops.hopsworks.exceptions.ServingException;
@@ -104,10 +104,10 @@ public class LocalhostServingMonitor {
         try {
           Serving dbServing = servingFacade.acquireLock(serving.getProject(), serving.getId());
           ProcessDescriptor.Builder builder = new ProcessDescriptor.Builder().addCommand("/usr/bin/sudo");
-          if (serving.getServingType() == ServingType.TENSORFLOW) {
+          if (serving.getModelServer() == ModelServer.TENSORFLOW_SERVING) {
             builder.addCommand(tfScript);
           }
-          if (serving.getServingType() == ServingType.SKLEARN) {
+          if (serving.getModelServer() == ModelServer.FLASK) {
             builder.addCommand(sklearnScript);
           }
           ProcessDescriptor processDescriptor = builder.addCommand("alive")
@@ -126,10 +126,10 @@ public class LocalhostServingMonitor {
               // and update the value in the db
               Path secretDir = Paths.get(settings.getStagingDir(), SERVING_DIRS + serving.getLocalDir());
               builder = new ProcessDescriptor.Builder().addCommand("/usr/bin/sudo");
-              if (serving.getServingType() == ServingType.TENSORFLOW) {
+              if (serving.getModelServer() == ModelServer.TENSORFLOW_SERVING) {
                 builder.addCommand(tfScript);
               }
-              if (serving.getServingType() == ServingType.SKLEARN) {
+              if (serving.getModelServer() == ModelServer.FLASK) {
                 builder.addCommand(sklearnScript);
               }
               processDescriptor = builder.addCommand("kill")

@@ -1127,7 +1127,7 @@ public class RESTCodes {
       Response.Status.BAD_REQUEST),
     PYTHON_ENVIRONMENT_NOT_ENABLED(12, "Python environment has not been enabled in this project, " +
       "which is required for serving SkLearn Models", Response.Status.BAD_REQUEST),
-    UPDATE_SERVING_TYPE_ERROR(13, "The serving type of a serving cannot be updated.",
+    UPDATE_SERVING_TYPE_ERROR(13, "The model server of a serving cannot be updated.",
       Response.Status.BAD_REQUEST);
 
 

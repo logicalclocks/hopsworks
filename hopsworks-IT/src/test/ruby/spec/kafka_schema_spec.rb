@@ -25,6 +25,7 @@ describe "On #{ENV['OS']}" do
       let(:compatibilities_array) { ["BACKWARD", "BACKWARD_TRANSITIVE", "FORWARD", "FORWARD_TRANSITIVE", "FULL", "FULL_TRANSITIVE", "NONE"] }
       let(:schema_v1) { "{\"type\" : \"record\",\n\"name\" : \"userInfo\",\n\"namespace\" : \"my.example\",\n\"fields\" : [{\"name\" : \"name\", \"type\" : \"string\", \"default\" : \"\"}]}" }
       let(:schema_v2) { "{\"type\" : \"record\",\n\"name\" : \"userInfo\",\n\"namespace\" : \"my.example\",\n\"fields\" : [{\"name\" : \"name\", \"type\" : \"string\", \"default\" : \"\"},\n{\"name\" : \"age\", \"type\" : \"int\" , \"default\" : -1}]} " }
+      let(:schema_v3) { "{\"type\" : \"record\",\n\"name\" : \"userInfo\",\n\"namespace\" : \"my.example\",\n\"fields\" : [{\"name\" : \"name\", \"type\" : \"string\", \"default\" : \"\"},\n{\"name\" : \"age\", \"type\" : \"int\" , \"default\" : -1},\n{\"name\" : \"email\", \"type\" : \"string\" , \"default\" : \"\"}]} " }
       let(:invalid_schema) {"{\"type\" : \"invalid\",\"name\" : \"test\",\"fields\" : [ {\"name\" : \"name\",\"type\" : \"string\"}]}"}
       let(:incompatible_schema) {"{\"type\" : \"record\",\"name\" : \"userInfo\",\"namespace\" : \"my.example\",\"fields\" : [{\"name\" : \"name\", \"type\" : \"string\", \"default\" : \"\"},{\"name\" : \"age\", \"type\" : \"int\"}]}"}
 
@@ -67,23 +68,24 @@ describe "On #{ENV['OS']}" do
           get_subject_versions(project, "inferenceschema")
           expect_status(200)
           res = response.body[1...-1].delete(' ').split(",")
-          expect(res).to eq(["1", "2"])
+          expect(res).to eq(["1", "2", "3"])
         end
 
         it 'deletes previously registered subject' do
           id = "subject_#{short_random_id}"
           register_new_schema(project, id, schema_v1)
           register_new_schema(project, id, schema_v2)
+          register_new_schema(project, id, schema_v3)
           # check if the schemas were registered correctly
           get_subject_versions(project, "inferenceschema")
           expect_status(200)
           res = response.body[1...-1].delete(' ').split(",")
-          expect(res).to eq(["1", "2"])
+          expect(res).to eq(["1", "2", "3"])
           # remove subject
           delete_subject(project, id)
           expect_status(200)
           res = response.body[1...-1].delete(' ').split(",")
-          expect(res).to eq(["1", "2"])
+          expect(res).to eq(["1", "2", "3"])
           # try to remove again and fail
           delete_subject(project, id)
           expect_status(404)
@@ -101,7 +103,7 @@ describe "On #{ENV['OS']}" do
           get_subject_details(project, "inferenceschema", "latest")
           expect_status(200)
           expect_json(subject: "inferenceschema")
-          expect_json(version: 2)
+          expect_json(version: 3)
         end
 
         it 'fails to get details of a random subject' do

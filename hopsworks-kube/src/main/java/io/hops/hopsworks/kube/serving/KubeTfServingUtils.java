@@ -60,7 +60,7 @@ import static io.hops.hopsworks.common.util.Settings.HOPS_USERNAME_SEPARATOR;
 
 @Stateless
 @TransactionAttribute(TransactionAttributeType.NEVER)
-public class KubeTfServingController {
+public class KubeTfServingUtils {
 
   private final static String SERVING_ID = "SERVING_ID";
   private final static String MODEL_NAME = "MODEL_NAME";
@@ -93,13 +93,23 @@ public class KubeTfServingController {
   public String getDeploymentName(String servingId) {
     return "tf-serving-dep-" + servingId;
   }
-
+  
+  public String getDeploymentPath(String servingName, Integer modelVersion, String verb) {
+    StringBuilder pathBuilder = new StringBuilder()
+      .append("/v1/models/")
+      .append(servingName);
+    
+    // Append the version if the user specified it.
+    if (modelVersion != null) {
+      pathBuilder.append("/versions").append(modelVersion);
+    }
+    
+    pathBuilder.append(verb);
+    return pathBuilder.toString();
+  }
+  
   public String getServiceName(String servingId) {
     return "tf-serving-ser-" + servingId;
-  }
-
-  public String getInferenceServiceName(String servingId) {
-    return "tf-serving-inf-" + servingId;
   }
 
   public Deployment buildServingDeployment(Project project, Users user,
@@ -237,11 +247,12 @@ public class KubeTfServingController {
         .build();
   }
   
-  public JSONObject buildInferenceServicePredictor(String artifactPath) {
+  public JSONObject buildInferenceServicePredictor(String artifactPath, Integer minReplicas) {
     return new JSONObject() {
       {
         put("predictor", new JSONObject() {
           {
+            put("minReplicas", minReplicas);
             put("tensorflow", new JSONObject() {
               {
                 put("storageUri", artifactPath);

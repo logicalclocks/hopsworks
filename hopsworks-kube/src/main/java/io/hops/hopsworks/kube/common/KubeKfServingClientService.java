@@ -17,10 +17,13 @@ import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.logging.Logger;
 
 @Stateless
-@TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
+@TransactionAttribute(TransactionAttributeType.NEVER)
 public class KubeKfServingClientService {
   
   private static final Logger LOGGER = Logger.getLogger(KubeKfServingClientService.class.getName());
@@ -52,6 +55,27 @@ public class KubeKfServingClientService {
     
     handleClientOp((client) -> client.customResource(context).delete(kubeProjectNs,
       inferenceServiceMetadata.getName()));
+  }
+  
+  public JSONObject getInferenceServiceStatus(Project project, String servingId)
+    throws KubernetesClientException {
+    CustomResourceDefinitionContext context = getCustomResourceDefinitionContext();
+    String kubeProjectNs = kubeClientService.getKubeProjectName(project);
+    Map<String, String> labels = new HashMap<>();
+    labels.put(KubeServingUtils.SERVING_ID_LABEL_NAME, servingId);
+
+    Map<String, Object> inferenceService =
+      handleClientOp((client) -> client.customResource(context).list(kubeProjectNs, labels));
+    
+    JSONObject status = null;
+    if (inferenceService != null) {
+      ArrayList<Map<String, Object>> inferenceServices = (ArrayList<Map<String, Object>>) inferenceService.get("items");
+      if (inferenceServices.size() > 0) {
+        status = new JSONObject(inferenceServices.get(0)).getJSONObject("status");
+      }
+    }
+    
+    return status;
   }
   
   private interface KubeRunner<T> {

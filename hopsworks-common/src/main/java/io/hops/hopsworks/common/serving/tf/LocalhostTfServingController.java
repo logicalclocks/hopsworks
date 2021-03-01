@@ -186,7 +186,7 @@ public class LocalhostTfServingController {
    *
    * @param project the project to start the serving in
    * @param user the user starting the serving
-   * @param serving the serving instance to start (tfserving servingtype)
+   * @param serving the serving instance to start (tfserving modelserver)
    * @throws ServingException
    */
   public void startServingInstance(Project project, Users user, Serving serving) throws ServingException {

@@ -45,21 +45,24 @@
                                 <div class="col-xs-3 col-sm-3 col-md-3 col-lg-3" style="text-align: right;">
                                 </div>
                                 <div class="col-xs-6 col-sm-6 col-md-6 col-lg-6">
-                                    <md-radio-group ng-model="servingCtrl.editServing.servingType">
+                                    <md-radio-group ng-model="servingCtrl.editServing.modelServer">
                                         <table class="button-table">
                                             <tbody>
                                             <tr>
                                                 <td>
-                                                    <md-radio-button value="TENSORFLOW" class="md-primary"
-                                                                     ng-click="servingCtrl.setServingType('TENSORFLOW');">TensorFlow Serving</md-radio-button>
+                                                    <md-radio-button value="TENSORFLOW_SERVING" class="md-primary"
+                                                                     ng-click="servingCtrl.setModelServer('TENSORFLOW_SERVING');">TensorFlow</md-radio-button>
                                                 </td>
                                                 <td>
-                                                    <md-radio-button value="SKLEARN" class="md-primary" style="display: inline-block"
-                                                                     ng-click="servingCtrl.setServingType('SKLEARN');">Python (SkLearn, XGBoost, ...)
+                                                    <md-radio-button value="FLASK" class="md-primary" style="display:
+                                                    inline-block"
+                                                                     ng-click="servingCtrl.setModelServer('FLASK');">
+                                                        Python (SkLearn, XGBoost, ...)
+                                                        <i class="fa fa-info-circle" style="pointer-events: all"
+                                                           tooltip-placement="auto left" tooltip-append-to-body="true"
+                                                           uib-tooltip='Flask server that exposes a model using an user-provided python script'
+                                                           style="margin-left: 10px"></i>
                                                     </md-radio-button>
-                                                    <i class="fa fa-info-circle" tooltip-placement="auto left"
-                                                       uib-tooltip='Flask server that exposes a model using an user-provided python script'
-                                                       style="margin-left: 10px"></i>
                                                 </td>
                                             </tr>
                                             </tbody>
@@ -70,7 +73,7 @@
 
                             <div class="row">
                                 <div class="col-xs-3 col-sm-3 col-md-3 col-lg-3" style="text-align: right;">
-                                    <div ng-show="servingCtrl.editServing.servingType === 'SKLEARN'">
+                                    <div ng-show="servingCtrl.editServing.modelServer === 'FLASK'">
                                         <div>
                                             <label>
                                                 <button class="btn btn-default" ng-click="servingCtrl.selectFile()" style="margin-top: 5px;">
@@ -83,16 +86,16 @@
                                         </div>
                                         <div style="margin-top: 7px; heigth: 2em;"><label>Serving Name</label></div>
                                         <div style="margin-top: 9px; heigth: 2em;"><label>Model Version</label></div>
-                                    </div>
-
-                                    <div ng-show="servingCtrl.editServing.servingType === 'TENSORFLOW'">
-                                        <div style="heigth: 2em;"
-                                             ng-if="servingCtrl.editServing.servingType === 'TENSORFLOW'">
+                                        <div style="margin-top: 10px;">
                                             <label>KFServing</label>
                                             <i class="fa fa-info-circle" tooltip-placement="auto left"
-                                               uib-tooltip='Serve the model using KFServing'
+                                               uib-tooltip='Deploy a model with KFServing to leverage additional features such as scale-to-zero or online input transformations.'
                                                style="margin-left: 10px"></i>
                                         </div>
+                                    </div>
+
+                                    <div ng-show="servingCtrl.editServing.modelServer === 'TENSORFLOW_SERVING'">
+
                                         <div>
                                             <label>
                                                 <button style="margin-top: 5px;"
@@ -107,21 +110,18 @@
 
                                         <div style="margin-top: 7px; heigth: 2em;"><label>Serving Name</label></div>
                                         <div style="margin-top: 9px; heigth: 2em;"><label>Model Version</label></div>
-                                        <div style="margin-top: 10px;"
-                                             ng-if="servingCtrl.isKubernetes && servingCtrl.editServing.servingType === 'TENSORFLOW'">
+                                        <div style="margin-top: 10px;">
                                             <label>KFServing</label>
                                             <i class="fa fa-info-circle" tooltip-placement="auto left"
-                                               uib-tooltip='Deploy a model with KFServing to leverage additional features such as scale-to-zero.'
+                                               uib-tooltip='Deploy a model with KFServing to leverage additional features such as scale-to-zero or online input transformations.'
                                                style="margin-left: 10px"></i>
                                         </div>
-                                        <div style="margin-top: 15px; heigth: 2em;"
-                                             ng-if="servingCtrl.sliderOptions.options.ceil > 1 && !servingCtrl.editServing.kfserving">
+                                        <div style="margin-top: 15px; height: 2em;">
                                             <label># Instances</label>
                                         </div>
                                     </div>
 
-                                    <div style="margin-top: 11px; heigth: 2em;"
-                                         ng-if="!servingCtrl.editServing.kfserving"><label
+                                    <div style="margin-top: 11px; heigth: 2em;"><label
                                             ng-click="servingCtrl.showAdvanced()">
                                         <span class="glyphicon glyphicon-chevron-right"
                                               ng-if="!servingCtrl.showAdvancedForm"></span>
@@ -132,7 +132,12 @@
                                 </div>
 
                                 <div class="col-xs-6 col-sm-6 col-md-6 col-lg-5">
-                                    <ui-select tagging tagging="tagTransform" ng-model="servingCtrl.editServing.artifactPath" style="margin-top:5px;" theme="bootstrap" title="Search for servable models" ng-show="servingCtrl.editServing.servingType === 'TENSORFLOW'" on-select="servingCtrl.setFullModelPath()">
+                                    <ui-select tagging tagging="tagTransform"
+                                               ng-model="servingCtrl.editServing.artifactPath"
+                                               style="margin-top:5px;" theme="bootstrap"
+                                               title="Search for servable models"
+                                               ng-show="servingCtrl.editServing.modelServer === 'TENSORFLOW_SERVING'"
+                                               on-select="servingCtrl.setFullModelPath()">
                                         <ui-select-match placeholder="Enter model name...">{{servingCtrl.editServing.artifactPath}}</ui-select-match>
                                         <ui-select-choices
                                                 refresh="servingCtrl.fetchAsync($select.search)"
@@ -151,28 +156,27 @@
                                     </ui-select>
 
                                     <input style="margin-top: 5px" type="text" class="form-control"
-                                           ng-model="servingCtrl.editServing.artifactPath" ng-show="servingCtrl.editServing.servingType === 'SKLEARN'">
+                                           ng-model="servingCtrl.editServing.artifactPath"
+                                           ng-show="servingCtrl.editServing.modelServer === 'FLASK'">
 
                                     <input style="margin-top: 5px" name="name" class="form-control" type="text"
                                            ng-model="servingCtrl.editServing.name">
                                     <input style="margin-top: 5px" name="modelVersion" class="form-control" type="text"
                                            ng-model="servingCtrl.editServing.modelVersion"
-                                           ng-if="servingCtrl.editServing.servingType === 'SKLEARN'">
+                                           ng-if="servingCtrl.editServing.modelServer === 'FLASK'">
 
                                     <select class="form-control" style="margin-top: 5px; width: 25%" name="modelVersion"
                                             ng-model="servingCtrl.editServing.modelVersion"
                                             ng-options="x for x in servingCtrl.editServing.versions"
-                                            ng-if="servingCtrl.editServing.servingType === 'TENSORFLOW'"></select>
+                                            ng-if="servingCtrl.editServing.modelServer === 'TENSORFLOW_SERVING'"></select>
 
                                     <input style="margin-top: 14px;" type="checkbox"
                                            name="kfserving"
                                            ng-model="servingCtrl.kfserving"
-                                           ng-if="servingCtrl.isKubernetes && servingCtrl.editServing.servingType === 'TENSORFLOW'"
-                                           ng-disabled="!servingCtrl.isKubernetes"
+                                           ng-disabled="!servingCtrl.isKubernetes || servingCtrl.editServing.modelServer === 'FLASK'"
                                            ng-click="servingCtrl.setKFServing()">
 
-                                    <rzslider ng-if="servingCtrl.sliderOptions.options.ceil > 1"
-                                              style="margin-top: 40px;"
+                                    <rzslider style="margin-top: 40px;"
                                               rz-slider-model="servingCtrl.sliderOptions.value"
                                               rz-slider-options="servingCtrl.sliderOptions.options">
                                     </rzslider>
@@ -180,25 +184,20 @@
                                     <hr>
                                 </div>
                             </div>
-                            <div ng-if="servingCtrl.showAdvancedForm && !servingCtrl.editServing.kfserving" class="animate-if">
+                            <div ng-if="servingCtrl.showAdvancedForm" class="animate-if">
                                 <div class="row">
                                     <div class="col-xs-3 col-sm-3 col-md-3 col-lg-3" style="text-align: right;">
-                                        <div style="margin-top: 10px; heigth: 2em;"
-                                             ng-if="servingCtrl.editServing.servingType === 'TENSORFLOW'"><label>Request
-                                            Batching</label></div>
+                                        <div style="margin-top: 10px; heigth: 2em;"><label>Request Batching</label></div>
                                         <div style="margin-top: 10px; heigth: 2em;"><label>Kafka Topic</label></div>
                                         <div style="margin-top: 10px; heigth: 2em;"><label>Kafka Num Partitions</label>
                                         </div>
-                                        <div style="margin-top: 10px; heigth: 2em;"><label>Kafka Replication
-                                            Factor</label></div>
+                                        <div style="margin-top: 10px; heigth: 2em;"><label>Kafka Replication Factor</label></div>
                                     </div>
 
                                     <div class="col-xs-6 col-sm-6 col-md-6 col-lg-6" style="padding-top: 10px">
                                         <input type="checkbox" name="requestBatching"
                                                ng-model="servingCtrl.editServing.batchingEnabled"
-                                               ng-if="servingCtrl.editServing.servingType === 'TENSORFLOW'"
-                                               ng-disabled="servingCtrl.kfserving">
-
+                                               ng-disabled="servingCtrl.kfserving || servingCtrl.editServing.modelServer === 'FLASK'">
                                         <select class="form-control" style="margin-top: 5px; width: 40%"
                                                 name="kafkaTopicName"
                                                 ng-model="servingCtrl.editServing.kafkaTopicDTO"
@@ -256,9 +255,21 @@
                                 <span class="glyphicon sort-icon" ng-show="servingCtrl.sortKey == 'name'"
                                       ng-class="{'glyphicon-chevron-up':!servingCtrl.reverse,'glyphicon-chevron-down':servingCtrl.reverse}"></span>
                             </th>
-                            <th style="width: 11%" ng-click="servingCtrl.sort('servingType')">
-                                Type
-                                <span class="glyphicon sort-icon" ng-show="servingCtrl.sortKey == 'servingType'"
+                            <th style="width: 11%" ng-click="servingCtrl.sort('modelServer')">
+                                Model server
+                                <i class="fa fa-info-circle" tooltip-placement="auto left" tooltip-append-to-body="true"
+                                   uib-tooltip='Model server used for running the model, e.g TENSORFLOW_SERVING or FLASK.'
+                                   style="margin-left: 10px"></i>
+                                <span class="glyphicon sort-icon" ng-show="servingCtrl.sortKey == 'modelServer'"
+                                      ng-class="{'glyphicon-chevron-up':!servingCtrl.reverse,'glyphicon-chevron-down':servingCtrl.reverse}"></span>
+                            </th>
+                            <th style="width: 11%" ng-click="servingCtrl.sort('servingTool')">
+                                Serving tool
+                                <i class="fa fa-info-circle" tooltip-placement="auto left" tooltip-append-to-body="true"
+                                   uib-tooltip='Serving tool used to deploy the model server, e.g KFSERVING or DEFAULT. DEFAULT refers to a single
+                                   container (Community) or Kubernetes deployment (Enterprise).'
+                                   style="margin-left: 10px"></i>
+                                <span class="glyphicon sort-icon" ng-show="servingCtrl.sortKey == 'servingTool'"
                                       ng-class="{'glyphicon-chevron-up':!servingCtrl.reverse,'glyphicon-chevron-down':servingCtrl.reverse}"></span>
                             </th>
                             <th style="width: 27%" ng-click="servingCtrl.sort('artifactPath')">
@@ -328,7 +339,8 @@
 
                                 </td>
                                 <td> {{serving.name}}</td>
-                                <td> {{serving.servingType}}</td>
+                                <td> {{serving.modelServer}}</td>
+                                <td> {{serving.servingTool}}</td>
                                 <td> {{serving.artifactPath}}</td>
                                 <td> {{serving.modelVersion}}</td>
                                 <td> {{serving.created | date:'medium'}}</td>

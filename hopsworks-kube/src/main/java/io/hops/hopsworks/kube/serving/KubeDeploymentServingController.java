@@ -15,9 +15,10 @@ import io.fabric8.kubernetes.client.KubernetesClientException;
 import io.hops.hopsworks.common.serving.ServingStatusEnum;
 import io.hops.hopsworks.exceptions.ServingException;
 import io.hops.hopsworks.kube.common.KubeClientService;
+import io.hops.hopsworks.kube.common.KubeServingUtils;
 import io.hops.hopsworks.persistence.entity.project.Project;
+import io.hops.hopsworks.persistence.entity.serving.ModelServer;
 import io.hops.hopsworks.persistence.entity.serving.Serving;
-import io.hops.hopsworks.persistence.entity.serving.ServingType;
 import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.restutils.RESTCodes;
 
@@ -38,13 +39,9 @@ public class KubeDeploymentServingController extends KubeToolServingController {
   @EJB
   private KubeClientService kubeClientService;
   @EJB
-  private KubeTfServingController kubeTfServingController;
+  private KubeTfServingUtils kubeTfServingUtils;
   @EJB
-  private KubeSkLearnServingController kubeSkLearnServingController;
-  
-  public KubeDeploymentServingController() {
-    super("deployment");
-  }
+  private KubeSkLearnServingUtils kubeSkLearnServingUtils;
   
   @Override
   public void createInstance(Project project, Users user, Serving serving) throws ServingException {
@@ -61,7 +58,7 @@ public class KubeDeploymentServingController extends KubeToolServingController {
     String servingId = String.valueOf(serving.getId());
     try {
       DeploymentStatus deploymentStatus =
-        kubeClientService.getDeploymentStatus(project, getDeploymentName(servingId, serving.getServingType()));
+        kubeClientService.getDeploymentStatus(project, getDeploymentName(servingId, serving.getModelServer()));
       if (deploymentStatus != null) {
         kubeClientService.createOrReplaceDeployment(project, buildDeployment(project, user, serving));
       }
@@ -76,19 +73,19 @@ public class KubeDeploymentServingController extends KubeToolServingController {
     
     try {
       DeploymentStatus deploymentStatus = kubeClientService.getDeploymentStatus(project,
-        getDeploymentName(servingId, serving.getServingType()));
+        getDeploymentName(servingId, serving.getModelServer()));
       
       // If pods are currently running for this serving instance, kill them
       if (deploymentStatus != null) {
-        kubeClientService.deleteDeployment(project, getDeploymentMetadata(servingId, serving.getServingType()));
+        kubeClientService.deleteDeployment(project, getDeploymentMetadata(servingId, serving.getModelServer()));
       }
       
       Service serviceInfo = kubeClientService.getServiceInfo(project, getServiceName(servingId,
-        serving.getServingType()));
+        serving.getModelServer()));
       
       // if there is a service, delete it
       if (serviceInfo != null) {
-        kubeClientService.deleteService(project, getServiceMetadata(servingId, serving.getServingType()));
+        kubeClientService.deleteService(project, getServiceMetadata(servingId, serving.getModelServer()));
       }
     } catch (KubernetesClientException e) {
       throw new ServingException(RESTCodes.ServingErrorCode.DELETIONERROR, Level.SEVERE, null, e.getMessage(), e);
@@ -98,15 +95,15 @@ public class KubeDeploymentServingController extends KubeToolServingController {
   @Override
   public KubeServingInternalStatus getInternalStatus(Project project, Serving serving) throws ServingException {
     String servingId = String.valueOf(serving.getId());
-    ServingType servingType = serving.getServingType();
+    ModelServer modelServer = serving.getModelServer();
     
     DeploymentStatus deploymentStatus;
     List<Pod> podList;
     Service instanceService;
     try {
-      deploymentStatus = kubeClientService.getDeploymentStatus(project, getDeploymentName(servingId, servingType));
+      deploymentStatus = kubeClientService.getDeploymentStatus(project, getDeploymentName(servingId, modelServer));
       podList = getPodList(project, serving);
-      instanceService = kubeClientService.getServiceInfo(project, getServiceName(servingId, servingType));
+      instanceService = kubeClientService.getServiceInfo(project, getServiceName(servingId, modelServer));
     } catch (KubernetesClientException e) {
       throw new ServingException(RESTCodes.ServingErrorCode.STATUSERROR, Level.SEVERE,
         "Error while getting service status", e.getMessage(), e);
@@ -157,15 +154,15 @@ public class KubeDeploymentServingController extends KubeToolServingController {
   
   private Deployment buildDeployment(Project project, Users user, Serving serving) throws ServiceDiscoveryException {
     Deployment deployment;
-    switch (serving.getServingType()) {
-      case TENSORFLOW:
-        deployment = kubeTfServingController.buildServingDeployment(project, user, serving);
+    switch (serving.getModelServer()) {
+      case TENSORFLOW_SERVING:
+        deployment = kubeTfServingUtils.buildServingDeployment(project, user, serving);
         break;
-      case SKLEARN:
-        deployment = kubeSkLearnServingController.buildServingDeployment(project, user, serving);
+      case FLASK:
+        deployment = kubeSkLearnServingUtils.buildServingDeployment(project, user, serving);
         break;
       default:
-        throw new NotSupportedException("Serving type not supported for kubernetes deployments");
+        throw new NotSupportedException("Model server not supported for kubernetes deployments");
     }
     
     // Add service.hops.works labels
@@ -178,15 +175,15 @@ public class KubeDeploymentServingController extends KubeToolServingController {
   
   private Service buildService(Project project, Serving serving) {
     Service service;
-    switch (serving.getServingType()) {
-      case TENSORFLOW:
-        service = kubeTfServingController.buildServingService(serving);
+    switch (serving.getModelServer()) {
+      case TENSORFLOW_SERVING:
+        service = kubeTfServingUtils.buildServingService(serving);
         break;
-      case SKLEARN:
-        service = kubeSkLearnServingController.buildServingService(serving);
+      case FLASK:
+        service = kubeSkLearnServingUtils.buildServingService(serving);
         break;
       default:
-        throw new NotSupportedException("Serving type not supported for kubernetes services");
+        throw new NotSupportedException("Model server not supported for kubernetes services");
     }
     
     // Add service.hops.works labels
@@ -195,48 +192,48 @@ public class KubeDeploymentServingController extends KubeToolServingController {
     return service;
   }
   
-  private ObjectMeta getDeploymentMetadata(String servingId, ServingType servingType) {
+  private ObjectMeta getDeploymentMetadata(String servingId, ModelServer modelServer) {
     return new ObjectMetaBuilder()
-      .withName(getDeploymentName(servingId, servingType))
+      .withName(getDeploymentName(servingId, modelServer))
       .build();
   }
   
-  private ObjectMeta getServiceMetadata(String servingId, ServingType servingType) {
+  private ObjectMeta getServiceMetadata(String servingId, ModelServer modelServer) {
     return new ObjectMetaBuilder()
-      .withName(getServiceName(servingId, servingType))
+      .withName(getServiceName(servingId, modelServer))
       .build();
   }
   
-  private String getDeploymentName(String servingId, ServingType servingType) {
-    switch (servingType) {
-      case TENSORFLOW:
-        return kubeTfServingController.getDeploymentName(servingId);
-      case SKLEARN:
-        return kubeSkLearnServingController.getDeploymentName(servingId);
+  private String getDeploymentName(String servingId, ModelServer modelServer) {
+    switch (modelServer) {
+      case TENSORFLOW_SERVING:
+        return kubeTfServingUtils.getDeploymentName(servingId);
+      case FLASK:
+        return kubeSkLearnServingUtils.getDeploymentName(servingId);
       default:
-        throw new NotSupportedException("Serving type not supported for kubernetes deployments");
+        throw new NotSupportedException("Model server not supported for kubernetes deployments");
     }
   }
   
-  private String getServiceName(String servingId, ServingType servingType) {
-    switch (servingType) {
-      case TENSORFLOW:
-        return kubeTfServingController.getServiceName(servingId);
-      case SKLEARN:
-        return kubeSkLearnServingController.getServiceName(servingId);
+  private String getServiceName(String servingId, ModelServer modelServer) {
+    switch (modelServer) {
+      case TENSORFLOW_SERVING:
+        return kubeTfServingUtils.getServiceName(servingId);
+      case FLASK:
+        return kubeSkLearnServingUtils.getServiceName(servingId);
       default:
-        throw new NotSupportedException("Serving type not supported for kubernetes services");
+        throw new NotSupportedException("Model server not supported for kubernetes services");
     }
   }
   
   private void addHopsworksServingLabels(ObjectMeta metadata, Project project, Serving serving) {
     String servingId = String.valueOf(serving.getId());
     Integer projectId = project.getId();
-    ServingType servingType = serving.getServingType();
     
     Map<String, String> labels = metadata.getLabels();
     Map<String, String> servingLabels = KubeServingUtils.getHopsworksServingLabels(projectId, servingId,
-      serving.getName(), KubeServingUtils.getModelName(serving), serving.getVersion(), servingType, SERVING_TOOL_NAME);
+      serving.getName(), KubeServingUtils.getModelName(serving), serving.getVersion(), serving.getModelServer(),
+      serving.getServingTool());
     
     if (labels == null) {
       metadata.setLabels(servingLabels);

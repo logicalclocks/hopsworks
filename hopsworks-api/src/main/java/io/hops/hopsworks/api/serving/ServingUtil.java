@@ -21,11 +21,13 @@ import io.hops.hopsworks.common.dao.serving.ServingFacade;
 import io.hops.hopsworks.common.hdfs.Utils;
 import io.hops.hopsworks.common.hdfs.inode.InodeController;
 import io.hops.hopsworks.common.serving.ServingWrapper;
+import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.ServingException;
 import io.hops.hopsworks.persistence.entity.hdfs.inode.Inode;
 import io.hops.hopsworks.persistence.entity.project.Project;
+import io.hops.hopsworks.persistence.entity.serving.ModelServer;
 import io.hops.hopsworks.persistence.entity.serving.Serving;
-import io.hops.hopsworks.persistence.entity.serving.ServingType;
+import io.hops.hopsworks.persistence.entity.serving.ServingTool;
 import io.hops.hopsworks.restutils.RESTCodes;
 
 import javax.ejb.EJB;
@@ -48,6 +50,8 @@ public class ServingUtil {
   private ServingFacade servingFacade;
   @EJB
   private InodeController inodeController;
+  @EJB
+  private Settings settings;
   
   /**
    * Validates user input before creating or updating a serving. This method contains the common input validation
@@ -70,6 +74,10 @@ public class ServingUtil {
     // Check that the artifactPath is present
     if (Strings.isNullOrEmpty(servingWrapper.getServing().getArtifactPath())) {
       throw new IllegalArgumentException("Artifact path not provided");
+    } else {
+      // Format artifact path (e.g remove duplicated '/')
+      String formattedArtifactPath = Paths.get(servingWrapper.getServing().getArtifactPath()).toString();
+      servingWrapper.getServing().setArtifactPath(formattedArtifactPath);
     }
     if (servingWrapper.getServing().getVersion() == null) {
       throw new IllegalArgumentException("Serving version not provided");
@@ -84,16 +92,23 @@ public class ServingUtil {
       throw new IllegalArgumentException("Serving name must follow regex: \"[a-zA-Z0-9]+\"");
     }
     //Serving-type-specific validations
-    switch (servingWrapper.getServing().getServingType()){
-      case KFSERVING_TENSORFLOW:
-        validateKFServingUserInput(servingWrapper);
-        break;
-      case TENSORFLOW:
-        validateTfUserInput(servingWrapper);
-        break;
-      case SKLEARN:
-        validateSKLearnUserInput(servingWrapper, project);
-        break;
+    if (servingWrapper.getServing().getModelServer() == null) {
+      throw new IllegalArgumentException("Model server not provided or unsupported");
+    }
+    if (servingWrapper.getServing().getModelServer() == ModelServer.TENSORFLOW_SERVING) {
+      validateTfUserInput(servingWrapper);
+    }
+    if (servingWrapper.getServing().getModelServer() == ModelServer.FLASK) {
+      validateSKLearnUserInput(servingWrapper, project);
+    }
+    
+    // Serving tool validation
+    if (servingWrapper.getServing().getServingTool() == null) {
+      throw new IllegalArgumentException("Serving tool not provided or unsupported");
+    }
+    // Serving-tool-specific validations
+    if (servingWrapper.getServing().getServingTool() == ServingTool.KFSERVING) {
+      validateKFServingUserInput(servingWrapper);
     }
   }
   
@@ -133,9 +148,26 @@ public class ServingUtil {
    * @throws ServingException
    */
   public void validateKFServingUserInput(ServingWrapper servingWrapper) {
-    if (servingWrapper.getServing().getServingType() == ServingType.KFSERVING_TENSORFLOW) {
-      // Check that the modelPath respects the TensorFlow standard
-      validateTfModelPath(servingWrapper.getServing().getArtifactPath(), servingWrapper.getServing().getVersion());
+    if (!settings.getKubeInstalled()) {
+      throw new IllegalArgumentException("Serving tool not supported. Kubernetes installation is required");
+    }
+    
+    if (servingWrapper.getServing().getModelServer() == ModelServer.FLASK) {
+      throw new IllegalArgumentException("KFServing not supported for SKLearn models");
+    }
+    
+    if (servingWrapper.getServing().isBatchingEnabled()) {
+      throw new IllegalArgumentException("Request batching is not supported in KFServing deployments");
+    }
+  
+    // Service name is used as DNS subdomain. It must consist of lower case alphanumeric characters, '-' or '.', and
+    // must start and end with an alphanumeric character. (e.g. 'example.com', regex used for validation is '[a-z0-9]
+    // ([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*').
+    Pattern namePattern = Pattern.compile("[a-z0-9]([-a-z0-9]*[a-z0-9])?(\\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*");
+    Matcher nameMatcher = namePattern.matcher(servingWrapper.getServing().getName());
+    if(!nameMatcher.matches()){
+      throw new IllegalArgumentException("Serving name must consist of lower case alphanumeric characters, '-' or '" +
+        ".', and start and end with an alphanumeric character");
     }
   }
   
