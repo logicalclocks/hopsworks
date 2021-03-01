@@ -39,6 +39,7 @@ import java.util.stream.Collectors;
 public class TrainingDatasetDTO extends FeaturestoreEntityDTO {
   
   private String dataFormat;
+  private Boolean coalesce;
   private TrainingDatasetType trainingDatasetType;
   // set defaults so old clients don't get broken
   private List<TrainingDatasetSplitDTO> splits = new ArrayList<>();
@@ -64,6 +65,7 @@ public class TrainingDatasetDTO extends FeaturestoreEntityDTO {
         new StatisticsConfigDTO(trainingDataset.getStatisticsConfig()));
     setDescription(trainingDataset.getDescription());
     this.dataFormat = trainingDataset.getDataFormat();
+    this.coalesce = trainingDataset.getCoalesce();
     this.trainingDatasetType = trainingDataset.getTrainingDatasetType();
     this.splits =
       trainingDataset.getSplits().stream().map(tds -> new TrainingDatasetSplitDTO(tds.getName(), tds.getPercentage()))
@@ -79,6 +81,14 @@ public class TrainingDatasetDTO extends FeaturestoreEntityDTO {
   
   public void setDataFormat(String dataFormat) {
     this.dataFormat = dataFormat;
+  }
+
+  public Boolean getCoalesce() {
+    return coalesce;
+  }
+
+  public void setCoalesce(Boolean coalesce) {
+    this.coalesce = coalesce;
   }
 
   public FeaturestoreStorageConnectorDTO getStorageConnector() {
