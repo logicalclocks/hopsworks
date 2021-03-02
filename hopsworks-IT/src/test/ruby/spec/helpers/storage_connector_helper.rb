@@ -165,6 +165,26 @@ module StorageConnectorHelper
     [json_result, redshift_connector_name]
   end
 
+  def create_snowflake_connector(project_id, featurestore_id)
+    endpoint = "#{ENV['HOPSWORKS_API']}/project/#{project_id}/featurestores/#{featurestore_id}/storageconnectors/"
+    type = "featurestoreSnowflakeConnectorDTO"
+    storageConnectorType = "SNOWFLAKE"
+    connector = { name: "snowflake_connector_#{random_id}",
+                   description: "test snowflake connector",
+                   type: type,
+                   storageConnectorType: storageConnectorType,
+                   sfOptions: [{name:"sfTimezone", value:"spark"}, {name: "sfCompress", value: "true"}],
+                   database: "test",
+                   password: "123456PWD",
+                   role: "role",
+                   schema: "PUBLIC",
+                   url: "http://123456.eu-central-1.snowflakecomputing.com",
+                   user: "user0",
+                   warehouse: "warehouse"
+    }
+    post endpoint, connector.to_json
+  end
+
   def update_redshift_connector(project_id, featurestore_id, connector_name, redshift_connector_json)
     update_redshift_connector_endpoint = "#{ENV['HOPSWORKS_API']}/project/#{project_id}/featurestores/#{featurestore_id}/storageconnectors/#{connector_name}"
     redshift_connector_json["type"] = "featurestoreRedshiftConnectorDTO"

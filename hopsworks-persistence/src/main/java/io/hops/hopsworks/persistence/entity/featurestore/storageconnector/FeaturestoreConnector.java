@@ -187,15 +187,15 @@ public class FeaturestoreConnector implements Serializable {
   public void setAdlsConnector(FeaturestoreADLSConnector adlsConnector) {
     this.adlsConnector = adlsConnector;
   }
-
+  
   public FeaturestoreSnowflakeConnector getSnowflakeConnector() {
     return snowflakeConnector;
   }
-
+  
   public void setSnowflakeConnector(FeaturestoreSnowflakeConnector snowflakeConnector) {
     this.snowflakeConnector = snowflakeConnector;
   }
-
+  
   @Override
   public boolean equals(Object o) {
     if (this == o) return true;

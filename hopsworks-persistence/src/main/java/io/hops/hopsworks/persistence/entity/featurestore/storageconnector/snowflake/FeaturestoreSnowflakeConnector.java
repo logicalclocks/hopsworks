@@ -89,7 +89,7 @@ public class FeaturestoreSnowflakeConnector implements Serializable {
   public FeaturestoreSnowflakeConnector(Integer id) {
     this.id = id;
   }
-
+  
   public FeaturestoreSnowflakeConnector(Integer id, String url, String databaseUser, String databaseName,
     String databaseSchema, String tableName, String role, String warehouse, String arguments) {
     this.id = id;
@@ -102,7 +102,7 @@ public class FeaturestoreSnowflakeConnector implements Serializable {
     this.warehouse = warehouse;
     this.arguments = arguments;
   }
-
+  
   public Integer getId() {
     return id;
   }
@@ -110,87 +110,87 @@ public class FeaturestoreSnowflakeConnector implements Serializable {
   public void setId(Integer id) {
     this.id = id;
   }
-
+  
   public String getUrl() {
     return url;
   }
-
+  
   public void setUrl(String url) {
     this.url = url;
   }
-
+  
   public String getDatabaseUser() {
     return databaseUser;
   }
-
+  
   public void setDatabaseUser(String databaseUser) {
     this.databaseUser = databaseUser;
   }
-
+  
   public String getDatabaseName() {
     return databaseName;
   }
-
+  
   public void setDatabaseName(String databaseName) {
     this.databaseName = databaseName;
   }
-
+  
   public String getDatabaseSchema() {
     return databaseSchema;
   }
-
+  
   public void setDatabaseSchema(String databaseSchema) {
     this.databaseSchema = databaseSchema;
   }
-
+  
   public String getTableName() {
     return tableName;
   }
-
+  
   public void setTableName(String tableName) {
     this.tableName = tableName;
   }
-
+  
   public String getRole() {
     return role;
   }
-
+  
   public void setRole(String role) {
     this.role = role;
   }
-
+  
   public String getWarehouse() {
     return warehouse;
   }
-
+  
   public void setWarehouse(String warehouse) {
     this.warehouse = warehouse;
   }
-
+  
   public String getArguments() {
     return arguments;
   }
-
+  
   public void setArguments(String arguments) {
     this.arguments = arguments;
   }
-
+  
   public Secret getPwdSecret() {
     return pwdSecret;
   }
-
+  
   public void setPwdSecret(Secret pwdSecret) {
     this.pwdSecret = pwdSecret;
   }
-
+  
   public Secret getTokenSecret() {
     return tokenSecret;
   }
-
+  
   public void setTokenSecret(Secret tokenSecret) {
     this.tokenSecret = tokenSecret;
   }
-
+  
   @Override
   public int hashCode() {
     int hash = 0;

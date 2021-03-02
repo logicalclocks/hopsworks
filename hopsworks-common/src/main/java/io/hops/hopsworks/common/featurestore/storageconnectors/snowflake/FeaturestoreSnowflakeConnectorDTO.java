@@ -34,10 +34,10 @@ public class FeaturestoreSnowflakeConnectorDTO extends FeaturestoreStorageConnec
   private String role;
   private String table;
   private List<OptionDTO> sfOptions;
-
+  
   public FeaturestoreSnowflakeConnectorDTO() {
   }
-
+  
   public FeaturestoreSnowflakeConnectorDTO(FeaturestoreConnector featurestoreConnector) {
     super(featurestoreConnector);
     this.url = featurestoreConnector.getSnowflakeConnector().getUrl();
@@ -48,83 +48,83 @@ public class FeaturestoreSnowflakeConnectorDTO extends FeaturestoreStorageConnec
     this.role = featurestoreConnector.getSnowflakeConnector().getRole();
     this.table = featurestoreConnector.getSnowflakeConnector().getTableName();
   }
-
+  
   public String getUrl() {
     return url;
   }
-
+  
   public void setUrl(String url) {
     this.url = url;
   }
-
+  
   public String getUser() {
     return user;
   }
-
+  
   public void setUser(String user) {
     this.user = user;
   }
-
+  
   public String getPassword() {
     return password;
   }
-
+  
   public void setPassword(String password) {
     this.password = password;
   }
-
+  
   public String getToken() {
     return token;
   }
-
+  
   public void setToken(String token) {
     this.token = token;
   }
-
+  
   public String getDatabase() {
     return database;
   }
-
+  
   public void setDatabase(String database) {
     this.database = database;
   }
-
+  
   public String getSchema() {
     return schema;
   }
-
+  
   public void setSchema(String schema) {
     this.schema = schema;
   }
-
+  
   public String getWarehouse() {
     return warehouse;
   }
-
+  
   public void setWarehouse(String warehouse) {
     this.warehouse = warehouse;
   }
-
+  
   public String getRole() {
     return role;
   }
-
+  
   public void setRole(String role) {
     this.role = role;
   }
-
+  
   public String getTable() {
     return table;
   }
-
+  
   public void setTable(String table) {
     this.table = table;
   }
-
+  
   public List<OptionDTO> getSfOptions() {
     return sfOptions;
   }
-
+  
   public void setSfOptions(List<OptionDTO> sfOptions) {
     this.sfOptions = sfOptions;
   }
