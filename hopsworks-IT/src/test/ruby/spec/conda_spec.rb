@@ -248,12 +248,6 @@ describe "On #{ENV['OS']}" do
             expect_status(400)
           end
 
-          it 'should fail to install library if version not set' do
-            @project = create_env_and_update_project(@project, python_version)
-            install_library(@project[:id], python_version, 'dropbox', 'CONDA', '', conda_channel)
-            expect_status(400)
-          end
-
           it 'should fail to install library if env version wrong' do
             @project = create_env_and_update_project(@project, python_version)
             install_library(@project[:id], python_version_2, 'dropbox', 'CONDA', '9.0.0', conda_channel)
@@ -293,18 +287,20 @@ describe "On #{ENV['OS']}" do
             expect_status(409)
           end
 
-          it 'install libraries' do
+          it 'install versioned libraries' do
             @project = create_env_and_update_project(@project, python_version)
 
-            install_library(@project[:id], python_version, 'imageio', 'CONDA', '2.9.0', conda_channel)
             install_library(@project[:id], python_version, 'tflearn', 'PIP', '0.3.2', conda_channel)
             expect_status(201)
 
-            get_library_commands(@project[:id], python_version, 'imageio')
+            install_library(@project[:id], python_version, 'imageio', 'CONDA', '2.9.0', conda_channel)
+            expect_status(201)
+
+            get_library_commands(@project[:id], python_version, 'tflearn')
             expect_status(200)
             expect(json_body[:count]).to be == 1
 
-            get_library_commands(@project[:id], python_version, 'tflearn')
+            get_library_commands(@project[:id], python_version, 'imageio')
             expect_status(200)
             expect(json_body[:count]).to be == 1
 
@@ -312,40 +308,74 @@ describe "On #{ENV['OS']}" do
               CondaCommands.find_by(project_id: @project[:id]).nil?
             end
 
-            get_library_commands(@project[:id], python_version, 'imageio')
-            expect_status(200)
-            expect(json_body[:count]).to be == 0
-
             get_library_commands(@project[:id], python_version, 'tflearn')
             expect_status(200)
             expect(json_body[:count]).to be == 0
 
-            wait_for do
-              CondaCommands.find_by(project_id: @project[:id]).nil?
-            end
-          end
+            get_library_commands(@project[:id], python_version, 'imageio')
+            expect_status(200)
+            expect(json_body[:count]).to be == 0
 
-          it 'list libraries' do
-            @project = create_env_and_update_project(@project, python_version)
             list_libraries(@project[:id], python_version)
 
             tflearn_library = json_body[:items].detect { |library| library[:library] == "tflearn" }
-            tensorflow_library = json_body[:items].detect { |library| library[:library] == "tensorflow" }
-            hops_library = json_body[:items].detect { |library| library[:library] == "hops" }
             imageio_library = json_body[:items].detect { |library| library[:library] == "imageio" }
 
             expect(tflearn_library[:packageSource]).to eq ("PIP")
             expect(tflearn_library[:version]).to eq ("0.3.2")
 
-            expect(hops_library[:packageSource]).to eq ("PIP")
-
             expect(imageio_library[:packageSource]).to eq("CONDA")
             expect(imageio_library[:version]).to eq ("2.9.0")
 
+            delete_env(@project[:id], python_version)
+            
+            wait_for do
+              CondaCommands.find_by(project_id: @project[:id]).nil?
+            end
+          end
+
+          it 'install latest library version' do
+            @project = create_env_and_update_project(@project, python_version)
+
+            install_library(@project[:id], python_version, 'folium', 'PIP', nil, conda_channel)
+            expect_status(201)
+            install_library(@project[:id], python_version, 'rapidjson', 'CONDA', nil, conda_channel)
+            expect_status(201)
+
+            get_library_commands(@project[:id], python_version, 'folium')
+            expect_status(200)
+            expect(json_body[:count]).to be == 1
+            get_library_commands(@project[:id], python_version, 'rapidjson')
+            expect_status(200)
+            expect(json_body[:count]).to be == 1
+
+            wait_for do
+              CondaCommands.find_by(project_id: @project[:id]).nil?
+            end
+
+            get_library_commands(@project[:id], python_version, 'folium')
+            expect_status(200)
+            expect(json_body[:count]).to be == 0
+            get_library_commands(@project[:id], python_version, 'rapidjson')
+            expect_status(200)
+            expect(json_body[:count]).to be == 0
+
+            list_libraries(@project[:id], python_version)
+
+            folium_library = json_body[:items].detect { |library| library[:library] == "folium" }
+            rapidjson_library = json_body[:items].detect { |library| library[:library] == "rapidjson" }
+
+            expect(folium_library[:packageSource]).to eq ("PIP")
+            expect(rapidjson_library[:packageSource]).to eq("CONDA")
+
+            delete_env(@project[:id], python_version)
+
+            wait_for do
+              CondaCommands.find_by(project_id: @project[:id]).nil?
+            end
           end
 
           it 'install from git' do
-
             @project = create_env_and_update_project(@project, python_version)
             uninstall_library(@project[:id], python_version, 'hops')
             expect_status(204)
@@ -354,7 +384,7 @@ describe "On #{ENV['OS']}" do
               CondaCommands.find_by(project_id: @project[:id]).nil?
             end
 
-            install_library(@project[:id], python_version, 'hops-util-py.git@branch-1.0', 'GIT', '', 'git', 'https://github.com/logicalclocks/hops-util-py.git@branch-1.0')
+            install_library(@project[:id], python_version, 'hops-util-py.git@branch-1.0', 'GIT', nil, 'git', 'https://github.com/logicalclocks/hops-util-py.git@branch-1.0')
 
             wait_for do
               CondaCommands.find_by(project_id: @project[:id]).nil?
@@ -372,7 +402,7 @@ describe "On #{ENV['OS']}" do
             @project = create_env_and_update_project(@project, python_version)
 
             upload_wheel
-            install_library(@project[:id], python_version, 'lark_parser-0.10.1-py2.py3-none-any.whl', 'WHEEL', '', 'wheel', "/Projects/#{@project[:projectname]}/Resources/lark_parser-0.10.1-py2.py3-none-any.whl")
+            install_library(@project[:id], python_version, 'lark_parser-0.10.1-py2.py3-none-any.whl', 'WHEEL', nil, 'wheel', "/Projects/#{@project[:projectname]}/Resources/lark_parser-0.10.1-py2.py3-none-any.whl")
 
             wait_for do
               CondaCommands.find_by(project_id: @project[:id]).nil?
@@ -390,7 +420,7 @@ describe "On #{ENV['OS']}" do
             @project = create_env_and_update_project(@project, python_version)
 
             upload_environment
-            install_library(@project[:id], python_version, 'environment.yml', 'ENVIRONMENT_YAML', '', 'environment', "/Projects/#{@project[:projectname]}/Resources/environment.yml")
+            install_library(@project[:id], python_version, 'environment.yml', 'ENVIRONMENT_YAML', nil, 'environment', "/Projects/#{@project[:projectname]}/Resources/environment.yml")
 
             wait_for do
               CondaCommands.find_by(project_id: @project[:id]).nil?
@@ -408,7 +438,7 @@ describe "On #{ENV['OS']}" do
             @project = create_env_and_update_project(@project, python_version)
 
             upload_requirements
-            install_library(@project[:id], python_version, 'requirements.txt', 'REQUIREMENTS_TXT', '', 'requirements', "/Projects/#{@project[:projectname]}/Resources/requirements.txt")
+            install_library(@project[:id], python_version, 'requirements.txt', 'REQUIREMENTS_TXT', nil, 'requirements', "/Projects/#{@project[:projectname]}/Resources/requirements.txt")
 
             wait_for do
               CondaCommands.find_by(project_id: @project[:id]).nil?
