@@ -15,6 +15,7 @@
  */
 package io.hops.hopsworks.api.python.library;
 
+import com.google.common.base.Strings;
 import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.api.filter.Audience;
 import io.hops.hopsworks.api.jwt.JWTHelper;
@@ -139,7 +140,7 @@ public class LibraryResource {
     return Response.ok().entity(libraryDTO).build();
   }
   
-  @ApiOperation(value = "Get the a python library installed in this environment", response = LibraryDTO.class)
+  @ApiOperation(value = "Get a python library installed in this environment", response = LibraryDTO.class)
   @GET
   @Path("{library}")
   @Produces(MediaType.APPLICATION_JSON)
@@ -299,10 +300,6 @@ public class LibraryResource {
     PackageSource packageSource = librarySpecification.getPackageSource();
     String channel = librarySpecification.getChannelUrl();
 
-    if (version == null || version.isEmpty()) {
-      throw new PythonException(RESTCodes.PythonErrorCode.VERSION_NOT_SPECIFIED, Level.FINE);
-    }
-
     if(packageSource.equals(PackageSource.CONDA)) {
       if(channel == null) {
         throw new PythonException(RESTCodes.PythonErrorCode.CONDA_INSTALL_REQUIRES_CHANNEL, Level.FINE);
@@ -312,7 +309,10 @@ public class LibraryResource {
     }
 
     validatePattern(library);
-    validatePattern(version);
+
+    if(!Strings.isNullOrEmpty(version)) {
+      validatePattern(version);
+    }
   }
 
   private void validateBundledDependency(Users user, LibrarySpecification librarySpecification)

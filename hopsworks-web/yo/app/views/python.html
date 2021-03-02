@@ -170,18 +170,18 @@
                         <form name="pipNnestedForm"
                               ng-submit="pythonCtrl.install(pipLib, 'PIP', pipVersion)">
                           <div class="form-group has-feedback row" style="margin-top: 40px;">
-                            <div class="col-md-5">
+                            <div class="col-md-6">
                               <div class="row">
-                                <div class="col-xs-9">
+                                <div class="col-xs-8">
                                   <input type="text" class="form-control"
                                          placeholder="Library name ..."
                                          required ng-model="pipLib"/>
                                 </div>
-                                <div class="col-xs-3">
+                                <div class="col-xs-4">
                                   <input name="pipVersionInput" type="text" class="form-control"
-                                         placeholder="version"
+                                         placeholder="(optional) version"
                                          ng-pattern="/^[a-zA-Z0-9\.\-\_]{1,50}$/"
-                                         required ng-model="pipVersion"/>
+                                         ng-model="pipVersion"/>
                                   <div class="invalid-feedback">
                                   <span ng-show="pipNnestedForm.pipVersionInput.$dirty && pipNnestedForm.pipVersionInput.$error.pattern"
                                         class="text-danger ng-hide">Wrong version pattern.</span>
@@ -208,7 +208,7 @@
                         <div class="row"></div>
                         <form name="nestedForm">
                           <div class="form-group row" style="margin-top: 40px;">
-                            <div class="col-md-5">
+                            <div class="col-md-6">
                               <input type="text" class="form-control" placeholder="Search here ...." required ng-model="pythonCtrl.pipSelectedLib.library" />
                             </div>
                             <div class="col-md-5">
@@ -314,18 +314,18 @@
                         <form name="condaNestedForm"
                               ng-submit="pythonCtrl.install(condaLib, 'CONDA', condaVersion)">
                           <div class="form-group has-feedback row" style="margin-top: 40px;">
-                            <div class="col-md-5">
+                            <div class="col-md-6">
                               <div class="row">
-                                <div class="col-xs-9">
+                                <div class="col-xs-8">
                                   <input type="text" class="form-control"
                                          placeholder="Library name ..."
                                          required ng-model="condaLib"/>
                                 </div>
-                                <div class="col-xs-3">
+                                <div class="col-xs-4">
                                   <input name="condaVersionInput" type="text" class="form-control has-error"
-                                         placeholder="version"
+                                         placeholder="(optional) version"
                                          ng-pattern="/^[a-zA-Z0-9\.\-\_]{1,50}$/"
-                                         required ng-model="condaVersion"/>
+                                         ng-model="condaVersion"/>
                                   <div class="invalid-feedback">
                                   <span ng-show="condaNestedForm.condaVersionInput.$dirty && condaNestedForm.condaVersionInput.$error.pattern"
                                         class="text-danger ng-hide">Wrong version pattern.</span>
@@ -351,7 +351,7 @@
                         <div class="row"></div>
                         <form name="nestedForm">
                           <div class="form-group row" style="margin-top: 40px;">
-                            <div class="col-md-5">
+                            <div class="col-md-6">
                               <input type="text" class="form-control"
                                      placeholder="Search here ...."
                                      required ng-model="pythonCtrl.condaSelectedLib.library"/>
@@ -714,7 +714,9 @@
                           </div>
                         </td>
                         <td class="col-sm-2">
-                          {{pythonCtrl.getVersion(row)}}
+                          <div ng-show="pythonCtrl.getVersion(row) !== 'UNKNOWN'">
+                            {{pythonCtrl.getVersion(row)}}
+                          </div>
                         </td>
                         <td class="col-sm-2">
                           <span ng-if="pythonCtrl.getStatus(row) === 'FAILED'" style="color: #880000 ">{{pythonCtrl.getStatus(row)}}</span>

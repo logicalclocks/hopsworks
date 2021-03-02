@@ -358,13 +358,15 @@ public class LibraryInstaller {
                 + " --mount=type=bind,source=.pip,target=/root/.pip ");
         switch (cc.getInstallType()) {
           case CONDA:
-            writer.write(anaconda_dir + "/bin/conda install -y -n " +
-                settings.getCurrentCondaEnvironment() + " -c " + cc.getChannelUrl() + " " + cc.
-                getLib() + "=" + cc.getVersion());
+            String condaLib = cc.getVersion().equals(Settings.UNKNOWN_LIBRARY_VERSION) ?
+              cc.getLib() : cc.getLib() + "=" + cc.getVersion();
+            writer.write(anaconda_dir + "/bin/conda install -y -n " + settings.getCurrentCondaEnvironment()
+              + " -c " + cc.getChannelUrl() + " " + condaLib);
             break;
           case PIP:
-            writer.write(anaconda_project_dir + "/bin/pip install --upgrade " +
-                cc.getLib() + "==" + cc.getVersion());
+            String pipLib = cc.getVersion().equals(Settings.UNKNOWN_LIBRARY_VERSION) ?
+              cc.getLib() : cc.getLib() + "==" + cc.getVersion();
+            writer.write(anaconda_project_dir + "/bin/pip install --upgrade " + pipLib);
             break;
           case EGG:
             String eggName = cc.getLib();

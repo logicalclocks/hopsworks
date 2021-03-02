@@ -15,6 +15,7 @@
  */
 package io.hops.hopsworks.common.python.commands;
 
+import com.google.common.base.Strings;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
 import io.hops.hopsworks.common.dao.python.CondaCommandFacade;
 import io.hops.hopsworks.common.dao.python.LibraryFacade;
@@ -105,6 +106,10 @@ public class CommandsController {
   public PythonDep condaOp(CondaOp op, Users user, CondaInstallType installType, Project proj, String channelUrl,
                            String lib, String version, String arg, GitBackend gitBackend, String apiKeyName)
     throws GenericException {
+
+    if(Strings.isNullOrEmpty(version) && CondaOp.isLibraryOp(op)) {
+      version = Settings.UNKNOWN_LIBRARY_VERSION;
+    }
     
     PythonDep dep;
     try {
@@ -153,19 +158,14 @@ public class CommandsController {
         // the PythonDep to be installed or
         // the CondaEnv operation is finished implicitly (no condaOperations are
         // returned => CondaEnv operation is finished).
-        if (!CondaOp.isEnvOp(opType)) {
+        if (CondaOp.isLibraryOp(opType)) {
           Project project = projectFacade.findById(cc.getProjectId().getId()).orElseThrow(() -> new ProjectException(
             RESTCodes.ProjectErrorCode.PROJECT_NOT_FOUND, Level.FINE, "projectId: " + cc.getProjectId().getId()));
           PythonDep dep = libraryFacade.getOrCreateDep(libraryFacade.getRepo(cc.getChannelUrl(), false),
               cc.getInstallType(), cc.getLib(), cc.getVersion(), true, false);
           Collection<PythonDep> deps = project.getPythonDepCollection();
 
-          if(cc.getInstallType().equals(CondaInstallType.GIT) ||
-              cc.getInstallType().equals(CondaInstallType.EGG) ||
-              cc.getInstallType().equals(CondaInstallType.WHEEL) ||
-              cc.getInstallType().equals(CondaInstallType.REQUIREMENTS_TXT) ||
-              cc.getInstallType().equals(CondaInstallType.ENVIRONMENT_YAML) ||
-              opType.equals(CondaOp.UNINSTALL)) {
+          if(isPlaceholderDep(cc, opType) || opType.equals(CondaOp.UNINSTALL)) {
             deps.remove(dep);
           }
           
@@ -186,4 +186,33 @@ public class CommandsController {
       LOGGER.log(Level.FINE, "Could not remove CondaCommand with id: {0}", commandId);
     }
   }
+
+  /**
+   * A placeholder is a library which represents a dependency in the project which is not known before installation
+   * For example installing from a git url, we do not know the name of the library, and when installing a library
+   * but not specifying a version it's not known which PythonDep it will resolve to in the end.
+   * We need placeholders to keep track of what libraries are being installed in the environment and to monitor the
+   * installation progress.
+   *
+   * @param command
+   * @param condaOp
+   * @return
+   */
+  private boolean isPlaceholderDep(CondaCommands command, CondaOp condaOp) {
+    if (command.getInstallType().equals(CondaInstallType.GIT) ||
+      command.getInstallType().equals(CondaInstallType.EGG) ||
+      command.getInstallType().equals(CondaInstallType.WHEEL) ||
+      command.getInstallType().equals(CondaInstallType.REQUIREMENTS_TXT) ||
+      command.getInstallType().equals(CondaInstallType.ENVIRONMENT_YAML)) {
+      return true;
+    }
+    if(condaOp.equals(CondaOp.INSTALL) &&
+      (command.getInstallType().equals(CondaInstallType.PIP)
+        || command.getInstallType().equals(CondaInstallType.CONDA))
+      && command.getVersion().equals(Settings.UNKNOWN_LIBRARY_VERSION)) {
+      return true;
+    }
+    return false;
+  }
 }
+

@@ -682,14 +682,6 @@ angular.module('hopsWorksApp')
             };
 
             self.install = function (library, packageSource, version) {
-
-                if ((packageSource.toUpperCase() === 'CONDA' || packageSource.toUpperCase() === 'PIP') && (version === undefined || version === null || version.length === 0 || version.toUpperCase() === "NONE")) {
-                    growl.error("Select a version to install from the dropdown list", {
-                        title: 'Error',
-                        ttl: 3000
-                    });
-                    return;
-                }
                 self.installing[library] = true;
                 if (packageSource.toUpperCase() === "CONDA") {
                     var data = {
@@ -703,7 +695,6 @@ angular.module('hopsWorksApp')
                         "channelUrl": packageSource.toLowerCase(),
                         "packageSource": packageSource,
                         "library": library.substring(library.lastIndexOf("/") + 1, library.length),
-                        "version": "",
                         "dependencyUrl": library
                     };
                     if(self.privateGitRepo) {
@@ -715,7 +706,6 @@ angular.module('hopsWorksApp')
                         "channelUrl": packageSource.toLowerCase(),
                         "packageSource": packageSource,
                         "library": library.substring(library.lastIndexOf("/") + 1, library.length),
-                        "version": "",
                         "dependencyUrl": library
                     };
                 } else {
