@@ -74,7 +74,7 @@ public class RulesBuilder {
       dto.setName(validationRule.getName());
       dto.setDescription(validationRule.getDescription());
       dto.setPredicate(validationRule.getPredicate());
-      dto.setValueType(validationRule.getValueType());
+      dto.setAcceptedType(validationRule.getAcceptedType());
     }
     return dto;
   }

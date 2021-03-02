@@ -16,7 +16,7 @@
 
 package io.hops.hopsworks.persistence.entity.featurestore.featuregroup.datavalidation;
 
-import java.util.Arrays;
+import java.util.List;
 
 public class Rule {
   
@@ -24,9 +24,10 @@ public class Rule {
   private Level level;
   private Double min;
   private Double max;
+  private String value;
   private String pattern;
-  private ValueType acceptedType;
-  private String[] legalValues;
+  private AcceptedType acceptedType;
+  private List<String> legalValues;
 
   public Rule() {
   }
@@ -63,6 +64,14 @@ public class Rule {
     this.max = max;
   }
 
+  public String getValue() {
+    return value;
+  }
+
+  public void setValue(String value) {
+    this.value = value;
+  }
+
   public String getPattern() {
     return pattern;
   }
@@ -71,19 +80,19 @@ public class Rule {
     this.pattern = pattern;
   }
 
-  public ValueType getAcceptedType() {
+  public AcceptedType getAcceptedType() {
     return acceptedType;
   }
 
-  public void setAcceptedType(ValueType acceptedType) {
+  public void setAcceptedType(AcceptedType acceptedType) {
     this.acceptedType = acceptedType;
   }
 
-  public String[] getLegalValues() {
+  public List<String> getLegalValues() {
     return legalValues;
   }
 
-  public void setLegalValues(String[] legalValues) {
+  public void setLegalValues(List<String> legalValues) {
     this.legalValues = legalValues;
   }
 
@@ -96,7 +105,7 @@ public class Rule {
             ", max=" + max +
             ", pattern='" + pattern + '\'' +
             ", acceptedType=" + acceptedType +
-            ", legalValues=" + Arrays.toString(legalValues) +
+            ", legalValues=" + legalValues +
             '}';
   }
 }

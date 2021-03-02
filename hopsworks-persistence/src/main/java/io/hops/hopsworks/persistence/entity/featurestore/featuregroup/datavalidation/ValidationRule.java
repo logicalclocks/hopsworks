@@ -64,8 +64,8 @@ public class ValidationRule implements Serializable {
 
   @NotNull
   @Enumerated(EnumType.STRING)
-  @Column(name = "value_type")
-  private ValueType valueType;
+  @Column(name = "accepted_type")
+  private AcceptedType acceptedType;
 
   @Basic
   @Column(name = "description")
@@ -95,12 +95,12 @@ public class ValidationRule implements Serializable {
     this.predicate = predicate;
   }
 
-  public ValueType getValueType() {
-    return valueType;
+  public AcceptedType getAcceptedType() {
+    return acceptedType;
   }
 
-  public void setValueType(ValueType valueType) {
-    this.valueType = valueType;
+  public void setAcceptedType(AcceptedType acceptedType) {
+    this.acceptedType = acceptedType;
   }
 
   public String getDescription() {

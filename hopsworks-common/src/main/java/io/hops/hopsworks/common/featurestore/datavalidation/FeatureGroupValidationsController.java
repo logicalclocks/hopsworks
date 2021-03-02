@@ -180,7 +180,6 @@ public class FeatureGroupValidationsController {
         .setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES)
         .create();
 
-      LOGGER.log(java.util.logging.Level.INFO, "results:\n" + results);
       try (FSDataOutputStream outStream = udfso.create(path2result)) {
         outStream.writeBytes(gson.toJson(results));
         outStream.hflush();

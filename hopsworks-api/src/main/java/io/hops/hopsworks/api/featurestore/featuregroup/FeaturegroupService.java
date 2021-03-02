@@ -181,11 +181,13 @@ public class FeaturegroupService {
   @ApiOperation(value = "Get the list of feature groups for a featurestore",
       response = FeaturegroupDTO.class,
       responseContainer = "List")
-  public Response getFeaturegroupsForFeaturestore(@Context SecurityContext sc)
+  public Response getFeaturegroupsForFeaturestore(
+          @BeanParam FeatureGroupBeanParam featureGroupBeanParam,
+          @Context SecurityContext sc)
       throws FeaturestoreException, ServiceException {
     Users user = jWTHelper.getUserPrincipal(sc);
     List<FeaturegroupDTO> featuregroups = featuregroupController.
-        getFeaturegroupsForFeaturestore(featurestore, project, user);
+        getFeaturegroupsForFeaturestore(featurestore, project, user, featureGroupBeanParam.getFilterValues());
     GenericEntity<List<FeaturegroupDTO>> featuregroupsGeneric =
         new GenericEntity<List<FeaturegroupDTO>>(featuregroups) {};
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(featuregroupsGeneric).build();

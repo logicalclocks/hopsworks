@@ -19,6 +19,7 @@ package io.hops.hopsworks.persistence.entity.featurestore.featuregroup.datavalid
 import io.hops.hopsworks.persistence.entity.featurestore.Featurestore;
 
 import javax.persistence.Basic;
+import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Convert;
 import javax.persistence.Entity;
@@ -32,9 +33,11 @@ import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
+import javax.persistence.OneToMany;
 import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
 import javax.xml.bind.annotation.XmlRootElement;
+import java.util.Collection;
 import java.util.Set;
 
 @Entity
@@ -70,7 +73,10 @@ public class FeatureStoreExpectation {
     referencedColumnName = "id")
   @ManyToOne(optional = false)
   private Featurestore featureStore;
-  
+
+  @OneToMany(cascade = CascadeType.ALL, mappedBy = "featureStoreExpectation")
+  private Collection<FeatureGroupExpectation> featureGroupExpectations;
+
   @JoinTable(name = "hopsworks.feature_store_expectation_rule",
           joinColumns
                   = {
@@ -131,7 +137,15 @@ public class FeatureStoreExpectation {
   public void setValidationRules(Set<ValidationRule> validationRules) {
     this.validationRules = validationRules;
   }
-  
+
+  public Collection<FeatureGroupExpectation> getFeatureGroupExpectations() {
+    return featureGroupExpectations;
+  }
+
+  public void setFeatureGroupExpectations(Collection<FeatureGroupExpectation> featureGroupExpectations) {
+    this.featureGroupExpectations = featureGroupExpectations;
+  }
+
   public Expectation getExpectation() {
     return expectation;
   }
