@@ -22,6 +22,7 @@ import io.hops.hopsworks.persistence.entity.featurestore.storageconnector.hopsfs
 import io.hops.hopsworks.persistence.entity.featurestore.storageconnector.jdbc.FeaturestoreJdbcConnector;
 import io.hops.hopsworks.persistence.entity.featurestore.storageconnector.redshift.FeatureStoreRedshiftConnector;
 import io.hops.hopsworks.persistence.entity.featurestore.storageconnector.s3.FeaturestoreS3Connector;
+import io.hops.hopsworks.persistence.entity.featurestore.storageconnector.snowflake.FeaturestoreSnowflakeConnector;
 
 import javax.persistence.Basic;
 import javax.persistence.CascadeType;
@@ -100,6 +101,9 @@ public class FeaturestoreConnector implements Serializable {
   @JoinColumn(name = "adls_id", referencedColumnName = "id")
   @ManyToOne(cascade = CascadeType.ALL)
   private FeaturestoreADLSConnector adlsConnector;
+  @JoinColumn(name = "snowflake_id", referencedColumnName = "id")
+  @ManyToOne(cascade = CascadeType.ALL)
+  private FeaturestoreSnowflakeConnector snowflakeConnector;
 
   public static long getSerialVersionUID() {
     return serialVersionUID;
@@ -176,7 +180,6 @@ public class FeaturestoreConnector implements Serializable {
   public void setRedshiftConnector(FeatureStoreRedshiftConnector redshiftConnector) {
     this.redshiftConnector = redshiftConnector;
   }
-
   public FeaturestoreADLSConnector getAdlsConnector() {
     return adlsConnector;
   }
@@ -184,7 +187,15 @@ public class FeaturestoreConnector implements Serializable {
   public void setAdlsConnector(FeaturestoreADLSConnector adlsConnector) {
     this.adlsConnector = adlsConnector;
   }
-
+  
+  public FeaturestoreSnowflakeConnector getSnowflakeConnector() {
+    return snowflakeConnector;
+  }
+  
+  public void setSnowflakeConnector(FeaturestoreSnowflakeConnector snowflakeConnector) {
+    this.snowflakeConnector = snowflakeConnector;
+  }
+  
   @Override
   public boolean equals(Object o) {
     if (this == o) return true;

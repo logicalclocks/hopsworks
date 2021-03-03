@@ -1162,7 +1162,6 @@ describe "On #{ENV['OS']}" do
         expect(parsed_json['keywords']).to include('keyword123')
       end
 
->>>>>>> 41acf23b0... [HOPSWORKS-2139] Use Hudi commit ID as statistics timestamp (#453)
       it "should be able to create cached feature group with extra constraints of features" do
         project = get_project
         featurestore_id = get_featurestore_id(@project[:id])
@@ -1542,6 +1541,53 @@ describe "On #{ENV['OS']}" do
         expect(parsed_json["name"] == featuregroup_name).to be true
         expect(parsed_json["type"] == "onDemandFeaturegroupDTO").to be true
         expect(parsed_json["storageConnector"]["id"] == connector_id).to be true
+
+        path = "/apps/hive/warehouse/#{project['projectname'].downcase}_featurestore.db/#{featuregroup_name}_1"
+        expect(test_file(path)).to be true
+      end
+
+      it "should be able to create an on-demand featuregroup from redshift connector" do
+        project = get_project
+        featurestore_id = get_featurestore_id(project.id)
+        create_redshift_connector(project.id, featurestore_id, redshift_connector_name: "redshift_connector_#{random_id}",
+                                  databasePassword: "password")
+        connector_id = json_body[:id]
+        json_result, featuregroup_name = create_on_demand_featuregroup(project.id, featurestore_id, connector_id)
+        parsed_json = JSON.parse(json_result)
+        expect_status(201)
+        expect(parsed_json.key?("id")).to be true
+        expect(parsed_json.key?("query")).to be true
+        expect(parsed_json.key?("storageConnector")).to be true
+        expect(parsed_json.key?("features")).to be true
+        expect(parsed_json.key?("featurestoreName")).to be true
+        expect(parsed_json.key?("name")).to be true
+        expect(parsed_json["featurestoreName"] == project.projectname.downcase + "_featurestore").to be true
+        expect(parsed_json["name"] == featuregroup_name).to be true
+        expect(parsed_json["type"] == "onDemandFeaturegroupDTO").to be true
+        expect(parsed_json["storageConnector"]["id"]).to eq connector_id
+
+        path = "/apps/hive/warehouse/#{project['projectname'].downcase}_featurestore.db/#{featuregroup_name}_1"
+        expect(test_file(path)).to be true
+      end
+
+      it "should be able to create an on-demand featuregroup from snowflake connector" do
+        project = get_project
+        featurestore_id = get_featurestore_id(project.id)
+        create_snowflake_connector(project.id, featurestore_id)
+        connector_id = json_body[:id]
+        json_result, featuregroup_name = create_on_demand_featuregroup(project.id, featurestore_id, connector_id)
+        parsed_json = JSON.parse(json_result)
+        expect_status(201)
+        expect(parsed_json.key?("id")).to be true
+        expect(parsed_json.key?("query")).to be true
+        expect(parsed_json.key?("storageConnector")).to be true
+        expect(parsed_json.key?("features")).to be true
+        expect(parsed_json.key?("featurestoreName")).to be true
+        expect(parsed_json.key?("name")).to be true
+        expect(parsed_json["featurestoreName"] == project.projectname.downcase + "_featurestore").to be true
+        expect(parsed_json["name"] == featuregroup_name).to be true
+        expect(parsed_json["type"] == "onDemandFeaturegroupDTO").to be true
+        expect(parsed_json["storageConnector"]["id"]).to eq connector_id
 
         path = "/apps/hive/warehouse/#{project['projectname'].downcase}_featurestore.db/#{featuregroup_name}_1"
         expect(test_file(path)).to be true

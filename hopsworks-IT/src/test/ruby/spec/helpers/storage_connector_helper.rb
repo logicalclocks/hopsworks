@@ -165,6 +165,26 @@ module StorageConnectorHelper
     [json_result, redshift_connector_name]
   end
 
+  def create_snowflake_connector(project_id, featurestore_id)
+    endpoint = "#{ENV['HOPSWORKS_API']}/project/#{project_id}/featurestores/#{featurestore_id}/storageconnectors/"
+    type = "featurestoreSnowflakeConnectorDTO"
+    storageConnectorType = "SNOWFLAKE"
+    connector = { name: "snowflake_connector_#{random_id}",
+                   description: "test snowflake connector",
+                   type: type,
+                   storageConnectorType: storageConnectorType,
+                   sfOptions: [{name:"sfTimezone", value:"spark"}, {name: "sfCompress", value: "true"}],
+                   database: "test",
+                   password: "123456PWD",
+                   role: "role",
+                   schema: "PUBLIC",
+                   url: "http://123456.eu-central-1.snowflakecomputing.com",
+                   user: "user0",
+                   warehouse: "warehouse"
+    }
+    post endpoint, connector.to_json
+  end
+
   def update_redshift_connector(project_id, featurestore_id, connector_name, redshift_connector_json)
     update_redshift_connector_endpoint = "#{ENV['HOPSWORKS_API']}/project/#{project_id}/featurestores/#{featurestore_id}/storageconnectors/#{connector_name}"
     redshift_connector_json["type"] = "featurestoreRedshiftConnectorDTO"
@@ -242,5 +262,19 @@ module StorageConnectorHelper
     expect(json_body[:arguments]).to eq connector[:arguments]
     expect(json_body[:iamRole]).to eq connector[:iamRole]
     expect(json_body[:databasePassword]).to eq connector[:databasePassword]
+  end
+
+  def check_snowflake_connector_update(json_body, connector)
+    expect(json_body[:name]).to eq connector[:name]
+    expect(json_body[:description]).to eq connector[:description]
+    expect(json_body[:url]).to eq connector[:url]
+    expect(json_body[:warehouse]).to eq connector[:warehouse]
+    expect(json_body[:schema]).to eq connector[:schema]
+    expect(json_body[:database]).to eq connector[:database]
+    expect(json_body[:user]).to eq connector[:user]
+    expect(json_body[:password]).to eq connector[:password]
+    expect(json_body[:token]).to eq connector[:token]
+    expect(json_body[:tableName]).to eq connector[:tableName]
+    expect(json_body[:sfOptions]).to eq connector[:sfOptions]
   end
 end

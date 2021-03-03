@@ -23,13 +23,13 @@ import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.hdfs.DistributedFsService;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
 import io.hops.hopsworks.common.hdfs.inode.InodeController;
+import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.persistence.entity.featurestore.Featurestore;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.Featuregroup;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.ondemand.OnDemandFeature;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.ondemand.OnDemandFeaturegroup;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.ondemand.OnDemandOption;
 import io.hops.hopsworks.persistence.entity.featurestore.storageconnector.FeaturestoreConnector;
-import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.persistence.entity.featurestore.storageconnector.FeaturestoreConnectorType;
 import io.hops.hopsworks.persistence.entity.hdfs.inode.Inode;
 import io.hops.hopsworks.persistence.entity.project.Project;
@@ -86,18 +86,18 @@ public class OnDemandFeaturegroupController {
 
     // We allow users to read an entire S3 bucket for instance and they don't need to provide us with a query
     // However if you are running against a JDBC database, you need to provide a query
-    if (Strings.isNullOrEmpty(onDemandFeaturegroupDTO.getQuery()) &&
-        connector.getConnectorType() == FeaturestoreConnectorType.JDBC){
-      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.INVALID_SQL_QUERY,
-          Level.FINE, "SQL Query cannot be empty");
-    } else if (!Strings.isNullOrEmpty(onDemandFeaturegroupDTO.getQuery()) &&
-        connector.getConnectorType() != FeaturestoreConnectorType.JDBC) {
-      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.INVALID_SQL_QUERY,
-          Level.FINE, "SQL query not supported when specifying non JDBC storage connectors");
-    } else if (onDemandFeaturegroupDTO.getDataFormat() == null &&
-        connector.getConnectorType() != FeaturestoreConnectorType.JDBC) {
-      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_ON_DEMAND_DATA_FORMAT,
-          Level.FINE, "Data format required when specifying non JDBC storage connectors");
+    boolean isJDBCType = (connector.getConnectorType() == FeaturestoreConnectorType.JDBC ||
+        connector.getConnectorType() == FeaturestoreConnectorType.REDSHIFT ||
+        connector.getConnectorType() == FeaturestoreConnectorType.SNOWFLAKE);
+    if (Strings.isNullOrEmpty(onDemandFeaturegroupDTO.getQuery()) && isJDBCType) {
+      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.INVALID_SQL_QUERY, Level.FINE,
+          "SQL Query cannot be empty");
+    } else if (!Strings.isNullOrEmpty(onDemandFeaturegroupDTO.getQuery()) && !isJDBCType) {
+      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.INVALID_SQL_QUERY, Level.FINE,
+          "SQL query not supported when specifying " + connector.getConnectorType() + " storage connectors");
+    } else if (onDemandFeaturegroupDTO.getDataFormat() == null && !isJDBCType) {
+      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_ON_DEMAND_DATA_FORMAT, Level.FINE,
+          "Data format required when specifying " + connector.getConnectorType() + " storage connectors");
     }
 
     //Persist on-demand featuregroup
