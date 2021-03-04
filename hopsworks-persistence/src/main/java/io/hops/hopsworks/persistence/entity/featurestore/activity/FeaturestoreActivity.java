@@ -18,6 +18,7 @@ package io.hops.hopsworks.persistence.entity.featurestore.activity;
 
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.Featuregroup;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.cached.FeatureGroupCommit;
+import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.datavalidation.FeatureGroupValidation;
 import io.hops.hopsworks.persistence.entity.featurestore.statistics.FeaturestoreStatistic;
 import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.TrainingDataset;
 import io.hops.hopsworks.persistence.entity.jobs.history.Execution;
@@ -108,6 +109,9 @@ public class FeaturestoreActivity implements Serializable {
     })
   private FeatureGroupCommit commit;
 
+  @JoinColumn(name = "validation_id", referencedColumnName = "id")
+  private FeatureGroupValidation validation;
+
   @JoinColumn(name = "feature_group_id", referencedColumnName = "id")
   private Featuregroup featureGroup;
 
@@ -194,6 +198,14 @@ public class FeaturestoreActivity implements Serializable {
 
   public void setCommit(FeatureGroupCommit commit) {
     this.commit = commit;
+  }
+
+  public FeatureGroupValidation getValidation() {
+    return validation;
+  }
+
+  public void setValidation(FeatureGroupValidation validation) {
+    this.validation = validation;
   }
 
   public Featuregroup getFeatureGroup() {

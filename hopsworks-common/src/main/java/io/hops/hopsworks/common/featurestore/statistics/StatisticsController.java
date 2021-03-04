@@ -50,6 +50,7 @@ import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import java.io.IOException;
 import java.sql.Timestamp;
+import java.util.Date;
 import java.util.Optional;
 import java.util.logging.Level;
 
@@ -124,12 +125,17 @@ public class StatisticsController {
     Inode statisticsInode = registerStatistics(project, user, statisticsCommitTimeStamp, statisticsJson.toString(),
         featuregroup.getName(), "FeatureGroups", featuregroup.getVersion());
     Timestamp commitTime = new Timestamp(statisticsCommitTimeStamp);
+
     FeaturestoreStatistic featurestoreStatistic = new FeaturestoreStatistic(commitTime, statisticsInode, featuregroup);
     if (featuregroup.getFeaturegroupType() == FeaturegroupType.CACHED_FEATURE_GROUP &&
         featuregroup.getCachedFeaturegroup().getTimeTravelFormat() == TimeTravelFormat.HUDI)  {
       featurestoreStatistic.setFeatureGroupCommit(featureGroupCommit);
     }
-    featurestoreStatisticFacade.update(featurestoreStatistic);
+    featurestoreStatistic = featurestoreStatisticFacade.update(featurestoreStatistic);
+
+    // Log statistics activity
+    fsActivityFacade.logStatisticsActivity(user, featuregroup, new Date(commitTime.getTime()), featurestoreStatistic);
+
     return featurestoreStatistic;
   }
 
@@ -152,7 +158,12 @@ public class StatisticsController {
     Timestamp commitTime = new Timestamp(commitTimeStamp);
     FeaturestoreStatistic featurestoreStatistic =
       new FeaturestoreStatistic(commitTime, statisticsInode, trainingDataset);
-    featurestoreStatisticFacade.update(featurestoreStatistic);
+    featurestoreStatistic = featurestoreStatisticFacade.update(featurestoreStatistic);
+
+    // Log statistics activity
+    fsActivityFacade
+        .logStatisticsActivity(user, trainingDataset, new Date(commitTime.getTime()), featurestoreStatistic);
+
     return featurestoreStatistic;
   }
 
