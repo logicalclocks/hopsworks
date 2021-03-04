@@ -400,6 +400,12 @@
       <artifactId>org.everit.json.schema</artifactId>
       <version>1.12.1</version>
     </dependency>
+    <dependency>
+        <groupId>com.fasterxml.jackson.module</groupId>
+        <artifactId>jackson-module-jaxb-annotations</artifactId>
+        <version>2.4.5</version>
+        <scope>compile</scope>
+    </dependency>
   </dependencies>
 
   <build>

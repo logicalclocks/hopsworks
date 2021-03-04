@@ -1,0 +1,21 @@
+<!--
+  ~ This file is part of Hopsworks
+  ~ Copyright (C) 2021, Logical Clocks AB. All rights reserved
+  ~
+  ~ Hopsworks is free software: you can redistribute it and/or modify it under the terms of
+  ~ the GNU Affero General Public License as published by the Free Software Foundation,
+  ~ either version 3 of the License, or (at your option) any later version.
+  ~
+  ~ Hopsworks is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+  ~ without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+  ~ PURPOSE.  See the GNU Affero General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU Affero General Public License along with this program.
+  ~ If not, see <https://www.gnu.org/licenses/>.
+  -->
+<div class="modal-body" style="overflow: auto" ng-controller="JupyterCtrl as jupyterCtrl" style="padding:0px
+!important;">
+    <div ng-controller="SparkConfigCtrl as sparkConfigCtrl">
+        <div ng-include="'views/jupyter/jupyterConfigPanel.html'"></div>
+    </div>
+</div>

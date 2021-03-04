@@ -60,7 +60,7 @@ import java.util.concurrent.ThreadLocalRandom;
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlSeeAlso({YarnJobConfiguration.class})
 @JsonIgnoreProperties(ignoreUnknown = true)
-@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY)
+@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "type")
 @JsonSubTypes({
   @JsonSubTypes.Type(value = YarnJobConfiguration.class, name = "YarnJobConfiguration")}
 )

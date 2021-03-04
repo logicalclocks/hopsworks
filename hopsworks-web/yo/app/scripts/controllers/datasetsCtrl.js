@@ -43,11 +43,11 @@ angular.module('hopsWorksApp')
         .controller('DatasetsCtrl', ['$scope', '$window', '$mdSidenav', '$mdUtil',
           'DataSetService', 'JupyterService', '$routeParams', 'ModalService', 'growl', '$location',
           'MetadataHelperService', '$rootScope', 'DelaProjectService', 'UtilsService', 'UserService', '$mdToast',
-          'TourService', 'ProjectService', 'StorageService',
+          'TourService', 'ProjectService', 'StorageService', 'MetadataRestService',
           function ($scope, $window, $mdSidenav, $mdUtil, DataSetService, JupyterService, $routeParams,
                   ModalService, growl, $location, MetadataHelperService,
                   $rootScope, DelaProjectService, UtilsService, UserService, $mdToast, TourService, ProjectService,
-                    StorageService) {
+                    StorageService, MetadataRestService) {
 
             var self = this;
             var SHARED_DATASET_SEPARATOR = '::';
@@ -58,6 +58,7 @@ angular.module('hopsWorksApp')
             var WAREHOUSE_PATH = "/apps/hive/warehouse";
             var PROJECT_PATH = "/Projects";
             var MAX_NUM_FILES = 1000; // the limit on files to keep in memory
+            var JUPYTER_CONFIG_METADATA_NAMESPACE = "jupyter_configuration";
             self.sharedDatasetSeparator = SHARED_DATASET_SEPARATOR;
             self.manyFilesLimit = 10000;
             self.working = false;
@@ -99,6 +100,10 @@ angular.module('hopsWorksApp')
             self.tgState = false;
             self.offset = 0;
             self.view = sessionStorage.getItem("datasetBrowserView");
+            self.canStartJupyterFromMetadata = false;
+            self.jupyterConfigFromMetadata = {};
+            self.project = {}
+
             if (typeof self.view  === "undefined" || self.view  === '' || self.view === "null" || self.view === null) {
               self.view  = 'list';// default is list view
               sessionStorage.setItem("datasetBrowserView", self.view);
@@ -1688,11 +1693,62 @@ angular.module('hopsWorksApp')
               ProjectService.get({}, {'id': self.projectId}).$promise.then(
                   function (success) {
                       self.projectName = success.projectName;
+                      self.project = success
                       getDirContents();
                   }, function (error) {
 
                   });
             };
+
+            self.getFileAttachedJupyterConfig = function (file) {
+                //only for .ipynb
+                self.canStartJupyterFromMetadata = false;
+                self.jupyterConfigFromMetadata = {};
+                if(file.attributes.path.endsWith(".ipynb")) {
+                    MetadataRestService.getfileMetadata(JUPYTER_CONFIG_METADATA_NAMESPACE, file.attributes.path,
+                        self.projectId).then(
+                        function( success) {
+                            if(success.data.items.length > 0) {
+                                try {
+                                    var config = JSON.parse(success.data.items[0].value)
+                                    self.jupyterConfigFromMetadata = JSON.parse(config[JUPYTER_CONFIG_METADATA_NAMESPACE])
+                                    self.canStartJupyterFromMetadata = true;
+                                } catch (error) {
+                                    //do nothing
+                                }
+                            }
+                        }, function (error) {
+
+                        });
+                }
+            }
+
+            self.startJupyterFromAttachedConfig = function (mode) {
+                //Configuration does not have project
+                //Get the current jupyter settings to get the project config
+               JupyterService.settings(self.projectId).then(
+                   function (success) {
+                       self.jupyterConfigFromMetadata.project = success.data.project;
+                       $scope.startFromXattrConfig(self.jupyterConfigFromMetadata, mode);
+                   }, function (error) {
+                       growl.warning("Error: Failed to get project configuration", {title: 'Error', ttl: 5000});
+                   }
+               )
+            }
+
+            self.viewAttachedJupyterConfiguration = function () {
+                JupyterService.settings(self.projectId).then(
+                    function (success) {
+                        self.jupyterConfigFromMetadata.project = success.data.project;
+                        ModalService.notebookAttachedJupyterConfigurationViewInfo('xl', self.jupyterConfigFromMetadata).then(
+                            function (success) {
+                            }, function (error) {
+                            });
+                    }, function (error) {
+                        growl.warning("Error: Failed to get project configuration", {title: 'Error', ttl: 5000});
+                    }
+                )
+            }
 
             var init = function () {
               //Check if the current dataset is set

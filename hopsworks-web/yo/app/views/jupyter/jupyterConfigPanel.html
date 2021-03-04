@@ -42,6 +42,13 @@
                             JupyterLab <i class="fa fa-play" aria-hidden="true" style="margin-left: 10px"></i>
                         </button>
                       </div>
+                    <button ng-if="jupyterCtrl.notebookAttachedConfigView === true" type="button"
+                            class="btn btn-warning"
+                            id="notebookAttachedConfigView"
+                            ng-click="jupyterCtrl.closeNotebookAttachedConfigView()"
+                            style="padding-left: 4px;">
+                        <i class="fa fa-times" aria-hidden="true" style="margin-left: 10px"></i> Close
+                    </button>
                 </div>
             </div>
         </div>

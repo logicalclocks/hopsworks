@@ -590,7 +590,11 @@ public class RESTCodes {
     DOCKER_IMAGE_CREATION_ERROR(51, "Error while creating the docker image", Response.Status.INTERNAL_SERVER_ERROR),
     METASTORE_CONNECTION_ERROR(52, "Error opening connection with the Hive metastore",
         Response.Status.INTERNAL_SERVER_ERROR),
-    SERVICE_DISCOVERY_ERROR(53, "Service not found", Response.Status.INTERNAL_SERVER_ERROR);
+    SERVICE_DISCOVERY_ERROR(53, "Service not found", Response.Status.INTERNAL_SERVER_ERROR),
+    WRONG_HDFS_USERNAME_PROVIDED_FOR_ATTACHING_JUPYTER_CONFIGURATION_TO_NOTEBOOK(54, "Failed to attach jupyter " +
+        "configuration to notebook. Wrong hdfs username provided", Response.Status.BAD_REQUEST),
+    ATTACHING_JUPYTER_CONFIG_TO_NOTEBOOK_FAILED(55, "Failed to attach jupyter configuration to notebook",
+        Response.Status.INTERNAL_SERVER_ERROR);
 
     private Integer code;
     private String message;

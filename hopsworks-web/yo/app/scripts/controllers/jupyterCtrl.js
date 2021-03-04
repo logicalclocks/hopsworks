@@ -74,6 +74,7 @@ angular.module('hopsWorksApp')
             self.shutdownLevelSelected;
             self.timeLeftInMinutes = 0;
             self.addShutdownHours;
+            self.notebookAttachedConfigView = false;
 
             self.jupyterConflicts = false;
 
@@ -107,6 +108,13 @@ angular.module('hopsWorksApp')
                 branch: 'UNKNOWN',
                 repository: 'UNKNOWN'
             };
+
+            $scope.$watch('attachedJupyterConfigInfo', function (jupyterSettings, oldConfig) {
+                if (jupyterSettings) {
+                    self.notebookAttachedConfigView = true
+                    self.initJupyterSettings(jupyterSettings)
+                }
+            }, true);
 
             self.getDockerMaxAllocation = function () {
               VariablesService.getVariable('kube_docker_max_memory_allocation')
@@ -353,6 +361,114 @@ angular.module('hopsWorksApp')
                 );
             }
 
+            self.initJupyterSettings = function (jupyterSettings) {
+                self.jupyterSettings = jupyterSettings;
+                if(self.jupyterSettings.dockerConfig) {
+                    self.getDockerMaxAllocation();
+                }
+                $scope.settings = self.jupyterSettings;
+                $scope.jobConfig = self.jupyterSettings.jobConfig;
+                self.projectName = self.jupyterSettings.project.name;
+
+                dataSetService.getAllDatasets(undefined, 0, 1000, ['name:asc'], ['shared:true', 'accepted:true'], "DATASET")
+                    .then(function (success) {
+                        self.dirs = [{
+                            id: 1,
+                            name: '/',
+                            warning: 'You can only create notebooks inside a dataset - not in the / (root) directory.'
+                        }, {
+                            id: 2,
+                            name: '/Jupyter'
+                        }];
+
+                        if(success.data.items) {
+                            for(var i = 0; i < success.data.items.length; i++) {
+                                var sharedDataset = {id: 3 + i, name: success.data.items[i].name};
+                                self.dirs.push({id: 3 + i, name: success.data.items[i].name});
+                            }
+                        }
+                        if(self.jupyterSettings.baseDir === '/Projects/' + self.jupyterSettings.project.name + '/') {
+                            //If started Jupyter from Project root folder
+                            self.selected = self.dirs[0];
+                        } else if(self.jupyterSettings.baseDir === '/Projects/' + self.jupyterSettings.project.name + '/Jupyter') {
+                            //If started Jupyter from Project Jupyter folder
+                            self.selected = self.dirs[1];
+                        } else {
+                            //If started Jupyter in a dataset shared with Project
+                            var foundSharedDataset = false;
+                            for(var y = 2; y < self.dirs.length; y++) {
+                                var datasetSplit = self.dirs[y].name.split('::');
+                                if(self.jupyterSettings.baseDir === '/Projects/' + datasetSplit[0] + '/' + datasetSplit[1]) {
+                                    self.selected = self.dirs[y];
+                                    foundSharedDataset = true;
+                                    break;
+                                }
+                            }
+                            //If previously selected shared dataset is no longer shared with the project default to Jupyter dataset
+                            if(!foundSharedDataset) {
+                                self.selected = self.dirs[1];
+                                self.changeBaseDir();
+                            }
+                        }
+                    }, function (error) {
+                        growl.error(error.data.usrMsg, {title: error.data.errorMsg, ttl: 5000});
+                    });
+
+
+                if (self.jupyterSettings.shutdownLevel <= "6") {
+                    self.shutdownLevelSelected = self.shutdown_levels[0];
+                } else if (self.jupyterSettings.shutdownLevel <= "12") {
+                    self.shutdownLevelSelected = self.shutdown_levels[1];
+                } else if (self.jupyterSettings.shutdownLevel <= "24") {
+                    self.shutdownLevelSelected = self.shutdown_levels[2];
+                } else if (self.jupyterSettings.shutdownLevel <= "72") {
+                    self.shutdownLevelSelected = self.shutdown_levels[3];
+                } else if (self.jupyterSettings.shutdownLevel <= "168") {
+                    self.shutdownLevelSelected = self.shutdown_levels[4];
+                } else {
+                    self.shutdownLevelSelected = self.shutdown_levels[0];
+                }
+
+                timeToShutdown();
+
+                // Loading of API keys happen when you click on Git backend
+                // but if it is already selected, user won't need to click it again
+                if (self.jupyterSettings.gitAvailable) {
+                    if (typeof self.jupyterSettings.gitConfig === 'undefined') {
+                        self.jupyterSettings.gitConfig = {}
+                        self.jupyterSettings.gitConfig.startupAutoPull = true;
+                        self.jupyterSettings.gitConfig.shutdownAutoPush = true;
+                    }
+                    if (self.jupyterSettings.gitBackend) {
+                        UserService.load_secrets().then(
+                            function (success) {
+                                self.third_party_api_keys = success.data.items;
+                                for (var i = 0; i < self.third_party_api_keys.length; i++) {
+                                    var api_key = self.third_party_api_keys[i]
+                                    if (api_key.name === self.jupyterSettings.gitConfig.apiKeyName) {
+                                        self.git_api_key = api_key
+                                    }
+                                }
+                                var repoConf = {
+                                    gitBackend: self.jupyterSettings.gitConfig.gitBackend,
+                                    remoteURI: self.jupyterSettings.gitConfig.remoteGitURL,
+                                    keyName: self.jupyterSettings.gitConfig.apiKeyName
+                                };
+                                JupyterService.getGitRemoteBranches(self.projectId, repoConf).then(
+                                    function (success) {
+                                        self.jupyterSettings.gitConfig.branches = success.data.branches;
+                                    }, function (error) {
+                                        growl.error(error.data.usrMsg, {title: error.data.errorMsg, ttl: 5000});
+                                    });
+                            }, function (error) {
+                                self.errorMsg = (typeof error.data.usrMsg !== 'undefined') ? error.data.usrMsg : "";
+                                growl.error(self.errorMsg, { title: error.data.errorMsg, ttl: 5000, referenceId: 1 });
+                            }
+                        );
+                    }
+                }
+            }
+
             var init = function() {
                 JupyterService.running(self.projectId).then(
                     function(success) {
@@ -368,118 +484,17 @@ angular.module('hopsWorksApp')
                         // nothing to do
                     }
                 );
-                JupyterService.settings(self.projectId).then(
-                    function(success) {
-                        self.jupyterSettings = success.data;
-                        if(self.jupyterSettings.dockerConfig) {
-                            self.getDockerMaxAllocation();
+                //When viewing the notebook attached configuration use the one attached
+                if(typeof $scope.notebookAttachedJupyterConfigInfoView === 'undefined') {
+                    JupyterService.settings(self.projectId).then(
+                        function(success) {
+                            self.initJupyterSettings(success.data)
+                        },
+                        function(error) {
+                            growl.error("Could not get Jupyter Notebook Server Settings.");
                         }
-                        $scope.settings = self.jupyterSettings;
-                        $scope.jobConfig = self.jupyterSettings.jobConfig;
-                        self.projectName = self.jupyterSettings.project.name;
-
-                        dataSetService.getAllDatasets(undefined, 0, 1000, ['name:asc'], ['shared:true', 'accepted:true'], "DATASET")
-                          .then(function (success) {
-                              self.dirs = [{
-                                  id: 1,
-                                  name: '/',
-                                  warning: 'You can only create notebooks inside a dataset - not in the / (root) directory.'
-                              }, {
-                                  id: 2,
-                                  name: '/Jupyter'
-                              }];
-
-                              if(success.data.items) {
-                                for(var i = 0; i < success.data.items.length; i++) {
-                                  var sharedDataset = {id: 3 + i, name: success.data.items[i].name};
-                                  self.dirs.push({id: 3 + i, name: success.data.items[i].name});
-                                }
-                              }
-                              if(self.jupyterSettings.baseDir === '/Projects/' + self.jupyterSettings.project.name + '/') {
-                                //If started Jupyter from Project root folder
-                                self.selected = self.dirs[0];
-                              } else if(self.jupyterSettings.baseDir === '/Projects/' + self.jupyterSettings.project.name + '/Jupyter') {
-                                //If started Jupyter from Project Jupyter folder
-                                self.selected = self.dirs[1];
-                              } else {
-                                //If started Jupyter in a dataset shared with Project
-                                var foundSharedDataset = false;
-                                for(var y = 2; y < self.dirs.length; y++) {
-                                  var datasetSplit = self.dirs[y].name.split('::');
-                                  if(self.jupyterSettings.baseDir === '/Projects/' + datasetSplit[0] + '/' + datasetSplit[1]) {
-                                    self.selected = self.dirs[y];
-                                    foundSharedDataset = true;
-                                    break;
-                                  }
-                                }
-                                //If previously selected shared dataset is no longer shared with the project default to Jupyter dataset
-                                if(!foundSharedDataset) {
-                                    self.selected = self.dirs[1];
-                                    self.changeBaseDir();
-                                }
-                              }
-                          }, function (error) {
-                            growl.error(error.data.usrMsg, {title: error.data.errorMsg, ttl: 5000});
-                        });
-
-
-                        if (self.jupyterSettings.shutdownLevel <= "6") {
-                            self.shutdownLevelSelected = self.shutdown_levels[0];
-                        } else if (self.jupyterSettings.shutdownLevel <= "12") {
-                            self.shutdownLevelSelected = self.shutdown_levels[1];
-                        } else if (self.jupyterSettings.shutdownLevel <= "24") {
-                            self.shutdownLevelSelected = self.shutdown_levels[2];
-                        } else if (self.jupyterSettings.shutdownLevel <= "72") {
-                            self.shutdownLevelSelected = self.shutdown_levels[3];
-                        } else if (self.jupyterSettings.shutdownLevel <= "168") {
-                            self.shutdownLevelSelected = self.shutdown_levels[4];
-                        } else {
-                            self.shutdownLevelSelected = self.shutdown_levels[0];
-                        }
-
-                        timeToShutdown();
-
-                        // Loading of API keys happen when you click on Git backend
-                        // but if it is already selected, user won't need to click it again
-                        if (self.jupyterSettings.gitAvailable) {
-                            if (typeof self.jupyterSettings.gitConfig === 'undefined') {
-                                self.jupyterSettings.gitConfig = {}
-                                self.jupyterSettings.gitConfig.startupAutoPull = true;
-                                self.jupyterSettings.gitConfig.shutdownAutoPush = true;
-                            }
-                            if (self.jupyterSettings.gitBackend) {
-                                UserService.load_secrets().then(
-                                    function (success) {
-                                        self.third_party_api_keys = success.data.items;
-                                        for (var i = 0; i < self.third_party_api_keys.length; i++) {
-                                            var api_key = self.third_party_api_keys[i]
-                                            if (api_key.name === self.jupyterSettings.gitConfig.apiKeyName) {
-                                                self.git_api_key = api_key
-                                            }
-                                        }
-                                        var repoConf = {
-                                            gitBackend: self.jupyterSettings.gitConfig.gitBackend,
-                                            remoteURI: self.jupyterSettings.gitConfig.remoteGitURL,
-                                            keyName: self.jupyterSettings.gitConfig.apiKeyName
-                                        };
-                                        JupyterService.getGitRemoteBranches(self.projectId, repoConf).then(
-                                            function (success) {
-                                                self.jupyterSettings.gitConfig.branches = success.data.branches;
-                                            }, function (error) {
-                                                growl.error(error.data.usrMsg, {title: error.data.errorMsg, ttl: 5000});
-                                            });
-                                    }, function (error) {
-                                        self.errorMsg = (typeof error.data.usrMsg !== 'undefined') ? error.data.usrMsg : "";
-                                        growl.error(self.errorMsg, { title: error.data.errorMsg, ttl: 5000, referenceId: 1 });
-                                    }
-                                );
-                            }
-                        }
-                    },
-                    function(error) {
-                        growl.error("Could not get Jupyter Notebook Server Settings.");
-                    }
-                );
+                    );
+                }
                 self.livySessions(self.projectId);
             };
 
@@ -618,6 +633,11 @@ angular.module('hopsWorksApp')
                 }
             };
 
+            $scope.startFromXattrConfig = function (config, mode) {
+                self.jupyterSettings = config;
+                self.start(mode)
+            }
+
             self.start = function(mode) {
                 // do not allow starting jupyter enterprise if invalid memory picked
                 if (self.jupyterSettings.pythonKernel === true &&
@@ -722,5 +742,9 @@ angular.module('hopsWorksApp')
             $scope.executorMemoryState = function (exMemory) {
                 self.sparkExecutorMemory = exMemory;
             };
+
+            self.closeNotebookAttachedConfigView = function () {
+                $scope.closeNotebookAttachedConfigView()
+            }
         }
     ]);

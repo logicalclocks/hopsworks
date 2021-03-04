@@ -111,7 +111,17 @@ angular.module('hopsWorksApp')
                 };
                 return $http(req);
               },
-              
+
+              getfileMetadata: function (metadata_namespace, path, projectId) {
+                var req = {
+                  method: 'GET',
+                  url: '/api/project/' + projectId + '/xattrs/' + path + "?name=" + metadata_namespace,
+                  headers: {
+                    'Content-Type': 'application/json'
+                  }
+                };
+                return $http(req);
+              }
             };
             return service;
           }]);

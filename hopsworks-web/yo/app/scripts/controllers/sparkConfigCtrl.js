@@ -34,9 +34,10 @@ angular.module('hopsWorksApp')
 
             self.loc = $location.url().split('#')[0];
 
-            self.isJupyter = self.loc.endsWith('jupyter');
+            self.isJupyter = self.loc.endsWith('jupyter') || typeof $scope.notebookAttachedJupyterConfigInfoView !== 'undefined';
             self.isJobs = self.loc.endsWith('newJob');
             self.uneditableMode = false;
+
 
             self.experimentType = '';
             $scope.indextab = 0;
@@ -60,6 +61,12 @@ angular.module('hopsWorksApp')
                 }
             }, true);
 
+            $scope.$watch('notebookAttachedJupyterConfigInfoView', function (editMode, oldConfig) {
+                if (editMode) {
+                    self.uneditableMode = editMode;
+                }
+            }, true);
+
             $scope.$watch('sparkConfigCtrl.sparkType', function(sparkType, oldSparkType) {
                 if (sparkType && typeof self.jobConfig !== "undefined") {
                     self.setMode(sparkType);
@@ -80,8 +87,10 @@ angular.module('hopsWorksApp')
             });
 
             self.setConf = function() {
-                if(self.isJupyter && self.settings && self.settings.pythonKernel === true) {
-                    $scope.indextab = 0;
+                if(self.isJupyter && self.settings) {
+                    if(self.settings.pythonKernel === true) {
+                        $scope.indextab = 0;
+                    }
                 } else if (self.jobConfig.experimentType) {
                     self.jobConfig['spark.dynamicAllocation.enabled'] = true;
                     self.setMode(self.jobConfig.experimentType);
