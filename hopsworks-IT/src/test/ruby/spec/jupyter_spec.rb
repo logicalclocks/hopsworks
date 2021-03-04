@@ -15,6 +15,7 @@
 =end
 
 require 'json'
+require 'websocket-client-simple'
 
 describe "On #{ENV['OS']}" do
   after(:all) {clean_all_test_projects(spec: "jupyter")}
@@ -89,6 +90,67 @@ describe "On #{ENV['OS']}" do
         get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/jupyter/running"
         expect_status(404)
 
+      end
+
+      kernels = ["ipython", "pyspark", "spark"]
+      kernels.each do |kernel|
+        it "should attach jupyter configuration as xattr to a notebook with #{kernel} kernel" do
+          create_env_and_update_project(@project, version)
+
+          get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/jupyter/settings"
+          expect_status(200)
+          shutdownLevel=6
+          settings = json_body
+          settings[:shutdownLevel] = shutdownLevel
+          json_result = post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/jupyter/start", JSON(settings)
+          expect_status_details(200)
+          jupyter_project = JSON.parse(json_result)
+          port = jupyter_project["port"]
+          token = jupyter_project["token"]
+          notebook_name = "test_attach_xattr_#{kernel}_kernel.ipynb"
+
+          Airborne.configure do |config|
+            config.headers["Authorization"] = "token #{token}"
+          end
+
+          temp_name = create_notebook(port)
+          notebook_json = read_notebook("#{ENV['PROJECT_DIR']}/hopsworks-IT/src/test/ruby/spec/auxiliary/#{notebook_name}")
+
+          update_notebook(port, notebook_json, temp_name)
+
+          #create a session for the notebook
+          session_id, kernel_id = create_notebook_session(port, temp_name)
+
+          #create a websocket session
+          ws = create_websocket_connection_to_jupyter_server(port, kernel_id, session_id)
+          notebook_code = get_notebook_code(notebook_json)
+          ws.on :open do
+            #run the notebook cells
+            for code in notebook_code do
+              msg_type = 'execute_request'
+              content = { code: code.join(""), 'silent':false}
+              hdr = { msg_id: SecureRandom.uuid, username: '', session: session_id, msg_type: msg_type, version: '5.2' }
+              msg = { 'header': hdr, parent_header: hdr, metadata: {}, content: content }
+              ws.send(msg)
+            end
+          end
+
+          ws.on :close do |e|
+            puts e
+          end
+
+          ws.on :error do |e|
+            fail "Failed to create a websocket connection. #{e}"
+          end
+
+          #reset session and relogin
+          reset_session
+          create_session(@project[:username],"Pass123")
+          #get the attached xatrr
+          configuration = get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/xattrs/#{settings[:baseDir]}/#{temp_name}?jupyter_configuration"
+          expect_status_details(200)
+          stop_jupyter(@project)
+        end
       end
 
       it "should fail to start if insufficient executor memory is provided" do

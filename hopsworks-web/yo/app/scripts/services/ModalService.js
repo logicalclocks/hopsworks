@@ -1465,6 +1465,30 @@ angular.module('hopsWorksApp')
                     }
                 });
                 return modalInstance.result;
+            },
+            notebookAttachedJupyterConfigurationViewInfo: function (size, jupyterConfig) {
+                var modalInstance = $uibModal.open({
+                    templateUrl: 'views/notebookAttachedJupyterConfigInfo.html',
+                    controller: 'NotebookAttachedJupyterConfigCtrl as notebookAttachedJupyterConfigCtrl',
+                    size: size,
+                    resolve: {
+                        auth: ['$q', '$location', 'AuthService',
+                            function ($q, $location, AuthService) {
+                                return AuthService.session().then(
+                                    function (success) {
+                                    },
+                                    function (err) {
+                                        $location.path('/login');
+                                        $location.replace();
+                                        return $q.reject(err);
+                                    });
+                            }],
+                        jupyterConfig: function () {
+                            return jupyterConfig
+                        }
+                    }
+                });
+                return modalInstance.result;
             }
         };
     }]);

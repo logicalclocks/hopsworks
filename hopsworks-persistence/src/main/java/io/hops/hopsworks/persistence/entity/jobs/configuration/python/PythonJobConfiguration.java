@@ -4,6 +4,7 @@
 
 package io.hops.hopsworks.persistence.entity.jobs.configuration.python;
 
+import com.fasterxml.jackson.annotation.JsonTypeName;
 import io.hops.hopsworks.persistence.entity.jobs.configuration.DockerJobConfiguration;
 import io.hops.hopsworks.persistence.entity.jobs.configuration.JobType;
 
@@ -11,6 +12,7 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
 @XmlRootElement
+@JsonTypeName("pythonJobConfiguration")
 public class PythonJobConfiguration extends DockerJobConfiguration {
   
   public PythonJobConfiguration() {

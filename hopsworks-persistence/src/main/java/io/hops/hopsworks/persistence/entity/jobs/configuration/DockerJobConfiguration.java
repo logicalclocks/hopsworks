@@ -7,6 +7,7 @@ package io.hops.hopsworks.persistence.entity.jobs.configuration;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import com.fasterxml.jackson.annotation.JsonTypeName;
 import io.hops.hopsworks.persistence.entity.jobs.configuration.python.PythonJobConfiguration;
 
 import javax.xml.bind.annotation.XmlAccessType;
@@ -19,7 +20,8 @@ import javax.xml.bind.annotation.XmlSeeAlso;
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlSeeAlso({PythonJobConfiguration.class})
 @JsonIgnoreProperties(ignoreUnknown = true)
-@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY)
+@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "type")
+@JsonTypeName("dockerJobConfiguration")
 @JsonSubTypes({
   @JsonSubTypes.Type(value = PythonJobConfiguration.class, name = "PythonJobConfiguration")}
 )

@@ -39,6 +39,7 @@
 package io.hops.hopsworks.persistence.entity.jupyter;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import io.hops.hopsworks.persistence.entity.jobs.configuration.JobConfiguration;
 import io.hops.hopsworks.persistence.entity.jupyter.config.DockerConfigurationConverter;
 import io.hops.hopsworks.persistence.entity.jupyter.config.GitConfig;
@@ -119,6 +120,9 @@ public class JupyterSettings implements Serializable {
       insertable = false,
       updatable = false)
   @ManyToOne(optional = false)
+  // Only for deserializing. There is a circular dependancy between Project and Users when serializing, so ignore
+  // when serializing.
+  @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
   private Users users;
 
   @JoinColumn(name = "project_id",
@@ -126,6 +130,9 @@ public class JupyterSettings implements Serializable {
       insertable = false,
       updatable = false)
   @ManyToOne(optional = false)
+  // Only for deserializing. There is a circular dependancy between Project and Users when serializing, so ignore
+  // when serializing.
+  @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
   private Project project;
 
   @Basic(optional = false)

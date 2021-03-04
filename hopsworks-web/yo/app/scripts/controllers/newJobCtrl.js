@@ -42,10 +42,10 @@
 angular.module('hopsWorksApp')
         .controller('NewJobCtrl', ['$routeParams', 'growl', 'JobService',
           '$location', 'ModalService', 'StorageService', '$scope', 'TourService',
-            'KafkaService', 'ProjectService', 'PythonService', 'VariablesService', '$timeout',
+            'KafkaService', 'ProjectService', 'PythonService', 'VariablesService', 'MetadataRestService', '$timeout',
           function ($routeParams, growl, JobService,
                   $location, ModalService, StorageService, $scope, TourService,
-                  KafkaService, ProjectService, PythonService, VariablesService, $timeout) {
+                  KafkaService, ProjectService, PythonService, VariablesService, MetadataRestService, $timeout) {
 
             var self = this;
             self.tourService = TourService;
@@ -95,6 +95,10 @@ angular.module('hopsWorksApp')
             //Validation of spark executor memory
             //just set some default values
             self.sparkExecutorMemory = {minExecutorMemory:1024, hasEnoughMemory:true};
+
+            //Jupyter configuration in file metadata
+            self.JUPYTER_CONFIG_METADATA_NAMESPACE = "jupyter_configuration";
+            self.jobConfigFromMetadata = null;
 
             self.getDockerMaxAllocation = function () {
               VariablesService.getVariable('kube_docker_max_memory_allocation')
@@ -681,8 +685,17 @@ angular.module('hopsWorksApp')
                     switch (reason.toUpperCase()) {
                       case "PYSPARK":
                       case "SPARK":
-                        $scope.jobConfig = success.data
-                        self.runConfig = $scope.jobConfig
+                        if(self.jobConfigFromMetadata != null) {
+                          //set some values in the jupyter config
+                          self.jobConfigFromMetadata.mainClass = success.data.mainClass
+                          self.jobConfigFromMetadata.appPath = success.data.appPath
+                          self.jobConfigFromMetadata.jobType = success.data.jobType
+                          $scope.jobConfig = self.jobConfigFromMetadata
+                          self.runConfig = $scope.jobConfig
+                        } else {
+                          $scope.jobConfig = success.data
+                          self.runConfig = $scope.jobConfig
+                        }
                         if (self.runConfig.appPath.toLowerCase().endsWith(".py") ||
                             self.runConfig.appPath.toLowerCase().endsWith(".ipynb")) {
                           self.jobtype = 2;
@@ -726,7 +739,6 @@ angular.module('hopsWorksApp')
              */
             self.onFileSelected = function (reason, path) {
               var filename = getFileName(path);
-
               if (reason.toUpperCase() === "PYSPARK") {
                 PythonService.enabled(self.projectId).then(
                     function (success) {
@@ -801,8 +813,40 @@ angular.module('hopsWorksApp')
             this.selectFile = function (reason, parameter) {
               ModalService.selectFile('lg',  self.projectId,  self.selectFileRegexes[reason],
                       self.selectFileErrorMsgs["PYSPARK"], false).then(
-                      function (success) {
-                        self.onFileSelected(reason, success);
+                      function (path) {
+                        self.jobConfigFromMetadata = null;
+                        //get attached jupyter configuration. For ipynb and files in Jupyter folder
+                        if(path.endsWith(".ipynb")) {
+                          MetadataRestService.getfileMetadata(self.JUPYTER_CONFIG_METADATA_NAMESPACE, path,
+                              self.projectId).then(
+                              function( success) {
+                                if(success.data.items.length > 0) {
+                                  try {
+                                    var config = JSON.parse(success.data.items[0].value)
+                                    self.jobConfigFromMetadata = JSON.parse(config[self.JUPYTER_CONFIG_METADATA_NAMESPACE])["jobConfig"]
+                                  } catch (error) {
+                                  }
+                                }
+                              }, function (error) {
+                              }).then(function () {
+                                if(self.jobConfigFromMetadata != null) {
+                                  ModalService.confirm('sm', 'Confirm', 'The file selected has some attached' +
+                                      ' configuration. Would you like to use this configuration?').then(
+                                      function (success) {
+                                        self.runConfig = self.jobConfigFromMetadata;
+                                      }, function (error) {
+                                        self.jobConfigFromMetadata = null;
+                                      }
+                                  ).then(function () {
+                                    self.onFileSelected(reason, path);
+                                  });
+                                } else {
+                                  self.onFileSelected(reason, path);
+                                }
+                          })
+                        } else {
+                          self.onFileSelected(reason, path);
+                        }
                       }, function (error) {
                 //The user changed their mind.
               });
