@@ -20,5 +20,6 @@ public enum ActivityType {
   JOB,
   METADATA,
   COMMIT,
-  STATISTICS
+  STATISTICS,
+  VALIDATIONS
 }

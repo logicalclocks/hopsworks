@@ -21,6 +21,7 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
+import io.hops.hopsworks.common.featurestore.activity.FeaturestoreActivityFacade;
 import io.hops.hopsworks.common.featurestore.feature.FeatureGroupFeatureDTO;
 import io.hops.hopsworks.common.featurestore.featuregroup.ExpectationResult;
 import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupController;
@@ -94,9 +95,11 @@ public class FeatureGroupValidationsController {
   @EJB
   private FeatureGroupValidationFacade featureGroupValidationFacade;
   @EJB
-  FeatureGroupCommitFacade featureGroupCommitFacade;
+  private FeatureGroupCommitFacade featureGroupCommitFacade;
   @EJB
-  FeaturegroupController featuregroupController;
+  private FeaturegroupController featuregroupController;
+  @EJB
+  private FeaturestoreActivityFacade activityFacade;
 
   public Pair<FeatureGroupValidation, List<ExpectationResult>> getFeatureGroupValidationResults(Users user,
     Project project,
@@ -187,7 +190,8 @@ public class FeatureGroupValidationsController {
         new FeatureGroupValidation(validationTimeDate, inodeController.getInodeAtPath(path2result),
                 featuregroup, getValidationResultStatus(results));
       featureGroupValidationFacade.persist(featureGroupValidation);
-      
+
+      activityFacade.logValidationActivity(featuregroup, user, featureGroupValidation);
       return featureGroupValidation;
     } catch (IOException ex) {
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.COULD_NOT_READ_DATA_VALIDATION_RESULT,
