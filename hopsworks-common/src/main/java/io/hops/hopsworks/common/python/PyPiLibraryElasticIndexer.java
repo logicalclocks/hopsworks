@@ -16,10 +16,8 @@
 
 package io.hops.hopsworks.common.python;
 
-import io.hops.hopsworks.common.elastic.ElasticController;
-import io.hops.hopsworks.common.provenance.core.elastic.ProvElasticController;
+import io.hops.hopsworks.common.elastic.ElasticClientController;
 import io.hops.hopsworks.common.util.Settings;
-import io.hops.hopsworks.exceptions.ElasticException;
 import org.elasticsearch.action.admin.cluster.health.ClusterHealthResponse;
 import org.elasticsearch.action.admin.indices.delete.DeleteIndexRequest;
 import org.elasticsearch.action.bulk.BulkRequest;
@@ -44,7 +42,6 @@ import javax.ejb.TimerConfig;
 import javax.ejb.TimerService;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
-import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -57,9 +54,7 @@ import static org.elasticsearch.common.xcontent.XContentFactory.jsonBuilder;
 public class PyPiLibraryElasticIndexer {
 
   @EJB
-  private ElasticController elasticController;
-  @EJB
-  private ProvElasticController provElasticController;
+  private ElasticClientController elasticClientCtrl;
   @EJB
   private Settings settings;
   @Resource
@@ -85,102 +80,103 @@ public class PyPiLibraryElasticIndexer {
 
   @Timeout
   @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
-  public void execute(Timer timer) throws ElasticException {
+  public void execute(Timer timer) {
+    long errorRescheduleTimeout = 300000;
+    
     LOGGER.log(Level.INFO, "Running PyPi Indexer");
-
+  
     try {
-      ClusterHealthResponse clusterHealthResponse = provElasticController.clusterHealthGet();
+      ClusterHealthResponse clusterHealthResponse = elasticClientCtrl.clusterHealthGet();
       GetIndexTemplatesResponse templateResponse =
-        provElasticController.templateGet(Settings.ELASTIC_PYPI_LIBRARIES_ALIAS);
-
+        elasticClientCtrl.templateGet(Settings.ELASTIC_PYPI_LIBRARIES_ALIAS);
+    
       //If elasticsearch is down or template not in elastic reschedule the timer
       if(clusterHealthResponse.getStatus().equals(ClusterHealthStatus.RED)) {
-        scheduleTimer(300000);
+        scheduleTimer(errorRescheduleTimeout);
         LOGGER.log(Level.INFO, "Elastic currently down, rescheduling indexing for pypi libraries");
         return;
       } else if(templateResponse.getIndexTemplates().isEmpty()) {
-        scheduleTimer(300000);
+        scheduleTimer(errorRescheduleTimeout);
         LOGGER.log(Level.INFO, "Elastic template " + Settings.ELASTIC_PYPI_LIBRARIES_ALIAS + " currently missing, " +
           "rescheduling indexing for pypi libraries");
         return;
       }
     } catch(Exception e) {
-      scheduleTimer(300000);
+      scheduleTimer(errorRescheduleTimeout);
       LOGGER.log(Level.SEVERE, "Exception occurred trying to index pypi libraries, rescheduling timer", e);
       return;
     }
-
+  
     try {
-      GetAliasesResponse pypiAlias = provElasticController.getAliases(Settings.ELASTIC_PYPI_LIBRARIES_ALIAS);
-
+      GetAliasesResponse pypiAlias = elasticClientCtrl.getAliases(Settings.ELASTIC_PYPI_LIBRARIES_ALIAS);
+    
       if(!pypiAlias.getAliases().isEmpty()) {
         this.isIndexed = true;
       }
-
-      Map<String, Long> indicesToDelete =
-        elasticController.getIndices("(" + Settings.ELASTIC_PYPI_LIBRARIES_INDEX_REGEX + ")");
-
+    
+      String[] indicesToDelete = elasticClientCtrl.mngIndicesGet(Settings.ELASTIC_PYPI_LIBRARIES_INDEX_REGEX);
+    
       String newIndex = Settings.ELASTIC_PYPI_LIBRARIES_INDEX_PATTERN_PREFIX + System.currentTimeMillis();
       CreateIndexRequest createIndexRequest = new CreateIndexRequest(newIndex);
-      provElasticController.mngIndexCreate(createIndexRequest);
-
+      elasticClientCtrl.mngIndexCreate(createIndexRequest);
+    
       Element body = Jsoup.connect(settings.getPyPiSimpleEndpoint()).maxBodySize(0).get().body();
       Elements elements = body.getElementsByTag("a");
-
+    
       final int bulkSize = 100;
       int currentBulkSize = 0;
       int currentId = 0;
       BulkRequest bulkRequest = new BulkRequest();
-
+    
       LOGGER.log(Level.INFO, "Starting to index libraries from pypi simple index");
-      
+    
       for (Element library : elements) {
         IndexRequest indexRequest = new IndexRequest()
-            .index(newIndex)
-            .id(String.valueOf(currentId))
-            .source(jsonBuilder()
-                .startObject()
-                .field("library", library.text())
-                .endObject());
-
+          .index(newIndex)
+          .id(String.valueOf(currentId))
+          .source(jsonBuilder()
+            .startObject()
+            .field("library", library.text())
+            .endObject());
+      
         bulkRequest.add(indexRequest);
         currentBulkSize += 1;
         currentId += 1;
-
+      
         if(currentBulkSize == bulkSize) {
-          provElasticController.bulkUpdateDoc(bulkRequest);
+          elasticClientCtrl.bulkUpdateDoc(bulkRequest);
           bulkRequest = new BulkRequest();
           currentBulkSize = 0;
         }
       }
-
+    
       //Also send last batch
       if(bulkRequest.numberOfActions() > 0) {
-        provElasticController.bulkUpdateDoc(bulkRequest);
+        elasticClientCtrl.bulkUpdateDoc(bulkRequest);
       }
-
+    
       if(pypiAlias.getAliases().isEmpty()) {
-        provElasticController.createAlias(Settings.ELASTIC_PYPI_LIBRARIES_ALIAS, newIndex);
-        this.isIndexed = true;
+        elasticClientCtrl.createAlias(Settings.ELASTIC_PYPI_LIBRARIES_ALIAS, newIndex);
       } else {
         String currentSearchIndex = pypiAlias.getAliases().keySet().iterator().next();
-        provElasticController.aliasSwitchIndex(Settings.ELASTIC_PYPI_LIBRARIES_ALIAS, currentSearchIndex, newIndex);
-        this.isIndexed = true;
+        elasticClientCtrl.aliasSwitchIndex(Settings.ELASTIC_PYPI_LIBRARIES_ALIAS, currentSearchIndex, newIndex);
       }
-
+      this.isIndexed = true;
+    
       LOGGER.log(Level.INFO, "Finished indexing");
-
-      for (String index : indicesToDelete.keySet()) {
+    
+      for (String index : indicesToDelete) {
         DeleteIndexRequest deleteIndexRequest = new DeleteIndexRequest().indices(index);
-        provElasticController.mngIndexDelete(deleteIndexRequest);
+        elasticClientCtrl.mngIndexDelete(deleteIndexRequest);
       }
     } catch(Exception ex) {
       LOGGER.log(Level.SEVERE, "Indexing pypi libraries failed", ex);
-    } finally {
-      String rawInterval = settings.getPyPiIndexerTimerInterval();
-      Long intervalValue = settings.getConfTimeValue(rawInterval);
-      TimeUnit intervalTimeunit = settings.getConfTimeTimeUnit(rawInterval);
-      scheduleTimer(intervalTimeunit.toMillis(intervalValue));
+      scheduleTimer(errorRescheduleTimeout);
+      return;
     }
+    String rawInterval = settings.getPyPiIndexerTimerInterval();
+    Long intervalValue = settings.getConfTimeValue(rawInterval);
+    TimeUnit intervalTimeunit = settings.getConfTimeTimeUnit(rawInterval);
+    scheduleTimer(intervalTimeunit.toMillis(intervalValue));
   }
 }

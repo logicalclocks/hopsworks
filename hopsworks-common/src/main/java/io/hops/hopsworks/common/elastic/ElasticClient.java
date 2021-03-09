@@ -64,8 +64,7 @@ public class ElasticClient {
   @EJB
   private BaseHadoopClientsService clientsService;
   
-  private static final Logger LOG =
-      Logger.getLogger(ElasticClient.class.getName());
+  private static final Logger LOG = Logger.getLogger(ElasticClient.class.getName());
   
   private RestHighLevelClient elasticClient = null;
   
@@ -87,6 +86,9 @@ public class ElasticClient {
     }
   }
   
+  public synchronized void resetClient() {
+    elasticClient = null;
+  }
   
   public synchronized RestHighLevelClient getClient() throws ElasticException {
     if (elasticClient == null) {
@@ -163,7 +165,7 @@ public class ElasticClient {
     return hosts;
   }
   
-  public void shutdownClient() throws ElasticException {
+  private void shutdownClient() throws ElasticException {
     if (elasticClient != null) {
       try {
         elasticClient.indices().clearCache(new ClearIndicesCacheRequest(

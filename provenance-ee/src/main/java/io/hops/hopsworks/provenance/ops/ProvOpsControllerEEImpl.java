@@ -16,7 +16,7 @@ import io.hops.hopsworks.common.provenance.core.elastic.BasicElasticHit;
 import io.hops.hopsworks.common.provenance.core.elastic.ElasticAggregationParser;
 import io.hops.hopsworks.common.provenance.core.elastic.ElasticHelper;
 import io.hops.hopsworks.common.provenance.core.elastic.ElasticHits;
-import io.hops.hopsworks.common.provenance.core.elastic.ProvElasticController;
+import io.hops.hopsworks.common.elastic.ElasticClientController;
 import io.hops.hopsworks.common.provenance.ops.ProvLinks;
 import io.hops.hopsworks.common.provenance.ops.ProvOpsAggregations;
 import io.hops.hopsworks.common.provenance.ops.ProvOpsControllerIface;
@@ -68,7 +68,7 @@ public class ProvOpsControllerEEImpl implements ProvOpsControllerIface {
   @EJB
   private Settings settings;
   @EJB
-  private ProvElasticController client;
+  private ElasticClientController client;
   @EJB
   private ProvAppController appCtrl;
   @EJB

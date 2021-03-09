@@ -13,10 +13,14 @@
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see <https://www.gnu.org/licenses/>.
  */
-package io.hops.hopsworks.common.provenance.core.elastic;
+package io.hops.hopsworks.common.elastic;
 
+import com.lambdista.util.FailableSupplier;
 import com.lambdista.util.Try;
-import io.hops.hopsworks.common.elastic.ElasticClient;
+import io.hops.hopsworks.common.provenance.core.elastic.ElasticAggregation;
+import io.hops.hopsworks.common.provenance.core.elastic.ElasticAggregationParser;
+import io.hops.hopsworks.common.provenance.core.elastic.ElasticHelper;
+import io.hops.hopsworks.common.provenance.core.elastic.ElasticHits;
 import io.hops.hopsworks.exceptions.ElasticException;
 import io.hops.hopsworks.restutils.RESTCodes;
 import org.elasticsearch.ElasticsearchStatusException;
@@ -29,6 +33,8 @@ import org.elasticsearch.action.bulk.BulkRequest;
 import org.elasticsearch.action.bulk.BulkResponse;
 import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.action.index.IndexResponse;
+import org.elasticsearch.action.search.MultiSearchRequest;
+import org.elasticsearch.action.search.MultiSearchResponse;
 import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.action.search.SearchScrollRequest;
@@ -55,7 +61,7 @@ import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
-import java.io.IOException;
+import javax.net.ssl.SSLHandshakeException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -64,66 +70,52 @@ import java.util.logging.Logger;
 
 @Stateless
 @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
-public class ProvElasticController {
-  private static final Logger LOG = Logger.getLogger(ProvElasticController.class.getName());
+/**
+ * This controller is here to simplify general elastic search access
+ * This is a wrapper around the ElasticClient Singleton in order to:
+ * 1. translate elastic exceptions to our internal exceptions in a consistent manner
+ * 2. reset client in case of certificate rotation
+ * 3. deal with search scrolling and aggregations consistently
+ */
+public class ElasticClientController {
+  private static final Logger LOG = Logger.getLogger(ElasticClientController.class.getName());
   
   @EJB
   private ElasticClient client;
-
+  
   public GetIndexResponse mngIndexGet(GetIndexRequest request) throws ElasticException {
-    GetIndexResponse response;
+    FailableSupplier<GetIndexResponse> query =
+      () -> client.getClient().indices().get(request, RequestOptions.DEFAULT);
+    return executeElasticQuery(query, "elastic get index", request.toString());
+  }
+  
+  public Map<String, Long> mngIndicesGetWithCreationTime(String indexRegex) throws ElasticException {
+    GetIndexResponse response = mngIndexGet(new GetIndexRequest(indexRegex));
+    Map<String, Long> result = new HashMap<>();
+    for(String index : response.getIndices()) {
+      result.put(index, Long.parseLong(response.getSetting(index, "index.creation_date")));
+    }
+    return result;
+  }
+  
+  public String[] mngIndicesGet(String indexRegex) throws ElasticException {
     try {
-      LOG.log(Level.FINE, "request:{0}", request.toString());
-      response = client.getClient().indices().get(request, RequestOptions.DEFAULT);
-    } catch (IOException e) {
-      String msg = "elastic index:" + request.indices() + "error during index get";
-      LOG.log(Level.WARNING, msg, e);
-      throw new ElasticException(RESTCodes.ElasticErrorCode.ELASTIC_INTERNAL_REQ_ERROR, Level.WARNING,
-        msg, e.getMessage(), e);
-    } catch (IndexNotFoundException e) {
-      String msg = "elastic index:" + request.indices() + " - index not found";
-      throw new ElasticException(RESTCodes.ElasticErrorCode.ELASTIC_INTERNAL_REQ_ERROR, Level.INFO,
-        msg, e.getMessage(), e);
-    } catch (ElasticsearchStatusException e) {
-      if(e.status().equals(RestStatus.NOT_FOUND)) {
-        String msg = "elastic index:" + request.indices() + " - index not found";
-        throw new ElasticException(RESTCodes.ElasticErrorCode.ELASTIC_INTERNAL_REQ_ERROR, Level.INFO,
-          msg, e.getMessage(), e);
+      return mngIndexGet(new GetIndexRequest(indexRegex)).getIndices();
+    } catch(ElasticException e) {
+      if (ElasticHelper.indexNotFound(e.getCause())) {
+        return new String[0];
       } else {
-        String msg = "elastic index:" + request.indices() + "error during index mapping get";
-        throw new ElasticException(RESTCodes.ElasticErrorCode.ELASTIC_INTERNAL_REQ_ERROR, Level.WARNING,
-          msg, e.getMessage(), e);
+        throw e;
       }
     }
-    return response;
   }
   
   public Map<String, Map<String, String>> mngIndexGetMappings(String indexRegex) throws ElasticException {
     GetMappingsRequest request = new GetMappingsRequest().indices(indexRegex);
-    GetMappingsResponse response;
-    try {
-      LOG.log(Level.FINE, "request:{0}", request.toString());
-      response = client.getClient().indices().getMapping(request, RequestOptions.DEFAULT);
-    } catch (IOException e) {
-      String msg = "elastic index:" + request.indices() + "error during index mapping get";
-      throw new ElasticException(RESTCodes.ElasticErrorCode.ELASTIC_INTERNAL_REQ_ERROR, Level.WARNING,
-        msg, e.getMessage(), e);
-    } catch (IndexNotFoundException e) {
-      String msg = "elastic index:" + request.indices() + " - index not found";
-      throw new ElasticException(RESTCodes.ElasticErrorCode.ELASTIC_INTERNAL_REQ_ERROR, Level.INFO,
-        msg, e.getMessage(), e);
-    } catch (ElasticsearchStatusException e) {
-      if(e.status().equals(RestStatus.NOT_FOUND)) {
-        String msg = "elastic index:" + request.indices() + " - index not found";
-        throw new ElasticException(RESTCodes.ElasticErrorCode.ELASTIC_INTERNAL_REQ_ERROR, Level.INFO,
-          msg, e.getMessage(), e);
-      } else {
-        String msg = "elastic index:" + request.indices() + "error during index mapping get";
-        throw new ElasticException(RESTCodes.ElasticErrorCode.ELASTIC_INTERNAL_REQ_ERROR, Level.WARNING,
-          msg, e.getMessage(), e);
-      }
-    }
-  
+    FailableSupplier<GetMappingsResponse> query =
+      () -> client.getClient().indices().getMapping(request, RequestOptions.DEFAULT);
+    GetMappingsResponse response = executeElasticQuery(query, "elastic get index mapping", request.toString());
+
     Map<String, Map<String, String>> result = new HashMap<>();
     for(Map.Entry<String, MappingMetaData> e1 : response.mappings().entrySet()) {
       String index = e1.getKey();
@@ -152,13 +144,10 @@ public class ProvElasticController {
   }
   
   public boolean mngIndexExists(String indexName) throws ElasticException {
-    try {
-      return client.getClient().indices().exists(new GetIndexRequest(indexName), RequestOptions.DEFAULT);
-    } catch (IOException e) {
-      String msg = "error accessing elastic index: " + indexName;
-      throw new ElasticException(RESTCodes.ElasticErrorCode.ELASTIC_INTERNAL_REQ_ERROR, Level.SEVERE,
-        msg, msg, e);
-    }
+    GetIndexRequest request = new GetIndexRequest(indexName);
+    FailableSupplier<Boolean> query =
+      () ->  client.getClient().indices().exists(request, RequestOptions.DEFAULT);
+    return executeElasticQuery(query, "elastic index exists", request.toString());
   }
   
   public CreateIndexResponse mngIndexCreate(CreateIndexRequest request) throws ElasticException {
@@ -170,15 +159,9 @@ public class ProvElasticController {
       String msg = "elastic index names can only contain lower case:" + request.index();
       throw new ElasticException(RESTCodes.ElasticErrorCode.ELASTIC_QUERY_ERROR, Level.INFO, msg);
     }
-    CreateIndexResponse response;
-    try {
-      LOG.log(Level.FINE, "request:{0}", request.toString());
-      response = client.getClient().indices().create(request, RequestOptions.DEFAULT);
-    } catch (IOException e) {
-      String msg = "elastic index:" + request.index() + "error during index create";
-      throw new ElasticException(RESTCodes.ElasticErrorCode.ELASTIC_INTERNAL_REQ_ERROR, Level.WARNING,
-        msg, e.getMessage(), e);
-    }
+    FailableSupplier<CreateIndexResponse> query =
+      () -> client.getClient().indices().create(request, RequestOptions.DEFAULT);
+    CreateIndexResponse response = executeElasticQuery(query, "elastic index create", request.toString());
     if(response.isAcknowledged()) {
       return response;
     } else {
@@ -187,16 +170,14 @@ public class ProvElasticController {
     }
   }
   
+  public AcknowledgedResponse mngIndexDelete(String index) throws ElasticException {
+    return mngIndexDelete(new DeleteIndexRequest((index)));
+  }
+  
   public AcknowledgedResponse mngIndexDelete(DeleteIndexRequest request) throws ElasticException {
-    AcknowledgedResponse response;
-    try {
-      LOG.log(Level.FINE, "request:{0}", request.toString());
-      response = client.getClient().indices().delete(request, RequestOptions.DEFAULT);
-    } catch (IOException e) {
-      String msg = "elastic index:" + request.indices()[0] + "error during index delete";
-      throw new ElasticException(RESTCodes.ElasticErrorCode.ELASTIC_INTERNAL_REQ_ERROR, Level.WARNING,
-        msg, e.getMessage(), e);
-    }
+    FailableSupplier<AcknowledgedResponse> query =
+      () -> client.getClient().indices().delete(request, RequestOptions.DEFAULT);
+    AcknowledgedResponse response = executeElasticQuery(query, "elastic index delete", request.toString());
     if(response.isAcknowledged()) {
       return response;
     } else {
@@ -206,16 +187,9 @@ public class ProvElasticController {
   }
 
   public void indexDoc(IndexRequest request) throws ElasticException {
-    IndexResponse response;
-
-    try {
-      LOG.log(Level.FINE, "request:{0}", request.toString());
-      response = client.getClient().index(request, RequestOptions.DEFAULT);
-    } catch (IOException e) {
-      String msg = "error during index doc:" + request.id();
-      throw new ElasticException(RESTCodes.ElasticErrorCode.ELASTIC_INTERNAL_REQ_ERROR, Level.WARNING,
-        msg, e.getMessage(), e);
-    }
+    FailableSupplier<IndexResponse> query =
+      () -> client.getClient().index(request, RequestOptions.DEFAULT);
+    IndexResponse response = executeElasticQuery(query, "elastic index doc", request.toString());
     if (response.status().getStatus() != 201) {
       String msg = "doc index - bad status response:" + response.status().getStatus();
       throw new ElasticException(RESTCodes.ElasticErrorCode.ELASTIC_QUERY_ERROR, Level.INFO, msg);
@@ -223,37 +197,70 @@ public class ProvElasticController {
   }
 
   public void updateDoc(UpdateRequest request) throws ElasticException {
-    UpdateResponse response;
-
-    try {
-      LOG.log(Level.FINE, "request:{0}", request.toString());
-      response = client.getClient().update(request, RequestOptions.DEFAULT);
-    } catch (IOException e) {
-      String msg = "error during update doc:" + request.id();
-      throw new ElasticException(RESTCodes.ElasticErrorCode.ELASTIC_INTERNAL_REQ_ERROR, Level.WARNING,
-        msg, e.getMessage(), e);
-    }
+    FailableSupplier<UpdateResponse> query =
+      () -> client.getClient().update(request, RequestOptions.DEFAULT);
+    UpdateResponse response = executeElasticQuery(query, "elastic update doc", request.toString());
     if (response.status().getStatus() != 200) {
       String msg = "doc update - bad status response:" + response.status().getStatus();
       throw new ElasticException(RESTCodes.ElasticErrorCode.ELASTIC_QUERY_ERROR, Level.INFO, msg);
     }
   }
   
+  public MultiSearchResponse multiSearch(MultiSearchRequest request) throws ElasticException {
+    FailableSupplier<MultiSearchResponse> query =
+      () -> client.getClient().msearch(request, RequestOptions.DEFAULT);
+    MultiSearchResponse response = executeElasticQuery(query, "elastic multi search", request.toString());
+    return response;
+  }
+  
+  /**
+   * When using this method keep in mind that a single page is returned and it is the user's job to get all pages
+   * @param request
+   * @return
+   * @throws ElasticException
+   */
+  public SearchResponse baseSearch(SearchRequest request) throws ElasticException {
+    FailableSupplier<SearchResponse> query =
+      () -> client.getClient().search(request, RequestOptions.DEFAULT);
+    SearchResponse response = executeElasticQuery(query, "elastic basic search", request.toString());
+    if (response.status().getStatus() != 200) {
+      String msg = "searchBasic query - bad status response:" + response.status().getStatus();
+      throw new ElasticException(RESTCodes.ElasticErrorCode.ELASTIC_QUERY_ERROR, Level.INFO, msg);
+    }
+    return response;
+  }
+  
+  /**
+   * When using this method keep in mind that a single page is returned and it is the user's job to get all pages
+   * @param request
+   * @param handler
+   * @param <R>
+   * @param <S>
+   * @return
+   * @throws ElasticException
+   */
   public <R, S> Pair<Long, Try<S>> search(SearchRequest request, ElasticHits.Handler<R, S> handler)
     throws ElasticException {
     SearchResponse response;
-    LOG.log(Level.FINE, "request:{0}", request.toString());
-    response = searchBasicInt(request);
+    response = baseSearch(request);
     Try<S> collectedResults = handler.apply(response.getHits().getHits());
     return Pair.with(response.getHits().getTotalHits().value, collectedResults);
   }
   
+  /**
+   * Returns all results matching the search - these results are all built in memory, so use with care.
+   * @param request
+   * @param handler
+   * @param <R>
+   * @param <S>
+   * @return
+   * @throws ElasticException
+   */
   public <R, S> Pair<Long, Try<S>> searchScrolling(SearchRequest request, ElasticHits.Handler<R, S> handler)
     throws ElasticException {
     SearchResponse response;
     long leftover;
-    LOG.log(Level.FINE, "request:{0}", request.toString());
-    response = searchBasicInt(request);
+    response = baseSearch(request);
     
     long totalHits = response.getHits().getTotalHits().value;
     long requested = request.source().size();
@@ -273,7 +280,7 @@ public class ProvElasticController {
   public long searchCount(SearchRequest request) throws ElasticException {
     SearchResponse response;
     LOG.log(Level.FINE, "request:{0}", request.toString());
-    response = searchBasicInt(request);
+    response = baseSearch(request);
     LOG.log(Level.FINE, "response:{0}", response.toString());
     return response.getHits().getTotalHits().value;
   }
@@ -281,8 +288,7 @@ public class ProvElasticController {
   public <A extends ElasticAggregation, E extends Exception> Map<A, List> searchAggregations(
       SearchRequest request, Map<A, ElasticAggregationParser<?, E>> aggregations)
       throws ElasticException, E {
-    LOG.log(Level.FINE, "request:{0}", request.toString());
-    SearchResponse response = searchBasicInt(request);
+    SearchResponse response = baseSearch(request);
     LOG.log(Level.FINE, "response:{0}", response.toString());
     Map<A, List> aggResults = new HashMap<>();
     if(!aggregations.isEmpty()) {
@@ -294,14 +300,9 @@ public class ProvElasticController {
   }
   
   private SearchResponse searchScrollingInt(SearchScrollRequest request) throws ElasticException {
-    SearchResponse response;
-    try {
-      response = client.getClient().scroll(request, RequestOptions.DEFAULT);
-    } catch (IOException e) {
-      String msg = "error querying elastic";
-      throw new ElasticException(RESTCodes.ElasticErrorCode.ELASTIC_INTERNAL_REQ_ERROR, Level.WARNING,
-        msg, e.getMessage(), e);
-    }
+    FailableSupplier<SearchResponse> query =
+      () -> client.getClient().scroll(request, RequestOptions.DEFAULT);
+    SearchResponse response = executeElasticQuery(query, "elastic scrolling search", request.toString());
     if (response.status().getStatus() != 200) {
       String msg = "searchBasic query - bad status response:" + response.status().getStatus();
       throw new ElasticException(RESTCodes.ElasticErrorCode.ELASTIC_QUERY_ERROR, Level.INFO, msg);
@@ -316,48 +317,19 @@ public class ProvElasticController {
   }
   
   public void bulkDelete(BulkRequest request) throws ElasticException {
-    BulkResponse response;
-    try {
-      LOG.log(Level.FINE, "request:{0}", request.toString());
-      response = client.getClient().bulk(request, RequestOptions.DEFAULT);
-    } catch (IOException e) {
-      String msg = "error during bulk delete";
-      throw new ElasticException(RESTCodes.ElasticErrorCode.ELASTIC_INTERNAL_REQ_ERROR, Level.WARNING,
-        msg, e.getMessage(), e);
-    }
+    FailableSupplier<BulkResponse> query =
+      () -> client.getClient().bulk(request, RequestOptions.DEFAULT);
+    BulkResponse response = executeElasticQuery(query, "elastic bulk delete", request.toString());
     if(response.hasFailures()) {
       String msg = "failures during bulk delete";
       throw new ElasticException(RESTCodes.ElasticErrorCode.ELASTIC_QUERY_ERROR, Level.INFO, msg);
     }
   }
-  
-  private SearchResponse searchBasicInt(SearchRequest request) throws ElasticException {
-    SearchResponse response;
-    try {
-      response = client.getClient().search(request, RequestOptions.DEFAULT);
-    } catch (IOException e) {
-      String msg = "error querying elastic index";
-      throw new ElasticException(RESTCodes.ElasticErrorCode.ELASTIC_INTERNAL_REQ_ERROR, Level.WARNING,
-        msg, e.getMessage(), e);
-    }
-    if (response.status().getStatus() != 200) {
-      String msg = "searchBasic query - bad status response:" + response.status().getStatus();
-      throw new ElasticException(RESTCodes.ElasticErrorCode.ELASTIC_QUERY_ERROR, Level.INFO, msg);
-    }
-    return response;
-  }
 
   public BulkResponse bulkUpdateDoc(BulkRequest request) throws ElasticException {
-    BulkResponse response;
-
-    try {
-      LOG.log(Level.FINE, "request:{0}", request.toString());
-      response = client.getClient().bulk(request, RequestOptions.DEFAULT);
-    } catch (IOException e) {
-      String msg = "error during update doc:" + request.getDescription();
-      throw new ElasticException(RESTCodes.ElasticErrorCode.ELASTIC_INTERNAL_REQ_ERROR, Level.WARNING,
-          msg, e.getMessage(), e);
-    }
+    FailableSupplier<BulkResponse> query =
+      () -> client.getClient().bulk(request, RequestOptions.DEFAULT);
+    BulkResponse response = executeElasticQuery(query, "elastic bulk update doc", request.toString());
     if (response.status().getStatus() != 200) {
       String msg = "doc update - bad status response:" + response.status().getStatus();
       throw new ElasticException(RESTCodes.ElasticErrorCode.ELASTIC_QUERY_ERROR, Level.INFO, msg);
@@ -366,19 +338,14 @@ public class ProvElasticController {
   }
 
   public AcknowledgedResponse aliasUpdate(IndicesAliasesRequest request) throws ElasticException {
-    String msg = "alias switch:" + request.toString();
-    LOG.log(Level.FINE, "request:{0}", msg);
-    AcknowledgedResponse response;
-    try {
-      response = client.getClient().indices().updateAliases(request, RequestOptions.DEFAULT);
-    } catch (IOException e) {
-      throw new ElasticException(RESTCodes.ElasticErrorCode.ELASTIC_INTERNAL_REQ_ERROR, Level.WARNING,
-          "error:" + msg, e.getMessage(), e);
-    }
+    FailableSupplier<AcknowledgedResponse> query =
+      () -> client.getClient().indices().updateAliases(request, RequestOptions.DEFAULT);
+    AcknowledgedResponse response = executeElasticQuery(query, "elastic alias update", request.toString());
     if(response.isAcknowledged()) {
       return response;
     } else {
-      throw new ElasticException(RESTCodes.ElasticErrorCode.ELASTIC_QUERY_ERROR, Level.INFO, msg);
+      throw new ElasticException(RESTCodes.ElasticErrorCode.ELASTIC_INTERNAL_REQ_ERROR, Level.INFO,
+        "error during elastic alias update");
     }
   }
 
@@ -393,19 +360,14 @@ public class ProvElasticController {
   }
 
   public GetAliasesResponse aliasGet(GetAliasesRequest request) throws ElasticException {
-    String msg = "alias get:" + request.toString();
-    LOG.log(Level.FINE, "request:{0}", msg);
-    GetAliasesResponse response;
-    try {
-      response = client.getClient().indices().getAlias(request, RequestOptions.DEFAULT);
-    } catch (IOException e) {
-      throw new ElasticException(RESTCodes.ElasticErrorCode.ELASTIC_INTERNAL_REQ_ERROR, Level.WARNING,
-        "error:" + msg, e.getMessage(), e);
-    }
+    FailableSupplier<GetAliasesResponse> query =
+      () -> client.getClient().indices().getAlias(request, RequestOptions.DEFAULT);
+    GetAliasesResponse response = executeElasticQuery(query, "elastic get alias", request.toString());
     if(response.status().equals(RestStatus.OK) || response.status().equals(RestStatus.NOT_FOUND)) {
       return response;
     } else {
-      throw new ElasticException(RESTCodes.ElasticErrorCode.ELASTIC_QUERY_ERROR, Level.INFO, msg);
+      throw new ElasticException(RESTCodes.ElasticErrorCode.ELASTIC_QUERY_ERROR, Level.INFO,
+        "error during elastic get alias");
     }
   }
 
@@ -424,37 +386,47 @@ public class ProvElasticController {
 
   public ClusterHealthResponse clusterHealthGet() throws ElasticException {
     ClusterHealthRequest request = new ClusterHealthRequest();
-    String msg = "cluster health get:" + request.toString();
-    LOG.log(Level.FINE, "request:{0}", msg);
-    ClusterHealthResponse response;
-    try {
-      response = client.getClient().cluster().health(request, RequestOptions.DEFAULT);
-    } catch (IOException e) {
-      throw new ElasticException(RESTCodes.ElasticErrorCode.ELASTIC_INTERNAL_REQ_ERROR, Level.WARNING,
-        "error:" + msg, e.getMessage(), e);
-    }
+    FailableSupplier<ClusterHealthResponse> query =
+      () -> client.getClient().cluster().health(request, RequestOptions.DEFAULT);
+    ClusterHealthResponse response = executeElasticQuery(query, "elastic get cluster health", request.toString());
     if(response.status().equals(RestStatus.OK) || response.status().equals(RestStatus.NOT_FOUND)) {
       return response;
     } else {
-      throw new ElasticException(RESTCodes.ElasticErrorCode.ELASTIC_QUERY_ERROR, Level.INFO, msg);
+      throw new ElasticException(RESTCodes.ElasticErrorCode.ELASTIC_QUERY_ERROR, Level.INFO,
+        "error during elastic get cluster health");
     }
   }
 
   public GetIndexTemplatesResponse templateGet(String template) throws ElasticException {
     GetIndexTemplatesRequest request = new GetIndexTemplatesRequest(template);
-    String msg = "cluster health get:" + request.toString();
-    LOG.log(Level.FINE, "request:{0}", msg);
-    GetIndexTemplatesResponse response;
+    FailableSupplier<GetIndexTemplatesResponse> query =
+      () -> client.getClient().indices().getIndexTemplate(request, RequestOptions.DEFAULT);
+    return executeElasticQuery(query, "elastic get template", request.toString());
+  }
+  
+  private <O> O executeElasticQuery(FailableSupplier<O> query, String usrMsg, String devMsg) throws ElasticException {
     try {
-      response = client.getClient().indices().getIndexTemplate(request, RequestOptions.DEFAULT);
-    } catch (IOException e) {
+      try {
+        LOG.log(Level.FINE, "{0}:{1}", new Object[]{usrMsg, devMsg});
+        return query.get();
+      } catch (SSLHandshakeException e) {
+        //certificates might have changed, we reset client and retry
+        client.resetClient();
+        return query.get();
+      }
+    } catch (IndexNotFoundException e) {
+      throw new ElasticException(RESTCodes.ElasticErrorCode.ELASTIC_INDEX_NOT_FOUND, Level.INFO,
+        "elastic index not found during " + usrMsg, devMsg, e);
+    } catch (ElasticsearchStatusException e) {
+      if(e.status().equals(RestStatus.NOT_FOUND)) {
+        throw new ElasticException(RESTCodes.ElasticErrorCode.ELASTIC_INDEX_NOT_FOUND, Level.INFO,
+          "elastic index not found during " + usrMsg, devMsg, e);
+      }
       throw new ElasticException(RESTCodes.ElasticErrorCode.ELASTIC_INTERNAL_REQ_ERROR, Level.WARNING,
-        "error:" + msg, e.getMessage(), e);
-    }
-    if(response != null) {
-      return response;
-    } else {
-      throw new ElasticException(RESTCodes.ElasticErrorCode.ELASTIC_QUERY_ERROR, Level.INFO, msg);
+        "error during " + usrMsg, devMsg, e);
+    } catch(Throwable e) {
+      throw new ElasticException(RESTCodes.ElasticErrorCode.ELASTIC_INTERNAL_REQ_ERROR, Level.WARNING,
+        "error during " + usrMsg, devMsg, e);
     }
   }
 }

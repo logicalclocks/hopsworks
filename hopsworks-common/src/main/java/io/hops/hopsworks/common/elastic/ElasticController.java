@@ -46,38 +46,27 @@ import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
 import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.common.dataset.DatasetController;
-import io.hops.hopsworks.common.proxies.client.NotFoundClientProtocolException;
 import io.hops.hopsworks.exceptions.ElasticException;
 import io.hops.hopsworks.exceptions.ProjectException;
 import io.hops.hopsworks.restutils.RESTCodes;
 import io.hops.hopsworks.exceptions.ServiceException;
 import io.hops.hopsworks.common.util.Settings;
-import org.apache.http.util.EntityUtils;
 import org.apache.lucene.search.join.ScoreMode;
-import org.elasticsearch.action.admin.indices.delete.DeleteIndexRequest;
 import org.elasticsearch.action.search.MultiSearchRequest;
 import org.elasticsearch.action.search.MultiSearchResponse;
 import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.search.SearchResponse;
-import org.elasticsearch.client.Request;
-import org.elasticsearch.client.RequestOptions;
-import org.elasticsearch.client.Response;
-import org.elasticsearch.client.RestHighLevelClient;
-import org.elasticsearch.client.indices.CreateIndexRequest;
-import org.elasticsearch.client.indices.GetIndexRequest;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.elasticsearch.search.fetch.subphase.highlight.HighlightBuilder;
 import org.javatuples.Pair;
-import org.json.JSONArray;
 import org.json.JSONObject;
 
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
-import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
@@ -87,7 +76,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
 import static org.elasticsearch.index.query.QueryBuilders.boolQuery;
@@ -116,26 +104,23 @@ public class ElasticController {
   @EJB
   private DatasetController datasetController;
   @EJB
-  private ElasticClient elasticClient;
-  @EJB
   private KibanaClient kibanaClient;
+  @EJB
+  private ElasticClientController elasticClientCtrl;
   
   private static final Logger LOG = Logger.getLogger(ElasticController.class.getName());
   
 
   public SearchHit[] globalSearchHighLevel(String searchTerm) throws ServiceException, ElasticException {
-    //some necessary client settings
-    RestHighLevelClient client = getClient();
-  
     //check if the index are up and running
-    if (!this.indexExists(client, Settings.META_INDEX)) {
+    if (!elasticClientCtrl.mngIndexExists(Settings.META_INDEX)) {
       throw new ServiceException(RESTCodes.ServiceErrorCode.ELASTIC_INDEX_NOT_FOUND,
         Level.SEVERE, "index: " + Settings.META_INDEX);
     }
   
     LOG.log(Level.FINE, "Found elastic index, now executing the query.");
   
-    SearchResponse response = executeSearchQuery(client, globalSearchQuery(searchTerm.toLowerCase()));
+    SearchResponse response = executeSearchQuery(globalSearchQuery(searchTerm.toLowerCase()));
 
     if (response.status().getStatus() == 200) {
       if (response.getHits().getHits().length > 0) {
@@ -149,41 +134,21 @@ public class ElasticController {
       Level.INFO,"Error while executing query, code: "+  response.status().getStatus());
   }
   
-  public List<ElasticHit> globalSearch(String searchTerm) throws ServiceException, ElasticException {
-    //construct the response
-    List<ElasticHit> elasticHits = new LinkedList<>();
-    SearchHit[] hits = globalSearchHighLevel(searchTerm);
-    for (SearchHit hit : hits) {
-      ElasticHit eHit = new ElasticHit(hit);
-      eHit.setLocalDataset(true);
-      long inode_id = Long.parseLong(hit.getId());
-      Dataset dsl = datasetController.getDatasetByInodeId(inode_id);
-      if (dsl != null && dsl.isPublicDs()) {
-        Dataset ds = dsl;
-        eHit.setPublicId(ds.getPublicDsId());
-      }
-      elasticHits.add(eHit);
-    }
-    return elasticHits;
-  }
-  
   public SearchHit[] projectSearchHighLevel(Integer projectId, String searchTerm) throws ServiceException,
     ElasticException {
-    RestHighLevelClient client = getClient();
-    
     //check if the index are up and running
-    if (!this.indexExists(client, Settings.META_INDEX)) {
+    if (!elasticClientCtrl.mngIndexExists(Settings.META_INDEX)) {
       throw new ServiceException(RESTCodes.ServiceErrorCode.ELASTIC_INDEX_NOT_FOUND,
         Level.SEVERE, "index: " + Settings.META_INDEX);
     }
     
-    SearchResponse response = executeSearchQuery(client, projectSearchQuery(projectId, searchTerm.toLowerCase()));
+    SearchResponse response = executeSearchQuery(projectSearchQuery(projectId, searchTerm.toLowerCase()));
     if (response.status().getStatus() == 200) {
       SearchHit[] hits = new SearchHit[0];
       if (response.getHits().getHits().length > 0) {
         hits = response.getHits().getHits();
       }
-      projectSearchInSharedDatasets(client, projectId, searchTerm, hits);
+      projectSearchInSharedDatasets(projectId, searchTerm, hits);
       return hits;
     }
     //we need to further check the status if it is a probelm with
@@ -192,25 +157,10 @@ public class ElasticController {
       Level.INFO,"Error while executing query, code: "+  response.status().getStatus());
   }
   
-  public List<ElasticHit> projectSearch(Integer projectId, String searchTerm) throws ServiceException,
-    ElasticException {
-    
-    List<ElasticHit> elasticHits = new LinkedList<>();
-    SearchHit[] hits = projectSearchHighLevel(projectId, searchTerm);
-    ElasticHit eHit;
-    for (SearchHit hit : hits) {
-      eHit = new ElasticHit(hit);
-      eHit.setLocalDataset(true);
-      elasticHits.add(eHit);
-    }
-    return elasticHits;
-  }
-  
   public SearchHit[] datasetSearchHighLevel(Integer projectId, String datasetName, String searchTerm)
     throws ServiceException, ElasticException {
-    RestHighLevelClient client = getClient();
     //check if the indices are up and running
-    if (!this.indexExists(client, Settings.META_INDEX)) {
+    if (!elasticClientCtrl.mngIndexExists(Settings.META_INDEX)) {
       throw new ServiceException(RESTCodes.ServiceErrorCode.ELASTIC_INDEX_NOT_FOUND,
         Level.SEVERE, "index: " + Settings.META_INDEX);
     }
@@ -227,7 +177,7 @@ public class ElasticController {
     
     Dataset dataset = datasetController.getByProjectAndDsName(project,null, dsName);
     final long datasetId = dataset.getInodeId();
-    SearchResponse response = executeSearchQuery(client, datasetSearchQuery(datasetId, searchTerm.toLowerCase()));
+    SearchResponse response = executeSearchQuery(datasetSearchQuery(datasetId, searchTerm.toLowerCase()));
     if (response.status().getStatus() == 200) {
       if (response.getHits().getHits().length > 0) {
         return response.getHits().getHits();
@@ -240,18 +190,6 @@ public class ElasticController {
       Level.INFO,"Error while executing query, code: "+  response.status().getStatus());
   }
   
-  public List<ElasticHit> datasetSearch(Integer projectId, String datasetName, String searchTerm)
-    throws ServiceException, ElasticException {
-    List<ElasticHit> elasticHits = new LinkedList<>();
-    SearchHit[] hits = datasetSearchHighLevel(projectId, datasetName, searchTerm);
-    ElasticHit eHit;
-    for (SearchHit hit : hits) {
-      eHit = new ElasticHit(hit);
-      eHit.setLocalDataset(true);
-      elasticHits.add(eHit);
-    }
-    return elasticHits;
-  }
   /**
    *
    * @param docType
@@ -265,9 +203,8 @@ public class ElasticController {
   public Map<FeaturestoreDocType, SearchResponse> featurestoreSearch(FeaturestoreDocType docType,
     String searchTerm, int from, int size)
     throws ElasticException, ServiceException {
-    RestHighLevelClient client = getClient();
     //check if the indices are up and running
-    if (!this.indexExists(client, Settings.FEATURESTORE_INDEX)) {
+    if (!elasticClientCtrl.mngIndexExists(Settings.FEATURESTORE_INDEX)) {
       throw new ServiceException(RESTCodes.ServiceErrorCode.ELASTIC_INDEX_NOT_FOUND,
         Level.SEVERE, "index: " + Settings.FEATURESTORE_INDEX);
     }
@@ -276,20 +213,20 @@ public class ElasticController {
     switch(docType) {
       case FEATUREGROUP: {
         QueryBuilder fgQB = featuregroupQueryB(searchTerm);
-        SearchResponse response = executeSearchQuery(client, fgQB, featuregroupHighlighter(), from, size);
+        SearchResponse response = executeSearchQuery(fgQB, featuregroupHighlighter(), from, size);
         checkResponse(fgQB, response);
         result.put(FeaturestoreDocType.FEATUREGROUP, response);
       } break;
       case TRAININGDATASET: {
         QueryBuilder tdQB = trainingdatasetQueryB(searchTerm);
-        SearchResponse response = executeSearchQuery(client, tdQB, trainingDatasetHighlighter(), from, size);
+        SearchResponse response = executeSearchQuery(tdQB, trainingDatasetHighlighter(), from, size);
         checkResponse(tdQB, response);
         result.put(FeaturestoreDocType.TRAININGDATASET, response);
       } break;
       case FEATURE: {
         QueryBuilder fQB = featureQueryB(searchTerm);
         //TODO Alex - v2 use actual from size of features
-        SearchResponse response = executeSearchQuery(client, fQB, featureHighlighter(), 0, 10000);
+        SearchResponse response = executeSearchQuery(fQB, featureHighlighter(), 0, 10000);
         checkResponse(fQB, response);
         result.put(FeaturestoreDocType.FEATURE, response);
       } break;
@@ -302,7 +239,7 @@ public class ElasticController {
         QueryBuilder fQB = featureQueryB(searchTerm);
         qbs.add(Pair.with(fQB, featureHighlighter()));
         
-        MultiSearchResponse response = executeSearchQuery(client, qbs, from, size);
+        MultiSearchResponse response = executeSearchQuery(qbs, from, size);
         
         checkResponse(fgQB, response.getResponses()[0].getResponse());
         result.put(FeaturestoreDocType.FEATUREGROUP, response.getResponses()[0].getResponse());
@@ -328,9 +265,8 @@ public class ElasticController {
   public Map<FeaturestoreDocType, SearchResponse> featurestoreSearch(String searchTerm,
     Map<FeaturestoreDocType, Set<Integer>> docProjectIds, int from, int size)
     throws ElasticException, ServiceException {
-    RestHighLevelClient client = getClient();
     //check if the indices are up and running
-    if (!this.indexExists(client, Settings.FEATURESTORE_INDEX)) {
+    if (!elasticClientCtrl.mngIndexExists(Settings.FEATURESTORE_INDEX)) {
       throw new ServiceException(RESTCodes.ServiceErrorCode.ELASTIC_INDEX_NOT_FOUND,
         Level.SEVERE, "index: " + Settings.FEATURESTORE_INDEX);
     }
@@ -355,7 +291,7 @@ public class ElasticController {
       qbs.add(Pair.with(fQB, featureHighlighter()));
     }
     
-    MultiSearchResponse response = executeSearchQuery(client, qbs, from, size);
+    MultiSearchResponse response = executeSearchQuery(qbs, from, size);
     
     Map<FeaturestoreDocType, SearchResponse> result = new HashMap<>();
     int idx = 0;
@@ -394,53 +330,6 @@ public class ElasticController {
     }
   }
     
-  @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
-  public boolean deleteIndex(String index)
-      throws ElasticException {
-    boolean acked =
-        false;
-    try {
-      acked = getClient().indices().delete(new DeleteIndexRequest(index),
-          RequestOptions.DEFAULT).isAcknowledged();
-    } catch (IOException e) {
-      throw new ElasticException(RESTCodes.ElasticErrorCode.ELASTIC_INTERNAL_REQ_ERROR,
-          Level.INFO,"Error while deleting an index", e.getMessage(), e);
-    }
-    if (acked) {
-      LOG.log(Level.INFO, "Acknowledged deletion of elastic index:{0}", index);
-    } else {
-      LOG.log(Level.SEVERE, "Elastic index:{0} deletion could not be acknowledged", index);
-    }
-    return acked;
-  }
-
-  public boolean indexExists(String index)
-      throws ElasticException {
-    boolean exists = indexExists(getClient(), index);
-    if (exists) {
-      LOG.log(Level.FINE, "Elastic index found:{0}", index);
-    } else {
-      LOG.log(Level.FINE, "Elastic index:{0} could not be found", index);
-    }
-    return exists;
-  }
-
-  public void createIndex(String index)
-      throws ServiceException, ElasticException {
-  
-    boolean acked = false;
-    try {
-      acked = getClient().indices().create(new CreateIndexRequest(index), RequestOptions.DEFAULT).isAcknowledged();
-    } catch (IOException e) {
-      throw new ElasticException(RESTCodes.ElasticErrorCode.ELASTIC_INTERNAL_REQ_ERROR,
-          Level.INFO,"Error while creating an index", e.getMessage(), e);
-    }
-    if (!acked) {
-      throw new ServiceException(RESTCodes.ServiceErrorCode.ELASTIC_INDEX_CREATION_ERROR,  Level.SEVERE,
-        "Elastic index:{0} creation could not be acknowledged. index: " + index);
-    }
-  }
-  
   public void createIndexPattern(Project project, Users user, String pattern)
       throws ProjectException, ElasticException {
     JSONObject resp = kibanaClient.createIndexPattern(user, project,
@@ -452,36 +341,15 @@ public class ElasticController {
     }
   }
   
-  public void deleteIndexPattern(Project project, String pattern)
-      throws ElasticException {
-    try {
-      JSONObject resp = kibanaClient.deleteAsDataOwner(project,
-          KibanaClient.KibanaType.IndexPattern, pattern);
-      LOG.log(Level.INFO, "Deletion of kibana index pattern:{0} Response {1}",
-          new Object[]{pattern, resp.toString()});
-    }catch (ElasticException ex){
-      if(ex.getCause() instanceof NotFoundClientProtocolException){
-        LOG.log(Level.INFO, "Index pattern:{0} was already deleted", pattern);
-        return;
-      }
-      throw ex;
-    }
-  }
-  
-  public JSONObject updateKibana(Project project, Users user,
-      KibanaClient.KibanaType type, String id, String data)
-      throws ElasticException {
-    return kibanaClient.postWithOverwrite(user, project, type, id, data);
-  }
-  
-  public void deleteProjectIndices(Project project)
-      throws ElasticException {
+  public void deleteProjectIndices(Project project) throws ElasticException {
     //Get all project indices
-    Map<String, Long> indices = getIndices(project.getName() +
+    String[] indices = elasticClientCtrl.mngIndicesGet(project.getName() +
       "_(((logs|serving|" + Settings.ELASTIC_BEAMSDKWORKER_INDEX_PATTERN + "|" +
       Settings.ELASTIC_BEAMJOBSERVER_INDEX_PATTERN + ")-\\d{4}.\\d{2}.\\d{2}))");
-    for (String index : indices.keySet()) {
-      if (!deleteIndex(index)) {
+    for (String index : indices) {
+      try {
+        elasticClientCtrl.mngIndexDelete(index);
+      } catch(ElasticException e) {
         LOG.log(Level.SEVERE, "Could not delete project index:{0}", index);
       }
     }
@@ -499,127 +367,50 @@ public class ElasticController {
           "supported.");
     }
     
-    deleteIndex(ElasticUtils.getAllKibanaTenantIndex(project.toLowerCase()));
+    elasticClientCtrl.mngIndexDelete(ElasticUtils.getAllKibanaTenantIndex(project.toLowerCase()));
   }
   
-  /**
-   * Get all indices. If pattern parameter is provided, only indices matching the pattern will be returned.
-   * @param regex
-   * @return
-   */
-  @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
-  public Map<String, Long> getIndices(String regex)
-      throws ElasticException {
-    
-    try {
-      RestHighLevelClient client = getClient();
-      Response response = client.getLowLevelClient().performRequest(new Request(
-          "GET", "/_cat/indices?h=i,creation" +
-          ".date&format=json"));
-      JSONArray jsonArray =
-          new JSONArray(EntityUtils.toString(response.getEntity()));
-  
-      Map<String, Long> indicesMap = new HashMap<>();
-      Pattern pattern = null;
-      if (regex != null) {
-        pattern = Pattern.compile(regex);
-      }
-      for (int i = 0; i < jsonArray.length(); i++) {
-        JSONObject index = jsonArray.getJSONObject(i);
-        String indexName = index.getString("i");
-        Long creationDate = index.getLong("creation.date");
-    
-        if (pattern == null || pattern.matcher(indexName).matches()) {
-          indicesMap.put(indexName, creationDate);
-        }
-      }
-      return indicesMap;
-    }catch (IOException e){
-      throw new ElasticException(RESTCodes.ElasticErrorCode.ELASTIC_INTERNAL_REQ_ERROR,
-          Level.INFO,"Error while getting all indices", e.getMessage(), e);
-    }
-  }
-
-  private RestHighLevelClient getClient() throws ElasticException {
-    return elasticClient.getClient();
-  }
-  
-  private void projectSearchInSharedDatasets(RestHighLevelClient client, Integer projectId,
-    String searchTerm, List<ElasticHit> elasticHits) throws ServiceException {
+  private SearchHit[] projectSearchInSharedDatasets(Integer projectId, String searchTerm,
+    SearchHit[] elasticHits) throws ElasticException {
     Project project = projectFacade.find(projectId);
     Collection<DatasetSharedWith> datasetSharedWithCollection = project.getDatasetSharedWithCollection();
     for (DatasetSharedWith ds : datasetSharedWithCollection) {
       long datasetId = ds.getDataset().getInode().getId();
-      executeProjectSearchQuery(client, searchSpecificDataset(datasetId, searchTerm), elasticHits);
-      executeProjectSearchQuery(client, datasetSearchQuery(datasetId, searchTerm), elasticHits);
-      
+      elasticHits = executeProjectSearchQuery(searchSpecificDataset(datasetId, searchTerm), elasticHits);
+      elasticHits = executeProjectSearchQuery(datasetSearchQuery(datasetId, searchTerm), elasticHits);
     }
+    return elasticHits;
   }
   
-  private void projectSearchInSharedDatasets(RestHighLevelClient client, Integer projectId, String searchTerm,
-    SearchHit[] elasticHits) throws ServiceException {
-    Project project = projectFacade.find(projectId);
-    Collection<DatasetSharedWith> datasetSharedWithCollection = project.getDatasetSharedWithCollection();
-    for (DatasetSharedWith ds : datasetSharedWithCollection) {
-      long datasetId = ds.getDataset().getInode().getId();
-      executeProjectSearchQuery(client, searchSpecificDataset(datasetId, searchTerm), elasticHits);
-      executeProjectSearchQuery(client, datasetSearchQuery(datasetId, searchTerm), elasticHits);
-    
-    }
-  }
-  
-  private void executeProjectSearchQuery(RestHighLevelClient client, QueryBuilder query, SearchHit[] elasticHits)
-    throws ServiceException {
-    SearchResponse response = executeSearchQuery(client, query);
+  private SearchHit[] executeProjectSearchQuery(QueryBuilder query, SearchHit[] elasticHits)
+    throws ElasticException {
+    SearchResponse response = executeSearchQuery(query);
     if (response.status().getStatus() == 200) {
       if (response.getHits().getHits().length > 0) {
         SearchHit[] hits = response.getHits().getHits();
         elasticHits = Stream.concat(Arrays.stream(elasticHits), Arrays.stream(hits)).toArray(SearchHit[]::new);
       }
     }
+    return elasticHits;
   }
   
-  private void executeProjectSearchQuery(RestHighLevelClient client, QueryBuilder query,
-      List<ElasticHit> elasticHits) throws ServiceException {
-    
-    SearchResponse response = executeSearchQuery(client, query);
-    
-    if (response.status().getStatus() == 200) {
-      if (response.getHits().getHits().length > 0) {
-        SearchHit[] hits = response.getHits().getHits();
-        for (SearchHit hit : hits) {
-          elasticHits.add(new ElasticHit(hit));
-        }
-      }
-    }
+  private SearchResponse executeSearchQuery(QueryBuilder query)
+    throws ElasticException {
+    return executeSearchQuery(Settings.META_INDEX, query);
   }
   
-  private SearchResponse executeSearchQuery(RestHighLevelClient client, QueryBuilder query)
-      throws ServiceException {
-    return executeSearchQuery(client, Settings.META_INDEX, query);
-  }
-  
-  private SearchResponse executeSearchQuery(RestHighLevelClient client,
-      String index, QueryBuilder query)
-      throws ServiceException {
+  private SearchResponse executeSearchQuery(String index, QueryBuilder query)
+    throws ElasticException {
     //hit the indices - execute the queries
     SearchRequest searchRequest = new SearchRequest(index);
     SearchSourceBuilder sb = new SearchSourceBuilder();
     sb.query(query);
     searchRequest.source(sb);
-    LOG.log(Level.INFO, "Search Elastic query is: {0}", searchRequest);
-  
-    try {
-      return client.search(searchRequest, RequestOptions.DEFAULT);
-    } catch (IOException e) {
-      throw new ServiceException(RESTCodes.ServiceErrorCode.ELASTIC_SERVER_NOT_FOUND,
-          Level.SEVERE,"Error while executing search", e.getMessage());
-    }
+    return elasticClientCtrl.baseSearch(searchRequest);
   }
   
-  private SearchResponse executeSearchQuery(RestHighLevelClient client,
-    QueryBuilder query, HighlightBuilder highlighter, int from, int size)
-    throws ServiceException {
+  private SearchResponse executeSearchQuery(QueryBuilder query, HighlightBuilder highlighter, int from, int size)
+    throws ElasticException {
     //hit the indices - execute the queries
     SearchRequest searchRequest = new SearchRequest(Settings.FEATURESTORE_INDEX);
     SearchSourceBuilder sb = new SearchSourceBuilder()
@@ -628,19 +419,12 @@ public class ElasticController {
       .from(from)
       .size(size);
     searchRequest.source(sb);
-    LOG.log(Level.FINE, "Search Elastic query is: {0}", searchRequest);
-  
-    try {
-      return client.search(searchRequest, RequestOptions.DEFAULT);
-    } catch (IOException e) {
-      throw new ServiceException(RESTCodes.ServiceErrorCode.ELASTIC_SERVER_NOT_FOUND,
-        Level.SEVERE,"Error while executing search", e.getMessage());
-    }
+    return elasticClientCtrl.baseSearch(searchRequest);
   }
   
-  private MultiSearchResponse executeSearchQuery(RestHighLevelClient client,
-    List<Pair<QueryBuilder, HighlightBuilder>> searchQB, int from, int size)
-    throws ServiceException {
+  private MultiSearchResponse executeSearchQuery(List<Pair<QueryBuilder, HighlightBuilder>> searchQB,
+                                                 int from, int size)
+    throws ElasticException {
     //hit the indices - execute the queries
     MultiSearchRequest multiSearchRequest = new MultiSearchRequest();
     for(Pair<QueryBuilder, HighlightBuilder> qb : searchQB) {
@@ -653,14 +437,7 @@ public class ElasticController {
       searchRequest.source(sb);
       multiSearchRequest.add(searchRequest);
     }
-    LOG.log(Level.FINE, "Search Elastic query is: {0}", multiSearchRequest.requests());
-    
-    try {
-      return client.msearch(multiSearchRequest, RequestOptions.DEFAULT);
-    } catch (IOException e) {
-      throw new ServiceException(RESTCodes.ServiceErrorCode.ELASTIC_SERVER_NOT_FOUND,
-        Level.SEVERE,"Error while executing search", e.getMessage());
-    }
+    return elasticClientCtrl.multiSearch(multiSearchRequest);
   }
   
   private QueryBuilder searchSpecificDataset(Long datasetId, String searchTerm) {
@@ -892,24 +669,6 @@ public class ElasticController {
     QueryBuilder nestedQuery = nestedQuery(Settings.META_DATA_NESTED_FIELD, metadataQuery, ScoreMode.Avg);
   
     return nestedQuery;
-  }
-
-  /**
-   * Checks if a given index exists in elastic
-   * <p/>
-   * @param client
-   * @param indexName
-   * @return
-   */
-  private boolean indexExists(RestHighLevelClient client, String indexName)
-      throws ElasticException {
-    try {
-      return client.indices().exists(new GetIndexRequest(indexName),
-          RequestOptions.DEFAULT);
-    } catch (IOException e) {
-      throw new ElasticException(RESTCodes.ElasticErrorCode.ELASTIC_INTERNAL_REQ_ERROR,
-          Level.INFO,"Error while checking index existence", e.getMessage(), e);
-    }
   }
 }
 

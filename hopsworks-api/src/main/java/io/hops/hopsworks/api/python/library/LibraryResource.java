@@ -35,7 +35,6 @@ import io.hops.hopsworks.common.python.library.LibrarySpecification;
 import io.hops.hopsworks.common.python.library.PackageSource;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.DatasetException;
-import io.hops.hopsworks.exceptions.ElasticException;
 import io.hops.hopsworks.exceptions.GenericException;
 import io.hops.hopsworks.exceptions.PythonException;
 import io.hops.hopsworks.exceptions.ServiceException;
@@ -253,7 +252,7 @@ public class LibraryResource {
                          @QueryParam("channel") String channel,
                          @Context UriInfo uriInfo,
                          @Context SecurityContext sc)
-    throws ServiceException, PythonException, ElasticException {
+    throws ServiceException, PythonException {
     validatePattern(query);
     environmentController.checkCondaEnabled(project, pythonVersion, true);
     LibrarySearchDTO librarySearchDTO;

@@ -21,7 +21,7 @@ import io.hops.hopsworks.common.dao.python.LibraryFacade;
 import io.hops.hopsworks.common.provenance.core.elastic.BasicElasticHit;
 import io.hops.hopsworks.common.provenance.core.elastic.ElasticHelper;
 import io.hops.hopsworks.common.provenance.core.elastic.ElasticHits;
-import io.hops.hopsworks.common.provenance.core.elastic.ProvElasticController;
+import io.hops.hopsworks.common.elastic.ElasticClientController;
 import io.hops.hopsworks.common.provenance.util.functional.CheckedSupplier;
 import io.hops.hopsworks.common.python.commands.CommandsController;
 import io.hops.hopsworks.common.util.OSProcessExecutor;
@@ -83,7 +83,7 @@ public class LibraryController {
   @EJB
   private OSProcessExecutor osProcessExecutor;
   @EJB
-  private ProvElasticController provElasticController;
+  private ElasticClientController provElasticController;
 
   public PythonDep getPythonDep(String dependency, Project project) {
     return libraryFacade.findByDependencyAndProject(dependency, project);
