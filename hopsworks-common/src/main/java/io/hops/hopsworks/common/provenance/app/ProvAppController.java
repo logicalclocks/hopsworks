@@ -20,7 +20,7 @@ import io.hops.hopsworks.common.provenance.core.Provenance;
 import io.hops.hopsworks.common.provenance.core.ProvParser;
 import io.hops.hopsworks.common.provenance.core.elastic.BasicElasticHit;
 import io.hops.hopsworks.common.provenance.core.elastic.ElasticHits;
-import io.hops.hopsworks.common.provenance.core.elastic.ProvElasticController;
+import io.hops.hopsworks.common.elastic.ElasticClientController;
 import io.hops.hopsworks.common.provenance.core.elastic.ElasticHelper;
 import io.hops.hopsworks.common.provenance.app.dto.ProvAppStateElastic;
 import io.hops.hopsworks.common.provenance.util.ProvHelper;
@@ -55,7 +55,7 @@ public class ProvAppController {
   @EJB
   private Settings settings;
   @EJB
-  private ProvElasticController client;
+  private ElasticClientController client;
   
   public Map<String, Map<Provenance.AppState, ProvAppStateElastic>> provAppState(
     Map<ProvParser.Field, ProvParser.FilterVal> filterBy) throws ProvenanceException {

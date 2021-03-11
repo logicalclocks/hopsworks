@@ -15,21 +15,17 @@
  */
 package io.hops.hopsworks.common.provenance.core;
 
-import io.hops.hopsworks.common.provenance.core.elastic.ElasticHelper;
 import io.hops.hopsworks.persistence.entity.hdfs.inode.Inode;
 import io.hops.hopsworks.common.dao.hdfs.inode.InodeFacade;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
-import io.hops.hopsworks.common.provenance.core.elastic.ProvElasticController;
+import io.hops.hopsworks.common.elastic.ElasticClientController;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.ElasticException;
 import io.hops.hopsworks.exceptions.ProvenanceException;
 import io.hops.hopsworks.restutils.RESTCodes;
 import org.elasticsearch.ElasticsearchException;
 import org.elasticsearch.action.admin.indices.delete.DeleteIndexRequest;
-import org.elasticsearch.action.support.master.AcknowledgedResponse;
-import org.elasticsearch.client.indices.GetIndexRequest;
-import org.elasticsearch.client.indices.GetIndexResponse;
 import org.elasticsearch.rest.RestStatus;
 import org.javatuples.Pair;
 
@@ -46,15 +42,16 @@ public class ProvenanceCleanerController {
   private final static Logger LOGGER = Logger.getLogger(ProvenanceCleanerController.class.getName());
   
   @EJB
-  private ProvElasticController client;
+  private ElasticClientController client;
   @EJB
   private ProjectFacade projectFacade;
   @EJB
   private InodeFacade inodeFacade;
   
   public Pair<Integer, String> indexCleanupRound(String nextToCheck, Integer limit)
-    throws ProvenanceException {
-    String[] indices = getAllIndices();
+    throws ProvenanceException, ElasticException {
+    String indexRegex = "*" + Settings.PROV_FILE_INDEX_SUFFIX;
+    String[] indices = client.mngIndicesGet(indexRegex);
     
     int cleaned = 0;
     String nextToCheckAux = "";
@@ -80,10 +77,10 @@ public class ProvenanceCleanerController {
   private Project getProject(String indexName) throws ProvenanceException {
     int endIndex = indexName.indexOf(Settings.PROV_FILE_INDEX_SUFFIX);
     String sInodeId = indexName.substring(0, endIndex);
-    Long inodeId;
+    long inodeId;
     try {
       inodeId = Long.parseLong(sInodeId);
-    }catch(NumberFormatException e) {
+    } catch(NumberFormatException e) {
       throw new ProvenanceException(RESTCodes.ProvenanceErrorCode.INTERNAL_ERROR, Level.WARNING,
         "error extracting project from prov index name - format error", e.getMessage(), e);
     }
@@ -91,30 +88,13 @@ public class ProvenanceCleanerController {
     if(inode == null) {
       return null;
     }
-    Project project = projectFacade.findByInodeId(inode.getInodePK().getParentId(), inode.getInodePK().getName());
-    return project;
-  }
-  
-  private String[] getAllIndices() throws ProvenanceException {
-    try {
-      String indexRegex = "*" + Settings.PROV_FILE_INDEX_SUFFIX;
-      GetIndexRequest request = new GetIndexRequest(indexRegex);
-      GetIndexResponse response = client.mngIndexGet(request);
-      return response.getIndices();
-    } catch(ElasticException e) {
-      if(ElasticHelper.indexNotFound(e.getCause())) {
-        return new String[0];
-      } else {
-        throw new ProvenanceException(RESTCodes.ProvenanceErrorCode.INTERNAL_ERROR, Level.WARNING,
-          "error querying elastic", e.getMessage(), e);
-      }
-    }
+    return projectFacade.findByInodeId(inode.getInodePK().getParentId(), inode.getInodePK().getName());
   }
   
   private void deleteProvIndex(String indexName) {
     DeleteIndexRequest request = new DeleteIndexRequest(indexName);
     try {
-      AcknowledgedResponse response = client.mngIndexDelete(request);
+      client.mngIndexDelete(request);
     } catch (ElasticException e) {
       if(e.getCause() instanceof ElasticsearchException) {
         ElasticsearchException ex = (ElasticsearchException)e.getCause();

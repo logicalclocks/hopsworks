@@ -54,7 +54,7 @@ public class ElasticCleaner {
   private final static Logger LOGGER = Logger.getLogger(ElasticCleaner.class.getName());
 
   @EJB
-  ElasticController elasticContoller;
+  ElasticClientController elasticClientCtrl;
   @EJB
   Settings settings;
 
@@ -68,11 +68,11 @@ public class ElasticCleaner {
     LOGGER.log(Level.INFO, "Running ElasticCleaner.");
     //Get all log indices
     try {
-      Map<String, Long> indices =
-          elasticContoller.getIndices("(" + Settings.ELASTIC_LOG_INDEX_REGEX
-        + ")|(" + Settings.ELASTIC_SERVING_INDEX_REGEX
-        + ")|(" + Settings.ELASTIC_BEAMJOBSERVER_INDEX_REGEX
-        + ")|(" + Settings.ELASTIC_BEAMSDKWORKER_INDEX_REGEX + ")");
+      Map<String, Long> indices = elasticClientCtrl.mngIndicesGetWithCreationTime(
+        "(" + Settings.ELASTIC_LOG_INDEX_REGEX + ")" +
+          "|(" + Settings.ELASTIC_SERVING_INDEX_REGEX + ")" +
+          "|(" + Settings.ELASTIC_BEAMJOBSERVER_INDEX_REGEX + ")" +
+          "|(" + Settings.ELASTIC_BEAMSDKWORKER_INDEX_REGEX + ")");
       for (String index : indices.keySet()) {
         //Get current timestamp
         long currentTime = System.currentTimeMillis();
@@ -80,7 +80,7 @@ public class ElasticCleaner {
         if (currentTime - indexCreationTime > settings.getElasticLogsIndexExpiration()) {
           //If index was created before the threshold, delete it asynchronously. If operation fails
           //we log it and the next day it will be retried.
-          elasticContoller.deleteIndex(index);
+          elasticClientCtrl.mngIndexDelete(index);
           LOGGER.log(Level.INFO, "Deletedindex:{0}", index);
         }
       }

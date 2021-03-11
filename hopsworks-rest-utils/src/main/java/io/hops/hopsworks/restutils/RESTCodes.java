@@ -1806,7 +1806,8 @@ public class RESTCodes {
     INVALID_ELASTIC_ROLE_USER(7, "Invalid elastic security role for a user",
         Response.Status.UNAUTHORIZED),
     ELASTIC_QUERY_NO_MAPPING(8, "Elastic query uses a field that is not in the mapping of the index",
-      Response.Status.BAD_REQUEST);
+      Response.Status.BAD_REQUEST),
+    ELASTIC_INDEX_NOT_FOUND(9, "Elastic index not found", Response.Status.NOT_FOUND);
     
     private Integer code;
     private String message;

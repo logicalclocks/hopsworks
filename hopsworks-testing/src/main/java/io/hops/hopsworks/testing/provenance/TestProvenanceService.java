@@ -22,6 +22,7 @@ import io.hops.hopsworks.common.provenance.core.ProvParser;
 import io.hops.hopsworks.common.provenance.core.ProvenanceCleanerController;
 import io.hops.hopsworks.common.provenance.util.dto.WrapperDTO;
 import io.hops.hopsworks.common.util.Settings;
+import io.hops.hopsworks.exceptions.ElasticException;
 import io.hops.hopsworks.exceptions.ProvenanceException;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
 import io.hops.hopsworks.testing.provenance.app.ProvAppBeanParams;
@@ -66,7 +67,7 @@ public class TestProvenanceService {
   @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN"})
   public Response cleanup(
     @QueryParam("size")
-      Integer size) throws ProvenanceException {
+      Integer size) throws ProvenanceException, ElasticException {
     if (size == null) {
       size = settings.getProvCleanupSize();
     }
