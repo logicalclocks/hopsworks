@@ -36,12 +36,9 @@ describe "On #{ENV['OS']}" do
     describe "Jupyter basic operations - python " + version do
       before :each do
         with_valid_project
-        delete_env(@project[:id], '3.7')
       end
 
       it "should start, get logs and stop a notebook server" do
-
-        create_env_and_update_project(@project, version)
 
         secret_dir, staging_dir, settings = start_jupyter(@project)
 
@@ -155,8 +152,6 @@ describe "On #{ENV['OS']}" do
 
       it "should fail to start if insufficient executor memory is provided" do
 
-        create_env_and_update_project(@project, version)
-
         get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/jupyter/settings"
         expect_status(200)
         shutdownLevel=6
@@ -175,8 +170,6 @@ describe "On #{ENV['OS']}" do
 
       it "should not allow starting multiple notebook servers" do
 
-        create_env_and_update_project(@project, version)
-
         secret_dir, staging_dir, settings = start_jupyter(@project)
 
         post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/jupyter/start", JSON(settings)
@@ -193,8 +186,6 @@ describe "On #{ENV['OS']}" do
       end
 
       it "should allow multiple restarts" do
-
-        create_env_and_update_project(@project, version)
 
         secret_dir, staging_dir, settings = start_jupyter(@project)
 
@@ -217,8 +208,6 @@ describe "On #{ENV['OS']}" do
 
       it "should be killed by timer" do
 
-        create_env_and_update_project(@project, version)
-
         secret_dir, staging_dir, settings = start_jupyter(@project, expected_status=200, shutdownLevel=0)
 
         # There is a potential race condition here if the timer runs just before this call
@@ -234,8 +223,6 @@ describe "On #{ENV['OS']}" do
       end
 
       it "should not be killed by timer" do
-
-        create_env_and_update_project(@project, version)
 
         secret_dir, staging_dir, settings = start_jupyter(@project, expected_status=200, shutdownLevel=6)
 
@@ -254,8 +241,6 @@ describe "On #{ENV['OS']}" do
       end
 
       it "should be able to start from a shared dataset" do
-
-        create_env_and_update_project(@project, version)
 
         projectname = "project_#{short_random_id}"
         project = create_project_by_name(projectname)
@@ -285,12 +270,85 @@ describe "On #{ENV['OS']}" do
 
       end
 
+      it "should start jupyter with public github repo" do
+
+        if not is_git_available(@project)
+            skip "Git backend not available"
+        end
+
+        git_config = get_git_config("GITHUB", "https://github.com/logicalclocks/hops-util-py.git")
+
+        secret_dir, staging_dir, settings = start_jupyter(@project, expected_status=200, shutdownLevel=6, baseDir=nil, gitConfig=git_config)
+
+        get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/jupyter/running"
+        expect_status(200)
+
+      end
+
+      it "should not start jupyter with non-existing public github repo" do
+
+        if not is_git_available(@project)
+            skip "Git backend not available"
+        end
+
+        git_config = get_git_config("GITHUB", "https://github.com/logicalclocks/this-is-not-a-repo.git")
+
+        secret_dir, staging_dir, settings = start_jupyter(@project, expected_status=400, shutdownLevel=6, baseDir=nil, gitConfig=git_config)
+
+        get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/jupyter/running"
+        expect_status(404)
+
+      end
+
+      it "should start jupyter with public gitlab repo" do
+
+        if not is_git_available(@project)
+            skip "Git backend not available"
+        end
+
+        git_config = get_git_config("GITLAB", "https://gitlab.com/fdroid/fdroidclient.git")
+
+        secret_dir, staging_dir, settings = start_jupyter(@project, expected_status=200, shutdownLevel=6, baseDir=nil, gitConfig=git_config)
+
+        get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/jupyter/running"
+        expect_status(200)
+
+      end
+
+      it "should not start jupyter with non-existing public gitlab repo" do
+
+        if not is_git_available(@project)
+            skip "Git backend not available"
+        end
+
+        git_config = get_git_config("GITLAB", "https://gitlab.com/logicalclocks/this-is-not-a-repo.git")
+
+        secret_dir, staging_dir, settings = start_jupyter(@project, expected_status=400, shutdownLevel=6, baseDir=nil, gitConfig=git_config)
+
+        get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/jupyter/running"
+        expect_status(404)
+
+      end
+
+      it "should not start jupyter with auto push if api key is not set" do
+
+        if not is_git_available(@project)
+            skip "Git backend not available"
+        end
+
+        git_config = get_git_config("GITHUB", "https://github.com/logicalclocks/this-is-not-a-repo.git", shutdown_auto_push=true)
+
+        secret_dir, staging_dir, settings = start_jupyter(@project, expected_status=500, shutdownLevel=6, baseDir=nil, gitConfig=git_config)
+
+        get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/jupyter/running"
+        expect_status(404)
+
+      end
+
       it "should convert .ipynb file to .py file" do
 
         copy_from_local("#{ENV['PROJECT_DIR']}/hopsworks-IT/src/test/ruby/spec/auxiliary/export_model.ipynb",
                         "/Projects/#{@project[:projectname]}/Resources", @user[:username], "#{@project[:projectname]}__Resources", 750, "#{@project[:projectname]}")
-
-        create_env_and_update_project(@project, version)
 
         get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/dataset/Resources/?action=listing&expand=inodes"
         expect_status(200)
@@ -309,8 +367,6 @@ describe "On #{ENV['OS']}" do
       it "should convert .ipynb file to .py file if the filename has special symbols or space" do
         copy_from_local("#{ENV['PROJECT_DIR']}/hopsworks-IT/src/test/ruby/spec/auxiliary/export_model.ipynb",
                         "/Projects/#{@project[:projectname]}/Resources", @user[:username], "#{@project[:projectname]}__Resources", 750, "#{@project[:projectname]}")
-
-        create_env_and_update_project(@project, version)
 
         get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/dataset/Resources/?action=listing&expand=inodes"
         expect_status(200)
