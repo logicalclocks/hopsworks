@@ -19,6 +19,21 @@ require 'json'
 describe "On #{ENV['OS']}" do
   after(:all) { clean_all_test_projects(spec: "kafka") }
   describe 'kafka' do
+    describe "Kafka cluster related information" do
+      context 'with valid project and kafka service enabled' do
+        before :all do
+          with_valid_project
+        end
+
+        it "should be able to get kafka cluster info" do
+          json_result = get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/kafka/clusterinfo"
+          expect_status_details(200)
+          clusterinfo = JSON.parse(json_result)
+          expect(clusterinfo["brokers"][0].split(//).last(4).join).to eql("9091")
+        end
+      end
+    end
+
     describe "kafka create/delete topics and schemas" do
 
       context 'with valid project and kafka service enabled' do

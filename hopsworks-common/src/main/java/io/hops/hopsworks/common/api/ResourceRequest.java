@@ -154,6 +154,7 @@ public class ResourceRequest {
     PROJECT,
     JOBS,
     KAFKA,
+    CLUSTERINFO,
     TOPICS,
     ACL,
     SHARED,

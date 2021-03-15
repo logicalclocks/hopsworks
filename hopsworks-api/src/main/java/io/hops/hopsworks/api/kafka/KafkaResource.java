@@ -51,6 +51,7 @@ import io.hops.hopsworks.audit.logger.LogLevel;
 import io.hops.hopsworks.audit.logger.annotation.Logged;
 import io.hops.hopsworks.common.api.ResourceRequest;
 import io.hops.hopsworks.common.dao.kafka.AclDTO;
+import io.hops.hopsworks.common.dao.kafka.KafkaClusterInfoDTO;
 import io.hops.hopsworks.common.dao.kafka.PartitionDetailsDTO;
 import io.hops.hopsworks.common.dao.kafka.SharedProjectDTO;
 import io.hops.hopsworks.common.dao.kafka.SharedTopicsDTO;
@@ -62,6 +63,7 @@ import io.hops.hopsworks.common.dao.kafka.schemas.CompatibilityLevel;
 import io.hops.hopsworks.common.dao.kafka.schemas.SchemaRegistryError;
 import io.hops.hopsworks.common.dao.kafka.schemas.SubjectDTO;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
+import io.hops.hopsworks.common.kafka.KafkaBrokers;
 import io.hops.hopsworks.common.kafka.KafkaController;
 import io.hops.hopsworks.common.kafka.SchemasController;
 import io.hops.hopsworks.common.kafka.SubjectsCompatibilityController;
@@ -77,6 +79,7 @@ import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.user.security.apiKey.ApiScope;
 import io.swagger.annotations.ApiOperation;
 import org.apache.commons.lang3.tuple.Pair;
+import org.apache.zookeeper.KeeperException;
 
 import javax.ejb.EJB;
 import javax.ejb.TransactionAttribute;
@@ -97,7 +100,9 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
 import javax.ws.rs.core.UriInfo;
+import java.io.IOException;
 import java.net.URI;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
@@ -126,6 +131,10 @@ public class KafkaResource {
   private SubjectsCompatibilityController subjectsCompatibilityController;
   @EJB
   private SchemasController schemasController;
+  @EJB
+  private KafkaBrokers kafkaBrokers;
+  @EJB
+  private KafkaClusterInfoBuilder kafkaClusterInfoBuilder;
 
   private Project project;
 
@@ -139,6 +148,20 @@ public class KafkaResource {
   @Logged(logLevel = LogLevel.OFF)
   public Project getProject() {
     return project;
+  }
+  
+  @ApiOperation(value = "Retrieve Kafka broker endpoints.")
+  @GET
+  @Path("/clusterinfo")
+  @Produces(MediaType.APPLICATION_JSON)
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
+  @JWTRequired(acceptedTokens={Audience.API, Audience.JOB}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
+  @ApiKeyRequired(acceptedScopes = {ApiScope.KAFKA}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
+  public Response getBrokers(@Context UriInfo uriInfo, @Context SecurityContext sc)
+    throws InterruptedException, IOException, KeeperException {
+    KafkaClusterInfoDTO dto = kafkaClusterInfoBuilder.build(
+      uriInfo, project, new ArrayList<>(kafkaBrokers.getBrokerEndpoints()));
+    return Response.ok().entity(dto).build();
   }
   
   @ApiOperation(value = "Retrieve Kafka topics metadata .")
