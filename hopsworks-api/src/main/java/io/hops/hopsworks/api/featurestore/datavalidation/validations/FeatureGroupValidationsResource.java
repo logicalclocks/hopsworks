@@ -156,13 +156,13 @@ public class FeatureGroupValidationsResource {
       if (expectationResult.getExpectation().getRules() != null
               && !expectationResult.getExpectation().getRules().isEmpty()) {
         expectationResult.getExpectation().getRules().stream().filter(rule -> rule.getLegalValues() != null
-                && rule.getLegalValues().length == 1
-                && rule.getLegalValues()[0] == null).forEach(rule -> rule.setLegalValues(null));
+                && rule.getLegalValues().size() == 1
+                && rule.getLegalValues().get(0) == null).forEach(rule -> rule.setLegalValues(null));
       }
       for (ValidationResult validationResult : expectationResult.getResults()) {
         if (validationResult.getRule() != null && validationResult.getRule().getLegalValues() != null
-                && validationResult.getRule().getLegalValues().length == 1
-                && validationResult.getRule().getLegalValues()[0] == null) {
+                && validationResult.getRule().getLegalValues().size() == 1
+                && validationResult.getRule().getLegalValues().get(0) == null) {
           validationResult.getRule().setLegalValues(null);
         }
       }

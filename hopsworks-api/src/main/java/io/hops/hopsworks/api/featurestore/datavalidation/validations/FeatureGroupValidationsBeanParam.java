@@ -43,7 +43,8 @@ public class FeatureGroupValidationsBeanParam {
     allowMultiple = true)
   private Set<FilterBy> filter;
   @QueryParam("fields")
-  @ApiParam(value = "ex. fields=features", allowableValues = "fields=features,rules,description,name")
+  @ApiParam(value = "ex. fields=validation_time",
+            allowableValues = "fields=id,validation_path,status,validation_time,commit_time,expectation_results")
   private String fields;
   private final Set<String> fieldSet = new HashSet<>();
 

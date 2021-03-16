@@ -21,6 +21,7 @@ import io.hops.hopsworks.common.featurestore.FeaturestoreFacade;
 import io.hops.hopsworks.common.featurestore.activity.FeaturestoreActivityFacade;
 import io.hops.hopsworks.common.featurestore.datavalidation.FeatureGroupExpectationFacade;
 import io.hops.hopsworks.common.featurestore.datavalidation.FeatureGroupValidationsController;
+import io.hops.hopsworks.common.featurestore.datavalidation.FeatureStoreExpectationFacade;
 import io.hops.hopsworks.common.featurestore.feature.FeatureGroupFeatureDTO;
 import io.hops.hopsworks.common.featurestore.featuregroup.cached.CachedFeaturegroupController;
 import io.hops.hopsworks.common.featurestore.featuregroup.cached.CachedFeaturegroupDTO;
@@ -46,7 +47,6 @@ import io.hops.hopsworks.exceptions.ProvenanceException;
 import io.hops.hopsworks.exceptions.ServiceException;
 import io.hops.hopsworks.persistence.entity.featurestore.Featurestore;
 import io.hops.hopsworks.persistence.entity.featurestore.activity.FeaturestoreActivityMeta;
-import io.hops.hopsworks.persistence.entity.featurestore.statistics.StatisticColumn;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.Featuregroup;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.FeaturegroupType;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.cached.CachedFeaturegroup;
@@ -55,6 +55,7 @@ import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.cached.Val
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.datavalidation.FeatureGroupExpectation;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.datavalidation.FeatureStoreExpectation;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.ondemand.OnDemandFeaturegroup;
+import io.hops.hopsworks.persistence.entity.featurestore.statistics.StatisticColumn;
 import io.hops.hopsworks.persistence.entity.featurestore.statistics.StatisticsConfig;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.user.Users;
@@ -70,6 +71,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.logging.Level;
 import java.util.stream.Collectors;
 
@@ -113,6 +115,8 @@ public class FeaturegroupController {
   private FeaturestoreStorageConnectorController connectorController;
   @EJB
   private FeatureGroupExpectationFacade featureGroupExpectationFacade;
+  @EJB
+  private FeatureStoreExpectationFacade featureStoreExpectationFacade;
 
   /**
    * Gets all featuregroups for a particular featurestore and project, using the userCerts to query Hive
@@ -121,8 +125,44 @@ public class FeaturegroupController {
    * @return list of XML/JSON DTOs of the featuregroups
    */
   public List<FeaturegroupDTO> getFeaturegroupsForFeaturestore(Featurestore featurestore, Project project, Users user)
+          throws FeaturestoreException, ServiceException {
+    return getFeaturegroupsForFeaturestore(featurestore, project, user, null);
+  }
+
+  /**
+   * Gets all featuregroups for a particular featurestore and project, using the userCerts to query Hive
+   *
+   * @param featurestore featurestore to query featuregroups for
+   * @return list of XML/JSON DTOs of the featuregroups
+   */
+  public List<FeaturegroupDTO> getFeaturegroupsForFeaturestore(Featurestore featurestore, Project project, Users user,
+                                                               Set<String> expectationNames)
     throws FeaturestoreException, ServiceException {
-    List<Featuregroup> featuregroups = featuregroupFacade.findByFeaturestore(featurestore);
+    List<Featuregroup> featuregroups = new ArrayList<>();
+    if (expectationNames != null && !expectationNames.isEmpty()) {
+      for(String name : expectationNames) {
+        for (FeatureGroupExpectation featureGroupExpectation :
+                featureStoreExpectationFacade
+                        .findByFeaturestoreAndName(featurestore, name)
+                        .orElseThrow(() -> new FeaturestoreException(
+                                RESTCodes.FeaturestoreErrorCode.FEATURE_STORE_EXPECTATION_NOT_FOUND,
+                                Level.FINE, name))
+                        .getFeatureGroupExpectations()) {
+          if (featuregroups.isEmpty()) {
+            featuregroups.add(featureGroupExpectation.getFeaturegroup());
+          } else {
+            boolean found = featuregroups
+                              .stream()
+                              .anyMatch(fg -> fg.getId().equals(featureGroupExpectation.getFeaturegroup().getId()));
+            if (!found) {
+              featuregroups.add(featureGroupExpectation.getFeaturegroup());
+            }
+          }
+        }
+      }
+    } else {
+      featuregroups = featuregroupFacade.findByFeaturestore(featurestore);
+    }
     List<FeaturegroupDTO> featuregroupDTOS = new ArrayList<>();
     for (Featuregroup featuregroup : featuregroups) {
       featuregroupDTOS.add(convertFeaturegrouptoDTO(featuregroup, project, user));

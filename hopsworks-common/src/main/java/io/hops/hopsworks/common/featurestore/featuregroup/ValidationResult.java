@@ -19,12 +19,14 @@ package io.hops.hopsworks.common.featurestore.featuregroup;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.datavalidation.FeatureGroupValidation;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.datavalidation.Rule;
 
+import java.util.List;
+
 public class ValidationResult {
 
   private FeatureGroupValidation.Status status;
   private String message;
   private String value;
-  private String feature;
+  private List<String> features;
   private Rule rule;
 
   public ValidationResult() {
@@ -54,12 +56,12 @@ public class ValidationResult {
     this.value = value;
   }
 
-  public String getFeature() {
-    return feature;
+  public List<String> getFeatures() {
+    return features;
   }
 
-  public void setFeature(String feature) {
-    this.feature = feature;
+  public void setFeatures(List<String> features) {
+    this.features = features;
   }
 
   public Rule getRule() {
@@ -76,7 +78,7 @@ public class ValidationResult {
             "status=" + status +
             ", message='" + message + '\'' +
             ", value='" + value + '\'' +
-            ", feature='" + feature + '\'' +
+            ", features='" + features + '\'' +
             ", rule=" + rule +
             '}';
   }

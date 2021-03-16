@@ -179,7 +179,7 @@ describe "On #{ENV['OS']}" do
           expect(json_body[:count]).to be == 1
           expect_status(200)
         end
-        it "should be able to attach multiple expectation rules on the same featuregroup" do
+        it "should be able to attach multiple expectation rules to the same featuregroup" do
           project = get_project
           featurestore_id = get_featurestore_id(project.id)
           json_result, featuregroup_name = create_cached_featuregroup(project.id, featurestore_id)
@@ -192,6 +192,32 @@ describe "On #{ENV['OS']}" do
           get_feature_group_expectations(project.id, featurestore_id, fg_json["id"])
           expect_status(200)
           expect(json_body[:count]).to be == 3
+        end
+        it "should be able to get feature groups filtered by expectations attached" do
+          project = get_project
+          featurestore_id = get_featurestore_id(project.id)
+          create_expectation(project.id, featurestore_id, "expA")
+          create_expectation(project.id, featurestore_id, "expB")
+          json_result, fg1 = create_cached_featuregroup(project.id, featurestore_id)
+          fg_json = JSON.parse(json_result)
+          attach_expectation(project.id, featurestore_id, fg_json["id"], "expA")
+          attach_expectation(project.id, featurestore_id, fg_json["id"], "expB")
+
+          json_result, fg2 = create_cached_featuregroup(project.id, featurestore_id)
+          fg_json = JSON.parse(json_result)
+          attach_expectation(project.id, featurestore_id, fg_json["id"], "expA")
+
+          # Filter by exp1, should return two FGs
+          get_featuregroups(project.id, featurestore_id, query="filter_by=expectations:expA")
+          expect(json_body.size).to be == 2
+
+          # Filter by exp2, should return one FGs
+          get_featuregroups(project.id, featurestore_id, query="filter_by=expectations:expB")
+          expect(json_body.size).to be == 1
+
+          # Filter by exp1 and exp2. should return two FGs
+          get_featuregroups(project.id, featurestore_id, query="filter_by=expectations:expA&filter_by=expectations:expB")
+          expect(json_body.size).to be == 2
         end
         it "should be able to detach an expectation from a featuregroup" do
           project = get_project

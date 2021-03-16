@@ -155,8 +155,8 @@ public class FeatureStoreExpectationsResource {
     // Workaround to ignore the list initialized from a json like {legalValues: null}
     if (expectation.getRules() != null && !expectation.getRules().isEmpty()){
       expectation.getRules().stream().filter(rule -> rule.getLegalValues() != null
-              && rule.getLegalValues().length == 1
-              && rule.getLegalValues()[0] == null).forEach(rule -> rule.setLegalValues(null));
+              && rule.getLegalValues().size() == 1
+              && rule.getLegalValues().get(0) == null).forEach(rule -> rule.setLegalValues(null));
     }
     FeatureStoreExpectation featureStoreExpectation =
       featureGroupValidationsController.createOrUpdateExpectation(featurestore,
