@@ -31,6 +31,7 @@ import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
 import javax.persistence.Table;
 import javax.xml.bind.annotation.XmlRootElement;
+import java.util.Objects;
 
 @Entity
 @Table(name = "feature_group_expectation", catalog = "hopsworks")
@@ -90,5 +91,18 @@ public class FeatureGroupExpectation {
   public void setFeatureStoreExpectation(
     FeatureStoreExpectation featureStoreExpectation) {
     this.featureStoreExpectation = featureStoreExpectation;
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) return true;
+    if (o == null || getClass() != o.getClass()) return false;
+    FeatureGroupExpectation that = (FeatureGroupExpectation) o;
+    return Objects.equals(id, that.id);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(id);
   }
 }

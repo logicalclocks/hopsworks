@@ -134,14 +134,14 @@ public class FeatureGroupExpectationsResource {
     return Response.ok().entity(dto).build();
   }
   
-  @ApiOperation(value = "Create feature store expectation.", response = ExpectationDTO.class)
+  @ApiOperation(value = "Attach an expectation to a feature group.", response = ExpectationDTO.class)
   @PUT
   @Path("/{name}")
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
   @JWTRequired(acceptedTokens={Audience.API, Audience.JOB}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
   @ApiKeyRequired( acceptedScopes = {ApiScope.JOB}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
-  public Response createExpectation(
+  public Response attachExpectation(
     @ApiParam(value = "name of the expectation", required = true) @PathParam("name") String name,
     @Context SecurityContext sc,
     @Context UriInfo uriInfo) throws FeaturestoreException {

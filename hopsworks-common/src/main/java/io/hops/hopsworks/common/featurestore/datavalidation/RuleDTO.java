@@ -17,9 +17,9 @@
 package io.hops.hopsworks.common.featurestore.datavalidation;
 
 import io.hops.hopsworks.common.api.RestDTO;
+import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.datavalidation.AcceptedType;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.datavalidation.Name;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.datavalidation.Predicate;
-import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.datavalidation.ValueType;
 
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
@@ -32,7 +32,7 @@ public class RuleDTO extends RestDTO<RuleDTO> {
   @XmlElement(required = true)
   private Predicate predicate;
   @XmlElement(required = true)
-  private ValueType valueType;
+  private AcceptedType acceptedType;
   @XmlElement(required = true)
   private String description;
   
@@ -60,12 +60,12 @@ public class RuleDTO extends RestDTO<RuleDTO> {
     this.predicate = predicate;
   }
 
-  public ValueType getValueType() {
-    return valueType;
+  public AcceptedType getAcceptedType() {
+    return acceptedType;
   }
 
-  public void setValueType(ValueType valueType) {
-    this.valueType = valueType;
+  public void setAcceptedType(AcceptedType acceptedType) {
+    this.acceptedType = acceptedType;
   }
 
 }

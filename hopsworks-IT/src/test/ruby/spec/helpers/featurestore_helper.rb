@@ -609,6 +609,13 @@ module FeaturestoreHelper
     return json_result, featuregroup_name
   end
 
+  def get_featuregroups(project_id, fs_id, query="")
+    get_fg_endpoint = "#{ENV['HOPSWORKS_API']}/project/#{project_id}/featurestores/#{fs_id}/featuregroups?#{query}"
+    pp "get #{get_fg_endpoint}" if defined?(@debugOpt) && @debugOpt
+    result = get get_fg_endpoint
+    JSON.parse(result)
+  end
+
   def get_featuregroup(project_id, name, version: 1, fs_id: nil, fs_project_id: nil)
     fs_project_id = project_id if fs_project_id.nil?
     fs_id = get_featurestore(project_id, fs_project_id: fs_project_id)["featurestoreId"] if fs_id.nil?

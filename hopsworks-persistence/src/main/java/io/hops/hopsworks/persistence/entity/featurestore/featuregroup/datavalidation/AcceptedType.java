@@ -16,6 +16,6 @@
 
 package io.hops.hopsworks.persistence.entity.featurestore.featuregroup.datavalidation;
 
-public enum ValueType {
-  Null, Fractional, Integral, Boolean, String, Numeric
+public enum AcceptedType {
+  Null, Fractional, Integral, Boolean, String
 }

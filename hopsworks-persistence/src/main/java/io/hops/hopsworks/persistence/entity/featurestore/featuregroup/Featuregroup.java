@@ -71,7 +71,9 @@ import java.util.Objects;
   @NamedQuery(name = "Featuregroup.findByFeaturestoreAndName", query = "SELECT fg FROM Featuregroup fg " +
     "WHERE fg.featurestore = :featurestore AND fg.name = :name"),
   @NamedQuery(name = "Featuregroup.findByFeaturestoreAndNameOrderedByDescVersion", query = "SELECT fg FROM " +
-    "Featuregroup fg WHERE fg.featurestore = :featurestore AND fg.name = :name ORDER BY fg.version DESC")})
+    "Featuregroup fg WHERE fg.featurestore = :featurestore AND fg.name = :name ORDER BY fg.version DESC"),
+  @NamedQuery(name = "Featuregroup.findByFeaturestoreAndExpectations", query = "SELECT fg FROM " +
+          "Featuregroup fg WHERE fg.featurestore = :featurestore AND fg.expectations in :expectationsList")})
 public class Featuregroup implements Serializable {
   private static final long serialVersionUID = 1L;
   @Id
