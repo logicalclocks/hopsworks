@@ -88,6 +88,7 @@ import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.restutils.RESTCodes;
 import io.swagger.annotations.ApiOperation;
 import org.apache.commons.codec.digest.DigestUtils;
+import com.google.common.base.Strings;
 
 import javax.ejb.EJB;
 import javax.ejb.TransactionAttribute;
@@ -327,6 +328,14 @@ public class JupyterService {
       throw new ServiceException(RESTCodes.ServiceErrorCode.JUPYTER_START_ERROR, Level.FINE,
           "Git support available only in JupyterLab");
     }
+
+    // Do not allow auto push on shutdown if api key is missing
+    if (jupyterSettings.isGitBackend() && jupyterSettings.getGitConfig().getShutdownAutoPush()
+      && Strings.isNullOrEmpty(jupyterSettings.getGitConfig().getApiKeyName())) {
+      throw new ServiceException(RESTCodes.ServiceErrorCode.JUPYTER_START_ERROR, Level.FINE,
+        "Auto push not supported if api key is not configured.");
+    }
+
     JupyterProject jp = jupyterFacade.findByUser(hdfsUser);
 
     if (jp == null) {

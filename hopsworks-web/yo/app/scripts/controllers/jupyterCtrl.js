@@ -342,7 +342,7 @@ angular.module('hopsWorksApp')
             self.loadThirdPartyApiKeys = function() {
                     UserService.load_secrets().then(
                         function (success) {
-                            self.third_party_api_keys = success.data.items
+                            self.third_party_api_keys = success.data.items;
                         }, function (error) {
                             self.errorMsg = (typeof error.data.usrMsg !== 'undefined') ? error.data.usrMsg : "";
                             growl.error(self.errorMsg, { title: error.data.errorMsg, ttl: 5000, referenceId: 1 });
@@ -360,13 +360,7 @@ angular.module('hopsWorksApp')
                     remoteURI: self.jupyterSettings.gitConfig.remoteGitURL,
                     keyName: self.jupyterSettings.gitConfig.apiKeyName
                 };
-                JupyterService.getGitRemoteBranches(self.projectId, repoConf).then(
-                    function (success) {
-                        self.jupyterSettings.gitConfig.branches = success.data.branches;
-                    }, function (error) {
-                        growl.error(error.data.usrMsg, {title: error.data.errorMsg, ttl: 5000});
-                    }
-                );
+                self.getRemoteGitBranches();
             }
 
             self.initJupyterSettings = function (jupyterSettings) {
@@ -575,35 +569,51 @@ angular.module('hopsWorksApp')
                 $location.path('project/' + self.projectId + '/python');
             };
 
+            self.clearToken = function() {
+               self.git_api_key = undefined;
+               self.jupyterSettings.gitConfig.apiKeyName = undefined;
+               self.jupyterSettings.gitConfig.shutdownAutoPush = false;
+               self.getRemoteGitBranches();
+            };
+
             self.git_error = "";
+            self.remote_git_repo_valid = false;
             self.getRemoteGitBranches = function() {
+                var repoConf = {
+                    gitBackend: self.jupyterSettings.gitConfig.gitBackend,
+                    remoteURI: self.jupyterSettings.gitConfig.remoteGitURL
+                };
+
                 if(self.git_api_key && self.git_api_key.name) {
                     self.jupyterSettings.gitConfig.apiKeyName = self.git_api_key.name
-                    var repoConf = {
-                        gitBackend: self.jupyterSettings.gitConfig.gitBackend,
-                        remoteURI: self.jupyterSettings.gitConfig.remoteGitURL,
-                        keyName: self.jupyterSettings.gitConfig.apiKeyName
-                    };
-                    self.gitWorking = true;
-                    self.git_error = "";
-                    JupyterService.getGitRemoteBranches(self.projectId, repoConf).then(
-                        function (success) {
-                            self.jupyterSettings.gitConfig.branches = success.data.branches;
-                            self.jupyterSettings.gitConfig.baseBranch = self.jupyterSettings.gitConfig.branches[0];
-                            self.jupyterSettings.gitConfig.headBranch = self.jupyterSettings.gitConfig.branches[0];
-                            self.gitWorking = false;
-                        }, function (error) {
-                            self.gitWorking = false;
-                            if (error.data.usrMsg.indexOf("Could not parse remote") !== -1) {
-                                // Could not parse remote Git URL
-                                self.git_error = "URI_SYNTAX_ERROR";
-                            } else if (error.data.usrMsg.indexOf("Invalid API key") !== -1) {
-                                self.git_error = "API_KEY_ERROR";
-                            }
-                            growl.error(error.data.usrMsg, {title: error.data.errorMsg, ttl: 5000});
-                        }
-                    );
+                    repoConf.keyName = self.jupyterSettings.gitConfig.apiKeyName;
+                } else {
+                  self.jupyterSettings.gitConfig.shutdownAutoPush = false;
                 }
+
+                self.gitWorking = true;
+                self.git_error = "";
+                self.git_error_msg = "";
+                JupyterService.getGitRemoteBranches(self.projectId, repoConf).then(
+                    function (success) {
+                        self.remote_git_repo_valid = true;
+                        self.jupyterSettings.gitConfig.branches = success.data.branches;
+                        self.jupyterSettings.gitConfig.baseBranch = self.jupyterSettings.gitConfig.branches[0];
+                        self.jupyterSettings.gitConfig.headBranch = self.jupyterSettings.gitConfig.branches[0];
+                        self.gitWorking = false;
+                    }, function (error) {
+                        self.remote_git_repo_valid = false;
+                        self.gitWorking = false;
+                        if (error.data.usrMsg.indexOf("Could not parse remote") !== -1) {
+                            // Could not parse remote Git URL
+                            self.git_error = "URI_SYNTAX_ERROR";
+                        } else if (error.data.usrMsg.startsWith("Could not find repository")) {
+                            self.git_error = "REPOSITORY_ERROR";
+                            self.git_error_msg = error.data.usrMsg;
+                        }
+                        growl.error(error.data.usrMsg, {title: error.data.errorMsg, ttl: 5000});
+                    }
+                );
             }
             
             self.gitStatus = function () {

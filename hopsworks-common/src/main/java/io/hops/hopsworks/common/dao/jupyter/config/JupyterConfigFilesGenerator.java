@@ -39,6 +39,7 @@
 
 package io.hops.hopsworks.common.dao.jupyter.config;
 
+import com.google.common.base.Strings;
 import com.logicalclocks.servicediscoverclient.exceptions.ServiceDiscoveryException;
 import com.logicalclocks.servicediscoverclient.service.Service;
 import freemarker.template.TemplateException;
@@ -222,7 +223,9 @@ public class JupyterConfigFilesGenerator {
     if (js.isGitBackend() && js.getGitConfig() != null) {
       remoteGitURL = js.getGitConfig().getRemoteGitURL();
       gitBackend = js.getGitConfig().getGitBackend().name();
-      apiKey = jupyterNbVCSController.getGitApiKey(hdfsUser, js.getGitConfig().getApiKeyName());
+      if(!Strings.isNullOrEmpty(js.getGitConfig().getApiKeyName())) {
+        apiKey = jupyterNbVCSController.getGitApiKey(hdfsUser, js.getGitConfig().getApiKeyName());
+      }
     }
     JupyterContentsManager jcm = jupyterNbVCSController.getJupyterContentsManagerClass(remoteGitURL);
     JupyterNotebookConfigTemplate template = JupyterNotebookConfigTemplateBuilder.newBuilder()

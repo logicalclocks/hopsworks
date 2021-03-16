@@ -14,14 +14,17 @@
  If not, see <https://www.gnu.org/licenses/>.
 =end
 module JupyterHelper
-  def start_jupyter(project, expected_status=200, shutdownLevel=6, baseDir=nil)
-    get "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/jupyter/settings"
-    expect_status(200)
 
-    settings = json_body
+  def start_jupyter(project, expected_status=200, shutdownLevel=6, baseDir=nil, gitConfig=nil)
+    settings = get_settings(project)
 
     if !baseDir.nil?
         settings[:baseDir] = baseDir
+    end
+
+    if !gitConfig.nil?
+        settings[:gitBackend] = true
+        settings[:gitConfig] = gitConfig
     end
 
     settings[:distributionStrategy] = ""
@@ -33,6 +36,16 @@ module JupyterHelper
     secret_dir = json_body[:secret]
 
     return secret_dir, staging_dir, settings
+  end
+
+  def get_settings(project)
+      get "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/jupyter/settings"
+      json_body
+  end
+
+  def is_git_available(project)
+      settings = get_settings(project)
+      settings[:gitAvailable]
   end
 
   def stop_jupyter(project)
@@ -93,5 +106,19 @@ module JupyterHelper
 
   def list_content(port, token)
     get "#{ENV['HOPSWORKS_BASE_API']}jupyter/#{port}/api/contents?token=#{token}"
+    json_body
+  end
+
+  def get_git_config(git_backend, repo_url, shutdown_auto_push=false, base_branch="master", head_branch="master", api_key_name=nil)
+    git_config = {
+      "gitBackend": "#{git_backend}",
+      "remoteGitURL": "#{repo_url}",
+      "baseBranch": "#{base_branch}",
+      "headBranch": "#{head_branch}",
+      "apiKeyName": "#{api_key_name}",
+      "startupAutoPull": true,
+      "shutdownAutoPush": "#{shutdown_auto_push}"
+    }
+    git_config
   end
 end

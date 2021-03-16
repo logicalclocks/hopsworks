@@ -5,6 +5,7 @@ package io.hops.hopsworks.jupyter.git.controllers.gitlab;
 
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
+import io.hops.hopsworks.common.dao.user.security.secrets.SecretPlaintext;
 import io.hops.hopsworks.exceptions.ServiceException;
 import io.hops.hopsworks.restutils.RESTCodes;
 import org.gitlab4j.api.GitLabApi;
@@ -33,12 +34,13 @@ public class GLClientCache {
   }
   
   @Lock(LockType.READ)
-  public GitLabApi getClient(String hostUrl, String authToken) throws ServiceException {
+  public GitLabApi getClient(String hostUrl, SecretPlaintext authToken) throws ServiceException {
     try {
-      return cache.get(authToken, new Callable<GitLabApi>() {
+      String authTokenPlainText = authToken == null ? null : authToken.getPlaintext();
+      return cache.get(authTokenPlainText == null ? hostUrl : authTokenPlainText, new Callable<GitLabApi>() {
         @Override
         public GitLabApi call() throws Exception {
-          GitLabApi gitLabApi = new GitLabApi(hostUrl, authToken);
+          GitLabApi gitLabApi = new GitLabApi(hostUrl, authTokenPlainText);
           return gitLabApi;
         }
       });

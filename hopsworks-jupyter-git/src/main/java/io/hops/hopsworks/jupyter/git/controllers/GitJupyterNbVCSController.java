@@ -110,7 +110,10 @@ public class GitJupyterNbVCSController implements JupyterNbVCSController {
       REMOTE_SERVICE remoteService = REMOTE_SERVICE.valueOf(gitBackend.name());
       Instance<RemoteGitClient> clientInstance = remoteRepoClient.select(remoteService.annotation);
       check4instance(clientInstance, "Remote repository client");
-      SecretPlaintext apiKey = secretsController.get(user, apiKeyName);
+      SecretPlaintext apiKey = null;
+      if(!Strings.isNullOrEmpty(apiKeyName)) {
+        apiKey = secretsController.get(user, apiKeyName);
+      }
       return clientInstance.get().fetchBranches(apiKey, remoteURI);
     } catch (IOException ex) {
       Level loggingLevel;
@@ -118,7 +121,11 @@ public class GitJupyterNbVCSController implements JupyterNbVCSController {
       String userErrorMsg, devErrorMsg;
       if (ex.getClass().isAssignableFrom(RequestException.class)) {
         loggingLevel = Level.FINE;
-        userErrorMsg = "Invalid API key";
+        if(Strings.isNullOrEmpty(apiKeyName)) {
+          userErrorMsg = "Could not find repository, is it public?";
+        } else {
+          userErrorMsg = "Could not find repository, check URL and API key.";
+        }
         devErrorMsg = "API key " + apiKeyName + " is not valid for " + remoteURI;
       } else {
         loggingLevel = Level.SEVERE;

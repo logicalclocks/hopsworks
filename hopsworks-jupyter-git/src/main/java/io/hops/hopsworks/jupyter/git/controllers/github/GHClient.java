@@ -35,10 +35,10 @@ import java.util.regex.Pattern;
 public class GHClient implements RemoteGitClient {
   private static final Logger LOG = Logger.getLogger(GHClient.class.getName());
   
-  private static final Pattern REPO_ATTRS = Pattern.compile("http(s)?://(?<type>.+)/(?<username>.+)/(?<repository>"
+  private static final Pattern REPO_ATTRS = Pattern.compile("http(s)?://(?<type>.+)/(?<organization>.+)/(?<repository>"
     + ".+)\\.git");
   @EJB
-  private ClientCache clientCache;
+  private GHClientCache clientCache;
   
   /**
    * Fetches remote branches names from GitHub. First branch is always the default.
@@ -51,9 +51,14 @@ public class GHClient implements RemoteGitClient {
    */
   @Override
   public Set<String> fetchBranches(SecretPlaintext apiKey, String repository) throws ServiceException, IOException {
-    GitHubClient client = clientCache.getClient(getHost(repository), apiKey.getPlaintext());
+    GitHubClient client = clientCache.getClient(getHost(repository), apiKey);
     RepositoryService repositoryService = getRepositoryService(client);
-    Repository repo = getRepository(getRepositoryName(repository), repositoryService);
+    Repository repo;
+    if(apiKey != null) {
+      repo = getRepository(getRepositoryName(repository), repositoryService);
+    } else {
+      repo = repositoryService.getRepository(getOrganizationName(repository), getRepositoryName(repository));
+    }
     List<RepositoryBranch> branches = getBranches(repo, repositoryService);
     Set<String> flatBranches = new LinkedHashSet<>(branches.size());
     flatBranches.add(repo.getMasterBranch());
@@ -91,6 +96,14 @@ public class GHClient implements RemoteGitClient {
     Matcher matcher = REPO_ATTRS.matcher(remoteURI);
     if (matcher.matches()) {
       return matcher.group("repository");
+    }
+    throw new IllegalArgumentException("Could not parse remote URI: " + remoteURI);
+  }
+
+  private String getOrganizationName(String remoteURI) {
+    Matcher matcher = REPO_ATTRS.matcher(remoteURI);
+    if (matcher.matches()) {
+      return matcher.group("organization");
     }
     throw new IllegalArgumentException("Could not parse remote URI: " + remoteURI);
   }

@@ -35,7 +35,7 @@ public class GLClient implements RemoteGitClient {
   @Override
   public Set<String> fetchBranches(SecretPlaintext apiKey, String repository) throws ServiceException, IOException {
     URL url = getUrl(repository);
-    GitLabApi gitLabApi = glClientCache.getClient(getHostUrl(url), apiKey.getPlaintext());
+    GitLabApi gitLabApi = glClientCache.getClient(getHostUrl(url), apiKey);
     RepositoryApi repositoryApi = new RepositoryApi(gitLabApi);
     List<Branch> branches = getBranches(repositoryApi, getPath(url));
     Set<String> flatBranches = new LinkedHashSet<>(branches.size());

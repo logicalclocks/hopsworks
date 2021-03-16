@@ -6,6 +6,7 @@ package io.hops.hopsworks.jupyter.git.controllers.github;
 
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
+import io.hops.hopsworks.common.dao.user.security.secrets.SecretPlaintext;
 import io.hops.hopsworks.exceptions.ServiceException;
 import io.hops.hopsworks.restutils.RESTCodes;
 import org.eclipse.egit.github.core.client.GitHubClient;
@@ -21,8 +22,8 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 @Singleton
-public class ClientCache {
-  private static final Logger LOG = Logger.getLogger(ClientCache.class.getName());
+public class GHClientCache {
+  private static final Logger LOG = Logger.getLogger(GHClientCache.class.getName());
   private Cache<String, GitHubClient> cache;
   
   @PostConstruct
@@ -34,13 +35,14 @@ public class ClientCache {
   }
   
   @Lock(LockType.READ)
-  public GitHubClient getClient(String hostUrl, String apiKey) throws ServiceException {
+  public GitHubClient getClient(String hostUrl, SecretPlaintext authToken) throws ServiceException {
     try {
-      return cache.get(apiKey, new Callable<GitHubClient>() {
+      String authTokenPlainText = authToken == null ? null : authToken.getPlaintext();
+      return cache.get(authTokenPlainText == null ? hostUrl : authTokenPlainText, new Callable<GitHubClient>() {
         @Override
         public GitHubClient call() throws Exception {
           GitHubClient client = new GitHubClient(hostUrl);
-          client.setOAuth2Token(apiKey);
+          client.setOAuth2Token(authTokenPlainText);
           return client;
         }
       });
