@@ -42,10 +42,10 @@
 angular.module('hopsWorksApp')
         .controller('DatasetsCtrl', ['$scope', '$window', '$mdSidenav', '$mdUtil',
           'DataSetService', 'JupyterService', '$routeParams', 'ModalService', 'growl', '$location',
-          'MetadataHelperService', '$rootScope', 'DelaProjectService', 'UtilsService', 'UserService', '$mdToast',
-          'TourService', 'ProjectService', 'StorageService', 'MetadataRestService',
+          '$rootScope', 'DelaProjectService', 'UtilsService', 'UserService', '$mdToast',
+          'TourService', 'ProjectService', 'StorageService',
           function ($scope, $window, $mdSidenav, $mdUtil, DataSetService, JupyterService, $routeParams,
-                  ModalService, growl, $location, MetadataHelperService,
+                  ModalService, growl, $location,
                   $rootScope, DelaProjectService, UtilsService, UserService, $mdToast, TourService, ProjectService,
                     StorageService, MetadataRestService) {
 
@@ -461,8 +461,6 @@ angular.module('hopsWorksApp')
                 growl.error(errorMsg, {title: error.data.errorMsg, ttl: 5000, referenceId: refId});
             };
 
-            self.metadataView = {};
-            self.availableTemplates = [];
             self.closeSlider = false;
             self.breadcrumbLen = function () {
               if (self.pathArray === undefined || self.pathArray === null) {
@@ -489,22 +487,6 @@ angular.module('hopsWorksApp')
               $scope.sortKey = keyname;   //set the sortKey to the param passed
               $scope.reverse = !$scope.reverse; //if true make it false and vice versa
             };
-
-            /**
-             * watch for changes happening in service variables from the other controller
-             */
-            $scope.$watchCollection(MetadataHelperService.getAvailableTemplates, function (availTemplates) {
-              if (!angular.isUndefined(availTemplates)) {
-                self.availableTemplates = availTemplates;
-              }
-            });
-
-            $scope.$watch(MetadataHelperService.getDirContents, function (response) {
-              if (response === "true") {
-                getDirContents();
-                MetadataHelperService.setDirContents("false");
-              }
-            });
 
             self.goToUrl = function (serviceName) {
                 $location.path('project/' + self.projectId + '/' + serviceName);
@@ -1316,8 +1298,7 @@ angular.module('hopsWorksApp')
              * @returns {undefined}
              */
             self.uploadFile = function () {
-              var templateId = -1;
-              ModalService.upload('lg', self.projectId, getPath(self.pathArray), templateId, self.datasetType).then(
+              ModalService.upload('lg', self.projectId, getPath(self.pathArray), self.datasetType).then(
                   function (success) {
                     getDirContents();
                   }, function (error) {
@@ -1619,22 +1600,6 @@ angular.module('hopsWorksApp')
             self.resetSelected = function () {
               self.deselectAll();
               self.tgState = false;
-            };
-
-            self.toggleLeft = buildToggler('left');
-            self.toggleRight = buildToggler('right');
-
-            function buildToggler(navID) {
-              var debounceFn = $mdUtil.debounce(function () {
-                $mdSidenav(navID).toggle()
-                        .then(function () {
-                          MetadataHelperService.fetchAvailableTemplates()
-                                  .then(function (response) {
-                                    self.availableTemplates = JSON.parse(response.board).templates;
-                                  });
-                        });
-              }, 300);
-              return debounceFn;
             };
 
             self.getSelectedPath = function (selectedFile) {

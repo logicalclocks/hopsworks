@@ -68,14 +68,11 @@ public class ResumableInfoStorage {
    * @param resumableFilename
    * @param resumableRelativePath
    * @param resumableFilePath
-   * @param resumableTemplateId
    * @return
    */
-  public synchronized ResumableInfo get(int resumableChunkSize,
-          long resumableTotalSize,
-          String resumableIdentifier, String resumableFilename,
-          String resumableRelativePath, String resumableFilePath,
-          int resumableTemplateId) {
+  public synchronized ResumableInfo get(int resumableChunkSize, long resumableTotalSize, String resumableIdentifier,
+                                        String resumableFilename, String resumableRelativePath,
+                                        String resumableFilePath) {
 
     ResumableInfo info = mMap.get(resumableIdentifier);
 
@@ -88,7 +85,6 @@ public class ResumableInfoStorage {
       info.setResumableFilename(resumableFilename);
       info.setResumableRelativePath(resumableRelativePath);
       info.setResumableFilePath(resumableFilePath);
-      info.setResumableTemplateId(resumableTemplateId);
 
       mMap.put(resumableIdentifier, info);
     }

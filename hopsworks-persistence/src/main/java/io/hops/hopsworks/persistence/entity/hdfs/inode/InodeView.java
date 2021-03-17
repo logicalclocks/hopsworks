@@ -68,7 +68,6 @@ public final class InodeView {
   private Date accessTime;
   private Long id;
   private Long parentId;
-  private int template;
   private String description;
   private boolean status = true;
   private boolean underConstruction;
@@ -98,8 +97,6 @@ public final class InodeView {
     this.id = i.getId();
     this.parentId = i.getInodePK().getParentId();
     this.size = i.getSize();
-    //put the template id in the REST response
-    this.template = i.getTemplate();
     this.underConstruction = i.isUnderConstruction();
     this.parent = false;
     this.path = path;
@@ -126,7 +123,6 @@ public final class InodeView {
     this.dir = ds.getInode().isDir();
     this.id = ds.getInode().getId();
     this.size = ds.getInode().getSize();
-    this.template = ds.getInode().getTemplate();
     this.underConstruction = ds.getInode().isUnderConstruction();
     this.publicId = ds.getPublicDsId();
     this.parent = false;
@@ -156,7 +152,6 @@ public final class InodeView {
     this.dir = ds.getDataset().getInode().isDir();
     this.id = ds.getDataset().getInode().getId();
     this.size = ds.getDataset().getInode().getSize();
-    this.template = ds.getDataset().getInode().getTemplate();
     this.underConstruction = ds.getDataset().getInode().isUnderConstruction();
     this.publicId = ds.getDataset().getPublicDsId();
     this.parent = false;
@@ -229,10 +224,6 @@ public final class InodeView {
     this.id = id;
   }
 
-  public void setTemplate(int template) {
-    this.template = template;
-  }
-
   public void setParent(boolean parent) {
     this.parent = parent;
   }
@@ -263,10 +254,6 @@ public final class InodeView {
 
   public Long getParentId() {
     return this.parentId;
-  }
-
-  public int getTemplate() {
-    return this.template;
   }
 
   public boolean isParent() {

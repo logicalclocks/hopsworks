@@ -61,7 +61,7 @@ module DatasetHelper
   def uploadFile(project, dsname, filePath)
     file_size = File.size(filePath)
     file_name = File.basename(filePath)
-    file = URI.encode_www_form({templateId: -1, flowChunkNumber: 1, flowChunkSize: 1048576,
+    file = URI.encode_www_form({flowChunkNumber: 1, flowChunkSize: 1048576,
                                 flowCurrentChunkSize: file_size, flowTotalSize: file_size,
                                 flowIdentifier: "#{file_size}-#{file_name}", flowFilename: "#{file_name}",
                                 flowRelativePath: "#{file_name}", flowTotalChunks: 1})
@@ -192,17 +192,8 @@ module DatasetHelper
   def create_files
     chmod_local_dir("#{ENV['PROJECT_DIR']}".gsub("/hopsworks", ""), 701, false)
     chmod_local_dir("#{ENV['PROJECT_DIR']}/tools", 777)
-    copy_from_local("#{ENV['PROJECT_DIR']}/tools/metadata_designer/Sample.json",
+    copy_from_local("#{ENV['PROJECT_DIR']}/tools/upload_example/Sample.json",
                     "/Projects/#{@project[:projectname]}/#{@dataset[:inode_name]}/Sample.json", @user[:username],
-                    "#{@project[:projectname]}__#{@dataset[:inode_name]}", 750, "#{@project[:projectname]}")
-    copy_from_local("#{ENV['PROJECT_DIR']}/tools/metadata_designer/Sample.json",
-                    "/Projects/#{@project[:projectname]}/#{@dataset[:inode_name]}/SampleCollection.json", @user[:username],
-                    "#{@project[:projectname]}__#{@dataset[:inode_name]}", 750, "#{@project[:projectname]}")
-    copy_from_local("#{ENV['PROJECT_DIR']}/tools/metadata_designer/Sample.json",
-                    "/Projects/#{@project[:projectname]}/#{@dataset[:inode_name]}/SampleCollection_Ext.json", @user[:username],
-                    "#{@project[:projectname]}__#{@dataset[:inode_name]}", 750, "#{@project[:projectname]}")
-    copy_from_local("#{ENV['PROJECT_DIR']}/tools/metadata_designer/Sample.json",
-                    "/Projects/#{@project[:projectname]}/#{@dataset[:inode_name]}/Study.json", @user[:username],
                     "#{@project[:projectname]}__#{@dataset[:inode_name]}", 750, "#{@project[:projectname]}")
   end
 
@@ -442,21 +433,6 @@ module DatasetHelper
 
   def update_dataset_description(project, path, description, datasetType: "")
     put "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/dataset/#{path}?action=description&description=#{description}#{datasetType}"
-  end
-
-  def attach_template(project, templateId, inodePath)
-    template = {}
-    template[:templateId] = templateId
-    template[:inodePath] = inodePath
-    post "#{ENV['HOPSWORKS_API']}/metadata/#{project[:id]}/attachTemplate/", template
-  end
-
-  def fetch_template(project, inodeid)
-    get "#{ENV['HOPSWORKS_API']}/metadata/#{project[:id]}/fetchtemplatesforinode/#{inodeid}"
-  end
-
-  def detach_template(project, inodeid, templateid)
-    get "#{ENV['HOPSWORKS_API']}/metadata/#{project[:id]}/detachtemplate/#{inodeid}/#{templateid}"
   end
 
   def get_list_from_json(json_body, field)

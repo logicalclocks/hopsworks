@@ -214,13 +214,18 @@ public class DatasetResource {
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   @ApiKeyRequired( acceptedScopes = {ApiScope.DATASET_CREATE}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
-  public Response postByPath(@PathParam("path") String path, @QueryParam("type") DatasetType datasetType,
-    @QueryParam("target_project") String targetProjectName, @QueryParam("action") DatasetActions.Post action,
-    @QueryParam("templateId") Integer templateId, @QueryParam("description") String description,
-    @QueryParam("searchable") Boolean searchable, @QueryParam("generate_readme") Boolean generateReadme,
-    @QueryParam("destination_path") String destPath, @QueryParam("destination_type") DatasetType destDatasetType,
-    @DefaultValue("READ_ONLY") @QueryParam("permission") DatasetAccessPermission permission, @Context UriInfo uriInfo,
-    @Context SecurityContext sc) throws DatasetException, ProjectException, HopsSecurityException, ProvenanceException {
+  public Response postByPath(@Context UriInfo uriInfo, @Context SecurityContext sc,
+                             @PathParam("path") String path,
+                             @QueryParam("type") DatasetType datasetType,
+                             @QueryParam("target_project") String targetProjectName,
+                             @QueryParam("action") DatasetActions.Post action,
+                             @QueryParam("description") String description,
+                             @QueryParam("searchable") Boolean searchable,
+                             @QueryParam("generate_readme") Boolean generateReadme,
+                             @QueryParam("destination_path") String destPath,
+                             @QueryParam("destination_type") DatasetType destDatasetType,
+                             @DefaultValue("READ_ONLY") @QueryParam("permission") DatasetAccessPermission permission)
+      throws DatasetException, ProjectException, HopsSecurityException, ProvenanceException {
     Users user = jwtHelper.getUserPrincipal(sc);
     DatasetPath datasetPath;
     DatasetPath distDatasetPath;
@@ -243,7 +248,7 @@ public class DatasetResource {
         ResourceRequest resourceRequest;
         if (datasetPath.isTopLevelDataset()) {
           datasetController.createDirectory(project, user, datasetPath.getFullPath(), datasetPath.getDatasetName(),
-            datasetPath.isTopLevelDataset(), templateId, description,
+            datasetPath.isTopLevelDataset(), description,
             Provenance.getDatasetProvCore(projectProvCore, Provenance.MLType.DATASET), generateReadme, permission);
           resourceRequest = new ResourceRequest(ResourceRequest.Name.DATASETS);
           Dataset ds = datasetController.getByProjectAndFullPath(project, datasetPath.getFullPath().toString());
@@ -252,7 +257,7 @@ public class DatasetResource {
         } else {
           datasetHelper.checkIfDatasetExists(project, datasetPath);
           datasetController.createDirectory(project, user, datasetPath.getFullPath(), datasetPath.getDatasetName(),
-            datasetPath.isTopLevelDataset(), templateId, description,
+            datasetPath.isTopLevelDataset(), description,
             Provenance.getDatasetProvCore(projectProvCore, Provenance.MLType.DATASET), generateReadme, permission);
           resourceRequest = new ResourceRequest(ResourceRequest.Name.INODES);
           Inode inode = inodeController.getInodeAtPath(datasetPath.getFullPath().toString());
@@ -407,9 +412,9 @@ public class DatasetResource {
   
   @Logged(logLevel = LogLevel.OFF)
   @Path("upload/{path: .+}")
-  public UploadService upload(@PathParam("path") String path, @QueryParam("templateId") int templateId,
-    @QueryParam("type") DatasetType datasetType) {
-    this.uploader.setParams(this.projectId, path, datasetType, templateId, false);
+  public UploadService upload(@PathParam("path") String path,
+                              @QueryParam("type") DatasetType datasetType) {
+    this.uploader.setParams(this.projectId, path, datasetType);
     return this.uploader;
   }
 }

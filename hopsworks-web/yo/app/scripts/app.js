@@ -462,16 +462,6 @@ angular.module('hopsWorksApp', [
                           }]
                       }
                     })
-                    .when('/project/:projectID/metadata', {
-                      templateUrl: 'views/metadata.html',
-                      controller: 'ProjectCtrl as projectCtrl',
-                      resolve: {
-                        auth: ['$q', '$route', 'AuthGuardService',
-                          function ($q, $route, AuthGuardService) {
-                            return AuthGuardService.guardProject($q, $route.current.params.projectID);
-                          }]
-                      }
-                    })
                     .when('/project/:projectID/jupyter', {
                       templateUrl: 'views/jupyterDashboard.html',
                       controller: 'ProjectCtrl as projectCtrl',

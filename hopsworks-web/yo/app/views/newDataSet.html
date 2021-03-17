@@ -82,18 +82,6 @@
           </div>
           <div class="row">
             <div class="col-md-12" style="margin-top: 15px;">
-              <div class="form-group" ng-if="datasetCreatorCtrl.templates.length > 0">
-                <label style="margin-right: 5px;" >Templates</label>
-                <ui-select ng-model="datasetCreatorCtrl.selectedTemplate" theme="select2" on-select=""
-                           style="min-width: 300px;">
-                  <ui-select-match id="template" placeholder="Add a template...">{{$select.selected.name}}</ui-select-match>
-                  <ui-select-choices repeat="template in datasetCreatorCtrl.templates | filter: $select.search">
-                    <small>
-                      <span ng-bind-html="'' + template.name | highlight: $select.search"></span>
-                    </small>
-                  </ui-select-choices>
-                </ui-select>
-              </div>
               <div class="form-group" style="display: flex" ng-hide="datasetCreatorCtrl.path.length>0">
                 <label for="permissions" style="margin-top: 8px; margin-right: 5px;" >Permission</label>
                 <div id="permissions" uib-dropdown role="group">

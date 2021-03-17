@@ -40,7 +40,7 @@ describe "On #{ENV['OS']}" do
       after :all do
         with_admin_session
         @tags.each do |tag|
-          delete_featurestore_Tag(tag)
+          delete_featurestore_tag(tag)
         end
         reset_session
         create_session(@usermail1, "Pass123")
