@@ -50,9 +50,7 @@ import javax.persistence.Id;
 import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
 import io.hops.hopsworks.persistence.entity.project.Project;
-import io.hops.hopsworks.persistence.entity.hdfs.inode.Inode;
 import io.hops.hopsworks.persistence.entity.dataset.Dataset;
-import io.hops.hopsworks.persistence.entity.metadata.Template;
 
 @Entity
 @Table(name = "ops_log", catalog = "hopsworks")
@@ -116,16 +114,6 @@ public class OperationsLog implements Serializable {
     this.projectId = project.getId();
     this.inodeId = project.getInode().getId();
     this.datasetId = -1L;
-  }
-
-  public OperationsLog(Project project, Dataset dataset, Template template,
-          Inode inode, OperationType opType) {
-    this.opId = template.getId();
-    this.opOn = OperationOn.Schema;
-    this.opType = opType;
-    this.projectId = project.getId();
-    this.datasetId = dataset.getInodeId();
-    this.inodeId = inode.getId();
   }
 
   public Integer getId() {

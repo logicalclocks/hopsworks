@@ -187,7 +187,7 @@ describe "On #{ENV['OS']}" do
           create_session(newUser[:email], "Pass123")
           projectname = "project_#{short_random_id}"
           project1 = create_project_by_name(projectname)
-          file = URI.encode_www_form({templateId: -1, flowChunkNumber: 1, flowChunkSize: 1048576,
+          file = URI.encode_www_form({flowChunkNumber: 1, flowChunkSize: 1048576,
                                       flowCurrentChunkSize: 3195, flowTotalSize: 3195,
                                       flowIdentifier: "3195-someFiletxt", flowFilename: "someFile.txt",
                                       flowRelativePath: "someFile.txt", flowTotalChunks: 1})
@@ -265,7 +265,7 @@ describe "On #{ENV['OS']}" do
         end
         it "should fail to upload" do
           project = get_project
-          uploadFile(project, "Logs", "#{ENV['PROJECT_DIR']}/tools/metadata_designer/Sample.json")
+          uploadFile(project, "Logs", "#{ENV['PROJECT_DIR']}/tools/upload_example/Sample.json")
           expect_json(errorCode: 200003)
           expect_status(401)
         end
@@ -280,7 +280,7 @@ describe "On #{ENV['OS']}" do
           member = create_user
           add_member_to_project(@project, member[:email], "Data scientist")
           create_session(member[:email], "Pass123")
-          uploadFile(@project, dsname, "#{ENV['PROJECT_DIR']}/tools/metadata_designer/Sample.json")
+          uploadFile(@project, dsname, "#{ENV['PROJECT_DIR']}/tools/upload_example/Sample.json")
           expect_json(errorCode: 200002)
           expect_status(403)
           reset_session
@@ -293,7 +293,7 @@ describe "On #{ENV['OS']}" do
           ds = create_dataset_by_name_checked(@project, dsname, permission: "READ_ONLY")
           request_access(@project, ds, project)
           share_dataset(@project, dsname, project[:projectname], permission: "READ_ONLY")
-          uploadFile(project, "#{@project[:projectname]}::#{dsname}", "#{ENV['PROJECT_DIR']}/tools/metadata_designer/Sample.json")
+          uploadFile(project, "#{@project[:projectname]}::#{dsname}", "#{ENV['PROJECT_DIR']}/tools/upload_example/Sample.json")
           expect_json(errorCode: 200002)
           expect_status(403)
         end
@@ -305,7 +305,7 @@ describe "On #{ENV['OS']}" do
         it "should upload file" do
           dsname = "dataset_#{short_random_id}"
           ds = create_dataset_by_name_checked(@project, dsname, permission: "READ_ONLY")
-          uploadFile(@project, dsname, "#{ENV['PROJECT_DIR']}/tools/metadata_designer/Sample.json")
+          uploadFile(@project, dsname, "#{ENV['PROJECT_DIR']}/tools/upload_example/Sample.json")
           expect_status(204)
         end
         it "should upload to a shared dataset with permission group writable." do
@@ -316,7 +316,7 @@ describe "On #{ENV['OS']}" do
           request_access(@project, ds, project)
           share_dataset(@project, dsname, project[:projectname], permission: "EDITABLE")
           update_dataset_permissions(@project, dsname, "EDITABLE", datasetType: "&type=DATASET")
-          uploadFile(project, "#{@project[:projectname]}::#{dsname}", "#{ENV['PROJECT_DIR']}/tools/metadata_designer/Sample.json")
+          uploadFile(project, "#{@project[:projectname]}::#{dsname}", "#{ENV['PROJECT_DIR']}/tools/upload_example/Sample.json")
           expect_status(204)
         end
         it "should upload to a dataset with permission owner only if Data owner" do
@@ -325,7 +325,7 @@ describe "On #{ENV['OS']}" do
           member = create_user
           add_member_to_project(@project, member[:email], "Data owner")
           create_session(member[:email], "Pass123")
-          uploadFile(@project, dsname, "#{ENV['PROJECT_DIR']}/tools/metadata_designer/Sample.json")
+          uploadFile(@project, dsname, "#{ENV['PROJECT_DIR']}/tools/upload_example/Sample.json")
           expect_status(204)
           reset_session
         end
@@ -800,7 +800,7 @@ describe "On #{ENV['OS']}" do
           accept_dataset_checked(@project2, "#{@project1[:projectname]}::#{@dsname}", datasetType: "DATASET")
         end
         it "should fail to upload to a shared dataset with permission read only" do
-          uploadFile(@project2, "#{@project1[:projectname]}::#{@dsname}", "#{ENV['PROJECT_DIR']}/tools/metadata_designer/Sample.json")
+          uploadFile(@project2, "#{@project1[:projectname]}::#{@dsname}", "#{ENV['PROJECT_DIR']}/tools/upload_example/Sample.json")
           expect_status_details(403, error_code: 200002)
         end
 
@@ -827,7 +827,7 @@ describe "On #{ENV['OS']}" do
           update_dataset_permissions_checked(@project1, @dsname, "EDITABLE")
         end
         it "should upload to a shared dataset with permission group writable." do
-          uploadFile(@project2, "#{@project1[:projectname]}::#{@dsname}", "#{ENV['PROJECT_DIR']}/tools/metadata_designer/Sample.json")
+          uploadFile(@project2, "#{@project1[:projectname]}::#{@dsname}", "#{ENV['PROJECT_DIR']}/tools/upload_example/Sample.json")
           expect_status_details(204)
         end
 

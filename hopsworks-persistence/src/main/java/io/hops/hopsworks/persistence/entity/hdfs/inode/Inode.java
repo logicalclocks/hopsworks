@@ -41,20 +41,14 @@ package io.hops.hopsworks.persistence.entity.hdfs.inode;
 
 import io.hops.hopsworks.persistence.entity.hdfs.user.HdfsGroups;
 import io.hops.hopsworks.persistence.entity.hdfs.user.HdfsUsers;
-import io.hops.hopsworks.persistence.entity.metadata.Template;
 
 import java.io.Serializable;
 import java.math.BigInteger;
-import java.util.Collection;
-import java.util.Iterator;
 import javax.persistence.Basic;
-import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.EmbeddedId;
 import javax.persistence.Entity;
-import javax.persistence.FetchType;
 import javax.persistence.JoinColumn;
-import javax.persistence.ManyToMany;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
 import javax.persistence.OneToOne;
@@ -62,7 +56,6 @@ import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.XmlTransient;
 
 @Entity
 @Table(name = "hdfs_inodes", catalog = "hops")
@@ -164,10 +157,6 @@ public class Inode implements Serializable {
   @NotNull
   @Column(name = "size")
   private long size;
-  @ManyToMany(mappedBy = "inodes",
-          cascade = CascadeType.PERSIST,
-          fetch = FetchType.LAZY)
-  private Collection<Template> templates;
 
   public Inode() {
   }
@@ -310,41 +299,6 @@ public class Inode implements Serializable {
     this.underConstruction = underConstruction;
   }
   
-  @XmlTransient
-  public Collection<Template> getTemplates() {
-    return this.templates;
-  }
-
-  public void setTemplates(Collection<Template> templates) {
-    this.templates = templates;
-  }
-
-  public void addTemplate(Template template) {
-    if (template != null) {
-      this.templates.add(template);
-    }
-  }
-
-  /**
-   * for the time being we treat the many to many relationship between inodes
-   * and templates as a many to one, where an inode may be associated only to
-   * one template, while the same template may be associated to many inodes
-   * <p/>
-   * @return the template id
-   */
-  public int getTemplate() {
-
-    int templateId = -1;
-
-    if (this.templates != null && !this.templates.isEmpty()) {
-      Iterator it = this.templates.iterator();
-      Template template = (Template) it.next();
-      templateId = template.getId();
-    }
-
-    return templateId;
-  }
-
   @Override
   public int hashCode() {
     int hash = 0;

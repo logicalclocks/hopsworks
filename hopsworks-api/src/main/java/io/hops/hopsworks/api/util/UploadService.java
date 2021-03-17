@@ -44,11 +44,7 @@ import io.hops.hopsworks.api.filter.Audience;
 import io.hops.hopsworks.api.filter.NoCacheResponse;
 import io.hops.hopsworks.api.filter.apiKey.ApiKeyRequired;
 import io.hops.hopsworks.api.jwt.JWTHelper;
-import io.hops.hopsworks.api.metadata.wscomm.ResponseBuilder;
-import io.hops.hopsworks.api.metadata.wscomm.message.UploadedTemplateMessage;
 import io.hops.hopsworks.common.dao.hdfs.inode.InodeFacade;
-import io.hops.hopsworks.common.dao.metadata.db.InodeBasicMetadataFacade;
-import io.hops.hopsworks.common.dao.metadata.db.TemplateFacade;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
 import io.hops.hopsworks.common.dao.project.team.ProjectTeamFacade;
 import io.hops.hopsworks.common.dataset.DatasetController;
@@ -58,13 +54,11 @@ import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.hdfs.DistributedFsService;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
 import io.hops.hopsworks.common.hdfs.Utils;
-import io.hops.hopsworks.common.hdfs.inode.InodeController;
 import io.hops.hopsworks.common.upload.HttpUtils;
 import io.hops.hopsworks.common.upload.ResumableInfo;
 import io.hops.hopsworks.common.upload.ResumableInfoStorage;
 import io.hops.hopsworks.common.upload.StagingManager;
 import io.hops.hopsworks.common.util.HopsUtils;
-import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.DatasetException;
 import io.hops.hopsworks.exceptions.GenericException;
 import io.hops.hopsworks.exceptions.MetadataException;
@@ -72,14 +66,11 @@ import io.hops.hopsworks.exceptions.ProjectException;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
 import io.hops.hopsworks.persistence.entity.dataset.DatasetType;
 import io.hops.hopsworks.persistence.entity.hdfs.inode.Inode;
-import io.hops.hopsworks.persistence.entity.metadata.InodeBasicMetadata;
-import io.hops.hopsworks.persistence.entity.metadata.Template;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.persistence.entity.user.security.apiKey.ApiScope;
 import io.hops.hopsworks.restutils.RESTCodes;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.hadoop.security.AccessControlException;
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
 import org.glassfish.jersey.media.multipart.FormDataParam;
@@ -88,8 +79,6 @@ import javax.ejb.EJB;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.enterprise.context.RequestScoped;
-import javax.json.Json;
-import javax.json.JsonObject;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
@@ -105,7 +94,6 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.RandomAccessFile;
-import java.io.StringReader;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -120,15 +108,7 @@ public class UploadService {
   @EJB
   private InodeFacade inodes;
   @EJB
-  private InodeController inodeController;
-  @EJB
   private StagingManager stagingManager;
-  @EJB
-  private TemplateFacade template;
-  @EJB
-  private ResponseBuilder responseBuilder;
-  @EJB
-  private InodeBasicMetadataFacade basicMetaFacade;
   @EJB
   private DistributedFsService dfs;
   @EJB
@@ -149,8 +129,6 @@ public class UploadService {
   private String username;
   private String role;
   private Inode fileParent;
-  private boolean isTemplate;
-  private int templateId;
   
   private Integer projectId;
   private String projectName;
@@ -179,37 +157,25 @@ public class UploadService {
   public UploadService() {
   }
   
-  public void setParams(String path, DatasetType datasetType, int templateId, boolean isTemplate) {
-    this.path = path;
-    this.datasetType = datasetType;
-    this.templateId = templateId;
-    this.isTemplate = isTemplate;
-  }
-  
-  public void setParams(Integer projectId, String path, DatasetType datasetType, int templateId, boolean isTemplate) {
+  public void setParams(Integer projectId, String path, DatasetType datasetType) {
     this.projectId = projectId;
     this.path = path;
     this.datasetType = datasetType;
-    this.templateId = templateId;
-    this.isTemplate = isTemplate;
   }
   
-  public void setParams(String projectName, String path, DatasetType datasetType, int templateId, boolean isTemplate) {
+  public void setParams(String projectName, String path, DatasetType datasetType) {
     this.projectName = projectName;
     this.path = path;
     this.datasetType = datasetType;
-    this.templateId = templateId;
-    this.isTemplate = isTemplate;
   }
 
   /**
    * Sets the upload path for the file to be uploaded.
    * <p/>
    * @param datasetPath the dsPath object built by the DatasetService.java
-   * @param templateId the template to associate the the uploaded file
    * @throws DatasetException DatasetException
    */
-  private void confFileUpload(DatasetPath datasetPath, int templateId) throws DatasetException {
+  private void confFileUpload(DatasetPath datasetPath) {
     if (datasetPath.getRelativePath() != null) {
       // We need to validate that each component of the path, either it exists
       // or it is a valid directory name
@@ -241,54 +207,24 @@ public class UploadService {
       this.fileParent = datasetPath.getDataset().getInode();
     }
 
-    this.templateId = templateId;
     this.path = datasetPath.getFullPath().toString();
   }
   
   private void configureUploader(SecurityContext sc) throws DatasetException, ProjectException {
-    if (!this.isTemplate) {
-      Users user = jWTHelper.getUserPrincipal(sc);
-      Project project =this.getProject();
-      this.username = hdfsUsersBean.getHdfsUserName(project, user);
-      DatasetPath datasetPath = datasetHelper.getDatasetPath(project, path, this.datasetType);
-      Project owning = datasetController.getOwningProject(datasetPath.getDataset());
-      //Is user a member of this project? If so get their role
-      boolean isMember = projectTeamFacade.isUserMemberOfProject(owning, user);
-      this.role = null;
-      if (isMember) {
-        role = projectTeamFacade.findCurrentRole(owning, user);
-      }
-      confFileUpload(datasetPath, templateId);
-    } else {
-      confUploadTemplate();
+    Users user = jWTHelper.getUserPrincipal(sc);
+    Project project =this.getProject();
+    this.username = hdfsUsersBean.getHdfsUserName(project, user);
+    DatasetPath datasetPath = datasetHelper.getDatasetPath(project, path, this.datasetType);
+    Project owning = datasetController.getOwningProject(datasetPath.getDataset());
+    //Is user a member of this project? If so get their role
+    boolean isMember = projectTeamFacade.isUserMemberOfProject(owning, user);
+    this.role = null;
+    if (isMember) {
+      role = projectTeamFacade.findCurrentRole(owning, user);
     }
-    
+    confFileUpload(datasetPath);
   }
 
-  /**
-   * Configure the uploader to upload a metadata Template.
-   * All the templates are uploaded to /user/metadata/uploads
-   * <p/>
-   * @throws DatasetException
-   */
-  private void confUploadTemplate() throws DatasetException {
-    DistributedFileSystemOps dfso = null;
-    try {
-      dfso = dfs.getDfsOps();
-      if (!dfso.isDir(Settings.DIR_META_TEMPLATES)) {
-        dfso.mkdirs(new Path(Settings.DIR_META_TEMPLATES), FsPermission.getDefault());
-      }
-    } catch (IOException e) {
-      throw new DatasetException(RESTCodes.DatasetErrorCode.UPLOAD_DIR_CREATE_ERROR, Level.SEVERE, null, e.getMessage(),
-        e);
-    } finally {
-      if (dfso != null) {
-        dfso.close();
-      }
-    }
-    this.path = Settings.DIR_META_TEMPLATES;
-  }
-  
   @GET
   @Consumes(MediaType.MULTIPART_FORM_DATA)
   @Produces(MediaType.APPLICATION_JSON)
@@ -336,7 +272,7 @@ public class UploadService {
         }
       }
     }
-    ResumableInfo info = getResumableInfo(request, this.path, this.templateId);
+    ResumableInfo info = getResumableInfo(request, this.path);
     if (info.isUploaded(new ResumableInfo.ResumableChunkNumber(resumableChunkNumber))) {
       json.setSuccessMessage("Uploaded");//This Chunk has been Uploaded.
       return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(json).build();
@@ -370,9 +306,8 @@ public class UploadService {
 
     int resumableChunkNumber = HttpUtils.toInt(flowChunkNumber, -1);
     ResumableInfo info = getResumableInfo(flowChunkSize, flowFilename, flowIdentifier, flowRelativePath, flowTotalSize,
-      this.path, this.templateId);
+      this.path);
     String fileName = info.getResumableFilename();
-    int templateid = info.getResumableTemplateId();
 
     long content_length;
     //Seek to position
@@ -414,30 +349,9 @@ public class UploadService {
         Path location = new Path(this.path, fileName);
         String stagingFilePath = new Path(stagingManager.getStagingPath() + this.path, fileName).toString();
 
-        //if it is about a template file check its validity
-        if (this.isTemplate) {
-          //TODO. More checks needed to ensure the valid template format
-          if (!Utils.checkJsonValidity(stagingFilePath)) {
-            json.setErrorMsg("This was an invalid json file");
-            return noCacheResponse.getNoCacheResponseBuilder(Response.Status.NOT_ACCEPTABLE).entity(json).build();
-          }
-          fileContent = Utils.getFileContents(stagingFilePath);
-          JsonObject obj = Json.createReader(new StringReader(fileContent)).readObject();
-          String templateName = obj.getString("templateName");
-          if (template.isTemplateAvailable(templateName.toLowerCase())) {
-            logger.log(Level.INFO, "{0} already exists.", templateName.toLowerCase());
-            json.setErrorMsg("Already exists.");
-            return noCacheResponse.getNoCacheResponseBuilder(Response.Status.NOT_ACCEPTABLE).entity(json).build();
-          }
-        }
-  
-        /**
-         * Metadata do not belong to a specific Project, so there is no project specific
-         * user. Do every HDFS operation as superuser
-         */
         //If the user has a role in the owning project of the Dataset and that is Data Owner
         //perform operation as superuser
-        if ((!Strings.isNullOrEmpty(role) && role.equals(AllowedProjectRoles.DATA_OWNER)) || this.isTemplate) {
+        if ((!Strings.isNullOrEmpty(role) && role.equals(AllowedProjectRoles.DATA_OWNER))) {
           dfsOps = dfs.getDfsOps();
         } else {
           dfsOps = dfs.getDfsOps(username);
@@ -445,25 +359,8 @@ public class UploadService {
 
         dfsOps.copyToHDFSFromLocal(true, stagingFilePath, location.toString());
         dfsOps.setPermission(location, dfsOps.getParentPermission(location));
-        if (!this.isTemplate) {
-          dfsOps.setOwner(location, username, dfsOps.getFileStatus(location).getGroup());
-        }
+        dfsOps.setOwner(location, username, dfsOps.getFileStatus(location).getGroup());
         logger.log(Level.INFO, "Copied to HDFS");
-
-        if (templateid != 0 && templateid != -1) {
-          this.attachTemplateToInode(info, this.path + fileName);
-        }
-
-        if (this.isTemplate) {
-          //if it is about a template file persist it in the database as well
-          this.persistUploadedTemplate(fileContent);
-        } else {
-          //this is a common file being uploaded so add basic metadata to it
-          //description and searchable
-          Inode fileInode = inodeController.getInodeAtPath(location.toString());
-          InodeBasicMetadata basicMeta = new InodeBasicMetadata(fileInode, "", true);
-          this.basicMetaFacade.addBasicMetadata(basicMeta);
-        }
 
         json.setSuccessMessage("Successfuly uploaded file to " + this.path);
         return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(json).build();
@@ -481,34 +378,11 @@ public class UploadService {
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(json).build();
   }
 
-  private void attachTemplateToInode(ResumableInfo info, String path) {
-    //find the inode
-    Inode inode = inodeController.getInodeAtPath(path);
-
-    Template templ = template.findByTemplateId(info.getResumableTemplateId());
-    templ.getInodes().add(inode);
-
-    //persist the relationship table
-    template.updateTemplatesInodesMxN(templ);
-  }
-
-  /**
-   * Persist a template to the database after it has been uploaded to hopsfs
-   * <p/>
-   */
-  private void persistUploadedTemplate(String fileContent) throws GenericException, MetadataException {
-    //the file content has to be wrapped in a TemplateMessage message
-    UploadedTemplateMessage message = new UploadedTemplateMessage();
-    message.setMessage(fileContent);
-
-    this.responseBuilder.persistUploadedTemplate(message);
-  }
-
   private int getResumableChunkNumber(HttpServletRequest request) {
     return HttpUtils.toInt(request.getParameter("flowChunkNumber"), -1);
   }
 
-  private ResumableInfo getResumableInfo(HttpServletRequest request, String hdfsPath, int templateId)
+  private ResumableInfo getResumableInfo(HttpServletRequest request, String hdfsPath)
     throws DatasetException {
     //this will give us a tmp folder
     String baseDir = stagingManager.getStagingPath();
@@ -545,7 +419,7 @@ public class UploadService {
     ResumableInfoStorage storage = ResumableInfoStorage.getInstance();
 
     ResumableInfo info = storage.get(resumableChunkSize, resumableTotalSize, resumableIdentifier, resumableFilename,
-      resumableRelativePath, resumableFilePath, templateId);
+      resumableRelativePath, resumableFilePath);
     if (!info.valid()) {
       storage.remove(info);
       throw new DatasetException(RESTCodes.DatasetErrorCode.UPLOAD_RESUMABLEINFO_INVALID, Level.WARNING);
@@ -553,13 +427,9 @@ public class UploadService {
     return info;
   }
 
-  private ResumableInfo getResumableInfo(String flowChunkSize,
-      String flowFilename,
-      String flowIdentifier,
-      String flowRelativePath,
-      String flowTotalSize,
-      String hdfsPath,
-      int templateId) throws DatasetException {
+  private ResumableInfo getResumableInfo(String flowChunkSize, String flowFilename, String flowIdentifier,
+                                         String flowRelativePath, String flowTotalSize, String hdfsPath)
+      throws DatasetException {
     //this will give us a tmp folder
     String base_dir = stagingManager.getStagingPath();
     //this will create a folder if it does not exist inside the tmp folder 
@@ -572,11 +442,8 @@ public class UploadService {
 
     int resumableChunkSize = HttpUtils.toInt(flowChunkSize, -1);
     long resumableTotalSize = HttpUtils.toLong(flowTotalSize, -1);
-    String resumableIdentifier = flowIdentifier;
-    String resumableFilename = flowFilename;
-    String resumableRelativePath = flowRelativePath;
 
-    File file = new File(base_dir, resumableFilename);
+    File file = new File(base_dir, flowFilename);
     //check if the file alrady exists in the staging dir.
     if (file.exists() && file.canRead()) {
       //file.exists returns true after deleting a file 
@@ -594,8 +461,8 @@ public class UploadService {
 
     ResumableInfoStorage storage = ResumableInfoStorage.getInstance();
 
-    ResumableInfo info = storage.get(resumableChunkSize, resumableTotalSize, resumableIdentifier, resumableFilename,
-      resumableRelativePath, resumableFilePath, templateId);
+    ResumableInfo info = storage.get(resumableChunkSize, resumableTotalSize, flowIdentifier, flowFilename,
+      flowRelativePath, resumableFilePath);
     if (!info.valid()) {
       storage.remove(info);
       throw new DatasetException(RESTCodes.DatasetErrorCode.UPLOAD_RESUMABLEINFO_INVALID, Level.WARNING);

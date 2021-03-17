@@ -251,7 +251,6 @@ public class StatisticsController {
       return datasetController.createDataset(user, project,
           Settings.ServiceDataset.STATISTICS.getName(),
           Settings.ServiceDataset.STATISTICS.getDescription(),
-          -1,
           Provenance.Type.DISABLED.dto, false, DatasetAccessPermission.EDITABLE, dfso);
     } finally {
       dfs.closeDfsClient(dfso);

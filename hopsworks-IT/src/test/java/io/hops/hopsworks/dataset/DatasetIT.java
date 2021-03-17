@@ -105,41 +105,6 @@ public class DatasetIT {
   }
   
   @Test
-  public void attachDetachMetadata() {
-    ProjectHelper.gotoProject(driver, project);
-    DatasetHelper.gotoDatasetPage(driver);
-    String name = DatasetHelper.uploadMetadata(driver);
-    String[] parts = name.split("\\.");
-    String template = parts[0];
-    WebElement row = driver.findElement(By.id("template-" + parts[0]));
-    String templateName = template.length() > 30 ? template.substring(0, 30) + "..." : template;
-    try {
-      assertEquals(templateName, row.getText());
-    } catch (Error e) {
-      verificationErrors.append("Should show the new template.").append(e.getMessage()).append("/n");
-    }
-    DatasetHelper.gotoDatasetPage(driver);
-    Dataset dataset = DatasetHelper.createNewDataset(driver, dbHelper, project);
-    DatasetHelper.attachMetadata(driver, dataset, template);
-    DatasetHelper.selectDataset(driver, dataset.getName());
-    By exMd = By.id("extended_metadata");
-    WebElement metadata = Helpers.waitForElementVisibility(exMd, driver);
-    try {
-      assertEquals(metadata.isEnabled(), true);
-    } catch (Error e) {
-      verificationErrors.append("Should show extended metadata.").append(e.getMessage()).append("/n");
-    }
-    DatasetHelper.detachMetadata(driver, dataset, template);
-    By noExMd = By.id("no_extended_metadata");
-    WebElement noMetadata = Helpers.waitForElementVisibility(noExMd, driver);
-    try {
-      assertEquals(noMetadata.isEnabled(), true);
-    } catch (Error e) {
-      verificationErrors.append("Should show no extended metadata.").append(e.getMessage()).append("/n");
-    }
-  }
-  
-  @Test
   public void copyAndMove() {
     ProjectHelper.gotoProject(driver, project);
     DatasetHelper.gotoDatasetPage(driver);

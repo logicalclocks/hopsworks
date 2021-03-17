@@ -46,8 +46,6 @@ import io.hops.hopsworks.common.dao.dataset.DatasetRequestFacade;
 import io.hops.hopsworks.common.dao.dataset.DatasetSharedWithFacade;
 import io.hops.hopsworks.common.dao.hdfs.inode.InodeFacade;
 import io.hops.hopsworks.common.dao.log.operation.OperationsLogFacade;
-import io.hops.hopsworks.common.dao.metadata.db.InodeBasicMetadataFacade;
-import io.hops.hopsworks.common.dao.metadata.db.TemplateFacade;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
 import io.hops.hopsworks.common.dao.project.team.ProjectTeamFacade;
 import io.hops.hopsworks.common.dao.user.activity.ActivityFacade;
@@ -80,8 +78,6 @@ import io.hops.hopsworks.persistence.entity.dataset.SharedState;
 import io.hops.hopsworks.persistence.entity.hdfs.inode.Inode;
 import io.hops.hopsworks.persistence.entity.log.operation.OperationType;
 import io.hops.hopsworks.persistence.entity.log.operation.OperationsLog;
-import io.hops.hopsworks.persistence.entity.metadata.InodeBasicMetadata;
-import io.hops.hopsworks.persistence.entity.metadata.Template;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.project.team.ProjectTeam;
 import io.hops.hopsworks.persistence.entity.user.Users;
@@ -126,8 +122,6 @@ public class DatasetController {
   @EJB
   private InodeController inodeController;
   @EJB
-  private TemplateFacade templates;
-  @EJB
   private DatasetFacade datasetFacade;
   @EJB
   private DatasetSharedWithFacade datasetSharedWithFacade;
@@ -135,8 +129,6 @@ public class DatasetController {
   private ProjectFacade projectFacade;
   @EJB
   private ActivityFacade activityFacade;
-  @EJB
-  private InodeBasicMetadataFacade inodeBasicMetaFacade;
   @EJB
   private OperationsLogFacade operationsLogFacade;
   @EJB
@@ -168,15 +160,13 @@ public class DatasetController {
    * and must satisfy the validity criteria for a folder name.
    * @param datasetDescription The description of the DataSet being created. Can
    * be null.
-   * @param templateId The id of the metadata template to be associated with
-   * this DataSet.
    * @param stickyBit Whether or not the dataset should have the sticky bit set
    * @param permission
    * @param dfso
    * folder names, or the folder already exists.
    */
   public Dataset createDataset(Users user, Project project, String dataSetName, String datasetDescription,
-    int templateId, ProvTypeDTO metaStatus, boolean stickyBit, DatasetAccessPermission permission,
+    ProvTypeDTO metaStatus, boolean stickyBit, DatasetAccessPermission permission,
     DistributedFileSystemOps dfso) throws DatasetException, HopsSecurityException {
 
     //Parameter checking.
@@ -196,7 +186,7 @@ public class DatasetController {
     Dataset newDS = null;
     //Permission 770
     FsPermission fsPermission = new FsPermission(FsAction.ALL, FsAction.ALL, FsAction.NONE, stickyBit);
-    success = createFolder(dsPath, templateId, fsPermission, dfso);
+    success = createFolder(dsPath, fsPermission, dfso);
     if (success) {
       try {
         ds = inodes.findByInodePK(parent, dataSetName, HopsUtils.dataSetPartitionId(parent, dataSetName));
@@ -246,10 +236,6 @@ public class DatasetController {
    * @param dirPath The full path of the folder to be created.
    * /Projects/projectA/datasetB/folder1/folder2/folder3, folder1/folder2
    * has to exist and folder3 needs to be a valid name.
-   * @param templateId The id of the template to be associated with the newly
-   * created directory.
-   * @param description The description of the directory
-   * @param searchable Defines if the directory can be searched upon
    * @param udfso
    * the directory.
    * @throws IllegalArgumentException If:
@@ -262,15 +248,14 @@ public class DatasetController {
    * @throws NullPointerException If any of the non-null-allowed parameters is
    * null.
    */
-  public void createSubDirectory(Project project, Path dirPath, int templateId, String description, boolean searchable,
-    DistributedFileSystemOps udfso) throws DatasetException, HopsSecurityException {
+  public void createSubDirectory(Project project, Path dirPath, DistributedFileSystemOps udfso)
+    throws DatasetException, HopsSecurityException {
     if (project == null) {
       throw new NullPointerException("Cannot create a directory under a null project.");
     } else if (dirPath == null) {
       throw new NullPointerException("Cannot create a directory for an empty path.");
     }
 
-    String folderName = dirPath.getName();
     String parentPath = dirPath.getParent().toString();
 
     //Check if the given folder already exists
@@ -286,18 +271,7 @@ public class DatasetController {
         "Path for parent folder does not exist: " + parentPath + " under " + project.getName());
     }
 
-    //Now actually create the folder
-    boolean success = this.createFolder(dirPath.toString(), templateId, null, udfso);
-
-    //if the folder was created successfully, persist basic metadata to it -
-    //description and searchable attribute
-    if (success) {
-      //find the corresponding inode
-      long partitionId = HopsUtils.calculatePartitionId(parent.getId(), folderName, dirPath.depth());
-      Inode folder = this.inodes.findByInodePK(parent, folderName, partitionId);
-      InodeBasicMetadata basicMeta = new InodeBasicMetadata(folder, description, searchable);
-      this.inodeBasicMetaFacade.addBasicMetadata(basicMeta);
-    }
+    this.createFolder(dirPath.toString(), null, udfso);
   }
 
   /**
@@ -368,7 +342,7 @@ public class DatasetController {
    * @return
    * @throws HopsSecurityException
    */
-  private boolean createFolder(String path, int template, FsPermission fsPermission, DistributedFileSystemOps dfso)
+  private boolean createFolder(String path, FsPermission fsPermission, DistributedFileSystemOps dfso)
     throws HopsSecurityException {
     boolean success;
     Path location = new Path(path);
@@ -379,16 +353,6 @@ public class DatasetController {
       success = dfso.mkdir(location, fsPermission);
       if (success) {
         dfso.setPermission(location, fsPermission);
-      }
-      if (success && template != 0 && template != -1) {
-        //Get the newly created Inode.
-        Inode created = inodeController.getInodeAtPath(path);
-        Template templ = templates.findByTemplateId(template);
-        if (templ != null) {
-          templ.getInodes().add(created);
-          //persist the relationship table
-          templates.updateTemplatesInodesMxN(templ);
-        }
       }
     } catch (IOException  ex) {
       throw new HopsSecurityException(RESTCodes.SecurityErrorCode.HDFS_ACCESS_CONTROL, Level.WARNING,
@@ -986,28 +950,24 @@ public class DatasetController {
   }
   
   public void createDirectory(Project project, Users user, Path fullPath, String name, Boolean isDataset,
-    Integer templateId, String description, ProvTypeDTO metaStatus, Boolean generateReadme,
-    DatasetAccessPermission permission) throws DatasetException, HopsSecurityException {
+    String description, ProvTypeDTO metaStatus, Boolean generateReadme, DatasetAccessPermission permission)
+    throws DatasetException, HopsSecurityException {
     DistributedFileSystemOps dfso = dfs.getDfsOps();
     String username = hdfsUsersController.getHdfsUserName(project, user);
     DistributedFileSystemOps udfso = dfs.getDfsOps(username);
-    if (templateId == null) {
-      templateId = -1;
-    }
     if (description == null) {
       description = "";
     }
     try {
       if (isDataset) {
-        createDataset(user, project, name, description, templateId, metaStatus, false, permission, dfso);
+        createDataset(user, project, name, description, metaStatus, false, permission, dfso);
         //Generate README.md for the dataset if the user requested it
         if (generateReadme != null && generateReadme) {
           //Persist README.md to hdfs
           generateReadme(udfso, name, description, project.getName());
         }
       } else {
-        boolean searchable = !Inode.MetaStatus.DISABLED.equals(metaStatus.getMetaStatus());
-        createSubDirectory(project, fullPath, templateId, description, searchable, udfso);
+        createSubDirectory(project, fullPath, udfso);
       }
     } finally {
       dfs.closeDfsClient(dfso);
