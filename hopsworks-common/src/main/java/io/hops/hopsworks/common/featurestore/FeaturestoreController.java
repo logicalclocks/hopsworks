@@ -17,36 +17,33 @@ package io.hops.hopsworks.common.featurestore;
 
 import com.logicalclocks.servicediscoverclient.exceptions.ServiceDiscoveryException;
 import io.hops.hopsworks.common.dao.user.activity.ActivityFacade;
-import io.hops.hopsworks.common.featurestore.app.FeaturestoreUtilJobDTO;
 import io.hops.hopsworks.common.featurestore.online.OnlineFeaturestoreController;
-import io.hops.hopsworks.common.featurestore.storageconnectors.hopsfs.FeaturestoreHopsfsConnectorController;
-import io.hops.hopsworks.common.featurestore.storageconnectors.jdbc.FeaturestoreJdbcConnectorController;
-import io.hops.hopsworks.common.featurestore.utils.FeaturestoreUtils;
+import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupFacade;
+import io.hops.hopsworks.common.featurestore.storageconnectors.FeaturestoreConnectorFacade;
+import io.hops.hopsworks.common.featurestore.storageconnectors.FeaturestoreStorageConnectorController;
+import io.hops.hopsworks.common.featurestore.storageconnectors.FeaturestoreStorageConnectorDTO;
+import io.hops.hopsworks.common.featurestore.storageconnectors.hopsfs.FeaturestoreHopsfsConnectorDTO;
+import io.hops.hopsworks.common.featurestore.storageconnectors.jdbc.FeaturestoreJdbcConnectorDTO;
+import io.hops.hopsworks.common.featurestore.trainingdatasets.TrainingDatasetFacade;
 import io.hops.hopsworks.common.hive.HiveController;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
+import io.hops.hopsworks.exceptions.ProjectException;
+import io.hops.hopsworks.exceptions.UserException;
 import io.hops.hopsworks.persistence.entity.dataset.Dataset;
 import io.hops.hopsworks.persistence.entity.dataset.DatasetSharedWith;
 import io.hops.hopsworks.persistence.entity.dataset.DatasetType;
 import io.hops.hopsworks.persistence.entity.featurestore.Featurestore;
+import io.hops.hopsworks.persistence.entity.featurestore.storageconnector.FeaturestoreConnectorType;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.persistence.entity.user.activity.ActivityFlag;
 import io.hops.hopsworks.restutils.RESTCodes;
-import org.apache.hadoop.fs.Path;
-import org.eclipse.persistence.jaxb.JAXBContextFactory;
-import org.eclipse.persistence.jaxb.MarshallerProperties;
 
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
-import javax.ws.rs.core.MediaType;
-import javax.xml.bind.JAXBContext;
-import javax.xml.bind.JAXBException;
-import javax.xml.bind.Marshaller;
-import java.io.IOException;
-import java.io.StringWriter;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
@@ -65,24 +62,20 @@ public class FeaturestoreController {
   @EJB
   private ActivityFacade activityFacade;
   @EJB
-  private FeaturestoreJdbcConnectorController featurestoreJdbcConnectorController;
-  @EJB
-  private FeaturestoreHopsfsConnectorController featurestoreHopsfsConnectorController;
-  @EJB
   private Settings settings;
   @EJB
   private OnlineFeaturestoreController onlineFeaturestoreController;
   @EJB
-  private FeaturestoreUtils featurestoreUtils;
-  @EJB
   private HiveController hiveController;
+  @EJB
+  private FeaturegroupFacade featuregroupFacade;
+  @EJB
+  private TrainingDatasetFacade trainingDatasetFacade;
+  @EJB
+  private FeaturestoreConnectorFacade connectorFacade;
+  @EJB
+  private FeaturestoreStorageConnectorController featurestoreStorageConnectorController;
   
-  private JAXBContext featurestoreUtilJobArgsJaxbContext = null;
-  private Marshaller featurestoreUtilJobArgsMarshaller = null;
-
-  private static final String FEATURESTORE_UTIL_ARGS_PATH = Path.SEPARATOR + Settings.DIR_ROOT + Path.SEPARATOR
-      + "%s" + Path.SEPARATOR + FeaturestoreConstants.FEATURESTORE_UTIL_4J_ARGS_DATASET + Path.SEPARATOR + "%s";
-  private static final String HDFS_FILE_PATH = "hdfs://%s";
 
   /*
    * Retrieves a list of all featurestores for a particular project
@@ -103,7 +96,20 @@ public class FeaturestoreController {
       throw ex;
     }
   }
-
+  
+  /**
+   * Return the feature store dataset for the specific project. not the shared ones.
+   * @param project
+   * @return
+   */
+  public Dataset getProjectFeaturestoreDataset(Project project) throws FeaturestoreException {
+    return  project.getDatasetCollection().stream()
+      .filter(ds -> ds.getDsType() == DatasetType.FEATURESTORE)
+      .findFirst()
+      .orElseThrow(() -> new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.FEATURESTORE_NOT_FOUND,
+        Level.INFO, "Could not find feature store for project: " + project.getName()));
+  }
+  
   /**
    * Return the feature store for the specific project. not the shared ones.
    * @param project
@@ -216,7 +222,7 @@ public class FeaturestoreController {
    * @throws FeaturestoreException
    */
   public Featurestore createProjectFeatureStore(Project project, Users user, String featurestoreName,
-      Dataset trainingDatasetsFolder) throws FeaturestoreException {
+      Dataset trainingDatasetsFolder) throws FeaturestoreException, ProjectException, UserException {
 
     //Get HiveDbId for the newly created Hive featurestore DB
     Long hiveDbId = featurestoreFacade.getHiveDatabaseId(featurestoreName);
@@ -228,22 +234,53 @@ public class FeaturestoreController {
     featurestoreFacade.persist(featurestore);
     activityFacade.persistActivity(ActivityFacade.CREATED_FEATURESTORE + featurestoreName, project,
       project.getOwner(), ActivityFlag.SERVICE);
-    featurestoreJdbcConnectorController.createDefaultJdbcConnectorForOfflineFeaturestore(featurestore,
-        getOfflineFeaturestoreDbName(project), "JDBC connection to Hopsworks Project Feature Store Hive Database");
     activityFacade.persistActivity(ActivityFacade.ADDED_FEATURESTORE_STORAGE_CONNECTOR +
         getOfflineFeaturestoreDbName(project), project, project.getOwner(), ActivityFlag.SERVICE);
-    featurestoreJdbcConnectorController.createDefaultJdbcConnectorForOfflineFeaturestore(featurestore,
-      project.getName(), "JDBC connection to Hopsworks Project Hive Warehouse");
     activityFacade.persistActivity(ActivityFacade.ADDED_FEATURESTORE_STORAGE_CONNECTOR + project.getName(),
       project, project.getOwner(), ActivityFlag.SERVICE);
-    featurestoreHopsfsConnectorController.createHopsFsBackendForFeaturestoreConnector(featurestore,
-        trainingDatasetsFolder);
+    featurestoreStorageConnectorController
+        .createStorageConnector(user, project, featurestore, hopsfsTrainingDatasetConnector(trainingDatasetsFolder));
+    featurestoreStorageConnectorController
+        .createStorageConnector(user, project, featurestore, createOfflineJdbcConnector(featurestoreName));
     activityFacade.persistActivity(ActivityFacade.ADDED_FEATURESTORE_STORAGE_CONNECTOR + trainingDatasetsFolder.
         getName(), project, project.getOwner(), ActivityFlag.SERVICE);
     if (settings.isOnlineFeaturestore()) {
       onlineFeaturestoreController.setupOnlineFeaturestore(user, featurestore);
     }
     return featurestore;
+  }
+
+  public FeaturestoreStorageConnectorDTO hopsfsTrainingDatasetConnector(Dataset hopsfsDataset) {
+    String name = hopsfsDataset.getName();
+    String description = "HOPSFS backend for storing Training Datasets of the Hopsworks Feature Store";
+    FeaturestoreHopsfsConnectorDTO featurestoreHopsfsConnectorDTO = new FeaturestoreHopsfsConnectorDTO();
+    featurestoreHopsfsConnectorDTO.setStorageConnectorType(FeaturestoreConnectorType.HOPSFS);
+    featurestoreHopsfsConnectorDTO.setName(name);
+    featurestoreHopsfsConnectorDTO.setDescription(description);
+    featurestoreHopsfsConnectorDTO.setDatasetName(hopsfsDataset.getName());
+
+    return featurestoreHopsfsConnectorDTO;
+  }
+
+  public FeaturestoreStorageConnectorDTO createOfflineJdbcConnector(String databaseName) throws FeaturestoreException {
+    String hiveEndpoint;
+    try {
+      hiveEndpoint = hiveController.getHiveServerInternalEndpoint();
+    } catch (ServiceDiscoveryException ex) {
+      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.CONNECTOR_NOT_FOUND,
+          Level.SEVERE, "Could not create Hive connection string", ex.getMessage(), ex);
+    }
+
+    String connectionString = "jdbc:hive2://" + hiveEndpoint + "/" + databaseName + ";" +
+        "auth=noSasl;ssl=true;twoWay=true;";
+    String arguments = "sslTrustStore,trustStorePassword,sslKeyStore,keyStorePassword";
+    FeaturestoreJdbcConnectorDTO featurestoreJdbcConnectorDTO = new FeaturestoreJdbcConnectorDTO();
+    featurestoreJdbcConnectorDTO.setStorageConnectorType(FeaturestoreConnectorType.JDBC);
+    featurestoreJdbcConnectorDTO.setName(databaseName);
+    featurestoreJdbcConnectorDTO.setDescription("JDBC connector for the Offline Feature Store");
+    featurestoreJdbcConnectorDTO.setConnectionString(connectionString);
+    featurestoreJdbcConnectorDTO.setArguments(arguments);
+    return featurestoreJdbcConnectorDTO;
   }
 
   /**
@@ -253,32 +290,38 @@ public class FeaturestoreController {
    * @param featurestore the featurestore entity
    * @return a DTO representation of the featurestore
    */
-  public FeaturestoreDTO convertFeaturestoreToDTO(Featurestore featurestore) {
+  private FeaturestoreDTO convertFeaturestoreToDTO(Featurestore featurestore) {
     String hiveDbDescription = featurestoreFacade.getHiveDatabaseDescription(featurestore.getHiveDbId());
     FeaturestoreDTO featurestoreDTO = new FeaturestoreDTO(featurestore);
+
     featurestoreDTO.setFeaturestoreDescription(hiveDbDescription);
-    String hiveDbName = featurestoreFacade.getHiveDbName(featurestore.getHiveDbId());
-    featurestoreDTO.setFeaturestoreName(hiveDbName);
-    String hdfsPath = featurestoreFacade.getHiveDbHdfsPath(featurestore.getHiveDbId());
-    featurestoreDTO.setHdfsStorePath(hdfsPath);
-    Long inodeId = featurestoreFacade.getFeaturestoreInodeId(featurestore.getHiveDbId());
-    featurestoreDTO.setInodeId(inodeId);
+    String name = featurestoreFacade.getHiveDbName(featurestore.getHiveDbId());
+    // TODO(Fabio): remove this when we switch to the new UI.
+    featurestoreDTO.setFeaturestoreName(name);
+    featurestoreDTO.setOfflineFeaturestoreName(name);
+    featurestoreDTO.setHdfsStorePath(featurestoreFacade.getHiveDbHdfsPath(featurestore.getHiveDbId()));
+    featurestoreDTO.setInodeId(featurestoreFacade.getFeaturestoreInodeId(featurestore.getHiveDbId()));
+
     try {
-      String hiveEndpoint = hiveController.getHiveServerInternalEndpoint();
-      featurestoreDTO.setHiveEndpoint(hiveEndpoint);
-      featurestoreDTO.setOfflineFeaturestoreName(hiveDbName);
+      featurestoreDTO.setHiveEndpoint(hiveController.getHiveServerInternalEndpoint());
       if (settings.isOnlineFeaturestore() &&
           onlineFeaturestoreController.checkIfDatabaseExists(
               onlineFeaturestoreController.getOnlineFeaturestoreDbName(featurestore.getProject()))) {
-        featurestoreDTO.setMysqlServerEndpoint(settings.getFeaturestoreJdbcUrl());
+        featurestoreDTO.setMysqlServerEndpoint(onlineFeaturestoreController.getJdbcURL());
         featurestoreDTO.setOnlineFeaturestoreSize(onlineFeaturestoreController.getDbSize(featurestore));
         featurestoreDTO.setOnlineFeaturestoreName(featurestore.getProject().getName());
         featurestoreDTO.setOnlineEnabled(true);
       }
-      return featurestoreDTO;
     } catch (ServiceDiscoveryException ex) {
       throw new RuntimeException(ex);
     }
+
+    // add counters
+    featurestoreDTO.setNumFeatureGroups(featuregroupFacade.countByFeaturestore(featurestore));
+    featurestoreDTO.setNumTrainingDatasets(trainingDatasetFacade.countByFeaturestore(featurestore));
+    featurestoreDTO.setNumStorageConnectors(connectorFacade.countByFeaturestore(featurestore));
+
+    return featurestoreDTO;
   }
 
   /**
@@ -289,44 +332,5 @@ public class FeaturestoreController {
    */
   public String getOfflineFeaturestoreDbName(Project project) {
     return project.getName().toLowerCase() + FeaturestoreConstants.FEATURESTORE_HIVE_DB_SUFFIX;
-  }
-
-  /**
-   * Writes JSON input for featurestore Util Job to HDFS as a JSON file
-   *
-   * @param user user making the request
-   * @param project project of the user
-   * @param featurestoreUtilJobDTO the JSON DTO
-   * @return HDFS path where the JSON file was written
-   * @throws FeaturestoreException
-   * @throws JAXBException
-   */
-  public String writeUtilArgsToHdfs(Users user, Project project, FeaturestoreUtilJobDTO featurestoreUtilJobDTO)
-      throws FeaturestoreException, JAXBException {
-    if (featurestoreUtilJobArgsMarshaller == null) {
-      try {
-        featurestoreUtilJobArgsJaxbContext =
-            JAXBContextFactory.createContext(new Class[]{FeaturestoreUtilJobDTO.class}, null);
-        featurestoreUtilJobArgsMarshaller = featurestoreUtilJobArgsJaxbContext.createMarshaller();
-        featurestoreUtilJobArgsMarshaller.setProperty(MarshallerProperties.JSON_INCLUDE_ROOT, false);
-        featurestoreUtilJobArgsMarshaller.setProperty(MarshallerProperties.MEDIA_TYPE, MediaType.APPLICATION_JSON);
-      } catch (JAXBException e) {
-        throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.FEATURESTORE_INITIALIZATION_ERROR,
-            Level.SEVERE, "Error initialization feature store controller");
-      }
-    }
-    StringWriter sw = new StringWriter();
-    featurestoreUtilJobArgsMarshaller.marshal(featurestoreUtilJobDTO, sw);
-    Path hdfsPath = new Path(String.format(FEATURESTORE_UTIL_ARGS_PATH, project.getName(),
-        featurestoreUtilJobDTO.getFileName()));
-
-    try {
-      featurestoreUtils.writeToHDFS(project, user, hdfsPath, sw.toString());
-    } catch (IOException ex) {
-      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.FEATURESTORE_UTIL_ARGS_FAILURE,
-          Level.WARNING, "Failed to write featurestore util args to HDFS", ex.getMessage(), ex);
-    }
-
-    return String.format(HDFS_FILE_PATH, hdfsPath.toString());
   }
 }

@@ -108,6 +108,16 @@ public class CondaCommandFacade extends AbstractFacade<CondaCommands> {
     }
   }
   
+  public void deleteCommandsForProject(Project proj) {
+    List<CondaCommands> commands = getCommandsForProject(proj);
+    for (CondaCommands cc : commands) {
+      // delete the conda library command if it has the same name as the input library name
+      if (cc.getOp().equals(CondaOp.CREATE) || cc.getOp().equals(CondaOp.EXPORT)) {
+        em.remove(cc);
+      }
+    }
+  }
+  
   public void removeCondaCommand(int commandId) {
     CondaCommands cc = findCondaCommand(commandId);
     if (cc != null) {
@@ -128,6 +138,16 @@ public class CondaCommandFacade extends AbstractFacade<CondaCommands> {
     TypedQuery<CondaCommands> query = em.createNamedQuery("CondaCommands.findByStatusAndCondaOp", CondaCommands.class);
     query.setParameter("status", status);
     query.setParameter("op", op);
+    return query.getResultList();
+  }
+  
+  public List<CondaCommands> findByStatusAndCondaOpAndProject(List<CondaStatus> statuses, CondaOp op, Project project) {
+    TypedQuery<CondaCommands> query =
+      em.createNamedQuery("CondaCommands.findByStatusListAndCondaOpAndProject", CondaCommands.class);
+    query.setParameter("statuses", statuses);
+    query.setParameter("op", op);
+    query.setParameter("project", project);
+    
     return query.getResultList();
   }
 

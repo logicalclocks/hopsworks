@@ -42,7 +42,7 @@
   <div id="wrapper"
        ng-class="{'toggled': projectCtrl.isClosed}"
        ng-controller="DatasetsCtrl as datasetsCtrl">
-    <div ng-controller="MetadataCtrl as metadataCtrl">
+    <div>
       <div class="overlay" ></div>
       <div ng-include="'navProject.html'"></div>
       <section>
@@ -146,9 +146,10 @@
                       </tr>
                     </tbody>
                     <tbody ng-show="datasetsCtrl.sortedDataset.length > 0">
-                    <tr dir-paginate="dataset in datasetsCtrl.sortedDataset | itemsPerPage:datasetsCtrl.datasetPagination.itemsPerPage"
+                    <tr
+                            dir-paginate="dataset in datasetsCtrl.sortedDataset | itemsPerPage:datasetsCtrl.datasetPreferences.itemsPerPage"
                         pagination-id="dataset_pagination"
-                        current-page="datasetsCtrl.datasetPagination.currentPage"
+                        current-page="datasetsCtrl.datasetPreferences.currentPage"
                         total-items="datasetsCtrl.filesCount"
                         id="table-row-{{ dataset.name}}"
                         context-menu data-target="table-menu-{{ dataset.name}}"
@@ -159,7 +160,7 @@
                                      ng-show="datasetsCtrl.selected !== dataset.name"
                                      ng-checked="false"
                                      title="Select dataset"
-                                     ng-click="datasetsCtrl.selectDataset(dataset.name, dataset); metadataCtrl.setMetadataTemplate(dataset.attributes); datasetsCtrl.filePreview(dataset, false, true); $event.stopPropagation();"
+                                     ng-click="datasetsCtrl.selectDataset(dataset.name, dataset); datasetsCtrl.filePreview(dataset, false, true); $event.stopPropagation();"
                                      style="z-index: 999; margin-right: unset">
                         </md-checkbox>
                         <md-checkbox md-no-ink aria-label="Select" class="md-primary"
@@ -195,8 +196,6 @@
                                       browse_dataset="datasetsCtrl.browseDataset(dataset)"
                                       delete_dataset="datasetsCtrl.deleteDataset(dataset)"
                                       permissions="datasetsCtrl.permissions(dataset, permission)"
-                                      attach_template="metadataCtrl.attachTemplate(attributes)"
-                                      detach_template="metadataCtrl.detachTemplate(attributes)"
                                       show_manifest="datasetsCtrl.showManifest(publicId)"
                                       share="datasetsCtrl.share(dataset)"
                                       shared-with="datasetsCtrl.sharedWith(dataset)"
@@ -247,9 +246,10 @@
                            No result found.</div>
                     </div>
                     <div class="row row-no-margin" ng-show="datasetsCtrl.sortedDataset.length > 0">
-                      <div dir-paginate="dataset in datasetsCtrl.sortedDataset | itemsPerPage:datasetsCtrl.datasetPagination.itemsPerPage"
+                      <div
+                              dir-paginate="dataset in datasetsCtrl.sortedDataset | itemsPerPage:datasetsCtrl.datasetPreferences.itemsPerPage"
                            pagination-id="dataset_pagination"
-                           current-page="datasetsCtrl.datasetPagination.currentPage"
+                           current-page="datasetsCtrl.datasetPreferences.currentPage"
                            total-items="datasetsCtrl.filesCount">
                         <div>
                           <div ng-init="(iscollapsed$index) = true"
@@ -272,7 +272,7 @@
                                 </div>
                                 <div class="file-name" data-toggle="tooltip"
                                      title="Click on the bottom section to view metadata for this dataset."
-                                     ng-click="datasetsCtrl.selectDataset(dataset.name, dataset); metadataCtrl.setMetadataTemplate(dataset.attributes); datasetsCtrl.filePreview(dataset, false, true);">
+                                     ng-click="datasetsCtrl.selectDataset(dataset.name, dataset); datasetsCtrl.filePreview(dataset, false, true);">
                                 <span data-toggle="tooltip"
                                       title="{{datasetsCtrl.shortDatasetName(dataset).length > 17 ? datasetsCtrl.shortDatasetName(dataset):''}}">
                                   {{datasetsCtrl.shortDatasetName(dataset)| cut:true:17:'...'}}
@@ -328,8 +328,6 @@
                                         browse_dataset="datasetsCtrl.browseDataset(dataset)"
                                         delete_dataset="datasetsCtrl.deleteDataset(dataset)"
                                         permissions="datasetsCtrl.permissions(dataset, permission)"
-                                        attach_template="metadataCtrl.attachTemplate(attributes)"
-                                        detach_template="metadataCtrl.detachTemplate(attributes)"
                                         show_manifest="datasetsCtrl.showManifest(publicId)"
                                         share="datasetsCtrl.share(dataset)"
                                         share_with_cluster="datasetsCtrl.publish(dataset)"
@@ -471,10 +469,6 @@
                             </td>
                           </tr>
                         </table>
-                        <!--METADATA PRESENTATION SECTION-->
-                        <div id="board" style="font-family: Times New Roman;"
-                             ng-include="'views/metadata/extendedMetadata.html'">
-                        </div>
                       </md-tab>
                     </md-tabs>
                   </md-content>
@@ -486,10 +480,10 @@
     </div>
     <tour class="ng-scope" step="datasetsCtrl.tourService.currentStep_TourNine"
           post-tour="closeTour()"
-          ng-if="datasetsCtrl.tourService.activeTour === 'featurestore'
+          ng-if="datasetsCtrl.tourService.activeTour === 'fs'
           && datasetsCtrl.tourService.showTips && !datasetsCtrl.working">
       <virtual-step
-              ng-if="datasetsCtrl.tourService.activeTour === 'featurestore'"
+              ng-if="datasetsCtrl.tourService.activeTour === 'fs'"
               class="ng-scope"
               tourtip="The feature groups and features can be found in a dataset called Featurestore.db"
               tourtip-step="7"
@@ -499,7 +493,7 @@
               on-proceed=""
       ></virtual-step>
       <virtual-step
-              ng-if="datasetsCtrl.tourService.activeTour === 'featurestore'"
+              ng-if="datasetsCtrl.tourService.activeTour === 'fs'"
               class="ng-scope"
               tourtip="The training datasets can be found in a dataset called Training Datasets"
               tourtip-step="8"
@@ -509,7 +503,7 @@
               on-proceed=""
       ></virtual-step>
       <virtual-step
-              ng-if="datasetsCtrl.tourService.activeTour === 'featurestore'"
+              ng-if="datasetsCtrl.tourService.activeTour === 'fs'"
               class="ng-scope"
               tourtip="The tour includes a set of sample notebooks for interacting with the feature store. These notebooks are available in the dataset called 'Jupyter'"
               tourtip-step="9"

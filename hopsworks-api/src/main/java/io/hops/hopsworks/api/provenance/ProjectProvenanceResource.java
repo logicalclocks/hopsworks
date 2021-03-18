@@ -15,28 +15,40 @@
  */
 package io.hops.hopsworks.api.provenance;
 
+import io.hops.hopsworks.api.dataset.DatasetAccessType;
 import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.api.filter.Audience;
+import io.hops.hopsworks.api.filter.apiKey.ApiKeyRequired;
 import io.hops.hopsworks.api.jwt.JWTHelper;
 import io.hops.hopsworks.api.provenance.ops.ProvLinksBeanParams;
+import io.hops.hopsworks.api.provenance.ops.ProvLinksBuilder;
 import io.hops.hopsworks.api.provenance.ops.ProvOpsBeanParams;
+import io.hops.hopsworks.api.provenance.ops.ProvOpsBuilder;
+import io.hops.hopsworks.api.provenance.ops.ProvUsageBuilder;
+import io.hops.hopsworks.api.provenance.ops.ProvUsageBeanParams;
 import io.hops.hopsworks.api.provenance.state.ProvStateBeanParams;
 import io.hops.hopsworks.api.util.Pagination;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
+import io.hops.hopsworks.common.dataset.DatasetController;
+import io.hops.hopsworks.common.featurestore.FeaturestoreController;
 import io.hops.hopsworks.common.provenance.core.HopsFSProvenanceController;
 import io.hops.hopsworks.common.provenance.core.dto.ProvDatasetDTO;
 import io.hops.hopsworks.common.provenance.core.dto.ProvTypeDTO;
-import io.hops.hopsworks.common.provenance.ops.ProvLinksBuilderIface;
-import io.hops.hopsworks.common.provenance.ops.ProvOpsBuilderIface;
+import io.hops.hopsworks.api.provenance.ops.dto.ProvArtifactUsageParentDTO;
 import io.hops.hopsworks.common.provenance.state.ProvStateBuilder;
 import io.hops.hopsworks.common.provenance.ops.dto.ProvLinksDTO;
 import io.hops.hopsworks.common.provenance.ops.dto.ProvOpsDTO;
 import io.hops.hopsworks.common.provenance.state.dto.ProvStateDTO;
+import io.hops.hopsworks.common.util.Settings;
+import io.hops.hopsworks.exceptions.DatasetException;
+import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.exceptions.GenericException;
 import io.hops.hopsworks.exceptions.ProvenanceException;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
+import io.hops.hopsworks.persistence.entity.dataset.Dataset;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.user.Users;
+import io.hops.hopsworks.persistence.entity.user.security.apiKey.ApiScope;
 import io.hops.hopsworks.restutils.RESTCodes;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -58,6 +70,7 @@ import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
+import javax.ws.rs.core.UriInfo;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -77,9 +90,15 @@ public class ProjectProvenanceResource {
   @Inject
   private ProvStateBuilder stateBuilder;
   @Inject
-  private ProvOpsBuilderIface opsBuilder;
+  private ProvOpsBuilder opsBuilder;
   @Inject
-  private ProvLinksBuilderIface linksBuilder;
+  private ProvLinksBuilder linksBuilder;
+  @Inject
+  private ProvUsageBuilder usageBuilder;
+  @EJB
+  private FeaturestoreController fsCtrl;
+  @EJB
+  private DatasetController datasetCtrl;
   
   private Project project;
   
@@ -87,10 +106,15 @@ public class ProjectProvenanceResource {
     this.project = projectFacade.find(projectId);
   }
   
+  public void setProject(Project project) {
+    this.project = project;
+  }
+  
   @GET
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.ANYONE})
   @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
+  @ApiKeyRequired( acceptedScopes = {ApiScope.PROJECT}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   @ApiOperation(value = "Get the Provenance Type of PROJECT/DATASET", response = ProvTypeDTO.class)
   public Response getProvenanceStatus(
     @QueryParam("type") @DefaultValue("PROJECT") TypeOf typeOf,
@@ -121,6 +145,7 @@ public class ProjectProvenanceResource {
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
   @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
+  @ApiKeyRequired( acceptedScopes = {ApiScope.PROJECT}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   @ApiOperation(value = "State Provenance query endpoint", response = ProvStateDTO.class)
   public Response getFileStates(
     @BeanParam
@@ -136,11 +161,14 @@ public class ProjectProvenanceResource {
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
   @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
+  @ApiKeyRequired( acceptedScopes = {ApiScope.PROJECT}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   @ApiOperation(value = "Operations Provenance query endpoint", response = ProvOpsDTO.class)
   public Response getFileOps(
     @BeanParam ProvOpsBeanParams params,
     @BeanParam Pagination pagination,
-    @Context HttpServletRequest req) throws ProvenanceException, GenericException {
+    @Context HttpServletRequest req,
+    @Context SecurityContext sc,
+    @Context UriInfo uriInfo) throws ProvenanceException, GenericException {
     ProvOpsDTO result = opsBuilder.build(project, params, pagination);
     return Response.ok().entity(result).build();
   }
@@ -150,6 +178,7 @@ public class ProjectProvenanceResource {
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
   @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
+  @ApiKeyRequired( acceptedScopes = {ApiScope.PROJECT}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   @ApiOperation(value = "Links Provenance query endpoint - " +
     "link feature groups/training datasets/experiments/models through their application ids",
     response = ProvLinksDTO.class)
@@ -159,5 +188,62 @@ public class ProjectProvenanceResource {
     @Context HttpServletRequest req) throws ProvenanceException, GenericException {
     ProvLinksDTO result = linksBuilder.build(project, params, pagination);
     return Response.ok().entity(result).build();
+  }
+  
+  @GET
+  @Path("usage")
+  @Produces(MediaType.APPLICATION_JSON)
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
+  @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
+  @ApiKeyRequired( acceptedScopes = {ApiScope.PROJECT}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
+  @ApiOperation(value = "Artifact usage", response = ProvArtifactUsageParentDTO.class)
+  public Response usage(
+    @QueryParam("artifact_id") String artifactId,
+    @QueryParam("endpoint_id") Integer endpointId,
+    @QueryParam("artifact_type") DatasetAccessType accessType,
+    @BeanParam
+      ProvUsageBeanParams params,
+    @Context UriInfo uriInfo) throws ProvenanceException, GenericException {
+    if(artifactId == null) {
+      throw new GenericException(RESTCodes.GenericErrorCode.ILLEGAL_ARGUMENT, Level.FINE,
+        "artifactId id cannot be null");
+    }
+    Project targetProject = project;
+    if(endpointId != null) {
+      targetProject = projectFacade.findById(endpointId).orElseThrow(
+        () -> new GenericException(RESTCodes.GenericErrorCode.ILLEGAL_ARGUMENT, Level.FINE, "target project not found")
+      );
+    }
+    Dataset targetEndpoint;
+    if (accessType != null) {
+      try {
+        switch (accessType) {
+          case FEATUREGROUPS:
+            targetEndpoint = fsCtrl.getProjectFeaturestoreDataset(targetProject);
+            break;
+          case TRAININGDATASETS:
+            String tdName = project.getName() + "_" + Settings.ServiceDataset.TRAININGDATASETS.getName();
+            targetEndpoint = datasetCtrl.getByName(targetProject, tdName);
+            break;
+          case MODELS:
+            targetEndpoint = datasetCtrl.getByName(targetProject, Settings.HOPS_MODELS_DATASET);
+            break;
+          case EXPERIMENTS:
+            targetEndpoint = datasetCtrl.getByName(targetProject, Settings.HOPS_EXPERIMENTS_DATASET);
+            break;
+          default:
+            throw new GenericException(RESTCodes.GenericErrorCode.ILLEGAL_ARGUMENT, Level.FINE,
+              "access type not supports:" + accessType);
+        }
+      } catch (FeaturestoreException | DatasetException e) {
+        throw new GenericException(RESTCodes.GenericErrorCode.ILLEGAL_STATE, Level.FINE,
+          "cannot access the dataset of the artifact");
+      }
+    } else {
+      throw new GenericException(RESTCodes.GenericErrorCode.ILLEGAL_STATE, Level.FINE, "access type not defined");
+    }
+    ProvArtifactUsageParentDTO status
+      = usageBuilder.buildAccessible(uriInfo, project, targetEndpoint, artifactId, params.getUsageType());
+    return Response.ok().entity(status).build();
   }
 }

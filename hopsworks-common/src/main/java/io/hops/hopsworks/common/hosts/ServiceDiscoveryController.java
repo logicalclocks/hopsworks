@@ -62,8 +62,11 @@ public class ServiceDiscoveryController {
     HOPSWORKS_APP("hopsworks.glassfish"),
     JUPYTER_LOGSTASH("jupyter.logstash"),
     REGISTRY("registry"),
-    CONSUL_SERVER("consul");
-    
+    CONSUL_SERVER("consul"),
+    ONLINEFS_MYSQL("onlinefs.mysql"),
+    RESOURCEMANAGER("resourcemanager"),
+    PUSHGATEWAY("pushgateway.prometheus");
+
     private String name;
     HopsworksService(String name) {
       this.name = name;
@@ -112,6 +115,12 @@ public class ServiceDiscoveryController {
   public String constructServiceFQDNWithPort(HopsworksService hopsworksService) throws ServiceDiscoveryException {
     Service service = getAnyAddressOfServiceWithDNS(hopsworksService);
     return service.getName() + ":" + service.getPort();
+  }
+
+  @Lock(LockType.READ)
+  public String constructServiceAddressWithPort(HopsworksService hopsworksService) throws ServiceDiscoveryException {
+    Service service = getAnyAddressOfServiceWithDNS(hopsworksService);
+    return service.getAddress() + ":" + service.getPort();
   }
 
   @Lock(LockType.READ)

@@ -20,9 +20,9 @@
  */
 angular.module('hopsWorksApp')
     .controller('SparkConfigCtrl', ['$scope', '$routeParams', '$route',
-        'growl', 'ModalService', '$interval', 'JupyterService', 'StorageService', '$location', '$timeout',
+        'growl', 'ModalService', '$interval', 'JupyterService', 'StorageService', 'VariablesService', '$location', '$timeout',
         function($scope, $routeParams, $route, growl, ModalService, $interval, JupyterService,
-            StorageService, $location, $timeout) {
+            StorageService, VariablesService, $location, $timeout) {
 
             var self = this;
 
@@ -34,17 +34,36 @@ angular.module('hopsWorksApp')
 
             self.loc = $location.url().split('#')[0];
 
-            self.isJupyter = self.loc.endsWith('jupyter');
+            self.isJupyter = self.loc.endsWith('jupyter') || typeof $scope.notebookAttachedJupyterConfigInfoView !== 'undefined';
             self.isJobs = self.loc.endsWith('newJob');
             self.uneditableMode = false;
 
+
             self.experimentType = '';
             $scope.indextab = 0;
+
+            self.executorMemoryWarning = "";
+            //just set some default
+            self.MIN_EXECUTOR_MEMORY = 1024;
+
+            self.init = function () {
+                VariablesService.getVariable('spark_executor_min_memory')
+                    .then(function (success) {
+                        self.MIN_EXECUTOR_MEMORY = parseInt(success.data.successMessage);
+                    });
+            }
+            self.init();
 
             $scope.$watch('jobConfig', function (jobConfig, oldConfig) {
                 if (jobConfig) {
                     self.jobConfig = jobConfig;
                     self.setConf();
+                }
+            }, true);
+
+            $scope.$watch('notebookAttachedJupyterConfigInfoView', function (editMode, oldConfig) {
+                if (editMode) {
+                    self.uneditableMode = editMode;
                 }
             }, true);
 
@@ -68,8 +87,10 @@ angular.module('hopsWorksApp')
             });
 
             self.setConf = function() {
-                if(self.isJupyter && self.settings && self.settings.pythonKernel === true) {
-                    $scope.indextab = 0;
+                if(self.isJupyter && self.settings) {
+                    if(self.settings.pythonKernel === true) {
+                        $scope.indextab = 0;
+                    }
                 } else if (self.jobConfig.experimentType) {
                     self.jobConfig['spark.dynamicAllocation.enabled'] = true;
                     self.setMode(self.jobConfig.experimentType);
@@ -144,6 +165,10 @@ angular.module('hopsWorksApp')
                             self.archives.push(archives[i]);
                         }
                     }
+                }
+
+                if(self.jobConfig["spark.executor.memory"]) {
+                    self.validateExecutorMemory();
                 }
             };
 
@@ -452,6 +477,17 @@ angular.module('hopsWorksApp')
                   if(currentElemHeight < scrollHeight) {
                     element.style.height = scrollHeight + "px";
                   }
+            };
+
+            self.validateExecutorMemory = function () {
+                if(!self.jobConfig['spark.executor.memory']  ||
+                    (self.jobConfig['spark.executor.memory'] < self.MIN_EXECUTOR_MEMORY)) {
+                    self.executorMemoryWarning = "Executor memory should not be less than " + self.MIN_EXECUTOR_MEMORY + " MB";
+                    $scope.$parent.executorMemoryState({minExecutorMemory:self.MIN_EXECUTOR_MEMORY, hasEnoughMemory:false});
+                } else {
+                    self.executorMemoryWarning = "";
+                    $scope.$parent.executorMemoryState({minExecutorMemory:self.MIN_EXECUTOR_MEMORY, hasEnoughMemory:true});
+                }
             };
         }
     ]);

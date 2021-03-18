@@ -47,6 +47,8 @@ public class ProvOpsDTO extends RestDTO<ProvOpsDTO> {
   private String mlId;
   private ProvAppStateDTO appState;
   
+  private String aggregation;
+  
   public ProvOpsDTO() {}
   
   public String getId() {
@@ -233,5 +235,13 @@ public class ProvOpsDTO extends RestDTO<ProvOpsDTO> {
         setDocSubType(ProvParser.DocSubType.DATASET); break;
     }
     return this;
+  }
+  
+  public String getAggregation() {
+    return aggregation;
+  }
+  
+  public void setAggregation(String aggregation) {
+    this.aggregation = aggregation;
   }
 }

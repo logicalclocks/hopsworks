@@ -19,6 +19,7 @@ import io.hops.hopsworks.api.python.command.CommandBuilder;
 import io.hops.hopsworks.common.api.ResourceRequest;
 import io.hops.hopsworks.common.dao.AbstractFacade;
 import io.hops.hopsworks.common.dao.python.LibraryFacade;
+import io.hops.hopsworks.common.python.library.PackageSource;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.python.PythonDep;
 
@@ -63,7 +64,7 @@ public class LibraryBuilder {
       .path(ResourceRequest.Name.PROJECT.toString())
       .path(project.getId().toString())
       .path(ResourceRequest.Name.ENVIRONMENTS.toString())
-      .path(project.getPythonVersion())
+      .path(project.getPythonEnvironment().getPythonVersion())
       .path(ResourceRequest.Name.LIBRARIES.toString())
       .build());
     return dto;
@@ -74,7 +75,7 @@ public class LibraryBuilder {
       .path(ResourceRequest.Name.PROJECT.toString())
       .path(project.getId().toString())
       .path(ResourceRequest.Name.ENVIRONMENTS.toString())
-      .path(project.getPythonVersion())
+      .path(project.getPythonEnvironment().getPythonVersion())
       .path(ResourceRequest.Name.LIBRARIES.toString())
       .path(dep.getDependency())
       .build());
@@ -146,7 +147,7 @@ public class LibraryBuilder {
       dto.setLibrary(dep.getDependency());
       dto.setVersion(dep.getVersion());
       dto.setChannel(dep.getRepoUrl().getUrl());
-      dto.setPackageManager(LibraryDTO.PackageManager.valueOf(dep.getInstallType().name()));
+      dto.setPackageSource(PackageSource.valueOf(dep.getInstallType().name()));
       dto.setPreinstalled(Boolean.toString(dep.isPreinstalled()));
       dto.setCommands(commandBuilder.buildItems(uriInfo, resourceRequest.get(ResourceRequest.Name.COMMANDS), project,
         dep.getDependency()));

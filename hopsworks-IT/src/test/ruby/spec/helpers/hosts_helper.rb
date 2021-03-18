@@ -31,6 +31,10 @@ module HostsHelper
     Host.where(registered: true)
   end
 
+  def find_by_host_id(id)
+    Host.find_by(id: id)
+  end
+
   def find_all_hosts()
     Host.all
   end

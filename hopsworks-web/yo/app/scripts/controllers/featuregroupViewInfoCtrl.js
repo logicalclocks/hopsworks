@@ -29,6 +29,7 @@ angular.module('hopsWorksApp')
 
             //Controller State
             self.tgState = false;
+            self.featurestoreCtrl = null;
             self.projectName = null;
             self.projectId = null;
             self.selectedFeaturegroup = null;
@@ -50,6 +51,8 @@ angular.module('hopsWorksApp')
             self.onlineSchemaWorking= false;
             self.offlineSampleColumns = []
             self.attachedTags = [];
+            self.showDataFormat = false;
+            self.showPath = false;
 
             self.featurestoreCtrl = null;
 
@@ -236,6 +239,10 @@ angular.module('hopsWorksApp')
 
                 self.selectedFeaturegroup = featuregroups.versionToGroups[featuregroups.activeVersion];
 
+                self.showDataFormat = typeof self.selectedFeaturegroup.dataFormat !== 'undefined';
+                self.showPath = typeof self.selectedFeaturegroup.path !== 'undefined' 
+                                    && self.selectedFeaturegroup.path != "";
+
                 self.featurestoreCtrl = featurestoreCtrl;
                 self.projectId = featurestoreCtrl.projectId;
                 self.projectName = featurestoreCtrl.projectName;
@@ -256,9 +263,8 @@ angular.module('hopsWorksApp')
                     if (self.selectedFeaturegroup.onlineEnabled === true) {
                         self.fetchOnlineDetails();
                     }
-                    self.fetchTags();
                 }
-
+                self.fetchTags();
             };
 
             $scope.$on('featuregroupSelected', function (event, args) {
@@ -274,9 +280,12 @@ angular.module('hopsWorksApp')
                 $location.path('project/' + self.projectId + '/' + serviceName);
             };
 
-            self.goToDataValidation = function () {
-                StorageService.store("dv_featuregroup", self.selectedFeaturegroup);
-                $location.path('project/' + self.projectId + "/featurestore/datavalidation");
+            self.goToStorageConnector = function () {
+                var connParam = {
+                    "storageConnector": self.selectedFeaturegroup.storageConnector.name
+                }
+
+                $location.path('project/' + self.projectId + "/featurestore").search(connParam);
             };
 
             /**
@@ -346,11 +355,8 @@ angular.module('hopsWorksApp')
              *
              */
             self.viewFeaturegroupStatistics = function () {
-                ModalService.viewFeaturegroupStatistics('lg', self.projectId, self.selectedFeaturegroup, self.projectName,
-                    self.featurestore, self.settings).then(
-                    function (success) {
-                    }, function (error) {
-                    });
+                self.featurestoreCtrl.fgStatistics = self.selectedFeaturegroup;
+                self.featurestoreCtrl.showStatistics = true;
             };
 
             self.fgLocation = function() {

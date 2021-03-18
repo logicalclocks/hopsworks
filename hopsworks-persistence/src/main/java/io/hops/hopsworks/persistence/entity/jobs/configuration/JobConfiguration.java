@@ -60,13 +60,15 @@ import java.util.concurrent.ThreadLocalRandom;
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlSeeAlso({YarnJobConfiguration.class})
 @JsonIgnoreProperties(ignoreUnknown = true)
-@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY)
+@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "type")
 @JsonSubTypes({
   @JsonSubTypes.Type(value = YarnJobConfiguration.class, name = "YarnJobConfiguration")}
 )
 public abstract class JobConfiguration {
 
   protected String appName;
+
+  protected String defaultArgs;
 
   protected ScheduleDTO schedule;
 
@@ -109,6 +111,14 @@ public abstract class JobConfiguration {
   @Override
   public int hashCode() {
     return ThreadLocalRandom.current().nextInt(0, 999999999 + 1);
+  }
+
+  public String getDefaultArgs() {
+    return defaultArgs;
+  }
+
+  public void setDefaultArgs(String defaultArgs) {
+    this.defaultArgs = defaultArgs;
   }
 
   public static class JobConfigurationFactory {

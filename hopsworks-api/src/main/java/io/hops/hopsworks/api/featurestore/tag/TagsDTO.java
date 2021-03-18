@@ -16,6 +16,7 @@
 
 package io.hops.hopsworks.api.featurestore.tag;
 
+import io.hops.hopsworks.api.tags.SchemaDTO;
 import io.hops.hopsworks.common.api.RestDTO;
 
 import javax.xml.bind.annotation.XmlRootElement;
@@ -24,6 +25,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 public class TagsDTO extends RestDTO<TagsDTO> {
   private String name;
   private String value;
+  private SchemaDTO schema;
 
   public String getName() {
     return name;
@@ -39,5 +41,13 @@ public class TagsDTO extends RestDTO<TagsDTO> {
 
   public void setValue(String value) {
     this.value = value;
+  }
+  
+  public SchemaDTO getSchema() {
+    return schema;
+  }
+  
+  public void setSchema(SchemaDTO schema) {
+    this.schema = schema;
   }
 }

@@ -62,6 +62,7 @@ import io.hops.hopsworks.common.jupyter.RepositoryStatus;
 import io.hops.hopsworks.common.livy.LivyController;
 import io.hops.hopsworks.common.livy.LivyMsg;
 import io.hops.hopsworks.common.security.CertificateMaterializer;
+import io.hops.hopsworks.common.user.UsersController;
 import io.hops.hopsworks.common.util.HopsUtils;
 import io.hops.hopsworks.common.util.Ip;
 import io.hops.hopsworks.common.util.Settings;
@@ -69,6 +70,7 @@ import io.hops.hopsworks.exceptions.GenericException;
 import io.hops.hopsworks.exceptions.HopsSecurityException;
 import io.hops.hopsworks.exceptions.ProjectException;
 import io.hops.hopsworks.exceptions.ServiceException;
+import io.hops.hopsworks.exceptions.JobException;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
 import io.hops.hopsworks.persistence.entity.hdfs.user.HdfsUsers;
 import io.hops.hopsworks.persistence.entity.jobs.configuration.spark.SparkJobConfiguration;
@@ -82,7 +84,9 @@ import io.hops.hopsworks.persistence.entity.project.PaymentType;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.restutils.RESTCodes;
+import io.swagger.annotations.ApiOperation;
 import org.apache.commons.codec.digest.DigestUtils;
+import com.google.common.base.Strings;
 
 import javax.ejb.EJB;
 import javax.ejb.TransactionAttribute;
@@ -94,6 +98,7 @@ import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
+import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
@@ -112,6 +117,7 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 import java.util.Set;
+import java.util.Optional;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeoutException;
 import java.util.logging.Level;
@@ -158,6 +164,8 @@ public class JupyterService {
   private JupyterNbVCSController jupyterNbVCSController;
   @EJB
   private SparkController sparkController;
+  @EJB
+  UsersController usersController;
 
   private Integer projectId;
   // No @EJB annotation for Project, it's injected explicitly in ProjectService.
@@ -289,11 +297,16 @@ public class JupyterService {
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
   public Response startNotebookServer(JupyterSettings jupyterSettings, @Context HttpServletRequest req,
       @Context SecurityContext sc, @Context UriInfo uriInfo) throws ProjectException, HopsSecurityException,
-    ServiceException, GenericException {
+          ServiceException, GenericException, JobException {
     
     Users hopsworksUser = jWTHelper.getUserPrincipal(sc);
     String hdfsUser = hdfsUsersController.getHdfsUserName(project, hopsworksUser);
-
+    //The JupyterSettings bean is serialized without the Project and User when attaching it to the notebook as xattr.
+    // .We need to put the user object when we are launching Jupyter from the notebook. The Project object is set
+    // from in the front-end
+    if(jupyterSettings.getUsers() == null) {
+      jupyterSettings.setUsers(hopsworksUser);
+    }
     if (project.getPaymentType().equals(PaymentType.PREPAID)) {
       YarnProjectsQuota projectQuota = yarnProjectsQuotaFacade.findByProjectName(project.getName());
       if (projectQuota == null || projectQuota.getQuotaRemaining() <= 0) {
@@ -301,7 +314,7 @@ public class JupyterService {
       }
     }
     
-    if (!project.getConda()) {
+    if (project.getPythonEnvironment() == null) {
       throw new ProjectException(RESTCodes.ProjectErrorCode.ANACONDA_NOT_ENABLED, Level.FINE);
     }
 
@@ -310,6 +323,14 @@ public class JupyterService {
       throw new ServiceException(RESTCodes.ServiceErrorCode.JUPYTER_START_ERROR, Level.FINE,
           "Git support available only in JupyterLab");
     }
+
+    // Do not allow auto push on shutdown if api key is missing
+    if (jupyterSettings.isGitBackend() && jupyterSettings.getGitConfig().getShutdownAutoPush()
+      && Strings.isNullOrEmpty(jupyterSettings.getGitConfig().getApiKeyName())) {
+      throw new ServiceException(RESTCodes.ServiceErrorCode.JUPYTER_START_ERROR, Level.FINE,
+        "Auto push not supported if api key is not configured.");
+    }
+
     JupyterProject jp = jupyterFacade.findByUser(hdfsUser);
 
     if (jp == null) {
@@ -324,10 +345,10 @@ public class JupyterService {
       String allowOrigin = settings.getJupyterOriginScheme() + "://" + allowOriginHost + allowOriginPortStr;
       try {
         jupyterSettingsFacade.update(jupyterSettings);
+
         //Inspect dependencies
         sparkController
           .inspectDependencies(project, hopsworksUser, (SparkJobConfiguration) jupyterSettings.getJobConfig());
-        
         dto = jupyterManager.startJupyterServer(project, configSecret, hdfsUser, hopsworksUser,
           jupyterSettings, allowOrigin);
         jupyterJWTManager.materializeJWT(hopsworksUser, project, jupyterSettings, dto.getCid(), dto.getPort(),
@@ -472,8 +493,10 @@ public class JupyterService {
     StringBuilder pathBuilder = new StringBuilder(ipynbPath.substring(0, extensionIndex)).append(".py");
     String pyAppPath = pathBuilder.toString();
     String hdfsUsername = getHdfsUser(sc);
-    jupyterController.convertIPythonNotebook(hdfsUsername, ipynbPath, project, pyAppPath,
-        JupyterController.NotebookConversion.PY);
+    Users user  =jWTHelper.getUserPrincipal(sc);
+    JupyterController.NotebookConversion conversionType = jupyterController
+        .getNotebookConversionType(ipynbPath, user, this.project);
+    jupyterController.convertIPythonNotebook(hdfsUsername, ipynbPath, project, pyAppPath, conversionType);
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).build();
   }
 
@@ -494,5 +517,26 @@ public class JupyterService {
     jupyterController.updateExpirationDate(project, user, jupyterSettings);
 
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(jupyterSettings).build();
+  }
+
+  @ApiOperation(value = "Attach a jupyter configuration to the notebook.", notes = "The notebook is passed as the " +
+      "kernelId from jupyter.")
+  @PUT
+  @Path("/attachConfiguration/{hdfsUsername}/{kernelId}")
+  @Produces(MediaType.APPLICATION_JSON)
+  @Consumes(MediaType.APPLICATION_JSON)
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
+  @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
+  public Response attachJupyterConfigurationToNotebook(@PathParam("hdfsUsername") String hdfsUsername,
+                                                       @PathParam("kernelId") String kernelId,
+                                                       @Context SecurityContext sc) throws ServiceException {
+    Optional<Users> user = usersController.findByUsername(hdfsUsersController.getUserName(hdfsUsername));
+    if(!user.isPresent()) {
+      throw new ServiceException(RESTCodes.ServiceErrorCode
+          .WRONG_HDFS_USERNAME_PROVIDED_FOR_ATTACHING_JUPYTER_CONFIGURATION_TO_NOTEBOOK, Level.FINE,
+          "HDFS username provided does not exist.");
+    }
+    jupyterController.attachJupyterConfigurationToNotebook(user.get(), hdfsUsername, project, kernelId);
+    return Response.ok().build();
   }
 }

@@ -21,6 +21,7 @@ import io.hops.hopsworks.common.api.ResourceRequest;
 import io.hops.hopsworks.common.dao.AbstractFacade;
 import io.hops.hopsworks.common.dao.jobs.description.JobFacade;
 import io.hops.hopsworks.persistence.entity.jobs.description.Jobs;
+import io.hops.hopsworks.persistence.entity.jobs.history.Execution;
 import io.hops.hopsworks.persistence.entity.project.Project;
 
 import javax.ejb.EJB;
@@ -84,6 +85,23 @@ public class JobsBuilder {
     }
     return dto;
   }
+
+  public JobDTO build(UriInfo uriInfo, ResourceRequest resourceRequest, Jobs job, Execution execution) {
+    JobDTO dto = new JobDTO();
+    uri(dto, uriInfo, job);
+    expand(dto, resourceRequest);
+    if (dto.isExpand()) {
+      dto.setId(job.getId());
+      dto.setName(job.getName());
+      dto.setCreationTime(job.getCreationTime());
+      dto.setConfig(job.getJobConfig());
+      dto.setJobType(job.getJobType());
+      dto.setCreator(usersBuilder.build(uriInfo, resourceRequest.get(ResourceRequest.Name.CREATOR), job.getCreator()));
+      dto.setExecutions(
+          executionsBuilder.build(uriInfo, resourceRequest.get(ResourceRequest.Name.EXECUTIONS), execution));
+    }
+    return dto;
+  }
   
   public JobDTO build(UriInfo uriInfo, ResourceRequest resourceRequest, Project project) {
     JobDTO dto = new JobDTO();
@@ -95,7 +113,9 @@ public class JobsBuilder {
         resourceRequest.getFilter(),
         resourceRequest.getSort(), project);
       //set the count
-      dto.setCount(collectionInfo.getCount());
+      if (collectionInfo.getCount() > 0) {
+        dto.setCount(collectionInfo.getCount());
+      }
       collectionInfo.getItems().forEach((job) -> dto.addItem(build(uriInfo, resourceRequest, (Jobs) job)));
     }
     return dto;

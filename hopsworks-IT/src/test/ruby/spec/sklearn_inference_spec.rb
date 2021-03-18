@@ -35,7 +35,7 @@ describe "On #{ENV['OS']}" do
       context 'without authentication', vm: true do
         before :all do
           with_valid_project
-          with_python_enabled(@project[:id], "3.6")
+          with_python_enabled(@project[:id], "3.7")
           sleep(10)
           with_sklearn_serving(@project[:id], @project[:projectname], @user[:username])
           sleep(10)
@@ -57,7 +57,7 @@ describe "On #{ENV['OS']}" do
       context 'with authentication, python enabled and with sklearn serving', vm: true do
         before :all do
           with_valid_project
-          with_python_enabled(@project[:id], "3.6")
+          with_python_enabled(@project[:id], "3.7")
           with_sklearn_serving(@project[:id], @project[:projectname], @user[:username])
         end
 
@@ -136,8 +136,6 @@ describe "On #{ENV['OS']}" do
 
           it "should receive an error if the input payload is malformed" do
             # Wait for pod to start
-            kubernetes_installed
-            sleep(30)
             post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/inference/models/#{@serving[:name]}:predict", {
                 somethingwrong: test_data
             }
@@ -147,8 +145,6 @@ describe "On #{ENV['OS']}" do
 
           it "should receive an error if the input payload is empty" do
             # Wait for pod to start
-            kubernetes_installed
-            sleep(30)
             post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/inference/models/#{@serving[:name]}:predict"
             expect_json(errorCode: 250008)
             expect_status(400)

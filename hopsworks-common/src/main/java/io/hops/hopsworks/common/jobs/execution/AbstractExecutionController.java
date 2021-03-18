@@ -22,13 +22,13 @@ import io.hops.hopsworks.common.dao.jobhistory.YarnApplicationAttemptStateFacade
 import io.hops.hopsworks.common.dao.jobhistory.YarnApplicationstateFacade;
 import io.hops.hopsworks.common.dao.jobs.description.YarnAppUrlsDTO;
 import io.hops.hopsworks.common.dao.jobs.quota.YarnProjectsQuotaFacade;
+import io.hops.hopsworks.common.dao.kagent.HostServicesFacade;
 import io.hops.hopsworks.common.dao.user.activity.ActivityFacade;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.hdfs.DistributedFsService;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
 import io.hops.hopsworks.common.hdfs.Utils;
 import io.hops.hopsworks.common.hdfs.inode.InodeController;
-import io.hops.hopsworks.common.jobs.AppInfoDTO;
 import io.hops.hopsworks.common.jobs.JobLogDTO;
 import io.hops.hopsworks.common.jobs.flink.FlinkController;
 import io.hops.hopsworks.common.jobs.spark.SparkController;
@@ -43,6 +43,7 @@ import io.hops.hopsworks.exceptions.JobException;
 import io.hops.hopsworks.exceptions.ProjectException;
 import io.hops.hopsworks.exceptions.ServiceException;
 import io.hops.hopsworks.persistence.entity.hdfs.inode.Inode;
+import io.hops.hopsworks.persistence.entity.host.ServiceStatus;
 import io.hops.hopsworks.persistence.entity.jobs.configuration.JobType;
 import io.hops.hopsworks.persistence.entity.jobs.configuration.history.JobFinalStatus;
 import io.hops.hopsworks.persistence.entity.jobs.configuration.history.JobState;
@@ -62,10 +63,6 @@ import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.yarn.api.records.ApplicationId;
 import org.apache.hadoop.yarn.exceptions.YarnException;
 import org.apache.hadoop.yarn.util.ConverterUtils;
-import org.influxdb.InfluxDB;
-import org.influxdb.InfluxDBFactory;
-import org.influxdb.dto.Query;
-import org.influxdb.dto.QueryResult;
 
 import javax.ejb.EJB;
 import javax.ejb.TransactionAttribute;
@@ -75,15 +72,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import static java.util.logging.Level.FINE;
 
@@ -108,7 +99,7 @@ public abstract class AbstractExecutionController implements ExecutionController
   @EJB
   private Settings settings;
   @EJB
-  private ExecutionFacade execFacade;
+  private ExecutionFacade executionFacade;
   @EJB
   private YarnClientService ycs;
   @EJB
@@ -119,6 +110,8 @@ public abstract class AbstractExecutionController implements ExecutionController
   private YarnProjectsQuotaFacade yarnProjectsQuotaFacade;
   @EJB
   private YarnExecutionFinalizer yarnExecutionFinalizer;
+  @EJB
+  private HostServicesFacade hostServicesFacade;
   
   @Override
   @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
@@ -132,7 +125,15 @@ public abstract class AbstractExecutionController implements ExecutionController
         throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_QUOTA_ERROR, Level.FINE);
       }
     }
-  
+
+    //Check if checking for nodemanager status is enabled
+    //If enabled and nodemanagers are all offline throw an JobException exception
+    if(settings.isCheckingForNodemanagerStatusEnabled() && job.getJobType() != JobType.PYTHON) {
+      hostServicesFacade.findServices("nodemanager").stream().filter(s -> s.getStatus()
+              == ServiceStatus.Started).findFirst().orElseThrow(() ->
+              new JobException(RESTCodes.JobErrorCode.NODEMANAGERS_OFFLINE, Level.SEVERE));
+    }
+
     Execution exec;
     switch (job.getJobType()) {
       case FLINK:
@@ -159,7 +160,7 @@ public abstract class AbstractExecutionController implements ExecutionController
           ActivityFlag.JOB);
         break;
       case PYSPARK:
-        if(!job.getProject().getConda()){
+        if(job.getProject().getPythonEnvironment() == null){
           throw new ProjectException(RESTCodes.ProjectErrorCode.ANACONDA_NOT_ENABLED, Level.FINEST);
         }
         exec = sparkController.startJob(job, args, user);
@@ -177,12 +178,12 @@ public abstract class AbstractExecutionController implements ExecutionController
   
   public Execution stop(Jobs job) throws JobException {
     //Get all the executions that are in a non-final state
-    List<Execution> executions = execFacade.findByJobAndNotFinished(job);
+    List<Execution> executions = executionFacade.findByJobAndNotFinished(job);
     if (executions != null && !executions.isEmpty()) {
       for (Execution execution : executions) {
         stopExecution(execution);
       }
-      return execFacade.findById(executions.get(0).getId())
+      return executionFacade.findById(executions.get(0).getId())
         .orElseThrow(() -> new JobException(RESTCodes.JobErrorCode.JOB_EXECUTION_NOT_FOUND,
           FINE, "Execution: " + executions.get(0).getId()));
     }
@@ -192,7 +193,7 @@ public abstract class AbstractExecutionController implements ExecutionController
   
   public Execution stopExecution(Integer id) throws JobException {
     return stopExecution(
-      execFacade.findById(id).orElseThrow(() -> new JobException(RESTCodes.JobErrorCode.JOB_EXECUTION_NOT_FOUND,
+      executionFacade.findById(id).orElseThrow(() -> new JobException(RESTCodes.JobErrorCode.JOB_EXECUTION_NOT_FOUND,
         FINE, "Execution: " + id)));
   }
   
@@ -204,7 +205,7 @@ public abstract class AbstractExecutionController implements ExecutionController
         yarnClientWrapper = ycs.getYarnClientSuper(settings.getConfiguration());
         yarnClientWrapper.getYarnClient().killApplication(ApplicationId.fromString(execution.getAppId()));
         yarnExecutionFinalizer.removeAllNecessary(execution);
-        return execFacade.findById(execution.getId())
+        return executionFacade.findById(execution.getId())
           .orElseThrow(() -> new JobException(RESTCodes.JobErrorCode.JOB_EXECUTION_NOT_FOUND,
             FINE, "Execution: " + execution.getId()));
       } catch (IOException | YarnException ex) {
@@ -220,7 +221,7 @@ public abstract class AbstractExecutionController implements ExecutionController
   
   public Execution authorize(Jobs job, Integer id) throws JobException {
     Execution execution =
-      execFacade.findById(id).orElseThrow(() -> new JobException(RESTCodes.JobErrorCode.JOB_EXECUTION_NOT_FOUND,
+      executionFacade.findById(id).orElseThrow(() -> new JobException(RESTCodes.JobErrorCode.JOB_EXECUTION_NOT_FOUND,
       FINE, "Execution: " + id));
     if (execution == null) {
       throw new JobException(RESTCodes.JobErrorCode.JOB_EXECUTION_NOT_FOUND, Level.FINE,
@@ -231,6 +232,11 @@ public abstract class AbstractExecutionController implements ExecutionController
       }
     }
     return execution;
+  }
+  
+  @Override
+  public void delete(Execution execution) throws JobException {
+    executionFacade.remove(execution);
   }
   
   //====================================================================================================================
@@ -361,115 +367,7 @@ public abstract class AbstractExecutionController implements ExecutionController
   //====================================================================================================================
   // Execution Proxies
   //====================================================================================================================
-  
-  public String getExecutionUI(Execution execution) throws JobException {
-    String trackingUrl = appAttemptStateFacade.findTrackingUrlByAppId(execution.getAppId());
-    if (trackingUrl != null && !trackingUrl.isEmpty()) {
-      return "/project/" + execution.getJob().getProject().getId() + "/jobs/" + execution.getAppId() + "/prox/" +
-        trackingUrl;
-    }
-    throw new JobException(RESTCodes.JobErrorCode.JOB_EXECUTION_TRACKING_URL_NOT_FOUND, Level.FINE,
-      "ExecutionId:" + execution.getId());
-  }
-  
-  public AppInfoDTO getExecutionAppInfo(Execution execution) {
-    
-    long startTime = System.currentTimeMillis() - 60000;
-    long endTime = System.currentTimeMillis();
-    boolean running = true;
-    if (execution != null) {
-      startTime = execution.getSubmissionTime().getTime();
-      endTime = startTime + execution.getExecutionDuration();
-      running = !execution.getState().isFinalState();
-    }
-    
-    InfluxDB influxDB = null;
-    int nbExecutors = 0;
-    HashMap<Integer, List<String>> executorInfo;
-    try {
-      influxDB = InfluxDBFactory.connect(settings.getInfluxDBAddress(),
-        settings.getInfluxDBUser(),
-        settings.getInfluxDBPW());
-      
-      // Transform application_1493112123688_0001 to 1493112123688_0001
-      // application_ = 12 chars
-      String timestamp_attempt = execution.getAppId().substring(12);
-      
-      Query query = new Query("show tag values from nodemanager with key=\"source\" " + "where source =~ /^.*"
-        + timestamp_attempt + ".*$/", "graphite");
-      QueryResult queryResult = influxDB.query(query, TimeUnit.MILLISECONDS);
-      
-      
-      executorInfo = new HashMap<>();
-      int index = 0;
-      if (queryResult != null && queryResult.getResults() != null) {
-        for (QueryResult.Result res : queryResult.getResults()) {
-          if (res.getSeries() != null) {
-            for (QueryResult.Series series : res.getSeries()) {
-              List<List<Object>> values = series.getValues();
-              if (values != null) {
-                nbExecutors += values.size();
-                for (List<Object> l : values) {
-                  executorInfo.put(index, Stream.of(Objects.toString(l.get(1))).collect(Collectors.toList()));
-                  index++;
-                }
-              }
-            }
-          }
-        }
-      }
-      
-      /*
-       * At this point executor info contains the keys and a list with a single value, the YARN container id
-       */
-      String vCoreTemp;
-      HashMap<String, String> hostnameVCoreCache = new HashMap<>();
-      
-      for (Map.Entry<Integer, List<String>> entry : executorInfo.entrySet()) {
-        query =
-          new Query("select MilliVcoreUsageAvgMilliVcores, hostname from nodemanager where source = \'" + entry.
-            getValue().get(0) + "\' limit 1", "graphite");
-        queryResult = influxDB.query(query, TimeUnit.MILLISECONDS);
-        
-        if (queryResult != null && queryResult.getResults() != null
-          && queryResult.getResults().get(0) != null && queryResult.
-          getResults().get(0).getSeries() != null) {
-          List<List<Object>> values = queryResult.getResults().get(0).getSeries().get(0).getValues();
-          String hostname = Objects.toString(values.get(0).get(2)).split("=")[1];
-          entry.getValue().add(hostname);
-          
-          if (!hostnameVCoreCache.containsKey(hostname)) {
-            // Not in cache, get the vcores of the host machine
-            query = new Query("select AllocatedVCores+AvailableVCores from nodemanager " + "where hostname =~ /.*"
-              + hostname + ".*/ limit 1", "graphite");
-            queryResult = influxDB.query(query, TimeUnit.MILLISECONDS);
-            
-            if (queryResult != null && queryResult.getResults() != null
-              && queryResult.getResults().get(0) != null && queryResult.
-              getResults().get(0).getSeries() != null) {
-              values = queryResult.getResults().get(0).getSeries().get(0).getValues();
-              vCoreTemp = Objects.toString(values.get(0).get(1));
-              entry.getValue().add(vCoreTemp);
-              hostnameVCoreCache.put(hostname, vCoreTemp); // cache it
-            }
-          } else {
-            // It's a hit, skip the database query
-            entry.getValue().add(hostnameVCoreCache.get(hostname));
-          }
-        }
-      }
-      
-    } finally {
-      if (influxDB != null) {
-        influxDB.close();
-        
-      }
-    }
-    
-    AppInfoDTO appInfo = new AppInfoDTO(execution.getAppId(), startTime, running, endTime, nbExecutors, executorInfo);
-    return appInfo;
-  }
-  
+
   @Override
   public void checkAccessRight(String appId, Project project) throws JobException {
     YarnApplicationstate appState = yarnApplicationstateFacade.findByAppId(appId);

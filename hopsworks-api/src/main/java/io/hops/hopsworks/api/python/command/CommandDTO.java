@@ -23,6 +23,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 public class CommandDTO extends RestDTO<CommandDTO> {
 
   private String op;
+  private String installType;
   private String status;
   private String errorMessage;
 
@@ -48,5 +49,13 @@ public class CommandDTO extends RestDTO<CommandDTO> {
 
   public void setErrorMessage(String errorMessage) {
     this.errorMessage = errorMessage;
+  }
+
+  public String getInstallType() {
+    return installType;
+  }
+
+  public void setInstallType(String installType) {
+    this.installType = installType;
   }
 }

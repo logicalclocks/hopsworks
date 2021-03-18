@@ -77,10 +77,6 @@
                                      required="#{register.accountType == 0}" requiredMessage="Last name is required."/>
                         <p:message for="lastName" />
 
-                        <h:outputText for="phone" value="Phone: "/>
-                        <p:inputText id="phone" placeholder="phone" value="#{register.phone}"/>
-                        <p:message for="phone" />
-
                         <h:outputLabel for="addRole" value="Role: *"/>
                         <p:selectOneMenu id="addRole"
                                          value="#{register.role}"

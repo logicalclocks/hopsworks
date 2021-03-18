@@ -34,7 +34,7 @@ module Helper
     return x
   end
 
-  #modified variant of expect_status where we print a mode detailed error msg
+  #modified variant of expect_status where we print a more detailed error msg
   #and we also have the ability to check for hopsworks error_code
   def expect_status_details(expected_status, error_code: nil)
     #204 doesn't have a response body - treat differently
@@ -82,5 +82,13 @@ module Helper
     l1 = list1.map{|o| Time.parse(o).change(:usec => 0)}
     l2 = list2.map{|o| Time.parse(o).change(:usec => 0)}
     expect(l1).to eq(l2)
+  end
+
+  def append_to_query(query, value)
+    if query.nil? || query == ""
+      "?#{value}"
+    else
+      query + "&#{value}"
+    end
   end
 end

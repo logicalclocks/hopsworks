@@ -43,21 +43,15 @@ import io.hops.hopsworks.admin.maintenance.MessagesController;
 import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.exceptions.UserException;
 import io.hops.hopsworks.persistence.entity.user.Users;
-import io.hops.hopsworks.persistence.entity.user.security.ua.SecurityQuestion;
 
 import javax.annotation.PostConstruct;
 import javax.ejb.EJB;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.SessionScoped;
 import javax.faces.context.FacesContext;
-import javax.mail.MessagingException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 import java.io.Serializable;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 @ManagedBean
@@ -72,10 +66,7 @@ public class ResetPassword implements Serializable {
   private String passwd1;
   private String passwd2;
   private String current;
-  private SecurityQuestion question;
-  private String answer;
   private Users people;
-  private List<SecurityQuestion> securityQuestions;
   private String notes;
 
   @EJB
@@ -85,8 +76,6 @@ public class ResetPassword implements Serializable {
   
   @PostConstruct
   public void init(){
-    securityQuestions = Arrays.asList(SecurityQuestion.values());
-    Collections.shuffle(securityQuestions);
   }
   
   public String getNotes() {
@@ -95,18 +84,6 @@ public class ResetPassword implements Serializable {
 
   public void setNotes(String notes) {
     this.notes = notes;
-  }
-
-  public SecurityQuestion[] getQuestions() {
-    return SecurityQuestion.values();
-  }
-
-  public SecurityQuestion getQuestion() {
-    return question;
-  }
-
-  public void setQuestion(SecurityQuestion question) {
-    this.question = question;
   }
 
   public String getCurrent() {
@@ -123,14 +100,6 @@ public class ResetPassword implements Serializable {
 
   public void setPeople(Users people) {
     this.people = people;
-  }
-
-  public String getAnswer() {
-    return answer;
-  }
-
-  public void setAnswer(String answer) {
-    this.answer = answer;
   }
 
   public String getUsername() {
@@ -155,33 +124,6 @@ public class ResetPassword implements Serializable {
 
   public void setPasswd2(String passwd2) {
     this.passwd2 = passwd2;
-  }
-  
-  public List<SecurityQuestion> getSecurityQuestions() {
-    return securityQuestions;
-  }
-  
-  public void setSecurityQuestions(List<SecurityQuestion> securityQuestions) {
-    this.securityQuestions = securityQuestions;
-  }
-  
-  public String sendPasswordResetEmail() {
-    FacesContext ctx = FacesContext.getCurrentInstance();
-    HttpServletRequest req = (HttpServletRequest) ctx.getExternalContext().getRequest();
-    try {
-      auditedUserAccountAction.sendPasswordRecoveryEmail(this.username, question, answer, req);
-    } catch (MessagingException ex) {
-      String detail = ex.getCause() != null? ex.getCause().getMessage() : "Failed to send recovery email.";
-      MessagesController.addSecurityErrorMessage(detail);
-      LOGGER.log(Level.FINE, null, detail);
-      return ("");
-    }  catch (UserException ue) {
-      String detail = ue.getUsrMsg() != null ? ue.getUsrMsg() : ue.getErrorCode().getMessage();
-      MessagesController.addSecurityErrorMessage(detail);
-      LOGGER.log(Level.FINE, null, detail);
-      return ("");
-    }
-    return ("password_sent");
   }
 
   public String changeProfilePassword() {

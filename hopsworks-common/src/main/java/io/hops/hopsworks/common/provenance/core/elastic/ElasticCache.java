@@ -17,6 +17,7 @@ package io.hops.hopsworks.common.provenance.core.elastic;
 
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
+import io.hops.hopsworks.common.elastic.ElasticClientController;
 import io.hops.hopsworks.exceptions.ElasticException;
 
 import javax.annotation.PostConstruct;
@@ -39,7 +40,7 @@ public class ElasticCache {
   private static final Logger LOG = Logger.getLogger(ElasticCache.class.getName());
   
   @EJB
-  private ProvElasticController client;
+  private ElasticClientController client;
   
   private Cache<String, Map<String, String>> indexMappings;
   

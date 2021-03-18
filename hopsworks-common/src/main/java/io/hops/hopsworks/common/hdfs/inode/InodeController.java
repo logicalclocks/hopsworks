@@ -18,10 +18,10 @@ package io.hops.hopsworks.common.hdfs.inode;
 import io.hops.common.Pair;
 import io.hops.hopsworks.persistence.entity.hdfs.inode.Inode;
 import io.hops.hopsworks.common.dao.hdfs.inode.InodeFacade;
-import io.hops.hopsworks.common.dao.hdfs.inode.NavigationPath;
 import io.hops.hopsworks.common.hdfs.Utils;
 import io.hops.hopsworks.common.util.HopsUtils;
 import io.hops.hopsworks.common.util.Settings;
+import org.apache.commons.lang3.ArrayUtils;
 
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
@@ -146,33 +146,6 @@ public class InodeController {
   }
   
   /**
-   * Get a list of NavigationPath objects representing the project-relative path
-   * to the given Inode. The first element in the list is the project root
-   * directory.
-   * <p/>
-   * @param i
-   * @return
-   */
-  public List<NavigationPath> getConstituentsPath(Inode i) {
-    if (isProjectRoot(i)) {
-      List<NavigationPath> p = new ArrayList<>();
-      p.add(new NavigationPath(i.getInodePK().getName(), i.getInodePK().getName() + "/"));
-      return p;
-    } else {
-      List<NavigationPath> p = getConstituentsPath(inodeFacade.findParent(i));
-      NavigationPath a;
-      if (i.isDir()) {
-        a = new NavigationPath(i.getInodePK().getName(), p.get(p.size() - 1).getPath() + i.getInodePK().getName()
-          + "/");
-      } else {
-        a = new NavigationPath(i.getInodePK().getName(), p.get(p.size() - 1).getPath() + i.getInodePK().getName());
-      }
-      p.add(a);
-      return p;
-    }
-  }
-  
-  /**
    * Get the path to the given Inode.
    * <p/>
    * @param i
@@ -274,6 +247,10 @@ public class InodeController {
     String[] p;
     if (path.charAt(0) == '/') {
       p = path.substring(1).split("/");
+    } else if(path.startsWith("hopsfs")){
+      //In case path looks like "hopsfs://namenode.service.consul:8020/apps/hive/warehouse/test_proj_fs.db/fg1_1"
+      p = path.split("/");
+      p = ArrayUtils.subarray(p,3,p.length);
     } else {
       p = path.split("/");
     }

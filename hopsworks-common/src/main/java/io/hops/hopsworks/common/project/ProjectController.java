@@ -177,10 +177,10 @@ import java.util.Date;
 import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
-import java.util.concurrent.TimeoutException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -354,15 +354,16 @@ public class ProjectController {
         } catch (Exception e) {
           cleanup(project, sessionId, null, true, owner);
           throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_HANDLER_PRECREATE_ERROR, Level.SEVERE,
-            "project: " + project.getName() + ", handler: " + projectHandler.getClassName(), e.getMessage(), e);
+            e.getMessage(), "project: " + project.getName() + ", handler: " + projectHandler.getClassName(), e);
         }
       }
+
+      List<Future<?>> projectCreationFutures = new ArrayList<>();
 
       //create certificate for this user
       // User's certificates should be created before making any call to
       // Hadoop clients. Otherwise the client will fail if RPC TLS is enabled
       // This is an async call
-      List<Future<?>> projectCreationFutures = new ArrayList<>();
       try {
         projectCreationFutures.add(certificatesController.generateCertificates(project, owner));
       } catch (Exception ex) {
@@ -405,7 +406,7 @@ public class ProjectController {
 
       //set payment and quotas
       try {
-        setProjectOwnerAndQuotas(project, settings.getHdfsDefaultQuotaInMBs(), dfso, owner);
+        setProjectOwnerAndQuotas(project, dfso, owner);
       } catch (IOException | EJBException ex) {
         cleanup(project, sessionId, projectCreationFutures, true, owner);
         throw new ProjectException(RESTCodes.ProjectErrorCode.QUOTA_ERROR, Level.SEVERE, "project: " + project.getName()
@@ -422,26 +423,26 @@ public class ProjectController {
           "project: " + projectName, ex.getMessage(), ex);
       }
       LOGGER.log(Level.FINE, "PROJECT CREATION TIME. Step 8 (logs): {0}", System.currentTimeMillis() - startTime);
-      
-      //Delete old project indices and kibana saved objects to avoid
-      // inconsistencies
+
       try {
-        elasticController.deleteProjectIndices(project);
-        elasticController.deleteProjectSavedObjects(projectName);
-        LOGGER.log(Level.FINE, "PROJECT CREATION TIME. Step 9 (elastic cleanup): {0}",
-            System.currentTimeMillis() - startTime);
-      } catch (ElasticException ex){
-        LOGGER.log(Level.FINE, "Error while cleaning old project indices", ex);
-      }
-  
-      try {
-        environmentController.createEnv(project, true);
+        project = environmentController.createEnv(project, owner);
       } catch (PythonException | EJBException ex) {
         cleanup(project, sessionId, projectCreationFutures);
         throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_ANACONDA_ENABLE_ERROR, Level.SEVERE,
             "project: " + projectName, ex.getMessage(), ex);
       }
       LOGGER.log(Level.FINE, "PROJECT CREATION TIME. Step 9 (env): {0}", System.currentTimeMillis() - startTime);
+
+      //Delete old project indices and kibana saved objects to avoid
+      // inconsistencies
+      try {
+        elasticController.deleteProjectIndices(project);
+        elasticController.deleteProjectSavedObjects(projectName);
+        LOGGER.log(Level.FINE, "PROJECT CREATION TIME. Step 10 (elastic cleanup): {0}",
+            System.currentTimeMillis() - startTime);
+      } catch (ElasticException ex){
+        LOGGER.log(Level.FINE, "Error while cleaning old project indices", ex);
+      }
 
       logProject(project, OperationType.Add);
 
@@ -475,7 +476,7 @@ public class ProjectController {
         } catch (Exception e) {
           cleanup(project, sessionId, projectCreationFutures);
           throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_HANDLER_POSTCREATE_ERROR, Level.SEVERE,
-            "project: " + projectName, e.getMessage(), e);
+            e.getMessage(), "project: " + project.getName() + ", handler: " + projectHandler.getClassName(), e);
         }
       }
 
@@ -541,7 +542,7 @@ public class ProjectController {
     }
     //Create a new project object
     Date now = new Date();
-    Project project = new Project(projectName, user, now, PaymentType.PREPAID);
+    Project project = new Project(projectName, user, now, settings.getDefaultPaymentType());
     project.setKafkaMaxNumTopics(settings.getKafkaMaxNumTopics());
     project.setDescription(projectDescription);
 
@@ -663,7 +664,7 @@ public class ProjectController {
     DatasetException, HopsSecurityException {
 
     for (Settings.BaseDataset ds : Settings.BaseDataset.values()) {
-      datasetController.createDataset(user, project, ds.getName(), ds.getDescription(), -1,
+      datasetController.createDataset(user, project, ds.getName(), ds.getDescription(),
         Provenance.Type.DISABLED.dto, false, DatasetAccessPermission.EDITABLE, dfso);
 
       Path dsPath = new Path(Utils.getProjectPath(project.getName()) + ds.getName());
@@ -674,7 +675,7 @@ public class ProjectController {
         String[] subResources = settings.getResourceDirs().split(";");
         for (String sub : subResources) {
           Path subDirPath = new Path(dsPath, sub);
-          datasetController.createSubDirectory(project, subDirPath, -1, "", false, dfso);
+          datasetController.createSubDirectory(project, subDirPath, dfso);
           dfso.setOwner(subDirPath, fstatus.getOwner(), fstatus.getGroup());
         }
       } else if (ds.equals(Settings.BaseDataset.LOGS)) {
@@ -682,7 +683,7 @@ public class ProjectController {
         JobType[] jobTypes = new JobType[]{JobType.SPARK, JobType.PYSPARK, JobType.FLINK};
         for (JobType jobType : jobTypes) {
           Path subDirPath = new Path(dsPath, jobType.getName());
-          datasetController.createSubDirectory(project, subDirPath, -1, "", false, dfso);
+          datasetController.createSubDirectory(project, subDirPath, dfso);
           dfso.setOwner(subDirPath, fstatus.getOwner(), fstatus.getGroup());
         }
       }
@@ -769,6 +770,7 @@ public class ProjectController {
           Provenance.getDatasetProvCore(projectProvCore, Provenance.MLType.FEATURE));
         addServiceDataset(project, user, Settings.ServiceDataset.DATAVALIDATION, dfso, udfso,
           Provenance.getDatasetProvCore(projectProvCore, Provenance.MLType.DATASET));
+        addServiceDataset(project, user, Settings.ServiceDataset.STATISTICS, dfso, udfso, Provenance.Type.DISABLED.dto);
         //Enable Jobs service at the same time as featurestore
         if (!projectServicesFacade.isServiceEnabledForProject(project, ProjectServiceEnum.JOBS)) {
           if (!projectServicesFacade.isServiceEnabledForProject(project, ProjectServiceEnum.JUPYTER)) {
@@ -805,7 +807,7 @@ public class ProjectController {
       if (ds == Settings.ServiceDataset.TRAININGDATASETS) {
         datasetName = project.getName() + "_" + datasetName;
       }
-      datasetController.createDataset(user, project, datasetName, ds.getDescription(), -1, datasetProvCore,
+      datasetController.createDataset(user, project, datasetName, ds.getDescription(), datasetProvCore,
         false, DatasetAccessPermission.EDITABLE, dfso);
       datasetController.generateReadme(udfso, datasetName, ds.getDescription(), project.getName());
 
@@ -898,7 +900,7 @@ public class ProjectController {
    */
   private void addServiceFeaturestore(Project project, Users user,
     DistributedFileSystemOps dfso, ProvTypeDTO datasetProvCore)
-    throws FeaturestoreException {
+      throws FeaturestoreException, ProjectException, UserException {
     String featurestoreName = featurestoreController.getOfflineFeaturestoreDbName(project);
     try {
       //Create HiveDB for the featurestore
@@ -1302,7 +1304,7 @@ public class ProjectController {
         cleanupLogger.logSuccess("Project is *NOT* in the database, going to remove as much as possible");
         Date now = DateUtils.localDateTime2Date(DateUtils.getNow());
         Users user = userFacade.findByEmail(userEmail);
-        Project toDeleteProject = new Project(projectName, user, now, PaymentType.PREPAID);
+        Project toDeleteProject = new Project(projectName, user, now, settings.getDefaultPaymentType());
         toDeleteProject.setKafkaMaxNumTopics(settings.getKafkaMaxNumTopics());
         Path tmpInodePath = new Path(File.separator + "tmp" + File.separator + projectName);
         try {
@@ -1639,8 +1641,7 @@ public class ProjectController {
       boolean decreaseCreatedProj, Users owner)
     throws IOException, InterruptedException, HopsSecurityException,
     ServiceException, ProjectException,
-    GenericException, TensorBoardException, FeaturestoreException,
-    ElasticException, TimeoutException, ExecutionException {
+    GenericException, TensorBoardException, FeaturestoreException {
     DistributedFileSystemOps dfso = null;
     try {
       dfso = dfs.getDfsOps();
@@ -2007,7 +2008,8 @@ public class ProjectController {
     QuotasDTO quotas = getQuotasInternal(project);
 
     return new ProjectDTO(project, inode.getId(), services, projectTeam, quotas,
-      settings.getHopsExamplesSparkFilename());
+      settings.getHopsExamplesSparkFilename(), projectUtils.dockerImageIsPreinstalled(project.getDockerImage()),
+        projectUtils.isOldDockerImage(project.getDockerImage()));
   }
 
   /**
@@ -2048,44 +2050,29 @@ public class ProjectController {
     }
 
     //send the project back to client
-    return new ProjectDTO(project, inode.getId(), services, projectTeam, kids);
+    return new ProjectDTO(project, inode.getId(), services, projectTeam, kids,
+        projectUtils.dockerImageIsPreinstalled(project.getDockerImage()),
+            projectUtils.isOldDockerImage(project.getDockerImage()));
   }
 
-  public void setProjectOwnerAndQuotas(Project project, long diskspaceQuotaInMB,
-    DistributedFileSystemOps dfso, Users user)
+  public void setProjectOwnerAndQuotas(Project project, DistributedFileSystemOps dfso, Users user)
     throws IOException {
     this.yarnProjectsQuotaFacade.persistYarnProjectsQuota(
       new YarnProjectsQuota(project.getName(), settings.getYarnDefaultQuota(), 0));
     this.yarnProjectsQuotaFacade.flushEm();
-    setHdfsSpaceQuotasInMBs(project, diskspaceQuotaInMB, null, null, dfso);
+
+    // Here we set only the project quota. The HiveDB and Feature Store quotas are set in the HiveController
+    if (settings.getHdfsDefaultQuotaInMBs() > -1) {
+      dfso.setHdfsSpaceQuotaInMBs(
+          new Path(Utils.getProjectPath(project.getName())), settings.getHdfsDefaultQuotaInMBs());
+    }
+
     projectFacade.setTimestampQuotaUpdate(project, new Date());
     //Add the activity information
     logActivity(ActivityFacade.NEW_PROJECT + project.getName(), user, project, ActivityFlag.PROJECT);
     //update role information in project
     addProjectOwner(project, user);
-    LOGGER.log(Level.FINE, "{0} - project created successfully.", project.
-      getName());
-  }
-
-  public void setHdfsSpaceQuotasInMBs(Project project, Long diskspaceQuotaInMB,
-    Long hiveDbSpaceQuotaInMb, Long featurestoreDbSpaceQuotaInMb,
-    DistributedFileSystemOps dfso)
-    throws IOException {
-
-    dfso.setHdfsSpaceQuotaInMBs(new Path(Utils.getProjectPath(project.getName())), diskspaceQuotaInMB);
-
-    if (hiveDbSpaceQuotaInMb != null && projectServicesFacade.isServiceEnabledForProject(project,
-      ProjectServiceEnum.HIVE)) {
-      dfso.setHdfsSpaceQuotaInMBs(hiveController.getDbPath(project.getName()),
-        hiveDbSpaceQuotaInMb);
-    }
-
-    if (featurestoreDbSpaceQuotaInMb != null && projectServicesFacade.isServiceEnabledForProject(project,
-      ProjectServiceEnum.FEATURESTORE)) {
-      dfso.setHdfsSpaceQuotaInMBs(hiveController.getDbPath(
-        featurestoreController.getOfflineFeaturestoreDbName(project)),
-        featurestoreDbSpaceQuotaInMb);
-    }
+    LOGGER.log(Level.FINE, "{0} - project created successfully.", project.getName());
   }
 
   public void setPaymentType(Project project, PaymentType paymentType) {
@@ -2094,21 +2081,11 @@ public class ProjectController {
     this.projectFacade.flushEm();
   }
 
-  /**
-   * @param projectId
-   * @return
-   */
-  public QuotasDTO getQuotas(Integer projectId) {
-    Project project = projectFacade.find(projectId);
-    return getQuotasInternal(project);
-  }
-
   public QuotasDTO getQuotasInternal(Project project) {
-    Long hdfsQuota = -1L, hdfsUsage = -1L, hdfsNsQuota = -1L, hdfsNsCount = -1L,
+    long hdfsQuota = -1L, hdfsUsage = -1L, hdfsNsQuota = -1L, hdfsNsCount = -1L,
       dbhdfsQuota = -1L, dbhdfsUsage = -1L, dbhdfsNsQuota = -1L, dbhdfsNsCount = -1L,
       fshdfsQuota = -1L, fshdfsUsage = -1L, fshdfsNsQuota = -1L, fshdfsNsCount = -1L;
-    Integer kafkaQuota = project.getKafkaMaxNumTopics();
-    Float yarnRemainingQuota = 0f, yarnTotalQuota = 0f;
+    float yarnRemainingQuota = 0f, yarnTotalQuota = 0f;
 
     // Yarn Quota
     YarnProjectsQuota yarnQuota = yarnProjectsQuotaFacade.
@@ -2121,54 +2098,40 @@ public class ProjectController {
     }
 
     // HDFS project directory quota
-    HdfsDirectoryWithQuotaFeature projectInodeAttrs = hdfsDirectoryWithQuotaFeatureFacade.
-      getByInodeId(project.getInode().getId());
-    if (projectInodeAttrs == null) {
-      LOGGER.log(Level.SEVERE, "Cannot find HDFS quota information for project: " + project.getName());
-    } else {
-      hdfsQuota = projectInodeAttrs.getSsquota().longValue();
-      hdfsUsage = projectInodeAttrs.getStorageSpace().longValue();
-      hdfsNsQuota = projectInodeAttrs.getNsquota().longValue();
-      hdfsNsCount = projectInodeAttrs.getNscount().longValue();
+    Optional<HdfsDirectoryWithQuotaFeature> projectInodeAttrsOptional =
+        hdfsDirectoryWithQuotaFeatureFacade.getByInodeId(project.getInode().getId());
+    if (projectInodeAttrsOptional.isPresent()) {
+      hdfsQuota = projectInodeAttrsOptional.get().getSsquota().longValue();
+      hdfsUsage = projectInodeAttrsOptional.get().getStorageSpace().longValue();
+      hdfsNsQuota = projectInodeAttrsOptional.get().getNsquota().longValue();
+      hdfsNsCount = projectInodeAttrsOptional.get().getNscount().longValue();
     }
 
     // If the Hive service is enabled, get the quota information for the db directory
-    if (projectServicesFacade.isServiceEnabledForProject(project, ProjectServiceEnum.HIVE)) {
-      List<Dataset> datasets = (List<Dataset>) project.getDatasetCollection();
-      for (Dataset ds : datasets) {
-        if (ds.getDsType() == DatasetType.HIVEDB) {
-          HdfsDirectoryWithQuotaFeature dbInodeAttrs = hdfsDirectoryWithQuotaFeatureFacade
-            .getByInodeId(ds.getInodeId());
-          if (dbInodeAttrs == null) {
-            LOGGER.log(Level.SEVERE, "Cannot find HiveDB quota information for project: " + project.getName());
-          } else {
-            dbhdfsQuota = dbInodeAttrs.getSsquota().longValue();
-            dbhdfsUsage = dbInodeAttrs.getStorageSpace().longValue();
-            dbhdfsNsQuota = dbInodeAttrs.getNsquota().longValue();
-            dbhdfsNsCount = dbInodeAttrs.getNscount().longValue();
-          }
+    List<Dataset> datasets = (List<Dataset>) project.getDatasetCollection();
+    for (Dataset ds : datasets) {
+      if (ds.getDsType() == DatasetType.HIVEDB) {
+        Optional<HdfsDirectoryWithQuotaFeature> dbInodeAttrsOptional =
+            hdfsDirectoryWithQuotaFeatureFacade.getByInodeId(ds.getInodeId());
+        if (dbInodeAttrsOptional.isPresent()) {
+          dbhdfsQuota = dbInodeAttrsOptional.get().getSsquota().longValue();
+          dbhdfsUsage = dbInodeAttrsOptional.get().getStorageSpace().longValue();
+          dbhdfsNsQuota = dbInodeAttrsOptional.get().getNsquota().longValue();
+          dbhdfsNsCount = dbInodeAttrsOptional.get().getNscount().longValue();
+        }
+      } else if (ds.getDsType() == DatasetType.FEATURESTORE) {
+        Optional<HdfsDirectoryWithQuotaFeature> fsInodeAttrsOptional =
+            hdfsDirectoryWithQuotaFeatureFacade.getByInodeId(ds.getInodeId());
+        if (fsInodeAttrsOptional.isPresent()) {
+          fshdfsQuota = fsInodeAttrsOptional.get().getSsquota().longValue();
+          fshdfsUsage = fsInodeAttrsOptional.get().getStorageSpace().longValue();
+          fshdfsNsQuota = fsInodeAttrsOptional.get().getNsquota().longValue();
+          fshdfsNsCount = fsInodeAttrsOptional.get().getNscount().longValue();
         }
       }
     }
 
-    // If the Featurestore service is enabled, get the quota information for the featurestore db directory
-    if (projectServicesFacade.isServiceEnabledForProject(project, ProjectServiceEnum.FEATURESTORE)) {
-      List<Dataset> datasets = (List<Dataset>) project.getDatasetCollection();
-      for (Dataset ds : datasets) {
-        if (ds.getDsType() == DatasetType.FEATURESTORE) {
-          HdfsDirectoryWithQuotaFeature dbInodeAttrs = hdfsDirectoryWithQuotaFeatureFacade
-            .getByInodeId(ds.getInodeId());
-          if (dbInodeAttrs == null) {
-            LOGGER.log(Level.SEVERE, "Cannot find FeaturestoreDb quota information for project: " + project.getName());
-          } else {
-            fshdfsQuota = dbInodeAttrs.getSsquota().longValue();
-            fshdfsUsage = dbInodeAttrs.getStorageSpace().longValue();
-            fshdfsNsQuota = dbInodeAttrs.getNsquota().longValue();
-            fshdfsNsCount = dbInodeAttrs.getNscount().longValue();
-          }
-        }
-      }
-    }
+    Integer kafkaQuota = project.getKafkaMaxNumTopics();
 
     return new QuotasDTO(yarnRemainingQuota, yarnTotalQuota, hdfsQuota, hdfsUsage, hdfsNsQuota, hdfsNsCount,
       dbhdfsQuota, dbhdfsUsage, dbhdfsNsQuota, dbhdfsNsCount, fshdfsQuota, fshdfsUsage, fshdfsNsQuota,
@@ -2408,7 +2371,7 @@ public class ProjectController {
 
       switch (projectType) {
         case SPARK:
-          datasetController.createDataset(user, project, tourFilesDataset, "files for guide projects", -1,
+          datasetController.createDataset(user, project, tourFilesDataset, "files for guide projects",
             Provenance.getDatasetProvCore(projectProvCore, Provenance.MLType.DATASET),
               false, DatasetAccessPermission.EDITABLE, dfso);
           String exampleDir = settings.getSparkDir() + Settings.SPARK_EXAMPLES_DIR + "/";
@@ -2439,7 +2402,7 @@ public class ProjectController {
           }
           break;
         case KAFKA:
-          datasetController.createDataset(user, project, tourFilesDataset, "files for guide projects", -1,
+          datasetController.createDataset(user, project, tourFilesDataset, "files for guide projects",
             Provenance.getDatasetProvCore(projectProvCore, Provenance.MLType.DATASET),
               false, DatasetAccessPermission.EDITABLE, dfso);
           // Get the JAR from /user/<super user>
@@ -2458,9 +2421,9 @@ public class ProjectController {
               "project: " + project.getName(), ex.getMessage(), ex);
           }
           break;
-        case DEEP_LEARNING:
+        case ML:
           tourFilesDataset = Settings.HOPS_DL_TOUR_DATASET;
-          datasetController.createDataset(user, project, tourFilesDataset, "sample training data for notebooks", -1,
+          datasetController.createDataset(user, project, tourFilesDataset, "sample training data for notebooks",
             Provenance.getDatasetProvCore(projectProvCore, Provenance.MLType.DATASET)
             , false, DatasetAccessPermission.EDITABLE, dfso);
           String DLDataSrc = "/user/" + settings.getHdfsSuperUser() + "/" + Settings.HOPS_DEEP_LEARNING_TOUR_DATA
@@ -2488,8 +2451,8 @@ public class ProjectController {
               "project: " + project.getName(), ex.getMessage(), ex);
           }
           break;
-        case FEATURESTORE:
-          datasetController.createDataset(user, project, tourFilesDataset, "files for guide projects", -1,
+        case FS:
+          datasetController.createDataset(user, project, tourFilesDataset, "files for guide projects",
             Provenance.getDatasetProvCore(projectProvCore, Provenance.MLType.DATASET),
             false, DatasetAccessPermission.EDITABLE, dfso);
           // Get the JAR from /user/<super user>
@@ -2539,6 +2502,7 @@ public class ProjectController {
           sparkJobConfiguration.setAmVCores(1);
           sparkJobConfiguration.setAppPath("hdfs://" + featurestoreExampleJarDst);
           sparkJobConfiguration.setMainClass(Settings.HOPS_FEATURESTORE_TOUR_JOB_CLASS);
+          sparkJobConfiguration.setDefaultArgs("--input TestJob/data");
           sparkJobConfiguration.setExecutorInstances(1);
           sparkJobConfiguration.setExecutorCores(1);
           sparkJobConfiguration.setExecutorMemory(2024);
@@ -2619,8 +2583,7 @@ public class ProjectController {
     }
   }
 
-  public void removeElasticsearch(Project project)
-      throws ServiceException, ElasticException {
+  public void removeElasticsearch(Project project) throws ElasticException {
     List<ProjectServiceEnum> projectServices = projectServicesFacade.
       findEnabledServicesForProject(project);
 

@@ -17,7 +17,6 @@ package io.hops.hopsworks.common.security.utils;
 
 import io.hops.hopsworks.common.user.UserValidator;
 import org.apache.commons.codec.binary.Base32;
-import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.lang.RandomStringUtils;
 
 import java.io.UnsupportedEncodingException;
@@ -137,14 +136,4 @@ public class SecurityUtils {
     }
     return urlEncoded;
   }
-  
-  /**
-   * Returns the hash of the value
-   * @param val
-   * @return
-   */
-  public String getHash(String val) {
-    return DigestUtils.sha256Hex(val);
-  }
-  
 }

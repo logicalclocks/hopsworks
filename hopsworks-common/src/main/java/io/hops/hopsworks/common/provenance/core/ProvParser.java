@@ -96,7 +96,7 @@ public class ProvParser {
     
     @Override
     public String toString() {
-      return name().toLowerCase();
+      return name().toUpperCase();
     }
     
     public DocSubType getPart() {
@@ -113,6 +113,25 @@ public class ProvParser {
           return DATASET_PART;
         case HIVE:
           return HIVE_PART;
+        default:
+          return this;
+      }
+    }
+  
+    public DocSubType upgradeIfPart() {
+      switch(this) {
+        case FEATURE_PART:
+          return FEATURE;
+        case TRAINING_DATASET_PART:
+          return TRAINING_DATASET;
+        case MODEL_PART:
+          return MODEL;
+        case EXPERIMENT_PART:
+          return EXPERIMENT;
+        case DATASET_PART:
+          return DATASET;
+        case HIVE_PART:
+          return HIVE;
         default:
           return this;
       }
@@ -365,12 +384,12 @@ public class ProvParser {
     return keyj.toString();
   }
   
-  public enum Expansions {
+  public enum ElasticExpansions {
     APP("APP");
     
     public final String queryParamName;
     
-    Expansions(String queryParamName) {
+    ElasticExpansions(String queryParamName) {
       this.queryParamName = queryParamName;
     }
     
@@ -401,15 +420,15 @@ public class ProvParser {
     }
   }
   
-  public static void withExpansions(Set<Expansions> expansions, Set<String> params)
+  public static void withExpansions(Set<ElasticExpansions> expansions, Set<String> params)
     throws ProvenanceException {
     for(String param : params) {
       try {
-        expansions.add(ProvParser.Expansions.valueOf(param));
+        expansions.add(ElasticExpansions.valueOf(param));
       } catch (NullPointerException | IllegalArgumentException e) {
         throw new ProvenanceException(RESTCodes.ProvenanceErrorCode.BAD_REQUEST, Level.INFO,
           "param " + param + " not supported - supported params:"
-            + EnumSet.allOf(ProvParser.Expansions.class),
+            + EnumSet.allOf(ElasticExpansions.class),
           "exception extracting FilterBy param", e);
       }
     }

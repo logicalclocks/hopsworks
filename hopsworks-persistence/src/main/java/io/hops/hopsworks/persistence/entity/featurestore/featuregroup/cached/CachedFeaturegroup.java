@@ -17,17 +17,23 @@
 package io.hops.hopsworks.persistence.entity.featurestore.featuregroup.cached;
 
 import javax.persistence.Basic;
+import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
+import javax.persistence.OneToMany;
 import javax.persistence.Table;
+import javax.validation.constraints.NotNull;
 import javax.xml.bind.annotation.XmlRootElement;
 import java.io.Serializable;
+import java.util.Collection;
 
 /**
  * Entity class representing the cached_feature_group table in Hopsworks database.
@@ -54,8 +60,13 @@ public class CachedFeaturegroup implements Serializable {
   private HiveTbls hiveTbls;
   @Column(name = "online_enabled")
   private boolean onlineEnabled;
-  @Column(name = "default_storage")
-  private Storage defaultStorage;
+  @Basic(optional = false)
+  @NotNull
+  @Enumerated(EnumType.ORDINAL)
+  @Column(name = "timetravel_format")
+  private TimeTravelFormat timeTravelFormat;
+  @OneToMany(cascade = CascadeType.ALL, mappedBy = "cachedFeaturegroup")
+  private Collection<CachedFeatureExtraConstraints> featuresExtraConstraints;
 
   public CachedFeaturegroup() {}
 
@@ -83,12 +94,20 @@ public class CachedFeaturegroup implements Serializable {
     this.onlineEnabled = onlineEnabled;
   }
 
-  public Storage getDefaultStorage() {
-    return defaultStorage;
+  public TimeTravelFormat getTimeTravelFormat() {
+    return timeTravelFormat;
   }
 
-  public void setDefaultStorage(Storage defaultStorage) {
-    this.defaultStorage = defaultStorage;
+  public Collection<CachedFeatureExtraConstraints> getFeaturesExtraConstraints() {
+    return featuresExtraConstraints;
+  }
+
+  public void setFeaturesExtraConstraints(Collection<CachedFeatureExtraConstraints> featuresExtraConstraints) {
+    this.featuresExtraConstraints = featuresExtraConstraints;
+  }
+
+  public void setTimeTravelFormat(TimeTravelFormat timeTravelFormat) {
+    this.timeTravelFormat = timeTravelFormat;
   }
 
   @Override

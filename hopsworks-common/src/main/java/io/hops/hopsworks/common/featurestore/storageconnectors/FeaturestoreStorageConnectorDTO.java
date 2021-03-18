@@ -19,45 +19,55 @@ package io.hops.hopsworks.common.featurestore.storageconnectors;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import io.hops.hopsworks.common.featurestore.storageconnectors.adls.FeaturestoreADLSConnectorDTO;
 import io.hops.hopsworks.common.featurestore.storageconnectors.hopsfs.FeaturestoreHopsfsConnectorDTO;
 import io.hops.hopsworks.common.featurestore.storageconnectors.jdbc.FeaturestoreJdbcConnectorDTO;
+import io.hops.hopsworks.common.featurestore.storageconnectors.redshift.FeaturestoreRedshiftConnectorDTO;
 import io.hops.hopsworks.common.featurestore.storageconnectors.s3.FeaturestoreS3ConnectorDTO;
+import io.hops.hopsworks.common.featurestore.storageconnectors.snowflake.FeaturestoreSnowflakeConnectorDTO;
+import io.hops.hopsworks.persistence.entity.featurestore.storageconnector.FeaturestoreConnector;
+import io.hops.hopsworks.persistence.entity.featurestore.storageconnector.FeaturestoreConnectorType;
 
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlSeeAlso;
-
 /**
  * Abstract storage connector in the featurestore. Contains the common fields and functionality between different
  * types of storage connectors
  */
 @XmlRootElement
-@XmlSeeAlso({FeaturestoreHopsfsConnectorDTO.class, FeaturestoreJdbcConnectorDTO.class,
-    FeaturestoreS3ConnectorDTO.class})
+@XmlSeeAlso({FeaturestoreHopsfsConnectorDTO.class,
+    FeaturestoreJdbcConnectorDTO.class,
+    FeaturestoreRedshiftConnectorDTO.class,
+    FeaturestoreS3ConnectorDTO.class,
+    FeaturestoreADLSConnectorDTO.class,
+    FeaturestoreSnowflakeConnectorDTO.class})
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY)
 @JsonSubTypes({
-    @JsonSubTypes.Type(value = FeaturestoreHopsfsConnectorDTO.class, name = "FeaturestoreJobDTO"),
+    @JsonSubTypes.Type(value = FeaturestoreHopsfsConnectorDTO.class, name = "FeaturestoreHopsfsConnectorDTO"),
     @JsonSubTypes.Type(value = FeaturestoreJdbcConnectorDTO.class, name = "FeaturestoreJdbcConnectorDTO"),
-    @JsonSubTypes.Type(value = FeaturestoreS3ConnectorDTO.class, name = "FeaturestoreS3ConnectorDTO")}
+    @JsonSubTypes.Type(value = FeaturestoreRedshiftConnectorDTO.class, name = "FeaturestoreRedshiftConnectorDTO"),
+    @JsonSubTypes.Type(value = FeaturestoreS3ConnectorDTO.class, name = "FeaturestoreS3ConnectorDTO"),
+    @JsonSubTypes.Type(value = FeaturestoreADLSConnectorDTO.class, name = "FeaturestoreADLSConnectorDTO"),
+    @JsonSubTypes.Type(value = FeaturestoreSnowflakeConnectorDTO.class, name = "FeaturestoreSnowflakeConnectorDTO")}
 )
 public class FeaturestoreStorageConnectorDTO {
   private Integer id;
   private String description;
   private String name;
   private Integer featurestoreId;
-  private FeaturestoreStorageConnectorType storageConnectorType;
+  private FeaturestoreConnectorType storageConnectorType;
 
   public FeaturestoreStorageConnectorDTO() {
   }
 
-  public FeaturestoreStorageConnectorDTO(Integer id, String description, String name, Integer featurestoreId,
-                                         FeaturestoreStorageConnectorType featurestoreStorageConnectorType) {
-    this.id = id;
-    this.description = description;
-    this.name = name;
-    this.featurestoreId = featurestoreId;
-    this.storageConnectorType = featurestoreStorageConnectorType;
+  public FeaturestoreStorageConnectorDTO(FeaturestoreConnector featurestoreConnector) {
+    this.id = featurestoreConnector.getId();
+    this.description = featurestoreConnector.getDescription();
+    this.name = featurestoreConnector.getName();
+    this.featurestoreId = featurestoreConnector.getFeaturestore().getId();
+    this.storageConnectorType = featurestoreConnector.getConnectorType();
   }
 
   @XmlElement
@@ -97,11 +107,11 @@ public class FeaturestoreStorageConnectorDTO {
   }
 
   @XmlElement
-  public FeaturestoreStorageConnectorType getStorageConnectorType() {
+  public FeaturestoreConnectorType getStorageConnectorType() {
     return storageConnectorType;
   }
 
-  public void setStorageConnectorType(FeaturestoreStorageConnectorType storageConnectorType) {
+  public void setStorageConnectorType(FeaturestoreConnectorType storageConnectorType) {
     this.storageConnectorType = storageConnectorType;
   }
 

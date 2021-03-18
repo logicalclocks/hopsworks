@@ -33,7 +33,6 @@ import java.util.List;
 @XmlRootElement
 public class FeaturestoreClientSettingsDTO {
   
-  private int featurestoreStatisticsMaxCorrelations = FeaturestoreConstants.FEATURESTORE_STATISTICS_MAX_CORRELATIONS;
   private String featurestoreRegex = FeaturestoreConstants.FEATURESTORE_REGEX.toString();
   private int featurestoreEntityNameMaxLength = FeaturestoreConstants.FEATURESTORE_ENTITY_NAME_MAX_LENGTH;
   private int featurestoreEntityDescriptionMaxLength = FeaturestoreConstants.FEATURESTORE_ENTITY_DESCRIPTION_MAX_LENGTH;
@@ -57,6 +56,7 @@ public class FeaturestoreClientSettingsDTO {
   private boolean s3IAMRole = false;
   private List<String> trainingDatasetDataFormats = FeaturestoreConstants.TRAINING_DATASET_DATA_FORMATS;
   private String jdbcConnectorType = FeaturestoreConstants.JDBC_CONNECTOR_TYPE;
+  private String redshiftConnectorType = FeaturestoreConstants.REDSHIFT_CONNECTOR_TYPE;
   private String hopsfsConnectorType = FeaturestoreConstants.HOPSFS_CONNECTOR_TYPE;
   private String s3ConnectorType = FeaturestoreConstants.S3_CONNECTOR_TYPE;
   private String cachedFeaturegroupDtoType = FeaturestoreConstants.CACHED_FEATUREGROUP_DTO_TYPE;
@@ -65,15 +65,11 @@ public class FeaturestoreClientSettingsDTO {
   private String externalTrainingDatasetType = FeaturestoreConstants.EXTERNAL_TRAINING_DATASET_TYPE;
   private String s3ConnectorDtoType = FeaturestoreConstants.S3_CONNECTOR_DTO_TYPE;
   private String jdbcConnectorDtoType = FeaturestoreConstants.JDBC_CONNECTOR_DTO_TYPE;
+  private String redshiftConnectorDtoType = FeaturestoreConstants.REDSHIFT_CONNECTOR_DTO_TYPE;
   private String hopsfsConnectorDtoType = FeaturestoreConstants.HOPSFS_CONNECTOR_DTO_TYPE;
   private String featuregroupType = FeaturestoreConstants.FEATUREGROUP_TYPE;
   private String trainingDatasetType = FeaturestoreConstants.TRAINING_DATASET_TYPE;
   private List<String> suggestedHiveFeatureTypes = FeaturestoreConstants.SUGGESTED_HIVE_FEATURE_TYPES;
-  private String featurestoreUtil4jMainClass = FeaturestoreConstants.FEATURESTORE_UTIL_4J_MAIN_CLASS;
-  private String featurestoreUtil4jArgsDataset = FeaturestoreConstants.FEATURESTORE_UTIL_4J_ARGS_DATASET;
-  private String featurestoreUtilPythonMainClass = FeaturestoreConstants.FEATURESTORE_UTIL_PYTHON_MAIN_CLASS;
-  private String featurestoreUtil4jExecutable = FeaturestoreConstants.FEATURESTORE_UTIL_4J_EXECUTABLE;
-  private String featurestoreUtilPythonExecutable = FeaturestoreConstants.FEATURESTORE_UTIL_PYTHON_EXECUTABLE;
   private String s3BucketTrainingDatasetsFolder = FeaturestoreConstants.S3_BUCKET_TRAINING_DATASETS_FOLDER;
   private List<String> featureImportConnectors = FeaturestoreConstants.FEATURE_IMPORT_CONNECTORS;
   private Boolean onlineFeaturestoreEnabled = false;
@@ -82,15 +78,6 @@ public class FeaturestoreClientSettingsDTO {
   
   public FeaturestoreClientSettingsDTO() {
     //For JAXB
-  }
-  
-  @XmlElement
-  public int getFeaturestoreStatisticsMaxCorrelations() {
-    return featurestoreStatisticsMaxCorrelations;
-  }
-  
-  public void setFeaturestoreStatisticsMaxCorrelations(int featurestoreStatisticsMaxCorrelations) {
-    this.featurestoreStatisticsMaxCorrelations = featurestoreStatisticsMaxCorrelations;
   }
   
   @XmlElement
@@ -220,6 +207,15 @@ public class FeaturestoreClientSettingsDTO {
   }
   
   @XmlElement
+  public String getRedshiftConnectorType() {
+    return redshiftConnectorType;
+  }
+
+  public void setRedshiftConnectorType(String redshiftConnectorType) {
+    this.redshiftConnectorType = redshiftConnectorType;
+  }
+
+  @XmlElement
   public String getHopsfsConnectorType() {
     return hopsfsConnectorType;
   }
@@ -292,6 +288,15 @@ public class FeaturestoreClientSettingsDTO {
   }
   
   @XmlElement
+  public String getRedshiftConnectorDtoType() {
+    return redshiftConnectorDtoType;
+  }
+
+  public void setRedshiftConnectorDtoType(String redshiftConnectorDtoType) {
+    this.redshiftConnectorDtoType = redshiftConnectorDtoType;
+  }
+
+  @XmlElement
   public String getHopsfsConnectorDtoType() {
     return hopsfsConnectorDtoType;
   }
@@ -325,51 +330,6 @@ public class FeaturestoreClientSettingsDTO {
   
   public void setSuggestedHiveFeatureTypes(List<String> suggestedHiveFeatureTypes) {
     this.suggestedHiveFeatureTypes = suggestedHiveFeatureTypes;
-  }
-  
-  @XmlElement
-  public String getFeaturestoreUtil4jMainClass() {
-    return featurestoreUtil4jMainClass;
-  }
-  
-  public void setFeaturestoreUtil4jMainClass(String featurestoreUtil4jMainClass) {
-    this.featurestoreUtil4jMainClass = featurestoreUtil4jMainClass;
-  }
-  
-  @XmlElement
-  public String getFeaturestoreUtil4jArgsDataset() {
-    return featurestoreUtil4jArgsDataset;
-  }
-  
-  public void setFeaturestoreUtil4jArgsDataset(String featurestoreUtil4jArgsDataset) {
-    this.featurestoreUtil4jArgsDataset = featurestoreUtil4jArgsDataset;
-  }
-  
-  @XmlElement
-  public String getFeaturestoreUtilPythonMainClass() {
-    return featurestoreUtilPythonMainClass;
-  }
-  
-  public void setFeaturestoreUtilPythonMainClass(String featurestoreUtilPythonMainClass) {
-    this.featurestoreUtilPythonMainClass = featurestoreUtilPythonMainClass;
-  }
-  
-  @XmlElement
-  public String getFeaturestoreUtil4jExecutable() {
-    return featurestoreUtil4jExecutable;
-  }
-  
-  public void setFeaturestoreUtil4jExecutable(String featurestoreUtil4jExecutable) {
-    this.featurestoreUtil4jExecutable = featurestoreUtil4jExecutable;
-  }
-  
-  @XmlElement
-  public String getFeaturestoreUtilPythonExecutable() {
-    return featurestoreUtilPythonExecutable;
-  }
-  
-  public void setFeaturestoreUtilPythonExecutable(String featurestoreUtilPythonExecutable) {
-    this.featurestoreUtilPythonExecutable = featurestoreUtilPythonExecutable;
   }
   
   @XmlElement

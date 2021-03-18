@@ -21,8 +21,6 @@ import io.hops.hopsworks.persistence.entity.user.Users;
 import javax.mail.MessagingException;
 
 public interface PasswordRecovery {
-  public void validateSecurityQAndStatus(Users user, String securityQuestion, String securityAnswer)
-          throws UserException;
   public void sendRecoveryNotification(Users user, String url, boolean isPassword,
           AuthController.CredentialsResetToken resetToken) throws MessagingException, UserException;
 }

@@ -126,7 +126,7 @@
                           </div>
 
                           <div class="col-md-5">
-                            <label class="control-label">Status</label>
+                            <label class="control-label">Quotas</label>
                             <fieldset>
                               <label class="text-muted">Datasets</label>
                               <div class="row" style="margin-left:15px; margin-bottom:0px">
@@ -235,7 +235,33 @@
                   </button>
 
                 </form>
-
+                <div class="row">
+                  <div class="col-md-12">
+                    <div class="panel panel-danger"  style="width: 800px">
+                      <div class="panel-heading">
+                        Danger Zone
+                      </div>
+                      <div class="panel-body no-padding">
+                        <div class="no-padding" ng-repeat="action in projectCtrl.projectDangerActions">
+                          <div class="col-md-12 no-padding border-bottom">
+                            <div class="col-md-9 no-padding">
+                              <h2>
+                                {{action.title}}
+                              </h2>
+                              {{action.description}}
+                            </div>
+                            <div class="col-md-3 no-padding" style="margin-top:25px">
+                              <button class="btn btn-danger"
+                                      ng-click="projectCtrl.handleProjectDangerActions(action.action)">
+                                {{action.title}}
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </uib-tab>
 
 

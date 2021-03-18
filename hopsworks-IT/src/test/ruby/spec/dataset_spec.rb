@@ -187,7 +187,7 @@ describe "On #{ENV['OS']}" do
           create_session(newUser[:email], "Pass123")
           projectname = "project_#{short_random_id}"
           project1 = create_project_by_name(projectname)
-          file = URI.encode_www_form({templateId: -1, flowChunkNumber: 1, flowChunkSize: 1048576,
+          file = URI.encode_www_form({flowChunkNumber: 1, flowChunkSize: 1048576,
                                       flowCurrentChunkSize: 3195, flowTotalSize: 3195,
                                       flowIdentifier: "3195-someFiletxt", flowFilename: "someFile.txt",
                                       flowRelativePath: "someFile.txt", flowTotalChunks: 1})
@@ -265,7 +265,7 @@ describe "On #{ENV['OS']}" do
         end
         it "should fail to upload" do
           project = get_project
-          uploadFile(project, "Logs", "#{ENV['PROJECT_DIR']}/tools/metadata_designer/Sample.json")
+          uploadFile(project, "Logs", "#{ENV['PROJECT_DIR']}/tools/upload_example/Sample.json")
           expect_json(errorCode: 200003)
           expect_status(401)
         end
@@ -280,7 +280,7 @@ describe "On #{ENV['OS']}" do
           member = create_user
           add_member_to_project(@project, member[:email], "Data scientist")
           create_session(member[:email], "Pass123")
-          uploadFile(@project, dsname, "#{ENV['PROJECT_DIR']}/tools/metadata_designer/Sample.json")
+          uploadFile(@project, dsname, "#{ENV['PROJECT_DIR']}/tools/upload_example/Sample.json")
           expect_json(errorCode: 200002)
           expect_status(403)
           reset_session
@@ -293,7 +293,7 @@ describe "On #{ENV['OS']}" do
           ds = create_dataset_by_name_checked(@project, dsname, permission: "READ_ONLY")
           request_access(@project, ds, project)
           share_dataset(@project, dsname, project[:projectname], permission: "READ_ONLY")
-          uploadFile(project, "#{@project[:projectname]}::#{dsname}", "#{ENV['PROJECT_DIR']}/tools/metadata_designer/Sample.json")
+          uploadFile(project, "#{@project[:projectname]}::#{dsname}", "#{ENV['PROJECT_DIR']}/tools/upload_example/Sample.json")
           expect_json(errorCode: 200002)
           expect_status(403)
         end
@@ -305,7 +305,7 @@ describe "On #{ENV['OS']}" do
         it "should upload file" do
           dsname = "dataset_#{short_random_id}"
           ds = create_dataset_by_name_checked(@project, dsname, permission: "READ_ONLY")
-          uploadFile(@project, dsname, "#{ENV['PROJECT_DIR']}/tools/metadata_designer/Sample.json")
+          uploadFile(@project, dsname, "#{ENV['PROJECT_DIR']}/tools/upload_example/Sample.json")
           expect_status(204)
         end
         it "should upload to a shared dataset with permission group writable." do
@@ -316,7 +316,7 @@ describe "On #{ENV['OS']}" do
           request_access(@project, ds, project)
           share_dataset(@project, dsname, project[:projectname], permission: "EDITABLE")
           update_dataset_permissions(@project, dsname, "EDITABLE", datasetType: "&type=DATASET")
-          uploadFile(project, "#{@project[:projectname]}::#{dsname}", "#{ENV['PROJECT_DIR']}/tools/metadata_designer/Sample.json")
+          uploadFile(project, "#{@project[:projectname]}::#{dsname}", "#{ENV['PROJECT_DIR']}/tools/upload_example/Sample.json")
           expect_status(204)
         end
         it "should upload to a dataset with permission owner only if Data owner" do
@@ -325,7 +325,7 @@ describe "On #{ENV['OS']}" do
           member = create_user
           add_member_to_project(@project, member[:email], "Data owner")
           create_session(member[:email], "Pass123")
-          uploadFile(@project, dsname, "#{ENV['PROJECT_DIR']}/tools/metadata_designer/Sample.json")
+          uploadFile(@project, dsname, "#{ENV['PROJECT_DIR']}/tools/upload_example/Sample.json")
           expect_status(204)
           reset_session
         end
@@ -603,62 +603,82 @@ describe "On #{ENV['OS']}" do
           readme_parsed = JSON.parse(readme)
           expect(readme_parsed['preview']).not_to be_nil
         end
-        it "should share training dataset when sharing requested feature store" do
+        it "should share training and statistic dataset when sharing requested feature store" do
           projectname = "project_#{short_random_id}"
           project = create_project_by_name(projectname)
           featurestore = "#{@project[:projectname].downcase}_featurestore.db"
           trainingDataset =  "#{@project[:projectname]}_Training_Datasets"
-          get_dataset_stat(@project, featurestore, datasetType: "&type=FEATURESTORE")
+          statisticsDataset =  "Statistics"
+          get_dataset_stat(@project, featurestore,  datasetType: "&type=FEATURESTORE")
           ds = json_body
           request_dataset_access(project, ds[:attributes][:id])
           share_dataset(@project, featurestore, project[:projectname], permission: "EDITABLE", datasetType:
               "&type=FEATURESTORE")
           get_dataset_stat(project, "#{@project[:projectname]}::#{trainingDataset}", datasetType: "&type=DATASET")
           expect_status(200)
+          get_dataset_stat(project, "#{@project[:projectname]}::#{statisticsDataset}", datasetType: "&type=DATASET")
+          expect_status(200)
         end
-        it "should share training dataset when accepting non requested feature store" do
+        it "should share training and statistics dataset when accepting non requested feature store" do
           projectname = "project_#{short_random_id}"
           project = create_project_by_name(projectname)
           featurestore = "#{@project[:projectname].downcase}_featurestore.db"
           trainingDataset =  "#{@project[:projectname]}_Training_Datasets"
+          statisticsDataset =  "Statistics"
           share_dataset(@project, featurestore, project[:projectname], permission: "EDITABLE", datasetType:
               "&type=FEATURESTORE")
           accept_dataset(project, "#{@project[:projectname]}::#{featurestore}", datasetType: "&type=FEATURESTORE")
           get_dataset_stat(project, "#{@project[:projectname]}::#{trainingDataset}", datasetType: "&type=DATASET")
           expect_status(200)
+          get_dataset_stat(project, "#{@project[:projectname]}::#{statisticsDataset}", datasetType: "&type=DATASET")
+          expect_status(200)
         end
-        it "should not share training dataset when sharing non requested feature store" do
+        it "should not share training and statistics dataset when sharing non requested feature store" do
           projectname = "project_#{short_random_id}"
           project = create_project_by_name(projectname)
           featurestore = "#{@project[:projectname].downcase}_featurestore.db"
           trainingDataset =  "#{@project[:projectname]}_Training_Datasets"
+          statisticsDataset =  "Statistics"
           share_dataset(@project, featurestore, project[:projectname], permission: "EDITABLE", datasetType:
               "&type=FEATURESTORE")
           get_dataset_stat(project, "#{@project[:projectname]}::#{trainingDataset}", datasetType: "&type=DATASET")
           expect_status(400)
+          get_dataset_stat(project, "#{@project[:projectname]}::#{statisticsDataset}", datasetType: "&type=DATASET")
+          expect_status(400)
         end
-        it "should accept pending training dataset when accepting feature store" do
+        it "should accept pending training and statistics dataset when accepting feature store" do
           projectname = "project_#{short_random_id}"
           project = create_project_by_name(projectname)
           featurestore = "#{@project[:projectname].downcase}_featurestore.db"
           trainingDataset =  "#{@project[:projectname]}_Training_Datasets"
+          statisticsDataset =  "Statistics"
           share_dataset(@project, trainingDataset, project[:projectname], permission: "EDITABLE", datasetType:
+              "&type=DATASET")
+          share_dataset(@project, statisticsDataset, project[:projectname], permission: "EDITABLE", datasetType:
               "&type=DATASET")
           share_dataset(@project, featurestore, project[:projectname], permission: "EDITABLE", datasetType:
               "&type=FEATURESTORE")
           accept_dataset(project, "#{@project[:projectname]}::#{featurestore}", datasetType: "&type=FEATURESTORE")
           get_dataset_stat(project, "#{@project[:projectname]}::#{trainingDataset}", datasetType: "&type=DATASET")
           expect_status(200)
+          get_dataset_stat(project, "#{@project[:projectname]}::#{statisticsDataset}", datasetType: "&type=DATASET")
+          expect_status(200)
         end
-        it "should ignore shared training dataset when accepting feature store" do
+        it "should ignore shared training and statistics dataset when accepting feature store" do
           projectname = "project_#{short_random_id}"
           project = create_project_by_name(projectname)
           featurestore = "#{@project[:projectname].downcase}_featurestore.db"
           trainingDataset =  "#{@project[:projectname]}_Training_Datasets"
+          statisticsDataset =  "Statistics"
           share_dataset(@project, trainingDataset, project[:projectname], permission: "EDITABLE", datasetType:
               "&type=DATASET")
           accept_dataset(project, "#{@project[:projectname]}::#{trainingDataset}", datasetType: "&type=DATASET")
           get_dataset_stat(project, "#{@project[:projectname]}::#{trainingDataset}", datasetType: "&type=DATASET")
+          expect_status(200)
+          share_dataset(@project, statisticsDataset, project[:projectname],permission: "EDITABLE", datasetType:
+              "&type=DATASET")
+          accept_dataset(project, "#{@project[:projectname]}::#{statisticsDataset}", datasetType: "&type=DATASET")
+          get_dataset_stat(project, "#{@project[:projectname]}::#{statisticsDataset}", datasetType: "&type=DATASET")
           expect_status(200)
           share_dataset(@project, featurestore, project[:projectname], permission: "EDITABLE", datasetType:
               "&type=FEATURESTORE")
@@ -666,34 +686,47 @@ describe "On #{ENV['OS']}" do
           expect_status(204)
           get_dataset_stat(project, "#{@project[:projectname]}::#{trainingDataset}", datasetType: "&type=DATASET")
           expect_status(200)
+          get_dataset_stat(project, "#{@project[:projectname]}::#{statisticsDataset}", datasetType: "&type=DATASET")
+          expect_status(200)
         end
-        it "should unshare training dataset when unsharing feature store" do
+        it "should unshare training and statistics dataset when unsharing feature store" do
           projectname = "project_#{short_random_id}"
           project = create_project_by_name(projectname)
           featurestore = "#{@project[:projectname].downcase}_featurestore.db"
           trainingDataset =  "#{@project[:projectname]}_Training_Datasets"
+          statisticsDataset =  "Statistics"
           share_dataset(@project, featurestore, project[:projectname], permission: "EDITABLE", datasetType:
               "&type=FEATURESTORE")
           accept_dataset(project, "#{@project[:projectname]}::#{featurestore}", datasetType: "&type=FEATURESTORE")
           get_dataset_stat(project, "#{@project[:projectname]}::#{trainingDataset}", datasetType: "&type=DATASET")
+          expect_status(200)
+          get_dataset_stat(project, "#{@project[:projectname]}::#{statisticsDataset}", datasetType: "&type=DATASET")
           expect_status(200)
           unshare_from(@project, featurestore, project[:projectname], datasetType: "&type=FEATURESTORE")
           get_dataset_stat(project, "#{@project[:projectname]}::#{trainingDataset}", datasetType: "&type=DATASET")
           expect_status(400)
           expect_json(errorCode: 110011)
+          get_dataset_stat(project, "#{@project[:projectname]}::#{statisticsDataset}", datasetType: "&type=DATASET")
+          expect_status(400)
+          expect_json(errorCode: 110011)
         end
-        it "should unshare training dataset when deleting feature store" do
+        it "should unshare training and statistics dataset when deleting feature store" do
           projectname = "project_#{short_random_id}"
           project = create_project_by_name(projectname)
           featurestore = "#{@project[:projectname].downcase}_featurestore.db"
           trainingDataset =  "#{@project[:projectname]}_Training_Datasets"
+          statisticsDataset =  "Statistics"
           share_dataset(@project, featurestore, project[:projectname], permission: "EDITABLE", datasetType:
               "&type=FEATURESTORE")
           accept_dataset(project, "#{@project[:projectname]}::#{featurestore}", datasetType: "&type=FEATURESTORE")
           get_dataset_stat(project, "#{@project[:projectname]}::#{trainingDataset}", datasetType: "&type=DATASET")
           expect_status(200)
+          get_dataset_stat(project, "#{@project[:projectname]}::#{statisticsDataset}", datasetType: "&type=DATASET")
+          expect_status(200)
           delete_dataset(project, "#{@project[:projectname]}::#{featurestore}", datasetType: "?type=FEATURESTORE")
           get_dataset_stat(project, "#{@project[:projectname]}::#{trainingDataset}", datasetType: "&type=DATASET")
+          expect_status(400)
+          get_dataset_stat(project, "#{@project[:projectname]}::#{statisticsDataset}", datasetType: "&type=DATASET")
           expect_status(400)
         end
       end
@@ -767,7 +800,7 @@ describe "On #{ENV['OS']}" do
           accept_dataset_checked(@project2, "#{@project1[:projectname]}::#{@dsname}", datasetType: "DATASET")
         end
         it "should fail to upload to a shared dataset with permission read only" do
-          uploadFile(@project2, "#{@project1[:projectname]}::#{@dsname}", "#{ENV['PROJECT_DIR']}/tools/metadata_designer/Sample.json")
+          uploadFile(@project2, "#{@project1[:projectname]}::#{@dsname}", "#{ENV['PROJECT_DIR']}/tools/upload_example/Sample.json")
           expect_status_details(403, error_code: 200002)
         end
 
@@ -794,7 +827,7 @@ describe "On #{ENV['OS']}" do
           update_dataset_permissions_checked(@project1, @dsname, "EDITABLE")
         end
         it "should upload to a shared dataset with permission group writable." do
-          uploadFile(@project2, "#{@project1[:projectname]}::#{@dsname}", "#{ENV['PROJECT_DIR']}/tools/metadata_designer/Sample.json")
+          uploadFile(@project2, "#{@project1[:projectname]}::#{@dsname}", "#{ENV['PROJECT_DIR']}/tools/upload_example/Sample.json")
           expect_status_details(204)
         end
 
@@ -1256,8 +1289,12 @@ describe "On #{ENV['OS']}" do
           expect_status(401)
         end
         it "should fail to download file without a token" do
-          get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/dataset/download/Logs/README.md?type=DATASET"
+          get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/dataset/download/with_token/Logs/README.md?type=DATASET"
           expect_json(errorCode: 200003)
+          expect_status(401)
+        end
+        it "should fail to download file without auth" do
+          download_dataset_with_auth(@project, "Logs/README.md", datasetType: "type=DATASET")
           expect_status(401)
         end
         it "should fail to download file with an empty string token" do
@@ -1276,6 +1313,10 @@ describe "On #{ENV['OS']}" do
           with_valid_project
         end
         it "should download Logs/README.md" do
+          download_dataset_with_auth(@project, "Logs/README.md", datasetType: "type=DATASET")
+          expect_status(200)
+        end
+        it "should download Logs/README.md with token" do
           download_dataset(@project, "Logs/README.md", datasetType: "type=DATASET")
           expect_status(200)
         end
@@ -1299,7 +1340,30 @@ describe "On #{ENV['OS']}" do
           user = @user[:email]
           setVar("download_allowed", 'false')
           create_session(user, "Pass123")
+          download_dataset_with_auth(@project, "Logs/README.md", datasetType: "type=DATASET")
+          expect_status(403)
+          #set var back to true
+          setVar("download_allowed", "true")
+          expect(getVar("download_allowed").value).to eq "true"
+        end
+        it 'should fail to download a file with token if variable download_allowed is false' do
+          user = @user[:email]
+          setVar("download_allowed", 'false')
+          create_session(user, "Pass123")
           get_download_token(@project, "Logs/README.md", datasetType: "?type=DATASET")
+          expect_status(403)
+          #set var back to true
+          setVar("download_allowed", "true")
+          expect(getVar("download_allowed").value).to eq "true"
+        end
+        it 'should fail to download a file with apikey if variable download_allowed is false' do
+          user = @user[:email]
+          setVar("download_allowed", 'false')
+          create_session(user, "Pass123")
+          # use a valid apikey
+          key_view = create_api_key('datasetKey', %w(DATASET_VIEW))
+          set_api_key_to_header(key_view)
+          download_dataset_with_auth(@project, "Logs/README.md", datasetType: "type=DATASET")
           expect_status(403)
           #set var back to true
           setVar("download_allowed", "true")
@@ -1366,7 +1430,7 @@ describe "On #{ENV['OS']}" do
       it 'should not allow :: in file name' do
         with_valid_dataset
         create_dir(@project, "#{@dataset[:inode_name]}/test::dir_#{short_random_id}", query: "&type=DATASET")
-        expect_status_details(400)
+        expect_status_details(422)
         featurestore_dataset_name = "#{@project[:projectname]}_featurestore.db".downcase
         create_dir(@project, "#{featurestore_dataset_name}/test::dir_#{short_random_id}", query: "&type=FEATURESTORE")
         expect_status_details(400)
@@ -1398,10 +1462,10 @@ describe "On #{ENV['OS']}" do
           test_sort_by_str(@project, @datasets, "", "name", "desc", "name")
         end
         it 'should return sorted datasets by searchable (asc)' do
-          test_sort_by(@project, @datasets, "", "searchable", "asc", "searchable")
+          test_sort_by_str(@project, @datasets, "", "searchable", "asc", "searchable")
         end
         it 'should return sorted datasets by searchable (desc)' do
-          test_sort_by(@project, @datasets, "", "searchable", "desc", "searchable")
+          test_sort_by_str(@project, @datasets, "", "searchable", "desc", "searchable")
         end
         it 'should return sorted datasets by size (asc)' do
           test_sort_by_attr(@project, @datasets, "", "size", "asc", "size")# dataset size is not set
@@ -1751,6 +1815,11 @@ describe "On #{ENV['OS']}" do
           expect_status(201)
           copy_dataset(@project, "Resources/test2", "/Projects/#{@project[:projectname]}/Logs/test2", datasetType: "&type=DATASET")
           expect_status(204)
+        end
+        it 'should download Logs/README.md' do
+          set_api_key_to_header(@key_view)
+          download_dataset_with_auth(@project, "Logs/README.md", datasetType: "type=DATASET")
+          expect_status(200)
         end
         it 'should delete' do
           set_api_key_to_header(@key_delete)

@@ -19,11 +19,14 @@ package io.hops.hopsworks.api.featurestore;
 import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.api.filter.Audience;
 import io.hops.hopsworks.api.filter.apiKey.ApiKeyRequired;
+import io.hops.hopsworks.api.jwt.JWTHelper;
 import io.hops.hopsworks.common.featurestore.query.FsQueryDTO;
 import io.hops.hopsworks.common.featurestore.query.QueryDTO;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
+import io.hops.hopsworks.exceptions.ServiceException;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
 import io.hops.hopsworks.persistence.entity.project.Project;
+import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.persistence.entity.user.security.apiKey.ApiScope;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -48,14 +51,17 @@ public class FsQueryConstructorResource {
 
   @EJB
   private FsQueryBuilder fsQueryBuilder;
+  @EJB
+  private JWTHelper jWTHelper;
 
   private Project project;
+
   public FsQueryConstructorResource setProject(Project project) {
     this.project = project;
     return this;
   }
 
-  /**
+ /**
    * TODO(Fabio): here probably a GET request is better as we are not changing any entity in the backend system.
    * For the moment as we are in a rush I'll let the PUT method, but I'll try to fix it before the final release
    * is done.
@@ -73,11 +79,14 @@ public class FsQueryConstructorResource {
   @ApiKeyRequired( acceptedScopes = {ApiScope.FEATURESTORE}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   @ApiOperation(value = "Construct the SQL query to join the requested features", response = FsQueryDTO.class)
   public Response constructQuery(@Context SecurityContext sc, @Context UriInfo uriInfo,
-                                 QueryDTO queryDto) throws FeaturestoreException {
+                                 QueryDTO queryDto) throws FeaturestoreException, ServiceException {
+    Users user = jWTHelper.getUserPrincipal(sc);
     if (queryDto == null) {
       throw new IllegalArgumentException("Please submit a query to construct");
     }
-    FsQueryDTO fsQueryDTO = fsQueryBuilder.build(uriInfo, project, queryDto);
+    FsQueryDTO fsQueryDTO = fsQueryBuilder.build(uriInfo, project, user, queryDto);
     return Response.ok().entity(fsQueryDTO).build();
   }
+
+
 }

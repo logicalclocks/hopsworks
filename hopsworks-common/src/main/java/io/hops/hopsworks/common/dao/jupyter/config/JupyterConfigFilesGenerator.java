@@ -39,9 +39,11 @@
 
 package io.hops.hopsworks.common.dao.jupyter.config;
 
+import com.google.common.base.Strings;
 import com.logicalclocks.servicediscoverclient.exceptions.ServiceDiscoveryException;
 import com.logicalclocks.servicediscoverclient.service.Service;
 import freemarker.template.TemplateException;
+import io.hops.hopsworks.exceptions.JobException;
 import io.hops.hopsworks.common.hive.HiveController;
 import io.hops.hopsworks.common.hosts.ServiceDiscoveryController;
 import io.hops.hopsworks.common.kafka.KafkaBrokers;
@@ -112,7 +114,7 @@ public class JupyterConfigFilesGenerator {
   
   public JupyterPaths generateConfiguration(Project project, String secretConfig, String hdfsUser,
     JupyterSettings js, Integer port, String allowOrigin)
-    throws ServiceException {
+    throws ServiceException, JobException {
     boolean newDir = false;
     
     JupyterPaths jp = generateJupyterPaths(project, hdfsUser, secretConfig);
@@ -120,14 +122,14 @@ public class JupyterConfigFilesGenerator {
     try {
       newDir = createJupyterDirs(jp);
       createConfigFiles(jp, hdfsUser, project, port, js, allowOrigin);
-    } catch (Exception e) {
+    } catch (IOException | ServiceException | ServiceDiscoveryException e) {
       if (newDir) { // if the folder was newly created delete it
         removeProjectUserDirRecursive(jp);
       }
       LOGGER.log(Level.SEVERE,
         "Error in initializing JupyterConfig for project: {0}. {1}",
         new Object[]{project.getName(), e});
-      
+
       throw new ServiceException(RESTCodes.ServiceErrorCode.JUPYTER_ADD_FAILURE, Level.SEVERE, null,
         e.getMessage(), e);
     }
@@ -218,7 +220,9 @@ public class JupyterConfigFilesGenerator {
     if (js.isGitBackend() && js.getGitConfig() != null) {
       remoteGitURL = js.getGitConfig().getRemoteGitURL();
       gitBackend = js.getGitConfig().getGitBackend().name();
-      apiKey = jupyterNbVCSController.getGitApiKey(hdfsUser, js.getGitConfig().getApiKeyName());
+      if(!Strings.isNullOrEmpty(js.getGitConfig().getApiKeyName())) {
+        apiKey = jupyterNbVCSController.getGitApiKey(hdfsUser, js.getGitConfig().getApiKeyName());
+      }
     }
     JupyterContentsManager jcm = jupyterNbVCSController.getJupyterContentsManagerClass(remoteGitURL);
     JupyterNotebookConfigTemplate template = JupyterNotebookConfigTemplateBuilder.newBuilder()
@@ -231,7 +235,7 @@ public class JupyterConfigFilesGenerator {
         .setPort(port)
         .setBaseDirectory(js.getBaseDir())
         .setHdfsUser(hdfsUser)
-        .setWhiteListedKernels("'" + pythonKernelName(js.getProject().getPythonVersion()) +
+        .setWhiteListedKernels("'" + pythonKernelName(js.getProject().getPythonEnvironment().getPythonVersion()) +
             "', 'pysparkkernel', 'sparkkernel', 'sparkrkernel'")
         .setHadoopHome(settings.getHadoopSymbolicLinkDir())
         .setJupyterCertsDirectory(certsDir)
@@ -241,6 +245,8 @@ public class JupyterConfigFilesGenerator {
         .setApiKey(apiKey)
         .setGitBackend(gitBackend)
         .setFlinkConfDirectory(settings.getFlinkConfDir())
+        .setFlinkLibDirectory(settings.getFlinkLibDir())
+        .setHadoopClasspathGlob(settings.getHadoopClasspathGlob())
         .setRequestsVerify(settings.getRequestsVerify())
         .setDomainCATruststore(Paths.get(certsDir, hdfsUser + Settings.TRUSTSTORE_SUFFIX).toString())
         .setServiceDiscoveryDomain(settings.getServiceDiscoveryDomain())
@@ -255,7 +261,7 @@ public class JupyterConfigFilesGenerator {
   }
 
   public void createSparkMagicConfig(Writer out, Project project, JupyterSettings js, String hdfsUser,
-      String confDirPath) throws IOException, ServiceDiscoveryException {
+      String confDirPath) throws IOException, ServiceDiscoveryException, JobException {
     
     SparkJobConfiguration sparkJobConfiguration = (SparkJobConfiguration) js.getJobConfig();
   
@@ -320,7 +326,7 @@ public class JupyterConfigFilesGenerator {
   // returns true if one of the conf files were created anew 
   private void createConfigFiles(JupyterPaths jp, String hdfsUser, Project project,
       Integer port, JupyterSettings js, String allowOrigin)
-      throws IOException, ServiceException, ServiceDiscoveryException {
+          throws IOException, ServiceException, ServiceDiscoveryException, JobException {
     String confDirPath = jp.getConfDirPath();
     String kernelsDir = jp.getKernelsDir();
     String certsDir = jp.getCertificatesDir();
@@ -328,7 +334,7 @@ public class JupyterConfigFilesGenerator {
     File sparkmagic_config_file = new File(confDirPath, SparkMagicConfigTemplate.FILE_NAME);
     
     if (!jupyter_config_file.exists()) {
-      String pythonKernelName = pythonKernelName(project.getPythonVersion());
+      String pythonKernelName = pythonKernelName(project.getPythonEnvironment().getPythonVersion());
       if (settings.isPythonKernelEnabled()) {
         String pythonKernelPath = pythonKernelPath(kernelsDir, pythonKernelName);
         File pythonKernelFile = new File(pythonKernelPath, KernelTemplate.FILE_NAME);

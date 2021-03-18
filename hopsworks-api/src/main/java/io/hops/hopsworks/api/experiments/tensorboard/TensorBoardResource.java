@@ -16,6 +16,7 @@
 
 package io.hops.hopsworks.api.experiments.tensorboard;
 
+import com.logicalclocks.servicediscoverclient.exceptions.ServiceDiscoveryException;
 import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.api.filter.Audience;
 import io.hops.hopsworks.api.jwt.JWTHelper;
@@ -105,7 +106,7 @@ public class TensorBoardResource {
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
   public Response startTensorBoard(@Context SecurityContext sc, @Context UriInfo uriInfo) throws DatasetException,
-      ProjectException, TensorBoardException, UnsupportedEncodingException {
+      ProjectException, TensorBoardException, UnsupportedEncodingException, ServiceDiscoveryException {
 
     DsPath dsPath = pathValidator.validatePath(this.project, "Experiments/" + experimentId);
     String fullPath = dsPath.getFullPath().toString();
@@ -133,10 +134,7 @@ public class TensorBoardResource {
 
 
   private void waitForTensorBoardLoaded(TensorBoardDTO tbDTO) {
-    int retries = 20;
-
-    int currentConsecutiveOK = 0;
-    int maxConsecutiveOK = 3;
+    int retries = 60;
 
     while (retries > 0) {
       Response response;
@@ -144,15 +142,11 @@ public class TensorBoardResource {
       Client client = ClientBuilder.newClient();
       WebTarget target = client.target(tbUrl);
       try {
-        Thread.currentThread().sleep(1500);
+        Thread.sleep(2000);
         response = target.request().head();
         if(response.getStatus() == Response.Status.OK.getStatusCode()) {
-          currentConsecutiveOK += 1;
-          if(currentConsecutiveOK == maxConsecutiveOK) {
-            return;
-          }
-        } else {
-          currentConsecutiveOK = 0;
+          Thread.sleep(5000);
+          return;
         }
       } catch (Exception ex) {
         LOGGER.log(Level.FINE, "Exception trying to get TensorBoard content", ex);

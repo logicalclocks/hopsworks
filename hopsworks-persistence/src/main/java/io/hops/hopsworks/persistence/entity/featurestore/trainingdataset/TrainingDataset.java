@@ -17,10 +17,8 @@
 package io.hops.hopsworks.persistence.entity.featurestore.trainingdataset;
 
 import io.hops.hopsworks.persistence.entity.featurestore.Featurestore;
-import io.hops.hopsworks.persistence.entity.featurestore.feature.FeaturestoreFeature;
-import io.hops.hopsworks.persistence.entity.featurestore.jobs.FeaturestoreJob;
-import io.hops.hopsworks.persistence.entity.featurestore.statistics.FeaturestoreStatistic;
-
+import io.hops.hopsworks.persistence.entity.featurestore.activity.FeaturestoreActivity;
+import io.hops.hopsworks.persistence.entity.featurestore.statistics.StatisticsConfig;
 import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.external.ExternalTrainingDataset;
 import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.hopsfs.HopsfsTrainingDataset;
 import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.split.TrainingDatasetSplit;
@@ -63,6 +61,8 @@ import java.util.Objects;
   @NamedQuery(name = "TrainingDataset.findById", query = "SELECT td FROM TrainingDataset td WHERE td.id = :id"),
   @NamedQuery(name = "TrainingDataset.findByFeaturestore", query = "SELECT td FROM TrainingDataset td " +
     "WHERE td.featurestore = :featurestore"),
+  @NamedQuery(name = "TrainingDataset.countByFeaturestore", query = "SELECT count(td.id) FROM TrainingDataset td " +
+        "WHERE td.featurestore = :featurestore"),
   @NamedQuery(name = "TrainingDataset.findByFeaturestoreAndId", query = "SELECT td FROM TrainingDataset td " +
     "WHERE td.featurestore = :featurestore AND td.id = :id"),
   @NamedQuery(name = "TrainingDataset.findByFeaturestoreAndNameVersion",
@@ -100,18 +100,24 @@ public class TrainingDataset implements Serializable {
   @NotNull
   @Column(name = "data_format")
   private String dataFormat;
+  @Basic
+  @Column(name = "coalesce")
+  private Boolean coalesce;
   @Basic(optional = false)
   @Column(name = "description")
   private String description;
   @Basic
   @Column(name = "seed")
   private Long seed;
+  @Basic
+  @Column(name = "query")
+  private boolean query;
+  @OneToOne(cascade = CascadeType.ALL, mappedBy = "trainingDataset")
+  private StatisticsConfig statisticsConfig;
   @OneToMany(cascade = CascadeType.ALL, mappedBy = "trainingDataset")
-  private Collection<FeaturestoreStatistic> statistics;
+  private Collection<TrainingDatasetFeature> features;
   @OneToMany(cascade = CascadeType.ALL, mappedBy = "trainingDataset")
-  private Collection<FeaturestoreFeature> features;
-  @OneToMany(cascade = CascadeType.ALL, mappedBy = "trainingDataset")
-  private Collection<FeaturestoreJob> jobs;
+  private Collection<TrainingDatasetJoin> joins;
   @NotNull
   @Enumerated(EnumType.ORDINAL)
   @Column(name = "training_dataset_type")
@@ -124,6 +130,8 @@ public class TrainingDataset implements Serializable {
   private ExternalTrainingDataset externalTrainingDataset;
   @OneToMany(cascade = CascadeType.ALL, mappedBy = "trainingDataset")
   private Collection<TrainingDatasetSplit> splits;
+  @OneToMany(cascade = CascadeType.ALL, mappedBy = "trainingDataset")
+  private Collection<FeaturestoreActivity> activities;
 
   public static long getSerialVersionUID() {
     return serialVersionUID;
@@ -177,6 +185,14 @@ public class TrainingDataset implements Serializable {
     this.dataFormat = dataFormat;
   }
 
+  public Boolean getCoalesce() {
+    return coalesce;
+  }
+
+  public void setCoalesce(Boolean coalesce) {
+    this.coalesce = coalesce;
+  }
+
   public String getDescription() {
     return description;
   }
@@ -185,19 +201,11 @@ public class TrainingDataset implements Serializable {
     this.description = description;
   }
 
-  public Collection<FeaturestoreStatistic> getStatistics() {
-    return statistics;
-  }
-
-  public void setStatistics(Collection<FeaturestoreStatistic> statistics) {
-    this.statistics = statistics;
-  }
-
-  public Collection<FeaturestoreFeature> getFeatures() {
+  public Collection<TrainingDatasetFeature> getFeatures() {
     return features;
   }
 
-  public void setFeatures(Collection<FeaturestoreFeature> features) {
+  public void setFeatures(Collection<TrainingDatasetFeature> features) {
     this.features = features;
   }
   
@@ -228,14 +236,6 @@ public class TrainingDataset implements Serializable {
     this.trainingDatasetType = trainingDatasetType;
   }
   
-  public Collection<FeaturestoreJob> getJobs() {
-    return jobs;
-  }
-  
-  public void setJobs(Collection<FeaturestoreJob> jobs) {
-    this.jobs = jobs;
-  }
-
   public String getName() {
     return name;
   }
@@ -260,7 +260,39 @@ public class TrainingDataset implements Serializable {
   public void setSeed(Long seed) {
     this.seed = seed;
   }
-  
+
+  public boolean isQuery() {
+    return query;
+  }
+
+  public void setQuery(boolean query) {
+    this.query = query;
+  }
+
+  public Collection<TrainingDatasetJoin> getJoins() {
+    return joins;
+  }
+
+  public void setJoins(Collection<TrainingDatasetJoin> joins) {
+    this.joins = joins;
+  }
+
+  public Collection<FeaturestoreActivity> getActivities() {
+    return activities;
+  }
+
+  public void setActivities(Collection<FeaturestoreActivity> activities) {
+    this.activities = activities;
+  }
+
+  public StatisticsConfig getStatisticsConfig() {
+    return statisticsConfig;
+  }
+
+  public void setStatisticsConfig(StatisticsConfig statisticsConfig) {
+    this.statisticsConfig = statisticsConfig;
+  }
+
   @Override
   public boolean equals(Object o) {
     if (this == o) return true;
@@ -268,6 +300,7 @@ public class TrainingDataset implements Serializable {
 
     TrainingDataset that = (TrainingDataset) o;
 
+    if (query != that.query) return false;
     if (!Objects.equals(id, that.id)) return false;
     if (!Objects.equals(name, that.name)) return false;
     if (!Objects.equals(featurestore, that.featurestore)) return false;
@@ -276,15 +309,13 @@ public class TrainingDataset implements Serializable {
     if (!Objects.equals(version, that.version)) return false;
     if (!Objects.equals(dataFormat, that.dataFormat)) return false;
     if (!Objects.equals(description, that.description)) return false;
-    if (!Objects.equals(statistics, that.statistics)) return false;
-    if (!Objects.equals(features, that.features)) return false;
-    if (!Objects.equals(jobs, that.jobs)) return false;
-    if (trainingDatasetType != that.trainingDatasetType) return false;
-    if (!Objects.equals(splits, that.splits)) return false;
     if (!Objects.equals(seed, that.seed)) return false;
-    if (!Objects.equals(hopsfsTrainingDataset, that.hopsfsTrainingDataset))
-      return false;
-    return Objects.equals(externalTrainingDataset, that.externalTrainingDataset);
+    if (!Objects.equals(features, that.features)) return false;
+    if (!Objects.equals(joins, that.joins)) return false;
+    if (trainingDatasetType != that.trainingDatasetType) return false;
+    if (!Objects.equals(hopsfsTrainingDataset, that.hopsfsTrainingDataset)) return false;
+    if (!Objects.equals(externalTrainingDataset, that.externalTrainingDataset)) return false;
+    return Objects.equals(splits, that.splits);
   }
 
   @Override
@@ -297,14 +328,14 @@ public class TrainingDataset implements Serializable {
     result = 31 * result + (version != null ? version.hashCode() : 0);
     result = 31 * result + (dataFormat != null ? dataFormat.hashCode() : 0);
     result = 31 * result + (description != null ? description.hashCode() : 0);
-    result = 31 * result + (statistics != null ? statistics.hashCode() : 0);
+    result = 31 * result + (seed != null ? seed.hashCode() : 0);
+    result = 31 * result + (query ? 1 : 0);
     result = 31 * result + (features != null ? features.hashCode() : 0);
-    result = 31 * result + (jobs != null ? jobs.hashCode() : 0);
+    result = 31 * result + (joins != null ? joins.hashCode() : 0);
     result = 31 * result + (trainingDatasetType != null ? trainingDatasetType.hashCode() : 0);
     result = 31 * result + (hopsfsTrainingDataset != null ? hopsfsTrainingDataset.hashCode() : 0);
     result = 31 * result + (externalTrainingDataset != null ? externalTrainingDataset.hashCode() : 0);
     result = 31 * result + (splits != null ? splits.hashCode() : 0);
-    result = 31 * result + (seed != null ? seed.hashCode() : 0);
     return result;
   }
 }

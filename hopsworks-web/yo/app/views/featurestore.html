@@ -27,7 +27,14 @@
         <div ng-if="featurestoreCtrl.showPreview" class="content-wrapper">
             <div ng-include="'views/featuregroupPreview.html'"></div>
         </div>
-        <div ng-if="!mainCtrl.showSearchPage && !featurestoreCtrl.showPreview" class="content-wrapper">
+        <div class="content-wrapper" ng-if="featurestoreCtrl.showStatistics && !mainCtrl.showSearchPage">
+            <fs-statistics project-id="featurestoreCtrl.projectId"
+                           feature-group="featurestoreCtrl.fgStatistics"
+                           training-dataset="featurestoreCtrl.tdStatistics"
+                           close="featurestoreCtrl.closeStatistics()"></fs-statistics>
+        </div>
+        <div class="content-wrapper" 
+             ng-show="!featurestoreCtrl.showPreview && !featurestoreCtrl.showStatistics && !mainCtrl.showSearchPage">
             <div style="background: #FFFFFF; border: 1px solid #21B182; box-sizing: border-box; width: 100%; padding: 20px 12px; margin-bottom: 40px;">A new Hopsworks is available in beta version! <a href="/" style="background: #21B182; padding: 10px 16px; color: white; font-weight: bold; text-decoration: none; margin-left: 20px;">Try out the new Hopsworks</a></div>
             <h3 id="projectBread" style="border-bottom: none"></h3>
             <div ng-if="featurestoreCtrl.loading" class="loadingwrap" style="z-index: 105">
@@ -139,7 +146,7 @@
                                         <select class="form-control"
                                                 ng-model="featuregroup.activeVersion"
                                                 ng-click="$event.stopPropagation();"
-                                                ng-change="featuregroupViewInfoCtrl.view(featurestoreCtrl.projectId, featurestoreCtrl.projectName, featurestoreCtrl.featurestore, featuregroup, featurestoreCtrl.settings, false); $event.stopPropagation();"
+                                                ng-change="featuregroupViewInfoCtrl.view(featurestoreCtrl, featuregroup, false); $event.stopPropagation();"
                                                 style="z-index: {{100-$index}}">
                                             <option ng-repeat="version in featuregroup.versions">{{version}}</option>
                                         </select>
@@ -161,19 +168,13 @@
                                                     <div ng-include="'views/featuregroupViewInfo.html'"></div>
                                                 </md-tab>
                                                 <md-tab label="Tags" ng-if="featurestoreCtrl.isEnterprise">
-                                                    <tags   ng-show="featuregroupViewInfoCtrl.selectedFeaturegroup.type == 'cachedFeaturegroupDTO'"
-                                                            project-id="featurestoreCtrl.projectId"
-                                                            featurestore="featurestoreCtrl.featurestore"
-                                                            attached-tags="featuregroupViewInfoCtrl.attachedTags"
-                                                            loading-tags="featuregroupViewInfoCtrl.loadingTags"
-                                                            add-tag="featuregroupViewInfoCtrl.addTag(name, value)"
-                                                            delete-tag="featuregroupViewInfoCtrl.deleteTag(name)">
+                                                    <tags project-id="featurestoreCtrl.projectId"
+                                                          featurestore="featurestoreCtrl.featurestore"
+                                                          attached-tags="featuregroupViewInfoCtrl.attachedTags"
+                                                          loading-tags="featuregroupViewInfoCtrl.loadingTags"
+                                                          add-tag="featuregroupViewInfoCtrl.addTag(name, value)"
+                                                          delete-tag="featuregroupViewInfoCtrl.deleteTag(name)">
                                                     </tags>
-
-                                                    <div style="margin-left: 10px" ng-show="!(featuregroupViewInfoCtrl.selectedFeaturegroup.type == 'cachedFeaturegroupDTO')">
-                                                        <h3 style="text-align:center;">Tags not supported for </h3>
-                                                        <p style="text-align:center; margin-top:20px;">{{featuregroupViewInfoCtrl.selectedFeaturegroup.featuregroupType}}</p>
-                                                    </div>
                                                 </md-tab>
                                             </md-tabs>
                                         </md-content>
@@ -615,10 +616,16 @@
                             <td class="fs-table">
                                 <i class="sub_icon fa fa-database fa-2x"
                                    ng-if="connector.storageConnectorType==featurestoreCtrl.jdbcConnectorType"></i>
+                                <i class="sub_icon fa fa-server fa-2x"
+                                   ng-if="connector.storageConnectorType==featurestoreCtrl.redshiftConnectorType"></i>
                                 <i class="sub_icon glyphicon glyphicon-folder-close fa-2x"
                                    ng-if="connector.storageConnectorType==featurestoreCtrl.hopsfsConnectorType"></i>
                                 <i class="sub_icon fa fa-cloud fa-2x"
                                    ng-if="connector.storageConnectorType==featurestoreCtrl.s3ConnectorType"></i>
+                                <i class="sub_icon glyphicon glyphicon-folder-close fa-2x"
+                                   ng-if="connector.storageConnectorType=='ADLS'"></i>
+                                <i class="sub_icon glyphicon glyphicon-folder-close fa-2x"
+                                   ng-if="connector.storageConnectorType=='SNOWFLAKE'"></i>
                             </td>
                             <td class="fs-table">{{connector.name}}</td>
                             <td class="fs-table">{{connector.storageConnectorType}}</td>
@@ -656,10 +663,10 @@
         </div>
         <tour class="ng-scope" step="featurestoreCtrl.tourService.currentStep_TourNine"
               post-tour="closeTour()"
-              ng-if="featurestoreCtrl.tourService.activeTour === 'featurestore'&& featurestoreCtrl.tourService.showTips
+              ng-if="featurestoreCtrl.tourService.activeTour === 'fs' && featurestoreCtrl.tourService.showTips
               && !featurestoreCtrl.loading && !projectCtrl.loading">
             <virtual-step
-                    ng-if="featurestoreCtrl.tourService.activeTour === 'featurestore'"
+                    ng-if="featurestoreCtrl.tourService.activeTour === 'fs'"
                     class="ng-scope"
                     tourtip="This is the feature store registry where you can list and search for
                     features/feature groups/training datasets in the feature store as well as edit their metadata."
@@ -670,7 +677,7 @@
                     on-proceed=""
             ></virtual-step>
             <virtual-step
-                    ng-if="featurestoreCtrl.tourService.activeTour === 'featurestore'"
+                    ng-if="featurestoreCtrl.tourService.activeTour === 'fs'"
                     class="ng-scope"
                     tourtip="This tab displays the available feature groups in the feature store.
                     A feature group is a logical grouping of a set of features."
@@ -681,7 +688,7 @@
                     on-proceed="featurestoreCtrl.goToTab(1)"
             ></virtual-step>
             <virtual-step
-                    ng-if="featurestoreCtrl.tourService.activeTour === 'featurestore'"
+                    ng-if="featurestoreCtrl.tourService.activeTour === 'fs'"
                     class="ng-scope"
                     tourtip="This tab displays the available training datasets in the feature store.
                     A training dataset is an immutable dataset of a set of features to use in machine
@@ -694,7 +701,7 @@
                     on-proceed="featurestoreCtrl.goToTab(2)"
             ></virtual-step>
             <virtual-step
-                    ng-if="featurestoreCtrl.tourService.activeTour === 'featurestore'"
+                    ng-if="featurestoreCtrl.tourService.activeTour === 'fs'"
                     class="ng-scope"
                     tourtip="This tab allows you to search for individual features in feature groups"
                     tourtip-step="3"
@@ -704,7 +711,7 @@
                     on-proceed="featurestoreCtrl.goToTab(3)"
             ></virtual-step>
             <virtual-step
-                    ng-if="featurestoreCtrl.tourService.activeTour === 'featurestore'"
+                    ng-if="featurestoreCtrl.tourService.activeTour === 'fs'"
                     class="ng-scope"
                     tourtip="This tab gives you an overview of the Feature Store."
                     tourtip-step="4"
@@ -714,7 +721,7 @@
                     on-proceed="featurestoreCtrl.goToTab(4)"
             ></virtual-step>
             <virtual-step
-                    ng-if="featurestoreCtrl.tourService.activeTour === 'featurestore'"
+                    ng-if="featurestoreCtrl.tourService.activeTour === 'fs'"
                     class="ng-scope"
                     tourtip="This tab lists the storage connectors for the Feature Store."
                     tourtip-step="5"
@@ -724,7 +731,7 @@
                     on-proceed="featurestoreCtrl.goToTab(0)"
             ></virtual-step>
             <virtual-step
-                    ng-if="featurestoreCtrl.tourService.activeTour === 'featurestore'"
+                    ng-if="featurestoreCtrl.tourService.activeTour === 'fs'"
                     class="ng-scope"
                     tourtip="You can find the feature store datasets here."
                     tourtip-step="6"

@@ -84,9 +84,12 @@
                ng-show="newJobCtrl.accordion2.visible"
                id="jobTypeDiv">
             <div class="btn-group">
-              <label id="pythonJobType" class="btn btn-default" ng-if="newJobCtrl.isPythonEnabled" ng-model="newJobCtrl.jobtype" uib-btn-radio="4" ng-change="newJobCtrl.jobTypeChosen()">Python</label>
-              <label id="sparkJobType" class="btn btn-default" ng-model="newJobCtrl.jobtype" uib-btn-radio="1" ng-change="newJobCtrl.jobTypeChosen()">Spark</label>
-              <label id="flinkJobType" class="btn btn-default" ng-model="newJobCtrl.jobtype" uib-btn-radio="3" ng-change="newJobCtrl.jobTypeChosen()">Flink</label>
+              <label id="pythonJobType" class="btn btn-default" ng-if="newJobCtrl.isPythonEnabled"
+                     ng-model="newJobCtrl.jobtype" uib-btn-radio="4" ng-change="newJobCtrl.jobTypeChosen({{newJobCtrl.jobtype}})">Python</label>
+              <label id="sparkJobType" class="btn btn-default" ng-model="newJobCtrl.jobtype" uib-btn-radio="1"
+                     ng-change="newJobCtrl.jobTypeChosen({{newJobCtrl.jobtype}})">Spark</label>
+              <label id="flinkJobType" class="btn btn-default" ng-model="newJobCtrl.jobtype" uib-btn-radio="3"
+                     ng-change="newJobCtrl.jobTypeChosen({{newJobCtrl.jobtype}})">Flink</label>
             </div>
           </div>
 
@@ -105,17 +108,21 @@
           <!-- Set up the job details -->
           <div uib-accordion-group class="panel-default" heading="{{newJobCtrl.accordion4.title}} {{newJobCtrl.accordion4.value}}"
                is-open="newJobCtrl.accordion4.isOpen"
-               ng-show="newJobCtrl.jobtype === 1 && newJobCtrl.accordion4.visible"
+               ng-show="newJobCtrl.jobtype === 1 || newJobCtrl.jobtype === 2 || newJobCtrl.jobtype === 4 && newJobCtrl.accordion4.visible"
                id="chooseParametersAndArguments">
             <!-- Spark.PySpark -->
             <div>
               <div class="row" ng-show="newJobCtrl.jobtype === 1">
-                <div class="text-right col-md-4">Main class name <i class="fa fa-info-circle" uib-tooltip="The name of the main class to run in the selected JAR file." style="margin-left: 10px"></i></div>
-                <div class="col-md-8"><input type="text"
+                <div class="text-right col-md-5">Main class name <i class="fa fa-info-circle" uib-tooltip="The name of the main class to run in the selected JAR file." style="margin-left: 10px"></i></div>
+                <div class="col-md-7"><input type="text"
                                              ng-model="newJobCtrl.runConfig.mainClass" class="form-control"></div>
               </div>
             </div>
-
+            <div class="row">
+              <div class="text-right col-md-5">Default arguments <i class="fa fa-info-circle" uib-tooltip="Default arguments to run with. Leaving it empty, will prompt you for input arguments when running the job." style="margin-left: 10px"></i></div>
+              <div class="col-md-7"><input type="text"
+                                           ng-model="newJobCtrl.runConfig.defaultArgs" class="form-control"></div>
+            </div>
           </div>
           <!-- Set some run configuration -->
           <div ng-if="newJobCtrl.jobtype === 1 || newJobCtrl.jobtype === 2">
@@ -332,7 +339,7 @@
         tourtip-next-label="Next"
         on-proceed="newJobCtrl.chooseParameters()"
         tourtip-offset-vertical="70"
-        tourtip-offset-horizontal="750"
+        tourtip-offset-horizontal="950"
         ng-if="newJobCtrl.accordion4.visible"
         ></virtual-step>
       <virtual-step

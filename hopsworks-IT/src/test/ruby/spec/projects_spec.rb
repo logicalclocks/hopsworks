@@ -209,7 +209,7 @@ describe "On #{ENV['OS']}" do
         it "Should be able to create a Project after a failed attempt" do
           # First shutdown the service
           execute_remotely @service_host, "sudo systemctl stop #{@failed_service}"
-          project_name = "ProJect_doomed2fail_#{Time.now.to_i}"
+          project_name = "ProJect_doomed2fail#{random_id_len(2)}"
           post "#{ENV['HOPSWORKS_API']}/project", {projectName: project_name,
                                                   services: ["JOBS","JUPYTER"]}
           expect_status(500)
@@ -292,7 +292,7 @@ describe "On #{ENV['OS']}" do
         end
         it "should delete project" do
           # Start Jupyter to put X.509 to HDFS
-          @project = create_env_and_update_project(@project, "3.6")
+          @project = create_env_and_update_project(@project, "3.7")
           get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/jupyter/settings"
           expect_status(200)
           settings = json_body
@@ -326,14 +326,14 @@ describe "On #{ENV['OS']}" do
           delete_project(project)
         end
         it "should delete and recreate deep_learning tour" do
-          project = create_project_tour("deep_learning")
+          project = create_project_tour("ml")
           delete_project(project)
           sleep(15)
-          project = create_project_tour("deep_learning")
+          project = create_project_tour("ml")
           delete_project(project)
         end
         it "should delete and recreate featurestore tour" do
-          project = create_project_tour("featurestore")
+          project = create_project_tour("fs")
           job_name = "featurestore_tour_job"
           wait_result = wait_for_me_time do
             get_executions(project[:id], job_name, "")
@@ -345,7 +345,7 @@ describe "On #{ENV['OS']}" do
           expect(wait_result["success"]).to be(true), wait_result["msg"]
           delete_project(project)
           sleep(15)
-          project = create_project_tour("featurestore")
+          project = create_project_tour("fs")
           wait_result = wait_for_me_time do
             get_executions(project[:id], job_name, "")
             execution_id = json_body[:items][0][:id]

@@ -15,6 +15,7 @@
  */
 package io.hops.hopsworks.common.provenance.core;
 
+import io.hops.hopsworks.common.featurestore.feature.TrainingDatasetFeatureDTO;
 import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupDTO;
 import io.hops.hopsworks.common.featurestore.trainingdatasets.TrainingDatasetDTO;
 import io.hops.hopsworks.common.featurestore.xattr.dto.FeaturestoreXAttrsConstants;
@@ -23,7 +24,7 @@ import io.hops.hopsworks.common.hdfs.xattrs.XAttrsController;
 import io.hops.hopsworks.exceptions.DatasetException;
 import io.hops.hopsworks.exceptions.MetadataException;
 import io.hops.hopsworks.persistence.entity.dataset.Dataset;
-import io.hops.hopsworks.common.featurestore.feature.FeatureDTO;
+import io.hops.hopsworks.common.featurestore.feature.FeatureGroupFeatureDTO;
 import io.hops.hopsworks.persistence.entity.dataset.DatasetSharedWith;
 import io.hops.hopsworks.persistence.entity.hdfs.inode.Inode;
 import io.hops.hopsworks.persistence.entity.project.Project;
@@ -48,12 +49,14 @@ import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 @Stateless(name = "HopsFSProvenanceController")
 @TransactionAttribute(TransactionAttributeType.NEVER)
@@ -102,20 +105,6 @@ public class HopsFSProvenanceController {
     }
   }
   
-  public ProvCoreDTO getDatasetProvCore(Users user, Dataset dataset)
-    throws ProvenanceException {
-    String hdfsUsername = hdfsUsersController.getHdfsUserName(dataset.getProject(), user);
-    DistributedFileSystemOps udfso = dfs.getDfsOps(hdfsUsername);
-    String datasetPath = Utils.getFileSystemDatasetPath(dataset, settings);
-    try {
-      return getProvCoreXAttr(datasetPath, udfso);
-    } finally {
-      if(udfso != null) {
-        dfs.closeDfsClient(udfso);
-      }
-    }
-  }
-
   public ProvTypeDTO getProjectProvType(Users user, Project project) throws ProvenanceException {
     String hdfsUsername = hdfsUsersController.getHdfsUserName(project, user);
     DistributedFileSystemOps udfso = dfs.getDfsOps(hdfsUsername);
@@ -235,77 +224,59 @@ public class HopsFSProvenanceController {
     }
   }
   
-  public void featuregroupAttachXAttrs(Users user, Project project, FeaturegroupDTO featuregroup)
+  public void featuregroupAttachXAttrs(String fgPath, FeaturegroupDTO featuregroup, DistributedFileSystemOps udfso)
     throws ProvenanceException {
-    String hdfsUsername = hdfsUsersController.getHdfsUserName(project, user);
-    DistributedFileSystemOps udfso = dfs.getDfsOps(hdfsUsername);
+    FeaturegroupXAttr.FullDTO fg = fromFeaturegroup(featuregroup);
     try {
-      String path = Utils.getFeaturestorePath(project, settings)
-        + "/" + Utils.getFeaturegroupName(featuregroup.getName(), featuregroup.getVersion());
-      FeaturegroupXAttr.FullDTO fg = fromFeaturegroup(featuregroup);
-      try {
-        byte[] xattrVal = converter.marshal(fg).getBytes();
-        try{
-          xattrCtrl.upsertProvXAttr(udfso, path, FeaturestoreXAttrsConstants.FEATURESTORE, xattrVal);
-        } catch (MetadataException e) {
-          if (RESTCodes.MetadataErrorCode.METADATA_MAX_SIZE_EXCEEDED.equals(e.getErrorCode())) {
-            LOGGER.log(Level.INFO,
-              "xattr is too large to attach - featuregroup:{0} will not have features attached", path);
-            fg = new FeaturegroupXAttr.FullDTO(featuregroup.getFeaturestoreId(), featuregroup.getDescription(),
-              featuregroup.getCreated(), featuregroup.getCreator());
-            xattrVal = converter.marshal(fg).getBytes();
-            xattrCtrl.upsertProvXAttr(udfso, path, FeaturestoreXAttrsConstants.FEATURESTORE, xattrVal);
-          } else {
-            throw e;
-          }
+      byte[] xattrVal = converter.marshal(fg).getBytes();
+      try{
+        xattrCtrl.upsertProvXAttr(udfso, fgPath, FeaturestoreXAttrsConstants.FEATURESTORE, xattrVal);
+      } catch (MetadataException e) {
+        if (RESTCodes.MetadataErrorCode.METADATA_MAX_SIZE_EXCEEDED.equals(e.getErrorCode())) {
+          LOGGER.log(Level.INFO,
+            "xattr is too large to attach - featuregroup:{0} will not have features attached", fgPath);
+          fg = new FeaturegroupXAttr.FullDTO(featuregroup.getFeaturestoreId(), featuregroup.getDescription(),
+            featuregroup.getCreated(), featuregroup.getCreator());
+          xattrVal = converter.marshal(fg).getBytes();
+          xattrCtrl.upsertProvXAttr(udfso, fgPath, FeaturestoreXAttrsConstants.FEATURESTORE, xattrVal);
+        } else {
+          throw e;
         }
-      } catch (GenericException | MetadataException | DatasetException e) {
-        throw new ProvenanceException(RESTCodes.ProvenanceErrorCode.FS_ERROR, Level.WARNING,
-          "hopsfs - set xattr - featuregroup - error", "hopsfs - set xattr - featuregroup - error", e);
       }
-    } finally {
-      if(udfso != null) {
-        dfs.closeDfsClient(udfso);
-      }
+    } catch (GenericException | MetadataException | DatasetException e) {
+      throw new ProvenanceException(RESTCodes.ProvenanceErrorCode.FS_ERROR, Level.WARNING,
+        "hopsfs - set xattr - featuregroup - error", "hopsfs - set xattr - featuregroup - error", e);
     }
   }
-  
-  public void trainingDatasetAttachXAttr(Users user, Project project, String path,
-    TrainingDatasetDTO trainingDatasetDTO)
-    throws ProvenanceException {
-    String hdfsUsername = hdfsUsersController.getHdfsUserName(project, user);
-    DistributedFileSystemOps udfso = dfs.getDfsOps(hdfsUsername);
+
+  public void trainingDatasetAttachXAttr(String path, TrainingDatasetDTO trainingDatasetDTO,
+                                         DistributedFileSystemOps udfso)
+      throws ProvenanceException {
+    TrainingDatasetXAttrDTO td = new TrainingDatasetXAttrDTO(trainingDatasetDTO.getFeaturestoreId(),
+        trainingDatasetDTO.getDescription(),
+        trainingDatasetDTO.getCreated(),
+        trainingDatasetDTO.getCreator(),
+        fromTrainingDataset(trainingDatasetDTO));
+
     try {
-      TrainingDatasetXAttrDTO td = new TrainingDatasetXAttrDTO(trainingDatasetDTO.getFeaturestoreId(),
-        trainingDatasetDTO.getDescription(), trainingDatasetDTO.getCreated(), trainingDatasetDTO.getCreator());
-      if(trainingDatasetDTO.getFeatures() != null) {
-        List<FeaturegroupXAttr.SimplifiedDTO> featuresDTO = fromTrainingDataset(trainingDatasetDTO);
-        td.setFeatures(featuresDTO);
-      }
-      try {
-        byte[] xattrVal = converter.marshal(td).getBytes();
-        try{
-          xattrCtrl.upsertProvXAttr(udfso, path, FeaturestoreXAttrsConstants.FEATURESTORE, xattrVal);
-        } catch (MetadataException e) {
-          if (RESTCodes.MetadataErrorCode.METADATA_MAX_SIZE_EXCEEDED.equals(e.getErrorCode())) {
-            LOGGER.log(Level.INFO,
+      byte[] xattrVal = converter.marshal(td).getBytes();
+      try{
+        xattrCtrl.upsertProvXAttr(udfso, path, FeaturestoreXAttrsConstants.FEATURESTORE, xattrVal);
+      } catch (MetadataException e) {
+        if (RESTCodes.MetadataErrorCode.METADATA_MAX_SIZE_EXCEEDED.equals(e.getErrorCode())) {
+          LOGGER.log(Level.INFO,
               "xattr is too large to attach - trainingdataset:{0} will not have features attached", path);
-            td = new TrainingDatasetXAttrDTO(trainingDatasetDTO.getFeaturestoreId(),
+          td = new TrainingDatasetXAttrDTO(trainingDatasetDTO.getFeaturestoreId(),
               trainingDatasetDTO.getDescription(), trainingDatasetDTO.getCreated(), trainingDatasetDTO.getCreator());
-            xattrVal = converter.marshal(td).getBytes();
-            xattrCtrl.upsertProvXAttr(udfso, path, FeaturestoreXAttrsConstants.FEATURESTORE, xattrVal);
-          } else {
-            throw e;
-          }
+          xattrVal = converter.marshal(td).getBytes();
+          xattrCtrl.upsertProvXAttr(udfso, path, FeaturestoreXAttrsConstants.FEATURESTORE, xattrVal);
+        } else {
+          throw e;
         }
-      } catch (GenericException | MetadataException | DatasetException e) {
-        throw new ProvenanceException(RESTCodes.ProvenanceErrorCode.FS_ERROR, Level.WARNING,
+      }
+    } catch (GenericException | MetadataException | DatasetException e) {
+      throw new ProvenanceException(RESTCodes.ProvenanceErrorCode.FS_ERROR, Level.WARNING,
           "hopsfs - set xattr - training dataset - error", "hopsfs - set xattr - training dataset - error", e);
-      }
-    } finally {
-      if(udfso != null) {
-        dfs.closeDfsClient(udfso);
-      }
     }
   }
   
@@ -321,27 +292,44 @@ public class HopsFSProvenanceController {
       return Provenance.Type.DISABLED.dto;
     }
   }
-  
-  //TODO - featurestore without knowing the featurestoreId I can't split them
+
+
   private List<FeaturegroupXAttr.SimplifiedDTO> fromTrainingDataset(TrainingDatasetDTO trainingDatasetDTO) {
-    List<FeaturegroupXAttr.SimplifiedDTO> result = new LinkedList<>();
-    Map<String, FeaturegroupXAttr.SimplifiedDTO> featuregroups = new HashMap<>();
-    for(FeatureDTO feature : trainingDatasetDTO.getFeatures()) {
-      FeaturegroupXAttr.SimplifiedDTO featuregroup = featuregroups.get(feature.getFeaturegroup());
+    if (trainingDatasetDTO.getFromQuery()) {
+      // training dataset generated from hsfs query
+      return fromTrainingDatasetQuery(trainingDatasetDTO);
+    } else {
+      // training dataset generated from spark dataframe
+      return fromTrainingDatasetDataframe(trainingDatasetDTO);
+    }
+  }
+
+  private List<FeaturegroupXAttr.SimplifiedDTO> fromTrainingDatasetQuery(TrainingDatasetDTO trainingDatasetDTO) {
+    Map<Integer, FeaturegroupXAttr.SimplifiedDTO> featuregroups = new HashMap<>();
+    for(TrainingDatasetFeatureDTO feature : trainingDatasetDTO.getFeatures()) {
+      FeaturegroupXAttr.SimplifiedDTO featuregroup = featuregroups.get(feature.getFeaturegroup().getId());
       if(featuregroup == null) {
-        featuregroup = new FeaturegroupXAttr.SimplifiedDTO(trainingDatasetDTO.getFeaturestoreId(),
-          feature.getFeaturegroup(), feature.getVersion());
-        featuregroups.put(feature.getFeaturegroup(), featuregroup);
-        result.add(featuregroup);
+        featuregroup = new FeaturegroupXAttr.SimplifiedDTO(feature.getFeaturegroup().getFeaturestoreId(),
+          feature.getFeaturegroup().getName(), feature.getFeaturegroup().getVersion());
+        featuregroups.put(feature.getFeaturegroup().getId(), featuregroup);
       }
       featuregroup.addFeature(feature.getName());
     }
-    return result;
+    return new ArrayList<>(featuregroups.values());
   }
-  
+
+  private List<FeaturegroupXAttr.SimplifiedDTO> fromTrainingDatasetDataframe(TrainingDatasetDTO trainingDatasetDTO) {
+    FeaturegroupXAttr.SimplifiedDTO containerFeatureGroup =
+        new FeaturegroupXAttr.SimplifiedDTO(-1, "", -1);
+    containerFeatureGroup.addFeatures(trainingDatasetDTO.getFeatures().stream()
+        .map(TrainingDatasetFeatureDTO::getName).collect(Collectors.toList()));
+
+    return Arrays.asList(containerFeatureGroup);
+  }
+
   private FeaturegroupXAttr.FullDTO fromFeaturegroup(FeaturegroupDTO featuregroup) {
     List<String> features = new LinkedList<>();
-    for(FeatureDTO feature : featuregroup.getFeatures()) {
+    for(FeatureGroupFeatureDTO feature : featuregroup.getFeatures()) {
       features.add(feature.getName());
     }
     return new FeaturegroupXAttr.FullDTO(featuregroup.getFeaturestoreId(), featuregroup.getDescription(),

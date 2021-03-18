@@ -45,13 +45,7 @@ public class ResponseMessages {
   public final static String PASSWORD_RESET = "Your password reset email has been sent. Please check your inbox.";
   public final static String QR_CODE_RESET = "Your QR code reset email has been sent. Please check your inbox.";
   public final static String PASSWORD_CHANGED = "Your password was successfully changed.";
-  public final static String SEC_QA_CHANGED = "Your have successfully updated your security question and answer.";
-  public final static String PROFILE_UPDATED
-          = "Your profile was updated successfully.";
-  public final static String SSH_KEY_REMOVED
-          = "Your ssh key was deleted successfully.";
-  public final static String NOTHING_TO_UPDATE
-          = "Nothing to update";
+  public final static String NOTHING_TO_UPDATE = "Nothing to update";
 
   //project error response
   public final static String PROJECT_NOT_FOUND = "Project wasn't found.";

@@ -53,36 +53,15 @@ public class UserAccountsEmailMessages {
   public final static String ACCOUNT_REQUEST_SUBJECT
           = "Your Hopsworks account needs verification";
   /*
-   * Subject of cluster request
-   */
-  public final static String CLUSTER_REQUEST_SUBJECT = "Your Hopsworks cluster needs verification";
-
-  /*
    * Subject of account activation email
    */
   public final static String ACCOUNT_CONFIRMATION_SUBJECT
           = "Welcome to Hopsworks!";
 
   /*
-   * Subject of device lost
-   */
-  public final static String DEVICE_LOST_SUBJECT = "Login issue";
-
-  /*
    * Subject of blocked acouunt
    */
   public final static String ACCOUNT_BLOCKED__SUBJECT = "Your account is locked";
-
-  /*
-   * Subject of blocked acouunt
-   */
-  public static String HOPSWORKS_SUPPORT_EMAIL = "support@hops.io";
-
-  /*
-   * Subject of profile update
-   */
-  public final static String ACCOUNT_PROFILE_UPDATE
-          = "Your profile has been updated";
 
   /*
    * Subject of password recovery
@@ -118,8 +97,6 @@ public class UserAccountsEmailMessages {
   /*
    * Account deactivation
    */
-  public final static String ACCOUNT_DEACTIVATED = "Your Hopsworks account has expired";
-  
   public final static String API_KEY_CREATED_SUBJECT = "Api key created";
   public final static String API_KEY_DELETED_SUBJECT = "Api key deleted";
 
@@ -136,7 +113,7 @@ public class UserAccountsEmailMessages {
     String message;
 
     String l1 = GREETINGS_HEADER + ",\n\n"
-            + "We received an account request for HopsWorks on your behalf.\n\n";
+            + "We received an account request for Hopsworks on your behalf.\n\n";
     String l2
             = "Please click on the following link to verify your email address. We"
             + " will activate your account within "
@@ -146,11 +123,9 @@ public class UserAccountsEmailMessages {
     String url = path + "/hopsworks-admin/security/validate_account.xhtml?key=" + key;
 
     String l3 = "To confirm your email click " + url + " \n\n";
-    String l4 = "If you have any questions please contact "
-            + HOPSWORKS_SUPPORT_EMAIL;
+    String l4 = "If you have any questions please visit https://community.hopsworks.ai/";
 
     message = l1 + l2 + l3 + l4;
-
     return message;
   }
   
@@ -174,7 +149,7 @@ public class UserAccountsEmailMessages {
     String l3 = "To confirm your email click " + url + " \n\n";
     String l4 = "If you did not request an account, please ignore this email. This link is only valid for"
       + formatTime(validFor) + ". \n\n";
-    String l5 = "If you have any questions please contact " + HOPSWORKS_SUPPORT_EMAIL;
+    String l5 = "If you have any questions please visit https://community.hopsworks.ai/";
 
     message = l1 + l2 + l3 + l4 + l5;
 
@@ -200,7 +175,7 @@ public class UserAccountsEmailMessages {
     String l3 = url + " \n\n";
     String l4 = "If you did not request a password reset, please ignore this email. This password reset link is only " +
       "valid for " + formatTime(validFor) + ". \n\n";
-    String l5 = "If you have any questions please contact " + HOPSWORKS_SUPPORT_EMAIL;
+    String l5 = "If you have any questions please visit https://community.hopsworks.ai/";
 
     message = l1 + l2 + l3 + l4 + l5;
 
@@ -219,8 +194,8 @@ public class UserAccountsEmailMessages {
     String l3 = url + " \n\n";
     String l4 = "If you did not request a QR code reset, please ignore this email. This QR code reset link is only " +
       "valid for " + formatTime(validFor) + ". \n\n";
-    String l5 = "If you have any questions please contact " + HOPSWORKS_SUPPORT_EMAIL;
-  
+    String l5 = "If you have any questions please visit https://community.hopsworks.ai/";
+
     message = l1 + l2 + l3 + l4 + l5;
     
     return message;
@@ -248,79 +223,9 @@ public class UserAccountsEmailMessages {
             + "Your Hopsworks account has been blocked.\n\n";
     String l2
             = "If you have any questions please visit www.hops.io or contact support@hops.io";
-    String l3 = "If you have any questions please contact "
-            + HOPSWORKS_SUPPORT_EMAIL;
+    String l3 = "If you have any questions please visit https://community.hopsworks.ai/";
 
     message = l1 + l2 + l3;
-    return message;
-  }
-
-  public static String buildPasswordResetMessage(String random_password) {
-
-    String message;
-    String l1 = GREETINGS_HEADER + ",\n\n"
-            + "A password reset has been requested on your behalf.\n\nPlease use the temporary password"
-            + " below. You will be required to change your passsword when you login first time.\n\n";
-
-    String tmp_pass = "Password:" + random_password + "\n\n\n";
-    String l3 = "If you have any questions please contact "
-            + HOPSWORKS_SUPPORT_EMAIL;
-
-    message = l1 + tmp_pass + l3;
-    return message;
-  }
-
-  public static String buildDeactivatedMessage() {
-
-    String message;
-    String l1 = GREETINGS_HEADER + ",\n\n"
-        + "A password reset has been requested on your behalf.\n\n After too many fail at answering the "
-        + "security question, your account has been deactivated\n\n";
-
-    String l3 = "To reactivate you account please contact "
-        + HOPSWORKS_SUPPORT_EMAIL;
-
-    message = l1 + l3;
-    return message;
-  }
-
-  public static String buildWrongAnswerMessage() {
-
-    String message;
-    String l1 = GREETINGS_HEADER + ",\n\n"
-        + "A password reset has been requested on your behalf.\n\n "
-        + "You have provided the wrong answer to the security question. Please, try again.\n\n";
-
-    String l3 = "If you have any questions please contact "
-        + HOPSWORKS_SUPPORT_EMAIL;
-
-    message = l1 + l3;
-    return message;
-  }
-
-  public static String buildSecResetMessage() {
-
-    String message;
-    String l1 = GREETINGS_HEADER + ",\n\n"
-            + "A security question change has been requested on your behalf.\n\n";
-    String l2 = "Your security question has been changed successfully.\n\n\n";
-    String l3 = "If you have any questions please contact "
-            + HOPSWORKS_SUPPORT_EMAIL;
-
-    message = l1 + l2 + l3;
-    return message;
-  }
-
-  public static String buildDeactMessage() {
-
-    String message;
-    String l1 = GREETINGS_HEADER + ",\n\n"
-            + "We received an account deactivation request and your Hopsworks "
-            + "account has been deactivated.\n\n";
-    String l2 = "If you have any questions please contact "
-            + HOPSWORKS_SUPPORT_EMAIL;
-
-    message = l1 + l2;
     return message;
   }
 
@@ -336,8 +241,7 @@ public class UserAccountsEmailMessages {
     String l1 = GREETINGS_HEADER + ",\n\n"
             + "A password reset has been requested on your behalf.\n\n";
     String l2 = "Your password has been changed successfully.\n\n\n";
-    String l3 = "If you have any questions please contact "
-            + HOPSWORKS_SUPPORT_EMAIL;
+    String l3 = "If you have any questions please visit https://community.hopsworks.ai/";
     message = l1 + l2 + l3;
 
     return message;
@@ -353,7 +257,7 @@ public class UserAccountsEmailMessages {
     String l1 =
       GREETINGS_HEADER + ",\n\n" + "Your password was reset by a platform administrator (" + initiator + ").\n\n";
     String l2 = "Your password has been changed successfully.\n\n\n";
-    String l3 = "If you have any questions please contact " + HOPSWORKS_SUPPORT_EMAIL;
+    String l3 = "If you have any questions please visit https://community.hopsworks.ai/";
     message = l1 + l2 + l3;
     return message;
   }
@@ -362,7 +266,7 @@ public class UserAccountsEmailMessages {
     String message;
     String l1 = GREETINGS_HEADER + ",\n\n A lost device has been reported on Hopsworks.\n\n";
     String l2 = "Your QR code has been changed successfully.\n\n\n";
-    String l3 = "If you have any questions please contact " + HOPSWORKS_SUPPORT_EMAIL;
+    String l3 = "If you have any questions please visit https://community.hopsworks.ai/";
     message = l1 + l2 + l3;
     return message;
   }
@@ -374,8 +278,7 @@ public class UserAccountsEmailMessages {
             + "Your account request to access Hopsworks has been approved.\n\n";
     String l2 = "You can login with your username: " + username
             + " and other credentials you setup.\n\n\n";
-    String l3 = "If you have any questions please contact "
-            + HOPSWORKS_SUPPORT_EMAIL;
+    String l3 = "If you have any questions please visit https://community.hopsworks.ai/";
     message = l1 + l2 + l3;
 
     return message;
@@ -386,8 +289,7 @@ public class UserAccountsEmailMessages {
 
     String l1 = GREETINGS_HEADER + ",\n\n"
             + "Your Hopsworks account request has been rejected.\n\n";
-    String l2 = "If you have any questions please contact "
-            + HOPSWORKS_SUPPORT_EMAIL;
+    String l2 = "If you have any questions please visit https://community.hopsworks.ai/";
     message = l1 + l2;
 
     return message;
@@ -398,32 +300,12 @@ public class UserAccountsEmailMessages {
     
     String l1 = GREETINGS_HEADER + ",\n\n"
       + "Your Hopsworks account status was changed to " + status + ".\n\n";
-    String l2 = "If you have any questions please contact "
-      + HOPSWORKS_SUPPORT_EMAIL;
+    String l2 = "If you have any questions please visit https://community.hopsworks.ai/";
     message = l1 + l2;
     
     return message;
   }
 
-  public static String buildTempResetMessage(String random_password) {
-
-    String message;
-
-    String l1 = GREETINGS_HEADER + ",\n\n"
-            + "A mobile device reset has been requested on your behalf.\n\n"
-            + "Please use the temporary password below."
-            + "You need to validate the code to get a new setup.\n\n";
-
-    String tmp_pass = "Code:" + random_password + "\n\n\n";
-    String l2 = "If you have any questions please contact "
-            + HOPSWORKS_SUPPORT_EMAIL;
-
-    message = l1 + tmp_pass + l2;
-
-    return message;
-
-  }
-  
   public static String buildClusterRegisterRequestMessage(String path, String key) {
 
     String message;
@@ -437,7 +319,7 @@ public class UserAccountsEmailMessages {
     String url = path + "/hopsworks-cluster/api/cluster/register/confirm/" + key;
 
     String l3 = "To confirm your email click " + url + " \n\n";
-    String l4 = "If you have any questions please contact " + HOPSWORKS_SUPPORT_EMAIL;
+    String l4 = "If you have any questions please visit https://community.hopsworks.ai/";
 
     message = l1 + l2 + l3 + l4;
 
@@ -457,7 +339,7 @@ public class UserAccountsEmailMessages {
     String url = path + "/hopsworks-cluster/api/cluster/unregister/confirm/" + key;
 
     String l3 = "To confirm this request click " + url + " \n\n";
-    String l4 = "If you have any questions please contact " + HOPSWORKS_SUPPORT_EMAIL;
+    String l4 = "If you have any questions please visit https://community.hopsworks.ai/";
 
     message = l1 + l2 + l3 + l4;
 
@@ -472,8 +354,8 @@ public class UserAccountsEmailMessages {
       "This api key will allow you to access your Hopsworks account from a device or application that can not login " +
       "with a username and password. Attaching this api key on a request authentication header will allow you to " +
       "access any hopsworks service in the scope: " + scopes + ".\n";
-    String l2 = "Don't recognize this activity? please contact " + HOPSWORKS_SUPPORT_EMAIL;
-  
+    String l2 = "Don't recognize this activity? please contact your administrator";
+
     message = l1 + l2;
     return message;
   }
@@ -484,7 +366,7 @@ public class UserAccountsEmailMessages {
       + "You have deleted an api key created for your Hopsworks Account " + email + " named \"" + keyName +
       "\" on " + deletedOn + ".\n";
       
-    String l2 = "Don't recognize this activity? please contact " + HOPSWORKS_SUPPORT_EMAIL;
+    String l2 = "Don't recognize this activity? please contact your administrator";
   
     message = l1 + l2;
     return message;
@@ -495,10 +377,9 @@ public class UserAccountsEmailMessages {
     String l1 = GREETINGS_HEADER + ",\n\n"
       + "You have deleted all api keys created for your Hopsworks Account " + email + " on " + deletedOn + ".\n";
     
-    String l2 = "Don't recognize this activity? please contact " + HOPSWORKS_SUPPORT_EMAIL;
+    String l2 = "Don't recognize this activity? please contact your administrator";
     
     message = l1 + l2;
     return message;
   }
-
 }

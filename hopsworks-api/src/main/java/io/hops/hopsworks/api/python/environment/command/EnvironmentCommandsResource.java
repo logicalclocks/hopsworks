@@ -77,7 +77,7 @@ public class EnvironmentCommandsResource {
   @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   public Response get(@BeanParam Pagination pagination, @BeanParam CommandBeanParam environmentsCommandBeanParam,
     @Context UriInfo uriInfo, @Context SecurityContext sc) throws PythonException {
-    environmentController.checkCondaEnabled(project, pythonVersion);
+    environmentController.checkCondaEnabled(project, pythonVersion, false);
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.COMMANDS);
     resourceRequest.setOffset(pagination.getOffset());
     resourceRequest.setLimit(pagination.getLimit());
@@ -95,7 +95,7 @@ public class EnvironmentCommandsResource {
   @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   public Response getByName(@PathParam("commandId") Integer commandId, @Context UriInfo uriInfo,
     @Context SecurityContext sc) throws PythonException {
-    environmentController.checkCondaEnabled(project, pythonVersion);
+    environmentController.checkCondaEnabled(project, pythonVersion, false);
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.COMMANDS);
     CommandDTO dto = commandBuilder.build(uriInfo, resourceRequest, project, commandId);
     return Response.ok().entity(dto).build();
@@ -106,7 +106,7 @@ public class EnvironmentCommandsResource {
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   public Response delete(@Context SecurityContext sc) throws PythonException {
-    environmentController.checkCondaEnabled(project, pythonVersion);
+    environmentController.checkCondaEnabled(project, pythonVersion, false);
     commandsController.deleteCommands(project);
     return Response.noContent().build();
   }
@@ -117,7 +117,7 @@ public class EnvironmentCommandsResource {
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
   public Response update(@PathParam("library") String library, @Context UriInfo uriInfo, @Context SecurityContext sc)
     throws PythonException {
-    environmentController.checkCondaEnabled(project, pythonVersion);
+    environmentController.checkCondaEnabled(project, pythonVersion, false);
     commandsController.retryFailedCondaEnvOps(project);
     return Response.noContent().build();
   }

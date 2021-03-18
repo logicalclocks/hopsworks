@@ -36,6 +36,7 @@ module JobHelper
       "jobType": "PYSPARK",
       "appPath": "hdfs:///Projects/#{project[:projectname]}/Resources/" + job_name + ".#{type}",
       "mainClass": "org.apache.spark.deploy.PythonRunner",
+      "defaultArgs": "10",
       "spark.executor.instances": 1,
       "spark.executor.cores": 1,
       "spark.executor.memory": 1500,
@@ -70,7 +71,7 @@ module JobHelper
     # need to enable python for conversion .ipynb to .py works
     get "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/python/environments"
     if response.code == 404
-       post "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/python/environments/3.6?action=create"
+       post "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/python/environments/3.7?action=create"
        expect_status_details(201)
     end
 
@@ -85,6 +86,7 @@ module JobHelper
             "jobType": "SPARK",
             "appPath": "hdfs:///Projects/#{project[:projectname]}/TestJob/spark-examples.jar",
             "mainClass": "org.apache.spark.examples.SparkPi",
+            "defaultArgs": "10",
             "spark.executor.instances": 1,
             "spark.executor.cores": 1,
             "spark.executor.memory": 1024,
@@ -99,29 +101,27 @@ module JobHelper
       put "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/jobs/#{job_name}", job_conf
 
     elsif type.eql? "py"
-
-      if !test_file("/Projects/#{project[:projectname]}/Resources/" + job_name + ".ipynb")
-        copy_from_local("#{ENV['PROJECT_DIR']}/hopsworks-IT/src/test/ruby/spec/auxiliary/run_single_experiment.ipynb",
-              "/Projects/#{project[:projectname]}/Resources/" + job_name + ".ipynb", @user[:username], "#{project[:projectname]}__Resources", 750, "#{project[:projectname]}")
+      if !test_file("/Projects/#{project[:projectname]}/Resources/#{job_name}.py")
+        if !test_file("/Projects/#{project[:projectname]}/Resources/" + job_name + ".ipynb")
+          copy_from_local("#{ENV['PROJECT_DIR']}/hopsworks-IT/src/test/ruby/spec/auxiliary/run_single_experiment.ipynb",
+                "/Projects/#{project[:projectname]}/Resources/" + job_name + ".ipynb", @user[:username], "#{project[:projectname]}__Resources", 750, "#{project[:projectname]}")
+          get "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/jupyter/convertIPythonNotebook/Resources/" + job_name + ".ipynb"
+          expect_status_details(200)
+        end
       end
-
-      get "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/jupyter/convertIPythonNotebook/Resources/" + job_name + ".ipynb"
-      expect_status_details(200)
       if job_conf.nil?
         job_conf = get_spark_default_py_config(project, job_name, "py")
       end
-
       put "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/jobs/#{job_name}", job_conf
-
     else
-        if !test_file("/Projects/#{project[:projectname]}/Resources/" + job_name + ".ipynb")
-          copy_from_local("#{ENV['PROJECT_DIR']}/hopsworks-IT/src/test/ruby/spec/auxiliary/run_single_experiment.ipynb",
-          "/Projects/#{project[:projectname]}/Resources/" + job_name + ".ipynb", @user[:username], "#{project[:projectname]}__Resources", 750, "#{project[:projectname]}")
-        end
-        if job_conf.nil?
-          job_conf = get_spark_default_py_config(project, job_name, "ipynb")
-        end
-        put "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/jobs/#{job_name}", job_conf
+      if !test_file("/Projects/#{project[:projectname]}/Resources/" + job_name + ".ipynb")
+        copy_from_local("#{ENV['PROJECT_DIR']}/hopsworks-IT/src/test/ruby/spec/auxiliary/run_single_experiment.ipynb",
+        "/Projects/#{project[:projectname]}/Resources/" + job_name + ".ipynb", @user[:username], "#{project[:projectname]}__Resources", 750, "#{project[:projectname]}")
+      end
+      if job_conf.nil?
+        job_conf = get_spark_default_py_config(project, job_name, "ipynb")
+      end
+      put "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/jobs/#{job_name}", job_conf
     end
   end
 
@@ -129,7 +129,7 @@ module JobHelper
     # need to enable python for conversion .ipynb to .py works
     get "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/python/environments"
     if response.code == 404
-      post "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/python/environments/3.6?action=create"
+      post "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/python/environments/3.7?action=create"
       expect_status_details(201)
     end
 
@@ -141,6 +141,7 @@ module JobHelper
           "cores" => 1,
           "jobType" => "PYTHON",
           "appPath" => "hdfs:///Projects/#{project[:projectname]}/Resources/" + job_name + ".py",
+          "defaultArgs" => "10",
           "files" => "hdfs:///Projects/#{project[:projectname]}/Resources/README.md,hdfs:///Projects/#{project[:projectname]}/TestJob/spark-examples.jar"
       }
     end
@@ -172,7 +173,7 @@ module JobHelper
     get "#{ENV['HOPSWORKS_API']}/project/#{project_id}/jobs#{query}"
   end
 
-  def get_job(project_id, job_name, query)
+  def get_job(project_id, job_name, query: "")
     get "#{ENV['HOPSWORKS_API']}/project/#{project_id}/jobs/#{job_name}/#{query}"
   end
 
@@ -196,5 +197,36 @@ module JobHelper
     if !json_body.empty? && json_body[:items].present?
       json_body[:items].map{|job| job[:name]}.each{|i| delete "#{ENV['HOPSWORKS_API']}/project/#{project_id}/jobs/#{i}"}
     end
+  end
+
+  def job_does_not_exist()
+    response.code == resolve_status(404, response.code) && json_body[:errorCode] == 130009
+  end
+
+  def job_exists(project_id, job_name, query: "")
+    get_job(project_id, job_name, query: query)
+    if response.code == resolve_status(200, response.code)
+      true
+    elsif response.code == resolve_status(404, response.code) && json_body[:errorCode] == 130009
+      false
+    else
+      expect_status_details(200)
+    end
+  end
+
+  def prepare_spark_job(project, username, job_name, job_type, job_config: nil, src_dir: "#{ENV['PROJECT_DIR']}/hopsworks-IT/src/test/ruby/spec/auxiliary")
+    chmod_local_dir("#{ENV['PROJECT_DIR']}", 777, true)
+    src = "#{src_dir}/#{job_name}.#{job_type}"
+    dst = "/Projects/#{project[:projectname]}/Resources/#{job_name}.#{job_type}"
+    group = "#{project[:projectname]}__Jupyter"
+    copy_from_local(src, dst, username, group, 750, "#{project[:projectname]}")
+    if job_config.nil?
+      job_config = get_spark_default_py_config(project, job_name, job_type)
+      job_config["amMemory"] = 2048
+      job_config["spark.executor.memory"] = 4096
+      job_config["defaultArgs"] = nil
+    end
+    create_sparktour_job(project, job_name, job_type, job_config)
+    expect_status_details(201)
   end
 end

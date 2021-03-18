@@ -15,6 +15,7 @@
  */
 package io.hops.hopsworks.common.python.commands;
 
+import com.google.common.base.Strings;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
 import io.hops.hopsworks.common.dao.python.CondaCommandFacade;
 import io.hops.hopsworks.common.dao.python.LibraryFacade;
@@ -22,6 +23,7 @@ import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.GenericException;
 import io.hops.hopsworks.exceptions.ProjectException;
 import io.hops.hopsworks.exceptions.ServiceException;
+import io.hops.hopsworks.persistence.entity.jupyter.config.GitBackend;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.python.AnacondaRepo;
 import io.hops.hopsworks.persistence.entity.python.CondaCommands;
@@ -39,6 +41,7 @@ import javax.ejb.TransactionAttributeType;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
+import java.util.Optional;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -56,8 +59,18 @@ public class CommandsController {
   @EJB
   private LibraryFacade libraryFacade;
   
-  public void deleteCommands(Project project, String lib) {
-    condaCommandFacade.deleteCommandsForLibrary(project, lib);
+  public void deleteCommands(Project project, String library) {
+    //Failed installation commands should remove
+    List<CondaCommands> commands = condaCommandFacade.getFailedCommandsForProjectAndLib(project, library);
+    Optional<CondaCommands> command = commands.stream()
+        .filter(d -> d.getStatus().equals(CondaStatus.FAILED))
+        .findFirst();
+    if(command.isPresent()) {
+      Collection<PythonDep> projectLibs = project.getPythonDepCollection();
+      projectLibs.removeIf(lib -> lib.getDependency().equals(library));
+      projectFacade.update(project);
+    }
+    condaCommandFacade.deleteCommandsForLibrary(project, library);
   }
   
   public void deleteCommands(Project project) {
@@ -91,8 +104,12 @@ public class CommandsController {
   }
 
   public PythonDep condaOp(CondaOp op, Users user, CondaInstallType installType, Project proj, String channelUrl,
-                           String lib, String version)
+                           String lib, String version, String arg, GitBackend gitBackend, String apiKeyName)
     throws GenericException {
+
+    if(Strings.isNullOrEmpty(version) && CondaOp.isLibraryOp(op)) {
+      version = Settings.UNKNOWN_LIBRARY_VERSION;
+    }
     
     PythonDep dep;
     try {
@@ -116,7 +133,7 @@ public class CommandsController {
 
       CondaCommands cc = new CondaCommands(settings.getAnacondaUser(), user, op,
           CondaStatus.NEW, installType, proj, lib, version, channelUrl,
-          new Date(), "", null, false);
+          new Date(), arg, null, false, gitBackend, apiKeyName);
       condaCommandFacade.save(cc);
     } catch (Exception ex) {
       throw new GenericException(RESTCodes.GenericErrorCode.UNKNOWN_ERROR, Level.SEVERE, "condaOp failed",
@@ -126,12 +143,12 @@ public class CommandsController {
   }
   
   public void updateCondaCommandStatus(int commandId, CondaStatus condaStatus, String arg,
-                                       CondaOp opType) throws ServiceException {
+                                       CondaOp opType) throws ServiceException, ProjectException {
     updateCondaCommandStatus(commandId, condaStatus, arg, opType, null);
   }
   
   public void updateCondaCommandStatus(int commandId, CondaStatus condaStatus, String arg, CondaOp opType,
-                                       String errorMessage) throws ServiceException {
+                                       String errorMessage) throws ServiceException, ProjectException {
     CondaCommands cc = condaCommandFacade.findCondaCommand(commandId);
     if (cc != null) {
       if (condaStatus == CondaStatus.SUCCESS) {
@@ -141,19 +158,20 @@ public class CommandsController {
         // the PythonDep to be installed or
         // the CondaEnv operation is finished implicitly (no condaOperations are
         // returned => CondaEnv operation is finished).
-        if (!CondaOp.isEnvOp(opType)) {
+        if (CondaOp.isLibraryOp(opType)) {
+          Project project = projectFacade.findById(cc.getProjectId().getId()).orElseThrow(() -> new ProjectException(
+            RESTCodes.ProjectErrorCode.PROJECT_NOT_FOUND, Level.FINE, "projectId: " + cc.getProjectId().getId()));
           PythonDep dep = libraryFacade.getOrCreateDep(libraryFacade.getRepo(cc.getChannelUrl(), false),
               cc.getInstallType(), cc.getLib(), cc.getVersion(), true, false);
-          Collection<PythonDep> deps = cc.getProjectId().getPythonDepCollection();
+          Collection<PythonDep> deps = project.getPythonDepCollection();
 
-          if (opType.equals(CondaOp.INSTALL)) {
-            deps.remove(dep);
-            deps.add(dep);
-          } else if (opType.equals(CondaOp.UNINSTALL)) {
+          if(isPlaceholderDep(cc, opType) || opType.equals(CondaOp.UNINSTALL)) {
             deps.remove(dep);
           }
-          cc.getProjectId().setPythonDepCollection(deps);
-          projectFacade.update(cc.getProjectId());
+          
+          project.setPythonDepCollection(deps);
+          projectFacade.update(project);
+          projectFacade.flushEm();
         }
       } else if(condaStatus == CondaStatus.FAILED) {
         cc.setStatus(condaStatus);
@@ -168,4 +186,33 @@ public class CommandsController {
       LOGGER.log(Level.FINE, "Could not remove CondaCommand with id: {0}", commandId);
     }
   }
+
+  /**
+   * A placeholder is a library which represents a dependency in the project which is not known before installation
+   * For example installing from a git url, we do not know the name of the library, and when installing a library
+   * but not specifying a version it's not known which PythonDep it will resolve to in the end.
+   * We need placeholders to keep track of what libraries are being installed in the environment and to monitor the
+   * installation progress.
+   *
+   * @param command
+   * @param condaOp
+   * @return
+   */
+  private boolean isPlaceholderDep(CondaCommands command, CondaOp condaOp) {
+    if (command.getInstallType().equals(CondaInstallType.GIT) ||
+      command.getInstallType().equals(CondaInstallType.EGG) ||
+      command.getInstallType().equals(CondaInstallType.WHEEL) ||
+      command.getInstallType().equals(CondaInstallType.REQUIREMENTS_TXT) ||
+      command.getInstallType().equals(CondaInstallType.ENVIRONMENT_YAML)) {
+      return true;
+    }
+    if(condaOp.equals(CondaOp.INSTALL) &&
+      (command.getInstallType().equals(CondaInstallType.PIP)
+        || command.getInstallType().equals(CondaInstallType.CONDA))
+      && command.getVersion().equals(Settings.UNKNOWN_LIBRARY_VERSION)) {
+      return true;
+    }
+    return false;
+  }
 }
+

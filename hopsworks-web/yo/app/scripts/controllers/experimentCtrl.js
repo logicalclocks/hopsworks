@@ -19,16 +19,19 @@
  * Controller for experiments service.
  */
 angular.module('hopsWorksApp')
-    .controller('ExperimentCtrl', ['$scope', '$timeout', 'growl', '$window', 'MembersService', 'UserService', 'ModalService', 'ProjectService', 'ExperimentService', 'TensorBoardService', 'DataSetService', 'StorageService', '$interval',
+    .controller('ExperimentCtrl', ['$scope', '$timeout', 'growl', '$window', 'UserService', 'ModalService', 'ProjectService', 'ProjectMembershipService', 'ExperimentService', 'TensorBoardService', 'DataSetService', 'StorageService', '$interval',
         '$routeParams', '$route', '$sce', 'JobService', '$location',
-        function($scope, $timeout, growl, $window, MembersService, UserService, ModalService, ProjectService, ExperimentService, TensorBoardService, DataSetService, StorageService, $interval,
+        function($scope, $timeout, growl, $window, UserService, ModalService, ProjectService, ProjectMembershipService, ExperimentService, TensorBoardService, DataSetService, StorageService, $interval,
             $routeParams, $route, $sce, JobService, $location) {
 
             var self = this;
 
             self.deleted = {}
             self.maxPaginationLinks = 10;
-            self.pageSize = 10;
+            self.defaultBrowserNumberOfItemsPerPage = 20
+            self.pageSize = self.defaultBrowserNumberOfItemsPerPage;
+            self.browserNumberOfItemsPerPage = self.defaultBrowserNumberOfItemsPerPage
+            self.MAX_ITEMS_PER_PAGE = 1000
             self.currentPage = 1;
             self.totalItems = 0;
 
@@ -76,6 +79,97 @@ angular.module('hopsWorksApp')
             self.experimentsToDate.setMinutes(self.experimentsToDate.getMinutes() + 60*24);
             self.experimentsFromDate = new Date();
             self.experimentsFromDate.setMinutes(self.experimentsToDate.getMinutes() - 60*24*30);
+
+            self.experimentsPreferencesStorageId = self.projectId + "_experimentsPreferences"
+
+            function preferences(reverseSort, sortType, orderBy, currentPage, totalPerPage) {
+                this.reverse = reverseSort
+                this.sortType = sortType
+                this.orderBy = orderBy
+                this.currentPage = currentPage
+                this.browserNumberOfItemsPerPage = totalPerPage
+            }
+
+            self.getPreferencesFromLocalStorage = function () {
+                if (!StorageService.contains(self.experimentsPreferencesStorageId)) {
+                    return new preferences(false, 'start', 'desc', 1, self.browserNumberOfItemsPerPage)
+                }
+                try {
+                    var storedPreferences = JSON.parse(StorageService.get(self.experimentsPreferencesStorageId));
+                    if(isNaN(storedPreferences.browserNumberOfItemsPerPage) || storedPreferences.browserNumberOfItemsPerPage < 1) {
+                        storedPreferences.browserNumberOfItemsPerPage = self.defaultBrowserNumberOfItemsPerPage
+                    }
+                    if(!storedPreferences.sortType || storedPreferences.sortType == null || storedPreferences.orderBy == '') {
+                        storedPreferences.orderBy = 'start'
+                    }
+                    if(!storedPreferences.orderBy || storedPreferences.orderBy == null || storedPreferences.orderBy == '') {
+                        storedPreferences.sortType = 'desc'
+                    }
+                    if(!storedPreferences.currentPage || isNaN(storedPreferences.currentPage)) {
+                        storedPreferences.currentPage = 1
+                    }
+                    if(storedPreferences.reverse === undefined) {
+                        storedPreferences.reverse = false
+                    }
+                    return storedPreferences
+                } catch (e) {
+                    return new preferences(false, 'start', 'desc', 1, self.browserNumberOfItemsPerPage)
+                }
+            }
+
+            self.initBrowserPreferenceValues = function () {
+                self.currentPage = self.preferences.currentPage
+                self.orderBy = self.preferences.orderBy
+                self.reverse = self.preferences.reverse
+                self.browserNumberOfItemsPerPage = self.preferences.browserNumberOfItemsPerPage
+                self.sortType = self.preferences.sortType
+            }
+
+            self.storeBrowserPreferencesInLocalStorage = function () {
+                StorageService.store(self.experimentsPreferencesStorageId, JSON.stringify(self.preferences))
+            }
+
+            self.preferences = self.getPreferencesFromLocalStorage();
+            self.initBrowserPreferenceValues()
+            self.storeBrowserPreferencesInLocalStorage()
+
+            $scope.$watch("experimentCtrl.browserNumberOfItemsPerPage", function (newValue) {
+                if(newValue > self.MAX_ITEMS_PER_PAGE) {
+                    self.preferences.browserNumberOfItemsPerPage = self.MAX_ITEMS_PER_PAGE
+                } else if(isNaN(newValue) || newValue < 1) {
+                    self.preferences.browserNumberOfItemsPerPage = null
+                } else {
+                    self.preferences.browserNumberOfItemsPerPage = newValue
+                }
+
+                if(self.preferences.browserNumberOfItemsPerPage == null) {
+                    self.pageSize = self.defaultBrowserNumberOfItemsPerPage
+                } else {
+                    self.pageSize = self.preferences.browserNumberOfItemsPerPage
+                }
+                self.preferences.browserNumberOfItemsPerPage = self.browserNumberOfItemsPerPage
+                self.storeBrowserPreferencesInLocalStorage()
+            })
+
+            $scope.$watch("experimentCtrl.sortType", function (newValue) {
+                self.preferences.sortType = newValue
+                self.storeBrowserPreferencesInLocalStorage()
+            })
+
+            $scope.$watch("experimentCtrl.orderBy", function (newValue) {
+                self.preferences.orderBy = newValue
+                self.storeBrowserPreferencesInLocalStorage()
+            })
+
+            $scope.$watch("experimentCtrl.reverse", function (newValue){
+                self.preferences.reverse = newValue
+                self.storeBrowserPreferencesInLocalStorage()
+            })
+
+            $scope.$watch("experimentCtrl.currentPage", function (newValue){
+                self.preferences.currentPage = newValue
+                self.storeBrowserPreferencesInLocalStorage()
+            })
 
             var startLoading = function(label) {
                 self.loading = true;
@@ -191,18 +285,19 @@ angular.module('hopsWorksApp')
                     return;
                 }
                 var offset = self.pageSize * (self.currentPage - 1);
-                self.query = "";
+                self.query = '';
                 if(self.experimentsFilter !== "") {
-                    self.query = '?filter_by=name_like:' + self.experimentsFilter + "&filter_by=date_start_lt:" + self.experimentsToDate.toISOString().replace('Z','')
-                        + "&filter_by=date_start_gt:" + self.experimentsFromDate.toISOString().replace('Z','');
-                } else {
-                    self.query = '?filter_by=date_start_lt:' + self.experimentsToDate.toISOString().replace('Z','')
-                        + "&filter_by=date_start_gt:" + self.experimentsFromDate.toISOString().replace('Z','');
+                    self.query = self.query + '&filter_by=name_like:' + self.experimentsFilter;
                 }
+                self.query = self.query + '&filter_by=date_start_lt:' + self.experimentsToDate.toISOString().replace('Z','');
+                self.query = self.query + '&filter_by=date_start_gt:' + self.experimentsFromDate.toISOString().replace('Z','');
                 if(self.memberSelected.name !== 'All Members') {
-                    self.query = self.query + '&filter_by=user:' + self.memberSelected.uid;
+                    self.query = self.query + '&filter_by=user:' + self.memberSelected.uid + '&filter_by=user_project:' + self.memberSelected.projectId;
                 }
                 self.query = self.query + '&sort_by=' + self.sortType + ':' + self.orderBy + '&offset=' + offset + '&limit=' + self.pageSize;
+                if(self.query.length > 0) {
+                    self.query = '?' + self.query.substring(1, self.query.length);
+                }
             };
 
             self.getExperiments = function(loadingText) {
@@ -294,27 +389,21 @@ angular.module('hopsWorksApp')
                 });
             };
 
+            self.updateMember = function() {
+                //update experiments for member
+                self.getExperiments('Loading Experiments...');
+            };
+
             self.getMembers = function () {
-              MembersService.query({id: self.projectId}).$promise.then(
+                ProjectMembershipService.getDatasetMembers(self.projectId, 'Experiments', 'DATASET').then(
                 function (success) {
-                  self.members = success;
-                  if(self.members.length > 0) {
-                    //Get current user team role
-                    self.members.forEach(function (member) {
-                        if(member.user.email !== 'serving@hopsworks.se') {
-                            self.membersList.push({'name': member.user.fname + ' ' + member.user.lname, 'uid': member.user.uid, 'email': member.user.email});
-                        }
-                    });
-
-
-                    self.membersList.push({'name': 'All Members'})
-
-                    for(var i = 0; i < self.membersList.length; i++) {
-                        if(self.membersList[i].email === self.userEmail) {
-                            self.memberSelected = self.membersList[i];
-                            break;
-                        }
-                    }
+                    if(success.data.length > 0) {
+                        self.membersList = [];
+                        success.data.forEach(function (member) {
+                            self.membersList.push({'name': member.user.fname + ' ' + member.user.lname + ':' + member.project.name, 'uid': member.user.uid, 'email': member.user.email, 'projectId': member.project.id});
+                        });
+                        self.membersList.push({'name': 'All Members', 'projectId': parseInt(self.projectId)});
+                        self.memberSelected = {'name': 'All Members', 'projectId': parseInt(self.projectId)};
                   }
                   self.getExperiments('Loading Experiments...');
                 },

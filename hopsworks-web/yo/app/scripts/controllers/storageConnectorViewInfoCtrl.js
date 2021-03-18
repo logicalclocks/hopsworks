@@ -32,16 +32,18 @@ angular.module('hopsWorksApp')
             self.featurestore = featurestore;
             self.settings = settings
             //Constants
-            self.hopsfsConnectorType = self.settings.hopsfsConnectorType
-            self.s3ConnectorType = self.settings.s3ConnectorType
-            self.jdbcConnectorType = self.settings.jdbcConnectorType
-            self.preProcessedArgs = []
-
+            self.hopsfsConnectorType = self.settings.hopsfsConnectorType;
+            self.s3ConnectorType = self.settings.s3ConnectorType;
+            self.jdbcConnectorType = self.settings.jdbcConnectorType;
+            self.redshiftConnectorType = self.settings.redshiftConnectorType;
+            self.preProcessedArgs = [];
+            self.showPwd = false;
+            self.pwdType = "password";
 
             /**
-             * PreProcess connector
+             * Initialization function
              */
-            self.preProcessConnector = function () {
+            self.init = function () {
                 if (self.storageConnector.storageConnectorType == self.jdbcConnectorType) {
                     var args = self.storageConnector.arguments
                     args = args + ''
@@ -49,20 +51,14 @@ angular.module('hopsWorksApp')
                     var newArgs = []
                     for (var j = 0; j < argsList.length; j++) {
                         var argValue = argsList[j].split("=")
-                        newArgs.push({
+                        var argPair = {
                             "name": argValue[0],
                             "value": argValue.length > 1 ? argValue[1] : "DEFAULT"
-                        })
+                        }
+                        newArgs.push(argPair);
                     }
                     self.preProcessedArgs = newArgs
                 }
-            }
-
-            /**
-             * Initialization function
-             */
-            self.init = function () {
-                self.preProcessConnector()
             };
 
             /**
@@ -71,6 +67,15 @@ angular.module('hopsWorksApp')
             self.close = function () {
                 $uibModalInstance.dismiss('cancel');
             };
+
+            self.showPlainConnectorPassword = function () {
+                self.showPwd = !self.showPwd;
+                if(self.showPwd) {
+                    self.pwdType = "text";
+                } else {
+                    self.pwdType = "password";
+                }
+            }
 
             self.init()
         }]);

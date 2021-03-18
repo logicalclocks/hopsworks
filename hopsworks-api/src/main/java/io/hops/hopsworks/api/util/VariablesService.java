@@ -43,13 +43,14 @@ import io.hops.hopsworks.api.filter.JWTNotRequired;
 import io.hops.hopsworks.api.filter.NoCacheResponse;
 import io.hops.hopsworks.api.filter.apiKey.ApiKeyRequired;
 import io.hops.hopsworks.common.dao.remote.oauth.OauthClientFacade;
+import io.hops.hopsworks.common.dataset.FolderNameValidator;
 import io.hops.hopsworks.common.util.Settings;
+import io.hops.hopsworks.exceptions.GenericException;
 import io.hops.hopsworks.exceptions.HopsSecurityException;
 import io.hops.hopsworks.exceptions.ServiceException;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
 import io.hops.hopsworks.persistence.entity.remote.oauth.OauthClient;
 import io.hops.hopsworks.persistence.entity.user.security.apiKey.ApiScope;
-import io.hops.hopsworks.persistence.entity.user.security.ua.SecurityQuestion;
 import io.hops.hopsworks.persistence.entity.util.Variables;
 import io.hops.hopsworks.persistence.entity.util.VariablesVisibility;
 import io.hops.hopsworks.restutils.RESTCodes;
@@ -63,13 +64,13 @@ import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.logging.Level;
@@ -170,17 +171,23 @@ public class VariablesService {
     }
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.SERVICE_UNAVAILABLE).build();
   }
-  
+
   @GET
-  @Path("securityQuestions")
+  @Path("filename-regex")
   @Produces(MediaType.APPLICATION_JSON)
   @JWTNotRequired
-  public Response getSecurityQuestions() {
-    List<SecurityQuestion> securityQuestions = Arrays.asList(SecurityQuestion.values());
-    Collections.shuffle(securityQuestions);
-    GenericEntity<List<SecurityQuestion>> questions = new GenericEntity<List<SecurityQuestion>>(securityQuestions) {
-    };
-    return Response.ok().entity(questions).build();
+  public Response getFileNameValidatorRegex(@QueryParam("type") String type) throws GenericException {
+    FileNameRegexDTO fileNameRegexDTO = new FileNameRegexDTO();
+    if (type == null || type.equals("project")) {
+      fileNameRegexDTO.setRegex(FolderNameValidator.getProjectNameRegexStr(settings.getReservedProjectNames()));
+      fileNameRegexDTO.setReservedWords(settings.getProjectNameReservedWords().toUpperCase());
+    } else if (type.equals("dataset")) {
+      fileNameRegexDTO.setRegex(FolderNameValidator.getDatasetNameRegexStr());
+    } else {
+      throw new GenericException(RESTCodes.GenericErrorCode.ILLEGAL_ARGUMENT, Level.FINE, "Type QueryParam should be:" +
+        "project|dataset|subdir");
+    }
+    return Response.ok(fileNameRegexDTO).build();
   }
 
 }

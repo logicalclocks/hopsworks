@@ -18,5 +18,10 @@ package io.hops.hopsworks.persistence.entity.python;
 public enum CondaInstallType {
   ENVIRONMENT,
   CONDA,
-  PIP
+  PIP,
+  EGG,
+  WHEEL,
+  GIT,
+  REQUIREMENTS_TXT,
+  ENVIRONMENT_YAML
 }

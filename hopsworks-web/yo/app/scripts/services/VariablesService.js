@@ -72,6 +72,9 @@ angular.module('hopsWorksApp')
               },
               isKubernetes: function () {
                 return $http.get('/api/variables/kubernetes_installed');
+              },
+              getFilenameRegex: function (type) {
+                return $http.get('/api/variables/filename-regex?type=' + type);
               }
             };
             return service;

@@ -56,7 +56,29 @@ angular.module('hopsWorksApp')
                         },
                         projectId: function () {
                             return projectId;
-}
+                        }
+                    }
+                });
+                return modalInstance.result;
+            },
+            conflicts: function (size, title, projectId, pythonVersion, query) {
+                var modalInstance = $uibModal.open({
+                    templateUrl: 'views/conflictModal.html',
+                    controller: 'ConflictCtrl as conflictCtrl',
+                    size: size,
+                    resolve: {
+                        title: function () {
+                            return title;
+                        },
+                        projectId: function () {
+                            return projectId;
+                        },
+                        pythonVersion: function () {
+                            return pythonVersion;
+                        },
+                        query: function () {
+                            return query;
+                        }
                     }
                 });
                 return modalInstance.result;
@@ -576,7 +598,7 @@ angular.module('hopsWorksApp')
                 });
                 return modalInstance.result;
             },
-            upload: function (size, projectId, path, templateId, datasetType) {
+            upload: function (size, projectId, path, datasetType) {
                 var modalInstance = $uibModal.open({
                     templateUrl: 'views/fileUpload.html',
                     controller: 'FileUploadCtrl as fileUploadCtrl',
@@ -597,9 +619,6 @@ angular.module('hopsWorksApp')
                         },
                         path: function () {
                             return path;
-                        },
-                        templateId: function () {
-                            return templateId;
                         },
                         datasetType: function () {
                             return datasetType;
@@ -638,10 +657,10 @@ angular.module('hopsWorksApp')
                 });
                 return modalInstance.result;
             },
-            selectEnvironmentYml: function (size, projectId, regex, errorMsg) {
+            selectEnvironmentImport: function (size, projectId, regex, errorMsg, type) {
                 var modalInstance = $uibModal.open({
-                    templateUrl: 'views/selectEnvYml.html',
-                    controller: 'SelectEnvYmlCtrl as selectEnvYmlCtrl',
+                    templateUrl: 'views/selectEnvImport.html',
+                    controller: 'SelectEnvImportCtrl as selectEnvImportCtrl',
                     size: size,
                     resolve: {
                         auth: ['$q','AuthGuardService',
@@ -660,6 +679,9 @@ angular.module('hopsWorksApp')
                         },
                         errorMsg: function () {
                             return errorMsg;
+                        },
+                        type: function () {
+                            return type;
                         }
                     }
                 });
@@ -958,29 +980,6 @@ angular.module('hopsWorksApp')
                 });
                 return modalInstance.result;
             },
-            modifyField: function (scope) {
-                var modalInstance = $uibModal.open({
-                    templateUrl: 'views/metadata/modifyFieldDialog.html',
-                    controller: 'ModifyFieldCtrl as modifyFieldCtrl',
-                    scope: scope,
-                    size: 'md',
-                    backdrop: 'static',
-                    resolve: {
-                        auth: ['$q','AuthGuardService',
-                            function ($q, AuthGuardService) {
-                                return AuthGuardService.guardSession($q).then(
-                                    function(success){
-                                    }, function (error) {
-                                        return $q.reject(error)
-                                    });
-                            }],
-                        scope: function () {
-                            return scope;
-                        }
-                    }
-                });
-                return modalInstance.result;
-            },
             enterName: function (size, title, newName) {
                 var modalInstance = $uibModal.open({
                     templateUrl: 'views/enterNameModal.html',
@@ -1001,97 +1000,6 @@ angular.module('hopsWorksApp')
                         },
                         newName: function () {
                             return newName;
-                        }
-                    }
-                });
-                return modalInstance.result;
-            },
-            importTemplate: function (size) {
-                var modalInstance = $uibModal.open({
-                    templateUrl: 'views/importTemplate.html',
-                    controller: 'ImportTemplateCtrl as importTemplateCtrl',
-                    size: size,
-                    resolve: {
-                        auth: ['$q','AuthGuardService',
-                            function ($q, AuthGuardService) {
-                                return AuthGuardService.guardSession($q).then(
-                                    function(success){
-                                    }, function (error) {
-                                        return $q.reject(error)
-                                    });
-                            }]
-                    }
-                });
-                return modalInstance.result;
-            },
-            addNewField: function (scope) {
-                var modalInstance = $uibModal.open({
-                    templateUrl: 'views/metadata/newFieldModal.html',
-                    controller: 'NewFieldCtrl as newFieldCtrl',
-                    scope: scope,
-                    size: 'md',
-                    backdrop: 'static',
-                    resolve: {
-                        auth: ['$q','AuthGuardService',
-                            function ($q, AuthGuardService) {
-                                return AuthGuardService.guardSession($q).then(
-                                    function(success){
-                                    }, function (error) {
-                                        return $q.reject(error)
-                                    });
-                            }],
-                        scope: function () {
-                            return scope;
-                        }
-                    }
-                });
-                return modalInstance.result;
-            },
-            attachTemplate: function (size, file, templateId) {
-                var modalInstance = $uibModal.open({
-                    templateUrl: 'views/metadata/attachTemplateDialog.html',
-                    controller: 'AttachTemplateCtrl as attachTemplateCtrl',
-                    size: size,
-                    backdrop: 'static',
-                    resolve: {
-                        auth: ['$q','AuthGuardService',
-                            function ($q, AuthGuardService) {
-                                return AuthGuardService.guardSession($q).then(
-                                    function(success){
-                                    }, function (error) {
-                                        return $q.reject(error)
-                                    });
-                            }],
-                        templateId: function () {
-                            return templateId;
-                        },
-                        file: function () {
-                            return file;
-                        }
-                    }
-                });
-                return modalInstance.result;
-            },
-            detachTemplate: function (size, file, templateId) {
-                var modalInstance = $uibModal.open({
-                    templateUrl: 'views/metadata/detachTemplateDialog.html',
-                    controller: 'DetachTemplateCtrl as detachTemplateCtrl',
-                    size: size,
-                    backdrop: 'static',
-                    resolve: {
-                        auth: ['$q','AuthGuardService',
-                            function ($q, AuthGuardService) {
-                                return AuthGuardService.guardSession($q).then(
-                                    function(success){
-                                    }, function (error) {
-                                        return $q.reject(error)
-                                    });
-                            }],
-                        templateId: function () {
-                            return templateId;
-                        },
-                        file: function () {
-                            return file;
                         }
                     }
                 });
@@ -1211,39 +1119,7 @@ angular.module('hopsWorksApp')
                 });
                 return modalInstance.result;
             },
-            viewFeaturegroupStatistics: function (size, projectId, featuregroup, projectName, featurestore, settings) {
-                var modalInstance = $uibModal.open({
-                    templateUrl: 'views/featuregroupStatistics.html',
-                    controller: 'featuregroupStatisticsCtrl as featuregroupStatisticsCtrl',
-                    size: size,
-                    resolve: {
-                        auth: ['$q','AuthGuardService',
-                            function ($q, AuthGuardService) {
-                                return AuthGuardService.guardSession($q).then(
-                                    function(success){
-                                    }, function (error) {
-                                        return $q.reject(error)
-                                    });
-                            }],
-                        projectId: function () {
-                            return projectId;
-                        },
-                        featuregroup: function () {
-                            return featuregroup;
-                        },
-                        projectName: function () {
-                            return projectName;
-                        },
-                        featurestore: function () {
-                            return featurestore;
-                        },
-                        settings: function () {
-                            return settings;
-                        }
-                    }
-                });
-                return modalInstance.result;
-            },
+
             viewFeaturestoreStatistic: function (size, projectId, featuregroup, statisticType, statisticData, trainingDataset) {
                 var modalInstance = $uibModal.open({
                     templateUrl: 'views/featurestoreStatisticModal.html',
@@ -1297,40 +1173,6 @@ angular.module('hopsWorksApp')
                         },
                         featuregroup: function () {
                             return featuregroup;
-                        },
-                        trainingDataset: function () {
-                            return trainingDataset;
-                        },
-                        featurestore: function () {
-                            return featurestore;
-                        },
-                        projectName: function () {
-                            return projectName;
-                        },
-                        settings: function () {
-                            return settings;
-                        }
-                    }
-                });
-                return modalInstance.result;
-            },
-            viewTrainingDatasetStatistics: function (size, projectId, trainingDataset, projectName, featurestore,
-                                                     settings) {
-                var modalInstance = $uibModal.open({
-                    templateUrl: 'views/trainingDatasetStatistics.html',
-                    controller: 'trainingDatasetStatisticsCtrl as trainingDatasetStatisticsCtrl',
-                    size: size,
-                    resolve: {
-                        auth: ['$q','AuthGuardService',
-                            function ($q, AuthGuardService) {
-                                return AuthGuardService.guardSession($q).then(
-                                    function(success){
-                                    }, function (error) {
-                                        return $q.reject(error)
-                                    });
-                            }],
-                        projectId: function () {
-                            return projectId;
                         },
                         trainingDataset: function () {
                             return trainingDataset;
@@ -1450,33 +1292,6 @@ angular.module('hopsWorksApp')
                 });
                 return modalInstance.result;
             },
-            addDataValidationPredicate: function (size, features, rule, groups) {
-                var modalInstance = $uibModal.open({
-                    templateUrl: 'views/addDataValidationPredicate.html',
-                    controller: 'DataValidationModalsCtrl as dataValidationModalsCtrl',
-                    size: size,
-                    resolve: {
-                        auth: ['$q','AuthGuardService',
-                            function ($q, AuthGuardService) {
-                                return AuthGuardService.guardSession($q).then(
-                                    function(success){
-                                    }, function (error) {
-                                        return $q.reject(error)
-                                    });
-                            }],
-                            features: function() {
-                                return features;
-                            },
-                            rule: function() {
-                                return rule;
-                            },
-                            groups: function() {
-                                return groups;
-                            }
-                    }
-                });
-                return modalInstance.result;
-            },
             addOperator2AirflowDag: function(size, operator, jobs, addedOperators) {
                 var modalInstance = $uibModal.open({
                     templateUrl: 'views/airflowDagOperatorProperties.html',
@@ -1529,6 +1344,30 @@ angular.module('hopsWorksApp')
                         },
                         list: function() {
                             return list;
+                        }
+                    }
+                });
+                return modalInstance.result;
+            },
+            notebookAttachedJupyterConfigurationViewInfo: function (size, jupyterConfig) {
+                var modalInstance = $uibModal.open({
+                    templateUrl: 'views/notebookAttachedJupyterConfigInfo.html',
+                    controller: 'NotebookAttachedJupyterConfigCtrl as notebookAttachedJupyterConfigCtrl',
+                    size: size,
+                    resolve: {
+                        auth: ['$q', '$location', 'AuthService',
+                            function ($q, $location, AuthService) {
+                                return AuthService.session().then(
+                                    function (success) {
+                                    },
+                                    function (err) {
+                                        $location.path('/login');
+                                        $location.replace();
+                                        return $q.reject(err);
+                                    });
+                            }],
+                        jupyterConfig: function () {
+                            return jupyterConfig
                         }
                     }
                 });

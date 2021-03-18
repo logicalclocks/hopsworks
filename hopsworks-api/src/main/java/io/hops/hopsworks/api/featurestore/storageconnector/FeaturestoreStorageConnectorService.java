@@ -21,28 +21,25 @@ import io.hops.hopsworks.api.filter.Audience;
 import io.hops.hopsworks.api.filter.NoCacheResponse;
 import io.hops.hopsworks.api.filter.apiKey.ApiKeyRequired;
 import io.hops.hopsworks.api.jwt.JWTHelper;
-import io.hops.hopsworks.common.dao.user.activity.ActivityFacade;
 import io.hops.hopsworks.common.featurestore.FeaturestoreController;
 import io.hops.hopsworks.common.featurestore.FeaturestoreDTO;
 import io.hops.hopsworks.common.featurestore.online.OnlineFeaturestoreController;
 import io.hops.hopsworks.common.featurestore.storageconnectors.FeaturestoreStorageConnectorController;
 import io.hops.hopsworks.common.featurestore.storageconnectors.FeaturestoreStorageConnectorDTO;
-import io.hops.hopsworks.common.featurestore.storageconnectors.FeaturestoreStorageConnectorType;
-import io.hops.hopsworks.common.featurestore.storageconnectors.jdbc.FeaturestoreJdbcConnectorDTO;
-import io.hops.hopsworks.common.featurestore.utils.FeaturestoreUtils;
-import io.hops.hopsworks.common.security.secrets.SecretsController;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
+import io.hops.hopsworks.exceptions.ProjectException;
+import io.hops.hopsworks.exceptions.UserException;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
 import io.hops.hopsworks.persistence.entity.featurestore.Featurestore;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.user.Users;
-import io.hops.hopsworks.persistence.entity.user.activity.ActivityFlag;
 import io.hops.hopsworks.persistence.entity.user.security.apiKey.ApiScope;
 import io.hops.hopsworks.restutils.RESTCodes;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
+import org.apache.parquet.Strings;
 
 import javax.ejb.EJB;
 import javax.ejb.TransactionAttribute;
@@ -78,23 +75,17 @@ public class FeaturestoreStorageConnectorService {
   @EJB
   private FeaturestoreController featurestoreController;
   @EJB
-  private OnlineFeaturestoreController onlineFeaturestoreController;
-  @EJB
-  private FeaturestoreStorageConnectorController featurestoreStorageConnectorController;
-  @EJB
-  private FeaturestoreUtils featurestoreUtils;
-  @EJB
-  private ActivityFacade activityFacade;
+  private FeaturestoreStorageConnectorController storageConnectorController;
   @EJB
   private JWTHelper jWTHelper;
   @EJB
   private Settings settings;
   @EJB
-  private SecretsController secretsController;
-  
+  private OnlineFeaturestoreController onlineFeaturestoreController;
+
   private Project project;
   private Featurestore featurestore;
-  
+
   /**
    * Set the project of the featurestore (provided by parent resource)
    *
@@ -130,73 +121,33 @@ public class FeaturestoreStorageConnectorService {
   @ApiKeyRequired( acceptedScopes = {ApiScope.FEATURESTORE}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   @ApiOperation(value = "Get all storage connectors of a feature store",
     response = FeaturestoreStorageConnectorDTO.class, responseContainer = "List")
-  public Response getStorageConnectors(@Context SecurityContext sc) {
+  public Response getStorageConnectors(@Context SecurityContext sc) throws FeaturestoreException {
+    Users user = jWTHelper.getUserPrincipal(sc);
     List<FeaturestoreStorageConnectorDTO> featurestoreStorageConnectorDTOS =
-      featurestoreStorageConnectorController.getAllStorageConnectorsForFeaturestore(featurestore);
+      storageConnectorController.getConnectorsForFeaturestore(user, project, featurestore);
     GenericEntity<List<FeaturestoreStorageConnectorDTO>> featurestoreStorageConnectorsGeneric =
-      new GenericEntity<List<FeaturestoreStorageConnectorDTO>>(featurestoreStorageConnectorDTOS) {
-      };
+      new GenericEntity<List<FeaturestoreStorageConnectorDTO>>(featurestoreStorageConnectorDTOS) {};
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(featurestoreStorageConnectorsGeneric)
       .build();
   }
   
-  /**
-   * Endpoint for getting all storage connectors of a specific type in a featurestore
-   *
-   * @param connectorType
-   *   type of the storage connector, e.g S3, JDBC or HOPSFS
-   * @return a JSON representation of all the storage connectors with the provided type in the feature store
-   */
   @GET
-  @Path("/{connectorType : JDBC|S3|HOPSFS}")
+  @Path("{connectorName}")
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   @JWTRequired(acceptedTokens = {Audience.API, Audience.JOB}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   @ApiKeyRequired( acceptedScopes = {ApiScope.FEATURESTORE}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
-  @ApiOperation(value = "Get all storage connectors of a specific type of a feature store",
-    response = FeaturestoreStorageConnectorDTO.class, responseContainer = "List")
-  public Response getStorageConnectorsOfType(
-    @ApiParam(value = "storage connector type", example = "JDBC")
-    @PathParam("connectorType") FeaturestoreStorageConnectorType connectorType, @Context SecurityContext sc) {
-    verifyStorageConnectorType(connectorType);
-    List<FeaturestoreStorageConnectorDTO> featurestoreStorageConnectorDTOS =
-      featurestoreStorageConnectorController.getAllStorageConnectorsForFeaturestoreWithType(featurestore,
-        connectorType);
-    GenericEntity<List<FeaturestoreStorageConnectorDTO>> featurestoreStorageConnectorsGeneric =
-      new GenericEntity<List<FeaturestoreStorageConnectorDTO>>(featurestoreStorageConnectorDTOS) {
-      };
-    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(featurestoreStorageConnectorsGeneric)
-      .build();
-  }
-  
-  /**
-   * Endpoint for getting a storage connector with a particular type and id in a feature store
-   *
-   * @param connectorType
-   *   type of the storage connector, e.g S3, JDBC or HOPSFS
-   * @param connectorId
-   *   the id of the storage connector
-   * @return a JSON representation of the connector
-   * @throws FeaturestoreException
-   */
-  @GET
-  @Path("/{connectorType : JDBC|S3|HOPSFS}/{connectorId}")
-  @Produces(MediaType.APPLICATION_JSON)
-  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
-  @JWTRequired(acceptedTokens = {Audience.API, Audience.JOB}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
-  @ApiKeyRequired( acceptedScopes = {ApiScope.FEATURESTORE}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
-  @ApiOperation(value = "Get a storage connector with a specific id and type from a featurestore",
+  @ApiOperation(value = "Get a storage connector with a specific name and from a featurestore",
     response = FeaturestoreStorageConnectorDTO.class)
-  public Response getStorageConnectorWithId(
-    @ApiParam(value = "storage connector type", example = "JDBC", required = true)
-    @PathParam("connectorType")
-      FeaturestoreStorageConnectorType connectorType,
-    @ApiParam(value = "Id of the storage connector", required = true)
-    @PathParam("connectorId") Integer connectorId, @Context SecurityContext sc) throws FeaturestoreException {
-    verifyStorageConnectorTypeAndId(connectorType, connectorId);
+  public Response getStorageConnector(@Context SecurityContext sc,
+                                      @ApiParam(value = "Name of the storage connector", required = true)
+                                      @PathParam("connectorName") String connectorName)
+      throws FeaturestoreException {
+
+    Users user = jWTHelper.getUserPrincipal(sc);
+    verifyStorageConnectorName(connectorName);
     FeaturestoreStorageConnectorDTO featurestoreStorageConnectorDTO =
-      featurestoreStorageConnectorController.getStorageConnectorForFeaturestoreWithTypeAndId(featurestore,
-        connectorType, connectorId);
+        storageConnectorController.getConnectorWithName(user, project, featurestore, connectorName);
     GenericEntity<FeaturestoreStorageConnectorDTO> featurestoreStorageConnectorDTOGenericEntity =
       new GenericEntity<FeaturestoreStorageConnectorDTO>(featurestoreStorageConnectorDTO) {
       };
@@ -207,13 +158,10 @@ public class FeaturestoreStorageConnectorService {
   /**
    * Endpoint for creating a storage connector with a particular type in a feature store
    *
-   * @param connectorType
-   *   type of the storage connector, e.g S3, JDBC or HOPSFS
    * @return a JSON representation of the connector
    * @throws FeaturestoreException
    */
   @POST
-  @Path("/{connectorType : JDBC|S3|HOPSFS}")
   @Produces(MediaType.APPLICATION_JSON)
   @Consumes(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
@@ -221,119 +169,83 @@ public class FeaturestoreStorageConnectorService {
   @ApiKeyRequired( acceptedScopes = {ApiScope.FEATURESTORE}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   @ApiOperation(value = "Create a new storage connector for the feature store",
     response = FeaturestoreStorageConnectorDTO.class)
-  public Response createNewStorageConnectorWithType(
-    @Context SecurityContext sc,
-    @ApiParam(value = "storage connector type", example = "JDBC", required = true)
-    @PathParam("connectorType")
-      FeaturestoreStorageConnectorType connectorType,
-    FeaturestoreStorageConnectorDTO featurestoreStorageConnectorDTO) throws FeaturestoreException {
+  public Response createNewStorageConnector(@Context SecurityContext sc,
+                                            FeaturestoreStorageConnectorDTO featurestoreStorageConnectorDTO)
+      throws FeaturestoreException, UserException, ProjectException {
     if (featurestoreStorageConnectorDTO == null) {
       throw new IllegalArgumentException("Input JSON for creating a new Feature Store Storage Connector Cannot be " +
         "null");
     }
-    verifyStorageConnectorType(connectorType);
     Users user = jWTHelper.getUserPrincipal(sc);
-    FeaturestoreStorageConnectorDTO createdFeaturestoreStorageConnectorDTO =
-      featurestoreStorageConnectorController.createStorageConnectorWithType(featurestore, connectorType,
-        featurestoreStorageConnectorDTO);
-    activityFacade.persistActivity(ActivityFacade.ADDED_FEATURESTORE_STORAGE_CONNECTOR +
-      featurestoreStorageConnectorDTO.getName(), project, user, ActivityFlag.SERVICE);
+    FeaturestoreStorageConnectorDTO createdFeaturestoreStorageConnectorDTO = storageConnectorController
+          .createStorageConnector(user, project, featurestore, featurestoreStorageConnectorDTO);
     GenericEntity<FeaturestoreStorageConnectorDTO> featurestoreStorageConnectorDTOGenericEntity =
-      new GenericEntity<FeaturestoreStorageConnectorDTO>(createdFeaturestoreStorageConnectorDTO) {
-      };
+      new GenericEntity<FeaturestoreStorageConnectorDTO>(createdFeaturestoreStorageConnectorDTO) {};
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.CREATED)
       .entity(featurestoreStorageConnectorDTOGenericEntity).build();
   }
   
   /**
-   * Endpoint for deleting a storage connector with a particular type and id in a feature store
+   * Endpoint for deleting a storage connector with a particular type and name in a feature store
    *
-   * @param connectorType
-   *   type of the storage connector, e.g S3, JDBC or HOPSFS
-   * @param connectorId
+   * @param connectorName
    *   the id of the storage connector
    * @return a JSON representation of the deleted connector
    * @throws FeaturestoreException
    */
   @DELETE
-  @Path("/{connectorType : JDBC|S3|HOPSFS}/{connectorId}")
+  @Path("{connectorName}")
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   @JWTRequired(acceptedTokens = {Audience.API, Audience.JOB}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   @ApiKeyRequired( acceptedScopes = {ApiScope.FEATURESTORE}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
-  @ApiOperation(value = "Delete storage connector with a specific id and type from a featurestore",
-    response = FeaturestoreStorageConnectorDTO.class)
-  public Response deleteStorageConnectorWithTypeAndId(
-    @Context
-      SecurityContext sc,
-    @ApiParam(value = "storage connector type", example = "JDBC", required = true)
-    @PathParam("connectorType")
-      FeaturestoreStorageConnectorType connectorType,
-    @ApiParam(value = "Id of the storage connector", required = true)
-    @PathParam("connectorId")
-      Integer connectorId)
-    throws FeaturestoreException {
-    verifyStorageConnectorTypeAndId(connectorType, connectorId);
+  @ApiOperation(value = "Delete storage connector with a specific name and type from a featurestore")
+  public Response deleteStorageConnector(@Context SecurityContext sc,
+                                         @ApiParam(value = "name of the storage connector", required = true)
+                                         @PathParam("connectorName") String connectorName) throws UserException {
     Users user = jWTHelper.getUserPrincipal(sc);
-    FeaturestoreStorageConnectorDTO featurestoreStorageConnectorDTO =
-      featurestoreStorageConnectorController.getStorageConnectorForFeaturestoreWithTypeAndId(featurestore,
-        connectorType, connectorId);
-    featurestoreUtils.verifyUserRole(featurestore, user, project, featurestoreStorageConnectorDTO);
-    featurestoreStorageConnectorDTO =
-      featurestoreStorageConnectorController.deleteStorageConnectorWithTypeAndId(connectorType, connectorId);
-    activityFacade.persistActivity(ActivityFacade.REMOVED_FEATURESTORE_STORAGE_CONNECTOR +
-      featurestoreStorageConnectorDTO.getName(), project, user, ActivityFlag.SERVICE);
-    GenericEntity<FeaturestoreStorageConnectorDTO> featurestoreStorageConnectorDTOGenericEntity =
-      new GenericEntity<FeaturestoreStorageConnectorDTO>(featurestoreStorageConnectorDTO) {
-      };
-    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK)
-      .entity(featurestoreStorageConnectorDTOGenericEntity).build();
+    storageConnectorController.deleteConnectorWithName(user, project, connectorName, featurestore);
+    return Response.ok().build();
   }
   
   /**
    * Endpoint for updating a storage connector with a particular type and id in a feature store
    *
-   * @param connectorType
-   *   type of the storage connector, e.g S3, JDBC or HOPSFS
-   * @param connectorId
+   * @param connectorName
    *   the id of the storage connector
    * @return a JSON representation of the updated connector
    * @throws FeaturestoreException
    */
   @PUT
-  @Path("/{connectorType : JDBC|S3|HOPSFS}/{connectorId}")
+  @Path("/{connectorName}")
   @Produces(MediaType.APPLICATION_JSON)
   @Consumes(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   @JWTRequired(acceptedTokens = {Audience.API, Audience.JOB}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   @ApiKeyRequired( acceptedScopes = {ApiScope.FEATURESTORE}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
-  @ApiOperation(value = "Get a storage connector with a specific id and type from a featurestore",
+  @ApiOperation(value = "Get a storage connector with a specific name and from a featurestore",
     response = FeaturestoreStorageConnectorDTO.class)
-  public Response updateStorageConnectorWithId(
-    @ApiParam(value = "storage connector type", example = "JDBC", required = true)
-    @PathParam("connectorType")
-      FeaturestoreStorageConnectorType connectorType,
-    @ApiParam(value = "Id of the storage connector", required = true)
-    @PathParam("connectorId")
-      Integer connectorId,
-    FeaturestoreStorageConnectorDTO featurestoreStorageConnectorInputDTO, @Context SecurityContext sc)
-    throws FeaturestoreException {
+  public Response updateStorageConnector(@ApiParam(value = "Name of the storage connector", required = true)
+                                         @PathParam("connectorName") String connectorName,
+                                         FeaturestoreStorageConnectorDTO featurestoreStorageConnectorInputDTO,
+                                         @Context SecurityContext sc)
+      throws FeaturestoreException, UserException, ProjectException {
     if (featurestoreStorageConnectorInputDTO == null) {
       throw new IllegalArgumentException("Input JSON for updating a Feature Store Storage Connector Cannot be " +
         "null");
     }
-    verifyStorageConnectorTypeAndId(connectorType, connectorId);
+    Users user = jWTHelper.getUserPrincipal(sc);
+    verifyStorageConnectorName(connectorName);
+    storageConnectorController.updateStorageConnector(user, project, featurestore,
+        featurestoreStorageConnectorInputDTO, connectorName);
     FeaturestoreStorageConnectorDTO featurestoreStorageConnectorDTO =
-      featurestoreStorageConnectorController.updateStorageConnectorWithType(featurestore,
-        connectorType, featurestoreStorageConnectorInputDTO, connectorId);
+        storageConnectorController.getConnectorWithName(user, project, featurestore, connectorName);
     GenericEntity<FeaturestoreStorageConnectorDTO> featurestoreStorageConnectorDTOGenericEntity =
-      new GenericEntity<FeaturestoreStorageConnectorDTO>(featurestoreStorageConnectorDTO) {
-      };
+      new GenericEntity<FeaturestoreStorageConnectorDTO>(featurestoreStorageConnectorDTO) {};
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK)
       .entity(featurestoreStorageConnectorDTOGenericEntity).build();
   }
-  
-  
+
   /**
    * This method returns the JDBC connector for the online featurestore for this user.
    * The JDBC connector is generated from the MySQL Server host:port, the user's username
@@ -350,69 +262,37 @@ public class FeaturestoreStorageConnectorService {
   @JWTRequired(acceptedTokens = {Audience.API, Audience.JOB}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   @ApiKeyRequired( acceptedScopes = {ApiScope.FEATURESTORE}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   @ApiOperation(value = "Get online featurestore storage connector for this feature store",
-    response = FeaturestoreStorageConnectorDTO.class)
-  public Response getOnlineFeaturestoreStorageConnector(@Context SecurityContext sc)
-    throws FeaturestoreException {
+          response = FeaturestoreStorageConnectorDTO.class)
+  public Response getOnlineFeaturestoreStorageConnector(@Context SecurityContext sc) throws FeaturestoreException {
     if (!settings.isOnlineFeaturestore()) {
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.FEATURESTORE_ONLINE_NOT_ENABLED,
-        Level.FINE, "Online Featurestore is not enabled for this Hopsworks cluster.");
+              Level.FINE, "Online Featurestore is not enabled for this Hopsworks cluster.");
     }
     if (!onlineFeaturestoreController.checkIfDatabaseExists(
-        onlineFeaturestoreController.getOnlineFeaturestoreDbName(featurestore.getProject()))) {
+            onlineFeaturestoreController.getOnlineFeaturestoreDbName(featurestore.getProject()))) {
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.FEATURESTORE_ONLINE_NOT_ENABLED,
-        Level.FINE, "Online Featurestore is not enabled for this project. To enable online feature store, talk to an " +
-        "administrator.");
+              Level.FINE, "Online Featurestore is not enabled for this project. To enable online feature store," +
+              " talk to an administrator.");
     }
     Users user = jWTHelper.getUserPrincipal(sc);
-    String dbUsername = onlineFeaturestoreController.onlineDbUsername(project, user);
-    String dbName = onlineFeaturestoreController.getOnlineFeaturestoreDbName(project);
-    FeaturestoreJdbcConnectorDTO featurestoreJdbcConnectorDTO =
-      featurestoreStorageConnectorController.getOnlineFeaturestoreConnector(user, project,
-      dbUsername, featurestore, dbName);
+    FeaturestoreStorageConnectorDTO featurestoreJdbcConnectorDTO =
+            storageConnectorController.getOnlineFeaturestoreConnector(user, project, featurestore);
     GenericEntity<FeaturestoreStorageConnectorDTO> featurestoreStorageConnectorDTOGenericEntity =
-      new GenericEntity<FeaturestoreStorageConnectorDTO>(featurestoreJdbcConnectorDTO) {
-      };
+            new GenericEntity<FeaturestoreStorageConnectorDTO>(featurestoreJdbcConnectorDTO) {};
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK)
-      .entity(featurestoreStorageConnectorDTOGenericEntity).build();
+            .entity(featurestoreStorageConnectorDTOGenericEntity).build();
   }
-  
-  /**
-   * Verify path parameters (storage connector type and id)
-   *
-   * @param connectorType
-   *   type provided as a path parameter to a request
-   * @param connectorId
-   *   id provided as a path parameter to a request
-   */
-  private void verifyStorageConnectorTypeAndId(FeaturestoreStorageConnectorType connectorType,
-    Integer connectorId) {
-    verifyStorageConnectorType(connectorType);
-    verifyStorageConnectorId(connectorId);
-  }
-  
+
   /**
    * Verify path parameters (storage connector id)
    *
-   * @param connectorId
+   * @param connectorName
    *   id provided as a path parameter to a request
    */
-  private void verifyStorageConnectorId(Integer connectorId) {
-    if (connectorId == null) {
+  private void verifyStorageConnectorName(String connectorName) {
+    if (Strings.isNullOrEmpty(connectorName)) {
       throw new IllegalArgumentException(
         RESTCodes.FeaturestoreErrorCode.STORAGE_CONNECTOR_ID_NOT_PROVIDED.getMessage());
-    }
-  }
-  
-  /**
-   * Verify path parameters (storage connector type)
-   *
-   * @param connectorType
-   *   type provided as a path parameter to a request
-   */
-  private void verifyStorageConnectorType(FeaturestoreStorageConnectorType connectorType) {
-    if (connectorType == null) {
-      throw new IllegalArgumentException(
-        RESTCodes.FeaturestoreErrorCode.STORAGE_CONNECTOR_TYPE_NOT_PROVIDED.getMessage());
     }
   }
 }

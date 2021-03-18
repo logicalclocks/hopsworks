@@ -21,12 +21,12 @@ import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
 import io.hops.hopsworks.common.project.AccessCredentialsDTO;
 import io.hops.hopsworks.common.project.ProjectController;
-import io.hops.hopsworks.common.project.ProjectDTO;
 import io.hops.hopsworks.exceptions.DatasetException;
 import io.hops.hopsworks.exceptions.HopsSecurityException;
 import io.hops.hopsworks.exceptions.ProjectException;
 import io.hops.hopsworks.exceptions.UserException;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
+import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.restutils.RESTCodes;
 import io.swagger.annotations.Api;
@@ -67,15 +67,15 @@ public class X509Resource {
     try {
       String projectName = hdfsUsersController.getProjectName(projectUsername);
       String username = hdfsUsersController.getUserName(projectUsername);
-  
-      ProjectDTO projectDTO = projectController.getProjectByName(projectName);
+
+      Project project = projectController.findProjectByName(projectName);
       Users user = userFacade.findByUsername(username);
       if (user == null) {
         throw new UserException(RESTCodes.UserErrorCode.USER_DOES_NOT_EXIST, Level.FINE);
       }
   
       try {
-        AccessCredentialsDTO credentialsDTO = projectController.credentials(projectDTO.getProjectId(), user);
+        AccessCredentialsDTO credentialsDTO = projectController.credentials(project.getId(), user);
         return Response.ok(credentialsDTO).build();
       } catch (DatasetException ex) {
         throw new HopsSecurityException(RESTCodes.SecurityErrorCode.CERTIFICATE_NOT_FOUND, Level.FINE);

@@ -87,8 +87,6 @@ module SessionHelper
     user[:lastName]         = params[:last_name] ? params[:last_name] : "last"
     user[:chosenPassword]   = params[:password] ? params[:password] : "Pass123"
     user[:repeatedPassword] = params[:password] ? params[:password] : "Pass123"
-    user[:securityQuestion] = params[:security_question] ? params[:security_question] : "Name of your first pet?"
-    user[:securityAnswer]   = params[:security_answer] ? params[:security_answer] : "example_answer"
     user[:tos]              = params[:tos] ? params[:tos] :  true
     user[:authType]         = params[:auth_type] ? params[:auth_type] : "Mobile"
     user[:twoFactor]        = params[:twoFactor] ? params[:twoFactor] : 0
@@ -133,7 +131,7 @@ module SessionHelper
 
   def create_session(email, password)
     raw_create_session(email, password)
-    expect_status(200)
+    expect_status_details(200)
     expect_json(sessionID: ->(value){ expect(value).not_to be_empty})
     @user = get_user_by_mail(email)
   end
@@ -424,9 +422,9 @@ module SessionHelper
     get "#{ENV['HOPSWORKS_ADMIN']}/security/validate_account.xhtml", {params: {key: key}}
   end
 
-  def start_password_reset(email, securityQuestion, securityAnswer)
-    post "#{ENV['HOPSWORKS_API']}/auth/recover/password", URI.encode_www_form({email: email, securityQuestion:
-        securityQuestion, securityAnswer: securityAnswer}), {content_type: 'application/x-www-form-urlencoded'}
+  def start_password_reset(email)
+    post "#{ENV['HOPSWORKS_API']}/auth/recover/password", URI.encode_www_form({email: email}),
+         {content_type: 'application/x-www-form-urlencoded'}
   end
 
   def validate_recovery_key(key)

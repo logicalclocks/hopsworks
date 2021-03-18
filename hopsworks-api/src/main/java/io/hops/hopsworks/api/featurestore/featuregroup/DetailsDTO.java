@@ -20,13 +20,12 @@ import io.hops.hopsworks.common.api.RestDTO;
 import io.hops.hopsworks.common.hive.HiveTableType;
 
 import javax.xml.bind.annotation.XmlRootElement;
-import java.math.BigInteger;
 
 @XmlRootElement
 public class DetailsDTO extends RestDTO<DetailsDTO> {
 
   // Storage agnostic
-  private BigInteger size;
+  private Long size;
   private String schema;
 
   // Offline
@@ -51,11 +50,11 @@ public class DetailsDTO extends RestDTO<DetailsDTO> {
     this.hiveTableType = hiveTableType;
   }
 
-  public BigInteger getSize() {
+  public Long getSize() {
     return size;
   }
 
-  public void setSize(BigInteger size) {
+  public void setSize(Long size) {
     this.size = size;
   }
 

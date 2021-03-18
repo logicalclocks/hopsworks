@@ -46,8 +46,6 @@ import io.hops.hopsworks.common.dao.dataset.DatasetRequestFacade;
 import io.hops.hopsworks.common.dao.dataset.DatasetSharedWithFacade;
 import io.hops.hopsworks.common.dao.hdfs.inode.InodeFacade;
 import io.hops.hopsworks.common.dao.log.operation.OperationsLogFacade;
-import io.hops.hopsworks.common.dao.metadata.db.InodeBasicMetadataFacade;
-import io.hops.hopsworks.common.dao.metadata.db.TemplateFacade;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
 import io.hops.hopsworks.common.dao.project.team.ProjectTeamFacade;
 import io.hops.hopsworks.common.dao.user.activity.ActivityFacade;
@@ -80,8 +78,6 @@ import io.hops.hopsworks.persistence.entity.dataset.SharedState;
 import io.hops.hopsworks.persistence.entity.hdfs.inode.Inode;
 import io.hops.hopsworks.persistence.entity.log.operation.OperationType;
 import io.hops.hopsworks.persistence.entity.log.operation.OperationsLog;
-import io.hops.hopsworks.persistence.entity.metadata.InodeBasicMetadata;
-import io.hops.hopsworks.persistence.entity.metadata.Template;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.project.team.ProjectTeam;
 import io.hops.hopsworks.persistence.entity.user.Users;
@@ -105,10 +101,12 @@ import java.io.DataInputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Stack;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 /**
  * Contains business logic pertaining DataSet management.
@@ -124,8 +122,6 @@ public class DatasetController {
   @EJB
   private InodeController inodeController;
   @EJB
-  private TemplateFacade templates;
-  @EJB
   private DatasetFacade datasetFacade;
   @EJB
   private DatasetSharedWithFacade datasetSharedWithFacade;
@@ -133,8 +129,6 @@ public class DatasetController {
   private ProjectFacade projectFacade;
   @EJB
   private ActivityFacade activityFacade;
-  @EJB
-  private InodeBasicMetadataFacade inodeBasicMetaFacade;
   @EJB
   private OperationsLogFacade operationsLogFacade;
   @EJB
@@ -166,22 +160,20 @@ public class DatasetController {
    * and must satisfy the validity criteria for a folder name.
    * @param datasetDescription The description of the DataSet being created. Can
    * be null.
-   * @param templateId The id of the metadata template to be associated with
-   * this DataSet.
    * @param stickyBit Whether or not the dataset should have the sticky bit set
    * @param permission
    * @param dfso
    * folder names, or the folder already exists.
    */
-  public void createDataset(Users user, Project project, String dataSetName, String datasetDescription, int templateId,
-    ProvTypeDTO metaStatus, boolean stickyBit, DatasetAccessPermission permission, DistributedFileSystemOps dfso)
-    throws DatasetException, HopsSecurityException {
-  
+  public Dataset createDataset(Users user, Project project, String dataSetName, String datasetDescription,
+    ProvTypeDTO metaStatus, boolean stickyBit, DatasetAccessPermission permission,
+    DistributedFileSystemOps dfso) throws DatasetException, HopsSecurityException {
+
     //Parameter checking.
     if (user == null || project == null || dataSetName == null) {
       throw new IllegalArgumentException("User, project or dataset were not provided");
     }
-    FolderNameValidator.isValidName(dataSetName, false);
+    FolderNameValidator.isValidName(dataSetName);
     //Logic
     boolean success;
     String dsPath = Utils.getProjectPath(project.getName()) + dataSetName;
@@ -191,13 +183,14 @@ public class DatasetController {
       throw new DatasetException(RESTCodes.DatasetErrorCode.DESTINATION_EXISTS, Level.FINE,
         "Dataset name: " + dataSetName);
     }
+    Dataset newDS = null;
     //Permission 770
     FsPermission fsPermission = new FsPermission(FsAction.ALL, FsAction.ALL, FsAction.NONE, stickyBit);
-    success = createFolder(dsPath, templateId, fsPermission, dfso);
+    success = createFolder(dsPath, fsPermission, dfso);
     if (success) {
       try {
         ds = inodes.findByInodePK(parent, dataSetName, HopsUtils.dataSetPartitionId(parent, dataSetName));
-        Dataset newDS = new Dataset(ds, project, permission);
+        newDS = new Dataset(ds, project, permission);
         newDS.setSearchable(isSearchable(metaStatus.getMetaStatus()));
         if (datasetDescription != null) {
           newDS.setDescription(datasetDescription);
@@ -225,6 +218,7 @@ public class DatasetController {
       throw new DatasetException(RESTCodes.DatasetErrorCode.DATASET_OPERATION_ERROR, Level.INFO,
         "Could not create dataset: " + dataSetName);
     }
+    return newDS;
   }
   
   private boolean isSearchable(Inode.MetaStatus metaStatus) {
@@ -242,10 +236,6 @@ public class DatasetController {
    * @param dirPath The full path of the folder to be created.
    * /Projects/projectA/datasetB/folder1/folder2/folder3, folder1/folder2
    * has to exist and folder3 needs to be a valid name.
-   * @param templateId The id of the template to be associated with the newly
-   * created directory.
-   * @param description The description of the directory
-   * @param searchable Defines if the directory can be searched upon
    * @param udfso
    * the directory.
    * @throws IllegalArgumentException If:
@@ -255,21 +245,18 @@ public class DatasetController {
    * <li>Such a folder already exists. </li>
    * <li>The parent folder does not exists. </li>
    * </ul>
-   * @see FolderNameValidator
    * @throws NullPointerException If any of the non-null-allowed parameters is
    * null.
    */
-  public void createSubDirectory(Project project, Path dirPath, int templateId, String description, boolean searchable,
-    DistributedFileSystemOps udfso) throws DatasetException, HopsSecurityException {
+  public void createSubDirectory(Project project, Path dirPath, DistributedFileSystemOps udfso)
+    throws DatasetException, HopsSecurityException {
     if (project == null) {
       throw new NullPointerException("Cannot create a directory under a null project.");
     } else if (dirPath == null) {
       throw new NullPointerException("Cannot create a directory for an empty path.");
     }
 
-    String folderName = dirPath.getName();
     String parentPath = dirPath.getParent().toString();
-    FolderNameValidator.isValidName(folderName, true);
 
     //Check if the given folder already exists
     if (inodeController.existsPath(dirPath.toString())) {
@@ -284,18 +271,7 @@ public class DatasetController {
         "Path for parent folder does not exist: " + parentPath + " under " + project.getName());
     }
 
-    //Now actually create the folder
-    boolean success = this.createFolder(dirPath.toString(), templateId, null, udfso);
-
-    //if the folder was created successfully, persist basic metadata to it -
-    //description and searchable attribute
-    if (success) {
-      //find the corresponding inode
-      long partitionId = HopsUtils.calculatePartitionId(parent.getId(), folderName, dirPath.depth());
-      Inode folder = this.inodes.findByInodePK(parent, folderName, partitionId);
-      InodeBasicMetadata basicMeta = new InodeBasicMetadata(folder, description, searchable);
-      this.inodeBasicMetaFacade.addBasicMetadata(basicMeta);
-    }
+    this.createFolder(dirPath.toString(), null, udfso);
   }
 
   /**
@@ -366,7 +342,7 @@ public class DatasetController {
    * @return
    * @throws HopsSecurityException
    */
-  private boolean createFolder(String path, int template, FsPermission fsPermission, DistributedFileSystemOps dfso)
+  private boolean createFolder(String path, FsPermission fsPermission, DistributedFileSystemOps dfso)
     throws HopsSecurityException {
     boolean success;
     Path location = new Path(path);
@@ -377,16 +353,6 @@ public class DatasetController {
       success = dfso.mkdir(location, fsPermission);
       if (success) {
         dfso.setPermission(location, fsPermission);
-      }
-      if (success && template != 0 && template != -1) {
-        //Get the newly created Inode.
-        Inode created = inodeController.getInodeAtPath(path);
-        Template templ = templates.findByTemplateId(template);
-        if (templ != null) {
-          templ.getInodes().add(created);
-          //persist the relationship table
-          templates.updateTemplatesInodesMxN(templ);
-        }
       }
     } catch (IOException  ex) {
       throw new HopsSecurityException(RESTCodes.SecurityErrorCode.HDFS_ACCESS_CONTROL, Level.WARNING,
@@ -551,6 +517,9 @@ public class DatasetController {
   
   public Dataset getDatasetByInodeId(Long inodeId) {
     Inode inode = inodes.findById(inodeId);
+    if(inode == null) {
+      return null;
+    }
     return datasetFacade.findByInode(inode);
   }
   
@@ -575,6 +544,41 @@ public class DatasetController {
       return null;
     }
     return getByProjectAndInode(currentProject, dsInode);
+  }
+  
+  public Dataset getByName(Project project, String dsName) throws DatasetException {
+    String nativeDatasetPath = Utils.getProjectPath(project.getName()) + dsName;
+    return getByProjectAndFullPath(project, nativeDatasetPath);
+  }
+  
+  /**
+   * @param project
+   * @param dsName
+   * @return The list of datasets that match the name, including the datasets shared with this project
+   */
+  public List<Dataset> getAllByName(Project project, String dsName) {
+    List<Dataset> result = new ArrayList<>();
+    try {
+      Dataset nativeDataset = getByName(project, dsName);
+      result.add(nativeDataset);
+    } catch(DatasetException e) {
+      //not found, don't do anything
+    }
+    List<Dataset> sharedDatasets = project.getDatasetSharedWithCollection().stream()
+      .filter(DatasetSharedWith::getAccepted)
+      .filter((sds) -> sds.getDataset().getName().equals(dsName))
+      .map((sds) -> sds.getDataset())
+      .collect(Collectors.toCollection(ArrayList::new));
+    result.addAll(sharedDatasets);
+    return result;
+  }
+  
+  public Dataset getByProjectAndInodeId(Project project, Long dsInodeId) throws DatasetException {
+    Inode inode = inodes.findById(dsInodeId);
+    if(inode == null) {
+      throw new DatasetException(RESTCodes.DatasetErrorCode.DATASET_NOT_FOUND, Level.FINE);
+    }
+    return getByProjectAndInode(project, inode);
   }
   
   public Dataset getByProjectAndInode(Project project, Inode inode) {
@@ -792,12 +796,31 @@ public class DatasetController {
           //Dataset already shared nothing to do
         }
       }
+      // If we migrate Training Datasets to remove the project prefix, these methods can be reused
+      shareFeatureStoreServiceDataset(user, project, targetProject, permission, Settings.ServiceDataset.STATISTICS);
     }
   }
   
   private Dataset getTrainingDataset(Project project) {
     String trainingDatasetName = project.getName() + "_" + Settings.ServiceDataset.TRAININGDATASETS.getName();
     Inode inode = inodes.findByParentAndName(project.getInode(), trainingDatasetName);
+    return datasetFacade.findByProjectAndInode(project, inode);
+  }
+  
+  private void shareFeatureStoreServiceDataset(Users user, Project project, Project targetProject,
+    DatasetAccessPermission permission, Settings.ServiceDataset serviceDataset) {
+    Dataset dataset = getFeatureStoreServiceDataset(project, serviceDataset);
+    if (dataset != null) {
+      try {
+        share(targetProject, dataset, user, permission, true);
+      } catch (DatasetException de) {
+        //Dataset already shared nothing to do
+      }
+    }
+  }
+  
+  private Dataset getFeatureStoreServiceDataset(Project project, Settings.ServiceDataset serviceDataset) {
+    Inode inode = inodes.findByParentAndName(project.getInode(), serviceDataset.getName());
     return datasetFacade.findByProjectAndInode(project, inode);
   }
   
@@ -853,7 +876,8 @@ public class DatasetController {
     }
   }
 
-  public void acceptShared(Project project, DatasetSharedWith datasetSharedWith) throws DatasetException {
+  public void acceptShared(Project project, DatasetSharedWith datasetSharedWith)
+    throws DatasetException {
     acceptSharedDs(datasetSharedWith);
     if (DatasetType.FEATURESTORE.equals(datasetSharedWith.getDataset().getDsType())) {
       DatasetSharedWith trainingDataset = getOrCreateSharedTrainingDataset(project,
@@ -865,6 +889,9 @@ public class DatasetController {
           //Dataset not shared or already accepted nothing to do
         }
       }
+      // If we migrate Training Datasets to remove the project prefix, these methods can be reused
+      acceptSharedFeatureStoreServiceDataset(project, datasetSharedWith, datasetSharedWith.getPermission(),
+        Settings.ServiceDataset.STATISTICS);
     }
   }
   
@@ -878,6 +905,32 @@ public class DatasetController {
       sharedTrainingDataset = datasetSharedWithFacade.findByProjectAndDataset(project, trainingDataset);
     }
     return sharedTrainingDataset;
+  }
+  
+  private void acceptSharedFeatureStoreServiceDataset(Project project, DatasetSharedWith datasetSharedWith,
+    DatasetAccessPermission permission, Settings.ServiceDataset serviceDataset) {
+    DatasetSharedWith dataset =
+      getOrCreateSharedFeatureStoreServiceDataset(project, datasetSharedWith.getDataset().getProject(), permission,
+        serviceDataset);
+    if (dataset != null && !dataset.getAccepted()) {
+      try {
+        acceptSharedDs(dataset);
+      } catch (DatasetException de) {
+        //Dataset not shared or already accepted nothing to do
+      }
+    }
+  }
+  
+  private DatasetSharedWith getOrCreateSharedFeatureStoreServiceDataset(Project project, Project parentProject,
+    DatasetAccessPermission permission, Settings.ServiceDataset serviceDataset) {
+    Dataset dataset = getFeatureStoreServiceDataset(parentProject, serviceDataset);
+    DatasetSharedWith sharedDataset = datasetSharedWithFacade.findByProjectAndDataset(project, dataset);
+    if (sharedDataset == null) {
+      sharedDataset = new DatasetSharedWith(project, dataset, permission, false);
+      datasetSharedWithFacade.save(sharedDataset);
+      sharedDataset = datasetSharedWithFacade.findByProjectAndDataset(project, dataset);
+    }
+    return sharedDataset;
   }
   
   private void acceptSharedDs(DatasetSharedWith datasetSharedWith) throws DatasetException {
@@ -897,28 +950,24 @@ public class DatasetController {
   }
   
   public void createDirectory(Project project, Users user, Path fullPath, String name, Boolean isDataset,
-    Integer templateId, String description, ProvTypeDTO metaStatus, Boolean generateReadme,
-    DatasetAccessPermission permission) throws DatasetException, HopsSecurityException {
+    String description, ProvTypeDTO metaStatus, Boolean generateReadme, DatasetAccessPermission permission)
+    throws DatasetException, HopsSecurityException {
     DistributedFileSystemOps dfso = dfs.getDfsOps();
     String username = hdfsUsersController.getHdfsUserName(project, user);
     DistributedFileSystemOps udfso = dfs.getDfsOps(username);
-    if (templateId == null) {
-      templateId = -1;
-    }
     if (description == null) {
       description = "";
     }
     try {
       if (isDataset) {
-        createDataset(user, project, name, description, templateId, metaStatus, false, permission, dfso);
+        createDataset(user, project, name, description, metaStatus, false, permission, dfso);
         //Generate README.md for the dataset if the user requested it
         if (generateReadme != null && generateReadme) {
           //Persist README.md to hdfs
           generateReadme(udfso, name, description, project.getName());
         }
       } else {
-        boolean searchable = !Inode.MetaStatus.DISABLED.equals(metaStatus.getMetaStatus());
-        createSubDirectory(project, fullPath, templateId, description, searchable, udfso);
+        createSubDirectory(project, fullPath, udfso);
       }
     } finally {
       dfs.closeDfsClient(dfso);
@@ -1188,6 +1237,8 @@ public class DatasetController {
       if (trainingDataset != null) {
         unshareDs(project, user, dataset, trainingDataset, dfso);
       }
+      unshareFeatureStoreServiceDataset(user, project, targetProject, dataset, datasetSharedWith,
+        Settings.ServiceDataset.STATISTICS);
     }
     unshareDs(project, user, dataset, datasetSharedWith, dfso);
   }
@@ -1211,6 +1262,23 @@ public class DatasetController {
     datasetSharedWithFacade.remove(datasetSharedWith);
     activityFacade.persistActivity(ActivityFacade.UNSHARED_DATA + dataset.getName() + " with project " +
       datasetSharedWith.getProject().getName(), project, user, ActivityFlag.DATASET);
+  }
+
+  private void unshareFeatureStoreServiceDataset(Users user, Project project, Project targetProject, Dataset dataset,
+    DatasetSharedWith datasetSharedWith, Settings.ServiceDataset serviceDataset) {
+    DatasetSharedWith serviceDatasetSharedWith =
+      getSharedFeatureStoreServiceDataset(targetProject, datasetSharedWith.getDataset().getProject(), serviceDataset);
+    try {
+      unshareDs(project, user, dataset, serviceDatasetSharedWith);
+    } catch (DatasetException de) {
+      //Dataset not shared nothing to do
+    }
+  }
+  
+  private DatasetSharedWith getSharedFeatureStoreServiceDataset(Project project, Project parentProject,
+    Settings.ServiceDataset serviceDataset) {
+    Dataset dataset = getFeatureStoreServiceDataset(parentProject, serviceDataset);
+    return datasetSharedWithFacade.findByProjectAndDataset(project, dataset);
   }
 
   /**

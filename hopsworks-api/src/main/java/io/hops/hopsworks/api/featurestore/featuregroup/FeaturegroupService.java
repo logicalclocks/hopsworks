@@ -17,33 +17,47 @@
 package io.hops.hopsworks.api.featurestore.featuregroup;
 
 import com.google.common.base.Strings;
+import io.hops.hopsworks.api.featurestore.FeaturestoreKeywordResource;
+import io.hops.hopsworks.api.featurestore.commit.CommitResource;
+import io.hops.hopsworks.api.featurestore.activities.ActivityResource;
+import io.hops.hopsworks.api.featurestore.datavalidation.expectations.fg.FeatureGroupExpectationsResource;
+import io.hops.hopsworks.api.featurestore.datavalidation.validations.FeatureGroupValidationsResource;
+import io.hops.hopsworks.api.featurestore.statistics.StatisticsResource;
 import io.hops.hopsworks.api.featurestore.tag.TagsBuilder;
 import io.hops.hopsworks.api.featurestore.tag.TagsDTO;
+import io.hops.hopsworks.api.featurestore.tag.TagsExpansionBeanParam;
 import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.api.filter.Audience;
 import io.hops.hopsworks.api.filter.NoCacheResponse;
 import io.hops.hopsworks.api.filter.apiKey.ApiKeyRequired;
 import io.hops.hopsworks.api.jwt.JWTHelper;
-import io.hops.hopsworks.common.featurestore.tag.FeaturegroupTagControllerIface;
+import io.hops.hopsworks.api.provenance.ProvArtifactResource;
 import io.hops.hopsworks.common.api.ResourceRequest;
-import io.hops.hopsworks.common.dao.user.activity.ActivityFacade;
 import io.hops.hopsworks.common.featurestore.FeaturestoreController;
 import io.hops.hopsworks.common.featurestore.FeaturestoreDTO;
+import io.hops.hopsworks.common.featurestore.OptionDTO;
+import io.hops.hopsworks.common.featurestore.app.FsJobManagerController;
 import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupController;
 import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupDTO;
+import io.hops.hopsworks.common.featurestore.featuregroup.IngestionJob;
+import io.hops.hopsworks.common.featurestore.tag.AttachTagResult;
+import io.hops.hopsworks.common.featurestore.tag.FeatureStoreTagControllerIface;
 import io.hops.hopsworks.exceptions.DatasetException;
+import io.hops.hopsworks.exceptions.FeatureStoreTagException;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.exceptions.HopsSecurityException;
+import io.hops.hopsworks.exceptions.JobException;
 import io.hops.hopsworks.exceptions.MetadataException;
 import io.hops.hopsworks.exceptions.ProvenanceException;
 import io.hops.hopsworks.exceptions.ServiceException;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
+import io.hops.hopsworks.persistence.entity.dataset.Dataset;
 import io.hops.hopsworks.persistence.entity.featurestore.Featurestore;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.Featuregroup;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.FeaturegroupType;
+import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.cached.ValidationType;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.user.Users;
-import io.hops.hopsworks.persistence.entity.user.activity.ActivityFlag;
 import io.hops.hopsworks.persistence.entity.user.security.apiKey.ApiScope;
 import io.hops.hopsworks.restutils.RESTCodes;
 import io.swagger.annotations.Api;
@@ -55,6 +69,7 @@ import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.enterprise.context.RequestScoped;
 import javax.inject.Inject;
+import javax.ws.rs.BeanParam;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.DefaultValue;
@@ -75,10 +90,12 @@ import javax.ws.rs.core.UriInfo;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 /**
  * A Stateless RESTful service for the featuregroups in a featurestore on Hopsworks.
@@ -96,20 +113,36 @@ public class FeaturegroupService {
   @EJB
   private FeaturegroupController featuregroupController;
   @EJB
-  private ActivityFacade activityFacade;
-  @EJB
   private JWTHelper jWTHelper;
   @EJB
   private TagsBuilder tagBuilder;
   @Inject
-  private FeaturegroupTagControllerIface tagController;
+  private FeatureStoreTagControllerIface tagController;
   @Inject
   private FeatureGroupPreviewResource featureGroupPreviewResource;
   @Inject
   private FeatureGroupPartitionResource featureGroupPartitionResource;
   @Inject
   private FeatureGroupDetailsResource featureGroupDetailsResource;
-  
+  @Inject
+  private StatisticsResource statisticsResource;
+  @Inject
+  private CommitResource commitResource;
+  @Inject
+  private ProvArtifactResource provenanceResource;
+  @Inject
+  private FsJobManagerController fsJobManagerController;
+  @Inject
+  private IngestionJobBuilder ingestionJobBuilder;
+  @Inject
+  private FeaturestoreKeywordResource featurestoreKeywordResource;
+  @Inject
+  private ActivityResource activityResource;
+  @Inject
+  private FeatureGroupExpectationsResource featureGroupExpectationsResource;
+  @Inject
+  private FeatureGroupValidationsResource featureGroupValidationsResource;
+
   private Project project;
   private Featurestore featurestore;
   private static final Logger LOGGER = Logger.getLogger(FeaturegroupService.class.getName());
@@ -148,9 +181,13 @@ public class FeaturegroupService {
   @ApiOperation(value = "Get the list of feature groups for a featurestore",
       response = FeaturegroupDTO.class,
       responseContainer = "List")
-  public Response getFeaturegroupsForFeaturestore(@Context SecurityContext sc) {
+  public Response getFeaturegroupsForFeaturestore(
+          @BeanParam FeatureGroupBeanParam featureGroupBeanParam,
+          @Context SecurityContext sc)
+      throws FeaturestoreException, ServiceException {
+    Users user = jWTHelper.getUserPrincipal(sc);
     List<FeaturegroupDTO> featuregroups = featuregroupController.
-        getFeaturegroupsForFeaturestore(featurestore);
+        getFeaturegroupsForFeaturestore(featurestore, project, user, featureGroupBeanParam.getFilterValues());
     GenericEntity<List<FeaturegroupDTO>> featuregroupsGeneric =
         new GenericEntity<List<FeaturegroupDTO>>(featuregroups) {};
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(featuregroupsGeneric).build();
@@ -184,12 +221,10 @@ public class FeaturegroupService {
       }
       FeaturegroupDTO createdFeaturegroup = featuregroupController.createFeaturegroup(featurestore, featuregroupDTO,
         project, user);
-      activityFacade.persistActivity(ActivityFacade.CREATED_FEATUREGROUP + createdFeaturegroup.getName(),
-          project, user, ActivityFlag.SERVICE);
       GenericEntity<FeaturegroupDTO> featuregroupGeneric =
           new GenericEntity<FeaturegroupDTO>(createdFeaturegroup) {};
       return noCacheResponse.getNoCacheResponseBuilder(Response.Status.CREATED).entity(featuregroupGeneric).build();
-    } catch (SQLException | IOException | ProvenanceException e) {
+    } catch (SQLException | ProvenanceException e) {
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.COULD_NOT_CREATE_FEATUREGROUP, Level.SEVERE,
           "project: " + project.getName() + ", featurestoreId: " + featurestore.getId(), e.getMessage(), e);
     }
@@ -212,10 +247,11 @@ public class FeaturegroupService {
       response = FeaturegroupDTO.class)
   public Response getFeatureGroup(@ApiParam(value = "Id of the featuregroup", required = true)
                                   @PathParam("featuregroupId") Integer featuregroupId, @Context SecurityContext sc)
-      throws FeaturestoreException {
+      throws FeaturestoreException, ServiceException {
+    Users user = jWTHelper.getUserPrincipal(sc);
     verifyIdProvided(featuregroupId);
     FeaturegroupDTO featuregroupDTO =
-        featuregroupController.getFeaturegroupWithIdAndFeaturestore(featurestore, featuregroupId);
+        featuregroupController.getFeaturegroupWithIdAndFeaturestore(featurestore, featuregroupId, project, user);
     GenericEntity<FeaturegroupDTO> featuregroupGeneric =
         new GenericEntity<FeaturegroupDTO>(featuregroupDTO) {};
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(featuregroupGeneric).build();
@@ -241,14 +277,16 @@ public class FeaturegroupService {
                                   @PathParam("name") String name,
                                   @ApiParam(value = "Filter by a specific version")
                                   @QueryParam("version") Integer version, @Context SecurityContext sc)
-      throws FeaturestoreException{
+      throws FeaturestoreException, ServiceException {
+    Users user = jWTHelper.getUserPrincipal(sc);
     verifyNameProvided(name);
     List<FeaturegroupDTO> featuregroupDTO;
     if (version == null) {
-      featuregroupDTO = featuregroupController.getFeaturegroupWithNameAndFeaturestore(featurestore, name);
+      featuregroupDTO = featuregroupController.getFeaturegroupWithNameAndFeaturestore(
+        featurestore, name, project, user);
     } else {
       featuregroupDTO = Arrays.asList(featuregroupController
-          .getFeaturegroupWithNameVersionAndFeaturestore(featurestore, name, version));
+          .getFeaturegroupWithNameVersionAndFeaturestore(featurestore, name, version, project, user));
     }
     GenericEntity<List<FeaturegroupDTO>> featuregroupGeneric =
         new GenericEntity<List<FeaturegroupDTO>>(featuregroupDTO) {};
@@ -348,17 +386,16 @@ public class FeaturegroupService {
       @PathParam("featuregroupId") Integer featuregroupId,
       @ApiParam(value = "updateMetadata", example = "true")
       @QueryParam("updateMetadata") @DefaultValue("false") Boolean updateMetadata,
-      @ApiParam(value = "updateStats", example = "true")
-      @QueryParam("updateStats") @DefaultValue("false") Boolean updateStats,
       @ApiParam(value = "enableOnline", example = "true")
       @QueryParam("enableOnline") @DefaultValue("false") Boolean enableOnline,
       @ApiParam(value = "disableOnline", example = "true")
       @QueryParam("disableOnline") @DefaultValue("false") Boolean disableOnline,
-      @ApiParam(value = "updateStatsSettings", example = "true")
-      @QueryParam("updateStatsSettings") @DefaultValue("false") Boolean updateStatsSettings,
-      @ApiParam(value = "updateJob") @DefaultValue("false") @QueryParam("updateJob") Boolean updateJob,
-      FeaturegroupDTO featuregroupDTO) throws FeaturestoreException, SQLException {
-
+      @ApiParam(value = "updateStatsConfig", example = "true")
+      @QueryParam("updateStatsConfig") @DefaultValue("false") Boolean updateStatsConfig,
+      @ApiParam(value = "validationType", example = "NONE")
+      @QueryParam("validationType") ValidationType validationType,
+      FeaturegroupDTO featuregroupDTO)
+      throws FeaturestoreException, SQLException, ProvenanceException, ServiceException {
     if(featuregroupDTO == null) {
       throw new IllegalArgumentException("Input JSON for updating Feature Group cannot be null");
     }
@@ -368,13 +405,11 @@ public class FeaturegroupService {
     Featuregroup featuregroup = featuregroupController.getFeaturegroupById(featurestore, featuregroupId);
     FeaturegroupDTO updatedFeaturegroupDTO = null;
     if(updateMetadata) {
-      updatedFeaturegroupDTO = featuregroupController.updateFeaturegroupMetadata(featurestore, featuregroupDTO);
-    }
-    if(updateStats){
-      updatedFeaturegroupDTO = featuregroupController.updateFeaturegroupStats(featurestore, featuregroupDTO);
+      updatedFeaturegroupDTO = featuregroupController.updateFeaturegroupMetadata(project, user, featurestore,
+        featuregroupDTO);
     }
     if(enableOnline && featuregroup.getFeaturegroupType() == FeaturegroupType.CACHED_FEATURE_GROUP &&
-        !featuregroup.getCachedFeaturegroup().isOnlineEnabled()){
+        !(featuregroup.getCachedFeaturegroup().isOnlineEnabled())) {
       updatedFeaturegroupDTO =
           featuregroupController.enableFeaturegroupOnline(featurestore, featuregroupDTO, project, user);
     }
@@ -382,16 +417,14 @@ public class FeaturegroupService {
         featuregroup.getCachedFeaturegroup().isOnlineEnabled()){
       updatedFeaturegroupDTO = featuregroupController.disableFeaturegroupOnline(featuregroup, project, user);
     }
-    if(updateStatsSettings) {
-      updatedFeaturegroupDTO = featuregroupController.updateFeaturegroupStatsSettings(featurestore, featuregroupDTO);
+    if(updateStatsConfig) {
+      updatedFeaturegroupDTO = featuregroupController.updateFeatureGroupStatsConfig(
+        featurestore, featuregroupDTO, project, user);
     }
-    if (updateJob) {
-      updatedFeaturegroupDTO = featuregroupController.updateFeaturegroupJob(featurestore, featuregroupDTO);
+    if(validationType != null) {
+      updatedFeaturegroupDTO = featuregroupController.updateValidationType(featuregroup, validationType, project, user);
     }
-
     if(updatedFeaturegroupDTO != null) {
-      activityFacade.persistActivity(ActivityFacade.EDITED_FEATUREGROUP + updatedFeaturegroupDTO.getName(),
-        project, user, ActivityFlag.SERVICE);
       GenericEntity<FeaturegroupDTO> featuregroupGeneric =
         new GenericEntity<FeaturegroupDTO>(updatedFeaturegroupDTO) {};
       return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(featuregroupGeneric).build();
@@ -423,35 +456,7 @@ public class FeaturegroupService {
     }
   }
   
-  /**
-   * Endpoint for syncing a Hive Table with the Feature Store
-   *
-   * @param featuregroupDTO JSON payload for the new featuregroup
-   * @return a JSON representation of the the created featuregroup
-   */
-  @POST
-  @Path("/sync")
-  @Produces(MediaType.APPLICATION_JSON)
-  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
-  @JWTRequired(acceptedTokens = {Audience.API, Audience.JOB}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
-  @ApiOperation(value = "Synchronize Hive Table with the feature store",
-    response = FeaturegroupDTO.class)
-  public Response syncWithFeaturestore(@Context SecurityContext sc, FeaturegroupDTO featuregroupDTO)
-    throws FeaturestoreException {
-    Users user = jWTHelper.getUserPrincipal(sc);
-    if(featuregroupDTO == null){
-      throw new IllegalArgumentException("Input JSON for creating a new Feature Group cannot be null");
-    }
-    FeaturegroupDTO createdFeaturegroupDTO = featuregroupController.syncHiveTableWithFeaturestore(featurestore,
-      featuregroupDTO, user);
-    activityFacade.persistActivity(ActivityFacade.CREATED_FEATUREGROUP + createdFeaturegroupDTO.getName(),
-      project, user, ActivityFlag.SERVICE);
-    GenericEntity<FeaturegroupDTO> featuregroupGeneric =
-      new GenericEntity<FeaturegroupDTO>(createdFeaturegroupDTO) {};
-    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.CREATED).entity(featuregroupGeneric).build();
-  }
-
-  @ApiOperation( value = "Create or update tags for a featuregroup", response = TagsDTO.class)
+  @ApiOperation( value = "Create or update one tag for a featuregroup", response = TagsDTO.class)
   @PUT
   @Path("/{featuregroupId}/tags/{name}")
   @Consumes(MediaType.APPLICATION_JSON)
@@ -459,37 +464,71 @@ public class FeaturegroupService {
   @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
   @JWTRequired(acceptedTokens={Audience.API, Audience.JOB}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
   @ApiKeyRequired( acceptedScopes = {ApiScope.FEATURESTORE}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
-  public Response putTag(@Context
-                          SecurityContext sc, @Context UriInfo uriInfo,
-                          @ApiParam(value = "Id of the featuregroup", required = true)
-                          @PathParam("featuregroupId") Integer featuregroupId,
-                          @ApiParam(value = "Name of the tag", required = true)
-                          @PathParam("name") String name,
-                          @ApiParam(value = "Value to set for the tag")
-                          @QueryParam("value") String value) throws DatasetException,
-      MetadataException, FeaturestoreException {
+  public Response putTag(@Context SecurityContext sc, @Context UriInfo uriInfo,
+                         @ApiParam(value = "Id of the featuregroup", required = true)
+                         @PathParam("featuregroupId") Integer featuregroupId,
+                         @ApiParam(value = "Name of the tag", required = true) @PathParam("name") String name,
+                         @ApiParam(value = "Value to set for the tag") String value)
+    throws MetadataException, FeaturestoreException, FeatureStoreTagException {
+    
     verifyIdProvided(featuregroupId);
     Users user = jWTHelper.getUserPrincipal(sc);
-
-    Response.Status status = Response.Status.OK;
-    if(tagController.createOrUpdateSingleTag(project, user, featurestore, featuregroupId, name, value)){
-      status = Response.Status.CREATED;
-    }
-
-    Map<String, String> result = tagController.getAll(project, user, featurestore, featuregroupId);
-
+    Featuregroup featuregroup = featuregroupController.getFeaturegroupById(featurestore, featuregroupId);
+    AttachTagResult result = tagController.upsert(project, user, featurestore, featuregroup, name, value);
+    
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.TAGS);
     TagsDTO dto = tagBuilder.build(uriInfo, resourceRequest, project,
-        featurestore.getId(), ResourceRequest.Name.FEATUREGROUPS.name(), featuregroupId, result);
-
+      featurestore.getId(), ResourceRequest.Name.FEATUREGROUPS.name(), featuregroupId, result.getItems());
+    
     UriBuilder builder = uriInfo.getAbsolutePathBuilder();
-    if(status == Response.Status.CREATED) {
+    if(result.isCreated()) {
       return Response.created(builder.build()).entity(dto).build();
     } else {
       return Response.ok(builder.build()).entity(dto).build();
     }
   }
-
+  
+  @ApiOperation( value = "Create or update tags(bulk) for a featuregroup", response = TagsDTO.class)
+  @PUT
+  @Path("/{featuregroupId}/tags")
+  @Consumes(MediaType.APPLICATION_JSON)
+  @Produces(MediaType.APPLICATION_JSON)
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
+  @JWTRequired(acceptedTokens={Audience.API, Audience.JOB}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
+  @ApiKeyRequired( acceptedScopes = {ApiScope.FEATURESTORE}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
+  public Response bulkPutTags(@Context SecurityContext sc, @Context UriInfo uriInfo,
+                              @ApiParam(value = "Id of the featuregroup", required = true)
+                              @PathParam("featuregroupId") Integer featuregroupId,
+                              TagsDTO tags)
+    throws MetadataException, FeaturestoreException, FeatureStoreTagException {
+    
+    verifyIdProvided(featuregroupId);
+    Users user = jWTHelper.getUserPrincipal(sc);
+    Featuregroup featuregroup = featuregroupController.getFeaturegroupById(featurestore, featuregroupId);
+    AttachTagResult result;
+    
+    if(tags.getItems().size() == 0) {
+      result = tagController.upsert(project, user, featurestore, featuregroup, tags.getName(), tags.getValue());
+    } else {
+      Map<String, String> newTags = new HashMap<>();
+      for(TagsDTO tag : tags.getItems()) {
+        newTags.put(tag.getName(), tag.getValue());
+      }
+      result = tagController.upsert(project, user, featurestore, featuregroup, newTags);
+    }
+  
+    ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.TAGS);
+    TagsDTO dto = tagBuilder.build(uriInfo, resourceRequest, project,
+      featurestore.getId(), ResourceRequest.Name.FEATUREGROUPS.name(), featuregroupId, result.getItems());
+    
+    UriBuilder builder = uriInfo.getAbsolutePathBuilder();
+    if(result.isCreated()) {
+      return Response.created(builder.build()).entity(dto).build();
+    } else {
+      return Response.ok(builder.build()).entity(dto).build();
+    }
+  }
+  
   @ApiOperation( value = "Get all tags attached to a featuregroup", response = TagsDTO.class)
   @GET
   @Path("/{featuregroupId}/tags")
@@ -497,17 +536,19 @@ public class FeaturegroupService {
   @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
   @JWTRequired(acceptedTokens={Audience.API, Audience.JOB}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
   @ApiKeyRequired( acceptedScopes = {ApiScope.FEATURESTORE}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
-  public Response getTags(@Context SecurityContext sc,
-      @Context UriInfo uriInfo,
-      @ApiParam(value = "Id of the featuregroup", required = true)
-      @PathParam("featuregroupId") Integer featuregroupId)
-      throws DatasetException, MetadataException, FeaturestoreException {
+  public Response getTags(@Context SecurityContext sc, @Context UriInfo uriInfo,
+                          @ApiParam(value = "Id of the featuregroup", required = true)
+                          @PathParam("featuregroupId") Integer featuregroupId,
+                          @BeanParam TagsExpansionBeanParam tagsExpansionBeanParam)
+    throws DatasetException, MetadataException, FeaturestoreException, FeatureStoreTagException {
+    
     verifyIdProvided(featuregroupId);
     Users user = jWTHelper.getUserPrincipal(sc);
-
-    Map<String, String> result = tagController.getAll(project, user, featurestore, featuregroupId);
+    Featuregroup featuregroup = featuregroupController.getFeaturegroupById(featurestore, featuregroupId);
+    Map<String, String> result = tagController.getAll(project, user, featurestore, featuregroup);
 
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.TAGS);
+    resourceRequest.setExpansions(tagsExpansionBeanParam.getResources());
     TagsDTO dto = tagBuilder.build(uriInfo, resourceRequest, project,
         featurestore.getId(), ResourceRequest.Name.FEATUREGROUPS.name(), featuregroupId, result);
     return Response.status(Response.Status.OK).entity(dto).build();
@@ -520,19 +561,20 @@ public class FeaturegroupService {
   @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
   @JWTRequired(acceptedTokens={Audience.API, Audience.JOB}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
   @ApiKeyRequired( acceptedScopes = {ApiScope.FEATURESTORE}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
-  public Response getTag(@Context SecurityContext sc,
-                          @Context UriInfo uriInfo,
-                          @ApiParam(value = "Id of the featuregroup", required = true)
-                          @PathParam("featuregroupId") Integer featuregroupId,
-                          @ApiParam(value = "Name of the tag", required = true)
-                          @PathParam("name") String name)
-      throws DatasetException, MetadataException, FeaturestoreException {
+  public Response getTag(@Context SecurityContext sc, @Context UriInfo uriInfo,
+                         @ApiParam(value = "Id of the featuregroup", required = true)
+                         @PathParam("featuregroupId") Integer featuregroupId,
+                         @ApiParam(value = "Name of the tag", required = true) @PathParam("name") String name,
+                         @BeanParam TagsExpansionBeanParam tagsExpansionBeanParam)
+    throws DatasetException, MetadataException, FeaturestoreException, FeatureStoreTagException {
+    
     verifyIdProvided(featuregroupId);
     Users user = jWTHelper.getUserPrincipal(sc);
-
-    Map<String, String> result = tagController.getSingle(project, user, featurestore, featuregroupId, name);
+    Featuregroup featuregroup = featuregroupController.getFeaturegroupById(featurestore, featuregroupId);
+    Map<String, String> result = tagController.get(project, user, featurestore, featuregroup, name);
 
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.TAGS);
+    resourceRequest.setExpansions(tagsExpansionBeanParam.getResources());
     TagsDTO dto = tagBuilder.build(uriInfo, resourceRequest, project,
         featurestore.getId(), ResourceRequest.Name.FEATUREGROUPS.name(), featuregroupId, result);
     return Response.status(Response.Status.OK).entity(dto).build();
@@ -546,13 +588,14 @@ public class FeaturegroupService {
   @JWTRequired(acceptedTokens={Audience.API, Audience.JOB}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
   @ApiKeyRequired( acceptedScopes = {ApiScope.FEATURESTORE}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   public Response deleteTags(@Context SecurityContext sc,
-     @ApiParam(value = "Id of the featuregroup", required = true)
-     @PathParam("featuregroupId") Integer featuregroupId)
-      throws DatasetException, MetadataException, FeaturestoreException {
+                             @ApiParam(value = "Id of the featuregroup", required = true)
+                             @PathParam("featuregroupId") Integer featuregroupId)
+    throws DatasetException, MetadataException, FeaturestoreException {
+    
     verifyIdProvided(featuregroupId);
     Users user = jWTHelper.getUserPrincipal(sc);
-
-    tagController.deleteAll(project, user, featurestore, featuregroupId);
+    Featuregroup featuregroup = featuregroupController.getFeaturegroupById(featurestore, featuregroupId);
+    tagController.deleteAll(project, user, featurestore, featuregroup);
 
     return Response.noContent().build();
   }
@@ -565,17 +608,55 @@ public class FeaturegroupService {
   @JWTRequired(acceptedTokens={Audience.API, Audience.JOB}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
   @ApiKeyRequired( acceptedScopes = {ApiScope.FEATURESTORE}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   public Response deleteTag(@Context SecurityContext sc,
-                             @ApiParam(value = "Id of the featuregroup", required = true)
-                             @PathParam("featuregroupId") Integer featuregroupId,
-                             @ApiParam(value = "Name of the tag", required = true)
-                             @PathParam("name") String name)
-      throws DatasetException, MetadataException, FeaturestoreException {
+                            @ApiParam(value = "Id of the featuregroup", required = true)
+                            @PathParam("featuregroupId") Integer featuregroupId,
+                            @ApiParam(value = "Name of the tag", required = true) @PathParam("name") String name)
+    throws DatasetException, MetadataException, FeaturestoreException {
+    
     verifyIdProvided(featuregroupId);
     Users user = jWTHelper.getUserPrincipal(sc);
-
-    tagController.deleteSingle(project, user, featurestore, featuregroupId, name);
+    Featuregroup featuregroup = featuregroupController.getFeaturegroupById(featurestore, featuregroupId);
+    tagController.delete(project, user, featurestore, featuregroup, name);
 
     return Response.noContent().build();
+  }
+
+  @POST
+  @Path("/{featuregroupId}/ingestion")
+  @Consumes(MediaType.APPLICATION_JSON)
+  @Produces(MediaType.APPLICATION_JSON)
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
+  @JWTRequired(acceptedTokens={Audience.API, Audience.JOB}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
+  @ApiKeyRequired( acceptedScopes = {ApiScope.FEATURESTORE}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
+  @ApiOperation(value = "Prepares environment for uploading data to ingest into the feature group",
+      response = IngestionJobDTO.class)
+  public Response ingestionJob(@Context SecurityContext sc,
+                               @Context UriInfo uriInfo,
+                               @ApiParam(value = "Id of the featuregroup", required = true)
+                               @PathParam("featuregroupId") Integer featuregroupId,
+                               IngestionJobConf ingestionJobConf)
+      throws DatasetException, HopsSecurityException, FeaturestoreException, JobException {
+    Users user = jWTHelper.getUserPrincipal(sc);
+    verifyIdProvided(featuregroupId);
+
+    Featuregroup featuregroup = featuregroupController.getFeaturegroupById(featurestore, featuregroupId);
+    Map<String, String> dataOptions = null;
+    if (ingestionJobConf.getDataOptions() != null) {
+      dataOptions = ingestionJobConf.getDataOptions().stream()
+          .collect(Collectors.toMap(OptionDTO::getName, OptionDTO::getValue));
+    }
+
+    Map<String, String> writeOptions = null;
+    if (ingestionJobConf.getWriteOptions() != null) {
+      dataOptions = ingestionJobConf.getWriteOptions().stream()
+          .collect(Collectors.toMap(OptionDTO::getName, OptionDTO::getValue));
+    }
+
+    IngestionJob ingestionJob = fsJobManagerController.setupIngestionJob(project, user, featuregroup,
+        ingestionJobConf.getSparkJobConfiguration(), ingestionJobConf.getDataFormat(),
+        writeOptions, dataOptions);
+    IngestionJobDTO ingestionJobDTO = ingestionJobBuilder.build(uriInfo, project, featuregroup, ingestionJob);
+    return Response.ok().entity(ingestionJobDTO).build();
   }
 
   @Path("/{featuregroupId}/details")
@@ -607,5 +688,72 @@ public class FeaturegroupService {
     partitionResource.setFeatureGroupId(featuregroupId);
     return partitionResource;
   }
-}
 
+  @Path("/{featureGroupId}/statistics")
+  public StatisticsResource statistics(@PathParam("featureGroupId") Integer featureGroupId)
+      throws FeaturestoreException {
+    this.statisticsResource.setProject(project);
+    this.statisticsResource.setFeaturestore(featurestore);
+    this.statisticsResource.setFeatureGroupId(featureGroupId);
+    return statisticsResource;
+  }
+  
+  @Path("/{featureGroupId}/provenance")
+  public ProvArtifactResource provenance(@PathParam("featureGroupId") Integer featureGroupId)
+    throws FeaturestoreException {
+    Dataset targetEndpoint = featurestoreController.getProjectFeaturestoreDataset(featurestore.getProject());
+    this.provenanceResource.setContext(project, targetEndpoint);
+    Featuregroup fg = featuregroupController.getFeaturegroupById(featurestore, featureGroupId);
+    this.provenanceResource.setArtifactId(fg.getName(), fg.getVersion());
+    return provenanceResource;
+  }
+  
+  @Path("/{featureGroupId}/expectations")
+  public FeatureGroupExpectationsResource expectations(@PathParam("featureGroupId") Integer featureGroupId)
+    throws FeaturestoreException {
+    this.featureGroupExpectationsResource.setProject(project);
+    this.featureGroupExpectationsResource.setFeaturestore(featurestore);
+    this.featureGroupExpectationsResource.setFeatureGroup(featureGroupId);
+    return featureGroupExpectationsResource;
+  }
+  
+  @Path("/{featureGroupId}/validations")
+  public FeatureGroupValidationsResource validationResults(@PathParam("featureGroupId") Integer featureGroupId)
+    throws FeaturestoreException {
+    this.featureGroupValidationsResource.setProject(project);
+    this.featureGroupValidationsResource.setFeaturestore(featurestore);
+    this.featureGroupValidationsResource.setFeatureGroupId(featureGroupId);
+    return featureGroupValidationsResource;
+  }
+
+  @Path("/{featureGroupId}/commits")
+  public CommitResource timetravel (
+      @ApiParam(value = "Id of the featuregroup") @PathParam("featureGroupId") Integer featureGroupId)
+      throws FeaturestoreException {
+    this.commitResource.setProject(project);
+    this.commitResource.setFeaturestore(featurestore);
+    this.commitResource.setFeatureGroup(featureGroupId);
+    return commitResource;
+  }
+
+
+  @Path("/{featureGroupId}/keywords")
+  public FeaturestoreKeywordResource keywords (
+      @ApiParam(value = "Id of the featuregroup") @PathParam("featureGroupId") Integer featureGroupId)
+      throws FeaturestoreException {
+    this.featurestoreKeywordResource.setProject(project);
+    this.featurestoreKeywordResource.setFeaturestore(featurestore);
+    this.featurestoreKeywordResource.setFeatureGroupId(featureGroupId);
+    return featurestoreKeywordResource;
+  }
+
+  @Path("/{featureGroupId}/activity")
+  public ActivityResource activity(@ApiParam(value = "Id of the feature group")
+                                     @PathParam("featureGroupId") Integer featureGroupId)
+      throws FeaturestoreException {
+    this.activityResource.setProject(project);
+    this.activityResource.setFeaturestore(featurestore);
+    this.activityResource.setFeatureGroupId(featureGroupId);
+    return this.activityResource;
+  }
+}

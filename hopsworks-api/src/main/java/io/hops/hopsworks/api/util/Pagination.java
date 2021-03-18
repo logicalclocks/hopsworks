@@ -36,6 +36,8 @@ public class Pagination implements PaginationParams {
     this.limit = limit;
   }
 
+  public Pagination() {}
+  
   @Override
   public Integer getOffset() {
     return offset;

@@ -16,9 +16,8 @@
 
 package io.hops.hopsworks.common.featurestore.storageconnectors.hopsfs;
 
-import io.hops.hopsworks.persistence.entity.featurestore.storageconnector.hopsfs.FeaturestoreHopsfsConnector;
+import io.hops.hopsworks.persistence.entity.featurestore.storageconnector.FeaturestoreConnector;
 import io.hops.hopsworks.common.featurestore.storageconnectors.FeaturestoreStorageConnectorDTO;
-import io.hops.hopsworks.common.featurestore.storageconnectors.FeaturestoreStorageConnectorType;
 
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
@@ -34,22 +33,19 @@ public class FeaturestoreHopsfsConnectorDTO extends FeaturestoreStorageConnector
   private String datasetName;
 
   public FeaturestoreHopsfsConnectorDTO() {
-    super(null, null, null, null, null);
   }
-  
-  public FeaturestoreHopsfsConnectorDTO(FeaturestoreHopsfsConnector featurestoreHopsfsConnector) {
-    super(featurestoreHopsfsConnector.getId(), featurestoreHopsfsConnector.getDescription(),
-        featurestoreHopsfsConnector.getName(), featurestoreHopsfsConnector.getFeaturestore().getId(),
-        FeaturestoreStorageConnectorType.HOPSFS);
+
+  public FeaturestoreHopsfsConnectorDTO(FeaturestoreConnector featurestoreConnector) {
+    super(featurestoreConnector);
     this.hopsfsPath = null;
-    this.datasetName = featurestoreHopsfsConnector.getHopsfsDataset().getName();
+    this.datasetName = featurestoreConnector.getHopsfsConnector().getHopsfsDataset().getName();
   }
   
   @XmlElement
   public String getHopsfsPath() {
     return hopsfsPath;
   }
-  
+
   public void setHopsfsPath(String hopsfsPath) {
     this.hopsfsPath = hopsfsPath;
   }

@@ -29,7 +29,7 @@ describe "On #{ENV['OS']}" do
         reset_session
       end
       it "should fail" do
-        get_job(@project[:id], 1, nil)
+        get_job(@project[:id], 1)
         expect_json(errorCode: 200003)
         expect_status(401)
       end
@@ -52,22 +52,22 @@ describe "On #{ENV['OS']}" do
       it "should update a job with different job_config" do
         create_sparktour_job(@project, job_spark_1, "jar", nil)
         #get job, change args and config params and put it
-        get_job(@project[:id], job_spark_1, nil)
+        get_job(@project[:id], job_spark_1)
         config = json_body[:config]
         config[:'spark.executor.memory'] = '2048'
         create_sparktour_job(@project, job_spark_1, "jar", config)
         expect_status(200)
-        get_job(@project[:id], job_spark_1, nil)
+        get_job(@project[:id], job_spark_1)
         expect(json_body[:config][:'spark.executor.memory']).to eq 2048
       end
       it "should get a single spark job" do
         create_sparktour_job(@project, job_spark_1, "jar", nil)
-        get_job(@project[:id], job_spark_1, nil)
+        get_job(@project[:id], job_spark_1)
         expect_status(200)
       end
       it "should get spark job dto with href" do
         create_sparktour_job(@project, job_spark_1, "jar", nil)
-        get_job(@project[:id], job_spark_1, nil)
+        get_job(@project[:id], job_spark_1)
         expect_status(200)
         #validate href
         expect(URI(json_body[:href]).path).to eq "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/jobs/demo_job_1"
@@ -105,7 +105,7 @@ describe "On #{ENV['OS']}" do
       end
       it "should get a single flink job" do
         create_flink_job(@project, job_flink, nil)
-        get_job(@project[:id], job_flink, nil)
+        get_job(@project[:id], job_flink)
         expect_status(200)
       end
       it "should fail to delete job as Data Scientist" do #this test must be the last in this `describe` unit
@@ -115,6 +115,20 @@ describe "On #{ENV['OS']}" do
         create_session(member[:email], "Pass123")
         delete_job(@project[:id], job_spark_1)
         expect_status(403)
+      end
+      it "should fail to create or update spark job if executor memory is less than the minimum" do
+          create_sparktour_job(@project, job_spark_1, "jar", nil)
+          #get job, change args and config params and put it.
+          get_job(@project[:id], job_spark_1)
+          config = json_body[:config]
+          config[:'spark.executor.memory'] = '1023'
+          json_result = create_sparktour_job(@project, job_spark_1, "jar", config)
+          expect_status_details(400)
+          parsed_json = JSON.parse(json_result)
+          expect(parsed_json.key?("errorCode")).to be true
+          expect(parsed_json.key?("errorMsg")).to be true
+          expect(parsed_json.key?("usrMsg")).to be true
+          expect(parsed_json["errorCode"] == 130029).to be true
       end
     end
     context 'with authentication test Flink jobs' do

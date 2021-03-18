@@ -27,6 +27,7 @@ angular.module('hopsWorksApp')
              */
             var self = this;
             //Controller Inputs
+            self.featurestoreCtrl = null;
             self.tgState = false;
             self.projectId = null;
             self.selectedTrainingDataset = null;
@@ -39,6 +40,7 @@ angular.module('hopsWorksApp')
             self.size = "Not fetched"
             self.pythonCode = ""
             self.scalaCode = ""
+            self.tdQuery = null;
             self.attachedTags = [];
 
             /**
@@ -182,6 +184,7 @@ angular.module('hopsWorksApp')
 
                 self.selectedTrainingDataset = trainingDatasets.versionToGroups[trainingDatasets.activeVersion];
 
+                self.featurestoreCtrl = featurestoreCtrl;
                 self.projectId = featurestoreCtrl.projectId;
                 self.projectName = featurestoreCtrl.projectName;
                 self.featurestore = featurestoreCtrl.featurestore;
@@ -204,6 +207,7 @@ angular.module('hopsWorksApp')
                 self.scalaCode = self.getScalaCode();
                 self.fetchSize()
                 self.fetchTags();
+                self.fetchQuery();
             };
 
             $scope.$on('trainingDatasetSelected', function (event, args) {
@@ -263,11 +267,8 @@ angular.module('hopsWorksApp')
              *
              */
             self.viewTrainingDatasetStatistics = function () {
-                ModalService.viewTrainingDatasetStatistics('lg', self.projectId, self.selectedTrainingDataset, self.projectName,
-                    self.featurestore, self.settings).then(
-                    function (success) {
-                    }, function (error) {
-                    });
+                self.featurestoreCtrl.showStatistics = true;
+                self.featurestoreCtrl.tdStatistics = self.selectedTrainingDataset;
             };
 
             /**
@@ -327,5 +328,21 @@ angular.module('hopsWorksApp')
                 self.goToUrl("newtrainingdataset")
             };
 
+            self.fetchQuery = function() {
+                if (!self.selectedTrainingDataset.fromQuery) {
+                    return;
+                }
+                FeaturestoreService.getTdQuery(self.projectId, self.featurestore, self.selectedTrainingDataset).then(
+                    function(success) {
+                        self.tdQuery = success.data.query;
+                    }, 
+                    function(error) {
+                        if (typeof error.data.usrMsg !== 'undefined') {
+                            growl.error(error.data.usrMsg, {title: error.data.errorMsg, ttl: 8000});
+                        } else {
+                            growl.error("", {title: error.data.errorMsg, ttl: 8000});
+                        }
+                    }
+                )
+            };
         }]);
-

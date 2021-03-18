@@ -196,6 +196,7 @@
     <script src="scripts/directives/filemgr/directives.js"></script>
     <script src="scripts/directives/showHidePassword.js"></script>
     <script src="scripts/directives/fileViewer.js"></script>
+    <script src="scripts/directives/fsStatistics.js"></script>
     <script src="scripts/directives/datasetMenu.js"></script>
     <script src="scripts/directives/hwSearch.js"></script>
     <script src="scripts/directives/dropdownFixOverflowHidden.js"></script>
@@ -212,20 +213,15 @@
     <script src="scripts/controllers/mainCtrl.js"></script>
     <script src="scripts/controllers/modalCtrl.js"></script>
     <script src="scripts/controllers/alertCtrl.js"></script>
-    <script src="scripts/controllers/newFieldCtrl.js"></script>
-    <script src="scripts/controllers/newTableCtrl.js"></script>
     <script src="scripts/controllers/profileCtrl.js"></script>
     <script src="scripts/controllers/projectCtrl.js"></script>
     <script src="scripts/controllers/projectCreatorCtrl.js"></script>
     <script src="scripts/controllers/projectSettingsCtrl.js"></script>
     <script src="scripts/controllers/recoverCtrl.js"></script>
-    <script src="scripts/controllers/newlistCtrl.js"></script>
     <script src="scripts/controllers/enterNameCtrl.js"></script>
-    <script src="scripts/controllers/modifyFieldCtrl.js"></script>
     <script src="scripts/controllers/registrationCtrl.js"></script>
     <script src="scripts/controllers/selectFileCtrl.js"></script>
-    <script src="scripts/controllers/selectEnvYmlCtrl.js"></script>
-    <script src="scripts/controllers/attachTemplateCtrl.js"></script>
+    <script src="scripts/controllers/selectEnvImportCtrl.js"></script>
     <script src="scripts/controllers/shareDatasetCtrl.js"></script>
     <script src="scripts/controllers/unshareDatasetCtrl.js"></script>
     <script src="scripts/controllers/viewPublicDatasetCtrl.js"></script>
@@ -236,11 +232,8 @@
     <script src="scripts/controllers/jobUICtrl.js"></script>
     <script src="scripts/controllers/jobArgsCtrl.js"></script>
     <script src="scripts/controllers/executionDetailsCtrl.js"></script>
-    <script src="scripts/controllers/metadataCtrl.js"></script>
-    <script src="scripts/controllers/importTemplateCtrl.js"></script>
     <script src="scripts/controllers/messageCtrl.js"></script>
     <script src="scripts/controllers/sshKeysCtrl.js"></script>
-    <script src="scripts/controllers/detachTemplateCtrl.js"></script>
     <script src="scripts/controllers/inputModalCtrl.js"></script>
     <script src="scripts/controllers/uberCtrl.js"></script>
     <script src="scripts/controllers/kafkaCtrl.js"></script>
@@ -272,17 +265,12 @@
     <script src="scripts/controllers/filemgr/main.js"></script>
     <script src="scripts/controllers/filemgr/selector-controller.js"></script>
     <script src="scripts/controllers/featurestoreCtrl.js"></script>
-    <script src="scripts/controllers/featureSchemaViewContentCtrl.js"></script>
-    <script src="scripts/controllers/featurestoreViewInfoCtrl.js"></script>
+    <script src="scripts/controllers/fsStatisticsCtrl.js"></script>
     <script src="scripts/controllers/featuregroupViewInfoCtrl.js"></script>
     <script src="scripts/controllers/featuregroupPreviewCtrl.js"></script>
-    <script src="scripts/controllers/createNewFeaturegroupVersionCtrl.js"></script>
     <script src="scripts/controllers/selectFeatureTypeCtrl.js"></script>
-    <script src="scripts/controllers/previewFeaturegroupCtrl.js"></script>
     <script src="scripts/controllers/trainingDatasetViewInfoCtrl.js"></script>
-    <script src="scripts/controllers/featuregroupStatisticsCtrl.js"></script>
     <script src="scripts/controllers/featureViewInfoCtrl.js"></script>
-    <script src="scripts/controllers/trainingDatasetStatisticsCtrl.js"></script>
     <script src="scripts/controllers/featurestoreStatisticModalCtrl.js"></script>
     <script src="scripts/controllers/sparkConfigCtrl.js"></script>
     <script src="scripts/controllers/flinkConfigCtrl.js"></script>
@@ -298,8 +286,6 @@
     <script src="scripts/controllers/newTrainingDatasetCtrl.js"></script>
     <script src="scripts/controllers/newStorageConnectorCtrl.js"></script>
     <script src="scripts/controllers/storageConnectorViewInfoCtrl.js"></script>
-    <script src="scripts/controllers/dataValidationCtrl.js"></script>
-    <script src="scripts/controllers/dataValidationModalsCtrl.js"></script>
     <script src="scripts/controllers/dagComposerCtrl.js"></script>
     <script src="scripts/controllers/dagComposerModalsCtrl.js"></script>
     <script src="scripts/controllers/provenanceCtrl.js"></script>
@@ -314,6 +300,8 @@
     <script src="scripts/controllers/selectFromListCtrl.js"></script>
     <script src="scripts/controllers/certsPasswordModalCtrl.js"></script>
     <script src="scripts/controllers/sharedWithCtrl.js"></script>
+    <script src="scripts/controllers/conflictCtrl.js"></script>
+    <script src="scripts/controllers/notebookAttachedJupyterConfigCtrl.js"></script>
     <!-- Services -->
     <script src="scripts/services/AuthInterceptorService.js"></script>
     <script src="scripts/services/AuthService.js"></script>
@@ -322,7 +310,6 @@
     <script src="scripts/services/UtilsService.js"></script>
     <script src="scripts/services/ElasticService.js"></script>
     <script src="scripts/services/AuthGuardService.js"></script>
-    <script src="scripts/services/MetadataService.js"></script>
     <script src="scripts/services/DataSetService.js"></script>
     <script src="scripts/services/ProjectService.js"></script>
     <script src="scripts/services/UserService.js"></script>
@@ -330,17 +317,13 @@
     <script src="scripts/services/TransformRequestService.js"></script>
     <script src="scripts/services/ModalService.js"></script>
     <script src="scripts/services/ActivityService.js"></script>
-    <script src="scripts/services/SecurityQuestionsService.js"></script>
     <script src="scripts/services/MembersService.js"></script>
-    <script src="scripts/services/MetadataActionService.js"></script>
     <script src="scripts/services/ExperimentService.js"></script>
     <script src="scripts/services/TensorBoardService.js"></script>
     <script src="scripts/services/ModelService.js"></script>
     <script src="scripts/services/ServingService.js"></script>
     <script src="scripts/services/JobService.js"></script>
     <script src="scripts/services/RequestService.js"></script>
-    <script src="scripts/services/MetadataRestService.js"></script>
-    <script src="scripts/services/MetadataHelperService.js"></script>
     <script src="scripts/services/StorageService.js"></script>
     <script src="scripts/services/MessageService.js"></script>
     <script src="scripts/services/VariablesService.js"></script>
@@ -359,11 +342,11 @@
     <script src="scripts/services/filemgr/apimiddleware.js"></script>
     <script src="scripts/services/filemgr/filenavigator.js"></script>
     <script src="scripts/services/FeaturestoreService.js"></script>
+    <script src="scripts/services/FsStatisticsService.js"></script>
     <script src="scripts/services/DatasetBrowserService.js"></script>
     <script src="scripts/services/ApiKeyService.js"></script>
-    <script src="scripts/services/DataValidationService.js"></script>
-    <script src="scripts/services/TemplateService.js"></script>
     <script src="scripts/services/PaginationService.js"></script>
+    <script src="scripts/services/ProjectMembershipService.js"></script>
     <!-- Providers -->
     <script src="scripts/providers/filemgr/config.js"></script>
     <!-- Entities -->

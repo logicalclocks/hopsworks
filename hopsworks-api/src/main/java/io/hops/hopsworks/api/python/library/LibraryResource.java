@@ -15,6 +15,7 @@
  */
 package io.hops.hopsworks.api.python.library;
 
+import com.google.common.base.Strings;
 import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.api.filter.Audience;
 import io.hops.hopsworks.api.jwt.JWTHelper;
@@ -23,10 +24,15 @@ import io.hops.hopsworks.api.python.library.search.LibrarySearchBuilder;
 import io.hops.hopsworks.api.python.library.search.LibrarySearchDTO;
 import io.hops.hopsworks.api.util.Pagination;
 import io.hops.hopsworks.common.api.ResourceRequest;
+import io.hops.hopsworks.common.dataset.DatasetController;
+import io.hops.hopsworks.common.hdfs.HdfsUsersController;
 import io.hops.hopsworks.common.python.commands.CommandsController;
 import io.hops.hopsworks.common.python.environment.EnvironmentController;
 import io.hops.hopsworks.common.python.library.LibraryController;
+import io.hops.hopsworks.common.python.library.LibrarySpecification;
+import io.hops.hopsworks.common.python.library.PackageSource;
 import io.hops.hopsworks.common.util.Settings;
+import io.hops.hopsworks.exceptions.DatasetException;
 import io.hops.hopsworks.exceptions.GenericException;
 import io.hops.hopsworks.exceptions.PythonException;
 import io.hops.hopsworks.exceptions.ServiceException;
@@ -46,6 +52,7 @@ import javax.enterprise.context.RequestScoped;
 import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.BeanParam;
+import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
@@ -58,6 +65,8 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
 import javax.ws.rs.core.UriInfo;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.logging.Level;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -69,6 +78,10 @@ public class LibraryResource {
 
   @EJB
   private LibraryController libraryController;
+  @EJB
+  private HdfsUsersController hdfsUsersController;
+  @EJB
+  private DatasetController datasetController;
   @EJB
   private LibraryBuilder librariesBuilder;
   @EJB
@@ -108,7 +121,7 @@ public class LibraryResource {
   public Response get(@BeanParam Pagination pagination,
       @BeanParam LibrariesBeanParam librariesBeanParam,
       @Context UriInfo uriInfo, @Context SecurityContext sc) throws PythonException {
-    environmentController.checkCondaEnabled(project, pythonVersion);
+    environmentController.checkCondaEnabled(project, pythonVersion, true);
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.LIBRARIES);
     resourceRequest.setOffset(pagination.getOffset());
     resourceRequest.setLimit(pagination.getLimit());
@@ -121,7 +134,7 @@ public class LibraryResource {
     return Response.ok().entity(libraryDTO).build();
   }
   
-  @ApiOperation(value = "Get the a python library installed in this environment", response = LibraryDTO.class)
+  @ApiOperation(value = "Get a python library installed in this environment", response = LibraryDTO.class)
   @GET
   @Path("{library}")
   @Produces(MediaType.APPLICATION_JSON)
@@ -130,7 +143,7 @@ public class LibraryResource {
   public Response getByName(@PathParam("library") String library, @BeanParam LibraryExpansionBeanParam expansions,
     @Context UriInfo uriInfo, @Context SecurityContext sc) throws PythonException {
     validatePattern(library);
-    environmentController.checkCondaEnabled(project, pythonVersion);
+    environmentController.checkCondaEnabled(project, pythonVersion, true);
     PythonDep dep = libraryController.getPythonDep(library, project);
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.LIBRARIES);
     if (expansions != null) {
@@ -139,7 +152,6 @@ public class LibraryResource {
     LibraryDTO libraryDTO = librariesBuilder.buildItem(uriInfo, resourceRequest, dep, project);
     return Response.ok().entity(libraryDTO).build();
   }
-
 
   @ApiOperation(value = "Uninstall a python library from the environment")
   @DELETE
@@ -151,14 +163,13 @@ public class LibraryResource {
     throws ServiceException, GenericException, PythonException {
     validatePattern(library);
     Users user = jwtHelper.getUserPrincipal(sc);
-    environmentController.checkCondaEnabled(project, pythonVersion);
-    if (settings.getUnmutablePythonLibraryNames().contains(library)) {
+    environmentController.checkCondaEnabled(project, pythonVersion, true);
+    if (settings.getImmutablePythonLibraryNames().contains(library)) {
       throw new ServiceException(RESTCodes.ServiceErrorCode.ANACONDA_DEP_REMOVE_FORBIDDEN, Level.INFO,
           "library: " + library);
     }
 
     environmentController.checkCondaEnvExists(project, user);
-
     commandsController.deleteCommands(project, library);
     libraryController.uninstallLibrary(project, user, library);
     return Response.noContent().build();
@@ -166,43 +177,47 @@ public class LibraryResource {
 
   @ApiOperation(value = "Install a python library in the environment")
   @POST
-  @Path("{library}")
+  @Consumes(MediaType.APPLICATION_JSON)
   @Produces(MediaType.APPLICATION_JSON)
+  @Path("{library}")
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
-  public Response install(@PathParam("library") String library,
-                          @QueryParam("package_manager") LibraryDTO.PackageManager packageManager,
-                          @QueryParam("version") String version,
-                          @QueryParam("channel") String channel,
+  public Response install(LibrarySpecification librarySpecification,
+                          @PathParam("library") String library,
                           @Context UriInfo uriInfo,
-                          @Context HttpServletRequest req)
-      throws ServiceException, GenericException, PythonException {
-    Users user = jwtHelper.getUserPrincipal(req);
-    if (version == null || version.isEmpty()) {
-      throw new PythonException(RESTCodes.PythonErrorCode.VERSION_NOT_SPECIFIED, Level.FINE);
-    }
-    validatePattern(library);
-    validatePattern(version);
+                          @Context HttpServletRequest req,
+                          @Context SecurityContext sc)
+      throws ServiceException, GenericException, PythonException, DatasetException {
 
-    environmentController.checkCondaEnabled(project, pythonVersion);
-    if (packageManager == null) {
+    Users user = jwtHelper.getUserPrincipal(req);
+    environmentController.checkCondaEnabled(project, pythonVersion, true);
+
+    PackageSource packageSource = librarySpecification.getPackageSource();
+    if (packageSource == null) {
       throw new PythonException(RESTCodes.PythonErrorCode.INSTALL_TYPE_NOT_SUPPORTED, Level.FINE);
     }
-    switch (packageManager) {
+    switch (packageSource) {
       case PIP:
-        //indicate that the library comes from the distribution published in PyPi
-        channel = "pypi";
+        validateLibrary(librarySpecification, library);
+        librarySpecification.setChannelUrl("pypi");
         break;
       case CONDA:
-        if(channel == null) {
-          throw new PythonException(RESTCodes.PythonErrorCode.CONDA_INSTALL_REQUIRES_CHANNEL, Level.FINE);
-        } else {
-          validateChannel(channel);
-        }
+        validateLibrary(librarySpecification, library);
+        break;
+      case EGG:
+      case WHEEL:
+      case REQUIREMENTS_TXT:
+      case ENVIRONMENT_YAML:
+        validateBundledDependency(user, librarySpecification);
+        break;
+      case GIT:
+        validateGitURL(librarySpecification.getDependencyUrl());
         break;
       default:
         throw new PythonException(RESTCodes.PythonErrorCode.INSTALL_TYPE_NOT_SUPPORTED, Level.FINE);
     }
+
+    environmentController.checkCondaEnvExists(project, user);
 
     //TODO account for ongoing operations
     for(PythonDep dep: project.getPythonDepCollection()) {
@@ -211,10 +226,10 @@ public class LibraryResource {
       }
     }
 
-    environmentController.checkCondaEnvExists(project, user);
-  
-    PythonDep dep = libraryController.addLibrary(project, user,
-      CondaInstallType.valueOf(packageManager.name().toUpperCase()), channel, library, version);
+    PythonDep dep = libraryController.installLibrary(project, user,
+        CondaInstallType.valueOf(packageSource.name().toUpperCase()), librarySpecification.getChannelUrl(),
+        library, librarySpecification.getVersion(), librarySpecification.getDependencyUrl(),
+        librarySpecification.getGitBackend(), librarySpecification.getGitApiKey());
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.LIBRARIES);
     LibraryDTO libraryDTO = librariesBuilder.build(uriInfo, resourceRequest, dep, project);
     return Response.created(libraryDTO.getHref()).entity(libraryDTO).build();
@@ -229,13 +244,15 @@ public class LibraryResource {
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
   public Response search(@PathParam("search") String search,
                          @QueryParam("query") String query,
-                         @QueryParam("channel") String channel, @Context UriInfo uriInfo, @Context SecurityContext sc)
+                         @QueryParam("channel") String channel,
+                         @Context UriInfo uriInfo,
+                         @Context SecurityContext sc)
     throws ServiceException, PythonException {
     validatePattern(query);
-    environmentController.checkCondaEnabled(project, pythonVersion);
+    environmentController.checkCondaEnabled(project, pythonVersion, true);
     LibrarySearchDTO librarySearchDTO;
-    LibraryDTO.PackageManager packageManager = LibraryDTO.PackageManager.fromString(search);
-    switch (packageManager) {
+    PackageSource packageSource = PackageSource.fromString(search);
+    switch (packageSource) {
       case CONDA:
         validateChannel(channel);
         librarySearchDTO = librariesSearchBuilder.buildCondaItems(uriInfo, query, project, channel);
@@ -267,6 +284,59 @@ public class LibraryResource {
     Matcher matcher = CHANNEL_PATTERN.matcher(channel);
     if (!matcher.matches()) {
       throw new IllegalArgumentException("Library names should follow the pattern: [a-zA-Z0-9_\\-:/~?&]+");
+    }
+  }
+
+  private void validateLibrary(LibrarySpecification librarySpecification, String library) throws PythonException {
+
+    String version = librarySpecification.getVersion();
+    PackageSource packageSource = librarySpecification.getPackageSource();
+    String channel = librarySpecification.getChannelUrl();
+
+    if(packageSource.equals(PackageSource.CONDA)) {
+      if(channel == null) {
+        throw new PythonException(RESTCodes.PythonErrorCode.CONDA_INSTALL_REQUIRES_CHANNEL, Level.FINE);
+      } else {
+        validateChannel(channel);
+      }
+    }
+
+    validatePattern(library);
+
+    if(!Strings.isNullOrEmpty(version)) {
+      validatePattern(version);
+    }
+  }
+
+  private void validateBundledDependency(Users user, LibrarySpecification librarySpecification)
+      throws DatasetException, PythonException {
+
+    String dependencyUrl = librarySpecification.getDependencyUrl();
+    PackageSource packageSource = librarySpecification.getPackageSource();
+
+    datasetController.checkFileExists(new org.apache.hadoop.fs.Path(dependencyUrl),
+        hdfsUsersController.getHdfsUserName(project, user));
+
+    if(packageSource.equals(PackageSource.EGG) && !dependencyUrl.endsWith(".egg")) {
+      throw new PythonException(RESTCodes.PythonErrorCode.INSTALL_TYPE_NOT_SUPPORTED, Level.FINE,
+          "The library to install is not an .egg file: " + dependencyUrl);
+    } else if(packageSource.equals(PackageSource.WHEEL) && !dependencyUrl.endsWith(".whl")) {
+      throw new PythonException(RESTCodes.PythonErrorCode.INSTALL_TYPE_NOT_SUPPORTED, Level.FINE,
+          "The library to install is not a .whl file: " + dependencyUrl);
+    } else if(packageSource.equals(PackageSource.REQUIREMENTS_TXT) && !dependencyUrl.endsWith("/requirements.txt")) {
+      throw new PythonException(RESTCodes.PythonErrorCode.INSTALL_TYPE_NOT_SUPPORTED, Level.FINE,
+          "The library to install is not a requirements.txt file: " + dependencyUrl);
+    } else if(packageSource.equals(PackageSource.ENVIRONMENT_YAML) && !dependencyUrl.endsWith(".yml")) {
+      throw new PythonException(RESTCodes.PythonErrorCode.INSTALL_TYPE_NOT_SUPPORTED, Level.FINE,
+          "The library to install is not a conda environment.yml file: " + dependencyUrl);
+    }
+  }
+
+  private void validateGitURL(String url) {
+    try {
+      new URL((url));
+    } catch (MalformedURLException e) {
+      throw new IllegalArgumentException("The provided Git URL is not a valid URL");
     }
   }
 }

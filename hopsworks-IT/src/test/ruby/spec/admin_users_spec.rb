@@ -47,12 +47,14 @@ describe "On #{ENV['OS']}" do
     context "with admin authentication and validated user" do
       before :all do
         with_admin_session()
+        @key = create_api_key("admin_user#{random_id_len(4)}", %w(ADMINISTER_USERS))
+        @key_register = create_api_key("admin_user#{random_id_len(4)}", %w(ADMINISTER_USERS_REGISTER))
       end
 
       let(:user) { create_validated_user() }
 
       it "gets the list of all users" do
-        id = user[:id] 
+        id = user[:uid] 
         admin_get_users()
         expect_status(200)
         expect(json_body[:count]).to be > 0
@@ -60,7 +62,7 @@ describe "On #{ENV['OS']}" do
       end
 
       it "gets user by id" do
-        id = user[:id]
+        id = user[:uid]
         admin_get_user_by_id(id)
         expect_status(200)
         expect_json(id: id)
@@ -68,7 +70,7 @@ describe "On #{ENV['OS']}" do
       end
 
       it "updates user's status by id" do
-        id = user[:id]
+        id = user[:uid]
         data = {status: "DEACTIVATED_ACCOUNT"}
         admin_update_user(id, data)
         expect_status(200)
@@ -78,7 +80,7 @@ describe "On #{ENV['OS']}" do
       end
 
       it "updates user's max num projects by id" do
-        id = user[:id]
+        id = user[:uid]
         data = {maxNumProjects: 77}
         admin_update_user(id, data)
         expect_status(200)
@@ -88,7 +90,7 @@ describe "On #{ENV['OS']}" do
       end
 
       it "accepts a verified user by its id" do
-        id = user[:id]
+        id = user[:uid]
         data = {status: "VERIFIED_ACCOUNT"}
         admin_update_user(id, data)
 	      expect_status(200)
@@ -100,7 +102,7 @@ describe "On #{ENV['OS']}" do
       end
 
       it "fails to accept a user with status different than verified" do 
-        id = user[:id]
+        id = user[:uid]
         data = {status: "NEW_MOBILE_ACCOUNT"}
         admin_update_user(id, data)
 	      expect_status(200)
@@ -116,7 +118,7 @@ describe "On #{ENV['OS']}" do
       end
 
       it "rejects user" do
-        id = user[:id]
+        id = user[:uid]
         admin_reject_user(id)
         expect_status(204)
         admin_get_user_by_id(id)
@@ -131,7 +133,7 @@ describe "On #{ENV['OS']}" do
       end
 
       it "resends a confirmation email" do
-        id = user[:id]
+        id = user[:uid]
         data = {status: "NEW_MOBILE_ACCOUNT"}
         admin_update_user(id, data)
 	      expect_status(200)
@@ -140,7 +142,7 @@ describe "On #{ENV['OS']}" do
       end
 
       it "fails to pend user with status other than new account" do
-        id = user[:id]
+        id = user[:uid]
         data = {status: "VERIFIED_ACCOUNT"}
         admin_update_user(id, data)
 	      expect_status(200)
@@ -159,6 +161,58 @@ describe "On #{ENV['OS']}" do
         admin_get_user_groups()
         expect_status(200)
         expect(json_body[:count]).to be > 0
+      end
+
+      it "should register new user" do
+        register_user_as_admin("#{random_id}@email.com", "name", "last", password: "Pass123", maxNumProjects: "5",
+                               status: "ACTIVATED_ACCOUNT")
+        expect_status(201)
+        expect(json_body[:maxNumProjects]).to be == 5
+        expect(json_body[:status]).to be == 2
+        expect(json_body[:password]).to be_nil
+      end
+      it "should register new user with no password" do
+        register_user_as_admin("#{random_id}@email.com", "name", "last", maxNumProjects: "5", status: "ACTIVATED_ACCOUNT")
+        expect_status(201)
+        expect(json_body[:maxNumProjects]).to be == 5
+        expect(json_body[:status]).to be == 2
+        expect(json_body[:password]).not_to be_nil
+      end
+      it "should register new user with no number of projects" do
+        register_user_as_admin("#{random_id}@email.com", "name", "last", status: "ACTIVATED_ACCOUNT")
+        expect_status(201)
+        expect(json_body[:maxNumProjects]).to be == 10
+        expect(json_body[:status]).to be == 2
+        expect(json_body[:password]).not_to be_nil
+      end
+      it "should register new user with no status" do
+        register_user_as_admin("#{random_id}@email.com", "name", "last")
+        expect_status(201)
+        expect(json_body[:maxNumProjects]).to be == 10
+        expect(json_body[:status]).to be == 0
+        expect(json_body[:password]).not_to be_nil
+      end
+      it "should fail to register new user with no name" do
+        register_user_as_admin("#{random_id}@email.com", "", "")
+        expect_status(400)
+      end
+      it "should register new user with api key" do
+        reset_session
+        set_api_key_to_header(@key)
+        register_user_as_admin("#{random_id}@email.com", "name", "last")
+        expect_status(201)
+        expect(json_body[:maxNumProjects]).to be == 10
+        expect(json_body[:status]).to be == 0
+        expect(json_body[:password]).not_to be_nil
+      end
+      it "should register new user with api key scope register" do
+        reset_session
+        set_api_key_to_header(@key_register)
+        register_user_as_admin("#{random_id}@email.com", "name", "last")
+        expect_status(201)
+        expect(json_body[:maxNumProjects]).to be == 10
+        expect(json_body[:status]).to be == 0
+        expect(json_body[:password]).not_to be_nil
       end
     end
   end

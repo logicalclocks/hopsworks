@@ -16,39 +16,31 @@
 
 package io.hops.hopsworks.common.featurestore.query;
 
-import io.hops.hopsworks.common.featurestore.feature.FeatureDTO;
 import org.apache.calcite.sql.JoinType;
-import org.apache.calcite.sql.SqlIdentifier;
-import org.apache.calcite.sql.SqlNode;
-import org.apache.calcite.sql.SqlNodeList;
-import org.apache.calcite.sql.fun.SqlStdOperatorTable;
-import org.apache.calcite.sql.parser.SqlParserPos;
 
-import java.util.Arrays;
 import java.util.List;
 
 public class Join {
   private Query leftQuery;
   private Query rightQuery;
 
-  private List<FeatureDTO> on;
-  private List<FeatureDTO> leftOn;
-  private List<FeatureDTO> rightOn;
+  private List<Feature> on;
+  private List<Feature> leftOn;
+  private List<Feature> rightOn;
   private JoinType joinType;
 
   public Join(Query leftQuery) {
     this.leftQuery = leftQuery;
   }
 
-  public Join(Query leftQuery, Query rightQuery, List<FeatureDTO> on, JoinType joinType) {
+  public Join(Query leftQuery, Query rightQuery, List<Feature> on, JoinType joinType) {
     this.leftQuery = leftQuery;
     this.rightQuery = rightQuery;
     this.on = on;
     this.joinType = joinType;
   }
 
-  public Join(Query leftQuery, Query rightQuery, List<FeatureDTO> leftOn,
-              List<FeatureDTO> rightOn, JoinType joinType) {
+  public Join(Query leftQuery, Query rightQuery, List<Feature> leftOn, List<Feature> rightOn, JoinType joinType) {
     this.leftQuery = leftQuery;
     this.rightQuery = rightQuery;
     this.leftOn = leftOn;
@@ -72,11 +64,11 @@ public class Join {
     this.rightQuery = rightQuery;
   }
 
-  public void setLeftOn(List<FeatureDTO> leftOn) {
+  public void setLeftOn(List<Feature> leftOn) {
     this.leftOn = leftOn;
   }
 
-  public void setRightOn(List<FeatureDTO> rightOn) {
+  public void setRightOn(List<Feature> rightOn) {
     this.rightOn = rightOn;
   }
 
@@ -88,86 +80,19 @@ public class Join {
     this.joinType = joinType;
   }
 
-  public List<FeatureDTO> getOn() {
+  public List<Feature> getOn() {
     return on;
   }
 
-  public void setOn(List<FeatureDTO> on) {
+  public void setOn(List<Feature> on) {
     this.on = on;
   }
 
-  public List<FeatureDTO> getLeftOn() {
+  public List<Feature> getLeftOn() {
     return leftOn;
   }
 
-  public List<FeatureDTO> getRightOn() {
+  public List<Feature> getRightOn() {
     return rightOn;
-  }
-
-  /**
-   * Generate the condition node for the join node. At this stage, primary keys joins are treated as `on` joins.
-   * @return
-   */
-  public SqlNode getCondition() {
-    if (on != null) {
-      return getOnCondition();
-    } else {
-      return getLeftRightCondition();
-    }
-  }
-
-  /**
-   * Iterate over the on list to generate the on condition node
-   * @return
-   */
-  private SqlNode getOnCondition() {
-    if (on.size() > 1) {
-      SqlNodeList conditionList = new SqlNodeList(SqlParserPos.ZERO);
-      for (FeatureDTO f : on) {
-        conditionList.add(generateEqualityCondition(leftQuery.getAs(), rightQuery.getAs(), f, f));
-      }
-      return  SqlStdOperatorTable.AND.createCall(conditionList);
-    } else {
-      return generateEqualityCondition(leftQuery.getAs(), rightQuery.getAs(), on.get(0), on.get(0));
-    }
-  }
-
-  /**
-   * Iterate over the leftOn and rightOn to generate the on condition node
-   * @return
-   */
-  private SqlNode getLeftRightCondition()  {
-    if (leftOn.size() > 1) {
-      SqlNodeList conditionList = new SqlNodeList(SqlParserPos.ZERO);
-      for (int i = 0; i < leftOn.size(); i++) {
-        conditionList.add(generateEqualityCondition(leftQuery.getAs(), rightQuery.getAs(),
-            leftOn.get(i), rightOn.get(i)));
-      }
-      return  SqlStdOperatorTable.AND.createCall(conditionList);
-    } else {
-      return generateEqualityCondition(leftQuery.getAs(), rightQuery.getAs(), leftOn.get(0), rightOn.get(0));
-    }
-  }
-
-  /**
-   * Generate equality node between 2 single feature. The feature name will have the fully qualified domain name.
-   * fg_alias.ft_name
-   * @param leftFgAs
-   * @param rightFgAs
-   * @param leftOn
-   * @param rightOn
-   * @return
-   */
-  private SqlNode generateEqualityCondition(String leftFgAs, String rightFgAs, FeatureDTO leftOn, FeatureDTO rightOn) {
-    SqlIdentifier leftHandside =
-        new SqlIdentifier(Arrays.asList("`" + leftFgAs + "`", "`" + leftOn.getName() + "`"), SqlParserPos.ZERO);
-    SqlIdentifier rightHandside =
-        new SqlIdentifier(Arrays.asList("`" + rightFgAs + "`", "`" + rightOn.getName() + "`"), SqlParserPos.ZERO);
-
-    SqlNodeList equalityList = new SqlNodeList(SqlParserPos.ZERO);
-    equalityList.add(leftHandside);
-    equalityList.add(rightHandside);
-
-    return SqlStdOperatorTable.EQUALS.createCall(equalityList);
   }
 }

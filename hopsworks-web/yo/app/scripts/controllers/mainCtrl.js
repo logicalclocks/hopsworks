@@ -245,6 +245,7 @@ angular.module('hopsWorksApp')
 
             self.versions = [];
             self.hopsworksDocVersion = undefined;
+            $rootScope.hopsworksDocVersion = undefined;
             var getHopsworksVersion = function (versions) {
               for (var i = 0; i < versions.length; i++) {
                   if (versions[i].software === 'hopsworks') {
@@ -254,6 +255,7 @@ angular.module('hopsWorksApp')
                           var index = versions[i].version.lastIndexOf('.');
                           self.hopsworksDocVersion = versions[i].version.substring(0, index);
                       }
+                      $rootScope.hopsworksDocVersion = self.hopsworksDocVersion;
                   }
               }
             }

@@ -16,6 +16,7 @@
 
 package io.hops.hopsworks.api.jobs.executions;
 
+import com.google.common.base.Strings;
 import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.api.filter.Audience;
 import io.hops.hopsworks.api.filter.apiKey.ApiKeyRequired;
@@ -43,6 +44,7 @@ import javax.enterprise.context.RequestScoped;
 import javax.inject.Inject;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.Consumes;
+import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
@@ -152,12 +154,33 @@ public class ExecutionsResource {
     @Context UriInfo uriInfo) throws JobException, GenericException, ServiceException, ProjectException {
     
     Users user = jWTHelper.getUserPrincipal(sc);
-    Execution exec = executionController.start(job, args, user);
+
+    Execution exec;
+    if(!Strings.isNullOrEmpty(job.getJobConfig().getDefaultArgs()) && Strings.isNullOrEmpty(args)) {
+      exec = executionController.start(job, job.getJobConfig().getDefaultArgs(), user);
+    } else {
+      exec = executionController.start(job, args, user);
+    }
+
     UriBuilder uriBuilder = uriInfo.getAbsolutePathBuilder();
     uriBuilder.path(Integer.toString(exec.getId()));
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.EXECUTIONS);
     return Response.created(uriBuilder.build()).entity(executionsBuilder.build(uriInfo, resourceRequest, exec))
       .build();
+  }
+  
+  @ApiOperation(value = "Delete an execution of a job by Id", response = ExecutionDTO.class)
+  @DELETE
+  @Path("{id}")
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
+  @JWTRequired(acceptedTokens={Audience.API, Audience.JOB}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
+  @ApiKeyRequired( acceptedScopes = {ApiScope.JOB}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
+  public Response delete(@ApiParam(value = "execution id", required = true) @PathParam("id") Integer id,
+    @Context UriInfo uriInfo, @Context SecurityContext sc) throws JobException {
+    //If requested execution does not belong to job
+    Execution execution = executionController.authorize(job, id);
+    executionController.delete(execution);
+    return Response.noContent().build();
   }
   
   @ApiOperation(value = "Retrieve log of given execution and type", response = JobLogDTO.class)

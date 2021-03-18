@@ -16,6 +16,7 @@
 package io.hops.hopsworks.api.python.environment;
 
 import io.hops.hopsworks.api.python.command.CommandDTO;
+import io.hops.hopsworks.api.python.conflicts.ConflictDTO;
 import io.hops.hopsworks.api.python.library.LibraryDTO;
 import io.hops.hopsworks.common.api.RestDTO;
 
@@ -25,6 +26,9 @@ import javax.xml.bind.annotation.XmlRootElement;
 public class EnvironmentDTO extends RestDTO<EnvironmentDTO> {
 
   private String pythonVersion;
+  private Boolean pythonConflicts;
+  private Boolean pipSearchEnabled;
+  private ConflictDTO conflicts;
   private String condaChannel;
   private LibraryDTO libraries;
   private CommandDTO commands;
@@ -59,6 +63,30 @@ public class EnvironmentDTO extends RestDTO<EnvironmentDTO> {
 
   public void setCommands(CommandDTO commands) {
     this.commands = commands;
+  }
+
+  public Boolean getPythonConflicts() {
+    return pythonConflicts;
+  }
+
+  public void setPythonConflicts(Boolean pythonConflicts) {
+    this.pythonConflicts = pythonConflicts;
+  }
+
+  public ConflictDTO getConflicts() {
+    return conflicts;
+  }
+
+  public void setConflicts(ConflictDTO conflicts) {
+    this.conflicts = conflicts;
+  }
+
+  public Boolean getPipSearchEnabled() {
+    return pipSearchEnabled;
+  }
+
+  public void setPipSearchEnabled(Boolean pipSearchEnabled) {
+    this.pipSearchEnabled = pipSearchEnabled;
   }
 
   public enum Operation {

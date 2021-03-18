@@ -35,6 +35,8 @@ public class JupyterNotebookConfigTemplate extends JupyterTemplate {
   private final String apiKey;
   private final String gitBackend;
   private final String flinkConfDirectory;
+  private final String flinkLibDirectory;
+  private final String hadoopClasspathGlob;
   private final Boolean requestsVerify;
   private final String domainCATruststore;
   private final String serviceDiscoveryDomain;
@@ -56,6 +58,8 @@ public class JupyterNotebookConfigTemplate extends JupyterTemplate {
     this.apiKey = builder.getApiKey();
     this.gitBackend = builder.getGitBackend();
     this.flinkConfDirectory = builder.getFlinkConfDirectory();
+    this.flinkLibDirectory = builder.getFlinkLibDirectory();
+    this.hadoopClasspathGlob = builder.getHadoopClasspathGlob();
     this.requestsVerify = builder.getRequestsVerify();
     this.domainCATruststore = builder.getDomainCATruststore();
     this.serviceDiscoveryDomain = builder.getServiceDiscoveryDomain();
@@ -119,6 +123,14 @@ public class JupyterNotebookConfigTemplate extends JupyterTemplate {
   
   public String getFlinkConfDirectory() {
     return flinkConfDirectory;
+  }
+  
+  public String getFlinkLibDirectory() {
+    return flinkLibDirectory;
+  }
+  
+  public String getHadoopClasspathGlob() {
+    return hadoopClasspathGlob;
   }
   
   public Boolean getRequestsVerify() {

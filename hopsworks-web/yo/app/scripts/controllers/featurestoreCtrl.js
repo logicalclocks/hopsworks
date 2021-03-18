@@ -91,6 +91,7 @@ angular.module('hopsWorksApp')
             self.hopsfsConnectorType = ""
             self.s3ConnectorType = ""
             self.jdbcConnectorType = ""
+            self.redshiftConnectorType = "";
             self.hopsfsTrainingDatasetType = ""
             self.externalTrainingDatasetType = ""
             self.trainingDatasetType = ""
@@ -107,9 +108,15 @@ angular.module('hopsWorksApp')
             self.queryFeaturestore = $location.search()['featurestore'];
             self.queryFeaturegroup = $location.search()['featureGroup'];
             self.queryTrainingDataset = $location.search()['trainingDataset'];
+            self.queryStorageConnector = $location.search()['storageConnector'];
             self.queryFeature = $location.search()['features'];
             self.queryVersion = $location.search()['version'];
 
+
+            // Statistics
+            self.showStatistics = false;
+            self.fgStatistics = null;
+            self.tdStatistics = null;
 
             /**
              * Boolean parameter in the feature search that indicates whether features inside feature groups should
@@ -286,16 +293,15 @@ angular.module('hopsWorksApp')
                             + "</code>"
                     }
                 }
-            }
 
+            }
             /**
              * Delete a storage connector
              *
              * @param connector the connector to delete
              */
             self.deleteStorageConnector = function (connector) {
-                FeaturestoreService.deleteStorageConnector(self.projectId, self.featurestore, connector.id,
-                    connector.storageConnectorType).then(
+                FeaturestoreService.deleteStorageConnector(self.projectId, self.featurestore, connector.name).then(
                     function (success) {
                         self.getStorageConnectors(self.featurestore);
                         growl.success("Storage connector deleted", {title: 'Success', ttl: 1000});
@@ -355,6 +361,24 @@ angular.module('hopsWorksApp')
                 return deferred.promise;
             };
 
+            
+            var selectStorageConnectorByName = function() {
+                const deferred = $q.defer();
+                if (typeof self.queryStorageConnector !== 'undefined') {
+                    for (var i = 0; i < self.storageConnectors.length; i++){
+                        if (self.storageConnectors[i].name === self.queryStorageConnector) {
+                            self.featurestoreSelectedTab = 4;
+                            deferred.resolve(self.storageConnectors[i]);
+                            break;
+                        }
+                    }
+                } else {
+                    deferred.reject("No select StorageConnector");
+                }
+                return deferred.promise;
+
+            };
+
             var broadcastFeaturegroupSelect = function () {
                 $scope.$broadcast('featuregroupSelected', {
                     featurestoreCtrl: self,
@@ -368,6 +392,7 @@ angular.module('hopsWorksApp')
                     trainingDatasets: self.selectedTrainingDataset,
                     toggle: true });
             };
+
 
             var broadcastFeatureSelect = function () {
                 $scope.$broadcast('featureSelected', {
@@ -426,6 +451,7 @@ angular.module('hopsWorksApp')
                         self.hopsfsConnectorType = self.settings.hopsfsConnectorType
                         self.s3ConnectorType = self.settings.s3ConnectorType
                         self.jdbcConnectorType = self.settings.jdbcConnectorType
+                        self.redshiftConnectorType = self.settings.redshiftConnectorType;
                         self.trainingDatasetType = self.settings.trainingDatasetType
                         self.hopsfsTrainingDatasetType = self.settings.hopsfsTrainingDatasetType
                         self.externalTrainingDatasetType = self.settings.externalTrainingDatasetType
@@ -452,6 +478,11 @@ angular.module('hopsWorksApp')
                 FeaturestoreService.getStorageConnectors(self.projectId, featurestore).then(
                     function (success) {
                         self.storageConnectors = success.data
+                        selectStorageConnectorByName().then(
+                            function (selected) {
+                                self.viewStorageConnectorInfo(selected);
+                            });
+
                         StorageService.store(self.projectId + "_storageconnectors", success.data);
                         self.storageConnectorsLoaded = true
                         self.stopLoading()
@@ -459,10 +490,9 @@ angular.module('hopsWorksApp')
                     function (error) {
                         self.storageConnectorsLoaded = true
                         self.stopLoading()
-                        growl.error(error.data.errorMsg, {
-                            title: 'Failed to fetch the storage connectors for the featurestore',
-                            ttl: 15000
-                        });
+                        var errorMsg = (typeof error.data.usrMsg !== 'undefined')? error.data.usrMsg : msg;
+                        growl.error(errorMsg, {title: 'Failed to fetch the storage connectors for the featurestore',
+                            ttl: 15000});
                     });
             }
 
@@ -1083,7 +1113,7 @@ angular.module('hopsWorksApp')
                     self.quotaChart.render();
                 }
             }
-
+            
             /**
              * Opens the modal to view storage connector information
              *
@@ -1094,6 +1124,12 @@ angular.module('hopsWorksApp')
                     function (success) {
                     }, function (error) {
                     });
+            };
+
+            self.closeStatistics = function() {
+                self.showStatistics = false;
+                self.fgStatistics = null;
+                self.tdStatistics = null;
             };
 
             /**

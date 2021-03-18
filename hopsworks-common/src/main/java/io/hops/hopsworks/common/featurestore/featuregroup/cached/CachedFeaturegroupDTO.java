@@ -19,7 +19,8 @@ package io.hops.hopsworks.common.featurestore.featuregroup.cached;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupDTO;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.Featuregroup;
-import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.cached.Storage;
+import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.cached.TimeTravelFormat;
+import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.cached.ValidationType;
 
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
@@ -33,8 +34,8 @@ import javax.xml.bind.annotation.XmlRootElement;
 public class CachedFeaturegroupDTO extends FeaturegroupDTO {
 
   private Boolean onlineEnabled = false;
-  private Boolean hudiEnabled = false;
-  private Storage defaultStorage;
+  private TimeTravelFormat timeTravelFormat = TimeTravelFormat.NONE;
+  private ValidationType validationType = ValidationType.NONE;
 
   public CachedFeaturegroupDTO() {
     super();
@@ -53,28 +54,26 @@ public class CachedFeaturegroupDTO extends FeaturegroupDTO {
     this.onlineEnabled = onlineEnabled;
   }
 
-  public Storage getDefaultStorage() {
-    return defaultStorage;
+  public TimeTravelFormat getTimeTravelFormat () { return timeTravelFormat; }
+
+  public void setTimeTravelFormat (TimeTravelFormat timeTravelFormat ) { this.timeTravelFormat = timeTravelFormat; }
+
+  @Override
+  public ValidationType getValidationType() {
+    return validationType;
   }
 
-  public void setDefaultStorage(Storage defaultStorage) {
-    this.defaultStorage = defaultStorage;
-  }
-
-  public Boolean getHudiEnabled() {
-    return hudiEnabled;
-  }
-
-  public void setHudiEnabled(Boolean hudiEnabled) {
-    this.hudiEnabled = hudiEnabled;
+  @Override
+  public void setValidationType(ValidationType validationType) {
+    this.validationType = validationType;
   }
 
   @Override
   public String toString() {
     return "CachedFeaturegroupDTO{" +
       ", onlineEnabled=" + onlineEnabled +
-      ", hudiEnabled =" + hudiEnabled +
-      ", defaultStorage=" + defaultStorage +
+      ", timeTravelFormat =" + timeTravelFormat +
+      ", validationType =" + validationType +
       '}';
   }
 }

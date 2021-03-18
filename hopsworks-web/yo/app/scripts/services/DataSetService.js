@@ -90,14 +90,13 @@ angular.module('hopsWorksApp')
                   var previewMode = getQuery(mode, 'mode');
                   return $http.get(baseUrl + getEncodedPath(path) + '?action=blob&expand=inodes' + datasetType + previewMode);
                 },
-                create: function (path, templateId, description, searchable, generateReadme, permission, type) {
-                  var template = getQuery(templateId, 'templateId');
+                create: function (path, description, searchable, generateReadme, permission, type) {
                   var description = getQuery(description, 'description');
                   var searchable = getQuery(searchable, 'searchable');
                   var generateReadme = getQuery(generateReadme, 'generate_readme');
                   var permission = getQuery(permission, 'permission');
                   var datasetType = getQuery(type, 'type');
-                  return $http.post(baseUrl + getEncodedPath(path) + '?action=create' + template + description + searchable + generateReadme + permission + datasetType);
+                  return $http.post(baseUrl + getEncodedPath(path) + '?action=create' + description + searchable + generateReadme + permission + datasetType);
                 },
                 copy: function (path, destinationPath) {
                   var destinationPath = getQuery(getEncodedPath(destinationPath), 'destination_path');
@@ -156,7 +155,8 @@ angular.module('hopsWorksApp')
                 },
                 download: function (path, token, type) {
                   var datasetType = getQuery(type, 'type');
-                  location.href=getPathname() + baseUrl + 'download/' + getEncodedPath(path) + '?token=' + token + datasetType;
+                  location.href=getPathname() + baseUrl + 'download/with_token/' + getEncodedPath(path) + '?token=' +
+                  token + datasetType;
                 },
                 publish: function (path, type) {
                   var datasetType = getQuery(type, 'type');

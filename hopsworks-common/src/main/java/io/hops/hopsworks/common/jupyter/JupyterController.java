@@ -16,6 +16,8 @@
 
 package io.hops.hopsworks.common.jupyter;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.module.jaxb.JaxbAnnotationModule;
 import com.google.common.base.Strings;
 import com.logicalclocks.servicediscoverclient.exceptions.ServiceDiscoveryException;
 import io.hops.hopsworks.common.dao.hdfsUser.HdfsUsersFacade;
@@ -25,6 +27,7 @@ import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.hdfs.DistributedFsService;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
+import io.hops.hopsworks.common.hdfs.xattrs.XAttrsController;
 import io.hops.hopsworks.common.livy.LivyController;
 import io.hops.hopsworks.common.livy.LivyMsg;
 import io.hops.hopsworks.common.security.CertificateMaterializer;
@@ -43,7 +46,9 @@ import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.restutils.RESTCodes;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.io.FileUtils;
+import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.io.IOUtils;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -53,12 +58,15 @@ import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.inject.Inject;
 import javax.ws.rs.client.ClientBuilder;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
+import java.util.Optional;
+import java.util.Arrays;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
@@ -69,6 +77,7 @@ import java.util.logging.Logger;
 public class JupyterController {
 
   private static final Logger LOGGER = Logger.getLogger(JupyterController.class.getName());
+  private static final String NOTEBOOK_JUPYTER_CONFIG_XATTR_NAME = "jupyter_configuration";
 
   @EJB
   private DistributedFsService dfs;
@@ -100,6 +109,8 @@ public class JupyterController {
   private JupyterNbVCSController jupyterNbVCSController;
   @EJB
   private ProjectUtils projectUtils;
+  @EJB
+  private XAttrsController xAttrsController;
 
   @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
   public String convertIPythonNotebook(String hdfsUsername, String notebookPath, Project project, String pyPath,
@@ -112,8 +123,6 @@ public class JupyterController {
     File conversionDir = new File(baseDir, DigestUtils.
         sha256Hex(Integer.toString(ThreadLocalRandom.current().nextInt())));
     conversionDir.mkdir();
-    notebookPath = notebookPath.replace(" ", "\\ ");
-    pyPath = pyPath.replace(" " , "\\ ");
 
     HdfsUsers user = hdfsUsersFacade.findByName(hdfsUsername);
     try{
@@ -137,6 +146,8 @@ public class JupyterController {
           materializeCertificatesLocalCustomDir(user.getUsername(), project.getName(), conversionDir.getAbsolutePath());
       ProcessResult processResult = osProcessExecutor.execute(processDescriptor);
       if (!processResult.processExited() || processResult.getExitCode() != 0) {
+        LOGGER.log(Level.WARNING, "error code: " + processResult.getExitCode(), "Failed to convert "
+            + notebookPath + "\nstderr: " + processResult.getStderr() + "\nstdout: " + processResult.getStdout());
         throw new ServiceException(RESTCodes.ServiceErrorCode.IPYTHON_CONVERT_ERROR,  Level.SEVERE,
             "error code: " + processResult.getExitCode(), "Failed to convert " + notebookPath
             + "\nstderr: " + processResult.getStderr()
@@ -290,34 +301,25 @@ public class JupyterController {
 
   public void versionProgram(Project project, Users user, String sessionKernelId, Path outputPath)
       throws ServiceException {
+  
+    DistributedFileSystemOps udfso = null;
+    try {
+      String username = hdfsUsersController.getHdfsUserName(project, user);
+      udfso = dfs.getDfsOps(username);
+      versionProgram(username, sessionKernelId, outputPath, udfso);
+    } finally {
+      if (udfso != null) {
+        dfs.closeDfsClient(udfso);
+      }
+    }
+  }
 
-    String hdfsUser = hdfsUsersController.getHdfsUserName(project, user);
+  public void versionProgram(String hdfsUser, String sessionKernelId, Path outputPath,
+    DistributedFileSystemOps udfso) throws ServiceException {
     JupyterProject jp = jupyterFacade.findByUser(hdfsUser);
-
     String relativeNotebookPath = null;
     try {
-      JSONArray sessionsArray = new JSONArray(ClientBuilder.newClient()
-          .target("http://" + jupyterManager.getJupyterHost() + ":" + jp.getPort() + "/hopsworks-api/jupyter/" +
-              jp.getPort() + "/api/sessions?token=" + jp.getToken())
-          .request()
-          .method("GET")
-          .readEntity(String.class));
-
-      boolean foundKernel = false;
-      for (int i = 0; i < sessionsArray.length(); i++) {
-        JSONObject session = (JSONObject) sessionsArray.get(i);
-        JSONObject kernel = (JSONObject) session.get("kernel");
-        String kernelId = kernel.getString("id");
-        if (kernelId.equals(sessionKernelId)) {
-          relativeNotebookPath = session.getString("path");
-          foundKernel = true;
-        }
-      }
-
-      if(!foundKernel) {
-        throw new ServiceException(RESTCodes.ServiceErrorCode.JUPYTER_NOTEBOOK_VERSIONING_FAILED,
-            Level.FINE, "failed to find kernel " + sessionKernelId);
-      }
+      relativeNotebookPath = getNotebookRelativeFilePath(hdfsUser, sessionKernelId, udfso);
 
       //Get the content of the notebook should work in both spark and python kernels irregardless of contents manager
       if (!Strings.isNullOrEmpty(relativeNotebookPath)) {
@@ -329,18 +331,11 @@ public class JupyterController {
             .method("GET")
             .readEntity(String.class));
         JSONObject notebookJSON = (JSONObject)notebookContents.get("content");
-        DistributedFileSystemOps udfso = null;
         try {
-          String username = hdfsUsersController.getHdfsUserName(project, user);
-          udfso = dfs.getDfsOps(username);
           udfso.create(outputPath, notebookJSON.toString());
         } catch(IOException e) {
           throw new ServiceException(RESTCodes.ServiceErrorCode.JUPYTER_NOTEBOOK_VERSIONING_FAILED,
               Level.FINE, "failed to save notebook content", e.getMessage(), e);
-        } finally {
-          if (udfso != null) {
-            dfs.closeDfsClient(udfso);
-          }
         }
       }
     } catch(Exception e) {
@@ -349,9 +344,125 @@ public class JupyterController {
     }
   }
 
+  public void attachJupyterConfigurationToNotebook(Users user, String hdfsUsername, Project project, String kernelId)
+      throws ServiceException {
+    DistributedFileSystemOps udfso = null;
+    try {
+      udfso = dfs.getDfsOps(hdfsUsername);
+      String relativeNotebookPath = getNotebookRelativeFilePath(hdfsUsername, kernelId, udfso);
+      JupyterSettings jupyterSettings = jupyterSettingsFacade.findByProjectUser(project, user.getEmail());
+      ObjectMapper objectMapper = new ObjectMapper();
+      objectMapper.registerModule(new JaxbAnnotationModule());
+      JSONObject jupyterSettingsMetadataObj = new JSONObject();
+      jupyterSettingsMetadataObj.put(NOTEBOOK_JUPYTER_CONFIG_XATTR_NAME,
+          objectMapper.writeValueAsString(jupyterSettings));
+      String inodePath = jupyterSettings.getBaseDir() + "/" +
+          relativeNotebookPath;
+      xAttrsController.addStrXAttr(inodePath, NOTEBOOK_JUPYTER_CONFIG_XATTR_NAME,
+          jupyterSettingsMetadataObj.toString(), udfso);
+    } catch (Exception e) {
+      throw new ServiceException(RESTCodes.ServiceErrorCode.ATTACHING_JUPYTER_CONFIG_TO_NOTEBOOK_FAILED,
+          Level.FINE, "Failed to attach jupyter configuration for user: " + user+ ", project" + ": " + project + ", " +
+          "kernelId: " + kernelId, e.getMessage(), e);
+    } finally {
+      dfs.closeDfsClient(udfso);
+    }
+  }
+
+  public String getNotebookRelativeFilePath(String hdfsUser, String sessionKernelId, DistributedFileSystemOps udfso)
+      throws ServiceException {
+    String relativeNotebookPath = null;
+    JupyterProject jp = jupyterFacade.findByUser(hdfsUser);
+    JSONArray sessionsArray = new JSONArray(ClientBuilder.newClient()
+        .target("http://" + jupyterManager.getJupyterHost() + ":" + jp.getPort() + "/hopsworks-api/jupyter/" +
+            jp.getPort() + "/api/sessions?token=" + jp.getToken())
+        .request()
+        .method("GET")
+        .readEntity(String.class));
+
+    boolean foundKernel = false;
+    for (int i = 0; i < sessionsArray.length(); i++) {
+      JSONObject session = (JSONObject) sessionsArray.get(i);
+      JSONObject kernel = (JSONObject) session.get("kernel");
+      String kernelId = kernel.getString("id");
+      if (kernelId.equals(sessionKernelId)) {
+        relativeNotebookPath = session.getString("path");
+        foundKernel = true;
+      }
+    }
+
+    if(!foundKernel) {
+      throw new ServiceException(RESTCodes.ServiceErrorCode.JUPYTER_NOTEBOOK_VERSIONING_FAILED,
+          Level.FINE, "failed to find kernel " + sessionKernelId);
+    }
+
+    return relativeNotebookPath;
+  }
+
+  /**
+   * Gets the NotebookConversion type depending on the kernel of the notebook
+   * @param notebookPath
+   * @return NotebookConversion type
+   * @throws ServiceException
+   */
+  @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
+  public NotebookConversion getNotebookConversionType(String notebookPath, Users user, Project project)
+      throws ServiceException {
+    String projectUsername = hdfsUsersController.getHdfsUserName(project, user);
+    DistributedFileSystemOps udfso = null;
+    Path p = new Path(notebookPath);
+    try {
+      udfso = dfs.getDfsOps(projectUsername);
+      String notebookString;
+      try(FSDataInputStream inStream = udfso.open(p)) {
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        IOUtils.copyBytes(inStream, out, 512);
+        notebookString = out.toString("UTF-8");
+      }
+      JSONObject notebookJSON = new JSONObject(notebookString);
+      String notebookKernel = (String) notebookJSON
+          .getJSONObject("metadata")
+          .getJSONObject("kernelspec")
+          .get("display_name");
+      Optional<NotebookConversion> kernel = NotebookConversion.fromKernel(notebookKernel);
+      if(kernel.isPresent()) {
+        if(kernel.get() == NotebookConversion.PY_JOB || kernel.get() == NotebookConversion.PY) {
+          return kernel.get();
+        } else {
+          throw new ServiceException(RESTCodes.ServiceErrorCode.IPYTHON_CONVERT_ERROR, Level.FINE,
+              "Unsupported kernel: " + kernel.get().name() + ". Conversion to .py is for PySpark " +
+                  "or Python notebooks");
+        }
+      } else {
+        throw new ServiceException(RESTCodes.ServiceErrorCode.IPYTHON_CONVERT_ERROR, Level.FINE,
+            "Unsupported kernel for notebook. Conversion to .py is for PySpark " +
+                "or Python notebooks");
+      }
+    } catch (Exception e) {
+      throw new ServiceException(RESTCodes.ServiceErrorCode.IPYTHON_CONVERT_ERROR, Level.FINE, "Failed to get " +
+          "kernel for notebook.",  e.getMessage(), e);
+    } finally {
+      dfs.closeDfsClient(udfso);
+    }
+  }
+
   public enum NotebookConversion {
-    PY,
-    HTML,
-    PY_JOB
+    PY("PySpark"),
+    HTML("Html"),
+    PY_JOB("Python");
+
+    private String kernel;
+    NotebookConversion(String kernel) {
+      this.kernel = kernel;
+    }
+
+    public static Optional<NotebookConversion> fromKernel(String kernel) {
+      return Arrays.stream(NotebookConversion.values()).filter(k ->
+          k.getKernel().equalsIgnoreCase(kernel)).findFirst();
+    }
+
+    public String getKernel() {
+      return kernel;
+    }
   }
 }

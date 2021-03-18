@@ -24,7 +24,7 @@ import javax.ws.rs.QueryParam;
 
 public class EnvironmentExpansionBeanParam {
   @QueryParam("expand")
-  @ApiParam(value = "ex. expand=commands", allowableValues = "commands, libraries")
+  @ApiParam(value = "ex. expand=commands", allowableValues = "commands, libraries, conflicts")
   private Set<EnvironmentExpansions> expansions;
 
   public EnvironmentExpansionBeanParam(@QueryParam("expand") Set<EnvironmentExpansions> expansions) {

@@ -62,17 +62,7 @@ public class RegisterIT {
     WebElement element = Helpers.waitForElementVisibility(by, driver);
     return element;
   }
-  
-  @Test
-  public void testSecurityAnswerTypeToggle() {
-    By element = By.name("sec_answer");
-    By xpath = By.xpath("(.//input[@name='sec_answer'])/following::span");
-    driver.findElement(element).click();
-    driver.findElement(element).clear();
-    driver.findElement(element).sendKeys("Some answer");
-    Helpers.testTogglePassword(element, xpath, verificationErrors, driver);
-  }
-  
+
   @Test
   public void testEmailConstraint() {
     driver.findElement(By.name("user_email")).sendKeys("user1234@kth.");

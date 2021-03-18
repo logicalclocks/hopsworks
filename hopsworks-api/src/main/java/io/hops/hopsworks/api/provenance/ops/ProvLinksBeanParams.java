@@ -15,14 +15,13 @@
  */
 package io.hops.hopsworks.api.provenance.ops;
 
-import io.hops.hopsworks.common.provenance.ops.ProvLinksParams;
 import io.swagger.annotations.ApiParam;
 
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.QueryParam;
 import java.util.Set;
 
-public class ProvLinksBeanParams implements ProvLinksParams {
+public class ProvLinksBeanParams {
   @QueryParam("filter_by")
   @ApiParam(value = "ex filter_by=APP_ID:app1, filter_by=IN_ARTIFACT:mnist_1, filter_by=OUT_ARTIFACT:mnist_1",
     allowMultiple = true)
@@ -42,7 +41,6 @@ public class ProvLinksBeanParams implements ProvLinksParams {
     this.fullLink = fullLink;
   }
   
-  @Override
   public Set<String> getFilterBy() {
     return filterBy;
   }
@@ -51,7 +49,6 @@ public class ProvLinksBeanParams implements ProvLinksParams {
     this.filterBy = filterBy;
   }
   
-  @Override
   public boolean isOnlyApps() {
     return onlyApps;
   }
@@ -60,7 +57,6 @@ public class ProvLinksBeanParams implements ProvLinksParams {
     this.onlyApps = onlyApps;
   }
   
-  @Override
   public boolean isFullLink() {
     return fullLink;
   }

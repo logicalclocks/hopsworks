@@ -175,7 +175,7 @@ angular.module('hopsWorksApp', [
                         resolve: {
                             auth: ['$q','AuthGuardService',
                                 function ($q, AuthGuardService) {
-                                    return AuthGuardService.guardRegister($q);
+                                    return AuthGuardService.guardSession($q);
                                 }]
                         }
                     })
@@ -185,7 +185,7 @@ angular.module('hopsWorksApp', [
                         resolve: {
                             auth: ['$q','AuthGuardService',
                                 function ($q, AuthGuardService) {
-                                    return AuthGuardService.guardRegister($q);
+                                    return AuthGuardService.guardSession($q);
                                 }]
                         }
                     })
@@ -195,7 +195,7 @@ angular.module('hopsWorksApp', [
                         resolve: {
                             auth: ['$q','AuthGuardService',
                                 function ($q, AuthGuardService) {
-                                    return AuthGuardService.guardRegister($q);
+                                    return AuthGuardService.guardSession($q);
                                 }]
                         }
                     })
@@ -452,16 +452,6 @@ angular.module('hopsWorksApp', [
                           }]
                       }
                     })
-                    .when('/project/:projectID/metadata', {
-                      templateUrl: 'views/metadata.html',
-                      controller: 'ProjectCtrl as projectCtrl',
-                      resolve: {
-                        auth: ['$q', '$route', 'AuthGuardService',
-                          function ($q, $route, AuthGuardService) {
-                            return AuthGuardService.guardProject($q, $route.current.params.projectID);
-                          }]
-                      }
-                    })
                     .when('/project/:projectID/jupyter', {
                       templateUrl: 'views/jupyterDashboard.html',
                       controller: 'ProjectCtrl as projectCtrl',
@@ -521,16 +511,6 @@ angular.module('hopsWorksApp', [
                                 return AuthGuardService.guardProject($q, $route.current.params.projectID);
                             }]
                     }
-                })
-                .when('/project/:projectID/featurestore/datavalidation', {
-                  templateUrl: 'views/dataValidation.html',
-                  controller: 'ProjectCtrl as projectCtrl',
-                  resolve: {
-                    auth: ['$q', '$route', 'AuthGuardService',
-                          function ($q, $route, AuthGuardService) {
-                            return AuthGuardService.guardProject($q, $route.current.params.projectID);
-                          }]
-                  }
                 })
                 .otherwise({
                   redirectTo: '/'

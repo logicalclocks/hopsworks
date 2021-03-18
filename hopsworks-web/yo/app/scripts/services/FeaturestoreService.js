@@ -19,7 +19,7 @@
  * Service for the feature store page
  */
 angular.module('hopsWorksApp')
-        .factory('FeaturestoreService', ['$http', 'TransformRequest', function ($http, TransformRequest) {
+        .factory('FeaturestoreService', ['$http', function ($http) {
             return {
 
                 /**
@@ -207,7 +207,8 @@ angular.module('hopsWorksApp')
 
                 updateFeaturegroupTag: function(projectId, featurestore, featuregroup, name, value) {
                     return $http.put('/api/project/' + projectId + '/featurestores/' +
-                        featurestore.featurestoreId + "/featuregroups/" + featuregroup.id + "/tags/" + name + "?value=" + value);
+                        featurestore.featurestoreId + '/featuregroups/' + featuregroup.id + '/tags/' + name,
+                        value, {headers: {'Content-Type': 'application/json'}});
                 },
 
                 deleteFeaturegroupTag: function(projectId, featurestore, featuregroup, tagName) {
@@ -222,7 +223,8 @@ angular.module('hopsWorksApp')
 
                 updateTrainingDatasetTag: function(projectId, featurestore, td, name, value) {
                     return $http.put('/api/project/' + projectId + '/featurestores/' +
-                        featurestore.featurestoreId + "/trainingdatasets/" + td.id + "/tags/" + name + "?value=" + value);
+                        featurestore.featurestoreId + "/trainingdatasets/" + td.id + "/tags/" + name,
+                        value, {headers: {'Content-Type': 'application/json'}});
                 },
 
                 deleteTrainingDatasetTag: function(projectId, featurestore, td, tagName) {
@@ -316,13 +318,12 @@ angular.module('hopsWorksApp')
                  * @param projectId project where the featuregroup will be created
                  * @param storageConnectorJson the JSON payload
                  * @param featurestore featurestore where the connector will be created
-                 * @param storageConnectorType the type of the storage connector
                  *
                  * @returns {HttpPromise}
                  */
-                createStorageConnector: function(projectId, storageConnectorJson, featurestore, storageConnectorType) {
+                createStorageConnector: function(projectId, storageConnectorJson, featurestore) {
                     return $http.post('/api/project/' + projectId + '/featurestores/' +
-                        featurestore.featurestoreId + "/storageconnectors/" + storageConnectorType,
+                        featurestore.featurestoreId + "/storageconnectors/",
                         JSON.stringify(storageConnectorJson), {headers: {'Content-Type': 'application/json'}});
                 },
 
@@ -332,16 +333,13 @@ angular.module('hopsWorksApp')
                  * @param projectId project where the featuregroup will be created
                  * @param storageConnectorJson the JSON payload
                  * @param featurestore featurestore where the connector will be created
-                 * @param storageConnectorId the id of the connector
-                 * @param storageConnectorType the type of the storage connector
+                 * @param storageConnectorName the name of the connector
                  *
                  * @returns {HttpPromise}
                  */
-                updateStorageConnector: function(projectId, storageConnectorJson, featurestore, storageConnectorType,
-                                                 storageConnectorId) {
+                updateStorageConnector: function(projectId, storageConnectorJson, featurestore, storageConnectorName) {
                     return $http.put('/api/project/' + projectId + '/featurestores/' +
-                        featurestore.featurestoreId + "/storageconnectors/" + storageConnectorType + "/"
-                        + storageConnectorId,
+                        featurestore.featurestoreId + "/storageconnectors/" + storageConnectorName,
                         JSON.stringify(storageConnectorJson), {headers: {'Content-Type': 'application/json'}});
                 },
 
@@ -350,25 +348,12 @@ angular.module('hopsWorksApp')
                  *
                  * @param projectId the project of the featurestore
                  * @param featurestore the featurestore
-                 * @param storageConnectorId the id of the connector
-                 * @param storageConnectorType the type of the storage connector
+                 * @param storageConnectorName the name of the connector
                  * @returns {HttpPromise}
                  */
-                deleteStorageConnector: function(projectId, featurestore, storageConnectorId, storageConnectorType) {
+                deleteStorageConnector: function(projectId, featurestore, storageConnectorName) {
                     return $http.delete('/api/project/' + projectId + '/featurestores/' +
-                        featurestore.featurestoreId + "/storageconnectors/" + storageConnectorType + "/" +
-                        storageConnectorId);
-                },
-                /**
-                 * Sends a POST request to the backend for writing args for featurestore util job to HDFS
-                 *
-                 * @param projectId project of the featurestore
-                 * @param utilArgsJson the JSON payload
-                 * @returns {HttpPromise}
-                 */
-                writeUtilArgstoHdfs: function(projectId, utilArgsJson) {
-                    return $http.post('/api/project/' + projectId + '/featurestores/util',
-                        JSON.stringify(utilArgsJson), {headers: {'Content-Type': 'application/json'}});
+                        featurestore.featurestoreId + "/storageconnectors/" + storageConnectorName);
                 },
                 /**
                  * GET request for the tags that can be attached to featuregroups or training datasets
@@ -378,6 +363,20 @@ angular.module('hopsWorksApp')
                  */
                 getTags: function(query) {
                     return $http.get('/api/tags' + query);
-                }
+                },
+
+                getTdQuery: function(projectId, featureStore, td) {
+                    return $http.get("/api/project/" + projectId + "/featurestores/" + featureStore.featurestoreId + "/trainingdatasets/" + td.id + "/query");
+                },
+
+                constructQuery: function(projectId, queryJson) {
+                    return $http.put("/api/project/" + projectId + "/featurestores/query",
+                        JSON.stringify(queryJson), {headers: {'Content-Type': 'application/json'}});
+                },
+
+                computeTrainingDataset: function(projectId, featureStore, trainingDatasetId, computeJson) {
+                    return $http.post("/api/project/" + projectId + "/featurestores/" + featureStore.featurestoreId + "/trainingdatasets/" + trainingDatasetId + "/compute",
+                        JSON.stringify(computeJson), {headers: {'Content-Type': 'application/json'}});
+                },
             };
           }]);

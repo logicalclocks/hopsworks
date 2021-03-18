@@ -53,6 +53,7 @@ public class ProjectDTO {
   private String projectName;
   private String owner;
   private String description;
+  private String dockerImage;
   private Date retentionPeriod;
   private Date created;
   private boolean archived;
@@ -62,6 +63,8 @@ public class ProjectDTO {
   private Long inodeid;
   private QuotasDTO quotas;
   private String hopsExamples;
+  private boolean isPreinstalledDockerImage;
+  private boolean isOldDockerImage;
 
   public ProjectDTO() {
   }
@@ -73,7 +76,8 @@ public class ProjectDTO {
   }
 
   public ProjectDTO(Project project, Long inodeid, List<String> services,
-      List<ProjectTeam> projectTeam, QuotasDTO quotas, String hopsExamples) {
+      List<ProjectTeam> projectTeam, QuotasDTO quotas, String hopsExamples, boolean isPreinstalledDockerImage,
+                    boolean isOldDockerImage) {
     this.projectId = project.getId();
     this.inodeid = inodeid;
     this.projectName = project.getName();
@@ -82,14 +86,18 @@ public class ProjectDTO {
     this.created = project.getCreated();
     this.archived = project.getArchived();
     this.description = project.getDescription();
+    this.dockerImage = project.getDockerImage();
     this.services = services;
     this.projectTeam = projectTeam;
     this.quotas = quotas;
     this.hopsExamples = hopsExamples;
+    this.isPreinstalledDockerImage = isPreinstalledDockerImage;
+    this.isOldDockerImage = isOldDockerImage;
   }
 
   public ProjectDTO(Project project, Long inodeid, List<String> services,
-      List<ProjectTeam> projectTeam, List<InodeView> datasets) {
+      List<ProjectTeam> projectTeam, List<InodeView> datasets, boolean isPreinstalledDockerImage,
+                    boolean isOldDockerImage) {
     this.projectId = project.getId();
     //the inodeid of the current project comes from hops database
     this.inodeid = inodeid;
@@ -99,14 +107,17 @@ public class ProjectDTO {
     this.created = project.getCreated();
     this.archived = project.getArchived();
     this.description = project.getDescription();
+    this.dockerImage = project.getDockerImage();
     this.services = services;
     this.projectTeam = projectTeam;
     this.datasets = datasets;
+    this.isPreinstalledDockerImage = isPreinstalledDockerImage;
+    this.isOldDockerImage = isOldDockerImage;
   }
 
   public ProjectDTO(Integer projectId, String projectName, String owner,
-      Date retentionPeriod, Date created, boolean archived, String description,
-      List<String> services, List<ProjectTeam> projectTeam) {
+      Date retentionPeriod, Date created, boolean archived, String description, boolean isPreinstalledDockerImage,
+      boolean isOldDockerImage, List<String> services, List<ProjectTeam> projectTeam) {
     this.projectId = projectId;
     this.projectName = projectName;
     this.owner = owner;
@@ -114,6 +125,8 @@ public class ProjectDTO {
     this.created = created;
     this.archived = archived;
     this.description = description;
+    this.isPreinstalledDockerImage = isPreinstalledDockerImage;
+    this.isOldDockerImage = isOldDockerImage;
     this.services = services;
     this.projectTeam = projectTeam;
   }
@@ -198,6 +211,14 @@ public class ProjectDTO {
     this.description = description;
   }
 
+  public String getDockerImage() {
+    return dockerImage;
+  }
+
+  public void setDockerImage(String dockerImage) {
+    this.dockerImage = dockerImage;
+  }
+
   public List<InodeView> getDatasets() {
     return datasets;
   }
@@ -222,13 +243,29 @@ public class ProjectDTO {
     this.hopsExamples = hopsExamples;
   }
 
+  public boolean getIsPreinstalledDockerImage() {
+    return this.isPreinstalledDockerImage;
+  }
+
+  public void setIsPreinstalledDockerImage(boolean isPreinstalledDockerImage) {
+    this.isPreinstalledDockerImage = isPreinstalledDockerImage;
+  }
+
+  public boolean getIsOldDockerImage() {
+    return this.isOldDockerImage;
+  }
+
+  public void setIsOldDockerImage(boolean isOldDockerImage) {
+    this.isOldDockerImage = isOldDockerImage;
+  }
+
   @Override
   public String toString() {
     return "ProjectDTO{" + "projectName=" + projectName + ", owner=" + owner
         + ", description=" + description + ", retentionPeriod="
         + retentionPeriod + ", created=" + created + ", archived="
         + archived + ", services="
-        + services + ", projectTeam=" + projectTeam + '}';
+        + services + ", projectTeam=" + projectTeam +
+        ", isPreinstalledDockerImage=" + isPreinstalledDockerImage + '}';
   }
-
 }

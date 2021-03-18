@@ -26,6 +26,7 @@ import io.hops.hopsworks.common.util.ProcessDescriptor;
 import io.hops.hopsworks.common.util.ProcessResult;
 import io.hops.hopsworks.common.util.ProjectUtils;
 import io.hops.hopsworks.common.util.Settings;
+import io.hops.hopsworks.exceptions.ProjectException;
 import io.hops.hopsworks.exceptions.ServiceException;
 import io.hops.hopsworks.persistence.entity.command.Operation;
 import io.hops.hopsworks.persistence.entity.command.SystemCommand;
@@ -74,22 +75,18 @@ public abstract class DockerRegistryMngrImpl implements DockerRegistryMngr {
   @EJB
   private HttpClient httpClient;
   
-  
   @Override
-  public final void gc() throws IOException, ServiceException {
+  public void gc() throws IOException, ServiceException, ProjectException {
     // 1. Get all conda commands of type REMOVE. Should be only 1 REMOVE per project
-    final List<CondaCommands> condaCommandsRemove =
-        condaCommandFacade.findByStatusAndCondaOp(CondaStatus.NEW,
-            CondaOp.REMOVE);
+    final List<CondaCommands> condaCommandsRemove = condaCommandFacade.findByStatusAndCondaOp(CondaStatus.NEW,
+      CondaOp.REMOVE);
+    LOG.log(Level.FINE, "condaCommandsRemove: " + condaCommandsRemove);
     try {
       for (CondaCommands cc : condaCommandsRemove) {
         // We do not want to remove the base image! Get arguments from command as project may have already been deleted.
         String projectDockerImage = cc.getArg();
         String projectDockerRepoName = projectUtils.getProjectDockerRepoName(projectDockerImage);
-        if (!projectDockerImage
-            .equals(settings.getBaseDockerImagePythonName()) &&
-            !projectDockerImage
-                .equals(settings.getBaseNonPythonDockerImage())) {
+        if (!projectUtils.dockerImageIsPreinstalled(projectDockerImage)) {
           try {
             // 1. Get and delete all the tags for each repository(project)
             List<String> projectTags =
@@ -109,7 +106,7 @@ public abstract class DockerRegistryMngrImpl implements DockerRegistryMngr {
                       cc.getArg(), cc.getOp(),
                       "Could not complete docker registry cleanup: " +
                           ex.getMessage());
-            } catch (ServiceException e) {
+            } catch (ServiceException | ProjectException e) {
               LOG.log(Level.WARNING,
                   "Could not change conda command status to NEW.", e);
             }
@@ -176,18 +173,15 @@ public abstract class DockerRegistryMngrImpl implements DockerRegistryMngr {
             .addCommand(prog)
             .addCommand("delete")
             .addCommand(projectDockerImageNoTags)
-            .addCommand(tag)
             .redirectErrorStream(true)
-            .setWaitTimeout(5, TimeUnit.MINUTES)
+            .setWaitTimeout(1, TimeUnit.MINUTES)
             .build();
   
         ProcessResult processResult =
             osProcessExecutor.execute(processDescriptor);
         if (processResult.getExitCode() != 0) {
           throw new IOException("Could not delete the docker image. Exit code: " +
-              processResult.getExitCode()
-              + " out: " + processResult.getStdout() + "\n err: " +
-              processResult.getStderr());
+              processResult.getExitCode() + " out: " + processResult.getStdout());
         }
       }
     }

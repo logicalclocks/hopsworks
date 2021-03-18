@@ -198,9 +198,9 @@ angular.module('hopsWorksApp')
 
               var internalTourName = '';
               if(uiTourName === 'Deep Learning') {
-                internalTourName = 'Deep_Learning';
+                internalTourName = 'ml';
               } else if(uiTourName === 'Feature Store') {
-                internalTourName = 'featurestore';
+                internalTourName = 'fs';
               } else {
                 internalTourName = uiTourName;
               }
@@ -225,28 +225,6 @@ angular.module('hopsWorksApp')
                           } else {
                               growl.error("", {title: error.data.errorMsg, ttl: 8000});
                           }
-                      }
-              );
-            };
-
-            self.deleteProjectAndDatasets = function (projectId) {
-              self.working[projectId] = true;
-
-              ProjectService.delete({id: projectId}).$promise.then(
-                      function (success) {
-                        growl.success(success.successMessage, {title: 'Success', ttl: 5000});
-                        updateUIAfterChange(false);
-                        if (self.tourService.currentStep_TourOne > -1) {
-                          self.tourService.resetTours();
-                        }
-                        self.working[projectId] = false;
-                      },function (error) {
-                      if (typeof error.data.usrMsg !== 'undefined') {
-                          growl.error(error.data.usrMsg, {title: error.data.errorMsg, ttl: 8000});
-                      } else {
-                          growl.error("", {title: error.data.errorMsg, ttl: 8000});
-                      }
-                        self.working[projectId] = false;
                       }
               );
             };

@@ -41,6 +41,5 @@ package io.hops.hopsworks.persistence.entity.log.operation;
 
 public enum OperationOn {
   Dataset,
-  Project,
-  Schema
+  Project
 }

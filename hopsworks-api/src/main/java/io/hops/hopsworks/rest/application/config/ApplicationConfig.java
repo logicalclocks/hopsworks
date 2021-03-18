@@ -66,7 +66,6 @@ public class ApplicationConfig extends ResourceConfig {
     register(io.hops.hopsworks.api.serving.inference.InferenceResource.class);
     register(io.hops.hopsworks.api.kafka.KafkaResource.class);
     register(io.hops.hopsworks.api.project.MessageService.class);
-    register(io.hops.hopsworks.api.project.MetadataService.class);
     register(io.hops.hopsworks.api.project.ProjectMembersService.class);
     register(io.hops.hopsworks.api.project.ProjectService.class);
     register(io.hops.hopsworks.api.project.RequestService.class);
@@ -91,12 +90,17 @@ public class ApplicationConfig extends ResourceConfig {
     register(io.hops.hopsworks.api.cluster.Monitor.class);
     register(io.hops.hopsworks.api.serving.ServingConfResource.class);
     register(io.hops.hopsworks.api.featurestore.FeaturestoreService.class);
+    register(io.hops.hopsworks.api.tags.TagSchemasResource.class);
+    register(io.hops.hopsworks.api.featurestore.datavalidation.rules.RulesResource.class);
+    register(io.hops.hopsworks.api.featurestore.datavalidation.validations.FeatureGroupValidationsResource.class);
+    register(io.hops.hopsworks.api.featurestore.datavalidation.expectations.fs.FeatureStoreExpectationsResource.class);
+    register(io.hops.hopsworks.api.featurestore.datavalidation.expectations.fg.FeatureGroupExpectationsResource.class);
+    register(io.hops.hopsworks.api.tags.TagSchemasResource.class);
 
     // admin
     register(UsersAdminResource.class);
     register(io.hops.hopsworks.api.admin.SystemAdminService.class);
     register(io.hops.hopsworks.api.admin.ProjectsAdmin.class);
-    register(io.hops.hopsworks.api.admin.llap.LlapAdmin.class);
     register(io.hops.hopsworks.api.admin.hosts.HostsAdminResource.class);
     register(io.hops.hopsworks.api.admin.security.CertificateMaterializerAdmin.class);
     register(io.hops.hopsworks.api.admin.security.CredentialsResource.class);
@@ -122,6 +126,9 @@ public class ApplicationConfig extends ResourceConfig {
     
     //search
     register(io.hops.hopsworks.api.elastic.ElasticResource.class);
+
+    //uncomment to allow Cross-Origin Resource Sharing
+    //register(io.hops.hopsworks.api.filter.AllowCORSFilter.class);
 
     //swagger
     register(io.swagger.jaxrs.listing.ApiListingResource.class);

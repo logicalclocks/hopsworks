@@ -17,11 +17,12 @@
 package io.hops.hopsworks.persistence.entity.featurestore.featuregroup;
 
 import io.hops.hopsworks.persistence.entity.featurestore.Featurestore;
+import io.hops.hopsworks.persistence.entity.featurestore.activity.FeaturestoreActivity;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.cached.CachedFeaturegroup;
+import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.cached.ValidationType;
+import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.datavalidation.FeatureGroupExpectation;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.ondemand.OnDemandFeaturegroup;
-import io.hops.hopsworks.persistence.entity.featurestore.jobs.FeaturestoreJob;
-import io.hops.hopsworks.persistence.entity.featurestore.statistics.FeaturestoreStatistic;
-import io.hops.hopsworks.persistence.entity.featurestore.statistics.columns.StatisticColumn;
+import io.hops.hopsworks.persistence.entity.featurestore.statistics.StatisticsConfig;
 import io.hops.hopsworks.persistence.entity.user.Users;
 
 import javax.persistence.Basic;
@@ -61,6 +62,8 @@ import java.util.Objects;
   @NamedQuery(name = "Featuregroup.findById", query = "SELECT fg FROM Featuregroup fg WHERE fg.id = :id"),
   @NamedQuery(name = "Featuregroup.findByFeaturestore", query = "SELECT fg FROM Featuregroup fg " +
     "WHERE fg.featurestore = :featurestore"),
+  @NamedQuery(name = "Featuregroup.countByFeaturestore", query = "SELECT count(fg.id) FROM Featuregroup fg " +
+        "WHERE fg.featurestore = :featurestore"),
   @NamedQuery(name = "Featuregroup.findByFeaturestoreAndId", query = "SELECT fg FROM Featuregroup fg " +
     "WHERE fg.featurestore = :featurestore AND fg.id = :id"),
   @NamedQuery(name = "Featuregroup.findByFeaturestoreAndNameVersion", query = "SELECT fg FROM Featuregroup fg " +
@@ -68,7 +71,9 @@ import java.util.Objects;
   @NamedQuery(name = "Featuregroup.findByFeaturestoreAndName", query = "SELECT fg FROM Featuregroup fg " +
     "WHERE fg.featurestore = :featurestore AND fg.name = :name"),
   @NamedQuery(name = "Featuregroup.findByFeaturestoreAndNameOrderedByDescVersion", query = "SELECT fg FROM " +
-    "Featuregroup fg WHERE fg.featurestore = :featurestore AND fg.name = :name ORDER BY fg.version DESC")})
+    "Featuregroup fg WHERE fg.featurestore = :featurestore AND fg.name = :name ORDER BY fg.version DESC"),
+  @NamedQuery(name = "Featuregroup.findByFeaturestoreAndExpectations", query = "SELECT fg FROM " +
+          "Featuregroup fg WHERE fg.featurestore = :featurestore AND fg.expectations in :expectationsList")})
 public class Featuregroup implements Serializable {
   private static final long serialVersionUID = 1L;
   @Id
@@ -84,10 +89,6 @@ public class Featuregroup implements Serializable {
   @ManyToOne(optional = false)
   private Featurestore featurestore;
   @Basic(optional = false)
-  @NotNull
-  @Column(name = "hdfs_user_id")
-  private Integer hdfsUserId;
-  @Basic(optional = false)
   @Column(name = "created")
   @Temporal(TemporalType.TIMESTAMP)
   private Date created;
@@ -100,34 +101,9 @@ public class Featuregroup implements Serializable {
   private Integer version;
   @Basic(optional = false)
   @NotNull
-  @Column(name = "desc_stats_enabled")
-  private boolean descStatsEnabled = true;
-  @Basic(optional = false)
-  @NotNull
-  @Column(name = "feat_corr_enabled")
-  private boolean featCorrEnabled = true;
-  @Basic(optional = false)
-  @NotNull
-  @Column(name = "feat_hist_enabled")
-  private boolean featHistEnabled = true;
-  @Basic(optional = false)
-  @NotNull
-  @Column(name = "cluster_analysis_enabled")
-  private boolean clusterAnalysisEnabled = true;
-  @Basic(optional = false)
-  @NotNull
-  @Column(name = "num_bins")
-  private Integer numBins = 5;
-  @Basic(optional = false)
-  @NotNull
-  @Column(name = "num_clusters")
-  private Integer numClusters = 20;
-  @Basic(optional = false)
-  @NotNull
-  @Column(name = "corr_method")
-  private String corrMethod = "pearson";
-  @OneToMany(cascade = CascadeType.ALL, mappedBy = "featuregroup")
-  private Collection<FeaturestoreStatistic> statistics;
+  @Enumerated(EnumType.ORDINAL)
+  @Column(name = "validation_type")
+  private ValidationType validationType = ValidationType.NONE;
   @NotNull
   @Enumerated(EnumType.ORDINAL)
   @Column(name = "feature_group_type")
@@ -138,10 +114,12 @@ public class Featuregroup implements Serializable {
   @JoinColumn(name = "cached_feature_group_id", referencedColumnName = "id")
   @OneToOne
   private CachedFeaturegroup cachedFeaturegroup;
+  @OneToMany(cascade = CascadeType.ALL, mappedBy = "featureGroup")
+  private Collection<FeaturestoreActivity> activities;
+  @OneToOne(cascade = CascadeType.ALL, mappedBy = "featuregroup")
+  private StatisticsConfig statisticsConfig;
   @OneToMany(cascade = CascadeType.ALL, mappedBy = "featuregroup")
-  private Collection<FeaturestoreJob> jobs;
-  @OneToMany(cascade = CascadeType.ALL, mappedBy = "featuregroup")
-  private Collection<StatisticColumn> statisticColumns;
+  private Collection<FeatureGroupExpectation> expectations;
 
   public Featuregroup() { }
 
@@ -177,14 +155,6 @@ public class Featuregroup implements Serializable {
     this.featurestore = featurestore;
   }
 
-  public Integer getHdfsUserId() {
-    return hdfsUserId;
-  }
-
-  public void setHdfsUserId(Integer hdfsUserId) {
-    this.hdfsUserId = hdfsUserId;
-  }
-
   public Date getCreated() {
     return created;
   }
@@ -209,70 +179,6 @@ public class Featuregroup implements Serializable {
     this.version = version;
   }
 
-  public boolean isDescStatsEnabled() {
-    return descStatsEnabled;
-  }
-
-  public void setDescStatsEnabled(boolean descStatsEnabled) {
-    this.descStatsEnabled = descStatsEnabled;
-  }
-
-  public boolean isFeatCorrEnabled() {
-    return featCorrEnabled;
-  }
-
-  public void setFeatCorrEnabled(boolean featCorrEnabled) {
-    this.featCorrEnabled = featCorrEnabled;
-  }
-
-  public boolean isFeatHistEnabled() {
-    return featHistEnabled;
-  }
-
-  public void setFeatHistEnabled(boolean featHistEnabled) {
-    this.featHistEnabled = featHistEnabled;
-  }
-
-  public boolean isClusterAnalysisEnabled() {
-    return clusterAnalysisEnabled;
-  }
-
-  public void setClusterAnalysisEnabled(boolean clusterAnalysisEnabled) {
-    this.clusterAnalysisEnabled = clusterAnalysisEnabled;
-  }
-  
-  public Integer getNumBins() {
-    return numBins;
-  }
-  
-  public void setNumBins(Integer numBins) {
-    this.numBins = numBins;
-  }
-  
-  public Integer getNumClusters() {
-    return numClusters;
-  }
-  
-  public void setNumClusters(Integer numClusters) {
-    this.numClusters = numClusters;
-  }
-  
-  public String getCorrMethod() {
-    return corrMethod;
-  }
-  
-  public void setCorrMethod(String corrMethod) {
-    this.corrMethod = corrMethod;
-  }
-
-  public Collection<FeaturestoreStatistic> getStatistics() {
-    return statistics;
-  }
-
-  public void setStatistics(Collection<FeaturestoreStatistic> statistics) {
-    this.statistics = statistics;
-  }
-  
   public FeaturegroupType getFeaturegroupType() {
     return featuregroupType;
   }
@@ -296,21 +202,37 @@ public class Featuregroup implements Serializable {
   public void setCachedFeaturegroup(CachedFeaturegroup cachedFeaturegroup) {
     this.cachedFeaturegroup = cachedFeaturegroup;
   }
-  
-  public Collection<FeaturestoreJob> getJobs() {
-    return jobs;
-  }
-  
-  public void setJobs(Collection<FeaturestoreJob> jobs) {
-    this.jobs = jobs;
+
+  public StatisticsConfig getStatisticsConfig() {
+    return statisticsConfig;
   }
 
-  public Collection<StatisticColumn> getStatisticColumns() {
-    return statisticColumns;
+  public void setStatisticsConfig(StatisticsConfig statisticsConfig) {
+    this.statisticsConfig = statisticsConfig;
   }
-  
-  public void setStatisticColumns(Collection<StatisticColumn> statisticColumns) {
-    this.statisticColumns = statisticColumns;
+
+  public Collection<FeaturestoreActivity> getActivities() {
+    return activities;
+  }
+
+  public void setActivities(Collection<FeaturestoreActivity> activities) {
+    this.activities = activities;
+  }
+
+  public ValidationType getValidationType() {
+    return validationType;
+  }
+
+  public void setValidationType(ValidationType validationType) {
+    this.validationType = validationType;
+  }
+
+  public Collection<FeatureGroupExpectation> getExpectations() {
+    return expectations;
+  }
+
+  public void setExpectations(Collection<FeatureGroupExpectation> expectations) {
+    this.expectations = expectations;
   }
 
   @Override
@@ -320,28 +242,16 @@ public class Featuregroup implements Serializable {
 
     Featuregroup that = (Featuregroup) o;
 
-    if (descStatsEnabled != that.descStatsEnabled) return false;
-    if (featCorrEnabled != that.featCorrEnabled) return false;
-    if (featHistEnabled != that.featHistEnabled) return false;
-    if (clusterAnalysisEnabled != that.clusterAnalysisEnabled) return false;
     if (!Objects.equals(id, that.id)) return false;
     if (!Objects.equals(name, that.name)) return false;
     if (!Objects.equals(featurestore, that.featurestore)) return false;
-    if (!Objects.equals(hdfsUserId, that.hdfsUserId)) return false;
     if (!Objects.equals(created, that.created)) return false;
     if (!Objects.equals(creator, that.creator)) return false;
     if (!Objects.equals(version, that.version)) return false;
-    if (!Objects.equals(numBins, that.numBins)) return false;
-    if (!Objects.equals(numClusters, that.numClusters)) return false;
-    if (!Objects.equals(corrMethod, that.corrMethod)) return false;
-    if (!Objects.equals(statistics, that.statistics)) return false;
     if (featuregroupType != that.featuregroupType) return false;
-    if (!Objects.equals(onDemandFeaturegroup, that.onDemandFeaturegroup))
-      return false;
-    if (!Objects.equals(cachedFeaturegroup, that.cachedFeaturegroup))
-      return false;
-    if (!Objects.equals(jobs, that.jobs)) return false;
-    return Objects.equals(statisticColumns, that.statisticColumns);
+    if (!Objects.equals(onDemandFeaturegroup, that.onDemandFeaturegroup)) return false;
+    if (!Objects.equals(cachedFeaturegroup, that.cachedFeaturegroup)) return false;
+    return Objects.equals(statisticsConfig, that.statisticsConfig);
   }
 
   @Override
@@ -349,23 +259,13 @@ public class Featuregroup implements Serializable {
     int result = id != null ? id.hashCode() : 0;
     result = 31 * result + (name != null ? name.hashCode() : 0);
     result = 31 * result + (featurestore != null ? featurestore.hashCode() : 0);
-    result = 31 * result + (hdfsUserId != null ? hdfsUserId.hashCode() : 0);
     result = 31 * result + (created != null ? created.hashCode() : 0);
     result = 31 * result + (creator != null ? creator.hashCode() : 0);
     result = 31 * result + (version != null ? version.hashCode() : 0);
-    result = 31 * result + (descStatsEnabled ? 1 : 0);
-    result = 31 * result + (featCorrEnabled ? 1 : 0);
-    result = 31 * result + (featHistEnabled ? 1 : 0);
-    result = 31 * result + (clusterAnalysisEnabled ? 1 : 0);
-    result = 31 * result + (numBins != null ? numBins.hashCode() : 0);
-    result = 31 * result + (numClusters != null ? numClusters.hashCode() : 0);
-    result = 31 * result + (corrMethod != null ? corrMethod.hashCode() : 0);
-    result = 31 * result + (statistics != null ? statistics.hashCode() : 0);
     result = 31 * result + (featuregroupType != null ? featuregroupType.hashCode() : 0);
     result = 31 * result + (onDemandFeaturegroup != null ? onDemandFeaturegroup.hashCode() : 0);
     result = 31 * result + (cachedFeaturegroup != null ? cachedFeaturegroup.hashCode() : 0);
-    result = 31 * result + (jobs != null ? jobs.hashCode() : 0);
-    result = 31 * result + (statisticColumns != null ? statisticColumns.hashCode() : 0);
+    result = 31 * result + (statisticsConfig != null ? statisticsConfig.hashCode() : 0);
     return result;
   }
 }

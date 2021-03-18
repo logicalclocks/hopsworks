@@ -33,6 +33,7 @@ public interface ProvOpsParams {
   
   enum ReturnType {
     LIST,
-    COUNT;
+    COUNT,
+    AGGREGATIONS;
   }
 }

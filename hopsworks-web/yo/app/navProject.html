@@ -250,7 +250,7 @@
     tourtip-offset-vertical="-15"
     ></virtual-step>
   <virtual-step
-    ng-if="projectCtrl.tourService.activeTour === 'deep_learning'"
+    ng-if="projectCtrl.tourService.activeTour === 'ml'"
     id="TourTwo"
     class="ng-scope"
     tourtip="Click Next to navigate to Jupyter and follow the Deep Learning tour!"
@@ -263,7 +263,7 @@
     tourtip-offset-horizontal="-13"
     ></virtual-step>
   <virtual-step
-          ng-if="projectCtrl.tourService.activeTour === 'featurestore' && projectCtrl.tourService.currentStep_TourNine === -1"
+          ng-if="projectCtrl.tourService.activeTour === 'fs' && projectCtrl.tourService.currentStep_TourNine === -1"
           id="TourTwo"
           class="ng-scope"
           tourtip="Click Next to navigate to the Feature Store service and follow the Feature Store tour"
@@ -281,7 +281,7 @@
       post-tour="closeTour()"
       ng-if="projectCtrl.loadedView && projectCtrl.loadedProjectData && projectCtrl.tourService.showTips">
   <virtual-step
-          ng-if="projectCtrl.tourService.activeTour === 'featurestore'"
+          ng-if="projectCtrl.tourService.activeTour === 'fs'"
           id="TourTwo"
           class="ng-scope"
           tourtip="Features and feature groups are typically computed by jobs. In the 'Jobs' tab you can create and view jobs in your project."

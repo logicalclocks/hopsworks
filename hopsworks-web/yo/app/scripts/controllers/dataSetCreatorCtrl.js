@@ -47,8 +47,8 @@
 
 
 angular.module('hopsWorksApp')
-        .controller('DataSetCreatorCtrl', ['$cookies', '$uibModalInstance', 'DataSetService', 'MetadataActionService', '$routeParams', 'growl', 'path', 'datasetType', 'isDataset',
-          function ($cookies, $uibModalInstance, DataSetService, MetadataActionService, $routeParams, growl, path, datasetType, isDataset) {
+        .controller('DataSetCreatorCtrl', ['$cookies', '$uibModalInstance', 'DataSetService', '$routeParams', 'growl', 'VariablesService', 'ModalService', 'path', 'datasetType', 'isDataset',
+          function ($cookies, $uibModalInstance, DataSetService, $routeParams, growl, VariablesService, ModalService, path, datasetType, isDataset) {
 
             var self = this;
             self.path = path;
@@ -56,9 +56,7 @@ angular.module('hopsWorksApp')
             self.working = false;
             self.datasets = [];
             self.isDataset = isDataset;
-            self.selectedTemplate = {};
-            self.temps = [{'temp': "temp"}];
-            self.dataSet = {'name': "", 'description': undefined, 'template': "", 'searchable': true, 'generateReadme': true};
+            self.dataSet = {'name': "", 'description': undefined, 'searchable': true, 'generateReadme': true};
             var pId = $routeParams.projectID;
             var dataSetService = DataSetService(pId);
             var defaultPermissions = 'READ_ONLY';
@@ -68,43 +66,48 @@ angular.module('hopsWorksApp')
             self.permission['EDITABLE_BY_OWNERS'] = 'Data owners can edit ';
             self.permission['EDITABLE'] = 'Everyone can edit ';
 
-            self.templates = [];
+            self.datasetNameValidator = {regex: undefined, reservedWords: undefined};
+            self.subdirNameValidator = {regex: undefined, reservedWords: undefined};
+            VariablesService.getFilenameRegex("dataset").then(
+              function (success) {
+                  self.datasetNameValidator = success.data;
+                  self.datasetNameValidator.regex = new RegExp(self.datasetNameValidator.regex, 'i');
+              });
+            self.getRegex = function () {
+                if (self.path) {
+                    return self.subdirNameValidator;
+                } else {
+                    return self.datasetNameValidator;
+                }
+            };
 
-            self.regex = /^(?!.*?__|.*?&|.*? |.*?\/|.*\\|.*?\?|.*?\*|.*?:|.*?\||.*?'|.*?\"|.*?<|.*?>|.*?%|.*?\(|.*?\)|.*?\;|.*?#).*$/;
-
-            MetadataActionService.fetchTemplates($cookies.get('email'))
-                    .then(function (response) {
-                      if (response.board != undefined && response.board !== null && response.status !== "ERROR") {
-                        var temps = JSON.parse(response.board);
-                        angular.forEach(temps.templates, function (value, key) {
-                          self.templates.push(value);
-                        });
-                      }
-                    }, function (error) {
-                      console.log("ERROR " + JSON.stringify(error));
-                    });
+            var showError = function (error, msg, id) {
+              var errorMsg = (typeof error.data.usrMsg !== 'undefined')? error.data.usrMsg : error.data.errorMsg;
+              var refId = typeof id === "undefined"? 444:id;
+              growl.error(errorMsg, {title: msg, ttl: 5000, referenceId: refId});
+            };
 
             var createDataSetDir = function (dataSet) {
               self.working = true;
-              dataSetService.create(dataSet.name, dataSet.template, dataSet.description, dataSet.searchable,  dataSet.generateReadme, undefined, self.datasetType)
+              dataSetService.create(dataSet.name, dataSet.description, dataSet.searchable,  dataSet.generateReadme, undefined, self.datasetType)
                       .then(function (success) {
                         self.working = false;
                         $uibModalInstance.close(success);
                       },function (error) {
                         self.working = false;
-                        growl.error(error.data.usrMsg, {title: 'Error', ttl: 5000, referenceId: 444});
+                        showError(error, "Error");
                       });
             };
 
             var createTopLevelDataSet = function (dataSet) {
               self.working = true;
-              dataSetService.create(dataSet.name, dataSet.template, dataSet.description, dataSet.searchable, dataSet.generateReadme, self.selectedPermission)
+              dataSetService.create(dataSet.name, dataSet.description, dataSet.searchable, dataSet.generateReadme, self.selectedPermission)
                       .then(function (success) {
                         self.working = false;
                         $uibModalInstance.close(success);
                       },function (error) {
                         self.working = false;
-                        growl.error(error.data.usrMsg, {title: 'Error', ttl: 5000, referenceId: 444});
+                        showError(error, "Error");
                       });
             };
 
@@ -113,7 +116,6 @@ angular.module('hopsWorksApp')
             };
 
             self.saveDataSetDir = function () {
-              self.dataSet.template = self.selectedTemplate.id;
               if (self.path) {
                 //Assign it to new var to avoid showing the 
                 var newDS = angular.copy(self.dataSet);

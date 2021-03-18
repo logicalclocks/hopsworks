@@ -16,9 +16,8 @@
 
 package io.hops.hopsworks.common.featurestore.storageconnectors.jdbc;
 
-import io.hops.hopsworks.persistence.entity.featurestore.storageconnector.jdbc.FeaturestoreJdbcConnector;
+import io.hops.hopsworks.persistence.entity.featurestore.storageconnector.FeaturestoreConnector;
 import io.hops.hopsworks.common.featurestore.storageconnectors.FeaturestoreStorageConnectorDTO;
-import io.hops.hopsworks.common.featurestore.storageconnectors.FeaturestoreStorageConnectorType;
 
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
@@ -34,15 +33,12 @@ public class FeaturestoreJdbcConnectorDTO extends FeaturestoreStorageConnectorDT
   private String arguments;
 
   public FeaturestoreJdbcConnectorDTO() {
-    super(null, null, null, null, null);
   }
 
-  public FeaturestoreJdbcConnectorDTO(FeaturestoreJdbcConnector featurestoreJdbcConnector) {
-    super(featurestoreJdbcConnector.getId(), featurestoreJdbcConnector.getDescription(),
-        featurestoreJdbcConnector.getName(), featurestoreJdbcConnector.getFeaturestore().getId(),
-        FeaturestoreStorageConnectorType.JDBC);
-    this.connectionString = featurestoreJdbcConnector.getConnectionString();
-    this.arguments = featurestoreJdbcConnector.getArguments();
+  public FeaturestoreJdbcConnectorDTO(FeaturestoreConnector featurestoreConnector) {
+    super(featurestoreConnector);
+    this.connectionString = featurestoreConnector.getJdbcConnector().getConnectionString();
+    this.arguments = featurestoreConnector.getJdbcConnector().getArguments();
   }
 
   @XmlElement

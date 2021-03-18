@@ -19,6 +19,21 @@ require 'json'
 describe "On #{ENV['OS']}" do
   after(:all) { clean_all_test_projects(spec: "kafka") }
   describe 'kafka' do
+    describe "Kafka cluster related information" do
+      context 'with valid project and kafka service enabled' do
+        before :all do
+          with_valid_project
+        end
+
+        it "should be able to get kafka cluster info" do
+          json_result = get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/kafka/clusterinfo"
+          expect_status_details(200)
+          clusterinfo = JSON.parse(json_result)
+          expect(clusterinfo["brokers"][0].split(//).last(4).join).to eql("9091")
+        end
+      end
+    end
+
     describe "kafka create/delete topics and schemas" do
 
       context 'with valid project and kafka service enabled' do
@@ -137,6 +152,36 @@ describe "On #{ENV['OS']}" do
         topic = get_topic
         delete_topic(project.id, topic)
         expect_status(204)
+      end
+
+      it "should be able to share the topic with another project and get the schema" do
+        with_kafka_topic(@project[:id])
+        org_project = get_project
+
+        # create the target project
+        target_project = create_project
+        topic = get_topic
+        share_topic(org_project, topic, target_project)
+        expect_status(201)
+
+        # Check that the topic has been shared correctly
+        get_shared_topics(target_project.id)
+        expect(json_body[:items].count).to eq 1
+
+        # Get the topic's schema from the target_project
+        get_topic_subject_details(target_project, topic)
+        expect_status(200)
+      end
+      it "should not be able to get the schema of a non-shared topic" do
+        with_kafka_topic(@project[:id])
+
+        # create the target project
+        target_project = create_project
+        topic = get_topic
+
+        # Get the topic's schema from the target_project
+        get_topic_subject_details(target_project, topic)
+        expect_status(404)
       end
     end
 

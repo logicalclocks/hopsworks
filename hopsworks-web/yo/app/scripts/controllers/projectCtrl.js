@@ -67,15 +67,42 @@ angular.module('hopsWorksApp')
             self.cloak = true;
             self.isClosed = true;
             self.versions = [];
-
             self.role = "";
-
             self.endpoint = '...';
 
             self.disableTours = function() {
                 $rootScope.showTourTips = false;
                 self.tourService.disableTourTips();
             };
+
+            self.projectDangerActions = [
+                {
+                    "action":"delete",
+                    "title":"Delete Project",
+                    "description":"Once you delete a project, there is no going back. Please be certain."
+                }
+            ]
+
+            self.handleProjectDangerActions = function (action) {
+                switch (action) {
+                    case "delete":
+                        ModalService.confirm('md', 'Confirm Delete',
+                            'Are you sure that you want to delete ' + self.currentProject.projectName +
+                            '?. This action will delete all the project data and there is no going back, please be' +
+                            ' sure.')
+                            .then(function (success) {
+                               ProjectService.delete({id: self.projectId}).$promise.then(function (success){
+                                   $location.path('/')
+                               }, function (error){
+                                   growl.error("", {title: error.data.errorMsg, ttl: 8000});
+                               });
+                               growl.info("Deleting project...", {title: 'Deleting', ttl: 12000})
+                            }, function (error) {})
+                        break;
+                    default:
+                        //do nothing
+                }
+            }
 
             // We could instead implement a service to get all the available types but this will do it for now
             if ($rootScope.isDelaEnabled) {
@@ -130,11 +157,11 @@ angular.module('hopsWorksApp')
               } else if (angular.equals(self.currentProject.projectName
                       .substr(0, self.tourService.deepLearningProjectPrefix.length),
                       self.tourService.deepLearningProjectPrefix)) {
-                self.tourService.setActiveTour('deep_learning');
+                self.tourService.setActiveTour('ml');
               } else if (angular.equals(self.currentProject.projectName
                       .substr(0, self.tourService.featurestoreProjectPrefix.length),
                   self.tourService.featurestoreProjectPrefix)) {
-                  self.tourService.setActiveTour('featurestore');
+                  self.tourService.setActiveTour('fs');
               }
 
               // Angular adds '#' symbol to the url when click on the home logo
@@ -199,7 +226,6 @@ angular.module('hopsWorksApp')
                       self.loadedProjectData = true
                   }
               );
-
             };
 
             self.pageSize = 8;
@@ -353,23 +379,9 @@ angular.module('hopsWorksApp')
               self.enabling = true;
               PythonService.enabled(self.projectId).then(
                   function (success) {
-                      var version = success.data.count > 0? success.data.items[0].pythonVersion : "0.0";
-                      // Check if jupyter is installed
-                      PythonService.getLibrary(self.projectId, version,"hdfscontents").then(
-                          function(success) {
-                              self.goToUrl('jupyter');
-                          },
-                          function(error) {
-                              ModalService.confirm('sm', 'Install Jupyter first', 'Make sure Jupyter is installed in your project environment')
-                              .then(function (success) {
-                                  self.goToUrl('python');
-                              }, function (error) {
-                                  self.goToUrl('jupyter');
-                              });
-                          }
-                      );
+                      self.goToUrl('jupyter');
                   }, function (error) {
-                      if (self.currentProject.projectName.startsWith("demo_deep_learning")) {
+                      if (self.currentProject.projectName.startsWith("demo_ml")) {
                           self.goToUrl('jupyter');
                       } else {
                           ModalService.confirm('sm', 'Enable Anaconda First', 'You need to enable Anaconda before running Jupyter!')
@@ -397,7 +409,6 @@ angular.module('hopsWorksApp')
             };
 
             self.goToPython = function () {
-              self.toggleKibanaNavBar();
               self.goToUrl('python');
             };
 
@@ -433,10 +444,6 @@ angular.module('hopsWorksApp')
               $location.path($location.path() + '/' + name);
             };
 
-            self.goToMetadataDesigner = function () {
-              self.goToUrl('metadata');
-            };
-
             /**
              * Checks if the file has been accepted before opening.
              * @param dataset
@@ -450,7 +457,8 @@ angular.module('hopsWorksApp')
               } else {
                   var msg = 'Do you want to accept this dataset and add it to this project?';
                   if (dataset.datasetType === 'FEATURESTORE') {
-                      msg = msg + '<br> This will also accept and add the Training Dataset to this project.'
+                      msg = msg + '<br> This will also accept and add the Training Dataset and Statistics to this' +
+                          ' project.'
                   }
                   ModalService.confirmShare('sm', 'Accept Shared Dataset?', msg)
                         .then(function (success) {

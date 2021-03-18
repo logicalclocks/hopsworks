@@ -161,22 +161,22 @@
                       total-items="jobsCtrl.totalItems"
                       ng-class="{'active':$index === jobsCtrl.selectedJobs[job.name]['index']}"
                       ng-init="jobsCtrl.initJobs(job, $index)">
-                      <td id="{{job.name}}" ng-click="jobsCtrl.toggle(job, $index);">
+                      <td id="{{job.name}}" ng-click="jobsCtrl.toggle(job, $index);" style="background-color:#ddd; padding: 20px 8px 8px 8px; box-shadow: inset 0px 10px 0px #f1efee;">
                         {{job.name}}
                       </td>
-                      <td ng-click="jobsCtrl.toggle(job, $index);">
+                      <td ng-click="jobsCtrl.toggle(job, $index);" style="background-color:#ddd; padding: 20px 8px 8px 8px; box-shadow: inset 0px 10px 0px #f1efee;">
                         {{job.creationTime| date:'medium'}}
                       </td>
-                      <td ng-click="jobsCtrl.toggle(job, $index);">
+                      <td ng-click="jobsCtrl.toggle(job, $index);" style="background-color:#ddd; padding: 20px 8px 8px 8px; box-shadow: inset 0px 10px 0px #f1efee;">
                         {{job.jobType}}
                       </td>
-                      <td ng-click="jobsCtrl.toggle(job, $index);">
+                      <td ng-click="jobsCtrl.toggle(job, $index);" style="background-color:#ddd; padding: 20px 8px 8px 8px; box-shadow: inset 0px 10px 0px #f1efee;">
                         {{job.creator.firstname}} {{job.creator.lastname}}
                       </td>
-                      <td ng-click="jobsCtrl.toggle(job, $index);">
+                      <td ng-click="jobsCtrl.toggle(job, $index);" style="background-color:#ddd; padding: 20px 8px 8px 8px; box-shadow: inset 0px 10px 0px #f1efee;">
                         {{job.running}}
                       </td>
-                      <td>
+                      <td style="background-color:#ddd; padding: 20px 8px 8px 8px; box-shadow: inset 0px 10px 0px #f1efee;">
                         <div class="btn-group"  role="group">
                           <button
                                 uib-tooltip="Run"
@@ -225,7 +225,7 @@
                       </td>
                     </tr>
                   <!-- Executions -->
-                  <tr dir-paginate-end style="background: white">
+                  <tr dir-paginate-end style="background: white; box-shadow: inset 0px 0px 0px 4px #ddd;">
                     <td style="padding:0px;" colspan="12">
                       <div
                            ng-if="jobsCtrl.executions.hasOwnProperty(job.name) && !jobsCtrl.executionsEmpty(jobsCtrl.executions[job.name])"
@@ -286,6 +286,11 @@
                              <span
                                      ng-if="execution.state === 'INITIALIZING'"
                                      style="color: #0066bb ">
+                                {{jobsCtrl.toTitleCase(execution.state)}}
+                            </span>
+                              <span
+                                      ng-if="execution.state === 'CONVERTING_NOTEBOOK'"
+                                      style="color: #0066bb ">
                                 {{jobsCtrl.toTitleCase(execution.state)}}
                             </span>
                                   <span
@@ -412,7 +417,7 @@
                                       uib-tooltip="Real-time logs"
                                       ng-if="job.jobType === 'PYTHON'"
                                       ng-disabled = "execution.state === 'INITIALIZING'"
-                                      type="button" class="btn btn-default fa fa-refresh"
+                                      type="button" class="btn btn-default fa fa-eye"
                                       ng-click="jobsCtrl.showExecutionUI(execution);$event.stopPropagation();">
                               </button>
 
@@ -428,6 +433,12 @@
                                       ng-disabled="jobsCtrl.isRunningState(execution.state)"
                                       type="button" class="btn btn-default fa fa-file-text" style="color:#d9534f"
                                       ng-click="jobsCtrl.getLog(job.name, execution.id, 'err');$event.stopPropagation();">
+                              </button>
+
+                              <button
+                                      uib-tooltip="Delete run"
+                                      ng-click="jobsCtrl.deleteExecution(job.name, execution.id);$event.stopPropagation();"
+                                      class="btn btn-danger fa fa-trash">
                               </button>
 
                             </div>
@@ -511,7 +522,7 @@
       ></virtual-step>
     <virtual-step
       class="ng-scope"
-      tourtip="Click Run to give input arguments (default empty) and run your job!"
+      tourtip="Click Run to run your job!"
       tourtip-step="1"
       tourtip-element="#buttonRunJob"
       tourtip-placement="bottom"
@@ -521,10 +532,10 @@
   </tour>
     <tour class="ng-scope" step="jobsCtrl.tourService.currentStep_TourNine"
           post-tour="closeTour()"
-          ng-if="jobsCtrl.tourService.activeTour === 'featurestore'
+          ng-if="jobsCtrl.tourService.activeTour === 'fs'
           && jobsCtrl.tourService.showTips && !projectCtrl.loading && !getAllJobsStatusIsPending ">
       <virtual-step
-              ng-if="jobsCtrl.tourService.activeTour === 'featurestore'"
+              ng-if="jobsCtrl.tourService.activeTour === 'fs'"
               class="ng-scope"
               tourtip="The tour includes a sample job that does feature engineering and creates some example feature groups,
             this job typically takes 5-15 minutes depending on how busy the cluster is.

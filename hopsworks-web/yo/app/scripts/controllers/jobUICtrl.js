@@ -312,45 +312,18 @@ angular.module('hopsWorksApp')
                 getAppId(kibanaUIInt);
             };
             self.grafanaUI = function () {
-              startLoading("Loading Grafana UI...");
               getAppId(grafanaUIInt);
             };
-            var grafanaUIInt = function () {
-              JobService.getAppInfo(self.projectId, self.appId).then(
-                      function (success) {
-                        var info = success.data;
-                        var appid = info.appId;
-                        var startTime = info.startTime;
-                        var finishTime = info.endTime;
-                        //nbExecutors=;
-                        if (info.now) {
-                          self.ui = "/hopsworks-api/grafana/dashboard/script/spark.js?app="
-                                  + appid + "&maxExecutorId="
-                                  + info.nbExecutors + "&from="
-                                  + startTime;
-                        } else {
-                          self.ui = "/hopsworks-api/grafana/dashboard/script/spark.js?app="
-                                  + appid + "&maxExecutorId="
-                                  + info.nbExecutors + "&from="
-                                  + startTime + "&to="
-                                  + finishTime;
-                        }
-                        self.current = "grafanaUI";
-                        var iframe = document.getElementById('ui_iframe');
-                        if (iframe !== null) {
-                          iframe.src = $sce.trustAsResourceUrl(self.ui);
-                        }
-                        $timeout(stopLoading(), 1000);
-                      }, function (error) {
 
-                      if (typeof error.data.usrMsg !== 'undefined') {
-                          growl.error(error.data.usrMsg, {title: error.data.errorMsg, ttl: 8000});
-                      } else {
-                          growl.error("", {title: error.data.errorMsg, ttl: 8000});
-                      }
-                stopLoading();
-              });
+            var grafanaUIInt = function () {
+              self.ui = "/hopsworks-api/grafana/d/spark/spark?var-applicationId=" + self.appId
+              self.current = "grafanaUI";
+              var iframe = document.getElementById('ui_iframe');
+              if (iframe !== null) {
+                iframe.src = $sce.trustAsResourceUrl(self.ui);
+              }
             };
+
             self.tfUI = function (tfSession) {
               startLoading("Loading Tensorboard...");
               getAppId(tensorboardDummy);

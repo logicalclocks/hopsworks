@@ -16,12 +16,14 @@
 
 package io.hops.hopsworks.common.featurestore.trainingdatasets;
 
+import io.hops.hopsworks.common.featurestore.FeaturestoreEntityDTO;
+import io.hops.hopsworks.common.featurestore.feature.TrainingDatasetFeatureDTO;
+import io.hops.hopsworks.common.featurestore.query.QueryDTO;
+import io.hops.hopsworks.common.featurestore.statistics.StatisticsConfigDTO;
+import io.hops.hopsworks.common.featurestore.storageconnectors.FeaturestoreStorageConnectorDTO;
 import io.hops.hopsworks.common.featurestore.trainingdatasets.split.TrainingDatasetSplitDTO;
 import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.TrainingDataset;
 import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.TrainingDatasetType;
-import io.hops.hopsworks.common.featurestore.FeaturestoreEntityDTO;
-import io.hops.hopsworks.common.featurestore.feature.FeatureDTO;
-import io.hops.hopsworks.common.featurestore.storageconnectors.FeaturestoreStorageConnectorType;
 
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
@@ -37,40 +39,39 @@ import java.util.stream.Collectors;
 public class TrainingDatasetDTO extends FeaturestoreEntityDTO {
   
   private String dataFormat;
+  private Boolean coalesce;
   private TrainingDatasetType trainingDatasetType;
   // set defaults so old clients don't get broken
   private List<TrainingDatasetSplitDTO> splits = new ArrayList<>();
   private Long seed = null;
 
-  private Integer storageConnectorId; // Need to know which storage connector to use it
-  // ID + type would be unique. However momentarily keep also the name, until we switch to
-  // rest api v2 with expansion on the storage controller.
-  private String storageConnectorName;
-  private FeaturestoreStorageConnectorType storageConnectorType;
+  private FeaturestoreStorageConnectorDTO storageConnector;
 
   // This is here for the frontend. The frontend uses a rest call to get the total size of
   // a subdirectory - the rest call requires the inode id.
   private Long inodeId;
 
+  private QueryDTO queryDTO;
+
+  private Boolean fromQuery;
+  private List<TrainingDatasetFeatureDTO> features;
+
   public TrainingDatasetDTO() {
   }
 
   public TrainingDatasetDTO(TrainingDataset trainingDataset) {
-    super(trainingDataset.getFeaturestore().getId(),
-      trainingDataset.getName(),
-      trainingDataset.getCreated(),
-      trainingDataset.getCreator(), trainingDataset.getVersion(),
-      (List) trainingDataset.getStatistics(), (List) trainingDataset.getJobs(),
-      trainingDataset.getId());
+    super(trainingDataset.getFeaturestore().getId(), trainingDataset.getName(), trainingDataset.getCreated(),
+      trainingDataset.getCreator(), trainingDataset.getVersion(), trainingDataset.getId(),
+        new StatisticsConfigDTO(trainingDataset.getStatisticsConfig()));
     setDescription(trainingDataset.getDescription());
-    setFeatures(trainingDataset.getFeatures().stream().map(tdf -> new FeatureDTO(tdf.getName(),
-      tdf.getType(), tdf.getDescription(), tdf.getPrimary(), false, null)).collect(Collectors.toList()));
     this.dataFormat = trainingDataset.getDataFormat();
+    this.coalesce = trainingDataset.getCoalesce();
     this.trainingDatasetType = trainingDataset.getTrainingDatasetType();
     this.splits =
       trainingDataset.getSplits().stream().map(tds -> new TrainingDatasetSplitDTO(tds.getName(), tds.getPercentage()))
         .collect(Collectors.toList());
     this.seed = trainingDataset.getSeed();
+    this.fromQuery = trainingDataset.isQuery();
   }
   
   @XmlElement
@@ -82,28 +83,20 @@ public class TrainingDatasetDTO extends FeaturestoreEntityDTO {
     this.dataFormat = dataFormat;
   }
 
-  public Integer getStorageConnectorId() {
-    return storageConnectorId;
+  public Boolean getCoalesce() {
+    return coalesce;
   }
 
-  public void setStorageConnectorId(Integer storageConnectorId) {
-    this.storageConnectorId = storageConnectorId;
+  public void setCoalesce(Boolean coalesce) {
+    this.coalesce = coalesce;
   }
 
-  public String getStorageConnectorName() {
-    return storageConnectorName;
+  public FeaturestoreStorageConnectorDTO getStorageConnector() {
+    return storageConnector;
   }
 
-  public void setStorageConnectorName(String storageConnectorName) {
-    this.storageConnectorName = storageConnectorName;
-  }
-
-  public FeaturestoreStorageConnectorType getStorageConnectorType() {
-    return storageConnectorType;
-  }
-
-  public void setStorageConnectorType(FeaturestoreStorageConnectorType storageConnectorType) {
-    this.storageConnectorType = storageConnectorType;
+  public void setStorageConnector(FeaturestoreStorageConnectorDTO storageConnector) {
+    this.storageConnector = storageConnector;
   }
 
   public Long getInodeId() {
@@ -142,7 +135,31 @@ public class TrainingDatasetDTO extends FeaturestoreEntityDTO {
   public void setSeed(Long seed) {
     this.seed = seed;
   }
-  
+
+  public QueryDTO getQueryDTO() {
+    return queryDTO;
+  }
+
+  public void setQueryDTO(QueryDTO queryDTO) {
+    this.queryDTO = queryDTO;
+  }
+
+  public List<TrainingDatasetFeatureDTO> getFeatures() {
+    return features;
+  }
+
+  public void setFeatures(List<TrainingDatasetFeatureDTO> features) {
+    this.features = features;
+  }
+
+  public Boolean getFromQuery() {
+    return fromQuery;
+  }
+
+  public void setFromQuery(Boolean fromQuery) {
+    this.fromQuery = fromQuery;
+  }
+
   @Override
   public String toString() {
     return "TrainingDatasetDTO{" +
@@ -150,9 +167,6 @@ public class TrainingDatasetDTO extends FeaturestoreEntityDTO {
       ", trainingDatasetType=" + trainingDatasetType +
       ", splits=" + splits +
       ", seed=" + seed +
-      ", storageConnectorId=" + storageConnectorId +
-      ", storageConnectorName='" + storageConnectorName + '\'' +
-      ", storageConnectorType=" + storageConnectorType +
       ", inodeId=" + inodeId +
       '}';
   }

@@ -42,6 +42,7 @@ import io.hops.hopsworks.common.api.RestDTO;
 import io.hops.hopsworks.persistence.entity.user.Users;
 
 import javax.xml.bind.annotation.XmlRootElement;
+import java.util.Date;
 
 @XmlRootElement
 public class UserProfileDTO extends RestDTO<UserProfileDTO> {
@@ -51,7 +52,6 @@ public class UserProfileDTO extends RestDTO<UserProfileDTO> {
   private String lastname;
   private String email;
   private String username;
-  private String phoneNumber;
   private String accountType;
   private Boolean twoFactor;
   private Integer toursState;
@@ -59,6 +59,7 @@ public class UserProfileDTO extends RestDTO<UserProfileDTO> {
   private Integer maxNumProjects;
   private Integer numCreatedProjects;
   private Integer numActiveProjects;
+  private Date activated;
 
   public UserProfileDTO() {
   }
@@ -69,7 +70,6 @@ public class UserProfileDTO extends RestDTO<UserProfileDTO> {
     this.lastname = user.getLname();
     this.email = user.getEmail();
     this.username = user.getUsername();
-    this.phoneNumber = user.getMobile();
     this.accountType = user.getMode().toString();
     this.twoFactor = user.getTwoFactor();
     this.toursState = user.getToursState();
@@ -77,6 +77,7 @@ public class UserProfileDTO extends RestDTO<UserProfileDTO> {
     this.maxNumProjects = user.getMaxNumProjects();
     this.numCreatedProjects = user.getNumCreatedProjects();
     this.numActiveProjects = user.getNumActiveProjects();
+    this.activated = user.getActivated();
   }
   
   public Integer getId() {
@@ -109,14 +110,6 @@ public class UserProfileDTO extends RestDTO<UserProfileDTO> {
 
   public void setEmail(String email) {
     this.email = email;
-  }
-
-  public String getPhoneNumber() {
-    return phoneNumber;
-  }
-
-  public void setPhoneNumber(String phoneNumber) {
-    this.phoneNumber = phoneNumber;
   }
 
   public String getAccountType() {
@@ -181,5 +174,13 @@ public class UserProfileDTO extends RestDTO<UserProfileDTO> {
   
   public void setUsername(String username) {
     this.username = username;
+  }
+
+  public Date getActivated() {
+    return activated;
+  }
+
+  public void setActivated(Date activated) {
+    this.activated = activated;
   }
 }

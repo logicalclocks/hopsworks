@@ -46,13 +46,12 @@ module CondaHelper
   #the registry url and port should not change, if they do fix the tests
   @@registry = "registry.service.consul:4443"
 
-  def wait_for
-    timeout = 600
+  def wait_for(timeout=600, error_msg="Timed out waiting for Anaconda to finish.")
     start = Time.now
     x = yield
     until x
       if Time.now - start > timeout
-        raise "Timed out waiting for Anaconda to finish. Timeout #{timeout} sec"
+        raise "#{error_msg} Timeout #{timeout} sec"
       end
       sleep(1)
       x = yield
@@ -74,11 +73,29 @@ module CondaHelper
     end
   end
 
+  def upload_wheel
+      chmod_local_dir("#{ENV['PROJECT_DIR']}".gsub("/hopsworks", ""), 701, false)
+      chmod_local_dir("#{ENV['PROJECT_DIR']}", 777, true)
+      copy_from_local("#{ENV['PROJECT_DIR']}/hopsworks-IT/src/test/ruby/spec/auxiliary/lark_parser-0.10.1-py2.py3-none-any.whl",
+                      "/Projects/#{@project[:projectname]}/Resources/lark_parser-0.10.1-py2.py3-none-any.whl", @user[:username],
+                      "#{@project[:projectname]}__Resources", 750, "#{@project[:projectname]}")
+  end
+
   def upload_yml
-    chmod_local_dir("#{ENV['PROJECT_DIR']}".gsub("/hopsworks", ""), 701, false)
-    chmod_local_dir("#{ENV['PROJECT_DIR']}", 777, true)
-    copy_from_local("#{ENV['PROJECT_DIR']}/hopsworks-IT/src/test/ruby/spec/auxiliary/python3.6.yml",
+      copy_from_local("#{ENV['PROJECT_DIR']}/hopsworks-IT/src/test/ruby/spec/auxiliary/python3.7.yml",
                     "/Projects/#{@project[:projectname]}/Resources/environment_cpu.yml", @user[:username],
+                    "#{@project[:projectname]}__Resources", 750, "#{@project[:projectname]}")
+  end
+
+  def upload_requirements
+      copy_from_local("#{ENV['PROJECT_DIR']}/hopsworks-IT/src/test/ruby/spec/auxiliary/requirements.txt",
+                    "/Projects/#{@project[:projectname]}/Resources/requirements.txt", @user[:username],
+                    "#{@project[:projectname]}__Resources", 750, "#{@project[:projectname]}")
+  end
+
+  def upload_environment
+      copy_from_local("#{ENV['PROJECT_DIR']}/hopsworks-IT/src/test/ruby/spec/auxiliary/environment.yml",
+                    "/Projects/#{@project[:projectname]}/Resources/environment.yml", @user[:username],
                     "#{@project[:projectname]}__Resources", 750, "#{@project[:projectname]}")
   end
 
@@ -87,6 +104,10 @@ module CondaHelper
     Open3.popen3(cmd) do |_, stdout, _, _|
       JSON.parse(stdout.read)
     end
+  end
+
+  def get_project_env_by_id(id)
+    PythonEnvironment.find_by(project_id: "#{id}")
   end
 
   def check_if_img_exists_locally(docker_image_name)
@@ -98,12 +119,23 @@ module CondaHelper
     delete "#{ENV['HOPSWORKS_API']}/project/#{projectId}/python/environments/#{version}"
   end
 
-  def create_env(project, version)
+  def wait_for_sync
+    wait_for do
+      CondaCommands.where(["project_id = ? and op = ?", @project[:id], "SYNC_BASE_ENV"]).empty?
+    end
+  end
+
+  def create_env(project, version, wait_for_sync_complete=true)
+    env = get_project_env_by_id(project[:id])
     project = get_project_by_name(project[:projectname])
-    if not (project[:python_version].nil? or project[:python_version].empty?)
+    if not env.nil?
       delete_env(project[:id], version)
     end
-    post "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/python/environments/#{version}?action=create"
+    project = post "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/python/environments/#{version}?action=create"
+    if wait_for_sync_complete
+      wait_for_sync
+    end
+    project
   end
 
   def list_envs(projectId)
@@ -111,19 +143,22 @@ module CondaHelper
   end
 
   def create_env_and_update_project(project, version)
+    env = get_project_env_by_id(project[:id])
     project = get_project_by_name(project[:projectname])
-    if project[:python_version].nil? or project[:python_version].empty?
+    if env.nil?
       create_env(project, version)
       expect_status(201)
+      wait_for_sync
       get_project_by_name(project[:projectname]) #get project from db with updated python version
     else
+      wait_for_sync
       project
     end
   end
 
-  def create_env_yml(projectId, ymlPath, installJupyter)
+  def create_env_from_file(projectId, path, installJupyter)
     post "#{ENV['HOPSWORKS_API']}/project/#{projectId}/python/environments",
-         {ymlPath: ymlPath, installJupyter: installJupyter}
+         {path: path, installJupyter: installJupyter}
   end
 
   def export_env(projectId, version)
@@ -134,8 +169,16 @@ module CondaHelper
     get "#{ENV['HOPSWORKS_API']}/project/#{projectId}/python/environments/#{version}/libraries"
   end
 
-  def install_library(projectId, version, lib, package_manager, lib_version, channel)
-    post "#{ENV['HOPSWORKS_API']}/project/#{projectId}/python/environments/#{version}/libraries/#{lib}?package_manager=#{package_manager}&version=#{lib_version}&channel=#{channel}"
+  def install_library(projectId, version, lib, package_source, lib_version, channel, dependency_url=nil)
+
+    lib_spec = {
+      "version": lib_version,
+      "packageSource": package_source,
+      "channelUrl": channel,
+      "dependencyUrl": dependency_url
+    }
+
+    post "#{ENV['HOPSWORKS_API']}/project/#{projectId}/python/environments/#{version}/libraries/#{lib}", lib_spec
   end
 
   def search_library(projectId, version, package_manager, lib, conda_channel="")
@@ -153,6 +196,10 @@ module CondaHelper
   def get_env_commands(projectId, version)
     get "#{ENV['HOPSWORKS_API']}/project/#{projectId}/python/environments/#{version}/commands"
   end
+
+    def get_env_conflicts(projectId, version, query="")
+      get "#{ENV['HOPSWORKS_API']}/project/#{projectId}/python/environments/#{version}/conflicts" + query
+    end
 
   def get_library_commands(projectId, version, lib)
     get "#{ENV['HOPSWORKS_API']}/project/#{projectId}/python/environments/#{version}/libraries/#{lib}/commands"

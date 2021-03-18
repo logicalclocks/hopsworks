@@ -13,48 +13,74 @@
   ~ You should have received a copy of the GNU Affero General Public License along with this program.
   ~ If not, see <https://www.gnu.org/licenses/>.
   -->
-<div class="row" ng-controller="ClusterUtilisationCtrl as clusterUtilCtrl">
 
-    <div class="col-sm-12 col-md-12 col-lg-12" layout-align="center center" style='margin-top:1px; margin-left: 0px;'>
 
-        <div class="row">
-            <div class="text-right col-md-4">JobManager memory (MB)<i class="fa fa-info-circle" uib-tooltip="The amount of memory, in MB, for the JobManager" style="margin-left: 10px"></i></div>
-            <div class="col-md-2"><input type="number" min="768"
-                                         ng-model="flinkConfigCtrl.jobConfig['jobmanager.heap.size']"
-                                         class="form-control"></div>
+<form class="form-horizontal">
+    <div class="form-group">
+        <label class="control-label col-sm-5" for="flink-jb-memory"
+               uib-tooltip="The amount of memory, in MB">JobManager memory (MB) </label>
+        <div class="col-sm-2">
+            <input type="number" class="form-control" id="flink-jb-memory" min="768" step="1"
+                   ng-model="flinkConfigCtrl.jobConfig['jobmanager.heap.size']">
         </div>
-        <div class="row">
-            <div class="text-right col-md-4">Number of TaskManagers <i class="fa fa-info-circle" uib-tooltip="The number of Flink TaskManagers" style="margin-left: 10px"></i></div>
-            <div class="col-md-2"><input type="number" min="1"
-                                         ng-model="flinkConfigCtrl.jobConfig['numberOfTaskManagers']"
-                                         class="form-control"></div>
+    </div>
+
+    <div class="form-group">
+        <label class="control-label col-sm-5" for="flink-num-tm"
+               uib-tooltip="The number of Flink TaskManagers">Number of TaskManagers </label>
+        <div class="col-sm-2">
+            <input type="number" class="form-control" id="flink-num-tm" min="1" step="1"
+                   ng-model="flinkConfigCtrl.jobConfig['numberOfTaskManagers']">
         </div>
-        <div class="row">
-            <div class="text-right col-md-4">TaskManager memory (MB) <i class="fa fa-info-circle" uib-tooltip="The amount of memory, in MB, for each TaskManager." style="margin-left: 10px"></i></div>
-            <div class="col-md-2"><input type="number" min="768"
-                                         ng-model="flinkConfigCtrl.jobConfig['taskmanager.heap.size']"
-                                         class="form-control"></div>
+    </div>
+
+    <div class="form-group">
+        <label class="control-label col-sm-5" for="flink-tm-memory"
+               uib-tooltip="The amount of memory, in MB">TaskManager memory (MB) </label>
+        <div class="col-sm-2">
+            <input type="number" class="form-control" id="flink-tm-memory" min="768" step="1"
+                   ng-model="flinkConfigCtrl.jobConfig['taskmanager.heap.size']">
         </div>
-        <div class="row">
-            <div class="text-right col-md-4">Number of slots <i class="fa fa-info-circle" uib-tooltip="The number of slots per TaskManager" style="margin-left: 10px"></i></div>
-            <div class="col-md-2"><input type="number" min="1"
-                                         ng-model="flinkConfigCtrl.jobConfig['taskmanager.numberOfTaskSlots']"
-                                         class="form-control"></div>
+    </div>
+
+    <div class="form-group">
+        <label class="control-label col-sm-5" for="flink-num-slots"
+               uib-tooltip="The number of slots per TaskManager">Number of slots </label>
+        <div class="col-sm-2">
+            <input type="number" class="form-control" id="flink-num-slots" min="1" step="1"
+                   ng-model="flinkConfigCtrl.jobConfig['taskmanager.numberOfTaskSlots']">
         </div>
-        <div class="row">
-            <div class="row clusterparams">
-                <div class="text-right col-md-4">More Flink Properties <i class="fa fa-info-circle"
-                                                                          uib-tooltip="Enter additional line-separated Flink properties here. Use the equality symbol to separate parameters from values."
-                                                                          style="margin-left: 10px"></i>
-                </div>
-                <div class="col-md-2 jupyter-left">
-                    <textarea style="width: 100%;margin-left:-4px;" id="TextArea"
-                              ng-model="flinkConfigCtrl.jobConfig.properties"
-                              ng-keyup="flinkConfigCtrl.autoExpand($event)"
-                              title="state.checkpoints.dir=hdfs:///Projects/flinking/Logs&#10;env.java.opts=&#34;-Dkey=val&#34;">
-                    </textarea>
+    </div>
+
+    <div class="form-group">
+        <label class="control-label col-sm-10">
+        <h5 class="j-tab-advanced"
+            ng-click="flinkConfigCtrl.settings.advanced = !flinkConfigCtrl.settings.advanced"
+            data-toggle="collapse" data-target="#flinkAdvanced">
+            Advanced configuration
+            <i class="fa"
+               ng-class="{'fa-chevron-down': flinkConfigCtrl.settings.advanced, 'fa-chevron-right': !flinkConfigCtrl.settings.advanced}"
+               style="margin-left: 5px">
+            </i>
+        </h5>
+        </label>
+    </div>
+    <div class="form-group">
+        <div id="flinkAdvanced"
+             ng-class="{'collapse in': flinkConfigCtrl.settings.advanced, 'collapse': !flinkConfigCtrl.settings.advanced}">
+            <div class="form-group">
+                <label class="control-label col-sm-5" for="props"
+                       uib-tooltip='Enter additional line-separated Flink properties here. Use the equality symbol to separate parameters from values.'>More
+                    Flink Properties: </label>
+                <div class="col-sm-2">
+                <textarea style="width: 100%; max-width: 100%"
+                          id="props"
+                          ng-model="flinkConfigCtrl.jobConfig.properties"
+                          ng-keyup="flinkConfigCtrl.autoExpand($event)"
+                          title="state.checkpoints.dir=hdfs:///Projects/flinking/Logs&#10;env.java.opts=&#34;-Dkey=val&#34;">
+                </textarea>
                 </div>
             </div>
         </div>
     </div>
-</div>
+</form>

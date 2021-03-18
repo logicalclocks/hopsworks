@@ -21,6 +21,7 @@ import io.hops.hopsworks.common.util.OSProcessExecutor;
 import io.hops.hopsworks.common.util.ProcessDescriptor;
 import io.hops.hopsworks.common.util.ProcessResult;
 import io.hops.hopsworks.common.util.Settings;
+import io.hops.hopsworks.exceptions.JobException;
 import io.hops.hopsworks.exceptions.ServiceException;
 import io.hops.hopsworks.persistence.entity.jupyter.JupyterProject;
 import io.hops.hopsworks.persistence.entity.jupyter.JupyterSettings;
@@ -47,7 +48,7 @@ public abstract class JupyterManagerImpl implements JupyterManager {
   private OSProcessExecutor osProcessExecutor;
   
   public abstract JupyterDTO startJupyterServer(Project project, String secretConfig, String hdfsUser, Users user,
-    JupyterSettings js, String allowOrigin) throws ServiceException;
+    JupyterSettings js, String allowOrigin) throws ServiceException, JobException;
   
   @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
   public String getJupyterHome(String hdfsUser, Project project, String secret)

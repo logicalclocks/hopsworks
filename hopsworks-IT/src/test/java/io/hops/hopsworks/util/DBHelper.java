@@ -34,7 +34,7 @@ public class DBHelper {
   private static final String DB_PASSWORD_ENV = "DB_PASSWORD";
   private static final String DEFAULT_PORT = "3306";
   private static final String DEFAULT_HOST = "127.0.0.1";
-  private static final String JDBC_DRIVER = "com.mysql.jdbc.Driver";
+  private static final String JDBC_DRIVER = "com.mysql.cj.jdbc.Driver";
   private static final String DB_URL = "jdbc:mysql://%%s%%/hopsworks";
   private static final String DEFAULT_USER = "kthfs";
   private static final String DEFAULT_PASSWORD = "kthfs";

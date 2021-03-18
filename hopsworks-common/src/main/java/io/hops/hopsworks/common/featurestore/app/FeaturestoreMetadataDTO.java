@@ -20,14 +20,12 @@ import io.hops.hopsworks.common.featurestore.FeaturestoreDTO;
 import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupDTO;
 import io.hops.hopsworks.common.featurestore.settings.FeaturestoreClientSettingsDTO;
 import io.hops.hopsworks.common.featurestore.storageconnectors.FeaturestoreStorageConnectorDTO;
-import io.hops.hopsworks.common.featurestore.storageconnectors.jdbc.FeaturestoreJdbcConnectorDTO;
 import io.hops.hopsworks.common.featurestore.trainingdatasets.TrainingDatasetDTO;
 
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlType;
 import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * DTO containing the metadata of a featurestore.
@@ -43,33 +41,19 @@ public class FeaturestoreMetadataDTO {
   private List<TrainingDatasetDTO> trainingDatasets;
   private FeaturestoreClientSettingsDTO settings;
   private List<FeaturestoreStorageConnectorDTO> storageConnectors;
-  private FeaturestoreJdbcConnectorDTO onlineFeaturestoreConnector;
+  private FeaturestoreStorageConnectorDTO onlineFeaturestoreConnector;
   
   public FeaturestoreMetadataDTO() {
   }
-  
+
   public FeaturestoreMetadataDTO(FeaturestoreDTO featurestore,
-    List<FeaturegroupDTO> featuregroups, List<TrainingDatasetDTO> trainingDatasets,
-    FeaturestoreClientSettingsDTO featurestoreClientSettingsDTO,
-    List<FeaturestoreStorageConnectorDTO> storageConnectors, FeaturestoreJdbcConnectorDTO onlineFeaturestoreConnector) {
+                                 List<FeaturegroupDTO> featuregroups, List<TrainingDatasetDTO> trainingDatasets,
+                                 FeaturestoreClientSettingsDTO featurestoreClientSettingsDTO,
+                                 List<FeaturestoreStorageConnectorDTO> storageConnectors,
+                                 FeaturestoreStorageConnectorDTO onlineFeaturestoreConnector) {
     this.featurestore = featurestore;
-    // We do not need to send all of the statistics information over the wire for the Python/Scala clients
-    this.featuregroups = featuregroups.stream().map(fg -> {
-        fg.setClusterAnalysis(null);
-        fg.setDescriptiveStatistics(null);
-        fg.setFeaturesHistogram(null);
-        fg.setFeatureCorrelationMatrix(null);
-        return fg;
-      }
-    ).collect(Collectors.toList());
-    this.trainingDatasets = trainingDatasets.stream().map(td -> {
-        td.setClusterAnalysis(null);
-        td.setDescriptiveStatistics(null);
-        td.setFeaturesHistogram(null);
-        td.setFeatureCorrelationMatrix(null);
-        return td;
-      }
-    ).collect(Collectors.toList());
+    this.featuregroups = featuregroups;
+    this.trainingDatasets = trainingDatasets;
     this.settings = featurestoreClientSettingsDTO;
     this.storageConnectors = storageConnectors;
     this.onlineFeaturestoreConnector = onlineFeaturestoreConnector;
@@ -101,7 +85,7 @@ public class FeaturestoreMetadataDTO {
   }
   
   @XmlElement
-  public FeaturestoreJdbcConnectorDTO getOnlineFeaturestoreConnector() {
+  public FeaturestoreStorageConnectorDTO getOnlineFeaturestoreConnector() {
     return onlineFeaturestoreConnector;
   }
   
@@ -127,7 +111,7 @@ public class FeaturestoreMetadataDTO {
   }
   
   public void setOnlineFeaturestoreConnector(
-    FeaturestoreJdbcConnectorDTO onlineFeaturestoreConnector) {
+    FeaturestoreStorageConnectorDTO onlineFeaturestoreConnector) {
     this.onlineFeaturestoreConnector = onlineFeaturestoreConnector;
   }
   

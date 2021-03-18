@@ -16,18 +16,24 @@
 
 package io.hops.hopsworks.common.featurestore.trainingdatasets.external;
 
+import io.hops.hopsworks.common.featurestore.storageconnectors.FeaturestoreStorageConnectorController;
+import io.hops.hopsworks.exceptions.FeaturestoreException;
+import io.hops.hopsworks.persistence.entity.featurestore.storageconnector.adls.FeaturestoreADLSConnector;
 import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.TrainingDataset;
 import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.external.ExternalTrainingDataset;
 import com.google.common.base.Strings;
 import io.hops.hopsworks.common.featurestore.FeaturestoreConstants;
-import io.hops.hopsworks.common.featurestore.storageconnectors.FeaturestoreStorageConnectorType;
 import io.hops.hopsworks.common.featurestore.trainingdatasets.TrainingDatasetDTO;
+import io.hops.hopsworks.persistence.entity.project.Project;
+import io.hops.hopsworks.persistence.entity.user.Users;
+import io.hops.hopsworks.restutils.RESTCodes;
 
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import java.nio.file.Paths;
+import java.util.logging.Level;
 
 /**
  * Class controlling the interaction with the external_training_dataset table and required business logic
@@ -35,33 +41,23 @@ import java.nio.file.Paths;
 @Stateless
 @TransactionAttribute(TransactionAttributeType.NEVER)
 public class ExternalTrainingDatasetController {
+
   @EJB
-  private ExternalTrainingDatasetFacade externalTrainingDatasetFacade;
+  private FeaturestoreStorageConnectorController storageConnectorController;
 
-  /**
-   * Removes an external training dataset from the database
-   *
-   * @param externalTrainingDataset the entity to remove
-   */
-  @TransactionAttribute(TransactionAttributeType.NEVER)
-  public void removeExternalTrainingDataset(ExternalTrainingDataset externalTrainingDataset) {
-    externalTrainingDatasetFacade.remove(externalTrainingDataset);
-  }
-  
-  /**
-   * Converts a External Training Dataset entity into a DTO representation
-   *
-   * @param trainingDatasetDTO the DTO to populate
-   * @param trainingDataset the entity to convert
-   * @return the converted DTO representation
-   */
-  public TrainingDatasetDTO convertExternalTrainingDatasetToDTO(TrainingDatasetDTO trainingDatasetDTO,
-                                                                TrainingDataset trainingDataset) {
+  private static final String ABFSS_SCHEME = "abfss://";
+  private static final String ABFSS_URI_SUFFIX = ".dfs.core.windows.net";
+
+  private static final String ADL_SCHEME = "adl://";
+  private static final String ADL_URI_SUFFIX = ".azuredatalakestore.net";
+
+  public TrainingDatasetDTO convertExternalTrainingDatasetToDTO(Users user, Project project,
+                                                                TrainingDatasetDTO trainingDatasetDTO,
+                                                                TrainingDataset trainingDataset)
+      throws FeaturestoreException {
     ExternalTrainingDataset externalTrainingDataset = trainingDataset.getExternalTrainingDataset();
-
-    trainingDatasetDTO.setStorageConnectorId(externalTrainingDataset.getFeaturestoreS3Connector().getId());
-    trainingDatasetDTO.setStorageConnectorName(externalTrainingDataset.getFeaturestoreS3Connector().getName());
-    trainingDatasetDTO.setStorageConnectorType(FeaturestoreStorageConnectorType.S3);
+    trainingDatasetDTO.setStorageConnector(storageConnectorController
+        .convertToConnectorDTO(user, project, externalTrainingDataset.getFeaturestoreConnector()));
     trainingDatasetDTO.setLocation(buildDatasetPath(trainingDataset));
 
     return trainingDatasetDTO;
@@ -72,14 +68,40 @@ public class ExternalTrainingDatasetController {
    * @param trainingDataset
    * @return
    */
-  private String buildDatasetPath(TrainingDataset trainingDataset) {
+  private String buildDatasetPath(TrainingDataset trainingDataset) throws FeaturestoreException {
+    switch (trainingDataset.getExternalTrainingDataset().getFeaturestoreConnector().getConnectorType()) {
+      case S3:
+        return buildDatasetPathS3(trainingDataset);
+      case ADLS:
+        return buildDatasetPathADL(trainingDataset);
+      default:
+        // This shouldn't happen here
+        throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_STORAGE_CONNECTOR_TYPE,
+            Level.SEVERE, "External training dataset type not supported");
+    }
+  }
+
+  private String buildDatasetPathS3(TrainingDataset trainingDataset) {
     String bucketFolder = FeaturestoreConstants.S3_BUCKET_TRAINING_DATASETS_FOLDER;
     if (!Strings.isNullOrEmpty(trainingDataset.getExternalTrainingDataset().getPath())) {
       bucketFolder = trainingDataset.getExternalTrainingDataset().getPath();
     }
 
-    return "s3://" + Paths.get(trainingDataset.getExternalTrainingDataset().getFeaturestoreS3Connector().getBucket(),
-        bucketFolder,
+    return "s3://" + Paths.get(trainingDataset.getExternalTrainingDataset()
+            .getFeaturestoreConnector().getS3Connector().getBucket(), bucketFolder,
         trainingDataset.getName() + "_" + trainingDataset.getVersion()).toString();
+  }
+
+  private String buildDatasetPathADL(TrainingDataset trainingDataset) {
+    FeaturestoreADLSConnector adlsConnector = trainingDataset.getExternalTrainingDataset()
+        .getFeaturestoreConnector().getAdlsConnector();
+    String directory = Strings.isNullOrEmpty(trainingDataset.getExternalTrainingDataset().getPath()) ? "" :
+        trainingDataset.getExternalTrainingDataset().getPath();
+    String scheme = adlsConnector.getGeneration() == 1 ? ADL_SCHEME : ABFSS_SCHEME;
+    String hostname = adlsConnector.getGeneration() == 1 ?
+        adlsConnector.getAccountName() + ADL_URI_SUFFIX :
+        adlsConnector.getContainerName() + "@" + adlsConnector.getAccountName() + ABFSS_URI_SUFFIX;
+
+    return scheme + hostname + "/" + directory + trainingDataset.getName() + "_" + trainingDataset.getVersion();
   }
 }

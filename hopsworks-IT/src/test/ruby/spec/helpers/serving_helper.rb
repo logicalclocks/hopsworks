@@ -17,8 +17,10 @@
 INFERENCE_SCHEMA_NAME = "inferenceschema"
 INFERENCE_SCHEMA_VERSION = 2
 
-TF_MODEL_TOUR_FILE_LOCATION = "/user/hdfs/tensorflow_demo/data/mnist/model/*"
-SKLEARN_MODEL_TOUR_FILE_LOCATION = "/user/hdfs/tensorflow_demo/data/iris/iris_knn.pkl"
+TF_TOURS_LOCATION = "/user/hdfs/tensorflow_demo/data"
+MNIST_TOUR_DATA_LOCATION = "#{TF_TOURS_LOCATION}/mnist"
+TF_MODEL_TOUR_FILE_LOCATION = "#{MNIST_TOUR_DATA_LOCATION}/model/*"
+SKLEARN_MODEL_TOUR_FILE_LOCATION = "#{TF_TOURS_LOCATION}/iris/iris_knn.pkl"
 SKLEARN_SCRIPT_FILE_NAME="iris_flower_classifier.py"
 SKLEARN_SCRIPT_TOUR_FILE_LOCATION = "/user/hdfs/tensorflow_demo/notebooks/End_To_End_Pipeline/sklearn/#{SKLEARN_SCRIPT_FILE_NAME}"
 
@@ -70,9 +72,6 @@ module ServingHelper
                requestedInstances: 1
               }
     expect_status(201)
-    if kubernetes_installed
-      sleep(20)
-    end
     Serving.find_by(project_id: project_id, name: serving_name)
   end
 
@@ -98,10 +97,6 @@ module ServingHelper
          requestedInstances: 1
         }
     expect_status(201)
-    # Wait for pod to start
-    if kubernetes_installed
-      sleep(20)
-    end
     Serving.find_by(project_id: project_id, name: serving_name)
   end
 
@@ -129,10 +124,12 @@ module ServingHelper
 
   def wait_for_type(serving_name)
     if !kubernetes_installed
-      wait_for do
+      wait_for(60) do
         system "pgrep -f #{serving_name} -a"
         $?.exitstatus == 0
       end
+      #Wait a bit more for the actual server to start in the container
+      sleep(20)
     else
       sleep(120)
     end
@@ -140,11 +137,11 @@ module ServingHelper
 
   def check_process_running(name)
     if !kubernetes_installed
-    # check if the process is running on the host
-    system "pgrep -f #{name}"
-    if $?.exitstatus != 1
-      raise "the process is still running"
-    end
+      # check if the process is running on the host
+      system "pgrep -f #{name}"
+      if $?.exitstatus != 1
+        raise "the process is still running"
+      end
     else
       sleep(120)
     end

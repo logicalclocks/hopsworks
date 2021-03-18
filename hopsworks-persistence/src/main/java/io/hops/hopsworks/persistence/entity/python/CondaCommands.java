@@ -39,6 +39,7 @@
 
 package io.hops.hopsworks.persistence.entity.python;
 
+import io.hops.hopsworks.persistence.entity.jupyter.config.GitBackend;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.user.Users;
 
@@ -112,12 +113,18 @@ import javax.xml.bind.annotation.XmlRootElement;
   @NamedQuery(name = "CondaCommands.findByStatusAndCondaOp",
           query
           = "SELECT c FROM CondaCommands c WHERE c.status = :status AND c.op = :op"),
+  @NamedQuery(name = "CondaCommands.findByStatusListAndCondaOpAndProject",
+    query
+      = "SELECT c FROM CondaCommands c WHERE c.status IN :statuses AND c.op = :op AND c.projectId = :project"),
   @NamedQuery(name = "CondaCommands.findByCreated",
           query
           = "SELECT c FROM CondaCommands c WHERE c.created = :created"),
   @NamedQuery(name = "CondaCommands.deleteAllFailedCommands",
           query
-          = "DELETE FROM CondaCommands c WHERE c.status = :status")})
+          = "DELETE FROM CondaCommands c WHERE c.status = :status"),
+  @NamedQuery(name = "CondaCommands.deleteAllFailedCommands",
+    query
+      = "DELETE FROM CondaCommands c WHERE c.status = :status")})
 public class CondaCommands implements Serializable {
 
   private static final long serialVersionUID = 1L;
@@ -147,6 +154,13 @@ public class CondaCommands implements Serializable {
   @Size(max = 52)
   @Column(name = "version")
   private String version = "";
+  @Size(max = 125)
+  @Column(name = "git_api_key_name")
+  private String gitApiKeyName = "";
+  @Size(max = 45)
+  @Column(name = "git_backend")
+  @Enumerated(EnumType.STRING)
+  private GitBackend gitBackend;
   @Basic(optional = false)
   @NotNull
   @Size(min = 1,
@@ -179,12 +193,12 @@ public class CondaCommands implements Serializable {
   private Project projectId;
   @Size(min = 1,
           max = 1000)
-  @Column(name = "environment_yml")
-  private String environmentYml;
+  @Column(name = "environment_file")
+  private String environmentFile;
 
   @Column(name= "install_jupyter")
   private Boolean installJupyter = false;
-  @Size(max = 11000)
+  @Size(max = 10000)
   @Column(name = "error_message")
   private String errorMsg="";
   
@@ -193,7 +207,15 @@ public class CondaCommands implements Serializable {
 
   public CondaCommands(String user, Users userId, CondaOp op,
                        CondaStatus status, CondaInstallType installType, Project project, String lib, String version,
-                       String channelUrl, Date created, String arg, String environmentYml, Boolean installJupyter) {
+                       String channelUrl, Date created, String arg, String environmentFile, Boolean installJupyter) {
+    this(user, userId, op, status, installType, project, lib, version, channelUrl, created, arg,
+        environmentFile, installJupyter, null, null);
+  }
+
+  public CondaCommands(String user, Users userId, CondaOp op,
+                       CondaStatus status, CondaInstallType installType, Project project, String lib, String version,
+                       String channelUrl, Date created, String arg, String environmentFile, Boolean installJupyter,
+                       GitBackend gitBackend, String gitApiKeyName) {
     if (op  == null || user == null || project == null) { 
       throw new NullPointerException("Op/user/project cannot be null");
     }
@@ -208,8 +230,10 @@ public class CondaCommands implements Serializable {
     this.lib = lib;
     this.version = version;
     this.arg = arg;
-    this.environmentYml = environmentYml;
+    this.environmentFile = environmentFile;
     this.installJupyter = installJupyter;
+    this.gitBackend = gitBackend;
+    this.gitApiKeyName = gitApiKeyName;
   }
 
   public Integer getId() {
@@ -301,12 +325,12 @@ public class CondaCommands implements Serializable {
     this.installType = installType;
   }
 
-  public String getEnvironmentYml() {
-    return environmentYml;
+  public String getEnvironmentFile() {
+    return environmentFile;
   }
 
-  public void setEnvironmentYml(String environmentYml) {
-    this.environmentYml = environmentYml;
+  public void setEnvironmentFile(String environmentFile) {
+    this.environmentFile = environmentFile;
   }
 
   public Boolean getInstallJupyter() {
@@ -322,7 +346,7 @@ public class CondaCommands implements Serializable {
   }
 
   public void setErrorMsg(String errorMsg) {
-    this.errorMsg = errorMsg.substring(Math.max(0, errorMsg.length() - 11000), errorMsg.length());
+    this.errorMsg = errorMsg.substring(Math.max(0, errorMsg.length() - 10000), errorMsg.length());
   }
   
   @Override
@@ -348,7 +372,8 @@ public class CondaCommands implements Serializable {
 
   @Override
   public String toString() {
-    return "[ id=" + id + ", proj=" + projectId.getName()  + ", op=" + op + ", installType=" + installType 
+    String projectName = projectId != null ? projectId.getName() : "unknown";
+    return "[ id=" + id + ", proj=" + projectName  + ", op=" + op + ", installType=" + installType
         + ", lib=" + lib + ", version=" + version + ", arg=" + arg
         + ", channel=" + channelUrl + "]";
   }
@@ -359,5 +384,21 @@ public class CondaCommands implements Serializable {
 
   public void setUserId(Users userId) {
     this.userId = userId;
+  }
+
+  public String getGitApiKeyName() {
+    return gitApiKeyName;
+  }
+
+  public void setGitApiKeyName(String gitApiKeyName) {
+    this.gitApiKeyName = gitApiKeyName;
+  }
+
+  public GitBackend getGitBackend() {
+    return gitBackend;
+  }
+
+  public void setGitBackend(GitBackend gitBackend) {
+    this.gitBackend = gitBackend;
   }
 }

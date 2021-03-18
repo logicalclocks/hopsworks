@@ -19,6 +19,7 @@ package io.hops.hopsworks.common.featurestore.featuregroup;
 import io.hops.hopsworks.common.dao.AbstractFacade;
 import io.hops.hopsworks.persistence.entity.featurestore.Featurestore;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.Featuregroup;
+import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.datavalidation.FeatureGroupExpectation;
 
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
@@ -56,12 +57,13 @@ public class FeaturegroupFacade extends AbstractFacade<Featuregroup> {
    * @param id id of the featuregroup
    * @return a single Featuregroup entity
    */
-  public Featuregroup findById(Integer id) {
+  public Optional<Featuregroup> findById(Integer id) {
     try {
-      return em.createNamedQuery("Featuregroup.findById", Featuregroup.class)
-        .setParameter("id", id).getSingleResult();
+      return Optional.of(em.createNamedQuery("Featuregroup.findById", Featuregroup.class)
+              .setParameter("id", id)
+              .getSingleResult());
     } catch (NoResultException e) {
-      return null;
+      return Optional.empty();
     }
   }
   
@@ -72,14 +74,14 @@ public class FeaturegroupFacade extends AbstractFacade<Featuregroup> {
    * @param featurestore featurestore of the featuregroup
    * @return a single Featuregroup entity
    */
-  public Featuregroup findByIdAndFeaturestore(Integer id, Featurestore featurestore) {
+  public Optional<Featuregroup> findByIdAndFeaturestore(Integer id, Featurestore featurestore) {
     try {
-      return em.createNamedQuery("Featuregroup.findByFeaturestoreAndId", Featuregroup.class)
+      return Optional.of(em.createNamedQuery("Featuregroup.findByFeaturestoreAndId", Featuregroup.class)
         .setParameter("featurestore", featurestore)
         .setParameter("id", id)
-        .getSingleResult();
+        .getSingleResult());
     } catch (NoResultException e) {
-      return null;
+      return Optional.empty();
     }
   }
 
@@ -155,6 +157,12 @@ public class FeaturegroupFacade extends AbstractFacade<Featuregroup> {
       .setParameter("featurestore", featurestore);
     return q.getResultList();
   }
+
+  public Long countByFeaturestore(Featurestore featurestore) {
+    return em.createNamedQuery("Featuregroup.countByFeaturestore", Long.class)
+        .setParameter("featurestore", featurestore)
+        .getSingleResult();
+  }
   
   /**
    * Transaction to create a new featuregroup in the database
@@ -192,5 +200,50 @@ public class FeaturegroupFacade extends AbstractFacade<Featuregroup> {
     em.merge(featuregroup);
     return featuregroup;
   }
-  
+
+  public List<Featuregroup> findByFeatureStoreAndExpectations(Featurestore featurestore,
+                                                              List<FeatureGroupExpectation> expectations) {
+    TypedQuery<Featuregroup> q = em.createNamedQuery("Featuregroup.findByFeaturestoreAndExpectations",
+                                                        Featuregroup.class)
+                                    .setParameter("featurestore", featurestore)
+                                    .setParameter("expectationsList", expectations);
+    return q.getResultList();
+  }
+
+  public enum Filters {
+    EXPECTATIONS("EXPECTATIONS", "", "expectations", "");
+
+    private final String value;
+    private final String sql;
+    private final String field;
+    private final String defaultParam;
+
+    private Filters(String value, String sql, String field, String defaultParam) {
+      this.value = value;
+      this.sql = sql;
+      this.field = field;
+      this.defaultParam = defaultParam;
+    }
+
+    public String getValue() {
+      return value;
+    }
+
+    public String getDefaultParam() {
+      return defaultParam;
+    }
+
+    public String getSql() {
+      return sql;
+    }
+
+    public String getField() {
+      return field;
+    }
+
+    @Override
+    public String toString() {
+      return value;
+    }
+  }
 }

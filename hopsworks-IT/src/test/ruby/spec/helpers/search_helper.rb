@@ -77,21 +77,30 @@ module SearchHelper
     end
   end
 
-  def check_searched(item, expected, search_type)
-    match = true
+  def expect_searched(item, expected, search_type)
     #base check
     if search_type == "FEATURE"
-      match = match && item["featuregroup"] == expected[:name] &&
-          item["parentProjectName"] == expected[:parent_project] && item["highlights"].key?(expected[:highlight])
+      expect(item["featuregroup"]).to eq(expected[:name])
+      expect(item["parentProjectName"]).to eq(expected[:parent_project])
+      expect(item["highlights"].key?(expected[:highlight])). to be true
     else
-      match = match && item["name"] == expected[:name] &&
-          item["parentProjectName"] == expected[:parent_project] && item["highlights"].key?(expected[:highlight])
+      expect(item["name"]).to eq(expected[:name])
+      expect(item["parentProjectName"]).to eq(expected[:parent_project])
+      expect(item["highlights"].key?(expected[:highlight])). to be true
     end
     if expected.key?(:access_projects)
-      match = match && item.key?("accessProjects") &&
-          item["accessProjects"]["entry"].length == expected[:access_projects]
+      expect(item.key?("accessProjects")).to be true
+      expect(item["accessProjects"]["entry"].length).to eq(expected[:access_projects])
     end
-    match
+  end
+
+  def check_searched(item, expected, search_type)
+    begin
+      expect_searched(item, expected, search_type)
+      true
+    rescue RSpec::Expectations::ExpectationNotMetError => e
+      false
+    end
   end
 
   def project_search_test(project, term, type, items)
@@ -100,7 +109,7 @@ module SearchHelper
     wait_result = wait_for_me_time(15) do
       search_hits = local_featurestore_search(project, search_type, term)["#{result_type}"]
       pp search_hits if defined?(@debugOpt) && @debugOpt
-      error_msg = "expected:#{items.length}, found:#{search_hits.length}"
+      error_msg = "search expected:#{items.length}, found:#{search_hits.length}"
       if search_hits.length != items.length
         { 'success' => false, 'msg' => error_msg }
       else
@@ -127,7 +136,7 @@ module SearchHelper
     wait_result = wait_for_me_time(15) do
       search_hits = global_featurestore_search(search_type, term)["#{result_type}"]
       pp search_hits if defined?(@debugOpt) && @debugOpt
-      error_msg = "expected:#{items.length}, found:#{search_hits.length}"
+      error_msg = "expected:#{items}, found:#{search_hits}"
       if search_hits.length < items.length
         { 'success' => false, 'msg' => error_msg }
       else

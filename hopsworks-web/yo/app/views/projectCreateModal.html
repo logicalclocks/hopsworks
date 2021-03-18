@@ -55,7 +55,7 @@
             <md-input-container style="height: 50px" class="md-block">
               <input name="project_name" type="text" id="projectname"
                      ng-model="projectCreatorCtrl.projectName" tabindex="1"
-                     ng-pattern="projectCreatorCtrl.regex"
+                     ng-pattern="projectCreatorCtrl.projectNameValidator.regex"
                      autofocus="autofocus"
                      ng-maxlength="88"
                      required >
@@ -64,8 +64,11 @@
                   class="text-danger ng-hide">This field is required</span>
 
             <span ng-show="(projectForm.project_name.$dirty) && projectForm.project_name.$error.pattern"
-                  class="text-danger ng-hide">Invalid project name. You are not allowed to use spaces in project names and special characters such as __, -, /, \, ?,
-              *, :, |, ', ", &lt;, &gt;, %, (, ), &, ;, #, å, ä, ö, ü, etc..</span>
+                  class="text-danger ng-hide">Invalid project name. Project name can only contain characters a-z,
+              A-Z, 0-9 and special characters '_, .' but not '__' (double underscore). Go to
+              <a target="_blank" rel="noopener noreferrer"
+                    href="https://hopsworks.readthedocs.io/en/{{hopsworksDocVersion}}/user_guide/hopsworks/newProject.html">
+                Documentation</a> to see additional reserved words.</span>
 
             <span ng-show="(projectForm.project_name.$dirty) && projectForm.project_name.$error.maxlength"
                   class="text-danger ng-hide">Project name shouldn't be longer than 88 characters.</span>

@@ -1,6 +1,6 @@
 /*
  * This file is part of Hopsworks
- * Copyright (C) 2019, Logical Clocks AB. All rights reserved
+ * Copyright (C) 2018, Logical Clocks AB. All rights reserved
  *
  * Hopsworks is free software: you can redistribute it and/or modify it under the terms of
  * the GNU Affero General Public License as published by the Free Software Foundation,
@@ -16,24 +16,29 @@
 
 package io.hops.hopsworks.persistence.entity.featurestore.featuregroup.ondemand;
 
-import io.hops.hopsworks.persistence.entity.featurestore.feature.FeaturestoreFeature;
-import io.hops.hopsworks.persistence.entity.featurestore.storageconnector.jdbc.FeaturestoreJdbcConnector;
+import io.hops.hopsworks.persistence.entity.featurestore.storageconnector.FeaturestoreConnector;
+import io.hops.hopsworks.persistence.entity.hdfs.inode.Inode;
 
 import javax.persistence.Basic;
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
+import javax.persistence.JoinColumns;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
 import javax.persistence.OneToMany;
+import javax.persistence.OneToOne;
 import javax.persistence.Table;
 import javax.xml.bind.annotation.XmlRootElement;
 import java.io.Serializable;
 import java.util.Collection;
+import java.util.Objects;
 
 /**
  * Entity class representing the on_demand_feature_group table in Hopsworks database.
@@ -59,10 +64,24 @@ public class OnDemandFeaturegroup implements Serializable {
   private String query;
   @Column(name = "description")
   private String description;
-  @JoinColumn(name = "jdbc_connector_id", referencedColumnName = "id")
-  private FeaturestoreJdbcConnector featurestoreJdbcConnector;
+  @Column(name = "data_format")
+  @Enumerated(EnumType.ORDINAL)
+  private OnDemandDataFormat dataFormat;
+  @Column(name = "path")
+  private String path;
+  @JoinColumn(name = "connector_id", referencedColumnName = "id")
+  private FeaturestoreConnector featurestoreConnector;
   @OneToMany(cascade = CascadeType.ALL, mappedBy = "onDemandFeaturegroup")
-  private Collection<FeaturestoreFeature> features;
+  private Collection<OnDemandFeature> features;
+  @OneToMany(cascade = CascadeType.ALL, mappedBy = "onDemandFeaturegroup")
+  private Collection<OnDemandOption> options;
+
+  @JoinColumns({
+      @JoinColumn(name = "inode_pid", referencedColumnName = "parent_id"),
+      @JoinColumn(name = "inode_name", referencedColumnName = "name"),
+      @JoinColumn(name = "partition_id", referencedColumnName = "partition_id")})
+  @OneToOne(optional = false)
+  private Inode inode;
   
   public static long getSerialVersionUID() {
     return serialVersionUID;
@@ -83,21 +102,20 @@ public class OnDemandFeaturegroup implements Serializable {
   public void setDescription(String description) {
     this.description = description;
   }
-  
-  public FeaturestoreJdbcConnector getFeaturestoreJdbcConnector() {
-    return featurestoreJdbcConnector;
+
+  public FeaturestoreConnector getFeaturestoreConnector() {
+    return featurestoreConnector;
   }
-  
-  public void setFeaturestoreJdbcConnector(
-    FeaturestoreJdbcConnector featurestoreJdbcConnector) {
-    this.featurestoreJdbcConnector = featurestoreJdbcConnector;
+
+  public void setFeaturestoreConnector(FeaturestoreConnector featurestoreConnector) {
+    this.featurestoreConnector = featurestoreConnector;
   }
-  
-  public Collection<FeaturestoreFeature> getFeatures() {
+
+  public Collection<OnDemandFeature> getFeatures() {
     return features;
   }
   
-  public void setFeatures(Collection<FeaturestoreFeature> features) {
+  public void setFeatures(Collection<OnDemandFeature> features) {
     this.features = features;
   }
 
@@ -105,38 +123,50 @@ public class OnDemandFeaturegroup implements Serializable {
     return id;
   }
 
+  public Inode getInode() {
+    return inode;
+  }
+
+  public void setInode(Inode inode) {
+    this.inode = inode;
+  }
+
+  public OnDemandDataFormat getDataFormat() {
+    return dataFormat;
+  }
+
+  public void setDataFormat(OnDemandDataFormat dataFormat) {
+    this.dataFormat = dataFormat;
+  }
+
+  public String getPath() {
+    return path;
+  }
+
+  public void setPath(String path) {
+    this.path = path;
+  }
+
+  public Collection<OnDemandOption> getOptions() {
+    return options;
+  }
+
+  public void setOptions(Collection<OnDemandOption> options) {
+    this.options = options;
+  }
+
   @Override
   public boolean equals(Object o) {
-    if (this == o) {
-      return true;
-    }
-    if (!(o instanceof OnDemandFeaturegroup)) {
-      return false;
-    }
+    if (this == o) return true;
+    if (o == null || getClass() != o.getClass()) return false;
 
     OnDemandFeaturegroup that = (OnDemandFeaturegroup) o;
-  
-    if (!id.equals(that.id)) {
-      return false;
-    }
-    
-    if (!query.equals(that.query)) {
-      return false;
-    }
-    if (!description.equals(that.description)) {
-      return false;
-    }
-    if (features != null && !features.equals(that.features)) return false;
-    return featurestoreJdbcConnector.equals(that.featurestoreJdbcConnector);
+
+    return Objects.equals(id, that.id);
   }
-  
+
   @Override
   public int hashCode() {
-    int result = id.hashCode();
-    result = 31 * result + query.hashCode();
-    result = 31 * result + description.hashCode();
-    result = 31 * result + featurestoreJdbcConnector.hashCode();
-    result = 31 * result + (features != null ? features.hashCode() : 0);
-    return result;
+    return id != null ? id.hashCode() : 0;
   }
 }

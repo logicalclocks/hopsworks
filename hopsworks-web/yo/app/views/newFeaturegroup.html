@@ -338,182 +338,7 @@
                                     </p>
                                 </div>
                             </div>
-                            <div uib-accordion-group class="panel-default"
-                                 is-open="newFeaturegroupCtrl.cached_fg_accordion4.isOpen"
-                                 id="cachedFeatureGroupSqlQueryDiv"
-                                 ng-if="newFeaturegroupCtrl.featuregroupOperation === 'CREATE' || newFeaturegroupCtrl.featuregroupOperation === 'NEW_VERSION'"
-                            >
-                                <div uib-accordion-heading>
-                                    <i class="fa fa-info-circle" tooltip-placement="auto left"
-                                       uib-tooltip='Data is inserted into Feature Groups using Data Pipelines with
-                                    Hopsworks jobs or notebooks. Inside a Hopsworks job or notebook you can use
-                                    the Feature Store API in Python or Scala to update a Feature Group.
-                                   By specifying a SQL Query below, a Hopsworks Job to run the query and insert into the
-                                   Feature Group will be created automatically.'></i>
-                                    <span style="margin-left: 20px">
-                                    {{newFeaturegroupCtrl.cached_fg_accordion4.title}}
-                                    {{newFeaturegroupCtrl.cached_fg_accordion4.value}}
-                                    </span>
-                                    <span ng-if="newFeaturegroupCtrl.cachedFeaturegroupSqlWrongValue === -1"
-                                          class="glyphicon glyphicon-alert" tooltip-placement="auto left"
-                                          uib-tooltip='The provided SQL Query is not Valid'
-                                          style="margin-left: 10px"></span>
-                                </div>
-                                <div class="view-info" style="margin-top:20px">
-                                    <div class="col-md-12">
-                                        <div class="col-sm-12" style="margin-bottom: 20px">
-                                            <div class="col-sm-3">
-                                                <i class="fa fa-info-circle" tooltip-placement="auto left"
-                                                   uib-tooltip='Specify a SQL Query to compute the Feature Group,
-                                                   this will be used to automatically configure a Spark job to compute the feature group'></i>
-                                                <label class="control-label"
-                                                       style="margin-left:20px; margin-top: 5px;">SQL
-                                                    Query: </label>
-                                            </div>
-                                            <div class="col-sm-9">
-                                            <textarea
-                                                    rows="4"
-                                                    ng-model="newFeaturegroupCtrl.cachedSqlQuery"
-                                                    style="min-width:100%"
-                                            >
-                                            </textarea>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="view-info">
-                                    <div class="col-md-12">
-                                        <div class="col-sm-12" style="margin-bottom: 20px">
-                                            <div class="col-sm-3">
-                                            </div>
-                                            <div class="col-sm-9">
-                                                <div class="btn-group blocks" style="padding: 0px;">
-                                                    <div style="display: inline-block; vertical-align: top;">
-                                                        <div class="btn-group btn-group-toggle" data-toggle="buttons">
-                                                            <label class="btn btn-default btn-md"
-                                                                   id="sklearn_serving_lbl"
-                                                                   ng-click="newFeaturegroupCtrl.setCachedSqlType(0);"
-                                                                   ng-class="{unset: newFeaturegroupCtrl.cachedSqlType !== 0}"
-                                                                   style="margin:2px; background:rgb(108, 117, 125); color:white; z-index:2">
-                                                                <input type="radio" value="PREDEFINED_HOPSWORKS_JOB"
-                                                                       id="PREDEFINED_HOPSWORKS_JOB">
-                                                                SparkSQL
-                                                                <i class="fa fa-info-circle"
-                                                                   uib-tooltip="SparkSQL can be used to Query Hive Databases in Hopsworks using SQL"
-                                                                   tooltip-placement="left" style="margin-left: 10px">
-                                                                </i>
-                                                            </label>
-                                                            <label class="btn btn-default btn-md"
-                                                                   ng-click="newFeaturegroupCtrl.setCachedSqlType(1);"
-                                                                   ng-class="{unset: newFeaturegroupCtrl.cachedSqlType !== 1}"
-                                                                   style="margin:2px; background:rgb(108, 117, 125); color:white; z-index:2">
-                                                                <input type="radio" value="SQL_JOB"
-                                                                       id="SQL_JOB">
-                                                                JDBC
-                                                                <i class="fa fa-info-circle"
-                                                                   uib-tooltip="JDBC can be used to query external Databases as well as Hopsworks Hive and MySQL Databases using SQL"
-                                                                   tooltip-placement="left" style="margin-left: 10px">
-                                                                </i>
-                                                            </label>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                                <br>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div class="view-info" ng-if="newFeaturegroupCtrl.cachedSqlType === 0">
-                                    <div class="col-md-12">
-                                        <div class="col-sm-12" style="margin-bottom: 20px">
-                                            <div class="col-sm-3">
-                                                <i class="fa fa-info-circle" tooltip-placement="auto left"
-                                                   uib-tooltip='The Hive Database in Hopsworks to Query'></i>
-                                                <label style="margin-left:20px;" class="control-label">
-                                                    Hive Database :
-                                                </label>
-                                            </div>
-                                            <div class="col-sm-9">
-                                                <ui-select ng-model="newFeaturegroupCtrl.cachedHiveDbName"
-                                                           style="z-index: 100">
-                                                    <ui-select-match placeholder="Select a Hive Database">
-                                                        <span>{{$select.selected}}</span>
-                                                    </ui-select-match>
-                                                    <ui-select-choices
-                                                            repeat="db in newFeaturegroupCtrl.hiveDatabases">
-                                                        <span ng-bind="db"></span>
-                                                    </ui-select-choices>
-                                                </ui-select>
-                                                <div
-                                                        ng-if="newFeaturegroupCtrl.cachedFeaturegroupHiveDbWrongValue === -1
-                                                        && newFeaturegroupCtrl.cachedSqlType === 0"
-                                                        style="color: red">
-                                                    <p>
-                                                        Please specify a Hive Database to run the SQL query against.
-                                                    </p>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div class="view-info" ng-if="newFeaturegroupCtrl.cachedSqlType === 1">
-                                    <div class="col-md-12">
-                                        <div class="col-sm-12" style="margin-bottom: 20px">
-                                            <div class="col-sm-3">
-                                                <i class="fa fa-info-circle" tooltip-placement="auto left"
-                                                   uib-tooltip='The JDBC Connection to use for the Query'></i>
-                                                <label style="margin-left:20px;" class="control-label">JDBC
-                                                    Connector:</label>
-                                            </div>
-                                            <div class="col-sm-9">
-                                                <ui-select
-                                                        ng-model="newFeaturegroupCtrl.cachedFeaturegroupjdbcConnection"
-                                                        style="z-index: 100">
-                                                    <ui-select-match
-                                                            placeholder="Select one of the JDBC Connectors configured for the Feature Store">
-                                                        <span>{{$select.selected.name}}</span>
-                                                    </ui-select-match>
-                                                    <ui-select-choices
-                                                            repeat="connector in newFeaturegroupCtrl.jdbcConnectors">
-                                                        <span ng-bind="connector.name"></span>
-                                                    </ui-select-choices>
-                                                </ui-select>
-                                                <div
-                                                        ng-if="newFeaturegroupCtrl.cachedFeaturegroupJdbcConnectorWrongValue === -1
-                                                        && newFeaturegroupCtrl.cachedSqlType === 0"
-                                                        style="color: red">
-                                                    <p>
-                                                        Please specify a JDBC Connection to run the SQL query against.
-                                                    </p>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div class="view-info" ng-if="newFeaturegroupCtrl.cachedSqlType === 1"
-                                     data-ng-repeat="argument in newFeaturegroupCtrl.cachedFeaturegroupjdbcConnection.arguments track by $index">
-                                    <div class="col-md-12">
-                                        <div class="col-sm-12" style="margin-bottom: 20px">
-                                            <div class="col-sm-3">
-                                                <i class="fa fa-info-circle" tooltip-placement="auto left"
-                                                   uib-tooltip='Argument for the JDBC Connector. If not specified or set to "DEFAULT"
-                                               the argument will be set to default value at runtime.'></i>
-                                                <label style="margin-left:20px;" class="control-label">
-                                                    {{argument.name}}
-                                                </label>
-                                            </div>
-                                            <div class="col-sm-9">
-                                                <input type="text" class="form-control" id="argumentName"
-                                                       ng-model="newFeaturegroupCtrl.cachedFeaturegroupjdbcConnection.arguments[$index].value"
-                                                       placeholder="Argument Value">
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
+                            
                             <div uib-accordion-group class="panel-default"
                                  is-open="newFeaturegroupCtrl.cached_fg_accordion5.isOpen"
                             >
@@ -546,27 +371,16 @@
                                             </button>
 
                                         <md-checkbox class="md-primary"
-                                                     ng-checked="newFeaturegroupCtrl.configureJob"
-                                                     ng-click="newFeaturegroupCtrl.setConfigureJob()"
-                                                     aria-label="If this box is checked, a Spark job for creating
-                                                         the Feature Group will be configured automatically using the provided SQL string"
-                                                     style="margin-left:20px;"
-                                                     dir="rtl"
-                                                     ng-if="(newFeaturegroupCtrl.cachedSqlQuery && newFeaturegroupCtrl.cachedSqlQuery != undefined && newFeaturegroupCtrl.cachedSqlQuery != null) && (newFeaturegroupCtrl.featuregroupOperation === 'CREATE' || newFeaturegroupCtrl.featuregroupOperation === 'NEW_VERSION')"
-                                        >
-                                                <span>Configure Spark Job for creating the feature group using
-                                                    the SQL string</span>
-                                        </md-checkbox>
-                                        <md-checkbox class="md-primary"
                                                      ng-checked="newFeaturegroupCtrl.onlineFg"
                                                      ng-click="newFeaturegroupCtrl.setOnlineFg()"
                                                      aria-label="If this box is checked, online feature serving will be enabled for this feature group.
                                                                      This means that a MySQL in-memory table with real-time response time is created."
-                                                     style="margin-left:20px;"
                                                      dir="rtl"
                                                      ng-if="newFeaturegroupCtrl.featurestore.onlineEnabled && newFeaturegroupCtrl.featuregroupOperation === 'CREATE' || newFeaturegroupCtrl.featuregroupOperation === 'NEW_VERSION'"
                                         >
-                                            <span>Enable Online Feature Serving for this Feature Group</span>
+                                            <span style="margin-right: 40px;">
+                                                Enable Online Serving for this Feature Group
+                                            </span>
                                         </md-checkbox>
                                         <button ng-click="newFeaturegroupCtrl.updateCachedFeaturegroup()"
                                                 class="btn btn-default btn-success"
@@ -827,7 +641,7 @@
                                                 <div class="col-sm-3">
                                                 </div>
                                                 <div class="col-sm-9">
-                                                    <button class="col-sm-2 btn btn-sm btn-danger glyphicon glyphicon-trash"
+                                                    <button class="btn btn-sm btn-danger glyphicon glyphicon-trash"
                                                             uib-tooltip="delete"
                                                             ng-click="newFeaturegroupCtrl.removeNewOnDemandFeature($index)">
                                                     </button>
@@ -922,14 +736,14 @@
                                             </div>
                                             <div class="col-sm-9">
                                                 <ui-select
-                                                        ng-model="newFeaturegroupCtrl.onDemandFeaturegroupjdbcConnection"
+                                                        ng-model="newFeaturegroupCtrl.onDemandFeaturegroupStorageConnector"
                                                         style="z-index: 100">
                                                     <ui-select-match
                                                             placeholder="Select one of the JDBC Connectors configured for the Feature Store">
                                                         <span>{{$select.selected.name}}</span>
                                                     </ui-select-match>
                                                     <ui-select-choices
-                                                            repeat="connector in newFeaturegroupCtrl.jdbcConnectors">
+                                                            repeat="connector in newFeaturegroupCtrl.storageConnectors">
                                                         <span ng-bind="connector.name"></span>
                                                     </ui-select-choices>
                                                 </ui-select>
@@ -944,28 +758,8 @@
                                         </div>
                                     </div>
                                 </div>
-
-                                <div class="view-info"
-                                     data-ng-repeat="argument in newFeaturegroupCtrl.onDemandFeaturegroupjdbcConnection.arguments track by $index">
-                                    <div class="col-md-12">
-                                        <div class="col-sm-12" style="margin-bottom: 20px">
-                                            <div class="col-sm-3">
-                                                <i class="fa fa-info-circle" tooltip-placement="auto left"
-                                                   uib-tooltip='Argument for the JDBC Connector. If not specified or set to "DEFAULT"
-                                               the argument will be set to default value at runtime.'></i>
-                                                <label style="margin-left:20px;" class="control-label">
-                                                    {{argument.name}}
-                                                </label>
-                                            </div>
-                                            <div class="col-sm-9">
-                                                <input type="text" class="form-control" id="argumentName"
-                                                       ng-model="newFeaturegroupCtrl.onDemandFeaturegroupjdbcConnection.arguments[$index].value"
-                                                       placeholder="Argument Value">
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
                             </div>
+
                             <div uib-accordion-group class="panel-default"
                                  is-open="newFeaturegroupCtrl.on_demand_fg_accordion5.isOpen">
                                 <div uib-accordion-heading>

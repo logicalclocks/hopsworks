@@ -1,0 +1,124 @@
+<!--
+  ~ Changes to this file committed after and not including commit-id: ccc0d2c5f9a5ac661e60e6eaf138de7889928b8b
+  ~ are released under the following license:
+  ~
+  ~ This file is part of Hopsworks
+  ~ Copyright (C) 2018, Logical Clocks AB. All rights reserved
+  ~
+  ~ Hopsworks is free software: you can redistribute it and/or modify it under the terms of
+  ~ the GNU Affero General Public License as published by the Free Software Foundation,
+  ~ either version 3 of the License, or (at your option) any later version.
+  ~
+  ~ Hopsworks is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+  ~ without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+  ~ PURPOSE.  See the GNU Affero General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU Affero General Public License along with this program.
+  ~ If not, see <https://www.gnu.org/licenses/>.
+  ~
+  ~ Changes to this file committed before and including commit-id: ccc0d2c5f9a5ac661e60e6eaf138de7889928b8b
+  ~ are released under the following license:
+  ~
+  ~ Copyright (C) 2013 - 2018, Logical Clocks AB and RISE SICS AB. All rights reserved
+  ~
+  ~ Permission is hereby granted, free of charge, to any person obtaining a copy of this
+  ~ software and associated documentation files (the "Software"), to deal in the Software
+  ~ without restriction, including without limitation the rights to use, copy, modify, merge,
+  ~ publish, distribute, sublicense, and/or sell copies of the Software, and to permit
+  ~ persons to whom the Software is furnished to do so, subject to the following conditions:
+  ~
+  ~ The above copyright notice and this permission notice shall be included in all copies or
+  ~ substantial portions of the Software.
+  ~
+  ~ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS  OR IMPLIED, INCLUDING
+  ~ BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+  ~ NONINFRINGEMENT. IN NO EVENT SHALL  THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
+  ~ DAMAGES OR  OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+  ~ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+  -->
+
+<!-- A file selection dialog. -->
+
+<div class="modal-header">
+  <button class="close" ng-click="selectEnvImportCtrl.close()" data-dismiss="modal" aria-hidden="true" type="button">&times;</button>
+  <h2 class="modal-title">Create Anaconda environment from {{selectEnvImportCtrl.type}} file</h2>
+</div>
+<div class="modal-body" ng-controller="PythonCtrl as pythonCtrl">
+
+  <div class="row">
+    <div class="col-md-12">
+      <input style="margin-top: 5px" ng-init="selectEnvImportCtrl.environmentImportDef.path = ''" type="text" class="form-control" ng-model="selectEnvImportCtrl.environmentImportDef.path" required/>
+    </div>
+  </div>
+
+  <div>
+    <span>
+      <label>Install on top of default environment:
+        <input type="checkbox" ng-init="selectEnvImportCtrl.environmentImportDef.installJupyter = true"
+                                     ng-model="selectEnvImportCtrl.environmentImportDef.installJupyter">
+      </label>
+      <i class="fa" ng-class="fa-info" uib-tooltip="If this is checked then the dependencies listed in your environment file will be installed on top of the base environment. In doing so services such as Jupyter will still work." style="margin-left: 10px"></i>
+    </span>
+  </div>
+
+
+
+  <div class="table-responsive" style="overflow: hidden;" ng-controller="DatasetsCtrl as datasetsCtrl">
+
+    <div class="table-responsive" style="overflow: hidden;">
+      <h4 class="row text-muted" style="margin-bottom: 15px; margin-left: 10px;">
+        /{{ selectEnvImportCtrl.datasetBrowser.projectName}}/{{ selectEnvImportCtrl.datasetBrowser.relativePath}}
+      </h4>
+      <div growl reference="114" class="pull-right" ></div>
+      <table class="table table-hover" id="select_file">
+        <tbody>
+        <tr ng-click="selectEnvImportCtrl.datasetBrowser.back()">
+          <td style="padding: 0px">&nbsp &nbsp
+            <a style="font-size:25px">..</a>
+          </td>
+        </tr>
+        <tr dir-paginate="file in selectEnvImportCtrl.datasetBrowser.files | itemsPerPage:selectEnvImportCtrl.datasetBrowser.pageSize"
+            pagination-id="file_select_pagination"
+            current-page="selectEnvImportCtrl.datasetBrowser.currentPage"
+            total-items="selectEnvImportCtrl.datasetBrowser.filesCount"
+            ng-click="selectEnvImportCtrl.selectEnvImport(pythonCtrl, $index, file);"
+            ng-class="{'highlight': selectEnvImportCtrl.datasetBrowser.selected === $index, 'disabled-stroke': (file.accepted !== undefined && file.accepted === false) }"
+            title="{{(file.accepted !== undefined && file.accepted === false) ? 'You need to accept this dataset.':''}}">
+          <td ng-if="selectFileCtrl.datasetBrowser.isTopLevelDataset(file)">
+            <i class="fa"
+               ng-class="{'fa-file': (!file.attributes.dir), 'fa-folder': (file.attributes.dir && (file.accepted === undefined || file.accepted === true)), 'fa-database': ((file.datasetType === 'HIVEDB' || file.datasetType === 'FEATURESTORE') && file.accepted === true) , 'fa-eye-slash': (file.accepted === false), 'fa-cloud-download': (file.downloading)}"></i>
+            &nbsp; {{file.name}}
+          </td>
+          <td ng-if="!selectFileCtrl.datasetBrowser.isTopLevelDataset(file)">
+            <i class="fa"
+               ng-class="{'fa-file': (!file.attributes.dir), 'fa-folder': (file.attributes.dir && (file.accepted === undefined || file.accepted === true)), 'fa-database': ((file.datasetType === 'HIVEDB' || file.datasetType === 'FEATURESTORE') && file.accepted === true) , 'fa-eye-slash': (file.accepted === false), 'fa-cloud-download': (file.downloading)}"></i>
+            &nbsp; {{file.attributes.name}}
+          </td>
+        </tr>
+        </tbody>
+        <tfoot>
+        <tr>
+          <td>
+            <div class="loader loader-sm" ng-show="selectEnvImportCtrl.datasetBrowser.working" style="position: static;"
+                 id="select_file_loading"></div>
+          </td>
+        </tr>
+        </tfoot>
+      </table>
+      <div layout="row" class="pull-right" style="margin-top: -20px; margin-bottom: -20px">
+        <dir-pagination-controls
+                pagination-id="file_select_pagination"
+                max-size="7"
+                direction-links="true"
+                boundary-links="true"
+                on-page-change="selectEnvImportCtrl.datasetBrowser.pageChange(newPageNumber)"
+                class="pull-right">
+        </dir-pagination-controls>
+      </div>
+    </div>
+  </div>
+  <button id="createEnvironment" class="btn btn-success" ng-click="selectEnvImportCtrl.confirmSelection(pythonCtrl, false)" type="submit" style="margin-top:5px; margin-bottom:10px;">
+          <span>
+            Create environment</span>
+  </button>
+</div>

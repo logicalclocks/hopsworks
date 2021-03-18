@@ -18,7 +18,7 @@ package io.hops.hopsworks.common.featurestore.trainingdatasets.hopsfs;
 
 import com.logicalclocks.servicediscoverclient.exceptions.ServiceDiscoveryException;
 import com.logicalclocks.servicediscoverclient.service.Service;
-import io.hops.hopsworks.common.featurestore.storageconnectors.FeaturestoreStorageConnectorType;
+import io.hops.hopsworks.common.featurestore.storageconnectors.hopsfs.FeaturestoreHopsfsConnectorDTO;
 import io.hops.hopsworks.common.featurestore.trainingdatasets.TrainingDatasetDTO;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.hdfs.inode.InodeController;
@@ -72,9 +72,10 @@ public class HopsfsTrainingDatasetController {
         namenodeService.getAddress() + ":" + namenodeService.getPort(),
         inodeController.getPath(hopsfsTrainingDataset.getInode())).toString());
     trainingDatasetDTO.setInodeId(hopsfsTrainingDataset.getInode().getId());
-    trainingDatasetDTO.setStorageConnectorId(hopsfsTrainingDataset.getFeaturestoreHopsfsConnector().getId());
-    trainingDatasetDTO.setStorageConnectorName(hopsfsTrainingDataset.getFeaturestoreHopsfsConnector().getName());
-    trainingDatasetDTO.setStorageConnectorType(FeaturestoreStorageConnectorType.HOPSFS);
+
+    FeaturestoreHopsfsConnectorDTO hopsfsConnectorDTO =
+        new FeaturestoreHopsfsConnectorDTO(hopsfsTrainingDataset.getFeaturestoreConnector());
+    trainingDatasetDTO.setStorageConnector(hopsfsConnectorDTO);
     return trainingDatasetDTO;
   }
 }

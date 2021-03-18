@@ -42,20 +42,23 @@
 angular.module('hopsWorksApp')
         .controller('DatasetsCtrl', ['$scope', '$window', '$mdSidenav', '$mdUtil',
           'DataSetService', 'JupyterService', '$routeParams', 'ModalService', 'growl', '$location',
-          'MetadataHelperService', '$rootScope', 'DelaProjectService', 'UtilsService', 'UserService', '$mdToast',
-          'TourService', 'ProjectService',
+          '$rootScope', 'DelaProjectService', 'UtilsService', 'UserService', '$mdToast',
+          'TourService', 'ProjectService', 'StorageService',
           function ($scope, $window, $mdSidenav, $mdUtil, DataSetService, JupyterService, $routeParams,
-                  ModalService, growl, $location, MetadataHelperService,
-                  $rootScope, DelaProjectService, UtilsService, UserService, $mdToast, TourService, ProjectService) {
+                  ModalService, growl, $location,
+                  $rootScope, DelaProjectService, UtilsService, UserService, $mdToast, TourService, ProjectService,
+                    StorageService, MetadataRestService) {
 
             var self = this;
             var SHARED_DATASET_SEPARATOR = '::';
             var FEATURESTORE_NAME = 'Featurestore.db';
             var HIVEDB_NAME = 'Hive.db';
             var TRAINING_DATASET_NAME = 'Training Datasets';
+            var STATISTICS_DATASET_NAME = 'Statistics';
             var WAREHOUSE_PATH = "/apps/hive/warehouse";
             var PROJECT_PATH = "/Projects";
             var MAX_NUM_FILES = 1000; // the limit on files to keep in memory
+            var JUPYTER_CONFIG_METADATA_NAMESPACE = "jupyter_configuration";
             self.sharedDatasetSeparator = SHARED_DATASET_SEPARATOR;
             self.manyFilesLimit = 10000;
             self.working = false;
@@ -63,6 +66,7 @@ angular.module('hopsWorksApp')
             self.files = []; //A list of files currently displayed to the user.
             self.pagenatedFiles = [];
             self.filesCount = 0;
+            self.defaultItemsPerPage = 20;
 
             self.projectId = $routeParams.projectID; //The id of the project we're currently working in.
             self.basePath = '/project/' + self.projectId + '/datasets';
@@ -96,6 +100,10 @@ angular.module('hopsWorksApp')
             self.tgState = false;
             self.offset = 0;
             self.view = sessionStorage.getItem("datasetBrowserView");
+            self.canStartJupyterFromMetadata = false;
+            self.jupyterConfigFromMetadata = {};
+            self.project = {}
+
             if (typeof self.view  === "undefined" || self.view  === '' || self.view === "null" || self.view === null) {
               self.view  = 'list';// default is list view
               sessionStorage.setItem("datasetBrowserView", self.view);
@@ -115,32 +123,49 @@ angular.module('hopsWorksApp')
               return pathArray.join("/");
             };
 
-            function pagination(page, itemsPerPage, currentPage) {
+            function preferences(page, itemsPerPage, currentPage, sortBy, reverse) {
                 this.page = page;
-                this.itemsPerPage = itemsPerPage;
+                this.itemsPerPage = itemsPerPage
                 this.currentPage = currentPage;
+                this.sortBy = sortBy
+                this.reverse = reverse
                 console.assert(this.itemsPerPage % 10 === 0 && this.itemsPerPage < MAX_NUM_FILES,
                      "items per page should be < " + MAX_NUM_FILES + " and a multiple of 10");
             };
 
-            var getPaginationFromSessionStorage = function (id) {
-                var value = sessionStorage.getItem(id);
-                if (typeof value === "undefined" || value === "null" || value === null) {
-                    return new pagination(1, 20, 1);
+            var getPreferencesFromLocalStorage = function (id) {
+                if (!StorageService.contains(self.projectId + "_" + id)) {
+                    return new preferences(1, self.defaultItemsPerPage, 1, 'ID', false);
                 }
                 try {
-                    return JSON.parse(value);
+                    var storedPreferences = JSON.parse(StorageService.get(self.projectId + "_" + id));
+                    if(typeof storedPreferences.sortBy === "undefined") {
+                        storedPreferences.sortBy = 'ID'
+                    }
+                    if(typeof storedPreferences.reverse === "undefined") {
+                        storedPreferences.reverse = false
+                    }
+                    if(typeof storedPreferences.page === "undefined") {
+                        storedPreferences.page = 1
+                    }
+                    if(typeof storedPreferences.currentPage === "undefined") {
+                        storedPreferences.currentPage = 1
+                    }
+                    if(typeof storedPreferences.itemsPerPage === "undefined") {
+                        storedPreferences.itemsPerPage = self.defaultItemsPerPage
+                    }
+                    return storedPreferences;
                 } catch (e) {
-                    return new pagination(1, 20, 1);
+                    return new preferences(1, self.defaultItemsPerPage, 1, 'ID', false);
                 }
             };
 
-            var setPaginationInSessionStorage = function (id, pagination) {
-                sessionStorage.setItem(id, JSON.stringify(pagination));
+            var setPreferencesInLocalStorage = function (id, preferences) {
+                StorageService.store(self.projectId + "_" + id, JSON.stringify(preferences));
             };
 
-            self.datasetPagination = getPaginationFromSessionStorage("datasetPagination");
-            self.datasetBrowserPagination = getPaginationFromSessionStorage("datasetBrowserPagination");
+            self.datasetPreferences = getPreferencesFromLocalStorage( "datasetPagination");
+            self.datasetBrowserPreferences = getPreferencesFromLocalStorage("datasetBrowserPagination");
 
               /**
                * Checks whether a dataset is a Hive database or not (featurestore or regular hive db will match here)
@@ -229,12 +254,25 @@ angular.module('hopsWorksApp')
                   pinnedDatasets = pinnedDatasets.concat(traningDatasets);
                   pinnedDatasets = pinnedDatasets.concat(system);
                   pinnedDatasets = pinnedDatasets.concat(regularDatasets);
-                  return getPaginated(self.datasetPagination, pinnedDatasets);
+                  return getPaginated(self.datasetPreferences, pinnedDatasets);
               };
 
               self.paginatedFiles = [];
+
+              var getPaginatedSubDir = function () {
+                  var filtered = $scope.$eval("datasetsCtrl.files | orderBy:sortKey:reverse | filter:datasetsCtrl.searchTerm");
+                  self.filesCount = filtered.length;
+                  return getPaginated(self.datasetBrowserPreferences, filtered);
+              }
+
+              var getPaginatedDataset = function () {
+                  var filtered = $scope.$eval("datasetsCtrl.files | filter:{shared: datasetsCtrl.shared, accepted:datasetsCtrl.status, publicDataset: datasetsCtrl.isPublic} | filter:datasetsCtrl.searchTerm");
+                  self.filesCount = filtered.length;
+                  return getPaginated(self.datasetPreferences, filtered);
+              }
+
               self.getPaginatedItems = function () {
-                  return getPaginated(self.datasetBrowserPagination, self.files);
+                  return getPaginatedSubDir();
               };
 
               var setPaginated = function () {
@@ -260,29 +298,41 @@ angular.module('hopsWorksApp')
                 if (getMore) {
                     self.offset = MAX_NUM_FILES*(pagination.page - 1);
                     getDirContents();
-                    setPaginationInSessionStorage(id, pagination);
+                    setPreferencesInLocalStorage(id, pagination);
                 } else {
                     setPaginated();
                 }
             };
 
-            $scope.$watch('datasetsCtrl.datasetPagination', function() {
-                setPaginationInSessionStorage("datasetPagination", self.datasetPagination);
+            $scope.$watch('datasetsCtrl.datasetPreferences', function() {
+                setPreferencesInLocalStorage("datasetPagination", self.datasetPreferences);
             }, true);
 
-            $scope.$watch('datasetsCtrl.datasetBrowserPagination', function() {
-                setPaginationInSessionStorage("datasetBrowserPagination", self.datasetBrowserPagination);
+            $scope.$watch('sortKey', function (newValue) {
+                if(typeof newValue !== "undefined") {
+                    self.datasetBrowserPreferences.sortKey = newValue
+                }
+            });
+
+            $scope.$watch('reverse', function (newVal) {
+                if(typeof newVal !== "undefined") {
+                    self.datasetBrowserPreferences.reverse = newVal
+                }
+            })
+
+            $scope.$watch('datasetsCtrl.datasetBrowserPreferences', function() {
+                setPreferencesInLocalStorage("datasetBrowserPagination", self.datasetBrowserPreferences);
             }, true);
 
             self.pageChange = function (newPageNumber) {
                 self.currentPage = newPageNumber;
                 self.resetSelected();
                 if ($routeParams.datasetName) {
-                    self.datasetBrowserPagination.currentPage = newPageNumber;
-                    getFromServer(self.datasetBrowserPagination, "datasetBrowserPagination");
+                    self.datasetBrowserPreferences.currentPage = newPageNumber;
+                    getFromServer(self.datasetBrowserPreferences, "datasetBrowserPagination");
                 } else {
-                    self.datasetPagination.currentPage = newPageNumber;
-                    getFromServer(self.datasetPagination, "datasetPagination");
+                    self.datasetPreferences.currentPage = newPageNumber;
+                    getFromServer(self.datasetPreferences, "datasetPagination");
                 }
             };
 
@@ -299,13 +349,22 @@ angular.module('hopsWorksApp')
             };
 
             var getSortOrder = function () {
-              return typeof $scope.reverse === "undefined" || $scope.reverse === true ?  ':desc' : ':asc';
+              var reverse = self.datasetBrowserPreferences.reverse
+              if(typeof reverse !== "undefined") {
+                  reverse = $scope.reverse
+              }
+              return typeof reverse === "undefined" || reverse === true ?  ':desc' : ':asc';
             };
 
             var getSortBy = function () {
               var sortBy = [];
-              if (typeof $scope.sortKey !== "undefined" && $scope.sortKey.length > 0) {
-                  switch($scope.sortKey) {
+              if ((typeof self.datasetBrowserPreferences.sortKey !== "undefined")
+                  || (typeof $scope.sortKey !== "undefined" && $scope.sortKey.length > 0)) {
+                  var sortKey = self.datasetBrowserPreferences.sortKey
+                  if(typeof sortKey === "undefined") {
+                      sortKey = $scope.sortKey
+                  }
+                  switch(sortKey) {
                       case 'dir':
                       case 'type':
                       case 'attributes.dir':
@@ -357,13 +416,11 @@ angular.module('hopsWorksApp')
             function getFilteredResults() {
                 var filtered;
                 if ($routeParams.datasetName) {
-                  filtered = $scope.$eval("datasetsCtrl.files | orderBy:sortKey:reverse | filter:datasetsCtrl.searchTerm");
-                  filtered = getPaginated(self.datasetBrowserPagination, filtered);
-                  self.paginatedFiles = filtered;
+                    filtered = getPaginatedSubDir();
+                    self.paginatedFiles = filtered;
                 } else {
-                  filtered = $scope.$eval("datasetsCtrl.files | filter:{shared: datasetsCtrl.shared, accepted: datasetsCtrl.status, publicDataset: datasetsCtrl.isPublic} | filter:datasetsCtrl.searchTerm");
-                  filtered = getPaginated(self.datasetPagination, filtered);
-                  self.sortedDataset = filtered;
+                    filtered = getPaginatedDataset();
+                    self.sortedDataset = filtered;
                 }
                 return filtered;
             }
@@ -404,8 +461,6 @@ angular.module('hopsWorksApp')
                 growl.error(errorMsg, {title: error.data.errorMsg, ttl: 5000, referenceId: refId});
             };
 
-            self.metadataView = {};
-            self.availableTemplates = [];
             self.closeSlider = false;
             self.breadcrumbLen = function () {
               if (self.pathArray === undefined || self.pathArray === null) {
@@ -432,22 +487,6 @@ angular.module('hopsWorksApp')
               $scope.sortKey = keyname;   //set the sortKey to the param passed
               $scope.reverse = !$scope.reverse; //if true make it false and vice versa
             };
-
-            /**
-             * watch for changes happening in service variables from the other controller
-             */
-            $scope.$watchCollection(MetadataHelperService.getAvailableTemplates, function (availTemplates) {
-              if (!angular.isUndefined(availTemplates)) {
-                self.availableTemplates = availTemplates;
-              }
-            });
-
-            $scope.$watch(MetadataHelperService.getDirContents, function (response) {
-              if (response === "true") {
-                getDirContents();
-                MetadataHelperService.setDirContents("false");
-              }
-            });
 
             self.goToUrl = function (serviceName) {
                 $location.path('project/' + self.projectId + '/' + serviceName);
@@ -743,10 +782,10 @@ angular.module('hopsWorksApp')
                 });
             };
 
-            var getAssociatedTrainingDataset = function (sharedFeaturestoreName) {
+            var getAssociatedServiceDataset = function (sharedFeaturestoreName, datasetName) {
                 var fsName = sharedFeaturestoreName;
                 var index = fsName.indexOf(SHARED_DATASET_SEPARATOR);
-                return fsName.substring(0, index + SHARED_DATASET_SEPARATOR.length) + TRAINING_DATASET_NAME;
+                return fsName.substring(0, index + SHARED_DATASET_SEPARATOR.length) + datasetName;
             }
 
             /**
@@ -758,9 +797,11 @@ angular.module('hopsWorksApp')
                 var msg = getDeleteWarnMsg(dataset);
                 if (dataset.datasetType === 'FEATURESTORE' && dataset.shared && dataset.accepted) {
                     var fsName = replaceName(dataset.name, FEATURESTORE_NAME);
-                    var tsName = getAssociatedTrainingDataset(fsName);
+                    var tsName = getAssociatedServiceDataset(fsName, TRAINING_DATASET_NAME);
+                    var statsName = getAssociatedServiceDataset(fsName, STATISTICS_DATASET_NAME);
                     msg += '<br><br><i class="fa fa-info-circle text-info"></i> ' +
-                        'Deleting <strong>' + fsName + '</strong> will also delete <strong>' + tsName + '</strong> if it exists.';
+                        'Deleting <strong>' + fsName + '</strong> will also delete <strong>' + tsName + '</strong>' +
+                        ' and <strong>' + statsName + '</strong> if it exists.';
                 }
                 ModalService.confirm('md', 'Confirm', msg).then(function (success) {
                    removeFile(dataset);
@@ -995,9 +1036,11 @@ angular.module('hopsWorksApp')
                 var msg = 'Do you want to accept this dataset and add it to this project?';
                 if (dataset.datasetType === 'FEATURESTORE') {
                     var fsName = replaceName(dataset.name, FEATURESTORE_NAME);
-                    var tsName = getAssociatedTrainingDataset(fsName);
+                    var tsName = getAssociatedServiceDataset(fsName, TRAINING_DATASET_NAME);
+                    var statsName = getAssociatedServiceDataset(fsName, STATISTICS_DATASET_NAME);
                     msg += '<br><i class="fa fa-info-circle text-info"></i> ' +
-                        'Accepting this shared dataset will also add ' + tsName + ' to this project.';
+                        'Accepting this shared dataset will also add ' + tsName + ' and ' + statsName + ' to this' +
+                        ' project.';
                 }
                 ModalService.confirmShare('md', 'Accept Shared Dataset?', msg)
                   .then(function (success) {
@@ -1255,8 +1298,7 @@ angular.module('hopsWorksApp')
              * @returns {undefined}
              */
             self.uploadFile = function () {
-              var templateId = -1;
-              ModalService.upload('lg', self.projectId, getPath(self.pathArray), templateId, self.datasetType).then(
+              ModalService.upload('lg', self.projectId, getPath(self.pathArray), self.datasetType).then(
                   function (success) {
                     getDirContents();
                   }, function (error) {
@@ -1560,22 +1602,6 @@ angular.module('hopsWorksApp')
               self.tgState = false;
             };
 
-            self.toggleLeft = buildToggler('left');
-            self.toggleRight = buildToggler('right');
-
-            function buildToggler(navID) {
-              var debounceFn = $mdUtil.debounce(function () {
-                $mdSidenav(navID).toggle()
-                        .then(function () {
-                          MetadataHelperService.fetchAvailableTemplates()
-                                  .then(function (response) {
-                                    self.availableTemplates = JSON.parse(response.board).templates;
-                                  });
-                        });
-              }, 300);
-              return debounceFn;
-            };
-
             self.getSelectedPath = function (selectedFile) {
               if (self.isSelectedFiles() !== 1) {
                 return "";
@@ -1632,11 +1658,62 @@ angular.module('hopsWorksApp')
               ProjectService.get({}, {'id': self.projectId}).$promise.then(
                   function (success) {
                       self.projectName = success.projectName;
+                      self.project = success
                       getDirContents();
                   }, function (error) {
 
                   });
             };
+
+            self.getFileAttachedJupyterConfig = function (file) {
+                //only for .ipynb
+                self.canStartJupyterFromMetadata = false;
+                self.jupyterConfigFromMetadata = {};
+                if(file.attributes.path.endsWith(".ipynb")) {
+                    MetadataRestService.getfileMetadata(JUPYTER_CONFIG_METADATA_NAMESPACE, file.attributes.path,
+                        self.projectId).then(
+                        function( success) {
+                            if(success.data.items.length > 0) {
+                                try {
+                                    var config = JSON.parse(success.data.items[0].value)
+                                    self.jupyterConfigFromMetadata = JSON.parse(config[JUPYTER_CONFIG_METADATA_NAMESPACE])
+                                    self.canStartJupyterFromMetadata = true;
+                                } catch (error) {
+                                    //do nothing
+                                }
+                            }
+                        }, function (error) {
+
+                        });
+                }
+            }
+
+            self.startJupyterFromAttachedConfig = function (mode) {
+                //Configuration does not have project
+                //Get the current jupyter settings to get the project config
+               JupyterService.settings(self.projectId).then(
+                   function (success) {
+                       self.jupyterConfigFromMetadata.project = success.data.project;
+                       $scope.startFromXattrConfig(self.jupyterConfigFromMetadata, mode);
+                   }, function (error) {
+                       growl.warning("Error: Failed to get project configuration", {title: 'Error', ttl: 5000});
+                   }
+               )
+            }
+
+            self.viewAttachedJupyterConfiguration = function () {
+                JupyterService.settings(self.projectId).then(
+                    function (success) {
+                        self.jupyterConfigFromMetadata.project = success.data.project;
+                        ModalService.notebookAttachedJupyterConfigurationViewInfo('xl', self.jupyterConfigFromMetadata).then(
+                            function (success) {
+                            }, function (error) {
+                            });
+                    }, function (error) {
+                        growl.warning("Error: Failed to get project configuration", {title: 'Error', ttl: 5000});
+                    }
+                )
+            }
 
             var init = function () {
               //Check if the current dataset is set

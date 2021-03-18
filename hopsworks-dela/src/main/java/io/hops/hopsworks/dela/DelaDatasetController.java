@@ -160,7 +160,7 @@ public class DelaDatasetController {
     DistributedFileSystemOps dfso = dfs.getDfsOps();
     try {
       ProvTypeDTO projectMetaStatus = fsProvenanceController.getProjectProvType(user, project);
-      datasetCtrl.createDataset(user, project, name, description, -1, projectMetaStatus,
+      datasetCtrl.createDataset(user, project, name, description, projectMetaStatus,
         false, DatasetAccessPermission.EDITABLE, dfso);
       return datasetController.getByProjectAndDsName(project, null, name);
     } finally {

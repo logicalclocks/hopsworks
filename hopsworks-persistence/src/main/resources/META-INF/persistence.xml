@@ -51,26 +51,41 @@
     <class>io.hops.hopsworks.persistence.entity.dataset.DatasetRequest</class>
     <class>io.hops.hopsworks.persistence.entity.dela.certs.ClusterCertificate</class>
     <class>io.hops.hopsworks.persistence.entity.featurestore.Featurestore</class>
-    <class>io.hops.hopsworks.persistence.entity.featurestore.feature.FeaturestoreFeature</class>
+    <class>io.hops.hopsworks.persistence.entity.featurestore.activity.FeaturestoreActivity</class>
+    <class>io.hops.hopsworks.persistence.entity.featurestore.tag.FeatureStoreTag</class>
+    <class>io.hops.hopsworks.persistence.entity.featurestore.featuregroup.ondemand.OnDemandFeature</class>
+    <class>io.hops.hopsworks.persistence.entity.featurestore.featuregroup.ondemand.OnDemandOption</class>
+    <class>io.hops.hopsworks.persistence.entity.featurestore.storageconnector.FeaturestoreConnector</class>
     <class>io.hops.hopsworks.persistence.entity.featurestore.storageconnector.jdbc.FeaturestoreJdbcConnector</class>
+    <class>io.hops.hopsworks.persistence.entity.featurestore.storageconnector.redshift.FeatureStoreRedshiftConnector</class>
     <class>io.hops.hopsworks.persistence.entity.featurestore.storageconnector.s3.FeaturestoreS3Connector</class>
     <class>io.hops.hopsworks.persistence.entity.featurestore.storageconnector.hopsfs.FeaturestoreHopsfsConnector</class>
+    <class>io.hops.hopsworks.persistence.entity.featurestore.storageconnector.adls.FeaturestoreADLSConnector</class>
+    <class>io.hops.hopsworks.persistence.entity.featurestore.storageconnector.snowflake.FeaturestoreSnowflakeConnector</class>
     <class>io.hops.hopsworks.persistence.entity.featurestore.featuregroup.Featuregroup</class>
     <class>io.hops.hopsworks.persistence.entity.featurestore.featuregroup.ondemand.OnDemandFeaturegroup</class>
     <class>io.hops.hopsworks.persistence.entity.featurestore.featuregroup.cached.CachedFeaturegroup</class>
+    <class>io.hops.hopsworks.persistence.entity.featurestore.featuregroup.cached.FeatureGroupCommit</class>
+    <class>io.hops.hopsworks.persistence.entity.featurestore.featuregroup.cached.CachedFeatureExtraConstraints</class>
     <class>io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.hopsfs.HopsfsTrainingDataset</class>
     <class>io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.external.ExternalTrainingDataset</class>
     <class>io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.TrainingDataset</class>
+    <class>io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.TrainingDatasetFeature</class>
+    <class>io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.TrainingDatasetJoin</class>
+    <class>io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.TrainingDatasetJoinCondition</class>
     <class>io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.split.TrainingDatasetSplit</class>
-    <class>io.hops.hopsworks.persistence.entity.featurestore.jobs.FeaturestoreJob</class>
-    <class>io.hops.hopsworks.persistence.entity.featurestore.statistics.columns.StatisticColumn</class>
+    <class>io.hops.hopsworks.persistence.entity.featurestore.statistics.StatisticsConfig</class>
+    <class>io.hops.hopsworks.persistence.entity.featurestore.statistics.StatisticColumn</class>
     <class>io.hops.hopsworks.persistence.entity.featurestore.statistics.FeaturestoreStatistic</class>
+    <class>io.hops.hopsworks.persistence.entity.featurestore.featuregroup.datavalidation.ValidationRule</class>
+    <class>io.hops.hopsworks.persistence.entity.featurestore.featuregroup.datavalidation.FeatureStoreExpectation</class>
+    <class>io.hops.hopsworks.persistence.entity.featurestore.featuregroup.datavalidation.FeatureGroupExpectation</class>
+    <class>io.hops.hopsworks.persistence.entity.featurestore.featuregroup.datavalidation.FeatureGroupValidation</class>
     <class>io.hops.hopsworks.persistence.entity.hdfs.HdfsDirectoryWithQuotaFeature</class>
     <class>io.hops.hopsworks.persistence.entity.hdfs.HdfsLeDescriptors</class>
     <class>io.hops.hopsworks.persistence.entity.hdfs.user.HdfsGroups</class>
     <class>io.hops.hopsworks.persistence.entity.hdfs.user.HdfsUsers</class>
     <class>io.hops.hopsworks.persistence.entity.hdfs.inode.Inode</class>
-    <class>io.hops.hopsworks.persistence.entity.hdfs.inode.InodeEncodingStatus</class>
     <class>io.hops.hopsworks.persistence.entity.hdfs.inode.InodeOps</class>
     <class>io.hops.hopsworks.persistence.entity.host.Hosts</class>
     <class>io.hops.hopsworks.persistence.entity.jobs.history.Execution</class>
@@ -93,24 +108,15 @@
     <class>io.hops.hopsworks.persistence.entity.kafka.SharedTopics</class>
     <class>io.hops.hopsworks.persistence.entity.kafka.TopicAcls</class>
     <class>io.hops.hopsworks.persistence.entity.kagent.HostServices</class>
-    <class>io.hops.hopsworks.persistence.entity.log.meta.MetaLog</class>
     <class>io.hops.hopsworks.persistence.entity.log.operation.OperationsLog</class>
     <class>io.hops.hopsworks.persistence.entity.maggy.MaggyDriver</class>
     <class>io.hops.hopsworks.persistence.entity.message.Message</class>
-    <class>io.hops.hopsworks.persistence.entity.metadata.Field</class>
-    <class>io.hops.hopsworks.persistence.entity.metadata.FieldPredefinedValue</class>
-    <class>io.hops.hopsworks.persistence.entity.metadata.FieldType</class>
-    <class>io.hops.hopsworks.persistence.entity.metadata.InodeBasicMetadata</class>
-    <class>io.hops.hopsworks.persistence.entity.metadata.MTable</class>
-    <class>io.hops.hopsworks.persistence.entity.metadata.Metadata</class>
-    <class>io.hops.hopsworks.persistence.entity.metadata.RawData</class>
-    <class>io.hops.hopsworks.persistence.entity.metadata.Template</class>
-    <class>io.hops.hopsworks.persistence.entity.metadata.TupleToFile</class>
     <class>io.hops.hopsworks.persistence.entity.ndb.NdbBackup</class>
     <class>io.hops.hopsworks.persistence.entity.project.Project</class>
     <class>io.hops.hopsworks.persistence.entity.project.service.ProjectServices</class>
     <class>io.hops.hopsworks.persistence.entity.project.team.ProjectTeam</class>
     <class>io.hops.hopsworks.persistence.entity.project.pia.Pia</class>
+    <class>io.hops.hopsworks.persistence.entity.python.PythonEnvironment</class>
     <class>io.hops.hopsworks.persistence.entity.python.PythonDep</class>
     <class>io.hops.hopsworks.persistence.entity.python.AnacondaRepo</class>
     <class>io.hops.hopsworks.persistence.entity.python.CondaCommands</class>
@@ -129,13 +135,9 @@
     <class>io.hops.hopsworks.persistence.entity.user.Users</class>
     <class>io.hops.hopsworks.persistence.entity.user.cluster.ClusterCert</class>
     <class>io.hops.hopsworks.persistence.entity.user.activity.Activity</class>
-    <class>io.hops.hopsworks.persistence.entity.user.security.Address</class>
-    <class>io.hops.hopsworks.persistence.entity.user.security.Organization</class>
     <class>io.hops.hopsworks.persistence.entity.user.security.audit.AccountAudit</class>
     <class>io.hops.hopsworks.persistence.entity.user.security.audit.RolesAudit</class>
     <class>io.hops.hopsworks.persistence.entity.user.security.audit.Userlogins</class>
-    <class>io.hops.hopsworks.persistence.entity.user.sshkey.AuthorizedSshkeys</class>
-    <class>io.hops.hopsworks.persistence.entity.user.sshkey.SshKeys</class>
     <class>io.hops.hopsworks.persistence.entity.user.security.secrets.Secret</class>
     <class>io.hops.hopsworks.persistence.entity.util.Variables</class>
     <class>io.hops.hopsworks.persistence.entity.yarn.YarnContainersLog</class>
@@ -154,7 +156,7 @@
     <class>io.hops.hopsworks.persistence.entity.user.cluster.RegistrationStatusConverter</class>
     <class>io.hops.hopsworks.persistence.entity.jobs.configuration.JobConfigurationConverter</class>
     <class>io.hops.hopsworks.persistence.entity.jupyter.config.JupyterConfigurationConverter</class>
-    <class>io.hops.hopsworks.persistence.entity.featurestore.statistics.FeaturestoreStatisticValueConverter</class>
+    <class>io.hops.hopsworks.persistence.entity.featurestore.featuregroup.datavalidation.RuleAssertionsConverter</class>
 
     <exclude-unlisted-classes>true</exclude-unlisted-classes>
     <shared-cache-mode>NONE</shared-cache-mode>
@@ -168,18 +170,6 @@
       <property name="eclipselink.logging.parameters" value="true"/>
       <property name="eclipselink.logging.logger" value="ServerLogger"/>
       -->
-    </properties>
-  </persistence-unit>
-
-  <persistence-unit name="featurestorePU" transaction-type="JTA">
-    <provider>org.eclipse.persistence.jpa.PersistenceProvider</provider>
-    <jta-data-source>jdbc/featurestore</jta-data-source>
-    <exclude-unlisted-classes>true</exclude-unlisted-classes>
-    <shared-cache-mode>NONE</shared-cache-mode>
-    <validation-mode>NONE</validation-mode>
-    <properties>
-      <property name="eclipselink.target-database" value="MYSQL"/>
-      <property name="eclipselink.read-only" value="true"/>
     </properties>
   </persistence-unit>
 </persistence>

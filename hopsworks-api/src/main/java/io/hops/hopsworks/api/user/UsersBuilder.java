@@ -112,7 +112,6 @@ public class UsersBuilder {
       dto.setLastname(user.getLname());
       dto.setEmail(user.getEmail());
       dto.setUsername(user.getUsername());
-      dto.setPhoneNumber(user.getMobile());
       dto.setTwoFactor(user.getTwoFactor());
       if (UserAccountType.REMOTE_ACCOUNT_TYPE.equals(user.getMode())) {
         dto.setAccountType(remoteUserFacade.findByUsers(user).getType().toString());
@@ -123,6 +122,7 @@ public class UsersBuilder {
       dto.setNumCreatedProjects(user.getNumCreatedProjects());
       dto.setNumActiveProjects(user.getNumActiveProjects());
       dto.setToursState(user.getToursState());
+      dto.setActivated(user.getActivated());
     }
     return dto;
   }

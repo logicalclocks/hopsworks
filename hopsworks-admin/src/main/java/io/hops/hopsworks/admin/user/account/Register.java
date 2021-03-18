@@ -28,7 +28,6 @@ import io.hops.hopsworks.exceptions.GenericException;
 import io.hops.hopsworks.exceptions.UserException;
 import io.hops.hopsworks.persistence.entity.remote.user.RemoteUserType;
 import io.hops.hopsworks.persistence.entity.user.BbcGroup;
-import io.hops.hopsworks.persistence.entity.user.security.ua.SecurityQuestion;
 import io.hops.hopsworks.persistence.entity.user.security.ua.UserAccountStatus;
 import io.hops.hopsworks.persistence.entity.user.security.ua.UserAccountType;
 import io.hops.hopsworks.restutils.RESTCodes;
@@ -55,16 +54,11 @@ import java.util.logging.Logger;
 public class Register implements Serializable {
   private static final Logger LOGGER = Logger.getLogger(Register.class.getName());
   
-  private static final String DEFAULT_ROLE = "HOPS_USER";
-  private static final int DEFAULT_MAX_NUM_PROJECTS = 5;
-  private static final int DEFAULT_SECURITY_ANSWER_LEN = 16;
-  
   private String uuid;
   private String email;
   private String firstName;
   private String lastName;
   private String role;
-  private String phone;
   private Integer status;
   private Integer maxNumProjects;
   private Integer remoteUserType;
@@ -119,9 +113,9 @@ public class Register implements Serializable {
   
   private void resetDefault() {
     setAccountType(UserAccountType.M_ACCOUNT_TYPE.getValue());
-    setRole(DEFAULT_ROLE);
+    setRole(Settings.DEFAULT_ROLE);
     setStatus(UserAccountStatus.TEMP_PASSWORD.getValue());
-    setMaxNumProjects(DEFAULT_MAX_NUM_PROJECTS);
+    setMaxNumProjects(settings.getMaxNumProjPerUser());
     this.remoteAuthEnabled = settings.isKrbEnabled() || settings.isLdapEnabled();
   }
   
@@ -131,10 +125,9 @@ public class Register implements Serializable {
     this.firstName = null;
     this.lastName = null;
     this.role = null;
-    this.phone = null;
-    this.role = DEFAULT_ROLE;
+    this.role = Settings.DEFAULT_ROLE;
     this.status = UserAccountStatus.TEMP_PASSWORD.getValue();
-    this.maxNumProjects = DEFAULT_MAX_NUM_PROJECTS;
+    this.maxNumProjects = settings.getMaxNumProjPerUser();
   }
   
   public String getUuid() {
@@ -175,14 +168,6 @@ public class Register implements Serializable {
   
   public void setRole(String role) {
     this.role = role;
-  }
-  
-  public String getPhone() {
-    return phone;
-  }
-  
-  public void setPhone(String phone) {
-    this.phone = phone;
   }
   
   public Integer getStatus() {
@@ -285,8 +270,6 @@ public class Register implements Serializable {
       this.password = securityUtils.generateRandomString(UserValidator.TEMP_PASSWORD_LENGTH);
       newUser.setChosenPassword(this.password);
       newUser.setRepeatedPassword(this.password);
-      newUser.setSecurityQuestion(SecurityQuestion.randomQuestion().getValue());
-      newUser.setSecurityAnswer(securityUtils.generateSecureRandomString(DEFAULT_SECURITY_ANSWER_LEN));
       auditedUserAdministration.createUser(newUser, this.role, UserAccountStatus.fromValue(status),
         UserAccountType.M_ACCOUNT_TYPE, httpServletRequest);
       showDialog();
