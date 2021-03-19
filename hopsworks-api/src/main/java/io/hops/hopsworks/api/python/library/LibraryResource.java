@@ -164,6 +164,7 @@ public class LibraryResource {
     validatePattern(library);
     Users user = jwtHelper.getUserPrincipal(sc);
     environmentController.checkCondaEnabled(project, pythonVersion, true);
+
     if (settings.getImmutablePythonLibraryNames().contains(library)) {
       throw new ServiceException(RESTCodes.ServiceErrorCode.ANACONDA_DEP_REMOVE_FORBIDDEN, Level.INFO,
           "library: " + library);
@@ -218,13 +219,6 @@ public class LibraryResource {
     }
 
     environmentController.checkCondaEnvExists(project, user);
-
-    //TODO account for ongoing operations
-    for(PythonDep dep: project.getPythonDepCollection()) {
-      if(dep.getDependency().equalsIgnoreCase(library)) {
-        throw new ServiceException(RESTCodes.ServiceErrorCode.ANACONDA_DEP_INSTALL_FORBIDDEN, Level.FINE);
-      }
-    }
 
     PythonDep dep = libraryController.installLibrary(project, user,
         CondaInstallType.valueOf(packageSource.name().toUpperCase()), librarySpecification.getChannelUrl(),

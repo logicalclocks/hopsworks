@@ -30,6 +30,7 @@ public class LibraryDTO extends RestDTO<LibraryDTO> {
   private PackageSource packageSource;
   private String library;
   private String version;
+  private String latestVersion;
   private CondaStatus status;
   private String preinstalled;
   private CommandDTO commands;
@@ -60,7 +61,15 @@ public class LibraryDTO extends RestDTO<LibraryDTO> {
   public void setVersion(String version) {
     this.version = version;
   }
-  
+
+  public String getLatestVersion() {
+    return latestVersion;
+  }
+
+  public void setLatestVersion(String latestVersion) {
+    this.latestVersion = latestVersion;
+  }
+
   public CondaStatus getStatus() {
     return status;
   }
@@ -131,10 +140,10 @@ public class LibraryDTO extends RestDTO<LibraryDTO> {
       ", packageSource=" + getPackageSource() +
       ", library='" + library + '\'' +
       ", version='" + version + '\'' +
+      ", latestVersion='" + latestVersion + '\'' +
       ", status=" + status +
       ", preinstalled='" + preinstalled + '\'' +
       ", commands=" + commands +
       '}';
   }
-
 }

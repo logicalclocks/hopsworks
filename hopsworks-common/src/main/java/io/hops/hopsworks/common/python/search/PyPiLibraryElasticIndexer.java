@@ -14,7 +14,7 @@
  * If not, see <https://www.gnu.org/licenses/>.
  */
 
-package io.hops.hopsworks.common.python;
+package io.hops.hopsworks.common.python.search;
 
 import io.hops.hopsworks.common.elastic.ElasticClientController;
 import io.hops.hopsworks.common.util.Settings;

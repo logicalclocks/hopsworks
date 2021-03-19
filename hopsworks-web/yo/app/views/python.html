@@ -568,6 +568,14 @@
                     </i> <a ng-click="pythonCtrl.showConflicts()" style="cursor: pointer;">Conflicts</a> detected in this environment
                   </span>
                 </div>
+
+                <div class="alert alert-warning" style="padding: 10px; margin-bottom: 10px;" ng-repeat="lib in pythonCtrl.libraryToUpgrade">
+                  <span style="font-size: 1.1em !important; margin-left:100px;">
+                    <i class="fa fa-warning" uib-tooltip="yoyo" style="color:orange;">
+                    </i> A new release {{lib.latestVersion}} for {{lib.library}} is available. It is recommended that you <a ng-click="pythonCtrl.upgrade(lib)" style="cursor: pointer;">upgrade</a> as version {{lib.version}} is installed.
+                  </span>
+                </div>
+
                 <div>
                   <h2 style="margin-bottom: 30px;">Manage Environment
                     <span ng-show="pythonCtrl.loadingLibs" class="glyphicon glyphicon-refresh spin-icon" style="font-size: 0.9em !important;"> </span>
