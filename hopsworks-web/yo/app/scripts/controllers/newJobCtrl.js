@@ -42,10 +42,10 @@
 angular.module('hopsWorksApp')
         .controller('NewJobCtrl', ['$routeParams', 'growl', 'JobService',
           '$location', 'ModalService', 'StorageService', '$scope', 'TourService',
-            'KafkaService', 'ProjectService', 'PythonService', 'VariablesService', 'MetadataRestService', '$timeout',
+            'KafkaService', 'ProjectService', 'PythonService', 'VariablesService', 'XAttrService', '$timeout',
           function ($routeParams, growl, JobService,
                   $location, ModalService, StorageService, $scope, TourService,
-                  KafkaService, ProjectService, PythonService, VariablesService, MetadataRestService, $timeout) {
+                  KafkaService, ProjectService, PythonService, VariablesService, XAttrService, $timeout) {
 
             var self = this;
             self.tourService = TourService;
@@ -97,7 +97,7 @@ angular.module('hopsWorksApp')
             self.sparkExecutorMemory = {minExecutorMemory:1024, hasEnoughMemory:true};
 
             //Jupyter configuration in file metadata
-            self.JUPYTER_CONFIG_METADATA_NAMESPACE = "jupyter_configuration";
+            self.JUPYTER_CONFIG_METADATA_KEY = "jupyter_configuration";
             self.jobConfigFromMetadata = null;
 
             self.getDockerMaxAllocation = function () {
@@ -817,13 +817,13 @@ angular.module('hopsWorksApp')
                         self.jobConfigFromMetadata = null;
                         //get attached jupyter configuration. For ipynb and files in Jupyter folder
                         if(path.endsWith(".ipynb")) {
-                          MetadataRestService.getfileMetadata(self.JUPYTER_CONFIG_METADATA_NAMESPACE, path,
+                          XAttrService.get(self.JUPYTER_CONFIG_METADATA_KEY, path,
                               self.projectId).then(
                               function( success) {
                                 if(success.data.items.length > 0) {
                                   try {
                                     var config = JSON.parse(success.data.items[0].value)
-                                    self.jobConfigFromMetadata = JSON.parse(config[self.JUPYTER_CONFIG_METADATA_NAMESPACE])["jobConfig"]
+                                    self.jobConfigFromMetadata = JSON.parse(config[self.JUPYTER_CONFIG_METADATA_KEY])["jobConfig"]
                                   } catch (error) {
                                   }
                                 }
