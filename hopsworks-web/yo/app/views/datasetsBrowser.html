@@ -234,7 +234,7 @@
                             <md-checkbox md-no-ink class="md-primary" aria-label="Select File"
                                          ng-checked="false"
                                          ng-show="!datasetsCtrl.haveSelected(file)"
-                                         ng-click="datasetsCtrl.select($index, file, $event); datasetsCtrl.sharedDatasetPath(); datasetsCtrl.getStat(file) datasetsCtrl.getFileAttachedJupyterConfig(file)"
+                                         ng-click="datasetsCtrl.select($index, file, $event); datasetsCtrl.sharedDatasetPath(); datasetsCtrl.getStat(file); datasetsCtrl.getFileAttachedJupyterConfig(file)"
                                          style="margin-top: 5px; margin-bottom: 5px">
                               <md-tooltip md-direction="right">
                                 Select
