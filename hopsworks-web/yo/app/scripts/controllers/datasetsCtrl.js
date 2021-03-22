@@ -43,11 +43,11 @@ angular.module('hopsWorksApp')
         .controller('DatasetsCtrl', ['$scope', '$window', '$mdSidenav', '$mdUtil',
           'DataSetService', 'JupyterService', '$routeParams', 'ModalService', 'growl', '$location',
           '$rootScope', 'DelaProjectService', 'UtilsService', 'UserService', '$mdToast',
-          'TourService', 'ProjectService', 'StorageService',
+          'TourService', 'ProjectService', 'StorageService', 'XAttrService',
           function ($scope, $window, $mdSidenav, $mdUtil, DataSetService, JupyterService, $routeParams,
                   ModalService, growl, $location,
                   $rootScope, DelaProjectService, UtilsService, UserService, $mdToast, TourService, ProjectService,
-                    StorageService, MetadataRestService) {
+                    StorageService, XAttrService) {
 
             var self = this;
             var SHARED_DATASET_SEPARATOR = '::';
@@ -58,7 +58,7 @@ angular.module('hopsWorksApp')
             var WAREHOUSE_PATH = "/apps/hive/warehouse";
             var PROJECT_PATH = "/Projects";
             var MAX_NUM_FILES = 1000; // the limit on files to keep in memory
-            var JUPYTER_CONFIG_METADATA_NAMESPACE = "jupyter_configuration";
+            var JUPYTER_CONFIG_METADATA_KEY = "jupyter_configuration";
             self.sharedDatasetSeparator = SHARED_DATASET_SEPARATOR;
             self.manyFilesLimit = 10000;
             self.working = false;
@@ -1670,13 +1670,13 @@ angular.module('hopsWorksApp')
                 self.canStartJupyterFromMetadata = false;
                 self.jupyterConfigFromMetadata = {};
                 if(file.attributes.path.endsWith(".ipynb")) {
-                    MetadataRestService.getfileMetadata(JUPYTER_CONFIG_METADATA_NAMESPACE, file.attributes.path,
+                    XAttrService.get(JUPYTER_CONFIG_METADATA_KEY, file.attributes.path,
                         self.projectId).then(
                         function( success) {
                             if(success.data.items.length > 0) {
                                 try {
                                     var config = JSON.parse(success.data.items[0].value)
-                                    self.jupyterConfigFromMetadata = JSON.parse(config[JUPYTER_CONFIG_METADATA_NAMESPACE])
+                                    self.jupyterConfigFromMetadata = JSON.parse(config[JUPYTER_CONFIG_METADATA_KEY])
                                     self.canStartJupyterFromMetadata = true;
                                 } catch (error) {
                                     //do nothing
