@@ -424,21 +424,12 @@ public class ProjectController {
       }
       LOGGER.log(Level.FINE, "PROJECT CREATION TIME. Step 8 (logs): {0}", System.currentTimeMillis() - startTime);
 
-      try {
-        project = environmentController.createEnv(project, owner);
-      } catch (PythonException | EJBException ex) {
-        cleanup(project, sessionId, projectCreationFutures);
-        throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_ANACONDA_ENABLE_ERROR, Level.SEVERE,
-            "project: " + projectName, ex.getMessage(), ex);
-      }
-      LOGGER.log(Level.FINE, "PROJECT CREATION TIME. Step 9 (env): {0}", System.currentTimeMillis() - startTime);
-
       //Delete old project indices and kibana saved objects to avoid
       // inconsistencies
       try {
         elasticController.deleteProjectIndices(project);
         elasticController.deleteProjectSavedObjects(projectName);
-        LOGGER.log(Level.FINE, "PROJECT CREATION TIME. Step 10 (elastic cleanup): {0}",
+        LOGGER.log(Level.FINE, "PROJECT CREATION TIME. Step 9 (elastic cleanup): {0}",
             System.currentTimeMillis() - startTime);
       } catch (ElasticException ex){
         LOGGER.log(Level.FINE, "Error while cleaning old project indices", ex);
@@ -480,13 +471,22 @@ public class ProjectController {
         }
       }
 
+      try {
+        project = environmentController.createEnv(project, owner);
+      } catch (PythonException | EJBException ex) {
+        cleanup(project, sessionId, projectCreationFutures);
+        throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_ANACONDA_ENABLE_ERROR, Level.SEVERE,
+          "project: " + projectName, ex.getMessage(), ex);
+      }
+      LOGGER.log(Level.FINE, "PROJECT CREATION TIME. Step 10 (env): {0}", System.currentTimeMillis() - startTime);
+
       return project;
 
     } finally {
       if (dfso != null) {
         dfso.close();
       }
-      LOGGER.log(Level.FINE, "PROJECT CREATION TIME. Step 10 (close): {0}", System.currentTimeMillis() - startTime);
+      LOGGER.log(Level.FINE, "PROJECT CREATION TIME. Step 11 (close): {0}", System.currentTimeMillis() - startTime);
     }
 
   }

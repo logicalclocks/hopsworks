@@ -348,36 +348,7 @@ public class LibraryController {
     return Try.apply(() -> new String[] {hit.getSource().get("library").toString()});
   }
   
-  public Collection<PythonDep> listLibraries(String imageName) throws ServiceException {
-    String prog = settings.getSudoersDir() + "/dockerImage.sh";
-    
-    ProcessDescriptor processDescriptor = new ProcessDescriptor.Builder()
-      .addCommand("/usr/bin/sudo")
-      .addCommand(prog)
-      .addCommand("list")
-      .addCommand(imageName)
-      .redirectErrorStream(true)
-      .setWaitTimeout(300L, TimeUnit.SECONDS)
-      .build();
-    
-    try {
-      ProcessResult processResult = osProcessExecutor.execute(processDescriptor);
-      if (processResult.getExitCode() != 0) {
-        String errorMsg = "Could not create the docker image. Exit code: " + processResult.getExitCode()
-          + " out: " + processResult.getStdout() + "\n err: " + processResult.getStderr() + "||\n";
-        LOGGER.log(Level.SEVERE, errorMsg);
-        throw new ServiceException(RESTCodes.ServiceErrorCode.DOCKER_IMAGE_CREATION_ERROR, Level.SEVERE, "Failed to "
-        + "list libraries for the environment, if the issue persists please try to recreate the python environment");
-      } else {
-        return depStringToCollec(processResult.getStdout());
-      }
-    } catch (IOException ex) {
-      throw new ServiceException(RESTCodes.ServiceErrorCode.DOCKER_IMAGE_CREATION_ERROR, Level.SEVERE, "Failed to "
-          + "list libraries for the environment, if the issue persists please try to recreate the python environment");
-    }
-  }
-  
-  public Collection<PythonDep> depStringToCollec(String condaListStr) throws ServiceException {
+  public Collection<PythonDep> parseCondaList(String condaListStr) throws ServiceException {
     Collection<PythonDep> deps = new ArrayList<>();
     
     String[] lines = condaListStr.split(System.getProperty("line.separator"));
@@ -449,5 +420,31 @@ public class LibraryController {
       }
     }
     return deps;
+  }
+
+  public String condaList(String dockerImage) throws IOException, ServiceException {
+
+    String prog = settings.getSudoersDir() + "/dockerImage.sh";
+
+    ProcessDescriptor processDescriptor = new ProcessDescriptor.Builder()
+      .addCommand("/usr/bin/sudo")
+      .addCommand(prog)
+      .addCommand("list")
+      .addCommand(dockerImage)
+      .redirectErrorStream(true)
+      .setWaitTimeout(30, TimeUnit.MINUTES)
+      .build();
+
+    ProcessResult processResult = osProcessExecutor.execute(processDescriptor);
+    if (processResult.getExitCode() != 0) {
+      String devMsg = "Could list libraries in the docker image. Exit code: " + processResult.getExitCode()
+        + " out: " + processResult.getStdout() + "\n err: " + processResult.getStderr() + "||\n";
+      String errorMsg = "Failed to list libraries for the environment, if the issue persists" +
+        " please retry the command or recreate the environment";
+      throw new ServiceException(RESTCodes.ServiceErrorCode.DOCKER_IMAGE_CREATION_ERROR,
+        Level.SEVERE, errorMsg, devMsg);
+    } else {
+      return processResult.getStdout();
+    }
   }
 }
