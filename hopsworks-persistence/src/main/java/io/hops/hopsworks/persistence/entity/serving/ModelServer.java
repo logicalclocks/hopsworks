@@ -1,6 +1,6 @@
 /*
  * This file is part of Hopsworks
- * Copyright (C) 2018, Logical Clocks AB. All rights reserved
+ * Copyright (C) 2019, Logical Clocks AB. All rights reserved
  *
  * Hopsworks is free software: you can redistribute it and/or modify it under the terms of
  * the GNU Affero General Public License as published by the Free Software Foundation,
@@ -14,17 +14,16 @@
  * If not, see <https://www.gnu.org/licenses/>.
  */
 
-package io.hops.hopsworks.common.serving.inference;
+package io.hops.hopsworks.persistence.entity.serving;
 
-import io.hops.common.Pair;
-import io.hops.hopsworks.persistence.entity.serving.Serving;
-import io.hops.hopsworks.exceptions.InferenceException;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 /**
- * Interface for sending inference requests to tfserving serving instances. Different type of tf serving
- * controllers e.g (localhost or Kubernetes) should implement this interface.
+ * Model Server
  */
-public interface TfInferenceController {
-  Pair<Integer, String> infer(Serving serving, Integer modelVersion,
-                              String verb, String inferenceRequestJson) throws InferenceException;
+public enum ModelServer {
+  @JsonProperty("TENSORFLOW_SERVING")
+  TENSORFLOW_SERVING,
+  @JsonProperty("FLASK")
+  FLASK, //Note: since we map enum directly to the DB the order is important!
 }

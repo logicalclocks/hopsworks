@@ -17,9 +17,9 @@
 package io.hops.hopsworks.common.serving;
 
 import io.hops.hopsworks.persistence.entity.project.Project;
+import io.hops.hopsworks.persistence.entity.serving.ModelServer;
 import io.hops.hopsworks.persistence.entity.serving.Serving;
 import io.hops.hopsworks.common.dao.serving.ServingFacade;
-import io.hops.hopsworks.persistence.entity.serving.ServingType;
 import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.common.integrations.LocalhostStereotype;
 import io.hops.hopsworks.common.serving.sklearn.LocalhostSkLearnServingController;
@@ -180,7 +180,7 @@ public class LocalhostServingController implements ServingController {
   
   /**
    * Starts or stop a serving instance (depending on the user command). Will call the controller for the corresponding
-   * servingtype, such as Tensorflow or SkLearn
+   * model server, such as Tensorflow Serving or Flask
    *
    * @param project the project where the serving resides
    * @param user the user making the request
@@ -267,7 +267,7 @@ public class LocalhostServingController implements ServingController {
         } else {
           // To update the version call the script and download the new version in the directory
           // the server polls for new versions and it will pick it up.
-          if(serving.getServingType() == ServingType.TENSORFLOW){
+          if(serving.getModelServer() == ModelServer.TENSORFLOW_SERVING){
             tfServingController.updateModelVersion(project, user, dbServing);
           } else {
             //If we do not need to update model version there is nothing left to do and we can release the lock
@@ -293,20 +293,20 @@ public class LocalhostServingController implements ServingController {
   
   
   private void startServingInstance(Project project, Users user, Serving serving) throws ServingException {
-    if(serving.getServingType() == ServingType.TENSORFLOW){
+    if(serving.getModelServer() == ModelServer.TENSORFLOW_SERVING){
       tfServingController.startServingInstance(project, user, serving);
     }
-    if(serving.getServingType() == ServingType.SKLEARN){
+    if(serving.getModelServer() == ModelServer.FLASK){
       skLearnServingController.startServingInstance(project, user, serving);
     }
   }
 
   private void killServingInstance(Project project, Serving serving, boolean releaseLock)
       throws ServingException {
-    if(serving.getServingType() == ServingType.TENSORFLOW){
+    if(serving.getModelServer() == ModelServer.TENSORFLOW_SERVING){
       tfServingController.killServingInstance(project, serving, releaseLock);
     }
-    if(serving.getServingType() == ServingType.SKLEARN){
+    if(serving.getModelServer() == ModelServer.FLASK){
       skLearnServingController.killServingInstance(project, serving, releaseLock);
     }
   }

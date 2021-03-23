@@ -21,11 +21,13 @@ import io.hops.hopsworks.common.dao.serving.ServingFacade;
 import io.hops.hopsworks.common.hdfs.Utils;
 import io.hops.hopsworks.common.hdfs.inode.InodeController;
 import io.hops.hopsworks.common.serving.ServingWrapper;
+import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.ServingException;
 import io.hops.hopsworks.persistence.entity.hdfs.inode.Inode;
 import io.hops.hopsworks.persistence.entity.project.Project;
+import io.hops.hopsworks.persistence.entity.serving.ModelServer;
 import io.hops.hopsworks.persistence.entity.serving.Serving;
-import io.hops.hopsworks.persistence.entity.serving.ServingType;
+import io.hops.hopsworks.persistence.entity.serving.ServingTool;
 import io.hops.hopsworks.restutils.RESTCodes;
 
 import javax.ejb.EJB;
@@ -48,6 +50,8 @@ public class ServingUtil {
   private ServingFacade servingFacade;
   @EJB
   private InodeController inodeController;
+  @EJB
+  private Settings settings;
   
   /**
    * Validates user input before creating or updating a serving. This method contains the common input validation
@@ -70,6 +74,10 @@ public class ServingUtil {
     // Check that the artifactPath is present
     if (Strings.isNullOrEmpty(servingWrapper.getServing().getArtifactPath())) {
       throw new IllegalArgumentException("Artifact path not provided");
+    } else {
+      // Format artifact path (e.g remove duplicated '/')
+      String formattedArtifactPath = Paths.get(servingWrapper.getServing().getArtifactPath()).toString();
+      servingWrapper.getServing().setArtifactPath(formattedArtifactPath);
     }
     if (servingWrapper.getServing().getVersion() == null) {
       throw new IllegalArgumentException("Serving version not provided");
@@ -84,13 +92,19 @@ public class ServingUtil {
       throw new IllegalArgumentException("Serving name must follow regex: \"[a-zA-Z0-9]+\"");
     }
     //Serving-type-specific validations
-    switch (servingWrapper.getServing().getServingType()){
-      case TENSORFLOW:
-        validateTfUserInput(servingWrapper);
-        break;
-      case SKLEARN:
-        validateSKLearnUserInput(servingWrapper, project);
-        break;
+    if (servingWrapper.getServing().getModelServer() == null) {
+      throw new IllegalArgumentException("Model server not provided or unsupported");
+    }
+    if (servingWrapper.getServing().getModelServer() == ModelServer.TENSORFLOW_SERVING) {
+      validateTfUserInput(servingWrapper);
+    }
+    if (servingWrapper.getServing().getModelServer() == ModelServer.FLASK) {
+      validateSKLearnUserInput(servingWrapper, project);
+    }
+    
+    // Serving tool validation
+    if (servingWrapper.getServing().getServingTool() == null) {
+      throw new IllegalArgumentException("Serving tool not provided or unsupported");
     }
   }
   
@@ -122,7 +136,6 @@ public class ServingUtil {
       throw new ServingException(RESTCodes.ServingErrorCode.PYTHON_ENVIRONMENT_NOT_ENABLED, Level.SEVERE, null);
     }
   }
-  
   
   /**
    * Validates user data for creating or updating a Tensorflow Serving Instance

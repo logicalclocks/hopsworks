@@ -67,7 +67,8 @@ module ServingHelper
                   numOfPartitions: 1,
                   numOfReplicas: 1
                },
-               servingType: "TENSORFLOW",
+               modelServer: "TENSORFLOW_SERVING",
+               servingTool: "DEFAULT",
                availableInstances: 1,
                requestedInstances: 1
               }
@@ -92,7 +93,8 @@ module ServingHelper
              numOfPartitions: 1,
              numOfReplicas: 1
          },
-         servingType: "SKLEARN",
+         modelServer: "FLASK",
+         servingTool: "DEFAULT",
          availableInstances: 1,
          requestedInstances: 1
         }

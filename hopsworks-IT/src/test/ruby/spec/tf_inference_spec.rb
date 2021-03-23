@@ -20,11 +20,6 @@ describe "On #{ENV['OS']}" do
     purge_all_tf_serving_instances
   end
   describe 'inference' do
-    before (:all) do
-      if ENV['OS'] == "centos"
-        skip "These tests do not run on centos"
-      end
-    end
     let(:test_data) {[[0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
                        0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
                        0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
@@ -141,9 +136,13 @@ describe "On #{ENV['OS']}" do
               kafkaTopicDTO: {
                  name: "NONE"
               },
-              servingType: "TENSORFLOW"
+              modelServer: "TENSORFLOW_SERVING",
+              servingTool: "DEFAULT"
              }
             expect_status(201)
+
+            # Sleep some time while the TfServing server restarts
+            wait_for_type(@serving[:name])
 
             post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/inference/models/#{@serving[:name]}:predict", {
                 signature_name: 'predict_images',
@@ -160,7 +159,8 @@ describe "On #{ENV['OS']}" do
               kafkaTopicDTO: {
                  name: @topic[:topic_name]
               },
-              servingType: "TENSORFLOW"
+              modelServer: "TENSORFLOW_SERVING",
+              servingTool: "DEFAULT"
              }
           end
 

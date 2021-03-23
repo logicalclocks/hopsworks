@@ -18,12 +18,11 @@ package io.hops.hopsworks.common.serving.inference;
 
 import com.google.common.base.Strings;
 import io.hops.common.Pair;
-import io.hops.hopsworks.persistence.entity.project.Project;
-import io.hops.hopsworks.persistence.entity.serving.Serving;
 import io.hops.hopsworks.common.dao.serving.ServingFacade;
-import io.hops.hopsworks.persistence.entity.serving.ServingType;
 import io.hops.hopsworks.common.serving.inference.logger.InferenceLogger;
 import io.hops.hopsworks.exceptions.InferenceException;
+import io.hops.hopsworks.persistence.entity.project.Project;
+import io.hops.hopsworks.persistence.entity.serving.Serving;
 import io.hops.hopsworks.restutils.RESTCodes;
 
 import javax.ejb.EJB;
@@ -50,14 +49,13 @@ public class InferenceController {
   private ServingFacade servingFacade;
 
   @Inject
-  private TfInferenceController tfInferenceController;
-  @Inject
-  private SkLearnInferenceController skLearnInferenceController;
+  private ServingInferenceController servingInferenceController;
+
   @Inject
   @Any
   private Instance<InferenceLogger> inferenceLoggers;
   
-  
+
   /**
    * Makes an inference request to a running serving instance
    *
@@ -80,16 +78,15 @@ public class InferenceController {
     if (Strings.isNullOrEmpty(verb)) {
       throw new InferenceException(RESTCodes.InferenceErrorCode.MISSING_VERB, Level.FINE);
     }
+    
+    if (modelVersion != null && modelVersion < 0) {
+      throw new InferenceException(RESTCodes.InferenceErrorCode.BAD_REQUEST, Level.FINE, "Model version must be " +
+        "positive");
+    }
 
-    Pair<Integer, String> inferenceResult = null;
-    if(serving.getServingType() == ServingType.TENSORFLOW){
-      inferenceResult =
-          tfInferenceController.infer(serving, modelVersion, verb, inferenceRequestJson);
-    }
-    if(serving.getServingType() == ServingType.SKLEARN){
-      inferenceResult =
-          skLearnInferenceController.infer(serving, modelVersion, verb, inferenceRequestJson);
-    }
+    // ServingInferenceController is either localhost or kubernetes inference controller
+    Pair<Integer, String> inferenceResult =
+      servingInferenceController.infer(serving, modelVersion, verb, inferenceRequestJson);
 
     // Log the inference
     for (InferenceLogger inferenceLogger : inferenceLoggers) {
