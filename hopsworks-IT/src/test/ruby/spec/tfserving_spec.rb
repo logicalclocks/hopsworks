@@ -290,7 +290,7 @@ describe "On #{ENV['OS']}" do
 
         # Check that the logs are written in the elastic index.
         elastic_rest do
-          response = elastic_get "#{@project[:projectname].downcase}_serving*/_search?q=modelname:#{@serving[:name]}"
+          response = elastic_get "#{@project[:projectname].downcase}_serving*/_search?q=serving_name:#{@serving[:name]}"
           index = response.body
           parsed_index = JSON.parse(index)
           expect(parsed_index['hits']['total']['value']).to be > 0
