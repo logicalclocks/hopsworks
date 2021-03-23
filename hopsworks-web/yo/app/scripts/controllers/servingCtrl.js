@@ -22,10 +22,10 @@
 angular.module('hopsWorksApp')
     .controller('servingCtrl', ['$scope', '$routeParams', 'growl', 'ServingService', 'UtilsService', '$location',
         'PythonService', 'ModalService', '$interval', 'StorageService', '$mdSidenav', 'DataSetService',
-        'KafkaService', 'JobService','ElasticService', 'ModelService',
+        'KafkaService', 'JobService','ElasticService', 'ModelService', 'VariablesService',
         function ($scope, $routeParams, growl, ServingService, UtilsService, $location, PythonService,
                   ModalService, $interval, StorageService, $mdSidenav, DataSetService, KafkaService, JobService,
-                  ElasticService, ModelService) {
+                  ElasticService, ModelService, VariablesService) {
 
             var self = this;
 
@@ -58,6 +58,7 @@ angular.module('hopsWorksApp')
             self.loadingText = "";
 
             self.editServing = {};
+            self.kfserving = false;
             self.editServing.batchingEnabled = false;
 
             // Configuration to create a new Kafka topic for the serving
@@ -107,7 +108,7 @@ angular.module('hopsWorksApp')
                             // Users changed their minds.
                         });
                 }
-                if (self.editServing.servingType == "SKLEARN") {
+                if (self.editServing.servingType === "SKLEARN") {
                     ModalService.selectFile('lg', self.projectId, self.sklearnScriptRegex, self.sklearnSelectScriptErrorMsg,
                         false).then(
                         function (success) {
@@ -199,7 +200,7 @@ angular.module('hopsWorksApp')
                     });
                     return
                 }
-                if (typeof name === 'undefined' || name === null || name == "") {
+                if (typeof name === 'undefined' || name === null || name === "") {
                     name = filename.replace(".py", "");
                     name = name.replace(/_/g, "")
                 }
@@ -228,16 +229,17 @@ angular.module('hopsWorksApp')
             self.hideCreateServingForm = function () {
                 self.showCreateNewServingForm = false;
                 self.createNewServingMode = false;
+                self.kfserving = false;
+                self.versions = [];
+                self.sliderOptions.value = 1;
+                self.showAdvancedForm = false;
+
                 self.editServing = {};
-                self.editServing.kafkaTopicDTO = {};
-                self.editServing.kafkaTopicDTO.name = "CREATE";
+                self.editServing.kafkaTopicDTO = self.projectKafkaTopics[0];
                 self.editServing.kafkaTopicDTO.numOfPartitions = self.kafkaDefaultNumPartitions;
                 self.editServing.kafkaTopicDTO.numOfReplicas = self.kafkaDefaultNumReplicas;
                 self.editServing.batchingEnabled = false;
                 self.editServing.servingType = "TENSORFLOW";
-                self.versions = [];
-                self.sliderOptions.value = 1;
-                self.showAdvancedForm = false;
             };
 
             self.getAllServings = function () {
@@ -275,6 +277,18 @@ angular.module('hopsWorksApp')
                 return topic.name === self.editServing.kafkaTopicDTO.name;
             };
 
+            self.setKFServing = function(){
+                if (!self.isKubernetes) {
+                    self.kfserving = false;
+                } else if (self.kfserving) {
+                    self.editServing.batchingEnabled = false;
+                    self.sliderOptions.value = 1;
+                    self.sliderOptions.options.disabled = true;
+                } else {
+                    self.sliderOptions.options.disabled = false;
+                }
+            }
+
             self.updateKafkaDetails = function () {
                 if (self.editServing.kafkaTopicDTO.name === 'CREATE' ||
                     self.editServing.kafkaTopicDTO.name === 'NONE') {
@@ -283,6 +297,8 @@ angular.module('hopsWorksApp')
 
                 KafkaService.getTopicDetails(self.projectId, self.editServing.kafkaTopicDTO.name).then(
                     function (success) {
+                        console.log("GET TOPIC DETAILS");
+                        console.log(success.data);
                         self.editServing.kafkaTopicDTO.numOfPartitions = success.data.length;
                         if (success.data.length > 0) {
                             self.editServing.kafkaTopicDTO.numOfReplicas = success.data[0].replicas.length
@@ -388,6 +404,12 @@ angular.module('hopsWorksApp')
 
                         });
                 } else {
+
+                    // If KFServing is enabled, change servingType to use KFServing
+                    if (self.kfserving && !self.editServing.servingType.startsWith("KFSERVING_")) {
+                        self.editServing.servingType = "KFSERVING_" + self.editServing.servingType;
+                    }
+
                     self.doCreateOrUpdate()
                 }
             };
@@ -421,10 +443,17 @@ angular.module('hopsWorksApp')
                 angular.copy(serving, self.editServing);
                 self.editServing.modelVersion = self.editServing.modelVersion.toString();
                 self.sliderOptions.value = serving.requestedInstances;
+                if (self.editServing.servingType.startsWith("KFSERVING_")) {
+                    self.kfserving = true;
+                    self.editServing.servingType = self.editServing.servingType.replace("KFSERVING_", "");
+                } else {
+                    self.kfserving = false;
+                }
                 if (self.editServing.servingType === "TENSORFLOW") {
                     self.validateTfModelPath(serving.artifactPath, serving.name);
                 }
                 self.showCreateServingForm();
+                self.setKFServing();
             };
 
             /**
@@ -510,13 +539,18 @@ angular.module('hopsWorksApp')
             /**
              * Function called when the user is switching between the form for creating a TFServing vs a SkLearnServing
              *
-             * @param servingType the selected sereving type
+             * @param servingType the selected serving type
              */
             self.setServingType = function (servingType) {
                 self.editServing.artifactPath = ""
                 self.editServing.name = ""
                 self.editServing.modelVersion = ""
                 self.editServing.servingType = servingType
+
+                if (servingType === "SKLEARN" && self.kfserving) {
+                    self.kfserving = false;
+                    self.setKFServing();
+                }
             }
 
             self.setFullModelPath = function() {
@@ -600,7 +634,20 @@ angular.module('hopsWorksApp')
                             ttl: 15000
                         });
                     }
-                )
+                );
+
+                VariablesService.isKubernetes().then(
+                    function(success) {
+                        self.isKubernetes = success.data.successMessage === "true";
+                        self.setKFServing();
+                    },
+                    function (error) {
+                        growl.error(error.data.errorMsg, {
+                            title: 'Failed to fetch if kubernetes is enabled',
+                            ttl: 15000
+                        });
+                    }
+                );
             };
             self.init();
         }

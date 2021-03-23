@@ -746,6 +746,10 @@ public class DatasetController {
   }
   
   public void zip(Project project, Users user, Path path) throws DatasetException {
+    zip(project, user, path, null);
+  }
+  
+  public void zip(Project project, Users user, Path path, Path destPath) throws DatasetException {
     String hdfsUser = hdfsUsersController.getHdfsUserName(project, user);
     checkFileExists(path, hdfsUser);
     String localDir = DigestUtils.sha256Hex(path.toString());
@@ -755,11 +759,17 @@ public class DatasetController {
     zipDir.mkdirs();
     settings.addZippingState(path.toString());
     
-    ProcessDescriptor processDescriptor = new ProcessDescriptor.Builder()
+    ProcessDescriptor.Builder processDescriptorBuilder = new ProcessDescriptor.Builder()
       .addCommand(settings.getHopsworksDomainDir() + "/bin/zip-background.sh")
       .addCommand(stagingDir)
       .addCommand(path.toString())
-      .addCommand(hdfsUser)
+      .addCommand(hdfsUser);
+      
+    if (destPath != null) {
+      processDescriptorBuilder.addCommand(destPath.toString());
+    }
+
+    ProcessDescriptor processDescriptor = processDescriptorBuilder
       .ignoreOutErrStreams(true)
       .build();
     
