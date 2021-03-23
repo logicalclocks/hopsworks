@@ -788,6 +788,10 @@ public class ProjectController {
           SchemaCompatibility.NONE);
         subjectsController.registerNewSubject(project, Settings.INFERENCE_SCHEMANAME,
           KafkaConst.INFERENCE_SCHEMA_VERSION_2, true);
+        subjectsCompatibilityController.setSubjectCompatibility(project, Settings.INFERENCE_SCHEMANAME,
+          SchemaCompatibility.NONE);
+        subjectsController.registerNewSubject(project, Settings.INFERENCE_SCHEMANAME,
+          KafkaConst.INFERENCE_SCHEMA_VERSION_3, true);
         
         break;
     }

@@ -60,7 +60,8 @@ describe "On #{ENV['OS']}" do
                artifactPath: "/Projects/#{@project[:projectname]}/Models/mnist/",
                modelVersion: 1,
                batchingEnabled: false,
-               servingType: "TENSORFLOW",
+               modelServer: "TENSORFLOW_SERVING",
+               servingTool: "DEFAULT",
                availableInstances: 1,
                requestedInstances: 1
               }
@@ -83,7 +84,8 @@ describe "On #{ENV['OS']}" do
                artifactPath: "/Projects/#{@project[:projectname]}/Models/mnist/",
                modelVersion: 1,
                batchingEnabled: false,
-               servingType: "TENSORFLOW",
+               modelServer: "TENSORFLOW_SERVING",
+               servingTool: "DEFAULT",
                availableInstances: 1,
                requestedInstances: 1
               }
@@ -100,7 +102,8 @@ describe "On #{ENV['OS']}" do
                artifactPath: "/Projects/#{@project[:projectname]}/Models/mnist/",
                modelVersion: 1,
                batchingEnabled: true,
-               servingType: "TENSORFLOW",
+               modelServer: "TENSORFLOW_SERVING",
+               servingTool: "DEFAULT",
                availableInstances: 1,
                requestedInstances: 1
               }
@@ -118,7 +121,8 @@ describe "On #{ENV['OS']}" do
                    numOfPartitions: 1,
                    numOfReplicas: 1
                },
-               servingType: "TENSORFLOW",
+               modelServer: "TENSORFLOW_SERVING",
+               servingTool: "DEFAULT",
                availableInstances: 1,
                requestedInstances: 1
               }
@@ -150,7 +154,8 @@ describe "On #{ENV['OS']}" do
                kafkaTopicDTO: {
                    name: topic_name
                },
-               servingType: "TENSORFLOW",
+               modelServer: "TENSORFLOW_SERVING",
+               servingTool: "DEFAULT",
                availableInstances: 1,
                requestedInstances: 1
               }
@@ -178,7 +183,8 @@ describe "On #{ENV['OS']}" do
                kafkaTopicDTO: {
                    name: topic_name
                },
-               servingType: "TENSORFLOW",
+               modelServer: "TENSORFLOW_SERVING",
+               servingTool: "DEFAULT",
                availableInstances: 1,
                requestedInstances: 1
               }
@@ -210,7 +216,8 @@ describe "On #{ENV['OS']}" do
                kafkaTopicDTO: {
                    name: topic_name
                },
-               servingType: "TENSORFLOW",
+               modelServer: "TENSORFLOW_SERVING",
+               servingTool: "DEFAULT",
                availableInstances: 1,
                requestedInstances: 1
               }
@@ -228,7 +235,8 @@ describe "On #{ENV['OS']}" do
                    numOfPartitions: 1,
                    numOfReplicas: 1
                },
-               servingType: "TENSORFLOW",
+               modelServer: "TENSORFLOW_SERVING",
+               servingTool: "DEFAULT",
                availableInstances: 1,
                requestedInstances: 1
               }
@@ -242,9 +250,27 @@ describe "On #{ENV['OS']}" do
                artifactPath: "/Projects/#{@project[:projectname]}/DOESNTEXISTS",
                batchingEnabled: false,
                modelVersion: 1,
-               servingType: "TENSORFLOW"
+               modelServer: "TENSORFLOW_SERVING",
+               servingTool: "DEFAULT"
               }
           expect_json(usrMsg: "The model path provided does not exists")
+          expect_status(422)
+        end
+
+        it "should fail to create a serving without serving tool" do
+          put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
+              {name: "invalidName",
+               artifactPath: "/Projects/#{@project[:projectname]}/Models/mnist/",
+               modelVersion: 1,
+               batchingEnabled: false,
+               kafkaTopicDTO: {
+                   name: "NONE"
+               },
+               modelServer: "TENSORFLOW_SERVING",
+               availableInstances: 1,
+               requestedInstances: 1
+              }
+          expect_json(usrMsg: "Serving tool not provided or unsupported")
           expect_status(422)
         end
 
@@ -256,7 +282,8 @@ describe "On #{ENV['OS']}" do
                artifactPath: "/Projects/#{@project[:projectname]}/Models/mnist/",
                batchingEnabled: false,
                modelVersion: 1,
-               servingType: "TENSORFLOW",
+               modelServer: "TENSORFLOW_SERVING",
+               servingTool: "DEFAULT",
                availableInstances: 1,
                requestedInstances: 1
               }
@@ -335,7 +362,8 @@ describe "On #{ENV['OS']}" do
              kafkaTopicDTO: {
                  name: @topic[:topic_name]
              },
-             servingType: "TENSORFLOW",
+             modelServer: "TENSORFLOW_SERVING",
+             servingTool: "DEFAULT",
              availableInstances: 1,
              requestedInstances: 1
             }
@@ -352,7 +380,8 @@ describe "On #{ENV['OS']}" do
              kafkaTopicDTO: {
                  name: @topic[:topic_name]
              },
-             servingType: "TENSORFLOW",
+             modelServer: "TENSORFLOW_SERVING",
+             servingTool: "DEFAULT",
              availableInstances: 1,
              requestedInstances: 1
             }
@@ -369,7 +398,8 @@ describe "On #{ENV['OS']}" do
              kafkaTopicDTO: {
                  name: @topic[:topic_name]
              },
-             servingType: "TENSORFLOW"
+             modelServer: "TENSORFLOW_SERVING",
+             servingTool: "DEFAULT"
             }
         expect_status(201)
       end
@@ -391,14 +421,15 @@ describe "On #{ENV['OS']}" do
              kafkaTopicDTO: {
                  name: @topic[:topic_name]
              },
-             servingType: "TENSORFLOW",
+             modelServer: "TENSORFLOW_SERVING",
+             servingTool: "DEFAULT",
              availableInstances: 1,
              requestedInstances: 1
             }
         expect_status(201)
       end
 
-      it "should not be able to update the serving type" do
+      it "should not be able to update the model server" do
 
         put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
             {id: @serving[:id],
@@ -409,7 +440,8 @@ describe "On #{ENV['OS']}" do
              kafkaTopicDTO: {
                  name: @topic[:topic_name]
              },
-             servingType: "SKLEARN",
+             modelServer: "FLASK",
+             servingTool: "DEFAULT",
              availableInstances: 1,
              requestedInstances: 1
             }
@@ -428,7 +460,8 @@ describe "On #{ENV['OS']}" do
              kafkaTopicDTO: {
                  name: topic_name
              },
-             servingType: "TENSORFLOW"
+             modelServer: "TENSORFLOW_SERVING",
+             servingTool: "DEFAULT"
             }
         expect_status(201)
 
@@ -447,7 +480,8 @@ describe "On #{ENV['OS']}" do
              kafkaTopicDTO: {
                  name: "NONE"
              },
-             servingType: "TENSORFLOW",
+             modelServer: "TENSORFLOW_SERVING",
+             servingTool: "DEFAULT",
              availableInstances: 1,
              requestedInstances: 1
             }

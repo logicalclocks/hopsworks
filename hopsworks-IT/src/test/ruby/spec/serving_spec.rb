@@ -35,7 +35,8 @@ describe "On #{ENV['OS']}" do
                artifactPath: "/Projects/#{@project[:projectname]}/Models/mnist/",
                modelVersion: 1,
                batchingEnabled: false,
-               servingType: "TENSORFLOW"
+               modelServer: "TENSORFLOW_SERVING",
+               servingTool: "DEFAULT"
               }
           expect_json(errorCode: 200003)
           expect_status(401)
@@ -61,7 +62,8 @@ describe "On #{ENV['OS']}" do
                    numOfPartitions: -10,
                    numOfReplicas: 5
                },
-               servingType: "TENSORFLOW"
+               modelServer: "TENSORFLOW_SERVING",
+               servingTool: "DEFAULT"
               }
           expect_json(errorMsg: "Maximum topic replication factor exceeded")
           expect_status(400)
@@ -73,7 +75,8 @@ describe "On #{ENV['OS']}" do
               {artifactPath: "/Projects/#{@project[:projectname]}/Models/mnist/",
                batchingEnabled: false,
                modelVersion: 1,
-               servingType: "TENSORFLOW"
+               modelServer: "TENSORFLOW_SERVING",
+               servingTool: "DEFAULT"
               }
           expect_json(usrMsg: "Serving name not provided")
         end
@@ -89,7 +92,8 @@ describe "On #{ENV['OS']}" do
                    numOfPartitions: 1,
                    numOfReplicas: 1
                },
-               servingType: "TENSORFLOW"
+               modelServer: "TENSORFLOW_SERVING",
+               servingTool: "DEFAULT"
               }
           expect_json(usrMsg: "Serving name cannot contain spaces")
           expect_status(422)
@@ -105,7 +109,8 @@ describe "On #{ENV['OS']}" do
                    numOfPartitions: 1,
                    numOfReplicas: 1
                },
-               servingType: "TENSORFLOW"
+               modelServer: "TENSORFLOW_SERVING",
+               servingTool: "DEFAULT"
               }
           expect_json(usrMsg: "Batching is null")
         end
@@ -115,7 +120,8 @@ describe "On #{ENV['OS']}" do
               {name: "testModel3",
                batchingEnabled: false,
                modelVersion: 1,
-               servingType: "TENSORFLOW"
+               modelServer: "TENSORFLOW_SERVING",
+               servingTool: "DEFAULT"
               }
           expect_json(usrMsg: "Artifact path not provided")
         end
@@ -125,7 +131,8 @@ describe "On #{ENV['OS']}" do
               {name: "testModel4",
                artifactPath: "/Projects/#{@project[:projectname]}/Models/mnist/",
                batchingEnabled: false,
-               servingType: "TENSORFLOW"
+               modelServer: "TENSORFLOW_SERVING",
+               servingTool: "DEFAULT"
               }
           expect_json(usrMsg: "Serving version not provided")
         end

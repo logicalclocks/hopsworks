@@ -38,7 +38,8 @@ describe "On #{ENV['OS']}" do
               {name: "testModel",
                artifactPath: "/Projects/#{@project[:projectname]}/Models/IrisFlowerClassifier/1/#{SKLEARN_SCRIPT_FILE_NAME}",
                modelVersion: 1,
-               servingType: "SKLEARN"
+               modelServer: "FLASK",
+               servingTool: "DEFAULT"
               }
           expect_json(errorCode: 200003)
           expect_status(401)
@@ -76,7 +77,8 @@ describe "On #{ENV['OS']}" do
               {name: "testModel",
                artifactPath: "/Projects/#{@project[:projectname]}/Models/IrisFlowerClassifier/1/#{SKLEARN_SCRIPT_FILE_NAME}",
                modelVersion: 1,
-               servingType: "SKLEARN"
+               modelServer: "FLASK",
+               servingTool: "DEFAULT"
               }
           expect_json(errorCode: 240012)
           expect_status(400)
@@ -99,7 +101,8 @@ describe "On #{ENV['OS']}" do
               {name: "testModel",
                artifactPath: "/Projects/#{@project[:projectname]}/Models/NONEXISTENT",
                modelVersion: 1,
-               servingType: "SKLEARN"
+               modelServer: "FLASK",
+               servingTool: "DEFAULT"
               }
           expect_json(errorCode: 120001)
           expect_status(422)
@@ -137,7 +140,8 @@ describe "On #{ENV['OS']}" do
               {name: "testModel",
                artifactPath: "/Projects/#{@project[:projectname]}/Models/IrisFlowerClassifier/1/#{SKLEARN_SCRIPT_FILE_NAME}",
                modelVersion: 1,
-               servingType: "SKLEARN",
+               modelServer: "FLASK",
+               servingTool: "DEFAULT",
                availableInstances: 1,
                requestedInstances: 1
               }
@@ -158,7 +162,8 @@ describe "On #{ENV['OS']}" do
                    numOfPartitions: 1,
                    numOfReplicas: 1
                },
-               servingType: "SKLEARN",
+               modelServer: "FLASK",
+               servingTool: "DEFAULT",
                availableInstances: 1,
                requestedInstances: 1
               }
@@ -186,7 +191,8 @@ describe "On #{ENV['OS']}" do
                kafkaTopicDTO: {
                    name: topic_name
                },
-               servingType: "SKLEARN",
+               modelServer: "FLASK",
+               servingTool: "DEFAULT",
                availableInstances: 1,
                requestedInstances: 1
               }
@@ -213,7 +219,8 @@ describe "On #{ENV['OS']}" do
                kafkaTopicDTO: {
                    name: topic_name
                },
-               servingType: "SKLEARN",
+               modelServer: "FLASK",
+               servingTool: "DEFAULT",
                availableInstances: 1,
                requestedInstances: 1
               }
@@ -244,14 +251,15 @@ describe "On #{ENV['OS']}" do
                kafkaTopicDTO: {
                    name: topic_name
                },
-               servingType: "SKLEARN",
+               modelServer: "FLASK",
+               servingTool: "DEFAULT",
                availableInstances: 1,
                requestedInstances: 1
               }
           expect_status(400)
         end
 
-        it "fail to create a serving with the same name" do
+        it "should fail to create a serving with the same name" do
           put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
               {name: "testModel1",
                artifactPath: "/Projects/#{@project[:projectname]}/Models/IrisFlowerClassifier/1/#{SKLEARN_SCRIPT_FILE_NAME}",
@@ -261,7 +269,8 @@ describe "On #{ENV['OS']}" do
                    numOfPartitions: 1,
                    numOfReplicas: 1
                },
-               servingType: "SKLEARN",
+               modelServer: "FLASK",
+               servingTool: "DEFAULT",
                availableInstances: 1,
                requestedInstances: 1
               }
@@ -274,11 +283,25 @@ describe "On #{ENV['OS']}" do
               {name: "testModel5",
                artifactPath: "/Projects/#{@project[:projectname]}/DOESNTEXISTS",
                modelVersion: 1,
-               servingType: "SKLEARN",
+               modelServer: "FLASK",
+               servingTool: "DEFAULT",
                availableInstances: 1,
                requestedInstances: 1
               }
           expect_json(errorCode: 120001)
+          expect_status(422)
+        end
+
+        it "should fail to create a serving without serving tool" do
+          put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
+              {name: "testmodel",
+               artifactPath: "/Projects/#{@project[:projectname]}/Models/IrisFlowerClassifier/1/#{SKLEARN_SCRIPT_FILE_NAME}",
+               modelVersion: 1,
+               modelServer: "FLASK",
+               availableInstances: 1,
+               requestedInstances: 1
+              }
+          expect_json(usrMsg: "Serving tool not provided or unsupported")
           expect_status(422)
         end
       end
@@ -359,7 +382,8 @@ describe "On #{ENV['OS']}" do
                kafkaTopicDTO: {
                    name: @topic[:topic_name]
                },
-               servingType: "SKLEARN",
+               modelServer: "FLASK",
+               servingTool: "DEFAULT",
                availableInstances: 1,
                requestedInstances: 1
               }
@@ -375,14 +399,15 @@ describe "On #{ENV['OS']}" do
                kafkaTopicDTO: {
                    name: @topic[:topic_name]
                },
-               servingType: "SKLEARN",
+               modelServer: "FLASK",
+               servingTool: "DEFAULT",
                availableInstances: 1,
                requestedInstances: 1
               }
           expect_status(201)
         end
 
-        it "should not be able to update the serving type" do
+        it "should not be able to update the model server" do
           put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
               {id: @serving[:id],
                name: "testModelChanged",
@@ -391,7 +416,8 @@ describe "On #{ENV['OS']}" do
                kafkaTopicDTO: {
                    name: @topic[:topic_name]
                },
-               servingType: "TENSORFLOW",
+               modelServer: "TENSORFLOW_SERVING",
+               servingTool: "DEFAULT",
                availableInstances: 1,
                requestedInstances: 1
               }
@@ -409,7 +435,8 @@ describe "On #{ENV['OS']}" do
                kafkaTopicDTO: {
                    name: topic_name
                },
-               servingType: "SKLEARN",
+               modelServer: "FLASK",
+               servingTool: "DEFAULT",
                availableInstances: 1,
                requestedInstances: 1
               }
@@ -429,7 +456,8 @@ describe "On #{ENV['OS']}" do
                kafkaTopicDTO: {
                    name: "NONE"
                },
-               servingType: "SKLEARN",
+               modelServer: "FLASK",
+               servingTool: "DEFAULT",
                availableInstances: 1,
                requestedInstances: 1
               }

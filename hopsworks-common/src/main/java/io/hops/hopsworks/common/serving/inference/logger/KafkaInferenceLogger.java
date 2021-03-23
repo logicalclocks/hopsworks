@@ -146,7 +146,8 @@ public class KafkaInferenceLogger implements InferenceLogger {
    */
   private void populateInfererenceRecord(Serving serving, String inferenceRequest, Integer responseHttpCode,
     String inferenceResponse, GenericData.Record inferenceRecord, int schemaVersion){
-    if(schemaVersion == 1) {
+    if (schemaVersion <= 3) {
+      // schema v1
       inferenceRecord.put("modelId", serving.getId());
       inferenceRecord.put("modelName", serving.getName());
       inferenceRecord.put("modelVersion", serving.getVersion());
@@ -156,14 +157,11 @@ public class KafkaInferenceLogger implements InferenceLogger {
       inferenceRecord.put("inferenceResponse", inferenceResponse);
     }
     if(schemaVersion == 2){
-      inferenceRecord.put("modelId", serving.getId());
-      inferenceRecord.put("modelName", serving.getName());
-      inferenceRecord.put("modelVersion", serving.getVersion());
-      inferenceRecord.put("requestTimestamp", System.currentTimeMillis());
-      inferenceRecord.put("responseHttpCode", responseHttpCode);
-      inferenceRecord.put("inferenceRequest", inferenceRequest);
-      inferenceRecord.put("inferenceResponse", inferenceResponse);
-      inferenceRecord.put("servingType", serving.getServingType().name());
+      inferenceRecord.put("servingType", serving.getModelServer().name());
+    }
+    if(schemaVersion == 3){
+      inferenceRecord.put("modelServer", serving.getModelServer().name());
+      inferenceRecord.put("servingTool", serving.getServingTool().name());
     }
   }
 

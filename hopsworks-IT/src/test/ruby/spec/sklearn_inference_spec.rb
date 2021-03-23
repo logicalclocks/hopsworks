@@ -83,7 +83,7 @@ describe "On #{ENV['OS']}" do
           before :all do
             post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/#{@serving[:id]}?action=start"
             expect_status(200)
-            # Sleep a bit to avoid race condition and SkLearn Flask server starts
+            # Sleep a bit to avoid race condition and Flask server starts
             wait_for_type("sklearn_flask_server.py")
           end
 
@@ -109,11 +109,15 @@ describe "On #{ENV['OS']}" do
                  kafkaTopicDTO: {
                      name: "NONE"
                  },
-                 servingType: "SKLEARN",
+                 modelServer: "FLASK",
+                 servingTool: "DEFAULT",
                  availableInstances: 1,
                  requestedInstances: 1
                 }
             expect_status(201)
+
+            # Sleep a bit to avoid race condition and Flask server restarts
+            wait_for_type("sklearn_flask_server.py")
 
             post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/inference/models/#{@serving[:name]}:predict", {
                 inputs: test_data
@@ -128,7 +132,8 @@ describe "On #{ENV['OS']}" do
                  kafkaTopicDTO: {
                      name: @topic[:topic_name]
                  },
-                 servingType: "SKLEARN",
+                 modelServer: "FLASK",
+                 servingTool: "DEFAULT",
                  availableInstances: 1,
                  requestedInstances: 1
                 }

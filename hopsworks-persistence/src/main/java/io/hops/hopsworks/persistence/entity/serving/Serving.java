@@ -118,20 +118,26 @@ public class Serving implements Serializable {
   private String localDir;
   @NotNull
   @Enumerated(EnumType.ORDINAL)
-  @Column(name = "serving_type")
-  private ServingType servingType = ServingType.TENSORFLOW;
+  @Column(name = "model_server")
+  private ModelServer modelServer = ModelServer.TENSORFLOW_SERVING;
+  @NotNull
+  @Enumerated(EnumType.ORDINAL)
+  @Column(name = "serving_tool")
+  private ServingTool servingTool = ServingTool.DEFAULT;
 
   public Serving() { }
 
   public Serving(Integer id, String name, String artifactPath, Integer version,
-                 Integer nInstances, Boolean batchingEnabled, ServingType servingType) {
+                 Integer nInstances, Boolean batchingEnabled, ModelServer modelServer,
+                 ServingTool servingTool) {
     this.id = id;
     this.name = name;
     this.artifactPath = artifactPath;
     this.version = version;
     this.instances = nInstances;
     this.batchingEnabled = batchingEnabled;
-    this.servingType = servingType;
+    this.modelServer = modelServer;
+    this.servingTool = servingTool;
   }
 
   public Integer getId() {
@@ -262,13 +268,17 @@ public class Serving implements Serializable {
     this.kafkaTopic = kafkaTopic;
   }
 
-  public ServingType getServingType() {
-    return servingType;
+  public ModelServer getModelServer() {
+    return modelServer;
   }
 
-  public void setServingType(ServingType servingType) {
-    this.servingType = servingType;
+  public void setModelServer(ModelServer modelServer) {
+    this.modelServer = modelServer;
   }
+  
+  public ServingTool getServingTool() { return servingTool; }
+  
+  public void setServingTool(ServingTool servingTool) { this.servingTool = servingTool; }
 
   @Override
   public boolean equals(Object o) {
@@ -293,7 +303,8 @@ public class Serving implements Serializable {
     if (kafkaTopic != null ? !kafkaTopic.equals(serving.kafkaTopic) : serving.kafkaTopic != null) return false;
     if (localPort != null ? !localPort.equals(serving.localPort) : serving.localPort != null) return false;
     if (cid != null ? !cid.equals(serving.cid) : serving.cid != null) return false;
-    if (servingType != null ? !servingType.equals(serving.servingType) : serving.servingType != null) return false;
+    if (modelServer != null ? !modelServer.equals(serving.modelServer) : serving.modelServer != null) return false;
+    if (servingTool != null ? !servingTool.equals(serving.servingTool) : serving.servingTool != null) return false;
     return localDir != null ? localDir.equals(serving.localDir) : serving.localDir == null;
   }
 
@@ -315,7 +326,8 @@ public class Serving implements Serializable {
     result = 31 * result + (localPort != null ? localPort.hashCode() : 0);
     result = 31 * result + (cid != null ? cid.hashCode() : 0);
     result = 31 * result + (localDir != null ? localDir.hashCode() : 0);
-    result = 31 * result + (servingType!= null ? servingType.hashCode() : 0);
+    result = 31 * result + (modelServer != null ? modelServer.hashCode() : 0);
+    result = 31 * result + (servingTool != null ? servingTool.hashCode() : 0);
     return result;
   }
 }
