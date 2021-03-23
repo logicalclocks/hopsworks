@@ -86,6 +86,13 @@
                                     </div>
 
                                     <div ng-show="servingCtrl.editServing.servingType === 'TENSORFLOW'">
+                                        <div style="heigth: 2em;"
+                                             ng-if="servingCtrl.editServing.servingType === 'TENSORFLOW'">
+                                            <label>KFServing</label>
+                                            <i class="fa fa-info-circle" tooltip-placement="auto left"
+                                               uib-tooltip='Serve the model using KFServing'
+                                               style="margin-left: 10px"></i>
+                                        </div>
                                         <div>
                                             <label>
                                                 <button style="margin-top: 5px;"
@@ -108,12 +115,13 @@
                                                style="margin-left: 10px"></i>
                                         </div>
                                         <div style="margin-top: 15px; heigth: 2em;"
-                                             ng-if="servingCtrl.sliderOptions.options.ceil > 1">
+                                             ng-if="servingCtrl.sliderOptions.options.ceil > 1 && !servingCtrl.editServing.kfserving">
                                             <label># Instances</label>
                                         </div>
                                     </div>
 
-                                    <div style="margin-top: 11px; heigth: 2em;"><label
+                                    <div style="margin-top: 11px; heigth: 2em;"
+                                         ng-if="!servingCtrl.editServing.kfserving"><label
                                             ng-click="servingCtrl.showAdvanced()">
                                         <span class="glyphicon glyphicon-chevron-right"
                                               ng-if="!servingCtrl.showAdvancedForm"></span>
@@ -172,7 +180,7 @@
                                     <hr>
                                 </div>
                             </div>
-                            <div ng-if="servingCtrl.showAdvancedForm" class="animate-if">
+                            <div ng-if="servingCtrl.showAdvancedForm && !servingCtrl.editServing.kfserving" class="animate-if">
                                 <div class="row">
                                     <div class="col-xs-3 col-sm-3 col-md-3 col-lg-3" style="text-align: right;">
                                         <div style="margin-top: 10px; heigth: 2em;"
