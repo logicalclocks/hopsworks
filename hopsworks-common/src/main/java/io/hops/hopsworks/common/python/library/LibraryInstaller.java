@@ -513,7 +513,7 @@ public class LibraryInstaller {
           .addCommand(projectUtils.getRegistryURL() + "/" + nextDockerImageName)
           .redirectErrorStream(true)
           .setCurrentWorkingDirectory(baseDir)
-          .setWaitTimeout(10, TimeUnit.MINUTES)
+          .setWaitTimeout(30, TimeUnit.MINUTES)
           .build();
 
       ProcessResult processResult = osProcessExecutor.execute(processDescriptor);
@@ -592,7 +592,7 @@ public class LibraryInstaller {
         .addCommand("export")
         .addCommand(projectUtils.getFullDockerImageName(project, false))
         .redirectErrorStream(true)
-        .setWaitTimeout(300L, TimeUnit.SECONDS)
+        .setWaitTimeout(30, TimeUnit.MINUTES)
         .build();
 
     ProcessResult processResult = osProcessExecutor.execute(processDescriptor);
@@ -607,12 +607,17 @@ public class LibraryInstaller {
   }
 
   public void syncBaseLibraries(CondaCommands cc)
-      throws ServiceException, ServiceDiscoveryException, ProjectException {
+    throws ServiceException, ServiceDiscoveryException, ProjectException, IOException {
     Project project = projectFacade.findById(cc.getProjectId().getId()).orElseThrow(() -> new ProjectException(
-        RESTCodes.ProjectErrorCode.PROJECT_NOT_FOUND, Level.FINE, "projectId: " + cc.getProjectId().getId()));
-    Collection<PythonDep> projectDeps = libraryController.listLibraries(
-        projectUtils.getFullDockerImageName(project, true));
+      RESTCodes.ProjectErrorCode.PROJECT_NOT_FOUND, Level.FINE, "projectId: " + cc.getProjectId().getId()));
+
+    String condaListOutput = libraryController.condaList(projectUtils.getFullDockerImageName(project, true));
+    Collection<PythonDep> projectDeps = libraryController.parseCondaList(condaListOutput);
     projectDeps = libraryController.persistAndMarkImmutable(projectDeps);
+
+    project = projectFacade.findById(cc.getProjectId().getId()).orElseThrow(() -> new ProjectException(
+      RESTCodes.ProjectErrorCode.PROJECT_NOT_FOUND, Level.FINE, "projectId: " + cc.getProjectId().getId()));
+
     project.setPythonDepCollection(projectDeps);
     projectFacade.update(project);
   }

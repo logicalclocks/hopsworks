@@ -137,17 +137,17 @@ public class EnvironmentController {
     }
   }
 
-  public Project updateInstalledDependencies(Project project) throws ServiceException {
+  public Project updateInstalledDependencies(Project project) throws ServiceException, IOException {
     try {
-      Collection<PythonDep> projectDeps = libraryController.listLibraries(
-          projectUtils.getFullDockerImageName(project, false));
+      String condaListOutput = libraryController.condaList(projectUtils.getFullDockerImageName(project, false));
+      Collection<PythonDep> projectDeps = libraryController.parseCondaList(condaListOutput);
       projectDeps = libraryController.persistAndMarkImmutable(projectDeps);
       project = libraryController.syncProjectPythonDepsWithEnv(project, projectDeps);
       project = libraryController.addOngoingOperations(project);
       return project;
     } catch (ServiceDiscoveryException e) {
-      throw new ServiceException(RESTCodes.ServiceErrorCode.SERVICE_DISCOVERY_ERROR, Level.SEVERE, null, e.
-          getMessage(), e);
+      throw new ServiceException(RESTCodes.ServiceErrorCode.SERVICE_DISCOVERY_ERROR, Level.SEVERE, null,
+        e.getMessage(), e);
     }
   }
 
@@ -278,6 +278,7 @@ public class EnvironmentController {
   }
 
   public Project createEnv(Project project, Users user) throws PythonException {
+
     List<CondaStatus> statuses = new ArrayList<>();
     statuses.add(CondaStatus.NEW);
     statuses.add(CondaStatus.ONGOING);
@@ -297,8 +298,8 @@ public class EnvironmentController {
     CondaCommands cc = new CondaCommands(settings.getAnacondaUser(), user, CondaOp.SYNC_BASE_ENV, CondaStatus.NEW,
         CondaInstallType.ENVIRONMENT, project, settings.getDockerBaseImagePythonVersion(),
         null, null, new Date(), null, null, false);
-    condaCommandFacade.save(cc);
 
+    condaCommandFacade.save(cc);
     return projectFacade.update(project);
   }
 
