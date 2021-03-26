@@ -29,7 +29,7 @@ angular.module('hopsWorksApp')
             self.conflicts = null;
 
 
-            self.ok = function () {
+            self.close = function () {
                 $uibModalInstance.close();
             };
 
