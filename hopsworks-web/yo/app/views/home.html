@@ -47,6 +47,7 @@
 
   <div class="container content-wrapper" ng-if="!mainCtrl.showSearchPage" ng-controller="HomeCtrl as homeCtrl"
        ng-cloak="">
+    <div style="background: #FFFFFF; border: 1px solid #21B182; box-sizing: border-box; width: 100%; padding: 20px 12px; margin-bottom: 20px;">A new Hopsworks is available in beta version! <a href="/" style="background: #21B182; padding: 10px 16px; color: white; font-weight: bold; text-decoration: none; margin-left: 20px;">Try out the new Hopsworks</a></div>
     <div class="alert alert-warning alert-dismissable" ng-if="mainCtrl.userNotification !== ''">
       <a class="close" data-dismiss="alert" aria-label="close">&times;</a>
       <p align="center"><i class="fa fa-bullhorn"></i> <strong>Notification!</strong> {{mainCtrl.userNotification}}
