@@ -27,7 +27,6 @@ import io.hops.hopsworks.persistence.entity.hdfs.inode.Inode;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.serving.ModelServer;
 import io.hops.hopsworks.persistence.entity.serving.Serving;
-import io.hops.hopsworks.persistence.entity.serving.ServingTool;
 import io.hops.hopsworks.restutils.RESTCodes;
 
 import javax.ejb.EJB;
