@@ -51,7 +51,7 @@ public class ServiceDiscoveryController {
     LIVY("livy"),
     ZOOKEEPER_CLIENT("client.zookeeper"),
     SPARK_HISTORY_SERVER("sparkhistoryserver"),
-    HTTP_RESOURCEMANAGER("http.resourcemanager"),
+    HTTPS_RESOURCEMANAGER("https.resourcemanager"),
     HIVE_SERVER_PLAIN("hiveserver2-plain.hive"),
     HIVE_SERVER_TLS("hiveserver2-tls.hive"),
     HIVE_METASTORE("metastore.hive"),

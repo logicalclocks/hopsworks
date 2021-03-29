@@ -122,6 +122,20 @@ public class HttpClient {
     }
   }
 
+  public static class StringResponseHandler implements ResponseHandler<String> {
+    @Override
+    public String handleResponse(HttpResponse response) throws ClientProtocolException, IOException {
+      String responseJson = EntityUtils.toString(response.getEntity(), Charset.defaultCharset());
+      if (response.getStatusLine().getStatusCode() / 100 == 2) {
+        return responseJson;
+      } else if (response.getStatusLine().getStatusCode() / 100 == 5) {
+        throw new IOException(responseJson);
+      } else {
+        throw new NotRetryableClientProtocolException(responseJson);
+      }
+    }
+  }
+
   public static class NoBodyResponseHandler<T> implements ResponseHandler<T> {
 
     public NoBodyResponseHandler() {

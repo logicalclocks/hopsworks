@@ -220,15 +220,6 @@ angular.module('hopsWorksApp')
                 return $http.get('/api/project/' + projectId + '/jobs/' + appId + '/tensorboard');
               },
               /**
-               * Get the yarn ui of the given job.
-               * @param {type} projectId
-               * @param {type} appId
-               * @returns {unresolved} The address of the job ui.
-               */
-              getYarnUI: function (projectId, appId) {
-                return $http.get('/api/project/' + projectId + '/jobs/' + appId + '/yarnui');
-              },
-              /**
                * Get the content of log for the appId
                * @param {type} projectId
                * @param {type} name
