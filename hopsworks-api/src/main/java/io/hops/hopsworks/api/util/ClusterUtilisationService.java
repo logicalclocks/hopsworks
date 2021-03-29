@@ -39,14 +39,20 @@
 
 package io.hops.hopsworks.api.util;
 
+import com.logicalclocks.servicediscoverclient.exceptions.ServiceDiscoveryException;
 import com.logicalclocks.servicediscoverclient.service.Service;
 import io.hops.hopsworks.api.filter.Audience;
-import io.hops.hopsworks.api.filter.NoCacheResponse;
 import io.hops.hopsworks.common.hosts.ServiceDiscoveryController;
-import io.hops.hopsworks.common.util.Settings;
+import io.hops.hopsworks.common.proxies.client.HttpClient;
+import io.hops.hopsworks.exceptions.ServiceException;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
+import io.hops.hopsworks.restutils.RESTCodes;
 import io.swagger.annotations.Api;
+import org.apache.http.HttpHost;
+import org.apache.http.client.methods.HttpGet;
 
+import java.io.IOException;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
@@ -55,46 +61,46 @@ import javax.ejb.TransactionAttributeType;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
-import javax.ws.rs.client.Client;
-import javax.ws.rs.client.ClientBuilder;
-import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 @Stateless
 @Path("/clusterUtilisation")
 @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
-@Api(value = "Cluster Utilisation Service",
-  description = "Cluster Utilisation Service")
+@Api(value = "Cluster Utilisation Service", description = "Cluster Utilisation Service")
 @TransactionAttribute(TransactionAttributeType.NEVER)
 public class ClusterUtilisationService {
   
   private final static Logger LOGGER = Logger.getLogger(ClusterUtilisationService.class.getName());
   @EJB
-  private NoCacheResponse noCacheResponse;
-  @EJB
-  private Settings settings;
-  @EJB
   private ServiceDiscoveryController serviceDiscoveryController;
-  
+  @EJB
+  private HttpClient httpClient;
+
+  private static final String METRICS_ENDPOINT = "/ws/v1/cluster/metrics";
+
   @GET
   @Path("/metrics")
   @Produces(MediaType.APPLICATION_JSON)
-  public Response getGpus() {
-    Response response = null;
-    Client client = ClientBuilder.newClient();
+  public Response metrics() throws ServiceException {
+    Service rm = null;
     try {
-      Service rm = serviceDiscoveryController
-          .getAnyAddressOfServiceWithDNS(ServiceDiscoveryController.HopsworksService.HTTP_RESOURCEMANAGER);
-      String rmUrl = "http://" + rm.getAddress() + ":" + rm.getPort() + "/ws/v1/cluster/metrics";
-      WebTarget target = client.target(rmUrl);
-      response = target.request().get();
-    } catch (Exception ex) {
-      return noCacheResponse.getNoCacheResponseBuilder(Response.Status.SERVICE_UNAVAILABLE).build();
-    } finally {
-      client.close();
+      rm = serviceDiscoveryController
+          .getAnyAddressOfServiceWithDNS(ServiceDiscoveryController.HopsworksService.HTTPS_RESOURCEMANAGER);
+    } catch (ServiceDiscoveryException e) {
+      throw new ServiceException(RESTCodes.ServiceErrorCode.SERVICE_DISCOVERY_ERROR, Level.FINE);
     }
-    return response;
+
+    HttpHost rmHost = new HttpHost(rm.getAddress(), rm.getPort(), "https");
+    HttpGet getRequest = new HttpGet(METRICS_ENDPOINT);
+
+    String response = null; // defined as string as we don't really need to look inside it
+    try {
+      response = httpClient.execute(rmHost, getRequest, new HttpClient.StringResponseHandler());
+    } catch (IOException e) {
+      throw new ServiceException(RESTCodes.ServiceErrorCode.RM_METRICS_ERROR, Level.FINE);
+    }
+
+    return Response.ok().entity(response).build();
   }
-  
 }

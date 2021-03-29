@@ -90,18 +90,15 @@ import java.util.regex.Pattern;
 @Stateless
 public class YarnUIProxyServlet extends ProxyServlet {
   
-  final static Logger logger = Logger.getLogger(YarnUIProxyServlet.class.getName());
-  
-  
-  private static final HashSet<String> PASS_THROUGH_HEADERS
-    = new HashSet<String>(
-    Arrays
-      .asList("User-Agent", "user-agent", "Accept", "accept",
-        "Accept-Encoding", "accept-encoding",
-        "Accept-Language",
-        "accept-language",
-        "Accept-Charset", "accept-charset"));
-  String isRemoving = null;
+  final static Logger LOGGER = Logger.getLogger(YarnUIProxyServlet.class.getName());
+
+  private static final HashSet<String> PASS_THROUGH_HEADERS = new HashSet<>(
+      Arrays.asList("User-Agent", "user-agent", "Accept", "accept",
+          "Accept-Encoding", "accept-encoding",
+          "Accept-Language",
+          "accept-language",
+          "Accept-Charset", "accept-charset"));
+
   @EJB
   private Settings settings;
   @EJB
@@ -116,13 +113,16 @@ public class YarnUIProxyServlet extends ProxyServlet {
   private ProjectTeamFacade projectTeamFacade;
   @EJB
   private ServiceDiscoveryController serviceDiscoveryController;
-  
+
+  private String isRemoving = null;
+  private Service httpsResourceManager;
+
   protected void initTarget() throws ServletException {
     try {
-      Service httpRM =
+      httpsResourceManager =
           serviceDiscoveryController.getAnyAddressOfServiceWithDNS(
-              ServiceDiscoveryController.HopsworksService.HTTP_RESOURCEMANAGER);
-      targetUri = "http://" + httpRM.getName() + ":" + httpRM.getPort();
+              ServiceDiscoveryController.HopsworksService.HTTPS_RESOURCEMANAGER);
+      targetUri = "https://" + httpsResourceManager.getName() + ":" + httpsResourceManager.getPort();
       targetUriObj = new URI(targetUri);
     } catch (Exception e) {
       throw new ServletException("Trying to process targetUri init parameter: " + e, e);
@@ -209,29 +209,17 @@ public class YarnUIProxyServlet extends ProxyServlet {
     // note: we won't transfer the protocol version because I'm not 
     // sure it would truly be compatible
     String proxyRequestUri = rewriteUrlFromRequest(servletRequest);
-    
-    logger.log(Level.FINE, "YarnProxyUI Url is: " + servletRequest.getRequestURI() + " for " +
-      proxyRequestUri);
-  
-    if (settings.isLocalHost() && proxyRequestUri.contains("proxy/application")) {
-      proxyRequestUri = proxyRequestUri.replaceAll("http://.*:", "http://localhost:");
-    }
-  
-    logger.log(Level.FINE, "YarnProxyUI Url is now: " + servletRequest.getRequestURI() + " for " +
-      proxyRequestUri);
-  
+
     try {
       // Execute the request
-      
       HttpClientParams params = new HttpClientParams();
       params.setCookiePolicy(CookiePolicy.BROWSER_COMPATIBILITY);
-      params.setBooleanParameter(HttpClientParams.ALLOW_CIRCULAR_REDIRECTS,
-        true);
+      params.setBooleanParameter(HttpClientParams.ALLOW_CIRCULAR_REDIRECTS, true);
       HttpClient client = new HttpClient(params);
       HostConfiguration config = new HostConfiguration();
       InetAddress localAddress = InetAddress.getLocalHost();
       config.setLocalAddress(localAddress);
-      
+
       String method = servletRequest.getMethod();
       HttpMethod m;
       if (method.equalsIgnoreCase("PUT")) {
@@ -250,8 +238,8 @@ public class YarnUIProxyServlet extends ProxyServlet {
           //yarn does not send back the js if encoding is not accepted
           //but we don't want to accept encoding for the html because we
           //need to be able to parse it
-          if (headerName.equalsIgnoreCase("accept-encoding") && (servletRequest.getPathInfo() == null
-            || !servletRequest.getPathInfo().contains(".js"))) {
+          if (headerName.equalsIgnoreCase("accept-encoding") &&
+              (servletRequest.getPathInfo() == null || !servletRequest.getPathInfo().contains(".js"))) {
             continue;
           } else {
             m.setRequestHeader(headerName, value);
@@ -272,8 +260,7 @@ public class YarnUIProxyServlet extends ProxyServlet {
       // Pass the response code. This method with the "reason phrase" is 
       //deprecated but it's the only way to pass the reason along too.
       //noinspection deprecation
-      servletResponse.setStatus(statusCode, m.getStatusLine().
-        getReasonPhrase());
+      servletResponse.setStatus(statusCode, m.getStatusLine().getReasonPhrase());
       
       copyResponseHeaders(m, servletRequest, servletResponse);
       
@@ -380,7 +367,7 @@ public class YarnUIProxyServlet extends ProxyServlet {
   }
   
   private String removeUnusable(String ui) {
-    
+
     if (ui.contains("<div id=\"user\">") || ui.contains("<tfoot>") || ui.contains("<td id=\"navcell\">")) {
       isRemoving = ui;
       return "";
@@ -403,14 +390,19 @@ public class YarnUIProxyServlet extends ProxyServlet {
     StringBuilder uri = new StringBuilder(500);
     if (servletRequest.getPathInfo() != null && servletRequest.getPathInfo().matches(
       "/http([a-zA-Z,:,/,.,0-9,-])+:([0-9])+(.)+")) {
-      
+
       String pathInfo = servletRequest.getPathInfo();
-      
-      logger.log(Level.FINE, "YarnProxyUI PathInfo is: " + pathInfo);
-      
-      String target = "http://" + pathInfo.substring(7);
+
+      // For some reason the requests here arrive with a mix of http/https protocol
+      // We need to standardize them with HTTPS for the Yarn proxy to work
+      if (pathInfo.startsWith("/http:/")) {
+        pathInfo = pathInfo.replaceFirst("/http:/", "");
+      } else if (pathInfo.startsWith("/https:/")) {
+        pathInfo = pathInfo.replaceFirst("/https:/", "");
+      }
+
+      String target = "https://" + pathInfo;
       servletRequest.setAttribute(ATTR_TARGET_URI, target);
-      
       uri.append(target);
     } else {
       uri.append(getTargetUri(servletRequest));
@@ -434,7 +426,7 @@ public class YarnUIProxyServlet extends ProxyServlet {
       }
       
     } else {
-      logger.log(Level.FINE, "YarnProxyUI queryString is NULL");
+      LOGGER.log(Level.FINE, "YarnProxyUI queryString is NULL");
     }
     
     queryString = rewriteQueryStringFromRequest(servletRequest, queryString);
