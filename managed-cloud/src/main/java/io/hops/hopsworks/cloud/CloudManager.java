@@ -340,6 +340,10 @@ public class CloudManager {
           //if the node selected to be decommisined is not present in yarn it is directly decommissioned without
           //decommissioning phase
           decommissioned.put(host, worker);
+        } else if (workerPerType.get(worker.getInstanceType()).get(Status.UNUSABLE) != null && workerPerType.get(worker.
+            getInstanceType()).get(Status.UNUSABLE).contains(worker)) {
+          //if the node is unusable it is directly decommissioned without decommissioning phase
+          decommissioned.put(host, worker);
         } else {
           decommissioning.put(host, worker);
         }
