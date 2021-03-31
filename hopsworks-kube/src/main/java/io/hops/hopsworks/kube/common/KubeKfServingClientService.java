@@ -31,7 +31,7 @@ public class KubeKfServingClientService {
   public static final String INFERENCESERVICE_PLURAL = "inferenceservices";
   public static final String INFERENCESERVICE_GROUP = "serving.kubeflow.org";
   public static final String INFERENCESERVICE_SCOPE = "Namespaced";
-  public static final String INFERENCESERVICE_VERSION = "v1alpha2";
+  public static final String INFERENCESERVICE_VERSION = "v1beta1";
   public static final String INFERENCESERVICE_KIND = "InferenceService";
   
   @EJB

@@ -242,11 +242,7 @@ public class KubeKfServingController extends KubeToolServingController {
           KubeKfServingClientService.INFERENCESERVICE_VERSION));
         put("kind", KubeKfServingClientService.INFERENCESERVICE_KIND);
         put("metadata", getInferenceServingMetadataJSON(project, serving));
-        put("spec", new JSONObject() {
-          {
-            put("default", predictor);
-          }
-        });
+        put("spec", predictor);
       }
     };
   }
