@@ -299,7 +299,8 @@ public class JupyterConfigFilesGenerator {
           .setLivyIp(livyService.getAddress())
           .setJupyterHome(confDirPath)
           .setDriverCores(Integer.parseInt(finalSparkConfiguration.get(Settings.SPARK_DRIVER_CORES_ENV)))
-          .setDriverMemory(finalSparkConfiguration.get(Settings.SPARK_DRIVER_MEMORY_ENV));
+          .setDriverMemory(finalSparkConfiguration.get(Settings.SPARK_DRIVER_MEMORY_ENV))
+          .setLivyStartupTimeout(settings.getLivyStartupTimeout());
       if (sparkJobConfiguration.isDynamicAllocationEnabled() || sparkJobConfiguration.getExperimentType() != null) {
         templateBuilder.setNumExecutors(1);
       } else {
