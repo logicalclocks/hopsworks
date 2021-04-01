@@ -27,13 +27,18 @@ import io.hops.hopsworks.common.featurestore.online.OnlineFeaturestoreController
 import io.hops.hopsworks.common.featurestore.query.ConstructorController;
 import io.hops.hopsworks.common.featurestore.query.Feature;
 import io.hops.hopsworks.common.featurestore.utils.FeaturestoreUtils;
+import io.hops.hopsworks.common.hdfs.Utils;
 import io.hops.hopsworks.common.hive.HiveController;
 import io.hops.hopsworks.common.security.CertificateMaterializer;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.CryptoPasswordNotFoundException;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.exceptions.HopsSecurityException;
+import io.hops.hopsworks.exceptions.KafkaException;
+import io.hops.hopsworks.exceptions.ProjectException;
+import io.hops.hopsworks.exceptions.SchemaException;
 import io.hops.hopsworks.exceptions.ServiceException;
+import io.hops.hopsworks.exceptions.UserException;
 import io.hops.hopsworks.persistence.entity.featurestore.Featurestore;
 import io.hops.hopsworks.persistence.entity.featurestore.activity.FeaturestoreActivityMeta;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.Featuregroup;
@@ -324,14 +329,17 @@ public class CachedFeaturegroupController {
    * @param user the user making the request
    * @return the created entity
    */
-  public CachedFeaturegroup createCachedFeaturegroup(
-      Featurestore featurestore, CachedFeaturegroupDTO cachedFeaturegroupDTO, Project project, Users user)
-      throws FeaturestoreException, SQLException {
-
+  public CachedFeaturegroup createCachedFeaturegroup(Featurestore featurestore,
+                                                     CachedFeaturegroupDTO cachedFeaturegroupDTO, Project project,
+                                                     Users user)
+      throws FeaturestoreException, SQLException, KafkaException, SchemaException, ProjectException, UserException,
+      ServiceException, HopsSecurityException, IOException {
     verifyPrimaryKey(cachedFeaturegroupDTO.getFeatures(), cachedFeaturegroupDTO.getTimeTravelFormat());
 
     //Prepare DDL statement
     String tableName = getTblName(cachedFeaturegroupDTO.getName(), cachedFeaturegroupDTO.getVersion());
+    // make copy of schema without hudi columns
+    List<FeatureGroupFeatureDTO> featuresNoHudi = new ArrayList<>(cachedFeaturegroupDTO.getFeatures());
     offlineFeatureGroupController.createHiveTable(featurestore, tableName, cachedFeaturegroupDTO.getDescription(),
         cachedFeaturegroupDTO.getTimeTravelFormat() == TimeTravelFormat.HUDI ?
             addHudiSpecFeatures(cachedFeaturegroupDTO.getFeatures()) :
@@ -341,8 +349,8 @@ public class CachedFeaturegroupController {
     //Create MySQL Table for Online Cached Feature Group
     boolean onlineEnabled = false;
     if(settings.isOnlineFeaturestore() && cachedFeaturegroupDTO.getOnlineEnabled()){
-      onlineFeaturegroupController.createMySQLTable(featurestore, tableName,
-          cachedFeaturegroupDTO.getFeatures(), project, user);
+      onlineFeaturegroupController.setupOnlineFeatureGroup(featurestore, cachedFeaturegroupDTO, featuresNoHudi, project,
+        user);
       onlineEnabled = true;
     }
     
@@ -355,7 +363,7 @@ public class CachedFeaturegroupController {
     return persistCachedFeaturegroupMetadata(hiveTbls, onlineEnabled, cachedFeaturegroupDTO.getTimeTravelFormat(),
         cachedFeaturegroupDTO.getFeatures());
   }
-  
+
   /**
    * Converts a CachedFeaturegroup entity into a DTO representation
    *
@@ -369,6 +377,8 @@ public class CachedFeaturegroupController {
 
     if (settings.isOnlineFeaturestore() && featuregroup.getCachedFeaturegroup().isOnlineEnabled()) {
       cachedFeaturegroupDTO.setOnlineEnabled(true);
+      cachedFeaturegroupDTO.setOnlineTopicName(onlineFeaturegroupController
+              .onlineFeatureGroupTopicName(project.getId(), Utils.getFeaturegroupName(featuregroup)));
       List<FeatureGroupFeatureDTO> onlineFeatureGroupFeatureDTOS =
           onlineFeaturegroupController.getFeaturegroupFeatures(featuregroup);
       for (FeatureGroupFeatureDTO featureGroupFeatureDTO : featureGroupFeatureDTOS) {
@@ -488,22 +498,6 @@ public class CachedFeaturegroupController {
     String db = featurestoreController.getOfflineFeaturestoreDbName(featuregroup.getFeaturestore().getProject());
     String tableName = getTblName(featuregroup.getName(), featuregroup.getVersion());
     offlineFeatureGroupController.dropFeatureGroup(db, tableName, project, user);
-  }
-
-  /**
-   * Drops a online feature group in MySQL database
-   *
-   * @param featuregroup    a cached feature group
-   * @param project
-   * @param user            the user making the request
-   * @throws SQLException
-   * @throws FeaturestoreException
-   */
-  public void dropMySQLFeaturegroup(Featuregroup featuregroup, Project project, Users user)
-      throws SQLException, FeaturestoreException {
-    if(settings.isOnlineFeaturestore() && featuregroup.getCachedFeaturegroup().isOnlineEnabled()){
-      onlineFeaturegroupController.dropMySQLTable(featuregroup, project, user);
-    }
   }
 
   /**
@@ -635,7 +629,8 @@ public class CachedFeaturegroupController {
    */
   public FeaturegroupDTO enableFeaturegroupOnline(Featurestore featurestore, Featuregroup featuregroup,
                                                   Project project, Users user)
-      throws FeaturestoreException, SQLException, ServiceException {
+      throws FeaturestoreException, SQLException, ServiceException, KafkaException, SchemaException, ProjectException,
+      UserException, IOException, HopsSecurityException {
     if(!settings.isOnlineFeaturestore()) {
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.FEATURESTORE_ONLINE_NOT_ENABLED,
         Level.FINE, "Online Featurestore is not enabled for this Hopsworks cluster.");
@@ -647,14 +642,14 @@ public class CachedFeaturegroupController {
         "administrator.");
     }
     CachedFeaturegroup cachedFeaturegroup = featuregroup.getCachedFeaturegroup();
-    //Create MySQL Table for Online Feature Group
-    String tableName = getTblName(featuregroup.getName(), featuregroup.getVersion());
+
     List<FeatureGroupFeatureDTO> features = getFeaturesDTO(featuregroup, project, user);
     if (cachedFeaturegroup.getTimeTravelFormat() == TimeTravelFormat.HUDI){
       features = dropHudiSpecFeatureGroupFeature(features);
     }
+
     if(!cachedFeaturegroup.isOnlineEnabled()) {
-      onlineFeaturegroupController.createMySQLTable(featurestore, tableName, features, project, user);
+      onlineFeaturegroupController.setupOnlineFeatureGroup(featurestore, featuregroup, features, project, user);
     }
     //Set foreign key of the cached feature group to the new online feature group
     cachedFeaturegroup.setOnlineEnabled(true);
@@ -673,7 +668,7 @@ public class CachedFeaturegroupController {
    * @throws SQLException
    */
   public FeaturegroupDTO disableFeaturegroupOnline(Featuregroup featuregroup, Project project, Users user)
-      throws FeaturestoreException, SQLException, ServiceException {
+      throws FeaturestoreException, SQLException, ServiceException, SchemaException, KafkaException {
     if(!settings.isOnlineFeaturestore()) {
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.FEATURESTORE_ONLINE_NOT_ENABLED,
         Level.FINE, "Online Featurestore is not enabled for this Hopsworks cluster.");
@@ -685,9 +680,8 @@ public class CachedFeaturegroupController {
         "administrator.");
     }
     CachedFeaturegroup cachedFeaturegroup = featuregroup.getCachedFeaturegroup();
-    if (cachedFeaturegroup.isOnlineEnabled()) {
-      //Drop MySQL Table for Online Feature Group
-      dropMySQLFeaturegroup(featuregroup, project, user);
+    if (settings.isOnlineFeaturestore() && cachedFeaturegroup.isOnlineEnabled()) {
+      onlineFeaturegroupController.disableOnlineFeatureGroup(featuregroup, project, user);
       cachedFeaturegroup.setOnlineEnabled(false);
       cachedFeaturegroupFacade.persist(cachedFeaturegroup);
     }
@@ -696,7 +690,7 @@ public class CachedFeaturegroupController {
 
   public void updateMetadata(Project project, Users user, Featuregroup featuregroup,
                              CachedFeaturegroupDTO cachedFeaturegroupDTO)
-      throws FeaturestoreException, SQLException {
+    throws FeaturestoreException, SQLException, SchemaException, KafkaException {
     List<FeatureGroupFeatureDTO> previousSchema = getFeaturesDTO(featuregroup, project, user);
     String tableName = getTblName(featuregroup.getName(), featuregroup.getVersion());
 
@@ -719,8 +713,7 @@ public class CachedFeaturegroupController {
 
       // if online feature group
       if (settings.isOnlineFeaturestore() && featuregroup.getCachedFeaturegroup().isOnlineEnabled()) {
-        onlineFeaturegroupController.alterMySQLTableColumns(
-          featuregroup.getFeaturestore(), tableName, newFeatures, project, user);
+        onlineFeaturegroupController.alterOnlineFeatureGroupSchema(featuregroup, newFeatures, project, user);
       }
 
       // Log schema change
@@ -777,8 +770,8 @@ public class CachedFeaturegroupController {
     }
   }
 
-  public List<FeatureGroupFeatureDTO> verifyAndGetNewFeatures (List<FeatureGroupFeatureDTO> previousSchema,
-                                                               List<FeatureGroupFeatureDTO> newSchema)
+  public List<FeatureGroupFeatureDTO> verifyAndGetNewFeatures(List<FeatureGroupFeatureDTO> previousSchema,
+                                                              List<FeatureGroupFeatureDTO> newSchema)
       throws FeaturestoreException {
     List<FeatureGroupFeatureDTO> newFeatures = new ArrayList<>();
     for (FeatureGroupFeatureDTO newFeature : newSchema) {

@@ -208,18 +208,18 @@ describe "On #{ENV['OS']}" do
           project = get_project
           topic = get_topic
           get_kafka_acls(project, topic)
-          acls = json_body[:items].map { |a| "#{a[:id]}" }.sort
+          acls = json_body[:items].map { |a| a[:id] }.sort
           get_kafka_acls(project, topic, "?sort_by=id:asc")
-          res = json_body[:items].map { |a| "#{a[:id]}" }
+          res = json_body[:items].map { |a| a[:id] }
           expect(res).to eq(acls)
         end
         it 'should sort by id descending' do
           project = get_project
           topic = get_topic
           get_kafka_acls(project, topic)
-          acls = json_body[:items].map { |a| "#{a[:id]}" }.sort.reverse
+          acls = json_body[:items].map { |a| a[:id] }.sort.reverse
           get_kafka_acls(project, topic, "?sort_by=id:desc")
-          res = json_body[:items].map { |a| "#{a[:id]}" }
+          res = json_body[:items].map { |a| a[:id] }
           expect(res).to eq(acls)
         end
         it 'should sort by operationType ascending' do
@@ -410,10 +410,10 @@ describe "On #{ENV['OS']}" do
           project = get_project
           topic = get_topic
           get_kafka_acls(project, topic)
-          acls = json_body[:items].select { |a| a[:projectName] == project[:projectname] }.map { |a| "#{a[:id]}" }.sort
+          acls = json_body[:items].select { |a| a[:projectName] == project[:projectname] }.map { |a| a[:id] }.sort
           filter = "?sort_by=id:asc&filter_by=project_name:" + project[:projectname]
           get_kafka_acls(project, topic, filter)
-          res = json_body[:items].map { |a| "#{a[:id]}" }
+          res = json_body[:items].map { |a| a[:id] }
           expect(res).to eq(acls)
         end
         it 'should filter for role=x' do
@@ -463,14 +463,14 @@ describe "On #{ENV['OS']}" do
           project = get_project
           topic = get_topic
           get_kafka_acls(project, topic)
-          acls = json_body[:items].map { |a| "#{a[:id]}" }.sort
+          acls = json_body[:items].map { |a| a[:id] }.sort
           count = json_body[:count]
           get_kafka_acls(project, topic, "?sort_by=id:asc&offset=3")
-          res = json_body[:items].map { |a| "#{a[:id]}" }
+          res = json_body[:items].map { |a| a[:id] }
           expect(res).to eq(acls.drop(3))
           expect(count).to eq(json_body[:count])
           get_kafka_acls(project, topic, "?sort_by=id:asc&offset=5")
-          res = json_body[:items].map { |a| "#{a[:id]}" }
+          res = json_body[:items].map { |a| a[:id] }
           expect(res).to eq(acls.drop(5))
           expect(count).to eq(json_body[:count])
         end
@@ -478,14 +478,14 @@ describe "On #{ENV['OS']}" do
           project = get_project
           topic = get_topic
           get_kafka_acls(project, topic)
-          acls = json_body[:items].map { |a| "#{a[:id]}" }.sort
+          acls = json_body[:items].map { |a| a[:id] }.sort
           count = json_body[:count]
           get_kafka_acls(project, topic, "?sort_by=id:asc&offset=3&limit=2")
-          res = json_body[:items].map { |a| "#{a[:id]}" }
+          res = json_body[:items].map { |a| a[:id] }
           expect(res).to eq(acls.drop(3).take(2))
           expect(count).to eq(json_body[:count])
           get_kafka_acls(project, topic, "?sort_by=id:asc&offset=5&limit=3")
-          res = json_body[:items].map { |a| "#{a[:id]}" }
+          res = json_body[:items].map { |a| a[:id] }
           expect(res).to eq(acls.drop(5).take(3))
           expect(count).to eq(json_body[:count])
         end
@@ -493,10 +493,10 @@ describe "On #{ENV['OS']}" do
           project = get_project
           topic = get_topic
           get_kafka_acls(project, topic)
-          acls = json_body[:items].map { |a| "#{a[:id]}" }.sort
+          acls = json_body[:items].map { |a| a[:id] }.sort
           count = json_body[:count]
           get_kafka_acls(project, topic, "?sort_by=id:asc&limit=-2")
-          res = json_body[:items].map { |a| "#{a[:id]}" }
+          res = json_body[:items].map { |a| a[:id] }
           expect(res).to eq(acls)
           expect(count).to eq(json_body[:count])
         end
@@ -504,10 +504,10 @@ describe "On #{ENV['OS']}" do
           project = get_project
           topic = get_topic
           get_kafka_acls(project, topic)
-          acls = json_body[:items].map { |a| "#{a[:id]}" }.sort
+          acls = json_body[:items].map { |a| a[:id] }.sort
           count = json_body[:count]
           get_kafka_acls(project, topic, "?sort_by=id:asc&offset=-2")
-          res = json_body[:items].map { |a| "#{a[:id]}" }
+          res = json_body[:items].map { |a| a[:id] }
           expect(res).to eq(acls)
           expect(count).to eq(json_body[:count])
         end
@@ -515,10 +515,10 @@ describe "On #{ENV['OS']}" do
           project = get_project
           topic = get_topic
           get_kafka_acls(project, topic)
-          acls = json_body[:items].map { |a| "#{a[:id]}" }.sort
+          acls = json_body[:items].map { |a| a[:id] }.sort
           count = json_body[:count]
           get_kafka_acls(project, topic, "?sort_by=id:asc&limit=0")
-          res = json_body[:items].map { |a| "#{a[:id]}" }
+          res = json_body[:items].map { |a| a[:id] }
           expect(res).to eq(acls)
           count = json_body[:count]
         end

@@ -70,7 +70,8 @@ public class OnlineFeaturestoreController {
   private static final String MYSQL_DRIVER = "com.mysql.cj.jdbc.Driver";
   private static final String MYSQL_JDBC = "jdbc:mysql://";
   private static final String MYSQL_PROPERTIES = "?useSSL=false&allowPublicKeyRetrieval=true";
-
+  public static final String ONLINEFS_USERNAME = "onlinefs";
+  
   @EJB
   private SecretsFacade secretsFacade;
   @EJB

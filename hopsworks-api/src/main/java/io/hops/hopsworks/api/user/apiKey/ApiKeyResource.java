@@ -150,7 +150,7 @@ public class ApiKeyResource {
   @POST
   @Produces(MediaType.APPLICATION_JSON)
   @ApiOperation(value = "Create an api key.", response = ApiKeyDTO.class)
-  @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
+  @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "AGENT"})
   public Response create(@QueryParam("name") String name, @QueryParam("scope") Set<ApiScope> scopes,
     @Context UriInfo uriInfo, @Context SecurityContext sc,
     @Context HttpServletRequest req) throws ApiKeyException, UserException {

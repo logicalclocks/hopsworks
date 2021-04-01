@@ -51,12 +51,16 @@ public class FeaturegroupDTO extends FeaturestoreEntityDTO {
   private List<String> expectationsNames; // List of expectation names
   @XmlElement
   private ValidationType validationType;
-
+  @XmlElement
+  private String onlineTopicName = null;
+  
   public FeaturegroupDTO() {
   }
 
-  public FeaturegroupDTO(Integer featurestoreId, String featurestoreName, Integer id, String name, Integer version) {
+  public FeaturegroupDTO(Integer featurestoreId, String featurestoreName, Integer id, String name, Integer version,
+    String onlineTopicName) {
     super(featurestoreId, featurestoreName, id, name, version);
+    this.onlineTopicName = onlineTopicName;
   }
 
   public FeaturegroupDTO(Featuregroup featuregroup) {
@@ -87,6 +91,14 @@ public class FeaturegroupDTO extends FeaturestoreEntityDTO {
 
   public void setValidationType(ValidationType validationType) {
     this.validationType = validationType;
+  }
+
+  public String getOnlineTopicName() {
+    return onlineTopicName;
+  }
+
+  public void setOnlineTopicName(String onlineTopicName) {
+    this.onlineTopicName = onlineTopicName;
   }
 
   @Override

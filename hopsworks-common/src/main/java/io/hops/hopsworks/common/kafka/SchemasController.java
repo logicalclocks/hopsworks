@@ -52,13 +52,12 @@ public class SchemasController {
     }
   }
   
-  private Schema validateSchema(Project project, String schema) throws SchemaException {
+  public Schema validateSchema(Project project, String schema) throws SchemaException {
     if(schema == null){
       throw new IllegalArgumentException("No schema provided");
     }
     try {
-      Schema s = new Schema.Parser().parse(schema);
-      return s;
+      return new Schema.Parser().parse(schema);
     } catch (SchemaParseException e) {
       throw new SchemaException(RESTCodes.SchemaRegistryErrorCode.INVALID_AVRO_SCHEMA, Level.FINE,
         "project=" + project.getName() + ", schema=" + schema);

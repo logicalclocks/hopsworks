@@ -41,6 +41,12 @@ public class SubjectDTO {
   public SubjectDTO(Integer id) {
     this.id = id;
   }
+
+  public SubjectDTO(Integer id, String subject, Integer version) {
+    this.id = id;
+    this.subject = subject;
+    this.version = version;
+  }
   
   public SubjectDTO(Integer id, String subject, Integer version, String schema) {
     this.id = id;

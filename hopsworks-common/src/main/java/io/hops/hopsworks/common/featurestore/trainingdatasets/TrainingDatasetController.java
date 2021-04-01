@@ -25,6 +25,7 @@ import io.hops.hopsworks.common.featurestore.feature.FeatureGroupFeatureDTO;
 import io.hops.hopsworks.common.featurestore.feature.TrainingDatasetFeatureDTO;
 import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupController;
 import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupDTO;
+import io.hops.hopsworks.common.featurestore.featuregroup.online.OnlineFeaturegroupController;
 import io.hops.hopsworks.common.featurestore.query.ServingPreparedStatementDTO;
 import io.hops.hopsworks.common.featurestore.query.PreparedStatementParameterDTO;
 import io.hops.hopsworks.common.featurestore.query.filter.Filter;
@@ -50,6 +51,7 @@ import io.hops.hopsworks.common.featurestore.utils.FeaturestoreUtils;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.hdfs.DistributedFsService;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
+import io.hops.hopsworks.common.hdfs.Utils;
 import io.hops.hopsworks.common.hdfs.inode.InodeController;
 import io.hops.hopsworks.common.provenance.core.HopsFSProvenanceController;
 import io.hops.hopsworks.common.util.Settings;
@@ -147,6 +149,8 @@ public class TrainingDatasetController {
   private FilterController filterController;
   @EJB
   private FeaturestoreController featurestoreController;
+  @EJB
+  private OnlineFeaturegroupController onlineFeaturegroupController;
 
   /**
    * Gets all trainingDatasets for a particular featurestore and project
@@ -189,7 +193,9 @@ public class TrainingDatasetController {
                 new FeaturegroupDTO(f.getFeatureGroup().getFeaturestore().getId(),
                     fsLookupTable.get(f.getFeatureGroup().getFeaturestore().getId()),
                     f.getFeatureGroup().getId(),
-                    f.getFeatureGroup().getName(), f.getFeatureGroup().getVersion())
+                    f.getFeatureGroup().getName(), f.getFeatureGroup().getVersion(),
+                    onlineFeaturegroupController.onlineFeatureGroupTopicName(project.getId(),
+                      Utils.getFeaturegroupName(f.getFeatureGroup())))
                 : null,
             f.getIndex(), f.isLabel()))
         .collect(Collectors.toList()));

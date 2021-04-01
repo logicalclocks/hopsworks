@@ -193,6 +193,10 @@ public class KafkaController {
     hopsKafkaAdminClient.deleteTopics(Collections.singleton(pt.getTopicName()));
   }
   
+  public boolean projectTopicExists(Project project, String topicName) {
+    return projectTopicsFacade.findTopicByNameAndProject(project, topicName).isPresent();
+  }
+
   public List<TopicDTO> findTopicsByProject(Project project) {
     List<ProjectTopics> ptList = projectTopicsFacade.findTopicsByProject(project);
   

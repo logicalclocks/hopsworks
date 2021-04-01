@@ -63,13 +63,17 @@ public class AccessController {
   
   public Collection<ProjectTeam> getExtendedMembers(Dataset dataset) {
     List<ProjectTeam> members = dataset.getProject().getProjectTeamCollection().stream()
-      .filter(pt -> !pt.getUser().getEmail().equals("serving@hopsworks.se")) //filter serving user
+      // filter serving and onlinefs user
+      .filter(pt -> !pt.getUser().getEmail().equals("serving@hopsworks.se")
+        && !pt.getUser().getEmail().equals("onlinefs@hopsworks.ai"))
       .collect(Collectors.toCollection(ArrayList::new));
     //get members of projects that this dataset has been shared with
     List<ProjectTeam> sharedDatasets = dataset.getDatasetSharedWithCollection().stream()
       .filter(DatasetSharedWith::getAccepted)
       .flatMap((sds) -> sds.getProject().getProjectTeamCollection().stream())
-      .filter(pt -> !pt.getUser().getEmail().equals("serving@hopsworks.se")) //filter serving user
+      // filter serving and onlinefs user
+      .filter(pt -> !pt.getUser().getEmail().equals("serving@hopsworks.se")
+        && !pt.getUser().getEmail().equals("onlinefs@hopsworks.ai"))
       .collect(Collectors.toCollection(ArrayList::new));
     members.addAll(sharedDatasets);
     return members;

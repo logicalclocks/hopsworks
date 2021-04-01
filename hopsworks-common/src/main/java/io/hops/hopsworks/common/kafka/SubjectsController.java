@@ -121,7 +121,8 @@ public class SubjectsController {
     Optional<Subjects> optionalSubject =
       subjectsFacade.findSubjectByNameAndSchema(project, subject, schema.toString());
     if (optionalSubject.isPresent()) {
-      return new SubjectDTO(optionalSubject.get().getSchema().getId());
+      Subjects subjects = optionalSubject.get();
+      return new SubjectDTO(subjects.getSchema().getId(), subjects.getSubject(), subjects.getVersion());
     }
     //check if schema compatible - return 409 of not
     if(!isCompatible(project, subject, schema)) {
@@ -136,7 +137,7 @@ public class SubjectsController {
   
     Schemas schemas = schemasController.addNewSchema(project, schema.toString());
     Integer id = subjectsFacade.insertNewSubject(project, subject, schemas, latestVersion + 1);
-    return new SubjectDTO(id);
+    return new SubjectDTO(id, subject, latestVersion + 1);
   }
   
   public void validateSubject(String subject, boolean isEnablingKafkaService) throws KafkaException {

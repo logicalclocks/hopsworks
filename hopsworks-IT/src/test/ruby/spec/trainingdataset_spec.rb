@@ -60,12 +60,12 @@ describe "On #{ENV['OS']}" do
           expect(td_features.length).to be 2
 
           expect(td_features.select{|feature| feature['index'] == 0}[0]['name']).to eql("testfeature")
-          expect(td_features.select{|feature| feature['index'] == 0}[0]['featuregroup']).to be nil
+          expect(td_features.select{|feature| feature['index'] == 0}[0]['featureGroup']).to be nil
           expect(td_features.select{|feature| feature['index'] == 0}[0]['type']).to eql("int")
           expect(td_features.select{|feature| feature['index'] == 0}[0]['label']).to be false
 
           expect(td_features.select{|feature| feature['index'] == 1}[0]['name']).to eql("testfeature1")
-          expect(td_features.select{|feature| feature['index'] == 1}[0]['featuregroup']).to be nil
+          expect(td_features.select{|feature| feature['index'] == 1}[0]['featureGroup']).to be nil
           expect(td_features.select{|feature| feature['index'] == 1}[0]['type']).to eql("int")
           expect(td_features.select{|feature| feature['index'] == 1}[0]['label']).to be false
 
@@ -463,9 +463,9 @@ describe "On #{ENV['OS']}" do
           td_features = training_dataset['features']
           expect(td_features.count).to eql(2)
           expect(td_features.select{|feature| feature['index'] == 0}[0]['name']).to eql("testfeature")
-          expect(td_features.select{|feature| feature['index'] == 0}[0]['featuregroup']['id']).to eql(fg_id)
+          expect(td_features.select{|feature| feature['index'] == 0}[0]['featureGroup']['id']).to eql(fg_id)
           expect(td_features.select{|feature| feature['index'] == 1}[0]['name']).to eql("testfeature1")
-          expect(td_features.select{|feature| feature['index'] == 1}[0]['featuregroup']['id']).to eql(fg_id)
+          expect(td_features.select{|feature| feature['index'] == 1}[0]['featureGroup']['id']).to eql(fg_id)
         end
 
         it "should be able to create a training dataset from a query object with label" do
@@ -581,11 +581,11 @@ describe "On #{ENV['OS']}" do
           expect(td_features.length).to eql(3)
           # check that all the features are indexed correctly and that they are picked from the correct feature group
           expect(td_features.select{|feature| feature['index'] == 0}[0]['name']).to eql("a_testfeature")
-          expect(td_features.select{|feature| feature['index'] == 0}[0]['featuregroup']['id']).to eql(fg_id)
+          expect(td_features.select{|feature| feature['index'] == 0}[0]['featureGroup']['id']).to eql(fg_id)
           expect(td_features.select{|feature| feature['index'] == 1}[0]['name']).to eql("a_testfeature1")
-          expect(td_features.select{|feature| feature['index'] == 1}[0]['featuregroup']['id']).to eql(fg_id)
+          expect(td_features.select{|feature| feature['index'] == 1}[0]['featureGroup']['id']).to eql(fg_id)
           expect(td_features.select{|feature| feature['index'] == 2}[0]['name']).to eql("b_testfeature1")
-          expect(td_features.select{|feature| feature['index'] == 2}[0]['featuregroup']['id']).to eql(fg_id_b)
+          expect(td_features.select{|feature| feature['index'] == 2}[0]['featureGroup']['id']).to eql(fg_id_b)
         end
 
         it "should fail to replay the query from a feature based training dataset" do
