@@ -159,7 +159,7 @@ public class ApiKeyResource {
   @Produces(MediaType.APPLICATION_JSON)
   @ApiOperation(value = "Create an api key.", response = ApiKeyDTO.class)
   @Audited(type = AuditType.ACCOUNT_AUDIT, action = AuditAction.PROFILE_UPDATE, message = "User created an api key")
-  @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
+  @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "AGENT"})
   public Response create(@QueryParam("name") String name, @QueryParam("scope") Set<ApiScope> scopes,
     @Context UriInfo uriInfo, @AuditTarget(UserIdentifier.REQ) @Context SecurityContext sc,
     @Context HttpServletRequest req) throws ApiKeyException, UserException {

@@ -1897,6 +1897,23 @@ describe "On #{ENV['OS']}" do
         expect(parsed_json["featurestoreName"] == project.projectname.downcase + "_featurestore").to be true
         expect(parsed_json["name"] == featuregroup_name).to be true
         expect(parsed_json["type"] == "cachedFeaturegroupDTO").to be true
+        expect(parsed_json["onlineTopicName"]).to eql(project.id.to_s + "_" + featuregroup_name + "_" +
+                                                          parsed_json["version"].to_s + "_onlinefs")
+      end
+
+      it "should create the kafka topic and avro schema for an online enabled feature group" do
+        project = get_project
+        featurestore_id = get_featurestore_id(project.id)
+        json_result, featuregroup_name = create_cached_featuregroup(project.id, featurestore_id, online:true)
+        parsed_json = JSON.parse(json_result)
+        expect_status_details(201)
+        topic_name = project.id.to_s + "_" + featuregroup_name + "_" + parsed_json["version"].to_s + "_onlinefs"
+        get_project_topics(project.id)
+        expect_status_details(200)
+        topic = json_body[:items].select{|topic| topic[:name] == topic_name}
+        expect(topic.length).to eq(1)
+        get_subject_schema(project, topic[0][:name], 1)
+        expect_status_details(200)
       end
 
       it "should be able to preview a offline featuregroup in the featurestore" do
@@ -2251,8 +2268,11 @@ describe "On #{ENV['OS']}" do
         expect_status(201)
         featuregroup_id = parsed_json["id"]
         featuregroup_version = parsed_json["version"]
-        enable_cached_featuregroup_online(project.id, featurestore_id, featuregroup_id)
+        json_result = enable_cached_featuregroup_online(project.id, featurestore_id, featuregroup_id)
         expect_status(200)
+        parsed_json = JSON.parse(json_result)
+        expect(parsed_json["onlineTopicName"]).to eql(project.id.to_s + "_" + featuregroup_name + "_" +
+                                                          parsed_json["version"].to_s + "_onlinefs")
       end
 
       it "should be able to disable online serving for a online cached feature group" do
@@ -2266,6 +2286,31 @@ describe "On #{ENV['OS']}" do
         disable_cached_featuregroup_online(project.id, featurestore_id, featuregroup_id, featuregroup_version)
         expect_status(200)
       end
+
+      it "should delete kafka topic and schema when disabling online serving for a feature group" do
+        project = get_project
+        featurestore_id = get_featurestore_id(project.id)
+        json_result, featuregroup_name = create_cached_featuregroup(project.id, featurestore_id, online:true)
+        parsed_json = JSON.parse(json_result)
+        expect_status_details(201)
+        featuregroup_id = parsed_json["id"]
+        featuregroup_version = parsed_json["version"]
+        topic_name = project.id.to_s + "_" + featuregroup_name + "_" + parsed_json["version"].to_s + "_onlinefs"
+        disable_cached_featuregroup_online(project.id, featurestore_id, featuregroup_id, featuregroup_version)
+        expect_status_details(200)
+        get_project_topics(project.id)
+        expect_status_details(200)
+        if json_body[:count] > 0
+          topic = json_body[:items].select{|topic| topic[:name] == topic_name}
+        else
+          topic = []
+        end
+        expect(topic.length).to eq(0)
+        get_subject_schema(project, topic_name, 1)
+        expect_status_details(404)
+        expect(json_body[:error_code]).to eql(40401)
+      end
+
 
       it "should be able to get online featurestore JDBC connector" do
         project = get_project

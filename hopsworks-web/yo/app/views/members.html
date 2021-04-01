@@ -157,7 +157,8 @@
           <td style="width:7%;border-top:none;">Action</td>
         </tr>
 
-        <tr ng-repeat="member in memberCtrl.members| filter:searchInput" ng-if="member.user.email !== 'serving@hopsworks.se'">
+        <tr ng-repeat="member in memberCtrl.members| filter:searchInput"
+            ng-if="member.user.email !== 'serving@hopsworks.se' && member.user.email !== 'onlinefs@hopsworks.ai'">
           <td ng-class="{'text-muted' : member.user.email === mainCtrl.email}">
             <div class="media">
               <a class="pull-left">

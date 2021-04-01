@@ -409,7 +409,8 @@ module FeaturestoreHelper
         onlineEnabled: true,
         type: "cachedFeaturegroupDTO"
     }
-    put enable_featuregroup_online_endpoint, json_data.to_json
+    json_result = put enable_featuregroup_online_endpoint, json_data.to_json
+    return json_result
   end
 
   def disable_cached_featuregroup_online(project_id, featurestore_id, featuregroup_id, featuregroup_version)

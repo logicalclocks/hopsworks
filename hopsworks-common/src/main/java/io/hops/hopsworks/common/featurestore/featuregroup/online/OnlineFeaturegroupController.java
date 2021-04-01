@@ -18,25 +18,45 @@ package io.hops.hopsworks.common.featurestore.featuregroup.online;
 
 import com.google.common.base.Strings;
 import com.logicalclocks.shaded.org.apache.commons.lang3.StringUtils;
+import io.hops.hopsworks.common.dao.kafka.TopicDTO;
+import io.hops.hopsworks.common.dao.kafka.schemas.SubjectDTO;
 import io.hops.hopsworks.common.featurestore.feature.FeatureGroupFeatureDTO;
+import io.hops.hopsworks.common.featurestore.featuregroup.cached.CachedFeaturegroupDTO;
 import io.hops.hopsworks.common.featurestore.featuregroup.cached.FeaturegroupPreview;
 import io.hops.hopsworks.common.featurestore.online.OnlineFeaturestoreController;
 import io.hops.hopsworks.common.featurestore.online.OnlineFeaturestoreFacade;
+import io.hops.hopsworks.common.hdfs.Utils;
+import io.hops.hopsworks.common.kafka.KafkaController;
+import io.hops.hopsworks.common.kafka.SchemasController;
+import io.hops.hopsworks.common.kafka.SubjectsCompatibilityController;
+import io.hops.hopsworks.common.kafka.SubjectsController;
+import io.hops.hopsworks.common.project.ProjectController;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
+import io.hops.hopsworks.exceptions.HopsSecurityException;
+import io.hops.hopsworks.exceptions.KafkaException;
+import io.hops.hopsworks.exceptions.ProjectException;
+import io.hops.hopsworks.exceptions.SchemaException;
+import io.hops.hopsworks.exceptions.ServiceException;
+import io.hops.hopsworks.exceptions.UserException;
 import io.hops.hopsworks.persistence.entity.featurestore.Featurestore;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.Featuregroup;
+import io.hops.hopsworks.persistence.entity.kafka.schemas.SchemaCompatibility;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.user.Users;
+import io.hops.hopsworks.restutils.RESTCodes;
 
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
+import java.io.IOException;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
+import java.util.logging.Level;
 import java.util.stream.Collectors;
 
 /**
@@ -52,6 +72,18 @@ public class OnlineFeaturegroupController {
   private OnlineFeaturestoreFacade onlineFeaturestoreFacade;
   @EJB
   private Settings settings;
+  @EJB
+  private SubjectsController subjectsController;
+  @EJB
+  private KafkaController kafkaController;
+  @EJB
+  private AvroSchemaConstructorController avroSchemaConstructorController;
+  @EJB
+  private SchemasController schemasController;
+  @EJB
+  private SubjectsCompatibilityController subjectsCompatibilityController;
+  @EJB
+  private ProjectController projectController;
 
   private final static List<String> MYSQL_TYPES = Arrays.asList("INT", "TINYINT", "SMALLINT", "MEDIUMINT", "BIGINT",
       "FLOAT", "DOUBLE", "DECIMAL", "DATE", "DATETIME", "TIMESTAMP", "TIME", "YEAR", "CHAR", "BINARY", "BLOB", "TEXT",
@@ -59,6 +91,7 @@ public class OnlineFeaturegroupController {
 
   private final static String VARBINARY_DEFAULT = "VARBINARY(100)";
   private final static String CHAR_DEFAULT = "CHAR(100)";
+  private static final String KAFKA_TOPIC_SUFFIX = "_onlinefs";
 
   public OnlineFeaturegroupController() {}
 
@@ -90,6 +123,95 @@ public class OnlineFeaturegroupController {
     String dbName = onlineFeaturestoreController.getOnlineFeaturestoreDbName(featurestore.getProject());
     String createStatement = buildCreateStatement(dbName, tableName, features);
     onlineFeaturestoreController.executeUpdateJDBCQuery(createStatement, dbName, project, user);
+  }
+  
+  public void setupOnlineFeatureGroup(Featurestore featureStore, CachedFeaturegroupDTO cachedFeaturegroupDTO,
+                                      List<FeatureGroupFeatureDTO> features, Project project, Users user)
+      throws KafkaException, UserException, SQLException, SchemaException, ProjectException, FeaturestoreException,
+      IOException, HopsSecurityException, ServiceException {
+    setupOnlineFeatureGroup(featureStore, cachedFeaturegroupDTO.getName(), cachedFeaturegroupDTO.getVersion(),
+      features, project, user);
+  }
+  
+  public void setupOnlineFeatureGroup(Featurestore featureStore, Featuregroup featureGroup,
+                                      List<FeatureGroupFeatureDTO> features, Project project, Users user)
+      throws FeaturestoreException, SQLException, SchemaException, KafkaException, ProjectException, UserException,
+      IOException, HopsSecurityException, ServiceException {
+    setupOnlineFeatureGroup(featureStore, featureGroup.getName(), featureGroup.getVersion(), features, project, user);
+  }
+  
+  public void setupOnlineFeatureGroup(Featurestore featureStore, String featureGroupName, Integer featureGroupVersion,
+                                      List<FeatureGroupFeatureDTO> features, Project project, Users user)
+      throws KafkaException, SchemaException, ProjectException, UserException, FeaturestoreException, SQLException,
+      IOException, HopsSecurityException, ServiceException {
+    // check if onlinefs user is part of project
+    if (project.getProjectTeamCollection().stream().noneMatch(pt ->
+      pt.getUser().getUsername().equals(OnlineFeaturestoreController.ONLINEFS_USERNAME))) {
+      try {
+        // wait for the future
+        projectController.addOnlineFsUser(project).get();
+      } catch (InterruptedException | ExecutionException e) {
+        throw new ServiceException(RESTCodes.ServiceErrorCode.SERVICE_GENERIC_ERROR,
+          Level.SEVERE, "failed to add onlinefs user to project: " + project.getName(), e.getMessage(), e);
+      }
+    }
+    
+    String featureGroupEntityName = Utils.getFeatureStoreEntityName(featureGroupName, featureGroupVersion);
+
+    createMySQLTable(featureStore, featureGroupEntityName, features, project, user);
+
+    String avroSchema = avroSchemaConstructorController
+        .constructSchema(featureGroupEntityName, Utils.getFeaturestoreName(project), features);
+    schemasController.validateSchema(project, avroSchema);
+    createOnlineKafkaTopic(project, featureGroupEntityName, avroSchema);
+  }
+  
+  // For ingesting data in the online feature store, we setup a new topic for each feature group
+  // The topic schema is also registered so it's available both for the hsfs library and for the collector
+  private void createOnlineKafkaTopic(Project project, String featureGroupEntityName, String avroSchema)
+      throws KafkaException, SchemaException, ProjectException, UserException {
+    String topicName = onlineFeatureGroupTopicName(project.getId(), featureGroupEntityName);
+    SubjectDTO topicSubject = subjectsController.registerNewSubject(project, topicName, avroSchema, false);
+    subjectsCompatibilityController.setSubjectCompatibility(project, topicName, SchemaCompatibility.NONE);
+    // TODO(Fabio): Make Kafka topics configurable
+    TopicDTO topicDTO = new TopicDTO(topicName, 1, 1, topicSubject.getSubject(), topicSubject.getVersion());
+    kafkaController.createTopic(project, topicDTO);
+  }
+  
+  public String onlineFeatureGroupTopicName(Integer projectId, String featureGroupEntityName) {
+    return projectId.toString() + "_" + featureGroupEntityName + KAFKA_TOPIC_SUFFIX;
+  }
+  
+  public void deleteOnlineKafkaTopic(Project project, Featuregroup featureGroup)
+    throws KafkaException, SchemaException {
+    String topicName = onlineFeatureGroupTopicName(project.getId(), Utils.getFeaturegroupName(featureGroup));
+    // user might have deleted topic manually
+    if (kafkaController.projectTopicExists(project, topicName)) {
+      kafkaController.removeTopicFromProject(project, topicName);
+    }
+    if (!subjectsController.getSubjectVersions(project, topicName).isEmpty()) {
+      subjectsController.deleteSubject(project, topicName);
+    }
+  }
+  
+  public void alterOnlineFeatureGroupSchema(Featuregroup featureGroup, List<FeatureGroupFeatureDTO> newFeatures,
+                                            Project project, Users user)
+      throws FeaturestoreException, SchemaException, SQLException, KafkaException {
+    String tableName = Utils.getFeatureStoreEntityName(featureGroup.getName(), featureGroup.getVersion());
+    String topicName = onlineFeatureGroupTopicName(project.getId(), tableName);
+    alterMySQLTableColumns(featureGroup.getFeaturestore(), tableName, newFeatures, project, user);
+    // publish new version of avro schema
+    String avroSchema = avroSchemaConstructorController.constructSchema(featureGroup.getName(),
+      Utils.getFeaturestoreName(project), newFeatures);
+    schemasController.validateSchema(project, avroSchema);
+    SubjectDTO topicSubject = subjectsController.registerNewSubject(project, topicName, avroSchema, false);
+    kafkaController.updateTopicSchemaVersion(project, topicName, topicSubject.getVersion());
+  }
+  
+  public void disableOnlineFeatureGroup(Featuregroup featureGroup, Project project, Users user)
+      throws FeaturestoreException, SQLException, SchemaException, KafkaException {
+    dropMySQLTable(featureGroup, project, user);
+    deleteOnlineKafkaTopic(project, featureGroup);
   }
 
   public String buildCreateStatement(String dbName, String tableName, List<FeatureGroupFeatureDTO> features) {
@@ -221,7 +343,7 @@ public class OnlineFeaturegroupController {
    */
   public String getFeaturegroupSchema(Featuregroup featuregroup) throws FeaturestoreException {
     return onlineFeaturestoreFacade.getMySQLSchema(
-        getTblName(featuregroup),
+        Utils.getFeatureStoreEntityName(featuregroup.getName(), featuregroup.getVersion()),
         onlineFeaturestoreController.getOnlineFeaturestoreDbName(featuregroup.getFeaturestore().getProject()));
   }
 
@@ -233,17 +355,13 @@ public class OnlineFeaturegroupController {
    */
   public List<FeatureGroupFeatureDTO> getFeaturegroupFeatures(Featuregroup featuregroup) throws FeaturestoreException {
     return onlineFeaturestoreFacade.getMySQLFeatures(
-        getTblName(featuregroup),
+        Utils.getFeatureStoreEntityName(featuregroup.getName(), featuregroup.getVersion()),
         onlineFeaturestoreController.getOnlineFeaturestoreDbName(featuregroup.getFeaturestore().getProject()));
   }
 
   public Long getFeaturegroupSize(Featuregroup featuregroup) {
     return onlineFeaturestoreFacade.getTblSize(
-        getTblName(featuregroup),
+        Utils.getFeatureStoreEntityName(featuregroup.getName(), featuregroup.getVersion()),
         onlineFeaturestoreController.getOnlineFeaturestoreDbName(featuregroup.getFeaturestore().getProject()));
-  }
-
-  private String getTblName(Featuregroup featuregroup) {
-    return featuregroup.getName() + "_" + featuregroup.getVersion();
   }
 }
