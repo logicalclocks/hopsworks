@@ -29,6 +29,7 @@ import io.hops.hopsworks.common.featurestore.featuregroup.cached.CachedFeaturegr
 import io.hops.hopsworks.common.featurestore.featuregroup.cached.FeaturegroupPreview;
 import io.hops.hopsworks.common.featurestore.featuregroup.ondemand.OnDemandFeaturegroupController;
 import io.hops.hopsworks.common.featurestore.featuregroup.ondemand.OnDemandFeaturegroupDTO;
+import io.hops.hopsworks.common.featurestore.featuregroup.online.OnlineFeaturegroupController;
 import io.hops.hopsworks.common.featurestore.statistics.StatisticsController;
 import io.hops.hopsworks.common.featurestore.statistics.columns.StatisticColumnController;
 import io.hops.hopsworks.common.featurestore.storageconnectors.FeaturestoreStorageConnectorController;
@@ -43,8 +44,12 @@ import io.hops.hopsworks.common.provenance.core.HopsFSProvenanceController;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.exceptions.HopsSecurityException;
+import io.hops.hopsworks.exceptions.KafkaException;
+import io.hops.hopsworks.exceptions.ProjectException;
 import io.hops.hopsworks.exceptions.ProvenanceException;
+import io.hops.hopsworks.exceptions.SchemaException;
 import io.hops.hopsworks.exceptions.ServiceException;
+import io.hops.hopsworks.exceptions.UserException;
 import io.hops.hopsworks.persistence.entity.featurestore.Featurestore;
 import io.hops.hopsworks.persistence.entity.featurestore.activity.FeaturestoreActivityMeta;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.Featuregroup;
@@ -109,6 +114,8 @@ public class FeaturegroupController {
   private HdfsUsersController hdfsUsersController;
   @EJB
   private InodeController inodeController;
+  @EJB
+  private OnlineFeaturegroupController onlineFeaturegroupController;
   @EJB
   private FeaturestoreActivityFacade fsActivityFacade;
   @EJB
@@ -182,7 +189,8 @@ public class FeaturegroupController {
    * @throws SQLException
    */
   public FeaturegroupDTO clearFeaturegroup(Featuregroup featuregroup, Project project, Users user)
-    throws FeaturestoreException, SQLException, ProvenanceException, IOException, ServiceException {
+      throws FeaturestoreException, SQLException, ProvenanceException, IOException, ServiceException,
+      KafkaException, SchemaException, ProjectException, UserException, HopsSecurityException {
     switch (featuregroup.getFeaturegroupType()) {
       case CACHED_FEATURE_GROUP:
         FeaturegroupDTO featuregroupDTO = convertFeaturegrouptoDTO(featuregroup, project, user);
@@ -215,7 +223,8 @@ public class FeaturegroupController {
    */
   public FeaturegroupDTO createFeaturegroup(Featurestore featurestore, FeaturegroupDTO featuregroupDTO,
                                             Project project, Users user)
-      throws FeaturestoreException, ServiceException, SQLException, ProvenanceException {
+      throws FeaturestoreException, ServiceException, SQLException, ProvenanceException, IOException,
+      KafkaException, SchemaException, ProjectException, UserException, HopsSecurityException {
 
     // if version not provided, get latest and increment
     if (featuregroupDTO.getVersion() == null) {
@@ -236,7 +245,8 @@ public class FeaturegroupController {
 
   public FeaturegroupDTO createFeaturegroupNoValidation(Featurestore featurestore, FeaturegroupDTO featuregroupDTO,
                                                       Project project, Users user)
-      throws FeaturestoreException, SQLException, ProvenanceException, ServiceException {
+      throws FeaturestoreException, SQLException, ProvenanceException, ServiceException, KafkaException,
+      SchemaException, ProjectException, UserException, IOException, HopsSecurityException {
 
     //Persist specific feature group metadata (cached fg or on-demand fg)
     OnDemandFeaturegroup onDemandFeaturegroup = null;
@@ -356,7 +366,8 @@ public class FeaturegroupController {
    */
   public FeaturegroupDTO updateFeaturegroupMetadata(Project project, Users user, Featurestore featurestore,
                                                     FeaturegroupDTO featuregroupDTO)
-      throws FeaturestoreException, SQLException, ProvenanceException, ServiceException {
+      throws FeaturestoreException, SQLException, ProvenanceException, ServiceException, SchemaException,
+      KafkaException {
     Featuregroup featuregroup = getFeaturegroupById(featurestore, featuregroupDTO.getId());
     // Verify general entity related information
     featurestoreInputValidation.verifyDescription(featuregroupDTO);
@@ -398,7 +409,8 @@ public class FeaturegroupController {
    */
   public FeaturegroupDTO enableFeaturegroupOnline(Featurestore featurestore, FeaturegroupDTO featuregroupDTO,
                                                   Project project, Users user)
-      throws FeaturestoreException, SQLException, ServiceException {
+      throws FeaturestoreException, SQLException, ServiceException, KafkaException,
+      SchemaException, ProjectException, UserException, IOException, HopsSecurityException {
     Featuregroup featuregroup = getFeaturegroupById(featurestore, featuregroupDTO.getId());
     if(featuregroup.getFeaturegroupType() == FeaturegroupType.ON_DEMAND_FEATURE_GROUP){
       throw new FeaturestoreException(
@@ -424,7 +436,7 @@ public class FeaturegroupController {
    * @throws FeaturestoreException
    */
   public FeaturegroupDTO disableFeaturegroupOnline(Featuregroup featuregroup, Project project, Users user)
-      throws FeaturestoreException, SQLException, ServiceException {
+      throws FeaturestoreException, SQLException, ServiceException, SchemaException, KafkaException {
     if(featuregroup.getFeaturegroupType() == FeaturegroupType.ON_DEMAND_FEATURE_GROUP) {
       throw new FeaturestoreException(
         RESTCodes.FeaturestoreErrorCode.ONLINE_FEATURE_SERVING_NOT_SUPPORTED_FOR_ON_DEMAND_FEATUREGROUPS, Level.FINE,
@@ -516,13 +528,15 @@ public class FeaturegroupController {
    * @throws IOException
    */
   public void deleteFeaturegroup(Featuregroup featuregroup, Project project, Users user)
-    throws SQLException, FeaturestoreException, ServiceException, IOException {
+    throws SQLException, FeaturestoreException, ServiceException, IOException, SchemaException, KafkaException {
     switch (featuregroup.getFeaturegroupType()) {
       case CACHED_FEATURE_GROUP:
         //Delete hive_table will cascade to cached_featuregroup_table which will cascade to feature_group table
         cachedFeaturegroupController.dropHiveFeaturegroup(featuregroup, project, user);
         //Delete mysql table and metadata
-        cachedFeaturegroupController.dropMySQLFeaturegroup(featuregroup, project, user);
+        if(settings.isOnlineFeaturestore() && featuregroup.getCachedFeaturegroup().isOnlineEnabled()) {
+          onlineFeaturegroupController.disableOnlineFeatureGroup(featuregroup, project, user);
+        }
         break;
       case ON_DEMAND_FEATURE_GROUP:
         //Delete on_demand_feature_group will cascade will cascade to feature_group table

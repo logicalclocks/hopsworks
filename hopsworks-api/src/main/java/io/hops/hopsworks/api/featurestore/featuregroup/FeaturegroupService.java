@@ -47,9 +47,13 @@ import io.hops.hopsworks.exceptions.FeatureStoreTagException;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.exceptions.HopsSecurityException;
 import io.hops.hopsworks.exceptions.JobException;
+import io.hops.hopsworks.exceptions.KafkaException;
 import io.hops.hopsworks.exceptions.MetadataException;
+import io.hops.hopsworks.exceptions.ProjectException;
 import io.hops.hopsworks.exceptions.ProvenanceException;
+import io.hops.hopsworks.exceptions.SchemaException;
 import io.hops.hopsworks.exceptions.ServiceException;
+import io.hops.hopsworks.exceptions.UserException;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
 import io.hops.hopsworks.persistence.entity.dataset.Dataset;
 import io.hops.hopsworks.persistence.entity.featurestore.Featurestore;
@@ -209,7 +213,7 @@ public class FeaturegroupService {
   @ApiOperation(value = "Create feature group in a featurestore",
       response = FeaturegroupDTO.class)
   public Response createFeaturegroup(@Context SecurityContext sc, FeaturegroupDTO featuregroupDTO)
-      throws FeaturestoreException, ServiceException {
+      throws FeaturestoreException, ServiceException, KafkaException, SchemaException, ProjectException, UserException {
     Users user = jWTHelper.getUserPrincipal(sc);
     if(featuregroupDTO == null) {
       throw new IllegalArgumentException("Input JSON for creating a new Feature Group cannot be null");
@@ -224,7 +228,7 @@ public class FeaturegroupService {
       GenericEntity<FeaturegroupDTO> featuregroupGeneric =
           new GenericEntity<FeaturegroupDTO>(createdFeaturegroup) {};
       return noCacheResponse.getNoCacheResponseBuilder(Response.Status.CREATED).entity(featuregroupGeneric).build();
-    } catch (SQLException | ProvenanceException e) {
+    } catch (SQLException | ProvenanceException | IOException | HopsSecurityException e) {
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.COULD_NOT_CREATE_FEATUREGROUP, Level.SEVERE,
           "project: " + project.getName() + ", featurestoreId: " + featurestore.getId(), e.getMessage(), e);
     }
@@ -310,7 +314,7 @@ public class FeaturegroupService {
   @ApiOperation(value = "Delete specific featuregroup from a specific featurestore")
   public Response deleteFeatureGroup(@Context SecurityContext sc,
       @ApiParam(value = "Id of the featuregroup", required = true) @PathParam("featuregroupId") Integer featuregroupId)
-      throws FeaturestoreException, ServiceException {
+      throws FeaturestoreException, ServiceException, SchemaException, KafkaException {
     verifyIdProvided(featuregroupId);
     Users user = jWTHelper.getUserPrincipal(sc);
     //Verify that the user has the data-owner role or is the creator of the featuregroup
@@ -348,7 +352,7 @@ public class FeaturegroupService {
   @ApiOperation(value = "Delete featuregroup contents")
   public Response deleteFeaturegroupContents(@Context SecurityContext sc,
       @ApiParam(value = "Id of the featuregroup", required = true) @PathParam("featuregroupId") Integer featuregroupId)
-      throws FeaturestoreException, ServiceException {
+      throws FeaturestoreException, ServiceException, KafkaException, SchemaException, ProjectException, UserException {
     verifyIdProvided(featuregroupId);
     Users user = jWTHelper.getUserPrincipal(sc);
     //Verify that the user has the data-owner role or is the creator of the featuregroup
@@ -356,7 +360,7 @@ public class FeaturegroupService {
     try {
       featuregroupController.clearFeaturegroup(featuregroup, project, user);
       return Response.ok().build();
-    } catch (SQLException | IOException | ProvenanceException e) {
+    } catch (SQLException | IOException | ProvenanceException | HopsSecurityException e) {
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.COULD_NOT_CLEAR_FEATUREGROUP, Level.SEVERE,
           "project: " + project.getName() + ", featurestoreId: " + featurestore.getId() +
               ", featuregroupId: " + featuregroupId, e.getMessage(), e);
@@ -395,7 +399,8 @@ public class FeaturegroupService {
       @ApiParam(value = "validationType", example = "NONE")
       @QueryParam("validationType") ValidationType validationType,
       FeaturegroupDTO featuregroupDTO)
-      throws FeaturestoreException, SQLException, ProvenanceException, ServiceException {
+      throws FeaturestoreException, SQLException, ProvenanceException, ServiceException, SchemaException,
+      KafkaException, ProjectException, UserException, IOException, HopsSecurityException {
     if(featuregroupDTO == null) {
       throw new IllegalArgumentException("Input JSON for updating Feature Group cannot be null");
     }

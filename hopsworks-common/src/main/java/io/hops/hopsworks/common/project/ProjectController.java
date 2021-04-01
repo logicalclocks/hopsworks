@@ -771,6 +771,8 @@ public class ProjectController {
         addServiceDataset(project, user, Settings.ServiceDataset.DATAVALIDATION, dfso, udfso,
           Provenance.getDatasetProvCore(projectProvCore, Provenance.MLType.DATASET));
         addServiceDataset(project, user, Settings.ServiceDataset.STATISTICS, dfso, udfso, Provenance.Type.DISABLED.dto);
+        // add onlinefs service user to project
+        futureList.add(addOnlineFsUser(project));
         //Enable Jobs service at the same time as featurestore
         if (!projectServicesFacade.isServiceEnabledForProject(project, ProjectServiceEnum.JOBS)) {
           if (!projectServicesFacade.isServiceEnabledForProject(project, ProjectServiceEnum.JUPYTER)) {
@@ -779,20 +781,16 @@ public class ProjectController {
             addKibana(project, user);
           }
         }
+        // might have been enabled as regular service for project already
+        if (!projectServicesFacade.isServiceEnabledForProject(project, ProjectServiceEnum.KAFKA)) {
+          addServiceKafka(project);
+        }
         break;
       case KAFKA:
-        subjectsCompatibilityController.setProjectCompatibility(project, SchemaCompatibility.BACKWARD);
-        subjectsController.registerNewSubject(project, Settings.INFERENCE_SCHEMANAME,
-          KafkaConst.INFERENCE_SCHEMA_VERSION_1, true);
-        subjectsCompatibilityController.setSubjectCompatibility(project, Settings.INFERENCE_SCHEMANAME,
-          SchemaCompatibility.NONE);
-        subjectsController.registerNewSubject(project, Settings.INFERENCE_SCHEMANAME,
-          KafkaConst.INFERENCE_SCHEMA_VERSION_2, true);
-        subjectsCompatibilityController.setSubjectCompatibility(project, Settings.INFERENCE_SCHEMANAME,
-          SchemaCompatibility.NONE);
-        subjectsController.registerNewSubject(project, Settings.INFERENCE_SCHEMANAME,
-          KafkaConst.INFERENCE_SCHEMA_VERSION_3, true);
-        
+        // might have been enabled by feature store service already
+        if (!projectServicesFacade.isServiceEnabledForProject(project, ProjectServiceEnum.KAFKA)) {
+          addServiceKafka(project);
+        }
         break;
     }
 
@@ -845,6 +843,29 @@ public class ProjectController {
         "project: " + project.getName(), ex.getMessage(), ex);
     }
   }
+  
+  private void addServiceKafka(Project project) throws SchemaException, KafkaException {
+    subjectsCompatibilityController.setProjectCompatibility(project, SchemaCompatibility.BACKWARD);
+    subjectsController.registerNewSubject(project, Settings.INFERENCE_SCHEMANAME,
+      KafkaConst.INFERENCE_SCHEMA_VERSION_1, true);
+    subjectsCompatibilityController.setSubjectCompatibility(project, Settings.INFERENCE_SCHEMANAME,
+      SchemaCompatibility.NONE);
+    subjectsController.registerNewSubject(project, Settings.INFERENCE_SCHEMANAME,
+      KafkaConst.INFERENCE_SCHEMA_VERSION_2, true);
+    subjectsCompatibilityController.setSubjectCompatibility(project, Settings.INFERENCE_SCHEMANAME,
+      SchemaCompatibility.NONE);
+    subjectsController.registerNewSubject(project, Settings.INFERENCE_SCHEMANAME,
+      KafkaConst.INFERENCE_SCHEMA_VERSION_3, true);
+  }
+  
+  /**
+   * Add the onlinefs user to the project in order for the onlinefs service to be able to get an API key
+   * @param project
+   */
+  public Future<CertificatesController.CertsResult> addOnlineFsUser(Project project)
+      throws HopsSecurityException, IOException {
+    return addServiceUser(project, OnlineFeaturestoreController.ONLINEFS_USERNAME);
+  }
 
   private Future<CertificatesController.CertsResult> addServiceServing(Project project, Users user,
     DistributedFileSystemOps dfso, DistributedFileSystemOps udfso, ProvTypeDTO datasetProvCore)
@@ -866,15 +887,20 @@ public class ProjectController {
    * Add to the project the serving manager. The user responsible of writing the inference logs to kafka
    * @param project
    */
-  private Future<CertificatesController.CertsResult> addServingManager(Project project) throws HopsSecurityException,
-    IOException {
+  private Future<CertificatesController.CertsResult> addServingManager(Project project)
+      throws IOException, HopsSecurityException {
+    return addServiceUser(project, KafkaInferenceLogger.SERVING_MANAGER_USERNAME);
+  }
+  
+  private Future<CertificatesController.CertsResult> addServiceUser(Project project, String username)
+      throws IOException, HopsSecurityException {
     // Add the Serving Manager user to the project team
-    Users servingManagerUser = userFacade.findByUsername(KafkaInferenceLogger.SERVING_MANAGER_USERNAME);
-    ProjectTeamPK stp = new ProjectTeamPK(project.getId(), servingManagerUser.getEmail());
+    Users serviceUser = userFacade.findByUsername(username);
+    ProjectTeamPK stp = new ProjectTeamPK(project.getId(), serviceUser.getEmail());
     ProjectTeam st = new ProjectTeam(stp);
     st.setTeamRole(ProjectRoleTypes.DATA_SCIENTIST.getRole());
     st.setTimestamp(new Date());
-    st.setUser(servingManagerUser);
+    st.setUser(serviceUser);
     st.setProject(project);//Not fetched by jpa from project id in PK
     projectTeamFacade.persistProjectTeam(st);
     // Create the Hdfs user
@@ -882,10 +908,10 @@ public class ProjectController {
     // Create the certificate for this project user
     Future<CertificatesController.CertsResult> certsResultFuture = null;
     try {
-      certsResultFuture = certificatesController.generateCertificates(project, servingManagerUser);
+      certsResultFuture = certificatesController.generateCertificates(project, serviceUser);
     } catch (Exception e) {
       throw new HopsSecurityException(RESTCodes.SecurityErrorCode.CERT_CREATION_ERROR, Level.SEVERE,
-        "project: " + project.getName() + "owner: servingmanager", e.getMessage(), e);
+        "failed adding service user to project: " + project.getName() + "owner: " + username, e.getMessage(), e);
     }
 
     return certsResultFuture;

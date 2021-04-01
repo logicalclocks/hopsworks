@@ -691,7 +691,7 @@ public class RESTCodes {
         "Topic limit reached. Contact your administrator to increase the number of topics " +
             "that can be created for this project.", Response.Status.PRECONDITION_FAILED),
     TOPIC_REPLICATION_ERROR(5, "Maximum topic replication factor exceeded", Response.Status.BAD_REQUEST),
-    SCHEMA_NOT_FOUND(6, "Topic has not schema attached to it.", Response.Status.NOT_FOUND),
+    SCHEMA_NOT_FOUND(6, "Topic has no schema attached to it.", Response.Status.NOT_FOUND),
     KAFKA_GENERIC_ERROR(7, "An error occurred while retrieving information from Kafka service",
         Response.Status.INTERNAL_SERVER_ERROR),
     DESTINATION_PROJECT_IS_TOPIC_OWNER(8, "Destination projet is topic owner",
@@ -1527,7 +1527,11 @@ public class RESTCodes {
     FEATURE_GROUP_CHECKS_FAILED(149,
                        "Feature group validation checks did not pass, will not persist validation results.",
                                 Response.Status.EXPECTATION_FAILED),
-    RULE_NOT_FOUND(150, "Rule with provided name was not found.", Response.Status.NOT_FOUND);
+    RULE_NOT_FOUND(150, "Rule with provided name was not found.", Response.Status.NOT_FOUND),
+    AVRO_PRIMITIVE_TYPE_NOT_SUPPORTED(151, "Error converting Hive Type to Avro primitive type",
+                                      Response.Status.BAD_REQUEST),
+    AVRO_MAP_STRING_KEY(152, "Map types are only supported with STRING type keys", Response.Status.BAD_REQUEST),
+    AVRO_MALFORMED_SCHEMA(153, "Error converting Hive schema to Avro", Response.Status.INTERNAL_SERVER_ERROR);
 
     private int code;
     private String message;
