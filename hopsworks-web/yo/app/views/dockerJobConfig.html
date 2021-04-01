@@ -1,0 +1,124 @@
+<!--
+ ~
+ ~ This file is part of Hopsworks
+ ~ Copyright (C) 2021, Logical Clocks AB. All rights reserved
+ ~
+ ~ Hopsworks is free software: you can redistribute it and/or modify it under the terms of
+ ~ the GNU Affero General Public License as published by the Free Software Foundation,
+ ~ either version 3 of the License, or (at your option) any later version.
+ ~
+ ~ Hopsworks is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+ ~ without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+ ~ PURPOSE.  See the GNU Affero General Public License for more details.
+ ~
+ ~ You should have received a copy of the GNU Affero General Public License along with this program.
+ ~ If not, see <https://www.gnu.org/licenses/>.
+ ~
+ -->
+<form class="form-horizontal" name="newJobCtrl.dockerJobConfigForm">
+    <div class="form-group" ng-show="newJobCtrl.hasDockerMemory">
+        <label class="control-label col-sm-5" for="mem" uib-tooltip="Memory to allocate for the Docker job">Memory (MB):</label>
+        <div class="col-sm-2">
+            <input type="number" class="form-control" id="mem" name="memory" step="1" ng-min="1024" ng-max="newJobCtrl.maxDockerMemory" ng-model="newJobCtrl.runConfig.memory" required>
+            <span class="text-danger" ng-show="(newJobCtrl.dockerJobConfigForm.memory.$dirty) && newJobCtrl.dockerJobConfigForm.memory.$error.number">Must be a number.</span>
+            <span class="text-danger" ng-show="(newJobCtrl.dockerJobConfigForm.memory.$dirty) && newJobCtrl.dockerJobConfigForm.memory.$error.max">You can at most allocate {{newJobCtrl.maxDockerMemory}} MB.</span>
+            <span class="text-danger" ng-show="(newJobCtrl.dockerJobConfigForm.memory.$dirty) && newJobCtrl.dockerJobConfigForm.memory.$error.min">It is recommended to allocate at minimum 1024 MB.</span>
+        </div>
+    </div>
+    <div class="form-group" ng-show="newJobCtrl.hasDockerCores">
+        <label class="control-label col-sm-5" for="cores"
+               uib-tooltip="Virtual cores to allocate for the Docker job">CPU cores:</label>
+        <div class="col-sm-2">
+            <select class="form-control" id="cores" ng-model="newJobCtrl.runConfig.cores" required>
+                <option ng-selected="newJobCtrl.runConfig.cores === i"
+                        ng-repeat="i in newJobCtrl.range(1, newJobCtrl.maxDockerCores)"
+                        ng-value="i">{{i}}</option>
+            </select>
+        </div>
+    </div>
+    <div class="form-group" ng-show="newJobCtrl.hasDockerGpus">
+        <label class="control-label col-sm-5" for="gpus" uib-tooltip="GPUs to allocate for this Job">GPUs:</label>
+        <div class="col-sm-2">
+            <select class="form-control" id="gpus" ng-model="newJobCtrl.runConfig.gpus" required>
+                <option ng-selected="newJobCtrl.runConfig.gpus === i"
+                        ng-repeat="i in newJobCtrl.range(0, newJobCtrl.maxDockerGpus)"
+                        ng-value="i">{{i}}</option>
+            </select>
+        </div>
+    </div>
+    <div class="form-group">
+        <label class="control-label col-sm-5"
+               uib-tooltip="Optionally set the path where the docker container will redirect its output. The directory is automatically created in the container and the job will copy its content to the equivalent path in Datasets (you need to create the dataset manually first)">Output path: </label>
+        <div class="col-sm-2">
+                <button id="selectOutputDirButton" class="btn btn-default"
+                        ng-click="newJobCtrl.selectDockerOutputDir()">
+                    <span>Select...</span>
+                </button>
+                <textarea style="width: 100%; max-width: 100%"
+                      id="outputPath"
+                      ng-model="newJobCtrl.runConfig.outputPath">/logs
+                </textarea>
+        </div>
+    </div>
+
+    <div class="form-group">
+        <label class="control-label col-sm-10">
+            <h5 class="j-tab-advanced"
+                ng-click="newJobCtrl.settings.advanced = !newJobCtrl.settings.advanced"
+                data-toggle="collapse" data-target="#dockerAdvanced">
+                Advanced configuration
+                <i class="fa"
+                   ng-class="{'fa-chevron-down': newJobCtrl.settings.advanced, 'fa-chevron-right': !newJobCtrl.settings.advanced}"
+                   style="margin-left: 5px">
+                </i>
+            </h5>
+        </label>
+    </div>
+    <div class="form-group">
+        <div id="dockerAdvanced"
+             ng-class="{'collapse in': newJobCtrl.settings.advanced, 'collapse': !newJobCtrl.settings.advanced}">
+            <div class="form-group">
+                <label class="control-label col-sm-5" for="envs"
+                       uib-tooltip='Enter additional line-separated environment variables to be available in the container.'>Environment variables: </label>
+                <div class="col-sm-2">
+                    <textarea style="width: 100%; max-width: 100%"
+                              id="envs"
+                              ng-model="newJobCtrl.runConfig.envVars"
+                              title="env1=val1&#10;env2=val2">
+                    </textarea>
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="control-label col-sm-5" for="volumes"
+                       uib-tooltip='Enter additional line-separated volumes to be mounted in the container.'>Volumes: </label>
+                <div class="col-sm-2">
+                    <textarea style="width: 100%; max-width: 100%"
+                              id="volumes"
+                              ng-model="newJobCtrl.runConfig.volumes"
+                              title="/local-path1:/container-path1&#10;/local-path2:/container-path2">
+                    </textarea>
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="control-label col-sm-5" for="uid"
+                       uib-tooltip='User id the container runs with. If empty, container will run with uid set by the image (Optional).'>User id: </label>
+                <div class="col-sm-2">
+                    <textarea style="width: 100%; max-width: 100%"
+                              id="uid"
+                              ng-model="newJobCtrl.runConfig.uid">
+                    </textarea>
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="control-label col-sm-5" for="gid"
+                       uib-tooltip='Group id the container runs with. If empty, container will run with gid set by the image (Optional).'>Group id: </label>
+                <div class="col-sm-2">
+                    <textarea style="width: 100%; max-width: 100%"
+                              id="gid"
+                              ng-model="newJobCtrl.runConfig.gid">
+                    </textarea>
+                </div>
+            </div>
+        </div>
+    </div>
+</form>

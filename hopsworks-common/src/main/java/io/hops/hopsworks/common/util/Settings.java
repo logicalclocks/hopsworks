@@ -331,6 +331,9 @@ public class Settings implements Serializable {
   /*-----------------------Yarn Docker------------------------*/
   private final static String VARIABLE_YARN_RUNTIME = "yarn_runtime";
   private final static String VARIABLE_DOCKER_MOUNTS = "docker_mounts";
+  private final static String VARIABLE_DOCKER_JOB_MOUNTS_LIST = "docker_job_mounts_list";
+  private final static String VARIABLE_DOCKER_JOB_MOUNT_ALLOWED = "docker_job_mounts_allowed";
+  private final static String VARIABLE_DOCKER_JOB_UID_STRICT = "docker_job_uid_strict";
   private final static String VARIABLE_DOCKER_BASE_IMAGE_PYTHON_NAME = "docker_base_image_python_name";
   private final static String VARIABLE_DOCKER_BASE_IMAGE_PYTHON_VERSION = "docker_base_image_python_version";
   private final static String VARIABLE_YARN_APP_UID = "yarn_app_uid";
@@ -739,6 +742,9 @@ public class Settings implements Serializable {
 
       YARN_RUNTIME = setStrVar(VARIABLE_YARN_RUNTIME, YARN_RUNTIME);
       DOCKER_MOUNTS = setStrVar(VARIABLE_DOCKER_MOUNTS, DOCKER_MOUNTS);
+      DOCKER_JOB_MOUNTS_LIST = setStrVar(VARIABLE_DOCKER_JOB_MOUNTS_LIST, DOCKER_JOB_MOUNTS_LIST);
+      DOCKER_JOB_MOUNT_ALLOWED = setBoolVar(VARIABLE_DOCKER_JOB_MOUNT_ALLOWED, DOCKER_JOB_MOUNT_ALLOWED);
+      DOCKER_JOB_UID_STRICT = setBoolVar(VARIABLE_DOCKER_JOB_UID_STRICT, DOCKER_JOB_UID_STRICT);
       DOCKER_BASE_IMAGE_PYTHON_NAME = setStrVar(VARIABLE_DOCKER_BASE_IMAGE_PYTHON_NAME, DOCKER_BASE_IMAGE_PYTHON_NAME);
       DOCKER_BASE_IMAGE_PYTHON_VERSION = setStrVar(VARIABLE_DOCKER_BASE_IMAGE_PYTHON_VERSION,
           DOCKER_BASE_IMAGE_PYTHON_VERSION);
@@ -3353,7 +3359,7 @@ public class Settings implements Serializable {
     checkCache();
     return KUBE_INSTALLED;
   }
-  
+
   private Boolean HOPSWORKS_ENTERPRISE = false;
   public synchronized Boolean getHopsworksEnterprise() {
     checkCache();
@@ -3786,6 +3792,24 @@ public class Settings implements Serializable {
   public synchronized String getBaseNonPythonDockerImageWithNoTag(){
     checkCache();
     return DOCKER_BASE_NON_PYTHON_IMAGE;
+  }
+
+  private String DOCKER_JOB_MOUNTS_LIST;
+  public synchronized List<String> getDockerMountsList(){
+    checkCache();
+    return Arrays.asList(DOCKER_JOB_MOUNTS_LIST.split(","));
+  }
+
+  private Boolean DOCKER_JOB_MOUNT_ALLOWED = true;
+  public synchronized Boolean isDockerJobMountAllowed(){
+    checkCache();
+    return DOCKER_JOB_MOUNT_ALLOWED;
+  }
+
+  private Boolean DOCKER_JOB_UID_STRICT = true;
+  public synchronized Boolean isDockerJobUidStrict(){
+    checkCache();
+    return DOCKER_JOB_UID_STRICT;
   }
 
   private int MAX_ENV_YML_BYTE_SIZE = 20000;

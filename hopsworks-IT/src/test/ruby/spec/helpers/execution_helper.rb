@@ -61,7 +61,7 @@ module ExecutionHelper
   end
 
   def wait_for_execution_completed(project_id, job_name, execution_id, expected_end_state, expected_final_status: nil)
-    wait_result = wait_for_me_time do
+    wait_result = wait_for_me_time(timeout=120) do
       get_execution(project_id, job_name, execution_id)
       unless is_execution_active(json_body)
         expect(json_body[:state]).to eq(expected_end_state), "job completed with state:#{json_body[:state]}"
@@ -128,6 +128,14 @@ module ExecutionHelper
     else
       expect(output).not_to include(job_name.gsub("_","-"))
     end
+  end
+
+  def wait_for_docker_job_output(path)
+    file_found = false
+    wait_for(60, "Docker job output not found") do
+      file_found = test_file(path)
+    end
+    expect(file_found).to be true
   end
 end
 

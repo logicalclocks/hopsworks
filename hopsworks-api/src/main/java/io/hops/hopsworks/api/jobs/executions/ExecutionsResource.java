@@ -140,7 +140,7 @@ public class ExecutionsResource {
   }
   
   @ApiOperation(value = "Start an execution(run) of the job",
-    notes = "Starts a job by creating and starting an Execution, stops a job by stopping the Execution.",
+    notes = "Starts a job by creating and starting an Execution.",
     response = ExecutionDTO.class)
   @POST
   @Consumes(MediaType.TEXT_PLAIN)
