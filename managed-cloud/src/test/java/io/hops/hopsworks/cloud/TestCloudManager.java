@@ -176,9 +176,9 @@ public class TestCloudManager {
     DecommissionStatus status = cloudManager.setAndGetDecommission(requests, workers, yarnClient, dfsOps, conf, caProxy,
         hostsController);
     
-    Assert.assertTrue(status.getDecommissioning().size() == 1);
-    Assert.assertTrue(status.getDecommissioned().isEmpty());
-    Assert.assertTrue(status.getDecommissioning().contains(workers.get("host1")));
+    Assert.assertTrue(status.getDecommissioning().isEmpty());
+    Assert.assertTrue(status.getDecommissioned().size() == 1);
+    Assert.assertTrue(status.getDecommissioned().contains(workers.get("host1")));
     
     ArgumentCaptor<String[]> commandCaptor = ArgumentCaptor.forClass(String[].class);
     Mockito.verify(cloudManager, Mockito.times(2)).execute(Mockito.any(RMAdminCLI.class), commandCaptor.capture());
@@ -212,9 +212,9 @@ public class TestCloudManager {
     status = cloudManager.setAndGetDecommission(requests, workers, yarnClient, dfsOps, conf, caProxy,
         hostsController);
     
-    Assert.assertTrue(status.getDecommissioning().size() == 2);
-    Assert.assertTrue(status.getDecommissioned().isEmpty());
-    Assert.assertTrue(status.getDecommissioning().contains(workers.get("host1")));
+    Assert.assertTrue(status.getDecommissioning().size() == 1);
+    Assert.assertTrue(status.getDecommissioned().size() == 1);
+    Assert.assertTrue(status.getDecommissioned().contains(workers.get("host1")));
     Assert.assertTrue(status.getDecommissioning().contains(workers.get("host2")));
     
     commandCaptor = ArgumentCaptor.forClass(String[].class);
@@ -253,9 +253,9 @@ public class TestCloudManager {
     status = cloudManager.setAndGetDecommission(requests, workers, yarnClient, dfsOps, conf, caProxy,
         hostsController);
     
-    Assert.assertTrue(status.getDecommissioning().size() == 3);
-    Assert.assertTrue(status.getDecommissioned().isEmpty());
-    Assert.assertTrue(status.getDecommissioning().contains(workers.get("host1")));
+    Assert.assertTrue(status.getDecommissioning().size() == 2);
+    Assert.assertTrue(status.getDecommissioned().size() == 1);
+    Assert.assertTrue(status.getDecommissioned().contains(workers.get("host1")));
     Assert.assertTrue(status.getDecommissioning().contains(workers.get("host2")));
     Assert.assertTrue(status.getDecommissioning().contains(workers.get("host3")));
     
@@ -296,9 +296,9 @@ public class TestCloudManager {
     status = cloudManager.setAndGetDecommission(requests, workers, yarnClient, dfsOps, conf, caProxy,
         hostsController);
     
-    Assert.assertTrue(status.getDecommissioning().size() == 4);
-    Assert.assertTrue(status.getDecommissioned().isEmpty());
-    Assert.assertTrue(status.getDecommissioning().contains(workers.get("host1")));
+    Assert.assertTrue(status.getDecommissioning().size() == 3);
+    Assert.assertTrue(status.getDecommissioned().size() == 1);
+    Assert.assertTrue(status.getDecommissioned().contains(workers.get("host1")));
     Assert.assertTrue(status.getDecommissioning().contains(workers.get("host2")));
     Assert.assertTrue(status.getDecommissioning().contains(workers.get("host3")));
     Assert.assertTrue(status.getDecommissioning().contains(workers.get("host4")));
@@ -338,7 +338,7 @@ public class TestCloudManager {
     Configuration conf = new Configuration();
 
     List<NodeReport> report = new ArrayList<>();
-    NodeReport nodeReport = NodeReport.newInstance(NodeId.newInstance("host1", 0), NodeState.SHUTDOWN,
+    NodeReport nodeReport = NodeReport.newInstance(NodeId.newInstance("host1", 0), NodeState.RUNNING,
         "httpAddress", "rackName", null, null, 1, null, 0);
     report.add(nodeReport);
     nodeReport = NodeReport.newInstance(NodeId.newInstance("host2", 0), NodeState.RUNNING,
@@ -396,7 +396,7 @@ public class TestCloudManager {
     Configuration conf = new Configuration();
 
     List<NodeReport> report = new ArrayList<>();
-    NodeReport nodeReport = NodeReport.newInstance(NodeId.newInstance("host1", 0), NodeState.SHUTDOWN,
+    NodeReport nodeReport = NodeReport.newInstance(NodeId.newInstance("host1", 0), NodeState.RUNNING,
         "httpAddress", "rackName", null, null, 1, null, 1);
     report.add(nodeReport);
     nodeReport = NodeReport.newInstance(NodeId.newInstance("host2", 0), NodeState.RUNNING,
