@@ -394,6 +394,11 @@ describe "On #{ENV['OS']}" do
           delete_dataset(@project, "Logs", datasetType: "?type=DATASET")
           expect_status(204)
         end
+        it "should create-delete-create dataset" do
+          dsname = create_random_dataset(@project, true, false)
+          delete_dataset(@project, dsname)
+          create_dataset_by_name_checked(@project, dsname)
+        end
       end
     end
     describe "#request" do
