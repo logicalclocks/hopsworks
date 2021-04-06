@@ -31,7 +31,10 @@ public interface JupyterNbVCSController {
   
   Set<String> getRemoteBranches(Users user, String apiKeyName, String remoteURI, GitBackend gitBackend)
     throws ServiceException;
-  
+
+  boolean hasWriteAccess(Users user, String apiKeyName, String remoteURI, GitBackend gitBackend)
+    throws ServiceException;
+
   String getGitApiKey(String hdfsUser, String apiKeyName) throws ServiceException;
   
   RepositoryStatus init(JupyterProject jupyterProject, JupyterSettings jupyterSettings) throws ServiceException;
@@ -42,4 +45,5 @@ public interface JupyterNbVCSController {
   
   RepositoryStatus push(JupyterProject jupyterProject, JupyterSettings jupyterSettings, Users user)
     throws ServiceException;
+
 }
