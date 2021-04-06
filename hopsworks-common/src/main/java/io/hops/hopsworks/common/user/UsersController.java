@@ -41,6 +41,8 @@ package io.hops.hopsworks.common.user;
 
 import com.google.common.base.Strings;
 import com.google.zxing.WriterException;
+import io.hops.hopsworks.common.dao.project.ProjectFacade;
+import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.user.BbcGroup;
 import io.hops.hopsworks.common.dao.user.BbcGroupFacade;
 import io.hops.hopsworks.common.dao.user.UserDTO;
@@ -110,6 +112,8 @@ public class UsersController {
   private SecurityUtils securityUtils;
   @EJB
   private UserStatusValidator userStatusValidator;
+  @EJB
+  private ProjectFacade projectFacade;
 
   // To send the user the QR code image
   private byte[] qrCode;
@@ -643,6 +647,21 @@ public class UsersController {
           "audit log on another account can not be deleted.", cve.getMessage());
       }
     }
+  }
+  
+  /**
+   * Delete user with no project
+   * @param id
+   * @throws UserException
+   */
+  public void deleteUser(Integer id) throws UserException {
+    Users user = getUserById(id);
+    List<Project> projects = projectFacade.findByUser(user);
+    if (projects != null && !projects.isEmpty()) {
+      throw new UserException(RESTCodes.UserErrorCode.ACCOUNT_DELETION_ERROR, Level.FINE, "Can not delete user that " +
+          "is a owner of a project.");
+    }
+    deleteUser(user);
   }
   
   public Users getUserById(Integer id) throws UserException {

@@ -43,6 +43,14 @@ module AdminHelper
     get "#{ENV['HOPSWORKS_API']}/admin/users/groups"
   end
 
+  def admin_reset_password(id)
+    put "#{ENV['HOPSWORKS_API']}/admin/users/#{id}/reset"
+  end
+
+  def admin_delete_user(id)
+    delete "#{ENV['HOPSWORKS_API']}/admin/users/#{id}"
+  end
+
   def register_user_as_admin(email, givenName, surname, password: nil, maxNumProjects: nil,
                              status: nil, accountType: "M_ACCOUNT_TYPE")
     query = (password.nil? || password.empty?) ?  "" : "&password=#{password}"

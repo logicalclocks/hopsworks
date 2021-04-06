@@ -53,8 +53,10 @@ import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.inject.Inject;
+import javax.mail.MessagingException;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.BeanParam;
+import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
@@ -172,6 +174,28 @@ public class UsersAdminResource {
     String linkUrl = FormatUtils.getUserURL(req) + settings.getEmailVerificationEndpoint();
     UserProfileDTO userProfileDTO = userProfileBuilder.pendUser(linkUrl, id);
     return Response.ok(userProfileDTO).build();
+  }
+  
+  @ApiOperation(value = "Reset password of a user specified by id.", response = NewUserDTO.class)
+  @PUT
+  @Path("/users/{id}/reset")
+  @Produces(MediaType.APPLICATION_JSON)
+  public Response resetPassword(@Context HttpServletRequest req, @Context SecurityContext sc,
+      @PathParam("id") Integer id) throws UserException, MessagingException {
+    String password = usersController.resetPassword(id, req.getRemoteUser());
+    NewUserDTO newUserDTO = new NewUserDTO();
+    newUserDTO.setPassword(password);
+    return Response.ok(newUserDTO).build();
+  }
+  
+  @ApiOperation(value = "Delete a user specified by id. Only users without projects can be deleted")
+  @DELETE
+  @Path("/users/{id: [0-9]*}")
+  @Produces(MediaType.APPLICATION_JSON)
+  public Response deleteUser(@Context HttpServletRequest req, @Context SecurityContext sc, @PathParam("id") Integer id)
+      throws UserException {
+    usersController.deleteUser(id);
+    return Response.noContent().build();
   }
   
   @ApiOperation(value = "Get all user groups.")
