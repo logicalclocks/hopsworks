@@ -42,7 +42,12 @@ public class GLClient implements RemoteGitClient {
     branches.stream().map(Branch::getName).forEach(flatBranches::add);
     return flatBranches;
   }
-  
+
+  @Override
+  public boolean hasWriteAccess(SecretPlaintext apiKey, String repository) throws ServiceException, IOException {
+    return true;
+  }
+
   private List<Branch> getBranches(RepositoryApi repositoryApi, String path) throws IOException {
     List<Branch> branches;
     try {

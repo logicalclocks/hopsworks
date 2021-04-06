@@ -13,4 +13,6 @@ import java.util.Set;
 public interface RemoteGitClient {
   Set<String> fetchBranches(SecretPlaintext apiKey, String repository)
       throws ServiceException, IOException;
+
+  boolean hasWriteAccess(SecretPlaintext apiKey, String repository) throws ServiceException, IOException;
 }

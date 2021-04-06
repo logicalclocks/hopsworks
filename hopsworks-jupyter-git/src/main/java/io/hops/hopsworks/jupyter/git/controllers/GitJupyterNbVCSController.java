@@ -144,6 +144,33 @@ public class GitJupyterNbVCSController implements JupyterNbVCSController {
           msg, ex.getMessage());
     }
   }
+
+  @Override
+  public boolean hasWriteAccess(Users user, String apiKeyName, String remoteURI, GitBackend gitBackend)
+    throws ServiceException {
+    try {
+      REMOTE_SERVICE remoteService = REMOTE_SERVICE.valueOf(gitBackend.name());
+      Instance<RemoteGitClient> clientInstance = remoteRepoClient.select(remoteService.annotation);
+      check4instance(clientInstance, "Remote repository client");
+      SecretPlaintext apiKey = null;
+      if(!Strings.isNullOrEmpty(apiKeyName)) {
+        apiKey = secretsController.get(user, apiKeyName);
+      }
+      return clientInstance.get().hasWriteAccess(apiKey, remoteURI);
+    } catch (IOException ex) {
+      throw new ServiceException(RESTCodes.ServiceErrorCode.GIT_COMMAND_FAILURE, Level.FINE,
+        "Failed trying to check write permission of API key",
+        "Failed trying to check write permission of API key with name "
+          + apiKeyName + " for user " + user.getUsername(), ex);
+    } catch (UserException ex) {
+      throw new ServiceException(RESTCodes.ServiceErrorCode.GIT_COMMAND_FAILURE, Level.FINE,
+        "Could not find API key for user",
+        "Could not find API key with name " + apiKeyName + " for user " + user.getUsername(), ex);
+    } catch (IllegalArgumentException ex) {
+      throw new ServiceException(RESTCodes.ServiceErrorCode.GIT_COMMAND_FAILURE, Level.FINE,
+        "Could not parse remote Git URI: " + remoteURI, ex.getMessage());
+    }
+  }
   
   @Override
   public String getGitApiKey(String hdfsUser, String apiKeyName) throws ServiceException {

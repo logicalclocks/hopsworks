@@ -617,21 +617,18 @@ angular.module('hopsWorksApp')
             }
             
             self.gitStatus = function () {
-                if (!self.jupyterSettings.gitAvailable || !self.jupyterSettings.gitBackend) {
-                    growl.error("Git backend is either not enabled or unavailable",
-                        {title: "Git operation could not complete", ttl: 5000, referenceId: 10});
-                    return;
+                if (self.jupyterSettings.gitAvailable && self.jupyterSettings.gitBackend) {
+                  self.gitWorking = true;
+                  JupyterService.gitStatus(self.projectId).then(
+                      function (success) {
+                          self.gitRepoStatus = success.data;
+                          self.gitWorking = false;
+                      }, function (error) {
+                          console.error("Could not get Git status, " + error.data.usrMsg);
+                          self.gitWorking = false;
+                      }
+                  );
                 }
-                self.gitWorking = true;
-                JupyterService.gitStatus(self.projectId).then(
-                    function (success) {
-                        self.gitRepoStatus = success.data;
-                        self.gitWorking = false;
-                    }, function (error) {
-                        console.error("Could not get Git status, " + error.data.usrMsg);
-                        self.gitWorking = false;
-                    }
-                );
             }
 
             var gitRepositoryStatusPoller = function() {
@@ -703,6 +700,7 @@ angular.module('hopsWorksApp')
                         if (typeof self.gitRepositoryPoller === 'undefined') {
                             gitRepositoryStatusPoller();
                         }
+                        self.gitStatus();
                         if (self.tourService.currentStep_TourEight == 6 || self.tourService.currentStep_TourEight == 7) {
                             self.tourService.currentStep_TourEight = 8;
                         } else {

@@ -330,10 +330,20 @@ public class JupyterService {
     }
 
     // Do not allow auto push on shutdown if api key is missing
-    if (jupyterSettings.isGitBackend() && jupyterSettings.getGitConfig().getShutdownAutoPush()
-      && Strings.isNullOrEmpty(jupyterSettings.getGitConfig().getApiKeyName())) {
+    GitConfig gitConfig = jupyterSettings.getGitConfig();
+    if (jupyterSettings.isGitBackend() && gitConfig.getShutdownAutoPush()
+      && Strings.isNullOrEmpty(gitConfig.getApiKeyName())) {
       throw new ServiceException(RESTCodes.ServiceErrorCode.JUPYTER_START_ERROR, Level.FINE,
         "Auto push not supported if api key is not configured.");
+    }
+
+    // Verify that API token has got write access on the repo if ShutdownAutoPush is enabled
+    if (jupyterSettings.isGitBackend() && gitConfig.getShutdownAutoPush()
+      && !jupyterNbVCSController.hasWriteAccess(hopsworksUser, gitConfig.getApiKeyName(),
+      gitConfig.getRemoteGitURL(), gitConfig.getGitBackend())) {
+      throw new ServiceException(RESTCodes.ServiceErrorCode.JUPYTER_START_ERROR, Level.FINE,
+        "API token " + gitConfig.getApiKeyName() + " does not have write access on "
+          + gitConfig.getRemoteGitURL());
     }
 
     JupyterProject jp = jupyterFacade.findByUser(hdfsUser);
