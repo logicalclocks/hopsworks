@@ -38,12 +38,14 @@ import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 @Stateless
 @TransactionAttribute(TransactionAttributeType.NEVER)
@@ -105,25 +107,42 @@ public class CommandsController {
 
   public PythonDep condaOp(CondaOp op, Users user, CondaInstallType installType, Project proj, String channelUrl,
                            String lib, String version, String arg, GitBackend gitBackend, String apiKeyName)
-    throws GenericException {
+    throws GenericException, ServiceException {
 
     if(Strings.isNullOrEmpty(version) && CondaOp.isLibraryOp(op)) {
       version = Settings.UNKNOWN_LIBRARY_VERSION;
+    }
+
+    //If there is an already ongoing command to uninstall the same library, allow the queuing of a new install op
+    List<CondaStatus> statuses = new ArrayList<>();
+    statuses.add(CondaStatus.NEW);
+    statuses.add(CondaStatus.ONGOING);
+    List<CondaCommands> uninstallCommands =
+      condaCommandFacade.findByStatusAndCondaOpAndProject(statuses, CondaOp.UNINSTALL, proj);
+    //Get current uninstall operations for this project
+    List<CondaCommands> ongoingUninstall = uninstallCommands.stream()
+      .filter(c -> c.getLib().equalsIgnoreCase(lib) && c.getInstallType().equals(installType))
+      .collect(Collectors.toList());
+    //Get currently installed library with the same name and package manager if it exists
+    Optional<PythonDep> installedDep = proj.getPythonDepCollection().stream()
+      .filter(d -> d.getDependency().equalsIgnoreCase(lib) && d.getInstallType().equals(installType))
+      .findFirst();
+
+    if (op == CondaOp.INSTALL && installedDep.isPresent() && ongoingUninstall.isEmpty()) {
+      throw new ServiceException(RESTCodes.ServiceErrorCode.ANACONDA_DEP_INSTALL_FORBIDDEN, Level.FINE,
+        "dep: " + lib);
     }
     
     PythonDep dep;
     try {
       // 1. test if anacondaRepoUrl exists. If not, add it.
       AnacondaRepo repo = libraryFacade.getRepo(channelUrl, true);
+
       // 2. Test if pythonDep exists. If not, add it.
       dep = libraryFacade.getOrCreateDep(repo, installType, lib, version, true, false);
 
-      // 3. Add the python library to the join table for the project
       Collection<PythonDep> depsInProj = proj.getPythonDepCollection();
-      if (depsInProj.contains(dep) && op == CondaOp.INSTALL) {
-        throw new ProjectException(RESTCodes.ProjectErrorCode.PYTHON_LIB_ALREADY_INSTALLED, Level.FINE,
-            "dep: " + dep.getDependency());
-      }
+      // 3. Add the python library to the join table for the project
       if (op == CondaOp.INSTALL) {
         depsInProj.remove(dep);// if upgrade
         depsInProj.add(dep);

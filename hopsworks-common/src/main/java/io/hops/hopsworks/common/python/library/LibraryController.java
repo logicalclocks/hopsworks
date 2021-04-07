@@ -24,6 +24,7 @@ import io.hops.hopsworks.common.provenance.core.elastic.ElasticHits;
 import io.hops.hopsworks.common.elastic.ElasticClientController;
 import io.hops.hopsworks.common.provenance.util.functional.CheckedSupplier;
 import io.hops.hopsworks.common.python.commands.CommandsController;
+import io.hops.hopsworks.common.python.search.PyPiLibraryElasticIndexer;
 import io.hops.hopsworks.common.util.OSProcessExecutor;
 import io.hops.hopsworks.common.util.ProcessDescriptor;
 import io.hops.hopsworks.common.util.ProcessResult;
@@ -84,12 +85,14 @@ public class LibraryController {
   private OSProcessExecutor osProcessExecutor;
   @EJB
   private ElasticClientController provElasticController;
+  @EJB
+  private PyPiLibraryElasticIndexer pypiIndexer;
 
   public PythonDep getPythonDep(String dependency, Project project) {
     return libraryFacade.findByDependencyAndProject(dependency, project);
   }
 
-  public void uninstallLibrary(Project project, Users user, String libName) throws GenericException {
+  public void uninstallLibrary(Project project, Users user, String libName) throws GenericException, ServiceException {
     for (PythonDep dep : project.getPythonDepCollection()) {
       if (dep.getDependency().equals(libName)) {
         uninstallLibrary(project, user,  dep.getInstallType(), dep.getRepoUrl().getUrl(), libName,
@@ -108,13 +111,13 @@ public class LibraryController {
 
   public PythonDep installLibrary(Project proj, Users user, CondaInstallType installType, String channelUrl,
                               String dependency, String version, String arg, GitBackend gitBackend, String apiKeyName)
-      throws GenericException {
+      throws GenericException, ServiceException {
     return commandsController.condaOp(CondaOp.INSTALL, user, installType, proj,
       channelUrl, dependency, version, arg, gitBackend, apiKeyName);
   }
 
   public void uninstallLibrary(Project proj, Users user, CondaInstallType installType, String channelUrl,
-                               String dependency, String version) throws GenericException {
+                               String dependency, String version) throws GenericException, ServiceException {
     commandsController.condaOp(CondaOp.UNINSTALL, user, installType, proj, channelUrl,
       dependency, version, "", null, null);
   }
@@ -228,10 +231,13 @@ public class LibraryController {
 
     HashMap<String, List<LibraryVersionDTO>> versions = new HashMap<>();
 
-    String[] lines = pipList(query, new HandlerFactory.BaseList(), Settings.ELASTIC_PYPI_LIBRARIES_ALIAS);
+    String[] lines = pipList(query, new HandlerFactory.BaseList(),
+      Settings.ELASTIC_PYPI_LIBRARIES_ALIAS);
+
     for (String library : lines) {
       findPipLibPyPi(library, versions);
     }
+
     // if empty
     if (versions.isEmpty()) {
       throw new ServiceException(RESTCodes.ServiceErrorCode.ANACONDA_LIST_LIB_NOT_FOUND, Level.FINE);
@@ -446,5 +452,9 @@ public class LibraryController {
     } else {
       return processResult.getStdout();
     }
+  }
+
+  public boolean isPyPiIndexed() {
+    return this.pypiIndexer.isIndexed();
   }
 }
