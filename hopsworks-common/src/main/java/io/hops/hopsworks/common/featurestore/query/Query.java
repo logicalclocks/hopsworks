@@ -43,6 +43,7 @@ public class Query {
   private Long leftFeatureGroupEndCommitId;
   private String as;
   private List<Feature> availableFeatures;
+  private Boolean hiveEngine = false;
 
   private List<Join> joins;
   private FilterLogic filter;
@@ -66,6 +67,17 @@ public class Query {
     this.as = as;
     this.features = features;
     this.availableFeatures = availableFeatures;
+  }
+
+  public Query(String featureStore, String project, Featuregroup featuregroup, String as,
+    List<Feature> features, List<Feature> availableFeatures, Boolean hiveEngine) {
+    this.featureStore = featureStore;
+    this.project = project;
+    this.featuregroup = featuregroup;
+    this.as = as;
+    this.features = features;
+    this.availableFeatures = availableFeatures;
+    this.hiveEngine = hiveEngine;
   }
 
   public Query(String featureStore, String project, Featuregroup featuregroup, String as) {
@@ -178,5 +190,13 @@ public class Query {
   
   public void setFilter(FilterLogic filter) {
     this.filter = filter;
+  }
+
+  public Boolean getHiveEngine() {
+    return hiveEngine;
+  }
+
+  public void setHiveEngine(Boolean hiveEngine) {
+    this.hiveEngine = hiveEngine;
   }
 }

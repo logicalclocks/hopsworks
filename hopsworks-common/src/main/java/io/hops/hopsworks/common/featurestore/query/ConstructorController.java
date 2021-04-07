@@ -158,7 +158,7 @@ public class ConstructorController {
       availableFeatureLookup.get(fgId));
 
     Query query = new Query(featureStore, projectName, fg, fgAliasLookup.get(fgId), requestedFeatures,
-      availableFeatureLookup.get(fgId));
+      availableFeatureLookup.get(fgId), queryDTO.getHiveEngine());
 
     if (fg.getCachedFeaturegroup() != null &&
         fg.getCachedFeaturegroup().getTimeTravelFormat() == TimeTravelFormat.HUDI){
@@ -547,7 +547,8 @@ public class ConstructorController {
       tableIdentifierStr.add("`" + query.getProject() + "`");
       tableIdentifierStr.add("`" + query.getFeaturegroup().getName() + "_" + query.getFeaturegroup().getVersion()
           + "`");
-    } else if (query.getFeaturegroup().getCachedFeaturegroup().getTimeTravelFormat() != TimeTravelFormat.HUDI) {
+    } else if (query.getFeaturegroup().getCachedFeaturegroup().getTimeTravelFormat() != TimeTravelFormat.HUDI
+        || query.getHiveEngine()) {
       tableIdentifierStr.add("`" + query.getFeatureStore() + "`");
       tableIdentifierStr.add("`" + query.getFeaturegroup().getName() + "_" + query.getFeaturegroup().getVersion()
           + "`");

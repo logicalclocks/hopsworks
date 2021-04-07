@@ -48,10 +48,13 @@ import org.mockito.Mockito;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class TestConstructorController {
 
@@ -499,6 +502,75 @@ public class TestConstructorController {
         "FROM `fs1`.`fg1_1` `fg0` " +
         "INNER JOIN `fs1`.`fg2_1` `fg1` ON `fg0`.`ft1` = `fg1`.`ft2` " +
         "INNER JOIN `fs1`.`fg3_1` `fg2` ON `fg0`.`ft1` = `fg2`.`ft1`", query);
+  }
+  
+  @Test
+  public void testTreeWayHudiJoinSQLNode() throws Exception {
+    List<Feature> availableFirst = new ArrayList<>();
+    availableFirst.add(new Feature("ft1", "fg0", "Float", null));
+    
+    List<Feature> availableSecond = new ArrayList<>();
+    availableSecond.add(new Feature("ft2", "fg1", "Float", null));
+    
+    List<Feature> availableThird = new ArrayList<>();
+    availableThird.add(new Feature("ft1", "fg2", "Float", null));
+  
+    Mockito.when(cachedFeaturegroupController.dropHudiSpecFeatures(Mockito.any()))
+      .thenReturn(availableSecond, availableThird, Stream.of(availableFirst, availableSecond, availableThird)
+        .flatMap(Collection::stream).collect(Collectors.toList()));
+    
+    fg1.getCachedFeaturegroup().setTimeTravelFormat(TimeTravelFormat.HUDI);
+    fg2.getCachedFeaturegroup().setTimeTravelFormat(TimeTravelFormat.HUDI);
+    fg3.getCachedFeaturegroup().setTimeTravelFormat(TimeTravelFormat.HUDI);
+  
+    Query leftQuery = new Query("fs1", "project_fs1", fg1, "fg0", availableFirst, availableFirst);
+    Query secondQuery = new Query("fs1", "project_fs1", fg2, "fg1", availableSecond , availableSecond);
+    Query thirdQuery = new Query("fs1", "project_fs1", fg3,"fg2", availableThird, availableThird);
+    
+    Join join = new Join(leftQuery, secondQuery, availableFirst, availableSecond, JoinType.INNER);
+    Join secondJoin = new Join(leftQuery, thirdQuery, availableFirst, JoinType.INNER);
+    leftQuery.setJoins(Arrays.asList(join, secondJoin));
+    
+    String query = constructorController.generateSQL(leftQuery, false).replace("\n", " ");
+    Assert.assertEquals("SELECT `fg0`.`ft1`, `fg1`.`ft2`, `fg2`.`ft1` " +
+      "FROM `fg0` `fg0` " +
+      "INNER JOIN `fg1` `fg1` ON `fg0`.`ft1` = `fg1`.`ft2` " +
+      "INNER JOIN `fg2` `fg2` ON `fg0`.`ft1` = `fg2`.`ft1`", query);
+  }
+  
+  
+  @Test
+  public void testTreeWayHudiJoinSQLNodeHiveEngine() throws Exception {
+    List<Feature> availableFirst = new ArrayList<>();
+    availableFirst.add(new Feature("ft1", "fg0", "Float", null));
+    
+    List<Feature> availableSecond = new ArrayList<>();
+    availableSecond.add(new Feature("ft2", "fg1", "Float", null));
+    
+    List<Feature> availableThird = new ArrayList<>();
+    availableThird.add(new Feature("ft1", "fg2", "Float", null));
+    
+    Mockito.when(cachedFeaturegroupController.dropHudiSpecFeatures(Mockito.any()))
+      .thenReturn(availableSecond, availableThird, Stream.of(availableFirst, availableSecond, availableThird)
+        .flatMap(Collection::stream).collect(Collectors.toList()));
+    
+    fg1.getCachedFeaturegroup().setTimeTravelFormat(TimeTravelFormat.HUDI);
+    fg2.getCachedFeaturegroup().setTimeTravelFormat(TimeTravelFormat.HUDI);
+    fg3.getCachedFeaturegroup().setTimeTravelFormat(TimeTravelFormat.HUDI);
+    
+    Query leftQuery = new Query("fs1", "project_fs1", fg1, "fg0", availableFirst, availableFirst, true);
+    Query secondQuery = new Query("fs1", "project_fs1", fg2, "fg1", availableSecond , availableSecond, true);
+    Query thirdQuery = new Query("fs1", "project_fs1", fg3,"fg2", availableThird, availableThird, true);
+    
+    Join join = new Join(leftQuery, secondQuery, availableFirst, availableSecond, JoinType.INNER);
+    Join secondJoin = new Join(leftQuery, thirdQuery, availableFirst, JoinType.INNER);
+    leftQuery.setJoins(Arrays.asList(join, secondJoin));
+    
+    String query = constructorController.generateSQL(leftQuery, false).replace("\n", " ");
+    Assert.assertEquals("SELECT `fg0`.`ft1`, `fg1`.`ft2`, `fg2`.`ft1` " +
+      "FROM `fs1`.`fg1_1` `fg0` " +
+      "INNER JOIN `fs1`.`fg2_1` `fg1` ON `fg0`.`ft1` = `fg1`.`ft2` " +
+      "INNER JOIN `fs1`.`fg3_1` `fg2` ON `fg0`.`ft1` = `fg2`.`ft1`", query);
   }
   
   @Test
