@@ -22,7 +22,7 @@ public class TrainingDatasetFeatureDTO {
 
   private String name;
   private String type;
-  private FeaturegroupDTO featureGroup;
+  private FeaturegroupDTO featuregroup;
   private Integer index;
   private Boolean label = false;
 
@@ -33,7 +33,7 @@ public class TrainingDatasetFeatureDTO {
                                    Boolean label) {
     this.name = name;
     this.type = type;
-    this.featureGroup = featuregroupDTO;
+    this.featuregroup = featuregroupDTO;
     this.index = index;
     this.label = label;
   }
@@ -54,12 +54,12 @@ public class TrainingDatasetFeatureDTO {
     this.type = type;
   }
 
-  public FeaturegroupDTO getFeatureGroup() {
-    return featureGroup;
+  public FeaturegroupDTO getFeaturegroup() {
+    return featuregroup;
   }
 
-  public void setFeatureGroup(FeaturegroupDTO featuregroupDTO) {
-    this.featureGroup = featuregroupDTO;
+  public void setFeaturegroup(FeaturegroupDTO featuregroupDTO) {
+    this.featuregroup = featuregroupDTO;
   }
 
   public Integer getIndex() {
