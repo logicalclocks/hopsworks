@@ -158,10 +158,18 @@ public class ConstructorController {
       availableFeatureLookup.get(fgId));
 
     Query query = new Query(featureStore, projectName, fg, fgAliasLookup.get(fgId), requestedFeatures,
-      availableFeatureLookup.get(fgId));
+      availableFeatureLookup.get(fgId), queryDTO.getHiveEngine());
 
     if (fg.getCachedFeaturegroup() != null &&
         fg.getCachedFeaturegroup().getTimeTravelFormat() == TimeTravelFormat.HUDI){
+      // if hudi and end hive engine, only possible to get latest snapshot else raise exception
+      if (queryDTO.getHiveEngine() && (queryDTO.getLeftFeatureGroupEndTime() != null
+          || queryDTO.getJoins().stream().anyMatch(join -> join.getQuery().getLeftFeatureGroupEndTime() != null))) {
+        throw new IllegalArgumentException("Hive engine on Python environments does not support incremental or " +
+          "snapshot queries. Read feature group without timestamp to retrieve latest snapshot or switch to " +
+          "environment with Spark Engine.");
+      }
+      
       // If the feature group is hudi, validate and configure start and end commit id/timestamp
       FeatureGroupCommit endCommit =
           featureGroupCommitCommitController.findCommitByDate(fg, queryDTO.getLeftFeatureGroupEndTime());
@@ -547,7 +555,8 @@ public class ConstructorController {
       tableIdentifierStr.add("`" + query.getProject() + "`");
       tableIdentifierStr.add("`" + query.getFeaturegroup().getName() + "_" + query.getFeaturegroup().getVersion()
           + "`");
-    } else if (query.getFeaturegroup().getCachedFeaturegroup().getTimeTravelFormat() != TimeTravelFormat.HUDI) {
+    } else if (query.getFeaturegroup().getCachedFeaturegroup().getTimeTravelFormat() != TimeTravelFormat.HUDI
+        || query.getHiveEngine()) {
       tableIdentifierStr.add("`" + query.getFeatureStore() + "`");
       tableIdentifierStr.add("`" + query.getFeaturegroup().getName() + "_" + query.getFeaturegroup().getVersion()
           + "`");

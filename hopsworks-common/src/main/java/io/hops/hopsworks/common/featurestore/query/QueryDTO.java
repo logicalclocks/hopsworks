@@ -34,6 +34,7 @@ public class QueryDTO {
   private Long leftFeatureGroupStartTime;
   private Long leftFeatureGroupEndTime;
   private FilterLogicDTO filter;
+  private Boolean hiveEngine = false; // default for backwards compatibility
 
   // Recursively merge QueryDTOs
   private List<JoinDTO> joins;
@@ -134,6 +135,14 @@ public class QueryDTO {
   
   public void setFilter(FilterLogicDTO filter) {
     this.filter = filter;
+  }
+
+  public Boolean getHiveEngine() {
+    return hiveEngine;
+  }
+
+  public void setHiveEngine(Boolean hiveEngine) {
+    this.hiveEngine = hiveEngine;
   }
 
   @Override
