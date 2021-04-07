@@ -152,6 +152,10 @@ public class TrainingDatasetController {
   @EJB
   private OnlineFeaturegroupController onlineFeaturegroupController;
 
+
+  // this is used to overwrite feature type in prepared statement
+  private final static String PREPARED_STATEMENT_TYPE =  "parameter";
+
   /**
    * Gets all trainingDatasets for a particular featurestore and project
    *
@@ -1032,11 +1036,16 @@ public class TrainingDatasetController {
     FilterLogic filterLogic;
     // record pk position in the prepared statement
     Integer primaryKeyIndex = 1;
-    filterLogic =  new FilterLogic(new Filter(primaryKeys.get(0), SqlFilterCondition.EQUALS, "?"));
+    Feature pkFeature;
+    pkFeature = primaryKeys.get(0);
+    pkFeature.setType(PREPARED_STATEMENT_TYPE);
+    filterLogic =  new FilterLogic(new Filter(pkFeature, SqlFilterCondition.EQUALS, "?"));
     preparedStatementParameterDTOS.add( new PreparedStatementParameterDTO(primaryKeys.get(0).getName(),
         primaryKeyIndex++));
     for (int i = 1; i < primaryKeys.size(); i++) {
-      filterLogic = filterLogic.and(new Filter(primaryKeys.get(i), SqlFilterCondition.EQUALS, "?"));
+      pkFeature = primaryKeys.get(i);
+      pkFeature.setType(PREPARED_STATEMENT_TYPE);
+      filterLogic = filterLogic.and(new Filter(pkFeature, SqlFilterCondition.EQUALS, "?"));
       preparedStatementParameterDTOS.add(new PreparedStatementParameterDTO(primaryKeys.get(i).getName(),
           primaryKeyIndex++));
     }
