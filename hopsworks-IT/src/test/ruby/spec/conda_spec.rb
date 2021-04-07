@@ -287,6 +287,20 @@ describe "On #{ENV['OS']}" do
             expect_status(409)
           end
 
+          it 'should be possible to install same library if uninstall operation is ongoing for the same library' do
+            @project = create_env_and_update_project(@project, python_version)
+
+            uninstall_library(@project[:id], python_version, 'hops')
+            expect_status(204)
+
+            install_library(@project[:id], python_version, 'hops', 'PIP', '2.1.0', conda_channel)
+            expect_status(201) #scipy is in the base env
+
+            wait_for do
+              CondaCommands.find_by(project_id: @project[:id]).nil?
+            end
+          end
+
           it 'install versioned libraries' do
             @project = create_env_and_update_project(@project, python_version)
 

@@ -128,6 +128,8 @@ public class Settings implements Serializable {
   private static final String VARIABLE_PYPI_REST_ENDPOINT = "pypi_rest_endpoint";
   private static final String VARIABLE_PYPI_INDEXER_TIMER_INTERVAL = "pypi_indexer_timer_interval";
   private static final String VARIABLE_PYPI_SIMPLE_ENDPOINT = "pypi_simple_endpoint";
+  private static final String VARIABLE_PYTHON_LIBRARY_UPDATES_MONITOR_INTERVAL =
+    "python_library_updates_monitor_interval";
   private static final String VARIABLE_PYTHON_KERNEL = "python_kernel";
   private static final String VARIABLE_HADOOP_VERSION = "hadoop_version";
   private static final String VARIABLE_JAVA_HOME = "JAVA_HOME";
@@ -661,6 +663,8 @@ public class Settings implements Serializable {
       PYPI_REST_ENDPOINT = setStrVar(VARIABLE_PYPI_REST_ENDPOINT, PYPI_REST_ENDPOINT);
       PYPI_SIMPLE_ENDPOINT = setStrVar(VARIABLE_PYPI_SIMPLE_ENDPOINT, PYPI_SIMPLE_ENDPOINT);
       PYPI_INDEXER_TIMER_INTERVAL = setStrVar(VARIABLE_PYPI_INDEXER_TIMER_INTERVAL, PYPI_INDEXER_TIMER_INTERVAL);
+      PYTHON_LIBRARY_UPDATES_MONITOR_INTERVAL = setStrVar(VARIABLE_PYTHON_LIBRARY_UPDATES_MONITOR_INTERVAL,
+        PYTHON_LIBRARY_UPDATES_MONITOR_INTERVAL);
 
       IMMUTABLE_PYTHON_LIBRARY_NAMES = toSetFromCsv(
           setStrVar(VARIABLE_IMMUTABLE_PYTHON_LIBRARY_NAMES, DEFAULT_IMMUTABLE_PYTHON_LIBRARY_NAMES),
@@ -2419,6 +2423,13 @@ public class Settings implements Serializable {
   public synchronized String getPyPiSimpleEndpoint() {
     checkCache();
     return PYPI_SIMPLE_ENDPOINT;
+  }
+
+  private String PYTHON_LIBRARY_UPDATES_MONITOR_INTERVAL = "1d";
+
+  public synchronized String getPythonLibraryUpdatesMonitorInterval() {
+    checkCache();
+    return PYTHON_LIBRARY_UPDATES_MONITOR_INTERVAL;
   }
 
   private String HOPS_EXAMPLES_VERSION = "0.3.0";

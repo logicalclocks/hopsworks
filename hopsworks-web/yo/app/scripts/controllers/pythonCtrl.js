@@ -85,6 +85,7 @@ angular.module('hopsWorksApp')
             self.pipSearchResults = [];
             self.installedLibs = [];
             self.opsStatus = [];
+            self.libraryToUpgrade = [];
             self.selectedInstallStatus = {};
             self.numEnvsNotEnabled = 0;
             self.numEnvs = 0;
@@ -102,6 +103,8 @@ angular.module('hopsWorksApp')
             self.condaSelectedLibs = {};
             self.pipSelectedLibs = {};
             self.environmentTypes = {};
+
+            self.commonVersionPrefixRegexp = new RegExp("^(\\d+[.]\\d+[.])");
 
             self.environmentImportDef = {};
 
@@ -293,12 +296,20 @@ angular.module('hopsWorksApp')
                                 self.loadingLibs = false;
                                 self.loadingCommands = false;
                                 self.updateInstalledLibs(success.data.items);
+                                var libraryToUpgradeList = [];
                                 var libCount = success.data.count;
                                 for (var i = 0; i < libCount; i++) {
                                     if (typeof self.installedLibs[i].commands !== 'undefined' && self.installedLibs[i].commands.count > 0) {
-                                        opsStatusList.push(self.installedLibs[i]);
+                                       opsStatusList.push(self.installedLibs[i]);
+                                    }
+                                    if('latestVersion' in self.installedLibs[i] &&
+                                       self.commonVersionPrefixRegexp.test(self.installedLibs[i].latestVersion) &&
+                                       self.installedLibs[i].version !== self.installedLibs[i].latestVersion &&
+                                       self.installedLibs[i].commands.count === 0) {
+                                       libraryToUpgradeList.push(self.installedLibs[i]);
                                     }
                                 }
+                                self.libraryToUpgrade = libraryToUpgradeList;
                                 self.opsStatus = opsStatusList;
                             },
                             function (error) {
@@ -680,6 +691,19 @@ angular.module('hopsWorksApp')
                 //The user changed their mind.
               });
             };
+
+            self.upgrade = function (library) {
+              PythonService.uninstall(self.projectId, self.pythonVersion, library.library).then(
+                  function (success) {
+                      self.uninstalling[library.library] = false;
+                      self.install(library.library, library.packageSource, library.latestVersion);
+                  },
+                  function (error) {
+                      self.uninstalling[library.library] = false;
+                      showErrorGrowl(error);
+                  });
+
+            }
 
             self.install = function (library, packageSource, version) {
                 self.installing[library] = true;
