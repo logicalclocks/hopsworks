@@ -30,6 +30,7 @@ public class SparkMagicConfigTemplateBuilder {
   private String yarnQueue;
   private String hadoopVersion;
   private String sparkConfiguration;
+  private Integer livyStartupTimeout;
   
   private SparkMagicConfigTemplateBuilder() {}
   
@@ -62,6 +63,15 @@ public class SparkMagicConfigTemplateBuilder {
   public SparkMagicConfigTemplateBuilder setLivyIp(String livyIp) {
     this.livyIp = livyIp;
     return this;
+  }
+  
+  public SparkMagicConfigTemplateBuilder setLivyStartupTimeout(Integer livyStartupTimeout) {
+    this.livyStartupTimeout = livyStartupTimeout;
+    return this;
+  }
+  
+  public Integer getLivyStartupTimeout() {
+    return livyStartupTimeout;
   }
   
   public String getJupyterHome() {
