@@ -241,6 +241,7 @@ public class Settings implements Serializable {
   private static final String VARIABLE_ELASTIC_VERSION = "elastic_version";
   private static final String VARIABLE_TENSORFLOW_VERSION = "tensorflow_version";
   private static final String VARIABLE_HOPSWORKS_VERSION = "hopsworks_version";
+  private final static String VARIABLE_LIVY_STARTUP_TIMEOUT = "livy_startup_timeout";
 
   //Used by RESTException to include devMsg or not in response
   private static final String VARIABLE_HOPSWORKS_REST_LOG_LEVEL = "hopsworks_rest_log_level";
@@ -764,7 +765,9 @@ public class Settings implements Serializable {
 
       MAX_ENV_YML_BYTE_SIZE = setIntVar(VARIABLE_MAX_ENV_YML_BYTE_SIZE, MAX_ENV_YML_BYTE_SIZE);
       SPARK_EXECUTOR_MIN_MEMORY = setIntVar(VARIABLE_SPARK_EXECUTOR_MIN_MEMORY, SPARK_EXECUTOR_MIN_MEMORY);
-
+      
+      LIVY_STARTUP_TIMEOUT = setIntVar(VARIABLE_LIVY_STARTUP_TIMEOUT, LIVY_STARTUP_TIMEOUT);
+      
       cached = true;
     }
   }
@@ -3863,5 +3866,11 @@ public class Settings implements Serializable {
   public synchronized int getMaxEnvYmlByteSize() {
     checkCache();
     return MAX_ENV_YML_BYTE_SIZE;
+  }
+  
+  private int LIVY_STARTUP_TIMEOUT = 240;
+  public synchronized int getLivyStartupTimeout() {
+    checkCache();
+    return LIVY_STARTUP_TIMEOUT;
   }
 }
