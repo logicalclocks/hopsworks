@@ -195,6 +195,11 @@ angular.module('hopsWorksApp')
               "runConfig": null,
             };
 
+            self.dockerState = {//Will hold Docker-specific state
+              "selectedFile": null, //The path to the selected jar
+              "runConfig": null,
+            };
+
             //Variables for front-end magic
             this.accordion1 = {//Contains the job name
               "isOpen": true,
@@ -239,6 +244,7 @@ angular.module('hopsWorksApp')
                 "sparkState": self.sparkState,
                 "flinkState": self.flinkState,
                 "pythonState": self.pythonState,
+                "dockerState": self.dockerState,
                 "accordions": [self.accordion1, self.accordion2, self.accordion3, self.accordion4, self.accordion5]
               };
               self.undoneState = state;
@@ -259,6 +265,10 @@ angular.module('hopsWorksApp')
               self.pythonState = {
                 "runConfig": null,
                 "selectedFile": ""
+              }
+              self.dockerState = {
+                "selectedFile": null, //The path to the selected jar
+                "runConfig": null,
               }
               //Variables for front-end magic
               self.accordion1 = {//Contains the job name
@@ -401,6 +411,52 @@ angular.module('hopsWorksApp')
                 self.runConfig['files'] = self.runConfig['files'].replace(/,\s*$/, "");
               }
 
+              // Convert text entries to list
+              if (self.getJobType() === "DOCKER")  {
+                if (typeof self.runConfig['envVars'] !== "undefined" && self.runConfig['envVars'] !== "" ) {
+                  self.runConfig['envVars'] = JSON.stringify(self.runConfig['envVars'])
+                                                   .replace("[\"", "")
+                                                   .replace("\"]", "")
+                                                   .replace("\"", "")
+                                                   .split(",");
+
+                  for (var i = 0; i < self.runConfig['envVars'].length; i++) {
+                    self.runConfig['envVars'][i] = self.runConfig['envVars'][i].replace("\"", "")
+                  }
+                }
+                if (typeof self.runConfig['volumes'] !== "undefined" && self.runConfig['volumes'] !== "" ) {
+                  self.runConfig['volumes'] = JSON.stringify(self.runConfig['volumes'])
+                      .replace("[\"", "")
+                      .replace("\"]", "")
+                      .replace("\"", "")
+                      .split(",");
+
+                  for (var i = 0; i < self.runConfig['volumes'].length; i++) {
+                    self.runConfig['volumes'][i] = self.runConfig['volumes'][i].replace("\"", "")
+                  }
+                }
+                if (typeof self.runConfig['args'] !== "undefined" && self.runConfig['args'] !== "" ) {
+                  self.runConfig['args'] = JSON.stringify(self.runConfig['args'])
+                      .replace("[\"", "")
+                      .replace("\"]", "")
+                      .replace("\"", "")
+                      .split(",");
+
+                  for (var i = 0; i < self.runConfig['args'].length; i++) {
+                    self.runConfig['args'][i] = self.runConfig['args'][i].replace("\"", "")
+                  }
+                }
+                if (typeof self.runConfig['uid'] === "undefined" || self.runConfig['uid'] === "" || self.runConfig['uid'] === "-1") {
+                  delete self.runConfig['uid'];
+                }
+                if (typeof self.runConfig['gid'] === "undefined" || self.runConfig['gid'] === "" || self.runConfig['gid'] === "-1") {
+                  delete self.runConfig['gid'];
+                }
+                if (typeof self.runConfig['outputPath'] === "undefined" || self.runConfig['outputPath'] === "") {
+                  delete self.runConfig['outputPath'];
+                }
+              }
+
               if (self.tourService.currentStep_TourFour > -1) {
                 //self.tourService.resetTours();
                 self.tourService.currentStep_TourThree = 2;
@@ -485,6 +541,9 @@ angular.module('hopsWorksApp')
                 case 4:
                   self.pythonState.runConfig = self.runConfig
                   self.pythonState.selectedFile = self.accordion3.value
+                  break;
+                case 5:
+                  self.dockerState.runConfig = self.runConfig
                   break;
                 default:
                   break;
@@ -575,6 +634,27 @@ angular.module('hopsWorksApp')
                   self.accordion3.value = self.pythonState.selectedFile;
                   self.showJobSetupAndConfig(self.pythonState)
                   break;
+                case 5:
+                  self.accordion4.title = "Job details";
+                  selectedType = "Docker";
+                  jobConfig = 'dockerJobConfiguration';
+                  self.accordion3.isOpen = false;
+                  self.accordion3.visible = false;
+                  self.accordion4.isOpen = true;
+                  self.accordion4.visible = true;
+                  self.accordion5.visible = true;
+                  self.accordion5.isOpen = true;
+
+                  if(self.dockerState.runConfig != null) {
+                    self.runConfig = self.dockerState.runConfig
+                  } else {
+                    self.runConfig = JSON.parse("{\"type\":\"" + jobConfig + "\"," +
+                        "\"memory\":2048," +
+                        "\"cores\":1," +
+                        "\"gpus\":0}");
+                  }
+                  $scope.jobConfig = self.runConfig;
+                  break;
                 default:
                   break;
               }
@@ -611,6 +691,8 @@ angular.module('hopsWorksApp')
                   return "FLINK";
                 case 4:
                   return "PYTHON";
+                case 5:
+                  return "DOCKER";
                 default:
                   return null;
               }
@@ -858,11 +940,11 @@ angular.module('hopsWorksApp')
              * @param {Object} parameter The parameter to bind.
              * @returns {undefined}
              */
-            this.selectDir = function (reason, parameter) {
+            this.selectDockerOutputDir = function (reason, parameter) {
               ModalService.selectDir('lg',  self.projectId, self.selectFileRegexes[reason],
                       self.selectFileErrorMsgs["PYSPARK"]).then(
                       function (success) {
-                        self.onFileSelected(reason, success);
+                        self.runConfig.outputPath = success
                       }, function (error) {
                 //The user changed their mind.
               });
@@ -901,6 +983,7 @@ angular.module('hopsWorksApp')
                 "sparkState": self.sparkState,
                 "flinkState": self.flinkState,
                 "pythonState": self.pythonState,
+                "dockerState": self.dockerState,
                 "accordion1": self.accordion1,
                 "accordion2": self.accordion2,
                 "accordion3": self.accordion3,
@@ -930,6 +1013,8 @@ angular.module('hopsWorksApp')
                 self.sparkState = stored.sparkState;
               } else if(self.jobtype === 4) {
                 self.pythonState = stored.pythonState
+              }else if(self.jobtype === 5) {
+                self.dockerState = stored.dockerState
               } else if (self.jobtype ===  3) {
                 self.flinkState = stored.flinkState;
               }

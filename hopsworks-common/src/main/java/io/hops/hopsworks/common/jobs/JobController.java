@@ -95,7 +95,7 @@ public class JobController {
   private HdfsUsersController hdfsUsersController;
   @EJB
   private Settings settings;
-  
+
   private static final Logger LOGGER = Logger.getLogger(JobController.class.getName());
   
   public Jobs putJob(Users user, Project project, Jobs job, JobConfiguration config) throws JobException {

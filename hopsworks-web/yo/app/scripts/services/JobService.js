@@ -297,6 +297,9 @@ angular.module('hopsWorksApp')
                       case "PYTHON":
                           jobType = 4;
                           break;
+                      case "DOCKER":
+                          jobType = 5;
+                          break;
                   }
                   var mainFileTxt, mainFileVal, jobDetailsTxt, sparkState, flinkState;
                   if (jobType === 1 || jobType === 2 || jobType === 4 ) {

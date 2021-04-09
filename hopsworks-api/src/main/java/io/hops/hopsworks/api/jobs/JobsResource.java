@@ -261,7 +261,7 @@ public class JobsResource {
   @ApiOperation(value = "Inspect user program and return a JobConfiguration",
     response = SparkJobConfiguration.class)
   @GET
-  @Path("{jobtype : python|spark|pyspark|flink}/inspection")
+  @Path("{jobtype : python|docker|spark|pyspark|flink}/inspection")
   @Produces(MediaType.APPLICATION_JSON)
   @Consumes(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
