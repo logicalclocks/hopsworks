@@ -1175,12 +1175,12 @@ public class DatasetController {
       }
       
       if (isDataset) {
-        //remove the group associated with this dataset as it is a toplevel ds
+        //remove the groups associated with this dataset as it is a toplevel ds
         try {
-          hdfsUsersController.deleteDatasetGroup(dataset);
+          hdfsUsersController.deleteDatasetGroups(project, dataset);
         } catch (IOException ex) {
           //FIXME: take an action?
-          LOGGER.log(Level.WARNING, "Error while trying to delete a dataset group", ex);
+          LOGGER.log(Level.WARNING, "Error while trying to delete the dataset groups", ex);
         }
       }
     }
