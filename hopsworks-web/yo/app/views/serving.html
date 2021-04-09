@@ -173,7 +173,7 @@
                                     <input style="margin-top: 14px;" type="checkbox"
                                            name="kfserving"
                                            ng-model="servingCtrl.kfserving"
-                                           ng-disabled="!servingCtrl.isKubernetes || servingCtrl.editServing.modelServer === 'FLASK'"
+                                           ng-disabled="!servingCtrl.isKFServing || servingCtrl.editServing.modelServer === 'FLASK'"
                                            ng-click="servingCtrl.setKFServing()">
 
                                     <rzslider style="margin-top: 40px;"

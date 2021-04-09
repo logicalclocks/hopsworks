@@ -274,6 +274,51 @@ describe "On #{ENV['OS']}" do
           expect_status(422)
         end
 
+        it "should fail to create a serving with KFSERVING tool when Kubernetes is not installed" do
+          if kubernetes_installed
+            skip "This test does not run on Kubernetes"
+          end
+          put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
+              {name: "invalidName",
+               artifactPath: "/Projects/#{@project[:projectname]}/Models/mnist/",
+               modelVersion: 1,
+               batchingEnabled: false,
+               kafkaTopicDTO: {
+                   name: "NONE"
+               },
+               modelServer: "TENSORFLOW_SERVING",
+               servingTool: "KFSERVING",
+               availableInstances: 1,
+               requestedInstances: 1
+              }
+          expect_json(errorMsg: "Kubernetes is not installed, which is required for serving models with KFServing")
+          expect_status(400)
+        end
+
+        it "should fail to create a serving with KFSERVING tool when KFServing is not installed" do
+          if !kubernetes_installed
+            skip "This test only run on Kubernetes"
+          end
+          if kfserving_installed
+            skip "This test does not run with KFServing installed"
+          end
+          put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
+              {name: "invalidName",
+               artifactPath: "/Projects/#{@project[:projectname]}/Models/mnist/",
+               modelVersion: 1,
+               batchingEnabled: false,
+               kafkaTopicDTO: {
+                   name: "NONE"
+               },
+               modelServer: "TENSORFLOW_SERVING",
+               servingTool: "KFSERVING",
+               availableInstances: 1,
+               requestedInstances: 1
+              }
+          expect_json(errorMsg: "KFServing is not installed or disabled")
+          expect_status(400)
+        end
+
         it "should fail to create a serving with a non-standard path" do
           rm("/Projects/#{@project[:projectname]}/Models/mnist/1/saved_model.pb")
 
