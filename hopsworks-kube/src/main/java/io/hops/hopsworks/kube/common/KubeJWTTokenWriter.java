@@ -17,6 +17,7 @@ import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.jwt.JWTController;
 import io.hops.hopsworks.jwt.exception.SigningKeyNotFoundException;
 import io.hops.hopsworks.jwt.exception.VerificationException;
+import io.hops.hopsworks.persistence.entity.jobs.configuration.history.JobState;
 import io.hops.hopsworks.persistence.entity.jobs.history.Execution;
 
 import javax.ejb.EJB;
@@ -99,7 +100,10 @@ public class KubeJWTTokenWriter implements JWTTokenWriter {
     for (Secret secret : secrets) {
       String token = new String(Base64.getDecoder().decode(secret.getData().get("token.jwt")));
       //Get project
-      if (executionFacade.findById(Integer.parseInt(secret.getMetadata().getLabels().get("execution"))).isPresent()) {
+      if (executionFacade.findById(Integer.parseInt(secret.getMetadata().getLabels().get("execution"))).isPresent()
+          && !JobState.getFinalStates().contains(
+                  executionFacade.findById(Integer.parseInt(secret.getMetadata().getLabels().get("execution")))
+                                                                                            .get().getState())) {
         Execution execution = executionFacade.findById(Integer.parseInt(secret.getMetadata().getLabels().get(
           "execution"))).get();
         ExecutionJWT jwt = new ExecutionJWT(execution, token);

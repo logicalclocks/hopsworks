@@ -391,7 +391,8 @@ public class RESTCodes {
   public enum JobErrorCode implements RESTErrorCode {
 
     // JOBS Error Messages
-    JOB_START_FAILED(0, "An error occurred while trying to start this job.", Response.Status.BAD_REQUEST),
+    JOB_START_FAILED(0, "An error occurred while trying to start this job. Check the job logs for details",
+            Response.Status.BAD_REQUEST),
     JOB_STOP_FAILED(1, "An error occurred while trying to stop this job.", Response.Status.BAD_REQUEST),
     JOB_TYPE_UNSUPPORTED(2, "Unsupported job type.", Response.Status.BAD_REQUEST),
     JOB_ACTION_UNSUPPORTED(3, "Unsupported action type.", Response.Status.BAD_REQUEST),
@@ -426,7 +427,13 @@ public class RESTCodes {
     APPID_NOT_FOUND(27, "AppId not found.", Response.Status.NOT_FOUND),
     JOB_PROGRAM_VERSIONING_FAILED(28, "Failed to version application program", Response.Status.INTERNAL_SERVER_ERROR),
     INSUFFICIENT_EXECUTOR_MEMORY(29, "Insufficient executor memory provided.", Response.Status.BAD_REQUEST),
-    NODEMANAGERS_OFFLINE(30, "Nodemanagers are offline", Response.Status.SERVICE_UNAVAILABLE);
+    NODEMANAGERS_OFFLINE(30, "Nodemanagers are offline", Response.Status.SERVICE_UNAVAILABLE),
+    DOCKER_MOUNT_NOT_ALLOWED(31, "It is not allowed to mount volumes.", Response.Status.BAD_REQUEST),
+    DOCKER_MOUNT_DIR_NOT_ALLOWED(32, "It is not allowed to mount this directory.", Response.Status.BAD_REQUEST),
+    DOCKER_UID_GID_STRICT(33, "Docker jobs run in uid/gid strict mode." +
+            " It it now allowed to set uid/gid. If you remove the uid/gid, the job will run with a default user." +
+            " Please ask an administrator to update the setting if necessary.",
+            Response.Status.BAD_REQUEST);
 
     private Integer code;
     private String message;

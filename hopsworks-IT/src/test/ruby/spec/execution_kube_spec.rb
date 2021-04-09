@@ -22,6 +22,128 @@ describe "On #{ENV['OS']}" do
           expect_json(errorCode: 200003)
         end
       end
+      context 'with authentication and docker job' do
+        before :all do
+          setVar("docker_job_mounts_list", "/tmp,/var")
+          setVar("docker_job_mounts_allowed", "false")
+          setVar("docker_job_uid_strict", "false")
+          with_valid_project
+          $job_name = "j_#{short_random_id}"
+        end
+        after :all do
+          setVar("docker_job_mounts_allowed", "true")
+        end
+        describe 'create, get, delete executions' do
+          it "should fail to start a docker job with mounted volumes if not allowed" do
+            create_docker_job(@project,  $job_name)
+            #start execution
+            start_execution(@project[:id],  $job_name)
+            expect_status(400)
+          end
+        end
+      end
+      context 'with authentication and docker job' do
+        before :all do
+          setVar("docker_job_mounts_list", "var")
+          setVar("docker_job_mounts_allowed", "true")
+          setVar("docker_job_uid_strict", "false")
+          with_valid_project
+          $job_name = "j_#{short_random_id}"
+        end
+        after :all do
+          setVar("docker_job_mounts_list", "/tmp,/var")
+        end
+        describe 'create, get, delete executions' do
+          it "should fail to start a docker job with a forbidden volume" do
+            create_docker_job(@project, $job_name)
+            #start execution
+            start_execution(@project[:id], $job_name)
+            expect_status(400)
+          end
+        end
+      end
+      context 'with authentication and docker job' do
+        before :all do
+          setVar("docker_job_mounts_list", "/tmp,/var")
+          setVar("docker_job_mounts_allowed", "true")
+          setVar("docker_job_uid_strict", "true")
+          with_valid_project
+          $job_name = "j_#{short_random_id}"
+        end
+        after :all do
+          setVar("docker_job_uid_strict", "false")
+        end
+        describe 'create, get, delete executions' do
+          it "should fail to start a docker job with provided uid and gid if not allowed" do
+            create_docker_job(@project,  $job_name)
+            #start execution
+            start_execution(@project[:id], $job_name)
+            expect_status(400)
+          end
+        end
+      end
+      context 'with authentication and docker job' do
+        before :all do
+          setVar("docker_job_mounts_list", "/tmp,/var")
+          setVar("docker_job_mounts_allowed", "true")
+          setVar("docker_job_uid_strict", "false")
+          with_valid_project
+        end
+        before :each do
+          $job_name = "j_#{short_random_id}"
+        end
+        describe 'create, get, delete executions' do
+          it "should start/stop a job and get its executions" do
+            #create job
+            create_docker_job(@project, $job_name)
+            job_id = json_body[:id]
+            #start execution
+            start_execution(@project[:id], $job_name)
+            execution_id = json_body[:id]
+            expect_status(201)
+            expect(json_body[:state]).to eq "INITIALIZING"
+            #get execution
+            get_execution(@project[:id], $job_name, json_body[:id])
+            expect_status(200)
+            expect(json_body[:id]).to eq(execution_id)
+            #wait till it's finished and start second execution
+            wait_for_execution_completed(@project[:id], $job_name, json_body[:id], "FINISHED")
+            #start execution
+            start_execution(@project[:id], $job_name)
+            execution_id = json_body[:id]
+            expect_status(201)
+
+            #get all executions of job
+            get_executions(@project[:id], $job_name, "")
+            expect(json_body[:items].count).to eq 2
+
+            #check database
+            num_executions = count_executions(job_id)
+            expect(num_executions).to eq 2
+
+            wait_for_execution_completed(@project[:id], $job_name, execution_id, "FINISHED")
+          end
+          it "should start a job that outputs a file and asserts the file is in datasets." do
+            #create job
+            create_docker_job(@project, $job_name)
+            job_id = json_body[:id]
+            #start execution
+            start_execution(@project[:id], $job_name)
+            execution_id = json_body[:id]
+            expect_status(201)
+            expect(json_body[:state]).to eq "INITIALIZING"
+            #get execution
+            get_execution(@project[:id], $job_name, json_body[:id])
+            expect_status(200)
+            expect(json_body[:id]).to eq(execution_id)
+            #wait till it's finished and start second execution
+            wait_for_execution_completed(@project[:id], $job_name, json_body[:id], "FINISHED")
+
+            # wait for Kubernetes handler to copy to hdfs
+            wait_for_docker_job_output("/Projects/#{@project[:projectname]}/Resources/hello.txt")
+          end
+        end
+      end
       job_types = ['py', 'ipynb']
       job_types.each do |type|
         context 'with authentication and executable ' + type do

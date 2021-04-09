@@ -46,12 +46,14 @@ public class JobConfigurationConverter implements AttributeConverter<JobConfigur
   private static JAXBContext sparkJAXBContext;
   private static JAXBContext flinkJAXBContext;
   private static JAXBContext pythonJAXBContext;
+  private static JAXBContext dockerJAXBContext;
 
   static {
     try {
       sparkJAXBContext = JAXBContextFactory.createContext(new Class[] {SparkJobConfiguration.class}, null);
       flinkJAXBContext = JAXBContextFactory.createContext(new Class[] {FlinkJobConfiguration.class}, null);
       pythonJAXBContext = JAXBContextFactory.createContext(new Class[] {PythonJobConfiguration.class}, null);
+      dockerJAXBContext = JAXBContextFactory.createContext(new Class[] {DockerJobConfiguration.class}, null);
     } catch (JAXBException e) {
       LOGGER.log(Level.SEVERE, "An error occurred while initializing JAXBContext", e);
     }
@@ -96,6 +98,8 @@ public class JobConfigurationConverter implements AttributeConverter<JobConfigur
         return flinkJAXBContext;
       case PYTHON:
         return pythonJAXBContext;
+      case DOCKER:
+        return dockerJAXBContext;
       default:
         throw new IllegalArgumentException("Could not find a mapping for JobType " + jobType);
     }
@@ -113,6 +117,8 @@ public class JobConfigurationConverter implements AttributeConverter<JobConfigur
       case FLINK:
         return unmarshaller.unmarshal(json, FlinkJobConfiguration.class).getValue();
       case PYTHON:
+        return unmarshaller.unmarshal(json, PythonJobConfiguration.class).getValue();
+      case DOCKER:
         return unmarshaller.unmarshal(json, PythonJobConfiguration.class).getValue();
       default:
         throw new IllegalArgumentException("Could not find a mapping for JobType " + jobType);

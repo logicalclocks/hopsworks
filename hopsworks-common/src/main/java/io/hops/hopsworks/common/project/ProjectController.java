@@ -677,8 +677,7 @@ public class ProjectController {
         }
       } else if (ds.equals(Settings.BaseDataset.LOGS)) {
         dfso.setStoragePolicy(dsPath, settings.getHdfsLogStoragePolicy());
-        JobType[] jobTypes = new JobType[]{JobType.SPARK, JobType.PYSPARK, JobType.FLINK, JobType.PYTHON};
-        for (JobType jobType : jobTypes) {
+        for (JobType jobType : JobType.values()) {
           Path subDirPath = new Path(dsPath, jobType.getName());
           datasetController.createSubDirectory(project, subDirPath, dfso);
           dfso.setOwner(subDirPath, fstatus.getOwner(), fstatus.getGroup());

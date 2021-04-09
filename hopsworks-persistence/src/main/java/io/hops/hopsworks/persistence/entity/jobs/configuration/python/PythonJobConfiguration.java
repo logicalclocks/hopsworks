@@ -17,7 +17,7 @@ public class PythonJobConfiguration extends DockerJobConfiguration {
   
   public PythonJobConfiguration() {
   }
-  
+
   @XmlElement
   private String appPath;
   

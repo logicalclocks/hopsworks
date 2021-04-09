@@ -115,9 +115,9 @@ import java.util.List;
           query
           = "SELECT e FROM Execution e WHERE e.job.type = :type AND e.job.project "
           + "= :project ORDER BY e.submissionTime DESC"),
-  @NamedQuery(name = "Execution.findByTypeAndStates",
+  @NamedQuery(name = "Execution.findByTypesAndStates",
           query
-          = "SELECT e FROM Execution e WHERE e.job.type = :type AND e.state in :states"),
+          = "SELECT e FROM Execution e WHERE e.job.type in :types AND e.state in :states"),
   @NamedQuery(name = "Execution.findByJob",
           query
           = "SELECT e FROM Execution e WHERE e.job = :job ORDER BY e.submissionTime DESC"),

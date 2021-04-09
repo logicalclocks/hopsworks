@@ -15,6 +15,7 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlSeeAlso;
+import java.util.List;
 
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.FIELD)
@@ -37,8 +38,31 @@ public class DockerJobConfiguration extends JobConfiguration {
 
   @XmlElement
   private int gpus = 0;
-  
-  
+
+  @XmlElement
+  private String imagePath;
+
+  @XmlElement
+  private List<String> volumes;
+
+  @XmlElement
+  private List<String> envVars;
+
+  @XmlElement
+  private String command;
+
+  @XmlElement
+  private List<String> args;
+
+  @XmlElement
+  private String outputPath = "/logs";
+
+  @XmlElement
+  private Long uid;
+
+  @XmlElement
+  private Long gid;
+
   public int getCores() {
     return cores;
   }
@@ -62,7 +86,71 @@ public class DockerJobConfiguration extends JobConfiguration {
   public void setGpus(int gpus) {
     this.gpus = gpus;
   }
-  
+
+  public String getImagePath() {
+    return imagePath;
+  }
+
+  public void setImagePath(String imagePath) {
+    this.imagePath = imagePath;
+  }
+
+  public List<String> getVolumes() {
+    return volumes;
+  }
+
+  public void setVolumes(List<String> volumes) {
+    this.volumes = volumes;
+  }
+
+  public List<String> getEnvVars() {
+    return envVars;
+  }
+
+  public void setEnvVars(List<String> envVars) {
+    this.envVars = envVars;
+  }
+
+  public String getCommand() {
+    return command;
+  }
+
+  public void setCommand(String command) {
+    this.command = command;
+  }
+
+  public List<String> getArgs() {
+    return args;
+  }
+
+  public void setArgs(List<String> args) {
+    this.args = args;
+  }
+
+  public String getOutputPath() {
+    return outputPath;
+  }
+
+  public void setOutputPath(String outputPath) {
+    this.outputPath = outputPath;
+  }
+
+  public Long getUid() {
+    return uid;
+  }
+
+  public void setUid(Long uid) {
+    this.uid = uid;
+  }
+
+  public Long getGid() {
+    return gid;
+  }
+
+  public void setGid(Long gid) {
+    this.gid = gid;
+  }
+
   @Override
   @XmlElement(name="jobType")
   public JobType getJobType() {

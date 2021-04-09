@@ -169,6 +169,28 @@ module JobHelper
     end
   end
 
+  def create_docker_job(project, job_name, job_conf=nil)
+
+    if job_conf.nil?
+      job_conf = {
+        "type" => "dockerJobConfiguration",
+        "appName" => "#{job_name}",
+        "memory" => 2048,
+        "cores" => 1,
+        "jobType" => "DOCKER",
+        "imagePath" => "alpine",
+        "volumes" => ["/tmp:/tmp2","/var:/var2"],
+        "envVars" => ["ENV1=val1","ENV2=val2"],
+        "command" => "/bin/sh",
+        "args"=> ["-c", 'echo "hello world" >> /Projects/' + project[:projectname] + '/Resources/hello.txt'],
+        "outputPath" => "/Projects/#{project[:projectname]}/Resources",
+        "uid" => "1",
+        "gid" => "1"
+      }
+      put "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/jobs/#{job_name}", job_conf
+    end
+  end
+
   def get_jobs(project_id, query)
     get "#{ENV['HOPSWORKS_API']}/project/#{project_id}/jobs#{query}"
   end

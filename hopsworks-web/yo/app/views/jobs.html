@@ -196,7 +196,7 @@
                           </button>
                           <button uib-tooltip="Monitoring UI"
                                   type="button" class="btn btn-default fa fa-eye"
-                                  ng-show="job.jobType !== 'PYTHON'"
+                                  ng-show="job.jobType !== 'PYTHON' && job.jobType !== 'DOCKER'"
                                   ng-click="jobsCtrl.showUI(job);$event.stopPropagation();">
                           </button>
                           <button

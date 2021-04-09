@@ -43,6 +43,7 @@ import com.google.common.base.Strings;
 import io.hops.hopsworks.common.dao.jobs.description.JobFacade;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.common.util.SparkConfigurationUtil;
+import io.hops.hopsworks.persistence.entity.jobs.configuration.DockerJobConfiguration;
 import io.hops.hopsworks.persistence.entity.jobs.configuration.python.PythonJobConfiguration;
 import io.hops.hopsworks.persistence.entity.jobs.description.Jobs;
 import io.hops.hopsworks.persistence.entity.project.Project;
@@ -96,7 +97,7 @@ public class JobController {
   private HdfsUsersController hdfsUsersController;
   @EJB
   private Settings settings;
-  
+
   private static final Logger LOGGER = Logger.getLogger(JobController.class.getName());
   
   public Jobs putJob(Users user, Project project, Jobs job, JobConfiguration config) throws JobException {
@@ -204,6 +205,8 @@ public class JobController {
             throw new IllegalArgumentException("Path does not point to a .py or .ipynb or .egg file.");
           }
           return new PythonJobConfiguration();
+        case DOCKER:
+          return new DockerJobConfiguration();
         default:
           throw new IllegalArgumentException("Job type not supported: " + jobType);
       }

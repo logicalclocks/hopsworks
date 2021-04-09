@@ -31,6 +31,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Singleton
 @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
@@ -54,9 +56,12 @@ public class KubeJobsMonitor implements JobsMonitor {
   public synchronized void monitor(Timer timer) {
     LOGGER.log(Level.FINE, "Running KubeJobsMonitor timer");
     try {
-      // Get all non-finished executions of type Python, if they don't exist in kubernetes, set them to failed
-      List<Execution> pendingExecutions = executionFacade.findByTypeAndStates(JobType.PYTHON,
-        JobState.getKubeRunningStates());
+
+      ;
+      // Get all non-finished executions of type Python or Docker, if they don't exist in kubernetes, set them to failed
+      List<Execution> pendingExecutions = executionFacade.findByTypesAndStates(
+              Stream.of(JobType.DOCKER, JobType.PYTHON).collect(Collectors.toSet()),
+              JobState.getKubeRunningStates());
       
       Map<String, String> label = new HashMap<>();
       label.put("deployment-type", "job");
@@ -75,7 +80,8 @@ public class KubeJobsMonitor implements JobsMonitor {
           } else {
             //Get the app container
             for (ContainerStatus containerStatus : pod.getStatus().getContainerStatuses()) {
-              if (containerStatus.getName().equals(JobType.PYTHON.getName().toLowerCase())) {
+              if (containerStatus.getName().equals(JobType.PYTHON.getName().toLowerCase())
+                  || containerStatus.getName().equals(JobType.DOCKER.getName().toLowerCase())) {
                 ContainerState containerState = containerStatus.getState();
                 if (containerState.getTerminated() != null) {
                   LOGGER.log(Level.FINEST, "reason: " + containerState.getTerminated().getReason() + ", pod: " + pod);
@@ -89,7 +95,7 @@ public class KubeJobsMonitor implements JobsMonitor {
                   if (!Strings.isNullOrEmpty(reason) &&
                     !reason.equals("ContainerCreating") &&
                     execution.getExecutionDuration() > Settings.PYTHON_JOB_KUBE_WAITING_TIMEOUT_MS) {
-                    LOGGER.log(Level.FINEST, "reason: " + containerState.getTerminated().getReason() + ", pod: " + pod);
+                    LOGGER.log(Level.FINEST, "reason: " + containerState + ", pod: " + pod);
                     execution.setState(KubeJobType.getAsJobState(reason));
                     cleanUpExecution(execution, pod);
                     // Write log in Logs dataset

@@ -13,6 +13,10 @@ describe "On #{ENV['OS']}" do
   job_python_2 = "demo_job_2"
   job_python_3 = "demo_job_3"
 
+  job_docker_1 = "demo_job_docker_1"
+  job_docker_2 = "demo_job_docker_2"
+  job_docker_3 = "demo_job_docker_3"
+
   describe 'job' do
     context 'without authentication' do
       before :all do
@@ -66,6 +70,42 @@ describe "On #{ENV['OS']}" do
       it "should delete created job" do
         create_python_job(@project, job_python_1, "py")
         delete_job(@project[:id], job_python_1)
+        expect_status(204)
+      end
+      it "should create three docker jobs" do
+        create_docker_job(@project, job_docker_1)
+        expect_status(201)
+        create_docker_job(@project, job_docker_2)
+        expect_status(201)
+        create_docker_job(@project, job_docker_3)
+        expect_status(201)
+      end
+      it "should get a single docker job" do
+        create_docker_job(@project, job_docker_1)
+        get_job(@project[:id], job_docker_1)
+        expect_status(200)
+      end
+      it "should get docker job dto with href" do
+        create_docker_job(@project, job_docker_1)
+        get_job(@project[:id], job_docker_1)
+        expect_status(200)
+        #validate href
+        expect(URI(json_body[:href]).path).to eq "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/jobs/" + job_docker_1
+        expect(json_body[:config][:type]).to eq "dockerJobConfiguration"
+        expect(json_body[:jobType]).to eq "DOCKER"
+      end
+      it "should get three jobs" do
+        create_docker_job(@project, job_docker_1)
+        create_docker_job(@project, job_docker_2)
+        create_docker_job(@project, job_docker_3)
+        get_jobs(@project[:id], nil)
+        expect_status(200)
+        expect(json_body[:items].count).to eq 3
+        expect(json_body[:count]).to eq 3
+      end
+      it "should delete created job" do
+        create_docker_job(@project, job_docker_1)
+        delete_job(@project[:id], job_docker_1)
         expect_status(204)
       end
     end

@@ -129,5 +129,13 @@ module ExecutionHelper
       expect(output).not_to include(job_name.gsub("_","-"))
     end
   end
+
+  def wait_for_docker_job_output(path)
+    file_found = false
+    wait_for(60, "Docker job output not found") do
+      file_found = test_file(path)
+    end
+    expect(file_found).to be true
+  end
 end
 

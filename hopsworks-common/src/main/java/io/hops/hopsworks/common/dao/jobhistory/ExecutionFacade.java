@@ -149,10 +149,10 @@ public class ExecutionFacade extends AbstractFacade<Execution> {
       Execution.class).setParameter("states", JobState.getRunningStates()).getResultList();
   }
   
-  public List<Execution> findByTypeAndStates(JobType type, Set<JobState> jobStates) {
+  public List<Execution> findByTypesAndStates(Set<JobType> types, Set<JobState> jobStates) {
     TypedQuery<Execution> q = em.createNamedQuery(
-      "Execution.findByTypeAndStates", Execution.class);
-    q.setParameter("type", type );
+      "Execution.findByTypesAndStates", Execution.class);
+    q.setParameter("types", types );
     q.setParameter("states", jobStates);
     return q.getResultList();
   }

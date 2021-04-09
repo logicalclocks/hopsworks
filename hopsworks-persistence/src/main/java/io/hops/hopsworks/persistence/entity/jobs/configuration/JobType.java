@@ -50,7 +50,8 @@ public enum JobType {
   PYSPARK("PySpark"),
   ERASURE_CODING("ERASURE_CODING"),
   DOCKER("Docker"),
-  PYTHON("Python");
+  PYTHON("Python"),
+  KUBE("Kube");
 
   private final String name;
   

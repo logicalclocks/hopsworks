@@ -105,6 +105,7 @@ public final class Utils {
       case FLINK:
       case YARN:
       case PYTHON:
+      case DOCKER:
         defaultOutputPath = Settings.BaseDataset.LOGS.getName() + "/" + jobType.getName() +"/";
         break;
       default:
