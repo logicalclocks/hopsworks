@@ -147,9 +147,15 @@ public class ServingUtil {
    * @param servingWrapper the user data
    * @throws ServingException
    */
-  public void validateKFServingUserInput(ServingWrapper servingWrapper) {
+  public void validateKFServingUserInput(ServingWrapper servingWrapper) throws ServingException {
     if (!settings.getKubeInstalled()) {
-      throw new IllegalArgumentException("Serving tool not supported. Kubernetes installation is required");
+      throw new ServingException(RESTCodes.ServingErrorCode.KUBERNETES_NOT_INSTALLED, Level.SEVERE, "Serving tool not" +
+        " supported");
+    }
+  
+    if (!settings.getKubeKFServingInstalled()) {
+      throw new ServingException(RESTCodes.ServingErrorCode.KFSERVING_NOT_ENABLED, Level.SEVERE, "Serving tool not " +
+        "supported");
     }
     
     if (servingWrapper.getServing().getModelServer() == ModelServer.FLASK) {

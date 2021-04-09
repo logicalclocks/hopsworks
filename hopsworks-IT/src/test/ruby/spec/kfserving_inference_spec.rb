@@ -19,8 +19,8 @@ describe "On #{ENV['OS']}" do
 
   describe 'tensorflow' do
     before :all do
-      if !kubernetes_installed
-        skip "This test only run on Kubernetes"
+      if !kfserving_installed
+        skip "This test only run with KFServing installed"
       end
     end
     after (:all) do

@@ -18,8 +18,8 @@ require 'json'
 
 describe "On #{ENV['OS']}" do
   before :all do
-    if !kubernetes_installed
-      skip "This test only run on Kubernetes"
+    if !kfserving_installed
+      skip "This test only run with KFServing installed"
     end
   end
 
@@ -570,33 +570,22 @@ describe "On #{ENV['OS']}" do
           with_kfserving_tensorflow(@project[:id], @project[:projectname], @user[:username])
         end
 
-        before :each do
+        it "should fail to kill a non running instance" do
+          post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/#{@serving[:id]}?action=stop"
+          expect_status(400)
+          expect_json(errorCode: 240003)
+        end
+
+        it "should be able to kill a running serving instance" do
           post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/#{@serving[:id]}?action=start"
           expect_status(200)
 
           wait_for_type(@serving[:name])
-        end
 
-        it "should be able to kill a running serving instance" do
           post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/#{@serving[:id]}?action=stop"
           expect_status(200)
 
-          sleep(5)
-
           check_process_running("tensorflow_model_server")
-        end
-
-        it "should fail to kill a non running instance" do
-          post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/#{@serving[:id]}?action=stop"
-          expect_status(200)
-
-          sleep(5)
-
-          check_process_running("tensorflow_model_server")
-
-          post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/#{@serving[:id]}?action=stop"
-          expect_status(400)
-          expect_json(errorCode: 240003)
         end
       end
 

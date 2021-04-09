@@ -280,6 +280,7 @@ public class Settings implements Serializable {
   private static final String VARIABLE_KUBE_DOCKER_MAX_GPUS_ALLOCATION = "kube_docker_max_gpus_allocation";
   private static final String VARIABLE_KUBE_DOCKER_MAX_CORES_ALLOCATION = "kube_docker_max_cores_allocation";
   private static final String VARIABLE_KUBE_INSTALLED = "kubernetes_installed";
+  private static final String VARIABLE_KUBE_KFSERVING_INSTALLED = "kube_kfserving_installed";
   
 
   /*
@@ -706,6 +707,7 @@ public class Settings implements Serializable {
       KUBE_DOCKER_MAX_GPUS_ALLOCATION = setIntVar(VARIABLE_KUBE_DOCKER_MAX_GPUS_ALLOCATION,
           KUBE_DOCKER_MAX_GPUS_ALLOCATION);
       KUBE_INSTALLED = setBoolVar(VARIABLE_KUBE_INSTALLED, KUBE_INSTALLED);
+      KUBE_KFSERVING_INSTALLED = setBoolVar(VARIABLE_KUBE_KFSERVING_INSTALLED, KUBE_KFSERVING_INSTALLED);
   
       HOPSWORKS_ENTERPRISE = setBoolVar(VARIABLE_HOPSWORKS_ENTERPRISE, HOPSWORKS_ENTERPRISE);
 
@@ -3421,7 +3423,13 @@ public class Settings implements Serializable {
     checkCache();
     return KUBE_INSTALLED;
   }
-
+  
+  private Boolean KUBE_KFSERVING_INSTALLED = false;
+  public synchronized Boolean getKubeKFServingInstalled() {
+    checkCache();
+    return KUBE_KFSERVING_INSTALLED;
+  }
+  
   private Boolean HOPSWORKS_ENTERPRISE = false;
   public synchronized Boolean getHopsworksEnterprise() {
     checkCache();

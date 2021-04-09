@@ -319,8 +319,28 @@ describe "On #{ENV['OS']}" do
                availableInstances: 1,
                requestedInstances: 1
               }
-          expect_json(usrMsg: "Serving tool not supported. Kubernetes installation is required")
-          expect_status(422)
+          expect_json(errorMsg: "Kubernetes is not installed, which is required for serving models with KFServing")
+          expect_status(400)
+        end
+
+        it "should fail to create a serving with KFSERVING tool when KFServing is not installed" do
+          if !kubernetes_installed
+            skip "This test only run on Kubernetes"
+          end
+          if kfserving_installed
+            skip "This test does not run with KFServing installed"
+          end
+          put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
+              {name: "invalidName",
+               artifactPath: "/Projects/#{@project[:projectname]}/Models/IrisFlowerClassifier/1/#{SKLEARN_SCRIPT_FILE_NAME}",
+               modelVersion: 1,
+               modelServer: "FLASK",
+               servingTool: "KFSERVING",
+               availableInstances: 1,
+               requestedInstances: 1
+              }
+          expect_json(errorMsg: "KFServing is not installed or disabled")
+          expect_status(400)
         end
       end
     end
