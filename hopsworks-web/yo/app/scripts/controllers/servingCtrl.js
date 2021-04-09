@@ -297,6 +297,13 @@ angular.module('hopsWorksApp')
                 }
             }
 
+            self.setIsKFServing = function(isKFServing) {
+                self.isKFServing = isKFServing;
+                if (!self.isKFServing){
+                    self.kfserving = false;
+                }
+            }
+
             self.setIsKubernetes = function(isKubernetes) {
                 self.isKubernetes = isKubernetes;
                 if (!self.isKubernetes){
@@ -646,6 +653,18 @@ angular.module('hopsWorksApp')
                     function (error) {
                         growl.error(error.data.errorMsg, {
                             title: 'Failed to fetch if kubernetes is enabled',
+                            ttl: 15000
+                        });
+                    }
+                );
+
+                VariablesService.isKFServing().then(
+                    function(success) {
+                        self.setIsKFServing(success.data.successMessage === "true")
+                    },
+                    function (error) {
+                        growl.error(error.data.errorMsg, {
+                            title: 'Failed to fetch if kfserving is enabled',
                             ttl: 15000
                         });
                     }
