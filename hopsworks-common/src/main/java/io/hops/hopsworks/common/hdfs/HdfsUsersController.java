@@ -218,20 +218,23 @@ public class HdfsUsersController {
   }
 
   /**
-   * Deletes the dataset group from HDFS
+   * Deletes the dataset group and datasetAcl group from HDFS
    * <p>
    * @param dataset
    * @throws java.io.IOException
    */
-  public void deleteDatasetGroup(Dataset dataset) throws IOException {
+  public void deleteDatasetGroups(Project project, Dataset dataset) throws IOException {
     if (dataset == null) {
       throw new IllegalArgumentException("One or more arguments are null.");
     }
     String datasetGroup = getHdfsGroupName(dataset);
+    String datasetAclGroup = getHdfsAclGroupName(project, dataset);
+    
     DistributedFileSystemOps dfso = null;
     try {
       dfso = dfsService.getDfsOps();
       dfso.removeGroup(datasetGroup);
+      dfso.removeGroup(datasetAclGroup);
     } finally {
       dfsService.closeDfsClient(dfso);
     }
