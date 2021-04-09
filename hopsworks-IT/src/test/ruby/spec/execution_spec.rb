@@ -675,28 +675,28 @@ describe "On #{ENV['OS']}" do
       proxied_pages = [
           {:type => "spark main",
            :uri => lambda {|app_id, attempt_id|
-             "/hopsworks-api/yarnui/http://resourcemanager.service.consul:8088/proxy/#{app_id}"}},
+             "/hopsworks-api/yarnui/https://resourcemanager.service.consul:8089/proxy/#{app_id}"}},
           {:type => "sql",
            :uri => lambda {|app_id, attempt_id|
-             "/hopsworks-api/yarnui/http://resourcemanager.service.consul:8088/proxy/#{app_id}/SQL"}},
+             "/hopsworks-api/yarnui/https://resourcemanager.service.consul:8089/proxy/#{app_id}/SQL"}},
           {:type => "all executors",
            :uri => lambda {|app_id, attempt_id|
-             "/hopsworks-api/yarnui/http://historyserver.spark.service.consul:18080/api/v1/applications/#{app_id}/#{attempt_id}/allexecutors"}},
+             "/hopsworks-api/yarnui/https://historyserver.spark.service.consul:18080/api/v1/applications/#{app_id}/#{attempt_id}/allexecutors"}},
           {:type => "executors",
            :uri => lambda {|app_id, attempt_id|
-             "/hopsworks-api/yarnui/http://historyserver.spark.service.consul:18080/history/#{app_id}/#{attempt_id}/executors"}},
+             "/hopsworks-api/yarnui/https://historyserver.spark.service.consul:18080/history/#{app_id}/#{attempt_id}/executors"}},
           {:type => "envirnoment",
            :uri => lambda {|app_id, attempt_id|
-             "/hopsworks-api/yarnui/http://historyserver.spark.service.consul:18080/history/#{app_id}/#{attempt_id}/environment"}},
+             "/hopsworks-api/yarnui/https://historyserver.spark.service.consul:18080/history/#{app_id}/#{attempt_id}/environment"}},
           {:type => "storage",
            :uri => lambda {|app_id, attempt_id|
-             "/hopsworks-api/yarnui/http://historyserver.spark.service.consul:18080/history/#{app_id}/#{attempt_id}/storage"}},
+             "/hopsworks-api/yarnui/https://historyserver.spark.service.consul:18080/history/#{app_id}/#{attempt_id}/storage"}},
           {:type => "stages",
            :uri => lambda {|app_id, attempt_id|
-             "/hopsworks-api/yarnui/http://historyserver.spark.service.consul:18080/history/#{app_id}/#{attempt_id}/stages"}},
+             "/hopsworks-api/yarnui/https://historyserver.spark.service.consul:18080/history/#{app_id}/#{attempt_id}/stages"}},
           {:type => "jobs",
            :uri => lambda {|app_id, attempt_id|
-             "/hopsworks-api/yarnui/http://historyserver.spark.service.consul:18080/history/#{app_id}/#{attempt_id}/jobs"}}
+             "/hopsworks-api/yarnui/https://historyserver.spark.service.consul:18080/history/#{app_id}/#{attempt_id}/jobs"}}
       ]
       proxied_pages.each do |p|
         it 'data owner should see ' + p[:type] do
