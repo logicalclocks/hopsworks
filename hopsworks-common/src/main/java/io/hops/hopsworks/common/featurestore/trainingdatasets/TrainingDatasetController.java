@@ -199,7 +199,7 @@ public class TrainingDatasetController {
                     f.getFeatureGroup().getId(),
                     f.getFeatureGroup().getName(), f.getFeatureGroup().getVersion(),
                     onlineFeaturegroupController.onlineFeatureGroupTopicName(project.getId(),
-                      Utils.getFeaturegroupName(f.getFeatureGroup())))
+                      f.getFeatureGroup().getId(), Utils.getFeaturegroupName(f.getFeatureGroup())))
                 : null,
             f.getIndex(), f.isLabel()))
         .collect(Collectors.toList()));

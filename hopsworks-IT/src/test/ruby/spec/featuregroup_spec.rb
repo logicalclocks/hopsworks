@@ -1897,8 +1897,8 @@ describe "On #{ENV['OS']}" do
         expect(parsed_json["featurestoreName"] == project.projectname.downcase + "_featurestore").to be true
         expect(parsed_json["name"] == featuregroup_name).to be true
         expect(parsed_json["type"] == "cachedFeaturegroupDTO").to be true
-        expect(parsed_json["onlineTopicName"]).to eql(project.id.to_s + "_" + featuregroup_name + "_" +
-                                                          parsed_json["version"].to_s + "_onlinefs")
+        expect(parsed_json["onlineTopicName"]).to eql(project.id.to_s + "_" + parsed_json["id"].to_s + "_" +
+            featuregroup_name + "_" + parsed_json["version"].to_s + "_onlinefs")
       end
 
       it "should create the kafka topic and avro schema for an online enabled feature group" do
@@ -1907,7 +1907,8 @@ describe "On #{ENV['OS']}" do
         json_result, featuregroup_name = create_cached_featuregroup(project.id, featurestore_id, online:true)
         parsed_json = JSON.parse(json_result)
         expect_status_details(201)
-        topic_name = project.id.to_s + "_" + featuregroup_name + "_" + parsed_json["version"].to_s + "_onlinefs"
+        topic_name = project.id.to_s + "_" + parsed_json["id"].to_s + "_" + featuregroup_name + "_" +
+            parsed_json["version"].to_s + "_onlinefs"
         get_project_topics(project.id)
         expect_status_details(200)
         topic = json_body[:items].select{|topic| topic[:name] == topic_name}
@@ -2271,8 +2272,8 @@ describe "On #{ENV['OS']}" do
         json_result = enable_cached_featuregroup_online(project.id, featurestore_id, featuregroup_id)
         expect_status(200)
         parsed_json = JSON.parse(json_result)
-        expect(parsed_json["onlineTopicName"]).to eql(project.id.to_s + "_" + featuregroup_name + "_" +
-                                                          parsed_json["version"].to_s + "_onlinefs")
+        expect(parsed_json["onlineTopicName"]).to eql(project.id.to_s + "_" + parsed_json["id"].to_s + "_" +
+            featuregroup_name + "_" + parsed_json["version"].to_s + "_onlinefs")
       end
 
       it "should be able to disable online serving for a online cached feature group" do
@@ -2295,7 +2296,8 @@ describe "On #{ENV['OS']}" do
         expect_status_details(201)
         featuregroup_id = parsed_json["id"]
         featuregroup_version = parsed_json["version"]
-        topic_name = project.id.to_s + "_" + featuregroup_name + "_" + parsed_json["version"].to_s + "_onlinefs"
+        topic_name = project.id.to_s + "_" + parsed_json["id"].to_s + "_" + featuregroup_name + "_" +
+            parsed_json["version"].to_s + "_onlinefs"
         disable_cached_featuregroup_online(project.id, featurestore_id, featuregroup_id, featuregroup_version)
         expect_status_details(200)
         get_project_topics(project.id)

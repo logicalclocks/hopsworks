@@ -251,7 +251,12 @@ public class FeaturegroupController {
     //Persist specific feature group metadata (cached fg or on-demand fg)
     OnDemandFeaturegroup onDemandFeaturegroup = null;
     CachedFeaturegroup cachedFeaturegroup = null;
+  
+    List<FeatureGroupFeatureDTO> featuresNoHudi = null;
+    
     if (featuregroupDTO instanceof CachedFeaturegroupDTO) {
+      // make copy of schema without hudi columns
+      featuresNoHudi = new ArrayList<>(featuregroupDTO.getFeatures());
       cachedFeaturegroup = cachedFeaturegroupController.createCachedFeaturegroup(featurestore,
           (CachedFeaturegroupDTO) featuregroupDTO, project, user);
     } else {
@@ -262,6 +267,12 @@ public class FeaturegroupController {
     //Persist basic feature group metadata
     Featuregroup featuregroup = persistFeaturegroupMetadata(featurestore, user, featuregroupDTO,
       cachedFeaturegroup, onDemandFeaturegroup);
+  
+    // online feature group needs to be set up after persisting metadata in order to get feature group id
+    if (featuregroupDTO instanceof CachedFeaturegroupDTO && settings.isOnlineFeaturestore()
+      && featuregroup.getCachedFeaturegroup().isOnlineEnabled()){
+      onlineFeaturegroupController.setupOnlineFeatureGroup(featurestore, featuregroup, featuresNoHudi, project, user);
+    }
 
     FeaturegroupDTO completeFeaturegroupDTO = convertFeaturegrouptoDTO(featuregroup, project, user);
 
