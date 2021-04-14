@@ -338,21 +338,13 @@ public class CachedFeaturegroupController {
 
     //Prepare DDL statement
     String tableName = getTblName(cachedFeaturegroupDTO.getName(), cachedFeaturegroupDTO.getVersion());
-    // make copy of schema without hudi columns
-    List<FeatureGroupFeatureDTO> featuresNoHudi = new ArrayList<>(cachedFeaturegroupDTO.getFeatures());
     offlineFeatureGroupController.createHiveTable(featurestore, tableName, cachedFeaturegroupDTO.getDescription(),
         cachedFeaturegroupDTO.getTimeTravelFormat() == TimeTravelFormat.HUDI ?
             addHudiSpecFeatures(cachedFeaturegroupDTO.getFeatures()) :
             cachedFeaturegroupDTO.getFeatures(),
         project, user, getTableFormat(cachedFeaturegroupDTO.getTimeTravelFormat()));
 
-    //Create MySQL Table for Online Cached Feature Group
-    boolean onlineEnabled = false;
-    if(settings.isOnlineFeaturestore() && cachedFeaturegroupDTO.getOnlineEnabled()){
-      onlineFeaturegroupController.setupOnlineFeatureGroup(featurestore, cachedFeaturegroupDTO, featuresNoHudi, project,
-        user);
-      onlineEnabled = true;
-    }
+    boolean onlineEnabled = settings.isOnlineFeaturestore() && cachedFeaturegroupDTO.getOnlineEnabled();
     
     //Get HiveTblId of the newly created table from the metastore
     HiveTbls hiveTbls = cachedFeaturegroupFacade.getHiveTableByNameAndDB(tableName, featurestore.getHiveDbId())
@@ -378,7 +370,8 @@ public class CachedFeaturegroupController {
     if (settings.isOnlineFeaturestore() && featuregroup.getCachedFeaturegroup().isOnlineEnabled()) {
       cachedFeaturegroupDTO.setOnlineEnabled(true);
       cachedFeaturegroupDTO.setOnlineTopicName(onlineFeaturegroupController
-              .onlineFeatureGroupTopicName(project.getId(), Utils.getFeaturegroupName(featuregroup)));
+              .onlineFeatureGroupTopicName(project.getId(), featuregroup.getId(),
+                Utils.getFeaturegroupName(featuregroup)));
       List<FeatureGroupFeatureDTO> onlineFeatureGroupFeatureDTOS =
           onlineFeaturegroupController.getFeaturegroupFeatures(featuregroup);
       for (FeatureGroupFeatureDTO featureGroupFeatureDTO : featureGroupFeatureDTOS) {
