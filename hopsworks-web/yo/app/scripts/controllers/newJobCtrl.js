@@ -789,7 +789,7 @@ angular.module('hopsWorksApp')
                         $scope.settings = {advanced: true};
                         self.mainFileSelected(getFileName(path));
                         // For Kafka tour
-                        if (self.projectIsGuide) {
+                        if (self.projectIsGuide && self.projectName.startsWith("demo_kafka")) {
                           self.runConfig['spark.executor.memory'] = 2048;
                           self.tourService.currentStep_TourSeven = 6;
                         }
@@ -897,7 +897,7 @@ angular.module('hopsWorksApp')
                       self.selectFileErrorMsgs["PYSPARK"], false).then(
                       function (path) {
                         self.jobConfigFromMetadata = null;
-                        //get attached jupyter configuration. For ipynb and files in Jupyter folder
+                        //get attached jupyter configuration
                         if(path.endsWith(".ipynb")) {
                           XAttrService.get(self.JUPYTER_CONFIG_METADATA_KEY, path,
                               self.projectId).then(
@@ -905,7 +905,22 @@ angular.module('hopsWorksApp')
                                 if(success.data.items.length > 0) {
                                   try {
                                     var config = JSON.parse(success.data.items[0].value)
-                                    self.jobConfigFromMetadata = JSON.parse(config[self.JUPYTER_CONFIG_METADATA_KEY])["jobConfig"]
+                                    if(reason === "SPARK" || reason === "PYSPARK") {
+                                      self.jobConfigFromMetadata = JSON.parse(config[self.JUPYTER_CONFIG_METADATA_KEY])["jobConfig"];
+                                    } else if(reason === "PYTHON") {
+                                      // dockerJobConfig is a superclass of pythonJobConfig which we need here
+                                      // as such we need to merge the fields already set in the pythonJobConfig
+                                      // with the dockerConfig from the xattribute
+                                      var dockerConfig = JSON.parse(config[self.JUPYTER_CONFIG_METADATA_KEY])["dockerConfig"];
+                                      delete dockerConfig.type;
+                                      self.jobConfigFromMetadata = {};
+                                      for (var pythonConfigField in self.runConfig) {
+                                        self.jobConfigFromMetadata[pythonConfigField] = self.runConfig[pythonConfigField];
+                                      }
+                                      for (var dockerConfigField in dockerConfig) {
+                                        self.jobConfigFromMetadata[dockerConfigField] = dockerConfig[dockerConfigField];
+                                      }
+                                    }
                                   } catch (error) {
                                   }
                                 }
