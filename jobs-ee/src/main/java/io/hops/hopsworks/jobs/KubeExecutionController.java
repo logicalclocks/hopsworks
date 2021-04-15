@@ -305,7 +305,7 @@ public class KubeExecutionController extends AbstractExecutionController impleme
             .withName("logs")
             .withEmptyDir(new EmptyDirVolumeSource())
             .build());
-    parseVolumes(jobConfiguration.getVolumes()).stream().map(Pair::getValue0).forEach(volumes::add);
+    parseVolumes(jobConfiguration).stream().map(Pair::getValue0).forEach(volumes::add);
 
     return new PodSpecBuilder()
       .withContainers(containers)
@@ -388,7 +388,7 @@ public class KubeExecutionController extends AbstractExecutionController impleme
               .build());
 
       // Parse volumes from job and create mounts
-      parseVolumes(jobConfiguration.getVolumes()).stream().map(Pair::getValue1).forEach(volumeMounts::add);
+      parseVolumes(jobConfiguration).stream().map(Pair::getValue1).forEach(volumeMounts::add);
 
       // Validate uid and gid
       Long uid = null;
@@ -519,10 +519,11 @@ public class KubeExecutionController extends AbstractExecutionController impleme
         sideContainer.put("PROJECT", project.getName().toLowerCase());
         break;
       case DOCKER:
-        Map<String, String> envVars = HopsUtils.parseUserProperties(String.join("\n",
-                                                                                dockerJobConfiguration.getEnvVars()));
-        primaryContainer.putAll(envVars);
-
+        if (dockerJobConfiguration.getEnvVars() != null && !dockerJobConfiguration.getEnvVars().isEmpty()) {
+          Map<String, String> envVars = HopsUtils.parseUserProperties(String.join("\n",
+                  dockerJobConfiguration.getEnvVars()));
+          primaryContainer.putAll(envVars);
+        }
         sideContainer.put("HADOOP_CONF_DIR", settings.getHadoopConfDir());
         sideContainer.put("HADOOP_CLIENT_OPTS", "-Dfs.permissions.umask-mode=0007");
         sideContainer.put("MATERIAL_DIRECTORY", certificatesDir);
@@ -608,36 +609,39 @@ public class KubeExecutionController extends AbstractExecutionController impleme
     return logstash.getAddress() + ":" + logstash.getPort();
   }
 
-  private List<Pair<Volume, VolumeMount>> parseVolumes(List<String> volumes) throws JobException {
-    if (!settings.isDockerJobMountAllowed()) {
-      throw new JobException(RESTCodes.JobErrorCode.DOCKER_MOUNT_NOT_ALLOWED, FINE);
-    }
-    List<Pair<Volume, VolumeMount>> volumeMounts = new ArrayList<>();
-    if (volumes != null && !volumes.isEmpty()) {
-      int i = 0;
-      for (String volume : volumes) {
-        String hostPath = volume.split(":")[0];
-        // Check if the user-provided volume is allowed
-        if (!settings.getDockerMountsList().contains(hostPath)) {
-          throw new JobException(RESTCodes.JobErrorCode.DOCKER_MOUNT_DIR_NOT_ALLOWED, FINE, "path:" + hostPath);
-        }
-
-        String name = "vol" + i++;
-        volumeMounts.add(new Pair<>(
-                new VolumeBuilder()
-                        .withName(name)
-                        .withHostPath(
-                                new HostPathVolumeSourceBuilder()
-                                        .withPath(hostPath)
-                                        .build())
-                        .build(),
-                new VolumeMountBuilder()
-                        .withName(name)
-                        .withMountPath(volume.split(":")[1])
-                        .withReadOnly(true)
-                        .build()));
+  private List<Pair<Volume, VolumeMount>> parseVolumes(DockerJobConfiguration jobConfiguration) throws JobException {
+    if (jobConfiguration.getJobType() == JobType.DOCKER && jobConfiguration.getVolumes() != null
+                                                        && !jobConfiguration.getVolumes().isEmpty()) {
+      if (!settings.isDockerJobMountAllowed()) {
+        throw new JobException(RESTCodes.JobErrorCode.DOCKER_MOUNT_NOT_ALLOWED, FINE);
       }
+      List<Pair<Volume, VolumeMount>> volumeMounts = new ArrayList<>();
+      int i = 0;
+      for (String volume : jobConfiguration.getVolumes()) {
+        String hostPath = volume.split(":")[0];
+        if (!Strings.isNullOrEmpty(hostPath)) {// Check if the user-provided volume is allowed
+          if (!settings.getDockerMountsList().contains(hostPath)) {
+            throw new JobException(RESTCodes.JobErrorCode.DOCKER_MOUNT_DIR_NOT_ALLOWED, FINE, "path:" + hostPath);
+          }
+
+          String name = "vol" + i++;
+          volumeMounts.add(new Pair<>(
+                  new VolumeBuilder()
+                          .withName(name)
+                          .withHostPath(
+                                  new HostPathVolumeSourceBuilder()
+                                          .withPath(hostPath)
+                                          .build())
+                          .build(),
+                  new VolumeMountBuilder()
+                          .withName(name)
+                          .withMountPath(volume.split(":")[1])
+                          .withReadOnly(true)
+                          .build()));
+        }
+      }
+      return volumeMounts;
     }
-    return volumeMounts;
+    return new ArrayList<>();
   }
 }
