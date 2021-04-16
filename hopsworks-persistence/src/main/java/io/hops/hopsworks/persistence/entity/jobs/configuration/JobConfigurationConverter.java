@@ -119,7 +119,7 @@ public class JobConfigurationConverter implements AttributeConverter<JobConfigur
       case PYTHON:
         return unmarshaller.unmarshal(json, PythonJobConfiguration.class).getValue();
       case DOCKER:
-        return unmarshaller.unmarshal(json, PythonJobConfiguration.class).getValue();
+        return unmarshaller.unmarshal(json, DockerJobConfiguration.class).getValue();
       default:
         throw new IllegalArgumentException("Could not find a mapping for JobType " + jobType);
     }
