@@ -57,6 +57,23 @@ module FeaturestoreHelper
     }
   end
 
+  def json_data_expectation_categorical
+    {
+      "description": "validate pattern",
+      "features": [
+        "testfeature"
+      ],
+      "name": "exp_pattern",
+      "rules": [
+        {
+          "level": "ERROR",
+          "pattern": "abc",
+          "name": "HAS_PATTERN"
+        }
+      ]
+    }
+  end
+
   def json_data_validation
     {
       "validationTime": 1612285461346,
@@ -135,8 +152,12 @@ module FeaturestoreHelper
     }
   end
 
-  def create_expectation(project_id, featurestore_id, name, feature="testfeature")
-    json_data = json_data_expectation
+  def create_expectation(project_id, featurestore_id, name, feature="testfeature", custom_expectation=nil)
+    if custom_expectation != nil
+      json_data = custom_expectation
+    else
+      json_data = json_data_expectation
+    end
     json_data[:name] = name
     json_data[:features][0] = feature
     json_data = json_data.to_json

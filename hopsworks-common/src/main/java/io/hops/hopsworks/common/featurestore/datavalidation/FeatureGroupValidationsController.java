@@ -40,6 +40,7 @@ import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.datavalida
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.datavalidation.FeatureGroupExpectation;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.datavalidation.FeatureGroupValidation;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.datavalidation.FeatureStoreExpectation;
+import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.datavalidation.FeatureType;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.datavalidation.Level;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.datavalidation.Name;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.datavalidation.Predicate;
@@ -63,9 +64,13 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.sql.Timestamp;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.logging.Logger;
@@ -100,6 +105,8 @@ public class FeatureGroupValidationsController {
   private FeaturegroupController featuregroupController;
   @EJB
   private FeaturestoreActivityFacade activityFacade;
+  @EJB
+  private Settings settings;
 
   public Pair<FeatureGroupValidation, List<ExpectationResult>> getFeatureGroupValidationResults(Users user,
     Project project,
@@ -332,7 +339,7 @@ public class FeatureGroupValidationsController {
     FeatureGroupExpectation featureGroupExpectation;
     Optional<FeatureGroupExpectation> attachedExpectation =
       featureGroupExpectationFacade.findByFeaturegroupAndExpectation(featuregroup, featureStoreExpectation);
-    checkFeaturesExist(featureStoreExpectation, featuregroup, name, project, user);
+    featureValidation(featureStoreExpectation, featuregroup, project, user);
 
     if (!attachedExpectation.isPresent()) {
       featureGroupExpectation = new FeatureGroupExpectation();
@@ -344,30 +351,69 @@ public class FeatureGroupValidationsController {
     }
   }
 
-
-  public void checkFeaturesExist(FeatureStoreExpectation featureStoreExpectation,
-                                 Featuregroup featuregroup, String name, Project project, Users user)
+  public void featureValidation(FeatureStoreExpectation expectation,
+                                Featuregroup featuregroup, Project project, Users user)
           throws FeaturestoreException {
-    // Check that all the expectation's features exist in the feature group
-    List<String> expectationFeatures = featureStoreExpectation.getExpectation().getFeatures();
     List<FeatureGroupFeatureDTO> featuresDTOs = featuregroupController.getFeatures(featuregroup, project, user);
-    List<String> features = new ArrayList<>();
-    for (FeatureGroupFeatureDTO featureGroupFeature : featuresDTOs) {
-      features.add(featureGroupFeature.getName());
+    featureValidation(Collections.singletonList(expectation), featuresDTOs);
+  }
+
+  /**
+   * Validate than features exist in the feature group and that the rules can be applied to the features (types).
+   *
+   * @param featureStoreExpectations featureStoreExpectations
+   * @param features features
+   * @throws FeaturestoreException FeaturestoreException
+   */
+  public void featureValidation(List<FeatureStoreExpectation> featureStoreExpectations,
+                                List<FeatureGroupFeatureDTO> features)
+          throws FeaturestoreException {
+    List<String> featureTypesErrMsg = new ArrayList<>();
+    List<String> featureNames = new ArrayList<>();
+
+    for (FeatureGroupFeatureDTO featureGroupFeature : features) {
+      featureNames.add(featureGroupFeature.getName());
     }
-    // List to store all the features that do not exist
+
     List<String> featuresNotFound = new ArrayList<>();
-    for (String expectationFeature : expectationFeatures) {
-      if (!features.contains(expectationFeature)) {
-        featuresNotFound.add(expectationFeature);
+    for (FeatureStoreExpectation expectation : featureStoreExpectations) {
+      // List to store all the features that do not exist
+      for (String feature : expectation.getExpectation().getFeatures()) {
+        if (!featureNames.contains(feature)) {
+          featuresNotFound.add("Expectation: " + expectation.getExpectation().getName() + ", feature:" + feature);
+        }
+      }
+      if (!featuresNotFound.isEmpty()) {
+        throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.FEATURE_GROUP_EXPECTATION_FEATURE_NOT_FOUND,
+                java.util.logging.Level.FINE, "expectation: " + expectation + ", feature: " + featuresNotFound);
       }
     }
 
-    if (!featuresNotFound.isEmpty()) {
-      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.FEATURE_GROUP_EXPECTATION_FEATURE_NOT_FOUND,
-              java.util.logging.Level.FINE, "expectation: " + name + ", feature: " + featuresNotFound);
+    for (FeatureStoreExpectation expectation : featureStoreExpectations) {
+      // Check that all the expectation's features exist in the feature group
+      // Check that the data type of rules match the data types of the features
+      for (FeatureGroupFeatureDTO featureGroupFeature : features) {
+        if (expectation.getExpectation().getFeatures().contains(featureGroupFeature.getName())) {
+          featureNames.add(featureGroupFeature.getName());
+          for (ValidationRule validationRule : expectation.getValidationRules()) {
+            if (validationRule.getFeatureType() != null &&
+                    !getRuleTypeMappings(validationRule.getFeatureType(), featureGroupFeature.getType())) {
+              featureTypesErrMsg.add("feature: " + featureGroupFeature.getName() + ", " +
+                      "expectation: " + expectation.getExpectation().getName() + ", " +
+                      "feature type: " + featureGroupFeature.getType() + ", " +
+                      "rule: " + validationRule.getName() + ", " +
+                      "rule type: " + validationRule.getFeatureType() + ", ");
+            }
+          }
+        }
+      }
+    }
+    if (!featureTypesErrMsg.isEmpty()) {
+      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.FEATURE_GROUP_EXPECTATION_FEATURE_TYPE_INVALID,
+              java.util.logging.Level.FINE, featureTypesErrMsg.toString());
     }
   }
+
   public void detachExpectation(Featuregroup featuregroup, String name) throws FeaturestoreException {
     FeatureStoreExpectation featureStoreExpectation = getFeatureStoreExpectation(featuregroup.getFeaturestore(), name);
     Optional<FeatureGroupExpectation> e =
@@ -381,6 +427,19 @@ public class FeatureGroupValidationsController {
     return featureGroupCommitFacade.findByValidation(featureGroupValidation)
             .map(FeatureGroupCommit::getCommittedOn)
             .orElse(null);
+  }
+
+  private boolean getRuleTypeMappings(FeatureType featureType, String featureGroupFeatureType) {
+    // <FeatureType, FeatureGroupFeatureType>
+    final Map<FeatureType, List<String>> rulesTypeMappings =  new HashMap<>();
+    rulesTypeMappings.put(FeatureType.Quantitative,Arrays.asList("float", "double", "decimal", "numeric", "int",
+                                                                  "integer", "tinyint", "bigint"));
+    rulesTypeMappings.put(FeatureType.Categorical,Arrays.asList("string", "varchar", "char"));
+
+    return rulesTypeMappings.get(featureType)
+                             .stream()
+                             .anyMatch(numericType -> numericType.toLowerCase()
+                                .startsWith(featureGroupFeatureType.toLowerCase()));
   }
 
 }

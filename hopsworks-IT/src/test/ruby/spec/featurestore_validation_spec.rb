@@ -115,12 +115,13 @@ describe "On #{ENV['OS']}" do
           create_expectation(project.id, featurestore_id, "exp0")
           create_expectation(project.id, featurestore_id, "exp1")
           create_expectation(project.id, featurestore_id, "exp2")
+          create_expectation(project.id, featurestore_id, "exp_fail", feature="testfeature", custom_expectation=json_data_expectation_categorical)
         end
         it "should be able to get all expectations" do
           project = get_project
           featurestore_id = get_featurestore_id(project.id)
           get_feature_store_expectations(project.id, featurestore_id)
-          expect(json_body[:count]).to be == 3
+          expect(json_body[:count]).to be == 4
           expect_status(200)
         end
         it "should be able to create an expectation" do
@@ -156,6 +157,14 @@ describe "On #{ENV['OS']}" do
           fg_json = JSON.parse(json_result)
           attach_expectation(project.id, featurestore_id, fg_json["id"], json_data_expectation[:name])
           expect_status(200)
+          end
+        it "should fail to attach an expectation to a featuregroup with a feature type mismatch" do
+          project = get_project
+          featurestore_id = get_featurestore_id(project.id)
+          json_result, featuregroup_name = create_cached_featuregroup(project.id, featurestore_id)
+          fg_json = JSON.parse(json_result)
+          attach_expectation(project.id, featurestore_id, fg_json["id"], "exp_fail")
+          expect_status(400)
         end
         it "should be able to get an expectation that is attached to featuregroup" do
           project = get_project
