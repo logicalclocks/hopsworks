@@ -457,8 +457,11 @@ public class CloudManager {
     Instant now = Instant.now();
     return allHosts.stream()
             .filter(h -> !reportedWorkers.containsKey(h.getHostname()))
-            .filter(h -> h.getLastHeartbeat() != null)
             .filter(h -> {
+              if(h.getLastHeartbeat() == null){
+                //clean up node that never sent an heartbeat.
+                return true;
+              }
               Instant lastHeartbeat = Instant.ofEpochMilli(h.getLastHeartbeat());
               return ChronoUnit.SECONDS.between(lastHeartbeat, now) >= 90;
             })
