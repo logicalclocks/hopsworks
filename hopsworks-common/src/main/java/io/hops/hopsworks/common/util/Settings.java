@@ -2272,7 +2272,7 @@ public class Settings implements Serializable {
       conf.addResource(new Path(confFile.getAbsolutePath()));
       conf.addResource(new Path(hadoopConf.getAbsolutePath()));
       conf.addResource(new Path(hdfsConf.getAbsolutePath()));
-
+      
       addPathToConfig(conf, confFile);
       addPathToConfig(conf, hadoopConf);
       setDefaultConfValues(conf);

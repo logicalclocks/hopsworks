@@ -68,6 +68,7 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
 import org.apache.hadoop.yarn.api.records.NodeReport;
+import org.apache.hadoop.yarn.api.records.QueueStatistics;
 import org.apache.hadoop.yarn.client.api.YarnClient;
 import org.apache.hadoop.yarn.client.cli.RMAdminCLI;
 import org.apache.hadoop.yarn.exceptions.YarnException;
@@ -122,9 +123,36 @@ public class CloudManager {
       if (firstHeartbeat) {
         beginningOfHeartbeat = Instant.now();
       }
+      
+      QueueStatistics qs = getClusterStats();
+      long allocatedVcores = 0;
+      long pendingVcores = 0;
+      long allocatedMemoryMB = 0;
+      long pendingMemoryMB = 0;
+      long allocatedGPUs = 0;
+      long pendingGPUs = 0;
+      if(qs!=null){
+        allocatedVcores = qs.getAllocatedVCores();
+        pendingVcores = qs.getPendingVCores();
+        allocatedMemoryMB = qs.getAllocatedMemoryMB();
+        pendingMemoryMB = qs.getPendingMemoryMB();
+        if (qs.getAllocatedResources().getResources().length > 2) {
+          //we only have vcore, memory and gpus in our clusters.
+          //Yarn set vcores and memory at indexes 0 and 1 so index 2 will be gpus.
+          allocatedGPUs = qs.getAllocatedResources().getResourceInformation(2).getValue();
+        }
+
+        if (qs.getPendingResources().getResources().length > 2) {
+          //we only have vcore, memory and gpus in our clusters.
+          //Yarn set vcores and memory at indexes 0 and 1 so index 2 will be gpus.
+          pendingGPUs = qs.getPendingResources().getResourceInformation(2).getValue();
+        }
+      }
       //send heartbeat to hopsworks-cloud
       HeartbeatRequest request = new HeartbeatRequest(new ArrayList<>(toSend.getDecommissioned()),
-          new ArrayList<>(toSend.getDecommissioning()), commandsStatus, firstHeartbeat);
+          new ArrayList<>(toSend.getDecommissioning()), commandsStatus, firstHeartbeat, allocatedVcores, pendingVcores,
+          allocatedMemoryMB, pendingMemoryMB, allocatedGPUs, pendingGPUs
+      );
       
       toSend = new DecommissionStatus();
           
@@ -254,6 +282,21 @@ public class CloudManager {
     return count;
   }
 
+  private QueueStatistics getClusterStats() {
+    Configuration conf = settings.getConfiguration();
+    YarnClientWrapper yarnClientWrapper = null;
+    try {
+      yarnClientWrapper = yarnClientService.getYarnClientSuper(conf);
+      YarnClient yarnClient = yarnClientWrapper.getYarnClient();
+      return yarnClient.getQueueInfo("root").getQueueStatistics();
+    } catch (YarnException | IOException ex){
+      LOG.log(Level.WARNING, "Did not manage to get the statistics from the root queue", ex);
+      return null;
+    } finally {
+      yarnClientService.closeYarnClient(yarnClientWrapper);
+    }
+  }
+  
   private DecommissionStatus setAndGetDecommission(List<RemoveNodesCommand> commands,
       Map<String, CloudNode> workers) throws InterruptedException {
     Configuration conf = settings.getConfiguration();

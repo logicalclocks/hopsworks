@@ -14,18 +14,33 @@ public class HeartbeatRequest extends BaseMessage {
   private final List<CloudNode> decommissionedNodes;
   private final Map<Long, CommandStatus> commandsStatus;
   private final boolean firstHeartBeat;
+  private final long allocatedVcores;
+  private final long pendingVcores;
+  private final long allocatedMemoryMB;
+  private final long pendingMemoryMB; 
+  private final long allocatedGPUs;
+  private final long pendingGPUs;
   
   public HeartbeatRequest(List<CloudNode> decommissionedNodes, List<CloudNode> decommissioningNodes,
-      Map<Long, CommandStatus> commandsStatus){
-    this(decommissionedNodes, decommissioningNodes, commandsStatus, false);
+      Map<Long, CommandStatus> commandsStatus, long allocatedVcores, long pendingVcores,
+      long allocatedMemoryMB, long pendingMemoryMB, long allocatedGPUs, long pendingGPUs) {
+    this(decommissionedNodes, decommissioningNodes, commandsStatus, false, allocatedVcores, pendingVcores,
+        allocatedMemoryMB, pendingMemoryMB, allocatedGPUs, pendingGPUs);
   }
-  
+
   public HeartbeatRequest(List<CloudNode> decommissionedNodes, List<CloudNode> decommissioningNodes,
-          Map<Long, CommandStatus> commandsStatus, boolean firstHeartBeat){
+      Map<Long, CommandStatus> commandsStatus, boolean firstHeartBeat, long allocatedVcores, long pendingVcores,
+      long allocatedMemoryMB, long pendingMemoryMB, long allocatedGPUs, long pendingGPUs) {
     this.decommissionedNodes = decommissionedNodes;
     this.decommissioningNodes = decommissioningNodes;
     this.commandsStatus = commandsStatus;
     this.firstHeartBeat = firstHeartBeat;
+    this.allocatedVcores = allocatedVcores;
+    this.pendingVcores = pendingVcores;
+    this.allocatedMemoryMB = allocatedMemoryMB;
+    this.pendingMemoryMB = pendingMemoryMB;
+    this.allocatedGPUs = allocatedGPUs;
+    this.pendingGPUs = pendingGPUs;
   }
 
   public List<CloudNode> getDecommissioningNodes() {
@@ -41,4 +56,20 @@ public class HeartbeatRequest extends BaseMessage {
   }
   
   public boolean isFirstHeartBeat(){return firstHeartBeat;}
+
+  public long getAllocatedVcores() {
+    return allocatedVcores;
+  }
+
+  public long getPendingVcores() {
+    return pendingVcores;
+  }
+
+  public long getAllocatedMemoryMB() {
+    return allocatedMemoryMB;
+  }
+
+  public long getPendingMemoryMB() {
+    return pendingMemoryMB;
+  }
 }

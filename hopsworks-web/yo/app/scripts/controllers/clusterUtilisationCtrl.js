@@ -183,7 +183,7 @@ angular.module('hopsWorksApp')
                         if (nbRunningNodeManagers > nbNodeManagers * 2 / 3 && nbRunningRMs > nbRMs / 2) {
                           self.YarnBan = false;
                           self.YarnWarn = false;
-                        } else if (nbRunningNodeManagers > nbNodeManagers * 1 / 3 && nbRunningRMs >= 1) {
+                        } else if ( nbRunningRMs >= 1) {
                           self.YarnBan = false;
                           self.YarnWarn = true;
                         } else {

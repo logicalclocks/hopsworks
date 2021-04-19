@@ -126,16 +126,19 @@ public class HeartbeatDeserialization {
     commandsStatus.put(1L, new CommandStatus(CommandStatus.CLOUD_COMMAND_STATUS.NEW, "message"));
     commandsStatus.put(2L, new CommandStatus(CommandStatus.CLOUD_COMMAND_STATUS.ONGOING, "message1"));
 
-    return constructHeartbeatRequest(decommissioningNodes, decommissionedNodes, commandsStatus);
+    return constructHeartbeatRequest(decommissioningNodes, decommissionedNodes, commandsStatus, -1, -1, -1, -1, -1, -1);
   }
 
   private HeartbeatRequest constructEmptyHeartbeatRequest() {
-    return constructHeartbeatRequest(Collections.EMPTY_LIST, Collections.EMPTY_LIST, Collections.EMPTY_MAP);
+    return constructHeartbeatRequest(Collections.EMPTY_LIST, Collections.EMPTY_LIST, Collections.EMPTY_MAP, -1, -1, -1,
+        -1, -1, -1);
   }
 
   private HeartbeatRequest constructHeartbeatRequest(List<CloudNode> ingNodes, List<CloudNode> edNodes,
-          Map<Long, CommandStatus> cst) {
-    final HeartbeatRequest hr = new HeartbeatRequest(ingNodes, edNodes, cst);
+          Map<Long, CommandStatus> cst, long allocatedVcores, long pendingVcores,
+          long allocatedMemoryMB, long pendingMemoryMB, long allocatedGPUs, long pendingGPUs) {
+    final HeartbeatRequest hr = new HeartbeatRequest(ingNodes, edNodes, cst, allocatedVcores, pendingVcores,
+          allocatedMemoryMB, pendingMemoryMB, allocatedGPUs, pendingGPUs);
     hr.setVersion(Version.V010);
     return hr;
   }
