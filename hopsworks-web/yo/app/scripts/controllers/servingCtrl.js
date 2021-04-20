@@ -339,15 +339,17 @@ angular.module('hopsWorksApp')
                         self.projectKafkaTopics.push(self.createKafkaTopicDTO);
                         self.projectKafkaTopics.push(self.noneKafkaTopicDTO);
 
-                        for (var topic in success.data) {
-                            if (success.data[topic].schemaName === self.kafkaSchemaName) {
-                                self.projectKafkaTopics.push(success.data[topic]);
+                        var topics = success.data["items"]
+                        for (var idx in topics) {
+                            var topic = topics[idx]
+                            if (topic.schemaName === self.kafkaSchemaName) {
+                                self.projectKafkaTopics.push(topic);
                             }
                         }
 
                         if (typeof self.editServing.kafkaTopicDTO !== "undefined") {
-                            topic = self.projectKafkaTopics.filter(self.filterTopics);
-                            self.editServing.kafkaTopicDTO = topic[0];
+                            topics = self.projectKafkaTopics.filter(self.filterTopics);
+                            self.editServing.kafkaTopicDTO = topics[0];
                             self.updateKafkaDetails();
                         } else {
                             self.editServing.kafkaTopicDTO = self.projectKafkaTopics[0];
@@ -438,11 +440,10 @@ angular.module('hopsWorksApp')
                         self.sendingRequest = false;
                     },
                     function (error) {
-                        if (error.data !== undefined) {
-                            growl.error(error.data.errorMsg, {
-                                title: 'Error',
-                                ttl: 15000
-                            });
+                        if (typeof error.data.usrMsg !== 'undefined') {
+                            growl.error(error.data.usrMsg, {title: error.data.errorMsg, ttl: 10000});
+                        } else {
+                            growl.error("", {title: error.data.errorMsg, ttl: 10000});
                         }
                         self.sendingRequest = false;
                     });
@@ -491,17 +492,19 @@ angular.module('hopsWorksApp')
              * @param action the action
              */
             self.startOrStopServing = function (serving, action) {
+                self.ignorePoll = true;
                 if (action === 'START') {
-                    self.ignorePoll = true;
                     serving.status = 'Starting';
-                } else {
-                    self.ignorePoll;
+                } else if (serving.servingTool === 'DEFAULT') {
                     serving.status = 'Stopping';
                 }
 
                 ServingService.startOrStop(self.projectId, serving.id, action).then(
                     function (success) {
                         self.ignorePoll = false;
+                        if (action === 'STOP' && serving.servingTool !== 'DEFAULT') {
+                            serving.status = 'Stopping';
+                        }
                     },
                     function (error) {
                         self.ignorePoll = false;
@@ -595,7 +598,7 @@ angular.module('hopsWorksApp')
             };
 
             self.showDetailedInformation = function (serving) {
-                ModalService.viewServingInfo('lg', self.projectId, serving).then(
+                ModalService.viewServingInfo('lg', self.projectId, serving, self.isKubernetes).then(
                     function (success) {
                     }, function (error) {
                     });

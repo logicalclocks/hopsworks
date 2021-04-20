@@ -1388,7 +1388,7 @@ public class Settings implements Serializable {
 
   //Serving constants
   public static final String INFERENCE_SCHEMANAME = "inferenceschema";
-  public static final int INFERENCE_SCHEMAVERSION = 2;
+  public static final int INFERENCE_SCHEMAVERSION = 3;
   
   //Kafka constants
   public static final String PROJECT_COMPATIBILITY_SUBJECT = "projectcompatibility";

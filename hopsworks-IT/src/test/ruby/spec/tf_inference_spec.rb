@@ -149,19 +149,6 @@ describe "On #{ENV['OS']}" do
                 instances: test_data
             }
             expect_status(200)
-
-            put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
-             {id: @serving[:id],
-              name: @serving[:name],
-              artifactPath: @serving[:artifact_path],
-              modelVersion: @serving[:model_version],
-              batchingEnabled: false,
-              kafkaTopicDTO: {
-                 name: @topic[:topic_name]
-              },
-              modelServer: "TENSORFLOW_SERVING",
-              servingTool: "DEFAULT"
-             }
           end
 
           it "should receive an error if the input payload is malformed" do
