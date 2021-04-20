@@ -40,6 +40,7 @@ import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Date;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
@@ -113,6 +114,7 @@ public class LocalhostSkLearnServingController {
 
     serving.setCid(CID_STOPPED);
     serving.setLocalPort(-1);
+    serving.setDeployed(null);
     servingFacade.updateDbObject(serving, project);
 
     if (releaseLock) {
@@ -193,6 +195,7 @@ public class LocalhostSkLearnServingController {
       // Update the info in the db
       serving.setCid(pidContents);
       serving.setLocalPort(port);
+      serving.setDeployed(new Date());
       servingFacade.updateDbObject(serving, project);
     } catch (Exception ex) {
       // Startup process failed for some reason

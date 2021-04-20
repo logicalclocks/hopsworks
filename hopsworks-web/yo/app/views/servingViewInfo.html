@@ -114,6 +114,22 @@
                 </td>
                 <td> {{servingViewInfoCtrl.serving.kafkaTopicDTO.name}} </td>
             </tr>
+            <tr>
+                <td>
+                    Deployed <i class="fa fa-info-circle" tooltip-placement="auto left"
+                                        uib-tooltip="Timestamp when the serving was deployed."
+                                        style="margin-left: 10px"></i>
+                </td>
+                <td> {{servingViewInfoCtrl.serving.deployed | date:'medium'}} </td>
+            </tr>
+            <tr ng-if="servingViewInfoCtrl.isKubernetes">
+                <td>
+                    Revision <i class="fa fa-info-circle" tooltip-placement="auto left"
+                                uib-tooltip="Revision identifier of the last operation (i.e create, update, delete)."
+                                style="margin-left: 10px"></i>
+                </td>
+                <td> {{servingViewInfoCtrl.serving.revision}} </td>
+            </tr>
             </tbody>
         </table>
     </div>
