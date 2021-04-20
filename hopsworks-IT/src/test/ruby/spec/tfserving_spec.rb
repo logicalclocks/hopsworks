@@ -546,6 +546,8 @@ describe "On #{ENV['OS']}" do
       before :each do
         post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/#{@serving[:id]}?action=start"
         expect_status(200)
+        # Wait a bit for tfserving server to be in a running state
+        sleep(5)
       end
 
       it "should be able to kill a running serving instance" do

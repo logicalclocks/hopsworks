@@ -87,8 +87,14 @@ public class ServingFacade {
   @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
   public Serving updateDbObject(Serving newServing, Project project) throws ServingException {
     // Update request - execute this code within a transaction
-    Serving dbServing = findByProjectAndId(project, newServing.getId());
-
+    // Merge serving fields
+    Serving oldDbServing = findByProjectAndId(project, newServing.getId());
+    Serving dbServing = mergeServings(oldDbServing, newServing);
+    // Update entity in the db
+    return merge(dbServing);
+  }
+  
+  public Serving mergeServings(Serving dbServing, Serving newServing) throws ServingException {
     if (newServing.getName() != null && !newServing.getName().isEmpty()) {
       dbServing.setName(newServing.getName());
     }
@@ -101,9 +107,9 @@ public class ServingFacade {
     if (newServing.getVersion() != null) {
       dbServing.setVersion(newServing.getVersion());
     }
-
+  
     dbServing.setKafkaTopic(newServing.getKafkaTopic());
-
+  
     if (newServing.getCid() != null) {
       dbServing.setCid(newServing.getCid());
     }
@@ -113,20 +119,23 @@ public class ServingFacade {
     if (newServing.getLocalPort() != null) {
       dbServing.setLocalPort(newServing.getLocalPort());
     }
-
+  
     if (newServing.isBatchingEnabled() != null) {
       dbServing.setBatchingEnabled(newServing.isBatchingEnabled());
     }
-
+  
     if (newServing.getModelServer() != null && newServing.getModelServer() != dbServing.getModelServer()) {
       throw new ServingException(RESTCodes.ServingErrorCode.UPDATE_SERVING_TYPE_ERROR, Level.FINE);
     }
-
+  
     if (newServing.getServingTool() != null) {
       dbServing.setServingTool(newServing.getServingTool());
     }
-
-    return merge(dbServing);
+  
+    dbServing.setDeployed(newServing.getDeployed());
+    dbServing.setRevision(newServing.getRevision());
+    
+    return dbServing;
   }
 
   public Serving merge(Serving serving) {
@@ -193,7 +202,8 @@ public class ServingFacade {
       }
     }
 
-    throw new ServingException(RESTCodes.ServingErrorCode.LIFECYCLEERRORINT, Level.FINE);
+    throw new ServingException(RESTCodes.ServingErrorCode.LIFECYCLEERRORINT, Level.FINE, "Instance is busy. Please, " +
+      "try later");
   }
 
 

@@ -19,8 +19,8 @@
  */
 angular.module('hopsWorksApp')
     .controller('servingViewInfoCtrl', ['$uibModalInstance', '$scope', '$location', 'ProjectService',
-        'growl', 'projectId', 'serving',
-        function ($uibModalInstance, $scope, $location, ProjectService, growl, projectId, serving) {
+        'growl', 'projectId', 'serving', 'isKubernetes',
+        function ($uibModalInstance, $scope, $location, ProjectService, growl, projectId, serving, isKubernetes) {
 
             /**
              * Initialize controller state
@@ -28,6 +28,7 @@ angular.module('hopsWorksApp')
             var self = this;
             self.projectId = projectId;
             self.serving = serving;
+            self.isKubernetes = isKubernetes;
 
 
             /**
