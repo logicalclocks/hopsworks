@@ -57,8 +57,7 @@ public class KubeKfServingInferenceController {
     Project project = serving.getProject();
     JSONObject inferenceServiceStatus;
     try {
-      inferenceServiceStatus = kubeKFServingClientService.getInferenceServiceStatus(project,
-        String.valueOf(serving.getId()));
+      inferenceServiceStatus = kubeKFServingClientService.getInferenceServiceStatus(project, serving);
     } catch (KubernetesClientException e) {
       throw new InferenceException(RESTCodes.InferenceErrorCode.SERVING_INSTANCE_INTERNAL, Level.SEVERE, null,
         e.getMessage(), e);

@@ -227,13 +227,8 @@ public class KubeDeploymentServingController extends KubeToolServingController {
   }
   
   private void addHopsworksServingLabels(ObjectMeta metadata, Project project, Serving serving) {
-    String servingId = String.valueOf(serving.getId());
-    Integer projectId = project.getId();
-    
     Map<String, String> labels = metadata.getLabels();
-    Map<String, String> servingLabels = KubeServingUtils.getHopsworksServingLabels(projectId, servingId,
-      serving.getName(), KubeServingUtils.getModelName(serving), serving.getVersion(), serving.getModelServer(),
-      serving.getServingTool());
+    Map<String, String> servingLabels = KubeServingUtils.getHopsworksServingLabels(project, serving);
     
     if (labels == null) {
       metadata.setLabels(servingLabels);

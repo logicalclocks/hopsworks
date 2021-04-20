@@ -9,6 +9,7 @@ import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.KubernetesClientException;
 import io.fabric8.kubernetes.client.dsl.base.CustomResourceDefinitionContext;
 import io.hops.hopsworks.persistence.entity.project.Project;
+import io.hops.hopsworks.persistence.entity.serving.Serving;
 import org.json.JSONObject;
 
 import javax.ejb.Asynchronous;
@@ -57,25 +58,41 @@ public class KubeKfServingClientService {
       inferenceServiceMetadata.getName()));
   }
   
-  public JSONObject getInferenceServiceStatus(Project project, String servingId)
+  public JSONObject getInferenceServiceStatus(Project project, Serving serving)
+    throws KubernetesClientException {
+    JSONObject inferenceService = getInferenceService(project, serving);
+    return inferenceService != null && inferenceService.has("status")
+      ? inferenceService.getJSONObject(("status"))
+      : null;
+  }
+  
+  public JSONObject getInferenceServiceMetadata(Project project, Serving serving)
+    throws KubernetesClientException {
+    JSONObject inferenceService = getInferenceService(project, serving);
+    return inferenceService != null && inferenceService.has("metadata")
+      ? inferenceService.getJSONObject(("metadata"))
+      : null;
+  }
+  
+  private JSONObject getInferenceService(Project project, Serving serving)
     throws KubernetesClientException {
     CustomResourceDefinitionContext context = getCustomResourceDefinitionContext();
     String kubeProjectNs = kubeClientService.getKubeProjectName(project);
     Map<String, String> labels = new HashMap<>();
-    labels.put(KubeServingUtils.SERVING_ID_LABEL_NAME, servingId);
-
-    Map<String, Object> inferenceService =
-      handleClientOp((client) -> client.customResource(context).list(kubeProjectNs, labels));
+    labels.put(KubeServingUtils.SERVING_ID_LABEL_NAME, String.valueOf(serving.getId()));
     
-    JSONObject status = null;
-    if (inferenceService != null) {
-      ArrayList<Map<String, Object>> inferenceServices = (ArrayList<Map<String, Object>>) inferenceService.get("items");
+    Map<String, Object> response = handleClientOp((client) -> client.customResource(context).list(kubeProjectNs,
+      labels));
+    
+    JSONObject inferenceService = null;
+    if (response != null) {
+      ArrayList<Map<String, Object>> inferenceServices = (ArrayList<Map<String, Object>>) response.get("items");
       if (inferenceServices.size() > 0) {
-        status = new JSONObject(inferenceServices.get(0)).getJSONObject("status");
+        inferenceService = new JSONObject(inferenceServices.get(0));
       }
     }
     
-    return status;
+    return inferenceService;
   }
   
   private interface KubeRunner<T> {

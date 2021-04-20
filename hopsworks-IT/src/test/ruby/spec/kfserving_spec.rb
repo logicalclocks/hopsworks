@@ -395,11 +395,6 @@ describe "On #{ENV['OS']}" do
         before :all do
           with_valid_project
           with_kfserving_tensorflow(@project[:id], @project[:projectname], @user[:username])
-
-          post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/#{@serving[:id]}?action=start"
-          expect_status(200)
-
-          wait_for_type(@serving[:name])
         end
 
         after :all do
@@ -408,7 +403,7 @@ describe "On #{ENV['OS']}" do
 
         after :each do
           # Check if the process is
-          wait_for_type("testmodelchanged")
+          sleep(10)
         end
 
         it "should be able to update the name" do
@@ -447,13 +442,97 @@ describe "On #{ENV['OS']}" do
           expect_status(201)
         end
 
-        it "should create a zipped model artifact when updating a serving instance version" do
+        it "should be able to change the kafka topic it's writing to"  do
+          json_result, topic_name = add_topic(@project[:id], INFERENCE_SCHEMA_NAME, INFERENCE_SCHEMA_VERSION)
+
+          put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
+              {id: @serving[:id],
+               name: "testmodelchanged",
+               artifactPath: "/Projects/#{@project[:projectname]}/Models/mnist/",
+               modelVersion: 1,
+               batchingEnabled: false,
+               kafkaTopicDTO: {
+                   name: topic_name
+               },
+               modelServer: "TENSORFLOW_SERVING",
+               servingTool: "KFSERVING"
+              }
+          expect_status(201)
+
+          serving = Serving.find(@serving[:id])
+          new_topic = ProjectTopics.find_by(topic_name: topic_name, project_id: @project[:id])
+          expect(serving[:kafka_topic_id]).to be new_topic[:id]
+        end
+
+        it "should be able to stop writing to a kafka topic" do
+          put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
+              {id: @serving[:id],
+               name: "testmodelchanged",
+               artifactPath: "/Projects/#{@project[:projectname]}/Models/mnist/",
+               modelVersion: 1,
+               batchingEnabled: false,
+               kafkaTopicDTO: {
+                   name: "NONE"
+               },
+               modelServer: "TENSORFLOW_SERVING",
+               servingTool: "KFSERVING",
+               availableInstances: 1,
+               requestedInstances: 1
+              }
+          expect_status(201)
+
+          serving = Serving.find(@serving[:id])
+          expect(serving[:kafka_topic_id]).to be nil
+        end
+
+        it "should not be able to update the model server" do
+          put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
+              {id: @serving[:id],
+               name: "testmodelchanged",
+               artifactPath: "/Projects/#{@project[:projectname]}/Models/mnist/",
+               modelVersion: 1,
+               batchingEnabled: false,
+               kafkaTopicDTO: {
+                   name: "NONE"
+               },
+               modelServer: "FLASK",
+               servingTool: "DEFAULT",
+               availableInstances: 1,
+               requestedInstances: 1
+              }
+          expect_status(422)
+        end
+
+        it "should create a zipped model artifact when updating the model version" do
+          post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/#{@serving[:id]}?action=start"
+          expect_status(200)
+
+          wait_for_type(@serving[:name])
+
+          put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
+              {id: @serving[:id],
+               name: "testmodelchanged",
+               artifactPath: "/Projects/#{@project[:projectname]}/Models/mnist/",
+               modelVersion: 2,
+               batchingEnabled: false,
+               kafkaTopicDTO: {
+                   name: @topic[:topic_name]
+               },
+               modelServer: "TENSORFLOW_SERVING",
+               servingTool: "KFSERVING",
+               availableInstances: 1,
+               requestedInstances: 1
+              }
+          expect_status(201)
+
+          wait_for_type(@serving[:name])
+
           get_datasets_in_path(@project, "Models/mnist/2", query: "&type=DATASET")
           ds = json_body[:items].detect { |d| d[:attributes][:name] == "2.zip" }
           expect(ds).to be_present
         end
 
-        # TODO: Baching not supported yet
+        # TODO: Baching not supported yet. https://logicalclocks.atlassian.net/jira/software/c/projects/HOPSWORKS/issues/HOPSWORKS-2501
         #it "should be able to update the batching" do
         #  put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
         #      {id: @serving[:id],
@@ -470,7 +549,7 @@ describe "On #{ENV['OS']}" do
         #  expect_status(201)
         #end
 
-        it "should be able to update the path" do
+        it "should be able to update the artifact path" do
           mkdir("/Projects/#{@project[:projectname]}/Models/newMnist/", @user[:username],
                 "#{@project[:projectname]}__Models", 750)
 
@@ -499,68 +578,6 @@ describe "On #{ENV['OS']}" do
           get_datasets_in_path(@project, "Models/newMnist/2", query: "&type=DATASET")
           ds = json_body[:items].detect { |d| d[:attributes][:name] == "2.zip" }
           expect(ds).to be_present
-        end
-
-        it "should not be able to update the model server" do
-
-          put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
-              {id: @serving[:id],
-               name: "testmodelchanged",
-               artifactPath: "/Projects/#{@project[:projectname]}/Models/newMnist/",
-               modelVersion: 2,
-               batchingEnabled: false,
-               kafkaTopicDTO: {
-                   name: @topic[:topic_name]
-               },
-               modelServer: "FLASK",
-               servingTool: "DEFAULT",
-               availableInstances: 1,
-               requestedInstances: 1
-              }
-          expect_status(422)
-        end
-
-        it "should be able to change the kafka topic it's writing to"  do
-          json_result, topic_name = add_topic(@project[:id], INFERENCE_SCHEMA_NAME, INFERENCE_SCHEMA_VERSION)
-
-          put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
-              {id: @serving[:id],
-               name: "testmodelchanged",
-               artifactPath: "/Projects/#{@project[:projectname]}/Models/newMnist/",
-               modelVersion: 2,
-               batchingEnabled: false,
-               kafkaTopicDTO: {
-                   name: topic_name
-               },
-               modelServer: "TENSORFLOW_SERVING",
-               servingTool: "KFSERVING"
-              }
-          expect_status(201)
-
-          serving = Serving.find(@serving[:id])
-          new_topic = ProjectTopics.find_by(topic_name: topic_name, project_id: @project[:id])
-          expect(serving[:kafka_topic_id]).to be new_topic[:id]
-        end
-
-        it "should be able to stop writing to a kafka topic" do
-          put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
-              {id: @serving[:id],
-               name: "testmodelchanged",
-               artifactPath: "/Projects/#{@project[:projectname]}/Models/newMnist/",
-               modelVersion: 2,
-               batchingEnabled: false,
-               kafkaTopicDTO: {
-                   name: "NONE"
-               },
-               modelServer: "TENSORFLOW_SERVING",
-               servingTool: "KFSERVING",
-               availableInstances: 1,
-               requestedInstances: 1
-              }
-          expect_status(201)
-
-          serving = Serving.find(@serving[:id])
-          expect(serving[:kafka_topic_id]).to be nil
         end
       end
 

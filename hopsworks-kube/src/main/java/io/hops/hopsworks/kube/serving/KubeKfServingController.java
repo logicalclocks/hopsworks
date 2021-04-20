@@ -70,21 +70,17 @@ public class KubeKfServingController extends KubeToolServingController {
   
   @Override
   public void createInstance(Project project, Users user, Serving serving) throws ServingException {
-    try {
-      zipArtifact(project, user, serving);
-      ensureApiKeySecret(project, user);
-      kubeKfServingClientService.createOrReplaceInferenceService(project, buildInferenceService(project, serving));
-    } catch (ApiKeyException | UserException | DatasetException e) {
-      throw new ServingException(RESTCodes.ServingErrorCode.LIFECYCLEERRORINT, Level.SEVERE, null, e.getMessage(), e);
-    }
+    createOrReplace(project, user, serving, buildInferenceService(project, serving));
   }
   
   @Override
   public void updateInstance(Project project, Users user, Serving serving) throws ServingException {
     try {
-      DeploymentStatus deploymentStatus = getDeploymentStatus(project, serving);
-      if (deploymentStatus != null) {
-        createInstance(project, user, serving);
+      JSONObject metadata = kubeKfServingClientService.getInferenceServiceMetadata(project, serving);
+      if (metadata != null) {
+        // When updating an inference service, the current resource version must be indicated
+        String resourceVersion = metadata.getString("resourceVersion");
+        createOrReplace(project, user, serving, buildInferenceService(project, serving, resourceVersion));
       }
     } catch (KubernetesClientException e) {
       throw new ServingException(RESTCodes.ServingErrorCode.UPDATEERROR, Level.SEVERE, null, e.getMessage(), e);
@@ -94,8 +90,8 @@ public class KubeKfServingController extends KubeToolServingController {
   @Override
   public void deleteInstance(Project project, Serving serving) throws ServingException {
     try {
-      DeploymentStatus deploymentStatus = getDeploymentStatus(project, serving);
-      if (deploymentStatus != null) {
+      JSONObject metadata = kubeKfServingClientService.getInferenceServiceMetadata(project, serving);
+      if (metadata != null) {
         kubeKfServingClientService
           .deleteInferenceService(project, getInferenceServiceMetadataObject(project, serving));
       }
@@ -106,20 +102,32 @@ public class KubeKfServingController extends KubeToolServingController {
   
   @Override
   public KubeServingInternalStatus getInternalStatus(Project project, Serving serving) throws ServingException {
+    ServingStatusEnum status;
+    JSONObject inferenceService;
     DeploymentStatus deploymentStatus;
-    List<Pod> podList;
     Pair<String, Integer> ingressHostPort;
+    
     try {
+      inferenceService = kubeKfServingClientService.getInferenceServiceMetadata(project, serving);
       deploymentStatus = getDeploymentStatus(project, serving);
-      podList = getPodList(project, serving);
       ingressHostPort = kubeIstioClientService.getIstioIngressHostPort();
+      status = getServingStatus(project, serving, inferenceService, deploymentStatus);
     } catch (KubernetesClientException e) {
       throw new ServingException(RESTCodes.ServingErrorCode.STATUSERROR, Level.SEVERE, null, e.getMessage(), e);
     }
     
-    ServingStatusEnum status = getServingStatus(serving, deploymentStatus, podList);
-    Integer availableReplicas = deploymentStatus == null ? null : deploymentStatus.getAvailableReplicas();
-    
+    // If the deployment is not created but the inference service is, or
+    // the deployment is created but the nº of available replicas is still null,
+    // set available replicas to 0 because the inference service is already created in both cases.
+    Integer availableReplicas;
+    if (deploymentStatus == null) {
+      availableReplicas = inferenceService != null ? 0 : null;
+    } else {
+      availableReplicas = deploymentStatus.getAvailableReplicas() != null
+        ? deploymentStatus.getAvailableReplicas()
+        : 0;
+    }
+
     return new KubeServingInternalStatus() {
       {
         setServingStatus(status);
@@ -132,30 +140,58 @@ public class KubeKfServingController extends KubeToolServingController {
   public DeploymentStatus getDeploymentStatus(Project project, Serving serving) {
     Map<String, String> labelMap = new HashMap<>();
     labelMap.put(KubeServingUtils.SERVING_ID_LABEL_NAME, String.valueOf(serving.getId()));
+    labelMap.put(KubeServingUtils.REVISION_LABEL_NAME, String.valueOf(serving.getRevision()));
     return kubeClientService.getDeploymentStatus(project, labelMap);
   }
   
-  private ServingStatusEnum getServingStatus(Serving serving, DeploymentStatus deploymentStatus, List<Pod> podList) {
-    if (deploymentStatus != null) {
-      Integer availableReplicas = deploymentStatus.getAvailableReplicas();
-      if (availableReplicas == null ||
-        (!availableReplicas.equals(serving.getInstances()) && deploymentStatus.getObservedGeneration() == 1)) {
-        // if there is a mismatch between the requested number of instances and the number actually active
-        // in Kubernetes, and it's the 1st generation, the serving cluster is starting
-        return ServingStatusEnum.STARTING;
-      } else if (availableReplicas.equals(serving.getInstances())) {
-        return ServingStatusEnum.RUNNING;
-      } else {
-        return ServingStatusEnum.UPDATING;
-      }
-    } else {
-      if (podList.isEmpty()) {
-        return ServingStatusEnum.STOPPED;
-      } else {
-        // If there are still Pod running, we are still in the stopping phase.
-        return ServingStatusEnum.STOPPING;
-      }
+  private void createOrReplace(Project project, Users user, Serving serving,
+    JSONObject inferenceService) throws ServingException {
+    try {
+      zipArtifact(project, user, serving);
+      ensureApiKeySecret(project, user);
+      kubeKfServingClientService.createOrReplaceInferenceService(project, inferenceService);
+      // Save revision in Serving instance database
+      
+    } catch (ApiKeyException | UserException | DatasetException e) {
+      throw new ServingException(RESTCodes.ServingErrorCode.LIFECYCLEERRORINT, Level.SEVERE, null, e.getMessage(), e);
     }
+  }
+  
+  private ServingStatusEnum getServingStatus(Project project, Serving serving, JSONObject inferenceService,
+    DeploymentStatus deploymentStatus) {
+    
+    if (serving.getDeployed() == null) {
+      // If the serving has not been deployed
+      if (inferenceService == null) {
+        // but the inference service is not created, check running pods
+        List<Pod> podList = getPodList(project, serving);
+        return podList.isEmpty()
+          ? ServingStatusEnum.STOPPED
+          : ServingStatusEnum.STOPPING;
+      }
+      // Otherwise, the serving is still stopping
+      return ServingStatusEnum.STOPPING;
+    }
+    
+    // If the serving has been deployed
+    if (inferenceService == null) {
+      // but the inference service is not created, the serving is still starting
+      return ServingStatusEnum.STARTING;
+    }
+
+    // Otherwise, check for available replicas
+    Integer availableReplicas = deploymentStatus != null ? deploymentStatus.getAvailableReplicas() : null;
+    if (availableReplicas == null || !availableReplicas.equals(serving.getInstances())) {
+      // If can't get the available replicas or the nº of available replicas doesn't match, the serving is either
+      // starting or updating, depending on the inference service generation
+      String revision = inferenceService.getJSONObject("labels").getString(KubeServingUtils.REVISION_LABEL_NAME);
+      return inferenceService.getInt("generation") == 1 && revision.equals(serving.getRevision())
+        ? ServingStatusEnum.STARTING
+        : ServingStatusEnum.UPDATING;
+    }
+    
+    // If nº of available replicas matches, the serving is running
+    return ServingStatusEnum.RUNNING;
   }
   
   private void ensureApiKeySecret(Project project, Users user) throws ApiKeyException, UserException {
@@ -212,6 +248,7 @@ public class KubeKfServingController extends KubeToolServingController {
   private List<Pod> getPodList(Project project, Serving serving) {
     Map<String, String> labelMap = new HashMap<>();
     labelMap.put(KubeServingUtils.SERVING_ID_LABEL_NAME, String.valueOf(serving.getId()));
+    labelMap.put(KubeServingUtils.REVISION_LABEL_NAME, String.valueOf(serving.getRevision()));
     return kubeClientService.getPodList(project, labelMap);
   }
   
@@ -224,7 +261,9 @@ public class KubeKfServingController extends KubeToolServingController {
   }
   
   private JSONObject buildInferenceService(Project project, Serving serving) {
-    
+    return buildInferenceService(project, serving, null);
+  }
+  private JSONObject buildInferenceService(Project project, Serving serving, String resourceVersion) {
     String versionedArtifactPath = getVersionedArtifactPath(serving);
     
     JSONObject predictor;
@@ -236,25 +275,28 @@ public class KubeKfServingController extends KubeToolServingController {
         throw new NotSupportedException("Model server not supported for KFServing inference services");
     }
     
-    return new JSONObject() {
+    JSONObject metadata = getInferenceServingMetadataJSON(project, serving);
+    if (resourceVersion != null) {
+      metadata.put("resourceVersion", resourceVersion);
+    }
+    
+    JSONObject inferenceService = new JSONObject() {
       {
         put("apiVersion", String.format("%s/%s", KubeKfServingClientService.INFERENCESERVICE_GROUP,
           KubeKfServingClientService.INFERENCESERVICE_VERSION));
         put("kind", KubeKfServingClientService.INFERENCESERVICE_KIND);
-        put("metadata", getInferenceServingMetadataJSON(project, serving));
+        put("metadata", metadata);
         put("spec", predictor);
       }
     };
+        
+    return inferenceService;
   }
   
   private ObjectMeta getInferenceServiceMetadataObject(Project project, Serving serving) {
-    String servingId = String.valueOf(serving.getId());
-    
     return new ObjectMetaBuilder()
       .withName(serving.getName())
-      .withLabels(KubeServingUtils.getHopsworksServingLabels(project.getId(), servingId, serving.getName(),
-        KubeServingUtils.getModelName(serving), serving.getVersion(), serving.getModelServer(),
-          serving.getServingTool()))
+      .withLabels(KubeServingUtils.getHopsworksServingLabels(project, serving))
       .build();
   }
   

@@ -10,6 +10,7 @@ import io.hops.hopsworks.common.serving.ServingStatusEnum;
 import io.hops.hopsworks.common.serving.ServingWrapper;
 import io.hops.hopsworks.common.serving.util.KafkaServingHelper;
 import io.hops.hopsworks.common.serving.util.ServingCommands;
+import io.hops.hopsworks.kube.common.KubeServingUtils;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.KafkaException;
 import io.hops.hopsworks.exceptions.ProjectException;
@@ -110,23 +111,42 @@ public class KubeServingController implements ServingController {
     ServingStatusEnum status = internalStatus.getServingStatus();
     
     try {
-      if ((status == ServingStatusEnum.RUNNING ||
-          status == ServingStatusEnum.STARTING ||
-          // Maybe something went wrong during the first stopping, give the opportunity to the user to fix it.
-          status == ServingStatusEnum.STOPPING ||
-          status == ServingStatusEnum.UPDATING) && command == STOP) {
-
-        // Delete instance
-        toolServingController.deleteInstance(project, serving);
-
-      } else if (status == ServingStatusEnum.STOPPED && command == START) {
-
-        // Create instance
-        toolServingController.createInstance(project, user, serving);
-
-      } else {
-        throw new ServingException(RESTCodes.ServingErrorCode.LIFECYCLEERROR, Level.FINE,
-            "Instance is already: " + status.toString());
+      if (command == START) {
+        if (serving.getDeployed() == null || status == ServingStatusEnum.STOPPED
+          || status == ServingStatusEnum.STOPPING) {
+          // If the serving is not deployed, create a new instance
+          String newRevision = KubeServingUtils.getNewRevisionID();
+          serving.setRevision(newRevision);
+          toolServingController.createInstance(project, user, serving);
+          serving.setDeployed(new Date());
+          servingFacade.updateDbObject(serving, project);
+        } else {
+          // Otherwise, an instance has already been created
+          throw new ServingException(RESTCodes.ServingErrorCode.LIFECYCLEERROR, Level.FINE,
+            "Instance is already " + status.toString().toLowerCase());
+        }
+      }
+      
+      if (command == STOP) {
+        if (serving.getDeployed() != null) {
+          // If the serving is deployed, check the serving status
+          if (internalStatus.getAvailableReplicas() == null && status == ServingStatusEnum.STARTING) {
+            // If the serving is starting but we can't get the nº of available replicas, the inference service is not
+            // created yet. Therefore, we cannot stop it since it cannot be found.
+            throw new ServingException(RESTCodes.ServingErrorCode.LIFECYCLEERRORINT, Level.FINE,
+              "Instance is busy. Please, try later.");
+          }
+          if (status != ServingStatusEnum.STOPPED) {
+            // If serving is deployed and the inference service can be found, delete it
+            toolServingController.deleteInstance(project, serving);
+            serving.setDeployed(null);
+            servingFacade.updateDbObject(serving, project);
+          }
+        } else {
+          // Otherwise, the instance is already stopped or stopping
+          throw new ServingException(RESTCodes.ServingErrorCode.LIFECYCLEERROR, Level.FINE,
+            "Instance is already " + status.toString().toLowerCase());
+        }
       }
     } finally {
       servingFacade.releaseLock(project, servingId);
@@ -153,27 +173,49 @@ public class KubeServingController implements ServingController {
       Serving oldDbServing = servingFacade.acquireLock(project, serving.getId());
       KubeToolServingController toolServingController = getServingController(oldDbServing);
 
-      // Setup the Kafka topic for logging
-      kafkaServingHelper.setupKafkaServingTopic(project, newServing, serving, oldDbServing);
-
-      // Update the object in the database
-      Serving dbServing = servingFacade.updateDbObject(serving, project);
+      // Set deployed timestamp and revision to keep consistency with the stored serving entity
+      serving.setDeployed(oldDbServing.getDeployed());
+      serving.setRevision(oldDbServing.getRevision());
+      
+      // Merge serving fields
+      Serving dbServing = servingFacade.mergeServings(oldDbServing, serving);
 
       // If pods are currently running for this serving instance, submit a new deployment to update them
       try {
-        ServingStatusEnum status = toolServingController.getInternalStatus(project, serving).getServingStatus();
-        if (status == ServingStatusEnum.STARTING || status == ServingStatusEnum.RUNNING ||
-          status == ServingStatusEnum.UPDATING) {
-          // If serving tool doesn't change, update current instance.
-          // Otherwise, delete old instance and create the new one.
-          if (serving.getServingTool() == oldDbServing.getServingTool()) {
-            toolServingController.updateInstance(project, user, dbServing);
-          } else {
-            KubeToolServingController newToolServingController = getServingController(serving);
-            toolServingController.deleteInstance(project, oldDbServing);
-            newToolServingController.createInstance(project, user, serving);
+        KubeServingInternalStatus internalStatus = toolServingController.getInternalStatus(project, dbServing);
+        ServingStatusEnum status = internalStatus.getServingStatus();
+        if (dbServing.getDeployed() != null) {
+          // If the serving is deployed, check the serving status
+          if (internalStatus.getAvailableReplicas() == null && status == ServingStatusEnum.STARTING) {
+            // If the serving is starting but we can't get the nº of available replicas, the inference service is not
+            // created yet. Therefore, we cannot update it since it cannot be found.
+            throw new ServingException(RESTCodes.ServingErrorCode.UPDATEERROR, Level.FINE,
+              "Instance is busy. Please, try later.");
+          }
+          if (status == ServingStatusEnum.RUNNING) {
+            // Generate pseudo-random revision id
+            String newRevision = KubeServingUtils.getNewRevisionID();
+            dbServing.setRevision(newRevision);
+            // If serving name or serving tool change, delete old instance and create the new one
+            // Otherwise, update current instance
+            if (!dbServing.getName().equals(oldDbServing.getName()) ||
+              dbServing.getServingTool() != oldDbServing.getServingTool()) {
+              toolServingController.deleteInstance(project, oldDbServing);
+              getServingController(dbServing).createInstance(project, user, dbServing);
+            } else {
+              toolServingController.updateInstance(project, user, dbServing);
+            }
+          } else if (status == ServingStatusEnum.STARTING || status == ServingStatusEnum.UPDATING) {
+            // If the serving is already starting or updating, applying an additional update can overload the node with
+            // idle terminating pods.
+            throw new ServingException(RESTCodes.ServingErrorCode.UPDATEERROR, Level.FINE,
+              "Instance is already updating. Please, try later.");
           }
         }
+        // Setup the Kafka topic for logging
+        kafkaServingHelper.setupKafkaServingTopic(project, newServing, dbServing, oldDbServing);
+        // Update the object in the database
+        servingFacade.updateDbObject(dbServing, project);
       } finally {
         servingFacade.releaseLock(project, serving.getId());
       }
