@@ -50,6 +50,8 @@ public class ServingView implements Serializable {
   private Boolean batchingEnabled;
   private ModelServer modelServer;
   private ServingTool servingTool;
+  private Date deployed;
+  private String revision;
 
   // TODO(Fabio): use expansions here
   private String creator;
@@ -76,6 +78,8 @@ public class ServingView implements Serializable {
     this.batchingEnabled = servingWrapper.getServing().isBatchingEnabled();
     this.modelServer = servingWrapper.getServing().getModelServer();
     this.servingTool = servingWrapper.getServing().getServingTool();
+    this.deployed = servingWrapper.getServing().getDeployed();
+    this.revision = servingWrapper.getServing().getRevision();
     Users user = servingWrapper.getServing().getCreator();
     this.creator = user.getFname() + " " + user.getLname();
   }
@@ -199,6 +203,24 @@ public class ServingView implements Serializable {
   
   public void setServingTool(ServingTool servingTool) {
     this.servingTool = servingTool;
+  }
+  
+  @ApiModelProperty(value = "Date on which the Serving was deployed", readOnly = true)
+  public Date getDeployed() {
+    return deployed;
+  }
+  
+  public void setDeployed(Date deployed) {
+    this.deployed = deployed;
+  }
+  
+  @ApiModelProperty(value = "Revision identifier of the last deployment", readOnly = true)
+  public String getRevision() {
+    return revision;
+  }
+  
+  public void setRevision(String revision) {
+    this.revision = revision;
   }
   
   @JsonIgnore

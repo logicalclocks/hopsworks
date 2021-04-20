@@ -520,13 +520,11 @@ describe "On #{ENV['OS']}" do
           delete_all_sklearn_serving_instances(@project)
         end
 
-        before :each do
+        it "should be able to kill a running serving instance" do
           post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/#{@serving[:id]}?action=start"
           expect_status(200)
           wait_for_type("sklearn_flask_server.py")
-        end
 
-        it "should be able to kill a running serving instance" do
           post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/#{@serving[:id]}?action=stop"
           expect_status(200)
 
@@ -538,17 +536,9 @@ describe "On #{ENV['OS']}" do
 
         it "should fail to kill a non running instance" do
           post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/#{@serving[:id]}?action=stop"
-          expect_status(200)
-
-          # Wait a bit
-          sleep(30)
-
-          check_process_running("sklearn_flask_server.py")
-
-          post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/#{@serving[:id]}?action=stop"
           expect_status(400)
           expect_json(errorCode: 240003)
-          expect_json(usrMsg: "Instance is already: Stopped")
+          expect_json(usrMsg: "Instance is already stopped")
         end
 
         it "should mark the serving as not running if the process dies" do

@@ -124,6 +124,16 @@ public class Serving implements Serializable {
   @Enumerated(EnumType.ORDINAL)
   @Column(name = "serving_tool")
   private ServingTool servingTool = ServingTool.DEFAULT;
+  
+  @Basic(optional = true)
+  @Column(name = "deployed")
+  @Temporal(TemporalType.TIMESTAMP)
+  private Date deployed;
+  @Basic(optional = true)
+  @Size(min = 1, max = 10)
+  @Column(name = "revision")
+  private String revision;
+  
 
   public Serving() { }
 
@@ -279,7 +289,23 @@ public class Serving implements Serializable {
   public ServingTool getServingTool() { return servingTool; }
   
   public void setServingTool(ServingTool servingTool) { this.servingTool = servingTool; }
-
+  
+  public Date getDeployed() {
+    return deployed;
+  }
+  
+  public void setDeployed(Date deployed) {
+    this.deployed = deployed;
+  }
+  
+  public String getRevision() {
+    return revision;
+  }
+  
+  public void setRevision(String revision) {
+    this.revision = revision;
+  }
+  
   @Override
   public boolean equals(Object o) {
     if (this == o) return true;
@@ -305,6 +331,8 @@ public class Serving implements Serializable {
     if (cid != null ? !cid.equals(serving.cid) : serving.cid != null) return false;
     if (modelServer != null ? !modelServer.equals(serving.modelServer) : serving.modelServer != null) return false;
     if (servingTool != null ? !servingTool.equals(serving.servingTool) : serving.servingTool != null) return false;
+    if (deployed != null ? !deployed.equals(serving.deployed) : serving.deployed != null) return false;
+    if (revision != null ? !revision.equals(serving.revision) : serving.revision != null) return false;
     return localDir != null ? localDir.equals(serving.localDir) : serving.localDir == null;
   }
 
@@ -328,6 +356,8 @@ public class Serving implements Serializable {
     result = 31 * result + (localDir != null ? localDir.hashCode() : 0);
     result = 31 * result + (modelServer != null ? modelServer.hashCode() : 0);
     result = 31 * result + (servingTool != null ? servingTool.hashCode() : 0);
+    result = 31 * result + (deployed != null ? deployed.hashCode() : 0);
+    result = 31 * result + (revision != null ? revision.hashCode() : 0);
     return result;
   }
 }
