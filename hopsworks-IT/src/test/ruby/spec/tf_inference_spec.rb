@@ -137,7 +137,8 @@ describe "On #{ENV['OS']}" do
                  name: "NONE"
               },
               modelServer: "TENSORFLOW_SERVING",
-              servingTool: "DEFAULT"
+              servingTool: "DEFAULT",
+              requestedInstances: 1
              }
             expect_status(201)
 
@@ -149,6 +150,21 @@ describe "On #{ENV['OS']}" do
                 instances: test_data
             }
             expect_status(200)
+          end
+
+          it "should receive an error if the input payload is malformed" do
+            post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/inference/models/#{@serving[:name]}:predict", {
+                signature_name: 'predict_images',
+                somethingwrong: test_data
+            }
+            expect_json(errorCode: 250008)
+            expect_status(400)
+          end
+
+          it "should receive an error if the input payload is empty" do
+            post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/inference/models/#{@serving[:name]}:predict"
+            expect_json(errorCode: 250008)
+            expect_status(400)
           end
 
           it "should receive an error if the input payload is malformed" do

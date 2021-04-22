@@ -81,6 +81,9 @@ public class ServingUtil {
     if (servingWrapper.getServing().getVersion() == null) {
       throw new IllegalArgumentException("Serving version not provided");
     }
+    if (servingWrapper.getServing().getInstances() == null) {
+      throw new IllegalArgumentException("Number of instances not provided");
+    }
     // Check for duplicated entries
     checkDuplicates(project, servingWrapper);
     //Validate that serving name follows allowed regex as required by the InferenceResource to use it as a
