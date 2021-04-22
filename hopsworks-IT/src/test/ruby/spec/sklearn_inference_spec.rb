@@ -111,7 +111,6 @@ describe "On #{ENV['OS']}" do
                  },
                  modelServer: "FLASK",
                  servingTool: "DEFAULT",
-                 availableInstances: 1,
                  requestedInstances: 1
                 }
             expect_status(201)
@@ -123,6 +122,22 @@ describe "On #{ENV['OS']}" do
                 inputs: test_data
             }
             expect_status(200)
+          end
+
+          it "should receive an error if the input payload is malformed" do
+            # Wait for pod to start
+            post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/inference/models/#{@serving[:name]}:predict", {
+                somethingwrong: test_data
+            }
+            expect_json(errorCode: 250008)
+            expect_status(400)
+          end
+
+          it "should receive an error if the input payload is empty" do
+            # Wait for pod to start
+            post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/inference/models/#{@serving[:name]}:predict"
+            expect_json(errorCode: 250008)
+            expect_status(400)
           end
 
           it "should receive an error if the input payload is malformed" do

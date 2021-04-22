@@ -41,6 +41,12 @@ public final class KafkaConst {
     "\"type\": \"int\" }, {  \"name\": \"inferenceRequest\",  \"type\": \"string\" }, {  " +
     "\"name\": \"inferenceResponse\",  \"type\": \"string\" }, { \"name\": \"modelServer\", \"type\": \"string\" }, {" +
     " \"name\": \"servingTool\", \"type\": \"string\" } ], \"name\": \"inferencelog\",  \"type\": \"record\" }";
+  public static final String INFERENCE_SCHEMA_VERSION_4 = "{\"fields\": [{\"name\": \"servingId\", \"type\": " +
+    "\"int\"}, " + "{ \"name\": \"modelName\", \"type\": \"string\" }, {  \"name\": \"modelVersion\",  \"type\": " +
+    "\"int\" }, " + "{  \"name\": \"requestTimestamp\",  \"type\": \"long\" }, {  \"name\": \"responseHttpCode\",  " +
+    "\"type\": \"int\" }, {  \"name\": \"inferenceId\",  \"type\": \"string\" }, {  " + "\"name\": \"messageType\",  " +
+    "\"type\": \"string\" }, { \"name\": \"payload\", \"type\": \"string\" } ]," + "  \"name\": \"inferencelog\",  " +
+    "\"type\": \"record\" }";
   
   public static String buildPrincipalName(String projectName, String userName) {
     return projectName + PROJECT_DELIMITER + userName;

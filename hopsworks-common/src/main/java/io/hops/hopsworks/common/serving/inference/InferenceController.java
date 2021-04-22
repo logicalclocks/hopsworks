@@ -23,7 +23,9 @@ import io.hops.hopsworks.common.serving.inference.logger.InferenceLogger;
 import io.hops.hopsworks.exceptions.InferenceException;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.serving.Serving;
+import io.hops.hopsworks.persistence.entity.serving.ServingTool;
 import io.hops.hopsworks.restutils.RESTCodes;
+import org.json.JSONObject;
 
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
@@ -109,7 +111,19 @@ public class InferenceController {
       throw new InferenceException(RESTCodes.InferenceErrorCode.SERVING_INSTANCE_BAD_REQUEST, Level.FINE,
           inferenceResult.getR());
     }
-
+  
+    // There is a bug in KFServing when using the inference logging that always returns 200 OK even when the request
+    // is malformed. The following check is a workaround to detect this corner case.
+    // https://github.com/kubeflow/kfserving/issues/1530
+    if (serving.getServingTool() == ServingTool.KFSERVING && serving.getKafkaTopic() != null) {
+      JSONObject response = new JSONObject(inferenceResult.getR());
+      if (response.has("error")){
+        String errorStatusCode = "400";
+        throw new InferenceException(RESTCodes.InferenceErrorCode.SERVING_INSTANCE_BAD_REQUEST, Level.FINE,
+          "Request error: " + errorStatusCode + " - " + inferenceResult.getR());
+      }
+    }
+    
     return inferenceResult.getR();
   }
 

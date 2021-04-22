@@ -40,6 +40,7 @@ import io.fabric8.kubernetes.api.model.apps.DeploymentSpecBuilder;
 import io.hops.hopsworks.common.util.ProjectUtils;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.kube.common.KubeClientService;
+import io.hops.hopsworks.kube.common.KubeServingUtils;
 import io.hops.hopsworks.kube.project.KubeProjectConfigMaps;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.serving.Serving;
@@ -247,12 +248,19 @@ public class KubeTfServingUtils {
         .build();
   }
   
-  public JSONObject buildInferenceServicePredictor(String artifactPath, Integer minReplicas) {
+  public JSONObject buildInferenceServicePredictor(String artifactPath, Integer minReplicas, Boolean logger) {
     return new JSONObject() {
       {
         put("predictor", new JSONObject() {
           {
             put("minReplicas", minReplicas);
+            put("logger", !logger ? null : new JSONObject() {
+              {
+                put("mode", KubeServingUtils.INFERENCE_LOGGER_MODE);
+                put("url", String.format("http://%s:%s", KubeServingUtils.INFERENCE_LOGGER_HOST,
+                  KubeServingUtils.INFERENCE_LOGGER_PORT));
+              }
+            });
             put("tensorflow", new JSONObject() {
               {
                 put("storageUri", artifactPath);

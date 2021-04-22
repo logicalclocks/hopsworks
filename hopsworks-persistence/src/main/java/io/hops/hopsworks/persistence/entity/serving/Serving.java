@@ -130,7 +130,7 @@ public class Serving implements Serializable {
   @Temporal(TemporalType.TIMESTAMP)
   private Date deployed;
   @Basic(optional = true)
-  @Size(min = 1, max = 10)
+  @Size(min = 1, max = 8)
   @Column(name = "revision")
   private String revision;
   

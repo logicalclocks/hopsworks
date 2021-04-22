@@ -167,7 +167,6 @@ public class KubeDeploymentServingController extends KubeToolServingController {
     
     // Add service.hops.works labels
     addHopsworksServingLabels(deployment.getMetadata(), project, serving);
-    // TODO: Add labels to pods included in the deployment
     addHopsworksServingLabels(deployment.getSpec().getTemplate().getMetadata(), project, serving);
     
     return deployment;

@@ -26,6 +26,7 @@ describe "On #{ENV['OS']}" do
       let(:schema_v1) { "{\"type\" : \"record\",\n\"name\" : \"userInfo\",\n\"namespace\" : \"my.example\",\n\"fields\" : [{\"name\" : \"name\", \"type\" : \"string\", \"default\" : \"\"}]}" }
       let(:schema_v2) { "{\"type\" : \"record\",\n\"name\" : \"userInfo\",\n\"namespace\" : \"my.example\",\n\"fields\" : [{\"name\" : \"name\", \"type\" : \"string\", \"default\" : \"\"},\n{\"name\" : \"age\", \"type\" : \"int\" , \"default\" : -1}]} " }
       let(:schema_v3) { "{\"type\" : \"record\",\n\"name\" : \"userInfo\",\n\"namespace\" : \"my.example\",\n\"fields\" : [{\"name\" : \"name\", \"type\" : \"string\", \"default\" : \"\"},\n{\"name\" : \"age\", \"type\" : \"int\" , \"default\" : -1},\n{\"name\" : \"email\", \"type\" : \"string\" , \"default\" : \"\"}]} " }
+      let(:schema_v4) { "{\"type\" : \"record\",\n\"name\" : \"userInfo\",\n\"namespace\" : \"my.example\",\n\"fields\" : [{\"name\" : \"name\", \"type\" : \"string\", \"default\" : \"\"},\n{\"name\" : \"age\", \"type\" : \"int\" , \"default\" : -1},\n{\"name\" : \"email\", \"type\" : \"string\" , \"default\" : \"\"}, \n{\"name\" : \"address\", \"type\" : \"string\" , \"default\" : \"\"}]} " }
       let(:invalid_schema) {"{\"type\" : \"invalid\",\"name\" : \"test\",\"fields\" : [ {\"name\" : \"name\",\"type\" : \"string\"}]}"}
       let(:incompatible_schema) {"{\"type\" : \"record\",\"name\" : \"userInfo\",\"namespace\" : \"my.example\",\"fields\" : [{\"name\" : \"name\", \"type\" : \"string\", \"default\" : \"\"},{\"name\" : \"age\", \"type\" : \"int\"}]}"}
 
@@ -68,7 +69,7 @@ describe "On #{ENV['OS']}" do
           get_subject_versions(project, "inferenceschema")
           expect_status(200)
           res = response.body[1...-1].delete(' ').split(",")
-          expect(res).to eq(["1", "2", "3"])
+          expect(res).to eq(["1", "2", "3", "4"])
         end
 
         it 'deletes previously registered subject' do
@@ -76,16 +77,17 @@ describe "On #{ENV['OS']}" do
           register_new_schema(project, id, schema_v1)
           register_new_schema(project, id, schema_v2)
           register_new_schema(project, id, schema_v3)
+          register_new_schema(project, id, schema_v4)
           # check if the schemas were registered correctly
           get_subject_versions(project, "inferenceschema")
           expect_status(200)
           res = response.body[1...-1].delete(' ').split(",")
-          expect(res).to eq(["1", "2", "3"])
+          expect(res).to eq(["1", "2", "3", "4"])
           # remove subject
           delete_subject(project, id)
           expect_status(200)
           res = response.body[1...-1].delete(' ').split(",")
-          expect(res).to eq(["1", "2", "3"])
+          expect(res).to eq(["1", "2", "3", "4"])
           # try to remove again and fail
           delete_subject(project, id)
           expect_status(404)
@@ -103,7 +105,7 @@ describe "On #{ENV['OS']}" do
           get_subject_details(project, "inferenceschema", "latest")
           expect_status(200)
           expect_json(subject: "inferenceschema")
-          expect_json(version: 3)
+          expect_json(version: 4)
         end
 
         it 'fails to get details of a random subject' do
@@ -185,7 +187,15 @@ describe "On #{ENV['OS']}" do
           subject = "subject_#{short_random_id}"
           register_new_schema(project, subject, schema_v1)
           register_new_schema(project, subject, schema_v2)
+          register_new_schema(project, subject, schema_v3)
+          register_new_schema(project, subject, schema_v4)
           delete_subject_version(project, subject, "latest")
+          expect_status(200)
+          expect(response.body).to eq("4")
+          delete_subject_version(project, subject, 3)
+          expect_status(200)
+          expect(response.body).to eq("3")
+          delete_subject_version(project, subject, 2)
           expect_status(200)
           expect(response.body).to eq("2")
           delete_subject_version(project, subject, 1)
@@ -308,6 +318,8 @@ describe "On #{ENV['OS']}" do
 	        subject = "subject_#{short_random_id}"
           register_new_schema(project, subject, schema_v1)
           register_new_schema(project, subject, schema_v2)
+          register_new_schema(project, subject, schema_v3)
+          register_new_schema(project, subject, schema_v4)
           json, topic_name = add_topic(project.id, subject, 1)
           get_topic_subject_details(project, topic_name)
           expect_json(subject: subject)
@@ -316,6 +328,14 @@ describe "On #{ENV['OS']}" do
           get_topic_subject_details(project, topic_name)
           expect_json(subject: subject)
           expect_json(version: 2)
+          update_topic_subject_version(project, topic_name, subject, 3)
+          get_topic_subject_details(project, topic_name)
+          expect_json(subject: subject)
+          expect_json(version: 3)
+          update_topic_subject_version(project, topic_name, subject, 4)
+          get_topic_subject_details(project, topic_name)
+          expect_json(subject: subject)
+          expect_json(version: 4)
 	      end
       end
     end

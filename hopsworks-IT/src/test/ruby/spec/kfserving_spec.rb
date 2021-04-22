@@ -46,7 +46,6 @@ describe "On #{ENV['OS']}" do
                  batchingEnabled: false,
                  modelServer: "TENSORFLOW_SERVING",
                  servingTool: "KFSERVING",
-                 availableInstances: 1,
                  requestedInstances: 1
                 }
             expect_json(errorCode: 200003)
@@ -70,7 +69,6 @@ describe "On #{ENV['OS']}" do
                  batchingEnabled: false,
                  modelServer: "TENSORFLOW_SERVING",
                  servingTool: "KFSERVING",
-                 availableInstances: 1,
                  requestedInstances: 1
                 }
             expect_status(201)
@@ -78,20 +76,19 @@ describe "On #{ENV['OS']}" do
 
           it "should create the serving without Kafka topic" do
             put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
-                {name: "testmodel",
+                {name: "testmodel2",
                  artifactPath: "/Projects/#{@project[:projectname]}/Models/mnist/",
                  modelVersion: 1,
                  batchingEnabled: false,
                  modelServer: "TENSORFLOW_SERVING",
                  servingTool: "KFSERVING",
-                 availableInstances: 1,
                  requestedInstances: 1
                 }
             expect_status(201)
 
             serving_list = get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/"
             kafka_topic = JSON.parse(serving_list).select { |serving| serving['name'] ==
-            "testmodel"}[0]['kafkaTopicDTO']
+            "testmodel2"}[0]['kafkaTopicDTO']
             expect(kafka_topic).to be nil
           end
 
@@ -104,7 +101,6 @@ describe "On #{ENV['OS']}" do
           #       batchingEnabled: true,
           #       modelServer: "TENSORFLOW_SERVING",
           #       servingTool: "KFSERVING",
-          #       availableInstances: 1,
           #       requestedInstances: 1
           #      }
           #  expect_status(201)
@@ -112,7 +108,7 @@ describe "On #{ENV['OS']}" do
 
           it "should create the serving with a new Kafka topic" do
             put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
-                {name: "testmodel1",
+                {name: "testmodel3",
                  artifactPath: "/Projects/#{@project[:projectname]}/Models/mnist/",
                  modelVersion: 1,
                  batchingEnabled: false,
@@ -123,7 +119,6 @@ describe "On #{ENV['OS']}" do
                  },
                  modelServer: "TENSORFLOW_SERVING",
                  servingTool: "KFSERVING",
-                 availableInstances: 1,
                  requestedInstances: 1
                 }
             expect_status(201)
@@ -136,7 +131,7 @@ describe "On #{ENV['OS']}" do
             kafka_topic_list = get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/kafka/topics"
 
             kafka_topic_name = JSON.parse(serving_list).select { |serving| serving['name'] ==
-            "testmodel1"}[0]['kafkaTopicDTO']['name']
+            "testmodel3"}[0]['kafkaTopicDTO']['name']
             kafka_topic = JSON.parse(kafka_topic_list)['items'].select { |topic| topic['name'] == kafka_topic_name}
             expect(kafka_topic.size).to eq 1
             expect(kafka_topic[0]['schemaName']).to eql INFERENCE_SCHEMA_NAME
@@ -148,7 +143,7 @@ describe "On #{ENV['OS']}" do
 
             # Create serving
             put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
-                {name: "testmodel2",
+                {name: "testmodel4",
                  artifactPath: "/Projects/#{@project[:projectname]}/Models/mnist/",
                  modelVersion: 1,
                  batchingEnabled: false,
@@ -157,7 +152,6 @@ describe "On #{ENV['OS']}" do
                  },
                  modelServer: "TENSORFLOW_SERVING",
                  servingTool: "KFSERVING",
-                 availableInstances: 1,
                  requestedInstances: 1
                 }
             expect_status(201)
@@ -168,7 +162,7 @@ describe "On #{ENV['OS']}" do
             # Check that the serving is actually using that topic
             serving_list = get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/"
             kafka_topic_name = JSON.parse(serving_list).select { |serving| serving['name'] ==
-            "testmodel2"}[0]['kafkaTopicDTO']['name']
+            "testmodel4"}[0]['kafkaTopicDTO']['name']
             expect(kafka_topic_name).to eql topic_name
           end
 
@@ -178,7 +172,7 @@ describe "On #{ENV['OS']}" do
 
             # Create serving
             put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
-                {name: "testmodel3",
+                {name: "testmodel5",
                  artifactPath: "/Projects/#{@project[:projectname]}/Models/mnist/",
                  modelVersion: 1,
                  batchingEnabled: false,
@@ -187,7 +181,6 @@ describe "On #{ENV['OS']}" do
                  },
                  modelServer: "TENSORFLOW_SERVING",
                  servingTool: "KFSERVING",
-                 availableInstances: 1,
                  requestedInstances: 1
                 }
             expect_status(201)
@@ -198,7 +191,7 @@ describe "On #{ENV['OS']}" do
             # Check that the serving is actually using that topic
             serving_list = get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/"
             kafka_topic_name = JSON.parse(serving_list).select { |serving| serving['name'] ==
-                "testmodel3"}[0]['kafkaTopicDTO']['name']
+                "testmodel5"}[0]['kafkaTopicDTO']['name']
             expect(kafka_topic_name).to eql topic_name
           end
 
@@ -211,7 +204,7 @@ describe "On #{ENV['OS']}" do
 
             # Create serving
             put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
-                {name: "testmodel5",
+                {name: "testmodel6",
                  artifactPath: "/Projects/#{@project[:projectname]}/Models/mnist/",
                  modelVersion: 1,
                  batchingEnabled: false,
@@ -220,7 +213,6 @@ describe "On #{ENV['OS']}" do
                  },
                  modelServer: "TENSORFLOW_SERVING",
                  servingTool: "KFSERVING",
-                 availableInstances: 1,
                  requestedInstances: 1
                 }
             expect_status(400)
@@ -228,18 +220,29 @@ describe "On #{ENV['OS']}" do
 
           it "should fail to create a serving with the same name" do
             put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
-                {name: "testmodel1",
+                {name: "testmodel7",
                  artifactPath: "/Projects/#{@project[:projectname]}/Models/mnist/",
                  modelVersion: 1,
                  batchingEnabled: false,
                  kafkaTopicDTO: {
-                     name: "CREATE",
-                     numOfPartitions: 1,
-                     numOfReplicas: 1
+                     name: "NONE"
                  },
                  modelServer: "TENSORFLOW_SERVING",
                  servingTool: "KFSERVING",
-                 availableInstances: 1,
+                 requestedInstances: 1
+                }
+            expect_status(201)
+
+            put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
+                {name: "testmodel7",
+                 artifactPath: "/Projects/#{@project[:projectname]}/Models/mnist/",
+                 modelVersion: 1,
+                 batchingEnabled: false,
+                 kafkaTopicDTO: {
+                     name: "NONE"
+                 },
+                 modelServer: "TENSORFLOW_SERVING",
+                 servingTool: "KFSERVING",
                  requestedInstances: 1
                 }
             expect_json(errorMsg: "An entry with the same name already exists in this project")
@@ -248,12 +251,13 @@ describe "On #{ENV['OS']}" do
 
           it "should fail to create a serving with a non-existent path" do
             put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
-                {name: "testmodel5",
+                {name: "testmodel8",
                  artifactPath: "/Projects/#{@project[:projectname]}/DOESNTEXISTS",
                  batchingEnabled: false,
                  modelVersion: 1,
                  modelServer: "TENSORFLOW_SERVING",
-                 servingTool: "KFSERVING"
+                 servingTool: "KFSERVING",
+                 requestedInstances: 1
                 }
             expect_json(usrMsg: "The model path provided does not exists")
             expect_status(422)
@@ -270,44 +274,9 @@ describe "On #{ENV['OS']}" do
                  },
                  modelServer: "TENSORFLOW_SERVING",
                  servingTool: "KFSERVING",
-                 availableInstances: 1,
                  requestedInstances: 1
                 }
             expect_json(usrMsg: "Serving name must consist of lower case alphanumeric characters, '-' or '.', and start and end with an alphanumeric character")
-            expect_status(422)
-          end
-
-          it "should fail to create a serving without model server" do
-            put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
-                {name: "testmodel7",
-                 artifactPath: "/Projects/#{@project[:projectname]}/Models/mnist/",
-                 modelVersion: 1,
-                 batchingEnabled: false,
-                 kafkaTopicDTO: {
-                     name: "NONE"
-                 },
-                 servingTool: "KFSERVING",
-                 availableInstances: 1,
-                 requestedInstances: 1
-                }
-            expect_json(usrMsg: "Model server not provided or unsupported")
-            expect_status(422)
-          end
-
-          it "should fail to create a serving without serving tool" do
-            put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
-                {name: "testmodel8",
-                 artifactPath: "/Projects/#{@project[:projectname]}/Models/mnist/",
-                 modelVersion: 1,
-                 batchingEnabled: false,
-                 kafkaTopicDTO: {
-                     name: "NONE"
-                 },
-                 modelServer: "TENSORFLOW_SERVING",
-                 availableInstances: 1,
-                 requestedInstances: 1
-                }
-            expect_json(usrMsg: "Serving tool not provided or unsupported")
             expect_status(422)
           end
 
@@ -322,7 +291,6 @@ describe "On #{ENV['OS']}" do
                  },
                  modelServer: "TENSORFLOW_SERVING",
                  servingTool: "KFSERVING",
-                 availableInstances: 1,
                  requestedInstances: 1
                 }
             expect_json(usrMsg: "Request batching is not supported in KFServing deployments")
@@ -333,13 +301,12 @@ describe "On #{ENV['OS']}" do
             rm("/Projects/#{@project[:projectname]}/Models/mnist/1/saved_model.pb")
 
             put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
-                {name: "testmodel6",
+                {name: "testmodel10",
                  artifactPath: "/Projects/#{@project[:projectname]}/Models/mnist/",
                  batchingEnabled: false,
                  modelVersion: 1,
                  modelServer: "TENSORFLOW_SERVING",
                  servingTool: "KFSERVING",
-                 availableInstances: 1,
                  requestedInstances: 1
                 }
             expect_json(usrMsg: "The model path does not respect the TensorFlow standard")
@@ -418,7 +385,6 @@ describe "On #{ENV['OS']}" do
                },
                modelServer: "TENSORFLOW_SERVING",
                servingTool: "KFSERVING",
-               availableInstances: 1,
                requestedInstances: 1
               }
           expect_status(201)
@@ -436,7 +402,6 @@ describe "On #{ENV['OS']}" do
                },
                modelServer: "TENSORFLOW_SERVING",
                servingTool: "KFSERVING",
-               availableInstances: 1,
                requestedInstances: 1
               }
           expect_status(201)
@@ -455,7 +420,8 @@ describe "On #{ENV['OS']}" do
                    name: topic_name
                },
                modelServer: "TENSORFLOW_SERVING",
-               servingTool: "KFSERVING"
+               servingTool: "KFSERVING",
+               requestedInstances: 1
               }
           expect_status(201)
 
@@ -476,7 +442,6 @@ describe "On #{ENV['OS']}" do
                },
                modelServer: "TENSORFLOW_SERVING",
                servingTool: "KFSERVING",
-               availableInstances: 1,
                requestedInstances: 1
               }
           expect_status(201)
@@ -497,7 +462,6 @@ describe "On #{ENV['OS']}" do
                },
                modelServer: "FLASK",
                servingTool: "DEFAULT",
-               availableInstances: 1,
                requestedInstances: 1
               }
           expect_status(422)
@@ -520,7 +484,6 @@ describe "On #{ENV['OS']}" do
                },
                modelServer: "TENSORFLOW_SERVING",
                servingTool: "KFSERVING",
-               availableInstances: 1,
                requestedInstances: 1
               }
           expect_status(201)
@@ -568,7 +531,6 @@ describe "On #{ENV['OS']}" do
                },
                modelServer: "TENSORFLOW_SERVING",
                servingTool: "KFSERVING",
-               availableInstances: 1,
                requestedInstances: 1
               }
           expect_status(201)
@@ -656,7 +618,8 @@ describe "On #{ENV['OS']}" do
                  artifactPath: "/Projects/#{@project[:projectname]}/Models/IrisFlowerClassifier/1/#{SKLEARN_SCRIPT_FILE_NAME}",
                  modelVersion: 1,
                  modelServer: "FLASK",
-                 servingTool: "KFSERVING"
+                 servingTool: "KFSERVING",
+                 requestedInstances: 1
                 }
             expect_json(errorCode: 200003)
             expect_status(401)
@@ -696,7 +659,6 @@ describe "On #{ENV['OS']}" do
                  modelVersion: 1,
                  modelServer: "FLASK",
                  servingTool: "KFSERVING",
-                 availableInstances: 1,
                  requestedInstances: 1
                 }
             expect_json(usrMsg: "KFServing not supported for SKLearn models")

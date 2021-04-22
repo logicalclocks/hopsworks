@@ -84,8 +84,26 @@ public class KubeServingController implements ServingController {
   @Override
   public void deleteServing(Project project, Integer id) throws ServingException {
     Serving serving = servingFacade.acquireLock(project, id);
-
     KubeToolServingController toolServingController = getServingController(serving);
+    
+    try {
+      if (serving.getDeployed() != null) {
+        // If the serving is deployed, check status before deleting it
+        KubeServingInternalStatus internalStatus = toolServingController.getInternalStatus(project, serving);
+        ServingStatusEnum status = internalStatus.getServingStatus();
+    
+        if (internalStatus.getAvailableReplicas() == null && status == ServingStatusEnum.STARTING) {
+          // If the serving is starting but we can't get the nº of available replicas, the inference service is not
+          // created yet. Therefore, we cannot delete it since it is still not materialized in the api server.
+          throw new ServingException(RESTCodes.ServingErrorCode.DELETIONERROR, Level.FINE,
+            "Instance is busy. Please, try later.");
+        }
+      }
+    } finally {
+      servingFacade.releaseLock(project, id);
+    }
+    
+    // Otherwise, delete the instance
     toolServingController.deleteInstance(project, serving);
 
     // If the call to Kubernetes succeeded, then Kubernetes is taking care of terminating the pods.
@@ -154,10 +172,10 @@ public class KubeServingController implements ServingController {
   }
 
   @Override
-  public void createOrUpdate(Project project, Users user, ServingWrapper newServing)
+  public void createOrUpdate(Project project, Users user, ServingWrapper servingWrapper)
     throws KafkaException, UserException, ProjectException, ServingException, ExecutionException,
     InterruptedException {
-    Serving serving = newServing.getServing();
+    Serving serving = servingWrapper.getServing();
 
     if (serving.getId() == null) {
       // Create request
@@ -166,25 +184,28 @@ public class KubeServingController implements ServingController {
       serving.setProject(project);
 
       // Setup the Kafka topic for logging
-      kafkaServingHelper.setupKafkaServingTopic(project, newServing, serving, null);
+      kafkaServingHelper.setupKafkaServingTopic(project, servingWrapper, serving, null);
 
       servingFacade.merge(serving);
     } else {
-      Serving oldDbServing = servingFacade.acquireLock(project, serving.getId());
-      KubeToolServingController toolServingController = getServingController(oldDbServing);
+      Serving oldServing = servingFacade.acquireLock(project, serving.getId());
+      KubeToolServingController toolServingController = getServingController(oldServing);
 
       // Set deployed timestamp and revision to keep consistency with the stored serving entity
-      serving.setDeployed(oldDbServing.getDeployed());
-      serving.setRevision(oldDbServing.getRevision());
+      serving.setDeployed(oldServing.getDeployed());
+      serving.setRevision(oldServing.getRevision());
+  
+      // Setup the Kafka topic for logging
+      kafkaServingHelper.setupKafkaServingTopic(project, servingWrapper, serving, oldServing);
       
       // Merge serving fields
-      Serving dbServing = servingFacade.mergeServings(oldDbServing, serving);
+      Serving newServing = servingFacade.mergeServings(oldServing, serving);
 
       // If pods are currently running for this serving instance, submit a new deployment to update them
       try {
-        KubeServingInternalStatus internalStatus = toolServingController.getInternalStatus(project, dbServing);
+        KubeServingInternalStatus internalStatus = toolServingController.getInternalStatus(project, newServing);
         ServingStatusEnum status = internalStatus.getServingStatus();
-        if (dbServing.getDeployed() != null) {
+        if (newServing.getDeployed() != null) {
           // If the serving is deployed, check the serving status
           if (internalStatus.getAvailableReplicas() == null && status == ServingStatusEnum.STARTING) {
             // If the serving is starting but we can't get the nº of available replicas, the inference service is not
@@ -195,15 +216,15 @@ public class KubeServingController implements ServingController {
           if (status == ServingStatusEnum.RUNNING) {
             // Generate pseudo-random revision id
             String newRevision = KubeServingUtils.getNewRevisionID();
-            dbServing.setRevision(newRevision);
+            newServing.setRevision(newRevision);
             // If serving name or serving tool change, delete old instance and create the new one
             // Otherwise, update current instance
-            if (!dbServing.getName().equals(oldDbServing.getName()) ||
-              dbServing.getServingTool() != oldDbServing.getServingTool()) {
-              toolServingController.deleteInstance(project, oldDbServing);
-              getServingController(dbServing).createInstance(project, user, dbServing);
+            if (!newServing.getName().equals(oldServing.getName()) ||
+              newServing.getServingTool() != oldServing.getServingTool()) {
+              toolServingController.deleteInstance(project, oldServing);
+              getServingController(newServing).createInstance(project, user, newServing);
             } else {
-              toolServingController.updateInstance(project, user, dbServing);
+              toolServingController.updateInstance(project, user, newServing);
             }
           } else if (status == ServingStatusEnum.STARTING || status == ServingStatusEnum.UPDATING) {
             // If the serving is already starting or updating, applying an additional update can overload the node with
@@ -212,10 +233,8 @@ public class KubeServingController implements ServingController {
               "Instance is already updating. Please, try later.");
           }
         }
-        // Setup the Kafka topic for logging
-        kafkaServingHelper.setupKafkaServingTopic(project, newServing, dbServing, oldDbServing);
         // Update the object in the database
-        servingFacade.updateDbObject(dbServing, project);
+        servingFacade.updateDbObject(newServing, project);
       } finally {
         servingFacade.releaseLock(project, serving.getId());
       }

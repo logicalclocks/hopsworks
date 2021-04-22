@@ -222,7 +222,8 @@ public class KubeKfServingController extends KubeToolServingController {
     // If apikey or secret doesn't exist, create a new apikey and secret.
     Set<ApiScope> scopes = new HashSet<ApiScope>() {
       {
-        add(ApiScope.DATASET_VIEW);
+        add(ApiScope.DATASET_VIEW); // for downloading the model artifact
+        add(ApiScope.KAFKA); // for getting the topic schema
       }
     };
     String key = apiKeyController.createNewKey(user, apiKeyName, scopes);
@@ -269,7 +270,8 @@ public class KubeKfServingController extends KubeToolServingController {
     JSONObject predictor;
     switch (serving.getModelServer()) {
       case TENSORFLOW_SERVING:
-        predictor = kubeTfServingUtils.buildInferenceServicePredictor(versionedArtifactPath, serving.getInstances());
+        predictor = kubeTfServingUtils.buildInferenceServicePredictor(versionedArtifactPath, serving.getInstances(),
+          serving.getKafkaTopic() != null);
         break;
       default:
         throw new NotSupportedException("Model server not supported for KFServing inference services");
@@ -289,7 +291,7 @@ public class KubeKfServingController extends KubeToolServingController {
         put("spec", predictor);
       }
     };
-        
+    
     return inferenceService;
   }
   

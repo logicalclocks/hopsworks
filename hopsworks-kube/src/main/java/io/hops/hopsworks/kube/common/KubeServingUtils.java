@@ -15,6 +15,7 @@ public final class KubeServingUtils {
   
   private final static Integer LAST_REVISION_LENGTH = 8;
   
+  // Labels
   protected final static String LABEL_PREFIX = "serving.hops.works";
   public final static String SERVING_ID_LABEL_NAME = LABEL_PREFIX + "/id";
   public final static String SERVING_NAME_LABEL_NAME = LABEL_PREFIX + "/name";
@@ -24,9 +25,15 @@ public final class KubeServingUtils {
   public final static String MODEL_VERSION_LABEL_NAME = LABEL_PREFIX + "/model-version";
   public final static String MODEL_SERVER_LABEL_NAME = LABEL_PREFIX + "/model-server";
   public final static String REVISION_LABEL_NAME = LABEL_PREFIX + "/revision";
-  
+  public final static String TOPIC_NAME_LABEL_NAME = LABEL_PREFIX + "/topic-name";
+
+  // Inference logger
+  public final static String INFERENCE_LOGGER_MODE = "all";
+  public final static String INFERENCE_LOGGER_HOST = "localhost";
+  public final static Integer INFERENCE_LOGGER_PORT = 9099;
+
   public static Map<String, String> getHopsworksServingLabels(Project project, Serving serving) {
-    return new HashMap<String, String>() {
+    HashMap<String, String> labels = new HashMap<String, String>() {
       {
         put(SERVING_ID_LABEL_NAME, String.valueOf(serving.getId()));
         put(SERVING_NAME_LABEL_NAME, serving.getName());
@@ -38,6 +45,11 @@ public final class KubeServingUtils {
         put(REVISION_LABEL_NAME, serving.getRevision());
       }
     };
+    if (serving.getKafkaTopic() != null) {
+      labels.put(TOPIC_NAME_LABEL_NAME, serving.getKafkaTopic().getTopicName());
+    }
+    
+    return labels;
   }
   
   public static String getModelName(Serving serving) {

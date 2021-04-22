@@ -78,7 +78,6 @@ module ServingHelper
                },
                modelServer: "TENSORFLOW_SERVING",
                servingTool: "KFSERVING",
-               availableInstances: 1,
                requestedInstances: 1
               }
     expect_status(201)
@@ -99,7 +98,6 @@ module ServingHelper
                },
                modelServer: "TENSORFLOW_SERVING",
                servingTool: "DEFAULT",
-               availableInstances: 1,
                requestedInstances: 1
               }
     expect_status(201)
@@ -175,7 +173,6 @@ module ServingHelper
          },
          modelServer: "FLASK",
          servingTool: "DEFAULT",
-         availableInstances: 1,
          requestedInstances: 1
         }
     expect_status(201)

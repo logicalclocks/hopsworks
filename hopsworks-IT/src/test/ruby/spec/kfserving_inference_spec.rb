@@ -128,51 +128,13 @@ describe "On #{ENV['OS']}" do
               wait_for_type(@serving[:name])
             end
 
-            # TODO: Kafka topics not supported yet with KFServing deployments
-            #it "should succeeds to infer from a serving with kafka logging" do
-            #  post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/inference/models/#{@serving[:name]}:predict", {
-            #      signature_name: 'predict_images',
-            #      instances: test_data
-            #  }
-            #  expect_status(200)
-            #  # TODO(Check that the response has the correct format)
-            #end
-
-            it "should succeed to infer from a serving with no kafka logging" do
-              put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
-               {id: @serving[:id],
-                name: @serving[:name],
-                artifactPath: @serving[:artifact_path],
-                modelVersion: @serving[:version],
-                batchingEnabled: false,
-                kafkaTopicDTO: {
-                   name: "NONE"
-                },
-                modelServer: "TENSORFLOW_SERVING",
-                servingTool: "KFSERVING"
-               }
-              expect_status(201)
-
+            it "should succeeds to infer from a serving with kafka logging" do
               post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/inference/models/#{@serving[:name]}:predict", {
                   signature_name: 'predict_images',
                   instances: test_data
               }
-
               expect_status(200)
-
-              # TODO: Kafka topics not supported yet with KFServing deployments
-              #put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
-              # {id: @serving[:id],
-              #  name: @serving[:name],
-              #  artifactPath: @serving[:artifact_path],
-              #  modelVersion: @serving[:model_version],
-              #  batchingEnabled: false,
-              #  kafkaTopicDTO: {
-              #     name: @topic[:topic_name]
-              #  },
-              #  modelServer: "TENSORFLOW_SERVING",
-              #  servingTool: "KFSERVING"
-              # }
+              # TODO(Check that the response has the correct format)
             end
 
             it "should receive an error if the input payload is malformed" do
@@ -190,6 +152,32 @@ describe "On #{ENV['OS']}" do
 
               expect_json(errorCode: 250008)
               expect_status(400)
+            end
+
+            it "should succeed to infer from a serving with no kafka logging" do
+              put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
+               {id: @serving[:id],
+                name: @serving[:name],
+                artifactPath: @serving[:artifact_path],
+                modelVersion: @serving[:version],
+                batchingEnabled: false,
+                kafkaTopicDTO: {
+                   name: "NONE"
+                },
+                modelServer: "TENSORFLOW_SERVING",
+                servingTool: "KFSERVING",
+                requestedInstances: 1
+               }
+              expect_status(201)
+
+              # Sleep some time while the inference service restarts
+              wait_for_type(@serving[:name])
+
+              post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/inference/models/#{@serving[:name]}:predict", {
+                  signature_name: 'predict_images',
+                  instances: test_data
+              }
+              expect_status(200)
             end
           end
         end

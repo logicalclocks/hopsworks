@@ -32,6 +32,7 @@ import io.hops.hopsworks.exceptions.KafkaException;
 import io.hops.hopsworks.exceptions.ProjectException;
 import io.hops.hopsworks.exceptions.ServiceException;
 import io.hops.hopsworks.exceptions.UserException;
+import io.hops.hopsworks.persistence.entity.serving.ServingTool;
 import io.hops.hopsworks.restutils.RESTCodes;
 import org.apache.commons.lang.RandomStringUtils;
 import org.apache.zookeeper.KeeperException;
@@ -162,11 +163,17 @@ public class KafkaServingHelper {
       servingWrapper.getKafkaTopicDTO().setNumOfPartitions(settings.getKafkaDefaultNumPartitions());
     }
 
+    // Select schema version according to serving mode
+    Integer schemaVersion = Settings.INFERENCE_SCHEMAVERSION;
+    if (servingWrapper.getServing().getServingTool() == ServingTool.KFSERVING) {
+      // Messages for topics with schema version 4 are produced by the inference logger sidecar in Kubernetes
+      schemaVersion = 4;
+    }
+    
     String servingTopicName = getServingTopicName(servingWrapper);
 
     TopicDTO topicDTO = new TopicDTO(servingTopicName, servingWrapper.getKafkaTopicDTO().getNumOfReplicas(),
-        servingWrapper.getKafkaTopicDTO().getNumOfPartitions(), Settings.INFERENCE_SCHEMANAME,
-      Settings.INFERENCE_SCHEMAVERSION);
+        servingWrapper.getKafkaTopicDTO().getNumOfPartitions(), Settings.INFERENCE_SCHEMANAME, schemaVersion);
 
     ProjectTopics pt = kafkaController.createTopicInProject(project, topicDTO);
   

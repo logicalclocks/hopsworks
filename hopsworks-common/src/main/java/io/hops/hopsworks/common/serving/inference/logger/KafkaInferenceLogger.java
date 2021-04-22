@@ -85,6 +85,16 @@ public class KafkaInferenceLogger implements InferenceLogger {
       return;
     }
 
+    //Get the version of the schema
+    int schemaVersion = serving.getKafkaTopic().getSubjects().getVersion();
+    
+    if (schemaVersion == 4) {
+      // Schema version 4 is used by the inference logging sidecar in kubernetes deployments.
+      // It mainly differs from other versions in the split of request and response in
+      // two different messages with the same 'inferenceId' value.
+      return;
+    }
+
     // Setup the producer for the given project
     KafkaProducer <String, byte[]> kafkaProducer = null;
     try {
@@ -99,9 +109,6 @@ public class KafkaInferenceLogger implements InferenceLogger {
     Schema avroSchema = new Schema.Parser().parse(serving.getKafkaTopic().getSubjects().getSchema().getSchema());
     Injection<GenericRecord, byte[]> recordSerializer = GenericAvroCodecs.toBinary(avroSchema);
   
-    //Get the version of the schema
-    int schemaVersion = serving.getKafkaTopic().getSubjects().getVersion();
-    
     // Create the GenericRecord from the avroSchema
     GenericData.Record inferenceRecord = new GenericData.Record(avroSchema);
   
