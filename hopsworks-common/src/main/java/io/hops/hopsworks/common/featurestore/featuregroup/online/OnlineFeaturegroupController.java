@@ -89,7 +89,7 @@ public class OnlineFeaturegroupController {
       "TINYBLOB", "TINYTEXT", "MEDIUMBLOB", "MEDIUMTEXT", "LONGBLOB", "LONGTEXT");
 
   private final static String VARBINARY_DEFAULT = "VARBINARY(100)";
-  private final static String CHAR_DEFAULT = "CHAR(100)";
+  private final static String VARCHAR_DEFAULT = "VARCHAR(100)";
   private static final String KAFKA_TOPIC_SUFFIX = "_onlinefs";
 
   public OnlineFeaturegroupController() {}
@@ -297,13 +297,20 @@ public class OnlineFeaturegroupController {
       return featureGroupFeatureDTO.getOnlineType().toLowerCase();
     }
 
-    if (MYSQL_TYPES.contains(featureGroupFeatureDTO.getType().toUpperCase())) {
-      // Hive type and MySQL type match
-      return featureGroupFeatureDTO.getType().toLowerCase();
-    } else if (featureGroupFeatureDTO.getType().equalsIgnoreCase("boolean")) {
+    for (String mysqlType : MYSQL_TYPES) {
+      // User startsWith to handle offline types like decimal(X, Y) where X and Y depend on teh context
+      // Same for CHAR(X) where X is the length of the char. We are not particularly interested in the
+      // type configuration, but rather if we can use the same Hive type on MySQL or if we need
+      // to handle it separately.
+      if (featureGroupFeatureDTO.getType().toUpperCase().startsWith(mysqlType)) {
+        return featureGroupFeatureDTO.getType();
+      }
+    }
+
+    if (featureGroupFeatureDTO.getType().equalsIgnoreCase("boolean")) {
       return "tinyint";
     } else if (featureGroupFeatureDTO.getType().equalsIgnoreCase("string")) {
-      return CHAR_DEFAULT;
+      return VARCHAR_DEFAULT;
     } else {
       return VARBINARY_DEFAULT;
     }
