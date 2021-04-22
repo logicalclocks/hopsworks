@@ -486,9 +486,9 @@ angular.module('hopsWorksApp')
                     },
                     function (error) {
                         if (typeof error.data.usrMsg !== 'undefined') {
-                            growl.error(error.data.usrMsg, {title: error.data.errorMsg, ttl: 10000});
+                            growl.error(error.data.usrMsg, {title: error.data.errorMsg, ttl: 15000});
                         } else {
-                            growl.error("", {title: error.data.errorMsg, ttl: 10000});
+                            growl.error("", {title: error.data.errorMsg, ttl: 15000});
                         }
                         self.sendingRequest = false;
                     });
@@ -529,10 +529,11 @@ angular.module('hopsWorksApp')
                         self.getAllServings();
                     },
                     function (error) {
-                        growl.error(error.data.errorMsg, {
-                            title: 'Error',
-                            ttl: 15000
-                        });
+                        if (typeof error.data.usrMsg !== 'undefined') {
+                            growl.error(error.data.usrMsg, {title: error.data.errorMsg, ttl: 15000});
+                        } else {
+                            growl.error("", {title: error.data.errorMsg, ttl: 15000});
+                        }
                     });
             };
 

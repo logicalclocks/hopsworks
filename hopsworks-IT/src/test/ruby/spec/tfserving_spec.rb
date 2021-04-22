@@ -62,7 +62,6 @@ describe "On #{ENV['OS']}" do
                batchingEnabled: false,
                modelServer: "TENSORFLOW_SERVING",
                servingTool: "DEFAULT",
-               availableInstances: 1,
                requestedInstances: 1
               }
           expect_json(errorCode: 200003)
@@ -86,7 +85,6 @@ describe "On #{ENV['OS']}" do
                batchingEnabled: false,
                modelServer: "TENSORFLOW_SERVING",
                servingTool: "DEFAULT",
-               availableInstances: 1,
                requestedInstances: 1
               }
           expect_status(201)
@@ -104,7 +102,6 @@ describe "On #{ENV['OS']}" do
                batchingEnabled: true,
                modelServer: "TENSORFLOW_SERVING",
                servingTool: "DEFAULT",
-               availableInstances: 1,
                requestedInstances: 1
               }
           expect_status(201)
@@ -123,7 +120,6 @@ describe "On #{ENV['OS']}" do
                },
                modelServer: "TENSORFLOW_SERVING",
                servingTool: "DEFAULT",
-               availableInstances: 1,
                requestedInstances: 1
               }
           expect_status(201)
@@ -156,7 +152,6 @@ describe "On #{ENV['OS']}" do
                },
                modelServer: "TENSORFLOW_SERVING",
                servingTool: "DEFAULT",
-               availableInstances: 1,
                requestedInstances: 1
               }
           expect_status(201)
@@ -185,7 +180,6 @@ describe "On #{ENV['OS']}" do
                },
                modelServer: "TENSORFLOW_SERVING",
                servingTool: "DEFAULT",
-               availableInstances: 1,
                requestedInstances: 1
               }
           expect_status(201)
@@ -218,7 +212,6 @@ describe "On #{ENV['OS']}" do
                },
                modelServer: "TENSORFLOW_SERVING",
                servingTool: "DEFAULT",
-               availableInstances: 1,
                requestedInstances: 1
               }
           expect_status(400)
@@ -237,7 +230,6 @@ describe "On #{ENV['OS']}" do
                },
                modelServer: "TENSORFLOW_SERVING",
                servingTool: "DEFAULT",
-               availableInstances: 1,
                requestedInstances: 1
               }
           expect_json(errorMsg: "An entry with the same name already exists in this project")
@@ -251,7 +243,8 @@ describe "On #{ENV['OS']}" do
                batchingEnabled: false,
                modelVersion: 1,
                modelServer: "TENSORFLOW_SERVING",
-               servingTool: "DEFAULT"
+               servingTool: "DEFAULT",
+               requestedInstances: 1
               }
           expect_json(usrMsg: "The model path provided does not exists")
           expect_status(422)
@@ -267,7 +260,6 @@ describe "On #{ENV['OS']}" do
                    name: "NONE"
                },
                modelServer: "TENSORFLOW_SERVING",
-               availableInstances: 1,
                requestedInstances: 1
               }
           expect_json(usrMsg: "Serving tool not provided or unsupported")
@@ -288,7 +280,6 @@ describe "On #{ENV['OS']}" do
                },
                modelServer: "TENSORFLOW_SERVING",
                servingTool: "KFSERVING",
-               availableInstances: 1,
                requestedInstances: 1
               }
           expect_json(errorMsg: "Kubernetes is not installed, which is required for serving models with KFServing")
@@ -312,7 +303,6 @@ describe "On #{ENV['OS']}" do
                },
                modelServer: "TENSORFLOW_SERVING",
                servingTool: "KFSERVING",
-               availableInstances: 1,
                requestedInstances: 1
               }
           expect_json(errorMsg: "KFServing is not installed or disabled")
@@ -329,7 +319,6 @@ describe "On #{ENV['OS']}" do
                modelVersion: 1,
                modelServer: "TENSORFLOW_SERVING",
                servingTool: "DEFAULT",
-               availableInstances: 1,
                requestedInstances: 1
               }
           expect_json(usrMsg: "The model path does not respect the TensorFlow standard")
@@ -409,7 +398,6 @@ describe "On #{ENV['OS']}" do
              },
              modelServer: "TENSORFLOW_SERVING",
              servingTool: "DEFAULT",
-             availableInstances: 1,
              requestedInstances: 1
             }
         expect_status(201)
@@ -427,7 +415,6 @@ describe "On #{ENV['OS']}" do
              },
              modelServer: "TENSORFLOW_SERVING",
              servingTool: "DEFAULT",
-             availableInstances: 1,
              requestedInstances: 1
             }
         expect_status(201)
@@ -444,7 +431,8 @@ describe "On #{ENV['OS']}" do
                  name: @topic[:topic_name]
              },
              modelServer: "TENSORFLOW_SERVING",
-             servingTool: "DEFAULT"
+             servingTool: "DEFAULT",
+             requestedInstances: 1
             }
         expect_status(201)
       end
@@ -468,7 +456,6 @@ describe "On #{ENV['OS']}" do
              },
              modelServer: "TENSORFLOW_SERVING",
              servingTool: "DEFAULT",
-             availableInstances: 1,
              requestedInstances: 1
             }
         expect_status(201)
@@ -487,7 +474,6 @@ describe "On #{ENV['OS']}" do
              },
              modelServer: "FLASK",
              servingTool: "DEFAULT",
-             availableInstances: 1,
              requestedInstances: 1
             }
         expect_status(422)
@@ -506,7 +492,8 @@ describe "On #{ENV['OS']}" do
                  name: topic_name
              },
              modelServer: "TENSORFLOW_SERVING",
-             servingTool: "DEFAULT"
+             servingTool: "DEFAULT",
+             requestedInstances: 1
             }
         expect_status(201)
 
@@ -527,7 +514,6 @@ describe "On #{ENV['OS']}" do
              },
              modelServer: "TENSORFLOW_SERVING",
              servingTool: "DEFAULT",
-             availableInstances: 1,
              requestedInstances: 1
             }
         expect_status(201)

@@ -39,7 +39,8 @@ describe "On #{ENV['OS']}" do
                artifactPath: "/Projects/#{@project[:projectname]}/Models/IrisFlowerClassifier/1/#{SKLEARN_SCRIPT_FILE_NAME}",
                modelVersion: 1,
                modelServer: "FLASK",
-               servingTool: "DEFAULT"
+               servingTool: "DEFAULT",
+               requestedInstances: 1
               }
           expect_json(errorCode: 200003)
           expect_status(401)
@@ -78,7 +79,8 @@ describe "On #{ENV['OS']}" do
                artifactPath: "/Projects/#{@project[:projectname]}/Models/IrisFlowerClassifier/1/#{SKLEARN_SCRIPT_FILE_NAME}",
                modelVersion: 1,
                modelServer: "FLASK",
-               servingTool: "DEFAULT"
+               servingTool: "DEFAULT",
+               requestedInstances: 1
               }
           expect_json(errorCode: 240012)
           expect_status(400)
@@ -102,7 +104,8 @@ describe "On #{ENV['OS']}" do
                artifactPath: "/Projects/#{@project[:projectname]}/Models/NONEXISTENT",
                modelVersion: 1,
                modelServer: "FLASK",
-               servingTool: "DEFAULT"
+               servingTool: "DEFAULT",
+               requestedInstances: 1
               }
           expect_json(errorCode: 120001)
           expect_status(422)
@@ -142,7 +145,6 @@ describe "On #{ENV['OS']}" do
                modelVersion: 1,
                modelServer: "FLASK",
                servingTool: "DEFAULT",
-               availableInstances: 1,
                requestedInstances: 1
               }
           expect_status(201)
@@ -164,7 +166,6 @@ describe "On #{ENV['OS']}" do
                },
                modelServer: "FLASK",
                servingTool: "DEFAULT",
-               availableInstances: 1,
                requestedInstances: 1
               }
           expect_status(201)
@@ -193,7 +194,6 @@ describe "On #{ENV['OS']}" do
                },
                modelServer: "FLASK",
                servingTool: "DEFAULT",
-               availableInstances: 1,
                requestedInstances: 1
               }
           expect_status(201)
@@ -221,7 +221,6 @@ describe "On #{ENV['OS']}" do
                },
                modelServer: "FLASK",
                servingTool: "DEFAULT",
-               availableInstances: 1,
                requestedInstances: 1
               }
           expect_status(201)
@@ -253,7 +252,6 @@ describe "On #{ENV['OS']}" do
                },
                modelServer: "FLASK",
                servingTool: "DEFAULT",
-               availableInstances: 1,
                requestedInstances: 1
               }
           expect_status(400)
@@ -271,7 +269,6 @@ describe "On #{ENV['OS']}" do
                },
                modelServer: "FLASK",
                servingTool: "DEFAULT",
-               availableInstances: 1,
                requestedInstances: 1
               }
           expect_json(errorMsg: "An entry with the same name already exists in this project")
@@ -285,7 +282,6 @@ describe "On #{ENV['OS']}" do
                modelVersion: 1,
                modelServer: "FLASK",
                servingTool: "DEFAULT",
-               availableInstances: 1,
                requestedInstances: 1
               }
           expect_json(errorCode: 120001)
@@ -298,7 +294,6 @@ describe "On #{ENV['OS']}" do
                artifactPath: "/Projects/#{@project[:projectname]}/Models/IrisFlowerClassifier/1/#{SKLEARN_SCRIPT_FILE_NAME}",
                modelVersion: 1,
                modelServer: "FLASK",
-               availableInstances: 1,
                requestedInstances: 1
               }
           expect_json(usrMsg: "Serving tool not provided or unsupported")
@@ -316,7 +311,6 @@ describe "On #{ENV['OS']}" do
                modelVersion: 1,
                modelServer: "FLASK",
                servingTool: "KFSERVING",
-               availableInstances: 1,
                requestedInstances: 1
               }
           expect_json(errorMsg: "Kubernetes is not installed, which is required for serving models with KFServing")
@@ -336,7 +330,6 @@ describe "On #{ENV['OS']}" do
                modelVersion: 1,
                modelServer: "FLASK",
                servingTool: "KFSERVING",
-               availableInstances: 1,
                requestedInstances: 1
               }
           expect_json(errorMsg: "KFServing is not installed or disabled")
@@ -422,7 +415,6 @@ describe "On #{ENV['OS']}" do
                },
                modelServer: "FLASK",
                servingTool: "DEFAULT",
-               availableInstances: 1,
                requestedInstances: 1
               }
           expect_status(201)
@@ -439,7 +431,6 @@ describe "On #{ENV['OS']}" do
                },
                modelServer: "FLASK",
                servingTool: "DEFAULT",
-               availableInstances: 1,
                requestedInstances: 1
               }
           expect_status(201)
@@ -456,7 +447,6 @@ describe "On #{ENV['OS']}" do
                },
                modelServer: "TENSORFLOW_SERVING",
                servingTool: "DEFAULT",
-               availableInstances: 1,
                requestedInstances: 1
               }
           expect_status(422)
@@ -475,7 +465,6 @@ describe "On #{ENV['OS']}" do
                },
                modelServer: "FLASK",
                servingTool: "DEFAULT",
-               availableInstances: 1,
                requestedInstances: 1
               }
           expect_status(201)
@@ -496,7 +485,6 @@ describe "On #{ENV['OS']}" do
                },
                modelServer: "FLASK",
                servingTool: "DEFAULT",
-               availableInstances: 1,
                requestedInstances: 1
               }
           expect_status(201)
