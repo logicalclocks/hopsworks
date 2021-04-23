@@ -251,7 +251,7 @@
     </dependency>
     <dependency>
       <groupId>io.hops.hive</groupId>
-      <artifactId>hive-jdbc</artifactId>
+      <artifactId>hops-jdbc</artifactId>
       <version>${hive.version}</version>
       <exclusions>
         <exclusion>

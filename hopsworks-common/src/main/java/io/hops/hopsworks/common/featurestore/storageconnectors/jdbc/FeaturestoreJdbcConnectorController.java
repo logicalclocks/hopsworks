@@ -126,7 +126,10 @@ public class FeaturestoreJdbcConnectorController {
             + FeaturestoreConstants.ONLINE_FEATURE_STORE_CONNECTOR_SUFFIX)) {
       setPasswordPlainTextForOnlineJdbcConnector(user, featurestoreJdbcConnectorDTO, project.getName());
     }
-    return replaceOnlineFsConnectorUrl(featurestoreJdbcConnectorDTO);
+    replaceOnlineFsConnectorUrl(featurestoreJdbcConnectorDTO);
+    replaceOfflineFsConnectorUrl(featurestoreJdbcConnectorDTO);
+
+    return featurestoreJdbcConnectorDTO;
   }
 
   /**
@@ -168,9 +171,8 @@ public class FeaturestoreJdbcConnectorController {
   // In the database we store the consul name for mysql, so that we can handle backups and taking AMIs.
   // When serving to the user, we resolve the name with ANY so that both internal and external users can
   // work with it.
-  private FeaturestoreJdbcConnectorDTO replaceOnlineFsConnectorUrl(FeaturestoreJdbcConnectorDTO jdbcConnectorDTO)
+  private void replaceOnlineFsConnectorUrl(FeaturestoreJdbcConnectorDTO jdbcConnectorDTO)
       throws FeaturestoreException {
-
     String connectionString = "";
     try {
       connectionString = jdbcConnectorDTO.getConnectionString().replace(
@@ -182,6 +184,23 @@ public class FeaturestoreJdbcConnectorController {
           "Error resolving MySQL DNS name", e.getMessage(), e);
     }
     jdbcConnectorDTO.setConnectionString(connectionString);
-    return jdbcConnectorDTO;
+  }
+
+  // In the database we store the consul name for Hive, so that we can handle backups and taking AMIs.
+  // When serving to the user, we resolve the name with ANY so that both internal and external users can
+  // work with it.
+  private void replaceOfflineFsConnectorUrl(FeaturestoreJdbcConnectorDTO jdbcConnectorDTO)
+      throws FeaturestoreException {
+    String connectionString = "";
+    try {
+      connectionString = jdbcConnectorDTO.getConnectionString().replace(
+          serviceDiscoveryController.constructServiceFQDN(ServiceDiscoveryController.HopsworksService.HIVE_SERVER_TLS),
+          serviceDiscoveryController.getAnyAddressOfServiceWithDNS(
+              ServiceDiscoveryController.HopsworksService.HIVE_SERVER_TLS).getAddress());
+    } catch (ServiceDiscoveryException e) {
+      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.STORAGE_CONNECTOR_GET_ERROR, Level.SEVERE,
+          "Error resolving Hive DNS name", e.getMessage(), e);
+    }
+    jdbcConnectorDTO.setConnectionString(connectionString);
   }
 }

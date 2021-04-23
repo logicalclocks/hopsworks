@@ -116,7 +116,6 @@ public class CachedFeaturegroupController {
   private FeaturestoreActivityFacade fsActivityFacade;
 
   private static final Logger LOGGER = Logger.getLogger(CachedFeaturegroupController.class.getName());
-  private static final String HIVE_DRIVER = "org.apache.hive.jdbc.HiveDriver";
   private static final List<String> HUDI_SPEC_FEATURE_NAMES = Arrays.asList("_hoodie_record_key",
       "_hoodie_partition_path", "_hoodie_commit_time", "_hoodie_file_name", "_hoodie_commit_seqno");
 
@@ -124,9 +123,9 @@ public class CachedFeaturegroupController {
   public void init() {
     try {
       // Load Hive JDBC Driver
-      Class.forName(HIVE_DRIVER);
+      Class.forName(HiveController.HIVE_DRIVER);
     } catch (ClassNotFoundException e) {
-      LOGGER.log(Level.SEVERE, "Could not load the Hive driver: " + HIVE_DRIVER, e);
+      LOGGER.log(Level.SEVERE, "Could not load the Hive driver: " + HiveController.HIVE_DRIVER, e);
     }
   }
 
@@ -150,7 +149,7 @@ public class CachedFeaturegroupController {
       String password = String.copyValueOf(
           certificateMaterializer.getUserMaterial(user.getUsername(), project.getName()).getPassword());
 
-      String jdbcString = "jdbc:hive2://" + hiveEndpoint + "/" + databaseName + ";" +
+      String jdbcString = HiveController.HIVE_JDBC_PREFIX + hiveEndpoint + "/" + databaseName + ";" +
           "auth=noSasl;ssl=true;twoWay=true;" +
           "sslTrustStore=" + certificateMaterializer.getUserTransientTruststorePath(project, user) + ";" +
           "trustStorePassword=" + password + ";" +

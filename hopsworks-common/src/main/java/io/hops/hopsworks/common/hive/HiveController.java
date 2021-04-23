@@ -85,6 +85,9 @@ import java.util.logging.Logger;
 @Stateless(name = "HiveController")
 public class HiveController {
 
+  public final static String HIVE_JDBC_PREFIX = "jdbc:hopshive://";
+  public final static String HIVE_DRIVER = "io.hops.hive.jdbc.HiveDriver";
+
   @EJB
   private Settings settings;
   @EJB
@@ -106,7 +109,6 @@ public class HiveController {
   @EJB
   private ServiceDiscoveryController serviceDiscoveryController;
 
-  private final static String driver = "org.apache.hive.jdbc.HiveDriver";
   private final static Logger logger = Logger.getLogger(HiveController.class.getName());
 
   private Connection conn;
@@ -116,16 +118,16 @@ public class HiveController {
   public void init() {
     try {
       // Load Hive JDBC Driver
-      Class.forName(driver);
+      Class.forName(HIVE_DRIVER);
     } catch (ClassNotFoundException e) {
-      logger.log(Level.SEVERE, "Could not load the Hive driver: " + driver, e);
+      logger.log(Level.SEVERE, "Could not load the Hive driver: " + HIVE_DRIVER, e);
     }
   }
 
   private void initConnection() throws SQLException, ServiceDiscoveryException {
     // Create connection url
     String hiveEndpoint = getHiveServerInternalEndpoint();
-    jdbcString = "jdbc:hive2://" + hiveEndpoint + "/default;" +
+    jdbcString = HIVE_JDBC_PREFIX + hiveEndpoint + "/default;" +
       "auth=noSasl;ssl=true;twoWay=true;" +
       "sslTrustStore=" + bhcs.getSuperTrustStorePath() + ";" +
       "trustStorePassword=" + bhcs.getSuperTrustStorePassword() + ";" +
