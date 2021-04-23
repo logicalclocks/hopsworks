@@ -509,7 +509,7 @@ public class FeaturegroupController {
                     "featuregroup: " + featuregroup.getName()));
     toUpdate.setValidationType(validationType);
     featuregroupFacade.updateFeaturegroupMetadata(toUpdate);
-    return convertFeaturegrouptoDTO(featuregroup, project, user);
+    return convertFeaturegrouptoDTO(toUpdate, project, user);
   }
 
   /**
