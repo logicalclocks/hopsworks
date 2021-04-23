@@ -83,6 +83,7 @@ public class DatabricksController {
       "chmod -R +xr {1}\n" +
       "cp /tmp/client/hopsfs-client*.jar /databricks/jars/\n" +
       "cp /tmp/client/hsfs*.jar /databricks/jars/\n" +
+      "cp /tmp/client/hops-jdbc*.jar /databricks/jars/\n" +
       "cp /tmp/client/hudi*.jar /databricks/jars/";
 
   @EJB
@@ -307,9 +308,8 @@ public class DatabricksController {
 
     // Hops has an additional digit at the end
     // this is just a temporary hack, we'll get rid of hops in the next release
-    DbLibrary hopsPy = new DbLibrary(new DbPyPiLibrary("hops~=" + getPyPiLibraryVersion() + ".0"));
     DbLibrary hsfsPy = new DbLibrary(new DbPyPiLibrary("hsfs~=" + getPyPiLibraryVersion()));
-    dbLibraryInstall.setLibraries(Arrays.asList(hopsPy, hsfsPy));
+    dbLibraryInstall.setLibraries(Arrays.asList(hsfsPy));
     databricksClient.installLibraries(dbInstanceUrl, dbLibraryInstall, token);
   }
 
