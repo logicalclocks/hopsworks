@@ -343,7 +343,7 @@ public class ElasticController {
   
   public void deleteProjectIndices(Project project) throws ElasticException {
     //Get all project indices
-    String[] indices = elasticClientCtrl.mngIndicesGet(project.getName() +
+    String[] indices = elasticClientCtrl.mngIndicesGetByRegex(project.getName() +
       "_(((logs|serving|" + Settings.ELASTIC_BEAMSDKWORKER_INDEX_PATTERN + "|" +
       Settings.ELASTIC_BEAMJOBSERVER_INDEX_PATTERN + ")-\\d{4}.\\d{2}.\\d{2}))");
     for (String index : indices) {

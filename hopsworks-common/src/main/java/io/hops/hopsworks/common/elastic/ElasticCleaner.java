@@ -45,6 +45,7 @@ import javax.ejb.Schedule;
 import javax.ejb.Singleton;
 import javax.ejb.Timer;
 import java.util.Map;
+import java.util.function.Function;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -68,11 +69,18 @@ public class ElasticCleaner {
     LOGGER.log(Level.INFO, "Running ElasticCleaner.");
     //Get all log indices
     try {
-      Map<String, Long> indices = elasticClientCtrl.mngIndicesGetWithCreationTime(
-        "(" + Settings.ELASTIC_LOG_INDEX_REGEX + ")" +
-          "|(" + Settings.ELASTIC_SERVING_INDEX_REGEX + ")" +
-          "|(" + Settings.ELASTIC_BEAMJOBSERVER_INDEX_REGEX + ")" +
-          "|(" + Settings.ELASTIC_BEAMSDKWORKER_INDEX_REGEX + ")");
+      Function<org.elasticsearch.common.settings.Settings, Long> creationTimeParser = settings -> {
+        try {
+          return Long.parseLong(settings.get("index.creation_date"));
+        } catch(NumberFormatException | NullPointerException e) {
+          return -1L;
+        }
+      };
+      String indexRegex = "(" + Settings.ELASTIC_LOG_INDEX_REGEX + ")" +
+        "|(" + Settings.ELASTIC_SERVING_INDEX_REGEX + ")" +
+        "|(" + Settings.ELASTIC_BEAMJOBSERVER_INDEX_REGEX + ")" +
+        "|(" + Settings.ELASTIC_BEAMSDKWORKER_INDEX_REGEX + ")";
+      Map<String, Long> indices = elasticClientCtrl.mngIndicesGetByRegex(indexRegex, creationTimeParser);
       for (String index : indices.keySet()) {
         //Get current timestamp
         long currentTime = System.currentTimeMillis();
