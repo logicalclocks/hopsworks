@@ -114,7 +114,8 @@ public class PyPiLibraryElasticIndexer {
         this.isIndexed = true;
       }
     
-      String[] indicesToDelete = elasticClientCtrl.mngIndicesGet(Settings.ELASTIC_PYPI_LIBRARIES_INDEX_REGEX);
+      String[] indicesToDelete = elasticClientCtrl.mngIndicesGetBySimplifiedRegex(
+        Settings.ELASTIC_PYPI_LIBRARIES_INDEX_REGEX);
     
       String newIndex = Settings.ELASTIC_PYPI_LIBRARIES_INDEX_PATTERN_PREFIX + System.currentTimeMillis();
       CreateIndexRequest createIndexRequest = new CreateIndexRequest(newIndex);
