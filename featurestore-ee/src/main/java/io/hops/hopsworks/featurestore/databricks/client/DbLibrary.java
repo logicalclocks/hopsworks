@@ -20,4 +20,8 @@ public class DbLibrary {
   public DbLibrary(DbPyPiLibrary pypi) {
     this.pypi = pypi;
   }
+
+  public DbLibrary(String jar) {
+    this.jar = jar;
+  }
 }

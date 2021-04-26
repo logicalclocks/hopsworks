@@ -35,10 +35,10 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
 import javax.ws.rs.core.UriInfo;
-import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
+import java.nio.file.Paths;
 
 @Logged
 @RequestScoped
@@ -54,6 +54,7 @@ public class SparkResource {
   private SparkConfigurationBuilder sparkConfigurationBuilder;
 
   private final static String CLIENT_TOKEN_ISSUER = "INVALID/client.tar.gz";
+  private final static String CLIENTS_FILE_NAME = "clients.tar.gz";
 
   private Project project;
 
@@ -94,9 +95,9 @@ public class SparkResource {
   public Response client(@QueryParam("token") String token, @Context SecurityContext sc)
       throws FileNotFoundException, SigningKeyNotFoundException, VerificationException {
     jwtHelper.verifyOneTimeToken(token, CLIENT_TOKEN_ISSUER);
-    InputStream stream = new FileInputStream(new File(settings.getClientPath()));
+    InputStream stream = new FileInputStream(Paths.get(settings.getClientPath(), CLIENTS_FILE_NAME).toFile());
     Response.ResponseBuilder response = Response.ok(HopsUtils.buildOutputStream(stream));
-    response.header("Content-disposition", "attachment; filename=\"client.tar.gz\"");
+    response.header("Content-disposition", "attachment; filename=\"clients.tar.gz\"");
     return response.build();
   }
 }

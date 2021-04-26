@@ -141,6 +141,7 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -752,8 +753,7 @@ public class ProjectService {
   @ApiKeyRequired(acceptedScopes = {ApiScope.PROJECT}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   public Response client(@PathParam("projectId") Integer id, @Context HttpServletRequest req,
       @Context SecurityContext sc) throws FileNotFoundException {
-    String clientPath = settings.getClientPath();
-    File clientFile = new File(clientPath);
+    File clientFile = Paths.get(settings.getClientPath(), "clients.tar.gz").toFile();
     InputStream stream = new FileInputStream(clientFile);
     Response.ResponseBuilder response = Response.ok(HopsUtils.buildOutputStream(stream));
     response.header("Content-disposition", "attachment; filename=client.tar.gz");

@@ -50,6 +50,7 @@ import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -57,6 +58,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 @Stateless
 @TransactionAttribute(TransactionAttributeType.NEVER)
@@ -73,18 +75,14 @@ public class DatabricksController {
 
   private static final String SPARK_CONF_PREFIX = "spark.hadoop.";
 
-  private static final String CLIENTS_FILE_NAME = "clients.tar.gz";
+  private static final String HIVE_PACKAGE_NAME = "apache-hive";
+  private static final String CLIENT_DIR = "client";
 
   private static final String INIT_SCRIPT =
       "#!/bin/sh\n" +
-      "tar -xf {0} -C /tmp\n" +
-      "tar -xf /tmp/client/apache-hive-*-bin.tar.gz -C /tmp\n" +
+      "tar -xf {0}/apache-hive-*-bin.tar.gz -C /tmp\n" +
       "mv /tmp/apache-hive-*-bin {1}\n" +
-      "chmod -R +xr {1}\n" +
-      "cp /tmp/client/hopsfs-client*.jar /databricks/jars/\n" +
-      "cp /tmp/client/hsfs*.jar /databricks/jars/\n" +
-      "cp /tmp/client/hops-jdbc*.jar /databricks/jars/\n" +
-      "cp /tmp/client/hudi*.jar /databricks/jars/";
+      "chmod -R +xr {0}\n";
 
   @EJB
   private SecretsController secretsController;
@@ -161,7 +159,7 @@ public class DatabricksController {
     uploadCertificastes(dbInstanceUrl, targetUser, project, baseDbfsPath, token);
 
     // Upload client jars
-    uploadClientJars(dbInstanceUrl, baseClientDbfsPath, token);
+    List<String> dbfsJars = uploadClientJars(dbInstanceUrl, baseClientDbfsPath, token);
 
     // edit cluster configuration
     editCluster(dbInstanceUrl, dbCluster, project, targetUser, baseDbfsPath, token);
@@ -174,7 +172,7 @@ public class DatabricksController {
     waitForCuster(dbInstanceUrl, clusterId, token);
 
     // installing libraries requires a running cluster (?)
-    installLibraries(dbInstanceUrl, dbCluster.getId(), token);
+    installLibraries(dbInstanceUrl, dbCluster.getId(), dbfsJars, token);
 
     return databricksClient.getCluster(dbInstanceUrl, dbCluster.getId(), token);
   }
@@ -203,7 +201,7 @@ public class DatabricksController {
                                 Path baseClientDbfsPath, String token) throws FeaturestoreException, IOException {
     Map<String, String> paths = new HashMap<>();
     // On the VMs, dbfs is mounted in /dbfs/
-    paths.put("0", DBFS_VM + baseClientDbfsPath.resolve(CLIENTS_FILE_NAME).toString());
+    paths.put("0", DBFS_VM + baseClientDbfsPath.toString());
     paths.put("1", METASTORE_JAR_DIR);
     StrSubstitutor sub = new StrSubstitutor(paths, "{", "}");
     String scriptContent = sub.replace(INIT_SCRIPT);
@@ -231,16 +229,35 @@ public class DatabricksController {
     databricksClient.uploadOneShot(dbInstanceUrl, passwordPut, token);
   }
 
-  private void uploadClientJars(String dbInstanceUrl, Path baseClientDbfsPath, String token)
+  private List<String> uploadClientJars(String dbInstanceUrl, Path baseClientDbfsPath, String token)
       throws FeaturestoreException, IOException {
-    if (databricksClient.fileExists(dbInstanceUrl, baseClientDbfsPath.resolve(CLIENTS_FILE_NAME).toString(), token)) {
-      return;
+    // Iterate over all files in the client dir and uploads them to Dbfs.
+    // Return a list of files available on dbfs
+
+    // TODO(Fabio): In the future, use managed executor here.
+    List<String> dbfsJars = new ArrayList<>();
+    File clientDir = Paths.get(settings.getClientPath(), CLIENT_DIR).toFile();
+    for (File f : clientDir.listFiles()) {
+      dbfsJars.add(uploadClientJar(dbInstanceUrl, baseClientDbfsPath, f.getName(), f.getAbsolutePath(), token));
     }
 
-    DbfsCreate dbfsCreate = new DbfsCreate(baseClientDbfsPath.resolve(CLIENTS_FILE_NAME).toString(), false);
-    try (InputStream inputStream = new FileInputStream(new File(settings.getClientPath()))){
+    return dbfsJars;
+  }
+
+  private String uploadClientJar(String dbInstanceUrl, Path baseClientDbfsPath, String fileName,
+                               String filePath, String token) throws FeaturestoreException, IOException {
+    String dbfsFilePath = baseClientDbfsPath.resolve(fileName).toString();
+    if (databricksClient.fileExists(dbInstanceUrl, dbfsFilePath, token)) {
+      // The library is already available on dbfs, just return the path
+      return dbfsFilePath;
+    }
+
+    DbfsCreate dbfsCreate = new DbfsCreate(dbfsFilePath, false);
+    try (InputStream inputStream = new FileInputStream(filePath)){
       databricksClient.uploadLarge(dbInstanceUrl, dbfsCreate, inputStream, token);
     }
+
+    return dbfsFilePath;
   }
 
   private void editCluster(String dbInstanceUrl, DbCluster dbCluster, Project project,
@@ -302,14 +319,23 @@ public class DatabricksController {
     databricksClient.startCluster(dbInstanceUrl, dbClusterStart, token);
   }
 
-  private void installLibraries(String dbInstanceUrl, String clusterId, String token)
+  private void installLibraries(String dbInstanceUrl, String clusterId, List<String> dbfsJars, String token)
       throws FeaturestoreException, IOException {
     DbLibraryInstall dbLibraryInstall = new DbLibraryInstall(clusterId);
 
     // Hops has an additional digit at the end
     // this is just a temporary hack, we'll get rid of hops in the next release
-    DbLibrary hsfsPy = new DbLibrary(new DbPyPiLibrary("hsfs~=" + getPyPiLibraryVersion()));
-    dbLibraryInstall.setLibraries(Arrays.asList(hsfsPy));
+    List<DbLibrary> libraries = new ArrayList<>();
+    libraries.add(new DbLibrary(new DbPyPiLibrary("hsfs~=" + getPyPiLibraryVersion())));
+
+    // Add all the libraries that have been uploaded
+    libraries.addAll(dbfsJars.stream()
+        .filter(jar -> !(jar.contains(HIVE_PACKAGE_NAME)))
+        .map(jar -> DBFS_SCHEME + jar)
+        .map(DbLibrary::new)
+        .collect(Collectors.toList()));
+
+    dbLibraryInstall.setLibraries(libraries);
     databricksClient.installLibraries(dbInstanceUrl, dbLibraryInstall, token);
   }
 
