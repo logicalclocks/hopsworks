@@ -197,6 +197,7 @@ angular.module('hopsWorksApp')
                   if (!self.selected_secret_project_vis) {
                     growl.error('Visibility is Project but no project has been selected',
                       {title: 'Could not add Secret', ttl: 5000, referenceId: 1})
+                      self.secretsWorking = false;
                       return;
                   }
                   self.secret.scope = self.selected_secret_project_vis.id
