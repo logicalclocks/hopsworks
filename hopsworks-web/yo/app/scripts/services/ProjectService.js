@@ -129,7 +129,20 @@ angular.module('hopsWorksApp')
               "provStates": {
                 url: '/api/project/:id/provenance/states?filter_by=ML_TYPE::provStateType&return_type=COUNT',
                 method: 'GET'
+              },
+              "saveDefaultJobConfig": {
+                'method': 'PUT',
+                headers: {'Content-Type': 'application/json; charset=UTF-8'},
+                 url: '/api/project/:id/jobconfig/:type'
+              },
+              "getDefaultJobConfig": {
+                url: '/api/project/:id/jobconfig/:type',
+                method: 'GET'
+              },
+              "deleteDefaultJobConfig": {
+                url: '/api/project/:id/jobconfig/:type',
+                method: 'DELETE'
               }
-            }
+              }
             );
           }]);

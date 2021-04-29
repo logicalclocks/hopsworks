@@ -43,8 +43,8 @@
 'use strict';
 
 angular.module('hopsWorksApp')
-        .controller('ProjectSettingsCtrl', ['ProjectService', '$routeParams', '$location', 'growl', 'VariablesService',
-          function (ProjectService,  $routeParams, $location, growl, VariablesService) {
+        .controller('ProjectSettingsCtrl', ['ProjectService', '$routeParams', '$location', 'growl', 'VariablesService', 'ModalService',
+          function (ProjectService,  $routeParams, $location, growl, VariablesService, ModalService) {
 
             var self = this;
             self.projectId = $routeParams.projectID;
@@ -70,6 +70,7 @@ angular.module('hopsWorksApp')
               "subjectAccessRights": "",
               "risks": ""
             };
+
             var getPia = function () {
               ProjectService.getPia({id: self.projectId}).$promise.then(
                 function (success) {
@@ -157,6 +158,15 @@ angular.module('hopsWorksApp')
               }
             };
             getVersions();
+
+            self.showJobConfigurationModal = function () {
+              ModalService.setDefaultJobConfigurationModal('xl',  self.projectId).then(
+                      function (success) {
+                          //ok
+                      }, function (error) {
+                //The user changed their mind.
+              });
+            };
 
 
           }]);

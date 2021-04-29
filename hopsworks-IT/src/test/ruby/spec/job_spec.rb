@@ -51,7 +51,7 @@ describe "On #{ENV['OS']}" do
       end
       it "should update a job with different job_config" do
         create_sparktour_job(@project, job_spark_1, "jar", nil)
-        #get job, change args and config params and put it
+        # get job, change args and config params and put it
         get_job(@project[:id], job_spark_1)
         config = json_body[:config]
         config[:'spark.executor.memory'] = '2048'

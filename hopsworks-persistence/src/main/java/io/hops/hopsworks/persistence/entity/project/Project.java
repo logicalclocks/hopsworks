@@ -65,6 +65,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
 
 import io.hops.hopsworks.persistence.entity.dataset.DatasetSharedWith;
+import io.hops.hopsworks.persistence.entity.project.jobs.DefaultJobConfiguration;
 import io.hops.hopsworks.persistence.entity.project.service.ProjectServices;
 import io.hops.hopsworks.persistence.entity.project.team.ProjectTeam;
 import io.hops.hopsworks.persistence.entity.python.CondaCommands;
@@ -144,6 +145,10 @@ public class Project implements Serializable {
   @OneToMany(cascade = CascadeType.ALL,
           mappedBy = "project")
   private Collection<TensorBoard> tensorBoardCollection;
+  @OneToMany(cascade = CascadeType.ALL,
+    mappedBy = "project",
+    orphanRemoval=true)
+  private Collection<DefaultJobConfiguration> defaultJobConfigurationCollection;
 
   private static final long serialVersionUID = 1L;
 
@@ -504,6 +509,17 @@ public class Project implements Serializable {
     this.tensorBoardCollection = tensorBoardCollection;
   }
 
+  @XmlTransient
+  @JsonIgnore
+  public Collection<DefaultJobConfiguration> getDefaultJobConfigurationCollection() {
+    return defaultJobConfigurationCollection;
+  }
+
+  public void setDefaultJobConfigurationCollection(
+    Collection<DefaultJobConfiguration> defaultJobConfigurationCollection) {
+    this.defaultJobConfigurationCollection = defaultJobConfigurationCollection;
+  }
+
   public Date getLastQuotaUpdate() {
     return lastQuotaUpdate;
   }
@@ -529,7 +545,7 @@ public class Project implements Serializable {
   }
 
   public PythonEnvironment getPythonEnvironment() {
-    return pythonEnvironment;
+    return this.pythonEnvironment;
   }
 
   public void setPythonEnvironment(PythonEnvironment pythonEnvironment) {

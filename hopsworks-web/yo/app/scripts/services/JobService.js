@@ -269,6 +269,15 @@ angular.module('hopsWorksApp')
                   return $http.get('/api/project/' + projectId + '/jobs/' + type + '/inspection?path=' + path);
               },
               /**
+               * Get inspection object (it's a subset of a job configuration)
+               * @param projectId
+               * @param path
+               * @returns {*}
+               */
+              getConfiguration: function (projectId, type) {
+                  return $http.get('/api/project/' + projectId + '/jobs/' + type + '/configuration');
+              },
+              /**
                * Get Flink Master (JobManager) UI.
                * @param projectId
                * @param path

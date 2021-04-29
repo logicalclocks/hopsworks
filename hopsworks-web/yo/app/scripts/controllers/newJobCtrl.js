@@ -57,6 +57,8 @@ angular.module('hopsWorksApp')
 
             self.projectName = "";
             self.putAction =  "Create";
+            self.saveConfigAction = "Save";
+            self.deleteConfigAction = "Reset";
             self.showUpdateWarning = false;
             self.updateWarningMsg = "Job already exists. Are you sure you want to update it?";
             self.maxDockerCores = 5;
@@ -81,6 +83,8 @@ angular.module('hopsWorksApp')
 
             self.localResources = [];//Will hold extra libraries
 
+            self.defaultConfigFound = false;
+
             self.newJobName = self.projectId + "_newjob";
 
             self.phase = 0; //The phase of creation we are in.
@@ -99,6 +103,8 @@ angular.module('hopsWorksApp')
             //Jupyter configuration in file metadata
             self.JUPYTER_CONFIG_METADATA_KEY = "jupyter_configuration";
             self.jobConfigFromMetadata = null;
+
+
 
             self.getDockerMaxAllocation = function () {
               VariablesService.getVariable('kube_docker_max_memory_allocation')
@@ -298,6 +304,17 @@ angular.module('hopsWorksApp')
                 "title": "Configure and create"};
             };
 
+            self.isSettings = $location.path().endsWith('settings');
+
+            if(self.isSettings) {
+
+              self.accordion1.visible=false;
+              self.accordion1.isOpen=false;
+
+              self.accordion2.visible=true;
+              self.accordion2.isOpen=true;
+            }
+
             self.exitToJobs = function () {
               self.clear();
               StorageService.remove(self.newJobName);
@@ -361,7 +378,10 @@ angular.module('hopsWorksApp')
               reader.readAsText(file);
             };
 
-            document.getElementById('jobConfigFile').addEventListener('change', handleFileSelect, false);
+            var jobConfigFileElem = document.getElementById('jobConfigFile');
+            if(jobConfigFileElem) {
+              jobConfigFileElem.addEventListener('change', handleFileSelect, false);
+            };
 
             var jobConfigFileImported = function (config) {
               try {
@@ -476,6 +496,30 @@ angular.module('hopsWorksApp')
               });
             };
 
+            self.createDefaultJobConfig = function () {
+                ProjectService.saveDefaultJobConfig({id: self.projectId, type: self.getJobType().toLowerCase()}, self.runConfig)
+                  .$promise.then(function (success) {
+                      growl.success("Saved default job configuration for " + self.getJobType().toLowerCase(),
+                      {title: 'Saved', ttl: 2000});
+                      self.defaultConfigFound = true;
+                    }, function (error) {
+                      defaultConfigFound = false;
+                      growl.warning("Error: " + error.data.errorMsg, {title: 'Error', ttl: 5000});
+                  });
+            }
+
+            self.deleteDefaultJobConfig = function () {
+                ProjectService.deleteDefaultJobConfig({id: self.projectId, type: self.getJobType().toLowerCase()})
+                  .$promise.then(function (success) {
+                  growl.success("Reset to default configuration " + self.getJobType().toLowerCase(),
+                                        {title: 'Removed', ttl: 2000});
+                    self.getJobConfiguration(self.getJobType());
+                    self.defaultConfigFound = false;
+                    }, function (error) {
+                      growl.warning("Error: " + error.data.errorMsg, {title: 'Error', ttl: 5000});
+                  });
+            }
+
             /**
              * Callback method for when the user filled in a job name. Will then
              * display the type selection.
@@ -529,6 +573,9 @@ angular.module('hopsWorksApp')
             };
 
             self.storePreviousJobRunConfig = function (prevJobType) {
+              if(self.isSettings) {
+                return;
+              }
               switch (prevJobType) {
                 case 1:
                 case 2:
@@ -561,12 +608,34 @@ angular.module('hopsWorksApp')
               if (self.projectIsGuide) {
                 self.tourService.currentStep_TourSeven = 4;
               }
-              self.phase = 2;
-              self.accordion1.isOpen = false; //Close job name panel
-              self.accordion1.value = " - " + self.jobname; //Set job name panel title
-              self.accordion2.isOpen = false; //Close jnewJobCtrl.jobtypeob type panel
-              self.accordion3.value = ""; //Reset selected file
-              self.accordion3.isOpen = true; //Open file selection
+
+              if(self.isSettings) {
+                  ProjectService.getDefaultJobConfig({id: self.projectId, type: self.getJobType().toLowerCase()})
+                    .$promise.then(function (success) {
+                        $scope.jobConfig = success.config
+                        self.runConfig = $scope.jobConfig
+                        self.defaultConfigFound = true;
+                      }, function (error) {
+                        self.defaultConfigFound = false;
+                        self.getJobConfiguration(self.getJobType());
+                    });
+
+                    self.phase = 3;
+                    self.accordion3.visible = false; //Reset selected file
+                    self.accordion3.isOpen = false; //Open file selection
+                    self.accordion4.visible = true; //Reset selected file
+                    self.accordion4.isOpen = true; //Open file selection
+                    self.accordion5.visible = true; //Reset selected file
+                    self.accordion5.isOpen = true; //Open file selection
+                  return;
+              } else {
+                  self.phase = 2;
+                  self.accordion1.isOpen = false; //Close job name panel
+                  self.accordion1.value = " - " + self.jobname; //Set job name panel title
+                  self.accordion2.isOpen = false; //Close jnewJobCtrl.jobtypeob type panel
+                  self.accordion3.value = ""; //Reset selected file
+                  self.accordion3.isOpen = true; //Open file selection
+              }
               var selectedType;
               switch (self.jobtype) { //Set the panel titles according to job type
                 case 1:
@@ -605,16 +674,10 @@ angular.module('hopsWorksApp')
                   self.accordion5.isOpen = true;
                   if(self.flinkState.runConfig != null) {
                     self.runConfig = self.flinkState.runConfig
-                  } else{
-                    self.runConfig = JSON.parse("{\"type\":\"" + jobConfig + "\"," +
-                        "\"amQueue\":\"default\"," +
-                        "\"jobmanager.heap.size\":1024," +
-                        "\"amVCores\":1," +
-                        "\"numberOfTaskManagers\":1," +
-                        "\"taskmanager.heap.size\":1024," +
-                        "\"taskmanager.numberOfTaskSlots\":1}");
+                    $scope.jobConfig = self.runConfig;
+                  } else {
+                    self.getJobConfiguration(selectedType);
                   }
-                  $scope.jobConfig = self.runConfig;
                   break;
                 case 4:
                   self.accordion3.title = "File, archive, notebook (.py, .egg, .zip, .ipynb)";
@@ -624,13 +687,10 @@ angular.module('hopsWorksApp')
                   self.accordion3.visible = true; //Display file selection
                   if(self.pythonState.runConfig != null) {
                     self.runConfig = self.pythonState.runConfig
+                    $scope.jobConfig = self.runConfig;
                   } else {
-                    self.runConfig = JSON.parse("{\"type\":\"" + jobConfig + "\"," +
-                        "\"memory\":2048," +
-                        "\"cores\":1," +
-                        "\"gpus\":0}");
+                    self.getJobConfiguration(selectedType);
                   }
-                  $scope.jobConfig = self.runConfig;
                   self.accordion3.value = self.pythonState.selectedFile;
                   self.showJobSetupAndConfig(self.pythonState)
                   break;
@@ -646,13 +706,11 @@ angular.module('hopsWorksApp')
                   self.accordion5.isOpen = true;
 
                   if(self.dockerState.runConfig != null) {
-                    self.runConfig = self.dockerState.runConfig
-                  } else {
-                    self.runConfig = JSON.parse("{\"type\":\"" + jobConfig + "\"," +
-                        "\"memory\":2048," +
-                        "\"cores\":1," +
-                        "\"gpus\":0}");
-                  }
+                     self.runConfig = self.dockerState.runConfig
+                     $scope.jobConfig = self.runConfig;
+                   } else {
+                     self.getJobConfiguration(selectedType);
+                   }
                   $scope.jobConfig = self.runConfig;
                   break;
                 default:
@@ -709,8 +767,7 @@ angular.module('hopsWorksApp')
             };
 
             self.chooseParameters = function () {
-              if (self.jobtype === 1 && self.projectIsGuide &&
-                      (typeof self.runConfig.mainClass === 'undefined' || self.runConfig.mainClass === '')) {
+              if (self.jobtype === 1 && self.projectIsGuide && self.projectName.startsWith("demo_spark")) {
                 self.runConfig.mainClass = 'org.apache.spark.examples.SparkPi';
                 self.runConfig.defaultArgs = '10';
               }
@@ -759,6 +816,20 @@ angular.module('hopsWorksApp')
              */
             self.jobDetailsFilledIn = function () {
               self.phase = 4;
+            };
+
+            self.getJobConfiguration = function (jobType) {
+              JobService.getConfiguration(self.projectId, jobType.toLowerCase()).then(
+                  function (success) {
+                    $scope.jobConfig = success.data
+                    self.runConfig = $scope.jobConfig
+                  }, function (error) {
+                    if (typeof error.data.usrMsg !== 'undefined') {
+                      growl.error(error.data.usrMsg, {title: error.data.errorMsg, ttl: 8000});
+                    } else {
+                      growl.error("", {title: error.data.errorMsg, ttl: 8000});
+                    }
+                  });
             };
 
             self.getJobInspection = function (reason, path) {
@@ -985,6 +1056,9 @@ angular.module('hopsWorksApp')
              * Save state upon destroy.
              */
             $scope.$on('$destroy', function () {
+              if(self.isSettings) {
+                return;
+              }
               if (self.removed) {
                 //The state was removed explicitly; do not add again.
                 return;
@@ -1012,6 +1086,9 @@ angular.module('hopsWorksApp')
              * Initializes variables from the stored job
              */
             self.initStoredJob = function (stored) {
+              if(self.isSettings) {
+                return;
+              }
               //Job information
               self.jobtype = stored.jobtype;
               self.jobname = stored.jobname;
