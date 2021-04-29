@@ -285,8 +285,8 @@ public class ExecutionFacade extends AbstractFacade<Execution> {
     FINALSTATUS ("FINALSTATUS", "e.finalStatus IN :finalstatuses ", "finalstatuses", ""),
     FINALSTATUS_NEQ ("FINALSTATUS_NEQ", "e.finalStatus NOT IN :finalstatuses ", "finalstatuses", ""),
     SUBMISSIONTIME("SUBMISSIONTIME", "e.submissionTime = :submissionTime ", "submissionTime", ""),
-    SUBMISSIONTIME_LT("SUBMISSIONTIME", "e.submissionTime < :submissionTime ", "submissionTime", ""),
-    SUBMISSIONTIME_GT("SUBMISSIONTIME", "e.submissionTime > :submissionTime ", "submissionTime", "");
+    SUBMISSIONTIME_LT("SUBMISSIONTIME_LT", "e.submissionTime < :submissionTimeTo ", "submissionTimeTo", ""),
+    SUBMISSIONTIME_GT("SUBMISSIONTIME_GT", "e.submissionTime > :submissionTimeFrom ", "submissionTimeFrom", "");
     private final String value;
     private final String sql;
     private final String field;
