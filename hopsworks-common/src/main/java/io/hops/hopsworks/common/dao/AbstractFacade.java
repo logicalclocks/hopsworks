@@ -160,7 +160,7 @@ public abstract class AbstractFacade<T> {
   
   public Date getDate(String field, String value) {
     String[] formats = {"yyyy-MM-dd'T'HH:mm:ss.SSSX", "yyyy-MM-dd'T'HH:mm:ss.SSSZ", "yyyy-MM-dd'T'HH:mm:ssX",
-      "yyyy-MM-dd'T'HH:mm:ssZ", "yyyy-MM-dd"};
+      "yyyy-MM-dd'T'HH:mm:ssZ", "yyyy-MM-dd'T'HH:mm:sss", "yyyy-MM-dd"};
     Date date = null;
     for (int i = 0; i < formats.length && date == null; i++ ) {
       date = getDateByFormat(value, formats[i]);
