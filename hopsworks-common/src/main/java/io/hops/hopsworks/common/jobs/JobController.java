@@ -43,8 +43,10 @@ import com.google.common.base.Strings;
 import io.hops.hopsworks.common.dao.jobs.description.JobFacade;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.common.util.SparkConfigurationUtil;
+import io.hops.hopsworks.persistence.entity.jobs.configuration.flink.FlinkJobConfiguration;
 import io.hops.hopsworks.persistence.entity.jobs.description.Jobs;
 import io.hops.hopsworks.persistence.entity.project.Project;
+import io.hops.hopsworks.persistence.entity.project.jobs.DefaultJobConfiguration;
 import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.common.dao.user.activity.ActivityFacade;
 import io.hops.hopsworks.persistence.entity.user.activity.ActivityFlag;
@@ -69,6 +71,7 @@ import javax.ejb.TransactionAttributeType;
 import javax.inject.Inject;
 import javax.xml.bind.JAXBException;
 import java.io.IOException;
+import java.util.Optional;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -189,14 +192,18 @@ public class JobController {
       udfso = dfs.getDfsOps(username);
       LOGGER.log(Level.FINE, "Inspecting executable job program by {0} at path: {1}", new Object[]{username, path});
 
-      switch (jobType){
+      JobConfiguration jobConf = getConfiguration(project, jobType, true);
+
+      switch (jobType) {
         case SPARK:
         case PYSPARK:
           if (Strings.isNullOrEmpty(path) || !(path.endsWith(".jar") || path.endsWith(".py")
               || path.endsWith(".ipynb"))) {
             throw new IllegalArgumentException("Path does not point to a .jar, .py or .ipynb file.");
           }
-          return sparkController.inspectProgram(path, udfso);
+          return sparkController.inspectProgram((SparkJobConfiguration)jobConf, path, udfso);
+        case FLINK:
+          return jobConf;
         default:
           throw new IllegalArgumentException("Job type not supported: " + jobType);
       }
@@ -204,6 +211,45 @@ public class JobController {
       if (udfso != null) {
         dfs.closeDfsClient(udfso);
       }
+    }
+  }
+
+  @TransactionAttribute(TransactionAttributeType.NEVER)
+  public JobConfiguration getConfiguration(Project project, JobType jobType, boolean useDefaultConfig) {
+
+    Optional<DefaultJobConfiguration> defaultConfig;
+
+    if(jobType.equals(JobType.SPARK) || jobType.equals(JobType.PYSPARK)) {
+      /**
+       * The Spark and PySpark configuration is stored in the same configuration entry in the
+       * database for DefaultJobConfiguration. Namely in a PySpark configuration. We infer the JobType based on if
+       * you set a .jar or .py. However when creating the DefaultJobConfiguration, as part of the PK the JobType
+       * needs to be set. So for now PySpark/Spark shares the same configuration.
+       */
+      defaultConfig = project.getDefaultJobConfigurationCollection().stream()
+        .filter(conf -> conf.getDefaultJobConfigurationPK().getType().equals(JobType.PYSPARK))
+        .findFirst();
+      defaultConfig.ifPresent(defaultJobConfiguration ->
+        ((SparkJobConfiguration) defaultJobConfiguration.getJobConfig()).setMainClass(null));
+    } else {
+      defaultConfig = project.getDefaultJobConfigurationCollection().stream()
+        .filter(conf -> conf.getDefaultJobConfigurationPK().getType().equals(jobType))
+        .findFirst();
+    }
+    if(defaultConfig.isPresent()) {
+      return defaultConfig.get().getJobConfig();
+    } else if(useDefaultConfig) {
+      switch (jobType) {
+        case SPARK:
+        case PYSPARK:
+          return new SparkJobConfiguration();
+        case FLINK:
+          return new FlinkJobConfiguration();
+        default:
+          throw new IllegalArgumentException("Job type not supported: " + jobType);
+      }
+    } else {
+      return null;
     }
   }
 

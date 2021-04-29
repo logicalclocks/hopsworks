@@ -279,7 +279,7 @@ public class JobFacade extends AbstractFacade<Jobs> {
     }
   }
   
-  private Set<JobType> getJobTypes(String field, String values) {
+  public static Set<JobType> getJobTypes(String field, String values) {
     String[] jobTypesArr = values.split(",");
     Set<JobType> jobTypes = new HashSet<>();
     for (String jobType : jobTypesArr) {

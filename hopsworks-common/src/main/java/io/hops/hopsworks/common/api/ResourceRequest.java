@@ -200,6 +200,7 @@ public class ResourceRequest {
     CONFLICTS,
     RULES,
     EXPECTATIONS,
+    JOBCONFIG,
     PREPAREDSTATEMENTS;
 
     public static Name fromString(String name) {
