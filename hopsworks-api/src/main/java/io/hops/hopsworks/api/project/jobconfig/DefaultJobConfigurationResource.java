@@ -49,6 +49,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.SecurityContext;
 import javax.ws.rs.core.UriBuilder;
 import javax.ws.rs.core.UriInfo;
 import java.util.logging.Level;
@@ -83,7 +84,8 @@ public class DefaultJobConfigurationResource {
   @ApiKeyRequired(acceptedScopes = {ApiScope.JOB}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   public Response get(@BeanParam Pagination pagination,
                       @BeanParam DefaultJobConfigurationBeanParam defaultJobConfigurationBeanParam,
-                      @Context UriInfo uriInfo) throws ProjectException {
+                      @Context UriInfo uriInfo,
+                      @Context SecurityContext sc) throws ProjectException {
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.JOBCONFIG);
     resourceRequest.setOffset(pagination.getOffset());
     resourceRequest.setLimit(pagination.getLimit());
@@ -105,7 +107,8 @@ public class DefaultJobConfigurationResource {
   @JWTRequired(acceptedTokens={Audience.API, Audience.JOB}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
   @ApiKeyRequired(acceptedScopes = {ApiScope.JOB}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   public Response getByType(@PathParam("type") JobType jobType,
-                            @Context UriInfo uriInfo) throws ProjectException {
+                            @Context UriInfo uriInfo,
+                            @Context SecurityContext sc) throws ProjectException {
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.JOBCONFIG);
     DefaultJobConfiguration defaultJobConfiguration =
       projectController.getProjectDefaultJobConfiguration(project, jobType);
@@ -129,7 +132,8 @@ public class DefaultJobConfigurationResource {
   public Response put (
     @ApiParam(value = "Job configuration", required = true) JobConfiguration config,
     @PathParam("type") JobType type,
-    @Context UriInfo uriInfo) throws ProjectException {
+    @Context UriInfo uriInfo,
+    @Context SecurityContext sc) throws ProjectException {
 
     Response.Status status = Response.Status.CREATED;
 
@@ -160,7 +164,8 @@ public class DefaultJobConfigurationResource {
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   @JWTRequired(acceptedTokens={Audience.API, Audience.JOB}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
   @ApiKeyRequired(acceptedScopes = {ApiScope.JOB}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
-  public Response delete(@PathParam("type") JobType type) {
+  public Response delete(@PathParam("type") JobType type,
+                         @Context SecurityContext sc) {
     projectController.removeProjectDefaultJobConfiguration(this.project, type);
     return Response.noContent().build();
   }
