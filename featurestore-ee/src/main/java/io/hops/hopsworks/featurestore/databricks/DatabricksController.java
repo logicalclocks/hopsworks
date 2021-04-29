@@ -309,6 +309,7 @@ public class DatabricksController {
 
     sparkConfiguration.put("spark.hadoop.hive.metastore.uris",
         "thrift://" + hiveMetastoreService.getAddress() + ":" + hiveMetastoreService.getPort());
+    sparkConfiguration.put("spark.serializer", "org.apache.spark.serializer.KryoSerializer");
 
     return sparkConfiguration;
   }
