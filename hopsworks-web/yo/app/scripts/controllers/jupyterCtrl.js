@@ -41,9 +41,9 @@
 angular.module('hopsWorksApp')
     .controller('JupyterCtrl', ['$scope', '$routeParams', '$route',
         'growl', 'ModalService', '$interval', 'JupyterService', 'StorageService', '$location',
-        '$timeout', '$window', '$sce', 'PythonService', 'TourService', 'UserService', 'VariablesService', 'DataSetService', 'ElasticService',
+        '$timeout', '$window', '$sce', 'PythonService', 'TourService', 'UserService', 'VariablesService', 'DataSetService', 'ElasticService', 'ProjectService',
         function($scope, $routeParams, $route, growl, ModalService, $interval, JupyterService,
-            StorageService, $location, $timeout, $window, $sce, PythonService, TourService, UserService, VariablesService, DataSetService, ElasticService) {
+            StorageService, $location, $timeout, $window, $sce, PythonService, TourService, UserService, VariablesService, DataSetService, ElasticService, ProjectService) {
 
             var self = this;
             self.loading = false;
@@ -63,6 +63,11 @@ angular.module('hopsWorksApp')
             self.ongoingCondaOps = 0;
             self.opsStatus = {};
             self.pythonVersion;
+
+            self.projectDefaultSparkConfig;
+            self.showProjectDefaultSparkConfigButton = false;
+            self.projectDefaultPythonConfig;
+            self.showProjectDefaultPythonConfigButton = false;
 
             var dataSetService = DataSetService(self.projectId);
 
@@ -115,6 +120,42 @@ angular.module('hopsWorksApp')
                     self.initJupyterSettings(jupyterSettings)
                 }
             }, true);
+
+            self.getJobConfiguration = function (jobType) {
+                ProjectService.getDefaultJobConfig({id: self.projectId, type: jobType.toLowerCase()})
+                  .$promise.then(function (success) {
+                      if(jobType === "SPARK") {
+                        self.projectDefaultSparkConfig = success.config;
+                        for(var key in self.projectDefaultSparkConfig) {
+                          if(!(key in $scope.jobConfig) || self.projectDefaultSparkConfig[key] != $scope.jobConfig[key]) {
+                            self.showProjectDefaultSparkConfigButton = true;
+                            return;
+                          }
+                        }
+                      } else if(jobType === "PYTHON") {
+                        self.projectDefaultPythonConfig = success.config;
+                        for(var key in self.projectDefaultPythonConfig) {
+                          if(!(key in self.jupyterSettings.dockerConfig) || self.projectDefaultPythonConfig[key] != self.jupyterSettings.dockerConfig[key]) {
+                            self.showProjectDefaultPythonConfigButton = true;
+                            return;
+                          }
+                        }
+                      }
+                    }, function (error) {});
+            };
+
+            self.useProjectDefaultSparkConfig = function () {
+              self.jupyterSettings.jobConfig = self.projectDefaultSparkConfig;
+              $scope.jobConfig = self.jupyterSettings.jobConfig;
+              self.jupyterSettings.pythonKernel = false;
+              self.showProjectDefaultSparkConfigButton = false;
+            }
+
+            self.useProjectDefaultPythonConfig = function () {
+              self.jupyterSettings.dockerConfig = self.projectDefaultPythonConfig;
+              self.jupyterSettings.pythonKernel = true;
+              self.showProjectDefaultPythonConfigButton = false;
+            }
 
             self.getDockerMaxAllocation = function () {
               VariablesService.getVariable('kube_docker_max_memory_allocation')
@@ -366,8 +407,10 @@ angular.module('hopsWorksApp')
             self.initJupyterSettings = function (jupyterSettings) {
                 self.jupyterSettings = jupyterSettings;
                 if(self.jupyterSettings.dockerConfig) {
+                    self.getJobConfiguration("PYTHON");
                     self.getDockerMaxAllocation();
                 }
+                self.getJobConfiguration("SPARK");
                 $scope.settings = self.jupyterSettings;
                 $scope.jobConfig = self.jupyterSettings.jobConfig;
                 self.projectName = self.jupyterSettings.project.name;
@@ -469,7 +512,7 @@ angular.module('hopsWorksApp')
                         );
                     }
                 }
-            }
+            };
 
             var init = function() {
                 JupyterService.running(self.projectId).then(
@@ -493,7 +536,7 @@ angular.module('hopsWorksApp')
                             self.initJupyterSettings(success.data)
                         },
                         function(error) {
-                            growl.error("Could not get Jupyter Notebook Server Settings.");
+                            growl.error("Could not get Jupyter Notebook Server Settings.", {title: error.data.errorMsg, ttl: 10000});
                         }
                     );
                 }

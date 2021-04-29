@@ -283,6 +283,21 @@ public class JobsResource {
     JobConfiguration config = jobController.inspectProgram(path, project, user, jobtype);
     return Response.ok().entity(config).build();
   }
+
+  @ApiOperation(value = "Return a JobConfiguration for the given JobType",
+    response = JobConfiguration.class)
+  @GET
+  @Path("{jobtype : python|docker|spark|pyspark|flink}/configuration")
+  @Produces(MediaType.APPLICATION_JSON)
+  @Consumes(MediaType.APPLICATION_JSON)
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
+  @JWTRequired(acceptedTokens={Audience.API, Audience.JOB}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
+  @ApiKeyRequired( acceptedScopes = {ApiScope.JOB}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
+  public Response configuration (
+    @ApiParam (value = "job type", example = "spark") @PathParam("jobtype") JobType jobtype) throws JobException {
+    JobConfiguration config = jobController.getConfiguration(project, jobtype, true);
+    return Response.ok().entity(config).build();
+  }
   
   @Logged(logLevel = LogLevel.OFF)
   @Path("{name}/executions")

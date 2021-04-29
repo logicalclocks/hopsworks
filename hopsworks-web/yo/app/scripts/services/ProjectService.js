@@ -143,7 +143,20 @@ angular.module('hopsWorksApp')
                 method: 'PUT',
                 url: '/api/project/:id/cloud/role-mappings/:cloudMappingId?defaultRole=false',
                 hasBody: false
+              },
+              "saveDefaultJobConfig": {
+                'method': 'PUT',
+                headers: {'Content-Type': 'application/json; charset=UTF-8'},
+                 url: '/api/project/:id/jobconfig/:type'
+              },
+              "getDefaultJobConfig": {
+                url: '/api/project/:id/jobconfig/:type',
+                method: 'GET'
+              },
+              "deleteDefaultJobConfig": {
+                url: '/api/project/:id/jobconfig/:type',
+                method: 'DELETE'
               }
-            }
+              }
             );
           }]);

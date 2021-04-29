@@ -59,6 +59,7 @@
                         <div class="col-sm-8">
                             <h2 class="j-tab-heading">Python</h2>
                             <p>Starting Jupyter with this mode will configure the Python Kernel.</p>
+                            <button uib-tooltip="Use the default Python configuration for this project" class="btn btn-info" ng-show="jupyterCtrl.showProjectDefaultPythonConfigButton" ng-click="jupyterCtrl.useProjectDefaultPythonConfig()">Use project default</button>
                             <div ng-include="'views/jupyter/pythonConfig.html'"></div>
                         </div>
                         <div class="col-sm-4 description" ng-class="{comments:sparkConfigCtrl.uneditableMode}">
@@ -78,6 +79,7 @@
                         <div class="col-sm-8">
                             <h2 class="j-tab-heading">Experiments</h2>
                             <p>Starting Jupyter with this mode will configure the PySpark Kernel.</p>
+                            <button uib-tooltip="Use the default Spark configuration for this project" class="btn btn-info" ng-show="jupyterCtrl.showProjectDefaultSparkConfigButton" ng-click="jupyterCtrl.useProjectDefaultSparkConfig()">Use project default</button>
                             <md-radio-group ng-model="sparkConfigCtrl.jobConfig.experimentType">
                                 <table class="button-table">
                                     <tbody>
@@ -140,6 +142,7 @@
                         <div class="col-sm-8">
                             <h2 class="j-tab-heading">Spark</h2>
                             <p>Starting Jupyter with this mode will configure the Spark, PySpark and SparkR Kernel.</p>
+                            <button uib-tooltip="Use the default Spark configuration for this project" class="btn btn-info" ng-show="jupyterCtrl.showProjectDefaultSparkConfigButton" ng-click="jupyterCtrl.useProjectDefaultSparkConfig()">Use project default</button>
                             <md-radio-group ng-model="sparkConfigCtrl.sparkType">
                                 <table class="button-table">
                                     <tbody>

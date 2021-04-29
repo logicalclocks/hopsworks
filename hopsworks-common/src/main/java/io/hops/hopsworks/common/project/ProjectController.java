@@ -55,6 +55,7 @@ import io.hops.hopsworks.common.dao.kafka.ProjectTopicsFacade;
 import io.hops.hopsworks.common.dao.kafka.TopicAclsFacade;
 import io.hops.hopsworks.common.dao.log.operation.OperationsLogFacade;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
+import io.hops.hopsworks.common.dao.project.jobconfig.DefaultJobConfigurationFacade;
 import io.hops.hopsworks.common.dao.project.service.ProjectServiceFacade;
 import io.hops.hopsworks.common.dao.project.team.ProjectTeamFacade;
 import io.hops.hopsworks.common.dao.user.UserFacade;
@@ -120,6 +121,7 @@ import io.hops.hopsworks.persistence.entity.hdfs.inode.Inode;
 import io.hops.hopsworks.persistence.entity.hdfs.inode.InodeView;
 import io.hops.hopsworks.persistence.entity.hdfs.user.HdfsGroups;
 import io.hops.hopsworks.persistence.entity.hdfs.user.HdfsUsers;
+import io.hops.hopsworks.persistence.entity.jobs.configuration.JobConfiguration;
 import io.hops.hopsworks.persistence.entity.jobs.configuration.JobType;
 import io.hops.hopsworks.persistence.entity.jobs.configuration.spark.SparkJobConfiguration;
 import io.hops.hopsworks.persistence.entity.jobs.configuration.yarn.LocalResourceDTO;
@@ -133,6 +135,7 @@ import io.hops.hopsworks.persistence.entity.log.operation.OperationType;
 import io.hops.hopsworks.persistence.entity.log.operation.OperationsLog;
 import io.hops.hopsworks.persistence.entity.project.PaymentType;
 import io.hops.hopsworks.persistence.entity.project.Project;
+import io.hops.hopsworks.persistence.entity.project.jobs.DefaultJobConfiguration;
 import io.hops.hopsworks.persistence.entity.project.service.ProjectServiceEnum;
 import io.hops.hopsworks.persistence.entity.project.team.ProjectRoleTypes;
 import io.hops.hopsworks.persistence.entity.project.team.ProjectTeam;
@@ -199,6 +202,8 @@ public class ProjectController {
   protected ExecutionController executionController;
   @EJB
   private ProjectFacade projectFacade;
+  @EJB
+  private DefaultJobConfigurationFacade projectJobConfigurationFacade;
   @EJB
   private ProjectTeamFacade projectTeamFacade;
   @EJB
@@ -2791,5 +2796,23 @@ public class ProjectController {
         projectFacade.setTimestampQuotaUpdate(currentProject, new Date());
       }
     }
+  }
+
+  public DefaultJobConfiguration getProjectDefaultJobConfiguration(Project project, JobType jobType) {
+    JobConfiguration jobConfiguration = jobController.getConfiguration(project, jobType, false);
+    if(jobConfiguration != null) {
+      return new DefaultJobConfiguration(project, jobType, jobConfiguration);
+    } else {
+      return null;
+    }
+  }
+
+  public DefaultJobConfiguration setProjectDefaultJobConfiguration(Project project, JobConfiguration jobConfiguration,
+                                                            JobType jobType, DefaultJobConfiguration newConf) {
+    return projectJobConfigurationFacade.createOrUpdateDefaultJobConfig(project, jobConfiguration, jobType, newConf);
+  }
+
+  public void removeProjectDefaultJobConfiguration(Project project, JobType type) {
+    projectJobConfigurationFacade.removeDefaultJobConfig(project, type);
   }
 }

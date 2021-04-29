@@ -251,4 +251,8 @@ module JobHelper
     create_sparktour_job(project, job_name, job_type, job_config)
     expect_status_details(201)
   end
+
+  def get_default_job_configuration(project_id, job_type)
+    get "#{ENV['HOPSWORKS_API']}/project/#{project_id}/jobs/#{job_type}/configuration"
+  end
 end

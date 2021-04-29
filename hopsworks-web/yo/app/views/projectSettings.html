@@ -229,6 +229,7 @@
                   </button>
 
                 </form>
+
                 <div class="row">
                   <div class="col-md-12">
                     <div class="panel panel-danger"  style="width: 800px">
@@ -257,7 +258,16 @@
                   </div>
                 </div>
               </uib-tab>
-              <uib-tab index="1" heading="PIA">
+              <uib-tab index="1" heading="Default Job Configuration">
+                <h2>Default job configuration</h2>
+                <div class="panel panel-default">
+                  <div class="panel-body">
+                    <h5>Set a default Job Configuration for all new Jobs. The Python and Spark configuration may also be imported in your Jupyter settings.</h5>
+                    <div ng-include="'views/newJob.html'"></div>
+                  </div>
+                </div>
+              </uib-tab>
+              <uib-tab index="2" heading="PIA">
                 <h2>Privacy Impact Assessment</h2>
 
                 <form ng-submit="projectSettingsCtrl.savePia()" name="piaForm" class="needs-validation" novalidate>
@@ -384,7 +394,7 @@
                   </div>
                 </form>
               </uib-tab>
-              <uib-tab index="2" heading="Versions">
+              <uib-tab index="3" heading="Versions">
                 <h3>Hopsworks Software Versions</h3>
                 <table st-table="rowCollection" class="table table-striped" ng-show="projectSettingsCtrl.versions.length > 0">
                   <thead>
@@ -405,7 +415,7 @@
                   </tbody>
                 </table>
               </uib-tab>
-              <uib-tab index="3" heading="Provenance">
+              <uib-tab index="4" heading="Provenance">
                 <h3>Hopsworks Provenance Settings</h3>
                 <div class="panel panel-default"  style="width: 800px; background-color: #F7F7F7;" ng-controller="ProvenanceCtrl as provenanceCtrl">
                   <div class="panel-body">
@@ -492,7 +502,7 @@
                   </div>
                 </div>
               </uib-tab>
-              <uib-tab index="4" heading="Cloud Roles"
+              <uib-tab index="5" heading="Cloud Roles"
                      ng-if="projectSettingsCtrl.cloudRoleMappings != undefined && projectSettingsCtrl.cloudRoleMappings.length > 0">
                 <h3>Cloud Roles accessible from this project</h3>
                 <div class="panel panel-default" style="width: 800px; background-color: #F7F7F7;">
@@ -537,7 +547,7 @@
                       </div>
                     </div>
                   </div>
-                </div>
+
               </uib-tab>
             </uib-tabset>
           </div>

@@ -90,7 +90,7 @@ public class JobConfigurationConverter implements AttributeConverter<JobConfigur
   }
 
   private JAXBContext getJAXBContext(JobType jobType) {
-    switch(jobType) {
+    switch (jobType) {
       case SPARK:
       case PYSPARK:
         return sparkJAXBContext;

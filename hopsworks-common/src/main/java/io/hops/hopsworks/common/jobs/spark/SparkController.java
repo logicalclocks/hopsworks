@@ -176,17 +176,24 @@ public class SparkController {
     
   }
   
-  public SparkJobConfiguration inspectProgram(String path, DistributedFileSystemOps udfso) throws JobException {
-    SparkJobConfiguration config;
+  public SparkJobConfiguration inspectProgram(SparkJobConfiguration existingConfig, String path,
+                                              DistributedFileSystemOps udfso) throws JobException {
+    SparkJobConfiguration sparkConfig = null;
+    if(existingConfig == null) {
+      sparkConfig = new SparkJobConfiguration();
+    } else {
+      sparkConfig = existingConfig;
+    }
     //If the main program is in a jar, try to set main class from it
     if (path.endsWith(".jar")) {
-      config = new SparkJobConfiguration();
       try (JarInputStream jis = new JarInputStream(udfso.open(path))) {
         Manifest mf = jis.getManifest();
         if (mf != null) {
           Attributes atts = mf.getMainAttributes();
           if (atts.containsKey(Attributes.Name.MAIN_CLASS)) {
-            config.setMainClass(atts.getValue(Attributes.Name.MAIN_CLASS));
+            sparkConfig.setMainClass(atts.getValue(Attributes.Name.MAIN_CLASS));
+          } else {
+            sparkConfig.setMainClass(null);
           }
         }
       } catch (IOException ex) {
@@ -194,11 +201,15 @@ public class SparkController {
           "Failed to inspect jar at:" + path, ex.getMessage(), ex);
       }
     } else {
-      config = new SparkJobConfiguration(ExperimentType.EXPERIMENT);
-      config.setMainClass(Settings.SPARK_PY_MAINCLASS);
+      //This case is needed as users may want to run a PySpark job and have a project default config
+      //In that case we should not override it and set the experimentType, only set it if no default exists
+      if(existingConfig == null) {
+        sparkConfig.setExperimentType(ExperimentType.EXPERIMENT);
+      }
+      sparkConfig.setMainClass(Settings.SPARK_PY_MAINCLASS);
     }
-    config.setAppPath(path);
-    return config;
+    sparkConfig.setAppPath(path);
+    return sparkConfig;
   }
   
   public void inspectDependencies(Project project, Users user, SparkJobConfiguration jobConf)

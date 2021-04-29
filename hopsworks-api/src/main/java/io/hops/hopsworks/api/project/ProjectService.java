@@ -57,6 +57,7 @@ import io.hops.hopsworks.api.jwt.JWTHelper;
 import io.hops.hopsworks.api.kafka.KafkaResource;
 import io.hops.hopsworks.api.metadata.XAttrsResource;
 import io.hops.hopsworks.api.models.ModelsResource;
+import io.hops.hopsworks.api.project.jobconfig.DefaultJobConfigurationResource;
 import io.hops.hopsworks.api.provenance.ProjectProvenanceResource;
 import io.hops.hopsworks.api.python.PythonResource;
 import io.hops.hopsworks.api.serving.ServingService;
@@ -233,6 +234,8 @@ public class ProjectService {
   private IntegrationsResource integrationsResource;
   @EJB
   private AccessController accessCtrl;
+  @Inject
+  private DefaultJobConfigurationResource defaultJobConfigurationResource;
 
   private final static Logger LOGGER = Logger.getLogger(ProjectService.class.getName());
 
@@ -772,6 +775,13 @@ public class ProjectService {
   public JupyterService jupyter(@PathParam("projectId") Integer id) {
     this.jupyter.setProjectId(id);
     return this.jupyter;
+  }
+
+  @Logged(logLevel = LogLevel.OFF)
+  @Path("{projectId}/jobconfig")
+  public DefaultJobConfigurationResource defaultJobConfig(@PathParam("projectId") Integer id) {
+    this.defaultJobConfigurationResource.setProjectId(id);
+    return this.defaultJobConfigurationResource;
   }
 
   @Logged(logLevel = LogLevel.OFF)
