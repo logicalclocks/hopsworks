@@ -293,8 +293,9 @@ public class JobsResource {
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   @JWTRequired(acceptedTokens={Audience.API, Audience.JOB}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
   @ApiKeyRequired( acceptedScopes = {ApiScope.JOB}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
-  public Response configuration (
-    @ApiParam (value = "job type", example = "spark") @PathParam("jobtype") JobType jobtype) throws JobException {
+  public Response configuration (@ApiParam (value = "job type", example = "spark")
+                                 @PathParam("jobtype") JobType jobtype,
+                                 @Context SecurityContext sc) throws JobException {
     JobConfiguration config = jobController.getConfiguration(project, jobtype, true);
     return Response.ok().entity(config).build();
   }
