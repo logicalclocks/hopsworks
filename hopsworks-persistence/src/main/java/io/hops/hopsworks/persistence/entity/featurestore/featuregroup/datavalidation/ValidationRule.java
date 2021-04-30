@@ -67,6 +67,11 @@ public class ValidationRule implements Serializable {
   @Column(name = "accepted_type")
   private AcceptedType acceptedType;
 
+  @NotNull
+  @Enumerated(EnumType.STRING)
+  @Column(name = "feature_type")
+  private FeatureType featureType;
+
   @Basic
   @Column(name = "description")
   private String description;
@@ -101,6 +106,14 @@ public class ValidationRule implements Serializable {
 
   public void setAcceptedType(AcceptedType acceptedType) {
     this.acceptedType = acceptedType;
+  }
+
+  public FeatureType getFeatureType() {
+    return featureType;
+  }
+
+  public void setFeatureType(FeatureType featureType) {
+    this.featureType = featureType;
   }
 
   public String getDescription() {

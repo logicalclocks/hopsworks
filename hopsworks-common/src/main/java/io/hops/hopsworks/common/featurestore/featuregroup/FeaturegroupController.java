@@ -239,6 +239,7 @@ public class FeaturegroupController {
     }
 
     verifyFeatureGroupInput(featuregroupDTO);
+    verifyFeatureGroupValidations(featurestore, featuregroupDTO.getExpectationsNames(), featuregroupDTO.getFeatures());
     verifyFeaturesNoDefaultValue(featuregroupDTO.getFeatures());
     return createFeaturegroupNoValidation(featurestore, featuregroupDTO, project, user);
   }
@@ -714,8 +715,6 @@ public class FeaturegroupController {
         FeatureGroupExpectation featureGroupExpectation;
         Optional<FeatureGroupExpectation> e =
                 featureGroupExpectationFacade.findByFeaturegroupAndExpectation(featuregroup, featureStoreExpectation);
-        featureGroupValidationsController.checkFeaturesExist(featureStoreExpectation, featuregroup, name,
-                featurestore.getProject(), user);
         if (!e.isPresent()) {
           featureGroupExpectation = new FeatureGroupExpectation();
           featureGroupExpectation.setFeaturegroup(featuregroup);
@@ -792,6 +791,19 @@ public class FeaturegroupController {
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_FEATURE_GROUP_FEATURE_DEFAULT_VALUE,
         Level.FINE, "default values for features cannot be set during feature group creation, only allowed for appened"
         + "features");
+    }
+  }
+
+  void verifyFeatureGroupValidations(Featurestore featurestore,
+                                     List<String> expectationNames,
+                                     List<FeatureGroupFeatureDTO> features)
+          throws FeaturestoreException {
+    if (expectationNames != null && !expectationNames.isEmpty()) {
+      List<FeatureStoreExpectation> expectations = new ArrayList<>();
+      for (String expectation : expectationNames) {
+        expectations.add(featureGroupValidationsController.getFeatureStoreExpectation(featurestore, expectation));
+      }
+      featureGroupValidationsController.featureValidation(expectations, features);
     }
   }
 }
