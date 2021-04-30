@@ -18,6 +18,7 @@ package io.hops.hopsworks.common.python.search;
 
 import io.hops.hopsworks.common.elastic.ElasticClientController;
 import io.hops.hopsworks.common.util.Settings;
+import io.hops.hopsworks.exceptions.ElasticException;
 import org.elasticsearch.action.admin.cluster.health.ClusterHealthResponse;
 import org.elasticsearch.action.admin.indices.delete.DeleteIndexRequest;
 import org.elasticsearch.action.bulk.BulkRequest;
@@ -75,13 +76,17 @@ public class PyPiLibraryElasticIndexer {
   }
 
   private void scheduleTimer(long duration) {
-    timerService.createSingleActionTimer(duration, new TimerConfig("PyPi Search Indexer", false));
+    if(settings.isPyPiIndexerTimerEnabled()) {
+      timerService.createSingleActionTimer(duration, new TimerConfig("PyPi Search Indexer", false));
+    } else {
+      LOGGER.log(Level.INFO, "PyPi Indexer is disabled, will not index libraries in elastic");
+    }
   }
 
   @Timeout
   @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
-  public void execute(Timer timer) {
-    long errorRescheduleTimeout = 300000;
+  public void execute(Timer timer) throws ElasticException {
+    long errorRescheduleTimeout = 600000;
     
     LOGGER.log(Level.INFO, "Running PyPi Indexer");
   
@@ -106,7 +111,9 @@ public class PyPiLibraryElasticIndexer {
       LOGGER.log(Level.SEVERE, "Exception occurred trying to index pypi libraries, rescheduling timer", e);
       return;
     }
-  
+
+    String newIndex = Settings.ELASTIC_PYPI_LIBRARIES_INDEX_PATTERN_PREFIX + System.currentTimeMillis();
+
     try {
       GetAliasesResponse pypiAlias = elasticClientCtrl.getAliases(Settings.ELASTIC_PYPI_LIBRARIES_ALIAS);
     
@@ -117,12 +124,11 @@ public class PyPiLibraryElasticIndexer {
       String[] indicesToDelete = elasticClientCtrl.mngIndicesGetBySimplifiedRegex(
         Settings.ELASTIC_PYPI_LIBRARIES_INDEX_REGEX);
     
-      String newIndex = Settings.ELASTIC_PYPI_LIBRARIES_INDEX_PATTERN_PREFIX + System.currentTimeMillis();
-      CreateIndexRequest createIndexRequest = new CreateIndexRequest(newIndex);
-      elasticClientCtrl.mngIndexCreate(createIndexRequest);
-    
       Element body = Jsoup.connect(settings.getPyPiSimpleEndpoint()).maxBodySize(0).get().body();
       Elements elements = body.getElementsByTag("a");
+
+      CreateIndexRequest createIndexRequest = new CreateIndexRequest(newIndex);
+      elasticClientCtrl.mngIndexCreate(createIndexRequest);
     
       final int bulkSize = 100;
       int currentBulkSize = 0;
@@ -173,6 +179,10 @@ public class PyPiLibraryElasticIndexer {
     } catch(Exception ex) {
       LOGGER.log(Level.SEVERE, "Indexing pypi libraries failed", ex);
       scheduleTimer(errorRescheduleTimeout);
+      if(elasticClientCtrl.mngIndexExists(newIndex)) {
+        DeleteIndexRequest deleteIndexRequest = new DeleteIndexRequest().indices(newIndex);
+        elasticClientCtrl.mngIndexDelete(deleteIndexRequest);
+      }
       return;
     }
     String rawInterval = settings.getPyPiIndexerTimerInterval();

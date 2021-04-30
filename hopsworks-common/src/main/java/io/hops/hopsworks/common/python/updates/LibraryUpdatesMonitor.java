@@ -72,7 +72,7 @@ public class LibraryUpdatesMonitor {
     HsfsLatestVersionAnalyzer hsfsAnalyzer = new HsfsLatestVersionAnalyzer();
     latestVersionAnalyzerMap.put(hsfsAnalyzer.getLibrary(), hsfsAnalyzer);
 
-    String rawInterval = settings.getPyPiIndexerTimerInterval();
+    String rawInterval = settings.getPythonLibraryUpdatesMonitorInterval();
     Long intervalValue = settings.getConfTimeValue(rawInterval);
     TimeUnit intervalTimeunit = settings.getConfTimeTimeUnit(rawInterval);
 
