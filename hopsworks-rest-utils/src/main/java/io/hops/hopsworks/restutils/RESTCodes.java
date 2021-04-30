@@ -1542,7 +1542,10 @@ public class RESTCodes {
     AVRO_PRIMITIVE_TYPE_NOT_SUPPORTED(151, "Error converting Hive Type to Avro primitive type",
                                       Response.Status.BAD_REQUEST),
     AVRO_MAP_STRING_KEY(152, "Map types are only supported with STRING type keys", Response.Status.BAD_REQUEST),
-    AVRO_MALFORMED_SCHEMA(153, "Error converting Hive schema to Avro", Response.Status.INTERNAL_SERVER_ERROR);
+    AVRO_MALFORMED_SCHEMA(153, "Error converting Hive schema to Avro", Response.Status.INTERNAL_SERVER_ERROR),
+    FEATURE_GROUP_EXPECTATION_FEATURE_TYPE_INVALID(154,
+            "Could not attach expectation because some feature types did not match rule types.",
+            Response.Status.BAD_REQUEST);
 
     private int code;
     private String message;
