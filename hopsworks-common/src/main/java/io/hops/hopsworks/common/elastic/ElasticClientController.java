@@ -52,6 +52,7 @@ import org.elasticsearch.client.indices.GetIndexTemplatesResponse;
 import org.elasticsearch.client.indices.GetMappingsRequest;
 import org.elasticsearch.client.indices.GetMappingsResponse;
 import org.elasticsearch.cluster.metadata.MappingMetaData;
+import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.unit.TimeValue;
 import org.elasticsearch.index.IndexNotFoundException;
 import org.elasticsearch.rest.RestStatus;
@@ -62,11 +63,14 @@ import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.net.ssl.SSLHandshakeException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.regex.Pattern;
 
 @Stateless
 @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
@@ -89,18 +93,15 @@ public class ElasticClientController {
     return executeElasticQuery(query, "elastic get index", request.toString());
   }
   
-  public Map<String, Long> mngIndicesGetWithCreationTime(String indexRegex) throws ElasticException {
-    GetIndexResponse response = mngIndexGet(new GetIndexRequest(indexRegex));
-    Map<String, Long> result = new HashMap<>();
-    for(String index : response.getIndices()) {
-      result.put(index, Long.parseLong(response.getSetting(index, "index.creation_date")));
-    }
-    return result;
-  }
-  
-  public String[] mngIndicesGet(String indexRegex) throws ElasticException {
+  /**
+   * This is an optimized elastic query, but the regex expression only accepts wildcards *
+   * @param regex
+   * @return
+   * @throws ElasticException
+   */
+  public String[] mngIndicesGetBySimplifiedRegex(String regex) throws ElasticException {
     try {
-      return mngIndexGet(new GetIndexRequest(indexRegex)).getIndices();
+      return mngIndexGet(new GetIndexRequest(regex)).getIndices();
     } catch(ElasticException e) {
       if (ElasticHelper.indexNotFound(e.getCause())) {
         return new String[0];
@@ -108,6 +109,31 @@ public class ElasticClientController {
         throw e;
       }
     }
+  }
+  public String[] mngIndicesGetByRegex(String regex) throws ElasticException {
+    GetIndexResponse response = mngIndexGet(new GetIndexRequest("*"));
+    ArrayList<String> result = new ArrayList<>();
+    Pattern pattern = Pattern.compile(regex);
+    for(String index : response.getIndices()) {
+      if (pattern.matcher(index).matches()) {
+        result.add(index);
+      }
+    }
+    return result.toArray(new String[0]);
+  }
+  
+  public <T> Map<String, T> mngIndicesGetByRegex(String regex, Function<Settings, T> indexSettingsParser)
+      throws ElasticException {
+    GetIndexResponse response = mngIndexGet(new GetIndexRequest("*"));
+    Map<String, T> result = new HashMap<>();
+    Pattern pattern = Pattern.compile(regex);
+    Map<String, Settings> settings = response.getSettings();
+    for(String index : response.getIndices()) {
+      if (pattern.matcher(index).matches()) {
+        result.put(index, indexSettingsParser.apply(settings.get(index)));
+      }
+    }
+    return result;
   }
   
   public Map<String, Map<String, String>> mngIndexGetMappings(String indexRegex) throws ElasticException {
