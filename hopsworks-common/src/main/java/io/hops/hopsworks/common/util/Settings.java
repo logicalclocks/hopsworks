@@ -127,6 +127,7 @@ public class Settings implements Serializable {
   private static final String VARIABLE_ADMIN_EMAIL = "admin_email";
   private static final String VARIABLE_PYPI_REST_ENDPOINT = "pypi_rest_endpoint";
   private static final String VARIABLE_PYPI_INDEXER_TIMER_INTERVAL = "pypi_indexer_timer_interval";
+  private static final String VARIABLE_PYPI_INDEXER_TIMER_ENABLED = "pypi_indexer_timer_enabled";
   private static final String VARIABLE_PYPI_SIMPLE_ENDPOINT = "pypi_simple_endpoint";
   private static final String VARIABLE_PYTHON_LIBRARY_UPDATES_MONITOR_INTERVAL =
     "python_library_updates_monitor_interval";
@@ -670,6 +671,7 @@ public class Settings implements Serializable {
       PYPI_INDEXER_TIMER_INTERVAL = setStrVar(VARIABLE_PYPI_INDEXER_TIMER_INTERVAL, PYPI_INDEXER_TIMER_INTERVAL);
       PYTHON_LIBRARY_UPDATES_MONITOR_INTERVAL = setStrVar(VARIABLE_PYTHON_LIBRARY_UPDATES_MONITOR_INTERVAL,
         PYTHON_LIBRARY_UPDATES_MONITOR_INTERVAL);
+      PYPI_INDEXER_TIMER_ENABLED = setBoolVar(VARIABLE_PYPI_INDEXER_TIMER_ENABLED, PYPI_INDEXER_TIMER_ENABLED);
 
       IMMUTABLE_PYTHON_LIBRARY_NAMES = toSetFromCsv(
           setStrVar(VARIABLE_IMMUTABLE_PYTHON_LIBRARY_NAMES, DEFAULT_IMMUTABLE_PYTHON_LIBRARY_NAMES),
@@ -2433,6 +2435,13 @@ public class Settings implements Serializable {
   public synchronized String getPyPiSimpleEndpoint() {
     checkCache();
     return PYPI_SIMPLE_ENDPOINT;
+  }
+
+  private boolean PYPI_INDEXER_TIMER_ENABLED = true;
+
+  public synchronized boolean isPyPiIndexerTimerEnabled() {
+    checkCache();
+    return PYPI_INDEXER_TIMER_ENABLED;
   }
 
   private String PYTHON_LIBRARY_UPDATES_MONITOR_INTERVAL = "1d";

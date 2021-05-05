@@ -51,7 +51,7 @@ public class ProvenanceCleanerController {
   public Pair<Integer, String> indexCleanupRound(String nextToCheck, Integer limit)
     throws ProvenanceException, ElasticException {
     String indexRegex = "*" + Settings.PROV_FILE_INDEX_SUFFIX;
-    String[] indices = client.mngIndicesGetByRegex(indexRegex);
+    String[] indices = client.mngIndicesGetBySimplifiedRegex(indexRegex);
     
     int cleaned = 0;
     String nextToCheckAux = "";
