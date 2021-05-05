@@ -173,6 +173,14 @@
       </exclusions>
     </dependency>
 
+    <dependency>
+      <groupId>io.hops.hopsworks</groupId>
+      <artifactId>hopsworks-alert</artifactId>
+      <version>${project.version}</version>
+      <type>ejb</type>
+      <scope>provided</scope>
+    </dependency>
+
     <!-- jersey dependencies -->
     <dependency>
       <groupId>org.glassfish.jersey.core</groupId>

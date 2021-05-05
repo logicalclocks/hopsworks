@@ -40,6 +40,7 @@ package io.hops.hopsworks.api.project;
 
 import io.hops.hopsworks.api.activities.ProjectActivitiesResource;
 import io.hops.hopsworks.api.airflow.AirflowService;
+import io.hops.hopsworks.api.alert.AlertResource;
 import io.hops.hopsworks.api.dataset.DatasetResource;
 import io.hops.hopsworks.api.dela.DelaProjectService;
 import io.hops.hopsworks.api.elastic.ElasticResource;
@@ -55,6 +56,7 @@ import io.hops.hopsworks.api.jwt.JWTHelper;
 import io.hops.hopsworks.api.kafka.KafkaResource;
 import io.hops.hopsworks.api.metadata.XAttrsResource;
 import io.hops.hopsworks.api.models.ModelsResource;
+import io.hops.hopsworks.api.project.alert.ProjectAlertsResource;
 import io.hops.hopsworks.api.project.jobconfig.DefaultJobConfigurationResource;
 import io.hops.hopsworks.api.provenance.ProjectProvenanceResource;
 import io.hops.hopsworks.api.python.PythonResource;
@@ -214,10 +216,14 @@ public class ProjectService {
   private ElasticResource elastic;
   @EJB
   private HopsFSProvenanceController fsProvenanceController;
+  @Inject
+  private AlertResource alertResource;
   @EJB
   private AccessController accessCtrl;
   @Inject
   private DefaultJobConfigurationResource defaultJobConfigurationResource;
+  @Inject
+  private ProjectAlertsResource projectAlertsResource;
 
   private final static Logger LOGGER = Logger.getLogger(ProjectService.class.getName());
 
@@ -853,5 +859,17 @@ public class ProjectService {
   public ElasticResource elastic(@PathParam("projectId") Integer id) {
     this.elastic.setProjectId(id);
     return elastic;
+  }
+  
+  @Path("{projectId}/alerts")
+  public AlertResource alerting(@PathParam("projectId") Integer id) {
+    this.alertResource.setProjectId(id);
+    return alertResource;
+  }
+  
+  @Path("{projectId}/service/alerts")
+  public ProjectAlertsResource projectAlert(@PathParam("projectId") Integer id) {
+    this.projectAlertsResource.setProjectId(id);
+    return projectAlertsResource;
   }
 }

@@ -19,8 +19,8 @@
  */
 angular.module('hopsWorksApp')
     .controller('featuregroupViewInfoCtrl', ['$scope', 'FeaturestoreService', 'ProjectService',
-        'JobService', 'StorageService', 'ModalService', '$location', 'growl',
-        function ($scope, FeaturestoreService, ProjectService, JobService, StorageService, ModalService, $location, growl) {
+        'JobService', 'StorageService', 'ModalService', '$location', 'AlertsService', 'growl',
+        function ($scope, FeaturestoreService, ProjectService, JobService, StorageService, ModalService, $location, AlertsService, growl) {
 
             /**
              * Initialize controller state
@@ -55,6 +55,17 @@ angular.module('hopsWorksApp')
             self.showPath = false;
 
             self.featurestoreCtrl = null;
+
+            var alertsService = undefined;
+            self.serviceAlerts = [];
+            self.values = [];
+            self.loadingServiceAlerts = true;
+
+            self.newAlert = {
+                status: undefined,
+                alertType: undefined,
+                severity: undefined
+            };
 
             /**
              * Get featuregroup tags
@@ -372,6 +383,58 @@ angular.module('hopsWorksApp')
                     datasetLocation = locationSplits.slice(3).join("/");
                 }
                 $location.path('project/' + self.projectId + '/datasets/' + datasetLocation);
+            };
+
+            var getMsg = function (res) {
+                return (typeof res.data.usrMsg !== 'undefined')? res.data.usrMsg : '';
+            }
+            var getResult = function (success) {
+                return typeof success !== 'undefined' && typeof success.data !== 'undefined' &&
+                typeof success.data.count !== 'undefined' && success.data.count > 0 ? success.data.items : [];
+            }
+
+            var getServiceAlerts = function() {
+                self.loadingServiceAlerts = true;
+                alertsService.featureGroupAlerts.getAll(self.selectedFeaturegroup.featurestoreId, self.selectedFeaturegroup.id).then(function (success) {
+                    self.serviceAlerts = getResult(success);
+                    self.loadingServiceAlerts = false;
+                });
+
+                alertsService.featureGroupAlerts.getValues(self.selectedFeaturegroup.featurestoreId, self.selectedFeaturegroup.id).then(function (success) {
+                    self.values = success.data;
+                });
+            }
+
+            var initAlerts = function () {
+                alertsService = AlertsService(self.projectId);
+                getServiceAlerts();
+            }
+
+            self.createServiceAlert = function () {
+                alertsService.featureGroupAlerts.create(self.selectedFeaturegroup.featurestoreId, self.selectedFeaturegroup.id, self.newAlert).then(function(success) {
+                    growl.success(getMsg(success), {title: 'Alert Created', ttl: 1000});
+                    getServiceAlerts();
+                }, function(error){
+                    growl.error(getMsg(error), {title: 'Failed to create alert', ttl: 5000});
+                })
+            };
+
+            self.deleteServiceAlert = function(alert) {
+                alertsService.featureGroupAlerts.delete(self.selectedFeaturegroup.featurestoreId, self.selectedFeaturegroup.id, alert.id).then(function(success) {
+                    growl.success(getMsg(success), {title: 'Alert deleted', ttl: 1000});
+                    getServiceAlerts();
+                }, function(error){
+                    growl.error(getMsg(error), {title: 'Failed to delete alert', ttl: 5000});
+                })
+            };
+
+            self.testServiceAlert = function(alert) {
+                alertsService.featureGroupAlerts.test(self.selectedFeaturegroup.featurestoreId, self.selectedFeaturegroup.id, alert.id).then(function(success) {
+                    self.alerts = getResult(success);
+                    growl.success(getMsg(success), {title: 'Alert sent', ttl: 1000});
+                }, function(error){
+                    growl.error(getMsg(error), {title: 'Failed to send alert', ttl: 5000});
+                })
             };
         }]);
 

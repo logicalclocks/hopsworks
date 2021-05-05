@@ -555,6 +555,10 @@ angular.module('hopsWorksApp')
               FileSaver.saveAs(blob, job.name + '_config.json');
             };
 
+            self.alerts = function (job) {
+                ModalService.jobAlerts('lg', self.projectId, job.name);
+            }
+
             self.showUI = function (job) {
               StorageService.store(self.projectId + "_jobui_" + job.name, job);
               $location.path('project/' + self.projectId + '/jobMonitor-job/' + job.name);

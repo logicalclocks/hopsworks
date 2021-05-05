@@ -201,7 +201,12 @@ public class ResourceRequest {
     RULES,
     EXPECTATIONS,
     JOBCONFIG,
-    PREPAREDSTATEMENTS;
+    PREPAREDSTATEMENTS,
+    ALERTS,
+    ALERTGROUPS,
+    SILENCES,
+    RECEIVERS,
+    ROUTES;
 
     public static Name fromString(String name) {
       return valueOf(name.toUpperCase());

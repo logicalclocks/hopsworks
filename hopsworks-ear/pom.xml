@@ -75,6 +75,7 @@
     </plugins>
     <finalName>hopsworks-ear</finalName>
   </build>
+
   <dependencies>
     <dependency>
       <groupId>io.hops.hopsworks</groupId>
@@ -117,6 +118,18 @@
       <artifactId>hopsworks-admin</artifactId>
       <version>${project.version}</version>
       <type>war</type>
+    </dependency>
+    <dependency>
+      <groupId>io.hops.hopsworks</groupId>
+      <artifactId>hopsworks-alert</artifactId>
+      <version>${project.version}</version>
+      <type>ejb</type>
+    </dependency>
+    <dependency>
+      <groupId>io.hops.hopsworks</groupId>
+      <artifactId>hopsworks-alert</artifactId>
+      <version>${project.version}</version>
+      <type>ejb</type>
     </dependency>
   </dependencies>
   <profiles>

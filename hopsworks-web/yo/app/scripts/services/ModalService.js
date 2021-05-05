@@ -1375,6 +1375,30 @@ angular.module('hopsWorksApp')
                     }
                 });
                 return modalInstance.result;
+            },
+            jobAlerts: function (size, projectId, jobName) {
+                var modalInstance = $uibModal.open({
+                    templateUrl: 'views/jobAlerts.html',
+                    controller: 'JobAlertCtrl as jobAlertCtrl',
+                    size: size,
+                    resolve: {
+                        auth: ['$q','AuthGuardService',
+                            function ($q, AuthGuardService) {
+                                return AuthGuardService.guardSession($q).then(
+                                    function(success){
+                                    }, function (error) {
+                                        return $q.reject(error)
+                                    });
+                            }],
+                        projectId: function () {
+                            return projectId;
+                        },
+                        jobName: function () {
+                            return jobName;
+                        }
+                    }
+                });
+                return modalInstance.result;
             }
         };
     }]);

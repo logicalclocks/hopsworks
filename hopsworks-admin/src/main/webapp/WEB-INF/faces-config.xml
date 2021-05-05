@@ -210,6 +210,12 @@
     </navigation-case>
 
     <navigation-case>
+      <from-outcome>alert</from-outcome>
+      <to-view-id>/security/protected/admin/alert.xhtml</to-view-id>
+      <redirect/>
+    </navigation-case>
+
+    <navigation-case>
       <from-outcome>adminIndex</from-outcome>
       <to-view-id>/security/protected/admin/adminIndex.xhtml</to-view-id>
       <redirect/>
