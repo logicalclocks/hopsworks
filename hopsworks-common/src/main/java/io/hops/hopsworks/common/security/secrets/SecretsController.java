@@ -159,7 +159,11 @@ public class SecretsController {
         if (projectIdScope == null) {
           throw new UserException(RESTCodes.UserErrorCode.SECRET_EMPTY, Level.FINE,
             "Secret visibility is PROJECT but there is not Project ID scope",
-            "Project scope for shared secret " + secretId.getName()+ " is null");
+            "Project scope for shared secret " + secretId.getName() + " is null");
+        }
+        if (projectFacade.find(projectIdScope) == null) {
+          throw new UserException(RESTCodes.UserErrorCode.SECRET_EMPTY, Level.FINE,
+            "Could not find a project for Project ID scope " + projectIdScope);
         }
         storedSecret.setProjectIdScope(projectIdScope);
       }

@@ -210,6 +210,7 @@ public class UsersResource {
   @Consumes(MediaType.APPLICATION_JSON)
   @Produces(MediaType.APPLICATION_JSON)
   @ApiOperation(value = "Stores a secret for user")
+  @JWTRequired(acceptedTokens = {Audience.API, Audience.JOB}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   public Response addSecret(SecretDTO secret, @Context SecurityContext sc, @Context HttpServletRequest req)
     throws UserException {
     Users user = jWTHelper.getUserPrincipal(sc);
@@ -236,9 +237,10 @@ public class UsersResource {
   @Path("secrets/shared")
   @Produces(MediaType.APPLICATION_JSON)
   @ApiOperation(value = "Gets the value of a shared secret", response = SecretDTO.class)
+  @JWTRequired(acceptedTokens = {Audience.API, Audience.JOB}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   public Response getSharedSecret(@QueryParam("name") String secretName, @QueryParam("owner") String ownerUsername,
-      @Context SecurityContext sc)
-      throws UserException, ServiceException, ProjectException {
+                                  @Context SecurityContext sc)
+    throws UserException, ServiceException, ProjectException {
     Users caller = jWTHelper.getUserPrincipal(sc);
     SecretPlaintext secret = secretsController.getShared(caller, ownerUsername, secretName);
     SecretDTO dto = secretsBuilder.build(Arrays.asList(secret), true);
@@ -249,6 +251,7 @@ public class UsersResource {
   @Path("secrets/{secretName}")
   @Produces(MediaType.APPLICATION_JSON)
   @ApiOperation(value = "Gets the value of a private secret", response = SecretDTO.class)
+  @JWTRequired(acceptedTokens = {Audience.API, Audience.JOB}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   public Response getSecret(@PathParam("secretName") String name, @Context SecurityContext sc) throws UserException {
     Users user = jWTHelper.getUserPrincipal(sc);
     SecretPlaintext secret = secretsController.get(user, name);
@@ -260,6 +263,7 @@ public class UsersResource {
   @Path("secrets/{secretName}")
   @Produces(MediaType.APPLICATION_JSON)
   @ApiOperation(value = "Deletes a secret by its name")
+  @JWTRequired(acceptedTokens = {Audience.API, Audience.JOB}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   public Response deleteSecret(@PathParam("secretName") String name, @Context HttpServletRequest req,
     @Context SecurityContext sc) throws UserException {
     Users user = jWTHelper.getUserPrincipal(sc);
