@@ -773,13 +773,13 @@
                             </div>
                             <label class="text-muted">{{alertsCtrl.receiverConfig}}</label>
                             <textarea name="emailConfigs" class="form-control " style="resize: vertical;"
-                                      placeholder="[{to: admin@hopsworks.ai, html: ''}, {to: admin@hopsworks.ai, html: ''}]"
+                                      placeholder="[{'to': 'admin@hopsworks.ai', 'html': ''}, {'to': 'admin@hopsworks.ai', 'html': ''}]"
                                       ng-if="alertsCtrl.receiverConfig === 'EmailConfigs'"
                                       ng-model="alertsCtrl.newReceiver.emailConfigs"
                                       ng-change="alertsCtrl.validateJSON(receiverForm.emailConfigs, alertsCtrl.newReceiver.emailConfigs)"
                                       required></textarea>
                             <textarea name="slackConfigs" class="form-control " style="resize: vertical;"
-                                      placeholder="[{api_url: 'https://hooks.slack.com/services/xxx', channel: '#general', icon_url: 'https://gravatar.com/avatar/e3fb1c1d58b043af5e3a6a645b7f569f'}]"
+                                      placeholder="[{'apiUrl': 'https://hooks.slack.com/services/xxx', 'channel': '#general', 'iconUrl': 'https://gravatar.com/avatar/e3fb1c1d58b043af5e3a6a645b7f569f'}]"
                                       ng-if="alertsCtrl.receiverConfig === 'SlackConfigs'"
                                       ng-change="alertsCtrl.validateJSON(receiverForm.slackConfigs, alertsCtrl.newReceiver.slackConfigs)"
                                       ng-model="alertsCtrl.newReceiver.slackConfigs" required></textarea>

@@ -65,6 +65,7 @@ import javax.ws.rs.client.ClientBuilder;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -575,13 +576,20 @@ public class AlertManagerConfiguration {
   }
 
   private void fixRoute(Route route, Project project) {
-    if (route.getMatch() != null && !route.getMatch().isEmpty()) {
+    if ((route.getMatch() == null || route.getMatch().isEmpty()) &&
+        (route.getMatchRe() == null || route.getMatchRe().isEmpty()) ) {
+      route.setMatch(new HashMap<>());
       route.getMatch().put(Constants.ALERT_TYPE_LABEL, AlertType.PROJECT_ALERT.getValue());
       route.getMatch().put(Constants.LABEL_PROJECT, project.getName());
-    }
-    if (route.getMatchRe() != null && !route.getMatchRe().isEmpty()) {
-      route.getMatchRe().put(Constants.ALERT_TYPE_LABEL, AlertType.PROJECT_ALERT.getValue());
-      route.getMatchRe().put(Constants.LABEL_PROJECT, project.getName());
+    } else {
+      if (route.getMatch() != null && !route.getMatch().isEmpty()) {
+        route.getMatch().put(Constants.ALERT_TYPE_LABEL, AlertType.PROJECT_ALERT.getValue());
+        route.getMatch().put(Constants.LABEL_PROJECT, project.getName());
+      }
+      if (route.getMatchRe() != null && !route.getMatchRe().isEmpty()) {
+        route.getMatchRe().put(Constants.ALERT_TYPE_LABEL, AlertType.PROJECT_ALERT.getValue());
+        route.getMatchRe().put(Constants.LABEL_PROJECT, project.getName());
+      }
     }
   }
 

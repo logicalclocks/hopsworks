@@ -69,7 +69,7 @@ angular.module('hopsWorksApp')
                 repeatInterval: undefined,
                 receiver: undefined,
                 continue: false,
-                match: [''],
+                match: [],
                 matchRe: []
             };
             self.newReceiver = {
@@ -259,7 +259,7 @@ angular.module('hopsWorksApp')
                         repeatInterval: undefined,
                         receiver: undefined,
                         continue: false,
-                        match: [''],
+                        match: [],
                         matchRe: []
                     };
                     form.$setPristine();
