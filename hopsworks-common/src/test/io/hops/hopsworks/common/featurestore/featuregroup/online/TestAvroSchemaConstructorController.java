@@ -112,9 +112,10 @@ public class TestAvroSchemaConstructorController {
   
   @Test
   public void testToPrimitiveTypeLogicalDecimal() throws Exception {
-    String hiveType = "decimal";
+    String hiveType = "decimal(10,6)";
     Schema result = avroSchemaConstructorController.toAvroPrimitiveType(hiveType);
-    Assert.assertEquals("{\"type\":\"bytes\",\"logicalType\":\"decimal\",\"precision\":38,\"scale\":0}", result.toString());
+    Assert.assertEquals("{\"type\":\"bytes\",\"logicalType\":\"decimal\",\"precision\":10,\"scale\":6}",
+      result.toString());
   }
   
   @Test
