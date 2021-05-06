@@ -223,6 +223,7 @@ public class UsersResource {
   @Produces(MediaType.APPLICATION_JSON)
   @Audited(type = AuditType.ACCOUNT_AUDIT, action = AuditAction.PROFILE_UPDATE, message = "User added secret")
   @ApiOperation(value = "Stores a secret for user")
+  @JWTRequired(acceptedTokens = {Audience.API, Audience.JOB}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   public Response addSecret(@Secret SecretDTO secret, @AuditTarget(UserIdentifier.REQ) @Context SecurityContext sc,
     @Context HttpServletRequest req) throws UserException {
     Users user = jWTHelper.getUserPrincipal(sc);
@@ -249,9 +250,10 @@ public class UsersResource {
   @Path("secrets/shared")
   @Produces(MediaType.APPLICATION_JSON)
   @ApiOperation(value = "Gets the value of a shared secret", response = SecretDTO.class)
+  @JWTRequired(acceptedTokens = {Audience.API, Audience.JOB}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   public Response getSharedSecret(@QueryParam("name") String secretName, @QueryParam("owner") String ownerUsername,
-      @Context SecurityContext sc)
-      throws UserException, ServiceException, ProjectException {
+                                  @Context SecurityContext sc)
+    throws UserException, ServiceException, ProjectException {
     Users caller = jWTHelper.getUserPrincipal(sc);
     SecretPlaintext secret = secretsController.getShared(caller, ownerUsername, secretName);
     SecretDTO dto = secretsBuilder.build(Arrays.asList(secret), true);
@@ -262,6 +264,7 @@ public class UsersResource {
   @Path("secrets/{secretName}")
   @Produces(MediaType.APPLICATION_JSON)
   @ApiOperation(value = "Gets the value of a private secret", response = SecretDTO.class)
+  @JWTRequired(acceptedTokens = {Audience.API, Audience.JOB}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   public Response getSecret(@PathParam("secretName") String name, @Context SecurityContext sc) throws UserException {
     Users user = jWTHelper.getUserPrincipal(sc);
     SecretPlaintext secret = secretsController.get(user, name);
@@ -274,6 +277,7 @@ public class UsersResource {
   @Produces(MediaType.APPLICATION_JSON)
   @Audited(type = AuditType.ACCOUNT_AUDIT, action = AuditAction.PROFILE_UPDATE, message = "User deleted a secret")
   @ApiOperation(value = "Deletes a secret by its name")
+  @JWTRequired(acceptedTokens = {Audience.API, Audience.JOB}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   public Response deleteSecret(@PathParam("secretName") String name, @Context HttpServletRequest req,
     @AuditTarget(UserIdentifier.REQ) @Context SecurityContext sc) throws UserException {
     Users user = jWTHelper.getUserPrincipal(sc);
