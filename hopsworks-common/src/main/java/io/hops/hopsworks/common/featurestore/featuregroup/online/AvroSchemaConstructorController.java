@@ -81,8 +81,16 @@ public class AvroSchemaConstructorController {
       case TIMESTAMP_TYPE:
         return LogicalTypes.timestampMicros().addToSchema(avroSchema.longType());
       case DECIMAL_TYPE:
-        // is this precision/scale correct?
-        return LogicalTypes.decimal(Type.DECIMAL_TYPE.getMaxPrecision(),Type.DECIMAL_TYPE.getMaximumScale())
+        String precisionScale = hiveType.substring(7);
+        String[] precisionScaleArray;
+        if (precisionScale.startsWith("(") && precisionScale.endsWith(")")) {
+          precisionScale = precisionScale.substring(1, precisionScale.length() - 1);
+          precisionScaleArray = precisionScale.split(",", 2);
+        } else {
+          throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.AVRO_MALFORMED_SCHEMA, Level.FINE, "The " +
+            "provided type is malformed: " + hiveType);
+        }
+        return LogicalTypes.decimal(Integer.parseInt(precisionScaleArray[0]), Integer.parseInt(precisionScaleArray[1]))
           .addToSchema(avroSchema.bytesType());
       default:
         // shouldn't happen
