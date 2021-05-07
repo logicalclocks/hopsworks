@@ -210,7 +210,7 @@ module AlertHelper
     silences = create_random_silences_list(project, num: num)
     i = 0
     while i < num do
-      create_silences(project, silences[i])
+      create_silences_checked(project, silences[i])
       i = i+1
     end
   end
@@ -221,7 +221,7 @@ module AlertHelper
     silences = create_random_alerts_list(project, num: num)
     i = 0
     while i < num do
-      create_silences_admin(silences[i])
+      create_silences_admin_checked(silences[i])
       i = i+1
     end
   end
@@ -320,6 +320,11 @@ module AlertHelper
     post "#{@@alert_silence_resource}" % {projectId: project[:id]}, silence.to_json
   end
 
+  def create_silences_checked(project, silence)
+    post "#{@@alert_silence_resource}" % {projectId: project[:id]}, silence.to_json
+    expect_status_details(201)
+  end
+
   def update_silences(project, id, silence)
     put "#{@@alert_silence_resource}/#{id}" % {projectId: project[:id]}, silence.to_json
   end
@@ -388,6 +393,11 @@ module AlertHelper
 
   def create_silences_admin(silence)
     post "#{@@admin_alert_silence_resource}", silence.to_json
+  end
+
+  def create_silences_admin_checked(silence)
+    post "#{@@admin_alert_silence_resource}", silence.to_json
+    expect_status_details(201)
   end
 
   def update_silences_admin(id, silence)

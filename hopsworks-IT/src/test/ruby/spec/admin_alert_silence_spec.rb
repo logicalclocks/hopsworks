@@ -108,7 +108,7 @@ describe "On #{ENV['OS']}" do
         update[:startsAt] = silence[:startsAt]
         update_silences_admin(silence[:id], update)
         expect_status_details(200)
-        expect(json_body[:endsAt]).to eq update[:endsAt]
+        expect(Date.parse(json_body[:endsAt])).to eq Date.parse(update[:endsAt])
       end
       it "should delete" do
         get_silences_admin
