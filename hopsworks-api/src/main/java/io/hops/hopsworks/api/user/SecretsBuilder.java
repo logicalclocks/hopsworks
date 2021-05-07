@@ -40,6 +40,7 @@ public class SecretsBuilder {
     if (withSecret) {
       dto.setSecret(secret.getPlaintext());
     }
+    dto.setProjectIdScope(secret.getProjectIdScope());
     dto.setVisibility(secret.getVisibilityType());
     return dto;
   }
