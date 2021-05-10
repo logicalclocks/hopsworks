@@ -218,7 +218,7 @@ module AlertHelper
   def create_random_silences_admin(num: 3)
     project = {}
     project[:projectname] = "testAdminProject1"
-    silences = create_random_alerts_list(project, num: num)
+    silences = create_random_silences_list(project, num: num)
     i = 0
     while i < num do
       create_silences_admin_checked(silences[i])
