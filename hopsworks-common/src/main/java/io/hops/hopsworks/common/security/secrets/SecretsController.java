@@ -382,7 +382,7 @@ public class SecretsController {
    */
   private SecretPlaintext constructSecretView(Users user, Secret ciphered) {
     return SecretPlaintext.newInstance(user, ciphered.getId().getName(), "", ciphered.getAddedOn(),
-        ciphered.getVisibilityType());
+        ciphered.getVisibilityType(), ciphered.getProjectIdScope());
   }
   
   /**
@@ -410,10 +410,9 @@ public class SecretsController {
     descriptor = symmetricEncryptionService.decrypt(descriptor);
     
     byte[] plaintext = descriptor.getOutput();
-    
-    
+
     return SecretPlaintext.newInstance(user, ciphered.getId().getName(), bytes2string(plaintext),
-        ciphered.getAddedOn());
+        ciphered.getAddedOn(), ciphered.getVisibilityType(), ciphered.getProjectIdScope());
   }
   
   /**
