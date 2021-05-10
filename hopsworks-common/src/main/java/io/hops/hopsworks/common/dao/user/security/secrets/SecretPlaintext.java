@@ -27,22 +27,21 @@ public final class SecretPlaintext {
   private final Date addedOn;
   private String plaintext;
   private VisibilityType visibilityType;
+  private Integer projectIdScope;
   
-  private SecretPlaintext(Users user, String keyName, String plaintext, Date addedOn, VisibilityType visibilityType) {
+  private SecretPlaintext(Users user, String keyName, String plaintext, Date addedOn, VisibilityType visibilityType,
+                          Integer projectIdScope) {
     this.user = user;
     this.keyName = keyName;
     this.plaintext = plaintext;
     this.addedOn = addedOn;
     this.visibilityType = visibilityType;
-  }
-  
-  public static SecretPlaintext newInstance(Users user, String keyName, String plaintext, Date addedOn) {
-    return new SecretPlaintext(user, keyName, plaintext, addedOn, null);
+    this.projectIdScope = projectIdScope;
   }
   
   public static SecretPlaintext newInstance(Users user, String keyName, String plaintext, Date addedOn,
-      VisibilityType visibilityType) {
-    return new SecretPlaintext(user, keyName, plaintext, addedOn, visibilityType);
+      VisibilityType visibilityType, Integer projectId) {
+    return new SecretPlaintext(user, keyName, plaintext, addedOn, visibilityType, projectId);
   }
   
   public Users getUser() {
@@ -71,5 +70,13 @@ public final class SecretPlaintext {
   
   public void setVisibilityType(VisibilityType visibilityType) {
     this.visibilityType = visibilityType;
+  }
+
+  public Integer getProjectIdScope() {
+    return projectIdScope;
+  }
+
+  public void setProjectIdScope(Integer projectIdScope) {
+    this.projectIdScope = projectIdScope;
   }
 }
