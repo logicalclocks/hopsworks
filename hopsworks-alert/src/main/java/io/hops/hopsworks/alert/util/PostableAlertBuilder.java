@@ -33,7 +33,9 @@ public class PostableAlertBuilder {
     private String jobName;
     private Integer executionId;
     private Integer featureGroupId;
+    private String featureStoreName;
     private String featureGroupName;
+    private Integer featureGroupVersion;
     private AlertType type;
     private AlertSeverity severity;
     private String status;
@@ -80,6 +82,22 @@ public class PostableAlertBuilder {
       return this;
     }
 
+    public Builder withFeatureStoreName(String featureStoreName) {
+      if (jobName != null || executionId != null) {
+        throw new IllegalArgumentException("Alert can be either job or feature group validation.");
+      }
+      this.featureStoreName = featureStoreName;
+      return this;
+    }
+
+    public Builder withFeatureGroupVersion(Integer featureGroupVersion) {
+      if (jobName != null || executionId != null) {
+        throw new IllegalArgumentException("Alert can be either job or feature group validation.");
+      }
+      this.featureGroupVersion = featureGroupVersion;
+      return this;
+    }
+
     public Builder withSummary(String summary) {
       this.summary = summary;
       return this;
@@ -119,8 +137,14 @@ public class PostableAlertBuilder {
         labels.put(Constants.LABEL_FEATURE_GROUP, this.featureGroupName);
         annotations.put(Constants.LABEL_TITLE, this.featureGroupName);
       }
+      if (!Strings.isNullOrEmpty(this.featureStoreName)) {
+        labels.put(Constants.LABEL_FEATURE_STORE, this.featureStoreName);
+      }
       if (this.featureGroupId != null) {
         labels.put(Constants.LABEL_FEATURE_GROUP_ID, this.featureGroupId.toString());
+      }
+      if (this.featureGroupVersion != null) {
+        labels.put(Constants.LABEL_FEATURE_GROUP_VERSION, this.featureGroupVersion.toString());
       }
       if (Strings.isNullOrEmpty(this.summary) || Strings.isNullOrEmpty(this.description)) {
         throw new IllegalArgumentException("Summary and description can not be empty.");

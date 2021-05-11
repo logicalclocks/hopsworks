@@ -24,6 +24,7 @@ import io.hops.hopsworks.alerting.api.alert.dto.Alert;
 import io.hops.hopsworks.alerting.api.alert.dto.PostableAlert;
 import io.hops.hopsworks.alerting.exceptions.AlertManagerClientCreateException;
 import io.hops.hopsworks.alerting.exceptions.AlertManagerResponseException;
+import io.hops.hopsworks.common.featurestore.FeaturestoreFacade;
 import io.hops.hopsworks.common.featurestore.featuregroup.ExpectationResult;
 import io.hops.hopsworks.persistence.entity.alertmanager.AlertSeverity;
 import io.hops.hopsworks.persistence.entity.alertmanager.AlertType;
@@ -57,6 +58,8 @@ public class AlertController {
   private static final Logger LOGGER = Logger.getLogger(AlertController.class.getName());
   @EJB
   private AlertManager alertManager;
+  @EJB
+  private FeaturestoreFacade featurestoreFacade;
 
   /**
    * send feature group alert
@@ -153,7 +156,8 @@ public class AlertController {
       AlertManagerClientCreateException {
     List<PostableAlert> postableAlerts = new ArrayList<>();
     PostableAlert postableAlert = getPostableAlert(project.getName(), alertType, severity, status.getName(),
-        getExpectationResult(status, new ArrayList<>()), Constants.TEST_ALERT_FG_ID, Constants.TEST_ALERT_FG_NAME);
+        getExpectationResult(status, new ArrayList<>()), Constants.TEST_ALERT_FG_ID, Constants.TEST_ALERT_FS_NAME,
+        Constants.TEST_ALERT_FG_NAME, Constants.TEST_ALERT_FG_VERSION);
     postableAlerts.add(postableAlert);
     sendAlert(postableAlerts, project);
     String fgFilter = Constants.FILTER_BY_FG_FORMAT.replace(Constants.FG_PLACE_HOLDER, Constants.TEST_ALERT_FG_NAME) +
@@ -197,10 +201,11 @@ public class AlertController {
     if (featuregroup.getFeatureGroupAlerts() != null && !featuregroup.getFeatureGroupAlerts().isEmpty()) {
       for (FeatureGroupAlert alert : featuregroup.getFeatureGroupAlerts()) {
         if (alert.getStatus().equals(ValidationRuleAlertStatus.getStatus(status))) {
+          String name = featurestoreFacade.getHiveDbName(featuregroup.getFeaturestore().getHiveDbId());
           PostableAlert postableAlert =
               getPostableAlert(featuregroup.getFeaturestore().getProject().getName(), alert.getAlertType(),
                   alert.getSeverity(), alert.getStatus().getName(), getExpectationResult(status, results),
-                  featuregroup.getId(), featuregroup.getName());
+                  featuregroup.getId(), name, featuregroup.getName(), featuregroup.getVersion());
           postableAlerts.add(postableAlert);
         }
       }
@@ -209,10 +214,11 @@ public class AlertController {
       for (ProjectServiceAlert alert : featuregroup.getFeaturestore().getProject().getProjectServiceAlerts()) {
         if (ProjectServiceEnum.FEATURESTORE.equals(alert.getService()) &&
             alert.getStatus().equals(ProjectServiceAlertStatus.getStatus(status))) {
+          String name = featurestoreFacade.getHiveDbName(featuregroup.getFeaturestore().getHiveDbId());
           PostableAlert postableAlert =
               getPostableAlert(featuregroup.getFeaturestore().getProject().getName(), alert.getAlertType(),
                   alert.getSeverity(), alert.getStatus().getName(), getExpectationResult(status, results),
-                  featuregroup.getId(), featuregroup.getName());
+                  featuregroup.getId(), name, featuregroup.getName(), featuregroup.getVersion());
           postableAlerts.add(postableAlert);
         }
       }
@@ -221,13 +227,15 @@ public class AlertController {
   }
 
   private PostableAlert getPostableAlert(String projectName, AlertType alertType, AlertSeverity severity,
-      String status, String results, Integer id, String name) {
+      String status, String results, Integer id, String featureStoreName, String featureGroupName, int version) {
     return new PostableAlertBuilder
         .Builder(projectName, alertType, severity, status)
         .withFeatureGroupId(id)
-        .withFeatureGroupName(name)
+        .withFeatureStoreName(featureStoreName)
+        .withFeatureGroupName(featureGroupName)
+        .withFeatureGroupVersion(version)
         .withSummary("Feature group validation " + status.toLowerCase())
-        .withDescription("Feature group name=" + name + results)
+        .withDescription("Feature group name=" + featureGroupName + results)
         .build();
   }
 

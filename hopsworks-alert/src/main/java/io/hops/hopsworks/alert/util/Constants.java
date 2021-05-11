@@ -44,8 +44,10 @@ public class Constants {
 
   public final static String LABEL_JOB = "job";
   public final static String LABEL_EXECUTION_ID = "executionId";
+  public final static String LABEL_FEATURE_STORE = "featureStore";
   public final static String LABEL_FEATURE_GROUP = "featureGroup";
   public final static String LABEL_FEATURE_GROUP_ID = "featureGroupId";
+  public final static String LABEL_FEATURE_GROUP_VERSION = "featureGroupVersion";
 
   public final static String LABEL_TITLE = "title";
   public final static String LABEL_SUMMARY = "summary";
@@ -67,9 +69,11 @@ public class Constants {
   public final static String FILTER_BY_FG_ID_FORMAT = FILTER_BY_FG_ID_LABEL + FG_ID_PLACE_HOLDER + "\"";
 
   public final static String TEST_ALERT_JOB_NAME = "AlertTestJob";
+  public final static String TEST_ALERT_FS_NAME = "AlertTestFeatureStore";
   public final static String TEST_ALERT_FG_NAME = "AlertTestFeatureGroup";
   public final static Integer TEST_ALERT_EXECUTION_ID = 1;
   public final static Integer TEST_ALERT_FG_ID = 1;
+  public final static Integer TEST_ALERT_FG_VERSION = 1;
 
   public enum TimerType {
     CLIENT,
