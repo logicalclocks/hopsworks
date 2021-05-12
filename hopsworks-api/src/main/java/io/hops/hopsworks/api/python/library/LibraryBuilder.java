@@ -20,7 +20,7 @@ import io.hops.hopsworks.common.api.ResourceRequest;
 import io.hops.hopsworks.common.dao.AbstractFacade;
 import io.hops.hopsworks.common.dao.python.LibraryFacade;
 import io.hops.hopsworks.common.python.library.PackageSource;
-import io.hops.hopsworks.common.python.updates.LibraryUpdatesMonitor;
+import io.hops.hopsworks.common.python.updates.PythonLibraryUpdatesMonitor;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.python.CondaInstallType;
 import io.hops.hopsworks.persistence.entity.python.PythonDep;
@@ -44,7 +44,7 @@ public class LibraryBuilder {
   @EJB
   private LibraryFacade libraryFacade;
   @EJB
-  private LibraryUpdatesMonitor libraryUpdatesMonitor;
+  private PythonLibraryUpdatesMonitor pythonLibraryUpdatesMonitor;
 
   /**
    * @param dto
@@ -148,13 +148,13 @@ public class LibraryBuilder {
   private LibraryDTO buildDTO(LibraryDTO dto, UriInfo uriInfo, ResourceRequest resourceRequest, PythonDep dep,
     Project project) {
     expand(dto, resourceRequest);
-    Set<String> monitoredLibraries = libraryUpdatesMonitor.getMonitoredLibraries();
+    Set<String> monitoredLibraries = pythonLibraryUpdatesMonitor.getMonitoredLibraries();
     String libraryName = dep.getDependency();
     if (dto.isExpand()) {
       dto.setLibrary(libraryName);
       dto.setVersion(dep.getVersion());
       if(monitoredLibraries.contains(libraryName) && dep.getInstallType().equals(CondaInstallType.PIP)) {
-        dto.setLatestVersion(libraryUpdatesMonitor.getLatestVersion(libraryName));
+        dto.setLatestVersion(pythonLibraryUpdatesMonitor.getLatestVersion(libraryName));
       }
       dto.setChannel(dep.getRepoUrl().getUrl());
       dto.setPackageSource(PackageSource.valueOf(dep.getInstallType().name()));
