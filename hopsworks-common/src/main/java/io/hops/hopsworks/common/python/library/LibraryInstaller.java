@@ -87,6 +87,8 @@ public class LibraryInstaller {
   private static final Logger LOG = Logger.getLogger(LibraryInstaller.class.getName());
 
   private static final Comparator<CondaCommands> ASC_COMPARATOR = new CommandsComparator<>();
+  private static final String DOCKER_NO_CACHE_OPT = "--no-cache";
+  private static final String DOCKER_HOST_NETWORK_OPT = "--network=host";
 
   private final AtomicInteger registryGCCycles = new AtomicInteger();
   private String prog;
@@ -340,6 +342,10 @@ public class LibraryInstaller {
     baseDir.mkdirs();
     Project project = projectFacade.findById(cc.getProjectId().getId()).orElseThrow(() -> new ProjectException(
       RESTCodes.ProjectErrorCode.PROJECT_NOT_FOUND, Level.FINE, "projectId: " + cc.getProjectId().getId()));
+
+    ArrayList<String> dockerBuildOpts = new ArrayList<>();
+    dockerBuildOpts.add(DOCKER_HOST_NETWORK_OPT);
+
     try {
       File home = new File(System.getProperty("user.home"));
       File condarc = new File(home, ".condarc");
@@ -358,14 +364,24 @@ public class LibraryInstaller {
                 + " --mount=type=bind,source=.pip,target=/root/.pip ");
         switch (cc.getInstallType()) {
           case CONDA:
-            String condaLib = cc.getVersion().equals(Settings.UNKNOWN_LIBRARY_VERSION) ?
-              cc.getLib() : cc.getLib() + "=" + cc.getVersion();
+            String condaLib;
+            if(cc.getVersion().equals(Settings.UNKNOWN_LIBRARY_VERSION)) {
+              condaLib = cc.getLib();
+              dockerBuildOpts.add(DOCKER_NO_CACHE_OPT);
+            } else {
+              condaLib = cc.getLib() + "=" + cc.getVersion();
+            }
             writer.write(anaconda_dir + "/bin/conda install -y -n " + settings.getCurrentCondaEnvironment()
               + " -c " + cc.getChannelUrl() + " " + condaLib);
             break;
           case PIP:
-            String pipLib = cc.getVersion().equals(Settings.UNKNOWN_LIBRARY_VERSION) ?
-              cc.getLib() : cc.getLib() + "==" + cc.getVersion();
+            String pipLib;
+            if(cc.getVersion().equals(Settings.UNKNOWN_LIBRARY_VERSION)) {
+              pipLib = cc.getLib();
+              dockerBuildOpts.add(DOCKER_NO_CACHE_OPT);
+            } else {
+              pipLib = cc.getLib() + "==" + cc.getVersion();
+            }
             writer.write(anaconda_project_dir + "/bin/pip install --upgrade " + pipLib);
             break;
           case EGG:
@@ -412,6 +428,7 @@ public class LibraryInstaller {
             } else {
               writer.write(anaconda_project_dir + "/bin/pip install --upgrade 'git+" + cc.getArg() + "'");
             }
+            dockerBuildOpts.add(DOCKER_NO_CACHE_OPT);
             break;
           case ENVIRONMENT:
           default:
@@ -432,6 +449,7 @@ public class LibraryInstaller {
           .addCommand("create")
           .addCommand(dockerFile.getAbsolutePath())
           .addCommand(projectUtils.getRegistryURL() + "/" + nextDockerImageName)
+          .addCommand("'" + String.join(" ", dockerBuildOpts) + "'")
           .redirectErrorStream(true)
           .setCurrentWorkingDirectory(baseDir)
           .setWaitTimeout(1, TimeUnit.HOURS)
