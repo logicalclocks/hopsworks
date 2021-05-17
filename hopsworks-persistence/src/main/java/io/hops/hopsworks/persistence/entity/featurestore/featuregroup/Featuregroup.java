@@ -21,6 +21,7 @@ import io.hops.hopsworks.persistence.entity.featurestore.activity.FeaturestoreAc
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.cached.CachedFeaturegroup;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.cached.ValidationType;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.datavalidation.FeatureGroupExpectation;
+import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.datavalidation.alert.FeatureGroupAlert;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.ondemand.OnDemandFeaturegroup;
 import io.hops.hopsworks.persistence.entity.featurestore.statistics.StatisticsConfig;
 import io.hops.hopsworks.persistence.entity.user.Users;
@@ -120,6 +121,8 @@ public class Featuregroup implements Serializable {
   private StatisticsConfig statisticsConfig;
   @OneToMany(cascade = CascadeType.ALL, mappedBy = "featuregroup")
   private Collection<FeatureGroupExpectation> expectations;
+  @OneToMany(cascade = CascadeType.ALL, mappedBy = "featureGroup")
+  private Collection<FeatureGroupAlert> featureGroupAlerts;
 
   public Featuregroup() { }
 
@@ -234,7 +237,16 @@ public class Featuregroup implements Serializable {
   public void setExpectations(Collection<FeatureGroupExpectation> expectations) {
     this.expectations = expectations;
   }
-
+  
+  public Collection<FeatureGroupAlert> getFeatureGroupAlerts() {
+    return featureGroupAlerts;
+  }
+  
+  public void setFeatureGroupAlerts(
+      Collection<FeatureGroupAlert> featureGroupAlerts) {
+    this.featureGroupAlerts = featureGroupAlerts;
+  }
+  
   @Override
   public boolean equals(Object o) {
     if (this == o) return true;

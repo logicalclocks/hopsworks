@@ -21,6 +21,7 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
+import io.hops.hopsworks.common.alert.AlertController;
 import io.hops.hopsworks.common.featurestore.activity.FeaturestoreActivityFacade;
 import io.hops.hopsworks.common.featurestore.feature.FeatureGroupFeatureDTO;
 import io.hops.hopsworks.common.featurestore.featuregroup.ExpectationResult;
@@ -106,7 +107,7 @@ public class FeatureGroupValidationsController {
   @EJB
   private FeaturestoreActivityFacade activityFacade;
   @EJB
-  private Settings settings;
+  private AlertController alertController;
 
   public Pair<FeatureGroupValidation, List<ExpectationResult>> getFeatureGroupValidationResults(Users user,
     Project project,
@@ -168,6 +169,7 @@ public class FeatureGroupValidationsController {
   public FeatureGroupValidation putFeatureGroupValidationResults(Users user, Project project,
     Featuregroup featuregroup, List<ExpectationResult> results, Long validationTime) throws FeaturestoreException {
     FeatureGroupValidation.Status status = getValidationResultStatus(results);
+    alertController.sendAlert(featuregroup, results, status);
     if (featuregroup.getValidationType().getSeverity() < status.getSeverity()) {
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.FEATURE_GROUP_CHECKS_FAILED,
               java.util.logging.Level.FINE,

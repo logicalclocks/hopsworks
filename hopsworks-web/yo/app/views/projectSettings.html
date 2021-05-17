@@ -100,20 +100,14 @@
                                 <p></p>
                                 <label class="control-label">Data Retention Period</label>
                                 <div class='input-group date col-md-8' id='schedulePicker'>
-                                  <input id="dpInput" type="text" ng-model="projectCtrl.currentProject.retentionPeriod" data-format="YYYY-MM-DD" class="form-control">
+                                  <input id="dpInput" type="text" hw-date-picker
+                                         ng-model="projectCtrl.currentProject.retentionPeriod"
+                                         data-format="YYYY-MM-DD"
+                                         class="form-control">
                                   <span class="input-group-addon">
                                     <span class="glyphicon glyphicon-calendar"></span>
                                   </span>
                                 </div>
-                                <script type="text/javascript">
-                                              $(function () {
-                                                $('#schedulePicker').datetimepicker({
-                                                  format: 'YYYY-MM-DD'
-                                                }).on('dp.change', function (e) {
-                                                  $('#dpInput').trigger('input');
-                                                });
-                                              });</script>
-
                                 <p></p>
                               </div>
                             </fieldset>
@@ -502,7 +496,593 @@
                   </div>
                 </div>
               </uib-tab>
-              <uib-tab index="5" heading="Cloud Roles"
+              <uib-tab index="5" heading="Project Alerts">
+                <h3>Project alert settings </h3>
+                <div class="row" ng-controller="AlertManagerCtrl as alertsCtrl">
+                  <div class="col-sm-6">
+                    <div class="panel panel-default" style="background-color: #F7F7F7;">
+                      <div class="panel-heading">
+                        Service Alerts
+                      </div>
+                      <div class="panel-body">
+                        <div class="loader loader-sm" ng-show="alertsCtrl.loadingServiceAlerts" style="position: unset"></div>
+                        <div class="row" style="padding-bottom: 20px">
+                          <div class="col-sm-2">
+                            <label class="control-label">Service</label>
+                            <select class="form-control" id="sel1" ng-model="alertsCtrl.newAlert.service"
+                                    ng-options="x for x in alertsCtrl.values.service">
+                            </select>
+                          </div>
+                          <div class="col-sm-3">
+                            <label class="control-label">Status</label>
+                            <select class="form-control" id="sel2" ng-model="alertsCtrl.newAlert.status"
+                                    ng-options="x for x in alertsCtrl.values.status">
+                            </select>
+                          </div>
+                          <div class="col-sm-2">
+                            <label class="control-label">Severity</label>
+                            <select class="form-control" id="sel3" ng-model="alertsCtrl.newAlert.severity"
+                                    ng-options="x for x in alertsCtrl.values.severity">
+                            </select>
+                          </div>
+                          <div class="col-sm-3">
+                            <label class="control-label">Alert type</label>
+                            <select class="form-control" id="sel4" ng-model="alertsCtrl.newAlert.alertType"
+                                    ng-options="x for x in alertsCtrl.values.alertType">
+                            </select>
+                          </div>
+                          <div class="col-sm-2">
+                            <label class="control-label">Action</label>
+                            <button class="form-control btn btn-success" uib-tooltip="Create"
+                                    ng-click="alertsCtrl.createServiceAlert()">
+                              <i class="fa fa-plus"></i> Create new
+                            </button>
+                          </div>
+                        </div>
+                        <div ng-show="alertsCtrl.serviceAlerts.length < 1"> No service alerts to show.</div>
+                        <div ng-show="alertsCtrl.serviceAlerts.length > 0">
+                          <table class="table table-bordered table-striped">
+                            <thead>
+                            <tr>
+                              <th>Service</th>
+                              <th>Status</th>
+                              <th>Severity</th>
+                              <th>Type</th>
+                              <th>Created on</th>
+                              <th class="text-center">Action</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <tr ng-repeat="serviceAlert in alertsCtrl.serviceAlerts">
+                              <td>{{ serviceAlert.service }}</td>
+                              <td>{{ serviceAlert.status }}</td>
+                              <td>{{ serviceAlert.severity }}</td>
+                              <td>{{ serviceAlert.alertType }}</td>
+                              <td>{{ serviceAlert.created | date:'medium'}}</td>
+                              <td class="text-center">
+                                <button class="btn btn-danger" uib-tooltip="Delete"
+                                        ng-click="alertsCtrl.deleteServiceAlert(serviceAlert)">
+                                  <i class="fa fa-trash"></i>
+                                </button>
+                                <button class="btn btn-success" uib-tooltip="Test"
+                                        ng-click="alertsCtrl.testServiceAlert(serviceAlert)">
+                                  <i class="fa fa-paper-plane"></i>
+                                </button>
+                              </td>
+                            </tr>
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="col-sm-6">
+                    <div class="panel panel-default" style="background-color: #F7F7F7;">
+                      <div class="panel-heading">
+                        Routes
+                      </div>
+                      <div class="panel-body">
+                        <div class="row">
+                          <div class="col-sm-6 border-right">
+                            <h4>Create new</h4>
+                            <form name="receiverForm" role="form" ng-submit="alertsCtrl.createRoute(receiverForm)">
+                              <div class="form-group has-feedback">
+                                <label class="text-muted">Receiver</label>
+                                <select name="receiver" class="form-control" ng-model="alertsCtrl.newRoute.receiver" required>
+                                  <option value="">--Select Receiver--</option>
+                                  <option ng-repeat="receiver in alertsCtrl.receivers">{{receiver.name}}</option>
+                                </select>
+                                <label class="text-muted">Group Wait</label>
+                                <input name="groupWait"
+                                       placeholder="Group wait. ex. 30s"
+                                       ng-model="alertsCtrl.newRoute.groupWait"
+                                       class="form-control "
+                                       type="text">
+                                <label class="text-muted">Group Interval</label>
+                                <input name="groupInterval"
+                                       placeholder="Group wait. ex. 5m"
+                                       ng-model="alertsCtrl.newRoute.groupInterval"
+                                       class="form-control "
+                                       type="text">
+                                <label class="text-muted">Repeat Interval</label>
+                                <input name="repeatInterval"
+                                       placeholder="Repeat Interval. ex. 4h"
+                                       ng-model="alertsCtrl.newRoute.repeatInterval"
+                                       class="form-control "
+                                       type="text">
+                                <label class="text-muted">Group By</label>
+                                <input name="groupBy"
+                                       placeholder="Group By. Comma separated values. ex. type,project,alertname"
+                                       ng-model="alertsCtrl.newRoute.groupBy"
+                                       class="form-control "
+                                       type="text">
+                                <label class="text-muted">Continue</label>
+                                <div class="checkbox c-checkbox">
+                                  <label>
+                                    <input name="continue" ng-model="alertsCtrl.newRoute.continue" type="checkbox">
+                                    <span class="fa fa-check"></span>
+                                  </label>
+                                </div>
+                                <label class="text-muted">Match</label>
+                                <div data-ng-repeat="match in alertsCtrl.newRoute.match track by $index"
+                                     style="padding-bottom: 5px">
+                                  <div class="input-group">
+                                    <input name="matchKeyVal" placeholder="Key=Value"
+                                           value="{{match}}"
+                                           ng-model="alertsCtrl.newRoute.match[$index]"
+                                           class="form-control"
+                                           type="text" required>
+                                    <span class="input-group-btn">
+                                      <button class="btn btn-danger fa fa-trash-o icon-resize-small"
+                                              type="button"
+                                              title="Delete"
+                                              ng-click="alertsCtrl.newRoute.match.splice($index, 1)"></button>
+                                    </span>
+                                  </div>
+                                </div>
+                                <div>
+                                  <button type="button"
+                                          uib-tooltip="Add match"
+                                          ng-click="alertsCtrl.newRoute.match.push('')"
+                                          class="btn btn-sm btn-default btn-success control-label" style="margin-bottom:
+                              10px">
+                                    Add Match<i style="margin-left: 10px" class="glyphicon glyphicon-plus"></i>
+                                  </button>
+                                </div>
+                                <label class="text-muted">Match regex</label>
+                                <div data-ng-repeat="matchRe in alertsCtrl.newRoute.matchRe track by $index"
+                                     style="padding-bottom: 5px">
+                                  <div class="input-group">
+                                    <input name="matchReKeyVal" placeholder="Key=Value"
+                                           value="{{matchRe}}"
+                                           ng-model="alertsCtrl.newRoute.matchRe[$index]"
+                                           class="form-control"
+                                           type="text" required>
+                                    <span class="input-group-btn">
+                                      <button class="btn btn-danger fa fa-trash-o icon-resize-small"
+                                              type="button"
+                                              title="Delete"
+                                              ng-click="alertsCtrl.newRoute.matchRe.splice($index, 1)"></button>
+                                    </span>
+                                  </div>
+                                </div>
+                                <div>
+                                  <button type="button"
+                                          uib-tooltip="Add match regex"
+                                          ng-click="alertsCtrl.newRoute.matchRe.push('')"
+                                          class="btn btn-sm btn-default btn-success control-label" style="margin-bottom:10px">
+                                    Add MatchRe<i style="margin-left: 10px" class="glyphicon glyphicon-plus"></i>
+                                  </button>
+                                </div>
+                              </div>
+                              <div class="row">
+                                <div class="col-md-12">
+                                  <button type="submit" class="btn btn-primary pull-right"
+                                          data-ng-disabled="alertsCtrl.routeWorking">
+                                    Create Route
+                                  </button>
+                                </div>
+                              </div>
+                            </form>
+                          </div>
+                          <div class="col-sm-6">
+                            <h4>Existing routes</h4>
+                            <div class="loader loader-sm" ng-show="alertsCtrl.loadingRoutes" style="position: unset"></div>
+                            <div ng-show="alertsCtrl.routes.length < 1"> No routes to show.</div>
+                            <div ng-show="alertsCtrl.routes.length > 0">
+
+                              <div uib-accordion close-others="true">
+                                <div uib-accordion-group class="panel-default"
+                                     ng-repeat="route in alertsCtrl.routes track by $index"
+                                     is-open="alertsCtrl.statusRoute[$index]">
+                                  <uib-accordion-heading>
+                                    <div class="hw-ellipsis">
+                                      {{route.receiver}}
+                                      <i class="pull-right glyphicon"
+                                         ng-class="{'glyphicon-chevron-down': alertsCtrl.statusRoute[$index], 'glyphicon-chevron-right': !alertsCtrl.statusRoute[$index]}"></i>
+                                    </div>
+                                  </uib-accordion-heading>
+                                  <div style="overflow-x: auto">
+                                    <span ng-show="route.groupBy">Group By: {{route.groupBy}}<br></span>
+                                    <span ng-show="route.groupWait">Group Wait: {{route.groupWait}}<br></span>
+                                    <span ng-show="route.groupInterval">Group Interval: {{route.groupInterval}}<br></span>
+                                    <span ng-show="route.repeatInterval">Repeat Interval: {{route.repeatInterval}}<br></span>
+                                    <span ng-show="route.continue">Continue: {{route.continue}}<br></span>
+                                    <span ng-show="route.match && route.match['entry'].length > 0">
+                                        Match: <br>
+                                        <span ng-repeat="match in route.match['entry']">
+                                          &nbsp;&nbsp;{{match.key}}: {{match.value}} <br>
+                                        </span>
+                                    </span>
+                                        <span ng-show="route.matchRe && route.matchRe['entry'].length > 0">
+                                        MatchRe: <br>
+                                        <span ng-repeat="matchRe in route.matchRe['entry']">
+                                          &nbsp;&nbsp;{{matchRe.key}}: {{matchRe.value}} <br>
+                                        </span>
+                                    </span>
+                                  </div>
+                                  <div class="row">
+                                    <button class="btn btn-danger pull-right" style="margin-right: 16px"
+                                            ng-if="!alertsCtrl.isGlobalRoute(route)"
+                                            data-ng-disabled="alertsCtrl.receiverWorking"
+                                            ng-click="alertsCtrl.deleteRoute(route)">
+                                      Delete
+                                    </button>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="col-sm-6">
+                    <div class="panel panel-default" style="background-color: #F7F7F7;">
+                      <div class="panel-heading">
+                        Receivers
+                      </div>
+                      <div class="panel-body">
+                        <div class="row">
+                          <div class="col-sm-4 border-right">
+                            <h4>Create new</h4>
+                            <form name="receiverForm" role="form" ng-submit="alertsCtrl.createReceiver(receiverForm)">
+                              <div class="form-group has-feedback">
+                                <label class="text-muted">Name</label>
+                                <input name="receiverName"
+                                       placeholder="Receiver"
+                                       ng-model="alertsCtrl.newReceiver.name"
+                                       class="form-control "
+                                       type="text" required>
+                                <div class="radio">
+                                  <label class="radio text-muted"
+                                         ng-repeat="receiverConfig in alertsCtrl.receiverConfigs track by $index">
+                                    <input type="radio"
+                                           ng-model="alertsCtrl.receiverConfig"
+                                           ng-change="alertsCtrl.receiverConfigNewValue()"
+                                           value="{{receiverConfig}}">
+                                    {{receiverConfig}}
+                                  </label>
+                                </div>
+                                <label class="text-muted">{{alertsCtrl.receiverConfig}}</label>
+                                <textarea name="emailConfigs" class="form-control " style="resize: vertical;"
+                                          placeholder="[{'to': 'admin@hopsworks.ai', 'html': ''}, {'to': 'admin@hopsworks.ai', 'html': ''}]"
+                                          ng-if="alertsCtrl.receiverConfig === 'EmailConfigs'"
+                                          ng-model="alertsCtrl.newReceiver.emailConfigs"
+                                          ng-change="alertsCtrl.validateJSON(receiverForm.emailConfigs, alertsCtrl.newReceiver.emailConfigs)"
+                                          required></textarea>
+                                <textarea name="slackConfigs" class="form-control " style="resize: vertical;"
+                                          placeholder="[{'apiUrl': 'https://hooks.slack.com/services/xxx', 'channel': '#general', 'iconUrl': 'https://gravatar.com/avatar/e3fb1c1d58b043af5e3a6a645b7f569f'}]"
+                                          ng-if="alertsCtrl.receiverConfig === 'SlackConfigs'"
+                                          ng-change="alertsCtrl.validateJSON(receiverForm.slackConfigs, alertsCtrl.newReceiver.slackConfigs)"
+                                          ng-model="alertsCtrl.newReceiver.slackConfigs" required></textarea>
+                                <textarea name="pagerdutyConfigs" class="form-control " style="resize: vertical;"
+                                          placeholder="PagerdutyConfigs"
+                                          ng-if="alertsCtrl.receiverConfig === 'PagerdutyConfigs'"
+                                          ng-change="alertsCtrl.validateJSON(receiverForm.pagerdutyConfigs, alertsCtrl.newReceiver.pagerdutyConfigs)"
+                                          ng-model="alertsCtrl.newReceiver.pagerdutyConfigs" required></textarea>
+                                <textarea name="pushoverConfigs" class="form-control " style="resize: vertical;"
+                                          placeholder="PushoverConfigs"
+                                          ng-if="alertsCtrl.receiverConfig === 'PushoverConfigs'"
+                                          ng-change="alertsCtrl.validateJSON(receiverForm.pushoverConfigs, alertsCtrl.newReceiver.pushoverConfigs)"
+                                          ng-model="alertsCtrl.newReceiver.pushoverConfigs" required></textarea>
+                                <textarea name="opsgenieConfigs" class="form-control " style="resize: vertical;"
+                                          placeholder="OpsgenieConfigs"
+                                          ng-if="alertsCtrl.receiverConfig === 'OpsgenieConfigs'"
+                                          ng-change="alertsCtrl.validateJSON(receiverForm.opsgenieConfigs, alertsCtrl.newReceiver.opsgenieConfigs)"
+                                          ng-model="alertsCtrl.newReceiver.opsgenieConfigs" required></textarea>
+                                <textarea name="webhookConfigs" class="form-control " style="resize: vertical;"
+                                          placeholder="WebhookConfigs"
+                                          ng-if="alertsCtrl.receiverConfig === 'WebhookConfigs'"
+                                          ng-change="alertsCtrl.validateJSON(receiverForm.webhookConfigs, alertsCtrl.newReceiver.webhookConfigs)"
+                                          ng-model="alertsCtrl.newReceiver.webhookConfigs" required></textarea>
+                                <textarea name="victoropsConfigs" class="form-control " style="resize: vertical;"
+                                          placeholder="VictoropsConfigs"
+                                          ng-if="alertsCtrl.receiverConfig === 'VictoropsConfigs'"
+                                          ng-change="alertsCtrl.validateJSON(receiverForm.victoropsConfigs, alertsCtrl.newReceiver.victoropsConfigs)"
+                                          ng-model="alertsCtrl.newReceiver.victoropsConfigs" required></textarea>
+                                <textarea name="wechatConfigs" class="form-control " style="resize: vertical;"
+                                          placeholder="WechatConfigs"
+                                          ng-if="alertsCtrl.receiverConfig === 'WechatConfigs'"
+                                          ng-change="alertsCtrl.validateJSON(receiverForm.wechatConfigs, alertsCtrl.newReceiver.wechatConfigs)"
+                                          ng-model="alertsCtrl.newReceiver.wechatConfigs" required></textarea>
+                              </div>
+                              <div class="row">
+                                <div class="col-md-12">
+                                  <button type="submit" class="btn btn-primary pull-right"
+                                          ng-disabled="!receiverForm.$valid"
+                                          data-ng-disabled="alertsCtrl.receiverWorking">
+                                    Create Receiver
+                                  </button>
+                                </div>
+                              </div>
+                            </form>
+                          </div>
+                          <div class="col-sm-8">
+                            <h4>Existing receivers</h4>
+                            <div class="loader loader-sm" ng-show="alertsCtrl.loadingReceivers" style="position: unset"></div>
+                            <div ng-show="alertsCtrl.receivers.length < 1"> No receivers to show.</div>
+                            <div ng-show="alertsCtrl.receivers.length > 0">
+                              <div uib-accordion close-others="true" >
+                                <div uib-accordion-group class="panel-default"
+                                     ng-repeat="receiver in alertsCtrl.receivers"
+                                     is-open="alertsCtrl.statusReceiver[receiver.name]">
+                                  <uib-accordion-heading>
+                                    <div ng-click="alertsCtrl.opened(receiver.name)" class="hw-ellipsis">
+                                      {{receiver.name}}
+                                      <i class="pull-right glyphicon"
+                                         ng-class="{'glyphicon-chevron-down': alertsCtrl.statusReceiver[receiver.name], 'glyphicon-chevron-right': !alertsCtrl.statusReceiver[receiver.name]}"></i>
+                                    </div>
+                                  </uib-accordion-heading>
+                                  <md-input-container class="md-block">
+                                    <div class="loader loader-sm" ng-show="alertsCtrl.loadingReceiver" style="position: unset"></div>
+                                    <div ng-show="alertsCtrl.receiver.emailConfigs">
+                                      <label>Email Configs:</label><br/>
+                                      <pre><code>{{alertsCtrl.showReceiverValue(alertsCtrl.receiver.emailConfigs)}}</code></pre>
+                                    </div>
+                                    <div ng-show="alertsCtrl.receiver.slackConfigs">
+                                      <label>Slack Configs:</label><br/>
+                                      <pre><code>{{alertsCtrl.showReceiverValue(alertsCtrl.receiver.slackConfigs)}}</code></pre>
+                                    </div>
+                                    <div ng-show="alertsCtrl.receiver.pagerdutyConfigs">
+                                      <label>Pagerduty Configs:</label><br/>
+                                      <pre><code>{{alertsCtrl.showReceiverValue(alertsCtrl.receiver.pagerdutyConfigs)}}</code></pre>
+                                    </div>
+                                    <div ng-show="alertsCtrl.receiver.pushoverConfigs">
+                                      <label>Pushover Configs:</label><br/>
+                                      <pre><code>{{alertsCtrl.showReceiverValue(alertsCtrl.receiver.pushoverConfigs)}}</code></pre>
+                                    </div>
+                                    <div ng-show="alertsCtrl.receiver.opsgenieConfigs">
+                                      <label>Opsgenie Configs:</label><br/>
+                                      <pre><code>{{alertsCtrl.showReceiverValue(alertsCtrl.receiver.opsgenieConfigs)}}</code></pre>
+                                    </div>
+                                    <div ng-show="alertsCtrl.receiver.webhookConfigs">
+                                      <label>Webhook Configs:</label><br/>
+                                      <pre><code>{{alertsCtrl.showReceiverValue(alertsCtrl.receiver.webhookConfigs)}}</code></pre>
+                                    </div>
+                                    <div ng-show="alertsCtrl.receiver.victoropsConfigs">
+                                      <label>Victorops Configs:</label><br/>
+                                      <pre><code>{{alertsCtrl.showReceiverValue(alertsCtrl.receiver.victoropsConfigs)}}</code></pre>
+                                    </div>
+                                    <div ng-show="alertsCtrl.receiver.wechatConfigs">
+                                      <label>WechatConfigs:</label><br/>
+                                      <pre><code>{{alertsCtrl.showReceiverValue(alertsCtrl.receiver.wechatConfigs)}}</code></pre>
+                                    </div>
+                                  </md-input-container>
+                                  <div class="row">
+                                    <button class="btn btn-danger pull-right" style="margin-right: 16px"
+                                            data-ng-disabled="alertsCtrl.receiverWorking"
+                                            ng-if="!alertsCtrl.isGlobalReceiver(receiver)"
+                                            ng-click="alertsCtrl.deleteReceiver(receiver.name)">
+                                      Delete
+                                    </button>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="col-sm-6">
+                    <div class="panel panel-default" style="background-color: #F7F7F7;">
+                      <div class="panel-heading">
+                        Silence
+                      </div>
+                      <div class="panel-body">
+                        <div class="row">
+                          <div class="col-sm-6  border-right">
+                            <h4>Create new</h4>
+                            <form name="silenceForm" role="form" ng-submit="alertsCtrl.createSilence(silenceForm)">
+                              <div class="form-group has-feedback">
+                                <label class="text-muted">Comment</label>
+                                <input name="newSilence"
+                                       placeholder="Comment"
+                                       ng-model="alertsCtrl.newSilence.comment"
+                                       class="form-control "
+                                       type="text" required>
+                                <br/>
+                                <div class="row">
+                                  <div class="col-sm-6">
+                                    <label class="control-label text-muted">Starts At</label>
+                                    <div class='input-group date'>
+                                      <input id="startsAt" type="text" hw-date-picker
+                                             ng-model="alertsCtrl.newSilence.startsAt"
+                                             data-format="YYYY-MM-DD HH:mm"
+                                             class="form-control" required>
+                                          <span class="input-group-addon">
+                                            <span class="glyphicon glyphicon-calendar"></span>
+                                          </span>
+                                    </div>
+                                  </div>
+                                  <div class="col-sm-6">
+                                    <label class="control-label text-muted">Ends At</label>
+                                    <div class='input-group date'>
+                                      <input id="endsAt" type="text" hw-date-picker
+                                             ng-model="alertsCtrl.newSilence.endsAt"
+                                             data-format="YYYY-MM-DD HH:mm"
+                                             class="form-control" required>
+                                      <span class="input-group-addon">
+                                        <span class="glyphicon glyphicon-calendar"></span>
+                                      </span>
+                                    </div>
+                                  </div>
+                                </div>
+                                <br/>
+                                <label class="text-muted">Matchers</label>
+                                <div data-ng-repeat="matcher in alertsCtrl.newSilence.matchers track by $index"
+                                     style="padding-bottom: 5px">
+                                  <label class="text-muted">Is regex</label>
+                                  <div class="checkbox c-checkbox">
+                                    <label>
+                                      <input name="continue" ng-model="matcher.isRegex" type="checkbox">
+                                      <span class="fa fa-check"></span>
+                                    </label>
+                                  </div>
+                                  <label class="text-muted">Name</label>
+                                  <input name="matcher" placeholder="Matcher name" ng-model="matcher.name"
+                                         class="form-control"
+                                         type="text" required>
+                                  <label class="text-muted">Value</label>
+                                  <input name="matcher" placeholder="Matcher value" ng-model="matcher.value"
+                                         class="form-control"
+                                         type="text" required>
+                                  <br/>
+                                  <button class="btn btn-danger fa fa-trash-o"
+                                          ng-show="$index > 0"
+                                          type="button"
+                                          title="Delete"
+                                          ng-click="alertsCtrl.newSilence.matchers.splice($index, 1)"></button>
+                                  <hr/>
+                                </div>
+                                <br/>
+                                <div>
+                                  <button type="button"
+                                          uib-tooltip="Add match"
+                                          ng-click="alertsCtrl.newSilence.matchers.push({isRegex: false, name: undefined, value: undefined})"
+                                          class="btn btn-sm btn-default btn-success control-label" style="margin-bottom:
+                              10px">
+                                    Add Matcher<i style="margin-left: 10px" class="glyphicon glyphicon-plus"></i>
+                                  </button>
+                                </div>
+                              </div>
+                              <div class="row">
+                                <div class="col-md-12">
+                                  <button type="submit" class="btn btn-primary pull-right"
+                                          data-ng-disabled="alertsCtrl.silenceWorking">
+                                    Create Silence
+                                  </button>
+                                </div>
+                              </div>
+                            </form>
+                          </div>
+                          <div class="col-sm-6">
+                            <h4>Existing silence</h4>
+                            <div class="loader loader-sm" ng-show="alertsCtrl.loadingSilences" style="position: unset"></div>
+                            <div ng-show="alertsCtrl.silences.length < 1"> No silences to show.</div>
+                            <div ng-show="alertsCtrl.silences.length > 0">
+                              <div uib-accordion close-others="true">
+                                <div uib-accordion-group class="panel-default"
+                                     ng-repeat="silence in alertsCtrl.silences"
+                                     is-open="alertsCtrl.statusSilences[silence.id]">
+                                  <uib-accordion-heading>
+                                    <div class="hw-ellipsis">
+                                      {{silence.id}} {{silence.comment}}
+                                      <i class="pull-right glyphicon"
+                                         ng-class="{'glyphicon-chevron-down': alertsCtrl.statusSilences[silence.id], 'glyphicon-chevron-right': !alertsCtrl.statusSilences[silence.id]}"></i>
+                                    </div>
+                                  </uib-accordion-heading>
+                                  <div style="overflow-x: auto">
+                                    <span ng-show="silence.comment">Comment: {{silence.comment}}<br></span>
+                                    <span ng-show="silence.status">Status: {{silence.status.state}}<br></span>
+                                    <span ng-show="silence.createdBy">Created By: {{silence.createdBy}}<br></span>
+                                    <span ng-show="silence.updatedAt">UpdatedAt: {{silence.updatedAt | date:'medium'}}<br></span>
+                                    <span ng-show="silence.startsAt">StartsAt: {{silence.startsAt | date:'medium'}}<br></span>
+                                    <span ng-show="silence.endsAt">EndsAt: {{silence.endsAt | date:'medium'}}<br></span>
+                                    <span ng-show="silence.matchers.length > 0">
+                                      Matchers: <br>
+                                      <span ng-repeat="matcher in silence.matchers">
+                                        &nbsp;&nbsp;{{matcher.name}}: {{matcher.value}} <br>
+                                      </span>
+                                    </span>
+                                  </div>
+                                  <div class="row">
+                                    <button class="btn btn-danger pull-right" style="margin-right: 16px"
+                                            data-ng-disabled="alertsCtrl.receiverWorking"
+                                            ng-if="silence.status.state !== 'expired'"
+                                            ng-click="alertsCtrl.deleteSilence(silence.id)">
+                                      Delete
+                                    </button>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="col-sm-6">
+                    <div class="panel panel-default" style="background-color: #F7F7F7;">
+                      <div class="panel-heading">
+                        Active alerts
+                      </div>
+                      <div class="panel-body">
+                        <div class="loader loader-sm" ng-show="alertsCtrl.loadingAlerts" style="position: unset"></div>
+                        <div ng-show="alertsCtrl.alerts.length < 1"> No active alerts to show.</div>
+                        <div ng-show="alertsCtrl.alerts.length > 0">
+                          <div uib-accordion close-others="true">
+                            <div uib-accordion-group class="panel-default"
+                                 ng-repeat="alert in alertsCtrl.alerts"
+                                 is-open="alertsCtrl.statusAlerts[alert.fingerprint]">
+                              <uib-accordion-heading>
+                                <div>
+                                  {{alert.fingerprint}}
+                                  <i class="pull-right glyphicon"
+                                     ng-class="{'glyphicon-chevron-down': alertsCtrl.statusAlerts[alert.fingerprint], 'glyphicon-chevron-right': !alertsCtrl.statusAlerts[alert.fingerprint]}"></i>
+                                </div>
+                              </uib-accordion-heading>
+                              <div class="alert alert-warning"
+                                   ng-show="!alertsCtrl.validReceiver(alert.receivers)">
+                                <strong>Warning!</strong> There are no valid receivers found for this alert.
+                              </div>
+                              <div style="overflow-x: auto">
+                                <span ng-show="alert.status">
+                                    <span ng-show="alert.status">
+                                      <strong>Status:</strong> {{alert.status.state}}<br></span>
+                                    <span ng-show="alert.status.inhibitedBy.length > 0">
+                                      <strong>InhibitedBy:</strong> {{alert.status.inhibitedBy}}<br></span>
+                                    <span ng-show="alert.status.silencedBy.length > 0">
+                                      <strong>SilencedBy:</strong> {{alert.status.silencedBy}}<br></span>
+                                </span>
+                                <span ng-show="alert.updatedAt"><strong>UpdatedAt:</strong> {{alert.updatedAt | date:'medium'}}<br></span>
+                                <span ng-show="alert.startsAt"><strong>StartsAt:</strong> {{alert.startsAt | date:'medium'}}<br></span>
+                                <span ng-show="alert.endsAt"><strong>EndsAt:</strong> {{alert.endsAt | date:'medium'}}<br></span>
+                                <span ng-show="alert.generatorURL"><strong>GeneratorURL:</strong> {{alert.generatorURL}}<br></span>
+                                <span ng-show="alert.receivers"><strong>Receivers:</strong> {{alert.receivers}}<br></span>
+                                <span ng-show="alert.labels['entry'].length > 0">
+                                      <strong>Labels:</strong> <br>
+                                      <span ng-repeat="label in alert.labels['entry']">
+                                        &nbsp;&nbsp;{{label.key}}:{{label.value}} <br>
+                                      </span>
+                                </span>
+                                <span ng-show="alert.annotations['entry'].length > 0">
+                                      <strong>Annotations:</strong> <br>
+                                      <span ng-repeat="annotation in alert.annotations['entry']">
+                                        &nbsp;&nbsp;{{annotation.key}}:{{annotation.value}}<br>
+                                      </span>
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </uib-tab>
+              <uib-tab index="6" heading="Cloud Roles"
                      ng-if="projectSettingsCtrl.cloudRoleMappings != undefined && projectSettingsCtrl.cloudRoleMappings.length > 0">
                 <h3>Cloud Roles accessible from this project</h3>
                 <div class="panel panel-default" style="width: 800px; background-color: #F7F7F7;">

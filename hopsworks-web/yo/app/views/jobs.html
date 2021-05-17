@@ -219,6 +219,8 @@
                               <li><a role="menuitem" ng-click="jobsCtrl.makeACopy(job.config, 1); $event.stopPropagation();" >Make a copy</a></li>
                               <li><a ng-href="{{ downloadLink }}" role="menuitem"
                                      ng-click="jobsCtrl.exportJob(job); $event.stopPropagation();" >Export</a></li>
+                              <li><a role="menuitem"
+                                     ng-click="jobsCtrl.alerts(job); $event.stopPropagation();" >Alerts</a></li>
                             </ul>
                           </div>
                         </div>

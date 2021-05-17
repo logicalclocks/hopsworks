@@ -40,6 +40,8 @@
 package io.hops.hopsworks.rest.application.config;
 
 import io.hops.hopsworks.api.admin.UsersAdminResource;
+import io.hops.hopsworks.api.admin.alert.AdminAlertResource;
+import io.hops.hopsworks.api.admin.alert.silence.AdminSilenceResource;
 import io.swagger.annotations.Api;
 import org.glassfish.jersey.server.ResourceConfig;
 
@@ -70,6 +72,11 @@ public class ApplicationConfig extends ResourceConfig {
     register(io.hops.hopsworks.api.project.ProjectService.class);
     register(io.hops.hopsworks.api.project.RequestService.class);
     register(io.hops.hopsworks.api.activities.ProjectActivitiesResource.class);
+    register(io.hops.hopsworks.api.alert.AlertResource.class);
+    register(io.hops.hopsworks.api.alert.silence.SilenceResource.class);
+    register(AdminAlertResource.class);
+    register(io.hops.hopsworks.api.admin.alert.management.ManagementResource.class);
+    register(AdminSilenceResource.class);
     register(io.hops.hopsworks.api.python.environment.command.EnvironmentCommandsResource.class);
     register(io.hops.hopsworks.api.python.environment.EnvironmentResource.class);
     register(io.hops.hopsworks.api.python.library.command.LibraryCommandsResource.class);

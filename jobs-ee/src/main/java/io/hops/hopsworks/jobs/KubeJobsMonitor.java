@@ -13,6 +13,7 @@ import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.hdfs.DistributedFsService;
 import io.hops.hopsworks.common.jobs.ExecutionJWT;
 import io.hops.hopsworks.common.jobs.JobsMonitor;
+import io.hops.hopsworks.common.jobs.execution.ExecutionUpdateController;
 import io.hops.hopsworks.common.jobs.yarn.YarnLogUtil;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.kube.common.KubeClientService;
@@ -48,6 +49,8 @@ public class KubeJobsMonitor implements JobsMonitor {
   private ExecutionFacade executionFacade;
   @EJB
   private DistributedFsService dfs;
+  @EJB
+  private ExecutionUpdateController executionUpdateController;
   
   @Schedule(persistent = false,
     second = "*/5",
@@ -153,12 +156,12 @@ public class KubeJobsMonitor implements JobsMonitor {
   
   @Override
   public Execution updateProgress(float progress, Execution execution) {
-    return executionFacade.updateProgress(execution, progress);
+    return executionUpdateController.updateProgress(progress, execution);
   }
   
   @Override
   public Execution updateState(JobState newState, Execution execution) {
-    return executionFacade.updateState(execution, newState);
+    return executionUpdateController.updateState(newState, execution);
   }
   
   private enum KubeJobType {

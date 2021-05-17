@@ -275,3 +275,5 @@ ui-panelgrid td {
 td.centeredColumnContent{
   text-align: center;
 }
+
+.CodeMirror { height: 100%; }

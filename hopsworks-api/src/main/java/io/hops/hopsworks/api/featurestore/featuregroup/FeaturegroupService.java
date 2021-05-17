@@ -19,12 +19,13 @@ package io.hops.hopsworks.api.featurestore.featuregroup;
 import com.google.common.base.Strings;
 import io.hops.hopsworks.api.featurestore.FeaturestoreKeywordResource;
 import io.hops.hopsworks.api.featurestore.activities.ActivityResource;
+import io.hops.hopsworks.api.featurestore.commit.CommitResource;
 import io.hops.hopsworks.api.featurestore.datavalidation.expectations.fg.FeatureGroupExpectationsResource;
+import io.hops.hopsworks.api.featurestore.datavalidation.alert.FeatureGroupAlertResource;
 import io.hops.hopsworks.api.featurestore.datavalidation.validations.FeatureGroupValidationsResource;
+import io.hops.hopsworks.api.featurestore.statistics.StatisticsResource;
 import io.hops.hopsworks.api.featurestore.tag.TagsBuilder;
 import io.hops.hopsworks.api.featurestore.tag.TagsDTO;
-import io.hops.hopsworks.api.featurestore.statistics.StatisticsResource;
-import io.hops.hopsworks.api.featurestore.commit.CommitResource;
 import io.hops.hopsworks.api.featurestore.tag.TagsExpansionBeanParam;
 import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.api.filter.Audience;
@@ -32,18 +33,18 @@ import io.hops.hopsworks.api.filter.NoCacheResponse;
 import io.hops.hopsworks.api.filter.apiKey.ApiKeyRequired;
 import io.hops.hopsworks.api.jwt.JWTHelper;
 import io.hops.hopsworks.api.provenance.ProvArtifactResource;
-import io.hops.hopsworks.common.featurestore.OptionDTO;
-import io.hops.hopsworks.common.featurestore.app.FsJobManagerController;
-import io.hops.hopsworks.common.featurestore.featuregroup.IngestionJob;
-import io.hops.hopsworks.common.featurestore.tag.AttachTagResult;
-import io.hops.hopsworks.common.featurestore.tag.FeatureStoreTagControllerIface;
 import io.hops.hopsworks.audit.logger.LogLevel;
 import io.hops.hopsworks.audit.logger.annotation.Logged;
 import io.hops.hopsworks.common.api.ResourceRequest;
 import io.hops.hopsworks.common.featurestore.FeaturestoreController;
 import io.hops.hopsworks.common.featurestore.FeaturestoreDTO;
+import io.hops.hopsworks.common.featurestore.OptionDTO;
+import io.hops.hopsworks.common.featurestore.app.FsJobManagerController;
 import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupController;
 import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupDTO;
+import io.hops.hopsworks.common.featurestore.featuregroup.IngestionJob;
+import io.hops.hopsworks.common.featurestore.tag.AttachTagResult;
+import io.hops.hopsworks.common.featurestore.tag.FeatureStoreTagControllerIface;
 import io.hops.hopsworks.exceptions.DatasetException;
 import io.hops.hopsworks.exceptions.FeatureStoreTagException;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
@@ -149,6 +150,8 @@ public class FeaturegroupService {
   private FeatureGroupExpectationsResource featureGroupExpectationsResource;
   @Inject
   private FeatureGroupValidationsResource featureGroupValidationsResource;
+  @Inject
+  private FeatureGroupAlertResource featureGroupAlertResource;
 
   private Project project;
   private Featurestore featurestore;
@@ -775,5 +778,14 @@ public class FeaturegroupService {
     this.activityResource.setFeaturestore(featurestore);
     this.activityResource.setFeatureGroupId(featureGroupId);
     return this.activityResource;
+  }
+  
+  @Path("/{featureGroupId}/alerts")
+  @Logged(logLevel = LogLevel.OFF)
+  public FeatureGroupAlertResource alerts(@PathParam("featureGroupId") Integer featureGroupId)
+      throws FeaturestoreException {
+    Featuregroup featuregroup = featuregroupController.getFeaturegroupById(featurestore, featureGroupId);
+    featureGroupAlertResource.setFeatureGroup(featuregroup);
+    return featureGroupAlertResource;
   }
 }

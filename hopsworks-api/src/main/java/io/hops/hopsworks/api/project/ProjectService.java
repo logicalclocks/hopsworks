@@ -40,6 +40,7 @@ package io.hops.hopsworks.api.project;
 
 import io.hops.hopsworks.api.activities.ProjectActivitiesResource;
 import io.hops.hopsworks.api.airflow.AirflowService;
+import io.hops.hopsworks.api.alert.AlertResource;
 import io.hops.hopsworks.api.cloud.RoleMappingResource;
 import io.hops.hopsworks.api.dataset.DatasetResource;
 import io.hops.hopsworks.api.dela.DelaProjectService;
@@ -58,6 +59,7 @@ import io.hops.hopsworks.api.kafka.KafkaResource;
 import io.hops.hopsworks.api.metadata.XAttrsResource;
 import io.hops.hopsworks.api.models.ModelsResource;
 import io.hops.hopsworks.api.project.jobconfig.DefaultJobConfigurationResource;
+import io.hops.hopsworks.api.project.alert.ProjectAlertsResource;
 import io.hops.hopsworks.api.provenance.ProjectProvenanceResource;
 import io.hops.hopsworks.api.python.PythonResource;
 import io.hops.hopsworks.api.serving.ServingService;
@@ -88,8 +90,8 @@ import io.hops.hopsworks.common.project.TourProjectType;
 import io.hops.hopsworks.common.provenance.core.HopsFSProvenanceController;
 import io.hops.hopsworks.common.provenance.core.dto.ProvTypeDTO;
 import io.hops.hopsworks.common.user.AuthController;
-import io.hops.hopsworks.common.util.HopsUtils;
 import io.hops.hopsworks.common.util.AccessController;
+import io.hops.hopsworks.common.util.HopsUtils;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.DatasetException;
 import io.hops.hopsworks.exceptions.ElasticException;
@@ -232,10 +234,14 @@ public class ProjectService {
   private HopsFSProvenanceController fsProvenanceController;
   @Inject
   private IntegrationsResource integrationsResource;
+  @Inject
+  private AlertResource alertResource;
   @EJB
   private AccessController accessCtrl;
   @Inject
   private DefaultJobConfigurationResource defaultJobConfigurationResource;
+  @Inject
+  private ProjectAlertsResource projectAlertsResource;
 
   private final static Logger LOGGER = Logger.getLogger(ProjectService.class.getName());
 
@@ -908,5 +914,19 @@ public class ProjectService {
   public IntegrationsResource integration(@PathParam("projectId") Integer id) {
     this.integrationsResource.setProjectId(id);
     return integrationsResource;
+  }
+  
+  @Logged(logLevel = LogLevel.OFF)
+  @Path("{projectId}/alerts")
+  public AlertResource alerting(@PathParam("projectId") Integer id) {
+    this.alertResource.setProjectId(id);
+    return alertResource;
+  }
+  
+  @Logged(logLevel = LogLevel.OFF)
+  @Path("{projectId}/service/alerts")
+  public ProjectAlertsResource projectAlert(@PathParam("projectId") Integer id) {
+    this.projectAlertsResource.setProjectId(id);
+    return projectAlertsResource;
   }
 }

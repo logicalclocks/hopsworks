@@ -37,7 +37,6 @@
   ~ DAMAGES OR  OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
   ~ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
   -->
-
 <persistence version="2.1" xmlns="http://xmlns.jcp.org/xml/ns/persistence" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://xmlns.jcp.org/xml/ns/persistence http://xmlns.jcp.org/xml/ns/persistence/persistence_2_1.xsd">
   <persistence-unit name="kthfsPU" transaction-type="JTA">
     <provider>org.eclipse.persistence.jpa.PersistenceProvider</provider>
@@ -146,7 +145,10 @@
     <class>io.hops.hopsworks.persistence.entity.util.Variables</class>
     <class>io.hops.hopsworks.persistence.entity.yarn.YarnContainersLog</class>
     <class>io.hops.hopsworks.persistence.entity.integrations.DatabricksInstance</class>
-
+    <class>io.hops.hopsworks.persistence.entity.alertmanager.AlertManagerConfigEntity</class>
+    <class>io.hops.hopsworks.persistence.entity.jobs.description.JobAlert</class>
+    <class>io.hops.hopsworks.persistence.entity.featurestore.featuregroup.datavalidation.alert.FeatureGroupAlert</class>
+    <class>io.hops.hopsworks.persistence.entity.project.alert.ProjectServiceAlert</class>
     <!-- Metastore -->
     <class>io.hops.hopsworks.persistence.entity.featurestore.featuregroup.cached.HiveTbls</class>
     <class>io.hops.hopsworks.persistence.entity.featurestore.featuregroup.cached.HiveSds</class>
@@ -156,14 +158,13 @@
     <class>io.hops.hopsworks.persistence.entity.featurestore.featuregroup.cached.HiveTableParams</class>
     <class>io.hops.hopsworks.persistence.entity.featurestore.featuregroup.cached.HivePartitionKeys</class>
     <class>io.hops.hopsworks.persistence.entity.featurestore.featuregroup.cached.HivePartitions</class>
-
     <!-- Converters -->
     <class>io.hops.hopsworks.persistence.entity.user.cluster.RegistrationStatusConverter</class>
     <class>io.hops.hopsworks.persistence.entity.jobs.configuration.JobConfigurationConverter</class>
     <class>io.hops.hopsworks.persistence.entity.jupyter.config.JupyterConfigurationConverter</class>
     <class>io.hops.hopsworks.persistence.entity.jupyter.config.DockerConfigurationConverter</class>
     <class>io.hops.hopsworks.persistence.entity.featurestore.featuregroup.datavalidation.RuleAssertionsConverter</class>
-
+    <class>io.hops.hopsworks.persistence.entity.alertmanager.ConfigConverter</class>
     <exclude-unlisted-classes>true</exclude-unlisted-classes>
     <shared-cache-mode>NONE</shared-cache-mode>
     <validation-mode>NONE</validation-mode>

@@ -151,6 +151,10 @@ public class Jobs implements Serializable {
   @OneToMany(cascade = CascadeType.ALL,
           mappedBy = "job")
   private Collection<Execution> executions;
+  
+  @OneToMany(cascade = CascadeType.ALL,
+      mappedBy = "jobId")
+  private Collection<JobAlert> jobAlertCollection;
 
   public Jobs() {
     this.name = "Hopsworks job";
@@ -279,5 +283,13 @@ public class Jobs implements Serializable {
   public void setCreator(Users creator) {
     this.creator = creator;
   }
-
+  
+  public Collection<JobAlert> getJobAlertCollection() {
+    return jobAlertCollection;
+  }
+  
+  public void setJobAlertCollection(
+      Collection<JobAlert> jobAlertCollection) {
+    this.jobAlertCollection = jobAlertCollection;
+  }
 }

@@ -63,6 +63,8 @@
     <module>hopsworks-audit</module>
     <module>hopsworks-UT</module>
     <module>provenance-ee</module>
+    <module>alerting</module>
+    <module>hopsworks-alert</module>
   </modules>
 
   <profiles>
