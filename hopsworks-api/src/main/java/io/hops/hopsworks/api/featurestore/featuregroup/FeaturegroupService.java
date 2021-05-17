@@ -18,9 +18,10 @@ package io.hops.hopsworks.api.featurestore.featuregroup;
 
 import com.google.common.base.Strings;
 import io.hops.hopsworks.api.featurestore.FeaturestoreKeywordResource;
-import io.hops.hopsworks.api.featurestore.commit.CommitResource;
 import io.hops.hopsworks.api.featurestore.activities.ActivityResource;
+import io.hops.hopsworks.api.featurestore.commit.CommitResource;
 import io.hops.hopsworks.api.featurestore.datavalidation.expectations.fg.FeatureGroupExpectationsResource;
+import io.hops.hopsworks.api.featurestore.datavalidation.alert.FeatureGroupAlertResource;
 import io.hops.hopsworks.api.featurestore.datavalidation.validations.FeatureGroupValidationsResource;
 import io.hops.hopsworks.api.featurestore.statistics.StatisticsResource;
 import io.hops.hopsworks.api.featurestore.tag.TagsBuilder;
@@ -146,6 +147,8 @@ public class FeaturegroupService {
   private FeatureGroupExpectationsResource featureGroupExpectationsResource;
   @Inject
   private FeatureGroupValidationsResource featureGroupValidationsResource;
+  @Inject
+  private FeatureGroupAlertResource featureGroupAlertResource;
 
   private Project project;
   private Featurestore featurestore;
@@ -760,5 +763,13 @@ public class FeaturegroupService {
     this.activityResource.setFeaturestore(featurestore);
     this.activityResource.setFeatureGroupId(featureGroupId);
     return this.activityResource;
+  }
+
+  @Path("/{featureGroupId}/alerts")
+  public FeatureGroupAlertResource alerts(@PathParam("featureGroupId") Integer featureGroupId)
+      throws FeaturestoreException {
+    Featuregroup featuregroup = featuregroupController.getFeaturegroupById(featurestore, featureGroupId);
+    featureGroupAlertResource.setFeatureGroup(featuregroup);
+    return featureGroupAlertResource;
   }
 }

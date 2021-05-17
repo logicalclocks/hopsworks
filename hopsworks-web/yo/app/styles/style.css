@@ -627,3 +627,11 @@ md-input-container {
 .tooltip-inner {
   max-width: 350px;
 }
+
+.border-right {
+  border-right: 1px solid #ddd;
+}
+
+.form-control.ng-dirty.ng-invalid {
+  border-color: #f93154;
+}

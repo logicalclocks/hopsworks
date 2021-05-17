@@ -15,6 +15,7 @@
  */
 package io.hops.hopsworks.api.jobs;
 
+import io.hops.hopsworks.api.jobs.alert.JobAlertsResourceRequest;
 import io.hops.hopsworks.api.user.UserResourceRequest;
 import io.hops.hopsworks.api.jobs.executions.ExecutionResourceRequest;
 import io.hops.hopsworks.common.api.Expansions;
@@ -38,6 +39,9 @@ public class JobExpansions implements Expansions {
         break;
       case EXECUTIONS:
         resourceRequest = new ExecutionResourceRequest(name, queryParam);
+        break;
+      case ALERTS:
+        resourceRequest = new JobAlertsResourceRequest(name, queryParam);
         break;
       default:
         break;

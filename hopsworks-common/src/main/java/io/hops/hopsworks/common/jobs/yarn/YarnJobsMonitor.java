@@ -39,12 +39,27 @@
 
 package io.hops.hopsworks.common.jobs.yarn;
 
-import io.hops.hopsworks.common.jobs.JobsMonitor;
-import io.hops.hopsworks.persistence.entity.jobs.history.Execution;
 import io.hops.hopsworks.common.dao.jobhistory.ExecutionFacade;
+import io.hops.hopsworks.common.jobs.JobsMonitor;
+import io.hops.hopsworks.common.jobs.execution.ExecutionUpdateController;
+import io.hops.hopsworks.common.util.Settings;
+import io.hops.hopsworks.common.yarn.YarnClientService;
+import io.hops.hopsworks.common.yarn.YarnClientWrapper;
 import io.hops.hopsworks.persistence.entity.jobs.configuration.history.JobFinalStatus;
 import io.hops.hopsworks.persistence.entity.jobs.configuration.history.JobState;
-import io.hops.hopsworks.common.util.Settings;
+import io.hops.hopsworks.persistence.entity.jobs.history.Execution;
+import org.apache.hadoop.yarn.api.records.ApplicationId;
+import org.apache.hadoop.yarn.api.records.FinalApplicationStatus;
+import org.apache.hadoop.yarn.api.records.YarnApplicationState;
+import org.apache.hadoop.yarn.exceptions.YarnException;
+
+import javax.ejb.DependsOn;
+import javax.ejb.EJB;
+import javax.ejb.Schedule;
+import javax.ejb.Singleton;
+import javax.ejb.Timer;
+import javax.ejb.TransactionAttribute;
+import javax.ejb.TransactionAttributeType;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -54,20 +69,6 @@ import java.util.Map;
 import java.util.concurrent.Future;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.ejb.DependsOn;
-import javax.ejb.EJB;
-import javax.ejb.Schedule;
-import javax.ejb.Singleton;
-import javax.ejb.Timer;
-import javax.ejb.TransactionAttribute;
-import javax.ejb.TransactionAttributeType;
-
-import io.hops.hopsworks.common.yarn.YarnClientService;
-import io.hops.hopsworks.common.yarn.YarnClientWrapper;
-import org.apache.hadoop.yarn.api.records.ApplicationId;
-import org.apache.hadoop.yarn.api.records.FinalApplicationStatus;
-import org.apache.hadoop.yarn.api.records.YarnApplicationState;
-import org.apache.hadoop.yarn.exceptions.YarnException;
 
 @Singleton
 @DependsOn("Settings")
@@ -80,6 +81,8 @@ public class YarnJobsMonitor implements JobsMonitor {
   private Settings settings;
   @EJB
   private ExecutionFacade executionFacade;
+  @EJB
+  private ExecutionUpdateController executionUpdateController;
   @EJB
   private YarnExecutionFinalizer execFinalizer;
   @EJB
@@ -194,15 +197,15 @@ public class YarnJobsMonitor implements JobsMonitor {
   
   @Override
   public Execution updateProgress(float progress, Execution execution) {
-    return executionFacade.updateProgress(execution, progress);
+    return executionUpdateController.updateProgress(progress, execution);
   }
   
   @Override
   public Execution updateState(JobState newState, Execution execution) {
-    return executionFacade.updateState(execution, newState);
+    return executionUpdateController.updateState(newState, execution);
   }
   
   private Execution updateFinalStatus(JobFinalStatus finalStatus, Execution execution) {
-    return executionFacade.updateFinalStatus(execution, finalStatus);
+    return executionUpdateController.updateFinalStatus(finalStatus, execution);
   }
 }

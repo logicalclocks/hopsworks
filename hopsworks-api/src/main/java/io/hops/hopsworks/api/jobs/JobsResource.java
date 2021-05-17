@@ -20,6 +20,7 @@ import com.google.common.base.Strings;
 import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.api.filter.Audience;
 import io.hops.hopsworks.api.filter.apiKey.ApiKeyRequired;
+import io.hops.hopsworks.api.jobs.alert.JobAlertsResource;
 import io.hops.hopsworks.api.jobs.executions.ExecutionsResource;
 import io.hops.hopsworks.api.jwt.JWTHelper;
 import io.hops.hopsworks.api.util.Pagination;
@@ -94,6 +95,8 @@ public class JobsResource {
   private JWTHelper jWTHelper;
   @EJB
   private JobsBuilder jobsBuilder;
+  @Inject
+  private JobAlertsResource jobAlertsResource;
 
   private Project project;
   public JobsResource setProject(Integer projectId) {
@@ -303,6 +306,16 @@ public class JobsResource {
     }
   }
   
+  @Path("{name}/alerts")
+  public JobAlertsResource alerts(@PathParam("name") String name) throws JobException {
+    Jobs job = jobFacade.findByProjectAndName(project, name);
+    if (job == null) {
+      throw new JobException(RESTCodes.JobErrorCode.JOB_NOT_FOUND, Level.FINEST, "job name:" + name);
+    } else {
+      return this.jobAlertsResource.setJob(job);
+    }
+  }
+
   public enum Action {
     INSPECT
   }

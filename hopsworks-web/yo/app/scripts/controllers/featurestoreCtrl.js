@@ -384,6 +384,7 @@ angular.module('hopsWorksApp')
                     featurestoreCtrl: self,
                     featuregroups: self.selectedFeaturegroup,
                     toggle: true });
+                console.log("$broadcast toggle=", true);
             };
 
             var broadcastTrainingDatasetSelect = function () {

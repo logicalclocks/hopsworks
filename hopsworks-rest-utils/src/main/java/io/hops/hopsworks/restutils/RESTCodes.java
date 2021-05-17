@@ -190,7 +190,10 @@ public class RESTCodes {
         "Failed to extract the hopsworks version of the docker image for this project.",
         Response.Status.INTERNAL_SERVER_ERROR),
     PROJECT_DEFAULT_JOB_CONFIG_NOT_FOUND(77, "Default job config not defined",
-      Response.Status.NOT_FOUND);
+      Response.Status.NOT_FOUND),
+    ALERT_NOT_FOUND(78, "Alert not found", Response.Status.NOT_FOUND),
+    ALERT_ILLEGAL_ARGUMENT(79, "Alert missing argument.", Response.Status.BAD_REQUEST),
+    ALERT_ALREADY_EXISTS(80, "Alert with the same status already exists.", Response.Status.BAD_REQUEST);
 
 
 
@@ -435,7 +438,10 @@ public class RESTCodes {
     DOCKER_UID_GID_STRICT(33, "Docker jobs run in uid/gid strict mode." +
             " It it now allowed to set uid/gid. If you remove the uid/gid, the job will run with a default user." +
             " Please ask an administrator to update the setting if necessary.",
-            Response.Status.BAD_REQUEST);
+            Response.Status.BAD_REQUEST),
+    JOB_ALERT_NOT_FOUND(34, "Job alert not found", Response.Status.NOT_FOUND),
+    JOB_ALERT_ILLEGAL_ARGUMENT(35, "Job alert missing argument.", Response.Status.BAD_REQUEST),
+    JOB_ALERT_ALREADY_EXISTS(36, "Job alert with the same status already exists.", Response.Status.BAD_REQUEST);
 
     private Integer code;
     private String message;
@@ -1545,7 +1551,10 @@ public class RESTCodes {
     AVRO_MALFORMED_SCHEMA(153, "Error converting Hive schema to Avro", Response.Status.INTERNAL_SERVER_ERROR),
     FEATURE_GROUP_EXPECTATION_FEATURE_TYPE_INVALID(154,
             "Could not attach expectation because some feature types did not match rule types.",
-            Response.Status.BAD_REQUEST);
+            Response.Status.BAD_REQUEST),
+    ALERT_NOT_FOUND(155, "Alert not found", Response.Status.NOT_FOUND),
+    ALERT_ILLEGAL_ARGUMENT(156, "Alert missing argument.", Response.Status.BAD_REQUEST),
+    ALERT_ALREADY_EXISTS(157, "Alert with the same status already exists.", Response.Status.BAD_REQUEST);
 
     private int code;
     private String message;
@@ -2077,6 +2086,53 @@ public class RESTCodes {
       return respStatus;
     }
   
+    @Override
+    public int getRange() {
+      return range;
+    }
+  }
+
+  public enum AlertErrorCode implements RESTErrorCode {
+    ALERT_CREATION_FAILED(0, "Failed to creat alert", Response.Status.BAD_REQUEST),
+    RECEIVER_EXIST(1, "A receiver already exists.", Response.Status.BAD_REQUEST),
+    ROUTE_EXIST(2, "A route already exists.", Response.Status.BAD_REQUEST),
+    RECEIVER_NOT_FOUND(3, "Receiver not found.", Response.Status.BAD_REQUEST),
+    ROUTE_NOT_FOUND(4, "Route not found.", Response.Status.BAD_REQUEST),
+    SILENCE_NOT_FOUND(5, "Silence not found.", Response.Status.BAD_REQUEST),
+    ILLEGAL_ARGUMENT(6, "Illegal argument.", Response.Status.BAD_REQUEST),
+    FAILED_TO_CONNECT(7, "Failed to connect to alert manager.", Response.Status.PRECONDITION_FAILED),
+    FAILED_TO_UPDATE_AM_CONFIG(8, "Failed to update alert manager configuration.",
+        Response.Status.PRECONDITION_FAILED),
+    RESPONSE_ERROR(9, "Alert manager response error.", Response.Status.BAD_REQUEST),
+    ACCESS_CONTROL_EXCEPTION(10, "You are not allowed to access this resource.", Response.Status.FORBIDDEN),
+    FAILED_TO_READ_CONFIGURATION(11, "Failed to read alert manager configuration.",
+        Response.Status.PRECONDITION_FAILED);
+
+    private int code;
+    private String message;
+    private Response.Status respStatus;
+    public final int range = 390000;
+
+    AlertErrorCode(Integer code, String message, Response.Status respStatus) {
+      this.code = range + code;
+      this.message = message;
+      this.respStatus = respStatus;
+    }
+
+    @Override
+    public Integer getCode() {
+      return code;
+    }
+
+    @Override
+    public String getMessage() {
+      return message;
+    }
+
+    public Response.StatusType getRespStatus() {
+      return respStatus;
+    }
+
     @Override
     public int getRange() {
       return range;

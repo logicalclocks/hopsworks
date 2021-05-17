@@ -60,6 +60,8 @@
     <module>hopsworks-IT</module>
     <module>hopsworks-rest-utils</module>
     <module>hopsworks-UT</module>
+    <module>alerting</module>
+    <module>hopsworks-alert</module>
   </modules>
 
   <profiles>

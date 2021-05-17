@@ -108,6 +108,10 @@ RSpec.configure do |config|
   config.include StorageConnectorHelper
   config.include ProvAppHelper
   config.include DefaultJobConfigurationHelper
+  config.include AlertHelper
+  config.include ProjectServiceAlertHelper
+  config.include FeatureGroupAlertHelper
+  config.include JobAlertHelper
   # uncomment next line if you need to clean hdfs and hopsworks db before test.
   # config.before(:suite) { clean_test_data }
   config.after(:suite) {

@@ -38,19 +38,38 @@
  */
 package io.hops.hopsworks.persistence.entity.project;
 
-import java.io.Serializable;
-import java.util.Collection;
-import java.util.Date;
+import io.hops.hopsworks.persistence.entity.dataset.Dataset;
+import io.hops.hopsworks.persistence.entity.dataset.DatasetSharedWith;
+import io.hops.hopsworks.persistence.entity.hdfs.inode.Inode;
+import io.hops.hopsworks.persistence.entity.jupyter.JupyterProject;
+import io.hops.hopsworks.persistence.entity.jupyter.JupyterSettings;
+import io.hops.hopsworks.persistence.entity.project.alert.ProjectServiceAlert;
+import io.hops.hopsworks.persistence.entity.project.jobs.DefaultJobConfiguration;
+import io.hops.hopsworks.persistence.entity.project.service.ProjectServices;
+import io.hops.hopsworks.persistence.entity.project.team.ProjectTeam;
+import io.hops.hopsworks.persistence.entity.python.CondaCommands;
+import io.hops.hopsworks.persistence.entity.python.PythonDep;
+import io.hops.hopsworks.persistence.entity.python.PythonEnvironment;
+import io.hops.hopsworks.persistence.entity.serving.Serving;
+import io.hops.hopsworks.persistence.entity.tensorflow.TensorBoard;
+import io.hops.hopsworks.persistence.entity.user.Users;
+import io.hops.hopsworks.persistence.entity.user.activity.Activity;
+import org.codehaus.jackson.annotate.JsonIgnore;
+
 import javax.persistence.Basic;
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
 import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.JoinColumns;
+import javax.persistence.JoinTable;
+import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
@@ -63,29 +82,11 @@ import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
-
-import io.hops.hopsworks.persistence.entity.dataset.DatasetSharedWith;
-import io.hops.hopsworks.persistence.entity.project.jobs.DefaultJobConfiguration;
-import io.hops.hopsworks.persistence.entity.project.service.ProjectServices;
-import io.hops.hopsworks.persistence.entity.project.team.ProjectTeam;
-import io.hops.hopsworks.persistence.entity.python.CondaCommands;
-import io.hops.hopsworks.persistence.entity.python.PythonDep;
-import io.hops.hopsworks.persistence.entity.python.PythonEnvironment;
-import io.hops.hopsworks.persistence.entity.tensorflow.TensorBoard;
-import io.hops.hopsworks.persistence.entity.serving.Serving;
-import org.codehaus.jackson.annotate.JsonIgnore;
-import io.hops.hopsworks.persistence.entity.hdfs.inode.Inode;
-import io.hops.hopsworks.persistence.entity.dataset.Dataset;
-import io.hops.hopsworks.persistence.entity.jupyter.JupyterProject;
-import io.hops.hopsworks.persistence.entity.jupyter.JupyterSettings;
-import io.hops.hopsworks.persistence.entity.user.Users;
-import io.hops.hopsworks.persistence.entity.user.activity.Activity;
+import java.io.Serializable;
+import java.util.Collection;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
-import javax.persistence.EnumType;
-import javax.persistence.Enumerated;
-import javax.persistence.JoinTable;
-import javax.persistence.ManyToMany;
 
 @Entity
 @Table(name = "project", catalog = "hopsworks")
@@ -238,6 +239,9 @@ public class Project implements Serializable {
   @OneToMany(cascade = CascadeType.ALL,
       mappedBy = "projectId")
   private Collection<JupyterProject> jupyterProjectCollection;
+
+  @OneToMany(cascade = CascadeType.ALL, mappedBy = "project")
+  private Collection<ProjectServiceAlert> projectServiceAlerts;
 
   public Project() {
   }
@@ -550,6 +554,16 @@ public class Project implements Serializable {
 
   public void setPythonEnvironment(PythonEnvironment pythonEnvironment) {
     this.pythonEnvironment = pythonEnvironment;
+  }
+
+  @XmlTransient
+  @JsonIgnore
+  public Collection<ProjectServiceAlert> getProjectServiceAlerts() {
+    return projectServiceAlerts;
+  }
+
+  public void setProjectServiceAlerts(Collection<ProjectServiceAlert> projectServiceAlerts) {
+    this.projectServiceAlerts = projectServiceAlerts;
   }
 
   @Override
