@@ -39,6 +39,8 @@ import javax.ejb.TimerConfig;
 import javax.ejb.TimerService;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Collections;
@@ -109,10 +111,27 @@ public class CloudManager {
   private Instant beginningOfHeartbeat;
   private boolean shouldLookForMissingNodes = false;
   private boolean isJwtSet = false;
+  private final Set<String> blacklistHostnamesToRemove = new HashSet<>();
   
   @PostConstruct
   public void init() {
     LOG.log(Level.INFO, "Hopsworks@Cloud - Initializing CloudManager");
+    try {
+      InetAddress localhost = InetAddress.getLocalHost();
+      blacklistHostnamesToRemove.add(localhost.getCanonicalHostName());
+      blacklistHostnamesToRemove.add(localhost.getHostName());
+      if (settings.getCloudType().equals(Settings.CLOUD_TYPES.AZURE)) {
+        blacklistHostnamesToRemove.add(getAzureInternalHostname(localhost.getHostName()));
+      }
+    } catch (UnknownHostException ex) {
+      LOG.log(Level.WARNING, "Hopsworks@Cloud - Failed to get localhost hostname");
+    }
+    StringBuilder whitelistLog = new StringBuilder();
+    whitelistLog.append("Whitelisted hostnames from automatic removal: ");
+    for (String h : blacklistHostnamesToRemove) {
+      whitelistLog.append(h).append(" ");
+    }
+    LOG.log(Level.INFO, whitelistLog.toString());
     timerService.createIntervalTimer(0, 3000, new TimerConfig("Cloud heartbeat", false));
   }
 
@@ -343,7 +362,7 @@ public class CloudManager {
       }
 
       // These are nodes which haven't heartbeated for more than 2 minutes
-      // 5 minutes after Hopsworks has started
+      // 7 minutes after Hopsworks has started
       Set<String> missingNodes = getMissingNodes(workers);
       toRemove.addAll(missingNodes);
 
@@ -396,6 +415,7 @@ public class CloudManager {
       if (!toRemove.isEmpty()) {
         try {
           for (String node : toRemove) {
+            LOG.log(Level.INFO, "Removing node " + node + " from Cluster");
             //for newly decommissioned nodes we should remove them from hopsworks.
             caProxy.revokeHostX509(node);
             hostsController.removeByHostname(node);
@@ -448,7 +468,7 @@ public class CloudManager {
   private Set<String> getMissingNodes(Map<String, CloudNode> reportedWorkers) {
     if (!shouldLookForMissingNodes) {
       // If we've just restarted the cluster, give the agents some time to catch up
-      if (ChronoUnit.MINUTES.between(getBeginningOfHeartbeat(), Instant.now()) >= 5) {
+      if (ChronoUnit.MINUTES.between(getBeginningOfHeartbeat(), Instant.now()) >= 7) {
         shouldLookForMissingNodes = true;
       }
       return Collections.EMPTY_SET;
@@ -457,17 +477,17 @@ public class CloudManager {
     Instant now = Instant.now();
     return allHosts.stream()
             .filter(h -> !reportedWorkers.containsKey(h.getHostname()))
+            .filter(h -> !blacklistHostnamesToRemove.contains(h.getHostname()))
             .filter(h -> {
               if(h.getLastHeartbeat() == null){
                 //clean up node that never sent an heartbeat.
                 return true;
               }
               Instant lastHeartbeat = Instant.ofEpochMilli(h.getLastHeartbeat());
-              return ChronoUnit.SECONDS.between(lastHeartbeat, now) >= 90;
+              return ChronoUnit.SECONDS.between(lastHeartbeat, now) >= 120;
             })
             .map(Hosts::getHostname)
             .collect(Collectors.toSet());
-
   }
 
   Instant getBeginningOfHeartbeat() {
