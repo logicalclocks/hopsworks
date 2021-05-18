@@ -43,6 +43,7 @@ public class JupyterNotebookConfigTemplateBuilder {
   private Boolean requestsVerify;
   private String domainCATruststore;
   private String serviceDiscoveryDomain = "consul";
+  private String kafkaBrokers;
   
   private JupyterNotebookConfigTemplateBuilder() {}
   
@@ -253,6 +254,15 @@ public class JupyterNotebookConfigTemplateBuilder {
   
   public JupyterNotebookConfigTemplateBuilder setServiceDiscoveryDomain(String serviceDiscoveryDomain) {
     this.serviceDiscoveryDomain = serviceDiscoveryDomain;
+    return this;
+  }
+
+  public String getKafkaBrokers() {
+    return kafkaBrokers;
+  }
+
+  public JupyterNotebookConfigTemplateBuilder setKafkaBrokers(String kafkaBrokers) {
+    this.kafkaBrokers = kafkaBrokers;
     return this;
   }
   
