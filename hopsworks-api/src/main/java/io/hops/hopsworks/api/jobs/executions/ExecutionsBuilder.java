@@ -45,6 +45,8 @@ public class ExecutionsBuilder {
   private FlinkMasterAddrCache flinkMasterAddrCache;
   @EJB
   private UsersBuilder usersBuilder;
+  @EJB
+  private MonitoringUrlBuilder monitoringUrlBuilder;
   
   
   /**
@@ -116,6 +118,7 @@ public class ExecutionsBuilder {
           dto.setFlinkMasterURL(addr);
         }
       }
+      dto.setMonitoring(monitoringUrlBuilder.build(execution));
     }
     
     return dto;
