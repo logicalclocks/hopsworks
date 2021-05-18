@@ -143,10 +143,10 @@ public class OAuthController {
   
   public RemoteUserStateDTO getOAuthUser(Users user) throws HopsSecurityException {
     RemoteUser remoteUser = remoteUserFacade.findByUsers(user);
-    if (!RemoteUserType.OAUTH2.equals(remoteUser.getType())) {
+    if (remoteUser == null || !RemoteUserType.OAUTH2.equals(remoteUser.getType())) {
       throw new HopsSecurityException(RESTCodes.SecurityErrorCode.CERT_ACCESS_DENIED, Level.FINE);
     }
-    return new RemoteUserStateDTO(remoteUser == null, remoteUser, null);
+    return new RemoteUserStateDTO(true, remoteUser, null);
   }
 
 }
