@@ -50,7 +50,7 @@ import java.util.logging.Logger;
 @Startup
 @DependsOn("Settings")
 @TransactionAttribute(TransactionAttributeType.NEVER)
-public class LibraryUpdatesMonitor {
+public class PythonLibraryUpdatesMonitor {
 
   @EJB
   private Settings settings;
@@ -61,11 +61,22 @@ public class LibraryUpdatesMonitor {
 
   private final Map<String, LatestVersionAnalyzer> latestVersionAnalyzerMap = new ConcurrentHashMap<>();
 
+  private String hopsworksVersion;
+
   private static final Logger LOGGER = Logger.getLogger(
-    LibraryUpdatesMonitor.class.getName());
+    PythonLibraryUpdatesMonitor.class.getName());
 
   @PostConstruct
   public void init() {
+    String hopsworksVersion = settings.getHopsworksVersion();
+    if(hopsworksVersion.contains("-SNAPSHOT")) {
+      LOGGER.log(Level.SEVERE, "Python Library Updates monitor is disabled for snapshot versions, " +
+        "not scheduling timer");
+      return;
+    } else {
+      this.hopsworksVersion = hopsworksVersion;
+    }
+
     HopsLatestVersionAnalyzer hopsAnalyzer = new HopsLatestVersionAnalyzer();
     latestVersionAnalyzerMap.put(hopsAnalyzer.getLibrary(), hopsAnalyzer);
 
@@ -91,7 +102,6 @@ public class LibraryUpdatesMonitor {
       return;
     }
 
-    String hopsworksVersion = settings.getHopsworksVersion().replace("-SNAPSHOT", "");
     for(String library: latestVersionAnalyzerMap.keySet()) {
       HashMap<String, List<LibraryVersionDTO>> versions = libraryController.pipSearch(library);
       latestVersionAnalyzerMap.get(library).setLatestVersion(hopsworksVersion, versions);
