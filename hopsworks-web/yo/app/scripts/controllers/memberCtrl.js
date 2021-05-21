@@ -56,6 +56,7 @@ angular.module('hopsWorksApp')
             self.newMembers = {'projectTeam': []};
             self.card = {};
             self.myCard = {};
+            self.searchEnabled = true;
             
             self.defaultRole = function (role) {
               return role === self.roles[0]? 'selected' : '';
@@ -71,30 +72,40 @@ angular.module('hopsWorksApp')
               return false;
             };
             
-            var getUsers = function (query) {
+            var getUsers = function (select) {
               self.loadingUsers = true;
-              UserService.allValidUsers(query).then(function (success) {
+              UserService.allValidUsers(select.search).then(function (success) {
                   var items = success.data.items;
                   // remove my own 'card' from the list of members
                   // remove project owner as well, since he is always a 
                   // member of the project
                   var countRemoved = 0;
-                  for (var i = items.length-1; i >= 0; i--) {
-                    if (items[i].email === self.myCard.email 
-                            || items[i].email === self.projectOwner.email
-                            || inSelectedUsers(items[i].email)) {
-                      items.splice(i, 1);
-                      countRemoved++;
-                      if(countRemoved === self.selectedUsers.length + 2){
-                        break;
+                  if (typeof items !== 'undefined') {
+                      for (var i = items.length - 1; i >= 0; i--) {
+                          if (items[i].email === self.myCard.email
+                              || items[i].email === self.projectOwner.email
+                              || inSelectedUsers(items[i].email)) {
+                              items.splice(i, 1);
+                              countRemoved++;
+                              if (countRemoved === self.selectedUsers.length + 2) {
+                                  break;
+                              }
+                          }
                       }
-                    }
+                      select.items = items;
+                  } else {
+                      select.items = [];
                   }
                   self.users = items;
                   self.loadingUsers = false;
                 }, function (error) {
                   self.errorMsg = error.data.msg;
                   self.loadingUsers = false;
+                  if (error.data.errorCode === 160057) {
+                      self.searchEnabled = false;
+                      select.items = [{"email": select.search, "firstname": select.search, "lastname": "-", "username": "-"}];
+                      self.users = [{"email": select.search, "firstname": select.search, "lastname": "-", "username": "-"}];
+                  }
               });
             };
                         
@@ -139,7 +150,7 @@ angular.module('hopsWorksApp')
                 projectTeam.teamRole = selected.teamRole;
                 self.newMembers.projectTeam.push(projectTeam);
               });
-              return self.projectTeam;
+              return self.newMembers;
             };        
 
 
@@ -157,11 +168,14 @@ angular.module('hopsWorksApp')
             };
 
             self.addMembers = function () {
-              addNewMembers();
-              MembersService.save({id: self.projectId}, self.newMembers).$promise.then(function (success) {
+              var newMembers = addNewMembers();
+              MembersService.save({id: self.projectId}, newMembers).$promise.then(function (success) {
                   self.newMembers.projectTeam.length = 0;
                   self.selectedUsers.length = 0;
                   getMembers();
+                  if (success.fieldErrors && success.fieldErrors.length > 0) {
+                      growl.error(success.fieldErrors.join('\n'), {title: success.successMessage, ttl: 5000});
+                  }
                 }, function (error) {
                   if (typeof error.data.usrMsg !== 'undefined') {
                       growl.error(error.data.usrMsg, {title: error.data.errorMsg, ttl: 8000});
@@ -223,15 +237,20 @@ angular.module('hopsWorksApp')
               }, secondsToWaitBeforeSave * 4000);
             };
             
-            self.fetchAsync = function (query) {
-              if (query) {
-                getUsers(query);
+            self.fetchAsync = function (select) {
+              select.items = [];
+              if (select.search) {
+                getUsers(select);
                 self.selectNoChoice = 'Could not find any user...';
               } else {
                 self.users = undefined;
                 self.selectNoChoice = 'Search for a user...';
               }
             };
+
+            self.isUndefined = function (item) {
+                return typeof item === 'undefined' || item.length < 1;
+            }
 
             self.close = function () {
               $uibModalStack.getTop().key.dismiss();
