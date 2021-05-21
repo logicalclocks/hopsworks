@@ -322,4 +322,34 @@ describe "On #{ENV['OS']}" do
       end
     end
   end
+
+  context "correct capitalization of project name in hive related ops" do
+    before :all do
+      #making sure no one changes the default test project to all lowcase
+      @project_name = "ProJect_#{short_random_id}"
+      create_project_by_name(@project_name)
+      @project = get_project_by_name(@project_name)
+      pp get_project_inode(@project)[:id] if defined?(@debugOpt) && @debugOpt
+    end
+
+    it "check featuregroup op project name" do
+      fs_id = get_featurestore_id(@project[:id])
+      fg_name = "fg_#{short_random_id}"
+      begin
+        fg_id = create_cached_featuregroup_checked(@project[:id], fs_id, fg_name)
+      ensure
+        delete_featuregroup_checked(@project[:id], fs_id, fg_id) if defined?(fg_id)
+      end
+      result = wait_for_me_time(10) do
+        ops = prov_ops_get(@project, ml_id: "#{fg_name}_1")
+        # we expect the CREATE, and at least one of XATTR_ADD and DELETE ops
+        { 'success' => (ops["count"] >= 2), ops: ops }
+      end
+      # CREATE was always correct, we need one more op
+      expect(result[:ops]["count"]).to be >= 2
+      result[:ops]["items"].each { |op|
+        expect(op["projectName"]).to eq(@project_name)
+      }
+    end
+  end
 end
