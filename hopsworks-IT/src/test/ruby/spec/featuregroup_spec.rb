@@ -1095,7 +1095,7 @@ describe "On #{ENV['OS']}" do
         parsed_json = JSON.parse(json_result)
         featuregroup_id = parsed_json["id"]
         post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/featurestores/#{featurestore_id}/featuregroups/#{featuregroup_id}/keywords",
-            {keywords: ['hello', 'this', 'keyword123']}.to_json
+            {keywords: ['hello', 'this', 'keyword123', 'CAPITAL_LETTERS']}.to_json
         expect_status(200)
 
         json_result = get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/featurestores/#{featurestore_id}/featuregroups/#{featuregroup_id}/keywords"
@@ -1104,6 +1104,7 @@ describe "On #{ENV['OS']}" do
         expect(parsed_json['keywords']).to include('hello')
         expect(parsed_json['keywords']).to include('this')
         expect(parsed_json['keywords']).to include('keyword123')
+        expect(parsed_json['keywords']).to include('CAPITAL_LETTERS')
       end
 
       it "should be able to find the attached keywords in the list of used keywords" do
