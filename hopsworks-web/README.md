@@ -26,11 +26,10 @@ io.hops.hopsworks.rest.application.config.ApplicationConfig then build and redep
     ...
  ```
 #### Build Requirements (for Ubuntu)
-NodeJS server and bower, both required for building the front-end.
+- Node version 11 (maximum)
+- Node version 6
 
 ```sh
-sudo apt install nodejs-legacy
-sudo apt-get install npm
 sudo npm cache clean
 # You must have a version of bower > 1.54
 sudo npm install bower -g

@@ -434,7 +434,7 @@ public class FeatureGroupValidationsController {
   private boolean getRuleTypeMappings(FeatureType featureType, String featureGroupFeatureType) {
     // <FeatureType, FeatureGroupFeatureType>
     final Map<FeatureType, List<String>> rulesTypeMappings =  new HashMap<>();
-    rulesTypeMappings.put(FeatureType.Quantitative,Arrays.asList("float", "double", "decimal", "numeric", "int",
+    rulesTypeMappings.put(FeatureType.Numerical,Arrays.asList("float", "double", "decimal", "numeric", "int",
                                                                   "integer", "tinyint", "bigint"));
     rulesTypeMappings.put(FeatureType.Categorical,Arrays.asList("string", "varchar", "char"));
 
