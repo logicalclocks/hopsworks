@@ -191,9 +191,9 @@ public class KeywordController implements KeywordControllerIface {
 
   private void validateKeywords(List<String> keywords) throws FeaturestoreException {
     for (String keyword : keywords) {
-      if (!FeaturestoreConstants.FEATURESTORE_REGEX.matcher(keyword).matches()) {
+      if (!FeaturestoreConstants.KEYWORDS_REGEX.matcher(keyword).matches()) {
         throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.KEYWORD_FORMAT_ERROR, Level.FINE,
-            "Keywords can only contain lower case characters, numbers and underscores and cannot be " +
+            "Keywords can only contain characters, numbers and underscores and cannot be " +
                 "longer than " + FeaturestoreConstants.FEATURESTORE_ENTITY_NAME_MAX_LENGTH + " characters or empty.");
       }
     }
