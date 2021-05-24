@@ -121,6 +121,47 @@ angular.module('hopsWorksApp')
                 }
             };
 
+            self.getDockerConfiguration = function () {
+              VariablesService.getVariable('kube_docker_max_memory_allocation')
+                .then(function (success) {
+                  self.hasDockerMemory = true;
+                  self.maxDockerMemory = parseInt(success.data.successMessage);
+                }, function (error) {
+                  self.hasDockerMemory = false;
+                  self.maxDockerMemory = -1;
+              });
+              VariablesService.getVariable('kube_docker_max_cores_allocation')
+                .then(function (success) {
+                  self.hasDockerCores = true;
+                  self.maxDockerCores = parseInt(success.data.successMessage);
+                }, function (error) {
+                  self.hasDockerCores = false;
+                  self.maxDockerCores = -1;
+              });
+                VariablesService.getVariable('kube_docker_max_gpus_allocation')
+                  .then(function (success) {
+                    self.hasDockerGpus = true;
+                    self.maxDockerGpus = parseInt(success.data.successMessage);
+                  }, function (error) {
+                    self.hasDockerGpus = false;
+                    self.maxDockerGpus = -1;
+                });
+                JobService.getConfiguration(self.projectId, "docker").then(
+                    function (success) {
+                      self.defaultDockerConfig = success.data;
+                   }, function (error) {});
+            };
+
+            self.getDockerConfiguration();
+
+            self.range = function (min, max) {
+                var input = [];
+                for (var i = min; i <= max; i++) {
+                    input.push(i);
+                }
+                return input;
+            };
+
             /**
              * Check that the directory selected follows the required structure.
              * In particular, check that the children are integers (version numbers)
@@ -243,6 +284,7 @@ angular.module('hopsWorksApp')
                 self.editServing.batchingEnabled = false;
                 self.editServing.modelServer = "TENSORFLOW_SERVING";
                 self.editServing.servingTool = "DEFAULT";
+                self.editServing.predictorResourceConfig = JSON.parse(JSON.stringify(self.defaultDockerConfig.resourceConfig))
                 self.versions = [];
                 self.sliderOptions.value = 1;
                 self.showAdvancedForm = false;
@@ -367,16 +409,17 @@ angular.module('hopsWorksApp')
                 self.showCreateNewServingForm = true;
                 self.createNewServingMode = true;
                 self.updateKafkaTopics();
+                if(!self.editServing.predictorResourceConfig) {
+                  self.editServing.predictorResourceConfig = JSON.parse(JSON.stringify(self.defaultDockerConfig.resourceConfig));
+                }
             };
 
             self.containsServingStatus = function (status) {
-
                 for (var j = 0; j < self.servings.length; j++) {
                     if (self.servings[j].status === status) {
                         return true;
                     }
                 }
-
                 return false;
             };
 
@@ -459,9 +502,15 @@ angular.module('hopsWorksApp')
                 self.editServing.modelVersion = self.editServing.modelVersion.toString();
                 self.sliderOptions.value = serving.requestedInstances;
                 self.kfserving = self.editServing.servingTool === "KFSERVING";
+
                 if (self.editServing.modelServer === "TENSORFLOW_SERVING") {
                     self.validateTfModelPath(serving.artifactPath, serving.name);
                 }
+
+                if(serving.predictorResourceConfig) {
+                  self.editServing.predictorResourceConfig = serving.predictorResourceConfig;
+                }
+
                 self.showCreateServingForm();
                 self.setKFServing();
             };
@@ -651,7 +700,8 @@ angular.module('hopsWorksApp')
 
                 VariablesService.isKubernetes().then(
                     function(success) {
-                        self.setIsKubernetes(success.data.successMessage === "true")
+                        var isKubernetes = success.data.successMessage === "true";
+                        self.setIsKubernetes(isKubernetes)
                     },
                     function (error) {
                         growl.error(error.data.errorMsg, {
