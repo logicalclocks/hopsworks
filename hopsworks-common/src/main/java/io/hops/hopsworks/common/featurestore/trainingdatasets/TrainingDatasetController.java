@@ -921,19 +921,22 @@ public class TrainingDatasetController {
           .map(af -> new Feature(af.getName(), "fg0", af.getType(), af.getPrimary(), af.getDefaultValue()))
           .collect(Collectors.toList());
 
-      // construct query for this feature group
-      String featureStore = featurestoreController.getOfflineFeaturestoreDbName(project);
-      String projectName = onlineFeaturestoreController.getOnlineFeaturestoreDbName(
-          featuregroup.getFeaturestore().getProject());
-      Query query = new Query();
-      query.setFeatureStore(featureStore);
-      query.setProject(projectName);
-      query.setFeaturegroup(featuregroup);
-      query.setAs("fg0");
-      query.setFeatures(features);
-
-      // construct ServingPreparedStatementDTO and add to the list
-      servingPreparedStatementDTOS.add(buildServingPreparedStatementDTO(join.getIndex(), primaryKeys, query));
+      // In some cases only primary key(s) and label(s) are used from a feature group. In this case they will not be
+      // part of the prepared statement thus don't add to this query.
+      if (features.size() > 0){
+        // construct query for this feature group
+        String featureStore = featurestoreController.getOfflineFeaturestoreDbName(project);
+        String projectName = onlineFeaturestoreController.getOnlineFeaturestoreDbName(
+            featuregroup.getFeaturestore().getProject());
+        Query query = new Query();
+        query.setFeatureStore(featureStore);
+        query.setProject(projectName);
+        query.setFeaturegroup(featuregroup);
+        query.setAs("fg0");
+        query.setFeatures(features);
+        // construct ServingPreparedStatementDTO and add to the list
+        servingPreparedStatementDTOS.add(buildServingPreparedStatementDTO(join.getIndex(), primaryKeys, query));
+      }
     }
 
     return servingPreparedStatementDTOS;
