@@ -590,6 +590,17 @@ describe "On #{ENV['OS']}" do
           get_validations(project.id, featurestore_id, fg_json["id"])
           expect(json_body[:count]).to be == 2
         end
+        it "should be able to get all validations of a on-demand feature group" do
+          project = get_project
+          featurestore_id = get_featurestore_id(project.id)
+          connector_id = with_jdbc_connector(project.id)
+          json_result, featuregroup_name = create_on_demand_featuregroup(project.id, featurestore_id, connector_id)
+          fg_json = JSON.parse(json_result)
+          create_validation(project.id, featurestore_id, fg_json["id"])
+          create_validation(project.id, featurestore_id, fg_json["id"], "1612285461348")
+          get_validations(project.id, featurestore_id, fg_json["id"])
+          expect(json_body[:count]).to be == 2
+        end
         it "should be able to get a validation by id" do
           project = get_project
           featurestore_id = get_featurestore_id(project.id)

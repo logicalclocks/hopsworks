@@ -74,7 +74,8 @@ public class FeatureGroupValidationFacade extends AbstractFacade<FeatureGroupVal
                                            Set<? extends SortBy> sorts,
                                            Featuregroup featureGroup) {
     String join = "";
-    if (featureGroup.getCachedFeaturegroup().getTimeTravelFormat() == TimeTravelFormat.HUDI) {
+    if (featureGroup.getCachedFeaturegroup() != null &&
+        featureGroup.getCachedFeaturegroup().getTimeTravelFormat() == TimeTravelFormat.HUDI) {
       if (sorts != null) {
         for (SortBy sort : sorts) {
           if (sort.getValue().contains(Sorts.COMMIT_TIME.getValue())) {
