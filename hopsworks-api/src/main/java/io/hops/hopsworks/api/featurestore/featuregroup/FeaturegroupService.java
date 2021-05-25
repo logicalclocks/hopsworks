@@ -661,7 +661,7 @@ public class FeaturegroupService {
 
     Map<String, String> writeOptions = null;
     if (ingestionJobConf.getWriteOptions() != null) {
-      dataOptions = ingestionJobConf.getWriteOptions().stream()
+      writeOptions = ingestionJobConf.getWriteOptions().stream()
           .collect(Collectors.toMap(OptionDTO::getName, OptionDTO::getValue));
     }
 
