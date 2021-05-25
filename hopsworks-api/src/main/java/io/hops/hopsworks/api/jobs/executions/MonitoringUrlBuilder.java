@@ -68,12 +68,15 @@ public class MonitoringUrlBuilder {
   private YarnApplicationAttemptStateFacade yarnApplicationAttemptStateFacade;
   
   public MonitoringUrlDTO build(Execution execution) {
+    if (execution == null || Strings.isNullOrEmpty(execution.getAppId())) {
+      return null;
+    }
     MonitoringUrlDTO monitoringUrlDTO = new MonitoringUrlDTO();
     monitoringUrlDTO.setYarnUrl(YARN_UI_CLUSTER + execution.getAppId());
     monitoringUrlDTO.setGrafanaUrl(GRAFANA + execution.getAppId());
     monitoringUrlDTO.setTfUrl(TENSOR_BOARD + execution.getAppId());
     String kibanaUrl;
-    if (Strings.isNullOrEmpty(execution.getAppId()) || !execution.getAppId().contains("application")) {
+    if (!execution.getAppId().contains("application")) {
       kibanaUrl = KIBANA_KUBE.replace(PROJECT_NAME_PLACEHOLDER, execution.getJob().getProject().getName().toLowerCase())
           .replace(APP_ID_PLACEHOLDER, execution.getAppId());
     } else {
@@ -96,6 +99,9 @@ public class MonitoringUrlBuilder {
   }
   
   public MonitoringUrlDTO build(String appId, Project project) {
+    if (Strings.isNullOrEmpty(appId)) {
+      return null;
+    }
     MonitoringUrlDTO monitoringUrlDTO = new MonitoringUrlDTO();
     monitoringUrlDTO.setYarnUrl(YARN_UI_CLUSTER + appId);
     monitoringUrlDTO.setGrafanaUrl(GRAFANA + appId);
