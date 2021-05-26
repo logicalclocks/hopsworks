@@ -170,6 +170,11 @@ public class KubeJupyterManager extends JupyterManagerImpl implements JupyterMan
       jupyterConfigFilesGenerator.createSparkMagicConfig(sparkMagicConfig,project, jupyterSettings, hdfsUser,
           jupyterPaths.getConfDirPath());
       
+      //If user selected Experiments or Spark we should use the default docker config for the Python kernel
+      if(!jupyterSettings.isPythonKernel()) {
+        jupyterSettings.setDockerConfig(new DockerJobConfiguration());
+      }
+      
       kubeClientService.createOrUpdateConfigMap(project, user, CONF_SUFFIX,
         ImmutableMap.of(
             JupyterNotebookConfigTemplate.FILE_NAME, jupyterNotebookConfig.toString(),
