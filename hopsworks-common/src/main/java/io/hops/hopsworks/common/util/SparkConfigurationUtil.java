@@ -343,7 +343,7 @@ public class SparkConfigurationUtil extends ConfigurationUtil {
       new ConfigProperty(
         Settings.SPARK_DRIVER_CORES_ENV,
         HopsUtils.OVERWRITE,
-        Integer.toString(experimentType != null ? 1 : sparkJobConfiguration.getExecutorCores())));
+        Integer.toString(experimentType != null ? 1 : sparkJobConfiguration.getAmVCores())));
     sparkProps.put(Settings.SPARK_EXECUTOR_MEMORY_ENV,
       new ConfigProperty(
         Settings.SPARK_EXECUTOR_MEMORY_ENV,
