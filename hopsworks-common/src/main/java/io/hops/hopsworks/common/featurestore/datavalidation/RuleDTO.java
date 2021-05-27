@@ -18,6 +18,7 @@ package io.hops.hopsworks.common.featurestore.datavalidation;
 
 import io.hops.hopsworks.common.api.RestDTO;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.datavalidation.AcceptedType;
+import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.datavalidation.FeatureType;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.datavalidation.Name;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.datavalidation.Predicate;
 
@@ -33,6 +34,8 @@ public class RuleDTO extends RestDTO<RuleDTO> {
   private Predicate predicate;
   @XmlElement(required = true)
   private AcceptedType acceptedType;
+  @XmlElement
+  private FeatureType featureType;
   @XmlElement(required = true)
   private String description;
   
@@ -68,4 +71,11 @@ public class RuleDTO extends RestDTO<RuleDTO> {
     this.acceptedType = acceptedType;
   }
 
+  public FeatureType getFeatureType() {
+    return featureType;
+  }
+
+  public void setFeatureType(FeatureType featureType) {
+    this.featureType = featureType;
+  }
 }

@@ -17,5 +17,5 @@
 package io.hops.hopsworks.persistence.entity.featurestore.featuregroup.datavalidation;
 
 public enum FeatureType {
-  Quantitative, Categorical
+  Numerical, Categorical
 }
