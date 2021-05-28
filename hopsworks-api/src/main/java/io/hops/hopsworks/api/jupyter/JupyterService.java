@@ -41,6 +41,7 @@ package io.hops.hopsworks.api.jupyter;
 import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.api.filter.Audience;
 import io.hops.hopsworks.api.filter.NoCacheResponse;
+import io.hops.hopsworks.api.jobs.executions.MonitoringUrlBuilder;
 import io.hops.hopsworks.api.jwt.JWTHelper;
 import io.hops.hopsworks.audit.logger.LogLevel;
 import io.hops.hopsworks.audit.logger.annotation.Logged;
@@ -169,6 +170,8 @@ public class JupyterService {
   private SparkController sparkController;
   @EJB
   UsersController usersController;
+  @EJB
+  private MonitoringUrlBuilder monitoringUrlBuilder;
 
   private Integer projectId;
   // No @EJB annotation for Project, it's injected explicitly in ProjectService.
@@ -221,7 +224,13 @@ public class JupyterService {
   public Response livySessions(@Context SecurityContext sc) {
     Users user = jWTHelper.getUserPrincipal(sc);
     List<LivyMsg.Session> sessions = livyController.getLivySessionsForProjectUser(this.project, user);
-    GenericEntity<List<LivyMsg.Session>> livyActive = new GenericEntity<List<LivyMsg.Session>>(sessions) {
+    List<LivySessionDTO> livySessionDTOS = new ArrayList<>();
+    for (LivyMsg.Session session : sessions) {
+      LivySessionDTO dto = new LivySessionDTO(session);
+      dto.setMonitoring(monitoringUrlBuilder.build(session.getAppId(), project));
+      livySessionDTOS.add(dto);
+    }
+    GenericEntity<List<LivySessionDTO>> livyActive = new GenericEntity<List<LivySessionDTO>>(livySessionDTOS) {
     };
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(livyActive).build();
   }
