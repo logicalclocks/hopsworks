@@ -41,6 +41,7 @@ public class ExecutionDTO extends RestDTO<ExecutionDTO> {
   private List<String> filesToRemove;
   private Long duration;
   private String flinkMasterURL;
+  private MonitoringUrlDTO monitoring;
   
   public ExecutionDTO() {
   }
@@ -155,5 +156,13 @@ public class ExecutionDTO extends RestDTO<ExecutionDTO> {
   
   public void setFlinkMasterURL(String flinkMasterURL) {
     this.flinkMasterURL = flinkMasterURL;
+  }
+  
+  public MonitoringUrlDTO getMonitoring() {
+    return monitoring;
+  }
+  
+  public void setMonitoring(MonitoringUrlDTO monitoring) {
+    this.monitoring = monitoring;
   }
 }

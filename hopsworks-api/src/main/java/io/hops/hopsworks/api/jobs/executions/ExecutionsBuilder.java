@@ -45,6 +45,8 @@ public class ExecutionsBuilder {
   private FlinkMasterAddrCache flinkMasterAddrCache;
   @EJB
   private UsersBuilder usersBuilder;
+  @EJB
+  private MonitoringUrlBuilder monitoringUrlBuilder;
   
   
   /**
@@ -108,14 +110,14 @@ public class ExecutionsBuilder {
       dto.setFilesToRemove(execution.getFilesToRemove());
       dto.setDuration(execution.getExecutionDuration());
       // Get Flink Master URL if current execution hasn't finished
-      if (execution.getJob().getJobType() == JobType.FLINK &&
-        !execution.getState().isFinalState() &&
-        !Strings.isNullOrEmpty(execution.getAppId())) {
+      if (execution.getJob().getJobType() == JobType.FLINK && !execution.getState().isFinalState() &&
+          !Strings.isNullOrEmpty(execution.getAppId())) {
         String addr = flinkMasterAddrCache.get(execution.getAppId());
         if (!Strings.isNullOrEmpty(addr)) {
           dto.setFlinkMasterURL(addr);
         }
       }
+      dto.setMonitoring(monitoringUrlBuilder.build(execution));
     }
     
     return dto;
