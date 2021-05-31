@@ -201,7 +201,7 @@ public class RemoteUserAuthController {
   private RemoteUser createRemoteUser(String uuid, String email, String givenName, String surname,
     List<String> userGroups, RemoteUserType type, UserAccountStatus status) {
     String authKey = securityUtils.generateSecureRandomString(16);
-    Users user = userController.createNewRemoteUser(email, givenName, surname, authKey, status);
+    Users user = userController.createNewRemoteUser(email.toLowerCase(), givenName, surname, authKey, status);
     List<String> groups = remoteUserGroupMapper.getMappedGroups(userGroups, type);
     BbcGroup group;
     for (String grp : groups) {
