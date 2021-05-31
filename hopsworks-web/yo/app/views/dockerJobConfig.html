@@ -46,6 +46,18 @@
             </select>
         </div>
     </div>
+
+    <div class="form-group">
+        <label class="control-label col-sm-5"
+               uib-tooltip="Comma-separated list of datasets or directories to be made available to the docker container. Data is copied asynchronously in the container, it is up  to the application to wait until all data copy is completed.">Input paths: </label>
+        <div class="col-sm-2">
+            <textarea style="width: 100%; max-width: 100%"
+                      id="inputPaths"
+                      ng-model="newJobCtrl.runConfig.inputPaths">/logs
+            </textarea>
+        </div>
+    </div>
+
     <div class="form-group">
         <label class="control-label col-sm-5"
                uib-tooltip="Optionally set the path where the docker container will redirect its output. The directory is automatically created in the container and the job will copy its content to the equivalent path in Datasets (you need to create the dataset manually first)">Output path: </label>
@@ -79,23 +91,23 @@
              ng-class="{'collapse in': newJobCtrl.settings.advanced, 'collapse': !newJobCtrl.settings.advanced}">
             <div class="form-group">
                 <label class="control-label col-sm-5" for="envs"
-                       uib-tooltip='Enter additional line-separated environment variables to be available in the container.'>Environment variables: </label>
+                       uib-tooltip='Enter additional comma-separated environment variables to be available in the container.'>Environment variables: </label>
                 <div class="col-sm-2">
                     <textarea style="width: 100%; max-width: 100%"
                               id="envs"
                               ng-model="newJobCtrl.runConfig.envVars"
-                              title="env1=val1&#10;env2=val2">
+                              title="env1=val1,env2=val2">
                     </textarea>
                 </div>
             </div>
             <div class="form-group">
                 <label class="control-label col-sm-5" for="volumes"
-                       uib-tooltip='Enter additional line-separated volumes to be mounted in the container.'>Volumes: </label>
+                       uib-tooltip='Enter additional comma-separated volumes to be mounted in the container.'>Volumes: </label>
                 <div class="col-sm-2">
                     <textarea style="width: 100%; max-width: 100%"
                               id="volumes"
                               ng-model="newJobCtrl.runConfig.volumes"
-                              title="/local-path1:/container-path1&#10;/local-path2:/container-path2">
+                              title="/local-path1:/container-path1,/local-path2:/container-path2">
                     </textarea>
                 </div>
             </div>

@@ -49,10 +49,10 @@ public class DockerJobConfiguration extends JobConfiguration {
   private List<String> envVars;
 
   @XmlElement
-  private String command;
+  private List<String> command;
 
   @XmlElement
-  private List<String> args;
+  private List<String> inputPaths;
 
   @XmlElement
   private String outputPath = "/logs";
@@ -111,20 +111,20 @@ public class DockerJobConfiguration extends JobConfiguration {
     this.envVars = envVars;
   }
 
-  public String getCommand() {
+  public List<String> getCommand() {
     return command;
   }
 
-  public void setCommand(String command) {
+  public void setCommand(List<String> command) {
     this.command = command;
   }
 
-  public List<String> getArgs() {
-    return args;
+  public List<String> getInputPaths() {
+    return inputPaths;
   }
 
-  public void setArgs(List<String> args) {
-    this.args = args;
+  public void setInputPaths(List<String> inputPaths) {
+    this.inputPaths = inputPaths;
   }
 
   public String getOutputPath() {

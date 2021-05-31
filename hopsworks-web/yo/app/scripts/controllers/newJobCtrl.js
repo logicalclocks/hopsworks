@@ -433,6 +433,27 @@ angular.module('hopsWorksApp')
 
               // Convert text entries to list
               if (self.getJobType() === "DOCKER")  {
+                if (typeof self.runConfig['command'] !== "undefined" && self.runConfig['command'] !== "" ) {
+                  self.runConfig['command'] = JSON.stringify(self.runConfig['command'])
+                      .replace("[\"", "")
+                      .replace("\"]", "")
+                      .replace("\"", "")
+                      .split(",");
+                  for (var i = 0; i < self.runConfig['command'].length; i++) {
+                    self.runConfig['command'][i] = self.runConfig['command'][i].replace("\"", "")
+                  }
+                }
+                if (typeof self.runConfig['inputPaths'] !== "undefined" && self.runConfig['inputPaths'] !== "" ) {
+                  self.runConfig['inputPaths'] = JSON.stringify(self.runConfig['inputPaths'])
+                      .replace("[\"", "")
+                      .replace("\"]", "")
+                      .replace("\"", "")
+                      .split(",");
+
+                  for (var i = 0; i < self.runConfig['inputPaths'].length; i++) {
+                    self.runConfig['inputPaths'][i] = self.runConfig['inputPaths'][i].replace("\"", "")
+                  }
+                }
                 if (typeof self.runConfig['envVars'] !== "undefined" && self.runConfig['envVars'] !== "" ) {
                   self.runConfig['envVars'] = JSON.stringify(self.runConfig['envVars'])
                                                    .replace("[\"", "")
@@ -453,17 +474,6 @@ angular.module('hopsWorksApp')
 
                   for (var i = 0; i < self.runConfig['volumes'].length; i++) {
                     self.runConfig['volumes'][i] = self.runConfig['volumes'][i].replace("\"", "")
-                  }
-                }
-                if (typeof self.runConfig['args'] !== "undefined" && self.runConfig['args'] !== "" ) {
-                  self.runConfig['args'] = JSON.stringify(self.runConfig['args'])
-                      .replace("[\"", "")
-                      .replace("\"]", "")
-                      .replace("\"", "")
-                      .split(",");
-
-                  for (var i = 0; i < self.runConfig['args'].length; i++) {
-                    self.runConfig['args'][i] = self.runConfig['args'][i].replace("\"", "")
                   }
                 }
                 if (typeof self.runConfig['uid'] === "undefined" || self.runConfig['uid'] === "" || self.runConfig['uid'] === "-1") {

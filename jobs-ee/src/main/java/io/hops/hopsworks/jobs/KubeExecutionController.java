@@ -91,9 +91,9 @@ import static java.util.logging.Level.SEVERE;
 @KubeStereotype
 @TransactionAttribute(TransactionAttributeType.NEVER)
 public class KubeExecutionController extends AbstractExecutionController implements ExecutionController {
-  
+
   private static final Logger LOGGER = Logger.getLogger(KubeExecutionController.class.getName());
-  
+
   private static final String SEPARATOR = "-";
   private static final String CERTS = "certs";
   private static final String HADOOP_CONF = "hadoopconf";
@@ -125,18 +125,18 @@ public class KubeExecutionController extends AbstractExecutionController impleme
   private ProjectUtils projectUtils;
   @EJB
   private KubeProjectConfigMaps kubeProjectConfigMaps;
-  
+
   @Override
   @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
   public Execution start(Jobs job, String args, Users user) throws JobException, GenericException,
-    ServiceException, ProjectException {
-    
+          ServiceException, ProjectException {
+
     if (job.getJobType() == JobType.PYTHON || job.getJobType() == JobType.DOCKER) {
       Project project = job.getProject();
       String hdfsUser = hdfsUsersController.getHdfsUserName(project, user);
       Execution execution = executionFacade.create(job, user, null, null, null, 0, hdfsUser, args);
       String logOutputPath = Utils.getJobLogLocation(execution.getJob().getProject().getName(),
-        execution.getJob().getJobType())[0] + job.getName() + File.separator + execution.getId() + File.separator;
+              execution.getJob().getJobType())[0] + job.getName() + File.separator + execution.getId() + File.separator;
       execution.setStdoutPath(logOutputPath + "stdout.log");
       execution.setStderrPath(logOutputPath + "stderr.log");
       execution.setExecutionStart(System.currentTimeMillis());
@@ -194,21 +194,21 @@ public class KubeExecutionController extends AbstractExecutionController impleme
         Map<String, String> primaryContainerEnv = new HashMap<>();
         Map<String, String> sidecarContainerEnv = new HashMap<>();
         setContainerEnv(job.getJobType(), primaryContainerEnv, sidecarContainerEnv, hdfsUser, project, execution,
-                        certificatesDir, secretsDir, settings.getAnacondaProjectDir(), jobConfiguration, hdfsUser);
+                certificatesDir, secretsDir, settings.getAnacondaProjectDir(), jobConfiguration, hdfsUser);
 
         List<Container> containers = buildContainers(job.getJobType(), jobConfiguration, secretsDir,
-                                                     certificatesDir, resourceRequirements, primaryContainerEnv,
-                                                     sidecarContainerEnv, project);
+                certificatesDir, resourceRequirements, primaryContainerEnv,
+                sidecarContainerEnv, project, execution);
         kubeClientService.createJob(job.getProject(),
           buildJob(
-            deploymentName,
-            secretsName,
-            kubeProjectUser,
-            execution,
-            project,
-            job.getJobType(),
-            containers,
-            jobConfiguration));
+                  deploymentName,
+                  secretsName,
+                  kubeProjectUser,
+                  execution,
+                  project,
+                  job.getJobType(),
+                  containers,
+                  jobConfiguration));
       } catch (Exception e) {
         execution.setExecutionStop(System.currentTimeMillis());
         execution.setProgress(1);
@@ -217,9 +217,9 @@ public class KubeExecutionController extends AbstractExecutionController impleme
 
         String usrMsg = "";
         if (e instanceof EJBException &&
-          ((EJBException) e).getCausedByException() instanceof KubernetesClientException) {
+                ((EJBException) e).getCausedByException() instanceof KubernetesClientException) {
           usrMsg = "Reason: " +
-            ((KubernetesClientException) ((EJBException) e).getCausedByException()).getStatus().getMessage();
+                  ((KubernetesClientException) ((EJBException) e).getCausedByException()).getStatus().getMessage();
         } else if (e instanceof JobException) {
           usrMsg = ((JobException)e).getErrorCode().getMessage();
         } else {
@@ -242,7 +242,7 @@ public class KubeExecutionController extends AbstractExecutionController impleme
     }
     return super.start(job, args, user);
   }
-  
+
   private Job buildJob(String name, String secretsName, String kubeProjectUser,
                        Execution execution, Project project, JobType jobType, List<Container> containers,
                        DockerJobConfiguration jobConfiguration) throws JobException {
@@ -253,31 +253,32 @@ public class KubeExecutionController extends AbstractExecutionController impleme
     jobSpec.setAdditionalProperty("backoffLimit", 0);
     jobSpec.setTemplate(new PodTemplateSpecBuilder()
       .withMetadata(
-        new ObjectMetaBuilder()
-          .withLabels(ImmutableMap.of(jobType.getName().toLowerCase(), kubeProjectUser,
-            "execution", Integer.toString(execution.getId()),
-            "job-type", jobType.getName().toLowerCase(),
-            "deployment-type", "job"))
-          .build())
+              new ObjectMetaBuilder()
+                      .withLabels(ImmutableMap.of(jobType.getName().toLowerCase(), kubeProjectUser,
+                              "execution", Integer.toString(execution.getId()),
+                              "job-type", jobType.getName().toLowerCase(),
+                              "deployment-type", "job"))
+                      .build())
       .withSpec(buildPodSpec(project, secretsName, kubeProjectUser, containers, jobConfiguration))
       .build());
-    
+
     Job job = new JobBuilder()
       .withNewMetadata()
       .withName(name)
       .withLabels(ImmutableMap.of(jobType.getName().toLowerCase(), kubeProjectUser,
-        "execution", Integer.toString(execution.getId()),
-        "job-type", jobType.getName().toLowerCase(),
-        "deployment-type", "job"))
+              "execution", Integer.toString(execution.getId()),
+              "job-type", jobType.getName().toLowerCase(),
+              "deployment-type", "job"))
       .endMetadata()
       .build();
-  
+
     job.setSpec(jobSpec);
     return job;
   }
-  
+
   private PodSpec buildPodSpec(Project project, String secretsName,
-      String kubeProjectUser, List<Container> containers, DockerJobConfiguration jobConfiguration) throws JobException {
+                               String kubeProjectUser, List<Container> containers,
+                               DockerJobConfiguration jobConfiguration) throws JobException {
     List<Volume> volumes = new ArrayList<>();
     volumes.add(new VolumeBuilder()
             .withName(CERTS)
@@ -305,15 +306,27 @@ public class KubeExecutionController extends AbstractExecutionController impleme
             .withName("logs")
             .withEmptyDir(new EmptyDirVolumeSource())
             .build());
+
+    if (jobConfiguration.getInputPaths() != null && !jobConfiguration.getInputPaths().isEmpty()) {
+      List<String> inputPaths = jobConfiguration.getInputPaths();
+      for (int i = 0, inputPathsSize = inputPaths.size(); i < inputPathsSize; i++) {
+        if (!Strings.isNullOrEmpty(inputPaths.get(i))) {
+          volumes.add((new VolumeBuilder()
+                  .withName("inputpath" + i)
+                  .withEmptyDir(new EmptyDirVolumeSource())
+                  .build()));
+        }
+      }
+    }
     parseVolumes(jobConfiguration).stream().map(Pair::getValue0).forEach(volumes::add);
 
     return new PodSpecBuilder()
-      .withContainers(containers)
-      .withVolumes(volumes)
-      .withRestartPolicy("Never")
-      .build();
+            .withContainers(containers)
+            .withVolumes(volumes)
+            .withRestartPolicy("Never")
+            .build();
   }
-  
+
   private List<Container> buildContainers(JobType jobType,
                                           DockerJobConfiguration jobConfiguration,
                                           String secretDir,
@@ -321,7 +334,8 @@ public class KubeExecutionController extends AbstractExecutionController impleme
                                           ResourceRequirements resourceRequirements,
                                           Map<String, String> primaryContainerEnv,
                                           Map<String, String> sidecarContainerEnv,
-                                          Project project)
+                                          Project project,
+                                          Execution execution)
           throws ServiceDiscoveryException, JobException {
 
     List<Container> containers = new ArrayList<>();
@@ -387,6 +401,18 @@ public class KubeExecutionController extends AbstractExecutionController impleme
               .withMountPath(jobConfiguration.getOutputPath())
               .build());
 
+      if (jobConfiguration.getInputPaths() != null && !jobConfiguration.getInputPaths().isEmpty()) {
+        List<String> inputPaths = jobConfiguration.getInputPaths();
+        for (int i = 0; i < inputPaths.size(); i++) {
+          if (!Strings.isNullOrEmpty(inputPaths.get(i))) {
+            volumeMounts.add(new VolumeMountBuilder()
+                    .withName("inputpath" + i)
+                    .withMountPath(inputPaths.get(i))
+                    .build());
+          }
+        }
+      }
+
       // Parse volumes from job and create mounts
       parseVolumes(jobConfiguration).stream().map(Pair::getValue1).forEach(volumeMounts::add);
 
@@ -403,7 +429,7 @@ public class KubeExecutionController extends AbstractExecutionController impleme
         }
         sc = new SecurityContextBuilder().withRunAsUser(uid).withRunAsGroup(gid).build();
       } else if (settings.isDockerJobUidStrict() && (jobConfiguration.getUid() != null
-                                                  || jobConfiguration.getGid() != null)) {
+              || jobConfiguration.getGid() != null)) {
         throw new JobException(RESTCodes.JobErrorCode.DOCKER_UID_GID_STRICT, FINE);
       }
 
@@ -416,42 +442,69 @@ public class KubeExecutionController extends AbstractExecutionController impleme
               .withSecurityContext(sc)
               .withEnv(kubeClientService.getEnvVars(primaryContainerEnv))
               .withCommand(jobConfiguration.getCommand())
-              .withArgs(jobConfiguration.getArgs())
+              .withArgs(!Strings.isNullOrEmpty(jobConfiguration.getDefaultArgs())
+                        ? jobConfiguration.getDefaultArgs()
+                        : execution.getArgs())
               .withVolumeMounts(volumeMounts)
               .build());
 
-      containers.add(new ContainerBuilder()
+      LifecycleBuilder lifecycleBuilder = new LifecycleBuilder()
+                      .withNewPreStop()
+                      .withNewExec()
+                      .withCommand("/bin/sh", "-c",
+                              "hdfs dfs -mkdir -p " + jobConfiguration.getOutputPath() + " ; " +
+                                      "hdfs dfs -copyFromLocal -f " + jobConfiguration.getOutputPath() + "/* "
+                                      + jobConfiguration.getOutputPath())
+                      .endExec()
+                      .endPreStop();
+
+      if (jobConfiguration.getInputPaths() != null && !jobConfiguration.getInputPaths().isEmpty()) {
+        String command = "echo \"" + String.join("\n", jobConfiguration.getInputPaths()) +
+                "\" | while read line ; do hdfs dfs -test -d $line  && hdfs dfs -copyToLocal -f $line/* $line " +
+                "&&  chmod +rx -R $line ; done";
+        lifecycleBuilder
+                .withNewPostStart()
+                .withNewExec()
+                .withCommand("/bin/sh", "-c", command)
+                .endExec()
+                .endPostStart();
+      }
+      List<VolumeMount> jobVolumeMounts = new ArrayList<>();
+      jobVolumeMounts.add(new VolumeMountBuilder()
+              .withName(CERTS)
+              .withReadOnly(true)
+              .withMountPath(certificatesDir)
+              .build());
+      jobVolumeMounts.add(new VolumeMountBuilder()
+                      .withName(HADOOP_CONF)
+                      .withReadOnly(true)
+                      .withMountPath("/srv/hops/hadoop/etc/hadoop")
+                      .build());
+      jobVolumeMounts.add(new VolumeMountBuilder()
+                      .withName("logs")
+                      .withMountPath(jobConfiguration.getOutputPath())
+                      .build());
+      if (jobConfiguration.getInputPaths() != null && !jobConfiguration.getInputPaths().isEmpty()) {
+        List<String> inputPaths = jobConfiguration.getInputPaths();
+        for (int i = 0, inputPathsSize = inputPaths.size(); i < inputPathsSize; i++) { ;
+          if (!Strings.isNullOrEmpty(inputPaths.get(i))) {
+            jobVolumeMounts.add(new VolumeMountBuilder()
+                    .withName("inputpath" + i)
+                    .withMountPath(inputPaths.get(i))
+                    .build());
+          }
+        }
+      }
+
+      containers.add (new ContainerBuilder()
               .withName("logger")
               .withImage(projectUtils.getFullDockerImageName(project, true))
               .withImagePullPolicy(settings.getKubeImagePullPolicy())
               .withEnv(kubeClientService.getEnvVars(sidecarContainerEnv))
               .withCommand("/bin/sh")
               .withArgs("-c","while true; do sleep 1; done")
-              .withVolumeMounts(
-                      new VolumeMountBuilder()
-                              .withName(CERTS)
-                              .withReadOnly(true)
-                              .withMountPath(certificatesDir)
-                              .build(),
-                      new VolumeMountBuilder()
-                              .withName(HADOOP_CONF)
-                              .withReadOnly(true)
-                              .withMountPath("/srv/hops/hadoop/etc/hadoop")
-                              .build(),
-                      new VolumeMountBuilder()
-                              .withName("logs")
-                              .withMountPath(jobConfiguration.getOutputPath())
-                              .build())
-              .withLifecycle(new LifecycleBuilder()
-                      .withNewPreStop()
-                        .withNewExec()
-                        .withCommand("/bin/sh", "-c",
-                                     "hdfs dfs -mkdir -p " + jobConfiguration.getOutputPath() + " ; " +
-                                     "hdfs dfs -copyFromLocal -f " + jobConfiguration.getOutputPath() + "/* "
-                                                                   + jobConfiguration.getOutputPath())
-                        .endExec()
-                      .endPreStop()
-                      .build())
+              .withVolumeMounts(jobVolumeMounts)
+              .withLifecycle(lifecycleBuilder.build())
               .build());
 
     }
@@ -459,10 +512,10 @@ public class KubeExecutionController extends AbstractExecutionController impleme
   }
 
   private void setContainerEnv(JobType jobType, Map<String, String> primaryContainer,
-                                              Map<String, String> sideContainer, String hadoopUser, Project project,
-                                              Execution execution, String certificatesDir, String secretsDir,
-                                              String anacondaEnv, DockerJobConfiguration dockerJobConfiguration,
-                                              String hdfsUser)
+                               Map<String, String> sideContainer, String hadoopUser, Project project,
+                               Execution execution, String certificatesDir, String secretsDir,
+                               String anacondaEnv, DockerJobConfiguration dockerJobConfiguration,
+                               String hdfsUser)
           throws ServiceDiscoveryException, IOException {
     switch (jobType) {
       case PYTHON:
@@ -507,7 +560,7 @@ public class KubeExecutionController extends AbstractExecutionController impleme
         primaryContainer.put("ANACONDA_ENV", anacondaEnv);
         primaryContainer.put("APP_PATH", ((PythonJobConfiguration)dockerJobConfiguration).getAppPath());
         primaryContainer.put("APP_FILE",
-                                FilenameUtils.getName(((PythonJobConfiguration)dockerJobConfiguration).getAppPath()));
+                FilenameUtils.getName(((PythonJobConfiguration)dockerJobConfiguration).getAppPath()));
         primaryContainer.put("APP_ARGS", execution.getArgs());
         primaryContainer.put("APP_FILES", ((PythonJobConfiguration)dockerJobConfiguration).getFiles());
 
@@ -535,7 +588,7 @@ public class KubeExecutionController extends AbstractExecutionController impleme
   }
 
   private Optional<Exception> runCatchAndLog(Runnable runnable, String errorMessage,
-    Optional<Exception> previousError) {
+                                             Optional<Exception> previousError) {
     try {
       runnable.run();
     } catch (Exception e) {
@@ -544,36 +597,36 @@ public class KubeExecutionController extends AbstractExecutionController impleme
     }
     return previousError;
   }
-  
+
   @Override
   public Execution stop(Jobs job) throws JobException {
     return super.stop(job);
   }
-  
+
   @Override
   public Execution stopExecution(Integer id) throws JobException {
     Execution execution =
-      executionFacade.findById(id).orElseThrow(() -> new JobException(RESTCodes.JobErrorCode.JOB_EXECUTION_NOT_FOUND,
-        FINE, "Execution: " + id));
+            executionFacade.findById(id).orElseThrow(() ->
+                    new JobException(RESTCodes.JobErrorCode.JOB_EXECUTION_NOT_FOUND, FINE, "Execution: " + id));
     if (execution.getJob().getJobType() == JobType.PYTHON || execution.getJob().getJobType() == JobType.DOCKER) {
       return stopExecution(execution);
     }
     return super.stopExecution(execution);
   }
-  
+
   @Override
   public Execution stopExecution(Execution execution) throws JobException {
     Optional<Exception> t = Optional.empty();
     // Set state to failed as execution was terminated by user
     t = runCatchAndLog(() -> executionFacade.updateState(execution, JobState.KILLED),
-      RESTCodes.JobErrorCode.JOB_STOP_FAILED.getMessage(), t);
+            RESTCodes.JobErrorCode.JOB_STOP_FAILED.getMessage(), t);
     if (t.isPresent()) {
       throw new JobException(RESTCodes.JobErrorCode.JOB_STOP_FAILED, SEVERE,
-        "Job: " + execution.getJob().getName() + ", Execution: " + execution.getId(), null, t.get());
+              "Job: " + execution.getJob().getName() + ", Execution: " + execution.getId(), null, t.get());
     }
     return execution;
   }
-  
+
   @Override
   public void delete(Execution execution) throws JobException {
     if (execution.getJob().getJobType() == JobType.PYTHON || execution.getJob().getJobType() == JobType.DOCKER) {
@@ -583,7 +636,7 @@ public class KubeExecutionController extends AbstractExecutionController impleme
     }
     super.delete(execution);
   }
-  
+
   @Override
   public JobLogDTO retryLogAggregation(Execution execution, JobLogDTO.LogType type) throws JobException {
     if (execution.getJob().getJobType() != JobType.PYTHON) {
@@ -591,27 +644,27 @@ public class KubeExecutionController extends AbstractExecutionController impleme
     }
     throw new UnsupportedOperationException();
   }
-  
+
   @Override
   public void checkAccessRight(String appId, Project project) throws JobException {
     super.checkAccessRight(appId, project);
   }
-  
+
   @Override
   public List<YarnAppUrlsDTO> getTensorBoardUrls(Users user, String appId, Project project) throws JobException {
     return super.getTensorBoardUrls(user, appId, project);
   }
-  
+
   private String getLogstashURL() throws ServiceDiscoveryException {
     com.logicalclocks.servicediscoverclient.service.Service logstash =
-        serviceDiscoveryController
-            .getAnyAddressOfServiceWithDNS(ServiceDiscoveryController.HopsworksService.PYTHON_JOBS_LOGSTASH);
+            serviceDiscoveryController
+                    .getAnyAddressOfServiceWithDNS(ServiceDiscoveryController.HopsworksService.PYTHON_JOBS_LOGSTASH);
     return logstash.getAddress() + ":" + logstash.getPort();
   }
 
   private List<Pair<Volume, VolumeMount>> parseVolumes(DockerJobConfiguration jobConfiguration) throws JobException {
     if (jobConfiguration.getJobType() == JobType.DOCKER && jobConfiguration.getVolumes() != null
-                                                        && !jobConfiguration.getVolumes().isEmpty()) {
+            && !jobConfiguration.getVolumes().isEmpty()) {
       if (!settings.isDockerJobMountAllowed()) {
         throw new JobException(RESTCodes.JobErrorCode.DOCKER_MOUNT_NOT_ALLOWED, FINE);
       }

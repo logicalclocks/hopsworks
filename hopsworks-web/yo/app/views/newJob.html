@@ -120,12 +120,6 @@
                                              ng-model="newJobCtrl.runConfig.mainClass" class="form-control"></div>
               </div>
             </div>
-            <div class="row" ng-show="newJobCtrl.jobtype !== 5">
-              <div class="text-right col-md-5">Default arguments <i class="fa fa-info-circle" uib-tooltip="Default arguments to run with. Leaving it empty, will prompt you for input arguments when running the job." style="margin-left: 10px"></i></div>
-              <div class="col-md-7"><input type="text"
-                                           ng-model="newJobCtrl.runConfig.defaultArgs" class="form-control"></div>
-            </div>
-
             <!-- Docker -->
             <div>
               <div class="row" ng-show="newJobCtrl.jobtype === 5">
@@ -135,14 +129,14 @@
               </div>
             </div>
             <div class="row" ng-show="newJobCtrl.jobtype === 5">
-              <div class="text-right col-md-5">Docker command <i class="fa fa-info-circle" uib-tooltip="Command to run the docker image with." style="margin-left: 10px"></i></div>
+              <div class="text-right col-md-5">Docker command <i class="fa fa-info-circle" uib-tooltip="Comma-separated list of commands to run the docker image with." style="margin-left: 10px"></i></div>
               <div class="col-md-7"><input type="text"
                                            ng-model="newJobCtrl.runConfig.command" class="form-control"></div>
             </div>
-            <div class="row" ng-show="newJobCtrl.jobtype === 5">
-              <div class="text-right col-md-5">Docker command arguments <i class="fa fa-info-circle" uib-tooltip="Command arguments to run the docker image with." style="margin-left: 10px"></i></div>
+            <div class="row">
+              <div class="text-right col-md-5">Default arguments <i class="fa fa-info-circle" uib-tooltip="Default arguments to run with. Leaving it empty, will prompt you for input arguments when running the job." style="margin-left: 10px"></i></div>
               <div class="col-md-7"><input type="text"
-                                           ng-model="newJobCtrl.runConfig.args" class="form-control"></div>
+                                           ng-model="newJobCtrl.runConfig.defaultArgs" class="form-control"></div>
             </div>
           </div>
           <!-- Set some run configuration -->
