@@ -114,7 +114,7 @@ describe "On #{ENV['OS']}" do
             expect(project_default_job_configuration["config"]["appPath"]).to eq "/some/file.py"
           elsif type == "docker"
             expect(project_default_job_configuration["config"]["imagePath"]).to eq "someimg"
-            expect(project_default_job_configuration["config"]["command"]).to eq "some command"
+            expect(project_default_job_configuration["config"]["command"]).to eq ["some command"]
           end
         end
 
