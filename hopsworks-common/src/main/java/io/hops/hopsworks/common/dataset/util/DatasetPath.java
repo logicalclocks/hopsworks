@@ -93,6 +93,7 @@ public class DatasetPath {
   
   public void setDatasetSharedWith(DatasetSharedWith datasetSharedWith) {
     this.datasetSharedWith = datasetSharedWith;
+    this.isShared = true;
   }
   
   public Inode getInode() {
@@ -139,5 +140,9 @@ public class DatasetPath {
     String[] parts = fullPath.split(File.separator);
     String dsPath = String.join(File.separator, Arrays.copyOfRange(parts, 0, root.depth() + 1));
     return new Path(File.separator + dsPath);
+  }
+  
+  public Project getAccessProject() {
+    return isShared ? datasetSharedWith.getProject() : dataset.getProject();
   }
 }

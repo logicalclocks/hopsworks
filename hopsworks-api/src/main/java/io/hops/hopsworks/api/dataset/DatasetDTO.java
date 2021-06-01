@@ -16,6 +16,7 @@
 package io.hops.hopsworks.api.dataset;
 
 import io.hops.hopsworks.api.dataset.inode.attribute.InodeAttributeDTO;
+import io.hops.hopsworks.api.tags.TagsDTO;
 import io.hops.hopsworks.common.api.RestDTO;
 import io.hops.hopsworks.persistence.entity.dataset.DatasetAccessPermission;
 import io.hops.hopsworks.persistence.entity.dataset.DatasetType;
@@ -39,6 +40,7 @@ public class DatasetDTO extends RestDTO<DatasetDTO> {
   private DatasetAccessPermission permission;
   private DatasetType datasetType;
   private InodeAttributeDTO attributes;
+  private TagsDTO tags;
   
   public DatasetDTO() {
   }
@@ -147,6 +149,14 @@ public class DatasetDTO extends RestDTO<DatasetDTO> {
     this.datasetType = datasetType;
   }
   
+  public TagsDTO getTags() {
+    return tags;
+  }
+  
+  public void setTags(TagsDTO tags) {
+    this.tags = tags;
+  }
+  
   @Override
   public String toString() {
     return "DatasetDTO{" +
@@ -163,6 +173,7 @@ public class DatasetDTO extends RestDTO<DatasetDTO> {
       ", permission=" + permission +
       ", datasetType=" + datasetType +
       ", attributes=" + attributes +
+      ", tags=" + tags +
       '}';
   }
 }

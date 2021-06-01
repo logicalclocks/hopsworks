@@ -211,7 +211,9 @@ module DatasetHelper
   end
 
   def create_dir(project, path, query: "")
-    post "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/dataset/#{path}?action=create#{query}"
+    path = "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/dataset/#{path}?action=create#{query}"
+    pp "post #{path}" if defined?(@debugOpt) && @debugOpt
+    post path
   end
 
   def create_dir_checked(project, path, query: "")
@@ -415,7 +417,15 @@ module DatasetHelper
   end
 
   def get_dataset_blob(project, path, datasetType: "")
-    get "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/dataset/#{path}?action=blob&expand=inodes&mode=head#{datasetType}"
+    path =  "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/dataset/#{path}?action=blob&expand=inodes&mode=head#{datasetType}"
+    pp "get #{path}" if defined?(@debugOpt) && @debugOpt
+    get path
+  end
+
+  def get_dataset_blob_checked(project, path, datasetType: "")
+    get_dataset_blob(project, path, datasetType: datasetType)
+    expect_status_details(200)
+    json_body
   end
 
   def update_dataset_permissions(project, path, permissions, datasetType: "")
@@ -801,5 +811,20 @@ module DatasetHelper
     expect_status_details(200)
     ds = json_body
     expect(ds[:attributes][:permission]).to eq (permission)
+  end
+
+  def query_dataset_checked(project, path, dataset_type: "DATASET", action: "stat", expand: nil)
+    query_dataset(project, path, dataset_type: dataset_type, action: action, expand: expand)
+    expect_status_details(200)
+  end
+
+  def query_dataset(project, path, dataset_type: "DATASET", action: "stat", expand: nil)
+    base_path = "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/dataset/#{path}"
+    query = "type=#{dataset_type}&action=#{action}"
+    expand.each { |item| query = query << "&expand=#{item}" } if defined?(expand) and !expand.nil?
+
+    path = "#{base_path}?#{query}"
+    pp "get #{path}" if defined?(@debugOpt) && @debugOpt
+    get path
   end
 end

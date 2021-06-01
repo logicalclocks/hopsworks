@@ -21,9 +21,9 @@ import io.hops.hopsworks.api.featurestore.FeaturestoreKeywordResource;
 import io.hops.hopsworks.api.featurestore.FsQueryBuilder;
 import io.hops.hopsworks.api.featurestore.activities.ActivityResource;
 import io.hops.hopsworks.api.featurestore.statistics.StatisticsResource;
-import io.hops.hopsworks.api.featurestore.tag.TagsBuilder;
-import io.hops.hopsworks.api.featurestore.tag.TagsDTO;
-import io.hops.hopsworks.api.featurestore.tag.TagsExpansionBeanParam;
+import io.hops.hopsworks.api.featurestore.tag.FeaturestoreTagsBuilder;
+import io.hops.hopsworks.api.tags.TagsDTO;
+import io.hops.hopsworks.api.tags.TagsExpansionBeanParam;
 import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.api.filter.Audience;
 import io.hops.hopsworks.api.filter.NoCacheResponse;
@@ -33,6 +33,8 @@ import io.hops.hopsworks.api.jobs.JobsBuilder;
 import io.hops.hopsworks.api.jwt.JWTHelper;
 import io.hops.hopsworks.api.provenance.ProvArtifactResource;
 import io.hops.hopsworks.common.dataset.DatasetController;
+import io.hops.hopsworks.common.dataset.util.DatasetHelper;
+import io.hops.hopsworks.common.dataset.util.DatasetPath;
 import io.hops.hopsworks.common.featurestore.OptionDTO;
 import io.hops.hopsworks.common.featurestore.app.FsJobManagerController;
 import io.hops.hopsworks.common.featurestore.query.FsQueryDTO;
@@ -47,7 +49,7 @@ import io.hops.hopsworks.common.featurestore.trainingdatasets.TrainingDatasetCon
 import io.hops.hopsworks.common.featurestore.trainingdatasets.TrainingDatasetDTO;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.DatasetException;
-import io.hops.hopsworks.exceptions.FeatureStoreTagException;
+import io.hops.hopsworks.exceptions.SchematizedTagException;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.exceptions.GenericException;
 import io.hops.hopsworks.exceptions.JobException;
@@ -120,7 +122,7 @@ public class TrainingDatasetService {
   @EJB
   private JWTHelper jWTHelper;
   @EJB
-  private TagsBuilder tagBuilder;
+  private FeaturestoreTagsBuilder tagBuilder;
   @Inject
   private FeatureStoreTagControllerIface tagController;
   @Inject
@@ -141,6 +143,8 @@ public class TrainingDatasetService {
   private JobsBuilder jobsBuilder;
   @EJB
   private PreparedStatementBuilder preparedStatementBuilder;
+  @EJB
+  private DatasetHelper datasetHelper;
 
   private Project project;
   private Featurestore featurestore;
@@ -382,7 +386,7 @@ public class TrainingDatasetService {
                          @ApiParam(value = "Name of the tag", required = true)
                          @PathParam("name") String name,
                          @ApiParam(value = "Value to set for the tag") String value)
-    throws MetadataException, FeaturestoreException, FeatureStoreTagException {
+    throws MetadataException, FeaturestoreException, SchematizedTagException, DatasetException {
 
     verifyIdProvided(trainingdatasetId);
     Users user = jWTHelper.getUserPrincipal(sc);
@@ -414,7 +418,7 @@ public class TrainingDatasetService {
                               @ApiParam(value = "Id of the training dataset", required = true)
                               @PathParam("trainingDatasetId") Integer trainingDatasetId,
                               TagsDTO tags)
-    throws MetadataException, FeaturestoreException, FeatureStoreTagException {
+    throws MetadataException, FeaturestoreException, SchematizedTagException, DatasetException {
 
     verifyIdProvided(trainingDatasetId);
     Users user = jWTHelper.getUserPrincipal(sc);
@@ -455,7 +459,7 @@ public class TrainingDatasetService {
                           @ApiParam(value = "Id of the training dataset", required = true)
                           @PathParam("trainingDatasetId") Integer trainingDatasetId,
                           @BeanParam TagsExpansionBeanParam tagsExpansionBeanParam)
-    throws DatasetException, MetadataException, FeaturestoreException, FeatureStoreTagException {
+    throws DatasetException, MetadataException, FeaturestoreException, SchematizedTagException {
 
     verifyIdProvided(trainingDatasetId);
     Users user = jWTHelper.getUserPrincipal(sc);
@@ -481,12 +485,13 @@ public class TrainingDatasetService {
                          @ApiParam(value = "Name of the tag", required = true)
                          @PathParam("name") String name,
                          @BeanParam TagsExpansionBeanParam tagsExpansionBeanParam)
-    throws DatasetException, MetadataException, FeaturestoreException, FeatureStoreTagException {
+    throws DatasetException, MetadataException, FeaturestoreException, SchematizedTagException {
 
     verifyIdProvided(trainingDatasetId);
     Users user = jWTHelper.getUserPrincipal(sc);
     TrainingDataset trainingDataset = trainingDatasetController.getTrainingDatasetById(featurestore, trainingDatasetId);
-    Map<String, String> result = tagController.get(project, user, featurestore,trainingDataset, name);
+    Map<String, String> result = new HashMap<>();
+    result.put(name, tagController.get(project, user, featurestore,trainingDataset, name));
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.TAGS);
     resourceRequest.setExpansions(tagsExpansionBeanParam.getResources());
     TagsDTO dto = tagBuilder.build(uriInfo, resourceRequest, project,
@@ -504,7 +509,7 @@ public class TrainingDatasetService {
   public Response deleteTags(@Context SecurityContext sc,
                              @ApiParam(value = "Id of the training dataset", required = true)
                              @PathParam("trainingDatasetId") Integer trainingDatasetId)
-    throws DatasetException, MetadataException, FeaturestoreException {
+    throws DatasetException, MetadataException, SchematizedTagException, FeaturestoreException {
 
     verifyIdProvided(trainingDatasetId);
     Users user = jWTHelper.getUserPrincipal(sc);
@@ -526,7 +531,7 @@ public class TrainingDatasetService {
                             @PathParam("trainingDatasetId") Integer trainingDatasetId,
                             @ApiParam(value = "Name of the tag", required = true)
                             @PathParam("name") String name)
-    throws DatasetException, MetadataException, FeaturestoreException {
+    throws DatasetException, MetadataException, SchematizedTagException, FeaturestoreException {
 
     verifyIdProvided(trainingDatasetId);
     Users user = jWTHelper.getUserPrincipal(sc);
@@ -604,13 +609,15 @@ public class TrainingDatasetService {
   public ProvArtifactResource provenance(@PathParam("trainingDatasetId") Integer trainingDatasetId)
     throws FeaturestoreException, GenericException {
     String tdName = featurestore.getProject().getName() + "_" + Settings.ServiceDataset.TRAININGDATASETS.getName();
-    Dataset targetEndpoint;
+    DatasetPath targetEndpointPath;
     try {
-      targetEndpoint = datasetController.getByName(featurestore.getProject(), tdName);
+      Dataset targetEndpoint = datasetController.getByName(featurestore.getProject(), tdName);
+      targetEndpointPath = datasetHelper.getTopLevelDatasetPath(project, targetEndpoint);
     } catch (DatasetException ex) {
       throw new GenericException(RESTCodes.GenericErrorCode.ILLEGAL_ARGUMENT, Level.FINE, "training dataset not found");
     }
-    this.provenanceResource.setContext(project, targetEndpoint);
+    
+    this.provenanceResource.setContext(project, targetEndpointPath);
     TrainingDataset td = trainingDatasetController.getTrainingDatasetById(featurestore, trainingDatasetId);
     this.provenanceResource.setArtifactId(td.getName(), td.getVersion());
     return provenanceResource;

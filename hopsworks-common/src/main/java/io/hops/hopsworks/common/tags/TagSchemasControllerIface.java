@@ -14,40 +14,16 @@
  * If not, see <https://www.gnu.org/licenses/>.
  */
 
-package io.hops.hopsworks.api.featurestore.tag;
+package io.hops.hopsworks.common.tags;
 
-import io.hops.hopsworks.api.tags.SchemaDTO;
-import io.hops.hopsworks.common.api.RestDTO;
+import io.hops.hopsworks.exceptions.SchematizedTagException;
+import io.hops.hopsworks.persistence.entity.featurestore.tag.TagSchemas;
 
-import javax.xml.bind.annotation.XmlRootElement;
+import java.util.Map;
 
-@XmlRootElement
-public class TagsDTO extends RestDTO<TagsDTO> {
-  private String name;
-  private String value;
-  private SchemaDTO schema;
-
-  public String getName() {
-    return name;
-  }
-
-  public void setName(String name) {
-    this.name = name;
-  }
-
-  public String getValue() {
-    return value;
-  }
-
-  public void setValue(String value) {
-    this.value = value;
-  }
-  
-  public SchemaDTO getSchema() {
-    return schema;
-  }
-  
-  public void setSchema(SchemaDTO schema) {
-    this.schema = schema;
-  }
+public interface TagSchemasControllerIface {
+  void create(String name, String schema) throws SchematizedTagException;
+  void delete(String name);
+  void delete(TagSchemas tag);
+  Map<String, String> getAll();
 }

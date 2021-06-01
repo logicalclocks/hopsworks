@@ -2014,20 +2014,21 @@ public class RESTCodes {
     }
   }
   
-  public enum FeatureStoreTagErrorCode implements RESTErrorCode {
+  public enum SchematizedTagErrorCode implements RESTErrorCode {
     TAG_SCHEMA_NOT_FOUND(0, "No schema found for provided name", Response.Status.NOT_FOUND),
     INVALID_TAG_SCHEMA(1, "Invalid tag schema.", Response.Status.BAD_REQUEST),
     TAG_NOT_FOUND(2, "No tag found for provided name.", Response.Status.NOT_FOUND),
     TAG_ALREADY_EXISTS(3, "Tag with the same name already exists.", Response.Status.CONFLICT),
     INVALID_TAG_NAME(4, "Invalid tag name.", Response.Status.BAD_REQUEST),
-    INVALID_TAG_VALUE(5, "Invalid tag value.", Response.Status.BAD_REQUEST);
+    INVALID_TAG_VALUE(5, "Invalid tag value.", Response.Status.BAD_REQUEST),
+    TAG_NOT_ALLOWED(6, "The provided tag is not allowed", Response.Status.BAD_REQUEST);
     
     private int code;
     private String message;
     private Response.Status respStatus;
     public final int range = 370000;
     
-    FeatureStoreTagErrorCode(Integer code, String message, Response.Status respStatus) {
+    SchematizedTagErrorCode(Integer code, String message, Response.Status respStatus) {
       this.code = range + code;
       this.message = message;
       this.respStatus = respStatus;

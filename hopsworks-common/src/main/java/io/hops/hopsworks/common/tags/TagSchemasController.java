@@ -14,27 +14,34 @@
  * If not, see <https://www.gnu.org/licenses/>.
  */
 
-package io.hops.hopsworks.common.featurestore.tag;
+package io.hops.hopsworks.common.tags;
 
-import io.hops.hopsworks.exceptions.FeatureStoreTagException;
-import io.hops.hopsworks.persistence.entity.featurestore.tag.FeatureStoreTag;
+import io.hops.hopsworks.common.integrations.CommunityStereotype;
+import io.hops.hopsworks.persistence.entity.featurestore.tag.TagSchemas;
 
+import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import java.util.Map;
 
+@Stateless
+@CommunityStereotype
 @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
-public interface FeatureStoreTagSchemaControllerIface {
-  default void create(String name, String schema) throws FeatureStoreTagException {
+public class TagSchemasController implements TagSchemasControllerIface {
+  @Override
+  public void create(String name, String schema) {
     throw new IllegalArgumentException("API not supported in the community edition");
   }
-  default void delete(String name) {
+  @Override
+  public void delete(String name) {
     throw new IllegalArgumentException("API not supported in the community edition");
   }
-  default void delete(FeatureStoreTag tag) {
+  @Override
+  public void delete(TagSchemas tag) {
     throw new IllegalArgumentException("API not supported in the community edition");
   }
-  default Map<String, String> getAll() {
+  @Override
+  public Map<String, String> getAll() {
     throw new IllegalArgumentException("API not supported in the community edition");
   }
 }

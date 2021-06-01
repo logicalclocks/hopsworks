@@ -16,10 +16,12 @@
 
 package io.hops.hopsworks.api.featurestore.tag;
 
-import io.hops.hopsworks.api.tags.SchemaDTO;
-import io.hops.hopsworks.api.tags.TagSchemasBuilder;
+import io.hops.hopsworks.api.tags.TagsBuilder;
+import io.hops.hopsworks.api.tags.TagsDTO;
 import io.hops.hopsworks.common.api.ResourceRequest;
-import io.hops.hopsworks.exceptions.FeatureStoreTagException;
+import io.hops.hopsworks.exceptions.DatasetException;
+import io.hops.hopsworks.exceptions.MetadataException;
+import io.hops.hopsworks.exceptions.SchematizedTagException;
 import io.hops.hopsworks.persistence.entity.project.Project;
 
 import javax.ejb.EJB;
@@ -31,10 +33,10 @@ import java.util.Map;
 
 @Stateless
 @TransactionAttribute(TransactionAttributeType.NEVER)
-public class TagsBuilder {
+public class FeaturestoreTagsBuilder {
   
   @EJB
-  private TagSchemasBuilder tagSchemasBuilder;
+  private TagsBuilder tagsBuilder;
 
   public TagsDTO uri(TagsDTO dto, UriInfo uriInfo, Project project, String tagsObjectResource,
                      Integer featurestoreId, Integer tagsObjectId, String name) {
@@ -66,37 +68,33 @@ public class TagsBuilder {
         .build());
     return dto;
   }
-
-  public TagsDTO build(UriInfo uriInfo, ResourceRequest resourceRequest, Project project, Integer featurestoreId,
-                       String fsObjectResource, Integer fsObjectId, Map<String, String> tags)
-    throws FeatureStoreTagException {
-    
-    TagsDTO dto = new TagsDTO();
-    uri(dto, uriInfo, project, fsObjectResource, featurestoreId, fsObjectId);
-    dto.setCount((long)tags.size());
-    for(Map.Entry<String, String> t : tags.entrySet()) {
-      dto.addItem(build(uriInfo, resourceRequest, project, featurestoreId, fsObjectResource,
-        fsObjectId, t.getKey(), t.getValue()));
+  
+  private TagsDTO uriAll(TagsDTO dto, UriInfo uriInfo, Project project, String tagsObjectResource,
+                         Integer featurestoreId, Integer tagsObjectId) {
+    uri(dto, uriInfo, project, tagsObjectResource, featurestoreId, tagsObjectId);
+    if(dto.getItems() != null) {
+      for(TagsDTO item : dto.getItems()) {
+        uri(item, uriInfo, project, tagsObjectResource, featurestoreId, tagsObjectId, item.getName());
+      }
     }
     return dto;
   }
 
   public TagsDTO build(UriInfo uriInfo, ResourceRequest resourceRequest, Project project, Integer featurestoreId,
-                       String fsObjectResource, Integer featuregroupId, String name, String value)
-    throws FeatureStoreTagException {
+                       String fsObjectResource, Integer fsObjectId, Map<String, String> tags)
+    throws SchematizedTagException, DatasetException, MetadataException {
     
-    TagsDTO dto = new TagsDTO();
+    TagsDTO dto = tagsBuilder.build(uriInfo, resourceRequest, tags);
+    uriAll(dto, uriInfo, project, fsObjectResource, featurestoreId, fsObjectId);
+    return dto;
+  }
+
+  public TagsDTO build(UriInfo uriInfo, ResourceRequest resourceRequest, Project project, Integer featurestoreId,
+                       String fsObjectResource, Integer featuregroupId, String name, String value)
+    throws SchematizedTagException {
+    
+    TagsDTO dto = tagsBuilder.build(uriInfo, resourceRequest, name, value);
     uri(dto, uriInfo, project, fsObjectResource, featurestoreId, featuregroupId, name);
-    if (resourceRequest != null && resourceRequest.contains(ResourceRequest.Name.TAGS)) {
-      dto.setExpand(true);
-      dto.setName(name);
-      dto.setValue(value);
-      if(resourceRequest != null && resourceRequest.contains(ResourceRequest.Name.TAG_SCHEMAS)) {
-        SchemaDTO schema
-          = tagSchemasBuilder.build(uriInfo, resourceRequest.get(ResourceRequest.Name.TAG_SCHEMAS), name);
-        dto.setSchema(schema);
-      }
-    }
     return dto;
   }
 }

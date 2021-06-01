@@ -17,9 +17,9 @@ package io.hops.hopsworks.api.tags;
 
 import io.hops.hopsworks.common.api.ResourceRequest;
 import io.hops.hopsworks.common.dao.AbstractFacade;
-import io.hops.hopsworks.common.dao.featurestore.tag.FeatureStoreTagFacade;
-import io.hops.hopsworks.exceptions.FeatureStoreTagException;
-import io.hops.hopsworks.persistence.entity.featurestore.tag.FeatureStoreTag;
+import io.hops.hopsworks.common.dao.featurestore.tag.TagSchemasFacade;
+import io.hops.hopsworks.exceptions.SchematizedTagException;
+import io.hops.hopsworks.persistence.entity.featurestore.tag.TagSchemas;
 import io.hops.hopsworks.restutils.RESTCodes;
 
 import javax.ejb.EJB;
@@ -34,25 +34,28 @@ import java.util.logging.Level;
 @TransactionAttribute(TransactionAttributeType.NEVER)
 public class TagSchemasBuilder {
   @EJB
-  private FeatureStoreTagFacade featureStoreTagFacade;
+  private TagSchemasFacade tagSchemasFacade;
   
   public SchemaDTO uri(SchemaDTO dto, UriInfo uriInfo) {
-    dto.setHref(uriInfo.getAbsolutePathBuilder().build());
+    dto.setHref(uriInfo.getBaseUriBuilder()
+      .path(ResourceRequest.Name.TAGS.toString())
+      .build());
     return dto;
   }
   
-  public SchemaDTO uriItems(SchemaDTO dto, UriInfo uriInfo, FeatureStoreTag tag) {
-    dto.setHref(uriInfo.getAbsolutePathBuilder()
+  public SchemaDTO uriItems(SchemaDTO dto, UriInfo uriInfo, TagSchemas tag) {
+    dto.setHref(uriInfo.getBaseUriBuilder()
+      .path(ResourceRequest.Name.TAGS.toString())
       .path(tag.getName())
       .build());
     return dto;
   }
   
   public SchemaDTO build(UriInfo uriInfo, ResourceRequest resourceRequest, String value)
-    throws FeatureStoreTagException {
-    FeatureStoreTag tag = featureStoreTagFacade.findByName(value);
+    throws SchematizedTagException {
+    TagSchemas tag = tagSchemasFacade.findByName(value);
     if(tag == null) {
-      throw new FeatureStoreTagException(RESTCodes.FeatureStoreTagErrorCode.TAG_SCHEMA_NOT_FOUND, Level.FINE);
+      throw new SchematizedTagException(RESTCodes.SchematizedTagErrorCode.TAG_SCHEMA_NOT_FOUND, Level.FINE);
     }
     return buildItem(uriInfo, resourceRequest, tag);
   }
@@ -60,24 +63,24 @@ public class TagSchemasBuilder {
   public SchemaDTO build(UriInfo uriInfo, ResourceRequest resourceRequest) {
     SchemaDTO dto = new SchemaDTO();
     uri(dto, uriInfo);
-    AbstractFacade.CollectionInfo collectionInfo = featureStoreTagFacade.findAll(resourceRequest.getOffset(),
+    AbstractFacade.CollectionInfo collectionInfo = tagSchemasFacade.findAll(resourceRequest.getOffset(),
       resourceRequest.getLimit(), resourceRequest.getFilter(), resourceRequest.getSort());
     dto.setCount(collectionInfo.getCount());
     return items(dto, uriInfo, resourceRequest, collectionInfo.getItems());
   }
   
   private SchemaDTO items(SchemaDTO dto, UriInfo uriInfo, ResourceRequest resourceRequest,
-                          List<FeatureStoreTag> items) {
+                          List<TagSchemas> items) {
     items.forEach(tag -> dto.addItem(buildItem(uriInfo, resourceRequest, tag)));
     return dto;
   }
   
-  private SchemaDTO buildItem(UriInfo uriInfo, ResourceRequest resourceRequest, FeatureStoreTag tag) {
+  private SchemaDTO buildItem(UriInfo uriInfo, ResourceRequest resourceRequest, TagSchemas tag) {
     SchemaDTO dto = new SchemaDTO();
     uriItems(dto, uriInfo, tag);
-    dto.setName(tag.getName());
     if (resourceRequest != null && resourceRequest.contains(ResourceRequest.Name.TAG_SCHEMAS)) {
       dto.setExpand(true);
+      dto.setName(tag.getName());
       dto.setValue(tag.getSchema());
     }
     return dto;

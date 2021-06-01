@@ -13,13 +13,39 @@
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see <https://www.gnu.org/licenses/>.
  */
+package io.hops.hopsworks.api.tags;
 
-package io.hops.hopsworks.common.featurestore.tag;
+import io.hops.hopsworks.common.api.RestDTO;
 
-import io.hops.hopsworks.common.integrations.CommunityStereotype;
-import javax.ejb.Stateless;
+import javax.xml.bind.annotation.XmlRootElement;
 
-@Stateless
-@CommunityStereotype
-public class FeatureStoreTagSchemaController implements FeatureStoreTagSchemaControllerIface {
+@XmlRootElement
+public class TagsDTO extends RestDTO<TagsDTO> {
+  private String name;
+  private String value;
+  private SchemaDTO schema;
+
+  public String getName() {
+    return name;
+  }
+
+  public void setName(String name) {
+    this.name = name;
+  }
+
+  public String getValue() {
+    return value;
+  }
+
+  public void setValue(String value) {
+    this.value = value;
+  }
+  
+  public SchemaDTO getSchema() {
+    return schema;
+  }
+  
+  public void setSchema(SchemaDTO schema) {
+    this.schema = schema;
+  }
 }
