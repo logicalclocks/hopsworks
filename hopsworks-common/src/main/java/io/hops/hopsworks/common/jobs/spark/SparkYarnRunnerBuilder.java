@@ -237,6 +237,8 @@ public class SparkYarnRunnerBuilder {
       amargs.append(" --arg '").append(s).append("'");
     }
 
+    amargs.append(" --dist-cache-conf 'distcache.conf'");
+
     builder.amArgs(amargs.toString());
 
     //Set up Yarn properties

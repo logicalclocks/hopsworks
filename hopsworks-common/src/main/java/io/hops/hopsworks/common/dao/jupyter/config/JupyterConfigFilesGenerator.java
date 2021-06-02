@@ -277,7 +277,7 @@ public class JupyterConfigFilesGenerator {
     HashMap<String, String> finalSparkConfiguration = new HashMap<>();
   
     finalSparkConfiguration.put(Settings.SPARK_DRIVER_STAGINGDIR_ENV,
-      "hdfs:///Projects/" + project.getName() + "/Resources");
+        "hdfs:///Projects/" + project.getName() + "/Resources/.sparkStaging");
 
     // Set Hopsworks consul service domain, don't use the address, use the name
     String hopsworksRestEndpoint = "https://" + serviceDiscoveryController.
