@@ -698,7 +698,6 @@ public class TrainingDatasetService {
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   @JWTRequired(acceptedTokens={Audience.API, Audience.JOB}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
   @ApiKeyRequired( acceptedScopes = {ApiScope.FEATURESTORE}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
-  @Logged(logLevel = LogLevel.OFF)
   public Response getTransformationFunction(@Context SecurityContext sc,
                                             @Context UriInfo uriInfo,
                                             @ApiParam(value = "Id of the trainingdatasetid", required = true)

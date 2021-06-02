@@ -313,7 +313,6 @@ public class FeaturestoreService {
    * @return the feature store transformationfunction resource
    * @throws FeaturestoreException
    */
-  @Logged(logLevel = LogLevel.OFF)
   @Path("/{featurestoreId}/transformationfunctions")
   public TransformationFunctionResource transformationResource(
       @PathParam("featurestoreId") Integer featurestoreId) throws FeaturestoreException {

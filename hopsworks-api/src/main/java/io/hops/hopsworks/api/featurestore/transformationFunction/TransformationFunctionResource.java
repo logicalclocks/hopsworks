@@ -21,8 +21,6 @@ import io.hops.hopsworks.api.filter.Audience;
 import io.hops.hopsworks.api.filter.apiKey.ApiKeyRequired;
 import io.hops.hopsworks.api.jwt.JWTHelper;
 import io.hops.hopsworks.api.util.Pagination;
-import io.hops.hopsworks.audit.logger.LogLevel;
-import io.hops.hopsworks.audit.logger.annotation.Logged;
 import io.hops.hopsworks.common.api.ResourceRequest;
 import io.hops.hopsworks.common.featurestore.trainingdatasets.TrainingDatasetDTO;
 import io.hops.hopsworks.common.featurestore.transformationFunction.TransformationFunctionDTO;
@@ -59,7 +57,6 @@ import javax.ws.rs.core.SecurityContext;
 import javax.ws.rs.core.UriInfo;
 import java.io.IOException;
 
-@Logged
 @Api(value = "Feature Store Transformation Function Resource")
 @RequestScoped
 @TransactionAttribute(TransactionAttributeType.NEVER)
@@ -75,12 +72,10 @@ public class TransformationFunctionResource {
   private Project project;
   private Featurestore featurestore;
 
-  @Logged(logLevel = LogLevel.OFF)
   public void setProject(Project project) {
     this.project = project;
   }
 
-  @Logged(logLevel = LogLevel.OFF)
   public void setFeaturestore(Featurestore featurestore) {
     this.featurestore = featurestore;
   }
