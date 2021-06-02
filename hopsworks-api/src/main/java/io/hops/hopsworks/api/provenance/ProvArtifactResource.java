@@ -17,16 +17,22 @@ package io.hops.hopsworks.api.provenance;
 
 import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.api.filter.Audience;
+import io.hops.hopsworks.api.jwt.JWTHelper;
 import io.hops.hopsworks.api.provenance.ops.ProvUsageBuilder;
 import io.hops.hopsworks.api.provenance.ops.ProvUsageBeanParams;
 import io.hops.hopsworks.api.provenance.ops.dto.ProvArtifactUsageParentDTO;
+import io.hops.hopsworks.common.dataset.util.DatasetPath;
+import io.hops.hopsworks.exceptions.DatasetException;
 import io.hops.hopsworks.exceptions.GenericException;
+import io.hops.hopsworks.exceptions.MetadataException;
 import io.hops.hopsworks.exceptions.ProvenanceException;
+import io.hops.hopsworks.exceptions.SchematizedTagException;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
-import io.hops.hopsworks.persistence.entity.dataset.Dataset;
 import io.hops.hopsworks.persistence.entity.project.Project;
+import io.hops.hopsworks.persistence.entity.user.Users;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
+import javax.ejb.EJB;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.enterprise.context.RequestScoped;
@@ -38,6 +44,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.SecurityContext;
 import javax.ws.rs.core.UriInfo;
 
 @RequestScoped
@@ -46,12 +53,14 @@ import javax.ws.rs.core.UriInfo;
 public class ProvArtifactResource {
   @Inject
   private ProvUsageBuilder usageBuilder;
+  @EJB
+  private JWTHelper jWTHelper;
   
   private Project userProject;
-  private Dataset targetEndpoint;
+  private DatasetPath targetEndpoint;
   private String artifactId;
   
-  public void setContext(Project userProject, Dataset targetEndpoint) {
+  public void setContext(Project userProject, DatasetPath targetEndpoint) {
     this.userProject = userProject;
     this.targetEndpoint = targetEndpoint;
   }
@@ -67,11 +76,12 @@ public class ProvArtifactResource {
   @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   @ApiOperation(value = "Artifact usage", response = ProvArtifactUsageParentDTO.class)
   public Response status(
-    @BeanParam
-      ProvUsageBeanParams params,
-    @Context UriInfo uriInfo)
-    throws ProvenanceException, GenericException {
-    ProvArtifactUsageParentDTO status = usageBuilder.buildAccessible(uriInfo, userProject, targetEndpoint, artifactId,
+    @BeanParam ProvUsageBeanParams params,
+    @Context UriInfo uriInfo,
+    @Context SecurityContext sc)
+    throws ProvenanceException, GenericException, DatasetException, MetadataException, SchematizedTagException {
+    Users user = jWTHelper.getUserPrincipal(sc);
+    ProvArtifactUsageParentDTO status = usageBuilder.buildAccessible(uriInfo, user, targetEndpoint, artifactId,
       params.getUsageType());
     return Response.ok().entity(status).build();
   }

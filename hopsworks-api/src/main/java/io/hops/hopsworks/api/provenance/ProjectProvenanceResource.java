@@ -30,6 +30,8 @@ import io.hops.hopsworks.api.provenance.state.ProvStateBeanParams;
 import io.hops.hopsworks.api.util.Pagination;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
 import io.hops.hopsworks.common.dataset.DatasetController;
+import io.hops.hopsworks.common.dataset.util.DatasetHelper;
+import io.hops.hopsworks.common.dataset.util.DatasetPath;
 import io.hops.hopsworks.common.featurestore.FeaturestoreController;
 import io.hops.hopsworks.common.provenance.core.HopsFSProvenanceController;
 import io.hops.hopsworks.common.provenance.core.dto.ProvDatasetDTO;
@@ -43,7 +45,9 @@ import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.DatasetException;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.exceptions.GenericException;
+import io.hops.hopsworks.exceptions.MetadataException;
 import io.hops.hopsworks.exceptions.ProvenanceException;
+import io.hops.hopsworks.exceptions.SchematizedTagException;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
 import io.hops.hopsworks.persistence.entity.dataset.Dataset;
 import io.hops.hopsworks.persistence.entity.project.Project;
@@ -99,6 +103,8 @@ public class ProjectProvenanceResource {
   private FeaturestoreController fsCtrl;
   @EJB
   private DatasetController datasetCtrl;
+  @EJB
+  private DatasetHelper datasetHelper;
   
   private Project project;
   
@@ -201,9 +207,11 @@ public class ProjectProvenanceResource {
     @QueryParam("artifact_id") String artifactId,
     @QueryParam("endpoint_id") Integer endpointId,
     @QueryParam("artifact_type") DatasetAccessType accessType,
-    @BeanParam
-      ProvUsageBeanParams params,
-    @Context UriInfo uriInfo) throws ProvenanceException, GenericException {
+    @BeanParam ProvUsageBeanParams params,
+    @Context UriInfo uriInfo,
+    @Context SecurityContext sc)
+    throws ProvenanceException, GenericException, DatasetException, MetadataException, SchematizedTagException {
+    Users user = jWTHelper.getUserPrincipal(sc);
     if(artifactId == null) {
       throw new GenericException(RESTCodes.GenericErrorCode.ILLEGAL_ARGUMENT, Level.FINE,
         "artifactId id cannot be null");
@@ -242,8 +250,9 @@ public class ProjectProvenanceResource {
     } else {
       throw new GenericException(RESTCodes.GenericErrorCode.ILLEGAL_STATE, Level.FINE, "access type not defined");
     }
+    DatasetPath targetEndpointPath = datasetHelper.getTopLevelDatasetPath(project, targetEndpoint);
     ProvArtifactUsageParentDTO status
-      = usageBuilder.buildAccessible(uriInfo, project, targetEndpoint, artifactId, params.getUsageType());
+      = usageBuilder.buildAccessible(uriInfo, user, targetEndpointPath, artifactId, params.getUsageType());
     return Response.ok().entity(status).build();
   }
 }

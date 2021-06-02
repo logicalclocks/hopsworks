@@ -16,13 +16,13 @@
 package io.hops.hopsworks.api.tags;
 
 import io.hops.hopsworks.common.dao.AbstractFacade;
-import io.hops.hopsworks.common.dao.featurestore.tag.FeatureStoreTagFacade;
+import io.hops.hopsworks.common.dao.featurestore.tag.TagSchemasFacade;
 
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response;
 
 public class SortBy implements AbstractFacade.SortBy {
-  private final FeatureStoreTagFacade.Sorts sortBy;
+  private final TagSchemasFacade.Sorts sortBy;
   private final AbstractFacade.OrderBy param;
   
   public SortBy(String param) {
@@ -30,7 +30,7 @@ public class SortBy implements AbstractFacade.SortBy {
     String sort = "";
     try {
       sort = sortByParams[0].toUpperCase();
-      this.sortBy = FeatureStoreTagFacade.Sorts.valueOf(sort);
+      this.sortBy = TagSchemasFacade.Sorts.valueOf(sort);
     } catch (IllegalArgumentException iae) {
       throw new WebApplicationException("Sort by needs to set a valid sort parameter, but found: " + sort,
         Response.Status.NOT_FOUND);

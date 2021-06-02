@@ -67,7 +67,21 @@ public class DatasetHelper {
     }
     return datasetPath;
   }
-
+  
+  public DatasetPath updateDataset(Project project, DatasetPath datasetPath) throws DatasetException {
+    Dataset dataset = datasetController.getByProjectAndFullPath(project, datasetPath.getDatasetFullPath().toString());
+    return updateDataset(project, datasetPath, dataset);
+  }
+  
+  public DatasetPath updateDataset(Project project, DatasetPath datasetPath, Dataset dataset) {
+    datasetPath.setDataset(dataset);
+    if (dataset != null && dataset.isShared(project)) {
+      DatasetSharedWith datasetSharedWith = datasetSharedWithFacade.findByProjectAndDataset(project, dataset);
+      datasetPath.setDatasetSharedWith(datasetSharedWith);
+    }
+    return datasetPath;
+  }
+  
   /**
    *
    * @param project
@@ -93,6 +107,29 @@ public class DatasetHelper {
       datasetPath.setInode(inodeController.getInodeAtPath(datasetPath.getDataset().getInode(),
         datasetPath.getDatasetFullPath().depth(), datasetPath.getDatasetRelativePath()));// expensive
     }
+    return datasetPath;
+  }
+  
+  public DatasetPath getTopLevelDatasetPath(Project project, Dataset dataset) throws DatasetException {
+    DatasetPath datasetPath;
+    if(dataset.isShared(project)) {
+      DatasetSharedWith datasetSharedWith = datasetSharedWithFacade.findByProjectAndDataset(project, dataset);
+      datasetPath = getTopLevelDatasetPath(project, datasetSharedWith);
+    } else {
+      datasetPath = getNewDatasetPath(project, dataset.getName(), dataset.getDsType());
+      datasetPath.setDataset(dataset);
+      datasetPath.setInode(dataset.getInode());
+    }
+    return datasetPath;
+  }
+  
+  public DatasetPath getTopLevelDatasetPath(Project project, DatasetSharedWith datasetSharedWith)
+    throws DatasetException {
+    String path = datasetSharedWith.getDatasetName();
+    DatasetPath datasetPath = getNewDatasetPath(project, path, datasetSharedWith.getDataset().getDsType());
+    datasetPath.setDataset(datasetSharedWith.getDataset());
+    datasetPath.setDatasetSharedWith(datasetSharedWith);
+    datasetPath.setInode(datasetSharedWith.getDataset().getInode());
     return datasetPath;
   }
   

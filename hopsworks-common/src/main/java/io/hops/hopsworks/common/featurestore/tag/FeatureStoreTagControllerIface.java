@@ -17,8 +17,7 @@
 package io.hops.hopsworks.common.featurestore.tag;
 
 import io.hops.hopsworks.exceptions.DatasetException;
-import io.hops.hopsworks.exceptions.FeatureStoreTagException;
-import io.hops.hopsworks.exceptions.FeaturestoreException;
+import io.hops.hopsworks.exceptions.SchematizedTagException;
 import io.hops.hopsworks.exceptions.MetadataException;
 import io.hops.hopsworks.persistence.entity.featurestore.Featurestore;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.Featuregroup;
@@ -26,79 +25,47 @@ import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.Trainin
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.user.Users;
 
-import javax.ejb.TransactionAttribute;
-import javax.ejb.TransactionAttributeType;
 import java.util.Map;
 
-@TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
 public interface FeatureStoreTagControllerIface {
   
-  default Map<String, String> getAll(Project project, Users user, Featurestore featureStore, Featuregroup featureGroup)
-    throws DatasetException, MetadataException {
-    throw new IllegalArgumentException("API not supported in the community edition");
-  }
+  Map<String, String> getAll(Project project, Users user, Featurestore featureStore, Featuregroup featureGroup)
+    throws DatasetException, MetadataException;
   
-  default Map<String, String> getAll(Project project, Users user, Featurestore featureStore,
-                                     TrainingDataset trainingDataset)
-    throws DatasetException, MetadataException, FeaturestoreException {
-    throw new IllegalArgumentException("API not supported in the community edition");
-  }
+  Map<String, String> getAll(Project project, Users user, Featurestore featureStore, TrainingDataset trainingDataset)
+    throws DatasetException, MetadataException, SchematizedTagException;
   
-  default Map<String, String> get(Project project, Users user, Featurestore featureStore, Featuregroup featureGroup,
-                                  String name)
-    throws FeaturestoreException, DatasetException, MetadataException {
-    throw new IllegalArgumentException("API not supported in the community edition");
-  }
+  String get(Project project, Users user, Featurestore featureStore, Featuregroup featureGroup, String name)
+    throws DatasetException, MetadataException, SchematizedTagException;
   
-  default Map<String, String> get(Project project, Users user, Featurestore featureStore,
-                                  TrainingDataset trainingDataset, String name)
-    throws FeaturestoreException, DatasetException, MetadataException {
-    throw new IllegalArgumentException("API not supported in the community edition");
-  }
+  String get(Project project, Users user, Featurestore featureStore, TrainingDataset trainingDataset, String name)
+    throws DatasetException, MetadataException, SchematizedTagException;
   
-  default AttachTagResult upsert(Project project, Users user, Featurestore featureStore, Featuregroup featureGroup,
-                                 String name, String value)
-    throws FeaturestoreException, MetadataException, FeatureStoreTagException {
-    throw new IllegalArgumentException("API not supported in the community edition");
-  }
+  AttachTagResult upsert(Project project, Users user, Featurestore featureStore, Featuregroup featureGroup,
+                         String name, String value)
+    throws MetadataException, SchematizedTagException;
   
-  default AttachTagResult upsert(Project project, Users user, Featurestore featureStore,
-                                 TrainingDataset trainingDataset, String name, String value)
-    throws FeaturestoreException, MetadataException, FeatureStoreTagException {
-    throw new IllegalArgumentException("API not supported in the community edition");
-  }
+  AttachTagResult upsert(Project project, Users user, Featurestore featureStore, TrainingDataset trainingDataset,
+                         String name, String value)
+    throws MetadataException, SchematizedTagException;
   
-  default AttachTagResult upsert(Project project, Users user, Featurestore featureStore, Featuregroup featureGroup,
-                                 Map<String, String> tags)
-    throws FeaturestoreException, MetadataException, FeatureStoreTagException {
-    throw new IllegalArgumentException("API not supported in the community edition");
-  }
+  AttachTagResult upsert(Project project, Users user, Featurestore featureStore, Featuregroup featureGroup,
+                         Map<String, String> tags)
+    throws MetadataException, SchematizedTagException;
   
-  default AttachTagResult upsert(Project project, Users user, Featurestore featureStore,
-                                 TrainingDataset trainingDataset, Map<String, String> tags)
-    throws FeaturestoreException, MetadataException, FeatureStoreTagException {
-    throw new IllegalArgumentException("API not supported in the community edition");
-  }
+  AttachTagResult upsert(Project project, Users user, Featurestore featureStore, TrainingDataset trainingDataset,
+                         Map<String, String> tags)
+    throws MetadataException, SchematizedTagException;
   
-  default void deleteAll(Project project, Users user, Featurestore featureStore, Featuregroup featureGroup)
-    throws DatasetException, MetadataException {
-    throw new IllegalArgumentException("API not supported in the community edition");
-  }
+  void deleteAll(Project project, Users user, Featurestore featureStore, Featuregroup featureGroup)
+    throws DatasetException, MetadataException;
   
-  default void deleteAll(Project project, Users user, Featurestore featureStore, TrainingDataset trainingDataset)
-    throws FeaturestoreException, DatasetException, MetadataException {
-    throw new IllegalArgumentException("API not supported in the community edition");
-  }
+  void deleteAll(Project project, Users user, Featurestore featureStore, TrainingDataset trainingDataset)
+    throws DatasetException, MetadataException, SchematizedTagException;
   
-  default void delete(Project project, Users user, Featurestore featureStore, Featuregroup featureGroup,
-                      String name)
-    throws DatasetException, MetadataException {
-    throw new IllegalArgumentException("API not supported in the community edition");
-  }
+  void delete(Project project, Users user, Featurestore featureStore, Featuregroup featureGroup, String name)
+    throws DatasetException, MetadataException;
   
-  default void delete(Project project, Users user, Featurestore featureStore, TrainingDataset trainingDataset,
-                      String name)
-    throws FeaturestoreException, DatasetException, MetadataException {
-    throw new IllegalArgumentException("API not supported in the community edition");
-  }
+  void delete(Project project, Users user, Featurestore featureStore, TrainingDataset trainingDataset, String name)
+    throws DatasetException, MetadataException, SchematizedTagException;
 }

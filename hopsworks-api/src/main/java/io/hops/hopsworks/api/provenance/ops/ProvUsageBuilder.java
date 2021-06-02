@@ -25,10 +25,10 @@ import io.hops.hopsworks.api.jobs.executions.ExecutionsBuilder;
 import io.hops.hopsworks.api.user.UserDTO;
 import io.hops.hopsworks.api.user.UsersBuilder;
 import io.hops.hopsworks.common.api.ResourceRequest;
-import io.hops.hopsworks.common.dao.dataset.DatasetFacade;
 import io.hops.hopsworks.common.dao.hdfsUser.HdfsUsersFacade;
 import io.hops.hopsworks.common.dao.jobhistory.ExecutionFacade;
 import io.hops.hopsworks.common.dao.user.UserFacade;
+import io.hops.hopsworks.common.dataset.util.DatasetPath;
 import io.hops.hopsworks.common.provenance.core.Provenance;
 import io.hops.hopsworks.common.provenance.ops.ProvOps;
 import io.hops.hopsworks.common.provenance.ops.ProvOpsAggregations;
@@ -39,12 +39,14 @@ import io.hops.hopsworks.api.provenance.ops.dto.ProvArtifactUsageParentDTO;
 import io.hops.hopsworks.api.provenance.ops.dto.ProvArtifactUsageDTO;
 import io.hops.hopsworks.common.provenance.ops.dto.ProvOpsDTO;
 import io.hops.hopsworks.common.util.AccessController;
+import io.hops.hopsworks.exceptions.DatasetException;
 import io.hops.hopsworks.exceptions.GenericException;
+import io.hops.hopsworks.exceptions.MetadataException;
 import io.hops.hopsworks.exceptions.ProvenanceException;
+import io.hops.hopsworks.exceptions.SchematizedTagException;
 import io.hops.hopsworks.persistence.entity.dataset.Dataset;
 import io.hops.hopsworks.persistence.entity.hdfs.user.HdfsUsers;
 import io.hops.hopsworks.persistence.entity.jobs.history.Execution;
-import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.restutils.RESTCodes;
 import org.javatuples.Pair;
@@ -71,8 +73,6 @@ public class ProvUsageBuilder {
   @EJB
   private ExecutionFacade executionFacade;
   @EJB
-  private DatasetFacade datasetFacade;
-  @EJB
   private ProvOpsBuilder opsBuilder;
   @EJB
   private AccessController accessController;
@@ -85,21 +85,23 @@ public class ProvUsageBuilder {
   @EJB
   private DatasetBuilder datasetBuilder;
   
-  public ProvArtifactUsageParentDTO buildAccessible(UriInfo uriInfo, Project userProject, Dataset targetEndpoint,
+  public ProvArtifactUsageParentDTO buildAccessible(UriInfo uriInfo, Users user, DatasetPath targetEndpoint,
     String artifactId, Set<ProvUsageType> type)
-    throws ProvenanceException, GenericException {
-    if(!accessController.hasAccess(userProject, targetEndpoint)) {
+    throws ProvenanceException, GenericException, DatasetException, MetadataException, SchematizedTagException {
+    if(!accessController.hasAccess(targetEndpoint.getAccessProject(), targetEndpoint.getDataset())) {
       throw new GenericException(RESTCodes.GenericErrorCode.NOT_AUTHORIZED_TO_ACCESS, Level.FINE);
     }
   
     ProvArtifactUsageParentDTO usage = new ProvArtifactUsageParentDTO();
     usage.setArtifactId(artifactId);
-    usage.setDataset(getDataset(uriInfo, targetEndpoint.getId()));
-    usage.setProjectId(targetEndpoint.getProject().getId());
-    usage.setProjectName(targetEndpoint.getProject().getName());
+    DatasetDTO datasetDTO =
+      datasetBuilder.build(uriInfo, new ResourceRequest(ResourceRequest.Name.DATASETS), user, targetEndpoint);
+    usage.setDataset(datasetDTO);
+    usage.setProjectId(targetEndpoint.getDataset().getProject().getId());
+    usage.setProjectName(targetEndpoint.getDataset().getProject().getName());
     
-    ProvOpsParamBuilder params = getBasicUsageOpsParams(targetEndpoint, artifactId);
-    ProvOpsDTO ops = opsBuilder.build(targetEndpoint.getProject(), params, ProvOpsReturnType.AGGREGATIONS);
+    ProvOpsParamBuilder params = getBasicUsageOpsParams(targetEndpoint.getDataset(), artifactId);
+    ProvOpsDTO ops = opsBuilder.build(targetEndpoint.getDataset().getProject(), params, ProvOpsReturnType.AGGREGATIONS);
     Optional<ProvOpsDTO> aggregation = ops.getItems().stream()
       .filter(agg -> agg.getAggregation() != null
         && agg.getAggregation().equals(ProvOpsAggregations.APP_USAGE.toString()))
@@ -181,14 +183,6 @@ public class ProvUsageBuilder {
       return Optional.of(aux.get(0));
     }
     return Optional.empty();
-  }
-  
-  private DatasetDTO getDataset(UriInfo uriInfo, Integer datasetId) {
-    Dataset dataset = datasetFacade.find(datasetId);
-    if (dataset != null) {
-      return datasetBuilder.build(uriInfo, new ResourceRequest(ResourceRequest.Name.DATASETS), dataset);
-    }
-    return null;
   }
   
   private ExecutionDTO getExecution(UriInfo uriInfo, String appId) {

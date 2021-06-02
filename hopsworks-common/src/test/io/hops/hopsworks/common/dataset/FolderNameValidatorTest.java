@@ -39,6 +39,39 @@ public class FolderNameValidatorTest {
   }
 
   @Test
+  public void testUploadAsDatasetName() {
+    boolean isValid = true;
+    try {
+      FolderNameValidator.isValidName("upload");
+    } catch (DatasetException e) {
+      isValid = false;
+    }
+    Assert.assertFalse(isValid);
+  }
+  
+  @Test
+  public void testDownloadAsDatasetName() {
+    boolean isValid = true;
+    try {
+      FolderNameValidator.isValidName("download");
+    } catch (DatasetException e) {
+      isValid = false;
+    }
+    Assert.assertFalse(isValid);
+  }
+  
+  @Test
+  public void testTagsAsDatasetName() {
+    boolean isValid = true;
+    try {
+      FolderNameValidator.isValidName("tags");
+    } catch (DatasetException e) {
+      isValid = false;
+    }
+    Assert.assertFalse(isValid);
+  }
+  
+  @Test
   public void testProjectsAsProjectName() {
     Matcher m = FolderNameValidator.getProjectNameRegexValidator().matcher("Projects");
     boolean isValid = m.find();

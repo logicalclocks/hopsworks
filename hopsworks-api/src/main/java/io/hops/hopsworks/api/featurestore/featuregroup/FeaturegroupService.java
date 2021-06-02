@@ -24,9 +24,9 @@ import io.hops.hopsworks.api.featurestore.datavalidation.expectations.fg.Feature
 import io.hops.hopsworks.api.featurestore.datavalidation.alert.FeatureGroupAlertResource;
 import io.hops.hopsworks.api.featurestore.datavalidation.validations.FeatureGroupValidationsResource;
 import io.hops.hopsworks.api.featurestore.statistics.StatisticsResource;
-import io.hops.hopsworks.api.featurestore.tag.TagsBuilder;
-import io.hops.hopsworks.api.featurestore.tag.TagsDTO;
-import io.hops.hopsworks.api.featurestore.tag.TagsExpansionBeanParam;
+import io.hops.hopsworks.api.featurestore.tag.FeaturestoreTagsBuilder;
+import io.hops.hopsworks.api.tags.TagsDTO;
+import io.hops.hopsworks.api.tags.TagsExpansionBeanParam;
 import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.api.filter.Audience;
 import io.hops.hopsworks.api.filter.NoCacheResponse;
@@ -34,6 +34,8 @@ import io.hops.hopsworks.api.filter.apiKey.ApiKeyRequired;
 import io.hops.hopsworks.api.jwt.JWTHelper;
 import io.hops.hopsworks.api.provenance.ProvArtifactResource;
 import io.hops.hopsworks.common.api.ResourceRequest;
+import io.hops.hopsworks.common.dataset.util.DatasetHelper;
+import io.hops.hopsworks.common.dataset.util.DatasetPath;
 import io.hops.hopsworks.common.featurestore.FeaturestoreController;
 import io.hops.hopsworks.common.featurestore.FeaturestoreDTO;
 import io.hops.hopsworks.common.featurestore.OptionDTO;
@@ -44,7 +46,8 @@ import io.hops.hopsworks.common.featurestore.featuregroup.IngestionJob;
 import io.hops.hopsworks.common.featurestore.tag.AttachTagResult;
 import io.hops.hopsworks.common.featurestore.tag.FeatureStoreTagControllerIface;
 import io.hops.hopsworks.exceptions.DatasetException;
-import io.hops.hopsworks.exceptions.FeatureStoreTagException;
+import io.hops.hopsworks.exceptions.GenericException;
+import io.hops.hopsworks.exceptions.SchematizedTagException;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.exceptions.HopsSecurityException;
 import io.hops.hopsworks.exceptions.JobException;
@@ -120,7 +123,7 @@ public class FeaturegroupService {
   @EJB
   private JWTHelper jWTHelper;
   @EJB
-  private TagsBuilder tagBuilder;
+  private FeaturestoreTagsBuilder tagBuilder;
   @Inject
   private FeatureStoreTagControllerIface tagController;
   @Inject
@@ -149,6 +152,8 @@ public class FeaturegroupService {
   private FeatureGroupValidationsResource featureGroupValidationsResource;
   @Inject
   private FeatureGroupAlertResource featureGroupAlertResource;
+  @EJB
+  private DatasetHelper datasetHelper;
 
   private Project project;
   private Featurestore featurestore;
@@ -477,7 +482,7 @@ public class FeaturegroupService {
                          @PathParam("featuregroupId") Integer featuregroupId,
                          @ApiParam(value = "Name of the tag", required = true) @PathParam("name") String name,
                          @ApiParam(value = "Value to set for the tag") String value)
-    throws MetadataException, FeaturestoreException, FeatureStoreTagException {
+    throws MetadataException, FeaturestoreException, SchematizedTagException, DatasetException {
     
     verifyIdProvided(featuregroupId);
     Users user = jWTHelper.getUserPrincipal(sc);
@@ -508,7 +513,7 @@ public class FeaturegroupService {
                               @ApiParam(value = "Id of the featuregroup", required = true)
                               @PathParam("featuregroupId") Integer featuregroupId,
                               TagsDTO tags)
-    throws MetadataException, FeaturestoreException, FeatureStoreTagException {
+    throws MetadataException, FeaturestoreException, SchematizedTagException, DatasetException {
     
     verifyIdProvided(featuregroupId);
     Users user = jWTHelper.getUserPrincipal(sc);
@@ -548,7 +553,7 @@ public class FeaturegroupService {
                           @ApiParam(value = "Id of the featuregroup", required = true)
                           @PathParam("featuregroupId") Integer featuregroupId,
                           @BeanParam TagsExpansionBeanParam tagsExpansionBeanParam)
-    throws DatasetException, MetadataException, FeaturestoreException, FeatureStoreTagException {
+    throws DatasetException, MetadataException, FeaturestoreException, SchematizedTagException {
     
     verifyIdProvided(featuregroupId);
     Users user = jWTHelper.getUserPrincipal(sc);
@@ -574,12 +579,13 @@ public class FeaturegroupService {
                          @PathParam("featuregroupId") Integer featuregroupId,
                          @ApiParam(value = "Name of the tag", required = true) @PathParam("name") String name,
                          @BeanParam TagsExpansionBeanParam tagsExpansionBeanParam)
-    throws DatasetException, MetadataException, FeaturestoreException, FeatureStoreTagException {
+    throws DatasetException, MetadataException, FeaturestoreException, SchematizedTagException {
     
     verifyIdProvided(featuregroupId);
     Users user = jWTHelper.getUserPrincipal(sc);
     Featuregroup featuregroup = featuregroupController.getFeaturegroupById(featurestore, featuregroupId);
-    Map<String, String> result = tagController.get(project, user, featurestore, featuregroup, name);
+    Map<String, String> result = new HashMap<>();
+    result.put(name, tagController.get(project, user, featurestore, featuregroup, name));
 
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.TAGS);
     resourceRequest.setExpansions(tagsExpansionBeanParam.getResources());
@@ -708,9 +714,16 @@ public class FeaturegroupService {
   
   @Path("/{featureGroupId}/provenance")
   public ProvArtifactResource provenance(@PathParam("featureGroupId") Integer featureGroupId)
-    throws FeaturestoreException {
-    Dataset targetEndpoint = featurestoreController.getProjectFeaturestoreDataset(featurestore.getProject());
-    this.provenanceResource.setContext(project, targetEndpoint);
+    throws FeaturestoreException, GenericException {
+    DatasetPath targetEndpointPath;
+    try {
+      Dataset targetEndpoint = featurestoreController.getProjectFeaturestoreDataset(featurestore.getProject());
+      targetEndpointPath = datasetHelper.getTopLevelDatasetPath(project, targetEndpoint);
+    } catch (DatasetException ex) {
+      throw new GenericException(RESTCodes.GenericErrorCode.ILLEGAL_ARGUMENT, Level.FINE, "training dataset not found");
+    }
+  
+    this.provenanceResource.setContext(project, targetEndpointPath);
     Featuregroup fg = featuregroupController.getFeaturegroupById(featurestore, featureGroupId);
     this.provenanceResource.setArtifactId(fg.getName(), fg.getVersion());
     return provenanceResource;

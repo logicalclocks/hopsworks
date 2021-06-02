@@ -4,7 +4,7 @@
 package io.hops.hopsworks.common.dao.featurestore.tag;
 
 import io.hops.hopsworks.common.dao.AbstractFacade;
-import io.hops.hopsworks.persistence.entity.featurestore.tag.FeatureStoreTag;
+import io.hops.hopsworks.persistence.entity.featurestore.tag.TagSchemas;
 
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
@@ -15,13 +15,13 @@ import javax.persistence.TypedQuery;
 import java.util.Set;
 
 @Stateless
-public class FeatureStoreTagFacade extends AbstractFacade<FeatureStoreTag> {
+public class TagSchemasFacade extends AbstractFacade<TagSchemas> {
   
   @PersistenceContext(unitName = "kthfsPU")
   private EntityManager em;
   
-  public FeatureStoreTagFacade() {
-    super(FeatureStoreTag.class);
+  public TagSchemasFacade() {
+    super(TagSchemas.class);
   }
   
   @Override
@@ -29,8 +29,8 @@ public class FeatureStoreTagFacade extends AbstractFacade<FeatureStoreTag> {
     return em;
   }
   
-  public FeatureStoreTag findByName(String name) {
-    TypedQuery<FeatureStoreTag> q = em.createNamedQuery("FeatureStoreTag.findByName", FeatureStoreTag.class);
+  public TagSchemas findByName(String name) {
+    TypedQuery<TagSchemas> q = em.createNamedQuery("TagSchemas.findByName", TagSchemas.class);
     q.setParameter("name", name);
     try {
       return q.getSingleResult();
@@ -41,11 +41,11 @@ public class FeatureStoreTagFacade extends AbstractFacade<FeatureStoreTag> {
   
   public CollectionInfo findAll(Integer offset, Integer limit, Set<? extends FilterBy> filter,
     Set<? extends SortBy> sort) {
-    String queryStr = buildQuery("SELECT f FROM FeatureStoreTag f ", filter, sort, null);
-    String queryCountStr = buildQuery("SELECT COUNT(DISTINCT f.id) FROM FeatureStoreTag f ", filter, null,
+    String queryStr = buildQuery("SELECT f FROM TagSchemas f ", filter, sort, null);
+    String queryCountStr = buildQuery("SELECT COUNT(DISTINCT f.id) FROM TagSchemas f ", filter, null,
       null);
-    Query query = em.createQuery(queryStr, FeatureStoreTag.class);
-    Query queryCount = em.createQuery(queryCountStr, FeatureStoreTag.class);
+    Query query = em.createQuery(queryStr, TagSchemas.class);
+    Query queryCount = em.createQuery(queryCountStr, TagSchemas.class);
     setFilter(filter, query);
     setFilter(filter, queryCount);
     setOffsetAndLim(offset, limit, query);

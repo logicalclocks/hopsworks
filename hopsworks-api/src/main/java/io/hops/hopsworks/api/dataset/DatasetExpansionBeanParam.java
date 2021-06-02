@@ -25,7 +25,7 @@ import javax.ws.rs.QueryParam;
 
 public class DatasetExpansionBeanParam {
   @QueryParam("expand")
-  @ApiParam(value = "ex. expand=inode", allowableValues = "inode")
+  @ApiParam(value = "ex. expand=inode", allowableValues = "inode, tags")
   private Set<DatasetExpansions> expansions;
   
   public DatasetExpansionBeanParam(@QueryParam("expand") Set<DatasetExpansions> expansions) {

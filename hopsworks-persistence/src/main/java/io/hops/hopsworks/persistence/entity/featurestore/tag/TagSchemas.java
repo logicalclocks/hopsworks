@@ -34,10 +34,10 @@ import javax.xml.bind.annotation.XmlRootElement;
 @Table(name = "feature_store_tag", catalog = "hopsworks")
 @XmlRootElement
 @NamedQueries({
-  @NamedQuery(name = "FeatureStoreTag.findAll", query = "SELECT f FROM FeatureStoreTag f"),
-  @NamedQuery(name = "FeatureStoreTag.findById", query = "SELECT f FROM FeatureStoreTag f WHERE f.id = :id"),
-  @NamedQuery(name = "FeatureStoreTag.findByName", query = "SELECT f FROM FeatureStoreTag f WHERE f.name = :name")})
-public class FeatureStoreTag implements Serializable {
+  @NamedQuery(name = "TagSchemas.findAll", query = "SELECT f FROM TagSchemas f"),
+  @NamedQuery(name = "TagSchemas.findById", query = "SELECT f FROM TagSchemas f WHERE f.id = :id"),
+  @NamedQuery(name = "TagSchemas.findByName", query = "SELECT f FROM TagSchemas f WHERE f.name = :name")})
+public class TagSchemas implements Serializable {
 
   private static final long serialVersionUID = 1L;
   @Id
@@ -55,10 +55,10 @@ public class FeatureStoreTag implements Serializable {
   @Column(name = "tag_schema")
   private String schema;
 
-  public FeatureStoreTag() {
+  public TagSchemas() {
   }
 
-  public FeatureStoreTag(String name, String schema) {
+  public TagSchemas(String name, String schema) {
     this.name = name;
     this.schema = schema;
   }
@@ -97,10 +97,10 @@ public class FeatureStoreTag implements Serializable {
   @Override
   public boolean equals(Object object) {
     // TODO: Warning - this method won't work in the case the id fields are not set
-    if (!(object instanceof FeatureStoreTag)) {
+    if (!(object instanceof TagSchemas)) {
       return false;
     }
-    FeatureStoreTag other = (FeatureStoreTag) object;
+    TagSchemas other = (TagSchemas) object;
     if ((this.id == null && other.id != null) || (this.id != null && !this.id.equals(other.id))) {
       return false;
     }

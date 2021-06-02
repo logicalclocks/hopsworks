@@ -53,7 +53,9 @@ module ProjectHelper
   def with_valid_tour_project(type)
     @project ||= create_project_tour(type)
     get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/dataset/?action=listing"
+    pp "get #{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/dataset/?action=listing" if defined?(@debugOpt) && @debugOpt == true
     if response.code != 200 # project and logged in user not the same
+      pp "tour project create response:#{response.code}" if defined?(@debugOpt) && @debugOpt == true
       @project = create_project_tour(type)
     end
   end
@@ -93,7 +95,8 @@ module ProjectHelper
   def create_project_tour(tourtype)
     with_valid_session
     post "#{ENV['HOPSWORKS_API']}/project/starterProject/#{tourtype}"
-    expect_status(201)
+    pp "post #{ENV['HOPSWORKS_API']}/project/starterProject/#{tourtype}" if defined?(@debugOpt) && @debugOpt == true
+    expect_status_details(201)
     expect_json(description: regex("A demo project*"))
     get_project_by_name(json_body[:name])
   end
