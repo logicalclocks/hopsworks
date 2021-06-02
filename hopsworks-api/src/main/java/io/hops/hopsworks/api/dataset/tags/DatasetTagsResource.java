@@ -63,6 +63,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Logger;
 
+@Logged
 @Api(value = "Dataset Tags Resource")
 @RequestScoped
 @TransactionAttribute(TransactionAttributeType.NEVER)
@@ -80,6 +81,7 @@ public class DatasetTagsResource {
   
   private Project project;
   
+  @Logged(logLevel = LogLevel.OFF)
   public void setProject(Project project) {
     this.project = project;
   }
