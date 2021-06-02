@@ -92,9 +92,9 @@ public class TestStatisticColumnController {
     TrainingDataset trainingDataset = new TrainingDataset();
     StatisticsConfigDTO statisticsConfig = new StatisticsConfigDTO();
     statisticsConfig.setColumns(Arrays.asList("ft1", "ft4"));
-    trainingDataset.setFeatures(Arrays.asList(new TrainingDatasetFeature(trainingDataset, "ft1", null, null, false),
-      new TrainingDatasetFeature(trainingDataset, "ft2", null, null, false),
-      new TrainingDatasetFeature(trainingDataset, "ft3", null, null, false)));
+    trainingDataset.setFeatures(Arrays.asList(new TrainingDatasetFeature(trainingDataset, "ft1", null, null, false, null),
+      new TrainingDatasetFeature(trainingDataset, "ft2", null, null, false, null),
+      new TrainingDatasetFeature(trainingDataset, "ft3", null, null, false, null)));
     TrainingDatasetDTO trainingDatasetDTO = new TrainingDatasetDTO();
     trainingDatasetDTO.setName("td1");
     trainingDatasetDTO.setVersion(1);

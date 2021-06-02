@@ -21,6 +21,7 @@ import io.hops.hopsworks.api.featurestore.datavalidation.expectations.fs.Feature
 import io.hops.hopsworks.api.featurestore.featuregroup.FeaturegroupService;
 import io.hops.hopsworks.api.featurestore.storageconnector.FeaturestoreStorageConnectorService;
 import io.hops.hopsworks.api.featurestore.trainingdataset.TrainingDatasetService;
+import io.hops.hopsworks.api.featurestore.transformationFunction.TransformationFunctionResource;
 import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.api.filter.Audience;
 import io.hops.hopsworks.api.filter.NoCacheResponse;
@@ -92,6 +93,8 @@ public class FeaturestoreService {
   private FeaturestoreKeywordBuilder featurestoreKeywordBuilder;
   @Inject
   private FeatureStoreExpectationsResource featureGroupExpectationsResource;
+  @Inject
+  private TransformationFunctionResource transformationFunctionResource;
 
   private Project project;
 
@@ -310,5 +313,25 @@ public class FeaturestoreService {
     if (Strings.isNullOrEmpty(featureStoreName)) {
       throw new IllegalArgumentException(RESTCodes.FeaturestoreErrorCode.FEATURESTORE_NAME_NOT_PROVIDED.getMessage());
     }
+  }
+
+  /**
+   * TransformationFunctions sub-resource
+   *
+   * @param featurestoreId id of the featurestore
+   * @return the feature store transformationfunction resource
+   * @throws FeaturestoreException
+   */
+  @Logged(logLevel = LogLevel.OFF)
+  @Path("/{featurestoreId}/transformationfunctions")
+  public TransformationFunctionResource transformationResource(
+      @PathParam("featurestoreId") Integer featurestoreId) throws FeaturestoreException {
+    this.transformationFunctionResource.setProject(project);
+    if (featurestoreId == null) {
+      throw new IllegalArgumentException(RESTCodes.FeaturestoreErrorCode.FEATURESTORE_ID_NOT_PROVIDED.getMessage());
+    }
+    this.transformationFunctionResource.setFeaturestore(
+        featurestoreController.getFeaturestoreWithId(featurestoreId));
+    return transformationFunctionResource;
   }
 }

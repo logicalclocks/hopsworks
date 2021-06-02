@@ -108,7 +108,7 @@ public class StatisticsController {
         featuregroup.getCachedFeaturegroup().getTimeTravelFormat() == TimeTravelFormat.HUDI) {
       featureGroupCommit = featureGroupCommitCommitController.findCommitByDate(featuregroup, fgCommitId);
       // Statistics commitTimeStamp will be always system time sent from client if user wants to recompute
-      // statistics on particular commit id (i.e. fgCommitId was provided). If fgCommitId is null it means its
+      // statistics on particular commit id (i.e. fgCommitId was provided). If fgCommitId is null
       // it means: 1) client issued save or insert method; here statistics commitTimeStamp will be featureGroupCommit;
       // 2) Or it is recomputing statistics of existing time travel enabled feature group. Here latest fg commit
       // timestamp will be used to read dataset and as statistics commit time client system time will be provided.

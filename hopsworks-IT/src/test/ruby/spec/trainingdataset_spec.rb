@@ -1617,6 +1617,84 @@ describe "On #{ENV['OS']}" do
           json_result = get get_prep_statement_endpoint
           expect_status(400)
         end
+
+        it "should be able to create and then delete transformation function" do
+          featurestore_id = get_featurestore_id(@project.id)
+          json_result = register_transformation_fn(@project.id, featurestore_id)
+          parsed_json = JSON.parse(json_result)
+          expect_status(200)
+          transformation_function_id = parsed_json["id"]
+          endpoint = "#{ENV['HOPSWORKS_API']}/project/#{@project.id}/featurestores/#{featurestore_id}/transformationfunctions/#{transformation_function_id}"
+          delete endpoint
+          expect_status(200)
+        end
+
+
+        it "should be able to attach transformation function to training_dataset" do
+          # featurestore id
+          featurestore_id = get_featurestore_id(@project.id)
+
+          # create transformation function
+          json_result = register_transformation_fn(@project.id, featurestore_id)
+          transformation_function = JSON.parse(json_result)
+          expect_status(200)
+
+          # create first feature group
+          project_name = @project.projectname
+          features = [
+              {type: "INT", name: "a_testfeature", primary: true},
+              {type: "INT", name: "a_testfeature1"},
+          ]
+          json_result, fg_name = create_cached_featuregroup(@project.id, featurestore_id, features: features, featuregroup_name: "test_fg_a_#{short_random_id}", online:true)
+          parsed_json = JSON.parse(json_result)
+          fg_id = parsed_json["id"]
+          # create second feature group
+          features = [
+              {type: "INT", name: "a_testfeature", primary: true},
+              {type: "INT", name: "b_testfeature1"},
+          ]
+          json_result_b, fg_name_b = create_cached_featuregroup(@project.id, featurestore_id, features: features, featuregroup_name: "test_fg_b_#{short_random_id}", online:true)
+          parsed_json_b = JSON.parse(json_result_b)
+          fg_id_b = parsed_json_b["id"]
+
+          # create queryDTO object
+          query = {
+              leftFeatureGroup: {
+                  id: fg_id
+              },
+              leftFeatures: [{name: 'a_testfeature1'}],
+              joins: [{
+                          query: {
+                              leftFeatureGroup: {
+                                  id: fg_id_b
+                              },
+                              leftFeatures: [{name: 'b_testfeature1'}]
+                          },
+                      }
+              ]
+          }
+
+          td_schema = [
+              {type: "INT", name: "a_testfeature1", label: false, transformationFunction: transformation_function},
+              {type: "INT", name: "b_testfeature1", label: false, transformationFunction: transformation_function}
+          ]
+
+          json_result, training_dataset_name = create_hopsfs_training_dataset(@project.id, featurestore_id, nil, query: query, features: td_schema)
+          training_dataset =  JSON.parse(json_result)
+          training_dataset_id = training_dataset["id"]
+
+          # endpoint to attach transformation functions
+          endpoint = "#{ENV['HOPSWORKS_API']}/project/#{@project.id}/featurestores/#{featurestore_id}/trainingdatasets/#{training_dataset_id}/transformationfunctions"
+          json_result =  get endpoint
+          parsed_json = JSON.parse(json_result)
+          feature_transformation = parsed_json["items"].first["transformationFunction"]
+          expect(feature_transformation["name"]).to eql("plus_one")
+          expect(feature_transformation["outputType"]).to eql("FloatType()")
+
+          feature_transformation = parsed_json["items"].second["transformationFunction"]
+          expect(feature_transformation["name"]).to eql("plus_one")
+          expect(feature_transformation["outputType"]).to eql("FloatType()")
+        end
       end
     end
   end

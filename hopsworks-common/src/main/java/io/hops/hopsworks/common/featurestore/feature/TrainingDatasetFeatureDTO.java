@@ -17,6 +17,7 @@
 package io.hops.hopsworks.common.featurestore.feature;
 
 import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupDTO;
+import io.hops.hopsworks.common.featurestore.transformationFunction.TransformationFunctionDTO;
 
 public class TrainingDatasetFeatureDTO {
 
@@ -25,6 +26,7 @@ public class TrainingDatasetFeatureDTO {
   private FeaturegroupDTO featuregroup;
   private Integer index;
   private Boolean label = false;
+  private TransformationFunctionDTO transformationFunction;
 
   public TrainingDatasetFeatureDTO() {
   }
@@ -76,5 +78,13 @@ public class TrainingDatasetFeatureDTO {
 
   public void setLabel(Boolean label) {
     this.label = label;
+  }
+
+  public TransformationFunctionDTO getTransformationFunction() {
+    return transformationFunction;
+  }
+
+  public void setTransformationFunction(TransformationFunctionDTO transformationFunction) {
+    this.transformationFunction = transformationFunction;
   }
 }
