@@ -241,7 +241,7 @@ public class YarnRunner {
       appContext.setApplicationType("Hopsworks-Yarn");
 
       //Add local resources to AM container
-      Map<String, LocalResource> localResources = addAllToLocalResources();
+      Map<String, LocalResource> localResources = addAllToLocalResources(dfso);
 
       //Copy files to HDFS that are expected to be there
       copyAllToHDFS();
@@ -384,7 +384,8 @@ public class YarnRunner {
     }
   }
 
-  private Map<String, LocalResource> addAllToLocalResources() throws IOException, URISyntaxException {
+  private Map<String, LocalResource> addAllToLocalResources(DistributedFileSystemOps dfs)
+    throws IOException, URISyntaxException {
     Map<String, LocalResource> localResources = new HashMap<>();
     //Construct basepath
     FileSystem fs = dfsClient.getFilesystem();
@@ -436,15 +437,33 @@ public class YarnRunner {
         visibilities.append(entry.getValue().getVisibility()).append(",");
         types.append(entry.getValue().getType()).append(",");
       }
-      //Remove the last comma (,) and add them to javaOptions
-      javaOptions.
-          add(escapeForShell("-D" + Settings.SPARK_CACHE_FILENAMES + "=" + uris.substring(0, uris.length() - 1)));
-      javaOptions.add(escapeForShell("-D" + Settings.SPARK_CACHE_TIMESTAMPS + "=" + timestamps.substring(0, timestamps.
-          length() - 1)));
-      javaOptions.add(escapeForShell("-D" + Settings.SPARK_CACHE_SIZES + "=" + sizes.substring(0, sizes.length() - 1)));
-      javaOptions.add(escapeForShell("-D" + Settings.SPARK_CACHE_VISIBILITIES
-          + "=" + visibilities.substring(0, visibilities.length() - 1)));
-      javaOptions.add(escapeForShell("-D" + Settings.SPARK_CACHE_TYPES + "=" + types.substring(0, types.length() - 1)));
+
+      StringBuilder distCacheConf = new StringBuilder();
+      distCacheConf.append(Settings.SPARK_CACHE_FILENAMES + "\t" +
+        uris.substring(0, uris.length() - 1) + "\n");
+      distCacheConf.append(Settings.SPARK_CACHE_TIMESTAMPS + "\t" +
+        timestamps.substring(0, timestamps.length() - 1) + "\n");
+      distCacheConf.append(Settings.SPARK_CACHE_SIZES + "\t" +
+        sizes.substring(0, sizes.length() - 1) + "\n");
+      distCacheConf.append(Settings.SPARK_CACHE_VISIBILITIES + "\t" +
+        visibilities.substring(0, visibilities.length() - 1) + "\n");
+      distCacheConf.append(Settings.SPARK_CACHE_TYPES + "\t" +
+        types.substring(0, types.length() - 1) + "\n");
+
+      String distCacheConfPath = hdfsPrefix + localResourcesBasePath + "/distcache.conf";
+      Path distCacheSrc = new Path(distCacheConfPath);
+      dfs.create(new Path(distCacheConfPath),
+        distCacheConf.toString());
+
+      FileStatus distCacheFileStat = fs.getFileStatus(distCacheSrc);
+
+      LocalResource scRsrc = LocalResource.newInstance(
+        ConverterUtils.getYarnUrlFromPath(distCacheSrc),
+        LocalResourceType.FILE,
+        LocalResourceVisibility.APPLICATION,
+        distCacheFileStat.getLen(),
+        distCacheFileStat.getModificationTime());
+      localResources.put("distcache.conf", scRsrc);
     }
     return localResources;
   }

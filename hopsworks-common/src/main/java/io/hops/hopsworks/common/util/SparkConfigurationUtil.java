@@ -109,13 +109,13 @@ public class SparkConfigurationUtil extends ConfigurationUtil {
         HopsUtils.IGNORE, "-1"));
   
     sparkProps.put(Settings.SPARK_YARN_APPMASTER_ENV_EXECUTOR_GPUS,
-      new ConfigProperty(Settings.SPARK_YARN_APPMASTER_ENV_EXECUTOR_GPUS,
-        HopsUtils.IGNORE, "0"));
-  
-    sparkProps.put(Settings.SPARK_EXECUTOR_ENV + "EXECUTOR_GPUS",
-      new ConfigProperty(Settings.SPARK_EXECUTOR_ENV + "EXECUTOR_GPUS",
-        HopsUtils.IGNORE, Integer.toString(sparkJobConfiguration.getExecutorGpus())));
-  
+        new ConfigProperty(Settings.SPARK_YARN_APPMASTER_ENV_EXECUTOR_GPUS,
+            HopsUtils.IGNORE, "0"));
+
+    sparkProps.put(Settings.SPARK_EXECUTOR_ENV_EXECUTOR_GPUS,
+        new ConfigProperty(Settings.SPARK_EXECUTOR_ENV_EXECUTOR_GPUS,
+            HopsUtils.IGNORE, Integer.toString(sparkJobConfiguration.getExecutorGpus())));
+
     sparkProps.put(Settings.SPARK_SUBMIT_DEPLOYMODE, new ConfigProperty(Settings.SPARK_SUBMIT_DEPLOYMODE,
       HopsUtils.OVERWRITE,"cluster"));
     
@@ -123,24 +123,12 @@ public class SparkConfigurationUtil extends ConfigurationUtil {
       if(sparkJobConfiguration.getExecutorGpus() == 0) {
         addToSparkEnvironment(sparkProps, "HIP_VISIBLE_DEVICES", "-1", HopsUtils.IGNORE);
         addToSparkEnvironment(sparkProps, "CUDA_VISIBLE_DEVICES", "", HopsUtils.IGNORE);
-      }
-      if (sparkJobConfiguration.getExecutorGpus() > 0) {
-        sparkProps.put(Settings.SPARK_TF_GPUS_ENV,
+      } else if (sparkJobConfiguration.getExecutorGpus() > 0) {
+        sparkProps.put(Settings.SPARK_EXECUTOR_GPUS_ENV,
           new ConfigProperty(
-            Settings.SPARK_TF_GPUS_ENV,
+            Settings.SPARK_EXECUTOR_GPUS_ENV,
             HopsUtils.OVERWRITE,
             Integer.toString(sparkJobConfiguration.getExecutorGpus())));
-        sparkProps.put(Settings.SPARK_TENSORFLOW_APPLICATION,
-          new ConfigProperty(
-            Settings.SPARK_TENSORFLOW_APPLICATION,
-            HopsUtils.OVERWRITE,
-            "true"));
-      } else {
-        sparkProps.put(Settings.SPARK_TENSORFLOW_APPLICATION,
-          new ConfigProperty(
-            Settings.SPARK_TENSORFLOW_APPLICATION,
-            HopsUtils.OVERWRITE,
-            "false"));
       }
     }
 
@@ -178,6 +166,8 @@ public class SparkConfigurationUtil extends ConfigurationUtil {
     addToSparkEnvironment(sparkProps, "DOMAIN_CA_TRUSTSTORE", Settings.DOMAIN_CA_TRUSTSTORE, HopsUtils.IGNORE);
     addToSparkEnvironment(sparkProps, "SERVICE_DISCOVERY_DOMAIN", settings.getServiceDiscoveryDomain(),
         HopsUtils.IGNORE);
+    addToSparkEnvironment(sparkProps, "NUM_TF_PS", Integer.toString(sparkJobConfiguration.getNumPs()),
+      HopsUtils.IGNORE);
     addLibHdfsOpts(userSparkProperties, settings, sparkProps, sparkJobConfiguration);
   
     //If DynamicExecutors are not enabled, set the user defined number
@@ -217,11 +207,6 @@ public class SparkConfigurationUtil extends ConfigurationUtil {
               HopsUtils.OVERWRITE,
               String.valueOf(sparkJobConfiguration.getDynamicAllocationMaxExecutors())));
         } else if(distributionStrategy == DistributionStrategy.PARAMETER_SERVER) {
-          sparkProps.put(Settings.SPARK_TENSORFLOW_NUM_PS,
-            new ConfigProperty(
-              Settings.SPARK_TENSORFLOW_NUM_PS,
-              HopsUtils.OVERWRITE,
-              Integer.toString(sparkJobConfiguration.getNumPs())));
           sparkProps.put(Settings.SPARK_DYNAMIC_ALLOC_MIN_EXECS_ENV,
             new ConfigProperty(
               Settings.SPARK_DYNAMIC_ALLOC_MIN_EXECS_ENV,
@@ -231,14 +216,14 @@ public class SparkConfigurationUtil extends ConfigurationUtil {
             new ConfigProperty(
               Settings.SPARK_DYNAMIC_ALLOC_MAX_EXECS_ENV,
               HopsUtils.OVERWRITE,
-              String.valueOf(sparkJobConfiguration.getDynamicAllocationMaxExecutors() +
-                sparkJobConfiguration.getNumPs())));
+              String.valueOf(sparkJobConfiguration.getDynamicAllocationMaxExecutors())
+              + sparkJobConfiguration.getNumPs()));
           sparkProps.put(Settings.SPARK_DYNAMIC_ALLOC_INIT_EXECS_ENV,
             new ConfigProperty(
               Settings.SPARK_DYNAMIC_ALLOC_INIT_EXECS_ENV,
               HopsUtils.OVERWRITE,
-              String.valueOf(sparkJobConfiguration.getDynamicAllocationMaxExecutors() +
-                sparkJobConfiguration.getNumPs())));
+              String.valueOf(sparkJobConfiguration.getDynamicAllocationMaxExecutors())
+              + sparkJobConfiguration.getNumPs()));
         }
         //These values were set based on:
         //https://docs.nvidia.com/deeplearning/nccl/archives/nccl_256/nccl-developer-guide/docs/env.html
@@ -355,14 +340,6 @@ public class SparkConfigurationUtil extends ConfigurationUtil {
         HopsUtils.OVERWRITE,
         Integer.toString(experimentType != null ? 1 : sparkJobConfiguration.getExecutorCores())));
 
-    StringBuilder sparkFiles = new StringBuilder();
-    sparkFiles
-            //Log4j.properties
-            .append(settings.getSparkLog4JPath())
-            .append(",")
-            // Add Hive-site.xml for SparkSQL
-            .append(settings.getHiveSiteSparkHdfsPath());
-
     StringBuilder extraClassPath = new StringBuilder();
     extraClassPath
       .append("{{PWD}}")
@@ -373,6 +350,7 @@ public class SparkConfigurationUtil extends ConfigurationUtil {
       .append(settings.getSparkDir())
       .append("/hopsworks-jars/*");
 
+    StringBuilder sparkFiles = new StringBuilder(settings.getSparkLog4JPath());
     String applicationsJars = sparkJobConfiguration.getJars();
     if(!Strings.isNullOrEmpty(applicationsJars)) {
       applicationsJars = formatResources(applicationsJars);

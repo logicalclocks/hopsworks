@@ -895,6 +895,7 @@ public class Settings implements Serializable {
   public static final String SPARK_DRIVER_EXTRACLASSPATH = "spark.driver.extraClassPath";
   public static final String SPARK_EXECUTOR_MEMORY_ENV = "spark.executor.memory";
   public static final String SPARK_EXECUTOR_CORES_ENV = "spark.executor.cores";
+  public static final String SPARK_EXECUTOR_GPUS_ENV = "spark.yarn.executor.resource.yarn.io/gpu.amount";
   public static final String SPARK_EXECUTOR_EXTRACLASSPATH = "spark.executor.extraClassPath";
   public static final String SPARK_DRIVER_STAGINGDIR_ENV = "spark.yarn.stagingDir";
   public static final String SPARK_JAVA_LIBRARY_PROP = "java.library.path";
@@ -933,11 +934,6 @@ public class Settings implements Serializable {
   public static final String SPARK_PYSPARK_PYTHON = "PYSPARK_PYTHON";
 
   public static final String SPARK_PYSPARK_PYTHON_OPTION = "spark.pyspark.python";
-
-  //TFSPARK properties
-  public static final String SPARK_TF_GPUS_ENV = "spark.executor.gpus";
-  public static final String SPARK_TENSORFLOW_APPLICATION = "spark.tensorflow.application";
-  public static final String SPARK_TENSORFLOW_NUM_PS = "spark.tensorflow.num.ps";
 
   //Spark log4j and metrics properties
   public static final String JOB_LOG4J_CONFIG = "log4j.configuration";
@@ -3541,10 +3537,6 @@ public class Settings implements Serializable {
   public synchronized String getFSJobUtilPath() {
     checkCache();
     return FS_JOB_UTIL_PATH;
-  }
-
-  public String getHiveSiteSparkHdfsPath() {
-    return "hdfs:///user/" + getSparkUser() + "/hive-site.xml";
   }
 
   private long FEATURESTORE_DB_DEFAULT_QUOTA = -1;
