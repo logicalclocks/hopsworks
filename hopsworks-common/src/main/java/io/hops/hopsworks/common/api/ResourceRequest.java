@@ -206,7 +206,8 @@ public class ResourceRequest {
     ALERTGROUPS,
     SILENCES,
     RECEIVERS,
-    ROUTES;
+    ROUTES,
+    TRANSFORMATIONFUNCTIONS;
 
     public static Name fromString(String name) {
       return valueOf(name.toUpperCase());

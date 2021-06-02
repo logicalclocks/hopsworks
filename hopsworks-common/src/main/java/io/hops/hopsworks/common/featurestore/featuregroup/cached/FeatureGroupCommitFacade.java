@@ -66,7 +66,6 @@ public class FeatureGroupCommitFacade extends AbstractFacade<FeatureGroupCommit>
     } catch (NoResultException e) {
       return Optional.empty();
     }
-
   }
 
   public Optional<FeatureGroupCommit> findLatestDateCommit(Integer featureGroupId) {

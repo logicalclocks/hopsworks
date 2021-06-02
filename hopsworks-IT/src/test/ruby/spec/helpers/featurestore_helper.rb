@@ -780,4 +780,21 @@ module FeaturestoreHelper
     expect_status_details(200)
     JSON.parse(result)
   end
+  def register_transformation_fn(project_id, featurestore_id, transformation_fn_metadata: nil)
+      plus_one = {
+            "name": "plus_one",
+            "version": 1,
+            "sourceCodeContent": "{
+              \"module_imports\": \"import numpy as np\\nimport pandas as pd\\nfrom datetime import datetime\",
+              \"transformer_code\": \"def plus_one(value):\\n    return value + 1\\n\"
+            }",
+            "outputType": "FloatType()"
+      }
+
+      transformation_fn_metadata = transformation_fn_metadata == nil ? plus_one : transformation_fn_metadata
+
+      json_data = transformation_fn_metadata.to_json
+      endpoint = "#{ENV['HOPSWORKS_API']}/project/#{project_id}/featurestores/#{featurestore_id}/transformationfunctions"
+      post endpoint, json_data
+  end
 end

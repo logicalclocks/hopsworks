@@ -24,6 +24,7 @@ import io.hops.hopsworks.api.featurestore.statistics.StatisticsResource;
 import io.hops.hopsworks.api.featurestore.tag.FeaturestoreTagsBuilder;
 import io.hops.hopsworks.api.tags.TagsDTO;
 import io.hops.hopsworks.api.tags.TagsExpansionBeanParam;
+import io.hops.hopsworks.api.featurestore.transformationFunction.TransformationFunctionBuilder;
 import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.api.filter.Audience;
 import io.hops.hopsworks.api.filter.NoCacheResponse;
@@ -47,6 +48,7 @@ import io.hops.hopsworks.common.featurestore.FeaturestoreController;
 import io.hops.hopsworks.common.featurestore.FeaturestoreDTO;
 import io.hops.hopsworks.common.featurestore.trainingdatasets.TrainingDatasetController;
 import io.hops.hopsworks.common.featurestore.trainingdatasets.TrainingDatasetDTO;
+import io.hops.hopsworks.common.featurestore.transformationFunction.TransformationFunctionAttachedDTO;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.DatasetException;
 import io.hops.hopsworks.exceptions.SchematizedTagException;
@@ -145,6 +147,8 @@ public class TrainingDatasetService {
   private PreparedStatementBuilder preparedStatementBuilder;
   @EJB
   private DatasetHelper datasetHelper;
+  @EJB
+  private TransformationFunctionBuilder transformationFunctionBuilder;
 
   private Project project;
   private Featurestore featurestore;
@@ -616,7 +620,7 @@ public class TrainingDatasetService {
     } catch (DatasetException ex) {
       throw new GenericException(RESTCodes.GenericErrorCode.ILLEGAL_ARGUMENT, Level.FINE, "training dataset not found");
     }
-    
+
     this.provenanceResource.setContext(project, targetEndpointPath);
     TrainingDataset td = trainingDatasetController.getTrainingDatasetById(featurestore, trainingDatasetId);
     this.provenanceResource.setArtifactId(td.getName(), td.getVersion());
@@ -674,17 +678,42 @@ public class TrainingDatasetService {
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   @JWTRequired(acceptedTokens={Audience.API, Audience.JOB}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
   @ApiKeyRequired( acceptedScopes = {ApiScope.FEATURESTORE}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
-  public Response getQuery(@Context SecurityContext sc,
+  public Response getPreparedStatements(@Context SecurityContext sc,
                            @Context UriInfo uriInfo,
                            @ApiParam(value = "Id of the trainingdatasetid", required = true)
-                           @PathParam("trainingdatasetid") Integer trainingdatasetid)
+                           @PathParam("trainingdatasetid") Integer trainingDatsetId)
       throws FeaturestoreException {
-    verifyIdProvided(trainingdatasetid);
+    verifyIdProvided(trainingDatsetId);
     Users user = jWTHelper.getUserPrincipal(sc);
 
     ServingPreparedStatementDTO servingPreparedStatementDTO = preparedStatementBuilder.build(uriInfo,
-        new ResourceRequest(ResourceRequest.Name.PREPAREDSTATEMENTS), project, user, featurestore, trainingdatasetid);
+        new ResourceRequest(ResourceRequest.Name.PREPAREDSTATEMENTS), project, user, featurestore, trainingDatsetId);
     return Response.ok().entity(servingPreparedStatementDTO).build();
+  }
+
+  @ApiOperation(value = "Get training dataset transformation functions", response = TrainingDatasetDTO.class)
+  @GET
+  @Path("/{trainingdatasetid}/transformationfunctions")
+  @Produces(MediaType.APPLICATION_JSON)
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
+  @JWTRequired(acceptedTokens={Audience.API, Audience.JOB}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
+  @ApiKeyRequired( acceptedScopes = {ApiScope.FEATURESTORE}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
+  @Logged(logLevel = LogLevel.OFF)
+  public Response getTransformationFunction(@Context SecurityContext sc,
+                                            @Context UriInfo uriInfo,
+                                            @ApiParam(value = "Id of the trainingdatasetid", required = true)
+                                            @PathParam("trainingdatasetid") Integer trainingDatasetId)
+      throws FeaturestoreException {
+    if (trainingDatasetId == null) {
+      throw new IllegalArgumentException(RESTCodes.FeaturestoreErrorCode.TRAINING_DATASET_ID_NOT_PROVIDED.getMessage());
+    }
+
+    TrainingDataset trainingDataset = trainingDatasetController.getTrainingDatasetById(featurestore, trainingDatasetId);
+    Users user = jWTHelper.getUserPrincipal(sc);
+    ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.TRANSFORMATIONFUNCTIONS);
+    TransformationFunctionAttachedDTO transformationFunctionAttachedDTO =
+        transformationFunctionBuilder.build(uriInfo, resourceRequest, user, project, trainingDataset);
+    return Response.ok().entity(transformationFunctionAttachedDTO).build();
   }
 }
 
