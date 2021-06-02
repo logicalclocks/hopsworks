@@ -65,6 +65,7 @@
     <module>provenance-ee</module>
     <module>alerting</module>
     <module>hopsworks-alert</module>
+    <module>tags-ee</module>
   </modules>
 
   <profiles>

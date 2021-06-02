@@ -43,11 +43,11 @@ angular.module('hopsWorksApp')
         .controller('DatasetsCtrl', ['$scope', '$window', '$mdSidenav', '$mdUtil',
           'DataSetService', 'JupyterService', '$routeParams', 'ModalService', 'growl', '$location',
           '$rootScope', 'DelaProjectService', 'UtilsService', 'UserService', '$mdToast',
-          'TourService', 'ProjectService', 'StorageService', 'XAttrService',
+          'TourService', 'ProjectService', 'StorageService', 'XAttrService', 'VariablesService',
           function ($scope, $window, $mdSidenav, $mdUtil, DataSetService, JupyterService, $routeParams,
                   ModalService, growl, $location,
                   $rootScope, DelaProjectService, UtilsService, UserService, $mdToast, TourService, ProjectService,
-                    StorageService, XAttrService) {
+                    StorageService, XAttrService, VariablesService) {
 
             var self = this;
             var SHARED_DATASET_SEPARATOR = '::';
@@ -103,6 +103,7 @@ angular.module('hopsWorksApp')
             self.canStartJupyterFromMetadata = false;
             self.jupyterConfigFromMetadata = {};
             self.project = {}
+            self.isEnterprise = '';
 
             if (typeof self.view  === "undefined" || self.view  === '' || self.view === "null" || self.view === null) {
               self.view  = 'list';// default is list view
@@ -1452,6 +1453,7 @@ angular.module('hopsWorksApp')
                 self.selectedFiles[file.name].selectedIndex = selectedIndex;
                 self.menustyle.opacity = 1.0;
                 self.lastSelected = selectedIndex;
+                self.fetchTags();
             };
 
             /**
@@ -1506,6 +1508,7 @@ angular.module('hopsWorksApp')
               self.selectedFiles[file.attributes.name].selectedIndex = selectedIndex;
               self.menustyle.opacity = 1.0;
               self.lastSelected = selectedIndex;
+              self.fetchTags();
             };
 
             self.haveSelected = function (file) {
@@ -1600,6 +1603,7 @@ angular.module('hopsWorksApp')
             self.resetSelected = function () {
               self.deselectAll();
               self.tgState = false;
+              self.attachedTags = []
             };
 
             self.getSelectedPath = function (selectedFile) {
@@ -1736,6 +1740,99 @@ angular.module('hopsWorksApp')
               self.getRole();
               getProjectName();
               self.tgState = false;
+              VariablesService.isEnterprise().then(function(success) {
+                  self.isEnterprise = success.data.successMessage === "true";
+                },
+                function (error) {
+                  growl.error(error.data.errorMsg, {
+                    title: 'Failed to fetch if enterprise is enabled',
+                    ttl: 15000
+                  });
+                }
+              );
+            };
+            /**
+             * Get dataset tags
+             */
+            self.fetchTags = function () {
+              self.loadingTags = true;
+              var uriEnPath = encodeURIComponent(self.selectedFiles[self.selected].attributes.path);
+              dataSetService.getTags(uriEnPath).then(
+                function (success) {
+                  self.loadingTags = false;
+                  self.attachedTags = [];
+                  if(success.data.items) {
+                    for (var i = 0; i < success.data.items.length; i++) {
+                      self.attachedTags.push({"tag": success.data.items[i].name, "value": success.data.items[i].value});
+                    }
+                  } else {
+                    self.attachedTags = [];
+                  }
+                },
+                function (error) {
+                  self.loadingTags = false;
+                  if(error.status !== 422) {
+                    if (typeof error.data.usrMsg !== 'undefined') {
+                      growl.error(error.data.usrMsg, {title: error.data.errorMsg, ttl: 8000});
+                    } else {
+                      growl.error("", {title: error.data.errorMsg, ttl: 8000});
+                    }
+                  }
+                });
+            };
+
+            /**
+             * Add dataset tags
+             */
+            self.addTag = function(name, value) {
+              self.loadingTags = true;
+              var uriEnPath = encodeURIComponent(self.selectedFiles[self.selected].attributes.path);
+              dataSetService.updateTag(uriEnPath, name, value).then(
+                function (success) {
+                  self.loadingTags = false;
+                  self.attachedTags = [];
+                  if(success.data.items) {
+                    for (var i = 0; i < success.data.items.length; i++) {
+                      self.attachedTags.push({"tag": success.data.items[i].name, "value": success.data.items[i].value});
+                    }
+                  } else {
+                    self.attachedTags = [];
+                  }
+                },
+                function (error) {
+                  self.loadingTags = false;
+                  if(error.status !== 404) {
+                    if (typeof error.data.usrMsg !== 'undefined') {
+                      growl.error(error.data.usrMsg, {title: error.data.errorMsg, ttl: 8000});
+                    } else {
+                      growl.error("", {title: error.data.errorMsg, ttl: 8000});
+                    }
+                  }
+                });
+            };
+
+            /**
+             * Delete dataset tag
+             */
+            self.deleteTag = function(name) {
+              self.loadingTags = true;
+              var uriEnPath = encodeURIComponent(self.selectedFiles[self.selected].attributes.path);
+              dataSetService.deleteTag(uriEnPath, name).then(
+                function (success) {
+                  self.loadingTags = false;
+                  self.attachedTags = [];
+                  self.fetchTags();
+                },
+                function (error) {
+                  self.loadingTags = false;
+                  if(error.status !== 404) {
+                    if (typeof error.data.usrMsg !== 'undefined') {
+                      growl.error(error.data.usrMsg, {title: error.data.errorMsg, ttl: 8000});
+                    } else {
+                      growl.error("", {title: error.data.errorMsg, ttl: 8000});
+                    }
+                  }
+                });
             };
             init();
           }]);

@@ -21,8 +21,6 @@ angular.module('hopsWorksApp').directive("tags", function() {
     return {
         restrict: 'E',
         scope: {
-            projectId: "=",
-            featurestore: "=",
             attachedTags: "=",
             loadingTags: "=",
             deleteTag: "&",

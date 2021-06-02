@@ -16,6 +16,7 @@
 package io.hops.hopsworks.api.dataset.inode;
 
 import io.hops.hopsworks.api.dataset.inode.attribute.InodeAttributeDTO;
+import io.hops.hopsworks.api.tags.TagsDTO;
 import io.hops.hopsworks.common.api.RestDTO;
 import io.hops.hopsworks.common.dataset.FilePreviewDTO;
 
@@ -27,6 +28,7 @@ public class InodeDTO extends RestDTO<InodeDTO> {
   private InodeAttributeDTO attributes;
   private FilePreviewDTO preview;
   private String zipState = "NONE";
+  private TagsDTO tags;
   
   public InodeDTO() {
   }
@@ -55,10 +57,19 @@ public class InodeDTO extends RestDTO<InodeDTO> {
     this.zipState = zipState;
   }
   
+  public TagsDTO getTags() {
+    return tags;
+  }
+  
+  public void setTags(TagsDTO tags) {
+    this.tags = tags;
+  }
+  
   @Override
   public String toString() {
     return "InodeDTO{" +
       "attributes=" + attributes +
+      ", tags=" + tags +
       '}';
   }
 }

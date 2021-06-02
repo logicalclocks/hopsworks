@@ -16,6 +16,7 @@
 package io.hops.hopsworks.persistence.entity.dataset;
 
 import io.hops.hopsworks.persistence.entity.project.Project;
+import io.hops.hopsworks.persistence.entity.util.Settings;
 
 import java.io.Serializable;
 import java.util.Date;
@@ -154,6 +155,10 @@ public class DatasetSharedWith implements Serializable {
   
   public void setPermission(DatasetAccessPermission permission) {
     this.permission = permission;
+  }
+  
+  public String getDatasetName() {
+    return dataset.getProject().getName() + Settings.SHARED_FILE_SEPARATOR + dataset.getName();
   }
   
   @Override

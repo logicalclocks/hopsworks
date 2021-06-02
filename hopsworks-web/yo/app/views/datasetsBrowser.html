@@ -517,6 +517,21 @@
                             </div>
                           </div>
                         </md-tab>
+                        <md-tab label="Tags" ng-if="datasetsCtrl.isEnterprise">
+                          <div ng-show="datasetsCtrl.selected === null">
+                            <div class="file" style="text-align: center;">
+                              <div class="icon">
+                                <i class="fa fa-folder-open"></i>
+                              </div>
+                              Click on a DataSet's name to view its tags.
+                            </div>
+                          </div>
+                          <tags ng-show="datasetsCtrl.selected"
+                                attached-tags="datasetsCtrl.attachedTags"
+                                add-tag="datasetsCtrl.addTag(name, value)"
+                                delete-tag="datasetsCtrl.deleteTag(name)">
+                          </tags>
+                        </md-tab>
                       </md-tabs>
                     </md-content>
                   </div>

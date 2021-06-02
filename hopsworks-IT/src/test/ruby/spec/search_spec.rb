@@ -62,12 +62,6 @@ describe "On #{ENV['OS']}" do
       fgs[5][:name] = "fg_othername4"
       fg5_description = "some description about a dog"
       fgs[5][:id] = create_cached_featuregroup_checked(project[:id], featurestore_id, fgs[5][:name], featuregroup_description: fg5_description)
-      fgs[6] = {}
-      fgs[6][:name] = "fg_othername5"
-      fgs[6][:id] = create_cached_featuregroup_checked(project[:id], featurestore_id, fgs[6][:name])
-      fgs[7] = {}
-      fgs[7][:name] = "fg_othername6"
-      fgs[7][:id] = create_cached_featuregroup_checked(project[:id], featurestore_id, fgs[7][:name])
       fgs
     end
     def trainingdataset_setup(project)
@@ -95,14 +89,6 @@ describe "On #{ENV['OS']}" do
       td3_description = "some description about a dog"
       td_json, _ = create_hopsfs_training_dataset_checked(project[:id], featurestore_id, connector, name: tds[3][:name], description: td3_description)
       tds[3][:id] = td_json[:id]
-      tds[4] = {}
-      tds[4][:name] = "td_something5"
-      td_json, _ = create_hopsfs_training_dataset_checked(project[:id], featurestore_id, connector, name: tds[4][:name])
-      tds[4][:id] = td_json[:id]
-      tds[5] = {}
-      tds[5][:name] = "td_something6"
-      td_json, _ = create_hopsfs_training_dataset_checked(project[:id], featurestore_id, connector, name: tds[5][:name])
-      tds[5][:id] = td_json[:id]
       # TODO add featuregroup name to search
       tds
     end
@@ -259,14 +245,6 @@ describe "On #{ENV['OS']}" do
       end
     end
 
-    it 'three projects with shared content - force cleanup tags' do
-      clean_all_test_projects(spec: "search")
-      with_admin_session
-      delete_featurestore_tag_checked("search_base_tag")
-      delete_featurestore_tag_checked("search_schematized_tag")
-      reset_session
-    end
-    #if any test in the next context fails due to tag setup, uncomment above cleanup test and run it manually
     context 'three projects with shared content' do
       before :all do
         clean_all_test_projects(spec: "search")
@@ -295,66 +273,16 @@ describe "On #{ENV['OS']}" do
 
         create_session(@user2_params[:email], @user2_params[:password])
         accept_dataset_checked(@project2, "#{@project1[:projectname]}::#{@project1[:projectname].downcase}_featurestore.db", datasetType: "FEATURESTORE")
-
-        with_admin_session
-        @search_tags = Array.new(2)
-        @search_tags[0] = "search_base_tag"
-        @search_tags[1] = "search_schematized_tag"
-        create_featurestore_tag_checked(@search_tags[0], string_schema)
-        create_featurestore_tag_checked(@search_tags[1], schema)
-        reset_session
       end
       after :all do
-        #delete projects that might contain these tags
         create_session(@user1_params[:email], @user1_params[:password])
         delete_project(@project1)
         delete_project(@project3)
         create_session(@user2_params[:email], @user2_params[:password])
         delete_project(@project2)
-
-        with_admin_session
-        delete_featurestore_tag_checked(@search_tags[0])
-        delete_featurestore_tag_checked(@search_tags[1])
-        reset_session
       end
 
-      def schema()
-        schema = {
-            '$schema' => 'http://json-schema.org/draft-07/schema#',
-            'definitions' => {
-                'attr_1' => {
-                    'type' => 'object',
-                    'properties' => {
-                        'attr_2' => { 'type' => 'string' }
-                    }
-                }
-            },
-            '$id' => 'http://example.com/product.schema.json',
-            'title' => 'Test Search Schema',
-            'description' => 'This is a test search schematized tags',
-            'type' => 'object',
-            'properties' => {
-                'id' => {
-                    'description' => 'identifier',
-                    'type' => 'integer'
-                },
-                'attr_1' => { '$ref' => '#/definitions/attr_1' }
-            },
-            'required' => [ 'id', 'attr_1' ]
-        }
-        schema.to_json
-      end
-      def schematized_tag_val()
-        val = {
-            'id' => rand(100000),
-            'attr_1' => {
-                'attr_2' => 'dog'
-            }
-        }
-        val.to_json
-      end
-
-      context 'fgs - search by name, desc, features, tags' do
+      context 'fgs - search by name, desc, features' do
         before :all do
           #make sure epipe is free of work
           wait_result = epipe_wait_on_mutations(wait_time: 30, repeat: 2)
@@ -362,9 +290,6 @@ describe "On #{ENV['OS']}" do
 
           create_session(@user1_params[:email], @user1_params[:password])
           @fgs1 = featuregroups_setup(@project1)
-          featurestore_id = get_featurestore(@project1[:id])["featurestoreId"]
-          add_featuregroup_tag_checked(@project1[:id], featurestore_id, @fgs1[6][:id], @search_tags[0], value: "dog")
-          add_featuregroup_tag_checked(@project1[:id], featurestore_id, @fgs1[7][:id], @search_tags[1], value: schematized_tag_val)
 
           create_session(@user2_params[:email], @user2_params[:password])
           @fgs2 = featuregroups_setup(@project2)
@@ -377,9 +302,7 @@ describe "On #{ENV['OS']}" do
           create_session(@user1_params[:email], @user1_params[:password])
           expected_hits1 = [{:name => @fgs1[1][:name], :highlight => 'name', :parent_project => @project1[:projectname]},
                             {:name => @fgs1[3][:name], :highlight => 'features', :parent_project => @project1[:projectname]},
-                            {:name => @fgs1[5][:name], :highlight => "description", :parent_project => @project1[:projectname]},
-                            {:name => @fgs1[6][:name], :highlight => "tags", :parent_project => @project1[:projectname]},
-                            {:name => @fgs1[7][:name], :highlight => "tags", :parent_project => @project1[:projectname]}]
+                            {:name => @fgs1[5][:name], :highlight => "description", :parent_project => @project1[:projectname]}]
           project_search_test(@project1, "dog", "featuregroup", expected_hits1)
 
           expected_hits2 = [{:name => @fgs1[3][:name], :highlight => 'name', :parent_project => @project1[:projectname]}]
@@ -393,9 +316,7 @@ describe "On #{ENV['OS']}" do
                             #shared featuregroups
                             {:name => @fgs1[1][:name], :highlight => 'name', :parent_project => @project1[:projectname]},
                             {:name => @fgs1[3][:name], :highlight => 'features', :parent_project => @project1[:projectname]},
-                            {:name => @fgs1[5][:name], :highlight => "description", :parent_project => @project1[:projectname]},
-                            {:name => @fgs1[6][:name], :highlight => "tags", :parent_project => @project1[:projectname]},
-                            {:name => @fgs1[7][:name], :highlight => "tags", :parent_project => @project1[:projectname]}]
+                            {:name => @fgs1[5][:name], :highlight => "description", :parent_project => @project1[:projectname]}]
           project_search_test(@project2, "dog", "featuregroup", expected_hits1)
 
           expected_hits2 = [{:name => @fgs2[3][:name], :highlight => 'name', :parent_project => @project2[:projectname]},
@@ -418,7 +339,7 @@ describe "On #{ENV['OS']}" do
           global_search_test("dog", "feature", expected_hits2)
         end
       end
-      context 'tds - search by name, desc, features, tags' do
+      context 'tds - search by name, desc, features' do
         before :all do
           #make sure epipe is free of work
           wait_result = epipe_wait_on_mutations(wait_time: 30, repeat: 2)
@@ -426,9 +347,6 @@ describe "On #{ENV['OS']}" do
 
           create_session(@user1_params[:email], @user1_params[:password])
           @tds1 = trainingdataset_setup(@project1)
-          featurestore_id = get_featurestore_id(@project1[:id])
-          add_training_dataset_tag_checked(@project1[:id], featurestore_id, @tds1[4][:id], @search_tags[0], value: "dog")
-          add_training_dataset_tag_checked(@project1[:id], featurestore_id, @tds1[5][:id], @search_tags[1], value: schematized_tag_val)
           create_session(@user2_params[:email], @user2_params[:password])
           @tds2 = trainingdataset_setup(@project2)
 
@@ -443,9 +361,7 @@ describe "On #{ENV['OS']}" do
           create_session(@user1_params[:email], @user1_params[:password])
           expected_hits = [{:name => @tds1[1][:name], :highlight => 'name', :parent_project => @project1[:projectname]},
                             {:name => @tds1[2][:name], :highlight => 'features', :parent_project => @project1[:projectname]},
-                            {:name => @tds1[3][:name], :highlight => "description", :parent_project => @project1[:projectname]},
-                            {:name => @tds1[4][:name], :highlight => "tags", :parent_project => @project1[:projectname]},
-                            {:name => @tds1[5][:name], :highlight => "tags", :parent_project => @project1[:projectname]}]
+                            {:name => @tds1[3][:name], :highlight => "description", :parent_project => @project1[:projectname]}]
           project_search_test(@project1, "dog", "trainingdataset", expected_hits)
         end
         it 'project shared search' do
@@ -456,9 +372,7 @@ describe "On #{ENV['OS']}" do
                             # shared trainingdatasets
                             {:name => @tds1[1][:name], :highlight => 'name', :parent_project => @project1[:projectname]},
                             {:name => @tds1[2][:name], :highlight => 'features', :parent_project => @project1[:projectname]},
-                            {:name => @tds1[3][:name], :highlight => "description", :parent_project => @project1[:projectname]},
-                            {:name => @tds1[4][:name], :highlight => "tags", :parent_project => @project1[:projectname]},
-                            {:name => @tds1[5][:name], :highlight => "tags", :parent_project => @project1[:projectname]}]
+                            {:name => @tds1[3][:name], :highlight => "description", :parent_project => @project1[:projectname]}]
           project_search_test(@project2, "dog", "trainingdataset", expected_hits)
         end
         it 'global tds' do
@@ -466,8 +380,6 @@ describe "On #{ENV['OS']}" do
           expected_hits = [{:name => @tds1[1][:name], :highlight => 'name', :parent_project => @project1[:projectname]},
                            {:name => @tds1[2][:name], :highlight => 'features', :parent_project => @project1[:projectname]},
                            {:name => @tds1[3][:name], :highlight => "description", :parent_project => @project1[:projectname]},
-                           {:name => @tds1[4][:name], :highlight => "tags", :parent_project => @project1[:projectname]},
-                           {:name => @tds1[5][:name], :highlight => "tags", :parent_project => @project1[:projectname]},
                            {:name => @tds2[1][:name], :highlight => 'name', :parent_project => @project2[:projectname]},
                            {:name => @tds2[2][:name], :highlight => 'features', :parent_project => @project2[:projectname]},
                            {:name => @tds2[3][:name], :highlight => "description", :parent_project => @project2[:projectname]}]

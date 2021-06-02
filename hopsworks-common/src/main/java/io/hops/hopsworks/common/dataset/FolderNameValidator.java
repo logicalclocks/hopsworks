@@ -54,7 +54,8 @@ public class FolderNameValidator {
   private static String PROJECT_NAME_REGEX = "^(?!^Projects$)" + PLACE_HOLDER + "(?!^[0-9]*$)[a-zA-Z0-9]((?!__)" +
     "(?!_featurestore)[_a-zA-Z0-9]){0,22}[a-zA-Z0-9]$";
   private static String DATASET_NAME_REGEX =
-    "^((?!__)(?!^Projects$)" + PLACE_HOLDER + "[-_a-zA-Z0-9\\.]){1,87}[-_a-zA-Z0-9]$";
+    "^((?!__)(?!^Projects$|^download$|^upload$|^tags$)" +
+      PLACE_HOLDER + "[-_a-zA-Z0-9\\.]){1,87}[-_a-zA-Z0-9]$";
   /**
    * Check if the given String is a valid folder name.
    * <p/>

@@ -17,6 +17,7 @@ package io.hops.hopsworks.api.dataset;
 
 import io.hops.hopsworks.api.dataset.inode.attribute.InodeAttributeBuilder;
 import io.hops.hopsworks.api.dataset.inode.attribute.InodeAttributeDTO;
+import io.hops.hopsworks.api.dataset.tags.DatasetTagsBuilder;
 import io.hops.hopsworks.common.api.ResourceRequest;
 import io.hops.hopsworks.common.dao.AbstractFacade;
 import io.hops.hopsworks.common.dao.dataset.DatasetFacade;
@@ -24,9 +25,11 @@ import io.hops.hopsworks.common.dao.dataset.DatasetSharedWithFacade;
 import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.dataset.DatasetController;
 import io.hops.hopsworks.common.dataset.util.DatasetHelper;
+import io.hops.hopsworks.common.dataset.util.DatasetPath;
 import io.hops.hopsworks.common.hdfs.inode.InodeController;
-import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.DatasetException;
+import io.hops.hopsworks.exceptions.MetadataException;
+import io.hops.hopsworks.exceptions.SchematizedTagException;
 import io.hops.hopsworks.persistence.entity.dataset.Dataset;
 import io.hops.hopsworks.persistence.entity.dataset.DatasetSharedWith;
 import io.hops.hopsworks.persistence.entity.dataset.DatasetType;
@@ -70,6 +73,8 @@ public class DatasetBuilder {
   private UserFacade userFacade;
   @EJB
   private DatasetHelper datasetHelper;
+  @EJB
+  private DatasetTagsBuilder tagsBuilder;
   
   private DatasetDTO uri(DatasetDTO dto, UriInfo uriInfo) {
     dto.setHref(uriInfo.getAbsolutePathBuilder()
@@ -84,12 +89,12 @@ public class DatasetBuilder {
     return dto;
   }
   
-  private DatasetDTO uriItems(DatasetDTO dto, UriInfo uriInfo, Project project, Dataset dataset) {
+  private DatasetDTO uriItems(DatasetDTO dto, UriInfo uriInfo, DatasetPath datasetPath) {
     dto.setHref(uriInfo.getBaseUriBuilder()
       .path(ResourceRequest.Name.PROJECT.toString())
-      .path(project.getId().toString())
+      .path(datasetPath.getAccessProject().getId().toString())
       .path(ResourceRequest.Name.DATASETS.toString())
-      .path(dataset.getName())
+      .path(datasetPath.getRelativePath().toString())
       .build());
     return dto;
   }
@@ -101,28 +106,30 @@ public class DatasetBuilder {
     return dto;
   }
   
-  private DatasetDTO build(DatasetDTO dto, ResourceRequest resourceRequest, Dataset dataset, String parentPath,
-    Users dirOwner, Project project) {
+  private DatasetDTO build(DatasetDTO dto, UriInfo uriInfo, ResourceRequest resourceRequest,
+                           Users user, DatasetPath datasetPath, String parentPath, Users dirOwner)
+    throws DatasetException, MetadataException, SchematizedTagException {
     expand(dto, resourceRequest);
     if (dto.isExpand()) {
+      Dataset dataset = datasetPath.getDataset();
       dto.setId(dataset.getId());
       dto.setDescription(dataset.getDescription());
       dto.setPublicDataset(dataset.getPublicDs());
       dto.setPublicId(dataset.getPublicDsId());
       dto.setSearchable(dataset.isSearchable());
       dto.setDatasetType(dataset.getDsType());
-      dto.setShared(dataset.isShared(project));
+      dto.setShared(datasetPath.isShared());
       dto.setPermission(dataset.getPermission());
       dto.setAccepted(true);
       dto.setSharedWith(dataset.getDatasetSharedWithCollection().size());
+      dto.setTags(tagsBuilder.build(uriInfo, resourceRequest, user, datasetPath));
       if (dto.isShared()) {
-        DatasetSharedWith sharedWith = datasetSharedWithFacade.findByProjectAndDataset(project, dataset);
-        if (sharedWith == null) {
+        if (datasetPath.getDatasetSharedWith() == null) {
           throw new IllegalStateException("Shared dataset not found.");
         }
-        dto.setAccepted(sharedWith.getAccepted());
-        dto.setPermission(sharedWith.getPermission());
-        dto.setName(dataset.getProject().getName() + Settings.SHARED_FILE_SEPARATOR + dataset.getName());
+        dto.setAccepted(datasetPath.getDatasetSharedWith().getAccepted());
+        dto.setPermission(datasetPath.getDatasetSharedWith().getPermission());
+        dto.setName(datasetPath.getDatasetSharedWith().getDatasetName());
         dto.setAttributes(inodeAttributeBuilder.build(new InodeAttributeDTO(), resourceRequest, dataset.getInode(),
           null, null));//if shared parent and owner not this project
       } else if (DatasetType.DATASET.equals(dataset.getDsType())) {
@@ -138,18 +145,20 @@ public class DatasetBuilder {
     return dto;
   }
   
-  public DatasetDTO build(UriInfo uriInfo, ResourceRequest resourceRequest, Dataset dataset) {
-    return build(uriInfo, resourceRequest, dataset.getProject(), dataset, null, null, false);
+  public DatasetDTO build(UriInfo uriInfo, ResourceRequest resourceRequest, Users user, DatasetPath datasetPath)
+    throws DatasetException, MetadataException, SchematizedTagException {
+    return build(uriInfo, resourceRequest, user, datasetPath, null, null, false);
   }
   
-  public DatasetDTO build(UriInfo uriInfo, ResourceRequest resourceRequest, Project project, Dataset dataset,
-    String parentPath, Users dirOwner, boolean expandSharedWith) {
+  public DatasetDTO build(UriInfo uriInfo, ResourceRequest resourceRequest, Users user, DatasetPath datasetPath,
+                          String parentPath, Users dirOwner, boolean expandSharedWith)
+    throws DatasetException, MetadataException, SchematizedTagException {
     DatasetDTO dto = new DatasetDTO();
     uri(dto, uriInfo);
-    build(dto, resourceRequest, dataset, parentPath, dirOwner, project);
+    build(dto, uriInfo, resourceRequest, user, datasetPath, parentPath, dirOwner);
     //will be changed to expand when project is done.
     if (expandSharedWith) {
-      List<DatasetSharedWith> dsSharedWith = datasetSharedWithFacade.findByDataset(dataset);
+      List<DatasetSharedWith> dsSharedWith = datasetSharedWithFacade.findByDataset(datasetPath.getDataset());
       List<ProjectDTO> projectDTOS = new ArrayList<>();
       for(DatasetSharedWith datasetSharedWith : dsSharedWith) {
         projectDTOS.add(new ProjectDTO(datasetSharedWith.getProject(), datasetSharedWith.getPermission()));
@@ -159,11 +168,12 @@ public class DatasetBuilder {
     return dto;
   }
   
-  public DatasetDTO buildItems(UriInfo uriInfo, ResourceRequest resourceRequest, Project project, Dataset dataset,
-    String parentPath, Users dirOwner) {
+  public DatasetDTO buildItems(UriInfo uriInfo, ResourceRequest resourceRequest, Users user, DatasetPath datasetPath,
+                               String parentPath, Users dirOwner)
+    throws DatasetException, MetadataException, SchematizedTagException {
     DatasetDTO dto = new DatasetDTO();
-    uriItems(dto, uriInfo, project, dataset);
-    return build(dto, resourceRequest, dataset, parentPath, dirOwner, project);
+    uriItems(dto, uriInfo, datasetPath);
+    return build(dto, uriInfo, resourceRequest, user, datasetPath, parentPath, dirOwner);
   }
   
   /**
@@ -174,13 +184,15 @@ public class DatasetBuilder {
    * @param name
    * @return
    */
-  public DatasetDTO build(UriInfo uriInfo, ResourceRequest resourceRequest, Project project, String name)
-    throws DatasetException {
-    Dataset dataset = datasetController.getByProjectAndDsName(project, null, name);
+  public DatasetDTO build(UriInfo uriInfo, ResourceRequest resourceRequest, Project accessProject, Users user,
+                          String name)
+    throws DatasetException, MetadataException, SchematizedTagException {
+    Dataset dataset = datasetController.getByProjectAndDsName(accessProject, null, name);
     if (dataset == null) {
       throw new DatasetException(RESTCodes.DatasetErrorCode.DATASET_NOT_FOUND, Level.FINE);
     }
-    return build(uriInfo, resourceRequest, project, dataset, null, null, false);
+    DatasetPath datasetPath = datasetHelper.getTopLevelDatasetPath(accessProject, dataset);
+    return build(uriInfo, resourceRequest, user, datasetPath, null, null, false);
   }
   
   /**
@@ -192,64 +204,78 @@ public class DatasetBuilder {
    * @return
    */
   public DatasetDTO buildItems(UriInfo uriInfo, ResourceRequest resourceRequest,
-    ResourceRequest sharedDatasetResourceRequest, Project project) {
+    ResourceRequest sharedDatasetResourceRequest, Project project, Users user)
+    throws DatasetException, MetadataException, SchematizedTagException {
     Inode parent = project.getInode();
     datasetHelper.checkResourceRequestLimit(resourceRequest, parent.getChildrenNum());
     String parentPath = inodeController.getPath(parent);
     Users dirOwner = userFacade.findByUsername(parent.getHdfsUser().getUsername());
-    return items(new DatasetDTO(), uriInfo, resourceRequest, sharedDatasetResourceRequest, project, parentPath,
+    return items(new DatasetDTO(), uriInfo, resourceRequest, sharedDatasetResourceRequest, project, user, parentPath,
       dirOwner);
   }
   
   private DatasetDTO items(DatasetDTO dto, UriInfo uriInfo, ResourceRequest resourceRequest,
-    ResourceRequest sharedDatasetResourceRequest, Project project, String parentPath, Users dirOwner) {
+                           ResourceRequest sharedDatasetResourceRequest, Project accessProject, Users user,
+                           String parentPath, Users dirOwner)
+    throws DatasetException, MetadataException, SchematizedTagException {
     uri(dto, uriInfo);
     expand(dto, resourceRequest);
     if (dto.isExpand()) {
-      DatasetDTO ownedDatasets = ownItems(new DatasetDTO(), uriInfo, resourceRequest, project, parentPath, dirOwner);
+      DatasetDTO ownedDatasets =
+        ownItems(new DatasetDTO(), uriInfo, resourceRequest, accessProject, user, parentPath, dirOwner);
       DatasetDTO sharedDatasets =
-        sharedItems(new DatasetDTO(), uriInfo, sharedDatasetResourceRequest, project, parentPath, dirOwner);
+        sharedItems(new DatasetDTO(), uriInfo, sharedDatasetResourceRequest, accessProject, user, parentPath, dirOwner);
       return mergeAndApplyOffsetAndLimit(dto, resourceRequest, ownedDatasets, sharedDatasets);
     }
     return dto;
   }
   
   // datasets in the project
-  private DatasetDTO ownItems(DatasetDTO dto, UriInfo uriInfo, ResourceRequest resourceRequest, Project project,
-    String parentPath, Users dirOwner) {
+  private DatasetDTO ownItems(DatasetDTO dto, UriInfo uriInfo, ResourceRequest resourceRequest,
+                              Project accessProject, Users user, String parentPath, Users dirOwner)
+    throws DatasetException, MetadataException, SchematizedTagException {
     AbstractFacade.CollectionInfo collectionInfo = datasetFacade.findAllDatasetByProject(null, null,
-      resourceRequest.getFilter(), resourceRequest.getSort(), project);
+      resourceRequest.getFilter(), resourceRequest.getSort(), accessProject);
     dto.setCount(collectionInfo.getCount());
-    return datasetItems(dto, uriInfo, resourceRequest, collectionInfo.getItems(), project, parentPath, dirOwner);
+    return datasetItems(dto, uriInfo, resourceRequest, collectionInfo.getItems(), accessProject, user, parentPath,
+      dirOwner);
   }
   
   // shared datasets
-  private DatasetDTO sharedItems(DatasetDTO dto, UriInfo uriInfo, ResourceRequest resourceRequest, Project project,
-    String parentPath, Users dirOwner) {
+  private DatasetDTO sharedItems(DatasetDTO dto, UriInfo uriInfo, ResourceRequest resourceRequest,
+                                 Project accessProject, Users user, String parentPath, Users dirOwner)
+    throws DatasetException, MetadataException, SchematizedTagException {
     AbstractFacade.CollectionInfo collectionInfo = datasetSharedWithFacade.findAllDatasetByProject(null, null,
-      resourceRequest.getFilter(), resourceRequest.getSort(), project);
+      resourceRequest.getFilter(), resourceRequest.getSort(), accessProject);
     dto.setCount(collectionInfo.getCount());
-    return datasetSharedWithItems(dto, uriInfo, resourceRequest, collectionInfo.getItems(), project, parentPath,
-      dirOwner);
+    return datasetSharedWithItems(dto, uriInfo, resourceRequest, accessProject, user, collectionInfo.getItems(),
+      parentPath, dirOwner);
   }
   
   // create dto from a list of dataset
   private DatasetDTO datasetItems(DatasetDTO dto, UriInfo uriInfo, ResourceRequest resourceRequest,
-    List<Dataset> datasets, Project project, String parentPath, Users dirOwner) {
+    List<Dataset> datasets, Project accessProject, Users user, String parentPath, Users dirOwner)
+    throws DatasetException, MetadataException, SchematizedTagException {
     if (datasets != null && !datasets.isEmpty()) {
-      datasets.forEach((dataset) -> dto.addItem(buildItems(uriInfo, resourceRequest, project, dataset, parentPath,
-        dirOwner)));
+      for(Dataset dataset : datasets) {
+        DatasetPath datasetPath = datasetHelper.getTopLevelDatasetPath(accessProject, dataset);
+        dto.addItem(buildItems(uriInfo, resourceRequest, user, datasetPath, parentPath, dirOwner));
+      }
     }
     return dto;
   }
   
   // create dto from a list of DatasetSharedWith objects
   private DatasetDTO datasetSharedWithItems(DatasetDTO dto, UriInfo uriInfo, ResourceRequest resourceRequest,
-    List<DatasetSharedWith> datasetSharedWithList, Project project, String parentPath, Users dirOwner) {
+                                            Project accessProject, Users user,
+                                            List<DatasetSharedWith> datasetSharedWithList, String parentPath,
+                                            Users dirOwner)
+    throws DatasetException, MetadataException, SchematizedTagException {
     if (datasetSharedWithList != null && !datasetSharedWithList.isEmpty()) {
-      datasetSharedWithList.forEach((datasetSharedWith) -> dto.addItem(buildItems(uriInfo, resourceRequest, project,
-        datasetSharedWith.getDataset(), parentPath,
-        dirOwner)));
+      for(DatasetSharedWith datasetSharedWith : datasetSharedWithList) {
+        DatasetPath datasetPath = datasetHelper.getTopLevelDatasetPath(accessProject, datasetSharedWith);
+        dto.addItem(buildItems(uriInfo, resourceRequest, user, datasetPath, parentPath, dirOwner));
+      }
     }
     return dto;
   }

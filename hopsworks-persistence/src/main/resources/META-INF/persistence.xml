@@ -53,7 +53,7 @@
     <class>io.hops.hopsworks.persistence.entity.dela.certs.ClusterCertificate</class>
     <class>io.hops.hopsworks.persistence.entity.featurestore.Featurestore</class>
     <class>io.hops.hopsworks.persistence.entity.featurestore.activity.FeaturestoreActivity</class>
-    <class>io.hops.hopsworks.persistence.entity.featurestore.tag.FeatureStoreTag</class>
+    <class>io.hops.hopsworks.persistence.entity.featurestore.tag.TagSchemas</class>
     <class>io.hops.hopsworks.persistence.entity.featurestore.featuregroup.ondemand.OnDemandFeature</class>
     <class>io.hops.hopsworks.persistence.entity.featurestore.featuregroup.ondemand.OnDemandOption</class>
     <class>io.hops.hopsworks.persistence.entity.featurestore.storageconnector.FeaturestoreConnector</class>

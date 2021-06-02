@@ -76,6 +76,19 @@
         </exclusion>
       </exclusions>
     </dependency>
+    <dependency>
+      <groupId>io.hops.hopsworks</groupId>
+      <artifactId>tags-ee</artifactId>
+      <version>${project.version}</version>
+      <scope>provided</scope>
+      <!-- exclude all transitive dependencies -->
+      <exclusions>
+        <exclusion>
+          <groupId>*</groupId>
+          <artifactId>*</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
 
     <dependency>
       <groupId>javax</groupId>

@@ -174,7 +174,17 @@ angular.module('hopsWorksApp')
                 unshareAll: function (datasetName, type) {
                   var datasetType = getQuery(type, 'type');
                   return $http.post(baseUrl + datasetName + '?action=unshare_all' + datasetType);
-                }
+                },
+                getTags: function(path) {
+                  return $http.get(baseUrl + 'tags/all/' + path);
+                },
+                updateTag: function(path, key, value) {
+                  return $http.put(baseUrl + 'tags/schema/' + key + '/' + path,
+                    value, {headers: {'Content-Type': 'application/json'}});
+                },
+                deleteTag: function(path, key) {
+                  return $http.delete(baseUrl + 'tags/schema/' + key + '/' + path);
+                },
               };
               return services;
             };

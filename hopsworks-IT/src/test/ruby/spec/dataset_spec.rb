@@ -603,10 +603,8 @@ describe "On #{ENV['OS']}" do
           create_session(member[:email], "Pass123")
 
           # The new member should be able to fetch the readme in the readme
-          readme = get_dataset_blob(project, "Projects/#{second_project[:projectname]}/#{dsname}/README.md", datasetType: "&type=DATASET")
-          expect_status(200)
-          readme_parsed = JSON.parse(readme)
-          expect(readme_parsed['preview']).not_to be_nil
+          readme = get_dataset_blob_checked(project, "Projects/#{second_project[:projectname]}/#{dsname}/README.md", datasetType: "&type=DATASET")
+          expect(readme[:preview]).not_to be_nil
         end
         it "should share training and statistic dataset when sharing requested feature store" do
           projectname = "project_#{short_random_id}"

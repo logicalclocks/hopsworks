@@ -18,6 +18,7 @@ package io.hops.hopsworks.api.dataset;
 import io.hops.hopsworks.api.dataset.inode.InodeBeanParam;
 import io.hops.hopsworks.api.dataset.inode.InodeBuilder;
 import io.hops.hopsworks.api.dataset.inode.InodeDTO;
+import io.hops.hopsworks.api.dataset.tags.DatasetTagsResource;
 import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.api.filter.Audience;
 import io.hops.hopsworks.api.filter.apiKey.ApiKeyRequired;
@@ -41,8 +42,10 @@ import io.hops.hopsworks.common.provenance.core.Provenance;
 import io.hops.hopsworks.common.provenance.core.dto.ProvTypeDTO;
 import io.hops.hopsworks.exceptions.DatasetException;
 import io.hops.hopsworks.exceptions.HopsSecurityException;
+import io.hops.hopsworks.exceptions.MetadataException;
 import io.hops.hopsworks.exceptions.ProjectException;
 import io.hops.hopsworks.exceptions.ProvenanceException;
+import io.hops.hopsworks.exceptions.SchematizedTagException;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
 import io.hops.hopsworks.persistence.entity.dataset.Dataset;
 import io.hops.hopsworks.persistence.entity.dataset.DatasetAccessPermission;
@@ -109,6 +112,10 @@ public class DatasetResource {
   private UploadService uploader;
   @EJB
   private HopsFSProvenanceController fsProvenanceController;
+  @Inject
+  private DatasetTagsResource tagsResource;
+  @EJB
+  private JWTHelper jWTHelper;
 
   private Integer projectId;
   private String projectName;
@@ -144,7 +151,9 @@ public class DatasetResource {
   @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   @ApiKeyRequired( acceptedScopes = {ApiScope.DATASET_VIEW}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   public Response get(@BeanParam Pagination pagination, @BeanParam DatasetBeanParam datasetBeanParam,
-    @Context UriInfo uriInfo, @Context SecurityContext sc) throws ProjectException {
+    @Context UriInfo uriInfo, @Context SecurityContext sc)
+    throws ProjectException, DatasetException, MetadataException, SchematizedTagException {
+    Users user = jWTHelper.getUserPrincipal(sc);
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.DATASETS);
     resourceRequest.setOffset(pagination.getOffset());
     resourceRequest.setLimit(pagination.getLimit());
@@ -158,7 +167,7 @@ public class DatasetResource {
     sharedDatasetResourceRequest.setFilter(datasetBeanParam.getSharedWithFilter());
     sharedDatasetResourceRequest.setExpansions(datasetBeanParam.getExpansions().getResources());
     DatasetDTO dto = datasetBuilder.buildItems(uriInfo, resourceRequest, sharedDatasetResourceRequest,
-      this.getProject());
+      this.getProject(), user);
     return Response.ok().entity(dto).build();
   }
   
@@ -173,32 +182,33 @@ public class DatasetResource {
     @QueryParam("action") DatasetActions.Get action, @QueryParam("mode") FilePreviewMode mode,
     @BeanParam Pagination pagination, @BeanParam InodeBeanParam inodeBeanParam,
     @BeanParam DatasetExpansionBeanParam datasetExpansionBeanParam, @Context UriInfo uriInfo,
-    @Context SecurityContext sc) throws DatasetException, ProjectException {
+    @Context SecurityContext sc) throws DatasetException, ProjectException, MetadataException, SchematizedTagException {
     Users user = jwtHelper.getUserPrincipal(sc);
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.INODES);
+    resourceRequest.setExpansions(datasetExpansionBeanParam.getResources());
     Project project = this.getProject();
     DatasetPath datasetPath = datasetHelper.getDatasetPathIfFileExist(project, path, datasetType);
     InodeDTO dto;
     switch (action == null? DatasetActions.Get.STAT : action) {
       case BLOB:
-        dto = inodeBuilder.buildBlob(uriInfo, resourceRequest, project, user, datasetPath, mode);
+        dto = inodeBuilder.buildBlob(uriInfo, resourceRequest, user, datasetPath, mode);
         break;
       case LISTING:
         resourceRequest.setOffset(pagination.getOffset());
         resourceRequest.setLimit(pagination.getLimit());
         resourceRequest.setSort(inodeBeanParam.getSortBySet());
         resourceRequest.setFilter(inodeBeanParam.getFilter());
-        dto = inodeBuilder.buildItems(uriInfo, resourceRequest, project, datasetPath);
+        dto = inodeBuilder.buildItems(uriInfo, resourceRequest, user, datasetPath);
         break;
       case STAT:
         if (datasetPath.isTopLevelDataset()) {
           ResourceRequest datasetResourceRequest = new ResourceRequest(ResourceRequest.Name.DATASETS);
           datasetResourceRequest.setExpansions(datasetExpansionBeanParam.getResources());
-          DatasetDTO datasetDTO = datasetBuilder.build(uriInfo, datasetResourceRequest, project,
-            datasetPath.getDataset(), null, null, true);
+          DatasetDTO datasetDTO = datasetBuilder.build(uriInfo, datasetResourceRequest, user, datasetPath,
+            null, null, true);
           return Response.ok().entity(datasetDTO).build();
         } else {
-          dto = inodeBuilder.buildStat(uriInfo, resourceRequest, datasetPath);
+          dto = inodeBuilder.buildStat(uriInfo, resourceRequest, user, datasetPath);
         }
         break;
       default:
@@ -225,7 +235,8 @@ public class DatasetResource {
                              @QueryParam("destination_path") String destPath,
                              @QueryParam("destination_type") DatasetType destDatasetType,
                              @DefaultValue("READ_ONLY") @QueryParam("permission") DatasetAccessPermission permission)
-      throws DatasetException, ProjectException, HopsSecurityException, ProvenanceException {
+    throws DatasetException, ProjectException, HopsSecurityException, ProvenanceException, MetadataException,
+           SchematizedTagException {
     Users user = jwtHelper.getUserPrincipal(sc);
     DatasetPath datasetPath;
     DatasetPath distDatasetPath;
@@ -252,16 +263,20 @@ public class DatasetResource {
             Provenance.getDatasetProvCore(projectProvCore, Provenance.MLType.DATASET), generateReadme, permission);
           resourceRequest = new ResourceRequest(ResourceRequest.Name.DATASETS);
           Dataset ds = datasetController.getByProjectAndFullPath(project, datasetPath.getFullPath().toString());
-          DatasetDTO dto = datasetBuilder.build(uriInfo, resourceRequest, project, ds, null, null, false);
+          datasetHelper.updateDataset(project, datasetPath, ds);
+          datasetPath.setInode(ds.getInode());
+          DatasetDTO dto = datasetBuilder.build(uriInfo, resourceRequest, user, datasetPath, null, null, false);
           return Response.created(dto.getHref()).entity(dto).build();
         } else {
           datasetHelper.checkIfDatasetExists(project, datasetPath);
+          datasetHelper.updateDataset(project, datasetPath);
           datasetController.createDirectory(project, user, datasetPath.getFullPath(), datasetPath.getDatasetName(),
             datasetPath.isTopLevelDataset(), description,
             Provenance.getDatasetProvCore(projectProvCore, Provenance.MLType.DATASET), generateReadme, permission);
           resourceRequest = new ResourceRequest(ResourceRequest.Name.INODES);
           Inode inode = inodeController.getInodeAtPath(datasetPath.getFullPath().toString());
-          InodeDTO dto = inodeBuilder.buildStat(uriInfo, resourceRequest, inode);
+          datasetPath.setInode(inode);
+          InodeDTO dto = inodeBuilder.buildStat(uriInfo, resourceRequest, user, datasetPath, inode);
           return Response.created(dto.getHref()).entity(dto).build();
         }
       case COPY:
@@ -339,7 +354,7 @@ public class DatasetResource {
     @QueryParam("action") DatasetActions.Put action, @QueryParam("description") String description,
     @DefaultValue("READ_ONLY") @QueryParam("permissions") DatasetAccessPermission datasetPermissions,
     @QueryParam("target_project") String targetProjectName, @Context UriInfo uriInfo, @Context SecurityContext sc)
-    throws DatasetException, ProjectException {
+    throws DatasetException, ProjectException, MetadataException, SchematizedTagException {
     Project project = this.getProject();
     DatasetPath datasetPath = datasetHelper.getDatasetPath(project, path, datasetType);
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.DATASETS);
@@ -349,17 +364,17 @@ public class DatasetResource {
       case PERMISSION:
         checkIfDataOwner(project, user);
         datasetController.updatePermission(datasetPath.getDataset(), datasetPermissions, project, project, user);
-        dto = datasetBuilder.build(uriInfo, resourceRequest, project, datasetPath.getDataset(), null, null, false);
+        dto = datasetBuilder.build(uriInfo, resourceRequest, user, datasetPath, null, null, false);
         break;
       case SHARE_PERMISSION:
         checkIfDataOwner(project, user);
         datasetController.updateSharePermission(datasetPath.getDataset(), datasetPermissions, project, targetProjectName
           , user);
-        dto = datasetBuilder.build(uriInfo, resourceRequest, project, datasetPath.getDataset(), null, null, false);
+        dto = datasetBuilder.build(uriInfo, resourceRequest, user, datasetPath, null, null, false);
         break;
       case DESCRIPTION:
         datasetController.updateDescription(project, user, datasetPath.getDataset(), description);
-        dto = datasetBuilder.build(uriInfo, resourceRequest, project, datasetPath.getDataset(), null, null, false);
+        dto = datasetBuilder.build(uriInfo, resourceRequest, user, datasetPath, null, null, false);
         break;
       default:
         throw new WebApplicationException("Action not valid.", Response.Status.NOT_FOUND);
@@ -416,5 +431,12 @@ public class DatasetResource {
                               @QueryParam("type") DatasetType datasetType) {
     this.uploader.setParams(this.projectId, path, datasetType);
     return this.uploader;
+  }
+  
+  @Logged(logLevel = LogLevel.OFF)
+  @Path("tags")
+  public DatasetTagsResource tags() throws ProjectException {
+    this.tagsResource.setParams(getProject());
+    return this.tagsResource;
   }
 }

@@ -20,8 +20,8 @@ import io.hops.hopsworks.api.filter.apiKey.ApiKeyRequired;
 import io.hops.hopsworks.api.util.Pagination;
 import io.hops.hopsworks.audit.logger.annotation.Logged;
 import io.hops.hopsworks.common.api.ResourceRequest;
-import io.hops.hopsworks.common.featurestore.tag.FeatureStoreTagSchemaControllerIface;
-import io.hops.hopsworks.exceptions.FeatureStoreTagException;
+import io.hops.hopsworks.common.tags.TagSchemasControllerIface;
+import io.hops.hopsworks.exceptions.SchematizedTagException;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
 import io.hops.hopsworks.persistence.entity.user.security.apiKey.ApiScope;
 import io.swagger.annotations.Api;
@@ -61,7 +61,7 @@ public class TagSchemasResource {
   @EJB
   private TagSchemasBuilder tagSchemasBuilder;
   @Inject
-  private FeatureStoreTagSchemaControllerIface featureStoreTagSchemaController;
+  private TagSchemasControllerIface TagSchemasController;
   
   @ApiOperation(value = "Get all schemas", response = SchemaDTO.class)
   @GET
@@ -87,7 +87,7 @@ public class TagSchemasResource {
   @ApiKeyRequired( acceptedScopes = {ApiScope.FEATURESTORE}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
   public Response get(@Context SecurityContext sc, @Context UriInfo uriInfo,
                       @PathParam("name") String schemaName)
-    throws FeatureStoreTagException {
+    throws SchematizedTagException {
     
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.TAG_SCHEMAS);
     SchemaDTO dto = tagSchemasBuilder.build(uriInfo, resourceRequest, schemaName);
@@ -101,9 +101,9 @@ public class TagSchemasResource {
   public Response post(@Context SecurityContext sc, @Context UriInfo uriInfo,
                        @QueryParam("name") String schemaName,
                        String schema)
-    throws FeatureStoreTagException {
+    throws SchematizedTagException {
     
-    featureStoreTagSchemaController.create(schemaName, schema);
+    TagSchemasController.create(schemaName, schema);
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.TAG_SCHEMAS);
     SchemaDTO dto = tagSchemasBuilder.build(uriInfo, resourceRequest, schemaName);
     return Response.created(dto.getHref()).entity(dto).build();
@@ -117,7 +117,7 @@ public class TagSchemasResource {
   public Response delete(@Context SecurityContext sc, @Context UriInfo uriInfo,
                          @PathParam("name") String schemaName) {
     
-    featureStoreTagSchemaController.delete(schemaName);
+    TagSchemasController.delete(schemaName);
     return Response.noContent().build();
   }
 }

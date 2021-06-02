@@ -168,9 +168,7 @@
                                                     <div ng-include="'views/featuregroupViewInfo.html'"></div>
                                                 </md-tab>
                                                 <md-tab label="Tags" ng-if="featurestoreCtrl.isEnterprise">
-                                                    <tags project-id="featurestoreCtrl.projectId"
-                                                          featurestore="featurestoreCtrl.featurestore"
-                                                          attached-tags="featuregroupViewInfoCtrl.attachedTags"
+                                                    <tags attached-tags="featuregroupViewInfoCtrl.attachedTags"
                                                           loading-tags="featuregroupViewInfoCtrl.loadingTags"
                                                           add-tag="featuregroupViewInfoCtrl.addTag(name, value)"
                                                           delete-tag="featuregroupViewInfoCtrl.deleteTag(name)">
@@ -347,9 +345,7 @@
                                         </md-tab>
                                         <md-tab label="Tags" ng-if="featurestoreCtrl.isEnterprise">
                                             <span ng-if="trainingDatasetViewInfoCtrl.selectedTrainingDataset.trainingDatasetType == featurestoreCtrl.hopsfsTrainingDatasetType">
-                                                <tags project-id="featurestoreCtrl.projectId"
-                                                      featurestore="featurestoreCtrl.featurestore"
-                                                      attached-tags="trainingDatasetViewInfoCtrl.attachedTags"
+                                                <tags attached-tags="trainingDatasetViewInfoCtrl.attachedTags"
                                                       loading-tags="trainingDatasetViewInfoCtrl.loadingTags"
                                                       add-tag="trainingDatasetViewInfoCtrl.addTag(name, value)"
                                                       delete-tag="trainingDatasetViewInfoCtrl.deleteTag(name)">
