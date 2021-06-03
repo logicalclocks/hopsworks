@@ -77,19 +77,36 @@ public class FeaturestoreRedshiftConnectorController {
       throws FeaturestoreException, UserException, ProjectException {
     verifyCreateDTO(featurestoreRedshiftConnectorDTO);
     FeatureStoreRedshiftConnector featurestoreRedshiftConnector = new FeatureStoreRedshiftConnector();
-    featurestoreRedshiftConnector.setClusterIdentifier(featurestoreRedshiftConnectorDTO.getClusterIdentifier());
-    featurestoreRedshiftConnector.setDatabaseDriver(featurestoreRedshiftConnectorDTO.getDatabaseDriver());
-    featurestoreRedshiftConnector.setDatabaseEndpoint(featurestoreRedshiftConnectorDTO.getDatabaseEndpoint());
-    featurestoreRedshiftConnector.setDatabaseName(featurestoreRedshiftConnectorDTO.getDatabaseName());
-    featurestoreRedshiftConnector.setDatabasePort(featurestoreRedshiftConnectorDTO.getDatabasePort());
-    featurestoreRedshiftConnector.setTableName(featurestoreRedshiftConnectorDTO.getTableName());
-    featurestoreRedshiftConnector.setDatabaseUserName(featurestoreRedshiftConnectorDTO.getDatabaseUserName());
+    setConnector(featurestoreRedshiftConnector, featurestoreRedshiftConnectorDTO);
     setPassword(user, featurestoreRedshiftConnectorDTO, featurestore, featurestoreRedshiftConnector);
-    featurestoreRedshiftConnector.setIamRole(featurestoreRedshiftConnectorDTO.getIamRole());
-    featurestoreRedshiftConnector.setAutoCreate(featurestoreRedshiftConnectorDTO.getAutoCreate());
-    featurestoreRedshiftConnector.setDatabaseGroup(featurestoreRedshiftConnectorDTO.getDatabaseGroup());
-    featurestoreRedshiftConnector.setArguments(featurestoreRedshiftConnectorDTO.getArguments());
     return featurestoreRedshiftConnector;
+  }
+
+  private void setConnector(FeatureStoreRedshiftConnector featurestoreRedshiftConnector,
+      FeaturestoreRedshiftConnectorDTO featurestoreRedshiftConnectorDTO) {
+    featurestoreRedshiftConnector
+        .setClusterIdentifier(getValueOrNull(featurestoreRedshiftConnectorDTO.getClusterIdentifier()));
+    featurestoreRedshiftConnector
+        .setDatabaseDriver(getValueOrNull(featurestoreRedshiftConnectorDTO.getDatabaseDriver()));
+    featurestoreRedshiftConnector
+        .setDatabaseEndpoint(getValueOrNull(featurestoreRedshiftConnectorDTO.getDatabaseEndpoint()));
+    featurestoreRedshiftConnector.setDatabaseName(getValueOrNull(featurestoreRedshiftConnectorDTO.getDatabaseName()));
+    featurestoreRedshiftConnector.setDatabasePort(featurestoreRedshiftConnectorDTO.getDatabasePort());
+    featurestoreRedshiftConnector.setTableName(getValueOrNull(featurestoreRedshiftConnectorDTO.getTableName()));
+    featurestoreRedshiftConnector
+        .setDatabaseUserName(getValueOrNull(featurestoreRedshiftConnectorDTO.getDatabaseUserName()));
+    featurestoreRedshiftConnector.setIamRole(getValueOrNull(featurestoreRedshiftConnectorDTO.getIamRole()));
+    featurestoreRedshiftConnector.setAutoCreate(featurestoreRedshiftConnectorDTO.getAutoCreate());
+    featurestoreRedshiftConnector.setDatabaseGroup(getValueOrNull(featurestoreRedshiftConnectorDTO.getDatabaseGroup()));
+    featurestoreRedshiftConnector.setArguments(getValueOrNull(featurestoreRedshiftConnectorDTO.getArguments()));
+  }
+
+  private boolean isNullOrWhitespace(String val) {
+    return Strings.isNullOrEmpty(val) || Strings.isNullOrEmpty(val.trim());
+  }
+
+  private String getValueOrNull(String val) {
+    return isNullOrWhitespace(val)? null : val.trim();
   }
 
   private void setPassword(Users user, FeaturestoreRedshiftConnectorDTO featurestoreRedshiftConnectorDTO,
@@ -109,6 +126,36 @@ public class FeaturestoreRedshiftConnectorController {
 
   private void verifyCreateDTO(FeaturestoreRedshiftConnectorDTO featurestoreRedshiftConnectorDTO)
       throws FeaturestoreException {
+    if (featurestoreRedshiftConnectorDTO == null) {
+      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_STORAGE_CONNECTOR_ARG, Level.FINE,
+          "Null input data");
+    }
+    if (isNullOrWhitespace(featurestoreRedshiftConnectorDTO.getClusterIdentifier())) {
+      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_STORAGE_CONNECTOR_ARG, Level.FINE,
+          "Cluster identifier can not be empty.");
+    }
+    if (isNullOrWhitespace(featurestoreRedshiftConnectorDTO.getDatabaseDriver())) {
+      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_STORAGE_CONNECTOR_ARG, Level.FINE,
+          "Database driver can not be empty.");
+    }
+    if (isNullOrWhitespace(featurestoreRedshiftConnectorDTO.getDatabaseEndpoint())) {
+      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_STORAGE_CONNECTOR_ARG, Level.FINE,
+          "Database endpoint can not be empty.");
+    }
+    if (isNullOrWhitespace(featurestoreRedshiftConnectorDTO.getDatabaseName())) {
+      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_STORAGE_CONNECTOR_ARG, Level.FINE,
+          "Database name can not be empty.");
+    }
+    if (featurestoreRedshiftConnectorDTO.getDatabasePort() == null ||
+        featurestoreRedshiftConnectorDTO.getDatabasePort() < 1150 ||
+        featurestoreRedshiftConnectorDTO.getDatabasePort() > 65535) {
+      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_STORAGE_CONNECTOR_ARG, Level.FINE,
+          "Database port should be between 1150 and 65535.");
+    }
+    if (isNullOrWhitespace(featurestoreRedshiftConnectorDTO.getDatabaseUserName())) {
+      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_STORAGE_CONNECTOR_ARG, Level.FINE,
+          "Database username can not be empty.");
+    }
     if(!Strings.isNullOrEmpty(featurestoreRedshiftConnectorDTO.getArguments())
       && featurestoreRedshiftConnectorDTO.getArguments().length() >
       FeaturestoreConstants.JDBC_STORAGE_CONNECTOR_ARGUMENTS_MAX_LENGTH) {
@@ -153,57 +200,13 @@ public class FeaturestoreRedshiftConnectorController {
       FeaturestoreRedshiftConnectorDTO featurestoreRedshiftConnectorDTO,
       FeatureStoreRedshiftConnector featureStoreRedshiftConnector)
       throws FeaturestoreException, UserException, ProjectException {
-
-    if (!Strings.isNullOrEmpty(featurestoreRedshiftConnectorDTO.getClusterIdentifier()) &&
-        !featurestoreRedshiftConnectorDTO.getClusterIdentifier()
-            .equals(featureStoreRedshiftConnector.getClusterIdentifier())) {
-      featureStoreRedshiftConnector.setClusterIdentifier(featurestoreRedshiftConnectorDTO.getClusterIdentifier());
-    }
-    if (shouldUpdate(featureStoreRedshiftConnector.getDatabaseDriver(),
-        featurestoreRedshiftConnectorDTO.getDatabaseDriver())) {
-      featureStoreRedshiftConnector.setDatabaseDriver(featurestoreRedshiftConnectorDTO.getDatabaseDriver());
-    }
-    if (shouldUpdate(featureStoreRedshiftConnector.getDatabaseEndpoint(),
-        featurestoreRedshiftConnectorDTO.getDatabaseEndpoint())) {
-      featureStoreRedshiftConnector.setDatabaseEndpoint(featurestoreRedshiftConnectorDTO.getDatabaseEndpoint());
-    }
-    if (shouldUpdate(featureStoreRedshiftConnector.getDatabaseName(),
-        featurestoreRedshiftConnectorDTO.getDatabaseName())) {
-      featureStoreRedshiftConnector.setDatabaseName(featurestoreRedshiftConnectorDTO.getDatabaseName());
-    }
-    if (shouldUpdate(featureStoreRedshiftConnector.getDatabaseUserName(),
-        featurestoreRedshiftConnectorDTO.getDatabaseUserName())) {
-      featureStoreRedshiftConnector.setDatabaseUserName(featurestoreRedshiftConnectorDTO.getDatabaseUserName());
-    }
-    if (shouldUpdate(featureStoreRedshiftConnector.getDatabaseGroup(),
-        featurestoreRedshiftConnectorDTO.getDatabaseGroup())) {
-      featureStoreRedshiftConnector.setDatabaseGroup(featurestoreRedshiftConnectorDTO.getDatabaseGroup());
-    }
-    if (featurestoreRedshiftConnectorDTO.getAutoCreate() != featureStoreRedshiftConnector.getAutoCreate()) {
-      featureStoreRedshiftConnector.setAutoCreate(featurestoreRedshiftConnectorDTO.getAutoCreate());
-    }
-    if (shouldUpdate(featurestoreRedshiftConnectorDTO.getDatabasePort(),
-        featureStoreRedshiftConnector.getDatabasePort())) {
-      featureStoreRedshiftConnector.setDatabasePort(featurestoreRedshiftConnectorDTO.getDatabasePort());
-    }
-    if (shouldUpdate(featureStoreRedshiftConnector.getTableName(),
-        featurestoreRedshiftConnectorDTO.getTableName())) {
-      featureStoreRedshiftConnector.setTableName(featurestoreRedshiftConnectorDTO.getTableName());
-    }
-    if (shouldUpdate(featureStoreRedshiftConnector.getIamRole(),
-        featurestoreRedshiftConnectorDTO.getIamRole())) {
-      featureStoreRedshiftConnector.setIamRole(featurestoreRedshiftConnectorDTO.getIamRole());
-    }
+    verifyCreateDTO(featurestoreRedshiftConnectorDTO);
+    setConnector(featureStoreRedshiftConnector, featurestoreRedshiftConnectorDTO);
 
     Secret secret = null;
     if (shouldUpdate(getDatabasePassword(featureStoreRedshiftConnector, user),
             featurestoreRedshiftConnectorDTO.getDatabasePassword())) {
       secret = updatePassword(user, featurestoreRedshiftConnectorDTO, featurestore, featureStoreRedshiftConnector);
-    }
-
-    if (shouldUpdate(featureStoreRedshiftConnector.getArguments(),
-      featurestoreRedshiftConnectorDTO.getArguments())) {
-      featureStoreRedshiftConnector.setArguments(featurestoreRedshiftConnectorDTO.getArguments());
     }
 
     verifyPassword(featureStoreRedshiftConnector.getIamRole(), featureStoreRedshiftConnector.getSecret());
@@ -236,15 +239,10 @@ public class FeaturestoreRedshiftConnectorController {
     }
     return secret;
   }
-
+  
   private boolean shouldUpdate(String oldVal, String newVal) {
     return (oldVal == null && newVal != null) || (oldVal != null && !oldVal.equals(newVal));
   }
-
-  private boolean shouldUpdate(Integer oldVal, Integer newVal) {
-    return (oldVal == null && newVal != null) || (oldVal != null && !oldVal.equals(newVal));
-  }
-
 
   private String getDatabasePassword(FeatureStoreRedshiftConnector featureStoreRedshiftConnector, Users user) {
     if (featureStoreRedshiftConnector.getSecret() == null) {
