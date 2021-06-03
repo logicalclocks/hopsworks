@@ -46,6 +46,8 @@ import io.hops.hopsworks.common.featurestore.trainingdatasets.external.ExternalT
 import io.hops.hopsworks.common.featurestore.trainingdatasets.hopsfs.HopsfsTrainingDatasetController;
 import io.hops.hopsworks.common.featurestore.trainingdatasets.hopsfs.HopsfsTrainingDatasetFacade;
 import io.hops.hopsworks.common.featurestore.trainingdatasets.split.TrainingDatasetSplitDTO;
+import io.hops.hopsworks.common.featurestore.transformationFunction.TransformationFunctionController;
+import io.hops.hopsworks.common.featurestore.transformationFunction.TransformationFunctionFacade;
 import io.hops.hopsworks.common.featurestore.utils.FeaturestoreInputValidation;
 import io.hops.hopsworks.common.featurestore.utils.FeaturestoreUtils;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
@@ -75,6 +77,7 @@ import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.Trainin
 import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.external.ExternalTrainingDataset;
 import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.hopsfs.HopsfsTrainingDataset;
 import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.split.TrainingDatasetSplit;
+import io.hops.hopsworks.persistence.entity.featurestore.transformationFunction.TransformationFunction;
 import io.hops.hopsworks.persistence.entity.hdfs.inode.Inode;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.user.Users;
@@ -151,6 +154,10 @@ public class TrainingDatasetController {
   private FeaturestoreController featurestoreController;
   @EJB
   private OnlineFeaturegroupController onlineFeaturegroupController;
+  @EJB
+  private TransformationFunctionController transformationFunctionController;
+  @EJB
+  private TransformationFunctionFacade transformationFunctionFacade;
 
 
   // this is used to overwrite feature type in prepared statement
@@ -176,9 +183,12 @@ public class TrainingDatasetController {
   /**
    * Converts a trainingDataset entity to a TrainingDataset DTO
    *
+   * @param user
+   * @param project
    * @param trainingDataset trainingDataset entity
    * @return JSON/XML DTO of the trainingDataset
    * @throws ServiceException
+   * @throws FeaturestoreException
    */
   private TrainingDatasetDTO convertTrainingDatasetToDTO(Users user, Project project, TrainingDataset trainingDataset)
       throws ServiceException, FeaturestoreException {
@@ -199,7 +209,7 @@ public class TrainingDatasetController {
                     f.getFeatureGroup().getId(),
                     f.getFeatureGroup().getName(), f.getFeatureGroup().getVersion(),
                     onlineFeaturegroupController.onlineFeatureGroupTopicName(project.getId(),
-                      f.getFeatureGroup().getId(), Utils.getFeaturegroupName(f.getFeatureGroup())))
+                        f.getFeatureGroup().getId(), Utils.getFeaturegroupName(f.getFeatureGroup())))
                 : null,
             f.getIndex(), f.isLabel()))
         .collect(Collectors.toList()));
@@ -304,6 +314,7 @@ public class TrainingDatasetController {
           .findById(trainingDatasetDTO.getStorageConnector().getId())
           .orElseThrow(() -> new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.CONNECTOR_NOT_FOUND,
               Level.FINE, "Connector: " + trainingDatasetDTO.getStorageConnector().getId()));
+
       return createTrainingDatasetMetadata(user, project, featurestore, trainingDatasetDTO,
           query, featurestoreConnector, null);
     }
@@ -393,7 +404,7 @@ public class TrainingDatasetController {
 
   private void setTrainingDatasetQuery(Query query,
                                        List<TrainingDatasetFeatureDTO> features,
-                                       TrainingDataset trainingDataset) {
+                                       TrainingDataset trainingDataset) throws FeaturestoreException {
     // Convert the joins from the query object into training dataset joins
     List<TrainingDatasetJoin> tdJoins = collectJoins(query, trainingDataset);
     trainingDataset.setJoins(tdJoins);
@@ -404,15 +415,20 @@ public class TrainingDatasetController {
   // and handle correctly the case in which a feature group is joined with itself.
   private List<TrainingDatasetFeature> collectFeatures(Query query, List<TrainingDatasetFeatureDTO> featureDTOs,
                                                        TrainingDataset trainingDataset, int featureIndex,
-                                                       List<TrainingDatasetJoin> tdJoins, int joinIndex) {
+                                                       List<TrainingDatasetJoin> tdJoins, int joinIndex)
+      throws FeaturestoreException {
     List<TrainingDatasetFeature> features = new ArrayList<>();
     boolean isLabel = false;
+    TransformationFunction transformationFunction = null;
     for (Feature f : query.getFeatures()) {
       if (featureDTOs != null && !featureDTOs.isEmpty()) {
+        // identify if feature is label
         isLabel = featureDTOs.stream().anyMatch(dto -> f.getName().equals(dto.getName()) && dto.getLabel());
+        // get transformation function for this feature
+        transformationFunction = getTransformationFunction(f, featureDTOs);
       }
       features.add(new TrainingDatasetFeature(trainingDataset, tdJoins.get(joinIndex), query.getFeaturegroup(),
-          f.getName(), f.getType(), featureIndex++, isLabel));
+          f.getName(), f.getType(), featureIndex++, isLabel, transformationFunction));
     }
 
     if (query.getJoins() != null) {
@@ -480,7 +496,7 @@ public class TrainingDatasetController {
     int index = 0;
     for (TrainingDatasetFeatureDTO f : featureList) {
       trainingDatasetFeatureList.add(
-          new TrainingDatasetFeature(trainingDataset, f.getName(), f.getType(), index++, f.getLabel()));
+          new TrainingDatasetFeature(trainingDataset, f.getName(), f.getType(), index++, f.getLabel(), null));
     }
 
     return trainingDatasetFeatureList;
@@ -564,10 +580,13 @@ public class TrainingDatasetController {
   /**
    * Updates a training dataset with new metadata
    *
+   * @param user
+   * @param project
    * @param featurestore             the featurestore that the trainingDataset is linked to
    * @param trainingDatasetDTO       the user input data for updating the training dataset
    * @return a JSON/XML DTO of the updated training dataset
    * @throws FeaturestoreException
+   * @throws ServiceException
    */
   public TrainingDatasetDTO updateTrainingDatasetMetadata(Users user, Project project,
                                                           Featurestore featurestore,
@@ -757,12 +776,22 @@ public class TrainingDatasetController {
     List<TrainingDatasetFeatureDTO> labels = featuresDTOs.stream()
         .filter(TrainingDatasetFeatureDTO::getLabel)
         .collect(Collectors.toList());
+    List<TrainingDatasetFeatureDTO> featuresWithTransformation = featuresDTOs.stream()
+        .filter(f -> f.getTransformationFunction() != null)
+        .collect(Collectors.toList());
     List<Feature> features = collectFeatures(query);
 
     for (TrainingDatasetFeatureDTO label : labels) {
       if (features.stream().noneMatch(f -> f.getName().equals(label.getName()))) {
         throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.LABEL_NOT_FOUND, Level.FINE,
             "Label: " + label.getName() + " is missing");
+      }
+    }
+    for (TrainingDatasetFeatureDTO featureWithTransformation : featuresWithTransformation) {
+      if (features.stream().noneMatch(f -> f.getName().equals(featureWithTransformation.getName()))) {
+        throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.FEATURE_WITH_TRANSFORMATION_NOT_FOUND,
+            Level.FINE, "feature: " + featureWithTransformation.getName() +
+            " is missing and transformation function can't be attached");
       }
     }
   }
@@ -1060,5 +1089,20 @@ public class TrainingDatasetController {
     servingPreparedStatementDTO.setQueryOnline(constructorController.generateSQL(query, true));
     servingPreparedStatementDTO.setPreparedStatementParameters(preparedStatementParameterDTOS);
     return servingPreparedStatementDTO;
+  }
+
+  private TransformationFunction getTransformationFunction(
+      Feature feature, List<TrainingDatasetFeatureDTO> featureDTOs) throws FeaturestoreException {
+    TrainingDatasetFeatureDTO featureDTO = featureDTOs.stream().filter(dto ->
+        feature.getName().equals(dto.getName())).findFirst().orElse(null);
+    TransformationFunction transformationFunction = null;
+    if (featureDTO != null && featureDTO.getTransformationFunction() != null){
+      transformationFunction = transformationFunctionFacade.findById(featureDTO.getTransformationFunction().getId())
+          .orElseThrow(() ->
+              new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.TRANSFORMATION_FUNCTION_DOES_NOT_EXIST,
+                  Level.FINE, "Could not find transformation function with ID" +
+                  featureDTO.getTransformationFunction().getId()));
+    }
+    return transformationFunction;
   }
 }

@@ -1556,7 +1556,20 @@ public class RESTCodes {
             Response.Status.BAD_REQUEST),
     ALERT_NOT_FOUND(155, "Alert not found", Response.Status.NOT_FOUND),
     ALERT_ILLEGAL_ARGUMENT(156, "Alert missing argument.", Response.Status.BAD_REQUEST),
-    ALERT_ALREADY_EXISTS(157, "Alert with the same status already exists.", Response.Status.BAD_REQUEST);
+    ALERT_ALREADY_EXISTS(157, "Alert with the same status already exists.", Response.Status.BAD_REQUEST),
+    ERROR_DELETING_TRANSFORMERFUNCTION(158, "Error deleting the transformer function of a feature store entity",
+        Response.Status.INTERNAL_SERVER_ERROR),
+    TRANSFORMATION_FUNCTION_ALREADY_EXISTS(159, "The provided transformation function name and version " +
+        "already exists", Response.Status.BAD_REQUEST),
+    TRANSFORMATION_FUNCTION_DOES_NOT_EXIST(160, "Transformation function does not exist", Response.Status.BAD_REQUEST),
+    TRANSFORMATION_FUNCTION_READ_ERROR(161, "Error reading the transformation function",
+        Response.Status.INTERNAL_SERVER_ERROR),
+    TRANSFORMATION_FUNCTION_VERSION(162, "Illegal transformation function version",
+                                     Response.Status.BAD_REQUEST),
+    ILLEGAL_TRANSFORMATION_FUNCTION_OUTPUT_TYPE(163, "Illegal transformation function output type",
+        Response.Status.BAD_REQUEST),
+    FEATURE_WITH_TRANSFORMATION_NOT_FOUND(164, "Could not find feature in training dataset schema",
+        Response.Status.NOT_FOUND);
 
     private int code;
     private String message;
@@ -2079,16 +2092,16 @@ public class RESTCodes {
     public Integer getCode() {
       return code;
     }
-  
+
     @Override
     public String getMessage() {
       return message;
     }
-  
+
     public Response.StatusType getRespStatus() {
       return respStatus;
     }
-  
+
     @Override
     public int getRange() {
       return range;

@@ -17,6 +17,7 @@
 package io.hops.hopsworks.persistence.entity.featurestore.trainingdataset;
 
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.Featuregroup;
+import io.hops.hopsworks.persistence.entity.featurestore.transformationFunction.TransformationFunction;
 
 import javax.persistence.Basic;
 import javax.persistence.Column;
@@ -58,12 +59,15 @@ public class TrainingDatasetFeature implements Serializable {
   @Basic(optional = false)
   @Column(name = "label")
   private boolean label;
+  @JoinColumn(name = "transformation_function", referencedColumnName = "id")
+  private TransformationFunction transformationFunction;
 
   public TrainingDatasetFeature() {
   }
 
   public TrainingDatasetFeature(TrainingDataset trainingDataset, TrainingDatasetJoin trainingDatasetJoin,
-                                Featuregroup featureGroup, String name, String type, Integer index, boolean label) {
+                                Featuregroup featureGroup, String name, String type, Integer index, boolean label,
+                                TransformationFunction transformationFunction) {
     this.trainingDataset = trainingDataset;
     this.trainingDatasetJoin = trainingDatasetJoin;
     this.featureGroup = featureGroup;
@@ -71,15 +75,17 @@ public class TrainingDatasetFeature implements Serializable {
     this.type = type;
     this.index = index;
     this.label = label;
+    this.transformationFunction = transformationFunction;
   }
 
   public TrainingDatasetFeature(TrainingDataset trainingDataset, String name, String type, Integer index,
-                                boolean label) {
+                                boolean label, TransformationFunction transformationFunction) {
     this.trainingDataset = trainingDataset;
     this.name = name;
     this.type = type;
     this.index = index;
     this.label = label;
+    this.transformationFunction = transformationFunction;
   }
 
   public static long getSerialVersionUID() {
@@ -148,6 +154,15 @@ public class TrainingDatasetFeature implements Serializable {
   
   public void setLabel(boolean label) {
     this.label = label;
+  }
+
+  public TransformationFunction getTransformationFunction() {
+    return transformationFunction;
+  }
+
+  public void setTransformationFunction(
+      TransformationFunction transformationFunction) {
+    this.transformationFunction = transformationFunction;
   }
 
   @Override

@@ -93,4 +93,8 @@ public class FeaturestoreConstants {
   public static final int ONLINE_FEATURESTORE_USERNAME_MAX_LENGTH = 32;
   public static final int ONLINE_FEATURESTORE_PW_LENGTH = 32;
   public static final String FEATURESTORE_HIVE_DB_SUFFIX = "_featurestore";
+  public static final List<String> TRANSFORMATION_FUNCTION_OUTPUT_TYPES = Arrays.asList(new String[]{
+      "StringType()", "BinaryType()", "ByteType()", "ShortType()", "IntegerType()", "LongType()", "FloatType()",
+      "DoubleType()", "TimestampType()", "DateType()", "BooleanType()"
+  });
 }
