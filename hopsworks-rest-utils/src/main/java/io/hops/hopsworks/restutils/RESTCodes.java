@@ -193,7 +193,8 @@ public class RESTCodes {
       Response.Status.NOT_FOUND),
     ALERT_NOT_FOUND(78, "Alert not found", Response.Status.NOT_FOUND),
     ALERT_ILLEGAL_ARGUMENT(79, "Alert missing argument.", Response.Status.BAD_REQUEST),
-    ALERT_ALREADY_EXISTS(80, "Alert with the same status already exists.", Response.Status.BAD_REQUEST);
+    ALERT_ALREADY_EXISTS(80, "Alert with the same status already exists.", Response.Status.BAD_REQUEST),
+    FAILED_TO_ADD_MEMBER(81, "Failed to add member.", Response.Status.BAD_REQUEST);
 
 
 
@@ -946,7 +947,8 @@ public class RESTCodes {
     ROLE_NOT_FOUND(53, "Role not found", Response.Status.BAD_REQUEST),
     ACCOUNT_DELETION_ERROR(54, "Failed to delete account.", Response.Status.BAD_REQUEST),
     USER_NAME_NOT_SET(55, "User name not set.", Response.Status.BAD_REQUEST),
-    SECRET_DELETION_FAILED(56, "Failed to delete secret.", Response.Status.BAD_REQUEST);
+    SECRET_DELETION_FAILED(56, "Failed to delete secret.", Response.Status.BAD_REQUEST),
+    USER_SEARCH_NOT_ALLOWED(57, "Search not allowed.", Response.Status.BAD_REQUEST);
 
     private Integer code;
     private String message;
