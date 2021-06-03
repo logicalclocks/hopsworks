@@ -243,6 +243,8 @@ public class Settings implements Serializable {
   private static final String VARIABLE_TENSORFLOW_VERSION = "tensorflow_version";
   private static final String VARIABLE_HOPSWORKS_VERSION = "hopsworks_version";
   private final static String VARIABLE_LIVY_STARTUP_TIMEOUT = "livy_startup_timeout";
+  
+  private final static String VARIABLE_USER_SEARCH = "enable_user_search";
 
   //Used by RESTException to include devMsg or not in response
   private static final String VARIABLE_HOPSWORKS_REST_LOG_LEVEL = "hopsworks_rest_log_level";
@@ -777,6 +779,8 @@ public class Settings implements Serializable {
       SPARK_EXECUTOR_MIN_MEMORY = setIntVar(VARIABLE_SPARK_EXECUTOR_MIN_MEMORY, SPARK_EXECUTOR_MIN_MEMORY);
       
       LIVY_STARTUP_TIMEOUT = setIntVar(VARIABLE_LIVY_STARTUP_TIMEOUT, LIVY_STARTUP_TIMEOUT);
+  
+      USER_SEARCH_ENABLED = setBoolVar(VARIABLE_USER_SEARCH, USER_SEARCH_ENABLED);
       
       cached = true;
     }
@@ -3904,5 +3908,11 @@ public class Settings implements Serializable {
   public synchronized int getLivyStartupTimeout() {
     checkCache();
     return LIVY_STARTUP_TIMEOUT;
+  }
+  
+  private boolean USER_SEARCH_ENABLED = true;
+  public synchronized boolean isUserSearchEnabled() {
+    checkCache();
+    return USER_SEARCH_ENABLED;
   }
 }

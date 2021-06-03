@@ -539,32 +539,28 @@ describe "On #{ENV['OS']}" do
         end
         it "should not add non-existing user" do
           post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/projectMembers", {projectTeam: [{projectTeamPK: {projectId: @project[:id],teamMember: "none_existing_user@email.com"},teamRole: "Data scientist"}]}
-          expect_json(successMessage: " No member added.")
-          expect_status(200)
-          field_errors = json_body[:fieldErrors]
+          expect_status(400)
+          field_errors = json_body[:usrMsg]
           expect(field_errors).to include("none_existing_user@email.com was not found in the system.")
         end
         it "should exclude non-existing user but add existing one" do
           new_member = create_user[:email]
           post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/projectMembers", {projectTeam: [{projectTeamPK: {projectId: @project[:id],teamMember: "none_existing_user@email.com"},teamRole: "Data scientist"},{projectTeamPK: {projectId: @project[:id],teamMember: new_member},teamRole: "Data scientist"}]}
-          expect_json(successMessage: "One member added successfully")
-          expect_status(200)
-          field_errors = json_body[:fieldErrors]
+          expect_status(400)
+          field_errors = json_body[:usrMsg]
           expect(field_errors).to include("none_existing_user@email.com was not found in the system.")
         end
         it "should not add existing member" do
           post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/projectMembers", {projectTeam: [{projectTeamPK: {projectId: @project[:id], teamMember: "#{@project[:username]}"},teamRole: "Data scientist"}]}
-          expect_json(successMessage: " No member added.")
-          expect_status(200)
-          field_errors = json_body[:fieldErrors]
+          expect_status(400)
+          field_errors = json_body[:usrMsg]
           expect(field_errors).to include("#{@project[:username]} is already a member in this project.")
         end
         it "should not add existing member but add non-existing one" do
           new_member = create_user[:email]
           post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/projectMembers", {projectTeam: [{projectTeamPK: {projectId: @project[:id], teamMember: "#{@project[:username]}"},teamRole: "Data scientist"},{projectTeamPK: {projectId: @project[:id],teamMember: new_member},teamRole: "Data scientist"}]}
-          expect_json(successMessage: "One member added successfully")
-          expect_status(200)
-          field_errors = json_body[:fieldErrors]
+          expect_status(400)
+          field_errors = json_body[:usrMsg]
           expect(field_errors).to include("#{@project[:username]} is already a member in this project.")
         end
         it "should allow a new member with sufficient privilege (Data owner) to add a member" do
