@@ -899,7 +899,10 @@ public class Settings implements Serializable {
   public static final String SPARK_DRIVER_EXTRACLASSPATH = "spark.driver.extraClassPath";
   public static final String SPARK_EXECUTOR_MEMORY_ENV = "spark.executor.memory";
   public static final String SPARK_EXECUTOR_CORES_ENV = "spark.executor.cores";
-  public static final String SPARK_EXECUTOR_GPUS_ENV = "spark.yarn.executor.resource.yarn.io/gpu.amount";
+  public static final String SPARK_EXECUTOR_GPU_AMOUNT = "spark.executor.resource.gpu.amount";
+  public static final String SPARK_TASK_RESOURCE_GPU_AMOUNT = "spark.task.resource.gpu.amount";
+  public static final String SPARK_EXECUTOR_RESOURCE_GPU_DISCOVERY_SCRIPT =
+    "spark.executor.resource.gpu.discoveryScript";
   public static final String SPARK_EXECUTOR_EXTRACLASSPATH = "spark.executor.extraClassPath";
   public static final String SPARK_DRIVER_STAGINGDIR_ENV = "spark.yarn.stagingDir";
   public static final String SPARK_JAVA_LIBRARY_PROP = "java.library.path";
