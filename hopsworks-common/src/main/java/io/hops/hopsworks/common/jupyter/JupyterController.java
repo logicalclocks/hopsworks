@@ -350,6 +350,7 @@ public class JupyterController {
     try {
       JupyterSettings jupyterSettings = jupyterSettingsFacade.findByProjectUser(project, user.getEmail());
       //If Jupyter was started with a git backend, do not attach the xattribute
+      //When we have support git Datasets remove this if statement
       if(jupyterSettings.isGitBackend()) {
         return;
       }
