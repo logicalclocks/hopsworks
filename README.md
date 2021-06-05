@@ -81,7 +81,7 @@ Hopsworks REST API is documented with Swagger and hosted by SwaggerHub.
 - **hopsworks-ca** - [https://app.swaggerhub.com/apis-docs/logicalclocks/hopsworks-ca](https://app.swaggerhub.com/apis-docs/logicalclocks/hopsworks-ca)
 
 To build and deploy swagger on your own Hopsworks instance you can follow the instructions found in 
-[this](https://hopsworks.readthedocs.io/en/latest/developer_guide/guide/microservices.html#swagger-ui) guide.
+[this](https://hopsworks.readthedocs.io/en/stable/user_guide/hopsworks/microservices.html?highlight=swagger#swagger-ui) guide.
 
 
 <a name="who"></a>
