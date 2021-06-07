@@ -46,9 +46,9 @@
   <div class="row">
     <div class="col-md-5" style="max-width: 400px">
       <input type="text"
-             id="srch-term"
+             id="member-search-term"
              ng-model="searchInput"
-             name="srch-term"
+             name="member-search-term"
              placeholder="Find member..."
              style="height: 28px;margin-top: 0px;height:38px;"
              class="form-control" autofocus>
@@ -73,7 +73,7 @@
         <ui-select multiple tagging="tagTransform" ng-model="memberCtrl.selectedUsers" theme="bootstrap" title="Choose a user">
           <ui-select-match placeholder="Select user...">{{$item.firstname}} {{$item.lastname}}</ui-select-match>
           <ui-select-choices
-            refresh="memberCtrl.fetchAsync($select.search)"
+            refresh="memberCtrl.fetchAsync($select)"
             refresh-delay="600"
             repeat="user in memberCtrl.users">
             <div>

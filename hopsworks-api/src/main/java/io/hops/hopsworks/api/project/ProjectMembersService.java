@@ -162,19 +162,21 @@ public class ProjectMembersService {
       json.setSuccessMessage(ResponseMessages.PROJECT_MEMBER_ADDED);
     }
 
-    if (failedMembers != null) {
-      json.setFieldErrors(failedMembers);
-      if (members.getProjectTeam().size() > failedMembers.size() + 1) {
-        json.setSuccessMessage(ResponseMessages.PROJECT_MEMBERS_ADDED);
-      } else if (members.getProjectTeam().size() > failedMembers.size()) {
-        json.setSuccessMessage(ResponseMessages.PROJECT_MEMBER_ADDED);
+    if (failedMembers != null && !failedMembers.isEmpty()) {
+      String msg;
+      if (members.getProjectTeam().size() == 1) {
+        msg = "Failed to add a member. " + failedMembers.get(0);
+      } else if (members.getProjectTeam().size() == failedMembers.size()) {
+        msg = "Failed to add all members. " + String.join(" ", failedMembers);
+      } else if (failedMembers.size() == 1) {
+        msg = "Failed to add a member. " + failedMembers.get(0);
       } else {
-        json.setSuccessMessage(ResponseMessages.NO_MEMBER_ADD);
+        msg = "Failed to add some members. " + String.join(" ", failedMembers);
       }
+      throw new ProjectException(RESTCodes.ProjectErrorCode.FAILED_TO_ADD_MEMBER, Level.FINE, msg);
     }
 
-    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
-        json).build();
+    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(json).build();
   }
 
   @POST

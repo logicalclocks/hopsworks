@@ -188,7 +188,8 @@ public class RESTCodes {
         Response.Status.BAD_REQUEST),
     PROJECT_DOCKER_VERSION_EXTRACT_ERROR(76,
         "Failed to extract the hopsworks version of the docker image for this project.",
-        Response.Status.INTERNAL_SERVER_ERROR);
+        Response.Status.INTERNAL_SERVER_ERROR),
+    FAILED_TO_ADD_MEMBER(77, "Failed to add member.", Response.Status.BAD_REQUEST);
 
 
 
@@ -938,7 +939,8 @@ public class RESTCodes {
     ROLE_NOT_FOUND(53, "Role not found", Response.Status.BAD_REQUEST),
     ACCOUNT_DELETION_ERROR(54, "Failed to delete account.", Response.Status.BAD_REQUEST),
     USER_NAME_NOT_SET(55, "User name not set.", Response.Status.BAD_REQUEST),
-    SECRET_DELETION_FAILED(56, "Failed to delete secret.", Response.Status.BAD_REQUEST);
+    SECRET_DELETION_FAILED(56, "Failed to delete secret.", Response.Status.BAD_REQUEST),
+    USER_SEARCH_NOT_ALLOWED(57, "Search not allowed.", Response.Status.BAD_REQUEST);
 
     private Integer code;
     private String message;

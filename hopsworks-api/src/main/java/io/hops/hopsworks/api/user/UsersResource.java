@@ -53,6 +53,7 @@ import io.hops.hopsworks.common.dao.user.security.secrets.SecretPlaintext;
 import io.hops.hopsworks.common.project.ProjectController;
 import io.hops.hopsworks.common.security.secrets.SecretsController;
 import io.hops.hopsworks.common.user.UsersController;
+import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.ProjectException;
 import io.hops.hopsworks.exceptions.ServiceException;
 import io.hops.hopsworks.exceptions.UserException;
@@ -124,13 +125,17 @@ public class UsersResource {
   private SecretsController secretsController;
   @EJB
   private SecretsBuilder secretsBuilder;
+  @EJB
+  private Settings settings;
 
   @GET
   @Produces(MediaType.APPLICATION_JSON)
   @ApiOperation(value = "Get all users.", response = UserDTO.class)
-  public Response findAll(@BeanParam Pagination pagination,
-      @BeanParam UsersBeanParam usersBeanParam,
-      @Context UriInfo uriInfo, @Context SecurityContext sc) {
+  public Response findAll(@BeanParam Pagination pagination, @BeanParam UsersBeanParam usersBeanParam,
+      @Context UriInfo uriInfo, @Context SecurityContext sc) throws UserException {
+    if (!settings.isUserSearchEnabled()) {
+      throw new UserException(RESTCodes.UserErrorCode.USER_SEARCH_NOT_ALLOWED, Level.FINE);
+    }
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.USERS);
     resourceRequest.setOffset(pagination.getOffset());
     resourceRequest.setLimit(pagination.getLimit());
