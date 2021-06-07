@@ -119,18 +119,35 @@ public class SparkConfigurationUtil extends ConfigurationUtil {
     sparkProps.put(Settings.SPARK_SUBMIT_DEPLOYMODE, new ConfigProperty(Settings.SPARK_SUBMIT_DEPLOYMODE,
       HopsUtils.OVERWRITE,"cluster"));
 
-    if(experimentType != null) {
-      if(sparkJobConfiguration.getExecutorGpus() == 0) {
-        addToSparkEnvironment(sparkProps, "HIP_VISIBLE_DEVICES", "-1", HopsUtils.IGNORE);
-        addToSparkEnvironment(sparkProps, "CUDA_VISIBLE_DEVICES", "", HopsUtils.IGNORE);
-      } else if (sparkJobConfiguration.getExecutorGpus() > 0) {
-        sparkProps.put(Settings.SPARK_EXECUTOR_GPUS_ENV,
-          new ConfigProperty(
-            Settings.SPARK_EXECUTOR_GPUS_ENV,
-            HopsUtils.OVERWRITE,
-            Integer.toString(sparkJobConfiguration.getExecutorGpus())));
-      }
+    if(sparkJobConfiguration.getExecutorGpus() == 0) {
+      addToSparkEnvironment(sparkProps, "HIP_VISIBLE_DEVICES", "-1", HopsUtils.IGNORE);
+      addToSparkEnvironment(sparkProps, "CUDA_VISIBLE_DEVICES", "", HopsUtils.IGNORE);
+      sparkProps.put(Settings.SPARK_EXECUTOR_GPU_AMOUNT,
+        new ConfigProperty(
+          Settings.SPARK_EXECUTOR_GPU_AMOUNT,
+          HopsUtils.IGNORE,
+          Integer.toString(0)));
+    } else if (experimentType != null && sparkJobConfiguration.getExecutorGpus() > 0) {
+      //Number of GPU allocated for each executor
+      sparkProps.put(Settings.SPARK_EXECUTOR_GPU_AMOUNT,
+        new ConfigProperty(
+          Settings.SPARK_EXECUTOR_GPU_AMOUNT,
+          HopsUtils.IGNORE,
+          Integer.toString(sparkJobConfiguration.getExecutorGpus())));
+      //Spark tasks should not share GPUs so we set it to the number of GPUs allocated for each executor
+      sparkProps.put(Settings.SPARK_TASK_RESOURCE_GPU_AMOUNT,
+        new ConfigProperty(
+          Settings.SPARK_TASK_RESOURCE_GPU_AMOUNT,
+          HopsUtils.OVERWRITE,
+          Integer.toString(sparkJobConfiguration.getExecutorGpus())));
+      //Script needed to find all the GPUs that the Executor has access to
+      sparkProps.put(Settings.SPARK_EXECUTOR_RESOURCE_GPU_DISCOVERY_SCRIPT,
+        new ConfigProperty(
+          Settings.SPARK_EXECUTOR_RESOURCE_GPU_DISCOVERY_SCRIPT,
+          HopsUtils.IGNORE,
+          settings.getSparkDir() + "/bin/getGpusResources.sh"));
     }
+
 
     addToSparkEnvironment(sparkProps, "SPARK_HOME", settings.getSparkDir(), HopsUtils.IGNORE);
     addToSparkEnvironment(sparkProps, "SPARK_CONF_DIR", settings.getSparkConfDir(), HopsUtils.IGNORE);
@@ -166,8 +183,7 @@ public class SparkConfigurationUtil extends ConfigurationUtil {
     addToSparkEnvironment(sparkProps, "DOMAIN_CA_TRUSTSTORE", Settings.DOMAIN_CA_TRUSTSTORE, HopsUtils.IGNORE);
     addToSparkEnvironment(sparkProps, "SERVICE_DISCOVERY_DOMAIN", settings.getServiceDiscoveryDomain(),
         HopsUtils.IGNORE);
-    addToSparkEnvironment(sparkProps, "NUM_TF_PS", Integer.toString(sparkJobConfiguration.getNumPs()),
-      HopsUtils.IGNORE);
+
     addLibHdfsOpts(userSparkProperties, settings, sparkProps, sparkJobConfiguration);
   
     //If DynamicExecutors are not enabled, set the user defined number
@@ -224,6 +240,8 @@ public class SparkConfigurationUtil extends ConfigurationUtil {
               HopsUtils.OVERWRITE,
               String.valueOf(sparkJobConfiguration.getDynamicAllocationMaxExecutors())
               + sparkJobConfiguration.getNumPs()));
+          addToSparkEnvironment(sparkProps, "NUM_TF_PS", Integer.toString(sparkJobConfiguration.getNumPs()),
+            HopsUtils.IGNORE);
         }
         //These values were set based on:
         //https://docs.nvidia.com/deeplearning/nccl/archives/nccl_256/nccl-developer-guide/docs/env.html
