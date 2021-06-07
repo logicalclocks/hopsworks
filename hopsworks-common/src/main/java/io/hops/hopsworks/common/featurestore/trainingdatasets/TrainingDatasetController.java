@@ -202,12 +202,12 @@ public class TrainingDatasetController {
     Map<Integer, String> fsLookupTable = getFsLookupTableFeatures(tdFeatures);
     trainingDatasetDTO.setFeatures(tdFeatures
         .stream()
-        .map(f -> new TrainingDatasetFeatureDTO(f.getName(), f.getType(),
+        .map(f -> new TrainingDatasetFeatureDTO(checkPrefix(f), f.getType(),
             f.getFeatureGroup() != null ?
                 new FeaturegroupDTO(f.getFeatureGroup().getFeaturestore().getId(),
                     fsLookupTable.get(f.getFeatureGroup().getFeaturestore().getId()),
-                    f.getFeatureGroup().getId(),
-                    f.getFeatureGroup().getName(), f.getFeatureGroup().getVersion(),
+                    f.getFeatureGroup().getId(), f.getFeatureGroup().getName(),
+                    f.getFeatureGroup().getVersion(),
                     onlineFeaturegroupController.onlineFeatureGroupTopicName(project.getId(),
                         f.getFeatureGroup().getId(), Utils.getFeaturegroupName(f.getFeatureGroup())))
                 : null,
@@ -398,7 +398,7 @@ public class TrainingDatasetController {
     Map<Integer, List<Feature>> availableFeatureLookup = new HashMap<>();
 
     constructorController.populateFgLookupTables(queryDTO, 0, fgAliasLookup, fgLookup, availableFeatureLookup,
-        project, user);
+        project, user, null);
     return constructorController.convertQueryDTO(queryDTO, fgAliasLookup, fgLookup, availableFeatureLookup);
   }
 
@@ -450,9 +450,9 @@ public class TrainingDatasetController {
     if (query.getFeaturegroup().getFeaturegroupType() == FeaturegroupType.CACHED_FEATURE_GROUP &&
         query.getFeaturegroup().getCachedFeaturegroup().getTimeTravelFormat() == TimeTravelFormat.HUDI){
       joins.add(new TrainingDatasetJoin(trainingDataset, query.getFeaturegroup(),
-          query.getLeftFeatureGroupEndCommitId() , (short) 0, index++));
+          query.getLeftFeatureGroupEndCommitId() , (short) 0, index++, null));
     } else {
-      joins.add(new TrainingDatasetJoin(trainingDataset, query.getFeaturegroup(), (short) 0, index++));
+      joins.add(new TrainingDatasetJoin(trainingDataset, query.getFeaturegroup(), (short) 0, index++, null));
     }
 
     if (query.getJoins() != null && !query.getJoins().isEmpty()) {
@@ -463,12 +463,12 @@ public class TrainingDatasetController {
           tdJoin = new TrainingDatasetJoin(trainingDataset,
               join.getRightQuery().getFeaturegroup(), join.getRightQuery().getLeftFeatureGroupEndCommitId(),
               (short) join.getJoinType().ordinal(),
-              index++);
+              index++, join.getPrefix());
         } else {
           tdJoin = new TrainingDatasetJoin(trainingDataset,
               join.getRightQuery().getFeaturegroup(),
               (short) join.getJoinType().ordinal(),
-              index++);
+              index++, join.getPrefix());
         }
         tdJoin.setConditions(collectJoinConditions(join, tdJoin));
         joins.add(tdJoin);
@@ -794,6 +794,21 @@ public class TrainingDatasetController {
             " is missing and transformation function can't be attached");
       }
     }
+
+    //verify join prefix if any
+    if (query != null && query.getJoins() != null) {
+      for (Join join : query.getJoins()){
+        if (join.getPrefix() != null){
+          Pattern namePattern = FeaturestoreConstants.FEATURESTORE_REGEX;
+          if (!namePattern.matcher(join.getPrefix()).matches()) {
+            throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_PREFIX_NAME, Level.FINE,
+                ", the provided prefix name " + join.getPrefix() + " is invalid. Prefix names can only contain lower" +
+                    " case characters, numbers and underscores and cannot be longer than " +
+                    FeaturestoreConstants.FEATURESTORE_ENTITY_NAME_MAX_LENGTH + " characters or empty.");
+          }
+        }
+      }
+    }
   }
   
   /**
@@ -849,7 +864,7 @@ public class TrainingDatasetController {
         List<Feature> availableFeatures = featuregroupController.getFeatures(join.getFeatureGroup(), project, user)
           .stream()
           .map(f -> new Feature(f.getName(),
-            fgAliasLookup.get(join.getId()), f.getType(), f.getPrimary(), f.getDefaultValue()))
+            fgAliasLookup.get(join.getId()), f.getType(), f.getPrimary(), f.getDefaultValue(), join.getPrefix()))
           .collect(Collectors.toList());
         availableFeaturesLookup.put(join.getFeatureGroup().getId(), availableFeatures);
       }
@@ -862,7 +877,7 @@ public class TrainingDatasetController {
         .filter(af -> af.getName().equals(requestedFeature.getName()))
         // instantiate new feature since alias in available feature is not correct if fg is joined with itself
         .map(af -> new Feature(af.getName(), fgAliasLookup.get(requestedFeature.getTrainingDatasetJoin().getId()),
-          af.getType(), af.getDefaultValue()))
+          af.getType(), af.getDefaultValue(), af.getPrefix()))
         .findFirst()
         .orElseThrow(() -> new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.FEATURE_DOES_NOT_EXIST, Level.FINE,
           "Feature: " + requestedFeature.getName() + " not found in feature group: " +
@@ -934,7 +949,8 @@ public class TrainingDatasetController {
       List<FeatureGroupFeatureDTO> availableFeatures = featuregroupController.getFeatures(join.getFeatureGroup(),
           project, user);
       List<Feature> primaryKeys =  availableFeatures.stream().filter(FeatureGroupFeatureDTO::getPrimary)
-          .map(af -> new Feature(af.getName(), "fg0", af.getType(), af.getPrimary(), af.getDefaultValue()))
+          .map(af -> new Feature(af.getName(), "fg0", af.getType(), af.getPrimary(), af.getDefaultValue(),
+              join.getPrefix()))
           .collect(Collectors.toList());
       if (primaryKeys.size() == 0 ) {
         throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.PRIMARY_KEY_REQUIRED,
@@ -947,7 +963,8 @@ public class TrainingDatasetController {
           .filter(tdf -> tdf.getTrainingDatasetJoin().getId().equals(join.getId())).map(tdf -> tdf.getName())
           .collect(Collectors.toList());
       List<Feature> features =  availableFeatures.stream().filter(af -> tdFeaturesNames.contains(af.getName()))
-          .map(af -> new Feature(af.getName(), "fg0", af.getType(), af.getPrimary(), af.getDefaultValue()))
+          .map(af -> new Feature(af.getName(), "fg0", af.getType(), af.getPrimary(), af.getDefaultValue(),
+              join.getPrefix()))
           .collect(Collectors.toList());
 
       // In some cases only primary key(s) and label(s) are used from a feature group. In this case they will not be
@@ -1054,7 +1071,8 @@ public class TrainingDatasetController {
       .map(c -> new Feature(c.getRightFeature())).collect(Collectors.toList());
 
     JoinType joinType = JoinType.values()[rightTdJoin.getType()];
-    return constructorController.extractLeftRightOn(leftQuery, rightQuery, leftOn, rightOn, joinType);
+    return constructorController.extractLeftRightOn(leftQuery, rightQuery, leftOn, rightOn, joinType,
+        rightTdJoin.getPrefix());
   }
 
   private ServingPreparedStatementDTO buildServingPreparedStatementDTO(Integer preparedStatementIndex,
@@ -1104,5 +1122,13 @@ public class TrainingDatasetController {
                   featureDTO.getTransformationFunction().getId()));
     }
     return transformationFunction;
+  }
+
+  private String checkPrefix(TrainingDatasetFeature feature) {
+    if (feature.getTrainingDatasetJoin() != null && feature.getTrainingDatasetJoin().getPrefix() != null){
+      return feature.getTrainingDatasetJoin().getPrefix() + feature.getName();
+    } else {
+      return feature.getName();
+    }
   }
 }
