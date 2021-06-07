@@ -117,7 +117,7 @@ public class ConstructorController {
     Map<Integer, Featuregroup> fgLookup = new HashMap<>();
     Map<Integer, List<Feature>> availableFeatureLookup = new HashMap<>();
     
-    populateFgLookupTables(queryDTO, 0, fgAliasLookup, fgLookup, availableFeatureLookup, project, user);
+    populateFgLookupTables(queryDTO, 0, fgAliasLookup, fgLookup, availableFeatureLookup, project, user, null);
     
     Query query = convertQueryDTO(queryDTO, fgAliasLookup, fgLookup, availableFeatureLookup);
     // Generate SQL
@@ -176,13 +176,8 @@ public class ConstructorController {
       query.setLeftFeatureGroupEndTimestamp(endCommit.getCommittedOn());
       query.setLeftFeatureGroupEndCommitId(endCommit.getFeatureGroupCommitPK().getCommitId());
 
-      boolean noJoins = false;
-      if (queryDTO.getJoins() == null) {
-        noJoins = true;
-      } else if (queryDTO.getJoins().size() == 0){
-        noJoins = true;
-      }
-      if (noJoins && queryDTO.getLeftFeatureGroupStartTime() != null){
+      if ((queryDTO.getJoins() == null || queryDTO.getJoins().isEmpty())
+          && queryDTO.getLeftFeatureGroupStartTime() != null){
         Long exactStartCommitTimestamp = featureGroupCommitCommitController.findCommitByDate(
             query.getFeaturegroup(), queryDTO.getLeftFeatureGroupStartTime()).getCommittedOn();
         query.setLeftFeatureGroupStartTimestamp(exactStartCommitTimestamp);
@@ -208,14 +203,15 @@ public class ConstructorController {
   }
   
   public int populateFgLookupTables(QueryDTO queryDTO, int fgId, Map<Integer, String> fgAliasLookup,
-                                      Map<Integer, Featuregroup> fgLookup,
-                                      Map<Integer, List<Feature>> availableFeatureLookup, Project project, Users user)
+                                    Map<Integer, Featuregroup> fgLookup,
+                                    Map<Integer, List<Feature>> availableFeatureLookup, Project project,
+                                    Users user, String prefix)
       throws FeaturestoreException {
     // go into depth first
     if (queryDTO.getJoins() != null && !queryDTO.getJoins().isEmpty()) {
       for (JoinDTO join : queryDTO.getJoins()) {
         fgId = populateFgLookupTables(join.getQuery(), fgId, fgAliasLookup, fgLookup, availableFeatureLookup, project,
-          user);
+          user, join.getPrefix());
         fgId++;
       }
     }
@@ -230,7 +226,7 @@ public class ConstructorController {
       // it's easier and faster to return the training dataset schema if we store the type in the
       // training dataset features table.
       .map(f -> new Feature(
-        f.getName(), fgAliasLookup.get(fg.getId()), f.getType(), f.getPrimary(), f.getDefaultValue()))
+        f.getName(), fgAliasLookup.get(fg.getId()), f.getType(), f.getPrimary(), f.getDefaultValue(), prefix))
       .collect(Collectors.toList());
     availableFeatureLookup.put(fg.getId(), availableFeatures);
 
@@ -314,17 +310,17 @@ public class ConstructorController {
         List<Feature> rightOn =
           joinDTO.getOn().stream().map(f -> new Feature(f.getName())).collect(Collectors.toList());
 
-        joins.add(extractLeftRightOn(leftQuery, rightQuery, leftOn, rightOn, joinDTO.getType()));
+        joins.add(extractLeftRightOn(leftQuery, rightQuery, leftOn, rightOn, joinDTO.getType(), joinDTO.getPrefix()));
       } else if (joinDTO.getLeftOn() != null && !joinDTO.getLeftOn().isEmpty()) {
         List<Feature> leftOn = joinDTO.getLeftOn().stream()
             .map(f -> new Feature(f.getName())).collect(Collectors.toList());
         List<Feature> rightOn = joinDTO.getRightOn().stream()
             .map(f -> new Feature(f.getName())).collect(Collectors.toList());
 
-        joins.add(extractLeftRightOn(leftQuery, rightQuery, leftOn, rightOn, joinDTO.getType()));
+        joins.add(extractLeftRightOn(leftQuery, rightQuery, leftOn, rightOn, joinDTO.getType(), joinDTO.getPrefix()));
       } else {
         // Only if right feature group is present, extract the primary keys for the join
-        joins.add(extractPrimaryKeysJoin(leftQuery, rightQuery, joinDTO.getType()));
+        joins.add(extractPrimaryKeysJoin(leftQuery, rightQuery, joinDTO.getType(), joinDTO.getPrefix()));
       }
     }
 
@@ -343,7 +339,7 @@ public class ConstructorController {
    * @return
    */
   public Join extractLeftRightOn(Query leftQuery, Query rightQuery, List<Feature> leftOn, List<Feature> rightOn,
-                                    JoinType joinType)
+                                    JoinType joinType, String prefix)
       throws FeaturestoreException {
     // Make sure that they 2 list have the same length
     if (leftOn.size() != rightOn.size()) {
@@ -360,7 +356,7 @@ public class ConstructorController {
       checkFeatureExistsAndSetAttributes(rightQuery, feature);
     }
 
-    return new Join(leftQuery, rightQuery, leftOn, rightOn, joinType);
+    return new Join(leftQuery, rightQuery, leftOn, rightOn, joinType, prefix);
   }
 
   /**
@@ -371,7 +367,7 @@ public class ConstructorController {
    * @param joinType
    * @return
    */
-  protected Join extractPrimaryKeysJoin(Query leftQuery, Query rightQuery, JoinType joinType)
+  protected Join extractPrimaryKeysJoin(Query leftQuery, Query rightQuery, JoinType joinType, String prefix)
       throws FeaturestoreException {
     // Find subset of matching primary keys (same name) to be used as join condition
     List<Feature> joinFeatures = new ArrayList<>();
@@ -386,7 +382,7 @@ public class ConstructorController {
           leftQuery.getFeaturegroup().getName() + " and: " + rightQuery.getFeaturegroup().getName());
     }
 
-    return new Join(leftQuery, rightQuery, joinFeatures, joinType);
+    return new Join(leftQuery, rightQuery, joinFeatures, joinType, prefix);
   }
 
   private void checkFeatureExistsAndSetAttributes(Query query, Feature feature) throws FeaturestoreException {
@@ -449,8 +445,7 @@ public class ConstructorController {
       // Build the select part. List of features selected by the user. Each feature will be fg_alias.fg_name
       // we should use the ` to avoid syntax errors on reserved keywords used as feature names (e.g. date)
       if (f.getDefaultValue() == null || online) {
-        selectList.add(new SqlIdentifier(Arrays.asList("`" + f.getFgAlias() + "`", "`" + f.getName() + "`"),
-          SqlParserPos.ZERO));
+        selectList.add(getWithOrWithoutPrefix(f));
       } else {
         selectList.add(selectWithDefaultAs(f));
       }
@@ -537,6 +532,16 @@ public class ConstructorController {
     if (query.getJoins() != null) {
       for (Join join : query.getJoins()) {
         if (join.getRightQuery() != null && join.getRightQuery().getFeatures() != null) {
+          // add prefix
+          if (join.getPrefix() != null){
+            List<Feature> featuresWithPrefix = new ArrayList<>();
+            for (Feature f: join.getRightQuery().getFeatures()){
+              f.setPrefix(join.getPrefix());
+              featuresWithPrefix.add(f);
+            }
+            join.getRightQuery().setFeatures(featuresWithPrefix);
+          }
+
           features.addAll(collectFeatures(join.getRightQuery()));
         }
       }
@@ -738,5 +743,17 @@ public class ConstructorController {
     }
 
     return aliases;
+  }
+
+  private SqlNode getWithOrWithoutPrefix(Feature feature){
+    if (feature.getPrefix()!=null){
+      return SqlStdOperatorTable.AS.createCall(SqlParserPos.ZERO,
+          new SqlIdentifier(Arrays.asList("`" + feature.getFgAlias() + "`", "`" + feature.getName() + "`"),
+              SqlParserPos.ZERO),
+          new SqlIdentifier("`" +  feature.getPrefix() + feature.getName() + "`", SqlParserPos.ZERO));
+    } else {
+      return new SqlIdentifier(Arrays.asList("`" + feature.getFgAlias() + "`", "`" + feature.getName() + "`"),
+          SqlParserPos.ZERO);
+    }
   }
 }

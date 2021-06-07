@@ -1547,11 +1547,12 @@ describe "On #{ENV['OS']}" do
           # create first feature group
           featurestore_id = get_featurestore_id(@project.id)
           project_name = @project.projectname
+
           features = [
               {type: "INT", name: "a_testfeature", primary: true},
               {type: "INT", name: "a_testfeature1"},
           ]
-          json_result, fg_name = create_cached_featuregroup(@project.id, featurestore_id, features: features, featuregroup_name: "test_fg_a_#{short_random_id}", online:true)
+          json_result, fg_name_a = create_cached_featuregroup(@project.id, featurestore_id, features: features, featuregroup_name: "test_fg_a_#{short_random_id}", online:true)
           parsed_json = JSON.parse(json_result)
           fg_id = parsed_json["id"]
           # create second feature group
@@ -1694,6 +1695,79 @@ describe "On #{ENV['OS']}" do
           feature_transformation = parsed_json["items"].second["transformationFunction"]
           expect(feature_transformation["name"]).to eql("plus_one")
           expect(feature_transformation["outputType"]).to eql("FloatType()")
+        end
+
+        it "should be able to create training dataset with prefixed join" do
+          # create first feature group
+          featurestore_id = get_featurestore_id(@project.id)
+          project_name = @project.projectname
+          features = [
+              {type: "INT", name: "a_testfeature", primary: true},
+              {type: "INT", name: "a_testfeature1"},
+          ]
+          json_result, fg_name_a = create_cached_featuregroup(@project.id, featurestore_id, features: features, featuregroup_name: "test_fg_a_#{short_random_id}", online:true)
+          parsed_json = JSON.parse(json_result)
+          fg_id = parsed_json["id"]
+          # create second feature group
+          features = [
+              {type: "INT", name: "a_testfeature", primary: true},
+              {type: "INT", name: "b_testfeature1"},
+          ]
+          json_result_b, fg_name_b = create_cached_featuregroup(@project.id, featurestore_id, features: features, featuregroup_name: "test_fg_b_#{short_random_id}", online:true)
+          parsed_json_b = JSON.parse(json_result_b)
+          fg_id_b = parsed_json_b["id"]
+
+          # create third feature group
+          features = [
+              {type: "INT", name: "a_testfeature", primary: true},
+              {type: "INT", name: "c_testfeature1",label: true},
+          ]
+          json_result_c, fg_name_c = create_cached_featuregroup(@project.id, featurestore_id, features: features, featuregroup_name: "test_fg_c_#{short_random_id}", online:true)
+          parsed_json_c = JSON.parse(json_result_c)
+          fg_id_c = parsed_json_c["id"]
+          # create queryDTO object
+          query = {
+              leftFeatureGroup: {
+                  id: fg_id
+              },
+              leftFeatures: [{name: 'a_testfeature1'}],
+              joins: [{
+                          query: {
+                              leftFeatureGroup: {
+                                  id: fg_id_c
+                              },
+                              leftFeatures: [{name: 'c_testfeature1'}]
+                          },
+                          prefix: "prefix_c_"
+                      },
+                      {
+                          query: {
+                              leftFeatureGroup: {
+                                  id: fg_id_b
+                              },
+                              leftFeatures: [{name: 'b_testfeature1'}]
+                          },
+                          prefix: "prefix_b_"
+                      }
+              ]
+          }
+
+          td_schema = [
+              {type: "INT", name: "a_testfeature1", label: false},
+              {type: "INT", name: "b_testfeature1", label: false},
+              {type: "INT", name: "c_testfeature1", label: true}
+          ]
+
+          json_result, _ = create_hopsfs_training_dataset(@project.id, featurestore_id, nil, query: query, features: td_schema)
+          parsed_json = JSON.parse(json_result)
+          expect_status_details(201)
+          training_dataset_id = parsed_json["id"]
+          json_result = get "#{ENV['HOPSWORKS_API']}/project/#{@project.id}/featurestores/#{featurestore_id}/trainingdatasets/#{training_dataset_id}/query"
+          expect_status_details(200)
+          query = JSON.parse(json_result)
+
+          expect(query['query']).to eql("SELECT `fg0`.`a_testfeature1`, `fg1`.`c_testfeature1` `prefix_c_c_testfeature1`, `fg2`.`b_testfeature1` `prefix_b_b_testfeature1`\nFROM `#{project_name.downcase}_featurestore`.`#{fg_name_a}_1` `fg0`\nINNER JOIN `#{project_name.downcase}_featurestore`.`#{fg_name_c}_1` `fg1` ON `fg0`.`a_testfeature` = `fg1`.`a_testfeature`\nINNER JOIN `#{project_name.downcase}_featurestore`.`#{fg_name_b}_1` `fg2` ON `fg0`.`a_testfeature` = `fg2`.`a_testfeature`")
+          expect(query['queryOnline']).to eql("SELECT `fg0`.`a_testfeature1`, `fg1`.`c_testfeature1` `prefix_c_c_testfeature1`, `fg2`.`b_testfeature1` `prefix_b_b_testfeature1`\nFROM `#{project_name.downcase}`.`#{fg_name_a}_1` `fg0`\nINNER JOIN `#{project_name.downcase}`.`#{fg_name_c}_1` `fg1` ON `fg0`.`a_testfeature` = `fg1`.`a_testfeature`\nINNER JOIN `#{project_name.downcase}`.`#{fg_name_b}_1` `fg2` ON `fg0`.`a_testfeature` = `fg2`.`a_testfeature`")
         end
       end
     end

@@ -98,20 +98,20 @@ public class TestFilterController {
     fgLookup.put(fg3.getId(), fg3);
   
     fg1Features = new ArrayList<>();
-    fg1Features.add(new Feature("fg1_pk", "fg1", "string",true, null));
-    fg1Features.add(new Feature("fg1_ft", "fg1", "integer", false, null));
-    fg1Features.add(new Feature("join", "fg1", "string",true, null));
+    fg1Features.add(new Feature("fg1_pk", "fg1", "string",true, null, "prefix2_"));
+    fg1Features.add(new Feature("fg1_ft", "fg1", "integer", false, null, "prefix2_"));
+    fg1Features.add(new Feature("join", "fg1", "string",true, null, "prefix2_"));
   
     fg2Features = new ArrayList<>();
-    fg2Features.add(new Feature("fg2_pk", "fg2", "string", true, null));
-    fg2Features.add(new Feature("fg2_ft", "fg2", "double", false, "10.0"));
-    fg3Features.add(new Feature("join", "fg2", "string",true, null));
+    fg2Features.add(new Feature("fg2_pk", "fg2", "string", true, null, "prefix2_"));
+    fg2Features.add(new Feature("fg2_ft", "fg2", "double", false, "10.0", "prefix2_"));
+    fg3Features.add(new Feature("join", "fg2", "string",true, null, "prefix2_"));
   
     fg3Features = new ArrayList<>();
-    fg3Features.add(new Feature("fg3_pk", "fg3", "string", true, null));
-    fg3Features.add(new Feature("fg3_ft", "fg3", "string",false, "default"));
-    fg3Features.add(new Feature("join", "fg3", "string",true, null));
-  
+    fg3Features.add(new Feature("fg3_pk", "fg3", "string", true, null, "prefix3_"));
+    fg3Features.add(new Feature("fg3_ft", "fg3", "string",false, "default", "prefix3_"));
+    fg3Features.add(new Feature("join", "fg3", "string",true, null, "prefix3_"));
+
     joinFeatures = new ArrayList<>();
     joinFeatures.add(fg1Features.get(2));
     leftOn = new ArrayList<>();
@@ -407,7 +407,7 @@ public class TestFilterController {
     secondFilter.setLeftFilter(new Filter(fg2Features.get(1), SqlFilterCondition.NOT_EQUALS, "10"));
     secondQuery.setFilter(secondFilter);
   
-    Join join = new Join(leftQuery, secondQuery, joinFeatures, JoinType.INNER);
+    Join join = new Join(leftQuery, secondQuery, joinFeatures, JoinType.INNER, null);
     leftQuery.setJoins(Arrays.asList(join));
   
     String result =
@@ -438,8 +438,8 @@ public class TestFilterController {
     secondFilter.setLeftFilter(new Filter(fg2Features.get(1), SqlFilterCondition.NOT_EQUALS, "10"));
     secondQuery.setFilter(secondFilter);
     
-    Join join = new Join(leftQuery, secondQuery, joinFeatures, JoinType.INNER);
-    Join secondJoin = new Join(leftQuery, thirdQuery, leftOn, rightOn, JoinType.INNER);
+    Join join = new Join(leftQuery, secondQuery, joinFeatures, JoinType.INNER, null);
+    Join secondJoin = new Join(leftQuery, thirdQuery, leftOn, rightOn, JoinType.INNER, null);
     leftQuery.setJoins(Arrays.asList(join, secondJoin));
     
     String result =
