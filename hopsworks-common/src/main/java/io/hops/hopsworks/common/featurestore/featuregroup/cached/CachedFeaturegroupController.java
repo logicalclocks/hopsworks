@@ -727,12 +727,12 @@ public class CachedFeaturegroupController {
     return features;
   }
 
-  private List<FeatureGroupFeatureDTO> dropHudiSpecFeatureGroupFeature(List<FeatureGroupFeatureDTO> features)  {
+  private List<FeatureGroupFeatureDTO> dropHudiSpecFeatureGroupFeature(List<FeatureGroupFeatureDTO> features) {
     return features.stream()
         .filter(feature -> !HUDI_SPEC_FEATURE_NAMES.contains(feature.getName())).collect(Collectors.toList());
   }
 
-  public List<Feature> dropHudiSpecFeatures(List<Feature> features)  {
+  public List<Feature> dropHudiSpecFeatures(List<Feature> features) {
     return features.stream()
         .filter(feature -> !HUDI_SPEC_FEATURE_NAMES.contains(feature.getName())).collect(Collectors.toList());
   }

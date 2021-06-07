@@ -51,6 +51,8 @@ public class TrainingDatasetJoin implements Serializable {
   @Basic(optional = false)
   @Column(name = "feature_group_commit_id")
   private Long featureGroupCommitId;
+  @Column(name = "prefix")
+  private String prefix;
   @JoinColumn(name = "training_dataset", referencedColumnName = "id")
   private TrainingDataset trainingDataset;
   @JoinColumn(name = "feature_group", referencedColumnName = "id")
@@ -65,20 +67,23 @@ public class TrainingDatasetJoin implements Serializable {
     this.id = id;
   }
 
-  public TrainingDatasetJoin(TrainingDataset trainingDataset, Featuregroup featureGroup, short type, int index) {
+  public TrainingDatasetJoin(TrainingDataset trainingDataset, Featuregroup featureGroup, short type, int index,
+                             String prefix) {
     this.trainingDataset = trainingDataset;
     this.featureGroup = featureGroup;
     this.type = type;
     this.index = index;
+    this.prefix = prefix;
   }
 
   public TrainingDatasetJoin(TrainingDataset trainingDataset, Featuregroup featureGroup, Long featureGroupCommitId,
-                             short type, int index) {
+                             short type, int index, String prefix) {
     this.trainingDataset = trainingDataset;
     this.featureGroup = featureGroup;
     this.featureGroupCommitId = featureGroupCommitId;
     this.type = type;
     this.index = index;
+    this.prefix = prefix;
   }
 
   public TrainingDatasetJoin(Featuregroup featureGroup, short type, int index,
@@ -127,6 +132,14 @@ public class TrainingDatasetJoin implements Serializable {
 
   public void setFeatureGroupCommitId(Long featureGroupCommitId) {
     this.featureGroupCommitId = featureGroupCommitId;
+  }
+
+  public String getPrefix() {
+    return prefix;
+  }
+
+  public void setPrefix(String prefix) {
+    this.prefix = prefix;
   }
 
   public Featuregroup getFeatureGroup() {

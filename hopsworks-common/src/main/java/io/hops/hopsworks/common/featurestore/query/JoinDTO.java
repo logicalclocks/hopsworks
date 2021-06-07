@@ -33,6 +33,8 @@ public class JoinDTO {
 
   private JoinType type = JoinType.INNER;
 
+  private String prefix;
+
   public JoinDTO() {
   }
 
@@ -88,5 +90,13 @@ public class JoinDTO {
 
   public void setType(JoinType type) {
     this.type = type;
+  }
+
+  public String getPrefix() {
+    return prefix;
+  }
+
+  public void setPrefix(String prefix) {
+    this.prefix = prefix;
   }
 }

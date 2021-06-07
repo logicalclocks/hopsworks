@@ -24,13 +24,15 @@ public class Feature {
   private String type;
   private boolean primary;
   private String defaultValue;
+  private String prefix;
 
-  public Feature(String name, String fgAlias, String type, boolean primary, String defaultValue) {
+  public Feature(String name, String fgAlias, String type, boolean primary, String defaultValue, String prefix) {
     this.name = name;
     this.fgAlias = fgAlias;
     this.type = type;
     this.primary = primary;
     this.defaultValue = defaultValue;
+    this.prefix = prefix;
   }
   
   public Feature(FeatureGroupFeatureDTO featureGroupFeatureDTO, String fgAlias) {
@@ -48,11 +50,12 @@ public class Feature {
     this.primary = primary;
   }
 
-  public Feature(String name, String fgAlias, String type, String defaultValue) {
+  public Feature(String name, String fgAlias, String type, String defaultValue, String prefix) {
     this.name = name;
     this.fgAlias = fgAlias;
     this.type = type;
     this.defaultValue = defaultValue;
+    this.prefix = prefix;
   }
 
   // For testing purposes only
@@ -103,5 +106,13 @@ public class Feature {
   
   public void setDefaultValue(String defaultValue) {
     this.defaultValue = defaultValue;
+  }
+
+  public String getPrefix() {
+    return prefix;
+  }
+
+  public void setPrefix(String prefix) {
+    this.prefix = prefix;
   }
 }

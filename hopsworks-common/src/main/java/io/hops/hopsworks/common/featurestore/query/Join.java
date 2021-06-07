@@ -29,23 +29,28 @@ public class Join {
   private List<Feature> rightOn;
   private JoinType joinType;
 
+  private String prefix;
+
   public Join(Query leftQuery) {
     this.leftQuery = leftQuery;
   }
 
-  public Join(Query leftQuery, Query rightQuery, List<Feature> on, JoinType joinType) {
+  public Join(Query leftQuery, Query rightQuery, List<Feature> on, JoinType joinType, String prefix) {
     this.leftQuery = leftQuery;
     this.rightQuery = rightQuery;
     this.on = on;
     this.joinType = joinType;
+    this.prefix = prefix;
   }
 
-  public Join(Query leftQuery, Query rightQuery, List<Feature> leftOn, List<Feature> rightOn, JoinType joinType) {
+  public Join(Query leftQuery, Query rightQuery, List<Feature> leftOn, List<Feature> rightOn, JoinType joinType,
+              String prefix) {
     this.leftQuery = leftQuery;
     this.rightQuery = rightQuery;
     this.leftOn = leftOn;
     this.rightOn = rightOn;
     this.joinType = joinType;
+    this.prefix = prefix;
   }
 
   public Query getLeftQuery() {
@@ -94,5 +99,13 @@ public class Join {
 
   public List<Feature> getRightOn() {
     return rightOn;
+  }
+
+  public String getPrefix() {
+    return prefix;
+  }
+
+  public void setPrefix(String prefix) {
+    this.prefix = prefix;
   }
 }

@@ -1569,7 +1569,8 @@ public class RESTCodes {
     ILLEGAL_TRANSFORMATION_FUNCTION_OUTPUT_TYPE(163, "Illegal transformation function output type",
         Response.Status.BAD_REQUEST),
     FEATURE_WITH_TRANSFORMATION_NOT_FOUND(164, "Could not find feature in training dataset schema",
-        Response.Status.NOT_FOUND);
+        Response.Status.NOT_FOUND),
+    ILLEGAL_PREFIX_NAME(165, "Illegal feature name", Response.Status.BAD_REQUEST);
 
     private int code;
     private String message;
