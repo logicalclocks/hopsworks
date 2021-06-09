@@ -348,9 +348,14 @@ public class JupyterController {
       throws ServiceException {
     DistributedFileSystemOps udfso = null;
     try {
+      JupyterSettings jupyterSettings = jupyterSettingsFacade.findByProjectUser(project, user.getEmail());
+      //If Jupyter was started with a git backend, do not attach the xattribute
+      //When we have support git Datasets remove this if statement
+      if(jupyterSettings.isGitBackend()) {
+        return;
+      }
       udfso = dfs.getDfsOps(hdfsUsername);
       String relativeNotebookPath = getNotebookRelativeFilePath(hdfsUsername, kernelId, udfso);
-      JupyterSettings jupyterSettings = jupyterSettingsFacade.findByProjectUser(project, user.getEmail());
       ObjectMapper objectMapper = new ObjectMapper();
       objectMapper.registerModule(new JaxbAnnotationModule());
       JSONObject jupyterSettingsMetadataObj = new JSONObject();
