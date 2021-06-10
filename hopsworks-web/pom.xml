@@ -156,7 +156,7 @@
         <activeByDefault>false</activeByDefault>
       </activation> 
       <properties>
-        <swagger-ui-version>3.18.3</swagger-ui-version>
+        <swagger-ui-version>3.50.0</swagger-ui-version>
       </properties>
       <build>
         <plugins>
@@ -172,9 +172,9 @@
                   <goal>wget</goal>
                 </goals>
                 <configuration>
-                  <url>http://snurran.sics.se/hops/swagger-ui-${swagger-ui-version}.tar.gz</url>
+                  <url>https://repo.hops.works/master/swagger-ui-${swagger-ui-version}.tar.gz</url>
                   <unpack>true</unpack>
-                  <outputDirectory>${project.build.directory}</outputDirectory>
+                  <outputDirectory>${project.build.directory}/swagger-ui-${swagger-ui-version}</outputDirectory>
                 </configuration>
               </execution>
             </executions>
