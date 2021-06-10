@@ -17,12 +17,15 @@ package io.hops.hopsworks.rest.application.config;
 
 import io.swagger.jaxrs.config.SwaggerContextService;
 import io.swagger.models.Scheme;
+import io.swagger.models.SecurityRequirement;
 import io.swagger.models.Swagger;
 import io.swagger.models.auth.ApiKeyAuthDefinition;
 import io.swagger.models.auth.In;
 
 import javax.servlet.http.HttpServlet;
 import javax.servlet.ServletConfig;
+import java.util.ArrayList;
+import java.util.List;
 
 public class Bootstrap extends HttpServlet {
 
@@ -31,8 +34,14 @@ public class Bootstrap extends HttpServlet {
     ApiKeyAuthDefinition apiKeyAuth = new ApiKeyAuthDefinition();
     apiKeyAuth.setName("Authorization");
     apiKeyAuth.setIn(In.HEADER);
+    apiKeyAuth.setDescription("Authorization Token JWT or ApiKey. \n To use jwt add the token with prefix Bearer and " +
+        "for ApiKey add prefix ApiKey. Not all end points accept apikey.");
     Swagger swagger = new Swagger();
     swagger.securityDefinition("Authorization", apiKeyAuth);
+    List<SecurityRequirement> securityRequirements = new ArrayList<>();
+    SecurityRequirement securityRequirement = new SecurityRequirement();
+    securityRequirements.add(securityRequirement.requirement("Authorization"));
+    swagger.setSecurity(securityRequirements);
     swagger.addScheme(Scheme.HTTPS);
     swagger.addScheme(Scheme.HTTP);
     new SwaggerContextService().withServletConfig(config).updateSwagger(swagger);
