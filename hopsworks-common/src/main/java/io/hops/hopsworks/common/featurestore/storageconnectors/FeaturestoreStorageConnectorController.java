@@ -155,7 +155,7 @@ public class FeaturestoreStorageConnectorController {
     if (featurestoreConnectorFacade.findByFeaturestoreName(featurestore, featurestoreStorageConnectorDTO.getName())
         .isPresent()) {
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_STORAGE_CONNECTOR_NAME, Level.FINE,
-          "Redshift connector with the same name already exists. Name=" + featurestoreStorageConnectorDTO.getName());
+          "Storage connector with the same name already exists. Name=" + featurestoreStorageConnectorDTO.getName());
     }
 
     FeaturestoreConnector featurestoreConnector = new FeaturestoreConnector();

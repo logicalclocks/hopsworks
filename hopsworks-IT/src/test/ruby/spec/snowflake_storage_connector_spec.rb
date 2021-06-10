@@ -106,6 +106,16 @@ describe "On #{ENV['OS']}" do
       expect_status_details(400)
   end
 
+  it "should set empty table name to null" do
+    connector = @connector.clone
+    connector[:name] = "snowflake_connector_#{random_id}"
+    connector[:table] = " "
+    post @connector_endpoint, connector.to_json
+    expect_status_details(201)
+    connector[:table] = nil
+    check_snowflake_connector_update(json_body, connector)
+  end
+
   it "should update a connector" do
       connector = @connector.clone
       connector[:url] = "https://123457.eu-central-1.snowflakecomputing.com"
