@@ -284,7 +284,9 @@ angular.module('hopsWorksApp')
                 self.editServing.batchingEnabled = false;
                 self.editServing.modelServer = "TENSORFLOW_SERVING";
                 self.editServing.servingTool = "DEFAULT";
-                self.editServing.predictorResourceConfig = JSON.parse(JSON.stringify(self.defaultDockerConfig.resourceConfig))
+                if(self.defaultDockerConfig) {
+                  self.editServing.predictorResourceConfig = JSON.parse(JSON.stringify(self.defaultDockerConfig.resourceConfig))
+                }
                 self.versions = [];
                 self.sliderOptions.value = 1;
                 self.showAdvancedForm = false;
@@ -409,7 +411,7 @@ angular.module('hopsWorksApp')
                 self.showCreateNewServingForm = true;
                 self.createNewServingMode = true;
                 self.updateKafkaTopics();
-                if(!self.editServing.predictorResourceConfig) {
+                if(!self.editServing.predictorResourceConfig && self.defaultDockerConfig) {
                   self.editServing.predictorResourceConfig = JSON.parse(JSON.stringify(self.defaultDockerConfig.resourceConfig));
                 }
             };
