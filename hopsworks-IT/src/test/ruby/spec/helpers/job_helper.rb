@@ -137,10 +137,11 @@ module JobHelper
       job_conf = {
           "type" => "pythonJobConfiguration",
           "appName" => "#{job_name}",
-          "resourceConfig" =>
+          "resourceConfig" => {
             "memory" => 1024,
             "cores" => 1,
             "gpus" => 0
+          },
           "jobType" => "PYTHON",
           "appPath" => "hdfs:///Projects/#{project[:projectname]}/Resources/" + job_name + ".py",
           "defaultArgs" => "10",
@@ -177,10 +178,11 @@ module JobHelper
       job_conf = {
         "type" => "dockerJobConfiguration",
         "appName" => "#{job_name}",
-        "resourceConfig" =>
+        "resourceConfig" => {
           "memory" => 1024,
           "cores" => 1,
           "gpus" => 0
+        },
         "jobType" => "DOCKER",
         "imagePath" => "alpine",
         "volumes" => ["/tmp:/tmp2","/var:/var2"],
