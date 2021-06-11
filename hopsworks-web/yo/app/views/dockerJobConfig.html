@@ -19,7 +19,7 @@
     <div class="form-group" ng-show="newJobCtrl.hasDockerMemory">
         <label class="control-label col-sm-5" for="mem" uib-tooltip="Memory to allocate for the Docker job">Memory (MB):</label>
         <div class="col-sm-2">
-            <input type="number" class="form-control" id="mem" name="memory" step="1" ng-min="1024" ng-max="newJobCtrl.maxDockerMemory" ng-model="newJobCtrl.runConfig.memory" required>
+            <input type="number" class="form-control" id="mem" name="memory" step="1" ng-min="1024" ng-max="newJobCtrl.maxDockerMemory" ng-model="newJobCtrl.runConfig.resourceConfig.memory" required>
             <span class="text-danger" ng-show="(newJobCtrl.dockerJobConfigForm.memory.$dirty) && newJobCtrl.dockerJobConfigForm.memory.$error.number">Must be a number.</span>
             <span class="text-danger" ng-show="(newJobCtrl.dockerJobConfigForm.memory.$dirty) && newJobCtrl.dockerJobConfigForm.memory.$error.max">You can at most allocate {{newJobCtrl.maxDockerMemory}} MB.</span>
             <span class="text-danger" ng-show="(newJobCtrl.dockerJobConfigForm.memory.$dirty) && newJobCtrl.dockerJobConfigForm.memory.$error.min">It is recommended to allocate at minimum 1024 MB.</span>
@@ -29,8 +29,8 @@
         <label class="control-label col-sm-5" for="cores"
                uib-tooltip="Virtual cores to allocate for the Docker job">CPU cores:</label>
         <div class="col-sm-2">
-            <select class="form-control" id="cores" ng-model="newJobCtrl.runConfig.cores" required>
-                <option ng-selected="newJobCtrl.runConfig.cores === i"
+            <select class="form-control" id="cores" ng-model="newJobCtrl.runConfig.resourceConfig.cores" required>
+                <option ng-selected="newJobCtrl.runConfig.resourceConfig.cores === i"
                         ng-repeat="i in newJobCtrl.range(1, newJobCtrl.maxDockerCores)"
                         ng-value="i">{{i}}</option>
             </select>
@@ -39,8 +39,8 @@
     <div class="form-group" ng-show="newJobCtrl.hasDockerGpus">
         <label class="control-label col-sm-5" for="gpus" uib-tooltip="GPUs to allocate for this Job">GPUs:</label>
         <div class="col-sm-2">
-            <select class="form-control" id="gpus" ng-model="newJobCtrl.runConfig.gpus" required>
-                <option ng-selected="newJobCtrl.runConfig.gpus === i"
+            <select class="form-control" id="gpus" ng-model="newJobCtrl.runConfig.resourceConfig.gpus" required>
+                <option ng-selected="newJobCtrl.runConfig.resourceConfig.gpus === i"
                         ng-repeat="i in newJobCtrl.range(0, newJobCtrl.maxDockerGpus)"
                         ng-value="i">{{i}}</option>
             </select>

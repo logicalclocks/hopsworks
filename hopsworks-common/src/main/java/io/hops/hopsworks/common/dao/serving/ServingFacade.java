@@ -131,6 +131,11 @@ public class ServingFacade {
     if (newServing.getServingTool() != null) {
       dbServing.setServingTool(newServing.getServingTool());
     }
+
+    if(newServing.getDockerResourcesConfig() != null &&
+      !newServing.getDockerResourcesConfig().equals(dbServing.getDockerResourcesConfig())) {
+      dbServing.setDockerResourcesConfig(newServing.getDockerResourcesConfig());
+    }
   
     dbServing.setDeployed(newServing.getDeployed());
     dbServing.setRevision(newServing.getRevision());

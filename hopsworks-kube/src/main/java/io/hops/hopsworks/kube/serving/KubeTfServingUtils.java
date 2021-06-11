@@ -6,6 +6,7 @@ package io.hops.hopsworks.kube.serving;
 
 import com.logicalclocks.servicediscoverclient.exceptions.ServiceDiscoveryException;
 import io.fabric8.kubernetes.api.model.ConfigMapVolumeSourceBuilder;
+import io.fabric8.kubernetes.api.model.ResourceRequirements;
 import io.fabric8.kubernetes.api.model.SecurityContextBuilder;
 import io.hops.hopsworks.common.hosts.ServiceDiscoveryController;
 import io.fabric8.kubernetes.api.model.Container;
@@ -43,6 +44,7 @@ import io.hops.hopsworks.kube.common.KubeClientService;
 import io.hops.hopsworks.kube.common.KubeServingUtils;
 import io.hops.hopsworks.kube.project.KubeProjectConfigMaps;
 import io.hops.hopsworks.persistence.entity.project.Project;
+import io.hops.hopsworks.persistence.entity.serving.DockerResourcesConfiguration;
 import io.hops.hopsworks.persistence.entity.serving.Serving;
 import io.hops.hopsworks.persistence.entity.user.Users;
 import org.json.JSONObject;
@@ -56,12 +58,16 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import static io.hops.hopsworks.common.util.Settings.HOPS_USERNAME_SEPARATOR;
 
 @Stateless
 @TransactionAttribute(TransactionAttributeType.NEVER)
 public class KubeTfServingUtils {
+
+  private static final Logger LOGGER = Logger.getLogger(KubeTfServingUtils.class.getName());
 
   private final static String SERVING_ID = "SERVING_ID";
   private final static String MODEL_NAME = "MODEL_NAME";
@@ -120,6 +126,9 @@ public class KubeTfServingUtils {
     String projectUser = project.getName() + HOPS_USERNAME_SEPARATOR + user.getUsername();
     String hadoopHome = settings.getHadoopSymbolicLinkDir();
     String hadoopConfDir = hadoopHome + "/etc/hadoop";
+
+    ResourceRequirements resourceRequirements = kubeClientService.
+      buildResourceRequirements(serving.getDockerResourcesConfig());
 
     List<EnvVar> tfServingEnv = new ArrayList<>();
     tfServingEnv.add(new EnvVarBuilder().withName(SERVING_ID).withValue(servingIdStr).build());
@@ -187,6 +196,7 @@ public class KubeTfServingUtils {
         .withSecurityContext(new SecurityContextBuilder().withRunAsUser(settings.getYarnAppUID()).build())
         .withCommand("tfserving-launcher.sh")
         .withVolumeMounts(secretMount, hadoopConfMount)
+        .withResources(resourceRequirements)
         .build();
 
     List<Container> containerList = Arrays.asList(tfContainer);
@@ -248,7 +258,68 @@ public class KubeTfServingUtils {
         .build();
   }
   
-  public JSONObject buildInferenceServicePredictor(String artifactPath, Integer minReplicas, Boolean logger) {
+  public JSONObject buildInferenceServicePredictor(String artifactPath, Integer minReplicas, Boolean logger,
+                                                   DockerResourcesConfiguration dockerResourcesConfiguration) {
+
+    String memory = dockerResourcesConfiguration.getMemory() + "Mi";
+    String cores = Double.toString(dockerResourcesConfiguration.getCores() *
+      settings.getKubeDockerCoresFraction());
+    JSONObject resources = new JSONObject() {
+      {
+        put("requests", new JSONObject() {
+          {
+            put("memory", memory);
+            put("cpu", cores);
+          }
+        });
+        put("limits", new JSONObject() {
+          {
+            put("memory", memory);
+            put("cpu", cores);
+          }
+        });
+      }
+    };
+
+    String runtimeVersion = settings.getTensorflowVersion() +
+      (dockerResourcesConfiguration.getGpus() > 0 ? "-gpu" : "");
+
+    if(dockerResourcesConfiguration.getGpus() > 0) {
+      resources.getJSONObject("limits").put("nvidia.com/gpu", dockerResourcesConfiguration.getGpus());
+    }
+
+    JSONObject tensorflow = new JSONObject() {
+      {
+        put("storageUri", artifactPath);
+        put("runtimeVersion", runtimeVersion);
+      }
+    };
+
+    tensorflow.put("resources", resources);
+
+    JSONObject inferenceServicePredictorConfig = new JSONObject() {
+      {
+        put("predictor", new JSONObject() {
+          {
+            put("minReplicas", minReplicas);
+            put("logger", !logger ? null : new JSONObject() {
+              {
+                put("mode", KubeServingUtils.INFERENCE_LOGGER_MODE);
+                put("url", String.format("http://%s:%s", KubeServingUtils.INFERENCE_LOGGER_HOST,
+                  KubeServingUtils.INFERENCE_LOGGER_PORT));
+              }
+            });
+          }
+        });
+      }
+    };
+    inferenceServicePredictorConfig.getJSONObject("predictor").put("tensorflow", tensorflow);
+
+    LOGGER.log(Level.SEVERE, inferenceServicePredictorConfig.toString(2));
+
+    return inferenceServicePredictorConfig;
+
+    /**
     return new JSONObject() {
       {
         put("predictor", new JSONObject() {
@@ -270,5 +341,6 @@ public class KubeTfServingUtils {
         });
       }
     };
+     */
   }
 }

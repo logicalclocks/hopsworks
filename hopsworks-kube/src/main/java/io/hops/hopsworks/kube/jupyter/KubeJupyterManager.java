@@ -421,10 +421,10 @@ public class KubeJupyterManager extends JupyterManagerImpl implements JupyterMan
   private Deployment buildDeployment(String name, String kubeProjectUser, JupyterPaths jupyterPaths, String anacondaEnv,
     String pythonKernelName, String secretDir, String certificatesDir, String hadoopUser, String token,
     DockerJobConfiguration dockerConfig, Integer nodePort, String jupyterMode, boolean isGit, Project project,
-    Users user)
-    throws ServiceException, ServiceDiscoveryException {
+    Users user) throws ServiceDiscoveryException {
 
-    ResourceRequirements resourceRequirements = kubeClientService.buildResourceRequirements(dockerConfig);
+    ResourceRequirements resourceRequirements = kubeClientService.
+      buildResourceRequirements(dockerConfig.getResourceConfig());
   
     com.logicalclocks.servicediscoverclient.service.Service logstash =
       serviceDiscoveryController

@@ -16,6 +16,7 @@
 
 package io.hops.hopsworks.api.serving;
 
+import io.hops.hopsworks.persistence.entity.serving.DockerResourcesConfiguration;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 
@@ -28,15 +29,19 @@ public class ServingConf {
   private Integer maxNumInstances;
   private String kafkaTopicSchema;
   private Integer kafkaTopicSchemaVersion;
+  private DockerResourcesConfiguration predictorResourceConfig;
 
   public ServingConf() {
   }
 
   public ServingConf(Integer maxNumInstances,
-                     String kafkaTopicSchema, Integer kafkaTopicSchemaVersion) {
+                     String kafkaTopicSchema,
+                     Integer kafkaTopicSchemaVersion,
+                     DockerResourcesConfiguration predictorResourceConfig) {
     this.maxNumInstances = maxNumInstances;
     this.kafkaTopicSchema = kafkaTopicSchema;
     this.kafkaTopicSchemaVersion = kafkaTopicSchemaVersion;
+    this.predictorResourceConfig = predictorResourceConfig;
   }
 
   @ApiModelProperty(value = "Schema name for the Kafka topic used for logging", readOnly = true)
@@ -64,5 +69,14 @@ public class ServingConf {
 
   public void setMaxNumInstances(Integer maxNumInstances) {
     this.maxNumInstances = maxNumInstances;
+  }
+
+  @ApiModelProperty(value = "Predictor resource configuration for inference", readOnly = true)
+  public DockerResourcesConfiguration getPredictorResourceConfig() {
+    return predictorResourceConfig;
+  }
+
+  public void setPredictorResourceConfig(DockerResourcesConfiguration predictorResourceConfig) {
+    this.predictorResourceConfig = predictorResourceConfig;
   }
 }

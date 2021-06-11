@@ -104,7 +104,6 @@ public class ServingUtil {
     if (servingWrapper.getServing().getModelServer() == ModelServer.FLASK) {
       validateSKLearnUserInput(servingWrapper, project);
     }
-    
     // Serving tool validation
     if (servingWrapper.getServing().getServingTool() == null) {
       throw new IllegalArgumentException("Serving tool not provided or unsupported");

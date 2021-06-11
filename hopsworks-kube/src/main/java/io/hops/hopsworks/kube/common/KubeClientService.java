@@ -37,12 +37,10 @@ import io.github.resilience4j.retry.Retry;
 import io.github.resilience4j.retry.RetryConfig;
 import io.hops.hopsworks.common.hosts.ServiceDiscoveryController;
 import io.hops.hopsworks.common.util.Settings;
-import io.hops.hopsworks.persistence.entity.jobs.configuration.DockerJobConfiguration;
 import io.hops.hopsworks.persistence.entity.jobs.history.Execution;
 import io.hops.hopsworks.persistence.entity.project.Project;
+import io.hops.hopsworks.persistence.entity.serving.DockerResourcesConfiguration;
 import io.hops.hopsworks.persistence.entity.user.Users;
-import io.hops.hopsworks.exceptions.ServiceException;
-import io.hops.hopsworks.restutils.RESTCodes;
 
 import javax.ejb.Asynchronous;
 import javax.ejb.ConcurrencyManagement;
@@ -509,29 +507,32 @@ public class KubeClientService {
     return nodeIPs.get((int) (System.currentTimeMillis() % nodeIPs.size()));
   }
   
-  public ResourceRequirements buildResourceRequirements(DockerJobConfiguration dockerConfig) throws ServiceException {
+  public ResourceRequirements buildResourceRequirements(DockerResourcesConfiguration dockerResourcesConfiguration) {
 
-    if(dockerConfig.getMemory() > settings.getKubeDockerMaxMemoryAllocation()) {
-      throw new ServiceException(RESTCodes.ServiceErrorCode.JUPYTER_START_ERROR, Level.FINE, "Exceeded maximum memory "
-          + "allocation allowed for Jupyter Notebook server: " + settings.getKubeDockerMaxMemoryAllocation() + "MB");
-    } else if(dockerConfig.getCores() > settings.getKubeDockerMaxCoresAllocation()) {
-      throw new ServiceException(RESTCodes.ServiceErrorCode.JUPYTER_START_ERROR, Level.FINE, "Exceeded maximum cores "
-          + "allocation allowed for Jupyter Notebook server: " + settings.getKubeDockerMaxCoresAllocation() + " cores");
-    } else if(dockerConfig.getGpus() > settings.getKubeDockerMaxGpusAllocation()) {
-      throw new ServiceException(RESTCodes.ServiceErrorCode.JUPYTER_START_ERROR, Level.FINE, "Exceeded maximum gpus "
-        + "allocation allowed for Jupyter Notebook server: " + settings.getKubeDockerMaxGpusAllocation() + " gpus");
+    if(dockerResourcesConfiguration.getMemory() > settings.getKubeDockerMaxMemoryAllocation()) {
+      throw new IllegalArgumentException("Configured memory allocation of " + dockerResourcesConfiguration.getMemory() +
+        "MB exceeds maximum memory allocation allowed for " +
+        "Docker containers: " + settings.getKubeDockerMaxMemoryAllocation() + "MB");
+    } else if(dockerResourcesConfiguration.getCores() > settings.getKubeDockerMaxCoresAllocation()) {
+      throw new IllegalArgumentException("Configured cores allocation of " + dockerResourcesConfiguration.getCores() +
+        " exceeds maximum core allocation allowed for " +
+        "Docker containers: " + settings.getKubeDockerMaxCoresAllocation() + " cores");
+    } else if(dockerResourcesConfiguration.getGpus() > settings.getKubeDockerMaxGpusAllocation()) {
+      throw new IllegalArgumentException("Configured GPU allocation of " + dockerResourcesConfiguration.getGpus() +
+        " exceeds maximum GPU allocation allowed for " +
+        "Docker containers: " + settings.getKubeDockerMaxGpusAllocation() + " GPUs");
     }
 
     ResourceRequirementsBuilder resources = new ResourceRequirementsBuilder();
     resources
-        .addToLimits("memory", new Quantity(dockerConfig.getMemory() + "Mi"))
+        .addToLimits("memory", new Quantity(dockerResourcesConfiguration.getMemory() + "Mi"))
         .addToLimits("cpu", new QuantityBuilder().withAmount(
-            Double.toString(dockerConfig.getCores() * settings.getKubeDockerCoresFraction())).build());
+            Double.toString(dockerResourcesConfiguration.getCores() * settings.getKubeDockerCoresFraction())).build());
 
-    int requestedGPUs = dockerConfig.getGpus();
+    int requestedGPUs = dockerResourcesConfiguration.getGpus();
     if(requestedGPUs > 0) {
       resources.addToLimits("nvidia.com/gpu", new QuantityBuilder()
-          .withAmount(Double.toString(dockerConfig.getGpus())).build());
+          .withAmount(Double.toString(dockerResourcesConfiguration.getGpus())).build());
     }
     return resources.build();
   }

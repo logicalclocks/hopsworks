@@ -13,6 +13,7 @@ import io.fabric8.kubernetes.api.model.apps.Deployment;
 import io.fabric8.kubernetes.api.model.apps.DeploymentStatus;
 import io.fabric8.kubernetes.client.KubernetesClientException;
 import io.hops.hopsworks.common.serving.ServingStatusEnum;
+import io.hops.hopsworks.exceptions.ServiceException;
 import io.hops.hopsworks.exceptions.ServingException;
 import io.hops.hopsworks.kube.common.KubeClientService;
 import io.hops.hopsworks.kube.common.KubeServingUtils;
@@ -48,7 +49,7 @@ public class KubeDeploymentServingController extends KubeToolServingController {
     try {
       kubeClientService.createOrReplaceDeployment(project, buildDeployment(project, user, serving));
       kubeClientService.createOrReplaceService(project, buildService(project, serving));
-    } catch (ServiceDiscoveryException e) {
+    } catch (ServiceDiscoveryException | ServiceException e) {
       throw new ServingException(RESTCodes.ServingErrorCode.LIFECYCLEERRORINT, Level.SEVERE, null, e.getMessage(), e);
     }
   }
@@ -62,7 +63,7 @@ public class KubeDeploymentServingController extends KubeToolServingController {
       if (deploymentStatus != null) {
         kubeClientService.createOrReplaceDeployment(project, buildDeployment(project, user, serving));
       }
-    } catch (KubernetesClientException | ServiceDiscoveryException e) {
+    } catch (KubernetesClientException | ServiceDiscoveryException | ServiceException e) {
       throw new ServingException(RESTCodes.ServingErrorCode.UPDATEERROR, Level.SEVERE, null, e.getMessage(), e);
     }
   }
@@ -152,7 +153,8 @@ public class KubeDeploymentServingController extends KubeToolServingController {
     return kubeClientService.getPodList(project, labelMap);
   }
   
-  private Deployment buildDeployment(Project project, Users user, Serving serving) throws ServiceDiscoveryException {
+  private Deployment buildDeployment(Project project, Users user, Serving serving)
+    throws ServiceDiscoveryException, ServiceException {
     Deployment deployment;
     switch (serving.getModelServer()) {
       case TENSORFLOW_SERVING:

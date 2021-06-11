@@ -22,6 +22,7 @@ import io.hops.hopsworks.audit.logger.LogLevel;
 import io.hops.hopsworks.audit.logger.annotation.Logged;
 import io.hops.hopsworks.common.serving.ServingController;
 import io.hops.hopsworks.common.util.Settings;
+import io.hops.hopsworks.persistence.entity.serving.DockerResourcesConfiguration;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 
@@ -55,7 +56,7 @@ public class ServingConfResource {
   @ApiOperation(value = "Get UI configuration for serving", response = ServingConf.class)
   public Response getConfiguration() {
     ServingConf servingConf = new ServingConf(servingController.getMaxNumInstances(),
-        Settings.INFERENCE_SCHEMANAME, Settings.INFERENCE_SCHEMAVERSION);
+        Settings.INFERENCE_SCHEMANAME, Settings.INFERENCE_SCHEMAVERSION, new DockerResourcesConfiguration());
     GenericEntity<ServingConf> servingConfDTOGenericEntity =
         new GenericEntity<ServingConf>(servingConf) { };
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(servingConfDTOGenericEntity).build();

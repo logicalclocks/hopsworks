@@ -124,6 +124,30 @@
             </tr>
             <tr ng-if="servingViewInfoCtrl.isKubernetes">
                 <td>
+                    Memory <i class="fa fa-info-circle" tooltip-placement="auto left"
+                                uib-tooltip="Memory allocated for the serving container."
+                                style="margin-left: 10px"></i>
+                </td>
+                <td> {{servingViewInfoCtrl.serving.predictorResourceConfig.memory}} </td>
+            </tr>
+            <tr ng-if="servingViewInfoCtrl.isKubernetes">
+                <td>
+                    Virtual cores <i class="fa fa-info-circle" tooltip-placement="auto left"
+                                uib-tooltip="Virtual cores allocated for the serving container."
+                                style="margin-left: 10px"></i>
+                </td>
+                <td> {{servingViewInfoCtrl.serving.predictorResourceConfig.cores}} </td>
+            </tr>
+            <tr ng-if="servingViewInfoCtrl.isKubernetes">
+                <td>
+                    GPUs <i class="fa fa-info-circle" tooltip-placement="auto left"
+                                uib-tooltip="GPUs allocated for the serving container."
+                                style="margin-left: 10px"></i>
+                </td>
+                <td> {{servingViewInfoCtrl.serving.predictorResourceConfig.gpus}} </td>
+            </tr>
+            <tr ng-if="servingViewInfoCtrl.isKubernetes">
+                <td>
                     Revision <i class="fa fa-info-circle" tooltip-placement="auto left"
                                 uib-tooltip="Revision identifier of the last operation (i.e create, update, delete)."
                                 style="margin-left: 10px"></i>

@@ -31,7 +31,7 @@
     <div class="form-group" ng-show="jupyterCtrl.hasDockerMemory">
         <label class="control-label col-sm-3" for="mem" uib-tooltip="Memory to allocate for Jupyter">Memory (MB):</label>
         <div class="col-sm-4">
-            <input type="number" class="form-control" id="mem" name="dockerMemory" step="1" ng-min="1024" ng-max="jupyterCtrl.maxDockerMemory" ng-model="jupyterCtrl.jupyterSettings.dockerConfig.memory" required>
+            <input type="number" class="form-control" id="mem" name="dockerMemory" step="1" ng-min="1024" ng-max="jupyterCtrl.maxDockerMemory" ng-model="jupyterCtrl.jupyterSettings.dockerConfig.resourceConfig.memory" required>
             <span class="text-danger" ng-show="(jupyterCtrl.pythonConfigForm.dockerMemory.$dirty) && jupyterCtrl.pythonConfigForm.dockerMemory.$error.number">Must be a number.</span>
             <span class="text-danger" ng-show="(jupyterCtrl.pythonConfigForm.dockerMemory.$dirty) && jupyterCtrl.pythonConfigForm.dockerMemory.$error.max">You can at most allocate {{jupyterCtrl.maxDockerMemory}} MB.</span>
             <span class="text-danger" ng-show="(jupyterCtrl.pythonConfigForm.dockerMemory.$dirty) && jupyterCtrl.pythonConfigForm.dockerMemory.$error.min">It is recommended to allocate at minimum 1024 MB.</span>
@@ -40,8 +40,8 @@
     <div class="form-group" ng-show="jupyterCtrl.hasDockerCores">
         <label class="control-label col-sm-3" for="cores" uib-tooltip="Virtual cores to allocate for Jupyter">Virtual Cores:</label>
         <div class="col-sm-4">
-            <select class="form-control" id="cores" ng-model="jupyterCtrl.jupyterSettings.dockerConfig.cores" required>
-                <option ng-selected="jupyterCtrl.jupyterSettings.dockerConfig.cores === i"
+            <select class="form-control" id="cores" ng-model="jupyterCtrl.jupyterSettings.dockerConfig.resourceConfig.cores" required>
+                <option ng-selected="jupyterCtrl.jupyterSettings.dockerConfig.resourceConfig.cores === i"
                         ng-repeat="i in jupyterCtrl.range(1, jupyterCtrl.maxDockerCores)"
                         ng-value="i">{{i}}</option>
             </select>
@@ -50,8 +50,8 @@
     <div class="form-group" ng-show="jupyterCtrl.hasDockerGpus">
         <label class="control-label col-sm-3" for="gpus" uib-tooltip="GPUs to allocate for Jupyter">GPUs:</label>
         <div class="col-sm-4">
-            <select class="form-control" id="gpus" ng-model="jupyterCtrl.jupyterSettings.dockerConfig.gpus" required>
-                <option ng-selected="jupyterCtrl.jupyterSettings.dockerConfig.gpus === i"
+            <select class="form-control" id="gpus" ng-model="jupyterCtrl.jupyterSettings.dockerConfig.resourceConfig.gpus" required>
+                <option ng-selected="jupyterCtrl.jupyterSettings.dockerConfig.resourceConfig.gpus === i"
                         ng-repeat="i in jupyterCtrl.range(0, jupyterCtrl.maxDockerGpus)"
                         ng-value="i">{{i}}</option>
             </select>

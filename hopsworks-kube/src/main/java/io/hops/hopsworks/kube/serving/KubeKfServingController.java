@@ -271,7 +271,7 @@ public class KubeKfServingController extends KubeToolServingController {
     switch (serving.getModelServer()) {
       case TENSORFLOW_SERVING:
         predictor = kubeTfServingUtils.buildInferenceServicePredictor(versionedArtifactPath, serving.getInstances(),
-          serving.getKafkaTopic() != null);
+          serving.getKafkaTopic() != null, serving.getDockerResourcesConfig());
         break;
       default:
         throw new NotSupportedException("Model server not supported for KFServing inference services");

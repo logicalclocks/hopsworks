@@ -21,6 +21,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.hops.hopsworks.common.dao.kafka.TopicDTO;
 import io.hops.hopsworks.common.serving.ServingStatusEnum;
 import io.hops.hopsworks.common.serving.ServingWrapper;
+import io.hops.hopsworks.persistence.entity.serving.DockerResourcesConfiguration;
 import io.hops.hopsworks.persistence.entity.serving.ModelServer;
 import io.hops.hopsworks.persistence.entity.serving.Serving;
 import io.hops.hopsworks.persistence.entity.serving.ServingTool;
@@ -50,6 +51,7 @@ public class ServingView implements Serializable {
   private Boolean batchingEnabled;
   private ModelServer modelServer;
   private ServingTool servingTool;
+  private DockerResourcesConfiguration predictorResourceConfig;
   private Date deployed;
   private String revision;
 
@@ -82,6 +84,7 @@ public class ServingView implements Serializable {
     this.revision = servingWrapper.getServing().getRevision();
     Users user = servingWrapper.getServing().getCreator();
     this.creator = user.getFname() + " " + user.getLname();
+    this.predictorResourceConfig = servingWrapper.getServing().getDockerResourcesConfig();
   }
 
   @ApiModelProperty(value = "ID of the Serving entry" )
@@ -222,13 +225,22 @@ public class ServingView implements Serializable {
   public void setRevision(String revision) {
     this.revision = revision;
   }
+
+  @ApiModelProperty(value = "Resource configuration for predictor", readOnly = true)
+  public DockerResourcesConfiguration getPredictorResourceConfig() {
+    return predictorResourceConfig;
+  }
+
+  public void setPredictorResourceConfig(DockerResourcesConfiguration predictorResourceConfig) {
+    this.predictorResourceConfig = predictorResourceConfig;
+  }
   
   @JsonIgnore
   public ServingWrapper getServingWrapper() {
 
     ServingWrapper servingWrapper = new ServingWrapper(
         new Serving(id, name, artifactPath, modelVersion, requestedInstances, batchingEnabled,
-          modelServer, servingTool));
+          modelServer, servingTool, predictorResourceConfig));
     servingWrapper.setKafkaTopicDTO(kafkaTopicDTO);
 
     return servingWrapper;

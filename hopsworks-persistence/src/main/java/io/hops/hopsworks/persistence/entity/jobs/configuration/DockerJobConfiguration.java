@@ -9,6 +9,7 @@ import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import io.hops.hopsworks.persistence.entity.jobs.configuration.python.PythonJobConfiguration;
+import io.hops.hopsworks.persistence.entity.serving.DockerResourcesConfiguration;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
@@ -31,13 +32,7 @@ public class DockerJobConfiguration extends JobConfiguration {
   public DockerJobConfiguration(){}
 
   @XmlElement
-  private int cores = 1;
-
-  @XmlElement
-  private int memory = 2048;
-
-  @XmlElement
-  private int gpus = 0;
+  private DockerResourcesConfiguration resourceConfig = new DockerResourcesConfiguration();
 
   @XmlElement
   private String imagePath;
@@ -63,28 +58,12 @@ public class DockerJobConfiguration extends JobConfiguration {
   @XmlElement
   private Long gid;
 
-  public int getCores() {
-    return cores;
+  public DockerResourcesConfiguration getResourceConfig() {
+    return resourceConfig;
   }
 
-  public void setCores(int cores) {
-    this.cores = cores;
-  }
-
-  public int getMemory() {
-    return memory;
-  }
-
-  public void setMemory(int memory) {
-    this.memory = memory;
-  }
-
-  public int getGpus() {
-    return gpus;
-  }
-
-  public void setGpus(int gpus) {
-    this.gpus = gpus;
+  public void setResourceConfig(DockerResourcesConfiguration resourceConfig) {
+    this.resourceConfig = resourceConfig;
   }
 
   public String getImagePath() {

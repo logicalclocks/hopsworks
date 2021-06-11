@@ -16,12 +16,14 @@
 
 package io.hops.hopsworks.persistence.entity.serving;
 
+import io.hops.hopsworks.persistence.entity.jupyter.config.DockerResourcesConverter;
 import io.hops.hopsworks.persistence.entity.kafka.ProjectTopics;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.user.Users;
 
 import javax.persistence.Basic;
 import javax.persistence.Column;
+import javax.persistence.Convert;
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
@@ -124,7 +126,9 @@ public class Serving implements Serializable {
   @Enumerated(EnumType.ORDINAL)
   @Column(name = "serving_tool")
   private ServingTool servingTool = ServingTool.DEFAULT;
-  
+  @Column(name = "docker_resource_config")
+  @Convert(converter = DockerResourcesConverter.class)
+  private DockerResourcesConfiguration dockerResourcesConfig = new DockerResourcesConfiguration();
   @Basic(optional = true)
   @Column(name = "deployed")
   @Temporal(TemporalType.TIMESTAMP)
@@ -139,7 +143,7 @@ public class Serving implements Serializable {
 
   public Serving(Integer id, String name, String artifactPath, Integer version,
                  Integer nInstances, Boolean batchingEnabled, ModelServer modelServer,
-                 ServingTool servingTool) {
+                 ServingTool servingTool, DockerResourcesConfiguration dockerResourcesConfig) {
     this.id = id;
     this.name = name;
     this.artifactPath = artifactPath;
@@ -148,6 +152,7 @@ public class Serving implements Serializable {
     this.batchingEnabled = batchingEnabled;
     this.modelServer = modelServer;
     this.servingTool = servingTool;
+    this.dockerResourcesConfig = dockerResourcesConfig;
   }
 
   public Integer getId() {
@@ -305,6 +310,14 @@ public class Serving implements Serializable {
   public void setRevision(String revision) {
     this.revision = revision;
   }
+
+  public DockerResourcesConfiguration getDockerResourcesConfig() {
+    return dockerResourcesConfig;
+  }
+
+  public void setDockerResourcesConfig(DockerResourcesConfiguration dockerResourcesConfig) {
+    this.dockerResourcesConfig = dockerResourcesConfig;
+  }
   
   @Override
   public boolean equals(Object o) {
@@ -331,6 +344,8 @@ public class Serving implements Serializable {
     if (cid != null ? !cid.equals(serving.cid) : serving.cid != null) return false;
     if (modelServer != null ? !modelServer.equals(serving.modelServer) : serving.modelServer != null) return false;
     if (servingTool != null ? !servingTool.equals(serving.servingTool) : serving.servingTool != null) return false;
+    if (dockerResourcesConfig != null ? !servingTool.equals(serving.dockerResourcesConfig) :
+      serving.dockerResourcesConfig != null) return false;
     if (deployed != null ? !deployed.equals(serving.deployed) : serving.deployed != null) return false;
     if (revision != null ? !revision.equals(serving.revision) : serving.revision != null) return false;
     return localDir != null ? localDir.equals(serving.localDir) : serving.localDir == null;
@@ -356,6 +371,7 @@ public class Serving implements Serializable {
     result = 31 * result + (localDir != null ? localDir.hashCode() : 0);
     result = 31 * result + (modelServer != null ? modelServer.hashCode() : 0);
     result = 31 * result + (servingTool != null ? servingTool.hashCode() : 0);
+    result = 31 * result + (dockerResourcesConfig != null ? dockerResourcesConfig.hashCode() : 0);
     result = 31 * result + (deployed != null ? deployed.hashCode() : 0);
     result = 31 * result + (revision != null ? revision.hashCode() : 0);
     return result;

@@ -218,6 +218,51 @@ describe "On #{ENV['OS']}" do
             expect_status(400)
           end
 
+          it "should create the serving with default predictorResourceConfig if not set" do
+            put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
+                {name: "res1model",
+                 artifactPath: "/Projects/#{@project[:projectname]}/Models/mnist/",
+                 modelVersion: 1,
+                 batchingEnabled: false,
+                 modelServer: "TENSORFLOW_SERVING",
+                 servingTool: "KFSERVING",
+                 requestedInstances: 1
+                }
+            expect_status(201)
+
+            serving_list = get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/"
+            resource_config = JSON.parse(serving_list).select { |serving| serving['name'] ==
+            "res1model"}[0]['predictorResourceConfig']
+            expect(resource_config['memory']).to be 1024
+            expect(resource_config['cores']).to be 1
+            expect(resource_config['gpus']).to be 0
+          end
+
+          it "should create the serving with overridden predictorResourceConfig" do
+            put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
+                {name: "res2model",
+                 artifactPath: "/Projects/#{@project[:projectname]}/Models/mnist/",
+                 modelVersion: 1,
+                 batchingEnabled: false,
+                 modelServer: "TENSORFLOW_SERVING",
+                 servingTool: "KFSERVING",
+                 requestedInstances: 1,
+                 predictorResourceConfig: {
+                   memory: 3000,
+                   cores: 2,
+                   gpus: 1
+                }
+                }
+            expect_status(201)
+  
+            serving_list = get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/"
+            resource_config = JSON.parse(serving_list).select { |serving| serving['name'] ==
+            "res2model"}[0]['predictorResourceConfig']
+            expect(resource_config['memory']).to be 3000
+            expect(resource_config['cores']).to be 2
+            expect(resource_config['gpus']).to be 1
+          end
+
           it "should fail to create a serving with the same name" do
             put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
                 {name: "testmodel7",
@@ -313,7 +358,6 @@ describe "On #{ENV['OS']}" do
             expect_status(422)
           end
         end
-
       end
 
       describe "#start", vm: true do

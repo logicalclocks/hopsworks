@@ -31,6 +31,7 @@ import io.fabric8.kubernetes.api.model.PodSpec;
 import io.fabric8.kubernetes.api.model.PodSpecBuilder;
 import io.fabric8.kubernetes.api.model.PodTemplateSpec;
 import io.fabric8.kubernetes.api.model.PodTemplateSpecBuilder;
+import io.fabric8.kubernetes.api.model.ResourceRequirements;
 import io.fabric8.kubernetes.api.model.SecretVolumeSource;
 import io.fabric8.kubernetes.api.model.SecretVolumeSourceBuilder;
 import io.fabric8.kubernetes.api.model.SecurityContextBuilder;
@@ -122,6 +123,9 @@ public class KubeSkLearnServingUtils {
     String projectUser = project.getName() + HOPS_USERNAME_SEPARATOR + user.getUsername();
     String hadoopHome = settings.getHadoopSymbolicLinkDir();
     String hadoopConfDir = hadoopHome + "/etc/hadoop";
+
+    ResourceRequirements resourceRequirements = kubeClientService.
+      buildResourceRequirements(serving.getDockerResourcesConfig());
     
     List<EnvVar> servingEnv = new ArrayList<>();
     servingEnv.add(new EnvVarBuilder().withName(SERVING_ID).withValue(servingIdStr).build());
@@ -178,6 +182,7 @@ public class KubeSkLearnServingUtils {
         .withSecurityContext(new SecurityContextBuilder().withRunAsUser(settings.getYarnAppUID()).build())
         .withCommand("sklearn_serving-launcher.sh")
         .withVolumeMounts(secretMount, hadoopConfEnvMount)
+        .withResources(resourceRequirements)
         .build();
 
     List<Container> containerList = Arrays.asList(skLeanContainer);

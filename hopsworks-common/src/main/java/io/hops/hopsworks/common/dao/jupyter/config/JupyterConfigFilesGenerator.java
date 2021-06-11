@@ -189,7 +189,7 @@ public class JupyterConfigFilesGenerator {
       throws IOException {
     try {
       DockerJobConfiguration dockerJobConfiguration = (DockerJobConfiguration)js.getDockerConfig();
-      int libHdfsOptsXmx = (int)(dockerJobConfiguration.getMemory() * 0.2);
+      int libHdfsOptsXmx = (int)(dockerJobConfiguration.getResourceConfig().getMemory() * 0.2);
 
       KernelTemplate kernelTemplate = KernelTemplateBuilder.newBuilder()
               .setHdfsUser(hdfsUser)

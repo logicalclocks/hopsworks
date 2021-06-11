@@ -190,7 +190,9 @@ public class KubeExecutionController extends AbstractExecutionController impleme
 
         kubeProjectConfigMaps.reloadConfigMaps(project);
 
-        ResourceRequirements resourceRequirements = kubeClientService.buildResourceRequirements(jobConfiguration);
+        ResourceRequirements resourceRequirements = kubeClientService.
+          buildResourceRequirements(jobConfiguration.getResourceConfig());
+
         Map<String, String> primaryContainerEnv = new HashMap<>();
         Map<String, String> sidecarContainerEnv = new HashMap<>();
         setContainerEnv(job.getJobType(), primaryContainerEnv, sidecarContainerEnv, hdfsUser, project, execution,
