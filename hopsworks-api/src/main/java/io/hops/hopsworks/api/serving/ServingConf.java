@@ -33,7 +33,8 @@ public class ServingConf {
   }
 
   public ServingConf(Integer maxNumInstances,
-                     String kafkaTopicSchema, Integer kafkaTopicSchemaVersion) {
+                     String kafkaTopicSchema,
+                     Integer kafkaTopicSchemaVersion) {
     this.maxNumInstances = maxNumInstances;
     this.kafkaTopicSchema = kafkaTopicSchema;
     this.kafkaTopicSchemaVersion = kafkaTopicSchemaVersion;

@@ -32,207 +32,238 @@
                 <div class="" ng-if="servingCtrl.showLogs === false">
                     <!-- Page Content -->
                     <div ng-if="servingCtrl.showCreateNewServingForm === true">
-                        <div class="col-xs-10 col-sm-10 col-md-10 col-lg-10" layout-align="left left"
-                             style='margin-left: 0px;'>
+                        <form class="form-horizontal" name="servingCtrl.servingConfigForm">
+                            <div class="col-xs-10 col-sm-10 col-md-10 col-lg-10" layout-align="left left"
+                                 style='margin-left: 0px;'>
 
-                            <div class="row">
-                                <div class="col-xs-9 col-sm-9 col-md-9 col-lg-8">
-                                    <button class="close" ng-click="servingCtrl.hideCreateServingForm()" type="button">
-                                        <span aria-hidden="true">&times;</span></button>
-                                </div>
-                            </div>
-                            <div class="row">
-                                <div class="col-xs-3 col-sm-3 col-md-3 col-lg-3" style="text-align: right;">
-                                </div>
-                                <div class="col-xs-6 col-sm-6 col-md-6 col-lg-6">
-                                    <md-radio-group ng-model="servingCtrl.editServing.modelServer">
-                                        <table class="button-table">
-                                            <tbody>
-                                            <tr>
-                                                <td>
-                                                    <md-radio-button value="TENSORFLOW_SERVING" class="md-primary"
-                                                                     ng-click="servingCtrl.setModelServer('TENSORFLOW_SERVING');">TensorFlow</md-radio-button>
-                                                </td>
-                                                <td>
-                                                    <md-radio-button value="FLASK" class="md-primary" style="display:
-                                                    inline-block"
-                                                                     ng-click="servingCtrl.setModelServer('FLASK');">
-                                                        Python (SkLearn, XGBoost, ...)
-                                                        <i class="fa fa-info-circle" style="pointer-events: all"
-                                                           tooltip-placement="auto left" tooltip-append-to-body="true"
-                                                           uib-tooltip='Flask server that exposes a model using an user-provided python script'
-                                                           style="margin-left: 10px"></i>
-                                                    </md-radio-button>
-                                                </td>
-                                            </tr>
-                                            </tbody>
-                                        </table>
-                                    </md-radio-group>
-                                </div>
-                            </div>
-
-                            <div class="row">
-                                <div class="col-xs-3 col-sm-3 col-md-3 col-lg-3" style="text-align: right;">
-                                    <div ng-show="servingCtrl.editServing.modelServer === 'FLASK'">
-                                        <div>
-                                            <label>
-                                                <button class="btn btn-default" ng-click="servingCtrl.selectFile()" style="margin-top: 5px;">
-                                                    <span>Python Script</span>
-                                                </button>
-                                            </label>
-                                            <i class="fa fa-info-circle" tooltip-placement="auto left"
-                                               uib-tooltip='Select a python script that implements the Predict class and the predict(inputs) --> prediction function.'
-                                               style="margin-left: 10px"></i>
-                                        </div>
-                                        <div style="margin-top: 7px; heigth: 2em;"><label>Serving Name</label></div>
-                                        <div style="margin-top: 9px; heigth: 2em;"><label>Model Version</label></div>
-                                        <div style="margin-top: 10px;">
-                                            <label>KFServing</label>
-                                            <i class="fa fa-info-circle" tooltip-placement="auto left"
-                                               uib-tooltip='Deploy a model with KFServing to leverage additional features such as scale-to-zero or online input transformations.'
-                                               style="margin-left: 10px"></i>
-                                        </div>
-                                    </div>
-
-                                    <div ng-show="servingCtrl.editServing.modelServer === 'TENSORFLOW_SERVING'">
-
-                                        <div>
-                                            <label>
-                                                <button style="margin-top: 5px;"
-                                                        class="btn btn-default" ng-click="servingCtrl.selectFile()">
-                                                    <span>Model</span>
-                                                </button>
-                                            </label>
-                                            <i class="fa fa-info-circle" tooltip-placement="auto left"
-                                               uib-tooltip='Select a model directory. The correct directory structure can be found in the documentation'
-                                               style="margin-left: 10px"></i>
-                                        </div>
-
-                                        <div style="margin-top: 7px; heigth: 2em;"><label>Serving Name</label></div>
-                                        <div style="margin-top: 9px; heigth: 2em;"><label>Model Version</label></div>
-                                        <div style="margin-top: 10px;">
-                                            <label>KFServing</label>
-                                            <i class="fa fa-info-circle" tooltip-placement="auto left"
-                                               uib-tooltip='Deploy a model with KFServing to leverage additional features such as scale-to-zero or online input transformations.'
-                                               style="margin-left: 10px"></i>
-                                        </div>
-                                        <div style="margin-top: 15px; height: 2em;">
-                                            <label># Instances</label>
-                                        </div>
-                                    </div>
-
-                                    <div style="margin-top: 11px; heigth: 2em;"><label
-                                            ng-click="servingCtrl.showAdvanced()">
-                                        <span class="glyphicon glyphicon-chevron-right"
-                                              ng-if="!servingCtrl.showAdvancedForm"></span>
-                                        <span class="glyphicon glyphicon-chevron-down"
-                                              ng-if="servingCtrl.showAdvancedForm"></span>
-                                        Advanced</label>
+                                <div class="row">
+                                    <div class="col-xs-9 col-sm-9 col-md-9 col-lg-8">
+                                        <button class="close" ng-click="servingCtrl.hideCreateServingForm()" type="button">
+                                            <span aria-hidden="true">&times;</span></button>
                                     </div>
                                 </div>
-
-                                <div class="col-xs-6 col-sm-6 col-md-6 col-lg-5">
-                                    <ui-select tagging tagging="tagTransform"
-                                               ng-model="servingCtrl.editServing.artifactPath"
-                                               style="margin-top:5px;" theme="bootstrap"
-                                               title="Search for servable models"
-                                               ng-show="servingCtrl.editServing.modelServer === 'TENSORFLOW_SERVING'"
-                                               on-select="servingCtrl.setFullModelPath()">
-                                        <ui-select-match placeholder="Enter model name...">{{servingCtrl.editServing.artifactPath}}</ui-select-match>
-                                        <ui-select-choices
-                                                refresh="servingCtrl.fetchAsync($select.search)"
-                                                refresh-delay="200"
-                                                repeat="model in servingCtrl.models">
-                                            <div>
-                                                <span ng-bind-html="model"></span>
-                                            </div>
-                                        </ui-select-choices>
-                                        <ui-select-no-choice>
-                                            <div>
-                                                <span ng-if="servingCtrl.loadingModels" class="loading-dots-sm" style="padding-left:5px;"> Searching</span>
-                                                <span ng-if="!servingCtrl.loadingModels" style="padding-left:5px;">{{servingCtrl.selectNoChoice}}</span>
-                                            </div>
-                                        </ui-select-no-choice>
-                                    </ui-select>
-
-                                    <input style="margin-top: 5px" type="text" class="form-control"
-                                           ng-model="servingCtrl.editServing.artifactPath"
-                                           ng-show="servingCtrl.editServing.modelServer === 'FLASK'">
-
-                                    <input style="margin-top: 5px" name="name" class="form-control" type="text"
-                                           ng-model="servingCtrl.editServing.name">
-                                    <input style="margin-top: 5px" name="modelVersion" class="form-control" type="text"
-                                           ng-model="servingCtrl.editServing.modelVersion"
-                                           ng-if="servingCtrl.editServing.modelServer === 'FLASK'">
-
-                                    <select class="form-control" style="margin-top: 5px; width: 25%" name="modelVersion"
-                                            ng-model="servingCtrl.editServing.modelVersion"
-                                            ng-options="x for x in servingCtrl.editServing.versions"
-                                            ng-if="servingCtrl.editServing.modelServer === 'TENSORFLOW_SERVING'"></select>
-
-                                    <input style="margin-top: 14px;" type="checkbox"
-                                           name="kfserving"
-                                           ng-model="servingCtrl.kfserving"
-                                           ng-disabled="!servingCtrl.isKFServing || servingCtrl.editServing.modelServer === 'FLASK'"
-                                           ng-click="servingCtrl.setKFServing()">
-
-                                    <rzslider style="margin-top: 40px;"
-                                              rz-slider-model="servingCtrl.sliderOptions.value"
-                                              rz-slider-options="servingCtrl.sliderOptions.options">
-                                    </rzslider>
-
-                                    <hr>
-                                </div>
-                            </div>
-                            <div ng-if="servingCtrl.showAdvancedForm" class="animate-if">
                                 <div class="row">
                                     <div class="col-xs-3 col-sm-3 col-md-3 col-lg-3" style="text-align: right;">
-                                        <div style="margin-top: 10px; heigth: 2em;"><label>Request Batching</label></div>
-                                        <div style="margin-top: 10px; heigth: 2em;"><label>Kafka Topic</label></div>
-                                        <div style="margin-top: 10px; heigth: 2em;"><label>Kafka Num Partitions</label>
+                                    </div>
+                                    <div class="col-xs-6 col-sm-6 col-md-6 col-lg-6">
+                                        <md-radio-group ng-model="servingCtrl.editServing.modelServer">
+                                            <table class="button-table">
+                                                <tbody>
+                                                <tr>
+                                                    <td>
+                                                        <md-radio-button value="TENSORFLOW_SERVING" class="md-primary"
+                                                                         ng-click="servingCtrl.setModelServer('TENSORFLOW_SERVING');">TensorFlow</md-radio-button>
+                                                    </td>
+                                                    <td>
+                                                        <md-radio-button value="FLASK" class="md-primary" style="display:
+                                                        inline-block"
+                                                                         ng-click="servingCtrl.setModelServer('FLASK');">
+                                                            Python (SkLearn, XGBoost, ...)
+                                                            <i class="fa fa-info-circle" style="pointer-events: all"
+                                                               tooltip-placement="auto left" tooltip-append-to-body="true"
+                                                               uib-tooltip='Flask server that exposes a model using an user-provided python script'
+                                                               style="margin-left: 10px"></i>
+                                                        </md-radio-button>
+                                                    </td>
+                                                </tr>
+                                                </tbody>
+                                            </table>
+                                        </md-radio-group>
+                                    </div>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-xs-3 col-sm-3 col-md-3 col-lg-3" style="text-align: right;">
+                                        <div ng-show="servingCtrl.editServing.modelServer === 'FLASK'">
+                                            <div>
+                                                <label>
+                                                    <button class="btn btn-default" ng-click="servingCtrl.selectFile()" style="margin-top: 5px;">
+                                                        <span>Python Script</span>
+                                                    </button>
+                                                </label>
+                                                <i class="fa fa-info-circle" tooltip-placement="auto left"
+                                                   uib-tooltip='Select a python script that implements the Predict class and the predict(inputs) --> prediction function.'
+                                                   style="margin-left: 10px"></i>
+                                            </div>
+                                            <div style="margin-top: 7px; heigth: 2em;"><label>Serving Name</label></div>
+                                            <div style="margin-top: 9px; heigth: 2em;"><label>Model Version</label></div>
+                                            <div style="margin-top: 10px;">
+                                                <label>KFServing</label>
+                                                <i class="fa fa-info-circle" tooltip-placement="auto left"
+                                                   uib-tooltip='Deploy a model with KFServing to leverage additional features such as scale-to-zero or online input transformations.'
+                                                   style="margin-left: 10px"></i>
+                                            </div>
                                         </div>
-                                        <div style="margin-top: 10px; heigth: 2em;"><label>Kafka Replication Factor</label></div>
+
+                                        <div ng-show="servingCtrl.editServing.modelServer === 'TENSORFLOW_SERVING'">
+
+                                            <div>
+                                                <label>
+                                                    <button style="margin-top: 5px;"
+                                                            class="btn btn-default" ng-click="servingCtrl.selectFile()">
+                                                        <span>Model</span>
+                                                    </button>
+                                                </label>
+                                                <i class="fa fa-info-circle" tooltip-placement="auto left"
+                                                   uib-tooltip='Select a model directory. The correct directory structure can be found in the documentation'
+                                                   style="margin-left: 10px"></i>
+                                            </div>
+
+                                            <div style="margin-top: 7px; heigth: 2em;"><label>Serving Name</label></div>
+                                            <div style="margin-top: 9px; heigth: 2em;"><label>Model Version</label></div>
+                                            <div style="margin-top: 10px;">
+                                                <label>KFServing</label>
+                                                <i class="fa fa-info-circle" tooltip-placement="auto left"
+                                                   uib-tooltip='Deploy a model with KFServing to leverage additional features such as scale-to-zero or online input transformations.'
+                                                   style="margin-left: 10px"></i>
+                                            </div>
+                                            <div style="margin-top: 15px; height: 2em;">
+                                                <label># Instances</label>
+                                            </div>
+                                        </div>
+
+                                        <div style="margin-top: 11px; heigth: 2em;"><label
+                                                ng-click="servingCtrl.showAdvanced()">
+                                            <span class="glyphicon glyphicon-chevron-right"
+                                                  ng-if="!servingCtrl.showAdvancedForm"></span>
+                                            <span class="glyphicon glyphicon-chevron-down"
+                                                  ng-if="servingCtrl.showAdvancedForm"></span>
+                                            Advanced</label>
+                                        </div>
                                     </div>
 
-                                    <div class="col-xs-6 col-sm-6 col-md-6 col-lg-6" style="padding-top: 10px">
-                                        <input type="checkbox" name="requestBatching"
-                                               ng-model="servingCtrl.editServing.batchingEnabled"
-                                               ng-disabled="servingCtrl.kfserving || servingCtrl.editServing.modelServer === 'FLASK'">
-                                        <select class="form-control" style="margin-top: 5px; width: 40%"
-                                                name="kafkaTopicName"
-                                                ng-model="servingCtrl.editServing.kafkaTopicDTO"
-                                                ng-options="x.name for x in servingCtrl.projectKafkaTopics"
-                                                ng-change="servingCtrl.updateKafkaDetails()"></select>
+                                    <div class="col-xs-6 col-sm-6 col-md-6 col-lg-5">
+                                        <ui-select tagging tagging="tagTransform"
+                                                   ng-model="servingCtrl.editServing.artifactPath"
+                                                   style="margin-top:5px;" theme="bootstrap"
+                                                   title="Search for servable models"
+                                                   ng-show="servingCtrl.editServing.modelServer === 'TENSORFLOW_SERVING'"
+                                                   on-select="servingCtrl.setFullModelPath()">
+                                            <ui-select-match placeholder="Enter model name...">{{servingCtrl.editServing.artifactPath}}</ui-select-match>
+                                            <ui-select-choices
+                                                    refresh="servingCtrl.fetchAsync($select.search)"
+                                                    refresh-delay="200"
+                                                    repeat="model in servingCtrl.models">
+                                                <div>
+                                                    <span ng-bind-html="model"></span>
+                                                </div>
+                                            </ui-select-choices>
+                                            <ui-select-no-choice>
+                                                <div>
+                                                    <span ng-if="servingCtrl.loadingModels" class="loading-dots-sm" style="padding-left:5px;"> Searching</span>
+                                                    <span ng-if="!servingCtrl.loadingModels" style="padding-left:5px;">{{servingCtrl.selectNoChoice}}</span>
+                                                </div>
+                                            </ui-select-no-choice>
+                                        </ui-select>
 
-                                        <input style="margin-top: 5px; width: 40%" name="kafkaNumPartitions"
-                                               class="form-control"
-                                               type="number" min="1"
-                                               ng-model="servingCtrl.editServing.kafkaTopicDTO.numOfPartitions"
-                                               ng-disabled="servingCtrl.editServing.kafkaTopicDTO.name !== 'CREATE'">
+                                        <input style="margin-top: 5px" type="text" class="form-control"
+                                               ng-model="servingCtrl.editServing.artifactPath"
+                                               ng-show="servingCtrl.editServing.modelServer === 'FLASK'">
 
-                                        <input style="margin-top: 5px; width: 40%" name="kafkaReplicationFactor"
-                                               class="form-control" type="number"
-                                               max="{{servingCtrl.kafkaMaxNumReplicas}}" min="1"
-                                               ng-model="servingCtrl.editServing.kafkaTopicDTO.numOfReplicas"
-                                               ng-disabled="servingCtrl.editServing.kafkaTopicDTO.name !== 'CREATE'">
+                                        <input style="margin-top: 5px" name="name" class="form-control" type="text"
+                                               ng-model="servingCtrl.editServing.name">
+                                        <input style="margin-top: 5px" name="modelVersion" class="form-control" type="text"
+                                               ng-model="servingCtrl.editServing.modelVersion"
+                                               ng-if="servingCtrl.editServing.modelServer === 'FLASK'">
 
+                                        <select class="form-control" style="margin-top: 5px; width: 25%" name="modelVersion"
+                                                ng-model="servingCtrl.editServing.modelVersion"
+                                                ng-options="x for x in servingCtrl.editServing.versions"
+                                                ng-if="servingCtrl.editServing.modelServer === 'TENSORFLOW_SERVING'"></select>
+
+                                        <input style="margin-top: 14px;" type="checkbox"
+                                               name="kfserving"
+                                               ng-model="servingCtrl.kfserving"
+                                               ng-disabled="!servingCtrl.isKFServing || servingCtrl.editServing.modelServer === 'FLASK'"
+                                               ng-click="servingCtrl.setKFServing()">
+
+                                        <rzslider style="margin-top: 40px;"
+                                                  rz-slider-model="servingCtrl.sliderOptions.value"
+                                                  rz-slider-options="servingCtrl.sliderOptions.options">
+                                        </rzslider>
+
+                                        <hr>
+                                    </div>
+                                </div>
+                                <div ng-if="servingCtrl.showAdvancedForm" class="animate-if">
+                                    <div class="row">
+                                        <div class="col-xs-3 col-sm-3 col-md-3 col-lg-3" style="text-align: right;">
+                                            <div style="margin-top: 10px; heigth: 2em;"><label>Request Batching</label></div>
+                                            <div style="margin-top: 10px; heigth: 2em;"><label>Kafka Topic</label></div>
+                                            <div style="margin-top: 10px; heigth: 2em;"><label>Kafka Num Partitions</label></div>
+                                            <div style="margin-top: 10px; heigth: 2em;"><label>Kafka Replication Factor</label></div>
+                                            <div style="margin-top: 10px; heigth: 2em;" ng-show="servingCtrl.hasDockerMemory"><label>Memory</label></div>
+                                            <div style="margin-top: 10px; heigth: 2em;" ng-show="servingCtrl.hasDockerCores"><label>Virtual cores</label></div>
+                                            <div style="margin-top: 10px; heigth: 2em;" ng-show="servingCtrl.hasDockerGpus"><label>GPUs</label></div>
+                                        </div>
+
+                                        <div class="col-xs-6 col-sm-6 col-md-6 col-lg-6" style="padding-top: 10px">
+                                            <input type="checkbox" name="requestBatching"
+                                                   ng-model="servingCtrl.editServing.batchingEnabled"
+                                                   ng-disabled="servingCtrl.kfserving || servingCtrl.editServing.modelServer === 'FLASK'">
+                                            <select class="form-control" style="margin-top: 5px; width: 40%"
+                                                    name="kafkaTopicName"
+                                                    ng-model="servingCtrl.editServing.kafkaTopicDTO"
+                                                    ng-options="x.name for x in servingCtrl.projectKafkaTopics"
+                                                    ng-change="servingCtrl.updateKafkaDetails()"></select>
+
+                                            <input style="margin-top: 5px; width: 40%" name="kafkaNumPartitions"
+                                                   class="form-control"
+                                                   type="number" min="1"
+                                                   ng-model="servingCtrl.editServing.kafkaTopicDTO.numOfPartitions"
+                                                   ng-disabled="servingCtrl.editServing.kafkaTopicDTO.name !== 'CREATE'">
+
+                                            <input style="margin-top: 5px; width: 40%" name="kafkaReplicationFactor"
+                                                   class="form-control" type="number"
+                                                   max="{{servingCtrl.kafkaMaxNumReplicas}}" min="1"
+                                                   ng-model="servingCtrl.editServing.kafkaTopicDTO.numOfReplicas"
+                                                   ng-disabled="servingCtrl.editServing.kafkaTopicDTO.name !== 'CREATE'">
+
+                                            <div ng-show="servingCtrl.hasDockerMemory">
+                                                <div style="margin-top: 5px; width:40%;">
+                                                    <input type="number" class="form-control" id="mem" name="dockerMemory" step="1" ng-min="1024" ng-max="servingCtrl.maxDockerMemory" ng-model="servingCtrl.editServing.predictorResourceConfig.memory" required>
+                                                    <span class="text-danger" ng-show="(servingCtrl.servingConfigForm.dockerMemory.$dirty) && servingCtrl.servingConfigForm.dockerMemory.$error.number">Must be a number.</span>
+                                                    <span class="text-danger" ng-show="(servingCtrl.servingConfigForm.dockerMemory.$dirty) && servingCtrl.servingConfigForm.dockerMemory.$error.max">You can at most allocate {{servingCtrl.maxDockerMemory}} MB.</span>
+                                                    <span class="text-danger" ng-show="(servingCtrl.servingConfigForm.dockerMemory.$dirty) && servingCtrl.servingConfigForm.dockerMemory.$error.min">It is recommended to allocate at minimum 1024 MB.</span>
+                                                </div>
+                                            </div>
+                                            <div ng-show="servingCtrl.hasDockerCores">
+                                                <div style="margin-top: 5px; width:40%;">
+                                                    <select class="form-control" id="cores" ng-model="servingCtrl.editServing.predictorResourceConfig.cores" required>
+                                                        <option ng-selected="servingCtrl.editServing.predictorResourceConfig.cores === i"
+                                                                ng-repeat="i in servingCtrl.range(1, servingCtrl.maxDockerCores)"
+                                                                ng-value="i">{{i}}</option>
+                                                    </select>
+                                                </div>
+                                            </div>
+                                            <div ng-show="servingCtrl.hasDockerGpus">
+                                                <div style="margin-top: 5px; width:40%;">
+                                                    <select class="form-control" id="gpus" ng-model="servingCtrl.editServing.predictorResourceConfig.gpus" required>
+                                                        <option ng-selected="servingCtrl.editServing.predictorResourceConfig.gpus === i"
+                                                                ng-repeat="i in servingCtrl.range(0, servingCtrl.maxDockerGpus)"
+                                                                ng-value="i">{{i}}</option>
+                                                    </select>
+                                                </div>
+                                            </div>
+
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-xs-3 col-sm-3 col-md-3 col-lg-3" style="text-align: right;">
+                                    </div>
+
+                                    <div class="col-xs-6 col-sm-6 col-md-6 col-lg-5">
+                                        <button type="button" style="float:right; margin-bottom: 10px; margin-top: 10px;"
+                                                class="btn btn-success" ng-click="servingCtrl.createOrUpdate()">
+                                            <span class="fa fa-spinner fa-spin" aria-hidden="true"
+                                                  ng-if="servingCtrl.sendingRequest === true"></span>
+                                            {{servingCtrl.editServing.id == null ? 'Create Serving' : 'Update Serving'}}
+                                        </button>
                                     </div>
                                 </div>
                             </div>
-                            <div class="row">
-                                <div class="col-xs-3 col-sm-3 col-md-3 col-lg-3" style="text-align: right;">
-                                </div>
-
-                                <div class="col-xs-6 col-sm-6 col-md-6 col-lg-5">
-                                    <button type="button" style="float:right; margin-bottom: 10px; margin-top: 10px;"
-                                            class="btn btn-success" ng-click="servingCtrl.createOrUpdate()">
-                                        <span class="fa fa-spinner fa-spin" aria-hidden="true"
-                                              ng-if="servingCtrl.sendingRequest === true"></span>
-                                        {{servingCtrl.editServing.id == null ? 'Create Serving' : 'Update Serving'}}
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
+                        </form>
                     </div>
 
                     <hr class="col-xs-12 col-sm-12 col-md-12 col-lg-12"
