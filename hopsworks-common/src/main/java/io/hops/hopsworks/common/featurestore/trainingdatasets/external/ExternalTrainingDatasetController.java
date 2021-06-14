@@ -95,13 +95,13 @@ public class ExternalTrainingDatasetController {
   private String buildDatasetPathADL(TrainingDataset trainingDataset) {
     FeaturestoreADLSConnector adlsConnector = trainingDataset.getExternalTrainingDataset()
         .getFeaturestoreConnector().getAdlsConnector();
-    String directory = Strings.isNullOrEmpty(trainingDataset.getExternalTrainingDataset().getPath()) ? "" :
+    String directory = Strings.isNullOrEmpty(trainingDataset.getExternalTrainingDataset().getPath()) ? "/" :
         trainingDataset.getExternalTrainingDataset().getPath();
     String scheme = adlsConnector.getGeneration() == 1 ? ADL_SCHEME : ABFSS_SCHEME;
     String hostname = adlsConnector.getGeneration() == 1 ?
         adlsConnector.getAccountName() + ADL_URI_SUFFIX :
         adlsConnector.getContainerName() + "@" + adlsConnector.getAccountName() + ABFSS_URI_SUFFIX;
 
-    return scheme + hostname + "/" + directory + trainingDataset.getName() + "_" + trainingDataset.getVersion();
+    return scheme + hostname + directory + trainingDataset.getName() + "_" + trainingDataset.getVersion();
   }
 }

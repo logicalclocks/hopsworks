@@ -1397,7 +1397,7 @@ public class RESTCodes {
         Response.Status.BAD_REQUEST),
     ILLEGAL_FEATUREGROUP_VERSION(59, "Illegal feature group version",
         Response.Status.BAD_REQUEST),
-    ILLEGAL_STORAGE_CONNECTOR_TYPE(60, "The provided storage connector type was not recognized",
+    ILLEGAL_STORAGE_CONNECTOR_TYPE(60, "The provided storage connector type is not valid",
         Response.Status.BAD_REQUEST),
     FEATURESTORE_INITIALIZATION_ERROR(61, "Featurestore Initialization Error", Response.Status.INTERNAL_SERVER_ERROR),
     FEATURESTORE_UTIL_ARGS_FAILURE(62, "Could not write featurestore util args to HDFS",

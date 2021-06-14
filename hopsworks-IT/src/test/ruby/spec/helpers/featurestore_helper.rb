@@ -547,10 +547,10 @@ module FeaturestoreHelper
     [json_result, name]
   end
 
-  def create_external_training_dataset(project_id, featurestore_id, s3_connector_id, name: nil, location: "",
+  def create_external_training_dataset(project_id, featurestore_id, connector_id, name: nil, location: "",
                                        splits:[], features: nil)
     trainingDatasetType = "EXTERNAL_TRAINING_DATASET"
-    create_training_dataset_endpoint = "#{ENV['HOPSWORKS_API']}/project/" + project_id.to_s + "/featurestores/" + featurestore_id.to_s + "/trainingdatasets"
+    create_training_dataset_endpoint = "#{ENV['HOPSWORKS_API']}/project/#{project_id}/featurestores/#{featurestore_id}/trainingdatasets"
     if name == nil
       training_dataset_name = "training_dataset_#{random_id}"
     else
@@ -579,9 +579,9 @@ module FeaturestoreHelper
         seed: 1234
     }
 
-    unless s3_connector_id.nil?
+    unless connector_id.nil?
       json_data["storageConnector"] = {
-          id: s3_connector_id
+          id: connector_id
       }
     end
 
