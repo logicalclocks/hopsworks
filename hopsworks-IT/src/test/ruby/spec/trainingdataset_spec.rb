@@ -1303,6 +1303,52 @@ describe "On #{ENV['OS']}" do
           expect_status(201)
           expect(parsed_json1['location']).to eql("s3://testbucket/inner/location/#{training_dataset_name}_1")
         end
+
+        it "should be able to create a training dataset using ADLS connector" do
+          project = get_project
+          featurestore_id = get_featurestore_id(project.id)
+          connector = create_adls_connector(project.id, featurestore_id)
+          connector = JSON.parse(connector)
+          json_result1, training_dataset_name = create_external_training_dataset(project.id, featurestore_id,
+                                                                                 connector["id"],
+                                                                                 location: "/inner/location/")
+          parsed_json1 = JSON.parse(json_result1)
+          expect_status_details(201)
+          expect(parsed_json1['location']).to eql("abfss://containerName@accountName.dfs.core.windows.net/inner/location/#{training_dataset_name}_1")
+        end
+
+        it "should not be able to create a training dataset using a SNOWFLAKE connector" do
+          project = get_project
+          featurestore_id = get_featurestore_id(project.id)
+          connector = create_snowflake_connector(project.id, featurestore_id)
+          connector = JSON.parse(connector)
+          json_result1, training_dataset_name = create_external_training_dataset(project.id, featurestore_id,
+                                                                                 connector["id"],
+                                                                                 location: "/inner/location")
+          expect_status_details(400)
+        end
+
+        it "should not be able to create a training dataset using a REDSHIFT connector" do
+          project = get_project
+          featurestore_id = get_featurestore_id(project.id)
+          connector, _ = create_redshift_connector(project.id, featurestore_id, databasePassword: "pwdf")
+          connector = JSON.parse(connector)
+          json_result1, training_dataset_name = create_external_training_dataset(project.id, featurestore_id,
+                                                                                 connector["id"],
+                                                                                 location: "/inner/location")
+          expect_status_details(400)
+        end
+
+        it "should not be able to create a training dataset using a JDBC connector" do
+          project = get_project
+          featurestore_id = get_featurestore_id(project.id)
+          connector, _ = create_jdbc_connector(project.id, featurestore_id)
+          connector = JSON.parse(connector)
+          json_result1, training_dataset_name = create_external_training_dataset(project.id, featurestore_id,
+                                                                                 connector["id"],
+                                                                                 location: "/inner/location")
+          expect_status_details(400)
+        end
       end
     end
 

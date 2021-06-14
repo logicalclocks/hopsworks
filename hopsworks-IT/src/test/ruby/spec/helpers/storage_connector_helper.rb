@@ -227,6 +227,23 @@ module StorageConnectorHelper
     @s3_connector_id = connector_id
   end
 
+  def create_adls_connector(project_id, featurestore_id)
+    data = {
+      name: "adls_connector_#{random_id}",
+      description: "testadlsconnectordescription",
+      type: "featurestoreADLSConnectorDTO",
+      storageConnectorType: "ADLS",
+      generation: 2,
+      directoryId: "directoryId",
+      applicationId: "applicationId",
+      serviceCredential: "serviceCredential",
+      accountName: "accountName",
+      containerName: "containerName"
+    }
+
+    post "#{ENV['HOPSWORKS_API']}/project/#{project_id}/featurestores/#{featurestore_id}/storageconnectors", data.to_json
+  end
+
   def delete_connector(project_id, featurestore_id, name)
     delete "#{ENV['HOPSWORKS_API']}/project/#{project_id}/featurestores/#{featurestore_id}/storageconnectors/#{name}"
   end

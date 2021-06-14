@@ -17,7 +17,6 @@
 package io.hops.hopsworks.common.featurestore.trainingdatasets;
 
 import com.logicalclocks.shaded.com.google.common.collect.Streams;
-import io.hops.hopsworks.common.featurestore.FeaturestoreConstants;
 import io.hops.hopsworks.common.featurestore.FeaturestoreController;
 import io.hops.hopsworks.common.featurestore.FeaturestoreFacade;
 import io.hops.hopsworks.common.featurestore.activity.FeaturestoreActivityFacade;
@@ -29,7 +28,6 @@ import io.hops.hopsworks.common.featurestore.featuregroup.online.OnlineFeaturegr
 import io.hops.hopsworks.common.featurestore.query.ServingPreparedStatementDTO;
 import io.hops.hopsworks.common.featurestore.query.PreparedStatementParameterDTO;
 import io.hops.hopsworks.common.featurestore.query.filter.Filter;
-import io.hops.hopsworks.common.featurestore.query.filter.FilterController;
 import io.hops.hopsworks.common.featurestore.query.filter.FilterLogic;
 import io.hops.hopsworks.common.featurestore.query.filter.SqlFilterCondition;
 import io.hops.hopsworks.common.featurestore.statistics.StatisticsController;
@@ -45,8 +43,6 @@ import io.hops.hopsworks.common.featurestore.trainingdatasets.external.ExternalT
 import io.hops.hopsworks.common.featurestore.trainingdatasets.external.ExternalTrainingDatasetFacade;
 import io.hops.hopsworks.common.featurestore.trainingdatasets.hopsfs.HopsfsTrainingDatasetController;
 import io.hops.hopsworks.common.featurestore.trainingdatasets.hopsfs.HopsfsTrainingDatasetFacade;
-import io.hops.hopsworks.common.featurestore.trainingdatasets.split.TrainingDatasetSplitDTO;
-import io.hops.hopsworks.common.featurestore.transformationFunction.TransformationFunctionController;
 import io.hops.hopsworks.common.featurestore.transformationFunction.TransformationFunctionFacade;
 import io.hops.hopsworks.common.featurestore.utils.FeaturestoreInputValidation;
 import io.hops.hopsworks.common.featurestore.utils.FeaturestoreUtils;
@@ -84,7 +80,6 @@ import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.exceptions.ProvenanceException;
 import io.hops.hopsworks.restutils.RESTCodes;
 import org.apache.calcite.sql.JoinType;
-import org.apache.commons.lang3.StringUtils;
 
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
@@ -94,14 +89,11 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Date;
-import java.util.HashSet;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 import java.util.logging.Level;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 /**
@@ -149,15 +141,13 @@ public class TrainingDatasetController {
   @EJB
   private StatisticColumnController statisticColumnController;
   @EJB
-  private FilterController filterController;
-  @EJB
   private FeaturestoreController featurestoreController;
   @EJB
   private OnlineFeaturegroupController onlineFeaturegroupController;
   @EJB
-  private TransformationFunctionController transformationFunctionController;
-  @EJB
   private TransformationFunctionFacade transformationFunctionFacade;
+  @EJB
+  private TrainingDatasetInputValidation inputValidation;
 
 
   // this is used to overwrite feature type in prepared statement
@@ -262,7 +252,7 @@ public class TrainingDatasetController {
     }
   
     // Verify input
-    verifyTrainingDatasetInput(trainingDatasetDTO, query);
+    inputValidation.validate(trainingDatasetDTO, query);
 
     Inode inode = null;
     FeaturestoreConnector featurestoreConnector;
@@ -592,8 +582,11 @@ public class TrainingDatasetController {
                                                           Featurestore featurestore,
                                                           TrainingDatasetDTO trainingDatasetDTO)
       throws FeaturestoreException, ServiceException {
-    TrainingDataset trainingDataset = verifyTrainingDatasetId(trainingDatasetDTO.getId(), featurestore);
-  
+    TrainingDataset trainingDataset =
+        trainingDatasetFacade.findByIdAndFeaturestore(trainingDatasetDTO.getId(), featurestore)
+            .orElseThrow(() -> new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.TRAINING_DATASET_NOT_FOUND,
+            Level.FINE, "training dataset id: " + trainingDatasetDTO.getId()));
+
     // Verify general entity related information
     featurestoreInputValidation.verifyUserInput(trainingDatasetDTO);
 
@@ -655,177 +648,6 @@ public class TrainingDatasetController {
   public String getTrainingDatasetPath(String trainingDatasetsFolderPath, String trainingDatasetName, Integer version){
     return trainingDatasetsFolderPath + "/" + trainingDatasetName + "_" + version;
   }
-
-  /**
-   * Verifies the id of a training dataset
-   *
-   * @param trainingDatasetId the id of the training dataset
-   * @param featurestore the featurestore to query
-   * @return the training dataset with the Id if it passed the validation
-   * @throws FeaturestoreException if the training dataset was not found
-   */
-  private TrainingDataset verifyTrainingDatasetId(Integer trainingDatasetId, Featurestore featurestore)
-      throws FeaturestoreException {
-    return trainingDatasetFacade.findByIdAndFeaturestore(trainingDatasetId, featurestore)
-        .orElseThrow(() -> new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.TRAINING_DATASET_NOT_FOUND,
-            Level.FINE, "training dataset id: " + trainingDatasetId));
-  }
-  
-  /**
-   * Verify training dataset type
-   *
-   * @param trainingDatasetType the training dataset type to verify
-   * @throws FeaturestoreException
-   */
-  private void verifyTrainingDatasetType(TrainingDatasetType trainingDatasetType) throws FeaturestoreException {
-    if (trainingDatasetType != TrainingDatasetType.HOPSFS_TRAINING_DATASET &&
-      trainingDatasetType != TrainingDatasetType.EXTERNAL_TRAINING_DATASET) {
-      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_TRAINING_DATASET_TYPE, Level.FINE,
-        ", Recognized Training Dataset types are: " + TrainingDatasetType.HOPSFS_TRAINING_DATASET + ", and: " +
-        TrainingDatasetType.EXTERNAL_TRAINING_DATASET+ ". The provided training dataset type was not recognized: "
-        + trainingDatasetType);
-    }
-  }
-  
-  /**
-   * Verify user input training dataset version
-   *
-   * @param version the version to verify
-   * @throws FeaturestoreException
-   */
-  private void verifyTrainingDatasetVersion(Integer version) throws FeaturestoreException {
-    if (version == null) {
-      throw new IllegalArgumentException(
-        RESTCodes.FeaturestoreErrorCode.TRAINING_DATASET_VERSION_NOT_PROVIDED.getMessage());
-    }
-    if(version <= 0) {
-      throw new FeaturestoreException(
-        RESTCodes.FeaturestoreErrorCode.ILLEGAL_TRAINING_DATASET_VERSION, Level.FINE,
-        " version cannot be negative or zero");
-    }
-  }
-  
-  /**
-   * Verfiy user input data format
-   *
-   * @param dataFormat the data format to verify
-   * @throws FeaturestoreException
-   */
-  private void verifyTrainingDatasetDataFormat(String dataFormat) throws FeaturestoreException {
-    if (!FeaturestoreConstants.TRAINING_DATASET_DATA_FORMATS.contains(dataFormat)) {
-      throw new FeaturestoreException(
-        RESTCodes.FeaturestoreErrorCode.ILLEGAL_TRAINING_DATASET_DATA_FORMAT, Level.FINE, ", the recognized " +
-          "training dataset formats are: " +
-          StringUtils.join(FeaturestoreConstants.TRAINING_DATASET_DATA_FORMATS) + ". The provided data " +
-          "format:" + dataFormat + " was not recognized.");
-    }
-  }
-  
-  /**
-   * Verfiy user input split information
-   *
-   * @param trainingDatasetSplitDTOs the list of training dataset splits
-   * @throws FeaturestoreException
-   */
-  private void verifyTrainingDatasetSplits(List<TrainingDatasetSplitDTO> trainingDatasetSplitDTOs)
-    throws FeaturestoreException {
-    if (trainingDatasetSplitDTOs != null && !trainingDatasetSplitDTOs.isEmpty()) {
-      Pattern namePattern = FeaturestoreConstants.FEATURESTORE_REGEX;
-      Set<String> splitNames = new HashSet<>();
-      for (TrainingDatasetSplitDTO trainingDatasetSplitDTO : trainingDatasetSplitDTOs) {
-        if (!namePattern.matcher(trainingDatasetSplitDTO.getName()).matches()) {
-          throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_TRAINING_DATASET_SPLIT_NAME,
-            Level.FINE, ", the provided training dataset split name " + trainingDatasetSplitDTO.getName() + " is " +
-            "invalid. Split names can only contain lower case characters, numbers and underscores and cannot be " +
-            "longer than " + FeaturestoreConstants.FEATURESTORE_ENTITY_NAME_MAX_LENGTH + " characters or empty.");
-        }
-        if (trainingDatasetSplitDTO.getPercentage() == null) {
-          throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_TRAINING_DATASET_SPLIT_PERCENTAGE,
-            Level.FINE, ", the provided training dataset split percentage is invalid. Percentages can only be numeric" +
-            ". Weights will be normalized if they don’t sum up to 1.0.");
-        }
-        if (!splitNames.add(trainingDatasetSplitDTO.getName())) {
-          throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.TRAINING_DATASET_DUPLICATE_SPLIT_NAMES,
-            Level.FINE, " The split names must be unique");
-        }
-      }
-    }
-  }
-
-  // Collect Features for verification
-  private List<Feature> collectFeatures(Query query) {
-    List<Feature> features = new ArrayList<>(query.getFeatures());
-    if (query.getJoins() != null) {
-      for (Join join : query.getJoins()) {
-        features.addAll(collectFeatures(join.getRightQuery()));
-      }
-    }
-
-    return features;
-  }
-
-  private void verifyFeatures(Query query, List<TrainingDatasetFeatureDTO> featuresDTOs) throws FeaturestoreException {
-    if (query == null || featuresDTOs == null) {
-      // If the query is null the features are taken from the featuresDTO, so we are guarantee that the label
-      // features exists
-      // if the featuresDTOs is null and the query is not, the the user didn't specify a label object, no validation
-      // needed.
-      return;
-    }
-
-    List<TrainingDatasetFeatureDTO> labels = featuresDTOs.stream()
-        .filter(TrainingDatasetFeatureDTO::getLabel)
-        .collect(Collectors.toList());
-    List<TrainingDatasetFeatureDTO> featuresWithTransformation = featuresDTOs.stream()
-        .filter(f -> f.getTransformationFunction() != null)
-        .collect(Collectors.toList());
-    List<Feature> features = collectFeatures(query);
-
-    for (TrainingDatasetFeatureDTO label : labels) {
-      if (features.stream().noneMatch(f -> f.getName().equals(label.getName()))) {
-        throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.LABEL_NOT_FOUND, Level.FINE,
-            "Label: " + label.getName() + " is missing");
-      }
-    }
-    for (TrainingDatasetFeatureDTO featureWithTransformation : featuresWithTransformation) {
-      if (features.stream().noneMatch(f -> f.getName().equals(featureWithTransformation.getName()))) {
-        throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.FEATURE_WITH_TRANSFORMATION_NOT_FOUND,
-            Level.FINE, "feature: " + featureWithTransformation.getName() +
-            " is missing and transformation function can't be attached");
-      }
-    }
-
-    //verify join prefix if any
-    if (query != null && query.getJoins() != null) {
-      for (Join join : query.getJoins()){
-        if (join.getPrefix() != null){
-          Pattern namePattern = FeaturestoreConstants.FEATURESTORE_REGEX;
-          if (!namePattern.matcher(join.getPrefix()).matches()) {
-            throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_PREFIX_NAME, Level.FINE,
-                ", the provided prefix name " + join.getPrefix() + " is invalid. Prefix names can only contain lower" +
-                    " case characters, numbers and underscores and cannot be longer than " +
-                    FeaturestoreConstants.FEATURESTORE_ENTITY_NAME_MAX_LENGTH + " characters or empty.");
-          }
-        }
-      }
-    }
-  }
-  
-  /**
-   * Verify training dataset specific input
-   */
-  private void verifyTrainingDatasetInput(TrainingDatasetDTO trainingDatasetDTO, Query query)
-      throws FeaturestoreException {
-    // Verify general entity related information
-    featurestoreInputValidation.verifyUserInput(trainingDatasetDTO);
-    statisticColumnController.verifyStatisticColumnsExist(trainingDatasetDTO, query);
-    verifyTrainingDatasetType(trainingDatasetDTO.getTrainingDatasetType());
-    verifyTrainingDatasetVersion(trainingDatasetDTO.getVersion());
-    verifyTrainingDatasetDataFormat(trainingDatasetDTO.getDataFormat());
-    verifyTrainingDatasetSplits(trainingDatasetDTO.getSplits());
-    verifyFeatures(query, trainingDatasetDTO.getFeatures());
-  }
-
 
   /**
    * Reconstruct the query used to generate the training datset, fetching the features and the joins
