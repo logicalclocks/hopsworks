@@ -129,6 +129,11 @@
                                                                 ng-click="modelCtrl.showDetailedInformation(model.name, version.Version); $event.stopPropagation();"
                                                                 type="button">
                                                         </button>
+                                                        <button class="btn btn-danger glyphicon glyphicon-trash"
+                                                                uib-tooltip="Delete"
+                                                                ng-click="modelCtrl.deleteModel(model.name, version.Version); $event.stopPropagation();"
+                                                                type="button">
+                                                        </button>
                                                     </div>
                                                 </td>
                                             </tr>

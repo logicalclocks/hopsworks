@@ -186,14 +186,15 @@ public class ExperimentsController {
       jobController.versionProgram(sparkJobConf, project, user,
           new Path(Utils.getProjectPath(project.getName()) + relativePath));
       return relativePath;
-    } else {
+    } else if(!Strings.isNullOrEmpty(kernelId)) {
       //experiment in jupyter
       String relativePath = Settings.HOPS_EXPERIMENTS_DATASET + "/" + mlId + "/program.ipynb";
       Path path = new Path(Utils.getProjectPath(project.getName())
-          + "/" + relativePath);
+        + "/" + relativePath);
       jupyterController.versionProgram(project, user, kernelId, path);
       return relativePath;
     }
+    return null;
   }
   
   public List<ExperimentsEndpointDTO> getExperimentsEndpoints(Project project) {

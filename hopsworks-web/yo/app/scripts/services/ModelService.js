@@ -23,8 +23,6 @@ angular.module('hopsWorksApp')
                 return $http.get('/api/project/' + projectId + '/models' + query);
             },
             get: function(projectId, mlId, query) {
-                console.log('query?')
-                console.log(query);
                 return $http.get('/api/project/' + projectId + '/models/' + mlId + query);
             },
             deleteModel: function(projectId, id) {

@@ -217,7 +217,7 @@ angular.module('hopsWorksApp')
 
             self.deleteExperiment = function (id) {
                 ModalService.confirm('sm', 'Delete Experiment?',
-                    'WARNING: This will remove the directory in your Experiments dataset containing your Experiment output, it will also be removed from this view. This action can not be undone.')
+                    'WARNING: This will permanently remove the experiment from this view and associated files. This action can not be undone.')
                     .then(function (success) {
                         startLoading("Deleting Experiment...");
                         ExperimentService.deleteExperiment(self.projectId, id).then(

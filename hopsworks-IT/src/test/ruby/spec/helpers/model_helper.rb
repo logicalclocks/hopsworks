@@ -15,7 +15,7 @@
 =end
 module ModelHelper
 
-  def create_model_job(project, job_name)
+  def create_model_job(project, job_name, notebook_file)
 
     # need to enable python for conversion .ipynb to .py works
     get "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/python/environments"
@@ -25,7 +25,7 @@ module ModelHelper
     end
 
     if !test_file("/Projects/#{project[:projectname]}/Resources/" + job_name + ".ipynb")
-        copy_from_local("#{ENV['PROJECT_DIR']}/hopsworks-IT/src/test/ruby/spec/auxiliary/export_model.ipynb",
+        copy_from_local("#{ENV['PROJECT_DIR']}/hopsworks-IT/src/test/ruby/spec/auxiliary/#{notebook_file}",
                         "/Projects/#{project[:projectname]}/Resources/" + job_name + ".ipynb", @user[:username],
                         "#{project[:projectname]}__Resources", 750, "#{project[:projectname]}")
     end
@@ -46,6 +46,12 @@ module ModelHelper
     get_model_request = "#{ENV['HOPSWORKS_API']}/project/#{project_id}/models/#{ml_id}/#{query}"
     pp get_model_request if defined?(@debugOpt) && @debugOpt
     get get_model_request
+  end
+
+  def delete_model(project_id, ml_id)
+    delete_model_request = "#{ENV['HOPSWORKS_API']}/project/#{project_id}/models/#{ml_id}"
+    pp delete_model_request if defined?(@debugOpt) && @debugOpt
+    delete delete_model_request
   end
 
   def model_exists(project, name, version: 1)
