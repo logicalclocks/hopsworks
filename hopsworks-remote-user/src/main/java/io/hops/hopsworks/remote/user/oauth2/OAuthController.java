@@ -5,13 +5,16 @@ package io.hops.hopsworks.remote.user.oauth2;
 
 import com.nimbusds.oauth2.sdk.ParseException;
 import com.nimbusds.oauth2.sdk.token.BearerAccessToken;
+import io.hops.hopsworks.common.dao.remote.oauth.OauthClientFacade;
 import io.hops.hopsworks.common.dao.remote.oauth.OauthLoginStateFacade;
 import io.hops.hopsworks.common.dao.remote.user.RemoteUserFacade;
 import io.hops.hopsworks.common.remote.RemoteUserDTO;
 import io.hops.hopsworks.common.remote.RemoteUserStateDTO;
+import io.hops.hopsworks.common.remote.oauth.OpenIdConstant;
 import io.hops.hopsworks.common.remote.oauth.OpenIdProviderConfig;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.HopsSecurityException;
+import io.hops.hopsworks.exceptions.RemoteAuthException;
 import io.hops.hopsworks.jwt.exception.VerificationException;
 import io.hops.hopsworks.persistence.entity.remote.oauth.OauthClient;
 import io.hops.hopsworks.persistence.entity.remote.oauth.OauthLoginState;
@@ -19,8 +22,10 @@ import io.hops.hopsworks.persistence.entity.remote.user.RemoteUser;
 import io.hops.hopsworks.persistence.entity.remote.user.RemoteUserType;
 import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.persistence.entity.user.security.ua.UserAccountStatus;
+import io.hops.hopsworks.remote.user.GroupMapping;
 import io.hops.hopsworks.remote.user.RemoteUserAuthController;
 import io.hops.hopsworks.restutils.RESTCodes;
+import org.apache.parquet.Strings;
 
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
@@ -57,6 +62,10 @@ public class OAuthController {
   private RemoteUserFacade remoteUserFacade;
   @EJB
   private Settings settings;
+  @EJB
+  private OauthClientFacade oauthClientFacade;
+  @EJB
+  private OAuthProviderCache oAuthProviderCache;
   
   /**
    *
@@ -147,6 +156,66 @@ public class OAuthController {
       throw new HopsSecurityException(RESTCodes.SecurityErrorCode.CERT_ACCESS_DENIED, Level.FINE);
     }
     return new RemoteUserStateDTO(true, remoteUser, null);
+  }
+  
+  public void saveClient(OauthClient oauthClient) {
+    removeWellKnownFromProviderUri(oauthClient);
+    oauthClientFacade.save(oauthClient);
+    oAuthProviderCache.removeFromCache(oauthClient.getClientId());
+  }
+  
+  public void updateClient(OauthClient oauthClient) {
+    removeWellKnownFromProviderUri(oauthClient);
+    oauthClientFacade.update(oauthClient);
+    oAuthProviderCache.removeFromCache(oauthClient.getClientId());
+  }
+  
+  public void removeClient(OauthClient oauthClient) {
+    oauthClientFacade.remove(oauthClient);
+    oAuthProviderCache.removeFromCache(oauthClient.getClientId());
+  }
+  
+  private void removeWellKnownFromProviderUri(OauthClient oauthClient) {
+    if (oauthClient.getProviderURI().endsWith(OpenIdConstant.OPENID_CONFIGURATION_URL)) {
+      oauthClient.setProviderURI(oauthClient.getProviderURI().replace(OpenIdConstant.OPENID_CONFIGURATION_URL, ""));
+    }
+  }
+  
+  public void updateSettings(Boolean needConsent, Boolean registrationDisabled, Boolean activateUser,
+      GroupMapping groupMapping, String groupMappings, String domain) throws RemoteAuthException {
+    if (groupMapping != null) {
+      if (GroupMapping.GROUP_MAPPING.equals(groupMapping)) {
+        if (Strings.isNullOrEmpty(groupMappings)) {
+          throw new RemoteAuthException(RESTCodes.RemoteAuthErrorCode.ILLEGAL_ARGUMENT, Level.FINE,
+              "Group mapping not set.");
+        }
+        settings.updateOAuthGroupMapping(groupMappings);
+      } else {
+        settings.updateOAuthGroupMapping(groupMapping.getValue());
+      }
+    }
+    
+    if (needConsent != null) {
+      settings.updateRemoteAuthNeedConsent(needConsent);
+    }
+    
+    if (registrationDisabled != null) {
+      settings.updateRegistrationDisabled(registrationDisabled);
+    }
+    
+    if (activateUser != null && activateUser) {
+      settings.updateOAuthAccountStatus(UserAccountStatus.ACTIVATED_ACCOUNT.getValue());
+    }
+    
+    if (!Strings.isNullOrEmpty(domain)) {
+      settings.updateOauthRedirectUri(domain);
+    }
+    
+    if (!Strings.isNullOrEmpty(domain)) {
+      settings.updateOauthLogoutRedirectUri(domain);
+    }
+    
+    settings.refreshCache();
   }
 
 }

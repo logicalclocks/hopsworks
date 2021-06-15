@@ -40,11 +40,7 @@ package io.hops.hopsworks.common.util;
 
 import com.google.common.base.Splitter;
 import com.google.common.base.Strings;
-import io.hops.hopsworks.persistence.entity.project.PaymentType;
-import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.common.dao.user.UserFacade;
-import io.hops.hopsworks.persistence.entity.user.Users;
-import io.hops.hopsworks.persistence.entity.util.Variables;
 import io.hops.hopsworks.common.dela.AddressJSON;
 import io.hops.hopsworks.common.dela.DelaClientType;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
@@ -52,6 +48,10 @@ import io.hops.hopsworks.common.hdfs.Utils;
 import io.hops.hopsworks.common.provenance.core.Provenance;
 import io.hops.hopsworks.common.provenance.core.dto.ProvTypeDTO;
 import io.hops.hopsworks.exceptions.ProvenanceException;
+import io.hops.hopsworks.persistence.entity.project.PaymentType;
+import io.hops.hopsworks.persistence.entity.project.Project;
+import io.hops.hopsworks.persistence.entity.user.Users;
+import io.hops.hopsworks.persistence.entity.util.Variables;
 import io.hops.hopsworks.persistence.entity.util.VariablesVisibility;
 import io.hops.hopsworks.restutils.RESTLogLevel;
 import org.apache.commons.codec.digest.DigestUtils;
@@ -2823,8 +2823,10 @@ public class Settings implements Serializable {
   private String OAUTH_ENABLED = "false";
   private boolean IS_OAUTH_ENABLED = false;
   private String OAUTH_GROUP_MAPPING = "";
-  private String OAUTH_REDIRECT_URI = "hopsworks/callback";
-  private String OAUTH_LOGOUT_REDIRECT_URI = "hopsworks/logout";
+  private String OAUTH_REDIRECT_URI_PATH = "hopsworks/callback";
+  private String OAUTH_LOGOUT_REDIRECT_URI_PATH = "hopsworks/";
+  private String OAUTH_REDIRECT_URI = OAUTH_REDIRECT_URI_PATH;
+  private String OAUTH_LOGOUT_REDIRECT_URI = OAUTH_LOGOUT_REDIRECT_URI_PATH;
   private int OAUTH_ACCOUNT_STATUS = 1;
   private long LDAP_GROUP_MAPPING_SYNC_INTERVAL = 0;
   
@@ -2996,10 +2998,18 @@ public class Settings implements Serializable {
     checkCache();
     return OAUTH_GROUP_MAPPING;
   }
-
+  
+  public void updateOAuthGroupMapping(String mapping) {
+    updateVariableInternal(VARIABLE_OAUTH_GROUP_MAPPING, mapping, VariablesVisibility.ADMIN);
+  }
+  
   public synchronized String getOauthRedirectUri() {
     checkCache();
     return OAUTH_REDIRECT_URI;
+  }
+  
+  public void updateOauthRedirectUri(String uri) {
+    updateVariableInternal(VARIABLE_OAUTH_REDIRECT_URI, uri + OAUTH_REDIRECT_URI_PATH, VariablesVisibility.ADMIN);
   }
   
   public synchronized String getOauthLogoutRedirectUri() {
@@ -3007,9 +3017,18 @@ public class Settings implements Serializable {
     return OAUTH_LOGOUT_REDIRECT_URI;
   }
   
+  public void updateOauthLogoutRedirectUri(String uri) {
+    updateVariableInternal(VARIABLE_OAUTH_LOGOUT_REDIRECT_URI, uri + OAUTH_LOGOUT_REDIRECT_URI_PATH,
+        VariablesVisibility.ADMIN);
+  }
+  
   public synchronized int getOAuthAccountStatus() {
     checkCache();
     return OAUTH_ACCOUNT_STATUS;
+  }
+  
+  public void updateOAuthAccountStatus(Integer val) {
+    updateVariableInternal(VARIABLE_OAUTH_ACCOUNT_STATUS, val.toString(), VariablesVisibility.ADMIN);
   }
   
   public synchronized  boolean shouldValidateEmailVerified() {
@@ -3020,6 +3039,10 @@ public class Settings implements Serializable {
   public synchronized  boolean remoteAuthNeedConsent() {
     checkCache();
     return REMOTE_AUTH_NEED_CONSENT;
+  }
+  
+  public void updateRemoteAuthNeedConsent(boolean needConsent) {
+    updateVariableInternal(VARIABLE_REMOTE_AUTH_NEED_CONSENT, Boolean.toString(needConsent), VariablesVisibility.ADMIN);
   }
 
   public synchronized String getVarLdapAccountStatus() {
@@ -3086,6 +3109,10 @@ public class Settings implements Serializable {
   public synchronized  boolean isRegistrationDisabled() {
     checkCache();
     return DISABLE_REGISTRATION;
+  }
+  
+  public void updateRegistrationDisabled(boolean disable) {
+    updateVariableInternal(VARIABLE_DISABLE_REGISTRATION, Boolean.toString(disable), VariablesVisibility.ADMIN);
   }
 
   // Special flag to disable only registration UI but not the backend

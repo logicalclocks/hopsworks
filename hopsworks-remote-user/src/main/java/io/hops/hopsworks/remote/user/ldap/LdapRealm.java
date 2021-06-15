@@ -7,6 +7,7 @@ import io.hops.hopsworks.common.remote.RemoteUserDTO;
 import io.hops.hopsworks.common.remote.RemoteUsersDTO;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.persistence.entity.remote.user.RemoteUser;
+import org.apache.parquet.Strings;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
@@ -308,6 +309,7 @@ public class LdapRealm {
         ldapUserDTO = new RemoteUserDTO(getUUIDAttribute(attrs, entryUUIDField), getAttribute(attrs, usernameField),
           getAttribute(attrs, givenNameField), getAttribute(attrs, surnameField), getAttrList(attrs, emailField),
           true);
+        validateRemoteUser(ldapUserDTO);
       }
     } catch (Exception e) {
       LOGGER.log(Level.WARNING, "Ldaprealm search error: {0}", filter);
@@ -518,4 +520,21 @@ public class LdapRealm {
     }
   }
   
+  private void validateRemoteUser(RemoteUserDTO remoteUserDTO) {
+    if (Strings.isNullOrEmpty(remoteUserDTO.getUuid())) {
+      LOGGER.log(Level.SEVERE, "Error in Ldap Attributes. {0} not set.", entryUUIDField);
+    }
+    if (Strings.isNullOrEmpty(remoteUserDTO.getUid())) {
+      LOGGER.log(Level.WARNING, "Error in Ldap Attributes. {0} not set.", usernameField);
+    }
+    if (Strings.isNullOrEmpty(remoteUserDTO.getGivenName())) {
+      LOGGER.log(Level.WARNING, "Error in Ldap Attributes. {0} not set.", givenNameField);
+    }
+    if (Strings.isNullOrEmpty(remoteUserDTO.getSurname())) {
+      LOGGER.log(Level.WARNING, "Error in Ldap Attributes. {0} not set.", surnameField);
+    }
+    if (remoteUserDTO.getEmail().isEmpty()) {
+      LOGGER.log(Level.SEVERE, "Error in Ldap Attributes. {0} not set.", emailField);
+    }
+  }
 }

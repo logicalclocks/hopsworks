@@ -3,7 +3,6 @@
  */
 package io.hops.hopsworks.remote.user.oauth2;
 
-import io.hops.hopsworks.common.dao.remote.oauth.OauthClientFacade;
 import io.hops.hopsworks.common.remote.RemoteUserStateDTO;
 import io.hops.hopsworks.common.remote.oauth.OAuthHelper;
 import io.hops.hopsworks.common.remote.oauth.OpenIdProviderConfig;
@@ -34,10 +33,6 @@ public class OAuthHelperImpl implements OAuthHelper {
   @EJB
   private OIDAuthorizationCodeFlowHelper oidAuthorizationCodeFlowHelper;
   @EJB
-  private OauthClientFacade oauthClientFacade;
-  @EJB
-  private OAuthProviderCache oAuthProviderCache;
-  @EJB
   private Settings settings;
   
   @Override
@@ -64,20 +59,17 @@ public class OAuthHelperImpl implements OAuthHelper {
   
   @Override
   public void saveClient(OauthClient oauthClient) {
-    oauthClientFacade.save(oauthClient);
-    oAuthProviderCache.removeFromCache(oauthClient.getClientId());
+    oAuthController.saveClient(oauthClient);
   }
   
   @Override
   public void updateClient(OauthClient oauthClient) {
-    oauthClientFacade.update(oauthClient);
-    oAuthProviderCache.removeFromCache(oauthClient.getClientId());
+    oAuthController.updateClient(oauthClient);
   }
   
   @Override
   public void removeClient(OauthClient oauthClient) {
-    oauthClientFacade.remove(oauthClient);
-    oAuthProviderCache.removeFromCache(oauthClient.getClientId());
+    oAuthController.removeClient(oauthClient);
   }
   
   @Override

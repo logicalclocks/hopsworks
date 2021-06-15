@@ -420,6 +420,7 @@ public class OIDAuthorizationCodeFlowHelper {
       groups.add(userInfo.toJSONObject().getAsString(OpenIdConstant.ROLES));
     }
     remoteUserDTO.setGroups(groups);
+    validateRemoteUser(remoteUserDTO);
     return remoteUserDTO;
   }
   
@@ -436,22 +437,29 @@ public class OIDAuthorizationCodeFlowHelper {
     if (client.isVerifyEmail()) {
       remoteUserDTO.setEmailVerified(userInfo.getEmailVerified() != null && userInfo.getEmailVerified());
     } else {
-      DecodedJWT decodedJWT = JWT.decode(accessToken.getValue());
-      if (!decodedJWT.getClaim(OpenIdConstant.AD_UNIQUE_NAME_CLAIM).isNull()) {
-        emails.add(decodedJWT.getClaim(OpenIdConstant.AD_UNIQUE_NAME_CLAIM).asString());
-      }
-      if (!decodedJWT.getClaim(OpenIdConstant.AD_PREFERRED_NAME_CLAIM).isNull()) {
-        emails.add(decodedJWT.getClaim(OpenIdConstant.AD_PREFERRED_NAME_CLAIM).asString());
-      }
-      if (!decodedJWT.getClaim(OpenIdConstant.AD_USER_PRINCIPAL_NAME_CLAIM).isNull()) {
-        emails.add(decodedJWT.getClaim(OpenIdConstant.AD_USER_PRINCIPAL_NAME_CLAIM).asString());
-      }
-      if (emails.isEmpty()) {
+      if (emails.isEmpty() && accessToken != null && !Strings.isNullOrEmpty(accessToken.getValue())) {
+        DecodedJWT decodedJWT = JWT.decode(accessToken.getValue());
+        if (isEmail(decodedJWT, OpenIdConstant.AD_UNIQUE_NAME_CLAIM)) {
+          emails.add(decodedJWT.getClaim(OpenIdConstant.AD_UNIQUE_NAME_CLAIM).asString());
+        }
+        if (isEmail(decodedJWT, OpenIdConstant.AD_PREFERRED_NAME_CLAIM)) {
+          emails.add(decodedJWT.getClaim(OpenIdConstant.AD_PREFERRED_NAME_CLAIM).asString());
+        }
+        if (isEmail(decodedJWT, OpenIdConstant.AD_USER_PRINCIPAL_NAME_CLAIM)) {
+          emails.add(decodedJWT.getClaim(OpenIdConstant.AD_USER_PRINCIPAL_NAME_CLAIM).asString());
+        }
+      } else if (emails.isEmpty()) {
         generateEmail(remoteUserDTO, emails);
       }
       remoteUserDTO.setEmailVerified(true);
     }
     remoteUserDTO.setEmail(new ArrayList<>(emails));
+  }
+  
+  private boolean isEmail(DecodedJWT decodedJWT, String claimName) {
+    return decodedJWT != null && !decodedJWT.getClaim(claimName).isNull() &&
+        decodedJWT.getClaim(claimName).asString().contains("@") &&
+        !decodedJWT.getClaim(claimName).asString().startsWith("@");
   }
   
   private void generateEmail(RemoteUserDTO remoteUserDTO, Set<String> emails) throws LoginException {
@@ -485,4 +493,21 @@ public class OIDAuthorizationCodeFlowHelper {
     return u != null? null : email.toLowerCase();
   }
   
+  private void validateRemoteUser(RemoteUserDTO remoteUserDTO) {
+    if (Strings.isNullOrEmpty(remoteUserDTO.getUuid())) {
+      LOGGER.log(Level.SEVERE, "Error in UserInfo response. UUID not set.");
+    }
+    if (Strings.isNullOrEmpty(remoteUserDTO.getUid())) {
+      LOGGER.log(Level.WARNING, "Error in UserInfo response. UID not set.");
+    }
+    if (Strings.isNullOrEmpty(remoteUserDTO.getGivenName())) {
+      LOGGER.log(Level.WARNING, "Error in UserInfo response. GivenName not set.");
+    }
+    if (Strings.isNullOrEmpty(remoteUserDTO.getSurname())) {
+      LOGGER.log(Level.WARNING, "Error in UserInfo response. Surname not set.");
+    }
+    if (remoteUserDTO.getEmail().isEmpty()) {
+      LOGGER.log(Level.SEVERE, "Error in UserInfo response. Email not set.");
+    }
+  }
 }

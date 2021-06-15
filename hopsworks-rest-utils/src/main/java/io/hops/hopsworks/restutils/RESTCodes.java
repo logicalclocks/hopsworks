@@ -2155,4 +2155,40 @@ public class RESTCodes {
       return range;
     }
   }
+  
+  public enum RemoteAuthErrorCode implements RESTErrorCode {
+    NOT_FOUND(0, "Not found.", Response.Status.NOT_FOUND),
+    DUPLICATE_ENTRY(1, "Duplicate entry.", Response.Status.BAD_REQUEST),
+    ILLEGAL_ARGUMENT(2, "Illegal argument.", Response.Status.BAD_REQUEST);
+    
+    private int code;
+    private String message;
+    private Response.Status respStatus;
+    public final int range = 400000;
+  
+    RemoteAuthErrorCode(Integer code, String message, Response.Status respStatus) {
+      this.code = range + code;
+      this.message = message;
+      this.respStatus = respStatus;
+    }
+    
+    @Override
+    public Integer getCode() {
+      return code;
+    }
+    
+    @Override
+    public String getMessage() {
+      return message;
+    }
+    
+    public Response.StatusType getRespStatus() {
+      return respStatus;
+    }
+    
+    @Override
+    public int getRange() {
+      return range;
+    }
+  }
 }
