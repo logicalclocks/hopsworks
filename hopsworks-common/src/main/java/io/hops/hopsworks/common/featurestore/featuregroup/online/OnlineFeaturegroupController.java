@@ -168,7 +168,8 @@ public class OnlineFeaturegroupController {
     SubjectDTO topicSubject = subjectsController.registerNewSubject(project, topicName, avroSchema, false);
     subjectsCompatibilityController.setSubjectCompatibility(project, topicName, SchemaCompatibility.NONE);
     // TODO(Fabio): Make Kafka topics configurable
-    TopicDTO topicDTO = new TopicDTO(topicName, 1, 1, topicSubject.getSubject(), topicSubject.getVersion());
+    TopicDTO topicDTO = new TopicDTO(topicName, 1, settings.getOnlineFsThreadNumber(), topicSubject.getSubject(),
+      topicSubject.getVersion());
     kafkaController.createTopic(project, topicDTO);
   }
   
