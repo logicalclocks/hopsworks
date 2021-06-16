@@ -189,7 +189,7 @@ public class TrainingDatasetInputValidation {
 
   private void validateStorageConnector(FeaturestoreStorageConnectorDTO connectorDTO)
       throws FeaturestoreException {
-    if (connectorDTO == null) {
+    if (connectorDTO == null || connectorDTO.getId() == null) {
       // The storage connector is null, the training dataset will use the default
       // HopsFS training dataset connector controller from the project
       return;
