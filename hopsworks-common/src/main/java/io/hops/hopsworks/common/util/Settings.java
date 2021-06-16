@@ -314,6 +314,7 @@ public class Settings implements Serializable {
   private static final String VARIABLE_FG_PREVIEW_LIMIT = "fg_preview_limit";
   private static final String VARIABLE_ONLINE_FEATURESTORE_TS = "featurestore_online_tablespace";
   private static final String VARIABLE_FS_JOB_ACTIVITY_TIME = "fs_job_activity_time";
+  private static final String VARIABLE_ONLINEFS_THREAD_NUMBER = "onlinefs_service_thread_number";
 
   private static final String VARIABLE_HIVE_CONF_PATH = "hive_conf_path";
   private static final String VARIABLE_FS_JOB_UTIL_PATH = "fs_job_util";
@@ -730,6 +731,7 @@ public class Settings implements Serializable {
       ONLINE_FEATURESTORE = setBoolVar(VARIABLE_ONLINE_FEATURESTORE, ONLINE_FEATURESTORE);
       ONLINE_FEATURESTORE_TS = setStrVar(VARIABLE_ONLINE_FEATURESTORE_TS, ONLINE_FEATURESTORE_TS);
       FS_JOB_ACTIVITY_TIME = setStrVar(VARIABLE_FS_JOB_ACTIVITY_TIME, FS_JOB_ACTIVITY_TIME);
+      ONLINEFS_THREAD_NUMBER = setIntVar(VARIABLE_ONLINEFS_THREAD_NUMBER, ONLINEFS_THREAD_NUMBER);
 
       KIBANA_HTTPS_ENABELED = setBoolVar(VARIABLE_KIBANA_HTTPS_ENABLED,
           KIBANA_HTTPS_ENABELED);
@@ -3363,6 +3365,12 @@ public class Settings implements Serializable {
   public synchronized String getOnlineFeatureStoreTableSpace() {
     checkCache();
     return ONLINE_FEATURESTORE_TS;
+  }
+
+  private Integer ONLINEFS_THREAD_NUMBER = 10;
+  public synchronized  Integer getOnlineFsThreadNumber() {
+    checkCache();
+    return ONLINEFS_THREAD_NUMBER;
   }
 
   private Integer KUBE_DOCKER_MAX_MEMORY_ALLOCATION = 8192;
