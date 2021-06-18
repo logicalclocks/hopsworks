@@ -5,8 +5,9 @@ package io.hops.hopsworks.cloud.dao.heartbeat;
 
 public class Version {
   public static final Version V010 = new Version(0, 1, 0);
+  public static final Version V020 = new Version(0, 2, 0);
 
-  public static final Version CURRENT = V010;
+  public static final Version CURRENT = V020;
 
   private final Integer major;
   private final Integer minor;

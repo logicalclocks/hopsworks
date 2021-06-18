@@ -14,6 +14,7 @@ import io.hops.hopsworks.cloud.dao.heartbeat.commands.CloudCommandType;
 import io.hops.hopsworks.cloud.dao.heartbeat.commands.CloudCommandTypeDeserializer;
 import io.hops.hopsworks.cloud.dao.heartbeat.commands.CloudCommandsDeserializer;
 import io.hops.hopsworks.cloud.dao.heartbeat.commands.CommandStatus;
+import io.hops.hopsworks.cloud.dao.heartbeat.commands.DecommissionNodeCommand;
 import io.hops.hopsworks.cloud.dao.heartbeat.commands.RemoveNodesCommand;
 import io.hops.hopsworks.cloud.dao.heartbeat.commands.RemoveNodesCommandSerializer;
 import org.junit.Assert;
@@ -158,9 +159,12 @@ public class HeartbeatDeserialization {
     nodesToRemove1.put("instance.type.30", 6);
     CloudCommand command1 = new RemoveNodesCommand(2L, nodesToRemove1);
 
+    CloudCommand command2 = new DecommissionNodeCommand(3L, "host", "nodeId");
+    
     List<CloudCommand> commands = new ArrayList<>(3);
     commands.add(command0);
     commands.add(command1);
+    commands.add(command2);
     commands.add(new DummyCommand(12L, "args1"));
     commands.add(new DummyCommand(13L, "args2"));
 

@@ -13,6 +13,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.logicalclocks.servicediscoverclient.exceptions.ServiceDiscoveryException;
 import com.logicalclocks.servicediscoverclient.service.Service;
 import io.hops.hopsworks.cloud.dao.heartbeat.DecommissionStatus;
+import io.hops.hopsworks.cloud.dao.heartbeat.commands.DecommissionNodeCommand;
 import io.hops.hopsworks.common.dao.host.HostDTO;
 import io.hops.hopsworks.common.dao.host.HostsFacade;
 import io.hops.hopsworks.common.dao.user.UserFacade;
@@ -204,11 +205,15 @@ public class CloudManager {
         Service nm = serviceDiscoveryController
             .getAnyAddressOfServiceWithDNS(ServiceDiscoveryController.HopsworksService.RPC_NAMENODE);
         
-        final List<RemoveNodesCommand> requests = response.getCommands().stream()
+        final List<RemoveNodesCommand> removeNodesRequests = response.getCommands().stream()
             .filter(cc -> cc.getType().equals(CloudCommandType.REMOVE_NODES))
             .map(cc -> (RemoveNodesCommand) cc).collect(Collectors.toList());
+        
+        final List<DecommissionNodeCommand> decomissionNodeRequests = response.getCommands().stream()
+            .filter(cc -> cc.getType().equals(CloudCommandType.DECOMMISSION_NODE))
+            .map(cc -> (DecommissionNodeCommand) cc).collect(Collectors.toList());
 
-        toSend = setAndGetDecommission(requests, workers);
+        toSend = setAndGetDecommission(removeNodesRequests, workers, decomissionNodeRequests);
 
         if (firstHeartbeat) {
           firstHeartbeat = false;
@@ -291,10 +296,12 @@ public class CloudManager {
         ws.sort(comparator);
       }
       for (CloudNode worker : ws) {
-        toRemove.put(worker.getHost(), worker);
-        count++;
-        if (count >= max) {
-          break;
+        if (!toRemove.containsKey(worker.getHost())) {
+          toRemove.put(worker.getHost(), worker);
+          count++;
+          if (count >= max) {
+            break;
+          }
         }
       }
     }
@@ -316,8 +323,9 @@ public class CloudManager {
     }
   }
   
-  private DecommissionStatus setAndGetDecommission(List<RemoveNodesCommand> commands,
-      Map<String, CloudNode> workers) throws InterruptedException {
+  private DecommissionStatus setAndGetDecommission(List<RemoveNodesCommand> removeNodesCommands,
+      Map<String, CloudNode> workers, List<DecommissionNodeCommand> decomissionNodeRequests)
+      throws InterruptedException {
     Configuration conf = settings.getConfiguration();
     YarnClientWrapper yarnClientWrapper = null;
     DistributedFileSystemOps dfsOps = null;
@@ -325,8 +333,8 @@ public class CloudManager {
       dfsOps = dfsService.getDfsOps();
       yarnClientWrapper = yarnClientService.getYarnClientSuper(conf);
       //we pass yarnClient, dfsOps, caProxy and hostsController as argument to be able to mock them in testing
-      return setAndGetDecommission(commands, workers, yarnClientWrapper.getYarnClient(),
-          dfsOps, conf, caProxy, hostsController);
+      return setAndGetDecommission(removeNodesCommands, workers, yarnClientWrapper.getYarnClient(),
+          dfsOps, conf, caProxy, hostsController, decomissionNodeRequests);
     } finally {
       dfsService.closeDfsClient(dfsOps);
       yarnClientService.closeYarnClient(yarnClientWrapper);
@@ -334,9 +342,10 @@ public class CloudManager {
   }
   
   @VisibleForTesting
-  DecommissionStatus setAndGetDecommission(List<RemoveNodesCommand> commands,
-      Map<String, CloudNode> workers, YarnClient yarnClient, DistributedFileSystemOps dfsOps, Configuration conf,
-      CAProxy caProxy, HostsController hostsController) throws InterruptedException {
+  DecommissionStatus setAndGetDecommission(List<RemoveNodesCommand> removeNodesCommands, Map<String, CloudNode> workers,
+      YarnClient yarnClient, DistributedFileSystemOps dfsOps, Configuration conf, CAProxy caProxy,
+      HostsController hostsController, List<DecommissionNodeCommand> decomissionNodeRequests) throws
+      InterruptedException {
 
     try {
       int nbTries = 0;
@@ -381,8 +390,8 @@ public class CloudManager {
         }
       });
 
-      Map<String, CloudNode> toDecom = selectNodeToDecommission(commands,
-          activeNodeReports, workerPerType);
+      Map<String, CloudNode> toDecom = selectNodeToDecommission(removeNodesCommands,
+          activeNodeReports, workerPerType, decomissionNodeRequests, workers);
       
 
       //as we overwrite the config files for yarn and hdfs we need a list of all the nodes that should still be in
@@ -440,11 +449,19 @@ public class CloudManager {
         //The most important is to decommission in Yarn, it is ok to swallow this exception.
       }
 
-      if (commands != null) {
-        for (RemoveNodesCommand cmd : commands) {
+      if (removeNodesCommands != null) {
+        for (RemoveNodesCommand cmd : removeNodesCommands) {
           if (!commandsStatus.containsKey(cmd.getId())) {
             commandsStatus.put(cmd.getId(), new CommandStatus(CommandStatus.CLOUD_COMMAND_STATUS.SUCCEED,
                 "Successfully started the decommission of " + decommissioning.size() + " nodes"));
+          }
+        }
+      }
+      if (decomissionNodeRequests != null) {
+        for (DecommissionNodeCommand cmd : decomissionNodeRequests) {
+          if (!commandsStatus.containsKey(cmd.getId())) {
+            commandsStatus.put(cmd.getId(), new CommandStatus(CommandStatus.CLOUD_COMMAND_STATUS.SUCCEED,
+                "Successfully started the decommission of " + cmd.getHost()));
           }
         }
       }
@@ -455,8 +472,14 @@ public class CloudManager {
       //if we arrive here it means that none of the decommissioning request has been correctly processed
       //set all of them as failed
       LOG.log(Level.SEVERE, "Failed to decommission node.", ex);
-      if (commands != null) {
-        for (RemoveNodesCommand cmd : commands) {
+      if (removeNodesCommands != null) {
+        for (RemoveNodesCommand cmd : removeNodesCommands) {
+          commandsStatus.put(cmd.getId(), new CommandStatus(CommandStatus.CLOUD_COMMAND_STATUS.FAILED,
+              ex.getMessage()));
+        }
+      }
+      if (decomissionNodeRequests != null) {
+        for (DecommissionNodeCommand cmd : decomissionNodeRequests) {
           commandsStatus.put(cmd.getId(), new CommandStatus(CommandStatus.CLOUD_COMMAND_STATUS.FAILED,
               ex.getMessage()));
         }
@@ -632,11 +655,21 @@ public class CloudManager {
     }
   }
 
-  private Map<String, CloudNode> selectNodeToDecommission(List<RemoveNodesCommand> commands,
-      Map<String, NodeReport> activeNodeReports, Map<String, Map<Status, Set<CloudNode>>> workerPerType) {
+  private Map<String, CloudNode> selectNodeToDecommission(List<RemoveNodesCommand> removeNodesCommands,
+      Map<String, NodeReport> activeNodeReports, Map<String, Map<Status, Set<CloudNode>>> workerPerType,
+      List<DecommissionNodeCommand> decomissionNodeRequests, Map<String, CloudNode> workers) {
     Map<String, CloudNode> toDecom = new HashMap<>();
-    for (RemoveNodesCommand cmd : commands) {
-      Map<String, CloudNode> toDecomCMD = new HashMap<>();
+    for (DecommissionNodeCommand cmd : decomissionNodeRequests) {
+      //check that the node exist
+      if(!activeNodeReports.containsKey(cmd.getHost())){
+        //add the node to toDecom
+        LOG.log(Level.WARNING, "Decomissioning a node that is not present in the cluster {0}", new Object[]{cmd.
+          getHost()});
+      }
+      toDecom.put(cmd.getHost(), workers.get(cmd.getHost()));
+    }
+    
+    for (RemoveNodesCommand cmd : removeNodesCommands) {
       if (cmd != null && cmd.getNodesToRemove() != null) {
         for (Map.Entry<String, Integer> req : cmd.getNodesToRemove().entrySet()) {
           String type = req.getKey();
@@ -667,26 +700,23 @@ public class CloudManager {
           }
           
           //first try to select node that are not present in yarn
-          number -= addToRemove(Status.NOPRESENT, workerPerStatus, toDecomCMD, number, null);
+          number -= addToRemove(Status.NOPRESENT, workerPerStatus, toDecom, number, null);
           if (number <= 0) {
-            toDecom.putAll(toDecomCMD);
             continue;
           }
           //first try to select node that are unusable
-          number -= addToRemove(Status.UNUSABLE, workerPerStatus, toDecomCMD, number, null);
+          number -= addToRemove(Status.UNUSABLE, workerPerStatus, toDecom, number, null);
           if (number <= 0) {
-            toDecom.putAll(toDecomCMD);
             continue;
           }
           //then select nodes that are empty to avoid interefering with running applications
-          number -= addToRemove(Status.EMPTY, workerPerStatus, toDecomCMD, number, null);
+          number -= addToRemove(Status.EMPTY, workerPerStatus, toDecom, number, null);
           if (number <= 0) {
-            toDecom.putAll(toDecomCMD);
             continue;
           }
           //then select nodes running no application master and the least number of containers to minimize 
           //interfering with running application
-          number -= addToRemove(Status.NOMASTER, workerPerStatus, toDecomCMD, number, 
+          number -= addToRemove(Status.NOMASTER, workerPerStatus, toDecom, number, 
             (CloudNode cn1, CloudNode cn2) -> {
               Integer cn1NumContainers
                 = activeNodeReports.get(cn1.getHost()).getNumContainers();
@@ -695,11 +725,10 @@ public class CloudManager {
               return cn1NumContainers.compareTo(cn2NumContainers);
             });
           if (number <= 0) {
-            toDecom.putAll(toDecomCMD);
             continue;
           }
           //finally select nodes running the least number of application masters to minimize interferences
-          number -= addToRemove(Status.OTHER, workerPerStatus, toDecomCMD, number, (CloudNode cn1, CloudNode cn2) -> {
+          number -= addToRemove(Status.OTHER, workerPerStatus, toDecom, number, (CloudNode cn1, CloudNode cn2) -> {
             Integer cn1NumAppMaster = activeNodeReports.get(cn1.getHost()).
                 getNumApplicationMasters();
             Integer cn2NumAppMaster = activeNodeReports.get(cn2.getHost()).
@@ -714,7 +743,6 @@ public class CloudManager {
             return cn1NumAppMaster.compareTo(cn2NumAppMaster);
           });
           if (number <= 0) {
-            toDecom.putAll(toDecomCMD);
             continue;
           }
           //this should not happen. Mark this command as failed and treat the other commands

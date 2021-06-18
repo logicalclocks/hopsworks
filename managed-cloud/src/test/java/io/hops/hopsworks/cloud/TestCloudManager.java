@@ -4,6 +4,7 @@
 package io.hops.hopsworks.cloud;
 
 import io.hops.hopsworks.cloud.dao.heartbeat.DecommissionStatus;
+import io.hops.hopsworks.cloud.dao.heartbeat.commands.DecommissionNodeCommand;
 import io.hops.hopsworks.cloud.dao.heartbeat.commands.RemoveNodesCommand;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.hosts.HostsController;
@@ -54,7 +55,7 @@ public class TestCloudManager {
     DistributedFileSystemOps dfsOps = Mockito.mock(DistributedFileSystemOps.class);
     
     DecommissionStatus status = cloudManager.setAndGetDecommission(new ArrayList<>(), workers,
-        yarnClient, dfsOps, conf, caProxy, hostsController);
+        yarnClient, dfsOps, conf, caProxy, hostsController, new ArrayList<>());
     
     Assert.assertTrue(status.getDecommissioned().size() == 1);
     Assert.assertTrue(status.getDecommissioning().isEmpty());
@@ -71,7 +72,7 @@ public class TestCloudManager {
     Mockito.doReturn(Instant.now()).when(cloudManager).getBeginningOfHeartbeat();
     
     status = cloudManager.setAndGetDecommission(new ArrayList<>(), workers, yarnClient, dfsOps, conf, caProxy,
-        hostsController);
+        hostsController, new ArrayList<>());
     
     Assert.assertTrue(status.getDecommissioning().size() == 1);
     Assert.assertTrue(status.getDecommissioned().isEmpty());
@@ -88,7 +89,7 @@ public class TestCloudManager {
     Mockito.doReturn(Instant.now()).when(cloudManager).getBeginningOfHeartbeat();
     
     status = cloudManager.setAndGetDecommission(new ArrayList<>(), workers, yarnClient, dfsOps, conf, caProxy,
-        hostsController);
+        hostsController, new ArrayList<>());
     
     Assert.assertTrue(status.getDecommissioning().isEmpty());
     Assert.assertTrue(status.getDecommissioned().isEmpty());
@@ -107,7 +108,7 @@ public class TestCloudManager {
     Mockito.doReturn(Instant.now()).when(cloudManager).getBeginningOfHeartbeat();
     
     status = cloudManager.setAndGetDecommission(new ArrayList<>(), workers, yarnClient, dfsOps, conf, caProxy,
-        hostsController);
+        hostsController, new ArrayList<>());
     Assert.assertTrue(status.getDecommissioning().isEmpty());
     Assert.assertTrue(status.getDecommissioned().isEmpty());
 
@@ -123,7 +124,7 @@ public class TestCloudManager {
     Mockito.stub(yarnClient.getNodeReports()).toReturn(report);
     
     status = cloudManager.setAndGetDecommission(new ArrayList<>(), workers, yarnClient, dfsOps, conf, caProxy,
-        hostsController);
+        hostsController, new ArrayList<>());
     //we only return newly decomissioned nodes.
     Assert.assertTrue(status.getDecommissioned().isEmpty());
     Assert.assertTrue(status.getDecommissioning().isEmpty());
@@ -174,7 +175,7 @@ public class TestCloudManager {
     requests.add(request);
 
     DecommissionStatus status = cloudManager.setAndGetDecommission(requests, workers, yarnClient, dfsOps, conf, caProxy,
-        hostsController);
+        hostsController, new ArrayList<>());
     
     Assert.assertTrue(status.getDecommissioning().isEmpty());
     Assert.assertTrue(status.getDecommissioned().size() == 1);
@@ -210,7 +211,7 @@ public class TestCloudManager {
     requests.add(request);
 
     status = cloudManager.setAndGetDecommission(requests, workers, yarnClient, dfsOps, conf, caProxy,
-        hostsController);
+        hostsController, new ArrayList<>());
     
     Assert.assertTrue(status.getDecommissioning().size() == 1);
     Assert.assertTrue(status.getDecommissioned().size() == 1);
@@ -251,7 +252,7 @@ public class TestCloudManager {
 
 
     status = cloudManager.setAndGetDecommission(requests, workers, yarnClient, dfsOps, conf, caProxy,
-        hostsController);
+        hostsController, new ArrayList<>());
     
     Assert.assertTrue(status.getDecommissioning().size() == 2);
     Assert.assertTrue(status.getDecommissioned().size() == 1);
@@ -294,7 +295,7 @@ public class TestCloudManager {
     requests.add(request);
 
     status = cloudManager.setAndGetDecommission(requests, workers, yarnClient, dfsOps, conf, caProxy,
-        hostsController);
+        hostsController, new ArrayList<>());
     
     Assert.assertTrue(status.getDecommissioning().size() == 3);
     Assert.assertTrue(status.getDecommissioned().size() == 1);
@@ -359,7 +360,7 @@ public class TestCloudManager {
     requests.add(request);
 
     DecommissionStatus status = cloudManager.setAndGetDecommission(requests, workers, yarnClient, dfsOps, conf, caProxy,
-        hostsController);
+        hostsController, new ArrayList<>());
 
     Assert.assertTrue(status.getDecommissioning().size() == 1);
     Assert.assertTrue(status.getDecommissioned().isEmpty());
@@ -417,7 +418,7 @@ public class TestCloudManager {
     requests.add(request);
 
     DecommissionStatus status = cloudManager.setAndGetDecommission(requests, workers, yarnClient, dfsOps, conf, caProxy,
-        hostsController);
+        hostsController, new ArrayList<>());
 
     Assert.assertTrue(status.getDecommissioning().size() == 1);
     Assert.assertTrue(status.getDecommissioned().isEmpty());
@@ -437,6 +438,90 @@ public class TestCloudManager {
     ArgumentCaptor<String> nodes = ArgumentCaptor.forClass(String.class);
     Mockito.verify(dfsOps).updateExcludeList(nodes.capture());
     Assert.assertEquals("host1", nodes.getValue());
+    Mockito.verify(dfsOps).refreshNodes();
+  }
+  
+  
+  
+  @Test
+  public void testDecomissionRequest() throws IOException, TransformerException, TransformerConfigurationException,
+      ParserConfigurationException, Exception {
+    CloudManager cloudManager = Mockito.spy(CloudManager.class);
+    Mockito.doNothing().when(cloudManager).execute(Mockito.any(RMAdminCLI.class), Mockito.any(String[].class));
+    Mockito.doReturn(Instant.now()).when(cloudManager).getBeginningOfHeartbeat();
+    Map<String, CloudNode> workers = new HashMap<>();
+    workers.put("host1", new CloudNode("id", "host1", "ip1", 0, "type1", "running"));
+    workers.put("host2", new CloudNode("id", "host2", "ip2", 0, "type1", "running"));
+    workers.put("host3", new CloudNode("id", "host3", "ip3", 0, "type1", "running"));
+    workers.put("host4", new CloudNode("id", "host4", "ip4", 0, "type1", "running"));
+    
+    Configuration conf = new Configuration();
+
+    
+    List<NodeReport> report = new ArrayList<>();
+    NodeReport nodeReport = NodeReport.newInstance(NodeId.newInstance("host1", 0), NodeState.SHUTDOWN,
+        "httpAddress", "rackName", null, null, 0, null, 0);
+    report.add(nodeReport);
+    nodeReport = NodeReport.newInstance(NodeId.newInstance("host2", 0), NodeState.RUNNING,
+        "httpAddress", "rackName", null, null, 0, null, 0);
+    report.add(nodeReport);
+    nodeReport = NodeReport.newInstance(NodeId.newInstance("host3", 0), NodeState.RUNNING,
+        "httpAddress", "rackName", null, null, 1, null, 0);
+    report.add(nodeReport);
+    nodeReport = NodeReport.newInstance(NodeId.newInstance("host4", 0), NodeState.RUNNING,
+        "httpAddress", "rackName", null, null, 1, null, 0);
+    nodeReport.setNumApplicationMasters(1);
+    report.add(nodeReport);
+    YarnClient yarnClient = Mockito.mock(YarnClient.class);
+    Mockito.stub(yarnClient.getNodeReports()).toReturn(report);
+    HostsController hostsController = Mockito.mock(HostsController.class);
+    CAProxy caProxy = Mockito.mock(CAProxy.class);
+
+    cloudManager = Mockito.spy(CloudManager.class);
+    Mockito.doNothing().when(cloudManager).execute(Mockito.any(RMAdminCLI.class), Mockito.any(String[].class));
+    Mockito.doReturn(Instant.now()).when(cloudManager).getBeginningOfHeartbeat();
+    
+    DistributedFileSystemOps dfsOps = Mockito.mock(DistributedFileSystemOps.class);
+    
+    Map<String, Integer> nodesToRemove = new HashMap<>();
+    nodesToRemove.put("type1", 2);
+    RemoveNodesCommand request = new RemoveNodesCommand(1L, nodesToRemove);
+    List<RemoveNodesCommand> removeCommands = new ArrayList<>();
+    removeCommands.add(request);
+    
+    DecommissionNodeCommand decomCmd = new DecommissionNodeCommand(2L, "host2", "nodeId2");
+    List<DecommissionNodeCommand> decomCommands = new ArrayList<>();
+    decomCommands.add(decomCmd);
+
+    //it should decommission the node from the decommission command and then proceede with the decommission selection
+    //for the remaining nodes.
+    DecommissionStatus status = cloudManager.setAndGetDecommission(removeCommands, workers, yarnClient, dfsOps, conf,
+        caProxy, hostsController, decomCommands);
+       
+    Assert.assertTrue(status.getDecommissioning().size() == 2);
+    Assert.assertTrue(status.getDecommissioned().size() == 1);
+    Assert.assertTrue(status.getDecommissioned().contains(workers.get("host1")));
+    Assert.assertTrue(status.getDecommissioning().contains(workers.get("host2")));
+    Assert.assertTrue(status.getDecommissioning().contains(workers.get("host3")));
+    
+    ArgumentCaptor<String[]> commandCaptor = ArgumentCaptor.forClass(String[].class);
+    Mockito.verify(cloudManager, Mockito.times(2)).execute(Mockito.any(RMAdminCLI.class), commandCaptor.capture());
+    List<String[]> expected = new ArrayList<>(2);
+    expected.add(new String[]{"-updateExcludeList",
+      "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>" +
+          "<hosts>" +
+          "<host><name>host1</name><timeout>36000</timeout></host>" +
+          "<host><name>host3</name><timeout>36000</timeout></host>" +
+          "<host><name>host2</name><timeout>36000</timeout></host>" +
+          "</hosts>"});
+    expected.add(new String[]{"-refreshNodes","-g","-server"});
+    List<String[]> called = commandCaptor.getAllValues();
+    Assert.assertArrayEquals(expected.get(0), called.get(0));
+    Assert.assertArrayEquals(expected.get(1), called.get(1));
+    
+    ArgumentCaptor<String> nodes = ArgumentCaptor.forClass(String.class);
+    Mockito.verify(dfsOps).updateExcludeList(nodes.capture());
+    Assert.assertEquals("host1\nhost3\nhost2", nodes.getValue());
     Mockito.verify(dfsOps).refreshNodes();
   }
 }

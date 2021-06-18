@@ -17,6 +17,8 @@ public class CloudCommandsDeserializer implements JsonDeserializer<CloudCommand>
     String cmdType  = jsonElement.getAsJsonObject().get("type").getAsString();
     if (CloudCommandType.of(cmdType).equals(CloudCommandType.REMOVE_NODES)) {
       return jsonDeserializationContext.deserialize(jsonElement, RemoveNodesCommand.class);
+    } else if(CloudCommandType.of(cmdType).equals(CloudCommandType.DECOMMISSION_NODE)){
+      return jsonDeserializationContext.deserialize(jsonElement, DecommissionNodeCommand.class);
     }
     throw new IllegalArgumentException("We don't know how to deserialize Cloud Command of type: " + cmdType);
   }

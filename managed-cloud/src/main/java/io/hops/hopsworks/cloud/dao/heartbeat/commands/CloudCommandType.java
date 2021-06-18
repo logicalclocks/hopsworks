@@ -9,6 +9,7 @@ import java.util.Objects;
 
 public class CloudCommandType {
   public static final CloudCommandType REMOVE_NODES = CloudCommandType.of("REMOVE_NODES");
+  public static final CloudCommandType DECOMMISSION_NODE = CloudCommandType.of("DECOMMISSION_NODE");
 
   private final String type;
 
