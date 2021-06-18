@@ -141,6 +141,11 @@ public class PKI {
     return TimeUnit.MILLISECONDS.convert(timeValue, unitValue);
   }
 
+  private static final long FIVE_MINUTES_IN_MS = TimeUnit.MINUTES.toMillis(5);
+  public String getStartDateASN1() {
+    return dateFormat.format(new Date(System.currentTimeMillis() - FIVE_MINUTES_IN_MS)) + 'Z';
+  }
+
   /**
    * Format date ASN1 UTCTime
    */

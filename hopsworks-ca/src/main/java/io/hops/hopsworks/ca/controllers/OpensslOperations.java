@@ -220,6 +220,9 @@ public class OpensslOperations {
       throw ex;
     }
 
+    // Start Date formatted as ASN1 UTCTime (NOW - slack_time)
+    String startDate = pki.getStartDateASN1();
+
     // Expiration Date formatted as ASN1 UTCTime
     String expirationDate = pki.getValidityPeriod(certType);
 
@@ -240,6 +243,7 @@ public class OpensslOperations {
     command.add(csr.getAbsolutePath());
     command.add(signedCertificateFile.getAbsolutePath());
     command.add(expirationDate);
+    command.add(startDate);
 
     executeCommand(command, false);
     LOGGER.log(Level.FINE, "Signed CSR");

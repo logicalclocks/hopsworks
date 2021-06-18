@@ -87,7 +87,8 @@ module CaHelper
 
     raw = File.read ca_path + "certs/" + cert_name + ".cert.pem"
     certificate = OpenSSL::X509::Certificate.new raw
-    certificate_validity = Integer(certificate.not_after - certificate.not_before)
+    # We give 5 minutes slack to NotBefore
+    certificate_validity = Integer(certificate.not_after - certificate.not_before - 60 * 5)
 
     # Validity should be within expected validity +/- 20 seconds to account for slowness in the tests
     if (certificate_validity < (expected_validity - 20)) or (certificate_validity > (expected_validity + 20))
