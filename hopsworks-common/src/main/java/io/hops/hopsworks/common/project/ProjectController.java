@@ -1445,7 +1445,7 @@ public class ProjectController {
 
         // Remove Certificates
         try {
-          certificatesController.revokeProjectCertificates(project);
+          certificatesController.revokeProjectCertificates(toDeleteProject);
           userCertsFacade.removeAllCertsOfAProject(projectName);
           cleanupLogger.logSuccess("Deleted certificates");
         } catch (HopsSecurityException | GenericException | IOException ex) {
