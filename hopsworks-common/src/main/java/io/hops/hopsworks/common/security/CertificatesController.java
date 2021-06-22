@@ -92,11 +92,14 @@ import java.security.Security;
 import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
+import java.util.Collection;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.Future;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Singleton
 @TransactionAttribute(TransactionAttributeType.NEVER)
@@ -193,8 +196,9 @@ public class CertificatesController {
       throws GenericException, HopsSecurityException, IOException {
     String projectName = project.getName();
 
-    Set<Users> users2deleteCertificates = project.getProjectTeamCollection()
-        .stream().map(ProjectTeam::getUser).collect(Collectors.toSet());
+    Set<Users> users2deleteCertificates = Optional.ofNullable(project.getProjectTeamCollection())
+            .map(Collection::stream).orElse(Stream.empty())
+            .map(ProjectTeam::getUser).collect(Collectors.toSet());
     if (owner != null) {
       users2deleteCertificates.add(owner);
     }
