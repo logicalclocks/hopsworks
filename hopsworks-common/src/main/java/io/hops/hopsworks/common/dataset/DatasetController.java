@@ -1231,7 +1231,7 @@ public class DatasetController {
   }
 
   public void unshare(Project project, Users user, Dataset dataset, String targetProjectName,
-    DistributedFileSystemOps dfso) throws DatasetException {
+                      DistributedFileSystemOps dfso) throws DatasetException {
     Project targetProject = projectFacade.findByName(targetProjectName);
     if (targetProject == null) {
       throw new DatasetException(RESTCodes.DatasetErrorCode.TARGET_PROJECT_NOT_FOUND, Level.FINE);
@@ -1245,12 +1245,12 @@ public class DatasetController {
       DatasetSharedWith trainingDataset =
         getSharedTrainingDataset(targetProject, datasetSharedWith.getDataset().getProject());
       if (trainingDataset != null) {
-        unshareDs(project, user, dataset, trainingDataset, dfso);
+        unshareDs(project, user, trainingDataset, dfso);
       }
-      unshareFeatureStoreServiceDataset(user, project, targetProject, dataset, datasetSharedWith,
-        Settings.ServiceDataset.STATISTICS);
+      unshareFeatureStoreServiceDataset(user, project, targetProject, datasetSharedWith,
+          Settings.ServiceDataset.STATISTICS, dfso);
     }
-    unshareDs(project, user, dataset, datasetSharedWith, dfso);
+    unshareDs(project, user, datasetSharedWith, dfso);
   }
   
   private DatasetSharedWith getSharedTrainingDataset(Project project, Project parentProject) {
@@ -1258,12 +1258,12 @@ public class DatasetController {
     return datasetSharedWithFacade.findByProjectAndDataset(project, trainingDataset);
   }
   
-  private void unshareDs(Project project, Users user, Dataset dataset, DatasetSharedWith datasetSharedWith,
-    DistributedFileSystemOps dfso) throws DatasetException {
+  private void unshareDs(Project project, Users user, DatasetSharedWith datasetSharedWith,
+                         DistributedFileSystemOps dfso) throws DatasetException {
     removeAllShareMembers(datasetSharedWith, dfso);
     datasetSharedWithFacade.remove(datasetSharedWith);
-    activityFacade.persistActivity(ActivityFacade.UNSHARED_DATA + dataset.getName() + " with project " +
-      datasetSharedWith.getProject().getName(), project, user, ActivityFlag.DATASET);
+    activityFacade.persistActivity(ActivityFacade.UNSHARED_DATA + datasetSharedWith.getDataset().getName() +
+        " with project " + datasetSharedWith.getProject().getName(), project, user, ActivityFlag.DATASET);
   }
 
   private void unshareDs(Project project, Users user, Dataset dataset, DatasetSharedWith datasetSharedWith)
@@ -1273,20 +1273,20 @@ public class DatasetController {
     activityFacade.persistActivity(ActivityFacade.UNSHARED_DATA + dataset.getName() + " with project " +
       datasetSharedWith.getProject().getName(), project, user, ActivityFlag.DATASET);
   }
-
-  private void unshareFeatureStoreServiceDataset(Users user, Project project, Project targetProject, Dataset dataset,
-    DatasetSharedWith datasetSharedWith, Settings.ServiceDataset serviceDataset) {
+ 
+  private void unshareFeatureStoreServiceDataset(Users user, Project project, Project targetProject,
+                                                 DatasetSharedWith datasetSharedWith,
+                                                 Settings.ServiceDataset serviceDataset,
+                                                 DistributedFileSystemOps dfso) throws DatasetException {
     DatasetSharedWith serviceDatasetSharedWith =
       getSharedFeatureStoreServiceDataset(targetProject, datasetSharedWith.getDataset().getProject(), serviceDataset);
-    try {
-      unshareDs(project, user, dataset, serviceDatasetSharedWith);
-    } catch (DatasetException de) {
-      //Dataset not shared nothing to do
+    if (serviceDatasetSharedWith != null) {
+      unshareDs(project, user, serviceDatasetSharedWith, dfso);
     }
   }
   
   private DatasetSharedWith getSharedFeatureStoreServiceDataset(Project project, Project parentProject,
-    Settings.ServiceDataset serviceDataset) {
+                                                                Settings.ServiceDataset serviceDataset) {
     Dataset dataset = getFeatureStoreServiceDataset(parentProject, serviceDataset);
     return datasetSharedWithFacade.findByProjectAndDataset(project, dataset);
   }
