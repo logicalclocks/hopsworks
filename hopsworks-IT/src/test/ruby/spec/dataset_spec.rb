@@ -713,6 +713,15 @@ describe "On #{ENV['OS']}" do
           expect_status(400)
           expect_json(errorCode: 110011)
         end
+        it "should unshare a not-accepted shared feature store" do
+          projectname = "project_#{short_random_id}"
+          project = create_project_by_name(projectname)
+          featurestore = "#{@project[:projectname].downcase}_featurestore.db"
+          share_dataset(@project, featurestore, project[:projectname], permission: "EDITABLE", datasetType:
+            "&type=FEATURESTORE")
+          unshare_from(@project, featurestore, project[:projectname], datasetType: "&type=FEATURESTORE")
+          expect_status_details(204)
+        end
         it "should unshare training and statistics dataset when deleting feature store" do
           projectname = "project_#{short_random_id}"
           project = create_project_by_name(projectname)
