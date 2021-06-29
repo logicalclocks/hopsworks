@@ -187,9 +187,9 @@ module JobHelper
         "imagePath" => "alpine",
         "volumes" => ["/tmp:/tmp2","/var:/var2"],
         "envVars" => ["ENV1=val1","ENV2=val2"],
-        "command" => ["/bin/sh", "-c", 'sleep 30 && cp /Projects/' + project[:projectname] + '/Logs/README.md /Projects/' + project[:projectname] + '/Resources/README_Logs.md ' +
-                                       '&& cp /Projects/' + project[:projectname] + '/Jupyter/README.md /Projects/' + project[:projectname] + '/Resources/README_Jupyter.md'],
-        "inputPaths" => ["/Projects/#{project[:projectname]}/Logs", "/Projects/#{project[:projectname]}/Jupyter"],
+        "command" => ["/bin/sh", "-c", 'sleep 30 && cp /Projects/' + project[:projectname] + '/DataValidation/README.md /Projects/' + project[:projectname] + '/Resources/README_DV.md ' +
+                                       '&& cp /Projects/' + project[:projectname] + '/Jupyter/README.md /Projects/' + project[:projectname] + '/Resources/README_Jupyter.md && echo hello'],
+        "inputPaths" => ["/Projects/#{project[:projectname]}/DataValidation", "/Projects/#{project[:projectname]}/Jupyter"],
         "outputPath" => "/Projects/#{project[:projectname]}/Resources",
         "uid" => "1",
         "gid" => "1"

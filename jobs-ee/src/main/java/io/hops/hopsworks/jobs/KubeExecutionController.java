@@ -72,6 +72,7 @@ import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -99,9 +100,6 @@ public class KubeExecutionController extends AbstractExecutionController impleme
   private static final String HADOOP_CONF = "hadoopconf";
   private static final String JWT = "jwt";
   private static final String JWT_SUFFIX = SEPARATOR + "jwt";
-  // Flink is here because of Beam when running Beam portable runner
-  private static final String FLINK = "flink";
-  private static final String SPARK = "spark";
 
   @EJB
   private KubeClientService kubeClientService;
@@ -135,10 +133,9 @@ public class KubeExecutionController extends AbstractExecutionController impleme
       Project project = job.getProject();
       String hdfsUser = hdfsUsersController.getHdfsUserName(project, user);
       Execution execution = executionFacade.create(job, user, null, null, null, 0, hdfsUser, args);
-      String logOutputPath = Utils.getJobLogLocation(execution.getJob().getProject().getName(),
-              execution.getJob().getJobType())[0] + job.getName() + File.separator + execution.getId() + File.separator;
-      execution.setStdoutPath(logOutputPath + "stdout.log");
-      execution.setStderrPath(logOutputPath + "stderr.log");
+      String logPath = getLogsPath(job, execution);
+      execution.setStdoutPath(logPath + "/stdout.log");
+      execution.setStderrPath(logPath + "/stderr.log");
       execution.setExecutionStart(System.currentTimeMillis());
       execution = executionFacade.update(execution);
 
@@ -200,7 +197,7 @@ public class KubeExecutionController extends AbstractExecutionController impleme
 
         List<Container> containers = buildContainers(job.getJobType(), jobConfiguration, secretsDir,
                 certificatesDir, resourceRequirements, primaryContainerEnv,
-                sidecarContainerEnv, project, execution);
+                sidecarContainerEnv, project, job, execution);
         kubeClientService.createJob(job.getProject(),
           buildJob(
                   deploymentName,
@@ -309,6 +306,13 @@ public class KubeExecutionController extends AbstractExecutionController impleme
             .withEmptyDir(new EmptyDirVolumeSource())
             .build());
 
+    if (!Strings.isNullOrEmpty(jobConfiguration.getOutputPath())) {
+      volumes.add(new VolumeBuilder()
+              .withName("output")
+              .withEmptyDir(new EmptyDirVolumeSource())
+              .build());
+    }
+
     if (jobConfiguration.getInputPaths() != null && !jobConfiguration.getInputPaths().isEmpty()) {
       List<String> inputPaths = jobConfiguration.getInputPaths();
       for (int i = 0, inputPathsSize = inputPaths.size(); i < inputPathsSize; i++) {
@@ -337,6 +341,7 @@ public class KubeExecutionController extends AbstractExecutionController impleme
                                           Map<String, String> primaryContainerEnv,
                                           Map<String, String> sidecarContainerEnv,
                                           Project project,
+                                          Jobs job,
                                           Execution execution)
           throws ServiceDiscoveryException, JobException {
 
@@ -400,8 +405,14 @@ public class KubeExecutionController extends AbstractExecutionController impleme
               .build());
       volumeMounts.add(new VolumeMountBuilder()
               .withName("logs")
+              .withMountPath(getLogsPath(job, execution))
+              .build());
+      if (!Strings.isNullOrEmpty(jobConfiguration.getOutputPath())) {
+        volumeMounts.add(new VolumeMountBuilder()
+              .withName("output")
               .withMountPath(jobConfiguration.getOutputPath())
               .build());
+      }
 
       if (jobConfiguration.getInputPaths() != null && !jobConfiguration.getInputPaths().isEmpty()) {
         List<String> inputPaths = jobConfiguration.getInputPaths();
@@ -435,6 +446,24 @@ public class KubeExecutionController extends AbstractExecutionController impleme
         throw new JobException(RESTCodes.JobErrorCode.DOCKER_UID_GID_STRICT, FINE);
       }
 
+      String stdLogsPath = " 2> " + execution.getStderrPath() + " 1> " + execution.getStdoutPath();
+      String args = null;
+      if (!Strings.isNullOrEmpty(jobConfiguration.getDefaultArgs())) {
+        args = jobConfiguration.getDefaultArgs();
+        if (jobConfiguration.getLogRedirection()) {
+          args += stdLogsPath;
+        }
+      } else if (!Strings.isNullOrEmpty(execution.getArgs())) {
+        args = execution.getArgs();
+        if (jobConfiguration.getLogRedirection()) {
+          args += stdLogsPath;
+        }
+      } else if (jobConfiguration.getLogRedirection()) {
+        String lastCommand = jobConfiguration.getCommand().get(jobConfiguration.getCommand().size() - 1);
+        lastCommand += stdLogsPath;
+        jobConfiguration.getCommand().set(jobConfiguration.getCommand().size() - 1, lastCommand);
+      }
+
       //Add Job container
       containers.add(new ContainerBuilder()
               .withName(jobType.getName().toLowerCase())
@@ -444,19 +473,29 @@ public class KubeExecutionController extends AbstractExecutionController impleme
               .withSecurityContext(sc)
               .withEnv(kubeClientService.getEnvVars(primaryContainerEnv))
               .withCommand(jobConfiguration.getCommand())
-              .withArgs(!Strings.isNullOrEmpty(jobConfiguration.getDefaultArgs())
-                        ? jobConfiguration.getDefaultArgs()
-                        : execution.getArgs())
+              .withArgs(args)
               .withVolumeMounts(volumeMounts)
               .build());
+
+      String logsPath = getLogsPath(job, execution);
+
+      Path path = Paths.get(logsPath);
+      String directory = path.getParent().toString();
+      String copyCmd = "hdfs dfs -mkdir -p " + logsPath + " ; " +
+                       "hdfs dfs -copyFromLocal -f " + logsPath + " " + directory + " ; ";
+
+      if (!Strings.isNullOrEmpty(jobConfiguration.getOutputPath())) {
+        path = Paths.get(jobConfiguration.getOutputPath());
+        directory = path.getParent().toString();
+        copyCmd += "hdfs dfs -mkdir -p " + jobConfiguration.getOutputPath() + " ; " +
+                   "hdfs dfs -copyFromLocal -f " + jobConfiguration.getOutputPath() + " " +
+                    directory;
+      }
 
       LifecycleBuilder lifecycleBuilder = new LifecycleBuilder()
                       .withNewPreStop()
                       .withNewExec()
-                      .withCommand("/bin/sh", "-c",
-                              "hdfs dfs -mkdir -p " + jobConfiguration.getOutputPath() + " ; " +
-                                      "hdfs dfs -copyFromLocal -f " + jobConfiguration.getOutputPath() + "/* "
-                                      + jobConfiguration.getOutputPath())
+                      .withCommand("/bin/sh", "-c", copyCmd)
                       .endExec()
                       .endPreStop();
 
@@ -464,6 +503,8 @@ public class KubeExecutionController extends AbstractExecutionController impleme
         String command = "echo \"" + String.join("\n", jobConfiguration.getInputPaths()) +
                 "\" | while read line ; do hdfs dfs -test -d $line  && hdfs dfs -copyToLocal -f $line/* $line " +
                 "&&  chmod +rx -R $line ; done";
+
+        LOGGER.log(Level.INFO, "command:" + command);
         lifecycleBuilder
                 .withNewPostStart()
                 .withNewExec()
@@ -473,10 +514,10 @@ public class KubeExecutionController extends AbstractExecutionController impleme
       }
       List<VolumeMount> jobVolumeMounts = new ArrayList<>();
       jobVolumeMounts.add(new VolumeMountBuilder()
-              .withName(CERTS)
-              .withReadOnly(true)
-              .withMountPath(certificatesDir)
-              .build());
+                      .withName(CERTS)
+                      .withReadOnly(true)
+                      .withMountPath(certificatesDir)
+                      .build());
       jobVolumeMounts.add(new VolumeMountBuilder()
                       .withName(HADOOP_CONF)
                       .withReadOnly(true)
@@ -484,8 +525,14 @@ public class KubeExecutionController extends AbstractExecutionController impleme
                       .build());
       jobVolumeMounts.add(new VolumeMountBuilder()
                       .withName("logs")
+                      .withMountPath(getLogsPath(job, execution))
+              .build());
+      if (!Strings.isNullOrEmpty(jobConfiguration.getOutputPath())) {
+        jobVolumeMounts.add(new VolumeMountBuilder()
+                      .withName("output")
                       .withMountPath(jobConfiguration.getOutputPath())
                       .build());
+      }
       if (jobConfiguration.getInputPaths() != null && !jobConfiguration.getInputPaths().isEmpty()) {
         List<String> inputPaths = jobConfiguration.getInputPaths();
         for (int i = 0, inputPathsSize = inputPaths.size(); i < inputPathsSize; i++) { ;
@@ -698,5 +745,16 @@ public class KubeExecutionController extends AbstractExecutionController impleme
       return volumeMounts;
     }
     return new ArrayList<>();
+  }
+
+  /**
+   * Returns the path in the Logs dataset where logs should be written by default.
+   * @param job
+   * @param execution
+   * @return String logs path
+   */
+  private String getLogsPath(Jobs job, Execution execution) {
+    return Utils.getJobLogLocation(execution.getJob().getProject().getName(),
+            execution.getJob().getJobType())[0] + job.getName() + File.separator + execution.getId() ;
   }
 }

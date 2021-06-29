@@ -140,8 +140,12 @@ describe "On #{ENV['OS']}" do
             wait_for_execution_completed(@project[:id], $job_name, json_body[:id], "FINISHED")
 
             # wait for Kubernetes handler to copy to hdfs
-            wait_for_docker_job_output("/Projects/#{@project[:projectname]}/Resources/README_Logs.md")
+            wait_for_docker_job_output("/Projects/#{@project[:projectname]}/Resources/README_DV.md")
             wait_for_docker_job_output("/Projects/#{@project[:projectname]}/Resources/README_Jupyter.md")
+
+            # wait for stdout and stderr and assert content
+            wait_for_docker_job_output("/Projects/#{@project[:projectname]}/Logs/Docker/#{$job_name}/#{execution_id}/stdout.log")
+            wait_for_docker_job_output("/Projects/#{@project[:projectname]}/Logs/Docker/#{$job_name}/#{execution_id}/stderr.log")
           end
         end
       end

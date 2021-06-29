@@ -434,47 +434,18 @@ angular.module('hopsWorksApp')
               // Convert text entries to list
               if (self.getJobType() === "DOCKER")  {
                 if (typeof self.runConfig['command'] !== "undefined" && self.runConfig['command'] !== "" ) {
-                  self.runConfig['command'] = JSON.stringify(self.runConfig['command'])
-                      .replace("[\"", "")
-                      .replace("\"]", "")
-                      .replace("\"", "")
-                      .split(",");
-                  for (var i = 0; i < self.runConfig['command'].length; i++) {
-                    self.runConfig['command'][i] = self.runConfig['command'][i].replace("\"", "")
-                  }
+                  self.runConfig['command'] = String(self.runConfig['command']).split("\n")
                 }
                 if (typeof self.runConfig['inputPaths'] !== "undefined" && self.runConfig['inputPaths'] !== "" ) {
-                  self.runConfig['inputPaths'] = JSON.stringify(self.runConfig['inputPaths'])
-                      .replace("[\"", "")
-                      .replace("\"]", "")
-                      .replace("\"", "")
-                      .split(",");
-
-                  for (var i = 0; i < self.runConfig['inputPaths'].length; i++) {
-                    self.runConfig['inputPaths'][i] = self.runConfig['inputPaths'][i].replace("\"", "")
-                  }
+                  self.runConfig['inputPaths'] = String(self.runConfig['inputPaths']).split("\n")
                 }
                 if (typeof self.runConfig['envVars'] !== "undefined" && self.runConfig['envVars'] !== "" ) {
-                  self.runConfig['envVars'] = JSON.stringify(self.runConfig['envVars'])
-                                                   .replace("[\"", "")
-                                                   .replace("\"]", "")
-                                                   .replace("\"", "")
-                                                   .split(",");
-
-                  for (var i = 0; i < self.runConfig['envVars'].length; i++) {
-                    self.runConfig['envVars'][i] = self.runConfig['envVars'][i].replace("\"", "")
-                  }
+                  self.runConfig['envVars'] = String(self.runConfig['envVars']).split("\n")
                 }
-                if (typeof self.runConfig['volumes'] !== "undefined" && self.runConfig['volumes'] !== "" ) {
-                  self.runConfig['volumes'] = JSON.stringify(self.runConfig['volumes'])
-                      .replace("[\"", "")
-                      .replace("\"]", "")
-                      .replace("\"", "")
-                      .split(",");
-
-                  for (var i = 0; i < self.runConfig['volumes'].length; i++) {
-                    self.runConfig['volumes'][i] = self.runConfig['volumes'][i].replace("\"", "")
-                  }
+                if (typeof self.runConfig['volumes'] !== "undefined" && self.runConfig['volumes'] !== "" && self.runConfig['volumes'].length > 0 && self.runConfig['volumes'][0] !== "") {
+                  self.runConfig['volumes'] = String(self.runConfig['volumes']).split("\n")
+                } else {
+                  delete self.runConfig['volumes']
                 }
                 if (typeof self.runConfig['uid'] === "undefined" || self.runConfig['uid'] === "" || self.runConfig['uid'] === "-1") {
                   delete self.runConfig['uid'];
@@ -1128,6 +1099,26 @@ angular.module('hopsWorksApp')
                     if(self.files.indexOf(files[i] === -1))
                       self.files.push(files[i]);
                   }
+                }
+              }
+
+              // Convert list attributes to be displayed in text area
+              if(self.jobtype === 5) {
+                if (typeof self.runConfig['command'] !== "undefined" && self.runConfig['command'] !== "" && self.runConfig['command'].length > 0 && self.runConfig['command'][0] !== "") {
+                  self.runConfig['command'] = self.runConfig['command'].join("\n")
+                }
+                if (typeof self.runConfig['inputPaths'] !== "undefined" && self.runConfig['inputPaths'] !== "" && self.runConfig['inputPaths'].length > 0 && self.runConfig['inputPaths'][0] !== "") {
+                  self.runConfig['inputPaths'] = self.runConfig['inputPaths'].join("\n")
+                } else {
+                  delete self.runConfig['inputPaths']
+                }
+
+                if (typeof self.runConfig['envVars'] !== "undefined" && self.runConfig['envVars'] !== "" && self.runConfig['envVars'].length > 0 && self.runConfig['envVars'][0] !== "") {
+                  self.runConfig['envVars'] = self.runConfig['envVars'].join("\n")
+                }
+
+                if (typeof self.runConfig['volumes'] !== "undefined" && self.runConfig['volumes'] !== "" && self.runConfig['volumes'].length > 0 && self.runConfig['volumes'][0] !== "") {
+                  self.runConfig['volumes'] = self.runConfig['volumes'].join("\n")
                 }
               }
               //GUI state

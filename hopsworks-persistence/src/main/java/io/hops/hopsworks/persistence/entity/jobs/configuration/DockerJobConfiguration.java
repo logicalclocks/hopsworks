@@ -50,13 +50,16 @@ public class DockerJobConfiguration extends JobConfiguration {
   private List<String> inputPaths;
 
   @XmlElement
-  private String outputPath = "/logs";
+  private String outputPath;
 
   @XmlElement
   private Long uid;
 
   @XmlElement
   private Long gid;
+
+  @XmlElement
+  private Boolean logRedirection = true;
 
   public DockerResourcesConfiguration getResourceConfig() {
     return resourceConfig;
@@ -128,6 +131,14 @@ public class DockerJobConfiguration extends JobConfiguration {
 
   public void setGid(Long gid) {
     this.gid = gid;
+  }
+
+  public Boolean getLogRedirection() {
+    return logRedirection;
+  }
+
+  public void setLogRedirection(Boolean logRedirection) {
+    this.logRedirection = logRedirection;
   }
 
   @Override
