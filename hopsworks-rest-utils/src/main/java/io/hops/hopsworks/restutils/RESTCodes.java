@@ -442,7 +442,8 @@ public class RESTCodes {
             Response.Status.BAD_REQUEST),
     JOB_ALERT_NOT_FOUND(34, "Job alert not found", Response.Status.NOT_FOUND),
     JOB_ALERT_ILLEGAL_ARGUMENT(35, "Job alert missing argument.", Response.Status.BAD_REQUEST),
-    JOB_ALERT_ALREADY_EXISTS(36, "Job alert with the same status already exists.", Response.Status.BAD_REQUEST);
+    JOB_ALERT_ALREADY_EXISTS(36, "Job alert with the same status already exists.", Response.Status.BAD_REQUEST),
+    DOCKER_INVALID_JOB_PROPERTIES(37, "Received invalid job property values", Response.Status.BAD_REQUEST);
 
     private Integer code;
     private String message;

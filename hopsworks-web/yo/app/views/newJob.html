@@ -128,16 +128,6 @@
                                              ng-model="newJobCtrl.runConfig.imagePath" class="form-control"></div>
               </div>
             </div>
-            <div class="row" ng-show="newJobCtrl.jobtype === 5">
-              <div class="text-right col-md-5">Docker command <i class="fa fa-info-circle" uib-tooltip="Comma-separated list of commands to run the docker image with." style="margin-left: 10px"></i></div>
-              <div class="col-md-7"><input type="text"
-                                           ng-model="newJobCtrl.runConfig.command" class="form-control"></div>
-            </div>
-            <div class="row">
-              <div class="text-right col-md-5">Default arguments <i class="fa fa-info-circle" uib-tooltip="Default arguments to run with. Leaving it empty, will prompt you for input arguments when running the job." style="margin-left: 10px"></i></div>
-              <div class="col-md-7"><input type="text"
-                                           ng-model="newJobCtrl.runConfig.defaultArgs" class="form-control"></div>
-            </div>
           </div>
           <!-- Set some run configuration -->
           <div ng-if="newJobCtrl.jobtype === 1 || newJobCtrl.jobtype === 2">
