@@ -21,20 +21,22 @@ import io.hops.hopsworks.persistence.entity.project.Project;
 import javax.xml.bind.annotation.XmlRootElement;
 
 @XmlRootElement
-public class ProjectDTO {
+public class ProjectSharedWithDTO {
   private Integer id;
   private String name;
   private String owner;
   private DatasetAccessPermission permission;
+  private boolean accepted;
   
-  public ProjectDTO() {
+  public ProjectSharedWithDTO() {
   }
   
-  public ProjectDTO(Project project, DatasetAccessPermission permission) {
+  public ProjectSharedWithDTO(Project project, DatasetAccessPermission permission, boolean accepted) {
     this.id = project.getId();
     this.name = project.getName();
     this.owner = project.getOwner().getFname() + " " + project.getOwner().getLname();
     this.permission = permission;
+    this.accepted = accepted;
   }
   
   public Integer getId() {
@@ -68,14 +70,23 @@ public class ProjectDTO {
   public void setPermission(DatasetAccessPermission permission) {
     this.permission = permission;
   }
-  
+
+  public boolean isAccepted() {
+    return accepted;
+  }
+
+  public void setAccepted(boolean accepted) {
+    this.accepted = accepted;
+  }
+
   @Override
   public String toString() {
-    return "ProjectDTO{" +
-      "id=" + id +
-      ", name='" + name + '\'' +
-      ", owner='" + owner + '\'' +
-      ", permission=" + permission +
-      '}';
+    return "ProjectSharedWithDTO{" +
+        "id=" + id +
+        ", name='" + name + '\'' +
+        ", owner='" + owner + '\'' +
+        ", permission=" + permission +
+        ", accepted=" + accepted +
+        '}';
   }
 }
