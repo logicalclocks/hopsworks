@@ -36,7 +36,7 @@ public class DatasetDTO extends RestDTO<DatasetDTO> {
   private Boolean accepted; //share status
   private Boolean shared;
   private Integer sharedWith;
-  private List<ProjectDTO> projectsSharedWith;
+  private List<ProjectSharedWithDTO> projectsSharedWith;
   private DatasetAccessPermission permission;
   private DatasetType datasetType;
   private InodeAttributeDTO attributes;
@@ -117,11 +117,11 @@ public class DatasetDTO extends RestDTO<DatasetDTO> {
     this.sharedWith = sharedWith;
   }
   
-  public List<ProjectDTO> getProjectsSharedWith() {
+  public List<ProjectSharedWithDTO> getProjectsSharedWith() {
     return projectsSharedWith;
   }
   
-  public void setProjectsSharedWith(List<ProjectDTO> projectsSharedWith) {
+  public void setProjectsSharedWith(List<ProjectSharedWithDTO> projectsSharedWith) {
     this.projectsSharedWith = projectsSharedWith;
   }
   

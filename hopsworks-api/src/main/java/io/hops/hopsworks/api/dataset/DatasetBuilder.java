@@ -56,9 +56,9 @@ import java.util.stream.Collectors;
 @Stateless
 @TransactionAttribute(TransactionAttributeType.NEVER)
 public class DatasetBuilder {
-  
+
   private static final Logger LOGGER = Logger.getLogger(DatasetBuilder.class.getName());
-  
+
   @EJB
   private DatasetFacade datasetFacade;
   @EJB
@@ -75,20 +75,20 @@ public class DatasetBuilder {
   private DatasetHelper datasetHelper;
   @EJB
   private DatasetTagsBuilder tagsBuilder;
-  
+
   private DatasetDTO uri(DatasetDTO dto, UriInfo uriInfo) {
     dto.setHref(uriInfo.getAbsolutePathBuilder()
       .build());
     return dto;
   }
-  
+
   private DatasetDTO uri(DatasetDTO dto, UriInfo uriInfo, Dataset dataset) {
     dto.setHref(uriInfo.getAbsolutePathBuilder()
       .path(dataset.getId().toString())
       .build());
     return dto;
   }
-  
+
   private DatasetDTO uriItems(DatasetDTO dto, UriInfo uriInfo, DatasetPath datasetPath) {
     dto.setHref(uriInfo.getBaseUriBuilder()
       .path(ResourceRequest.Name.PROJECT.toString())
@@ -98,14 +98,14 @@ public class DatasetBuilder {
       .build());
     return dto;
   }
-  
+
   public DatasetDTO expand(DatasetDTO dto, ResourceRequest resourceRequest) {
     if (resourceRequest != null && resourceRequest.contains(ResourceRequest.Name.DATASETS)) {
       dto.setExpand(true);
     }
     return dto;
   }
-  
+
   private DatasetDTO build(DatasetDTO dto, UriInfo uriInfo, ResourceRequest resourceRequest,
                            Users user, DatasetPath datasetPath, String parentPath, Users dirOwner)
     throws DatasetException, MetadataException, SchematizedTagException {
@@ -144,12 +144,12 @@ public class DatasetBuilder {
     }
     return dto;
   }
-  
+
   public DatasetDTO build(UriInfo uriInfo, ResourceRequest resourceRequest, Users user, DatasetPath datasetPath)
     throws DatasetException, MetadataException, SchematizedTagException {
     return build(uriInfo, resourceRequest, user, datasetPath, null, null, false);
   }
-  
+
   public DatasetDTO build(UriInfo uriInfo, ResourceRequest resourceRequest, Users user, DatasetPath datasetPath,
                           String parentPath, Users dirOwner, boolean expandSharedWith)
     throws DatasetException, MetadataException, SchematizedTagException {
@@ -158,16 +158,15 @@ public class DatasetBuilder {
     build(dto, uriInfo, resourceRequest, user, datasetPath, parentPath, dirOwner);
     //will be changed to expand when project is done.
     if (expandSharedWith) {
-      List<DatasetSharedWith> dsSharedWith = datasetSharedWithFacade.findByDataset(datasetPath.getDataset());
-      List<ProjectDTO> projectDTOS = new ArrayList<>();
-      for(DatasetSharedWith datasetSharedWith : dsSharedWith) {
-        projectDTOS.add(new ProjectDTO(datasetSharedWith.getProject(), datasetSharedWith.getPermission()));
-      }
-      dto.setProjectsSharedWith(projectDTOS);
+      List<ProjectSharedWithDTO> projectSharedWithList =
+          datasetSharedWithFacade.findByDataset(datasetPath.getDataset()).stream()
+              .map(p -> new ProjectSharedWithDTO(p.getProject(), p.getPermission(), p.getAccepted()))
+              .collect(Collectors.toList());
+      dto.setProjectsSharedWith(projectSharedWithList);
     }
     return dto;
   }
-  
+
   public DatasetDTO buildItems(UriInfo uriInfo, ResourceRequest resourceRequest, Users user, DatasetPath datasetPath,
                                String parentPath, Users dirOwner)
     throws DatasetException, MetadataException, SchematizedTagException {
@@ -175,7 +174,7 @@ public class DatasetBuilder {
     uriItems(dto, uriInfo, datasetPath);
     return build(dto, uriInfo, resourceRequest, user, datasetPath, parentPath, dirOwner);
   }
-  
+
   /**
    * Build a single Dataset
    *
@@ -194,7 +193,7 @@ public class DatasetBuilder {
     DatasetPath datasetPath = datasetHelper.getTopLevelDatasetPath(accessProject, dataset);
     return build(uriInfo, resourceRequest, user, datasetPath, null, null, false);
   }
-  
+
   /**
    * Build a list of Datasets
    *
@@ -213,7 +212,7 @@ public class DatasetBuilder {
     return items(new DatasetDTO(), uriInfo, resourceRequest, sharedDatasetResourceRequest, project, user, parentPath,
       dirOwner);
   }
-  
+
   private DatasetDTO items(DatasetDTO dto, UriInfo uriInfo, ResourceRequest resourceRequest,
                            ResourceRequest sharedDatasetResourceRequest, Project accessProject, Users user,
                            String parentPath, Users dirOwner)
@@ -229,7 +228,7 @@ public class DatasetBuilder {
     }
     return dto;
   }
-  
+
   // datasets in the project
   private DatasetDTO ownItems(DatasetDTO dto, UriInfo uriInfo, ResourceRequest resourceRequest,
                               Project accessProject, Users user, String parentPath, Users dirOwner)
@@ -240,7 +239,7 @@ public class DatasetBuilder {
     return datasetItems(dto, uriInfo, resourceRequest, collectionInfo.getItems(), accessProject, user, parentPath,
       dirOwner);
   }
-  
+
   // shared datasets
   private DatasetDTO sharedItems(DatasetDTO dto, UriInfo uriInfo, ResourceRequest resourceRequest,
                                  Project accessProject, Users user, String parentPath, Users dirOwner)
@@ -251,7 +250,7 @@ public class DatasetBuilder {
     return datasetSharedWithItems(dto, uriInfo, resourceRequest, accessProject, user, collectionInfo.getItems(),
       parentPath, dirOwner);
   }
-  
+
   // create dto from a list of dataset
   private DatasetDTO datasetItems(DatasetDTO dto, UriInfo uriInfo, ResourceRequest resourceRequest,
     List<Dataset> datasets, Project accessProject, Users user, String parentPath, Users dirOwner)
@@ -264,7 +263,7 @@ public class DatasetBuilder {
     }
     return dto;
   }
-  
+
   // create dto from a list of DatasetSharedWith objects
   private DatasetDTO datasetSharedWithItems(DatasetDTO dto, UriInfo uriInfo, ResourceRequest resourceRequest,
                                             Project accessProject, Users user,
@@ -279,7 +278,7 @@ public class DatasetBuilder {
     }
     return dto;
   }
-  
+
   public DatasetDTOComparator getComparator(ResourceRequest property) {
     Set<DatasetFacade.SortBy> sortBy = (Set<DatasetFacade.SortBy>) property.getSort();
     if (property.getSort() != null && !property.getSort().isEmpty()) {
@@ -287,15 +286,15 @@ public class DatasetBuilder {
     }
     return null;
   }
-  
+
   class DatasetDTOComparator implements Comparator<DatasetDTO> {
-    
+
     Set<DatasetFacade.SortBy> sortBy;
-    
+
     public DatasetDTOComparator(Set<DatasetFacade.SortBy> sortBy) {
       this.sortBy = sortBy;
     }
-    
+
     private int compare(DatasetDTO a, DatasetDTO b, DatasetFacade.SortBy sortBy) {
       switch (DatasetFacade.Sorts.valueOf(sortBy.getValue())) {
         case ID:
@@ -319,7 +318,7 @@ public class DatasetBuilder {
           throw new UnsupportedOperationException("Sort By " + sortBy + " not supported");
       }
     }
-    
+
     private int order(String a, String b, AbstractFacade.OrderBy orderBy) {
       switch (orderBy) {
         case ASC:
@@ -330,7 +329,7 @@ public class DatasetBuilder {
           throw new UnsupportedOperationException("Order By " + orderBy + " not supported");
       }
     }
-    
+
     private int order(Boolean a, Boolean b, AbstractFacade.OrderBy orderBy) {
       switch (orderBy) {
         case ASC:
@@ -341,7 +340,7 @@ public class DatasetBuilder {
           throw new UnsupportedOperationException("Order By " + orderBy + " not supported");
       }
     }
-    
+
     private int order(Integer a, Integer b, AbstractFacade.OrderBy orderBy) {
       switch (orderBy) {
         case ASC:
@@ -352,7 +351,7 @@ public class DatasetBuilder {
           throw new UnsupportedOperationException("Order By " + orderBy + " not supported");
       }
     }
-    
+
     private int order(Long a, Long b, AbstractFacade.OrderBy orderBy) {
       switch (orderBy) {
         case ASC:
@@ -363,7 +362,7 @@ public class DatasetBuilder {
           throw new UnsupportedOperationException("Order By " + orderBy + " not supported");
       }
     }
-    
+
     private int order(Date a, Date b, AbstractFacade.OrderBy orderBy) {
       switch (orderBy) {
         case ASC:
@@ -374,7 +373,7 @@ public class DatasetBuilder {
           throw new UnsupportedOperationException("Order By " + orderBy + " not supported");
       }
     }
-    
+
     @Override
     public int compare(DatasetDTO a, DatasetDTO b) {
       Iterator<DatasetFacade.SortBy> sort = sortBy.iterator();
@@ -385,7 +384,7 @@ public class DatasetBuilder {
       return c;
     }
   }
-  
+
   private DatasetDTO mergeAndApplyOffsetAndLimit(DatasetDTO dto, ResourceRequest resourceRequest, DatasetDTO dto1,
     DatasetDTO dto2) {
     if ((dto1 == null || dto1.getItems() == null || dto1.getItems().isEmpty()) &&
@@ -401,7 +400,7 @@ public class DatasetBuilder {
     }
     return dto;
   }
-  
+
   private List<DatasetDTO> merge(List<DatasetDTO> items1, List<DatasetDTO> items2, ResourceRequest resourceRequest) {
     DatasetDTOComparator comparator = getComparator(resourceRequest);
     List<DatasetDTO> items = new ArrayList<>();
@@ -433,7 +432,7 @@ public class DatasetBuilder {
     }
     return items;
   }
-  
+
   private void applyOffsetAndLimit(DatasetDTO dto, List<DatasetDTO> items, Integer offset, Integer limit) {
     if (offset == null || offset < 0) {
       offset = 0;
