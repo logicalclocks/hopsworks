@@ -428,7 +428,7 @@ public class LibraryController {
     return deps;
   }
 
-  public String condaList(String dockerImage) throws IOException, ServiceException {
+  public String condaList(String dockerImage) throws IOException {
 
     String prog = settings.getSudoersDir() + "/dockerImage.sh";
 
@@ -443,12 +443,12 @@ public class LibraryController {
 
     ProcessResult processResult = osProcessExecutor.execute(processDescriptor);
     if (processResult.getExitCode() != 0) {
-      String devMsg = "Could list libraries in the docker image. Exit code: " + processResult.getExitCode()
-        + " out: " + processResult.getStdout() + "\n err: " + processResult.getStderr() + "||\n";
-      String errorMsg = "Failed to list libraries for the environment, if the issue persists" +
-        " please retry the command or recreate the environment";
-      throw new ServiceException(RESTCodes.ServiceErrorCode.DOCKER_IMAGE_CREATION_ERROR,
-        Level.SEVERE, errorMsg, devMsg);
+      String errorMsg = "Could list libraries in the docker image. " +
+        "Try to retry the command or recreate the environment" +
+        "\n Exit code: " + processResult.getExitCode() +
+        "\nout: " + processResult.getStdout() +
+        "\nerr: " + processResult.getStderr() + "||\n";
+      throw new IOException(errorMsg);
     } else {
       return processResult.getStdout();
     }
