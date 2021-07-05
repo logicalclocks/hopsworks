@@ -102,4 +102,23 @@ module ElasticHelper
       end
     end
   end
+
+  def elastic_nodes_ids()
+    path = "_cat/nodes"
+    query = "format=JSON&full_id=true&v=true&h=id"
+    elastic_rest do
+      response = elastic_get "#{path}?#{query}"
+      elastic_status_details(response, 200)
+      JSON.parse(response.body)
+    end
+  end
+
+  def elastic_nodes_stats(node_id)
+    path = "_nodes/stats"
+    elastic_rest do
+      response = elastic_get path
+      elastic_status_details(response, 200)
+      JSON.parse(response.body)["nodes"][node_id]
+    end
+  end
 end
