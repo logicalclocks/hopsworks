@@ -57,6 +57,8 @@ public class TrainingDatasetJoin implements Serializable {
   private TrainingDataset trainingDataset;
   @JoinColumn(name = "feature_group", referencedColumnName = "id")
   private Featuregroup featureGroup;
+  @OneToMany(cascade = CascadeType.ALL, mappedBy = "trainingDatasetJoin")
+  private Collection<TrainingDatasetFeature> features;
   @OneToMany(cascade = CascadeType.ALL, mappedBy = "join")
   private Collection<TrainingDatasetJoinCondition> conditions;
 
@@ -148,6 +150,14 @@ public class TrainingDatasetJoin implements Serializable {
 
   public void setFeatureGroup(Featuregroup featureGroup) {
     this.featureGroup = featureGroup;
+  }
+
+  public Collection<TrainingDatasetFeature> getFeatures() {
+    return features;
+  }
+
+  public void setFeatures(Collection<TrainingDatasetFeature> features) {
+    this.features = features;
   }
 
   public Collection<TrainingDatasetJoinCondition> getConditions() {

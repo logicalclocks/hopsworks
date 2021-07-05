@@ -23,6 +23,7 @@ import java.util.List;
 
 @XmlRootElement
 public class ServingPreparedStatementDTO  extends RestDTO<ServingPreparedStatementDTO> {
+
   private Integer preparedStatementIndex;
   private List<PreparedStatementParameterDTO> preparedStatementParameters;
   private String queryOnline;

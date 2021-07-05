@@ -87,6 +87,14 @@ public class Query {
     this.as = as;
   }
 
+  public Query(String featureStore, String project, Featuregroup featuregroup, String as, List<Feature> features) {
+    this.featureStore = featureStore;
+    this.project = project;
+    this.featuregroup = featuregroup;
+    this.as = as;
+    this.features = features;
+  }
+
   public String getFeatureStore() {
     return featureStore;
   }
