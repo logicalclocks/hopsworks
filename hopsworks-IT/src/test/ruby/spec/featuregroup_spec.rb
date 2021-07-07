@@ -2294,6 +2294,48 @@ describe "On #{ENV['OS']}" do
         expect(json_body[:error_code]).to eql(40401)
       end
 
+       it "should update avro schema when features are appended to existing online feature group" do
+        project = get_project
+        featurestore_id = get_featurestore_id(project.id)
+        json_result, featuregroup_name = create_cached_featuregroup(project.id, featurestore_id, online:true)
+        parsed_json = JSON.parse(json_result)
+        expect_status(201)
+        new_schema = [
+            {
+                type: "INT",
+                name: "testfeature",
+                description: "testfeaturedescription",
+                primary: true,
+                onlineType: "INT",
+                partition: false
+            },
+            {
+                type: "DOUBLE",
+                name: "testfeature2",
+                description: "testfeaturedescription",
+                primary: false,
+                onlineType: "DOUBLE",
+                partition: false,
+                defaultValue: "10.0"
+            },
+        ]
+        update_cached_featuregroup_metadata(project.id, featurestore_id, parsed_json["id"],
+                                                          parsed_json["version"], featuregroup_name: featuregroup_name,
+                                                          features: new_schema)
+        expect_status_details(200)
+
+        topic_name = project.id.to_s + "_" + parsed_json["id"].to_s + "_" + featuregroup_name + "_" +
+            parsed_json["version"].to_s + "_onlinefs"
+        get_project_topics(project.id)
+        expect_status_details(200)
+        topic = json_body[:items].select{|topic| topic[:name] == topic_name}
+        expect(topic.length).to eq(1)
+        get_subject_schema(project, topic[0][:name], 2)
+        expect_status_details(200)
+        expect(json_body.to_json).to eql("{\"type\":\"record\",\"name\":\"#{featuregroup_name}\",\"namespace\":" +
+                                   "\"#{project.projectname.downcase}_featurestore.db\",\"fields\":[{\"name\":\"testfeature\"," +
+                                   "\"type\":[\"null\",\"int\"]},{\"name\":\"testfeature2\",\"type\":[\"null\",\"double\"]}]}")
+       end
 
       it "should be able to get online featurestore JDBC connector" do
         project = get_project

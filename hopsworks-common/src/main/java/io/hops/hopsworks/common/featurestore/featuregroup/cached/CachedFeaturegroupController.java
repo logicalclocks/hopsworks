@@ -704,7 +704,8 @@ public class CachedFeaturegroupController {
 
       // if online feature group
       if (settings.isOnlineFeaturestore() && featuregroup.getCachedFeaturegroup().isOnlineEnabled()) {
-        onlineFeaturegroupController.alterOnlineFeatureGroupSchema(featuregroup, newFeatures, project, user);
+        onlineFeaturegroupController.alterOnlineFeatureGroupSchema(
+          featuregroup, newFeatures, cachedFeaturegroupDTO.getFeatures(), project, user);
       }
 
       // Log schema change

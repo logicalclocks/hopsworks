@@ -191,6 +191,7 @@ public class OnlineFeaturegroupController {
   }
   
   public void alterOnlineFeatureGroupSchema(Featuregroup featureGroup, List<FeatureGroupFeatureDTO> newFeatures,
+                                            List<FeatureGroupFeatureDTO> fullNewSchema,
                                             Project project, Users user)
       throws FeaturestoreException, SchemaException, SQLException, KafkaException {
     String tableName = Utils.getFeatureStoreEntityName(featureGroup.getName(), featureGroup.getVersion());
@@ -198,7 +199,7 @@ public class OnlineFeaturegroupController {
     alterMySQLTableColumns(featureGroup.getFeaturestore(), tableName, newFeatures, project, user);
     // publish new version of avro schema
     String avroSchema = avroSchemaConstructorController.constructSchema(featureGroup.getName(),
-      Utils.getFeaturestoreName(project), newFeatures);
+      Utils.getFeaturestoreName(project), fullNewSchema);
     schemasController.validateSchema(project, avroSchema);
     SubjectDTO topicSubject = subjectsController.registerNewSubject(project, topicName, avroSchema, false);
     kafkaController.updateTopicSchemaVersion(project, topicName, topicSubject.getVersion());
