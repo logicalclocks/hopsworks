@@ -89,7 +89,7 @@ public class ServingService {
     project/id/serving/
 
     Serving {
-      artifact_path
+      model_path
       name
     }
 

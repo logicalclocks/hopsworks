@@ -1148,8 +1148,7 @@ public class RESTCodes {
       "which is required for serving SkLearn Models", Response.Status.BAD_REQUEST),
     UPDATE_SERVING_TYPE_ERROR(13, "The model server of a serving cannot be updated.",
       Response.Status.BAD_REQUEST),
-    KUBERNETES_NOT_INSTALLED(14, "Kubernetes is not installed, which is required for serving models " +
-      "with KFServing", Response.Status.BAD_REQUEST),
+    KUBERNETES_NOT_INSTALLED(14, "Kubernetes is not installed", Response.Status.BAD_REQUEST),
     KFSERVING_NOT_ENABLED(15, "KFServing is not installed or disabled", Response.Status.BAD_REQUEST);
 
     private Integer code;

@@ -22,41 +22,36 @@ MNIST_TOUR_DATA_LOCATION = "#{TF_TOURS_LOCATION}/mnist"
 TF_MODEL_TOUR_FILE_LOCATION = "#{MNIST_TOUR_DATA_LOCATION}/model/*"
 SKLEARN_MODEL_TOUR_FILE_LOCATION = "#{TF_TOURS_LOCATION}/iris/iris_knn.pkl"
 SKLEARN_SCRIPT_FILE_NAME="iris_flower_classifier.py"
-SKLEARN_SCRIPT_TOUR_FILE_LOCATION = "/user/hdfs/tensorflow_demo/notebooks/End_To_End_Pipeline/sklearn/#{SKLEARN_SCRIPT_FILE_NAME}"
+SKLEARN_SCRIPT_TOUR_FILE_LOCATION = "/user/hdfs/tensorflow_demo/notebooks/end_to_end_pipeline/sklearn/#{SKLEARN_SCRIPT_FILE_NAME}"
+TRANSFORMER_SCRIPT_FILE_NAME="transformer.py"
+TRANSFORMER_NB_FILE_NAME="transformer.ipynb"
+TRANSFORMER_SCRIPT_TOUR_FILE_LOCATION = "/user/hdfs/tensorflow_demo/notebooks/serving/kfserving/tensorflow/#{TRANSFORMER_SCRIPT_FILE_NAME}"
+TRANSFORMER_NB_TOUR_FILE_LOCATION = "/user/hdfs/tensorflow_demo/notebooks/serving/kfserving/tensorflow/#{TRANSFORMER_NB_FILE_NAME}"
 
 module ServingHelper
 
   def with_kfserving_tensorflow(project_id, project_name, user)
-    # Copy model to the project directory
-    mkdir("/Projects/#{project_name}/Models/mnist/", "#{project_name}__#{user}", "#{project_name}__Models", 750)
-    copy(TF_MODEL_TOUR_FILE_LOCATION, "/Projects/#{project_name}/Models/mnist/", "#{user}", "#{project_name}__Models", 750, "#{project_name}")
-
+    copy_mnist_files(project_id, project_name, user)
     @serving ||= create_kfserving_tensorflow(project_id, project_name)
     @topic = ProjectTopics.find(@serving[:kafka_topic_id])
   end
 
   def with_tf_serving(project_id, project_name, user)
-    # Copy model to the project directory
-    mkdir("/Projects/#{project_name}/Models/mnist/", "#{project_name}__#{user}", "#{project_name}__Models", 750)
-    copy(TF_MODEL_TOUR_FILE_LOCATION, "/Projects/#{project_name}/Models/mnist/", "#{user}", "#{project_name}__Models", 750, "#{project_name}")
-
+    copy_mnist_files(project_id, project_name, user)
     @serving ||= create_tf_serving(project_id, project_name)
     @topic = ProjectTopics.find(@serving[:kafka_topic_id])
   end
 
   def with_sklearn_serving(project_id, project_name, user)
     # Make Serving Dir
-    mkdir("/Projects/#{project_name}/Models/IrisFlowerClassifier/", "#{project_name}__#{user}",
-          "#{project_name}__Models", 750)
-    # Make Version Dir
-    mkdir("/Projects/#{project_name}/Models/IrisFlowerClassifier/1", "#{project_name}__#{user}",
+    mkdir("/Projects/#{project_name}/Models/irisflowerclassifier/1", "#{project_name}__#{user}",
           "#{project_name}__Models", 750)
     # Copy model to the servingversion dir
-    copy(SKLEARN_MODEL_TOUR_FILE_LOCATION, "/Projects/#{project_name}/Models/IrisFlowerClassifier/1/",
+    copy(SKLEARN_MODEL_TOUR_FILE_LOCATION, "/Projects/#{project_name}/Models/irisflowerclassifier/1/",
          "#{user}",
          "#{project_name}__Models", 750, "#{project_name}")
     # Copy script to the servingversion dir
-    copy(SKLEARN_SCRIPT_TOUR_FILE_LOCATION, "/Projects/#{project_name}/Models/IrisFlowerClassifier/1/",
+    copy(SKLEARN_SCRIPT_TOUR_FILE_LOCATION, "/Projects/#{project_name}/Models/irisflowerclassifier/1/",
          "#{user}",
          "#{project_name}__Models", 750, "#{project_name}")
 
@@ -68,14 +63,16 @@ module ServingHelper
     serving_name = "testmodel#{short_random_id}"
     put "#{ENV['HOPSWORKS_API']}/project/#{project_id}/serving/",
               {name: serving_name,
-               artifactPath: "/Projects/#{project_name}/Models/mnist/",
+               modelPath: "/Projects/#{project_name}/Models/mnist/",
                modelVersion: 1,
+               artifactVersion: "CREATE",
                batchingEnabled: false,
                kafkaTopicDTO: {
                   name: "CREATE",
                   numOfPartitions: 1,
                   numOfReplicas: 1
                },
+               inferenceLogging: "ALL",
                modelServer: "TENSORFLOW_SERVING",
                servingTool: "KFSERVING",
                requestedInstances: 1
@@ -88,7 +85,7 @@ module ServingHelper
     serving_name = "testModel#{short_random_id}"
     put "#{ENV['HOPSWORKS_API']}/project/#{project_id}/serving/",
               {name: serving_name,
-               artifactPath: "/Projects/#{project_name}/Models/mnist/",
+               modelPath: "/Projects/#{project_name}/Models/mnist/",
                modelVersion: 1,
                batchingEnabled: true,
                kafkaTopicDTO: {
@@ -96,12 +93,20 @@ module ServingHelper
                   numOfPartitions: 1,
                   numOfReplicas: 1
                },
+               inferenceLogging: "ALL",
                modelServer: "TENSORFLOW_SERVING",
                servingTool: "DEFAULT",
                requestedInstances: 1
               }
     expect_status(201)
     Serving.find_by(project_id: project_id, name: serving_name)
+  end
+
+  def copy_mnist_files(project_id, project_name, user)
+      mkdir("/Projects/#{project_name}/Models/mnist/", "#{project_name}__#{user}", "#{project_name}__Models", 750)
+      copy(TF_MODEL_TOUR_FILE_LOCATION, "/Projects/#{project_name}/Models/mnist/", "#{user}", "#{project_name}__Models", 750, "#{project_name}")
+      copy(TRANSFORMER_SCRIPT_TOUR_FILE_LOCATION, "/Projects/#{project_name}/Models/mnist/1/", "#{user}", "#{project_name}__Models", 750, "#{project_name}")
+      copy(TRANSFORMER_NB_TOUR_FILE_LOCATION, "/Projects/#{project_name}/Models/mnist/1/", "#{user}", "#{project_name}__Models", 750, "#{project_name}")
   end
 
   def purge_all_kfserving_instances(project_name="", should_exist=true)
@@ -164,13 +169,14 @@ module ServingHelper
     serving_name = "testModel#{short_random_id}"
     put "#{ENV['HOPSWORKS_API']}/project/#{project_id}/serving/",
         {name: serving_name,
-         artifactPath: "/Projects/#{project_name}/Models/IrisFlowerClassifier/1/#{SKLEARN_SCRIPT_FILE_NAME}",
+         modelPath: "/Projects/#{project_name}/Models/irisflowerclassifier/1/#{SKLEARN_SCRIPT_FILE_NAME}",
          modelVersion: 1,
          kafkaTopicDTO: {
              name: "CREATE",
              numOfPartitions: 1,
              numOfReplicas: 1
          },
+         inferenceLogging: "ALL",
          modelServer: "FLASK",
          servingTool: "DEFAULT",
          requestedInstances: 1
@@ -231,4 +237,28 @@ module ServingHelper
     "#{service}.#{project}.logicalclocks.com"
   end
 
+  def parse_model_server(value)
+    return case
+      when value == 0 ; "TENSORFLOW_SERVING"
+      when value == 1 ; "FLASK"
+      else puts "Model server value cannot be parsed"
+      end
+  end
+
+  def parse_serving_tool(value)
+    return case
+      when value == 0 ; "DEFAULT"
+      when value == 1 ; "KFSERVING"
+      else puts "Serving tool value cannot be parsed"
+      end
+  end
+
+  def parse_inference_logging(value)
+    return case
+      when value == 0 ; "PREDICTIONS"
+      when value == 1 ; "MODEL_INPUTS"
+      when value == 2 ; "ALL"
+      else puts "Inference logging value cannot be parsed"
+      end
+  end
 end

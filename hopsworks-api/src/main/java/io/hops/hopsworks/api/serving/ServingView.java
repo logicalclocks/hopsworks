@@ -22,6 +22,7 @@ import io.hops.hopsworks.common.dao.kafka.TopicDTO;
 import io.hops.hopsworks.common.serving.ServingStatusEnum;
 import io.hops.hopsworks.common.serving.ServingWrapper;
 import io.hops.hopsworks.persistence.entity.serving.DockerResourcesConfiguration;
+import io.hops.hopsworks.persistence.entity.serving.InferenceLogging;
 import io.hops.hopsworks.persistence.entity.serving.ModelServer;
 import io.hops.hopsworks.persistence.entity.serving.Serving;
 import io.hops.hopsworks.persistence.entity.serving.ServingTool;
@@ -42,13 +43,18 @@ public class ServingView implements Serializable {
   
   private Integer id;
   private String name;
-  private String artifactPath;
+  private String modelPath;
   private Integer modelVersion;
+  private Integer artifactVersion;
+  private String transformer;
   private Integer availableInstances;
+  private Integer availableTransformerInstances;
   private Integer requestedInstances;
+  private Integer requestedTransformerInstances;
   private Integer nodePort;
   private Date created;
   private Boolean batchingEnabled;
+  private InferenceLogging inferenceLogging;
   private ModelServer modelServer;
   private ServingTool servingTool;
   private DockerResourcesConfiguration predictorResourceConfig;
@@ -69,14 +75,19 @@ public class ServingView implements Serializable {
   public ServingView(ServingWrapper servingWrapper) {
     this.id = servingWrapper.getServing().getId();
     this.name = servingWrapper.getServing().getName();
-    this.artifactPath = servingWrapper.getServing().getArtifactPath();
-    this.modelVersion = servingWrapper.getServing().getVersion();
+    this.modelPath = servingWrapper.getServing().getModelPath();
+    this.transformer = servingWrapper.getServing().getTransformer();
+    this.modelVersion = servingWrapper.getServing().getModelVersion();
+    this.artifactVersion = servingWrapper.getServing().getArtifactVersion();
     this.availableInstances = servingWrapper.getAvailableReplicas();
+    this.availableTransformerInstances = servingWrapper.getAvailableTransformerReplicas();
     this.requestedInstances = servingWrapper.getServing().getInstances();
+    this.requestedTransformerInstances = servingWrapper.getServing().getTransformerInstances();
     this.nodePort = servingWrapper.getNodePort();
     this.created = servingWrapper.getServing().getCreated();
     this.status = servingWrapper.getStatus();
     this.kafkaTopicDTO = servingWrapper.getKafkaTopicDTO();
+    this.inferenceLogging = servingWrapper.getServing().getInferenceLogging();
     this.batchingEnabled = servingWrapper.getServing().isBatchingEnabled();
     this.modelServer = servingWrapper.getServing().getModelServer();
     this.servingTool = servingWrapper.getServing().getServingTool();
@@ -106,15 +117,24 @@ public class ServingView implements Serializable {
   }
 
   @ApiModelProperty(value = "HOPSFS directory path containing the model (tf) or python script (sklearn)")
-  public String getArtifactPath() {
-    return artifactPath;
+  public String getModelPath() {
+    return modelPath;
   }
 
-  public void setArtifactPath(String artifactPath) {
-    this.artifactPath = artifactPath;
+  public void setModelPath(String modelPath) {
+    this.modelPath = modelPath;
   }
 
-  @ApiModelProperty(value = "Version of the serving")
+  @ApiModelProperty(value = "Transformer script name")
+  public String getTransformer() {
+    return transformer;
+  }
+
+  public void setTransformer(String transformer) {
+    this.transformer = transformer;
+  }
+
+  @ApiModelProperty(value = "Version of the model")
   public Integer getModelVersion() {
     return modelVersion;
   }
@@ -123,7 +143,16 @@ public class ServingView implements Serializable {
     this.modelVersion = modelVersion;
   }
 
-  @ApiModelProperty(value = "Number of Serving instances to use for serving")
+  @ApiModelProperty(value = "Version of the artifact")
+  public Integer getArtifactVersion() {
+    return artifactVersion;
+  }
+  
+  public void setArtifactVersion(Integer artifactVersion) {
+    this.artifactVersion = artifactVersion;
+  }
+
+  @ApiModelProperty(value = "Number of serving instances to use for serving")
   public Integer getRequestedInstances() {
     return requestedInstances;
   }
@@ -132,13 +161,31 @@ public class ServingView implements Serializable {
     this.requestedInstances = requestedInstances;
   }
 
-  @ApiModelProperty(value = "Number of Serving instances available for serving", readOnly = true)
+  @ApiModelProperty(value = "Number of serving instances to use for the transformer")
+  public Integer getRequestedTransformerInstances() {
+    return requestedTransformerInstances;
+  }
+
+  public void setRequestedTransformerInstances(Integer transformerInstances) {
+    this.requestedTransformerInstances = transformerInstances;
+  }
+
+  @ApiModelProperty(value = "Number of serving instances available for serving", readOnly = true)
   public Integer getAvailableInstances() {
     return availableInstances;
   }
 
   public void setAvailableInstances(Integer availableInstances) {
     this.availableInstances = availableInstances;
+  }
+
+  @ApiModelProperty(value = "Number of serving instances available for transformers serving", readOnly = true)
+  public Integer getAvailableTransformerInstances() {
+    return availableTransformerInstances;
+  }
+
+  public void setAvailableTransformerInstances(Integer availableInstances) {
+    this.availableTransformerInstances = availableInstances;
   }
 
   @ApiModelProperty(value = "Port on which the Serving instance(s) are listening", readOnly = true)
@@ -190,6 +237,10 @@ public class ServingView implements Serializable {
     this.kafkaTopicDTO = kafkaTopicDTO;
   }
   
+  public InferenceLogging getInferenceLogging() { return inferenceLogging; }
+  
+  public void setInferenceLogging(InferenceLogging inferenceLogging) { this.inferenceLogging = inferenceLogging; }
+  
   @ApiModelProperty(value = "Model server, tf serving or flask")
   public ModelServer getModelServer() {
     return modelServer;
@@ -239,8 +290,9 @@ public class ServingView implements Serializable {
   public ServingWrapper getServingWrapper() {
 
     ServingWrapper servingWrapper = new ServingWrapper(
-        new Serving(id, name, artifactPath, modelVersion, requestedInstances, batchingEnabled,
-          modelServer, servingTool, predictorResourceConfig));
+        new Serving(id, name, modelPath, transformer, modelVersion, artifactVersion, requestedInstances,
+          requestedTransformerInstances, batchingEnabled, modelServer, servingTool, inferenceLogging,
+          predictorResourceConfig));
     servingWrapper.setKafkaTopicDTO(kafkaTopicDTO);
 
     return servingWrapper;

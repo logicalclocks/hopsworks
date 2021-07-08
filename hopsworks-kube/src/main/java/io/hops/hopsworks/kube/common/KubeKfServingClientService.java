@@ -8,6 +8,7 @@ import io.fabric8.kubernetes.api.model.ObjectMeta;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.KubernetesClientException;
 import io.fabric8.kubernetes.client.dsl.base.CustomResourceDefinitionContext;
+import io.hops.hopsworks.kube.serving.utils.KubeServingUtils;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.serving.Serving;
 import org.json.JSONObject;
@@ -74,7 +75,7 @@ public class KubeKfServingClientService {
       : null;
   }
   
-  private JSONObject getInferenceService(Project project, Serving serving)
+  public JSONObject getInferenceService(Project project, Serving serving)
     throws KubernetesClientException {
     CustomResourceDefinitionContext context = getCustomResourceDefinitionContext();
     String kubeProjectNs = kubeClientService.getKubeProjectName(project);
@@ -91,7 +92,6 @@ public class KubeKfServingClientService {
         inferenceService = new JSONObject(inferenceServices.get(0));
       }
     }
-    
     return inferenceService;
   }
   

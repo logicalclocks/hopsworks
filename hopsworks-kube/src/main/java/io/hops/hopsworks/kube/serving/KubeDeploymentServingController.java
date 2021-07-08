@@ -16,7 +16,9 @@ import io.hops.hopsworks.common.serving.ServingStatusEnum;
 import io.hops.hopsworks.exceptions.ServiceException;
 import io.hops.hopsworks.exceptions.ServingException;
 import io.hops.hopsworks.kube.common.KubeClientService;
-import io.hops.hopsworks.kube.common.KubeServingUtils;
+import io.hops.hopsworks.kube.serving.utils.KubeServingUtils;
+import io.hops.hopsworks.kube.serving.utils.KubeSkLearnServingUtils;
+import io.hops.hopsworks.kube.serving.utils.KubeTfServingUtils;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.serving.ModelServer;
 import io.hops.hopsworks.persistence.entity.serving.Serving;
@@ -39,6 +41,8 @@ public class KubeDeploymentServingController extends KubeToolServingController {
   
   @EJB
   private KubeClientService kubeClientService;
+  @EJB
+  private KubeServingUtils kubeServingUtils;
   @EJB
   private KubeTfServingUtils kubeTfServingUtils;
   @EJB
@@ -112,12 +116,12 @@ public class KubeDeploymentServingController extends KubeToolServingController {
 
     ServingStatusEnum status = getServingStatus(serving, deploymentStatus, podList);
     Integer nodePort = instanceService == null ? null : instanceService.getSpec().getPorts().get(0).getNodePort();
-    Integer availableReplicas = deploymentStatus == null ? null : deploymentStatus.getAvailableReplicas();
-    
+    Integer availableReplicas = kubeServingUtils.getAvailableReplicas(deploymentStatus);
     return new KubeServingInternalStatus() {
       {
         setServingStatus(status);
         setNodePort(nodePort);
+        setAvailable(deploymentStatus != null && instanceService != null);
         setAvailableReplicas(availableReplicas);
       }
     };
@@ -229,7 +233,7 @@ public class KubeDeploymentServingController extends KubeToolServingController {
   
   private void addHopsworksServingLabels(ObjectMeta metadata, Project project, Serving serving) {
     Map<String, String> labels = metadata.getLabels();
-    Map<String, String> servingLabels = KubeServingUtils.getHopsworksServingLabels(project, serving);
+    Map<String, String> servingLabels = kubeServingUtils.getHopsworksServingLabels(project, serving);
     
     if (labels == null) {
       metadata.setLabels(servingLabels);

@@ -4,6 +4,7 @@
 
 package io.hops.hopsworks.kube.serving;
 
+import com.logicalclocks.servicediscoverclient.exceptions.ServiceDiscoveryException;
 import io.fabric8.kubernetes.api.model.ObjectMeta;
 import io.fabric8.kubernetes.api.model.ObjectMetaBuilder;
 import io.fabric8.kubernetes.api.model.Pod;
@@ -11,26 +12,25 @@ import io.fabric8.kubernetes.api.model.Secret;
 import io.fabric8.kubernetes.api.model.apps.DeploymentStatus;
 import io.fabric8.kubernetes.client.KubernetesClientException;
 import io.hops.common.Pair;
-import io.hops.hopsworks.common.dataset.DatasetController;
-import io.hops.hopsworks.common.dataset.util.DatasetHelper;
 import io.hops.hopsworks.common.serving.ServingStatusEnum;
 import io.hops.hopsworks.common.user.security.apiKey.ApiKeyController;
 import io.hops.hopsworks.exceptions.ApiKeyException;
-import io.hops.hopsworks.exceptions.DatasetException;
 import io.hops.hopsworks.exceptions.ServingException;
 import io.hops.hopsworks.exceptions.UserException;
 import io.hops.hopsworks.kube.common.KubeClientService;
 import io.hops.hopsworks.kube.common.KubeIstioClientService;
 import io.hops.hopsworks.kube.common.KubeKfServingClientService;
-import io.hops.hopsworks.kube.common.KubeServingUtils;
-import io.hops.hopsworks.persistence.entity.dataset.DatasetType;
+import io.hops.hopsworks.kube.serving.utils.KubeArtifactUtils;
+import io.hops.hopsworks.kube.serving.utils.KubeServingUtils;
+import io.hops.hopsworks.kube.serving.utils.KubeTfServingUtils;
+import io.hops.hopsworks.kube.serving.utils.KubeTransformerUtils;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.serving.Serving;
 import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.persistence.entity.user.security.apiKey.ApiKey;
 import io.hops.hopsworks.persistence.entity.user.security.apiKey.ApiScope;
 import io.hops.hopsworks.restutils.RESTCodes;
-import org.apache.hadoop.fs.Path;
+import org.json.JSONArray;
 import org.json.JSONObject;
 
 import javax.ejb.EJB;
@@ -50,9 +50,6 @@ import java.util.logging.Level;
 @TransactionAttribute(TransactionAttributeType.NEVER)
 public class KubeKfServingController extends KubeToolServingController {
   
-  private final static String MODEL_SERVING_SECRET_SUFFIX = "--serving";
-  private final static String MODEL_SERVING_SECRET_APIKEY_NAME = "apiKey";
-  
   @EJB
   private KubeClientService kubeClientService;
   @EJB
@@ -60,17 +57,19 @@ public class KubeKfServingController extends KubeToolServingController {
   @EJB
   private KubeIstioClientService kubeIstioClientService;
   @EJB
-  private KubeTfServingUtils kubeTfServingUtils;
-  @EJB
   private ApiKeyController apiKeyController;
   @EJB
-  private DatasetController datasetController;
+  private KubeServingUtils kubeServingUtils;
   @EJB
-  private DatasetHelper datasetHelper;
+  private KubeTfServingUtils kubeTfServingUtils;
+  @EJB
+  private KubeTransformerUtils kubeTransformerUtils;
+  @EJB
+  private KubeArtifactUtils kubeArtifactUtils;
   
   @Override
   public void createInstance(Project project, Users user, Serving serving) throws ServingException {
-    createOrReplace(project, user, serving, buildInferenceService(project, serving));
+    createOrReplace(project, user, buildInferenceService(project, user, serving));
   }
   
   @Override
@@ -80,7 +79,7 @@ public class KubeKfServingController extends KubeToolServingController {
       if (metadata != null) {
         // When updating an inference service, the current resource version must be indicated
         String resourceVersion = metadata.getString("resourceVersion");
-        createOrReplace(project, user, serving, buildInferenceService(project, serving, resourceVersion));
+        createOrReplace(project, user, buildInferenceService(project, user, serving, resourceVersion));
       }
     } catch (KubernetesClientException e) {
       throw new ServingException(RESTCodes.ServingErrorCode.UPDATEERROR, Level.SEVERE, null, e.getMessage(), e);
@@ -105,66 +104,66 @@ public class KubeKfServingController extends KubeToolServingController {
     ServingStatusEnum status;
     JSONObject inferenceService;
     DeploymentStatus deploymentStatus;
+    DeploymentStatus transformerDeploymentStatus = null;
     Pair<String, Integer> ingressHostPort;
     
     try {
-      inferenceService = kubeKfServingClientService.getInferenceServiceMetadata(project, serving);
-      deploymentStatus = getDeploymentStatus(project, serving);
+      inferenceService = kubeKfServingClientService.getInferenceService(project, serving);
+      deploymentStatus = getDeploymentStatus(project, serving, "predictor");
+      status = getServingStatus(project, serving, inferenceService);
+      if (serving.getTransformer() != null) {
+        transformerDeploymentStatus = getDeploymentStatus(project, serving, "transformer");
+      }
       ingressHostPort = kubeIstioClientService.getIstioIngressHostPort();
-      status = getServingStatus(project, serving, inferenceService, deploymentStatus);
     } catch (KubernetesClientException e) {
       throw new ServingException(RESTCodes.ServingErrorCode.STATUSERROR, Level.SEVERE, null, e.getMessage(), e);
     }
-    
-    // If the deployment is not created but the inference service is, or
-    // the deployment is created but the nº of available replicas is still null,
-    // set available replicas to 0 because the inference service is already created in both cases.
-    Integer availableReplicas;
-    if (deploymentStatus == null) {
-      availableReplicas = inferenceService != null ? 0 : null;
-    } else {
-      availableReplicas = deploymentStatus.getAvailableReplicas() != null
-        ? deploymentStatus.getAvailableReplicas()
-        : 0;
+  
+    Integer availableReplicas = kubeServingUtils.getAvailableReplicas(deploymentStatus);
+    Integer availableTransformerReplicas = null;
+    if (serving.getTransformer() != null) {
+      availableTransformerReplicas = kubeServingUtils.getAvailableReplicas(transformerDeploymentStatus);
     }
 
+    // These variables are accessed from within inner class, needs to be final or effectively final
+    ServingStatusEnum finalStatus = status;
+    Integer finalAvailableTransformerReplicas = availableTransformerReplicas;
+    
     return new KubeServingInternalStatus() {
       {
-        setServingStatus(status);
+        setServingStatus(finalStatus);
         setNodePort(ingressHostPort.getR());
+        setAvailable(inferenceService != null);
         setAvailableReplicas(availableReplicas);
+        setAvailableTransformerReplicas(finalAvailableTransformerReplicas);
       }
     };
   }
   
-  public DeploymentStatus getDeploymentStatus(Project project, Serving serving) {
+  public DeploymentStatus getDeploymentStatus(Project project, Serving serving, String component) {
     Map<String, String> labelMap = new HashMap<>();
     labelMap.put(KubeServingUtils.SERVING_ID_LABEL_NAME, String.valueOf(serving.getId()));
     labelMap.put(KubeServingUtils.REVISION_LABEL_NAME, String.valueOf(serving.getRevision()));
+    labelMap.put(KubeServingUtils.COMPONENT_LABEL_NAME, component);
     return kubeClientService.getDeploymentStatus(project, labelMap);
   }
   
-  private void createOrReplace(Project project, Users user, Serving serving,
-    JSONObject inferenceService) throws ServingException {
+  private void createOrReplace(Project project, Users user, JSONObject inferenceService) throws ServingException {
     try {
-      zipArtifact(project, user, serving);
       ensureApiKeySecret(project, user);
       kubeKfServingClientService.createOrReplaceInferenceService(project, inferenceService);
-      // Save revision in Serving instance database
-      
-    } catch (ApiKeyException | UserException | DatasetException e) {
-      throw new ServingException(RESTCodes.ServingErrorCode.LIFECYCLEERRORINT, Level.SEVERE, null, e.getMessage(), e);
+    } catch (ApiKeyException | UserException e) {
+      throw new ServingException(RESTCodes.ServingErrorCode.LIFECYCLEERRORINT, Level.INFO, null, e.getMessage(), e);
     }
   }
   
-  private ServingStatusEnum getServingStatus(Project project, Serving serving, JSONObject inferenceService,
-    DeploymentStatus deploymentStatus) {
+  private ServingStatusEnum getServingStatus(Project project, Serving serving, JSONObject inferenceService) {
     
     if (serving.getDeployed() == null) {
       // If the serving has not been deployed
       if (inferenceService == null) {
-        // but the inference service is not created, check running pods
-        List<Pod> podList = getPodList(project, serving);
+        // and the inference service is not created, check running pods
+        List<Pod> podList = getPodList(project, serving, null);
         return podList.isEmpty()
           ? ServingStatusEnum.STOPPED
           : ServingStatusEnum.STOPPING;
@@ -174,30 +173,32 @@ public class KubeKfServingController extends KubeToolServingController {
     }
     
     // If the serving has been deployed
-    if (inferenceService == null) {
+    if (inferenceService == null || !inferenceService.has("metadata") || !inferenceService.has("status")) {
       // but the inference service is not created, the serving is still starting
       return ServingStatusEnum.STARTING;
     }
 
-    // Otherwise, check for available replicas
-    Integer availableReplicas = deploymentStatus != null ? deploymentStatus.getAvailableReplicas() : null;
-    if (availableReplicas == null || !availableReplicas.equals(serving.getInstances())) {
-      // If can't get the available replicas or the nº of available replicas doesn't match, the serving is either
-      // starting or updating, depending on the inference service generation
-      String revision = inferenceService.getJSONObject("labels").getString(KubeServingUtils.REVISION_LABEL_NAME);
-      return inferenceService.getInt("generation") == 1 && revision.equals(serving.getRevision())
-        ? ServingStatusEnum.STARTING
-        : ServingStatusEnum.UPDATING;
+    // Otherwise, check inference service conditions
+    JSONArray conditions = inferenceService.getJSONObject("status").getJSONArray("conditions");
+    for (int i=0; i < conditions.length(); i++) {
+      JSONObject condition = conditions.getJSONObject(i);
+      if (condition.getString("type").endsWith("Ready") && !condition.getString("status").equals("True")) {
+        JSONObject metadata = inferenceService.getJSONObject("metadata");
+        String revision = metadata.getJSONObject("labels").getString(KubeServingUtils.REVISION_LABEL_NAME);
+        return metadata.getInt("generation") == 1 && revision.equals(serving.getRevision())
+          ? ServingStatusEnum.STARTING
+          : ServingStatusEnum.UPDATING;
+      }
     }
     
-    // If nº of available replicas matches, the serving is running
+    // If nº of available replicas matches or scale-to-zero enabled, the serving is running
     return ServingStatusEnum.RUNNING;
   }
   
   private void ensureApiKeySecret(Project project, Users user) throws ApiKeyException, UserException {
     // One apikey per project is created for model serving. This apikey is stored in a kubernetes secret in
     // the namespace of the project and, therefore, removed together with the namespace when a project is deleted.
-    String apiKeyName = project.getName().toLowerCase() + MODEL_SERVING_SECRET_SUFFIX;
+    String apiKeyName = kubeServingUtils.getApiKeyName(project.getName());
     List<ApiKey> apiKeys = apiKeyController.getKeys(user);
     Optional<ApiKey> apiKey =
       apiKeys.stream().filter(key -> key.getName().equals(apiKeyName)).findFirst();
@@ -212,8 +213,7 @@ public class KubeKfServingController extends KubeToolServingController {
       if (secrets != null && !secrets.isEmpty()) {
         // If apiKey and secret exists, return
         return;
-      }
-      else {
+      } else {
         // If apiKey exists but the secret doesn't, create a new apiKey and secret.
         apiKeyController.deleteKey(user, apiKeyName);
       }
@@ -222,56 +222,47 @@ public class KubeKfServingController extends KubeToolServingController {
     // If apikey or secret doesn't exist, create a new apikey and secret.
     Set<ApiScope> scopes = new HashSet<ApiScope>() {
       {
-        add(ApiScope.DATASET_VIEW); // for downloading the model artifact
-        add(ApiScope.KAFKA); // for getting the topic schema
+        add(ApiScope.DATASET_VIEW); // storage-initializer: download the model artifact
+        add(ApiScope.KAFKA); // inference-logger: get the topic schema
+        add(ApiScope.PROJECT); // transformer: get project details
+        add(ApiScope.FEATURESTORE); // transformer: get feature vector and transformations from the feature store
       }
     };
     String key = apiKeyController.createNewKey(user, apiKeyName, scopes);
     
     // Create or update secret
     String kubeProjectNS = kubeClientService.getKubeProjectName(project);
-    String secretName = kubeProjectNS + MODEL_SERVING_SECRET_SUFFIX;
+    String secretName = kubeServingUtils.getApiKeySecretName(kubeProjectNS);
     kubeClientService.createOrUpdateSecret(kubeProjectNS, secretName, new HashMap<String, byte[]>() {
       {
-        put(MODEL_SERVING_SECRET_APIKEY_NAME, key.getBytes());
+        put(kubeServingUtils.getApiKeySecretKey(), key.getBytes());
       }
     }, labels);
   }
   
-  private void zipArtifact(Project project, Users user, Serving serving)
-    throws DatasetException {
-    String versionedArtifactDir = getVersionedArtifactPath(serving);
-    Path artifactPath = datasetHelper.getDatasetPath(project, versionedArtifactDir, DatasetType.DATASET).getFullPath();
-    // If the artifact already exists, it does nothing.
-    datasetController.zip(project, user, artifactPath, artifactPath);
-  }
-  
-  private List<Pod> getPodList(Project project, Serving serving) {
+  private List<Pod> getPodList(Project project, Serving serving, String component) {
     Map<String, String> labelMap = new HashMap<>();
     labelMap.put(KubeServingUtils.SERVING_ID_LABEL_NAME, String.valueOf(serving.getId()));
     labelMap.put(KubeServingUtils.REVISION_LABEL_NAME, String.valueOf(serving.getRevision()));
+    if (component != null) {
+      labelMap.put(KubeServingUtils.COMPONENT_LABEL_NAME, component);
+    }
     return kubeClientService.getPodList(project, labelMap);
   }
-  
-  private String getVersionedArtifactPath(Serving serving) {
-    String versionedArtifactDir = serving.getArtifactPath();
-    if (!versionedArtifactDir.endsWith("/")) {
-      versionedArtifactDir += "/";
-    }
-    return versionedArtifactDir + serving.getVersion();
+
+  private JSONObject buildInferenceService(Project project, Users user, Serving serving) throws ServingException {
+    return buildInferenceService(project, user, serving, null);
   }
-  
-  private JSONObject buildInferenceService(Project project, Serving serving) {
-    return buildInferenceService(project, serving, null);
-  }
-  private JSONObject buildInferenceService(Project project, Serving serving, String resourceVersion) {
-    String versionedArtifactPath = getVersionedArtifactPath(serving);
+  private JSONObject buildInferenceService(Project project, Users user, Serving serving, String resourceVersion)
+      throws ServingException {
+    String artifactPath = kubeArtifactUtils.getArtifactFilePath(serving);
     
-    JSONObject predictor;
+    JSONObject pipeline = new JSONObject();
     switch (serving.getModelServer()) {
       case TENSORFLOW_SERVING:
-        predictor = kubeTfServingUtils.buildInferenceServicePredictor(versionedArtifactPath, serving.getInstances(),
-          serving.getKafkaTopic() != null, serving.getDockerResourcesConfig());
+        JSONObject predictor = kubeTfServingUtils.buildInferenceServicePredictor(artifactPath,
+          serving.getInstances(), serving.getInferenceLogging(), serving.getDockerResourcesConfig());
+        pipeline.put("predictor", predictor.getJSONObject("predictor"));
         break;
       default:
         throw new NotSupportedException("Model server not supported for KFServing inference services");
@@ -282,13 +273,22 @@ public class KubeKfServingController extends KubeToolServingController {
       metadata.put("resourceVersion", resourceVersion);
     }
     
+    if (serving.getTransformer() != null) {
+      try {
+        JSONObject transformer = kubeTransformerUtils.buildInferenceServiceTransformer(project, user, serving);
+        pipeline.put("transformer", transformer.getJSONObject("transformer"));
+      } catch (ServiceDiscoveryException e) {
+        throw new ServingException(RESTCodes.ServingErrorCode.LIFECYCLEERRORINT, Level.INFO, null, e.getMessage(), e);
+      }
+    }
+    
     JSONObject inferenceService = new JSONObject() {
       {
         put("apiVersion", String.format("%s/%s", KubeKfServingClientService.INFERENCESERVICE_GROUP,
           KubeKfServingClientService.INFERENCESERVICE_VERSION));
         put("kind", KubeKfServingClientService.INFERENCESERVICE_KIND);
         put("metadata", metadata);
-        put("spec", predictor);
+        put("spec", pipeline);
       }
     };
     
@@ -298,7 +298,8 @@ public class KubeKfServingController extends KubeToolServingController {
   private ObjectMeta getInferenceServiceMetadataObject(Project project, Serving serving) {
     return new ObjectMetaBuilder()
       .withName(serving.getName())
-      .withLabels(KubeServingUtils.getHopsworksServingLabels(project, serving))
+      .withLabels(kubeServingUtils.getHopsworksServingLabels(project, serving))
+      .withAnnotations(kubeServingUtils.getHopsworksServingAnnotations(serving))
       .build();
   }
   
@@ -311,6 +312,13 @@ public class KubeKfServingController extends KubeToolServingController {
           {
             for (Map.Entry<String, String> label : metadata.getLabels().entrySet()) {
               put(label.getKey(), label.getValue());
+            }
+          }
+        });
+        put("annotations", new JSONObject() {
+          {
+            for (Map.Entry<String, String> annotation : metadata.getAnnotations().entrySet()) {
+              put(annotation.getKey(), annotation.getValue());
             }
           }
         });

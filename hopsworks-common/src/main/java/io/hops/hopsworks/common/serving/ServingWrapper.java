@@ -24,6 +24,7 @@ public class ServingWrapper {
 
   private ServingStatusEnum status;
   private Integer availableReplicas;
+  private Integer availableTransformerReplicas;
   private Integer nodePort;
 
   private TopicDTO kafkaTopicDTO;
@@ -54,6 +55,14 @@ public class ServingWrapper {
 
   public void setAvailableReplicas(Integer availableReplicas) {
     this.availableReplicas = availableReplicas;
+  }
+
+  public Integer getAvailableTransformerReplicas() {
+    return availableTransformerReplicas;
+  }
+  
+  public void setAvailableTransformerReplicas(Integer availableReplicas) {
+    this.availableTransformerReplicas = availableReplicas;
   }
 
   public Integer getNodePort() {

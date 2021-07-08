@@ -1,20 +1,8 @@
 /*
- * This file is part of Hopsworks
- * Copyright (C) 2019, Logical Clocks AB. All rights reserved
- *
- * Hopsworks is free software: you can redistribute it and/or modify it under the terms of
- * the GNU Affero General Public License as published by the Free Software Foundation,
- * either version 3 of the License, or (at your option) any later version.
- *
- * Hopsworks is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
- * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
- * PURPOSE.  See the GNU Affero General Public License for more details.
- *
- * You should have received a copy of the GNU Affero General Public License along with this program.
- * If not, see <https://www.gnu.org/licenses/>.
+ * Copyright (C) 2021, Logical Clocks AB. All rights reserved
  */
 
-package io.hops.hopsworks.kube.serving;
+package io.hops.hopsworks.kube.serving.utils;
 
 import com.logicalclocks.servicediscoverclient.exceptions.ServiceDiscoveryException;
 import io.fabric8.kubernetes.api.model.ConfigMapVolumeSourceBuilder;
@@ -73,13 +61,13 @@ import static io.hops.hopsworks.common.util.Settings.HOPS_USERNAME_SEPARATOR;
 @Stateless
 @TransactionAttribute(TransactionAttributeType.NEVER)
 public class KubeSkLearnServingUtils {
-
+  
   private final static String SERVING_ID = "SERVING_ID";
   private final static String ARTIFACT_PATH = "ARTIFACT_PATH";
   private final static String DEFAULT_FS = "DEFAULT_FS";
   private final static String PROJECT_NAME = "PROJECT_NAME";
   private final static String MODEL_NAME = "MODEL_NAME";
-
+  
   @EJB
   private KubeClientService kubeClientService;
   @EJB
@@ -94,31 +82,31 @@ public class KubeSkLearnServingUtils {
   public String getDeploymentName(String servingId) {
     return "sklrn-serving-dep-" + servingId;
   }
-
+  
   public String getServiceName(String servingId) {
     return "sklrn-serving-ser-" + servingId;
   }
-
+  
   private ObjectMeta getDeploymentMetadata(String servingId) {
     return new ObjectMetaBuilder()
-        .withName(getDeploymentName(servingId))
-        .build();
+      .withName(getDeploymentName(servingId))
+      .build();
   }
   
   public String getDeploymentPath(String verb) {
     StringBuilder pathBuilder = new StringBuilder().append("/").append(verb.replaceFirst(":", ""));
     return pathBuilder.toString();
   }
-
+  
   private ObjectMeta getServiceMetadata(String servingId) {
     return new ObjectMetaBuilder()
-        .withName(getServiceName(servingId))
-        .build();
+      .withName(getServiceName(servingId))
+      .build();
   }
-
+  
   public Deployment buildServingDeployment(Project project, Users user,
-      Serving serving) throws ServiceDiscoveryException {
-
+    Serving serving) throws ServiceDiscoveryException {
+    
     String servingIdStr = String.valueOf(serving.getId());
     String projectUser = project.getName() + HOPS_USERNAME_SEPARATOR + user.getUsername();
     String hadoopHome = settings.getHadoopSymbolicLinkDir();
@@ -132,27 +120,27 @@ public class KubeSkLearnServingUtils {
     servingEnv.add(new EnvVarBuilder().withName(PROJECT_NAME).withValue(project.getName()).build());
     servingEnv.add(new EnvVarBuilder().withName(MODEL_NAME).withValue(serving.getName().toLowerCase()).build());
     servingEnv.add(new EnvVarBuilder().withName(ARTIFACT_PATH)
-        .withValue("hdfs://" + serviceDiscoveryController.constructServiceFQDN(
-          ServiceDiscoveryController.HopsworksService.RPC_NAMENODE) + "/" + serving.getArtifactPath()).build());
+      .withValue("hdfs://" + serviceDiscoveryController.constructServiceFQDN(
+        ServiceDiscoveryController.HopsworksService.RPC_NAMENODE) + "/" + serving.getModelPath()).build());
     servingEnv.add(new EnvVarBuilder().withName(DEFAULT_FS)
-        .withValue("hdfs://" +  serviceDiscoveryController.constructServiceFQDN(
-          ServiceDiscoveryController.HopsworksService.RPC_NAMENODE)).build());
+      .withValue("hdfs://" + serviceDiscoveryController.constructServiceFQDN(
+        ServiceDiscoveryController.HopsworksService.RPC_NAMENODE)).build());
     servingEnv.add(new EnvVarBuilder().withName("MATERIAL_DIRECTORY").withValue("/certs").build());
     servingEnv.add(new EnvVarBuilder().withName("TLS").withValue(String.valueOf(settings.getHopsRpcTls())).build());
     servingEnv.add(new EnvVarBuilder().withName("HADOOP_PROXY_USER").withValue(projectUser).build());
     servingEnv.add(new EnvVarBuilder().withName("HDFS_USER").withValue(projectUser).build());
     servingEnv.add(new EnvVarBuilder().withName("PYTHONPATH").withValue(
-      settings.getAnacondaProjectDir()+ "/bin/python").build());
+      settings.getAnacondaProjectDir() + "/bin/python").build());
     servingEnv.add(new EnvVarBuilder().withName("SCRIPT_NAME").withValue("predict.py").build());
     servingEnv.add(new EnvVarBuilder().withName("IS_KUBE").withValue("true").build());
     SecretVolumeSource secretVolume = new SecretVolumeSourceBuilder()
-        .withSecretName(kubeClientService.getKubeDeploymentName(project, user))
-        .build();
-
+      .withSecretName(kubeClientService.getKubeDeploymentName(project, user))
+      .build();
+    
     Volume secretVol = new VolumeBuilder()
-        .withName("certs")
-        .withSecret(secretVolume)
-        .build();
+      .withName("certs")
+      .withSecret(secretVolume)
+      .build();
     
     Volume pythonEnv = new VolumeBuilder()
       .withName("hadoopconf")
@@ -161,86 +149,86 @@ public class KubeSkLearnServingUtils {
           .withName(kubeProjectConfigMaps.getHadoopConfigMapName(project))
           .build())
       .build();
-
+    
     VolumeMount secretMount = new VolumeMountBuilder()
-        .withName("certs")
-        .withReadOnly(true)
-        .withMountPath("/certs")
-        .build();
+      .withName("certs")
+      .withReadOnly(true)
+      .withMountPath("/certs")
+      .build();
     
     VolumeMount hadoopConfEnvMount = new VolumeMountBuilder()
       .withName("hadoopconf")
       .withReadOnly(true)
       .withMountPath(hadoopConfDir)
       .build();
-
+    
     Container skLeanContainer = new ContainerBuilder()
-        .withName("sklearn")
-        .withImage(projectUtils.getFullDockerImageName(project, false))
-        .withImagePullPolicy(settings.getKubeImagePullPolicy())
-        .withEnv(servingEnv)
-        .withSecurityContext(new SecurityContextBuilder().withRunAsUser(settings.getYarnAppUID()).build())
-        .withCommand("sklearn_serving-launcher.sh")
-        .withVolumeMounts(secretMount, hadoopConfEnvMount)
-        .withResources(resourceRequirements)
-        .build();
-
+      .withName("sklearn")
+      .withImage(projectUtils.getFullDockerImageName(project, false))
+      .withImagePullPolicy(settings.getKubeImagePullPolicy())
+      .withEnv(servingEnv)
+      .withSecurityContext(new SecurityContextBuilder().withRunAsUser(settings.getYarnAppUID()).build())
+      .withCommand("sklearn_serving-launcher.sh")
+      .withVolumeMounts(secretMount, hadoopConfEnvMount)
+      .withResources(resourceRequirements)
+      .build();
+    
     List<Container> containerList = Arrays.asList(skLeanContainer);
-
+    
     LabelSelector labelSelector = new LabelSelectorBuilder()
-        .addToMatchLabels("model", servingIdStr)
-        .build();
-
+      .addToMatchLabels("model", servingIdStr)
+      .build();
+    
     Map<String, String> labelMap = new HashMap<>();
     labelMap.put("model", servingIdStr);
-
+    
     ObjectMeta podMetadata = new ObjectMetaBuilder()
-        .withLabels(labelMap)
-        .build();
-
+      .withLabels(labelMap)
+      .build();
+    
     PodSpec podSpec = new PodSpecBuilder()
-        .withContainers(containerList)
-        .withVolumes(secretVol, pythonEnv)
-        .build();
-
+      .withContainers(containerList)
+      .withVolumes(secretVol, pythonEnv)
+      .build();
+    
     PodTemplateSpec podTemplateSpec = new PodTemplateSpecBuilder()
-        .withMetadata(podMetadata)
-        .withSpec(podSpec)
-        .build();
-
+      .withMetadata(podMetadata)
+      .withSpec(podSpec)
+      .build();
+    
     DeploymentSpec deploymentSpec = new DeploymentSpecBuilder()
-        .withReplicas(serving.getInstances())
-        .withSelector(labelSelector)
-        .withTemplate(podTemplateSpec)
-        .build();
-
+      .withReplicas(serving.getInstances())
+      .withSelector(labelSelector)
+      .withTemplate(podTemplateSpec)
+      .build();
+    
     return new DeploymentBuilder()
-        .withMetadata(getDeploymentMetadata(servingIdStr))
-        .withSpec(deploymentSpec)
-        .build();
+      .withMetadata(getDeploymentMetadata(servingIdStr))
+      .withSpec(deploymentSpec)
+      .build();
   }
-
+  
   public Service buildServingService(Serving serving) {
     String servingIdStr = String.valueOf(serving.getId());
-
+    
     Map<String, String> selector = new HashMap<>();
     selector.put("model", servingIdStr);
-
+    
     ServicePort tfServingServicePorts = new ServicePortBuilder()
-        .withProtocol("TCP")
-        .withPort(9998)
-        .withTargetPort(new IntOrString(5000))
-        .build();
-
+      .withProtocol("TCP")
+      .withPort(9998)
+      .withTargetPort(new IntOrString(5000))
+      .build();
+    
     ServiceSpec tfServingServiceSpec = new ServiceSpecBuilder()
-        .withSelector(selector)
-        .withPorts(tfServingServicePorts)
-        .withType("NodePort")
-        .build();
-
+      .withSelector(selector)
+      .withPorts(tfServingServicePorts)
+      .withType("NodePort")
+      .build();
+    
     return new ServiceBuilder()
-        .withMetadata(getServiceMetadata(servingIdStr))
-        .withSpec(tfServingServiceSpec)
-        .build();
+      .withMetadata(getServiceMetadata(servingIdStr))
+      .withSpec(tfServingServiceSpec)
+      .build();
   }
 }

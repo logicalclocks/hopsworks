@@ -82,18 +82,26 @@ public class Serving implements Serializable {
   @Basic(optional = false)
   @NotNull
   @Size(min = 1, max = 255)
-  @Column(name = "artifact_path")
-  private String artifactPath;
+  @Column(name = "model_path")
+  private String modelPath;
+  @Size(min = 1, max = 255)
+  @Column(name = "transformer") // <filename>.<ext>
+  private String transformer;
   @Basic(optional = false)
   @NotNull
-  @Column(name = "version")
-  private Integer version;
+  @Column(name = "model_version")
+  private Integer modelVersion;
+  @Basic(optional = false)
+  @Column(name = "artifact_version")
+  private Integer artifactVersion = 0;
   @Basic(optional = false)
   @NotNull
   @Column(name = "optimized")
   private boolean optimized;
   @Column(name = "instances")
   private Integer instances;
+  @Column(name = "transformer_instances")
+  private Integer transformerInstances;
   @JoinColumn(name = "project_id", referencedColumnName = "id")
   @ManyToOne(optional = false)
   private Project project;
@@ -108,6 +116,9 @@ public class Serving implements Serializable {
   @JoinColumn(name = "kafka_topic_id", referencedColumnName = "id")
   @ManyToOne
   private ProjectTopics kafkaTopic;
+  @Enumerated(EnumType.ORDINAL)
+  @Column(name = "inference_logging")
+  private InferenceLogging inferenceLogging;
 
   @Basic(optional = true)
   @Column(name = "local_port")
@@ -141,17 +152,22 @@ public class Serving implements Serializable {
 
   public Serving() { }
 
-  public Serving(Integer id, String name, String artifactPath, Integer version,
-                 Integer nInstances, Boolean batchingEnabled, ModelServer modelServer,
-                 ServingTool servingTool, DockerResourcesConfiguration dockerResourcesConfig) {
+  public Serving(Integer id, String name, String modelPath, String transformer, Integer modelVersion,
+      Integer artifactVersion, Integer nInstances, Integer nTransformerInstances, Boolean batchingEnabled,
+      ModelServer modelServer, ServingTool servingTool, InferenceLogging inferenceLogging,
+      DockerResourcesConfiguration dockerResourcesConfig) {
     this.id = id;
     this.name = name;
-    this.artifactPath = artifactPath;
-    this.version = version;
+    this.modelPath = modelPath;
+    this.transformer = transformer;
+    this.modelVersion = modelVersion;
+    this.artifactVersion = artifactVersion;
     this.instances = nInstances;
+    this.transformerInstances = nTransformerInstances;
     this.batchingEnabled = batchingEnabled;
     this.modelServer = modelServer;
     this.servingTool = servingTool;
+    this.inferenceLogging = inferenceLogging;
     this.dockerResourcesConfig = dockerResourcesConfig;
   }
 
@@ -187,20 +203,32 @@ public class Serving implements Serializable {
     this.name = name;
   }
 
-  public String getArtifactPath() {
-    return artifactPath;
+  public String getModelPath() {
+    return modelPath;
   }
 
-  public void setArtifactPath(String artifactPath) {
-    this.artifactPath = artifactPath;
+  public void setModelPath(String modelPath) {
+    this.modelPath = modelPath;
   }
 
-  public Integer getVersion() {
-    return version;
+  public String getTransformer() {
+    return transformer;
   }
 
-  public void setVersion(Integer version) {
-    this.version = version;
+  public void setTransformer(String transformer) {
+    this.transformer = transformer;
+  }
+  
+  public Integer getModelVersion() { return modelVersion; }
+
+  public void setModelVersion(Integer modelVersion) {
+    this.modelVersion = modelVersion;
+  }
+
+  public Integer getArtifactVersion() { return artifactVersion; }
+
+  public void setArtifactVersion(Integer artifactVersion) {
+    this.artifactVersion = artifactVersion;
   }
 
   public Integer getInstances() {
@@ -209,6 +237,14 @@ public class Serving implements Serializable {
 
   public void setInstances(Integer instances) {
     this.instances = instances;
+  }
+
+  public Integer getTransformerInstances() {
+    return transformerInstances;
+  }
+  
+  public void setTransformerInstances(Integer transformerInstances) {
+    this.transformerInstances = transformerInstances;
   }
 
   public boolean isOptimized() {
@@ -283,6 +319,10 @@ public class Serving implements Serializable {
     this.kafkaTopic = kafkaTopic;
   }
 
+  public InferenceLogging getInferenceLogging() { return inferenceLogging; }
+  
+  public void setInferenceLogging(InferenceLogging inferenceLogging) { this.inferenceLogging = inferenceLogging; }
+  
   public ModelServer getModelServer() {
     return modelServer;
   }
@@ -332,14 +372,20 @@ public class Serving implements Serializable {
     if (created != null ? !created.equals(serving.created) : serving.created != null) return false;
     if (creator != null ? !creator.equals(serving.creator) : serving.creator != null) return false;
     if (!name.equals(serving.name)) return false;
-    if (!artifactPath.equals(serving.artifactPath)) return false;
-    if (!version.equals(serving.version)) return false;
+    if (!modelPath.equals(serving.modelPath)) return false;
+    if (transformer != null ? !transformer.equals(serving.transformer) : serving.transformer != null) return false;
+    if (!modelVersion.equals(serving.modelVersion)) return false;
+    if (!artifactVersion.equals(serving.artifactVersion)) return false;
     if (instances != null ? !instances.equals(serving.instances) : serving.instances != null) return false;
+    if (transformerInstances != null ? !transformerInstances.equals(serving.transformerInstances) :
+        serving.transformerInstances != null) return false;
     if (project != null ? !project.equals(serving.project) : serving.project != null) return false;
     if (lockIP != null ? !lockIP.equals(serving.lockIP) : serving.lockIP != null) return false;
     if (lockTimestamp != null ? !lockTimestamp.equals(serving.lockTimestamp) : serving.lockTimestamp != null)
       return false;
     if (kafkaTopic != null ? !kafkaTopic.equals(serving.kafkaTopic) : serving.kafkaTopic != null) return false;
+    if (inferenceLogging != null ? !inferenceLogging.equals(serving.inferenceLogging) :
+      serving.inferenceLogging != null) return false;
     if (localPort != null ? !localPort.equals(serving.localPort) : serving.localPort != null) return false;
     if (cid != null ? !cid.equals(serving.cid) : serving.cid != null) return false;
     if (modelServer != null ? !modelServer.equals(serving.modelServer) : serving.modelServer != null) return false;
@@ -357,15 +403,19 @@ public class Serving implements Serializable {
     result = 31 * result + (created != null ? created.hashCode() : 0);
     result = 31 * result + (creator != null ? creator.hashCode() : 0);
     result = 31 * result + name.hashCode();
-    result = 31 * result + artifactPath.hashCode();
-    result = 31 * result + version.hashCode();
+    result = 31 * result + modelPath.hashCode();
+    result = 31 * result + transformer.hashCode();
+    result = 31 * result + modelVersion.hashCode();
+    result = 31 * result + artifactVersion.hashCode();
     result = 31 * result + (optimized ? 1 : 0);
     result = 31 * result + (instances != null ? instances.hashCode() : 0);
+    result = 31 * result + (transformerInstances != null ? transformerInstances.hashCode() : 0);
     result = 31 * result + (project != null ? project.hashCode() : 0);
     result = 31 * result + (batchingEnabled ? 1 : 0);
     result = 31 * result + (lockIP != null ? lockIP.hashCode() : 0);
     result = 31 * result + (lockTimestamp != null ? lockTimestamp.hashCode() : 0);
     result = 31 * result + (kafkaTopic != null ? kafkaTopic.hashCode() : 0);
+    result = 31 * result + (inferenceLogging != null ? inferenceLogging.hashCode() : 0);
     result = 31 * result + (localPort != null ? localPort.hashCode() : 0);
     result = 31 * result + (cid != null ? cid.hashCode() : 0);
     result = 31 * result + (localDir != null ? localDir.hashCode() : 0);

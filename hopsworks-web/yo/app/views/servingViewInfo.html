@@ -97,13 +97,30 @@
             </tr>
             <tr>
                 <td>
-                    Instances <i class="fa fa-info-circle" tooltip-placement="auto left"
-                               uib-tooltip="Number of active instances of the serving out of the total number of instances.
+                    Predictor instances <i class="fa fa-info-circle" tooltip-placement="auto left"
+                               uib-tooltip="Number of active predictor instances of the serving out of the total number of requested instances.
                                            Using multiple instances is recommended for servings with high load of inference
                                            requests as the number of requests will be load balanced across the active instances."
                                style="margin-left: 10px"></i>
                 </td>
-                <td> {{servingViewInfoCtrl.serving.availableInstances}} / {{servingViewInfoCtrl.serving.requestedInstances}} </td>
+                <td> {{servingViewInfoCtrl.serving.availableInstances !== undefined ? servingViewInfoCtrl.serving.availableInstances : 0}} /
+                     {{servingViewInfoCtrl.serving.requestedInstances}} </td>
+            </tr>
+            <tr>
+                <td>
+                    Transformer instances <i class="fa fa-info-circle" tooltip-placement="auto left"
+                                           uib-tooltip="Number of active transformer instances of the serving out of the total number of requested instances.
+                                           Using multiple instances is recommended for servings with high load of inference
+                                           requests as the number of requests will be load balanced across the active instances."
+                                           style="margin-left: 10px"></i>
+                </td>
+                <td>
+                    <div ng-if="servingViewInfoCtrl.serving.transformer">
+                       {{servingViewInfoCtrl.serving.availableTransformerInstances !== undefined ? servingViewInfoCtrl.serving.availableTransformerInstances : 0}} /
+                       {{servingViewInfoCtrl.serving.requestedTransformerInstances}}
+                    </div>
+                    <div ng-if="!servingViewInfoCtrl.serving.transformer">-</div>
+                </td>
             </tr>
             <tr>
                 <td>
@@ -112,15 +129,16 @@
                                              The kafka topic can be used to monitor how the serving instance is handling inference requests in real-time."
                                  style="margin-left: 10px"></i>
                 </td>
-                <td> {{servingViewInfoCtrl.serving.kafkaTopicDTO.name}} </td>
+                <td> {{servingViewInfoCtrl.serving.kafkaTopicDTO.name ? servingViewInfoCtrl.serving.kafkaTopicDTO.name : '-'}} </td>
             </tr>
             <tr>
                 <td>
-                    Deployed <i class="fa fa-info-circle" tooltip-placement="auto left"
-                                        uib-tooltip="Timestamp when the serving was deployed."
+                    Inference logging <i class="fa fa-info-circle" tooltip-placement="auto left"
+                                        uib-tooltip="Inference data to log into the Kafka topic."
                                         style="margin-left: 10px"></i>
                 </td>
-                <td> {{servingViewInfoCtrl.serving.deployed | date:'medium'}} </td>
+                <td> {{servingViewInfoCtrl.serving.inferenceLogging ? servingViewInfoCtrl.serving.inferenceLogging : '-'}}
+                </td>
             </tr>
             <tr ng-if="servingViewInfoCtrl.isKubernetes">
                 <td>
@@ -146,13 +164,21 @@
                 </td>
                 <td> {{servingViewInfoCtrl.serving.predictorResourceConfig.gpus}} </td>
             </tr>
+            <tr>
+                <td>
+                    Deployed <i class="fa fa-info-circle" tooltip-placement="auto left"
+                                        uib-tooltip="Timestamp when the serving was deployed."
+                                        style="margin-left: 10px"></i>
+                </td>
+                <td> {{servingViewInfoCtrl.serving.deployed ? (servingViewInfoCtrl.serving.deployed | date:'medium') : '-'}} </td>
+            </tr>
             <tr ng-if="servingViewInfoCtrl.isKubernetes">
                 <td>
                     Revision <i class="fa fa-info-circle" tooltip-placement="auto left"
                                 uib-tooltip="Revision identifier of the last operation (i.e create, update, delete)."
                                 style="margin-left: 10px"></i>
                 </td>
-                <td> {{servingViewInfoCtrl.serving.revision}} </td>
+                <td> {{servingViewInfoCtrl.serving.revision ? servingViewInfoCtrl.serving.revision : '-' }} </td>
             </tr>
             </tbody>
         </table>
