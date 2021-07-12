@@ -65,12 +65,12 @@ public class DatabricksClusterBuilder {
                                     String dbInstance, List<DbCluster> dbClusters) {
     DatabricksClusterDTO dbClusterDTO = new DatabricksClusterDTO();
     dbClusterDTO.setHref(buildHref(uriInfo, project, dbInstance));
-    dbClusterDTO.setCount((long) dbClusters.size());
-    if (expand(resourceRequest)) {
+    dbClusterDTO.setCount((long) (dbClusters == null ? 0 : dbClusters.size()));
+    if(dbClusters != null && expand(resourceRequest)) {
       dbClusterDTO.setExpand(true);
       dbClusterDTO.setItems(
-          dbClusters.stream().map(c -> build(uriInfo, project, resourceRequest, dbInstance, c))
-              .collect(Collectors.toList())
+              dbClusters.stream().map(c -> build(uriInfo, project, resourceRequest, dbInstance, c))
+                      .collect(Collectors.toList())
       );
     }
     return dbClusterDTO;
