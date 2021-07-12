@@ -170,14 +170,6 @@ public class FeatureGroupValidationsController {
     Featuregroup featuregroup, List<ExpectationResult> results, Long validationTime) throws FeaturestoreException {
     FeatureGroupValidation.Status status = getValidationResultStatus(results);
     alertController.sendAlert(featuregroup, results, status);
-    if (featuregroup.getValidationType().getSeverity() < status.getSeverity()) {
-      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.FEATURE_GROUP_CHECKS_FAILED,
-              java.util.logging.Level.FINE,
-                "Results: " + results.stream()
-                                      .filter(result -> result.getStatus().getSeverity()
-                                              >= FeatureGroupValidation.Status.WARNING.getSeverity())
-                                      .collect(Collectors.toList()));
-    }
     String hdfsUsername = hdfsUsersController.getHdfsUserName(project, user);
     DistributedFileSystemOps udfso = null;
     try {
@@ -200,6 +192,15 @@ public class FeatureGroupValidationsController {
       featureGroupValidationFacade.persist(featureGroupValidation);
 
       activityFacade.logValidationActivity(featuregroup, user, featureGroupValidation);
+      // Persist validation results but throw an error if the data is invalid so that the client (hsfs) does not insert
+      if (featuregroup.getValidationType().getSeverity() < status.getSeverity()) {
+        throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.FEATURE_GROUP_CHECKS_FAILED,
+                java.util.logging.Level.FINE,
+                "Results: " + results.stream()
+                        .filter(result -> result.getStatus().getSeverity()
+                                >= FeatureGroupValidation.Status.WARNING.getSeverity())
+                        .collect(Collectors.toList()));
+      }
       return featureGroupValidation;
     } catch (IOException ex) {
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.COULD_NOT_READ_DATA_VALIDATION_RESULT,
