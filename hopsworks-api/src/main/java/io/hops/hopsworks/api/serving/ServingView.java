@@ -41,7 +41,7 @@ public class ServingView implements Serializable {
   
   private Integer id;
   private String name;
-  private String artifactPath;
+  private String modelPath;
   private Integer modelVersion;
   private Integer availableInstances;
   private Integer requestedInstances;
@@ -51,7 +51,6 @@ public class ServingView implements Serializable {
   private ModelServer modelServer;
   private ServingTool servingTool;
   private Date deployed;
-  private String revision;
 
   // TODO(Fabio): use expansions here
   private String creator;
@@ -67,8 +66,8 @@ public class ServingView implements Serializable {
   public ServingView(ServingWrapper servingWrapper) {
     this.id = servingWrapper.getServing().getId();
     this.name = servingWrapper.getServing().getName();
-    this.artifactPath = servingWrapper.getServing().getArtifactPath();
-    this.modelVersion = servingWrapper.getServing().getVersion();
+    this.modelPath = servingWrapper.getServing().getModelPath();
+    this.modelVersion = servingWrapper.getServing().getModelVersion();
     this.availableInstances = servingWrapper.getAvailableReplicas();
     this.requestedInstances = servingWrapper.getServing().getInstances();
     this.nodePort = servingWrapper.getNodePort();
@@ -79,7 +78,6 @@ public class ServingView implements Serializable {
     this.modelServer = servingWrapper.getServing().getModelServer();
     this.servingTool = servingWrapper.getServing().getServingTool();
     this.deployed = servingWrapper.getServing().getDeployed();
-    this.revision = servingWrapper.getServing().getRevision();
     Users user = servingWrapper.getServing().getCreator();
     this.creator = user.getFname() + " " + user.getLname();
   }
@@ -103,15 +101,15 @@ public class ServingView implements Serializable {
   }
 
   @ApiModelProperty(value = "HOPSFS directory path containing the model (tf) or python script (sklearn)")
-  public String getArtifactPath() {
-    return artifactPath;
+  public String getModelPath() {
+    return modelPath;
   }
 
-  public void setArtifactPath(String artifactPath) {
-    this.artifactPath = artifactPath;
+  public void setModelPath(String modelPath) {
+    this.modelPath = modelPath;
   }
 
-  @ApiModelProperty(value = "Version of the serving")
+  @ApiModelProperty(value = "Version of the model")
   public Integer getModelVersion() {
     return modelVersion;
   }
@@ -120,7 +118,7 @@ public class ServingView implements Serializable {
     this.modelVersion = modelVersion;
   }
 
-  @ApiModelProperty(value = "Number of Serving instances to use for serving")
+  @ApiModelProperty(value = "Number of serving instances to use for serving")
   public Integer getRequestedInstances() {
     return requestedInstances;
   }
@@ -129,7 +127,7 @@ public class ServingView implements Serializable {
     this.requestedInstances = requestedInstances;
   }
 
-  @ApiModelProperty(value = "Number of Serving instances available for serving", readOnly = true)
+  @ApiModelProperty(value = "Number of serving instances available for serving", readOnly = true)
   public Integer getAvailableInstances() {
     return availableInstances;
   }
@@ -214,20 +212,11 @@ public class ServingView implements Serializable {
     this.deployed = deployed;
   }
   
-  @ApiModelProperty(value = "Revision identifier of the last deployment", readOnly = true)
-  public String getRevision() {
-    return revision;
-  }
-  
-  public void setRevision(String revision) {
-    this.revision = revision;
-  }
-  
   @JsonIgnore
   public ServingWrapper getServingWrapper() {
 
     ServingWrapper servingWrapper = new ServingWrapper(
-        new Serving(id, name, artifactPath, modelVersion, requestedInstances, batchingEnabled,
+        new Serving(id, name, modelPath, modelVersion, requestedInstances, batchingEnabled,
           modelServer, servingTool));
     servingWrapper.setKafkaTopicDTO(kafkaTopicDTO);
 

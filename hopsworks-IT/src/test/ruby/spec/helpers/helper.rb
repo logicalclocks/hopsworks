@@ -21,14 +21,14 @@ module Helper
     pp "time = #{end_time - start_time}"
   end
 
-  def wait_for_me_time(timeout=480)
+  def wait_for_me_time(timeout=480, delay=1)
     start = Time.now
     x = yield
     until x["success"] == true
       if Time.now - start > timeout
         break
       end
-      sleep(1)
+      sleep(delay)
       x = yield
     end
     return x

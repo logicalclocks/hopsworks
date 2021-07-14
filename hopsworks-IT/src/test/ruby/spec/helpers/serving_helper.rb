@@ -22,32 +22,26 @@ MNIST_TOUR_DATA_LOCATION = "#{TF_TOURS_LOCATION}/mnist"
 TF_MODEL_TOUR_FILE_LOCATION = "#{MNIST_TOUR_DATA_LOCATION}/model/*"
 SKLEARN_MODEL_TOUR_FILE_LOCATION = "#{TF_TOURS_LOCATION}/iris/iris_knn.pkl"
 SKLEARN_SCRIPT_FILE_NAME="iris_flower_classifier.py"
-SKLEARN_SCRIPT_TOUR_FILE_LOCATION = "/user/hdfs/tensorflow_demo/notebooks/End_To_End_Pipeline/sklearn/#{SKLEARN_SCRIPT_FILE_NAME}"
+SKLEARN_SCRIPT_TOUR_FILE_LOCATION = "/user/hdfs/tensorflow_demo/notebooks/end_to_end_pipeline/sklearn/#{SKLEARN_SCRIPT_FILE_NAME}"
 
 module ServingHelper
 
   def with_tf_serving(project_id, project_name, user)
-    # Copy model to the project directory
-    mkdir("/Projects/#{project_name}/Models/mnist/", "#{project_name}__#{user}", "#{project_name}__Models", 750)
-    copy(TF_MODEL_TOUR_FILE_LOCATION, "/Projects/#{project_name}/Models/mnist/", "#{user}", "#{project_name}__Models", 750, "#{project_name}")
-
+    copy_mnist_files(project_id, project_name, user)
     @serving ||= create_tf_serving(project_id, project_name)
     @topic = ProjectTopics.find(@serving[:kafka_topic_id])
   end
 
   def with_sklearn_serving(project_id, project_name, user)
     # Make Serving Dir
-    mkdir("/Projects/#{project_name}/Models/IrisFlowerClassifier/", "#{project_name}__#{user}",
-          "#{project_name}__Models", 750)
-    # Make Version Dir
-    mkdir("/Projects/#{project_name}/Models/IrisFlowerClassifier/1", "#{project_name}__#{user}",
+    mkdir("/Projects/#{project_name}/Models/irisflowerclassifier/1", "#{project_name}__#{user}",
           "#{project_name}__Models", 750)
     # Copy model to the servingversion dir
-    copy(SKLEARN_MODEL_TOUR_FILE_LOCATION, "/Projects/#{project_name}/Models/IrisFlowerClassifier/1/",
+    copy(SKLEARN_MODEL_TOUR_FILE_LOCATION, "/Projects/#{project_name}/Models/irisflowerclassifier/1/",
          "#{user}",
          "#{project_name}__Models", 750, "#{project_name}")
     # Copy script to the servingversion dir
-    copy(SKLEARN_SCRIPT_TOUR_FILE_LOCATION, "/Projects/#{project_name}/Models/IrisFlowerClassifier/1/",
+    copy(SKLEARN_SCRIPT_TOUR_FILE_LOCATION, "/Projects/#{project_name}/Models/irisflowerclassifier/1/",
          "#{user}",
          "#{project_name}__Models", 750, "#{project_name}")
 
@@ -59,7 +53,7 @@ module ServingHelper
     serving_name = "testModel#{short_random_id}"
     put "#{ENV['HOPSWORKS_API']}/project/#{project_id}/serving/",
               {name: serving_name,
-               artifactPath: "/Projects/#{project_name}/Models/mnist/",
+               modelPath: "/Projects/#{project_name}/Models/mnist/",
                modelVersion: 1,
                batchingEnabled: true,
                kafkaTopicDTO: {
@@ -75,6 +69,11 @@ module ServingHelper
     Serving.find_by(project_id: project_id, name: serving_name)
   end
 
+  def copy_mnist_files(project_id, project_name, user)
+      mkdir("/Projects/#{project_name}/Models/mnist/", "#{project_name}__#{user}", "#{project_name}__Models", 750)
+      copy(TF_MODEL_TOUR_FILE_LOCATION, "/Projects/#{project_name}/Models/mnist/", "#{user}", "#{project_name}__Models", 750, "#{project_name}")
+  end
+
   def purge_all_tf_serving_instances()
     if !kubernetes_installed
       system "sudo /bin/bash -c \"pgrep -f tensorflow_model_server | xargs kill\""
@@ -85,7 +84,7 @@ module ServingHelper
     serving_name = "testModel#{short_random_id}"
     put "#{ENV['HOPSWORKS_API']}/project/#{project_id}/serving/",
         {name: serving_name,
-         artifactPath: "/Projects/#{project_name}/Models/IrisFlowerClassifier/1/#{SKLEARN_SCRIPT_FILE_NAME}",
+         modelPath: "/Projects/#{project_name}/Models/irisflowerclassifier/1/#{SKLEARN_SCRIPT_FILE_NAME}",
          modelVersion: 1,
          kafkaTopicDTO: {
              name: "CREATE",
@@ -145,5 +144,25 @@ module ServingHelper
     else
       sleep(120)
     end
+  end
+
+  def get_kube_service_host(project, service)
+    project.gsub! '_', '-'
+    "#{service}.#{project}.logicalclocks.com"
+  end
+
+  def parse_model_server(value)
+    return case
+      when value == 0 ; "TENSORFLOW_SERVING"
+      when value == 1 ; "FLASK"
+      else puts "Model server value cannot be parsed"
+      end
+  end
+
+  def parse_serving_tool(value)
+    return case
+      when value == 0 ; "DEFAULT"
+      else puts "Serving tool value cannot be parsed"
+      end
   end
 end

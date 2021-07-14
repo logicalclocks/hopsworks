@@ -49,8 +49,7 @@ describe "On #{ENV['OS']}" do
 
         it "the inference should fail" do
           post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/inference/models/#{@serving[:name]}:predict"
-          expect_json(errorCode: 200003)
-          expect_status(401)
+          expect_status_details(401, error_code: 200003)
         end
       end
 
@@ -68,21 +67,19 @@ describe "On #{ENV['OS']}" do
 
         it "should fail to send a request to a non existing model" do
           post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/inference/models/nonexistingmodel:predict"
-          expect_json(errorCode: 250000)
-          expect_status(404)
+          expect_status_details(404, error_code: 250000)
         end
 
         it "should fail to send a request to a non running model" do
           post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/inference/models/#{@serving[:name]}:predict"
-          expect_json(errorCode: 250001)
-          expect_status(400)
+          expect_status_details(400, error_code: 250001)
         end
 
         context 'with running model do' do
 
           before :all do
             post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/#{@serving[:id]}?action=start"
-            expect_status(200)
+            expect_status_details(200)
             # Sleep a bit to avoid race condition and Flask server starts
             wait_for_type("sklearn_flask_server.py")
           end
@@ -94,26 +91,27 @@ describe "On #{ENV['OS']}" do
 
           it "should succeed to infer from a serving with kafka logging" do
             post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/inference/models/#{@serving[:name]}:predict", {inputs: test_data}
-            expect_status(200)
+            expect_status_details(200)
             parsed_json = JSON.parse(response.body)
             expect(parsed_json.key?("predictions")).to be true
             expect(parsed_json["predictions"].length == test_data.length).to be true
           end
 
           it "should succeed to infer from a serving with no kafka logging" do
+            serving = Serving.find(@serving[:id])
             put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
-                {id: @serving[:id],
-                 name: @serving[:name],
-                 artifactPath: @serving[:artifact_path],
-                 modelVersion: @serving[:version],
+                {id: serving[:id],
+                 name: serving[:name],
+                 modelPath: serving[:model_path],
+                 modelVersion: serving[:model_version],
                  kafkaTopicDTO: {
                      name: "NONE"
                  },
-                 modelServer: "FLASK",
-                 servingTool: "DEFAULT",
+                 modelServer: parse_model_server(serving[:model_server]),
+                 servingTool: parse_serving_tool(serving[:serving_tool]),
                  requestedInstances: 1
                 }
-            expect_status(201)
+            expect_status_details(201)
 
             # Sleep a bit to avoid race condition and Flask server restarts
             wait_for_type("sklearn_flask_server.py")
@@ -121,7 +119,7 @@ describe "On #{ENV['OS']}" do
             post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/inference/models/#{@serving[:name]}:predict", {
                 inputs: test_data
             }
-            expect_status(200)
+            expect_status_details(200)
           end
 
           it "should receive an error if the input payload is malformed" do
@@ -129,29 +127,25 @@ describe "On #{ENV['OS']}" do
             post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/inference/models/#{@serving[:name]}:predict", {
                 somethingwrong: test_data
             }
-            expect_json(errorCode: 250008)
-            expect_status(400)
+            expect_status_details(400, error_code: 250008)
           end
 
           it "should receive an error if the input payload is empty" do
             # Wait for pod to start
             post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/inference/models/#{@serving[:name]}:predict"
-            expect_json(errorCode: 250008)
-            expect_status(400)
+            expect_status_details(400, error_code: 250008)
           end
 
           it "should receive an error if the input payload is malformed" do
             post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/inference/models/#{@serving[:name]}:predict", {
                 somethingwrong: test_data
             }
-            expect_json(errorCode: 250008)
-            expect_status(400)
+            expect_status_details(400, error_code: 250008)
           end
 
           it "should receive an error if the input payload is empty" do
             post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/inference/models/#{@serving[:name]}:predict"
-            expect_json(errorCode: 250008)
-            expect_status(400)
+            expect_status_details(400, error_code: 250008)
           end
         end
       end

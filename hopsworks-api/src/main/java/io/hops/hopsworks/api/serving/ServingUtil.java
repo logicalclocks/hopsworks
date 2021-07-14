@@ -34,6 +34,7 @@ import javax.ejb.Stateless;
 import java.io.FileNotFoundException;
 import java.io.UnsupportedEncodingException;
 import java.nio.file.Paths;
+import java.util.Collections;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.regex.Matcher;
@@ -64,24 +65,27 @@ public class ServingUtil {
    */
   public void validateUserInput(ServingWrapper servingWrapper, Project project) throws ServingException,
       UnsupportedEncodingException {
+
+    Serving serving = servingWrapper.getServing();
+    
     // Check that the modelName is present
-    if (Strings.isNullOrEmpty(servingWrapper.getServing().getName())) {
+    if (Strings.isNullOrEmpty(serving.getName())) {
       throw new IllegalArgumentException("Serving name not provided");
-    } else if (servingWrapper.getServing().getName().contains(" ")) {
+    } else if (serving.getName().contains(" ")) {
       throw new IllegalArgumentException("Serving name cannot contain spaces");
     }
-    // Check that the artifactPath is present
-    if (Strings.isNullOrEmpty(servingWrapper.getServing().getArtifactPath())) {
-      throw new IllegalArgumentException("Artifact path not provided");
+    // Check that the modelPath is present
+    if (Strings.isNullOrEmpty(serving.getModelPath())) {
+      throw new IllegalArgumentException("Model path not provided");
     } else {
-      // Format artifact path (e.g remove duplicated '/')
-      String formattedArtifactPath = Paths.get(servingWrapper.getServing().getArtifactPath()).toString();
-      servingWrapper.getServing().setArtifactPath(formattedArtifactPath);
+      // Format model path (e.g remove duplicated '/')
+      String formattedModelPath = Paths.get(serving.getModelPath()).toString();
+      serving.setModelPath(formattedModelPath);
     }
-    if (servingWrapper.getServing().getVersion() == null) {
-      throw new IllegalArgumentException("Serving version not provided");
+    if (serving.getModelVersion() == null) {
+      throw new IllegalArgumentException("Model version not provided");
     }
-    if (servingWrapper.getServing().getInstances() == null) {
+    if (serving.getInstances() == null) {
       throw new IllegalArgumentException("Number of instances not provided");
     }
     // Check for duplicated entries
@@ -89,46 +93,60 @@ public class ServingUtil {
     //Validate that serving name follows allowed regex as required by the InferenceResource to use it as a
     //Rest Endpoint
     Pattern urlPattern = Pattern.compile("[a-zA-Z0-9]+");
-    Matcher urlMatcher = urlPattern.matcher(servingWrapper.getServing().getName());
+    Matcher urlMatcher = urlPattern.matcher(serving.getName());
     if(!urlMatcher.matches()){
       throw new IllegalArgumentException("Serving name must follow regex: \"[a-zA-Z0-9]+\"");
     }
-    //Serving-type-specific validations
-    if (servingWrapper.getServing().getModelServer() == null) {
+    // Model-server-specific validations
+    if (serving.getModelServer() == null) {
       throw new IllegalArgumentException("Model server not provided or unsupported");
     }
-    if (servingWrapper.getServing().getModelServer() == ModelServer.TENSORFLOW_SERVING) {
-      validateTfUserInput(servingWrapper);
+    if (serving.getModelServer() == ModelServer.TENSORFLOW_SERVING) {
+      validateTfUserInput(serving);
     }
-    if (servingWrapper.getServing().getModelServer() == ModelServer.FLASK) {
-      validateSKLearnUserInput(servingWrapper, project);
+    if (serving.getModelServer() == ModelServer.FLASK) {
+      validatePythonUserInput(project, serving.getModelPath());
     }
-    
-    // Serving tool validation
-    if (servingWrapper.getServing().getServingTool() == null) {
-      throw new IllegalArgumentException("Serving tool not provided or unsupported");
+  
+    // Serving-tool-specific validations
+    if (serving.getServingTool() == null) {
+      throw new IllegalArgumentException("Serving tool not provided or invalid");
     }
   }
   
   /**
-   * Validates user data for creating or updating a SkLearn Serving Instance
+   * Validates user data for creating or updating a Python Serving Instance
    *
-   * @param servingWrapper the user data
    * @param project the project to create the serving for
+   * @param scriptPath path to python script
    * @throws ServingException if the python environment is not activated for the project
    * @throws java.io.UnsupportedEncodingException
    */
-  public void validateSKLearnUserInput(ServingWrapper servingWrapper, Project project) throws ServingException,
-      UnsupportedEncodingException {
+  public void validatePythonUserInput(Project project, String scriptPath) throws ServingException,
+    UnsupportedEncodingException {
+    validatePythonUserInput(project, scriptPath, Collections.singletonList(".py"));
+  }
   
+  /**
+   * Validates user data for creating or updating a Python Serving Instance
+   *
+   * @param project the project to create the serving for
+   * @param scriptPath path to python script
+   * @param extensions file extensions
+   * @throws ServingException if the python environment is not activated for the project
+   * @throws java.io.UnsupportedEncodingException
+   */
+  public void validatePythonUserInput(Project project, String scriptPath, List<String> extensions)
+    throws ServingException, UnsupportedEncodingException {
+
     // Check that the script name is valid and exists
-    String scriptName = Utils.getFileName(servingWrapper.getServing().getArtifactPath());
-    if(!scriptName.contains(".py")){
-      throw new IllegalArgumentException("Script name should be a valid python script name");
+    String scriptName = Utils.getFileName(scriptPath);
+    if(extensions.stream().noneMatch(scriptName::endsWith)){
+      throw new IllegalArgumentException("Script name should be a valid python script name: " + String.join(", ",
+        extensions));
     }
-    String hdfsPath = servingWrapper.getServing().getArtifactPath();
     //Remove hdfs:// if it is in the path
-    hdfsPath = Utils.prepPath(hdfsPath);
+    String hdfsPath = Utils.prepPath(scriptPath);
     if(!inodeController.existsPath(hdfsPath)){
       throw new IllegalArgumentException("Python script path does not exist in HDFS");
     }
@@ -142,16 +160,16 @@ public class ServingUtil {
   /**
    * Validates user data for creating or updating a Tensorflow Serving Instance
    *
-   * @param servingWrapper the user data
+   * @param serving the user data
    * @throws ServingException if the python environment is not activated for the project
    */
-  public void validateTfUserInput(ServingWrapper servingWrapper) {
+  public void validateTfUserInput(Serving serving) {
     // Check that the modelPath respects the TensorFlow standard
-    validateTfModelPath(servingWrapper.getServing().getArtifactPath(),
-      servingWrapper.getServing().getVersion());
+    validateTfModelPath(serving.getModelPath(),
+      serving.getModelVersion());
     
     // Check that the batching option has been specified
-    if (servingWrapper.getServing().isBatchingEnabled() == null) {
+    if (serving.isBatchingEnabled() == null) {
       throw new IllegalArgumentException("Batching is null");
     }
   }
