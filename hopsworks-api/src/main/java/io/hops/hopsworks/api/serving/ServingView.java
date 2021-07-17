@@ -51,7 +51,16 @@ public class ServingView implements Serializable {
   private ModelServer modelServer;
   private ServingTool servingTool;
   private Date deployed;
-
+  
+  // Hopsworks-ee
+  private Integer artifactVersion;
+  private String transformer;
+  private Integer availableTransformerInstances;
+  private Integer requestedTransformerInstances;
+  private Object inferenceLogging;
+  private Object predictorResourceConfig;
+  private String revision;
+  
   // TODO(Fabio): use expansions here
   private String creator;
 
@@ -221,5 +230,52 @@ public class ServingView implements Serializable {
     servingWrapper.setKafkaTopicDTO(kafkaTopicDTO);
 
     return servingWrapper;
+  }
+  
+  // Hopsworks-ee
+  
+  public Integer getArtifactVersion() {
+    return artifactVersion;
+  }
+  public void setArtifactVersion(Integer artifactVersion) {
+    this.artifactVersion = artifactVersion;
+  }
+  
+  public String getTransformer() {
+    return transformer;
+  }
+  public void setTransformer(String transformer) {
+    this.transformer = transformer;
+  }
+  
+  public Integer getAvailableTransformerInstances() {
+    return availableTransformerInstances;
+  }
+  public void setAvailableTransformerInstances(Integer availableInstances) {
+    this.availableTransformerInstances = availableInstances;
+  }
+  
+  public Integer getRequestedTransformerInstances() {
+    return requestedTransformerInstances;
+  }
+  public void setRequestedTransformerInstances(Integer transformerInstances) {
+    this.requestedTransformerInstances = transformerInstances;
+  }
+  
+  public Object getInferenceLogging() { return inferenceLogging; }
+  public void setInferenceLogging(Object inferenceLogging) { this.inferenceLogging = inferenceLogging; }
+  
+  public Object getPredictorResourceConfig() {
+    return predictorResourceConfig;
+  }
+  public void setPredictorResourceConfig(Object predictorResourceConfig) {
+    this.predictorResourceConfig = predictorResourceConfig;
+  }
+  
+  public String getRevision() {
+    return revision;
+  }
+  public void setRevision(String revision) {
+    this.revision = revision;
   }
 }
