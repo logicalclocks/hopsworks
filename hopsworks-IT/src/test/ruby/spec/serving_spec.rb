@@ -26,13 +26,14 @@ describe "On #{ENV['OS']}" do
       context 'without authentication' do
         before :all do
           with_valid_project
+          copy_mnist_files(@project[:id], @project[:projectname], @user[:username])
           reset_session
         end
 
         it "should fail to create the serving" do
           put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
               {name: "testModel",
-               artifactPath: "/Projects/#{@project[:projectname]}/Models/mnist/",
+               modelPath: "/Projects/#{@project[:projectname]}/Models/mnist/",
                modelVersion: 1,
                batchingEnabled: false,
                modelServer: "TENSORFLOW_SERVING",
@@ -47,15 +48,13 @@ describe "On #{ENV['OS']}" do
       context 'with authentication', vm: true do
         before :all do
           with_valid_project
-
-          mkdir("/Projects/#{@project[:projectname]}/Models/mnist/", @user[:username], "#{@project[:projectname]}__Models", 750)
-          copy(TF_MODEL_TOUR_FILE_LOCATION, "/Projects/#{@project[:projectname]}/Models/mnist/", @user[:username], "#{@project[:projectname]}__Models", 750, "#{@project[:projectname]}")
+          copy_mnist_files(@project[:id], @project[:projectname], @user[:username])
         end
 
         it "fail to create a serving with bad kafka configuration" do
           put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
               {name: "testModelBadKafka",
-               artifactPath: "/Projects/#{@project[:projectname]}/Models/mnist/",
+               modelPath: "/Projects/#{@project[:projectname]}/Models/mnist/",
                modelVersion: 1,
                batchingEnabled: false,
                kafkaTopicDTO: {
@@ -74,7 +73,7 @@ describe "On #{ENV['OS']}" do
         it "should fail to create the serving without a name" do
           # Create serving
           put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
-              {artifactPath: "/Projects/#{@project[:projectname]}/Models/mnist/",
+              {modelPath: "/Projects/#{@project[:projectname]}/Models/mnist/",
                batchingEnabled: false,
                modelVersion: 1,
                modelServer: "TENSORFLOW_SERVING",
@@ -87,7 +86,7 @@ describe "On #{ENV['OS']}" do
         it "fail to create a serving with space in the name" do
           put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
               {name: "test Model1",
-               artifactPath: "/Projects/#{@project[:projectname]}/Models/mnist/",
+               modelPath: "/Projects/#{@project[:projectname]}/Models/mnist/",
                modelVersion: 1,
                batchingEnabled: false,
                kafkaTopicDTO: {
@@ -106,7 +105,7 @@ describe "On #{ENV['OS']}" do
         it "fail to create a serving without batching specified" do
           put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
               {name: "nobatchingModels",
-               artifactPath: "/Projects/#{@project[:projectname]}/Models/mnist/",
+               modelPath: "/Projects/#{@project[:projectname]}/Models/mnist/",
                modelVersion: 1,
                kafkaTopicDTO: {
                    name: "CREATE",
@@ -129,25 +128,25 @@ describe "On #{ENV['OS']}" do
                servingTool: "DEFAULT",
                requestedInstances: 1
               }
-          expect_json(usrMsg: "Artifact path not provided")
+          expect_json(usrMsg: "Model path not provided")
         end
 
         it "should fail to create a serving without a version" do
           put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
               {name: "testModel4",
-               artifactPath: "/Projects/#{@project[:projectname]}/Models/mnist/",
+               modelPath: "/Projects/#{@project[:projectname]}/Models/mnist/",
                batchingEnabled: false,
                modelServer: "TENSORFLOW_SERVING",
                servingTool: "DEFAULT",
                requestedInstances: 1
               }
-          expect_json(usrMsg: "Serving version not provided")
+          expect_json(usrMsg: "Model version not provided")
         end
 
           it "should fail to create a serving without model server" do
             put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
                 {name: "testmodel5",
-                 artifactPath: "/Projects/#{@project[:projectname]}/Models/mnist/",
+                 modelPath: "/Projects/#{@project[:projectname]}/Models/mnist/",
                  modelVersion: 1,
                  batchingEnabled: false,
                  servingTool: "DEFAULT",
@@ -160,20 +159,20 @@ describe "On #{ENV['OS']}" do
           it "should fail to create a serving without serving tool" do
             put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
                 {name: "testmodel6",
-                 artifactPath: "/Projects/#{@project[:projectname]}/Models/mnist/",
+                 modelPath: "/Projects/#{@project[:projectname]}/Models/mnist/",
                  modelVersion: 1,
                  batchingEnabled: false,
                  modelServer: "TENSORFLOW_SERVING",
                  requestedInstances: 1
                 }
-            expect_json(usrMsg: "Serving tool not provided or unsupported")
+            expect_json(usrMsg: "Serving tool not provided or invalid")
             expect_status(422)
           end
 
         it "should fail to create a serving without requested instances" do
           put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
                 {name: "testmodel7",
-                 artifactPath: "/Projects/#{@project[:projectname]}/Models/mnist/",
+                 modelPath: "/Projects/#{@project[:projectname]}/Models/mnist/",
                  modelVersion: 1,
                  batchingEnabled: false,
                  modelServer: "TENSORFLOW_SERVING",

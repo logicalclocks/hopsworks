@@ -258,9 +258,9 @@ public class LocalhostServingController implements ServingController {
       Serving dbServing = servingFacade.updateDbObject(serving, project);
       if (status == ServingStatusEnum.RUNNING || status == ServingStatusEnum.UPDATING) {
         if (!oldDbServing.getName().equals(dbServing.getName()) ||
-            !oldDbServing.getArtifactPath().equals(dbServing.getArtifactPath()) ||
+            !oldDbServing.getModelPath().equals(dbServing.getModelPath()) ||
             oldDbServing.isBatchingEnabled() != dbServing.isBatchingEnabled() ||
-            oldDbServing.getVersion() > dbServing.getVersion()) {
+            oldDbServing.getModelVersion() > dbServing.getModelVersion()) {
           // To update the name and/or the artifact path we need to restart the server and/or the version as been
           // reduced. We need to restart the server
           restartServingInstance(project, user, oldDbServing, dbServing);

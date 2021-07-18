@@ -117,6 +117,13 @@ module HopsHelper
     end
   end
 
+  def rmdir(path)
+    system "sudo su #{@@hdfs_user} /bin/bash -c \"#{@@hadoop_home}/bin/hdfs dfs -rm -r #{path}\""
+    if $?.exitstatus > 0
+      raise "Failed to rm directory: #{path} "
+    end
+  end
+
   def get_storage_policy(path)
     cmd = "sudo su #{@@hdfs_user} /bin/bash -c \"#{@@hadoop_home}/bin/hdfs storagepolicies -getStoragePolicy -path #{path}\""
     policy = ""

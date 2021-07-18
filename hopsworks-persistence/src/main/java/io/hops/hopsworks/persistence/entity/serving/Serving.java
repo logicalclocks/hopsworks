@@ -80,12 +80,12 @@ public class Serving implements Serializable {
   @Basic(optional = false)
   @NotNull
   @Size(min = 1, max = 255)
-  @Column(name = "artifact_path")
-  private String artifactPath;
+  @Column(name = "model_path")
+  private String modelPath;
   @Basic(optional = false)
   @NotNull
-  @Column(name = "version")
-  private Integer version;
+  @Column(name = "model_version")
+  private Integer modelVersion;
   @Basic(optional = false)
   @NotNull
   @Column(name = "optimized")
@@ -129,21 +129,16 @@ public class Serving implements Serializable {
   @Column(name = "deployed")
   @Temporal(TemporalType.TIMESTAMP)
   private Date deployed;
-  @Basic(optional = true)
-  @Size(min = 1, max = 8)
-  @Column(name = "revision")
-  private String revision;
-  
 
   public Serving() { }
 
-  public Serving(Integer id, String name, String artifactPath, Integer version,
+  public Serving(Integer id, String name, String modelPath, Integer modelVersion,
                  Integer nInstances, Boolean batchingEnabled, ModelServer modelServer,
                  ServingTool servingTool) {
     this.id = id;
     this.name = name;
-    this.artifactPath = artifactPath;
-    this.version = version;
+    this.modelPath = modelPath;
+    this.modelVersion = modelVersion;
     this.instances = nInstances;
     this.batchingEnabled = batchingEnabled;
     this.modelServer = modelServer;
@@ -182,20 +177,18 @@ public class Serving implements Serializable {
     this.name = name;
   }
 
-  public String getArtifactPath() {
-    return artifactPath;
+  public String getModelPath() {
+    return modelPath;
   }
 
-  public void setArtifactPath(String artifactPath) {
-    this.artifactPath = artifactPath;
+  public void setModelPath(String modelPath) {
+    this.modelPath = modelPath;
   }
 
-  public Integer getVersion() {
-    return version;
-  }
+  public Integer getModelVersion() { return modelVersion; }
 
-  public void setVersion(Integer version) {
-    this.version = version;
+  public void setModelVersion(Integer modelVersion) {
+    this.modelVersion = modelVersion;
   }
 
   public Integer getInstances() {
@@ -298,14 +291,6 @@ public class Serving implements Serializable {
     this.deployed = deployed;
   }
   
-  public String getRevision() {
-    return revision;
-  }
-  
-  public void setRevision(String revision) {
-    this.revision = revision;
-  }
-  
   @Override
   public boolean equals(Object o) {
     if (this == o) return true;
@@ -319,8 +304,8 @@ public class Serving implements Serializable {
     if (created != null ? !created.equals(serving.created) : serving.created != null) return false;
     if (creator != null ? !creator.equals(serving.creator) : serving.creator != null) return false;
     if (!name.equals(serving.name)) return false;
-    if (!artifactPath.equals(serving.artifactPath)) return false;
-    if (!version.equals(serving.version)) return false;
+    if (!modelPath.equals(serving.modelPath)) return false;
+    if (!modelVersion.equals(serving.modelVersion)) return false;
     if (instances != null ? !instances.equals(serving.instances) : serving.instances != null) return false;
     if (project != null ? !project.equals(serving.project) : serving.project != null) return false;
     if (lockIP != null ? !lockIP.equals(serving.lockIP) : serving.lockIP != null) return false;
@@ -332,7 +317,6 @@ public class Serving implements Serializable {
     if (modelServer != null ? !modelServer.equals(serving.modelServer) : serving.modelServer != null) return false;
     if (servingTool != null ? !servingTool.equals(serving.servingTool) : serving.servingTool != null) return false;
     if (deployed != null ? !deployed.equals(serving.deployed) : serving.deployed != null) return false;
-    if (revision != null ? !revision.equals(serving.revision) : serving.revision != null) return false;
     return localDir != null ? localDir.equals(serving.localDir) : serving.localDir == null;
   }
 
@@ -342,8 +326,8 @@ public class Serving implements Serializable {
     result = 31 * result + (created != null ? created.hashCode() : 0);
     result = 31 * result + (creator != null ? creator.hashCode() : 0);
     result = 31 * result + name.hashCode();
-    result = 31 * result + artifactPath.hashCode();
-    result = 31 * result + version.hashCode();
+    result = 31 * result + modelPath.hashCode();
+    result = 31 * result + modelVersion.hashCode();
     result = 31 * result + (optimized ? 1 : 0);
     result = 31 * result + (instances != null ? instances.hashCode() : 0);
     result = 31 * result + (project != null ? project.hashCode() : 0);
@@ -357,7 +341,6 @@ public class Serving implements Serializable {
     result = 31 * result + (modelServer != null ? modelServer.hashCode() : 0);
     result = 31 * result + (servingTool != null ? servingTool.hashCode() : 0);
     result = 31 * result + (deployed != null ? deployed.hashCode() : 0);
-    result = 31 * result + (revision != null ? revision.hashCode() : 0);
     return result;
   }
 }

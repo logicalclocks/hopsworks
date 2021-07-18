@@ -98,14 +98,14 @@ public class ServingFacade {
     if (newServing.getName() != null && !newServing.getName().isEmpty()) {
       dbServing.setName(newServing.getName());
     }
-    if (newServing.getArtifactPath() != null && !newServing.getArtifactPath().isEmpty()) {
-      dbServing.setArtifactPath(newServing.getArtifactPath());
+    if (newServing.getModelPath() != null && !newServing.getModelPath().isEmpty()) {
+      dbServing.setModelPath(newServing.getModelPath());
     }
     if (newServing.getInstances() != null) {
       dbServing.setInstances(newServing.getInstances());
     }
-    if (newServing.getVersion() != null) {
-      dbServing.setVersion(newServing.getVersion());
+    if (newServing.getModelVersion() != null) {
+      dbServing.setModelVersion(newServing.getModelVersion());
     }
   
     dbServing.setKafkaTopic(newServing.getKafkaTopic());
@@ -133,9 +133,44 @@ public class ServingFacade {
     }
   
     dbServing.setDeployed(newServing.getDeployed());
-    dbServing.setRevision(newServing.getRevision());
-    
+
     return dbServing;
+  }
+
+  public Serving fill(Serving serving, Serving dbServing) {
+    if (serving.getCreated() == null) {
+      serving.setCreated(dbServing.getCreated());
+    }
+    if (serving.getCreator() == null) {
+      serving.setCreator(dbServing.getCreator());
+    }
+    if (serving.getProject() == null) {
+      serving.setProject(dbServing.getProject());
+    }
+    serving.setOptimized(dbServing.isOptimized());
+    if (serving.getName() == null || serving.getName().isEmpty()) {
+      serving.setName(dbServing.getName());
+    }
+    if (serving.getLocalPort() == null) {
+      serving.setLocalPort(dbServing.getLocalPort());
+    }
+    if (serving.getLocalDir() == null) {
+      serving.setLocalDir(dbServing.getLocalDir());
+    }
+    if (serving.getCid() == null || serving.getCid().isEmpty()) {
+      serving.setCid(dbServing.getCid());
+    }
+    if (serving.getLockIP() == null || serving.getLockIP().isEmpty()) {
+      serving.setLockIP(dbServing.getLockIP());
+    }
+    if (serving.getLockTimestamp() == null) {
+      serving.setLockTimestamp(dbServing.getLockTimestamp());
+    }
+    if (serving.getDeployed() == null) {
+      serving.setDeployed(dbServing.getDeployed());
+    }
+
+    return serving;
   }
 
   public Serving merge(Serving serving) {

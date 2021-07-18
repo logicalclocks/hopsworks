@@ -22,20 +22,29 @@
 angular.module('hopsWorksApp')
     .controller('servingCtrl', ['$scope', '$routeParams', 'growl', 'ServingService', 'UtilsService', '$location',
         'PythonService', 'ModalService', '$interval', 'StorageService', '$mdSidenav', 'DataSetService',
-        'KafkaService', 'JobService','ElasticService', 'ModelService', 'VariablesService',
+        'KafkaService', 'JobService', 'ElasticService', 'ModelService', 'VariablesService', '$mdToast',
         function ($scope, $routeParams, growl, ServingService, UtilsService, $location, PythonService,
                   ModalService, $interval, StorageService, $mdSidenav, DataSetService, KafkaService, JobService,
-                  ElasticService, ModelService, VariablesService) {
+                  ElasticService, ModelService, VariablesService, $mdToast) {
 
             var self = this;
 
             // Instance number slider setting
-            self.sliderOptions = {
+            self.predictorSliderOptions = {
                 value: 1,
                 options: {
                     floor: 1,
                     ceil: 1,
                     step: 1
+                }
+            };
+            self.transformerSliderOptions = {
+                value: 0,
+                options: {
+                    floor: 0,
+                    ceil: 1,
+                    step: 1,
+                    disabled: true
                 }
             };
 
@@ -79,8 +88,8 @@ angular.module('hopsWorksApp')
             self.sortKey = 'created';
             self.reverse = true;
 
-            self.sort = function(sortKey) {
-                self.reverse = (self.sortKey=== sortKey) ? !self.reverse : false;
+            self.sort = function (sortKey) {
+                self.reverse = (self.sortKey === sortKey) ? !self.reverse : false;
                 self.sortKey = sortKey;
             };
 
@@ -89,9 +98,9 @@ angular.module('hopsWorksApp')
             self.ignorePoll = false;
             self.createNewServingMode = false;
 
-            self.sklearnScriptRegex = /(.py|.ipynb)\b/
-            self.sklearnSelectScriptErrorMsg = "Please select a .py or .ipynb file."
-            self.nameRegex = /^[a-zA-Z0-9]+$/;
+            self.pythonScriptRegex = /(.py|.ipynb)\b/
+            self.pythonSelectScriptErrorMsg = "Please select a .py or .ipynb file."
+            self.nameRegex = /^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$/;
 
             self.kfserving = false;
 
@@ -99,201 +108,28 @@ angular.module('hopsWorksApp')
             self.editServing.batchingEnabled = false;
             self.editServing.modelServer = "TENSORFLOW_SERVING";
             self.editServing.servingTool = "DEFAULT";
-
-            this.selectFile = function () {
-                if (self.editServing.modelServer === "TENSORFLOW_SERVING") {
-                    ModalService.selectDir('lg', self.projectId, '*', '').then(
-                        function (success) {
-                            self.onDirSelected(success);
-                        },
-                        function (error) {
-                            // Users changed their minds.
-                        });
-                }
-                if (self.editServing.modelServer === "FLASK") {
-                    ModalService.selectFile('lg', self.projectId, self.sklearnScriptRegex, self.sklearnSelectScriptErrorMsg,
-                        false).then(
-                        function (success) {
-                            self.onFileSelected(success);
-                        }, function (error) {
-                            //The user changed their mind.
-                        });
-                }
-            };
-
-            self.getDockerConfiguration = function () {
-              VariablesService.getVariable('kube_docker_max_memory_allocation')
-                .then(function (success) {
-                  self.hasDockerMemory = true;
-                  self.maxDockerMemory = parseInt(success.data.successMessage);
-                }, function (error) {
-                  self.hasDockerMemory = false;
-                  self.maxDockerMemory = -1;
-              });
-              VariablesService.getVariable('kube_docker_max_cores_allocation')
-                .then(function (success) {
-                  self.hasDockerCores = true;
-                  self.maxDockerCores = parseInt(success.data.successMessage);
-                }, function (error) {
-                  self.hasDockerCores = false;
-                  self.maxDockerCores = -1;
-              });
-                VariablesService.getVariable('kube_docker_max_gpus_allocation')
-                  .then(function (success) {
-                    self.hasDockerGpus = true;
-                    self.maxDockerGpus = parseInt(success.data.successMessage);
-                  }, function (error) {
-                    self.hasDockerGpus = false;
-                    self.maxDockerGpus = -1;
-                });
-                JobService.getConfiguration(self.projectId, "docker").then(
-                    function (success) {
-                      self.defaultDockerConfig = success.data;
-                   }, function (error) {});
-            };
-
-            self.getDockerConfiguration();
-
-            self.range = function (min, max) {
-                var input = [];
-                for (var i = min; i <= max; i++) {
-                    input.push(i);
-                }
-                return input;
-            };
-
-            /**
-             * Check that the directory selected follows the required structure.
-             * In particular, check that the children are integers (version numbers)
-             *
-             * @param artifactPath path to the model
-             * @param name name of the serving
-             */
-            self.validateTfModelPath = function (artifactPath, name) {
-                // /Projects/project_name/RelativePath
-                var artifactPathSplits = artifactPath.split("/");
-                var relativePath = artifactPathSplits.slice(3).join("/");
-                if (typeof name === 'undefined') {
-                    name = artifactPathSplits[artifactPathSplits.length - 1];
-                }
-
-                datasetService.getAllDatasets(relativePath).then(
-                    function (success) {
-                        var versions = [];
-                        var files = success.data.items;
-                        for (var version in files) {
-                            if (!isNaN(files[version].attributes.name)) {
-                                versions.push(files[version].attributes.name);
-                            } else {
-                                growl.error("Directory doesn't respect the required structure", {
-                                    title: 'Error',
-                                    ttl: 15000
-                                });
-                                return;
-                            }
-                        }
-
-                        if (versions.length === 0) {
-                            growl.error("The selected model doesn't have any servable version", {
-                                title: 'Error',
-                                ttl: 15000
-                            });
-                            return;
-                        }
-
-                        // If the validation phase has passed, update the UI
-                        self.editServing.artifactPath = artifactPath;
-                        self.editServing.name = name;
-                        self.editServing.versions = versions.sort().reverse();
-
-                        if (self.editServing.modelVersion == null) {
-                            self.editServing.modelVersion = self.editServing.versions[0];
-                        }
-                    },
-                    function (error) {
-                        growl.error(error.data.errorMsg, {
-                            title: 'Error',
-                            ttl: 15000
-                        });
-                    });
-            };
-
-            /**
-             * Callback when the user selects a model containing a TfServing Model
-             *
-             * @param artifactPath the directory HDFS path
-             */
-            self.onDirSelected = function (artifactPath) {
-                if (self.editServing.modelServer === "TENSORFLOW_SERVING") {
-                    self.validateTfModelPath(artifactPath, undefined);
-                }
-            };
-
-            /**
-             * Validates that the user-provided path points to a python script
-             *
-             * @param artifactPath the hdfs path
-             */
-            self.validateSkLearnScriptPath = function (artifactPath, name) {
-                var filename = getFileName(artifactPath);
-                if (!filename.toLowerCase().endsWith(".py")) {
-                    growl.error("You need to select a python script with file ending .py", {
-                        title: 'Error - Invalid sklearn serving python script.',
-                        ttl: 15000
-                    });
-                    return
-                }
-                if (typeof name === 'undefined' || name === null || name === "") {
-                    name = filename.replace(".py", "");
-                    name = name.replace(/_/g, "")
-                }
-                self.editServing.artifactPath = artifactPath;
-                self.editServing.name = name;
-                self.editServing.modelVersion = 1;
+            if (self.defaultDockerConfig) {
+                self.editServing.predictorResourceConfig = JSON.parse(JSON.stringify(self.defaultDockerConfig.resourceConfig))
             }
 
-            /**
-             * Callback when the user selects a python script for Sklearn serving in the UI
-             *
-             * @param path the selected path
-             */
-            self.onFileSelected = function (path) {
-                if (self.editServing.modelServer === "FLASK") {
-                    self.validateSkLearnScriptPath(path, self.editServing.name)
-                }
-            }
+            self.artifactsDirName = "Artifacts";
+            self.artifactCreate = "CREATE";
+            self.artifactModelOnly = "MODEL-ONLY"
+            self.modelServerFlask = "FLASK";
+            self.modelServerTensorflow = "TENSORFLOW_SERVING";
+            self.servingToolDefault = "DEFAULT";
+            self.servingToolKFServing = "KFSERVING";
+
+            self.inferenceLoggingDefaultModelInputs = true;
+            self.inferenceLoggingDefaultPredictions = true;
+            self.inferenceLoggingModelInputs = self.inferenceLoggingDefaultModelInputs;
+            self.inferenceLoggingPredictions = self.inferenceLoggingDefaultPredictions;
 
 
-            self.showAdvanced = function () {
-                self.showAdvancedForm = !self.showAdvancedForm;
-            };
-
-
-            self.hideCreateServingForm = function () {
-                self.showCreateNewServingForm = false;
-                self.createNewServingMode = false;
-                self.kfserving = false;
-                self.versions = [];
-                self.sliderOptions.value = 1;
-                self.showAdvancedForm = false;
-
-                self.editServing = {};
-                self.editServing.kafkaTopicDTO = self.projectKafkaTopics[0];
-                self.editServing.kafkaTopicDTO.numOfPartitions = self.kafkaDefaultNumPartitions;
-                self.editServing.kafkaTopicDTO.numOfReplicas = self.kafkaDefaultNumReplicas;
-                self.editServing.batchingEnabled = false;
-                self.editServing.modelServer = "TENSORFLOW_SERVING";
-                self.editServing.servingTool = "DEFAULT";
-                if(self.defaultDockerConfig) {
-                  self.editServing.predictorResourceConfig = JSON.parse(JSON.stringify(self.defaultDockerConfig.resourceConfig))
-                }
-                self.versions = [];
-                self.sliderOptions.value = 1;
-                self.showAdvancedForm = false;
-            };
+            /* REST API requests */
 
             self.getAllServings = function () {
-                if(!self.loaded) {
+                if (!self.loaded) {
                     startLoading('Loading Servings...')
                 }
                 ServingService.getAllServings(self.projectId).then(
@@ -314,51 +150,75 @@ angular.module('hopsWorksApp')
                     });
             };
 
-            var startLoading = function(label) {
-                self.loading = true;
-                self.loadingText = label;
-            };
-            var stopLoading = function() {
-                self.loading = false;
-                self.loadingText = "";
-            };
+            /**
+             * Create or update serving
+             *
+             * 1. Validate user input
+             * 2. Send REST call to Hopsworks for creating the serving instance
+             */
+            self.createOrUpdate = function () {
+                self.editServing.requestedInstances = self.predictorSliderOptions.value;
+                self.editServing.requestedTransformerInstances = self.editServing.transformer != null
+                    ? self.transformerSliderOptions.value
+                    : null;
 
-            self.filterTopics = function (topic) {
-                return topic.name === self.editServing.kafkaTopicDTO.name;
-            };
-
-            self.setKFServing = function(){
-                // KFServing currently not supported with Flask model server.
-                if (self.editServing.modelServer === "FLASK") {
-                    self.kfserving = false;
+                // Check that all the fields are populated
+                if (self.editServing.modelPath === "" || self.editServing.modelPath == null ||
+                    self.editServing.name === "" || self.editServing.name == null ||
+                    self.editServing.modelVersion === "" || self.editServing.modelVersion == null) {
+                    growl.error("Please fill out all the fields", {
+                        title: 'Error',
+                        ttl: 15000
+                    });
+                    return;
                 }
-                if (self.kfserving) {
-                    self.editServing.servingTool = "KFSERVING";
-                    // Request batching not supported in KFServing v0.3
-                    self.editServing.batchingEnabled = false;
+                // Check that name is valid according to regex so that it can be used as a REST endpoint for inference
+                if (!self.nameRegex.test(self.editServing.name)) {
+                    growl.error("Serving/Model name must be valid according to regex: " + self.nameRegex, {
+                        title: 'Error',
+                        ttl: 15000
+                    });
+                    return
+                }
+
+                // Set inference logging mode
+                if (self.inferenceLoggingModelInputs) {
+                    if (self.inferenceLoggingPredictions) {
+                        self.editServing.inferenceLogging = "ALL";
+                    } else {
+                        self.editServing.inferenceLogging = "MODEL_INPUTS";
+                    }
+                } else if (self.inferenceLoggingPredictions) {
+                    self.editServing.inferenceLogging = "PREDICTIONS";
                 } else {
-                    self.editServing.servingTool = "DEFAULT";
+                    self.editServing.inferenceLogging = undefined;
                 }
-            }
 
-            self.setIsKFServing = function(isKFServing) {
-                self.isKFServing = isKFServing;
-                if (!self.isKFServing){
-                    self.kfserving = false;
-                }
-            }
+                // Check that python kernel is enabled if it is a sklearn serving, as the flask serving will be launched
+                // inside the project anaconda environment
+                if (self.editServing.modelServer === self.modelServerFlask) {
+                    PythonService.enabled(self.projectId).then(
+                        function (success) {
+                            self.doCreateOrUpdate()
+                        },
+                        function (error) {
+                            growl.error("You need to enable Python in your project before creating a SkLearn serving" +
+                                " instance.", {
+                                title: 'Error - Python not' +
+                                    ' enabled yet.', ttl: 15000
+                            });
 
-            self.setIsKubernetes = function(isKubernetes) {
-                self.isKubernetes = isKubernetes;
-                if (!self.isKubernetes){
-                    self.sliderOptions.options.disabled = true;
+                        });
+                } else {
+                    self.doCreateOrUpdate()
                 }
-            }
+            };
 
             self.updateKafkaDetails = function () {
-                if (self.editServing.kafkaTopicDTO.name === 'CREATE' ||
-                    self.editServing.kafkaTopicDTO.name === 'NONE') {
-                    return;
+                self.inferenceLoggingPredictions = self.inferenceLoggingModelInputs = self.editServing.kafkaTopicDTO.name !== 'NONE';
+
+                if (self.editServing.kafkaTopicDTO.name === 'NONE' || self.editServing.kafkaTopicDTO.name === 'CREATE') {
+                    return; // noop
                 }
 
                 KafkaService.getTopicDetails(self.projectId, self.editServing.kafkaTopicDTO.name).then(
@@ -396,7 +256,14 @@ angular.module('hopsWorksApp')
                             self.editServing.kafkaTopicDTO = topics[0];
                             self.updateKafkaDetails();
                         } else {
-                            self.editServing.kafkaTopicDTO = self.projectKafkaTopics[0];
+                            if (self.editServing.id) {
+                                topics = self.projectKafkaTopics.filter(function (t) {
+                                    return t.name === "NONE"
+                                });
+                                self.editServing.kafkaTopicDTO = topics[0];
+                            } else {
+                                self.editServing.kafkaTopicDTO = self.projectKafkaTopics[0];
+                            }
                         }
                     },
                     function (error) {
@@ -405,74 +272,6 @@ angular.module('hopsWorksApp')
                             ttl: 15000
                         });
                     });
-            };
-
-            self.showCreateServingForm = function () {
-                self.showCreateNewServingForm = true;
-                self.createNewServingMode = true;
-                self.updateKafkaTopics();
-                if(!self.editServing.predictorResourceConfig && self.defaultDockerConfig) {
-                  self.editServing.predictorResourceConfig = JSON.parse(JSON.stringify(self.defaultDockerConfig.resourceConfig));
-                }
-            };
-
-            self.containsServingStatus = function (status) {
-                for (var j = 0; j < self.servings.length; j++) {
-                    if (self.servings[j].status === status) {
-                        return true;
-                    }
-                }
-                return false;
-            };
-
-            self.getAllServings()
-
-            /**
-             * Create or update serving
-             *
-             * 1. Validate user input
-             * 2. Send REST call to Hopsworks for creating the serving instance
-             */
-            self.createOrUpdate = function () {
-                self.editServing.requestedInstances = self.sliderOptions.value;
-
-                // Check that all the fields are populated
-                if (self.editServing.artifactPath === "" || self.editServing.artifactPath == null ||
-                    self.editServing.name === "" || self.editServing.name == null ||
-                    self.editServing.modelVersion === "" || self.editServing.modelVersion == null) {
-                    growl.error("Please fill out all the fields", {
-                        title: 'Error',
-                        ttl: 15000
-                    });
-                    return;
-                }
-                // Check that name is valid according to regex so that it can be used as a REST endpoint for inference
-                if (!self.nameRegex.test(self.editServing.name)) {
-                    growl.error("Serving/Model name must be valid according to regex: " + self.nameRegex, {
-                        title: 'Error',
-                        ttl: 15000
-                    });
-                    return
-                }
-
-                // Check that python kernel is enabled if it is a sklearn serving, as the flask serving will be launched
-                // inside the project anaconda environment
-                if (self.editServing.modelServer === "FLASK") {
-                    PythonService.enabled(self.projectId).then(
-                        function (success) {
-                            self.doCreateOrUpdate()
-                        },
-                        function (error) {
-                            growl.error("You need to enable Python in your project before creating a SkLearn serving" +
-                                " instance.", {
-                                title: 'Error - Python not' +
-                                    ' enabled yet.', ttl: 15000
-                            });
-
-                        });
-                } else {
-                    self.doCreateOrUpdate()
-                }
             };
 
             self.doCreateOrUpdate = function () {
@@ -492,7 +291,7 @@ angular.module('hopsWorksApp')
                         }
                         self.sendingRequest = false;
                     });
-            }
+            };
 
             /**
              * Function called when the user press the "Edit" button
@@ -502,19 +301,25 @@ angular.module('hopsWorksApp')
             self.updateServing = function (serving) {
                 angular.copy(serving, self.editServing);
                 self.editServing.modelVersion = self.editServing.modelVersion.toString();
-                self.sliderOptions.value = serving.requestedInstances;
-                self.kfserving = self.editServing.servingTool === "KFSERVING";
-
-                if (self.editServing.modelServer === "TENSORFLOW_SERVING") {
-                    self.validateTfModelPath(serving.artifactPath, serving.name);
+                self.editServing.artifactVersion = self.editServing.artifactVersion ? self.editServing.artifactVersion.toString() : undefined;
+                self.predictorSliderOptions.value = serving.requestedInstances;
+                if (self.editServing.transformer != null) {
+                    self.transformerSliderOptions.value = serving.requestedTransformerInstances;
+                }
+                self.kfserving = self.editServing.servingTool === self.servingToolKFServing;
+                if (self.editServing.modelServer === self.modelServerTensorflow) {
+                    self.validateTfModelPath(serving.modelPath, serving.name);
+                } else if (self.editServing.modelServer === self.modelServerFlask) {
+                    self.validatePythonScriptPath(serving.modelPath, serving.name, "predictor", [".py"])
                 }
 
-                if(serving.predictorResourceConfig) {
-                  self.editServing.predictorResourceConfig = serving.predictorResourceConfig;
+                if (serving.predictorResourceConfig) {
+                    self.editServing.predictorResourceConfig = serving.predictorResourceConfig;
                 }
 
-                self.showCreateServingForm();
+                self.showCreateServingForm(false);
                 self.setKFServing();
+                self.setInferenceLogging(self.editServing.inferenceLogging);
             };
 
             /**
@@ -523,7 +328,6 @@ angular.module('hopsWorksApp')
              * @param serving the serving to delete
              */
             self.deleteServing = function (serving) {
-
                 ServingService.deleteServing(self.projectId, serving.id).then(
                     function (success) {
                         self.getAllServings();
@@ -572,14 +376,14 @@ angular.module('hopsWorksApp')
             self.fetchAsync = function (modelNameLike) {
                 self.loadingModels = false;
                 var query = '';
-                if(modelNameLike) {
+                if (modelNameLike) {
                     query = '?filter_by=name_like:' + modelNameLike;
                 }
                 ModelService.getAll(self.projectId, query).then(
-                    function(success) {
-                        if(success.data.items) {
+                    function (success) {
+                        if (success.data.items) {
                             var modelNames = new Set();
-                            for(var i = 0; i < success.data.items.length; i < i++) {
+                            for (var i = 0; i < success.data.items.length; i < i++) {
                                 modelNames.add(success.data.items[i].name)
                             }
                             self.models = Array.from(modelNames);
@@ -588,7 +392,7 @@ angular.module('hopsWorksApp')
                         }
                         self.loadingModels = true;
                     },
-                    function(error) {
+                    function (error) {
                         if (typeof error.data.usrMsg !== 'undefined') {
                             growl.error(error.data.usrMsg, {title: error.data.errorMsg, ttl: 8000});
                         } else {
@@ -599,30 +403,164 @@ angular.module('hopsWorksApp')
             };
 
             /**
-             * Function called when the user is switching between the form for creating a TF Serving or Flask
+             * Check that the directory selected follows the required structure.
+             * In particular, check that the children are integers (version numbers)
              *
-             * @param modelServer the selected model server
+             * @param modelPath path to the model
+             * @param name name of the serving
              */
-            self.setModelServer = function (modelServer) {
-                self.editServing.artifactPath = ""
-                self.editServing.name = ""
-                self.editServing.modelVersion = ""
-                self.editServing.modelServer = modelServer
-
-                if (modelServer === "FLASK") {
-                    // request batching is not supported with Flask
-                    self.editServing.batchingEnabled = false;
+            self.validateTfModelPath = function (modelPath, name) {
+                // /Projects/project_name/Models/model_name
+                var pattern = /\/Projects\/\w+\/Models\/\w+/g;
+                if (!pattern.test(modelPath)) {
+                    growl.error("Please, select a model folder from Models dataset", {
+                        title: 'Error - Invalid model folder.',
+                        ttl: 15000
+                    });
+                    return
                 }
 
-                // refresh kfserving settings
-                self.setKFServing()
-            }
+                var modelPathSplits = modelPath.split("/");
+                var relativePath = modelPathSplits.slice(3).join("/");
 
-            self.setFullModelPath = function() {
-                var projectName = UtilsService.getProjectName();
-                self.editServing.artifactPath = '/Projects/' + projectName + '/Models/' + self.editServing.artifactPath;
-                self.validateTfModelPath(self.editServing.artifactPath, undefined);
+                // Get model versions
+                datasetService.getAllDatasets(relativePath).then(
+                    function (success) {
+                        var versions = [];
+                        var files = success.data.items;
+                        for (var idx in files) {
+                            var version = files[idx].attributes.name
+                            if (!isNaN(parseInt(version))) {
+                                versions.push(version);
+                            } else {
+                                growl.error("Directory doesn't respect the required structure", {
+                                    title: 'Error',
+                                    ttl: 15000
+                                });
+                                return;
+                            }
+                        }
+                        if (versions.length === 0) {
+                            growl.error("The selected model doesn't have any servable version", {
+                                title: 'Error',
+                                ttl: 15000
+                            });
+                            return;
+                        }
+                        self.setModelPath(modelPath, versions)
+                        self.setModelName(name)
+                    },
+                    function (error) {
+                        growl.error(error.data.errorMsg, {
+                            title: 'Error',
+                            ttl: 15000
+                        });
+                    });
             };
+
+            /**
+             * Validates that the user-provided path points to a python script
+             *
+             * @param path the hdfs path
+             */
+            self.validatePythonScriptPath = function (path, name, component, extensions) {
+                // Check extension
+                if (extensions.filter(function (ext) {
+                    return path.endsWith(ext);
+                }).length <= 0) {
+                    growl.error("Please, select a python script ending with " + extensions.join(" or "), {
+                        title: 'Error - Invalid python script.',
+                        ttl: 15000
+                    });
+                    return
+                }
+
+                if (component === "predictor") {
+                    // /Projects/project_name/Models/model_name
+                    var pattern = /^\/Projects\/[a-zA-Z0-9_]+\/Models\/([a-zA-Z0-9-]+)\/(\d+)\/([a-zA-Z0-9_]+)(.[a-zA-Z0-9]+)$/g;
+                    var matches = pattern.exec(path);
+                    if (matches === null) {
+                        growl.error("Please, select a python script from Models dataset folder", {
+                            title: 'Error - Invalid python script.',
+                            ttl: 15000
+                        });
+                        return
+                    }
+
+                    var version = matches[2];
+                    var filename = matches[3];
+                    var extension = matches[4];
+
+                    if (typeof name === 'undefined' || name === null || name === "") {
+                        name = filename.replace(".py", "");
+                        name = name.replace(/_/g, "")
+                    }
+                    if (!extensions.includes(extension)) {
+                        growl.error("You need to select a python script with file ending with " + extensions.join(" or "), {
+                            title: 'Error - Invalid python script.',
+                            ttl: 15000
+                        });
+                        return
+                    }
+
+                    self.editServing.name = name;
+                    self.editServing.modelPath = path;
+                    self.editServing.modelVersion = version;
+
+                    if (self.isKubernetes) {
+                        self.artifactVersions = [{key: "0", value: self.artifactModelOnly}];
+                        self.artifactVersion = self.artifactVersions[0];
+                        self.editServing.artifactVersion = self.artifactVersion.key;
+                    }
+                } else {
+                    self.editServing.transformer = path;
+                    self.validateTransformer();
+                }
+            };
+
+            self.getDockerConfiguration = function () {
+                VariablesService.getVariable('kube_docker_max_memory_allocation')
+                    .then(function (success) {
+                        self.hasDockerMemory = true;
+                        self.maxDockerMemory = parseInt(success.data.successMessage);
+                    }, function (error) {
+                        self.hasDockerMemory = false;
+                        self.maxDockerMemory = -1;
+                    });
+                VariablesService.getVariable('kube_docker_max_cores_allocation')
+                    .then(function (success) {
+                        self.hasDockerCores = true;
+                        self.maxDockerCores = parseInt(success.data.successMessage);
+                    }, function (error) {
+                        self.hasDockerCores = false;
+                        self.maxDockerCores = -1;
+                    });
+                VariablesService.getVariable('kube_docker_max_gpus_allocation')
+                    .then(function (success) {
+                        self.hasDockerGpus = true;
+                        self.maxDockerGpus = parseInt(success.data.successMessage);
+                    }, function (error) {
+                        self.hasDockerGpus = false;
+                        self.maxDockerGpus = -1;
+                    });
+                JobService.getConfiguration(self.projectId, "docker").then(
+                    function (success) {
+                        self.defaultDockerConfig = success.data;
+                    }, function (error) {
+                    });
+            };
+
+            self.getDockerConfiguration();
+
+            self.range = function (min, max) {
+                var input = [];
+                for (var i = min; i <= max; i++) {
+                    input.push(i);
+                }
+                return input;
+            };
+
+            /* Redirects */
 
             /**
              * Called when the user press the "Logs" button
@@ -630,23 +568,23 @@ angular.module('hopsWorksApp')
              * @param serving the serving to show the logs for
              */
             self.showServingLogs = function (serving) {
-             var projectName = UtilsService.getProjectName();
-             ElasticService.getJwtToken(self.projectId).then(
-                 function (success) {
-                    var kibanaUrl = success.data.kibanaUrl;
-                     self.kibanaUI = kibanaUrl + "projectId=" + self.projectId +
-                                        "#/discover?_g=()&_a=(columns:!(serving_name,log_message,'@timestamp')," +
-                                        "index:'" + projectName.toLowerCase() + "_serving-*',interval:auto," +
-                                        "query:(language:lucene,query:'serving_name:" + serving.name + "'),sort:!('@timestamp',desc))";
-                     self.showLogs = true;
+                var projectName = UtilsService.getProjectName();
+                ElasticService.getJwtToken(self.projectId).then(
+                    function (success) {
+                        var kibanaUrl = success.data.kibanaUrl;
+                        self.kibanaUI = kibanaUrl + "projectId=" + self.projectId +
+                            "#/discover?_g=()&_a=(columns:!(serving_name,log_message,'@timestamp')," +
+                            "index:'" + projectName.toLowerCase() + "_serving-*',interval:auto," +
+                            "query:(language:lucene,query:'serving_name:" + serving.name + "'),sort:!('@timestamp',desc))";
+                        self.showLogs = true;
 
-                 }, function (error) {
-                     if (typeof error.data.usrMsg !== 'undefined') {
-                         growl.error(error.data.usrMsg, {title: error.data.errorMsg, ttl: 8000});
+                    }, function (error) {
+                        if (typeof error.data.usrMsg !== 'undefined') {
+                            growl.error(error.data.usrMsg, {title: error.data.errorMsg, ttl: 8000});
                         } else {
-                          growl.error("", {title: error.data.errorMsg, ttl: 8000});
+                            growl.error("", {title: error.data.errorMsg, ttl: 8000});
                         }
-             });
+                    });
             };
 
             self.showDetailedInformation = function (serving) {
@@ -659,6 +597,478 @@ angular.module('hopsWorksApp')
             self.showMainUI = function () {
                 self.showLogs = false;
             };
+
+            /* UI handlers */
+
+            // Select script for predictor or transformer
+            this.selectFile = function (component) {
+                if (component === "predictor") {
+                    if (self.editServing.modelServer === self.modelServerTensorflow) {
+                        ModalService.selectDir('lg', self.projectId, '*', '').then(
+                            function (success) {
+                                self.onDirSelected(success);
+                            },
+                            function (error) {
+                                // Users changed their minds.
+                            });
+                    }
+                    if (self.editServing.modelServer === self.modelServerFlask) {
+                        ModalService.selectFile('lg', self.projectId, self.pythonScriptRegex,
+                            self.pythonSelectScriptErrorMsg, false).then(
+                            function (success) {
+                                self.onFileSelected(component, success);
+                            }, function (error) {
+                                //The user changed their mind.
+                            });
+                    }
+                } else if (component === "transformer") {
+                    if (self.kfserving && self.editServing.modelServer === self.modelServerTensorflow) {
+                        ModalService.selectFile('lg', self.projectId, self.pythonScriptRegex,
+                            self.pythonSelectScriptErrorMsg, false).then(
+                            function (success) {
+                                self.onFileSelected(component, success);
+                            }, function (error) {
+                                //The user changed their mind.
+                            });
+                    }
+                }
+            };
+
+            /**
+             * Callback when the user selects a model containing a TfServing Model
+             *
+             * @param modelPath the directory HDFS path
+             */
+            self.onDirSelected = function (modelPath) {
+                if (self.editServing.modelServer === self.modelServerTensorflow) {
+                    self.validateTfModelPath(modelPath, undefined);
+                }
+            };
+
+            /**
+             * Callback when the user selects a python script for serving in the UI
+             *
+             * @param path the selected path
+             */
+            self.onFileSelected = function (component, path) {
+                if (component === "predictor") {
+                    if (self.editServing.modelServer === self.modelServerFlask) {
+                        self.validatePythonScriptPath(path, self.editServing.name, component, [".py"])
+                    }
+                } else if (component === "transformer") {
+                    self.validatePythonScriptPath(path, self.editServing.name, component, [".py", ".ipynb"])
+                }
+            };
+
+            self.showAdvanced = function () {
+                self.showAdvancedForm = !self.showAdvancedForm;
+            };
+
+            self.hideCreateServingForm = function () {
+                self.showCreateNewServingForm = false;
+                self.createNewServingMode = false;
+                self.versions = [];
+                self.predictorSliderOptions.value = 1;
+                self.transformerSliderOptions.value = 0;
+                self.showAdvancedForm = false;
+                self.kfserving = false;
+
+                self.editServing = {};
+                self.editServing.modelPath = null;
+                self.editServing.kafkaTopicDTO = self.projectKafkaTopics[0];
+                self.editServing.kafkaTopicDTO.numOfPartitions = self.kafkaDefaultNumPartitions;
+                self.editServing.kafkaTopicDTO.numOfReplicas = self.kafkaDefaultNumReplicas;
+                self.editServing.batchingEnabled = false;
+                self.editServing.modelServer = self.modelServerTensorflow;
+                self.editServing.servingTool = self.servingToolDefault;
+                self.editServing.transformer = null;
+                self.versions = [];
+                self.artifactVersions = [];
+                self.artifactVersion = null;
+                self.inferenceLoggingModelInputs = self.inferenceLoggingDefaultModelInputs;
+                self.inferenceLoggingPredictions = self.inferenceLoggingDefaultPredictions;
+                self.showAdvancedForm = false;
+            };
+
+            var startLoading = function (label) {
+                self.loading = true;
+                self.loadingText = label;
+            };
+            var stopLoading = function () {
+                self.loading = false;
+                self.loadingText = "";
+            };
+
+            var showToast = function (text) {
+                var toast = $mdToast.simple()
+                    .textContent(text)
+                    .action('Close')
+                    .position('bottom right')
+                    .hideDelay(0);
+
+                $mdToast.show(toast).then(function (response) {
+                    if (response == 'ok') {
+                        $mdToast.hide();
+                    }
+                });
+            };
+
+            var closeToast = function () {
+                $mdToast.hide();
+            };
+
+            self.filterTopics = function (topic) {
+                return topic.name === self.editServing.kafkaTopicDTO.name;
+            };
+
+            self.download = function (serving, file) {
+                var path = serving.modelPath + "/" + serving.modelVersion + "/";
+                if (file === 'artifact') {
+                    var modelName = serving.modelPath.substring(serving.modelPath.lastIndexOf("/") + 1)
+                    path += modelName + "_" + serving.modelVersion + ".zip"
+                } else {
+                    var transformerName = serving.transformer.substring(serving.transformer.lastIndexOf("/") + 1)
+                    path += transformerName
+                }
+
+                ModalService.confirm('sm', 'Confirm', 'Do you want to download this file?').then(
+                    function (success) {
+                        showToast('Preparing Download..');
+                        datasetService.getDownloadToken(path, "DATASET").then(
+                            function (success) {
+                                var token = success.data.data.value;
+                                closeToast();
+                                datasetService.download(path, token, "DATASET");
+                            }, function (error) {
+                                closeToast();
+                                self.showError(error, '', 4);
+                            });
+                    }
+                );
+            };
+
+            self.showCreateServingForm = function () {
+                self.showCreateNewServingForm = true;
+                self.createNewServingMode = true;
+                self.updateKafkaTopics();
+                if (!self.editServing.predictorResourceConfig && self.defaultDockerConfig) {
+                    self.editServing.predictorResourceConfig = JSON.parse(JSON.stringify(self.defaultDockerConfig.resourceConfig));
+                }
+            };
+
+            self.containsServingStatus = function (status) {
+                for (var j = 0; j < self.servings.length; j++) {
+                    if (self.servings[j].status === status) {
+                        return true;
+                    }
+                }
+                return false;
+            };
+
+            self.setFullModelPath = function () {
+                var projectName = UtilsService.getProjectName();
+                self.editServing.modelPath = '/Projects/' + projectName + '/Models/' + self.editServing.modelPath;
+                self.validateTfModelPath(self.editServing.modelPath, undefined);
+            };
+
+            self.setModelName = function (name) {
+                if (!self.editServing.name) {
+                    if (name) {
+                        self.editServing.name = name;
+                    } else {
+                        const modelPathSplits = self.editServing.modelPath.split("/");
+                        self.editServing.name = modelPathSplits[modelPathSplits.length - 1];
+                    }
+                }
+            }
+
+            self.setModelPath = function (modelPath, modelVersions) {
+                self.editServing.modelPath = modelPath;
+                self.setModelVersion(null, modelVersions);
+            };
+
+            self.setModelVersion = function (modelVersion, modelVersions) {
+                if (modelVersions) {
+                    self.modelVersions = modelVersions.sort().reverse();
+                }
+                if (modelVersion) {
+                    self.editServing.modelVersion = modelVersion;
+                } else if (self.editServing.modelVersion == null) {
+                    self.editServing.modelVersion = self.modelVersions[0];
+                }
+                self.setArtifactVersion()
+            };
+
+            self.setArtifactVersion = function (artifactVersion) {
+                if (!self.isKubernetes) {
+                    self.editServing.artifactVersion = self.artifactVersion = undefined;
+                    return;
+                }
+
+                if (self.editServing.modelVersion == null || artifactVersion === null) {
+                    return; /* Ignore change */
+                }
+
+                if (artifactVersion) {
+                    const version = self.findArtifactVersion(artifactVersion.key, null);
+                    if (version) {
+                        self.artifactVersion = version;
+                        self.editServing.artifactVersion = version.key;
+                        self.setTransformer();
+                        return;
+                    }
+                }
+
+                // Build relative path
+                const slices = self.editServing.modelPath.split("/").slice(3);
+                slices.push(self.editServing.modelVersion, self.artifactsDirName)
+                const path = slices.join("/");
+
+                self.artifactVersions = [{key: "-1", value: self.artifactCreate}]
+
+                // Get artifact versions
+                datasetService.getAllDatasets(path).then(
+                    function (success) {
+                        const files = success.data.items;
+                        for (var idx in files) {
+                            const name = files[idx].attributes.name;
+                            if (!isNaN(parseInt(name))) {
+                                self.artifactVersions.push({
+                                    key: name,
+                                    value: name === '0' ? self.artifactModelOnly : name
+                                })
+                            } else {
+                                growl.error("Directory doesn't respect the required structure", {
+                                    title: 'Error',
+                                    ttl: 15000
+                                });
+                                return;
+                            }
+                        }
+                        self.artifactVersions = self.artifactVersions.sort(function (a1, a2) {
+                            return (a1.key > a2.key) ? 1 : -1
+                        });
+                        if (artifactVersion) {
+                            const version = self.findArtifactVersion(artifactVersion.key, null);
+                            if (version) {
+                                self.artifactVersion = version;
+                                self.editServing.artifactVersion = version.key;
+                                return;
+                            } else {
+                                growl.error("Artifact version not found", {
+                                    title: 'Error',
+                                    ttl: 15000
+                                });
+                                return;
+                            }
+                        }
+                        if (self.editServing.artifactVersion == null) {
+                            self.artifactVersion = self.artifactVersions.slice(-1)[0];
+                            self.editServing.artifactVersion = self.artifactVersion.key;
+                        } else {
+                            version = self.findArtifactVersion(self.editServing.artifactVersion, self.artifactVersions.slice(-1)[0]);
+                            self.artifactVersion = version;
+                            self.editServing.artifactVersion = self.artifactVersion.key;
+                        }
+
+                        self.setTransformer();
+                    },
+                    function (error) {
+                        if (error.data.errorCode == 110018) {
+                            // If artifacts folder is not found
+                            self.artifactVersion = self.artifactVersions.slice(-1)[0];
+                            self.editServing.artifactVersion = self.artifactVersion.key;
+                            self.setTransformer();
+                        } else {
+                            growl.error(error.data.errorMsg, {
+                                title: 'Error',
+                                ttl: 15000
+                            });
+                        }
+                    });
+            };
+
+            self.findArtifactVersion = function (artifactVersion, defaultVersion) {
+                var version = defaultVersion;
+                for (var idx in self.artifactVersions) {
+                    if (self.artifactVersions[idx].key === artifactVersion) {
+                        version = self.artifactVersions[idx];
+                    }
+                }
+                return version;
+            };
+
+            self.setTransformer = function (transformer) {
+                if (self.artifactVersion == null) {
+                    return; /* Ignore change */
+                }
+
+                if (transformer || transformer === "") {
+                    self.editServing.transformer = transformer;
+                    self.validateTransformer();
+                    return;
+                }
+
+                var version = self.artifactVersion.value;
+                if (version === self.artifactModelOnly || version === self.artifactCreate) {
+                    self.editServing.transformer = null;
+                    self.validateTransformer();
+                } else {
+                    // if (self.editServing.transformer && !self.editServing.transformer.includes("/")) {
+                    //     self.validateTransformer();
+                    //     return; /* Ignore, transformer already set */
+                    // }
+
+                    var slices = self.editServing.modelPath.split("/").slice(3);
+                    slices.push(self.editServing.modelVersion, self.artifactsDirName, version)
+                    var path = slices.join("/");
+                    datasetService.getAllDatasets(path).then(
+                        function (success) {
+                            var files = success.data.items;
+                            var transformer;
+                            for (var idx in files) {
+                                var name = files[idx].attributes.name;
+                                var prefix = "transformer-";
+                                if (name.startsWith(prefix)) {
+                                    transformer = name.slice(prefix.length);
+                                    break
+                                }
+                            }
+                            if (transformer) {
+                                self.editServing.transformer = transformer;
+                                self.validateTransformer();
+                            }
+                        },
+                        function (error) {
+                            growl.error(error.data.errorMsg, {
+                                title: 'Error',
+                                ttl: 15000
+                            });
+                        });
+                }
+            };
+
+            self.setInferenceLogging = function (loggingMode) {
+                self.inferenceLoggingModelInputs = self.inferenceLoggingPredictions = false;
+
+                if (!loggingMode) {
+                    return;
+                }
+                switch (loggingMode) {
+                    case "PREDICTIONS":
+                        self.inferenceLoggingPredictions = true;
+                        break;
+                    case "MODEL_INPUTS":
+                        self.inferenceLoggingModelInputs = true;
+                        break;
+                    case "ALL":
+                        self.inferenceLoggingModelInputs = self.inferenceLoggingPredictions = true;
+                        break;
+                }
+            }
+
+            self.validateTransformer = function () {
+                if (self.editServing.transformer == null) {
+                    self.transformerSliderOptions.options.disabled = true;
+                } else {
+                    if (self.editServing.transformer.includes("/")) {
+                        // If user selected a transformer, enable KFServing and set new artifact
+                        if (self.editServing.artifactVersion !== self.artifactCreate) {
+                            self.artifactVersion = self.artifactVersions[0]; // CREATE
+                            self.editServing.artifactVersion = self.artifactVersion.key;
+                        }
+                    }
+                    self.transformerSliderOptions.options.disabled = false;
+                    self.kfserving = true;
+                    self.setKFServing();
+                }
+            };
+
+            /**
+             * Function called when the user is swit    ching between the form for creating a TF Serving or Flask
+             *
+             * @param modelServer the selected model server
+             */
+            self.setModelServer = function (modelServer) {
+                self.editServing.modelPath = undefined;
+                self.editServing.name = undefined;
+                self.editServing.modelVersion = undefined;
+                self.editServing.artifactVersion = undefined;
+                self.editServing.modelServer = modelServer;
+
+                self.artifactVersions = [];
+                self.artifactVersion = null;
+
+                if (modelServer === self.modelServerFlask) {
+                    // request batching is not supported with Flask
+                    self.editServing.batchingEnabled = false;
+                    // kfserving is not supported with Flask yet
+                    self.kfserving = false;
+
+                    if (self.editServing.kafkaTopicDTO.name !== 'NONE') {
+                        self.inferenceLoggingPredictions = self.inferenceLoggingModelInputs = true;
+                    }
+                }
+
+                // refresh kfserving settings
+                self.setKFServing();
+            };
+
+            self.setKFServing = function (kfserving) {
+                if (typeof kfserving !== 'undefined') {
+                    self.kfserving = kfserving;
+                }
+
+                // KFServing currently not supported with Flask model server.
+                if (self.editServing.modelServer === self.modelServerFlask) {
+                    self.kfserving = false;
+                }
+                if (self.kfserving) {
+                    self.editServing.servingTool = self.servingToolKFServing;
+                    self.editServing.batchingEnabled = false;
+                    self.predictorSliderOptions.options.floor = 0;
+                } else {
+                    self.editServing.servingTool = self.servingToolDefault;
+                    self.editServing.transformer = null;
+                    self.predictorSliderOptions.options.floor = 1;
+                    if (self.predictorSliderOptions.value === 0) {
+                        self.predictorSliderOptions.value = 1;
+                    }
+                    self.transformerSliderOptions.options.disabled = true;
+                    self.transformerSliderOptions.value = 0;
+                    self.validateTransformer();
+                    if (self.artifactVersions && self.artifactVersions.length > 0) {
+                        self.artifactVersion = self.artifactVersions[0];
+                        for (var idx in self.artifactVersions) {
+                            if (self.artifactVersions[idx].value === self.artifactModelOnly) {
+                                self.artifactVersion = self.artifactVersions[idx];
+                                break;
+                            }
+                        }
+                        self.editServing.artifactVersion = self.artifactVersion.key;
+                    }
+                }
+            };
+
+            // System variables
+
+            self.setIsKFServing = function (isKFServing) {
+                self.isKFServing = isKFServing;
+                if (!self.isKFServing) {
+                    self.kfserving = false;
+                }
+            };
+
+            self.setIsKubernetes = function (isKubernetes) {
+                self.isKubernetes = isKubernetes;
+                if (!self.isKubernetes) {
+                    self.predictorSliderOptions.options.disabled = true;
+                    self.transformerSliderOptions.options.disabled = true;
+                }
+            };
+
+            // Get all servings
+            self.getAllServings();
 
             $scope.$on('$destroy', function () {
                 $interval.cancel(self.poller);
@@ -674,7 +1084,8 @@ angular.module('hopsWorksApp')
             self.init = function () {
                 ServingService.getConfiguration().then(
                     function (success) {
-                        self.sliderOptions.options.ceil = success.data.maxNumInstances;
+                        self.predictorSliderOptions.options.ceil = success.data.maxNumInstances;
+                        self.transformerSliderOptions.options.ceil = success.data.maxNumInstances;
                         self.kafkaSchemaName = success.data.kafkaTopicSchema;
                         self.kafkaSchemaVersion = success.data.kafkaTopicSchemaVersion;
                     },
@@ -702,9 +1113,8 @@ angular.module('hopsWorksApp')
                 );
 
                 VariablesService.isKubernetes().then(
-                    function(success) {
-                        var isKubernetes = success.data.successMessage === "true";
-                        self.setIsKubernetes(isKubernetes)
+                    function (success) {
+                        self.setIsKubernetes(success.data.successMessage === "true")
                     },
                     function (error) {
                         growl.error(error.data.errorMsg, {
@@ -715,7 +1125,7 @@ angular.module('hopsWorksApp')
                 );
 
                 VariablesService.isKFServing().then(
-                    function(success) {
+                    function (success) {
                         self.setIsKFServing(success.data.successMessage === "true")
                     },
                     function (error) {
