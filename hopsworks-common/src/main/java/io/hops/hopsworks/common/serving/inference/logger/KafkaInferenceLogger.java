@@ -150,7 +150,7 @@ public class KafkaInferenceLogger implements InferenceLogger {
       // schema v1
       inferenceRecord.put("modelId", serving.getId());
       inferenceRecord.put("modelName", serving.getName());
-      inferenceRecord.put("modelVersion", serving.getVersion());
+      inferenceRecord.put("modelVersion", serving.getModelVersion());
       inferenceRecord.put("requestTimestamp", System.currentTimeMillis());
       inferenceRecord.put("responseHttpCode", responseHttpCode);
       inferenceRecord.put("inferenceRequest", inferenceRequest);

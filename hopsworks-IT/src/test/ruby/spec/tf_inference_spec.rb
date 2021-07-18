@@ -84,8 +84,7 @@ describe "On #{ENV['OS']}" do
 
         it "the inference should fail" do
           post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/inference/models/#{@serving[:name]}:predict"
-          expect_json(errorCode: 200003)
-          expect_status(401)
+          expect_status_details(401, error_code: 200003)
         end
       end
 
@@ -97,21 +96,19 @@ describe "On #{ENV['OS']}" do
 
         it "should fail to send a request to a non existing model"  do
           post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/inference/models/nonexistingmodel:predict"
-          expect_json(errorCode: 250000)
-          expect_status(404)
+          expect_status_details(404, error_code: 250000)
         end
 
         it "should fail to send a request to a non running model" do
           post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/inference/models/#{@serving[:name]}:predict"
-          expect_json(errorCode: 250001)
-          expect_status(400)
+          expect_status_details(400, error_code: 250001)
         end
 
         context 'with running model do' do
 
           before :all do
             post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/#{@serving[:id]}?action=start"
-            expect_status(200)
+            expect_status_details(200)
 
             # Sleep some time while the TfServing server starts
             wait_for_type(@serving[:name])
@@ -122,7 +119,7 @@ describe "On #{ENV['OS']}" do
                 signature_name: 'predict_images',
                 instances: test_data
             }
-            expect_status(200)
+            expect_status_details(200)
             # TODO(Check that the response has the correct format)
           end
 
@@ -130,8 +127,8 @@ describe "On #{ENV['OS']}" do
             put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
              {id: @serving[:id],
               name: @serving[:name],
-              artifactPath: @serving[:artifact_path],
-              modelVersion: @serving[:version],
+              modelPath: @serving[:model_path],
+              modelVersion: @serving[:model_version],
               batchingEnabled: false,
               kafkaTopicDTO: {
                  name: "NONE"
@@ -140,7 +137,7 @@ describe "On #{ENV['OS']}" do
               servingTool: "DEFAULT",
               requestedInstances: 1
              }
-            expect_status(201)
+            expect_status_details(201)
 
             # Sleep some time while the TfServing server restarts
             wait_for_type(@serving[:name])
@@ -149,7 +146,7 @@ describe "On #{ENV['OS']}" do
                 signature_name: 'predict_images',
                 instances: test_data
             }
-            expect_status(200)
+            expect_status_details(200)
           end
 
           it "should receive an error if the input payload is malformed" do
@@ -157,14 +154,12 @@ describe "On #{ENV['OS']}" do
                 signature_name: 'predict_images',
                 somethingwrong: test_data
             }
-            expect_json(errorCode: 250008)
-            expect_status(400)
+            expect_status_details(400, error_code: 250008)
           end
 
           it "should receive an error if the input payload is empty" do
             post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/inference/models/#{@serving[:name]}:predict"
-            expect_json(errorCode: 250008)
-            expect_status(400)
+            expect_status_details(400, error_code: 250008)
           end
 
           it "should receive an error if the input payload is malformed" do
@@ -172,14 +167,12 @@ describe "On #{ENV['OS']}" do
                 signature_name: 'predict_images',
                 somethingwrong: test_data
             }
-            expect_json(errorCode: 250008)
-            expect_status(400)
+            expect_status_details(400, error_code: 250008)
           end
 
           it "should receive an error if the input payload is empty" do
             post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/inference/models/#{@serving[:name]}:predict"
-            expect_json(errorCode: 250008)
-            expect_status(400)
+            expect_status_details(400, error_code: 250008)
           end
         end
       end
@@ -201,8 +194,7 @@ describe "On #{ENV['OS']}" do
         end
         it 'should fail to access inference end-point' do
           post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/inference/models/#{@serving[:name]}:predict"
-          expect_json(errorCode: 320004)
-          expect_status(403)
+          expect_status_details(403, error_code: 320004)
         end
       end
       context 'with valid scope' do
@@ -214,7 +206,7 @@ describe "On #{ENV['OS']}" do
               signature_name: 'predict_images',
               instances: test_data
           }
-          expect_status(200)
+          expect_status_details(200)
         end
       end
     end

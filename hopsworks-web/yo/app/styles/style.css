@@ -603,6 +603,10 @@ md-input-container {
   height: 30px;
 }
 
+.ui-select-height-auto.ui-select-bootstrap > .ui-select-match > .btn {
+  height: auto;
+}
+
 .interpreters-group {
   position: relative;
   display: inline-block;
