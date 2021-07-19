@@ -510,7 +510,7 @@ angular.module('hopsWorksApp')
                     if (self.isKubernetes) {
                         self.artifactVersions = [{key: "0", value: self.artifactModelOnly}];
                         self.artifactVersion = self.artifactVersions[0];
-                        self.editServing.artifactVersion = self.artifactVersion.key;
+                        self.editServing.artifactVersion = null; // set null to create the artifact if it doesn't exist
                     }
                 } else {
                     self.editServing.transformer = path;
