@@ -211,7 +211,7 @@
                                                 ng-disabled="!servingCtrl.isKubernetes"
                                                 ng-change="servingCtrl.setArtifactVersion(servingCtrl.artifactVersion)"></select>
                                         <!-- KFServing -->
-                                        <md-checkbox style="margin-top: -2px; margin-bottom: -20px;"
+                                        <md-checkbox style="margin-top: 7px; margin-bottom: -2px;"
                                                      class="md-primary"
                                                      name="kfserving"
                                                      ng-model="servingCtrl.kfserving"
@@ -293,7 +293,7 @@
                                             </rzslider>
                                             <!-- Request batching -->
                                             <md-checkbox name="requestBatching"
-                                                         style="margin-top: 10px; margin-bottom: -20px;"
+                                                         style="margin-top: 17px; margin-bottom: -2px;"
                                                          class="md-primary"
                                                          ng-model="servingCtrl.editServing.batchingEnabled"
                                                          ng-disabled="servingCtrl.kfserving || servingCtrl.editServing.modelServer === servingCtrl.modelServerFlask">
