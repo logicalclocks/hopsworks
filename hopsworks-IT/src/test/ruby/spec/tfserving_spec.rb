@@ -342,8 +342,8 @@ describe "On #{ENV['OS']}" do
       end
 
       after :each do
-        # Check if the process is
-        wait_for_type("testModelChanged")
+        serving = Serving.find(@serving[:id])
+        wait_for_type(serving[:name])
       end
 
       it "should be able to update the name" do
