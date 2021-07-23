@@ -19,6 +19,7 @@ package io.hops.hopsworks.common.featurestore.datavalidation;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.datavalidation.Rule;
 
 import javax.xml.bind.annotation.XmlElement;
+import java.util.ArrayList;
 import java.util.List;
 
 public class Expectation {
@@ -26,7 +27,7 @@ public class Expectation {
   private String name;
   private String description;
   @XmlElement(name = "features")
-  private List<String> features;
+  private List<String> features = new ArrayList<>();
   @XmlElement(name = "rules")
   private List<Rule> rules;
   
