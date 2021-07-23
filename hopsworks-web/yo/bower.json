@@ -42,7 +42,7 @@
     "angular-growl-v2": "^0.7.9",
     "angular-xeditable": "^0.2.0",
     "isteven-angular-multiselect": "angular-multi-select#^4.0.0",
-    "angular-material": "^1.1.1",
+    "angular-material": "1.1.22",
     "angular-material-data-table": "^0.10.9",
     "angularjs-slider": "^5.5.1",
     "angular-nvd3": "^1.0.9",
