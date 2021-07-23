@@ -81,6 +81,8 @@ import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -412,8 +414,13 @@ public class CachedFeaturegroupController {
     boolean primary;
     boolean hudiPrecombine;
     String defaultValue;
+
     // Add all the columns - if there is a primary key constraint, set the primary key flag
-    for (HiveColumns hc : hiveTable.getSdId().getCdId().getHiveColumnsCollection()) {
+    List<HiveColumns> sortedFeatures = hiveTable.getSdId().getCdId().getHiveColumnsCollection().stream()
+      .sorted(Comparator.comparing(HiveColumns::getIntegerIdx))
+      .collect(Collectors.toList());
+
+    for (HiveColumns hc : sortedFeatures) {
       primary = getPrimaryFlag(featureExtraConstraints, hc.getHiveColumnsPK().getColumnName());
       hudiPrecombine = getPrecombineFlag(featureGroup, featureExtraConstraints, hc.getHiveColumnsPK().getColumnName());
 
@@ -421,13 +428,21 @@ public class CachedFeaturegroupController {
       featureGroupFeatureDTOS.add(new FeatureGroupFeatureDTO(hc.getHiveColumnsPK().getColumnName(),
           hc.getTypeName(), hc.getComment(), primary, false, hudiPrecombine, defaultValue, featureGroup.getId()));
     }
-    // Hive stores the partition columns separately. Add them
-    for (HivePartitionKeys pk : hiveTable.getHivePartitionKeysCollection()) {
+    // Hive stores the partition columns separately
+    // sort partition columns reversely cause they are then added at the beginning of list and therefore correct
+    // order again
+    List<HivePartitionKeys> sortedPartitionKeys =
+      hiveTable.getHivePartitionKeysCollection().stream()
+        .sorted(Collections.reverseOrder(Comparator.comparing(HivePartitionKeys::getIntegerIdx)))
+        .collect(Collectors.toList());
+
+    for (HivePartitionKeys pk : sortedPartitionKeys) {
       primary = getPrimaryFlag(featureExtraConstraints, pk.getHivePartitionKeysPK().getPkeyName());
       hudiPrecombine = getPrecombineFlag(featureGroup, featureExtraConstraints,
           pk.getHivePartitionKeysPK().getPkeyName());
       defaultValue = getDefaultValue(defaultConstraints, pk.getHivePartitionKeysPK().getPkeyName());
-      featureGroupFeatureDTOS.add(new FeatureGroupFeatureDTO(pk.getHivePartitionKeysPK().getPkeyName(),
+      // insert partition keys at beginning
+      featureGroupFeatureDTOS.add(0, new FeatureGroupFeatureDTO(pk.getHivePartitionKeysPK().getPkeyName(),
         pk.getPkeyType(), pk.getPkeyComment(), primary, true, hudiPrecombine, defaultValue, featureGroup.getId()));
     }
     if (featureGroup.getCachedFeaturegroup().getTimeTravelFormat() == TimeTravelFormat.HUDI){
