@@ -18,6 +18,7 @@ package io.hops.hopsworks.common.featurestore.featuregroup.ondemand;
 
 import com.google.common.base.Strings;
 import io.hops.hopsworks.common.featurestore.FeaturestoreFacade;
+import io.hops.hopsworks.common.featurestore.feature.FeatureGroupFeatureDTO;
 import io.hops.hopsworks.common.featurestore.storageconnectors.FeaturestoreConnectorFacade;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.hdfs.DistributedFsService;
@@ -44,6 +45,7 @@ import javax.ejb.TransactionAttributeType;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.stream.Collectors;
@@ -165,10 +167,13 @@ public class OnDemandFeaturegroupController {
     if (onDemandFeaturegroupDTO.getFeatures().isEmpty()) {
       throw new IllegalArgumentException("No features were provided for on demand feature group");
     }
-    return onDemandFeaturegroupDTO.getFeatures().stream()
-        .map(f ->
-            new OnDemandFeature(onDemandFeaturegroup, f.getName(), f.getType(), f.getDescription(), f.getPrimary()))
-        .collect(Collectors.toList());
+    int i = 0;
+    List<OnDemandFeature> features = new ArrayList<>();
+    for (FeatureGroupFeatureDTO f : onDemandFeaturegroupDTO.getFeatures()) {
+      features.add(new OnDemandFeature(onDemandFeaturegroup, f.getName(), f.getType(), f.getDescription(),
+        f.getPrimary(), i++));
+    }
+    return features;
   }
 
   private Inode createFile(Project project, Users user, Featurestore featurestore,
