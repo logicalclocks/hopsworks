@@ -1299,6 +1299,34 @@ describe "On #{ENV['OS']}" do
                                                 "INNER JOIN `#{project_name.downcase}`.`#{fg_b_name}_1` `fg0` ON `fg1`.`a_testfeature` = `fg0`.`a_testfeature`\n" +
                                                 "WHERE (`fg1`.`a_testfeature` = 10 OR `fg0`.`b_testfeature1` = 10) AND `fg0`.`b_testfeature2` = 10")
       end
+
+      it "should be able to create cached feature group with many features and get features in specific order on get" do
+        featurestore_id = get_featurestore_id(@project.id)
+        features = [
+          {type: "INT", name: "ft_a", primary: true},
+          {type: "INT", name: "ft_b", partition: true},
+          {type: "INT", name: "ft_c", partition: true},
+          {type: "INT", name: "ft_d"},
+          {type: "INT", name: "ft_e"},
+          {type: "INT", name: "ft_f"},
+        ]
+        json_result, fg_name = create_cached_featuregroup(@project.id, featurestore_id, features: features)
+        expect_status_details(201)
+
+        # Get the first version
+        get_featuregroup_endpoint = "#{ENV['HOPSWORKS_API']}/project/#{@project.id}/featurestores/#{featurestore_id}/featuregroups/#{fg_name}?version=1"
+        json_result = get get_featuregroup_endpoint
+        parsed_json = JSON.parse(json_result)
+        expect_status_details(200)
+
+        # partition keys should come first
+        expect(parsed_json.first["features"][0]["name"]).to eql("ft_b")
+        expect(parsed_json.first["features"][1]["name"]).to eql("ft_c")
+        expect(parsed_json.first["features"][2]["name"]).to eql("ft_a")
+        expect(parsed_json.first["features"][3]["name"]).to eql("ft_d")
+        expect(parsed_json.first["features"][4]["name"]).to eql("ft_e")
+        expect(parsed_json.first["features"][5]["name"]).to eql("ft_f")
+      end
     end
   end
 
@@ -1815,6 +1843,34 @@ describe "On #{ENV['OS']}" do
                                           "FROM `#{featurestore_name}`.`#{fg_name}_1` `fg1`\n" +
                                           "INNER JOIN `fg0` ON `fg1`.`testfeature` = `fg0`.`testfeature`\n" +
                                           "WHERE `fg1`.`anotherfeature` = 10 AND `fg0`.`testfeature` = 10")
+      end
+
+      it "should be able to create on feature group with many features and get features in specific order on get" do
+        featurestore_id = get_featurestore_id(@project.id)
+        features = [
+          {type: "INT", name: "ft_a", primary: true},
+          {type: "INT", name: "ft_b", partition: true},
+          {type: "INT", name: "ft_c", partition: true},
+          {type: "INT", name: "ft_d"},
+          {type: "INT", name: "ft_e"},
+          {type: "INT", name: "ft_f"},
+        ]
+        json_result, fg_name = create_on_demand_featuregroup(@project.id, featurestore_id, get_jdbc_connector_id, features: features)
+        expect_status_details(201)
+
+        # Get the first version
+        get_featuregroup_endpoint = "#{ENV['HOPSWORKS_API']}/project/#{@project.id}/featurestores/#{featurestore_id}/featuregroups/#{fg_name}?version=1"
+        json_result = get get_featuregroup_endpoint
+        parsed_json = JSON.parse(json_result)
+        expect_status_details(200)
+
+        # partition keys should come first
+        expect(parsed_json.first["features"][0]["name"]).to eql("ft_a")
+        expect(parsed_json.first["features"][1]["name"]).to eql("ft_b")
+        expect(parsed_json.first["features"][2]["name"]).to eql("ft_c")
+        expect(parsed_json.first["features"][3]["name"]).to eql("ft_d")
+        expect(parsed_json.first["features"][4]["name"]).to eql("ft_e")
+        expect(parsed_json.first["features"][5]["name"]).to eql("ft_f")
       end
     end
   end

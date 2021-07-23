@@ -22,9 +22,11 @@ import io.hops.hopsworks.common.featurestore.storageconnectors.FeaturestoreStora
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.Featuregroup;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.cached.ValidationType;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.ondemand.OnDemandDataFormat;
+import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.ondemand.OnDemandFeature;
 
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
+import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -69,7 +71,9 @@ public class OnDemandFeaturegroupDTO extends FeaturegroupDTO {
 
     setFeaturestoreName(featureStoreName);
     setDescription(featuregroup.getOnDemandFeaturegroup().getDescription());
-    setFeatures(featuregroup.getOnDemandFeaturegroup().getFeatures().stream().map(fgFeature ->
+    setFeatures(featuregroup.getOnDemandFeaturegroup().getFeatures().stream()
+      .sorted(Comparator.comparing(OnDemandFeature::getIdx))
+      .map(fgFeature ->
         new FeatureGroupFeatureDTO(fgFeature.getName(),
             fgFeature.getType(),
             fgFeature.getDescription(), featuregroup.getId())).collect(Collectors.toList()));

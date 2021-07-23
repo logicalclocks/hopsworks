@@ -56,6 +56,9 @@ public class OnDemandFeature implements Serializable {
   @Basic(optional = false)
   @Column(name = "primary_column")
   private Boolean primary = false;
+  @Basic(optional = false)
+  @Column(name = "idx")
+  private Integer idx;
 
   public static long getSerialVersionUID() {
     return serialVersionUID;
@@ -64,12 +67,13 @@ public class OnDemandFeature implements Serializable {
   public OnDemandFeature() {}
 
   public OnDemandFeature(OnDemandFeaturegroup onDemandFeaturegroup, String name, String type,
-                         String description, Boolean primary) {
+                         String description, Boolean primary, Integer idx) {
     this.onDemandFeaturegroup = onDemandFeaturegroup;
     this.name = name;
     this.type = type;
     this.description = description;
     this.primary = primary;
+    this.idx = idx;
   }
 
   public Integer getId() {
@@ -119,6 +123,14 @@ public class OnDemandFeature implements Serializable {
   public void setOnDemandFeaturegroup(OnDemandFeaturegroup onDemandFeaturegroup) {
     this.onDemandFeaturegroup = onDemandFeaturegroup;
   }
+  
+  public Integer getIdx() {
+    return idx;
+  }
+  
+  public void setIdx(Integer idx) {
+    this.idx = idx;
+  }
 
   @Override
   public boolean equals(Object o) {
@@ -131,6 +143,7 @@ public class OnDemandFeature implements Serializable {
     if (!Objects.equals(description, that.description)) return false;
     if (!Objects.equals(name, that.name)) return false;
     if (!Objects.equals(type, that.type)) return false;
+    if (!Objects.equals(idx, that.idx)) return false;
     return Objects.equals(primary, that.primary);
   }
 
@@ -141,6 +154,7 @@ public class OnDemandFeature implements Serializable {
     result = 31 * result + (name != null ? name.hashCode() : 0);
     result = 31 * result + (type != null ? type.hashCode() : 0);
     result = 31 * result + (primary != null ? primary.hashCode() : 0);
+    result = 31 * result + (idx != null ? idx.hashCode() : 0);
     return result;
   }
 }
