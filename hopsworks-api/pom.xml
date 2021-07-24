@@ -201,7 +201,7 @@
     <dependency>
       <groupId>com.google.guava</groupId>
       <artifactId>guava</artifactId>
-      <version>18.0</version>
+      <version>${guava.version}</version>
     </dependency>
     <dependency>
       <groupId>javax</groupId>
@@ -223,7 +223,7 @@
     <dependency>
       <groupId>org.projectlombok</groupId>
       <artifactId>lombok</artifactId>
-      <version>RELEASE</version>
+      <version>1.18.10</version>
       <scope>compile</scope>
     </dependency>
   </dependencies>

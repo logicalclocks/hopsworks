@@ -91,7 +91,7 @@
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
       <scope>test</scope>
-      <version>4.11</version>
+      <version>${junit.version}</version>
     </dependency>
     <dependency>
       <groupId>commons-io</groupId>
