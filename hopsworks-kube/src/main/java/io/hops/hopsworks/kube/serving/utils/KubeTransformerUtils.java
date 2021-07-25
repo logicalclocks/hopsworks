@@ -146,13 +146,9 @@ public class KubeTransformerUtils {
     
     return new JSONObject() {
       {
-        put("transformer", new JSONObject() {
-          {
-            put("minReplicas", serving.getTransformerInstances());
-            put("containers", new JSONArray(containers));
-            put("volumes", new JSONArray(volumes));
-          }
-        });
+        put("minReplicas", serving.getTransformerInstances());
+        put("containers", new JSONArray(containers));
+        put("volumes", new JSONArray(volumes));
       }
     };
   }

@@ -318,6 +318,7 @@ public class KubeServingController implements ServingController {
     servingWrapper.setNodePort(internalStatus.getNodePort());
     servingWrapper.setAvailableReplicas(internalStatus.getAvailableReplicas());
     servingWrapper.setAvailableTransformerReplicas(internalStatus.getAvailableTransformerReplicas());
+    servingWrapper.setConditions(internalStatus.getConditions());
     
     servingWrapper.setKafkaTopicDTO(kafkaServingHelper.buildTopicDTO(serving));
     

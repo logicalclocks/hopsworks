@@ -34,6 +34,7 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import java.io.Serializable;
 import java.util.Date;
+import java.util.List;
 
 @XmlRootElement
 @ApiModel(value = "Represents a Serving model")
@@ -60,6 +61,7 @@ public class ServingView implements Serializable {
   private DockerResourcesConfiguration predictorResourceConfig;
   private Date deployed;
   private String revision;
+  private List<String> conditions;
 
   // TODO(Fabio): use expansions here
   private String creator;
@@ -93,6 +95,7 @@ public class ServingView implements Serializable {
     this.servingTool = servingWrapper.getServing().getServingTool();
     this.deployed = servingWrapper.getServing().getDeployed();
     this.revision = servingWrapper.getServing().getRevision();
+    this.conditions = servingWrapper.getConditions();
     Users user = servingWrapper.getServing().getCreator();
     this.creator = user.getFname() + " " + user.getLname();
     this.predictorResourceConfig = servingWrapper.getServing().getDockerResourcesConfig();
@@ -102,7 +105,6 @@ public class ServingView implements Serializable {
   public Integer getId() {
     return id;
   }
-
   public void setId(Integer id) {
     this.id = id;
   }
@@ -111,7 +113,6 @@ public class ServingView implements Serializable {
   public String getName() {
     return name;
   }
-
   public void setName(String name) {
     this.name = name;
   }
@@ -120,7 +121,6 @@ public class ServingView implements Serializable {
   public String getModelPath() {
     return modelPath;
   }
-
   public void setModelPath(String modelPath) {
     this.modelPath = modelPath;
   }
@@ -129,7 +129,6 @@ public class ServingView implements Serializable {
   public String getTransformer() {
     return transformer;
   }
-
   public void setTransformer(String transformer) {
     this.transformer = transformer;
   }
@@ -138,7 +137,6 @@ public class ServingView implements Serializable {
   public Integer getModelVersion() {
     return modelVersion;
   }
-
   public void setModelVersion(Integer modelVersion) {
     this.modelVersion = modelVersion;
   }
@@ -147,7 +145,6 @@ public class ServingView implements Serializable {
   public Integer getArtifactVersion() {
     return artifactVersion;
   }
-  
   public void setArtifactVersion(Integer artifactVersion) {
     this.artifactVersion = artifactVersion;
   }
@@ -156,7 +153,6 @@ public class ServingView implements Serializable {
   public Integer getRequestedInstances() {
     return requestedInstances;
   }
-
   public void setRequestedInstances(Integer requestedInstances) {
     this.requestedInstances = requestedInstances;
   }
@@ -165,7 +161,6 @@ public class ServingView implements Serializable {
   public Integer getRequestedTransformerInstances() {
     return requestedTransformerInstances;
   }
-
   public void setRequestedTransformerInstances(Integer transformerInstances) {
     this.requestedTransformerInstances = transformerInstances;
   }
@@ -174,7 +169,6 @@ public class ServingView implements Serializable {
   public Integer getAvailableInstances() {
     return availableInstances;
   }
-
   public void setAvailableInstances(Integer availableInstances) {
     this.availableInstances = availableInstances;
   }
@@ -183,7 +177,6 @@ public class ServingView implements Serializable {
   public Integer getAvailableTransformerInstances() {
     return availableTransformerInstances;
   }
-
   public void setAvailableTransformerInstances(Integer availableInstances) {
     this.availableTransformerInstances = availableInstances;
   }
@@ -192,7 +185,6 @@ public class ServingView implements Serializable {
   public Integer getNodePort() {
     return nodePort;
   }
-
   public void setNodePort(Integer nodePort) {
     this.nodePort = nodePort;
   }
@@ -201,7 +193,6 @@ public class ServingView implements Serializable {
   public Date getCreated() {
     return created;
   }
-
   public void setCreated(Date created) {
     this.created = created;
   }
@@ -210,7 +201,6 @@ public class ServingView implements Serializable {
   public String getCreator() {
     return creator;
   }
-
   public void setCreator(String creator) {
     this.creator = creator;
   }
@@ -219,12 +209,11 @@ public class ServingView implements Serializable {
   public ServingStatusEnum getStatus() {
     return status;
   }
-
+  
   @ApiModelProperty(value = "Is request batching enabled")
   public Boolean isBatchingEnabled() {
     return batchingEnabled;
   }
-
   public void setBatchingEnabled(Boolean batchingEnabled) {
     this.batchingEnabled = batchingEnabled;
   }
@@ -232,20 +221,17 @@ public class ServingView implements Serializable {
   public TopicDTO getKafkaTopicDTO() {
     return kafkaTopicDTO;
   }
-
   public void setKafkaTopicDTO(TopicDTO kafkaTopicDTO) {
     this.kafkaTopicDTO = kafkaTopicDTO;
   }
   
   public InferenceLogging getInferenceLogging() { return inferenceLogging; }
-  
   public void setInferenceLogging(InferenceLogging inferenceLogging) { this.inferenceLogging = inferenceLogging; }
   
   @ApiModelProperty(value = "Model server, tf serving or flask")
   public ModelServer getModelServer() {
     return modelServer;
   }
-  
   public void setModelServer(ModelServer modelServer) {
     this.modelServer = modelServer;
   }
@@ -254,7 +240,6 @@ public class ServingView implements Serializable {
   public ServingTool getServingTool() {
     return servingTool;
   }
-  
   public void setServingTool(ServingTool servingTool) {
     this.servingTool = servingTool;
   }
@@ -263,7 +248,6 @@ public class ServingView implements Serializable {
   public Date getDeployed() {
     return deployed;
   }
-  
   public void setDeployed(Date deployed) {
     this.deployed = deployed;
   }
@@ -272,16 +256,22 @@ public class ServingView implements Serializable {
   public String getRevision() {
     return revision;
   }
-  
   public void setRevision(String revision) {
     this.revision = revision;
+  }
+  
+  @ApiModelProperty(value = "Conditions of the serving replicas", readOnly = true)
+  public List<String> getConditions() {
+    return conditions;
+  }
+  public void setConditions(List<String> conditions) {
+    this.conditions = conditions;
   }
 
   @ApiModelProperty(value = "Resource configuration for predictor", readOnly = true)
   public DockerResourcesConfiguration getPredictorResourceConfig() {
     return predictorResourceConfig;
   }
-
   public void setPredictorResourceConfig(DockerResourcesConfiguration predictorResourceConfig) {
     this.predictorResourceConfig = predictorResourceConfig;
   }

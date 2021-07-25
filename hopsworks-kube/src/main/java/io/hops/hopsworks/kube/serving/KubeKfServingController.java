@@ -14,6 +14,7 @@ import io.fabric8.kubernetes.client.KubernetesClientException;
 import io.hops.common.Pair;
 import io.hops.hopsworks.common.serving.ServingStatusEnum;
 import io.hops.hopsworks.common.user.security.apiKey.ApiKeyController;
+import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.ApiKeyException;
 import io.hops.hopsworks.exceptions.ServingException;
 import io.hops.hopsworks.exceptions.UserException;
@@ -38,6 +39,7 @@ import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.ws.rs.NotSupportedException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -45,11 +47,14 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.logging.Level;
+import java.util.stream.Collectors;
 
 @Stateless
 @TransactionAttribute(TransactionAttributeType.NEVER)
 public class KubeKfServingController extends KubeToolServingController {
   
+  @EJB
+  private Settings settings;
   @EJB
   private KubeClientService kubeClientService;
   @EJB
@@ -129,6 +134,20 @@ public class KubeKfServingController extends KubeToolServingController {
     ServingStatusEnum finalStatus = status;
     Integer finalAvailableTransformerReplicas = availableTransformerReplicas;
     
+    List<String> conditions = new ArrayList<>();
+    if (inferenceService != null && inferenceService.has("status")) {
+      JSONArray jsonConditions = inferenceService.getJSONObject("status").getJSONArray("conditions");
+      for (int i = 0; i < jsonConditions.length(); i++) {
+        JSONObject condition = jsonConditions.getJSONObject(i);
+        if (condition.has("reason") && condition.getString("reason").equals("RevisionFailed")
+          && !condition.getString("status").equals("True")) {
+          String msg = condition.getString("message");
+          String component = condition.getString("type").contains("Predictor") ? "Predictor" : "Transformer";
+          conditions.add(component + ":" + (msg.contains(":") ? msg.substring(msg.indexOf(":") + 1) : msg));
+        }
+      }
+    }
+    
     return new KubeServingInternalStatus() {
       {
         setServingStatus(finalStatus);
@@ -136,6 +155,7 @@ public class KubeKfServingController extends KubeToolServingController {
         setAvailable(inferenceService != null);
         setAvailableReplicas(availableReplicas);
         setAvailableTransformerReplicas(finalAvailableTransformerReplicas);
+        setConditions(conditions.size() > 0 ? conditions : null);
       }
     };
   }
@@ -180,7 +200,7 @@ public class KubeKfServingController extends KubeToolServingController {
 
     // Otherwise, check inference service conditions
     JSONArray conditions = inferenceService.getJSONObject("status").getJSONArray("conditions");
-    for (int i=0; i < conditions.length(); i++) {
+    for (int i = 0; i < conditions.length(); i++) {
       JSONObject condition = conditions.getJSONObject(i);
       if (condition.getString("type").endsWith("Ready") && !condition.getString("status").equals("True")) {
         JSONObject metadata = inferenceService.getJSONObject("metadata");
@@ -255,28 +275,54 @@ public class KubeKfServingController extends KubeToolServingController {
   }
   private JSONObject buildInferenceService(Project project, Users user, Serving serving, String resourceVersion)
       throws ServingException {
-    String artifactPath = kubeArtifactUtils.getArtifactFilePath(serving);
     
+    String artifactPath = kubeArtifactUtils.getArtifactFilePath(serving);
     JSONObject pipeline = new JSONObject();
+    
+    JSONObject predictor;
     switch (serving.getModelServer()) {
       case TENSORFLOW_SERVING:
-        JSONObject predictor = kubeTfServingUtils.buildInferenceServicePredictor(artifactPath,
-          serving.getInstances(), serving.getInferenceLogging(), serving.getDockerResourcesConfig());
-        pipeline.put("predictor", predictor.getJSONObject("predictor"));
+        predictor = kubeTfServingUtils.buildInferenceServicePredictor(artifactPath, serving.getInstances(),
+          serving.getInferenceLogging(), serving.getDockerResourcesConfig());
         break;
       default:
         throw new NotSupportedException("Model server not supported for KFServing inference services");
     }
+  
+    // Add node selectors if defined
+    JSONObject nodeSelector = null;
+    Map<String, String> nodeSelectorLabels = kubeServingUtils.getServingNodeLabels();
+    if (nodeSelectorLabels != null) {
+      nodeSelector = new JSONObject(nodeSelectorLabels);
+      predictor.put("nodeSelector", nodeSelector);
+    }
+    
+    // Add node tolerations if defined
+    JSONArray tolerations = null;
+    List<Map<String, String>> nodeTolerations = kubeServingUtils.getServingNodeTolerations();
+    if (nodeTolerations != null) {
+      tolerations = new JSONArray(nodeTolerations.stream().map(JSONObject::new).collect(Collectors.toList()));
+      predictor.put("tolerations", tolerations);
+    }
+    
+    pipeline.put("predictor", predictor);
     
     JSONObject metadata = getInferenceServingMetadataJSON(project, serving);
     if (resourceVersion != null) {
       metadata.put("resourceVersion", resourceVersion);
     }
     
+    // Add transformer if defined
     if (serving.getTransformer() != null) {
       try {
         JSONObject transformer = kubeTransformerUtils.buildInferenceServiceTransformer(project, user, serving);
-        pipeline.put("transformer", transformer.getJSONObject("transformer"));
+        if (nodeSelector != null) {
+          transformer.put("nodeSelector", nodeSelector);
+        }
+        if (tolerations != null) {
+          transformer.put("tolerations", tolerations);
+        }
+        pipeline.put("transformer", transformer);
       } catch (ServiceDiscoveryException e) {
         throw new ServingException(RESTCodes.ServingErrorCode.LIFECYCLEERRORINT, Level.INFO, null, e.getMessage(), e);
       }

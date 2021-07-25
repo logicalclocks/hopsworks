@@ -9,6 +9,8 @@ import io.fabric8.kubernetes.api.model.ObjectMeta;
 import io.fabric8.kubernetes.api.model.ObjectMetaBuilder;
 import io.fabric8.kubernetes.api.model.Pod;
 import io.fabric8.kubernetes.api.model.Service;
+import io.fabric8.kubernetes.api.model.Toleration;
+import io.fabric8.kubernetes.api.model.TolerationBuilder;
 import io.fabric8.kubernetes.api.model.apps.Deployment;
 import io.fabric8.kubernetes.api.model.apps.DeploymentStatus;
 import io.fabric8.kubernetes.client.KubernetesClientException;
@@ -30,10 +32,12 @@ import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.ws.rs.NotSupportedException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
+import java.util.stream.Collectors;
 
 @Stateless
 @TransactionAttribute(TransactionAttributeType.NEVER)
@@ -117,12 +121,18 @@ public class KubeDeploymentServingController extends KubeToolServingController {
     ServingStatusEnum status = getServingStatus(serving, deploymentStatus, podList);
     Integer nodePort = instanceService == null ? null : instanceService.getSpec().getPorts().get(0).getNodePort();
     Integer availableReplicas = kubeServingUtils.getAvailableReplicas(deploymentStatus);
+    List<String> conditions = deploymentStatus == null ? new ArrayList<>() : deploymentStatus.getConditions().stream()
+      .filter(c -> c.getType().equals("Available") && c.getStatus().equals("False"))
+      .map(c -> String.format("Predictor: %s - %s", c.getReason(), c.getMessage()))
+      .collect(Collectors.toList());
+    
     return new KubeServingInternalStatus() {
       {
         setServingStatus(status);
         setNodePort(nodePort);
         setAvailable(deploymentStatus != null && instanceService != null);
         setAvailableReplicas(availableReplicas);
+        setConditions(conditions.size() > 0 ? conditions : null);
       }
     };
   }
@@ -174,6 +184,29 @@ public class KubeDeploymentServingController extends KubeToolServingController {
     // Add service.hops.works labels
     addHopsworksServingLabels(deployment.getMetadata(), project, serving);
     addHopsworksServingLabels(deployment.getSpec().getTemplate().getMetadata(), project, serving);
+    
+    // Add node selectors
+    Map<String, String> nodeSelectorLabels = kubeServingUtils.getServingNodeLabels();
+    if (nodeSelectorLabels != null) {
+      deployment.getSpec().getTemplate().getSpec().setNodeSelector(nodeSelectorLabels);
+    }
+    
+    // Add node tolerations
+    List<Map<String, String>> nodeTolerations = kubeServingUtils.getServingNodeTolerations();
+    if (nodeTolerations != null) {
+      List<Toleration> tolerations = nodeTolerations.stream().map(nt -> {
+        Toleration toleration = new TolerationBuilder()
+          .withKey(nt.get("key"))
+          .withOperator(nt.get("operator"))
+          .withEffect(nt.get("effect")).build();
+        if (nt.containsKey("value")) {
+          toleration.setValue(nt.get("value"));
+        }
+        return toleration;
+      }).collect(Collectors.toList());
+      
+      deployment.getSpec().getTemplate().getSpec().setTolerations(tolerations);
+    }
     
     return deployment;
   }

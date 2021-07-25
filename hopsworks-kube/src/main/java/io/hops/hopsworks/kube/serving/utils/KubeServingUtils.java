@@ -5,6 +5,7 @@
 package io.hops.hopsworks.kube.serving.utils;
 
 import io.fabric8.kubernetes.api.model.apps.DeploymentStatus;
+import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.serving.Serving;
 import org.apache.commons.lang3.RandomStringUtils;
@@ -13,7 +14,10 @@ import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @Stateless
@@ -22,6 +26,8 @@ public class KubeServingUtils {
   
   private final static Integer LAST_REVISION_LENGTH = 8;
   
+  @EJB
+  private Settings settings;
   @EJB
   private KubeArtifactUtils kubeArtifactUtils;
   @EJB
@@ -38,6 +44,10 @@ public class KubeServingUtils {
   public final static String MODEL_SERVER_LABEL_NAME = LABEL_PREFIX + "/model-server";
   public final static String SERVING_TOOL_LABEL_NAME = LABEL_PREFIX + "/tool";
   public final static String REVISION_LABEL_NAME = LABEL_PREFIX + "/revision";
+  
+  public final static String NODE_LABELS_TOLERATIONS_SEPARATOR = ",";
+  public final static String NODE_SELECTOR_KEY_VALUE_SEPARATOR = "=";
+  public final static String NODE_TOLERATIONS_ATTR_SEPARATOR = ":";
   
   public final static String COMPONENT_LABEL_NAME = "component";
   
@@ -77,7 +87,7 @@ public class KubeServingUtils {
     return new HashMap<String, String>() {
       {
         put(ARTIFACT_PATH_ANNOTATION_NAME, kubeArtifactUtils.getArtifactFilePath(serving));
-        if (serving.getKafkaTopic()!= null) {
+        if (serving.getKafkaTopic() != null) {
           put(TOPIC_NAME_ANNOTATION_NAME, serving.getKafkaTopic().getTopicName());
         }
         if (serving.getTransformer() != null) {
@@ -107,5 +117,51 @@ public class KubeServingUtils {
     return deploymentStatus != null && deploymentStatus.getAvailableReplicas() != null
       ? deploymentStatus.getAvailableReplicas()
       : 0;
+  }
+  
+  public Map<String, String> getServingNodeLabels() {
+    String nodeLabels = settings.getKubeServingNodeLabels();
+    if (nodeLabels.isEmpty()) {
+      return null;
+    }
+    Map<String, String> nodeSelectors = new HashMap<>();
+    for (String keyValue : nodeLabels.split(NODE_LABELS_TOLERATIONS_SEPARATOR)) {
+      String[] split = Arrays.stream(keyValue.split(NODE_SELECTOR_KEY_VALUE_SEPARATOR))
+        .map(String::trim).toArray(String[]::new);
+      
+      if (split.length != 2) {
+        throw new IllegalArgumentException("node label '" + keyValue + "' does not follow the format key=value");
+      }
+      nodeSelectors.put(split[0], split[1]);
+    }
+    return nodeSelectors;
+  }
+  
+  public List<Map<String, String>> getServingNodeTolerations() {
+    String tolerations = settings.getKubeServingNodeTolerations();
+    if (tolerations.isEmpty()) {
+      return null;
+    }
+    List<Map<String, String>> nodeTolerations = new ArrayList<>();
+    for (String keyValue : tolerations.split(NODE_LABELS_TOLERATIONS_SEPARATOR)) {
+      String[] split = Arrays.stream(keyValue.split(NODE_TOLERATIONS_ATTR_SEPARATOR))
+        .map(String::trim).toArray(String[]::new);
+      
+      if (split.length != 3 && split.length != 4) {
+        throw new IllegalArgumentException("node toleration '" + keyValue + "' does not follow the format " +
+          "key:operator:[value]:effect");
+      }
+      
+      nodeTolerations.add(new HashMap<String, String>() {{
+          put("key", split[0]);
+          put("operator", split[1]);
+          if (split.length == 4) {
+            put("value", split[2]);
+          }
+          put("effect", split[split.length-1]);
+        }}
+      );
+    }
+    return nodeTolerations;
   }
 }

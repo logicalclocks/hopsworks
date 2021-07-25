@@ -180,6 +180,17 @@
                 </td>
                 <td> {{servingViewInfoCtrl.serving.revision ? servingViewInfoCtrl.serving.revision : '-' }} </td>
             </tr>
+            <tr ng-if="servingViewInfoCtrl.isKubernetes">
+                <td>
+                    Conditions <i class="fa fa-info-circle" tooltip-placement="auto left"
+                                  uib-tooltip="Conditions of the serving replicas."
+                                  style="margin-left: 10px"></i>
+                </td>
+                <td>
+                    <p ng-repeat="condition in servingViewInfoCtrl.serving.conditions">{{condition}}</p>
+                    <div ng-if="!servingViewInfoCtrl.serving.conditions">-</div>
+                </td>
+            </tr>
             </tbody>
         </table>
     </div>

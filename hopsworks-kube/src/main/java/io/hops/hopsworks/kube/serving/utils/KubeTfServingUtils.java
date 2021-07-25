@@ -283,19 +283,15 @@ public class KubeTfServingUtils {
     // Predictor
     JSONObject inferenceServicePredictorConfig = new JSONObject() {
       {
-        put("predictor", new JSONObject() {
+        put("minReplicas", minReplicas);
+        put("logger", !logging ? null : new JSONObject() {
           {
-            put("minReplicas", minReplicas);
-            put("logger", !logging ? null : new JSONObject() {
-              {
-                put("mode", finalLoggerMode);
-                put("url", String.format("http://%s:%s", KubeServingUtils.INFERENCE_LOGGER_HOST,
-                  KubeServingUtils.INFERENCE_LOGGER_PORT));
-              }
-            });
-            put("tensorflow", tensorflow);
+            put("mode", finalLoggerMode);
+            put("url", String.format("http://%s:%s", KubeServingUtils.INFERENCE_LOGGER_HOST,
+              KubeServingUtils.INFERENCE_LOGGER_PORT));
           }
         });
+        put("tensorflow", tensorflow);
       }
     };
     

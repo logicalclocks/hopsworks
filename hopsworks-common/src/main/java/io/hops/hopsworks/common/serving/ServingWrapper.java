@@ -19,6 +19,8 @@ package io.hops.hopsworks.common.serving;
 import io.hops.hopsworks.common.dao.kafka.TopicDTO;
 import io.hops.hopsworks.persistence.entity.serving.Serving;
 
+import java.util.List;
+
 public class ServingWrapper {
   private Serving serving;
 
@@ -26,7 +28,8 @@ public class ServingWrapper {
   private Integer availableReplicas;
   private Integer availableTransformerReplicas;
   private Integer nodePort;
-
+  private List<String> conditions;
+  
   private TopicDTO kafkaTopicDTO;
 
   public ServingWrapper(Serving serving) {
@@ -36,7 +39,6 @@ public class ServingWrapper {
   public Serving getServing() {
     return serving;
   }
-
   public void setServing(Serving serving) {
     this.serving = serving;
   }
@@ -44,7 +46,6 @@ public class ServingWrapper {
   public ServingStatusEnum getStatus() {
     return status;
   }
-
   public void setStatus(ServingStatusEnum status) {
     this.status = status;
   }
@@ -52,7 +53,6 @@ public class ServingWrapper {
   public Integer getAvailableReplicas() {
     return availableReplicas;
   }
-
   public void setAvailableReplicas(Integer availableReplicas) {
     this.availableReplicas = availableReplicas;
   }
@@ -60,7 +60,6 @@ public class ServingWrapper {
   public Integer getAvailableTransformerReplicas() {
     return availableTransformerReplicas;
   }
-  
   public void setAvailableTransformerReplicas(Integer availableReplicas) {
     this.availableTransformerReplicas = availableReplicas;
   }
@@ -68,15 +67,16 @@ public class ServingWrapper {
   public Integer getNodePort() {
     return nodePort;
   }
-
   public void setNodePort(Integer nodePort) {
     this.nodePort = nodePort;
   }
 
+  public List<String> getConditions() { return conditions; }
+  public void setConditions(List<String> conditions) { this.conditions = conditions; }
+  
   public TopicDTO getKafkaTopicDTO() {
     return kafkaTopicDTO;
   }
-
   public void setKafkaTopicDTO(TopicDTO kafkaTopicDTO) {
     this.kafkaTopicDTO = kafkaTopicDTO;
   }
