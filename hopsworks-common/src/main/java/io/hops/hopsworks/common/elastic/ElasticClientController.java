@@ -33,6 +33,8 @@ import org.elasticsearch.action.bulk.BulkRequest;
 import org.elasticsearch.action.bulk.BulkResponse;
 import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.action.index.IndexResponse;
+import org.elasticsearch.action.search.ClearScrollRequest;
+import org.elasticsearch.action.search.ClearScrollResponse;
 import org.elasticsearch.action.search.MultiSearchRequest;
 import org.elasticsearch.action.search.MultiSearchResponse;
 import org.elasticsearch.action.search.SearchRequest;
@@ -300,6 +302,7 @@ public class ElasticClientController {
       leftover = leftover - response.getHits().getHits().length;
       result = handler.apply(response.getHits().getHits());
     }
+    clearScrollingContext(response.getScrollId());
     return Pair.with(totalHits, result);
   }
   
@@ -340,6 +343,20 @@ public class ElasticClientController {
     SearchScrollRequest ssr = new SearchScrollRequest(scrollId);
     ssr.scroll(TimeValue.timeValueMinutes(1));
     return ssr;
+  }
+  
+  private ClearScrollResponse clearScrollingContext(String scrollId) throws ElasticException {
+    ClearScrollRequest request = new ClearScrollRequest();
+    request.addScrollId(scrollId);
+    
+    FailableSupplier<ClearScrollResponse> query =
+      () -> client.getClient().clearScroll(request, RequestOptions.DEFAULT);
+    ClearScrollResponse response = executeElasticQuery(query, "elastic scrolling search", request.toString());
+    if (response.status().getStatus() != 200) {
+      String msg = "scroll context clearing query - bad status response:" + response.status().getStatus();
+      throw new ElasticException(RESTCodes.ElasticErrorCode.ELASTIC_QUERY_ERROR, Level.INFO, msg);
+    }
+    return response;
   }
   
   public void bulkDelete(BulkRequest request) throws ElasticException {

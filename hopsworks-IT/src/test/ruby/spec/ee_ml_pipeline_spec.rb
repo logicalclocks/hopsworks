@@ -165,6 +165,30 @@ describe "On #{ENV['OS']}" do
         expect(trainingdataset_exists(@project1[:id], @td_1)).to be(true)
       end
     end
+    context "elastic health" do
+      it 'open scroll contexts' do
+        ids = elastic_nodes_ids
+        open_contexts1 = elastic_nodes_stats(ids[0]["id"])["indices"]["search"]["open_contexts"]
+
+        create_session(@user1_params[:email], @user1_params[:password])
+        expect(job_exists(@project1[:id], @create_synth_td_job)).to be(true)
+        #make sure fgs exist
+        @base_fg_count.times do |i|
+          expect(featuregroup_exists(@project1[:id], @base_fgs[i])).to be(true)
+        end
+        expect(trainingdataset_exists(@project1[:id], @td_1)).to be(true)
+
+        get_executions(@project1[:id], @create_synth_td_job, "")
+        expect(json_body[:count]).to eq(1)
+        td_app_id = json_body[:items][0][:appId]
+        result = prov_links_get(@project1, in_artifact: "#{@base_fgs[0]}_1")
+        expect(result["items"].length).to be >= 1
+        prov_verify_link(result, td_app_id, "#{@base_fgs[0]}_1", "#{@td_1}_1")
+
+        open_contexts2 = elastic_nodes_stats(ids[0]["id"]) ["indices"]["search"]["open_contexts"]
+        expect(open_contexts2).to eq(open_contexts1)
+      end
+    end
     context 'view local usage of' do
       #depends on setup context
       it 'fg' do
