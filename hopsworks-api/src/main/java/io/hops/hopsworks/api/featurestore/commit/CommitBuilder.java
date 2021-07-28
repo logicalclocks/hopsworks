@@ -39,6 +39,13 @@ public class CommitBuilder {
   @EJB
   private FeatureGroupCommitController featureGroupCommitController;
 
+  public CommitBuilder() {}
+
+  // For testing
+  protected CommitBuilder(FeatureGroupCommitController featureGroupCommitController) {
+    this.featureGroupCommitController = featureGroupCommitController;
+  }
+
   private URI uri(UriInfo uriInfo, Project project, Featuregroup featuregroup) {
     return uriInfo.getBaseUriBuilder().path(ResourceRequest.Name.PROJECT.toString().toLowerCase())
         .path(Integer.toString(project.getId()))
@@ -78,10 +85,10 @@ public class CommitBuilder {
 
       AbstractFacade.CollectionInfo featureGroupCommits =
           featureGroupCommitController.getCommitDetails(featuregroup.getId(),
-              resourceRequest.getLimit(),
-              resourceRequest.getOffset(),
-              resourceRequest.getSort(),
-              resourceRequest.getFilter());
+                  resourceRequest.getLimit() == null ? 20 : resourceRequest.getLimit(),
+                  resourceRequest.getOffset() == null ? 0 : resourceRequest.getOffset(),
+                  resourceRequest.getSort(),
+                  resourceRequest.getFilter());
 
       commitDTO.setItems((List<CommitDTO>) featureGroupCommits.getItems().stream()
           .map(c -> build(uriInfo, resourceRequest, project, featuregroup, (FeatureGroupCommit) c))
