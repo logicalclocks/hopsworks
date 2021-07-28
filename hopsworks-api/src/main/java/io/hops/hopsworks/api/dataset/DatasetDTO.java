@@ -17,6 +17,7 @@ package io.hops.hopsworks.api.dataset;
 
 import io.hops.hopsworks.api.dataset.inode.attribute.InodeAttributeDTO;
 import io.hops.hopsworks.api.tags.TagsDTO;
+import io.hops.hopsworks.api.user.UserDTO;
 import io.hops.hopsworks.common.api.RestDTO;
 import io.hops.hopsworks.persistence.entity.dataset.DatasetAccessPermission;
 import io.hops.hopsworks.persistence.entity.dataset.DatasetType;
@@ -33,7 +34,6 @@ public class DatasetDTO extends RestDTO<DatasetDTO> {
   private String publicId;
   private Integer publicDataset;
   private Boolean searchable;
-  private Boolean accepted; //share status
   private Boolean shared;
   private Integer sharedWith;
   private List<ProjectSharedWithDTO> projectsSharedWith;
@@ -41,6 +41,9 @@ public class DatasetDTO extends RestDTO<DatasetDTO> {
   private DatasetType datasetType;
   private InodeAttributeDTO attributes;
   private TagsDTO tags;
+  private Boolean accepted; //share status
+  private UserDTO sharedBy;
+  private UserDTO acceptedBy;
   
   public DatasetDTO() {
   }
@@ -156,24 +159,42 @@ public class DatasetDTO extends RestDTO<DatasetDTO> {
   public void setTags(TagsDTO tags) {
     this.tags = tags;
   }
-  
+
+  public UserDTO getSharedBy() {
+    return sharedBy;
+  }
+
+  public void setSharedBy(UserDTO sharedBy) {
+    this.sharedBy = sharedBy;
+  }
+
+  public UserDTO getAcceptedBy() {
+    return acceptedBy;
+  }
+
+  public void setAcceptedBy(UserDTO acceptedBy) {
+    this.acceptedBy = acceptedBy;
+  }
+
   @Override
   public String toString() {
     return "DatasetDTO{" +
-      "id=" + id +
-      ", name='" + name + '\'' +
-      ", description='" + description + '\'' +
-      ", publicId='" + publicId + '\'' +
-      ", publicDataset=" + publicDataset +
-      ", searchable=" + searchable +
-      ", accepted=" + accepted +
-      ", shared=" + shared +
-      ", sharedWith=" + sharedWith +
-      ", projectsSharedWith=" + projectsSharedWith +
-      ", permission=" + permission +
-      ", datasetType=" + datasetType +
-      ", attributes=" + attributes +
-      ", tags=" + tags +
-      '}';
+        "id=" + id +
+        ", name='" + name + '\'' +
+        ", description='" + description + '\'' +
+        ", publicId='" + publicId + '\'' +
+        ", publicDataset=" + publicDataset +
+        ", searchable=" + searchable +
+        ", shared=" + shared +
+        ", sharedWith=" + sharedWith +
+        ", projectsSharedWith=" + projectsSharedWith +
+        ", permission=" + permission +
+        ", datasetType=" + datasetType +
+        ", attributes=" + attributes +
+        ", tags=" + tags +
+        ", accepted=" + accepted +
+        ", sharedBy=" + sharedBy +
+        ", acceptedBy=" + acceptedBy +
+        '}';
   }
 }

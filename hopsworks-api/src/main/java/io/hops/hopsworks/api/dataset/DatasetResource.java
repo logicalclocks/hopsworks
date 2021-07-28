@@ -299,7 +299,7 @@ public class DatasetResource {
       case ACCEPT:
         checkIfDataOwner(project, user);
         datasetPath = datasetHelper.getDatasetPathIfFileExist(project, path, datasetType);
-        datasetController.acceptShared(project, datasetPath.getDatasetSharedWith());
+        datasetController.acceptShared(project, user, datasetPath.getDatasetSharedWith());
         break;
       case ZIP:
         datasetPath = datasetHelper.getDatasetPathIfFileExist(project, path, datasetType);

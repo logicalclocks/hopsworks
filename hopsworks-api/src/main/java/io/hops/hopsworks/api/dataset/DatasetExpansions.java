@@ -37,6 +37,7 @@ public class DatasetExpansions implements Expansions {
         resourceRequest = new InodeResourceRequest(name, queryParam);
         break;
       case TAGS:
+      case USERS:
         resourceRequest = new ResourceRequest(name);
       default:
         break;
