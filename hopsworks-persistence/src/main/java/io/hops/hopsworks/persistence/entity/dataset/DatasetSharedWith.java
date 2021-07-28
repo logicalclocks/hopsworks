@@ -16,6 +16,7 @@
 package io.hops.hopsworks.persistence.entity.dataset;
 
 import io.hops.hopsworks.persistence.entity.project.Project;
+import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.persistence.entity.util.Settings;
 
 import java.io.Serializable;
@@ -93,6 +94,12 @@ public class DatasetSharedWith implements Serializable {
   @Enumerated(EnumType.STRING)
   @Column(name = "permission")
   private DatasetAccessPermission permission;
+  @JoinColumn(name = "shared_by", referencedColumnName = "uid")
+  @ManyToOne
+  private Users sharedBy;
+  @JoinColumn(name = "accepted_by", referencedColumnName = "uid")
+  @ManyToOne
+  private Users acceptedBy;
 
   public DatasetSharedWith() {
   }
@@ -101,12 +108,14 @@ public class DatasetSharedWith implements Serializable {
     this.id = id;
   }
 
-  public DatasetSharedWith(Project project, Dataset dataset, DatasetAccessPermission permission, boolean accepted) {
+  public DatasetSharedWith(Project project, Dataset dataset, DatasetAccessPermission permission,
+                           boolean accepted, Users sharedBy) {
     this.project = project;
     this.dataset = dataset;
     this.accepted = accepted;
     this.permission = permission;
     this.sharedOn = new Date();
+    this.sharedBy = sharedBy;
   }
 
   public Integer getId() {
@@ -160,7 +169,23 @@ public class DatasetSharedWith implements Serializable {
   public String getDatasetName() {
     return dataset.getProject().getName() + Settings.SHARED_FILE_SEPARATOR + dataset.getName();
   }
-  
+
+  public Users getSharedBy() {
+    return sharedBy;
+  }
+
+  public void setSharedBy(Users sharedBy) {
+    this.sharedBy = sharedBy;
+  }
+
+  public Users getAcceptedBy() {
+    return acceptedBy;
+  }
+
+  public void setAcceptedBy(Users acceptedBy) {
+    this.acceptedBy = acceptedBy;
+  }
+
   @Override
   public int hashCode() {
     int hash = 0;

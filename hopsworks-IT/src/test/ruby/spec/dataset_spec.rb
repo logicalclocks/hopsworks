@@ -495,6 +495,21 @@ describe "On #{ENV['OS']}" do
           share_dataset(@project, dsname, project[:projectname], permission: "EDITABLE", datasetType: "&type=DATASET")
           expect_status(204)
         end
+
+        it "should show the user that shared the dataset" do
+          projectname = "project_#{short_random_id}"
+          project = create_project_by_name(projectname)
+          dsname = "dataset_#{short_random_id}"
+          create_dataset_by_name_checked(@project, dsname, permission: "READ_ONLY")
+          share_dataset_checked(@project, dsname, project[:projectname], permission: "EDITABLE", datasetType: "&type=DATASET")
+          get "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/dataset?expand=users"
+          datasets = JSON.parse(response.body)
+          shared_by = datasets['items'].select{|dataset|
+            dataset['name'].eql?("#{@project['projectname']}::#{dsname}")
+          }[0]["sharedBy"]
+          expect(shared_by["username"]).to eql(@user["username"])
+        end
+
         it "should share a HiveDB" do
           projectname = "project_#{short_random_id}"
           project = create_project_by_name(projectname)
@@ -505,6 +520,7 @@ describe "On #{ENV['OS']}" do
           shared_ds = json_body
           expect("#{shared_ds[:name]}").to eq("#{@project[:projectname]}::#{@project[:projectname].downcase}.db")
         end
+
         it "should appear as pending for datasets not requested" do
           projectname = "project_#{short_random_id}"
           project = create_project_by_name(projectname)
@@ -548,6 +564,24 @@ describe "On #{ENV['OS']}" do
           create_dir(project, "#{@project[:projectname]}::#{dsname}/testdir", query: "&type=DATASET")
           expect_status(403)
         end
+
+        it "should show the user that accepted the dataset" do
+          projectname = "project_#{short_random_id}"
+          project = create_project_by_name(projectname)
+          dsname = "dataset_#{short_random_id}"
+          create_dataset_by_name_checked(@project, dsname, permission: "READ_ONLY")
+          share_dataset_checked(@project, dsname, project[:projectname], permission: "EDITABLE", datasetType: "&type=DATASET")
+
+          accept_dataset_checked(project, "#{@project[:projectname]}::#{dsname}", datasetType: "&type=DATASET")
+
+          get "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/dataset?expand=users"
+          datasets = JSON.parse(response.body)
+          accepted_by = datasets['items'].select{|dataset|
+            dataset['name'].eql?("#{@project['projectname']}::#{dsname}")
+          }[0]["acceptedBy"]
+          expect(accepted_by["username"]).to eql(@user["username"])
+        end
+
         it "should write in an editable shared dataset" do
           projectname = "project_#{short_random_id}"
           project = create_project_by_name(projectname)
@@ -581,6 +615,37 @@ describe "On #{ENV['OS']}" do
           expect_status(200)
           get_datasets_in_path(project, dsname)
           expect_status(200)
+        end
+
+        it "should correctly set sharedBy and acceptedBy when requesting a dataset" do
+          dsname = "dataset_#{short_random_id}"
+          ds = create_dataset_by_name_checked(@project, dsname, permission: "READ_ONLY")
+
+          # Request the the dataset from another project
+          req_user = create_user
+          create_session(req_user[:email], "Pass123")
+          req_projectname = "project_#{short_random_id}"
+          req_project = create_project_by_name(req_projectname)
+          request_dataset_access_checked(req_project, ds[:inode_id])
+
+          create_session(@project[:username], "Pass123") # be the user of the project that owns the dataset
+          share_dataset_checked(@project, dsname, req_project[:projectname], permission: "EDITABLE", datasetType: "&type=DATASET")
+
+          create_session(req_user[:email], "Pass123")
+          get "#{ENV['HOPSWORKS_API']}/project/#{req_project[:id]}/dataset?expand=users"
+          datasets = JSON.parse(response.body)
+          create_session(@project[:username], "Pass123") # reset the user to continue with the tests
+
+          shared_by = datasets['items'].select{|dataset|
+            dataset['name'].eql?("#{@project['projectname']}::#{dsname}")
+          }[0]["sharedBy"]
+
+          accepted_by = datasets['items'].select{|dataset|
+            dataset['name'].eql?("#{@project['projectname']}::#{dsname}")
+          }[0]["acceptedBy"]
+
+          expect(shared_by["username"]).to eql(@user["username"])
+          expect(accepted_by["username"]).to eql(req_user["username"])
         end
 
         it "when adding a new member it should add it also to the shared datasets" do

@@ -104,6 +104,11 @@ module DatasetHelper
     post "#{ENV['HOPSWORKS_API']}/request/access", {inodeId: inode, projectId: project[:id]}
   end
 
+  def request_dataset_access_checked(project, inode)
+    request_dataset_access(project, inode)
+    expect_status_details(200)
+  end
+
   def request_access(owningProject, dataset, requestingProject)
     request_access_by_name(owningProject, dataset[:inode_name], requestingProject)
   end

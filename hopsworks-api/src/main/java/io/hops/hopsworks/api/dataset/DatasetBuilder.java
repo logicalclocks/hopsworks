@@ -18,6 +18,7 @@ package io.hops.hopsworks.api.dataset;
 import io.hops.hopsworks.api.dataset.inode.attribute.InodeAttributeBuilder;
 import io.hops.hopsworks.api.dataset.inode.attribute.InodeAttributeDTO;
 import io.hops.hopsworks.api.dataset.tags.DatasetTagsBuilder;
+import io.hops.hopsworks.api.user.UsersBuilder;
 import io.hops.hopsworks.common.api.ResourceRequest;
 import io.hops.hopsworks.common.dao.AbstractFacade;
 import io.hops.hopsworks.common.dao.dataset.DatasetFacade;
@@ -75,7 +76,9 @@ public class DatasetBuilder {
   private DatasetHelper datasetHelper;
   @EJB
   private DatasetTagsBuilder tagsBuilder;
-
+  @EJB
+  private UsersBuilder usersBuilder;
+  
   private DatasetDTO uri(DatasetDTO dto, UriInfo uriInfo) {
     dto.setHref(uriInfo.getAbsolutePathBuilder()
       .build());
@@ -130,8 +133,21 @@ public class DatasetBuilder {
         dto.setAccepted(datasetPath.getDatasetSharedWith().getAccepted());
         dto.setPermission(datasetPath.getDatasetSharedWith().getPermission());
         dto.setName(datasetPath.getDatasetSharedWith().getDatasetName());
-        dto.setAttributes(inodeAttributeBuilder.build(new InodeAttributeDTO(), resourceRequest, dataset.getInode(),
-          null, null));//if shared parent and owner not this project
+        if (datasetPath.getDatasetSharedWith().getSharedBy() != null) {
+          // for old shared datasets we might not have the information
+          // about who shared the dataset
+          dto.setSharedBy(
+              usersBuilder.build(uriInfo, resourceRequest, datasetPath.getDatasetSharedWith().getSharedBy()));
+        }
+        if (datasetPath.getDatasetSharedWith().getAcceptedBy() != null) {
+          // for old shared datasets we might not have the information
+          // about who accepted the dataset
+          dto.setAcceptedBy(
+              usersBuilder.build(uriInfo, resourceRequest, datasetPath.getDatasetSharedWith().getAcceptedBy()));
+        }
+        //if shared parent and owner not this project
+        dto.setAttributes(
+            inodeAttributeBuilder.build(new InodeAttributeDTO(), resourceRequest, dataset.getInode(), null, null));
       } else if (DatasetType.DATASET.equals(dataset.getDsType())) {
         dto.setName(dataset.getName());
         dto.setAttributes(inodeAttributeBuilder.build(new InodeAttributeDTO(), resourceRequest, dataset.getInode(),
