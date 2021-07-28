@@ -99,13 +99,6 @@ module CondaHelper
                     "#{@project[:projectname]}__Resources", 750, "#{@project[:projectname]}")
   end
 
-  def get_conda_envs_locally
-    cmd = "#{@conda_bin} env list --json"
-    Open3.popen3(cmd) do |_, stdout, _, _|
-      JSON.parse(stdout.read)
-    end
-  end
-
   def get_project_env_by_id(id)
     PythonEnvironment.find_by(project_id: "#{id}")
   end
@@ -140,6 +133,10 @@ module CondaHelper
 
   def list_envs(projectId)
     get "#{ENV['HOPSWORKS_API']}/project/#{projectId}/python/environments"
+  end
+
+  def get_env(projectId, env)
+    get "#{ENV['HOPSWORKS_API']}/project/#{projectId}/python/environments/#{env}"
   end
 
   def create_env_and_update_project(project, version)

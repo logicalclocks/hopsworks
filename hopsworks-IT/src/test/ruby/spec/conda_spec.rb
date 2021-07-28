@@ -75,6 +75,16 @@ describe "On #{ENV['OS']}" do
             expect_status(404)
           end
 
+          it 'should fail to get an environment' do
+            @env = get_project_env_by_id(@project[:id])
+            @project = get_project_by_name(@project[:projectname])
+            if !@env.nil?
+              delete_env(@project[:id], python_version)
+            end
+            get_env(@project[:id], "3.7")
+            expect_status_details(404)
+          end
+
           it 'should fail to get env commands' do
             @env = get_project_env_by_id(@project[:id])
             @project = get_project_by_name(@project[:projectname])

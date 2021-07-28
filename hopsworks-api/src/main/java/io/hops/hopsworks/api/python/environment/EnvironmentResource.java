@@ -134,7 +134,8 @@ public class EnvironmentResource {
   public Response get(@PathParam("version") String version, @BeanParam EnvironmentExpansionBeanParam expansions,
     @Context UriInfo uriInfo, @Context SecurityContext sc) throws PythonException, IOException,
       ServiceDiscoveryException {
-    if (!version.equals(this.project.getPythonEnvironment().getPythonVersion())) {
+    if (project.getPythonEnvironment() == null ||
+        !project.getPythonEnvironment().getPythonVersion().equals(version)) {
       throw new PythonException(RESTCodes.PythonErrorCode.ANACONDA_ENVIRONMENT_NOT_FOUND, Level.FINE);
     } 
     EnvironmentDTO dto = buildEnvDTO(uriInfo, expansions, version);
