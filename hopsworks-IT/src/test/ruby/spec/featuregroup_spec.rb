@@ -937,6 +937,27 @@ describe "On #{ENV['OS']}" do
         expect(parsed_json["items"][0]["commitID"]).to eql(1603650176000)
         expect(parsed_json["items"][1]["commitID"]).to eql(1603577485000)
       end
+	  
+	  it "should be able to retrieve commit timeline from existing hudi enabled offline cached featuregroup without providing any parameters" do
+        featurestore_id = get_featurestore_id(@project[:id])
+        featurestore_name = @project['projectname'].downcase + "_featurestore"
+        json_result, featuregroup_name = create_cached_featuregroup_with_partition(@project[:id], featurestore_id, time_travel_format: "HUDI")
+        parsed_json = JSON.parse(json_result)
+        featuregroup_id = parsed_json["id"]
+        featuregroup_version = parsed_json["version"]
+        path = "/apps/hive/warehouse/#{featurestore_name}.db/#{featuregroup_name}_#{featuregroup_version}"
+        hoodie_path = path + "/.hoodie"
+        mkdir(hoodie_path, getHopsworksUser, getHopsworksUser, 777)
+
+        touchz(hoodie_path + "/20201024221125.commit", getHopsworksUser, getHopsworksUser)
+        commit_metadata = {commitDateString: 20201024221125, commitTime: 1603577485000, rowsInserted:3, rowsUpdated:0, rowsDeleted:0}
+        _ = commit_cached_featuregroup(@project[:id], featurestore_id, featuregroup_id, commit_metadata: commit_metadata)
+
+        json_result = get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/featurestores/#{featurestore_id}/featuregroups/#{featuregroup_id}/commits"
+        expect_status_details(200)
+		parsed_json = JSON.parse(json_result)
+        expect(parsed_json["items"][0]["commitID"]).to eql(1603577485000)
+      end
 
       it "should be able to join 2 hudi feature groups together and return the configuration correctly" do
         featurestore_id = get_featurestore_id(@project[:id])
