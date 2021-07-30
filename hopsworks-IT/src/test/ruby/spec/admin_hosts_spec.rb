@@ -148,22 +148,22 @@ describe "On #{ENV['OS']}" do
 
       it "stops a service" do
         sparkhistoryserver_start(@hostname)
-        expect(is_sparkhistoryserver_running(@hostname)).to eq(true)
+        expect(is_service_running("sparkhistoryserver", @hostname)).to eq(true)
         hosts_update_host_service(@hostname, "sparkhistoryserver", "SERVICE_STOP")
         expect_status(200)
         # wait for service to stop
         sleep(10)
-        expect(is_sparkhistoryserver_running(@hostname)).to eq(false)
+        expect(is_service_running("sparkhistoryserver", @hostname)).to eq(false)
       end
 
       it "starts a service" do
         sparkhistoryserver_stop(@hostname)
-        expect(is_sparkhistoryserver_running(@hostname)).to eq(false)
+        expect(is_service_running("sparkhistoryserver", @hostname)).to eq(false)
         hosts_update_host_service(@hostname, "sparkhistoryserver", "SERVICE_START")
         expect_status(200)
         # wait for service to stop
         sleep(10)
-        expect(is_sparkhistoryserver_running(@hostname)).to eq(true)
+        expect(is_service_running("sparkhistoryserver", @hostname)).to eq(true)
       end
 
       it "restart a service" do
@@ -171,7 +171,7 @@ describe "On #{ENV['OS']}" do
         expect_status(200)
         # wait for service to stop
         sleep(10)
-        expect(is_sparkhistoryserver_running(@hostname)).to eq(true)
+        expect(is_service_running("sparkhistoryserver", @hostname)).to eq(true)
       end
 
     end

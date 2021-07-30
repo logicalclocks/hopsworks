@@ -131,17 +131,17 @@ describe "On #{ENV['OS']}" do
       describe "#it should not be able to" do
         it "stop" do
           kagent_start(@hostname)
-          expect(is_kagent_running(@hostname)).to eq(true)
+          expect(is_service_running("kagent", @hostname)).to eq(true)
           delete "#{ENV['HOPSWORKS_API']}/admin/kagent/#{@hostname}"
           expect_status(401)
-          expect(is_kagent_running(@hostname)).to eq(true)
+          expect(is_service_running("kagent", @hostname)).to eq(true)
         end
         it "start" do
           kagent_stop(@hostname)
-          expect(is_kagent_running(@hostname)).to eq(false)
+          expect(is_service_running("kagent", @hostname)).to eq(false)
           post "#{ENV['HOPSWORKS_API']}/admin/kagent/#{@hostname}"
           expect_status(401)
-          expect(is_kagent_running(@hostname)).to eq(false)
+          expect(is_service_running("kagent", @hostname)).to eq(false)
         end
         it "restart" do
           put "#{ENV['HOPSWORKS_API']}/admin/kagent/#{@hostname}"
@@ -158,24 +158,24 @@ describe "On #{ENV['OS']}" do
       describe "#it should be able to" do
         it "stop" do
           kagent_start(@hostname)
-          expect(is_kagent_running(@hostname)).to eq(true)
+          expect(is_service_running("kagent", @hostname)).to eq(true)
           delete "#{ENV['HOPSWORKS_API']}/admin/kagent/#{@hostname}"
           expect_status(200)
-          expect(is_kagent_running(@hostname)).to eq(false)
+          expect(is_service_running("kagent", @hostname)).to eq(false)
         end
         it "start" do
           kagent_stop(@hostname)
-          expect(is_kagent_running(@hostname)).to eq(false)
+          expect(is_service_running("kagent", @hostname)).to eq(false)
           post "#{ENV['HOPSWORKS_API']}/admin/kagent/#{@hostname}"
           expect_status(200)
-          expect(is_kagent_running(@hostname)).to eq(true)
+          expect(is_service_running("kagent", @hostname)).to eq(true)
         end
         it "restart" do
           kagent_stop(@hostname)
-          expect(is_kagent_running(@hostname)).to eq(false)
+          expect(is_service_running("kagent", @hostname)).to eq(false)
           put "#{ENV['HOPSWORKS_API']}/admin/kagent/#{@hostname}"
           expect_status(200)
-          expect(is_kagent_running(@hostname)).to eq(true)
+          expect(is_service_running("kagent", @hostname)).to eq(true)
         end
       end
     end
@@ -206,9 +206,9 @@ describe "On #{ENV['OS']}" do
         kagent_start(@hostname)
         sleep 5
         kagent_stop(@hostname)
-        expect(is_kagent_running(@hostname)).to eq(false)
+        expect(is_service_running("kagent", @hostname)).to eq(false)
         wait_for do
-          is_kagent_running(@hostname).eql?(true)
+          is_service_running("kagent", @hostname).eql?(true)
         end
       end
     end
