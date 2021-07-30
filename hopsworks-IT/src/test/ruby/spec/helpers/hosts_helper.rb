@@ -74,24 +74,17 @@ module HostsHelper
     put "#{ENV['HOPSWORKS_API']}/hosts/" + hostname + "/services/" + service, action_json.to_json
   end
 
-  def start_service_on_all_hosts(service)
+  def update_host_service_on_all_hosts(service, action)
       services = HostServices.where(name: service)
       services.each { |host_service|
       host = Host.find_by(id: host_service.host_id)
-      hosts_update_host_service(host.hostname, service, "SERVICE_START")
+      hosts_update_host_service(host.hostname, service, action)
       wait_for do
-        is_service_running(service, host.hostname).eql?(true)
-      end
-      }
-  end
-
-  def stop_service_on_all_hosts(service)
-      services = HostServices.where(name: service)
-      services.each { |host_service|
-      host = Host.find_by(id: host_service.host_id)
-      hosts_update_host_service(host.hostname, service, "SERVICE_STOP")
-      wait_for do
-        is_service_running(service, host.hostname).eql?(false)
+        if action.eql?("SERVICE_STOP")
+          is_service_running(service, host.hostname).eql?(false)
+        else
+          is_service_running(service, host.hostname).eql?(true)
+        end
       end
       }
   end

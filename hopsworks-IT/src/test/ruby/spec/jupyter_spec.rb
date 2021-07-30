@@ -398,13 +398,13 @@ describe "On #{ENV['OS']}" do
       end
 
       after :each do
-        start_service_on_all_hosts('kafka')
-        start_service_on_all_hosts('zookeeper')
+        update_host_service_on_all_hosts('kafka', 'SERVICE_START')
+        update_host_service_on_all_hosts('zookeeper', 'SERVICE_START')
       end
 
       it "Should start Jupyter if Kafka is down" do
 
-        stop_service_on_all_hosts('kafka')
+        update_host_service_on_all_hosts('kafka', 'SERVICE_STOP')
 
         secret_dir, staging_dir, settings = start_jupyter(@project)
 
@@ -420,7 +420,7 @@ describe "On #{ENV['OS']}" do
 
       it "Should start Jupyter if Zookeeper is down" do
 
-        stop_service_on_all_hosts('zookeeper')
+        update_host_service_on_all_hosts('zookeeper', 'SERVICE_STOP')
 
         secret_dir, staging_dir, settings = start_jupyter(@project)
 
@@ -436,8 +436,8 @@ describe "On #{ENV['OS']}" do
 
       it "Should start Jupyter if Zookeeper and Kafka is down" do
 
-        stop_service_on_all_hosts('zookeeper')
-        stop_service_on_all_hosts('kafka')
+        update_host_service_on_all_hosts('zookeeper', 'SERVICE_STOP')
+        update_host_service_on_all_hosts('kafka', 'SERVICE_STOP')
 
         secret_dir, staging_dir, settings = start_jupyter(@project)
 
