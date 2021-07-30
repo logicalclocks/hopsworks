@@ -33,6 +33,7 @@ describe "On #{ENV['OS']}" do
 
   python_versions = ['3.7']
   python_versions.each do |version|
+
     describe "Jupyter basic operations - python " + version do
       before :each do
         with_valid_project
@@ -386,6 +387,68 @@ describe "On #{ENV['OS']}" do
         expect_status(200)
         python_file = json_body[:items].detect { |d| d[:attributes][:name] == "[export model].py" }
         expect(python_file).to be_present
+      end
+    end
+
+    describe "Failure scenarios - python " + version do
+
+      before :each do
+        with_admin_session
+        with_valid_project
+      end
+
+      after :each do
+        update_host_service_on_all_hosts('kafka', 'SERVICE_START')
+        update_host_service_on_all_hosts('zookeeper', 'SERVICE_START')
+      end
+
+      it "Should start Jupyter if Kafka is down" do
+
+        update_host_service_on_all_hosts('kafka', 'SERVICE_STOP')
+
+        secret_dir, staging_dir, settings = start_jupyter(@project)
+
+        get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/jupyter/running"
+        expect_status(200)
+
+        stop_jupyter(@project)
+
+        get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/jupyter/running"
+        expect_status(404)
+
+      end
+
+      it "Should start Jupyter if Zookeeper is down" do
+
+        update_host_service_on_all_hosts('zookeeper', 'SERVICE_STOP')
+
+        secret_dir, staging_dir, settings = start_jupyter(@project)
+
+        get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/jupyter/running"
+        expect_status(200)
+
+        stop_jupyter(@project)
+
+        get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/jupyter/running"
+        expect_status(404)
+
+      end
+
+      it "Should start Jupyter if Zookeeper and Kafka is down" do
+
+        update_host_service_on_all_hosts('zookeeper', 'SERVICE_STOP')
+        update_host_service_on_all_hosts('kafka', 'SERVICE_STOP')
+
+        secret_dir, staging_dir, settings = start_jupyter(@project)
+
+        get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/jupyter/running"
+        expect_status(200)
+
+        stop_jupyter(@project)
+
+        get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/jupyter/running"
+        expect_status(404)
+
       end
     end
   end
