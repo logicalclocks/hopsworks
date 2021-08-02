@@ -175,7 +175,7 @@ public class ExperimentsResource {
     Project experimentProject = project;
     switch(type) {
       case INIT: {
-        String experimentPath = Settings.HOPS_EXPERIMENTS_DATASET + "/" + id;
+        String experimentPath = Settings.HOPS_EXPERIMENTS_DATASET + "/" + id + "/" + Settings.ENVIRONMENT_FILE;
         experimentDTO.setEnvironment(environmentController.exportEnv(experimentProject, user, experimentPath));
         try {
           String program = experimentsController.versionProgram(experimentProject, user,
