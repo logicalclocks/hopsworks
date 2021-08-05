@@ -116,15 +116,4 @@
   <build>
     <finalName>hopsworks-remote-user-api</finalName>
   </build>
-  <repositories>
-    <!-- SPNEGO -->
-    <repository>
-      <id>jspresso</id>
-      <name>jspresso Repository</name>
-      <url>http://repository.jspresso.org/maven2/</url>
-      <snapshots>
-        <enabled>false</enabled>
-      </snapshots>
-    </repository>
-  </repositories>
 </project>
