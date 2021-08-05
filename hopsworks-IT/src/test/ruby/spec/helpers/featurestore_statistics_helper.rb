@@ -15,12 +15,18 @@
 
 module FeatureStoreStatisticsHelper
 
-  def create_statistics_commit(project_id, featurestore_id, entity_type, entity_id, commit_time: 1597903688000)
+  def create_statistics_commit(project_id, featurestore_id, entity_type, entity_id, split_statistics: nil, commit_time: 1597903688000)
     post_statistics_endpoint = "#{ENV['HOPSWORKS_API']}/project/#{project_id}/featurestores/#{featurestore_id}/#{entity_type}/#{entity_id}/statistics"
     json_data = {
         commitTime: commit_time,
-        content: '{"columns": ["a", "b", "c"]}'
     }
+
+    if split_statistics == nil
+       json_data[:content] = '{"columns": ["a", "b", "c"]}'
+    else
+       json_data[:splitStatistics] = split_statistics
+    end
+
     post post_statistics_endpoint, json_data.to_json
   end
 

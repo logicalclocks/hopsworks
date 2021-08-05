@@ -24,6 +24,7 @@ import io.hops.hopsworks.persistence.entity.featurestore.Featurestore;
 import io.hops.hopsworks.persistence.entity.featurestore.statistics.FeaturestoreStatistic;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.Featuregroup;
 import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.TrainingDataset;
+import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.split.TrainingDatasetSplit;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
@@ -35,6 +36,8 @@ import javax.ejb.TransactionAttributeType;
 import javax.ws.rs.core.UriBuilder;
 import javax.ws.rs.core.UriInfo;
 import java.net.URI;
+import java.util.ArrayList;
+import java.util.List;
 
 @Stateless
 @TransactionAttribute(TransactionAttributeType.NEVER)
@@ -75,7 +78,7 @@ public class StatisticsBuilder {
   private URI uri(UriInfo uriInfo, Project project,
                   Featurestore featurestore, TrainingDataset trainingDataset) {
     return uri(uriInfo, project, featurestore)
-        .path(ResourceRequest.Name.FEATUREGROUPS.toString().toLowerCase())
+        .path(ResourceRequest.Name.TRAININGDATASETS.toString().toLowerCase())
         .path(Integer.toString(trainingDataset.getId()))
         .path(ResourceRequest.Name.STATISTICS.toString().toLowerCase())
         .build();
@@ -84,7 +87,7 @@ public class StatisticsBuilder {
   private URI uri(UriInfo uriInfo, Project project, Featurestore featurestore,
                   TrainingDataset trainingDataset, FeaturestoreStatistic statistics) {
     return uri(uriInfo, project, featurestore)
-        .path(ResourceRequest.Name.FEATUREGROUPS.toString().toLowerCase())
+        .path(ResourceRequest.Name.TRAININGDATASETS.toString().toLowerCase())
         .path(Integer.toString(trainingDataset.getId()))
         .path(ResourceRequest.Name.STATISTICS.toString().toLowerCase())
         .queryParam("filter_by", "commit_time_eq:" + statistics.getCommitTime())
@@ -127,7 +130,17 @@ public class StatisticsBuilder {
     if (dto.isExpand()) {
       dto.setCommitTime(featurestoreStatistic.getCommitTime().getTime());
       if (resourceRequest.getField() != null && resourceRequest.getField().contains("content")) {
-        dto.setContent(statisticsController.readStatisticsContent(project, user, featurestoreStatistic));
+        if (trainingDataset.getSplits() != null && !trainingDataset.getSplits().isEmpty()){
+          List<SplitStatisticsDTO> splitStatistics = new ArrayList<>();
+          for (TrainingDatasetSplit trainingDatasetSplit: trainingDataset.getSplits()){
+            splitStatistics.add(new SplitStatisticsDTO(trainingDatasetSplit.getName(),
+                statisticsController.readStatisticsContent(project, user, featurestoreStatistic,
+                    trainingDatasetSplit.getName())));
+          }
+          dto.setSplitStatistics(splitStatistics);
+        } else {
+          dto.setContent(statisticsController.readStatisticsContent(project, user, featurestoreStatistic));
+        }
       }
     }
 

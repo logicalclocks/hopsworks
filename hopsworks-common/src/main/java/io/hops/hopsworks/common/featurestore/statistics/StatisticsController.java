@@ -51,6 +51,8 @@ import javax.ejb.TransactionAttributeType;
 import java.io.IOException;
 import java.sql.Timestamp;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
 import java.util.logging.Level;
 
@@ -89,20 +91,28 @@ public class StatisticsController {
     }
   }
 
+  public String readStatisticsContent(Project project, Users user, FeaturestoreStatistic statistic, String splitName)
+      throws FeaturestoreException {
+
+    String statisticsPath = inodeController.getPath(statistic.getInode());
+    String path = statisticsPath + "/" + splitStatisticsFileName(splitName, statistic.getCommitTime().getTime());
+
+    DistributedFileSystemOps udfso = null;
+    try {
+      udfso = dfs.getDfsOps(hdfsUsersController.getHdfsUserName(project, user));
+      return udfso.cat(path);
+    } catch (IOException e) {
+      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.STATISTICS_READ_ERROR,
+          Level.WARNING, e.getMessage(), e.getMessage(), e);
+    } finally {
+      dfs.closeDfsClient(udfso);
+    }
+  }
+
   public FeaturestoreStatistic registerStatistics(Project project, Users user, Long statisticsCommitTimeStamp,
                                                   Long fgCommitId, String content, Featuregroup featuregroup)
       throws FeaturestoreException, DatasetException, HopsSecurityException, IOException {
-    // In some cases Deequ returns NaN. Having NaNs in the frontend causes issue to the display
-    // By converting the string to JSONObject and back to string, JSONObject is going to fix them and
-    // potentially other errors
-    JSONObject statisticsJson = null;
-    try {
-      statisticsJson = new JSONObject(content);
-    } catch (JSONException jex) {
-      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ERROR_SAVING_STATISTICS,
-          Level.WARNING, "Not a valid JSON", jex.getMessage(), jex);
-    }
-
+    JSONObject statisticsJson = extractJsonFromContent(content);
     FeatureGroupCommit featureGroupCommit = null;
     if (featuregroup.getFeaturegroupType() == FeaturegroupType.CACHED_FEATURE_GROUP &&
         featuregroup.getCachedFeaturegroup().getTimeTravelFormat() == TimeTravelFormat.HUDI) {
@@ -123,7 +133,7 @@ public class StatisticsController {
     }
 
     Inode statisticsInode = registerStatistics(project, user, statisticsCommitTimeStamp, statisticsJson.toString(),
-        featuregroup.getName(), "FeatureGroups", featuregroup.getVersion());
+        featuregroup.getName(), "FeatureGroups", featuregroup.getVersion(), null);
     Timestamp commitTime = new Timestamp(statisticsCommitTimeStamp);
 
     FeaturestoreStatistic featurestoreStatistic = new FeaturestoreStatistic(commitTime, statisticsInode, featuregroup);
@@ -142,19 +152,34 @@ public class StatisticsController {
   public FeaturestoreStatistic registerStatistics(Project project, Users user, Long commitTimeStamp, String content,
                                                   TrainingDataset trainingDataset)
       throws FeaturestoreException, DatasetException, HopsSecurityException, IOException {
-    // In some cases Deequ returns NaN. Having NaNs in the frontend causes issue to the display
-    // By converting the string to JSONObject and back to string, JSONObject is going to fix them and
-    // potentially other errors
-    JSONObject statisticsJson = null;
-    try {
-      statisticsJson = new JSONObject(content);
-    } catch (JSONException jex) {
-      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ERROR_SAVING_STATISTICS,
-          Level.WARNING, "Not a valid JSON", jex.getMessage(), jex);
-    }
+
+    JSONObject statisticsJson = extractJsonFromContent(content);
 
     Inode statisticsInode = registerStatistics(project, user, commitTimeStamp, statisticsJson.toString(),
-        trainingDataset.getName(), "TrainingDatasets", trainingDataset.getVersion());
+        trainingDataset.getName(), "TrainingDatasets", trainingDataset.getVersion(), null);
+    Timestamp commitTime = new Timestamp(commitTimeStamp);
+    FeaturestoreStatistic featurestoreStatistic =
+        new FeaturestoreStatistic(commitTime, statisticsInode, trainingDataset);
+    featurestoreStatistic = featurestoreStatisticFacade.update(featurestoreStatistic);
+
+    // Log statistics activity
+    fsActivityFacade
+        .logStatisticsActivity(user, trainingDataset, new Date(commitTime.getTime()), featurestoreStatistic);
+
+    return featurestoreStatistic;
+  }
+
+  public FeaturestoreStatistic registerStatistics(Project project, Users user, Long commitTimeStamp,
+                                                  TrainingDataset trainingDataset, Map<String, String> splitStatistics)
+      throws FeaturestoreException, DatasetException, HopsSecurityException, IOException {
+
+    Map<String, JSONObject> splitStatJson =  new HashMap<>();
+    for (Map.Entry<String, String> entry: splitStatistics.entrySet()){
+      splitStatJson.put(entry.getKey(), extractJsonFromContent(entry.getValue()));
+    }
+
+    Inode statisticsInode = registerStatistics(project, user, commitTimeStamp, null,
+        trainingDataset.getName(), "TrainingDatasets", trainingDataset.getVersion(), splitStatJson);
     Timestamp commitTime = new Timestamp(commitTimeStamp);
     FeaturestoreStatistic featurestoreStatistic =
       new FeaturestoreStatistic(commitTime, statisticsInode, trainingDataset);
@@ -168,7 +193,7 @@ public class StatisticsController {
   }
 
   private Inode registerStatistics(Project project, Users user, Long commitTime, String content, String entityName,
-                                  String entitySubDir, Integer version)
+                                  String entitySubDir, Integer version, Map<String, JSONObject> splitStatistics)
       throws DatasetException, HopsSecurityException, IOException {
 
     DistributedFileSystemOps udfso = null;
@@ -188,10 +213,19 @@ public class StatisticsController {
         udfso.mkdir(dirPath.toString());
       }
 
-      Path filePath = new Path(dirPath, commitTime + ".json");
-      udfso.create(filePath, content);
-
-      return inodeController.getInodeAtPath(filePath.toString());
+      Inode inode;
+      if (splitStatistics != null){
+        for (Map.Entry<String, JSONObject> entry: splitStatistics.entrySet()){
+          Path filePath = new Path(dirPath,  splitStatisticsFileName(entry.getKey(), commitTime));
+          udfso.create(filePath, entry.getValue().toString());
+        }
+        inode = inodeController.getInodeAtPath(dirPath.toString());
+      } else {
+        Path filePath = new Path(dirPath, commitTime + ".json");
+        udfso.create(filePath, content);
+        inode = inodeController.getInodeAtPath(filePath.toString());
+      }
+      return inode;
     } finally {
       dfs.closeDfsClient(udfso);
     }
@@ -255,5 +289,23 @@ public class StatisticsController {
     } finally {
       dfs.closeDfsClient(dfso);
     }
+  }
+
+  private JSONObject extractJsonFromContent(String content) throws FeaturestoreException {
+    // In some cases Deequ returns NaN. Having NaNs in the frontend causes issue to the display
+    // By converting the string to JSONObject and back to string, JSONObject is going to fix them and
+    // potentially other errors
+    JSONObject statisticsJson = null;
+    try {
+      statisticsJson = new JSONObject(content);
+    } catch (JSONException jex) {
+      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ERROR_SAVING_STATISTICS,
+          Level.WARNING, "Not a valid JSON", jex.getMessage(), jex);
+    }
+    return statisticsJson;
+  }
+
+  private String splitStatisticsFileName(String name, Long commitTime) {
+    return name + "_" +  commitTime + ".json";
   }
 }

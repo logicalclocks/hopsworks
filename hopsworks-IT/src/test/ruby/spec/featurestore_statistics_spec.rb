@@ -168,6 +168,42 @@ describe "On #{ENV['OS']}" do
           path = "/Projects/#{project[:projectname]}/Statistics/TrainingDatasets/#{training_dataset_name}_1"
           expect(test_dir(path)).to be false
         end
+
+        it "should be able to create a training dataset split statistics and retrieve content back" do
+          project = get_project
+          featurestore_id = get_featurestore_id(project.id)
+          connector = get_hopsfs_training_datasets_connector(@project[:projectname])
+          splits = [
+              {
+                  name: "train_split",
+                  percentage: 0.8
+              },
+              {
+                  name: "test_split",
+                  percentage: 0.2
+              }
+          ]
+          json_result, training_dataset_name = create_hopsfs_training_dataset(project.id, featurestore_id, connector, splits: splits)
+          parsed_json = JSON.parse(json_result)
+          expect_status_details(201)
+          expect(parsed_json.key?("splits")).to be true
+          expect(parsed_json["splits"].length).to be 2
+
+          splitStatistics = [
+            {"name": "train_split", "content": '{"columns": ["a", "b", "c"]}'},
+            {"name": "test_split", "content": '{"columns": ["a", "b", "c"]}'}
+          ]
+
+          create_statistics_commit(project.id, featurestore_id, "trainingdatasets", parsed_json["id"], split_statistics: splitStatistics)
+          json_result = get_statistics_commit(project.id, featurestore_id, "trainingdatasets", parsed_json["id"])
+          expect_status_details(200)
+          parsed_json = JSON.parse(json_result)
+          expect(parsed_json["items"][0].key?("splitStatistics")).to be true
+          expect(parsed_json["items"][0]["splitStatistics"].length).to be 2
+          expect(parsed_json["items"][0]["splitStatistics"][0].key?("content")).to be true
+          expect(JSON.parse(parsed_json["items"][0]["splitStatistics"][0]["content"])).to eql({"columns" => ["a", "b", "c"]})
+          expect(parsed_json["items"][0]["commitTime"]).to eql(1597903688000)
+        end
       end
     end
   end

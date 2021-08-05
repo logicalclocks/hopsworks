@@ -38,7 +38,7 @@
             <div uib-accordion-group class="panel-default" is-open="true">
                 <div uib-accordion-heading>
                     <i class="fa fa-info-circle" tooltip-placement="auto left"
-                       uib-tooltip='General feature statistics'></i>
+                       uib-tooltip='Commit date'></i>
                     <span style="margin-left: 20px">
                         Commit: 
                     </span>
@@ -57,7 +57,33 @@
                 </div>
             </div>
         </div>
-        
+
+        <div  ng-show="fsStatisticsCtrl.entityType === 'trainingdatasets'">
+            <div uib-accordion close-others="false">
+                <div uib-accordion-group class="panel-default" is-open="true">
+                    <div uib-accordion-heading>
+                        <i class="fa fa-info-circle" tooltip-placement="auto left"
+                           uib-tooltip='Training dataset splits'></i>
+                        <span style="margin-left: 20px">
+                            Splits:
+                        </span>
+                    </div>
+
+                    <div>
+                        <select ng-show="fsStatisticsCtrl.splitStatisticNames.length > 0" class="form-control"
+                                ng-model="fsStatisticsCtrl.splitStatisticName"
+                                ng-click="$event.stopPropagation();"
+                                ng-change="fsStatisticsCtrl.fetchStatistics(); $event.stopPropagation();">
+                            <option ng-repeat="splitStatisticName in fsStatisticsCtrl.splitStatisticNames track by $index">{{splitStatisticName}}</option>
+                        </select>
+                        <h3 class="text-muted" style="text-align: center;" ng-show="fsStatisticsCtrl.splitStatisticNames.length < 1">
+                            This training dataset has no splits available.
+                        </h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <div uib-accordion close-others="false">
             <div uib-accordion-group class="panel-default" is-open="true">
                 <div uib-accordion-heading>

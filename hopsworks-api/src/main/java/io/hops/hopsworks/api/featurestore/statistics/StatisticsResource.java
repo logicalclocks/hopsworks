@@ -63,6 +63,8 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
 import javax.ws.rs.core.UriInfo;
 import java.io.IOException;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Api(value = "Feature store statistics Resource")
 @RequestScoped
@@ -157,8 +159,15 @@ public class StatisticsResource {
       dto = statisticsBuilder.build(uriInfo, new ResourceRequest(ResourceRequest.Name.STATISTICS),
           project, user, featuregroup, statistics);
     } else {
-      statistics = statisticsController.registerStatistics(project, user, statisticsDTO.getCommitTime(),
-        statisticsDTO.getContent(), trainingDataset);
+      if (statisticsDTO.getSplitStatistics() != null){
+        Map<String, String> splitStatistics = statisticsDTO.getSplitStatistics().stream()
+            .collect(Collectors.toMap(SplitStatisticsDTO::getName, SplitStatisticsDTO::getContent));
+        statistics = statisticsController.registerStatistics(project, user, statisticsDTO.getCommitTime(),
+             trainingDataset, splitStatistics);
+      } else {
+        statistics = statisticsController.registerStatistics(project, user, statisticsDTO.getCommitTime(),
+            statisticsDTO.getContent(), trainingDataset);
+      }
       dto = statisticsBuilder.build(uriInfo, new ResourceRequest(ResourceRequest.Name.STATISTICS),
           project, user, trainingDataset, statistics);
     }
