@@ -27,9 +27,11 @@ angular.module('hopsWorksApp')
             self.commitTimes = [];
             self.commitTime = null;
             self.stats = null;
-            self.commitTimePrintFormat = "MMM D, YYYY hh:mm:ss A";
+            self.commitTimePrintFormat = "MMM D, YYYY hh:mm:ss.SSS A";
             self.entity = null;
             self.entityType = null;
+            self.splitStatisticNames = [];
+            self.splitStatisticName = null;
 
             self.distributionPlotSettings = {
                 chart: {
@@ -150,7 +152,17 @@ angular.module('hopsWorksApp')
                     new moment(self.commitTime, self.commitTimePrintFormat).valueOf())
                 .then(
                     function (success) {
-                        self.prepareData(success.data.items[0].content)
+                        if (self.splitStatisticNames.length > 0) {
+                            success.data.items.map(function(item) {
+                                item.splitStatistics.map(function(splitStatistic) {
+                                    if (splitStatistic.name == self.splitStatisticName) {
+                                        self.prepareData(splitStatistic.content)
+                                    }
+                                })
+                            });
+                        } else {
+                            self.prepareData(success.data.items[0].content)
+                        }
 
                         // if features were previously selected try reloading correlation with new data
                         if (self.correlationChart != null && self.selectedCorrelationFeatures.length != 0) {
@@ -210,7 +222,12 @@ angular.module('hopsWorksApp')
                             // should return only one item
                             if (success.data.count > 0) {
                                 self.commitTime = moment(success.data.items[0].commitTime).format(self.commitTimePrintFormat).toString();
-                                self.prepareData(success.data.items[0].content)
+                                if (self.splitStatisticNames.length > 0) {
+                                    self.splitStatisticName = success.data.items[0].splitStatistics[0].name;
+                                    self.prepareData(success.data.items[0].splitStatistics[0].content)
+                                } else {
+                                    self.prepareData(success.data.items[0].content)
+                                }
                             }
                         },
                         function (error) {
@@ -228,6 +245,9 @@ angular.module('hopsWorksApp')
                 } else {
                     self.entity = $scope.trainingDataset
                     self.entityType = "trainingdatasets"
+                    if (self.entity.splits !== null || self.entity.splits.length > 0) {
+                        self.splitStatisticNames = self.entity.splits.map(function(split) {return split.name;})
+                    }
                 }
                 self.initData();
             };

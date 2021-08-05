@@ -19,6 +19,7 @@ package io.hops.hopsworks.api.featurestore.statistics;
 import io.hops.hopsworks.common.api.RestDTO;
 
 import javax.xml.bind.annotation.XmlRootElement;
+import java.util.List;
 
 @XmlRootElement
 public class StatisticsDTO extends RestDTO<StatisticsDTO> {
@@ -26,6 +27,7 @@ public class StatisticsDTO extends RestDTO<StatisticsDTO> {
   private Long commitTime;
   private Long featureGroupCommitId;
   private String content;
+  private List<SplitStatisticsDTO> splitStatistics;
 
   public Long getCommitTime() {
     return commitTime;
@@ -49,5 +51,13 @@ public class StatisticsDTO extends RestDTO<StatisticsDTO> {
 
   public void setContent(String content) {
     this.content = content;
+  }
+
+  public List<SplitStatisticsDTO> getSplitStatistics() {
+    return splitStatistics;
+  }
+
+  public void setSplitStatistics(List<SplitStatisticsDTO> splitStatistics) {
+    this.splitStatistics = splitStatistics;
   }
 }
