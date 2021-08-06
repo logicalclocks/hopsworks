@@ -159,9 +159,6 @@ public class Settings implements Serializable {
   private static final String VARIABLE_SPARK_DIR = "spark_dir";
   private static final String VARIABLE_FLINK_DIR = "flink_dir";
   private static final String VARIABLE_FLINK_USER = "flink_user";
-  private static final String VARIABLE_NDB_DIR = "ndb_dir";
-  private static final String VARIABLE_MYSQL_DIR = "mysql_dir";
-  private static final String VARIABLE_MYSQL_USER = "mysql_user";
   private static final String VARIABLE_HADOOP_DIR = "hadoop_dir";
   private static final String VARIABLE_HOPSWORKS_DIR = "hopsworks_dir";
   private static final String VARIABLE_SUDOERS_DIR = "sudoers_dir";
@@ -567,15 +564,12 @@ public class Settings implements Serializable {
       HADOOP_VERSION = setVar(VARIABLE_HADOOP_VERSION, HADOOP_VERSION);
       JUPYTER_DIR = setDirVar(VARIABLE_JUPYTER_DIR, JUPYTER_DIR);
       JUPYTER_WS_PING_INTERVAL_MS = setMillisecondVar(VARIABLE_JUPYTER_WS_PING_INTERVAL, JUPYTER_WS_PING_INTERVAL_MS);
-      MYSQL_DIR = setDirVar(VARIABLE_MYSQL_DIR, MYSQL_DIR);
-      MYSQL_USER = setStrVar(VARIABLE_MYSQL_USER, MYSQL_USER);
       HADOOP_DIR = setDirVar(VARIABLE_HADOOP_DIR, HADOOP_DIR);
       HOPSWORKS_INSTALL_DIR = setDirVar(VARIABLE_HOPSWORKS_DIR, HOPSWORKS_INSTALL_DIR);
       CERTS_DIR = setDirVar(VARIABLE_CERTS_DIRS, CERTS_DIR);
       SUDOERS_DIR = setDirVar(VARIABLE_SUDOERS_DIR, SUDOERS_DIR);
       CERTIFICATE_USER_VALID_DAYS = setStrVar(VARIABLE_CERTIFICATE_USER_VALID_DAYS, CERTIFICATE_USER_VALID_DAYS);
       SERVICE_DISCOVERY_DOMAIN = setStrVar(VARIABLE_SERVICE_DISCOVERY_DOMAIN, SERVICE_DISCOVERY_DOMAIN);
-      NDB_DIR = setDirVar(VARIABLE_NDB_DIR, NDB_DIR);
       AIRFLOW_DIR = setDirVar(VARIABLE_AIRFLOW_DIR, AIRFLOW_DIR);
       String elasticIps = setStrVar(VARIABLE_ELASTIC_IP,
           ElasticSettings.ELASTIC_IP_DEFAULT);
@@ -1059,24 +1053,6 @@ public class Settings implements Serializable {
 
   public String getFlinkConfFile() {
     return getFlinkConfDir() + File.separator + FLINK_CONF_FILE;
-  }
-
-  private String MYSQL_DIR = "/usr/local/mysql";
-  public synchronized String getMySqlDir() {
-    checkCache();
-    return MYSQL_DIR;
-  }
-
-  private String MYSQL_USER = "mysql";
-  public synchronized String getMysqlUser() {
-    checkCache();
-    return MYSQL_USER;
-  }
-
-  private String NDB_DIR = "/var/lib/mysql-cluster";
-  public synchronized String getNdbDir() {
-    checkCache();
-    return NDB_DIR;
   }
 
   private String AIRFLOW_DIR = "/srv/hops/airflow";
