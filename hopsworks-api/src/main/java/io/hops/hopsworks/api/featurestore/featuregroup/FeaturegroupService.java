@@ -19,6 +19,7 @@ package io.hops.hopsworks.api.featurestore.featuregroup;
 import com.google.common.base.Strings;
 import io.hops.hopsworks.api.featurestore.FeaturestoreKeywordResource;
 import io.hops.hopsworks.api.featurestore.activities.ActivityResource;
+import io.hops.hopsworks.api.featurestore.code.CodeResource;
 import io.hops.hopsworks.api.featurestore.commit.CommitResource;
 import io.hops.hopsworks.api.featurestore.datavalidation.expectations.fg.FeatureGroupExpectationsResource;
 import io.hops.hopsworks.api.featurestore.datavalidation.alert.FeatureGroupAlertResource;
@@ -137,6 +138,8 @@ public class FeaturegroupService {
   private FeatureGroupDetailsResource featureGroupDetailsResource;
   @Inject
   private StatisticsResource statisticsResource;
+  @Inject
+  private CodeResource codeResource;
   @Inject
   private CommitResource commitResource;
   @Inject
@@ -719,6 +722,16 @@ public class FeaturegroupService {
     this.statisticsResource.setFeaturestore(featurestore);
     this.statisticsResource.setFeatureGroupId(featureGroupId);
     return statisticsResource;
+  }
+
+  @Path("/{featureGroupId}/code")
+  @Logged(logLevel = LogLevel.OFF)
+  public CodeResource code(@PathParam("featureGroupId") Integer featureGroupId)
+          throws FeaturestoreException {
+    this.codeResource.setProject(project);
+    this.codeResource.setFeatureStore(featurestore);
+    this.codeResource.setFeatureGroupId(featureGroupId);
+    return codeResource;
   }
 
   @Path("/{featureGroupId}/provenance")

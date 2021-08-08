@@ -54,6 +54,7 @@ import java.io.StringReader;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
+import java.util.Optional;
 import java.util.Scanner;
 import java.util.logging.Logger;
 import javax.json.Json;
@@ -68,6 +69,12 @@ public final class Utils {
     int lastSlash = path.lastIndexOf("/");
     int startName = (lastSlash > -1) ? lastSlash + 1 : 0;
     return path.substring(startName);
+  }
+
+  public static Optional<String> getExtension(String filename) {
+    return Optional.ofNullable(filename)
+            .filter(f -> f.contains("."))
+            .map(f -> f.substring(filename.lastIndexOf(".")));
   }
 
   public static String getDirectoryPart(String path) {

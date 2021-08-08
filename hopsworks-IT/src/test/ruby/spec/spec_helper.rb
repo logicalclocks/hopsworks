@@ -107,6 +107,7 @@ RSpec.configure do |config|
   config.include ProvHelper
   config.include ProvOpsHelper
   config.include FeatureStoreStatisticsHelper
+  config.include FeatureStoreCodeHelper
   config.include StorageConnectorHelper
   config.include ProvAppHelper
   config.include CloudRoleMappingHelper
