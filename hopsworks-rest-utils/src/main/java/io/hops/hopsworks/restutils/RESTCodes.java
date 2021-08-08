@@ -1570,7 +1570,10 @@ public class RESTCodes {
         Response.Status.BAD_REQUEST),
     FEATURE_WITH_TRANSFORMATION_NOT_FOUND(164, "Could not find feature in training dataset schema",
         Response.Status.NOT_FOUND),
-    ILLEGAL_PREFIX_NAME(165, "Illegal feature name", Response.Status.BAD_REQUEST);
+    ILLEGAL_PREFIX_NAME(165, "Illegal feature name", Response.Status.BAD_REQUEST),
+    ERROR_SAVING_CODE(166, "Error saving code", Response.Status.BAD_REQUEST),
+    CODE_READ_ERROR(167, "Error reading the code", Response.Status.INTERNAL_SERVER_ERROR),
+    CODE_NOT_FOUND(168, "Code not found", Response.Status.NOT_FOUND);
 
     private int code;
     private String message;

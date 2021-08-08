@@ -93,8 +93,8 @@ module JupyterHelper
     return ws
   end
 
-  def create_notebook_session(jupyter_port, notebook_name)
-    json_result = post "/hopsworks-api/jupyter/#{jupyter_port}/api/sessions", {path:SecureRandom.uuid, name:notebook_name,
+  def create_notebook_session(jupyter_port, notebook_name, path=SecureRandom.uuid)
+    json_result = post "/hopsworks-api/jupyter/#{jupyter_port}/api/sessions", {path:path, name:notebook_name,
                                                                        type:"notebook"}
     expect_status_details(201)
     notebook_session = JSON.parse(json_result)

@@ -20,6 +20,7 @@ import com.google.common.base.Strings;
 import io.hops.hopsworks.api.featurestore.FeaturestoreKeywordResource;
 import io.hops.hopsworks.api.featurestore.FsQueryBuilder;
 import io.hops.hopsworks.api.featurestore.activities.ActivityResource;
+import io.hops.hopsworks.api.featurestore.code.CodeResource;
 import io.hops.hopsworks.api.featurestore.statistics.StatisticsResource;
 import io.hops.hopsworks.api.featurestore.tag.FeaturestoreTagsBuilder;
 import io.hops.hopsworks.api.tags.TagsDTO;
@@ -129,6 +130,8 @@ public class TrainingDatasetService {
   private FeatureStoreTagControllerIface tagController;
   @Inject
   private StatisticsResource statisticsResource;
+  @Inject
+  private CodeResource codeResource;
   @EJB
   private FsQueryBuilder fsQueryBuilder;
   @Inject
@@ -546,12 +549,21 @@ public class TrainingDatasetService {
   }
 
   @Path("/{trainingDatasetId}/statistics")
-  public StatisticsResource statistics(@PathParam("trainingDatasetId") Integer trainingDatsetId)
+  public StatisticsResource statistics(@PathParam("trainingDatasetId") Integer trainingDatasetId)
       throws FeaturestoreException {
     this.statisticsResource.setProject(project);
     this.statisticsResource.setFeaturestore(featurestore);
-    this.statisticsResource.setTrainingDatasetId(trainingDatsetId);
+    this.statisticsResource.setTrainingDatasetId(trainingDatasetId);
     return statisticsResource;
+  }
+
+  @Path("/{trainingDatasetId}/code")
+  public CodeResource code(@PathParam("trainingDatasetId") Integer trainingDatasetId)
+          throws FeaturestoreException {
+    this.codeResource.setProject(project);
+    this.codeResource.setFeatureStore(featurestore);
+    this.codeResource.setTrainingDatasetId(trainingDatasetId);
+    return codeResource;
   }
 
   @ApiOperation(value = "Get the query used to generated the training dataset", response = FsQueryDTO.class)

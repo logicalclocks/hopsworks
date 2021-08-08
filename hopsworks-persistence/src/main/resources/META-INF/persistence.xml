@@ -76,6 +76,7 @@
     <class>io.hops.hopsworks.persistence.entity.featurestore.statistics.StatisticsConfig</class>
     <class>io.hops.hopsworks.persistence.entity.featurestore.statistics.StatisticColumn</class>
     <class>io.hops.hopsworks.persistence.entity.featurestore.statistics.FeaturestoreStatistic</class>
+    <class>io.hops.hopsworks.persistence.entity.featurestore.code.FeaturestoreCode</class>
     <class>io.hops.hopsworks.persistence.entity.featurestore.featuregroup.datavalidation.ValidationRule</class>
     <class>io.hops.hopsworks.persistence.entity.featurestore.featuregroup.datavalidation.FeatureStoreExpectation</class>
     <class>io.hops.hopsworks.persistence.entity.featurestore.featuregroup.datavalidation.FeatureGroupExpectation</class>

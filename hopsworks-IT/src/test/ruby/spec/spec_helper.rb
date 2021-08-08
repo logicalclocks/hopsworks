@@ -105,6 +105,7 @@ RSpec.configure do |config|
   config.include EpipeHelper
   config.include ProvHelper
   config.include FeatureStoreStatisticsHelper
+  config.include FeatureStoreCodeHelper
   config.include StorageConnectorHelper
   config.include ProvAppHelper
   config.include DefaultJobConfigurationHelper

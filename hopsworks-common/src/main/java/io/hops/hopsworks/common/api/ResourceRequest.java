@@ -189,6 +189,7 @@ public class ResourceRequest {
     SERVICES,
     TRAININGDATASETS,
     STATISTICS,
+    CODE,
     COMMITS,
     CLOUD,
     INTEGRATIONS,
