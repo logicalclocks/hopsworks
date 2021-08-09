@@ -16,10 +16,15 @@
 
 package io.hops.hopsworks.api.jobs.alert;
 
+import io.hops.hopsworks.alert.dao.AlertReceiverFacade;
 import io.hops.hopsworks.alert.exception.AlertManagerAccessControlException;
 import io.hops.hopsworks.alert.exception.AlertManagerUnreachableException;
 import io.hops.hopsworks.alerting.api.alert.dto.Alert;
 import io.hops.hopsworks.alerting.exceptions.AlertManagerClientCreateException;
+import io.hops.hopsworks.alerting.exceptions.AlertManagerConfigCtrlCreateException;
+import io.hops.hopsworks.alerting.exceptions.AlertManagerConfigReadException;
+import io.hops.hopsworks.alerting.exceptions.AlertManagerConfigUpdateException;
+import io.hops.hopsworks.alerting.exceptions.AlertManagerNoSuchElementException;
 import io.hops.hopsworks.alerting.exceptions.AlertManagerResponseException;
 import io.hops.hopsworks.api.alert.AlertBuilder;
 import io.hops.hopsworks.api.alert.AlertDTO;
@@ -33,12 +38,14 @@ import io.hops.hopsworks.common.dao.jobs.description.JobAlertsFacade;
 import io.hops.hopsworks.exceptions.AlertException;
 import io.hops.hopsworks.exceptions.JobException;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
-import io.hops.hopsworks.persistence.entity.alertmanager.AlertType;
+import io.hops.hopsworks.persistence.entity.alertmanager.AlertReceiver;
 import io.hops.hopsworks.persistence.entity.jobs.description.JobAlert;
+import io.hops.hopsworks.persistence.entity.jobs.description.JobAlertStatus;
 import io.hops.hopsworks.persistence.entity.jobs.description.Jobs;
 import io.hops.hopsworks.restutils.RESTCodes;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
+import org.apache.parquet.Strings;
 
 import javax.ejb.EJB;
 import javax.ejb.TransactionAttribute;
@@ -47,19 +54,24 @@ import javax.enterprise.context.RequestScoped;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
+import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
 import javax.ws.rs.core.UriInfo;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
+import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -78,9 +90,11 @@ public class JobAlertsResource {
   private AlertController alertController;
   @EJB
   private AlertBuilder alertBuilder;
+  @EJB
+  private AlertReceiverFacade alertReceiverFacade;
 
   private Jobs job;
-  
+
   public JobAlertsResource setJob(Jobs job) {
     this.job = job;
     return this;
@@ -142,13 +156,6 @@ public class JobAlertsResource {
     if (jobAlertsDTO == null) {
       throw new JobException(RESTCodes.JobErrorCode.JOB_ALERT_ILLEGAL_ARGUMENT, Level.FINE, "No payload.");
     }
-    if (jobAlertsDTO.getAlertType() != null) {
-      if (AlertType.SYSTEM_ALERT.equals(jobAlertsDTO.getAlertType())) {
-        throw new JobException(RESTCodes.JobErrorCode.JOB_ALERT_ILLEGAL_ARGUMENT, Level.FINE,
-            "AlertType can not be " + AlertType.SYSTEM_ALERT);
-      }
-      jobAlert.setAlertType(jobAlertsDTO.getAlertType());
-    }
     if (jobAlertsDTO.getStatus() != null) {
       if (!jobAlertsDTO.getStatus().equals(jobAlert.getStatus()) && jobalertsFacade.findByJobAndStatus(job,
           jobAlertsDTO.getStatus()) != null) {
@@ -160,6 +167,12 @@ public class JobAlertsResource {
     if (jobAlertsDTO.getSeverity() != null) {
       jobAlert.setSeverity(jobAlertsDTO.getSeverity());
     }
+    if (!jobAlert.getReceiver().getName().equals(jobAlertsDTO.getReceiver())) {
+      deleteRoute(jobAlert);
+      jobAlert.setReceiver(getReceiver(jobAlertsDTO.getReceiver()));
+      createRoute(jobAlert);
+    }
+    jobAlert.setAlertType(alertController.getAlertType(jobAlert.getReceiver()));
     jobAlert = jobalertsFacade.update(jobAlert);
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.ALERTS);
     JobAlertsDTO dto = jobalertsBuilder.build(uriInfo, resourceRequest, jobAlert);
@@ -169,35 +182,64 @@ public class JobAlertsResource {
   @POST
   @Produces(MediaType.APPLICATION_JSON)
   @Consumes(MediaType.APPLICATION_JSON)
-  @ApiOperation(value = "Create an alert.", response = JobAlertsDTO.class)
+  @ApiOperation(value = "Create an alert.", response = PostableJobAlerts.class)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
-  public Response create(JobAlertsDTO jobAlertsDTO, @Context UriInfo uriInfo, @Context SecurityContext sc)
+  public Response create(PostableJobAlerts jobAlertsDTO, @QueryParam("bulk") @DefaultValue("false") Boolean bulk,
+      @Context UriInfo uriInfo, @Context SecurityContext sc) throws JobException {
+    ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.ALERTS);
+    JobAlertsDTO dto = createAlert(jobAlertsDTO, bulk, uriInfo, resourceRequest);
+    return Response.created(dto.getHref()).entity(dto).build();
+  }
+
+  private JobAlertsDTO createAlert(PostableJobAlerts jobAlertsDTO, Boolean bulk, UriInfo uriInfo,
+      ResourceRequest resourceRequest) throws JobException {
+    JobAlertsDTO dto;
+    if (bulk) {
+      validateBulk(jobAlertsDTO);
+      dto = new JobAlertsDTO();
+      for (PostableJobAlerts pa : jobAlertsDTO.getItems()) {
+        dto.addItem(createAlert(pa, uriInfo, resourceRequest));
+      }
+      dto.setCount((long) jobAlertsDTO.getItems().size());
+    } else {
+      dto = createAlert(jobAlertsDTO, uriInfo, resourceRequest);
+    }
+    return dto;
+  }
+
+  private void validateBulk(PostableJobAlerts jobAlertsDTO) throws JobException {
+    if (jobAlertsDTO.getItems() == null || jobAlertsDTO.getItems().size() < 1) {
+      throw new JobException(RESTCodes.JobErrorCode.JOB_ALERT_ILLEGAL_ARGUMENT, Level.FINE, "No payload.");
+    }
+    Set<JobAlertStatus> statusSet = new HashSet<>();
+    for (PostableJobAlerts dto : jobAlertsDTO.getItems()) {
+      statusSet.add(dto.getStatus());
+    }
+    if (statusSet.size() < jobAlertsDTO.getItems().size()) {
+      throw new JobException(RESTCodes.JobErrorCode.JOB_ALERT_ILLEGAL_ARGUMENT, Level.FINE, "Duplicate alert.");
+    }
+  }
+
+  private JobAlertsDTO createAlert(PostableJobAlerts jobAlertsDTO, UriInfo uriInfo, ResourceRequest resourceRequest)
       throws JobException {
     validate(jobAlertsDTO);
     JobAlert jobAlert = new JobAlert();
-    jobAlert.setAlertType(jobAlertsDTO.getAlertType());
     jobAlert.setStatus(jobAlertsDTO.getStatus());
     jobAlert.setSeverity(jobAlertsDTO.getSeverity());
     jobAlert.setCreated(new Date());
     jobAlert.setJobId(job);
+    jobAlert.setReceiver(getReceiver(jobAlertsDTO.getReceiver()));
+    jobAlert.setAlertType(alertController.getAlertType(jobAlert.getReceiver()));
+    createRoute(jobAlert);
     jobalertsFacade.save(jobAlert);
     jobAlert = jobalertsFacade.findByJobAndStatus(job, jobAlertsDTO.getStatus());
-    ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.ALERTS);
-    JobAlertsDTO dto = jobalertsBuilder.buildItems(uriInfo, resourceRequest, jobAlert);
-    return Response.created(dto.getHref()).entity(dto).build();
+    return jobalertsBuilder.buildItems(uriInfo, resourceRequest, jobAlert);
   }
 
-  private void validate(JobAlertsDTO jobAlertsDTO) throws JobException {
+  private void validate(PostableJobAlerts jobAlertsDTO) throws JobException {
     if (jobAlertsDTO == null) {
       throw new JobException(RESTCodes.JobErrorCode.JOB_ALERT_ILLEGAL_ARGUMENT, Level.FINE, "No payload.");
-    }
-    if (jobAlertsDTO.getAlertType() == null) {
-      throw new JobException(RESTCodes.JobErrorCode.JOB_ALERT_ILLEGAL_ARGUMENT, Level.FINE, "Type can not be empty.");
-    }
-    if (AlertType.SYSTEM_ALERT.equals(jobAlertsDTO.getAlertType())) {
-      throw new JobException(RESTCodes.JobErrorCode.JOB_ALERT_ILLEGAL_ARGUMENT, Level.FINE,
-          "AlertType can not be " + AlertType.SYSTEM_ALERT);
     }
     if (jobAlertsDTO.getStatus() == null) {
       throw new JobException(RESTCodes.JobErrorCode.JOB_ALERT_ILLEGAL_ARGUMENT, Level.FINE, "Status can not be empty.");
@@ -242,12 +284,46 @@ public class JobAlertsResource {
   @ApiOperation(value = "Delete alert by Id.")
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
-  public Response deleteById(@PathParam("id") Integer id, @Context UriInfo uriInfo, @Context SecurityContext sc) {
+  public Response deleteById(@PathParam("id") Integer id, @Context UriInfo uriInfo, @Context SecurityContext sc)
+      throws JobException {
     JobAlert jobAlert = jobalertsFacade.findByJobAndId(job, id);
     if (jobAlert != null) {
+      deleteRoute(jobAlert);
       jobalertsFacade.remove(jobAlert);
     }
     return Response.noContent().build();
+  }
+
+  private AlertReceiver getReceiver(String name) throws JobException {
+    if (Strings.isNullOrEmpty(name)) {
+      throw new JobException(RESTCodes.JobErrorCode.JOB_ALERT_ILLEGAL_ARGUMENT, Level.FINE,
+          "Receiver can not be empty.");
+    }
+    Optional<AlertReceiver> alertReceiver = alertReceiverFacade.findByName(name);
+    if (!alertReceiver.isPresent()) {
+      throw new JobException(RESTCodes.JobErrorCode.JOB_ALERT_ILLEGAL_ARGUMENT, Level.FINE,
+          "Alert receiver not found " + name);
+    }
+    return alertReceiver.get();
+  }
+
+  private void createRoute(JobAlert jobAlert) throws JobException {
+    try {
+      alertController.createRoute(jobAlert);
+    } catch ( AlertManagerClientCreateException | AlertManagerConfigReadException |
+        AlertManagerConfigCtrlCreateException | AlertManagerConfigUpdateException | AlertManagerNoSuchElementException |
+        AlertManagerAccessControlException | AlertManagerUnreachableException e) {
+      throw new JobException(RESTCodes.JobErrorCode.FAILED_TO_CREATE_ROUTE, Level.FINE, e.getMessage());
+    }
+  }
+
+  private void deleteRoute(JobAlert jobAlert) throws JobException {
+    try {
+      alertController.deleteRoute(jobAlert);
+    } catch (AlertManagerUnreachableException | AlertManagerAccessControlException | AlertManagerConfigUpdateException |
+        AlertManagerConfigCtrlCreateException | AlertManagerConfigReadException | AlertManagerClientCreateException e) {
+      throw new JobException(RESTCodes.JobErrorCode.FAILED_TO_DELETE_ROUTE, Level.FINE, e.getMessage());
+    }
   }
 
 }

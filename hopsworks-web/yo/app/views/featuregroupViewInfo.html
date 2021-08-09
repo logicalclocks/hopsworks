@@ -546,33 +546,40 @@
                 <span style="margin-left: 20px">Validation alert</span>
             </div>
             <div class="row">
-                <div class="row" style="padding-bottom: 20px">
+                <form name="fgAlertForm" role="form" ng-submit="featuregroupViewInfoCtrl.createServiceAlert()">
+                  <div class="row" style="padding-bottom: 20px">
                     <div class="col-sm-3">
                         <label class="control-label">Status</label>
-                        <select class="form-control" id="sel2" ng-model="featuregroupViewInfoCtrl.newAlert.status"
-                                ng-options="x for x in featuregroupViewInfoCtrl.values.status">
+                        <select class="form-control has-feedback" id="sel2" ng-model="featuregroupViewInfoCtrl.newAlert.status"
+                                required>
+                            <option value="">--Select status--</option>
+                            <option ng-repeat="status in featuregroupViewInfoCtrl.values.status">{{status}}</option>
                         </select>
                     </div>
                     <div class="col-sm-3">
                         <label class="control-label">Severity</label>
-                        <select class="form-control" id="sel3" ng-model="featuregroupViewInfoCtrl.newAlert.severity"
-                                ng-options="x for x in featuregroupViewInfoCtrl.values.severity">
+                        <select class="form-control has-feedback" id="sel3" ng-model="featuregroupViewInfoCtrl.newAlert.severity"
+                                required>
+                            <option value="">--Select severity--</option>
+                            <option ng-repeat="severity in featuregroupViewInfoCtrl.values.severity">{{severity}}</option>
                         </select>
                     </div>
                     <div class="col-sm-3">
-                        <label class="control-label">Alert type</label>
-                        <select class="form-control" id="sel4" ng-model="featuregroupViewInfoCtrl.newAlert.alertType"
-                                ng-options="x for x in featuregroupViewInfoCtrl.values.alertType">
+                        <label class="control-label">Receiver</label>
+                        <select class="form-control has-feedback" id="sel5" ng-model="featuregroupViewInfoCtrl.newAlert.receiver"
+                                required>
+                            <option value="">--Select receiver--</option>
+                            <option ng-repeat="receiver in featuregroupViewInfoCtrl.receivers">{{receiver.name}}</option>
                         </select>
                     </div>
                     <div class="col-sm-3">
                         <label class="control-label">Action</label>
-                        <button class="form-control btn btn-success" uib-tooltip="Create"
-                                ng-click="featuregroupViewInfoCtrl.createServiceAlert()">
+                        <button class="form-control btn btn-success" type="submit" uib-tooltip="Create">
                             <i class="fa fa-plus"></i> Create new
                         </button>
                     </div>
-                </div>
+                  </div>
+                </form>
                 <div class="loader loader-sm" ng-show="featuregroupViewInfoCtrl.loadingServiceAlerts" style="position: unset"></div>
                 <div ng-show="featuregroupViewInfoCtrl.serviceAlerts.length < 1"> No alert to show.</div>
                 <div ng-show="featuregroupViewInfoCtrl.serviceAlerts.length > 0">
@@ -581,7 +588,7 @@
                         <tr>
                             <th>Status</th>
                             <th>Severity</th>
-                            <th>Type</th>
+                            <th>Receiver</th>
                             <th>Created on</th>
                             <th class="text-center">Action</th>
                         </tr>
@@ -590,7 +597,7 @@
                         <tr ng-repeat="serviceAlert in featuregroupViewInfoCtrl.serviceAlerts">
                             <td>{{ serviceAlert.status }}</td>
                             <td>{{ serviceAlert.severity }}</td>
-                            <td>{{ serviceAlert.alertType }}</td>
+                            <td>{{ serviceAlert.receiver }}</td>
                             <td>{{ serviceAlert.created | date:'medium'}}</td>
                             <td class="text-center">
                                 <button class="btn btn-danger" uib-tooltip="Delete"

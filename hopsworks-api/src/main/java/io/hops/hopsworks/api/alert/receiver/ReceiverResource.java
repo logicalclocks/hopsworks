@@ -109,13 +109,14 @@ public class ReceiverResource {
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   public Response get(@BeanParam Pagination pagination, @BeanParam ReceiverBeanParam receiverBeanParam,
-      @QueryParam("global") @DefaultValue("false") Boolean includeGlobal, @Context UriInfo uriInfo,
+      @QueryParam("global") @DefaultValue("false") Boolean includeGlobal,
+      @QueryParam("expand") @DefaultValue("false") Boolean expand, @Context UriInfo uriInfo,
       @Context SecurityContext sc) throws AlertException, ProjectException {
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.RECEIVERS);
     resourceRequest.setOffset(pagination.getOffset());
     resourceRequest.setLimit(pagination.getLimit());
     ReceiverDTO dto =
-        receiverBuilder.buildItems(uriInfo, resourceRequest, receiverBeanParam, getProject(), includeGlobal);
+        receiverBuilder.buildItems(uriInfo, resourceRequest, receiverBeanParam, getProject(), includeGlobal, expand);
     return Response.ok().entity(dto).build();
   }
 
@@ -132,18 +133,31 @@ public class ReceiverResource {
     return Response.ok().entity(dto).build();
   }
 
+  @GET
+  @Path("default")
+  @Produces(MediaType.APPLICATION_JSON)
+  @ApiOperation(value = "Check if default receiver configured.", response = GlobalReceiverDefaults.class)
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
+  @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
+  public Response getDefaults(@Context UriInfo uriInfo, @Context SecurityContext sc)
+      throws AlertManagerConfigCtrlCreateException, AlertManagerConfigReadException {
+    return Response.ok().entity(receiverBuilder.build()).build();
+  }
+
   @POST
   @Produces(MediaType.APPLICATION_JSON)
   @Consumes(MediaType.APPLICATION_JSON)
   @ApiOperation(value = "Create a receiver.")
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER})
   @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
-  public Response create(PostableReceiverDTO postableReceiverDTO, @Context UriInfo uriInfo, @Context SecurityContext sc)
+  public Response create(PostableReceiverDTO postableReceiverDTO,
+      @QueryParam("defaultTemplate") @DefaultValue("false") Boolean defaultTemplate,
+      @Context UriInfo uriInfo, @Context SecurityContext sc)
       throws AlertException, ProjectException {
     if (postableReceiverDTO == null) {
       throw new AlertException(RESTCodes.AlertErrorCode.ILLEGAL_ARGUMENT, Level.FINE, "No payload.");
     }
-    Receiver receiver = receiverBuilder.build(postableReceiverDTO);
+    Receiver receiver = receiverBuilder.build(postableReceiverDTO, defaultTemplate);
     try {
       alertManagerConfiguration.addReceiver(receiver, getProject());
     } catch (AlertManagerConfigCtrlCreateException | AlertManagerUnreachableException|
@@ -158,7 +172,10 @@ public class ReceiverResource {
     } catch (IllegalArgumentException e) {
       throw new AlertException(RESTCodes.AlertErrorCode.ILLEGAL_ARGUMENT, Level.FINE, e.getMessage());
     }
-    return Response.created(uriInfo.getAbsolutePathBuilder().path(receiver.getName()).build()).build();
+    ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.RECEIVERS);
+    ReceiverDTO dto = receiverBuilder.build(uriInfo, resourceRequest, receiver.getName(), getProject());
+    dto.setHref(uriInfo.getAbsolutePathBuilder().path(receiver.getName()).build());
+    return Response.created(dto.getHref()).entity(dto).build();
   }
 
   @PUT
@@ -173,7 +190,7 @@ public class ReceiverResource {
     if (postableReceiverDTO == null) {
       throw new AlertException(RESTCodes.AlertErrorCode.ILLEGAL_ARGUMENT, Level.FINE, "No payload.");
     }
-    Receiver receiver = receiverBuilder.build(postableReceiverDTO);
+    Receiver receiver = receiverBuilder.build(postableReceiverDTO, false);
     try {
       alertManagerConfiguration.updateReceiver(name, receiver, getProject());
     } catch (AlertManagerConfigCtrlCreateException | AlertManagerUnreachableException|
@@ -203,13 +220,14 @@ public class ReceiverResource {
   @ApiOperation(value = "Delete receiver by name.")
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER})
   @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
-  public Response deleteById(@PathParam("name") String name, @Context UriInfo uriInfo, @Context SecurityContext sc)
-      throws AlertException, ProjectException {
+  public Response deleteById(@PathParam("name") String name,
+      @QueryParam("cascade") @DefaultValue("false") Boolean cascade, @Context UriInfo uriInfo,
+      @Context SecurityContext sc) throws AlertException, ProjectException {
     Project project = getProject();
     try {
       List<ReceiverName>  receiverNameList = alertManager.getReceivers(project, false);
       if (!receiverNameList.isEmpty() && receiverNameList.contains(new ReceiverName(name))) {
-        alertManagerConfiguration.removeReceiver(name, project);
+        alertManagerConfiguration.removeReceiver(name, project, cascade);
       }
     } catch (AlertManagerConfigCtrlCreateException | AlertManagerUnreachableException|
         AlertManagerConfigReadException e) {

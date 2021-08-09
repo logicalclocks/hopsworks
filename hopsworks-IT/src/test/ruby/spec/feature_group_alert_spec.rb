@@ -28,7 +28,7 @@ describe "On #{ENV['OS']}" do
         expect_status_details(401)
       end
       it "should fail to create" do
-        create_fg_alert(@project, @featuregroup, get_fg_alert_success)
+        create_fg_alert(@project, @featuregroup, get_fg_alert_success(@project))
         expect_status_details(401)
       end
     end
@@ -45,19 +45,15 @@ describe "On #{ENV['OS']}" do
       end
       it "should update" do
         get_fg_alerts(@project, @featuregroup)
-        alert = json_body[:items].detect { |a| a[:alertType] == "GLOBAL_ALERT_EMAIL" }
-        alert[:alertType] = "PROJECT_ALERT"
+        alert = json_body[:items].detect { |a| a[:status] == "FAILURE" }
+        receiver = alert[:receiver]
+        alert[:receiver] = "#{@project[:projectname]}__slack1"
         update_fg_alert(@project, @featuregroup, alert[:id], alert)
         expect_status_details(200)
         get_fg_alert(@project, @featuregroup, alert[:id])
         expect(json_body).to eq(alert)
-      end
-      it "should fail to update to SYSTEM_ALERT" do
-        get_fg_alerts(@project, @featuregroup)
-        alert = json_body[:items][0]
-        alert[:alertType] = "SYSTEM_ALERT"
-        update_fg_alert(@project, @featuregroup, alert[:id], alert)
-        expect_status_details(400)
+        check_route_created(@project, alert[:receiver], alert[:status], fg: @featuregroup)
+        check_route_deleted(@project, receiver, alert[:status], fg: @featuregroup)
       end
       it "should fail to update if duplicate" do
         get_fg_alerts(@project, @featuregroup)
@@ -67,14 +63,15 @@ describe "On #{ENV['OS']}" do
         expect_status_details(400)
       end
       it "should create" do
-        create_fg_alert(@project, @featuregroup, get_fg_alert_warning)
+        alert = get_fg_alert_warning(@project)
+        create_fg_alert(@project, @featuregroup, get_fg_alert_warning(@project))
         expect_status_details(201)
-
+        check_route_created(@project, alert[:receiver], alert[:status], fg: @featuregroup)
         get_fg_alerts(@project, @featuregroup)
         expect(json_body[:count]).to eq(3)
       end
       it "should fail to create duplicate" do
-        create_fg_alert(@project, @featuregroup, get_fg_alert_warning)
+        create_fg_alert(@project, @featuregroup, get_fg_alert_warning(@project))
         expect_status_details(400)
       end
       it "should delete alert" do
@@ -82,19 +79,43 @@ describe "On #{ENV['OS']}" do
         alert = json_body[:items].detect { |a| a[:status] == "FAILURE" }
         delete_fg_alert(@project, @featuregroup, alert[:id])
         expect_status_details(204)
-
+        check_route_deleted(@project, alert[:receiver], alert[:status], fg: @featuregroup)
         get_fg_alerts(@project, @featuregroup)
         expect(json_body[:count]).to eq(2)
       end
-      it "should fail to create SYSTEM_ALERT" do
-        alert = get_fg_alert_failure
-        alert[:alertType] = "SYSTEM_ALERT"
-        create_fg_alert(@project, @featuregroup, alert)
-        expect_status_details(400)
+      it "should cleanup receivers and routes when deleting project" do
+        delete_project(@project)
+        with_admin_session
+        get_routes_admin
+        routes = json_body[:items].detect { |r| r[:receiver].start_with?("#{@project[:projectname]}__") }
+        expect(routes).to be nil
+        get_receivers_admin
+        receivers = json_body[:items].detect { |r| r[:name].start_with?("#{@project[:projectname]}__") }
+        expect(receivers).to be nil
+
+        alert_receiver = AlertReceiver.where("name LIKE '#{@project[:projectname]}__%'")
+        expect(alert_receiver.length()).to eq(0)
+      end
+      it "should create only one route for global receiver" do
+        with_admin_session
+        project = create_project
+        featuregroup = with_valid_fg(project)
+        create_fg_alerts_global(project, featuregroup)
+        get_fg_alerts(project, featuregroup)
+        expect(json_body[:count]).to eq(3)
+        alert_receiver = AlertReceiver.where("name LIKE '#{project[:projectname]}__%'")
+        expect(alert_receiver.length()).to eq(0)
+        get_routes_admin()
+        global = json_body[:items].select { |r| r[:receiver].start_with?("global-receiver__") }
+        expect(global.length()).to eq(3)
       end
       context 'sort and filter' do
         before :all do
-          create_fg_alert(@project, @featuregroup, get_fg_alert_failure)
+          reset_session
+          with_valid_project
+          @featuregroup = with_valid_fg(@project)
+          create_fg_alerts(@project, @featuregroup)
+          create_fg_alert(@project, @featuregroup, get_fg_alert_warning(@project))
         end
         it "should sort by ID" do
           get_fg_alerts(@project, @featuregroup, query: "?sort_by=id:desc")

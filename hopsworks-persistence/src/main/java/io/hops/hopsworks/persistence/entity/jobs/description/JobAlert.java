@@ -15,6 +15,7 @@
  */
 package io.hops.hopsworks.persistence.entity.jobs.description;
 
+import io.hops.hopsworks.persistence.entity.alertmanager.AlertReceiver;
 import io.hops.hopsworks.persistence.entity.alertmanager.AlertSeverity;
 import io.hops.hopsworks.persistence.entity.alertmanager.AlertType;
 
@@ -107,6 +108,10 @@ public class JobAlert implements Serializable {
       referencedColumnName = "id")
   @ManyToOne(optional = false)
   private Jobs jobId;
+  @JoinColumn(name = "receiver",
+      referencedColumnName = "id")
+  @ManyToOne(optional = false)
+  private AlertReceiver receiver;
 
   public JobAlert() {
   }
@@ -115,12 +120,15 @@ public class JobAlert implements Serializable {
     this.id = id;
   }
 
-  public JobAlert(Integer id, JobAlertStatus status, AlertType alertType, AlertSeverity severity, Date created) {
+  public JobAlert(Integer id, JobAlertStatus status, AlertType alertType, AlertSeverity severity, Date created,
+      Jobs jobId, AlertReceiver receiver) {
     this.id = id;
     this.status = status;
     this.alertType = alertType;
     this.severity = severity;
     this.created = created;
+    this.jobId = jobId;
+    this.receiver = receiver;
   }
 
   public Integer getId() {
@@ -169,6 +177,14 @@ public class JobAlert implements Serializable {
 
   public void setJobId(Jobs jobId) {
     this.jobId = jobId;
+  }
+
+  public AlertReceiver getReceiver() {
+    return receiver;
+  }
+
+  public void setReceiver(AlertReceiver receiver) {
+    this.receiver = receiver;
   }
 
   @Override

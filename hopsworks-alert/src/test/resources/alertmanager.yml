@@ -1,0 +1,74 @@
+---
+global:
+  smtp_smarthost: "smtp.gmail.com:587"
+  smtp_from: "hopsworks@gmail.com"
+  smtp_auth_username: "hopsworks@gmail.com"
+  smtp_auth_identity: "hopsworks@gmail.com"
+  smtp_auth_password: "1234567"
+templates:
+  - "/etc/alertmanager/template/*.tmpl"
+route:
+  group_by:
+    - "alertname"
+    - "cluster"
+    - "service"
+  group_wait: "30s"
+  group_interval: "5m"
+  repeat_interval: "3h"
+  receiver: "team-X-mails"
+  routes:
+    - match:
+        type: system-alert
+        severity: "critical"
+      receiver: "team-Y-mails"
+    - match:
+        project: "project1"
+      receiver: slack_general
+      group_by: [project, jobId, executionId]
+    - match:
+        project: "project2"
+      receiver: slack_test
+      group_by: [project, jobId, executionId]
+inhibit_rules:
+  - source_match:
+      severity: "critical"
+    target_match:
+      severity: "warning"
+    equal:
+      - "alertname"
+      - "cluster"
+      - "service"
+receivers:
+  - name: "team-X-mails"
+    email_configs:
+      - to: "team-X@example.se"
+      - to: "team-X1@example.se"
+      - to: "team-X2@example.se"
+  - name: "team-Y-mails"
+    email_configs:
+      - to: "ermias@hotmail.com"
+  - name: slack_general
+    slack_configs:
+      - api_url: https://hooks.slack.com/services/12345678901/e3fb1c1d58b043af5e3a6a645b7f569f
+        channel: '#general'
+        send_resolved: true
+        icon_url: https://gravatar.com/avatar/e3fb1c1d58b043af5e3a6a645b7f569f
+        title: '{{ template "hopsworks.title" . }}'
+        text: '{{ template "hopsworks.text" . }}'
+      - api_url: https://hooks.slack.com/services/12345678901/0987654321
+        channel: '#offtopic'
+        send_resolved: true
+        icon_url: https://gravatar.com/avatar/e3fb1c1d58b043af5e3a6a645b7f569f
+        title: '{{ template "hopsworks.title" . }}'
+        text: '{{ template "hopsworks.text" . }}'
+  - name: slack_test
+    slack_configs:
+      - api_url: https://hooks.slack.com/services/12345678901/e3fb1c1d58b043af5e3a6a645b7f569f
+        channel: '#test'
+        send_resolved: true
+        icon_url: https://gravatar.com/avatar/e3fb1c1d58b043af5e3a6a645b7f569f
+        title: '{{ template "hopsworks.title" . }}'
+        text: '{{ template "hopsworks.text" . }}'
+  - name: team-DB-pager
+    pagerduty_configs:
+      - service_key: <team-DB-key>

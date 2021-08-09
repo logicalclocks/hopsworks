@@ -60,11 +60,13 @@ angular.module('hopsWorksApp')
             self.serviceAlerts = [];
             self.values = [];
             self.loadingServiceAlerts = true;
+            self.receivers = [];
+            self.loadingReceivers = true;
 
             self.newAlert = {
                 status: undefined,
-                alertType: undefined,
-                severity: undefined
+                severity: undefined,
+                receiver: undefined
             };
 
             /**
@@ -405,9 +407,18 @@ angular.module('hopsWorksApp')
                 });
             }
 
+            var getReceivers = function() {
+                self.loadingReceivers = true;
+                alertsService.receivers.getAll(true).then(function (success) {
+                    self.receivers = getResult(success);
+                    self.loadingReceivers = false;
+                });
+            }
+
             var initAlerts = function () {
                 alertsService = AlertsService(self.projectId);
                 getServiceAlerts();
+                getReceivers();
             }
 
             self.createServiceAlert = function () {

@@ -136,7 +136,11 @@ public class SilenceResource {
     Project project = getProject();
     postableSilenceDTO.setId(null);
     SilenceID silenceID = postSilence(postableSilenceDTO, project, user);
-    return Response.created(uriInfo.getAbsolutePathBuilder().path(silenceID.getSilenceID()).build()).build();
+    SilenceDTO dto = silenceBuilder.build(uriInfo,
+        new ResourceRequest(ResourceRequest.Name.SILENCES),
+        silenceID.getSilenceID(), project);
+    dto.setHref(uriInfo.getAbsolutePathBuilder().path(silenceID.getSilenceID()).build());
+    return Response.created(dto.getHref()).entity(dto).build();
   }
 
   @PUT

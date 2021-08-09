@@ -16,16 +16,26 @@
 package io.hops.hopsworks.common.alert;
 
 import io.hops.hopsworks.alert.AlertManager;
+import io.hops.hopsworks.alert.AlertManagerConfiguration;
+import io.hops.hopsworks.alert.dao.AlertReceiverFacade;
 import io.hops.hopsworks.alert.exception.AlertManagerAccessControlException;
 import io.hops.hopsworks.alert.exception.AlertManagerUnreachableException;
+import io.hops.hopsworks.alert.util.ConfigUtil;
 import io.hops.hopsworks.alert.util.Constants;
 import io.hops.hopsworks.alert.util.PostableAlertBuilder;
 import io.hops.hopsworks.alerting.api.alert.dto.Alert;
 import io.hops.hopsworks.alerting.api.alert.dto.PostableAlert;
+import io.hops.hopsworks.alerting.config.dto.Route;
 import io.hops.hopsworks.alerting.exceptions.AlertManagerClientCreateException;
+import io.hops.hopsworks.alerting.exceptions.AlertManagerConfigCtrlCreateException;
+import io.hops.hopsworks.alerting.exceptions.AlertManagerConfigReadException;
+import io.hops.hopsworks.alerting.exceptions.AlertManagerConfigUpdateException;
+import io.hops.hopsworks.alerting.exceptions.AlertManagerDuplicateEntryException;
+import io.hops.hopsworks.alerting.exceptions.AlertManagerNoSuchElementException;
 import io.hops.hopsworks.alerting.exceptions.AlertManagerResponseException;
 import io.hops.hopsworks.common.featurestore.FeaturestoreFacade;
 import io.hops.hopsworks.common.featurestore.featuregroup.ExpectationResult;
+import io.hops.hopsworks.persistence.entity.alertmanager.AlertReceiver;
 import io.hops.hopsworks.persistence.entity.alertmanager.AlertSeverity;
 import io.hops.hopsworks.persistence.entity.alertmanager.AlertType;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.Featuregroup;
@@ -46,8 +56,10 @@ import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -59,7 +71,11 @@ public class AlertController {
   @EJB
   private AlertManager alertManager;
   @EJB
+  private AlertManagerConfiguration alertManagerConfiguration;
+  @EJB
   private FeaturestoreFacade featurestoreFacade;
+  @EJB
+  private AlertReceiverFacade alertReceiverFacade;
 
   /**
    * send feature group alert
@@ -300,4 +316,133 @@ public class AlertController {
     }
     return postableAlerts;
   }
+
+  public void cleanProjectAlerts(Project project) throws AlertManagerConfigCtrlCreateException,
+      AlertManagerConfigReadException, AlertManagerUnreachableException, AlertManagerResponseException,
+      AlertManagerClientCreateException, AlertManagerConfigUpdateException {
+    alertManagerConfiguration.cleanProject(project);
+  }
+
+  private void addRouteIfNotExist(AlertType type, Route route, Project project)
+      throws AlertManagerUnreachableException, AlertManagerNoSuchElementException, AlertManagerConfigUpdateException,
+      AlertManagerConfigCtrlCreateException, AlertManagerConfigReadException, AlertManagerClientCreateException,
+      AlertManagerAccessControlException {
+    try {
+      if (type.isGlobal()) {
+        alertManagerConfiguration.addRoute(route);
+      } else {
+        alertManagerConfiguration.addRoute(route, project);
+      }
+    } catch (AlertManagerDuplicateEntryException e) {
+      // route exists
+    }
+  }
+
+  public void createRoute(ProjectServiceAlert alert) throws AlertManagerUnreachableException,
+      AlertManagerAccessControlException, AlertManagerNoSuchElementException, AlertManagerConfigUpdateException,
+      AlertManagerConfigCtrlCreateException, AlertManagerConfigReadException, AlertManagerClientCreateException {
+    Project project = alert.getProject();
+    Route route = ConfigUtil.getRoute(alert);
+    addRouteIfNotExist(alert.getAlertType(), route, project);
+  }
+
+  public void createRoute(FeatureGroupAlert alert) throws AlertManagerUnreachableException,
+      AlertManagerAccessControlException, AlertManagerNoSuchElementException, AlertManagerConfigUpdateException,
+      AlertManagerConfigCtrlCreateException, AlertManagerConfigReadException, AlertManagerClientCreateException {
+    Project project = alert.getFeatureGroup().getFeaturestore().getProject();
+    Route route = ConfigUtil.getRoute(alert);
+    addRouteIfNotExist(alert.getAlertType(), route, project);
+  }
+
+  public void createRoute(JobAlert alert) throws AlertManagerUnreachableException, AlertManagerAccessControlException,
+      AlertManagerNoSuchElementException, AlertManagerConfigUpdateException, AlertManagerConfigCtrlCreateException,
+      AlertManagerConfigReadException, AlertManagerClientCreateException {
+    Project project = alert.getJobId().getProject();
+    Route route = ConfigUtil.getRoute(alert);
+    addRouteIfNotExist(alert.getAlertType(), route, project);
+  }
+
+  public void createRoute(AlertType alertType)
+      throws AlertManagerUnreachableException, AlertManagerAccessControlException, AlertManagerNoSuchElementException,
+      AlertManagerConfigUpdateException, AlertManagerConfigCtrlCreateException, AlertManagerConfigReadException,
+      AlertManagerClientCreateException {
+    Route route = ConfigUtil.getRoute(alertType);
+    try {
+      alertManagerConfiguration.addRoute(route);
+    } catch (AlertManagerDuplicateEntryException e) {
+      // route exists
+    }
+  }
+
+  public void deleteRoute(ProjectServiceAlert alert)
+      throws AlertManagerUnreachableException, AlertManagerAccessControlException, AlertManagerConfigUpdateException,
+      AlertManagerConfigCtrlCreateException, AlertManagerConfigReadException, AlertManagerClientCreateException {
+    Project project = alert.getProject();
+    Route route = ConfigUtil.getRoute(alert);
+    if (!isUsedByOtherAlerts(route, alert.getId())) {
+      alertManagerConfiguration.removeRoute(route, project);
+    }
+  }
+
+  public void deleteRoute(FeatureGroupAlert alert)
+      throws AlertManagerUnreachableException, AlertManagerAccessControlException, AlertManagerConfigUpdateException,
+      AlertManagerConfigCtrlCreateException, AlertManagerConfigReadException, AlertManagerClientCreateException {
+    Project project = alert.getFeatureGroup().getFeaturestore().getProject();
+    Route route = ConfigUtil.getRoute(alert);
+    if (!isUsedByOtherAlerts(route, alert.getId())) {
+      alertManagerConfiguration.removeRoute(route, project);
+    }
+  }
+
+  public void deleteRoute(JobAlert alert)
+      throws AlertManagerUnreachableException, AlertManagerAccessControlException, AlertManagerConfigUpdateException,
+      AlertManagerConfigCtrlCreateException, AlertManagerConfigReadException, AlertManagerClientCreateException {
+    Project project = alert.getJobId().getProject();
+    Route route = ConfigUtil.getRoute(alert);
+    if (!isUsedByOtherAlerts(route, alert.getId())) {
+      alertManagerConfiguration.removeRoute(route, project);
+    }
+  }
+
+  private boolean isUsedByOtherAlerts(Route route, int id) {
+    Optional<AlertReceiver> alertReceiver = alertReceiverFacade.findByName(route.getReceiver());
+    if (!alertReceiver.isPresent()) {
+      return false;
+    }
+    if (route.getMatch().get(Constants.LABEL_JOB) != null) {
+      Collection<JobAlert> jobAlerts = alertReceiver.get().getJobAlertCollection();
+      for (JobAlert alert : jobAlerts) {
+        Route jobAlertRoute = ConfigUtil.getRoute(alert);
+        if (alert.getId() != id && jobAlertRoute.equals(route)) {
+          return true;
+        }
+      }
+    } else if (route.getMatch().get(Constants.LABEL_FEATURE_GROUP) != null) {
+      Collection<FeatureGroupAlert> featureGroupAlerts = alertReceiver.get().getFeatureGroupAlertCollection();
+      for (FeatureGroupAlert alert : featureGroupAlerts) {
+        Route fgAlertRoute = ConfigUtil.getRoute(alert);
+        if (alert.getId() != id && fgAlertRoute.equals(route)) {
+          return true;
+        }
+      }
+    } else {
+      Collection<ProjectServiceAlert> projectServiceAlerts = alertReceiver.get().getProjectServiceAlertCollection();
+      for (ProjectServiceAlert alert : projectServiceAlerts) {
+        Route projectAlertRoute = ConfigUtil.getRoute(alert);
+        if (alert.getId() != id && projectAlertRoute.equals(route)) {
+          return true;
+        }
+      }
+    }
+    return false;
+  }
+
+  public AlertType getAlertType(AlertReceiver receiver) {
+    AlertType alertType = AlertType.fromReceiverName(receiver.getName());
+    if (alertType == null) {
+      return AlertType.PROJECT_ALERT;
+    }
+    return alertType;
+  }
+
 }
