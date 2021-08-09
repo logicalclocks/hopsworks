@@ -64,7 +64,7 @@
     <dependency>
       <groupId>io.hops</groupId>
       <artifactId>service-proxy-core</artifactId>
-      <version>4.6.2</version>
+      <version>${service-proxy.version}</version>
       <exclusions>
         <exclusion>
           <groupId>com.fasterxml.jackson.core</groupId>
