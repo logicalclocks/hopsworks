@@ -220,12 +220,12 @@ public class ReceiverBuilder {
       ReceiverBeanParam receiverBeanParam, List<ReceiverName> receivers) {
     if (receivers != null && !receivers.isEmpty()) {
       receivers.forEach((receiver) -> dto.addItem(build(uriInfo, resourceRequest, receiver)));
+      if (receiverBeanParam.getSortBySet() != null && !receiverBeanParam.getSortBySet().isEmpty()) {
+        ReceiverComparator receiverComparator = new ReceiverComparator(receiverBeanParam.getSortBySet());
+        dto.getItems().sort(receiverComparator);
+      }
+      paginate(dto, resourceRequest);
     }
-    if (receiverBeanParam.getSortBySet() != null && !receiverBeanParam.getSortBySet().isEmpty()) {
-      ReceiverComparator receiverComparator = new ReceiverComparator(receiverBeanParam.getSortBySet());
-      dto.getItems().sort(receiverComparator);
-    }
-    paginate(dto, resourceRequest);
     return dto;
   }
 
@@ -233,12 +233,12 @@ public class ReceiverBuilder {
       ReceiverBeanParam receiverBeanParam, List<Receiver> receivers) {
     if (receivers != null && !receivers.isEmpty()) {
       receivers.forEach((receiver) -> dto.addItem(build(uriInfo, resourceRequest, receiver)));
+      if (receiverBeanParam.getSortBySet() != null && !receiverBeanParam.getSortBySet().isEmpty()) {
+        ReceiverComparator receiverComparator = new ReceiverComparator(receiverBeanParam.getSortBySet());
+        dto.getItems().sort(receiverComparator);
+      }
+      paginate(dto, resourceRequest);
     }
-    if (receiverBeanParam.getSortBySet() != null && !receiverBeanParam.getSortBySet().isEmpty()) {
-      ReceiverComparator receiverComparator = new ReceiverComparator(receiverBeanParam.getSortBySet());
-      dto.getItems().sort(receiverComparator);
-    }
-    paginate(dto, resourceRequest);
     return dto;
   }
 

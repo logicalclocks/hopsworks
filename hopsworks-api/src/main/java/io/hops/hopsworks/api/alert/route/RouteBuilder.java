@@ -216,12 +216,12 @@ public class RouteBuilder {
       List<Route> routes) {
     if (routes != null && !routes.isEmpty()) {
       routes.forEach((route) -> dto.addItem(buildItem(uriInfo, resourceRequest, route)));
+      if (routeBeanParam.getSortBySet() != null && !routeBeanParam.getSortBySet().isEmpty()) {
+        RouteComparator routeComparator = new RouteComparator(routeBeanParam.getSortBySet());
+        dto.getItems().sort(routeComparator);
+      }
+      paginate(dto, resourceRequest);
     }
-    if (routeBeanParam.getSortBySet() != null && !routeBeanParam.getSortBySet().isEmpty()) {
-      RouteComparator routeComparator = new RouteComparator(routeBeanParam.getSortBySet());
-      dto.getItems().sort(routeComparator);
-    }
-    paginate(dto, resourceRequest);
     return dto;
   }
 

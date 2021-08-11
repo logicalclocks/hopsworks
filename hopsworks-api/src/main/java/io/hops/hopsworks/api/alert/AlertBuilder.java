@@ -252,13 +252,13 @@ public class AlertBuilder {
       List<Alert> alerts) {
     if (alerts != null && !alerts.isEmpty()) {
       alerts.forEach((alert) -> dto.addItem(build(uriInfo, resourceRequest, alert)));
+      if (dto.getItems() != null && dto.getItems().size() > 1 &&
+          alertBeanParam.getSortBySet() != null && !alertBeanParam.getSortBySet().isEmpty()) {
+        AlertComparator alertComparator = new AlertComparator(alertBeanParam.getSortBySet());
+        dto.getItems().sort(alertComparator);
+      }
+      paginate(dto, resourceRequest);
     }
-    if (dto.getItems() != null && dto.getItems().size() > 1 &&
-        alertBeanParam.getSortBySet() != null && !alertBeanParam.getSortBySet().isEmpty()) {
-      AlertComparator alertComparator = new AlertComparator(alertBeanParam.getSortBySet());
-      dto.getItems().sort(alertComparator);
-    }
-    paginate(dto, resourceRequest);
     return dto;
   }
 
@@ -277,8 +277,8 @@ public class AlertBuilder {
       List<AlertGroup> alertGroups) {
     if (alertGroups != null && !alertGroups.isEmpty()) {
       alertGroups.forEach((alertGroup) -> dto.addItem(build(uriInfo, resourceRequest, alertGroup)));
+      paginate(dto, resourceRequest);
     }
-    paginate(dto, resourceRequest);
     return dto;
   }
 
