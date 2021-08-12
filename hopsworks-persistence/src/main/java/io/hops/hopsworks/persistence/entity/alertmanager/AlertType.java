@@ -21,6 +21,7 @@ import java.util.Map;
 
 @XmlEnum
 public enum AlertType {
+  DEFAULT("DEFAULT", "default", "default"),
   SYSTEM_ALERT("SYSTEM_ALERT", "system-alert", ""),
   GLOBAL_ALERT_EMAIL("GLOBAL_ALERT_EMAIL", "global-alert-email", "global-receiver__email"),
   GLOBAL_ALERT_SLACK("GLOBAL_ALERT_SLACK", "global-alert-slack", "global-receiver__slack"),
@@ -77,9 +78,10 @@ public enum AlertType {
   public String getReceiverName() {
     return receiverName;
   }
-
+  
   public boolean isGlobal() {
-    return !this.equals(AlertType.SYSTEM_ALERT) && !this.equals(AlertType.PROJECT_ALERT);
+    return !this.equals(AlertType.DEFAULT) && !this.equals(AlertType.SYSTEM_ALERT) &&
+        !this.equals(AlertType.PROJECT_ALERT);
   }
 
 }

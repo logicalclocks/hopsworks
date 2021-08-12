@@ -948,7 +948,9 @@ public class AlertManagerConfiguration {
     List<Route> routes = getRoutes(alertManagerConfig);
     List<Route> routesToAdd = new ArrayList<>();
     for (AlertReceiver alertReceiver : alertReceivers) {
-      routesToAdd.addAll(getRoutesToAdd(alertReceiver, routes));
+      if (!alertReceiver.getName().equals(AlertType.DEFAULT.getValue())) {
+        routesToAdd.addAll(getRoutesToAdd(alertReceiver, routes));
+      }
     }
     if (!routesToAdd.isEmpty()) {
       alertManagerConfig.getRoute().getRoutes().addAll(routesToAdd);
