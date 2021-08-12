@@ -202,7 +202,7 @@ public class EnvironmentController {
     return pythonVersion;
   }
 
-  public void removeEnvironment(Project project) {
+  public void removeEnvironment(Project project) throws PythonException {
     commandsController.deleteCommandsForProject(project);
     project.setPythonDepCollection(new ArrayList<>());
     condaEnvironmentRemove(project, project.getOwner());
@@ -231,7 +231,23 @@ public class EnvironmentController {
     condaCommandFacade.save(cc);
   }
 
-  public void condaEnvironmentRemove(Project project, Users user) {
+  public void condaEnvironmentRemove(Project project, Users user) throws PythonException {
+
+    // Delete environment.yml from filesystem, new one will be created upon next environment creation
+    DistributedFileSystemOps udfso = null;
+    try {
+      udfso = dfs.getDfsOps();
+      udfso.rm(Utils.getProjectPath(project.getName()) + new Path(Settings.PROJECT_PYTHON_ENVIRONMENT_FILE), false);
+    } catch (IOException ex) {
+      throw new PythonException(RESTCodes.PythonErrorCode.ANACONDA_ENVIRONMENT_REMOVAL_FAILED, Level.SEVERE,
+        "Failed to clean up environment yaml file on path: " +
+          Settings.PROJECT_PYTHON_ENVIRONMENT_FILE, ex.getMessage(), ex);
+    } finally {
+      if (udfso != null) {
+        dfs.closeDfsClient(udfso);
+      }
+    }
+
     // Do not remove conda env if project is using the base
     if (Strings.isNullOrEmpty(project.getDockerImage()) ||
         projectUtils.dockerImageIsPreinstalled(project.getDockerImage())) {
@@ -250,7 +266,7 @@ public class EnvironmentController {
         project.getDockerImage(), null, false);
   }
 
-  public String findPythonVersion(String ymlFile) throws PythonException {
+  public String findPythonVersion(String ymlFile) {
     String foundVersion = null;
     Pattern urlPattern = Pattern.compile("(- python=(\\d+.\\d+))");
     Matcher urlMatcher = urlPattern.matcher(ymlFile);
@@ -268,10 +284,7 @@ public class EnvironmentController {
       throw new PythonException(RESTCodes.PythonErrorCode.ANACONDA_ENVIRONMENT_NOT_FOUND, Level.FINE);
     }
 
-    Date date = new Date();
-
-    long exportTime = date.getTime();
-    String ymlPath = projectRelativeExportPath + "/" + "environment_" + exportTime + ".yml";
+    String ymlPath = projectRelativeExportPath;
     condaEnvironmentOp(CondaOp.EXPORT, project.getPythonEnvironment().getPythonVersion(), project, user,
         ymlPath,  null, false);
     return new String[]{ymlPath};
@@ -298,8 +311,8 @@ public class EnvironmentController {
     CondaCommands cc = new CondaCommands(settings.getAnacondaUser(), user, CondaOp.SYNC_BASE_ENV, CondaStatus.NEW,
         CondaInstallType.ENVIRONMENT, project, settings.getDockerBaseImagePythonVersion(),
         null, null, new Date(), null, null, false);
-
     condaCommandFacade.save(cc);
+
     return projectFacade.update(project);
   }
 

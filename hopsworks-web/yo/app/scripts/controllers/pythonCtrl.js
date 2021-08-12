@@ -21,13 +21,15 @@
 angular.module('hopsWorksApp')
     .controller('PythonCtrl', ['$scope', '$route', '$routeParams', 'growl', '$location', 'PythonService',
         'ModalService', '$interval', '$mdDialog', 'UtilsService',
-        'VariablesService', 'ElasticService', 'UserService',
+        'VariablesService', 'ElasticService', 'UserService', 'DataSetService',
         function ($scope, $route, $routeParams, growl, $location, PythonService, ModalService, $interval, $mdDialog,
-                  UtilsService, VariablesService, ElasticService, UserService) {
+                  UtilsService, VariablesService, ElasticService, UserService, DataSetService) {
 
 
             var self = this;
             self.projectId = $routeParams.projectID;
+
+            var dataSetService = DataSetService(self.projectId); //The datasetservice for the current project.
 
             self.installMode = 'PYPI';
 
@@ -499,21 +501,33 @@ angular.module('hopsWorksApp')
             };
 
             self.exportEnvironment = function () {
-                self.exporting = true;
-                $scope.indextab = 2;
-                PythonService.exportEnvironment(self.projectId).then(
-                    function (success) {
-                        self.exporting = false;
-                        growl.success("Exporting environment operation ongoing. Check your Resources dataset for the .yml file once the operation is finished.", {
-                            title: 'Export Ongoing...',
-                            ttl: 10000
-                        });
-                    },
-                    function (error) {
-                        self.exporting = false;
-                        showErrorGrowl(error);
+                var environmentPath = "Resources/.python/environment.yml"
+                var datasetType = "DATASET"
+                dataSetService.getDatasetStat(environmentPath, datasetType).then(function (success) {
+                    dataSetService.getDownloadToken(environmentPath, datasetType).then(
+                            function (success) {
+                              var token = success.data.data.value;
+                              dataSetService.download(environmentPath, token, datasetType);
+                            },function (error) {
+                            showErrorGrowl(error);
                     });
-            }
+                },function (error) {
+                        self.exporting = true;
+                        $scope.indextab = 2;
+                        PythonService.exportEnvironment(self.projectId).then(
+                            function (success) {
+                                self.exporting = false;
+                                growl.success("Exporting environment operation ongoing. Check your Resources dataset for the .yml file once the operation is finished.", {
+                                    title: 'Export Ongoing...',
+                                    ttl: 10000
+                                });
+                            },
+                            function (error) {
+                                self.exporting = false;
+                                showErrorGrowl(error);
+                            });
+                });
+            };
 
             //Set some (semi-)constants
             self.selectFileRegexes = {

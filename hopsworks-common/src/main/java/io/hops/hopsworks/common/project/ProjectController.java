@@ -2579,7 +2579,7 @@ public class ProjectController {
   }
 
   @TransactionAttribute(TransactionAttributeType.NEVER)
-  public void removeAnacondaEnv(Project project) {
+  public void removeAnacondaEnv(Project project) throws PythonException {
     environmentController.removeEnvironment(project);
   }
 

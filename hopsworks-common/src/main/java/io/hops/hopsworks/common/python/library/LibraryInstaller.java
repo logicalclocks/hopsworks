@@ -19,6 +19,7 @@ import com.google.common.base.Strings;
 import com.logicalclocks.servicediscoverclient.exceptions.ServiceDiscoveryException;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
 import io.hops.hopsworks.common.dao.python.CondaCommandFacade;
+import io.hops.hopsworks.common.dataset.DatasetController;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.hdfs.DistributedFsService;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
@@ -43,6 +44,7 @@ import io.hops.hopsworks.persistence.entity.python.CondaInstallType;
 import io.hops.hopsworks.persistence.entity.python.CondaOp;
 import io.hops.hopsworks.persistence.entity.python.CondaStatus;
 import io.hops.hopsworks.persistence.entity.python.PythonDep;
+import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.restutils.RESTCodes;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
@@ -111,6 +113,8 @@ public class LibraryInstaller {
   private OSProcessExecutor osProcessExecutor;
   @EJB
   private EnvironmentController environmentController;
+  @EJB
+  private DatasetController datasetController;
   @EJB
   private Settings settings;
   @Inject
@@ -216,7 +220,7 @@ public class LibraryInstaller {
                 uninstallLibrary(cc);
                 break;
               case EXPORT:
-                exportLibraries(cc);
+                exportEnvironment(cc);
                 break;
               case SYNC_BASE_ENV:
                 syncBaseLibraries(cc);
@@ -323,6 +327,7 @@ public class LibraryInstaller {
         projectFacade.flushEm();
         setPipConflicts(project);
         environmentController.updateInstalledDependencies(project);
+        exportEnvironment(project, cc.getUserId(), Settings.PROJECT_PYTHON_ENVIRONMENT_FILE);
       }
     } catch (ServiceException | ProjectException | PythonException e) {
       LOG.log(Level.SEVERE, "Failed to persist python deps", e);
@@ -483,6 +488,7 @@ public class LibraryInstaller {
         projectFacade.flushEm();
         setPipConflicts(project);
         environmentController.updateInstalledDependencies(project);
+        exportEnvironment(project, cc.getUserId(), Settings.PROJECT_PYTHON_ENVIRONMENT_FILE);
       }
     } finally {
       FileUtils.deleteDirectory(baseDir);
@@ -549,6 +555,7 @@ public class LibraryInstaller {
         projectFacade.flushEm();
         setPipConflicts(project);
         environmentController.updateInstalledDependencies(project);
+        exportEnvironment(project, cc.getUserId(), Settings.PROJECT_PYTHON_ENVIRONMENT_FILE);
       }
     } finally {
       FileUtils.deleteDirectory(baseDir);
@@ -601,29 +608,36 @@ public class LibraryInstaller {
     }
   }
 
-  public void exportLibraries(CondaCommands cc)
-    throws IOException, ServiceException, ServiceDiscoveryException, ProjectException {
-  
-    Project project = projectFacade.findById(cc.getProjectId().getId()).orElseThrow(() -> new ProjectException(
-      RESTCodes.ProjectErrorCode.PROJECT_NOT_FOUND, Level.FINE, "projectId: " + cc.getProjectId().getId()));
+  public void exportEnvironment(Project project, Users user, String relativeEnvironmentYmlPath)
+    throws IOException, ServiceException, ServiceDiscoveryException {
+
     ProcessDescriptor processDescriptor = new ProcessDescriptor.Builder()
-        .addCommand("/usr/bin/sudo")
-        .addCommand(prog)
-        .addCommand("export")
-        .addCommand(projectUtils.getFullDockerImageName(project, false))
-        .redirectErrorStream(true)
-        .setWaitTimeout(30, TimeUnit.MINUTES)
-        .build();
+      .addCommand("/usr/bin/sudo")
+      .addCommand(prog)
+      .addCommand("export")
+      .addCommand(projectUtils.getFullDockerImageName(project, false))
+      .redirectErrorStream(true)
+      .setWaitTimeout(30, TimeUnit.MINUTES)
+      .build();
 
     ProcessResult processResult = osProcessExecutor.execute(processDescriptor);
     if (processResult.getExitCode() != 0) {
       String errorMsg = "Could not create the docker image. Exit code: " + processResult.getExitCode()
-          + " out: " + processResult.getStdout() + "\n err: " + processResult.getStderr() + "||\n";
+        + " out: " + processResult.getStdout() + "\n err: " + processResult.getStderr() + "||\n";
       throw new IOException(errorMsg);
     } else {
-      environmentController.uploadYmlInProject(project, cc.getUserId(), processResult.getStdout(),
-          cc.getArg());
+      environmentController.uploadYmlInProject(project, user, processResult.getStdout(),
+        relativeEnvironmentYmlPath);
     }
+  }
+
+  public void exportEnvironment(CondaCommands cc)
+    throws IOException, ServiceException, ServiceDiscoveryException, ProjectException {
+
+    Project project = projectFacade.findById(cc.getProjectId().getId()).orElseThrow(() -> new ProjectException(
+      RESTCodes.ProjectErrorCode.PROJECT_NOT_FOUND, Level.FINE, "projectId: " + cc.getProjectId().getId()));
+
+    exportEnvironment(project, cc.getUserId(), cc.getArg());
   }
 
   public void syncBaseLibraries(CondaCommands cc)
@@ -640,6 +654,8 @@ public class LibraryInstaller {
 
     project.setPythonDepCollection(projectDeps);
     projectFacade.update(project);
+
+    exportEnvironment(project, cc.getUserId(), Settings.PROJECT_PYTHON_ENVIRONMENT_FILE);
   }
 
   private String getNextDockerImageName(Project project) {

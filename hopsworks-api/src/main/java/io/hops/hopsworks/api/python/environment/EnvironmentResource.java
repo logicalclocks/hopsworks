@@ -157,7 +157,7 @@ public class EnvironmentResource {
     Users user = jWTHelper.getUserPrincipal(sc);
     switch ((action != null) ? action : EnvironmentDTO.Operation.CREATE) {
       case EXPORT:
-        environmentController.exportEnv(project, user, Settings.PROJECT_STAGING_DIR);
+        environmentController.exportEnv(project, user, Settings.PROJECT_PYTHON_ENVIRONMENT_FILE);
         dto = buildEnvDTO(uriInfo, null, version);
         return Response.ok().entity(dto).build();
       case CREATE:
@@ -195,7 +195,7 @@ public class EnvironmentResource {
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
-  public Response delete(@PathParam("version") String version, @Context SecurityContext sc) {
+  public Response delete(@PathParam("version") String version, @Context SecurityContext sc) throws PythonException {
     environmentController.removeEnvironment(project);
     return Response.noContent().build();
   }
