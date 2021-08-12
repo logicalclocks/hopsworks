@@ -560,7 +560,7 @@ public class RESTCodes {
       Response.Status.INTERNAL_SERVER_ERROR),
     ANACONDA_FROM_YML_ERROR(20, "Failed to create Anaconda environment from .yml file.",
       Response.Status.INTERNAL_SERVER_ERROR),
-    PYTHON_INVALID_VERSION(21, "Invalid version of python (valid: '2.7', and '3.6'",
+    PYTHON_INVALID_VERSION(21, "Invalid version of python (valid: '3.7'",
       Response.Status.BAD_REQUEST),
     ANACONDA_REPO_ERROR(22, "Problem adding the repo.", Response.Status.INTERNAL_SERVER_ERROR),
     ANACONDA_OP_IN_PROGRESS(23,
@@ -1721,7 +1721,10 @@ public class RESTCodes {
         "must be Anaconda .yml or requirements.txt", Response.Status.BAD_REQUEST),
     ANACONDA_PIP_CHECK_FAILED(13, "pip check command failed", Response.Status.INTERNAL_SERVER_ERROR),
     ANACONDA_ENVIRONMENT_FAILED_INITIALIZATION(14, "The project's Python environment failed to initialize," +
-        " please recreate the environment.", Response.Status.INTERNAL_SERVER_ERROR);
+        " please recreate the environment.", Response.Status.INTERNAL_SERVER_ERROR),
+    ANACONDA_ENVIRONMENT_REMOVAL_FAILED(15,
+      "Deletion of the project's Python environment encountered an issue",
+      Response.Status.INTERNAL_SERVER_ERROR);
 
     private int code;
     private String message;

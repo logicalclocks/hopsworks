@@ -1944,6 +1944,10 @@ public class Settings implements Serializable {
   // Used to indicate that a python version is unknown
   public static final String UNKNOWN_LIBRARY_VERSION = "UNKNOWN";
 
+  public static final String PROJECT_PYTHON_DIR = PROJECT_STAGING_DIR + "/.python";
+  public static final String ENVIRONMENT_FILE = "environment.yml";
+  public static final String PROJECT_PYTHON_ENVIRONMENT_FILE = PROJECT_PYTHON_DIR + "/" + ENVIRONMENT_FILE;
+
   // when user is loged in 1 otherwise 0
   public static final int IS_ONLINE = 1;
   public static final int IS_OFFLINE = 0;

@@ -242,7 +242,8 @@ public class ModelsResource {
     modelDTO.setProgram(modelsController.versionProgram(accessor, modelDTO.getJobName(), modelDTO.getKernelId(),
       modelDTO.getName(), modelDTO.getVersion()));
     modelDTO.setEnvironment(environmentController.exportEnv(accessor.experimentProject, accessor.user,
-      Settings.HOPS_MODELS_DATASET + "/" + modelDTO.getName() + "/" + modelDTO.getVersion()));
+      Settings.HOPS_MODELS_DATASET + "/" + modelDTO.getName() + "/" + modelDTO.getVersion() +
+      "/" + Settings.ENVIRONMENT_FILE));
     modelsController.attachModel(accessor.udfso, accessor.modelProject, realName, modelDTO);
     UriBuilder builder = uriInfo.getAbsolutePathBuilder().path(mlId);
     return Response.created(builder.build()).entity(modelDTO).build();
