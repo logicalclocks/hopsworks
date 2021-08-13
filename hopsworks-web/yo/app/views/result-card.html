@@ -37,7 +37,7 @@
             <div class="col-sm-12 col-md-6 col-lg-2"><label>Created on: </label> {{item.created | date:'medium'}}
             </div>
             <div class="col-sm-12 col-md-6 col-lg-3 hw-ellipsis"><label>Owner: </label>
-                {{item.creator}}
+                {{item.creator.email}}
             </div>
             <div class="col-sm-12 col-md-6 col-lg-2 hw-ellipsis" ng-if="item.tags !== undefined">
                 <label>Tags: </label>

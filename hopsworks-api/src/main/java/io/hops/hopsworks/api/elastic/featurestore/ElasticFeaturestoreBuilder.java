@@ -52,6 +52,8 @@ public class ElasticFeaturestoreBuilder {
   private ProjectFacade projectFacade;
   @EJB
   private HopsworksJAXBContext converter;
+  @EJB
+  private ElasticFeaturestoreItemBuilder elasticFeaturestoreItemBuilder;
   
   private void checkRequest(ElasticFeaturestoreRequest req) throws GenericException {
     if(req.getSize() == null || req.getFrom() == null
@@ -108,7 +110,7 @@ public class ElasticFeaturestoreBuilder {
         case FEATUREGROUP: {
           for (SearchHit hitAux : e.getValue().getHits()) {
             ElasticFeaturestoreHit hit = ElasticFeaturestoreHit.instance(hitAux);
-            ElasticFeaturestoreItemDTO.Base item = ElasticFeaturestoreItemDTO.fromFeaturegroup(hit, converter);
+            ElasticFeaturestoreItemDTO.Base item = elasticFeaturestoreItemBuilder.fromFeaturegroup(hit, converter);
             item.setHighlights(getHighlights(hitAux.getHighlightFields()));
             accessCtrl.accept(inputWrapper(hit), collectorWrapper(item));
             result.addFeaturegroup(item);
@@ -118,7 +120,7 @@ public class ElasticFeaturestoreBuilder {
         case TRAININGDATASET: {
           for (SearchHit hitAux : e.getValue().getHits()) {
             ElasticFeaturestoreHit hit = ElasticFeaturestoreHit.instance(hitAux);
-            ElasticFeaturestoreItemDTO.Base item = ElasticFeaturestoreItemDTO.fromTrainingDataset(hit, converter);
+            ElasticFeaturestoreItemDTO.Base item = elasticFeaturestoreItemBuilder.fromTrainingDataset(hit, converter);
             item.setHighlights(getHighlights(hitAux.getHighlightFields()));
             accessCtrl.accept(inputWrapper(hit), collectorWrapper(item));
             result.addTrainingdataset(item);
@@ -128,7 +130,7 @@ public class ElasticFeaturestoreBuilder {
         case FEATURE: {
           for (SearchHit hitAux : e.getValue().getHits()) {
             ElasticFeaturestoreHit hit = ElasticFeaturestoreHit.instance(hitAux);
-            ElasticFeaturestoreItemDTO.Base fgParent = ElasticFeaturestoreItemDTO.fromFeaturegroup(hit, converter);
+            ElasticFeaturestoreItemDTO.Base fgParent = elasticFeaturestoreItemBuilder.fromFeaturegroup(hit, converter);
             Map<String, HighlightField> highlightFields = hitAux.getHighlightFields();
             String featureField
               = FeaturestoreXAttrsConstants.getFeaturestoreElasticKey(FeaturestoreXAttrsConstants.FG_FEATURES);
@@ -136,7 +138,7 @@ public class ElasticFeaturestoreBuilder {
             if (hf != null) {
               for (Text ee : hf.fragments()) {
                 String feature = removeHighlightTags(ee.toString());
-                ElasticFeaturestoreItemDTO.Feature item = ElasticFeaturestoreItemDTO.fromFeature(feature, fgParent);
+                ElasticFeaturestoreItemDTO.Feature item = elasticFeaturestoreItemBuilder.fromFeature(feature, fgParent);
                 ElasticFeaturestoreItemDTO.Highlights highlights = new ElasticFeaturestoreItemDTO.Highlights();
                 highlights.setName(ee.toString());
                 item.setHighlights(highlights);

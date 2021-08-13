@@ -40,7 +40,7 @@ describe "On #{ENV['OS']}" do
           expect(parsed_json.key?("id")).to be true
           expect(parsed_json.key?("featurestoreName")).to be true
           expect(parsed_json.key?("name")).to be true
-          expect(parsed_json.key?("creator")).to be true
+          expect(parsed_json["creator"].key?("email")).to be true
           expect(parsed_json.key?("location")).to be true
           expect(parsed_json.key?("version")).to be true
           expect(parsed_json.key?("dataFormat")).to be true
@@ -328,7 +328,7 @@ describe "On #{ENV['OS']}" do
           expect_status(200)
           expect(parsed_json2.key?("id")).to be true
           expect(parsed_json2.key?("name")).to be true
-          expect(parsed_json2.key?("creator")).to be true
+          expect(parsed_json2["creator"].key?("email")).to be true
           expect(parsed_json2.key?("location")).to be true
           expect(parsed_json2.key?("version")).to be true
           expect(parsed_json2.key?("dataFormat")).to be true
@@ -1086,7 +1086,7 @@ describe "On #{ENV['OS']}" do
           expect(parsed_json.key?("id")).to be true
           expect(parsed_json.key?("featurestoreName")).to be true
           expect(parsed_json.key?("name")).to be true
-          expect(parsed_json.key?("creator")).to be true
+          expect(parsed_json["creator"].key?("email")).to be true
           expect(parsed_json.key?("location")).to be true
           expect(parsed_json.key?("version")).to be true
           expect(parsed_json.key?("dataFormat")).to be true
@@ -1259,7 +1259,7 @@ describe "On #{ENV['OS']}" do
           expect(parsed_json2.key?("id")).to be true
           expect(parsed_json2.key?("featurestoreName")).to be true
           expect(parsed_json2.key?("name")).to be true
-          expect(parsed_json2.key?("creator")).to be true
+          expect(parsed_json2["creator"].key?("email")).to be true
           expect(parsed_json2.key?("location")).to be true
           expect(parsed_json2.key?("version")).to be true
           expect(parsed_json2.key?("dataFormat")).to be true
