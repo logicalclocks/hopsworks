@@ -235,7 +235,7 @@
                                 {{searchCtrl.selected.parentProjectName}}
                             </div>
                             <div><label>Owner: </label>
-                                {{searchCtrl.selected.creator}}
+                                {{searchCtrl.selected.creator.email}}
                             </div>
                             <div ng-if="searchCtrl.selected.created !== undefined">
                                 <label>Created on: </label> {{searchCtrl.selected.created | date:'medium'}}

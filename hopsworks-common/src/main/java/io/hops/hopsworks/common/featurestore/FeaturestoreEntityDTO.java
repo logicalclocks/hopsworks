@@ -19,6 +19,7 @@ package io.hops.hopsworks.common.featurestore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import io.hops.hopsworks.common.dao.user.UserDTO;
 import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupDTO;
 import io.hops.hopsworks.common.featurestore.statistics.StatisticsConfigDTO;
 import io.hops.hopsworks.common.featurestore.trainingdatasets.TrainingDatasetDTO;
@@ -46,7 +47,7 @@ public abstract class FeaturestoreEntityDTO {
   private String featurestoreName;
   private String description;
   private Date created;
-  private String creator;
+  private UserDTO creator;
   private Integer version;
   private String name;
   private Integer id;
@@ -60,7 +61,10 @@ public abstract class FeaturestoreEntityDTO {
                                Integer version, Integer id, StatisticsConfigDTO statisticsConfig) {
     this.featurestoreId = featurestoreId;
     this.created = created;
-    this.creator = creator.getEmail();
+    this.creator = new UserDTO();
+    this.creator.setFirstName(creator.getFname());
+    this.creator.setLastName(creator.getLname());
+    this.creator.setEmail(creator.getEmail());
     this.version = version;
     this.name = name;
     this.id = id;
@@ -82,7 +86,7 @@ public abstract class FeaturestoreEntityDTO {
   }
   
   @XmlElement
-  public String getCreator() {
+  public UserDTO getCreator() {
     return creator;
   }
   
@@ -154,7 +158,7 @@ public abstract class FeaturestoreEntityDTO {
     this.created = created;
   }
   
-  public void setCreator(String creator) {
+  public void setCreator(UserDTO creator) {
     this.creator = creator;
   }
   

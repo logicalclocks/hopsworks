@@ -236,7 +236,7 @@ public class HopsFSProvenanceController {
           LOGGER.log(Level.INFO,
             "xattr is too large to attach - featuregroup:{0} will not have features attached", fgPath);
           fg = new FeaturegroupXAttr.FullDTO(featuregroup.getFeaturestoreId(), featuregroup.getDescription(),
-            featuregroup.getCreated(), featuregroup.getCreator());
+            featuregroup.getCreated(), featuregroup.getCreator().getEmail());
           xattrVal = converter.marshal(fg).getBytes();
           xattrCtrl.upsertProvXAttr(udfso, fgPath, FeaturestoreXAttrsConstants.FEATURESTORE, xattrVal);
         } else {
@@ -255,7 +255,7 @@ public class HopsFSProvenanceController {
     TrainingDatasetXAttrDTO td = new TrainingDatasetXAttrDTO(trainingDatasetDTO.getFeaturestoreId(),
         trainingDatasetDTO.getDescription(),
         trainingDatasetDTO.getCreated(),
-        trainingDatasetDTO.getCreator(),
+        trainingDatasetDTO.getCreator().getEmail(),
         fromTrainingDataset(trainingDatasetDTO));
 
     try {
@@ -266,8 +266,8 @@ public class HopsFSProvenanceController {
         if (RESTCodes.MetadataErrorCode.METADATA_MAX_SIZE_EXCEEDED.equals(e.getErrorCode())) {
           LOGGER.log(Level.INFO,
               "xattr is too large to attach - trainingdataset:{0} will not have features attached", path);
-          td = new TrainingDatasetXAttrDTO(trainingDatasetDTO.getFeaturestoreId(),
-              trainingDatasetDTO.getDescription(), trainingDatasetDTO.getCreated(), trainingDatasetDTO.getCreator());
+          td = new TrainingDatasetXAttrDTO(trainingDatasetDTO.getFeaturestoreId(), trainingDatasetDTO.getDescription(),
+                  trainingDatasetDTO.getCreated(), trainingDatasetDTO.getCreator().getEmail());
           xattrVal = converter.marshal(td).getBytes();
           xattrCtrl.upsertProvXAttr(udfso, path, FeaturestoreXAttrsConstants.FEATURESTORE, xattrVal);
         } else {
@@ -333,6 +333,6 @@ public class HopsFSProvenanceController {
       features.add(feature.getName());
     }
     return new FeaturegroupXAttr.FullDTO(featuregroup.getFeaturestoreId(), featuregroup.getDescription(),
-      featuregroup.getCreated(), featuregroup.getCreator(), features);
+      featuregroup.getCreated(), featuregroup.getCreator().getEmail(), features);
   }
 }

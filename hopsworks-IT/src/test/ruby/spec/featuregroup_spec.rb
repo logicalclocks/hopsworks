@@ -31,6 +31,7 @@ describe "On #{ENV['OS']}" do
         parsed_json = JSON.parse(json_result)
         expect_status(201)
         expect(parsed_json.key?("id")).to be true
+        expect(parsed_json["creator"].key?("email")).to be true
         expect(parsed_json.key?("featurestoreName")).to be true
         expect(parsed_json.key?("name")).to be true
         expect(parsed_json["featurestoreName"] == project.projectname.downcase + "_featurestore").to be true
@@ -59,6 +60,7 @@ describe "On #{ENV['OS']}" do
         expect_status(201)
         expect(parsed_json.key?("id")).to be true
         expect(parsed_json.key?("featurestoreName")).to be true
+        expect(parsed_json["creator"].key?("email")).to be true
         expect(parsed_json.key?("name")).to be true
         expect(parsed_json.key?("featurestoreName")).to be true
         expect(parsed_json["featurestoreName"] == project.projectname.downcase + "_featurestore").to be true
@@ -493,6 +495,7 @@ describe "On #{ENV['OS']}" do
                                                           description: new_description, features: new_schema)
         parsed_json = JSON.parse(json_result)
         expect_status_details(200)
+        expect(parsed_json["creator"].key?("email")).to be true
         expect(parsed_json["features"].length).to be 2
         expect(parsed_json["description"]).to eql("changed description")
         expect(parsed_json["features"].select{ |f| f["name"] == "testfeature"}.first["defaultValue"]).to be nil
@@ -746,6 +749,7 @@ describe "On #{ENV['OS']}" do
         expect(parsed_json.key?("id")).to be true
         expect(parsed_json.key?("featurestoreName")).to be true
         expect(parsed_json.key?("name")).to be true
+        expect(parsed_json["creator"].key?("email")).to be true
         expect(parsed_json["featurestoreName"] == project.projectname.downcase + "_featurestore").to be true
         expect(parsed_json["name"] == featuregroup_name).to be true
         expect(parsed_json["type"] == "cachedFeaturegroupDTO").to be true

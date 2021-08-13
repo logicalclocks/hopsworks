@@ -15,14 +15,7 @@
  */
 package io.hops.hopsworks.api.elastic.featurestore;
 
-import com.google.gson.Gson;
-import io.hops.hopsworks.common.elastic.ElasticFeaturestoreHit;
-import io.hops.hopsworks.common.featurestore.xattr.dto.FeaturestoreXAttrsConstants;
-import io.hops.hopsworks.common.featurestore.xattr.dto.FeaturegroupXAttr;
-import io.hops.hopsworks.common.featurestore.xattr.dto.TrainingDatasetXAttrDTO;
-import io.hops.hopsworks.common.util.HopsworksJAXBContext;
-import io.hops.hopsworks.exceptions.GenericException;
-
+import io.hops.hopsworks.api.user.UserDTO;
 import javax.xml.bind.annotation.XmlRootElement;
 import java.util.Date;
 import java.util.HashMap;
@@ -31,74 +24,6 @@ import java.util.List;
 import java.util.Map;
 
 public class ElasticFeaturestoreItemDTO {
-  public static Base fromFeaturegroup(ElasticFeaturestoreHit hit, HopsworksJAXBContext converter)
-    throws GenericException {
-    Base item = new Base();
-    item.elasticId = hit.getId();
-    item.name = hit.getName();
-    item.version = hit.getVersion();
-    item.datasetIId = hit.getDatasetIId();
-    item.parentProjectId = hit.getProjectId();
-    item.parentProjectName = hit.getProjectName();
-    for (Map.Entry<String, Object> e : hit.getXattrs().entrySet()) {
-      switch (e.getKey()) {
-        case FeaturestoreXAttrsConstants.FEATURESTORE: {
-          Gson gson = new Gson();
-          FeaturegroupXAttr.FullDTO fg
-            = converter.unmarshal(gson.toJson(e.getValue()), FeaturegroupXAttr.FullDTO.class);
-          item.featurestoreId = fg.getFeaturestoreId();
-          item.description = fg.getDescription();
-          item.created = new Date(fg.getCreateDate());
-          item.creator = fg.getCreator();
-        }
-        break;
-      }
-    }
-    return item;
-  }
-  
-  public static Base fromTrainingDataset(ElasticFeaturestoreHit hit, HopsworksJAXBContext converter)
-    throws GenericException {
-    Base item = new Base();
-    item.elasticId = hit.getId();
-    item.name = hit.getName();
-    item.version = hit.getVersion();
-    item.datasetIId = hit.getDatasetIId();
-    item.parentProjectId = hit.getProjectId();
-    item.parentProjectName = hit.getProjectName();
-    for (Map.Entry<String, Object> e : hit.getXattrs().entrySet()) {
-      switch (e.getKey()) {
-        case FeaturestoreXAttrsConstants.FEATURESTORE: {
-          Gson gson = new Gson();
-          TrainingDatasetXAttrDTO td
-            = converter.unmarshal(gson.toJson(e.getValue()), TrainingDatasetXAttrDTO.class);
-          item.featurestoreId = td.getFeaturestoreId();
-          item.description = td.getDescription();
-          item.created = new Date(td.getCreateDate());
-          item.creator = td.getCreator();
-        }
-        break;
-      }
-    }
-    return item;
-  }
-  
-  public static Feature fromFeature(String featureName, ElasticFeaturestoreItemDTO.Base parent) {
-    Feature item = new Feature();
-    item.elasticId = parent.getElasticId() + "_" + featureName;
-    item.featurestoreId = parent.getFeaturestoreId();
-    item.name = featureName;
-    item.featuregroup = parent.getName();
-    item.datasetIId = parent.getDatasetIId();
-    item.version = parent.getVersion();
-    item.created = parent.getCreated();
-    item.creator = parent.getCreator();
-    
-    item.parentProjectId = parent.getParentProjectId();
-    item.parentProjectName = parent.getParentProjectName();
-    return item;
-  }
-  
   @XmlRootElement
   public static class Base {
     protected String elasticId;
@@ -110,7 +35,7 @@ public class ElasticFeaturestoreItemDTO {
     protected Long datasetIId;
     protected String description;
     protected Date created;
-    protected String creator;
+    protected UserDTO creator;
     
     protected Highlights highlights;
   
@@ -178,11 +103,11 @@ public class ElasticFeaturestoreItemDTO {
       this.created = created;
     }
   
-    public String getCreator() {
+    public UserDTO getCreator() {
       return creator;
     }
   
-    public void setCreator(String creator) {
+    public void setCreator(UserDTO creator) {
       this.creator = creator;
     }
   
