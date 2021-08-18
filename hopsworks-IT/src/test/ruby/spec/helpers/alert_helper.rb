@@ -528,7 +528,12 @@ module AlertHelper
   end
 
   def toHash(key_value)
-    kv = key_value ? key_value[:entry].map { |r| %W[#{r[:key]} #{r[:value]}] } : nil
+    if key_value && key_value.kind_of?(Array)
+      list = key_value[0]
+    elsif key_value
+      list = key_value[:entry]
+    end
+    kv = list ? list.map { |r| %W[#{r[:key]} #{r[:value]}] } : nil
     return kv ? Hash[kv] : nil
   end
 

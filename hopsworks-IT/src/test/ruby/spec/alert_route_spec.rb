@@ -81,7 +81,7 @@ describe "On #{ENV['OS']}" do
         route = create_route(@project, receiver: receiver[:name])
         create_routes(@project, route)
         expect_status_details(201)
-        check_backup_contains_route(route)
+        check_backup_contains_route(json_body)
         get_routes_by_receiver(@project, route[:receiver], query: "?match=project:#{@project[:projectname]}&match=type:project-alert")
         expect_status_details(200)
         expect(json_body[:receiver]).to eq(route[:receiver])
@@ -94,7 +94,7 @@ describe "On #{ENV['OS']}" do
         route[:matchRe] = [create_match(@project[:projectname])]
         create_routes(@project, route)
         expect_status_details(201)
-        check_backup_contains_route(route)
+        check_backup_contains_route(json_body)
 
         get_routes_by_receiver(@project, route[:receiver], query: "?matchRe=project:#{@project[:projectname]}&matchRe=type:project-alert")
         expect_status_details(200)
@@ -135,7 +135,7 @@ describe "On #{ENV['OS']}" do
         expect(json_body[:receiver]).to eq(route[:receiver])
         @receiver = route[:receiver]
         check_eq_match(json_body, @project)
-        check_backup_contains_route(route)
+        check_backup_contains_route(json_body)
       end
       it "should update with matchRe" do
         receiver = create_receiver(@project, emailConfigs: [create_email_config])
@@ -154,7 +154,7 @@ describe "On #{ENV['OS']}" do
         expect_status_details(200)
         expect(json_body[:receiver]).to eq(route1[:receiver])
         check_eq_match(json_body, @project)
-        check_backup_contains_route(route1)
+        check_backup_contains_route(json_body)
       end
       it "should fail to update with receiver for another project" do
         route = create_route(@project, receiver: @receiver1)
