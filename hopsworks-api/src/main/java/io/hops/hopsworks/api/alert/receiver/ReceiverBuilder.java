@@ -49,6 +49,7 @@ import javax.ejb.TransactionAttributeType;
 import javax.ws.rs.core.UriInfo;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -251,11 +252,13 @@ public class ReceiverBuilder {
     }
   }
 
-  public Receiver build(PostableReceiverDTO postableReceiverDTO, Boolean defaultTemplate) {
+  public Receiver build(PostableReceiverDTO postableReceiverDTO, Boolean defaultTemplate, boolean checkUnique)
+      throws AlertException {
     Receiver receiver = new Receiver(postableReceiverDTO.getName())
-        .withEmailConfigs(toEmailConfig(postableReceiverDTO.getEmailConfigs(), defaultTemplate))
-        .withSlackConfigs(toSlackConfig(postableReceiverDTO.getSlackConfigs(), defaultTemplate))
-        .withPagerdutyConfigs(toPagerdutyConfig(postableReceiverDTO.getPagerdutyConfigs(), defaultTemplate))
+        .withEmailConfigs(toEmailConfig(postableReceiverDTO.getEmailConfigs(), defaultTemplate, checkUnique))
+        .withSlackConfigs(toSlackConfig(postableReceiverDTO.getSlackConfigs(), defaultTemplate, checkUnique))
+        .withPagerdutyConfigs(
+            toPagerdutyConfig(postableReceiverDTO.getPagerdutyConfigs(), defaultTemplate, checkUnique))
         .withOpsgenieConfigs(toOpsgenieConfig(postableReceiverDTO.getOpsgenieConfigs()))
         .withPushoverConfigs(postableReceiverDTO.getPushoverConfigs())
         .withVictoropsConfigs(postableReceiverDTO.getVictoropsConfigs())
@@ -264,10 +267,19 @@ public class ReceiverBuilder {
     return receiver;
   }
 
-  private List<EmailConfig> toEmailConfig(List<PostableEmailConfig> postableEmailConfigs, Boolean defaultTemplate) {
+  private List<EmailConfig> toEmailConfig(List<PostableEmailConfig> postableEmailConfigs, Boolean defaultTemplate,
+      boolean checkUnique) throws AlertException {
     if (postableEmailConfigs != null && !postableEmailConfigs.isEmpty()) {
-      return postableEmailConfigs.stream().map(p -> toEmailConfig(p, defaultTemplate))
+      List<EmailConfig> emailConfigs = postableEmailConfigs.stream().map(p -> toEmailConfig(p, defaultTemplate))
           .collect(Collectors.toList());
+      if (checkUnique) {
+        Set<EmailConfig> emailConfigSet = new HashSet<>();
+        emailConfigSet.addAll(emailConfigs);
+        if (emailConfigs.size() != emailConfigSet.size()) {
+          throw new AlertException(RESTCodes.AlertErrorCode.ILLEGAL_ARGUMENT, Level.FINE, "Emails are not unique.");
+        }
+      }
+      return emailConfigs;
     }
     return null;
   }
@@ -299,10 +311,20 @@ public class ReceiverBuilder {
     return emailConfig;
   }
 
-  private List<SlackConfig> toSlackConfig(List<SlackConfig> slackConfigs, Boolean defaultTemplate) {
+  private List<SlackConfig> toSlackConfig(List<SlackConfig> slackConfigs, Boolean defaultTemplate, boolean checkUnique)
+      throws AlertException {
     if (slackConfigs != null && !slackConfigs.isEmpty()) {
-      return slackConfigs.stream().map(p -> toSlackConfig(p, defaultTemplate))
+      List<SlackConfig> slackConfigList = slackConfigs.stream().map(p -> toSlackConfig(p, defaultTemplate))
           .collect(Collectors.toList());
+      if (checkUnique) {
+        Set<SlackConfig> slackConfigSet = new HashSet<>();
+        slackConfigSet.addAll(slackConfigList);
+        if (slackConfigList.size() != slackConfigSet.size()) {
+          throw new AlertException(RESTCodes.AlertErrorCode.ILLEGAL_ARGUMENT, Level.FINE, "Slack channels are not " +
+              "unique.");
+        }
+      }
+      return slackConfigList;
     }
     return null;
   }
@@ -323,10 +345,19 @@ public class ReceiverBuilder {
   }
 
   private List<PagerdutyConfig> toPagerdutyConfig(List<PostablePagerdutyConfig> pagerdutyConfigs,
-      Boolean defaultTemplate) {
+      Boolean defaultTemplate, boolean checkUnique) throws AlertException {
     if (pagerdutyConfigs != null && !pagerdutyConfigs.isEmpty()) {
-      return pagerdutyConfigs.stream().map(p -> toPagerdutyConfig(p, defaultTemplate))
-          .collect(Collectors.toList());
+      List<PagerdutyConfig> pagerdutyConfigList =
+          pagerdutyConfigs.stream().map(p -> toPagerdutyConfig(p, defaultTemplate)).collect(Collectors.toList());
+      if (checkUnique) {
+        Set<PagerdutyConfig> pagerdutyConfigSet = new HashSet<>();
+        pagerdutyConfigSet.addAll(pagerdutyConfigList);
+        if (pagerdutyConfigList.size() != pagerdutyConfigSet.size()) {
+          throw new AlertException(RESTCodes.AlertErrorCode.ILLEGAL_ARGUMENT, Level.FINE, "Pagerdutys are not " +
+              "unique.");
+        }
+      }
+      return pagerdutyConfigList;
     }
     return null;
   }

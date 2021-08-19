@@ -157,7 +157,8 @@ public class ReceiverResource {
     if (postableReceiverDTO == null) {
       throw new AlertException(RESTCodes.AlertErrorCode.ILLEGAL_ARGUMENT, Level.FINE, "No payload.");
     }
-    Receiver receiver = receiverBuilder.build(postableReceiverDTO, defaultTemplate);
+    Receiver receiver = receiverBuilder.build(postableReceiverDTO, defaultTemplate, true);
+    validateReceiverOneConfig(receiver);
     try {
       alertManagerConfiguration.addReceiver(receiver, getProject());
     } catch (AlertManagerConfigCtrlCreateException | AlertManagerUnreachableException|
@@ -185,12 +186,15 @@ public class ReceiverResource {
   @ApiOperation(value = "Update a receiver.", response = SilenceDTO.class)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER})
   @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
-  public Response update(@PathParam("name") String name, PostableReceiverDTO postableReceiverDTO,
-      @Context UriInfo uriInfo, @Context SecurityContext sc) throws AlertException, ProjectException {
+  public Response update(@PathParam("name") String name,
+      @QueryParam("defaultTemplate") @DefaultValue("false") Boolean defaultTemplate,
+      PostableReceiverDTO postableReceiverDTO, @Context UriInfo uriInfo, @Context SecurityContext sc)
+      throws AlertException, ProjectException {
     if (postableReceiverDTO == null) {
       throw new AlertException(RESTCodes.AlertErrorCode.ILLEGAL_ARGUMENT, Level.FINE, "No payload.");
     }
-    Receiver receiver = receiverBuilder.build(postableReceiverDTO, false);
+    Receiver receiver = receiverBuilder.build(postableReceiverDTO, defaultTemplate, true);
+    validateReceiverOneConfig(receiver);
     try {
       alertManagerConfiguration.updateReceiver(name, receiver, getProject());
     } catch (AlertManagerConfigCtrlCreateException | AlertManagerUnreachableException|
@@ -242,5 +246,37 @@ public class ReceiverResource {
       throw new AlertException(RESTCodes.AlertErrorCode.RESPONSE_ERROR, Level.FINE, e.getMessage());
     }
     return Response.noContent().build();
+  }
+
+  private void validateReceiverOneConfig(Receiver receiver) throws AlertException {
+    int count = 0;
+    if (receiver.getEmailConfigs() != null && !receiver.getEmailConfigs().isEmpty()) {
+      count++;
+    }
+    if (receiver.getSlackConfigs() != null && !receiver.getSlackConfigs().isEmpty()) {
+      count++;
+    }
+    if (receiver.getPagerdutyConfigs() != null && !receiver.getPagerdutyConfigs().isEmpty()) {
+      count++;
+    }
+    if (receiver.getOpsgenieConfigs() != null && !receiver.getOpsgenieConfigs().isEmpty()) {
+      count++;
+    }
+    if (receiver.getPushoverConfigs() != null && !receiver.getPushoverConfigs().isEmpty()) {
+      count++;
+    }
+    if (receiver.getVictoropsConfigs() != null && !receiver.getVictoropsConfigs().isEmpty()) {
+      count++;
+    }
+    if (receiver.getWebhookConfigs() != null && !receiver.getWebhookConfigs().isEmpty()) {
+      count++;
+    }
+    if (receiver.getWechatConfigs() != null && !receiver.getWechatConfigs().isEmpty()) {
+      count++;
+    }
+    if (count > 1) {
+      throw new AlertException(RESTCodes.AlertErrorCode.ILLEGAL_ARGUMENT, Level.FINE, "Receiver should set only one " +
+          "configuration.");
+    }
   }
 }

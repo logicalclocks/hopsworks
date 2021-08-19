@@ -137,7 +137,7 @@ public class AdminReceiverResource {
         alertType = getDefaultName(postableReceiverDTO);
         postableReceiverDTO.setName(alertType.getReceiverName());
       }
-      receiver = receiverBuilder.build(postableReceiverDTO, defaultTemplate);
+      receiver = receiverBuilder.build(postableReceiverDTO, defaultTemplate, true);
       alertManagerConfiguration.addReceiver(receiver);
       if (alertType != null) {
         alertController.createRoute(alertType); // to create a single route for global receivers
@@ -209,12 +209,14 @@ public class AdminReceiverResource {
   @Consumes(MediaType.APPLICATION_JSON)
   @ApiOperation(value = "Update a receiver.", response = ReceiverDTO.class)
   @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN"})
-  public Response update(@PathParam("name") String name, PostableReceiverDTO postableReceiverDTO,
-      @Context UriInfo uriInfo, @Context SecurityContext sc) throws AlertException {
+  public Response update(@PathParam("name") String name,
+      @QueryParam("defaultTemplate") @DefaultValue("false") Boolean defaultTemplate,
+      PostableReceiverDTO postableReceiverDTO, @Context UriInfo uriInfo, @Context SecurityContext sc)
+      throws AlertException {
     if (postableReceiverDTO == null) {
       throw new AlertException(RESTCodes.AlertErrorCode.ILLEGAL_ARGUMENT, Level.FINE, "No payload.");
     }
-    Receiver receiver = receiverBuilder.build(postableReceiverDTO, false);
+    Receiver receiver = receiverBuilder.build(postableReceiverDTO, defaultTemplate, true);
     try {
       alertManagerConfiguration.updateReceiver(name, receiver);
     } catch (AlertManagerConfigCtrlCreateException | AlertManagerUnreachableException |

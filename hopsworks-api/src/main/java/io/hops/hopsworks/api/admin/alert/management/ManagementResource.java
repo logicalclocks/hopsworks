@@ -155,7 +155,7 @@ public class ManagementResource {
     }
   }
 
-  private AlertManagerConfig toAlertManagerConfig(PostableAlertManagerConfig config) {
+  private AlertManagerConfig toAlertManagerConfig(PostableAlertManagerConfig config) throws AlertException {
     return new AlertManagerConfig()
         .withGlobal(config.getGlobal())
         .withTemplates(config.getTemplates())
@@ -164,10 +164,10 @@ public class ManagementResource {
         .withRoute(routeBuilder.toRoute(config.getRoute()));
   }
 
-  private List<Receiver> toReceivers(List<PostableReceiverDTO> receivers) {
+  private List<Receiver> toReceivers(List<PostableReceiverDTO> receivers) throws AlertException {
     List<Receiver> receiverList = new ArrayList<>();
     for (PostableReceiverDTO postableReceiverDTO : receivers) {
-      receiverList.add(receiverBuilder.build(postableReceiverDTO, false));
+      receiverList.add(receiverBuilder.build(postableReceiverDTO, false, false));
     }
     return receiverList;
   }

@@ -214,9 +214,9 @@ public class ProjectAlertsResource {
     if (!projectServiceAlert.getReceiver().getName().equals(projectAlertsDTO.getReceiver())) {
       deleteRoute(projectServiceAlert);
       projectServiceAlert.setReceiver(getReceiver(projectAlertsDTO.getReceiver()));
+      projectServiceAlert.setAlertType(alertController.getAlertType(projectServiceAlert.getReceiver()));
       createRoute(projectServiceAlert);
     }
-    projectServiceAlert.setAlertType(alertController.getAlertType(projectServiceAlert.getReceiver()));
     projectServiceAlert = projectServiceAlertsFacade.update(projectServiceAlert);
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.ALERTS);
     ProjectAlertsDTO dto = projectAlertsBuilder.build(uriInfo, resourceRequest, projectServiceAlert);
