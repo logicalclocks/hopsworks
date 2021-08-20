@@ -50,6 +50,7 @@ import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.project.alert.ProjectServiceAlert;
 import io.hops.hopsworks.persistence.entity.project.alert.ProjectServiceAlertStatus;
 import io.hops.hopsworks.persistence.entity.project.service.ProjectServiceEnum;
+import org.apache.parquet.Strings;
 
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
@@ -108,7 +109,7 @@ public class AlertController {
       throws AlertManagerUnreachableException, AlertManagerAccessControlException, AlertManagerResponseException,
       AlertManagerClientCreateException {
     return sendFgTestAlert(project, alert.getAlertType(), alert.getSeverity(),
-        FeatureGroupValidation.Status.fromString(alert.getStatus().toString()));
+        FeatureGroupValidation.Status.fromString(alert.getStatus().toString()), alert.getFeatureGroup().getName());
   }
 
   /**
@@ -119,7 +120,8 @@ public class AlertController {
   public List<Alert> testAlert(Project project, JobAlert alert)
       throws AlertManagerUnreachableException, AlertManagerAccessControlException, AlertManagerResponseException,
       AlertManagerClientCreateException {
-    return sendJobTestAlert(project, alert.getAlertType(), alert.getSeverity(), alert.getStatus().getName());
+    return sendJobTestAlert(project, alert.getAlertType(), alert.getSeverity(), alert.getStatus().getName(),
+        alert.getJobId().getName());
   }
 
   /**
@@ -133,9 +135,9 @@ public class AlertController {
     List<Alert> alerts = null;
     if (ProjectServiceEnum.FEATURESTORE.equals(alert.getService())) {
       alerts = sendFgTestAlert(project, alert.getAlertType(), alert.getSeverity(),
-          FeatureGroupValidation.Status.fromString(alert.getStatus().toString()));
+          FeatureGroupValidation.Status.fromString(alert.getStatus().toString()), null);
     } else if (ProjectServiceEnum.JOBS.equals(alert.getService())) {
-      alerts = sendJobTestAlert(project, alert.getAlertType(), alert.getSeverity(), alert.getStatus().getName());
+      alerts = sendJobTestAlert(project, alert.getAlertType(), alert.getSeverity(), alert.getStatus().getName(), null);
     }
     return alerts;
   }
@@ -167,30 +169,31 @@ public class AlertController {
   }
 
   private List<Alert> sendFgTestAlert(Project project, AlertType alertType, AlertSeverity severity,
-      FeatureGroupValidation.Status status)
-      throws AlertManagerUnreachableException, AlertManagerAccessControlException, AlertManagerResponseException,
-      AlertManagerClientCreateException {
+      FeatureGroupValidation.Status status, String fgName) throws AlertManagerUnreachableException,
+      AlertManagerAccessControlException, AlertManagerResponseException, AlertManagerClientCreateException {
+    String testAlertFgName = Strings.isNullOrEmpty(fgName) ? Constants.TEST_ALERT_FG_NAME : fgName;
     List<PostableAlert> postableAlerts = new ArrayList<>();
     PostableAlert postableAlert = getPostableAlert(project.getName(), alertType, severity, status.getName(),
         getExpectationResult(status, new ArrayList<>()), Constants.TEST_ALERT_FG_ID, Constants.TEST_ALERT_FS_NAME,
-        Constants.TEST_ALERT_FG_NAME, Constants.TEST_ALERT_FG_VERSION);
+        testAlertFgName, Constants.TEST_ALERT_FG_VERSION);
     postableAlerts.add(postableAlert);
     sendAlert(postableAlerts, project);
-    String fgFilter = Constants.FILTER_BY_FG_FORMAT.replace(Constants.FG_PLACE_HOLDER, Constants.TEST_ALERT_FG_NAME) +
+    String fgFilter = Constants.FILTER_BY_FG_FORMAT.replace(Constants.FG_PLACE_HOLDER, testAlertFgName) +
         Constants.FILTER_BY_FG_ID_FORMAT.replace(Constants.FG_ID_PLACE_HOLDER, Constants.TEST_ALERT_FG_ID.toString());
     return getAlerts(project, fgFilter);
   }
 
-  private List<Alert> sendJobTestAlert(Project project, AlertType alertType, AlertSeverity severity, String status)
-      throws AlertManagerUnreachableException, AlertManagerAccessControlException, AlertManagerResponseException,
-      AlertManagerClientCreateException {
+  private List<Alert> sendJobTestAlert(Project project, AlertType alertType, AlertSeverity severity, String status,
+      String jobName) throws AlertManagerUnreachableException, AlertManagerAccessControlException,
+      AlertManagerResponseException, AlertManagerClientCreateException {
     List<PostableAlert> postableAlerts = new ArrayList<>();
+    String testAlertJobName = Strings.isNullOrEmpty(jobName) ? Constants.TEST_ALERT_JOB_NAME : jobName;
     PostableAlert postableAlert = getPostableAlert(project, alertType,
-        severity, status, Constants.TEST_ALERT_JOB_NAME, Constants.TEST_ALERT_EXECUTION_ID);
+        severity, status, testAlertJobName, Constants.TEST_ALERT_EXECUTION_ID);
     postableAlerts.add(postableAlert);
     sendAlert(postableAlerts, project);
     String jobFilter =
-        Constants.FILTER_BY_JOB_FORMAT.replace(Constants.JOB_PLACE_HOLDER, Constants.TEST_ALERT_JOB_NAME) +
+        Constants.FILTER_BY_JOB_FORMAT.replace(Constants.JOB_PLACE_HOLDER, testAlertJobName) +
             Constants.FILTER_BY_EXECUTION_FORMAT
                 .replace(Constants.EXECUTION_ID_PLACE_HOLDER, Constants.TEST_ALERT_EXECUTION_ID.toString());
     return getAlerts(project, jobFilter);
