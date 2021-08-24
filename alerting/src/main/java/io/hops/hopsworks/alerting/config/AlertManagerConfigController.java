@@ -447,15 +447,31 @@ public class AlertManagerConfigController {
    * @throws AlertManagerServerException
    * @throws AlertManagerConfigReadException
    */
-  public AlertManagerConfig removeReceiver(String name) throws AlertManagerConfigReadException {
+  public AlertManagerConfig removeReceiver(String name, boolean cascade) throws AlertManagerConfigReadException {
     AlertManagerConfig alertManagerConfig = read();
     int index = alertManagerConfig.getReceivers() == null ? -1 :
         alertManagerConfig.getReceivers().indexOf(new Receiver(name));
     if (index > -1) {
       alertManagerConfig.getReceivers().remove(index);
+      if (cascade) {
+        return removeRoutes(name, alertManagerConfig);
+      }
       return alertManagerConfig;
     }
     return null;
+  }
+  
+  private AlertManagerConfig removeRoutes(String receiver, AlertManagerConfig alertManagerConfig) {
+    List<Route> routesToDelete = new ArrayList<>();
+    for(Route route : alertManagerConfig.getRoute().getRoutes()) {
+      if (route.getReceiver().equals(receiver)) {
+        routesToDelete.add(route);
+      }
+    }
+    if (routesToDelete.size() > 0) {
+      alertManagerConfig.getRoute().getRoutes().removeAll(routesToDelete);
+    }
+    return alertManagerConfig;
   }
   
   /**

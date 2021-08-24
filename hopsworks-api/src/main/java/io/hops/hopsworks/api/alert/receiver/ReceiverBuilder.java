@@ -16,15 +16,19 @@
 
 package io.hops.hopsworks.api.alert.receiver;
 
+import com.google.common.base.Strings;
 import io.hops.hopsworks.alert.AlertManager;
 import io.hops.hopsworks.alert.AlertManagerConfiguration;
 import io.hops.hopsworks.alert.exception.AlertManagerAccessControlException;
 import io.hops.hopsworks.alert.exception.AlertManagerUnreachableException;
+import io.hops.hopsworks.alert.util.Constants;
 import io.hops.hopsworks.alerting.api.alert.dto.ReceiverName;
+import io.hops.hopsworks.alerting.config.dto.AlertManagerConfig;
 import io.hops.hopsworks.alerting.config.dto.EmailConfig;
 import io.hops.hopsworks.alerting.config.dto.OpsgenieConfig;
 import io.hops.hopsworks.alerting.config.dto.PagerdutyConfig;
 import io.hops.hopsworks.alerting.config.dto.Receiver;
+import io.hops.hopsworks.alerting.config.dto.SlackConfig;
 import io.hops.hopsworks.alerting.exceptions.AlertManagerClientCreateException;
 import io.hops.hopsworks.alerting.exceptions.AlertManagerConfigCtrlCreateException;
 import io.hops.hopsworks.alerting.exceptions.AlertManagerConfigReadException;
@@ -43,7 +47,9 @@ import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.ws.rs.core.UriInfo;
+import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -121,6 +127,11 @@ public class ReceiverBuilder {
    */
   public ReceiverDTO build(UriInfo uriInfo, ResourceRequest resourceRequest, String name, Project project)
       throws AlertException {
+    Receiver receiver = getReceiver(name, project);
+    return build(uriInfo, resourceRequest, receiver);
+  }
+  
+  private Receiver getReceiver(String name, Project project) throws AlertException {
     Receiver receiver;
     try {
       if (project != null) {
@@ -135,7 +146,7 @@ public class ReceiverBuilder {
     } catch (AlertManagerAccessControlException e) {
       throw new AlertException(RESTCodes.AlertErrorCode.ACCESS_CONTROL_EXCEPTION, Level.FINE, e.getMessage());
     }
-    return build(uriInfo, resourceRequest, receiver);
+    return receiver;
   }
   
   /**
@@ -146,49 +157,89 @@ public class ReceiverBuilder {
    * @return
    */
   public ReceiverDTO buildItems(UriInfo uriInfo, ResourceRequest resourceRequest, ReceiverBeanParam receiverBeanParam
-      , Project project, Boolean includeGlobal)
+      , Project project, Boolean includeGlobal, Boolean expand)
       throws AlertException {
+    if (expand) {
+      return itemsExpand(new ReceiverDTO(), uriInfo, resourceRequest, receiverBeanParam, project, includeGlobal);
+    }
     return items(new ReceiverDTO(), uriInfo, resourceRequest, receiverBeanParam, project, includeGlobal);
   }
   
-  public ReceiverDTO buildItems(UriInfo uriInfo, ResourceRequest resourceRequest, ReceiverBeanParam receiverBeanParam)
-      throws AlertException {
+  public ReceiverDTO buildItems(UriInfo uriInfo, ResourceRequest resourceRequest, ReceiverBeanParam receiverBeanParam,
+      Boolean expand) throws AlertException {
+    if (expand) {
+      return itemsExpand(new ReceiverDTO(), uriInfo, resourceRequest, receiverBeanParam, null, null);
+    }
     return items(new ReceiverDTO(), uriInfo, resourceRequest, receiverBeanParam, null, null);
+  }
+  
+  private ReceiverDTO itemsExpand(ReceiverDTO dto, UriInfo uriInfo, ResourceRequest resourceRequest,
+      ReceiverBeanParam receiverBeanParam, Project project, Boolean includeGlobal) throws AlertException {
+    uri(dto, uriInfo);
+    expand(dto, resourceRequest);
+    if (dto.isExpand()) {
+      List<ReceiverName> receiverNameList = getReceiverNames(project, includeGlobal);
+      List<Receiver> receivers = new ArrayList<>();
+      for (ReceiverName receiverName : receiverNameList) {
+        receivers.add(getReceiver(receiverName.getName(), project));
+      }
+      dto.setCount((long) receivers.size());
+      return itemsExpand(dto, uriInfo, resourceRequest, receiverBeanParam, receivers);
+    }
+    return dto;
   }
   
   private ReceiverDTO items(ReceiverDTO dto, UriInfo uriInfo, ResourceRequest resourceRequest,
       ReceiverBeanParam receiverBeanParam, Project project, Boolean includeGlobal) throws AlertException {
     uri(dto, uriInfo);
     expand(dto, resourceRequest);
-    List<ReceiverName> receiverNameList;
     if (dto.isExpand()) {
-      try {
-        if (project != null) {
-          receiverNameList = alertManager.getReceivers(project, includeGlobal);
-        } else {
-          receiverNameList = alertManager.getReceivers();
-        }
-      } catch (AlertManagerResponseException e) {
-        throw new AlertException(RESTCodes.AlertErrorCode.RESPONSE_ERROR, Level.FINE, e.getMessage());
-      } catch (AlertManagerClientCreateException | AlertManagerUnreachableException e) {
-        throw new AlertException(RESTCodes.AlertErrorCode.FAILED_TO_CONNECT, Level.FINE, e.getMessage());
-      }
+      List<ReceiverName> receiverNameList = getReceiverNames(project, includeGlobal);
       dto.setCount((long) receiverNameList.size());
       return items(dto, uriInfo, resourceRequest, receiverBeanParam, receiverNameList);
     }
     return dto;
   }
   
+  private List<ReceiverName> getReceiverNames(Project project, Boolean includeGlobal) throws AlertException {
+    List<ReceiverName> receiverNameList;
+    try {
+      if (project != null) {
+        receiverNameList = alertManager.getReceivers(project, includeGlobal != null && includeGlobal);
+      } else {
+        receiverNameList = alertManager.getReceivers();
+      }
+    } catch (AlertManagerResponseException e) {
+      throw new AlertException(RESTCodes.AlertErrorCode.RESPONSE_ERROR, Level.FINE, e.getMessage());
+    } catch (AlertManagerClientCreateException | AlertManagerUnreachableException e) {
+      throw new AlertException(RESTCodes.AlertErrorCode.FAILED_TO_CONNECT, Level.FINE, e.getMessage());
+    }
+    return receiverNameList;
+  }
+  
   private ReceiverDTO items(ReceiverDTO dto, UriInfo uriInfo, ResourceRequest resourceRequest,
       ReceiverBeanParam receiverBeanParam, List<ReceiverName> receivers) {
     if (receivers != null && !receivers.isEmpty()) {
       receivers.forEach((receiver) -> dto.addItem(build(uriInfo, resourceRequest, receiver)));
+      if (receiverBeanParam.getSortBySet() != null && !receiverBeanParam.getSortBySet().isEmpty()) {
+        ReceiverComparator receiverComparator = new ReceiverComparator(receiverBeanParam.getSortBySet());
+        dto.getItems().sort(receiverComparator);
+      }
+      paginate(dto, resourceRequest);
     }
-    if (receiverBeanParam.getSortBySet() != null && !receiverBeanParam.getSortBySet().isEmpty()) {
-      ReceiverComparator receiverComparator = new ReceiverComparator(receiverBeanParam.getSortBySet());
-      dto.getItems().sort(receiverComparator);
+    return dto;
+  }
+  
+  private ReceiverDTO itemsExpand(ReceiverDTO dto, UriInfo uriInfo, ResourceRequest resourceRequest,
+      ReceiverBeanParam receiverBeanParam, List<Receiver> receivers) {
+    if (receivers != null && !receivers.isEmpty()) {
+      receivers.forEach((receiver) -> dto.addItem(build(uriInfo, resourceRequest, receiver)));
+      if (receiverBeanParam.getSortBySet() != null && !receiverBeanParam.getSortBySet().isEmpty()) {
+        ReceiverComparator receiverComparator = new ReceiverComparator(receiverBeanParam.getSortBySet());
+        dto.getItems().sort(receiverComparator);
+      }
+      paginate(dto, resourceRequest);
     }
-    paginate(dto, resourceRequest);
     return dto;
   }
   
@@ -201,11 +252,13 @@ public class ReceiverBuilder {
     }
   }
   
-  public Receiver build(PostableReceiverDTO postableReceiverDTO) {
+  public Receiver build(PostableReceiverDTO postableReceiverDTO, Boolean defaultTemplate, boolean checkUnique)
+      throws AlertException {
     Receiver receiver = new Receiver(postableReceiverDTO.getName())
-        .withEmailConfigs(toEmailConfig(postableReceiverDTO.getEmailConfigs()))
-        .withSlackConfigs(postableReceiverDTO.getSlackConfigs())
-        .withPagerdutyConfigs(toPagerdutyConfig(postableReceiverDTO.getPagerdutyConfigs()))
+        .withEmailConfigs(toEmailConfig(postableReceiverDTO.getEmailConfigs(), defaultTemplate, checkUnique))
+        .withSlackConfigs(toSlackConfig(postableReceiverDTO.getSlackConfigs(), defaultTemplate, checkUnique))
+        .withPagerdutyConfigs(
+            toPagerdutyConfig(postableReceiverDTO.getPagerdutyConfigs(), defaultTemplate, checkUnique))
         .withOpsgenieConfigs(toOpsgenieConfig(postableReceiverDTO.getOpsgenieConfigs()))
         .withPushoverConfigs(postableReceiverDTO.getPushoverConfigs())
         .withVictoropsConfigs(postableReceiverDTO.getVictoropsConfigs())
@@ -214,15 +267,24 @@ public class ReceiverBuilder {
     return receiver;
   }
   
-  private List<EmailConfig> toEmailConfig(List<PostableEmailConfig> postableEmailConfigs) {
+  private List<EmailConfig> toEmailConfig(List<PostableEmailConfig> postableEmailConfigs, Boolean defaultTemplate,
+      boolean checkUnique) throws AlertException {
     if (postableEmailConfigs != null && !postableEmailConfigs.isEmpty()) {
-      return postableEmailConfigs.stream().map(p -> toEmailConfig(p))
+      List<EmailConfig> emailConfigs = postableEmailConfigs.stream().map(p -> toEmailConfig(p, defaultTemplate))
           .collect(Collectors.toList());
+      if (checkUnique) {
+        Set<EmailConfig> emailConfigSet = new HashSet<>();
+        emailConfigSet.addAll(emailConfigs);
+        if (emailConfigs.size() != emailConfigSet.size()) {
+          throw new AlertException(RESTCodes.AlertErrorCode.ILLEGAL_ARGUMENT, Level.FINE, "Emails are not unique.");
+        }
+      }
+      return emailConfigs;
     }
     return null;
   }
   
-  private EmailConfig toEmailConfig(PostableEmailConfig postableEmailConfigs) {
+  private EmailConfig toEmailConfig(PostableEmailConfig postableEmailConfigs, Boolean defaultTemplate) {
     EmailConfig emailConfig = new EmailConfig(postableEmailConfigs.getTo())
         .withFrom(postableEmailConfigs.getFrom())
         .withSmarthost(postableEmailConfigs.getSmarthost())
@@ -243,18 +305,64 @@ public class ReceiverBuilder {
           .collect(Collectors.toMap(Entry::getKey, Entry::getValue));
       emailConfig.setHeaders(headers);
     }
+    if (defaultTemplate && Strings.isNullOrEmpty(emailConfig.getHtml())) {
+      emailConfig.setHtml(Constants.DEFAULT_EMAIL_HTML);
+    }
     return emailConfig;
   }
   
-  private List<PagerdutyConfig> toPagerdutyConfig(List<PostablePagerdutyConfig> pagerdutyConfigs) {
-    if (pagerdutyConfigs != null && !pagerdutyConfigs.isEmpty()) {
-      return pagerdutyConfigs.stream().map(p -> toPagerdutyConfig(p))
+  private List<SlackConfig> toSlackConfig(List<SlackConfig> slackConfigs, Boolean defaultTemplate, boolean checkUnique)
+      throws AlertException {
+    if (slackConfigs != null && !slackConfigs.isEmpty()) {
+      List<SlackConfig> slackConfigList = slackConfigs.stream().map(p -> toSlackConfig(p, defaultTemplate))
           .collect(Collectors.toList());
+      if (checkUnique) {
+        Set<SlackConfig> slackConfigSet = new HashSet<>();
+        slackConfigSet.addAll(slackConfigList);
+        if (slackConfigList.size() != slackConfigSet.size()) {
+          throw new AlertException(RESTCodes.AlertErrorCode.ILLEGAL_ARGUMENT, Level.FINE, "Slack channels are not " +
+              "unique.");
+        }
+      }
+      return slackConfigList;
     }
     return null;
   }
   
-  private PagerdutyConfig toPagerdutyConfig(PostablePagerdutyConfig p) {
+  private SlackConfig toSlackConfig(SlackConfig slackConfig, Boolean defaultTemplate) {
+    if (defaultTemplate) {
+      if (Strings.isNullOrEmpty(slackConfig.getIconUrl())) {
+        slackConfig.setIconUrl(Constants.DEFAULT_SLACK_ICON_URL);
+      }
+      if (Strings.isNullOrEmpty(slackConfig.getText())) {
+        slackConfig.setText(Constants.DEFAULT_SLACK_TEXT);
+      }
+      if (Strings.isNullOrEmpty(slackConfig.getTitle())) {
+        slackConfig.setTitle(Constants.DEFAULT_SLACK_TITLE);
+      }
+    }
+    return slackConfig;
+  }
+  
+  private List<PagerdutyConfig> toPagerdutyConfig(List<PostablePagerdutyConfig> pagerdutyConfigs,
+      Boolean defaultTemplate, boolean checkUnique) throws AlertException {
+    if (pagerdutyConfigs != null && !pagerdutyConfigs.isEmpty()) {
+      List<PagerdutyConfig> pagerdutyConfigList =
+          pagerdutyConfigs.stream().map(p -> toPagerdutyConfig(p, defaultTemplate)).collect(Collectors.toList());
+      if (checkUnique) {
+        Set<PagerdutyConfig> pagerdutyConfigSet = new HashSet<>();
+        pagerdutyConfigSet.addAll(pagerdutyConfigList);
+        if (pagerdutyConfigList.size() != pagerdutyConfigSet.size()) {
+          throw new AlertException(RESTCodes.AlertErrorCode.ILLEGAL_ARGUMENT, Level.FINE, "Pagerdutys are not " +
+              "unique.");
+        }
+      }
+      return pagerdutyConfigList;
+    }
+    return null;
+  }
+  
+  private PagerdutyConfig toPagerdutyConfig(PostablePagerdutyConfig p, Boolean defaultTemplate) {
     Map<String, String> details = null;
     if (p.getDetails() != null && !p.getDetails().isEmpty()) {
       details = p.getDetails().stream()
@@ -306,10 +414,34 @@ public class ReceiverBuilder {
         .withHttpConfig(p.getHttpConfig());
   }
   
+  public GlobalReceiverDefaults build() throws AlertManagerConfigCtrlCreateException, AlertManagerConfigReadException {
+    AlertManagerConfig alertManagerConfig = alertManagerConfiguration.read();
+    GlobalReceiverDefaults globalReceiverDefaults = new GlobalReceiverDefaults();
+    if (alertManagerConfig.getGlobal() != null) {
+      globalReceiverDefaults.setEmailConfigured(!Strings.isNullOrEmpty(alertManagerConfig.getGlobal().getSmtpFrom()) &&
+          !Strings.isNullOrEmpty(alertManagerConfig.getGlobal().getSmtpSmarthost()));
+      globalReceiverDefaults
+          .setSlackConfigured(!Strings.isNullOrEmpty(alertManagerConfig.getGlobal().getSlackApiUrl()));
+      globalReceiverDefaults
+          .setPagerdutyConfigured(!Strings.isNullOrEmpty(alertManagerConfig.getGlobal().getPagerdutyUrl()));
+      globalReceiverDefaults
+          .setOpsgenieConfigured(!Strings.isNullOrEmpty(alertManagerConfig.getGlobal().getOpsgenieApiKey()));
+      globalReceiverDefaults.setPushoverConfigured(true);
+      globalReceiverDefaults
+          .setVictoropsConfigured(!Strings.isNullOrEmpty(alertManagerConfig.getGlobal().getVictoropsApiUrl()) &&
+              !Strings.isNullOrEmpty(alertManagerConfig.getGlobal().getVictoropsApiKey()));
+      globalReceiverDefaults.setWebhookConfigured(true);
+      globalReceiverDefaults
+          .setWechatConfigured(!Strings.isNullOrEmpty(alertManagerConfig.getGlobal().getWechatApiUrl()) &&
+              !Strings.isNullOrEmpty(alertManagerConfig.getGlobal().getWechatApiSecret()));
+    }
+    return globalReceiverDefaults;
+  }
+  
   class ReceiverComparator implements Comparator<ReceiverDTO> {
     
     Set<ReceiverSortBy> sortBy;
-  
+    
     ReceiverComparator(Set<ReceiverSortBy> sortBy) {
       this.sortBy = sortBy;
     }
@@ -338,7 +470,7 @@ public class ReceiverBuilder {
     public int compare(ReceiverDTO a, ReceiverDTO b) {
       Iterator<ReceiverSortBy> sort = sortBy.iterator();
       int c = compare(a, b, sort.next());
-      for (; sort.hasNext() && c == 0;) {
+      for (; sort.hasNext() && c == 0; ) {
         c = compare(a, b, sort.next());
       }
       return c;

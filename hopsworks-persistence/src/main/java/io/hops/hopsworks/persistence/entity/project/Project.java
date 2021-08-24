@@ -41,6 +41,7 @@ package io.hops.hopsworks.persistence.entity.project;
 import io.hops.hopsworks.persistence.entity.dataset.Dataset;
 import io.hops.hopsworks.persistence.entity.dataset.DatasetSharedWith;
 import io.hops.hopsworks.persistence.entity.hdfs.inode.Inode;
+import io.hops.hopsworks.persistence.entity.jobs.description.Jobs;
 import io.hops.hopsworks.persistence.entity.jupyter.JupyterProject;
 import io.hops.hopsworks.persistence.entity.jupyter.JupyterSettings;
 import io.hops.hopsworks.persistence.entity.project.alert.ProjectServiceAlert;
@@ -150,6 +151,9 @@ public class Project implements Serializable {
     mappedBy = "project",
     orphanRemoval=true)
   private Collection<DefaultJobConfiguration> defaultJobConfigurationCollection;
+  @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY,
+      mappedBy = "project")
+  private Collection<Jobs> jobsCollection;
 
   private static final long serialVersionUID = 1L;
 
@@ -564,6 +568,16 @@ public class Project implements Serializable {
   
   public void setProjectServiceAlerts(Collection<ProjectServiceAlert> projectServiceAlerts) {
     this.projectServiceAlerts = projectServiceAlerts;
+  }
+  
+  @XmlTransient
+  @JsonIgnore
+  public Collection<Jobs> getJobsCollection() {
+    return jobsCollection;
+  }
+  
+  public void setJobsCollection(Collection<Jobs> jobsCollection) {
+    this.jobsCollection = jobsCollection;
   }
   
   @Override

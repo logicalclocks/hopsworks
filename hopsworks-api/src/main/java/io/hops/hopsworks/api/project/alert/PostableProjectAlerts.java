@@ -15,43 +15,22 @@
  */
 package io.hops.hopsworks.api.project.alert;
 
-import io.hops.hopsworks.common.api.RestDTO;
 import io.hops.hopsworks.persistence.entity.alertmanager.AlertSeverity;
-import io.hops.hopsworks.persistence.entity.alertmanager.AlertType;
 import io.hops.hopsworks.persistence.entity.project.alert.ProjectServiceAlertStatus;
 import io.hops.hopsworks.persistence.entity.project.service.ProjectServiceEnum;
 
 import javax.xml.bind.annotation.XmlRootElement;
-import java.util.Date;
+import java.util.List;
 
 @XmlRootElement
-public class ProjectAlertsDTO extends RestDTO<ProjectAlertsDTO> {
-  private Integer id;
-  private String projectName;
+public class PostableProjectAlerts {
   private ProjectServiceAlertStatus status;
-  private AlertType alertType;
   private AlertSeverity severity;
   private ProjectServiceEnum service;
   private String receiver;
-  private Date created;
+  private List<PostableProjectAlerts> items;
   
-  public ProjectAlertsDTO() {
-  }
-  
-  public Integer getId() {
-    return id;
-  }
-  
-  public void setId(Integer id) {
-    this.id = id;
-  }
-  
-  public String getProjectName() {
-    return projectName;
-  }
-  
-  public void setProjectName(String projectName) {
-    this.projectName = projectName;
+  public PostableProjectAlerts() {
   }
   
   public ProjectServiceAlertStatus getStatus() {
@@ -60,14 +39,6 @@ public class ProjectAlertsDTO extends RestDTO<ProjectAlertsDTO> {
   
   public void setStatus(ProjectServiceAlertStatus status) {
     this.status = status;
-  }
-  
-  public AlertType getAlertType() {
-    return alertType;
-  }
-  
-  public void setAlertType(AlertType alertType) {
-    this.alertType = alertType;
   }
   
   public AlertSeverity getSeverity() {
@@ -94,11 +65,11 @@ public class ProjectAlertsDTO extends RestDTO<ProjectAlertsDTO> {
     this.receiver = receiver;
   }
   
-  public Date getCreated() {
-    return created;
+  public List<PostableProjectAlerts> getItems() {
+    return items;
   }
   
-  public void setCreated(Date created) {
-    this.created = created;
+  public void setItems(List<PostableProjectAlerts> items) {
+    this.items = items;
   }
 }

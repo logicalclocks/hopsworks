@@ -87,7 +87,7 @@ public class PagerdutyConfig {
   }
   
   public PagerdutyConfig withServiceKey(String serviceKey) {
-    if (!Strings.isNullOrEmpty(this.routingKey)) {
+    if (!Strings.isNullOrEmpty(this.routingKey) && !Strings.isNullOrEmpty(serviceKey)) {
       throw new IllegalArgumentException("The two options serviceKey and routingKey are mutually exclusive.");
     }
     this.serviceKey = serviceKey;
@@ -120,7 +120,7 @@ public class PagerdutyConfig {
   }
   
   public PagerdutyConfig withRoutingKey(String routingKey) {
-    if (!Strings.isNullOrEmpty(this.serviceKey)) {
+    if (!Strings.isNullOrEmpty(this.serviceKey) && !Strings.isNullOrEmpty(routingKey)) {
       throw new IllegalArgumentException("The two options serviceKey and routingKey are mutually exclusive.");
     }
     this.routingKey = routingKey;

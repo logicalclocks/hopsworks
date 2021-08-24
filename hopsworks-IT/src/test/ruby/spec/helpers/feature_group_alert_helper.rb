@@ -17,20 +17,26 @@
 module FeatureGroupAlertHelper
   @@fg_alert_resource = "#{ENV['HOPSWORKS_API']}/project/%{projectId}/featurestores/%{fsId}/featuregroups/%{fgId}/alerts"
 
-  @@alert_success = {"status": "SUCCESS", "alertType": "PROJECT_ALERT", "severity": "INFO"}
-  @@alert_warning = {"status": "WARNING", "alertType": "PROJECT_ALERT", "severity": "WARNING"}
-  @@alert_failed = {"status": "FAILURE", "alertType": "GLOBAL_ALERT_EMAIL", "severity": "CRITICAL"}
+  @@alert_success = {"status": "SUCCESS", "receiver": "global-receiver__email", "severity": "INFO"}
+  @@alert_warning = {"status": "WARNING", "receiver": "global-receiver__slack", "severity": "WARNING"}
+  @@alert_failed = {"status": "FAILURE", "receiver": "global-receiver__pagerduty", "severity": "CRITICAL"}
 
-  def get_fg_alert_success
-    return @@alert_success.clone
+  def get_fg_alert_success(project)
+    success = @@alert_success.clone
+    success[:receiver] = "#{project[:projectname]}__email"
+    return success
   end
 
-  def get_fg_alert_warning
-    return @@alert_warning.clone
+  def get_fg_alert_warning(project)
+    warning = @@alert_warning.clone
+    warning[:receiver] = "#{project[:projectname]}__slack"
+    return warning
   end
 
-  def get_fg_alert_failure
-    return @@alert_failed.clone
+  def get_fg_alert_failure(project)
+    failed = @@alert_failed.clone
+    failed[:receiver] = "#{project[:projectname]}__pagerduty"
+    return failed
   end
 
   def get_fg_alerts(project, featuregroup, query: "")
@@ -64,8 +70,16 @@ module FeatureGroupAlertHelper
   end
 
   def create_fg_alerts(project, featuregroup)
-    create_fg_alert(project, featuregroup, get_fg_alert_success)
-    create_fg_alert(project, featuregroup, get_fg_alert_failure)
+    with_receivers(project)
+    create_fg_alert(project, featuregroup, get_fg_alert_success(project))
+    create_fg_alert(project, featuregroup, get_fg_alert_failure(project))
+  end
+
+  def create_fg_alerts_global(project, featuregroup)
+    with_global_receivers
+    create_fg_alert(project, featuregroup, @@alert_success.clone)
+    create_fg_alert(project, featuregroup, @@alert_warning.clone)
+    create_fg_alert(project, featuregroup, @@alert_failed.clone)
   end
 
   def with_valid_fg(project)

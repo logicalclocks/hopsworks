@@ -15,6 +15,7 @@
  */
 package io.hops.hopsworks.persistence.entity.featurestore.featuregroup.datavalidation.alert;
 
+import io.hops.hopsworks.persistence.entity.alertmanager.AlertReceiver;
 import io.hops.hopsworks.persistence.entity.alertmanager.AlertSeverity;
 import io.hops.hopsworks.persistence.entity.alertmanager.AlertType;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.Featuregroup;
@@ -116,10 +117,27 @@ public class FeatureGroupAlert implements Serializable {
       referencedColumnName = "id")
   @ManyToOne(optional = false)
   private Featuregroup featureGroup;
+  @JoinColumn(name = "receiver",
+      referencedColumnName = "id")
+  @ManyToOne(optional = false)
+  private AlertReceiver receiver;
 
   public FeatureGroupAlert() {
   }
-
+  
+  public FeatureGroupAlert(Integer id,
+      ValidationRuleAlertStatus status, AlertType alertType,
+      AlertSeverity severity, Date created,
+      Featuregroup featureGroup, AlertReceiver receiver) {
+    this.id = id;
+    this.status = status;
+    this.alertType = alertType;
+    this.severity = severity;
+    this.created = created;
+    this.featureGroup = featureGroup;
+    this.receiver = receiver;
+  }
+  
   public FeatureGroupAlert(Integer id) {
     this.id = id;
   }
@@ -170,6 +188,14 @@ public class FeatureGroupAlert implements Serializable {
   
   public void setFeatureGroup(Featuregroup featureGroup) {
     this.featureGroup = featureGroup;
+  }
+  
+  public AlertReceiver getReceiver() {
+    return receiver;
+  }
+  
+  public void setReceiver(AlertReceiver receiver) {
+    this.receiver = receiver;
   }
   
   @Override

@@ -21,31 +21,38 @@ import java.util.Map;
 
 @XmlEnum
 public enum AlertType {
-  SYSTEM_ALERT( "SYSTEM_ALERT", "system-alert"),
-  GLOBAL_ALERT_EMAIL( "GLOBAL_ALERT_EMAIL","global-alert-email"),
-  GLOBAL_ALERT_SLACK( "GLOBAL_ALERT_SLACK","global-alert-slack"),
-  GLOBAL_ALERT_PAGERDUTY( "GLOBAL_ALERT_PAGERDUTY","global-alert-pagerduty"),
-  GLOBAL_ALERT_PUSHOVER( "GLOBAL_ALERT_PUSHOVER","global-alert-pushover"),
-  GLOBAL_ALERT_OPSGENIE( "GLOBAL_ALERT_OPSGENIE","global-alert-opsgenie"),
-  GLOBAL_ALERT_WEBHOOK( "GLOBAL_ALERT_WEBHOOK","global-alert-webhook"),
-  GLOBAL_ALERT_VICTOROPS( "GLOBAL_ALERT_VICTOROPS","global-alert-victorops"),
-  GLOBAL_ALERT_WEBCHAT( "GLOBAL_ALERT_WEBCHAT","global-alert-wechat"),
-  PROJECT_ALERT( "PROJECT_ALERT","project-alert");
+  DEFAULT("DEFAULT", "default", "default"),
+  SYSTEM_ALERT("SYSTEM_ALERT", "system-alert", ""),
+  GLOBAL_ALERT_EMAIL("GLOBAL_ALERT_EMAIL", "global-alert-email", "global-receiver__email"),
+  GLOBAL_ALERT_SLACK("GLOBAL_ALERT_SLACK", "global-alert-slack", "global-receiver__slack"),
+  GLOBAL_ALERT_PAGERDUTY("GLOBAL_ALERT_PAGERDUTY", "global-alert-pagerduty", "global-receiver__pagerduty"),
+  GLOBAL_ALERT_PUSHOVER("GLOBAL_ALERT_PUSHOVER", "global-alert-pushover", "global-receiver__pushover"),
+  GLOBAL_ALERT_OPSGENIE("GLOBAL_ALERT_OPSGENIE", "global-alert-opsgenie", "global-receiver__opsgenie"),
+  GLOBAL_ALERT_WEBHOOK("GLOBAL_ALERT_WEBHOOK", "global-alert-webhook", "global-receiver__webhook"),
+  GLOBAL_ALERT_VICTOROPS("GLOBAL_ALERT_VICTOROPS", "global-alert-victorops", "global-receiver__victorops"),
+  GLOBAL_ALERT_WEBCHAT("GLOBAL_ALERT_WEBCHAT", "global-alert-wechat", "global-receiver__wechat"),
+  PROJECT_ALERT("PROJECT_ALERT", "project-alert", "");
   
   private final String name;
   private final String value;
+  private final String receiverName;
   
   private static final Map<String, AlertType> lookup = new HashMap<>();
+  private static final Map<String, AlertType> lookupReceiver = new HashMap<>();
   
   static {
     for (AlertType a : AlertType.values()) {
       lookup.put(a.value, a);
+      if (!a.receiverName.equals("")) {
+        lookupReceiver.put(a.receiverName, a);
+      }
     }
   }
   
-  AlertType(String name, String value) {
+  AlertType(String name, String value, String receiverName) {
     this.name = name;
     this.value = value;
+    this.receiverName = receiverName;
   }
   
   public static AlertType fromString(String name) {
@@ -56,12 +63,20 @@ public enum AlertType {
     return lookup.get(value);
   }
   
+  public static AlertType fromReceiverName(String receiverName) {
+    return lookupReceiver.get(receiverName);
+  }
+  
   public String getName() {
     return name;
   }
   
   public String getValue() {
     return value;
+  }
+  
+  public String getReceiverName() {
+    return receiverName;
   }
   
   public boolean isGlobal() {

@@ -23,6 +23,7 @@ import io.hops.hopsworks.alerting.api.alert.dto.AlertmanagerStatus;
 import io.hops.hopsworks.alerting.config.dto.AlertManagerConfig;
 import io.hops.hopsworks.alerting.config.dto.Global;
 import io.hops.hopsworks.alerting.config.dto.InhibitRule;
+import io.hops.hopsworks.alerting.config.dto.Receiver;
 import io.hops.hopsworks.alerting.config.dto.Route;
 import io.hops.hopsworks.alerting.exceptions.AlertManagerClientCreateException;
 import io.hops.hopsworks.alerting.exceptions.AlertManagerConfigCtrlCreateException;
@@ -30,6 +31,8 @@ import io.hops.hopsworks.alerting.exceptions.AlertManagerConfigReadException;
 import io.hops.hopsworks.alerting.exceptions.AlertManagerConfigUpdateException;
 import io.hops.hopsworks.alerting.exceptions.AlertManagerResponseException;
 import io.hops.hopsworks.api.alert.Entry;
+import io.hops.hopsworks.api.alert.receiver.PostableReceiverDTO;
+import io.hops.hopsworks.api.alert.receiver.ReceiverBuilder;
 import io.hops.hopsworks.api.alert.route.PostableRouteDTO;
 import io.hops.hopsworks.api.alert.route.RouteBuilder;
 import io.hops.hopsworks.api.filter.Audience;
@@ -53,6 +56,7 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -72,6 +76,9 @@ public class ManagementResource {
   private AlertManagerConfiguration alertManagerConfiguration;
   @EJB
   private RouteBuilder routeBuilder;
+  @EJB
+  private ReceiverBuilder receiverBuilder;
+  
   
   @GET
   @Path("healthy")
@@ -125,6 +132,46 @@ public class ManagementResource {
     } catch (AlertManagerConfigCtrlCreateException | AlertManagerConfigReadException e) {
       throw new AlertException(RESTCodes.AlertErrorCode.FAILED_TO_READ_CONFIGURATION, Level.FINE, e.getMessage());
     }
+  }
+  
+  @POST
+  @Path("config")
+  @Produces(MediaType.APPLICATION_JSON)
+  @Consumes(MediaType.APPLICATION_JSON)
+  @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN"})
+  public Response updateConfig(PostableAlertManagerConfig config, @Context SecurityContext sc) throws AlertException {
+    try {
+      AlertManagerConfig alertManagerConfig = toAlertManagerConfig(config);
+      alertManagerConfiguration.writeAndReload(alertManagerConfig);
+      alertManagerConfig = alertManagerConfiguration.read();
+      return Response.ok().entity(alertManagerConfig).build();
+    } catch (AlertManagerConfigCtrlCreateException | AlertManagerUnreachableException |
+        AlertManagerConfigReadException e) {
+      throw new AlertException(RESTCodes.AlertErrorCode.FAILED_TO_READ_CONFIGURATION, Level.FINE, e.getMessage());
+    } catch (AlertManagerConfigUpdateException e) {
+      throw new AlertException(RESTCodes.AlertErrorCode.FAILED_TO_UPDATE_AM_CONFIG, Level.FINE, e.getMessage());
+    } catch (AlertManagerClientCreateException e) {
+      throw new AlertException(RESTCodes.AlertErrorCode.FAILED_TO_CONNECT, Level.FINE, e.getMessage());
+    } catch (IllegalArgumentException e) {
+      throw new AlertException(RESTCodes.AlertErrorCode.ILLEGAL_ARGUMENT, Level.FINE, e.getMessage());
+    }
+  }
+  
+  private AlertManagerConfig toAlertManagerConfig(PostableAlertManagerConfig config) throws AlertException {
+    return new AlertManagerConfig()
+        .withGlobal(config.getGlobal())
+        .withTemplates(config.getTemplates())
+        .withInhibitRules(toInhibitRules(config.getInhibitRules()))
+        .withReceivers(toReceivers(config.getReceivers()))
+        .withRoute(routeBuilder.toRoute(config.getRoute()));
+  }
+  
+  private List<Receiver> toReceivers(List<PostableReceiverDTO> receivers) throws AlertException {
+    List<Receiver> receiverList = new ArrayList<>();
+    for (PostableReceiverDTO postableReceiverDTO : receivers) {
+      receiverList.add(receiverBuilder.build(postableReceiverDTO, false, false));
+    }
+    return receiverList;
   }
   
   @POST

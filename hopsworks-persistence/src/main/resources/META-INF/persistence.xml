@@ -167,6 +167,7 @@
     <class>io.hops.hopsworks.persistence.entity.jupyter.config.DockerResourcesConverter</class>
     <class>io.hops.hopsworks.persistence.entity.featurestore.featuregroup.datavalidation.RuleAssertionsConverter</class>
     <class>io.hops.hopsworks.persistence.entity.alertmanager.ConfigConverter</class>
+    <class>io.hops.hopsworks.persistence.entity.alertmanager.AlertReceiver</class>
     <exclude-unlisted-classes>true</exclude-unlisted-classes>
     <shared-cache-mode>NONE</shared-cache-mode>
     <validation-mode>NONE</validation-mode>

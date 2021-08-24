@@ -15,6 +15,7 @@
  */
 package io.hops.hopsworks.persistence.entity.project.alert;
 
+import io.hops.hopsworks.persistence.entity.alertmanager.AlertReceiver;
 import io.hops.hopsworks.persistence.entity.alertmanager.AlertSeverity;
 import io.hops.hopsworks.persistence.entity.alertmanager.AlertType;
 import io.hops.hopsworks.persistence.entity.project.Project;
@@ -132,10 +133,28 @@ public class ProjectServiceAlert implements Serializable {
       referencedColumnName = "id")
   @ManyToOne(optional = false)
   private Project project;
+  @JoinColumn(name = "receiver",
+      referencedColumnName = "id")
+  @ManyToOne(optional = false)
+  private AlertReceiver receiver;
 
   public ProjectServiceAlert() {
   }
-
+  
+  public ProjectServiceAlert(Integer id, ProjectServiceEnum service,
+      ProjectServiceAlertStatus status, AlertType alertType,
+      AlertSeverity severity, Date created, Project project,
+      AlertReceiver receiver) {
+    this.id = id;
+    this.service = service;
+    this.status = status;
+    this.alertType = alertType;
+    this.severity = severity;
+    this.created = created;
+    this.project = project;
+    this.receiver = receiver;
+  }
+  
   public ProjectServiceAlert(Integer id) {
     this.id = id;
   }
@@ -194,6 +213,14 @@ public class ProjectServiceAlert implements Serializable {
   
   public void setProject(Project project) {
     this.project = project;
+  }
+  
+  public AlertReceiver getReceiver() {
+    return receiver;
+  }
+  
+  public void setReceiver(AlertReceiver receiver) {
+    this.receiver = receiver;
   }
   
   @Override

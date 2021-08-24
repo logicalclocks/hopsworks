@@ -27,7 +27,7 @@ describe "On #{ENV['OS']}" do
         expect_status_details(401)
       end
       it "should fail to create" do
-        create_job_alert(@project, @job, get_job_alert_finished)
+        create_job_alert(@project, @job, get_job_alert_finished(@project))
         expect_status_details(401)
       end
     end
@@ -43,18 +43,14 @@ describe "On #{ENV['OS']}" do
       end
       it "should update" do
         get_job_alerts(@project, @job)
-        alert = json_body[:items].detect { |a| a[:alertType] == "GLOBAL_ALERT_EMAIL" }
-        alert[:alertType] = "PROJECT_ALERT"
+        alert = json_body[:items].detect { |a| a[:status] == "FINISHED" }
+        receiver = alert[:receiver]
+        alert[:receiver] = "#{@project[:projectname]}__slack1"
         update_job_alert(@project, @job, alert[:id], alert)
         expect_status_details(200)
         expect(json_body).to eq(alert)
-      end
-      it "should fail to update to SYSTEM_ALERT" do
-        get_job_alerts(@project, @job)
-        alert = json_body[:items][0]
-        alert[:alertType] = "SYSTEM_ALERT"
-        update_job_alert(@project, @job, alert[:id], alert)
-        expect_status_details(400)
+        check_route_created(@project, alert[:receiver], alert[:status], job: @job)
+        check_route_deleted(@project, receiver, alert[:status], job: @job)
       end
       it "should fail to update if duplicate" do
         get_job_alerts(@project, @job)
@@ -64,34 +60,57 @@ describe "On #{ENV['OS']}" do
         expect_status_details(400)
       end
       it "should create" do
-        create_job_alert(@project, @job, get_job_alert_failed)
+        alert = get_job_alert_failed(@project)
+        create_job_alert(@project, @job, get_job_alert_failed(@project))
         expect_status_details(201)
-
+        check_route_created(@project, alert[:receiver], alert[:status], job: @job)
         get_job_alerts(@project, @job)
         expect(json_body[:count]).to eq(3)
       end
       it "should fail to create duplicate" do
-        create_job_alert(@project, @job, get_job_alert_failed)
+        create_job_alert(@project, @job, get_job_alert_failed(@project))
         expect_status_details(400)
       end
       it "should delete alert" do
         get_job_alerts(@project, @job)
-        alert = json_body[:items].detect { |a| a[:status] == "FAILED"}
+        alert = json_body[:items].detect { |a| a[:status] == "KILLED"}
         delete_job_alert(@project, @job, alert[:id])
         expect_status_details(204)
-
+        check_route_deleted(@project, alert[:receiver], alert[:status], job: @job)
         get_job_alerts(@project, @job)
         expect(json_body[:count]).to eq(2)
       end
-      it "should fail to create SYSTEM_ALERT" do
-        alert = get_job_alert_failed
-        alert[:alertType] = "SYSTEM_ALERT"
-        create_project_alert(@project, alert)
-        expect_status_details(400)
+      it "should cleanup receivers and routes when deleting project" do
+        delete_project(@project)
+        with_admin_session
+        get_routes_admin
+        routes = json_body[:items].detect { |r| r[:receiver].start_with?("#{@project[:projectname]}__") }
+        expect(routes).to be nil
+        get_receivers_admin
+        receivers = json_body[:items].detect { |r| r[:name].start_with?("#{@project[:projectname]}__") }
+        expect(receivers).to be nil
+
+        alert_receiver = AlertReceiver.where("name LIKE '#{@project[:projectname]}__%'")
+        expect(alert_receiver.length()).to eq(0)
+      end
+      it "should create only one route for global receiver" do
+        with_admin_session
+        @job = with_valid_alert_job
+        create_job_alerts_global(@project, @job)
+        get_job_alerts(@project, @job)
+        expect(json_body[:count]).to eq(3)
+        alert_receiver = AlertReceiver.where("name LIKE '#{@project[:projectname]}__%'")
+        expect(alert_receiver.length()).to eq(0)
+        get_routes_admin()
+        global = json_body[:items].select { |r| r[:receiver].start_with?("global-receiver__") }
+        expect(global.length()).to eq(3)
       end
       context 'sort and filter' do
         before :all do
-          create_job_alert(@project, @job, get_job_alert_failed)
+          reset_session
+          @job = with_valid_alert_job
+          create_job_alerts(@project, @job)
+          create_job_alert(@project, @job, get_job_alert_failed(@project))
         end
         it "should sort by ID" do
           get_job_alerts(@project, @job, query: "?sort_by=id:desc")

@@ -17,10 +17,12 @@ package io.hops.hopsworks.api.featurestore.datavalidation.alert;
 
 import io.hops.hopsworks.common.api.ResourceRequest;
 import io.hops.hopsworks.common.dao.AbstractFacade;
+import io.hops.hopsworks.common.featurestore.FeaturestoreFacade;
 import io.hops.hopsworks.common.featurestore.datavalidation.FeatureGroupAlertFacade;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.Featuregroup;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.datavalidation.alert.FeatureGroupAlert;
+import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.restutils.RESTCodes;
 
 import javax.ejb.EJB;
@@ -31,6 +33,7 @@ import javax.ws.rs.core.UriInfo;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 @Stateless
 @TransactionAttribute(TransactionAttributeType.NEVER)
@@ -40,6 +43,8 @@ public class FeatureGroupAlertBuilder {
   
   @EJB
   private FeatureGroupAlertFacade featureGroupAlertFacade;
+  @EJB
+  private FeaturestoreFacade featurestoreFacade;
   
   public FeatureGroupAlertDTO uri(FeatureGroupAlertDTO dto, UriInfo uriInfo) {
     dto.setHref(uriInfo.getAbsolutePathBuilder()
@@ -55,6 +60,21 @@ public class FeatureGroupAlertBuilder {
     return dto;
   }
   
+  public FeatureGroupAlertDTO projectUri(FeatureGroupAlertDTO dto, UriInfo uriInfo,
+      FeatureGroupAlert featureGroupAlert) {
+    dto.setHref(uriInfo.getBaseUriBuilder()
+        .path(ResourceRequest.Name.PROJECT.toString())
+        .path(Integer.toString(featureGroupAlert.getFeatureGroup().getFeaturestore().getProject().getId()))
+        .path(ResourceRequest.Name.FEATURESTORES.toString())
+        .path(Integer.toString(featureGroupAlert.getFeatureGroup().getFeaturestore().getId()))
+        .path(ResourceRequest.Name.FEATUREGROUPS.toString())
+        .path(Integer.toString(featureGroupAlert.getFeatureGroup().getId()))
+        .path(ResourceRequest.Name.ALERTS.toString())
+        .path(featureGroupAlert.getId().toString())
+        .build());
+    return dto;
+  }
+  
   public FeatureGroupAlertDTO expand(FeatureGroupAlertDTO dto, ResourceRequest resourceRequest) {
     if (resourceRequest != null && resourceRequest.contains(ResourceRequest.Name.ALERTS)) {
       dto.setExpand(true);
@@ -62,10 +82,8 @@ public class FeatureGroupAlertBuilder {
     return dto;
   }
   
-  public FeatureGroupAlertDTO build(UriInfo uriInfo, ResourceRequest resourceRequest,
+  private void setValues(FeatureGroupAlertDTO dto, ResourceRequest resourceRequest,
       FeatureGroupAlert featureGroupAlert) {
-    FeatureGroupAlertDTO dto = new FeatureGroupAlertDTO();
-    uri(dto, uriInfo);
     expand(dto, resourceRequest);
     if (dto.isExpand()) {
       dto.setId(featureGroupAlert.getId());
@@ -73,7 +91,20 @@ public class FeatureGroupAlertBuilder {
       dto.setStatus(featureGroupAlert.getStatus());
       dto.setSeverity(featureGroupAlert.getSeverity());
       dto.setCreated(featureGroupAlert.getCreated());
+      String name =
+          featurestoreFacade.getHiveDbName(featureGroupAlert.getFeatureGroup().getFeaturestore().getHiveDbId());
+      dto.setFeatureStoreName(name);
+      dto.setFeatureGroupName(featureGroupAlert.getFeatureGroup().getName());
+      dto.setFeatureGroupId(featureGroupAlert.getFeatureGroup().getId());
+      dto.setReceiver(featureGroupAlert.getReceiver().getName());
     }
+  }
+  
+  public FeatureGroupAlertDTO build(UriInfo uriInfo, ResourceRequest resourceRequest,
+      FeatureGroupAlert featureGroupAlert) {
+    FeatureGroupAlertDTO dto = new FeatureGroupAlertDTO();
+    uri(dto, uriInfo);
+    setValues(dto, resourceRequest, featureGroupAlert);
     return dto;
   }
   
@@ -81,14 +112,15 @@ public class FeatureGroupAlertBuilder {
       FeatureGroupAlert featureGroupAlert) {
     FeatureGroupAlertDTO dto = new FeatureGroupAlertDTO();
     uri(dto, uriInfo, featureGroupAlert);
-    expand(dto, resourceRequest);
-    if (dto.isExpand()) {
-      dto.setId(featureGroupAlert.getId());
-      dto.setAlertType(featureGroupAlert.getAlertType());
-      dto.setStatus(featureGroupAlert.getStatus());
-      dto.setSeverity(featureGroupAlert.getSeverity());
-      dto.setCreated(featureGroupAlert.getCreated());
-    }
+    setValues(dto, resourceRequest, featureGroupAlert);
+    return dto;
+  }
+  
+  public FeatureGroupAlertDTO buildProjectItems(UriInfo uriInfo, ResourceRequest resourceRequest,
+      FeatureGroupAlert featureGroupAlert) {
+    FeatureGroupAlertDTO dto = new FeatureGroupAlertDTO();
+    projectUri(dto, uriInfo, featureGroupAlert);
+    setValues(dto, resourceRequest, featureGroupAlert);
     return dto;
   }
   
@@ -140,6 +172,34 @@ public class FeatureGroupAlertBuilder {
     if (featureGroupAlerts != null && !featureGroupAlerts.isEmpty()) {
       featureGroupAlerts
           .forEach((featureGroupAlert) -> dto.addItem(buildItems(uriInfo, resourceRequest, featureGroupAlert)));
+    }
+    return dto;
+  }
+  
+  private FeatureGroupAlertDTO projectItems(FeatureGroupAlertDTO dto, UriInfo uriInfo, ResourceRequest resourceRequest,
+      List<FeatureGroupAlert> featureGroupAlerts) {
+    if (featureGroupAlerts != null && !featureGroupAlerts.isEmpty()) {
+      featureGroupAlerts
+          .forEach((featureGroupAlert) -> dto.addItem(buildProjectItems(uriInfo, resourceRequest, featureGroupAlert)));
+    }
+    return dto;
+  }
+  
+  public FeatureGroupAlertDTO buildItems(UriInfo uriInfo, ResourceRequest resourceRequest, Project project) {
+    return items(new FeatureGroupAlertDTO(), uriInfo, resourceRequest, project);
+  }
+  
+  private FeatureGroupAlertDTO items(FeatureGroupAlertDTO dto, UriInfo uriInfo, ResourceRequest resourceRequest,
+      Project project) {
+    uri(dto, uriInfo);
+    expand(dto, resourceRequest);
+    if (dto.isExpand()) {
+      List<FeatureGroupAlert> alerts = featureGroupAlertFacade.findAll();
+      List<FeatureGroupAlert> projectAlerts =
+          alerts.stream().filter(alert -> alert.getFeatureGroup().getFeaturestore().getProject().equals(project))
+              .collect(Collectors.toList());
+      dto.setCount((long) projectAlerts.size());
+      return projectItems(dto, uriInfo, resourceRequest, projectAlerts);
     }
     return dto;
   }

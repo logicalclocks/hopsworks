@@ -40,7 +40,14 @@
 package io.hops.hopsworks.common.project;
 
 import com.logicalclocks.servicediscoverclient.exceptions.ServiceDiscoveryException;
+import io.hops.hopsworks.alert.exception.AlertManagerUnreachableException;
+import io.hops.hopsworks.alerting.exceptions.AlertManagerClientCreateException;
+import io.hops.hopsworks.alerting.exceptions.AlertManagerConfigCtrlCreateException;
+import io.hops.hopsworks.alerting.exceptions.AlertManagerConfigReadException;
+import io.hops.hopsworks.alerting.exceptions.AlertManagerConfigUpdateException;
+import io.hops.hopsworks.alerting.exceptions.AlertManagerResponseException;
 import io.hops.hopsworks.common.airflow.AirflowManager;
+import io.hops.hopsworks.common.alert.AlertController;
 import io.hops.hopsworks.common.constants.auth.AllowedRoles;
 import io.hops.hopsworks.common.dao.certificates.CertsFacade;
 import io.hops.hopsworks.common.dao.dataset.DatasetSharedWithFacade;
@@ -95,6 +102,7 @@ import io.hops.hopsworks.common.util.ProjectUtils;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.common.yarn.YarnClientService;
 import io.hops.hopsworks.common.yarn.YarnClientWrapper;
+import io.hops.hopsworks.exceptions.AlertException;
 import io.hops.hopsworks.exceptions.CryptoPasswordNotFoundException;
 import io.hops.hopsworks.exceptions.DatasetException;
 import io.hops.hopsworks.exceptions.ElasticException;
@@ -287,6 +295,8 @@ public class ProjectController {
   private SubjectsController subjectsController;
   @EJB
   private HopsFSProvenanceController fsProvController;
+  @EJB
+  private AlertController alertController;
 
   /**
    * Creates a new project(project), the related DIR, the different services in
@@ -1321,6 +1331,14 @@ public class ProjectController {
           cleanupLogger.logError("Error when removing root Project dir during project cleanup");
           cleanupLogger.logError(ex.getMessage());
         }
+        
+        try {
+          removeAlertConfigs(project);
+          cleanupLogger.logSuccess("Cleaning alert manager config from project");
+        } catch (Exception ex) {
+          cleanupLogger.logError("Error cleaning alert manager config during project cleanup");
+          cleanupLogger.logError(ex.getMessage());
+        }
 
         // Run custom handler for project deletion
         for (ProjectHandler projectHandler : projectHandlers) {
@@ -1640,6 +1658,8 @@ public class ProjectController {
         removeJupyter(project);
 
         removeAnacondaEnv(project);
+  
+        removeAlertConfigs(project);
 
         //kill jobs
         killYarnJobs(project);
@@ -2592,6 +2612,15 @@ public class ProjectController {
   @TransactionAttribute(TransactionAttributeType.NEVER)
   public void removeTensorBoard(Project project) throws TensorBoardException {
     tensorBoardController.removeProject(project);
+  }
+  
+  public void removeAlertConfigs(Project project) throws AlertException {
+    try {
+      alertController.cleanProjectAlerts(project);
+    } catch (AlertManagerConfigCtrlCreateException | AlertManagerConfigReadException | AlertManagerUnreachableException
+        | AlertManagerResponseException | AlertManagerClientCreateException | AlertManagerConfigUpdateException e) {
+      throw new AlertException(RESTCodes.AlertErrorCode.FAILED_TO_CLEAN, Level.FINE, e.getMessage());
+    }
   }
 
   /**

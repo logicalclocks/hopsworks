@@ -32,6 +32,7 @@ public class FixAlertManagerConfigTimer {
   public void timer() {
     try {
       alertManagerConfiguration.restoreFromBackup();
+      alertManagerConfiguration.runFixConfig();
     } catch (Exception e) {
       LOGGER.log(Level.INFO, "Failed to fix Alert Manager config from backup. " + e.getMessage());
     }

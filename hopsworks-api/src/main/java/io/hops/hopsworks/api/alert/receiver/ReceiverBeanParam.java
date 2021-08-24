@@ -25,7 +25,7 @@ import java.util.Set;
 public class ReceiverBeanParam {
   
   @QueryParam("sort_by")
-  @ApiParam(value = "ex. sort_by=name:asc,name:desc",
+  @ApiParam(value = "ex. sort_by=name:asc",
       allowableValues = "NAME:asc, NAME:desc")
   private String sortBy;
   private final Set<ReceiverSortBy> sortBySet;

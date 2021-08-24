@@ -322,7 +322,7 @@ public class TestAlertManagerConfigController {
     AlertManagerConfig alertManagerConfig = this.alertManagerConfigController.read();
     assert alertManagerConfig.getReceivers().contains(receiver);
   
-    AlertManagerConfig config = alertManagerConfigController.removeReceiver("team-Y-mails");
+    AlertManagerConfig config = alertManagerConfigController.removeReceiver("team-Y-mails", true);
     alertManagerConfigController.writeAndReload(config);
     
     alertManagerConfig = this.alertManagerConfigController.read();

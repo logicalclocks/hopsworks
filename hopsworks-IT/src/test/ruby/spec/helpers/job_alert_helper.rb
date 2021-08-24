@@ -17,20 +17,26 @@
 module JobAlertHelper
   @@job_alert_resource = "#{ENV['HOPSWORKS_API']}/project/%{projectId}/jobs/%{jobName}/alerts"
 
-  @@alert_finished = {"status": "FINISHED", "alertType": "PROJECT_ALERT", "severity": "INFO"}
-  @@alert_failed = {"status": "FAILED", "alertType": "PROJECT_ALERT", "severity": "WARNING"}
-  @@alert_killed = {"status": "KILLED", "alertType": "GLOBAL_ALERT_EMAIL", "severity": "CRITICAL"}
+  @@alert_finished = {"status": "FINISHED", "receiver": "global-receiver__email", "severity": "INFO"}
+  @@alert_failed = {"status": "FAILED", "receiver": "global-receiver__slack", "severity": "WARNING"}
+  @@alert_killed = {"status": "KILLED", "receiver": "global-receiver__pagerduty", "severity": "CRITICAL"}
 
-  def get_job_alert_finished
-    return @@alert_finished.clone
+  def get_job_alert_finished(project)
+    success = @@alert_finished.clone
+    success[:receiver] = "#{project[:projectname]}__email"
+    return success
   end
 
-  def get_job_alert_failed
-    return @@alert_failed.clone
+  def get_job_alert_failed(project)
+    failed = @@alert_failed.clone
+    failed[:receiver] = "#{project[:projectname]}__slack"
+    return failed
   end
 
-  def get_job_alert_killed
-    return @@alert_killed.clone
+  def get_job_alert_killed(project)
+    warning = @@alert_killed.clone
+    warning[:receiver] = "#{project[:projectname]}__pagerduty"
+    return warning
   end
 
   def get_job_alerts(project, job, query: "")
@@ -54,8 +60,16 @@ module JobAlertHelper
   end
 
   def create_job_alerts(project, job)
-    create_job_alert(project, job, get_job_alert_finished)
-    create_job_alert(project, job, get_job_alert_killed)
+    with_receivers(project)
+    create_job_alert(project, job, get_job_alert_finished(project))
+    create_job_alert(project, job, get_job_alert_killed(project))
+  end
+
+  def create_job_alerts_global(project, job)
+    with_global_receivers
+    create_job_alert(project, job, @@alert_finished.clone)
+    create_job_alert(project, job, @@alert_failed.clone)
+    create_job_alert(project, job, @@alert_killed.clone)
   end
 
   def with_valid_alert_job
