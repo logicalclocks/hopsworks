@@ -1,0 +1,124 @@
+---
+global:
+  smtp_smarthost: "smtp.gmail.com:587"
+  smtp_from: "hopsworks@gmail.com"
+  smtp_auth_username: "hopsworks@gmail.com"
+  smtp_auth_identity: "hopsworks@gmail.com"
+  smtp_auth_password: "1234567"
+templates:
+  - "/etc/alertmanager/template/*.tmpl"
+route:
+  group_by:
+    - "alertname"
+    - "cluster"
+    - "service"
+  group_wait: "30s"
+  group_interval: "5m"
+  repeat_interval: "3h"
+  receiver: "team-X-mails"
+  routes:
+    - receiver: email
+      match:
+        type: system-alert
+    - receiver: project1__email
+      continue: true
+      match:
+        project: project1
+        type: project-alert
+    - receiver: global-receiver__slack
+      continue: true
+      match:
+        type: global-alert-slack
+    - receiver: demo_fs_meb10000__email
+      continue: true
+      match:
+        project: demo_fs_meb10000
+        type: project-alert
+    - receiver: demo_fs_meb10000__email
+      continue: true
+      match:
+        project: demo_fs_meb10000
+        type: project-alert
+        job: job2
+    - receiver: demo_fs_meb10000__email
+      continue: true
+      match:
+        project: demo_fs_meb10000
+        type: project-alert
+        job: job3
+    - receiver: global-receiver__slack
+      continue: true
+      match:
+        project: demo_fs_meb10000
+        type: global-alert-slack
+        job: fsJob
+    - receiver: global-receiver__slack
+      continue: true
+      match:
+        project: demo_fs_meb10000
+        type: global-alert-slack
+        job: job2
+    - receiver: global-receiver__slack
+      continue: true
+      match:
+        featureGroup: players_features
+        project: demo_fs_meb10000
+        type: global-alert-slack
+    - receiver: global-receiver__slack
+      continue: true
+      match:
+        featureGroup: alert
+        project: demo_fs_meb10000
+        type: global-alert-slack
+    - receiver: global-receiver__slack
+      continue: true
+      match:
+        featureGroup: teams_features
+        project: demo_fs_meb10000
+        type: global-alert-slack
+    - receiver: global-receiver__slack
+      continue: true
+      match:
+        project: demo_fs_meb10000
+        type: global-alert-slack
+    - receiver: slack_test
+      match:
+        project: "project2"
+      group_by: [ project, jobId, executionId ]
+inhibit_rules:
+  - source_match:
+      severity: "critical"
+    target_match:
+      severity: "warning"
+    equal:
+      - "alertname"
+      - "cluster"
+      - "service"
+receivers:
+  - name: "team-X-mails"
+    email_configs:
+      - to: "team-X@example.se"
+      - to: "team-X1@example.se"
+      - to: "team-X2@example.se"
+  - name: "team-Y-mails"
+    email_configs:
+      - to: "ermias@hotmail.com"
+  - name: email
+    email_configs:
+      - to: sre@logicalclocks.com
+        from: hopsworks@logicalclocks.com
+        smarthost: mail.hello.com
+        text: 'summary: {{ .CommonAnnotations.summary }} description: {{ .CommonAnnotations.description }}'
+  - name: project1__email
+    email_configs:
+      - to: admin@kth.se
+  - name: global-receiver__slack
+    slack_configs:
+      - channel: '#general'
+        icon_url: https://gravatar.com/avatar/e3fb1c1d58b043af5e3a6a645b7f569f
+        text: '{{ template "hopsworks.slack.default.text" . }}'
+        title: '{{ template "hopsworks.slack.default.title" . }}'
+  - name: demo_fs_meb10000__email
+    email_configs:
+      - to: ermiasg@kth.se
+        html: '{{ template "hopsworks.email.default.html" . }}'

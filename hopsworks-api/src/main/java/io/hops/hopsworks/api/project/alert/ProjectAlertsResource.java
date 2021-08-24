@@ -16,15 +16,24 @@
 
 package io.hops.hopsworks.api.project.alert;
 
+import io.hops.hopsworks.alert.dao.AlertReceiverFacade;
 import io.hops.hopsworks.alert.exception.AlertManagerAccessControlException;
 import io.hops.hopsworks.alert.exception.AlertManagerUnreachableException;
 import io.hops.hopsworks.alerting.api.alert.dto.Alert;
 import io.hops.hopsworks.alerting.exceptions.AlertManagerClientCreateException;
+import io.hops.hopsworks.alerting.exceptions.AlertManagerConfigCtrlCreateException;
+import io.hops.hopsworks.alerting.exceptions.AlertManagerConfigReadException;
+import io.hops.hopsworks.alerting.exceptions.AlertManagerConfigUpdateException;
+import io.hops.hopsworks.alerting.exceptions.AlertManagerNoSuchElementException;
 import io.hops.hopsworks.alerting.exceptions.AlertManagerResponseException;
 import io.hops.hopsworks.api.alert.AlertBuilder;
 import io.hops.hopsworks.api.alert.AlertDTO;
+import io.hops.hopsworks.api.featurestore.datavalidation.alert.FeatureGroupAlertBuilder;
+import io.hops.hopsworks.api.featurestore.datavalidation.alert.FeatureGroupAlertDTO;
 import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.api.filter.Audience;
+import io.hops.hopsworks.api.jobs.alert.JobAlertsBuilder;
+import io.hops.hopsworks.api.jobs.alert.JobAlertsDTO;
 import io.hops.hopsworks.api.util.Pagination;
 import io.hops.hopsworks.common.alert.AlertController;
 import io.hops.hopsworks.common.api.ResourceRequest;
@@ -33,13 +42,15 @@ import io.hops.hopsworks.common.project.ProjectController;
 import io.hops.hopsworks.exceptions.AlertException;
 import io.hops.hopsworks.exceptions.ProjectException;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
-import io.hops.hopsworks.persistence.entity.alertmanager.AlertType;
+import io.hops.hopsworks.persistence.entity.alertmanager.AlertReceiver;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.project.alert.ProjectServiceAlert;
+import io.hops.hopsworks.persistence.entity.project.alert.ProjectServiceAlertStatus;
 import io.hops.hopsworks.persistence.entity.project.service.ProjectServiceEnum;
 import io.hops.hopsworks.restutils.RESTCodes;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
+import org.apache.parquet.Strings;
 
 import javax.ejb.EJB;
 import javax.ejb.TransactionAttribute;
@@ -48,19 +59,24 @@ import javax.enterprise.context.RequestScoped;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
+import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
 import javax.ws.rs.core.UriInfo;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
+import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -81,6 +97,12 @@ public class ProjectAlertsResource {
   private AlertController alertController;
   @EJB
   private AlertBuilder alertBuilder;
+  @EJB
+  private JobAlertsBuilder jobAlertsBuilder;
+  @EJB
+  private FeatureGroupAlertBuilder featureGroupAlertBuilder;
+  @EJB
+  private AlertReceiverFacade alertReceiverFacade;
 
   private Integer projectId;
   private String projectName;
@@ -137,9 +159,28 @@ public class ProjectAlertsResource {
   @ApiOperation(value = "Get values for services alert.", response = ProjectServiceAlertValues.class)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
-  public Response getAvailableServices(@Context UriInfo uriInfo, @Context SecurityContext sc)  {
+  public Response getAvailableServices(@Context UriInfo uriInfo, @Context SecurityContext sc) {
     ProjectServiceAlertValues values = new ProjectServiceAlertValues();
     return Response.ok().entity(values).build();
+  }
+
+  @GET
+  @Path("all")
+  @Produces(MediaType.APPLICATION_JSON)
+  @ApiOperation(value = "Get project, job and feature group alerts.", response = ProjectAllAlertsDTO.class)
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
+  @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
+  public Response getAllAlerts(@Context UriInfo uriInfo, @Context SecurityContext sc) throws ProjectException {
+    ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.ALERTS);
+    ProjectAlertsDTO projectAlertsDTO = projectAlertsBuilder.buildItemsAll(uriInfo, resourceRequest, getProject());
+    JobAlertsDTO jobAlertsDTO = jobAlertsBuilder.buildItems(uriInfo, resourceRequest, getProject());
+    FeatureGroupAlertDTO featureGroupAlertDTO =
+        featureGroupAlertBuilder.buildItems(uriInfo, resourceRequest, getProject());
+    ProjectAllAlertsDTO projectAllAlertsDTO = new ProjectAllAlertsDTO();
+    projectAllAlertsDTO.setProjectAlerts(projectAlertsDTO);
+    projectAllAlertsDTO.setJobAlerts(jobAlertsDTO);
+    projectAllAlertsDTO.setFeatureGroupAlerts(featureGroupAlertDTO);
+    return Response.ok().entity(projectAllAlertsDTO).build();
   }
 
   @PUT
@@ -158,13 +199,6 @@ public class ProjectAlertsResource {
     if (projectAlertsDTO == null) {
       throw new ProjectException(RESTCodes.ProjectErrorCode.ALERT_ILLEGAL_ARGUMENT, Level.FINE, "No payload.");
     }
-    if (projectAlertsDTO.getAlertType() != null) {
-      if (AlertType.SYSTEM_ALERT.equals(projectAlertsDTO.getAlertType())) {
-        throw new ProjectException(RESTCodes.ProjectErrorCode.ALERT_ILLEGAL_ARGUMENT, Level.FINE,
-            "AlertType can not be " + AlertType.SYSTEM_ALERT);
-      }
-      projectServiceAlert.setAlertType(projectAlertsDTO.getAlertType());
-    }
     Project project = getProject();
     if (projectAlertsDTO.getStatus() != null) {
       if (!projectAlertsDTO.getStatus().equals(projectServiceAlert.getStatus()) &&
@@ -177,6 +211,12 @@ public class ProjectAlertsResource {
     if (projectAlertsDTO.getSeverity() != null) {
       projectServiceAlert.setSeverity(projectAlertsDTO.getSeverity());
     }
+    if (!projectServiceAlert.getReceiver().getName().equals(projectAlertsDTO.getReceiver())) {
+      deleteRoute(projectServiceAlert);
+      projectServiceAlert.setReceiver(getReceiver(projectAlertsDTO.getReceiver()));
+      projectServiceAlert.setAlertType(alertController.getAlertType(projectServiceAlert.getReceiver()));
+      createRoute(projectServiceAlert);
+    }
     projectServiceAlert = projectServiceAlertsFacade.update(projectServiceAlert);
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.ALERTS);
     ProjectAlertsDTO dto = projectAlertsBuilder.build(uriInfo, resourceRequest, projectServiceAlert);
@@ -186,38 +226,90 @@ public class ProjectAlertsResource {
   @POST
   @Produces(MediaType.APPLICATION_JSON)
   @Consumes(MediaType.APPLICATION_JSON)
-  @ApiOperation(value = "Create an alert.", response = ProjectAlertsDTO.class)
+  @ApiOperation(value = "Create an alert.", response = PostableProjectAlerts.class)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
-  public Response create(ProjectAlertsDTO projectAlertsDTO, @Context UriInfo uriInfo, @Context SecurityContext sc)
+  public Response create(PostableProjectAlerts projectAlertsDTO,
+      @QueryParam("bulk") @DefaultValue("false") Boolean bulk, @Context UriInfo uriInfo, @Context SecurityContext sc)
       throws ProjectException {
-    validate(projectAlertsDTO);
+    ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.ALERTS);
+    ProjectAlertsDTO dto = createAlert(projectAlertsDTO, bulk, uriInfo, resourceRequest);
+    return Response.created(dto.getHref()).entity(dto).build();
+  }
+
+  private ProjectAlertsDTO createAlert(PostableProjectAlerts projectAlertsDTO, Boolean bulk, UriInfo uriInfo,
+      ResourceRequest resourceRequest) throws ProjectException {
+    ProjectAlertsDTO dto;
     Project project = getProject();
+    if (bulk) {
+      validateBulk(projectAlertsDTO);
+      dto = new ProjectAlertsDTO();
+      for (PostableProjectAlerts pa : projectAlertsDTO.getItems()) {
+        dto.addItem(createAlert(pa, uriInfo, project, resourceRequest));
+      }
+      dto.setCount((long) projectAlertsDTO.getItems().size());
+    } else {
+      dto = createAlert(projectAlertsDTO, uriInfo, project, resourceRequest);
+    }
+    return dto;
+  }
+
+  private void validateBulk(PostableProjectAlerts projectAlertsDTO) throws ProjectException {
+    if (projectAlertsDTO.getItems() == null || projectAlertsDTO.getItems().size() < 1) {
+      throw new ProjectException(RESTCodes.ProjectErrorCode.ALERT_ILLEGAL_ARGUMENT, Level.FINE, "No payload.");
+    }
+    Set<ProjectServiceAlertStatus> statusSet = new HashSet<>();
+    for (PostableProjectAlerts dto : projectAlertsDTO.getItems()) {
+      statusSet.add(dto.getStatus());
+    }
+    if (statusSet.size() < projectAlertsDTO.getItems().size()) {
+      throw new ProjectException(RESTCodes.ProjectErrorCode.ALERT_ILLEGAL_ARGUMENT, Level.FINE, "Duplicate alert.");
+    }
+  }
+
+  private ProjectAlertsDTO createAlert(PostableProjectAlerts projectAlertsDTO, UriInfo uriInfo, Project project,
+      ResourceRequest resourceRequest) throws ProjectException {
+    validate(projectAlertsDTO);
     ProjectServiceAlert projectServiceAlert = new ProjectServiceAlert();
-    projectServiceAlert.setAlertType(projectAlertsDTO.getAlertType());
     projectServiceAlert.setStatus(projectAlertsDTO.getStatus());
     projectServiceAlert.setSeverity(projectAlertsDTO.getSeverity());
     projectServiceAlert.setService(projectAlertsDTO.getService());
     projectServiceAlert.setCreated(new Date());
     projectServiceAlert.setProject(project);
+    projectServiceAlert.setReceiver(getReceiver(projectAlertsDTO.getReceiver()));
+    projectServiceAlert.setAlertType(alertController.getAlertType(projectServiceAlert.getReceiver()));
+    createRoute(projectServiceAlert);
     projectServiceAlertsFacade.save(projectServiceAlert);
     projectServiceAlert = projectServiceAlertsFacade.findByProjectAndStatus(project, projectAlertsDTO.getStatus());
-    ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.ALERTS);
-    ProjectAlertsDTO dto = projectAlertsBuilder.buildItems(uriInfo, resourceRequest, projectServiceAlert);
-    return Response.created(dto.getHref()).entity(dto).build();
+    return projectAlertsBuilder.buildItems(uriInfo, resourceRequest, projectServiceAlert);
   }
 
-  private void validate(ProjectAlertsDTO projectAlertsDTO) throws ProjectException {
+  private AlertReceiver getReceiver(String name) throws ProjectException {
+    if (Strings.isNullOrEmpty(name)) {
+      throw new ProjectException(RESTCodes.ProjectErrorCode.ALERT_ILLEGAL_ARGUMENT, Level.FINE,
+          "Receiver can not be empty.");
+    }
+    Optional<AlertReceiver> alertReceiver = alertReceiverFacade.findByName(name);
+    if (alertReceiver.isPresent()) {
+      return alertReceiver.get();
+    }
+    throw new ProjectException(RESTCodes.ProjectErrorCode.ALERT_ILLEGAL_ARGUMENT, Level.FINE,
+        "Alert receiver not found " + name);
+  }
+
+  private void createRoute(ProjectServiceAlert projectServiceAlert) throws ProjectException {
+    try {
+      alertController.createRoute(projectServiceAlert);
+    } catch ( AlertManagerClientCreateException | AlertManagerConfigReadException |
+        AlertManagerConfigCtrlCreateException | AlertManagerConfigUpdateException | AlertManagerNoSuchElementException |
+        AlertManagerAccessControlException | AlertManagerUnreachableException e) {
+      throw new ProjectException(RESTCodes.ProjectErrorCode.FAILED_TO_CREATE_ROUTE, Level.FINE, e.getMessage());
+    }
+  }
+
+  private void validate(PostableProjectAlerts projectAlertsDTO) throws ProjectException {
     if (projectAlertsDTO == null) {
       throw new ProjectException(RESTCodes.ProjectErrorCode.ALERT_ILLEGAL_ARGUMENT, Level.FINE, "No payload.");
-    }
-    if (projectAlertsDTO.getAlertType() == null) {
-      throw new ProjectException(RESTCodes.ProjectErrorCode.ALERT_ILLEGAL_ARGUMENT, Level.FINE,
-          "Type can not be empty.");
-    }
-    if (AlertType.SYSTEM_ALERT.equals(projectAlertsDTO.getAlertType())) {
-      throw new ProjectException(RESTCodes.ProjectErrorCode.ALERT_ILLEGAL_ARGUMENT, Level.FINE,
-          "AlertType can not be " + AlertType.SYSTEM_ALERT);
     }
     if (projectAlertsDTO.getStatus() == null) {
       throw new ProjectException(RESTCodes.ProjectErrorCode.ALERT_ILLEGAL_ARGUMENT, Level.FINE,
@@ -290,9 +382,19 @@ public class ProjectAlertsResource {
       throws ProjectException {
     ProjectServiceAlert projectServiceAlert = projectServiceAlertsFacade.findByProjectAndId(getProject(), id);
     if (projectServiceAlert != null) {
+      deleteRoute(projectServiceAlert);
       projectServiceAlertsFacade.remove(projectServiceAlert);
     }
     return Response.noContent().build();
+  }
+
+  private void deleteRoute(ProjectServiceAlert projectServiceAlert) throws ProjectException {
+    try {
+      alertController.deleteRoute(projectServiceAlert);
+    } catch (AlertManagerUnreachableException | AlertManagerAccessControlException | AlertManagerConfigUpdateException |
+        AlertManagerConfigCtrlCreateException | AlertManagerConfigReadException | AlertManagerClientCreateException e) {
+      throw new ProjectException(RESTCodes.ProjectErrorCode.FAILED_TO_DELETE_ROUTE, Level.FINE, e.getMessage());
+    }
   }
 
 }

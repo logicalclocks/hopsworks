@@ -54,6 +54,17 @@ public class ProjectAlertsBuilder {
     return dto;
   }
 
+  public ProjectAlertsDTO uriAll(ProjectAlertsDTO dto, UriInfo uriInfo, ProjectServiceAlert alert) {
+    dto.setHref(uriInfo.getBaseUriBuilder()
+        .path(ResourceRequest.Name.PROJECT.toString())
+        .path(Integer.toString(alert.getProject().getId()))
+        .path("service")
+        .path(ResourceRequest.Name.ALERTS.toString())
+        .path(Integer.toString(alert.getId()))
+        .build());
+    return dto;
+  }
+
   public ProjectAlertsDTO expand(ProjectAlertsDTO dto, ResourceRequest resourceRequest) {
     if (resourceRequest != null && resourceRequest.contains(ResourceRequest.Name.ALERTS)) {
       dto.setExpand(true);
@@ -61,9 +72,7 @@ public class ProjectAlertsBuilder {
     return dto;
   }
 
-  public ProjectAlertsDTO build(UriInfo uriInfo, ResourceRequest resourceRequest, ProjectServiceAlert alert) {
-    ProjectAlertsDTO dto = new ProjectAlertsDTO();
-    uri(dto, uriInfo);
+  private void setValues(ProjectAlertsDTO dto, ResourceRequest resourceRequest, ProjectServiceAlert alert) {
     expand(dto, resourceRequest);
     if (dto.isExpand()) {
       dto.setId(alert.getId());
@@ -72,22 +81,29 @@ public class ProjectAlertsBuilder {
       dto.setSeverity(alert.getSeverity());
       dto.setService(alert.getService());
       dto.setCreated(alert.getCreated());
+      dto.setProjectName(alert.getProject().getName());
+      dto.setReceiver(alert.getReceiver().getName());
     }
+  }
+
+  public ProjectAlertsDTO build(UriInfo uriInfo, ResourceRequest resourceRequest, ProjectServiceAlert alert) {
+    ProjectAlertsDTO dto = new ProjectAlertsDTO();
+    uri(dto, uriInfo);
+    setValues(dto, resourceRequest, alert);
     return dto;
   }
 
   public ProjectAlertsDTO buildItems(UriInfo uriInfo, ResourceRequest resourceRequest, ProjectServiceAlert alert) {
     ProjectAlertsDTO dto = new ProjectAlertsDTO();
     uri(dto, uriInfo, alert);
-    expand(dto, resourceRequest);
-    if (dto.isExpand()) {
-      dto.setId(alert.getId());
-      dto.setAlertType(alert.getAlertType());
-      dto.setStatus(alert.getStatus());
-      dto.setSeverity(alert.getSeverity());
-      dto.setService(alert.getService());
-      dto.setCreated(alert.getCreated());
-    }
+    setValues(dto, resourceRequest, alert);
+    return dto;
+  }
+
+  public ProjectAlertsDTO buildItemAll(UriInfo uriInfo, ResourceRequest resourceRequest, ProjectServiceAlert alert) {
+    ProjectAlertsDTO dto = new ProjectAlertsDTO();
+    uriAll(dto, uriInfo, alert);
+    setValues(dto, resourceRequest, alert);
     return dto;
   }
 
@@ -113,6 +129,10 @@ public class ProjectAlertsBuilder {
     return items(new ProjectAlertsDTO(), uriInfo, resourceRequest, project);
   }
 
+  public ProjectAlertsDTO buildItemsAll(UriInfo uriInfo, ResourceRequest resourceRequest, Project project) {
+    return itemsAll(new ProjectAlertsDTO(), uriInfo, resourceRequest, project);
+  }
+
   private ProjectAlertsDTO items(ProjectAlertsDTO dto, UriInfo uriInfo, ResourceRequest resourceRequest,
       Project project) {
     uri(dto, uriInfo);
@@ -127,10 +147,32 @@ public class ProjectAlertsBuilder {
     return dto;
   }
 
+  private ProjectAlertsDTO itemsAll(ProjectAlertsDTO dto, UriInfo uriInfo, ResourceRequest resourceRequest,
+      Project project) {
+    uri(dto, uriInfo);
+    expand(dto, resourceRequest);
+    if (dto.isExpand()) {
+      AbstractFacade.CollectionInfo collectionInfo = projectServiceAlertsFacade.findAllProjectAlerts(
+          resourceRequest.getOffset(), resourceRequest.getLimit(), resourceRequest.getFilter(),
+          resourceRequest.getSort(), project);
+      dto.setCount(collectionInfo.getCount());
+      return itemsAll(dto, uriInfo, resourceRequest, collectionInfo.getItems());
+    }
+    return dto;
+  }
+
   private ProjectAlertsDTO items(ProjectAlertsDTO dto, UriInfo uriInfo, ResourceRequest resourceRequest,
       List<ProjectServiceAlert> alerts) {
     if (alerts != null && !alerts.isEmpty()) {
       alerts.forEach((alert) -> dto.addItem(buildItems(uriInfo, resourceRequest, alert)));
+    }
+    return dto;
+  }
+
+  private ProjectAlertsDTO itemsAll(ProjectAlertsDTO dto, UriInfo uriInfo, ResourceRequest resourceRequest,
+      List<ProjectServiceAlert> alerts) {
+    if (alerts != null && !alerts.isEmpty()) {
+      alerts.forEach((alert) -> dto.addItem(buildItemAll(uriInfo, resourceRequest, alert)));
     }
     return dto;
   }

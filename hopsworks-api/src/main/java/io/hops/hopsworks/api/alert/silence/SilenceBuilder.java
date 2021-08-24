@@ -202,12 +202,12 @@ public class SilenceBuilder {
       SilenceBeanParam silenceBeanParam) {
     if (silences != null && !silences.isEmpty()) {
       silences.forEach((silence) -> dto.addItem(buildItems(uriInfo, resourceRequest, silence)));
+      if (silenceBeanParam.getSortBySet() != null && !silenceBeanParam.getSortBySet().isEmpty()) {
+        SilenceComparator silenceComparator = new SilenceComparator(silenceBeanParam.getSortBySet());
+        dto.getItems().sort(silenceComparator);
+      }
+      paginate(dto, resourceRequest);
     }
-    if (silenceBeanParam.getSortBySet() != null && !silenceBeanParam.getSortBySet().isEmpty()) {
-      SilenceComparator silenceComparator = new SilenceComparator(silenceBeanParam.getSortBySet());
-      dto.getItems().sort(silenceComparator);
-    }
-    paginate(dto, resourceRequest);
     return dto;
   }
 

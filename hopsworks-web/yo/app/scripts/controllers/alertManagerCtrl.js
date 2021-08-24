@@ -57,9 +57,9 @@ angular.module('hopsWorksApp')
 
             self.newAlert = {
                 status: undefined,
-                alertType: undefined,
                 severity: undefined,
-                service: undefined
+                service: undefined,
+                receiver: undefined
             };
 
             self.newRoute = {
@@ -173,6 +173,7 @@ angular.module('hopsWorksApp')
                 alertsService.serviceAlerts.create(self.newAlert).then(function(success) {
                     growl.success(getMsg(success), {title: 'Alert Created', ttl: 1000});
                     getServiceAlerts();
+                    getActiveRoutes();
                 }, function(error){
                     growl.error(getMsg(error), {title: 'Failed to create alert', ttl: 5000});
                 })
@@ -182,6 +183,7 @@ angular.module('hopsWorksApp')
                 alertsService.serviceAlerts.delete(alert.id).then(function(success) {
                     growl.success(getMsg(success), {title: 'Alert deleted', ttl: 1000});
                     getServiceAlerts();
+                    getActiveRoutes();
                 }, function(error){
                     growl.error(getMsg(error), {title: 'Failed to delete alert', ttl: 5000});
                 })

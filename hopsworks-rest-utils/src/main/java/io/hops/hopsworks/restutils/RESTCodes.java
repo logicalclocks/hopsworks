@@ -194,7 +194,9 @@ public class RESTCodes {
     ALERT_NOT_FOUND(78, "Alert not found", Response.Status.NOT_FOUND),
     ALERT_ILLEGAL_ARGUMENT(79, "Alert missing argument.", Response.Status.BAD_REQUEST),
     ALERT_ALREADY_EXISTS(80, "Alert with the same status already exists.", Response.Status.BAD_REQUEST),
-    FAILED_TO_ADD_MEMBER(81, "Failed to add member.", Response.Status.BAD_REQUEST);
+    FAILED_TO_ADD_MEMBER(81, "Failed to add member.", Response.Status.BAD_REQUEST),
+    FAILED_TO_CREATE_ROUTE(82, "Failed to create route.", Response.Status.BAD_REQUEST),
+    FAILED_TO_DELETE_ROUTE(83, "Failed to delete route.", Response.Status.BAD_REQUEST);
 
 
 
@@ -443,7 +445,9 @@ public class RESTCodes {
     JOB_ALERT_NOT_FOUND(34, "Job alert not found", Response.Status.NOT_FOUND),
     JOB_ALERT_ILLEGAL_ARGUMENT(35, "Job alert missing argument.", Response.Status.BAD_REQUEST),
     JOB_ALERT_ALREADY_EXISTS(36, "Job alert with the same status already exists.", Response.Status.BAD_REQUEST),
-    DOCKER_INVALID_JOB_PROPERTIES(37, "Received invalid job property values", Response.Status.BAD_REQUEST);
+    DOCKER_INVALID_JOB_PROPERTIES(37, "Received invalid job property values", Response.Status.BAD_REQUEST),
+    FAILED_TO_CREATE_ROUTE(38, "Failed to create route.", Response.Status.BAD_REQUEST),
+    FAILED_TO_DELETE_ROUTE(39, "Failed to delete route.", Response.Status.BAD_REQUEST);
 
     private Integer code;
     private String message;
@@ -1573,7 +1577,9 @@ public class RESTCodes {
     ILLEGAL_PREFIX_NAME(165, "Illegal feature name", Response.Status.BAD_REQUEST),
     ERROR_SAVING_CODE(166, "Error saving code", Response.Status.BAD_REQUEST),
     CODE_READ_ERROR(167, "Error reading the code", Response.Status.INTERNAL_SERVER_ERROR),
-    CODE_NOT_FOUND(168, "Code not found", Response.Status.NOT_FOUND);
+    CODE_NOT_FOUND(168, "Code not found", Response.Status.NOT_FOUND),
+    FAILED_TO_CREATE_ROUTE(169, "Failed to create route.", Response.Status.BAD_REQUEST),
+    FAILED_TO_DELETE_ROUTE(170, "Failed to delete route.", Response.Status.BAD_REQUEST);
 
     private int code;
     private String message;
@@ -2129,6 +2135,8 @@ public class RESTCodes {
     RESPONSE_ERROR(9, "Alert manager response error.", Response.Status.BAD_REQUEST),
     ACCESS_CONTROL_EXCEPTION(10, "You are not allowed to access this resource.", Response.Status.FORBIDDEN),
     FAILED_TO_READ_CONFIGURATION(11, "Failed to read alert manager configuration.",
+        Response.Status.PRECONDITION_FAILED),
+    FAILED_TO_CLEAN(12, "Failed to clean project from alert manager config.",
         Response.Status.PRECONDITION_FAILED);
 
     private int code;

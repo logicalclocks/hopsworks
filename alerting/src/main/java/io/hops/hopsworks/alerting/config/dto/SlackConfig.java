@@ -135,6 +135,11 @@ public class SlackConfig {
     this.channel = channel;
   }
 
+  public SlackConfig withChannel(String channel) {
+    this.channel = channel;
+    return this;
+  }
+
   @JsonProperty("icon_emoji")
   public String getIconEmoji() {
     return iconEmoji;

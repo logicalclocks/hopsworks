@@ -284,6 +284,23 @@ module AlertHelper
     create_receivers_admin_checked(create_receiver(project, pagerdutyConfigs: [create_pager_duty_config]))
   end
 
+  def with_global_receivers
+    create_receivers_admin(create_receiver(nil, name: "global-receiver__email", emailConfigs: [create_email_config]))
+    create_receivers_admin(create_receiver(nil, name: "global-receiver__slack", slackConfigs: [create_slack_config]))
+    create_receivers_admin(create_receiver(nil, name: "global-receiver__pagerduty", pagerdutyConfigs: [create_pager_duty_config]))
+  end
+
+  def with_receivers(project)
+    create_receivers_checked(project, create_receiver(project, name: "#{project[:projectname]}__email", emailConfigs:
+      [create_email_config]))
+    create_receivers_checked(project, create_receiver(project, name: "#{project[:projectname]}__slack", slackConfigs:
+      [create_slack_config]))
+    create_receivers_checked(project, create_receiver(project, name: "#{project[:projectname]}__pagerduty",
+                                                      pagerdutyConfigs: [create_pager_duty_config]))
+    create_receivers_checked(project, create_receiver(project, name: "#{project[:projectname]}__slack1",
+                                                      slackConfigs: [create_slack_config]))
+  end
+
   def get_alerts(project, query: "")
     get "#{@@alert_resource}#{query}" % {projectId: project[:id]}
   end
@@ -510,15 +527,27 @@ module AlertHelper
     expect(r).to eq(JSON.parse(r1.compact.to_json))
   end
 
+  def toHash(key_value)
+    if key_value && key_value.kind_of?(Array)
+      list = key_value[0]
+    elsif key_value
+      list = key_value[:entry]
+    end
+    kv = list ? list.map { |r| %W[#{r[:key]} #{r[:value]}] } : nil
+    return kv ? Hash[kv] : nil
+  end
+
   def check_backup_contains_route(route)
     config = AlertManagerConfig.order(created: :desc).first
     routes = JSON.parse(config[:content])["route"]["routes"]
-    r = routes.detect { |r| r["receiver"] == route[:receiver] }
     r1 = {}
-    r1["match"] = route[:match]? route[:match][0].map { |r| {"#{r[:key]}"=> "#{r[:value]}", "type"=>"project-alert"} }[0] : nil
-    r1["match_re"] = route[:matchRe]? route[:matchRe][0].map { |r| {"#{r[:key]}"=> "#{r[:value]}", "type"=>"project-alert"} }[0] : nil
+    r1["match"] = toHash(route[:match])
+    r1["match_re"] = toHash(route[:matchRe])
     r1["receiver"] = route[:receiver]
-    expect(r).to eq(r1.compact)
+    r1["continue"] = route[:continue]
+    r1["group_by"] = route[:groupBy]
+    r = routes.detect { |r| r == JSON.parse(r1.compact.to_json) }
+    expect(r).to be_present
   end
 
   def check_receiver_deleted_from_backup(receiver)
@@ -534,4 +563,46 @@ module AlertHelper
     r = routes.detect { |r| r["receiver"] == route[:receiver] }
     expect(r).to be nil
   end
+
+  def check_alert_receiver_created(receiver)
+    alert_receiver = AlertReceiver.where(name: receiver).first
+    config = JSON.parse(alert_receiver[:config])
+    expect(config["name"]).to eq(receiver)
+  end
+
+  def create_route_match_query(project, receiver, status, job: nil, fg: nil)
+    statusQ = status
+    if status.include? "_"
+      statusQ = status.partition('_')[2]
+    end
+    query = "?match=status:#{statusQ.capitalize}"
+    query = receiver.start_with?("global-receiver__") ?
+              "#{query}&match=type:global-alert-#{receiver.partition('__')[2]}" :
+              "#{query}&match=project:#{project[:projectname]}&match=type:project-alert"
+    query = job ? "#{query}&match=job:#{job[:name]}" : query
+    query = fg ? "#{query}&match=featureGroup:#{fg['name']}" : query
+    return query
+  end
+
+  def check_route_created(project, receiver, status, job: nil, fg: nil)
+    query = create_route_match_query(project, receiver, status, job: job, fg: fg)
+    get_routes_by_receiver(project, receiver, query: query)
+    expect_status_details(200)
+    check_backup_contains_route(json_body)
+    check_alert_receiver_created(receiver)
+    expect(json_body[:receiver]).to eq(receiver)
+  end
+
+  def check_route_exist(project, receiver, status, job: nil, fg: nil)
+    query = create_route_match_query(project, receiver, status, job: job, fg: fg)
+    get_routes_by_receiver(project, receiver, query: query)
+    expect_status_details(200)
+  end
+
+  def check_route_deleted(project, receiver, status, job: nil, fg: nil)
+    query = create_route_match_query(project, receiver, status, job: job, fg: fg)
+    get_routes_by_receiver(project, receiver, query: query)
+    expect_status_details(400)
+  end
+
 end

@@ -157,7 +157,8 @@ public class RouteResource {
     }
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.ROUTES);
     RouteDTO dto = routeBuilder.build(uriInfo, resourceRequest, route, getProject());
-    return Response.created(dto.getHref()).build();
+    routeBuilder.uriItem(dto, uriInfo, route);
+    return Response.created(dto.getHref()).entity(dto).build();
   }
 
 

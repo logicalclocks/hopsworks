@@ -13,59 +13,31 @@
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see <https://www.gnu.org/licenses/>.
  */
-package io.hops.hopsworks.api.jobs.alert;
+package io.hops.hopsworks.api.featurestore.datavalidation.alert;
 
-import io.hops.hopsworks.common.api.RestDTO;
 import io.hops.hopsworks.persistence.entity.alertmanager.AlertSeverity;
-import io.hops.hopsworks.persistence.entity.alertmanager.AlertType;
-import io.hops.hopsworks.persistence.entity.jobs.description.JobAlertStatus;
+import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.datavalidation.alert.ValidationRuleAlertStatus;
 
 import javax.xml.bind.annotation.XmlRootElement;
-import java.util.Date;
+import java.util.List;
 
 @XmlRootElement
-public class JobAlertsDTO extends RestDTO<JobAlertsDTO> {
-  private Integer id;
-  private String jobName;
-  private JobAlertStatus status;
-  private AlertType alertType;
+public class PostableFeatureGroupAlerts {
+  private ValidationRuleAlertStatus status;
   private AlertSeverity severity;
   private String receiver;
-  private Date created;
+  private List<PostableFeatureGroupAlerts> items;
 
-  public JobAlertsDTO() {
+  public PostableFeatureGroupAlerts() {
   }
 
-  public Integer getId() {
-    return id;
-  }
-
-  public void setId(Integer id) {
-    this.id = id;
-  }
-
-  public String getJobName() {
-    return jobName;
-  }
-
-  public void setJobName(String jobName) {
-    this.jobName = jobName;
-  }
-
-  public JobAlertStatus getStatus() {
+  public ValidationRuleAlertStatus getStatus() {
     return status;
   }
 
-  public void setStatus(JobAlertStatus status) {
+  public void setStatus(
+      ValidationRuleAlertStatus status) {
     this.status = status;
-  }
-
-  public AlertType getAlertType() {
-    return alertType;
-  }
-
-  public void setAlertType(AlertType alertType) {
-    this.alertType = alertType;
   }
 
   public AlertSeverity getSeverity() {
@@ -84,11 +56,12 @@ public class JobAlertsDTO extends RestDTO<JobAlertsDTO> {
     this.receiver = receiver;
   }
 
-  public Date getCreated() {
-    return created;
+  public List<PostableFeatureGroupAlerts> getItems() {
+    return items;
   }
 
-  public void setCreated(Date created) {
-    this.created = created;
+  public void setItems(
+      List<PostableFeatureGroupAlerts> items) {
+    this.items = items;
   }
 }

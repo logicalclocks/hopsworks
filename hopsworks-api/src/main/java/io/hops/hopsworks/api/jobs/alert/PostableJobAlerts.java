@@ -15,41 +15,20 @@
  */
 package io.hops.hopsworks.api.jobs.alert;
 
-import io.hops.hopsworks.common.api.RestDTO;
 import io.hops.hopsworks.persistence.entity.alertmanager.AlertSeverity;
-import io.hops.hopsworks.persistence.entity.alertmanager.AlertType;
 import io.hops.hopsworks.persistence.entity.jobs.description.JobAlertStatus;
 
 import javax.xml.bind.annotation.XmlRootElement;
-import java.util.Date;
+import java.util.List;
 
 @XmlRootElement
-public class JobAlertsDTO extends RestDTO<JobAlertsDTO> {
-  private Integer id;
-  private String jobName;
+public class PostableJobAlerts {
   private JobAlertStatus status;
-  private AlertType alertType;
   private AlertSeverity severity;
   private String receiver;
-  private Date created;
+  protected List<PostableJobAlerts> items;
 
-  public JobAlertsDTO() {
-  }
-
-  public Integer getId() {
-    return id;
-  }
-
-  public void setId(Integer id) {
-    this.id = id;
-  }
-
-  public String getJobName() {
-    return jobName;
-  }
-
-  public void setJobName(String jobName) {
-    this.jobName = jobName;
+  public PostableJobAlerts() {
   }
 
   public JobAlertStatus getStatus() {
@@ -58,14 +37,6 @@ public class JobAlertsDTO extends RestDTO<JobAlertsDTO> {
 
   public void setStatus(JobAlertStatus status) {
     this.status = status;
-  }
-
-  public AlertType getAlertType() {
-    return alertType;
-  }
-
-  public void setAlertType(AlertType alertType) {
-    this.alertType = alertType;
   }
 
   public AlertSeverity getSeverity() {
@@ -84,11 +55,11 @@ public class JobAlertsDTO extends RestDTO<JobAlertsDTO> {
     this.receiver = receiver;
   }
 
-  public Date getCreated() {
-    return created;
+  public List<PostableJobAlerts> getItems() {
+    return items;
   }
 
-  public void setCreated(Date created) {
-    this.created = created;
+  public void setItems(List<PostableJobAlerts> items) {
+    this.items = items;
   }
 }

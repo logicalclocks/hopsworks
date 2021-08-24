@@ -28,7 +28,7 @@ describe "On #{ENV['OS']}" do
         expect_status_details(401)
       end
       it "should fail to create" do
-        create_project_alert(@project, get_project_alert_failed)
+        create_project_alert(@project, get_project_alert_failed(@project))
         expect_status_details(401)
       end
     end
@@ -44,19 +44,15 @@ describe "On #{ENV['OS']}" do
       end
       it "should update" do
         get_project_alerts(@project)
-        alert = json_body[:items].detect { |a| a[:alertType] == "GLOBAL_ALERT_EMAIL" and a[:service] == "JOBS" }
-        alert[:alertType] = "PROJECT_ALERT"
+        alert = json_body[:items].detect { |a| a[:status] == "JOB_FINISHED" and a[:service] == "JOBS" }
+        receiver = alert[:receiver]
+        alert[:receiver] = "#{@project[:projectname]}__slack1"
         update_project_alert(@project, alert[:id], alert)
         expect_status_details(200)
         get_project_alert(@project, alert[:id])
         expect(json_body).to eq(alert)
-      end
-      it "should fail to update to SYSTEM_ALERT" do
-        get_project_alerts(@project)
-        alert = json_body[:items].detect { |a| a[:alertType] == "GLOBAL_ALERT_EMAIL" and a[:service] == "FEATURESTORE" }
-        alert[:alertType] = "SYSTEM_ALERT"
-        update_project_alert(@project, alert[:id], alert)
-        expect_status_details(400)
+        check_route_created(@project, alert[:receiver], alert[:status])
+        check_route_deleted(@project, receiver, alert[:status])
       end
       it "should fail to update if duplicate" do
         get_project_alerts(@project)
@@ -66,20 +62,15 @@ describe "On #{ENV['OS']}" do
         expect_status_details(400)
       end
       it "should create" do
-        create_project_alert(@project, get_project_alert_failed)
+        alert = get_project_alert_failed(@project)
+        create_project_alert(@project, alert)
         expect_status_details(201)
-
+        check_route_created(@project, alert[:receiver], alert[:status])
         get_project_alerts(@project)
         expect(json_body[:count]).to eq(5)
       end
       it "should fail to create duplicate" do
-        create_project_alert(@project, get_project_alert_failed)
-        expect_status_details(400)
-      end
-      it "should fail to create SYSTEM_ALERT" do
-        alert = get_project_alert_warning
-        alert[:alertType] = "SYSTEM_ALERT"
-        create_project_alert(@project, alert)
+        create_project_alert(@project, get_project_alert_failed(@project))
         expect_status_details(400)
       end
       it "should delete alert" do
@@ -91,11 +82,68 @@ describe "On #{ENV['OS']}" do
         get_project_alerts(@project)
         expect(json_body[:count]).to eq(4)
       end
+      it "should delete route if not used" do
+        project = create_project
+        create_project_alerts(project)
+        get_project_alerts(project)
+        alerts = json_body
+        job_alert1 = alerts[:items].detect { |a| a[:status] == "JOB_FINISHED" and a[:service] == "JOBS" }
+        delete_project_alert(project, job_alert1[:id])
+        expect_status_details(204)
+        check_route_deleted(project, job_alert1[:receiver], job_alert1[:status])
+        fg_alert1 = alerts[:items].detect { |a| a[:status] == "VALIDATION_SUCCESS" and a[:service] == "FEATURESTORE" }
+        delete_project_alert(project, fg_alert1[:id])
+        expect_status_details(204)
+
+        check_route_deleted(project, fg_alert1[:receiver], fg_alert1[:status])
+
+        job_alert2 = alerts[:items].detect { |a| a[:status] == "JOB_KILLED" and a[:service] == "JOBS" }
+        delete_project_alert(project, job_alert2[:id])
+        expect_status_details(204)
+        check_route_deleted(project, job_alert2[:receiver], job_alert2[:status])
+        fg_alert2 = alerts[:items].detect { |a| a[:status] == "VALIDATION_FAILURE" and a[:service] == "FEATURESTORE" }
+        delete_project_alert(project, fg_alert2[:id])
+        expect_status_details(204)
+
+        check_route_deleted(project, fg_alert2[:receiver], fg_alert2[:status])
+      end
+      it "should cleanup receivers and routes when deleting project" do
+        project = create_project
+        create_project_alerts(project)
+        get_project_alerts(project)
+        alerts = json_body[:items]
+        alert_receiver = AlertReceiver.where("name LIKE '#{project[:projectname]}__%'")
+        expect(alert_receiver.length()).to eq(alerts.length())
+        delete_project(project)
+        with_admin_session
+        get_routes_admin
+        routes = json_body[:items].detect { |r| r[:receiver].start_with?("#{project[:projectname]}__") }
+        expect(routes).to be nil
+        get_receivers_admin
+        receivers = json_body[:items].detect { |r| r[:name].start_with?("#{project[:projectname]}__") }
+        expect(receivers).to be nil
+
+        alert_receiver = AlertReceiver.where("name LIKE '#{project[:projectname]}__%'")
+        expect(alert_receiver.length()).to eq(0)
+      end
+      it "should create only one route for global receiver" do
+        with_admin_session
+        with_global_receivers
+        project = create_project
+        create_project_alerts_global(project)
+        get_project_alerts(project)
+        expect(json_body[:count]).to eq(4)
+        alert_receiver = AlertReceiver.where("name LIKE '#{project[:projectname]}__%'")
+        expect(alert_receiver.length()).to eq(0)
+        get_routes_admin()
+        global = json_body[:items].select { |r| r[:receiver].start_with?("global-receiver__") }
+        expect(global.length()).to be > 2
+      end
       context 'sort and filter' do
         before :all do
-          create_project_alert(@project, get_project_alert_failure)
-          create_project_alert(@project, get_project_alert_warning)
-          create_project_alert(@project, get_project_alert_failed)
+          reset_session
+          with_valid_project
+          create_project_alerts(@project)
         end
         it "should sort by ID" do
           get_project_alerts(@project, query: "?sort_by=id:desc")
@@ -136,7 +184,7 @@ describe "On #{ENV['OS']}" do
         it "should filter by service" do
           get_project_alerts(@project, query: "?filter_by=service:JOBS")
           expect_status_details(200)
-          expect(json_body[:count]).to eq(3)
+          expect(json_body[:count]).to eq(2)
         end
       end
     end

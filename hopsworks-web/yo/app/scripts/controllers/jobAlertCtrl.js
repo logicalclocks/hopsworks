@@ -25,11 +25,13 @@ angular.module('hopsWorksApp')
             self.serviceAlerts = [];
             self.values = [];
             self.loadingServiceAlerts = true;
+            self.receivers = [];
+            self.loadingReceivers = true;
 
             self.newAlert = {
               status: undefined,
-              alertType: undefined,
-              severity: undefined
+              severity: undefined,
+              receiver: undefined
             };
 
             var getMsg = function (res) {
@@ -38,6 +40,14 @@ angular.module('hopsWorksApp')
             var getResult = function (success) {
               return typeof success !== 'undefined' && typeof success.data !== 'undefined' &&
               typeof success.data.count !== 'undefined' && success.data.count > 0 ? success.data.items : [];
+            }
+
+            var getReceivers = function() {
+                self.loadingReceivers = true;
+                alertsService.receivers.getAll(true).then(function (success) {
+                    self.receivers = getResult(success);
+                    self.loadingReceivers = false;
+                });
             }
 
             var getServiceAlerts = function() {
@@ -54,6 +64,7 @@ angular.module('hopsWorksApp')
 
             var initAlerts = function () {
                 getServiceAlerts();
+                getReceivers();
             }
             initAlerts();
 

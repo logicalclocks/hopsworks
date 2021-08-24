@@ -27,9 +27,13 @@ import java.util.Date;
 @XmlRootElement
 public class FeatureGroupAlertDTO extends RestDTO<FeatureGroupAlertDTO> {
   private Integer id;
+  private Integer featureGroupId;
+  private String featureStoreName;
+  private String featureGroupName;
   private ValidationRuleAlertStatus status;
   private AlertType alertType;
   private AlertSeverity severity;
+  private String receiver;
   private Date created;
 
   public FeatureGroupAlertDTO() {
@@ -41,6 +45,30 @@ public class FeatureGroupAlertDTO extends RestDTO<FeatureGroupAlertDTO> {
 
   public void setId(Integer id) {
     this.id = id;
+  }
+
+  public Integer getFeatureGroupId() {
+    return featureGroupId;
+  }
+
+  public void setFeatureGroupId(Integer featureGroupId) {
+    this.featureGroupId = featureGroupId;
+  }
+
+  public String getFeatureStoreName() {
+    return featureStoreName;
+  }
+
+  public void setFeatureStoreName(String featureStoreName) {
+    this.featureStoreName = featureStoreName;
+  }
+
+  public String getFeatureGroupName() {
+    return featureGroupName;
+  }
+
+  public void setFeatureGroupName(String featureGroupName) {
+    this.featureGroupName = featureGroupName;
   }
 
   public ValidationRuleAlertStatus getStatus() {
@@ -66,6 +94,14 @@ public class FeatureGroupAlertDTO extends RestDTO<FeatureGroupAlertDTO> {
 
   public void setSeverity(AlertSeverity severity) {
     this.severity = severity;
+  }
+
+  public String getReceiver() {
+    return receiver;
+  }
+
+  public void setReceiver(String receiver) {
+    this.receiver = receiver;
   }
 
   public Date getCreated() {
