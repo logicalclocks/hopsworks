@@ -78,7 +78,7 @@ public class JobFacade extends AbstractFacade<Jobs> {
   
   private static final String JPQL_EXECUTIONS = "LEFT JOIN FETCH j.executions e on e.id = " +
     "(select max(e.id) from Execution e where e.job = j group by e.job) ";
-  
+
   public JobFacade() {
     super(Jobs.class);
   }
@@ -274,6 +274,10 @@ public class JobFacade extends AbstractFacade<Jobs> {
         q.setParameter(filterBy.getField(), filterBy.getParam());
         q.setParameter("searchUpper", filterBy.getParam().toUpperCase());
         break;
+      case LATEST_EXECUTION_STATE:
+        Set<JobState> jobStates = new HashSet<>(getJobStates(filterBy.getField(), filterBy.getParam()));
+        q.setParameter(filterBy.getField(), jobStates);
+        break;
       default:
         break;
     }
@@ -295,6 +299,24 @@ public class JobFacade extends AbstractFacade<Jobs> {
         "Filter value for " + field + " needs to set valid job types, but found: " + values);
     }
     return jobTypes;
+  }
+
+  private Set<JobState> getJobStates(String field, String values) {
+    String[] jobStatesArr = values.split(",");
+    Set<JobState> jobStates = new HashSet<>();
+    for (String jobState : jobStatesArr) {
+      try {
+        jobStates.add(JobState.valueOf(jobState.trim().toUpperCase()));
+      } catch (IllegalArgumentException ie) {
+        throw new InvalidQueryException("Filter value for " + field + " needs to set a valid " + field + ", but found: "
+            + jobState);
+      }
+    }
+    if (jobStates.isEmpty()) {
+      throw new InvalidQueryException(
+          "Filter value for " + field + " needs to set valid job state, but found: " + values);
+    }
+    return jobStates;
   }
   
   public enum Sorts {
@@ -349,17 +371,18 @@ public class JobFacade extends AbstractFacade<Jobs> {
     DATE_CREATED("DATE_CREATED", "j.creationTime = :creationTime ","creationTime",""),
     DATE_CREATED_GT("DATE_CREATED_GT", "j.creationTime > :creationTimeFrom ","creationTimeFrom",""),
     DATE_CREATED_LT("DATE_CREATED_LT", "j.creationTime < :creationTimeTo ","creationTimeTo",""),
-    NAME("NAME", "j.name LIKE CONCAT(:name, '%') ", "name", " "),
-    CREATOR("CREATOR", "(j.creator.username LIKE CONCAT(:user, '%') "
-      + "OR j.creator.fname LIKE CONCAT(:user, '%') "
-      + "OR j.creator.lname LIKE CONCAT(:user, '%') ", "user", " "),
-    LATEST_EXECUTION("LATEST_EXECUTION", "(j.creator.fname LIKE CONCAT(:search, '%') "
-      + "OR j.creator.lname LIKE CONCAT(:search, '%') "
-      + "OR j.name LIKE CONCAT(:search, '%') "
-      + "OR j.type LIKE CONCAT(:searchUpper, '%') "
-      + "OR e.state LIKE CONCAT(:searchUpper, '%') "
-      + "OR e.finalStatus LIKE CONCAT(:searchUpper, '%')) ", "search", " ");
-    
+    NAME("NAME", "j.name LIKE CONCAT('%', :name, '%') ", "name", " "),
+    CREATOR("CREATOR", "(j.creator.username LIKE CONCAT('%', :user, '%') "
+      + "OR j.creator.fname LIKE CONCAT('%', :user, '%') "
+      + "OR j.creator.lname LIKE CONCAT('%', :user, '%') ", "user", " "),
+    LATEST_EXECUTION("LATEST_EXECUTION", "(j.creator.fname LIKE CONCAT('%', :search, '%') "
+      + "OR j.creator.lname LIKE CONCAT('%', :search, '%') "
+      + "OR j.name LIKE CONCAT('%', :search, '%') "
+      + "OR j.type LIKE CONCAT('%', :searchUpper, '%') "
+      + "OR e.state LIKE CONCAT('%', :searchUpper, '%') "
+      + "OR e.finalStatus LIKE CONCAT('%', :searchUpper, '%')) ", "search", " "),
+    LATEST_EXECUTION_STATE("LATEST_EXECUTION_STATE", "e.state in :states ", "states", "");
+
     private final String value;
     private final String sql;
     private final String field;

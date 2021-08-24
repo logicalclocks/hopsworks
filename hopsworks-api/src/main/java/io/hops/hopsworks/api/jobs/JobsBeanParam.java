@@ -38,7 +38,8 @@ public class JobsBeanParam {
       "filter_by=jobtype:spark,filter_by=jobtype:pyspark,filter_by=jobtype:flink," +
       "filter_by=jobtype_neq:spark,filter_by=jobtype_neq:pyspark,filter_by=jobtype_neq:flink," +
       "filter_by=date_created_gt:2018-12-25T17:12:10.058, filter_by=date_created_lt:2018-12-25T17:12:10.058," +
-      "filter_by=name:myetl,filter_by=creator:john,filter_by=latest_execution:finished",
+      "filter_by=name:myetl,filter_by=creator:john,filter_by=latest_execution:finished," +
+      "filter_by=latest_execution_state:accepted,running",
     allowMultiple = true)
   private Set<FilterBy> filter;
   @BeanParam
