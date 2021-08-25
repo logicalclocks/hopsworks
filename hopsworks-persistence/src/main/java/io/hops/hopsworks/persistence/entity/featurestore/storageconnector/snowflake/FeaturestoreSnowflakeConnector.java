@@ -74,6 +74,9 @@ public class FeaturestoreSnowflakeConnector implements Serializable {
   @Size(max = 8000)
   @Column(name = "arguments")
   private String arguments;
+  @Size(max = 50)
+  @Column(name = "application")
+  private String application;
   @JoinColumns({@JoinColumn(name = "database_pwd_secret_uid", referencedColumnName = "uid"),
     @JoinColumn(name = "database_pwd_secret_name", referencedColumnName = "secret_name")})
   @ManyToOne(cascade = CascadeType.ALL)
@@ -91,7 +94,7 @@ public class FeaturestoreSnowflakeConnector implements Serializable {
   }
   
   public FeaturestoreSnowflakeConnector(Integer id, String url, String databaseUser, String databaseName,
-    String databaseSchema, String tableName, String role, String warehouse, String arguments) {
+    String databaseSchema, String tableName, String role, String warehouse, String arguments, String application) {
     this.id = id;
     this.url = url;
     this.databaseUser = databaseUser;
@@ -101,6 +104,7 @@ public class FeaturestoreSnowflakeConnector implements Serializable {
     this.role = role;
     this.warehouse = warehouse;
     this.arguments = arguments;
+    this.application = application;
   }
   
   public Integer getId() {
@@ -173,6 +177,14 @@ public class FeaturestoreSnowflakeConnector implements Serializable {
   
   public void setArguments(String arguments) {
     this.arguments = arguments;
+  }
+
+  public String getApplication() {
+    return application;
+  }
+
+  public void setApplication(String application) {
+    this.application = application;
   }
   
   public Secret getPwdSecret() {

@@ -35,7 +35,8 @@ describe "On #{ENV['OS']}" do
                    table: "table",
                    url: "http://123456.eu-central-1.snowflakecomputing.com",
                    user: "user0",
-                   warehouse: "warehouse"
+                   warehouse: "warehouse",
+                   application: "Hopsworks"
                  }
   end
 
