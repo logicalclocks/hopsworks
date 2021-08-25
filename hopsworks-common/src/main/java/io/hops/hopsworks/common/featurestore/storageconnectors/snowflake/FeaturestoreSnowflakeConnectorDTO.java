@@ -33,6 +33,7 @@ public class FeaturestoreSnowflakeConnectorDTO extends FeaturestoreStorageConnec
   private String warehouse;
   private String role;
   private String table;
+  private String application;
   private List<OptionDTO> sfOptions;
   
   public FeaturestoreSnowflakeConnectorDTO() {
@@ -47,6 +48,7 @@ public class FeaturestoreSnowflakeConnectorDTO extends FeaturestoreStorageConnec
     this.warehouse = featurestoreConnector.getSnowflakeConnector().getWarehouse();
     this.role = featurestoreConnector.getSnowflakeConnector().getRole();
     this.table = featurestoreConnector.getSnowflakeConnector().getTableName();
+    this.application = featurestoreConnector.getSnowflakeConnector().getApplication();
   }
   
   public String getUrl() {
@@ -119,6 +121,14 @@ public class FeaturestoreSnowflakeConnectorDTO extends FeaturestoreStorageConnec
   
   public void setTable(String table) {
     this.table = table;
+  }
+
+  public String getApplication() {
+    return application;
+  }
+
+  public void setApplication(String application) {
+    this.application = application;
   }
   
   public List<OptionDTO> getSfOptions() {

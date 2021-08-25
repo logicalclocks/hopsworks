@@ -96,6 +96,7 @@ public class FeaturestoreSnowflakeConnectorController {
     snowflakeConnector.setRole(featurestoreSnowflakeConnectorDTO.getRole());
     snowflakeConnector.setWarehouse(featurestoreSnowflakeConnectorDTO.getWarehouse());
     snowflakeConnector.setArguments(fromOptions(featurestoreSnowflakeConnectorDTO.getSfOptions()));
+    snowflakeConnector.setApplication(featurestoreSnowflakeConnectorDTO.getApplication());
     if (!Strings.isNullOrEmpty(featurestoreSnowflakeConnectorDTO.getPassword())) {
       snowflakeConnector.setPwdSecret(secret);
       snowflakeConnector.setTokenSecret(null);

@@ -180,7 +180,8 @@ module StorageConnectorHelper
                    schema: "PUBLIC",
                    url: "http://123456.eu-central-1.snowflakecomputing.com",
                    user: "user0",
-                   warehouse: "warehouse"
+                   warehouse: "warehouse",
+                   application: "Hopsworks"
     }
     post endpoint, connector.to_json
   end
@@ -293,5 +294,6 @@ module StorageConnectorHelper
     expect(json_body[:token]).to eq connector[:token]
     expect(json_body[:tableName]).to eq connector[:tableName]
     expect(json_body[:sfOptions]).to eq connector[:sfOptions]
+    expect(json_body[:application]).to eq connector[:application]
   end
 end
