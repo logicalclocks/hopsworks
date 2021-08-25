@@ -61,10 +61,10 @@ public class AvroSchemaConstructorController {
     switch (Type.getType(hiveType.toUpperCase())) {
       case INT_TYPE:
       case SMALLINT_TYPE:
+      case TINYINT_TYPE:
         return avroSchema.intType();
       case BOOLEAN_TYPE:
         return avroSchema.booleanType();
-      case TINYINT_TYPE:
       case BINARY_TYPE:
         return avroSchema.bytesType();
       case BIGINT_TYPE:
