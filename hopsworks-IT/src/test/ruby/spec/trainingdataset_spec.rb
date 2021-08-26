@@ -1069,18 +1069,21 @@ describe "On #{ENV['OS']}" do
           expect(parsed_json.key?("statisticsConfig")).to be true
           expect(parsed_json["statisticsConfig"].key?("histograms")).to be true
           expect(parsed_json["statisticsConfig"].key?("correlations")).to be true
+          expect(parsed_json["statisticsConfig"].key?("exactUniqueness")).to be true
           expect(parsed_json["statisticsConfig"].key?("enabled")).to be true
           expect(parsed_json["statisticsConfig"].key?("columns")).to be true
           expect(parsed_json["statisticsConfig"]["columns"].length).to eql(0)
           expect(parsed_json["statisticsConfig"]["enabled"]).to be true
           expect(parsed_json["statisticsConfig"]["correlations"]).to be false
+          expect(parsed_json["statisticsConfig"]["exactUniqueness"]).to be false
           expect(parsed_json["statisticsConfig"]["histograms"]).to be false
         end
 
         it "should be able to create a training dataset with statistics settings and retrieve them back" do
           featurestore_id = get_featurestore_id(@project[:id])
           connector = get_hopsfs_training_datasets_connector(@project[:projectname])
-          stats_config = {enabled: false, histograms: false, correlations: false, columns: ["testfeature"]}
+          stats_config = {enabled: false, histograms: false, correlations: false, exactUniqueness: false, columns:
+          ["testfeature"]}
           json_result, _ = create_hopsfs_training_dataset(@project[:id], featurestore_id, connector,
                                                           statistics_config: stats_config)
           expect_status_details(201)
@@ -1089,13 +1092,14 @@ describe "On #{ENV['OS']}" do
           expect(parsed_json["statisticsConfig"]["columns"][0]).to eql("testfeature")
           expect(parsed_json["statisticsConfig"]["enabled"]).to be false
           expect(parsed_json["statisticsConfig"]["correlations"]).to be false
+          expect(parsed_json["statisticsConfig"]["exactUniqueness"]).to be false
           expect(parsed_json["statisticsConfig"]["histograms"]).to be false
         end
 
         it "should not be possible to add a training dataset with non-existing statistic column" do
           featurestore_id = get_featurestore_id(@project[:id])
           connector = get_hopsfs_training_datasets_connector(@project[:projectname])
-          stats_config = {enabled: false, histograms: false, correlations: false, columns: ["wrongname"]}
+          stats_config = {enabled: false, histograms: false, correlations: false, exactUniqueness: false, columns: ["wrongname"]}
           json_result, _ = create_hopsfs_training_dataset(@project[:id], featurestore_id, connector,
                                                           statistics_config: stats_config)
           expect_status_details(400)
@@ -1122,6 +1126,7 @@ describe "On #{ENV['OS']}" do
           expect(parsed_json["statisticsConfig"]["columns"][0]).to eql("testfeature")
           expect(parsed_json["statisticsConfig"]["enabled"]).to be false
           expect(parsed_json["statisticsConfig"]["correlations"]).to be false
+          expect(parsed_json["statisticsConfig"]["exactUniqueness"]).to be false
           expect(parsed_json["statisticsConfig"]["histograms"]).to be false
         end
       end

@@ -30,6 +30,7 @@ public class StatisticsConfigDTO {
   private Boolean enabled = true;
   private Boolean histograms = false;
   private Boolean correlations = false;
+  private Boolean exactUniqueness = false;
   private List<String> columns = new ArrayList<>();
   
   public StatisticsConfigDTO() {}
@@ -38,6 +39,7 @@ public class StatisticsConfigDTO {
     this.enabled = statisticsConfig.isDescriptive();
     this.correlations = statisticsConfig.isCorrelations();
     this.histograms = statisticsConfig.isHistograms();
+    this.exactUniqueness = statisticsConfig.isExactUniqueness();
     this.columns = statisticsConfig.getStatisticColumns().stream()
       .map(StatisticColumn::getName).collect(Collectors.toList());
   }
@@ -66,6 +68,14 @@ public class StatisticsConfigDTO {
     this.correlations = correlations;
   }
   
+  public Boolean getExactUniqueness() {
+    return exactUniqueness;
+  }
+  
+  public void setExactUniqueness(Boolean exactUniqueness) {
+    this.exactUniqueness = exactUniqueness;
+  }
+  
   public List<String> getColumns() {
     return columns;
   }
@@ -80,6 +90,7 @@ public class StatisticsConfigDTO {
       "enabled=" + enabled +
       ", histograms=" + histograms +
       ", correlations=" + correlations +
+      ", exactUniqueness=" + exactUniqueness +
       ", columns=" + columns +
       '}';
   }
