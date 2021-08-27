@@ -309,6 +309,7 @@ angular.module('hopsWorksApp')
                         "enabled": true,
                         "histograms": true,
                         "correlations": true,
+                        "exactUniqueness": true
                     },
                     "storageConnector": self.getStorageConnector(),
                     "type": "trainingDatasetDTO"
@@ -351,6 +352,7 @@ angular.module('hopsWorksApp')
                         "enabled": true,
                         "histograms": true,
                         "correlations": true,
+                        "exactUniqueness": true
                     },
                     "storageConnector": self.getStorageConnector(),
                     "type": "trainingDatasetDTO"

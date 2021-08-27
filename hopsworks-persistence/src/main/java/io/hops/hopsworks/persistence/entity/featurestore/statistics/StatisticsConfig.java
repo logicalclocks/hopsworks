@@ -76,13 +76,17 @@ public class StatisticsConfig implements Serializable {
   @Basic(optional = false)
   @Column(name = "histograms")
   private boolean histograms;
+  @Basic(optional = false)
+  @Column(name = "exact_uniqueness")
+  private boolean exactUniqueness;
   
   public StatisticsConfig() {}
-
-  public StatisticsConfig(boolean descriptive, boolean correlations, boolean histograms) {
+  
+  public StatisticsConfig(boolean descriptive, boolean correlations, boolean histograms, boolean exactUniqueness) {
     this.descriptive = descriptive;
     this.histograms = histograms;
     this.correlations = correlations;
+    this.exactUniqueness = exactUniqueness;
   }
   
   public Integer getId() {
@@ -143,6 +147,10 @@ public class StatisticsConfig implements Serializable {
     this.histograms = featHistEnabled;
   }
   
+  public boolean isExactUniqueness() { return exactUniqueness; }
+  
+  public void setExactUniqueness(boolean exactUniqueness) { this.exactUniqueness = exactUniqueness; }
+  
   @Override
   public boolean equals(Object o) {
     if (this == o) {
@@ -161,6 +169,9 @@ public class StatisticsConfig implements Serializable {
       return false;
     }
     if (histograms != that.histograms) {
+      return false;
+    }
+    if (exactUniqueness != that.exactUniqueness) {
       return false;
     }
     if (!id.equals(that.id)) {
@@ -184,6 +195,7 @@ public class StatisticsConfig implements Serializable {
     result = 31 * result + (descriptive ? 1 : 0);
     result = 31 * result + (correlations ? 1 : 0);
     result = 31 * result + (histograms ? 1 : 0);
+    result = 31 * result + (exactUniqueness ? 1 : 0);
     return result;
   }
 }

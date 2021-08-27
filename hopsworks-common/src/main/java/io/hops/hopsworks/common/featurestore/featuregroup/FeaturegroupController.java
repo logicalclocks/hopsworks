@@ -484,6 +484,9 @@ public class FeaturegroupController {
     if (featureGroupDTO.getStatisticsConfig().getCorrelations() != null) {
       featuregroup.getStatisticsConfig().setCorrelations(featureGroupDTO.getStatisticsConfig().getCorrelations());
     }
+    if (featureGroupDTO.getStatisticsConfig().getExactUniqueness() != null) {
+      featuregroup.getStatisticsConfig().setExactUniqueness(featureGroupDTO.getStatisticsConfig().getExactUniqueness());
+    }
     // compare against schema from database, as client doesn't need to send schema in update request
     statisticColumnController.verifyStatisticColumnsExist(featureGroupDTO, featuregroup, getFeatures(featuregroup,
       project, user));
@@ -702,7 +705,8 @@ public class FeaturegroupController {
     featuregroup.setOnDemandFeaturegroup(onDemandFeaturegroup);
 
     StatisticsConfig statisticsConfig = new StatisticsConfig(featuregroupDTO.getStatisticsConfig().getEnabled(),
-      featuregroupDTO.getStatisticsConfig().getCorrelations(), featuregroupDTO.getStatisticsConfig().getHistograms());
+      featuregroupDTO.getStatisticsConfig().getCorrelations(), featuregroupDTO.getStatisticsConfig().getHistograms(),
+      featuregroupDTO.getStatisticsConfig().getExactUniqueness());
     statisticsConfig.setFeaturegroup(featuregroup);
     statisticsConfig.setStatisticColumns(featuregroupDTO.getStatisticsConfig().getColumns().stream()
       .map(sc -> new StatisticColumn(statisticsConfig, sc)).collect(Collectors.toList()));

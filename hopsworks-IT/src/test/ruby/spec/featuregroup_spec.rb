@@ -656,18 +656,21 @@ describe "On #{ENV['OS']}" do
         expect(parsed_json.key?("statisticsConfig")).to be true
         expect(parsed_json["statisticsConfig"].key?("histograms")).to be true
         expect(parsed_json["statisticsConfig"].key?("correlations")).to be true
+        expect(parsed_json["statisticsConfig"].key?("exactUniqueness")).to be true
         expect(parsed_json["statisticsConfig"].key?("enabled")).to be true
         expect(parsed_json["statisticsConfig"].key?("columns")).to be true
         expect(parsed_json["statisticsConfig"]["columns"].length).to eql(0)
         expect(parsed_json["statisticsConfig"]["enabled"]).to be true
         expect(parsed_json["statisticsConfig"]["correlations"]).to be false
         expect(parsed_json["statisticsConfig"]["histograms"]).to be false
+        expect(parsed_json["statisticsConfig"]["exactUniqueness"]).to be false
       end
 
       it "should be able to add a cached featuregroup with non default statistics settings to the featurestore" do
         project = get_project
         featurestore_id = get_featurestore_id(project.id)
-        stats_config = {enabled: false, histograms: false, correlations: false, columns: ["testfeature"]}
+        stats_config = {enabled: false, histograms: false, correlations: false, exactUniqueness: false, columns:
+        ["testfeature"]}
         json_result, featuregroup_name = create_cached_featuregroup(project.id, featurestore_id, statistics_config:
             stats_config)
         expect_status_details(201)
@@ -677,6 +680,7 @@ describe "On #{ENV['OS']}" do
         expect(parsed_json.key?("name")).to be true
         expect(parsed_json["statisticsConfig"].key?("histograms")).to be true
         expect(parsed_json["statisticsConfig"].key?("correlations")).to be true
+        expect(parsed_json["statisticsConfig"].key?("exactUniqueness")).to be true
         expect(parsed_json["statisticsConfig"].key?("enabled")).to be true
         expect(parsed_json["statisticsConfig"].key?("columns")).to be true
         expect(parsed_json["featurestoreName"] == project.projectname.downcase + "_featurestore").to be true
@@ -687,12 +691,14 @@ describe "On #{ENV['OS']}" do
         expect(parsed_json["statisticsConfig"]["enabled"]).to be false
         expect(parsed_json["statisticsConfig"]["correlations"]).to be false
         expect(parsed_json["statisticsConfig"]["histograms"]).to be false
+        expect(parsed_json["statisticsConfig"]["exactUniqueness"]).to be false
       end
 
       it "should not be able to add a cached feature group with non-existing statistic column to the feature store" do
         project = get_project
         featurestore_id = get_featurestore_id(project.id)
-        stats_config = {enabled: false, histograms: false, correlations: false, columns: ["wrongname"]}
+        stats_config = {enabled: false, histograms: false, correlations: false, exactUniqueness: false, columns:
+        ["wrongname"]}
         json_result, _ = create_cached_featuregroup(project.id, featurestore_id, statistics_config: stats_config)
         expect_status_details(400)
         parsed_json = JSON.parse(json_result)
@@ -718,6 +724,7 @@ describe "On #{ENV['OS']}" do
         expect(parsed_json["statisticsConfig"]["columns"][0]).to eql("testfeature")
         expect(parsed_json["statisticsConfig"]["enabled"]).to be false
         expect(parsed_json["statisticsConfig"]["correlations"]).to be false
+        expect(parsed_json["statisticsConfig"]["exactUniqueness"]).to be false
         expect(parsed_json["statisticsConfig"]["histograms"]).to be false
       end
 
@@ -1046,7 +1053,8 @@ describe "On #{ENV['OS']}" do
       it "should be able to add correct statistics commit timestamps on time travel enabled feature groups" do
         featurestore_id = get_featurestore_id(@project[:id])
         featurestore_name = @project['projectname'].downcase + "_featurestore"
-        stats_config = {enabled: true, histograms: false, correlations: false, columns: ["testfeature"]}
+        stats_config = {enabled: true, histograms: false, correlations: false, exactUniqueness: false, columns:
+        ["testfeature"]}
         json_result, featuregroup_name = create_cached_featuregroup(@project[:id], featurestore_id, time_travel_format: "HUDI", statistics_config: stats_config)
         parsed_json = JSON.parse(json_result)
         featuregroup_id = parsed_json["id"]
