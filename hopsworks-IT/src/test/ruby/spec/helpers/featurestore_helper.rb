@@ -375,6 +375,7 @@ module FeaturestoreHelper
         statisticsConfig: {
             histograms: false,
             correlations: false,
+            exactUniqueness: false,
             columns: statisticColumns,
             enabled: false
         }
@@ -383,6 +384,7 @@ module FeaturestoreHelper
       json_data[:statisticsConfig][:enabled] = false
       json_data[:statisticsConfig][:histograms] = true
       json_data[:statisticsConfig][:correlations] = true
+      json_data[:statisticsConfig][:exactUniqueness] = true
     end
     json_data = json_data.to_json
     json_result = put update_featuregroup_metadata_endpoint, json_data
@@ -398,6 +400,7 @@ module FeaturestoreHelper
         statisticsConfig: {
             histograms: false,
             correlations: false,
+            exactUniqueness: false,
             columns: statisticColumns,
             enabled: false
         }
@@ -406,6 +409,7 @@ module FeaturestoreHelper
       json_data[:statisticsConfig][:enabled] = false
       json_data[:statisticsConfig][:histograms] = true
       json_data[:statisticsConfig][:correlations] = true
+      json_data[:statisticsConfig][:exactUniqueness] = true
     end
     json_data = json_data.to_json
     json_result = put update_trainingdataset_metadata_endpoint, json_data

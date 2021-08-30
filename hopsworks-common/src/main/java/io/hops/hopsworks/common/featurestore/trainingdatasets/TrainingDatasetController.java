@@ -344,7 +344,8 @@ public class TrainingDatasetController {
 
     StatisticsConfig statisticsConfig = new StatisticsConfig(trainingDatasetDTO.getStatisticsConfig().getEnabled(),
       trainingDatasetDTO.getStatisticsConfig().getCorrelations(),
-      trainingDatasetDTO.getStatisticsConfig().getHistograms());
+      trainingDatasetDTO.getStatisticsConfig().getHistograms(),
+      trainingDatasetDTO.getStatisticsConfig().getExactUniqueness());
     statisticsConfig.setTrainingDataset(trainingDataset);
     statisticsConfig.setStatisticColumns(trainingDatasetDTO.getStatisticsConfig().getColumns().stream()
       .map(sc -> new StatisticColumn(statisticsConfig, sc)).collect(Collectors.toList()));
@@ -602,6 +603,10 @@ public class TrainingDatasetController {
     }
     if (trainingDatasetDTO.getStatisticsConfig().getCorrelations() != null) {
       trainingDataset.getStatisticsConfig().setCorrelations(trainingDatasetDTO.getStatisticsConfig().getCorrelations());
+    }
+    if (trainingDatasetDTO.getStatisticsConfig().getExactUniqueness() != null) {
+      trainingDataset.getStatisticsConfig().setExactUniqueness(trainingDatasetDTO.getStatisticsConfig()
+        .getExactUniqueness());
     }
     // compare against schema from database, as client doesn't need to send schema in update request
     statisticColumnController.verifyStatisticColumnsExist(trainingDatasetDTO, trainingDataset);
