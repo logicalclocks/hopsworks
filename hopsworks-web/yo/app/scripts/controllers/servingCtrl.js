@@ -477,7 +477,7 @@ angular.module('hopsWorksApp')
 
                 if (component === "predictor") {
                     // /Projects/project_name/Models/model_name
-                    var pattern = /^\/Projects\/[a-zA-Z0-9_]+\/Models\/([a-zA-Z0-9-]+)\/(\d+)\/([a-zA-Z0-9_]+)(.[a-zA-Z0-9]+)$/g;
+                    var pattern = /^\/Projects\/(.+)\/Models\/(.+)\/(\d+)\/(.+)$/g;
                     var matches = pattern.exec(path);
                     if (matches === null) {
                         growl.error("Please, select a python script from Models dataset folder", {
@@ -487,20 +487,12 @@ angular.module('hopsWorksApp')
                         return
                     }
 
-                    var version = matches[2];
-                    var filename = matches[3];
-                    var extension = matches[4];
+                    var version = matches[3];
+                    var filename = matches[4];
 
                     if (typeof name === 'undefined' || name === null || name === "") {
                         name = filename.replace(".py", "");
                         name = name.replace(/_/g, "")
-                    }
-                    if (!extensions.includes(extension)) {
-                        growl.error("You need to select a python script with file ending with " + extensions.join(" or "), {
-                            title: 'Error - Invalid python script.',
-                            ttl: 15000
-                        });
-                        return
                     }
 
                     self.editServing.name = name;
