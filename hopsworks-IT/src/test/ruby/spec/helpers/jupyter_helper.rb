@@ -15,7 +15,7 @@
 =end
 module JupyterHelper
 
-  def start_jupyter(project, expected_status=200, shutdownLevel=6, baseDir=nil, gitConfig=nil)
+  def start_jupyter(project, expected_status=200, shutdownLevel=6, baseDir=nil, gitConfig=nil, noLimit=false)
     settings = get_settings(project)
 
     if !baseDir.nil?
@@ -29,6 +29,7 @@ module JupyterHelper
 
     settings[:distributionStrategy] = ""
     settings[:shutdownLevel] = shutdownLevel
+    settings[:noLimit] = noLimit
     staging_dir = settings[:privateDir]
 
     post "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/jupyter/start", JSON(settings)

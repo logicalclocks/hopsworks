@@ -149,6 +149,9 @@ public class JupyterSettings implements Serializable {
   private String privateDir = "";
 
   @Transient
+  private Boolean noLimit = false;
+
+  @Transient
   private Boolean gitAvailable;
   
   @Column(name = "git_backend")
@@ -201,6 +204,14 @@ public class JupyterSettings implements Serializable {
 
   public void setAdvanced(boolean advanced) {
     this.advanced = advanced;
+  }
+
+  public boolean getNoLimit() {
+    return noLimit;
+  }
+
+  public void setNoLimit(boolean noLimit) {
+    this.noLimit = noLimit;
   }
 
   public Users getUsers() {

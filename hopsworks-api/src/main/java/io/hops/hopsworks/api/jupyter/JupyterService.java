@@ -409,7 +409,7 @@ public class JupyterService {
         expirationDate = cal.getTime();
 
         jp = jupyterFacade.saveServer(externalIp, project, configSecret,
-          dto.getPort(), user.getId(), dto.getToken(), dto.getCid(), expirationDate);
+          dto.getPort(), user.getId(), dto.getToken(), dto.getCid(), expirationDate, jupyterSettings.getNoLimit());
 
         //set minutes left until notebook server is killed
         Duration durationLeft = Duration.between(new Date().toInstant(), jp.getExpires().toInstant());
