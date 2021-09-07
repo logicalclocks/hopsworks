@@ -186,6 +186,22 @@ describe "On #{ENV['OS']}" do
 
       end
 
+	  it "should allow for creation of a non terminating jupyter session" do
+
+        secret_dir, staging_dir, settings = start_jupyter(@project, expected_status=200, shutdownLevel=6, baseDir=nil, gitConfig=nil, noLimit=true)
+
+        json_result = get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/jupyter/running"
+        expect_status(200)
+
+		parsed_json = JSON.parse(json_result)
+		expect(parsed_json["noLimit"]).to eq(true)
+
+        stop_jupyter(@project)
+
+        get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/jupyter/running"
+        expect_status(404)
+      end
+
       it "should allow multiple restarts" do
 
         secret_dir, staging_dir, settings = start_jupyter(@project)

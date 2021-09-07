@@ -129,6 +129,10 @@ public class JupyterProject implements Serializable {
   @NotNull
   @Column(name = "hdfs_user_id")
   private int hdfsUserId;
+  @Basic(optional = false)
+  @NotNull
+  @Column(name = "no_limit")
+  private boolean noLimit;
 
   @Transient
   private long minutesUntilExpiration;
@@ -136,8 +140,8 @@ public class JupyterProject implements Serializable {
   public JupyterProject() {
   }
 
-  public JupyterProject(Project project, String secret, Integer port,
-                        int hdfsUserId, String hostIp, String token, String cid, Date expires) {
+  public JupyterProject(Project project, String secret, Integer port, int hdfsUserId, String hostIp, String token,
+                        String cid, Date expires, boolean noLimit) {
     this.projectId = project;
     this.secret = secret;
     this.port = port;
@@ -146,6 +150,7 @@ public class JupyterProject implements Serializable {
     this.expires = expires;
     this.token = token;
     this.cid = cid;
+    this.noLimit = noLimit;
   }
 
   public String getSecret() {
@@ -218,6 +223,14 @@ public class JupyterProject implements Serializable {
 
   public void setMinutesUntilExpiration(long minutesUntilExpiration) {
     this.minutesUntilExpiration = minutesUntilExpiration;
+  }
+
+  public boolean getNoLimit() {
+    return this.noLimit;
+  }
+
+  public void setNoLimit(boolean noLimit) {
+    this.noLimit = noLimit;
   }
 
   @Override
