@@ -42,20 +42,22 @@ package io.hops.hopsworks.common.dao.jupyter;
 import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.logging.Logger;
+import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import javax.persistence.TypedQuery;
 
 import io.hops.hopsworks.common.hdfs.Utils;
+import io.hops.hopsworks.common.util.ProjectUtils;
 import io.hops.hopsworks.common.util.Settings;
-import io.hops.hopsworks.persistence.entity.jobs.configuration.DockerJobConfiguration;
 import io.hops.hopsworks.persistence.entity.jobs.configuration.ExperimentType;
 import io.hops.hopsworks.persistence.entity.jobs.configuration.spark.SparkJobConfiguration;
 import io.hops.hopsworks.persistence.entity.jupyter.JupyterSettings;
 import io.hops.hopsworks.persistence.entity.jupyter.JupyterSettingsPK;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import org.apache.commons.codec.digest.DigestUtils;
+
 
 /**
  * The jupyter_settings table stores the most recent configuration settings from the user's Hopsworks UI.
@@ -64,6 +66,9 @@ import org.apache.commons.codec.digest.DigestUtils;
  */
 @Stateless
 public class JupyterSettingsFacade {
+
+  @EJB
+  private ProjectUtils projectUtils;
 
   private static final Logger logger = Logger.getLogger(
           JupyterSettingsFacade.class.
@@ -98,7 +103,7 @@ public class JupyterSettingsFacade {
       js = new JupyterSettings(pk);
       js.setSecret(secret);
       js.setJobConfig(new SparkJobConfiguration(ExperimentType.EXPERIMENT));
-      js.setDockerConfig(new DockerJobConfiguration());
+      js.setDockerConfig(projectUtils.buildDockerJobConfiguration()); // HOPSWORKS-2660
       js.setBaseDir(Utils.getProjectPath(project.getName()) + Settings.ServiceDataset.JUPYTER.getName());
       persist(js);
     }
@@ -106,10 +111,13 @@ public class JupyterSettingsFacade {
       js.setJobConfig(new SparkJobConfiguration(ExperimentType.EXPERIMENT));
     }
     if(js.getDockerConfig() == null) {
-      js.setDockerConfig(new DockerJobConfiguration());
+      js.setDockerConfig(projectUtils.buildDockerJobConfiguration()); // HOPSWORKS-2660
     }
+
     return js;
   }
+
+
 
   private void persist(JupyterSettings js) {
     if (js != null) {

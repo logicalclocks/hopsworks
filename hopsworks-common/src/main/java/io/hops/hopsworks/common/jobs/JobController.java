@@ -43,7 +43,7 @@ import com.google.common.base.Strings;
 import io.hops.hopsworks.common.dao.jobs.description.JobFacade;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.common.util.SparkConfigurationUtil;
-import io.hops.hopsworks.persistence.entity.jobs.configuration.DockerJobConfiguration;
+import io.hops.hopsworks.common.util.ProjectUtils;
 import io.hops.hopsworks.persistence.entity.jobs.configuration.flink.FlinkJobConfiguration;
 import io.hops.hopsworks.persistence.entity.jobs.configuration.python.PythonJobConfiguration;
 import io.hops.hopsworks.persistence.entity.jobs.description.Jobs;
@@ -100,6 +100,8 @@ public class JobController {
   private HdfsUsersController hdfsUsersController;
   @EJB
   private Settings settings;
+  @EJB
+  private ProjectUtils projectUtils;
 
   private static final Logger LOGGER = Logger.getLogger(JobController.class.getName());
   
@@ -252,11 +254,13 @@ public class JobController {
         case PYSPARK:
           return new SparkJobConfiguration();
         case PYTHON:
-          return new PythonJobConfiguration();
+          PythonJobConfiguration pyConfig = new PythonJobConfiguration();
+          pyConfig.setResourceConfig(projectUtils.buildDockerResourceConfig());// HOPSWORKS-2660
+          return pyConfig;
         case FLINK:
           return new FlinkJobConfiguration();
         case DOCKER:
-          return new DockerJobConfiguration();
+          return projectUtils.buildDockerJobConfiguration(); // HOPSWORKS-2660
         default:
           throw new IllegalArgumentException("Job type not supported: " + jobType);
       }
