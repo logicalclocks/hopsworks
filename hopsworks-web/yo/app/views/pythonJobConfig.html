@@ -22,7 +22,7 @@
             <input type="number" class="form-control" id="mem" name="memory" step="1" ng-min="1024" ng-max="newJobCtrl.maxDockerMemory" ng-model="newJobCtrl.runConfig.resourceConfig.memory" required>
             <span class="text-danger" ng-show="(newJobCtrl.pythonJobConfigForm.memory.$dirty) && newJobCtrl.pythonJobConfigForm.memory.$error.number">Must be a number.</span>
             <span class="text-danger" ng-show="(newJobCtrl.pythonJobConfigForm.memory.$dirty) && newJobCtrl.pythonJobConfigForm.memory.$error.max">You can at most allocate {{newJobCtrl.maxDockerMemory}} MB.</span>
-            <span class="text-danger" ng-show="(newJobCtrl.pythonJobConfigForm.memory.$dirty) && newJobCtrl.pythonJobConfigForm.memory.$error.min">It is recommended to allocate at minimum 1024 MB.</span>
+            <span class="text-danger" ng-show="(newJobCtrl.pythonJobConfigForm.memory.$untouched || newJobCtrl.pythonJobConfigForm.memory.$dirty) && newJobCtrl.pythonJobConfigForm.memory.$error.min">It is recommended to allocate at minimum 1024 MB.</span>
         </div>
     </div>
     <div class="form-group" ng-show="newJobCtrl.hasDockerCores">
