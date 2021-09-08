@@ -120,11 +120,6 @@ public class RoleEnforcementPoint implements Serializable {
     return usersController.isUserInRole(p, "HOPS_USER");
   }
 
-  public boolean isOnlyAuditorRole() {
-    Users p = userFacade.findByEmail(getRequest().getRemoteUser());
-    return (usersController.isUserInRole(p,"AUDITOR") && !usersController.isUserInRole(p,"HOPS_ADMIN"));
-  }
-
   /**
    *
    * @return

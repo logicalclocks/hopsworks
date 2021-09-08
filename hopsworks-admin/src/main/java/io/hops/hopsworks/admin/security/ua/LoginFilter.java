@@ -90,9 +90,6 @@ public class LoginFilter extends PolicyDecisionPoint implements Filter {
       if (isInAdminRole(user)) {
         response.sendRedirect(contextPath
                 + "/security/protected/admin/adminIndex.xhtml");
-      } else if (isInAuditorRole(user)) {
-        response.sendRedirect(contextPath
-                + "/security/protected/audit/adminAuditIndex.xhtml");
       } else if (isInUserRole(user)) {
         response.sendRedirect("/hopsworks/#!home");
       }
