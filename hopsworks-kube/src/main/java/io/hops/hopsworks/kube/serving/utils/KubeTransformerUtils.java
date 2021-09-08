@@ -167,7 +167,7 @@ public class KubeTransformerUtils {
     
     return new ContainerBuilder()
       .withName("transformer")
-      .withImage(projectUtils.getFullDockerImageName(project, true))
+      .withImage(projectUtils.getFullDockerImageName(project, false))
       .withImagePullPolicy(settings.getKubeImagePullPolicy())
       .withCommand("transformer-launcher.sh")
       .withEnv(envVars)
