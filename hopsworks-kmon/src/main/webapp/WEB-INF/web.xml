@@ -79,9 +79,6 @@
     <role-name>HOPS_USER</role-name>
   </security-role>
   <security-role>
-    <role-name>AUDITOR</role-name>
-  </security-role>
-  <security-role>
     <role-name>AGENT</role-name>
   </security-role>
   <security-constraint>

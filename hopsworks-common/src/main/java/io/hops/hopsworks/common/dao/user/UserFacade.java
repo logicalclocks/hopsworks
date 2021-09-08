@@ -239,7 +239,7 @@ public class UserFacade extends AbstractFacade<Users> {
 
   public enum Filters {
     ROLE("ROLE", "u.bbcGroupCollection IN :roles ", "roles", "HOPS_ADMIN,HOPS_USER"),
-    ROLE_NEQ("ROLE_NEQ", "u.bbcGroupCollection NOT IN :roles_neq ", "roles_neq", "AGENT,AUDITOR"),
+    ROLE_NEQ("ROLE_NEQ", "u.bbcGroupCollection NOT IN :roles_neq ", "roles_neq", "AGENT"),
     TYPE("TYPE", "u.mode = :mode ", "mode", "0"),
     STATUS("STATUS", "u.status = :status ", "status", "2"),
     STATUS_LT("STATUS_LT", "u.status < :status_lt ", "status_lt", "2"),

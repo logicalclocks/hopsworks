@@ -59,8 +59,4 @@
     <group-name>CLUSTER_AGENT</group-name>
   </security-role-mapping>
   <parameter-encoding default-charset="UTF-8"/>
-  <security-role-mapping>
-    <role-name>AUDITOR</role-name>
-    <group-name>AUDITOR</group-name>
-  </security-role-mapping>
 </glassfish-web-app>
