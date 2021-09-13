@@ -74,7 +74,19 @@ public class ElasticJWTController {
   }
   
   public String createTokenForELKAsAdmin() throws ElasticException {
-    return createTokenForELK("admin", Optional.empty(), ElasticSettings.ELASTIC_ADMIN_ROLE);
+    return createTokenForELK(settings.getElasticAdminUser(), Optional.empty(), ElasticSettings.ELASTIC_ADMIN_ROLE);
+  }
+
+  /**
+   * Create a JWT token that can access the service index-pattern in Kibana
+   * The service index-pattern in Kibana gives access to the logs of the
+   * services
+   * @return the JWT token
+   * @throws ElasticException
+   */
+  public String createTokenForELKServices() throws ElasticException {
+    return createTokenForELK(
+        settings.getElasticServiceLogUser(), Optional.empty(), ElasticSettings.ELASTIC_SERVICE_LOG_ROLE);
   }
   
   private String createTokenForELK(Project project, String role)

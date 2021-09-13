@@ -77,9 +77,8 @@ public class ElasticCleaner {
         }
       };
       String indexRegex = "(" + Settings.ELASTIC_LOG_INDEX_REGEX + ")" +
-        "|(" + Settings.ELASTIC_SERVING_INDEX_REGEX + ")" +
-        "|(" + Settings.ELASTIC_BEAMJOBSERVER_INDEX_REGEX + ")" +
-        "|(" + Settings.ELASTIC_BEAMSDKWORKER_INDEX_REGEX + ")";
+          "|(" + Settings.ELASTIC_SERVING_INDEX_REGEX + ")" +
+          "|(" + Settings.ELASTIC_SERVICES_INDEX_REGEX + ")";
       Map<String, Long> indices = elasticClientCtrl.mngIndicesGetByRegex(indexRegex, creationTimeParser);
       for (String index : indices.keySet()) {
         //Get current timestamp

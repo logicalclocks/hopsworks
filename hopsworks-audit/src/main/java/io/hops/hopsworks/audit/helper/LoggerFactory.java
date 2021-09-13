@@ -24,6 +24,7 @@ import javax.ejb.Singleton;
 import java.io.File;
 import java.io.IOException;
 import java.util.logging.FileHandler;
+import java.util.logging.Formatter;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.logging.SimpleFormatter;
@@ -35,7 +36,7 @@ public class LoggerFactory {
   private static final String AUDIT_LOG_FILE_SIZE = "audit_log_size_limit";
   private static final String AUDIT_LOG_FILE_COUNT = "audit_log_count";
   private static final String AUDIT_LOG_FILE_TYPE = "audit_log_file_type";
-  
+
   @EJB
   private VariablesFacade variablesFacade;
   
@@ -46,29 +47,29 @@ public class LoggerFactory {
   private void init() {
     this.logger = Logger.getLogger(LoggerFactory.class.getName());
     this.logger.setUseParentHandlers(false);
+
     String logDirPath = getStrValue(AUDIT_LOG_FILE_VAR, "/srv/hops/domains/domain1/logs/audit");
     logDirPath = logDirPath.endsWith("/")? logDirPath : logDirPath + "/";
-    String logFileFormat = getStrValue(AUDIT_LOG_FILE_FORMAT, "server_audit_log%g.log");
-    logFileFormat = logFileFormat.startsWith("/")? logFileFormat.substring(1) : logFileFormat;
-    int logFileSize = getIntValue(AUDIT_LOG_FILE_SIZE, 256000000);//256MB
-    int logFileCount = getIntValue(AUDIT_LOG_FILE_COUNT, 10);//10 files
-    String logFileType = getStrValue(AUDIT_LOG_FILE_TYPE, "Text");
     File logDir = new File(logDirPath);
     if(!logDir.exists()) {
       logDir.mkdirs();
     }
+
+    String logFileFormat = getStrValue(AUDIT_LOG_FILE_FORMAT, "server_audit_log%g.log");
+    logFileFormat = logFileFormat.startsWith("/")? logFileFormat.substring(1) : logFileFormat;
+
+    int logFileSize = getIntValue(AUDIT_LOG_FILE_SIZE, 256000000);//256MB
+    int logFileCount = getIntValue(AUDIT_LOG_FILE_COUNT, 10);//10 files
+    String logFileType = getStrValue(AUDIT_LOG_FILE_TYPE, SimpleFormatter.class.getName());
+
     try {
       fileHandler = new FileHandler( logDirPath + logFileFormat, logFileSize, logFileCount, true);
-      if ("Html".equalsIgnoreCase(logFileType)) {
-        HtmlLogFormatter formatter = new HtmlLogFormatter();
-        fileHandler.setFormatter(formatter);
-      } else {
-        SimpleFormatter formatter = new SimpleFormatter();
-        fileHandler.setFormatter(formatter);
-      }
+      fileHandler.setFormatter((Formatter) Class.forName(logFileType).newInstance());
       fileHandler.setLevel(Level.FINEST); //Log levels INFO and higher will be automatically written to glassfish log.
       this.logger.addHandler(fileHandler);
-    } catch (SecurityException | IOException e) {
+    } catch (
+        SecurityException | IOException | ClassNotFoundException | InstantiationException | IllegalAccessException e
+    ) {
       logger.log(Level.SEVERE, "Error creating file handler for audit logger. {0}", e.getMessage());
     }
   }
@@ -80,11 +81,11 @@ public class LoggerFactory {
       this.fileHandler.close();
     }
   }
-  
+
   public Logger getLogger() {
     return this.logger;
   }
-  
+
   private int getIntValue(String id, int defaultVal) {
     String val = variablesFacade.getVariableValue(id);
     if (val == null) {
@@ -92,12 +93,10 @@ public class LoggerFactory {
     }
     try {
       return Integer.parseInt(val);
-    } catch (NumberFormatException e) {
-    
-    }
+    } catch (NumberFormatException e) { }
     return defaultVal;
   }
-  
+
   private String getStrValue(String id, String defaultVal) {
     String val = variablesFacade.getVariableValue(id);
     if (val == null) {
@@ -105,5 +104,4 @@ public class LoggerFactory {
     }
     return val;
   }
-  
 }

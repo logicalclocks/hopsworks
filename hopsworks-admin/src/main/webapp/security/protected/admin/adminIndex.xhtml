@@ -310,6 +310,21 @@
               <br></br>
               <p:outputLabel style="text-align: left" value="Alerts"></p:outputLabel>
             </p:column>
+
+            <p:column>
+              <h:commandLink
+                      action="#{facesContext.externalContext.redirect(roleEnforcementPoint.getKibanaServiceLogURL())}">
+                <p:graphicImage id="logs"
+                                value="/resources/images/log-file.svg"
+                                width="95"
+                                height="95"
+                                title="Services logs"
+                >
+                </p:graphicImage>
+              </h:commandLink>
+              <br></br>
+              <p:outputLabel style="text-align: left"  value="Services logs"></p:outputLabel>
+            </p:column>
           </h:panelGrid>
         </h:form>
       </div>
