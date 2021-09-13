@@ -41,14 +41,12 @@ package io.hops.hopsworks.common.util;
 import com.google.common.base.Splitter;
 import com.google.common.base.Strings;
 import io.hops.hopsworks.persistence.entity.project.PaymentType;
-import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.persistence.entity.util.Variables;
 import io.hops.hopsworks.common.dela.AddressJSON;
 import io.hops.hopsworks.common.dela.DelaClientType;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
-import io.hops.hopsworks.common.hdfs.Utils;
 import io.hops.hopsworks.common.provenance.core.Provenance;
 import io.hops.hopsworks.common.provenance.core.dto.ProvTypeDTO;
 import io.hops.hopsworks.exceptions.ProvenanceException;
@@ -320,6 +318,7 @@ public class Settings implements Serializable {
   private static final String VARIABLE_ELASTIC_OPENDISTRO_SECURITY_ENABLED = "elastic_opendistro_security_enabled";
   private static final String VARIABLE_ELASTIC_HTTPS_ENABLED = "elastic_https_enabled";
   private static final String VARIABLE_ELASTIC_ADMIN_USER = "elastic_admin_user";
+  private static final String VARIABLE_ELASTIC_SERVICE_LOG_USER = "kibana_service_log_viewer";
   private static final String VARIABLE_ELASTIC_ADMIN_PASSWORD = "elastic_admin_password";
   private static final String VARIABLE_KIBANA_HTTPS_ENABLED = "kibana_https_enabled";
   private static final String VARIABLE_ELASTIC_JWT_ENABLED = "elastic_jwt_enabled";
@@ -577,6 +576,8 @@ public class Settings implements Serializable {
           , ElasticSettings.ELASTIC_HTTPS_ENABLED_DEFAULT);
       String elasticAdminUser = setStrVar(VARIABLE_ELASTIC_ADMIN_USER,
           ElasticSettings.ELASTIC_ADMIN_USER_DEFAULT);
+      String elasticServiceLogUser = setStrVar(VARIABLE_ELASTIC_SERVICE_LOG_USER,
+          ElasticSettings.ELASTIC_SERVICE_LOG_ROLE);
       String elasticAdminPassword = setStrVar(VARIABLE_ELASTIC_ADMIN_PASSWORD,
           ElasticSettings.ELASTIC_ADMIN_PASSWORD_DEFAULT);
       boolean elasticJWTEnabled =  setBoolVar(VARIABLE_ELASTIC_JWT_ENABLED
@@ -588,7 +589,7 @@ public class Settings implements Serializable {
       ELASTIC_SETTINGS = new ElasticSettings(elasticIps, elasticPort,
           elasticRestPort, elasticOpenDistroEnabled, elasticHttpsEnabled,
           elasticAdminUser, elasticAdminPassword, elasticJWTEnabled,
-          elasticJWTUrlParameter, elasticJWTEXPMS);
+          elasticJWTUrlParameter, elasticJWTEXPMS, elasticServiceLogUser);
       ELASTIC_LOGS_INDEX_EXPIRATION = setLongVar(VARIABLE_ELASTIC_LOGS_INDEX_EXPIRATION, ELASTIC_LOGS_INDEX_EXPIRATION);
       HOPSWORKS_IP = setIpVar(VARIABLE_HOPSWORKS_IP, HOPSWORKS_IP);
       JHS_IP = setIpVar(VARIABLE_JHS_IP, JHS_IP);
@@ -1542,6 +1543,11 @@ public class Settings implements Serializable {
     checkCache();
     return ELASTIC_SETTINGS.getAdminUser();
   }
+
+  public synchronized String getElasticServiceLogUser() {
+    checkCache();
+    return ELASTIC_SETTINGS.getServiceLogUser();
+  }
   
   public synchronized String getElasticAdminPassword() {
     checkCache();
@@ -1662,15 +1668,12 @@ public class Settings implements Serializable {
         ":" + KIBANA_PORT;
   }
   
-  public synchronized String getKibanaAppUri() {
-    checkCache();
+  public String getKibanaAppUri() {
     return "/hopsworks-api/kibana/app/kibana?";
   }
   
-  public synchronized String getKibanaAppUri(String jwtToken) {
-    checkCache();
-    return  getKibanaAppUri() + ELASTIC_SETTINGS.getElasticJWTURLParameter()
-        + "=" + jwtToken + "&";
+  public String getKibanaAppUri(String jwtToken) {
+    return  getKibanaAppUri() + ELASTIC_SETTINGS.getElasticJWTURLParameter() + "=" + jwtToken + "&";
   }
 
   private String ZK_USER = "zk";
@@ -1993,23 +1996,14 @@ public class Settings implements Serializable {
 
   //Elastic log index pattern
   public static final String ELASTIC_LOGS_INDEX = "logs";
-  public static final String ELASTIC_BEAMJOBSERVER = "beamjobserver";
-  public static final String ELASTIC_BEAMSDKWORKER = "beamsdkworker";
   public static final String ELASTIC_PYPI_LIBRARIES_INDEX_PATTERN_PREFIX = "pypi_libraries_";
   public static final String ELASTIC_LOGS_INDEX_PATTERN = "_" + Settings.ELASTIC_LOGS_INDEX + "-*";
   public static final String ELASTIC_SERVING_INDEX = "serving";
-  public static final String ELASTIC_SERVING_INDEX_PATTERN = "_" + ELASTIC_SERVING_INDEX + "-*";
+  public static final String ELASTIC_SERVICES_INDEX = ".services";
 
-  public static final String ELASTIC_BEAMJOBSERVER_INDEX_PATTERN =
-    "_" + Settings.ELASTIC_BEAMJOBSERVER + "-*";
-  public static final String ELASTIC_BEAMSDKWORKER_INDEX_PATTERN =
-    "_" + Settings.ELASTIC_BEAMSDKWORKER + "-*";
   public static final String ELASTIC_LOG_INDEX_REGEX = ".*_" + ELASTIC_LOGS_INDEX + "-\\d{4}.\\d{2}.\\d{2}";
-  public static final String ELASTIC_SERVING_INDEX_REGEX = ".*_" + ELASTIC_SERVING_INDEX+ "-\\d{4}.\\d{2}.\\d{2}";
-  public static final String ELASTIC_BEAMJOBSERVER_INDEX_REGEX =
-    ".*_" + ELASTIC_BEAMJOBSERVER + "-\\d{4}.\\d{2}.\\d{2}";
-  public static final String ELASTIC_BEAMSDKWORKER_INDEX_REGEX =
-    ".*_" + ELASTIC_BEAMSDKWORKER + "-\\d{4}.\\d{2}.\\d{2}";
+  public static final String ELASTIC_SERVING_INDEX_REGEX = ".*_" + ELASTIC_SERVING_INDEX + "-\\d{4}.\\d{2}.\\d{2}";
+  public static final String ELASTIC_SERVICES_INDEX_REGEX = ELASTIC_SERVICES_INDEX + "-\\d{4}.\\d{2}.\\d{2}";
   public static final String ELASTIC_PYPI_LIBRARIES_INDEX_REGEX = ELASTIC_PYPI_LIBRARIES_INDEX_PATTERN_PREFIX + "*";
 
   //Other Elastic indexes
@@ -2112,43 +2106,6 @@ public class Settings implements Serializable {
   public synchronized String getResourceDirs() {
     checkCache();
     return RESOURCE_DIRS;
-  }
-
-  private static final String FEATURESTORE_IMPORT_PARENT_DIR = "featurestore_import";
-  public static final String FEATURESTORE_IMPORT_CONF = "configurations";
-  public static final String FEATURESTORE_IMPORT_JOB_NAME = "ft_import.py";
-
-  public String getBaseFeaturestoreJobImportDir(Project project) {
-    return Utils.getProjectPath(project.getName()) + Path.SEPARATOR +
-        Settings.BaseDataset.RESOURCES.getName() + Path.SEPARATOR +
-        Settings.FEATURESTORE_IMPORT_PARENT_DIR + Path.SEPARATOR;
-  }
-
-  public static final String REDSHIFT_JDBC_NAME = "RedshiftJDBC42-no-awssdk.jar";
-
-  public synchronized String getFeaturestoreImportJobPath() {
-    checkCache();
-    return "hdfs:///user" + Path.SEPARATOR + getSparkUser() + Path.SEPARATOR + FEATURESTORE_IMPORT_JOB_NAME;
-  }
-  
-  private static final String FEATURESTORE_TRAININGDATASET_JOB_PARENT_DIR = "featurestore-trainingdataset-job";
-  public static final String FEATURESTORE_TRAININGDATASET_JOB_CONF = "configurations";
-  public static final String FEATURESTORE_TRAININGDATASET_JOB_NAME = "ft_trainingdataset_job.py";
-  public static final String FEATURESTORE_TRAININGDATASET_SQL_JOB_NAME = "ft_trainingdataset_sql_job.py";
-  
-  public String getBaseFeaturestoreTrainingDatasetJobDir(Project project) {
-    return Utils.getProjectPath(project.getName()) + Settings.BaseDataset.RESOURCES.getName() + Path.SEPARATOR +
-      Settings.FEATURESTORE_TRAININGDATASET_JOB_PARENT_DIR + Path.SEPARATOR;
-  }
-  
-  public synchronized String getFeaturestoreTrainingDatasetJobPath(String sql_query) {
-    checkCache();
-    if (sql_query != null) {
-      return "hdfs:///user" + Path.SEPARATOR + getSparkUser() + Path.SEPARATOR +
-        FEATURESTORE_TRAININGDATASET_SQL_JOB_NAME;
-    } else {
-      return "hdfs:///user" + Path.SEPARATOR + getSparkUser() + Path.SEPARATOR + FEATURESTORE_TRAININGDATASET_JOB_NAME;
-    }
   }
 
   private String FS_JOB_ACTIVITY_TIME = "5m";

@@ -26,12 +26,14 @@ public class ElasticSettings {
   public final static boolean ELASTIC_OPENDISTRO_SECURTIY_ENABLED_DEFAULT = false;
   public final static boolean ELASTIC_HTTPS_ENABLED_DEFAULT = false;
   public final static String ELASTIC_ADMIN_USER_DEFAULT="admin";
+  public final static String ELASTIC_ADMIN_SERVICE_LOG_USER_DEFAULT="service_log_viewer";
   public final static String ELASTIC_ADMIN_PASSWORD_DEFAULT="adminpw";
   public final static boolean ELASTIC_JWT_ENABLED_DEFAULT= false;
   public final static String ELASTIC_JWT_URL_PARAMETER_DEFAULT ="jt";
   public final static long ELASTIC_JWT_EXP_MS_DEFAULT = 10 * 60 * 1000;
   
   public final static String ELASTIC_ADMIN_ROLE = "admin";
+  public final static String ELASTIC_SERVICE_LOG_ROLE = "service_log_viewer";
 
   public final static Integer DEFAULT_SCROLL_PAGE_SIZE = 1000;
   public final static Integer MAX_SCROLL_PAGE_SIZE = 10000;
@@ -46,13 +48,15 @@ public class ElasticSettings {
   private final boolean elasticJWTEnabled;
   private final String elasticJWTURLParameter;
   private final long elasticJWTExpMs;
+  private final String serviceLogUser;
   
   private int rrIndex = 0;
   
   public ElasticSettings(String elasticIps, int elasticPort,
-      int elasticRestPort, boolean openDistroSecurityEnabled,
-      boolean httpsEnabled, String adminUser, String adminPassword,
-      boolean elasticJWTEnabled, String elasticJWTURLParameter, long elasticJWTExpMs){
+                         int elasticRestPort, boolean openDistroSecurityEnabled,
+                         boolean httpsEnabled, String adminUser, String adminPassword,
+                         boolean elasticJWTEnabled, String elasticJWTURLParameter, long elasticJWTExpMs,
+                         String serviceLogUser){
     String[] ips = elasticIps.split(",");
     List<String> validIps = new ArrayList<>();
     for (String ip : ips) {
@@ -70,6 +74,7 @@ public class ElasticSettings {
     this.elasticJWTEnabled = elasticJWTEnabled;
     this.elasticJWTURLParameter = elasticJWTURLParameter;
     this.elasticJWTExpMs = elasticJWTExpMs;
+    this.serviceLogUser = serviceLogUser;
   }
   
   public List<String> getElasticIps() {
@@ -134,5 +139,9 @@ public class ElasticSettings {
   
   public Integer getMaxScrollPageSize() {
     return MAX_SCROLL_PAGE_SIZE;
+  }
+
+  public String getServiceLogUser() {
+    return serviceLogUser;
   }
 }
