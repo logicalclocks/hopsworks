@@ -216,7 +216,7 @@ public class TestFilterController {
   @Test
   public void testFindFilteredFeatureWithId() throws Exception {
     FeatureGroupFeatureDTO featureGroupFeatureDTO =
-      new FeatureGroupFeatureDTO("fg2_ft", "double", "", 2);
+      new FeatureGroupFeatureDTO("fg2_ft", "double", "", 2, true);
   
     Feature result = filterController.findFilteredFeature(featureGroupFeatureDTO, fgLookup, availableFeatureLookup);
   
@@ -238,7 +238,7 @@ public class TestFilterController {
   @Test
   public void testFindFilteredFeatureWithIdException() throws Exception {
     FeatureGroupFeatureDTO featureGroupFeatureDTO =
-      new FeatureGroupFeatureDTO("not_a_feature_of_fg2", "double", "", 2);
+      new FeatureGroupFeatureDTO("not_a_feature_of_fg2", "double", "", 2, true);
     
     thrown.expect(FeaturestoreException.class);
     filterController.findFilteredFeature(featureGroupFeatureDTO, fgLookup, availableFeatureLookup);
