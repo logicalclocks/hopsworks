@@ -106,11 +106,12 @@ public class FeatureGroupFeatureDTO {
     this.description = description;
   }
 
-  public FeatureGroupFeatureDTO(String name, String type, String description, Integer featureGroupId) {
+  public FeatureGroupFeatureDTO(String name, String type, String description, Integer featureGroupId, Boolean primary) {
     this.name = name;
     this.type = type;
     this.description = description;
     this.featureGroupId = featureGroupId;
+    this.primary = primary;
   }
 
   public FeatureGroupFeatureDTO(String name, String type, Boolean primary, String defaultValue,

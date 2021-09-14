@@ -74,9 +74,8 @@ public class OnDemandFeaturegroupDTO extends FeaturegroupDTO {
     setFeatures(featuregroup.getOnDemandFeaturegroup().getFeatures().stream()
       .sorted(Comparator.comparing(OnDemandFeature::getIdx))
       .map(fgFeature ->
-        new FeatureGroupFeatureDTO(fgFeature.getName(),
-            fgFeature.getType(),
-            fgFeature.getDescription(), featuregroup.getId())).collect(Collectors.toList()));
+        new FeatureGroupFeatureDTO(fgFeature.getName(), fgFeature.getType(), fgFeature.getDescription(),
+                featuregroup.getId(), fgFeature.getPrimary())).collect(Collectors.toList()));
   }
 
   public OnDemandFeaturegroupDTO(Featuregroup featuregroup, FeaturestoreStorageConnectorDTO storageConnectorDTO) {
