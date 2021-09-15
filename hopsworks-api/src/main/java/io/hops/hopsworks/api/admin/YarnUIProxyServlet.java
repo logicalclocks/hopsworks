@@ -210,6 +210,7 @@ public class YarnUIProxyServlet extends ProxyServlet {
     // sure it would truly be compatible
     String proxyRequestUri = rewriteUrlFromRequest(servletRequest);
 
+    HttpMethod m = null;
     try {
       // Execute the request
       HttpClientParams params = new HttpClientParams();
@@ -221,7 +222,6 @@ public class YarnUIProxyServlet extends ProxyServlet {
       config.setLocalAddress(localAddress);
 
       String method = servletRequest.getMethod();
-      HttpMethod m;
       if (method.equalsIgnoreCase("PUT")) {
         m = new PutMethod(proxyRequestUri);
         RequestEntity requestEntity = new InputStreamRequestEntity(servletRequest.getInputStream(), servletRequest.
@@ -280,6 +280,10 @@ public class YarnUIProxyServlet extends ProxyServlet {
       }
       throw new RuntimeException(e);
       
+    } finally {
+      if (m != null) {
+        m.releaseConnection();
+      }
     }
   }
   

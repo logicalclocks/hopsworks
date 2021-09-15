@@ -153,6 +153,7 @@ public class HDFSUIProxyServlet extends ProxyServlet {
     // sure it would truly be compatible
     String proxyRequestUri = rewriteUrlFromRequest(servletRequest);
 
+    HttpMethod m = null;
     try {
       String[] targetHost_port = leaderWebEndpoint.split(":");
       File keyStore = new File(baseHadoopClientsService.getSuperKeystorePath());
@@ -172,7 +173,7 @@ public class HDFSUIProxyServlet extends ProxyServlet {
       InetAddress localAddress = InetAddress.getLocalHost();
       config.setLocalAddress(localAddress);
 
-      HttpMethod m = new GetMethod(proxyRequestUri);
+      m = new GetMethod(proxyRequestUri);
       Enumeration<String> names = servletRequest.getHeaderNames();
       while (names.hasMoreElements()) {
         String headerName = names.nextElement();
@@ -224,6 +225,10 @@ public class HDFSUIProxyServlet extends ProxyServlet {
       }
       throw new RuntimeException(e);
 
+    } finally {
+      if (m != null) {
+        m.releaseConnection();
+      }
     }
   }
   
