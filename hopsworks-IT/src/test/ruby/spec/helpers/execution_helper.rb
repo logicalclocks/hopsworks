@@ -23,6 +23,11 @@ module ExecutionHelper
     get "#{ENV['HOPSWORKS_API']}/project/#{project_id}/jobs/#{job_name}/executions/#{execution_id}"
   end
 
+  def get_execution_checked(project_id, job_name, execution_id)
+    get_execution(project_id, job_name, execution_id)
+    expect_status_details(200)
+  end
+
   def start_execution(project_id, job_name, args=nil)
       headers = { 'Content-Type' => 'text/plain' }
       post "#{ENV['HOPSWORKS_API']}/project/#{project_id}/jobs/#{job_name}/executions", args, headers
@@ -45,14 +50,15 @@ module ExecutionHelper
   def wait_for_execution_active(project_id, job_name, execution_id, expected_active_state, appOrExecId)
     id = ''
     wait_result = wait_for_me_time do
-      get_execution(project_id, job_name, execution_id)
+      get_execution_checked(project_id, job_name, execution_id)
+      pp json_body if defined? (@debugOpt) && @debugOpt
       if appOrExecId.eql? 'id'
         id = json_body[:id]
       else
         id = json_body[:appId]
       end
       found_state = (json_body[:state].eql? expected_active_state) || !is_execution_active(json_body)
-      pp "waiting execution active - state:#{json_body[:state]}" if defined?(@debugOpt) && @debugOpt
+      pp "waiting execution:<#{execution_id}, #{id}> active - state:#{json_body[:state]}" if defined? (@debugOpt) && @debugOpt
       { 'success' => found_state, 'msg' => "expected:#{expected_active_state} found:#{json_body[:state]}" }
     end
     expect(wait_result["success"]).to be(true), wait_result["msg"]
@@ -87,14 +93,23 @@ module ExecutionHelper
     !(state == "FINISHED" || state == "FAILED" || state == "KILLED" || state == "INITIALIZATION_FAILED")
   end
 
-  def run_job(project, job_name, args: nil)
+  #job_type: SPARK/PYTHON maybe later DOCKER
+  def run_job(project, job_name, job_type: "SPARK", args: nil)
     arguments = nil
     arguments = args.join(' ') unless args.nil?
     start_execution(project[:id], job_name, arguments)
     expect_status(201)
     execution_id = json_body[:id]
-    app_id = wait_for_execution_active(project[:id], job_name, execution_id, "RUNNING", "appId")
-    wait_for_execution_completed(project[:id], job_name, execution_id, "FINISHED", expected_final_status: "SUCCEEDED")
+    if job_type == "SPARK"
+      app_id = wait_for_execution_active(project[:id], job_name, execution_id, "RUNNING", "appId")
+      wait_for_execution_completed(project[:id], job_name, execution_id, "FINISHED", expected_final_status: "SUCCEEDED")
+    elsif job_type == "PYTHON"
+      app_id = wait_for_execution_active(project[:id], job_name, execution_id, "RUNNING", "id")
+      wait_for_execution_completed(project[:id], job_name, execution_id, "FINISHED")
+    else
+      app_id = wait_for_execution_active(project[:id], job_name, execution_id, "RUNNING", "id")
+    end
+
     { app_id: app_id, execution_id: execution_id }
   end
 

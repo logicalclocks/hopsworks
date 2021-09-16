@@ -49,6 +49,21 @@ module JobHelper
     job_config
   end
 
+  def get_python_default_config(project, job_name, file_type)
+    job_conf = {
+        "type" => "pythonJobConfiguration",
+        "appName" => "#{job_name}",
+        "resourceConfig" => {
+            "memory" => 1024,
+            "cores" => 1,
+            "gpus" => 0
+        },
+        "jobType" => "PYTHON",
+        "appPath" => "hdfs:///Projects/#{project[:projectname]}/Resources/#{job_name}.#{file_type}",
+    }
+    job_conf
+  end
+
   def get_flink_conf(job_name)
     job_conf = {
         "type":"flinkJobConfiguration",
@@ -134,19 +149,9 @@ module JobHelper
     end
 
     if job_conf.nil?
-      job_conf = {
-          "type" => "pythonJobConfiguration",
-          "appName" => "#{job_name}",
-          "resourceConfig" => {
-            "memory" => 1024,
-            "cores" => 1,
-            "gpus" => 0
-          },
-          "jobType" => "PYTHON",
-          "appPath" => "hdfs:///Projects/#{project[:projectname]}/Resources/" + job_name + ".py",
-          "defaultArgs" => "10",
-          "files" => "hdfs:///Projects/#{project[:projectname]}/Resources/README.md,hdfs:///Projects/#{project[:projectname]}/TestJob/spark-examples.jar"
-      }
+      job_conf = get_python_default_config(project, job_name, type)
+      job_conf["defaultArgs"] = "10"
+      job_conf["files"] = "hdfs:///Projects/#{project[:projectname]}/Resources/README.md,hdfs:///Projects/#{project[:projectname]}/TestJob/spark-examples.jar"
     end
 
     if type.eql? "py"
@@ -256,6 +261,20 @@ module JobHelper
       job_config["defaultArgs"] = nil
     end
     create_sparktour_job(project, job_name, job_type, job_config)
+    expect_status_details(201)
+  end
+
+  def prepare_job(project, username, job_name, job_type, file_type, job_config: nil, src_dir: "#{ENV['PROJECT_DIR']}/hopsworks-IT/src/test/ruby/spec/auxiliary")
+    chmod_local_dir("#{ENV['PROJECT_DIR']}", 777, true)
+    src = "#{src_dir}/#{job_name}.#{file_type}"
+    dst = "/Projects/#{project[:projectname]}/Resources/#{job_name}.#{file_type}"
+    group = "#{project[:projectname]}__Jupyter"
+    copy_from_local(src, dst, username, group, 750, "#{project[:projectname]}")
+    if job_type == "PYTHON"
+      create_python_job(project, job_name, file_type, job_conf = job_config)
+    else
+      create_sparktour_job(project, job_name, file_type, job_config)
+    end
     expect_status_details(201)
   end
 
