@@ -16,6 +16,7 @@
 
 package io.hops.hopsworks.common.featurestore.query.filter;
 
+import com.google.gson.Gson;
 import io.hops.hopsworks.common.featurestore.feature.FeatureGroupFeatureDTO;
 import io.hops.hopsworks.common.featurestore.query.ConstructorController;
 import io.hops.hopsworks.common.featurestore.query.Feature;
@@ -26,14 +27,18 @@ import io.hops.hopsworks.restutils.RESTCodes;
 import org.apache.calcite.sql.SqlIdentifier;
 import org.apache.calcite.sql.SqlLiteral;
 import org.apache.calcite.sql.SqlNode;
+import org.apache.calcite.sql.SqlNodeList;
 import org.apache.calcite.sql.fun.SqlStdOperatorTable;
 import org.apache.calcite.sql.parser.SqlParserPos;
+import org.json.JSONTokener;
+import org.json.JSONArray;
 
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -149,13 +154,29 @@ public class FilterController {
     }
     
     SqlNode filterValue;
-    if (filter.getFeature().getType().equalsIgnoreCase("string")) {
-      filterValue = SqlLiteral.createCharString(filter.getValue(), SqlParserPos.ZERO);
+    Object json = new JSONTokener(filter.getValue()).nextValue();
+    if (json instanceof JSONArray) {
+      // Array
+      List<SqlNode> operandList = new ArrayList<>();
+      // Using gson, as casting "json" to JSONArray results in exception
+      for (Object item : new Gson().fromJson(filter.getValue(), List.class)) {
+        operandList.add(getSQLNode(filter.getFeature().getType(), item.toString()));
+      }
+      filterValue = new SqlNodeList(operandList, SqlParserPos.ZERO);
     } else {
-      filterValue = new SqlIdentifier(filter.getValue(), SqlParserPos.ZERO);
+      // Value
+      filterValue = getSQLNode(filter.getFeature().getType(), json.toString());
     }
     
     return filter.getCondition().operator.createCall(SqlParserPos.ZERO, feature, filterValue);
+  }
+
+  private SqlNode getSQLNode(String type, String value){
+    if (type.equalsIgnoreCase("string")) {
+      return SqlLiteral.createCharString(value, SqlParserPos.ZERO);
+    } else {
+      return new SqlIdentifier(value, SqlParserPos.ZERO);
+    }
   }
 
   public SqlNode buildFilterNode(Query baseQuery, Query query, int i, boolean online) {
