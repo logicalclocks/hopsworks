@@ -378,6 +378,17 @@ public class TestFilterController {
     String expected = "`fg1`.`fg1_pk` <> 'abc'";
     Assert.assertEquals(expected, result);
   }
+
+  @Test
+  public void testGenerateFilterNodeStringArrayType() {
+    Filter filter = new Filter(fg1Features.get(0), SqlFilterCondition.IN, "[\"ab\", \"cd\"]");
+
+    String result = filterController.generateFilterNode(filter, false).toSqlString(new SparkSqlDialect(SqlDialect
+            .EMPTY_CONTEXT)).getSql();
+
+    String expected = "`fg1`.`fg1_pk` IN ('ab', 'cd')";
+    Assert.assertEquals(expected, result);
+  }
   
   @Test
   public void testGenerateFilterNodeNumericType() {
@@ -387,6 +398,17 @@ public class TestFilterController {
       .EMPTY_CONTEXT)).getSql();
   
     String expected = "CASE WHEN `fg2`.`fg2_ft` IS NULL THEN 10.0 ELSE `fg2`.`fg2_ft` END <> 10";
+    Assert.assertEquals(expected, result);
+  }
+
+  @Test
+  public void testGenerateFilterNodeNumericArrayType() {
+    Filter filter = new Filter(fg2Features.get(1), SqlFilterCondition.IN, "[1, 9]");
+
+    String result = filterController.generateFilterNode(filter, false).toSqlString(new SparkSqlDialect(SqlDialect
+            .EMPTY_CONTEXT)).getSql();
+
+    String expected = "CASE WHEN `fg2`.`fg2_ft` IS NULL THEN 10.0 ELSE `fg2`.`fg2_ft` END IN (1.0, 9.0)";
     Assert.assertEquals(expected, result);
   }
   
