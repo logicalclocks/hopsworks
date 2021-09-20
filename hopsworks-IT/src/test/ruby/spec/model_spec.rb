@@ -16,8 +16,9 @@
 describe "On #{ENV['OS']}" do
   before :all do
     @debugOpt = false
+    @cleanup = true
   end
-  after(:all) {clean_all_test_projects(spec: "model")}
+  after(:all) {clean_all_test_projects(spec: "model") if @cleanup}
   experiment_1 = "experiment_1"
   describe 'model' do
     context 'without authentication' do
@@ -285,6 +286,77 @@ describe "On #{ENV['OS']}" do
 
       create_session(@user1_params[:email], @user1_params[:password])
       expect(model_exists(@project1, @model_name_1)).to be(true)
+    end
+  end
+  describe 'model export' do
+    def setup_user(email, password)
+      if email.nil? || password.nil?
+        email = "user_#{random_id}@email.com"
+        password = "Pass123"
+        user_params = { email: email, first_name: "User", last_name: "1", password: password }
+        user = create_user_with_role(user_params, "HOPS_USER")
+      else
+        user = create_session(email, password)
+      end
+      return user, email, password
+    end
+    def setup_project(project_name, user_params, create: true)
+      create_session(user_params[:email], user_params[:password])
+      if create
+        if project_name.nil?
+          project = create_project
+        else
+          project = create_project_by_name(project_name)
+        end
+
+      else
+        project = get_project_by_name(project_name)
+      end
+      return project
+    end
+    before :all do
+      email = nil
+      password = nil
+      project_name = nil
+      create = true
+
+      @user1, @email1, @password1 = setup_user(email, password)
+      @user1_params = {email: @email1, password: @password1, username: @user1[:username]}
+      pp "user:#{@email1}" if defined?(@debugOpt) && @debugOpt
+      @project1 = setup_project(project_name, @user1_params, create: create)
+      pp "project:#{@project1[:projectname]}" if defined?(@debugOpt) && @debugOpt
+    end
+    after :all do
+      clean_all_test_projects(spec: "ee_ml_pipeline") if @cleanup
+    end
+    def run_job_check_partials(user_params, project, job_name, job_type, file_type,
+                               job_config, job_args: nil, &is_job_done)
+      create_session(user_params[:email], user_params[:password])
+
+      if job_exists(project[:id], job_name)
+        pp "job exists - skipping" if defined?(@debugOpt) && @debugOpt
+      else
+        prepare_job(project, user_params[:username], job_name, job_type, file_type, job_config: job_config)
+      end
+      expect(job_exists(project[:id], job_name)).to be(true)
+      if is_job_done.call()
+        pp "all job outputs are created already - skipping" if defined?(@debugOpt) && @debugOpt
+      else
+        run_job(project, job_name, job_type: job_type, args: job_args)
+        unless is_job_done.call()
+          raise "job outputs are not all there - something went wrong"
+        end
+      end
+    end
+
+    it 'in pyspark' do
+      job_name = "export_model_spark"
+      file_type = "py"
+      job_type = "SPARK"
+      run_job_check_partials(@user1_params, @project1, job_name, job_type, file_type,
+                             get_spark_default_py_config(@project1, job_name, file_type)) do
+        model_exists(@project1, "mnist_spark", version: 1)
+      end
     end
   end
 end

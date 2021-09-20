@@ -106,12 +106,23 @@ public class ModelsController {
     if(!Strings.isNullOrEmpty(jobName)) {
       //model in job
       Jobs experimentJob = jobController.getJob(accessor.experimentProject, jobName);
-      SparkJobConfiguration sparkJobConf = (SparkJobConfiguration)experimentJob.getJobConfig();
-      String suffix = sparkJobConf.getAppPath().substring(sparkJobConf.getAppPath().lastIndexOf("."));
-      String relativePath = Settings.HOPS_MODELS_DATASET + "/" + modelName + "/" + modelVersion + "/program" + suffix;
-      Path path = new Path(Utils.getProjectPath(accessor.modelProject.getName()) + relativePath);
-      jobController.versionProgram(sparkJobConf, accessor.udfso, path);
-      return relativePath;
+      switch(experimentJob.getJobType()) {
+        case SPARK:
+        case PYSPARK: {
+          SparkJobConfiguration sparkJobConf = (SparkJobConfiguration) experimentJob.getJobConfig();
+          String suffix = sparkJobConf.getAppPath().substring(sparkJobConf.getAppPath().lastIndexOf("."));
+          String relativePath =
+            Settings.HOPS_MODELS_DATASET + "/" + modelName + "/" + modelVersion + "/program" + suffix;
+          Path path = new Path(Utils.getProjectPath(accessor.modelProject.getName()) + relativePath);
+          jobController.versionProgram(sparkJobConf.getAppPath(), accessor.udfso, path);
+          return relativePath;
+        }
+        case PYTHON: {
+          throw new IllegalArgumentException("python jobs unavailable in community");
+        }
+        default:
+          throw new IllegalArgumentException("cannot version program for job type:" + experimentJob.getJobType());
+      }
     } else {
       //model in jupyter
       String relativePath = Settings.HOPS_MODELS_DATASET + "/" + modelName + "/" + modelVersion + "/program.ipynb";
