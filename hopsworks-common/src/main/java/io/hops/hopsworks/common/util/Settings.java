@@ -1901,6 +1901,7 @@ public class Settings implements Serializable {
   public static final int MAX_USERNAME_SUFFIX = 99;
   public static final int MAX_RETRIES = 500;
   public static final String META_NAME_FIELD = "name";
+  public static final String META_USAGE_TIME = "usage_time";
   public static final String META_DESCRIPTION_FIELD = "description";
   public static final String META_INDEX = "projects";
   public static final String META_PROJECT_ID_FIELD = "project_id";
@@ -1911,6 +1912,7 @@ public class Settings implements Serializable {
   public static final String DOC_TYPE_INODE = "inode";
   public static final String META_ID = "_id";
   public static final String META_DATA_NESTED_FIELD = "xattr";
+  public static final String META_NOTEBOOK_JUPYTER_CONFIG_XATTR_NAME = "jupyter_configuration";
   public static final String META_DATA_FIELDS = META_DATA_NESTED_FIELD + ".*";
   
   //Filename conventions
