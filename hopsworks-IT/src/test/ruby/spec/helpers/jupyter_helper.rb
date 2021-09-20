@@ -122,4 +122,46 @@ module JupyterHelper
     }
     git_config
   end
+  
+  def auth_token(token)
+    begin
+      bearer = ""
+      Airborne.configure do |config|
+        bearer = config.headers["Authorization"]
+        config.headers["Authorization"] = "token #{token}"
+      end
+      yield
+    ensure
+      Airborne.configure do |config|
+        config.headers["Authorization"] = bearer
+      end
+    end
+  end
+
+  def recentnotebooks_search(project, expected_count)
+    wait_result = wait_for_me_time(10) do
+      pp "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/jupyter/recent" if (defined?(@debugOpt)) && @debugOpt
+      get "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/jupyter/recent"
+      expect_status_details(200)
+	  begin
+		expect(json_body[:items]).not_to be_nil
+        expect(json_body[:items].length).to eql(expected_count)
+        { 'success' => true }
+      rescue RSpec::Expectations::ExpectationNotMetError => e
+        pp "rescued ex - retrying" if defined?(@debugOpt) && @debugOpt
+        { 'success' => false, 'ex' => e }
+      end
+    end
+
+    if expected_count > 0
+      expect(json_body[:items][0][:jupyterConfiguration]).not_to be_nil
+      expect(json_body[:items][0][:path]).not_to be_nil
+    end
+  end
+  
+  def attachConfiguration(project, hdfsUsername, kernelId)
+    pp "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/jupyter/attachConfiguration/#{hdfsUsername}/#{kernelId}" if (defined?(@debugOpt)) && @debugOpt
+    put "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/jupyter/attachConfiguration/#{hdfsUsername}/#{kernelId}"
+    expect_status_details(200)
+  end
 end

@@ -60,6 +60,10 @@ import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.elasticsearch.search.fetch.subphase.highlight.HighlightBuilder;
+import org.elasticsearch.search.sort.NestedSortBuilder;
+import org.elasticsearch.search.sort.SortBuilder;
+import org.elasticsearch.search.sort.SortBuilders;
+import org.elasticsearch.search.sort.SortOrder;
 import org.javatuples.Pair;
 import org.json.JSONObject;
 
@@ -88,6 +92,7 @@ import static org.elasticsearch.index.query.QueryBuilders.queryStringQuery;
 import static org.elasticsearch.index.query.QueryBuilders.termQuery;
 import static org.elasticsearch.index.query.QueryBuilders.termsQuery;
 import static org.elasticsearch.index.query.QueryBuilders.wildcardQuery;
+import static org.elasticsearch.index.query.QueryBuilders.existsQuery;
 
 /**
  *
@@ -189,7 +194,22 @@ public class ElasticController {
     throw new ElasticException(RESTCodes.ElasticErrorCode.ELASTIC_QUERY_ERROR,
       Level.INFO,"Error while executing query, code: "+  response.status().getStatus());
   }
-  
+
+  public SearchHit[] recentJupyterNotebookSearch(int count, int projectId) throws ElasticException {
+    StringBuilder stringBuilder = new StringBuilder();
+    stringBuilder.append(Settings.META_DATA_NESTED_FIELD + ".");
+    stringBuilder.append(Settings.META_NOTEBOOK_JUPYTER_CONFIG_XATTR_NAME + ".");
+    stringBuilder.append(Settings.META_USAGE_TIME);
+    String usage_time_path = stringBuilder.toString();
+    SortBuilder sortBuilder = SortBuilders.fieldSort(usage_time_path)
+            .order(SortOrder.DESC)
+            .setNestedSort(new NestedSortBuilder(Settings.META_DATA_NESTED_FIELD))
+            .unmappedType("long");
+    SearchResponse response = executeJupyterSearchQuery(
+            getRecentNotebooks(usage_time_path, projectId), count, sortBuilder);
+    return response.getHits().getHits();
+  }
+
   /**
    *
    * @param docType
@@ -420,6 +440,18 @@ public class ElasticController {
     searchRequest.source(sb);
     return elasticClientCtrl.baseSearch(searchRequest);
   }
+
+  private SearchResponse executeJupyterSearchQuery(QueryBuilder query, int size, SortBuilder sort)
+          throws ElasticException {
+    //hit the indices - execute the queries
+    SearchRequest searchRequest = new SearchRequest(Settings.META_INDEX);
+    SearchSourceBuilder sb = new SearchSourceBuilder()
+            .query(query)
+            .size(size)
+            .sort(sort);
+    searchRequest.source(sb);
+    return elasticClientCtrl.baseSearch(searchRequest);
+  }
   
   private MultiSearchResponse executeSearchQuery(List<Pair<QueryBuilder, HighlightBuilder>> searchQB,
                                                  int from, int size)
@@ -579,6 +611,31 @@ public class ElasticController {
         .should(metadataQuery);
 
     return textCondition;
+  }
+
+  /**
+   * Creates the query that is used to get the most recently used Jupyter notebooks.
+   * <p/>
+   * @return
+   */
+  private QueryBuilder getRecentNotebooks(String existsLocation, int projectId) {
+    QueryBuilder existQuery = existsQuery(existsLocation);
+
+    QueryBuilder boolQuery = boolQuery()
+            .must(existQuery);
+
+    QueryBuilder nestedQuery = nestedQuery(Settings.META_DATA_NESTED_FIELD, boolQuery, ScoreMode.None);
+
+    QueryBuilder wildCardQuery = wildcardQuery(Settings.META_NAME_FIELD,"*ipynb");
+
+    QueryBuilder termQuery = termQuery("project_id", projectId);
+
+    QueryBuilder nameQuery = boolQuery()
+            .must(nestedQuery)
+            .must(wildCardQuery)
+            .must(termQuery);
+
+    return nameQuery;
   }
 
   /**

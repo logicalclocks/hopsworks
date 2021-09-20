@@ -208,6 +208,7 @@ public class ResourceRequest {
     SILENCES,
     RECEIVERS,
     ROUTES,
+    JUPYTER,
     TRANSFORMATIONFUNCTIONS;
 
     public static Name fromString(String name) {
