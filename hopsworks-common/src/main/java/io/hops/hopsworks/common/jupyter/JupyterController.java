@@ -77,7 +77,6 @@ import java.util.logging.Logger;
 public class JupyterController {
 
   private static final Logger LOGGER = Logger.getLogger(JupyterController.class.getName());
-  private static final String NOTEBOOK_JUPYTER_CONFIG_XATTR_NAME = "jupyter_configuration";
 
   @EJB
   private DistributedFsService dfs;
@@ -360,11 +359,13 @@ public class JupyterController {
       ObjectMapper objectMapper = new ObjectMapper();
       objectMapper.registerModule(new JaxbAnnotationModule());
       JSONObject jupyterSettingsMetadataObj = new JSONObject();
-      jupyterSettingsMetadataObj.put(NOTEBOOK_JUPYTER_CONFIG_XATTR_NAME,
+      jupyterSettingsMetadataObj.put(Settings.META_NOTEBOOK_JUPYTER_CONFIG_XATTR_NAME,
           objectMapper.writeValueAsString(jupyterSettings));
+      jupyterSettingsMetadataObj.put(Settings.META_USAGE_TIME,
+              new Date().getTime());
       String inodePath = jupyterSettings.getBaseDir() + "/" +
           relativeNotebookPath;
-      xAttrsController.addStrXAttr(inodePath, NOTEBOOK_JUPYTER_CONFIG_XATTR_NAME,
+      xAttrsController.addStrXAttr(inodePath, Settings.META_NOTEBOOK_JUPYTER_CONFIG_XATTR_NAME,
           jupyterSettingsMetadataObj.toString(), udfso);
     } catch (Exception e) {
       throw new ServiceException(RESTCodes.ServiceErrorCode.ATTACHING_JUPYTER_CONFIG_TO_NOTEBOOK_FAILED,

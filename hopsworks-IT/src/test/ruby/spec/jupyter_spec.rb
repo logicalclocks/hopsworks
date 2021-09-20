@@ -39,6 +39,26 @@ describe "On #{ENV['OS']}" do
         with_valid_project
       end
 
+      it 'should get recent jupyter notebooks' do
+        _, _, settings = start_jupyter(@project)
+        port = json_body[:port]
+        token = json_body[:token]
+        hdfsUsername = settings[:project][:inode][:hdfsUser][:name]
+
+        kernel_id = ""
+        auth_token(token) do
+          temp_name = create_notebook(port)
+          update_notebook(port, get_code_content, temp_name)
+          _, kernel_id = create_notebook_session(port, temp_name, temp_name)
+        end
+
+        attachConfiguration(@project, hdfsUsername, kernel_id)
+
+        recentnotebooks_search(@project, 1)
+
+        stop_jupyter(@project)
+      end
+
       it "should start, get logs and stop a notebook server" do
 
         secret_dir, staging_dir, settings = start_jupyter(@project)

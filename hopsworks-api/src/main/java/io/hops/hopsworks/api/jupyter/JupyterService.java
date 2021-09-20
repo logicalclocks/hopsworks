@@ -48,6 +48,7 @@ import io.hops.hopsworks.common.dao.jobs.quota.YarnProjectsQuotaFacade;
 import io.hops.hopsworks.common.dao.jupyter.JupyterSettingsFacade;
 import io.hops.hopsworks.common.dao.jupyter.config.JupyterDTO;
 import io.hops.hopsworks.common.dao.jupyter.config.JupyterFacade;
+import io.hops.hopsworks.common.jupyter.NotebookDTO;
 import io.hops.hopsworks.common.jupyter.JupyterManager;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
@@ -69,6 +70,7 @@ import io.hops.hopsworks.common.util.Ip;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.GenericException;
 import io.hops.hopsworks.exceptions.HopsSecurityException;
+import io.hops.hopsworks.exceptions.ElasticException;
 import io.hops.hopsworks.exceptions.ProjectException;
 import io.hops.hopsworks.exceptions.ServiceException;
 import io.hops.hopsworks.exceptions.JobException;
@@ -95,6 +97,8 @@ import javax.ejb.TransactionAttributeType;
 import javax.enterprise.context.RequestScoped;
 import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
+import javax.validation.constraints.Max;
+import javax.validation.constraints.Min;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
@@ -104,6 +108,7 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
+import javax.ws.rs.DefaultValue;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.MediaType;
@@ -169,6 +174,8 @@ public class JupyterService {
   UsersController usersController;
   @EJB
   private MonitoringUrlBuilder monitoringUrlBuilder;
+  @EJB
+  private NotebookBuilder notebookBuilder;
 
   private Integer projectId;
   // No @EJB annotation for Project, it's injected explicitly in ProjectService.
@@ -536,6 +543,20 @@ public class JupyterService {
     jupyterController.updateExpirationDate(project, user, jupyterSettings);
 
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(jupyterSettings).build();
+  }
+
+  @GET
+  @Path("recent")
+  @Produces(MediaType.APPLICATION_JSON)
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
+  @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
+  public Response recent(
+          @QueryParam("count") @DefaultValue("5") @Min(0) @Max(100) int count,
+          @Context UriInfo uriInfo,
+          @Context SecurityContext sc)
+          throws ElasticException {
+    NotebookDTO dto = notebookBuilder.build(uriInfo, project, count);
+    return Response.ok().entity(dto).build();
   }
 
   @ApiOperation(value = "Attach a jupyter configuration to the notebook.", notes = "The notebook is passed as the " +
