@@ -37,6 +37,7 @@ import io.hops.hopsworks.exceptions.ModelsException;
 import io.hops.hopsworks.exceptions.ProvenanceException;
 import io.hops.hopsworks.exceptions.ServiceException;
 import io.hops.hopsworks.persistence.entity.dataset.Dataset;
+import io.hops.hopsworks.persistence.entity.jobs.configuration.python.PythonJobConfiguration;
 import io.hops.hopsworks.persistence.entity.jobs.configuration.spark.SparkJobConfiguration;
 import io.hops.hopsworks.persistence.entity.jobs.description.Jobs;
 import io.hops.hopsworks.persistence.entity.project.Project;
@@ -106,12 +107,29 @@ public class ModelsController {
     if(!Strings.isNullOrEmpty(jobName)) {
       //model in job
       Jobs experimentJob = jobController.getJob(accessor.experimentProject, jobName);
-      SparkJobConfiguration sparkJobConf = (SparkJobConfiguration)experimentJob.getJobConfig();
-      String suffix = sparkJobConf.getAppPath().substring(sparkJobConf.getAppPath().lastIndexOf("."));
-      String relativePath = Settings.HOPS_MODELS_DATASET + "/" + modelName + "/" + modelVersion + "/program" + suffix;
-      Path path = new Path(Utils.getProjectPath(accessor.modelProject.getName()) + relativePath);
-      jobController.versionProgram(sparkJobConf, accessor.udfso, path);
-      return relativePath;
+      switch(experimentJob.getJobType()) {
+        case SPARK:
+        case PYSPARK: {
+          SparkJobConfiguration sparkJobConf = (SparkJobConfiguration) experimentJob.getJobConfig();
+          String suffix = sparkJobConf.getAppPath().substring(sparkJobConf.getAppPath().lastIndexOf("."));
+          String relativePath =
+            Settings.HOPS_MODELS_DATASET + "/" + modelName + "/" + modelVersion + "/program" + suffix;
+          Path path = new Path(Utils.getProjectPath(accessor.modelProject.getName()) + relativePath);
+          jobController.versionProgram(sparkJobConf.getAppPath(), accessor.udfso, path);
+          return relativePath;
+        }
+        case PYTHON: {
+          PythonJobConfiguration pythonJobConf = (PythonJobConfiguration) experimentJob.getJobConfig();
+          String suffix = pythonJobConf.getAppPath().substring(pythonJobConf.getAppPath().lastIndexOf("."));
+          String relativePath =
+            Settings.HOPS_MODELS_DATASET + "/" + modelName + "/" + modelVersion + "/program" + suffix;
+          Path path = new Path(Utils.getProjectPath(accessor.modelProject.getName()) + relativePath);
+          jobController.versionProgram(pythonJobConf.getAppPath(), accessor.udfso, path);
+          return relativePath;
+        }
+        default:
+          throw new IllegalArgumentException("cannot version program for job type:" + experimentJob.getJobType());
+      }
     } else {
       //model in jupyter
       String relativePath = Settings.HOPS_MODELS_DATASET + "/" + modelName + "/" + modelVersion + "/program.ipynb";
