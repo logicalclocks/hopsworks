@@ -24,7 +24,8 @@ public enum SqlFilterCondition {
   LESS_THAN_OR_EQUAL(SqlStdOperatorTable.LESS_THAN_OR_EQUAL),
   GREATER_THAN_OR_EQUAL(SqlStdOperatorTable.GREATER_THAN_OR_EQUAL),
   EQUALS(SqlStdOperatorTable.EQUALS),
-  NOT_EQUALS(SqlStdOperatorTable.NOT_EQUALS);
+  NOT_EQUALS(SqlStdOperatorTable.NOT_EQUALS),
+  IN(SqlStdOperatorTable.IN);
   
   public final org.apache.calcite.sql.SqlOperator operator;
   
