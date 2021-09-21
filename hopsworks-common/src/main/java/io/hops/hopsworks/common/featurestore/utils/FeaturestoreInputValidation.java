@@ -55,7 +55,7 @@ public class FeaturestoreInputValidation {
     if (!namePattern.matcher(featurestoreEntityDTO.getName()).matches()) {
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_ENTITY_NAME, Level.FINE,
         ", the provided name " + featurestoreEntityDTO.getName() + " is invalid. Entity names can only contain lower " +
-          "case characters, numbers and underscores and cannot be longer than " +
+          "case characters, numbers and underscores, have to start with a letter and cannot be longer than " +
           FeaturestoreConstants.FEATURESTORE_ENTITY_NAME_MAX_LENGTH + " characters or empty.");
     }
     
@@ -110,17 +110,17 @@ public class FeaturestoreInputValidation {
     }
   }
 
-  private void nameValidation(String name) throws FeaturestoreException {
+  void nameValidation(String name) throws FeaturestoreException {
     Pattern namePattern = FeaturestoreConstants.FEATURESTORE_REGEX;
     if (!namePattern.matcher(name).matches()) {
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_FEATURE_NAME, Level.FINE,
           ", the provided feature name " + name + " is invalid. Feature names can only contain lower case " +
-              "characters, numbers and underscores and cannot be longer than " +
+              "characters, numbers and underscores, have to start with a letter and cannot be longer than " +
               FeaturestoreConstants.FEATURESTORE_ENTITY_NAME_MAX_LENGTH + " characters or empty.");
     }
   }
 
-  private void descriptionValidation(String name, String description) throws FeaturestoreException {
+  void descriptionValidation(String name, String description) throws FeaturestoreException {
     if (!Strings.isNullOrEmpty(description) &&
         description.length() > FeaturestoreConstants.FEATURESTORE_ENTITY_DESCRIPTION_MAX_LENGTH) {
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_FEATURE_DESCRIPTION, Level.FINE,
