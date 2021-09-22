@@ -267,8 +267,7 @@ public class JupyterService {
   public Response settings(@Context SecurityContext sc) {
 
     Users user = jWTHelper.getUserPrincipal(sc);
-    String loggedinemail = user.getEmail();
-    JupyterSettings js = jupyterSettingsFacade.findByProjectUser(project, loggedinemail);
+    JupyterSettings js = jupyterSettingsFacade.findByProjectUser(project, user.getEmail());
     if (js.getProject() == null) {
       js.setProject(project);
     }
@@ -421,7 +420,7 @@ public class JupyterService {
         expirationDate = cal.getTime();
 
         jp = jupyterFacade.saveServer(externalIp, project, configSecret,
-          dto.getPort(), user.getId(), dto.getToken(), dto.getCid(), expirationDate, jupyterSettings.getNoLimit());
+          dto.getPort(), user.getId(), dto.getToken(), dto.getCid(), expirationDate, jupyterSettings.isNoLimit());
 
         //set minutes left until notebook server is killed
         Duration durationLeft = Duration.between(new Date().toInstant(), jp.getExpires().toInstant());

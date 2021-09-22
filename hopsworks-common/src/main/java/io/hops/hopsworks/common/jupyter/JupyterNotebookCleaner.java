@@ -107,7 +107,7 @@ public class JupyterNotebookCleaner {
         Date currentDate = Calendar.getInstance().getTime();
         for (JupyterProject jp : servers) {
           // If the notebook is expired
-          if (!jp.getNoLimit() && jp.getExpires().before(currentDate)) {
+          if (!jp.isNoLimit() && jp.getExpires().before(currentDate)) {
             try {
               HdfsUsers hdfsUser = hdfsUsersFacade.find(jp.getHdfsUserId());
               Users user = usersFacade.findByUsername(hdfsUser.getUsername());
