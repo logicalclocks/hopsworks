@@ -225,7 +225,7 @@ public class JupyterProject implements Serializable {
     this.minutesUntilExpiration = minutesUntilExpiration;
   }
 
-  public boolean getNoLimit() {
+  public boolean isNoLimit() {
     return this.noLimit;
   }
 

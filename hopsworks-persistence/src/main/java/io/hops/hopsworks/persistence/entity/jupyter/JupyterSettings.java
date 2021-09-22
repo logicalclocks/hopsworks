@@ -107,6 +107,10 @@ public class JupyterSettings implements Serializable {
   private int shutdownLevel = 6;
 
   @Basic(optional = false)
+  @Column(name = "no_limit")
+  private boolean noLimit = false;
+
+  @Basic(optional = false)
   @Column(name = "advanced")
   private boolean advanced = false;
 
@@ -147,9 +151,6 @@ public class JupyterSettings implements Serializable {
   
   @Transient
   private String privateDir = "";
-
-  @Transient
-  private Boolean noLimit = false;
 
   @Transient
   private Boolean gitAvailable;
@@ -206,7 +207,7 @@ public class JupyterSettings implements Serializable {
     this.advanced = advanced;
   }
 
-  public boolean getNoLimit() {
+  public boolean isNoLimit() {
     return noLimit;
   }
 

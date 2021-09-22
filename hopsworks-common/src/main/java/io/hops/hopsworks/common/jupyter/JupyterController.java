@@ -295,7 +295,7 @@ public class JupyterController {
     cal.add(Calendar.HOUR_OF_DAY, jupyterSettings.getShutdownLevel());
     expirationDate = cal.getTime();
     jupyterProject.setExpires(expirationDate);
-    jupyterProject.setNoLimit(jupyterSettings.getNoLimit());
+    jupyterProject.setNoLimit(jupyterSettings.isNoLimit());
     jupyterFacade.update(jupyterProject);
   }
 
