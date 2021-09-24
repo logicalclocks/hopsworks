@@ -197,7 +197,8 @@ public class OAuthClientResource {
     String baseUrl = base == null? "" : base.toString();
     baseUrl = baseUrl.endsWith("/")? baseUrl : baseUrl + "/";
     oAuthController.updateSettings(oauthClientDTO.getNeedConsent(), oauthClientDTO.getRegistrationDisabled(),
-        oauthClientDTO.getActivateUser(), oauthClientDTO.getGroupMapping(), oauthClientDTO.getGroupMappings(), baseUrl);
+        oauthClientDTO.getActivateUser(), oauthClientDTO.getGroupMapping(), oauthClientDTO.getGroupMappings(), baseUrl,
+        oauthClientDTO.getRejectRemoteNoGroup(), oauthClientDTO.getManagedCloudRedirectUri());
   }
   
   private void validate(OauthClient oauthClient, OAuthClientDTO oauthClientDTO) throws RemoteAuthException {

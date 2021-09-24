@@ -119,7 +119,14 @@ public class RemoteUserDTO {
   
   @Override
   public String toString() {
-    return uuid;
+    String s = "uuid: " + this.uuid + " uid: " + this.uid + " givenName: " + this.givenName + " surname: "
+        + this.surname + " email: " + this.email + " groups: ";
+    if (groups != null) {
+      for (String grp : groups) {
+        s = s + grp + ", ";
+      }
+    }
+    return s;
   }
 
 }

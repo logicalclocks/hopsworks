@@ -182,7 +182,8 @@ public class OAuthController {
   }
   
   public void updateSettings(Boolean needConsent, Boolean registrationDisabled, Boolean activateUser,
-      GroupMapping groupMapping, String groupMappings, String domain) throws RemoteAuthException {
+      GroupMapping groupMapping, String groupMappings, String domain, Boolean rejectNoGroup,
+      String managedCloudRedirectUri) throws RemoteAuthException {
     if (groupMapping != null) {
       if (GroupMapping.GROUP_MAPPING.equals(groupMapping)) {
         if (Strings.isNullOrEmpty(groupMappings)) {
@@ -213,6 +214,14 @@ public class OAuthController {
     
     if (!Strings.isNullOrEmpty(domain)) {
       settings.updateOauthLogoutRedirectUri(domain);
+    }
+    
+    if (rejectNoGroup != null){
+      settings.updateRejectRemoteNoGroup(rejectNoGroup);
+    }
+    
+    if(!Strings.isNullOrEmpty((managedCloudRedirectUri))){
+      settings.updateManagedCloudRedirectUri(managedCloudRedirectUri);
     }
     
     settings.refreshCache();

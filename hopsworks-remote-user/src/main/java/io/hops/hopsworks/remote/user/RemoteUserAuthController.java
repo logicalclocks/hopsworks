@@ -27,6 +27,7 @@ import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.persistence.entity.user.security.ua.UserAccountStatus;
 import io.hops.hopsworks.persistence.entity.user.security.ua.UserAccountType;
 import io.hops.hopsworks.restutils.RESTCodes;
+import java.util.ArrayList;
 
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
@@ -128,6 +129,8 @@ public class RemoteUserAuthController {
       remoteUserStateDTO = new RemoteUserStateDTO(consent, remoteUser, userDTO);
       return remoteUserStateDTO;
     }
+    //update the user groups, in case they have been changed in the identity provider
+    remoteUser = updateGroups(userDTO, remoteUser, type);
     remoteUserStateDTO = new RemoteUserStateDTO(true, remoteUser, userDTO);
     if (remoteUserUpdated(userDTO, remoteUser.getUid())) {
       remoteUser = updateRemoteUser(userDTO, remoteUser);//do we need to ask again?
@@ -144,10 +147,44 @@ public class RemoteUserAuthController {
     if (u != null) {
       throw new LoginException("Failed to login. A user with the chosen email already exists.");
     }
+    List<String> groups = remoteUserGroupMapper.getMappedGroups(userDTO.getGroups(), type);
+    if (settings.getRejectRemoteNoGroup() && groups.isEmpty()) {
+      //the user won't bellong to any group in hopsworks, do not create the user at all
+      throw new LoginException("Remote user has no valid groups");
+    }
     return createRemoteUser(userDTO.getUuid(), email, userDTO.getGivenName(), userDTO.getSurname(),
-      userDTO.getGroups(), type, status);
+      type, status, groups);
   }
   
+  /**
+   * Keep the mapped groups up to date with the ones in the identity provider
+   * @param userDTO
+   * @param type
+   * @throws LoginException 
+   */
+  private RemoteUser updateGroups(RemoteUserDTO userDTO, RemoteUser remoteUser, RemoteUserType type) throws
+      LoginException {
+    List<String> groups = remoteUserGroupMapper.getMappedGroups(userDTO.getGroups(), type);
+    Users user = remoteUser.getUid();
+    BbcGroup group;
+    for (String grp : groups) {
+      group = groupFacade.findByGroupName(grp);
+      if (group != null && !user.getBbcGroupCollection().contains(group)) {
+        userFacade.addGroup(user.getEmail(), group.getGid());
+        user.getBbcGroupCollection().add(group);
+      }
+    }
+    List<BbcGroup> toRemove = new ArrayList<>();
+    for (BbcGroup g : user.getBbcGroupCollection()) {
+      if (!groups.contains(g.getGroupName())) {
+        toRemove.add(g);
+        userFacade.removeGroup(user.getEmail(), g.getGid());
+      }
+    }
+    user.getBbcGroupCollection().removeAll(toRemove);
+    return remoteUser;
+  }
+
   public void createRemoteUser(RemoteUserDTO userDTO, String email, String givenName, String surname,
     RemoteUserType type, UserAccountStatus status) throws UserException, GenericException {
     if (userDTO == null) {
@@ -174,7 +211,8 @@ public class RemoteUserAuthController {
       throw new UserException(RESTCodes.UserErrorCode.USER_EXISTS, Level.FINE, "User with the same email " +
         "already exists.");
     }
-    remoteUser = createRemoteUser(userDTO.getUuid(), chosenEmail, fname, lname, userDTO.getGroups(), type, status);
+    List<String> groups = remoteUserGroupMapper.getMappedGroups(userDTO.getGroups(), type);
+    remoteUser = createRemoteUser(userDTO.getUuid(), chosenEmail, fname, lname, type, status, groups);
     remoteUserFacade.save(remoteUser);
   }
   
@@ -199,10 +237,9 @@ public class RemoteUserAuthController {
   }
   
   private RemoteUser createRemoteUser(String uuid, String email, String givenName, String surname,
-    List<String> userGroups, RemoteUserType type, UserAccountStatus status) {
+    RemoteUserType type, UserAccountStatus status, List<String> groups) {
     String authKey = securityUtils.generateSecureRandomString(16);
     Users user = userController.createNewRemoteUser(email.toLowerCase(), givenName, surname, authKey, status);
-    List<String> groups = remoteUserGroupMapper.getMappedGroups(userGroups, type);
     BbcGroup group;
     for (String grp : groups) {
       group = groupFacade.findByGroupName(grp);

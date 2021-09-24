@@ -37,6 +37,8 @@ public class OAuthClientDTO extends RestDTO<OAuthClientDTO> {
   private Boolean needConsent;
   private Boolean registrationDisabled;
   private String callbackURI;
+  private Boolean rejectRemoteNoGroup;
+  private String managedCloudRedirectUri;
   
   public OAuthClientDTO() {
   }
@@ -239,5 +241,21 @@ public class OAuthClientDTO extends RestDTO<OAuthClientDTO> {
   
   public void setCallbackURI(String callbackURI) {
     this.callbackURI = callbackURI;
+  }
+  
+  public Boolean getRejectRemoteNoGroup() {
+    return rejectRemoteNoGroup;
+  }
+  
+  public void setRejectRemoteNoGroup(Boolean rejectRemoteNoGroup) {
+    this.rejectRemoteNoGroup = rejectRemoteNoGroup;
+  }
+  
+  public String getManagedCloudRedirectUri() {
+    return managedCloudRedirectUri;
+  }
+  
+  public void setManagedCloudRedirectUri(String managedCloudRedirectUri) {
+    this.managedCloudRedirectUri = managedCloudRedirectUri;
   }
 }

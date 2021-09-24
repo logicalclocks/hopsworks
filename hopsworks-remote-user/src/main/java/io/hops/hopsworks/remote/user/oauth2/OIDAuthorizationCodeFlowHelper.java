@@ -195,10 +195,24 @@ public class OIDAuthorizationCodeFlowHelper {
   private State saveOauthLoginState(String sessionId, OauthClient client, Nonce nonce, CodeVerifier codeVerifier,
     URI redirectURI, String scopes) {
     State state = new State();
+    /*
+     * when using oauth for hopsworks.ai we need to first redirect to hopsworks.ai then to
+     * the hopsworks cluster. For this purpose we pass the cluster url in the state
+     */
+    if(!settings.getManagedCloudRedirectUri().isEmpty()){
+      state = new State(settings.getOauthRedirectUri(true) + "_" + state.getValue());
+    }
     int count = 10;
     OauthLoginState oauthLoginState = oauthLoginStateFacade.findByState(state.getValue());
     while (oauthLoginState != null && count > 0) {
       state = new State();
+      /*
+       * when using oauth for hopsworks.ai we need to first redirect to hopsworks.ai then to
+       * the hopsworks cluster. For this purpose we pass the cluster url in the state
+       */
+      if (!settings.getManagedCloudRedirectUri().isEmpty()) {
+        state = new State(settings.getOauthRedirectUri(true) + "_" + state.getValue());
+      }
       oauthLoginState = oauthLoginStateFacade.findByState(state.getValue());
       count--;
     }
@@ -412,12 +426,22 @@ public class OIDAuthorizationCodeFlowHelper {
     remoteUserDTO.setSurname(userInfo.getFamilyName());
     verifyAndSetEmail(remoteUserDTO, userInfo, client, accessToken);
     
+    //TODO replace all of this by a system in which we can define the mapping during configuration
     List<String> groups = new ArrayList<>();
     if (userInfo.toJSONObject().containsKey(OpenIdConstant.GROUPS)) {
       groups.add(userInfo.toJSONObject().getAsString(OpenIdConstant.GROUPS));
     }
     if (userInfo.toJSONObject().containsKey(OpenIdConstant.ROLES)) {
       groups.add(userInfo.toJSONObject().getAsString(OpenIdConstant.ROLES));
+    }
+    /*
+     * this is the way we set the groups in hopsworks.ai
+     */
+    if (userInfo.toJSONObject().containsKey(OpenIdConstant.COGNITO_USERS_GROUP)) {
+      groups.add(userInfo.toJSONObject().getAsString(OpenIdConstant.COGNITO_USERS_GROUP));
+    }
+    if (userInfo.toJSONObject().containsKey(OpenIdConstant.COGNITO_ADMINS_GROUP)) {
+      groups.add(userInfo.toJSONObject().getAsString(OpenIdConstant.COGNITO_ADMINS_GROUP));
     }
     remoteUserDTO.setGroups(groups);
     validateRemoteUser(remoteUserDTO);

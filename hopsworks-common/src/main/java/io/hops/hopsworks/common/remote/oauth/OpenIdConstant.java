@@ -67,6 +67,9 @@ public class OpenIdConstant {
   public static final String PREFERRED_USERNAME = "preferred_username";
   public static final String GROUPS = "groups";
   public static final String ROLES = "roles";
+  // the groups used by hopsworks.ai for oauth
+  public static final String COGNITO_USERS_GROUP = "custom:users_group";
+  public static final String COGNITO_ADMINS_GROUP = "custom:admins_group";
   public static final String PROFILE = "profile";
   public static final String PICTURE = "picture";
   public static final String WEBSITE = "website";

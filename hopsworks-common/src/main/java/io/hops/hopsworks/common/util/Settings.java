@@ -240,6 +240,7 @@ public class Settings implements Serializable {
   private final static String VARIABLE_LIVY_STARTUP_TIMEOUT = "livy_startup_timeout";
   
   private final static String VARIABLE_USER_SEARCH = "enable_user_search";
+  private final static String VARIABLE_REJECT_REMOTE_USER_NO_GROUP = "reject_remote_user_no_group";
 
   //Used by RESTException to include devMsg or not in response
   private static final String VARIABLE_HOPSWORKS_REST_LOG_LEVEL = "hopsworks_rest_log_level";
@@ -782,6 +783,7 @@ public class Settings implements Serializable {
       LIVY_STARTUP_TIMEOUT = setIntVar(VARIABLE_LIVY_STARTUP_TIMEOUT, LIVY_STARTUP_TIMEOUT);
   
       USER_SEARCH_ENABLED = setBoolVar(VARIABLE_USER_SEARCH, USER_SEARCH_ENABLED);
+      REJECT_REMOTE_USER_NO_GROUP = setBoolVar(VARIABLE_REJECT_REMOTE_USER_NO_GROUP, REJECT_REMOTE_USER_NO_GROUP);
       
       cached = true;
     }
@@ -2742,6 +2744,8 @@ public class Settings implements Serializable {
   
   private static final String VARIABLE_VALIDATE_REMOTE_USER_EMAIL_VERIFIED = "validate_email_verified";
 
+  private static final String VARIABLE_MANAGED_CLOUD_REDIRECT_URI = "managed_cloud_redirect_uri";
+  
   private String KRB_AUTH = "false";
   private String LDAP_AUTH = "false";
   private boolean IS_KRB_ENABLED = false;
@@ -2781,6 +2785,8 @@ public class Settings implements Serializable {
   private boolean DISABLE_REGISTRATION = false;
   private boolean VALIDATE_REMOTE_USER_EMAIL_VERIFIED = false;
 
+  private String MANAGED_CLOUD_REDIRECT_URI = "";
+  
   private void populateLDAPCache() {
     KRB_AUTH = setVar(VARIABLE_KRB_AUTH, KRB_AUTH);
     LDAP_AUTH = setVar(VARIABLE_LDAP_AUTH, LDAP_AUTH);
@@ -2822,6 +2828,8 @@ public class Settings implements Serializable {
   
     VALIDATE_REMOTE_USER_EMAIL_VERIFIED =
       setBoolVar(VARIABLE_VALIDATE_REMOTE_USER_EMAIL_VERIFIED, VALIDATE_REMOTE_USER_EMAIL_VERIFIED);
+    
+    MANAGED_CLOUD_REDIRECT_URI = setStrVar(VARIABLE_MANAGED_CLOUD_REDIRECT_URI, MANAGED_CLOUD_REDIRECT_URI);
   }
 
   public synchronized String getKRBAuthStatus() {
@@ -2949,8 +2957,24 @@ public class Settings implements Serializable {
   }
   
   public synchronized String getOauthRedirectUri() {
+    return getOauthRedirectUri(false);
+  }
+  
+  /*
+   * when using oauth for hopsworks.ai we need to first redirect to hopsworks.ai
+   * which then redirect to hopsworks.
+   */
+  public synchronized String getOauthRedirectUri(boolean skipManagedCloud) {
     checkCache();
-    return OAUTH_REDIRECT_URI;
+    if (MANAGED_CLOUD_REDIRECT_URI.isEmpty() || skipManagedCloud) {
+      return OAUTH_REDIRECT_URI;
+    }
+    return MANAGED_CLOUD_REDIRECT_URI;
+  }
+  
+  public synchronized String getManagedCloudRedirectUri() {
+    checkCache();
+    return MANAGED_CLOUD_REDIRECT_URI;
   }
   
   public void updateOauthRedirectUri(String uri) {
@@ -2965,6 +2989,10 @@ public class Settings implements Serializable {
   public void updateOauthLogoutRedirectUri(String uri) {
     updateVariableInternal(VARIABLE_OAUTH_LOGOUT_REDIRECT_URI, uri + OAUTH_LOGOUT_REDIRECT_URI_PATH,
         VariablesVisibility.ADMIN);
+  }
+  
+  public void updateManagedCloudRedirectUri(String uri) {
+    updateVariableInternal(VARIABLE_MANAGED_CLOUD_REDIRECT_URI, uri , VariablesVisibility.ADMIN);
   }
   
   public synchronized int getOAuthAccountStatus() {
@@ -3907,5 +3935,20 @@ public class Settings implements Serializable {
   public synchronized boolean isUserSearchEnabled() {
     checkCache();
     return USER_SEARCH_ENABLED;
+  }
+  
+  /*
+   * When a user try to connect for the first time with OAuth or LDAP
+   * do not create the user if it does not bellong to any group.
+   * This is to avoid having users that belong to no group poluting the users table
+   */
+  private boolean REJECT_REMOTE_USER_NO_GROUP = false;
+  public synchronized boolean getRejectRemoteNoGroup() {
+    checkCache();
+    return REJECT_REMOTE_USER_NO_GROUP;
+  }
+  
+  public void updateRejectRemoteNoGroup(boolean reject) {
+    updateVariableInternal(VARIABLE_REJECT_REMOTE_USER_NO_GROUP, Boolean.toString(reject), VariablesVisibility.ADMIN);
   }
 }
