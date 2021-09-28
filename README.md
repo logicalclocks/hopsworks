@@ -74,7 +74,7 @@ You can develop and run Python, Spark, and Flink applications on Hopsworks - in 
 
 <a name="docs"></a>
 ## Docs
-[Hopsworks documentation](https://hopsworks.readthedocs.io/en/latest/overview/overview.html#) includes a user-guide, Feature Store documentation, and an Administrator Guide. There is also dedicated [documentation for the Hopsworks Feature Store](https://docs.hopsworks.ai/latest/).
+[Hopsworks documentation](https://hopsworks.readthedocs.io/en/latest/overview/overview.html#) includes a user-guide, Feature Store documentation, and an Administrator Guide. There is also dedicated [documentation for the Hopsworks Feature Store](https://docs.hopsworks.ai/feature-store-api/latest/).
 
 Hopsworks REST API is documented with Swagger and hosted by SwaggerHub.
 - **hopsworks-api** - [https://app.swaggerhub.com/apis-docs/logicalclocks/hopsworks-api](https://app.swaggerhub.com/apis-docs/logicalclocks/hopsworks-api)
