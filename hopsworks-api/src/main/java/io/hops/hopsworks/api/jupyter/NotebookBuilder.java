@@ -59,10 +59,10 @@ public class NotebookBuilder {
   }
 
   private URI uri(UriInfo uriInfo, Project project, int count) {
-   return uri(uriInfo, project)
-           .path("recent")
-           .queryParam("count", count)
-           .build();
+    return uri(uriInfo, project)
+            .path("recent")
+            .queryParam("count", count)
+            .build();
   }
 
   public NotebookDTO build(UriInfo uriInfo, Project project, int count) throws ElasticException {
