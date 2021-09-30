@@ -9,6 +9,7 @@ import io.fabric8.kubernetes.api.model.Service;
 import io.fabric8.kubernetes.client.KubernetesClientException;
 import io.hops.common.Pair;
 import io.hops.hopsworks.common.serving.inference.InferenceHttpClient;
+import io.hops.hopsworks.common.serving.inference.ServingInferenceUtils;
 import io.hops.hopsworks.exceptions.InferenceException;
 import io.hops.hopsworks.kube.common.KubeClientService;
 import io.hops.hopsworks.kube.serving.utils.KubeSkLearnServingUtils;
@@ -19,16 +20,12 @@ import io.hops.hopsworks.restutils.RESTCodes;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.protocol.HttpClientContext;
-import org.apache.http.client.utils.URIBuilder;
-import org.apache.http.entity.StringEntity;
 import org.apache.http.protocol.HttpContext;
 
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
-import java.io.IOException;
-import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.logging.Level;
 
@@ -44,6 +41,8 @@ public class KubeDeploymentInferenceController {
   private KubeSkLearnServingUtils kubeSkLearnServingUtils;
   @EJB
   private KubeClientService kubeClientService;
+  @EJB
+  private ServingInferenceUtils servingInferenceUtils;
   
   /**
    * Kube deployment inference. Sends a JSON request to the REST API of a kube deployment server
@@ -79,39 +78,30 @@ public class KubeDeploymentInferenceController {
     Service serviceInfo;
     try {
       serviceInfo = kubeClientService.getServiceInfo(serving.getProject(), serviceName);
+      if (serviceInfo == null)
+        throw new InferenceException(RESTCodes.InferenceErrorCode.SERVING_NOT_RUNNING, Level.FINE);
     } catch (KubernetesClientException e) {
       throw new InferenceException(RESTCodes.InferenceErrorCode.SERVING_INSTANCE_INTERNAL, Level.SEVERE, null,
           e.getMessage(), e);
     }
 
-    if (serviceInfo == null) {
-      throw new InferenceException(RESTCodes.InferenceErrorCode.SERVING_NOT_RUNNING, Level.FINE);
-    }
-
-    // Send request
-    URI uri;
+    // Build request
+    HttpPost request;
     try {
-      uri = new URIBuilder()
-          .setScheme("http")
-          .setHost(kubeClientService.getRandomReadyNodeIp())
-          .setPort(serviceInfo.getSpec().getPorts().get(0).getNodePort())
-          .setPath(path)
-          .build();
-
+      request = servingInferenceUtils.buildInferenceRequest(kubeClientService.getRandomReadyNodeIp(),
+        serviceInfo.getSpec().getPorts().get(0).getNodePort(), path, inferenceRequestJson);
     } catch (URISyntaxException e) {
       throw new InferenceException(RESTCodes.InferenceErrorCode.REQUEST_ERROR, Level.SEVERE, null, e.getMessage(), e);
     }
-
+    
+    // Send request
     int nRetry = 3;
     while (nRetry > 0) {
       try {
-        HttpPost request = new HttpPost(uri);
-        request.addHeader("content-type", "application/json; charset=utf-8");
-        request.setEntity(new StringEntity(inferenceRequestJson));
         HttpContext context = HttpClientContext.create();
         CloseableHttpResponse response = inferenceHttpClient.execute(request, context);
         return inferenceHttpClient.handleInferenceResponse(response);
-      } catch (IOException e) {
+      } catch (InferenceException e) {
         // Maybe the node we are trying to send requests to died.
       } finally {
         nRetry--;
