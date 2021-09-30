@@ -4,11 +4,13 @@
 
 package io.hops.hopsworks.kube.common;
 
+import io.fabric8.kubernetes.api.model.ServiceSpec;
 import io.hops.common.Pair;
 
 import io.fabric8.kubernetes.api.model.Service;
 import io.fabric8.kubernetes.api.model.ServicePort;
 import io.fabric8.kubernetes.client.KubernetesClientException;
+import org.apache.commons.lang.NotImplementedException;
 
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
@@ -30,13 +32,40 @@ public class KubeIstioClientService {
   @EJB
   private KubeClientService kubeClientService;
   
-  public Pair<String, Integer> getIstioIngressHostPort() {
-    return getIstioIngressHostPort("http2");
+  public enum Host {
+    LOAD_BALANCER, // load balancer IP
+    EXTERNAL, // external IPs
+    CLUSTER, // clusterIP within the Kubernetes cluster
+    NODE // hostIP of one of the Kubernetes cluster nodes
   }
   
-  public Pair<String, Integer> getIstioIngressHostPort(String name) {
+  public enum Port {
+    HTTP("http2"),
+    HTTPS("https"),
+    STATUS("status-port"),
+    TLS("tls");
+    
+    private final String value;
+    
+    private Port(String value) {
+      this.value = value;
+    }
+    
+    @Override
+    public String toString() {
+      return value;
+    }
+  }
+  
+  public Pair<String, Integer> getIstioIngressHostPort() {
+    return getIstioIngressHostPort(Host.NODE, Port.HTTP);
+  }
+  
+  public Pair<String, Integer> getIstioIngressHostPort(Host hostType, Port portType) {
     Service ingressService = getIstioIngressService();
-    return new Pair<>(getIstioIngressClusterIp(ingressService), getIstioIngressNodePort(ingressService, name));
+    String host = getIstioIngressHost(ingressService, hostType);
+    Integer port = getIstioIngressPort(ingressService, portType, withExternalPort(hostType));
+    return new Pair<>(host, port);
   }
   
   private Service getIstioIngressService() throws KubernetesClientException {
@@ -45,14 +74,26 @@ public class KubeIstioClientService {
         .get());
   }
   
-  private String getIstioIngressClusterIp(Service ingressService) throws KubernetesClientException {
-    return ingressService.getSpec().getClusterIP();
+  private String getIstioIngressHost(Service ingressService, Host hostType) throws KubernetesClientException {
+    ServiceSpec spec = ingressService.getSpec();
+    switch (hostType) {
+      case NODE: return kubeClientService.getRandomReadyNodeIp();
+      case CLUSTER: return spec.getClusterIP();
+      case LOAD_BALANCER: return spec.getLoadBalancerIP();
+      case EXTERNAL: return spec.getExternalIPs().stream().findFirst().orElse(null); // TODO: (Javier) randomize
+      default: throw new NotImplementedException();
+    }
   }
   
-  private Integer getIstioIngressNodePort(Service ingressService, String name) throws KubernetesClientException {
-    Optional<ServicePort> servicePort =
-      ingressService.getSpec().getPorts().stream().filter(port -> port.getName().equals(name)).findFirst();
-    
-    return servicePort.map(ServicePort::getPort).orElse(null);
+  private Integer getIstioIngressPort(Service ingressService, Port portType, boolean external)
+      throws KubernetesClientException {
+    Optional<ServicePort> servicePort = ingressService.getSpec().getPorts().stream()
+        .filter(port -> port.getName().equals(portType.toString())).findFirst();
+    return servicePort.map(external ? ServicePort::getNodePort : ServicePort::getPort).orElse(null);
+  }
+  
+  private boolean withExternalPort(Host hostType) {
+    return hostType == Host.NODE || hostType == Host.LOAD_BALANCER;
+    // TODO: (Javier) test load balancer and external ips.
   }
 }
