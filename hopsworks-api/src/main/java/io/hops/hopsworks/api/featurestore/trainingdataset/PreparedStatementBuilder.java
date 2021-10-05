@@ -28,7 +28,7 @@ import io.hops.hopsworks.common.featurestore.query.Query;
 import io.hops.hopsworks.common.featurestore.query.ServingPreparedStatementDTO;
 import io.hops.hopsworks.common.featurestore.query.filter.Filter;
 import io.hops.hopsworks.common.featurestore.query.filter.FilterLogic;
-import io.hops.hopsworks.common.featurestore.query.filter.SqlFilterCondition;
+import io.hops.hopsworks.common.featurestore.query.SqlCondition;
 import io.hops.hopsworks.common.featurestore.trainingdatasets.TrainingDatasetController;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.persistence.entity.featurestore.Featurestore;
@@ -39,6 +39,8 @@ import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.Trainin
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.restutils.RESTCodes;
+import org.apache.calcite.sql.SqlDialect;
+import org.apache.calcite.sql.dialect.MysqlSqlDialect;
 
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
@@ -189,13 +191,13 @@ public class PreparedStatementBuilder {
     // First condition doesn't have any "AND"
     // we are guaranteed there is at least one primary key, as no primary key situations are filtered above
     Feature pkFeature = primaryKeys.get(0);
-    FilterLogic filterLogic = new FilterLogic(new Filter(pkFeature, SqlFilterCondition.EQUALS, "?"));
+    FilterLogic filterLogic = new FilterLogic(new Filter(pkFeature, SqlCondition.EQUALS, "?"));
     stmtParameters.add(new PreparedStatementParameterDTO(pkFeature.getName(), primaryKeyIndex++));
 
     // Concatenate AND conditions
     for (int i = 1; i < primaryKeys.size(); i++) {
       pkFeature = primaryKeys.get(i);
-      filterLogic = filterLogic.and(new Filter(pkFeature, SqlFilterCondition.EQUALS, "?"));
+      filterLogic = filterLogic.and(new Filter(pkFeature, SqlCondition.EQUALS, "?"));
       stmtParameters.add(
           new PreparedStatementParameterDTO(pkFeature.getName(), primaryKeyIndex++));
     }
@@ -203,6 +205,7 @@ public class PreparedStatementBuilder {
 
     // set prepared statement parameters
     return
-        new ServingPreparedStatementDTO(statementIndex, stmtParameters, constructorController.generateSQL(query, true));
+        new ServingPreparedStatementDTO(statementIndex, stmtParameters, constructorController.generateSQL(query,
+          true).toSqlString(new MysqlSqlDialect(SqlDialect.EMPTY_CONTEXT)).getSql());
   }
 }

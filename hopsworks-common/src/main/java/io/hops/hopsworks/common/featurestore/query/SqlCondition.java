@@ -14,11 +14,11 @@
  * If not, see <https://www.gnu.org/licenses/>.
  */
 
-package io.hops.hopsworks.common.featurestore.query.filter;
+package io.hops.hopsworks.common.featurestore.query;
 
 import org.apache.calcite.sql.fun.SqlStdOperatorTable;
 
-public enum SqlFilterCondition {
+public enum SqlCondition {
   LESS_THAN(SqlStdOperatorTable.LESS_THAN),
   GREATER_THAN(SqlStdOperatorTable.GREATER_THAN),
   LESS_THAN_OR_EQUAL(SqlStdOperatorTable.LESS_THAN_OR_EQUAL),
@@ -29,7 +29,7 @@ public enum SqlFilterCondition {
   
   public final org.apache.calcite.sql.SqlOperator operator;
   
-  SqlFilterCondition(org.apache.calcite.sql.SqlOperator operator) {
+  SqlCondition(org.apache.calcite.sql.SqlOperator operator) {
     this.operator = operator;
   }
   

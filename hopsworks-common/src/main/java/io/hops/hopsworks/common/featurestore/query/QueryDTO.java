@@ -19,6 +19,7 @@ package io.hops.hopsworks.common.featurestore.query;
 import io.hops.hopsworks.common.featurestore.feature.FeatureGroupFeatureDTO;
 import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupDTO;
 import io.hops.hopsworks.common.featurestore.query.filter.FilterLogicDTO;
+import io.hops.hopsworks.common.featurestore.query.join.JoinDTO;
 
 import javax.xml.bind.annotation.XmlRootElement;
 import java.util.List;

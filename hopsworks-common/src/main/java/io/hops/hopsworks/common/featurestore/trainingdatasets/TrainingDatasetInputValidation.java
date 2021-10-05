@@ -19,8 +19,8 @@ package io.hops.hopsworks.common.featurestore.trainingdatasets;
 import io.hops.hopsworks.common.featurestore.FeaturestoreConstants;
 import io.hops.hopsworks.common.featurestore.feature.TrainingDatasetFeatureDTO;
 import io.hops.hopsworks.common.featurestore.query.Feature;
-import io.hops.hopsworks.common.featurestore.query.Join;
 import io.hops.hopsworks.common.featurestore.query.Query;
+import io.hops.hopsworks.common.featurestore.query.join.Join;
 import io.hops.hopsworks.common.featurestore.statistics.columns.StatisticColumnController;
 import io.hops.hopsworks.common.featurestore.storageconnectors.FeaturestoreConnectorFacade;
 import io.hops.hopsworks.common.featurestore.storageconnectors.FeaturestoreStorageConnectorDTO;
@@ -56,9 +56,37 @@ public class TrainingDatasetInputValidation {
   @EJB
   private FeaturestoreConnectorFacade connectorFacade;
 
+  /**
+   * Verify entity names input by the user for creation of entities in the featurestore
+   *
+   * @param trainingDatasetDTO the user input data for the entity
+   * @throws FeaturestoreException
+   */
+  public void verifyUserInput(TrainingDatasetDTO trainingDatasetDTO)
+    throws FeaturestoreException {
+    featurestoreInputValidation.verifyUserInput(trainingDatasetDTO);
+
+    // features
+    if (trainingDatasetDTO.getQueryDTO() == null && trainingDatasetDTO.getFeatures() != null) {
+      // during updates the features are null
+      verifyTrainingDatasetFeatureList(trainingDatasetDTO.getFeatures());
+    }
+  }
+
+  /**
+   * Verifies the user input feature list for a training dataset entity with no query
+   * @param trainingDatasetFeatureDTOS the feature list to verify
+   */
+  private void verifyTrainingDatasetFeatureList(List<TrainingDatasetFeatureDTO> trainingDatasetFeatureDTOS)
+    throws FeaturestoreException {
+    for (TrainingDatasetFeatureDTO trainingDatasetFeatureDTO : trainingDatasetFeatureDTOS) {
+      featurestoreInputValidation.nameValidation(trainingDatasetFeatureDTO.getName());
+    }
+  }
+
   public void validate(TrainingDatasetDTO trainingDatasetDTO, Query query) throws FeaturestoreException {
     // Verify general entity related information
-    featurestoreInputValidation.verifyUserInput(trainingDatasetDTO);
+    verifyUserInput(trainingDatasetDTO);
     statisticColumnController.verifyStatisticColumnsExist(trainingDatasetDTO, query);
     validateType(trainingDatasetDTO.getTrainingDatasetType());
     validateVersion(trainingDatasetDTO.getVersion());

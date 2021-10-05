@@ -17,6 +17,7 @@
 package io.hops.hopsworks.common.featurestore.query;
 
 import io.hops.hopsworks.common.featurestore.query.filter.FilterLogic;
+import io.hops.hopsworks.common.featurestore.query.join.Join;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.Featuregroup;
 
 import java.util.List;
@@ -78,6 +79,18 @@ public class Query {
     this.features = features;
     this.availableFeatures = availableFeatures;
     this.hiveEngine = hiveEngine;
+  }
+
+  public Query(String featureStore, String project, Featuregroup featuregroup, String as,
+    List<Feature> features, List<Feature> availableFeatures, Boolean hiveEngine, FilterLogic filter) {
+    this.featureStore = featureStore;
+    this.project = project;
+    this.featuregroup = featuregroup;
+    this.as = as;
+    this.features = features;
+    this.availableFeatures = availableFeatures;
+    this.hiveEngine = hiveEngine;
+    this.filter = filter;
   }
 
   public Query(String featureStore, String project, Featuregroup featuregroup, String as) {

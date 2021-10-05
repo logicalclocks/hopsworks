@@ -178,6 +178,28 @@ describe "On #{ENV['OS']}" do
         expect_status(201)
       end
 
+      it "should be able to create a featuregroup with event time feature" do
+        project = get_project
+        featurestore_id = get_featurestore_id(project.id)
+        features = [{type: "INT", name: "testfeature", description: "testfeaturedescription",
+                     primary: true, onlineType: "INT", partition: false},
+                    {type: "TIMESTAMP", name: "event_time", description: "testfeaturedescription",
+                     primary: false, onlineType: "INT", partition: false}]
+        json_result, _ = create_cached_featuregroup(project.id, featurestore_id, features: features, event_time:
+            "event_time")
+        parsed_json = JSON.parse(json_result)
+        expect_status_details(201)
+        expect(parsed_json["eventTime"]).to eql("event_time")
+      end
+
+      it "should not be able to create a featuregroup with non-existing event time feature" do
+        project = get_project
+        featurestore_id = get_featurestore_id(project.id)
+        json_result, _ = create_cached_featuregroup(project.id, featurestore_id, event_time: "event_time")
+        parsed_json = JSON.parse(json_result)
+        expect_status_details(400)
+      end
+
       it "should be able to add a offline cached featuregroup to the featurestore with empty feature description" do
         project = get_project
         featurestore_id = get_featurestore_id(project.id)
@@ -1283,6 +1305,92 @@ describe "On #{ENV['OS']}" do
                                                 "WHERE (`fg1`.`a_testfeature` = 10 OR `fg0`.`b_testfeature1` = 10) AND `fg0`.`b_testfeature2` = 10")
       end
 
+      it "should be able to construct PIT join with event time enabled feature groups" do
+        project_name = @project.projectname
+        featurestore_id = get_featurestore_id(@project.id)
+        featurestore_name = get_featurestore_name(@project.id)
+        features = [
+          {type: "INT", name: "a_testfeature", primary: true},
+          {type: "INT", name: "a_testfeature1"},
+          {type: "TIMESTAMP", name: "event_time"}
+        ]
+        fg_a_name = "test_fg_#{short_random_id}"
+        fg_id = create_cached_featuregroup_checked(@project.id, featurestore_id, fg_a_name, features: features,
+                                                   event_time: "event_time")
+        # create second feature group
+        features = [
+          {type: "INT", name: "a_testfeature", primary: true},
+          {type: "INT", name: "b_testfeature1"},
+          {type: "INT", name: "b_testfeature2"},
+          {type: "TIMESTAMP", name: "event_time"}
+        ]
+        fg_b_name = "test_fg_#{short_random_id}"
+        fg_id_b = create_cached_featuregroup_checked(@project.id, featurestore_id, fg_b_name, features: features,
+                                                     event_time: "event_time")
+
+        # create queryDTO object
+        query = {
+          leftFeatureGroup: {
+            id: fg_id,
+            eventTime: "event_time"
+          },
+          leftFeatures: [{name: 'a_testfeature'}, {name: 'a_testfeature1'}],
+          joins: [{
+                    query: {
+                      leftFeatureGroup: {
+                        id: fg_id_b,
+                        eventTime: "event_time"
+                      },
+                      leftFeatures: [{name: 'a_testfeature'}, {name: 'b_testfeature1'}],
+                      filter: {
+                        type: "SINGLE",
+                        leftFilter: {
+                          feature: {name: "b_testfeature2", featureGroupId: fg_id_b},
+                          condition: "EQUALS",
+                          value: "10"
+                        }
+                      }
+                    }
+                  }
+          ],
+          filter: {
+            type: "OR",
+            leftFilter: {
+              feature: {name: "a_testfeature", featureGroupId: fg_id},
+              condition: "EQUALS",
+              value: "10"
+            },
+            rightFilter: {
+              feature: {name: "b_testfeature1"},
+              condition: "EQUALS",
+              value: "10"
+            }
+          }
+        }
+
+        json_result = put "#{ENV['HOPSWORKS_API']}/project/#{@project.id}/featurestores/query", query
+        expect_status_details(200)
+        query = JSON.parse(json_result)
+
+        expect(query['query']).to eql("SELECT `fg1`.`a_testfeature`, `fg1`.`a_testfeature1`, `fg0`.`b_testfeature1`\n" +
+                                        "FROM `#{project_name.downcase}_featurestore`.`#{fg_a_name}_1` `fg1`\n" +
+                                        "INNER JOIN `#{project_name.downcase}_featurestore`.`#{fg_b_name}_1` `fg0` ON `fg1`.`a_testfeature` = `fg0`.`a_testfeature`\n" +
+                                        "WHERE (`fg1`.`a_testfeature` = 10 OR `fg0`.`b_testfeature1` = 10) AND `fg0`.`b_testfeature2` = 10")
+
+        expect(query['queryOnline']).to eql("SELECT `fg1`.`a_testfeature`, `fg1`.`a_testfeature1`, `fg0`.`b_testfeature1`\n" +
+                                              "FROM `#{project_name.downcase}`.`#{fg_a_name}_1` `fg1`\n" +
+                                              "INNER JOIN `#{project_name.downcase}`.`#{fg_b_name}_1` `fg0` ON `fg1`.`a_testfeature` = `fg0`.`a_testfeature`\n" +
+                                              "WHERE (`fg1`.`a_testfeature` = 10 OR `fg0`.`b_testfeature1` = 10) AND `fg0`.`b_testfeature2` = 10")
+
+        expect(query['pitQuery']).to eql("WITH right_fg0 AS (" +
+                                           "SELECT *\nFROM " +
+                                           "(SELECT `fg1`.`a_testfeature`, `fg1`.`a_testfeature1`, `fg1`.`a_testfeature` `join_pk_a_testfeature`, `fg1`.`event_time` `join_evt_event_time`, `fg0`.`b_testfeature1`, RANK() OVER (PARTITION BY `fg0`.`a_testfeature`, `fg1`.`event_time` ORDER BY `fg0`.`event_time` DESC) pit_rank_hopsworks\n" +
+                                           "FROM `#{project_name.downcase}_featurestore`.`#{fg_a_name}_1` `fg1`\n" +
+                                           "INNER JOIN `#{project_name.downcase}_featurestore`.`#{fg_b_name}_1` `fg0` ON `fg1`.`a_testfeature` = `fg0`.`a_testfeature` AND `fg1`.`event_time` >= `fg0`.`event_time`\n" +
+                                           "WHERE (`fg1`.`a_testfeature` = 10 OR `fg0`.`b_testfeature1` = 10) AND `fg0`.`b_testfeature2` = 10) NA\n" +
+                                           "WHERE `pit_rank_hopsworks` = 1) (SELECT `right_fg0`.`a_testfeature`, `right_fg0`.`a_testfeature1`, `right_fg0`.`b_testfeature1`\nFROM right_fg0)")
+      end
+
       it "should be able to create cached feature group with many features and get features in specific order on get" do
         featurestore_id = get_featurestore_id(@project.id)
         features = [
@@ -1692,7 +1800,7 @@ describe "On #{ENV['OS']}" do
         featurestore_id = get_featurestore_id(project.id)
         connector_json, _ = create_s3_connector(project.id, featurestore_id, access_key: "test", secret_key: "test")
         connector_id = JSON.parse(connector_json)["id"]
-        options = [{"name": "header", "value": "true"}]
+        options = [{name: "header", value: "true"}]
         json_result, _ = create_on_demand_featuregroup(project.id, featurestore_id, connector_id,
                                                        query: "",
                                                        data_format: "CSV",
@@ -1794,6 +1902,50 @@ describe "On #{ENV['OS']}" do
         expect(query['query']).to eql("SELECT `fg1`.`anotherfeature`, `fg0`.`testfeature`\n" +
         "FROM `#{featurestore_name}`.`#{fg_name}_1` `fg1`\n" +
         "INNER JOIN `fg0` ON `fg1`.`testfeature` = `fg0`.`testfeature`")
+      end
+
+      it "should be able to generate a PIT query with on-demand and cached feature groups" do
+        featurestore_id = get_featurestore_id(@project[:id])
+        featurestore_name = get_featurestore_name(@project.id)
+        connector_id = get_jdbc_connector_id
+        features = [{type: "INT", name: "testfeature", description: "testfeaturedescription", primary: true},
+                    {type: "TIMESTAMP", name: "event_time"}]
+        json_result, _ = create_on_demand_featuregroup(@project[:id], featurestore_id, connector_id, features:
+          features, event_time: "event_time")
+        expect_status(201)
+        parsed_json = JSON.parse(json_result)
+        fg_ond_id = parsed_json["id"]
+
+        features = [{type: "INT", name: "testfeature", description: "testfeaturedescription", primary: true},
+                    {type: "INT", name: "anotherfeature", primary: false},
+                    {type: "TIMESTAMP", name: "event_time"}]
+        json_result, fg_name = create_cached_featuregroup(@project[:id], featurestore_id, features: features,
+                                                          event_time: "event_time")
+        parsed_json = JSON.parse(json_result)
+        fg_cached_id = parsed_json["id"]
+
+        query = {
+          leftFeatureGroup: {id: fg_cached_id, eventTime: "event_time"},
+          leftFeatures: [{name: 'anotherfeature'}, {name: "event_time"}],
+          joins: [{query: {
+            leftFeatureGroup: {id: fg_ond_id, eventTime: "event_time"},
+            leftFeatures: [{name: 'testfeature'}]
+          }}]}
+        json_result = put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/featurestores/query", query
+        expect_status_details(200)
+        query = JSON.parse(json_result)
+        expect(query.key?("onDemandFeatureGroups")).to be true
+
+        expect(query['query']).to eql("SELECT `fg1`.`anotherfeature`, `fg1`.`event_time`, `fg0`.`testfeature`\n" +
+                                        "FROM `#{featurestore_name}`.`#{fg_name}_1` `fg1`\n" +
+                                        "INNER JOIN `fg0` ON `fg1`.`testfeature` = `fg0`.`testfeature`")
+
+        expect(query['pitQuery']).to eql("WITH right_fg0 AS " +
+                                           "(SELECT *\nFROM " +
+                                           "(SELECT `fg1`.`anotherfeature`, `fg1`.`event_time`, `fg1`.`testfeature` `join_pk_testfeature`, `fg1`.`event_time` `join_evt_event_time`, `fg0`.`testfeature`, RANK() OVER (PARTITION BY `fg0`.`testfeature`, `fg1`.`event_time` ORDER BY `fg0`.`event_time` DESC) pit_rank_hopsworks\n" +
+                                           "FROM `#{featurestore_name}`.`#{fg_name}_1` `fg1`\n" +
+                                           "INNER JOIN `fg0` ON `fg1`.`testfeature` = `fg0`.`testfeature` AND `fg1`.`event_time` >= `fg0`.`event_time`) NA\n" +
+                                           "WHERE `pit_rank_hopsworks` = 1) (SELECT `right_fg0`.`anotherfeature`, `right_fg0`.`event_time`, `right_fg0`.`testfeature`\nFROM right_fg0)")
       end
 
       it "should be able to generate a query with on-demand and cached feature groups and filters for both" do

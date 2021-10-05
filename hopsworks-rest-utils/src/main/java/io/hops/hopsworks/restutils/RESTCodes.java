@@ -1579,7 +1579,11 @@ public class RESTCodes {
     CODE_READ_ERROR(167, "Error reading the code", Response.Status.INTERNAL_SERVER_ERROR),
     CODE_NOT_FOUND(168, "Code not found", Response.Status.NOT_FOUND),
     FAILED_TO_CREATE_ROUTE(169, "Failed to create route.", Response.Status.BAD_REQUEST),
-    FAILED_TO_DELETE_ROUTE(170, "Failed to delete route.", Response.Status.BAD_REQUEST);
+    FAILED_TO_DELETE_ROUTE(170, "Failed to delete route.", Response.Status.BAD_REQUEST),
+    ILLEGAL_EVENT_TIME_FEATURE_TYPE(171, "Illegal event time feature type", Response.Status.BAD_REQUEST),
+    EVENT_TIME_FEATURE_NOT_FOUND(172, "Event time feature not found", Response.Status.BAD_REQUEST),
+    FEATURE_GROUP_MISSING_EVENT_TIME(173, "Feature group is not event time enabled", Response.Status.BAD_REQUEST),
+    JOIN_OPERATOR_MISMATCH(174, "Join features and operator list have different sizes", Response.Status.BAD_REQUEST);
 
     private int code;
     private String message;

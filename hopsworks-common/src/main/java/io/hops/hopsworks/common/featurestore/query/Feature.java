@@ -17,14 +17,18 @@
 package io.hops.hopsworks.common.featurestore.query;
 
 import io.hops.hopsworks.common.featurestore.feature.FeatureGroupFeatureDTO;
+import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.Featuregroup;
 
 public class Feature {
   private String name;
   private String fgAlias;
+  private String pitFgAlias;
   private String type;
   private boolean primary;
   private String defaultValue;
   private String prefix;
+  private Featuregroup featureGroup;
+  private Integer idx;
 
   public Feature(String name, String fgAlias, String type, boolean primary, String defaultValue, String prefix) {
     this.name = name;
@@ -50,12 +54,67 @@ public class Feature {
     this.primary = primary;
   }
 
+  // For testing purposes
+  public Feature(String name, String fgAlias) {
+    this.name = name;
+    this.fgAlias = fgAlias;
+  }
+  
+  // For testing purposes
+  public Feature(String name, String fgAlias, Featuregroup featureGroup) {
+    this.name = name;
+    this.fgAlias = fgAlias;
+    this.featureGroup = featureGroup;
+  }
+  
+  // For testing purposes
+  public Feature(String name, String fgAlias, Featuregroup featureGroup, boolean primary) {
+    this.name = name;
+    this.fgAlias = fgAlias;
+    this.featureGroup = featureGroup;
+    this.primary = primary;
+  }
+
+  // For testing purposes
+  public Feature(String name, String fgAlias, Featuregroup featureGroup, String type, String defaultValue) {
+    this.name = name;
+    this.fgAlias = fgAlias;
+    this.featureGroup = featureGroup;
+    this.type = type;
+    this.defaultValue = defaultValue;
+  }
+
+  // For testing purposes
+  public Feature(String name, String fgAlias, Featuregroup featureGroup, boolean primary, Integer idx) {
+    this.name = name;
+    this.fgAlias = fgAlias;
+    this.featureGroup = featureGroup;
+    this.primary = primary;
+    this.idx = idx;
+  }
+
   public Feature(String name, String fgAlias, String type, String defaultValue, String prefix) {
     this.name = name;
     this.fgAlias = fgAlias;
     this.type = type;
     this.defaultValue = defaultValue;
     this.prefix = prefix;
+  }
+
+  public Feature(String name, String fgAlias, String type, String defaultValue, String prefix,
+                 Featuregroup featureGroup, Integer idx) {
+    this.name = name;
+    this.fgAlias = fgAlias;
+    this.type = type;
+    this.defaultValue = defaultValue;
+    this.prefix = prefix;
+    this.featureGroup = featureGroup;
+    this.idx = idx;
+  }
+  
+  // for testing
+  public Feature(Featuregroup featureGroup) {
+    this.featureGroup = featureGroup;
   }
 
   // For testing purposes only
@@ -80,8 +139,19 @@ public class Feature {
     return fgAlias;
   }
 
+  public String getFgAlias(boolean pitAlias) {
+    if (pitAlias) {
+      return pitFgAlias;
+    }
+    return fgAlias;
+  }
+
   public void setFgAlias(String fgAlias) {
     this.fgAlias = fgAlias;
+  }
+  
+  public void setPitFgAlias(String pitFgAlias) {
+    this.pitFgAlias = pitFgAlias;
   }
 
   public String getType() {
@@ -114,5 +184,21 @@ public class Feature {
 
   public void setPrefix(String prefix) {
     this.prefix = prefix;
+  }
+  
+  public Featuregroup getFeatureGroup() {
+    return featureGroup;
+  }
+  
+  public void setFeatureGroup(Featuregroup featureGroup) {
+    this.featureGroup = featureGroup;
+  }
+  
+  public Integer getIdx() {
+    return idx;
+  }
+  
+  public void setIdx(Integer idx) {
+    this.idx = idx;
   }
 }
