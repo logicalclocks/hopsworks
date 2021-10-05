@@ -14,9 +14,10 @@
  * If not, see <https://www.gnu.org/licenses/>.
  */
 
-package io.hops.hopsworks.common.featurestore.query;
+package io.hops.hopsworks.common.featurestore.query.join;
 
 import io.hops.hopsworks.common.featurestore.feature.FeatureGroupFeatureDTO;
+import io.hops.hopsworks.common.featurestore.query.QueryDTO;
 import org.apache.calcite.sql.JoinType;
 
 import javax.xml.bind.annotation.XmlRootElement;

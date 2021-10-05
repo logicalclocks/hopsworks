@@ -25,6 +25,7 @@ import java.util.List;
 public class FsQueryDTO extends RestDTO<FsQueryDTO> {
   private String query;
   private String queryOnline;
+  private String pitQuery;
 
   private List<HudiFeatureGroupAliasDTO> hudiCachedFeatureGroups;
   private List<OnDemandFeatureGroupAliasDTO> onDemandFeatureGroups;
@@ -43,6 +44,14 @@ public class FsQueryDTO extends RestDTO<FsQueryDTO> {
 
   public void setQueryOnline(String queryOnline) {
     this.queryOnline = queryOnline;
+  }
+  
+  public String getPitQuery() {
+    return pitQuery;
+  }
+  
+  public void setPitQuery(String pitQuery) {
+    this.pitQuery = pitQuery;
   }
 
   public List<HudiFeatureGroupAliasDTO> getHudiCachedFeatureGroups() {

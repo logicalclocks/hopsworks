@@ -105,6 +105,8 @@ public class Featuregroup implements Serializable {
   @Enumerated(EnumType.ORDINAL)
   @Column(name = "validation_type")
   private ValidationType validationType = ValidationType.NONE;
+  @Column(name = "event_time")
+  private String eventTime;
   @NotNull
   @Enumerated(EnumType.ORDINAL)
   @Column(name = "feature_group_type")
@@ -247,6 +249,14 @@ public class Featuregroup implements Serializable {
     this.featureGroupAlerts = featureGroupAlerts;
   }
 
+  public String getEventTime() {
+    return eventTime;
+  }
+
+  public void setEventTime(String eventTime) {
+    this.eventTime = eventTime;
+  }
+
   @Override
   public boolean equals(Object o) {
     if (this == o) return true;
@@ -263,6 +273,7 @@ public class Featuregroup implements Serializable {
     if (featuregroupType != that.featuregroupType) return false;
     if (!Objects.equals(onDemandFeaturegroup, that.onDemandFeaturegroup)) return false;
     if (!Objects.equals(cachedFeaturegroup, that.cachedFeaturegroup)) return false;
+    if (!Objects.equals(eventTime, that.eventTime)) return false;
     return Objects.equals(statisticsConfig, that.statisticsConfig);
   }
 
@@ -278,6 +289,7 @@ public class Featuregroup implements Serializable {
     result = 31 * result + (onDemandFeaturegroup != null ? onDemandFeaturegroup.hashCode() : 0);
     result = 31 * result + (cachedFeaturegroup != null ? cachedFeaturegroup.hashCode() : 0);
     result = 31 * result + (statisticsConfig != null ? statisticsConfig.hashCode() : 0);
+    result = 31 * result + (eventTime != null ? eventTime.hashCode() : 0);
     return result;
   }
 }

@@ -53,6 +53,8 @@ public class FeaturegroupDTO extends FeaturestoreEntityDTO {
   private ValidationType validationType;
   @XmlElement
   private String onlineTopicName = null;
+  @XmlElement
+  private String eventTime = null;
   
   public FeaturegroupDTO() {
   }
@@ -67,6 +69,12 @@ public class FeaturegroupDTO extends FeaturestoreEntityDTO {
     super(featuregroup.getFeaturestore().getId(), featuregroup.getName(), featuregroup.getCreated(),
         featuregroup.getCreator(), featuregroup.getVersion(),
         featuregroup.getId(), new StatisticsConfigDTO(featuregroup.getStatisticsConfig()));
+    this.eventTime = featuregroup.getEventTime();
+  }
+  
+  // for testing
+  public FeaturegroupDTO(String eventTime) {
+    this.eventTime = eventTime;
   }
 
   public List<FeatureGroupFeatureDTO> getFeatures() {
@@ -99,6 +107,14 @@ public class FeaturegroupDTO extends FeaturestoreEntityDTO {
 
   public void setOnlineTopicName(String onlineTopicName) {
     this.onlineTopicName = onlineTopicName;
+  }
+
+  public String getEventTime() {
+    return eventTime;
+  }
+
+  public void setEventTime(String eventTime) {
+    this.eventTime = eventTime;
   }
 
   @Override

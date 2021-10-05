@@ -17,14 +17,15 @@
 package io.hops.hopsworks.common.featurestore.query.filter;
 
 import io.hops.hopsworks.common.featurestore.query.Feature;
+import io.hops.hopsworks.common.featurestore.query.SqlCondition;
 
 public class Filter {
 
   private Feature feature;
-  private SqlFilterCondition condition;
+  private SqlCondition condition;
   private String value;
   
-  public Filter(Feature feature, SqlFilterCondition condition, String value) {
+  public Filter(Feature feature, SqlCondition condition, String value) {
     this.feature = feature;
     this.condition = condition;
     this.value = value;
@@ -38,11 +39,11 @@ public class Filter {
     this.feature = feature;
   }
   
-  public SqlFilterCondition getCondition() {
+  public SqlCondition getCondition() {
     return condition;
   }
   
-  public void setCondition(SqlFilterCondition condition) {
+  public void setCondition(SqlCondition condition) {
     this.condition = condition;
   }
   
