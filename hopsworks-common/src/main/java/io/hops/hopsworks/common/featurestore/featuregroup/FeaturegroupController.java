@@ -124,6 +124,8 @@ public class FeaturegroupController {
   private FeatureGroupExpectationFacade featureGroupExpectationFacade;
   @EJB
   private FeatureStoreExpectationFacade featureStoreExpectationFacade;
+  @EJB
+  private FeatureGroupInputValidation featureGroupInputValidation;
 
   /**
    * Gets all featuregroups for a particular featurestore and project, using the userCerts to query Hive
@@ -383,7 +385,7 @@ public class FeaturegroupController {
     Featuregroup featuregroup = getFeaturegroupById(featurestore, featuregroupDTO.getId());
     // Verify general entity related information
     featurestoreInputValidation.verifyDescription(featuregroupDTO);
-    featurestoreInputValidation.verifyFeatureGroupFeatureList(featuregroupDTO.getFeatures());
+    featureGroupInputValidation.verifyFeatureGroupFeatureList(featuregroupDTO.getFeatures());
 
     // Update on-demand feature group metadata
     if (featuregroup.getFeaturegroupType() == FeaturegroupType.CACHED_FEATURE_GROUP) {
@@ -703,6 +705,7 @@ public class FeaturegroupController {
 
     featuregroup.setCachedFeaturegroup(cachedFeaturegroup);
     featuregroup.setOnDemandFeaturegroup(onDemandFeaturegroup);
+    featuregroup.setEventTime(featuregroupDTO.getEventTime());
 
     StatisticsConfig statisticsConfig = new StatisticsConfig(featuregroupDTO.getStatisticsConfig().getEnabled(),
       featuregroupDTO.getStatisticsConfig().getCorrelations(), featuregroupDTO.getStatisticsConfig().getHistograms(),
@@ -766,7 +769,8 @@ public class FeaturegroupController {
   private void verifyFeatureGroupInput(FeaturegroupDTO featureGroupDTO)
     throws FeaturestoreException {
     // Verify general entity related information
-    featurestoreInputValidation.verifyUserInput(featureGroupDTO);
+    featureGroupInputValidation.verifyUserInput(featureGroupDTO);
+    featureGroupInputValidation.verifyEventTimeFeature(featureGroupDTO.getEventTime(), featureGroupDTO.getFeatures());
     verifyFeatureGroupVersion(featureGroupDTO.getVersion());
     statisticColumnController.verifyStatisticColumnsExist(featureGroupDTO);
   }

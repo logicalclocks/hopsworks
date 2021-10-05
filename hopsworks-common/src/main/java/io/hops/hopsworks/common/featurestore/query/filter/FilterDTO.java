@@ -17,6 +17,7 @@
 package io.hops.hopsworks.common.featurestore.query.filter;
 
 import io.hops.hopsworks.common.featurestore.feature.FeatureGroupFeatureDTO;
+import io.hops.hopsworks.common.featurestore.query.SqlCondition;
 
 import javax.xml.bind.annotation.XmlRootElement;
 
@@ -24,13 +25,13 @@ import javax.xml.bind.annotation.XmlRootElement;
 public class FilterDTO {
   
   private FeatureGroupFeatureDTO feature;
-  private SqlFilterCondition condition;
+  private SqlCondition condition;
   private String value;
   
   public FilterDTO() {
   }
   
-  public FilterDTO(FeatureGroupFeatureDTO feature, SqlFilterCondition condition, String value) {
+  public FilterDTO(FeatureGroupFeatureDTO feature, SqlCondition condition, String value) {
     this.feature = feature;
     this.condition = condition;
     this.value = value;
@@ -44,11 +45,11 @@ public class FilterDTO {
     this.feature = feature;
   }
   
-  public SqlFilterCondition getCondition() {
+  public SqlCondition getCondition() {
     return condition;
   }
   
-  public void setCondition(SqlFilterCondition condition) {
+  public void setCondition(SqlCondition condition) {
     this.condition = condition;
   }
   

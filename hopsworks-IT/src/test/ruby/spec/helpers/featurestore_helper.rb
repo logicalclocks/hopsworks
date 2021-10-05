@@ -227,10 +227,11 @@ module FeaturestoreHelper
   end
 
   def create_cached_featuregroup_checked(project_id, featurestore_id, featuregroup_name, features: nil,
-                                         featuregroup_description: nil)
+                                         featuregroup_description: nil, event_time: nil)
     pp "create featuregroup:#{featuregroup_name}" if defined?(@debugOpt) && @debugOpt == true
     json_result, _ = create_cached_featuregroup(project_id, featurestore_id, featuregroup_name: featuregroup_name,
-                                                features: features, featuregroup_description: featuregroup_description)
+                                                features: features, featuregroup_description: featuregroup_description,
+                                                event_time: event_time)
     expect_status_details(201)
     parsed_json = JSON.parse(json_result, :symbolize_names => true)
     parsed_json[:id]
@@ -238,7 +239,7 @@ module FeaturestoreHelper
 
   def create_cached_featuregroup(project_id, featurestore_id, features: nil, featuregroup_name: nil, online:false,
                                  version: 1, featuregroup_description: nil, statistics_config: nil, time_travel_format:
-                                     "NONE")
+                                 "NONE", event_time: nil)
     type = "cachedFeaturegroupDTO"
     features = features == nil ? [{type: "INT", name: "testfeature", description: "testfeaturedescription",
                                    primary: true, onlineType: "INT", partition: false}] : features
@@ -252,7 +253,8 @@ module FeaturestoreHelper
         version: version,
         type: type,
         onlineEnabled: online,
-        timeTravelFormat: time_travel_format
+        timeTravelFormat: time_travel_format,
+        eventTime: event_time,
     }
     unless statistics_config == nil
       json_data[:statisticsConfig] = statistics_config
@@ -265,7 +267,7 @@ module FeaturestoreHelper
   end
 
   def create_on_demand_featuregroup(project_id, featurestore_id, jdbcconnectorId, name: nil, version: 1, query: nil,
-                                    features: nil, data_format: nil, options: nil)
+                                    features: nil, data_format: nil, options: nil, event_time: nil)
     type = "onDemandFeaturegroupDTO"
     featuregroupType = "ON_DEMAND_FEATURE_GROUP"
     create_featuregroup_endpoint = "#{ENV['HOPSWORKS_API']}/project/#{project_id}/featurestores/#{featurestore_id}/featuregroups"
@@ -285,7 +287,8 @@ module FeaturestoreHelper
             id: jdbcconnectorId,
         },
         query: query,
-        featuregroupType: featuregroupType
+        featuregroupType: featuregroupType,
+        eventTime: event_time
     }
 
     unless data_format == nil

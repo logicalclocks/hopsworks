@@ -97,4 +97,5 @@ public class FeaturestoreConstants {
       "StringType()", "BinaryType()", "ByteType()", "ShortType()", "IntegerType()", "LongType()", "FloatType()",
       "DoubleType()", "TimestampType()", "DateType()", "BooleanType()"
   });
+  public static final List<String> EVENT_TIME_FEATURE_TYPES = Arrays.asList("TIMESTAMP", "DATE", "BIGINT");
 }

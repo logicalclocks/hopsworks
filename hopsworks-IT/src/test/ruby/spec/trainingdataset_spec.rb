@@ -1442,7 +1442,7 @@ describe "On #{ENV['OS']}" do
           expect(parsed_json["items"].first["preparedStatementParameters"].first["index"]).to eql(1)
           expect(parsed_json["items"].first["preparedStatementParameters"].first["name"]).to eql("a")
           expect(parsed_json["items"].first["queryOnline"]).to eql("SELECT `fg0`.`d`, `fg0`.`c`, `fg0`.`a`, `fg0`.`b`\n"+
-                                                                   "FROM `#{project_name.downcase}`.`#{fg_name}_1` `fg0`\n" +
+                                                                   "FROM `#{project_name.downcase}`.`#{fg_name}_1` AS `fg0`\n" +
                                                                    "WHERE `fg0`.`a` = ?")
         end
 
@@ -1490,10 +1490,10 @@ describe "On #{ENV['OS']}" do
           parsed_json = JSON.parse(json_result)
           expect(parsed_json["items"].first["preparedStatementParameters"].first["index"]).to eql(1)
           expect(parsed_json["items"].first["preparedStatementParameters"].first["name"]).to eql("a_testfeature")
-          expect(parsed_json["items"].first["queryOnline"]).to eql("SELECT `fg0`.`a_testfeature1`\nFROM `#{project_name.downcase}`.`#{fg_name}_1` `fg0`\nWHERE `fg0`.`a_testfeature` = ?")
+          expect(parsed_json["items"].first["queryOnline"]).to eql("SELECT `fg0`.`a_testfeature1`\nFROM `#{project_name.downcase}`.`#{fg_name}_1` AS `fg0`\nWHERE `fg0`.`a_testfeature` = ?")
           expect(parsed_json["items"].second["preparedStatementParameters"].first["index"]).to eql(1)
           expect(parsed_json["items"].second["preparedStatementParameters"].first["name"]).to eql("a_testfeature")
-          expect(parsed_json["items"].second["queryOnline"]).to eql("SELECT `fg0`.`b_testfeature1`\nFROM `#{project_name.downcase}`.`#{fg_name_b}_1` `fg0`\nWHERE `fg0`.`a_testfeature` = ?")
+          expect(parsed_json["items"].second["queryOnline"]).to eql("SELECT `fg0`.`b_testfeature1`\nFROM `#{project_name.downcase}`.`#{fg_name_b}_1` AS `fg0`\nWHERE `fg0`.`a_testfeature` = ?")
           expect_status(200)
         end
 
@@ -1566,10 +1566,10 @@ describe "On #{ENV['OS']}" do
           expect(parsed_json["items"].length).to eql(2)
           expect(parsed_json["items"].first["preparedStatementParameters"].first["index"]).to eql(1)
           expect(parsed_json["items"].first["preparedStatementParameters"].first["name"]).to eql("a_testfeature")
-          expect(parsed_json["items"].first["queryOnline"]).to eql("SELECT `fg0`.`a_testfeature1`\nFROM `#{project_name.downcase}`.`#{fg_name}_1` `fg0`\nWHERE `fg0`.`a_testfeature` = ?")
+          expect(parsed_json["items"].first["queryOnline"]).to eql("SELECT `fg0`.`a_testfeature1`\nFROM `#{project_name.downcase}`.`#{fg_name}_1` AS `fg0`\nWHERE `fg0`.`a_testfeature` = ?")
           expect(parsed_json["items"].second["preparedStatementParameters"].first["index"]).to eql(1)
           expect(parsed_json["items"].second["preparedStatementParameters"].first["name"]).to eql("a_testfeature")
-          expect(parsed_json["items"].second["queryOnline"]).to eql("SELECT `fg0`.`b_testfeature1`\nFROM `#{project_name.downcase}`.`#{fg_name_b}_1` `fg0`\nWHERE `fg0`.`a_testfeature` = ?")
+          expect(parsed_json["items"].second["queryOnline"]).to eql("SELECT `fg0`.`b_testfeature1`\nFROM `#{project_name.downcase}`.`#{fg_name_b}_1` AS `fg0`\nWHERE `fg0`.`a_testfeature` = ?")
           expect_status_details(200)
         end
 
@@ -1845,6 +1845,92 @@ describe "On #{ENV['OS']}" do
 
           expect(query['query']).to eql("SELECT `fg0`.`a_testfeature1`, `fg1`.`c_testfeature1` `prefix_c_c_testfeature1`, `fg2`.`b_testfeature1` `prefix_b_b_testfeature1`\nFROM `#{project_name.downcase}_featurestore`.`#{fg_name_a}_1` `fg0`\nINNER JOIN `#{project_name.downcase}_featurestore`.`#{fg_name_c}_1` `fg1` ON `fg0`.`a_testfeature` = `fg1`.`a_testfeature`\nINNER JOIN `#{project_name.downcase}_featurestore`.`#{fg_name_b}_1` `fg2` ON `fg0`.`a_testfeature` = `fg2`.`a_testfeature`")
           expect(query['queryOnline']).to eql("SELECT `fg0`.`a_testfeature1`, `fg1`.`c_testfeature1` `prefix_c_c_testfeature1`, `fg2`.`b_testfeature1` `prefix_b_b_testfeature1`\nFROM `#{project_name.downcase}`.`#{fg_name_a}_1` `fg0`\nINNER JOIN `#{project_name.downcase}`.`#{fg_name_c}_1` `fg1` ON `fg0`.`a_testfeature` = `fg1`.`a_testfeature`\nINNER JOIN `#{project_name.downcase}`.`#{fg_name_b}_1` `fg2` ON `fg0`.`a_testfeature` = `fg2`.`a_testfeature`")
+        end
+
+        it "should be able to create training dataset with PIT join and reproduce the PIT query" do
+          # create first feature group
+          featurestore_id = get_featurestore_id(@project.id)
+          project_name = @project.projectname
+          features = [
+            {type: "INT", name: "a_testfeature", primary: true},
+            {type: "INT", name: "a_testfeature1"},
+            {type: "BIGINT", name: "event_time"}
+          ]
+          json_result, fg_name_a = create_cached_featuregroup(@project.id, featurestore_id, features: features,
+                                                              featuregroup_name: "test_fg_a_#{short_random_id}",
+                                                              online:true, event_time: "event_time")
+          parsed_json = JSON.parse(json_result)
+          fg_id = parsed_json["id"]
+          # create second feature group
+          features = [
+            {type: "INT", name: "a_testfeature", primary: true},
+            {type: "INT", name: "b_testfeature1"},
+            {type: "BIGINT", name: "event_time"}
+          ]
+          json_result_b, fg_name_b = create_cached_featuregroup(@project.id, featurestore_id, features: features,
+                                                                featuregroup_name: "test_fg_b_#{short_random_id}",
+                                                                online:true, event_time: "event_time")
+          parsed_json_b = JSON.parse(json_result_b)
+          fg_id_b = parsed_json_b["id"]
+
+          # create third feature group
+          features = [
+            {type: "INT", name: "a_testfeature", primary: true},
+            {type: "INT", name: "c_testfeature1",label: true},
+            {type: "BIGINT", name: "event_time"}
+          ]
+          json_result_c, fg_name_c = create_cached_featuregroup(@project.id, featurestore_id, features: features,
+                                                                featuregroup_name: "test_fg_c_#{short_random_id}",
+                                                                online:true, event_time: "event_time")
+          parsed_json_c = JSON.parse(json_result_c)
+          fg_id_c = parsed_json_c["id"]
+          # create queryDTO object
+          query = {
+            leftFeatureGroup: {
+              id: fg_id,
+              eventTime: "event_time"
+            },
+            leftFeatures: [{name: 'a_testfeature1'}, {type: "INT", name: "event_time"}],
+            joins: [{
+                      query: {
+                        leftFeatureGroup: {
+                          id: fg_id_c,
+                          eventTime: "event_time"
+                        },
+                        leftFeatures: [{name: 'c_testfeature1'}]
+                      },
+                      prefix: "prefix_c_"
+                    },
+                    {
+                      query: {
+                        leftFeatureGroup: {
+                          id: fg_id_b,
+                          eventTime: "event_time"
+                        },
+                        leftFeatures: [{name: 'b_testfeature1'}]
+                      },
+                      prefix: "prefix_b_"
+                    }
+            ]
+          }
+
+          td_schema = [
+            {type: "INT", name: "a_testfeature1", label: false},
+            {type: "INT", name: "b_testfeature1", label: false},
+            {type: "INT", name: "c_testfeature1", label: true}
+          ]
+
+          json_result, _ = create_hopsfs_training_dataset(@project.id, featurestore_id, nil, query: query, features: td_schema)
+          parsed_json = JSON.parse(json_result)
+          expect_status_details(201)
+          training_dataset_id = parsed_json["id"]
+          json_result = get "#{ENV['HOPSWORKS_API']}/project/#{@project.id}/featurestores/#{featurestore_id}/trainingdatasets/#{training_dataset_id}/query"
+          expect_status_details(200)
+          query = JSON.parse(json_result)
+
+          expect(query['query']).to eql("SELECT `fg0`.`a_testfeature1`, `fg0`.`event_time`, `fg1`.`c_testfeature1` `prefix_c_c_testfeature1`, `fg2`.`b_testfeature1` `prefix_b_b_testfeature1`\nFROM `#{project_name.downcase}_featurestore`.`#{fg_name_a}_1` `fg0`\nINNER JOIN `#{project_name.downcase}_featurestore`.`#{fg_name_c}_1` `fg1` ON `fg0`.`a_testfeature` = `fg1`.`a_testfeature`\nINNER JOIN `#{project_name.downcase}_featurestore`.`#{fg_name_b}_1` `fg2` ON `fg0`.`a_testfeature` = `fg2`.`a_testfeature`")
+          expect(query['queryOnline']).to eql("SELECT `fg0`.`a_testfeature1`, `fg0`.`event_time`, `fg1`.`c_testfeature1` `prefix_c_c_testfeature1`, `fg2`.`b_testfeature1` `prefix_b_b_testfeature1`\nFROM `#{project_name.downcase}`.`#{fg_name_a}_1` `fg0`\nINNER JOIN `#{project_name.downcase}`.`#{fg_name_c}_1` `fg1` ON `fg0`.`a_testfeature` = `fg1`.`a_testfeature`\nINNER JOIN `#{project_name.downcase}`.`#{fg_name_b}_1` `fg2` ON `fg0`.`a_testfeature` = `fg2`.`a_testfeature`")
+          expect(query['pitQuery']).to eql("WITH right_fg0 AS (SELECT *\nFROM (SELECT `fg0`.`a_testfeature1`, `fg0`.`event_time`, `fg1`.`c_testfeature1` `prefix_c_c_testfeature1`, `fg0`.`a_testfeature` `join_pk_a_testfeature`, `fg0`.`event_time` `join_evt_event_time`, RANK() OVER (PARTITION BY `fg0`.`a_testfeature`, `fg0`.`event_time` ORDER BY `fg1`.`event_time` DESC) pit_rank_hopsworks\nFROM `#{project_name.downcase}_featurestore`.`#{fg_name_a}_1` `fg0`\nINNER JOIN `#{project_name.downcase}_featurestore`.`#{fg_name_c}_1` `fg1` ON `fg0`.`a_testfeature` = `fg1`.`a_testfeature` AND `fg0`.`event_time` >= `fg1`.`event_time`) NA\nWHERE `pit_rank_hopsworks` = 1), right_fg1 AS (SELECT *\nFROM (SELECT `fg0`.`a_testfeature1`, `fg0`.`event_time`, `fg2`.`b_testfeature1` `prefix_b_b_testfeature1`, `fg0`.`a_testfeature` `join_pk_a_testfeature`, `fg0`.`event_time` `join_evt_event_time`, RANK() OVER (PARTITION BY `fg0`.`a_testfeature`, `fg0`.`event_time` ORDER BY `fg2`.`event_time` DESC) pit_rank_hopsworks\nFROM `#{project_name.downcase}_featurestore`.`#{fg_name_a}_1` `fg0`\nINNER JOIN `#{project_name.downcase}_featurestore`.`#{fg_name_b}_1` `fg2` ON `fg0`.`a_testfeature` = `fg2`.`a_testfeature` AND `fg0`.`event_time` >= `fg2`.`event_time`) NA\nWHERE `pit_rank_hopsworks` = 1) (SELECT `right_fg0`.`a_testfeature1`, `right_fg0`.`event_time`, `right_fg0`.`prefix_c_c_testfeature1`, `right_fg1`.`prefix_b_b_testfeature1`\nFROM right_fg0\nINNER JOIN right_fg1 ON `right_fg0`.`join_pk_a_testfeature` = `right_fg1`.`join_pk_a_testfeature` AND `right_fg0`.`join_evt_event_time` = `right_fg1`.`join_evt_event_time`)")
         end
       end
     end

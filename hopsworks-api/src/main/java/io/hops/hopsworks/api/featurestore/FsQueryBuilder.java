@@ -21,6 +21,7 @@ import io.hops.hopsworks.common.featurestore.query.ConstructorController;
 import io.hops.hopsworks.common.featurestore.query.FsQueryDTO;
 import io.hops.hopsworks.common.featurestore.query.Query;
 import io.hops.hopsworks.common.featurestore.query.QueryDTO;
+import io.hops.hopsworks.common.featurestore.query.pit.PitJoinController;
 import io.hops.hopsworks.common.featurestore.trainingdatasets.TrainingDatasetController;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.exceptions.ServiceException;
@@ -44,6 +45,8 @@ public class FsQueryBuilder {
   private ConstructorController constructorController;
   @EJB
   private TrainingDatasetController trainingDatasetController;
+  @EJB
+  private PitJoinController pitJoinController;
 
   private URI uri(UriInfo uriInfo, Project project) {
     return uriInfo.getBaseUriBuilder().path(ResourceRequest.Name.PROJECT.toString().toLowerCase())
@@ -64,7 +67,7 @@ public class FsQueryBuilder {
       throws FeaturestoreException, ServiceException {
     TrainingDataset trainingDataset = trainingDatasetController.getTrainingDatasetById(featurestore, trainingDatasetId);
     Query query = trainingDatasetController.getQuery(trainingDataset, withLabel, project, user);
-    FsQueryDTO dto = constructorController.construct(query, project, user);
+    FsQueryDTO dto = constructorController.construct(query, pitJoinController.isPitEnabled(query), true, project, user);
     dto.setHref(uri(uriInfo, project));
     return dto;
   }

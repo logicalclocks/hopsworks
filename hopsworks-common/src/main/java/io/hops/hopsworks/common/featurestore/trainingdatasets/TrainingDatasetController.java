@@ -23,13 +23,14 @@ import io.hops.hopsworks.common.featurestore.feature.TrainingDatasetFeatureDTO;
 import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupController;
 import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupDTO;
 import io.hops.hopsworks.common.featurestore.featuregroup.online.OnlineFeaturegroupController;
-import io.hops.hopsworks.common.featurestore.statistics.StatisticsController;
 import io.hops.hopsworks.common.featurestore.online.OnlineFeaturestoreController;
 import io.hops.hopsworks.common.featurestore.query.ConstructorController;
 import io.hops.hopsworks.common.featurestore.query.Feature;
-import io.hops.hopsworks.common.featurestore.query.Join;
 import io.hops.hopsworks.common.featurestore.query.Query;
 import io.hops.hopsworks.common.featurestore.query.QueryDTO;
+import io.hops.hopsworks.common.featurestore.query.join.Join;
+import io.hops.hopsworks.common.featurestore.query.pit.PitJoinController;
+import io.hops.hopsworks.common.featurestore.statistics.StatisticsController;
 import io.hops.hopsworks.common.featurestore.statistics.columns.StatisticColumnController;
 import io.hops.hopsworks.common.featurestore.storageconnectors.FeaturestoreConnectorFacade;
 import io.hops.hopsworks.common.featurestore.trainingdatasets.external.ExternalTrainingDatasetController;
@@ -37,7 +38,6 @@ import io.hops.hopsworks.common.featurestore.trainingdatasets.external.ExternalT
 import io.hops.hopsworks.common.featurestore.trainingdatasets.hopsfs.HopsfsTrainingDatasetController;
 import io.hops.hopsworks.common.featurestore.trainingdatasets.hopsfs.HopsfsTrainingDatasetFacade;
 import io.hops.hopsworks.common.featurestore.transformationFunction.TransformationFunctionFacade;
-import io.hops.hopsworks.common.featurestore.utils.FeaturestoreInputValidation;
 import io.hops.hopsworks.common.featurestore.utils.FeaturestoreUtils;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.hdfs.DistributedFsService;
@@ -47,14 +47,15 @@ import io.hops.hopsworks.common.hdfs.inode.InodeController;
 import io.hops.hopsworks.common.provenance.core.HopsFSProvenanceController;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
+import io.hops.hopsworks.exceptions.ProvenanceException;
 import io.hops.hopsworks.exceptions.ServiceException;
 import io.hops.hopsworks.persistence.entity.dataset.Dataset;
 import io.hops.hopsworks.persistence.entity.featurestore.Featurestore;
 import io.hops.hopsworks.persistence.entity.featurestore.activity.FeaturestoreActivityMeta;
-import io.hops.hopsworks.persistence.entity.featurestore.statistics.StatisticColumn;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.Featuregroup;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.FeaturegroupType;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.cached.TimeTravelFormat;
+import io.hops.hopsworks.persistence.entity.featurestore.statistics.StatisticColumn;
 import io.hops.hopsworks.persistence.entity.featurestore.statistics.StatisticsConfig;
 import io.hops.hopsworks.persistence.entity.featurestore.storageconnector.FeaturestoreConnector;
 import io.hops.hopsworks.persistence.entity.featurestore.storageconnector.FeaturestoreConnectorType;
@@ -70,7 +71,6 @@ import io.hops.hopsworks.persistence.entity.featurestore.transformationFunction.
 import io.hops.hopsworks.persistence.entity.hdfs.inode.Inode;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.user.Users;
-import io.hops.hopsworks.exceptions.ProvenanceException;
 import io.hops.hopsworks.restutils.RESTCodes;
 import org.apache.calcite.sql.JoinType;
 
@@ -108,7 +108,7 @@ public class TrainingDatasetController {
   @EJB
   private ExternalTrainingDatasetFacade externalTrainingDatasetFacade;
   @EJB
-  private FeaturestoreInputValidation featurestoreInputValidation;
+  private TrainingDatasetInputValidation trainingDatasetInputValidation;
   @EJB
   private InodeController inodeController;
   @EJB
@@ -139,6 +139,8 @@ public class TrainingDatasetController {
   private TransformationFunctionFacade transformationFunctionFacade;
   @EJB
   private TrainingDatasetInputValidation inputValidation;
+  @EJB
+  private PitJoinController pitJoinController;
 
   /**
    * Gets all trainingDatasets for a particular featurestore and project
@@ -377,7 +379,8 @@ public class TrainingDatasetController {
 
     constructorController.populateFgLookupTables(queryDTO, 0, fgAliasLookup, fgLookup, availableFeatureLookup,
         project, user, null);
-    return constructorController.convertQueryDTO(queryDTO, fgAliasLookup, fgLookup, availableFeatureLookup);
+    return constructorController.convertQueryDTO(queryDTO, fgAliasLookup, fgLookup, availableFeatureLookup,
+      pitJoinController.isPitEnabled(queryDTO));
   }
 
   private void setTrainingDatasetQuery(Query query,
@@ -457,12 +460,6 @@ public class TrainingDatasetController {
   }
 
   private List<TrainingDatasetJoinCondition> collectJoinConditions(Join join, TrainingDatasetJoin tdJoin) {
-    if (join.getOn() != null)  {
-      return join.getOn().stream()
-          .map(f -> new TrainingDatasetJoinCondition(tdJoin, f.getName(), f.getName()))
-          .collect(Collectors.toList());
-    }
-
     return Streams.zip(join.getLeftOn().stream(), join.getRightOn().stream(),
       (left, right) -> new TrainingDatasetJoinCondition(tdJoin, left.getName(), right.getName()))
         .collect(Collectors.toList());
@@ -576,7 +573,7 @@ public class TrainingDatasetController {
             Level.FINE, "training dataset id: " + trainingDatasetDTO.getId()));
 
     // Verify general entity related information
-    featurestoreInputValidation.verifyUserInput(trainingDatasetDTO);
+    trainingDatasetInputValidation.verifyUserInput(trainingDatasetDTO);
 
     // Update metadata
     trainingDataset.setDescription(trainingDatasetDTO.getDescription());
@@ -691,7 +688,8 @@ public class TrainingDatasetController {
         .filter(af -> af.getName().equals(requestedFeature.getName()))
         // instantiate new feature since alias in available feature is not correct if fg is joined with itself
         .map(af -> new Feature(af.getName(), fgAliasLookup.get(requestedFeature.getTrainingDatasetJoin().getId()),
-          af.getType(), af.getDefaultValue(), af.getPrefix()))
+          af.getType(), af.getDefaultValue(), af.getPrefix(), requestedFeature.getFeatureGroup(),
+          requestedFeature.getIndex()))
         .findFirst()
         .orElseThrow(() -> new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.FEATURE_DOES_NOT_EXIST, Level.FINE,
           "Feature: " + requestedFeature.getName() + " not found in feature group: " +
@@ -793,7 +791,7 @@ public class TrainingDatasetController {
       rightTdJoin.getFeatureGroup(),
       rightAs,
       // no requested features as they are all in the left base query
-      null,
+      new ArrayList<>(),
       availableFeaturesLookup.get(rightTdJoin.getFeatureGroup().getId()));
 
     List<Feature> leftOn = rightTdJoin.getConditions().stream()

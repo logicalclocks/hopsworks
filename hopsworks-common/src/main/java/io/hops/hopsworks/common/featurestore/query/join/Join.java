@@ -14,8 +14,11 @@
  * If not, see <https://www.gnu.org/licenses/>.
  */
 
-package io.hops.hopsworks.common.featurestore.query;
+package io.hops.hopsworks.common.featurestore.query.join;
 
+import io.hops.hopsworks.common.featurestore.query.Feature;
+import io.hops.hopsworks.common.featurestore.query.Query;
+import io.hops.hopsworks.common.featurestore.query.SqlCondition;
 import org.apache.calcite.sql.JoinType;
 
 import java.util.List;
@@ -24,33 +27,22 @@ public class Join {
   private Query leftQuery;
   private Query rightQuery;
 
-  private List<Feature> on;
   private List<Feature> leftOn;
   private List<Feature> rightOn;
   private JoinType joinType;
+  private List<SqlCondition> joinOperator;
 
   private String prefix;
 
-  public Join(Query leftQuery) {
-    this.leftQuery = leftQuery;
-  }
-
-  public Join(Query leftQuery, Query rightQuery, List<Feature> on, JoinType joinType, String prefix) {
-    this.leftQuery = leftQuery;
-    this.rightQuery = rightQuery;
-    this.on = on;
-    this.joinType = joinType;
-    this.prefix = prefix;
-  }
-
   public Join(Query leftQuery, Query rightQuery, List<Feature> leftOn, List<Feature> rightOn, JoinType joinType,
-              String prefix) {
+              String prefix, List<SqlCondition> joinOperator) {
     this.leftQuery = leftQuery;
     this.rightQuery = rightQuery;
     this.leftOn = leftOn;
     this.rightOn = rightOn;
     this.joinType = joinType;
     this.prefix = prefix;
+    this.joinOperator = joinOperator;
   }
 
   public Query getLeftQuery() {
@@ -85,14 +77,6 @@ public class Join {
     this.joinType = joinType;
   }
 
-  public List<Feature> getOn() {
-    return on;
-  }
-
-  public void setOn(List<Feature> on) {
-    this.on = on;
-  }
-
   public List<Feature> getLeftOn() {
     return leftOn;
   }
@@ -107,5 +91,13 @@ public class Join {
 
   public void setPrefix(String prefix) {
     this.prefix = prefix;
+  }
+  
+  public List<SqlCondition> getJoinOperator() {
+    return joinOperator;
+  }
+  
+  public void setJoinOperator(List<SqlCondition> joinOperator) {
+    this.joinOperator = joinOperator;
   }
 }

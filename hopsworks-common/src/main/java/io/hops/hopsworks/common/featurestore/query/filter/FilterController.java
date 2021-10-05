@@ -144,11 +144,15 @@ public class FilterController {
     }
   }
   
-  SqlNode generateFilterNode(Filter filter, boolean online) {
+  public SqlNode generateFilterNode(Filter filter, boolean online) {
     SqlNode feature;
     if (filter.getFeature().getDefaultValue() == null || online) {
-      feature = new SqlIdentifier(Arrays.asList("`" + filter.getFeature().getFgAlias() + "`",
-        "`" + filter.getFeature().getName() + "`"), SqlParserPos.ZERO);
+      if (filter.getFeature().getFgAlias(false) != null) {
+        feature = new SqlIdentifier(Arrays.asList("`" + filter.getFeature().getFgAlias(false) + "`",
+          "`" + filter.getFeature().getName() + "`"), SqlParserPos.ZERO);
+      } else {
+        feature = new SqlIdentifier("`" + filter.getFeature().getName() + "`", SqlParserPos.ZERO);
+      }
     } else {
       feature = constructorController.caseWhenDefault(filter.getFeature());
     }
