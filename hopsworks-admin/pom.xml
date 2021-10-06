@@ -38,16 +38,17 @@
   ~ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
   -->
 
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
   <parent>
     <groupId>io.hops</groupId>
     <artifactId>hopsworks</artifactId>
     <version>2.5.0-SNAPSHOT</version>
-    <relativePath>..</relativePath>
+    <relativePath>../pom.xml</relativePath>
   </parent>
-  
+
   <groupId>io.hops.hopsworks</groupId>
   <artifactId>hopsworks-admin</artifactId>
   <version>2.5.0-SNAPSHOT</version>
@@ -58,12 +59,11 @@
   <properties>
     <maven.deploy.skip>true</maven.deploy.skip>
   </properties>
-  
+
   <dependencies>
     <dependency>
       <groupId>io.hops.hopsworks</groupId>
       <artifactId>hopsworks-persistence</artifactId>
-      <version>${project.version}</version>
       <exclusions>
         <!-- exclude all transitive dependencies -->
         <exclusion>
@@ -75,28 +75,18 @@
     <dependency>
       <groupId>io.hops.hopsworks</groupId>
       <artifactId>hopsworks-rest-utils</artifactId>
-      <version>${project.version}</version>
-      <scope>provided</scope>
     </dependency>
 
     <dependency>
       <groupId>io.hops.hopsworks</groupId>
       <artifactId>hopsworks-common</artifactId>
-      <version>${project.version}</version>
       <type>ejb</type>
       <scope>provided</scope>
-      <exclusions>
-        <exclusion>
-          <groupId>javax.servlet</groupId>
-          <artifactId>*</artifactId>
-        </exclusion>
-      </exclusions>
     </dependency>
 
     <dependency>
       <groupId>io.hops.hopsworks</groupId>
       <artifactId>hopsworks-alert</artifactId>
-      <version>${project.version}</version>
       <type>ejb</type>
       <scope>provided</scope>
     </dependency>
@@ -104,34 +94,26 @@
     <dependency>
       <groupId>org.primefaces.extensions</groupId>
       <artifactId>primefaces-extensions</artifactId>
-      <version>6.1.1</version>
     </dependency>
     <dependency>
       <groupId>org.primefaces.extensions</groupId>
       <artifactId>resources-codemirror</artifactId>
-      <version>6.1.1</version>
     </dependency>
     <dependency>
       <groupId>org.primefaces</groupId>
       <artifactId>primefaces</artifactId>
-      <version>6.1</version>
-    </dependency>
-    <dependency>
-      <groupId>org.primefaces.extensions</groupId>
-      <artifactId>primefaces-extensions</artifactId>
-      <version>6.1.1</version>
     </dependency>
     <dependency>
       <groupId>javax</groupId>
       <artifactId>javaee-web-api</artifactId>
-      <version>7.0</version>
-      <scope>provided</scope>
     </dependency>
     <dependency>
       <groupId>javax.enterprise.concurrent</groupId>
       <artifactId>javax.enterprise.concurrent-api</artifactId>
-      <version>1.1</version>
-      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>javax</groupId>
+      <artifactId>javaee-api</artifactId>
     </dependency>
   </dependencies>
   <build>
@@ -140,11 +122,30 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-war-plugin</artifactId>
-        <version>3.0.0</version>
-        <configuration>
-          <failOnMissingWebXml>true</failOnMissingWebXml>
-          <attachClasses>true</attachClasses>
-        </configuration>
+        <executions>
+          <execution>
+            <phase>process-resources</phase>
+            <goals>
+              <goal>exploded</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+      <!--
+        ~ With this plugin we are making sure that the clean command is always called.
+        ~ The reason is that we call the war plugin twice. The first time we invoke the exploded
+        ~ goal to copy the web resources in the target directory and the second time to build the war file.
+        ~ In between, if the kube profile is enabled we modify the beans.xml file.
+        ~ To make sure that the war:war goal (the second execution) packages the correct beans.xml we need to make sure
+        ~ that it uses the cache (i.e. the files already present in the target directory).
+        ~
+        ~ To avoid troubles of classes modified in code and cached in the target directory, here we are binding the
+        ~ clean goal during the initialization phase (the first phase). In this way even if someone forgot to invoke
+        ~ the clean target, he/she will find a clean directory.
+      -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-clean-plugin</artifactId>
       </plugin>
     </plugins>
   </build>
@@ -154,6 +155,6 @@
       <name>PrimeFaces Maven Repository</name>
       <url>http://repository.primefaces.org</url>
       <layout>default</layout>
-    </repository>  
+    </repository>
   </repositories>
 </project>
