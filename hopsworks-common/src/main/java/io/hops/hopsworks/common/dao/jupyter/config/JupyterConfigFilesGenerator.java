@@ -43,10 +43,12 @@ import com.google.common.base.Strings;
 import com.logicalclocks.servicediscoverclient.exceptions.ServiceDiscoveryException;
 import com.logicalclocks.servicediscoverclient.service.Service;
 import freemarker.template.TemplateException;
+import io.hops.hopsworks.common.jobs.JobController;
 import io.hops.hopsworks.exceptions.JobException;
 import io.hops.hopsworks.common.hive.HiveController;
 import io.hops.hopsworks.common.hosts.ServiceDiscoveryController;
 import io.hops.hopsworks.common.kafka.KafkaBrokers;
+import io.hops.hopsworks.persistence.entity.jobs.configuration.JobType;
 import io.hops.hopsworks.persistence.entity.jupyter.JupyterSettings;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.jobs.configuration.spark.SparkJobConfiguration;
@@ -107,6 +109,8 @@ public class JupyterConfigFilesGenerator {
   private KafkaBrokers kafkaBrokers;
   @EJB
   private HiveController hiveController;
+  @EJB
+  private JobController jobController;
 
   public JupyterPaths generateJupyterPaths(Project project, String hdfsUser, String secretConfig) {
     return new JupyterPaths(settings.getJupyterDir(), project.getName(), hdfsUser, secretConfig);
@@ -265,6 +269,11 @@ public class JupyterConfigFilesGenerator {
       String confDirPath) throws IOException, ServiceDiscoveryException, JobException {
     
     SparkJobConfiguration sparkJobConfiguration = (SparkJobConfiguration) js.getJobConfig();
+
+    //If user selected Python we should use the default spark configuration for Spark/PySpark kernels
+    if(js.isPythonKernel()) {
+      sparkJobConfiguration = (SparkJobConfiguration)jobController.getConfiguration(project, JobType.SPARK, true);
+    }
   
     SparkConfigurationUtil sparkConfigurationUtil = new SparkConfigurationUtil();
     Map<String, String> extraJavaOptions = new HashMap<>();
