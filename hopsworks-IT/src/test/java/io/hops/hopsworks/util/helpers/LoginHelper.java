@@ -20,6 +20,8 @@ import io.hops.hopsworks.util.models.User;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
+import org.openqa.selenium.support.ui.ExpectedConditions;
+import org.openqa.selenium.support.ui.WebDriverWait;
 
 import static org.junit.Assert.assertEquals;
 
@@ -65,7 +67,9 @@ public class LoginHelper {
   public static void logout(WebDriver driver) {
     if (driver.findElement(By.id("navbarProfile")) != null) {
       driver.findElement(By.id("navbarProfile")).click();
-      driver.findElement(By.linkText("Sign out")).click();
+      WebDriverWait wait = new WebDriverWait(driver, 60);
+      WebElement element = wait.until(ExpectedConditions.elementToBeClickable(By.id("navbar-sign-out")));
+      element.click();
     }
   }
 }

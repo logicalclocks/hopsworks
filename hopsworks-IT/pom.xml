@@ -70,6 +70,13 @@
     <maven.deploy.skip>true</maven.deploy.skip>
   </properties>
   <dependencies>
+    <!-- java.lang.NoSuchMethodError: com.google.common.util.concurrent.SimpleTimeLimiter.create... if guava < 25.0 -->
+    <dependency>
+      <groupId>com.google.guava</groupId>
+      <artifactId>guava</artifactId>
+      <version>27.0.1-jre</version>
+      <scope>test</scope>
+    </dependency>
     <dependency>
       <groupId>org.seleniumhq.selenium</groupId>
       <artifactId>selenium-java</artifactId>
