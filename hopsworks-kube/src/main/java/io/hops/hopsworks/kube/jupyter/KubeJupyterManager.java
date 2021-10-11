@@ -48,6 +48,7 @@ import io.hops.hopsworks.common.hosts.ServiceDiscoveryController;
 import io.hops.hopsworks.common.jupyter.JupyterManager;
 import io.hops.hopsworks.common.jupyter.JupyterManagerImpl;
 import io.hops.hopsworks.common.jupyter.TokenGenerator;
+import io.hops.hopsworks.common.jobs.JobController;
 import io.hops.hopsworks.common.util.HopsUtils;
 import io.hops.hopsworks.common.util.ProjectUtils;
 import io.hops.hopsworks.common.util.Settings;
@@ -60,6 +61,7 @@ import io.hops.hopsworks.kube.common.KubeClientService;
 import io.hops.hopsworks.kube.common.KubeStereotype;
 import io.hops.hopsworks.kube.project.KubeProjectConfigMaps;
 import io.hops.hopsworks.persistence.entity.jobs.configuration.DockerJobConfiguration;
+import io.hops.hopsworks.persistence.entity.jobs.configuration.JobType;
 import io.hops.hopsworks.persistence.entity.jupyter.JupyterProject;
 import io.hops.hopsworks.persistence.entity.jupyter.JupyterSettings;
 import io.hops.hopsworks.persistence.entity.project.Project;
@@ -135,6 +137,8 @@ public class KubeJupyterManager extends JupyterManagerImpl implements JupyterMan
   private ServiceDiscoveryController serviceDiscoveryController;
   @EJB
   private KubeProjectConfigMaps kubeProjectConfigMaps;
+  @EJB
+  private JobController jobController;
   
   @Override
   @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
@@ -169,10 +173,11 @@ public class KubeJupyterManager extends JupyterManagerImpl implements JupyterMan
       Writer sparkMagicConfig = new StringWriter();
       jupyterConfigFilesGenerator.createSparkMagicConfig(sparkMagicConfig,project, jupyterSettings, hdfsUser,
           jupyterPaths.getConfDirPath());
-      
+
       //If user selected Experiments or Spark we should use the default docker config for the Python kernel
       if(!jupyterSettings.isPythonKernel()) {
-        jupyterSettings.setDockerConfig(new DockerJobConfiguration());
+        jupyterSettings.setDockerConfig(
+                (DockerJobConfiguration)jobController.getConfiguration(project, JobType.DOCKER, true));
       }
       
       kubeClientService.createOrUpdateConfigMap(project, user, CONF_SUFFIX,
