@@ -231,7 +231,7 @@ public class LibraryInstaller {
           } catch (Throwable ex) {
             LOG.log(Level.WARNING, "Could not execute command with ID: " + cc.getId(), ex);
             commandsController.updateCondaCommandStatus(
-                cc.getId(), CondaStatus.FAILED, cc.getArg(), cc.getOp(), ex.toString());
+                cc.getId(), CondaStatus.FAILED, cc.getArg(), cc.getOp(), ex.getMessage());
             continue;
           }
           commandsController.updateCondaCommandStatus(
