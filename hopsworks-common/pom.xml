@@ -145,10 +145,6 @@
       <groupId>javax</groupId>
       <artifactId>javaee-api</artifactId>
     </dependency>
-<!--    <dependency>-->
-<!--      <groupId>javax.mail</groupId>-->
-<!--      <artifactId>mail</artifactId>-->
-<!--    </dependency>-->
     <dependency>
       <groupId>io.hops</groupId>
       <artifactId>hadoop-client-api</artifactId>
