@@ -206,6 +206,6 @@ public class YarnJobsMonitor implements JobsMonitor {
   }
   
   private Execution updateFinalStatus(JobFinalStatus finalStatus, Execution execution) {
-    return executionUpdateController.updateFinalStatus(finalStatus, execution);
+    return executionUpdateController.updateFinalStatusAndSendAlert(finalStatus, execution);
   }
 }
