@@ -374,8 +374,8 @@ public class FeaturegroupService {
     //Verify that the user has the data-owner role or is the creator of the featuregroup
     Featuregroup featuregroup = featuregroupController.getFeaturegroupById(featurestore, featuregroupId);
     try {
-      featuregroupController.clearFeaturegroup(featuregroup, project, user);
-      return Response.ok().build();
+      FeaturegroupDTO newFeatureGroup = featuregroupController.clearFeaturegroup(featuregroup, project, user);
+      return Response.ok().entity(newFeatureGroup).build();
     } catch (SQLException | IOException | ProvenanceException | HopsSecurityException e) {
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.COULD_NOT_CLEAR_FEATUREGROUP, Level.SEVERE,
           "project: " + project.getName() + ", featurestoreId: " + featurestore.getId() +
