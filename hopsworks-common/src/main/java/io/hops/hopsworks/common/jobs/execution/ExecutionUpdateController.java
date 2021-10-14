@@ -45,14 +45,10 @@ public class ExecutionUpdateController {
     return executionFacade.updateState(execution, newState);
   }
 
-  public Execution updateStateAndSendAlert(JobState newState, Execution execution) {
-    execution = executionFacade.updateState(execution, newState);
-    alertController.sendAlert(newState, execution);
+  public Execution updateStateAndSendAlert(Execution execution) {
+    execution = executionFacade.update(execution);
+    alertController.sendAlert(execution.getState(), execution);
     return execution;
-  }
-
-  public Execution updateFinalStatus(JobFinalStatus finalStatus, Execution execution) {
-    return executionFacade.updateFinalStatus(execution, finalStatus);
   }
 
   public Execution updateFinalStatusAndSendAlert(JobFinalStatus finalStatus, Execution execution) {
