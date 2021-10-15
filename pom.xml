@@ -94,7 +94,7 @@
     <bcprov-jdk15on.version>1.60</bcprov-jdk15on.version>
     <bijection-avro_2.12.version>0.9.6</bijection-avro_2.12.version>
     <caffeine.version>2.8.0</caffeine.version>
-    <calcite-core.version>1.21.0</calcite-core.version>
+    <calcite-core.version>1.26.0</calcite-core.version>
     <calcite-server.version>1.21.0</calcite-server.version>
     <commons-collections.version>3.2.2</commons-collections.version>
     <commons-fileupload.version>1.4</commons-fileupload.version>
