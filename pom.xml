@@ -86,7 +86,7 @@
     <apache-commons-lang3.version>3.8.1</apache-commons-lang3.version>
     <apache-commons-text.version>1.9</apache-commons-text.version>
     <apache-htrace-core4.version>4.2.0-incubating</apache-htrace-core4.version>
-    <apache-httpclient.version>4.5.12</apache-httpclient.version>
+    <apache-httpclient.version>4.5.13</apache-httpclient.version>
     <apache-httpcore.version>4.4.11</apache-httpcore.version>
     <avro.version>1.10.2</avro.version>
     <awssdk.version>2.17.19</awssdk.version>
