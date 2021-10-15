@@ -134,7 +134,7 @@
     <jsch.version>0.1.54</jsch.version>
     <json-schema.version>1.12.1</json-schema.version>
     <jsoup.version>1.13.1</jsoup.version>
-    <junit.version>4.13</junit.version>
+    <junit.version>4.13.1</junit.version>
     <kafka-clients.version>2.3.0</kafka-clients.version>
     <kafka_2.11.version>2.3.0</kafka_2.11.version>
     <kubernetes-client.version>4.10.3</kubernetes-client.version>
