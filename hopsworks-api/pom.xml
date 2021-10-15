@@ -45,9 +45,9 @@
     <groupId>io.hops</groupId>
     <artifactId>hopsworks</artifactId>
     <version>2.5.0-SNAPSHOT</version>
-    <relativePath>..</relativePath>
+    <relativePath>../pom.xml</relativePath>
   </parent>
-  
+
   <groupId>io.hops.hopsworks</groupId>
   <artifactId>hopsworks-api</artifactId>
   <version>2.5.0-SNAPSHOT</version>
@@ -58,97 +58,33 @@
   <properties>
     <maven.deploy.skip>true</maven.deploy.skip>
   </properties>
-    
+
   <dependencies>
-    
     <dependency>
       <groupId>io.hops</groupId>
       <artifactId>service-proxy-core</artifactId>
-      <version>${service-proxy.version}</version>
-      <exclusions>
-        <exclusion>
-          <groupId>com.fasterxml.jackson.core</groupId>
-          <artifactId>*</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>com.fasterxml.jackson.dataformat</groupId>
-          <artifactId>*</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>com.fasterxml.jackson.datatype</groupId>
-          <artifactId>*</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>javax.mail</groupId>
-          <artifactId>mail</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>io.swagger</groupId>
-          <artifactId>*</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>org.codehaus.groovy</groupId>
-          <artifactId>*</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>org.springframework</groupId>
-          <artifactId>*</artifactId>
-        </exclusion>
-      </exclusions>
-    </dependency>
-
-    <dependency>
-      <groupId>commons-net</groupId>
-      <artifactId>commons-net</artifactId>
-      <version>3.6</version>
     </dependency>
 
     <dependency>
       <groupId>org.eclipse.persistence</groupId>
       <artifactId>eclipselink</artifactId>
-      <version>${persistence.version}</version>
     </dependency>
 
     <dependency>
       <groupId>io.hops.hopsworks</groupId>
       <artifactId>hopsworks-common</artifactId>
-      <version>2.5.0-SNAPSHOT</version>
       <type>ejb</type>
       <scope>provided</scope>
-      <exclusions>
-        <exclusion>
-          <groupId>com.nimbusds</groupId>
-          <artifactId>nimbus-jose-jwt</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>org.bouncycastle</groupId>
-          <artifactId>*</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>javax.servlet</groupId>
-          <artifactId>*</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>com.sun.jersey</groupId>
-          <artifactId>jersey-core</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>org.apache.flink</groupId>
-          <artifactId>*</artifactId>
-        </exclusion>
-      </exclusions> 
     </dependency>
     <dependency>
       <groupId>io.hops.hopsworks</groupId>
       <artifactId>hopsworks-dela</artifactId>
-      <version>${project.version}</version>
       <type>ejb</type>
       <scope>provided</scope>
     </dependency>
     <dependency>
       <groupId>io.hops.hopsworks</groupId>
       <artifactId>hopsworks-jwt</artifactId>
-      <version>${project.version}</version>
       <type>ejb</type>
       <scope>provided</scope>
     </dependency>
@@ -156,14 +92,11 @@
     <dependency>
       <groupId>io.hops.hopsworks</groupId>
       <artifactId>hopsworks-rest-utils</artifactId>
-      <version>${project.version}</version>
-      <scope>provided</scope>
     </dependency>
 
     <dependency>
       <groupId>io.hops.hopsworks</groupId>
       <artifactId>hopsworks-persistence</artifactId>
-      <version>${project.version}</version>
       <exclusions>
         <!-- exclude all transitive dependencies -->
         <exclusion>
@@ -176,7 +109,6 @@
     <dependency>
       <groupId>io.hops.hopsworks</groupId>
       <artifactId>hopsworks-alert</artifactId>
-      <version>${project.version}</version>
       <type>ejb</type>
       <scope>provided</scope>
     </dependency>
@@ -185,87 +117,87 @@
     <dependency>
       <groupId>org.glassfish.jersey.core</groupId>
       <artifactId>jersey-server</artifactId>
-      <version>2.21</version>
     </dependency>
     <dependency>
       <groupId>org.glassfish.jersey.media</groupId>
       <artifactId>jersey-media-multipart</artifactId>
-      <version>2.21</version>
     </dependency>
     <!-- end of jersey dependencies -->
     <dependency>
       <groupId>io.swagger</groupId>
       <artifactId>swagger-jersey2-jaxrs</artifactId>
-      <version>1.6.2</version>
     </dependency>
     <dependency>
       <groupId>com.google.guava</groupId>
       <artifactId>guava</artifactId>
-      <version>18.0</version>
     </dependency>
     <dependency>
       <groupId>javax</groupId>
       <artifactId>javaee-web-api</artifactId>
-      <version>7.0</version>
-      <scope>provided</scope>
     </dependency>
     <dependency>
       <groupId>javax</groupId>
       <artifactId>javaee-api</artifactId>
-      <version>7.0</version>
-      <scope>provided</scope>
     </dependency>
     <dependency>
       <groupId>commons-httpclient</groupId>
       <artifactId>commons-httpclient</artifactId>
-      <version>3.1</version>
+    </dependency>
+    <dependency>
+      <groupId>commons-fileupload</groupId>
+      <artifactId>commons-fileupload</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.projectlombok</groupId>
+      <artifactId>lombok</artifactId>
     </dependency>
     <!-- Test dependencies -->
     <dependency>
       <groupId>org.mockito</groupId>
       <artifactId>mockito-all</artifactId>
-      <version>1.10.19</version>
-      <scope>test</scope>
     </dependency>
     <dependency>
-      <groupId>org.projectlombok</groupId>
-      <artifactId>lombok</artifactId>
-      <version>RELEASE</version>
-      <scope>compile</scope>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
     </dependency>
   </dependencies>
+
   <build>
     <finalName>hopsworks-api</finalName>
     <plugins>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-compiler-plugin</artifactId>
-        <configuration>
-          <source>1.8</source>
-          <target>1.8</target>
-        </configuration>
       </plugin>
-      
-      
+
+      <!--
+        ~ With this plugin we are making sure that the clean command is always called.
+        ~ The reason is that we call the war plugin twice. The first time we invoke the exploded
+        ~ goal to copy the web resources in the target directory and the second time to build the war file.
+        ~ In between, if the kube profile is enabled we modify the beans.xml file.
+        ~ To make sure that the war:war goal (the second execution) packages the correct beans.xml we need to make sure
+        ~ that it uses the cache (i.e. the files already present in the target directory).
+        ~
+        ~ To avoid troubles of classes modified in code and cached in the target directory, here we are binding the
+        ~ clean goal during the initialization phase (the first phase). In this way even if someone forgot to invoke
+        ~ the clean target, he/she will find a clean directory.
+      -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-clean-plugin</artifactId>
+      </plugin>
+
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-war-plugin</artifactId>
-        <version>3.0.0</version>
-        <configuration>
-          <failOnMissingWebXml>true</failOnMissingWebXml>
-          <attachClasses>true</attachClasses>
-          <webResources>
-            <resource>
-              <filtering>true</filtering>
-              <directory>src/main/webapp</directory>
-              <includes>
-                <include>**/web.xml</include>
-              </includes>
-            </resource>
-          </webResources>
-          <warSourceDirectory>src/main/webapp</warSourceDirectory>
-          <webXml>src/main/webapp/WEB-INF/web.xml</webXml>
-        </configuration>
+        <executions>
+          <execution>
+            <phase>process-resources</phase>
+            <goals>
+              <goal>exploded</goal>
+            </goals>
+          </execution>
+        </executions>
       </plugin>
     </plugins>
   </build>
