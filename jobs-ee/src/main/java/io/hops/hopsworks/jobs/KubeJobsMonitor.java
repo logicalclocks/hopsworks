@@ -147,7 +147,7 @@ public class KubeJobsMonitor implements JobsMonitor {
     if (execution.getExecutionStop() < 1) {
       execution.setExecutionStop(System.currentTimeMillis());
       execution.setProgress(1);
-      execution = executionFacade.update(execution);
+      execution = executionUpdateController.updateStateAndSendAlert(execution);
     }
     jobsJWTManager.cleanJWT(new ExecutionJWT(execution));
     kubeClientService.deleteJob(pod.getMetadata().getNamespace(), pod.getMetadata().getLabels()

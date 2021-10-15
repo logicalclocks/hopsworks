@@ -16,6 +16,7 @@
 package io.hops.hopsworks.persistence.entity.project.alert;
 
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.datavalidation.FeatureGroupValidation;
+import io.hops.hopsworks.persistence.entity.jobs.configuration.history.JobFinalStatus;
 import io.hops.hopsworks.persistence.entity.jobs.configuration.history.JobState;
 
 public enum ProjectServiceAlertStatus {
@@ -63,6 +64,19 @@ public enum ProjectServiceAlertStatus {
       case FRAMEWORK_FAILURE:
       case APP_MASTER_START_FAILED:
       case INITIALIZATION_FAILED:
+        return ProjectServiceAlertStatus.JOB_FAILED;
+      case KILLED:
+        return ProjectServiceAlertStatus.JOB_KILLED;
+      default:
+        throw new IllegalArgumentException("Invalid enum constant");//will happen if JobState is not final state
+    }
+  }
+  
+  public static ProjectServiceAlertStatus getJobAlertStatus(JobFinalStatus jobFinalStatus) {
+    switch (jobFinalStatus) {
+      case SUCCEEDED:
+        return ProjectServiceAlertStatus.JOB_FINISHED;
+      case FAILED:
         return ProjectServiceAlertStatus.JOB_FAILED;
       case KILLED:
         return ProjectServiceAlertStatus.JOB_KILLED;

@@ -15,6 +15,7 @@
  */
 package io.hops.hopsworks.persistence.entity.jobs.description;
 
+import io.hops.hopsworks.persistence.entity.jobs.configuration.history.JobFinalStatus;
 import io.hops.hopsworks.persistence.entity.jobs.configuration.history.JobState;
 
 import javax.xml.bind.annotation.XmlEnum;
@@ -48,6 +49,19 @@ public enum JobAlertStatus {
       case FRAMEWORK_FAILURE:
       case APP_MASTER_START_FAILED:
       case INITIALIZATION_FAILED:
+        return JobAlertStatus.FAILED;
+      case KILLED:
+        return JobAlertStatus.KILLED;
+      default:
+        throw new IllegalArgumentException("Invalid enum constant");//will happen if JobState is not final state
+    }
+  }
+  
+  public static JobAlertStatus getJobAlertStatus(JobFinalStatus jobFinalStatus) {
+    switch (jobFinalStatus) {
+      case SUCCEEDED:
+        return JobAlertStatus.FINISHED;
+      case FAILED:
         return JobAlertStatus.FAILED;
       case KILLED:
         return JobAlertStatus.KILLED;
