@@ -44,7 +44,7 @@
     <groupId>io.hops</groupId>
     <artifactId>hopsworks</artifactId>
     <version>2.5.0-SNAPSHOT</version>
-    <relativePath>..</relativePath>
+    <relativePath>../pom.xml</relativePath>
   </parent>
   <groupId>io.hops.hopsworks</groupId>
   <artifactId>hopsworks-IT</artifactId>
@@ -56,7 +56,6 @@
     <cargo.version>1.6.4</cargo.version>
     <glassfish.version>4.1.2</glassfish.version>
     <!--test lib versions-->
-    <selenium.version>3.141.59</selenium.version>
     <plugin.failsafe.version>2.16</plugin.failsafe.version>
     <!-- Glassfish conf -->
     <!--suppress UnresolvedMavenProperty -->
@@ -71,34 +70,36 @@
     <maven.deploy.skip>true</maven.deploy.skip>
   </properties>
   <dependencies>
+    <!-- java.lang.NoSuchMethodError: com.google.common.util.concurrent.SimpleTimeLimiter.create... if guava < 25.0 -->
+    <dependency>
+      <groupId>com.google.guava</groupId>
+      <artifactId>guava</artifactId>
+      <version>27.0.1-jre</version>
+      <scope>test</scope>
+    </dependency>
     <dependency>
       <groupId>org.seleniumhq.selenium</groupId>
       <artifactId>selenium-java</artifactId>
-      <version>${selenium.version}</version>
       <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>org.apache.commons</groupId>
       <artifactId>commons-lang3</artifactId>
-      <version>${commons.lang3.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>org.rauschig</groupId>
-      <artifactId>jarchivelib</artifactId>
-      <version>0.7.1</version>
+      <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
-      <scope>test</scope>
-      <version>4.11</version>
     </dependency>
     <dependency>
       <groupId>commons-io</groupId>
       <artifactId>commons-io</artifactId>
-      <version>2.5</version>
       <scope>test</scope>
-      <type>jar</type>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.commons</groupId>
+      <artifactId>commons-compress</artifactId>
+      <scope>test</scope>
     </dependency>
   </dependencies>
   <build>

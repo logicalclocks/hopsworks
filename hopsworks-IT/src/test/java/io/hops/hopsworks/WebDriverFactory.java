@@ -15,29 +15,40 @@
  */
 package io.hops.hopsworks;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.util.concurrent.TimeUnit;
+import org.apache.commons.compress.archivers.ArchiveException;
+import org.apache.commons.compress.archivers.ArchiveInputStream;
+import org.apache.commons.compress.archivers.ArchiveStreamFactory;
+import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
+import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
+import org.apache.commons.compress.archivers.zip.ZipArchiveEntry;
+import org.apache.commons.compress.compressors.gzip.GzipCompressorInputStream;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.FilenameUtils;
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.SystemUtils;
 import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.chrome.ChromeDriver;
+import org.openqa.selenium.chrome.ChromeDriverService;
+import org.openqa.selenium.chrome.ChromeOptions;
 import org.openqa.selenium.firefox.FirefoxDriver;
 import org.openqa.selenium.firefox.FirefoxOptions;
 import org.openqa.selenium.firefox.GeckoDriverService;
-import org.openqa.selenium.chrome.ChromeDriver;
-import org.openqa.selenium.chrome.ChromeOptions;
-import org.rauschig.jarchivelib.Archiver;
-import org.rauschig.jarchivelib.ArchiverFactory;
+
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import org.apache.commons.io.FilenameUtils;
-import org.openqa.selenium.chrome.ChromeDriverService;
 
 public class WebDriverFactory {
   
@@ -173,18 +184,50 @@ public class WebDriverFactory {
     if (!driver.exists()) {
       try {
         FileUtils.copyURLToFile(new URL(driverUrl), driverZip);
-        Archiver archiver;
         if ("tar".equals(ext)) {
-          archiver = ArchiverFactory.createArchiver("tar", "gz");
+          extractTarGz(driverZip, driverDir);
         } else {
-          archiver = ArchiverFactory.createArchiver("zip");
+          extractZip(driverZip, driverDir);
         }
-        archiver.extract(driverZip, driverDir);
-      } catch (IOException ex) {
-        LOGGER.log(Level.SEVERE, "Failed to download driver from: {0}", driverUrl);
+        boolean setExecutable = driver.setExecutable(true);
+        LOGGER.log(Level.SEVERE, "Driver : {0}, setExecutable: {1}", new Object[]{driver, setExecutable});
+      } catch (IOException | ArchiveException ex) {
+        LOGGER.log(Level.SEVERE, "Failed to download driver from: {0}, to: {1}, ext: {2}, exception: {3}",
+            new Object[]{driverUrl, driverZip, ext, ex.getMessage()});
       }
     }
   }
+  
+  public static void extractZip(File sourceFilePath, File destinationFilePath) throws IOException, ArchiveException {
+    InputStream is = new FileInputStream(sourceFilePath);
+    ArchiveInputStream in = new ArchiveStreamFactory().createArchiveInputStream("zip", is);
+    ZipArchiveEntry entry = null;
+    while((entry = (ZipArchiveEntry) in.getNextEntry()) != null) {
+      OutputStream out = new FileOutputStream(new File(destinationFilePath, entry.getName()));
+      IOUtils.copy(in, out);
+      out.close();
+    }
+    in.close();
+  }
+  
+  public static void extractTarGz(File sourceFilePath, File destinationFilePath) throws IOException {
+    TarArchiveInputStream fin =
+        new TarArchiveInputStream(new GzipCompressorInputStream(new FileInputStream(sourceFilePath)));
+    TarArchiveEntry entry;
+    while ((entry = fin.getNextTarEntry()) != null) {
+      if (entry.isDirectory()) {
+        continue;
+      }
+      File curfile = new File(destinationFilePath + entry.getName());
+      File parent = curfile.getParentFile();
+      if (!parent.exists()) {
+        parent.mkdirs();
+      }
+      IOUtils.copy(fin, new FileOutputStream(curfile));
+    }
+    fin.close();
+  }
+  
   
   public static String getVersionString(String versionCmd) {
     StringBuilder builder = new StringBuilder();

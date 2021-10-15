@@ -11,7 +11,7 @@
     <artifactId>hopsworks</artifactId>
     <groupId>io.hops</groupId>
     <version>2.5.0-SNAPSHOT</version>
-    <relativePath>..</relativePath>
+    <relativePath>../pom.xml</relativePath>
   </parent>
 
   <groupId>io.hops.hopsworks</groupId>
@@ -24,7 +24,6 @@
     <dependency>
       <groupId>io.hops.hopsworks</groupId>
       <artifactId>hopsworks-persistence</artifactId>
-      <version>${project.version}</version>
       <exclusions>
         <!-- exclude all transitive dependencies -->
         <exclusion>
@@ -37,36 +36,19 @@
     <dependency>
       <groupId>io.hops.hopsworks</groupId>
       <artifactId>hopsworks-common</artifactId>
-      <version>${project.version}</version>
       <type>ejb</type>
       <scope>provided</scope>
-      <exclusions>
-        <exclusion>
-          <groupId>javax.servlet</groupId>
-          <artifactId>*</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>com.sun.jersey</groupId>
-          <artifactId>*</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>org.apache.flink</groupId>
-          <artifactId>*</artifactId>
-        </exclusion>
-      </exclusions>
     </dependency>
 
     <dependency>
       <groupId>io.hops.hopsworks</groupId>
       <artifactId>hopsworks-rest-utils</artifactId>
-      <version>${project.version}</version>
-      <scope>provided</scope>
     </dependency>
 
     <dependency>
       <groupId>io.hops.hopsworks</groupId>
       <artifactId>provenance-ee</artifactId>
-      <version>${project.version}</version>
+      <type>ejb</type>
       <scope>provided</scope>
         <!-- exclude all transitive dependencies -->
       <exclusions>
@@ -79,7 +61,7 @@
     <dependency>
       <groupId>io.hops.hopsworks</groupId>
       <artifactId>tags-ee</artifactId>
-      <version>${project.version}</version>
+      <type>ejb</type>
       <scope>provided</scope>
       <!-- exclude all transitive dependencies -->
       <exclusions>
@@ -93,33 +75,21 @@
     <dependency>
       <groupId>javax</groupId>
       <artifactId>javaee-web-api</artifactId>
-      <version>7.0</version>
-      <scope>provided</scope>
     </dependency>
 
     <dependency>
       <groupId>javax</groupId>
       <artifactId>javaee-api</artifactId>
-      <version>7.0</version>
-      <scope>provided</scope>
-    </dependency>
-
-    <dependency>
-      <groupId>commons-collections</groupId>
-      <artifactId>commons-collections</artifactId>
-      <version>3.2.2</version>
     </dependency>
 
     <dependency>
       <groupId>org.projectlombok</groupId>
       <artifactId>lombok</artifactId>
-      <version>1.18.6</version>
     </dependency>
 
     <dependency>
       <groupId>com.damnhandy</groupId>
       <artifactId>handy-uri-templates</artifactId>
-      <version>2.1.8</version>
     </dependency>
   </dependencies>
 
@@ -129,10 +99,6 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-ejb-plugin</artifactId>
-        <version>2.3</version>
-        <configuration>
-          <ejbVersion>3.1</ejbVersion>
-        </configuration>
       </plugin>
     </plugins>
   </build>

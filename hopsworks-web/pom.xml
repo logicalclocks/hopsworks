@@ -45,7 +45,7 @@
     <groupId>io.hops</groupId>
     <artifactId>hopsworks</artifactId>
     <version>2.5.0-SNAPSHOT</version>
-    <relativePath>..</relativePath>
+    <relativePath>../pom.xml</relativePath>
   </parent>
   
   <groupId>io.hops.hopsworks</groupId>
@@ -55,16 +55,10 @@
   <description>Hopsworks web app</description>
   <name>hopsworks-web</name>
 
-  <properties>
-    <maven.deploy.skip>true</maven.deploy.skip>
-  </properties>
-
   <dependencies>
     <dependency>
       <groupId>javax</groupId>
       <artifactId>javaee-web-api</artifactId>
-      <version>7.0</version>
-      <scope>provided</scope>
     </dependency>
   </dependencies>
 
@@ -89,8 +83,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-war-plugin</artifactId>
-        <version>2.6</version>
-        <configuration>
+        <configuration combine.self="override">
           <failOnMissingWebXml>false</failOnMissingWebXml>
           <webResources>
             <resource>
@@ -100,8 +93,8 @@
         </configuration>
       </plugin>
       <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-clean-plugin</artifactId>
-        <version>2.5</version>
         <configuration>
           <filesets>
             <fileset>
@@ -113,39 +106,10 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-compiler-plugin</artifactId>
-        <version>3.1</version>
-        <configuration>
-          <source>${java.version}</source>
-          <target>${java.version}</target>
-          <compilerArguments>
-            <endorseddirs>${endorsed.dir}</endorseddirs>
-          </compilerArguments>
-        </configuration>
       </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-dependency-plugin</artifactId>
-        <version>2.6</version>
-        <executions>
-          <execution>
-            <phase>validate</phase>
-            <goals>
-              <goal>copy</goal>
-            </goals>
-            <configuration>
-              <outputDirectory>${endorsed.dir}</outputDirectory>
-              <silent>true</silent>
-              <artifactItems>
-                <artifactItem>
-                  <groupId>javax</groupId>
-                  <artifactId>javaee-endorsed-api</artifactId>
-                  <version>7.0</version>
-                  <type>jar</type>
-                </artifactItem>
-              </artifactItems>
-            </configuration>
-          </execution>
-        </executions>
       </plugin>
     </plugins>
   </build>

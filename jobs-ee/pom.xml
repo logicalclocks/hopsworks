@@ -22,21 +22,34 @@
     <dependency>
       <groupId>io.hops.hopsworks</groupId>
       <artifactId>hopsworks-kube</artifactId>
-      <version>${project.version}</version>
+      <type>ejb</type>
       <scope>provided</scope>
     </dependency>
     <dependency>
       <groupId>io.hops.hopsworks</groupId>
       <artifactId>hopsworks-jwt</artifactId>
-      <version>${project.version}</version>
+      <type>ejb</type>
       <scope>provided</scope>
     </dependency>
     <dependency>
       <groupId>io.hops.hopsworks</groupId>
       <artifactId>hopsworks-alert</artifactId>
-      <version>${project.version}</version>
       <type>ejb</type>
       <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>io.hops.hopsworks</groupId>
+      <artifactId>hopsworks-common</artifactId>
+      <type>ejb</type>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>io.hops.hopsworks</groupId>
+      <artifactId>hopsworks-rest-utils</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>javax</groupId>
+      <artifactId>javaee-api</artifactId>
     </dependency>
   </dependencies>
 
@@ -46,10 +59,6 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-ejb-plugin</artifactId>
-        <version>2.3</version>
-        <configuration>
-          <ejbVersion>3.1</ejbVersion>
-        </configuration>
       </plugin>
     </plugins>
   </build>

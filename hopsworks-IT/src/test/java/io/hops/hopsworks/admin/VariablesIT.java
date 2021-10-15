@@ -15,20 +15,21 @@
  */
 package io.hops.hopsworks.admin;
 
-import static org.junit.Assert.assertEquals;
 import io.hops.hopsworks.WebDriverFactory;
 import io.hops.hopsworks.util.DBHelper;
 import io.hops.hopsworks.util.Helpers;
-import io.hops.hopsworks.util.models.User;
 import io.hops.hopsworks.util.helpers.LoginHelper;
+import io.hops.hopsworks.util.models.User;
 import org.junit.After;
-import static org.junit.Assert.fail;
 import org.junit.Before;
 import org.junit.Test;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.support.ui.ExpectedCondition;
 import org.openqa.selenium.support.ui.WebDriverWait;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 
 public class VariablesIT {
 
