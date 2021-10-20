@@ -29,7 +29,9 @@ angular.module('hopsWorksApp')
                 AuthService.oauthLogin(user).then(function (success) {
                     self.working = false;
                     AuthService.saveToken(success.headers('Authorization'));
-                    $cookies.put("email", success.data.data.value);
+                    if (success.data) {
+                        $cookies.put("email", success.data.data.value);
+                    }
                     $location.path('/');
                 }, function (error) {
                     if (error !== undefined && error.status === 412) {
@@ -43,7 +45,6 @@ angular.module('hopsWorksApp')
                                 user = {code: '', state: '', chosenEmail: '', consent: ''};
                                 $location.path('/login');
                             }
-                            console.log("success", success);
                         }, function (error) {
                             user = {code: '', state: '', chosenEmail: '', consent: ''};
                             $location.path('/login');
