@@ -1657,6 +1657,7 @@ describe "On #{ENV['OS']}" do
         expect(parsed_json.key?("features")).to be true
         expect(parsed_json.key?("featurestoreName")).to be true
         expect(parsed_json.key?("name")).to be true
+		expect(parsed_json.key?("location")).to be true
         expect(parsed_json["featurestoreName"] == project.projectname.downcase + "_featurestore").to be true
         expect(parsed_json["name"] == featuregroup_name).to be true
         expect(parsed_json["type"] == "onDemandFeaturegroupDTO").to be true
@@ -1681,6 +1682,7 @@ describe "On #{ENV['OS']}" do
         expect(parsed_json.key?("features")).to be true
         expect(parsed_json.key?("featurestoreName")).to be true
         expect(parsed_json.key?("name")).to be true
+		expect(parsed_json.key?("location")).to be true
         expect(parsed_json["featurestoreName"] == project.projectname.downcase + "_featurestore").to be true
         expect(parsed_json["name"] == featuregroup_name).to be true
         expect(parsed_json["type"] == "onDemandFeaturegroupDTO").to be true
@@ -1704,6 +1706,7 @@ describe "On #{ENV['OS']}" do
         expect(parsed_json.key?("features")).to be true
         expect(parsed_json.key?("featurestoreName")).to be true
         expect(parsed_json.key?("name")).to be true
+		expect(parsed_json.key?("location")).to be true
         expect(parsed_json["featurestoreName"] == project.projectname.downcase + "_featurestore").to be true
         expect(parsed_json["name"] == featuregroup_name).to be true
         expect(parsed_json["type"] == "onDemandFeaturegroupDTO").to be true
@@ -1749,6 +1752,7 @@ describe "On #{ENV['OS']}" do
                                                        data_format: "CSV")
         parsed_json = JSON.parse(json_result)
         expect_status(201)
+		expect(parsed_json.key?("location")).to be true
         expect(parsed_json["query"]).to eql("")
         expect(parsed_json["dataFormat"]).to eql("CSV")
       end
@@ -1788,6 +1792,7 @@ describe "On #{ENV['OS']}" do
                                                        options: options)
         parsed_json = JSON.parse(json_result)
         expect_status(201)
+		expect(parsed_json.key?("location")).to be true
         expect(parsed_json["query"]).to eql("")
         expect(parsed_json["dataFormat"]).to eql("CSV")
         expect(parsed_json["options"][0]["name"]).to eql("header")
@@ -1825,6 +1830,7 @@ describe "On #{ENV['OS']}" do
                                                                           featuregroup_desc: "new description")
         parsed_json2 = JSON.parse(json_result2)
         expect_status(200)
+		expect(parsed_json.key?("location")).to be true
         expect(parsed_json2["version"] == featuregroup_version).to be true
         expect(parsed_json2["description"] == "new description").to be true
       end
