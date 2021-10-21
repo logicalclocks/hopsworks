@@ -17,6 +17,7 @@
 package io.hops.hopsworks.common.featurestore.featuregroup;
 
 import com.google.common.base.Strings;
+import com.logicalclocks.servicediscoverclient.exceptions.ServiceDiscoveryException;
 import io.hops.hopsworks.common.featurestore.FeaturestoreFacade;
 import io.hops.hopsworks.common.featurestore.activity.FeaturestoreActivityFacade;
 import io.hops.hopsworks.common.featurestore.datavalidation.FeatureGroupExpectationFacade;
@@ -35,6 +36,7 @@ import io.hops.hopsworks.common.featurestore.statistics.columns.StatisticColumnC
 import io.hops.hopsworks.common.featurestore.storageconnectors.FeaturestoreStorageConnectorController;
 import io.hops.hopsworks.common.featurestore.storageconnectors.FeaturestoreStorageConnectorDTO;
 import io.hops.hopsworks.common.featurestore.utils.FeaturestoreInputValidation;
+import io.hops.hopsworks.common.featurestore.utils.FeaturestoreUtils;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.hdfs.DistributedFsService;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
@@ -126,6 +128,8 @@ public class FeaturegroupController {
   private FeatureStoreExpectationFacade featureStoreExpectationFacade;
   @EJB
   private FeatureGroupInputValidation featureGroupInputValidation;
+  @EJB
+  private FeaturestoreUtils featurestoreUtils;
 
   /**
    * Gets all featuregroups for a particular featurestore and project, using the userCerts to query Hive
@@ -303,7 +307,7 @@ public class FeaturegroupController {
    * @return a DTO representation of the entity
    */
   private FeaturegroupDTO convertFeaturegrouptoDTO(Featuregroup featuregroup, Project project, Users user)
-    throws FeaturestoreException, ServiceException {
+          throws FeaturestoreException, ServiceException {
     String featurestoreName = featurestoreFacade.getHiveDbName(featuregroup.getFeaturestore().getHiveDbId());
     switch (featuregroup.getFeaturegroupType()) {
       case CACHED_FEATURE_GROUP:
@@ -315,7 +319,18 @@ public class FeaturegroupController {
         FeaturestoreStorageConnectorDTO storageConnectorDTO =
             connectorController.convertToConnectorDTO(user, project,
                     featuregroup.getOnDemandFeaturegroup().getFeaturestoreConnector());
-        return new OnDemandFeaturegroupDTO(featurestoreName, featuregroup, storageConnectorDTO);
+
+        OnDemandFeaturegroupDTO onDemandFeaturegroupDTO =
+                new OnDemandFeaturegroupDTO(featurestoreName, featuregroup, storageConnectorDTO);
+
+        try {
+          String path = getFeatureGroupLocation(featuregroup);
+          String location = featurestoreUtils.prependNameNode(path);
+          onDemandFeaturegroupDTO.setLocation(location);
+        } catch (ServiceDiscoveryException e) {
+          throw new ServiceException(RESTCodes.ServiceErrorCode.SERVICE_NOT_FOUND, Level.SEVERE);
+        }
+        return onDemandFeaturegroupDTO;
       default:
         throw new IllegalArgumentException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_FEATUREGROUP_TYPE.getMessage()
             + ", Recognized Feature group types are: " + FeaturegroupType.ON_DEMAND_FEATURE_GROUP + ", and: " +

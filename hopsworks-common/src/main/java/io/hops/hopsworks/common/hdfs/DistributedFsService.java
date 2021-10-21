@@ -74,10 +74,12 @@ import io.hops.hopsworks.persistence.entity.hdfs.user.HdfsGroups;
 @Stateless
 public class DistributedFsService {
 
+  public static final String HOPSFS_SCHEME = "hopsfs://";
+
   private static final Logger logger = Logger.getLogger(
           DistributedFsService.class.
           getName());
-  
+
   @EJB
   private InodeController inodeController;
   @EJB

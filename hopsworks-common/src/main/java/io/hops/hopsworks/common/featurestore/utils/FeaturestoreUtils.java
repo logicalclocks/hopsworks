@@ -22,6 +22,7 @@ import com.logicalclocks.servicediscoverclient.exceptions.ServiceDiscoveryExcept
 import com.logicalclocks.servicediscoverclient.resolvers.Type;
 import com.logicalclocks.servicediscoverclient.service.Service;
 import com.logicalclocks.servicediscoverclient.service.ServiceQuery;
+import io.hops.hopsworks.common.hdfs.DistributedFsService;
 import io.hops.hopsworks.common.hosts.ServiceDiscoveryController;
 import io.hops.hopsworks.exceptions.ServiceException;
 import io.hops.hopsworks.persistence.entity.featurestore.Featurestore;
@@ -94,5 +95,16 @@ public class FeaturestoreUtils {
       throw new ServiceException(RESTCodes.ServiceErrorCode.SERVICE_NOT_FOUND, Level.SEVERE,
           "Service Discovery is enabled but could not resolve domain " + uri.getHost(), ex.getMessage(), ex);
     }
+  }
+
+  /**
+   * Prepend hdfs://namenode_ip:port to hdfs path
+   * @param hdfsPath
+   * @return HDFS path with namenode authority
+   */
+  public String prependNameNode(String hdfsPath) throws ServiceDiscoveryException {
+    Service namenode = serviceDiscoveryController
+            .getAnyAddressOfServiceWithDNS(ServiceDiscoveryController.HopsworksService.RPC_NAMENODE);
+    return DistributedFsService.HOPSFS_SCHEME + namenode.getName() + ":" + namenode.getPort() + hdfsPath;
   }
 }
