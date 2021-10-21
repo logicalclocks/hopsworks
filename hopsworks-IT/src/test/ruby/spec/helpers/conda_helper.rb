@@ -82,7 +82,7 @@ module CondaHelper
   end
 
   def upload_yml
-      copy_from_local("#{ENV['PROJECT_DIR']}/hopsworks-IT/src/test/ruby/spec/auxiliary/python3.7.yml",
+      copy_from_local("#{ENV['PROJECT_DIR']}/hopsworks-IT/src/test/ruby/spec/auxiliary/python#{ENV['PYTHON_VERSION']}.yml",
                     "/Projects/#{@project[:projectname]}/Resources/environment_cpu.yml", @user[:username],
                     "#{@project[:projectname]}__Resources", 750, "#{@project[:projectname]}")
   end

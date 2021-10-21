@@ -1140,7 +1140,7 @@ describe "On #{ENV['OS']}" do
         context 'with authentication', vm: true do
           before :all do
             with_valid_project
-            with_python_enabled(@project[:id], "3.7")
+            with_python_enabled(@project[:id], ENV['PYTHON_VERSION'])
 
             # Make Serving Dir
             mkdir("/Projects/#{@project[:projectname]}/Models/irisflowerclassifier/1", "#{@user[:username]}",

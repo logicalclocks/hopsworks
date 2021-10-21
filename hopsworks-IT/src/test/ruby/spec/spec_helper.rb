@@ -41,8 +41,6 @@ require 'hops-airborne'
 require 'byebug'
 require 'active_record'
 
-#require 'launchy'
-
 require 'dotenv'
 Dotenv.load
 

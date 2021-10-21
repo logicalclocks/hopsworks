@@ -86,7 +86,7 @@ module JobHelper
     # need to enable python for conversion .ipynb to .py works
     get "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/python/environments"
     if response.code == 404
-       post "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/python/environments/3.7?action=create"
+       post "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/python/environments/#{ENV['PYTHON_VERSION']}?action=create"
        expect_status_details(201)
     end
 
@@ -144,7 +144,7 @@ module JobHelper
     # need to enable python for conversion .ipynb to .py works
     get "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/python/environments"
     if response.code == 404
-      post "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/python/environments/3.7?action=create"
+      post "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/python/environments/#{ENV['PYTHON_VERSION']}?action=create"
       expect_status_details(201)
     end
 

@@ -25,32 +25,32 @@ describe "On #{ENV['OS']}" do
     end
 
     describe "run notebook that tests distributed training, hyperparameter search, feature store API, kafka utils
-              and TLS utils in hops-util-py using Python 3.7 environment" do
+              and TLS utils in hops-util-py using Python #{ENV['PYTHON_VERSION']} environment" do
 
-      context 'with valid project, featurestore service, python 3.7 enabled, and sample data in /Resources' do
+      context "with valid project, featurestore service, python #{ENV['PYTHON_VERSION']} enabled, and sample data in /Resources" do
         before :all do
           project = get_project
-          with_python_enabled(project.id, "3.7")
-          with_it_test_job(project, get_python_it_tests_job_name("3.7"),
+          with_python_enabled(project.id, ENV['PYTHON_VERSION'])
+          with_it_test_job(project, get_python_it_tests_job_name(ENV['PYTHON_VERSION']),
                            get_python_it_tests_project_dir(project.projectname) + get_python_it_tests_notebook_name, nil)
         end
 
         it "should be able to run the python tests" do
           project = get_project
           # Start job
-          start_execution(project.id, get_python_it_tests_job_name("3.7"))
+          start_execution(project.id, get_python_it_tests_job_name(ENV['PYTHON_VERSION']))
           expect_status(201)
           execution_id = json_body[:id]
 
           # Wait for execution to complete
           wait_for_me_time(4000) do
-            get_execution(project.id, get_python_it_tests_job_name("3.7"), execution_id)
+            get_execution(project.id, get_python_it_tests_job_name(ENV['PYTHON_VERSION']), execution_id)
             execution_dto = JSON.parse(response.body)
             { 'success' => (not is_execution_active(execution_dto)) }
           end
 
           # Check that the execution completed successfully
-          get_execution(project.id, get_python_it_tests_job_name("3.7"), execution_id)
+          get_execution(project.id, get_python_it_tests_job_name(ENV['PYTHON_VERSION']), execution_id)
           execution_dto = JSON.parse(response.body)
           expect(execution_dto["state"] == "FINISHED").to be true
           expect(execution_dto["finalStatus"] == "SUCCEEDED").to be true
