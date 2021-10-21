@@ -2,6 +2,6 @@ name: theenv
 channels:
   - defaults
 dependencies:
-  - dropbox=10.10.0=py37h06a4308_0
+  - dropbox=11.14.0
 prefix: /srv/hops/anaconda/envs/theenv
 

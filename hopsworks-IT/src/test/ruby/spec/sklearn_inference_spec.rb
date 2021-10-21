@@ -35,7 +35,7 @@ describe "On #{ENV['OS']}" do
       context 'without authentication', vm: true do
         before :all do
           with_valid_project
-          with_python_enabled(@project[:id], "3.7")
+          with_python_enabled(@project[:id], ENV['PYTHON_VERSION'])
           sleep(10)
           with_sklearn_serving(@project[:id], @project[:projectname], @user[:username])
           sleep(10)
@@ -56,7 +56,7 @@ describe "On #{ENV['OS']}" do
       context 'with authentication, python enabled and with sklearn serving', vm: true do
         before :all do
           with_valid_project
-          with_python_enabled(@project[:id], "3.7")
+          with_python_enabled(@project[:id], ENV['PYTHON_VERSION'])
           with_sklearn_serving(@project[:id], @project[:projectname], @user[:username])
         end
 
