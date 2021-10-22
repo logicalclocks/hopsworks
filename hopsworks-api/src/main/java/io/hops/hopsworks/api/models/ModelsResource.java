@@ -15,8 +15,10 @@
  */
 package io.hops.hopsworks.api.models;
 
+import com.google.common.base.Strings;
 import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.api.filter.Audience;
+import io.hops.hopsworks.api.filter.apiKey.ApiKeyRequired;
 import io.hops.hopsworks.api.jwt.JWTHelper;
 import io.hops.hopsworks.api.models.dto.ModelDTO;
 import io.hops.hopsworks.api.models.dto.ModelsEndpointDTO;
@@ -46,6 +48,7 @@ import io.hops.hopsworks.jwt.annotation.JWTRequired;
 import io.hops.hopsworks.persistence.entity.dataset.Dataset;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.user.Users;
+import io.hops.hopsworks.persistence.entity.user.security.apiKey.ApiScope;
 import io.hops.hopsworks.restutils.RESTCodes;
 import io.swagger.annotations.ApiOperation;
 
@@ -56,11 +59,13 @@ import javax.enterprise.context.RequestScoped;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.Consumes;
+import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
@@ -111,6 +116,7 @@ public class ModelsResource {
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
   @JWTRequired(acceptedTokens={Audience.API, Audience.JOB}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
+  @ApiKeyRequired( acceptedScopes = {ApiScope.MODELREGISTRY}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   public Response getAll(
     @BeanParam Pagination pagination,
     @BeanParam ModelsBeanParam modelsBeanParam,
@@ -122,6 +128,7 @@ public class ModelsResource {
     resourceRequest.setOffset(pagination.getOffset());
     resourceRequest.setLimit(pagination.getLimit());
     resourceRequest.setFilter(modelsBeanParam.getFilter());
+    resourceRequest.setExpansions(modelsBeanParam.getExpansions().getResources());
     resourceRequest.setSort(modelsBeanParam.getSortBySet());
     ModelDTO dto = modelsBuilder.build(uriInfo, resourceRequest, project, user);
     return Response.ok().entity(dto).build();
@@ -133,12 +140,15 @@ public class ModelsResource {
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   @JWTRequired(acceptedTokens={Audience.API, Audience.JOB}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
+  @ApiKeyRequired( acceptedScopes = {ApiScope.MODELREGISTRY}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   public Response get (
     @PathParam("id") String id,
+    @BeanParam ModelsBeanParam modelsBeanParam,
     @Context UriInfo uriInfo,
     @Context SecurityContext sc)
     throws ProvenanceException, ModelsException, DatasetException, GenericException {
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.MODELS);
+    resourceRequest.setExpansions(modelsBeanParam.getExpansions().getResources());
     ProvStateDTO fileState = modelsController.getModel(project, id);
     if(fileState != null) {
       Map<Long, ModelsEndpointDTO> endpoints = new HashMap<>();
@@ -154,6 +164,31 @@ public class ModelsResource {
     }
   }
 
+  @ApiOperation( value = "Delete a model")
+  @DELETE
+  @Path("{id}")
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
+  @JWTRequired(acceptedTokens={Audience.API, Audience.JOB}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
+  @ApiKeyRequired( acceptedScopes = {ApiScope.MODELREGISTRY}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
+  public Response delete (
+    @PathParam("id") String id,
+    @QueryParam("endpointId") Integer parentProjId,
+    @Context HttpServletRequest req,
+    @Context UriInfo uriInfo,
+    @Context SecurityContext sc) throws DatasetException, ProvenanceException, ModelsException {
+    Users hopsworksUser = jwtHelper.getUserPrincipal(sc);
+    ProvStateDTO fileState = modelsController.getModel(project, id);
+    if(fileState != null) {
+      if (parentProjId != null) {
+        Project parentProject = projectFacade.find(parentProjId);
+        modelsController.delete(hopsworksUser, project, parentProject, fileState);
+      } else {
+        modelsController.delete(hopsworksUser, project, fileState);
+      }
+    }
+    return Response.noContent().build();
+  }
+
   @ApiOperation( value = "Create or update a model", response = ModelDTO.class)
   @PUT
   @Path("{id}")
@@ -161,9 +196,12 @@ public class ModelsResource {
   @Consumes(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   @JWTRequired(acceptedTokens={Audience.API, Audience.JOB}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
+  @ApiKeyRequired( acceptedScopes = {ApiScope.MODELREGISTRY}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   public Response put (
     @PathParam("id") String id,
     ModelDTO modelDTO,
+    @QueryParam("jobName") String jobName,
+    @QueryParam("kernelId") String kernelId,
     @Context HttpServletRequest req,
     @Context UriInfo uriInfo,
     @Context SecurityContext sc)
@@ -172,17 +210,24 @@ public class ModelsResource {
     if (modelDTO == null) {
       throw new IllegalArgumentException("Model summary not provided");
     }
+    validateModelName(modelDTO);
     Users user = jwtHelper.getUserPrincipal(sc);
     Project modelProject = getModelsProjectAndCheckAccess(modelDTO);
     Project experimentProject = getExperimentProjectAndCheckAccess(modelDTO);
     ModelsController.Accessor accessor = getModelsAccessor(user, project, modelProject, experimentProject);
     try {
-      return createModel(uriInfo, accessor, id, modelDTO);
+      return createModel(uriInfo, accessor, id, modelDTO, jobName, kernelId);
     } finally {
       dfs.closeDfsClient(accessor.udfso);
     }
   }
-  
+
+  private void validateModelName(ModelDTO modelDTO) {
+    if(!modelDTO.getName().matches("[a-zA-Z0-9_]+")) {
+      throw new IllegalArgumentException("Model name must conform to regex: [a-zA-Z0-9_]+");
+    }
+  }
+
   private Project getModelsProjectAndCheckAccess(ModelDTO modelDTO)
     throws ProjectException, GenericException, DatasetException {
     Project modelProject;
@@ -236,14 +281,20 @@ public class ModelsResource {
     }
   }
   
-  private Response createModel(UriInfo uriInfo, ModelsController.Accessor accessor, String mlId, ModelDTO modelDTO)
+  private Response createModel(UriInfo uriInfo, ModelsController.Accessor accessor, String mlId, ModelDTO modelDTO,
+                               String jobName, String kernelId)
     throws DatasetException, ModelsException, MetadataException, JobException, ServiceException, PythonException {
     String realName = accessor.user.getFname() + " " + accessor.user.getLname();
-    modelDTO.setProgram(modelsController.versionProgram(accessor, modelDTO.getJobName(), modelDTO.getKernelId(),
-      modelDTO.getName(), modelDTO.getVersion()));
-    modelDTO.setEnvironment(environmentController.exportEnv(accessor.experimentProject, accessor.user,
-      Settings.HOPS_MODELS_DATASET + "/" + modelDTO.getName() + "/" + modelDTO.getVersion() +
-      "/" + Settings.ENVIRONMENT_FILE));
+
+    //Only attach program and environment if exporting inside Hopsworks
+    if(!Strings.isNullOrEmpty(jobName) || !Strings.isNullOrEmpty(kernelId)) {
+      modelDTO.setProgram(modelsController.versionProgram(accessor, jobName, kernelId,
+              modelDTO.getName(), modelDTO.getVersion()));
+      modelDTO.setEnvironment(environmentController.exportEnv(accessor.experimentProject, accessor.user,
+              Settings.HOPS_MODELS_DATASET + "/" + modelDTO.getName() + "/" + modelDTO.getVersion() +
+                      "/" + Settings.ENVIRONMENT_FILE));
+    }
+
     modelsController.attachModel(accessor.udfso, accessor.modelProject, realName, modelDTO);
     UriBuilder builder = uriInfo.getAbsolutePathBuilder().path(mlId);
     return Response.created(builder.build()).entity(modelDTO).build();

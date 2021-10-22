@@ -3,9 +3,15 @@
 # -*- coding: utf-8 -*-
 
 import os
-from hops import model
+import hsml
 
 model_path = os.getcwd() + '/model_python'
 if not os.path.exists(model_path):
     os.mkdir(model_path)
-model.export(model_path, "mnist_python")
+    
+connection = hsml.connection()
+mr = connection.get_model_registry()
+
+py_model = mr.python.create_model("mnist_python")
+
+ret = py_model.save(model_path)

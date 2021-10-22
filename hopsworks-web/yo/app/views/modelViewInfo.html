@@ -30,7 +30,7 @@
             <tbody>
             <tr>
                 <td>
-                 Model Name <i class="fa fa-info-circle" tooltip-placement="auto left"
+                 Name <i class="fa fa-info-circle" tooltip-placement="auto left"
                                  uib-tooltip="Name of the model"
                                  style="margin-left: 10px"></i>
                 </td>
@@ -38,27 +38,54 @@
             </tr>
             <tr>
                 <td>
-                    Model Version <i class="fa fa-info-circle" tooltip-placement="auto left"
+                    Version <i class="fa fa-info-circle" tooltip-placement="auto left"
                                   uib-tooltip="Version of the model"
                                   style="margin-left: 10px"></i>
                 </td>
                 <td>{{modelViewInfoCtrl.model.version}}</td>
             </tr>
-            <tr>
-                <td>Model Directory</td>
-                <td><a ng-click="modelViewInfoCtrl.goToModelVersion()">Models/{{modelViewInfoCtrl.model.name}}/{{modelViewInfoCtrl.model.version}}</a></td>
+            <tr ng-if="modelViewInfoCtrl.model.framework">
+                <td>
+                    Framework <i class="fa fa-info-circle" tooltip-placement="auto left"
+                                     uib-tooltip="Framework of the model"
+                                     style="margin-left: 10px"></i>
+                </td>
+                <td>{{modelViewInfoCtrl.model.framework}}</td>
+            </tr>
+            <tr ng-if="modelViewInfoCtrl.model.description">
+                <td>
+                    Description <i class="fa fa-info-circle" tooltip-placement="auto left"
+                                     uib-tooltip="Description of the model"
+                                     style="margin-left: 10px"></i>
+                </td>
+                <td>{{modelViewInfoCtrl.model.description}}</td>
             </tr>
             <tr>
+                <td>Directory <i class="fa fa-info-circle" tooltip-placement="auto left"
+                                 uib-tooltip="Directory containing all the files exported for this model"
+                                 style="margin-left: 10px"></i>
+                </td>
+                <td><a ng-click="modelViewInfoCtrl.goToModelVersion()">Models/{{modelViewInfoCtrl.model.name}}/{{modelViewInfoCtrl.model.version}}</a></td>
+            </tr>
+            <tr ng-if="modelViewInfoCtrl.model.experimentId">
                 <td>Experiment</td>
                 <td><a ng-click="modelViewInfoCtrl.goToExperiment()">Experiments/{{modelViewInfoCtrl.model.experimentId}}</a></td>
             </tr>
-            <tr ng-if = "modelViewInfoCtrl.hasTDSource()">
+            <tr ng-if="modelViewInfoCtrl.model.projectName">
+                <td>
+                    Source Project<i class="fa fa-info-circle" tooltip-placement="auto left"
+                                     uib-tooltip="Project the model is exported to"
+                                     style="margin-left: 10px"></i>
+                </td>
+                <td>{{modelViewInfoCtrl.model.projectName}}</td>
+            </tr>
+            <tr ng-if = "modelViewInfoCtrl.model.trainingDataset">
                 <td>
                     Source Training Dataset
                     <i class="fa fa-info-circle" tooltip-placement="auto left"
                        uib-tooltip="Training Dataset used to generate this Model. Format: <project_name> : <training dataset name> : <training dataset version>" style="margin-left: 10px"></i>
                 </td>
-                <td><a ng-click="modelViewInfoCtrl.goToTrainingDataset(modelViewInfoCtrl.tdLink)">{{modelViewInfoCtrl.tdLink.projName}} : {{modelViewInfoCtrl.tdLink.name}} : {{modelViewInfoCtrl.tdLink.version}}</a></td>
+                <td><a ng-click="modelViewInfoCtrl.goToTrainingDataset(modelViewInfoCtrl.model.trainingDataset)">{{modelViewInfoCtrl.model.trainingDataset}}</a></td>
             </tr>
             </tbody>
         </table>

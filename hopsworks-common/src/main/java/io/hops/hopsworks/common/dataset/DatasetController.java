@@ -49,6 +49,7 @@ import io.hops.hopsworks.common.dao.log.operation.OperationsLogFacade;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
 import io.hops.hopsworks.common.dao.project.team.ProjectTeamFacade;
 import io.hops.hopsworks.common.dao.user.activity.ActivityFacade;
+import io.hops.hopsworks.common.dataset.util.CompressionInfo;
 import io.hops.hopsworks.common.featurestore.FeaturestoreConstants;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.hdfs.DistributedFsService;
@@ -84,7 +85,6 @@ import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.persistence.entity.user.activity.ActivityFlag;
 import io.hops.hopsworks.restutils.RESTCodes;
 import org.apache.commons.codec.binary.Base64;
-import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileStatus;
@@ -710,22 +710,28 @@ public class DatasetController {
         "path: " + filePath.toString());
     }
   }
-
-  public void unzip(Project project, Users user, Path path) throws DatasetException {
+  
+  public void unzip(Project project, Users user, Path path, Path destPath) throws DatasetException {
     String hdfsUser = hdfsUsersController.getHdfsUserName(project, user);
     checkFileExists(path, hdfsUser);
-    String localDir = DigestUtils.sha256Hex(path.toString());
-    String stagingDir = settings.getStagingDir() + File.separator + localDir;
-
+    CompressionInfo compressionInfo = new CompressionInfo(path, destPath);
+    String stagingDir = settings.getStagingDir() + File.separator + compressionInfo.getStagingDirectory();
+    
     File unzipDir = new File(stagingDir);
     unzipDir.mkdirs();
-    settings.addUnzippingState(path.toString());
-
-    ProcessDescriptor processDescriptor = new ProcessDescriptor.Builder()
+    settings.addUnzippingState(compressionInfo);
+    
+    ProcessDescriptor.Builder processDescriptorBuilder = new ProcessDescriptor.Builder()
       .addCommand(settings.getHopsworksDomainDir() + "/bin/unzip-background.sh")
       .addCommand(stagingDir)
       .addCommand(path.toString())
-      .addCommand(hdfsUser)
+      .addCommand(hdfsUser);
+
+    if (destPath != null) {
+      processDescriptorBuilder.addCommand(destPath.toString());
+    }
+
+    ProcessDescriptor processDescriptor = processDescriptorBuilder
       .ignoreOutErrStreams(true)
       .build();
 
@@ -744,21 +750,17 @@ public class DatasetController {
         "path: " + path.toString(), ex.getMessage(), ex);
     }
   }
-
-  public void zip(Project project, Users user, Path path) throws DatasetException {
-    zip(project, user, path, null);
-  }
-
+  
   public void zip(Project project, Users user, Path path, Path destPath) throws DatasetException {
     String hdfsUser = hdfsUsersController.getHdfsUserName(project, user);
     checkFileExists(path, hdfsUser);
-    String localDir = DigestUtils.sha256Hex(path.toString());
-    String stagingDir = settings.getStagingDir() + File.separator + localDir;
-
+    CompressionInfo compressionInfo = new CompressionInfo(path, destPath);
+    String stagingDir = settings.getStagingDir() + File.separator + compressionInfo.getStagingDirectory();
+    
     File zipDir = new File(stagingDir);
     zipDir.mkdirs();
-    settings.addZippingState(path.toString());
-
+    settings.addZippingState(compressionInfo);
+    
     ProcessDescriptor.Builder processDescriptorBuilder = new ProcessDescriptor.Builder()
       .addCommand(settings.getHopsworksDomainDir() + "/bin/zip-background.sh")
       .addCommand(stagingDir)

@@ -26,8 +26,11 @@ if arguments >= 3 :
 
 def wrapper():
     import random
-    from hops import model
-    model.export(model_path, model_name, metrics={'acc': random.randrange(10000)}, project=model_proj_name)
+    import hsml
+    connection = hsml.connection()
+    mr = connection.get_model_registry(project=model_proj_name)
+    model = mr.python.create_model(model_name, metrics={'acc': random.randrange(10000)})
+    model.save(model_path)
 
 from hops import experiment
 experiment.launch(wrapper)

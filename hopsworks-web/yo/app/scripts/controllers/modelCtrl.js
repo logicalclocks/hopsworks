@@ -69,6 +69,8 @@ angular.module('hopsWorksApp')
 
             self.mostRecent = {};
 
+            self.deleted = {}
+
             var startLoading = function(label) {
                 self.loading = true;
                 self.loadingText = label;
@@ -112,7 +114,7 @@ angular.module('hopsWorksApp')
             }
 
             self.buildQuery = function() {
-                self.query = '';
+                self.query = '&expand=trainingdatasets';
                 if(self.modelsNameFilter !== '') {
                     self.query = self.query + '&filter_by=name_like:' + self.modelsNameFilter;
                 }
@@ -157,6 +159,14 @@ angular.module('hopsWorksApp')
                         self.mostRecent = {};
                         self.selectedModel = {};
                         if(success.data.items) {
+                            //Remove entries under deletion
+                            for(var i = 0; success.data.items.length > i; i++) {
+                              if(success.data.items[i].id in self.deleted) {
+                                 success.data.items.splice(i, 1);
+                                 success.data.count = success.data.count - 1;
+                              }
+                            }
+
                             self.groupModelsByName(success.data.items);
                             self.initSortType();
                             self.initTable();
@@ -201,11 +211,40 @@ angular.module('hopsWorksApp')
                     }
                 });
 
+                ModalService.viewModelInfo('lg', self.projectId, selectedModel).then(
+                   function (success) {},
+                   function (error) {}
+                );
+            };
 
-                 ModalService.viewModelInfo('lg', self.projectId, selectedModel).then(
-                            function (success) {},
-                            function (error) {}
-                            );
+            self.deleteModel = function (modelName, modelVersion) {
+                ModalService.confirm('sm', 'Delete Model version?',
+                    'WARNING: This will permanently remove the model from this view and associated files. This action can not be undone.')
+                    .then(function (success) {
+                        var selectedModel;
+                        var modelVersions = self.models[modelName];
+                        self.models.forEach(function (model) {
+                            if(model.name === modelName) {
+                                model.versions.forEach(function (model) {
+                                    if(model.version === modelVersion) {
+                                        selectedModel = model;
+                                        startLoading("Deleting Model...");
+                                        ModelService.deleteModel(self.projectId, selectedModel.id).then(
+                                           function (success) {
+                                             stopLoading();
+                                             self.deleted[selectedModel.id] = true;
+                                             self.getAll();
+                                           },
+                                           function (error) {
+                                             stopLoading();
+                                           }
+                                       );
+                                    }
+                                });
+                            }
+                        });
+                    }, function (error) {
+                    });
             };
 
             self.initSortType = function() {

@@ -1,6 +1,6 @@
 /*
  * This file is part of Hopsworks
- * Copyright (C) 2019, Logical Clocks AB. All rights reserved
+ * Copyright (C) 2021, Logical Clocks AB. All rights reserved
  *
  * Hopsworks is free software: you can redistribute it and/or modify it under the terms of
  * the GNU Affero General Public License as published by the Free Software Foundation,
@@ -18,6 +18,7 @@ package io.hops.hopsworks.api.models;
 
 import io.swagger.annotations.ApiParam;
 
+import javax.ws.rs.BeanParam;
 import javax.ws.rs.QueryParam;
 import java.util.LinkedHashSet;
 import java.util.Set;
@@ -30,8 +31,12 @@ public class ModelsBeanParam {
   private final Set<SortBy> sortBySet;
   @QueryParam("filter_by")
   @ApiParam(value = "ex. filter_by=name_eq:mnist&filter_by:version:1",
+      allowableValues = "name_eq:mnist, name_like:mnist, version:1, id_eq:mnist_1, user:1234, user_project:1234, " +
+              "endpoint_id:1234",
       allowMultiple = true)
   private Set<FilterBy> filter;
+  @BeanParam
+  private ExpansionBeanParam expansions;
 
   private Set<SortBy> getSortBy(String param) {
     if (param == null || param.isEmpty()) {
@@ -73,5 +78,13 @@ public class ModelsBeanParam {
 
   public Set<SortBy> getSortBySet() {
     return sortBySet;
+  }
+
+  public ExpansionBeanParam getExpansions() {
+    return expansions;
+  }
+
+  public void setExpansions(ExpansionBeanParam expansions) {
+    this.expansions = expansions;
   }
 }

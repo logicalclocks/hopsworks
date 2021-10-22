@@ -19,8 +19,8 @@
  */
 angular.module('hopsWorksApp')
     .controller('modelViewInfoCtrl', ['$uibModalInstance', '$scope', '$location', '$window', 'ProjectService',
-        'StorageService', 'ProvenanceService', 'FeaturestoreService', 'growl', 'projectId', 'model',
-        function ($uibModalInstance, $scope, $location, $window, ProjectService, StorageService, ProvenanceService, FeaturestoreService, growl, projectId, model) {
+        'StorageService', 'FeaturestoreService', 'growl', 'projectId', 'model',
+        function ($uibModalInstance, $scope, $location, $window, ProjectService, StorageService, FeaturestoreService, growl, projectId, model) {
 
             /**
              * Initialize controller state
@@ -63,26 +63,22 @@ angular.module('hopsWorksApp')
                     }, self.errorPrint);
             };
 
-            self.getInArtifacts = function(name, version, inType, outType, linkInfoFunc, link) {
-                ProvenanceService.getAppLinks(self.projectId, {outArtifactName: name, outArtifactVersion: version, inArtifactType: inType, outArtifactType: outType}).then(
-                    function(success) {
-                        if(success.data.items !== undefined && success.data.items.length === 1) {
-                            if(success.data.items[0].in.entry.length === 1) {
-                                var versionSplitIndex = success.data.items[0].in.entry[0].value.mlId.lastIndexOf('_');
-                                link.name = success.data.items[0].in.entry[0].value.mlId.substring(0, versionSplitIndex);
-                                link.version = parseInt(success.data.items[0].in.entry[0].value.mlId.substring(versionSplitIndex+1));
-                                link.projName = success.data.items[0].in.entry[0].value.projectName;
-                                link.appId = success.data.items[0].in.entry[0].value.appId;
-                                linkInfoFunc(link);
-                            }
-                        }
-                    }, self.errorPrint);
+            self.setTDLink = function(modelTD, linkInfoFunc, link) {
+                console.log(modelTD);
+                var modelTDSplit = modelTD.split(':');
+                console.log(modelTDSplit);
+                link.projName = modelTDSplit[0];
+                link.name = modelTDSplit[1];
+                link.version = modelTDSplit[2];
+                linkInfoFunc(link);
             };
 
-            var getSourceTDLinks = function (name, version) {
+            var getSourceTDLinks = function (modelTD) {
                 self.tdLink = {};
                 /** td <- app <- model */
-                self.getInArtifacts(name, version, 'TRAINING_DATASET', 'MODEL', self.getLinkInfo, self.tdLink);
+                if(modelTD) {
+                    self.setTDLink(modelTD, self.getLinkInfo, self.tdLink);
+                }
             };
 
             self.goToExperiment = function () {
@@ -112,6 +108,6 @@ angular.module('hopsWorksApp')
                 $uibModalInstance.dismiss('cancel');
             };
 
-            getSourceTDLinks(model.name, model.version);
+            getSourceTDLinks(model.trainingDataset);
         }]);
 

@@ -19,6 +19,8 @@ package io.hops.hopsworks.api.models;
 import io.hops.hopsworks.api.models.dto.ModelDTO;
 import io.hops.hopsworks.api.models.dto.ModelsEndpointDTO;
 import io.hops.hopsworks.common.dataset.DatasetController;
+import io.hops.hopsworks.common.dataset.util.DatasetHelper;
+import io.hops.hopsworks.common.dataset.util.DatasetPath;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.hdfs.Utils;
 import io.hops.hopsworks.common.hdfs.xattrs.XAttrsController;
@@ -38,12 +40,14 @@ import io.hops.hopsworks.exceptions.ProvenanceException;
 import io.hops.hopsworks.exceptions.ServiceException;
 import io.hops.hopsworks.persistence.entity.dataset.Dataset;
 import io.hops.hopsworks.persistence.entity.jobs.configuration.python.PythonJobConfiguration;
+import io.hops.hopsworks.persistence.entity.dataset.DatasetType;
 import io.hops.hopsworks.persistence.entity.jobs.configuration.spark.SparkJobConfiguration;
 import io.hops.hopsworks.persistence.entity.jobs.description.Jobs;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.user.Users;
 import org.apache.hadoop.fs.Path;
 import org.apache.parquet.Strings;
+import org.json.JSONObject;
 
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
@@ -53,6 +57,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
+
+import static io.hops.hopsworks.api.models.ModelsBuilder.MODEL_SUMMARY_XATTR_NAME;
 
 @Stateless
 @TransactionAttribute(TransactionAttributeType.NEVER)
@@ -72,6 +78,8 @@ public class ModelsController {
   private DatasetController datasetController;
   @EJB
   private ModelConverter modelConverter;
+  @EJB
+  private DatasetHelper datasetHelper;
   
   public void attachModel(DistributedFileSystemOps udfso, Project modelProject, String userFullName,
     ModelDTO modelDTO)
@@ -83,7 +91,7 @@ public class ModelsController {
       modelDTO.getName() + "/" + modelDTO.getVersion();
     
     byte[] modelSummaryB = modelConverter.marshalDescription(modelDTO);
-    xattrCtrl.upsertProvXAttr(udfso, modelPath, ModelsBuilder.MODEL_SUMMARY_XATTR_NAME, modelSummaryB);
+    xattrCtrl.upsertProvXAttr(udfso, modelPath, MODEL_SUMMARY_XATTR_NAME, modelSummaryB);
   }
 
   public ProvStateDTO getModel(Project project, String mlId) throws ProvenanceException {
@@ -100,6 +108,34 @@ public class ModelsController {
       }
     }
     return null;
+  }
+
+  public void delete(Users user, Project userProject, Project parentProject, ProvStateDTO fileState)
+    throws DatasetException, ModelsException {
+    if(userProject.getId().equals(parentProject.getId())) {
+      delete(user, userProject, fileState);
+    } else {
+      JSONObject summary = new JSONObject(fileState.getXattrs().get(MODEL_SUMMARY_XATTR_NAME));
+      ModelDTO modelSummary = modelConverter.unmarshalDescription(summary.toString());
+      String modelPath = Utils.getProjectPath(userProject.getName())
+        + parentProject.getName() + "::" + Settings.HOPS_MODELS_DATASET + "/" + modelSummary.getName()
+        + "/" + modelSummary.getVersion();
+      deleteInternal(user, userProject, modelPath);
+    }
+  }
+
+  public void delete(Users user, Project project, ProvStateDTO fileState) throws DatasetException, ModelsException {
+    JSONObject summary = new JSONObject(fileState.getXattrs().get(MODEL_SUMMARY_XATTR_NAME));
+    ModelDTO modelSummary = modelConverter.unmarshalDescription(summary.toString());
+    String modelPath = Utils.getProjectPath(project.getName())
+      + Settings.HOPS_MODELS_DATASET + "/" + modelSummary.getName() + "/" + modelSummary.getVersion();
+    deleteInternal(user, project, modelPath);
+  }
+
+  private void deleteInternal(Users user, Project project, String path) throws DatasetException {
+    DatasetPath datasetPath = datasetHelper.getDatasetPath(project, path, DatasetType.DATASET);
+    datasetController.delete(project, user, datasetPath.getFullPath(), datasetPath.getDataset(),
+      datasetPath.isTopLevelDataset());
   }
   
   public String versionProgram(Accessor accessor, String jobName, String kernelId, String modelName, int modelVersion)

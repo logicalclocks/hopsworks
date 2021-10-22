@@ -39,7 +39,7 @@ def keras_mnist():
 
     from hops import tensorboard
 
-    from hops import model as hops_model
+    import hsml
     from hops import hdfs
 
     batch_size=32
@@ -120,7 +120,11 @@ def keras_mnist():
 
     metrics = {'accuracy': score[1]}
 
-    hops_model.export(export_path, model_name, metrics=metrics, project=model_proj_name)
+    connection = hsml.connection(project=model_proj_name)
+    mr = connection.get_model_registry()
+
+    model_obj = mr.tensorflow.create_model(model_name, metrics=metrics)
+    model_obj.save(export_path)
 
     return metrics
 

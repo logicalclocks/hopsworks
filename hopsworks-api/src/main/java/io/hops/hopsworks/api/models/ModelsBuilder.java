@@ -23,6 +23,12 @@ import io.hops.hopsworks.common.dao.hdfsUser.HdfsUsersFacade;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
 import io.hops.hopsworks.common.dao.project.team.ProjectTeamFacade;
 import io.hops.hopsworks.common.dao.user.UserFacade;
+import io.hops.hopsworks.common.provenance.core.ProvParser;
+import io.hops.hopsworks.common.provenance.ops.ProvLinks;
+import io.hops.hopsworks.common.provenance.ops.ProvLinksParamBuilder;
+import io.hops.hopsworks.common.provenance.ops.ProvOpsControllerIface;
+import io.hops.hopsworks.common.provenance.ops.dto.ProvLinksDTO;
+import io.hops.hopsworks.common.provenance.ops.dto.ProvOpsDTO;
 import io.hops.hopsworks.common.util.AccessController;
 import io.hops.hopsworks.common.dataset.DatasetController;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
@@ -52,12 +58,15 @@ import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
+import javax.inject.Inject;
 import javax.ws.rs.core.UriBuilder;
 import javax.ws.rs.core.UriInfo;
 import java.util.EnumSet;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -91,6 +100,8 @@ public class ModelsBuilder {
   private DatasetController datasetCtrl;
   @EJB
   private ModelsController modelsController;
+  @Inject
+  private ProvOpsControllerIface provOpsController;
   
   public ModelDTO uri(ModelDTO dto, UriInfo uriInfo, Project project) {
     dto.setHref(uriInfo.getBaseUriBuilder().path(ResourceRequest.Name.PROJECT.toString().toLowerCase())
@@ -174,7 +185,7 @@ public class ModelsBuilder {
   //Build specific
   public ModelDTO build(UriInfo uriInfo, ResourceRequest resourceRequest, Project project,
     Map<Long, ModelsEndpointDTO> endpoints, ProvStateDTO fileProvenanceHit)
-    throws ModelsException, GenericException {
+    throws ModelsException, GenericException, ProvenanceException {
     
     ModelDTO modelDTO = new ModelDTO();
     ModelsEndpointDTO endpoint = endpoints.get(fileProvenanceHit.getProjectInodeId());
@@ -196,9 +207,55 @@ public class ModelsBuilder {
         modelDTO.setMetrics(modelSummary.getMetrics());
         modelDTO.setDescription(modelSummary.getDescription());
         modelDTO.setProgram(modelSummary.getProgram());
+        modelDTO.setInputExample(modelSummary.getInputExample());
+        modelDTO.setFramework(modelSummary.getFramework());
+        modelDTO.setSignature(modelSummary.getSignature());
         modelDTO.setEnvironment(modelSummary.getEnvironment());
         modelDTO.setExperimentId(modelSummary.getExperimentId());
         modelDTO.setExperimentProjectName(modelSummary.getExperimentProjectName());
+        modelDTO.setProjectName(modelSummary.getProjectName());
+        /**
+         * If request is to expand training dataset, query the provenance API to find the first Training Dataset linked
+         * with the model
+         */
+        if(resourceRequest.contains(ResourceRequest.Name.TRAININGDATASETS)) {
+          if(modelSummary.getTrainingDataset() != null) {
+            modelDTO.setTrainingDataset(modelSummary.getTrainingDataset());
+          }
+          Set<String> filterByFields = new HashSet<>();
+          filterByFields.add(ProvLinks.FieldsPF.OUT_ARTIFACT.name() + ":" + modelSummary.getId());
+          filterByFields.add(ProvLinks.FieldsPF.IN_TYPE.name() + ":" + ProvParser.DocSubType.TRAINING_DATASET.name());
+          filterByFields.add(ProvLinks.FieldsPF.OUT_TYPE.name() + ":" + ProvParser.DocSubType.MODEL.name());
+
+          ProvLinksParamBuilder provLinksParamBuilder = new ProvLinksParamBuilder()
+            .linkType(true)
+            .onlyApps(true)
+            .filterByFields(filterByFields);
+          ProvLinksDTO dto = provOpsController.provLinks(project, provLinksParamBuilder, true);
+          if(dto != null) {
+            List<ProvLinksDTO> provLinksDTOList = dto.getItems();
+            if (provLinksDTOList != null && !provLinksDTOList.isEmpty()) {
+              Map<String, ProvOpsDTO> inLinks = dto.getItems().get(0).getIn();
+              if (inLinks != null && !inLinks.isEmpty()) {
+                Set<Map.Entry<String, ProvOpsDTO>> inLinksSets = inLinks.entrySet();
+
+                Optional<Map.Entry<String, ProvOpsDTO>> modelTrainingDataset =
+                  inLinksSets.stream().findFirst().filter(x ->
+                    x.getValue().getDocSubType().equals(ProvParser.DocSubType.TRAINING_DATASET));
+
+                //Set training dataset as format project:td_name:td_version
+                if (modelTrainingDataset.isPresent()) {
+                  String projectName = modelTrainingDataset.get().getValue().getProjectName();
+                  String mlId = modelTrainingDataset.get().getValue().getMlId();
+                  int tdNameVersionSeparatorIndex = mlId.lastIndexOf("_");
+                  StringBuilder mlIdSb = new StringBuilder(mlId);
+                  mlIdSb.replace(tdNameVersionSeparatorIndex, tdNameVersionSeparatorIndex + 1, ":");
+                  modelDTO.setTrainingDataset(projectName + ":" + mlIdSb);
+                }
+              }
+            }
+          }
+        }
       }
     }
     return modelDTO;

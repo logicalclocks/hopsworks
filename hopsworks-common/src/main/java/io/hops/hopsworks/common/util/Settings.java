@@ -41,6 +41,7 @@ package io.hops.hopsworks.common.util;
 import com.google.common.base.Splitter;
 import com.google.common.base.Strings;
 import io.hops.hopsworks.common.dao.user.UserFacade;
+import io.hops.hopsworks.common.dataset.util.CompressionInfo;
 import io.hops.hopsworks.common.dela.AddressJSON;
 import io.hops.hopsworks.common.dela.DelaClientType;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
@@ -52,7 +53,6 @@ import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.persistence.entity.util.Variables;
 import io.hops.hopsworks.persistence.entity.util.VariablesVisibility;
 import io.hops.hopsworks.restutils.RESTLogLevel;
-import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.yarn.conf.YarnConfiguration;
@@ -2295,15 +2295,15 @@ public class Settings implements Serializable {
 
   // For performance reasons, we have an in-memory cache of files being unzipped
   // Lazily remove them from the cache, when we check the FS and they aren't there.
-  private Set<String> zippingFiles = new HashSet<>();
+  private Set<CompressionInfo> zippingFiles = new HashSet<>();
 
-  public synchronized void addZippingState(String hdfsPath) {
-    zippingFiles.add(hdfsPath);
+  public synchronized void addZippingState(CompressionInfo compressionInfo) {
+    zippingFiles.add(compressionInfo);
   }
-  private Set<String> unzippingFiles = new HashSet<>();
+  private Set<CompressionInfo> unzippingFiles = new HashSet<>();
 
-  public synchronized void addUnzippingState(String hdfsPath) {
-    unzippingFiles.add(hdfsPath);
+  public synchronized void addUnzippingState(CompressionInfo compressionInfo) {
+    unzippingFiles.add(compressionInfo);
   }
 
   public synchronized String getZipState(String hdfsPath) {
@@ -2311,30 +2311,42 @@ public class Settings implements Serializable {
     boolean zipOperation = false;
     boolean unzipOperation = false;
 
-    if (zippingFiles.contains(hdfsPath)) {
+    CompressionInfo zipInfo = zippingFiles.stream()
+      .filter(zinfo -> zinfo.getHdfsPath().toString().equals(hdfsPath))
+      .findAny()
+      .orElse(null);
+
+    CompressionInfo unzipInfo = unzippingFiles.stream()
+      .filter(uzinfo -> uzinfo.getHdfsPath().toString().equals(hdfsPath))
+      .findAny()
+      .orElse(null);
+
+    String compressionDir = null;
+    String fsmPath = null;
+    if(zipInfo != null) {
+      compressionDir = getStagingDir() + File.separator + zipInfo.getStagingDirectory();
+      fsmPath = compressionDir + "/fsm.txt";
       zipOperation = true;
-    } else if (unzippingFiles.contains(hdfsPath)) {
+    } else if(unzipInfo != null) {
+      compressionDir = getStagingDir() + File.separator + unzipInfo.getStagingDirectory();
+      fsmPath = compressionDir + "/fsm.txt";
       unzipOperation = true;
     } else {
       return "NONE";
     }
 
-    String hashedPath = DigestUtils.sha256Hex(hdfsPath);
-    String fsmPath = getStagingDir() + File.separator + hashedPath + "/fsm.txt";
     String state = "NOT_FOUND";
     try {
       state = new String(java.nio.file.Files.readAllBytes(Paths.get(fsmPath)));
       state = state.trim();
     } catch (IOException ex) {
-
-      String stagingDir = getStagingDir() + File.separator + hashedPath;
-      if (!java.nio.file.Files.exists(Paths.get(stagingDir))) {
+      if (!java.nio.file.Files.exists(Paths.get(compressionDir))) {
         state = "NONE";
         // lazily remove the file, probably because it has finished zipping/unzipping
         if (zipOperation) {
-          zippingFiles.remove(hdfsPath);
+          zippingFiles.remove(zipInfo);
         } else if (unzipOperation) {
-          unzippingFiles.remove(hdfsPath);
+          unzippingFiles.remove(unzipInfo);
         }
       }
     }
@@ -2342,9 +2354,9 @@ public class Settings implements Serializable {
     if (state.isEmpty() || state.compareTo("FAILED") == 0 || state.compareTo("SUCCESS") == 0) {
       try {
         if (zipOperation) {
-          zippingFiles.remove(hdfsPath);
+          zippingFiles.remove(zipInfo);
         } else if (unzipOperation) {
-          unzippingFiles.remove(hdfsPath);
+          unzippingFiles.remove(unzipInfo);
         }
         java.nio.file.Files.deleteIfExists(Paths.get(fsmPath));
       } catch (IOException ex) {
