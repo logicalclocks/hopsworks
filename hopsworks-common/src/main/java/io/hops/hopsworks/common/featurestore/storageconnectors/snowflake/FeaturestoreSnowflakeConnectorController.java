@@ -88,13 +88,13 @@ public class FeaturestoreSnowflakeConnectorController {
   
   private void setConnector(FeaturestoreSnowflakeConnector snowflakeConnector, Secret secret,
       FeaturestoreSnowflakeConnectorDTO featurestoreSnowflakeConnectorDTO) {
-    snowflakeConnector.setUrl(featurestoreSnowflakeConnectorDTO.getUrl());
-    snowflakeConnector.setDatabaseUser(featurestoreSnowflakeConnectorDTO.getUser());
-    snowflakeConnector.setDatabaseName(featurestoreSnowflakeConnectorDTO.getDatabase());
-    snowflakeConnector.setDatabaseSchema(featurestoreSnowflakeConnectorDTO.getSchema());
-    snowflakeConnector.setTableName(featurestoreSnowflakeConnectorDTO.getTable());
-    snowflakeConnector.setRole(featurestoreSnowflakeConnectorDTO.getRole());
-    snowflakeConnector.setWarehouse(featurestoreSnowflakeConnectorDTO.getWarehouse());
+    snowflakeConnector.setUrl(getValueOrNull(featurestoreSnowflakeConnectorDTO.getUrl()));
+    snowflakeConnector.setDatabaseUser(getValueOrNull(featurestoreSnowflakeConnectorDTO.getUser()));
+    snowflakeConnector.setDatabaseName(getValueOrNull(featurestoreSnowflakeConnectorDTO.getDatabase()));
+    snowflakeConnector.setDatabaseSchema(getValueOrNull(featurestoreSnowflakeConnectorDTO.getSchema()));
+    snowflakeConnector.setTableName(getValueOrNull(featurestoreSnowflakeConnectorDTO.getTable()));
+    snowflakeConnector.setRole(getValueOrNull(featurestoreSnowflakeConnectorDTO.getRole()));
+    snowflakeConnector.setWarehouse(getValueOrNull(featurestoreSnowflakeConnectorDTO.getWarehouse()));
     snowflakeConnector.setArguments(fromOptions(featurestoreSnowflakeConnectorDTO.getSfOptions()));
     snowflakeConnector.setApplication(featurestoreSnowflakeConnectorDTO.getApplication());
     if (!Strings.isNullOrEmpty(featurestoreSnowflakeConnectorDTO.getPassword())) {
@@ -104,6 +104,14 @@ public class FeaturestoreSnowflakeConnectorController {
       snowflakeConnector.setTokenSecret(secret);
       snowflakeConnector.setPwdSecret(null);
     }
+  }
+  
+  private boolean isNullOrWhitespace(String val) {
+    return Strings.isNullOrEmpty(val) || Strings.isNullOrEmpty(val.trim());
+  }
+  
+  private String getValueOrNull(String val) {
+    return isNullOrWhitespace(val)? null : val.trim();
   }
   
   private List<OptionDTO> toOptions(String arguments) {
@@ -189,19 +197,23 @@ public class FeaturestoreSnowflakeConnectorController {
   
   private void verifyConnectorDTO(FeaturestoreSnowflakeConnectorDTO featurestoreSnowflakeConnectorDTO)
       throws FeaturestoreException {
-    if (Strings.isNullOrEmpty(featurestoreSnowflakeConnectorDTO.getUrl())) {
+    if (featurestoreSnowflakeConnectorDTO == null) {
+      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_STORAGE_CONNECTOR_ARG, Level.FINE,
+          "Null input data");
+    }
+    if (isNullOrWhitespace(featurestoreSnowflakeConnectorDTO.getUrl())) {
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_STORAGE_CONNECTOR_ARG, Level.FINE,
           "Url can not be empty");
     }
-    if (Strings.isNullOrEmpty(featurestoreSnowflakeConnectorDTO.getUser())) {
+    if (isNullOrWhitespace(featurestoreSnowflakeConnectorDTO.getUser())) {
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_STORAGE_CONNECTOR_ARG, Level.FINE,
           "User can not be empty");
     }
-    if (Strings.isNullOrEmpty(featurestoreSnowflakeConnectorDTO.getSchema())) {
+    if (isNullOrWhitespace(featurestoreSnowflakeConnectorDTO.getSchema())) {
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_STORAGE_CONNECTOR_ARG, Level.FINE,
           "Schema can not be empty");
     }
-    if (Strings.isNullOrEmpty(featurestoreSnowflakeConnectorDTO.getDatabase())) {
+    if (isNullOrWhitespace(featurestoreSnowflakeConnectorDTO.getDatabase())) {
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_STORAGE_CONNECTOR_ARG, Level.FINE,
           "Database can not be empty");
     }
