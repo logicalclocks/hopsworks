@@ -196,9 +196,13 @@ public class ModelsBuilder {
         modelDTO.setMetrics(modelSummary.getMetrics());
         modelDTO.setDescription(modelSummary.getDescription());
         modelDTO.setProgram(modelSummary.getProgram());
+        modelDTO.setInputExample(modelSummary.getInputExample());
+        modelDTO.setFramework(modelSummary.getFramework());
+        modelDTO.setSignature(modelSummary.getSignature());
         modelDTO.setEnvironment(modelSummary.getEnvironment());
         modelDTO.setExperimentId(modelSummary.getExperimentId());
         modelDTO.setExperimentProjectName(modelSummary.getExperimentProjectName());
+        modelDTO.setProjectName(modelSummary.getProjectName());
       }
     }
     return modelDTO;

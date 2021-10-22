@@ -20,6 +20,7 @@ describe "On #{ENV['OS']}" do
   end
   after(:all) {clean_all_test_projects(spec: "model") if @cleanup}
   experiment_1 = "experiment_1"
+  experiment_2 = "experiment_2"
   describe 'model' do
     context 'without authentication' do
       before :all do
@@ -47,20 +48,41 @@ describe "On #{ENV['OS']}" do
         get_model(@project[:id], "app_id_4254316623_1")
         expect_status(404)
       end
-      it "should produce 4 models and check items, count and href" do
-        create_model_job(@project, experiment_1)
+      it "should produce 6 models and check items, count and href" do
+        create_model_job(@project, experiment_1, "export_model.ipynb")
         run_experiment_blocking(@project, experiment_1)
+
+        wait_result = epipe_wait_on_provenance(repeat: 5)
+        expect(wait_result["success"]).to be(true), wait_result["msg"]
+
         get_models(@project[:id], nil)
         expect_status(200)
-        expect(json_body[:items].count).to eq 4
-        expect(json_body[:count]).to eq 4
+        expect(json_body[:items].count).to eq 6
+        expect(json_body[:count]).to eq 6
         json_body[:items].each {|model| expect(URI(model[:href]).path).to eq "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/models/#{model[:id]}"}
+      end
+      it "run hsml integration tests" do
+        create_model_job(@project, experiment_2, "test_hsml.ipynb")
+        run_experiment_blocking(@project, experiment_2)
       end
       it "should get all existing models" do
         get_models(@project[:id], nil)
         json_body[:items].each {|model|
         get_model(@project[:id], model[:id])
         expect_status(200)}
+      end
+      it "should delete specific model" do
+        get_models(@project[:id], nil)
+        model = json_body[:items][0]
+
+        delete_model(@project[:id], model[:id])
+        expect_status(204)
+
+        wait_result = epipe_wait_on_provenance(repeat: 5)
+        expect(wait_result["success"]).to be(true), wait_result["msg"]
+
+        get_model(@project[:id], model[:id])
+        expect_status(404)
       end
       it "should delete models by deleting Models dataset" do
         delete "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/dataset/Projects/#{@project[:projectname]}/Models"
@@ -77,7 +99,7 @@ describe "On #{ENV['OS']}" do
     context 'with authentication' do
       before :all do
         with_valid_tour_project("ml")
-        create_model_job(@project, experiment_1)
+        create_model_job(@project, experiment_1, "export_model.ipynb")
         run_experiment_blocking(@project, experiment_1)
       end
       describe "Models sort" do
@@ -185,25 +207,39 @@ describe "On #{ENV['OS']}" do
           expect_status(200)
           expect(json_body[:items]).to be nil
         end
-        it "should get 3 models with name_eq mnist" do
-          get_models(@project[:id], "?filter_by=name_eq:mnist")
+        it "should get 3 TensorFlow models with name_eq model_tf" do
+          get_models(@project[:id], "?filter_by=name_eq:model_tf")
           expect_status(200)
           expect(json_body[:items].count).to eq 3
+          json_body[:items].each {|model| expect(model[:framework]).to eq "TENSORFLOW"}
         end
-        it "should get 1 model with name_eq cif" do
-          get_models(@project[:id], "?filter_by=name_eq:cifar")
+        it "should get 1 Python model with name_eq model_python" do
+          get_models(@project[:id], "?filter_by=name_eq:model_python")
           expect_status(200)
           expect(json_body[:items].count).to eq 1
+          json_body[:items].each {|model| expect(model[:framework]).to eq "PYTHON"}
         end
-        it "should get 1 model with name_like cifar" do
-          get_models(@project[:id], "?filter_by=name_like:cifar")
+        it "should get 1 Sklearn model with name_eq model_sklearn" do
+          get_models(@project[:id], "?filter_by=name_eq:model_sklearn")
           expect_status(200)
           expect(json_body[:items].count).to eq 1
+          json_body[:items].each {|model| expect(model[:framework]).to eq "SKLEARN"}
         end
-        it "should get 3 model with name_like mni" do
-          get_models(@project[:id], "?filter_by=name_like:mni")
+        it "should get 1 Torch model with name_eq model_torch" do
+          get_models(@project[:id], "?filter_by=name_eq:model_torch")
           expect_status(200)
-          expect(json_body[:items].count).to eq 3
+          expect(json_body[:items].count).to eq 1
+          json_body[:items].each {|model| expect(model[:framework]).to eq "TORCH"}
+        end
+        it "should get 6 model with name_like model" do
+          get_models(@project[:id], "?filter_by=name_like:model")
+          expect_status(200)
+          expect(json_body[:items].count).to eq 6
+        end
+        it "should get 3 model with name_like model_t" do
+          get_models(@project[:id], "?filter_by=name_like:model_t")
+          expect_status(200)
+          expect(json_body[:items].count).to eq 4
         end
       end
     end

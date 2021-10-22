@@ -20,7 +20,7 @@ import io.hops.hopsworks.common.api.RestDTO;
 import javax.xml.bind.annotation.XmlRootElement;
 
 /**
- * Contains configuration and other information about an experiment
+ * Contains configuration and other information about a model
  */
 @XmlRootElement
 public class ModelDTO extends RestDTO<ModelDTO> {
@@ -33,11 +33,17 @@ public class ModelDTO extends RestDTO<ModelDTO> {
 
   private String name;
 
-  private int version;
+  private Integer version;
   
   private String projectName;
 
   private String userFullName;
+
+  private String inputExample;
+
+  private String framework;
+
+  private String signature;
 
   private Long created;
 
@@ -53,9 +59,7 @@ public class ModelDTO extends RestDTO<ModelDTO> {
   
   private String experimentProjectName;
 
-  private String kernelId;
-
-  private String jobName;
+  private String trainingDataset;
 
   public String getName() {
     return name;
@@ -65,11 +69,11 @@ public class ModelDTO extends RestDTO<ModelDTO> {
     this.name = name;
   }
 
-  public int getVersion() {
+  public Integer getVersion() {
     return version;
   }
 
-  public void setVersion(int version) {
+  public void setVersion(Integer version) {
     this.version = version;
   }
   
@@ -152,29 +156,36 @@ public class ModelDTO extends RestDTO<ModelDTO> {
   public void setExperimentProjectName(String experimentProjectName) {
     this.experimentProjectName = experimentProjectName;
   }
-  
-  public String getKernelId() {
-    return kernelId;
+
+  public String getInputExample() {
+    return inputExample;
   }
 
-  public void setKernelId(String kernelId) {
-    this.kernelId = kernelId;
+  public void setInputExample(String inputExample) {
+    this.inputExample = inputExample;
   }
 
-  public String getJobName() {
-    return jobName;
+  public String getFramework() {
+    return framework;
   }
 
-  public void setJobName(String jobName) {
-    this.jobName = jobName;
+  public void setFramework(String framework) {
+    this.framework = framework;
   }
 
-  public enum XAttrSetFlag {
-    CREATE,
-    REPLACE;
+  public String getSignature() {
+    return signature;
+  }
 
-    public static XAttrSetFlag fromString(String param) {
-      return valueOf(param.toUpperCase());
-    }
+  public void setSignature(String signature) {
+    this.signature = signature;
+  }
+
+  public String getTrainingDataset() {
+    return trainingDataset;
+  }
+
+  public void setTrainingDataset(String trainingDataset) {
+    this.trainingDataset = trainingDataset;
   }
 }

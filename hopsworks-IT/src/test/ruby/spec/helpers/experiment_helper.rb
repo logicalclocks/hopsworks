@@ -69,7 +69,7 @@ module ExperimentHelper
     start_execution(project[:id], job_name)
     execution_id = json_body[:id]
     expect_status(201)
-    wait_for_execution_completed(project[:id], job_name, execution_id, "FINISHED")
+    wait_for_execution_completed(project[:id], job_name, execution_id, "FINISHED", expected_final_status: "SUCCEEDED")
     wait_result = epipe_wait_on_provenance(repeat: 5)
     expect(wait_result["success"]).to be(true), wait_result["msg"]
   end

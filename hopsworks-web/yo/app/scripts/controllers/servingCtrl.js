@@ -769,7 +769,8 @@ angular.module('hopsWorksApp')
                         self.editServing.name = name;
                     } else {
                         const modelPathSplits = self.editServing.modelPath.split("/");
-                        self.editServing.name = modelPathSplits[modelPathSplits.length - 1];
+                        //When a model is selected from the filesystem browser, only keep alphanumeric characters to conform to serving regex
+                        self.editServing.name = modelPathSplits[modelPathSplits.length - 1].replace(/[^a-zA-Z0-9]/g, '');
                     }
                 }
             }

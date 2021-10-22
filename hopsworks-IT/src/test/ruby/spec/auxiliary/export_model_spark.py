@@ -3,7 +3,8 @@
 # -*- coding: utf-8 -*-
 
 import os
-from hops import model
+import hsml
+
 from pyspark.sql.types import *
 from pyspark.sql import SparkSession
 
@@ -11,4 +12,10 @@ spark = SparkSession.builder.appName("export_model_spark").getOrCreate()
 model_path = os.getcwd() + '/model_spark'
 if not os.path.exists(model_path):
     os.mkdir(model_path)
-model.export(model_path, "mnist_spark")
+
+connection = hsml.connection()
+mr = connection.get_model_registry()
+
+py_model = mr.python.create_model("mnist_spark")
+
+ret = py_model.save(model_path)
