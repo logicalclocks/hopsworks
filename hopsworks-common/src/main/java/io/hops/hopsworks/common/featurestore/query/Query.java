@@ -49,6 +49,8 @@ public class Query {
   private List<Join> joins;
   private FilterLogic filter;
 
+  private List<Feature> orderByFeatures;
+
   // For testing
   public Query() {
   }
@@ -219,5 +221,13 @@ public class Query {
 
   public void setHiveEngine(Boolean hiveEngine) {
     this.hiveEngine = hiveEngine;
+  }
+
+  public List<Feature> getOrderByFeatures() {
+    return orderByFeatures;
+  }
+
+  public void setOrderByFeatures(List<Feature> orderByFeatures) {
+    this.orderByFeatures = orderByFeatures;
   }
 }

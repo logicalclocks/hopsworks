@@ -144,7 +144,6 @@ public class TransformationFunctionBuilder {
                                                   Project project, TrainingDataset trainingDataset,
                                                   TrainingDatasetFeature tdFeature) throws FeaturestoreException {
 
-
     TransformationFunctionAttachedDTO  transformationFunctionAttachedDTO = new TransformationFunctionAttachedDTO();
     TransformationFunctionDTO transformationFunctionDTO =  new TransformationFunctionDTO(
         tdFeature.getTransformationFunction().getId(),

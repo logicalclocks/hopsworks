@@ -492,7 +492,7 @@ public class ConstructorController {
       // Build the select part. List of features selected by the user. Each feature will be fg_alias.fg_name
       // we should use the ` to avoid syntax errors on reserved keywords used as feature names (e.g. date)
       if (f.getDefaultValue() == null || online) {
-        selectList.add(getWithOrWithoutPrefix(f));
+        selectList.add(getWithOrWithoutPrefix(f, true));
       } else {
         selectList.add(selectWithDefaultAs(f));
       }
@@ -517,9 +517,24 @@ public class ConstructorController {
       filterNode = filterController.buildFilterNode(query, query,query.getJoins().size() - 1, online);
     }
 
+    SqlNodeList orderByList = null;
+    if (query.getOrderByFeatures() != null && !query.getOrderByFeatures().isEmpty()){
+      orderByList = new SqlNodeList(SqlParserPos.ZERO);
+      for (Feature f : query.getOrderByFeatures()) {
+        // Build the order by part. List of features selected by the user. Each feature will be fg_alias.fg_name
+        // we should use the ` to avoid syntax errors on reserved keywords used as feature names (e.g. date)
+        // if feature gas prefix don't add it here as it will not work for order by.
+        if (f.getDefaultValue() == null || online) {
+          orderByList.add(getWithOrWithoutPrefix(f, false));
+        } else {
+          orderByList.add(selectWithDefaultAs(f));
+        }
+      }
+    }
+
     // Assemble the query
     return new SqlSelect(SqlParserPos.ZERO, null, selectList, joinNode,
-        filterNode, null, null, null, null, null, null);
+        filterNode, null, null, null, orderByList, null, null);
   }
 
   public SqlNode caseWhenDefault(Feature feature) {
@@ -673,8 +688,8 @@ public class ConstructorController {
     return aliases;
   }
 
-  public SqlNode getWithOrWithoutPrefix(Feature feature){
-    if (feature.getPrefix()!=null){
+  protected SqlNode getWithOrWithoutPrefix(Feature feature, boolean withPrefix){
+    if (feature.getPrefix()!=null && withPrefix) {
       return SqlStdOperatorTable.AS.createCall(SqlParserPos.ZERO,
           new SqlIdentifier(Arrays.asList("`" + feature.getFgAlias() + "`", "`" + feature.getName() + "`"),
               SqlParserPos.ZERO),
