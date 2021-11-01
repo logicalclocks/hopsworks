@@ -693,13 +693,16 @@ public class TrainingDatasetService {
   public Response getPreparedStatements(@Context SecurityContext sc,
                            @Context UriInfo uriInfo,
                            @ApiParam(value = "Id of the trainingdatasetid", required = true)
-                           @PathParam("trainingdatasetid") Integer trainingDatsetId)
+                           @PathParam("trainingdatasetid") Integer trainingDatsetId,
+                           @ApiParam(value = "get batch serving vectors", example = "false")
+                           @QueryParam("batch") @DefaultValue("false") boolean batch)
       throws FeaturestoreException {
     verifyIdProvided(trainingDatsetId);
     Users user = jWTHelper.getUserPrincipal(sc);
 
     ServingPreparedStatementDTO servingPreparedStatementDTO = preparedStatementBuilder.build(uriInfo,
-        new ResourceRequest(ResourceRequest.Name.PREPAREDSTATEMENTS), project, user, featurestore, trainingDatsetId);
+        new ResourceRequest(ResourceRequest.Name.PREPAREDSTATEMENTS), project, user, featurestore, trainingDatsetId,
+          batch);
     return Response.ok().entity(servingPreparedStatementDTO).build();
   }
 
