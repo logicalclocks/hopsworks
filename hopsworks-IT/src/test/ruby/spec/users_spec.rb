@@ -70,14 +70,14 @@ describe "On #{ENV['OS']}" do
 
       it 'should handle multiple users with similar emails' do
         user_params = {}
-        email = "userusera#{random_id}@hopsworks.se"
+        email = "usera#{random_id}@hopsworks.se"
         user_params[:email] = email
         register_user(user_params)
 
         user = User.find_by(email: email)
         expect(user[:username]).to match(/^[a-z0-9]{8}$/)
 
-        email = "useruserb#{random_id}@hopsworks.se"
+        email = "userb#{random_id}@hopsworks.se"
         user_params[:email] = email
         register_user(user_params)
 

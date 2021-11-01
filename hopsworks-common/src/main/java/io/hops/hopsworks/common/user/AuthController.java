@@ -60,7 +60,10 @@ import io.hops.hopsworks.common.security.CertificatesMgmService;
 import io.hops.hopsworks.common.util.EmailBean;
 import io.hops.hopsworks.common.util.HopsUtils;
 import io.hops.hopsworks.common.util.Settings;
+import org.apache.commons.codec.binary.Base32;
 
+import javax.crypto.Mac;
+import javax.crypto.spec.SecretKeySpec;
 import javax.ejb.EJB;
 import javax.ejb.EJBException;
 import javax.ejb.Stateless;
@@ -70,6 +73,8 @@ import javax.inject.Inject;
 import javax.mail.Message;
 import javax.mail.MessagingException;
 import javax.servlet.http.HttpServletRequest;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
 import java.sql.Timestamp;
 import java.util.Date;
 import java.util.List;
@@ -237,6 +242,85 @@ public class AuthController {
   }
   
   /**
+   * Validate one time password
+   * @param email
+   * @param password
+   * @param otp
+   * @throws UserException
+   */
+  public void validateOTP(String email, String password, String otp) throws UserException {
+    Users user = userFacade.findByEmail(email);
+    if (user == null) {
+      throw new UserException(RESTCodes.UserErrorCode.USER_DOES_NOT_EXIST, Level.FINE);
+    }
+    if (validatePassword(user, password)) {
+      validateOTP(user, otp);
+    }
+  }
+
+  /**
+   * Validate one time password if user is already authenticated
+   * @param user
+   * @param otpStr
+   * @throws UserException
+   */
+  public void validateOTP(Users user, String otpStr) throws UserException {
+    int otp;
+    try {
+      otp = Integer.parseInt(otpStr);
+    } catch (NumberFormatException e) {
+      throw new UserException(RESTCodes.UserErrorCode.INVALID_OTP, Level.FINE, "OTP not an integer");
+    }
+    if (user == null) {
+      throw new UserException(RESTCodes.UserErrorCode.USER_DOES_NOT_EXIST, Level.FINE, "User not found");
+    }
+    boolean valid = checkCode(user.getSecret(), otp);
+    if (!valid) {
+      throw new UserException(RESTCodes.UserErrorCode.INVALID_OTP, Level.FINE);
+    }
+  }
+
+  private boolean checkCode(String secret, int code) {
+    Base32 codec = new Base32();
+    byte[] decodedKey = codec.decode(secret);
+    long t = System.currentTimeMillis() / 1000 / 30;
+    int window = 2;
+
+    for (int i = -window; i <= window; ++i) {
+      try {
+        long hash = verifyCode(decodedKey, t + i);
+        if (hash == code) {
+          return true;
+        }
+      } catch (NoSuchAlgorithmException | InvalidKeyException e) {
+        return false;
+      }
+    }
+    return false;
+  }
+
+  private static int verifyCode(byte[] key, long t) throws NoSuchAlgorithmException, InvalidKeyException {
+    byte[] data = new byte[8];
+    long value = t;
+    for (int i = 8; i-- > 0; value >>>= 8) {
+      data[i] = (byte) value;
+    }
+    SecretKeySpec signKey = new SecretKeySpec(key, "HmacSHA1");
+    Mac mac = Mac.getInstance("HmacSHA1");
+    mac.init(signKey);
+    byte[] hash = mac.doFinal(data);
+    int offset = hash[20 - 1] & 0xF;
+    long truncatedHash = 0;
+    for (int i = 0; i < 4; ++i) {
+      truncatedHash <<= 8;
+      truncatedHash |= (hash[offset + i] & 0xFF);
+    }
+    truncatedHash &= 0x7FFFFFFF;
+    truncatedHash %= 1000000;
+    return (int) truncatedHash;
+  }
+
+  /**
    * Check if the key exists and is valid. Will fail if the key is already set to reset.
    * Only password keys can be checked.
    * @param key
@@ -348,7 +432,6 @@ public class AuthController {
    * Sends new recovery key email.
    *
    * @param user
-   * @param req
    * @throws MessagingException
    */
   public void sendNewValidationKey(Users user, String linkUrl) throws MessagingException {
@@ -386,8 +469,8 @@ public class AuthController {
     String twoFactorAuth = settings.getTwoFactorAuth();
     String twoFactorExclude = settings.getTwoFactorExclude();
     String twoFactorMode = (twoFactorAuth != null ? twoFactorAuth : "");
-    String excludes = (twoFactorExclude != null ? twoFactorExclude : null);
-    String[] groups = (excludes != null && !excludes.isEmpty() ? excludes.split(";") : new String[]{});
+    String excludes = (twoFactorExclude != null ? twoFactorExclude : "");
+    String[] groups = (!excludes.isEmpty() ? excludes.split(";") : new String[]{});
 
     for (String group : groups) {
       if (isUserInRole(user, group)) {
@@ -413,6 +496,13 @@ public class AuthController {
     String twoFactorMode = (twoFactorAuth != null ? twoFactorAuth : "");
     return twoFactorMode.equals(Settings.TwoFactorMode.MANDATORY.getName()) || twoFactorMode.equals(
         Settings.TwoFactorMode.OPTIONAL.getName());
+  }
+
+  public boolean isTwoFactorEnabled(boolean userTwoFactorEnabled) {
+    String twoFactorAuth = settings.getTwoFactorAuth();
+    String twoFactorMode = (twoFactorAuth != null ? twoFactorAuth : "");
+    return twoFactorMode.equals(Settings.TwoFactorMode.MANDATORY.getName()) || (twoFactorMode.equals(
+      Settings.TwoFactorMode.OPTIONAL.getName()) && userTwoFactorEnabled);
   }
 
   /**

@@ -2739,6 +2739,7 @@ public class Settings implements Serializable {
   
   private static final String VARIABLE_DISABLE_PASSWORD_LOGIN = "disable_password_login";
   private static final String VARIABLE_DISABLE_REGISTRATION = "disable_registration";
+  private static final String VARIABLE_DISABLE_REGISTRATION_UI = "disable_registration_ui";
   private static final String VARIABLE_LDAP_GROUP_MAPPING_SYNC_INTERVAL = "ldap_group_mapping_sync_interval";
   
   private String KRB_AUTH = "false";
@@ -2805,6 +2806,7 @@ public class Settings implements Serializable {
     
     DISABLE_PASSWORD_LOGIN = setBoolVar(VARIABLE_DISABLE_PASSWORD_LOGIN, DISABLE_PASSWORD_LOGIN);
     DISABLE_REGISTRATION = setBoolVar(VARIABLE_DISABLE_REGISTRATION, DISABLE_REGISTRATION);
+    DISABLE_REGISTRATION_UI = setBoolVar(VARIABLE_DISABLE_REGISTRATION_UI, DISABLE_REGISTRATION_UI);
     
     LDAP_GROUP_MAPPING_SYNC_INTERVAL = setLongVar(VARIABLE_LDAP_GROUP_MAPPING_SYNC_INTERVAL,
       LDAP_GROUP_MAPPING_SYNC_INTERVAL);
@@ -3004,6 +3006,19 @@ public class Settings implements Serializable {
   public synchronized  boolean isRegistrationDisabled() {
     checkCache();
     return DISABLE_REGISTRATION;
+  }
+  
+  public void updateRegistrationDisabled(boolean disable) {
+    updateVariableInternal(VARIABLE_DISABLE_REGISTRATION, Boolean.toString(disable), VariablesVisibility.ADMIN);
+  }
+  
+  // Special flag to disable only registration UI but not the backend
+  // It is used in managed cloud when user management is MANAGED by hopsworks.ai
+  // Variable value is set during instance initialization by ec2-init
+  private boolean DISABLE_REGISTRATION_UI = false;
+  public synchronized boolean isRegistrationUIDisabled() {
+    checkCache();
+    return isRegistrationDisabled() || DISABLE_REGISTRATION_UI;
   }
   
   public synchronized long ldapGroupMappingSyncInterval() {
