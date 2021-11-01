@@ -307,27 +307,6 @@ public class AuthService {
     }
     return Response.ok(json).build();
   }
-
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
   
   @POST
   @Path("register")
