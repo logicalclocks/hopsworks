@@ -23,6 +23,7 @@ import io.hops.hopsworks.common.serving.inference.logger.InferenceLogger;
 import io.hops.hopsworks.exceptions.InferenceException;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.serving.Serving;
+import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.restutils.RESTCodes;
 
 import javax.ejb.EJB;
@@ -67,8 +68,8 @@ public class InferenceController {
    * @return a string representation of the inference result
    * @throws InferenceException
    */
-  public String infer(Project project, String modelName, Integer modelVersion,
-                      String verb, String inferenceRequestJson) throws InferenceException {
+  public String infer(Project project, Users user, String modelName, Integer modelVersion,
+                      String verb, String inferenceRequestJson, String authHeader) throws InferenceException {
 
     Serving serving = servingFacade.findByProjectAndName(project, modelName);
     if (serving == null) {
@@ -86,7 +87,7 @@ public class InferenceController {
 
     // ServingInferenceController is either localhost or kubernetes inference controller
     Pair<Integer, String> inferenceResult =
-      servingInferenceController.infer(serving, modelVersion, verb, inferenceRequestJson);
+      servingInferenceController.infer(user, serving, modelVersion, verb, inferenceRequestJson, authHeader);
 
     // Log the inference
     for (InferenceLogger inferenceLogger : inferenceLoggers) {

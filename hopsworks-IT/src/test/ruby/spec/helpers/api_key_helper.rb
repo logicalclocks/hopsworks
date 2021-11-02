@@ -14,9 +14,11 @@
  If not, see <https://www.gnu.org/licenses/>.
 =end
 
+require 'json'
+
 module ApiKeyHelper
   @@api_key_resource = "#{ENV['HOPSWORKS_API']}/users/apiKey"
-  @@api_key_scopes = %w(JOB DATASET_VIEW DATASET_CREATE DATASET_DELETE INFERENCE)
+  @@api_key_scopes = %w(JOB DATASET_VIEW DATASET_CREATE DATASET_DELETE SERVING)
 
   def set_api_key_to_header(key)
     Airborne.configure do |config|
@@ -73,5 +75,62 @@ module ApiKeyHelper
 
   def delete_api_keys
     delete @@api_key_resource
+  end
+
+  def get_api_key_name(username, uid)
+    "serving_" + username + "_" + uid.to_s
+  end
+
+  def get_api_key_kube_hops_secret_name(prefix)
+    name = "api-key-" + prefix.downcase + "-"
+    prefix.chars.each do |c|
+      if /[[:upper:]]/.match(c)
+        name << "1"
+      else
+        name << "0"
+      end
+    end
+    name
+  end
+
+  def get_api_key_kube_project_secret_name(username)
+    "api-key-" + username + "--serving"
+  end
+
+  def get_api_key_kube_secret(namespace, name)
+    secret = nil
+    kube_user = Variables.find_by(id: "kube_user").value
+    cmd = "sudo su #{kube_user} /bin/bash -c \"kubectl get secret #{name} --namespace=#{namespace} -o=json\""
+    Open3.popen3(cmd) do |_, stdout, _, wait_thr|
+      secret_str = stdout.read
+      if !secret_str.empty?
+        secret = JSON.parse(secret_str)
+      end
+    end
+    secret
+  end
+
+  def get_api_key_kube_project_serving_secret(project_name, username)
+    namespace = get_kube_project_namespace(project_name)
+    secret_name = get_api_key_kube_project_secret_name(username)
+    get_api_key_kube_secret(namespace, secret_name)
+  end
+
+  def get_api_key_kube_hops_serving_secret(username, uid)
+    namespace="hops-system"
+    secret_name=get_api_key_name(username, uid)
+    secret = nil
+    kube_user = Variables.find_by(id: "kube_user").value
+    cmd = "sudo su #{kube_user} /bin/bash -c \"kubectl get secret --namespace=#{namespace} -l serving.hops.works/scope=serving,serving.hops.works/user=#{username},serving.hops.works/reserved=true -o=json\""
+    Open3.popen3(cmd) do |_, stdout, _, wait_thr|
+      secrets_str = stdout.read
+      if !secrets_str.empty?
+        secrets = JSON.parse(secrets_str)
+        if secrets["items"].length > 0
+          secret = secrets["items"][0]
+        end
+      end
+    end
+    secret
   end
 end

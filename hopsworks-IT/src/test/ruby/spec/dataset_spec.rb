@@ -1847,7 +1847,7 @@ describe "On #{ENV['OS']}" do
         @key_view = create_api_key('datasetKey', %w(DATASET_VIEW))
         @key_create = create_api_key('datasetKey_create', %w(DATASET_VIEW DATASET_CREATE))
         @key_delete = create_api_key('datasetKey_delete', %w(DATASET_VIEW DATASET_DELETE))
-        @invalid_key = create_api_key('datasetKey_invalid', %w(JOB INFERENCE))
+        @invalid_key = create_api_key('datasetKey_invalid', %w(JOB SERVING))
       end
       context 'with invalid scope' do
         before(:all) do

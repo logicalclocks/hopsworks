@@ -270,4 +270,47 @@ module ProjectHelper
     project.save()
   end
 
+  def get_kube_project_namespace(project_name)
+    project_name.gsub("_","-").downcase
+  end
+
+  def get_project_teams_kube_config_map_name(project_name)
+    namespace = get_kube_project_namespace(project_name)
+    "#{namespace}-project-teams"
+  end
+
+  def get_project_teams_kube_config_map(project_name)
+    cm_name = get_project_teams_kube_config_map_name(project_name)
+    namespace = get_kube_project_namespace(project_name)
+    get_kube_config_map(namespace, cm_name)
+  end
+
+  def get_serving_kube_config_map()
+    get_kube_config_map("hops-system", "hops-system--serving")
+  end
+
+  def get_kube_config_map(namespace, cm_name)
+    cm = nil
+    kube_user = Variables.find_by(id: "kube_user").value
+    cmd = "sudo su #{kube_user} /bin/bash -c \"kubectl get cm #{cm_name} --namespace=#{namespace} -o=json\""
+    Open3.popen3(cmd) do |_, stdout, _, wait_thr|
+      cm = stdout.read
+    end
+    if !cm.empty?
+      cm = JSON.parse(cm)
+    end
+    cm
+  end
+
+  def update_authenticator_kube_config_map(user_roles, project_roles)
+    kube_user = Variables.find_by(id: "kube_user").value
+    ur = user_roles.map {|r| "\\\"#{r}\\\"" }.join(',')
+    pr = project_roles.map {|r| "\\\"#{r}\\\"" }.join(',')
+    cmd = "sudo su #{kube_user} /bin/bash -c \"kubectl create cm hops-system--serving -n hops-system --from-literal=authenticator='{\\\"allowedUserRoles\\\":[#{ur}], \\\"allowedProjectRoles\\\":[#{pr}]}' --dry-run=client -o yaml | kubectl apply -f -\""
+    result = nil
+    Open3.popen3(cmd) do |_, stdout, _, wait_thr|
+      result = stdout.read
+    end
+    result
+  end
 end

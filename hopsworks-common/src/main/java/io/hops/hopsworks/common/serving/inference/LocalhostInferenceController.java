@@ -21,6 +21,7 @@ import io.hops.hopsworks.persistence.entity.serving.Serving;
 import io.hops.hopsworks.common.integrations.LocalhostStereotype;
 import io.hops.hopsworks.exceptions.InferenceException;
 import io.hops.hopsworks.persistence.entity.serving.ModelServer;
+import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.restutils.RESTCodes;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpPost;
@@ -69,8 +70,8 @@ public class LocalhostInferenceController implements ServingInferenceController 
    * @return the inference result returned by the serving server
    * @throws InferenceException
    */
-  public Pair<Integer, String> infer(Serving serving, Integer modelVersion, String verb, String inferenceRequestJson)
-    throws InferenceException {
+  public Pair<Integer, String> infer(Users user, Serving serving, Integer modelVersion, String verb,
+    String inferenceRequestJson, String authHeader) throws InferenceException {
   
     if (serving.getCid().equals(CID_STOPPED)) {
       throw new InferenceException(RESTCodes.InferenceErrorCode.SERVING_NOT_RUNNING, Level.FINE);

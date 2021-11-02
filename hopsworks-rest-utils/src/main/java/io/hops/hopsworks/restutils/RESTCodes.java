@@ -196,9 +196,14 @@ public class RESTCodes {
     ALERT_ALREADY_EXISTS(80, "Alert with the same status already exists.", Response.Status.BAD_REQUEST),
     FAILED_TO_ADD_MEMBER(81, "Failed to add member.", Response.Status.BAD_REQUEST),
     FAILED_TO_CREATE_ROUTE(82, "Failed to create route.", Response.Status.BAD_REQUEST),
-    FAILED_TO_DELETE_ROUTE(83, "Failed to delete route.", Response.Status.BAD_REQUEST);
-
-
+    FAILED_TO_DELETE_ROUTE(83, "Failed to delete route.", Response.Status.BAD_REQUEST),
+    //project handler error response
+    PROJECT_TEAM_ROLE_HANDLER_ADD_MEMBER_ERROR(84, "Error occurred during project team role add handler.",
+      Response.Status.INTERNAL_SERVER_ERROR),
+    PROJECT_TEAM_ROLE_HANDLER_UPDATE_MEMBERS_ERROR(85, "Error occurred during project team role update handler.",
+      Response.Status.INTERNAL_SERVER_ERROR),
+    PROJECT_TEAM_ROLE_HANDLER_REMOVE_MEMBER_ERROR(86, "Error occurred during project team role remove handler.",
+      Response.Status.INTERNAL_SERVER_ERROR);
 
     private Integer code;
     private String message;
@@ -959,8 +964,14 @@ public class RESTCodes {
     USER_SEARCH_NOT_ALLOWED(57, "Search not allowed.", Response.Status.BAD_REQUEST),
     FAILED_TO_GENERATE_QR_CODE(58, "Failed to generate QR code.", Response.Status.EXPECTATION_FAILED),
     INVALID_OTP(59, "Invalid OTP.", Response.Status.BAD_REQUEST),
-    OPERATION_NOT_ALLOWED(60, "Operation not allowed on user", Response.Status.BAD_REQUEST),
-    ACCOUNT_REJECTION_FAILED(61, "Account rejection failed", Response.Status.BAD_REQUEST);
+    USER_ACCOUNT_HANDLER_CREATE_ERROR(60, "Error occurred during user account update handler.",
+      Response.Status.INTERNAL_SERVER_ERROR),
+    USER_ACCOUNT_HANDLER_UPDATE_ERROR(61, "Error occurred during user account update handler.",
+      Response.Status.INTERNAL_SERVER_ERROR),
+    USER_ACCOUNT_HANDLER_REMOVE_ERROR(62, "Error occurred during user account remove handler.",
+      Response.Status.INTERNAL_SERVER_ERROR),
+    OPERATION_NOT_ALLOWED(63, "Operation not allowed on user", Response.Status.BAD_REQUEST),
+    ACCOUNT_REJECTION_FAILED(64, "Account rejection failed", Response.Status.BAD_REQUEST);
 
     private Integer code;
     private String message;
@@ -1147,7 +1158,7 @@ public class RESTCodes {
     LIFECYCLEERROR(3, "Serving instance could not be started/stopped", Response.Status.BAD_REQUEST),
     LIFECYCLEERRORINT(4, "Serving instance could not be started/stopped",
         Response.Status.INTERNAL_SERVER_ERROR),
-    STATUSERROR(5, "Error getting TFServing instance status", Response.Status.INTERNAL_SERVER_ERROR),
+    STATUSERROR(5, "Error getting model server instance status", Response.Status.INTERNAL_SERVER_ERROR),
     PATHNOTFOUND(6, "Model Path not found", Response.Status.BAD_REQUEST),
     COMMANDNOTRECOGNIZED(7, "Command not recognized", Response.Status.BAD_REQUEST),
     COMMANDNOTPROVIDED(8, "Command not provided", Response.Status.BAD_REQUEST),
@@ -1205,7 +1216,8 @@ public class RESTCodes {
     MISSING_VERB(5, "Verb is missing", Response.Status.BAD_REQUEST),
     ERROR_READING_RESPONSE(6, "Error while reading the response", Response.Status.INTERNAL_SERVER_ERROR),
     SERVING_INSTANCE_INTERNAL(7, "Serving instance internal error", Response.Status.INTERNAL_SERVER_ERROR),
-    SERVING_INSTANCE_BAD_REQUEST(8, "Serving instance bad request error", Response.Status.BAD_REQUEST);
+    SERVING_INSTANCE_BAD_REQUEST(8, "Serving instance bad request error", Response.Status.BAD_REQUEST),
+    REQUEST_AUTH_TYPE_NOT_SUPPORTED(9, "Authentication type not supported", Response.Status.BAD_REQUEST);
 
     private int code;
     private String message;
@@ -1825,7 +1837,11 @@ public class RESTCodes {
     KEY_SCOPE_EMPTY(6, "Api key scope can not be empty", Response.Status.BAD_REQUEST),
     KEY_NAME_EXIST(7, "Api key name already exists", Response.Status.BAD_REQUEST),
     KEY_NAME_NOT_SPECIFIED(8, "Api key name not specified", Response.Status.BAD_REQUEST),
-    KEY_NAME_NOT_VALID(9, "Api key name not valid", Response.Status.BAD_REQUEST);
+    KEY_NAME_NOT_VALID(9, "Api key name not valid", Response.Status.BAD_REQUEST),
+    KEY_HANDLER_CREATE_ERROR(10, "Error occurred during apikey create handler.",
+      Response.Status.INTERNAL_SERVER_ERROR),
+    KEY_HANDLER_DELETE_ERROR(11, "Error occurred during apikey delete handler.",
+      Response.Status.INTERNAL_SERVER_ERROR);
 
     private Integer code;
     private String message;

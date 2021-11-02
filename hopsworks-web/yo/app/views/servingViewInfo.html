@@ -18,19 +18,26 @@
     <button class="close" ng-click="servingViewInfoCtrl.close()" data-dismiss="modal" aria-hidden="true"
             type="button">&times;
     </button>
-    <h2 class="modal-title">Serving details: {{servingViewInfoCtrl.serving.name}}</h2>
+    <h2 class="modal-title">Serving details</h2>
 </div>
 <div class="modal-body" style="overflow: auto">
-    <div class="row">
-        <table class="table table-hover" style="margin-left: 10px; overflow: auto">
-            <thead style="border:none;">
-            <th style="width: 10%">Property</th>
-            <th style="width: 20%">Value</th>
-            </thead>
+    <div class="row" style="margin: 5px">
+
+        <!-- Serving basic info -->
+        <h4 style="font-weight: bold">Serving details</h4>
+        <table class="table table-hover" style="overflow: auto">
+<!--            <thead style="border:none;">-->
+<!--            <th style="width: 10%">Property</th>-->
+<!--            <th style="width: 20%">Value</th>-->
+<!--            </thead>-->
+            <colgroup>
+                <col span="1" style="width: 25%;">
+                <col span="1" style="width: 75%;">
+            </colgroup>
             <tbody>
             <tr>
                 <td>
-                 Serving Name <i class="fa fa-info-circle" tooltip-placement="auto left"
+                 Serving name <i class="fa fa-info-circle" tooltip-placement="auto left"
                                  uib-tooltip="Name of the serving (unique identifier)"
                                  style="margin-left: 10px"></i>
                 </td>
@@ -38,108 +45,259 @@
             </tr>
             <tr>
                 <td>
-                    Predict inference endpoint
-                    <i class="fa fa-info-circle" tooltip-placement="auto left"
-                                    uib-tooltip="REST endpoint for
-                                    predict inference requests."
-                                    style="margin-left: 10px"></i>
-                </td>
-                <td>{{servingViewInfoCtrl.getPredictInferenceEndpoint(servingViewInfoCtrl.serving.name)}}</td>
-            </tr>
-            <tr>
-                <td>
-                    Classify inference endpoint
-                    <i class="fa fa-info-circle" tooltip-placement="auto left"
-                       uib-tooltip="REST endpoint for
-                                    classify inference requests."
-                       style="margin-left: 10px"></i>
-                </td>
-                <td>{{servingViewInfoCtrl.getClassifyInferenceEndpoint(servingViewInfoCtrl.serving.name)}}</td>
-            </tr>
-            <tr>
-                <td>
-                    Regression inference endpoint
-                    <i class="fa fa-info-circle" tooltip-placement="auto left"
-                       uib-tooltip="REST endpoint for
-                                    regression inference requests."
-                       style="margin-left: 10px"></i>
-                </td>
-                <td>{{servingViewInfoCtrl.getRegressInferenceEndpoint(servingViewInfoCtrl.serving.name)}}</td>
-            </tr>
-            <tr>
-                <td>
-                    Serving Server Port <i class="fa fa-info-circle" tooltip-placement="auto left"
-                                           uib-tooltip="Port of the  serving instance (necessary if you want to send requests directly to the serving server
-                                           rather than going through the standard inference endpoint).
-                                           If the serving server is not running the port will be undefined."
-                                           style="margin-left: 10px"></i>
-                </td>
-                <td>{{servingViewInfoCtrl.getPortString(servingViewInfoCtrl.serving.nodePort)}}</td>
-            </tr>
-            <tr>
-                <td>
-                    Batching <i class="fa fa-info-circle" tooltip-placement="auto left"
-                                           uib-tooltip="Whether batching is enabled for the serving instance.
-                                           With batching, several inference requests will be processed together by the serving instance rather than processing one request at a time.
-                                           This will give a speedup in terms of number of inference requests processed per second, especially if using GPUs."
-                                           style="margin-left: 10px"></i>
-                </td>
-                <td> <span class="glyphicon glyphicon-ok-circle" ng-show="servingViewInfoCtrl.serving.batchingEnabled"/>
-                    <span ng-show="!servingViewInfoCtrl.serving.batchingEnabled"> No </span> </td>
-            </tr>
-            <tr>
-                <td>
                     Creator <i class="fa fa-info-circle" tooltip-placement="auto left"
-                                uib-tooltip="User that created the serving."
-                                style="margin-left: 10px"></i>
+                               uib-tooltip="User that created the serving."
+                               style="margin-left: 10px"></i>
                 </td>
                 <td> {{servingViewInfoCtrl.serving.creator}} </td>
             </tr>
+            </tbody>
+        </table>
+
+        <!-- Serving inference endpoints -->
+        <h4 style="font-weight: bold">Inference endpoints</h4>
+        <table class="table table-hover" style="overflow: auto">
+            <colgroup>
+                <col span="1" style="width: 25%;">
+                <col span="1" style="width: 75%;">
+            </colgroup>
+            <!-- Serving tool - Default -->
+            <tbody ng-if="servingViewInfoCtrl.serving.servingTool === 'DEFAULT'">
+            <tr>
+                <td>
+                    Predict (REST API)
+                    <i class="fa fa-info-circle" tooltip-placement="auto left"
+                       uib-tooltip="REST endpoint for predict inference requests."
+                       style="margin-left: 10px"></i>
+                </td>
+                <td>{{servingViewInfoCtrl.getPredictInferenceEndpoint(servingViewInfoCtrl.serving, false)}}</td>
+            </tr>
+            <tr>
+                <td>
+                    Classify (REST API)
+                    <i class="fa fa-info-circle" tooltip-placement="auto left"
+                       uib-tooltip="REST endpoint for classify inference requests."
+                       style="margin-left: 10px"></i>
+                </td>
+                <td>{{servingViewInfoCtrl.getClassifyInferenceEndpoint(servingViewInfoCtrl.serving, false)}}</td>
+            </tr>
+            <tr>
+                <td>
+                    Regress (REST API)
+                    <i class="fa fa-info-circle" tooltip-placement="auto left"
+                       uib-tooltip="REST endpoint for regression inference requests."
+                       style="margin-left: 10px"></i>
+                </td>
+                <td>{{servingViewInfoCtrl.getRegressInferenceEndpoint(servingViewInfoCtrl.serving, false)}}</td>
+            </tr>
+            <tr>
+                <td>
+                    Predict (Model server)
+                    <i class="fa fa-info-circle" tooltip-placement="auto left"
+                       uib-tooltip="Internal endpoint for predict inference requests directly on the model server."
+                       style="margin-left: 10px"></i>
+                </td>
+                <td>{{servingViewInfoCtrl.getPredictInferenceEndpoint(servingViewInfoCtrl.serving, true)}}</td>
+            </tr>
+            <tr>
+                <td>
+                    Model server IPs
+                    <i class="fa fa-info-circle" tooltip-placement="auto left"
+                       uib-tooltip="Internal IPs of the model server. They can be used to send requests directly to the model server rather than going through the REST API."
+                       style="margin-left: 10px"></i>
+                </td>
+                <td>{{servingViewInfoCtrl.getInternalIPsString(servingViewInfoCtrl.serving.internalIPs)}}</td>
+            </tr>
+            <tr>
+                <td>
+                    Model server port <i class="fa fa-info-circle" tooltip-placement="auto left"
+                                         uib-tooltip="Port of the model server. They can be used to send requests directly to the model server rather than going through the REST API."
+                                         style="margin-left: 10px"></i>
+                </td>
+                <td>{{servingViewInfoCtrl.getInternalPortString(servingViewInfoCtrl.serving.internalPort)}}</td>
+            </tr>
+            </tbody>
+
+            <!-- Serving tool - KFServing -->
+            <tbody ng-if="servingViewInfoCtrl.serving.servingTool === 'KFSERVING'">
+            <tr>
+                <td>
+                    Predict (Load balancer)
+                    <i class="fa fa-info-circle" tooltip-placement="auto left"
+                       uib-tooltip="Load balancer endpoint for predict inference requests."
+                       style="margin-left: 10px"></i>
+                </td>
+                <td>{{servingViewInfoCtrl.getPredictInferenceEndpoint(servingViewInfoCtrl.serving, false)}}</td>
+            </tr>
+            <tr>
+                <td>
+                    Classify (Load balancer)
+                    <i class="fa fa-info-circle" tooltip-placement="auto left"
+                       uib-tooltip="Load balancer endpoint for classify inference requests."
+                       style="margin-left: 10px"></i>
+                </td>
+                <td>{{servingViewInfoCtrl.getClassifyInferenceEndpoint(servingViewInfoCtrl.serving, false)}}</td>
+            </tr>
+            <tr>
+                <td>
+                    Regress (Load balancer)
+                    <i class="fa fa-info-circle" tooltip-placement="auto left"
+                       uib-tooltip="Load balancer endpoint for regression inference requests."
+                       style="margin-left: 10px"></i>
+                </td>
+                <td>{{servingViewInfoCtrl.getRegressInferenceEndpoint(servingViewInfoCtrl.serving, false)}}</td>
+            </tr>
+            <tr>
+                <td>
+                    Predict (Ingress gateway)
+                    <i class="fa fa-info-circle" tooltip-placement="auto left"
+                       uib-tooltip="Ingress gateway endpoint for predict inference requests directly on the model server."
+                       style="margin-left: 10px"></i>
+                </td>
+                <td>{{servingViewInfoCtrl.getPredictInferenceEndpoint(servingViewInfoCtrl.serving, true)}}</td>
+            </tr>
+            <tr>
+                <td>
+                    Host header
+                    <i class="fa fa-info-circle" tooltip-placement="auto left"
+                       uib-tooltip="Host to be defined in the request header."
+                       style="margin-left: 10px"></i>
+                </td>
+                <td>{{servingViewInfoCtrl.getKFServingHostHeader(servingViewInfoCtrl.serving)}}</td>
+            </tr>
+            <tr>
+                <td>
+                    Ingress gateway IPs
+                    <i class="fa fa-info-circle" tooltip-placement="auto left"
+                       uib-tooltip="Internal IPs of the ingress gateway. They can be used to send requests directly to service mesh rather than going through the REST API."
+                       style="margin-left: 10px"></i>
+                </td>
+                <td>{{servingViewInfoCtrl.getInternalIPsString(servingViewInfoCtrl.serving.internalIPs)}}</td>
+            </tr>
+            <tr>
+                <td>
+                    Ingress gateway port <i class="fa fa-info-circle" tooltip-placement="auto left"
+                                         uib-tooltip="Port of the ingress gateway. It can be used to send requests directly to the service mesh rather than going through the REST API."
+                                         style="margin-left: 10px"></i>
+                </td>
+                <td>{{servingViewInfoCtrl.getInternalPortString(servingViewInfoCtrl.serving.internalPort)}}</td>
+            </tr>
+            </tbody>
+        </table>
+
+        <!-- Serving deployment status -->
+        <h4 style="font-weight: bold">Deployment status</h4>
+        <table class="table table-hover" style="overflow: auto">
+            <colgroup>
+                <col span="1" style="width: 25%;">
+                <col span="1" style="width: 75%;">
+            </colgroup>
+            <tbody>
             <tr>
                 <td>
                     Predictor instances <i class="fa fa-info-circle" tooltip-placement="auto left"
-                               uib-tooltip="Number of active predictor instances of the serving out of the total number of requested instances.
+                                           uib-tooltip="Number of active predictor instances of the serving out of the total number of requested instances.
                                            Using multiple instances is recommended for servings with high load of inference
                                            requests as the number of requests will be load balanced across the active instances."
-                               style="margin-left: 10px"></i>
+                                           style="margin-left: 10px"></i>
                 </td>
                 <td> {{servingViewInfoCtrl.serving.availableInstances !== undefined ? servingViewInfoCtrl.serving.availableInstances : 0}} /
-                     {{servingViewInfoCtrl.serving.requestedInstances}} </td>
+                    {{servingViewInfoCtrl.serving.requestedInstances}} </td>
             </tr>
             <tr>
                 <td>
                     Transformer instances <i class="fa fa-info-circle" tooltip-placement="auto left"
-                                           uib-tooltip="Number of active transformer instances of the serving out of the total number of requested instances.
+                                             uib-tooltip="Number of active transformer instances of the serving out of the total number of requested instances.
                                            Using multiple instances is recommended for servings with high load of inference
                                            requests as the number of requests will be load balanced across the active instances."
-                                           style="margin-left: 10px"></i>
+                                             style="margin-left: 10px"></i>
                 </td>
                 <td>
                     <div ng-if="servingViewInfoCtrl.serving.transformer">
-                       {{servingViewInfoCtrl.serving.availableTransformerInstances !== undefined ? servingViewInfoCtrl.serving.availableTransformerInstances : 0}} /
-                       {{servingViewInfoCtrl.serving.requestedTransformerInstances}}
+                        {{servingViewInfoCtrl.serving.availableTransformerInstances !== undefined ? servingViewInfoCtrl.serving.availableTransformerInstances : 0}} /
+                        {{servingViewInfoCtrl.serving.requestedTransformerInstances}}
                     </div>
                     <div ng-if="!servingViewInfoCtrl.serving.transformer">-</div>
                 </td>
             </tr>
             <tr>
                 <td>
-                    Kafka Topic Name <i class="fa fa-info-circle" tooltip-placement="auto left"
-                                 uib-tooltip="Name of the kafka topic where inference requests and responses are logged.
+                    Deployed <i class="fa fa-info-circle" tooltip-placement="auto left"
+                                uib-tooltip="Timestamp when the serving was deployed."
+                                style="margin-left: 10px"></i>
+                </td>
+                <td> {{servingViewInfoCtrl.serving.deployed ? (servingViewInfoCtrl.serving.deployed | date:'medium') : '-'}} </td>
+            </tr>
+            <tr ng-if="servingViewInfoCtrl.isKubernetes">
+                <td>
+                    Revision <i class="fa fa-info-circle" tooltip-placement="auto left"
+                                uib-tooltip="Revision identifier of the last operation (i.e create, update, delete)."
+                                style="margin-left: 10px"></i>
+                </td>
+                <td> {{servingViewInfoCtrl.serving.revision ? servingViewInfoCtrl.serving.revision : '-' }} </td>
+            </tr>
+            <tr ng-if="servingViewInfoCtrl.isKubernetes">
+                <td>
+                    Conditions <i class="fa fa-info-circle" tooltip-placement="auto left"
+                                  uib-tooltip="Conditions of the serving replicas."
+                                  style="margin-left: 10px"></i>
+                </td>
+                <td>
+                    <p ng-repeat="condition in servingViewInfoCtrl.serving.conditions">{{condition}}</p>
+                    <div ng-if="!servingViewInfoCtrl.serving.conditions">-</div>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+
+        <!-- Serving configuration -->
+        <h4 style="font-weight: bold">Instance configuration</h4>
+        <table class="table table-hover" style="overflow: auto">
+            <colgroup>
+                <col span="1" style="width: 25%;">
+                <col span="1" style="width: 75%;">
+            </colgroup>
+            <tbody>
+            <tr>
+                <td>
+                    Batching <i class="fa fa-info-circle" tooltip-placement="auto left"
+                                uib-tooltip="Whether batching is enabled for the serving instance.
+                                           With batching, several inference requests will be processed together by the serving instance rather than processing one request at a time.
+                                           This will give a speedup in terms of number of inference requests processed per second, especially if using GPUs."
+                                style="margin-left: 10px"></i>
+                </td>
+                <td> <span class="glyphicon glyphicon-ok-circle" ng-show="servingViewInfoCtrl.serving.batchingEnabled"/>
+                    <span ng-show="!servingViewInfoCtrl.serving.batchingEnabled"> No </span> </td>
+            </tr>
+            <tr>
+                <td>
+                    Kafka topic name <i class="fa fa-info-circle" tooltip-placement="auto left"
+                                        uib-tooltip="Name of the kafka topic where inference requests and responses are logged.
                                              The kafka topic can be used to monitor how the serving instance is handling inference requests in real-time."
-                                 style="margin-left: 10px"></i>
+                                        style="margin-left: 10px"></i>
                 </td>
                 <td> {{servingViewInfoCtrl.serving.kafkaTopicDTO.name ? servingViewInfoCtrl.serving.kafkaTopicDTO.name : '-'}} </td>
             </tr>
             <tr>
                 <td>
                     Inference logging <i class="fa fa-info-circle" tooltip-placement="auto left"
-                                        uib-tooltip="Inference data to log into the Kafka topic."
-                                        style="margin-left: 10px"></i>
+                                         uib-tooltip="Inference data to log into the Kafka topic."
+                                         style="margin-left: 10px"></i>
                 </td>
                 <td> {{servingViewInfoCtrl.serving.kafkaTopicDTO.name ? 'ALL' : '-'}}
                 </td>
             </tr>
+            </tbody>
+        </table>
+
+        <!-- Serving resource configuration -->
+        <h4 style="font-weight: bold">Resources configuration</h4>
+        <table class="table table-hover" style="overflow: auto">
+            <colgroup>
+                <col span="1" style="width: 25%;">
+                <col span="1" style="width: 75%;">
+            </colgroup>
+            <tbody>
             <tr ng-if="servingViewInfoCtrl.isKubernetes">
                 <td>
                     Memory <i class="fa fa-info-circle" tooltip-placement="auto left"
@@ -163,22 +321,6 @@
                                 style="margin-left: 10px"></i>
                 </td>
                 <td> {{servingViewInfoCtrl.serving.predictorResourceConfig.gpus}} </td>
-            </tr>
-            <tr>
-                <td>
-                    Deployed <i class="fa fa-info-circle" tooltip-placement="auto left"
-                                        uib-tooltip="Timestamp when the serving was deployed."
-                                        style="margin-left: 10px"></i>
-                </td>
-                <td> {{servingViewInfoCtrl.serving.deployed ? (servingViewInfoCtrl.serving.deployed | date:'medium') : '-'}} </td>
-            </tr>
-            <tr ng-if="servingViewInfoCtrl.isKubernetes">
-                <td>
-                    Revision <i class="fa fa-info-circle" tooltip-placement="auto left"
-                                uib-tooltip="Revision identifier of the last operation (i.e create, update, delete)."
-                                style="margin-left: 10px"></i>
-                </td>
-                <td> {{servingViewInfoCtrl.serving.revision ? servingViewInfoCtrl.serving.revision : '-' }} </td>
             </tr>
             </tbody>
         </table>

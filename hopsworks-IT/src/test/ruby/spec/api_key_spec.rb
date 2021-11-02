@@ -100,38 +100,136 @@ describe "On #{ENV['OS']}" do
       expect_status(200)
       expect(json_body[:name]).to eq('firstKey5')
     end
+    it "should not create a kube secret when a key is created without serving scope" do
+      if !kfserving_installed
+        skip "This test only runs with KFServing installed"
+      end
+      serving_key = create_api_key('keyWithServingScopeInvalid', %w(JOB))
+      expect_status(201)
+      # check secret in hops-system namespace
+      secret_name = get_api_key_kube_hops_secret_name(json_body[:prefix])
+      secret = get_api_key_kube_secret("hops-system", secret_name)
+      expect(secret).to be_nil
+    end
+    it "should create a kube secret when a key is created with serving scope" do
+      if !kfserving_installed
+        skip "This test only runs with KFServing installed"
+      end
+      serving_key = create_api_key('keyWithServingScope', %w(JOB SERVING))
+      expect_status(201)
+      # check secret in hops-system namespace
+      secret_name = get_api_key_kube_hops_secret_name(json_body[:prefix])
+      secret = get_api_key_kube_secret("hops-system", secret_name)
+      expect(secret).not_to be_nil
+      expect(secret).to include("data")
+      expect(secret["data"]).to include("user")
+      expect(secret["data"]).to include("salt")
+      expect(secret["data"]).to include("secret") # secret hash
+    end
     it "should update a key" do
       create_api_key('firstKey6', %w(JOB DATASET_VIEW))
-      edit_api_key('firstKey6', %w(INFERENCE  DATASET_CREATE))
+      edit_api_key('firstKey6', %w(SERVING  DATASET_CREATE))
       expect_status(200)
-      expect(json_body[:scope] - %w(INFERENCE DATASET_CREATE)).to be_empty
+      expect(json_body[:scope] - %w(SERVING DATASET_CREATE)).to be_empty
+    end
+    it "should update the kube secret when a key is updated" do
+      if !kfserving_installed
+        skip "This test only runs with KFServing installed"
+      end
+      # remove serving scope
+      edit_api_key('keyWithServingScope', %w(JOB))
+      expect_status(200)
+      # check secret was removed from hops-system namespace
+      secret_name = get_api_key_kube_hops_secret_name(json_body[:prefix])
+      secret = get_api_key_kube_secret("hops-system", secret_name)
+      expect(secret).to be_nil
+      # add serving scope
+      edit_api_key('keyWithServingScope', %w(JOB SERVING))
+      expect_status(200)
+      # check secret was created in hops-system namespace
+      secret = get_api_key_kube_secret("hops-system", secret_name)
+      expect(secret).not_to be_nil
+      expect(secret).to include("data")
+      expect(secret["data"]).to include("user")
+      expect(secret["data"]).to include("salt")
+      expect(secret["data"]).to include("secret") # secret hash
     end
     it "should delete scope from a key" do
       edit_api_key_delete_scope('firstKey6', %w(DATASET_CREATE))
       expect_status(200)
-      expect(json_body[:scope] - %w(INFERENCE)).to be_empty
+      expect(json_body[:scope] - %w(SERVING)).to be_empty
+    end
+    it "should delete kube secret when serving scope is removed" do
+      if !kfserving_installed
+        skip "This test only runs with KFServing installed"
+      end
+      edit_api_key_delete_scope('keyWithServingScope', %w(SERVING))
+      expect_status(200)
+      # check secret was removed from hops-system namespace
+      secret_name = get_api_key_kube_hops_secret_name(json_body[:prefix])
+      secret = get_api_key_kube_secret("hops-system", secret_name)
+      expect(secret).to be_nil
     end
     it "should add scope to a key" do
       edit_api_key_add_scope('firstKey6', %w(JOB DATASET_CREATE))
       expect_status(200)
-      expect(json_body[:scope] - %w(JOB DATASET_CREATE INFERENCE)).to be_empty
+      expect(json_body[:scope] - %w(JOB DATASET_CREATE SERVING)).to be_empty
     end
-    it "should delete a key" do
+    it "should add kube secret when serving scope is added" do
+      if !kfserving_installed
+        skip "This test only runs with KFServing installed"
+      end
+      edit_api_key_add_scope('keyWithServingScope', %w(SERVING))
+      expect_status(200)
+      # check secret was added to hops-system namespace
+      secret_name = get_api_key_kube_hops_secret_name(json_body[:prefix])
+      secret = get_api_key_kube_secret("hops-system", secret_name)
+      expect(secret).not_to be_nil
+      expect(secret).to include("data")
+      expect(secret["data"]).to include("user")
+      expect(secret["data"]).to include("salt")
+      expect(secret["data"]).to include("secret") # secret hash
+    end
+    it "should delete a key" dosend a request to a non existing model
       delete_api_key('firstKey6')
       expect_status(204)
       get_api_keys
       expect_status(200)
-      expect(3).to eq(json_body[:count])
+      expect(5).to eq(json_body[:count])
+    end
+    it "should delete the kube secret of a key with serving scope" do
+      if !kfserving_installed
+        skip "This test only runs with KFServing installed"
+      end
+      get_api_key('keyWithServingScope')
+      api_key_prefix=json_body[:prefix]
+      delete_api_key('keyWithServingScope')
+      expect_status(204)
+      # check secret was removed from hops-system namespace
+      secret_name = get_api_key_kube_hops_secret_name(api_key_prefix)
+      secret = get_api_key_kube_secret("hops-system", secret_name)
+      expect(secret).to be_nil
     end
     it "should delete all keys" do
+      serving_key_prefix = nil
+      if kfserving_installed
+        serving_key = create_api_key('keyWithServingScope3', %w(JOB SERVING))
+        serving_key_prefix = json_body[:prefix]
+      end
       delete_api_keys
       expect_status(204)
       get_api_keys
       expect_status(200)
       expect(0).to eq(json_body[:count])
+      if kfserving_installed
+        # check secret was removed from hops-system namespace
+        secret_name = get_api_key_kube_hops_secret_name(serving_key_prefix)
+        secret = get_api_key_kube_secret("hops-system", secret_name)
+        expect(secret).to be_nil
+      end
     end
     it "non-admin user should fail to create key with Admin scope" do
-      scopes = %w(JOB ADMIN INFERENCE)
+      scopes = %w(JOB ADMIN SERVING)
       create_api_key('fail_2_create', scopes)
       expect_status(403)
     end
