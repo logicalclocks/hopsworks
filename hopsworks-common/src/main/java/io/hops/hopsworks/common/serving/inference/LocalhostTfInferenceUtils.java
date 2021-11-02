@@ -38,7 +38,7 @@ public class LocalhostTfInferenceUtils {
   
     // Append the version if the user specified it.
     if (modelVersion != null) {
-      pathBuilder.append("/versions").append(modelVersion);
+      pathBuilder.append("/versions/").append(modelVersion);
     }
     
     pathBuilder.append(verb);

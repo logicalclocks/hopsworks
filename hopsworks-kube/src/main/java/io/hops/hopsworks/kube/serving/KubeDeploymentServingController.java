@@ -129,10 +129,17 @@ public class KubeDeploymentServingController extends KubeToolServingController {
     return new KubeServingInternalStatus() {
       {
         setServingStatus(status);
-        setNodePort(nodePort);
         setAvailable(deploymentStatus != null && instanceService != null);
         setAvailableReplicas(availableReplicas);
         setConditions(conditions.size() > 0 ? conditions : null);
+        setInternalIPs(kubeClientService.getReadyNodeList());
+        setInternalPort(nodePort);
+        setInternalPath(kubeServingUtils.getInternalInferencePath(serving, ""));
+        // These values will be fetched from the location href in the UI (client-side). By doing this, we make sure
+        // that we display the correct host and port to reach Hopsworks. For instance, using proxies or SSH
+        // tunneling, the port might differ from the default 80 or 443 on the client side.
+        setExternalIP(null);
+        setExternalPort(null);
       }
     };
   }

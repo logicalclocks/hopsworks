@@ -70,7 +70,7 @@ public class InferenceController {
    * @throws InferenceException
    */
   public String infer(Project project, String modelName, Integer modelVersion,
-                      String verb, String inferenceRequestJson) throws InferenceException {
+                      String verb, String inferenceRequestJson, String authHeader) throws InferenceException {
 
     Serving serving = servingFacade.findByProjectAndName(project, modelName);
     if (serving == null) {
@@ -88,7 +88,7 @@ public class InferenceController {
 
     // ServingInferenceController is either localhost or kubernetes inference controller
     Pair<Integer, String> inferenceResult =
-      servingInferenceController.infer(serving, modelVersion, verb, inferenceRequestJson);
+      servingInferenceController.infer(serving, modelVersion, verb, inferenceRequestJson, authHeader);
 
     // Log the inference
     for (InferenceLogger inferenceLogger : inferenceLoggers) {

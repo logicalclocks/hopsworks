@@ -33,6 +33,9 @@ import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
+import javax.enterprise.inject.Any;
+import javax.enterprise.inject.Instance;
+import javax.inject.Inject;
 import javax.mail.Message;
 import javax.mail.MessagingException;
 import java.util.ArrayList;
@@ -59,6 +62,9 @@ public class ApiKeyController {
   private SecurityUtils securityUtils;
   @EJB
   private EmailBean emailBean;
+  @Inject
+  @Any
+  private Instance<ApiKeyHandler> apiKeyHandlers;
   
   /**
    * Create new key for the give user with the given key name and scopes.
@@ -69,7 +75,7 @@ public class ApiKeyController {
    * @throws ApiKeyException
    * @return
    */
-  public String createNewKey(Users user, String keyName, Set<ApiScope> scopes)
+  public String createNewKey(Users user, String keyName, Set<ApiScope> scopes, Boolean reserved)
     throws UserException, ApiKeyException {
     if (user == null) {
       throw new UserException(RESTCodes.UserErrorCode.USER_WAS_NOT_FOUND, Level.FINE);
@@ -87,12 +93,19 @@ public class ApiKeyController {
     if (apiKey != null) {
       throw new ApiKeyException(RESTCodes.ApiKeyErrorCode.KEY_NAME_EXIST, Level.FINE);
     }
+
     Secret secret = generateApiKey();
     Date date = new Date();
-    apiKey = new ApiKey(user, secret.getPrefix(), secret.getSha256HexDigest(), secret.getSalt(), date, date, keyName);
+    apiKey = new ApiKey(user, secret.getPrefix(), secret.getSha256HexDigest(), secret.getSalt(), date, date, keyName,
+      reserved);
     List<ApiKeyScope> keyScopes = getKeyScopes(scopes, apiKey);
     apiKey.setApiKeyScopeCollection(keyScopes);
+  
     apiKeyFacade.save(apiKey);
+    
+    // run create handlers
+    ApiKeyHandler.runApiKeyCreateHandlers(apiKeyHandlers, apiKey);
+    
     sendCreatedEmail(user, keyName, date, scopes);
     return secret.getPrefixPlusSecret();
   }
@@ -168,11 +181,14 @@ public class ApiKeyController {
    * @param user
    * @param keyName
    */
-  public void deleteKey(Users user, String keyName) {
+  public void deleteKey(Users user, String keyName) throws ApiKeyException {
     ApiKey apiKey = apiKeyFacade.findByUserAndName(user, keyName);
     if (apiKey == null) {
       return;
     }
+    // run delete handlers
+    ApiKeyHandler.runApiKeyDeleteHandlers(apiKeyHandlers, apiKey);
+    
     apiKeyFacade.remove(apiKey);
     sendDeletedEmail(user, keyName);
   }
@@ -181,9 +197,10 @@ public class ApiKeyController {
    *
    * @param user
    */
-  public void deleteAll(Users user) {
+  public void deleteAll(Users user) throws ApiKeyException {
     List<ApiKey> keys = apiKeyFacade.findByUser(user);
     for (ApiKey key : keys) {
+      ApiKeyHandler.runApiKeyDeleteHandlers(apiKeyHandlers, key); // run delete handlers
       apiKeyFacade.remove(key);
     }
     sendDeletedAllEmail(user);
@@ -207,6 +224,8 @@ public class ApiKeyController {
       apiKey.getApiKeyScopeCollection().addAll(newScopes);
       apiKey.setModified(new Date());
       apiKey = apiKeyFacade.update(apiKey);
+      // run api key update handlers
+      ApiKeyHandler.runApiKeyCreateHandlers(apiKeyHandlers, apiKey);
     }
     return apiKey;
   }
@@ -239,6 +258,8 @@ public class ApiKeyController {
       }
       apiKey.setModified(new Date());
       apiKey = apiKeyFacade.update(apiKey);
+      // run api key update handlers
+      ApiKeyHandler.runApiKeyDeleteHandlers(apiKeyHandlers, apiKey, toRemove);
     } else if (removed && apiKey.getApiKeyScopeCollection().isEmpty()) {
       throw new ApiKeyException(RESTCodes.ApiKeyErrorCode.KEY_SCOPE_EMPTY, Level.FINE);
     }
@@ -287,9 +308,13 @@ public class ApiKeyController {
       update = true;
     }
     if (update) {
+      Collection<ApiKeyScope> toRemove = new ArrayList<>(oldScopes); // make a copy of toRemove scopes
       apiKey.setApiKeyScopeCollection(toKeep);
       apiKey.setModified(new Date());
       apiKey = apiKeyFacade.update(apiKey);
+      // run api key handlers
+      ApiKeyHandler.runApiKeyCreateHandlers(apiKeyHandlers, apiKey, toAdd);
+      ApiKeyHandler.runApiKeyDeleteHandlers(apiKeyHandlers, apiKey, toRemove);
     }
     return apiKey;
   }
@@ -344,5 +369,4 @@ public class ApiKeyController {
       LOGGER.log(Level.WARNING, "Failed to send api key creation verification email. {0}", e.getMessage());
     }
   }
-  
 }

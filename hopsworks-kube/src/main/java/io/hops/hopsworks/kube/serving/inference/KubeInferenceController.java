@@ -41,17 +41,18 @@ public class KubeInferenceController implements ServingInferenceController {
    * @param modelVersion the version of the serving
    * @param verb the type of inference request (predict, regress, classify)
    * @param inferenceRequestJson the JSON payload of the inference request
+   * @param authHeader the Authorization header of the request
    * @return the inference result returned by the serving server
    * @throws InferenceException
    */
-  public Pair<Integer, String> infer(Serving serving, Integer modelVersion, String verb, String inferenceRequestJson)
-    throws InferenceException {
+  public Pair<Integer, String> infer(Serving serving, Integer modelVersion, String verb, String inferenceRequestJson,
+    String authHeader) throws InferenceException {
 
     // KFServing
     if (serving.getServingTool() == ServingTool.KFSERVING) {
-      return kubeKfServingInferenceController.infer(serving, verb, inferenceRequestJson);
+      return kubeKfServingInferenceController.infer(serving, verb, inferenceRequestJson, authHeader);
     }
     // Elastic
-    return kubeDeploymentInferenceController.infer(serving, modelVersion, verb, inferenceRequestJson);
+    return kubeDeploymentInferenceController.infer(serving, verb, inferenceRequestJson);
   }
 }

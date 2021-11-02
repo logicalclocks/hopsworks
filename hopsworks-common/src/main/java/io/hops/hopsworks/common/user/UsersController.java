@@ -70,6 +70,9 @@ import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
+import javax.enterprise.inject.Any;
+import javax.enterprise.inject.Instance;
+import javax.inject.Inject;
 import javax.mail.Message;
 import javax.mail.MessagingException;
 import javax.validation.ConstraintViolationException;
@@ -113,6 +116,9 @@ public class UsersController {
   private UserStatusValidator userStatusValidator;
   @EJB
   private ProjectFacade projectFacade;
+  @Inject
+  @Any
+  private Instance<UserAccountHandler> userAccountHandlers;
   
   public QrCode registerUser(UserDTO newUser, String validationKeyUrl) throws UserException {
     if (newUser.getEmail() != null && !newUser.getEmail().isEmpty()) {
@@ -135,6 +141,10 @@ public class UsersController {
       }
       // Only register the user if i can send the email. To prevent fake emails
       userFacade.persist(user);
+      
+      // trigger user account handlers
+      UserAccountHandler.runUserAccountCreateHandlers(userAccountHandlers, user);
+      
       qrCode = getQrCode(user);
     } catch (MessagingException ex) {
       throw new UserException(RESTCodes.UserErrorCode.ACCOUNT_REGISTRATION_ERROR, Level.SEVERE,
@@ -158,6 +168,10 @@ public class UsersController {
       user.getBbcGroupCollection().add(group);
     }
     userFacade.persist(user);
+  
+    // trigger user account handlers
+    UserAccountHandler.runUserAccountCreateHandlers(userAccountHandlers, user);
+    
     return user;
   }
   
@@ -169,6 +183,9 @@ public class UsersController {
     } else {
       throw new UserException(RESTCodes.UserErrorCode.ROLE_NOT_FOUND, Level.FINE, "Role could not be granted.");
     }
+  
+    // trigger user account handlers
+    UserAccountHandler.runUserAccountUpdateHandlers(userAccountHandlers, p);
   }
   
   public void removeRole(String role, Integer id) throws UserException {
@@ -180,6 +197,9 @@ public class UsersController {
     } else if (bbcGroup != null) {
       throw new UserException(RESTCodes.UserErrorCode.ROLE_NOT_FOUND, Level.FINE, "Role could not be granted.");
     }
+  
+    // trigger user account handlers
+    UserAccountHandler.runUserAccountUpdateHandlers(userAccountHandlers, p);
   }
   
   public void sendConfirmationMail(Users user) throws ServiceException {
@@ -571,6 +591,10 @@ public class UsersController {
       p.setNotes(note);
       p.setStatus(status);
       userFacade.update(p);
+  
+      // trigger user account handlers
+      UserAccountHandler.runUserAccountUpdateHandlers(userAccountHandlers, p);
+      
       try {
         emailBean.sendEmail(p.getEmail(), Message.RecipientType.TO, UserAccountsEmailMessages.ACCOUNT_STATUS_CHANGED,
           UserAccountsEmailMessages.accountStatusChangeMessage(status.getUserStatus()));
@@ -580,7 +604,6 @@ public class UsersController {
     } else {
       throw new UserException(RESTCodes.UserErrorCode.USER_WAS_NOT_FOUND, Level.FINE);
     }
-
   }
 
   public void updateSecret(Users user, String sec) {
@@ -665,6 +688,10 @@ public class UsersController {
         AccountAudit next = iterator.next();
         accountAuditFacade.remove(next);
       }
+  
+      // run delete handlers
+      UserAccountHandler.runUserAccountDeleteHandlers(userAccountHandlers, u);
+      
       try {
         userFacade.removeByEmail(u.getEmail());
       } catch (ConstraintViolationException cve) {

@@ -3,10 +3,12 @@
  */
 package io.hops.hopsworks.kube.project;
 
+import com.google.common.collect.ImmutableMap;
 import io.hops.hopsworks.common.util.IoUtils;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.kube.common.KubeClientService;
 import io.hops.hopsworks.persistence.entity.project.Project;
+import io.hops.hopsworks.persistence.entity.project.team.ProjectRoleTypes;
 
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
@@ -27,20 +29,20 @@ public class KubeProjectConfigMaps {
   private final String HADOOP_CONF = "hadoopconf";
   private final String FLINK = "flink";
   private final String SPARK = "spark";
+  private final String PROJECT_TEAMS = "project-teams";
   private final String HADOOP_CONF_SUFFIX = SEPARATOR + HADOOP_CONF;
   private final String SPARK_SUFFIX = SEPARATOR + SPARK;
   private final String FLINK_SUFFIX = SEPARATOR + FLINK;
+  private final String PROJECT_TEAMS_SUFFIX = SEPARATOR + PROJECT_TEAMS;
   
   @EJB
   private KubeClientService kubeClientService;
   @EJB
   private Settings settings;
   
-  
   public void createConfigMaps(Project project) throws IOException{
-    createHadoopConfigMap(project);
-    createSparkConfigMap(project);
-    createFlinkConfigMap(project);
+    createServiceConfigMaps(project);
+    createProjectConfigMaps(project);
   }
   
   public void deleteConfigMaps(Project project){
@@ -50,11 +52,13 @@ public class KubeProjectConfigMaps {
         getSparkConfigMapName(project));
     kubeClientService.deleteConfigMap(kubeClientService.getKubeProjectName(project),
         getFlinkConfigMapName(project));
+    kubeClientService.deleteConfigMap(kubeClientService.getKubeProjectName(project),
+        getProjectTeamsConfigMapName(project));
   }
   
   public void reloadConfigMaps(Project project) throws IOException {
     //TODO: check for some condition to avoid continuous reload
-    createConfigMaps(project);
+    createServiceConfigMaps(project);
   }
   
   public String getHadoopConfigMapName(Project project){
@@ -67,6 +71,22 @@ public class KubeProjectConfigMaps {
   
   public String getFlinkConfigMapName(Project project){
     return kubeClientService.getKubeProjectName(project) + FLINK_SUFFIX;
+  }
+  
+  public String getProjectTeamsConfigMapName(Project project){
+    return kubeClientService.getKubeProjectName(project) + PROJECT_TEAMS_SUFFIX;
+  }
+  
+  private void createServiceConfigMaps(Project project) throws IOException {
+    // create config maps that are reloaded periodically
+    createHadoopConfigMap(project);
+    createSparkConfigMap(project);
+    createFlinkConfigMap(project);
+  }
+  
+  private void createProjectConfigMaps(Project project) throws IOException {
+    // create config maps that are only removed when the project is deleted
+    createProjectTeamsConfigMap(project);
   }
   
   private void createHadoopConfigMap(Project project) throws IOException {
@@ -91,8 +111,13 @@ public class KubeProjectConfigMaps {
         FLINK_SUFFIX);
   }
   
-  private void createConfigMap(Project project,
-      String confDir, List<String> confFiles, String suffix) throws IOException {
+  private void createProjectTeamsConfigMap(Project project) {
+    kubeClientService.createOrUpdateConfigMap(project, PROJECT_TEAMS_SUFFIX,
+      ImmutableMap.of(project.getOwner().getUsername(), ProjectRoleTypes.DATA_OWNER.getRole()));
+  }
+  
+  private void createConfigMap(Project project, String confDir, List<String> confFiles, String suffix)
+      throws IOException {
     
     Map<String, String> fileNamesToContent = new HashMap<>();
     for(String file : confFiles){
@@ -100,8 +125,7 @@ public class KubeProjectConfigMaps {
           IoUtils.readContentFromPath(new File(confDir, file)));
     }
     
-    kubeClientService.createOrUpdateConfigMap(project,
-        suffix, fileNamesToContent);
+    kubeClientService.createOrUpdateConfigMap(project, suffix, fileNamesToContent);
   }
   
 }

@@ -13,6 +13,7 @@ import io.fabric8.kubernetes.api.model.ContainerPortBuilder;
 import io.fabric8.kubernetes.api.model.EmptyDirVolumeSource;
 import io.fabric8.kubernetes.api.model.EnvVar;
 import io.fabric8.kubernetes.api.model.EnvVarBuilder;
+import io.fabric8.kubernetes.api.model.EnvVarSourceBuilder;
 import io.fabric8.kubernetes.api.model.HTTPGetActionBuilder;
 import io.fabric8.kubernetes.api.model.IntOrString;
 import io.fabric8.kubernetes.api.model.LabelSelectorBuilder;
@@ -60,6 +61,7 @@ import io.hops.hopsworks.exceptions.JobException;
 import io.hops.hopsworks.kube.common.KubeClientService;
 import io.hops.hopsworks.kube.common.KubeStereotype;
 import io.hops.hopsworks.kube.project.KubeProjectConfigMaps;
+import io.hops.hopsworks.kube.security.KubeApiKeyUtils;
 import io.hops.hopsworks.persistence.entity.jobs.configuration.DockerJobConfiguration;
 import io.hops.hopsworks.persistence.entity.jobs.configuration.JobType;
 import io.hops.hopsworks.persistence.entity.jupyter.JupyterProject;
@@ -139,6 +141,8 @@ public class KubeJupyterManager extends JupyterManagerImpl implements JupyterMan
   private KubeProjectConfigMaps kubeProjectConfigMaps;
   @EJB
   private JobController jobController;
+  @EJB
+  private KubeApiKeyUtils kubeApiKeyUtils;
   
   @Override
   @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
@@ -253,7 +257,7 @@ public class KubeJupyterManager extends JupyterManagerImpl implements JupyterMan
   private List<Container> buildContainer(JupyterPaths jupyterPaths, String anacondaEnv, String pythonKernelName,
       String secretDir, String certificatesDir, String hdfsUser, String token,
       ResourceRequirements resourceRequirements, Integer nodePort, String jupyterMode, boolean isGit,
-      Project project, Map<String, String> filebeatEnv) throws ServiceDiscoveryException {
+      Project project, Users user, Map<String, String> filebeatEnv) throws ServiceDiscoveryException {
     String jupyterHome = jupyterPaths.getNotebookPath();
     String hadoopHome = settings.getHadoopSymbolicLinkDir();
     String hadoopConfDir = hadoopHome + "/etc/hadoop";
@@ -280,6 +284,9 @@ public class KubeJupyterManager extends JupyterManagerImpl implements JupyterMan
     environment.add(new EnvVarBuilder().withName("PYTHONHASHSEED").withValue("0").build());
     environment.add(new EnvVarBuilder().withName("IS_GIT").withValue(Boolean.toString(isGit)).build());
     environment.add(new EnvVarBuilder().withName("FLINK_LIB_DIR").withValue(settings.getFlinkLibDir()).build());
+    environment.add(new EnvVarBuilder().withName("SERVING_API_KEY").withValueFrom(
+      new EnvVarSourceBuilder().withNewSecretKeyRef(KubeApiKeyUtils.SERVING_API_KEY_SECRET_KEY,
+        kubeApiKeyUtils.getProjectServingApiKeySecretName(user), false).build()).build());
 
     List<Container> containers = new ArrayList<>();
     VolumeMount logMount = new VolumeMountBuilder()
@@ -442,7 +449,7 @@ public class KubeJupyterManager extends JupyterManagerImpl implements JupyterMan
     filebeatEnv.put("LOGSTASH", logstashAddr);
   
     List<Container> containers = buildContainer(jupyterPaths, anacondaEnv, pythonKernelName, secretDir, certificatesDir,
-      hadoopUser, token, resourceRequirements, nodePort, jupyterMode, isGit, project, filebeatEnv);
+      hadoopUser, token, resourceRequirements, nodePort, jupyterMode, isGit, project, user, filebeatEnv);
     
     return new DeploymentBuilder()
       .withMetadata(new ObjectMetaBuilder()

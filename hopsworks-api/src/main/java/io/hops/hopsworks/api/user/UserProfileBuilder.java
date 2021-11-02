@@ -17,6 +17,7 @@ package io.hops.hopsworks.api.user;
 
 import io.hops.hopsworks.common.dao.user.BbcGroupFacade;
 import io.hops.hopsworks.common.dao.user.UserFacade;
+import io.hops.hopsworks.common.user.UserAccountHandler;
 import io.hops.hopsworks.common.user.UsersController;
 import io.hops.hopsworks.exceptions.ServiceException;
 import io.hops.hopsworks.exceptions.UserException;
@@ -29,6 +30,9 @@ import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
+import javax.enterprise.inject.Any;
+import javax.enterprise.inject.Instance;
+import javax.inject.Inject;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.logging.Level;
@@ -42,6 +46,9 @@ public class UserProfileBuilder {
   private UserFacade userFacade;
   @EJB
   private BbcGroupFacade bbcGroupFacade;
+  @Inject
+  @Any
+  private Instance<UserAccountHandler> userAccountHandlers;
 
   public UserProfileDTO acceptUser(Integer userId, Users newUser) throws UserException, ServiceException {
     Users u = usersController.getUserById(userId);
@@ -58,6 +65,7 @@ public class UserProfileBuilder {
       u.setStatus(UserAccountStatus.ACTIVATED_ACCOUNT);
       u.setBbcGroupCollection(groups);
       u = userFacade.update(u);
+      UserAccountHandler.runUserAccountUpdateHandlers(userAccountHandlers, u); // run user update handlers
       usersController.sendConfirmationMail(u);
     } else {
       throw new UserException(RESTCodes.UserErrorCode.TRANSITION_STATUS_ERROR, Level.WARNING,
@@ -71,6 +79,7 @@ public class UserProfileBuilder {
     if (u != null) {
       u.setStatus(UserAccountStatus.SPAM_ACCOUNT);
       u = userFacade.update(u);
+      UserAccountHandler.runUserAccountUpdateHandlers(userAccountHandlers, u); // run user update handlers
       usersController.sendRejectionEmail(u);
     } else {
       throw new UserException(RESTCodes.UserErrorCode.USER_WAS_NOT_FOUND, Level.FINE);
@@ -110,6 +119,10 @@ public class UserProfileBuilder {
       u.setMaxNumProjects(newUser.getMaxNumProjects());
     }
     u = userFacade.update(u);
+    
+    // run user update handlers
+    UserAccountHandler.runUserAccountUpdateHandlers(userAccountHandlers, u);
+    
     return new UserProfileDTO(u);
   }
 }

@@ -19,6 +19,7 @@ import io.fabric8.kubernetes.api.model.ResourceRequirements;
 import io.fabric8.kubernetes.api.model.ResourceRequirementsBuilder;
 import io.fabric8.kubernetes.api.model.Secret;
 import io.fabric8.kubernetes.api.model.SecretBuilder;
+import io.fabric8.kubernetes.api.model.SecretList;
 import io.fabric8.kubernetes.api.model.Service;
 import io.fabric8.kubernetes.api.model.ServiceBuilder;
 import io.fabric8.kubernetes.api.model.apps.Deployment;
@@ -31,9 +32,14 @@ import io.fabric8.kubernetes.client.ConfigBuilder;
 import io.fabric8.kubernetes.client.DefaultKubernetesClient;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.KubernetesClientException;
+import io.fabric8.kubernetes.client.Watch;
+import io.fabric8.kubernetes.client.Watcher;
+import io.fabric8.kubernetes.client.dsl.FilterWatchListDeletable;
+import io.fabric8.kubernetes.client.dsl.FilterWatchListMultiDeletable;
 import io.github.resilience4j.retry.IntervalFunction;
 import io.github.resilience4j.retry.Retry;
 import io.github.resilience4j.retry.RetryConfig;
+import io.hops.common.Pair;
 import io.hops.hopsworks.common.hosts.ServiceDiscoveryController;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.persistence.entity.jobs.history.Execution;
@@ -50,6 +56,7 @@ import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import java.util.ArrayList;
 import java.util.Base64;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -66,6 +73,7 @@ import static io.hops.hopsworks.common.util.Settings.CERT_PASS_SUFFIX;
 import static io.hops.hopsworks.common.util.Settings.HOPS_USERNAME_SEPARATOR;
 import static io.hops.hopsworks.common.util.Settings.KEYSTORE_SUFFIX;
 import static io.hops.hopsworks.common.util.Settings.TRUSTSTORE_SUFFIX;
+import static java.util.logging.Level.INFO;
 
 @Singleton
 @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
@@ -88,6 +96,8 @@ public class KubeClientService {
   @EJB
   private ServiceDiscoveryController serviceDiscoveryController;
 
+  // Namespaces
+  
   public void createProjectNamespace(Project project)
       throws KubernetesClientException {
     handleClientOp((client) ->
@@ -103,6 +113,8 @@ public class KubeClientService {
     handleClientOp((client) ->
         client.namespaces().withName(getKubeProjectName(project)).delete());
   }
+  
+  // Config maps
   
   @Asynchronous
   public void createOrUpdateConfigMap(Execution execution, String suffix, Map<String, String> filenameToContent)
@@ -143,9 +155,39 @@ public class KubeClientService {
                 .build())
         .withData(filenameToContent)
         .build();
-    
     handleClientOp((client) -> client.configMaps().inNamespace(kubeProjectNS)
         .createOrReplace(configMap));
+  }
+  
+  @Asynchronous
+  public void patchConfigMap(String kubeProjectNS, String kubeProjectConfigMap, Map<String, String> data)
+      throws KubernetesClientException {
+    // TODO: (Javier) Update fabric8 to v5 and use PatchContext(Strategy.MergePatch)
+    ConfigMap cm = getConfigMap(kubeProjectNS, kubeProjectConfigMap);
+    if (cm == null) {
+      data.values().removeAll(Collections.singleton(null));
+      createOrUpdateConfigMap(kubeProjectNS, kubeProjectConfigMap, data);
+      return; // config map was just created
+    }
+    Map<String, String> cmData = cm.getData();
+    if (cmData != null) {
+      cmData.putAll(data);
+      cmData.values().removeAll(Collections.singleton(null));
+    } else {
+      data.values().removeAll(Collections.singleton(null));
+      if (data.size() == 0) {
+        return; // config map doesn't exist and there is no data to patch
+      }
+      cmData = data;
+    }
+    cm.setData(cmData);
+    LOGGER.log(INFO, "Patching config map of project " + kubeProjectNS + " with members: " + String.join(", ",
+      cmData.keySet()));
+    handleClientOp((client) -> client.configMaps().inNamespace(kubeProjectNS).withName(kubeProjectConfigMap).patch(cm));
+  }
+  
+  public ConfigMap getConfigMap(String namespace, String name) {
+    return handleClientOp((client) -> client.configMaps().inNamespace(namespace).withName(name).get());
   }
   
   @Asynchronous
@@ -159,6 +201,8 @@ public class KubeClientService {
                         .build())
                 .build()));
   }
+  
+  // Secrets
   
   @Asynchronous
   public void createOrUpdateSecret(Project project, Users user, String suffix, Map<String, byte[]> filenameToContent)
@@ -182,14 +226,14 @@ public class KubeClientService {
   }
   
   @Asynchronous
-  public void createOrUpdateSecret(String projectNamespace, String deploymentName,
+  public void createOrUpdateSecret(String projectNamespace, String name,
       Map<String, byte[]> filenameToContent, Map<String, String> labels)
       throws KubernetesClientException {
     
     Secret secret = new SecretBuilder()
       .withMetadata(
         new ObjectMetaBuilder()
-          .withName(deploymentName)
+          .withName(name)
           .withLabels(labels)
           .build())
       .withData(filenameToContent
@@ -217,8 +261,7 @@ public class KubeClientService {
   }
   
   @Asynchronous
-  public void deleteSecret(String namespace, String secretName)
-      throws KubernetesClientException {
+  public void deleteSecret(String namespace, String secretName) throws KubernetesClientException {
     handleClientOp((client) -> client.secrets().inNamespace(namespace).delete(
         new SecretBuilder()
             .withMetadata(
@@ -227,7 +270,38 @@ public class KubeClientService {
                     .build())
             .build()));
   }
-
+  
+  @Asynchronous
+  public void deleteSecrets(Project project, Map<String, String> labels)
+      throws KubernetesClientException {
+    String kubeProjectNS = getKubeProjectName(project);
+    deleteSecrets(kubeProjectNS, labels, null);
+  }
+  
+  @Asynchronous
+  public void deleteSecrets(Map<String, String> labels) throws KubernetesClientException {
+    deleteSecrets(null, labels, null);
+  }
+  
+  public void deleteSecrets(String namespace, Map<String, String> labels, Pair<String, String[]> labelIn) {
+    handleClientOp((client) -> {
+      FilterWatchListMultiDeletable<Secret, SecretList, Boolean, Watch, Watcher<Secret>> secrets = (namespace != null)
+        ? client.secrets().inNamespace(namespace)
+        : client.secrets().inAnyNamespace();
+      FilterWatchListDeletable<Secret, SecretList, Boolean, Watch, Watcher<Secret>> secretsWithLabels = null;
+      if (labels != null) {
+        secretsWithLabels = secrets.withLabels(labels);
+        if (labelIn != null)
+          secretsWithLabels = secretsWithLabels.withLabelIn(labelIn.getL(), labelIn.getR());
+      } else {
+        if (labelIn != null) {
+          secretsWithLabels = secrets.withLabelIn(labelIn.getL(), labelIn.getR());
+        }
+      }
+      return (secretsWithLabels != null) ? secretsWithLabels.delete() : secrets.delete();
+    });
+  }
+  
   public void createTLSSecret(Project project, Users user, byte[] keyStore, byte[] trustStore,
                               String keyPassword) throws KubernetesClientException {
     
@@ -246,13 +320,57 @@ public class KubeClientService {
     deleteSecret(project, user, "");
   }
   
-  /**
-   * Returns a list of Kube secrets with potentially matching labels.
-   */
-  public List<Secret> getSecrets(Map<String, String> labels) {
-    return handleClientOp((client) -> client.secrets().inAnyNamespace().withLabels(labels).list().getItems());
+  public Secret getSecret(Project project, String name) {
+    String kubeProjectNs = getKubeProjectName(project);
+    return getSecret(kubeProjectNs, name);
   }
   
+  public Secret getSecret(String namespace, String name) {
+    return handleClientOp((client) -> client.secrets().inNamespace(namespace).withName(name).get());
+  }
+  
+  public List<Secret> getSecrets(Map<String, String> labels) {
+    return getSecrets(null, labels, null);
+  }
+  
+  public List<Secret> getSecrets(Project project, Map<String, String> labels) {
+    String kubeProjectNs = getKubeProjectName(project);
+    return getSecrets(kubeProjectNs, labels, null);
+  }
+  public List<Secret> getSecrets(String namespace, Map<String, String> labels) {
+    return getSecrets(namespace, labels, null);
+  }
+  
+  public List<Secret> getSecrets(Map<String, String> labels, Pair<String, String[]> labelIn) {
+    return getSecrets(null, labels, labelIn);
+  }
+  
+  public List<Secret> getSecrets(String namespace, Map<String, String> labels, Pair<String, String[]> labelIn) {
+    return handleClientOp((client) -> {
+      FilterWatchListMultiDeletable<Secret, SecretList, Boolean, Watch, Watcher<Secret>> secrets = (namespace != null)
+        ? client.secrets().inNamespace(namespace)
+        : client.secrets().inAnyNamespace();
+      FilterWatchListDeletable<Secret, SecretList, Boolean, Watch, Watcher<Secret>> secretsWithLabels = null;
+      if (labels != null) {
+        secretsWithLabels = secrets.withLabels(labels);
+        if (labelIn != null)
+          secretsWithLabels = secretsWithLabels.withLabelIn(labelIn.getL(), labelIn.getR());
+      } else {
+        if (labelIn != null)
+          secretsWithLabels = secrets.withLabelIn(labelIn.getL(), labelIn.getR());
+      }
+      return (secretsWithLabels != null) ? secretsWithLabels.list().getItems() : secrets.list().getItems();
+    });
+  }
+  
+  // Deployments
+  
+  @Asynchronous
+  public void createOrReplaceDeployment(Project project, Deployment deployment)
+    throws KubernetesClientException {
+    String kubeProjectNs = getKubeProjectName(project);
+    handleClientOp((client) -> client.apps().deployments().inNamespace(kubeProjectNs).createOrReplace(deployment));
+  }
   
   @Asynchronous
   public void deleteDeployment(String namespace, String deploymentName)
@@ -276,7 +394,64 @@ public class KubeClientService {
     handleClientOp((client) -> client.apps().deployments().inNamespace(namespace)
             .delete(new DeploymentBuilder().withMetadata(deploymentMetadata).build()));
   }
-
+  
+  public void waitForDeployment(Project project, String deploymentName, int maxAttempts) throws TimeoutException {
+    RetryConfig retryConfig = RetryConfig.<Optional<Integer>>custom()
+      .maxAttempts(maxAttempts)
+      .intervalFunction(IntervalFunction.ofExponentialBackoff(400L, 1.3D))
+      .retryOnResult(o -> o.map(replicas -> replicas < 1).orElse(true))
+      .build();
+    Retry retry = Retry.of("waitForDeployment: " + deploymentName, retryConfig);
+    Retry.decorateSupplier(retry, () -> getDeploymentStatus(project, deploymentName, 1)
+      .map(o -> o.getAvailableReplicas()))
+      .get()
+      .orElseThrow(() -> new TimeoutException("Timed out waiting for Jupyter pod startup"));
+  }
+  
+  public Optional<DeploymentStatus> getDeploymentStatus(Project project, String deploymentName, int maxAttempts) {
+    RetryConfig retryConfig = RetryConfig.<DeploymentStatus>custom()
+      .maxAttempts(maxAttempts)
+      .intervalFunction(IntervalFunction.ofExponentialBackoff())
+      .retryOnResult(x -> x == null)
+      .build();
+    Retry retry = Retry.of("getDeploymentStatus: " + deploymentName, retryConfig);
+    Supplier<DeploymentStatus> supplier = Retry.decorateSupplier(retry, () ->
+      this.getDeploymentStatus(project, deploymentName));
+    return Optional.ofNullable(supplier.get());
+  }
+  
+  public DeploymentStatus getDeploymentStatus(Project project, String deploymentName) {
+    String kubeProjectNs = getKubeProjectName(project);
+    
+    Deployment deployment = handleClientOp((client) -> client.apps().deployments().inNamespace(kubeProjectNs)
+      .withName(deploymentName).get());
+    return deployment == null ? null : deployment.getStatus();
+  }
+  
+  public DeploymentStatus getDeploymentStatus(Project project, Map<String, String> podLabels)
+    throws KubernetesClientException {
+    String kubeProjectNs = getKubeProjectName(project);
+    
+    List<Deployment> deployments = handleClientOp((client) -> client.apps().deployments().inNamespace(kubeProjectNs)
+      .withLabels(podLabels).list().getItems());
+    
+    return deployments.size() == 0 ? null : deployments.get(0).getStatus();
+  }
+  
+  public Deployment rolloutDeployment(String namespace, String name) {
+    return handleClientOp((client) -> client.apps().deployments().inNamespace(namespace).withName(name).
+      rolling().restart());
+  }
+  
+  // Services
+  
+  @Asynchronous
+  public void createOrReplaceService(Project project, Service service) {
+    String kubeProjectNs = getKubeProjectName(project);
+    handleClientOp((client) -> client.services().inNamespace(kubeProjectNs)
+      .createOrReplace(service));
+  }
+  
   @Asynchronous
   public void deleteService(String namespace, String serviceName)
     throws KubernetesClientException{
@@ -299,6 +474,30 @@ public class KubeClientService {
     handleClientOp((client) -> client.services().inNamespace(namespace)
         .delete(new ServiceBuilder().withMetadata(serviceMetadata).build()));
   }
+  
+  public Optional<Service> getServiceInfo(Project project, String serviceName, int maxAttempts) {
+    RetryConfig retryConfig = RetryConfig.<Service>custom()
+      .maxAttempts(maxAttempts)
+      .intervalFunction(IntervalFunction.ofExponentialBackoff())
+      .retryOnResult(x -> x == null)
+      .build();
+    Retry retry = Retry.of("getServiceInfo: " + serviceName, retryConfig);
+    Supplier<Service> supplier = Retry.decorateSupplier(retry, () -> this.getServiceInfo(project, serviceName));
+    return Optional.ofNullable(supplier.get());
+  }
+  
+  public Service getServiceInfo(Project project, String serviceName)
+    throws KubernetesClientException {
+    String kubeProjectNs = getKubeProjectName(project);
+    return handleClientOp((client) -> client.services().inNamespace(kubeProjectNs).withName(serviceName).get());
+  }
+  
+  public List<Service> getServices(String label)
+    throws KubernetesClientException {
+    return handleClientOp((client) -> client.services().inAnyNamespace().withLabel(label).list().getItems());
+  }
+  
+  // Jobs
   
   @Asynchronous
   public void deleteJob(String namespace, String kubeJobName)
@@ -325,96 +524,17 @@ public class KubeClientService {
     LOGGER.info("Stopped job: " + kubeJobName);
   }
   
-  
   public List<Job> getJobs() {
     return handleClientOp((client) -> client.batch().jobs().inAnyNamespace().list().getItems());
   }
-  
-  
-  @Asynchronous
-  public void createOrReplaceDeployment(Project project, Deployment deployment)
-      throws KubernetesClientException {
-    String kubeProjectNs = getKubeProjectName(project);
-    handleClientOp((client) -> client.apps().deployments().inNamespace(kubeProjectNs).createOrReplace(deployment));
-  }
-  
-  @Asynchronous
-  public void createOrReplaceService(Project project, Service service) {
-    String kubeProjectNs = getKubeProjectName(project);
-    handleClientOp((client) -> client.services().inNamespace(kubeProjectNs)
-        .createOrReplace(service));
-  }
-  
+
   public void createJob(Project project, Job job)
       throws KubernetesClientException {
     String kubeProjectNs = getKubeProjectName(project);
     handleClientOp((client) -> client.batch().jobs().inNamespace(kubeProjectNs).create(job));
   }
-  
-  public void waitForDeployment(Project project, String deploymentName, int maxAttempts) throws TimeoutException {
-    RetryConfig retryConfig = RetryConfig.<Optional<Integer>>custom()
-      .maxAttempts(maxAttempts)
-      .intervalFunction(IntervalFunction.ofExponentialBackoff(400L, 1.3D))
-      .retryOnResult(o -> o.map(replicas -> replicas < 1).orElse(true))
-      .build();
-    Retry retry = Retry.of("waitForDeployment: " + deploymentName, retryConfig);
-    Retry.decorateSupplier(retry, () -> getDeploymentStatus(project, deploymentName, 1)
-        .map(o -> o.getAvailableReplicas()))
-      .get()
-      .orElseThrow(() -> new TimeoutException("Timed out waiting for Jupyter pod startup"));
-  }
 
-  public Optional<DeploymentStatus> getDeploymentStatus(Project project, String deploymentName, int maxAttempts) {
-    RetryConfig retryConfig = RetryConfig.<DeploymentStatus>custom()
-        .maxAttempts(maxAttempts)
-        .intervalFunction(IntervalFunction.ofExponentialBackoff())
-        .retryOnResult(x -> x == null)
-        .build();
-    Retry retry = Retry.of("getDeploymentStatus: " + deploymentName, retryConfig);
-    Supplier<DeploymentStatus> supplier = Retry.decorateSupplier(retry, () ->
-        this.getDeploymentStatus(project, deploymentName));
-    return Optional.ofNullable(supplier.get());
-  }
-
-  public DeploymentStatus getDeploymentStatus(Project project, String deploymentName) {
-    String kubeProjectNs = getKubeProjectName(project);
-
-    Deployment deployment = handleClientOp((client) -> client.apps().deployments().inNamespace(kubeProjectNs)
-        .withName(deploymentName).get());
-    return deployment == null ? null : deployment.getStatus();
-  }
-  
-  public DeploymentStatus getDeploymentStatus(Project project, Map<String, String> podLabels)
-    throws KubernetesClientException {
-    String kubeProjectNs = getKubeProjectName(project);
-    
-    List<Deployment> deployments = handleClientOp((client) -> client.apps().deployments().inNamespace(kubeProjectNs)
-      .withLabels(podLabels).list().getItems());
-    
-    return deployments.size() == 0 ? null : deployments.get(0).getStatus();
-  }
-
-  public Optional<Service> getServiceInfo(Project project, String serviceName, int maxAttempts) {
-    RetryConfig retryConfig = RetryConfig.<Service>custom()
-      .maxAttempts(maxAttempts)
-      .intervalFunction(IntervalFunction.ofExponentialBackoff())
-      .retryOnResult(x -> x == null)
-      .build();
-    Retry retry = Retry.of("getServiceInfo: " + serviceName, retryConfig);
-    Supplier<Service> supplier = Retry.decorateSupplier(retry, () -> this.getServiceInfo(project, serviceName));
-    return Optional.ofNullable(supplier.get());
-  }
-  
-  public Service getServiceInfo(Project project, String serviceName)
-      throws KubernetesClientException {
-    String kubeProjectNs = getKubeProjectName(project);
-    return handleClientOp((client) -> client.services().inNamespace(kubeProjectNs).withName(serviceName).get());
-  }
-  
-  public List<Service> getServices(String label)
-      throws KubernetesClientException {
-    return handleClientOp((client) -> client.services().inAnyNamespace().withLabel(label).list().getItems());
-  }
+  // Pods
   
   public List<Pod> getPodList(Project project, Map<String, String> podLabels)
     throws KubernetesClientException {
@@ -430,7 +550,9 @@ public class KubeClientService {
   public List<Pod> getPodList(Map<String, String> podLabels) throws KubernetesClientException {
     return handleClientOp((client) -> client.pods().inAnyNamespace().withLabels(podLabels).list().getItems());
   }
-
+  
+  // Names
+  
   /* In Kubernetes, most of the regex to validate names do not allow the _.
    * For this reason we replace _ with - which is allowed.
    * Hopsworks projects cannot contain -.
@@ -479,6 +601,8 @@ public class KubeClientService {
     return project.getName() + HOPS_USERNAME_SEPARATOR + user.getUsername();
   }
 
+  // Nodes
+  
   private List<Node> getNodeList() throws KubernetesClientException {
     return handleClientOp((client) -> client.nodes().list().getItems());
   }

@@ -7,7 +7,9 @@ package io.hops.hopsworks.kube.serving.utils;
 import io.fabric8.kubernetes.api.model.apps.DeploymentStatus;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.persistence.entity.project.Project;
+import io.hops.hopsworks.persistence.entity.serving.ModelServer;
 import io.hops.hopsworks.persistence.entity.serving.Serving;
+import io.hops.hopsworks.persistence.entity.serving.ServingTool;
 import org.apache.commons.lang3.RandomStringUtils;
 
 import javax.ejb.EJB;
@@ -32,12 +34,23 @@ public class KubeServingUtils {
   private KubeArtifactUtils kubeArtifactUtils;
   @EJB
   private KubeModelUtils kubeModelUtils;
+  @EJB
+  private KubeTfServingUtils kubeTfServingUtils;
+  @EJB
+  private KubeSkLearnServingUtils kubeSkLearnServingUtils;
+  
+  // Namespaces
+  public final static String HOPS_SYSTEM_NAMESPACE = "hops-system";
+  
+  // Config maps
+  public final static String HOPS_SYSTEM_USERS = HOPS_SYSTEM_NAMESPACE + "--users";
   
   // Labels
-  protected final static String LABEL_PREFIX = "serving.hops.works";
+  public final static String LABEL_PREFIX = "serving.hops.works";
   public final static String SERVING_ID_LABEL_NAME = LABEL_PREFIX + "/id";
   public final static String SERVING_NAME_LABEL_NAME = LABEL_PREFIX + "/name";
   public final static String PROJECT_ID_LABEL_NAME = LABEL_PREFIX + "/project-id";
+  public final static String CREATOR_LABEL_NAME = LABEL_PREFIX + "/creator";
   public final static String MODEL_NAME_LABEL_NAME = LABEL_PREFIX + "/model-name";
   public final static String MODEL_VERSION_LABEL_NAME = LABEL_PREFIX + "/model-version";
   public final static String ARTIFACT_VERSION_LABEL_NAME = LABEL_PREFIX + "/artifact-version";
@@ -56,10 +69,6 @@ public class KubeServingUtils {
   public final static String TRANSFORMER_ANNOTATION_NAME = LABEL_PREFIX + "/transformer";
   public final static String TOPIC_NAME_ANNOTATION_NAME = LABEL_PREFIX + "/topic-name";
   
-  // Api key
-  private final static String MODEL_SERVING_SECRET_SUFFIX = "--serving";
-  private final static String MODEL_SERVING_SECRET_APIKEY_NAME = "apiKey";
-  
   // Inference logger
   public final static String INFERENCE_LOGGER_HOST = "localhost";
   public final static Integer INFERENCE_LOGGER_PORT = 9099;
@@ -67,12 +76,15 @@ public class KubeServingUtils {
   public final static String INFERENCE_LOGGER_MODE_REQUEST = "request";
   public final static String INFERENCE_LOGGER_MODE_RESPONSE = "response";
   
+  // Labels and annotations
+  
   public Map<String, String> getHopsworksServingLabels(Project project, Serving serving) {
     return new HashMap<String, String>() {
       {
         put(SERVING_ID_LABEL_NAME, String.valueOf(serving.getId()));
         put(SERVING_NAME_LABEL_NAME, serving.getName());
         put(PROJECT_ID_LABEL_NAME, String.valueOf(project.getId()));
+        put(CREATOR_LABEL_NAME, serving.getCreator().getUsername());
         put(MODEL_NAME_LABEL_NAME, serving.getModelName());
         put(MODEL_VERSION_LABEL_NAME, serving.getModelVersion().toString());
         put(ARTIFACT_VERSION_LABEL_NAME, serving.getArtifactVersion().toString());
@@ -96,18 +108,8 @@ public class KubeServingUtils {
       }
     };
   }
-  
-  public String getApiKeyName(String prefix) {
-    return prefix.toLowerCase() + MODEL_SERVING_SECRET_SUFFIX;
-  }
-  
-  public String getApiKeySecretName(String prefix) {
-    return prefix + MODEL_SERVING_SECRET_SUFFIX;
-  }
-  
-  public String getApiKeySecretKey() {
-    return MODEL_SERVING_SECRET_APIKEY_NAME;
-  }
+
+  // Deployment
   
   public String getNewRevisionID() {
     return RandomStringUtils.randomNumeric(LAST_REVISION_LENGTH);
@@ -118,6 +120,22 @@ public class KubeServingUtils {
       ? deploymentStatus.getAvailableReplicas()
       : 0;
   }
+  
+  public String getInternalInferencePath(Serving serving, String verb) {
+    if (serving.getServingTool() == ServingTool.KFSERVING) {
+      return "/v1/models/" + serving.getName() + verb;
+    } else { // default
+      if (serving.getModelServer() == ModelServer.TENSORFLOW_SERVING) {
+        return kubeTfServingUtils.getDeploymentPath(serving.getName(), serving.getModelVersion(), verb);
+      } else if (serving.getModelServer() == ModelServer.FLASK) {
+        return kubeSkLearnServingUtils.getDeploymentPath(verb);
+      } else {
+        throw new UnsupportedOperationException("Model server not supported in kube deployment servings.");
+      }
+    }
+  }
+  
+  // Node selector and tolerations
   
   public Map<String, String> getServingNodeLabels() {
     String nodeLabels = settings.getKubeServingNodeLabels();

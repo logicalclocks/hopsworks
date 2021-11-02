@@ -12,6 +12,9 @@ import io.fabric8.kubernetes.api.model.ConfigMapVolumeSourceBuilder;
 import io.fabric8.kubernetes.api.model.Container;
 import io.fabric8.kubernetes.api.model.ContainerBuilder;
 import io.fabric8.kubernetes.api.model.EmptyDirVolumeSource;
+import io.fabric8.kubernetes.api.model.EnvVar;
+import io.fabric8.kubernetes.api.model.EnvVarBuilder;
+import io.fabric8.kubernetes.api.model.EnvVarSourceBuilder;
 import io.fabric8.kubernetes.api.model.HostPathVolumeSourceBuilder;
 import io.fabric8.kubernetes.api.model.LifecycleBuilder;
 import io.fabric8.kubernetes.api.model.ObjectMetaBuilder;
@@ -53,6 +56,7 @@ import io.hops.hopsworks.exceptions.ServiceException;
 import io.hops.hopsworks.kube.common.KubeClientService;
 import io.hops.hopsworks.kube.common.KubeStereotype;
 import io.hops.hopsworks.kube.project.KubeProjectConfigMaps;
+import io.hops.hopsworks.kube.security.KubeApiKeyUtils;
 import io.hops.hopsworks.persistence.entity.jobs.configuration.DockerJobConfiguration;
 import io.hops.hopsworks.persistence.entity.jobs.configuration.JobType;
 import io.hops.hopsworks.persistence.entity.jobs.configuration.history.JobState;
@@ -75,7 +79,6 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -123,6 +126,8 @@ public class KubeExecutionController extends AbstractExecutionController impleme
   private ProjectUtils projectUtils;
   @EJB
   private KubeProjectConfigMaps kubeProjectConfigMaps;
+  @EJB
+  private KubeApiKeyUtils kubeApiKeyUtils;
 
   @Override
   @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
@@ -193,11 +198,11 @@ public class KubeExecutionController extends AbstractExecutionController impleme
         ResourceRequirements resourceRequirements = kubeClientService.
           buildResourceRequirements(jobConfiguration.getResourceConfig());
 
-        Map<String, String> primaryContainerEnv = new HashMap<>();
-        Map<String, String> sidecarContainerEnv = new HashMap<>();
-        setContainerEnv(job.getJobType(), primaryContainerEnv, sidecarContainerEnv, hdfsUser, project, execution,
-                certificatesDir, secretsDir, settings.getAnacondaProjectDir(), jobConfiguration, hdfsUser);
-
+        List<EnvVar> primaryContainerEnv = getPrimaryContainerEnv(job.getJobType(), user, hdfsUser, project, execution,
+          certificatesDir, secretsDir, settings.getAnacondaProjectDir(), jobConfiguration);
+        List<EnvVar> sidecarContainerEnv = getSidecarContainerEnv(job.getJobType(), project, execution,
+          certificatesDir, hdfsUser);
+        
         List<Container> containers = buildContainers(job.getJobType(), jobConfiguration, secretsDir,
                 certificatesDir, resourceRequirements, primaryContainerEnv,
                 sidecarContainerEnv, project, job, execution);
@@ -341,8 +346,8 @@ public class KubeExecutionController extends AbstractExecutionController impleme
                                           String secretDir,
                                           String certificatesDir,
                                           ResourceRequirements resourceRequirements,
-                                          Map<String, String> primaryContainerEnv,
-                                          Map<String, String> sidecarContainerEnv,
+                                          List<EnvVar> primaryContainerEnv,
+                                          List<EnvVar> sidecarContainerEnv,
                                           Project project,
                                           Jobs job,
                                           Execution execution)
@@ -357,7 +362,7 @@ public class KubeExecutionController extends AbstractExecutionController impleme
               .withImagePullPolicy(settings.getKubeImagePullPolicy())
               .withResources(resourceRequirements)
               .withSecurityContext(new SecurityContextBuilder().withRunAsUser(settings.getYarnAppUID()).build())
-              .withEnv(kubeClientService.getEnvVars(primaryContainerEnv))
+              .withEnv(primaryContainerEnv)
               .withCommand("python-exec.sh")
               .withVolumeMounts(
                       new VolumeMountBuilder()
@@ -386,7 +391,7 @@ public class KubeExecutionController extends AbstractExecutionController impleme
               .withImage(ProjectUtils.getRegistryURL(settings,
                       serviceDiscoveryController) + "/filebeat:" + settings.getHopsworksVersion())
               .withImagePullPolicy(settings.getKubeImagePullPolicy())
-              .withEnv(kubeClientService.getEnvVars(sidecarContainerEnv))
+              .withEnv(sidecarContainerEnv)
               .withVolumeMounts(
                       new VolumeMountBuilder()
                               .withName("logs")
@@ -474,7 +479,7 @@ public class KubeExecutionController extends AbstractExecutionController impleme
               .withImagePullPolicy(settings.getKubeImagePullPolicy())
               .withResources(resourceRequirements)
               .withSecurityContext(sc)
-              .withEnv(kubeClientService.getEnvVars(primaryContainerEnv))
+              .withEnv(primaryContainerEnv)
               .withCommand(jobConfiguration.getCommand())
               .withArgs(args)
               .withVolumeMounts(volumeMounts)
@@ -552,7 +557,7 @@ public class KubeExecutionController extends AbstractExecutionController impleme
               .withName("logger")
               .withImage(projectUtils.getFullDockerImageName(project, true))
               .withImagePullPolicy(settings.getKubeImagePullPolicy())
-              .withEnv(kubeClientService.getEnvVars(sidecarContainerEnv))
+              .withEnv(sidecarContainerEnv)
               .withCommand("/bin/sh")
               .withArgs("-c","while true; do sleep 1; done")
               .withVolumeMounts(jobVolumeMounts)
@@ -563,80 +568,114 @@ public class KubeExecutionController extends AbstractExecutionController impleme
     return containers;
   }
 
-  private void setContainerEnv(JobType jobType, Map<String, String> primaryContainer,
-                               Map<String, String> sideContainer, String hadoopUser, Project project,
-                               Execution execution, String certificatesDir, String secretsDir,
-                               String anacondaEnv, DockerJobConfiguration dockerJobConfiguration,
-                               String hdfsUser)
-          throws ServiceDiscoveryException, IOException {
+  private List<EnvVar> getPrimaryContainerEnv(JobType jobType, Users user, String hadoopUser, Project project,
+    Execution execution, String certificatesDir, String secretsDir, String anacondaEnv,
+    DockerJobConfiguration dockerJobConfiguration) throws ServiceDiscoveryException, IOException {
+    
+    List<EnvVar> environment = new ArrayList<>();
     switch (jobType) {
       case PYTHON:
-        primaryContainer.put("SPARK_HOME", settings.getSparkDir());
-        primaryContainer.put("SPARK_CONF_DIR", settings.getSparkConfDir());
-        primaryContainer.put("ELASTIC_ENDPOINT", settings.getElasticRESTEndpoint());
-        primaryContainer.put("HADOOP_VERSION", settings.getHadoopVersion());
-        primaryContainer.put("HOPSWORKS_VERSION", settings.getHopsworksVersion());
-        primaryContainer.put("TENSORFLOW_VERSION", settings.getTensorflowVersion());
-        primaryContainer.put("KAFKA_VERSION", settings.getKafkaVersion());
-        primaryContainer.put("SPARK_VERSION", settings.getSparkVersion());
-        primaryContainer.put("LIVY_VERSION", settings.getLivyVersion());
-        primaryContainer.put("HADOOP_HOME", settings.getHadoopSymbolicLinkDir());
-        primaryContainer.put("HADOOP_HDFS_HOME", settings.getHadoopSymbolicLinkDir());
-        primaryContainer.put("HADOOP_USER_NAME", hadoopUser);
+        environment.add(new EnvVarBuilder().withName("SPARK_HOME").withValue(settings.getSparkDir()).build());
+        environment.add(new EnvVarBuilder().withName("SPARK_CONF_DIR").withValue(settings.getSparkConfDir()).build());
+        environment.add(new EnvVarBuilder().withName("ELASTIC_ENDPOINT").withValue(settings.getElasticRESTEndpoint())
+          .build());
+        environment.add(new EnvVarBuilder().withName("HADOOP_VERSION").withValue(settings.getHadoopVersion()).build());
+        environment.add(new EnvVarBuilder().withName("HOPSWORKS_VERSION").withValue(settings.getHopsworksVersion())
+          .build());
+        environment.add(new EnvVarBuilder().withName("TENSORFLOW_VERSION").withValue(settings.getTensorflowVersion())
+          .build());
+        environment.add(new EnvVarBuilder().withName("KAFKA_VERSION").withValue(settings.getKafkaVersion()).build());
+        environment.add(new EnvVarBuilder().withName("SPARK_VERSION").withValue(settings.getSparkVersion()).build());
+        environment.add(new EnvVarBuilder().withName("LIVY_VERSION").withValue(settings.getLivyVersion()).build());
+        environment.add(new EnvVarBuilder().withName("HADOOP_HOME").withValue(settings.getHadoopSymbolicLinkDir())
+          .build());
+        environment.add(new EnvVarBuilder().withName("HADOOP_HDFS_HOME").withValue(settings.getHadoopSymbolicLinkDir())
+          .build());
+        environment.add(new EnvVarBuilder().withName("HADOOP_USER_NAME").withValue(hadoopUser).build());
 
         String jobName = execution.getJob().getName();
         String executionId = String.valueOf(execution.getId());
-        primaryContainer.put("HOPSWORKS_JOB_NAME", jobName);
-        primaryContainer.put("HOPSWORKS_JOB_EXECUTION_ID", executionId);
-        primaryContainer.put("HOPSWORKS_JOB_TYPE", execution.getJob().getJobConfig().getJobType().getName());
-        primaryContainer.put("HOPSWORKS_LOGS_DATASET", Settings.BaseDataset.LOGS.getName());
+        environment.add(new EnvVarBuilder().withName("HOPSWORKS_JOB_NAME").withValue(jobName).build());
+        environment.add(new EnvVarBuilder().withName("HOPSWORKS_JOB_EXECUTION_ID").withValue(executionId).build());
+        environment.add(new EnvVarBuilder().withName("HOPSWORKS_JOB_TYPE")
+          .withValue(execution.getJob().getJobConfig().getJobType().getName()).build());
+        environment.add(new EnvVarBuilder().withName("HOPSWORKS_LOGS_DATASET")
+          .withValue(Settings.BaseDataset.LOGS.getName()).build());
 
         if (!Strings.isNullOrEmpty(kafkaBrokers.getKafkaBrokersString())) {
-          primaryContainer.put("KAFKA_BROKERS", kafkaBrokers.getKafkaBrokersString());
+          environment.add(new EnvVarBuilder().withName("KAFKA_BROKERS").withValue(kafkaBrokers.getKafkaBrokersString())
+            .build());
         }
         Service hopsworks =
                 serviceDiscoveryController.getAnyAddressOfServiceWithDNS(
                         ServiceDiscoveryController.HopsworksService.HOPSWORKS_APP);
-        primaryContainer.put("REST_ENDPOINT", "https://" + hopsworks.getName() + ":" + hopsworks.getPort());
-        primaryContainer.put(Settings.SPARK_PYSPARK_PYTHON, settings.getAnacondaProjectDir() + "/bin/python");
-        primaryContainer.put("HOPSWORKS_PROJECT_ID", Integer.toString(project.getId()));
-        primaryContainer.put("REQUESTS_VERIFY", String.valueOf(settings.getRequestsVerify()));
-        primaryContainer.put("DOMAIN_CA_TRUSTSTORE",
-                Paths.get(certificatesDir, hadoopUser + Settings.TRUSTSTORE_SUFFIX).toString());
-        primaryContainer.put("SECRETS_DIR", secretsDir);
-        primaryContainer.put("CERTS_DIR", certificatesDir);
-        primaryContainer.put("FLINK_CONF_DIR", settings.getFlinkConfDir());
-        primaryContainer.put("FLINK_LIB_DIR", settings.getFlinkLibDir());
-        primaryContainer.put("HADOOP_CLASSPATH_GLOB", settings.getHadoopClasspathGlob());
-        primaryContainer.put("SPARK_CONF_DIR", settings.getSparkConfDir());
-        primaryContainer.put("ANACONDA_ENV", anacondaEnv);
-        primaryContainer.put("APP_PATH", ((PythonJobConfiguration)dockerJobConfiguration).getAppPath());
-        primaryContainer.put("APP_FILE",
-                FilenameUtils.getName(((PythonJobConfiguration)dockerJobConfiguration).getAppPath()));
-        primaryContainer.put("APP_ARGS", execution.getArgs());
-        primaryContainer.put("APP_FILES", ((PythonJobConfiguration)dockerJobConfiguration).getFiles());
-
-
-        sideContainer.put("LOGPATH", "/app/logs/*");
-        sideContainer.put("LOGSTASH", getLogstashURL());
-        sideContainer.put("JOB", jobName);
-        sideContainer.put("EXECUTION", executionId);
-        sideContainer.put("PROJECT", project.getName().toLowerCase());
+        environment.add(new EnvVarBuilder().withName("REST_ENDPOINT")
+          .withValue("https://" + hopsworks.getName() + ":" + hopsworks.getPort()).build());
+        environment.add(new EnvVarBuilder().withName(Settings.SPARK_PYSPARK_PYTHON)
+          .withValue(settings.getAnacondaProjectDir() + "/bin/python").build());
+        environment.add(new EnvVarBuilder().withName("HOPSWORKS_PROJECT_ID")
+          .withValue(Integer.toString(project.getId())).build());
+        environment.add(new EnvVarBuilder().withName("REQUESTS_VERIFY")
+          .withValue(String.valueOf(settings.getRequestsVerify())).build());
+        environment.add(new EnvVarBuilder().withName("DOMAIN_CA_TRUSTSTORE")
+          .withValue(Paths.get(certificatesDir, hadoopUser + Settings.TRUSTSTORE_SUFFIX).toString()).build());
+        environment.add(new EnvVarBuilder().withName("SECRETS_DIR").withValue(secretsDir).build());
+        environment.add(new EnvVarBuilder().withName("CERTS_DIR").withValue(certificatesDir).build());
+        environment.add(new EnvVarBuilder().withName("FLINK_CONF_DIR").withValue(settings.getFlinkConfDir()).build());
+        environment.add(new EnvVarBuilder().withName("FLINK_LIB_DIR").withValue(settings.getFlinkLibDir()).build());
+        environment.add(new EnvVarBuilder().withName("HADOOP_CLASSPATH_GLOB")
+          .withValue(settings.getHadoopClasspathGlob()).build());
+        environment.add(new EnvVarBuilder().withName("SPARK_CONF_DIR").withValue(settings.getSparkConfDir()).build());
+        environment.add(new EnvVarBuilder().withName("ANACONDA_ENV").withValue(anacondaEnv).build());
+        environment.add(new EnvVarBuilder().withName("APP_PATH")
+          .withValue(((PythonJobConfiguration)dockerJobConfiguration).getAppPath()).build());
+        environment.add(new EnvVarBuilder().withName("APP_FILE")
+          .withValue(FilenameUtils.getName(((PythonJobConfiguration)dockerJobConfiguration).getAppPath())).build());
+        environment.add(new EnvVarBuilder().withName("APP_ARGS").withValue(execution.getArgs()).build());
+        environment.add(new EnvVarBuilder().withName("APP_FILES")
+          .withValue(((PythonJobConfiguration)dockerJobConfiguration).getFiles()).build());
+        environment.add(new EnvVarBuilder().withName("SERVING_API_KEY").withValueFrom(
+          new EnvVarSourceBuilder().withNewSecretKeyRef(KubeApiKeyUtils.SERVING_API_KEY_SECRET_KEY,
+            kubeApiKeyUtils.getProjectServingApiKeySecretName(user), false).build()).build());
         break;
       case DOCKER:
         if (dockerJobConfiguration.getEnvVars() != null && !dockerJobConfiguration.getEnvVars().isEmpty()) {
           Map<String, String> envVars = HopsUtils.parseUserProperties(String.join("\n",
                   dockerJobConfiguration.getEnvVars()));
-          primaryContainer.putAll(envVars);
+          environment.addAll(kubeClientService.getEnvVars(envVars));
         }
-        sideContainer.put("HADOOP_CONF_DIR", settings.getHadoopConfDir());
-        sideContainer.put("HADOOP_CLIENT_OPTS", "-Dfs.permissions.umask-mode=0007");
-        sideContainer.put("MATERIAL_DIRECTORY", certificatesDir);
-        sideContainer.put("HADOOP_USER_NAME", hdfsUser);
         break;
       default:
         throw new UnsupportedOperationException("Job type not supported: " + jobType);
     }
+    return environment;
+  }
+  
+  private List<EnvVar> getSidecarContainerEnv(JobType jobType, Project project, Execution execution,
+    String certificatesDir, String hdfsUser) throws ServiceDiscoveryException {
+    
+    List<EnvVar> environment = new ArrayList<>();
+    switch (jobType) {
+      case PYTHON:
+        String jobName = execution.getJob().getName();
+        String executionId = String.valueOf(execution.getId());
+        environment.add(new EnvVarBuilder().withName("LOGPATH").withValue("/app/logs/*").build());
+        environment.add(new EnvVarBuilder().withName("LOGSTASH").withValue(getLogstashURL()).build());
+        environment.add(new EnvVarBuilder().withName("JOB").withValue(jobName).build());
+        environment.add(new EnvVarBuilder().withName("EXECUTION").withValue(executionId).build());
+        environment.add(new EnvVarBuilder().withName("PROJECT").withValue(project.getName().toLowerCase()).build());
+        break;
+      case DOCKER:
+        environment.add(new EnvVarBuilder().withName("HADOOP_CONF_DIR").withValue(settings.getHadoopConfDir()).build());
+        environment.add(new EnvVarBuilder().withName("HADOOP_CLIENT_OPTS")
+          .withValue("-Dfs.permissions.umask-mode=0007").build());
+        environment.add(new EnvVarBuilder().withName("MATERIAL_DIRECTORY").withValue(certificatesDir).build());
+        environment.add(new EnvVarBuilder().withName("HADOOP_USER_NAME").withValue(hdfsUser).build());
+        break;
+      default:
+        throw new UnsupportedOperationException("Job type not supported: " + jobType);
+    }
+    return environment;
   }
 
   private Optional<Exception> runCatchAndLog(Runnable runnable, String errorMessage,

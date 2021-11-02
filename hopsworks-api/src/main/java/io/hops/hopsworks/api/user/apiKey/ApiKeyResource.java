@@ -165,7 +165,7 @@ public class ApiKeyResource {
     @Context HttpServletRequest req) throws ApiKeyException, UserException {
     Users user = jwtHelper.getUserPrincipal(sc);
     Set<ApiScope> validatedScopes = validateScopes(user, scopes);
-    String apiKey = apikeyController.createNewKey(user, name, validatedScopes);
+    String apiKey = apikeyController.createNewKey(user, name, validatedScopes, false);
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.APIKEY);
     ApiKeyDTO dto = apikeyBuilder.build(uriInfo, resourceRequest, user, name);
     dto.setKey(apiKey);
@@ -179,7 +179,8 @@ public class ApiKeyResource {
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   public Response deleteByName(@PathParam("name") String name, @Context UriInfo uriInfo,
-    @Context HttpServletRequest req, @AuditTarget(UserIdentifier.REQ) @Context SecurityContext sc) {
+    @Context HttpServletRequest req, @AuditTarget(UserIdentifier.REQ) @Context SecurityContext sc)
+      throws ApiKeyException {
     Users user = jwtHelper.getUserPrincipal(sc);
     apikeyController.deleteKey(user, name);
     return Response.noContent().build();
@@ -191,7 +192,7 @@ public class ApiKeyResource {
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   public Response deleteAll(@Context UriInfo uriInfo, @AuditTarget(UserIdentifier.REQ) @Context SecurityContext sc,
-    @Context HttpServletRequest req) {
+    @Context HttpServletRequest req) throws ApiKeyException {
     Users user = jwtHelper.getUserPrincipal(sc);
     apikeyController.deleteAll(user);
     return Response.noContent().build();
@@ -219,7 +220,7 @@ public class ApiKeyResource {
   @ApiOperation(value = "Check api key session.")
   @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   @ApiKeyRequired( acceptedScopes = {ApiScope.DATASET_CREATE, ApiScope.DATASET_DELETE, ApiScope.DATASET_VIEW,
-    ApiScope.JOB, ApiScope.INFERENCE}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
+    ApiScope.JOB, ApiScope.SERVING}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   public Response checkSession(@Context SecurityContext sc) {
     return Response.ok().build();
   }

@@ -16,12 +16,17 @@
 
 
 describe "On #{ENV['OS']}" do
-
-  describe 'tensorflow' do
+  describe 'KFServing with tensorflow' do
     before :all do
       if !kfserving_installed
-        skip "This test only run with KFServing installed"
+        skip "This test only runs with KFServing installed"
       end
+      with_admin_session()
+      with_valid_project
+      admin_update_user(@user[:uid], {status: "ACTIVATED_ACCOUNT"})
+      @admin_user = @user
+
+      with_kfserving_tensorflow(@project[:id], @project[:projectname], @user[:username])
     end
     after (:all) do
       clean_all_test_projects(spec: "kfserving_inference")
@@ -82,151 +87,355 @@ describe "On #{ENV['OS']}" do
                          0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
                          0.0, 0.0, 0.0, 0.0]]}
 
-      describe "#infer" do
-        context 'without authentication', vm: true do
-          before :all do
-            with_valid_project
-            with_kfserving_tensorflow(@project[:id], @project[:projectname], @user[:username])
-            reset_session
-          end
 
-          it "the inference should fail" do
-            post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/inference/models/#{@serving[:name]}:predict"
-            expect_status_details(401, error_code: 200003)
-          end
-        end
+      context 'without authentication', vm: true do
 
-        context 'with authentication and with kfserving', vm: true do
-          before :all do
-            with_valid_project
-            with_kfserving_tensorflow(@project[:id], @project[:projectname], @user[:username])
-          end
-
-          it "should fail to send a request to a non existing model"  do
-            post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/inference/models/nonexistingmodel:predict"
-            expect_status_details(404)
-          end
-
-          it "should fail to send a request to a non running model" do
-            post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/inference/models/#{@serving[:name]}:predict"
-            expect_status_details(400, error_code: 250001)
-          end
-
-          context 'with running model do' do
-
-            before :all do
-              post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/#{@serving[:id]}?action=start"
-              expect_status_details(200)
-
-              # Sleep some time while the inference service starts
-              wait_for_type(@serving[:name])
-            end
-
-            it "should succeeds to infer from a serving with kafka logging" do
-              post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/inference/models/#{@serving[:name]}:predict", {
-                  signature_name: 'predict_images',
-                  instances: test_data
-              }
-              expect_status_details(200)
-              # TODO(Check that the response has the correct format)
-            end
-
-            it "should receive an error if the input payload is malformed" do
-              post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/inference/models/#{@serving[:name]}:predict", {
-                  signature_name: 'predict_images',
-                  somethingwrong: test_data
-              }
-              expect_status_details(400, error_code: 250008)
-            end
-
-            it "should receive an error if the input payload is empty" do
-              post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/inference/models/#{@serving[:name]}:predict"
-              expect_status_details(400, error_code: 250008)
-            end
-
-            it "should succeed to infer from a serving with no kafka logging" do
-              put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
-               {id: @serving[:id],
-                name: @serving[:name],
-                modelPath: @serving[:model_path],
-                modelVersion: @serving[:model_version],
-                batchingEnabled: @serving[:enable_batching],
-                modelServer: parse_model_server(@serving[:model_server]),
-                servingTool: parse_serving_tool(@serving[:serving_tool]),
-                requestedInstances: @serving[:instances]
-               }
-              expect_status_details(201)
-
-              # Sleep some time while the inference service restarts
-              wait_for_type(@serving[:name])
-
-              post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/inference/models/#{@serving[:name]}:predict", {
-                  signature_name: 'predict_images',
-                  instances: test_data
-              }
-              expect_status_details(200)
-            end
-
-            it "should succeed to infer from a serving with transformer" do
-              put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
-               {id: @serving[:id],
-                name: @serving[:name],
-                modelPath: @serving[:model_path],
-                modelVersion: @serving[:model_version],
-                batchingEnabled: false,
-                kafkaTopicDTO: {
-                   name: "NONE"
-                },
-                modelServer: parse_model_server(@serving[:model_server]),
-                servingTool: parse_serving_tool(@serving[:serving_tool]),
-                transformer: "/Projects/#{@project[:projectname]}/Models/mnist/1/transformer.py",
-                requestedInstances: @serving[:instances],
-                requestedTransformerInstances: 1
-               }
-              expect_status_details(201)
-
-              # Sleep some time while the inference service restarts
-              wait_for_type(@serving[:name])
-
-              post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/inference/models/#{@serving[:name]}:predict", {
-                  signature_name: 'predict_images',
-                  instances: test_data
-              }
-              expect_status_details(200)
-            end
-          end
-        end
-      end
-      describe 'with Api key' do
-        before(:all) do
-          with_valid_project
-          with_kfserving_tensorflow(@project[:id], @project[:projectname], @user[:username])
-          start_serving(@project, @serving)
-          wait_for_type(@serving[:name])
-          sleep(5)
-          @key = create_api_key('inferenceKey', %w(INFERENCE))
-          @invalid_key = create_api_key('inferenceKey_invalid', %w(JOB DATASET_VIEW DATASET_CREATE DATASET_DELETE))
+        before :all do
           reset_session
         end
-        context 'with invalid scope' do
-          before(:all) do
-            set_api_key_to_header(@invalid_key)
-          end
-          it 'should fail to access inference end-point' do
-            post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/inference/models/#{@serving[:name]}:predict"
-            expect_status_details(403, error_code: 320004)
-          end
+
+        it "the inference should fail" do
+          post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/inference/models/#{@serving[:name]}:predict", {
+              signature_name: 'predict_images',
+              instances: test_data
+          }
+          expect_status_details(401, error_code: 200003)
         end
-        context 'with valid scope' do
-          before(:all) do
-            set_api_key_to_header(@key)
+      end
+
+      context 'with JWT authentication', vm: true do
+
+        before :all do
+          create_session(@admin_user[:email], "Pass123")
+        end
+
+        it "should fail to send a request to a non existing model"  do
+          post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/inference/models/nonexistingmodel:predict", {
+              signature_name: 'predict_images',
+              instances: test_data
+          }
+          expect_status_details(404)
+        end
+
+        context 'with running model do' do
+
+          before :all do
+            start_serving(@project, @serving)
+
+            # Sleep some time while the inference service starts
+            wait_for_type(@serving[:name])
           end
-          it 'should succeed to infer' do
+
+          after :all do
+            stop_serving(@project, @serving)
+
+            # Sleep some time while the inference service stops
+            sleep(10) # 30
+          end
+
+          it "should fail to infer from a KFServing serving with JWT authentication" do
             post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/inference/models/#{@serving[:name]}:predict", {
                 signature_name: 'predict_images',
                 instances: test_data
             }
-            expect_status_details(200)
+            expect_status_details(400, error_code: 250009)
+          end
+        end
+      end
+
+      context 'with API Key authentication' do
+
+        before(:all) do
+          create_session(@admin_user[:email], "Pass123")
+
+          @key = create_api_key("serving_test_#{random_id_len(4)}", %w(SERVING))
+          @invalid_scope_key = create_api_key("serving_test_#{random_id_len(4)}", %w(DATASET_VIEW DATASET_CREATE
+          DATASET_DELETE))
+
+          reset_session
+          set_api_key_to_header(@key)
+        end
+
+        it "should fail to send a request to a non existing model"  do
+          post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/inference/models/nonexistingmodel:predict", {
+              signature_name: 'predict_images',
+              instances: test_data
+          }
+          expect_status_details(404)
+        end
+
+        it "should fail to send a request to a non running model" do
+          serving = get_serving(@serving[:name])
+          expect(serving[:status]).not_to eq("RUNNING")
+
+          post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/inference/models/#{@serving[:name]}:predict", {
+              signature_name: 'predict_images',
+              instances: test_data
+          }
+          expect_status_details(400, error_code: 250001)
+        end
+
+        context 'with running model do' do
+          before :all do
+            start_serving(@project, @serving)
+
+            # Sleep some time while the inference service starts
+            wait_for_type(@serving[:name])
+            sleep(5)
+          end
+
+          context "through Hopsworks REST API" do
+
+            context 'with invalid API key' do
+
+              before :each do
+                set_api_key_to_header(@invalid_scope_key)
+              end
+
+              it 'should fail to access inference end-point with invalid scope' do
+                post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/inference/models/#{@serving[:name]}:predict", {
+                    signature_name: 'predict_images',
+                    instances: test_data
+                }
+                expect_status_details(403, error_code: 320004)
+              end
+            end
+
+            context 'with valid API Key' do
+
+              before :all do
+                set_api_key_to_header(@key)
+              end
+
+              it "should succeed to infer from a serving with kafka logging" do
+                post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/inference/models/#{@serving[:name]}:predict", {
+                    signature_name: 'predict_images',
+                    instances: test_data
+                }
+                expect_status_details(200)
+              end
+
+              it "should receive an error if the input payload is malformed" do
+                post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/inference/models/#{@serving[:name]}:predict", {
+                    signature_name: 'predict_images',
+                    somethingwrong: test_data
+                }
+                expect_status_details(400, error_code: 250008)
+              end
+
+              it "should receive an error if the input payload is empty" do
+                post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/inference/models/#{@serving[:name]}:predict"
+                expect_status_details(400, error_code: 250008)
+              end
+
+              it "should succeed to infer from a serving with no kafka logging" do
+                put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
+                 {id: @serving[:id],
+                  name: @serving[:name],
+                  modelPath: @serving[:model_path],
+                  modelVersion: @serving[:model_version],
+                  batchingEnabled: @serving[:enable_batching],
+                  modelServer: parse_model_server(@serving[:model_server]),
+                  servingTool: parse_serving_tool(@serving[:serving_tool]),
+                  requestedInstances: @serving[:instances]
+                 }
+                expect_status_details(201)
+
+                # Sleep some time while the inference service restarts
+                wait_for_type(@serving[:name])
+
+                post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/inference/models/#{@serving[:name]}:predict", {
+                    signature_name: 'predict_images',
+                    instances: test_data
+                }
+                expect_status_details(200)
+              end
+
+              it "should succeed to infer from a serving with transformer" do
+                put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
+                 {id: @serving[:id],
+                  name: @serving[:name],
+                  modelPath: @serving[:model_path],
+                  modelVersion: @serving[:model_version],
+                  batchingEnabled: false,
+                  kafkaTopicDTO: {
+                     name: "NONE"
+                  },
+                  modelServer: parse_model_server(@serving[:model_server]),
+                  servingTool: parse_serving_tool(@serving[:serving_tool]),
+                  transformer: "/Projects/#{@project[:projectname]}/Models/mnist/1/transformer.py",
+                  requestedInstances: @serving[:instances],
+                  requestedTransformerInstances: 1
+                 }
+                expect_status_details(201)
+
+                # Sleep some time while the inference service restarts
+                wait_for_type(@serving[:name])
+
+                post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/inference/models/#{@serving[:name]}:predict", {
+                    signature_name: 'predict_images',
+                    instances: test_data
+                }
+                expect_status_details(200)
+              end
+            end
+          end
+
+          context 'through Istio ingress gateway' do
+
+            before :all do
+              # refresh serving once it's running to get internal IPs and port
+              @serving = get_serving(@serving[:name])
+            end
+
+            context 'with valid API Key' do
+
+              before :all do
+                set_api_key_to_header(@key)
+              end
+
+              it 'should succeed to infer' do
+                make_prediction_request_istio(@project[:projectname], @serving, { signature_name: 'predict_images', instances: test_data })
+                expect_status_details(200)
+                expect(json_body).to include :predictions
+              end
+            end
+
+            context 'with invalid API Key' do
+
+              it 'should fail to send inference request with invalid raw secret' do
+                invalid_key = @key + "typo"
+                set_api_key_to_header(invalid_key)
+                make_prediction_request_istio(@project[:projectname], @serving, { signature_name: 'predict_images', instances: test_data })
+                expect_status(401)
+                expect_json(userMsg: "could not authenticate API key")
+              end
+
+              it 'should fail to send inference request with non-existent prefix' do
+                invalid_key = "typo" + @key
+                set_api_key_to_header(invalid_key)
+                make_prediction_request_istio(@project[:projectname], @serving, { signature_name: 'predict_images', instances: test_data })
+                expect_status(401)
+                expect_json(userMsg: "invalid or non-existent api key")
+              end
+
+              it 'should fail to send inference request with invalid scope' do
+                set_api_key_to_header(@invalid_scope_key)
+                make_prediction_request_istio(@project[:projectname], @serving, { signature_name: 'predict_images', instances: test_data })
+                expect_status(401)
+                expect_json(userMsg: "invalid or non-existent api key")
+              end
+
+              it 'should fail to send inference request with invalid user role' do
+                project_name =  @project[:projectname]
+
+                cm = get_serving_kube_config_map
+                expect(cm).not_to be_empty
+                expect(cm).to include("data")
+                expect(cm["data"]).to include("authenticator")
+                authenticator = JSON.parse(cm["data"]["authenticator"])
+                expect(authenticator).to include("allowedUserRoles")
+                expect(authenticator).to include("allowedProjectUserRoles")
+
+                result = update_authenticator_kube_config_map(["HOPS_ADMIN"], authenticator["allowedProjectUserRoles"])
+                expect(result).not_to be_nil
+                expect(result).to eql("configmap/hops-system--serving configured\n")
+                restart_authenticator
+
+                create_session(@admin_user[:email], "Pass123")
+                newUser = create_user_with_role("HOPS_USER")
+                admin_update_user(newUser.uid, {status: "ACTIVATED_ACCOUNT"})
+                expect_status(200)
+                add_member_to_project(@project, newUser[:email], "Data owner")
+                create_session(newUser[:email], "Pass123")
+                key = create_api_key("serving_test_#{random_id_len(4)}", %w(SERVING))
+
+                reset_session
+                set_api_key_to_header(key)
+
+                make_prediction_request_istio(project_name, @serving, { signature_name: 'predict_images', instances: test_data })
+                expect_status(403)
+                expect_json(userMsg: "unauthorized user, user role not allowed")
+
+                result = update_authenticator_kube_config_map(authenticator["allowedUserRoles"], authenticator["allowedProjectUserRoles"])
+                expect(result).not_to be_nil
+                expect(result).to eql("configmap/hops-system--serving configured\n")
+                restart_authenticator
+              end
+
+              it 'should fail to send inference request with invalid project user (member) role' do
+                project_name =  @project[:projectname]
+
+                cm = get_serving_kube_config_map
+                expect(cm).not_to be_empty
+                expect(cm).to include("data")
+                expect(cm["data"]).to include("authenticator")
+                authenticator = JSON.parse(cm["data"]["authenticator"])
+                expect(authenticator).to include("allowedProjectUserRoles")
+
+                result = update_authenticator_kube_config_map(authenticator["allowedUserRoles"], ["Data owner"])
+                expect(result).not_to be_nil
+                expect(result).to eql("configmap/hops-system--serving configured\n")
+                restart_authenticator
+
+                create_session(@admin_user[:email], "Pass123")
+                newUser = create_user_with_role("HOPS_ADMIN")
+                admin_update_user(newUser.uid, {status: "ACTIVATED_ACCOUNT"})
+                expect_status(200)
+                add_member_to_project(@project, newUser[:email], "Data scientist")
+
+                create_session(newUser[:email], "Pass123")
+                key = create_api_key("serving_test_#{random_id_len(4)}", %w(SERVING))
+
+                reset_session
+                set_api_key_to_header(key)
+
+                make_prediction_request_istio(project_name, @serving, { signature_name: 'predict_images', instances: test_data })
+                expect_status(403)
+                expect_json(userMsg: "unauthorized user, project member roles not allowed")
+
+                result = update_authenticator_kube_config_map(authenticator["allowedUserRoles"], authenticator["allowedProjectUserRoles"])
+                expect(result).not_to be_nil
+                expect(result).to eql("configmap/hops-system--serving configured\n")
+                restart_authenticator
+              end
+
+              it 'should fail to send inference request with a non-member' do
+                project_name =  @project[:projectname]
+
+                create_session(@admin_user[:email], "Pass123")
+                newUser = create_user_with_role("HOPS_ADMIN")
+                admin_update_user(newUser.uid, {status: "ACTIVATED_ACCOUNT"})
+                expect_status(200)
+                create_session(newUser[:email], "Pass123")
+                key = create_api_key("serving_test_#{random_id_len(4)}", %w(SERVING))
+
+                reset_session
+                set_api_key_to_header(key)
+
+                make_prediction_request_istio(project_name, @serving, { signature_name: 'predict_images', instances: test_data })
+                expect_status(403)
+                expect_json(userMsg: "unauthorized user, not a member of the project")
+              end
+
+              it 'should fail to send inference request with a deactivated user' do
+                project_name =  @project[:projectname]
+
+                create_session(@admin_user[:email], "Pass123")
+                newUser = create_user_with_role("HOPS_ADMIN")
+                expect_status(200)
+                add_member(newUser[:email], "Data scientist")
+                create_session(newUser[:email], "Pass123")
+                key = create_api_key("serving_test_#{random_id_len(4)}", %w(SERVING))
+
+                reset_session
+                set_api_key_to_header(key)
+
+                make_prediction_request_istio(project_name, @serving, { signature_name: 'predict_images', instances: test_data })
+                expect_status(403)
+                expect_json(userMsg: "unauthorized user, account status not activated")
+              end
+            end
           end
         end
       end

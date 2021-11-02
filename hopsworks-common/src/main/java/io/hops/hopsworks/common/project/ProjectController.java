@@ -96,6 +96,7 @@ import io.hops.hopsworks.common.security.CertificateMaterializer;
 import io.hops.hopsworks.common.security.CertificatesController;
 import io.hops.hopsworks.common.serving.ServingController;
 import io.hops.hopsworks.common.serving.inference.logger.KafkaInferenceLogger;
+import io.hops.hopsworks.common.user.UserAccountHandler;
 import io.hops.hopsworks.common.user.UsersController;
 import io.hops.hopsworks.common.util.DateUtils;
 import io.hops.hopsworks.common.util.ProjectUtils;
@@ -184,6 +185,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Date;
 import java.util.EnumSet;
 import java.util.HashSet;
@@ -297,7 +299,13 @@ public class ProjectController {
   private HopsFSProvenanceController fsProvController;
   @EJB
   private AlertController alertController;
-
+  @Inject
+  @Any
+  private Instance<ProjectTeamRoleHandler> projectTeamRoleHandlers;
+  @Inject
+  @Any
+  private Instance<UserAccountHandler> userAccountHandlers;
+  
   /**
    * Creates a new project(project), the related DIR, the different services in
    * the project, and the master of the
@@ -362,15 +370,22 @@ public class ProjectController {
 
       LOGGER.log(Level.FINE, "PROJECT CREATION TIME. Step 3 (verify): {0}", System.currentTimeMillis() - startTime);
 
-      // Run the handlers.
-      for (ProjectHandler projectHandler : projectHandlers) {
-        try {
-          projectHandler.preCreate(project);
-        } catch (Exception e) {
-          cleanup(project, sessionId, null, true, owner);
-          throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_HANDLER_PRECREATE_ERROR, Level.SEVERE,
-            e.getMessage(), "project: " + project.getName() + ", handler: " + projectHandler.getClassName(), e);
-        }
+      // Run the user account update handlers
+      // For users created during Hopsworks installation (e.g., meb10000), the user account might have not been
+      // propagated completely in the system (e.g., hops-system--users config map)
+      try {
+        UserAccountHandler.runUserAccountUpdateHandlers(userAccountHandlers, owner);
+      } catch (UserException ex) {
+        cleanup(project, sessionId, null, true, owner);
+        throw ex;
+      }
+      
+      // Run the project precreate handlers.
+      try {
+        ProjectHandler.runProjectPreCreateHandlers(projectHandlers, project);
+      } catch (ProjectException ex) {
+        cleanup(project, sessionId, null, true, owner);
+        throw ex;
       }
 
       List<Future<?>> projectCreationFutures = new ArrayList<>();
@@ -476,14 +491,11 @@ public class ProjectController {
       }
 
       // Run the handlers.
-      for (ProjectHandler projectHandler : projectHandlers) {
-        try {
-          projectHandler.postCreate(project);
-        } catch (Exception e) {
-          cleanup(project, sessionId, projectCreationFutures);
-          throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_HANDLER_POSTCREATE_ERROR, Level.SEVERE,
-            e.getMessage(), "project: " + project.getName() + ", handler: " + projectHandler.getClassName(), e);
-        }
+      try {
+        ProjectHandler.runProjectPostCreateHandlers(projectHandlers, project);
+      } catch (ProjectException ex) {
+        cleanup(project, sessionId, projectCreationFutures);
+        throw ex;
       }
 
       try {
@@ -878,7 +890,7 @@ public class ProjectController {
    * @param project
    */
   public Future<CertificatesController.CertsResult> addOnlineFsUser(Project project)
-      throws HopsSecurityException, IOException {
+      throws HopsSecurityException, IOException, ProjectException {
     return addServiceUser(project, OnlineFeaturestoreController.ONLINEFS_USERNAME);
   }
 
@@ -903,12 +915,12 @@ public class ProjectController {
    * @param project
    */
   private Future<CertificatesController.CertsResult> addServingManager(Project project)
-      throws IOException, HopsSecurityException {
+      throws IOException, HopsSecurityException, ProjectException {
     return addServiceUser(project, KafkaInferenceLogger.SERVING_MANAGER_USERNAME);
   }
   
   private Future<CertificatesController.CertsResult> addServiceUser(Project project, String username)
-      throws IOException, HopsSecurityException {
+      throws IOException, HopsSecurityException, ProjectException {
     // Add the Serving Manager user to the project team
     Users serviceUser = userFacade.findByUsername(username);
     ProjectTeamPK stp = new ProjectTeamPK(project.getId(), serviceUser.getEmail());
@@ -928,6 +940,9 @@ public class ProjectController {
       throw new HopsSecurityException(RESTCodes.SecurityErrorCode.CERT_CREATION_ERROR, Level.SEVERE,
         "failed adding service user to project: " + project.getName() + "owner: " + username, e.getMessage(), e);
     }
+    // trigger project team role add handlers
+    ProjectTeamRoleHandler.runProjectTeamRoleAddMembersHandlers(projectTeamRoleHandlers, project,
+      Collections.singletonList(serviceUser), ProjectRoleTypes.fromString(st.getTeamRole()), true);
 
     return certsResultFuture;
   }
@@ -1016,6 +1031,8 @@ public class ProjectController {
     ProjectTeamPK stp = new ProjectTeamPK(project.getId(), user.getEmail());
     ProjectTeam st = new ProjectTeam(stp);
     st.setTeamRole(ProjectRoleTypes.DATA_OWNER.getRole());
+    // We don't trigger ProjectTeamRole handlers here. Owner's project team role must be handled within the project
+    // creation handler.
     st.setTimestamp(new Date());
     st.setProject(project);
     st.setUser(user);
@@ -1097,18 +1114,15 @@ public class ProjectController {
       if (project != null) {
         cleanupLogger.logSuccess("Project found in the database");
 
-        // Run custom handler for project deletion
-        for (ProjectHandler projectHandler : projectHandlers) {
-          try {
-            projectHandler.preDelete(project);
-            cleanupLogger.logSuccess("Handler " + projectHandler.getClassName() + " successfully run");
-          } catch (Exception e) {
-            cleanupLogger.logError("Error running handler: " + projectHandler.getClassName()
-              + " during project cleanup");
-            cleanupLogger.logError(e.getMessage());
-          }
+        // Run custom handlers for project deletion
+        try {
+          ProjectHandler.runProjectPreDeleteHandlers(projectHandlers, project);
+          cleanupLogger.logSuccess("Handlers successfully run");
+        } catch (ProjectException e) {
+          cleanupLogger.logError("Error running handlers during project cleanup");
+          cleanupLogger.logError(e.getMessage());
         }
-
+  
         // Remove from Project team
         try {
           updateProjectTeamRole(project, ProjectRoleTypes.UNDER_REMOVAL);
@@ -1340,16 +1354,13 @@ public class ProjectController {
           cleanupLogger.logError(ex.getMessage());
         }
 
-        // Run custom handler for project deletion
-        for (ProjectHandler projectHandler : projectHandlers) {
-          try {
-            projectHandler.postDelete(project);
-            cleanupLogger.logSuccess("Handler " + projectHandler.getClassName() + " successfully run");
-          } catch (Exception e) {
-            cleanupLogger.logError("Error running handler: " + projectHandler.getClassName()
-              + " during project cleanup");
-            cleanupLogger.logError(e.getMessage());
-          }
+        // Run custom handlers for project deletion
+        try {
+          ProjectHandler.runProjectPostDeleteHandlers(projectHandlers, project);
+          cleanupLogger.logSuccess("Handlers successfully run");
+        } catch (ProjectException e) {
+          cleanupLogger.logError("Error running handlers during project cleanup");
+          cleanupLogger.logError(e.getMessage());
         }
       } else {
         // Create /tmp/Project and add to database so we lock in case someone tries to create a Project
@@ -1701,15 +1712,9 @@ public class ProjectController {
     try {
       dfso = dfs.getDfsOps();
 
-      // Run custom handler for project deletion
-      for (ProjectHandler projectHandler : projectHandlers) {
-        try {
-          projectHandler.preDelete(project);
-        } catch (Exception e) {
-          throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_HANDLER_PREDELETE_ERROR, Level.SEVERE,
-            "project: " + project.getName() + ", handler: " + projectHandler.getClassName(), e.getMessage(), e);
-        }
-      }
+      // Run custom handlers for project deletion
+      ProjectHandler.runProjectPreDeleteHandlers(projectHandlers, project);
+      
       //log removal to notify elastic search
       logProject(project, OperationType.Delete);
       //change the owner and group of the project folder to hdfs super user
@@ -1805,15 +1810,8 @@ public class ProjectController {
 
       usersController.decrementNumActiveProjects(project.getOwner().getUid());
 
-      // Run custom handler for project deletion
-      for (ProjectHandler projectHandler : projectHandlers) {
-        try {
-          projectHandler.postDelete(project);
-        } catch (Exception e) {
-          throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_HANDLER_POSTDELETE_ERROR, Level.SEVERE,
-            "project: " + project.getName() + ", handler: " + projectHandler.getClassName(), e.getMessage(), e);
-        }
-      }
+      // Run custom handlers for project deletion
+      ProjectHandler.runProjectPostDeleteHandlers(projectHandlers, project);
 
       LOGGER.log(Level.INFO, "{0} - project removed.", project.getName());
     } finally {
@@ -1831,9 +1829,11 @@ public class ProjectController {
 
   @TransactionAttribute(
     TransactionAttributeType.REQUIRES_NEW)
-  private List<ProjectTeam> updateProjectTeamRole(Project project,
-    ProjectRoleTypes teamRole) {
-    return projectTeamFacade.updateTeamRole(project, teamRole);
+  private List<ProjectTeam> updateProjectTeamRole(Project project, ProjectRoleTypes teamRole) throws ProjectException {
+    List<ProjectTeam> projectTeams = projectTeamFacade.updateTeamRole(project, teamRole);
+    ProjectTeamRoleHandler.runProjectTeamRoleUpdateMembersHandlers(projectTeamRoleHandlers, project,
+      projectTeams.stream().map(ProjectTeam::getUser).collect(Collectors.toList()), teamRole);
+    return projectTeams;
   }
 
   @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
@@ -1958,7 +1958,7 @@ public class ProjectController {
     projectTeam.setTimestamp(new Date());
     if (newMember != null && !projectTeamFacade.isUserMemberOfProject(project, newMember)) {
       //this makes sure that the member is added to the project sent as the
-      //first param b/c the securty check was made on the parameter sent as path.
+      //first param b/c the security check was made on the parameter sent as path.
       projectTeam.getProjectTeamPK().setProjectId(project.getId());
       projectTeam.setProject(project);
       projectTeam.setUser(newMember);
@@ -2001,6 +2001,10 @@ public class ProjectController {
         throw new EJBException("Could not create certificates for user");
       }
   
+      // trigger project team role update handlers
+      ProjectTeamRoleHandler.runProjectTeamRoleAddMembersHandlers(projectTeamRoleHandlers, project,
+        Collections.singletonList(newMember), ProjectRoleTypes.fromString(projectTeam.getTeamRole()), false);
+      
       String message = "You have been added to project " + project.getName() + " with a role "
         + projectTeam.getTeamRole() + ".";
       messageController.send(newMember, owner, "You have been added to a project.", message, message, "");
@@ -2266,7 +2270,12 @@ public class ProjectController {
     } finally {
       ycs.closeYarnClient(yarnClientWrapper);
     }
-
+  
+    // trigger project team role remove handlers
+    ProjectTeamRoleHandler.runProjectTeamRoleRemoveMembersHandlers(projectTeamRoleHandlers, project,
+      Collections.singletonList(userToBeRemoved));
+    
+    // TODO: (Javier) Should we reuse handlers instead of calling removeOnlineFeaturestoreUser?
     // Revoke privileges for online feature store
     if (projectServiceFacade.isServiceEnabledForProject(project, ProjectServiceEnum.FEATURESTORE)) {
       Featurestore featurestore = featurestoreController.getProjectFeaturestore(project);
@@ -2350,7 +2359,12 @@ public class ProjectController {
     projectTeamFacade.update(projectTeam);
   
     hdfsUsersController.changeMemberRole(projectTeam);
-
+  
+    // trigger project team role update handlers
+    ProjectTeamRoleHandler.runProjectTeamRoleUpdateMembersHandlers(projectTeamRoleHandlers, project,
+      Collections.singletonList(user), ProjectRoleTypes.fromString(newRole));
+    
+    // TODO: (Javier) Should we reuse handlers instead of calling updateUserOnlineFeatureStoreDB?
     // Update privileges for online feature store
     if (projectServiceFacade.isServiceEnabledForProject(project, ProjectServiceEnum.FEATURESTORE)) {
       Featurestore featurestore = featurestoreController.getProjectFeaturestore(project);

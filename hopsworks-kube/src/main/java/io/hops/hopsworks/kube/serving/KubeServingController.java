@@ -327,10 +327,15 @@ public class KubeServingController implements ServingController {
     KubeServingInternalStatus internalStatus = toolServingController.getInternalStatus(project, serving);
     
     servingWrapper.setStatus(internalStatus.getServingStatus());
-    servingWrapper.setNodePort(internalStatus.getNodePort());
     servingWrapper.setAvailableReplicas(internalStatus.getAvailableReplicas());
     servingWrapper.setAvailableTransformerReplicas(internalStatus.getAvailableTransformerReplicas());
     servingWrapper.setConditions(internalStatus.getConditions());
+  
+    servingWrapper.setExternalIP(internalStatus.getExternalIP());
+    servingWrapper.setExternalPort(internalStatus.getExternalPort());
+    servingWrapper.setInternalIPs(internalStatus.getInternalIPs());
+    servingWrapper.setInternalPort(internalStatus.getInternalPort());
+    servingWrapper.setInternalPath(internalStatus.getInternalPath());
     
     servingWrapper.setKafkaTopicDTO(kafkaServingHelper.buildTopicDTO(serving));
     

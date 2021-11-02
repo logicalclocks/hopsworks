@@ -8,16 +8,19 @@ import com.google.common.base.Strings;
 import io.fabric8.kubernetes.client.KubernetesClientException;
 import io.hops.common.Pair;
 import io.hops.hopsworks.common.serving.inference.InferenceHttpClient;
-import io.hops.hopsworks.common.serving.inference.ServingInferenceUtils;
 import io.hops.hopsworks.exceptions.InferenceException;
 import io.hops.hopsworks.kube.common.KubeIstioClientService;
 import io.hops.hopsworks.kube.common.KubeKfServingClientService;
+import io.hops.hopsworks.kube.security.KubeApiKeyUtils;
+import io.hops.hopsworks.kube.serving.utils.KubeServingUtils;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.serving.Serving;
 import io.hops.hopsworks.restutils.RESTCodes;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.protocol.HttpClientContext;
+import org.apache.http.client.utils.URIBuilder;
+import org.apache.http.entity.StringEntity;
 import org.apache.http.protocol.HttpContext;
 import org.json.JSONObject;
 
@@ -25,6 +28,7 @@ import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
+import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.logging.Level;
@@ -38,9 +42,9 @@ public class KubeKfServingInferenceController {
   @EJB
   private KubeIstioClientService kubeIstioClientService;
   @EJB
-  private InferenceHttpClient inferenceHttpClient;
+  private KubeServingUtils kubeServingUtils;
   @EJB
-  private ServingInferenceUtils servingInferenceUtils;
+  private InferenceHttpClient inferenceHttpClient;
   
   /**
    * KFServing inference. Sends a JSON request to the REST API of a kfserving server
@@ -48,11 +52,18 @@ public class KubeKfServingInferenceController {
    * @param serving the serving instance to send the request to
    * @param verb the type of inference request (predict, regress, classify)
    * @param inferenceRequestJson the JSON payload of the inference request
+   * @param authHeader the Authorization header of the request
    * @return the inference result returned by the serving server
    * @throws InferenceException
    */
-  public Pair<Integer, String> infer(Serving serving, String verb, String inferenceRequestJson)
+  public Pair<Integer, String> infer(Serving serving, String verb, String inferenceRequestJson, String authHeader)
     throws InferenceException {
+  
+    // JWT not supported for KFServing (Istio auth)
+    if (!authHeader.startsWith(KubeApiKeyUtils.AUTH_HEADER_API_KEY_PREFIX)) {
+      throw new InferenceException(RESTCodes.InferenceErrorCode.REQUEST_AUTH_TYPE_NOT_SUPPORTED, Level.FINE, null,
+        "Inference requests to KFServing require authentication with API Keys");
+    }
     
     Project project = serving.getProject();
     JSONObject inferenceServiceStatus;
@@ -72,17 +83,10 @@ public class KubeKfServingInferenceController {
     }
     if (!verb.equals(":predict")) {
       throw new InferenceException(RESTCodes.InferenceErrorCode.BAD_REQUEST, Level.SEVERE, String.format("Verb %s not" +
-        " supported in KFServing deployments"));
+        " supported in KFServing deployments", verb));
     }
-    
-    // Build path
-    StringBuilder pathBuilder = new StringBuilder()
-      .append("/v1/models/")
-      .append(serving.getName());
-    pathBuilder.append(verb);
-    
-    // Get host, clusterIP and nodePort
-    Pair<String, Integer> ingressHostPort = kubeIstioClientService.getIstioIngressHostPort();
+
+    // Get host, hostIP and nodePort
     String host;
     try {
       host = (new URI(inferenceServiceStatus.getString("url"))).getHost();
@@ -90,25 +94,33 @@ public class KubeKfServingInferenceController {
       throw new InferenceException(RESTCodes.InferenceErrorCode.SERVING_INSTANCE_INTERNAL, Level.SEVERE, null,
         e.getMessage(), e);
     }
+    Pair<String, Integer> ingressHostPort = kubeIstioClientService.getIstioIngressHostPort();
     
-    // Build request
-    HttpPost request;
+    // Send request
+    URI uri;
     try {
-      request = servingInferenceUtils.buildInferenceRequest(ingressHostPort.getL(), ingressHostPort.getR(),
-        pathBuilder.toString(), inferenceRequestJson);
-      request.addHeader("host", host); // needed by Istio to route the request
+      uri = new URIBuilder()
+        .setScheme("http")
+        .setHost(ingressHostPort.getL())
+        .setPort(ingressHostPort.getR())
+        .setPath(kubeServingUtils.getInternalInferencePath(serving, verb))
+        .build();
     } catch (URISyntaxException e) {
       throw new InferenceException(RESTCodes.InferenceErrorCode.REQUEST_ERROR, Level.SEVERE, null, e.getMessage(), e);
     }
-  
-    // Send request
+    
     int nRetry = 3;
     while (nRetry > 0) {
       try {
+        HttpPost request = new HttpPost(uri);
+        request.addHeader("authorization", authHeader); // istio auth
+        request.addHeader("host", host);
+        request.addHeader("content-type", "application/json; charset=utf-8");
+        request.setEntity(new StringEntity(inferenceRequestJson));
         HttpContext context = HttpClientContext.create();
         CloseableHttpResponse response = inferenceHttpClient.execute(request, context);
         return inferenceHttpClient.handleInferenceResponse(response);
-      } catch (InferenceException e) {
+      } catch (IOException e) {
         // Maybe the node we are trying to send requests to died.
       } finally {
         nRetry--;

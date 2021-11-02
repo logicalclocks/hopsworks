@@ -11,7 +11,11 @@ import java.util.List;
 public class KubeServingInternalStatus {
   
   private ServingStatusEnum servingStatus;
-  private Integer nodePort;
+  private String externalIP;
+  private Integer externalPort;
+  private List<String> internalIPs;
+  private Integer internalPort;
+  private String internalPath;
   private Boolean available; // Whether the service is reachable or not. If so, we can perform actions.
   private Integer availableReplicas;
   private Integer availableTransformerReplicas;
@@ -44,12 +48,36 @@ public class KubeServingInternalStatus {
     this.availableTransformerReplicas = availableReplicas;
   }
   
-  public Integer getNodePort() {
-    return nodePort;
+  public String getExternalIP() {
+    return externalIP;
   }
-  public void setNodePort(Integer nodePort) {
-    this.nodePort = nodePort;
+  public void setExternalIP(String externalIP) {
+    this.externalIP = externalIP;
   }
+  
+  public Integer getExternalPort() {
+    return externalPort;
+  }
+  public void setExternalPort(Integer externalPort) {
+    this.externalPort = externalPort;
+  }
+  
+  public List<String> getInternalIPs() {
+    return internalIPs;
+  }
+  public void setInternalIPs(List<String> internalIPs) {
+    this.internalIPs = internalIPs;
+  }
+  
+  public Integer getInternalPort() {
+    return internalPort;
+  }
+  public void setInternalPort(Integer internalPort) {
+    this.internalPort = internalPort;
+  }
+  
+  public String getInternalPath() { return internalPath; }
+  public void setInternalPath(String internalPath) { this.internalPath = internalPath; }
   
   public List<String> getConditions() { return conditions; }
   public void setConditions(List<String> conditions) { this.conditions = conditions; }

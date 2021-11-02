@@ -19,7 +19,7 @@ require 'json'
 describe "On #{ENV['OS']}" do
   before :all do
     if !kfserving_installed
-      skip "This test only run with KFServing installed"
+      skip "This test only runs with KFServing installed"
     end
   end
 

@@ -461,7 +461,7 @@ describe "On #{ENV['OS']}" do
       with_valid_tour_project("spark")
       create_sparktour_job(@project, job_spark_1, "jar", nil)
       @key = create_api_key('jobKey', %w(JOB))
-      @invalid_key = create_api_key('jobKey_invalid', %w(DATASET_VIEW DATASET_CREATE DATASET_DELETE INFERENCE))
+      @invalid_key = create_api_key('jobKey_invalid', %w(DATASET_VIEW DATASET_CREATE DATASET_DELETE SERVING))
     end
     after :all do
       clean_jobs(@project[:id])

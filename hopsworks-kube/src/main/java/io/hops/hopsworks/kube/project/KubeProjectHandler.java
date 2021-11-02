@@ -23,12 +23,15 @@ public class KubeProjectHandler implements ProjectHandler {
   private KubeClientService kubeClientService;
   @EJB
   private KubeProjectConfigMaps kubeProjectConfigMaps;
+  @EJB
+  private KubeProjectSecrets kubeProjectSecrets;
   
   @Override
   public void preCreate(Project project) throws EJBException {
     try {
       kubeClientService.createProjectNamespace(project);
       kubeProjectConfigMaps.createConfigMaps(project);
+      kubeProjectSecrets.createSecrets(project);
     } catch (Exception e) {
       String usrMsg = "";
       if (e instanceof EJBException && ((EJBException) e).getCausedByException() instanceof KubernetesClientException) {
@@ -57,6 +60,7 @@ public class KubeProjectHandler implements ProjectHandler {
     try {
       kubeClientService.deleteProjectNamespace(project);
       kubeProjectConfigMaps.deleteConfigMaps(project);
+      kubeProjectSecrets.deleteSecrets(project);
     } catch (KubernetesClientException e) {
       throw new Exception(e);
     }

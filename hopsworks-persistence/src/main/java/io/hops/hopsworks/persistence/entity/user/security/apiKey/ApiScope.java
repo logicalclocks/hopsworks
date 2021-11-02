@@ -25,7 +25,7 @@ public enum ApiScope {
   DATASET_VIEW(false),
   DATASET_CREATE(false),
   DATASET_DELETE(false),
-  INFERENCE(false),
+  SERVING(false),
   FEATURESTORE(false),
   PROJECT(false),
   ADMIN(true),

@@ -184,7 +184,7 @@ describe "On #{ENV['OS']}" do
         start_serving(@project, @serving)
         wait_for_type(@serving[:name])
         sleep(5)
-        @key = create_api_key('inferenceKey', %w(INFERENCE))
+        @key = create_api_key('inferenceKey', %w(SERVING))
         @invalid_key = create_api_key('inferenceKey_invalid', %w(JOB DATASET_VIEW DATASET_CREATE DATASET_DELETE))
         reset_session
       end

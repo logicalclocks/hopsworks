@@ -53,7 +53,11 @@ public class ServingView implements Serializable {
   private Integer availableTransformerInstances;
   private Integer requestedInstances;
   private Integer requestedTransformerInstances;
-  private Integer nodePort;
+  private String externalIP;
+  private Integer externalPort;
+  private List<String> internalIPs;
+  private Integer internalPort;
+  private String internalPath;
   private Date created;
   private Boolean batchingEnabled;
   private InferenceLogging inferenceLogging;
@@ -87,7 +91,11 @@ public class ServingView implements Serializable {
     this.availableTransformerInstances = servingWrapper.getAvailableTransformerReplicas();
     this.requestedInstances = servingWrapper.getServing().getInstances();
     this.requestedTransformerInstances = servingWrapper.getServing().getTransformerInstances();
-    this.nodePort = servingWrapper.getNodePort();
+    this.externalIP = servingWrapper.getExternalIP();
+    this.externalPort = servingWrapper.getExternalPort();
+    this.internalIPs = servingWrapper.getInternalIPs();
+    this.internalPort = servingWrapper.getInternalPort();
+    this.internalPath = servingWrapper.getInternalPath();
     this.created = servingWrapper.getServing().getCreated();
     this.status = servingWrapper.getStatus();
     this.kafkaTopicDTO = servingWrapper.getKafkaTopicDTO();
@@ -190,15 +198,35 @@ public class ServingView implements Serializable {
   public void setAvailableTransformerInstances(Integer availableInstances) {
     this.availableTransformerInstances = availableInstances;
   }
-
-  @ApiModelProperty(value = "Port on which the Serving instance(s) are listening", readOnly = true)
-  public Integer getNodePort() {
-    return nodePort;
+  
+  @ApiModelProperty(value = "External IP on which the Serving instance(s) are listening", readOnly = true)
+  public String getExternalIP() {
+    return externalIP;
   }
-  public void setNodePort(Integer nodePort) {
-    this.nodePort = nodePort;
+  public void setExternalIP(String externalIP) {
+    this.externalIP = externalIP;
   }
-
+  
+  @ApiModelProperty(value = "External port on which the Serving instance(s) are listening", readOnly = true)
+  public Integer getExternalPort() { return externalPort; }
+  public void setExternalPort(Integer externalPort) { this.externalPort = externalPort; }
+  
+  @ApiModelProperty(value = "Internal IPs on which the Serving instance(s) are listening", readOnly = true)
+  public List<String> getInternalIPs() {
+    return internalIPs;
+  }
+  public void setInternalIPs(List<String> internalIPs) {
+    this.internalIPs = internalIPs;
+  }
+  
+  @ApiModelProperty(value = "Internal port on which the Serving instance(s) are listening", readOnly = true)
+  public Integer getInternalPort() { return internalPort; }
+  public void setInternalPort(Integer internalPort) { this.internalPort = internalPort; }
+  
+  @ApiModelProperty(value = "Internal endpoint path on which the Serving instance(s) can be reached", readOnly = true)
+  public String getInternalPath() { return internalPath; }
+  public void setInternalPath(String internalPath) { this.internalPath = internalPath; }
+  
   @ApiModelProperty(value = "Date on which the Serving entry was created", readOnly = true)
   public Date getCreated() {
     return created;

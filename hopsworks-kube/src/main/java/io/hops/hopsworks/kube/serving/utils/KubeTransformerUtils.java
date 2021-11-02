@@ -32,6 +32,7 @@ import io.hops.hopsworks.exceptions.DatasetException;
 import io.hops.hopsworks.exceptions.ServiceException;
 import io.hops.hopsworks.kube.common.KubeClientService;
 import io.hops.hopsworks.kube.project.KubeProjectConfigMaps;
+import io.hops.hopsworks.kube.security.KubeApiKeyUtils;
 import io.hops.hopsworks.persistence.entity.dataset.DatasetType;
 import io.hops.hopsworks.persistence.entity.hdfs.inode.Inode;
 import io.hops.hopsworks.persistence.entity.project.Project;
@@ -81,7 +82,7 @@ public class KubeTransformerUtils {
   @EJB
   private KubeArtifactUtils kubeArtifactUtils;
   @EJB
-  private KubeServingUtils kubeServingUtils;
+  private KubeApiKeyUtils kubeApiKeyUtils;
   
   public void copyTransformerToArtifactDir(Project project, Users user, Serving serving)
     throws DatasetException, ServiceException {
@@ -209,8 +210,8 @@ public class KubeTransformerUtils {
       .withName("HOPSWORKS_PROJECT_NAME").withValue(serving.getProject().getName()).build());
     envVars.add(new EnvVarBuilder().withName("API_KEY").withValueFrom(
       new EnvVarSourceBuilder().withNewSecretKeyRef(
-        kubeServingUtils.getApiKeySecretKey(),
-        kubeServingUtils.getApiKeySecretName(kubeClientService.getKubeProjectName(project)),
+        kubeApiKeyUtils.getServingApiKeySecretKeyName(),
+        kubeApiKeyUtils.getProjectServingApiKeySecretName(user),
         false)
         .build())
       .build());
@@ -228,9 +229,9 @@ public class KubeTransformerUtils {
       .build());
     volumes.add(new VolumeBuilder().withName("keys").withSecret(
       new SecretVolumeSourceBuilder()
-        .withSecretName(kubeServingUtils.getApiKeySecretName(kubeClientService.getKubeProjectName(project)))
+        .withSecretName(kubeApiKeyUtils.getProjectServingApiKeySecretName(user))
         .withItems(new KeyToPathBuilder()
-          .withKey(kubeServingUtils.getApiKeySecretKey())
+          .withKey(kubeApiKeyUtils.getServingApiKeySecretKeyName())
           .withPath("api.key").build())
         .build())
       .build());

@@ -210,6 +210,11 @@ module ServingHelper
     get "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/serving#{query}"
   end
 
+  def stop_serving(project, serving)
+    post "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/serving/#{serving[:id]}?action=stop"
+    expect_status(200)
+  end
+
   def wait_for_type(serving_name)
     if !kubernetes_installed
       wait_for(60) do
@@ -219,7 +224,7 @@ module ServingHelper
       #Wait a bit more for the actual server to start in the container
       sleep(20)
     else
-      sleep(120)
+      sleep(30)
     end
   end
 
@@ -231,7 +236,7 @@ module ServingHelper
         raise "the process is still running"
       end
     else
-      sleep(120)
+      sleep(30)
     end
   end
 
@@ -264,4 +269,49 @@ module ServingHelper
       else puts "Inference logging value cannot be parsed"
       end
   end
+
+  def get_serving(serving_name)
+    serving_list = get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/"
+    expect_status(200)
+    servings = JSON.parse(serving_list)
+    servings.select { |serving| serving['name'] == serving_name}[0]
+  end
+
+  def get_istio_inference_path(serving)
+    "http://" + serving["internalIPs"][0] + ":" + serving["internalPort"].to_s + serving["internalPath"] + ":predict"
+  end
+
+  def get_istio_serving_host(project_name, serving_name)
+    serving_name + "." + get_kube_project_namespace(project_name) + ".logicalclocks.com"
+  end
+
+  def make_prediction_request_istio(project_name, serving, data)
+    endpoint = get_istio_inference_path(serving)
+    host = get_istio_serving_host(project_name, serving["name"])
+    json_body = nil
+    begin
+      Airborne.configure do |config|
+        config.base_url = ''
+        config.headers["Host"] = host
+      end
+      post endpoint, data
+    rescue
+      p "kfserving: Error making prediction request through istio - #{$!}"
+    ensure
+      Airborne.configure do |config|
+        config.base_url = "https://#{ENV['WEB_HOST']}:#{ENV['WEB_PORT']}"
+        config.headers["Host"] = ''
+      end
+    end
+  end
+
+  def restart_authenticator()
+    kube_user = Variables.find_by(id: "kube_user").value
+    cmd = "sudo su #{kube_user} /bin/bash -c \"kubectl rollout restart deployment model-serving-authenticator -n hops-system\""
+    Open3.popen3(cmd) do |_, stdout, _, wait_thr|
+      result = stdout.read
+      sleep(6) # wait for new pod to start
+    end
+  end
+
 end

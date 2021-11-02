@@ -429,6 +429,33 @@ describe "On #{ENV['OS']}" do
           memb = json_body.detect { |e| e[:user][:email] == new_member }
           expect(memb[:teamRole]).to eq ("Data scientist")
         end
+        it "should add new member to kube config map" do
+          if !kfserving_installed
+            skip "This test only runs with KFServing installed"
+          end
+          new_member = create_user
+          email = new_member[:email]
+          username = new_member[:username]
+          add_member(email, "Data scientist")
+          cm = get_project_teams_kube_config_map(@project[:projectname])
+          expect(cm).not_to be_empty
+          expect(cm).to include("data")
+          expect(cm["data"]).to include(username)
+          expect(cm["data"][username]).to eql "Data scientist"
+        end
+        it "should copy kube serving secret when adding a new member" do
+          if !kfserving_installed
+            skip "This test only runs with KFServing installed"
+          end
+          new_member = create_user
+          email = new_member[:email]
+          username = new_member[:username]
+          add_member(email, "Data scientist")
+          secret = get_api_key_kube_project_serving_secret(@project[:projectname], username)
+          expect(secret).not_to be_nil
+          expect(secret).to include("data")
+          expect(secret["data"]).to include("apiKey")
+        end
         it "should remove data owner from project when remove issued by another data owner" do
           new_member = create_user[:email]
           add_member(new_member, "Data owner")
@@ -437,6 +464,39 @@ describe "On #{ENV['OS']}" do
           get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/projectMembers"
           memb = json_body.detect { |e| e[:user][:email] == new_member }
           expect(memb).to be_nil
+        end
+        it "should remove old member from kube config map" do
+          if !kfserving_installed
+            skip "This test only runs with KFServing installed"
+          end
+          new_member = create_user
+          email = new_member[:email]
+          username = new_member[:username]
+          add_member(email, "Data owner")
+          cm = get_project_teams_kube_config_map(@project[:projectname])
+          expect(cm).not_to be_empty
+          expect(cm).to include("data")
+          expect(cm["data"]).to include(username)
+          expect(cm["data"][username]).to eql "Data owner"
+          remove_member(@project, email)
+          cm = get_project_teams_kube_config_map(@project[:projectname])
+          expect(cm).not_to be_empty
+          expect(cm).to include("data")
+          expect(cm["data"]).not_to include(username)
+        end
+        it "should delete kube serving secret when removing a new member" do
+          if !kfserving_installed
+            skip "This test only runs with KFServing installed"
+          end
+          new_member = create_user
+          email = new_member[:email]
+          username = new_member[:username]
+          add_member(email, "Data owner")
+          secret = get_api_key_kube_project_serving_secret(@project[:projectname], username)
+          expect(secret).not_to be_nil
+          remove_member(@project, email)
+          secret = get_api_key_kube_project_serving_secret(@project[:projectname], username)
+          expect(secret).to be_nil
         end
         it "should remove data scientist from project when remove issued by data owner" do
           new_member = create_user[:email]
@@ -507,6 +567,29 @@ describe "On #{ENV['OS']}" do
           memb = json_body.detect { |e| e[:user][:email] == new_member }
           expect(memb[:teamRole]).to eq ("Data scientist")
         end
+        it "should update member project role in the kube config map" do
+          if !kfserving_installed
+            skip "This test only runs with KFServing installed"
+          end
+          new_member = create_user
+          email = new_member[:email]
+          username = new_member[:username]
+          add_member(email, "Data owner")
+          cm = get_project_teams_kube_config_map(@project[:projectname])
+          expect(cm).not_to be_empty
+          expect(cm).to include("data")
+          expect(cm["data"]).to include(username)
+          expect(cm["data"][username]).to eql "Data owner"
+
+          post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/projectMembers/#{email}", URI.encode_www_form({ role: "Data scientist"}), { content_type: 'application/x-www-form-urlencoded'}
+          expect_json(successMessage: "Role updated successfully.")
+          expect_status(200)
+          cm = get_project_teams_kube_config_map(@project[:projectname])
+          expect(cm).not_to be_empty
+          expect(cm).to include("data")
+          expect(cm["data"]).to include(username)
+          expect(cm["data"][username]).to eql "Data scientist"
+        end
         it "should change member role to Data owner" do
           new_member = create_user[:email]
           add_member(new_member, "Data scientist")
@@ -536,6 +619,50 @@ describe "On #{ENV['OS']}" do
           memb2 = json_body.detect { |e| e[:user][:email] == member_2 }
           expect(memb1).to be_present
           expect(memb2).to be_present
+        end
+        it "should add multiple members to kube config map" do
+          if !kfserving_installed
+            skip "This test only runs with KFServing installed"
+          end
+          member_1 = create_user
+          member_2 = create_user
+          post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/projectMembers", {projectTeam: [
+          {projectTeamPK: {projectId: @project[:id],teamMember: member_1[:email]},teamRole: "Data scientist"},
+          {projectTeamPK: {projectId: @project[:id],teamMember: member_2[:email]},teamRole: "Data owner"}]}
+          expect_json(successMessage: "Members added successfully")
+          expect_status(200)
+
+          cm = get_project_teams_kube_config_map(@project[:projectname])
+          expect(cm).not_to be_empty
+          expect(cm).to include("data")
+
+          expect(cm["data"]).to include(member_1[:username])
+          expect(cm["data"][member_1[:username]]).to eql "Data scientist"
+
+          expect(cm["data"]).to include(member_2[:username])
+          expect(cm["data"][member_2[:username]]).to eql "Data owner"
+        end
+        it "should copy kube secrets when adding multiple members" do
+          if !kfserving_installed
+            skip "This test only runs with KFServing installed"
+          end
+          member_1 = create_user
+          member_2 = create_user
+          post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/projectMembers", {projectTeam: [
+          {projectTeamPK: {projectId: @project[:id],teamMember: member_1[:email]},teamRole: "Data scientist"},
+          {projectTeamPK: {projectId: @project[:id],teamMember: member_2[:email]},teamRole: "Data owner"}]}
+          expect_json(successMessage: "Members added successfully")
+          expect_status(200)
+
+          secret_1 = get_api_key_kube_project_serving_secret(@project[:projectname], member_1[:username])
+          expect(secret_1).not_to be_nil
+          expect(secret_1).to include("data")
+          expect(secret_1["data"]).to include("apiKey")
+
+          secret_2 = get_api_key_kube_project_serving_secret(@project[:projectname], member_2[:username])
+          expect(secret_2).not_to be_nil
+          expect(secret_2).to include("data")
+          expect(secret_2["data"]).to include("apiKey")
         end
         it "should not add non-existing user" do
           post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/projectMembers", {projectTeam: [{projectTeamPK: {projectId: @project[:id],teamMember: "none_existing_user@email.com"},teamRole: "Data scientist"}]}

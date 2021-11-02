@@ -42,6 +42,7 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
+import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
@@ -77,19 +78,21 @@ public class InferenceResource {
   @Produces(MediaType.APPLICATION_JSON)
   @ApiOperation(value = "Make inference")
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
-  @JWTRequired(acceptedTokens={Audience.API, Audience.JOB}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
-  @ApiKeyRequired( acceptedScopes = {ApiScope.INFERENCE}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
+  @JWTRequired(acceptedTokens={Audience.API, Audience.JOB, Audience.SERVING}, allowedUserRoles={"HOPS_ADMIN",
+    "HOPS_USER"})
+  @ApiKeyRequired( acceptedScopes = {ApiScope.SERVING}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   public Response infer(
       @ApiParam(value = "Name of the model to query", required = true) @PathParam("modelName") String modelName,
       @ApiParam(value = "Version of the model to query") @PathParam("version") String modelVersion,
       @ApiParam(value = "Type of query") @PathParam("verb") String verb, @Context SecurityContext sc,
-      String inferenceRequestJson) throws InferenceException {
+      @Context HttpHeaders httpHeaders, String inferenceRequestJson) throws InferenceException {
     Integer version = null;
     if (!Strings.isNullOrEmpty(modelVersion)) {
       version = Integer.valueOf(modelVersion.split("/")[2]);
     }
-
-    String inferenceResult = inferenceController.infer(project, modelName, version, verb, inferenceRequestJson);
+    String authHeader = httpHeaders.getRequestHeader(HttpHeaders.AUTHORIZATION).get(0);
+    String inferenceResult = inferenceController.infer(project, modelName, version, verb, inferenceRequestJson,
+      authHeader);
     return Response.ok().entity(inferenceResult).build();
   }
 }
