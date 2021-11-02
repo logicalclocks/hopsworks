@@ -134,7 +134,21 @@ describe "On #{ENV['OS']}" do
           purge_all_sklearn_serving_instances()
           delete_all_sklearn_serving_instances(@project)
         end
+        it "should set the model name from path" do
+          put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
+              {name: "testModel7",
+               modelPath: "/Projects/#{@project[:projectname]}/Models/irisflowerclassifier/1/#{SKLEARN_SCRIPT_FILE_NAME}",
+               modelVersion: 1,
+               modelServer: "FLASK",
+               servingTool: "DEFAULT",
+               requestedInstances: 1
+              }
+          expect_status_details(201)
 
+          serving_list = get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/"
+          serving = JSON.parse(serving_list).select {|serving| serving['name'] == "testModel7"}[0]
+          expect(serving['modelName']).to eq "irisflowerclassifier"
+        end
         it "should create the serving without Kafka topic" do
           put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
               {name: "testModel",

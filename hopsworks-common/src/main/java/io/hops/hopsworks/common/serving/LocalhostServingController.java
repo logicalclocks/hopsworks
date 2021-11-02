@@ -16,6 +16,7 @@
 
 package io.hops.hopsworks.common.serving;
 
+import com.google.common.base.Strings;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.serving.ModelServer;
 import io.hops.hopsworks.persistence.entity.serving.Serving;
@@ -72,12 +73,22 @@ public class LocalhostServingController implements ServingController {
    * @return a list of ServingWrapper DTOs with metadata of the servings
    */
   @Override
-  public List<ServingWrapper> getServings(Project project) {
-    List<Serving> servingList = servingFacade.findForProject(project);
+  public List<ServingWrapper> getServings(Project project, String modelNameFilter, ServingStatusEnum statusFilter) {
+    List<Serving> servingList;
+    if(Strings.isNullOrEmpty(modelNameFilter)) {
+      servingList = servingFacade.findForProject(project);
+    } else {
+      servingList = servingFacade.findForProjectAndModel(project, modelNameFilter);
+    }
 
     List<ServingWrapper> servingWrapperList = new ArrayList<>();
     for (Serving serving : servingList) {
-      servingWrapperList.add(getServingInternal(serving));
+      ServingWrapper servingWrapper = getServingInternal(serving);
+      // If status filter is set only add servings with the defined status
+      if(statusFilter != null && !servingWrapper.getStatus().name().equals(statusFilter.name())) {
+        continue;
+      }
+      servingWrapperList.add(servingWrapper);
     }
 
     return servingWrapperList;
