@@ -61,8 +61,7 @@
                 <col span="1" style="width: 25%;">
                 <col span="1" style="width: 75%;">
             </colgroup>
-            <!-- Serving tool - Default -->
-            <tbody ng-if="servingViewInfoCtrl.serving.servingTool === 'DEFAULT'">
+            <tbody>
             <tr>
                 <td>
                     Predict (REST API)
@@ -99,6 +98,15 @@
                 </td>
                 <td>{{servingViewInfoCtrl.getPredictInferenceEndpoint(servingViewInfoCtrl.serving, true)}}</td>
             </tr>
+            <tr ng-if="servingViewInfoCtrl.serving.servingTool === 'KFSERVING'">
+                <td>
+                    Host header
+                    <i class="fa fa-info-circle" tooltip-placement="auto left"
+                       uib-tooltip="Host to be defined in the request header."
+                       style="margin-left: 10px"></i>
+                </td>
+                <td>{{servingViewInfoCtrl.getKFServingHostHeader(servingViewInfoCtrl.serving)}}</td>
+            </tr>
             <tr>
                 <td>
                     Model server IPs
@@ -112,72 +120,6 @@
                 <td>
                     Model server port <i class="fa fa-info-circle" tooltip-placement="auto left"
                                          uib-tooltip="Port of the model server. They can be used to send requests directly to the model server rather than going through the REST API."
-                                         style="margin-left: 10px"></i>
-                </td>
-                <td>{{servingViewInfoCtrl.getInternalPortString(servingViewInfoCtrl.serving.internalPort)}}</td>
-            </tr>
-            </tbody>
-
-            <!-- Serving tool - KFServing -->
-            <tbody ng-if="servingViewInfoCtrl.serving.servingTool === 'KFSERVING'">
-            <tr>
-                <td>
-                    Predict (Load balancer)
-                    <i class="fa fa-info-circle" tooltip-placement="auto left"
-                       uib-tooltip="Load balancer endpoint for predict inference requests."
-                       style="margin-left: 10px"></i>
-                </td>
-                <td>{{servingViewInfoCtrl.getPredictInferenceEndpoint(servingViewInfoCtrl.serving, false)}}</td>
-            </tr>
-            <tr>
-                <td>
-                    Classify (Load balancer)
-                    <i class="fa fa-info-circle" tooltip-placement="auto left"
-                       uib-tooltip="Load balancer endpoint for classify inference requests."
-                       style="margin-left: 10px"></i>
-                </td>
-                <td>{{servingViewInfoCtrl.getClassifyInferenceEndpoint(servingViewInfoCtrl.serving, false)}}</td>
-            </tr>
-            <tr>
-                <td>
-                    Regress (Load balancer)
-                    <i class="fa fa-info-circle" tooltip-placement="auto left"
-                       uib-tooltip="Load balancer endpoint for regression inference requests."
-                       style="margin-left: 10px"></i>
-                </td>
-                <td>{{servingViewInfoCtrl.getRegressInferenceEndpoint(servingViewInfoCtrl.serving, false)}}</td>
-            </tr>
-            <tr>
-                <td>
-                    Predict (Ingress gateway)
-                    <i class="fa fa-info-circle" tooltip-placement="auto left"
-                       uib-tooltip="Ingress gateway endpoint for predict inference requests directly on the model server."
-                       style="margin-left: 10px"></i>
-                </td>
-                <td>{{servingViewInfoCtrl.getPredictInferenceEndpoint(servingViewInfoCtrl.serving, true)}}</td>
-            </tr>
-            <tr>
-                <td>
-                    Host header
-                    <i class="fa fa-info-circle" tooltip-placement="auto left"
-                       uib-tooltip="Host to be defined in the request header."
-                       style="margin-left: 10px"></i>
-                </td>
-                <td>{{servingViewInfoCtrl.getKFServingHostHeader(servingViewInfoCtrl.serving)}}</td>
-            </tr>
-            <tr>
-                <td>
-                    Ingress gateway IPs
-                    <i class="fa fa-info-circle" tooltip-placement="auto left"
-                       uib-tooltip="Internal IPs of the ingress gateway. They can be used to send requests directly to service mesh rather than going through the REST API."
-                       style="margin-left: 10px"></i>
-                </td>
-                <td>{{servingViewInfoCtrl.getInternalIPsString(servingViewInfoCtrl.serving.internalIPs)}}</td>
-            </tr>
-            <tr>
-                <td>
-                    Ingress gateway port <i class="fa fa-info-circle" tooltip-placement="auto left"
-                                         uib-tooltip="Port of the ingress gateway. It can be used to send requests directly to the service mesh rather than going through the REST API."
                                          style="margin-left: 10px"></i>
                 </td>
                 <td>{{servingViewInfoCtrl.getInternalPortString(servingViewInfoCtrl.serving.internalPort)}}</td>

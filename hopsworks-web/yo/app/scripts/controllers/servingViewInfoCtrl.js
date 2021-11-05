@@ -55,27 +55,12 @@ angular.module('hopsWorksApp')
              * @returns the inference endpoint of the model without the predict verb
              */
             self.getInferenceEndpointWithoutVerb = function (serving, internal) {
-                var hostPort, path
-                if (serving.servingTool === self.servingToolDefault) {
-                    if (internal) {
-                        if (typeof serving.internalPath === 'undefined') { return "-" }
-                        path = serving.internalPath + ":"
-                        hostPort = self.getInternalHostPort(serving)
-                    } else {
-                        path = "/hopsworks-api/api/project/" + projectId + "/inference/models/" + serving.name + ":"
-                        hostPort = self.getExternalHostPort(serving)
-                    }
-                } else { // kfserving
-                    if (internal) {
-                        if (typeof serving.internalPath === 'undefined') { return "-" }
-                        hostPort = self.getInternalHostPort(serving)
-                    } else {
-                        if (typeof serving.externalIP === 'undefined') { return "-" }
-                        hostPort = self.getExternalHostPort(serving)
-                    }
-                    path = serving.internalPath + ":"
+                if (internal) {
+                    if (typeof serving.internalPort === 'undefined') { return "-" }
+                    return self.getInternalHostPort(serving) + serving.internalPath + ":"
                 }
-                return hostPort + path
+                var path = "/hopsworks-api/api/project/" + projectId + "/inference/models/" + serving.name + ":"
+                return self.getExternalHostPort(serving) + path
             }
 
             /**

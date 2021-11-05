@@ -306,7 +306,7 @@ module ProjectHelper
     kube_user = Variables.find_by(id: "kube_user").value
     ur = user_roles.map {|r| "\\\"#{r}\\\"" }.join(',')
     pr = project_roles.map {|r| "\\\"#{r}\\\"" }.join(',')
-    cmd = "sudo su #{kube_user} /bin/bash -c \"kubectl create cm hops-system--serving -n hops-system --from-literal=authenticator='{\\\"allowedUserRoles\\\":[#{ur}], \\\"allowedProjectRoles\\\":[#{pr}]}' --dry-run=client -o yaml | kubectl apply -f -\""
+    cmd = "sudo su #{kube_user} /bin/bash -c \"kubectl create cm hops-system--serving -n hops-system --from-literal=authenticator='{\\\"allowedUserRoles\\\":[#{ur}], \\\"allowedProjectUserRoles\\\":[#{pr}]}' --dry-run=client -o yaml | kubectl apply -f -\""
     result = nil
     Open3.popen3(cmd) do |_, stdout, _, wait_thr|
       result = stdout.read

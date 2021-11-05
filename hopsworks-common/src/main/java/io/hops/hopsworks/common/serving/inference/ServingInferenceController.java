@@ -19,13 +19,12 @@ package io.hops.hopsworks.common.serving.inference;
 import io.hops.common.Pair;
 import io.hops.hopsworks.persistence.entity.serving.Serving;
 import io.hops.hopsworks.exceptions.InferenceException;
-import io.hops.hopsworks.persistence.entity.user.Users;
 
 /**
  * Interface for sending inference requests to localhost or Kubernetes serving instances. Different type of serving
  * controllers e.g (localhost or Kubernetes) should implement this interface.
  */
 public interface ServingInferenceController {
-  Pair<Integer, String> infer(Users user, Serving serving, Integer modelVersion, String verb,
-    String inferenceRequestJson, String authHeader) throws InferenceException;
+  Pair<Integer, String> infer(Serving serving, Integer modelVersion, String verb, String inferenceRequestJson,
+    String authHeader) throws InferenceException;
 }

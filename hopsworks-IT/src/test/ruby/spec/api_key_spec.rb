@@ -190,7 +190,7 @@ describe "On #{ENV['OS']}" do
       expect(secret["data"]).to include("salt")
       expect(secret["data"]).to include("secret") # secret hash
     end
-    it "should delete a key" dosend a request to a non existing model
+    it "should delete a key" do
       delete_api_key('firstKey6')
       expect_status(204)
       get_api_keys

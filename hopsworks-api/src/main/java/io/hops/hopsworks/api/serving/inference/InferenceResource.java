@@ -92,7 +92,7 @@ public class InferenceResource {
     }
     Users user = jWTHelper.getUserPrincipal(sc);
     String authHeader = httpHeaders.getRequestHeader(HttpHeaders.AUTHORIZATION).get(0);
-    String inferenceResult = inferenceController.infer(project, user, modelName, version, verb, inferenceRequestJson,
+    String inferenceResult = inferenceController.infer(project, modelName, version, verb, inferenceRequestJson,
       authHeader);
     return Response.ok().entity(inferenceResult).build();
   }
