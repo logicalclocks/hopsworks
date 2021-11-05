@@ -222,6 +222,7 @@ public class OAuthController {
     
     if(!Strings.isNullOrEmpty((managedCloudRedirectUri))){
       settings.updateManagedCloudRedirectUri(managedCloudRedirectUri);
+      settings.updateOauthLogoutRedirectUri(managedCloudRedirectUri);
     }
     
     settings.refreshCache();

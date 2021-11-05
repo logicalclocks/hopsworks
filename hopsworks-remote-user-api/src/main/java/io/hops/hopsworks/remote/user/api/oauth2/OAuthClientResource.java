@@ -9,6 +9,7 @@ import io.hops.hopsworks.exceptions.RemoteAuthException;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
 import io.hops.hopsworks.persistence.entity.remote.oauth.OauthClient;
 import io.hops.hopsworks.remote.user.api.Audience;
+import io.hops.hopsworks.remote.user.api.AuthResource;
 import io.hops.hopsworks.remote.user.oauth2.OAuthController;
 import io.hops.hopsworks.remote.user.oauth2.OIDAuthorizationCodeFlowHelper;
 import io.hops.hopsworks.restutils.RESTCodes;
@@ -42,6 +43,7 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.Set;
 import java.util.logging.Level;
+import java.util.logging.Logger;
 
 @Path("/oauth")
 @Stateless
@@ -49,7 +51,7 @@ import java.util.logging.Level;
   description = "OAuth2 Resource")
 @TransactionAttribute(TransactionAttributeType.NEVER)
 public class OAuthClientResource {
-  
+  private static final Logger LOGGER = Logger.getLogger(AuthResource.class.getName());
   @EJB
   private OAuthClientBuilder oAuthClientBuilder;
   @EJB
@@ -171,9 +173,9 @@ public class OAuthClientResource {
       oauthClient.setAuthorisationEndpoint(oauthClientDTO.getAuthorizationEndpoint());
       oauthClient.setTokenEndpoint(oauthClientDTO.getTokenEndpoint());
       oauthClient.setUserInfoEndpoint(oauthClientDTO.getUserInfoEndpoint());
-      oauthClient.setJwksURI(oauthClientDTO.getJwksURI());
-      oauthClient.setEndSessionEndpoint(oauthClientDTO.getEndSessionEndpoint());
+      oauthClient.setJwksURI(oauthClientDTO.getJwksURI());  
     }
+    oauthClient.setEndSessionEndpoint(oauthClientDTO.getEndSessionEndpoint());
     oauthClient.setLogoutRedirectParam(oauthClientDTO.getLogoutRedirectParam());
     oauthClient.setOfflineAccess(fromBoolean(oauthClientDTO.getOfflineAccess()));
     if (oauthClientDTO.getCodeChallengeMethod() != null) {
@@ -193,6 +195,7 @@ public class OAuthClientResource {
         base = new URL(oauthClientDTO.getCallbackURI());
       }
     } catch (MalformedURLException e) {
+      LOGGER.log(Level.WARNING, e.getMessage());
     }
     String baseUrl = base == null? "" : base.toString();
     baseUrl = baseUrl.endsWith("/")? baseUrl : baseUrl + "/";
