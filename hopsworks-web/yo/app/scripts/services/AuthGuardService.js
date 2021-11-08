@@ -19,7 +19,7 @@ angular.module('hopsWorksApp')
         .factory('AuthGuardService', ['$location', '$rootScope', 'AuthService', 'HopssiteService', 'VariablesService', 'ProjectService', 'StorageService',
           function ($location, $rootScope,AuthService, HopssiteService, VariablesService, ProjectService, StorageService) {
             var saveEmail = function (value) {
-                localStorage.setItem("email", value);
+                StorageService.store("email", value);
             };
             var goToHome = function () {
               $location.path('/');
@@ -95,9 +95,9 @@ angular.module('hopsWorksApp')
               guardProject: function($q, projectId) {
                 ProjectService.checkProject({id: projectId}).$promise.then(
                   function (success) {
-                      localStorage.setItem("projectID", success.data.value);
+                      StorageService.store("projectID", success.data.value);
                   }, function (error) {
-                      localStorage.removeItem("projectID");
+                      StorageService.remove("projectID");
                       goToHome();
                       return $q.reject(error);
                 });
