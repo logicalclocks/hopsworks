@@ -274,7 +274,7 @@ public class CachedFeaturegroupController {
     SqlSelect select = new SqlSelect(SqlParserPos.ZERO, null, selectList,
       new SqlIdentifier("`" + tbl + "`", SqlParserPos.ZERO),
       whereClause, null, null, null, null, null,
-      SqlLiteral.createExactNumeric(String.valueOf(limit), SqlParserPos.ZERO));
+      SqlLiteral.createExactNumeric(String.valueOf(limit), SqlParserPos.ZERO), null);
     String db = featurestoreController.getOfflineFeaturestoreDbName(featuregroup.getFeaturestore().getProject());
     try {
       return executeReadHiveQuery(

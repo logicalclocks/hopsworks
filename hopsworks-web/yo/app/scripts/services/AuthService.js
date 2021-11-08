@@ -43,8 +43,13 @@
 'use strict';
 
 angular.module('hopsWorksApp')
-        .factory('AuthService', ['$http', 'TransformRequest', '$cookies', '$window',
-          function ($http, TransformRequest, $cookies, $window) {
+        .factory('AuthService', ['$http', 'TransformRequest', '$cookies', '$window', 'StorageService',
+          function ($http, TransformRequest, $cookies, $window, StorageService) {
+            var clearSession = function () {
+              $cookies.remove("SESSION");
+              sessionStorage.removeItem("isAdmin");
+              StorageService.clearVariables();
+            };
             var service = {
 
               isAdmin: function () {
@@ -72,6 +77,7 @@ angular.module('hopsWorksApp')
                 return $http.post('/api/auth/validatePassword', TransformRequest.jQueryStyle(user));
               },
               logout: function () {
+                clearSession();
                 return $http.get('/api/auth/logout')
                         .then(function (response) {
                           return response;
@@ -122,12 +128,7 @@ angular.module('hopsWorksApp')
                 $http.defaults.headers.common.Authorization = '';
               },
               cleanSession: function () {
-                $cookies.remove("email");
-                $cookies.remove("ldap");
-                $cookies.remove("otp");
-                $cookies.remove("projectID");
-                $cookies.remove("SESSION");
-                sessionStorage.removeItem("isAdmin");
+                clearSession();
               }
             };
             return service;

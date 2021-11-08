@@ -40,13 +40,13 @@
 'use strict';
 
 angular.module('hopsWorksApp')
-  .controller('LdapLoginCtrl', ['$location', '$cookies', 'AuthService', 'BannerService', 'ModalService',
-    function ($location, $cookies, AuthService, BannerService, ModalService) {
+  .controller('LdapLoginCtrl', ['$location', 'AuthService', 'BannerService', 'ModalService', 'StorageService',
+    function ($location, AuthService, BannerService, ModalService, StorageService) {
 
       var self = this;
 
       self.announcement = "";
-      self.ldapEnabled = $cookies.get('ldap') === 'true';
+      self.ldapEnabled = StorageService.get('ldap');
       
       var getAnnouncement = function () {
         BannerService.findBanner().then(
@@ -67,11 +67,10 @@ angular.module('hopsWorksApp')
         self.working = true;
         AuthService.ldapLogin(self.user).then(function (success) {
             self.working = false;
-            $cookies.put("email", success.data);
+            StorageService.store("email", success.data);
             $location.path('/');
           }, function (error) {
             self.working = false;
-            console.log("Login error: ", error);
             if (error !== undefined && error.status === 412) {
               self.errorMessage = "";
               ModalService.remoteUserConsent('sm', error.data).then(function (success) {

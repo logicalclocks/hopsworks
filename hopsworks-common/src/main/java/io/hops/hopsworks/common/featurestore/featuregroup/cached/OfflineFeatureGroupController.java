@@ -46,6 +46,7 @@ import org.apache.hadoop.hive.metastore.api.ThriftHiveMetastore;
 import org.apache.hadoop.hive.metastore.api.hive_metastoreConstants;
 import org.apache.hadoop.hive.metastore.conf.MetastoreConf;
 import org.apache.hadoop.hive.serde.serdeConstants;
+import org.apache.thrift.TConfiguration;
 import org.apache.thrift.TException;
 import org.apache.thrift.protocol.TBinaryProtocol;
 import org.apache.thrift.protocol.TProtocol;
@@ -342,7 +343,8 @@ public class OfflineFeatureGroupController {
         transport = TSSLTransportFactory.getClientSocket(metastoreService.getAddress(),
             metastoreService.getPort(), CONNECTION_TIMEOUT, params);
       } else {
-        transport = new TSocket(metastoreService.getAddress(), metastoreService.getPort(), CONNECTION_TIMEOUT);
+        transport = new TSocket(TConfiguration.DEFAULT, metastoreService.getAddress(), metastoreService.getPort(),
+          CONNECTION_TIMEOUT);
       }
 
       TProtocol protocol = new TBinaryProtocol(transport);

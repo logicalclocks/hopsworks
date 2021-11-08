@@ -16,21 +16,20 @@
 'use strict';
 
 angular.module('hopsWorksApp')
-    .controller('OAuthCallbackCtrl', ['$location', '$cookies', '$http', '$rootScope', 'growl', 'AuthService', 'ModalService',
-        function ($location, $cookies, $http, $rootScope, growl, AuthService, ModalService) {
+    .controller('OAuthCallbackCtrl', ['$location', '$http', '$rootScope', 'growl', 'AuthService', 'ModalService', 'StorageService',
+        function ($location, $http, $rootScope, growl, AuthService, ModalService, StorageService) {
 
             var self = this;
             self.working = false;
             self.user = {code: $location.search()['code'], state: $location.search()['state'], chosenEmail: '', consent: ''};
-            var oidp = $cookies.get("openIdProviders");
-            self.openIdProviders = oidp? JSON.parse(oidp) : undefined;
+            self.openIdProviders = StorageService.get("openIdProviders");
             $rootScope.oauthLoginErrorMsg = undefined;
             var login = function (user) {
                 AuthService.oauthLogin(user).then(function (success) {
                     self.working = false;
                     AuthService.saveToken(success.headers('Authorization'));
                     if (success.data) {
-                        $cookies.put("email", success.data.data.value);
+                        StorageService.store("email", success.data.data.value);
                     }
                     $location.path('/');
                 }, function (error) {
