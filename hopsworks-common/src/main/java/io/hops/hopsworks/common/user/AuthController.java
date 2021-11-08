@@ -280,15 +280,21 @@ public class AuthController {
     }
   }
 
+  /**
+   * https://www.javacodegeeks.com/2011/12/google-authenticator-using-it-with-your.html
+   * @param secret
+   * @param code
+   * @return
+   */
   private boolean checkCode(String secret, int code) {
     Base32 codec = new Base32();
     byte[] decodedKey = codec.decode(secret);
     long t = System.currentTimeMillis() / 1000 / 30;
     int window = 2;
-
+    // Window is used to check codes generated in the near past.
     for (int i = -window; i <= window; ++i) {
       try {
-        long hash = verifyCode(decodedKey, t + i);
+        long hash = generateTOTP(decodedKey, t + i);
         if (hash == code) {
           return true;
         }
@@ -298,23 +304,42 @@ public class AuthController {
     }
     return false;
   }
-
-  private static int verifyCode(byte[] key, long t) throws NoSuchAlgorithmException, InvalidKeyException {
+  
+  /**
+   * This method generates a TOTP value for the given
+   * set of parameters. With crypto HmacSHA1.
+   * @param key: the shared secret, HEX encoded
+   * @param t: a value that reflects a time
+   * @return TOTP
+   * @throws NoSuchAlgorithmException
+   * @throws InvalidKeyException
+   */
+  private static int generateTOTP(byte[] key, long t) throws NoSuchAlgorithmException, InvalidKeyException {
+    // Allocating an array of bytes to represent the specified instant
+    // of time.
     byte[] data = new byte[8];
     long value = t;
+    // Converting the instant of time from the long representation to a
+    // big-endian array of bytes (RFC4226, 5.2. Description).
     for (int i = 8; i-- > 0; value >>>= 8) {
       data[i] = (byte) value;
     }
+    // Building the secret key specification for the HmacSHA1 algorithm.
     SecretKeySpec signKey = new SecretKeySpec(key, "HmacSHA1");
     Mac mac = Mac.getInstance("HmacSHA1");
     mac.init(signKey);
     byte[] hash = mac.doFinal(data);
     int offset = hash[20 - 1] & 0xF;
+    // We're using a long because Java hasn't got unsigned int.
     long truncatedHash = 0;
     for (int i = 0; i < 4; ++i) {
       truncatedHash <<= 8;
+      // Java bytes are signed, but we need an unsigned integer:
+      // cleaning off all but the LSB.
       truncatedHash |= (hash[offset + i] & 0xFF);
     }
+    // Clean bits higher than the 32nd (inclusive) and calculate the
+    // module with the maximum validation code value.
     truncatedHash &= 0x7FFFFFFF;
     truncatedHash %= 1000000;
     return (int) truncatedHash;

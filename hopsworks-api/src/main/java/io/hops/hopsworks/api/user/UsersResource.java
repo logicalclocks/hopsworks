@@ -293,7 +293,7 @@ public class UsersResource {
   @POST
   @Path("twoFactor")
   @Produces(MediaType.APPLICATION_JSON)
-  @ApiOperation(value = "Updates logged in User\'s two factor setting.", response = RESTApiJsonResponse.class)
+  @ApiOperation(value = "Updates logged in User\'s two factor setting.")
   public Response changeTwoFactor(@FormParam("password") String password, @FormParam("twoFactor") boolean twoFactor,
     @Context HttpServletRequest req, @Context SecurityContext sc) throws UserException {
     Users user = jWTHelper.getUserPrincipal(sc);
@@ -314,19 +314,19 @@ public class UsersResource {
   @POST
   @Path("resetTwoFactor")
   @Produces(MediaType.APPLICATION_JSON)
-  @ApiOperation(value = "Reset logged in User\'s two factor setting.", response = RESTApiJsonResponse.class)
+  @ApiOperation(value = "Reset logged in User\'s two factor setting.", response = QrCode.class)
   public Response resetTwoFactor(@FormParam("password") String password, @Context HttpServletRequest req,
     @Context SecurityContext sc)
     throws UserException {
     Users user = jWTHelper.getUserPrincipal(sc);
-    QrCode qrCode = userController.recoverQRCode(user, password);
+    QrCode qrCode = userController.resetQRCode(user, password);
     return Response.ok(qrCode).build();
   }
 
   @POST
   @Path("getQRCode")
   @Produces(MediaType.APPLICATION_JSON)
-  @ApiOperation(value = "Gets the logged in User\'s QR code.", response = RESTApiJsonResponse.class)
+  @ApiOperation(value = "Gets the logged in User\'s QR code.", response = QrCode.class)
   public Response getQRCode(@FormParam("password") String password, @Context HttpServletRequest req,
     @Context SecurityContext sc) throws UserException {
     Users user = jWTHelper.getUserPrincipal(sc);
@@ -337,11 +337,7 @@ public class UsersResource {
       throw new IllegalArgumentException("Password was not provided.");
     }
     QrCode qrCode = userController.getQRCode(user, password);
-    if (qrCode != null) {
-      return Response.ok(qrCode).build();
-    } else {
-      throw new UserException(RESTCodes.UserErrorCode.TWO_FA_DISABLED, Level.FINE);
-    }
+    return Response.ok(qrCode).build();
   }
 
   @POST
