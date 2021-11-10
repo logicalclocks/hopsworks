@@ -22,6 +22,7 @@ import io.hops.hopsworks.persistence.entity.remote.user.RemoteUserType;
 import io.hops.hopsworks.persistence.entity.user.security.ua.UserAccountStatus;
 
 public interface RemoteUserHelper {
+  boolean isRemoteUserAuthAvailable();
   void createRemoteUser(RemoteUserDTO userDTO, String email, String givenName, String surname, RemoteUserType type,
     UserAccountStatus status) throws GenericException, UserException;
   RemoteUser getRemoteUser(String uuid) throws UserException;
