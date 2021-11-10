@@ -16,6 +16,7 @@
 
 package io.hops.hopsworks.common.featurestore.datavalidation;
 
+import com.google.common.base.Strings;
 import com.google.gson.FieldNamingPolicy;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -77,6 +78,8 @@ import java.util.Set;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
+import static java.util.logging.Level.FINE;
+
 @Stateless
 @TransactionAttribute(TransactionAttributeType.NEVER)
 public class FeatureGroupValidationsController {
@@ -113,7 +116,7 @@ public class FeatureGroupValidationsController {
     Project project,
     Featuregroup featuregroup, Date validationTime)
     throws FeaturestoreException {
-    LOGGER.log(java.util.logging.Level.FINE, "Fetching validation result for feature group " +
+    LOGGER.log(FINE, "Fetching validation result for feature group " +
             featuregroup.getName());
     String hdfsUsername = hdfsUsersController.getHdfsUserName(project, user);
     DistributedFileSystemOps udfso = null;
@@ -124,7 +127,7 @@ public class FeatureGroupValidationsController {
       FileStatus[] validationFile = udfso.getFilesystem().globStatus(path2result);
       if (validationFile == null || validationFile.length == 0) {
         throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.DATA_VALIDATION_RESULTS_NOT_FOUND,
-                java.util.logging.Level.FINE, "feature group: " + featuregroup.getName()
+                FINE, "feature group: " + featuregroup.getName()
                 + ", validation time: " + validationTime.getTime());
       }
       List<ExpectationResult> expectationResults = new ArrayList<>();
@@ -140,7 +143,7 @@ public class FeatureGroupValidationsController {
       FeatureGroupValidation featureGroupValidation =
         featureGroupValidationFacade.findByFeaturegroupAndValidationTime(featuregroup, validationTime).orElseThrow(
           () -> new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.DATA_VALIDATION_NOT_FOUND,
-                  java.util.logging.Level.FINE, "feature group: " + featuregroup.getName()
+                  FINE, "feature group: " + featuregroup.getName()
                   + ", validation time: " + validationTime));
       
       featureGroupValidation.setStatus(getValidationResultStatus(expectationResults));
@@ -195,7 +198,7 @@ public class FeatureGroupValidationsController {
       // Persist validation results but throw an error if the data is invalid so that the client (hsfs) does not insert
       if (featuregroup.getValidationType().getSeverity() < status.getSeverity()) {
         throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.FEATURE_GROUP_CHECKS_FAILED,
-                java.util.logging.Level.FINE,
+                FINE,
                 "Results: " + results.stream()
                         .filter(result -> result.getStatus().getSeverity()
                                 >= FeatureGroupValidation.Status.WARNING.getSeverity())
@@ -219,7 +222,7 @@ public class FeatureGroupValidationsController {
       featureGroupExpectationFacade.findByFeaturegroupAndExpectation(featuregroup, featureStoreExpectation);
     if (!optional.isPresent()) {
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.FEATURE_GROUP_EXPECTATION_NOT_FOUND,
-        java.util.logging.Level.FINE, "Expectation: " + name);
+        FINE, "Expectation: " + name);
     }
     return optional.get();
   }
@@ -229,7 +232,7 @@ public class FeatureGroupValidationsController {
     Optional<FeatureStoreExpectation> e = featureStoreExpectationFacade.findByFeaturestoreAndName(featurestore, name);
     if (!e.isPresent()) {
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.FEATURE_STORE_EXPECTATION_NOT_FOUND,
-        java.util.logging.Level.FINE, "Expectation: " + name);
+        FINE, "Expectation: " + name);
     }
     return e.get();
   }
@@ -310,15 +313,35 @@ public class FeatureGroupValidationsController {
   public FeatureStoreExpectation createOrUpdateExpectation(Featurestore featurestore, Expectation expectation)
     throws FeaturestoreException {
 
+    // Some expectation sanity checks
     Set<ValidationRule> validationRules = new HashSet<>();
     for (Rule rule : expectation.getRules()) {
       Optional<ValidationRule> validationRule = validationRuleFacade.findByName(rule.getName());
       if (!validationRule.isPresent()) {
         throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.FEATURE_STORE_RULE_NOT_FOUND,
-                java.util.logging.Level.FINE, "Rule: " + rule.getName());
+                FINE, "Rule: " + rule.getName());
+      }
+      // Check that the rule's predicate is set
+      if (validationRule.get().getPredicate() == Predicate.FEATURE && Strings.isNullOrEmpty(rule.getFeature()) ||
+          validationRule.get().getPredicate() == Predicate.ACCEPTED_TYPE && rule.getAcceptedType() == null ||
+          validationRule.get().getPredicate() == Predicate.LEGAL_VALUES && (rule.getLegalValues() == null ||
+                                                                            rule.getLegalValues().isEmpty()) ||
+          validationRule.get().getPredicate() == Predicate.PATTERN && Strings.isNullOrEmpty(rule.getPattern())) {
+        throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.VALIDATION_RULE_INCOMPLETE,
+                FINE, "Rule: " + rule.getName() + " should set " + validationRule.get().getPredicate());
+      }
+      if (!rule.getName().isAppliedToFeaturePairs() && rule.getMin() == null && rule.getMax() == null) {
+        throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.VALIDATION_RULE_INCOMPLETE,
+                FINE, "At least one of min/max need to be provided for rule: " + rule.getName());
+      } // Min/max is set to 1 by default for compliance rules
+      else if (rule.getName().isAppliedToFeaturePairs() && rule.getMin() == null && rule.getMax() == null) {
+        rule.setMin(1.0);
+        rule.setMax(1.0);
       }
       validationRules.add(validationRule.get());
     }
+
+    // Persist expectation
     FeatureStoreExpectation featureStoreExpectation;
     Optional<FeatureStoreExpectation> e =
       featureStoreExpectationFacade.findByFeaturestoreAndName(featurestore, expectation.getName());
@@ -388,7 +411,7 @@ public class FeatureGroupValidationsController {
       }
       if (!featuresNotFound.isEmpty()) {
         throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.FEATURE_GROUP_EXPECTATION_FEATURE_NOT_FOUND,
-                java.util.logging.Level.FINE, "expectation: " + expectation + ", feature: " + featuresNotFound);
+                FINE, "expectation: " + expectation + ", feature: " + featuresNotFound);
       }
     }
 
@@ -413,7 +436,7 @@ public class FeatureGroupValidationsController {
     }
     if (!featureTypesErrMsg.isEmpty()) {
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.FEATURE_GROUP_EXPECTATION_FEATURE_TYPE_INVALID,
-              java.util.logging.Level.FINE, featureTypesErrMsg.toString());
+              FINE, featureTypesErrMsg.toString());
     }
   }
 
@@ -423,7 +446,7 @@ public class FeatureGroupValidationsController {
             featureGroupExpectationFacade.findByFeaturegroupAndExpectation(featuregroup, featureStoreExpectation);
     featureGroupExpectationFacade.remove(e.orElseThrow( () ->
             new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.FEATURE_GROUP_EXPECTATION_NOT_FOUND,
-            java.util.logging.Level.FINE, "expectation: " + name)));
+            FINE, "expectation: " + name)));
   }
 
   public Long getCommitTime(FeatureGroupValidation featureGroupValidation) {

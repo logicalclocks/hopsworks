@@ -27,6 +27,7 @@ public class Rule {
   private String value;
   private String pattern;
   private AcceptedType acceptedType;
+  private String feature;
   private List<String> legalValues;
 
   public Rule() {
@@ -88,6 +89,14 @@ public class Rule {
     this.acceptedType = acceptedType;
   }
 
+  public String getFeature() {
+    return feature;
+  }
+
+  public void setFeature(String feature) {
+    this.feature = feature;
+  }
+
   public List<String> getLegalValues() {
     return legalValues;
   }
@@ -105,6 +114,7 @@ public class Rule {
             ", max=" + max +
             ", pattern='" + pattern + '\'' +
             ", acceptedType=" + acceptedType +
+            ", feature=" + feature +
             ", legalValues=" + legalValues +
             '}';
   }
