@@ -24,7 +24,8 @@ import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.cached.Val
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.ondemand.OnDemandDataFormat;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.ondemand.OnDemandFeature;
 
-import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 import java.util.Comparator;
 import java.util.List;
@@ -35,6 +36,7 @@ import java.util.stream.Collectors;
  * converted to JSON or XML representation using jaxb.
  */
 @XmlRootElement
+@XmlAccessorType(XmlAccessType.FIELD)
 public class OnDemandFeaturegroupDTO extends FeaturegroupDTO {
 
   private FeaturestoreStorageConnectorDTO storageConnector;
@@ -99,7 +101,6 @@ public class OnDemandFeaturegroupDTO extends FeaturegroupDTO {
     this.storageConnector = storageConnector;
   }
 
-  @XmlElement
   public String getQuery() {
     return query;
   }
