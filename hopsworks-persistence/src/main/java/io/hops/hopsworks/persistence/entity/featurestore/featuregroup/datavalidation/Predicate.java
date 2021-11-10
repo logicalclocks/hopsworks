@@ -17,5 +17,5 @@
 package io.hops.hopsworks.persistence.entity.featurestore.featuregroup.datavalidation;
 
 public enum Predicate {
-  VALUE, LEGAL_VALUES, ACCEPTED_TYPE, PATTERN
+  LEGAL_VALUES, ACCEPTED_TYPE, PATTERN, FEATURE
 }

@@ -1585,7 +1585,8 @@ public class RESTCodes {
     ILLEGAL_EVENT_TIME_FEATURE_TYPE(171, "Illegal event time feature type", Response.Status.BAD_REQUEST),
     EVENT_TIME_FEATURE_NOT_FOUND(172, "Event time feature not found", Response.Status.BAD_REQUEST),
     FEATURE_GROUP_MISSING_EVENT_TIME(173, "Feature group is not event time enabled", Response.Status.BAD_REQUEST),
-    JOIN_OPERATOR_MISMATCH(174, "Join features and operator list have different sizes", Response.Status.BAD_REQUEST);
+    JOIN_OPERATOR_MISMATCH(174, "Join features and operator list have different sizes", Response.Status.BAD_REQUEST),
+    VALIDATION_RULE_INCOMPLETE(175, "Rule is missing a required field.", Response.Status.BAD_REQUEST);
 
     private int code;
     private String message;
