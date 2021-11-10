@@ -32,6 +32,11 @@ import javax.ejb.TransactionAttributeType;
 public class NullRemoteUserHelper implements RemoteUserHelper {
   
   @Override
+  public boolean isRemoteUserAuthAvailable() {
+    return false;
+  }
+  
+  @Override
   public void createRemoteUser(RemoteUserDTO userDTO, String email, String givenName, String surname,
     RemoteUserType type, UserAccountStatus status) throws GenericException, UserException {
     throw new UnsupportedOperationException("Remote auth not supported.");

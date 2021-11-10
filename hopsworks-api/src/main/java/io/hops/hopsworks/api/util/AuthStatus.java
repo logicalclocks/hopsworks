@@ -42,6 +42,10 @@ package io.hops.hopsworks.api.util;
 import javax.xml.bind.annotation.XmlRootElement;
 import java.util.List;
 
+/**
+ * Use AuthenticationStatus
+ */
+@Deprecated
 @XmlRootElement
 public class AuthStatus {
   

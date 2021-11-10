@@ -40,6 +40,7 @@ package io.hops.hopsworks.api.user;
 
 import io.hops.hopsworks.api.activities.UserActivitiesResource;
 import io.hops.hopsworks.api.filter.Audience;
+import io.hops.hopsworks.api.filter.JWTNotRequired;
 import io.hops.hopsworks.api.jwt.JWTHelper;
 import io.hops.hopsworks.api.user.apiKey.ApiKeyResource;
 import io.hops.hopsworks.api.util.Pagination;
@@ -60,6 +61,8 @@ import io.hops.hopsworks.common.dao.user.UserProjectDTO;
 import io.hops.hopsworks.common.dao.user.security.secrets.SecretPlaintext;
 import io.hops.hopsworks.common.project.ProjectController;
 import io.hops.hopsworks.common.security.secrets.SecretsController;
+import io.hops.hopsworks.common.user.AuthController;
+import io.hops.hopsworks.common.user.QrCode;
 import io.hops.hopsworks.common.user.UsersController;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.ProjectException;
@@ -73,7 +76,6 @@ import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.restutils.RESTCodes;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
-import org.apache.commons.codec.binary.Base64;
 
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
@@ -136,6 +138,8 @@ public class UsersResource {
   private SecretsBuilder secretsBuilder;
   @EJB
   private Settings settings;
+  @EJB
+  private AuthController authController;
 
   @GET
   @Produces(MediaType.APPLICATION_JSON)
@@ -307,30 +311,42 @@ public class UsersResource {
   @Produces(MediaType.APPLICATION_JSON)
   @Audited(type = AuditType.ACCOUNT_AUDIT, action = AuditAction.TWO_FACTOR, message = "User changed " +
     "two factor setting")
-  @ApiOperation(value = "Updates logedin User\'s two factor setting.", response = RESTApiJsonResponse.class)
+  @ApiOperation(value = "Updates logged in User\'s two factor setting.")
   public Response changeTwoFactor(@Secret @FormParam("password") String password,
     @FormParam("twoFactor") boolean twoFactor, @AuditTarget(UserIdentifier.REQ) @Context HttpServletRequest req,
     @Context SecurityContext sc) throws UserException {
     Users user = jWTHelper.getUserPrincipal(sc);
-    byte[] qrCode;
     RESTApiJsonResponse json = new RESTApiJsonResponse();
     if (user.getTwoFactor() == twoFactor) {
       json.setSuccessMessage("No change made.");
       return Response.ok().entity(json).build();
     }
-    qrCode = userController.changeTwoFactor(user, password);
+    QrCode qrCode = userController.changeTwoFactor(user, password);
     if (qrCode != null) {
-      json.setQRCode(new String(Base64.encodeBase64(qrCode)));
+      return Response.ok(qrCode).build();
     } else {
-      json.setSuccessMessage("Tow factor authentication disabled.");
+      json.setSuccessMessage("Two factor authentication disabled.");
     }
     return Response.ok().entity(json).build();
+  }
+  
+  @POST
+  @Path("resetTwoFactor")
+  @Produces(MediaType.APPLICATION_JSON)
+  @Audited(type = AuditType.ACCOUNT_AUDIT, action = AuditAction.TWO_FACTOR, message = "User reset two factor")
+  @ApiOperation(value = "Reset logged in User\'s two factor setting.", response = QrCode.class)
+  public Response resetTwoFactor(@Secret @FormParam("password") String password,
+    @AuditTarget(UserIdentifier.REQ) @Context HttpServletRequest req, @Context SecurityContext sc)
+    throws UserException {
+    Users user = jWTHelper.getUserPrincipal(sc);
+    QrCode qrCode = userController.resetQRCode(user, password);
+    return Response.ok(qrCode).build();
   }
 
   @POST
   @Path("getQRCode")
   @Produces(MediaType.APPLICATION_JSON)
-  @ApiOperation(value = "Gets the logged in User\'s QR code.", response = RESTApiJsonResponse.class)
+  @ApiOperation(value = "Gets the logged in User\'s QR code.", response = QrCode.class)
   public Response getQRCode(@Secret @FormParam("password") String password, @Context HttpServletRequest req,
     @Context SecurityContext sc) throws UserException {
     Users user = jWTHelper.getUserPrincipal(sc);
@@ -340,15 +356,8 @@ public class UsersResource {
     if (password == null || password.isEmpty()) {
       throw new IllegalArgumentException("Password was not provided.");
     }
-    byte[] qrCode;
-    RESTApiJsonResponse json = new RESTApiJsonResponse();
-    qrCode = userController.getQRCode(user, password);
-    if (qrCode != null) {
-      json.setQRCode(new String(Base64.encodeBase64(qrCode)));
-    } else {
-      throw new UserException(RESTCodes.UserErrorCode.TWO_FA_DISABLED, Level.FINE);
-    }
-    return Response.ok().entity(json).build();
+    QrCode qrCode = userController.getQRCode(user, password);
+    return Response.ok(qrCode).build();
   }
 
   @POST
@@ -368,6 +377,17 @@ public class UsersResource {
     }
     userDTO.setRole(pt.getTeamRole());
     return Response.ok().entity(userDTO).build();
+  }
+  
+  @POST
+  @Path("/validate/otp")
+  @Produces(MediaType.APPLICATION_JSON)
+  @JWTNotRequired
+  @ApiOperation(value = "Validate OTP")
+  public Response validateOTP(@Secret @FormParam("otp") String otp, @Context SecurityContext sc) throws UserException {
+    Users user = jWTHelper.getUserPrincipal(sc);
+    authController.validateOTP(user, otp);
+    return Response.ok().build();
   }
   
   @Logged(logLevel = LogLevel.OFF)

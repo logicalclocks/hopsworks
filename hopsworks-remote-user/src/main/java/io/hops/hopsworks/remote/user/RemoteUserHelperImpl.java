@@ -25,6 +25,11 @@ public class RemoteUserHelperImpl implements RemoteUserHelper {
   private RemoteUserAuthController remoteUserAuthController;
   
   @Override
+  public boolean isRemoteUserAuthAvailable() {
+    return true;
+  }
+  
+  @Override
   public void createRemoteUser(RemoteUserDTO userDTO, String email, String givenName, String surname,
     RemoteUserType type, UserAccountStatus status) throws GenericException, UserException {
     remoteUserAuthController.createRemoteUser(userDTO, email, givenName, surname, type, status);

@@ -953,7 +953,9 @@ public class RESTCodes {
     ACCOUNT_DELETION_ERROR(54, "Failed to delete account.", Response.Status.BAD_REQUEST),
     USER_NAME_NOT_SET(55, "User name not set.", Response.Status.BAD_REQUEST),
     SECRET_DELETION_FAILED(56, "Failed to delete secret.", Response.Status.BAD_REQUEST),
-    USER_SEARCH_NOT_ALLOWED(57, "Search not allowed.", Response.Status.BAD_REQUEST);
+    USER_SEARCH_NOT_ALLOWED(57, "Search not allowed.", Response.Status.BAD_REQUEST),
+    FAILED_TO_GENERATE_QR_CODE(58, "Failed to generate QR code.", Response.Status.EXPECTATION_FAILED),
+    INVALID_OTP(59, "Invalid OTP.", Response.Status.BAD_REQUEST);
 
     private Integer code;
     private String message;

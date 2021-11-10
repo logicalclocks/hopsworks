@@ -57,6 +57,7 @@ import io.hops.hopsworks.common.constants.message.ResponseMessages;
 import io.hops.hopsworks.common.dao.user.UserDTO;
 import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.user.AuthController;
+import io.hops.hopsworks.common.user.QrCode;
 import io.hops.hopsworks.common.user.UserStatusValidator;
 import io.hops.hopsworks.common.user.UsersController;
 import io.hops.hopsworks.common.util.DateUtils;
@@ -74,7 +75,6 @@ import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.persistence.entity.util.FormatUtils;
 import io.hops.hopsworks.restutils.RESTCodes;
 import io.swagger.annotations.Api;
-import org.apache.commons.codec.binary.Base64;
 
 import javax.annotation.security.RolesAllowed;
 import javax.ejb.EJB;
@@ -339,17 +339,28 @@ public class AuthService {
       throw new UserException(RESTCodes.UserErrorCode.ACCOUNT_REGISTRATION_ERROR, Level.FINE, "Registration not " +
         "allowed.");
     }
-    byte[] qrCode;
     RESTApiJsonResponse json = new RESTApiJsonResponse();
     String linkUrl = FormatUtils.getUserURL(req) + settings.getEmailVerificationEndpoint();
-    qrCode = userController.registerUser(newUser, linkUrl);
-    if (authController.isTwoFactorEnabled() && newUser.isTwoFactor()) {
-      json.setQRCode(new String(Base64.encodeBase64(qrCode)));
+    QrCode qrCode = userController.registerUser(newUser, linkUrl);
+    if (authController.isTwoFactorEnabled(newUser.isTwoFactor())) {
+      return Response.ok(qrCode).build();
     } else {
       json.setSuccessMessage("We registered your account request. Please validate you email and we will "
         + "review your account within 48 hours.");
     }
     return Response.ok(json).build();
+  }
+  
+  @POST
+  @Path("/validate/otp")
+  @Produces(MediaType.APPLICATION_JSON)
+  @JWTNotRequired
+  @Audited(type = AuditType.ACCOUNT_AUDIT, action = AuditAction.QR_CODE, message = "Account otp verification")
+  public Response validateOTP(@Caller @AuditTarget @FormParam("email") String email,
+    @Secret @FormParam("password") String password, @Secret @FormParam("otp") String otp,
+    @Context HttpServletRequest req) throws UserException {
+    authController.validateOTP(email, password, otp);
+    return Response.ok().build();
   }
 
   @POST
@@ -415,9 +426,8 @@ public class AuthService {
   @Audited(type = AuditType.ACCOUNT_AUDIT, action = AuditAction.QR_CODE, message = "Reset QR Code")
   public Response qrCodeRecovery(@Caller(UserIdentifier.KEY) @AuditTarget(UserIdentifier.KEY) @Secret
     @FormParam("key") String key, @Context HttpServletRequest req) throws UserException, MessagingException {
-    RESTApiJsonResponse json = new RESTApiJsonResponse();
-    json.setQRCode(userController.recoverQRCode(key));
-    return Response.ok(json).build();
+    QrCode qrCode = userController.recoverQRCode(key);
+    return Response.ok(qrCode).build();
   }
   
   @POST

@@ -77,35 +77,22 @@ angular.module('hopsWorksApp')
               self.successMessage = null;
               self.errorMessage = null;
               if ($scope.registerForm.$valid) {
-                self.working = true;
-                if (self.otp === 'false' || !self.newUser.twoFactor) {
+                  self.working = true;
                   AuthService.register(self.newUser).then(
-                          function (success) {
-                            self.user = angular.copy(empty);
-                            $scope.registerForm.$setPristine();
-                            self.successMessage = success.data.successMessage;
-                            self.working = false;
-                            //$location.path('/login');
-                          }, function (error) {
-                             self.working = false;
-                             self.errorMessage = (typeof error.data.usrMsg !== 'undefined')? error.data.usrMsg : error.data.errorMsg;
-                  });
-                }else  if (self.newUser.authType === 'Mobile') {
-                  AuthService.register(self.newUser).then(
-                          function (success) {
-                            self.user = angular.copy(empty);                         
-                            $scope.registerForm.$setPristine();
-                            self.successMessage = success.data.successMessage;
-                            self.working = false;
-                            $location.path("/qrCode/register/" + success.data.QRCode);
-                            $location.replace();
-                            //$location.path('/login');
-                          }, function (error) {
-                    self.working = false;
-                    self.errorMessage = (typeof error.data.usrMsg !== 'undefined')? error.data.usrMsg : error.data.errorMsg;
-                  });
-                }
-              };
+                      function (success) {
+                          self.user = angular.copy(empty);
+                          $scope.registerForm.$setPristine();
+                          self.successMessage = success.data.successMessage;
+                          self.working = false;
+                          if (success.data.QRCode) {
+                              $location.path("/qrCode/register/" + success.data.QRCode);
+                              $location.replace();
+                          }
+                      }, function (error) {
+                          self.working = false;
+                          self.errorMessage = (typeof error.data.usrMsg !== 'undefined') ? error.data.usrMsg : error.data.errorMsg;
+                      });
+              }
             };
             self.countries = getAllCountries();
             

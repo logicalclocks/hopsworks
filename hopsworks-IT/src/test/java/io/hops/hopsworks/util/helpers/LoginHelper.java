@@ -65,9 +65,10 @@ public class LoginHelper {
   }
   
   public static void logout(WebDriver driver) {
-    if (driver.findElement(By.id("navbarProfile")) != null) {
-      driver.findElement(By.id("navbarProfile")).click();
-      WebDriverWait wait = new WebDriverWait(driver, 60);
+    WebDriverWait wait = new WebDriverWait(driver, 60);
+    WebElement navbar = wait.until(ExpectedConditions.elementToBeClickable(By.id("navbarProfile")));
+    if (navbar != null) {
+      navbar.click();
       WebElement element = wait.until(ExpectedConditions.elementToBeClickable(By.id("navbar-sign-out")));
       element.click();
     }

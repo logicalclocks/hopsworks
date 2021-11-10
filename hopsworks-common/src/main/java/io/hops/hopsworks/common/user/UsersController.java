@@ -64,7 +64,6 @@ import io.hops.hopsworks.exceptions.UserException;
 import io.hops.hopsworks.common.util.EmailBean;
 import io.hops.hopsworks.common.util.QRCodeGenerator;
 import io.hops.hopsworks.common.util.Settings;
-import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.lang3.StringUtils;
 
 import javax.ejb.EJB;
@@ -114,18 +113,21 @@ public class UsersController {
   private UserStatusValidator userStatusValidator;
   @EJB
   private ProjectFacade projectFacade;
-
-  // To send the user the QR code image
-  private byte[] qrCode;
-
-  public byte[] registerUser(UserDTO newUser, String validationKeyUrl) throws UserException {
+  
+  public QrCode registerUser(UserDTO newUser, String validationKeyUrl) throws UserException {
     if (newUser.getEmail() != null && !newUser.getEmail().isEmpty()) {
       newUser.setEmail(newUser.getEmail().toLowerCase());
     }
     userValidator.isValidNewUser(newUser);
+    // if setting is changed user should still be able to use her device
+    if (!Strings.isNullOrEmpty(settings.getTwoFactorAuth()) &&
+      Settings.TwoFactorMode.MANDATORY.getName().equals(settings.getTwoFactorAuth())) {
+      newUser.setTwoFactor(true);
+    }
     newUser.setMaxNumProjects(0);//should not allow setting max project
     Users user = createNewUser(newUser, UserAccountStatus.NEW_MOBILE_ACCOUNT, UserAccountType.M_ACCOUNT_TYPE);
     //to prevent sending email for test user emails
+    QrCode qrCode;
     try {
       if (!newUser.isTestUser()) {
         // Notify user about the request if not test user.
@@ -133,8 +135,8 @@ public class UsersController {
       }
       // Only register the user if i can send the email. To prevent fake emails
       userFacade.persist(user);
-      qrCode = QRCodeGenerator.getQRCodeBytes(newUser.getEmail(), Settings.ISSUER, user.getSecret());
-    } catch (WriterException | MessagingException | IOException ex) {
+      qrCode = getQrCode(user);
+    } catch (MessagingException ex) {
       throw new UserException(RESTCodes.UserErrorCode.ACCOUNT_REGISTRATION_ERROR, Level.SEVERE,
         "user: " + newUser.getUsername(), ex.getMessage(), ex);
     }
@@ -263,7 +265,7 @@ public class UsersController {
     if (!authController.checkUserPasswordAndStatus(user, password)) {
       throw new UserException(RESTCodes.UserErrorCode.INCORRECT_CREDENTIALS, Level.FINE);
     }
-    if (!user.getTwoFactor()) {
+    if (!authController.isTwoFactorEnabled(user)) {
       throw new UserException(RESTCodes.UserErrorCode.TWO_FA_DISABLED, Level.FINE);
     }
     authController.sendNewRecoveryValidationKey(user, reqUrl, false);
@@ -284,14 +286,19 @@ public class UsersController {
     authController.sendNewRecoveryValidationKey(user, reqUrl, true);
   }
   
-  public String recoverQRCode(String key) throws UserException, MessagingException {
-    return new String(recoverQRCodeByte(key));
+  public byte[] recoverQRCodeByte(String key) throws UserException, MessagingException {
+    Users user = sendQRCodeRecoverEmail(key);
+    return resetQRCodeByte(user);
   }
   
-  public byte[] recoverQRCodeByte(String key) throws UserException, MessagingException {
+  public QrCode recoverQRCode(String key) throws UserException, MessagingException {
+    Users user = sendQRCodeRecoverEmail(key);
+    return resetQRCode(user);
+  }
+  
+  private Users sendQRCodeRecoverEmail(String key) throws UserException, MessagingException {
     Users user = authController.validateRecoveryKey(key, ValidationKeyType.QR_RESET);
-    byte[] qrCode = recoverQRCode(user);
-    if (qrCode == null) {
+    if (!authController.isTwoFactorEnabled(user)) {
       throw new UserException(RESTCodes.UserErrorCode.TWO_FA_DISABLED, Level.FINE);
     }
     authController.resetValidationKey(user);
@@ -299,13 +306,39 @@ public class UsersController {
     String subject = UserAccountsEmailMessages.ACCOUNT_QR_RESET;
     String msg = UserAccountsEmailMessages.buildQRResetMessage();
     emailBean.sendEmail(user.getEmail(), Message.RecipientType.TO, subject, msg);
-    return Base64.encodeBase64(qrCode);
+    return user;
   }
   
-  private byte[] recoverQRCode(Users user) {
+  public QrCode resetQRCode(Users user, String password) throws UserException {
+    if (user == null) {
+      throw new UserException(RESTCodes.UserErrorCode.USER_DOES_NOT_EXIST, Level.FINE);
+    }
+    if (!authController.validatePassword(user, password)) {
+      throw new UserException(RESTCodes.UserErrorCode.PASSWORD_INCORRECT, Level.FINE);
+    }
+    if (!authController.isTwoFactorEnabled(user)) {
+      throw new UserException(RESTCodes.UserErrorCode.TWO_FA_DISABLED, Level.FINE);
+    }
+    return resetQRCode(user);
+  }
+  
+  private QrCode resetQRCode(Users user) throws UserException {
+    updateUserSecret(user);
+    return getQrCode(user);
+  }
+  
+  private byte[] resetQRCodeByte(Users user) throws UserException {
+    updateUserSecret(user);
+    try {
+      return QRCodeGenerator.getQRCodeBytes(user.getEmail(), Settings.ISSUER, user.getSecret());
+    } catch (IOException | WriterException e) {
+      throw new UserException(RESTCodes.UserErrorCode.FAILED_TO_GENERATE_QR_CODE, Level.FINE);
+    }
+  }
+  
+  private void updateUserSecret(Users user) {
     String random = securityUtils.calculateSecretKey();
     updateSecret(user, random);
-    return getQrCode(user);
   }
   
   /**
@@ -470,29 +503,22 @@ public class UsersController {
    * @param password
    * @return qrCode if tow factor is enabled null if disabled.
    */
-  public byte[] changeTwoFactor(Users user, String password) throws UserException {
+  public QrCode changeTwoFactor(Users user, String password) throws UserException {
     if (user == null) {
       throw new IllegalArgumentException("User was not provided.");
     }
     if (!authController.validatePassword(user, password)) {
       throw new UserException(RESTCodes.UserErrorCode.PASSWORD_INCORRECT, Level.FINE);
     }
-    byte[] qr_code = null;
     if (user.getTwoFactor()) {
       user.setTwoFactor(false);
       userFacade.update(user);
     } else {
-      try {
-        user.setTwoFactor(true);
-        userFacade.update(user);
-        qr_code = QRCodeGenerator.getQRCodeBytes(user.getEmail(), Settings.ISSUER, user.getSecret());
-      } catch (IOException | WriterException ex) {
-        LOGGER.log(Level.SEVERE, null, ex);
-        throw new UserException(RESTCodes.UserErrorCode.TWO_FA_ENABLE_ERROR, Level.SEVERE,
-          "user: " + user.getUsername(), ex.getMessage(), ex);
-      }
+      user.setTwoFactor(true);
+      userFacade.update(user);
+      return getQrCode(user);
     }
-    return qr_code;
+    return null;
   }
 
   /**
@@ -502,27 +528,26 @@ public class UsersController {
    * @param password
    * @return null if two factor is disabled.
    */
-  public byte[] getQRCode(Users user, String password) throws UserException {
+  public QrCode getQRCode(Users user, String password) throws UserException {
     if (user == null) {
       throw new IllegalArgumentException("User was not provided");
     }
     if (!authController.validatePassword(user, password)) {
       throw new UserException(RESTCodes.UserErrorCode.PASSWORD_INCORRECT, Level.FINE);
     }
-    
+    if (!authController.isTwoFactorEnabled(user)) {
+      throw new UserException(RESTCodes.UserErrorCode.TWO_FA_DISABLED, Level.FINE);
+    }
     return getQrCode(user);
   }
   
-  public byte[] getQrCode(Users user) {
-    byte[] qr_code = null;
-    if (user.getTwoFactor()) {
-      try {
-        qr_code = QRCodeGenerator.getQRCodeBytes(user.getEmail(), Settings.ISSUER, user.getSecret());
-      } catch (IOException | WriterException ex) {
-        LOGGER.log(Level.SEVERE, null, ex);
-      }
+  private QrCode getQrCode(Users user) throws UserException {
+    try {
+      byte[] img = QRCodeGenerator.getQRCodeBytes(user.getEmail(), Settings.ISSUER, user.getSecret());
+      return new QrCode(img, user.getSecret(), Settings.ISSUER, user.getEmail());
+    } catch (IOException | WriterException e) {
+      throw new UserException(RESTCodes.UserErrorCode.FAILED_TO_GENERATE_QR_CODE, Level.FINE);
     }
-    return qr_code;
   }
 
   public void registerGroup(Users uid, int gidNumber) {
