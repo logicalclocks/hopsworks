@@ -43,5 +43,14 @@ public enum Name {
   IS_LESS_THAN_OR_EQUAL_TO,
   IS_GREATER_THAN,
   IS_GREATER_THAN_OR_EQUAL_TO,
-  IS_CONTAINED_IN
+  IS_CONTAINED_IN;
+
+  public boolean isAppliedToFeaturePairs() {
+    return this == IS_GREATER_THAN_OR_EQUAL_TO
+            || this == IS_GREATER_THAN
+            || this == IS_LESS_THAN
+            || this == IS_LESS_THAN_OR_EQUAL_TO
+            || this == HAS_MUTUAL_INFORMATION
+            || this == HAS_CORRELATION;
+  }
 }

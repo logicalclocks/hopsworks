@@ -57,7 +57,6 @@ public class ValidationRule implements Serializable {
   @Column(name = "name")
   private Name name;
 
-  @NotNull
   @Enumerated(EnumType.STRING)
   @Column(name = "predicate")
   private Predicate predicate;
