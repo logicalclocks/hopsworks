@@ -213,7 +213,7 @@ public class OAuthController {
     }
     
     if (!Strings.isNullOrEmpty(domain)) {
-      settings.updateOauthLogoutRedirectUri(domain);
+      settings.addPathAndupdateOauthLogoutRedirectUri(domain);
     }
     
     if (rejectNoGroup != null){

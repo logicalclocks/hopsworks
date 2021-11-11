@@ -2997,11 +2997,15 @@ public class Settings implements Serializable {
     return OAUTH_LOGOUT_REDIRECT_URI;
   }
   
+  public void addPathAndupdateOauthLogoutRedirectUri(String uri) {
+      updateOauthLogoutRedirectUri(uri + OAUTH_LOGOUT_REDIRECT_URI_PATH);
+  }
+  
   public void updateOauthLogoutRedirectUri(String uri) {
     updateVariableInternal(VARIABLE_OAUTH_LOGOUT_REDIRECT_URI, uri + OAUTH_LOGOUT_REDIRECT_URI_PATH,
         VariablesVisibility.ADMIN);
   }
-  
+
   public void updateManagedCloudRedirectUri(String uri) {
     updateVariableInternal(VARIABLE_MANAGED_CLOUD_REDIRECT_URI, uri , VariablesVisibility.ADMIN);
   }
