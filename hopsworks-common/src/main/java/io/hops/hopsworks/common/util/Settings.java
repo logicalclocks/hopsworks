@@ -3002,7 +3002,7 @@ public class Settings implements Serializable {
   }
   
   public void updateOauthLogoutRedirectUri(String uri) {
-    updateVariableInternal(VARIABLE_OAUTH_LOGOUT_REDIRECT_URI, uri + OAUTH_LOGOUT_REDIRECT_URI_PATH,
+    updateVariableInternal(VARIABLE_OAUTH_LOGOUT_REDIRECT_URI, uri,
         VariablesVisibility.ADMIN);
   }
 
