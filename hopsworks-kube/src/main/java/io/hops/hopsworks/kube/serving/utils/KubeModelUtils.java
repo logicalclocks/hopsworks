@@ -63,15 +63,6 @@ public class KubeModelUtils {
     }
   }
   
-  public String getModelName(Serving serving) {
-    String modelPath = serving.getModelPath();
-    if (modelPath.endsWith("/")) {
-      modelPath = modelPath.substring(0, modelPath.length() - 1);
-    }
-    String[] split = modelPath.split("/");
-    return split[split.length - 1];
-  }
-  
   public String getModelVersionDirPath(Serving serving) {
     // Format: /Project/<project>/Models/<model>/<version>
     String path = serving.getModelPath();

@@ -51,6 +51,8 @@ import java.util.Date;
     @NamedQuery(name = "Serving.findById", query = "SELECT t FROM Serving t WHERE t.id = :id"),
     @NamedQuery(name = "Serving.findByProject", query = "SELECT t FROM Serving t " +
       "WHERE t.project = :project"),
+    @NamedQuery(name = "Serving.findByProjectAndModel", query = "SELECT t FROM Serving t " +
+            "WHERE t.project = :project AND t.modelName = :modelName"),
     @NamedQuery(name = "Serving.findByProjectAndId", query = "SELECT t FROM Serving t " +
       "WHERE t.project = :project AND t.id = :id"),
     @NamedQuery(name = "Serving.findByCreated", query = "SELECT t FROM Serving t WHERE t.created = :created"),
@@ -87,6 +89,11 @@ public class Serving implements Serializable {
   @Size(min = 1, max = 255)
   @Column(name = "transformer") // <filename>.<ext>
   private String transformer;
+  @Basic(optional = false)
+  @NotNull
+  @Size(min = 1, max = 255)
+  @Column(name = "model_name")
+  private String modelName;
   @Basic(optional = false)
   @NotNull
   @Column(name = "model_version")
@@ -152,7 +159,7 @@ public class Serving implements Serializable {
 
   public Serving() { }
 
-  public Serving(Integer id, String name, String modelPath, String transformer, Integer modelVersion,
+  public Serving(Integer id, String name, String modelPath, String transformer, String modelName, Integer modelVersion,
       Integer artifactVersion, Integer nInstances, Integer nTransformerInstances, Boolean batchingEnabled,
       ModelServer modelServer, ServingTool servingTool, InferenceLogging inferenceLogging,
       DockerResourcesConfiguration dockerResourcesConfig) {
@@ -160,6 +167,7 @@ public class Serving implements Serializable {
     this.name = name;
     this.modelPath = modelPath;
     this.transformer = transformer;
+    this.modelName = modelName;
     this.modelVersion = modelVersion;
     this.artifactVersion = artifactVersion;
     this.instances = nInstances;
@@ -217,6 +225,14 @@ public class Serving implements Serializable {
 
   public void setTransformer(String transformer) {
     this.transformer = transformer;
+  }
+
+  public String getModelName() {
+    return modelName;
+  }
+
+  public void setModelName(String modelName) {
+    this.modelName = modelName;
   }
   
   public Integer getModelVersion() { return modelVersion; }

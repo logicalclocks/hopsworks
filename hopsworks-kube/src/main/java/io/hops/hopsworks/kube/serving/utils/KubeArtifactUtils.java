@@ -118,7 +118,7 @@ public class KubeArtifactUtils {
   
   public String getArtifactFileName(Serving serving) {
     // Format: <model_name>_<version>_<version>.zip
-    return kubeModelUtils.getModelName(serving) + "_" + serving.getModelVersion() + "_" + serving.getArtifactVersion()
+    return serving.getModelName() + "_" + serving.getModelVersion() + "_" + serving.getArtifactVersion()
       + ARTIFACT_FILE_EXTENSION;
   }
   

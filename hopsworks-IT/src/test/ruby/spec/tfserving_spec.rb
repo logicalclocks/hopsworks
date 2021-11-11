@@ -470,6 +470,9 @@ describe "On #{ENV['OS']}" do
 
         serving = Serving.find(@serving[:id])
         topic = ProjectTopics.find(@serving[:kafka_topic_id])
+
+        expect(serving[:model_name]).to eq "mnist"
+
         put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
             {id: serving[:id],
              name: serving[:name],
@@ -487,6 +490,7 @@ describe "On #{ENV['OS']}" do
         expect_status_details(201)
 
         serving = Serving.find(@serving[:id])
+        expect(serving[:model_name]).to eq "newMnist"
         expect(serving[:model_path]).to eql "/Projects/#{@project[:projectname]}/Models/newMnist"
       end
 

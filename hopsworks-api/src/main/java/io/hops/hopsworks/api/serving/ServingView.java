@@ -45,6 +45,7 @@ public class ServingView implements Serializable {
   private Integer id;
   private String name;
   private String modelPath;
+  private String modelName;
   private Integer modelVersion;
   private Integer artifactVersion;
   private String transformer;
@@ -79,6 +80,7 @@ public class ServingView implements Serializable {
     this.name = servingWrapper.getServing().getName();
     this.modelPath = servingWrapper.getServing().getModelPath();
     this.transformer = servingWrapper.getServing().getTransformer();
+    this.modelName = servingWrapper.getServing().getModelName();
     this.modelVersion = servingWrapper.getServing().getModelVersion();
     this.artifactVersion = servingWrapper.getServing().getArtifactVersion();
     this.availableInstances = servingWrapper.getAvailableReplicas();
@@ -131,6 +133,14 @@ public class ServingView implements Serializable {
   }
   public void setTransformer(String transformer) {
     this.transformer = transformer;
+  }
+
+  @ApiModelProperty(value = "Name of the model")
+  public String getModelName() {
+    return modelName;
+  }
+  public void setModelName(String modelName) {
+    this.modelName = modelName;
   }
 
   @ApiModelProperty(value = "Version of the model")
@@ -280,7 +290,7 @@ public class ServingView implements Serializable {
   public ServingWrapper getServingWrapper() {
 
     ServingWrapper servingWrapper = new ServingWrapper(
-        new Serving(id, name, modelPath, transformer, modelVersion, artifactVersion, requestedInstances,
+        new Serving(id, name, modelPath, transformer, modelName, modelVersion, artifactVersion, requestedInstances,
           requestedTransformerInstances, batchingEnabled, modelServer, servingTool, inferenceLogging,
           predictorResourceConfig));
     servingWrapper.setKafkaTopicDTO(kafkaTopicDTO);

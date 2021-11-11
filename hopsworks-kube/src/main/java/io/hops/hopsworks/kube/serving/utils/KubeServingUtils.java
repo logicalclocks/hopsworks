@@ -73,7 +73,7 @@ public class KubeServingUtils {
         put(SERVING_ID_LABEL_NAME, String.valueOf(serving.getId()));
         put(SERVING_NAME_LABEL_NAME, serving.getName());
         put(PROJECT_ID_LABEL_NAME, String.valueOf(project.getId()));
-        put(MODEL_NAME_LABEL_NAME, kubeModelUtils.getModelName(serving));
+        put(MODEL_NAME_LABEL_NAME, serving.getModelName());
         put(MODEL_VERSION_LABEL_NAME, serving.getModelVersion().toString());
         put(ARTIFACT_VERSION_LABEL_NAME, serving.getArtifactVersion().toString());
         put(MODEL_SERVER_LABEL_NAME, serving.getModelServer().toString().toLowerCase());

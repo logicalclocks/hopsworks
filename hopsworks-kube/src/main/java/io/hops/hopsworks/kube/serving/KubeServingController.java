@@ -4,6 +4,7 @@
 
 package io.hops.hopsworks.kube.serving;
 
+import com.google.common.base.Strings;
 import io.hops.hopsworks.common.dao.serving.ServingFacade;
 import io.hops.hopsworks.common.serving.ServingController;
 import io.hops.hopsworks.common.serving.ServingStatusEnum;
@@ -70,13 +71,23 @@ public class KubeServingController implements ServingController {
   private KubeTransformerUtils kubeTransformerUtils;
   
   @Override
-  public List<ServingWrapper> getServings(Project project)
+  public List<ServingWrapper> getServings(Project project, String modelNameFilter, ServingStatusEnum statusFilter)
     throws ServingException {
-    List<Serving> servingList = servingFacade.findForProject(project);
-    
+    List<Serving> servingList;
+    if(Strings.isNullOrEmpty(modelNameFilter)) {
+      servingList = servingFacade.findForProject(project);
+    } else {
+      servingList = servingFacade.findForProjectAndModel(project, modelNameFilter);
+    }
+
     List<ServingWrapper> servingWrapperList = new ArrayList<>();
     for (Serving serving : servingList) {
-      servingWrapperList.add(getServingInternal(project, serving));
+      ServingWrapper servingWrapper = getServingInternal(project, serving);
+      // If status filter is set only add servings with the defined status
+      if(statusFilter != null && !servingWrapper.getStatus().name().equals(statusFilter.name())) {
+        continue;
+      }
+      servingWrapperList.add(servingWrapper);
     }
     
     return servingWrapperList;

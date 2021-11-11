@@ -35,7 +35,7 @@ import java.util.concurrent.ExecutionException;
  */
 public interface ServingController {
 
-  List<ServingWrapper> getServings(Project project)
+  List<ServingWrapper> getServings(Project project, String modelNameFilter, ServingStatusEnum statusFilter)
       throws ServingException, KafkaException, CryptoPasswordNotFoundException;
 
   ServingWrapper getServing(Project project, Integer id)

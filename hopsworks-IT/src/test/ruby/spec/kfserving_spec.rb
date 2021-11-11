@@ -654,11 +654,28 @@ describe "On #{ENV['OS']}" do
             expect_status_details(201)
           end
 
+          it "should set the model name from model path" do
+            put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
+                {name: "testmodel28",
+                 modelPath: "/Projects/#{@project[:projectname]}/Models/mnist/",
+                 modelVersion: 1,
+                 batchingEnabled: false,
+                 modelServer: "TENSORFLOW_SERVING",
+                 servingTool: "KFSERVING",
+                 requestedInstances: 1
+                }
+            expect_status_details(201)
+
+            serving_list = get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/"
+            serving = JSON.parse(serving_list).select { |serving| serving['name'] == "testmodel28"}[0]
+            expect(serving['modelName']).to eq "mnist"
+          end
+
           it "should fail to create a serving with a non-standard path" do
             rm("/Projects/#{@project[:projectname]}/Models/mnist/1/saved_model.pb")
 
             put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
-                {name: "testmodel28",
+                {name: "testmodel29",
                  modelPath: "/Projects/#{@project[:projectname]}/Models/mnist/",
                  batchingEnabled: false,
                  modelVersion: 1,
