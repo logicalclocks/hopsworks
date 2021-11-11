@@ -209,4 +209,17 @@ public class ServingUtil {
       throw new ServingException(RESTCodes.ServingErrorCode.DUPLICATEDENTRY, Level.FINE);
     }
   }
+
+  /**
+   * Infer the model name from the modelPath
+   * Assumes modelPath is absolute from /Projects
+   * And starts with the following format /Projects/{project}/Models/{model}
+   *
+   * @param servingWrapper
+   */
+  public void inferModelName(ServingWrapper servingWrapper) {
+    String modelPath = servingWrapper.getServing().getModelPath();
+    String[] split = modelPath.split("/");
+    servingWrapper.getServing().setModelName(split[4]);
+  }
 }

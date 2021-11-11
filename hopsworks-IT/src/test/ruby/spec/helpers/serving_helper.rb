@@ -118,7 +118,10 @@ module ServingHelper
     post "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/serving/#{serving[:id]}?action=start"
     expect_status(200)
     # Sleep some time while the TfServing server starts
+  end
 
+  def get_servings(project, query)
+    get "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/serving#{query}"
   end
 
   def wait_for_type(serving_name)
