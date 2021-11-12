@@ -2989,7 +2989,8 @@ public class Settings implements Serializable {
   }
   
   public void updateOauthRedirectUri(String uri) {
-    updateVariableInternal(VARIABLE_OAUTH_REDIRECT_URI, uri + OAUTH_REDIRECT_URI_PATH, VariablesVisibility.ADMIN);
+    updateVariableInternal(VARIABLE_OAUTH_REDIRECT_URI, uri + OAUTH_REDIRECT_URI_PATH,
+            VariablesVisibility.ADMIN);
   }
   
   public synchronized String getOauthLogoutRedirectUri() {
@@ -2998,7 +2999,7 @@ public class Settings implements Serializable {
   }
   
   public void addPathAndupdateOauthLogoutRedirectUri(String uri) {
-      updateOauthLogoutRedirectUri(uri + OAUTH_LOGOUT_REDIRECT_URI_PATH);
+    updateOauthLogoutRedirectUri(uri + OAUTH_LOGOUT_REDIRECT_URI_PATH);
   }
   
   public void updateOauthLogoutRedirectUri(String uri) {
