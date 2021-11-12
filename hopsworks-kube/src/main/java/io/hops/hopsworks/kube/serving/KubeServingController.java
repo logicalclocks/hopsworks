@@ -266,12 +266,13 @@ public class KubeServingController implements ServingController {
         if (oldServing.equals(serving)) {
           return;
         }
+  
+        // Get current serving status
+        KubeServingInternalStatus internalStatus = toolServingController.getInternalStatus(project, oldServing);
+        ServingStatusEnum status = internalStatus.getServingStatus();
         
         // Merge serving fields
         Serving newServing = servingFacade.mergeServings(oldServing, serving);
-        
-        KubeServingInternalStatus internalStatus = toolServingController.getInternalStatus(project, newServing);
-        ServingStatusEnum status = internalStatus.getServingStatus();
         if (newServing.getDeployed() != null) {
           // If the serving is deployed, check the serving status
           if (!internalStatus.getAvailable() && status == ServingStatusEnum.STARTING) {
