@@ -132,6 +132,44 @@
   </suppress>
   <suppress>
     <notes><![CDATA[
+   file name: parquet-hadoop-bundle-1.11.0.jar (shaded: com.fasterxml.jackson.core:jackson-databind:2.9.10)
+   ]]></notes>
+    <packageUrl regex="true">^pkg:maven/com\.fasterxml\.jackson\.core/jackson\-databind@.*$</packageUrl>
+    <cve>CVE-2020-9547</cve>
+    <cve>CVE-2020-9548</cve>
+    <cve>CVE-2020-36180</cve>
+    <cve>CVE-2020-14195</cve>
+    <cve>CVE-2020-24616</cve>
+    <cve>CVE-2020-36182</cve>
+    <cve>CVE-2020-36181</cve>
+    <cve>CVE-2020-36184</cve>
+    <cve>CVE-2020-36183</cve>
+    <cve>CVE-2020-10969</cve>
+    <cve>CVE-2020-11619</cve>
+    <cve>CVE-2020-35728</cve>
+    <cve>CVE-2020-10968</cve>
+    <cve>CVE-2020-24750</cve>
+    <cve>CVE-2020-10673</cve>
+    <cve>CVE-2020-11620</cve>
+    <cve>CVE-2020-36186</cve>
+    <cve>CVE-2020-36185</cve>
+    <cve>CVE-2020-36188</cve>
+    <cve>CVE-2020-36187</cve>
+    <cve>CVE-2020-10672</cve>
+    <cve>CVE-2020-36189</cve>
+    <cve>CVE-2020-9546</cve>
+    <cve>CVE-2020-14060</cve>
+    <cve>CVE-2020-14061</cve>
+    <cve>CVE-2020-14062</cve>
+    <cve>CVE-2021-20190</cve>
+    <cve>CVE-2020-11113</cve>
+    <cve>CVE-2020-11112</cve>
+    <cve>CVE-2020-36179</cve>
+    <cve>CVE-2020-8840</cve>
+    <cve>CVE-2020-11111</cve>
+  </suppress>
+  <suppress>
+    <notes><![CDATA[
    file name: hadoop-client-runtime-*.jar (shaded: org.eclipse.jetty:jetty-*:9.3.24.v20180605)
    ]]></notes>
     <packageUrl regex="true">^pkg:maven/org\.eclipse\.jetty/jetty\-*.*$</packageUrl>
