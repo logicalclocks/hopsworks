@@ -17,7 +17,6 @@
 package io.hops.hopsworks.api.airflow;
 
 import io.hops.hopsworks.common.util.templates.airflow.AirflowDAG;
-import io.hops.hopsworks.common.util.templates.airflow.AirflowFeatureValidationResultOperator;
 import io.hops.hopsworks.common.util.templates.airflow.AirflowJobLaunchOperator;
 import io.hops.hopsworks.common.util.templates.airflow.AirflowJobSuccessSensor;
 import io.hops.hopsworks.common.util.templates.airflow.AirflowOperator;
@@ -87,10 +86,6 @@ public class AirflowDagDTO {
           break;
         case AirflowJobSuccessSensor.NAME:
           operator = new AirflowJobSuccessSensor(project.getName(), op.getId(), op.getJobName());
-          break;
-        case AirflowFeatureValidationResultOperator.NAME:
-          operator = new AirflowFeatureValidationResultOperator(project.getName(), op.getId(),
-              op.getFeatureGroupName());
           break;
         default:
       }
