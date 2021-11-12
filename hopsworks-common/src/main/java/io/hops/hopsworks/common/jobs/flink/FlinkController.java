@@ -39,6 +39,7 @@
 
 package io.hops.hopsworks.common.jobs.flink;
 
+import com.google.common.base.Strings;
 import com.logicalclocks.servicediscoverclient.exceptions.ServiceDiscoveryException;
 import io.hops.hopsworks.common.hosts.ServiceDiscoveryController;
 import io.hops.hopsworks.exceptions.ServiceException;
@@ -72,7 +73,6 @@ import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.yarn.api.records.ApplicationId;
 import org.apache.hadoop.yarn.client.api.YarnClient;
 import org.apache.hadoop.yarn.conf.YarnConfiguration;
-import org.apache.parquet.Strings;
 import org.yaml.snakeyaml.Yaml;
 
 import javax.ejb.EJB;

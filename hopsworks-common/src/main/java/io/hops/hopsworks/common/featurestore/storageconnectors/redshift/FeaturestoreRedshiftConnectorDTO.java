@@ -15,9 +15,9 @@
  */
 package io.hops.hopsworks.common.featurestore.storageconnectors.redshift;
 
+import com.google.common.base.Strings;
 import io.hops.hopsworks.common.featurestore.storageconnectors.FeaturestoreStorageConnectorDTO;
 import io.hops.hopsworks.persistence.entity.featurestore.storageconnector.FeaturestoreConnector;
-import org.apache.parquet.Strings;
 
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;

@@ -16,6 +16,7 @@
 
 package io.hops.hopsworks.common.featurestore.storageconnectors.snowflake;
 
+import com.google.common.base.Strings;
 import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.featurestore.OptionDTO;
 import io.hops.hopsworks.common.security.secrets.SecretsController;
@@ -29,7 +30,6 @@ import io.hops.hopsworks.persistence.entity.featurestore.storageconnector.snowfl
 import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.persistence.entity.user.security.secrets.Secret;
 import io.hops.hopsworks.restutils.RESTCodes;
-import org.apache.parquet.Strings;
 
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
