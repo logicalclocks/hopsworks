@@ -286,7 +286,7 @@ public class ProvStateController {
       @Override
       public ElasticHits.Handler<ProvStateDTO, Set<ProvStateDTO>> getHandler() {
         ElasticHits.Parser<ProvStateDTO> mlIdParser =
-                hit -> ProvStateParser.tryInstance(BasicElasticHit.instance(hit));
+          hit -> ProvStateParser.tryInstance(BasicElasticHit.instance(hit));
         return ElasticHits.handlerAddToSet(mlIdParser);
       }
 
