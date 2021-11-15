@@ -17,6 +17,7 @@
 package io.hops.hopsworks.common.featurestore.query;
 
 import com.google.common.base.Strings;
+import com.logicalclocks.servicediscoverclient.exceptions.ServiceDiscoveryException;
 import io.hops.hopsworks.common.featurestore.FeaturestoreFacade;
 import io.hops.hopsworks.common.featurestore.feature.FeatureGroupFeatureDTO;
 import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupController;
@@ -652,7 +653,7 @@ public class ConstructorController {
   // or does the code becomes even more complicated?
   public List<OnDemandFeatureGroupAliasDTO> getOnDemandAliases(Users user, Project project, Query query,
                                                                 List<OnDemandFeatureGroupAliasDTO> aliases)
-      throws FeaturestoreException {
+          throws FeaturestoreException, ServiceException {
 
     if (query.getFeaturegroup().getFeaturegroupType() == FeaturegroupType.ON_DEMAND_FEATURE_GROUP) {
       FeaturestoreStorageConnectorDTO featurestoreStorageConnectorDTO =
@@ -660,6 +661,12 @@ public class ConstructorController {
               query.getFeaturegroup().getOnDemandFeaturegroup().getFeaturestoreConnector());
       OnDemandFeaturegroupDTO onDemandFeaturegroupDTO =
           new OnDemandFeaturegroupDTO(query.getFeaturegroup(), featurestoreStorageConnectorDTO);
+      try {
+        String path = featuregroupController.getFeatureGroupLocation(query.getFeaturegroup());
+        onDemandFeaturegroupDTO.setLocation(featurestoreUtils.prependNameNode(path));
+      } catch (ServiceDiscoveryException e) {
+        throw new ServiceException(RESTCodes.ServiceErrorCode.SERVICE_NOT_FOUND, Level.SEVERE);
+      }
 
       aliases.add(new OnDemandFeatureGroupAliasDTO(query.getAs(), onDemandFeaturegroupDTO));
     }
