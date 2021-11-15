@@ -26,6 +26,7 @@ import io.hops.hopsworks.api.util.Pagination;
 import io.hops.hopsworks.common.api.ResourceRequest;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
 import io.hops.hopsworks.common.dataset.DatasetController;
+import io.hops.hopsworks.common.hdfs.Utils;
 import io.hops.hopsworks.common.provenance.state.dto.ProvStateDTO;
 import io.hops.hopsworks.common.python.environment.EnvironmentController;
 import io.hops.hopsworks.common.util.AccessController;
@@ -175,7 +176,8 @@ public class ExperimentsResource {
     Project experimentProject = project;
     switch(type) {
       case INIT: {
-        String experimentPath = Settings.HOPS_EXPERIMENTS_DATASET + "/" + id + "/" + Settings.ENVIRONMENT_FILE;
+        String experimentPath = Utils.getProjectPath(project.getName()) + Settings.HOPS_EXPERIMENTS_DATASET +
+                "/" + id + "/" + Settings.ENVIRONMENT_FILE;
         experimentDTO.setEnvironment(environmentController.exportEnv(experimentProject, user, experimentPath));
         try {
           String program = experimentsController.versionProgram(experimentProject, user,

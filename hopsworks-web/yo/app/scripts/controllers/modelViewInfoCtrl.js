@@ -29,7 +29,6 @@ angular.module('hopsWorksApp')
             self.projectId = projectId;
             self.model = model;
 
-
             self.goToExperiment = function () {
                 StorageService.store(self.projectId + "_experiment", model.experimentId);
                 $location.path('project/' + self.projectId + '/experiments');

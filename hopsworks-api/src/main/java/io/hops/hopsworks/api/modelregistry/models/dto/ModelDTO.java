@@ -14,9 +14,11 @@
  * If not, see <https://www.gnu.org/licenses/>.
  */
 
-package io.hops.hopsworks.api.models.dto;
+package io.hops.hopsworks.api.modelregistry.models.dto;
 
 import io.hops.hopsworks.common.api.RestDTO;
+import io.hops.hopsworks.common.featurestore.trainingdatasets.TrainingDatasetDTO;
+
 import javax.xml.bind.annotation.XmlRootElement;
 
 /**
@@ -59,7 +61,9 @@ public class ModelDTO extends RestDTO<ModelDTO> {
   
   private String experimentProjectName;
 
-  private String trainingDataset;
+  private TrainingDatasetDTO trainingDataset;
+
+  private Integer modelRegistryId;
 
   public String getName() {
     return name;
@@ -181,11 +185,19 @@ public class ModelDTO extends RestDTO<ModelDTO> {
     this.signature = signature;
   }
 
-  public String getTrainingDataset() {
+  public TrainingDatasetDTO getTrainingDataset() {
     return trainingDataset;
   }
 
-  public void setTrainingDataset(String trainingDataset) {
+  public void setTrainingDataset(TrainingDatasetDTO trainingDataset) {
     this.trainingDataset = trainingDataset;
+  }
+
+  public Integer getModelRegistryId() {
+    return modelRegistryId;
+  }
+
+  public void setModelRegistryId(Integer modelRegistryId) {
+    this.modelRegistryId = modelRegistryId;
   }
 }

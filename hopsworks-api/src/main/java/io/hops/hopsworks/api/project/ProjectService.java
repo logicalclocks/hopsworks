@@ -55,9 +55,9 @@ import io.hops.hopsworks.api.jupyter.JupyterService;
 import io.hops.hopsworks.api.jwt.JWTHelper;
 import io.hops.hopsworks.api.kafka.KafkaResource;
 import io.hops.hopsworks.api.metadata.XAttrsResource;
-import io.hops.hopsworks.api.models.ModelsResource;
-import io.hops.hopsworks.api.project.alert.ProjectAlertsResource;
+import io.hops.hopsworks.api.modelregistry.ModelRegistryResource;
 import io.hops.hopsworks.api.project.jobconfig.DefaultJobConfigurationResource;
+import io.hops.hopsworks.api.project.alert.ProjectAlertsResource;
 import io.hops.hopsworks.api.provenance.ProjectProvenanceResource;
 import io.hops.hopsworks.api.python.PythonResource;
 import io.hops.hopsworks.api.serving.ServingService;
@@ -175,7 +175,7 @@ public class ProjectService {
   @Inject
   private ExperimentsResource experiments;
   @Inject
-  private ModelsResource models;
+  private ModelRegistryResource modelRegistry;
   @Inject
   private JobsResource jobs;
   @Inject
@@ -766,11 +766,11 @@ public class ProjectService {
     this.experiments.setProjectId(id);
     return this.experiments;
   }
-  
-  @Path("{projectId}/models")
-  public ModelsResource models(@PathParam("projectId") Integer id) {
-    this.models.setProjectId(id);
-    return this.models;
+
+  @Path("{projectId}/modelregistries")
+  public ModelRegistryResource modelregistries(@PathParam("projectId") Integer id) {
+    this.modelRegistry.setProjectId(id);
+    return this.modelRegistry;
   }
   
   @Path("{projectId}/airflow")

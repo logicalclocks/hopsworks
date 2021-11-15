@@ -13,15 +13,14 @@
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see <https://www.gnu.org/licenses/>.
  */
-package io.hops.hopsworks.api.models;
+package io.hops.hopsworks.api.modelregistry.models;
 
 import com.google.common.base.Strings;
 import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.api.filter.Audience;
 import io.hops.hopsworks.api.filter.apiKey.ApiKeyRequired;
 import io.hops.hopsworks.api.jwt.JWTHelper;
-import io.hops.hopsworks.api.models.dto.ModelDTO;
-import io.hops.hopsworks.api.models.dto.ModelsEndpointDTO;
+import io.hops.hopsworks.api.modelregistry.models.dto.ModelDTO;
 import io.hops.hopsworks.api.util.Pagination;
 import io.hops.hopsworks.common.api.ResourceRequest;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
@@ -29,6 +28,7 @@ import io.hops.hopsworks.common.dataset.DatasetController;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.hdfs.DistributedFsService;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
+import io.hops.hopsworks.common.hdfs.Utils;
 import io.hops.hopsworks.common.provenance.state.dto.ProvStateDTO;
 import io.hops.hopsworks.common.python.environment.EnvironmentController;
 import io.hops.hopsworks.common.util.AccessController;
@@ -37,7 +37,7 @@ import io.hops.hopsworks.exceptions.DatasetException;
 import io.hops.hopsworks.exceptions.GenericException;
 import io.hops.hopsworks.exceptions.JobException;
 import io.hops.hopsworks.exceptions.MetadataException;
-import io.hops.hopsworks.exceptions.ModelsException;
+import io.hops.hopsworks.exceptions.ModelRegistryException;
 import io.hops.hopsworks.exceptions.ProjectException;
 import io.hops.hopsworks.exceptions.ProvenanceException;
 import io.hops.hopsworks.exceptions.PythonException;
@@ -70,8 +70,6 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
 import javax.ws.rs.core.UriBuilder;
 import javax.ws.rs.core.UriInfo;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -100,11 +98,24 @@ public class ModelsResource {
   @EJB
   private DistributedFsService dfs;
 
-
   private Project project;
-  public ModelsResource setProjectId(Integer projectId) {
-    this.project = projectFacade.find(projectId);
+
+  private Project modelRegistryProject;
+
+  public ModelsResource setProject(Project project) {
+    this.project = project;
     return this;
+  }
+
+  /**
+   * Sets the model registry of the featuregroups (provided by parent resource)
+   *
+   * @param modelRegistryId id of the model registry
+   * @throws ModelRegistryException
+   */
+  public void setModelRegistryId(Integer modelRegistryId) throws ModelRegistryException {
+    //This call verifies that the project have access to the modelRegistryId provided
+    this.modelRegistryProject = modelsController.verifyModelRegistryAccess(project, modelRegistryId).getParentProject();
   }
 
   @ApiOperation(value = "Get a list of all models for this project", response = ModelDTO.class)
@@ -118,14 +129,13 @@ public class ModelsResource {
     @BeanParam ModelsBeanParam modelsBeanParam,
     @Context UriInfo uriInfo,
     @Context SecurityContext sc)
-    throws ModelsException, GenericException {
-    Users user = jwtHelper.getUserPrincipal(sc);
+    throws ModelRegistryException, GenericException {
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.MODELS);
     resourceRequest.setOffset(pagination.getOffset());
     resourceRequest.setLimit(pagination.getLimit());
     resourceRequest.setFilter(modelsBeanParam.getFilter());
     resourceRequest.setSort(modelsBeanParam.getSortBySet());
-    ModelDTO dto = modelsBuilder.build(uriInfo, resourceRequest, project, user);
+    ModelDTO dto = modelsBuilder.build(uriInfo, resourceRequest, project, modelRegistryProject);
     return Response.ok().entity(dto).build();
   }
 
@@ -141,20 +151,19 @@ public class ModelsResource {
     @BeanParam ModelsBeanParam modelsBeanParam,
     @Context UriInfo uriInfo,
     @Context SecurityContext sc)
-    throws ProvenanceException, ModelsException, DatasetException, GenericException {
+    throws ProvenanceException, ModelRegistryException, DatasetException, GenericException {
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.MODELS);
-    ProvStateDTO fileState = modelsController.getModel(project, id);
+    resourceRequest.setExpansions(modelsBeanParam.getExpansions().getResources());
+    ProvStateDTO fileState = modelsController.getModel(modelRegistryProject, id);
     if(fileState != null) {
-      Map<Long, ModelsEndpointDTO> endpoints = new HashMap<>();
-      endpoints.put(project.getInode().getId(), modelsController.getModelsEndpoint(project));
-      ModelDTO dto = modelsBuilder.build(uriInfo, resourceRequest, project, endpoints, fileState);
+      ModelDTO dto = modelsBuilder.build(uriInfo, resourceRequest, project, modelRegistryProject, fileState);
       if(dto == null) {
         throw new GenericException(RESTCodes.GenericErrorCode.NOT_AUTHORIZED_TO_ACCESS, Level.FINE);
       } else {
         return Response.ok().entity(dto).build();
       }
     } else {
-      throw new ModelsException(RESTCodes.ModelsErrorCode.MODEL_NOT_FOUND, Level.FINE);
+      throw new ModelRegistryException(RESTCodes.ModelRegistryErrorCode.MODEL_NOT_FOUND, Level.FINE);
     }
   }
 
@@ -166,19 +175,13 @@ public class ModelsResource {
   @ApiKeyRequired( acceptedScopes = {ApiScope.MODELREGISTRY}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   public Response delete (
     @PathParam("id") String id,
-    @QueryParam("endpointId") Integer parentProjId,
     @Context HttpServletRequest req,
     @Context UriInfo uriInfo,
-    @Context SecurityContext sc) throws DatasetException, ProvenanceException, ModelsException {
+    @Context SecurityContext sc) throws DatasetException, ProvenanceException, ModelRegistryException {
     Users hopsworksUser = jwtHelper.getUserPrincipal(sc);
     ProvStateDTO fileState = modelsController.getModel(project, id);
     if(fileState != null) {
-      if (parentProjId != null) {
-        Project parentProject = projectFacade.find(parentProjId);
-        modelsController.delete(hopsworksUser, project, parentProject, fileState);
-      } else {
-        modelsController.delete(hopsworksUser, project, fileState);
-      }
+      modelsController.delete(hopsworksUser, project, modelRegistryProject, fileState);
     }
     return Response.noContent().build();
   }
@@ -199,7 +202,7 @@ public class ModelsResource {
     @Context HttpServletRequest req,
     @Context UriInfo uriInfo,
     @Context SecurityContext sc)
-    throws DatasetException, ModelsException, JobException, ServiceException, PythonException, MetadataException,
+    throws DatasetException, ModelRegistryException, JobException, ServiceException, PythonException, MetadataException,
     GenericException, ProjectException {
     if (modelDTO == null) {
       throw new IllegalArgumentException("Model summary not provided");
@@ -261,7 +264,7 @@ public class ModelsResource {
   
   private ModelsController.Accessor getModelsAccessor(Users user, Project userProject, Project modelProject,
     Project experimentProject)
-    throws ModelsException {
+    throws DatasetException {
     DistributedFileSystemOps udfso = null;
     try {
       String hdfsUser = hdfsUsersController.getHdfsUserName(experimentProject, user);
@@ -271,23 +274,31 @@ public class ModelsResource {
       if(udfso != null){
         dfs.closeDfsClient(udfso);
       }
-      throw new ModelsException(RESTCodes.ModelsErrorCode.HOPS_ERROR, Level.INFO);
+      throw new DatasetException(RESTCodes.DatasetErrorCode.DATASET_OPERATION_ERROR, Level.INFO);
     }
   }
   
   private Response createModel(UriInfo uriInfo, ModelsController.Accessor accessor, String mlId, ModelDTO modelDTO,
                                String jobName, String kernelId)
-    throws DatasetException, ModelsException, MetadataException, JobException, ServiceException, PythonException {
+          throws DatasetException, MetadataException, JobException, ServiceException, PythonException,
+          ModelRegistryException {
     String realName = accessor.user.getFname() + " " + accessor.user.getLname();
 
     //Only attach program and environment if exporting inside Hopsworks
     if(!Strings.isNullOrEmpty(jobName) || !Strings.isNullOrEmpty(kernelId)) {
+
       modelDTO.setProgram(modelsController.versionProgram(accessor, jobName, kernelId,
               modelDTO.getName(), modelDTO.getVersion()));
+
+      //Export environment to correct path here
       modelDTO.setEnvironment(environmentController.exportEnv(accessor.experimentProject, accessor.user,
-              Settings.HOPS_MODELS_DATASET + "/" + modelDTO.getName() + "/" + modelDTO.getVersion() +
-                      "/" + Settings.ENVIRONMENT_FILE));
+              Utils.getProjectPath(accessor.modelProject.getName()) +
+                      Settings.HOPS_MODELS_DATASET + "/" + modelDTO.getName() + "/" + modelDTO.getVersion() +
+                      "/" + Settings.ENVIRONMENT_FILE
+              ));
     }
+
+    modelDTO.setModelRegistryId(accessor.modelProject.getId());
 
     modelsController.attachModel(accessor.udfso, accessor.modelProject, realName, modelDTO);
     UriBuilder builder = uriInfo.getAbsolutePathBuilder().path(mlId);

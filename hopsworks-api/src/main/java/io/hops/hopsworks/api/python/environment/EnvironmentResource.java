@@ -26,6 +26,7 @@ import io.hops.hopsworks.api.python.conflicts.EnvironmentConflictsResource;
 import io.hops.hopsworks.api.python.environment.command.EnvironmentCommandsResource;
 import io.hops.hopsworks.api.python.library.LibraryResource;
 import io.hops.hopsworks.common.api.ResourceRequest;
+import io.hops.hopsworks.common.hdfs.Utils;
 import io.hops.hopsworks.common.hdfs.inode.InodeController;
 import io.hops.hopsworks.common.python.environment.EnvironmentController;
 import io.hops.hopsworks.common.util.Settings;
@@ -157,7 +158,8 @@ public class EnvironmentResource {
     Users user = jWTHelper.getUserPrincipal(sc);
     switch ((action != null) ? action : EnvironmentDTO.Operation.CREATE) {
       case EXPORT:
-        environmentController.exportEnv(project, user, Settings.PROJECT_PYTHON_ENVIRONMENT_FILE);
+        environmentController.exportEnv(project, user, Utils.getProjectPath(project.getName()) +
+                Settings.PROJECT_PYTHON_ENVIRONMENT_FILE);
         dto = buildEnvDTO(uriInfo, null, version);
         return Response.ok().entity(dto).build();
       case CREATE:

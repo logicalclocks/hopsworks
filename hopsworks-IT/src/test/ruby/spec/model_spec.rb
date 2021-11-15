@@ -42,7 +42,7 @@ describe "On #{ENV['OS']}" do
         expect_status(200)
         expect(json_body[:items]).to be nil
         expect(json_body[:count]).to eq 0
-        expect(URI(json_body[:href]).path).to eq "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/models"
+        expect(URI(json_body[:href]).path).to eq "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/modelregistries/#{@project[:id]}/models"
       end
       it "should not find specific model" do
         get_model(@project[:id], "app_id_4254316623_1")
@@ -59,7 +59,7 @@ describe "On #{ENV['OS']}" do
         expect_status(200)
         expect(json_body[:items].count).to eq 6
         expect(json_body[:count]).to eq 6
-        json_body[:items].each {|model| expect(URI(model[:href]).path).to eq "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/models/#{model[:id]}"}
+        json_body[:items].each {|model| expect(URI(model[:href]).path).to eq "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/modelregistries/#{@project[:id]}/models/#{model[:id]}"}
       end
       it "run hsml integration tests" do
         create_model_job(@project, experiment_2, "test_hsml.ipynb")
@@ -84,14 +84,15 @@ describe "On #{ENV['OS']}" do
         get_model(@project[:id], model[:id])
         expect_status(404)
       end
-      it "should delete models by deleting Models dataset" do
+      it "retrieving models from project with no Models dataset should fail" do
         delete "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/dataset/Projects/#{@project[:projectname]}/Models"
         expect_status(204)
         wait_result = epipe_wait_on_provenance(repeat: 5)
         expect(wait_result["success"]).to be(true), wait_result["msg"]
 
         get_models(@project[:id], nil)
-        expect(json_body[:count]).to eq(0)
+        expect_status(500)
+        expect(json_body[:errorCode]).to eq(360008)
       end
     end
   end
@@ -253,7 +254,7 @@ describe "On #{ENV['OS']}" do
       # setup_shared_debug
       epipe_wait_on_provenance
 
-      @create_synth_model_job = "create_synthetic_model"
+      @test_synth_model_job = "test_synth_model"
       @model_name_1 = "model_1"
     end
 
@@ -302,22 +303,20 @@ describe "On #{ENV['OS']}" do
 
     it 'should setup model in shared models dataset' do
       create_session(@user2_params[:email], @user2_params[:password])
-      create_dir(@project2, "Resources/model")
-      if job_exists(@project2[:id], @create_synth_model_job)
+      if job_exists(@project2[:id], @test_synth_model_job)
         pp "job exists - skipping"
       else
-        prepare_spark_job(@project2, @user2[:username], @create_synth_model_job, "py")
+        prepare_spark_job(@project2, @user2[:username], @test_synth_model_job, "py")
       end
-      expect(job_exists(@project2[:id], @create_synth_model_job)).to be(true)
+      expect(job_exists(@project2[:id], @test_synth_model_job)).to be(true)
 
       create_session(@user1_params[:email], @user1_params[:password])
       if model_exists(@project1, @model_name_1)
         pp "model exists - skipping"
       else
         create_session(@user2_params[:email], @user2_params[:password])
-        model_path = "hdfs:///Projects/#{@project2[:projectname]}/Resources/model"
-        args = [@project1[:projectname], @model_name_1, model_path]
-        run_job(@project2, @create_synth_model_job, args: args)
+        args = [@project1[:projectname], @model_name_1]
+        run_job(@project2, @test_synth_model_job, args: args)
       end
 
       create_session(@user1_params[:email], @user1_params[:password])

@@ -13,8 +13,10 @@
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see <https://www.gnu.org/licenses/>.
  */
-package io.hops.hopsworks.api.models.dto;
+package io.hops.hopsworks.api.modelregistry.dto;
 
+import io.hops.hopsworks.api.modelregistry.models.dto.ModelDTO;
+import io.hops.hopsworks.common.api.RestDTO;
 import io.hops.hopsworks.persistence.entity.dataset.Dataset;
 import io.hops.hopsworks.persistence.entity.project.Project;
 
@@ -23,25 +25,27 @@ import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
 
 @XmlRootElement
-public class ModelsEndpointDTO {
+public class ModelRegistryDTO extends RestDTO<ModelRegistryDTO> {
   private Project parentProject;
   private Long datasetInodeId;
   
   private Integer parentProjectId;
   private String parentProjectName;
+
+  private ModelDTO models;
   
-  public ModelsEndpointDTO() {
+  public ModelRegistryDTO() {
   }
   
-  public ModelsEndpointDTO(Project parentProj, Long datasetInodeId) {
+  public ModelRegistryDTO(Project parentProj, Long datasetInodeId) {
     this.parentProject = parentProj;
     this.parentProjectId = parentProj.getId();
     this.parentProjectName = parentProj.getName();
     this.datasetInodeId = datasetInodeId;
   }
   
-  public static ModelsEndpointDTO fromDataset(Dataset ds) {
-    return new ModelsEndpointDTO(ds.getProject(), ds.getInodeId());
+  public static ModelRegistryDTO fromDataset(Dataset ds) {
+    return new ModelRegistryDTO(ds.getProject(), ds.getInodeId());
   }
   
   @XmlElement(name = "id")
@@ -78,5 +82,13 @@ public class ModelsEndpointDTO {
   
   public void setDatasetInodeId(Long datasetInodeId) {
     this.datasetInodeId = datasetInodeId;
+  }
+
+  public ModelDTO getModels() {
+    return models;
+  }
+
+  public void setModels(ModelDTO models) {
+    this.models = models;
   }
 }

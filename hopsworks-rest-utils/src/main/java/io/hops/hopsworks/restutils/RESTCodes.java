@@ -2005,7 +2005,7 @@ public class RESTCodes {
     }
   }
 
-  public enum ModelsErrorCode implements RESTErrorCode {
+  public enum ModelRegistryErrorCode implements RESTErrorCode {
 
     MODEL_NOT_FOUND(0, "No model found for provided name and version.",
         Response.Status.NOT_FOUND),
@@ -2018,15 +2018,21 @@ public class RESTCodes {
     MODEL_MARSHALLING_FAILED(4,
         "Error occurred during marshalling/unmarshalling of model json.",
         Response.Status.INTERNAL_SERVER_ERROR),
-    HOPS_ERROR(5, "Error accessing hops storage",
-      Response.Status.INTERNAL_SERVER_ERROR);
+    MODEL_REGISTRY_ID_NOT_PROVIDED(5, "Model Registry Id was not provided.",
+            Response.Status.BAD_REQUEST),
+    MODEL_REGISTRY_ID_NOT_FOUND(6, "Model Registry Id was not found.",
+            Response.Status.BAD_REQUEST),
+    MODEL_REGISTRY_ACCESS_DENIED(7, "Model Registry not accessible.",
+            Response.Status.FORBIDDEN),
+    MODEL_REGISTRY_MODELS_DATASET_NOT_FOUND(8, "Models dataset does not exist in project.",
+            Response.Status.INTERNAL_SERVER_ERROR);
 
     private int code;
     private String message;
     private Response.Status respStatus;
     public final int range = 360000;
 
-    ModelsErrorCode(Integer code, String message, Response.Status respStatus) {
+    ModelRegistryErrorCode(Integer code, String message, Response.Status respStatus) {
       this.code = range + code;
       this.message = message;
       this.respStatus = respStatus;

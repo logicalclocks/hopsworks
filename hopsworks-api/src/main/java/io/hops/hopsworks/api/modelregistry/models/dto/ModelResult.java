@@ -14,7 +14,7 @@
  * If not, see <https://www.gnu.org/licenses/>.
  */
 
-package io.hops.hopsworks.api.models.dto;
+package io.hops.hopsworks.api.modelregistry.models.dto;
 
 import javax.xml.bind.annotation.XmlAnyAttribute;
 import javax.xml.bind.annotation.XmlRootElement;
