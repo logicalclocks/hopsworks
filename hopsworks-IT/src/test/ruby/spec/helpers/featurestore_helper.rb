@@ -378,25 +378,27 @@ module FeaturestoreHelper
   end
 
   def update_on_demand_featuregroup(project_id, featurestore_id, jdbcconnectorId, featuregroup_id,
-                                    featuregroup_version, query: nil, featuregroup_name: nil, featuregroup_desc: nil)
+                                    featuregroup_version, query: nil, featuregroup_name: nil, featuregroup_desc: nil,
+                                    features: nil)
     type = "onDemandFeaturegroupDTO"
     featuregroupType = "ON_DEMAND_FEATURE_GROUP"
     update_featuregroup_endpoint = "#{ENV['HOPSWORKS_API']}/project/#{project_id}/featurestores/#{featurestore_id}/featuregroups/#{featuregroup_id}?updateMetadata=true"
     featuregroup_name = featuregroup_name == nil ?  "featuregroup_#{random_id}" :  featuregroup_name
     featuregroup_desc = featuregroup_desc == nil ? "description_#{random_id}" : featuregroup_desc
     query = query == nil ? "SELECT * FROM test" : query
+    default_features =  [
+        {
+            type: "INT",
+            name: "testfeature",
+            description: "testfeaturedescription",
+            primary: true
+        }
+    ]
 
     json_data = {
         name: featuregroup_name,
         jobs: [],
-        features: [
-            {
-                type: "INT",
-                name: "testfeature",
-                description: "testfeaturedescription",
-                primary: true
-            }
-        ],
+        features: features != nil ? features : default_features,
         description: featuregroup_desc,
         version: featuregroup_version,
         type: type,

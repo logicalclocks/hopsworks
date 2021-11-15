@@ -45,8 +45,10 @@ import javax.ejb.TransactionAttributeType;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.Collection;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.logging.Level;
 import java.util.stream.Collectors;
 
@@ -131,12 +133,58 @@ public class OnDemandFeaturegroupController {
    * @param onDemandFeaturegroupDTO the metadata DTO
    */
   public void updateOnDemandFeaturegroupMetadata(OnDemandFeaturegroup onDemandFeaturegroup,
-                                                 OnDemandFeaturegroupDTO onDemandFeaturegroupDTO) {
+                                                 OnDemandFeaturegroupDTO onDemandFeaturegroupDTO)
+      throws FeaturestoreException {
+    // verify previous schema unchanged and valid
+    verifySchemaUnchangedAndValid(onDemandFeaturegroup.getFeatures(), onDemandFeaturegroupDTO.getFeatures());
+    
     // Update metadata in entity
-    onDemandFeaturegroup.setDescription(onDemandFeaturegroupDTO.getDescription());
-
+    if (onDemandFeaturegroupDTO.getDescription() != null) {
+      onDemandFeaturegroup.setDescription(onDemandFeaturegroupDTO.getDescription());
+    }
+    
+    // append new features and update existing ones
+    updateOnDemandFeatures(onDemandFeaturegroup, onDemandFeaturegroupDTO.getFeatures());
+    
     // finally merge in database
     onDemandFeaturegroupFacade.updateMetadata(onDemandFeaturegroup);
+  }
+  
+  private void updateOnDemandFeatures(OnDemandFeaturegroup onDemandFeaturegroup,
+                                      List<FeatureGroupFeatureDTO> featureGroupFeatureDTOs) {
+    for (FeatureGroupFeatureDTO feature : featureGroupFeatureDTOs) {
+      Optional<OnDemandFeature> previousOnDemandFeature = getOnDemandFeature(onDemandFeaturegroup.getFeatures(),
+        feature.getName());
+  
+      if (previousOnDemandFeature.isPresent()) {
+        previousOnDemandFeature.get().setDescription(feature.getDescription());
+      } else {
+        onDemandFeaturegroup.getFeatures().add(new OnDemandFeature(onDemandFeaturegroup, feature.getName(),
+          feature.getType(), feature.getDescription(), feature.getPrimary(),
+          onDemandFeaturegroup.getFeatures().size()));
+      }
+    }
+  }
+  
+  private Optional<OnDemandFeature> getOnDemandFeature(Collection<OnDemandFeature> onDemandFeatures,
+                                                       String featureName) {
+    return onDemandFeatures.stream().filter(feature -> feature.getName().equalsIgnoreCase(featureName)).findAny();
+  }
+  
+  public void verifySchemaUnchangedAndValid(Collection<OnDemandFeature> previousSchema,
+    List<FeatureGroupFeatureDTO> newSchema) throws FeaturestoreException {
+    for (OnDemandFeature feature : previousSchema) {
+      FeatureGroupFeatureDTO newFeature =
+        newSchema.stream().filter(newFeat -> feature.getName().equals(newFeat.getName())).findAny().orElseThrow(() ->
+          new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_FEATUREGROUP_UPDATE, Level.FINE,
+            "Feature " + feature.getName() + " was not found in new schema. It is only possible to append features."));
+      if ( newFeature.getPrimary() != feature.getPrimary() ||
+          !newFeature.getType().equalsIgnoreCase(feature.getType())) {
+        throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_FEATUREGROUP_UPDATE, Level.FINE,
+          "Primary key or type information of feature " + feature.getName() + " changed. Primary key" +
+            " and type cannot be changed when updating features.");
+      }
+    }
   }
 
   /**

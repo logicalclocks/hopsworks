@@ -146,7 +146,7 @@ public class OfflineFeatureGroupController {
     for (FeatureGroupFeatureDTO featureGroupFeatureDTO : featureGroupFeatureDTOList) {
       FieldSchema fieldSchema = new FieldSchema(featureGroupFeatureDTO.getName(),
           // need to lowercase the type
-          featureGroupFeatureDTO.getType().toLowerCase(), featureGroupFeatureDTO.getDescription());
+          featureGroupFeatureDTO.getType().toLowerCase(), null);
       if (featureGroupFeatureDTO.getPartition()) {
         table.addToPartitionKeys(fieldSchema);
       } else {
@@ -187,7 +187,7 @@ public class OfflineFeatureGroupController {
       user);
     for (FeatureGroupFeatureDTO featureDTO : featureDTOs) {
       table.getSd().addToCols(
-        new FieldSchema(featureDTO.getName(), featureDTO.getType().toLowerCase(), featureDTO.getDescription()));
+        new FieldSchema(featureDTO.getName(), featureDTO.getType().toLowerCase(), null));
       if (featureDTO.getDefaultValue() != null) {
         defaultConstraints.add(new SQLDefaultConstraint(table.getCatName(), table.getDbName(),
           table.getTableName(), featureDTO.getName(), featureDTO.getDefaultValue(),

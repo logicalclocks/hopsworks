@@ -447,7 +447,7 @@ describe "On #{ENV['OS']}" do
             {
                 type: "INT",
                 name: "testfeature",
-                description: "testfeaturedescription",
+                description: "changed description",
                 primary: true,
                 onlineType: "INT",
                 partition: false
@@ -471,6 +471,7 @@ describe "On #{ENV['OS']}" do
         expect(parsed_json["features"].length).to be 2
         expect(parsed_json["description"]).to eql("changed description")
         expect(parsed_json["features"].select{ |f| f["name"] == "testfeature"}.first["defaultValue"]).to be nil
+        expect(parsed_json["features"].select{ |f| f["name"] == "testfeature"}.first["description"]).to eql("changed description")
         expect(parsed_json["features"].select{ |f| f["name"] == "testfeature2"}.first["defaultValue"]).to eql("10")
       end
 
@@ -1623,11 +1624,9 @@ describe "On #{ENV['OS']}" do
         wait_result = epipe_wait_on_mutations(wait_time: 30, repeat: 2)
         expect(wait_result["success"]).to be(true), wait_result["msg"]
         # search
-        expected_hits2 = [{:name => featuregroup_name, :highlight => "features", :parent_project =>
-            project[:projectname]}]
+        expected_hits2 = [{:name => featuregroup_name, :highlight => "features", :parentProjectName => project[:projectname]}]
         project_search_test(project, "testfeature2", "featuregroup", expected_hits2)
-        expected_hits3 = [{:name => featuregroup_name, :highlight => "description", :parent_project =>
-            project[:projectname]}]
+        expected_hits3 = [{:name => featuregroup_name, :highlight => "description", :parentProjectName => project[:projectname]}]
         project_search_test(project, "changeddescription", "featuregroup", expected_hits3)
       end
     end
@@ -1814,7 +1813,7 @@ describe "On #{ENV['OS']}" do
         expect(test_file(path)).to be false
       end
 
-      it "should be able to update the metadata (description) of an on-demand featuregroup from the featurestore" do
+      it "should be able to update the metadata of an on-demand featuregroup from the featurestore" do
         project = get_project
         featurestore_id = get_featurestore_id(project.id)
         connector_id = get_jdbc_connector_id
@@ -1823,16 +1822,95 @@ describe "On #{ENV['OS']}" do
         expect_status(201)
         featuregroup_id = parsed_json["id"]
         featuregroup_version = parsed_json["version"]
-        json_result2, _ = update_on_demand_featuregroup(project.id, featurestore_id,
-                                                                          connector_id, featuregroup_id,
-                                                                          featuregroup_version, query: nil,
-                                                                          featuregroup_name: featuregroup_name,
-                                                                          featuregroup_desc: "new description")
-        parsed_json2 = JSON.parse(json_result2)
+        features =  [
+            {
+                type: "INT",
+                name: "testfeature",
+                description: "new description",
+                primary: true
+            },
+            {
+                type: "INT",
+                name: "new_feature",
+                description: "testfeaturedescription",
+                primary: true
+            }
+        ]
+        json_result, _ = update_on_demand_featuregroup(project.id, featurestore_id,
+                                                        connector_id, featuregroup_id,
+                                                        featuregroup_version, query: nil,
+                                                        featuregroup_name: featuregroup_name,
+                                                        featuregroup_desc: "new description",
+                                                        features: features)
+        parsed_json = JSON.parse(json_result)
         expect_status(200)
-		expect(parsed_json.key?("location")).to be true
-        expect(parsed_json2["version"] == featuregroup_version).to be true
-        expect(parsed_json2["description"] == "new description").to be true
+        expect(parsed_json["version"]).to eql(featuregroup_version)
+        expect(parsed_json["description"]).to eql("new description")
+        expect(parsed_json["features"].length).to eql(2)
+        expect(parsed_json["features"].select{ |f| f["name"] == "testfeature"}.first["description"]).to eql("new description")
+        expect(parsed_json["features"].select{ |f| f["name"] == "new_feature"}.first["description"]).to eql("testfeaturedescription")
+      end
+
+      it "should not be possible to drop features of an on-demand featuregroup from the featurestore" do
+        project = get_project
+        featurestore_id = get_featurestore_id(project.id)
+        connector_id = get_jdbc_connector_id
+        json_result, featuregroup_name = create_on_demand_featuregroup(project.id, featurestore_id, connector_id)
+        parsed_json = JSON.parse(json_result)
+        expect_status(201)
+        featuregroup_id = parsed_json["id"]
+        featuregroup_version = parsed_json["version"]
+        features =  [
+            {
+                type: "INT",
+                name: "new_feature",
+                description: "testfeaturedescription",
+                primary: true
+            }
+        ]
+        json_result, _ = update_on_demand_featuregroup(project.id, featurestore_id,
+                                                       connector_id, featuregroup_id,
+                                                       featuregroup_version, query: nil,
+                                                       featuregroup_name: featuregroup_name,
+                                                       featuregroup_desc: "new description",
+                                                       features: features)
+        parsed_json = JSON.parse(json_result)
+        expect_status(400)
+        expect(parsed_json["errorCode"]).to eql(270114)
+      end
+
+      it "should not be possible to update the schema info of an existing feature of an on-demand featuregroup" do
+        project = get_project
+        featurestore_id = get_featurestore_id(project.id)
+        connector_id = get_jdbc_connector_id
+        json_result, featuregroup_name = create_on_demand_featuregroup(project.id, featurestore_id, connector_id)
+        parsed_json = JSON.parse(json_result)
+        expect_status(201)
+        featuregroup_id = parsed_json["id"]
+        featuregroup_version = parsed_json["version"]
+        features =  [
+            {
+                type: "DOUBLE",
+                name: "testfeature",
+                description: "new description",
+                primary: true
+            },
+            {
+                type: "INT",
+                name: "new_feature",
+                description: "testfeaturedescription",
+                primary: true
+            }
+        ]
+        json_result, _ = update_on_demand_featuregroup(project.id, featurestore_id,
+                                                       connector_id, featuregroup_id,
+                                                       featuregroup_version, query: nil,
+                                                       featuregroup_name: featuregroup_name,
+                                                       featuregroup_desc: "new description",
+                                                       features: features)
+        parsed_json = JSON.parse(json_result)
+        expect_status(400)
+        expect(parsed_json["errorCode"]).to eql(270114)
       end
 
       it "should be able to generate a query with only on-demand feature group" do

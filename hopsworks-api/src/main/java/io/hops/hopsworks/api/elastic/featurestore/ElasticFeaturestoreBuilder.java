@@ -31,14 +31,18 @@ import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.common.text.Text;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.fetch.subphase.highlight.HighlightField;
+import org.javatuples.Triplet;
 
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.inject.Inject;
+import java.util.ArrayList;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.BiConsumer;
+import java.util.function.Function;
 import java.util.logging.Level;
 
 @Stateless
@@ -129,23 +133,8 @@ public class ElasticFeaturestoreBuilder {
         } break;
         case FEATURE: {
           for (SearchHit hitAux : e.getValue().getHits()) {
-            ElasticFeaturestoreHit hit = ElasticFeaturestoreHit.instance(hitAux);
-            ElasticFeaturestoreItemDTO.Base fgParent = elasticFeaturestoreItemBuilder.fromFeaturegroup(hit, converter);
-            Map<String, HighlightField> highlightFields = hitAux.getHighlightFields();
-            String featureField
-              = FeaturestoreXAttrsConstants.getFeaturestoreElasticKey(FeaturestoreXAttrsConstants.FG_FEATURES);
-            HighlightField hf = highlightFields.get(featureField + ".keyword");
-            if (hf != null) {
-              for (Text ee : hf.fragments()) {
-                String feature = removeHighlightTags(ee.toString());
-                ElasticFeaturestoreItemDTO.Feature item = elasticFeaturestoreItemBuilder.fromFeature(feature, fgParent);
-                ElasticFeaturestoreItemDTO.Highlights highlights = new ElasticFeaturestoreItemDTO.Highlights();
-                highlights.setName(ee.toString());
-                item.setHighlights(highlights);
-                accessCtrl.accept(inputWrapper(hit), collectorWrapper(item));
-                result.addFeature(item);
-              }
-            }
+            setFeatureNameHighlights(hitAux, result, accessCtrl);
+            setFeatureDescriptionHighlights(hitAux, result, accessCtrl);
           }
           //TODO Alex fix v2 - from size of features
           //result.setFeaturesTotal(e.getValue().getHits().getTotalHits().value);
@@ -154,6 +143,97 @@ public class ElasticFeaturestoreBuilder {
       }
     }
     return result;
+  }
+  
+  private void setFeatureNameHighlights(SearchHit hitAux, ElasticFeaturestoreDTO result,
+                                        DatasetAccessController.DatasetAccessCtrl accessCtrl)
+    throws ElasticException, GenericException {
+    ElasticFeaturestoreHit hit = ElasticFeaturestoreHit.instance(hitAux);
+    Map<String, HighlightField> highlightFields = hitAux.getHighlightFields();
+    String featureNameField = FeaturestoreXAttrsConstants.getFeaturestoreElasticKey(
+      FeaturestoreXAttrsConstants.FG_FEATURES, FeaturestoreXAttrsConstants.NAME);
+    
+    //<highlighted text, name, description>
+    Function<Triplet<String, String, String>, Boolean> matcher = (state) -> {
+      //check if highlighted name equals feature name
+      return removeHighlightTags(state.getValue0()).equals(state.getValue1());
+    };
+    BiConsumer<ElasticFeaturestoreItemDTO.Highlights, String> highlighter =
+      ElasticFeaturestoreItemDTO.Highlights::setName;
+    setFeatureHighlights(highlightFields.get(featureNameField), hit, matcher, highlighter, result, accessCtrl);
+  }
+  
+  private void setFeatureDescriptionHighlights(SearchHit hitAux, ElasticFeaturestoreDTO result,
+                                               DatasetAccessController.DatasetAccessCtrl accessCtrl)
+    throws ElasticException, GenericException {
+    ElasticFeaturestoreHit hit = ElasticFeaturestoreHit.instance(hitAux);
+    Map<String, HighlightField> highlightFields = hitAux.getHighlightFields();
+    String featureDescriptionField = FeaturestoreXAttrsConstants.getFeaturestoreElasticKey(
+      FeaturestoreXAttrsConstants.FG_FEATURES, FeaturestoreXAttrsConstants.DESCRIPTION);
+  
+    //<highlighted text, name, description>
+    Function<Triplet<String, String, String>, Boolean> matcher = (state) -> {
+      //check if highlighted description equals feature description
+      return removeHighlightTags(state.getValue0()).equals(state.getValue2());
+    };
+    BiConsumer<ElasticFeaturestoreItemDTO.Highlights, String> highlighter =
+      ElasticFeaturestoreItemDTO.Highlights::setDescription;
+    setFeatureHighlights(highlightFields.get(featureDescriptionField),
+      hit, matcher, highlighter, result, accessCtrl);
+  }
+  
+  private void setFeatureHighlights(HighlightField hField,
+                                   ElasticFeaturestoreHit hit,
+                                   Function<Triplet<String, String, String>, Boolean> matcher,
+                                   BiConsumer<ElasticFeaturestoreItemDTO.Highlights, String> highlighter,
+                                   ElasticFeaturestoreDTO result,
+                                   DatasetAccessController.DatasetAccessCtrl accessCtrl)
+      throws GenericException {
+    if (hField != null) {
+      //highlights only return the field that matched the search, we will check the xattr for the omologue for
+      // complete info
+      @SuppressWarnings("unchecked")
+      Map<String, Object> featurestore = (Map)(hit.getXattrs()
+        .get(FeaturestoreXAttrsConstants.FEATURESTORE));
+      @SuppressWarnings("unchecked")
+      ArrayList<Map<String, String>> hit_fg_features = (ArrayList<Map<String, String>>)featurestore
+        .get(FeaturestoreXAttrsConstants.FG_FEATURES);
+      for (Text ee : hField.fragments()) { // looking through all highligths
+        for(Map<String, String> hit_fg_feature : hit_fg_features) { //comparing to each feature (from xattr)
+          String featureNameAux = null;
+          String featureDescriptionAux = "";
+          //features are stored as an array of hashes [{name:<>, description:<>}]
+          for(Map.Entry<String, String> hit_fg_feature_e : hit_fg_feature.entrySet()) {
+            switch(hit_fg_feature_e.getKey()) {
+              case FeaturestoreXAttrsConstants.NAME: featureNameAux = hit_fg_feature_e.getValue(); break;
+              case FeaturestoreXAttrsConstants.DESCRIPTION: featureDescriptionAux = hit_fg_feature_e.getValue(); break;
+            }
+          }
+          if(featureNameAux == null) {
+            throw new GenericException(RESTCodes.GenericErrorCode.ILLEGAL_STATE, Level.WARNING,
+              "elastic indices might contain malformed entries");
+          }
+          //does the feature match the highlight (name/description)
+          if (matcher.apply(Triplet.with(ee.toString(), featureNameAux, featureDescriptionAux))) {
+            ElasticFeaturestoreItemDTO.Feature feature = result.getFeature(hit.getProjectName(), featureNameAux);
+            if(feature == null) {
+              ElasticFeaturestoreItemDTO.Base fgParent
+                = elasticFeaturestoreItemBuilder.fromFeaturegroup(hit, converter);
+              feature = elasticFeaturestoreItemBuilder.fromFeature(featureNameAux, featureDescriptionAux, fgParent);
+              result.addFeature(feature);
+              accessCtrl.accept(inputWrapper(hit), collectorWrapper(feature));
+            }
+            ElasticFeaturestoreItemDTO.Highlights highlights = feature.getHighlights();
+            if(highlights == null) {
+              highlights = new ElasticFeaturestoreItemDTO.Highlights();
+              feature.setHighlights(highlights);
+            }
+            //set the appropriate highlight (name/description)
+            highlighter.accept(highlights, ee.toString());
+          }
+        }
+      }
+    }
   }
   
   private ElasticFeaturestoreItemDTO.Highlights getHighlights(Map<String, HighlightField> map) {
@@ -173,9 +253,18 @@ public class ElasticFeaturestoreBuilder {
         continue;
       }
       if(e.getKey().equals(
-        FeaturestoreXAttrsConstants.getFeaturestoreElasticKey(FeaturestoreXAttrsConstants.FG_FEATURES))) {
+        FeaturestoreXAttrsConstants.getFeaturestoreElasticKey(
+          FeaturestoreXAttrsConstants.FG_FEATURES, FeaturestoreXAttrsConstants.NAME))) {
         for(Text t : e.getValue().fragments()) {
           highlights.addFeature(t.toString());
+        }
+        continue;
+      }
+      if(e.getKey().equals(
+        FeaturestoreXAttrsConstants.getFeaturestoreElasticKey(
+          FeaturestoreXAttrsConstants.FG_FEATURES, FeaturestoreXAttrsConstants.DESCRIPTION))) {
+        for(Text t : e.getValue().fragments()) {
+          highlights.addFeatureDescription(t.toString());
         }
         continue;
       }
