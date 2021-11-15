@@ -42,21 +42,30 @@ package io.hops.hopsworks.api.util;
 import javax.xml.bind.annotation.XmlRootElement;
 import java.util.List;
 
+/**
+ * Use AuthenticationStatus
+ */
+@Deprecated
 @XmlRootElement
 public class AuthStatus {
   
   private String twofactor;
   private String ldap;
   private String krb;
+  private boolean loginDisabled;
+  private boolean registerDisabled;
   private List<OpenIdProvider> openIdProviders;
-
+  
   public AuthStatus() {
   }
-
-  public AuthStatus(String twofactor, String ldap, String krb, List<OpenIdProvider> openIdProviders) {
+  
+  public AuthStatus(String twofactor, String ldap, String krb, boolean loginDisabled, boolean registerDisabled,
+    List<OpenIdProvider> openIdProviders) {
     this.twofactor = twofactor;
     this.ldap = ldap;
     this.krb = krb;
+    this.loginDisabled = loginDisabled;
+    this.registerDisabled = registerDisabled;
     this.openIdProviders = openIdProviders;
   }
 
@@ -82,6 +91,22 @@ public class AuthStatus {
 
   public void setKrb(String krb) {
     this.krb = krb;
+  }
+  
+  public boolean isLoginDisabled() {
+    return loginDisabled;
+  }
+  
+  public void setLoginDisabled(boolean loginDisabled) {
+    this.loginDisabled = loginDisabled;
+  }
+  
+  public boolean isRegisterDisabled() {
+    return registerDisabled;
+  }
+  
+  public void setRegisterDisabled(boolean registerDisabled) {
+    this.registerDisabled = registerDisabled;
   }
   
   public List<OpenIdProvider> getOpenIdProviders() {

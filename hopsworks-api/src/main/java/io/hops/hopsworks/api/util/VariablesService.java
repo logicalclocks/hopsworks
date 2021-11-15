@@ -44,6 +44,7 @@ import io.hops.hopsworks.api.filter.NoCacheResponse;
 import io.hops.hopsworks.api.filter.apiKey.ApiKeyRequired;
 import io.hops.hopsworks.common.dao.remote.oauth.OauthClientFacade;
 import io.hops.hopsworks.common.dataset.FolderNameValidator;
+import io.hops.hopsworks.common.remote.RemoteUserHelper;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.GenericException;
 import io.hops.hopsworks.exceptions.HopsSecurityException;
@@ -55,11 +56,11 @@ import io.hops.hopsworks.persistence.entity.util.Variables;
 import io.hops.hopsworks.persistence.entity.util.VariablesVisibility;
 import io.hops.hopsworks.restutils.RESTCodes;
 import io.swagger.annotations.Api;
-
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
+import javax.inject.Inject;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
@@ -87,6 +88,8 @@ public class VariablesService {
   private Settings settings;
   @EJB
   private OauthClientFacade oauthClientFacade;
+  @Inject
+  private RemoteUserHelper remoteUserHelper;
 
   @GET
   @Path("{id}")
@@ -133,6 +136,7 @@ public class VariablesService {
   @Path("authStatus")
   @Produces(MediaType.APPLICATION_JSON)
   @JWTNotRequired
+  @Deprecated
   public Response getAuthStatus() {
     List<OauthClient> oauthClients = oauthClientFacade.findAll();
     List<OpenIdProvider> providers = new ArrayList<>();
@@ -141,9 +145,30 @@ public class VariablesService {
         new OpenIdProvider(client.getProviderName(), client.getProviderDisplayName(), client.getProviderLogoURI()));
     }
     AuthStatus authStatus = new AuthStatus(settings.getTwoFactorAuth(), settings.getLDAPAuthStatus(), settings.
-      getKRBAuthStatus(), providers);
+      getKRBAuthStatus(), settings.isPasswordLoginDisabled(), settings.isRegistrationUIDisabled(), providers);
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(authStatus).build();
-  
+  }
+
+  @GET
+  @Path("authenticationStatus")
+  @Produces(MediaType.APPLICATION_JSON)
+  @JWTNotRequired
+  public Response getAuthenticationStatus() {
+    boolean remoteAuthEnabled = remoteUserHelper.isRemoteUserAuthAvailable();
+
+    List<OpenIdProvider> providers = new ArrayList<>();
+    if (remoteAuthEnabled) {
+      List<OauthClient> oauthClients = oauthClientFacade.findAll();
+      for (OauthClient client : oauthClients) {
+        providers.add(new OpenIdProvider(client.getProviderName(), client.getProviderDisplayName(),
+          client.getProviderLogoURI()));
+      }
+    }
+    AuthenticationStatus authenticationStatus = new AuthenticationStatus(
+      OTPAuthStatus.fromTwoFactorMode(settings.getTwoFactorAuth()), settings.isLdapEnabled(), settings.isKrbEnabled(),
+      settings.isOAuthEnabled(), providers, settings.isPasswordLoginDisabled(), settings.isRegistrationUIDisabled(),
+      remoteAuthEnabled);
+    return Response.ok(authenticationStatus).build();
   }
 
   @GET

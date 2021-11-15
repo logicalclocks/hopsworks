@@ -448,7 +448,7 @@ angular.module('hopsWorksApp')
                             return;
                         }
                         self.setModelPath(modelPath, versions)
-                        self.setModelName(name)
+                        self.setServingName(name)
                     },
                     function (error) {
                         growl.error(error.data.errorMsg, {
@@ -486,7 +486,6 @@ angular.module('hopsWorksApp')
                         });
                         return
                     }
-
                     var version = matches[3];
                     var filename = matches[4];
 
@@ -763,7 +762,7 @@ angular.module('hopsWorksApp')
                 self.validateTfModelPath(self.editServing.modelPath, undefined);
             };
 
-            self.setModelName = function (name) {
+            self.setServingName = function (name) {
                 if (!self.editServing.name) {
                     if (name) {
                         self.editServing.name = name;
@@ -985,6 +984,7 @@ angular.module('hopsWorksApp')
             self.setModelServer = function (modelServer) {
                 self.editServing.modelPath = undefined;
                 self.editServing.name = undefined;
+                self.editServing.modelName = undefined;
                 self.editServing.modelVersion = undefined;
                 self.editServing.artifactVersion = undefined;
                 self.editServing.modelServer = modelServer;

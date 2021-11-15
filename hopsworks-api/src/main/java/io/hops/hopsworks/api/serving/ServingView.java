@@ -42,6 +42,7 @@ public class ServingView implements Serializable {
   private Integer id;
   private String name;
   private String modelPath;
+  private String modelName;
   private Integer modelVersion;
   private Integer availableInstances;
   private Integer requestedInstances;
@@ -76,6 +77,7 @@ public class ServingView implements Serializable {
     this.id = servingWrapper.getServing().getId();
     this.name = servingWrapper.getServing().getName();
     this.modelPath = servingWrapper.getServing().getModelPath();
+    this.modelName = servingWrapper.getServing().getModelName();
     this.modelVersion = servingWrapper.getServing().getModelVersion();
     this.availableInstances = servingWrapper.getAvailableReplicas();
     this.requestedInstances = servingWrapper.getServing().getInstances();
@@ -116,6 +118,14 @@ public class ServingView implements Serializable {
 
   public void setModelPath(String modelPath) {
     this.modelPath = modelPath;
+  }
+
+  @ApiModelProperty(value = "Name of the model")
+  public String getModelName() {
+    return modelName;
+  }
+  public void setModelName(String modelName) {
+    this.modelName = modelName;
   }
 
   @ApiModelProperty(value = "Version of the model")
@@ -225,7 +235,7 @@ public class ServingView implements Serializable {
   public ServingWrapper getServingWrapper() {
 
     ServingWrapper servingWrapper = new ServingWrapper(
-        new Serving(id, name, modelPath, modelVersion, requestedInstances, batchingEnabled,
+        new Serving(id, name, modelPath, modelName, modelVersion, requestedInstances, batchingEnabled,
           modelServer, servingTool));
     servingWrapper.setKafkaTopicDTO(kafkaTopicDTO);
 
@@ -271,7 +281,7 @@ public class ServingView implements Serializable {
   public void setPredictorResourceConfig(Object predictorResourceConfig) {
     this.predictorResourceConfig = predictorResourceConfig;
   }
-  
+
   public String getRevision() {
     return revision;
   }

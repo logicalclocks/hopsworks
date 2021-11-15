@@ -953,7 +953,9 @@ public class RESTCodes {
     ACCOUNT_DELETION_ERROR(54, "Failed to delete account.", Response.Status.BAD_REQUEST),
     USER_NAME_NOT_SET(55, "User name not set.", Response.Status.BAD_REQUEST),
     SECRET_DELETION_FAILED(56, "Failed to delete secret.", Response.Status.BAD_REQUEST),
-    USER_SEARCH_NOT_ALLOWED(57, "Search not allowed.", Response.Status.BAD_REQUEST);
+    USER_SEARCH_NOT_ALLOWED(57, "Search not allowed.", Response.Status.BAD_REQUEST),
+    FAILED_TO_GENERATE_QR_CODE(58, "Failed to generate QR code.", Response.Status.EXPECTATION_FAILED),
+    INVALID_OTP(59, "Invalid OTP.", Response.Status.BAD_REQUEST);
 
     private Integer code;
     private String message;
@@ -1583,7 +1585,8 @@ public class RESTCodes {
     ILLEGAL_EVENT_TIME_FEATURE_TYPE(171, "Illegal event time feature type", Response.Status.BAD_REQUEST),
     EVENT_TIME_FEATURE_NOT_FOUND(172, "Event time feature not found", Response.Status.BAD_REQUEST),
     FEATURE_GROUP_MISSING_EVENT_TIME(173, "Feature group is not event time enabled", Response.Status.BAD_REQUEST),
-    JOIN_OPERATOR_MISMATCH(174, "Join features and operator list have different sizes", Response.Status.BAD_REQUEST);
+    JOIN_OPERATOR_MISMATCH(174, "Join features and operator list have different sizes", Response.Status.BAD_REQUEST),
+    VALIDATION_RULE_INCOMPLETE(175, "Rule is missing a required field.", Response.Status.BAD_REQUEST);
 
     private int code;
     private String message;

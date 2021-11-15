@@ -1,6 +1,6 @@
 /*
  * This file is part of Hopsworks
- * Copyright (C) 2019, Logical Clocks AB. All rights reserved
+ * Copyright (C) 2021, Logical Clocks AB. All rights reserved
  *
  * Hopsworks is free software: you can redistribute it and/or modify it under the terms of
  * the GNU Affero General Public License as published by the Free Software Foundation,
@@ -13,19 +13,29 @@
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see <https://www.gnu.org/licenses/>.
  */
+package io.hops.hopsworks.api.util;
 
-package io.hops.hopsworks.common.util.templates.airflow;
+import io.hops.hopsworks.common.util.Settings;
 
-public class AirflowFeatureValidationResultOperator extends AirflowOperator {
-  public static final String NAME = "HopsworksFeatureValidationResult";
-  private final String featureGroupName;
-  
-  public AirflowFeatureValidationResultOperator(String projectName, String id, String featureGroupName) {
-    super(projectName, id);
-    this.featureGroupName = featureGroupName;
+public enum OTPAuthStatus {
+  DISABLED("DISABLED"),
+  MANDATORY("MANDATORY"),
+  OPTIONAL("OPTIONAL");
+
+  private final String name;
+
+
+  OTPAuthStatus(String name) {
+    this.name = name;
   }
-  
-  public String getFeatureGroupName() {
-    return featureGroupName;
+
+  public static OTPAuthStatus fromTwoFactorMode(String twoFactorMode) {
+    if (twoFactorMode.equals(Settings.TwoFactorMode.MANDATORY.getName())) {
+      return OTPAuthStatus.MANDATORY;
+    } else if (twoFactorMode.equals(Settings.TwoFactorMode.OPTIONAL.getName())) {
+      return OTPAuthStatus.OPTIONAL;
+    } else {
+      return OTPAuthStatus.DISABLED;
+    }
   }
 }

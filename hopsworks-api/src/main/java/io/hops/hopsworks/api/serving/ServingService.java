@@ -22,6 +22,7 @@ import io.hops.hopsworks.api.filter.NoCacheResponse;
 import io.hops.hopsworks.api.jwt.JWTHelper;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
 import io.hops.hopsworks.common.serving.ServingController;
+import io.hops.hopsworks.common.serving.ServingStatusEnum;
 import io.hops.hopsworks.common.serving.ServingWrapper;
 import io.hops.hopsworks.common.serving.util.ServingCommands;
 import io.hops.hopsworks.exceptions.CryptoPasswordNotFoundException;
@@ -111,9 +112,12 @@ public class ServingService {
   @ApiOperation(value = "Get the list of serving instances for the project",
       response = ServingView.class,
       responseContainer = "List")
-  public Response getServings(@Context SecurityContext sc) throws ServingException, KafkaException,
+  public Response getServings(@QueryParam("model") String modelName,
+                              @QueryParam("status") ServingStatusEnum status,
+                              @Context SecurityContext sc) throws ServingException, KafkaException,
     CryptoPasswordNotFoundException {
-    List<ServingWrapper> servingDAOList = servingController.getServings(project);
+
+    List<ServingWrapper> servingDAOList = servingController.getServings(project, modelName, status);
     
     ArrayList<ServingView> servingViewList = new ArrayList<>();
     for (ServingWrapper servingWrapper : servingDAOList) {
@@ -184,6 +188,7 @@ public class ServingService {
     }
     ServingWrapper servingWrapper = serving.getServingWrapper();
     servingUtil.validateUserInput(servingWrapper, project);
+    servingUtil.inferModelName(servingWrapper);
     servingController.createOrUpdate(project, user, servingWrapper);
     return Response.status(Response.Status.CREATED).build();
   }

@@ -25,7 +25,6 @@ import io.hops.hopsworks.common.airflow.AirflowManager;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
 import io.hops.hopsworks.common.util.TemplateEngine;
 import io.hops.hopsworks.common.util.templates.airflow.AirflowDAG;
-import io.hops.hopsworks.common.util.templates.airflow.AirflowFeatureValidationResultOperator;
 import io.hops.hopsworks.common.util.templates.airflow.AirflowJobLaunchOperator;
 import io.hops.hopsworks.common.util.templates.airflow.AirflowJobSuccessSensor;
 import io.hops.hopsworks.exceptions.AirflowException;
@@ -161,8 +160,6 @@ public class AirflowService {
     Map<String, Object> dataModel = new HashMap<>(4);
     dataModel.put(AirflowJobLaunchOperator.class.getSimpleName(), AirflowJobLaunchOperator.class);
     dataModel.put(AirflowJobSuccessSensor.class.getSimpleName(), AirflowJobSuccessSensor.class);
-    dataModel.put(AirflowFeatureValidationResultOperator.class.getSimpleName(),
-        AirflowFeatureValidationResultOperator.class);
     dataModel.put("dag", dag);
     java.nio.file.Path outputFile = Paths.get(airflowJWTManager.getProjectDagDirectory(project.getId()).toString(),
         dagDefinition.getName() + ".py");

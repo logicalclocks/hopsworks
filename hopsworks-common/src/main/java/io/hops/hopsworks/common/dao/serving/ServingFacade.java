@@ -68,6 +68,13 @@ public class ServingFacade {
         .getResultList();
   }
 
+  public List<Serving> findForProjectAndModel(Project project, String modelName) {
+    return em.createNamedQuery("Serving.findByProjectAndModel", Serving.class)
+            .setParameter("project", project)
+            .setParameter("modelName", modelName)
+            .getResultList();
+  }
+
   public Serving findById(Integer id) {
     return em.createNamedQuery("Serving.findById", Serving.class)
         .setParameter("id", id)
@@ -103,6 +110,9 @@ public class ServingFacade {
     }
     if (newServing.getInstances() != null) {
       dbServing.setInstances(newServing.getInstances());
+    }
+    if (newServing.getModelName() != null) {
+      dbServing.setModelName(newServing.getModelName());
     }
     if (newServing.getModelVersion() != null) {
       dbServing.setModelVersion(newServing.getModelVersion());

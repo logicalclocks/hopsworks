@@ -115,7 +115,7 @@ describe "On #{ENV['OS']}" do
           create_expectation(project.id, featurestore_id, "exp0")
           create_expectation(project.id, featurestore_id, "exp1")
           create_expectation(project.id, featurestore_id, "exp2")
-          create_expectation(project.id, featurestore_id, "exp_fail", feature="testfeature", custom_expectation=json_data_expectation_categorical)
+          create_expectation(project.id, featurestore_id, json_data_expectation_categorical[:name], feature="testfeature", custom_expectation=json_data_expectation_categorical)
         end
         it "should be able to get all expectations" do
           project = get_project
@@ -129,6 +129,35 @@ describe "On #{ENV['OS']}" do
           featurestore_id = get_featurestore_id(project.id)
           create_expectation(project.id, featurestore_id, "exp#{short_random_id}")
           expect_status(200)
+        end
+        it "should fail to create an expectation with missing predicate" do
+          project = get_project
+          featurestore_id = get_featurestore_id(project.id)
+          # First test the HAS_PATTERN rule
+          create_expectation(project.id, featurestore_id, json_data_expectation_categorical_invalid[:name], feature="testfeature", custom_expectation=json_data_expectation_categorical_invalid)
+          expect_status(400)
+          expect_json(errorCode: 270175)
+
+          # Test a compliance rule such as IS_LESS_THAN
+          create_expectation(project.id, featurestore_id, json_data_expectation_compliance[:name], feature="testfeature", custom_expectation=json_data_expectation_compliance_invalid)
+          expect_status(400)
+          expect_json(errorCode: 270175)
+        end
+        it "should fail to create an expectation with missing min and max" do
+          project = get_project
+          featurestore_id = get_featurestore_id(project.id)
+          create_expectation(project.id, featurestore_id, "exp_predicate_missing", feature="testfeature", custom_expectation=json_data_expectation_invalid)
+          expect_status(400)
+          expect_json(errorCode: 270175)
+        end
+        it "should create an expectation with a compliance rule and set default min/max." do
+          project = get_project
+          featurestore_id = get_featurestore_id(project.id)
+          create_expectation(project.id, featurestore_id, json_data_expectation_compliance[:name], feature="testfeature", custom_expectation=json_data_expectation_compliance)
+          expect_status(200)
+          get_feature_store_expectations(project.id, featurestore_id, json_data_expectation_compliance[:name])
+          expect(json_body[:rules][0][:min]).to be == 1.0
+          expect(json_body[:rules][0][:max]).to be == 1.0
         end
         it "should be able to get an expectation by name" do
           project = get_project
@@ -163,7 +192,7 @@ describe "On #{ENV['OS']}" do
           featurestore_id = get_featurestore_id(project.id)
           json_result, featuregroup_name = create_cached_featuregroup(project.id, featurestore_id)
           fg_json = JSON.parse(json_result)
-          attach_expectation(project.id, featurestore_id, fg_json["id"], "exp_fail")
+          attach_expectation(project.id, featurestore_id, fg_json["id"], json_data_expectation_categorical[:name])
           expect_status(400)
         end
         it "should be able to get an expectation that is attached to featuregroup" do

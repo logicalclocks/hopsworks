@@ -49,6 +49,8 @@ import java.util.Date;
     @NamedQuery(name = "Serving.findById", query = "SELECT t FROM Serving t WHERE t.id = :id"),
     @NamedQuery(name = "Serving.findByProject", query = "SELECT t FROM Serving t " +
       "WHERE t.project = :project"),
+    @NamedQuery(name = "Serving.findByProjectAndModel", query = "SELECT t FROM Serving t " +
+            "WHERE t.project = :project AND t.modelName = :modelName"),
     @NamedQuery(name = "Serving.findByProjectAndId", query = "SELECT t FROM Serving t " +
       "WHERE t.project = :project AND t.id = :id"),
     @NamedQuery(name = "Serving.findByCreated", query = "SELECT t FROM Serving t WHERE t.created = :created"),
@@ -82,6 +84,11 @@ public class Serving implements Serializable {
   @Size(min = 1, max = 255)
   @Column(name = "model_path")
   private String modelPath;
+  @Basic(optional = false)
+  @NotNull
+  @Size(min = 1, max = 255)
+  @Column(name = "model_name")
+  private String modelName;
   @Basic(optional = false)
   @NotNull
   @Column(name = "model_version")
@@ -132,12 +139,13 @@ public class Serving implements Serializable {
 
   public Serving() { }
 
-  public Serving(Integer id, String name, String modelPath, Integer modelVersion,
+  public Serving(Integer id, String name, String modelPath, String modelName, Integer modelVersion,
                  Integer nInstances, Boolean batchingEnabled, ModelServer modelServer,
                  ServingTool servingTool) {
     this.id = id;
     this.name = name;
     this.modelPath = modelPath;
+    this.modelName = modelName;
     this.modelVersion = modelVersion;
     this.instances = nInstances;
     this.batchingEnabled = batchingEnabled;
@@ -183,6 +191,14 @@ public class Serving implements Serializable {
 
   public void setModelPath(String modelPath) {
     this.modelPath = modelPath;
+  }
+
+  public String getModelName() {
+    return modelName;
+  }
+
+  public void setModelName(String modelName) {
+    this.modelName = modelName;
   }
 
   public Integer getModelVersion() { return modelVersion; }

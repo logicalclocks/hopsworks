@@ -182,5 +182,76 @@ describe "On #{ENV['OS']}" do
         end
       end
     end
+    describe "#filter" do
+      context 'without authentication' do
+        before :all do
+          with_valid_project
+          reset_session
+        end
+
+        it "should fail to get servings" do
+          get_servings(@project, nil)
+          expect_status(401)
+        end
+      end
+
+      context 'with authentication', vm: true do
+        before :all do
+          with_valid_project
+          copy_mnist_files(@project[:id], @project[:projectname], @user[:username])
+          create_tf_serving(@project[:id], @project[:projectname])
+          create_tf_serving(@project[:id], @project[:projectname])
+          @tf_serving = create_tf_serving(@project[:id], @project[:projectname])
+        end
+
+        it "should return all servings" do
+          get_servings(@project, nil)
+          expect_status(200)
+          json_body.each {|model| expect(model[:status]).to eq "Stopped"}
+          expect(json_body.length).to eq 3
+        end
+
+        describe "#status" do
+          it "should return all stopped servings" do
+            get_servings(@project, "?status=Stopped")
+            expect_status(200)
+            json_body.each {|model| expect(model[:status]).to eq "Stopped"}
+            expect(json_body.length).to eq 3
+          end
+
+          it "should return no running servings" do
+            get_servings(@project, "?status=Running")
+            expect_status(200)
+            expect(json_body.length).to eq 0
+          end
+
+          it "should return single running serving" do
+            start_serving(@project, @tf_serving)
+
+            wait_for_type(@tf_serving[:name])
+
+            get_servings(@project, "?status=Running")
+            expect_status(200)
+            json_body.each {|model| expect(model[:status]).to eq "Running"}
+            expect(json_body.length).to eq 1
+          end
+        end
+
+        describe "#model" do
+          it "should return no servings for non-existent model" do
+            get_servings(@project, "?model=cifar")
+            expect_status(200)
+            expect(json_body.length).to eq 0
+          end
+
+          it "should return all servings for mnist model" do
+            get_servings(@project, "?model=mnist")
+            expect_status(200)
+            json_body.each {|model| expect(model[:modelName]).to eq "mnist"}
+            expect(json_body.length).to eq 3
+          end
+        end
+      end
+    end
   end
 end

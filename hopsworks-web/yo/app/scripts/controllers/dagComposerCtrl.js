@@ -94,12 +94,7 @@ angular.module('hopsWorksApp')
                 + "in Jobs UI and job name in operator must match the job name in Jobs UI. "
                 + "The task will fail too if the job which is waiting for fails.", [true, false]);
 
-        var validationResult = new Operator(2, "HopsworksFeatureValidationResult",
-            "When this task runs, it will fetch the Data Validation result for a specific feature "
-                + "group. It assumes that the data validation Job has run before and it has finished. "
-                + "The task will fail if the validation result is not successful.", [false, false, true]);
-
-        self.availableOperators = [launchJobOperator, jobSensor, validationResult];
+        self.availableOperators = [launchJobOperator, jobSensor];
 
         self.finishedDagDefinition = function() {
             if (self.isUndefined(self.dag.name) || self.dag.name == "") {

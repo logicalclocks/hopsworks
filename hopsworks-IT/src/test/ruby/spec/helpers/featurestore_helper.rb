@@ -57,6 +57,62 @@ module FeaturestoreHelper
     }
   end
 
+  def json_data_expectation_invalid
+    {
+      "description": "validate year correctness",
+      "features": [
+        "testfeature"
+      ],
+      "name": "exp0_invalid",
+      "rules": [
+        {
+          "legalValues": [
+            "a"
+          ],
+          "level": "ERROR",
+          "name": "HAS_MIN"
+        },
+        {
+          "level": "WARNING",
+          "name": "HAS_MAX"
+        }
+      ]
+    }
+  end
+
+  def json_data_expectation_compliance
+    {
+      "description": "validate less than",
+      "features": [
+        "testfeature"
+      ],
+      "name": "exp_less_than",
+      "rules": [
+        {
+          "level": "ERROR",
+          "name": "IS_LESS_THAN",
+          "feature": "compare_me"
+        }
+      ]
+    }
+  end
+
+  def json_data_expectation_compliance_invalid
+    {
+      "description": "validate less than",
+      "features": [
+        "testfeature"
+      ],
+      "name": "exp_less_than_invalid",
+      "rules": [
+        {
+          "level": "ERROR",
+          "name": "IS_LESS_THAN"
+        }
+      ]
+    }
+  end
+
   def json_data_expectation_categorical
     {
       "description": "validate pattern",
@@ -68,6 +124,23 @@ module FeaturestoreHelper
         {
           "level": "ERROR",
           "pattern": "abc",
+          "name": "HAS_PATTERN",
+          "min": 0.0
+        }
+      ]
+    }
+  end
+
+  def json_data_expectation_categorical_invalid
+    {
+      "description": "validate pattern",
+      "features": [
+        "testfeature"
+      ],
+      "name": "exp_pattern_invalid",
+      "rules": [
+        {
+          "level": "ERROR",
           "name": "HAS_PATTERN"
         }
       ]
