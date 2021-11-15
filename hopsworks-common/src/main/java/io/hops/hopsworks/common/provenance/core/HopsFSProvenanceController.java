@@ -17,6 +17,8 @@ package io.hops.hopsworks.common.provenance.core;
 
 import io.hops.hopsworks.common.featurestore.feature.TrainingDatasetFeatureDTO;
 import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupDTO;
+import io.hops.hopsworks.common.featurestore.featuregroup.cached.CachedFeaturegroupDTO;
+import io.hops.hopsworks.common.featurestore.featuregroup.ondemand.OnDemandFeaturegroupDTO;
 import io.hops.hopsworks.common.featurestore.trainingdatasets.TrainingDatasetDTO;
 import io.hops.hopsworks.common.featurestore.xattr.dto.FeaturestoreXAttrsConstants;
 import io.hops.hopsworks.common.featurestore.xattr.dto.TrainingDatasetXAttrDTO;
@@ -332,7 +334,13 @@ public class HopsFSProvenanceController {
     for(FeatureGroupFeatureDTO feature : featuregroup.getFeatures()) {
       features.add(feature.getName());
     }
-    return new FeaturegroupXAttr.FullDTO(featuregroup.getFeaturestoreId(), featuregroup.getDescription(),
-      featuregroup.getCreated(), featuregroup.getCreator().getEmail(), features);
+    FeaturegroupXAttr.FullDTO fullDTO = new FeaturegroupXAttr.FullDTO(featuregroup.getFeaturestoreId(),
+            featuregroup.getDescription(), featuregroup.getCreated(), featuregroup.getCreator().getEmail(), features);
+    if(featuregroup instanceof CachedFeaturegroupDTO) {
+      fullDTO.setFgType(FeaturegroupXAttr.FGType.CACHED);
+    } else if (featuregroup instanceof OnDemandFeaturegroupDTO) {
+      fullDTO.setFgType(FeaturegroupXAttr.FGType.ON_DEMAND);
+    }
+    return fullDTO;
   }
 }
