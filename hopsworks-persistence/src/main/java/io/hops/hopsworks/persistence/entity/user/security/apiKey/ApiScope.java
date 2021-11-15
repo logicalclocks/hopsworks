@@ -32,7 +32,8 @@ public enum ApiScope {
   KAFKA(false),
   ADMINISTER_USERS(true),
   ADMINISTER_USERS_REGISTER(true),
-  MODELREGISTRY(false);
+  MODELREGISTRY(false),
+  USER(false);
 
   private final boolean privileged;
 
