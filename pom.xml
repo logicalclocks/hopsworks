@@ -116,6 +116,7 @@
     <google-zxing-javase.version>3.0.0</google-zxing-javase.version>
     <googlecode-json-simple.version>1.1.1</googlecode-json-simple.version>
     <handy-uri-templates.version>2.1.8</handy-uri-templates.version>
+    <jakarta.version>2.3.2</jakarta.version>
     <hive.version>3.0.0.7</hive.version>
     <hops.version>3.2.0.6-SNAPSHOT</hops.version>
     <jackson-core-asl.version>1.9.13</jackson-core-asl.version>
@@ -184,6 +185,12 @@
         <groupId>com.damnhandy</groupId>
         <artifactId>handy-uri-templates</artifactId>
         <version>${handy-uri-templates.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>jakarta.xml.bind</groupId>
+        <artifactId>jakarta.xml.bind-api</artifactId>
+        <version>${jakarta.version}</version>
+        <scope>compile</scope>
       </dependency>
       <dependency>
         <groupId>com.fasterxml.jackson.core</groupId>
