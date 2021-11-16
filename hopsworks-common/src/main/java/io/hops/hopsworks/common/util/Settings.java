@@ -340,6 +340,11 @@ public class Settings implements Serializable {
   private final static String VARIABLE_DOCKER_BASE_IMAGE_PYTHON_VERSION = "docker_base_image_python_version";
   private final static String VARIABLE_YARN_APP_UID = "yarn_app_uid";
 
+  /*-----------------------Jobs - Executions-------------------*/
+  private final static String VARIABLE_EXECUTIONS_PER_JOB_LIMIT = "executions_per_job_limit";
+  private final static String VARIABLE_EXECUTIONS_CLEANER_BATCH_SIZE = "executions_cleaner_batch_size";
+  private final static String VARIABLE_EXECUTIONS_CLEANER_INTERVAL_MS = "executions_cleaner_interval_ms";
+
   /*----------------------Yarn Nodemanager status------------*/
   private static final String VARIABLE_CHECK_NODEMANAGERS_STATUS = "check_nodemanagers_status";
 
@@ -755,6 +760,13 @@ public class Settings implements Serializable {
       DOCKER_BASE_IMAGE_PYTHON_NAME = setStrVar(VARIABLE_DOCKER_BASE_IMAGE_PYTHON_NAME, DOCKER_BASE_IMAGE_PYTHON_NAME);
       DOCKER_BASE_IMAGE_PYTHON_VERSION = setStrVar(VARIABLE_DOCKER_BASE_IMAGE_PYTHON_VERSION,
           DOCKER_BASE_IMAGE_PYTHON_VERSION);
+
+      // Job executions cleaner variables
+      EXECUTIONS_PER_JOB_LIMIT =  setIntVar(VARIABLE_EXECUTIONS_PER_JOB_LIMIT, EXECUTIONS_PER_JOB_LIMIT);
+      EXECUTIONS_CLEANER_BATCH_SIZE =  setIntVar(VARIABLE_EXECUTIONS_CLEANER_BATCH_SIZE, EXECUTIONS_CLEANER_BATCH_SIZE);
+      EXECUTIONS_CLEANER_INTERVAL_MS = setIntVar(VARIABLE_EXECUTIONS_CLEANER_INTERVAL_MS,
+                                                 EXECUTIONS_CLEANER_INTERVAL_MS);
+
       YARN_APP_UID = setLongVar(VARIABLE_YARN_APP_UID, YARN_APP_UID);
       populateProvenanceCache();
 
@@ -3814,6 +3826,24 @@ public class Settings implements Serializable {
   public synchronized Boolean isDockerJobUidStrict(){
     checkCache();
     return DOCKER_JOB_UID_STRICT;
+  }
+
+  private int EXECUTIONS_PER_JOB_LIMIT = 10000;
+  public synchronized int getExecutionsPerJobLimit(){
+    checkCache();
+    return EXECUTIONS_PER_JOB_LIMIT;
+  }
+
+  private int EXECUTIONS_CLEANER_BATCH_SIZE = 1000;
+  public synchronized int getExecutionsCleanerBatchSize(){
+    checkCache();
+    return EXECUTIONS_CLEANER_BATCH_SIZE;
+  }
+
+  private int EXECUTIONS_CLEANER_INTERVAL_MS = 600000;
+  public synchronized int getExecutionsCleanerInterval(){
+    checkCache();
+    return EXECUTIONS_CLEANER_INTERVAL_MS;
   }
 
   private int MAX_ENV_YML_BYTE_SIZE = 20000;

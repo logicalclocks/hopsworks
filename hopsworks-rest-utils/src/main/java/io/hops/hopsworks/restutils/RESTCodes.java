@@ -447,7 +447,10 @@ public class RESTCodes {
     JOB_ALERT_ALREADY_EXISTS(36, "Job alert with the same status already exists.", Response.Status.BAD_REQUEST),
     DOCKER_INVALID_JOB_PROPERTIES(37, "Received invalid job property values", Response.Status.BAD_REQUEST),
     FAILED_TO_CREATE_ROUTE(38, "Failed to create route.", Response.Status.BAD_REQUEST),
-    FAILED_TO_DELETE_ROUTE(39, "Failed to delete route.", Response.Status.BAD_REQUEST);
+    FAILED_TO_DELETE_ROUTE(39, "Failed to delete route.", Response.Status.BAD_REQUEST),
+    EXECUTIONS_LIMIT_REACHED(40, "Job reached the maximum number of executions.",
+            Response.Status.BAD_REQUEST);
+
 
     private Integer code;
     private String message;
