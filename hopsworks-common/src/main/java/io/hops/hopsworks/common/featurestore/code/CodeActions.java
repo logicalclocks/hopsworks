@@ -14,7 +14,7 @@
  * If not, see <https://www.gnu.org/licenses/>.
  */
 
-package io.hops.hopsworks.api.featurestore.code;
+package io.hops.hopsworks.common.featurestore.code;
 
 public class CodeActions {
 

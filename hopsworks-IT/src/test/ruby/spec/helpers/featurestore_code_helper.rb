@@ -15,88 +15,113 @@
 
 module FeatureStoreCodeHelper
 
-  def create_code_commit(project_id, featurestore_id, entity_type, entity_id, kernel_id, action_type, application_id)
-    post_statistics_endpoint = "#{ENV['HOPSWORKS_API']}/project/#{project_id}/featurestores/#{featurestore_id}/#{entity_type}/#{entity_id}/code?kernelId=#{kernel_id}&type=#{action_type}"
-    json_data = {
+  def save_code(featurestore_id, dataset_type, dataset_id, entity_id, type, application_id)
+	post_statistics_endpoint = "#{ENV['HOPSWORKS_API']}/project/#{@project.id}/featurestores/#{featurestore_id}/#{dataset_type}/#{dataset_id}/code?entityId=#{entity_id}&type=#{type}"
+	json_data = {
         commitTime: 1597903688000,
 		applicationId: application_id
     }
-    post post_statistics_endpoint, json_data.to_json
+    json_result = post post_statistics_endpoint, json_data.to_json
+	expect_status(200)
+	
+	return JSON.parse(json_result)
   end
 
-  def get_all_code_commit(project_id, featurestore_id, entity_type, entity_id)
-    get "#{ENV['HOPSWORKS_API']}/project/#{project_id}/featurestores/#{featurestore_id}/#{entity_type}/#{entity_id}/code?fields=content"
+  def get_all_code(project_id, featurestore_id, dataset_type, dataset_id)
+    json_result = get "#{ENV['HOPSWORKS_API']}/project/#{project_id}/featurestores/#{featurestore_id}/#{dataset_type}/#{dataset_id}/code?fields=content"
+	expect_status(200)
+	
+	return JSON.parse(json_result)
   end
 
-  def get_code_commit(project_id, featurestore_id, entity_type, entity_id, code_id)
-    get "#{ENV['HOPSWORKS_API']}/project/#{project_id}/featurestores/#{featurestore_id}/#{entity_type}/#{entity_id}/code/#{code_id}?fields=content"
+  def get_code(project_id, featurestore_id, dataset_type, dataset_id, code_id)
+    json_result = get "#{ENV['HOPSWORKS_API']}/project/#{project_id}/featurestores/#{featurestore_id}/#{dataset_type}/#{dataset_id}/code/#{code_id}?fields=content"
+	expect_status(200)
+	
+	return JSON.parse(json_result)
   end
   
   def get_code_content()
     return JSON.parse("{\"cells\":[],\"metadata\":{},\"nbformat\":4,\"nbformat_minor\":5}")
   end
-  
-  def save_code(application_id, entity)
+
+  def save_notebook(application_id, dataset_type)
     settings = get_settings(@project)
-		  
+
+	#start notebook
 	json_result = post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/jupyter/start", JSON(settings)
 	expect_status_details(200)
 	jupyter_project = JSON.parse(json_result)
 	port = jupyter_project["port"]
 	token = jupyter_project["token"]
-	  
+
+	#save header
 	bearer = ""
 	Airborne.configure do |config|
 	  bearer = config.headers["Authorization"]
 	  config.headers["Authorization"] = "token #{token}"
 	end
-	  
+	
+	#add code content
 	temp_name = create_notebook(port)
-
 	update_notebook(port, get_code_content, temp_name)
 	  
 	#create a session for the notebook
 	session_id, kernel_id = create_notebook_session(port, temp_name, temp_name)
-	  
+	
+	#reset header
 	Airborne.configure do |config|
 	  config.headers["Authorization"] = bearer
 	end
-	
+
+	#create featuregroup/training dataset
 	featurestore_id = get_featurestore_id(@project.id)
+	parsed_json = create_dataset(featurestore_id, dataset_type)
 	
-	if entity == "featuregroups"
-	   json_result = create_featuregroup_code(featurestore_id)
-	else
-	   json_result = create_training_code(featurestore_id)
-	end
-	
-	parsed_json = JSON.parse(json_result)
+	#save code
 	dataset_id = parsed_json["id"]
-	json_result = create_code_commit(@project.id, featurestore_id, entity, dataset_id, kernel_id, "JUPYTER", application_id)
-	expect_status(200)
+	parsed_json = save_code(featurestore_id, dataset_type, dataset_id, kernel_id, "JUPYTER", application_id)
 	  
 	stop_jupyter(@project)
 	
-	return JSON.parse(json_result), featurestore_id, dataset_id
+	return parsed_json, featurestore_id, dataset_id
   end
   
-  def create_featuregroup_code(featurestore_id)
-	json_result, _ = create_cached_featuregroup(@project.id, featurestore_id)
-	expect_status(201)
-	
-	return json_result
-  end
-  
-  def create_training_code(featurestore_id)
-	connector = get_hopsfs_training_datasets_connector(@project[:projectname])
+  def save_job(application_id, dataset_type)
+	#update tour project by adding services
+	new_project = {description:"", status: 0, services: ["JOBS","JUPYTER","HIVE","KAFKA","SERVING", "FEATURESTORE"],
+		   projectTeam:[], retentionPeriod: ""}
+	put "#{ENV['HOPSWORKS_API']}/project/#{@project.id}", new_project
 
-	features = [
-	  {type: "int", name: "testfeature"},
-	  {type: "int", name: "testfeature1"}
-	]
-	json_result, _ = create_hopsfs_training_dataset(@project[:id], featurestore_id, connector, features: features)
+	#create featuregroup/training dataset
+	featurestore_id = get_featurestore_id(@project.id)
+	parsed_json = create_dataset(featurestore_id, dataset_type)
+  
+	#create job
+	job_spark_1 = "demo_job_1"
+	create_sparktour_job(@project, job_spark_1, "jar", nil)
 	expect_status(201)
 	
-	return json_result
+	#save code
+	dataset_id = parsed_json["id"]
+	return save_code(featurestore_id, dataset_type, dataset_id, job_spark_1, "JOB", application_id), featurestore_id, dataset_id
+  end
+  
+  def create_dataset(featurestore_id, dataset_type)
+	if dataset_type == "featuregroups"
+	  json_result, _ = create_cached_featuregroup(@project.id, featurestore_id)
+	  expect_status(201)
+	else
+	  connector = get_hopsfs_training_datasets_connector(@project[:projectname])
+
+	  features = [
+		{type: "int", name: "testfeature"},
+		{type: "int", name: "testfeature1"}
+	  ]
+	  json_result, _ = create_hopsfs_training_dataset(@project[:id], featurestore_id, connector, features: features)
+	  expect_status(201)
+	end
+	
+	return JSON.parse(json_result)
   end
 end
