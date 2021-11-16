@@ -30,7 +30,7 @@
             <a class="list-group-item" ng-class="{active: profileCtrl.activeTab === 'credentials', disabled: profileCtrl.externalAccountType()}"
                ng-click="profileCtrl.activeTab = 'credentials'">Login credentials</a>
             <a class="list-group-item"
-               ng-class="{active: profileCtrl.activeTab === 'twoFactor', disabled: (profileCtrl.otp !== 'true' || profileCtrl.externalAccountType())}"
+               ng-class="{active: profileCtrl.activeTab === 'twoFactor', disabled: (profileCtrl.otp !== true || profileCtrl.externalAccountType())}"
                ng-click="profileCtrl.activeTab = 'twoFactor'">Two-factor</a>
             <a class="list-group-item" ng-class="{active: profileCtrl.activeTab === 'secrets'}"
                ng-click="profileCtrl.activeTab = 'secrets'; profileCtrl.load_secrets()">Secrets</a>
