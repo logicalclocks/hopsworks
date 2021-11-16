@@ -335,7 +335,7 @@ angular.module('hopsWorksApp')
             self.activeTab = undefined;
             var checkTab = function () {
               var userTabs = ["profile", "credentials", "security", "secrets", "apiKeys"];
-              if (self.otp === 'true') {
+              if (self.otp === true) {
                   userTabs.push("twoFactor");
               }
               var remoteUserTabs = ["profile", "secrets", "apiKeys"];
