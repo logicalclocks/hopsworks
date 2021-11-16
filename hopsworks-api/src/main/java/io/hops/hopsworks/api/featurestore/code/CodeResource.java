@@ -24,6 +24,8 @@ import io.hops.hopsworks.api.util.Pagination;
 import io.hops.hopsworks.audit.logger.LogLevel;
 import io.hops.hopsworks.audit.logger.annotation.Logged;
 import io.hops.hopsworks.common.api.ResourceRequest;
+import io.hops.hopsworks.common.featurestore.code.CodeActions;
+import io.hops.hopsworks.common.featurestore.code.CodeController;
 import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupController;
 import io.hops.hopsworks.common.featurestore.trainingdatasets.TrainingDatasetController;
 import io.hops.hopsworks.common.jupyter.JupyterController;
@@ -58,7 +60,6 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.SecurityContext;
 import javax.ws.rs.core.UriInfo;
-import java.io.IOException;
 
 @Logged
 @Api(value = "Feature store code Resource")
@@ -112,7 +113,7 @@ public class CodeResource {
   public Response get(@BeanParam Pagination pagination,
                       @BeanParam CodeBeanParam codeBeanParam,
                       @Context UriInfo uriInfo,
-                      @Context SecurityContext sc) throws FeaturestoreException, IOException {
+                      @Context SecurityContext sc) throws FeaturestoreException, ServiceException {
 
     Users user = jWTHelper.getUserPrincipal(sc);
 
@@ -147,7 +148,7 @@ public class CodeResource {
                       @BeanParam CodeBeanParam codeBeanParam,
                       @PathParam("codeId") Integer codeId,
                       @Context UriInfo uriInfo,
-                      @Context SecurityContext sc) throws FeaturestoreException, IOException {
+                      @Context SecurityContext sc) throws FeaturestoreException, ServiceException {
 
     Users user = jWTHelper.getUserPrincipal(sc);
 
@@ -179,22 +180,22 @@ public class CodeResource {
           allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   public Response post(@Context UriInfo uriInfo,
                        @Context SecurityContext sc,
-                       @QueryParam("kernelId") String kernelId,
+                       @QueryParam("entityId") String entityId,
                        @QueryParam("type") CodeActions.RunType type,
                        CodeDTO codeDTO)
-          throws FeaturestoreException, DatasetException, HopsSecurityException, IOException, ServiceException {
+          throws FeaturestoreException, DatasetException, HopsSecurityException, ServiceException {
 
     Users user = jWTHelper.getUserPrincipal(sc);
 
     CodeDTO dto;
     if (featuregroup != null) {
       FeaturestoreCode featurestoreCode = codeController.registerCode(project, user, codeDTO.getCommitTime(),
-              codeDTO.getFeatureGroupCommitId(), codeDTO.getApplicationId(), featuregroup, kernelId, type);
+              codeDTO.getFeatureGroupCommitId(), codeDTO.getApplicationId(), featuregroup, entityId, type);
       dto = codeBuilder.build(uriInfo, new ResourceRequest(ResourceRequest.Name.CODE),
               project, user, featuregroup, featurestoreCode, JupyterController.NotebookConversion.HTML);
     } else {
       FeaturestoreCode featurestoreCode = codeController.registerCode(project, user, codeDTO.getCommitTime(),
-              codeDTO.getApplicationId(), trainingDataset, kernelId, type);
+              codeDTO.getApplicationId(), trainingDataset, entityId, type);
       dto = codeBuilder.build(uriInfo, new ResourceRequest(ResourceRequest.Name.CODE),
               project, user, trainingDataset, featurestoreCode, JupyterController.NotebookConversion.HTML);
     }

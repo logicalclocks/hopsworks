@@ -14,10 +14,11 @@
  * If not, see <https://www.gnu.org/licenses/>.
  */
 
-package io.hops.hopsworks.api.featurestore.code;
+package io.hops.hopsworks.common.featurestore.code;
 
-import io.hops.hopsworks.common.featurestore.code.FeaturestoreCodeFacade;
+import io.hops.hopsworks.common.dao.jobs.description.JobFacade;
 import io.hops.hopsworks.common.featurestore.featuregroup.cached.FeatureGroupCommitController;
+import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.hdfs.DistributedFsService;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
 import io.hops.hopsworks.common.hdfs.Utils;
@@ -33,6 +34,10 @@ import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.cached.Fea
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.cached.TimeTravelFormat;
 import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.TrainingDataset;
 import io.hops.hopsworks.persistence.entity.hdfs.inode.Inode;
+import io.hops.hopsworks.persistence.entity.jobs.configuration.JobType;
+import io.hops.hopsworks.persistence.entity.jobs.configuration.python.PythonJobConfiguration;
+import io.hops.hopsworks.persistence.entity.jobs.configuration.spark.SparkJobConfiguration;
+import io.hops.hopsworks.persistence.entity.jobs.description.Jobs;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.restutils.RESTCodes;
@@ -43,6 +48,7 @@ import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
+import java.io.IOException;
 import java.sql.Timestamp;
 import java.util.logging.Level;
 
@@ -52,6 +58,8 @@ public class CodeController {
 
   @EJB
   private Settings settings;
+  @EJB
+  private JobFacade jobFacade;
   @EJB
   private DistributedFsService dfs;
   @EJB
@@ -66,42 +74,67 @@ public class CodeController {
   private FeatureGroupCommitController featureGroupCommitCommitController;
 
   private static final String CODE = "code";
-  private static final String JAR = ".jar";
-  private static final String IPYNB = ".ipynb";
 
-  public String readCodeContent(Project project, Users user, String path, JupyterController.NotebookConversion format)
-          throws FeaturestoreException {
-    String extension = Utils.getExtension(path).get();
+  public CodeContentFormat getContentFormat(String path) throws FeaturestoreException {
+    try {
+      return CodeContentFormat.valueOf(Utils.getExtension(path)
+          .orElse(CodeContentFormat.JAR.toString())
+          .toUpperCase());
+    } catch (IllegalArgumentException e) {
+      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.CODE_READ_ERROR,
+          Level.WARNING, e.getMessage(), e.getMessage(), e);
+    }
+  }
+
+  public String readContent(Project project, Users user, String path, CodeContentFormat contentFormat,
+                            JupyterController.NotebookConversion format)
+      throws FeaturestoreException, ServiceException {
     //returns empty contents in the case of jar file
-    if(extension.equals(JAR)){
-      return "";
+    switch (contentFormat) {
+      case JAR:
+        return null;
+      case IPYNB:
+        return readNotebookContent(project, user, path, format);
+      case PY:
+        return readPythonFileContent(project, user, path);
     }
 
-    String hdfsUsername = hdfsUsersController.getHdfsUserName(project, user);
+    return null;
+  }
 
+  private String readNotebookContent(Project project, Users user, String path,
+                                     JupyterController.NotebookConversion format) throws ServiceException {
+
+    String hdfsUsername = hdfsUsersController.getHdfsUserName(project, user);
+    if (format == JupyterController.NotebookConversion.HTML) {
+      return jupyterController.convertIPythonNotebook(hdfsUsername, path, project, "", format);
+    }
+    //returns empty contents in the case of not supported notebookConversion
+    return null;
+  }
+
+  private String readPythonFileContent(Project project, Users user, String path) throws FeaturestoreException {
+    DistributedFileSystemOps udfso = dfs.getDfsOps(hdfsUsersController.getHdfsUserName(project, user));
     try {
-      switch(format) {
-        case HTML:
-          return jupyterController.convertIPythonNotebook(hdfsUsername, path, project, "", format);
-        default:
-          //returns empty contents in the case of not supported notebookConversion
-          return "";
-      }
-    } catch (ServiceException e) {
+      return udfso.cat(path);
+    } catch (IOException e) {
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.CODE_READ_ERROR,
-              Level.WARNING, e.getMessage(), e.getMessage(), e);
+          Level.WARNING, e.getMessage(), e.getMessage(), e);
+    } finally {
+      dfs.closeDfsClient(udfso);
     }
   }
 
   public FeaturestoreCode registerCode(Project project, Users user, Long codeCommitTimeStamp,
                                        Long fgCommitId, String applicationId, Featuregroup featuregroup,
-                                       String kernelId, CodeActions.RunType type)
+                                       String entityId, CodeActions.RunType type)
           throws FeaturestoreException, ServiceException {
 
-    Inode codeInode = saveCode(project, user, applicationId, featuregroup, kernelId, type);
+    Inode codeInode = saveCode(project, user, applicationId, featuregroup, entityId, type);
 
     Timestamp commitTime = new Timestamp(codeCommitTimeStamp);
     FeaturestoreCode featurestoreCode = new FeaturestoreCode(commitTime, codeInode, featuregroup, applicationId);
+
     if (featuregroup.getFeaturegroupType() == FeaturegroupType.CACHED_FEATURE_GROUP &&
             featuregroup.getCachedFeaturegroup().getTimeTravelFormat() == TimeTravelFormat.HUDI) {
       FeatureGroupCommit featureGroupCommit =
@@ -114,10 +147,10 @@ public class CodeController {
 
   public FeaturestoreCode registerCode(Project project, Users user, Long codeCommitTimeStamp,
                                        String applicationId, TrainingDataset trainingDataset,
-                                       String kernelId, CodeActions.RunType type)
-          throws ServiceException {
+                                       String entityId, CodeActions.RunType type)
+          throws ServiceException, FeaturestoreException {
 
-    Inode codeInode = saveCode(project, user, applicationId, trainingDataset, kernelId, type);
+    Inode codeInode = saveCode(project, user, applicationId, trainingDataset, entityId, type);
 
     Timestamp commitTime = new Timestamp(codeCommitTimeStamp);
     FeaturestoreCode featurestoreCode = new FeaturestoreCode(commitTime, codeInode, trainingDataset, applicationId);
@@ -126,47 +159,84 @@ public class CodeController {
   }
 
   private Inode saveCode(Project project, Users user, String applicationId,
-                         Featuregroup featureGroup, String kernelId,
+                         Featuregroup featureGroup, String entityId,
                          CodeActions.RunType type)
-          throws ServiceException {
+          throws ServiceException, FeaturestoreException {
 
     Path datasetDir = new Path(Utils.getFeaturestorePath(project, settings));
     String datasetName = Utils.getFeaturegroupName(featureGroup);
 
-    return saveCode(project, user, applicationId, kernelId, datasetDir, datasetName, type);
+    return saveCode(project, user, applicationId, entityId, datasetDir, datasetName, type);
   }
 
   private Inode saveCode(Project project, Users user, String applicationId,
-                         TrainingDataset trainingDataset, String kernelId,
+                         TrainingDataset trainingDataset, String entityId,
                          CodeActions.RunType type)
-          throws ServiceException {
+          throws ServiceException, FeaturestoreException {
 
     Path datasetDir = new Path(Utils.getProjectPath(project.getName()),
             project.getName() + "_" + Settings.ServiceDataset.TRAININGDATASETS.getName());
     String datasetName = Utils.getTrainingDatasetName(trainingDataset);
 
-    return saveCode(project, user, applicationId, kernelId, datasetDir, datasetName, type);
+    return saveCode(project, user, applicationId, entityId, datasetDir, datasetName, type);
   }
 
   private Inode saveCode(Project project, Users user, String applicationId,
-                         String kernelId, Path datasetDir, String datasetName,
+                         String entityId, Path datasetDir, String datasetName,
                          CodeActions.RunType type)
-          throws ServiceException {
+          throws ServiceException, FeaturestoreException {
 
     // Construct the directory path
     Path codeDir = new Path(datasetDir, CODE);
     Path dirPath = new Path(codeDir, datasetName);
-    Path filePath = new Path(dirPath, applicationId + IPYNB);
+    Path filePath;
 
     switch(type) {
-      case JUPYTER: {
-        jupyterController.versionProgram(project, user, kernelId, filePath);
-      } break;
-      default: {
+      case JUPYTER:
+        filePath = new Path(dirPath, applicationId + ".ipynb");
+        jupyterController.versionProgram(project, user, entityId, filePath);
+        break;
+      case JOB:
+        filePath = saveJob(project, user, entityId, dirPath, applicationId);
+        break;
+      default:
         throw new NotImplementedException();
-      }
     }
 
     return inodeController.getInodeAtPath(filePath.toString());
+  }
+
+  private Path saveJob(Project project, Users user, String entityId, Path dirPath, String applicationId)
+      throws FeaturestoreException {
+    // get job path
+    Jobs job = jobFacade.findByProjectAndName(project, entityId);
+
+    // Currently we can save code only for (Py)Spark and Python jobs
+    String appPath = null;
+    if (job.getJobType() == JobType.SPARK || job.getJobType() == JobType.PYSPARK) {
+      appPath = ((SparkJobConfiguration) job.getJobConfig()).getAppPath();
+    } else if (job.getJobType() == JobType.PYTHON) {
+      appPath = ((PythonJobConfiguration) job.getJobConfig()).getAppPath();
+    }
+
+    // generate file path
+    String extension = Utils.getExtension(appPath).orElse("");
+    Path path = new Path(dirPath, applicationId + extension);
+
+    // read job and save to file path
+    String projectUsername = hdfsUsersController.getHdfsUserName(project, user);
+    DistributedFileSystemOps udfso = null;
+    try {
+      udfso = dfs.getDfsOps(projectUsername);
+      String notebookString = udfso.cat(appPath);
+      udfso.create(path, notebookString);
+    } catch (IOException e){
+      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.CODE_READ_ERROR,
+              Level.WARNING, e.getMessage(), e.getMessage(), e);
+    } finally {
+      dfs.closeDfsClient(udfso);
+    }
+
+    return path;
   }
 }

@@ -17,6 +17,7 @@
 package io.hops.hopsworks.api.featurestore.code;
 
 import io.hops.hopsworks.common.api.RestDTO;
+import io.hops.hopsworks.common.featurestore.code.CodeContentFormat;
 
 import javax.xml.bind.annotation.XmlRootElement;
 
@@ -28,6 +29,7 @@ public class CodeDTO extends RestDTO<CodeDTO> {
   private Long commitTime;
   private Long featureGroupCommitId;
   private String content;
+  private CodeContentFormat contentFormat;
   private String path;
 
   public String getApplicationId() {
@@ -68,6 +70,14 @@ public class CodeDTO extends RestDTO<CodeDTO> {
 
   public void setContent(String content) {
     this.content = content;
+  }
+
+  public CodeContentFormat getContentFormat() {
+    return contentFormat;
+  }
+
+  public void setContentFormat(CodeContentFormat contentFormat) {
+    this.contentFormat = contentFormat;
   }
 
   public String getPath() {
