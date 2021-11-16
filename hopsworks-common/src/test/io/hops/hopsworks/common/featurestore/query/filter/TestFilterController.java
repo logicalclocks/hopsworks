@@ -19,9 +19,9 @@ package io.hops.hopsworks.common.featurestore.query.filter;
 import io.hops.hopsworks.common.featurestore.feature.FeatureGroupFeatureDTO;
 import io.hops.hopsworks.common.featurestore.query.ConstructorController;
 import io.hops.hopsworks.common.featurestore.query.Feature;
+import io.hops.hopsworks.common.featurestore.query.Query;
 import io.hops.hopsworks.common.featurestore.query.SqlCondition;
 import io.hops.hopsworks.common.featurestore.query.join.Join;
-import io.hops.hopsworks.common.featurestore.query.Query;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.persistence.entity.featurestore.Featurestore;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.Featuregroup;
@@ -30,6 +30,8 @@ import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.cached.Tim
 import io.hops.hopsworks.persistence.entity.project.Project;
 import org.apache.calcite.sql.JoinType;
 import org.apache.calcite.sql.SqlDialect;
+import org.apache.calcite.sql.SqlNode;
+import org.apache.calcite.sql.dialect.HiveSqlDialect;
 import org.apache.calcite.sql.dialect.SparkSqlDialect;
 import org.junit.Assert;
 import org.junit.Before;
@@ -477,4 +479,52 @@ public class TestFilterController {
     
     Assert.assertEquals(expected, result);
   }
-}
+  
+  @Test
+  public void testGetSQLNodeString() throws Exception {
+    SqlNode node = filterController.getSQLNode("string", "value_string");
+    String result = node.toSqlString(new SparkSqlDialect(SqlDialect.EMPTY_CONTEXT)).getSql();
+    String expected = "'value_string'";
+    
+    Assert.assertEquals(expected, result);
+  
+    result = node.toSqlString(new HiveSqlDialect(SqlDialect.EMPTY_CONTEXT)).getSql();
+    Assert.assertEquals(expected, result);
+  }
+  
+  @Test
+  public void testGetSQLNodeDate() throws Exception {
+    SqlNode node = filterController.getSQLNode("date", "2021-11-12");
+    String result = node.toSqlString(new SparkSqlDialect(SqlDialect.EMPTY_CONTEXT)).getSql();
+    String expected = "DATE '2021-11-12'";
+  
+    Assert.assertEquals(expected, result);
+  
+    result = node.toSqlString(new HiveSqlDialect(SqlDialect.EMPTY_CONTEXT)).getSql();
+    Assert.assertEquals(expected, result);
+  }
+  
+  @Test
+  public void testGetSQLNodeTimestamp() throws Exception {
+    SqlNode node = filterController.getSQLNode("timestamp", "2021-11-12 09:55:32.084354");
+    String result = node.toSqlString(new SparkSqlDialect(SqlDialect.EMPTY_CONTEXT)).getSql();
+    String expected = "TIMESTAMP '2021-11-12 09:55:32.084'";
+  
+    Assert.assertEquals(expected, result);
+  
+    result = node.toSqlString(new HiveSqlDialect(SqlDialect.EMPTY_CONTEXT)).getSql();
+    Assert.assertEquals(expected, result);
+  }
+  
+  @Test
+  public void testGetSQLNodeOther() throws Exception {
+    SqlNode node = filterController.getSQLNode("int", "5");
+    String result = node.toSqlString(new SparkSqlDialect(SqlDialect.EMPTY_CONTEXT)).getSql();
+    String expected = "5";
+  
+    Assert.assertEquals(expected, result);
+  
+    result = node.toSqlString(new HiveSqlDialect(SqlDialect.EMPTY_CONTEXT)).getSql();
+    Assert.assertEquals(expected, result);
+  }
+ }
