@@ -48,6 +48,7 @@ import io.hops.hopsworks.persistence.entity.jobs.configuration.history.JobFinalS
 import io.hops.hopsworks.persistence.entity.jobs.configuration.history.JobState;
 import io.hops.hopsworks.exceptions.InvalidQueryException;
 import io.hops.hopsworks.persistence.entity.jobs.history.Execution;
+import org.javatuples.Pair;
 
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
@@ -62,6 +63,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 /**
  * Facade for management of persistent Execution objects.
@@ -125,12 +127,19 @@ public class ExecutionFacade extends AbstractFacade<Execution> {
     q.setParameter("job", job);
     return q.getResultList();
   }
-  
-  /**
-   * A job can have only one execution in a non-final state.
-   * @param job job
-   * @return the current job execution.
-   */
+
+  public List<Execution> findOrphaned(Pair<Integer, Integer> range) {
+    TypedQuery<Execution> q = em.createNamedQuery("Execution.findOrphanExecutions", Execution.class);
+    if (range != null) {
+      q.setMaxResults(range.getValue1() - range.getValue0());
+      q.setFirstResult(range.getValue0());
+    } else {
+      q.setFirstResult(0);
+      q.setMaxResults(Integer.MAX_VALUE);
+    }
+    return q.getResultList();
+  }
+
   public List<Execution> findByJobAndNotFinished(Jobs job) {
     TypedQuery<Execution> q = em.createNamedQuery("Execution.findByJobAndStates",
       Execution.class);
@@ -174,7 +183,16 @@ public class ExecutionFacade extends AbstractFacade<Execution> {
     return new CollectionInfo((Long) queryCount.getSingleResult(), query.getResultList());
   }
   
-  
+
+  public int batchDelete(List<Execution> executions) {
+    // Find all executionIds
+    List<Integer> executionIds = executions.stream().map(Execution::getId).collect(Collectors.toList());
+    logger.log(Level.FINE, "Delete executionIds:" + executionIds);
+    Query query =em.createNamedQuery("Execution.deleteBatch", Execution.class);
+    query.setParameter("executionIds", executionIds);
+    return query.executeUpdate();
+  }
+
   private void setFilter(Set<? extends AbstractFacade.FilterBy> filter, Query q) {
     if (filter == null || filter.isEmpty()) {
       return;

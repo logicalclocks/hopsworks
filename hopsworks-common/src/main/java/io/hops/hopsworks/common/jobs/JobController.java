@@ -40,6 +40,7 @@
 package io.hops.hopsworks.common.jobs;
 
 import com.google.common.base.Strings;
+import io.hops.hopsworks.common.dao.jobhistory.ExecutionFacade;
 import io.hops.hopsworks.common.dao.jobs.description.JobFacade;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.common.util.SparkConfigurationUtil;
@@ -47,6 +48,7 @@ import io.hops.hopsworks.common.util.ProjectUtils;
 import io.hops.hopsworks.persistence.entity.jobs.configuration.flink.FlinkJobConfiguration;
 import io.hops.hopsworks.persistence.entity.jobs.configuration.python.PythonJobConfiguration;
 import io.hops.hopsworks.persistence.entity.jobs.description.Jobs;
+import io.hops.hopsworks.persistence.entity.jobs.history.Execution;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.project.jobs.DefaultJobConfiguration;
 import io.hops.hopsworks.persistence.entity.user.Users;
@@ -73,6 +75,7 @@ import javax.ejb.TransactionAttributeType;
 import javax.inject.Inject;
 import javax.xml.bind.JAXBException;
 import java.io.IOException;
+import java.util.List;
 import java.util.Optional;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -88,6 +91,8 @@ public class JobController {
   private JobScheduler scheduler;
   @EJB
   private ActivityFacade activityFacade;
+  @EJB
+  private ExecutionFacade executionFacade;
   @EJB
   private HdfsUsersController hdfsUsersBean;
   @EJB
@@ -162,13 +167,39 @@ public class JobController {
   public void deleteJob(Jobs job, Users user) throws JobException {
     //Kill running execution of this job (if any)
     executionController.stop(job);
+    // Wait till execution is in a final state
+    List<Execution> nonFinishedExecutions = executionFacade.findByJobAndNotFinished(job);
+    LOGGER.log(Level.FINE, "nonFinishedExecutions:" + nonFinishedExecutions);
+    int sleep = 2000;
+    int timeout = 60;
+    int retries = timeout * 1000 / sleep;
+    int i = 0;
+    while (!nonFinishedExecutions.isEmpty() && i < retries) {
+      LOGGER.log(Level.INFO, "waiting for executions:" + nonFinishedExecutions);
+      // Wait a few seconds till execution in final state
+      try {
+        Thread.sleep(sleep);
+      } catch (InterruptedException ex) {
+        throw new JobException(RESTCodes.JobErrorCode.JOB_DELETION_ERROR,
+                               Level.WARNING,
+                               "Interrupted while waiting to stop the job's executions. Job: " + job.getName(),
+                               ex.getMessage(),
+                               ex);
+      }
+      nonFinishedExecutions = executionFacade.findByJobAndNotFinished(job);
+      i++;
+    }
+
     try {
       LOGGER.log(Level.FINE, "Request to delete job name ={0} job id ={1}",
         new Object[]{job.getName(), job.getId()});
       jobFacade.removeJob(job);
       LOGGER.log(Level.FINE, "Deleted job name ={0} job id ={1}", new Object[]{job.getName(), job.getId()});
-      activityFacade.persistActivity(ActivityFacade.DELETED_JOB + job.getName(), job.getProject(), user.getEmail(),
-        ActivityFlag.JOB);
+      String activityMessage = ActivityFacade.DELETED_JOB + job.getName();
+      if (!nonFinishedExecutions.isEmpty()) {
+        activityMessage += " with pending executions: " + nonFinishedExecutions;
+      }
+      activityFacade.persistActivity(activityMessage, job.getProject(), user.getEmail(), ActivityFlag.JOB);
     } catch (DatabaseException ex) {
       LOGGER.log(Level.SEVERE, "Job cannot be deleted job name ={0} job id ={1}",
         new Object[]{job.getName(), job.getId()});

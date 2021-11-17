@@ -80,10 +80,10 @@ import java.util.logging.Logger;
 import static java.util.logging.Level.FINE;
 
 public abstract class AbstractExecutionController implements ExecutionController {
-  
+
   private static final Logger LOGGER = Logger.getLogger(AbstractExecutionController.class.getName());
   private static final String REMOTE_PROTOCOL = "hdfs://";
-  
+
   //Controllers
   @EJB
   private SparkController sparkController;
@@ -113,12 +113,15 @@ public abstract class AbstractExecutionController implements ExecutionController
   private YarnExecutionFinalizer yarnExecutionFinalizer;
   @EJB
   private HostServicesFacade hostServicesFacade;
-  
+
   @Override
   @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
   public Execution start(Jobs job, String args, Users user)
     throws JobException, GenericException, ServiceException, ProjectException {
-  
+
+    // If the limit for the number of executions for this job has been reached, return an error
+    checkExecutionLimit(job);
+
     // A user should not be able to start a job if the project is prepaid and it doesn't have quota.
     if(job.getProject().getPaymentType().equals(PaymentType.PREPAID)){
       YarnProjectsQuota projectQuota = yarnProjectsQuotaFacade.findByProjectName(job.getProject().getName());
@@ -156,7 +159,7 @@ public abstract class AbstractExecutionController implements ExecutionController
         }
         Inode inode = inodeController.getInodeAtPath(pathOfInode);
         String inodeName = inode.getInodePK().getName();
-      
+
         activityFacade.persistActivity(ActivityFacade.EXECUTED_JOB + inodeName, job.getProject(), user,
           ActivityFlag.JOB);
         break;
@@ -173,10 +176,10 @@ public abstract class AbstractExecutionController implements ExecutionController
         throw new GenericException(RESTCodes.GenericErrorCode.UNKNOWN_ACTION, Level.FINE, "Unsupported job type: "
           + job.getJobType());
     }
-  
+
     return exec;
   }
-  
+
   public Execution stop(Jobs job) throws JobException {
     //Get all the executions that are in a non-final state
     List<Execution> executions = executionFacade.findByJobAndNotFinished(job);
@@ -190,14 +193,14 @@ public abstract class AbstractExecutionController implements ExecutionController
     }
     return null;
   }
-  
-  
+
+
   public Execution stopExecution(Integer id) throws JobException {
     return stopExecution(
       executionFacade.findById(id).orElseThrow(() -> new JobException(RESTCodes.JobErrorCode.JOB_EXECUTION_NOT_FOUND,
         FINE, "Execution: " + id)));
   }
-  
+
   public Execution stopExecution(Execution execution) throws JobException {
     //An execution when it's initializing might not have an appId in hopsworks
     if(execution.getAppId() != null && JobState.getRunningStates().contains(execution.getState())) {
@@ -219,7 +222,7 @@ public abstract class AbstractExecutionController implements ExecutionController
     }
     return execution;
   }
-  
+
   public Execution authorize(Jobs job, Integer id) throws JobException {
     Execution execution =
       executionFacade.findById(id).orElseThrow(() -> new JobException(RESTCodes.JobErrorCode.JOB_EXECUTION_NOT_FOUND,
@@ -234,12 +237,19 @@ public abstract class AbstractExecutionController implements ExecutionController
     }
     return execution;
   }
-  
+
   @Override
   public void delete(Execution execution) throws JobException {
     executionFacade.remove(execution);
   }
-  
+
+  public void checkExecutionLimit(Jobs job) throws JobException {
+    // If the limit for the number of executions for this job has been reached, return an error
+    if (job.getExecutions().size() >= settings.getExecutionsPerJobLimit()) {
+      throw new JobException(RESTCodes.JobErrorCode.EXECUTIONS_LIMIT_REACHED, Level.INFO,
+                             "Maximum number of executions per job: " + settings.getExecutionsPerJobLimit());
+    }
+  }
   //====================================================================================================================
   // Execution logs
   //====================================================================================================================

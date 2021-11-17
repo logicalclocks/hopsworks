@@ -148,8 +148,7 @@ public class Jobs implements Serializable {
   @ManyToOne(optional = false)
   private Users creator;
 
-  @OneToMany(cascade = CascadeType.ALL,
-          mappedBy = "job")
+  @OneToMany(mappedBy = "job")
   private Collection<Execution> executions;
   
   @OneToMany(cascade = CascadeType.ALL,

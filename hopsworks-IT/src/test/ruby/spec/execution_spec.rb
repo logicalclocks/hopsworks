@@ -34,7 +34,7 @@ describe "On #{ENV['OS']}" do
       end
       job_types = ['jar', 'py', 'ipynb']
       job_types.each do |type|
-        context 'with authentication and executable ' + type do
+      context 'with authentication and executable ' + type do
           before :all do
             with_valid_tour_project("spark")
           end
@@ -135,6 +135,43 @@ describe "On #{ENV['OS']}" do
               expect_status_details(201)
               start_execution(@project[:id], $job_name_3)
               expect_status_details(201)
+            end
+            it "should not start more than the allowed maximum number of executions per job" do
+              $job_name_3 = "demo_job_3_" + type
+              create_sparktour_job(@project, $job_name_3, type)
+              start_execution(@project[:id], $job_name_3)
+              expect_status_details(201)
+              start_execution(@project[:id], $job_name_3)
+              expect_status_details(201)
+              start_execution(@project[:id], $job_name_3)
+              expect_status_details(400)
+              expect(json_body[:errorCode]).to eq 130040
+            end
+            it "should start a job, delete it and cleanup its executions" do
+              #create job
+              job_name = "demo_job"
+              create_sparktour_job(@project, job_name, 'jar')
+              job_id = json_body[:id]
+              #start execution
+              start_execution(@project[:id], job_name)
+              execution_id = json_body[:id]
+              expect_status_details(201)
+              #wait till it's finished and start second execution
+              wait_for_execution_completed(@project[:id], job_name, json_body[:id], "ACCEPTED")
+              #start execution
+              start_execution(@project[:id], job_name)
+              execution_id = json_body[:id]
+              expect_status_details(201)
+              wait_for_execution_completed(@project[:id], job_name, execution_id, "ACCEPTED")
+
+              # Delete job
+              delete_job(@project[:id], job_name)
+              #Wait for executions to be deleted
+              sleep(getVar("executions_cleaner_interval_ms").value.to_i * 2/1000)
+
+              #check database
+              num_executions = count_executions(job_id)
+              expect(num_executions).to eq 0
             end
             it "should start a job and use default args" do
               $job_name_3 = "demo_job_3_" + type
@@ -252,6 +289,7 @@ describe "On #{ENV['OS']}" do
             end
           end
         end
+
       end
 
       describe 'execution with checking nodemanager status enabled' do

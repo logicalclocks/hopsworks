@@ -129,6 +129,9 @@ public class KubeExecutionController extends AbstractExecutionController impleme
   public Execution start(Jobs job, String args, Users user) throws JobException, GenericException,
           ServiceException, ProjectException {
 
+    // If the limit for the number of executions for this job has been reached, return an error
+    checkExecutionLimit(job);
+
     if (job.getJobType() == JobType.PYTHON || job.getJobType() == JobType.DOCKER) {
       Project project = job.getProject();
       String hdfsUser = hdfsUsersController.getHdfsUserName(project, user);
