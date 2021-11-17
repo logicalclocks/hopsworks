@@ -81,7 +81,7 @@ module JobHelper
   end
 
 
-  def create_sparktour_job(project, job_name, type, job_conf)
+  def create_sparktour_job(project, job_name, type, job_conf=nil)
 
     # need to enable python for conversion .ipynb to .py works
     get "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/python/environments"
