@@ -15,15 +15,22 @@
  */
 package io.hops.hopsworks.api.elastic.featurestore;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import org.javatuples.Pair;
+
 import javax.xml.bind.annotation.XmlRootElement;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 
 @XmlRootElement
 public class ElasticFeaturestoreDTO {
   private List<ElasticFeaturestoreItemDTO.Base> featuregroups = new LinkedList<>();
   private List<ElasticFeaturestoreItemDTO.Base> trainingdatasets = new LinkedList<>();
   private List<ElasticFeaturestoreItemDTO.Feature> features = new LinkedList<>();
+  @JsonIgnore
+  private Map<Pair<String, String>, ElasticFeaturestoreItemDTO.Feature> featuresAux = new HashMap<>();
   private Integer featuregroupsFrom = 0;
   private Long featuregroupsTotal = 0l;
   private Integer trainingdatasetsFrom = 0;
@@ -56,6 +63,9 @@ public class ElasticFeaturestoreDTO {
   
   public void setFeatures(List<ElasticFeaturestoreItemDTO.Feature> features) {
     this.features = features;
+    for(ElasticFeaturestoreItemDTO.Feature feature: features) {
+      featuresAux.put(Pair.with(feature.getParentProjectName(), feature.getName()), feature);
+    }
   }
   
   public Integer getFeaturegroupsFrom() {
@@ -116,5 +126,10 @@ public class ElasticFeaturestoreDTO {
   
   public void addFeature(ElasticFeaturestoreItemDTO.Feature feature) {
     features.add(feature);
+    featuresAux.put(Pair.with(feature.getParentProjectName(), feature.getName()), feature);
+  }
+  
+  public ElasticFeaturestoreItemDTO.Feature getFeature(String parentProjectName, String name) {
+    return featuresAux.get(Pair.with(parentProjectName, name));
   }
 }

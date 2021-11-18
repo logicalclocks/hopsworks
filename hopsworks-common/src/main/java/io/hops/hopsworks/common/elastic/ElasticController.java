@@ -560,11 +560,21 @@ public class ElasticController {
   }
   
   private QueryBuilder featureQueryB(String searchTerm) {
-    String key1 = FeaturestoreXAttrsConstants.getFeaturestoreElasticKey(FeaturestoreXAttrsConstants.FG_FEATURES) + ".*";
-    QueryBuilder query = boolQuery()
-      .must(termQuery("doc_type", FeaturestoreDocType.FEATUREGROUP.toString().toLowerCase()))
-      .must(getXAttrQuery(key1, searchTerm));
-    return query;
+    QueryBuilder featureQuery = termQuery(Settings.META_DOC_TYPE_FIELD,
+      FeaturestoreDocType.FEATUREGROUP.toString().toLowerCase());
+    
+    String featureName = FeaturestoreXAttrsConstants.getFeaturestoreElasticKey(
+      FeaturestoreXAttrsConstants.FG_FEATURES, FeaturestoreXAttrsConstants.NAME);
+    String description = FeaturestoreXAttrsConstants.getFeaturestoreElasticKey(
+      FeaturestoreXAttrsConstants.FG_FEATURES, FeaturestoreXAttrsConstants.DESCRIPTION);
+    QueryBuilder baseQuery = boolQuery()
+      .should(termFullTextQueryInt(featureName, searchTerm))
+      .should(phraseFullTextQueryInt(description, searchTerm));
+    
+    QueryBuilder nestedQuery = nestedQuery(Settings.META_DATA_NESTED_FIELD, baseQuery, ScoreMode.Avg);
+    return boolQuery()
+      .must(featureQuery)
+      .must(nestedQuery);
   }
   
   private HighlightBuilder featuregroupHighlighter() {
@@ -588,7 +598,11 @@ public class ElasticController {
   private HighlightBuilder featureHighlighter() {
     HighlightBuilder hb = new HighlightBuilder();
     hb.field(new HighlightBuilder.Field(
-      FeaturestoreXAttrsConstants.getFeaturestoreElasticKey(FeaturestoreXAttrsConstants.FG_FEATURES) + ".*"));
+      FeaturestoreXAttrsConstants.getFeaturestoreElasticKey(
+        FeaturestoreXAttrsConstants.FG_FEATURES, FeaturestoreXAttrsConstants.NAME)));
+    hb.field(new HighlightBuilder.Field(
+      FeaturestoreXAttrsConstants.getFeaturestoreElasticKey(
+        FeaturestoreXAttrsConstants.FG_FEATURES, FeaturestoreXAttrsConstants.DESCRIPTION)));
     return hb;
   }
   
@@ -645,27 +659,20 @@ public class ElasticController {
    * @return
    */
   private QueryBuilder getNameQuery(String searchTerm) {
-
-    //prefix name match
-    QueryBuilder namePrefixMatch = prefixQuery(Settings.META_NAME_FIELD,
-        searchTerm);
-
-    QueryBuilder namePhraseMatch = matchPhraseQuery(Settings.META_NAME_FIELD,
-        searchTerm);
-
-    QueryBuilder nameFuzzyQuery = fuzzyQuery(
-        Settings.META_NAME_FIELD, searchTerm);
-
-    QueryBuilder wildCardQuery = wildcardQuery(Settings.META_NAME_FIELD,
-        String.format("*%s*", searchTerm));
-
-    QueryBuilder nameQuery = boolQuery()
-        .should(namePrefixMatch)
-        .should(namePhraseMatch)
-        .should(nameFuzzyQuery)
-        .should(wildCardQuery);
-
-    return nameQuery;
+    return termFullTextQueryInt(Settings.META_NAME_FIELD, searchTerm);
+  }
+  
+  private QueryBuilder termFullTextQueryInt(String key, String searchTerm) {
+    QueryBuilder namePrefixMatch = prefixQuery(key, searchTerm);
+    QueryBuilder namePhraseMatch = matchPhraseQuery(key, searchTerm);
+    QueryBuilder nameFuzzyQuery = fuzzyQuery(key, searchTerm);
+    QueryBuilder wildCardQuery = wildcardQuery(key, String.format("*%s*", searchTerm));
+  
+    return boolQuery()
+      .should(namePrefixMatch)
+      .should(namePhraseMatch)
+      .should(nameFuzzyQuery)
+      .should(wildCardQuery);
   }
 
   /**
@@ -676,35 +683,26 @@ public class ElasticController {
    * @return
    */
   private QueryBuilder getDescriptionQuery(String searchTerm) {
-
-    //do a prefix query on the description field in case the user starts writing
-    //a full sentence
-    QueryBuilder descriptionPrefixMatch = prefixQuery(
-        Settings.META_DESCRIPTION_FIELD, searchTerm);
-
+    return phraseFullTextQueryInt(Settings.META_DESCRIPTION_FIELD, searchTerm);
+  }
+  
+  private QueryBuilder phraseFullTextQueryInt(String key, String searchTerm) {
+    //do a prefix query on the description field in case the user starts writing a full sentence
+    QueryBuilder descriptionPrefixMatch = prefixQuery(key, searchTerm);
     //a phrase query to match the dataset description
-    QueryBuilder descriptionMatch = termsQuery(
-        Settings.META_DESCRIPTION_FIELD, searchTerm);
-
+    QueryBuilder descriptionMatch = termsQuery(key, searchTerm);
     //add a phrase match query to enable results to popup while typing phrases
-    QueryBuilder descriptionPhraseMatch = matchPhraseQuery(
-        Settings.META_DESCRIPTION_FIELD, searchTerm);
-
+    QueryBuilder descriptionPhraseMatch = matchPhraseQuery(key, searchTerm);
     //add a fuzzy search on description field
-    QueryBuilder descriptionFuzzyQuery = fuzzyQuery(
-        Settings.META_DESCRIPTION_FIELD, searchTerm);
+    QueryBuilder descriptionFuzzyQuery = fuzzyQuery(key, searchTerm);
+    QueryBuilder wildCardQuery = wildcardQuery(key, String.format("*%s*", searchTerm));
 
-    QueryBuilder wildCardQuery = wildcardQuery(Settings.META_DESCRIPTION_FIELD,
-        String.format("*%s*", searchTerm));
-
-    QueryBuilder descriptionQuery = boolQuery()
+    return boolQuery()
         .should(descriptionPrefixMatch)
         .should(descriptionMatch)
         .should(descriptionPhraseMatch)
         .should(descriptionFuzzyQuery)
         .should(wildCardQuery);
-
-    return descriptionQuery;
   }
 
   /**
@@ -719,7 +717,7 @@ public class ElasticController {
   }
   
   private QueryBuilder getXAttrQuery(String key, String searchTerm) {
-    QueryBuilder metadataQuery = queryStringQuery(String.format("*%s*", searchTerm))
+    QueryBuilder metadataQuery =  queryStringQuery(String.format("*%s*", searchTerm))
       .lenient(Boolean.TRUE)
       .field(key);
     QueryBuilder nestedQuery = nestedQuery(Settings.META_DATA_NESTED_FIELD, metadataQuery, ScoreMode.Avg);

@@ -139,13 +139,13 @@ describe "On #{ENV['OS']}" do
           wait_result = epipe_wait_on_mutations(wait_time:30, repeat: 2)
           expect(wait_result["success"]).to be(true), wait_result["msg"]
 
-          expected_hits1 = [{:name => @fgs[1][:name], :highlight => "tags", :parent_project => @project[:projectname]},
-                            {:name => @fgs[2][:name], :highlight => "tags", :parent_project => @project[:projectname]},
-                            {:name => @fgs[3][:name], :highlight => "tags", :parent_project => @project[:projectname]}]
+          expected_hits1 = [{:name => @fgs[1][:name], :highlight => "tags", :parentProjectName => @project[:projectname]},
+                            {:name => @fgs[2][:name], :highlight => "tags", :parentProjectName => @project[:projectname]},
+                            {:name => @fgs[3][:name], :highlight => "tags", :parentProjectName => @project[:projectname]}]
           project_search_test(@project, "dog", "featuregroup", expected_hits1)
-          expected_hits2 = [{:name => @tds[1][:name], :highlight => "tags", :parent_project => @project[:projectname]},
-                            {:name => @tds[2][:name], :highlight => "tags", :parent_project => @project[:projectname]},
-                            {:name => @tds[3][:name], :highlight => "tags", :parent_project => @project[:projectname]}]
+          expected_hits2 = [{:name => @tds[1][:name], :highlight => "tags", :parentProjectName => @project[:projectname]},
+                            {:name => @tds[2][:name], :highlight => "tags", :parentProjectName => @project[:projectname]},
+                            {:name => @tds[3][:name], :highlight => "tags", :parentProjectName => @project[:projectname]}]
           project_search_test(@project, "dog", "trainingdataset", expected_hits2)
         end
       end
@@ -166,7 +166,7 @@ describe "On #{ENV['OS']}" do
           wait_result = epipe_wait_on_mutations(wait_time:30, repeat: 2)
           expect(wait_result["success"]).to be(true), wait_result["msg"]
 
-          expected_hits1 = [{:name => fg_name, :highlight => "tags", :parent_project => @project[:projectname]}]
+          expected_hits1 = [{:name => fg_name, :highlight => "tags", :parentProjectName => @project[:projectname]}]
           project_search_test(@project, "dog", "featuregroup", expected_hits1)
           #remove tag
           delete_featuregroup_tag_checked(@project[:id], @featuregroup_id, @tags[0])
@@ -184,7 +184,7 @@ describe "On #{ENV['OS']}" do
           wait_result = epipe_wait_on_mutations(wait_time:30, repeat: 2)
           expect(wait_result["success"]).to be(true), wait_result["msg"]
 
-          expected_hits2 = [{:name => fg_name, :highlight => "tags", :parent_project => @project[:projectname]}]
+          expected_hits2 = [{:name => fg_name, :highlight => "tags", :parentProjectName => @project[:projectname]}]
           project_search_test(@project, "dog", "featuregroup", expected_hits2)
           #update tag - with value - value is no search hit
           update_featuregroup_tag_checked(@project[:id], @featuregroup_id, @tags[1], "val")
@@ -208,10 +208,10 @@ describe "On #{ENV['OS']}" do
           wait_result = epipe_wait_on_mutations(wait_time:30, repeat: 2)
           expect(wait_result["success"]).to be(true), wait_result["msg"]
           #first part
-          expected_hits = [{:name => fg_name, :highlight => "tags", :parent_project => @project[:projectname]}]
+          expected_hits = [{:name => fg_name, :highlight => "tags", :parentProjectName => @project[:projectname]}]
           project_search_test(@project, "tag", "featuregroup", expected_hits)
           #second part
-          expected_hits = [{:name => fg_name, :highlight => "tags", :parent_project => @project[:projectname]}]
+          expected_hits = [{:name => fg_name, :highlight => "tags", :parentProjectName => @project[:projectname]}]
           project_search_test(@project, "book", "featuregroup", expected_hits)
 
           #remove tag from second part
@@ -219,7 +219,7 @@ describe "On #{ENV['OS']}" do
           #search
           wait_result = epipe_wait_on_mutations(wait_time:30, repeat: 2)
           expect(wait_result["success"]).to be(true), wait_result["msg"]
-          expected_hits = [{:name => fg_name, :highlight => "tags", :parent_project => @project[:projectname]}]
+          expected_hits = [{:name => fg_name, :highlight => "tags", :parentProjectName => @project[:projectname]}]
           project_search_test(@project, "book", "featuregroup", expected_hits)
 
           #delete last tag "book"
@@ -247,8 +247,10 @@ describe "On #{ENV['OS']}" do
           #share featurestore (with training dataset)
           featurestore_name = @project1[:projectname].downcase + "_featurestore.db"
           featurestore1 = get_dataset(@project1, featurestore_name)
+          training_dataset_name = @project1[:projectname] + "_Training_Datasets"
           request_access_by_dataset(featurestore1, @project2)
           share_dataset_checked(@project1, featurestore_name, @project2[:projectname], datasetType: "FEATURESTORE")
+          accept_dataset_checked(@project2, "#{@project1[:projectname]}::#{training_dataset_name}", datasetType: "DATASET")
           @fgs1 = featuregroups_setup(@project1)
           @fgs2 = featuregroups_setup(@project2)
           @tds1 = trainingdataset_setup(@project1)
@@ -264,32 +266,29 @@ describe "On #{ENV['OS']}" do
           wait_result = epipe_wait_on_mutations(wait_time:30, repeat: 2)
           expect(wait_result["success"]).to be(true), wait_result["msg"]
 
-          expected_hits1 = [{:name => @fgs1[1][:name], :highlight => "tags", :parent_project => @project1[:projectname]},
-                            {:name => @fgs1[2][:name], :highlight => "tags", :parent_project => @project1[:projectname]},
-                            {:name => @fgs1[3][:name], :highlight => "tags", :parent_project => @project1[:projectname]}]
+          expected_hits1 = [{:name => @fgs1[1][:name], :highlight => "tags", :parentProjectName => @project1[:projectname]},
+                            {:name => @fgs1[2][:name], :highlight => "tags", :parentProjectName => @project1[:projectname]},
+                            {:name => @fgs1[3][:name], :highlight => "tags", :parentProjectName => @project1[:projectname]}]
           project_search_test(@project1, "dog", "featuregroup", expected_hits1)
-          expected_hits2 = [{:name => @fgs2[1][:name], :highlight => "tags", :parent_project => @project2[:projectname]},
-                            {:name => @fgs2[2][:name], :highlight => "tags", :parent_project => @project2[:projectname]},
-                            {:name => @fgs2[3][:name], :highlight => "tags", :parent_project => @project2[:projectname]},
+          expected_hits2 = [{:name => @fgs2[1][:name], :highlight => "tags", :parentProjectName => @project2[:projectname]},
+                            {:name => @fgs2[2][:name], :highlight => "tags", :parentProjectName => @project2[:projectname]},
+                            {:name => @fgs2[3][:name], :highlight => "tags", :parentProjectName => @project2[:projectname]},
                             #shared featuregroups
-                            {:name => @fgs1[1][:name], :highlight => "tags", :parent_project => @project1[:projectname]},
-                            {:name => @fgs1[2][:name], :highlight => "tags", :parent_project => @project1[:projectname]},
-                            {:name => @fgs1[3][:name], :highlight => "tags", :parent_project => @project1[:projectname]}]
+                            {:name => @fgs1[1][:name], :highlight => "tags", :parentProjectName => @project1[:projectname]},
+                            {:name => @fgs1[2][:name], :highlight => "tags", :parentProjectName => @project1[:projectname]},
+                            {:name => @fgs1[3][:name], :highlight => "tags", :parentProjectName => @project1[:projectname]}]
           project_search_test(@project2, "dog", "featuregroup", expected_hits2)
-          expected_hits3 = [{:name => @tds1[1][:name], :highlight => "tags", :parent_project =>
-              @project1[:projectname]},
-                            {:name => @tds1[2][:name], :highlight => "tags", :parent_project =>
-                                @project1[:projectname]},
-                            {:name => @tds1[3][:name], :highlight => "tags", :parent_project =>
-                                @project1[:projectname]}]
+          expected_hits3 = [{:name => @tds1[1][:name], :highlight => "tags", :parentProjectName => @project1[:projectname]},
+                            {:name => @tds1[2][:name], :highlight => "tags", :parentProjectName => @project1[:projectname]},
+                            {:name => @tds1[3][:name], :highlight => "tags", :parentProjectName => @project1[:projectname]}]
           project_search_test(@project1, "dog", "trainingdataset", expected_hits3)
-          expected_hits4 = [{:name => @tds2[1][:name], :highlight => "tags", :parent_project => @project2[:projectname]},
-                            {:name => @tds2[2][:name], :highlight => "tags", :parent_project => @project2[:projectname]},
-                            {:name => @tds2[3][:name], :highlight => "tags", :parent_project => @project2[:projectname]},
+          expected_hits4 = [{:name => @tds2[1][:name], :highlight => "tags", :parentProjectName => @project2[:projectname]},
+                            {:name => @tds2[2][:name], :highlight => "tags", :parentProjectName => @project2[:projectname]},
+                            {:name => @tds2[3][:name], :highlight => "tags", :parentProjectName => @project2[:projectname]},
                             # shared trainingdatasets
-                            {:name => @tds1[1][:name], :highlight => "tags", :parent_project => @project1[:projectname]},
-                            {:name => @tds1[2][:name], :highlight => "tags", :parent_project => @project1[:projectname]},
-                            {:name => @tds1[3][:name], :highlight => "tags", :parent_project => @project1[:projectname]}]
+                            {:name => @tds1[1][:name], :highlight => "tags", :parentProjectName => @project1[:projectname]},
+                            {:name => @tds1[2][:name], :highlight => "tags", :parentProjectName => @project1[:projectname]},
+                            {:name => @tds1[3][:name], :highlight => "tags", :parentProjectName => @project1[:projectname]}]
           project_search_test(@project2, "dog", "trainingdataset", expected_hits4)
         end
       end
@@ -309,19 +308,19 @@ describe "On #{ENV['OS']}" do
           wait_result = epipe_wait_on_mutations(wait_time:30, repeat: 2)
           expect(wait_result["success"]).to be(true), wait_result["msg"]
 
-          expected_hits1 = [{:name => @fgs1[1][:name], :highlight => "tags", :parent_project => @project1[:projectname]},
-                            {:name => @fgs1[2][:name], :highlight => "tags", :parent_project => @project1[:projectname]},
-                            {:name => @fgs1[3][:name], :highlight => "tags", :parent_project => @project1[:projectname]},
-                            {:name => @fgs2[1][:name], :highlight => "tags", :parent_project => @project2[:projectname]},
-                            {:name => @fgs2[2][:name], :highlight => "tags", :parent_project => @project2[:projectname]},
-                            {:name => @fgs2[3][:name], :highlight => "tags", :parent_project => @project2[:projectname]}]
+          expected_hits1 = [{:name => @fgs1[1][:name], :highlight => "tags", :parentProjectName => @project1[:projectname]},
+                            {:name => @fgs1[2][:name], :highlight => "tags", :parentProjectName => @project1[:projectname]},
+                            {:name => @fgs1[3][:name], :highlight => "tags", :parentProjectName => @project1[:projectname]},
+                            {:name => @fgs2[1][:name], :highlight => "tags", :parentProjectName => @project2[:projectname]},
+                            {:name => @fgs2[2][:name], :highlight => "tags", :parentProjectName => @project2[:projectname]},
+                            {:name => @fgs2[3][:name], :highlight => "tags", :parentProjectName => @project2[:projectname]}]
           global_search_test("dog", "featuregroup", expected_hits1)
-          expected_hits2 = [{:name => @tds1[1][:name], :highlight => "tags", :parent_project => @project1[:projectname]},
-                            {:name => @tds1[2][:name], :highlight => "tags", :parent_project => @project1[:projectname]},
-                            {:name => @tds1[3][:name], :highlight => "tags", :parent_project => @project1[:projectname]},
-                            {:name => @tds2[1][:name], :highlight => "tags", :parent_project => @project2[:projectname]},
-                            {:name => @tds2[2][:name], :highlight => "tags", :parent_project => @project2[:projectname]},
-                            {:name => @tds2[3][:name], :highlight => "tags", :parent_project => @project2[:projectname]}]
+          expected_hits2 = [{:name => @tds1[1][:name], :highlight => "tags", :parentProjectName => @project1[:projectname]},
+                            {:name => @tds1[2][:name], :highlight => "tags", :parentProjectName => @project1[:projectname]},
+                            {:name => @tds1[3][:name], :highlight => "tags", :parentProjectName => @project1[:projectname]},
+                            {:name => @tds2[1][:name], :highlight => "tags", :parentProjectName => @project2[:projectname]},
+                            {:name => @tds2[2][:name], :highlight => "tags", :parentProjectName => @project2[:projectname]},
+                            {:name => @tds2[3][:name], :highlight => "tags", :parentProjectName => @project2[:projectname]}]
           global_search_test("dog", "trainingdataset", expected_hits2)
         end
       end
@@ -451,21 +450,21 @@ describe "On #{ENV['OS']}" do
 
         it 'project local search' do
           create_session(@user1_params[:email], @user1_params[:password])
-          expected_hits1 = [{:name => @fgs1[0][:name], :highlight => "tags", :parent_project => @project1[:projectname]},
-                            {:name => @fgs1[1][:name], :highlight => "tags", :parent_project => @project1[:projectname]}]
+          expected_hits1 = [{:name => @fgs1[0][:name], :highlight => "tags", :parentProjectName => @project1[:projectname]},
+                            {:name => @fgs1[1][:name], :highlight => "tags", :parentProjectName => @project1[:projectname]}]
           project_search_test(@project1, "dog", "featuregroup", expected_hits1)
         end
         it 'project shared search' do
           create_session(@user2_params[:email], @user2_params[:password])
           expected_hits1 = [#shared featuregroups
-                            {:name => @fgs1[0][:name], :highlight => "tags", :parent_project => @project1[:projectname]},
-                            {:name => @fgs1[1][:name], :highlight => "tags", :parent_project => @project1[:projectname]}]
+                            {:name => @fgs1[0][:name], :highlight => "tags", :parentProjectName => @project1[:projectname]},
+                            {:name => @fgs1[1][:name], :highlight => "tags", :parentProjectName => @project1[:projectname]}]
           project_search_test(@project2, "dog", "featuregroup", expected_hits1)
         end
         it 'global search' do
           create_session(@user1_params[:email], @user1_params[:password])
-          expected_hits1 = [{:name => @fgs1[0][:name], :highlight => "tags", :parent_project => @project1[:projectname]},
-                            {:name => @fgs1[1][:name], :highlight => "tags", :parent_project => @project1[:projectname]}]
+          expected_hits1 = [{:name => @fgs1[0][:name], :highlight => "tags", :parentProjectName => @project1[:projectname]},
+                            {:name => @fgs1[1][:name], :highlight => "tags", :parentProjectName => @project1[:projectname]}]
           global_search_test("dog", "featuregroup", expected_hits1)
         end
       end
@@ -505,21 +504,21 @@ describe "On #{ENV['OS']}" do
           expect(wait_result["success"]).to be(true), wait_result["msg"]
 
           create_session(@user1_params[:email], @user1_params[:password])
-          expected_hits = [{:name => @tds1[0][:name], :highlight => "tags", :parent_project => @project1[:projectname]},
-                           {:name => @tds1[1][:name], :highlight => "tags", :parent_project => @project1[:projectname]}]
+          expected_hits = [{:name => @tds1[0][:name], :highlight => "tags", :parentProjectName => @project1[:projectname]},
+                           {:name => @tds1[1][:name], :highlight => "tags", :parentProjectName => @project1[:projectname]}]
           project_search_test(@project1, "dog", "trainingdataset", expected_hits)
         end
         it 'project shared search' do
           create_session(@user2_params[:email], @user2_params[:password])
           expected_hits = [# shared trainingdatasets
-                           {:name => @tds1[0][:name], :highlight => "tags", :parent_project => @project1[:projectname]},
-                           {:name => @tds1[51][:name], :highlight => "tags", :parent_project => @project1[:projectname]}]
+                           {:name => @tds1[0][:name], :highlight => "tags", :parentProjectName => @project1[:projectname]},
+                           {:name => @tds1[1][:name], :highlight => "tags", :parentProjectName => @project1[:projectname]}]
           project_search_test(@project2, "dog", "trainingdataset", expected_hits)
         end
         it 'global tds' do
           create_session(@user1_params[:email], @user1_params[:password])
-          expected_hits = [{:name => @tds1[0][:name], :highlight => "tags", :parent_project => @project1[:projectname]},
-                           {:name => @tds1[1][:name], :highlight => "tags", :parent_project => @project1[:projectname]}]
+          expected_hits = [{:name => @tds1[0][:name], :highlight => "tags", :parentProjectName => @project1[:projectname]},
+                           {:name => @tds1[1][:name], :highlight => "tags", :parentProjectName => @project1[:projectname]}]
           global_search_test("dog", "trainingdataset", expected_hits)
         end
       end

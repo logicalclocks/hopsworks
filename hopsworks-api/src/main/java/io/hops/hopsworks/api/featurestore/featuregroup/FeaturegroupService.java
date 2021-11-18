@@ -189,6 +189,28 @@ public class FeaturegroupService {
   }
 
   /**
+   * Verify that the user id was provided as a path param
+   *
+   * @param featuregroupId the feature group id to verify
+   */
+  private void verifyIdProvided(Integer featuregroupId) {
+    if (featuregroupId == null) {
+      throw new IllegalArgumentException(RESTCodes.FeaturestoreErrorCode.FEATUREGROUP_ID_NOT_PROVIDED.getMessage());
+    }
+  }
+
+  /**
+   * Verify that the name was provided as a path param
+   *
+   * @param featureGroupName the feature group name to verify
+   */
+  private void verifyNameProvided(String featureGroupName) {
+    if (Strings.isNullOrEmpty(featureGroupName)) {
+      throw new IllegalArgumentException(RESTCodes.FeaturestoreErrorCode.FEATUREGROUP_NAME_NOT_PROVIDED.getMessage());
+    }
+  }
+
+  /**
    * Endpoint for getting all featuregroups of a featurestore
    *
    * @return list of JSON featuregroups
@@ -399,8 +421,7 @@ public class FeaturegroupService {
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   @JWTRequired(acceptedTokens = {Audience.API, Audience.JOB}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   @ApiKeyRequired( acceptedScopes = {ApiScope.FEATURESTORE}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
-  @ApiOperation(value = "Update featuregroup contents",
-      response = FeaturegroupDTO.class)
+  @ApiOperation(value = "Update featuregroup contents", response = FeaturegroupDTO.class)
   public Response updateFeaturegroup(@Context SecurityContext sc,
       @ApiParam(value = "Id of the featuregroup", required = true)
       @PathParam("featuregroupId") Integer featuregroupId,
@@ -452,28 +473,6 @@ public class FeaturegroupService {
     } else {
       GenericEntity<FeaturegroupDTO> featuregroupGeneric = new GenericEntity<FeaturegroupDTO>(featuregroupDTO) {};
       return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(featuregroupGeneric).build();
-    }
-  }
-  
-  /**
-   * Verify that the user id was provided as a path param
-   *
-   * @param featuregroupId the feature group id to verify
-   */
-  private void verifyIdProvided(Integer featuregroupId) {
-    if (featuregroupId == null) {
-      throw new IllegalArgumentException(RESTCodes.FeaturestoreErrorCode.FEATUREGROUP_ID_NOT_PROVIDED.getMessage());
-    }
-  }
-
-  /**
-   * Verify that the name was provided as a path param
-   *
-   * @param featureGroupName the feature group name to verify
-   */
-  private void verifyNameProvided(String featureGroupName) {
-    if (Strings.isNullOrEmpty(featureGroupName)) {
-      throw new IllegalArgumentException(RESTCodes.FeaturestoreErrorCode.FEATUREGROUP_NAME_NOT_PROVIDED.getMessage());
     }
   }
   

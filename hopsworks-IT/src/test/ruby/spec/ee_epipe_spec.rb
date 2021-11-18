@@ -67,7 +67,7 @@ describe "On #{ENV['OS']}" do
         wait_result = epipe_wait_on_mutations
         expect(wait_result["success"]).to be(true), wait_result["msg"]
 
-        expected_hits1 = [{:name => @fg_name, :highlight => "tags", :parent_project => @project1[:projectname]}]
+        expected_hits1 = [{:name => @fg_name, :highlight => "tags", :parentProjectName => @project1[:projectname]}]
         project_search_test(@project1, "test_tag", "featuregroup", expected_hits1)
 
         delete_featuregroup_checked(@project1[:id], featurestore_id, fg_id)
@@ -102,7 +102,7 @@ describe "On #{ENV['OS']}" do
         wait_result = epipe_wait_on_mutations
         expect(wait_result["success"]).to be(true), wait_result["msg"]
 
-        expected_hits1 = [{:name => @fg_name, :highlight => "tags", :parent_project => @project1[:projectname]}]
+        expected_hits1 = [{:name => @fg_name, :highlight => "tags", :parentProjectName => @project1[:projectname]}]
         project_search_test(@project1, "test_tag", "featuregroup", expected_hits1)
 
         delete_featuregroup_checked(@project1[:id], featurestore_id, fg_id)

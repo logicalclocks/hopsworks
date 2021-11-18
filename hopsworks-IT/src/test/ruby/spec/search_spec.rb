@@ -16,9 +16,10 @@
 describe "On #{ENV['OS']}" do
   before(:all) do
     @debugOpt = false
+    @cleanup = true
   end
   after(:all) do
-    clean_all_test_projects(spec: "search")
+    clean_all_test_projects(spec: "search") if @cleanup
   end
 
   context "featurestore" do
@@ -62,6 +63,18 @@ describe "On #{ENV['OS']}" do
       fgs[5][:name] = "fg_othername4"
       fg5_description = "some description about a dog"
       fgs[5][:id] = create_cached_featuregroup_checked(project[:id], featurestore_id, fgs[5][:name], featuregroup_description: fg5_description)
+      fgs
+      fgs[6] = {}
+      fgs[6][:name] = "fg_othername5"
+      features6 = [
+          {
+              type: "INT",
+              name: "husky",
+              description: "description of a dog",
+              primary: true
+          }
+      ]
+      fgs[6][:id] = create_cached_featuregroup_checked(project[:id], featurestore_id, fgs[6][:name], features: features6)
       fgs
     end
     def trainingdataset_setup(project)
@@ -214,19 +227,19 @@ describe "On #{ENV['OS']}" do
           wait_result = epipe_wait_on_mutations(wait_time: 30, repeat: 2)
           expect(wait_result["success"]).to be(true), wait_result["msg"]
           #search
-          expected_hits1 = [{:name => @fg_name, :highlight => "name", :parent_project => @project[:projectname]}]
+          expected_hits1 = [{:name => @fg_name, :highlight => "name", :parentProjectName => @project[:projectname]}]
           project_search_test(@project, @fg_name_keyword, "featuregroup", expected_hits1)
-          expected_hits2 = [{:name => @fg_name, :highlight => "description", :parent_project => @project[:projectname]}]
+          expected_hits2 = [{:name => @fg_name, :highlight => "description", :parentProjectName => @project[:projectname]}]
           project_search_test(@project, @desc_keyword, "featuregroup", expected_hits2)
-          expected_hits3 = [{:name => @fg_name, :highlight => "features", :parent_project => @project[:projectname]}]
+          expected_hits3 = [{:name => @fg_name, :highlight => "features", :parentProjectName => @project[:projectname]}]
           project_search_test(@project, @feature_keyword1, "featuregroup", expected_hits3)
           project_search_test(@project, @feature_keyword2, "featuregroup", expected_hits3)
 
-          expected_hits4 = [{:name => @td_name, :highlight => 'name', :parent_project => @project[:projectname]}]
+          expected_hits4 = [{:name => @td_name, :highlight => 'name', :parentProjectName => @project[:projectname]}]
           project_search_test(@project, @td_name_keyword, "trainingdataset", expected_hits4)
-          expected_hits5 = [{:name => @td_name, :highlight => 'description', :parent_project => @project[:projectname]}]
+          expected_hits5 = [{:name => @td_name, :highlight => 'description', :parentProjectName => @project[:projectname]}]
           project_search_test(@project, @desc_keyword, "trainingdataset", expected_hits5)
-          expected_hits6 = [{:name => @td_name, :highlight => 'features', :parent_project => @project[:projectname]}]
+          expected_hits6 = [{:name => @td_name, :highlight => 'features', :parentProjectName => @project[:projectname]}]
           project_search_test(@project, @feature_keyword1, "trainingdataset", expected_hits6)
           project_search_test(@project, @feature_keyword2, "trainingdataset", expected_hits6)
         end
@@ -247,7 +260,7 @@ describe "On #{ENV['OS']}" do
 
     context 'three projects with shared content' do
       before :all do
-        clean_all_test_projects(spec: "search")
+        clean_all_test_projects(spec: "search") if @cleanup
         @user1_params = {email: "user1_#{random_id}@email.com", first_name: "User", last_name: "1", password: "Pass123"}
         @user1 = create_user_with_role(@user1_params, "HOPS_ADMIN")
         pp "user email: #{@user1[:email]}" if defined?(@debugOpt) && @debugOpt
@@ -276,10 +289,10 @@ describe "On #{ENV['OS']}" do
       end
       after :all do
         create_session(@user1_params[:email], @user1_params[:password])
-        delete_project(@project1)
-        delete_project(@project3)
+        delete_project(@project1) if @cleanup
+        delete_project(@project3) if @cleanup
         create_session(@user2_params[:email], @user2_params[:password])
-        delete_project(@project2)
+        delete_project(@project2) if @cleanup
       end
 
       context 'fgs - search by name, desc, features' do
@@ -300,42 +313,53 @@ describe "On #{ENV['OS']}" do
 
         it 'project local search' do
           create_session(@user1_params[:email], @user1_params[:password])
-          expected_hits1 = [{:name => @fgs1[1][:name], :highlight => 'name', :parent_project => @project1[:projectname]},
-                            {:name => @fgs1[3][:name], :highlight => 'features', :parent_project => @project1[:projectname]},
-                            {:name => @fgs1[5][:name], :highlight => "description", :parent_project => @project1[:projectname]}]
+          expected_hits1 = [{:name => @fgs1[1][:name], :highlight => 'name', :parentProjectName => @project1[:projectname]},
+                            {:name => @fgs1[3][:name], :highlight => {'features' => 'name'}, :parentProjectName => @project1[:projectname]},
+                            {:name => @fgs1[5][:name], :highlight => 'description', :parentProjectName => @project1[:projectname]},
+                            {:name => @fgs1[6][:name], :highlight => {'features' => 'description'}, :parentProjectName => @project1[:projectname]}]
           project_search_test(@project1, "dog", "featuregroup", expected_hits1)
 
-          expected_hits2 = [{:name => @fgs1[3][:name], :highlight => 'name', :parent_project => @project1[:projectname]}]
+          expected_hits2 = [{:featuregroup => @fgs1[3][:name], :highlight => 'name', :parentProjectName => @project1[:projectname]},
+                            {:featuregroup => @fgs1[6][:name], :highlight => 'description', :parentProjectName => @project1[:projectname]}]
           project_search_test(@project1, "dog", "feature", expected_hits2)
         end
         it 'project shared search' do
           create_session(@user2_params[:email], @user2_params[:password])
-          expected_hits1 = [{:name => @fgs2[1][:name], :highlight => 'name', :parent_project => @project2[:projectname]},
-                            {:name => @fgs2[3][:name], :highlight => 'features', :parent_project => @project2[:projectname]},
-                            {:name => @fgs2[5][:name], :highlight => "description", :parent_project => @project2[:projectname]},
+          expected_hits1 = [{:name => @fgs2[1][:name], :highlight => 'name', :parentProjectName => @project2[:projectname]},
+                            {:name => @fgs2[3][:name], :highlight => {'features' => 'name'}, :parentProjectName => @project2[:projectname]},
+                            {:name => @fgs2[5][:name], :highlight => 'description', :parentProjectName => @project2[:projectname]},
+                            {:name => @fgs2[6][:name], :highlight => {'features' => 'description'}, :parentProjectName => @project2[:projectname]},
                             #shared featuregroups
-                            {:name => @fgs1[1][:name], :highlight => 'name', :parent_project => @project1[:projectname]},
-                            {:name => @fgs1[3][:name], :highlight => 'features', :parent_project => @project1[:projectname]},
-                            {:name => @fgs1[5][:name], :highlight => "description", :parent_project => @project1[:projectname]}]
+                            {:name => @fgs1[1][:name], :highlight => 'name', :parentProjectName => @project1[:projectname]},
+                            {:name => @fgs1[3][:name], :highlight => {'features' => 'name'}, :parentProjectName => @project1[:projectname]},
+                            {:name => @fgs1[5][:name], :highlight => "description", :parentProjectName => @project1[:projectname]},
+                            {:name => @fgs1[6][:name], :highlight => {'features' => 'description'}, :parentProjectName => @project1[:projectname]}]
           project_search_test(@project2, "dog", "featuregroup", expected_hits1)
 
-          expected_hits2 = [{:name => @fgs2[3][:name], :highlight => 'name', :parent_project => @project2[:projectname]},
+          expected_hits2 = [{:featuregroup => @fgs2[3][:name], :highlight => 'name', :parentProjectName => @project2[:projectname]},
+                            {:featuregroup => @fgs2[6][:name], :highlight => 'description', :parentProjectName => @project2[:projectname]},
                             # shared features
-                            {:name => @fgs1[3][:name], :highlight => 'name', :parent_project => @project1[:projectname]}]
+                            {:featuregroup => @fgs1[3][:name], :highlight => 'name', :parentProjectName => @project1[:projectname]},
+                            {:featuregroup => @fgs1[6][:name], :highlight => 'description', :parentProjectName => @project1[:projectname]}]
           project_search_test(@project2, "dog", "feature", expected_hits2)
         end
         it 'global search' do
           create_session(@user1_params[:email], @user1_params[:password])
-          expected_hits1 = [{:name => @fgs1[1][:name], :highlight => 'name', :parent_project => @project1[:projectname]},
-                            {:name => @fgs1[3][:name], :highlight => 'features', :parent_project => @project1[:projectname]},
-                            {:name => @fgs1[5][:name], :highlight => "description", :parent_project => @project1[:projectname]},
-                            {:name => @fgs2[1][:name], :highlight => 'name', :parent_project => @project2[:projectname]},
-                            {:name => @fgs2[3][:name], :highlight => 'features', :parent_project => @project2[:projectname]},
-                            {:name => @fgs2[5][:name], :highlight => "description", :parent_project => @project2[:projectname]}]
+          expected_hits1 = [{:name => @fgs1[1][:name], :highlight => 'name', :parentProjectName => @project1[:projectname]},
+                            {:name => @fgs1[3][:name], :highlight => {'features' => 'name'}, :parentProjectName => @project1[:projectname]},
+                            {:name => @fgs1[5][:name], :highlight => 'description', :parentProjectName => @project1[:projectname]},
+                            {:name => @fgs1[6][:name], :highlight => {'features' => 'description'}, :parentProjectName => @project1[:projectname]},
+                            {:name => @fgs2[1][:name], :highlight => 'name', :parentProjectName => @project2[:projectname]},
+                            {:name => @fgs2[3][:name], :highlight => {'features' => 'name'}, :parentProjectName => @project2[:projectname]},
+                            {:name => @fgs2[5][:name], :highlight => 'description', :parentProjectName => @project2[:projectname]},
+                            {:name => @fgs2[6][:name], :highlight => {'features' => 'description'}, :parentProjectName => @project2[:projectname]}]
           global_search_test("dog", "featuregroup", expected_hits1)
 
-          expected_hits2 = [{:name => @fgs1[3][:name], :highlight => 'name', :parent_project => @project1[:projectname]},
-                            {:name => @fgs2[3][:name], :highlight => 'name', :parent_project => @project2[:projectname]}]
+          expected_hits2 = [{:featuregroup => @fgs1[3][:name], :highlight => 'name', :parentProjectName => @project1[:projectname]},
+                            {:featuregroup => @fgs1[6][:name], :highlight => 'description', :parentProjectName => @project1[:projectname]},
+                            {:featuregroup => @fgs2[3][:name], :highlight => 'name', :parentProjectName => @project2[:projectname]},
+                            {:featuregroup => @fgs2[6][:name], :highlight => 'description', :parentProjectName => @project2[:projectname]}
+          ]
           global_search_test("dog", "feature", expected_hits2)
         end
       end
@@ -359,30 +383,30 @@ describe "On #{ENV['OS']}" do
           expect(wait_result["success"]).to be(true), wait_result["msg"]
 
           create_session(@user1_params[:email], @user1_params[:password])
-          expected_hits = [{:name => @tds1[1][:name], :highlight => 'name', :parent_project => @project1[:projectname]},
-                            {:name => @tds1[2][:name], :highlight => 'features', :parent_project => @project1[:projectname]},
-                            {:name => @tds1[3][:name], :highlight => "description", :parent_project => @project1[:projectname]}]
+          expected_hits = [{:name => @tds1[1][:name], :highlight => 'name', :parentProjectName => @project1[:projectname]},
+                            {:name => @tds1[2][:name], :highlight => 'features', :parentProjectName => @project1[:projectname]},
+                            {:name => @tds1[3][:name], :highlight => "description", :parentProjectName => @project1[:projectname]}]
           project_search_test(@project1, "dog", "trainingdataset", expected_hits)
         end
         it 'project shared search' do
           create_session(@user2_params[:email], @user2_params[:password])
-          expected_hits = [{:name => @tds2[1][:name], :highlight => 'name', :parent_project => @project2[:projectname]},
-                            {:name => @tds2[2][:name], :highlight => 'features', :parent_project => @project2[:projectname]},
-                            {:name => @tds2[3][:name], :highlight => "description", :parent_project => @project2[:projectname]},
+          expected_hits = [{:name => @tds2[1][:name], :highlight => 'name', :parentProjectName => @project2[:projectname]},
+                            {:name => @tds2[2][:name], :highlight => 'features', :parentProjectName => @project2[:projectname]},
+                            {:name => @tds2[3][:name], :highlight => "description", :parentProjectName => @project2[:projectname]},
                             # shared trainingdatasets
-                            {:name => @tds1[1][:name], :highlight => 'name', :parent_project => @project1[:projectname]},
-                            {:name => @tds1[2][:name], :highlight => 'features', :parent_project => @project1[:projectname]},
-                            {:name => @tds1[3][:name], :highlight => "description", :parent_project => @project1[:projectname]}]
+                            {:name => @tds1[1][:name], :highlight => 'name', :parentProjectName => @project1[:projectname]},
+                            {:name => @tds1[2][:name], :highlight => 'features', :parentProjectName => @project1[:projectname]},
+                            {:name => @tds1[3][:name], :highlight => "description", :parentProjectName => @project1[:projectname]}]
           project_search_test(@project2, "dog", "trainingdataset", expected_hits)
         end
         it 'global tds' do
           create_session(@user1_params[:email], @user1_params[:password])
-          expected_hits = [{:name => @tds1[1][:name], :highlight => 'name', :parent_project => @project1[:projectname]},
-                           {:name => @tds1[2][:name], :highlight => 'features', :parent_project => @project1[:projectname]},
-                           {:name => @tds1[3][:name], :highlight => "description", :parent_project => @project1[:projectname]},
-                           {:name => @tds2[1][:name], :highlight => 'name', :parent_project => @project2[:projectname]},
-                           {:name => @tds2[2][:name], :highlight => 'features', :parent_project => @project2[:projectname]},
-                           {:name => @tds2[3][:name], :highlight => "description", :parent_project => @project2[:projectname]}]
+          expected_hits = [{:name => @tds1[1][:name], :highlight => 'name', :parentProjectName => @project1[:projectname]},
+                           {:name => @tds1[2][:name], :highlight => 'features', :parentProjectName => @project1[:projectname]},
+                           {:name => @tds1[3][:name], :highlight => "description", :parentProjectName => @project1[:projectname]},
+                           {:name => @tds2[1][:name], :highlight => 'name', :parentProjectName => @project2[:projectname]},
+                           {:name => @tds2[2][:name], :highlight => 'features', :parentProjectName => @project2[:projectname]},
+                           {:name => @tds2[3][:name], :highlight => "description", :parentProjectName => @project2[:projectname]}]
           global_search_test("dog", "trainingdataset", expected_hits)
         end
       end
@@ -405,23 +429,23 @@ describe "On #{ENV['OS']}" do
 
         create_session(@user1_params[:email], @user1_params[:password])
         #have access to the featurestore both from parent(project1) and shared project(project3) (user1)
-        expected_hits1 = [{:name => fg1_name, :highlight => 'name', :parent_project => @project1[:projectname], :access_projects => 2}]
+        expected_hits1 = [{:name => fg1_name, :highlight => 'name', :parentProjectName => @project1[:projectname], :count => {:accessProjects => 2}}]
         global_search_test("alex", "featuregroup", expected_hits1)
 
         create_session(@user2_params[:email], @user2_params[:password])
         #have access to the user1 project1 featurestore shared with me user2 in project2
-        expected_hits2 = [{:name => fg1_name, :highlight => 'name', :parent_project => @project1[:projectname], :access_projects => 1}]
+        expected_hits2 = [{:name => fg1_name, :highlight => 'name', :parentProjectName => @project1[:projectname], :count => {:accessProjects => 1}}]
         global_search_test("alex", "featuregroup", expected_hits2)
 
         #I see the featurestore of project2, but no access to it
-        expected_hits3 = [{:name => fg2_name, :highlight => 'name', :parent_project => @project3[:projectname], :access_projects => 0}]
+        expected_hits3 = [{:name => fg2_name, :highlight => 'name', :parentProjectName => @project3[:projectname], :count => {:accessProjects => 0}}]
         global_search_test("john", "featuregroup", expected_hits3)
       end
     end
 
     context 'each with own project and clean environment' do
       before :all do
-        clean_all_test_projects(spec: "search")
+        clean_all_test_projects(spec: "search")  if @cleanup
         with_valid_session
         @user_email = @user["email"]
         pp "user: #{@user_email}" if defined?(@debugOpt) && @debugOpt
@@ -431,7 +455,7 @@ describe "On #{ENV['OS']}" do
         pp "project: #{@project[:projectname]}" if defined?(@debugOpt) && @debugOpt
       end
       after :each do
-        delete_project(@project)
+        delete_project(@project) if @cleanup
       end
       it 'featurestore pagination' do
         fgs_nr = 15

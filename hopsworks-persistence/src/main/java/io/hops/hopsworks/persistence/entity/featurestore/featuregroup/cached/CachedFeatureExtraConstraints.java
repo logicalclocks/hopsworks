@@ -29,7 +29,7 @@ import java.io.Serializable;
 import java.util.Objects;
 
 /**
- * Entity class representing the cashed_feature table in Hopsworks database.
+ * Entity class representing the cached_feature_extra_constraints table in Hopsworks database.
  * An instance of this class represents a row in the database.
  */
 @Entity
