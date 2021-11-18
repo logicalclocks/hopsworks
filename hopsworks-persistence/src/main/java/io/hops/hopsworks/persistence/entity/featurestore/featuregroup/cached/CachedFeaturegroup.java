@@ -16,6 +16,8 @@
 
 package io.hops.hopsworks.persistence.entity.featurestore.featuregroup.cached;
 
+import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.cached.hive.HiveTbls;
+
 import javax.persistence.Basic;
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
@@ -67,7 +69,9 @@ public class CachedFeaturegroup implements Serializable {
   private TimeTravelFormat timeTravelFormat;
   @OneToMany(cascade = CascadeType.ALL, mappedBy = "cachedFeaturegroup")
   private Collection<CachedFeatureExtraConstraints> featuresExtraConstraints;
-
+  @OneToMany(cascade = CascadeType.ALL, mappedBy = "cachedFeaturegroup")
+  private Collection<CachedFeature> cachedFeatures;
+  
   public CachedFeaturegroup() {}
 
   public HiveTbls getHiveTbls() {
@@ -102,8 +106,16 @@ public class CachedFeaturegroup implements Serializable {
     return featuresExtraConstraints;
   }
 
+  public Collection<CachedFeature> getCachedFeatures() {
+    return cachedFeatures;
+  }
+
   public void setFeaturesExtraConstraints(Collection<CachedFeatureExtraConstraints> featuresExtraConstraints) {
     this.featuresExtraConstraints = featuresExtraConstraints;
+  }
+
+  public void setCachedFeatures(Collection<CachedFeature> cachedFeatures) {
+    this.cachedFeatures = cachedFeatures;
   }
 
   public void setTimeTravelFormat(TimeTravelFormat timeTravelFormat) {

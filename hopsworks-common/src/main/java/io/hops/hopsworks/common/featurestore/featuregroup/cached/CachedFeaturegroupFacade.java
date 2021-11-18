@@ -18,8 +18,8 @@ package io.hops.hopsworks.common.featurestore.featuregroup.cached;
 
 import io.hops.hopsworks.common.dao.AbstractFacade;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.cached.CachedFeaturegroup;
-import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.cached.HivePartitions;
-import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.cached.HiveTbls;
+import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.cached.hive.HivePartitions;
+import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.cached.hive.HiveTbls;
 
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;

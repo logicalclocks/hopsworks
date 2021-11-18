@@ -13,72 +13,72 @@
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see <https://www.gnu.org/licenses/>.
  */
-package io.hops.hopsworks.persistence.entity.featurestore.featuregroup.cached;
+package io.hops.hopsworks.persistence.entity.featurestore.featuregroup.cached.hive;
 
-import java.io.Serializable;
 import javax.persistence.Basic;
 import javax.persistence.Column;
 import javax.persistence.Embeddable;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
+import java.io.Serializable;
 
 @Embeddable
-public class HiveTableParamsPK implements Serializable {
+public class HiveColumnsPK implements Serializable {
 
   @Basic(optional = false)
   @NotNull
-  @Column(name = "TBL_ID")
-  private long tblId;
+  @Column(name = "CD_ID")
+  private long cdId;
   @Basic(optional = false)
   @NotNull
-  @Size(min = 1, max = 256)
-  @Column(name = "PARAM_KEY")
-  private String paramKey;
+  @Size(min = 1, max = 767)
+  @Column(name = "COLUMN_NAME")
+  private String columnName;
 
-  public HiveTableParamsPK() {
+  public HiveColumnsPK() {
   }
 
-  public HiveTableParamsPK(long tblId, String paramKey) {
-    this.tblId = tblId;
-    this.paramKey = paramKey;
+  public HiveColumnsPK(long cdId, String columnName) {
+    this.cdId = cdId;
+    this.columnName = columnName;
   }
 
-  public long getTblId() {
-    return tblId;
+  public long getCdId() {
+    return cdId;
   }
 
-  public void setTblId(long tblId) {
-    this.tblId = tblId;
+  public void setCdId(long cdId) {
+    this.cdId = cdId;
   }
 
-  public String getParamKey() {
-    return paramKey;
+  public String getColumnName() {
+    return columnName;
   }
 
-  public void setParamKey(String paramKey) {
-    this.paramKey = paramKey;
+  public void setColumnName(String columnName) {
+    this.columnName = columnName;
   }
 
   @Override
   public int hashCode() {
     int hash = 0;
-    hash += (int) tblId;
-    hash += (paramKey != null ? paramKey.hashCode() : 0);
+    hash += (int) cdId;
+    hash += (columnName != null ? columnName.hashCode() : 0);
     return hash;
   }
 
   @Override
   public boolean equals(Object object) {
     // TODO: Warning - this method won't work in the case the id fields are not set
-    if (!(object instanceof HiveTableParamsPK)) {
+    if (!(object instanceof HiveColumnsPK)) {
       return false;
     }
-    HiveTableParamsPK other = (HiveTableParamsPK) object;
-    if (this.tblId != other.tblId) {
+    HiveColumnsPK other = (HiveColumnsPK) object;
+    if (this.cdId != other.cdId) {
       return false;
     }
-    if ((this.paramKey == null && other.paramKey != null) ||
-        (this.paramKey != null && !this.paramKey.equals(other.paramKey))) {
+    if ((this.columnName == null && other.columnName != null) ||
+        (this.columnName != null && !this.columnName.equals(other.columnName))) {
       return false;
     }
     return true;
@@ -86,7 +86,7 @@ public class HiveTableParamsPK implements Serializable {
 
   @Override
   public String toString() {
-    return "io.hops.hopsworks.persistence.entity.project.HiveTableParamsPK[ tblId=" + tblId + ", paramKey=" + paramKey +
+    return "io.hops.hopsworks.persistence.entity.project.HiveColumnsPK[ cdId=" + cdId + ", columnName=" + columnName +
         " ]";
   }
   

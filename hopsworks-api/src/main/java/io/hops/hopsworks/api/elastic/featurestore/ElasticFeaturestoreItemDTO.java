@@ -118,7 +118,7 @@ public class ElasticFeaturestoreItemDTO {
     public void setHighlights(Highlights highlights) {
       this.highlights = highlights;
     }
-  
+    
     public Integer getParentProjectId() {
       return parentProjectId;
     }
@@ -168,7 +168,7 @@ public class ElasticFeaturestoreItemDTO {
   public static class Highlights {
     private String name;
     private String description;
-    private List<String> features = null;
+    private List<FeatureHighlights> features = null;
     private List<Tag> tags = null;
     private Map<String, String> otherXattrs = null;
   
@@ -191,11 +191,11 @@ public class ElasticFeaturestoreItemDTO {
       this.description = description;
     }
   
-    public List<String> getFeatures() {
+    public List<FeatureHighlights> getFeatures() {
       return features;
     }
   
-    public void setFeatures(List<String> features) {
+    public void setFeatures(List<FeatureHighlights> features) {
       this.features = features;
     }
   
@@ -215,11 +215,22 @@ public class ElasticFeaturestoreItemDTO {
       this.otherXattrs = otherXattrs;
     }
   
-    public void addFeature(String feature) {
+    public void addFeature(String name) {
       if(features == null) {
         features = new LinkedList<>();
       }
+      FeatureHighlights feature = new FeatureHighlights();
       features.add(feature);
+      feature.setName(name);
+    }
+  
+    public void addFeatureDescription(String description) {
+      if(features == null) {
+        features = new LinkedList<>();
+      }
+      FeatureHighlights feature = new FeatureHighlights();
+      features.add(feature);
+      feature.setDescription(description);
     }
   
     public void addTagKey(String key) {
@@ -245,6 +256,31 @@ public class ElasticFeaturestoreItemDTO {
         otherXattrs = new HashMap<>();
       }
       otherXattrs.put(key, val);
+    }
+  }
+  
+  @XmlRootElement
+  public static class FeatureHighlights {
+    private String name;
+    private String description;
+  
+    public FeatureHighlights() {
+    }
+  
+    public String getName() {
+      return name;
+    }
+  
+    public void setName(String name) {
+      this.name = name;
+    }
+  
+    public String getDescription() {
+      return description;
+    }
+  
+    public void setDescription(String description) {
+      this.description = description;
     }
   }
   

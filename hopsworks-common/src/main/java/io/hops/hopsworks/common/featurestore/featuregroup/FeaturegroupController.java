@@ -57,7 +57,7 @@ import io.hops.hopsworks.persistence.entity.featurestore.activity.FeaturestoreAc
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.Featuregroup;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.FeaturegroupType;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.cached.CachedFeaturegroup;
-import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.cached.HivePartitions;
+import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.cached.hive.HivePartitions;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.cached.ValidationType;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.datavalidation.FeatureGroupExpectation;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.datavalidation.FeatureStoreExpectation;
@@ -398,6 +398,11 @@ public class FeaturegroupController {
       throws FeaturestoreException, SQLException, ProvenanceException, ServiceException, SchemaException,
       KafkaException {
     Featuregroup featuregroup = getFeaturegroupById(featurestore, featuregroupDTO.getId());
+    // currently supports updating:
+    // adding new features
+    // feature group description
+    // feature descriptions
+    
     // Verify general entity related information
     featurestoreInputValidation.verifyDescription(featuregroupDTO);
     featureGroupInputValidation.verifyFeatureGroupFeatureList(featuregroupDTO.getFeatures());

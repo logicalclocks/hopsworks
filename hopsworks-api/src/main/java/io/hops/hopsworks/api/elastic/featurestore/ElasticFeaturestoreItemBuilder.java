@@ -92,11 +92,14 @@ public class ElasticFeaturestoreItemBuilder {
     return item;
   }
 
-  public ElasticFeaturestoreItemDTO.Feature fromFeature(String featureName, ElasticFeaturestoreItemDTO.Base parent) {
+  public ElasticFeaturestoreItemDTO.Feature fromFeature(String featureName,
+                                                        String featureDescription,
+                                                        ElasticFeaturestoreItemDTO.Base parent) {
     ElasticFeaturestoreItemDTO.Feature item = new ElasticFeaturestoreItemDTO.Feature();
     item.elasticId = parent.getElasticId() + "_" + featureName;
     item.featurestoreId = parent.getFeaturestoreId();
     item.name = featureName;
+    item.description = featureDescription;
     item.featuregroup = parent.getName();
     item.datasetIId = parent.getDatasetIId();
     item.version = parent.getVersion();
