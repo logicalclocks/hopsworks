@@ -41,15 +41,21 @@ package io.hops.hopsworks.api.cluster;
 
 import io.hops.hopsworks.persistence.entity.kagent.Action;
 
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
 @XmlRootElement
+@XmlAccessorType(XmlAccessType.FIELD)
 public class ServicesActionDTO {
 
   @XmlElement(name = "action",
       required = true)
   private Action action;
+
+  public ServicesActionDTO() {
+  }
 
   public Action getAction() {
     return action;

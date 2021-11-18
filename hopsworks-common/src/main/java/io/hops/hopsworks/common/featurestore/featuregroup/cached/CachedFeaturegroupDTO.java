@@ -22,7 +22,8 @@ import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.Featuregro
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.cached.TimeTravelFormat;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.cached.ValidationType;
 
-import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 
 /**
@@ -30,6 +31,7 @@ import javax.xml.bind.annotation.XmlRootElement;
  * can be converted to JSON or XML representation using jaxb.
  */
 @XmlRootElement
+@XmlAccessorType(XmlAccessType.FIELD)
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class CachedFeaturegroupDTO extends FeaturegroupDTO {
 
@@ -45,7 +47,6 @@ public class CachedFeaturegroupDTO extends FeaturegroupDTO {
     super(featuregroup);
   }
 
-  @XmlElement
   public Boolean getOnlineEnabled() {
     return onlineEnabled;
   }
