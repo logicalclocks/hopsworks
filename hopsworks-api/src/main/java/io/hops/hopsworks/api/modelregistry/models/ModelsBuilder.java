@@ -13,24 +13,25 @@
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see <https://www.gnu.org/licenses/>.
  */
-package io.hops.hopsworks.api.models;
+package io.hops.hopsworks.api.modelregistry.models;
 
-import io.hops.hopsworks.api.models.dto.ModelsEndpointDTO;
-import io.hops.hopsworks.api.models.dto.ModelDTO;
+import io.hops.hopsworks.api.modelregistry.dto.ModelRegistryDTO;
+import io.hops.hopsworks.api.modelregistry.models.dto.ModelDTO;
 import io.hops.hopsworks.common.api.ResourceRequest;
 import io.hops.hopsworks.common.dao.AbstractFacade;
 import io.hops.hopsworks.common.dao.hdfsUser.HdfsUsersFacade;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
 import io.hops.hopsworks.common.dao.project.team.ProjectTeamFacade;
 import io.hops.hopsworks.common.dao.user.UserFacade;
+import io.hops.hopsworks.common.featurestore.FeaturestoreFacade;
+import io.hops.hopsworks.common.featurestore.trainingdatasets.TrainingDatasetDTO;
+import io.hops.hopsworks.common.hdfs.Utils;
 import io.hops.hopsworks.common.provenance.core.ProvParser;
 import io.hops.hopsworks.common.provenance.ops.ProvLinks;
 import io.hops.hopsworks.common.provenance.ops.ProvLinksParamBuilder;
 import io.hops.hopsworks.common.provenance.ops.ProvOpsControllerIface;
 import io.hops.hopsworks.common.provenance.ops.dto.ProvLinksDTO;
 import io.hops.hopsworks.common.provenance.ops.dto.ProvOpsDTO;
-import io.hops.hopsworks.common.util.AccessController;
-import io.hops.hopsworks.common.dataset.DatasetController;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
 import io.hops.hopsworks.common.provenance.core.Provenance;
 import io.hops.hopsworks.common.provenance.state.ProvStateParamBuilder;
@@ -41,9 +42,9 @@ import io.hops.hopsworks.common.provenance.util.ProvHelper;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.DatasetException;
 import io.hops.hopsworks.exceptions.GenericException;
-import io.hops.hopsworks.exceptions.ModelsException;
+import io.hops.hopsworks.exceptions.ModelRegistryException;
 import io.hops.hopsworks.exceptions.ProvenanceException;
-import io.hops.hopsworks.persistence.entity.dataset.Dataset;
+import io.hops.hopsworks.persistence.entity.featurestore.Featurestore;
 import io.hops.hopsworks.persistence.entity.hdfs.user.HdfsUsers;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.project.team.ProjectTeam;
@@ -58,11 +59,10 @@ import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.inject.Inject;
-import javax.ws.rs.core.UriBuilder;
 import javax.ws.rs.core.UriInfo;
 import java.util.EnumSet;
-import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -94,38 +94,33 @@ public class ModelsBuilder {
   @EJB
   private ProjectTeamFacade projectTeamFacade;
   @EJB
-  private AccessController accessCtrl;
-  @EJB
-  private DatasetController datasetCtrl;
+  private FeaturestoreFacade featurestoreFacade;
   @EJB
   private ModelsController modelsController;
   @Inject
   private ProvOpsControllerIface provOpsController;
   
-  public ModelDTO uri(ModelDTO dto, UriInfo uriInfo, Project project) {
-    dto.setHref(uriInfo.getBaseUriBuilder().path(ResourceRequest.Name.PROJECT.toString().toLowerCase())
-      .path(Integer.toString(project.getId()))
+  public ModelDTO uri(ModelDTO dto, UriInfo uriInfo, Project userProject, Project modelRegistryProject) {
+    dto.setHref(uriInfo.getBaseUriBuilder()
+      .path(ResourceRequest.Name.PROJECT.toString().toLowerCase())
+      .path(Integer.toString(userProject.getId()))
+      .path(ResourceRequest.Name.MODELREGISTRIES.toString().toLowerCase())
+      .path(Integer.toString(modelRegistryProject.getId()))
       .path(ResourceRequest.Name.MODELS.toString().toLowerCase())
       .build());
     return dto;
   }
   
-  public ModelDTO uri(ModelDTO dto, UriInfo uriInfo, Project queringProject,
-    ModelsEndpointDTO sharingEndpoint, ProvStateDTO fileProvenanceHit) {
-    UriBuilder uriBuilder = uriInfo.getBaseUriBuilder()
+  public ModelDTO uri(ModelDTO dto, UriInfo uriInfo, Project userProject, Project modelRegistryProject,
+                      ProvStateDTO fileProvenanceHit) {
+    dto.setHref(uriInfo.getBaseUriBuilder()
       .path(ResourceRequest.Name.PROJECT.toString().toLowerCase())
-      .path(Integer.toString(queringProject.getId()))
-      .path(ResourceRequest.Name.MODELS.toString().toLowerCase());
-    if(sharingEndpoint.getParentProjectId().equals(queringProject.getId())) {
-      uriBuilder = uriBuilder
-        .path(fileProvenanceHit.getMlId());
-    } else {
-      uriBuilder = uriBuilder
-        .queryParam("filter_by=" + Filters.ENDPOINT_ID + ":" + sharingEndpoint.getParentProjectId())
-        .queryParam("filter_by=" + Filters.ID_EQ + ":" + dto.getId());
-      
-    }
-    dto.setHref(uriBuilder.build());
+      .path(Integer.toString(userProject.getId()))
+      .path(ResourceRequest.Name.MODELREGISTRIES.toString().toLowerCase())
+      .path(Integer.toString(modelRegistryProject.getId()))
+      .path(ResourceRequest.Name.MODELS.toString().toLowerCase())
+      .path(fileProvenanceHit.getMlId())
+      .build());
     return dto;
   }
 
@@ -137,30 +132,36 @@ public class ModelsBuilder {
   }
 
   //Build collection
-  public ModelDTO build(UriInfo uriInfo, ResourceRequest resourceRequest, Project project, Users user)
-    throws ModelsException, GenericException {
+  public ModelDTO build(UriInfo uriInfo,
+                        ResourceRequest resourceRequest,
+                        Project userProject,
+                        Project modelRegistryProject)
+    throws ModelRegistryException, GenericException {
     ModelDTO dto = new ModelDTO();
-    uri(dto, uriInfo, project);
+    uri(dto, uriInfo, userProject, modelRegistryProject);
     expand(dto, resourceRequest);
     dto.setCount(0l);
-
-    validatePagination(resourceRequest);
-
     if(dto.isExpand()) {
+      validatePagination(resourceRequest);
       ProvStateDTO fileState;
       try {
-        Pair<ProvStateParamBuilder, Map<Long, ModelsEndpointDTO>> provFilesParamBuilder
-          = buildModelProvenanceParams(user, project, resourceRequest);
-        if(provFilesParamBuilder.getValue1().isEmpty()) {
+        Pair<ProvStateParamBuilder, ModelRegistryDTO> provFilesParamBuilder
+          = buildModelProvenanceParams(userProject, modelRegistryProject, resourceRequest);
+        if(provFilesParamBuilder.getValue1() == null) {
           //no endpoint - no results
           return dto;
         }
-        fileState = provenanceController.provFileStateList(project, provFilesParamBuilder.getValue0());
-        List<ProvStateDTO> models = fileState.getItems();
+
+        fileState = provenanceController.provFileStateList(
+                provFilesParamBuilder.getValue1().getParentProject(),
+                provFilesParamBuilder.getValue0());
+
+        List<ProvStateDTO> models = new LinkedList<>(fileState.getItems());
+
         dto.setCount(fileState.getCount());
         for(ProvStateDTO fileProvStateHit: models) {
           ModelDTO modelDTO
-            = build(uriInfo, resourceRequest, project, provFilesParamBuilder.getValue1(), fileProvStateHit);
+            = build(uriInfo, resourceRequest, userProject, modelRegistryProject, fileProvStateHit);
           if(modelDTO != null) {
             dto.addItem(modelDTO);
           }
@@ -170,29 +171,27 @@ public class ModelsBuilder {
           LOGGER.log(Level.WARNING, "Could not find elastic mapping for experiments query", e);
           return dto;
         } else {
-          throw new ModelsException(RESTCodes.ModelsErrorCode.MODEL_LIST_FAILED, Level.FINE,
-            "Unable to list models for project " + project.getName(), e.getMessage(), e);
+          throw new ModelRegistryException(RESTCodes.ModelRegistryErrorCode.MODEL_LIST_FAILED, Level.FINE,
+            "Unable to list models for project " + modelRegistryProject.getName(), e.getMessage(), e);
         }
       } catch(DatasetException e) {
-        throw new ModelsException(RESTCodes.ModelsErrorCode.MODEL_LIST_FAILED, Level.FINE,
-          "Unable to list models for project " + project.getName(), e.getMessage(), e);
+        throw new ModelRegistryException(RESTCodes.ModelRegistryErrorCode.MODEL_LIST_FAILED, Level.FINE,
+          "Unable to list models for project " + modelRegistryProject.getName(), e.getMessage(), e);
       }
     }
     return dto;
   }
 
   //Build specific
-  public ModelDTO build(UriInfo uriInfo, ResourceRequest resourceRequest, Project project,
-    Map<Long, ModelsEndpointDTO> endpoints, ProvStateDTO fileProvenanceHit)
-    throws ModelsException, GenericException, ProvenanceException {
+  public ModelDTO build(UriInfo uriInfo,
+                        ResourceRequest resourceRequest,
+                        Project userProject,
+                        Project modelRegistryProject,
+                        ProvStateDTO fileProvenanceHit)
+    throws ModelRegistryException, GenericException, ProvenanceException {
     
     ModelDTO modelDTO = new ModelDTO();
-    ModelsEndpointDTO endpoint = endpoints.get(fileProvenanceHit.getProjectInodeId());
-    if(endpoint == null) {
-      //no endpoint - no results
-      return null;
-    }
-    uri(modelDTO, uriInfo, project, endpoint, fileProvenanceHit);
+    uri(modelDTO, uriInfo, userProject, modelRegistryProject, fileProvenanceHit);
     if (expand(modelDTO, resourceRequest).isExpand()) {
       if (fileProvenanceHit.getXattrs() != null
         && fileProvenanceHit.getXattrs().containsKey(MODEL_SUMMARY_XATTR_NAME)) {
@@ -213,9 +212,11 @@ public class ModelsBuilder {
         modelDTO.setExperimentId(modelSummary.getExperimentId());
         modelDTO.setExperimentProjectName(modelSummary.getExperimentProjectName());
         modelDTO.setProjectName(modelSummary.getProjectName());
+        modelDTO.setModelRegistryId(modelRegistryProject.getId());
         /**
          * If request is to expand training dataset, query the provenance API to find the first Training Dataset linked
-         * with the model
+         * with the model.
+         * Currently there is no training datatsets builder that can be used to set the href for the training dataset
          */
         if(resourceRequest.contains(ResourceRequest.Name.TRAININGDATASETS)) {
           if(modelSummary.getTrainingDataset() != null) {
@@ -230,7 +231,7 @@ public class ModelsBuilder {
             .linkType(true)
             .onlyApps(true)
             .filterByFields(filterByFields);
-          ProvLinksDTO dto = provOpsController.provLinks(project, provLinksParamBuilder, true);
+          ProvLinksDTO dto = provOpsController.provLinks(userProject, provLinksParamBuilder, true);
           if(dto != null) {
             List<ProvLinksDTO> provLinksDTOList = dto.getItems();
             if (provLinksDTOList != null && !provLinksDTOList.isEmpty()) {
@@ -242,14 +243,27 @@ public class ModelsBuilder {
                   inLinksSets.stream().findFirst().filter(x ->
                     x.getValue().getDocSubType().equals(ProvParser.DocSubType.TRAINING_DATASET));
 
-                //Set training dataset as format project:td_name:td_version
                 if (modelTrainingDataset.isPresent()) {
-                  String projectName = modelTrainingDataset.get().getValue().getProjectName();
-                  String mlId = modelTrainingDataset.get().getValue().getMlId();
-                  int tdNameVersionSeparatorIndex = mlId.lastIndexOf("_");
-                  StringBuilder mlIdSb = new StringBuilder(mlId);
-                  mlIdSb.replace(tdNameVersionSeparatorIndex, tdNameVersionSeparatorIndex + 1, ":");
-                  modelDTO.setTrainingDataset(projectName + ":" + mlIdSb);
+                  ProvOpsDTO modelProvenanceDTO = modelTrainingDataset.get().getValue();
+                  String mlId = modelProvenanceDTO.getMlId();
+
+                  int splitIndex = mlId.lastIndexOf("_");
+                  String[] nameVersionSplit = {mlId.substring(0, splitIndex), mlId.substring(splitIndex + 1)};
+
+                  TrainingDatasetDTO tdDTO = new TrainingDatasetDTO();
+
+                  tdDTO.setName(nameVersionSplit[0]);
+                  tdDTO.setVersion(Integer.valueOf(nameVersionSplit[1]));
+
+                  Project tdProject = projectFacade.findByName(modelProvenanceDTO.getProjectName());
+                  if (tdProject != null) {
+                    List<Featurestore> featurestores = featurestoreFacade.findByProject(tdProject);
+                    if (!featurestores.isEmpty()) {
+                      tdDTO.setFeaturestoreId(featurestores.get(0).getId());
+                      tdDTO.setFeaturestoreName(Utils.getFeaturestoreName(tdProject));
+                    }
+                    modelDTO.setTrainingDataset(tdDTO);
+                  }
                 }
               }
             }
@@ -259,40 +273,16 @@ public class ModelsBuilder {
     }
     return modelDTO;
   }
-  
-  private ModelsEndpointDTO verifyModelsEndpoint(Project userProject, String sEndpointId)
-    throws GenericException, DatasetException {
-    Integer endpointId;
-    try {
-      endpointId = Integer.parseInt(sEndpointId);
-    } catch(NumberFormatException e) {
-      throw new GenericException(RESTCodes.GenericErrorCode.ILLEGAL_ARGUMENT, Level.FINE,
-        "Provided Endpoint Id was malformed - expected a Integer ", e.getMessage(), e);
-    }
-    Project sharingProject = projectFacade.findById(endpointId)
-      .orElseThrow(() -> new GenericException(RESTCodes.GenericErrorCode.ILLEGAL_ARGUMENT, Level.FINE,
-        "Provided project cannot be accessed"));
-    Dataset dataset = datasetCtrl.getByName(sharingProject, Settings.HOPS_MODELS_DATASET);
-    if(dataset != null && accessCtrl.hasAccess(userProject, dataset)) {
-      return ModelsEndpointDTO.fromDataset(dataset);
-    }
-    throw new GenericException(RESTCodes.GenericErrorCode.ILLEGAL_ARGUMENT, Level.FINE,
-      "Provided Endpoint cannot be accessed");
-  }
-  
-  private Pair<ProvStateParamBuilder, Map<Long, ModelsEndpointDTO>> buildFilter(Users user, Project project,
-    Set<? extends AbstractFacade.FilterBy> filters)
-    throws GenericException, ProvenanceException, DatasetException {
+
+  private Pair<ProvStateParamBuilder, ModelRegistryDTO> buildFilter(Project project,
+    Project modelRegistryProject, Set<? extends AbstractFacade.FilterBy> filters)
+          throws GenericException, ProvenanceException, DatasetException {
     ProvStateParamBuilder provFilesParamBuilder = new ProvStateParamBuilder();
-    Map<Long, ModelsEndpointDTO> selectedEndpoints = new HashMap<>();
     if(filters != null) {
       Users filterUser = null;
       Project filterUserProject = project;
       for (AbstractFacade.FilterBy filterBy : filters) {
-        if(filterBy.getParam().compareToIgnoreCase(Filters.ENDPOINT_ID.name()) == 0) {
-          ModelsEndpointDTO endpoint = verifyModelsEndpoint(project, filterBy.getValue());
-          selectedEndpoints.put(endpoint.getParentProject().getInode().getId(), endpoint);
-        } else if(filterBy.getParam().compareToIgnoreCase(Filters.NAME_EQ.name()) == 0) {
+        if(filterBy.getParam().compareToIgnoreCase(Filters.NAME_EQ.name()) == 0) {
           provFilesParamBuilder.filterByXAttr(MODEL_SUMMARY_XATTR_NAME + ".name", filterBy.getValue());
         } else if(filterBy.getParam().compareToIgnoreCase(Filters.NAME_LIKE.name()) == 0) {
           provFilesParamBuilder.filterLikeXAttr(MODEL_SUMMARY_XATTR_NAME + ".name", filterBy.getValue());
@@ -330,20 +320,13 @@ public class ModelsBuilder {
         provFilesParamBuilder.filterByField(ProvStateParser.FieldsP.USER_ID, hdfsUsers.getId().toString());
       }
     }
-    //an endpoint always has to be selected, if none provided, then all accessible endpoints are used
-    if(selectedEndpoints.isEmpty()) {
-      for(ModelsEndpointDTO endpoint : modelsController.getModelsEndpoints(project)) {
-        selectedEndpoints.put(endpoint.getParentProject().getInode().getId(), endpoint);
-      }
-    }
-    for(ModelsEndpointDTO endpoint : selectedEndpoints.values()) {
-      provFilesParamBuilder
-        .filterByField(ProvStateParser.FieldsP.PROJECT_I_ID, endpoint.getParentProject().getInode().getId())
-        .filterByField(ProvStateParser.FieldsP.DATASET_I_ID, endpoint.getDatasetInodeId());
-    }
-    return Pair.with(provFilesParamBuilder, selectedEndpoints);
+    ModelRegistryDTO modelRegistryDTO = modelsController.getModelRegistry(modelRegistryProject);
+    provFilesParamBuilder
+            .filterByField(ProvStateParser.FieldsP.PROJECT_I_ID, modelRegistryDTO.getParentProject().getInode().getId())
+            .filterByField(ProvStateParser.FieldsP.DATASET_I_ID, modelRegistryDTO.getDatasetInodeId());
+    return Pair.with(provFilesParamBuilder, modelRegistryDTO);
   }
-  
+
   private void buildSortOrder(ProvStateParamBuilder provFilesParamBuilder, Set<? extends AbstractFacade.SortBy> sort) {
     if(sort != null) {
       for(AbstractFacade.SortBy sortBy: sort) {
@@ -375,7 +358,6 @@ public class ModelsBuilder {
   }
 
   protected enum Filters {
-    ENDPOINT_ID,
     NAME_EQ,
     NAME_LIKE,
     VERSION,
@@ -384,11 +366,12 @@ public class ModelsBuilder {
     USER_PROJECT
   }
   
-  private Pair<ProvStateParamBuilder, Map<Long, ModelsEndpointDTO>> buildModelProvenanceParams(Users user,
-    Project project, ResourceRequest resourceRequest)
-    throws ProvenanceException, GenericException, DatasetException {
-    Pair<ProvStateParamBuilder, Map<Long, ModelsEndpointDTO>> builder
-      = buildFilter(user, project, resourceRequest.getFilter());
+  private Pair<ProvStateParamBuilder, ModelRegistryDTO> buildModelProvenanceParams(Project project,
+                                                                                   Project modelRegistryProject,
+                                                                                   ResourceRequest resourceRequest)
+          throws ProvenanceException, GenericException, DatasetException {
+    Pair<ProvStateParamBuilder, ModelRegistryDTO> builder
+      = buildFilter(project, modelRegistryProject, resourceRequest.getFilter());
     builder.getValue0()
       .filterByField(ProvStateParser.FieldsP.ML_TYPE, Provenance.MLType.MODEL.name())
       .hasXAttr(MODEL_SUMMARY_XATTR_NAME)

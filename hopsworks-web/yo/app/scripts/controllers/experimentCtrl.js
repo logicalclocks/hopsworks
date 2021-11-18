@@ -556,7 +556,7 @@ angular.module('hopsWorksApp')
                     var modelName = model.substr(0, splitIndex);
                     var modelVersion = model.substr(splitIndex + 1, model.length);
                     StorageService.store(self.projectId + "_model", model);
-                    $location.path('project/' + self.projectId + '/models');
+                    $location.path('project/' + self.projectId + '/modelregistries/' + self.projectId + '/models');
                 }
             };
 

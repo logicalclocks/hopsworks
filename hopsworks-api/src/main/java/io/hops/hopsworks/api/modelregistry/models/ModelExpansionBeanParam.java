@@ -14,7 +14,7 @@
  * If not, see <https://www.gnu.org/licenses/>.
  */
 
-package io.hops.hopsworks.api.models;
+package io.hops.hopsworks.api.modelregistry.models;
 
 import io.hops.hopsworks.common.api.ResourceRequest;
 import io.swagger.annotations.ApiParam;
@@ -23,12 +23,12 @@ import javax.ws.rs.QueryParam;
 import java.util.HashSet;
 import java.util.Set;
 
-public class ExpansionBeanParam {
+public class ModelExpansionBeanParam {
   @QueryParam("expand")
   @ApiParam(value = "ex. expand=trainingdatasets", allowableValues = "expand=trainingdatasets")
   private Set<ModelExpansions> expansions;
 
-  public ExpansionBeanParam(@QueryParam("expand") Set<ModelExpansions> expansions) {
+  public ModelExpansionBeanParam(@QueryParam("expand") Set<ModelExpansions> expansions) {
     this.expansions = expansions;
   }
 

@@ -278,13 +278,12 @@ public class EnvironmentController {
     return foundVersion;
   }
 
-  public String[] exportEnv(Project project, Users user, String projectRelativeExportPath)
+  public String[] exportEnv(Project project, Users user, String ymlPath)
       throws PythonException {
     if (project.getPythonEnvironment() == null) {
       throw new PythonException(RESTCodes.PythonErrorCode.ANACONDA_ENVIRONMENT_NOT_FOUND, Level.FINE);
     }
 
-    String ymlPath = projectRelativeExportPath;
     condaEnvironmentOp(CondaOp.EXPORT, project.getPythonEnvironment().getPythonVersion(), project, user,
         ymlPath,  null, false);
     return new String[]{ymlPath};
@@ -353,17 +352,17 @@ public class EnvironmentController {
     }
   }
 
-  public void uploadYmlInProject(Project project, Users user, String environmentYml, String relativePath)
+  public void uploadYmlInProject(Project project, Users user, String environmentYml, String exportPath)
       throws ServiceException {
     DistributedFileSystemOps udfso = null;
     String hdfsUser = hdfsUsersController.getHdfsUserName(project, user);
     try {
       udfso = dfs.getDfsOps(hdfsUser);
-      Path projectYmlPath = new Path(Utils.getProjectPath(project.getName()) + "/" + relativePath);
+      Path projectYmlPath = new Path(exportPath);
       udfso.create(projectYmlPath, environmentYml);
     } catch (IOException ex) {
       throw new ServiceException(RESTCodes.ServiceErrorCode.ANACONDA_EXPORT_ERROR,
-          Level.SEVERE, "path: " + relativePath, ex.getMessage(), ex);
+          Level.SEVERE, "path: " + exportPath, ex.getMessage(), ex);
     } finally {
       if (udfso != null) {
         dfs.closeDfsClient(udfso);

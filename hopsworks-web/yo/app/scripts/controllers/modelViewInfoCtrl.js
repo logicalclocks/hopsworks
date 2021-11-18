@@ -64,12 +64,10 @@ angular.module('hopsWorksApp')
             };
 
             self.setTDLink = function(modelTD, linkInfoFunc, link) {
-                console.log(modelTD);
-                var modelTDSplit = modelTD.split(':');
-                console.log(modelTDSplit);
-                link.projName = modelTDSplit[0];
-                link.name = modelTDSplit[1];
-                link.version = modelTDSplit[2];
+                link.featureStoreName = modelTD.featurestoreName;
+                link.projName = link.featureStoreName.substring(0, link.featureStoreName.lastIndexOf("_"));
+                link.name = modelTD.name;
+                link.version = modelTD.version;
                 linkInfoFunc(link);
             };
 
@@ -92,12 +90,12 @@ angular.module('hopsWorksApp')
                 self.close();
             };
 
-            self.goToTrainingDataset = function(sourceTD) {
+            self.goToTrainingDataset = function() {
                 $location.search('');
-                $location.path('/project/' + sourceTD.projId + '/featurestore');
-                $location.search('featurestore', sourceTD.fsId);
-                $location.search('trainingDataset', sourceTD.name);
-                $location.search('version',sourceTD.version);
+                $location.path('/project/' + self.tdLink.projId + '/featurestore');
+                $location.search('featurestore', self.tdLink.fsId);
+                $location.search('trainingDataset', self.tdLink.name);
+                $location.search('version', self.tdLink.version);
                 self.close();
             };
 

@@ -14,9 +14,9 @@
  * If not, see <https://www.gnu.org/licenses/>.
  */
 
-package io.hops.hopsworks.api.models;
+package io.hops.hopsworks.api.modelregistry.models;
 
-import io.hops.hopsworks.api.models.provenance.ModelTrainingDatasetResourceRequest;
+import io.hops.hopsworks.api.modelregistry.models.provenance.ModelTrainingDatasetResourceRequest;
 import io.hops.hopsworks.common.api.Expansions;
 import io.hops.hopsworks.common.api.ResourceRequest;
 

@@ -23,6 +23,7 @@ import io.hops.hopsworks.common.dataset.DatasetController;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.hdfs.DistributedFsService;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
+import io.hops.hopsworks.common.hdfs.Utils;
 import io.hops.hopsworks.common.python.commands.CommandsController;
 import io.hops.hopsworks.common.python.environment.DockerRegistryMngr;
 import io.hops.hopsworks.common.python.environment.EnvironmentController;
@@ -327,7 +328,8 @@ public class LibraryInstaller {
         projectFacade.flushEm();
         setPipConflicts(project);
         environmentController.updateInstalledDependencies(project);
-        exportEnvironment(project, cc.getUserId(), Settings.PROJECT_PYTHON_ENVIRONMENT_FILE);
+        exportEnvironment(project, cc.getUserId(), Utils.getProjectPath(project.getName()) +
+                Settings.PROJECT_PYTHON_ENVIRONMENT_FILE);
       }
     } catch (ServiceException | ProjectException | PythonException e) {
       LOG.log(Level.SEVERE, "Failed to persist python deps", e);
@@ -488,7 +490,8 @@ public class LibraryInstaller {
         projectFacade.flushEm();
         setPipConflicts(project);
         environmentController.updateInstalledDependencies(project);
-        exportEnvironment(project, cc.getUserId(), Settings.PROJECT_PYTHON_ENVIRONMENT_FILE);
+        exportEnvironment(project, cc.getUserId(), Utils.getProjectPath(project.getName()) +
+                Settings.PROJECT_PYTHON_ENVIRONMENT_FILE);
       }
     } finally {
       FileUtils.deleteDirectory(baseDir);
@@ -555,7 +558,8 @@ public class LibraryInstaller {
         projectFacade.flushEm();
         setPipConflicts(project);
         environmentController.updateInstalledDependencies(project);
-        exportEnvironment(project, cc.getUserId(), Settings.PROJECT_PYTHON_ENVIRONMENT_FILE);
+        exportEnvironment(project, cc.getUserId(), Utils.getProjectPath(project.getName()) +
+                Settings.PROJECT_PYTHON_ENVIRONMENT_FILE);
       }
     } finally {
       FileUtils.deleteDirectory(baseDir);
@@ -608,7 +612,7 @@ public class LibraryInstaller {
     }
   }
 
-  public void exportEnvironment(Project project, Users user, String relativeEnvironmentYmlPath)
+  public void exportEnvironment(Project project, Users user, String exportPath)
     throws IOException, ServiceException, ServiceDiscoveryException {
 
     ProcessDescriptor processDescriptor = new ProcessDescriptor.Builder()
@@ -627,7 +631,7 @@ public class LibraryInstaller {
       throw new IOException(errorMsg);
     } else {
       environmentController.uploadYmlInProject(project, user, processResult.getStdout(),
-        relativeEnvironmentYmlPath);
+              exportPath);
     }
   }
 
@@ -655,7 +659,8 @@ public class LibraryInstaller {
     project.setPythonDepCollection(projectDeps);
     projectFacade.update(project);
 
-    exportEnvironment(project, cc.getUserId(), Settings.PROJECT_PYTHON_ENVIRONMENT_FILE);
+    exportEnvironment(project, cc.getUserId(), Utils.getProjectPath(project.getName()) +
+            Settings.PROJECT_PYTHON_ENVIRONMENT_FILE);
   }
 
   private String getNextDockerImageName(Project project) {

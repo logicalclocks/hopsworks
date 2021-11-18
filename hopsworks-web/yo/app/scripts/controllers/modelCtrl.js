@@ -114,7 +114,7 @@ angular.module('hopsWorksApp')
             }
 
             self.buildQuery = function() {
-                self.query = '&expand=trainingdatasets';
+                self.query = '&expand=trainingdatasets'
                 if(self.modelsNameFilter !== '') {
                     self.query = self.query + '&filter_by=name_like:' + self.modelsNameFilter;
                 }

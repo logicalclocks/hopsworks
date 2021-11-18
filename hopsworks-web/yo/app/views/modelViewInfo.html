@@ -85,7 +85,8 @@
                     <i class="fa fa-info-circle" tooltip-placement="auto left"
                        uib-tooltip="Training Dataset used to generate this Model. Format: <project_name> : <training dataset name> : <training dataset version>" style="margin-left: 10px"></i>
                 </td>
-                <td><a ng-click="modelViewInfoCtrl.goToTrainingDataset(modelViewInfoCtrl.model.trainingDataset)">{{modelViewInfoCtrl.model.trainingDataset}}</a></td>
+                <td><a ng-click="modelViewInfoCtrl.goToTrainingDataset()">
+                    {{modelViewInfoCtrl.tdLink.projName}}:{{modelViewInfoCtrl.tdLink.name}}:{{modelViewInfoCtrl.tdLink.version}}</a></td>
             </tr>
             </tbody>
         </table>
