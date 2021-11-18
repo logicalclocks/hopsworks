@@ -96,6 +96,7 @@ RSpec.configure do |config|
   config.include ProvStateHelper
   config.include ExperimentHelper
   config.include ModelHelper
+  config.include ModelRegistryHelper
   config.include ElasticHelper
   config.include AuditHelper
   config.include SearchHelper

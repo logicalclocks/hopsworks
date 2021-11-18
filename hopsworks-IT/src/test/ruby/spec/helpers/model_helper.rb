@@ -39,17 +39,17 @@ module ModelHelper
   end
 
   def get_models(project_id, query)
-    get "#{ENV['HOPSWORKS_API']}/project/#{project_id}/models#{query}"
+    get "#{ENV['HOPSWORKS_API']}/project/#{project_id}/modelregistries/#{project_id}/models#{query}"
   end
 
   def get_model(project_id, ml_id, query: "")
-    get_model_request = "#{ENV['HOPSWORKS_API']}/project/#{project_id}/models/#{ml_id}/#{query}"
+    get_model_request = "#{ENV['HOPSWORKS_API']}/project/#{project_id}/modelregistries/#{project_id}/models/#{ml_id}/#{query}"
     pp get_model_request if defined?(@debugOpt) && @debugOpt
     get get_model_request
   end
 
   def delete_model(project_id, ml_id)
-    delete_model_request = "#{ENV['HOPSWORKS_API']}/project/#{project_id}/models/#{ml_id}"
+    delete_model_request = "#{ENV['HOPSWORKS_API']}/project/#{project_id}/modelregistries/#{project_id}/models/#{ml_id}"
     pp delete_model_request if defined?(@debugOpt) && @debugOpt
     delete delete_model_request
   end

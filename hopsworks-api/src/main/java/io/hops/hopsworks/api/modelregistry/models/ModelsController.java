@@ -14,11 +14,12 @@
  * If not, see <https://www.gnu.org/licenses/>.
  */
 
-package io.hops.hopsworks.api.models;
+package io.hops.hopsworks.api.modelregistry.models;
 
 import com.google.common.base.Strings;
-import io.hops.hopsworks.api.models.dto.ModelDTO;
-import io.hops.hopsworks.api.models.dto.ModelsEndpointDTO;
+import io.hops.hopsworks.api.modelregistry.dto.ModelRegistryDTO;
+import io.hops.hopsworks.api.modelregistry.models.dto.ModelDTO;
+import io.hops.hopsworks.common.dao.project.ProjectFacade;
 import io.hops.hopsworks.common.dataset.DatasetController;
 import io.hops.hopsworks.common.dataset.util.DatasetHelper;
 import io.hops.hopsworks.common.dataset.util.DatasetPath;
@@ -32,11 +33,12 @@ import io.hops.hopsworks.common.provenance.state.ProvStateParamBuilder;
 import io.hops.hopsworks.common.provenance.state.ProvStateParser;
 import io.hops.hopsworks.common.provenance.state.ProvStateController;
 import io.hops.hopsworks.common.provenance.state.dto.ProvStateDTO;
+import io.hops.hopsworks.common.util.AccessController;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.DatasetException;
 import io.hops.hopsworks.exceptions.JobException;
 import io.hops.hopsworks.exceptions.MetadataException;
-import io.hops.hopsworks.exceptions.ModelsException;
+import io.hops.hopsworks.exceptions.ModelRegistryException;
 import io.hops.hopsworks.exceptions.ProvenanceException;
 import io.hops.hopsworks.exceptions.ServiceException;
 import io.hops.hopsworks.persistence.entity.dataset.Dataset;
@@ -45,6 +47,7 @@ import io.hops.hopsworks.persistence.entity.jobs.configuration.spark.SparkJobCon
 import io.hops.hopsworks.persistence.entity.jobs.description.Jobs;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.user.Users;
+import io.hops.hopsworks.restutils.RESTCodes;
 import org.apache.hadoop.fs.Path;
 import org.json.JSONObject;
 
@@ -54,10 +57,11 @@ import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
-import static io.hops.hopsworks.api.models.ModelsBuilder.MODEL_SUMMARY_XATTR_NAME;
+import static io.hops.hopsworks.api.modelregistry.models.ModelsBuilder.MODEL_SUMMARY_XATTR_NAME;
 
 @Stateless
 @TransactionAttribute(TransactionAttributeType.NEVER)
@@ -79,10 +83,16 @@ public class ModelsController {
   private ModelConverter modelConverter;
   @EJB
   private DatasetHelper datasetHelper;
+  @EJB
+  private AccessController accessCtrl;
+  @EJB
+  private DatasetController datasetCtrl;
+  @EJB
+  private ProjectFacade projectFacade;
   
   public void attachModel(DistributedFileSystemOps udfso, Project modelProject, String userFullName,
     ModelDTO modelDTO)
-    throws DatasetException, ModelsException, MetadataException {
+    throws DatasetException, ModelRegistryException, MetadataException {
 
     modelDTO.setUserFullName(userFullName);
     
@@ -110,7 +120,7 @@ public class ModelsController {
   }
 
   public void delete(Users user, Project userProject, Project parentProject, ProvStateDTO fileState)
-    throws DatasetException, ModelsException {
+    throws DatasetException, ModelRegistryException {
     if(userProject.getId().equals(parentProject.getId())) {
       delete(user, userProject, fileState);
     } else {
@@ -123,7 +133,8 @@ public class ModelsController {
     }
   }
 
-  public void delete(Users user, Project project, ProvStateDTO fileState) throws DatasetException, ModelsException {
+  public void delete(Users user, Project project, ProvStateDTO fileState) throws DatasetException,
+          ModelRegistryException {
     JSONObject summary = new JSONObject(fileState.getXattrs().get(MODEL_SUMMARY_XATTR_NAME));
     ModelDTO modelSummary = modelConverter.unmarshalDescription(summary.toString());
     String modelPath = Utils.getProjectPath(project.getName())
@@ -168,16 +179,44 @@ public class ModelsController {
     }
   }
   
-  public List<ModelsEndpointDTO> getModelsEndpoints(Project project) {
+  public List<ModelRegistryDTO> getModelRegistries(Project project) {
     List<Dataset> modelsDatasets = datasetController.getAllByName(project, Settings.HOPS_MODELS_DATASET);
-    List<ModelsEndpointDTO> modelsEndpoints = modelsDatasets.stream()
-      .map(ModelsEndpointDTO::fromDataset)
+    List<ModelRegistryDTO> modelsEndpoints = modelsDatasets.stream()
+      .map(ModelRegistryDTO::fromDataset)
       .collect(Collectors.toCollection(ArrayList::new));
     return modelsEndpoints;
   }
   
-  public ModelsEndpointDTO getModelsEndpoint(Project project) throws DatasetException {
-    return ModelsEndpointDTO.fromDataset(datasetController.getByName(project, Settings.HOPS_MODELS_DATASET));
+  public ModelRegistryDTO getModelRegistry(Project project) throws DatasetException {
+    return ModelRegistryDTO.fromDataset(datasetController.getByName(project, Settings.HOPS_MODELS_DATASET));
+  }
+
+  public ModelRegistryDTO verifyModelRegistryAccess(Project userProject, Integer modelRegistryId)
+          throws ModelRegistryException {
+
+    //Validate existence of model registry project
+    Project modelRegistryProject = projectFacade.findById(modelRegistryId)
+            .orElseThrow(() -> new ModelRegistryException(RESTCodes.ModelRegistryErrorCode.MODEL_REGISTRY_ID_NOT_FOUND,
+            Level.FINE, "No model registry found for ID " + modelRegistryId));
+
+    //Validate existence of models dataset in registry project
+    Dataset dataset;
+    try {
+      dataset = datasetCtrl.getByName(modelRegistryProject, Settings.HOPS_MODELS_DATASET);
+    } catch(DatasetException de) {
+      throw new ModelRegistryException(RESTCodes.ModelRegistryErrorCode.MODEL_REGISTRY_MODELS_DATASET_NOT_FOUND,
+              Level.FINE, "Failed to verify existence of Models dataset in project " + modelRegistryProject.getName(),
+              de.getMessage(), de);
+    }
+
+    //Validate user project has got access to the models dataset
+    if (accessCtrl.hasAccess(userProject, dataset)) {
+      return ModelRegistryDTO.fromDataset(dataset);
+    } else {
+      throw new ModelRegistryException(RESTCodes.ModelRegistryErrorCode.MODEL_REGISTRY_ACCESS_DENIED, Level.FINE,
+              "The current project " + userProject.getName() + " does not have access to model registry of project " +
+                      dataset.getProject().getName());
+    }
   }
   
   public static class Accessor {

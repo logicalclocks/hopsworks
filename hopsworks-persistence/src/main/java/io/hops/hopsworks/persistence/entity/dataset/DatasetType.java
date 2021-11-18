@@ -42,5 +42,7 @@ package io.hops.hopsworks.persistence.entity.dataset;
 public enum DatasetType {
   DATASET,
   HIVEDB,
-  FEATURESTORE //Note: since we map enum directly to the DB the order is important for upgrades to work!
+  FEATURESTORE, //Note: since we map enum directly to the DB the order is important for upgrades to work!
+  MODELREGISTRY
+
 }
