@@ -16,6 +16,7 @@
 
 package io.hops.hopsworks.api.models;
 
+import com.google.common.base.Strings;
 import io.hops.hopsworks.api.models.dto.ModelDTO;
 import io.hops.hopsworks.api.models.dto.ModelsEndpointDTO;
 import io.hops.hopsworks.common.dataset.DatasetController;
@@ -45,7 +46,6 @@ import io.hops.hopsworks.persistence.entity.jobs.description.Jobs;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.user.Users;
 import org.apache.hadoop.fs.Path;
-import org.apache.parquet.Strings;
 import org.json.JSONObject;
 
 import javax.ejb.EJB;

@@ -15,6 +15,7 @@
  */
 package io.hops.hopsworks.common.alert;
 
+import com.google.common.base.Strings;
 import io.hops.hopsworks.alert.AlertManager;
 import io.hops.hopsworks.alert.AlertManagerConfiguration;
 import io.hops.hopsworks.alert.dao.AlertReceiverFacade;
@@ -51,7 +52,6 @@ import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.project.alert.ProjectServiceAlert;
 import io.hops.hopsworks.persistence.entity.project.alert.ProjectServiceAlertStatus;
 import io.hops.hopsworks.persistence.entity.project.service.ProjectServiceEnum;
-import org.apache.parquet.Strings;
 
 import javax.ejb.EJB;
 import javax.ejb.Stateless;

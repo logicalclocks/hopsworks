@@ -47,8 +47,8 @@
 
 
 angular.module('hopsWorksApp')
-        .controller('DataSetCreatorCtrl', ['$cookies', '$uibModalInstance', 'DataSetService', '$routeParams', 'growl', 'VariablesService', 'ModalService', 'path', 'datasetType', 'isDataset',
-          function ($cookies, $uibModalInstance, DataSetService, $routeParams, growl, VariablesService, ModalService, path, datasetType, isDataset) {
+        .controller('DataSetCreatorCtrl', [ '$uibModalInstance', 'DataSetService', '$routeParams', 'growl', 'VariablesService', 'ModalService', 'path', 'datasetType', 'isDataset',
+          function ($uibModalInstance, DataSetService, $routeParams, growl, VariablesService, ModalService, path, datasetType, isDataset) {
 
             var self = this;
             self.path = path;

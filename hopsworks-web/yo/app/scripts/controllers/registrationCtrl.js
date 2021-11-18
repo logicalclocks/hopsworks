@@ -40,12 +40,12 @@
 'use strict';
 
 angular.module('hopsWorksApp')
-        .controller('RegCtrl', ['AuthService', '$location', '$scope', '$window', '$routeParams', '$cookies',
-          function (AuthService, $location, $scope, $window, $routeParams, $cookies) {
+        .controller('RegCtrl', ['AuthService', '$location', '$scope', '$window', '$routeParams', 'StorageService',
+          function (AuthService, $location, $scope, $window, $routeParams, StorageService) {
           
             var self = this;
             self.working = false;
-            self.otp = $cookies.get('otp');
+            self.otp = StorageService.get('otp');
             self.newUser = {
               firstName: '',
               lastName: '',

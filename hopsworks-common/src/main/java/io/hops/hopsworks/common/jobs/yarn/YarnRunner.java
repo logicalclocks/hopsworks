@@ -39,6 +39,7 @@
 
 package io.hops.hopsworks.common.jobs.yarn;
 
+import com.google.common.base.Strings;
 import io.hops.hopsworks.persistence.entity.jobs.configuration.yarn.LocalResourceDTO;
 import io.hops.hopsworks.persistence.entity.jobs.configuration.yarn.YarnJobConfiguration;
 import io.hops.hopsworks.persistence.entity.project.Project;
@@ -72,7 +73,6 @@ import org.apache.hadoop.yarn.client.api.YarnClientApplication;
 import org.apache.hadoop.yarn.conf.YarnConfiguration;
 import org.apache.hadoop.yarn.exceptions.YarnException;
 import org.apache.hadoop.yarn.util.ConverterUtils;
-import org.apache.parquet.Strings;
 
 import java.io.File;
 import java.io.IOException;

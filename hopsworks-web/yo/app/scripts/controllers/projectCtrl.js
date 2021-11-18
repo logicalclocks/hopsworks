@@ -44,11 +44,11 @@
 
 angular.module('hopsWorksApp')
         .controller('ProjectCtrl', ['$scope', '$rootScope', '$location', '$routeParams', '$route', '$timeout', '$window', 'UtilsService',
-          'growl', 'ProjectService', 'ModalService', 'ActivityService', '$cookies', 'DataSetService',
+          'growl', 'ProjectService', 'ModalService', 'ActivityService', 'DataSetService',
           'UserService', 'TourService', 'PythonService', 'StorageService', 'CertService', 'VariablesService', 'FileSaver', 'Blob',
           'AirflowService', '$http',
         function ($scope, $rootScope, $location, $routeParams, $route, $timeout, $window, UtilsService, growl, ProjectService,
-                  ModalService, ActivityService, $cookies, DataSetService, UserService, TourService, PythonService,
+                  ModalService, ActivityService, DataSetService, UserService, TourService, PythonService,
                     StorageService, CertService, VariablesService, FileSaver, Blob, AirflowService, $http) {
 
             var self = this;
@@ -217,7 +217,7 @@ angular.module('hopsWorksApp')
                         });
 
 
-                        $cookies.put("projectID", self.projectId);
+                        StorageService.store("projectID", self.projectId);
                         //set the project name under which the search is performed
                         UtilsService.setProjectName(self.currentProject.projectName);
                         self.getRole();
