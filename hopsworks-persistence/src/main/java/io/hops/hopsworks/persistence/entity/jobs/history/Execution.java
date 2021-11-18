@@ -121,6 +121,9 @@ import java.util.List;
   @NamedQuery(name = "Execution.findByJob",
           query
           = "SELECT e FROM Execution e WHERE e.job = :job ORDER BY e.submissionTime DESC"),
+  @NamedQuery(name = "Execution.findOrphanExecutions",
+          query
+          = "SELECT e FROM Execution e WHERE e.job NOT IN (SELECT j FROM Jobs j)"),
   @NamedQuery(name = "Execution.findByJobSortByIdOrderByASC",
           query
           = "SELECT e FROM Execution e WHERE e.job = :job ORDER BY e.id ASC"),
@@ -139,7 +142,10 @@ import java.util.List;
   @NamedQuery(name = "Execution.findUserJobsIdsForExecutionInState",
       query
       = "SELECT DISTINCT e.job FROM Execution e WHERE e.job.id IN :jobids AND e.job.project = :project "
-      + "AND e.hdfsUser = :hdfsUser AND e.state IN :stateCollection ORDER BY e.submissionTime DESC")})
+      + "AND e.hdfsUser = :hdfsUser AND e.state IN :stateCollection ORDER BY e.submissionTime DESC"),
+  @NamedQuery(name = "Execution.deleteBatch",
+              query  = "DELETE FROM Execution e WHERE e.id IN :executionIds"),
+  })
 public class Execution implements Serializable {
 
   private static final long serialVersionUID = 1L;
@@ -202,7 +208,7 @@ public class Execution implements Serializable {
 
   @JoinColumn(name = "job_id",
           referencedColumnName = "id")
-  @ManyToOne(optional = false)
+  @ManyToOne(optional = true)
   private Jobs job;
 
   @JoinColumn(name = "user",

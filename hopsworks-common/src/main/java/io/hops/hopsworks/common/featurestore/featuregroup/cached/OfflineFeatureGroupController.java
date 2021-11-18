@@ -46,6 +46,7 @@ import org.apache.hadoop.hive.metastore.api.ThriftHiveMetastore;
 import org.apache.hadoop.hive.metastore.api.hive_metastoreConstants;
 import org.apache.hadoop.hive.metastore.conf.MetastoreConf;
 import org.apache.hadoop.hive.serde.serdeConstants;
+import org.apache.thrift.TConfiguration;
 import org.apache.thrift.TException;
 import org.apache.thrift.protocol.TBinaryProtocol;
 import org.apache.thrift.protocol.TProtocol;
@@ -146,7 +147,7 @@ public class OfflineFeatureGroupController {
     for (FeatureGroupFeatureDTO featureGroupFeatureDTO : featureGroupFeatureDTOList) {
       FieldSchema fieldSchema = new FieldSchema(featureGroupFeatureDTO.getName(),
           // need to lowercase the type
-          featureGroupFeatureDTO.getType().toLowerCase(), featureGroupFeatureDTO.getDescription());
+          featureGroupFeatureDTO.getType().toLowerCase(), null);
       if (featureGroupFeatureDTO.getPartition()) {
         table.addToPartitionKeys(fieldSchema);
       } else {
@@ -187,7 +188,7 @@ public class OfflineFeatureGroupController {
       user);
     for (FeatureGroupFeatureDTO featureDTO : featureDTOs) {
       table.getSd().addToCols(
-        new FieldSchema(featureDTO.getName(), featureDTO.getType().toLowerCase(), featureDTO.getDescription()));
+        new FieldSchema(featureDTO.getName(), featureDTO.getType().toLowerCase(), null));
       if (featureDTO.getDefaultValue() != null) {
         defaultConstraints.add(new SQLDefaultConstraint(table.getCatName(), table.getDbName(),
           table.getTableName(), featureDTO.getName(), featureDTO.getDefaultValue(),
@@ -342,7 +343,8 @@ public class OfflineFeatureGroupController {
         transport = TSSLTransportFactory.getClientSocket(metastoreService.getAddress(),
             metastoreService.getPort(), CONNECTION_TIMEOUT, params);
       } else {
-        transport = new TSocket(metastoreService.getAddress(), metastoreService.getPort(), CONNECTION_TIMEOUT);
+        transport = new TSocket(TConfiguration.DEFAULT, metastoreService.getAddress(), metastoreService.getPort(),
+          CONNECTION_TIMEOUT);
       }
 
       TProtocol protocol = new TBinaryProtocol(transport);

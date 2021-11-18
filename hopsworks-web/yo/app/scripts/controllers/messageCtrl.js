@@ -39,11 +39,11 @@
 
 'use strict';
 angular.module('hopsWorksApp')
-    .controller('MessageCtrl', ['$scope','$cookies','$uibModalInstance','MessageService','RequestService','growl','md5','selected',
-        function ($scope, $cookies, $uibModalInstance, MessageService, RequestService, growl, md5, selected) {
+    .controller('MessageCtrl', ['$scope', '$uibModalInstance', 'MessageService', 'RequestService', 'growl', 'md5', 'selected', 'StorageService',
+        function ($scope, $uibModalInstance, MessageService, RequestService, growl, md5, selected, StorageService) {
 
             var self = this;
-            self.email = $cookies.get('email');
+            self.email = StorageService.get('email');
             self.refreshing = false;
             self.loading = false;
             self.loadingMsg = false;

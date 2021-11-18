@@ -13,18 +13,17 @@
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see <https://www.gnu.org/licenses/>.
  */
+package io.hops.hopsworks.persistence.entity.featurestore.featuregroup.cached.hive;
 
-package io.hops.hopsworks.persistence.entity.featurestore.featuregroup.cached;
-
-import java.io.Serializable;
 import javax.persistence.Basic;
 import javax.persistence.Column;
 import javax.persistence.Embeddable;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
+import java.io.Serializable;
 
 @Embeddable
-public class HivePartitionKeysPK implements Serializable {
+public class HiveTableParamsPK implements Serializable {
 
   @Basic(optional = false)
   @NotNull
@@ -32,16 +31,16 @@ public class HivePartitionKeysPK implements Serializable {
   private long tblId;
   @Basic(optional = false)
   @NotNull
-  @Size(min = 1, max = 128)
-  @Column(name = "PKEY_NAME")
-  private String pkeyName;
+  @Size(min = 1, max = 256)
+  @Column(name = "PARAM_KEY")
+  private String paramKey;
 
-  public HivePartitionKeysPK() {
+  public HiveTableParamsPK() {
   }
 
-  public HivePartitionKeysPK(long tblId, String pkeyName) {
+  public HiveTableParamsPK(long tblId, String paramKey) {
     this.tblId = tblId;
-    this.pkeyName = pkeyName;
+    this.paramKey = paramKey;
   }
 
   public long getTblId() {
@@ -52,34 +51,34 @@ public class HivePartitionKeysPK implements Serializable {
     this.tblId = tblId;
   }
 
-  public String getPkeyName() {
-    return pkeyName;
+  public String getParamKey() {
+    return paramKey;
   }
 
-  public void setPkeyName(String pkeyName) {
-    this.pkeyName = pkeyName;
+  public void setParamKey(String paramKey) {
+    this.paramKey = paramKey;
   }
 
   @Override
   public int hashCode() {
     int hash = 0;
     hash += (int) tblId;
-    hash += (pkeyName != null ? pkeyName.hashCode() : 0);
+    hash += (paramKey != null ? paramKey.hashCode() : 0);
     return hash;
   }
 
   @Override
   public boolean equals(Object object) {
     // TODO: Warning - this method won't work in the case the id fields are not set
-    if (!(object instanceof HivePartitionKeysPK)) {
+    if (!(object instanceof HiveTableParamsPK)) {
       return false;
     }
-    HivePartitionKeysPK other = (HivePartitionKeysPK) object;
+    HiveTableParamsPK other = (HiveTableParamsPK) object;
     if (this.tblId != other.tblId) {
       return false;
     }
-    if ((this.pkeyName == null && other.pkeyName != null) ||
-        (this.pkeyName != null && !this.pkeyName.equals(other.pkeyName))) {
+    if ((this.paramKey == null && other.paramKey != null) ||
+        (this.paramKey != null && !this.paramKey.equals(other.paramKey))) {
       return false;
     }
     return true;
@@ -87,8 +86,7 @@ public class HivePartitionKeysPK implements Serializable {
 
   @Override
   public String toString() {
-    return "io.hops.hopsworks.persistence.entity.project.HivePartitionKeysPK[ tblId=" + tblId + ", " +
-        "pkeyName=" + pkeyName +
+    return "io.hops.hopsworks.persistence.entity.project.HiveTableParamsPK[ tblId=" + tblId + ", paramKey=" + paramKey +
         " ]";
   }
   

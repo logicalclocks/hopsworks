@@ -15,34 +15,34 @@
  */
 package io.hops.hopsworks.common.provenance.core;
 
+import io.hops.hopsworks.common.featurestore.feature.FeatureGroupFeatureDTO;
 import io.hops.hopsworks.common.featurestore.feature.TrainingDatasetFeatureDTO;
 import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupDTO;
 import io.hops.hopsworks.common.featurestore.featuregroup.cached.CachedFeaturegroupDTO;
 import io.hops.hopsworks.common.featurestore.featuregroup.ondemand.OnDemandFeaturegroupDTO;
 import io.hops.hopsworks.common.featurestore.trainingdatasets.TrainingDatasetDTO;
+import io.hops.hopsworks.common.featurestore.xattr.dto.FeaturegroupXAttr;
 import io.hops.hopsworks.common.featurestore.xattr.dto.FeaturestoreXAttrsConstants;
 import io.hops.hopsworks.common.featurestore.xattr.dto.TrainingDatasetXAttrDTO;
-import io.hops.hopsworks.common.hdfs.xattrs.XAttrsController;
-import io.hops.hopsworks.exceptions.DatasetException;
-import io.hops.hopsworks.exceptions.MetadataException;
-import io.hops.hopsworks.persistence.entity.dataset.Dataset;
-import io.hops.hopsworks.common.featurestore.feature.FeatureGroupFeatureDTO;
-import io.hops.hopsworks.persistence.entity.dataset.DatasetSharedWith;
-import io.hops.hopsworks.persistence.entity.hdfs.inode.Inode;
-import io.hops.hopsworks.persistence.entity.project.Project;
-import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.hdfs.DistributedFsService;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
 import io.hops.hopsworks.common.hdfs.Utils;
-import io.hops.hopsworks.common.featurestore.xattr.dto.FeaturegroupXAttr;
-import io.hops.hopsworks.common.provenance.core.dto.ProvDatasetDTO;
+import io.hops.hopsworks.common.hdfs.xattrs.XAttrsController;
 import io.hops.hopsworks.common.provenance.core.dto.ProvCoreDTO;
+import io.hops.hopsworks.common.provenance.core.dto.ProvDatasetDTO;
 import io.hops.hopsworks.common.provenance.core.dto.ProvTypeDTO;
 import io.hops.hopsworks.common.util.HopsworksJAXBContext;
 import io.hops.hopsworks.common.util.Settings;
+import io.hops.hopsworks.exceptions.DatasetException;
 import io.hops.hopsworks.exceptions.GenericException;
+import io.hops.hopsworks.exceptions.MetadataException;
 import io.hops.hopsworks.exceptions.ProvenanceException;
+import io.hops.hopsworks.persistence.entity.dataset.Dataset;
+import io.hops.hopsworks.persistence.entity.dataset.DatasetSharedWith;
+import io.hops.hopsworks.persistence.entity.hdfs.inode.Inode;
+import io.hops.hopsworks.persistence.entity.project.Project;
+import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.restutils.RESTCodes;
 
 import javax.ejb.EJB;
@@ -324,15 +324,15 @@ public class HopsFSProvenanceController {
     FeaturegroupXAttr.SimplifiedDTO containerFeatureGroup =
         new FeaturegroupXAttr.SimplifiedDTO(-1, "", -1);
     containerFeatureGroup.addFeatures(trainingDatasetDTO.getFeatures().stream()
-        .map(TrainingDatasetFeatureDTO::getName).collect(Collectors.toList()));
+      .map(TrainingDatasetFeatureDTO::getName).collect(Collectors.toList()));
 
     return Arrays.asList(containerFeatureGroup);
   }
 
   private FeaturegroupXAttr.FullDTO fromFeaturegroup(FeaturegroupDTO featuregroup) {
-    List<String> features = new LinkedList<>();
+    List<FeaturegroupXAttr.SimpleFeatureDTO> features = new LinkedList<>();
     for(FeatureGroupFeatureDTO feature : featuregroup.getFeatures()) {
-      features.add(feature.getName());
+      features.add(new FeaturegroupXAttr.SimpleFeatureDTO(feature.getName(), feature.getDescription()));
     }
     FeaturegroupXAttr.FullDTO fullDTO = new FeaturegroupXAttr.FullDTO(featuregroup.getFeaturestoreId(),
             featuregroup.getDescription(), featuregroup.getCreated(), featuregroup.getCreator().getEmail(), features);

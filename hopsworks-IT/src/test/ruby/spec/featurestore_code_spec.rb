@@ -22,30 +22,42 @@ describe "On #{ENV['OS']}" do
 
     describe "Create and get feature store code commits for feature groups and training datasets" do
       context 'with valid project, featurestore service enabled' do
-        before :all do
-          with_valid_project
+
+        after :each do
+          clean_jobs(@project[:id])
         end
 
         entities = ["featuregroups", "trainingdatasets"]
         entities.each do |entity|
-          it "should be able to save #{entity} code" do
+          it "should be able to save #{entity} notebook" do
+            with_valid_project
             application_id = "1"
-            parsed_json, _, _ = save_code(application_id, entity)
+            parsed_json, _, _ = save_notebook(application_id, entity)
 
             expect(parsed_json["applicationId"] == application_id).to be true
           end
         end
-		
+
+        entities = ["featuregroups", "trainingdatasets"]
+        entities.each do |entity|
+          it "should be able to save #{entity} job" do
+            with_valid_tour_project("spark")
+            application_id = "1"
+            parsed_json, _, _ = save_job(application_id, entity)
+
+            expect(parsed_json["applicationId"] == application_id).to be true
+          end
+        end
+
         entities = ["featuregroups", "trainingdatasets"]
         entities.each do |entity|
           it "should be able to get all #{entity} code" do
+            with_valid_project
             application_id = "1"
-            parsed_json, featurestore_id, dataset_id = save_code(application_id, entity)
+            _, featurestore_id, dataset_id = save_notebook(application_id, entity)
 
-            json_result = get_all_code_commit(@project[:id], featurestore_id, entity, dataset_id)
-            expect_status_details(200)
+            parsed_json = get_all_code(@project[:id], featurestore_id, entity, dataset_id)
 
-            parsed_json = JSON.parse(json_result)
             expect(parsed_json["count"] == 1).to be true
             expect(parsed_json.key?("items")).to be true
             expect(parsed_json["items"][0]["applicationId"] == application_id).to be true
@@ -53,17 +65,16 @@ describe "On #{ENV['OS']}" do
             expect(parsed_json["items"][0]["content"] .include? "<html>").to be true
           end
         end
-		
+
         entities = ["featuregroups", "trainingdatasets"]
         entities.each do |entity|
           it "should be able to get #{entity} code" do
+            with_valid_project
             application_id = "1"
-            parsed_json, featurestore_id, dataset_id = save_code(application_id, entity)
+            parsed_json, featurestore_id, dataset_id = save_notebook(application_id, entity)
 
-            json_result = get_code_commit(@project[:id], featurestore_id, entity, dataset_id, parsed_json["codeId"])
-            expect_status_details(200)
+            parsed_json = get_code(@project[:id], featurestore_id, entity, dataset_id, parsed_json["codeId"])
 
-            parsed_json = JSON.parse(json_result)
             expect(parsed_json["applicationId"] == application_id).to be true
             expect(parsed_json.key?("content")).to be true
             expect(parsed_json["content"] .include? "<html>").to be true

@@ -62,6 +62,7 @@ public class HopsworksJAXBContext {
           ProvTypeDTO.class,
           FeaturegroupXAttr.FullDTO.class,
           FeaturegroupXAttr.SimplifiedDTO.class,
+          FeaturegroupXAttr.SimpleFeatureDTO.class,
           TrainingDatasetXAttrDTO.class
         }, properties);
     } catch (JAXBException e) {

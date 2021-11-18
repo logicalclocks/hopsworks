@@ -77,28 +77,48 @@ module SearchHelper
     end
   end
 
-  def expect_searched(item, expected, search_type)
+  def expect_searched(item, expected)
+    expected = expected.transform_keys(&:to_s)
     #base check
-    if search_type == "FEATURE"
-      expect(item["featuregroup"]).to eq(expected[:name])
-      expect(item["parentProjectName"]).to eq(expected[:parent_project])
-      expect(item["highlights"].key?(expected[:highlight])). to be true
-    else
-      expect(item["name"]).to eq(expected[:name])
-      expect(item["parentProjectName"]).to eq(expected[:parent_project])
-      expect(item["highlights"].key?(expected[:highlight])). to be true
+    expected.each do |key, _|
+      next if key == "highlight" || key == "count"
+      expect(item[key]).to eq(expected[key])
     end
-    if expected.key?(:access_projects)
-      expect(item.key?("accessProjects")).to be true
-      expect(item["accessProjects"]["entry"].length).to eq(expected[:access_projects])
+    if expected.key?("highlight")
+      if expected["highlight"].is_a?(Hash)
+        expected["highlight"].each do |key, value|
+          if key == "features"
+            matched = item["highlights"]["features"].select { |i| i.key?(value) }
+            expect(matched.count).to eq(1)
+          else
+            expect(item["highlights"].key?(key)). to be true
+          end
+        end
+      else
+        expect(item["highlights"].key?(expected["highlight"])). to be true
+      end
+    end
+    if expected.key?("count")
+      expected_count = expected["count"].transform_keys(&:to_s)
+      expected_count.each do |key, _|
+        if item[key].key?("entry")
+          #java maps get serialized like this
+          expect(item[key]["entry"].length).to eq(expected_count[key])
+        else
+          expect(item[key].length).to eq(expected_count[key])
+        end
+      end
     end
   end
 
-  def check_searched(item, expected, search_type)
+  def check_searched(item, expected)
     begin
-      expect_searched(item, expected, search_type)
+      expect_searched(item, expected)
       true
     rescue RSpec::Expectations::ExpectationNotMetError => e
+      pp "expected:#{expected}" if defined?(@debugOpt) && @debugOpt
+      pp "found:#{item}" if defined?(@debugOpt) && @debugOpt
+      pp e if defined?(@debugOpt) && @debugOpt
       false
     end
   end
@@ -108,7 +128,6 @@ module SearchHelper
     result_type = "#{type}s"
     wait_result = wait_for_me_time(15) do
       search_hits = local_featurestore_search(project, search_type, term)["#{result_type}"]
-      pp search_hits if defined?(@debugOpt) && @debugOpt
       error_msg = "search expected:#{items.length}, found:#{search_hits.length}"
       if search_hits.length != items.length
         { 'success' => false, 'msg' => error_msg }
@@ -116,7 +135,7 @@ module SearchHelper
         matched_items = 0
         items.each do |item|
           matched = search_hits.select { |r|
-            check_searched(r, item, search_type)
+            check_searched(r, item)
           }
           matched_items = matched_items + 1 if matched.length == 1
         end
@@ -143,7 +162,7 @@ module SearchHelper
         matched_items = 0
         items.each do |item|
           matched = search_hits.select { |r|
-            check_searched(r, item, search_type)
+            check_searched(r, item)
           }
           pp "mismatched: #{item}" if defined?(@debugOpt) && @debugOpt && matched.length != 1
           matched_items = matched_items + 1 if matched.length == 1

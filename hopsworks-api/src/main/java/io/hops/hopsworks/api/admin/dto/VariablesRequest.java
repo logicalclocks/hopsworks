@@ -41,11 +41,14 @@ package io.hops.hopsworks.api.admin.dto;
 
 import io.hops.hopsworks.persistence.entity.util.Variables;
 
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import java.util.List;
 
 @XmlRootElement
+@XmlAccessorType(XmlAccessType.FIELD)
 public class VariablesRequest {
   
   @XmlElement(name = "variables", type = Variables.class)

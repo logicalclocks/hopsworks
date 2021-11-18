@@ -16,6 +16,7 @@
 package io.hops.hopsworks.api.jwt;
 
 import com.auth0.jwt.interfaces.DecodedJWT;
+import com.google.common.base.Strings;
 import io.hops.hopsworks.api.filter.Audience;
 import io.hops.hopsworks.api.user.ServiceJWTDTO;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
@@ -39,7 +40,6 @@ import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.user.BbcGroup;
 import io.hops.hopsworks.persistence.entity.user.Users;
 import org.apache.commons.lang3.tuple.Pair;
-import org.apache.parquet.Strings;
 
 import javax.ejb.EJB;
 import javax.ejb.Stateless;

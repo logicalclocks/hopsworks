@@ -74,7 +74,7 @@ public final class Utils {
   public static Optional<String> getExtension(String filename) {
     return Optional.ofNullable(filename)
             .filter(f -> f.contains("."))
-            .map(f -> f.substring(filename.lastIndexOf(".")));
+            .map(f -> f.substring(filename.lastIndexOf(".") + 1));
   }
 
   public static String getDirectoryPart(String path) {

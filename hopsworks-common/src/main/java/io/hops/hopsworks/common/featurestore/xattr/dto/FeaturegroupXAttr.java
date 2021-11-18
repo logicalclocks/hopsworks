@@ -28,19 +28,11 @@ public class FeaturegroupXAttr {
   public static abstract class Base {
     @XmlElement(nillable = false, name = FeaturestoreXAttrsConstants.FEATURESTORE_ID)
     private Integer featurestoreId;
-    
-    @XmlElement(nillable = false, name = FeaturestoreXAttrsConstants.FG_FEATURES)
-    private List<String> features = new LinkedList<>();
   
     public Base() {}
   
     public Base(Integer featurestoreId) {
-      this(featurestoreId, new LinkedList<>());
-    }
-  
-    public Base(Integer featurestoreId, List<String> features) {
       this.featurestoreId = featurestoreId;
-      this.features = features;
     }
   
     public Integer getFeaturestoreId() {
@@ -51,27 +43,10 @@ public class FeaturegroupXAttr {
       this.featurestoreId = featurestoreId;
     }
   
-    public List<String> getFeatures() {
-      return features;
-    }
-  
-    public void setFeatures(List<String> features) {
-      this.features = features;
-    }
-  
-    public void addFeature(String feature) {
-      features.add(feature);
-    }
-
-    public void addFeatures(List<String> features) {
-      this.features.addAll(features);
-    }
-  
     @Override
     public String toString() {
       return "Base{" +
         "featurestoreId=" + featurestoreId +
-        ", features=" + features +
         '}';
     }
   }
@@ -89,6 +64,8 @@ public class FeaturegroupXAttr {
     private String creator;
     @XmlElement(nillable = true, name = FeaturestoreXAttrsConstants.FG_TYPE)
     private FGType fgType;
+    @XmlElement(nillable = false, name = FeaturestoreXAttrsConstants.FG_FEATURES)
+    private List<SimpleFeatureDTO> features = new LinkedList<>();
   
     public FullDTO() {
       super();
@@ -99,8 +76,9 @@ public class FeaturegroupXAttr {
     }
   
     public FullDTO(Integer featurestoreId, String description,
-      Date createDate, String creator, List<String> features) {
-      super(featurestoreId, features);
+      Date createDate, String creator, List<SimpleFeatureDTO> features) {
+      super(featurestoreId);
+      this.features = features;
       this.description = description;
       this.createDate = createDate.getTime();
       this.creator = creator;
@@ -136,6 +114,21 @@ public class FeaturegroupXAttr {
 
     public void setFgType(FGType fgType) {
       this.fgType = fgType;
+
+    public List<SimpleFeatureDTO> getFeatures() {
+      return features;
+    }
+
+    public void setFeatures(List<SimpleFeatureDTO> features) {
+      this.features = features;
+    }
+
+    public void addFeature(SimpleFeatureDTO feature) {
+      features.add(feature);
+    }
+
+    public void addFeatures(List<SimpleFeatureDTO> features) {
+      this.features.addAll(features);
     }
 
     @Override
@@ -145,6 +138,7 @@ public class FeaturegroupXAttr {
         ", createDate=" + createDate +
         ", creator='" + creator + '\'' +
         ", fgType='" + fgType + '\'' +
+        ", features=" + features +
         '}';
     }
   }
@@ -159,6 +153,8 @@ public class FeaturegroupXAttr {
     private String name;
     @XmlElement(nillable = false, name = FeaturestoreXAttrsConstants.VERSION)
     private Integer version;
+    @XmlElement(nillable = false, name = FeaturestoreXAttrsConstants.FG_FEATURES)
+    private List<String> features = new LinkedList<>();
   
     public SimplifiedDTO() {
       super();
@@ -183,6 +179,59 @@ public class FeaturegroupXAttr {
   
     public void setVersion(Integer version) {
       this.version = version;
+    }
+
+    public List<String> getFeatures() {
+      return features;
+    }
+  
+    public void setFeatures(List<String> features) {
+      this.features = features;
+    }
+  
+    public void addFeature(String feature) {
+      features.add(feature);
+    }
+  
+    public void addFeatures(List<String> features) {
+      this.features.addAll(features);
+    }
+  }
+
+  @XmlRootElement
+  public static class SimpleFeatureDTO {
+    private String name;
+    private String description;
+    
+    public SimpleFeatureDTO() {}
+    
+    public SimpleFeatureDTO(String name, String description) {
+      this.name = name;
+      this.description = description;
+    }
+  
+    public String getName() {
+      return name;
+    }
+  
+    public void setName(String name) {
+      this.name = name;
+    }
+  
+    public String getDescription() {
+      return description;
+    }
+  
+    public void setDescription(String description) {
+      this.description = description;
+    }
+  
+    @Override
+    public String toString() {
+      return "SimpleFeatureDTO{" +
+        "name='" + name + '\'' +
+        ", description='" + description + '\'' +
+        '}';
     }
   }
 

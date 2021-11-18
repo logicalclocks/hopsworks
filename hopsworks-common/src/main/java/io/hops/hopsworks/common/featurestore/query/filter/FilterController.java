@@ -30,15 +30,17 @@ import org.apache.calcite.sql.SqlNode;
 import org.apache.calcite.sql.SqlNodeList;
 import org.apache.calcite.sql.fun.SqlStdOperatorTable;
 import org.apache.calcite.sql.parser.SqlParserPos;
-import org.json.JSONTokener;
+import org.apache.calcite.util.DateString;
+import org.apache.calcite.util.TimestampString;
 import org.json.JSONArray;
+import org.json.JSONTokener;
 
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
-import java.util.Arrays;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -169,15 +171,20 @@ public class FilterController {
       filterValue = new SqlNodeList(operandList, SqlParserPos.ZERO);
     } else {
       // Value
-      filterValue = getSQLNode(filter.getFeature().getType(), json.toString());
+      filterValue = getSQLNode(filter.getFeature().getType(), filter.getValue());
     }
     
     return filter.getCondition().operator.createCall(SqlParserPos.ZERO, feature, filterValue);
   }
 
-  private SqlNode getSQLNode(String type, String value){
+  protected SqlNode getSQLNode(String type, String value){
     if (type.equalsIgnoreCase("string")) {
       return SqlLiteral.createCharString(value, SqlParserPos.ZERO);
+    } else if (type.equalsIgnoreCase("date")) {
+      return SqlLiteral.createDate(new DateString(value), SqlParserPos.ZERO);
+    } else if (type.equalsIgnoreCase("timestamp")) {
+      // precision 3 should be milliseconds since we don't support more precision in parquet files
+      return SqlLiteral.createTimestamp(new TimestampString(value), 3, SqlParserPos.ZERO);
     } else {
       return new SqlIdentifier(value, SqlParserPos.ZERO);
     }

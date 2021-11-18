@@ -16,10 +16,10 @@
 'use strict';
 
 angular.module('hopsWorksApp')
-        .factory('AuthGuardService', ['$cookies', '$location', '$rootScope', 'AuthService', 'HopssiteService', 'VariablesService', 'ProjectService',
-          function ($cookies, $location, $rootScope,AuthService, HopssiteService, VariablesService, ProjectService) {
+        .factory('AuthGuardService', ['$location', '$rootScope', 'AuthService', 'HopssiteService', 'VariablesService', 'ProjectService', 'StorageService',
+          function ($location, $rootScope,AuthService, HopssiteService, VariablesService, ProjectService, StorageService) {
             var saveEmail = function (value) {
-              $cookies.put("email", value);
+                StorageService.store("email", value);
             };
             var goToHome = function () {
               $location.path('/');
@@ -30,12 +30,7 @@ angular.module('hopsWorksApp')
               $location.replace();
             };
             var setAuth = function (success) {
-              if (typeof success.data !== 'undefined') {
-                  $cookies.put("otp", success.data.twofactor);
-                  $cookies.put("ldap", success.data.ldap);
-                  $cookies.put("krb", success.data.krb);
-                  $cookies.put("openIdProviders", JSON.stringify(success.data.openIdProviders));//check undefined
-              }
+                StorageService.setVariables(success);
             };
             var checkIsAdmin = function () {
               var isAdmin = sessionStorage.getItem("isAdmin");
@@ -100,12 +95,40 @@ angular.module('hopsWorksApp')
               guardProject: function($q, projectId) {
                 ProjectService.checkProject({id: projectId}).$promise.then(
                   function (success) {
-                    $cookies.put("projectID", success.data.value);
+                      StorageService.store("projectID", success.data.value);
                   }, function (error) {
-                    $cookies.remove("projectID");
-                    goToHome();
-                    return $q.reject(error);
+                      StorageService.remove("projectID");
+                      goToHome();
+                      return $q.reject(error);
                 });
+              },
+              guardRegister: function($q) {
+                var deferred = $q.defer();
+                VariablesService.getAuthStatus().then(
+                  function (success) {
+                      setAuth(success);
+                      if (success.data.registerDisabled) {
+                          goToLogin();
+                          return deferred.reject("Registration disabled.");
+                      }
+                      return deferred.resolve(success);
+                  }, function (error) {
+                      return deferred.resolve(error);
+                  });
+              },
+              guardRecovery: function($q) {
+                var deferred = $q.defer();
+                VariablesService.getAuthStatus().then(
+                    function (success) {
+                        setAuth(success);
+                        if (success.data.loginDisabled) {
+                            goToLogin();
+                            return deferred.reject("Recovery disabled.");
+                        }
+                        return deferred.resolve(success);
+                    }, function (error) {
+                        return deferred.resolve(error);
+                    });
               }
             };
             return service;

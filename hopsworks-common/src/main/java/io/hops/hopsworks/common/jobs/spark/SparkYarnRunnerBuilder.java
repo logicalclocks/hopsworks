@@ -38,6 +38,7 @@
  */
 package io.hops.hopsworks.common.jobs.spark;
 
+import com.google.common.base.Strings;
 import com.logicalclocks.servicediscoverclient.exceptions.ServiceDiscoveryException;
 import io.hops.hopsworks.exceptions.JobException;
 import io.hops.hopsworks.persistence.entity.jobs.configuration.spark.SparkJobConfiguration;
@@ -56,7 +57,6 @@ import io.hops.hopsworks.common.util.templates.ConfigProperty;
 import org.apache.hadoop.yarn.api.records.LocalResourceType;
 import org.apache.hadoop.yarn.api.records.LocalResourceVisibility;
 import org.apache.hadoop.yarn.client.api.YarnClient;
-import org.apache.parquet.Strings;
 
 import java.io.File;
 import java.io.FileInputStream;
