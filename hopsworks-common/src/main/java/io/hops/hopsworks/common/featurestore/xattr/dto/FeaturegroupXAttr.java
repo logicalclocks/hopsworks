@@ -114,7 +114,8 @@ public class FeaturegroupXAttr {
 
     public void setFgType(FGType fgType) {
       this.fgType = fgType;
-
+    }
+    
     public List<SimpleFeatureDTO> getFeatures() {
       return features;
     }
