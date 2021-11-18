@@ -3,7 +3,9 @@
  */
 package io.hops.hopsworks.provenance.ops;
 
+import com.google.gson.Gson;
 import com.lambdista.util.Try;
+import io.hops.hopsworks.common.featurestore.xattr.dto.FeaturegroupXAttr;
 import io.hops.hopsworks.common.provenance.ops.ProvLinksParamBuilder;
 import io.hops.hopsworks.common.integrations.EnterpriseStereotype;
 import io.hops.hopsworks.common.provenance.app.ProvAppController;
@@ -26,6 +28,7 @@ import io.hops.hopsworks.common.provenance.ops.dto.ProvOpsDTO;
 import io.hops.hopsworks.common.provenance.state.ProvStateParamBuilder;
 import io.hops.hopsworks.common.provenance.state.ProvStateParser;
 import io.hops.hopsworks.common.provenance.state.ProvStateController;
+import io.hops.hopsworks.common.provenance.state.dto.ProvStateDTO;
 import io.hops.hopsworks.common.provenance.util.ProvHelper;
 import io.hops.hopsworks.common.provenance.util.functional.CheckedFunction;
 import io.hops.hopsworks.common.provenance.util.functional.CheckedSupplier;
@@ -277,11 +280,6 @@ public class ProvOpsControllerEEImpl implements ProvOpsControllerIface {
       if (outLinks.getAppLinks().isEmpty()) {
         return new ProvLinksDTO();
       }
-      Set<String> outAlive = null;
-      if (filterAlive) {
-        outAlive = getLinksAlive(project, splitOutLinks(outLinks));
-      }
-      return mergeLinks(inLinks, outLinks, null, outAlive, params.isFullLink());
     } else if (params.isOutArtifactDefined()) {
       outLinks = provOutLinks(provLinks(project.getInode().getId(), params.getOutFilterBy(), linkHandlerFactory));
       if (outLinks.getAppLinks().isEmpty()) {
@@ -303,11 +301,6 @@ public class ProvOpsControllerEEImpl implements ProvOpsControllerIface {
       if (inLinks.getAppLinks().isEmpty()) {
         return new ProvLinksDTO();
       }
-      Set<String> inAlive = null;
-      if (filterAlive) {
-        inAlive = getLinksAlive(project, splitInLinks(inLinks));
-      }
-      return mergeLinks(inLinks, outLinks, inAlive, null, params.isFullLink());
     } else if (params.isAppIdDefined()) {
       inLinks = provInLinks(provLinks(project.getInode().getId(), params.getInFilterBy(), linkHandlerFactory));
       if (inLinks.getAppLinks().isEmpty()) {
@@ -317,32 +310,55 @@ public class ProvOpsControllerEEImpl implements ProvOpsControllerIface {
       if (outLinks.getAppLinks().isEmpty()) {
         return new ProvLinksDTO();
       }
-      Set<String> inAlive = null;
-      Set<String> outAlive = null;
-      if (filterAlive) {
-        inAlive = getLinksAlive(project, splitInLinks(inLinks));
-        outAlive = getLinksAlive(project, splitOutLinks(outLinks));
-      }
-      return mergeLinks(inLinks, outLinks, inAlive, outAlive, params.isFullLink());
-    } else {
-      throw new ProvenanceException(RESTCodes.ProvenanceErrorCode.BAD_REQUEST, Level.INFO,
-        "query too vague - please define at least one of APP_ID, IN_ARTIFACT, OUT_ARTIFACT",
-        "full provenance link query error");
     }
+    else{
+      throw new ProvenanceException(RESTCodes.ProvenanceErrorCode.BAD_REQUEST, Level.INFO,
+              "query too vague - please define at least one of APP_ID, IN_ARTIFACT, OUT_ARTIFACT",
+              "full provenance link query error");
+    }
+    Set<ProvStateDTO> inAlive = null;
+    Set<ProvStateDTO> outAlive = null;
+    if (filterAlive) {
+      inAlive = getLinksAlive(project, splitInLinks(inLinks));
+      outAlive = getLinksAlive(project, splitOutLinks(outLinks));
+    }
+    return mergeLinks(inLinks, outLinks, inAlive, outAlive, params.isFullLink());
   }
   
   private ProvLinksDTO mergeLinks(ProvLinksDTO.Builder inLinks, ProvLinksDTO.Builder outLinks,
-                                  Set<String> inAlive, Set<String> outAlive, boolean fullLink) {
+                                  Set<ProvStateDTO> inAlive, Set<ProvStateDTO> outAlive, boolean fullLink) {
     ProvLinksDTO.Builder result = new ProvLinksDTO.Builder();
     for (Map.Entry<String, ProvLinksDTO> e : inLinks.getAppLinks().entrySet()) {
       if (inAlive != null) {
-        e.getValue().getIn().entrySet().removeIf(ee -> !inAlive.contains(ee.getKey()));
+        // remove not alive
+        e.getValue().getIn().entrySet().removeIf(ee -> !inAlive.stream()
+                .anyMatch(provState -> provState.getMlId().equals(ee.getKey())));
+        // set feature group type
+        e.getValue().getIn().entrySet().stream().forEach(ee -> ee.getValue()
+          .setFgType(
+            new Gson().fromJson(
+              inAlive.stream().filter(provState -> provState.getMlId().equals(ee.getKey()))
+                .findFirst().get().getXattrs().getOrDefault("featurestore", ""),
+              FeaturegroupXAttr.FullDTO.class
+            ).getFgType())
+        );
       }
       result.addInArtifacts(e.getKey(), e.getValue().getIn());
     }
     for (Map.Entry<String, ProvLinksDTO> e : outLinks.getAppLinks().entrySet()) {
       if (outAlive != null) {
-        e.getValue().getOut().entrySet().removeIf(ee -> !outAlive.contains(ee.getKey()));
+        // remove not alive
+        e.getValue().getOut().entrySet().removeIf(ee -> !outAlive.stream()
+                .anyMatch(provState -> provState.getMlId().equals(ee.getKey())));
+        // set feature group type
+        e.getValue().getOut().entrySet().stream().forEach(ee -> ee.getValue()
+          .setFgType(
+            new Gson().fromJson(
+              outAlive.stream().filter(provState -> provState.getMlId().equals(ee.getKey()))
+                .findFirst().get().getXattrs().getOrDefault("featurestore", ""),
+              FeaturegroupXAttr.FullDTO.class
+            ).getFgType())
+        );
       }
       result.addOutArtifacts(e.getKey(), e.getValue().getOut());
     }
@@ -357,33 +373,33 @@ public class ProvOpsControllerEEImpl implements ProvOpsControllerIface {
     }
     return result.build();
   }
-  
+
   private ProvLinksDTO.Builder provInLinks(ProvLinksDTO.Builder raw) {
     raw.getAppLinks().entrySet().removeIf(e -> e.getValue().getIn().isEmpty());
     return raw;
   }
-  
+
   private ProvLinksDTO.Builder provOutLinks(ProvLinksDTO.Builder raw) {
     raw.getAppLinks().entrySet().removeIf(e -> e.getValue().getOut().isEmpty());
     return raw;
   }
-  
+
   enum LinkTypes {
     FEATURESTORE,
     ML,
     OTHER;
   }
-  
+
   private Map<LinkTypes, List<ProvOpsDTO>> splitInLinks(ProvLinksDTO.Builder links) {
     return links.getAppLinks().values().stream().flatMap(appLinks -> appLinks.getIn().values().stream())
       .collect(Collectors.groupingBy(this::getLinkType));
   }
-  
+
   private Map<LinkTypes, List<ProvOpsDTO>> splitOutLinks(ProvLinksDTO.Builder links) {
     return links.getAppLinks().values().stream().flatMap(appLinks -> appLinks.getOut().values().stream())
       .collect(Collectors.groupingBy(this::getLinkType));
   }
-  
+
   private LinkTypes getLinkType(ProvOpsDTO link) {
     switch (link.getDocSubType()) {
       case FEATURE:
@@ -400,16 +416,17 @@ public class ProvOpsControllerEEImpl implements ProvOpsControllerIface {
         return LinkTypes.OTHER;
     }
   }
-  
-  private Set<String> getLinksAlive(Project project, Map<LinkTypes, List<ProvOpsDTO>> links)
+
+  private Set<ProvStateDTO> getLinksAlive(Project project, Map<LinkTypes, List<ProvOpsDTO>> links)
     throws ProvenanceException {
     ProvStateParamBuilder params1 = new ProvStateParamBuilder();
     ProvStateParamBuilder params2 = new ProvStateParamBuilder();
     int mlSize1 = links.getOrDefault(LinkTypes.FEATURESTORE, new LinkedList<>()).size();
     int mlSize2 = links.getOrDefault(LinkTypes.ML, new LinkedList<>()).size();
-    ProvStateController.HandlerFactory<String, Set<String>, Pair<Long, Set<String>>> stateHandlerFactory
+    ProvStateController.HandlerFactory<ProvStateDTO, Set<ProvStateDTO>,
+            Pair<Long, Set<ProvStateDTO>>> stateHandlerFactory
       = new ProvStateController.HandlerFactory.MLIdSet();
-    Set<String> outAlive = new HashSet<>();
+    Set<ProvStateDTO> outAlive = new HashSet<>();
     if (mlSize1 > 0) {
       for (ProvOpsDTO link : links.get(LinkTypes.FEATURESTORE)) {
         params1.filterByField(ProvStateParser.FieldsP.ML_ID, link.getMlId());

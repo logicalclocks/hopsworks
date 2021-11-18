@@ -32,7 +32,8 @@ public class FeaturestoreXAttrsConstants {
   public static final String CREATE_DATE = "create_date";
   public static final String CREATOR = "creator";
   public static final String KEYWORDS = "keywords";
-  
+  public static final String FG_TYPE = "fgType";
+
   public static final String TAGS = "tags";
   
   public static String getFeaturestoreXAttrKey() {

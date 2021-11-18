@@ -81,11 +81,18 @@ describe "On #{ENV['OS']}" do
       @base_fg_count = 4
       @base_fgs = []
       @base_fg_count.times do |i| @base_fgs[i] = "#{@base_fg_prefix}#{i}" end
+	  @base_on_demand_fg_prefix = "on_demand_fg_1_"
+	  @base_on_demand_fg_count = 4
+      @base_on_demand_fgs = []
+      @base_on_demand_fg_count.times do |i| @base_on_demand_fgs[i] = "#{@base_on_demand_fg_prefix}#{i}" end
       @derived_fg = "fg_2_1"
+	  @derived_synthetic_fg = "derived_synthetic_fg_2_1"
       @td_1 = "td1"
       @create_synth_fg_job = "create_synthetic_fg"
+	  @create_synth_on_demand_fg_job = "create_synthetic_on_demand_fg"
       @create_synth_td_job = "create_synthetic_td"
       @derive_synth_fg_job = "derive_synthetic_fg"
+	  @derive_synth_on_demand_fg_job = "derive_synthetic_on_demand_fg"
     end
 
     context 'setup of' do
@@ -118,6 +125,39 @@ describe "On #{ENV['OS']}" do
           expect(featuregroup_exists(@project1[:id], @base_fgs[i])).to be(true)
         end
       end
+	  it 'on-demand fg' do
+        create_session(@user1_params[:email], @user1_params[:password])
+		featurestore_id = get_featurestore_id(@project1[:id])
+		dataset_name = "temp_dir_#{short_random_id}"
+		create_dataset_by_name_checked(@project1, dataset_name, permission: "READ_ONLY")
+		json_result, connector_name = create_hopsfs_connector(@project1[:id], featurestore_id, datasetName: dataset_name)
+        if job_exists(@project1[:id], @create_synth_on_demand_fg_job)
+          pp "job exists - skipping"
+        else
+          prepare_spark_job(@project1, @user1[:username], @create_synth_on_demand_fg_job, "py")
+        end
+        expect(job_exists(@project1[:id], @create_synth_on_demand_fg_job)).to be(true)
+        #check if fgs exist
+        fg_or_exist = false
+        fg_and_exist = true
+        @base_on_demand_fg_count.times do |i|
+          fg_or_exist = fg_or_exist || featuregroup_exists(@project1[:id], @base_on_demand_fgs[i])
+          fg_and_exist = fg_and_exist && featuregroup_exists(@project1[:id], @base_on_demand_fgs[i])
+        end
+        #all or nothing approach
+        if fg_or_exist && fg_and_exist
+          pp "all featuregroups already exist - skipping"
+        elsif fg_or_exist && !fg_and_exist
+          raise "partial results - probably leftover, please clean before running test again"
+        else
+          args = [@base_on_demand_fg_prefix, @base_on_demand_fg_count, dataset_name, connector_name]
+          run_job(@project1, @create_synth_on_demand_fg_job, args: args)
+        end
+        #check results
+        @base_on_demand_fg_count.times do |i|
+          expect(featuregroup_exists(@project1[:id], @base_on_demand_fgs[i])).to be(true)
+        end
+      end
       it 'derived fg' do
         create_session(@user1_params[:email], @user1_params[:password])
         #make sure fgs exist
@@ -140,6 +180,29 @@ describe "On #{ENV['OS']}" do
         end
         #check results
         expect(featuregroup_exists(@project1[:id], @derived_fg)).to be(true)
+      end
+	  it 'derived on-demand fg' do
+        create_session(@user1_params[:email], @user1_params[:password])
+        #make sure fgs exist
+        @base_on_demand_fg_count.times do |i|
+          expect(featuregroup_exists(@project1[:id], @base_on_demand_fgs[i])).to be(true)
+        end
+        if job_exists(@project1[:id], @derive_synth_on_demand_fg_job)
+          pp "job exists - skipping"
+        else
+          prepare_spark_job(@project1, @user1[:username], @derive_synth_on_demand_fg_job, "py")
+        end
+        expect(job_exists(@project1[:id], @derive_synth_on_demand_fg_job)).to be(true)
+        #check if fgs exist
+        if featuregroup_exists(@project1[:id], @derived_synthetic_fg)
+          pp "all featuregroups already exist - skipping"
+        else
+          fs = get_featurestore(@project1[:id])
+          args = [fs["featurestoreName"], fs["featurestoreName"], @base_on_demand_fg_prefix, @base_on_demand_fg_count, @derived_synthetic_fg]
+          run_job(@project1, @derive_synth_on_demand_fg_job, args: args)
+        end
+        #check results
+        expect(featuregroup_exists(@project1[:id], @derived_synthetic_fg)).to be(true)
       end
       it 'td' do
         create_session(@user1_params[:email], @user1_params[:password])
@@ -312,6 +375,30 @@ describe "On #{ENV['OS']}" do
         result = prov_links_get(@project1, out_artifact: "#{@derived_fg}_1")
         expect(result["items"].length).to be >= 1
         prov_verify_link(result, app_id, "#{@base_fgs[0]}_1", "#{@derived_fg}_1")
+		expected_in_artifact = result["items"][0]["in"]["entry"].select do |i| i["value"]["fgType"] == "CACHED" end
+        expect(expected_in_artifact.length).to eq(@base_fg_count)
+		expected_out_artifact = result["items"][0]["out"]["entry"].select do |i| i["value"]["fgType"] == "CACHED" end
+        expect(expected_out_artifact.length).to eq(1)
+      end
+	  it 'on-demand fg to fg - using out fg id' do
+        create_session(@user1_params[:email], @user1_params[:password])
+        expect(job_exists(@project1[:id], @derive_synth_on_demand_fg_job)).to be(true)
+        #make sure fgs exist
+        @base_fg_count.times do |i|
+          expect(featuregroup_exists(@project1[:id], @base_on_demand_fgs[i])).to be(true)
+        end
+        expect(featuregroup_exists(@project1[:id], @derived_synthetic_fg)).to be(true)
+
+        get_executions(@project1[:id], @derive_synth_on_demand_fg_job, "")
+        expect(json_body[:count]).to eq(1)
+        app_id = json_body[:items][0][:appId]
+        result = prov_links_get(@project1, out_artifact: "#{@derived_synthetic_fg}_1")
+        expect(result["items"].length).to be >= 1
+        prov_verify_link(result, app_id, "#{@base_on_demand_fgs[0]}_1", "#{@derived_synthetic_fg}_1")
+		expected_in_artifact = result["items"][0]["in"]["entry"].select do |i| i["value"]["fgType"] == "ON_DEMAND" end
+        expect(expected_in_artifact.length).to eq(@base_on_demand_fg_count)
+		expected_out_artifact = result["items"][0]["out"]["entry"].select do |i| i["value"]["fgType"] == "CACHED" end
+        expect(expected_out_artifact.length).to eq(1)
       end
       it 'fg to td - using td id' do
         create_session(@user1_params[:email], @user1_params[:password])
