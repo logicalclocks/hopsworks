@@ -281,18 +281,18 @@ public class ProvStateController {
         }
       }
     }
-    
-    class MLIdSet implements HandlerFactory<String, Set<String>, Pair<Long, Set<String>>> {
+
+    class MLIdSet implements HandlerFactory<ProvStateDTO, Set<ProvStateDTO>, Pair<Long, Set<ProvStateDTO>>> {
       @Override
-      public ElasticHits.Handler<String, Set<String>> getHandler() {
-        ElasticHits.Parser<String> mlIdParser =
-          hit -> ProvStateParser.tryInstance(BasicElasticHit.instance(hit))
-            .flatMap(s -> Try.apply(s::getMlId));
+      public ElasticHits.Handler<ProvStateDTO, Set<ProvStateDTO>> getHandler() {
+        ElasticHits.Parser<ProvStateDTO> mlIdParser =
+          hit -> ProvStateParser.tryInstance(BasicElasticHit.instance(hit));
         return ElasticHits.handlerAddToSet(mlIdParser);
       }
-      
+
       @Override
-      public Pair<Long, Set<String>> checkedResult(Pair<Long, Try<Set<String>>> result) throws ProvenanceException {
+      public Pair<Long, Set<ProvStateDTO>> checkedResult(Pair<Long, Try<Set<ProvStateDTO>>> result)
+              throws ProvenanceException {
         try {
           return Pair.with(result.getValue0(), result.getValue1().checkedGet());
         } catch (Throwable t) {

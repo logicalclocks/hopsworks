@@ -50,7 +50,7 @@ public class FeaturegroupXAttr {
         '}';
     }
   }
-  
+
   /**
    * document attached as an xattr to a featuregroup directory
    */
@@ -62,6 +62,8 @@ public class FeaturegroupXAttr {
     private Long createDate;
     @XmlElement(nillable = true, name = FeaturestoreXAttrsConstants.CREATOR)
     private String creator;
+    @XmlElement(nillable = true, name = FeaturestoreXAttrsConstants.FG_TYPE)
+    private FGType fgType;
     @XmlElement(nillable = false, name = FeaturestoreXAttrsConstants.FG_FEATURES)
     private List<SimpleFeatureDTO> features = new LinkedList<>();
   
@@ -106,6 +108,13 @@ public class FeaturegroupXAttr {
       this.creator = creator;
     }
 
+    public FGType getFgType() {
+      return fgType;
+    }
+
+    public void setFgType(FGType fgType) {
+      this.fgType = fgType;
+
     public List<SimpleFeatureDTO> getFeatures() {
       return features;
     }
@@ -128,6 +137,7 @@ public class FeaturegroupXAttr {
         "description='" + description + '\'' +
         ", createDate=" + createDate +
         ", creator='" + creator + '\'' +
+        ", fgType='" + fgType + '\'' +
         ", features=" + features +
         '}';
     }
@@ -223,5 +233,10 @@ public class FeaturegroupXAttr {
         ", description='" + description + '\'' +
         '}';
     }
+  }
+
+  public enum FGType {
+    ON_DEMAND,
+    CACHED
   }
 }

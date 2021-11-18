@@ -16,6 +16,7 @@
 package io.hops.hopsworks.common.provenance.ops.dto;
 
 import io.hops.hopsworks.common.api.RestDTO;
+import io.hops.hopsworks.common.featurestore.xattr.dto.FeaturegroupXAttr;
 import io.hops.hopsworks.common.provenance.app.dto.ProvAppStateDTO;
 import io.hops.hopsworks.common.provenance.core.ProvParser;
 import io.hops.hopsworks.common.provenance.core.Provenance;
@@ -45,6 +46,7 @@ public class ProvOpsDTO extends RestDTO<ProvOpsDTO> {
   private String projectName;
   private ProvParser.DocSubType docSubType;
   private String mlId;
+  private FeaturegroupXAttr.FGType fgType;
   private ProvAppStateDTO appState;
   
   private String aggregation;
@@ -202,7 +204,15 @@ public class ProvOpsDTO extends RestDTO<ProvOpsDTO> {
   public void setMlId(String mlId) {
     this.mlId = mlId;
   }
-  
+
+  public FeaturegroupXAttr.FGType getFgType() {
+    return fgType;
+  }
+
+  public void setFgType(FeaturegroupXAttr.FGType fgType) {
+    this.fgType = fgType;
+  }
+
   public String getProjectName() {
     return projectName;
   }
