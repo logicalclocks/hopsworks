@@ -16,6 +16,8 @@
 
 package io.hops.hopsworks.common.featurestore.trainingdatasets.split;
 
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlType;
@@ -25,6 +27,7 @@ import javax.xml.bind.annotation.XmlType;
  * representation using jaxb.
  */
 @XmlRootElement
+@XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(propOrder = {"name", "percentage"})
 public class TrainingDatasetSplitDTO {
   @XmlElement
