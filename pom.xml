@@ -88,16 +88,16 @@
     <apache-commons-lang3.version>3.8.1</apache-commons-lang3.version>
     <apache-commons-text.version>1.9</apache-commons-text.version>
     <apache-htrace-core4.version>4.2.0-incubating</apache-htrace-core4.version>
-    <apache-httpclient.version>4.5.12</apache-httpclient.version>
-    <apache-httpcore.version>4.4.11</apache-httpcore.version>
-    <avro.version>1.10.2</avro.version>
+    <apache-httpclient.version>4.5.13</apache-httpclient.version>
+    <apache-httpcore.version>4.4.14</apache-httpcore.version>
+    <avro.version>1.11.0</avro.version>
     <awssdk.version>2.17.19</awssdk.version>
-    <bcpkix-jdk15on.version>1.60</bcpkix-jdk15on.version>
-    <bcprov-jdk15on.version>1.60</bcprov-jdk15on.version>
+    <bcpkix-jdk15on.version>1.69</bcpkix-jdk15on.version>
+    <bcprov-jdk15on.version>1.69</bcprov-jdk15on.version>
     <bijection-avro_2.12.version>0.9.6</bijection-avro_2.12.version>
     <caffeine.version>2.8.0</caffeine.version>
-    <calcite-core.version>1.21.0</calcite-core.version>
-    <calcite-server.version>1.21.0</calcite-server.version>
+    <calcite-core.version>1.27.0</calcite-core.version>
+    <calcite-server.version>1.27.0</calcite-server.version>
     <commons-collections.version>3.2.2</commons-collections.version>
     <commons-fileupload.version>1.4</commons-fileupload.version>
     <commons-httpclient.version>3.1</commons-httpclient.version>
@@ -107,7 +107,7 @@
     <commons.lang3.version>3.8.1</commons.lang3.version>
     <eclipse-egit-github-core.version>2.1.5</eclipse-egit-github-core.version>
     <ehcache.version>3.7.0</ehcache.version>
-    <elasticsearch-rest-high-level-client.version>7.2.0</elasticsearch-rest-high-level-client.version>
+    <elasticsearch-rest-high-level-client.version>7.7.0</elasticsearch-rest-high-level-client.version>
     <flink-clients_2.11.version>1.9.2</flink-clients_2.11.version>
     <flink-yarn_2.11.version>1.9.2.1</flink-yarn_2.11.version>
     <freemarker.version>2.3.29</freemarker.version>
@@ -135,16 +135,13 @@
     <jettison.version>1.1</jettison.version>
     <jsch.version>0.1.54</jsch.version>
     <json-schema.version>1.12.1</json-schema.version>
-    <jsoup.version>1.13.1</jsoup.version>
-    <junit.version>4.13</junit.version>
+    <jsoup.version>1.14.2</jsoup.version>
+    <junit.version>4.13.2</junit.version>
     <kafka-clients.version>2.3.0</kafka-clients.version>
     <kafka_2.11.version>2.3.0</kafka_2.11.version>
     <kubernetes-client.version>4.10.3</kubernetes-client.version>
     <lambdista-try.version>0.3.1</lambdista-try.version>
-    <libfb303.version>0.9.3</libfb303.version>
-    <libthrift.version>0.9.3</libthrift.version>
-    <log4j-api.version>2.6.2</log4j-api.version>
-    <log4j-core.version>2.6.2</log4j-core.version>
+    <libthrift.version>0.15.0</libthrift.version>
     <mockito.version>1.10.19</mockito.version>
     <oauth2-oidc-sdk.version>9.12</oauth2-oidc-sdk.version>
     <oauth-java-jwt.version>3.18.1</oauth-java-jwt.version>
@@ -159,7 +156,7 @@
     <reflections.version>0.9.12</reflections.version>
     <resilience4j-retry.version>0.16.0</resilience4j-retry.version>
     <selenium.version>3.141.59</selenium.version>
-    <service-discovery-client.version>0.5-SNAPSHOT</service-discovery-client.version>
+    <service-discovery-client.version>0.6-SNAPSHOT</service-discovery-client.version>
     <service-proxy.version>4.6.3</service-proxy.version>
     <slf4j-api.version>1.7.21</slf4j-api.version>
     <snakeyaml.version>1.27</snakeyaml.version>
@@ -333,11 +330,39 @@
         <groupId>io.hops</groupId>
         <artifactId>hadoop-client-api</artifactId>
         <version>${hops.version}</version>
+        <exclusions>
+          <exclusion>
+            <groupId>com.nimbusds</groupId>
+            <artifactId>nimbus-jose-jwt</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>javax.servlet</groupId>
+            <artifactId>*</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>com.sun.jersey</groupId>
+            <artifactId>*</artifactId>
+          </exclusion>
+        </exclusions>
       </dependency>
       <dependency>
         <groupId>io.hops</groupId>
         <artifactId>hadoop-client-runtime</artifactId>
         <version>${hops.version}</version>
+        <exclusions>
+          <exclusion>
+            <groupId>io.hops</groupId>
+            <artifactId>hadoop-client-api</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>org.eclipse.jetty</groupId>
+            <artifactId>*</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>org.apache.htrace</groupId>
+            <artifactId>htrace-core4</artifactId>
+          </exclusion>
+        </exclusions>
       </dependency>
       <dependency>
         <groupId>io.hops</groupId>
@@ -423,55 +448,7 @@
         <exclusions>
           <exclusion>
             <groupId>org.eclipse.jetty</groupId>
-            <artifactId>jetty-http</artifactId>
-          </exclusion>
-          <exclusion>
-            <groupId>org.eclipse.jetty</groupId>
-            <artifactId>jetty-xml</artifactId>
-          </exclusion>
-          <exclusion>
-            <groupId>org.eclipse.jetty</groupId>
-            <artifactId>jetty-util</artifactId>
-          </exclusion>
-          <exclusion>
-            <groupId>org.eclipse.jetty</groupId>
-            <artifactId>jetty-server</artifactId>
-          </exclusion>
-          <exclusion>
-            <groupId>org.eclipse.jetty</groupId>
-            <artifactId>jetty-client</artifactId>
-          </exclusion>
-          <exclusion>
-            <groupId>org.eclipse.jetty</groupId>
-            <artifactId>jetty-io</artifactId>
-          </exclusion>
-          <exclusion>
-            <groupId>org.eclipse.jetty</groupId>
-            <artifactId>jetty-webapp</artifactId>
-          </exclusion>
-          <exclusion>
-            <groupId>org.eclipse.jetty</groupId>
-            <artifactId>jetty-servlet</artifactId>
-          </exclusion>
-          <exclusion>
-            <groupId>org.eclipse.jetty</groupId>
-            <artifactId>jetty-runner</artifactId>
-          </exclusion>
-          <exclusion>
-            <groupId>org.eclipse.jetty</groupId>
-            <artifactId>jetty-plus</artifactId>
-          </exclusion>
-          <exclusion>
-            <groupId>org.eclipse.jetty</groupId>
-            <artifactId>jetty-jaas</artifactId>
-          </exclusion>
-          <exclusion>
-            <groupId>org.eclipse.jetty</groupId>
-            <artifactId>jetty-security</artifactId>
-          </exclusion>
-          <exclusion>
-            <groupId>org.eclipse.jetty</groupId>
-            <artifactId>jetty-rewrite</artifactId>
+            <artifactId>*</artifactId>
           </exclusion>
           <exclusion>
             <groupId>com.sun.jersey</groupId>
@@ -510,6 +487,10 @@
             <artifactId>hive-storage-api</artifactId>
           </exclusion>
           <exclusion>
+            <groupId>org.apache.parquet</groupId>
+            <artifactId>parquet-hadoop-bundle</artifactId>
+          </exclusion>
+          <exclusion>
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-databind</artifactId>
           </exclusion>
@@ -536,6 +517,10 @@
           <exclusion>
             <groupId>org.apache.ant</groupId>
             <artifactId>ant</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>io.netty</groupId>
+            <artifactId>netty-common</artifactId>
           </exclusion>
         </exclusions>
       </dependency>
@@ -574,20 +559,6 @@
         <artifactId>hopsworks-common</artifactId>
         <version>${project.version}</version>
         <type>ejb</type>
-        <exclusions>
-          <exclusion>
-            <groupId>com.nimbusds</groupId>
-            <artifactId>nimbus-jose-jwt</artifactId>
-          </exclusion>
-          <exclusion>
-            <groupId>javax.servlet</groupId>
-            <artifactId>*</artifactId>
-          </exclusion>
-          <exclusion>
-            <groupId>com.sun.jersey</groupId>
-            <artifactId>*</artifactId>
-          </exclusion>
-        </exclusions>
       </dependency>
       <dependency>
         <groupId>io.hops.hopsworks</groupId>
@@ -723,6 +694,16 @@
         <groupId>org.apache.calcite</groupId>
         <artifactId>calcite-core</artifactId>
         <version>${calcite-core.version}</version>
+        <exclusions>
+          <exclusion>
+           <groupId>log4j</groupId>
+            <artifactId>log4j</artifactId>
+          </exclusion>
+         <exclusion>
+           <groupId>net.minidev</groupId>
+           <artifactId>json-smart</artifactId>
+         </exclusion>
+       </exclusions>
       </dependency>
       <dependency>
         <groupId>org.apache.calcite</groupId>
@@ -787,21 +768,6 @@
             <artifactId>jackson-datatype-jdk8</artifactId>
           </exclusion>
         </exclusions>
-      </dependency>
-      <dependency>
-        <groupId>org.apache.logging.log4j</groupId>
-        <artifactId>log4j-api</artifactId>
-        <version>${log4j-api.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.apache.logging.log4j</groupId>
-        <artifactId>log4j-core</artifactId>
-        <version>${log4j-core.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.apache.thrift</groupId>
-        <artifactId>libfb303</artifactId>
-        <version>${libfb303.version}</version>
       </dependency>
       <dependency>
         <groupId>org.apache.thrift</groupId>
@@ -877,6 +843,16 @@
         <groupId>org.elasticsearch.client</groupId>
         <artifactId>elasticsearch-rest-high-level-client</artifactId>
         <version>${elasticsearch-rest-high-level-client.version}</version>
+        <exclusions>
+          <exclusion>
+            <groupId>com.fasterxml.jackson.dataformat</groupId>
+            <artifactId>jackson-dataformat-cbor</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>org.apache.logging.log4j</groupId>
+            <artifactId>*</artifactId>
+          </exclusion>
+        </exclusions>
       </dependency>
       <dependency>
         <groupId>org.freemarker</groupId>
@@ -1216,14 +1192,18 @@
           <plugin>
             <groupId>org.owasp</groupId>
             <artifactId>dependency-check-maven</artifactId>
-            <version>6.2.2</version>
-            <!--        <configuration>-->
-            <!--          <failBuildOnCVSS>9</failBuildOnCVSS>-->
-            <!--        </configuration>-->
+            <version>6.4.1</version>
+            <inherited>false</inherited>
+            <configuration>
+              <suppressionFiles>
+                <suppressionFile>project-suppression.xml</suppressionFile>
+              </suppressionFiles>
+              <failBuildOnCVSS>7.6</failBuildOnCVSS>
+            </configuration>
             <executions>
               <execution>
                 <goals>
-                  <goal>check</goal>
+                  <goal>aggregate</goal>
                 </goals>
               </execution>
             </executions>

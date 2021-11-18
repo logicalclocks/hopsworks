@@ -3,6 +3,7 @@
  */
 package io.hops.hopsworks.remote.user.oauth2;
 
+import com.google.common.base.Strings;
 import com.nimbusds.oauth2.sdk.ParseException;
 import com.nimbusds.oauth2.sdk.token.BearerAccessToken;
 import io.hops.hopsworks.common.dao.remote.oauth.OauthClientFacade;
@@ -25,7 +26,6 @@ import io.hops.hopsworks.persistence.entity.user.security.ua.UserAccountStatus;
 import io.hops.hopsworks.remote.user.GroupMapping;
 import io.hops.hopsworks.remote.user.RemoteUserAuthController;
 import io.hops.hopsworks.restutils.RESTCodes;
-import org.apache.parquet.Strings;
 
 import javax.ejb.EJB;
 import javax.ejb.Stateless;

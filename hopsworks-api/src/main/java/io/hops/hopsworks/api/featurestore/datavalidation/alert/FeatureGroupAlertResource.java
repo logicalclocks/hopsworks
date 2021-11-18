@@ -15,6 +15,7 @@
  */
 package io.hops.hopsworks.api.featurestore.datavalidation.alert;
 
+import com.google.common.base.Strings;
 import io.hops.hopsworks.alert.dao.AlertReceiverFacade;
 import io.hops.hopsworks.alert.exception.AlertManagerAccessControlException;
 import io.hops.hopsworks.alert.exception.AlertManagerUnreachableException;
@@ -46,7 +47,6 @@ import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.datavalida
 import io.hops.hopsworks.restutils.RESTCodes;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
-import org.apache.parquet.Strings;
 
 import javax.ejb.EJB;
 import javax.ejb.TransactionAttribute;

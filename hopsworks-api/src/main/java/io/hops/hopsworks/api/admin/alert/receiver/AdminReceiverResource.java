@@ -16,6 +16,7 @@
 
 package io.hops.hopsworks.api.admin.alert.receiver;
 
+import com.google.common.base.Strings;
 import io.hops.hopsworks.alert.AlertManagerConfiguration;
 import io.hops.hopsworks.alert.exception.AlertManagerAccessControlException;
 import io.hops.hopsworks.alert.exception.AlertManagerUnreachableException;
@@ -42,7 +43,6 @@ import io.hops.hopsworks.persistence.entity.alertmanager.AlertType;
 import io.hops.hopsworks.restutils.RESTCodes;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
-import org.apache.parquet.Strings;
 
 import javax.ejb.EJB;
 import javax.ejb.TransactionAttribute;

@@ -77,10 +77,10 @@
   <session-config>
     <session-timeout>600</session-timeout>
     <cookie-config>
-      <name>SESSION</name>
+      <name>SESSION-REMOTE</name>
       <path>/</path>
       <http-only>true</http-only>
-      <secure>false</secure>
+      <secure>true</secure>
     </cookie-config>
   </session-config>  
   

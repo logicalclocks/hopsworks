@@ -197,7 +197,7 @@ public class PitJoinController {
         "int",null,null), SqlCondition.EQUALS, "1"), false);
       SqlNodeList selectList = SqlNodeList.of(new SqlIdentifier(ALL_FEATURES, SqlParserPos.ZERO));
       newSubQueries.add(new SqlSelect(SqlParserPos.ZERO, null, selectList, select, whereRank, null,
-        null, null, null, null, null));
+        null, null, null, null, null, null));
     }
     return newSubQueries;
   }
@@ -280,7 +280,7 @@ public class PitJoinController {
         Arrays.asList("`" + f.getFgAlias(true) + "`", "`" + featurePrefixed + "`"), SqlParserPos.ZERO));
     }
     SqlSelect body = new SqlSelect(SqlParserPos.ZERO, null, selectList,
-            buildWithJoin(newJoins, newJoins.size()-1), null, null, null, null, null, null, null);
+            buildWithJoin(newJoins, newJoins.size()-1), null, null, null, null, null, null, null, null);
     
     return new SqlWith(SqlParserPos.ZERO, selectAsses, body);
   }

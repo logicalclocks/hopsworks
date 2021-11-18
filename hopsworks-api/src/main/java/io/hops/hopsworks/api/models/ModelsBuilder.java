@@ -49,7 +49,6 @@ import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.project.team.ProjectTeam;
 import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.restutils.RESTCodes;
-import org.apache.logging.log4j.core.util.Integers;
 import org.elasticsearch.search.sort.SortOrder;
 import org.javatuples.Pair;
 import org.json.JSONObject;
@@ -265,7 +264,7 @@ public class ModelsBuilder {
     throws GenericException, DatasetException {
     Integer endpointId;
     try {
-      endpointId = Integers.parseInt(sEndpointId);
+      endpointId = Integer.parseInt(sEndpointId);
     } catch(NumberFormatException e) {
       throw new GenericException(RESTCodes.GenericErrorCode.ILLEGAL_ARGUMENT, Level.FINE,
         "Provided Endpoint Id was malformed - expected a Integer ", e.getMessage(), e);

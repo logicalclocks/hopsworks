@@ -16,6 +16,7 @@
 
 package io.hops.hopsworks.api.alert.silence;
 
+import com.google.common.base.Strings;
 import io.hops.hopsworks.alert.AlertManager;
 import io.hops.hopsworks.alert.exception.AlertManagerAccessControlException;
 import io.hops.hopsworks.alert.exception.AlertManagerUnreachableException;
@@ -29,7 +30,6 @@ import io.hops.hopsworks.common.dao.AbstractFacade;
 import io.hops.hopsworks.exceptions.AlertException;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.restutils.RESTCodes;
-import org.apache.parquet.Strings;
 
 import javax.ejb.EJB;
 import javax.ejb.Stateless;

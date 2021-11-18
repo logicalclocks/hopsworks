@@ -3,11 +3,11 @@
  */
 package io.hops.hopsworks.remote.user.ldap;
 
+import com.google.common.base.Strings;
 import io.hops.hopsworks.common.remote.RemoteUserDTO;
 import io.hops.hopsworks.common.remote.RemoteUsersDTO;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.persistence.entity.remote.user.RemoteUser;
-import org.apache.parquet.Strings;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;

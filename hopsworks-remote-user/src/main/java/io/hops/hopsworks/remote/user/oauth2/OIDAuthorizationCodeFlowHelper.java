@@ -8,6 +8,7 @@ import com.auth0.jwt.JWTVerifier;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.exceptions.SignatureVerificationException;
 import com.auth0.jwt.interfaces.DecodedJWT;
+import com.google.common.base.Strings;
 import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jose.jwk.RSAKey;
 import com.nimbusds.oauth2.sdk.AuthorizationCode;
@@ -50,7 +51,6 @@ import io.hops.hopsworks.persistence.entity.remote.oauth.OauthClient;
 import io.hops.hopsworks.persistence.entity.remote.oauth.OauthLoginState;
 import io.hops.hopsworks.persistence.entity.user.Users;
 import net.minidev.json.JSONObject;
-import org.apache.parquet.Strings;
 
 import javax.ejb.EJB;
 import javax.ejb.Stateless;

@@ -535,7 +535,7 @@ public class ConstructorController {
 
     // Assemble the query
     return new SqlSelect(SqlParserPos.ZERO, null, selectList, joinNode,
-        filterNode, null, null, null, orderByList, null, null);
+        filterNode, null, null, null, orderByList, null, null, null);
   }
 
   public SqlNode caseWhenDefault(Feature feature) {

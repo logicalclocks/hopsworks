@@ -49,7 +49,6 @@ angular.module('hopsWorksApp')
                 try {
                   if ($window.Storage) {
                     $window.localStorage.clear();
-                    console.log("LocalStorage: cleaning local storage");
                     return true;
                   }
                 } catch (error) {
@@ -62,10 +61,8 @@ angular.module('hopsWorksApp')
                   if ($window.Storage) {
                     if (value === null) {
                       $window.localStorage.setItem(key, value);
-//                      console.log("LocalStorage: storing key: " + key);
                     } else {
                       $window.localStorage.setItem(key, $window.JSON.stringify(value));
-//                      console.log("LocalStorage: storing key/value: " + key + " -- " + value);
                     }
                     return true;
                   } else {
@@ -99,7 +96,11 @@ angular.module('hopsWorksApp')
                     var retval = $window.localStorage.getItem(key);
                     $window.localStorage.removeItem(key);
                     if (retval) {
-                      return $window.JSON.parse(retval);
+                      try {
+                        return $window.JSON.parse(retval);
+                      } catch (error) {
+                        return retval === 'true' ? true : (retval === 'false' ? false : retval);
+                      }
                     } else {
                       return false;
                     }
@@ -116,7 +117,11 @@ angular.module('hopsWorksApp')
                   if ($window.Storage) {
                     var retval = $window.localStorage.getItem(key);
                     if (retval) {
-                      return $window.JSON.parse(retval);
+                      try {
+                        return $window.JSON.parse(retval);
+                      } catch (error) {
+                        return retval === 'true' ? true : (retval === 'false' ? false : retval);
+                      }
                     } else {
                       return false;
                     }
@@ -132,7 +137,6 @@ angular.module('hopsWorksApp')
                 try {
                   if ($window.Storage) {
                     $window.localStorage.removeItem(key);
-//                    console.log("LocalStorage: removing key from local storage: " + key);
                     return true;
                   } else {
                     return false;
@@ -141,6 +145,28 @@ angular.module('hopsWorksApp')
                   console.error(error, error.message);
                 }
                 return false;
+              },
+              setVariables: function (success) {
+                if ($window.Storage && typeof success.data !== 'undefined') {
+                  $window.localStorage.setItem("otp", success.data.twofactor);
+                  $window.localStorage.setItem("ldap", success.data.ldap);
+                  $window.localStorage.setItem("krb", success.data.krb);
+                  $window.localStorage.setItem("loginDisabled", success.data.loginDisabled);
+                  $window.localStorage.setItem("registerDisabled", success.data.registerDisabled);
+                  $window.localStorage.setItem("openIdProviders", JSON.stringify(success.data.openIdProviders));//check undefined
+                }
+              },
+              clearVariables: function () {
+                if ($window.Storage) {
+                  $window.localStorage.removeItem("email");
+                  $window.localStorage.removeItem("ldap");
+                  $window.localStorage.removeItem("otp");
+                  $window.localStorage.removeItem("projectID");
+                  $window.localStorage.removeItem("registerDisabled");
+                  $window.localStorage.removeItem("loginDisabled");
+                  $window.localStorage.removeItem("openIdProviders");
+                  $window.localStorage.removeItem("providerName");
+                }
               }
             };
           }]);

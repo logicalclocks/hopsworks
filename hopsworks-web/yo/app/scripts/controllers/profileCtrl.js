@@ -40,8 +40,8 @@
 'use strict'
 
 angular.module('hopsWorksApp')
-        .controller('ProfileCtrl', ['UserService', '$location', '$scope', 'md5', 'growl', '$cookies', 'ProjectService', 'ModalService', 'ApiKeyService',
-          function (UserService, $location, $scope, md5, growl, $cookies, ProjectService, ModalService, ApiKeyService) {
+        .controller('ProfileCtrl', ['UserService', '$location', '$scope', 'md5', 'growl', 'ProjectService', 'ModalService', 'ApiKeyService', 'StorageService',
+          function (UserService, $location, $scope, md5, growl, ProjectService, ModalService, ApiKeyService, StorageService) {
 
             var self = this;
             self.pageLoading = true;
@@ -52,7 +52,7 @@ angular.module('hopsWorksApp')
             self.qrCodeWorking = false;
             self.apiKeyWorking = false;
             self.noPassword = false;
-            self.otp = $cookies.get('otp');
+            self.otp = StorageService.get('otp');
             self.emailHash = '';
             self.master = {};
             self.masterTwoFactor = {};
@@ -335,7 +335,7 @@ angular.module('hopsWorksApp')
             self.activeTab = undefined;
             var checkTab = function () {
               var userTabs = ["profile", "credentials", "security", "secrets", "apiKeys"];
-              if (self.otp === 'true') {
+              if (self.otp === true) {
                   userTabs.push("twoFactor");
               }
               var remoteUserTabs = ["profile", "secrets", "apiKeys"];

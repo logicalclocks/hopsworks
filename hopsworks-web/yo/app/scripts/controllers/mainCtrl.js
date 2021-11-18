@@ -43,22 +43,22 @@
 'use strict';
 
 angular.module('hopsWorksApp')
-        .controller('MainCtrl', ['$q', '$interval', '$cookies', '$location', '$scope', '$rootScope',
+        .controller('MainCtrl', ['$q', '$interval', '$location', '$scope', '$rootScope',
           '$http', 'AuthService', 'UtilsService', 'ElasticService', 'DelaProjectService',
           'DelaService', 'md5', 'ModalService', 'ProjectService', 'growl',
           'MessageService', '$routeParams', '$window', 'HopssiteService', 'BannerService',
-          'AirflowService', 'PaginationService', 'VariablesService',
-          function ($q, $interval, $cookies, $location, $scope, $rootScope, $http, AuthService, UtilsService,
+          'AirflowService', 'PaginationService', 'VariablesService', 'StorageService',
+          function ($q, $interval, $location, $scope, $rootScope, $http, AuthService, UtilsService,
                   ElasticService, DelaProjectService, DelaService, md5, ModalService, 
                   ProjectService, growl,
                   MessageService, $routeParams, $window, HopssiteService, BannerService,
-                  AirflowService, PaginationService, VariablesService) {
+                  AirflowService, PaginationService, VariablesService, StorageService) {
             var self = this;
 
             const MAX_IN_MEMORY_ITEMS = 1000;
             self.ui = "/hopsworks-api/airflow/login?q=username=";
 
-            self.email = $cookies.get('email');
+            self.email = StorageService.get('email');
             self.emailHash = md5.createHash(self.email || '');
 
             var checkeIsAdmin = function () {
@@ -87,7 +87,7 @@ angular.module('hopsWorksApp')
 
             self.logout = function () {
               AirflowService.logout();
-              var providerName = $cookies.get("providerName");
+              var providerName = StorageService.get("providerName");
               if (providerName) {
                   AuthService.oauthLogout(providerName).then(
                       function (success) {

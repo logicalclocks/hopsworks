@@ -15,6 +15,7 @@
  */
 package io.hops.hopsworks.api.jobs;
 
+import com.google.common.base.Strings;
 import io.hops.hopsworks.api.filter.apiKey.ApiKeyFilter;
 import io.hops.hopsworks.api.kibana.ProxyServlet;
 import io.hops.hopsworks.common.dao.hdfsUser.HdfsUsersFacade;
@@ -31,7 +32,6 @@ import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.persistence.entity.user.security.apiKey.ApiKey;
 import org.apache.hadoop.yarn.api.records.YarnApplicationState;
 import org.apache.http.client.utils.URIUtils;
-import org.apache.parquet.Strings;
 
 import javax.ejb.EJB;
 import javax.ejb.Stateless;

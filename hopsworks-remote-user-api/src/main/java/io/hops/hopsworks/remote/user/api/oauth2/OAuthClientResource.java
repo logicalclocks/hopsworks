@@ -3,6 +3,7 @@
  */
 package io.hops.hopsworks.remote.user.api.oauth2;
 
+import com.google.common.base.Strings;
 import io.hops.hopsworks.common.dao.remote.oauth.OauthClientFacade;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.RemoteAuthException;
@@ -15,7 +16,6 @@ import io.hops.hopsworks.remote.user.oauth2.OIDAuthorizationCodeFlowHelper;
 import io.hops.hopsworks.restutils.RESTCodes;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
-import org.apache.parquet.Strings;
 
 import javax.ejb.EJB;
 import javax.ejb.Stateless;

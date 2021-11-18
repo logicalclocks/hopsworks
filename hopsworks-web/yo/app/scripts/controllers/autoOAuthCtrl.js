@@ -5,13 +5,13 @@
 'use strict';
 
 angular.module('hopsWorksApp')
-        .controller('autoOAuthCtrl', ['$location', '$cookies', '$http', 'AuthService', 'VariablesService',
-          function ($location, $cookies, $http, AuthService, VariablesService) {
+        .controller('autoOAuthCtrl', ['$location', '$http', 'AuthService', 'VariablesService', 'StorageService',
+          function ($location, $http, AuthService, VariablesService, StorageService) {
             var self = this;
             
             self.oauthLogin = function (providerName) {
-                AuthService.oauthLoginURI(providerName);
-                $cookies.put("providerName", providerName);
+              AuthService.oauthLoginURI(providerName);
+              StorageService.store("providerName", providerName);
             };
             
             self.manualLogin = function() {
@@ -20,8 +20,8 @@ angular.module('hopsWorksApp')
 
             var checkRemoteAuth = function () {
               VariablesService.getAuthStatus().then(function (success) {
-                $cookies.put("openIdProviders", JSON.stringify(success.data.openIdProviders));//check undefined
-                self.openIdProviders = JSON.parse($cookies.get("openIdProviders"));
+                StorageService.store("openIdProviders", success.data.openIdProviders);
+                self.openIdProviders = StorageService.get("openIdProviders");
                 if (self.openIdProviders.length > 0) {
                   self.autoLog = true;
                   self.oauthLogin(self.openIdProviders[0].providerName);

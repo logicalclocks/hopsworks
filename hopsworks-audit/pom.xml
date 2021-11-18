@@ -38,6 +38,12 @@
     <dependency>
       <groupId>io.hops.hopsworks</groupId>
       <artifactId>hopsworks-common</artifactId>
+      <exclusions>
+        <exclusion>
+          <groupId>io.hops</groupId>
+          <artifactId>hadoop-client-api</artifactId>
+        </exclusion>
+      </exclusions>
       <type>ejb</type>
       <scope>provided</scope>
     </dependency>

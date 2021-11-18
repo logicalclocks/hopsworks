@@ -15,6 +15,7 @@
  */
 package io.hops.hopsworks.api.jobs;
 
+import com.google.common.base.Strings;
 import com.predic8.membrane.core.http.Header;
 import io.hops.hopsworks.api.kibana.MyRequestWrapper;
 import io.hops.hopsworks.api.kibana.ProxyServlet;
@@ -33,7 +34,6 @@ import org.apache.http.entity.InputStreamEntity;
 import org.apache.http.message.BasicHttpEntityEnclosingRequest;
 import org.apache.http.message.BasicHttpRequest;
 import org.apache.http.util.EntityUtils;
-import org.apache.parquet.Strings;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
