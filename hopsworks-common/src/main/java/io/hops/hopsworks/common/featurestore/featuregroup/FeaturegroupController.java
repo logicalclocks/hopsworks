@@ -231,7 +231,9 @@ public class FeaturegroupController {
                                             Project project, Users user)
       throws FeaturestoreException, ServiceException, SQLException, ProvenanceException, IOException,
       KafkaException, SchemaException, ProjectException, UserException, HopsSecurityException {
-
+  
+    featureGroupInputValidation.verifySchemaProvided(featuregroupDTO);
+    
     // if version not provided, get latest and increment
     if (featuregroupDTO.getVersion() == null) {
       // returns ordered list by desc version

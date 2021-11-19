@@ -18,6 +18,7 @@ package io.hops.hopsworks.common.featurestore.utils;
 
 import io.hops.hopsworks.common.featurestore.feature.FeatureGroupFeatureDTO;
 import io.hops.hopsworks.common.featurestore.featuregroup.FeatureGroupInputValidation;
+import io.hops.hopsworks.common.featurestore.featuregroup.cached.CachedFeaturegroupDTO;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
 import org.junit.Before;
 import org.junit.Rule;
@@ -58,5 +59,23 @@ public class TestFeatureGroupInputValidation {
   public void testVerifyEventTimeUnavailable() throws Exception {
     thrown.expect(FeaturestoreException.class);
     featureGroupInputValidation.verifyEventTimeFeature("time", features);
+  }
+  
+  @Test
+  public void testverifySchemaProvided_success() throws Exception {
+    CachedFeaturegroupDTO featuregroupDTO = new CachedFeaturegroupDTO();
+    featuregroupDTO.setFeatures(features);
+    featuregroupDTO.setOnlineEnabled(true);
+  
+    featureGroupInputValidation.verifySchemaProvided(featuregroupDTO);
+  }
+  
+  @Test(expected = FeaturestoreException.class)
+  public void testverifySchemaProvided_fail() throws Exception {
+    CachedFeaturegroupDTO featuregroupDTO = new CachedFeaturegroupDTO();
+    featuregroupDTO.setFeatures(new ArrayList<>());
+    featuregroupDTO.setOnlineEnabled(true);
+  
+    featureGroupInputValidation.verifySchemaProvided(featuregroupDTO);
   }
 }

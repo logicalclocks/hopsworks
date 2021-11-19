@@ -18,6 +18,7 @@ package io.hops.hopsworks.common.featurestore.featuregroup;
 
 import io.hops.hopsworks.common.featurestore.FeaturestoreConstants;
 import io.hops.hopsworks.common.featurestore.feature.FeatureGroupFeatureDTO;
+import io.hops.hopsworks.common.featurestore.featuregroup.cached.CachedFeaturegroupDTO;
 import io.hops.hopsworks.common.featurestore.utils.FeaturestoreInputValidation;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.restutils.RESTCodes;
@@ -30,6 +31,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.logging.Level;
 import java.util.stream.Collectors;
+
+import static io.hops.hopsworks.restutils.RESTCodes.FeaturestoreErrorCode.COULD_NOT_CREATE_ONLINE_FEATUREGROUP;
 
 @Stateless
 @TransactionAttribute(TransactionAttributeType.NEVER)
@@ -83,6 +86,22 @@ public class FeatureGroupInputValidation {
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.EVENT_TIME_FEATURE_NOT_FOUND, Level.FINE, ", " +
         "the provided event time feature `" + name + "` was not found among the available features: " +
         features.stream().map(FeatureGroupFeatureDTO::getName).collect(Collectors.joining(", ")) + ".");
+    }
+  }
+  
+  /**
+   * Make sure feature schema exists if online is enabled.
+   * @param featuregroupDTO
+   * @throws FeaturestoreException
+   */
+  public void verifySchemaProvided(FeaturegroupDTO featuregroupDTO) throws FeaturestoreException{
+    if (featuregroupDTO instanceof CachedFeaturegroupDTO
+      && ((CachedFeaturegroupDTO) featuregroupDTO).getOnlineEnabled()
+      && featuregroupDTO.getFeatures().isEmpty()) {
+      throw new FeaturestoreException(
+        COULD_NOT_CREATE_ONLINE_FEATUREGROUP,
+        Level.SEVERE,
+        "Cannot create an online feature group without a feature schema.");
     }
   }
 }
