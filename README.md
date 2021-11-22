@@ -33,23 +33,19 @@ Hopsworks and its Feature Store are an open source data-intensive AI platform us
 <img src="docs/architecture.svg">
 
 <a name="quick"></a>
-## Quick Start
+### Installer - On-premise
+
+Follow the [installation instructions](https://hopsworks.readthedocs.io/en/stable/getting_started/installation_guide/platforms/hopsworks-installer.html).
 
 
-```bash
-bash <(curl -s https://repo.hops.works/installer/latest/hopsworks-installer.sh)
-```
-Recommended minimum [specification](https://hopsworks.readthedocs.io/en/stable/getting_started/installation_guide/platforms/hopsworks-installer.html#requirements). 
-
-The [Hopsworks Installer](https://hopsworks.readthedocs.io/en/stable/getting_started/installation_guide/platforms/hopsworks-installer.html) takes roughly 1-2 hrs to complete, depending on your bandwidth. 
+The installation takes roughly 1-2 hrs to complete, depending on your bandwidth. 
 
 
-### Installer Quick Start with Azure CLI or GCP CLI
+### Installer - Azure CLI or GCP CLI
 
-```python
-bash <(curl -s https://repo.hops.works/installer/latest/hopsworks-cloud-installer.sh)
-```
-If you have the Azure or GCP CLI utilities installed (on a Linux machine), then the [Hopsworks Cloud Installer](https://hopsworks.readthedocs.io/en/stable/getting_started/installation_guide/platforms/hopsworks-cloud-installer.html) (Hopsworks-cloud-installer.sh) will both install Hopsworks and provision the VMs in one command. 
+Follow the [installation instructions](https://hopsworks.readthedocs.io/en/stable/getting_started/installation_guide/platforms/hopsworks-cloud-installer.html).
+
+If you have the Azure or GCP CLI utilities installed (on a Linux machine), then the Hopsworks-cloud-installer.sh will both install Hopsworks and provision the VMs in one command. 
 
 ### Hopsworks IDE Plugin
 
