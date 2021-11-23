@@ -45,6 +45,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 @Stateless
@@ -60,6 +62,8 @@ public class CommandsController {
   private ProjectFacade projectFacade;
   @EJB
   private LibraryFacade libraryFacade;
+
+  private static final Pattern BRACKET_PATTERN = Pattern.compile("^(.*\\[.*\\])$");
   
   public void deleteCommands(Project project, String library) {
     //Failed installation commands should remove
@@ -225,10 +229,12 @@ public class CommandsController {
       command.getInstallType().equals(CondaInstallType.ENVIRONMENT_YAML)) {
       return true;
     }
+
+    Matcher bracketMatcher = BRACKET_PATTERN.matcher(command.getLib());
     if(condaOp.equals(CondaOp.INSTALL) &&
       (command.getInstallType().equals(CondaInstallType.PIP)
         || command.getInstallType().equals(CondaInstallType.CONDA))
-      && command.getVersion().equals(Settings.UNKNOWN_LIBRARY_VERSION)) {
+      && (command.getVersion().equals(Settings.UNKNOWN_LIBRARY_VERSION) || bracketMatcher.matches())) {
       return true;
     }
     return false;
