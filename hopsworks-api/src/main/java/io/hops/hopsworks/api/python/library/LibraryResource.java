@@ -97,7 +97,7 @@ public class LibraryResource {
   @EJB
   private JWTHelper jwtHelper;
 
-  private static final Pattern VALIDATION_PATTERN = Pattern.compile("[a-zA-Z0-9_\\-\\.]+");
+  private static final Pattern VALIDATION_PATTERN = Pattern.compile("[a-zA-Z0-9_\\-\\.\\]\\[]+");
   private static final Pattern CHANNEL_PATTERN = Pattern.compile("[a-zA-Z0-9_\\-:/~?&\\.]+");
 
   private Project project;

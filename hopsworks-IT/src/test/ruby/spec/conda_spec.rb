@@ -312,13 +312,13 @@ describe "On #{ENV['OS']}" do
           it 'install versioned libraries' do
             @project = create_env_and_update_project(@project, ENV['PYTHON_VERSION'])
 
-            install_library(@project[:id], ENV['PYTHON_VERSION'], 'tflearn', 'PIP', '0.3.2', conda_channel)
+            install_library(@project[:id], ENV['PYTHON_VERSION'], 'modin%5Bdask%5D', 'PIP', '0.11.2', conda_channel)
             expect_status(201)
 
             install_library(@project[:id], ENV['PYTHON_VERSION'], 'imageio', 'CONDA', '2.9.0', conda_channel)
             expect_status(201)
 
-            get_library_commands(@project[:id], ENV['PYTHON_VERSION'], 'tflearn')
+            get_library_commands(@project[:id], ENV['PYTHON_VERSION'], 'modin%5Bdask%5D')
             expect_status(200)
             expect(json_body[:count]).to be == 1
 
@@ -330,7 +330,7 @@ describe "On #{ENV['OS']}" do
               CondaCommands.find_by(project_id: @project[:id]).nil?
             end
 
-            get_library_commands(@project[:id], ENV['PYTHON_VERSION'], 'tflearn')
+            get_library_commands(@project[:id], ENV['PYTHON_VERSION'], 'modin%5Bdask%5D')
             expect_status(200)
             expect(json_body[:count]).to be == 0
 
@@ -340,11 +340,11 @@ describe "On #{ENV['OS']}" do
 
             list_libraries(@project[:id], ENV['PYTHON_VERSION'])
 
-            tflearn_library = json_body[:items].detect { |library| library[:library] == "tflearn" }
+            modin_library = json_body[:items].detect { |library| library[:library] == "modin" }
             imageio_library = json_body[:items].detect { |library| library[:library] == "imageio" }
 
-            expect(tflearn_library[:packageSource]).to eq ("PIP")
-            expect(tflearn_library[:version]).to eq ("0.3.2")
+            expect(modin_library[:packageSource]).to eq ("PIP")
+            expect(modin_library[:version]).to eq ("0.11.2")
 
             expect(imageio_library[:packageSource]).to eq("CONDA")
             expect(imageio_library[:version]).to eq ("2.9.0")
