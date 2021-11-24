@@ -17,7 +17,8 @@
 package io.hops.hopsworks.common.kafka;
 
 import com.logicalclocks.servicediscoverclient.exceptions.ServiceDiscoveryException;
-import com.logicalclocks.servicediscoverclient.service.Service;
+import com.logicalclocks.servicediscoverclient.resolvers.Type;
+import com.logicalclocks.servicediscoverclient.service.ServiceQuery;
 import io.hops.hopsworks.common.dao.kafka.KafkaConst;
 import io.hops.hopsworks.common.hosts.ServiceDiscoveryController;
 import io.hops.hopsworks.common.util.Settings;
@@ -36,6 +37,7 @@ import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
@@ -96,9 +98,7 @@ public class KafkaBrokers {
   @Lock(LockType.READ)
   public Set<String> getBrokerEndpoints() throws IOException, KeeperException, InterruptedException {
     try {
-      Service zkService = serviceDiscoveryController
-          .getAnyAddressOfServiceWithDNS(ServiceDiscoveryController.HopsworksService.ZOOKEEPER_CLIENT);
-      String zkConnectionString = zkService.getAddress() + ":" + zkService.getPort();
+      String zkConnectionString = getZookeeperConnectionString();
       final ZooKeeper zk = new ZooKeeper(zkConnectionString, Settings.ZOOKEEPER_SESSION_TIMEOUT_MS,
           new Watcher() {
             @Override
@@ -128,6 +128,15 @@ public class KafkaBrokers {
       }
       throw ex;
     }
+  }
+  
+  public String getZookeeperConnectionString() throws ServiceDiscoveryException {
+    return serviceDiscoveryController.getService(
+      Type.DNS, ServiceQuery.of(
+        serviceDiscoveryController.constructServiceFQDN(ServiceDiscoveryController.HopsworksService.ZOOKEEPER_CLIENT),
+        Collections.emptySet()))
+      .map(zkServer -> zkServer.getAddress() + ":" + zkServer.getPort())
+      .collect(Collectors.joining(","));
   }
   
   private String getBrokerInfo(ZooKeeper zk, String brokerId) {

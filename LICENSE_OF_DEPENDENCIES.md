@@ -84,7 +84,6 @@ Frontend dependencies
 
 Backend Dependencies
 
-* com.101tec:zkclient:jar:0.9 [ApacheV2](http://www.apache.org/licenses/LICENSE-2.0)
 * com.google.code.gson:gson:jar:2.2 [ApacheV2](https://github.com/google/gson/blob/master/LICENSE)
 * com.googlecode.json-simple:json-simple:jar:1.1.1 [ApacheV2](https://github.com/fangyidong/json-simple/blob/master/LICENSE.txt)
 * com.google.guava:guava:jar:18.0 [ApacheV2](https://github.com/google/guava/blob/master/COPYING)

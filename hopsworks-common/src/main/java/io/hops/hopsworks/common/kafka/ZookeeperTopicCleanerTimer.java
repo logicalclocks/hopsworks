@@ -40,18 +40,10 @@
 package io.hops.hopsworks.common.kafka;
 
 import com.logicalclocks.servicediscoverclient.exceptions.ServiceDiscoveryException;
-import com.logicalclocks.servicediscoverclient.service.Service;
-import io.hops.hopsworks.common.dao.kafka.KafkaConst;
+import io.hops.hopsworks.common.dao.kafka.HopsKafkaAdminClient;
 import io.hops.hopsworks.common.hosts.ServiceDiscoveryController;
+import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.persistence.entity.kafka.ProjectTopics;
-import io.hops.hopsworks.exceptions.ServiceException;
-import io.hops.hopsworks.restutils.RESTCodes;
-import kafka.admin.AdminUtils;
-import kafka.common.TopicAlreadyMarkedForDeletionException;
-import kafka.utils.ZKStringSerializer$;
-import kafka.utils.ZkUtils;
-import org.I0Itec.zkclient.ZkClient;
-import org.I0Itec.zkclient.ZkConnection;
 import org.apache.zookeeper.KeeperException;
 import org.apache.zookeeper.WatchedEvent;
 import org.apache.zookeeper.Watcher;
@@ -64,11 +56,10 @@ import javax.ejb.Timer;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import java.io.IOException;
-import java.net.InetAddress;
-import java.net.UnknownHostException;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.ExecutionException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -82,6 +73,8 @@ public class ZookeeperTopicCleanerTimer {
   private final static Logger LOGGER = Logger.getLogger(
       ZookeeperTopicCleanerTimer.class.getName());
   
+  private final static String offsetTopic = "__consumer_offsets";
+  
   @PersistenceContext(unitName = "kthfsPU")
   private EntityManager em;
 
@@ -89,9 +82,9 @@ public class ZookeeperTopicCleanerTimer {
   private ServiceDiscoveryController serviceDiscoveryController;
   @EJB
   private KafkaBrokers kafkaBrokers;
+  @EJB
+  private HopsKafkaAdminClient hopsKafkaAdminClient;
 
-  private ZkClient zkClient = null;
-  private ZkConnection zkConnection = null;
   private ZooKeeper zk = null;
 
   // Run once per hour 
@@ -102,34 +95,32 @@ public class ZookeeperTopicCleanerTimer {
     LOGGER.log(Level.INFO, "Running ZookeeperTopicCleanerTimer.");
 
     try {
-      String zkConnectionString = getZookeeperConnectionString();
+      String zkConnectionString = kafkaBrokers.getZookeeperConnectionString();
       Set<String> zkTopics = new HashSet<>();
-      //30 seconds
-      int sessionTimeoutMs = 30 * 1000;
       try {
-        if (zk == null || !zk.getState().isConnected()) {
-          if (zk != null) {
-            zk.close();
-          }
-          zk = new ZooKeeper(zkConnectionString, sessionTimeoutMs, new ZookeeperWatcher());
-        }
+        zk = new ZooKeeper(zkConnectionString, Settings.ZOOKEEPER_SESSION_TIMEOUT_MS, new ZookeeperWatcher());
         List<String> topics = zk.getChildren("/brokers/topics", false);
         zkTopics.addAll(topics);
       } catch (IOException ex) {
         LOGGER.log(Level.SEVERE, "Unable to find the zookeeper server: ", ex.toString());
       } catch (KeeperException | InterruptedException ex) {
         LOGGER.log(Level.SEVERE, "Cannot retrieve topic list from Zookeeper", ex);
+      } finally {
+        if (zk != null) {
+          try {
+            zk.close();
+          } catch (InterruptedException ex) {
+            LOGGER.log(Level.SEVERE, "Unable to close zookeeper connection", ex);
+          }
+          zk = null;
+        }
       }
 
       List<ProjectTopics> dbProjectTopics = em.createNamedQuery("ProjectTopics.findAll").getResultList();
       Set<String> dbTopics = new HashSet<>();
 
       for (ProjectTopics pt : dbProjectTopics) {
-        try {
-          dbTopics.add(pt.getTopicName());
-        } catch (UnsupportedOperationException e) {
-          LOGGER.log(Level.SEVERE, e.toString());
-        }
+        dbTopics.add(pt.getTopicName());
       }
 
       /*
@@ -144,60 +135,24 @@ public class ZookeeperTopicCleanerTimer {
        * zkTopics.removeAll(dbTopics);
        * 3. remove those topics
        */
-      try {
-        if (zkClient == null) {
-          // 30 seconds
-          int connectionTimeout = 90 * 1000;
-          zkClient = new ZkClient(getIp(zkConnectionString).getHostName(),
-              sessionTimeoutMs, connectionTimeout,
-              ZKStringSerializer$.MODULE$);
-        }
-        if (!zkTopics.isEmpty()) {
-          zkTopics.removeAll(dbTopics);
-          for (String topicName : zkTopics) {
-            if (zkConnection == null) {
-              zkConnection = new ZkConnection(zkConnectionString);
-            }
-            ZkUtils zkUtils = new ZkUtils(zkClient, zkConnection, false);
+      zkTopics.removeAll(dbTopics);
 
-            try {
-              AdminUtils.deleteTopic(zkUtils, topicName);
-              LOGGER.log(Level.INFO, "{0} is removed from Zookeeper",
-                  new Object[]{topicName});
-            } catch (TopicAlreadyMarkedForDeletionException ex) {
-              LOGGER.log(Level.INFO, "{0} is already marked for deletion",
-                  new Object[]{topicName});
-            }
-          }
-        }
+      // DON'T remove offset topic
+      zkTopics.remove(offsetTopic);
 
-      } catch (ServiceException ex) {
-        LOGGER.log(Level.SEVERE, "Unable to get zookeeper ip address ", ex);
-      } finally {
-        if (zkClient != null) {
-          zkClient.close();
-        }
+      if (!zkTopics.isEmpty()) {
+        // blocks until all are deleted
         try {
-          if (zkConnection != null) {
-            zkConnection.close();
-          }
-        } catch (InterruptedException ex) {
-          LOGGER.log(Level.SEVERE, null, ex);
+          hopsKafkaAdminClient.deleteTopics(zkTopics).all().get();
+          LOGGER.log(Level.INFO, "Removed topics {0} from Kafka", new Object[]{zkTopics});
+        } catch (ExecutionException | InterruptedException ex) {
+          LOGGER.log(Level.SEVERE, "Error dropping topics from Kafka", ex);
         }
       }
-    } catch(Exception e) {
-      LOGGER.log(Level.SEVERE, "Got an exception while cleaning up topics", e);
-    }
-  }
-  
-  private InetAddress getIp(String zkIp) throws ServiceException {
-    
-    String ip = zkIp.split(KafkaConst.COLON_SEPARATOR)[0];
-    try {
-      return InetAddress.getByName(ip);
-    } catch (UnknownHostException ex) {
-      throw new ServiceException(RESTCodes.ServiceErrorCode.ZOOKEEPER_SERVICE_UNAVAILABLE, Level.SEVERE,
-        ex.getMessage());
+    } catch (ServiceDiscoveryException ex) {
+      LOGGER.log(Level.SEVERE, "Could not discover Zookeeper server addresses", ex);
+    } catch (Exception ex) {
+      LOGGER.log(Level.SEVERE, "Got an exception while cleaning up kafka topics", ex);
     }
   }
 
@@ -209,6 +164,8 @@ public class ZookeeperTopicCleanerTimer {
       minute = "*/1",
       hour = "*")
   public void getBrokers() {
+    // TODO: This should be removed by HOPSWORKS-2798 and usages of this method should simply call
+    //  kafkaBrokers.getBrokerEndpoints() directly
     try {
       kafkaBrokers.setKafkaBrokers(kafkaBrokers.getBrokerEndpoints());
     } catch (Exception ex) {
@@ -221,11 +178,5 @@ public class ZookeeperTopicCleanerTimer {
     @Override
     public void process(WatchedEvent we) {
     }
-  }
-
-  private String getZookeeperConnectionString() throws ServiceDiscoveryException {
-    Service zk = serviceDiscoveryController
-        .getAnyAddressOfServiceWithDNS(ServiceDiscoveryController.HopsworksService.ZOOKEEPER_CLIENT);
-    return zk.getAddress() + ":" + zk.getPort();
   }
 }
