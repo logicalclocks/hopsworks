@@ -281,6 +281,7 @@ angular.module('hopsWorksApp')
                     model['count'] = tmpModels[i].versions.length;
                     model['description'] = mostRecent.description;
                     model['created'] = mostRecent.created;
+                    model['pagination_id'] = "model" + i;
                     tmpModels[i] = model;
                 }
 

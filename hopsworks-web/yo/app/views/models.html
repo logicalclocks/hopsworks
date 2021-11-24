@@ -103,7 +103,8 @@
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            <tr dir-paginate="version in modelCtrl.modelData[model.name] | orderBy:modelSortType[model.name]:modelReverse[model.name] | itemsPerPage:modelCtrl.pageSize" pagination-id="model.name">
+                                            <tr
+                                                    dir-paginate="version in modelCtrl.modelData[model.name] | orderBy:modelSortType[model.name]:modelReverse[model.name] | itemsPerPage:modelCtrl.pageSize" pagination-id="model.pagination_id">
                                                 <td data-ng-repeat="cell in version">
                                                     <div ng-if="$index > 2" ng-style="{ 'width': modelCtrl.getWidth(model.name, $index, cell) + '%' }" style="background-color:lightblue; color:rgb(85, 85, 85); font-size:16px; border-radius: 0 !important; text-align:left; margin-top:5px;">
                                                         <span style="margin-left:5px;">
@@ -142,7 +143,7 @@
                                     <dir-pagination-controls
                                             class="pull-right"
                                             max-size="modelCtrl.maxPaginationLinks"
-                                            pagination-id="model.name"
+                                            pagination-id="model.pagination_id"
                                             direction-links="true"
                                             boundary-links="true">
                                     </dir-pagination-controls>
