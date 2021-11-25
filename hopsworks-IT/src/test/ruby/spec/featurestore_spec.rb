@@ -178,10 +178,42 @@ describe "On #{ENV['OS']}" do
           grantee = "'#{online_db_name}'@'%'"
           privileges = SchemaPrivileges.where(TABLE_SCHEMA:project[:projectname], GRANTEE:grantee)
 
-          # MySQL "grant all privileges" generates 18 rows
+          # MySQL "grant select privilege" generates 1 row
           expect(privileges.length).to eq(1)
           granted_privilege = privileges.first
           expect(granted_privilege[:PRIVILEGE_TYPE]).to eq("SELECT")
+        end
+
+        it "should assign the privileges to the existing users of the project" do
+          # Create a project without feature store
+          no_fs_project = create_project(services = [])
+
+          # Add member to the project
+          user = create_user
+          add_member_to_project(no_fs_project, user[:email], "Data owner")
+
+          # Enable feature store service
+          update_project({projectId: no_fs_project[:id],
+                          projectName: no_fs_project[:projectname],
+                          services: ["FEATURESTORE"]})
+
+          # Project owner should have the correct permissions on the online feature store
+          # online fs username are capped to 30 chars
+          online_db_name = "#{no_fs_project[:projectname]}_#{@user[:username]}"[0..30]
+          grantee = "'#{online_db_name}'@'%'"
+          privileges = SchemaPrivileges.where(TABLE_SCHEMA:no_fs_project[:projectname], GRANTEE:grantee)
+
+          # MySQL "grant all privileges" generates 18 rows
+          expect(privileges.length).to eq(18)
+
+          # New member should have the correct permissions on the online feature store
+          # online fs username are capped to 30 chars
+          online_db_name = "#{no_fs_project[:projectname]}_#{user[:username]}"[0..30]
+          grantee = "'#{online_db_name}'@'%'"
+          privileges = SchemaPrivileges.where(TABLE_SCHEMA:no_fs_project[:projectname], GRANTEE:grantee)
+
+          # MySQL "grant all privileges" generates 18 rows
+          expect(privileges.length).to eq(18)
         end
       end
     end
