@@ -16,6 +16,7 @@
 package io.hops.hopsworks.common.featurestore;
 
 import com.logicalclocks.servicediscoverclient.exceptions.ServiceDiscoveryException;
+import io.hops.hopsworks.common.dao.project.team.ProjectTeamFacade;
 import io.hops.hopsworks.common.dao.user.activity.ActivityFacade;
 import io.hops.hopsworks.common.featurestore.online.OnlineFeaturestoreController;
 import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupFacade;
@@ -37,6 +38,7 @@ import io.hops.hopsworks.persistence.entity.dataset.DatasetType;
 import io.hops.hopsworks.persistence.entity.featurestore.Featurestore;
 import io.hops.hopsworks.persistence.entity.featurestore.storageconnector.FeaturestoreConnectorType;
 import io.hops.hopsworks.persistence.entity.project.Project;
+import io.hops.hopsworks.persistence.entity.project.team.ProjectTeam;
 import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.persistence.entity.user.activity.ActivityFlag;
 import io.hops.hopsworks.restutils.RESTCodes;
@@ -78,7 +80,8 @@ public class FeaturestoreController {
   private FeaturestoreStorageConnectorController featurestoreStorageConnectorController;
   @EJB
   private ServiceDiscoveryController serviceDiscoveryController;
-  
+  @EJB
+  private ProjectTeamFacade projectTeamFacade;
 
   /*
    * Retrieves a list of all featurestores for a particular project
@@ -239,18 +242,37 @@ public class FeaturestoreController {
       project.getOwner(), ActivityFlag.SERVICE);
     activityFacade.persistActivity(ActivityFacade.ADDED_FEATURESTORE_STORAGE_CONNECTOR +
         getOfflineFeaturestoreDbName(project), project, project.getOwner(), ActivityFlag.SERVICE);
-    activityFacade.persistActivity(ActivityFacade.ADDED_FEATURESTORE_STORAGE_CONNECTOR + project.getName(),
-      project, project.getOwner(), ActivityFlag.SERVICE);
+
     featurestoreStorageConnectorController
         .createStorageConnector(user, project, featurestore, hopsfsTrainingDatasetConnector(trainingDatasetsFolder));
-    featurestoreStorageConnectorController
-        .createStorageConnector(user, project, featurestore, createOfflineJdbcConnector(featurestoreName));
     activityFacade.persistActivity(ActivityFacade.ADDED_FEATURESTORE_STORAGE_CONNECTOR + trainingDatasetsFolder.
         getName(), project, project.getOwner(), ActivityFlag.SERVICE);
-    if (settings.isOnlineFeaturestore()) {
-      onlineFeaturestoreController.setupOnlineFeaturestore(user, featurestore);
-    }
+
+    featurestoreStorageConnectorController
+        .createStorageConnector(user, project, featurestore, createOfflineJdbcConnector(featurestoreName));
+    activityFacade.persistActivity(ActivityFacade.ADDED_FEATURESTORE_STORAGE_CONNECTOR + project.getName(),
+        project, project.getOwner(), ActivityFlag.SERVICE);
+
+    createOnlineFeatureStore(project, user, featurestore);
+
     return featurestore;
+  }
+
+  private void createOnlineFeatureStore(Project project, Users user, Featurestore featurestore)
+      throws FeaturestoreException {
+    if (!settings.isOnlineFeaturestore()) {
+      return;
+    }
+
+    onlineFeaturestoreController.setupOnlineFeaturestore(user, featurestore);
+
+    // Create online feature store users for existing team members
+    for (ProjectTeam projectTeam : projectTeamFacade.findMembersByProject(project)) {
+      if (!projectTeam.getUser().equals(user)) {
+        onlineFeaturestoreController.createDatabaseUser(projectTeam.getUser(),
+            featurestore, projectTeam.getTeamRole());
+      }
+    }
   }
 
   public FeaturestoreStorageConnectorDTO hopsfsTrainingDatasetConnector(Dataset hopsfsDataset) {

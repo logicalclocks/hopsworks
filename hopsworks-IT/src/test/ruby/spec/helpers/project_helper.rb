@@ -60,9 +60,9 @@ module ProjectHelper
     end
   end
 
-  def create_project
+  def create_project(services = ["JOBS","JUPYTER","HIVE","KAFKA","SERVING", "FEATURESTORE"])
     with_valid_session
-    new_project = {projectName: "ProJect_#{short_random_id}", description:"", status: 0, services: ["JOBS","JUPYTER","HIVE","KAFKA","SERVING", "FEATURESTORE"],
+    new_project = {projectName: "ProJect_#{short_random_id}", description:"", status: 0, services: services,
                    projectTeam:[], retentionPeriod: ""}
     post "#{ENV['HOPSWORKS_API']}/project", new_project
     expect_status(201)
@@ -99,6 +99,11 @@ module ProjectHelper
     expect_status_details(201)
     expect_json(description: regex("A demo project*"))
     get_project_by_name(json_body[:name])
+  end
+
+  def update_project(project)
+    put "#{ENV['HOPSWORKS_API']}/project/#{project[:projectId]}", project
+    expect_status_details(201)
   end
 
   def raw_delete_project(project, response, headers)
@@ -151,10 +156,6 @@ module ProjectHelper
 
   def get_project
     @project
-  end
-
-  def update_project
-    @project = get_project_by_name(name)
   end
 
   def get_project_by_name(name)
