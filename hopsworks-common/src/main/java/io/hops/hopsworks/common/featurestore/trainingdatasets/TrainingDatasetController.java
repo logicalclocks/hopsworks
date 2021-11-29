@@ -646,7 +646,7 @@ public class TrainingDatasetController {
    * @throws FeaturestoreException
    */
   public Query getQuery(TrainingDataset trainingDataset, boolean withLabel, Project project,
-                        Users user) throws FeaturestoreException {
+                        Users user, Boolean isHiveEngine) throws FeaturestoreException {
 
     if (!trainingDataset.isQuery()) {
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.TRAINING_DATASET_NO_QUERY,
@@ -700,19 +700,20 @@ public class TrainingDatasetController {
     Map<Integer, String> fsLookup = getFsLookupTableJoins(joins);
 
     Query query = new Query(
-      fsLookup.get(joins.get(0).getFeatureGroup().getFeaturestore().getId()),
+        fsLookup.get(joins.get(0).getFeatureGroup().getFeaturestore().getId()),
         onlineFeaturestoreController
-          .getOnlineFeaturestoreDbName(joins.get(0).getFeatureGroup().getFeaturestore().getProject()),
-      joins.get(0).getFeatureGroup(),
-      fgAliasLookup.get(joins.get(0).getId()),
-      features,
-      availableFeaturesLookup.get(joins.get(0).getFeatureGroup().getId()));
+            .getOnlineFeaturestoreDbName(joins.get(0).getFeatureGroup().getFeaturestore().getProject()),
+        joins.get(0).getFeatureGroup(),
+        fgAliasLookup.get(joins.get(0).getId()),
+        features,
+        availableFeaturesLookup.get(joins.get(0).getFeatureGroup().getId()),
+        isHiveEngine);
 
     // Set the remaining feature groups as join
     List<Join> queryJoins = new ArrayList<>();
     for (int i = 1; i < joins.size(); i++) {
       // left side of the join stays fixed, the counter starts at 1
-      queryJoins.add(getQueryJoin(query, joins.get(i), fgAliasLookup, fsLookup, availableFeaturesLookup));
+      queryJoins.add(getQueryJoin(query, joins.get(i), fgAliasLookup, fsLookup, availableFeaturesLookup, isHiveEngine));
     }
     query.setJoins(queryJoins);
     return query;
@@ -781,18 +782,20 @@ public class TrainingDatasetController {
 
   // Rebuild query object so that the query constructor can be build the string
   private Join getQueryJoin(Query leftQuery, TrainingDatasetJoin rightTdJoin, Map<Integer, String> fgAliasLookup,
-    Map<Integer, String> fsLookup, Map<Integer, List<Feature>> availableFeaturesLookup) throws FeaturestoreException {
+    Map<Integer, String> fsLookup, Map<Integer, List<Feature>> availableFeaturesLookup, Boolean isHiveEngine)
+      throws FeaturestoreException {
 
     String rightAs = fgAliasLookup.get(rightTdJoin.getId());
     Query rightQuery = new Query(
-      fsLookup.get(rightTdJoin.getFeatureGroup().getFeaturestore().getId()),
-      onlineFeaturestoreController
-        .getOnlineFeaturestoreDbName(rightTdJoin.getFeatureGroup().getFeaturestore().getProject()),
-      rightTdJoin.getFeatureGroup(),
-      rightAs,
-      // no requested features as they are all in the left base query
-      new ArrayList<>(),
-      availableFeaturesLookup.get(rightTdJoin.getFeatureGroup().getId()));
+        fsLookup.get(rightTdJoin.getFeatureGroup().getFeaturestore().getId()),
+        onlineFeaturestoreController
+            .getOnlineFeaturestoreDbName(rightTdJoin.getFeatureGroup().getFeaturestore().getProject()),
+        rightTdJoin.getFeatureGroup(),
+        rightAs,
+        // no requested features as they are all in the left base query
+        new ArrayList<>(),
+        availableFeaturesLookup.get(rightTdJoin.getFeatureGroup().getId()),
+        isHiveEngine);
 
     List<Feature> leftOn = rightTdJoin.getConditions().stream()
       .map(c -> new Feature(c.getLeftFeature())).collect(Collectors.toList());
