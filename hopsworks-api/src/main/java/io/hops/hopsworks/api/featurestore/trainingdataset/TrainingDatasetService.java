@@ -571,19 +571,29 @@ public class TrainingDatasetService {
   @Path("/{trainingdatasetid}/query")
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
-  @JWTRequired(acceptedTokens={Audience.API, Audience.JOB}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
-  @ApiKeyRequired( acceptedScopes = {ApiScope.FEATURESTORE}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
-  public Response getQuery(@Context SecurityContext sc,
-                           @Context UriInfo uriInfo,
-                           @ApiParam(value = "Id of the trainingdatasetid", required = true)
-                           @PathParam("trainingdatasetid") Integer trainingdatasetid,
-                           @ApiParam(value = "get query with label features", example = "true")
-                           @QueryParam("withLabel") @DefaultValue("true") boolean withLabel)
-      throws FeaturestoreException, ServiceException {
+  @JWTRequired(acceptedTokens = {Audience.API, Audience.JOB}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
+  @ApiKeyRequired(acceptedScopes = {ApiScope.FEATURESTORE}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
+  public Response getQuery(
+      @Context
+          SecurityContext sc,
+      @Context
+          UriInfo uriInfo,
+      @ApiParam(value = "Id of the trainingdatasetid", required = true)
+      @PathParam("trainingdatasetid")
+          Integer trainingdatasetid,
+      @ApiParam(value = "get query with label features", example = "true")
+      @QueryParam("withLabel")
+      @DefaultValue("true")
+          boolean withLabel,
+      @ApiParam(value = "get query in hive format", example = "true")
+      @QueryParam("hiveQuery")
+      @DefaultValue("false")
+          boolean isHiveQuery) throws FeaturestoreException, ServiceException {
     verifyIdProvided(trainingdatasetid);
     Users user = jWTHelper.getUserPrincipal(sc);
-
-    FsQueryDTO fsQueryDTO = fsQueryBuilder.build(uriInfo, project, user, featurestore, trainingdatasetid, withLabel);
+  
+    FsQueryDTO fsQueryDTO = fsQueryBuilder.build(
+        uriInfo, project, user, featurestore, trainingdatasetid, withLabel, isHiveQuery);
     return Response.ok().entity(fsQueryDTO).build();
   }
 

@@ -63,11 +63,12 @@ public class FsQueryBuilder {
   }
 
   public FsQueryDTO build(UriInfo uriInfo, Project project, Users user, Featurestore featurestore,
-                          Integer trainingDatasetId, boolean withLabel)
+      Integer trainingDatasetId, boolean withLabel, boolean isHiveEngine)
       throws FeaturestoreException, ServiceException {
     TrainingDataset trainingDataset = trainingDatasetController.getTrainingDatasetById(featurestore, trainingDatasetId);
-    Query query = trainingDatasetController.getQuery(trainingDataset, withLabel, project, user);
-    FsQueryDTO dto = constructorController.construct(query, pitJoinController.isPitEnabled(query), true, project, user);
+    Query query = trainingDatasetController.getQuery(trainingDataset, withLabel, project, user, isHiveEngine);
+    FsQueryDTO dto = constructorController.construct(query, pitJoinController.isPitEnabled(query), true, project,
+        user);
     dto.setHref(uri(uriInfo, project));
     return dto;
   }

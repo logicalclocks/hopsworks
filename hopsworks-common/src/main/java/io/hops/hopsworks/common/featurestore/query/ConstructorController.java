@@ -139,8 +139,8 @@ public class ConstructorController {
   public FsQueryDTO construct(Query query, boolean pitEnabled, boolean isTrainingDataset, Project project, Users user)
       throws FeaturestoreException, ServiceException {
     FsQueryDTO fsQueryDTO = new FsQueryDTO();
-    fsQueryDTO.setQuery(
-      generateSQL(query, false).toSqlString(new SparkSqlDialect(SqlDialect.EMPTY_CONTEXT)).getSql());
+
+    fsQueryDTO.setQuery(makeOfflineQuery(query));
     fsQueryDTO.setHudiCachedFeatureGroups(getHudiAliases(query, new ArrayList<>(), project, user));
     fsQueryDTO.setOnDemandFeatureGroups(getOnDemandAliases(user, project, query, new ArrayList<>()));
 
@@ -149,20 +149,24 @@ public class ConstructorController {
       fsQueryDTO.setQueryOnline(
         generateSQL(query, true).toSqlString(new SparkSqlDialect(SqlDialect.EMPTY_CONTEXT)).getSql());
     }
-
-    if (pitEnabled) {
-      SqlNode pitQuery = pitJoinController.generateSQL(query, isTrainingDataset);
-      String pitString;
-      if (query.getHiveEngine()) {
-        pitString = pitQuery.toSqlString(new SparkSqlDialect(SqlDialect.EMPTY_CONTEXT)).getSql();
   
-      } else {
-        pitString = pitQuery.toSqlString(new HiveSqlDialect(SqlDialect.EMPTY_CONTEXT)).getSql();
-      }
-      fsQueryDTO.setPitQuery(pitString);
+    if (pitEnabled) {
+      fsQueryDTO.setPitQuery(makePitQuery(query, isTrainingDataset));
     }
 
     return fsQueryDTO;
+  }
+  
+  String makeOfflineQuery(Query query) {
+    SqlDialect offlineSqlDialect = query.getHiveEngine() ? new HiveSqlDialect(SqlDialect.EMPTY_CONTEXT) :
+        new SparkSqlDialect(SqlDialect.EMPTY_CONTEXT);
+    return generateSQL(query, false).toSqlString(offlineSqlDialect).getSql();
+  }
+  
+  String makePitQuery(Query query, boolean isTrainingDataset) {
+    SqlNode pitQuery = pitJoinController.generateSQL(query, isTrainingDataset);
+    return query.getHiveEngine() ? pitQuery.toSqlString(new HiveSqlDialect(SqlDialect.EMPTY_CONTEXT)).getSql() :
+        pitQuery.toSqlString(new SparkSqlDialect(SqlDialect.EMPTY_CONTEXT)).getSql();
   }
 
   /**
