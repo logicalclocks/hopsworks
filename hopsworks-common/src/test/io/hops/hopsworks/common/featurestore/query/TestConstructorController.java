@@ -57,6 +57,8 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static org.mockito.Matchers.eq;
+
 public class TestConstructorController {
 
   private Featurestore fs;
@@ -65,8 +67,10 @@ public class TestConstructorController {
   private Featuregroup fg2;
   private Featuregroup fg3;
   private Featuregroup fg4;
+  private Featuregroup fgHudi;
 
   private CachedFeaturegroup cachedFeaturegroup;
+  private CachedFeaturegroup hudiFeatureGroup;
 
   private List<Feature> fg1Features = new ArrayList<>();
   private List<Feature> fg2Features = new ArrayList<>();
@@ -120,6 +124,13 @@ public class TestConstructorController {
     fg4.setVersion(1);
     fg4.setCachedFeaturegroup(cachedFeaturegroup);
     fg4.setFeaturestore(fs);
+    fgHudi = new Featuregroup(5);
+    fgHudi.setName("fgHudi");
+    fgHudi.setVersion(1);
+    hudiFeatureGroup = new CachedFeaturegroup();
+    hudiFeatureGroup.setTimeTravelFormat(TimeTravelFormat.HUDI);
+    fgHudi.setCachedFeaturegroup(hudiFeatureGroup);
+    fgHudi.setFeaturestore(fs);
 
     fg1Features = new ArrayList<>();
     fg1Features.add(new Feature("pr", "", true));
@@ -892,5 +903,98 @@ public class TestConstructorController {
     Assert.assertEquals("`fg1`.`ft1` `right_ft1`",
       constructorController.getWithOrWithoutPrefix(feature, true)
         .toSqlString(new SparkSqlDialect(SqlDialect.EMPTY_CONTEXT)).getSql());
+  }
+  
+  @Test
+  public void testMakeOfflineQuery_hiveQuery() throws Exception {
+    List<Feature> availableLeft = new ArrayList<>();
+    availableLeft.add(new Feature("ft1", "fg0", true));
+    Query query = new Query("fs1", "project_fs1", fgHudi, "fg0", availableLeft, availableLeft);
+    query.setOrderByFeatures(availableLeft);
+    query.setHiveEngine(true);
+    Mockito.when(cachedFeaturegroupController.dropHudiSpecFeatures(eq(availableLeft))).thenReturn(availableLeft);
+    String actual = constructorController.makeOfflineQuery(query);
+    String expected = "SELECT `fg0`.`ft1`\n" +
+        "FROM `fs1`.`fgHudi_1` `fg0`\n" +
+        "ORDER BY `fg0`.`ft1`";
+    Assert.assertEquals(expected, actual);
+  }
+
+  @Test
+  public void testMakeOfflineQuery_hiveQueryNested() throws Exception {
+    List<Feature> availableLeft = new ArrayList<>();
+    availableLeft.add(new Feature("ft1", "fg0", true));
+
+    List<Feature> availableRight = new ArrayList<>();
+    availableRight.add(new Feature("ft1", "fg1", true));
+
+    Query leftQuery = new Query("fs1", "project_fs1", fgHudi, "fg0", availableLeft, availableLeft);
+    Query rightQuery = new Query("fs1", "project_fs1", fgHudi, "fg1", availableRight, availableRight);
+
+    leftQuery.setHiveEngine(true);
+    rightQuery.setHiveEngine(true);
+
+    Join join = new Join(leftQuery, rightQuery, availableLeft, availableRight, JoinType.INNER, null, singleEqualsJoinOperator);
+    leftQuery.setJoins(Arrays.asList(join));
+
+    leftQuery.setOrderByFeatures(availableLeft);
+
+    List<Feature> allFeatures = new ArrayList<>(availableLeft);
+    allFeatures.addAll(availableRight);
+    Mockito.when(cachedFeaturegroupController.dropHudiSpecFeatures(eq(allFeatures))).thenReturn(allFeatures);
+    Mockito.when(cachedFeaturegroupController.dropHudiSpecFeatures(eq(availableRight))).thenReturn(availableRight);
+
+    String actual = constructorController.makeOfflineQuery(leftQuery);
+    String expected = "SELECT `fg0`.`ft1`, `fg1`.`ft1`\n" +
+        "FROM `fs1`.`fgHudi_1` `fg0`\n" +
+        "INNER JOIN `fs1`.`fgHudi_1` `fg1` ON `fg0`.`ft1` = `fg1`.`ft1`\n" +
+        "ORDER BY `fg0`.`ft1`";
+    Assert.assertEquals(expected, actual);
+  }
+  
+  @Test
+  public void testMakeOfflineQuery_sparkQuery() throws Exception {
+    List<Feature> availableLeft = new ArrayList<>();
+    availableLeft.add(new Feature("ft1", "fg0", true));
+    Query query = new Query("fs1", "project_fs1", fgHudi, "fg0", availableLeft, availableLeft);
+    query.setOrderByFeatures(availableLeft);
+    query.setHiveEngine(false);
+    Mockito.when(cachedFeaturegroupController.dropHudiSpecFeatures(eq(availableLeft))).thenReturn(availableLeft);
+    String actual = constructorController.makeOfflineQuery(query);
+    String expected = "SELECT `fg0`.`ft1`\n" +
+        "FROM `fg0` `fg0`\n" +
+        "ORDER BY `fg0`.`ft1`";
+    Assert.assertEquals(expected, actual);
+  }
+
+  @Test
+  public void testMakeOfflineQuery_sparkQueryNested() throws Exception {
+    List<Feature> availableLeft = new ArrayList<>();
+    availableLeft.add(new Feature("ft1", "fg0", true));
+
+    List<Feature> availableRight = new ArrayList<>();
+    availableRight.add(new Feature("ft1", "fg1", true));
+
+    Query leftQuery = new Query("fs1", "project_fs1", fgHudi, "fg0", availableLeft, availableLeft);
+    Query rightQuery = new Query("fs1", "project_fs1", fgHudi, "fg1", availableRight, availableRight);
+
+    leftQuery.setHiveEngine(false);
+    rightQuery.setHiveEngine(false);
+
+    Join join = new Join(leftQuery, rightQuery, availableLeft, availableLeft, JoinType.INNER, null, singleEqualsJoinOperator);
+    leftQuery.setJoins(Arrays.asList(join));
+
+    leftQuery.setOrderByFeatures(availableLeft);
+    List<Feature> allFeatures = new ArrayList<>(availableLeft);
+    allFeatures.addAll(availableRight);
+    Mockito.when(cachedFeaturegroupController.dropHudiSpecFeatures(eq(allFeatures))).thenReturn(allFeatures);
+    Mockito.when(cachedFeaturegroupController.dropHudiSpecFeatures(eq(availableRight))).thenReturn(availableRight);
+
+    String actual = constructorController.makeOfflineQuery(leftQuery);
+    String expected = "SELECT `fg0`.`ft1`, `fg1`.`ft1`\n" +
+        "FROM `fg0` `fg0`\n" +
+        "INNER JOIN `fg1` `fg1` ON `fg0`.`ft1` = `fg1`.`ft1`\n" +
+        "ORDER BY `fg0`.`ft1`";
+    Assert.assertEquals(expected, actual);
   }
 }
