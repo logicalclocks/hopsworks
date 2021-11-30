@@ -22,7 +22,7 @@ io.hops.hopsworks.rest.application.config.ApplicationConfig then build and redep
    public ApplicationConfig() {
     ...
     //uncomment to allow Cross-Origin Resource Sharing
-    //register(io.hops.hopsworks.api.filter.AllowCORSFilter.class);
+    //register(io.hops.hopsworks.filter.AllowCORSFilter.class);
     ...
  ```
 #### Build Requirements (for Ubuntu)

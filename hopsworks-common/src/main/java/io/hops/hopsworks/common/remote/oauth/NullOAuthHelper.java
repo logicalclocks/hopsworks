@@ -50,7 +50,7 @@ public class NullOAuthHelper implements OAuthHelper {
   }
   
   @Override
-  public URI getAuthenticationRequestURL(String sessionId, String providerName, URI redirectURI, Set<String> scopes)
+  public URI getAuthenticationRequestURL(String sessionId, String providerName, String redirectURI, Set<String> scopes)
     throws URISyntaxException {
     return null;
   }

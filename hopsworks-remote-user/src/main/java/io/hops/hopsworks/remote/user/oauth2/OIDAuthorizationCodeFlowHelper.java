@@ -45,6 +45,7 @@ import io.hops.hopsworks.common.remote.RemoteUserDTO;
 import io.hops.hopsworks.common.remote.oauth.OpenIdConstant;
 import io.hops.hopsworks.common.remote.oauth.OpenIdProviderConfig;
 import io.hops.hopsworks.common.util.Settings;
+import io.hops.hopsworks.exceptions.RemoteAuthException;
 import io.hops.hopsworks.jwt.SignatureAlgorithm;
 import io.hops.hopsworks.jwt.exception.VerificationException;
 import io.hops.hopsworks.persistence.entity.remote.oauth.OauthClient;
@@ -93,8 +94,10 @@ public class OIDAuthorizationCodeFlowHelper {
    * @param client
    * @param invalidateCache
    * @return
+   * @throws RemoteAuthException
    */
-  public OpenIdProviderConfig getOpenIdProviderConfig(OauthClient client, boolean invalidateCache) {
+  public OpenIdProviderConfig getOpenIdProviderConfig(OauthClient client, boolean invalidateCache)
+    throws RemoteAuthException {
     return oAuthProviderCache.getProviderConfig(client, invalidateCache);
   }
   
@@ -140,13 +143,13 @@ public class OIDAuthorizationCodeFlowHelper {
    * @return
    * @throws URISyntaxException
    */
-  public URI getAuthenticationRequestURL(String sessionId, String providerName, URI redirectURI, Set<String> scopes)
-    throws URISyntaxException {
+  public URI getAuthenticationRequestURL(String sessionId, String providerName, String redirectUri, Set<String> scopes)
+    throws URISyntaxException, RemoteAuthException {
     OauthClient client = oauthClientFacade.findByProviderName(providerName);
     if (client == null) {
       throw new NotFoundException("Client not found.");
     }
-    OpenIdProviderConfig providerConfig = oAuthProviderCache.getProviderConfig(client, false);
+    OpenIdProviderConfig providerConfig = getOpenIdProviderConfig(client, false);
     Nonce nonce = new Nonce();
     CodeVerifier codeVerifier = null;
     CodeChallengeMethod codeChallengeMethod = null;
@@ -157,15 +160,16 @@ public class OIDAuthorizationCodeFlowHelper {
     
     Scope scope = scopes == null || scopes.isEmpty()? getSupportedScope(providerConfig.getScopesSupported(),
       client.isOfflineAccess()) : getScope(scopes);
-    redirectURI = redirectURI == null? new URI(settings.getOauthRedirectUri()) : redirectURI;
-    State state = saveOauthLoginState(sessionId, client, nonce, codeVerifier, redirectURI, scope.toString().replace(
+    //set to database redirect uri if empty
+    redirectUri = Strings.isNullOrEmpty(redirectUri) ? settings.getOauthRedirectUri() : redirectUri;
+    State state = saveOauthLoginState(sessionId, client, nonce, codeVerifier, redirectUri, scope.toString().replace(
       " ", " ,"));
     URI authEndpoint = new URI(providerConfig.getAuthorizationEndpoint());
     ClientID clientId = new ClientID(client.getClientId());
     ResponseType responseType = new ResponseType(ResponseType.Value.CODE);
-  
+    
     AuthenticationRequest authenticationRequest =
-      new AuthenticationRequest.Builder(responseType, scope, clientId, redirectURI)
+      new AuthenticationRequest.Builder(responseType, scope, clientId, new URI(getRedirectUri(redirectUri)))
         .state(state)
         .nonce(nonce)
         .codeChallenge(codeVerifier, codeChallengeMethod)
@@ -176,12 +180,12 @@ public class OIDAuthorizationCodeFlowHelper {
     return authReqURI;
   }
   
-  public URI getLogoutUrl(String providerName, String redirectURI) throws URISyntaxException {
+  public URI getLogoutUrl(String providerName, String redirectURI) throws URISyntaxException, RemoteAuthException {
     OauthClient client = oauthClientFacade.findByProviderName(providerName);
     if (client == null) {
       throw new NotFoundException("Client not found.");
     }
-    OpenIdProviderConfig providerConfig = oAuthProviderCache.getProviderConfig(client, false);
+    OpenIdProviderConfig providerConfig = getOpenIdProviderConfig(client, false);
     if (!Strings.isNullOrEmpty(providerConfig.getEndSessionEndpoint())) {
       URI postLogoutRedirectURI = new URI(redirectURI);
       URI logoutURI = new URI(providerConfig.getEndSessionEndpoint());
@@ -193,14 +197,14 @@ public class OIDAuthorizationCodeFlowHelper {
   }
   
   private State saveOauthLoginState(String sessionId, OauthClient client, Nonce nonce, CodeVerifier codeVerifier,
-    URI redirectURI, String scopes) {
+    String redirectUri, String scopes) {
     State state = new State();
     /*
      * when using oauth for hopsworks.ai we need to first redirect to hopsworks.ai then to
      * the hopsworks cluster. For this purpose we pass the cluster url in the state
      */
     if(!settings.getManagedCloudRedirectUri().isEmpty()){
-      state = new State(settings.getOauthRedirectUri(true) + "_" + state.getValue());
+      state = new State(getRedirectUriPrefix(redirectUri) + "_" + state.getValue());
     }
     int count = 10;
     OauthLoginState oauthLoginState = oauthLoginStateFacade.findByState(state.getValue());
@@ -211,7 +215,7 @@ public class OIDAuthorizationCodeFlowHelper {
        * the hopsworks cluster. For this purpose we pass the cluster url in the state
        */
       if (!settings.getManagedCloudRedirectUri().isEmpty()) {
-        state = new State(settings.getOauthRedirectUri(true) + "_" + state.getValue());
+        state = new State(getRedirectUriPrefix(redirectUri) + "_" + state.getValue());
       }
       oauthLoginState = oauthLoginStateFacade.findByState(state.getValue());
       count--;
@@ -219,11 +223,24 @@ public class OIDAuthorizationCodeFlowHelper {
     if (oauthLoginState != null) {
       throw new IllegalStateException("Failed to create state.");
     }
-    oauthLoginState = new OauthLoginState(state.getValue(), client, sessionId, redirectURI.toString(), scopes);
+    
+    oauthLoginState = new OauthLoginState(state.getValue(), client, sessionId, getRedirectUri(redirectUri), scopes);
     oauthLoginState.setNonce(nonce.getValue());
     oauthLoginState.setCodeChallenge(codeVerifier != null? codeVerifier.getValue() : null);
     oauthLoginStateFacade.save(oauthLoginState);
     return state;
+  }
+  
+  private String getRedirectUriPrefix(String redirectUri) {
+    // equals only if old ui
+    // then we need to prefix with OauthRedirectUri skipping managed cloud
+    return settings.getOauthRedirectUri().equals(redirectUri) ? settings.getOauthRedirectUri(true) : redirectUri;
+  }
+  
+  private String getRedirectUri(String redirectUri) {
+    //if managed cloud use redirect uri from database
+    return !Strings.isNullOrEmpty(settings.getManagedCloudRedirectUri()) ? settings.getManagedCloudRedirectUri() :
+      redirectUri;
   }
   
   /**
@@ -411,7 +428,7 @@ public class OIDAuthorizationCodeFlowHelper {
     if (userInfoResponse instanceof UserInfoErrorResponse) {
       ErrorObject error = ((UserInfoErrorResponse) userInfoResponse).getErrorObject();
       LOGGER.log(Level.SEVERE, "Error in UserInfo response: {0}", error.getDescription());
-      throw new IOException("Error in token response " + error.getDescription());
+      throw new IOException("Error in UserInfo response: " + error.getDescription());
     }
   
     UserInfoSuccessResponse successResponse = (UserInfoSuccessResponse) userInfoResponse;

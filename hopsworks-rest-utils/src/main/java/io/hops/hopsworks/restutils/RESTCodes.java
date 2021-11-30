@@ -2191,7 +2191,8 @@ public class RESTCodes {
   public enum RemoteAuthErrorCode implements RESTErrorCode {
     NOT_FOUND(0, "Not found.", Response.Status.NOT_FOUND),
     DUPLICATE_ENTRY(1, "Duplicate entry.", Response.Status.BAD_REQUEST),
-    ILLEGAL_ARGUMENT(2, "Illegal argument.", Response.Status.BAD_REQUEST);
+    ILLEGAL_ARGUMENT(2, "Illegal argument.", Response.Status.BAD_REQUEST),
+    WRONG_CONFIG(3, "Wrong configuration.", Response.Status.PRECONDITION_FAILED);
     
     private int code;
     private String message;

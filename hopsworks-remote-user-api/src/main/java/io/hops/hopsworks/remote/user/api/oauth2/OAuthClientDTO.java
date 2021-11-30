@@ -3,11 +3,17 @@
  */
 package io.hops.hopsworks.remote.user.api.oauth2;
 
+import com.google.common.base.Strings;
 import io.hops.hopsworks.common.api.RestDTO;
+import io.hops.hopsworks.exceptions.RemoteAuthException;
 import io.hops.hopsworks.persistence.entity.remote.oauth.CodeChallengeMethod;
 import io.hops.hopsworks.remote.user.GroupMapping;
+import io.hops.hopsworks.restutils.RESTCodes;
 
 import javax.xml.bind.annotation.XmlRootElement;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.util.logging.Level;
 
 @XmlRootElement
 public class OAuthClientDTO extends RestDTO<OAuthClientDTO> {
@@ -257,5 +263,68 @@ public class OAuthClientDTO extends RestDTO<OAuthClientDTO> {
   
   public void setManagedCloudRedirectUri(String managedCloudRedirectUri) {
     this.managedCloudRedirectUri = managedCloudRedirectUri;
+  }
+  
+  public void validate() throws RemoteAuthException {
+    if (Strings.isNullOrEmpty(this.getClientId())) {
+      throw new RemoteAuthException(RESTCodes.RemoteAuthErrorCode.ILLEGAL_ARGUMENT, Level.FINE, "Client id not set.");
+    }
+    if (Strings.isNullOrEmpty(this.getClientSecret())) {
+      throw new RemoteAuthException(RESTCodes.RemoteAuthErrorCode.ILLEGAL_ARGUMENT, Level.FINE,
+        "Client secret not set.");
+    }
+    if (Strings.isNullOrEmpty(this.getProviderName())) {
+      throw new RemoteAuthException(RESTCodes.RemoteAuthErrorCode.ILLEGAL_ARGUMENT, Level.FINE,
+        "Provider name not set.");
+    }
+    if (Strings.isNullOrEmpty(this.getProviderDisplayName())) {
+      throw new RemoteAuthException(RESTCodes.RemoteAuthErrorCode.ILLEGAL_ARGUMENT, Level.FINE,
+        "Provider display name not set.");
+    }
+    if (Strings.isNullOrEmpty(this.getProviderUri())) {
+      throw new RemoteAuthException(RESTCodes.RemoteAuthErrorCode.ILLEGAL_ARGUMENT, Level.FINE,
+        "Provider uri not set.");
+    }
+    validateURI(this.getProviderUri(), "Provider uri syntax exception.");
+    if (!Strings.isNullOrEmpty(this.getProviderLogoUri())) {
+      validateURI(this.getProviderLogoUri(), "Provider logo uri syntax exception.");
+    }
+  
+    if (!fromBoolean(this.getProviderMetadataEndpointSupported())) {
+      if (Strings.isNullOrEmpty(this.getAuthorizationEndpoint()) ||
+        Strings.isNullOrEmpty(this.getTokenEndpoint()) ||
+        Strings.isNullOrEmpty(this.getUserInfoEndpoint()) ||
+        Strings.isNullOrEmpty(this.getJwksURI())) {
+        throw new RemoteAuthException(RESTCodes.RemoteAuthErrorCode.ILLEGAL_ARGUMENT, Level.FINE,
+          "Failed to create client. Required field/s missing.");
+      }
+      validateURI(this.getAuthorizationEndpoint(), "Provider AuthorizationEndpoint uri syntax exception.");
+      validateURI(this.getTokenEndpoint(), "Provider uri TokenEndpoint syntax exception.");
+      validateURI(this.getUserInfoEndpoint(), "Provider UserInfoEndpoint uri syntax exception.");
+      validateURI(this.getJwksURI(), "Provider JWKS uri syntax exception.");
+    }
+    if (!Strings.isNullOrEmpty(this.getEndSessionEndpoint())) {
+      validateURI(this.getEndSessionEndpoint(), "Provider EndSessionEndpoint uri syntax exception.");
+    }
+  }
+  
+  private void validateURI(String uriStr, String errorMsg) throws RemoteAuthException {
+    try {
+      URI uri = new URI(uriStr);
+      if (uri.getScheme() == null || uri.getScheme().isEmpty()) {
+        throw new RemoteAuthException(RESTCodes.RemoteAuthErrorCode.ILLEGAL_ARGUMENT, Level.FINE, errorMsg + " No " +
+          "scheme provided.");
+      }
+      if (uri.getHost() == null || uri.getHost().isEmpty()) {
+        throw new RemoteAuthException(RESTCodes.RemoteAuthErrorCode.ILLEGAL_ARGUMENT, Level.FINE, errorMsg + " No " +
+          "host provided.");
+      }
+    } catch (URISyntaxException e) {
+      throw new RemoteAuthException(RESTCodes.RemoteAuthErrorCode.ILLEGAL_ARGUMENT, Level.FINE, errorMsg);
+    }
+  }
+  
+  public boolean fromBoolean(Boolean val) {
+    return val != null? val : false;
   }
 }

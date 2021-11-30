@@ -42,8 +42,10 @@ public class OAuthClientBuilder {
   private OAuthClientDTO build(OAuthClientDTO dto, OauthClient oauthClient) {
     dto.setId(oauthClient.getId());
     dto.setClientId(oauthClient.getClientId());
+    dto.setClientSecret(oauthClient.getClientSecret());
     dto.setProviderName(oauthClient.getProviderName());
     dto.setProviderDisplayName(oauthClient.getProviderDisplayName());
+    dto.setProviderLogoUri(oauthClient.getProviderLogoURI());
     dto.setProviderMetadataEndpointSupported(oauthClient.getProviderMetadataEndpointSupported());
     dto.setRedirectUri(settings.getOauthRedirectUri());
     dto.setProviderUri(oauthClient.getProviderURI());

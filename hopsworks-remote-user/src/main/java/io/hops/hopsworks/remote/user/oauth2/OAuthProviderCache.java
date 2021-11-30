@@ -8,7 +8,9 @@ import com.nimbusds.oauth2.sdk.ParseException;
 import com.nimbusds.oauth2.sdk.util.JSONObjectUtils;
 import io.hops.hopsworks.common.remote.oauth.OpenIdConstant;
 import io.hops.hopsworks.common.remote.oauth.OpenIdProviderConfig;
+import io.hops.hopsworks.exceptions.RemoteAuthException;
 import io.hops.hopsworks.persistence.entity.remote.oauth.OauthClient;
+import io.hops.hopsworks.restutils.RESTCodes;
 import net.minidev.json.JSONArray;
 import net.minidev.json.JSONObject;
 import org.ehcache.Cache;
@@ -92,7 +94,8 @@ public class OAuthProviderCache {
    * @param client
    * @return
    */
-  public OpenIdProviderConfig getProviderConfig(OauthClient client, boolean invalidateCache) {
+  public OpenIdProviderConfig getProviderConfig(OauthClient client, boolean invalidateCache)
+    throws RemoteAuthException {
     OpenIdProviderConfig providerConfig;
     if (client.getProviderMetadataEndpointSupported()) {
       try {
@@ -103,8 +106,9 @@ public class OAuthProviderCache {
         }
       } catch (Exception e) {
         LOGGER.log(Level.SEVERE, "Could not get provider configuration from URI {0}.", client.getProviderURI());
-        throw new IllegalStateException("Could not get provider configuration from URI " + client.getProviderURI() +
-          ". " + e.getMessage());
+        throw new RemoteAuthException(RESTCodes.RemoteAuthErrorCode.WRONG_CONFIG, Level.FINE, "Wrong configuration: " +
+          "Could not get provider configuration.",
+          "Could not get provider configuration from URI " + client.getProviderURI() + ". " + e.getMessage());
       }
     } else {
       providerConfig = new OpenIdProviderConfig(client);

@@ -139,10 +139,13 @@ public class Variables implements Serializable {
     }
     return true;
   }
-
+  
   @Override
   public String toString() {
-    return "io.hops.hopsworks.persistence.entity.util.Variables[ id=" + id + " ]";
+    return "Variables{" +
+      "id='" + id + '\'' +
+      ", value='" + value + '\'' +
+      ", visibility=" + visibility +
+      '}';
   }
-
 }

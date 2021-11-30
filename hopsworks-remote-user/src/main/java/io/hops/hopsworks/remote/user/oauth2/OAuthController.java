@@ -16,6 +16,7 @@ import io.hops.hopsworks.common.remote.oauth.OpenIdProviderConfig;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.HopsSecurityException;
 import io.hops.hopsworks.exceptions.RemoteAuthException;
+import io.hops.hopsworks.exceptions.UserException;
 import io.hops.hopsworks.jwt.exception.VerificationException;
 import io.hops.hopsworks.persistence.entity.remote.oauth.OauthClient;
 import io.hops.hopsworks.persistence.entity.remote.oauth.OauthLoginState;
@@ -78,7 +79,7 @@ public class OAuthController {
    * @throws LoginException
    */
   public RemoteUserStateDTO login(String sessionId, String code, String state, boolean consent, String chosenEmail)
-    throws LoginException {
+    throws LoginException, RemoteAuthException {
     OauthLoginState oauthLoginState = getClient(state, sessionId);
     OauthClient client = oauthLoginState.getClientId();
   
@@ -102,22 +103,23 @@ public class OAuthController {
     return remoteUserStateDTO;
   }
   
-  public URI getLogoutURI(String providerName, String redirectURI) {
+  public URI getLogoutURI(String providerName, String redirectURI) throws UserException, RemoteAuthException {
     try {
       return oidAuthorizationCodeFlowHelper.getLogoutUrl(providerName, redirectURI);
     } catch (URISyntaxException e) {
+      String errorMsg = "Failed to logout from " + providerName + ". " + e.getMessage();
+      throw new UserException(RESTCodes.UserErrorCode.LOGOUT_FAILURE, Level.SEVERE, errorMsg, errorMsg, e);
     }
-    return null;
   }
   
   private OauthLoginState getClient(String state, String sessionId) {
     OauthLoginState oauthLoginState = oauthLoginStateFacade.findByStateAndSession(state, sessionId)
-      .orElseThrow(() -> new IllegalStateException("No login request found for the given state."));
+      .orElseThrow(() -> new IllegalStateException("Authentication request not found."));
     Date currTime = new Date();
     long diffInSeconds = TimeUnit.MILLISECONDS.toSeconds(currTime.getTime() - oauthLoginState.getLoginTime().getTime());
     if (diffInSeconds > LOGIN_STATE_TTL_SEC) {
       oauthLoginStateFacade.remove(oauthLoginState);
-      throw new IllegalStateException("No login request found for the given state.");
+      throw new IllegalStateException("Authentication request has expired.");
     }
     return oauthLoginState;
   }

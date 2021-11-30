@@ -100,7 +100,9 @@
                         </button>
                         <button ng-repeat="openIdProvider in loginCtrl.openIdProviders" class="btn btn-block btn-default"
                                 ng-click="loginCtrl.oauthLogin(openIdProvider.providerName)">
-                            <img style="padding-right: 10px;" alt="" ng-src="{{openIdProvider.providerLogoURI}}"/>{{openIdProvider.providerDisplayName}}
+                            <img ng-if="openIdProvider.providerLogoURI" width="16px" height="16px"
+                                 style="padding-right: 10px;" alt=""
+                                 ng-src="{{openIdProvider.providerLogoURI}}"/>{{openIdProvider.providerDisplayName}}
                         </button>
                         <div class="alert alert-danger" role="alert" style="margin-top: 5px" ng-if="oauthLoginErrorMsg !== undefined">
                             <button type="button" class="close" aria-label="Close" ng-click="loginCtrl.resetOAuthLoginErrorMsg()">

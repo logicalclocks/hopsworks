@@ -21,7 +21,7 @@ import io.hops.hopsworks.restutils.RESTException;
 import java.util.logging.Level;
 
 public class RemoteAuthException extends RESTException {
-  protected RemoteAuthException(RESTCodes.RemoteAuthErrorCode errorCode, Level level) {
+  public RemoteAuthException(RESTCodes.RemoteAuthErrorCode errorCode, Level level) {
     super(errorCode, level);
   }
   
@@ -29,11 +29,11 @@ public class RemoteAuthException extends RESTException {
     super(errorCode, level, usrMsg);
   }
   
-  protected RemoteAuthException(RESTCodes.RemoteAuthErrorCode errorCode, Level level, String usrMsg, String devMsg) {
+  public RemoteAuthException(RESTCodes.RemoteAuthErrorCode errorCode, Level level, String usrMsg, String devMsg) {
     super(errorCode, level, usrMsg, devMsg);
   }
   
-  protected RemoteAuthException(RESTCodes.RemoteAuthErrorCode errorCode, Level level, String usrMsg, String devMsg,
+  public RemoteAuthException(RESTCodes.RemoteAuthErrorCode errorCode, Level level, String usrMsg, String devMsg,
       Throwable throwable) {
     super(errorCode, level, usrMsg, devMsg, throwable);
   }

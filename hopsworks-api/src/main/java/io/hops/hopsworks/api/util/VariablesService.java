@@ -38,6 +38,7 @@
  */
 package io.hops.hopsworks.api.util;
 
+import com.google.common.base.Strings;
 import io.hops.hopsworks.api.filter.Audience;
 import io.hops.hopsworks.api.filter.JWTNotRequired;
 import io.hops.hopsworks.api.filter.NoCacheResponse;
@@ -74,6 +75,8 @@ import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -164,15 +167,25 @@ public class VariablesService {
     if (remoteAuthEnabled) {
       List<OauthClient> oauthClients = oauthClientFacade.findAll();
       for (OauthClient client : oauthClients) {
-        providers.add(new OpenIdProvider(client.getProviderName(), client.getProviderDisplayName(),
-          client.getProviderLogoURI()));
+        String logoURI = Strings.isNullOrEmpty(client.getProviderLogoURI())? getDomain(client.getProviderURI()) :
+          client.getProviderLogoURI();
+        providers.add(new OpenIdProvider(client.getProviderName(), client.getProviderDisplayName(), logoURI));
       }
     }
     AuthenticationStatus authenticationStatus = new AuthenticationStatus(
       OTPAuthStatus.fromTwoFactorMode(settings.getTwoFactorAuth()), settings.isLdapEnabled(), settings.isKrbEnabled(),
-      settings.isOAuthEnabled(), providers, settings.isPasswordLoginDisabled(), settings.isRegistrationUIDisabled(),
-      remoteAuthEnabled);
+      settings.isOAuthEnabled(), providers, remoteAuthEnabled, settings.isPasswordLoginDisabled(),
+      settings.isRegistrationUIDisabled());
     return Response.ok(authenticationStatus).build();
+  }
+  
+  private String getDomain(String ProviderURI) {
+    try {
+      URI uri = new URI(ProviderURI);
+      return String.format("%s://%s", uri.getScheme() , uri.getHost());
+    } catch (URISyntaxException e) {
+      return "";
+    }
   }
 
   @GET

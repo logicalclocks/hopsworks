@@ -3,7 +3,7 @@
  */
 package io.hops.hopsworks.remote.user.api;
 
-import io.hops.hadoop.shaded.com.google.common.base.Strings;
+import com.google.common.base.Strings;
 import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.project.AccessCredentialsDTO;
 import io.hops.hopsworks.common.project.ProjectController;
@@ -14,6 +14,7 @@ import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.DatasetException;
 import io.hops.hopsworks.exceptions.HopsSecurityException;
 import io.hops.hopsworks.exceptions.ProjectException;
+import io.hops.hopsworks.exceptions.RemoteAuthException;
 import io.hops.hopsworks.exceptions.UserException;
 import io.hops.hopsworks.jwt.Constants;
 import io.hops.hopsworks.jwt.exception.DuplicateSigningKeyException;
@@ -166,7 +167,7 @@ public class AuthResource {
     @FormParam("chosenEmail") String chosenEmail,
     @FormParam("consent") boolean consent,
     @Context HttpServletRequest req) throws SigningKeyNotFoundException, NoSuchAlgorithmException,
-    DuplicateSigningKeyException, UserException, LoginException {
+    DuplicateSigningKeyException, UserException, LoginException, RemoteAuthException {
     if (!settings.isOAuthEnabled()) {
       return Response.status(Response.Status.METHOD_NOT_ALLOWED).build();
     }
@@ -234,11 +235,15 @@ public class AuthResource {
   @GET
   @Path("logout")
   @Produces(MediaType.APPLICATION_JSON)
-  public Response logout(@QueryParam("providerName") String providerName, @Context HttpServletRequest req)
-    throws UserException, InvalidationException {
+  public Response logout(@QueryParam("providerName") String providerName,
+    @QueryParam("redirect_uri") String redirectUri, @Context HttpServletRequest req) throws UserException,
+    InvalidationException, RemoteAuthException {
     logoutAndInvalidateSession(req);
     if (settings.isOAuthEnabled() && !Strings.isNullOrEmpty(providerName)) {
-      URI uri = oAuthController.getLogoutURI(providerName, settings.getOauthLogoutRedirectUri());
+      if (!Strings.isNullOrEmpty(settings.getManagedCloudRedirectUri()) || Strings.isNullOrEmpty(redirectUri)) {
+        redirectUri = settings.getOauthLogoutRedirectUri();
+      }
+      URI uri = oAuthController.getLogoutURI(providerName, redirectUri);
       if (uri != null) {
         return Response.ok(uri).build();
       }

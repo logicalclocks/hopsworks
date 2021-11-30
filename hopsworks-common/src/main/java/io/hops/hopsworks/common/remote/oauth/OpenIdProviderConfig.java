@@ -89,6 +89,7 @@ public class OpenIdProviderConfig implements Serializable {
     this.authorizationEndpoint = client.getAuthorisationEndpoint();
     this.tokenEndpoint = client.getTokenEndpoint();
     this.userInfoEndpoint = client.getUserInfoEndpoint();
+    this.jwkSetURI = client.getJwksURI();
     this.endSessionEndpoint = client.getEndSessionEndpoint();
     this.logoutRedirectParam = client.getLogoutRedirectParam();
   }

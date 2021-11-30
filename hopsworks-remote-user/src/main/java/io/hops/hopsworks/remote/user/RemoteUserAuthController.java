@@ -160,10 +160,8 @@ public class RemoteUserAuthController {
    * Keep the mapped groups up to date with the ones in the identity provider
    * @param userDTO
    * @param type
-   * @throws LoginException 
    */
-  private RemoteUser updateGroups(RemoteUserDTO userDTO, RemoteUser remoteUser, RemoteUserType type) throws
-      LoginException {
+  private RemoteUser updateGroups(RemoteUserDTO userDTO, RemoteUser remoteUser, RemoteUserType type) {
     List<String> groups = remoteUserGroupMapper.getMappedGroups(userDTO.getGroups(), type);
     Users user = remoteUser.getUid();
     BbcGroup group;
@@ -176,7 +174,7 @@ public class RemoteUserAuthController {
     }
     List<BbcGroup> toRemove = new ArrayList<>();
     for (BbcGroup g : user.getBbcGroupCollection()) {
-      if (!groups.contains(g.getGroupName())) {
+      if (!groups.isEmpty() && !groups.contains(g.getGroupName())) {
         toRemove.add(g);
         userFacade.removeGroup(user.getEmail(), g.getGid());
       }

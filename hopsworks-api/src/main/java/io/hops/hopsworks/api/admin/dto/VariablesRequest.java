@@ -69,4 +69,12 @@ public class VariablesRequest {
   public void setVariables(List<Variables> variables) {
     this.variables = variables;
   }
+  
+  // needed for audit
+  @Override
+  public String toString() {
+    return "VariablesRequest{" +
+      "variables=" + variables +
+      '}';
+  }
 }

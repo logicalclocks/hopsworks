@@ -7,6 +7,7 @@ import io.hops.hopsworks.common.remote.RemoteUserStateDTO;
 import io.hops.hopsworks.common.remote.oauth.OAuthHelper;
 import io.hops.hopsworks.common.remote.oauth.OpenIdProviderConfig;
 import io.hops.hopsworks.common.util.Settings;
+import io.hops.hopsworks.exceptions.RemoteAuthException;
 import io.hops.hopsworks.persistence.entity.remote.oauth.OauthClient;
 import io.hops.hopsworks.remote.user.RemoteAuthStereotype;
 
@@ -42,7 +43,7 @@ public class OAuthHelperImpl implements OAuthHelper {
   
   @Override
   public RemoteUserStateDTO login(String sessionId, String code, String state, boolean consent, String chosenEmail)
-    throws LoginException {
+    throws LoginException, RemoteAuthException {
     return  oAuthController.login(sessionId, code, state, consent, chosenEmail);
   }
   
@@ -73,8 +74,8 @@ public class OAuthHelperImpl implements OAuthHelper {
   }
   
   @Override
-  public URI getAuthenticationRequestURL(String sessionId, String providerName, URI redirectURI, Set<String> scopes)
-    throws URISyntaxException {
+  public URI getAuthenticationRequestURL(String sessionId, String providerName, String redirectURI, Set<String> scopes)
+    throws URISyntaxException, RemoteAuthException {
     return oidAuthorizationCodeFlowHelper.getAuthenticationRequestURL(sessionId, providerName, redirectURI, scopes);
   }
   

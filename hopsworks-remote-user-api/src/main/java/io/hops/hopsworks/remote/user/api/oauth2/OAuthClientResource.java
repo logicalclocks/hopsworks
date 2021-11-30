@@ -83,15 +83,29 @@ public class OAuthClientResource {
   
   @GET
   @Path("/provider/{providerName}/login/uri")
-  @ApiOperation(value = "Get login URL for the given provider name")
+  @ApiOperation(value = "Get login URL for the given provider name. Returns temporaryRedirect (307)")
   public Response getLoginURLByProvider(@PathParam("providerName") String providerName, @Context UriInfo uriInfo,
-    @QueryParam("redirect") @DefaultValue("true") boolean redirect,
-    @Context HttpServletRequest req) throws URISyntaxException, UnsupportedEncodingException {
-    URI redirectURI = new URI(settings.getOauthRedirectUri());
-    return getAuthURI(providerName, redirectURI, null, redirect, req.getSession().getId(),uriInfo);
+    @QueryParam("redirect") @DefaultValue("true") boolean redirect, @Context HttpServletRequest req)
+    throws URISyntaxException, UnsupportedEncodingException {
+    return getAuthURI(providerName, settings.getOauthRedirectUri(), null, redirect, req.getSession().getId(), uriInfo);
   }
   
-  private Response getAuthURI(String providerName, URI redirectURI, Set<String> scopes, boolean redirect,
+  @GET
+  @Path("/login/uri/{providerName}")
+  @ApiOperation(value = "Get login URL for the given provider name", response = OAuthProvider.class)
+  public Response getProviderLoginURL(@PathParam("providerName") String providerName,
+    @QueryParam("redirect_uri") String redirectUri, @Context UriInfo uriInfo, @Context HttpServletRequest req)
+    throws URISyntaxException, RemoteAuthException {
+    if (!settings.isOAuthEnabled()) {
+      return Response.status(Response.Status.METHOD_NOT_ALLOWED).build();
+    }
+    URI url = oidAuthorizationCodeFlowHelper.getAuthenticationRequestURL(req.getSession().getId(), providerName,
+      redirectUri, null);
+    OAuthProvider oAuthProvider = new OAuthProvider(url, providerName);
+    return Response.ok(oAuthProvider).build();
+  }
+  
+  private Response getAuthURI(String providerName, String redirectURI, Set<String> scopes, boolean redirect,
     String sessionId, UriInfo uriInfo)
     throws UnsupportedEncodingException, URISyntaxException {
     if (!settings.isOAuthEnabled()) {
@@ -130,7 +144,7 @@ public class OAuthClientResource {
     oAuthController.saveClient(oauthClient);
     updateSettings(oauthClientDTO, uriInfo);
     OAuthClientDTO oAuthClientDTO = oAuthClientBuilder.buildItem(uriInfo, oauthClientDTO.getProviderName());
-    return Response.created(oAuthClientDTO.getHref()).build();
+    return Response.created(oAuthClientDTO.getHref()).entity(oAuthClientDTO).build();
   }
   
   @PUT
@@ -208,53 +222,27 @@ public class OAuthClientResource {
     if (oauthClientDTO == null) {
       throw new RemoteAuthException(RESTCodes.RemoteAuthErrorCode.ILLEGAL_ARGUMENT, Level.FINE, "No payload.");
     }
+    oauthClientDTO.validate();
     if (oauthClient.getId() != null) {
       if (!oauthClient.getClientId().equals(oauthClientDTO.getClientId()) &&
-          oauthClientFacade.findByClientId(oauthClientDTO.getClientId()) != null) {
+        oauthClientFacade.findByClientId(oauthClientDTO.getClientId()) != null) {
         throw new RemoteAuthException(RESTCodes.RemoteAuthErrorCode.DUPLICATE_ENTRY, Level.FINE,
-            "A client with the same id already exists.");
+          "A client with the same id already exists.");
       }
       if (!oauthClient.getProviderName().equals(oauthClientDTO.getProviderName()) &&
-          oauthClientFacade.findByProviderName(oauthClientDTO.getProviderName()) != null) {
+        oauthClientFacade.findByProviderName(oauthClientDTO.getProviderName()) != null) {
         throw new RemoteAuthException(RESTCodes.RemoteAuthErrorCode.DUPLICATE_ENTRY, Level.FINE,
-            "A client with the same provider name already exists.");
+          "A client with the same provider name already exists.");
       }
     } else {
       if (oauthClientFacade.findByClientId(oauthClientDTO.getClientId()) != null) {
         throw new RemoteAuthException(RESTCodes.RemoteAuthErrorCode.DUPLICATE_ENTRY, Level.FINE,
-            "A client with the same id already exists.");
+          "A client with the same id already exists.");
       }
       if (oauthClientFacade.findByProviderName(oauthClientDTO.getProviderName()) != null) {
         throw new RemoteAuthException(RESTCodes.RemoteAuthErrorCode.DUPLICATE_ENTRY, Level.FINE,
-            "A client with the same provider name already exists.");
+          "A client with the same provider name already exists.");
       }
-    }
-    if (Strings.isNullOrEmpty(oauthClientDTO.getClientId())) {
-      throw new RemoteAuthException(RESTCodes.RemoteAuthErrorCode.ILLEGAL_ARGUMENT, Level.FINE, "Client id not set.");
-    }
-    if (Strings.isNullOrEmpty(oauthClientDTO.getClientSecret())) {
-      throw new RemoteAuthException(RESTCodes.RemoteAuthErrorCode.ILLEGAL_ARGUMENT, Level.FINE,
-          "Client secret not set.");
-    }
-    if (Strings.isNullOrEmpty(oauthClientDTO.getProviderName())) {
-      throw new RemoteAuthException(RESTCodes.RemoteAuthErrorCode.ILLEGAL_ARGUMENT, Level.FINE,
-          "Provider name not set.");
-    }
-    if (Strings.isNullOrEmpty(oauthClientDTO.getProviderDisplayName())) {
-      throw new RemoteAuthException(RESTCodes.RemoteAuthErrorCode.ILLEGAL_ARGUMENT, Level.FINE,
-          "Provider display name not set.");
-    }
-    if (Strings.isNullOrEmpty(oauthClientDTO.getProviderUri())) {
-      throw new RemoteAuthException(RESTCodes.RemoteAuthErrorCode.ILLEGAL_ARGUMENT, Level.FINE,
-          "Provider uri not set.");
-    }
-    if (!oauthClientDTO.getProviderMetadataEndpointSupported() &&
-        (Strings.isNullOrEmpty(oauthClientDTO.getAuthorizationEndpoint()) ||
-            Strings.isNullOrEmpty(oauthClientDTO.getTokenEndpoint()) ||
-            Strings.isNullOrEmpty(oauthClientDTO.getUserInfoEndpoint()) ||
-            Strings.isNullOrEmpty(oauthClientDTO.getJwksURI()))) {
-      throw new RemoteAuthException(RESTCodes.RemoteAuthErrorCode.ILLEGAL_ARGUMENT, Level.FINE,
-          "Failed to create client. Required field/s missing.");
     }
   }
   
