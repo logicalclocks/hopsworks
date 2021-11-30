@@ -16,6 +16,7 @@
 
 package io.hops.hopsworks.api.modelregistry.models.dto;
 
+import io.hops.hopsworks.api.dataset.inode.InodeDTO;
 import io.hops.hopsworks.common.api.RestDTO;
 import io.hops.hopsworks.common.featurestore.trainingdatasets.TrainingDatasetDTO;
 
@@ -41,11 +42,11 @@ public class ModelDTO extends RestDTO<ModelDTO> {
 
   private String userFullName;
 
-  private String inputExample;
+  private InodeDTO inputExample;
 
   private String framework;
 
-  private String modelSchema;
+  private InodeDTO modelSchema;
 
   private Long created;
 
@@ -161,12 +162,20 @@ public class ModelDTO extends RestDTO<ModelDTO> {
     this.experimentProjectName = experimentProjectName;
   }
 
-  public String getInputExample() {
+  public InodeDTO getInputExample() {
     return inputExample;
   }
 
-  public void setInputExample(String inputExample) {
+  public void setInputExample(InodeDTO inputExample) {
     this.inputExample = inputExample;
+  }
+
+  public InodeDTO getModelSchema() {
+    return modelSchema;
+  }
+
+  public void setModelSchema(InodeDTO modelSchema) {
+    this.modelSchema = modelSchema;
   }
 
   public String getFramework() {
@@ -175,14 +184,6 @@ public class ModelDTO extends RestDTO<ModelDTO> {
 
   public void setFramework(String framework) {
     this.framework = framework;
-  }
-
-  public String getModelSchema() {
-    return modelSchema;
-  }
-
-  public void setModelSchema(String modelSchema) {
-    this.modelSchema = modelSchema;
   }
 
   public TrainingDatasetDTO getTrainingDataset() {

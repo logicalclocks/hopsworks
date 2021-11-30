@@ -20,10 +20,13 @@ import io.hops.hopsworks.api.modelregistry.models.ModelsBuilder;
 import io.hops.hopsworks.common.api.ResourceRequest;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.GenericException;
+import io.hops.hopsworks.exceptions.MetadataException;
 import io.hops.hopsworks.exceptions.ModelRegistryException;
+import io.hops.hopsworks.exceptions.SchematizedTagException;
 import io.hops.hopsworks.persistence.entity.dataset.Dataset;
 import io.hops.hopsworks.persistence.entity.dataset.DatasetSharedWith;
 import io.hops.hopsworks.persistence.entity.project.Project;
+import io.hops.hopsworks.persistence.entity.user.Users;
 
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
@@ -65,8 +68,8 @@ public class ModelRegistryBuilder {
   }
 
   //Build collection
-  public ModelRegistryDTO build(UriInfo uriInfo, ResourceRequest resourceRequest, Project project)
-          throws GenericException, ModelRegistryException {
+  public ModelRegistryDTO build(UriInfo uriInfo, ResourceRequest resourceRequest, Users user, Project project)
+          throws GenericException, ModelRegistryException, SchematizedTagException, MetadataException {
     ModelRegistryDTO dto = new ModelRegistryDTO();
     uri(dto, uriInfo, project);
     expand(dto, resourceRequest);
@@ -85,7 +88,7 @@ public class ModelRegistryBuilder {
     dto.setCount((long)modelsDatasets.size());
 
     for(Dataset ds: modelsDatasets) {
-      ModelRegistryDTO modelRegistryDTO = build(uriInfo, resourceRequest, project, ds.getProject());
+      ModelRegistryDTO modelRegistryDTO = build(uriInfo, resourceRequest, user, project, ds.getProject());
       if(modelRegistryDTO != null) {
         dto.addItem(modelRegistryDTO);
       }
@@ -94,8 +97,9 @@ public class ModelRegistryBuilder {
   }
 
   //Build specific
-  public ModelRegistryDTO build(UriInfo uriInfo, ResourceRequest resourceRequest, Project userProject,
-                                Project modelRegistryProject) throws GenericException, ModelRegistryException {
+  public ModelRegistryDTO build(UriInfo uriInfo, ResourceRequest resourceRequest, Users user, Project userProject,
+                                Project modelRegistryProject) throws GenericException, ModelRegistryException,
+          SchematizedTagException, MetadataException {
     ModelRegistryDTO dto = new ModelRegistryDTO();
     uri(dto, uriInfo, userProject, modelRegistryProject);
     expand(dto, resourceRequest);
@@ -103,7 +107,7 @@ public class ModelRegistryBuilder {
     dto.setParentProjectName(modelRegistryProject.getName());
     if(dto.isExpand()) {
       dto.setModels(modelsBuilder.build(uriInfo, resourceRequest.get(ResourceRequest.Name.MODELS),
-              userProject, modelRegistryProject));
+              user, userProject, modelRegistryProject));
     }
     return dto;
   }

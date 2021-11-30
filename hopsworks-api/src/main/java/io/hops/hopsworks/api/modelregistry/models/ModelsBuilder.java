@@ -15,6 +15,8 @@
  */
 package io.hops.hopsworks.api.modelregistry.models;
 
+import io.hops.hopsworks.api.dataset.inode.InodeBuilder;
+import io.hops.hopsworks.api.dataset.inode.InodeDTO;
 import io.hops.hopsworks.api.modelregistry.dto.ModelRegistryDTO;
 import io.hops.hopsworks.api.modelregistry.models.dto.ModelDTO;
 import io.hops.hopsworks.common.api.ResourceRequest;
@@ -23,6 +25,9 @@ import io.hops.hopsworks.common.dao.hdfsUser.HdfsUsersFacade;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
 import io.hops.hopsworks.common.dao.project.team.ProjectTeamFacade;
 import io.hops.hopsworks.common.dao.user.UserFacade;
+import io.hops.hopsworks.common.dataset.FilePreviewMode;
+import io.hops.hopsworks.common.dataset.util.DatasetHelper;
+import io.hops.hopsworks.common.dataset.util.DatasetPath;
 import io.hops.hopsworks.common.featurestore.FeaturestoreFacade;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
 import io.hops.hopsworks.common.provenance.core.Provenance;
@@ -34,8 +39,11 @@ import io.hops.hopsworks.common.provenance.util.ProvHelper;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.DatasetException;
 import io.hops.hopsworks.exceptions.GenericException;
+import io.hops.hopsworks.exceptions.MetadataException;
 import io.hops.hopsworks.exceptions.ModelRegistryException;
 import io.hops.hopsworks.exceptions.ProvenanceException;
+import io.hops.hopsworks.exceptions.SchematizedTagException;
+import io.hops.hopsworks.persistence.entity.dataset.DatasetType;
 import io.hops.hopsworks.persistence.entity.hdfs.user.HdfsUsers;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.project.team.ProjectTeam;
@@ -84,6 +92,12 @@ public class ModelsBuilder {
   private FeaturestoreFacade featurestoreFacade;
   @EJB
   private ModelsController modelsController;
+  @EJB
+  private InodeBuilder inodeBuilder;
+  @EJB
+  private DatasetHelper datasetHelper;
+  @EJB
+  private ModelUtils modelUtils;
   
   public ModelDTO uri(ModelDTO dto, UriInfo uriInfo, Project userProject, Project modelRegistryProject) {
     dto.setHref(uriInfo.getBaseUriBuilder()
@@ -119,9 +133,11 @@ public class ModelsBuilder {
   //Build collection
   public ModelDTO build(UriInfo uriInfo,
                         ResourceRequest resourceRequest,
+                        Users user,
                         Project userProject,
-                        Project modelRegistryProject)
-    throws ModelRegistryException, GenericException {
+                        Project modelRegistryProject
+  )
+          throws ModelRegistryException, GenericException, SchematizedTagException, MetadataException {
     ModelDTO dto = new ModelDTO();
     uri(dto, uriInfo, userProject, modelRegistryProject);
     expand(dto, resourceRequest);
@@ -144,9 +160,11 @@ public class ModelsBuilder {
         List<ProvStateDTO> models = new LinkedList<>(fileState.getItems());
 
         dto.setCount(fileState.getCount());
+        String modelsDatasetPath = modelUtils.getModelsDatasetPath(userProject, modelRegistryProject);
         for(ProvStateDTO fileProvStateHit: models) {
           ModelDTO modelDTO
-            = build(uriInfo, resourceRequest, userProject, modelRegistryProject, fileProvStateHit);
+            = build(uriInfo, resourceRequest, user, userProject, modelRegistryProject, fileProvStateHit,
+                  modelsDatasetPath);
           if(modelDTO != null) {
             dto.addItem(modelDTO);
           }
@@ -170,11 +188,12 @@ public class ModelsBuilder {
   //Build specific
   public ModelDTO build(UriInfo uriInfo,
                         ResourceRequest resourceRequest,
+                        Users user,
                         Project userProject,
                         Project modelRegistryProject,
-                        ProvStateDTO fileProvenanceHit)
-    throws ModelRegistryException, GenericException, ProvenanceException {
-
+                        ProvStateDTO fileProvenanceHit,
+                        String modelsFolder) throws DatasetException, ModelRegistryException, SchematizedTagException,
+      MetadataException {
     ModelDTO modelDTO = new ModelDTO();
     uri(modelDTO, uriInfo, userProject, modelRegistryProject, fileProvenanceHit);
     if (expand(modelDTO, resourceRequest).isExpand()) {
@@ -190,9 +209,33 @@ public class ModelsBuilder {
         modelDTO.setMetrics(modelSummary.getMetrics());
         modelDTO.setDescription(modelSummary.getDescription());
         modelDTO.setProgram(modelSummary.getProgram());
-        modelDTO.setInputExample(modelSummary.getInputExample());
         modelDTO.setFramework(modelSummary.getFramework());
-        modelDTO.setModelSchema(modelSummary.getModelSchema());
+
+        String modelVersionPath = modelsFolder + "/" + modelDTO.getName() + "/" + modelDTO.getVersion() + "/";
+
+        DatasetPath modelSchemaPath = datasetHelper.getDatasetPath(userProject,
+            modelVersionPath + Settings.HOPS_MODELS_SCHEMA, DatasetType.DATASET);
+        if(resourceRequest.contains(ResourceRequest.Name.MODELSCHEMA) && modelSchemaPath.getInode() != null) {
+          InodeDTO modelSchemaDTO = inodeBuilder.buildBlob(uriInfo, new ResourceRequest(ResourceRequest.Name.INODES),
+              user, modelSchemaPath, modelSchemaPath.getInode(), FilePreviewMode.HEAD);
+          modelDTO.setModelSchema(modelSchemaDTO);
+        } else {
+          InodeDTO modelSchemaDTO = inodeBuilder.buildResource(uriInfo, modelRegistryProject, modelSchemaPath);
+          modelDTO.setInputExample(modelSchemaDTO);
+        }
+
+        DatasetPath inputExamplePath = datasetHelper.getDatasetPath(userProject,
+            modelVersionPath + Settings.HOPS_MODELS_INPUT_EXAMPLE, DatasetType.DATASET);
+        if(resourceRequest.contains(ResourceRequest.Name.INPUTEXAMPLE) && inputExamplePath.getInode() != null) {
+          InodeDTO inputExampleDTO = inodeBuilder.buildBlob(uriInfo, new ResourceRequest(ResourceRequest.Name.INODES),
+              user, inputExamplePath,
+              inputExamplePath.getInode(), FilePreviewMode.HEAD);
+          modelDTO.setInputExample(inputExampleDTO);
+        } else {
+          InodeDTO inputExampleDTO = inodeBuilder.buildResource(uriInfo, modelRegistryProject, inputExamplePath);
+          modelDTO.setInputExample(inputExampleDTO);
+        }
+
         modelDTO.setEnvironment(modelSummary.getEnvironment());
         modelDTO.setExperimentId(modelSummary.getExperimentId());
         modelDTO.setExperimentProjectName(modelSummary.getExperimentProjectName());
