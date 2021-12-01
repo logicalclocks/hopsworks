@@ -95,7 +95,7 @@ public class ProvUsageBuilder {
     ProvArtifactUsageParentDTO usage = new ProvArtifactUsageParentDTO();
     usage.setArtifactId(artifactId);
     DatasetDTO datasetDTO =
-      datasetBuilder.build(uriInfo, new ResourceRequest(ResourceRequest.Name.DATASETS), user, targetEndpoint);
+      datasetBuilder.build(uriInfo, new ResourceRequest(ResourceRequest.Name.DATASET), user, targetEndpoint);
     usage.setDataset(datasetDTO);
     usage.setProjectId(targetEndpoint.getDataset().getProject().getId());
     usage.setProjectName(targetEndpoint.getDataset().getProject().getName());

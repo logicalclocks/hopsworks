@@ -85,7 +85,7 @@ public class InodeBuilder {
     dto.setHref(uriInfo.getBaseUriBuilder()
       .path(ResourceRequest.Name.PROJECT.toString())
       .path(project.getId().toString())
-      .path(ResourceRequest.Name.DATASETS.toString())
+      .path(ResourceRequest.Name.DATASET.toString())
       .path(dto.getAttributes().getPath())
       .build());
     return dto;

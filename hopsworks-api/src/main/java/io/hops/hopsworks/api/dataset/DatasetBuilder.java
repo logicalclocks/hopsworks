@@ -96,14 +96,14 @@ public class DatasetBuilder {
     dto.setHref(uriInfo.getBaseUriBuilder()
       .path(ResourceRequest.Name.PROJECT.toString())
       .path(datasetPath.getAccessProject().getId().toString())
-      .path(ResourceRequest.Name.DATASETS.toString())
+      .path(ResourceRequest.Name.DATASET.toString())
       .path(datasetPath.getRelativePath().toString())
       .build());
     return dto;
   }
 
   public DatasetDTO expand(DatasetDTO dto, ResourceRequest resourceRequest) {
-    if (resourceRequest != null && resourceRequest.contains(ResourceRequest.Name.DATASETS)) {
+    if (resourceRequest != null && resourceRequest.contains(ResourceRequest.Name.DATASET)) {
       dto.setExpand(true);
     }
     return dto;

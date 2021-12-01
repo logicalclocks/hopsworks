@@ -150,13 +150,13 @@ public class DatasetResource {
     @Context UriInfo uriInfo, @Context SecurityContext sc)
     throws ProjectException, DatasetException, MetadataException, SchematizedTagException {
     Users user = jWTHelper.getUserPrincipal(sc);
-    ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.DATASETS);
+    ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.DATASET);
     resourceRequest.setOffset(pagination.getOffset());
     resourceRequest.setLimit(pagination.getLimit());
     resourceRequest.setSort(datasetBeanParam.getSortBySet());
     resourceRequest.setFilter(datasetBeanParam.getFilter());
     resourceRequest.setExpansions(datasetBeanParam.getExpansions().getResources());
-    ResourceRequest sharedDatasetResourceRequest = new ResourceRequest(ResourceRequest.Name.DATASETS);
+    ResourceRequest sharedDatasetResourceRequest = new ResourceRequest(ResourceRequest.Name.DATASET);
     sharedDatasetResourceRequest.setOffset(pagination.getOffset());
     sharedDatasetResourceRequest.setLimit(pagination.getLimit());
     sharedDatasetResourceRequest.setSort(datasetBeanParam.getSharedWithSortBySet());
@@ -198,7 +198,7 @@ public class DatasetResource {
         break;
       case STAT:
         if (datasetPath.isTopLevelDataset()) {
-          ResourceRequest datasetResourceRequest = new ResourceRequest(ResourceRequest.Name.DATASETS);
+          ResourceRequest datasetResourceRequest = new ResourceRequest(ResourceRequest.Name.DATASET);
           datasetResourceRequest.setExpansions(datasetExpansionBeanParam.getResources());
           DatasetDTO datasetDTO = datasetBuilder.build(uriInfo, datasetResourceRequest, user, datasetPath,
             null, null, true);
@@ -257,7 +257,7 @@ public class DatasetResource {
           datasetController.createDirectory(project, user, datasetPath.getFullPath(), datasetPath.getDatasetName(),
             datasetPath.isTopLevelDataset(), description,
             Provenance.getDatasetProvCore(projectProvCore, Provenance.MLType.DATASET), generateReadme, permission);
-          resourceRequest = new ResourceRequest(ResourceRequest.Name.DATASETS);
+          resourceRequest = new ResourceRequest(ResourceRequest.Name.DATASET);
           Dataset ds = datasetController.getByProjectAndFullPath(project, datasetPath.getFullPath().toString());
           datasetHelper.updateDataset(project, datasetPath, ds);
           datasetPath.setInode(ds.getInode());
@@ -363,7 +363,7 @@ public class DatasetResource {
     throws DatasetException, ProjectException, MetadataException, SchematizedTagException {
     Project project = this.getProject();
     DatasetPath datasetPath = datasetHelper.getDatasetPath(project, path, datasetType);
-    ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.DATASETS);
+    ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.DATASET);
     Users user = jwtHelper.getUserPrincipal(sc);
     DatasetDTO dto;
     switch (action == null ? DatasetActions.Put.DESCRIPTION : action) {
