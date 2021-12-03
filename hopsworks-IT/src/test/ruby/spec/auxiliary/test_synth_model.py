@@ -27,7 +27,8 @@ def wrapper():
     import uuid
     import pandas
     import numpy
-    from hsml.utils.signature import Signature
+    from hsml.utils.schema import Schema
+    from hsml.utils.model_schema import ModelSchema
     from hsml.client.exceptions import RestAPIError
 
     model_path = os.path.join(os.getcwd(), str(uuid.uuid4()))
@@ -41,12 +42,12 @@ def wrapper():
     mr = connection.get_model_registry(project=model_proj_name)
              
     input_data = {'int_column': [1, 2], 'string_column': ["John", "Jamie"], 'float_column': [0.5, 0.3]}
-    input_df = pandas.DataFrame(data=input_data)
+    inputs = pandas.DataFrame(data=input_data)
              
-    predictions = numpy.array([1.1, 20.2, 30.3, 40.4, 50.0, 60.6, 70.7, 0.1])
-    signature = Signature(inputs=input_df, predictions=predictions)
+    outputs = numpy.array([1.1, 20.2, 30.3, 40.4, 50.0, 60.6, 70.7, 0.1])
+    model_schema = ModelSchema(input_schema=Schema(inputs), output_schema=Schema(outputs))
              
-    model = mr.python.create_model(model_name, input_example=input_df, signature=signature)
+    model = mr.python.create_model(model_name, input_example=inputs, model_schema=model_schema)
     saved_meta_obj = model.save(model_path)
     
     def test_meta_model(meta_obj):
@@ -55,10 +56,10 @@ def wrapper():
         download_path = meta_obj.download()
         assert 'saved_shared_model.pb' in os.listdir(download_path), "model not in path"
         
-        # Check input_example and signatures
-        assert len(meta_obj.signature['inputs']['columnar_signature']['columns']) == 3, "signature len incorrect"
-        assert meta_obj.signature['predictions']['tensor_signature']['tensor']['data_type'] == "float64", "signature type incorrect"
-        assert meta_obj.signature['predictions']['tensor_signature']['tensor']['shape'] == [8], "signature shape incorrect"
+        # Check input_example and model schema
+        assert len(meta_obj.model_schema['input_schema']['columnar_schema']) == 3, "schema len incorrect"
+        assert meta_obj.model_schema['output_schema']['tensor_schema']['type'] == "float64", "schema type incorrect"
+        assert meta_obj.model_schema['output_schema']['tensor_schema']['shape'] == '(8,)', "schema shape incorrect"
         assert len(meta_obj.input_example['columns']) == 3, "input example columns len incorrect"
         
         assert 'dq23r23ard' in meta_obj.program, "string not in program"
