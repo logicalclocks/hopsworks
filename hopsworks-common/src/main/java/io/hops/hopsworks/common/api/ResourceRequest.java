@@ -159,7 +159,7 @@ public class ResourceRequest {
     ACL,
     SHARED,
     EXECUTIONS,
-    DATASETS,
+    DATASET,
     REQUESTS,
     INODES,
     MESSAGES,
