@@ -60,9 +60,10 @@ module ProjectHelper
     end
   end
 
-  def create_project(services = ["JOBS","JUPYTER","HIVE","KAFKA","SERVING", "FEATURESTORE"])
+  def create_project(projectName = nil, services = ["JOBS","JUPYTER","HIVE","KAFKA","SERVING", "FEATURESTORE"])
     with_valid_session
-    new_project = {projectName: "ProJect_#{short_random_id}", description:"", status: 0, services: services,
+    pName = projectName == nil ? "ProJect_#{short_random_id}" : projectName
+    new_project = {projectName: pName, description:"", status: 0, services: services,
                    projectTeam:[], retentionPeriod: ""}
     post "#{ENV['HOPSWORKS_API']}/project", new_project
     expect_status(201)

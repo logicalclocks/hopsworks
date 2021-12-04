@@ -215,6 +215,19 @@ describe "On #{ENV['OS']}" do
           # MySQL "grant all privileges" generates 18 rows
           expect(privileges.length).to eq(18)
         end
+
+        it "should not remove users from other projects - see HOPSWORKS-2856" do
+          demo_project = create_project(projectName = "demo")
+          demo_demo_project = create_project(projectName = "demo_demo")
+
+          delete_project(demo_project)
+
+          online_db_name = "#{demo_demo_project[:projectname]}_#{@user[:username]}"[0..30]
+          grantee = "'#{online_db_name}'@'%'"
+          privileges = SchemaPrivileges.where(TABLE_SCHEMA:demo_demo_project[:projectname], GRANTEE:grantee)
+
+          expect(privileges.length).to eq(18)
+        end
       end
     end
   end

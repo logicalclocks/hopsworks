@@ -16,13 +16,13 @@
 package io.hops.hopsworks.common.featurestore.online;
 
 import com.logicalclocks.servicediscoverclient.exceptions.ServiceDiscoveryException;
+import io.hops.hopsworks.common.dao.project.team.ProjectTeamFacade;
 import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.dao.user.security.secrets.SecretsFacade;
 import io.hops.hopsworks.common.featurestore.FeaturestoreConstants;
 import io.hops.hopsworks.common.featurestore.featuregroup.cached.CachedFeaturegroupController;
 import io.hops.hopsworks.common.featurestore.featuregroup.cached.FeaturegroupPreview;
 import io.hops.hopsworks.common.featurestore.storageconnectors.FeaturestoreConnectorFacade;
-import io.hops.hopsworks.common.hdfs.HdfsUsersController;
 import io.hops.hopsworks.common.hosts.ServiceDiscoveryController;
 import io.hops.hopsworks.common.security.secrets.SecretsController;
 import io.hops.hopsworks.common.util.Settings;
@@ -32,9 +32,9 @@ import io.hops.hopsworks.persistence.entity.featurestore.Featurestore;
 import io.hops.hopsworks.persistence.entity.featurestore.storageconnector.FeaturestoreConnector;
 import io.hops.hopsworks.persistence.entity.featurestore.storageconnector.FeaturestoreConnectorType;
 import io.hops.hopsworks.persistence.entity.featurestore.storageconnector.jdbc.FeaturestoreJdbcConnector;
-import io.hops.hopsworks.persistence.entity.hdfs.user.HdfsUsers;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.project.team.ProjectRoleTypes;
+import io.hops.hopsworks.persistence.entity.project.team.ProjectTeam;
 import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.persistence.entity.user.security.secrets.SecretId;
 import io.hops.hopsworks.persistence.entity.user.security.secrets.VisibilityType;
@@ -52,7 +52,6 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -83,7 +82,7 @@ public class OnlineFeaturestoreController {
   @EJB
   private CachedFeaturegroupController cachedFeaturegroupController;
   @EJB
-  private HdfsUsersController hdfsUsersController;
+  private ProjectTeamFacade projectTeamFacade;
   @EJB
   private UserFacade userFacade;
   @EJB
@@ -414,25 +413,20 @@ public class OnlineFeaturestoreController {
       //Nothing to remove
       return;
     }
-    for (HdfsUsers hdfsUser: hdfsUsersController.getAllProjectHdfsUsers(project.getName())) {
-      Users user = userFacade.findByUsername(hdfsUser.getUsername());
-      if (user != null) {
-        String dbUser = onlineDbUsername(project, user);
-        try {
-          secretsController.delete(user, dbUser);
-        } catch (UserException e) {
-          throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.FEATURESTORE_ONLINE_SECRETS_ERROR,
-                  Level.SEVERE, "Problem removing user-secret to online featurestore");
-        }
-      }
-    }
-    String db = getOnlineFeaturestoreDbName(project);
-    onlineFeaturestoreFacade.removeOnlineFeaturestoreDatabase(db);
 
-    List<String> users = onlineFeaturestoreFacade.getDatabaseUsers(db);
-    for (String dbUser: users) {
+    for (ProjectTeam member : projectTeamFacade.findMembersByProject(project)) {
+      String dbUser = onlineDbUsername(project, member.getUser());
+      try {
+        secretsController.delete(member.getUser(), dbUser);
+      } catch (UserException e) {
+        throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.FEATURESTORE_ONLINE_SECRETS_ERROR,
+            Level.SEVERE, "Problem removing user-secret to online featurestore");
+      }
       onlineFeaturestoreFacade.removeOnlineFeaturestoreUser(dbUser);
     }
+
+    String db = getOnlineFeaturestoreDbName(project);
+    onlineFeaturestoreFacade.removeOnlineFeaturestoreDatabase(db);
   }
   
   public void removeOnlineFeaturestoreUser(Featurestore featurestore, Users user) throws FeaturestoreException {
