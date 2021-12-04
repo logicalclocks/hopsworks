@@ -324,38 +324,6 @@ public class OnlineFeaturestoreFacade {
   }
 
   /**
-   * Get all users for a particular mysql online feature store database
-   *
-   * @param dbName name of the online featurestore database
-   * @return a list of db-usernames for the database
-   */
-  public List<String> getDatabaseUsers(String dbName) throws FeaturestoreException {
-    List<String> users = new ArrayList<>();
-    try {
-      ResultSet resultSet = null;
-      try (Connection connection = featureStoreDataSource.getConnection();
-           PreparedStatement pStmt = connection.prepareStatement(
-               "SELECT `User` FROM `mysql`.`user` WHERE `User` LIKE ?")) {
-        pStmt.setString(1, dbName + "_%");
-        resultSet = pStmt.executeQuery();
-        while (resultSet.next()) {
-          users.add(resultSet.getString(1));
-        }
-      } finally {
-        if (resultSet != null) {
-          resultSet.close();
-        }
-      }
-    } catch (SQLException se) {
-      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ERROR_ONLINE_USERS, Level.SEVERE,
-          "Error reading users", se.getMessage(), se);
-    }
-
-    return users;
-  }
-
-
-  /**
    * Checks if a mysql database exists
    *
    * @param dbName the name of the database
