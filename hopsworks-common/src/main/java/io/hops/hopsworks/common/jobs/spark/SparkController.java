@@ -49,6 +49,7 @@ import io.hops.hopsworks.common.hdfs.Utils;
 import io.hops.hopsworks.common.hosts.ServiceDiscoveryController;
 import io.hops.hopsworks.common.jupyter.JupyterController;
 import io.hops.hopsworks.common.kafka.KafkaBrokers;
+import io.hops.hopsworks.common.security.utils.SecurityUtils;
 import io.hops.hopsworks.persistence.entity.jobs.configuration.history.JobState;
 import io.hops.hopsworks.persistence.entity.jobs.history.Execution;
 import io.hops.hopsworks.persistence.entity.jobs.configuration.ExperimentType;
@@ -107,6 +108,8 @@ public class SparkController {
   private KafkaBrokers kafkaBrokers;
   @EJB
   private ServiceDiscoveryController serviceDiscoveryController;
+  @EJB
+  private SecurityUtils securityUtils;
 
   /**
    * Start the Spark job as the given user.
@@ -140,7 +143,8 @@ public class SparkController {
     if(job.getJobType().equals(JobType.PYSPARK) && appPath.endsWith(".ipynb")) {
       submitter.getExecutionFacade().updateState(exec, JobState.CONVERTING_NOTEBOOK);
       String outPath = "hdfs://" + Utils.getProjectPath(job.getProject().getName()) + Settings.PROJECT_STAGING_DIR;
-      String pyAppPath = outPath + "/job_tmp_" + job.getName() + ".py";
+      String randomHash = securityUtils.generateRandomString(20);
+      String pyAppPath = outPath + "/job_tmp_" + exec.getAppId() + "_" + job.getName() + "_" + randomHash + ".py";
       sparkConfig.setAppPath(pyAppPath);
       jupyterController.convertIPythonNotebook(username, appPath, job.getProject(), pyAppPath,
           jupyterController.getNotebookConversionType(appPath, user, job.getProject()));
