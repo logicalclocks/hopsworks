@@ -30,7 +30,7 @@
 
 Hopsworks and its Feature Store are an open source data-intensive AI platform used for the development and operation of machine learning models at scale.
 
-<img src="docs/architecture.svg">
+<img src="docs/assets/images/architecture.svg">
 
 <a name="quick"></a>
 ### Installer - On-premise
