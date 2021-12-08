@@ -207,7 +207,7 @@ public class ModelsBuilder {
         modelDTO.setProgram(modelSummary.getProgram());
         modelDTO.setInputExample(modelSummary.getInputExample());
         modelDTO.setFramework(modelSummary.getFramework());
-        modelDTO.setSignature(modelSummary.getSignature());
+        modelDTO.setModelSchema(modelSummary.getModelSchema());
         modelDTO.setEnvironment(modelSummary.getEnvironment());
         modelDTO.setExperimentId(modelSummary.getExperimentId());
         modelDTO.setExperimentProjectName(modelSummary.getExperimentProjectName());
