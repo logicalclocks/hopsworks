@@ -45,7 +45,7 @@ public class ModelDTO extends RestDTO<ModelDTO> {
 
   private String framework;
 
-  private String signature;
+  private String modelSchema;
 
   private Long created;
 
@@ -177,12 +177,12 @@ public class ModelDTO extends RestDTO<ModelDTO> {
     this.framework = framework;
   }
 
-  public String getSignature() {
-    return signature;
+  public String getModelSchema() {
+    return modelSchema;
   }
 
-  public void setSignature(String signature) {
-    this.signature = signature;
+  public void setModelSchema(String modelSchema) {
+    this.modelSchema = modelSchema;
   }
 
   public TrainingDatasetDTO getTrainingDataset() {
