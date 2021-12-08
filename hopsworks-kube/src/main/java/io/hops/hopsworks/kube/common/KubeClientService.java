@@ -5,7 +5,6 @@
 package io.hops.hopsworks.kube.common;
 
 import com.google.common.base.Suppliers;
-import com.logicalclocks.servicediscoverclient.exceptions.ServiceDiscoveryException;
 import io.fabric8.kubernetes.api.model.ConfigMap;
 import io.fabric8.kubernetes.api.model.ConfigMapBuilder;
 import io.fabric8.kubernetes.api.model.EnvVar;
@@ -547,38 +546,6 @@ public class KubeClientService {
       .collect(Collectors.toList());
   }
   
-  private void updateEKSCoreDNSToUseConsul() {
-    ConfigMap coreDnsConfig =
-        handleClientOp((client) -> client.configMaps().inNamespace("kube-system").withName("coredns").get());
-    if (coreDnsConfig != null) {
-      String coreFile = coreDnsConfig.getData().get("Corefile");
-      if (!coreFile.contains("consul")) {
-        String consulServer = null;
-        try {
-          consulServer =
-              serviceDiscoveryController.getConsulServerAddress();
-        } catch (ServiceDiscoveryException ex) {
-          LOGGER.log(Level.WARNING, "Failure to get Consul Server", ex);
-        }
-        
-        if (consulServer != null) {
-          String consulTemplate =
-              "consul:53 {\n    errors\n    cache 30\n    forward . "
-                  + consulServer + "\n}";
-          
-          String updatedCoreFile = coreFile + consulTemplate;
-          coreDnsConfig.getData().put("Corefile", updatedCoreFile);
-          handleClientOp((client) -> client.configMaps().inNamespace("kube-system")
-              .withName("coredns").replace(coreDnsConfig));
-        }
-      } else {
-        LOGGER.info("CoreDNS is already running with Consul support");
-      }
-    } else {
-      LOGGER.warning("There is no configmap associated for coredns!");
-    }
-  }
-
   public interface KubeRunner<T> {
     T run(KubernetesClient client) throws KubernetesClientException;
   }
@@ -628,7 +595,6 @@ public class KubeClientService {
         break;
       case EKS:
         client = new DefaultKubernetesClient();
-        updateEKSCoreDNSToUseConsul();
         break;
       case AKS:
         Config aksConfig = new ConfigBuilder()
