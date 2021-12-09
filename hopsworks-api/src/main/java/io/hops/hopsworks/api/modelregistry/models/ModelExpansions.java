@@ -35,6 +35,12 @@ public class ModelExpansions implements Expansions {
       case TRAININGDATASETS:
         resourceRequest = new ModelTrainingDatasetResourceRequest(name, queryParam);
         break;
+      case MODELSCHEMA:
+        resourceRequest = new ModelSchemaResourceRequest(name, queryParam);
+        break;
+      case INPUTEXAMPLE:
+        resourceRequest = new ModelInputExampleResourceRequest(name, queryParam);
+        break;
       default:
         break;
     }

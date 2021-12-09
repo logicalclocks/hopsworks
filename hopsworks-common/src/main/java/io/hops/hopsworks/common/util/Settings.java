@@ -1350,6 +1350,8 @@ public class Settings implements Serializable {
 
   public static final String HOPS_EXPERIMENTS_DATASET = "Experiments";
   public static final String HOPS_MODELS_DATASET = "Models";
+  public static final String HOPS_MODELS_SCHEMA = "model_schema.json";
+  public static final String HOPS_MODELS_INPUT_EXAMPLE = "input_example.json";
 
   public static final String HOPS_TOUR_DATASET = "TestJob";
   public static final String HOPS_DL_TOUR_DATASET = "TourData";

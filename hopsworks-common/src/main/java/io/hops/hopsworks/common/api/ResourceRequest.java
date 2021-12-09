@@ -210,7 +210,9 @@ public class ResourceRequest {
     ROUTES,
     JUPYTER,
     TRANSFORMATIONFUNCTIONS,
-    MODELREGISTRIES;
+    MODELREGISTRIES,
+    MODELSCHEMA,
+    INPUTEXAMPLE;
 
     public static Name fromString(String name) {
       return valueOf(name.toUpperCase());

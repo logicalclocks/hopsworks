@@ -19,6 +19,7 @@ package io.hops.hopsworks.api.modelregistry;
 import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.api.filter.Audience;
 import io.hops.hopsworks.api.filter.apiKey.ApiKeyRequired;
+import io.hops.hopsworks.api.jwt.JWTHelper;
 import io.hops.hopsworks.api.modelregistry.dto.ModelRegistryDTO;
 import io.hops.hopsworks.api.modelregistry.models.ModelsController;
 import io.hops.hopsworks.api.modelregistry.models.ModelsResource;
@@ -29,9 +30,12 @@ import io.hops.hopsworks.audit.logger.annotation.Logged;
 import io.hops.hopsworks.common.api.ResourceRequest;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
 import io.hops.hopsworks.exceptions.GenericException;
+import io.hops.hopsworks.exceptions.MetadataException;
 import io.hops.hopsworks.exceptions.ModelRegistryException;
+import io.hops.hopsworks.exceptions.SchematizedTagException;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
 import io.hops.hopsworks.persistence.entity.project.Project;
+import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.persistence.entity.user.security.apiKey.ApiScope;
 import io.hops.hopsworks.restutils.RESTCodes;
 import io.swagger.annotations.ApiOperation;
@@ -65,6 +69,8 @@ public class ModelRegistryResource {
   private ModelsController modelsController;
   @Inject
   private ModelsResource modelsResource;
+  @EJB
+  private JWTHelper jwtHelper;
 
   private Project project;
   @Logged(logLevel = LogLevel.OFF)
@@ -84,12 +90,14 @@ public class ModelRegistryResource {
     @BeanParam ModelRegistryBeanParam modelRegistryBeanParam,
     @BeanParam Pagination pagination,
     @Context UriInfo uriInfo,
-    @Context SecurityContext sc) throws GenericException, ModelRegistryException {
+    @Context SecurityContext sc) throws GenericException, ModelRegistryException, SchematizedTagException,
+          MetadataException {
+    Users user = jwtHelper.getUserPrincipal(sc);
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.MODELREGISTRIES);
     resourceRequest.setExpansions(modelRegistryBeanParam.getExpansions().getResources());
     resourceRequest.setOffset(pagination.getOffset());
     resourceRequest.setLimit(pagination.getLimit());
-    ModelRegistryDTO dto = modelRegistryBuilder.build(uriInfo, resourceRequest, project);
+    ModelRegistryDTO dto = modelRegistryBuilder.build(uriInfo, resourceRequest, user, project);
     return Response.ok().entity(dto).build();
   }
 
@@ -105,12 +113,14 @@ public class ModelRegistryResource {
           @BeanParam ModelRegistryBeanParam modelRegistryBeanParam,
           @BeanParam Pagination pagination,
           @Context UriInfo uriInfo,
-          @Context SecurityContext sc) throws GenericException, ModelRegistryException {
+          @Context SecurityContext sc) throws GenericException, ModelRegistryException, SchematizedTagException,
+          MetadataException {
+    Users user = jwtHelper.getUserPrincipal(sc);
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.MODELREGISTRIES);
     resourceRequest.setExpansions(modelRegistryBeanParam.getExpansions().getResources());
     Project modelRegistryProject =
             modelsController.verifyModelRegistryAccess(project, modelRegistryId).getParentProject();
-    ModelRegistryDTO dto = modelRegistryBuilder.build(uriInfo, resourceRequest, project, modelRegistryProject);
+    ModelRegistryDTO dto = modelRegistryBuilder.build(uriInfo, resourceRequest, user, project, modelRegistryProject);
     return Response.ok().entity(dto).build();
   }
 
