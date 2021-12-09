@@ -27,6 +27,7 @@ import io.hops.hopsworks.common.featurestore.query.PreparedStatementParameterDTO
 import io.hops.hopsworks.common.featurestore.query.Query;
 import io.hops.hopsworks.common.featurestore.query.ServingPreparedStatementDTO;
 import io.hops.hopsworks.common.featurestore.query.filter.Filter;
+import io.hops.hopsworks.common.featurestore.query.filter.FilterController;
 import io.hops.hopsworks.common.featurestore.query.filter.FilterLogic;
 import io.hops.hopsworks.common.featurestore.query.SqlCondition;
 import io.hops.hopsworks.common.featurestore.trainingdatasets.TrainingDatasetController;
@@ -49,6 +50,7 @@ import javax.ejb.TransactionAttributeType;
 import javax.ws.rs.core.UriInfo;
 import java.net.URI;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
@@ -73,6 +75,8 @@ public class PreparedStatementBuilder {
   private ConstructorController constructorController;
   @EJB
   private FeaturegroupController featuregroupController;
+  @EJB
+  private FilterController filterController;
 
   private URI uri(UriInfo uriInfo, Project project, Featurestore featurestore, TrainingDataset trainingDataset) {
     return uriInfo.getBaseUriBuilder().path(ResourceRequest.Name.PROJECT.toString().toLowerCase())
@@ -176,7 +180,7 @@ public class PreparedStatementBuilder {
   }
 
   private ServingPreparedStatementDTO buildDTO(Query query, List<Feature> primaryKeys, Integer statementIndex,
-                                               boolean batch) throws FeaturestoreException {
+                                               boolean batch) {
 
     // create primary key prepared statement filters for the query
     List<PreparedStatementParameterDTO> stmtParameters = new ArrayList<>();
@@ -188,33 +192,34 @@ public class PreparedStatementBuilder {
     // record pk position in the prepared statement - start from 1 as that's how
     // prepared statements work.
     int primaryKeyIndex = 1;
-
+    
     // First condition doesn't have any "AND"
     // we are guaranteed there is at least one primary key, as no primary key situations are filtered above
     Feature pkFeature = primaryKeys.get(0);
-    FilterLogic filterLogic = new FilterLogic(new Filter(pkFeature, batch ? SqlCondition.IN:
-            SqlCondition.EQUALS, "?"));
+  
     stmtParameters.add(new PreparedStatementParameterDTO(pkFeature.getName(), primaryKeyIndex++));
-
-    // Concatenate AND conditions
+  
+    FilterLogic filterLogic;
+    if (batch){
+      filterLogic = new FilterLogic(new Filter(primaryKeys, SqlCondition.IN, "?"));
+      query.setOrderByFeatures(primaryKeys);
+    } else {
+      filterLogic = new FilterLogic(new Filter(Arrays.asList(pkFeature), SqlCondition.EQUALS, "?"));
+    }
+  
+    // Concatenate conditions
     for (int i = 1; i < primaryKeys.size(); i++) {
       pkFeature = primaryKeys.get(i);
-      filterLogic = filterLogic.and(new Filter(pkFeature, batch ? SqlCondition.IN:
-              SqlCondition.EQUALS, "?"));
+      if (!batch) {
+        filterLogic = filterLogic.and(new Filter(Arrays.asList(pkFeature), SqlCondition.EQUALS, "?"));
+      }
       stmtParameters.add(
-          new PreparedStatementParameterDTO(pkFeature.getName(), primaryKeyIndex++));
+        new PreparedStatementParameterDTO(pkFeature.getName(), primaryKeyIndex++));
     }
+    
     query.setFilter(filterLogic);
-
-    // set prepared statement parameters
-    if (batch){
-      query.setOrderByFeatures(primaryKeys);
-      return new ServingPreparedStatementDTO(statementIndex, stmtParameters,
-              constructorController.generateSQL(query, true)
-                      .toSqlString(new MysqlSqlDialect(SqlDialect.EMPTY_CONTEXT)).getSql());
-    } else {
-      return new ServingPreparedStatementDTO(statementIndex, stmtParameters, constructorController.generateSQL(query,
-              true).toSqlString(new MysqlSqlDialect(SqlDialect.EMPTY_CONTEXT)).getSql());
-    }
+    return new ServingPreparedStatementDTO(statementIndex, stmtParameters,
+      constructorController.generateSQL(query, true)
+        .toSqlString(new MysqlSqlDialect(SqlDialect.EMPTY_CONTEXT)).getSql());
   }
 }

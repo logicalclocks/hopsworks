@@ -193,8 +193,8 @@ public class PitJoinController {
     List<SqlSelect> newSubQueries = new ArrayList<>();
     
     for (SqlCall select : sqlSelects) {
-      SqlNode whereRank = filterController.generateFilterNode(new Filter(new Feature(PIT_JOIN_RANK, null,
-        "int",null,null), SqlCondition.EQUALS, "1"), false);
+      SqlNode whereRank = filterController.generateFilterNode(new Filter(Arrays.asList(new Feature(PIT_JOIN_RANK, null,
+        "int",null,null)), SqlCondition.EQUALS, "1"), false);
       SqlNodeList selectList = SqlNodeList.of(new SqlIdentifier(ALL_FEATURES, SqlParserPos.ZERO));
       newSubQueries.add(new SqlSelect(SqlParserPos.ZERO, null, selectList, select, whereRank, null,
         null, null, null, null, null, null));

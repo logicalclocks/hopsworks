@@ -1644,6 +1644,7 @@ describe "On #{ENV['OS']}" do
           # create second feature group
           features = [
               {type: "INT", name: "a_testfeature", primary: true},
+              {type: "INT", name: "d_testfeature1", primary: true},
               {type: "INT", name: "b_testfeature1"},
           ]
           json_result_b, fg_name_b = create_cached_featuregroup(@project.id, featurestore_id, features: features, featuregroup_name: "test_fg_b_#{short_random_id}", online:true)
@@ -1701,8 +1702,8 @@ describe "On #{ENV['OS']}" do
           expect(parsed_json["items"].first["preparedStatementParameters"].first["name"]).to eql("a_testfeature")
           expect(parsed_json["items"].first["queryOnline"]).to eql("SELECT `fg0`.`a_testfeature1`\nFROM `#{project_name.downcase}`.`#{fg_name}_1` AS `fg0`\nWHERE `fg0`.`a_testfeature` IN ?\nORDER BY `fg0`.`a_testfeature`")
           expect(parsed_json["items"].second["preparedStatementParameters"].first["index"]).to eql(1)
-          expect(parsed_json["items"].second["preparedStatementParameters"].first["name"]).to eql("a_testfeature")
-          expect(parsed_json["items"].second["queryOnline"]).to eql("SELECT `fg0`.`b_testfeature1`\nFROM `#{project_name.downcase}`.`#{fg_name_b}_1` AS `fg0`\nWHERE `fg0`.`a_testfeature` IN ?\nORDER BY `fg0`.`a_testfeature`")
+          expect(parsed_json["items"].second["preparedStatementParameters"].first["name"]).to eql("d_testfeature1")
+          expect(parsed_json["items"].second["queryOnline"]).to eql("SELECT `fg0`.`b_testfeature1`\nFROM `#{project_name.downcase}`.`#{fg_name_b}_1` AS `fg0`\nWHERE (`fg0`.`d_testfeature1`, `fg0`.`a_testfeature`) IN ?\nORDER BY `fg0`.`d_testfeature1`, `fg0`.`a_testfeature`")
           expect_status_details(200)
         end
 

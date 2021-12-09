@@ -705,15 +705,15 @@ public class TestConstructorController {
     Query thirdQuery = new Query("fs1", "project_fs1", fg3,"fg2", availableThird, availableThird);
   
     FilterLogic firstFilter = new FilterLogic(SqlFilterLogic.AND);
-    firstFilter.setLeftFilter(new Filter(availableFirst.get(0), SqlCondition.EQUALS, "10"));
+    firstFilter.setLeftFilter(new Filter(Arrays.asList(availableFirst.get(0)), SqlCondition.EQUALS, "10"));
     FilterLogic rightLogic = new FilterLogic(SqlFilterLogic.OR);
-    rightLogic.setLeftFilter(new Filter(availableThird.get(0), SqlCondition.EQUALS, "10"));
-    rightLogic.setRightFilter(new Filter(availableThird.get(1), SqlCondition.EQUALS, "10"));
+    rightLogic.setLeftFilter(new Filter(Arrays.asList(availableThird.get(0)), SqlCondition.EQUALS, "10"));
+    rightLogic.setRightFilter(new Filter(Arrays.asList(availableThird.get(1)), SqlCondition.EQUALS, "10"));
     firstFilter.setRightLogic(rightLogic);
     leftQuery.setFilter(firstFilter);
   
     FilterLogic secondFilter = new FilterLogic(SqlFilterLogic.SINGLE);
-    secondFilter.setLeftFilter(new Filter(availableSecond.get(0), SqlCondition.NOT_EQUALS, "10"));
+    secondFilter.setLeftFilter(new Filter(Arrays.asList(availableSecond.get(0)), SqlCondition.NOT_EQUALS, "10"));
     secondQuery.setFilter(secondFilter);
     
     Join join = new Join(leftQuery, secondQuery, availableFirst, availableSecond, JoinType.INNER, null, singleEqualsJoinOperator);

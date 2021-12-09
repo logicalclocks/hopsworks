@@ -104,7 +104,7 @@ public class FilterController {
   
   Filter convertFilter(FilterDTO filterDTO, Map<Integer, Featuregroup> fgLookup,
     Map<Integer, List<Feature>> availableFeatureLookup) throws FeaturestoreException {
-    return new Filter(findFilteredFeature(filterDTO.getFeature(), fgLookup, availableFeatureLookup),
+    return new Filter(Arrays.asList(findFilteredFeature(filterDTO.getFeature(), fgLookup, availableFeatureLookup)),
       filterDTO.getCondition(), filterDTO.getValue());
   }
   
@@ -135,7 +135,14 @@ public class FilterController {
   
   public SqlNode generateFilterLogicNode(FilterLogic filterLogic, boolean online) {
     if (filterLogic.getType() == SqlFilterLogic.SINGLE) {
-      return generateFilterNode(filterLogic.getLeftFilter(), online);
+      if (filterLogic.getLeftFilter().getFeatures().size() > 1) {
+        // NOTE: this is currently only the case when the Filter is coming from the PreparedStatementBuilder
+        // if we want to support user defined filters over multiple features in the future, this needs to be changed,
+        // as the ? placeholder is hard coded in `generateFilterNodeList`
+        return generateFilterNodeList(filterLogic.getLeftFilter(), online);
+      } else {
+        return generateFilterNode(filterLogic.getLeftFilter(), online);
+      }
     } else {
       SqlNode leftNode = filterLogic.getLeftFilter() != null ? generateFilterNode(filterLogic.getLeftFilter(), online) :
         generateFilterLogicNode(filterLogic.getLeftLogic(), online);
@@ -147,16 +154,17 @@ public class FilterController {
   }
   
   public SqlNode generateFilterNode(Filter filter, boolean online) {
-    SqlNode feature;
-    if (filter.getFeature().getDefaultValue() == null || online) {
-      if (filter.getFeature().getFgAlias(false) != null) {
-        feature = new SqlIdentifier(Arrays.asList("`" + filter.getFeature().getFgAlias(false) + "`",
-          "`" + filter.getFeature().getName() + "`"), SqlParserPos.ZERO);
+    SqlNode sqlNode;
+    Feature feature =  filter.getFeatures().get(0);
+    if (feature.getDefaultValue() == null || online) {
+      if (feature.getFgAlias(false) != null) {
+        sqlNode = new SqlIdentifier(Arrays.asList("`" + feature.getFgAlias(false) + "`",
+          "`" + feature.getName() + "`"), SqlParserPos.ZERO);
       } else {
-        feature = new SqlIdentifier("`" + filter.getFeature().getName() + "`", SqlParserPos.ZERO);
+        sqlNode = new SqlIdentifier("`" + feature.getName() + "`", SqlParserPos.ZERO);
       }
     } else {
-      feature = constructorController.caseWhenDefault(filter.getFeature());
+      sqlNode = constructorController.caseWhenDefault(feature);
     }
 
     SqlNode filterValue;
@@ -166,17 +174,17 @@ public class FilterController {
       List<SqlNode> operandList = new ArrayList<>();
       // Using gson, as casting "json" to JSONArray results in exception
       for (Object item : new Gson().fromJson(filter.getValue(), List.class)) {
-        operandList.add(getSQLNode(filter.getFeature().getType(), item.toString()));
+        operandList.add(getSQLNode(feature.getType(), item.toString()));
       }
       filterValue = new SqlNodeList(operandList, SqlParserPos.ZERO);
     } else {
       // Value
-      filterValue = getSQLNode(filter.getFeature().getType(), filter.getValue());
+      filterValue = getSQLNode(feature.getType(), filter.getValue());
     }
     
-    return filter.getCondition().operator.createCall(SqlParserPos.ZERO, feature, filterValue);
+    return filter.getCondition().operator.createCall(SqlParserPos.ZERO, sqlNode, filterValue);
   }
-
+  
   protected SqlNode getSQLNode(String type, String value){
     if (type.equalsIgnoreCase("string")) {
       return SqlLiteral.createCharString(value, SqlParserPos.ZERO);
@@ -206,5 +214,24 @@ public class FilterController {
       }
     }
     return null;
+  }
+  
+  public SqlNode generateFilterNodeList(Filter filter, boolean online) {
+    SqlNodeList operandList = new SqlNodeList(SqlParserPos.ZERO);
+    for (Feature feature : filter.getFeatures()) {
+      if (feature.getDefaultValue() == null || online) {
+        if (feature.getFgAlias(false) != null) {
+          operandList.add(new SqlIdentifier(Arrays.asList("`" + feature.getFgAlias(false) + "`",
+            "`" + feature.getName() + "`"), SqlParserPos.ZERO));
+        } else {
+          operandList.add(new SqlIdentifier("`" + feature.getName() + "`", SqlParserPos.ZERO));
+        }
+      } else {
+        operandList.add(constructorController.caseWhenDefault(feature));
+      }
+    }
+    
+    return SqlStdOperatorTable.IN.createCall(SqlParserPos.ZERO, operandList,
+      new SqlIdentifier("?", SqlParserPos.ZERO));
   }
 }

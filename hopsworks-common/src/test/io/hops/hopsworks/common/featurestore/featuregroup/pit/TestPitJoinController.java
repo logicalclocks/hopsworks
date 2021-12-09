@@ -553,8 +553,8 @@ public class TestPitJoinController {
     List<SqlCondition> joinOperator = Arrays.asList(SqlCondition.EQUALS, SqlCondition.EQUALS);
     List<SqlCondition> joinOperator1 = Collections.singletonList(SqlCondition.EQUALS);
   
-    FilterLogic filter = new FilterLogic(new Filter(new Feature("label", "fg0", "int", null, null),
-      SqlCondition.EQUALS, "1"));
+    FilterLogic filter = new FilterLogic(new Filter(Arrays.asList(new Feature("label", "fg0", "int",
+      null, null)), SqlCondition.EQUALS, "1"));
   
     Query query = new Query("fs", "project", fgLeft, "fg0", leftFeatures, leftFeatures, false, filter);
     Query right = new Query("fs", "project", fgRight, "fg1", rightFeatures, rightFeatures, false, null);
