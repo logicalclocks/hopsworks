@@ -31,6 +31,12 @@ public class ModelExpansions implements Expansions {
       name = ResourceRequest.Name.valueOf(queryParam.toUpperCase());
     }
     switch (name) {
+      case MODELSCHEMA:
+        resourceRequest = new ModelSchemaResourceRequest(name, queryParam);
+        break;
+      case INPUTEXAMPLE:
+        resourceRequest = new ModelInputExampleResourceRequest(name, queryParam);
+        break;
       default:
         break;
     }

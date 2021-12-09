@@ -15,7 +15,6 @@
  */
 package io.hops.hopsworks.api.modelregistry.models;
 
-import com.google.common.base.Strings;
 import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.api.filter.Audience;
 import io.hops.hopsworks.api.filter.apiKey.ApiKeyRequired;
@@ -25,14 +24,11 @@ import io.hops.hopsworks.api.util.Pagination;
 import io.hops.hopsworks.common.api.ResourceRequest;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
 import io.hops.hopsworks.common.dataset.DatasetController;
-import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.hdfs.DistributedFsService;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
-import io.hops.hopsworks.common.hdfs.Utils;
 import io.hops.hopsworks.common.provenance.state.dto.ProvStateDTO;
 import io.hops.hopsworks.common.python.environment.EnvironmentController;
 import io.hops.hopsworks.common.util.AccessController;
-import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.DatasetException;
 import io.hops.hopsworks.exceptions.GenericException;
 import io.hops.hopsworks.exceptions.JobException;
@@ -41,9 +37,9 @@ import io.hops.hopsworks.exceptions.ModelRegistryException;
 import io.hops.hopsworks.exceptions.ProjectException;
 import io.hops.hopsworks.exceptions.ProvenanceException;
 import io.hops.hopsworks.exceptions.PythonException;
+import io.hops.hopsworks.exceptions.SchematizedTagException;
 import io.hops.hopsworks.exceptions.ServiceException;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
-import io.hops.hopsworks.persistence.entity.dataset.Dataset;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.persistence.entity.user.security.apiKey.ApiScope;
@@ -68,7 +64,6 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
-import javax.ws.rs.core.UriBuilder;
 import javax.ws.rs.core.UriInfo;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -97,13 +92,15 @@ public class ModelsResource {
   private HdfsUsersController hdfsUsersController;
   @EJB
   private DistributedFsService dfs;
+  @EJB
+  private ModelUtils modelUtils;
 
-  private Project project;
+  private Project userProject;
 
   private Project modelRegistryProject;
 
   public ModelsResource setProject(Project project) {
-    this.project = project;
+    this.userProject = project;
     return this;
   }
 
@@ -115,7 +112,8 @@ public class ModelsResource {
    */
   public void setModelRegistryId(Integer modelRegistryId) throws ModelRegistryException {
     //This call verifies that the project have access to the modelRegistryId provided
-    this.modelRegistryProject = modelsController.verifyModelRegistryAccess(project, modelRegistryId).getParentProject();
+    this.modelRegistryProject = modelsController.verifyModelRegistryAccess(userProject,
+        modelRegistryId).getParentProject();
   }
 
   @ApiOperation(value = "Get a list of all models for this project", response = ModelDTO.class)
@@ -129,13 +127,14 @@ public class ModelsResource {
     @BeanParam ModelsBeanParam modelsBeanParam,
     @Context UriInfo uriInfo,
     @Context SecurityContext sc)
-    throws ModelRegistryException, GenericException {
+          throws ModelRegistryException, GenericException, SchematizedTagException, MetadataException {
+    Users user = jwtHelper.getUserPrincipal(sc);
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.MODELS);
     resourceRequest.setOffset(pagination.getOffset());
     resourceRequest.setLimit(pagination.getLimit());
     resourceRequest.setFilter(modelsBeanParam.getFilter());
     resourceRequest.setSort(modelsBeanParam.getSortBySet());
-    ModelDTO dto = modelsBuilder.build(uriInfo, resourceRequest, project, modelRegistryProject);
+    ModelDTO dto = modelsBuilder.build(uriInfo, resourceRequest, user, userProject, modelRegistryProject);
     return Response.ok().entity(dto).build();
   }
 
@@ -151,12 +150,16 @@ public class ModelsResource {
     @BeanParam ModelsBeanParam modelsBeanParam,
     @Context UriInfo uriInfo,
     @Context SecurityContext sc)
-    throws ProvenanceException, ModelRegistryException, DatasetException, GenericException {
+          throws ProvenanceException, ModelRegistryException, DatasetException, GenericException,
+          SchematizedTagException, MetadataException {
+    Users user = jwtHelper.getUserPrincipal(sc);
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.MODELS);
     resourceRequest.setExpansions(modelsBeanParam.getExpansions().getResources());
     ProvStateDTO fileState = modelsController.getModel(modelRegistryProject, id);
+
     if(fileState != null) {
-      ModelDTO dto = modelsBuilder.build(uriInfo, resourceRequest, project, modelRegistryProject, fileState);
+      ModelDTO dto = modelsBuilder.build(uriInfo, resourceRequest, user, userProject, modelRegistryProject, fileState,
+              modelUtils.getModelsDatasetPath(userProject, modelRegistryProject));
       if(dto == null) {
         throw new GenericException(RESTCodes.GenericErrorCode.NOT_AUTHORIZED_TO_ACCESS, Level.FINE);
       } else {
@@ -178,10 +181,10 @@ public class ModelsResource {
     @Context HttpServletRequest req,
     @Context UriInfo uriInfo,
     @Context SecurityContext sc) throws DatasetException, ProvenanceException, ModelRegistryException {
-    Users hopsworksUser = jwtHelper.getUserPrincipal(sc);
-    ProvStateDTO fileState = modelsController.getModel(project, id);
+    Users user = jwtHelper.getUserPrincipal(sc);
+    ProvStateDTO fileState = modelsController.getModel(userProject, id);
     if(fileState != null) {
-      modelsController.delete(hopsworksUser, project, modelRegistryProject, fileState);
+      modelsController.delete(user, userProject, modelRegistryProject, fileState);
     }
     return Response.noContent().build();
   }
@@ -207,101 +210,16 @@ public class ModelsResource {
     if (modelDTO == null) {
       throw new IllegalArgumentException("Model summary not provided");
     }
-    validateModelName(modelDTO);
+    modelUtils.validateModelName(modelDTO);
     Users user = jwtHelper.getUserPrincipal(sc);
-    Project modelProject = getModelsProjectAndCheckAccess(modelDTO);
-    Project experimentProject = getExperimentProjectAndCheckAccess(modelDTO);
-    ModelsController.Accessor accessor = getModelsAccessor(user, project, modelProject, experimentProject);
+    Project modelProject = modelUtils.getModelsProjectAndCheckAccess(modelDTO, userProject);
+    Project experimentProject = modelUtils.getExperimentProjectAndCheckAccess(modelDTO, userProject);
+    ModelsController.Accessor accessor = modelUtils.getModelsAccessor(user, userProject, modelProject,
+        experimentProject);
     try {
-      return createModel(uriInfo, accessor, id, modelDTO, jobName, kernelId);
+      return modelUtils.createModel(uriInfo, accessor, id, modelDTO, jobName, kernelId);
     } finally {
       dfs.closeDfsClient(accessor.udfso);
     }
-  }
-
-  private void validateModelName(ModelDTO modelDTO) {
-    if(!modelDTO.getName().matches("[a-zA-Z0-9_]+")) {
-      throw new IllegalArgumentException("Model name must conform to regex: [a-zA-Z0-9_]+");
-    }
-  }
-
-  private Project getModelsProjectAndCheckAccess(ModelDTO modelDTO)
-    throws ProjectException, GenericException, DatasetException {
-    Project modelProject;
-    if(modelDTO.getProjectName() == null) {
-      modelProject = project;
-    } else {
-      modelProject = projectFacade.findByName(modelDTO.getProjectName());
-      if(modelProject == null) {
-        throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_NOT_FOUND, Level.INFO,
-          "model project not found");
-      }
-    }
-    Dataset modelDataset = datasetCtrl.getByName(modelProject, Settings.HOPS_MODELS_DATASET);
-    if(!accessCtrl.hasAccess(project, modelDataset)) {
-      throw new GenericException(RESTCodes.GenericErrorCode.NOT_AUTHORIZED_TO_ACCESS, Level.INFO, "models endpoint");
-    }
-    return modelProject;
-  }
-  
-  private Project getExperimentProjectAndCheckAccess(ModelDTO modelDTO) throws ProjectException, GenericException {
-    Project experimentProject;
-    if (modelDTO.getExperimentProjectName() == null) {
-      experimentProject = project;
-    } else {
-      experimentProject = projectFacade.findByName(modelDTO.getExperimentProjectName());
-      if (experimentProject == null) {
-        throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_NOT_FOUND, Level.INFO,
-          "experiment project not found for model");
-      }
-    }
-    if (!experimentProject.getId().equals(project.getId())) {
-      String usrMsg = "writing to shared experiment is not yet allowed";
-      throw new GenericException(RESTCodes.GenericErrorCode.NOT_AUTHORIZED_TO_ACCESS, Level.INFO, usrMsg, usrMsg);
-    }
-    return experimentProject;
-  }
-  
-  private ModelsController.Accessor getModelsAccessor(Users user, Project userProject, Project modelProject,
-    Project experimentProject)
-    throws DatasetException {
-    DistributedFileSystemOps udfso = null;
-    try {
-      String hdfsUser = hdfsUsersController.getHdfsUserName(experimentProject, user);
-      udfso = dfs.getDfsOps(hdfsUser);
-      return new ModelsController.Accessor(user, userProject, modelProject, experimentProject, udfso, hdfsUser);
-    } catch (Throwable t) {
-      if(udfso != null){
-        dfs.closeDfsClient(udfso);
-      }
-      throw new DatasetException(RESTCodes.DatasetErrorCode.DATASET_OPERATION_ERROR, Level.INFO);
-    }
-  }
-  
-  private Response createModel(UriInfo uriInfo, ModelsController.Accessor accessor, String mlId, ModelDTO modelDTO,
-                               String jobName, String kernelId)
-          throws DatasetException, MetadataException, JobException, ServiceException, PythonException,
-          ModelRegistryException {
-    String realName = accessor.user.getFname() + " " + accessor.user.getLname();
-
-    //Only attach program and environment if exporting inside Hopsworks
-    if(!Strings.isNullOrEmpty(jobName) || !Strings.isNullOrEmpty(kernelId)) {
-
-      modelDTO.setProgram(modelsController.versionProgram(accessor, jobName, kernelId,
-              modelDTO.getName(), modelDTO.getVersion()));
-
-      //Export environment to correct path here
-      modelDTO.setEnvironment(environmentController.exportEnv(accessor.experimentProject, accessor.user,
-              Utils.getProjectPath(accessor.modelProject.getName()) +
-                      Settings.HOPS_MODELS_DATASET + "/" + modelDTO.getName() + "/" + modelDTO.getVersion() +
-                      "/" + Settings.ENVIRONMENT_FILE
-              ));
-    }
-
-    modelDTO.setModelRegistryId(accessor.modelProject.getId());
-
-    modelsController.attachModel(accessor.udfso, accessor.modelProject, realName, modelDTO);
-    UriBuilder builder = uriInfo.getAbsolutePathBuilder().path(mlId);
-    return Response.created(builder.build()).entity(modelDTO).build();
   }
 }

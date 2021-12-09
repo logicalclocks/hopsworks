@@ -81,12 +81,12 @@ public class InodeBuilder {
     return dto;
   }
   
-  private InodeDTO uriItems(InodeDTO dto, UriInfo uriInfo, Project project) {
+  public InodeDTO uri(InodeDTO dto, UriInfo uriInfo, Project project, DatasetPath dsPath) {
     dto.setHref(uriInfo.getBaseUriBuilder()
       .path(ResourceRequest.Name.PROJECT.toString())
       .path(project.getId().toString())
       .path(ResourceRequest.Name.DATASET.toString())
-      .path(dto.getAttributes().getPath())
+      .path(dsPath.getFullPath().toString())
       .build());
     return dto;
   }
@@ -112,6 +112,12 @@ public class InodeBuilder {
     }
     return dto;
   }
+
+  public InodeDTO buildResource(UriInfo uriInfo, Project project, DatasetPath datasetPath) {
+    InodeDTO dto = new InodeDTO();
+    uri(dto, uriInfo, project, datasetPath);
+    return dto;
+  }
   
   /**
    *
@@ -135,8 +141,8 @@ public class InodeBuilder {
     return dto;
   }
   
-  private InodeDTO buildBlob(UriInfo uriInfo, ResourceRequest resourceRequest, Users user, DatasetPath datasetPath,
-                             Inode inode, FilePreviewMode mode)
+  public InodeDTO buildBlob(UriInfo uriInfo, ResourceRequest resourceRequest, Users user, DatasetPath datasetPath,
+                            Inode inode, FilePreviewMode mode)
     throws DatasetException, SchematizedTagException, MetadataException {
     InodeDTO dto = new InodeDTO();
     uri(dto, uriInfo);

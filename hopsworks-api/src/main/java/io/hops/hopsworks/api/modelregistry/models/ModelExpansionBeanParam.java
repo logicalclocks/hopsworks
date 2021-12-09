@@ -25,7 +25,8 @@ import java.util.Set;
 
 public class ModelExpansionBeanParam {
   @QueryParam("expand")
-  @ApiParam(value = "ex. expand=trainingdatasets", allowableValues = "expand=trainingdatasets")
+  @ApiParam(value = "ex. expand=trainingdatasets", allowableValues = "expand=trainingdatasets, expand=modelschema," +
+      " expand=inputexample")
   private Set<ModelExpansions> expansions;
 
   public ModelExpansionBeanParam(@QueryParam("expand") Set<ModelExpansions> expansions) {
