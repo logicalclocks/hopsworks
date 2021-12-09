@@ -24,6 +24,7 @@ public class FeatureGroupValidations {
   
   private Long validationTime;
   private List<ExpectationResult> expectationResults;
+  private Boolean logActivity = false;
   
   public FeatureGroupValidations() {
   }
@@ -43,12 +44,21 @@ public class FeatureGroupValidations {
   public void setExpectationResults(List<ExpectationResult> expectationResults) {
     this.expectationResults = expectationResults;
   }
-  
+
+  public Boolean getLogActivity() {
+    return logActivity;
+  }
+
+  public void setLogActivity(Boolean logActivity) {
+    this.logActivity = logActivity;
+  }
+
   @Override
   public String toString() {
     return "FeatureGroupValidationDTO{" +
       "validationTime='" + validationTime + '\'' +
       ", expectationResults=" + expectationResults +
+      ", logActivity=" + logActivity +
       '}';
   }
 }
