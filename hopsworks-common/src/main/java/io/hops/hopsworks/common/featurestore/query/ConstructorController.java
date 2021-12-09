@@ -521,7 +521,7 @@ public class ConstructorController {
     } else {
       filterNode = filterController.buildFilterNode(query, query,query.getJoins().size() - 1, online);
     }
-
+    
     SqlNodeList orderByList = null;
     if (query.getOrderByFeatures() != null && !query.getOrderByFeatures().isEmpty()){
       orderByList = new SqlNodeList(SqlParserPos.ZERO);

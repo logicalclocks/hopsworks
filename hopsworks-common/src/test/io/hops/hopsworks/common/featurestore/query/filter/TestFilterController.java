@@ -176,15 +176,16 @@ public class TestFilterController {
     filterLogicDTO.setRightLogic(filterLogicDTO2);
   
     FilterLogic result = filterController.convertFilterLogic(filterLogicDTO, fgLookup, availableFeatureLookup);
+    Feature feature = result.getLeftFilter().getFeatures().get(0);
   
     Assert.assertEquals(result.getType(), SqlFilterLogic.AND);
     Assert.assertEquals(result.getRightLogic().getType(), SqlFilterLogic.AND);
     Assert.assertEquals(SqlCondition.EQUALS, result.getLeftFilter().getCondition());
     Assert.assertEquals("10", result.getLeftFilter().getValue());
-    Assert.assertEquals("fg1_pk", result.getLeftFilter().getFeature().getName());
-    Assert.assertEquals("fg1", result.getLeftFilter().getFeature().getFgAlias(false));
-    Assert.assertEquals("string", result.getLeftFilter().getFeature().getType());
-    Assert.assertNull(result.getLeftFilter().getFeature().getDefaultValue());
+    Assert.assertEquals("fg1_pk", feature.getName());
+    Assert.assertEquals("fg1", feature.getFgAlias(false));
+    Assert.assertEquals("string", feature.getType());
+    Assert.assertNull(feature.getDefaultValue());
   }
   
   @Test
@@ -194,13 +195,14 @@ public class TestFilterController {
     FilterDTO filter = new FilterDTO(featureGroupFeatureDTO, SqlCondition.EQUALS, "10");
     
     Filter result = filterController.convertFilter(filter, fgLookup, availableFeatureLookup);
+    Feature feature = result.getFeatures().get(0);
   
     Assert.assertEquals(SqlCondition.EQUALS, result.getCondition());
     Assert.assertEquals("10", result.getValue());
-    Assert.assertEquals("fg2_ft", result.getFeature().getName());
-    Assert.assertEquals("fg2", result.getFeature().getFgAlias(false));
-    Assert.assertEquals("double", result.getFeature().getType());
-    Assert.assertEquals("10.0",result.getFeature().getDefaultValue());
+    Assert.assertEquals("fg2_ft", feature.getName());
+    Assert.assertEquals("fg2", feature.getFgAlias(false));
+    Assert.assertEquals("double", feature.getType());
+    Assert.assertEquals("10.0", feature.getDefaultValue());
   }
   
   @Test
@@ -250,7 +252,7 @@ public class TestFilterController {
   @Test
   public void testGenerateFilterLogicNodeSingle() throws Exception {
     FilterLogic filterLogic = new FilterLogic(SqlFilterLogic.SINGLE);
-    Filter filter = new Filter(fg1Features.get(0), SqlCondition.EQUALS, "abc");
+    Filter filter = new Filter(Arrays.asList(fg1Features.get(0)), SqlCondition.EQUALS, "abc");
     filterLogic.setLeftFilter(filter);
     
     String result = filterController.generateFilterLogicNode(filterLogic, false)
@@ -263,8 +265,8 @@ public class TestFilterController {
   @Test
   public void testGenerateFilterLogicNodeCase1() throws Exception {
     FilterLogic filterLogic = new FilterLogic(SqlFilterLogic.AND);
-    Filter leftFilter = new Filter(fg1Features.get(0), SqlCondition.EQUALS, "abc");
-    Filter rightFilter = new Filter(fg2Features.get(1), SqlCondition.LESS_THAN_OR_EQUAL, "10");
+    Filter leftFilter = new Filter(Arrays.asList(fg1Features.get(0)), SqlCondition.EQUALS, "abc");
+    Filter rightFilter = new Filter(Arrays.asList(fg2Features.get(1)), SqlCondition.LESS_THAN_OR_EQUAL, "10");
   
     filterLogic.setLeftFilter(leftFilter);
     filterLogic.setRightFilter(rightFilter);
@@ -281,10 +283,10 @@ public class TestFilterController {
   @Test
   public void testGenerateFilterLogicNodeCase2() throws Exception {
     FilterLogic filterLogic = new FilterLogic(SqlFilterLogic.AND);
-    Filter leftFilter = new Filter(fg1Features.get(0), SqlCondition.EQUALS, "abc");
-    Filter rightFilter = new Filter(fg2Features.get(1), SqlCondition.LESS_THAN_OR_EQUAL, "10");
+    Filter leftFilter = new Filter(Arrays.asList(fg1Features.get(0)), SqlCondition.EQUALS, "abc");
+    Filter rightFilter = new Filter(Arrays.asList(fg2Features.get(1)), SqlCondition.LESS_THAN_OR_EQUAL, "10");
     FilterLogic rightLogic = new FilterLogic(SqlFilterLogic.OR);
-    Filter middleFilter = new Filter(fg3Features.get(0), SqlCondition.NOT_EQUALS, "abc");
+    Filter middleFilter = new Filter(Arrays.asList(fg3Features.get(0)), SqlCondition.NOT_EQUALS, "abc");
     rightLogic.setLeftFilter(middleFilter);
     rightLogic.setRightFilter(rightFilter);
   
@@ -302,10 +304,10 @@ public class TestFilterController {
   @Test
   public void testGenerateFilterLogicNodeCase3() throws Exception {
     FilterLogic filterLogic = new FilterLogic(SqlFilterLogic.OR);
-    Filter leftFilter = new Filter(fg1Features.get(0), SqlCondition.EQUALS, "abc");
-    Filter rightFilter = new Filter(fg2Features.get(1), SqlCondition.LESS_THAN_OR_EQUAL, "10");
+    Filter leftFilter = new Filter(Arrays.asList(fg1Features.get(0)), SqlCondition.EQUALS, "abc");
+    Filter rightFilter = new Filter(Arrays.asList(fg2Features.get(1)), SqlCondition.LESS_THAN_OR_EQUAL, "10");
     FilterLogic leftLogic = new FilterLogic(SqlFilterLogic.AND);
-    Filter middleFilter = new Filter(fg3Features.get(0), SqlCondition.NOT_EQUALS, "abc");
+    Filter middleFilter = new Filter(Arrays.asList(fg3Features.get(0)), SqlCondition.NOT_EQUALS, "abc");
     leftLogic.setLeftFilter(leftFilter);
     leftLogic.setRightFilter(middleFilter);
   
@@ -323,11 +325,11 @@ public class TestFilterController {
   @Test
   public void testGenerateFilterLogicNodeCase4() throws Exception {
     FilterLogic filterLogic = new FilterLogic(SqlFilterLogic.OR);
-    Filter leftFilter = new Filter(fg1Features.get(0), SqlCondition.EQUALS, "abc");
-    Filter rightFilter = new Filter(fg2Features.get(1), SqlCondition.LESS_THAN_OR_EQUAL, "10");
+    Filter leftFilter = new Filter(Arrays.asList(fg1Features.get(0)), SqlCondition.EQUALS, "abc");
+    Filter rightFilter = new Filter(Arrays.asList(fg2Features.get(1)), SqlCondition.LESS_THAN_OR_EQUAL, "10");
     FilterLogic leftLogic = new FilterLogic(SqlFilterLogic.AND);
-    Filter middleFilter = new Filter(fg3Features.get(0), SqlCondition.NOT_EQUALS, "abc");
-    Filter middleFilter2 = new Filter(fg3Features.get(1), SqlCondition.NOT_EQUALS, "abc");
+    Filter middleFilter = new Filter(Arrays.asList(fg3Features.get(0)), SqlCondition.NOT_EQUALS, "abc");
+    Filter middleFilter2 = new Filter(Arrays.asList(fg3Features.get(1)), SqlCondition.NOT_EQUALS, "abc");
     FilterLogic rightLogic = new FilterLogic(SqlFilterLogic.OR);
   
   
@@ -350,8 +352,31 @@ public class TestFilterController {
   }
   
   @Test
+  public void testGenerateFilterLogicNodeInOnline() {
+    FilterLogic filter = new FilterLogic(new Filter(fg2Features, SqlCondition.IN, "?"));
+    String result = filterController.generateFilterLogicNode(filter, true).toSqlString(new SparkSqlDialect(SqlDialect
+      .EMPTY_CONTEXT)).getSql();
+    System.out.println(result);
+    String expected = "(`fg2`.`fg2_pk`, `fg2`.`fg2_ft`) IN ?";
+    Assert.assertEquals(expected, result);
+  }
+
+  @Test
+  public void testGenerateFilterLogicNodeSingleIN() throws Exception {
+    FilterLogic filterLogic = new FilterLogic(SqlFilterLogic.SINGLE);
+    Filter filter = new Filter(Arrays.asList(fg1Features.get(0)), SqlCondition.IN, "[\"ab\", \"cd\"]");
+    filterLogic.setLeftFilter(filter);
+    
+    String result = filterController.generateFilterLogicNode(filterLogic, false)
+      .toSqlString(new SparkSqlDialect(SqlDialect.EMPTY_CONTEXT)).getSql();
+    
+    String expected = "`fg1`.`fg1_pk` IN ('ab', 'cd')";
+    Assert.assertEquals(expected, result);
+  }
+  
+  @Test
   public void testGenerateFilterNodeDefault() {
-    Filter filter = new Filter(fg2Features.get(1), SqlCondition.EQUALS, "1");
+    Filter filter = new Filter(Arrays.asList(fg2Features.get(1)), SqlCondition.EQUALS, "1");
     
     String result = filterController.generateFilterNode(filter, false).toSqlString(new SparkSqlDialect(SqlDialect
       .EMPTY_CONTEXT)).getSql();
@@ -362,7 +387,7 @@ public class TestFilterController {
   
   @Test
   public void testGenerateFilterNodeOnline() {
-    Filter filter = new Filter(fg2Features.get(1), SqlCondition.EQUALS, "1");
+    Filter filter = new Filter(Arrays.asList(fg2Features.get(1)), SqlCondition.EQUALS, "1");
   
     String result = filterController.generateFilterNode(filter, true).toSqlString(new SparkSqlDialect(SqlDialect
       .EMPTY_CONTEXT)).getSql();
@@ -373,7 +398,7 @@ public class TestFilterController {
   
   @Test
   public void testGenerateFilterNodeStringType() {
-    Filter filter = new Filter(fg1Features.get(0), SqlCondition.NOT_EQUALS, "abc");
+    Filter filter = new Filter(Arrays.asList(fg1Features.get(0)), SqlCondition.NOT_EQUALS, "abc");
   
     String result = filterController.generateFilterNode(filter, false).toSqlString(new SparkSqlDialect(SqlDialect
       .EMPTY_CONTEXT)).getSql();
@@ -384,7 +409,7 @@ public class TestFilterController {
 
   @Test
   public void testGenerateFilterNodeStringArrayType() {
-    Filter filter = new Filter(fg1Features.get(0), SqlCondition.IN, "[\"ab\", \"cd\"]");
+    Filter filter = new Filter(Arrays.asList(fg1Features.get(0)), SqlCondition.IN, "[\"ab\", \"cd\"]");
 
     String result = filterController.generateFilterNode(filter, false).toSqlString(new SparkSqlDialect(SqlDialect
             .EMPTY_CONTEXT)).getSql();
@@ -395,7 +420,7 @@ public class TestFilterController {
 
   @Test
   public void testGenerateFilterNodeNumericType() {
-    Filter filter = new Filter(fg2Features.get(1), SqlCondition.NOT_EQUALS, "10");
+    Filter filter = new Filter(Arrays.asList(fg2Features.get(1)), SqlCondition.NOT_EQUALS, "10");
   
     String result = filterController.generateFilterNode(filter, false).toSqlString(new SparkSqlDialect(SqlDialect
       .EMPTY_CONTEXT)).getSql();
@@ -406,7 +431,7 @@ public class TestFilterController {
 
   @Test
   public void testGenerateFilterNodeNumericArrayType() {
-    Filter filter = new Filter(fg2Features.get(1), SqlCondition.IN, "[1, 9]");
+    Filter filter = new Filter(Arrays.asList(fg2Features.get(1)), SqlCondition.IN, "[1, 9]");
 
     String result = filterController.generateFilterNode(filter, false).toSqlString(new SparkSqlDialect(SqlDialect
             .EMPTY_CONTEXT)).getSql();
@@ -421,15 +446,15 @@ public class TestFilterController {
     Query secondQuery = new Query("fs1", "project_fs1", fg2, "fg1", fg2Features , fg2Features);
   
     FilterLogic firstFilter = new FilterLogic(SqlFilterLogic.AND);
-    firstFilter.setLeftFilter(new Filter(fg1Features.get(1), SqlCondition.EQUALS, "10"));
+    firstFilter.setLeftFilter(new Filter(Arrays.asList(fg1Features.get(1)), SqlCondition.EQUALS, "10"));
     FilterLogic rightLogic = new FilterLogic(SqlFilterLogic.OR);
-    rightLogic.setLeftFilter(new Filter(fg3Features.get(1), SqlCondition.EQUALS, "10"));
-    rightLogic.setRightFilter(new Filter(fg3Features.get(2), SqlCondition.EQUALS, "10"));
+    rightLogic.setLeftFilter(new Filter(Arrays.asList(fg3Features.get(1)), SqlCondition.EQUALS, "10"));
+    rightLogic.setRightFilter(new Filter(Arrays.asList(fg3Features.get(2)), SqlCondition.EQUALS, "10"));
     firstFilter.setRightLogic(rightLogic);
     leftQuery.setFilter(firstFilter);
   
     FilterLogic secondFilter = new FilterLogic(SqlFilterLogic.SINGLE);
-    secondFilter.setLeftFilter(new Filter(fg2Features.get(1), SqlCondition.NOT_EQUALS, "10"));
+    secondFilter.setLeftFilter(new Filter(Arrays.asList(fg2Features.get(1)), SqlCondition.NOT_EQUALS, "10"));
     secondQuery.setFilter(secondFilter);
   
     Join join = new Join(leftQuery, secondQuery, joinFeatures, joinFeatures, JoinType.INNER, null,
@@ -453,15 +478,15 @@ public class TestFilterController {
     Query thirdQuery = new Query("fs1", "project_fs1", fg3,"fg2", fg3Features, fg3Features);
   
     FilterLogic firstFilter = new FilterLogic(SqlFilterLogic.AND);
-    firstFilter.setLeftFilter(new Filter(fg1Features.get(1), SqlCondition.EQUALS, "10"));
+    firstFilter.setLeftFilter(new Filter(Arrays.asList(fg1Features.get(1)), SqlCondition.EQUALS, "10"));
     FilterLogic rightLogic = new FilterLogic(SqlFilterLogic.OR);
-    rightLogic.setLeftFilter(new Filter(fg3Features.get(1), SqlCondition.EQUALS, "10"));
-    rightLogic.setRightFilter(new Filter(fg3Features.get(2), SqlCondition.EQUALS, "10"));
+    rightLogic.setLeftFilter(new Filter(Arrays.asList(fg3Features.get(1)), SqlCondition.EQUALS, "10"));
+    rightLogic.setRightFilter(new Filter(Arrays.asList(fg3Features.get(2)), SqlCondition.EQUALS, "10"));
     firstFilter.setRightLogic(rightLogic);
     leftQuery.setFilter(firstFilter);
     
     FilterLogic secondFilter = new FilterLogic(SqlFilterLogic.SINGLE);
-    secondFilter.setLeftFilter(new Filter(fg2Features.get(1), SqlCondition.NOT_EQUALS, "10"));
+    secondFilter.setLeftFilter(new Filter(Arrays.asList(fg2Features.get(1)), SqlCondition.NOT_EQUALS, "10"));
     secondQuery.setFilter(secondFilter);
     
     Join join = new Join(leftQuery, secondQuery, joinFeatures, joinFeatures, JoinType.INNER, null,
