@@ -19,24 +19,26 @@ package io.hops.hopsworks.common.featurestore.query.filter;
 import io.hops.hopsworks.common.featurestore.query.Feature;
 import io.hops.hopsworks.common.featurestore.query.SqlCondition;
 
+import java.util.List;
+
 public class Filter {
 
-  private Feature feature;
+  private List<Feature> features;
   private SqlCondition condition;
   private String value;
   
-  public Filter(Feature feature, SqlCondition condition, String value) {
-    this.feature = feature;
+  public Filter(List<Feature> features, SqlCondition condition, String value) {
+    this.features = features;
     this.condition = condition;
     this.value = value;
   }
-
-  public Feature getFeature() {
-    return feature;
+  
+  public List<Feature> getFeatures() {
+    return features;
   }
   
-  public void setFeature(Feature feature) {
-    this.feature = feature;
+  public void setFeatures(List<Feature> features) {
+    this.features = features;
   }
   
   public SqlCondition getCondition() {
