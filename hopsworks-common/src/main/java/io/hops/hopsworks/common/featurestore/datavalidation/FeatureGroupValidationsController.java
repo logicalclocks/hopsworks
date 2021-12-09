@@ -170,7 +170,8 @@ public class FeatureGroupValidationsController {
   }
 
   public FeatureGroupValidation putFeatureGroupValidationResults(Users user, Project project,
-    Featuregroup featuregroup, List<ExpectationResult> results, Long validationTime) throws FeaturestoreException {
+    Featuregroup featuregroup, List<ExpectationResult> results, Long validationTime, Boolean logActivity)
+          throws FeaturestoreException {
     FeatureGroupValidation.Status status = getValidationResultStatus(results);
     alertController.sendAlert(featuregroup, results, status);
     String hdfsUsername = hdfsUsersController.getHdfsUserName(project, user);
@@ -194,7 +195,10 @@ public class FeatureGroupValidationsController {
                 featuregroup, getValidationResultStatus(results));
       featureGroupValidationFacade.persist(featureGroupValidation);
 
-      activityFacade.logValidationActivity(featuregroup, user, featureGroupValidation);
+      // Activity logged only if validations ran as part of a fg.save/insert operation
+      if (logActivity) {
+        activityFacade.logValidationActivity(featuregroup, user, featureGroupValidation);
+      }
       // Persist validation results but throw an error if the data is invalid so that the client (hsfs) does not insert
       if (featuregroup.getValidationType().getSeverity() < status.getSeverity()) {
         throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.FEATURE_GROUP_CHECKS_FAILED,

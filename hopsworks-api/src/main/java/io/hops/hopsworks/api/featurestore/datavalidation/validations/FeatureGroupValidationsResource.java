@@ -163,7 +163,8 @@ public class FeatureGroupValidationsResource {
     }
     FeatureGroupValidation featureGroupValidation =
       featureGroupValidationsController.putFeatureGroupValidationResults(user, featurestore.getProject(),
-        featuregroup, featureGroupValidations.getExpectationResults(), featureGroupValidations.getValidationTime());
+        featuregroup, featureGroupValidations.getExpectationResults(), featureGroupValidations.getValidationTime(),
+        featureGroupValidations.getLogActivity());
   
     FeatureGroupValidationDTO dto = featureGroupValidationBuilder
       .build(uriInfo, new ResourceRequest(ResourceRequest.Name.VALIDATIONS), user, project, featuregroup,

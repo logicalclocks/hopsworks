@@ -221,7 +221,8 @@ module FeaturestoreHelper
           ],
           "status": "SUCCESS"
         }
-      ]
+      ],
+      "logActivity": "true"
     }
   end
 

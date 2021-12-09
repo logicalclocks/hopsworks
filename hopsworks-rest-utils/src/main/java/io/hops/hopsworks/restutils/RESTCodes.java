@@ -1553,7 +1553,7 @@ public class RESTCodes {
     FEATURE_STORE_RULE_NOT_FOUND(148, "Could not find feature store data validation rule.",
       Response.Status.NOT_FOUND),
     FEATURE_GROUP_CHECKS_FAILED(149,
-                       "Feature group validation checks did not pass, will not persist validation results.",
+                       "Feature group validation checks did not pass, will not persist the data.",
                                 Response.Status.EXPECTATION_FAILED),
     RULE_NOT_FOUND(150, "Rule with provided name was not found.", Response.Status.NOT_FOUND),
     AVRO_PRIMITIVE_TYPE_NOT_SUPPORTED(151, "Error converting Hive Type to Avro primitive type",
