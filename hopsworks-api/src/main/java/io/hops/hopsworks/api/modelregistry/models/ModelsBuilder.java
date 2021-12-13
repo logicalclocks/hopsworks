@@ -238,7 +238,7 @@ public class ModelsBuilder {
           modelDTO.setModelSchema(modelSchemaDTO);
         } else {
           InodeDTO modelSchemaDTO = inodeBuilder.buildResource(uriInfo, modelRegistryProject, modelSchemaPath);
-          modelDTO.setInputExample(modelSchemaDTO);
+          modelDTO.setModelSchema(modelSchemaDTO);
         }
 
         DatasetPath inputExamplePath = datasetHelper.getDatasetPath(userProject,
