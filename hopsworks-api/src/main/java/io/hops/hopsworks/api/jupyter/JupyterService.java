@@ -268,9 +268,7 @@ public class JupyterService {
 
     Users user = jWTHelper.getUserPrincipal(sc);
     JupyterSettings js = jupyterSettingsFacade.findByProjectUser(project, user.getEmail());
-    if (js.getProject() == null) {
-      js.setProject(project);
-    }
+
     if (settings.isPythonKernelEnabled()) {
       js.setPrivateDir(settings.getStagingDir() + Settings.PRIVATE_DIRS + js.getSecret());
     }
@@ -336,6 +334,11 @@ public class JupyterService {
     
     if (project.getPythonEnvironment() == null) {
       throw new ProjectException(RESTCodes.ProjectErrorCode.ANACONDA_NOT_ENABLED, Level.FINE);
+    }
+
+    if (jupyterSettings.getMode() == null) {
+      // set default mode for jupyter if mode is null
+      jupyterSettings.setMode(JupyterMode.JUPYTER_LAB);
     }
 
     // Jupyter Git works only for JupyterLab
@@ -554,11 +557,10 @@ public class JupyterService {
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
-  public Response recent(
-          @QueryParam("count") @DefaultValue("5") @Min(0) @Max(100) int count,
-          @Context UriInfo uriInfo,
-          @Context SecurityContext sc)
-          throws ElasticException {
+  @ApiOperation(value = "Retrieve the list of most recent notebooks edited")
+  public Response recent(@QueryParam("count") @DefaultValue("5") @Min(0) @Max(100) int count,
+                         @Context UriInfo uriInfo, @Context SecurityContext sc)
+      throws ElasticException {
     NotebookDTO dto = notebookBuilder.build(uriInfo, project, count);
     return Response.ok().entity(dto).build();
   }

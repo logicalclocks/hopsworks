@@ -52,6 +52,7 @@ import org.apache.hadoop.io.IOUtils;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+import javax.annotation.PostConstruct;
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
@@ -110,6 +111,14 @@ public class JupyterController {
   private ProjectUtils projectUtils;
   @EJB
   private XAttrsController xAttrsController;
+
+  private ObjectMapper objectMapper;
+
+  @PostConstruct
+  public void init() {
+    objectMapper = new ObjectMapper();
+    objectMapper.registerModule(new JaxbAnnotationModule());
+  }
 
   @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
   public String convertIPythonNotebook(String hdfsUsername, String notebookPath, Project project, String pyPath,
@@ -356,16 +365,12 @@ public class JupyterController {
       }
       udfso = dfs.getDfsOps(hdfsUsername);
       String relativeNotebookPath = getNotebookRelativeFilePath(hdfsUsername, kernelId, udfso);
-      ObjectMapper objectMapper = new ObjectMapper();
-      objectMapper.registerModule(new JaxbAnnotationModule());
       JSONObject jupyterSettingsMetadataObj = new JSONObject();
       jupyterSettingsMetadataObj.put(Settings.META_NOTEBOOK_JUPYTER_CONFIG_XATTR_NAME,
           objectMapper.writeValueAsString(jupyterSettings));
-      jupyterSettingsMetadataObj.put(Settings.META_USAGE_TIME,
-              new Date().getTime());
-      String inodePath = jupyterSettings.getBaseDir() + "/" +
-          relativeNotebookPath;
-      xAttrsController.addStrXAttr(inodePath, Settings.META_NOTEBOOK_JUPYTER_CONFIG_XATTR_NAME,
+      jupyterSettingsMetadataObj.put(Settings.META_USAGE_TIME, new Date().getTime());
+      xAttrsController.addStrXAttr(jupyterSettings.getBaseDir() + "/" + relativeNotebookPath,
+          Settings.META_NOTEBOOK_JUPYTER_CONFIG_XATTR_NAME,
           jupyterSettingsMetadataObj.toString(), udfso);
     } catch (Exception e) {
       throw new ServiceException(RESTCodes.ServiceErrorCode.ATTACHING_JUPYTER_CONFIG_TO_NOTEBOOK_FAILED,

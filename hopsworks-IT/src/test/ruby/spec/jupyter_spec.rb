@@ -40,10 +40,10 @@ describe "On #{ENV['OS']}" do
       end
 
       it 'should get recent jupyter notebooks' do
-        _, _, settings = start_jupyter(@project)
+        start_jupyter(@project)
         port = json_body[:port]
         token = json_body[:token]
-        hdfsUsername = settings[:project][:inode][:hdfsUser][:name]
+        hdfsUsername = "#{@project[:projectname]}__#{@user[:username]}"
 
         kernel_id = ""
         auth_token(token) do
