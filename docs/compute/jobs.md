@@ -29,8 +29,8 @@ sections below.
 
 <p align="center">
   <figure>
-    <a  href="../../assets/images/newjob1.png">
-      <img src="../../assets/images/newjob1.png" alt="New job quickstart">
+    <a  href="../../assets/images/jobs/newjob1.png">
+      <img src="../../assets/images/jobs/newjob1.png" alt="New job quickstart">
     </a>
     <figcaption>New job quickstart</figcaption>
   </figure>
@@ -45,8 +45,8 @@ For example, in the image below the default arguments "a b c" will be passed as 
 
 <p align="center">
   <figure>
-    <a  href="../../assets/images/newjob2.png">
-      <img src="../../assets/images/newjob2.png" alt="Job default arguments">
+    <a  href="../../assets/images/jobs/newjob2.png">
+      <img src="../../assets/images/jobs/newjob2.png" alt="Job default arguments">
     </a>
     <figcaption>Job default arguments</figcaption>
   </figure>
@@ -59,8 +59,8 @@ the job's specification which you can then import from the `advanced options` pa
 
 <p align="center">
   <figure>
-    <a  href="../../assets/images/newjob3.png">
-      <img src="../../assets/images/newjob3.png" alt="Job export">
+    <a  href="../../assets/images/jobs/newjob3.png">
+      <img src="../../assets/images/jobs/newjob3.png" alt="Job export">
     </a>
     <figcaption>Job export</figcaption>
   </figure>
@@ -105,8 +105,8 @@ You can set the following properties for Spark/PySpark jobs:
 
 <p align="center">
   <figure>
-    <a  href="../../assets/images/newjob4.png">
-      <img src="../../assets/images/newjob4.png" alt="Spark job configuration properties">
+    <a  href="../../assets/images/jobs/newjob4.png">
+      <img src="../../assets/images/jobs/newjob4.png" alt="Spark job configuration properties">
     </a>
     <figcaption>Spark job configuration properties</figcaption>
   </figure>
@@ -125,8 +125,8 @@ You can set the following properties for Python jobs:
 
 <p align="center">
   <figure>
-    <a  href="../../assets/images/newjob5.png">
-      <img src="../../assets/images/newjob5.png" alt="Python job configuration properties">
+    <a  href="../../assets/images/jobs/newjob5.png">
+      <img src="../../assets/images/jobs/newjob5.png" alt="Python job configuration properties">
     </a>
     <figcaption>Python job configuration properties</figcaption>
   </figure>
@@ -171,8 +171,8 @@ The potential severities these alerts should report are:
 
 <p align="center">
   <figure>
-    <a  href="../../assets/images/newjob6.gif">
-      <img src="../../assets/images/newjob6.gif" alt="Job alerts">
+    <a  href="../../assets/images/jobs/newjob6.gif">
+      <img src="../../assets/images/jobs/newjob6.gif" alt="Job alerts">
     </a>
     <figcaption>Job alerts</figcaption>
   </figure>
@@ -189,8 +189,8 @@ and it is up to the user to clean them up if needed.
 
 <p align="center">
   <figure>
-    <a  href="../../assets/images/newjob7.png">
-      <img src="../../assets/images/newjob7.png" alt="Job deletion">
+    <a  href="../../assets/images/jobs/newjob7.png">
+      <img src="../../assets/images/jobs/newjob7.png" alt="Job deletion">
     </a>
     <figcaption>Job deletion</figcaption>
   </figure>
@@ -208,8 +208,8 @@ executions page by clicking the `view all executions` link.
 
 <p align="center">
   <figure>
-    <a  href="../../assets/images/newjob8.png">
-      <img src="../../assets/images/newjob8.png" alt="Job preview">
+    <a  href="../../assets/images/jobs/newjob8.png">
+      <img src="../../assets/images/jobs/newjob8.png" alt="Job preview">
     </a>
     <figcaption>Job preview</figcaption>
   </figure>
@@ -217,8 +217,8 @@ executions page by clicking the `view all executions` link.
 
 <p align="center">
   <figure>
-    <a  href="../../assets/images/newjob9.png">
-      <img src="../../assets/images/newjob9.png" alt="Executions overview">
+    <a  href="../../assets/images/jobs/newjob9.png">
+      <img src="../../assets/images/jobs/newjob9.png" alt="Executions overview">
     </a>
     <figcaption>Executions overview</figcaption>
   </figure>
@@ -256,8 +256,8 @@ It is also possible to work on jobs while developing in your IntelliJ/PyCharm ID
 
 <p align="center">
   <figure>
-    <a  href="../../assets/images/newjob10.gif">
-      <img src="../../assets/images/newjob10.gif" alt="    Working with jobs from Hopsworks IntelliJ/PyCharm plugin">
+    <a  href="../../assets/images/jobs/newjob10.gif">
+      <img src="../../assets/images/jobs/newjob10.gif" alt="    Working with jobs from Hopsworks IntelliJ/PyCharm plugin">
     </a>
     <figcaption>Working with jobs from Hopsworks IntelliJ/PyCharm plugin</figcaption>
   </figure>

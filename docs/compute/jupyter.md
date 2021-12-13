@@ -5,8 +5,8 @@ can access from the main project menu. The image below shows the Jupyter service
 
 <p align="center">
   <figure>
-    <a  href="../../assets/images/jupyter1.png">
-      <img src="../../assets/images/jupyter1.png" alt="Jupyter service in Hopsworks">
+    <a  href="../../assets/images/jupyter/jupyter1.png">
+      <img src="../../assets/images/jupyter/jupyter1.png" alt="Jupyter service in Hopsworks">
     </a>
     <figcaption>Jupyter dashboard in Hopsworks</figcaption>
   </figure>
@@ -23,8 +23,8 @@ open Jupyter in a new tab if your browser is blocking this operation by default.
 
 <p align="center">
   <figure>
-    <a  href="../../assets/images/jupyter2.png">
-      <img src="../../assets/images/jupyter2.png" alt="Classic Jupyter">
+    <a  href="../../assets/images/jupyter/jupyter2.png">
+      <img src="../../assets/images/jupyter/jupyter2.png" alt="Classic Jupyter">
     </a>
     <figcaption>Classic Jupyter</figcaption>
   </figure>
@@ -45,8 +45,8 @@ resources will be allocated based on the configuration options Jupyter was start
 
 <p align="center">
   <figure>
-    <a  href="../../assets/images/jupyter3.png">
-      <img src="../../assets/images/jupyter3.png" alt="Jupyter dashboard page showing currently running applications">
+    <a  href="../../assets/images/jupyter/jupyter3.png">
+      <img src="../../assets/images/jupyter/jupyter3.png" alt="Jupyter dashboard page showing currently running applications">
     </a>
     <figcaption>Jupyter dashboard page showing currently running applications</figcaption>
   </figure>
@@ -72,8 +72,8 @@ figure below.
 
 <p align="center">
   <figure>
-    <a  href="../../assets/images/jupyter4.png">
-      <img src="../../assets/images/jupyter4.png" alt="Jupyter logs">
+    <a  href="../../assets/images/jupyter/jupyter4.png">
+      <img src="../../assets/images/jupyter/jupyter4.png" alt="Jupyter logs">
     </a>
     <figcaption>Jupyter logs</figcaption>
   </figure>
@@ -88,7 +88,7 @@ also shows you how much time is currently left before the Jupyter server shuts d
 ## Debug Jupyter installation
 Jupyter is installed in the Python environment of your project. This means that if a dependency of Jupyter is removed,
 or an incorrect version is installed it may not work properly. If the Python environment ends up in a state with
-conflicting libraries installed then an alert will be shown in the Python management page under the project settings menu.
+conflicting libraries installed then an alert will be shown in the `Python libraries` page under the `Project settings` menu.
 
 ## Jupyter + Spark on Hopsworks
 
@@ -129,8 +129,8 @@ After you have started the Jupyter notebook server, you can create a PySpark not
 
 <p align="center">
   <figure>
-    <a  href="../../assets/images/jupyter5.png">
-      <img src="../../assets/images/jupyter5.png" alt="Create a pyspark notebook">
+    <a  href="../../assets/images/jupyter/jupyter5.png">
+      <img src="../../assets/images/jupyter/jupyter5.png" alt="Create a pyspark notebook">
     </a>
     <figcaption>Create a pyspark notebook</figcaption>
   </figure>
@@ -140,8 +140,8 @@ When you execute the first cell in a PySpark notebook, the Spark session is auto
 
 <p align="center">
   <figure>
-    <a  href="../../assets/images/jupyter6.png">
-      <img src="../../assets/images/jupyter6.png" alt="SparkSession creation with pyspark kernel">
+    <a  href="../../assets/images/jupyter/jupyter6.png">
+      <img src="../../assets/images/jupyter/jupyter6.png" alt="SparkSession creation with pyspark kernel">
     </a>
     <figcaption>SparkSession creation with pyspark kernel</figcaption>
   </figure>
@@ -152,8 +152,8 @@ on a Spark driver in the cluster. You can execute regular Python code:
 
 <p align="center">
   <figure>
-    <a  href="../../assets/images/jupyter7.png">
-      <img src="../../assets/images/jupyter7.png" alt="Executing python code on the spark driver in the cluster">
+    <a  href="../../assets/images/jupyter/jupyter7.png">
+      <img src="../../assets/images/jupyter/jupyter7.png" alt="Executing python code on the spark driver in the cluster">
     </a>
     <figcaption>Executing python code on the spark driver in the cluster</figcaption>
   </figure>
@@ -163,8 +163,8 @@ Since you are executing on the Spark driver, you can also run applications on sp
 
 <p align="center">
   <figure>
-    <a  href="../../assets/images/jupyter8.png">
-      <img src="../../assets/images/jupyter8.png" alt="Starting a spark application from Jupyter">
+    <a  href="../../assets/images/jupyter/jupyter8.png">
+      <img src="../../assets/images/jupyter/jupyter8.png" alt="Starting a spark application from Jupyter">
     </a>
     <figcaption>Starting a spark application from Jupyter</figcaption>
   </figure>
@@ -178,8 +178,8 @@ magic commands provided by sparkmagic. You can view a list of all commands by ex
 
 <p align="center">
   <figure>
-    <a  href="../../assets/images/jupyter9.png">
-      <img src="../../assets/images/jupyter9.png" alt="Printing a list of all sparkmagic commands">
+    <a  href="../../assets/images/jupyter/jupyter9.png">
+      <img src="../../assets/images/jupyter/jupyter9.png" alt="Printing a list of all sparkmagic commands">
     </a>
     <figcaption>Printing a list of all sparkmagic commands</figcaption>
   </figure>
@@ -202,8 +202,8 @@ are illustrated below. Using this approach, you can have large scale cluster com
 
 <p align="center">
   <figure>
-    <a  href="../../assets/images/jupyter10.png">
-      <img src="../../assets/images/jupyter10.png" alt="Creating a spark dataframe">
+    <a  href="../../assets/images/jupyter/jupyter10.png">
+      <img src="../../assets/images/jupyter/jupyter10.png" alt="Creating a spark dataframe">
     </a>
     <figcaption>Creating a spark dataframe</figcaption>
   </figure>
@@ -217,8 +217,8 @@ local Jupyter server for plotting.
 Using **%%sql**:
 <p align="center">
   <figure>
-    <a  href="../../assets/images/jupyter11.png">
-      <img src="../../assets/images/jupyter11.png" alt="Downloading the spark dataframe to a pandas dataframe using %%sql">
+    <a  href="../../assets/images/jupyter/jupyter11.png">
+      <img src="../../assets/images/jupyter/jupyter11.png" alt="Downloading the spark dataframe to a pandas dataframe using %%sql">
     </a>
     <figcaption>Downloading the spark dataframe to a pandas dataframe using %%sql</figcaption>
   </figure>
@@ -227,8 +227,8 @@ Using **%%sql**:
 Using **%%spark**:
 <p align="center">
   <figure>
-    <a  href="../../assets/images/jupyter12.png">
-      <img src="../../assets/images/jupyter12.png" alt="Printing a list of all sparkmagic commands">
+    <a  href="../../assets/images/jupyter/jupyter12.png">
+      <img src="../../assets/images/jupyter/jupyter12.png" alt="Printing a list of all sparkmagic commands">
     </a>
     <figcaption>Downloading the spark dataframe to a pandas dataframe using %%spark</figcaption>
   </figure>
@@ -243,24 +243,24 @@ To do this, use the sparkmagic `%%local` to access the local pandas dataframe an
 
 <p align="center">
   <figure>
-    <a  href="../../assets/images/jupyter13.png">
-      <img src="../../assets/images/jupyter13.png" alt="Import plotting libraries locally on the Jupyter server">
+    <a  href="../../assets/images/jupyter/jupyter13.png">
+      <img src="../../assets/images/jupyter/jupyter13.png" alt="Import plotting libraries locally on the Jupyter server">
     </a>
     <figcaption>Import plotting libraries locally on the Jupyter server</figcaption>
   </figure>
 </p>
 <p align="center">
   <figure>
-    <a  href="../../assets/images/jupyter14.png">
-      <img src="../../assets/images/jupyter14.png" alt="Printing a list of all sparkmagic commands">
+    <a  href="../../assets/images/jupyter/jupyter14.png">
+      <img src="../../assets/images/jupyter/jupyter14.png" alt="Printing a list of all sparkmagic commands">
     </a>
     <figcaption>Plot a local pandas dataframe using seaborn and the magic %%local</figcaption>
   </figure>
 </p>
 <p align="center">
   <figure>
-    <a  href="../../assets/images/jupyter15.png">
-      <img src="../../assets/images/jupyter15.png" alt="Plot a local pandas dataframe using matplotlib and the magic %%local">
+    <a  href="../../assets/images/jupyter/jupyter15.png">
+      <img src="../../assets/images/jupyter/jupyter15.png" alt="Plot a local pandas dataframe using matplotlib and the magic %%local">
     </a>
     <figcaption>Plot a local pandas dataframe using matplotlib and the magic %%local</figcaption>
   </figure>
