@@ -17,14 +17,17 @@
 package io.hops.hopsworks.common.jupyter;
 
 import io.hops.hopsworks.common.api.RestDTO;
+import io.hops.hopsworks.persistence.entity.jupyter.JupyterSettings;
 
 import javax.xml.bind.annotation.XmlRootElement;
+import java.util.Date;
 
 @XmlRootElement
 public class NotebookDTO extends RestDTO<NotebookDTO> {
 
   private String path;
-  private String jupyterConfiguration;
+  private Date date;
+  private JupyterSettings jupyterSettings;
 
   public String getPath() {
     return path;
@@ -34,11 +37,19 @@ public class NotebookDTO extends RestDTO<NotebookDTO> {
     this.path = path;
   }
 
-  public String getJupyterConfiguration() {
-    return jupyterConfiguration;
+  public Date getDate() {
+    return date;
   }
 
-  public void setJupyterConfiguration(String jupyterConfiguration) {
-    this.jupyterConfiguration = jupyterConfiguration;
+  public void setDate(Date date) {
+    this.date = date;
+  }
+
+  public JupyterSettings getJupyterSettings() {
+    return jupyterSettings;
+  }
+
+  public void setJupyterSettings(JupyterSettings jupyterSettings) {
+    this.jupyterSettings = jupyterSettings;
   }
 }

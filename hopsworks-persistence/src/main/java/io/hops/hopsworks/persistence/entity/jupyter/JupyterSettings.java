@@ -43,7 +43,6 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import io.hops.hopsworks.persistence.entity.jobs.configuration.JobConfiguration;
 import io.hops.hopsworks.persistence.entity.jupyter.config.GitConfig;
 import io.hops.hopsworks.persistence.entity.jupyter.config.JupyterConfigurationConverter;
-import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.user.Users;
 
 import java.io.Serializable;
@@ -128,16 +127,6 @@ public class JupyterSettings implements Serializable {
   @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
   private Users users;
 
-  @JoinColumn(name = "project_id",
-      referencedColumnName = "id",
-      insertable = false,
-      updatable = false)
-  @ManyToOne(optional = false)
-  // Only for deserializing. There is a circular dependancy between Project and Users when serializing, so ignore
-  // when serializing.
-  @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
-  private Project project;
-
   @Basic(optional = false)
   @NotNull
   @Size(min = 1,
@@ -221,14 +210,6 @@ public class JupyterSettings implements Serializable {
 
   public void setUsers(Users users) {
     this.users = users;
-  }
-
-  public Project getProject() {
-    return project;
-  }
-
-  public void setProject(Project project) {
-    this.project = project;
   }
 
   @Override

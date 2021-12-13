@@ -239,7 +239,7 @@ public class JupyterConfigFilesGenerator {
         .setPort(port)
         .setBaseDirectory(js.getBaseDir())
         .setHdfsUser(hdfsUser)
-        .setWhiteListedKernels("'" + pythonKernelName(js.getProject().getPythonEnvironment().getPythonVersion()) +
+        .setWhiteListedKernels("'" + pythonKernelName(project.getPythonEnvironment().getPythonVersion()) +
             "', 'pysparkkernel', 'sparkkernel', 'sparkrkernel'")
         .setHadoopHome(settings.getHadoopSymbolicLinkDir())
         .setJupyterCertsDirectory(certsDir)

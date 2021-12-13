@@ -43,7 +43,6 @@ import io.hops.hopsworks.persistence.entity.dataset.DatasetSharedWith;
 import io.hops.hopsworks.persistence.entity.hdfs.inode.Inode;
 import io.hops.hopsworks.persistence.entity.jobs.description.Jobs;
 import io.hops.hopsworks.persistence.entity.jupyter.JupyterProject;
-import io.hops.hopsworks.persistence.entity.jupyter.JupyterSettings;
 import io.hops.hopsworks.persistence.entity.project.alert.ProjectServiceAlert;
 import io.hops.hopsworks.persistence.entity.project.jobs.DefaultJobConfiguration;
 import io.hops.hopsworks.persistence.entity.project.service.ProjectServices;
@@ -138,9 +137,6 @@ public class Project implements Serializable {
   @OneToMany(cascade = CascadeType.ALL,
       mappedBy = "projectId")
   private Collection<CondaCommands> condaCommandsCollection;
-  @OneToMany(cascade = CascadeType.ALL,
-      mappedBy = "project")
-  private Collection<JupyterSettings> jupyterSettingsCollection;
   @OneToMany(cascade = CascadeType.ALL,
       mappedBy = "project")
   private Collection<Serving> servingCollection;
@@ -484,17 +480,6 @@ public class Project implements Serializable {
   public void setJupyterProjectCollection(
       Collection<JupyterProject> jupyterProjectCollection) {
     this.jupyterProjectCollection = jupyterProjectCollection;
-  }
-
-  @XmlTransient
-  @JsonIgnore
-  public Collection<JupyterSettings> getJupyterSettingsCollection() {
-    return jupyterSettingsCollection;
-  }
-
-  public void setJupyterSettingsCollection(
-      Collection<JupyterSettings> jupyterSettingsCollection) {
-    this.jupyterSettingsCollection = jupyterSettingsCollection;
   }
 
   @XmlTransient

@@ -154,7 +154,7 @@ module JupyterHelper
     end
 
     if expected_count > 0
-      expect(json_body[:items][0][:jupyterConfiguration]).not_to be_nil
+      expect(json_body[:items][0][:jupyterSettings]).not_to be_nil
       expect(json_body[:items][0][:path]).not_to be_nil
     end
   end
