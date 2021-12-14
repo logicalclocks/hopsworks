@@ -19,24 +19,43 @@ package io.hops.hopsworks.common.featurestore.query.filter;
 import io.hops.hopsworks.common.featurestore.query.Feature;
 import io.hops.hopsworks.common.featurestore.query.SqlCondition;
 
+import java.util.Arrays;
 import java.util.List;
 
 public class Filter {
 
   private List<Feature> features;
   private SqlCondition condition;
-  private String value;
+  private FilterValue value;
   
   public Filter(List<Feature> features, SqlCondition condition, String value) {
     this.features = features;
     this.condition = condition;
+    this.value = new FilterValue(value);
+  }
+
+  public Filter(Feature feature, SqlCondition condition, FilterValue value) {
+    this.features = Arrays.asList(feature);
+    this.condition = condition;
     this.value = value;
   }
-  
+
+  public Filter(List<Feature> features, SqlCondition condition, FilterValue value) {
+    this.features = features;
+    this.condition = condition;
+    this.value = value;
+  }
+
+  public Filter(Feature feature, SqlCondition condition, String value) {
+    this.features = Arrays.asList(feature);
+    this.condition = condition;
+    this.value = new FilterValue(value);
+  }
+
   public List<Feature> getFeatures() {
     return features;
   }
-  
+
   public void setFeatures(List<Feature> features) {
     this.features = features;
   }
@@ -49,12 +68,13 @@ public class Filter {
     this.condition = condition;
   }
   
-  public String getValue() {
+  public FilterValue getValue() {
     return value;
   }
   
-  public void setValue(String value) {
+  public void setValue(FilterValue value) {
     this.value = value;
   }
+
 }
 
