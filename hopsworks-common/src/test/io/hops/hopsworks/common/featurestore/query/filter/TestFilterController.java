@@ -16,6 +16,7 @@
 
 package io.hops.hopsworks.common.featurestore.query.filter;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.hops.hopsworks.common.featurestore.feature.FeatureGroupFeatureDTO;
 import io.hops.hopsworks.common.featurestore.query.ConstructorController;
 import io.hops.hopsworks.common.featurestore.query.Feature;
@@ -49,6 +50,7 @@ public class TestFilterController {
   
   private ConstructorController constructorController;
   private FilterController filterController;
+  private ObjectMapper objectMapper = new ObjectMapper();
   
   Featuregroup fg1;
   Featuregroup fg2;
@@ -101,9 +103,9 @@ public class TestFilterController {
     fgLookup.put(fg3.getId(), fg3);
   
     fg1Features = new ArrayList<>();
-    fg1Features.add(new Feature("fg1_pk", "fg1", "string",true, null, "prefix2_"));
-    fg1Features.add(new Feature("fg1_ft", "fg1", "integer", false, null, "prefix2_"));
-    fg1Features.add(new Feature("join", "fg1", "string",true, null, "prefix2_"));
+    fg1Features.add(new Feature("fg1_pk", "fg1", "string",true, null, "prefix2_", fg1));
+    fg1Features.add(new Feature("fg1_ft", "fg1", "integer", false, null, "prefix2_", fg1));
+    fg1Features.add(new Feature("join", "fg1", "string",true, null, "prefix2_", fg1));
   
     fg2Features = new ArrayList<>();
     fg2Features.add(new Feature("fg2_pk", "fg2", "string", true, null, "prefix2_"));
@@ -181,7 +183,7 @@ public class TestFilterController {
     Assert.assertEquals(result.getType(), SqlFilterLogic.AND);
     Assert.assertEquals(result.getRightLogic().getType(), SqlFilterLogic.AND);
     Assert.assertEquals(SqlCondition.EQUALS, result.getLeftFilter().getCondition());
-    Assert.assertEquals("10", result.getLeftFilter().getValue());
+    Assert.assertEquals("10", result.getLeftFilter().getValue().getValue());
     Assert.assertEquals("fg1_pk", feature.getName());
     Assert.assertEquals("fg1", feature.getFgAlias(false));
     Assert.assertEquals("string", feature.getType());
@@ -198,11 +200,36 @@ public class TestFilterController {
     Feature feature = result.getFeatures().get(0);
   
     Assert.assertEquals(SqlCondition.EQUALS, result.getCondition());
-    Assert.assertEquals("10", result.getValue());
+    Assert.assertEquals("10", result.getValue().getValue());
     Assert.assertEquals("fg2_ft", feature.getName());
     Assert.assertEquals("fg2", feature.getFgAlias(false));
     Assert.assertEquals("double", feature.getType());
     Assert.assertEquals("10.0", feature.getDefaultValue());
+  }
+  
+  @Test
+  public void testConvertFilterValue_feature() throws Exception {
+    FeatureGroupFeatureDTO value =
+        new FeatureGroupFeatureDTO("fg1_ft", "integer", null, null, 1);
+
+    FilterValue result = filterController.convertFilterValue(objectMapper.writeValueAsString(value), fgLookup,
+        availableFeatureLookup);
+    
+    Assert.assertEquals("`fg1`.`fg1_ft`", result.makeSqlValue());
+  }
+  
+  @Test
+  public void testConvertFilterValue_nonFeature() throws Exception {
+    FilterValue resultOfIntegerValue = filterController.convertFilterValue("123", fgLookup,
+        availableFeatureLookup);
+    FilterValue resultOfStringValue = filterController.convertFilterValue("abc", fgLookup,
+        availableFeatureLookup);
+    FilterValue resultOfArrayValue = filterController.convertFilterValue("[1, 2, 3]", fgLookup,
+        availableFeatureLookup);
+    
+    Assert.assertEquals("123", resultOfIntegerValue.makeSqlValue());
+    Assert.assertEquals("abc", resultOfStringValue.makeSqlValue());
+    Assert.assertEquals("[1, 2, 3]", resultOfArrayValue.makeSqlValue());
   }
   
   @Test
