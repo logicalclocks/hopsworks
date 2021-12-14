@@ -54,7 +54,7 @@
   <packaging>ear</packaging>
 
   <name>hopsworks-ear:2.6.0-SNAPSHOT</name>
-  
+
   <build>
     <finalName>hopsworks-ear</finalName>
     <plugins>
@@ -121,8 +121,8 @@
       <id>hops-site</id>
       <activation>
         <activeByDefault>false</activeByDefault>
-      </activation> 
-      <dependencies>  
+      </activation>
+      <dependencies>
         <dependency>
           <groupId>io.hops.hopsworks</groupId>
           <artifactId>hopsworks-cluster</artifactId>

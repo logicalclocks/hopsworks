@@ -39,7 +39,6 @@
 
 package io.hops.hopsworks.common.dao.jupyter.config;
 
-import com.google.common.base.Strings;
 import com.logicalclocks.servicediscoverclient.exceptions.ServiceDiscoveryException;
 import com.logicalclocks.servicediscoverclient.service.Service;
 import freemarker.template.TemplateException;
@@ -55,7 +54,6 @@ import io.hops.hopsworks.persistence.entity.jupyter.JupyterSettings;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.jobs.configuration.spark.SparkJobConfiguration;
 import io.hops.hopsworks.common.jupyter.JupyterContentsManager;
-import io.hops.hopsworks.common.jupyter.JupyterNbVCSController;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.common.util.SparkConfigurationUtil;
 import io.hops.hopsworks.common.util.TemplateEngine;
@@ -102,8 +100,6 @@ public class JupyterConfigFilesGenerator {
   
   @EJB
   private Settings settings;
-  @Inject
-  private JupyterNbVCSController jupyterNbVCSController;
   @EJB
   private TemplateEngine templateEngine;
   @EJB
@@ -223,17 +219,7 @@ public class JupyterConfigFilesGenerator {
     String hopsworksRestEndpoint = "https://" + serviceDiscoveryController
         .constructServiceFQDNWithPort(ServiceDiscoveryController.HopsworksService.HOPSWORKS_APP);
 
-    String remoteGitURL = "";
-    String apiKey = "";
-    String gitBackend = "";
-    if (js.isGitBackend() && js.getGitConfig() != null) {
-      remoteGitURL = js.getGitConfig().getRemoteGitURL();
-      gitBackend = js.getGitConfig().getGitBackend().name();
-      if(!Strings.isNullOrEmpty(js.getGitConfig().getApiKeyName())) {
-        apiKey = jupyterNbVCSController.getGitApiKey(hdfsUser, js.getGitConfig().getApiKeyName());
-      }
-    }
-    JupyterContentsManager jcm = jupyterNbVCSController.getJupyterContentsManagerClass(remoteGitURL);
+    JupyterContentsManager jcm = JupyterContentsManager.HDFS_CONTENTS_MANAGER;
     JupyterNotebookConfigTemplate template = JupyterNotebookConfigTemplateBuilder.newBuilder()
         .setProject(project)
         .setNamenodeIp(namenode.getAddress())
@@ -251,8 +237,6 @@ public class JupyterConfigFilesGenerator {
         .setSecretDirectory(settings.getStagingDir() + Settings.PRIVATE_DIRS + js.getSecret())
         .setAllowOrigin(allowOrigin)
         .setWsPingInterval(settings.getJupyterWSPingInterval())
-        .setApiKey(apiKey)
-        .setGitBackend(gitBackend)
         .setHadoopClasspathGlob(settings.getHadoopClasspathGlob())
         .setRequestsVerify(settings.getRequestsVerify())
         .setDomainCATruststore(Paths.get(certsDir, hdfsUser + Settings.TRUSTSTORE_SUFFIX).toString())

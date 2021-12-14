@@ -121,7 +121,7 @@
     <dependency>
       <groupId>org.opensearch.client</groupId>
       <artifactId>opensearch-rest-high-level-client</artifactId>
-      <version>${opensearch-rest-high-level-client.version}</version>      
+      <version>${opensearch-rest-high-level-client.version}</version>
     </dependency>
     <dependency>
       <groupId>org.apache.flink</groupId>
@@ -241,4 +241,3 @@
     </plugins>
   </build>
 </project>
-
