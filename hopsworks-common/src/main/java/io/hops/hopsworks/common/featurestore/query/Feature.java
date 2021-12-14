@@ -38,6 +38,28 @@ public class Feature {
     this.defaultValue = defaultValue;
     this.prefix = prefix;
   }
+
+  public Feature(String name, String fgAlias, String type, boolean primary, String defaultValue, String prefix,
+      Featuregroup featuregroup) {
+    this.name = name;
+    this.fgAlias = fgAlias;
+    this.type = type;
+    this.primary = primary;
+    this.defaultValue = defaultValue;
+    this.prefix = prefix;
+    this.featureGroup = featuregroup;
+  }
+
+  public Feature(String name, String fgAlias, String type, String defaultValue, boolean primary,
+      Featuregroup featureGroup, String prefix) {
+    this.name = name;
+    this.fgAlias = fgAlias;
+    this.type = type;
+    this.defaultValue = defaultValue;
+    this.primary = primary;
+    this.featureGroup = featureGroup;
+    this.prefix = prefix;
+  }
   
   public Feature(FeatureGroupFeatureDTO featureGroupFeatureDTO, String fgAlias) {
     this.name = featureGroupFeatureDTO.getName();

@@ -258,7 +258,7 @@ public class ConstructorController {
       // it's easier and faster to return the training dataset schema if we store the type in the
       // training dataset features table.
       .map(f -> new Feature(
-        f.getName(), fgAliasLookup.get(fg.getId()), f.getType(), f.getPrimary(), f.getDefaultValue(), prefix))
+          f.getName(), fgAliasLookup.get(fg.getId()), f.getType(), f.getDefaultValue(), f.getPrimary(), fg, prefix))
       .collect(Collectors.toList());
     availableFeatureLookup.put(fg.getId(), availableFeatures);
 

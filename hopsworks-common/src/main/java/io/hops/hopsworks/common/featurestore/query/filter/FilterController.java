@@ -16,6 +16,7 @@
 
 package io.hops.hopsworks.common.featurestore.query.filter;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.gson.Gson;
 import io.hops.hopsworks.common.featurestore.feature.FeatureGroupFeatureDTO;
 import io.hops.hopsworks.common.featurestore.query.ConstructorController;
@@ -39,6 +40,7 @@ import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -52,6 +54,8 @@ public class FilterController {
   
   @EJB
   private ConstructorController constructorController;
+  
+  private ObjectMapper objectMapper = new ObjectMapper();
   
   public FilterController() {}
   
@@ -105,7 +109,19 @@ public class FilterController {
   Filter convertFilter(FilterDTO filterDTO, Map<Integer, Featuregroup> fgLookup,
     Map<Integer, List<Feature>> availableFeatureLookup) throws FeaturestoreException {
     return new Filter(Arrays.asList(findFilteredFeature(filterDTO.getFeature(), fgLookup, availableFeatureLookup)),
-      filterDTO.getCondition(), filterDTO.getValue());
+      filterDTO.getCondition(), convertFilterValue(filterDTO.getValue(), fgLookup, availableFeatureLookup));
+  }
+  
+  FilterValue convertFilterValue(String value, Map<Integer, Featuregroup> fgLookup,
+      Map<Integer, List<Feature>> availableFeatureLookup) throws FeaturestoreException {
+    
+    try {
+      FeatureGroupFeatureDTO featureDto = objectMapper.readValue(value, FeatureGroupFeatureDTO.class);
+      Feature feature = findFilteredFeature(featureDto, fgLookup, availableFeatureLookup);
+      return new FilterValue(feature.getFeatureGroup().getId(), feature.getFgAlias(), feature.getName());
+    } catch (IOException e) {
+      return new FilterValue(value);
+    }
   }
   
   Feature findFilteredFeature(FeatureGroupFeatureDTO featureDTO, Map<Integer, Featuregroup> fgLookup,
@@ -168,13 +184,14 @@ public class FilterController {
     }
 
     SqlNode filterValue;
-    Object json = new JSONTokener(filter.getValue()).nextValue();
+    Object json = new JSONTokener(filter.getValue().makeSqlValue()).nextValue();
     if (json instanceof JSONArray) {
       // Array
       List<SqlNode> operandList = new ArrayList<>();
       // Using gson, as casting "json" to JSONArray results in exception
-      for (Object item : new Gson().fromJson(filter.getValue(), List.class)) {
-        operandList.add(getSQLNode(feature.getType(), item.toString()));
+      for (Object item : new Gson().fromJson(filter.getValue().getValue(), List.class)) {
+        // Item would not be json of FeatureDTO object, so it is ok to create FilterValue from string value of item
+        operandList.add(getSQLNode(filter.getFeatures().get(0).getType(), new FilterValue(item.toString())));
       }
       filterValue = new SqlNodeList(operandList, SqlParserPos.ZERO);
     } else {
@@ -186,15 +203,22 @@ public class FilterController {
   }
   
   protected SqlNode getSQLNode(String type, String value){
+    return getSQLNode(type, new FilterValue(value));
+  }
+
+  protected SqlNode getSQLNode(String type, FilterValue value){
+    if (value.isFeatureValue()) {
+      return new SqlIdentifier(value.makeSqlValue(), SqlParserPos.ZERO);
+    }
     if (type.equalsIgnoreCase("string")) {
-      return SqlLiteral.createCharString(value, SqlParserPos.ZERO);
+      return SqlLiteral.createCharString(value.makeSqlValue(), SqlParserPos.ZERO);
     } else if (type.equalsIgnoreCase("date")) {
-      return SqlLiteral.createDate(new DateString(value), SqlParserPos.ZERO);
+      return SqlLiteral.createDate(new DateString(value.makeSqlValue()), SqlParserPos.ZERO);
     } else if (type.equalsIgnoreCase("timestamp")) {
       // precision 3 should be milliseconds since we don't support more precision in parquet files
-      return SqlLiteral.createTimestamp(new TimestampString(value), 3, SqlParserPos.ZERO);
+      return SqlLiteral.createTimestamp(new TimestampString(value.makeSqlValue()), 3, SqlParserPos.ZERO);
     } else {
-      return new SqlIdentifier(value, SqlParserPos.ZERO);
+      return new SqlIdentifier(value.makeSqlValue(), SqlParserPos.ZERO);
     }
   }
 
