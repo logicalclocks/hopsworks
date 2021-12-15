@@ -1,10 +1,8 @@
 # Password Recovery
 
-<p align="center">
   <figure>
     <a  href="../../../assets/images/auth/resetPassword.png">
-      <img width="400px" src="../../../assets/images/auth/resetPassword.png" alt="OTP">
+      <img width="400px" src="../../../assets/images/auth/resetPassword.png" alt="Recover password">
     </a>
-    <figcaption>Password reset link</figcaption>
+    <figcaption>Password reset</figcaption>
   </figure>
-</p>

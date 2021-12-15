@@ -8,35 +8,29 @@ a-z, A-Z, 0-9 and special characters ‘_’ and ‘.’ but not ‘__’ (doubl
 There are also reserved words that are not allowed in project names. A complete list of reserved words can 
 be found in section Project name reserved words.
 
-<p align="center">
   <figure>
     <a  href="../../../assets/images/project/createProject.png">
-      <img width="800px" src="../../../assets/images/project/createProject.png" alt="OTP">
+      <img src="../../../assets/images/project/createProject.png" alt="Create project">
     </a>
     <figcaption>Create project</figcaption>
   </figure>
-</p>
 
 As soon as you have created a new project and click on **Open project** in the project list, you will see the project 
 main page as illustrated in the figure Project overview.
 
-<p align="center">
   <figure>
     <a  href="../../../assets/images/project/projectList.png">
-      <img width="800px" src="../../../assets/images/project/projectList.png" alt="OTP">
+      <img src="../../../assets/images/project/projectList.png" alt="Project list">
     </a>
     <figcaption>Project list</figcaption>
   </figure>
-</p>
 
-<p align="center">
   <figure>
     <a  href="../../../assets/images/project/projectOverview.png">
-      <img width="800px" src="../../../assets/images/project/projectOverview.png" alt="OTP">
+      <img src="../../../assets/images/project/projectOverview.png" alt="Project overview">
     </a>
     <figcaption>Project overview</figcaption>
   </figure>
-</p>
 
 On the left-hand side of the project overview page is the Project Menu. On the top we have the feature store section 
 with feature groups, training datasets and storage connectors. In the middle we have the compute section 
@@ -45,14 +39,12 @@ project.
 From Settings, you can configure python libraries, alerts and integrations to other services. From the general 
 configuration you can add members, share feature store with another project and delete the project.
 
-<p align="center">
   <figure>
     <a  href="../../../assets/images/project/projectSettings.png">
-      <img width="800px" src="../../../assets/images/project/projectSettings.png" alt="OTP">
+      <img src="../../../assets/images/project/projectSettings.png" alt="Project settings">
     </a>
     <figcaption>Project Settings</figcaption>
   </figure>
-</p>
 
 On the top navigation bar next to the Hopsworks logo we find the project name. By clicking on the project name you 
 can go to other projects or back to the projects list page.

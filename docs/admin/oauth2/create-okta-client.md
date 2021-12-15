@@ -1,48 +1,55 @@
 # Create An Application in Okta
 
-<p align="center">
+This example uses an Okta development account to create an application that will represent a Hopsworks client in the 
+identity provider.
+
+To register a client go to _Applications_ and click on **Create App Integration**.
+
   <figure>
     <a  href="../../../assets/images/admin/oauth2/okta.png">
-      <img width="800px" src="../../../assets/images/admin/oauth2/okta.png" alt="OTP">
+      <img src="../../../assets/images/admin/oauth2/okta.png" alt="Okta Applications" />
     </a>
     <figcaption>Okta Applications</figcaption>
   </figure>
-</p>
 
-
-<p align="center">
+This will open a popup as shown in the figure bellow. Select **OIDC** as _Sign-in-method_ and **Web Application** as 
+_Application type_ and click next.
   <figure>
     <a  href="../../../assets/images/admin/oauth2/create-new-app.png">
-      <img width="800px" src="../../../assets/images/admin/oauth2/create-new-app.png" alt="OTP">
+      <img src="../../../assets/images/admin/oauth2/create-new-app.png" alt="Create New Application" />
     </a>
     <figcaption>Create new Application</figcaption>
   </figure>
-</p>
 
+Give your application a name and select **Client credential** as _Grant Type_. If you want to limit who can access 
+your Hopsworks cluster select _Limit access to selected groups_ and select group(s) you want to give access to. Here 
+we will allow everyone in the organization to access the cluster.
 
-<p align="center">
   <figure>
     <a  href="../../../assets/images/admin/oauth2/new-web-app.png">
-      <img width="800px" src="../../../assets/images/admin/oauth2/new-web-app.png" alt="OTP">
+      <img src="../../../assets/images/admin/oauth2/new-web-app.png" alt="New Application" />
     </a>
     <figcaption>New Application</figcaption>
   </figure>
-</p>
 
-<p align="center">
   <figure>
     <a  href="../../../assets/images/admin/oauth2/assinments.png">
-      <img width="800px" src="../../../assets/images/admin/oauth2/assignments.png" alt="OTP">
+      <img src="../../../assets/images/admin/oauth2/assignments.png" alt="Group assignment" />
     </a>
     <figcaption>Group assignment</figcaption>
   </figure>
-</p>
 
-<p align="center">
+After the application is created the _client id_ and _client secret_ are generated and can be used in the [client 
+registration](./create-client.md) in Hopsworks.
+
   <figure>
     <a  href="../../../assets/images/admin/oauth2/overview.png">
-      <img width="800px" src="../../../assets/images/admin/oauth2/overview.png" alt="OTP">
+      <img src="../../../assets/images/admin/oauth2/overview.png" alt="Application overview" />
     </a>
     <figcaption>Application overview</figcaption>
   </figure>
-</p>
+
+!!! note
+
+    When copying the domain in the figure above make sure to add the url scheme (http:// or https://) when using it 
+    in the _Connection URL_ in the [client registration form](./create-client.md).

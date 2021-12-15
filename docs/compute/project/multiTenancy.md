@@ -24,14 +24,12 @@ a Data Owner (Admin) and a Data Scientist (OnlineFS).
 The role of a member can be altered at any time from the same screen by any Data Owner by clicking on **manage 
 members** link.
 
-<p align="center">
   <figure>
     <a  href="../../../assets/images/project/addMember.png">
-      <img width="800px" src="../../../assets/images/project/addMember.png" alt="OTP">
+      <img src="../../../assets/images/project/addMember.png" alt="Add member">
     </a>
     <figcaption>Add a new member</figcaption>
   </figure>
-</p>
 
 !!! warning
     **OnlineFS** is a system user, so deleting or altering the role of this user can create problems in the online 
