@@ -15,7 +15,7 @@
 =end
 module DefaultJobConfigurationHelper
 
-  def create_project_default_job_configurations(project_id, job_type, config)
+  def create_project_default_job_configuration(project_id, job_type, config)
     put "#{ENV['HOPSWORKS_API']}/project/#{project_id}/jobconfig/#{job_type}", config
   end
 

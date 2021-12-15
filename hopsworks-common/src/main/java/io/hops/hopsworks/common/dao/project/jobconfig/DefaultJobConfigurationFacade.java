@@ -57,7 +57,7 @@ public class DefaultJobConfigurationFacade extends AbstractFacade<DefaultJobConf
     return query.getResultList();
   }
 
-  public DefaultJobConfiguration createOrUpdateDefaultJobConfig(Project project, JobConfiguration jobConfiguration,
+  public DefaultJobConfiguration createOrUpdate(Project project, JobConfiguration jobConfiguration,
                                                      JobType jobType, DefaultJobConfiguration currentConfig) {
 
     if(jobConfiguration instanceof SparkJobConfiguration) {
@@ -80,7 +80,12 @@ public class DefaultJobConfigurationFacade extends AbstractFacade<DefaultJobConf
 
     //update
     } else {
-      currentConfig.setJobConfig(jobConfiguration);
+      for(DefaultJobConfiguration dc: project.getDefaultJobConfigurationCollection()) {
+        if(dc.getDefaultJobConfigurationPK().getType().equals(jobType)) {
+          dc.setJobConfig(jobConfiguration);
+          break;
+        }
+      }
     }
 
     em.merge(project);
@@ -93,9 +98,11 @@ public class DefaultJobConfigurationFacade extends AbstractFacade<DefaultJobConf
       project.getDefaultJobConfigurationCollection();
 
     if(type.equals(JobType.PYSPARK) || type.equals(JobType.SPARK)) {
-      defaultJobConfigurationCollection.removeIf(conf -> conf.getJobConfig().getJobType().equals(JobType.PYSPARK));
+      defaultJobConfigurationCollection.removeIf(conf ->
+          conf.getDefaultJobConfigurationPK().getType().equals(JobType.PYSPARK));
     } else {
-      defaultJobConfigurationCollection.removeIf(conf -> conf.getJobConfig().getJobType().equals(type));
+      defaultJobConfigurationCollection.removeIf(conf ->
+          conf.getDefaultJobConfigurationPK().getType().equals(type));
     }
 
     em.merge(project);

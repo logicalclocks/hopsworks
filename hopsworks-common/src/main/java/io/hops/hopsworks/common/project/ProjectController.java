@@ -2830,9 +2830,10 @@ public class ProjectController {
     }
   }
 
-  public DefaultJobConfiguration setProjectDefaultJobConfiguration(Project project, JobConfiguration jobConfiguration,
-                                                            JobType jobType, DefaultJobConfiguration newConf) {
-    return projectJobConfigurationFacade.createOrUpdateDefaultJobConfig(project, jobConfiguration, jobType, newConf);
+  public DefaultJobConfiguration createOrUpdateDefaultJobConfig(Project project, JobConfiguration newConfig,
+                                                            JobType jobType, DefaultJobConfiguration currentConfig) {
+    return projectJobConfigurationFacade.createOrUpdate(project, newConfig, jobType,
+        currentConfig);
   }
 
   public void removeProjectDefaultJobConfiguration(Project project, JobType type) {

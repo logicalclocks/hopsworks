@@ -45,6 +45,14 @@ describe "On #{ENV['OS']}" do
         expect(URI(json_body[:href]).path).to eq "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/jobconfig"
       end
 
+      it "should fail to set invalid job configuration for job type parameter" do
+        flink_job_config = get_default_job_configuration(@project[:id], "flink")
+        expect_status(200)
+
+        create_project_default_job_configuration(@project[:id], "spark", flink_job_config)
+        expect_status(422)
+      end
+
       job_types = ['spark', 'pyspark', 'flink', 'python', 'docker']
       job_types.each do |type|
 
@@ -60,7 +68,7 @@ describe "On #{ENV['OS']}" do
           get_project_default_job_configuration(@project[:id], type)
           expect_status(404)
 
-          create_project_default_job_configurations(@project[:id], type, default_job_configuration)
+          create_project_default_job_configuration(@project[:id], type, default_job_configuration)
           expect_status(201)
 
           get_project_default_job_configuration(@project[:id], type)
@@ -96,7 +104,7 @@ describe "On #{ENV['OS']}" do
             default_job_configuration["command"] = "some command"
           end
 
-          create_project_default_job_configurations(@project[:id], type, default_job_configuration)
+          create_project_default_job_configuration(@project[:id], type, default_job_configuration)
           expect_status(201)
 
           project_default_job_configuration = JSON.parse(get_project_default_job_configuration(@project[:id], type))
@@ -116,6 +124,16 @@ describe "On #{ENV['OS']}" do
             expect(project_default_job_configuration["config"]["imagePath"]).to eq "someimg"
             expect(project_default_job_configuration["config"]["command"]).to eq ["some command"]
           end
+
+          project_default_job_configuration["config"]["defaultArgs"] = "updated args"
+
+          create_project_default_job_configuration(@project[:id], type, project_default_job_configuration["config"])
+          expect_status(200)
+
+          updated_project_default_job_configuration = JSON.parse(get_project_default_job_configuration(@project[:id], type))
+          expect_status(200)
+
+          expect(updated_project_default_job_configuration["config"]["defaultArgs"]).to eq "updated args"
         end
 
         it "should delete project default #{type} job configuration" do
@@ -130,7 +148,7 @@ describe "On #{ENV['OS']}" do
           get_project_default_job_configuration(@project[:id], type)
           expect_status(404)
 
-          create_project_default_job_configurations(@project[:id], type, spark_config)
+          create_project_default_job_configuration(@project[:id], type, spark_config)
           expect_status(201)
 
           delete_project_default_job_configuration(@project[:id], type)

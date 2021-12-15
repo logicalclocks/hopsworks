@@ -23,6 +23,7 @@ import io.hops.hopsworks.api.util.Pagination;
 import io.hops.hopsworks.common.api.ResourceRequest;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
 import io.hops.hopsworks.common.project.ProjectController;
+import io.hops.hopsworks.common.util.HopsUtils;
 import io.hops.hopsworks.exceptions.ProjectException;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
 import io.hops.hopsworks.persistence.entity.jobs.configuration.JobConfiguration;
@@ -137,13 +138,15 @@ public class DefaultJobConfigurationResource {
 
     Response.Status status = Response.Status.CREATED;
 
+    HopsUtils.validateJobConfigurationType(config, type);
+
     DefaultJobConfiguration currentConfig = projectController.getProjectDefaultJobConfiguration(project, type);
     if(currentConfig != null) {
       status = Response.Status.OK;
     }
 
     DefaultJobConfiguration defaultConfig =
-      projectController.setProjectDefaultJobConfiguration(this.project, config, type, currentConfig);
+      projectController.createOrUpdateDefaultJobConfig(this.project, config, type, currentConfig);
 
     DefaultJobConfigurationDTO defaultJobConfigurationDTO =
       this.defaultJobConfigurationBuilder.build(uriInfo, new ResourceRequest(ResourceRequest.Name.JOBCONFIG),
