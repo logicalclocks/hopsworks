@@ -26,7 +26,7 @@ figure bellow.
 
 !!! note
 
-    When creating a client make sure you can access the provider metadata by making a GET a request on the well known 
+    When creating a client make sure you can access the provider metadata by making a GET request on the well known 
     endpoint of the provider. The well-known URL, will typically be the _Connection URL_ plus 
     `.well-known/openid-configuration`. For the above client it would be 
     `https://dev-86723251.okta.com/.well-known/openid-configuration`.

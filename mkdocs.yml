@@ -17,7 +17,6 @@ nav:
         - Registration: compute/auth/registration.md
         - Login: compute/auth/login.md
         - Password Recovery: compute/auth/recoverPassword.md
-        - Two-Factor Authentication: compute/auth/2fa.md
         - OAuth2 Authentication: compute/auth/oauth2.md
         - Update Profile: compute/auth/updateProfile.md
       - Project:

@@ -1,9 +1,9 @@
 # Create An Application in Okta
 
 This example uses an Okta development account to create an application that will represent a Hopsworks client in the 
-identity provider.
+identity provider. To create a developer account go to [Okta developer](https://developer.okta.com/signup/).
 
-To register a client go to _Applications_ and click on **Create App Integration**.
+After creating a developer account register a client by going to _Applications_ and click on **Create App Integration**.
 
   <figure>
     <a  href="../../../assets/images/admin/oauth2/okta.png">
