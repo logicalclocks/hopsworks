@@ -164,7 +164,7 @@ public class VariablesService {
     boolean remoteAuthEnabled = remoteUserHelper.isRemoteUserAuthAvailable();
     
     List<OpenIdProvider> providers = new ArrayList<>();
-    if (remoteAuthEnabled) {
+    if (remoteAuthEnabled && settings.isOAuthEnabled()) {
       List<OauthClient> oauthClients = oauthClientFacade.findAll();
       for (OauthClient client : oauthClients) {
         String logoURI = Strings.isNullOrEmpty(client.getProviderLogoURI())? getDomain(client.getProviderURI()) :

@@ -2192,7 +2192,8 @@ public class RESTCodes {
     NOT_FOUND(0, "Not found.", Response.Status.NOT_FOUND),
     DUPLICATE_ENTRY(1, "Duplicate entry.", Response.Status.BAD_REQUEST),
     ILLEGAL_ARGUMENT(2, "Illegal argument.", Response.Status.BAD_REQUEST),
-    WRONG_CONFIG(3, "Wrong configuration.", Response.Status.PRECONDITION_FAILED);
+    WRONG_CONFIG(3, "Wrong configuration.", Response.Status.PRECONDITION_FAILED),
+    TOKEN_PARSE_EXCEPTION(4, "Token ParseException .", Response.Status.EXPECTATION_FAILED);
     
     private int code;
     private String message;

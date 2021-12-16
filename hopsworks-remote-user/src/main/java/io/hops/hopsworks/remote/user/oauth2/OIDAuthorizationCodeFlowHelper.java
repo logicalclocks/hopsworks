@@ -11,6 +11,7 @@ import com.auth0.jwt.interfaces.DecodedJWT;
 import com.google.common.base.Strings;
 import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jose.jwk.RSAKey;
+import com.nimbusds.jwt.JWTParser;
 import com.nimbusds.oauth2.sdk.AuthorizationCode;
 import com.nimbusds.oauth2.sdk.AuthorizationCodeGrant;
 import com.nimbusds.oauth2.sdk.ErrorObject;
@@ -28,6 +29,7 @@ import com.nimbusds.oauth2.sdk.id.State;
 import com.nimbusds.oauth2.sdk.pkce.CodeChallengeMethod;
 import com.nimbusds.oauth2.sdk.pkce.CodeVerifier;
 import com.nimbusds.oauth2.sdk.token.BearerAccessToken;
+import com.nimbusds.oauth2.sdk.token.RefreshToken;
 import com.nimbusds.openid.connect.sdk.AuthenticationRequest;
 import com.nimbusds.openid.connect.sdk.Nonce;
 import com.nimbusds.openid.connect.sdk.OIDCTokenResponse;
@@ -40,6 +42,7 @@ import com.nimbusds.openid.connect.sdk.claims.UserInfo;
 import com.nimbusds.openid.connect.sdk.token.OIDCTokens;
 import io.hops.hopsworks.common.dao.remote.oauth.OauthClientFacade;
 import io.hops.hopsworks.common.dao.remote.oauth.OauthLoginStateFacade;
+import io.hops.hopsworks.common.dao.remote.oauth.OauthTokenFacade;
 import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.remote.RemoteUserDTO;
 import io.hops.hopsworks.common.remote.oauth.OpenIdConstant;
@@ -50,7 +53,9 @@ import io.hops.hopsworks.jwt.SignatureAlgorithm;
 import io.hops.hopsworks.jwt.exception.VerificationException;
 import io.hops.hopsworks.persistence.entity.remote.oauth.OauthClient;
 import io.hops.hopsworks.persistence.entity.remote.oauth.OauthLoginState;
+import io.hops.hopsworks.persistence.entity.remote.oauth.OauthToken;
 import io.hops.hopsworks.persistence.entity.user.Users;
+import io.hops.hopsworks.restutils.RESTCodes;
 import net.minidev.json.JSONObject;
 
 import javax.ejb.EJB;
@@ -68,6 +73,7 @@ import java.security.interfaces.RSAPublicKey;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -88,6 +94,8 @@ public class OIDAuthorizationCodeFlowHelper {
   private Settings settings;
   @EJB
   private UserFacade userFacade;
+  @EJB
+  private OauthTokenFacade oauthTokenFacade;
   
   /**
    *
@@ -175,12 +183,11 @@ public class OIDAuthorizationCodeFlowHelper {
         .codeChallenge(codeVerifier, codeChallengeMethod)
         .endpointURI(authEndpoint)
         .build();
-    
-    URI authReqURI = authenticationRequest.toURI();
-    return authReqURI;
+    return authenticationRequest.toURI();
   }
   
-  public URI getLogoutUrl(String providerName, String redirectURI) throws URISyntaxException, RemoteAuthException {
+  public URI getLogoutUrl(String providerName, String redirectURI, Users user) throws URISyntaxException,
+    RemoteAuthException {
     OauthClient client = oauthClientFacade.findByProviderName(providerName);
     if (client == null) {
       throw new NotFoundException("Client not found.");
@@ -191,6 +198,18 @@ public class OIDAuthorizationCodeFlowHelper {
       URI logoutURI = new URI(providerConfig.getEndSessionEndpoint());
       LogoutReq.Builder logoutRequestBuilder = new LogoutReq.Builder(logoutURI, new ClientID(client.getClientId()),
         postLogoutRedirectURI).postLogoutRedirectParam(providerConfig.getLogoutRedirectParam());
+      Optional<OauthToken> optionalOauthToken = oauthTokenFacade.findByUser(user);
+      if (optionalOauthToken.isPresent()) {
+        com.nimbusds.jwt.JWT idToken;
+        try {
+          idToken = JWTParser.parse(optionalOauthToken.get().getIdToken());
+        } catch (java.text.ParseException e) {
+          LOGGER.log(Level.SEVERE, "Id token ParseException {0}.", e.getMessage());
+          throw new RemoteAuthException(RESTCodes.RemoteAuthErrorCode.TOKEN_PARSE_EXCEPTION, Level.FINE, "Id token " +
+            "ParseException.", e.getMessage());
+        }
+        logoutRequestBuilder.idTokenHint(idToken);
+      }
       return logoutRequestBuilder.build().toURI();
     }
     return null;
@@ -257,10 +276,19 @@ public class OIDAuthorizationCodeFlowHelper {
     OpenIdProviderConfig providerMetadata) throws IOException, ParseException, URISyntaxException,
     VerificationException {
     OIDCTokens token = requestToken(code, oauthLoginState, providerMetadata);
-    BearerAccessToken accessToken = token.getBearerAccessToken();
-    oauthLoginState.setToken(accessToken.getValue());
+    oauthLoginState.setIdToken(token.getIDTokenString());
+    oauthLoginState.setAccessToken(token.getBearerAccessToken() != null ? token.getBearerAccessToken().getValue() :
+      null);
+    oauthLoginState.setRefreshToken(token.getRefreshToken() != null ? token.getRefreshToken().getValue() : null);
     oauthLoginStateFacade.update(oauthLoginState);
     return token;
+  }
+  
+  public void createOAuthTokens(OIDCTokens token, Users user) {
+    if (user != null) {
+      oauthTokenFacade.updateOrCreate(user, token.getIDTokenString(), token.getBearerAccessToken().getValue(),
+        token.getRefreshToken() != null ? token.getRefreshToken().getValue() : null);
+    }
   }
   
   /**
@@ -316,17 +344,19 @@ public class OIDAuthorizationCodeFlowHelper {
    * @throws ParseException
    * @throws IOException
    */
-  public BearerAccessToken getAccessToken(String code, OauthLoginState oauthLoginState,
+  public OIDCTokens getAccessToken(String code, OauthLoginState oauthLoginState,
     OpenIdProviderConfig providerMetadata) throws URISyntaxException, VerificationException, ParseException,
     IOException {
-    BearerAccessToken accessToken;
-    if (oauthLoginState.getToken() == null) {
-      OIDCTokens token = requestTokenLogin(code, oauthLoginState, providerMetadata);
-      accessToken = token.getBearerAccessToken();
+    OIDCTokens token;
+    if (oauthLoginState.getAccessToken() == null) {
+      token = requestTokenLogin(code, oauthLoginState, providerMetadata);
     } else {
-      accessToken = new BearerAccessToken(oauthLoginState.getToken());
+      RefreshToken refreshToken =
+        oauthLoginState.getRefreshToken() != null ? new RefreshToken(oauthLoginState.getRefreshToken()) : null;
+      token = new OIDCTokens(oauthLoginState.getIdToken(), new BearerAccessToken(oauthLoginState.getAccessToken()),
+        refreshToken);
     }
-    return accessToken;
+    return token;
   }
   
   /**

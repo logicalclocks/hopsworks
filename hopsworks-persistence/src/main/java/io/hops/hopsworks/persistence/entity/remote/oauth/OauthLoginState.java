@@ -86,14 +86,16 @@ public class OauthLoginState implements Serializable {
   private String nonce;
   @Column(name = "code_challenge")
   private String codeChallenge;
-  @Basic(optional = false)
-  @NotNull
-  @Column(name = "login_time")
+  @Column(name = "login_time", nullable = false, updatable = false, insertable = false,
+    columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
   @Temporal(TemporalType.TIMESTAMP)
   private Date loginTime;
-  @Size(max = 8000)
-  @Column(name = "token")
-  private String token;
+  @Column(name = "id_token", length = 8000)
+  private String idToken;
+  @Column(name = "access_token", length = 8000)
+  private String accessToken;
+  @Column(name = "refresh_token", length = 8000)
+  private String refreshToken;
   @Basic(optional = false)
   @NotNull
   @Size(min = 1,
@@ -119,7 +121,6 @@ public class OauthLoginState implements Serializable {
     this.state = state;
     this.clientId = clientId;
     this.sessionId = sessionId;
-    this.loginTime = new Date();
     this.redirectURI = redirectURI;
     this.scopes = scopes;
   }
@@ -196,6 +197,30 @@ public class OauthLoginState implements Serializable {
     this.redirectURI = redirectURI;
   }
   
+  public String getIdToken() {
+    return idToken;
+  }
+  
+  public void setIdToken(String idToken) {
+    this.idToken = idToken;
+  }
+  
+  public String getAccessToken() {
+    return accessToken;
+  }
+  
+  public void setAccessToken(String accessToken) {
+    this.accessToken = accessToken;
+  }
+  
+  public String getRefreshToken() {
+    return refreshToken;
+  }
+  
+  public void setRefreshToken(String refreshToken) {
+    this.refreshToken = refreshToken;
+  }
+  
   @Override
   public int hashCode() {
     int hash = 0;
@@ -219,14 +244,6 @@ public class OauthLoginState implements Serializable {
   @Override
   public String toString() {
     return "io.hops.hopsworks.persistence.entity.remote.oauth.OauthLoginState[ id=" + id + " ]";
-  }
-
-  public String getToken() {
-    return token;
-  }
-
-  public void setToken(String token) {
-    this.token = token;
   }
   
 }

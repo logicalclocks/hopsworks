@@ -5,7 +5,7 @@ package io.hops.hopsworks.remote.user.oauth2;
 
 import com.google.common.base.Strings;
 import com.nimbusds.oauth2.sdk.ParseException;
-import com.nimbusds.oauth2.sdk.token.BearerAccessToken;
+import com.nimbusds.openid.connect.sdk.token.OIDCTokens;
 import io.hops.hopsworks.common.dao.remote.oauth.OauthClientFacade;
 import io.hops.hopsworks.common.dao.remote.oauth.OauthLoginStateFacade;
 import io.hops.hopsworks.common.dao.remote.user.RemoteUserFacade;
@@ -84,11 +84,12 @@ public class OAuthController {
     OauthClient client = oauthLoginState.getClientId();
   
     RemoteUserDTO remoteUserDTO;
+    OIDCTokens oidcTokens;
     try {
       OpenIdProviderConfig providerConfig = oidAuthorizationCodeFlowHelper.getOpenIdProviderConfig(client, false);
-      BearerAccessToken
-        accessToken = oidAuthorizationCodeFlowHelper.getAccessToken(code, oauthLoginState, providerConfig);
-      remoteUserDTO = oidAuthorizationCodeFlowHelper.getRemoteUser(accessToken, providerConfig, client);
+      oidcTokens = oidAuthorizationCodeFlowHelper.getAccessToken(code, oauthLoginState, providerConfig);
+      remoteUserDTO = oidAuthorizationCodeFlowHelper.getRemoteUser(oidcTokens.getBearerAccessToken(), providerConfig,
+        client);
     } catch (URISyntaxException | VerificationException | IOException | ParseException e) {
       LOGGER.log(Level.SEVERE, "Error getting user info from {0}: {1}",
         new Object[]{client.getProviderName(), e.getMessage()});
@@ -99,13 +100,15 @@ public class OAuthController {
         UserAccountStatus.fromValue(settings.getOAuthAccountStatus()));
     if (remoteUserStateDTO.isSaved()) {
       oauthLoginStateFacade.remove(oauthLoginState);
+      oidAuthorizationCodeFlowHelper.createOAuthTokens(oidcTokens, remoteUserStateDTO.getRemoteUser().getUid());
     }
     return remoteUserStateDTO;
   }
   
-  public URI getLogoutURI(String providerName, String redirectURI) throws UserException, RemoteAuthException {
+  public URI getLogoutURI(String providerName, String redirectURI, Users user) throws UserException,
+    RemoteAuthException {
     try {
-      return oidAuthorizationCodeFlowHelper.getLogoutUrl(providerName, redirectURI);
+      return oidAuthorizationCodeFlowHelper.getLogoutUrl(providerName, redirectURI, user);
     } catch (URISyntaxException e) {
       String errorMsg = "Failed to logout from " + providerName + ". " + e.getMessage();
       throw new UserException(RESTCodes.UserErrorCode.LOGOUT_FAILURE, Level.SEVERE, errorMsg, errorMsg, e);

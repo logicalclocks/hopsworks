@@ -236,14 +236,15 @@ public class AuthResource {
   @Path("logout")
   @Produces(MediaType.APPLICATION_JSON)
   public Response logout(@QueryParam("providerName") String providerName,
-    @QueryParam("redirect_uri") String redirectUri, @Context HttpServletRequest req) throws UserException,
-    InvalidationException, RemoteAuthException {
+    @QueryParam("redirect_uri") String redirectUri, @Context HttpServletRequest req)
+    throws UserException, InvalidationException, RemoteAuthException {
+    Users user = jWTHelper.getUserPrincipal(req);
     logoutAndInvalidateSession(req);
     if (settings.isOAuthEnabled() && !Strings.isNullOrEmpty(providerName)) {
       if (!Strings.isNullOrEmpty(settings.getManagedCloudRedirectUri()) || Strings.isNullOrEmpty(redirectUri)) {
         redirectUri = settings.getOauthLogoutRedirectUri();
       }
-      URI uri = oAuthController.getLogoutURI(providerName, redirectUri);
+      URI uri = oAuthController.getLogoutURI(providerName, redirectUri, user);
       if (uri != null) {
         return Response.ok(uri).build();
       }
