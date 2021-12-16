@@ -19,12 +19,14 @@ package io.hops.hopsworks.common.dao.project.jobconfig;
 import io.hops.hopsworks.common.dao.AbstractFacade;
 import io.hops.hopsworks.common.dao.jobs.description.JobFacade;
 import io.hops.hopsworks.common.util.Settings;
+import io.hops.hopsworks.exceptions.ProjectException;
 import io.hops.hopsworks.persistence.entity.jobs.configuration.DefaultJobConfigurationPK;
 import io.hops.hopsworks.persistence.entity.jobs.configuration.JobConfiguration;
 import io.hops.hopsworks.persistence.entity.jobs.configuration.JobType;
 import io.hops.hopsworks.persistence.entity.jobs.configuration.spark.SparkJobConfiguration;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.project.jobs.DefaultJobConfiguration;
+import io.hops.hopsworks.restutils.RESTCodes;
 
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
@@ -35,6 +37,7 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.logging.Level;
 
 @Stateless
 public class DefaultJobConfigurationFacade extends AbstractFacade<DefaultJobConfiguration> {
@@ -57,8 +60,9 @@ public class DefaultJobConfigurationFacade extends AbstractFacade<DefaultJobConf
     return query.getResultList();
   }
 
-  public DefaultJobConfiguration createOrUpdate(Project project, JobConfiguration jobConfiguration,
-                                                     JobType jobType, DefaultJobConfiguration currentConfig) {
+  public DefaultJobConfiguration createOrUpdate(Project project, JobConfiguration jobConfiguration, JobType jobType,
+                                                DefaultJobConfiguration currentConfig)
+      throws ProjectException {
 
     if(jobConfiguration instanceof SparkJobConfiguration) {
       ((SparkJobConfiguration) jobConfiguration).setMainClass(Settings.SPARK_PY_MAINCLASS);
@@ -77,20 +81,19 @@ public class DefaultJobConfigurationFacade extends AbstractFacade<DefaultJobConf
       currentConfig.setJobConfig(jobConfiguration);
 
       project.getDefaultJobConfigurationCollection().add(currentConfig);
-
+      em.merge(project);
+      return currentConfig;
     //update
     } else {
       for(DefaultJobConfiguration dc: project.getDefaultJobConfigurationCollection()) {
         if(dc.getDefaultJobConfigurationPK().getType().equals(jobType)) {
           dc.setJobConfig(jobConfiguration);
-          break;
+          em.merge(project);
+          return dc;
         }
       }
+      throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_DEFAULT_JOB_CONFIG_NOT_FOUND, Level.FINEST);
     }
-
-    em.merge(project);
-
-    return currentConfig;
   }
 
   public void removeDefaultJobConfig(Project project, JobType type) {

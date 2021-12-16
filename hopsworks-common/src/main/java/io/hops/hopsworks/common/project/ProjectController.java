@@ -2831,7 +2831,8 @@ public class ProjectController {
   }
 
   public DefaultJobConfiguration createOrUpdateDefaultJobConfig(Project project, JobConfiguration newConfig,
-                                                            JobType jobType, DefaultJobConfiguration currentConfig) {
+                                                            JobType jobType, DefaultJobConfiguration currentConfig)
+      throws ProjectException {
     return projectJobConfigurationFacade.createOrUpdate(project, newConfig, jobType,
         currentConfig);
   }

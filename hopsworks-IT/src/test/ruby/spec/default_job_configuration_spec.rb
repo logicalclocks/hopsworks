@@ -127,8 +127,10 @@ describe "On #{ENV['OS']}" do
 
           project_default_job_configuration["config"]["defaultArgs"] = "updated args"
 
-          create_project_default_job_configuration(@project[:id], type, project_default_job_configuration["config"])
+          updated_project_default_job_configuration = JSON.parse(create_project_default_job_configuration(@project[:id], type, project_default_job_configuration["config"]))
           expect_status(200)
+          
+          expect(updated_project_default_job_configuration["config"]["defaultArgs"]).to eq "updated args"
 
           updated_project_default_job_configuration = JSON.parse(get_project_default_job_configuration(@project[:id], type))
           expect_status(200)
