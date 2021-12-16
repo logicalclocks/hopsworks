@@ -189,7 +189,7 @@ public class RESTCodes {
     PROJECT_DOCKER_VERSION_EXTRACT_ERROR(76,
         "Failed to extract the hopsworks version of the docker image for this project.",
         Response.Status.INTERNAL_SERVER_ERROR),
-    PROJECT_DEFAULT_JOB_CONFIG_NOT_FOUND(77, "Default job config not defined",
+    PROJECT_DEFAULT_JOB_CONFIG_NOT_FOUND(77, "Default job config not found",
       Response.Status.NOT_FOUND),
     ALERT_NOT_FOUND(78, "Alert not found", Response.Status.NOT_FOUND),
     ALERT_ILLEGAL_ARGUMENT(79, "Alert missing argument.", Response.Status.BAD_REQUEST),

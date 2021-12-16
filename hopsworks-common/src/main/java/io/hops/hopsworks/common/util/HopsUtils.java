@@ -41,6 +41,11 @@ package io.hops.hopsworks.common.util;
 
 import io.hops.hopsworks.persistence.entity.certificates.UserCerts;
 import io.hops.hopsworks.persistence.entity.hdfs.inode.Inode;
+import io.hops.hopsworks.persistence.entity.jobs.configuration.DockerJobConfiguration;
+import io.hops.hopsworks.persistence.entity.jobs.configuration.JobConfiguration;
+import io.hops.hopsworks.persistence.entity.jobs.configuration.flink.FlinkJobConfiguration;
+import io.hops.hopsworks.persistence.entity.jobs.configuration.python.PythonJobConfiguration;
+import io.hops.hopsworks.persistence.entity.jobs.configuration.spark.SparkJobConfiguration;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.hdfs.FsPermissions;
@@ -373,6 +378,27 @@ public class HopsUtils {
       }
     }
     return true;
+  }
+
+  /**
+   * Check that JobConfiguration class matches the supplied JobType enum.
+   * @param jobConf
+   * @param jobType
+   */
+  public static void validateJobConfigurationType(JobConfiguration jobConf, JobType jobType) {
+
+    if((jobType.equals(JobType.SPARK) || jobType.equals(JobType.PYSPARK)) && jobConf instanceof SparkJobConfiguration) {
+      return;
+    } else if(jobType.equals(JobType.FLINK) && jobConf instanceof FlinkJobConfiguration) {
+      return;
+    } else if(jobType.equals(JobType.DOCKER) && jobConf instanceof DockerJobConfiguration) {
+      return;
+    } else if(jobType.equals(JobType.PYTHON) && jobConf instanceof PythonJobConfiguration) {
+      return;
+    } else {
+      throw new IllegalArgumentException("Job type: " + jobType + " does not match class instance found " +
+          jobConf.getClass());
+    }
   }
 
   private static Key generateKey(String userKey, String masterKey) {
