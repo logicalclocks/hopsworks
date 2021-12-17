@@ -2,7 +2,7 @@
 
 When you log in to Hopsworks for the first time you will be presented with a landing page as shown in the figure bellow.
 From the landing page you can either create a new project or start with a demo project.
-The demo project is a place to start if you are new to Hopsworks.
+The demo project is a good place to start if you are new to Hopsworks.
   <figure>
     <a  href="../../../assets/images/project/landing-page.png">
       <img alt="landing page" src="../../../assets/images/project/landing-page.png">

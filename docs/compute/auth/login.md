@@ -1,6 +1,6 @@
 # Login to Hopsworks
 
-To login use your email and password.
+After your account is validated by an administrator you can use your email and password to login.
 
   <figure>
     <a  href="../../../assets/images/auth/login.png">
@@ -30,6 +30,6 @@ Upon successful login, you will arrive at the landing page:
     <figcaption>Landing page</figcaption>
   </figure>
 
-In the landing page, you will find two buttons. Use these buttons to create either a 
+In the landing page, you will find two buttons. Use these buttons to either create a 
 [demo project](../project/demoProject.md) or  [a new project](../project/createProject.md).
 
