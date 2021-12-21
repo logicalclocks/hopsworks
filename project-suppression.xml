@@ -145,6 +145,7 @@
    ]]></notes>
     <packageUrl regex="true">^pkg:maven/org\.apache\.logging\.log4j/log4j\-core@.*$</packageUrl>
     <cve>CVE-2021-44228</cve>
+    <cve>CVE-2021-45046</cve>
   </suppress>
   <suppress>
     <notes><![CDATA[
@@ -152,6 +153,7 @@
    ]]></notes>
     <packageUrl regex="true">^pkg:maven/org\.apache\.logging\.log4j/log4j\-api@.*$</packageUrl>
     <cve>CVE-2021-44228</cve>
+    <cve>CVE-2021-45046</cve>
   </suppress>
   <suppress>
     <notes><![CDATA[
@@ -159,6 +161,7 @@
    ]]></notes>
     <packageUrl regex="true">^pkg:maven/org\.apache\.logging\.log4j/log4j\-1\.2\-api@.*$</packageUrl>
     <cve>CVE-2021-44228</cve>
+    <cve>CVE-2021-45046</cve>
   </suppress>
   <suppress>
     <notes><![CDATA[
@@ -166,6 +169,7 @@
    ]]></notes>
     <packageUrl regex="true">^pkg:maven/org\.apache\.logging\.log4j/log4j\-slf4j\-impl@.*$</packageUrl>
     <cve>CVE-2021-44228</cve>
+    <cve>CVE-2021-45046</cve>
   </suppress>
   <suppress>
     <notes><![CDATA[
