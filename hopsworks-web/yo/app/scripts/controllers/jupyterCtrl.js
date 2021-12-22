@@ -88,6 +88,19 @@ angular.module('hopsWorksApp')
                             .then(function (success) {}, function (error) {});
             };
 
+            self.init = function () {
+                ProjectService.get({}, {'id': self.projectId}).$promise.then(
+                    function (success) {
+                        self.projectName = success.projectName;
+                        self.loadSettings();
+                    }, function (error) {
+                        growl.error(error.data.errorMsg, {
+                            title: 'Failed to fetch the name of the project',
+                            ttl: 15000
+                        });
+                });
+            };
+
             self.job = {
                 'type': '',
                 'name': '',
@@ -228,7 +241,7 @@ angular.module('hopsWorksApp')
                     var datasetSplit = self.selected.name.split('::');
                     self.jupyterSettings.baseDir = '/Projects/' + datasetSplit[0] + '/' + datasetSplit[1];
                 } else {
-                    self.jupyterSettings.baseDir = '/Projects/' + self.jupyterSettings.project.name + self.selected.name;
+                    self.jupyterSettings.baseDir = '/Projects/' + self.projectName + self.selected.name;
                 }
             };
 
@@ -405,7 +418,6 @@ angular.module('hopsWorksApp')
                 self.getJobConfiguration("SPARK");
                 $scope.settings = self.jupyterSettings;
                 $scope.jobConfig = self.jupyterSettings.jobConfig;
-                self.projectName = self.jupyterSettings.project.name;
 
                 dataSetService.getAllDatasets(undefined, 0, 1000, ['name:asc'], ['shared:true', 'accepted:true'], "DATASET")
                     .then(function (success) {
@@ -424,10 +436,10 @@ angular.module('hopsWorksApp')
                                 self.dirs.push({id: 3 + i, name: success.data.items[i].name});
                             }
                         }
-                        if(self.jupyterSettings.baseDir === '/Projects/' + self.jupyterSettings.project.name + '/') {
+                        if(self.jupyterSettings.baseDir === '/Projects/' + self.projectName + '/') {
                             //If started Jupyter from Project root folder
                             self.selected = self.dirs[0];
-                        } else if(self.jupyterSettings.baseDir === '/Projects/' + self.jupyterSettings.project.name + '/Jupyter') {
+                        } else if(self.jupyterSettings.baseDir === '/Projects/' + self.projectName + '/Jupyter') {
                             //If started Jupyter from Project Jupyter folder
                             self.selected = self.dirs[1];
                         } else {
@@ -506,7 +518,7 @@ angular.module('hopsWorksApp')
                 }
             };
 
-            var init = function() {
+            self.loadSettings = function() {
                 JupyterService.running(self.projectId).then(
                     function(success) {
                         self.config = success.data;
@@ -598,7 +610,7 @@ angular.module('hopsWorksApp')
                 $scope.tgState = true;
             };
 
-            init();
+            self.init();
 
             self.navigateToPython = function() {
                 $location.path('project/' + self.projectId + '/python');
