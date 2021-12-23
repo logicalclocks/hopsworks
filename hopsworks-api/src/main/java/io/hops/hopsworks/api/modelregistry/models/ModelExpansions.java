@@ -16,6 +16,7 @@
 
 package io.hops.hopsworks.api.modelregistry.models;
 
+import io.hops.hopsworks.api.modelregistry.models.provenance.ModelTrainingDatasetResourceRequest;
 import io.hops.hopsworks.common.api.Expansions;
 import io.hops.hopsworks.common.api.ResourceRequest;
 
@@ -31,11 +32,17 @@ public class ModelExpansions implements Expansions {
       name = ResourceRequest.Name.valueOf(queryParam.toUpperCase());
     }
     switch (name) {
+      case TRAININGDATASETS:
+        resourceRequest = new ModelTrainingDatasetResourceRequest(name, queryParam);
+        break;
       case MODELSCHEMA:
         resourceRequest = new ModelSchemaResourceRequest(name, queryParam);
         break;
       case INPUTEXAMPLE:
         resourceRequest = new ModelInputExampleResourceRequest(name, queryParam);
+        break;
+      case TAGS:
+        resourceRequest = new ResourceRequest(name);
         break;
       default:
         break;

@@ -23,6 +23,7 @@ import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.hdfs.DistributedFsService;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
 import io.hops.hopsworks.common.hdfs.Utils;
+import io.hops.hopsworks.common.provenance.state.dto.ProvStateDTO;
 import io.hops.hopsworks.common.python.environment.EnvironmentController;
 import io.hops.hopsworks.common.util.AccessController;
 import io.hops.hopsworks.common.util.Settings;
@@ -38,6 +39,7 @@ import io.hops.hopsworks.persistence.entity.dataset.Dataset;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.restutils.RESTCodes;
+import org.json.JSONObject;
 
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
@@ -66,6 +68,8 @@ public class ModelUtils {
   private ModelsController modelsController;
   @EJB
   private EnvironmentController environmentController;
+  @EJB
+  private ModelConverter modelConverter;
 
   public String getModelsDatasetPath(Project userProject, Project modelRegistryProject) {
     String modelsPath = Utils.getProjectPath(userProject.getName()) + Settings.HOPS_MODELS_DATASET + "/";
@@ -147,8 +151,7 @@ public class ModelUtils {
             modelDTO.getName(), modelDTO.getVersion()));
       //Export environment to correct path here
       modelDTO.setEnvironment(environmentController.exportEnv(accessor.experimentProject, accessor.user,
-          Utils.getProjectPath(accessor.modelProject.getName()) +
-              Settings.HOPS_MODELS_DATASET + "/" + modelDTO.getName() + "/" + modelDTO.getVersion() +
+          getModelFullPath(accessor.modelProject, modelDTO.getName(), modelDTO.getVersion()) +
               "/" + Settings.ENVIRONMENT_FILE
       ));
     }
@@ -158,5 +161,15 @@ public class ModelUtils {
     modelsController.attachModel(accessor.udfso, accessor.modelProject, realName, modelDTO);
     UriBuilder builder = uriInfo.getAbsolutePathBuilder().path(mlId);
     return Response.created(builder.build()).entity(modelDTO).build();
+  }
+
+  public String getModelFullPath(Project modelRegistryProject, String modelName, Integer modelVersion) {
+    return Utils.getProjectPath(modelRegistryProject.getName()) +
+        Settings.HOPS_MODELS_DATASET + "/" + modelName + "/" + modelVersion;
+  }
+
+  public ModelDTO convertProvenanceHitToModel(ProvStateDTO model) throws ModelRegistryException {
+    JSONObject summary = new JSONObject(model.getXattrs().get(ModelsBuilder.MODEL_SUMMARY_XATTR_NAME));
+    return modelConverter.unmarshalDescription(summary.toString());
   }
 }

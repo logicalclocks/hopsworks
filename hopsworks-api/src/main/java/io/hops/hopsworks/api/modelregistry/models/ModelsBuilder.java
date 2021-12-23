@@ -19,6 +19,7 @@ import io.hops.hopsworks.api.dataset.inode.InodeBuilder;
 import io.hops.hopsworks.api.dataset.inode.InodeDTO;
 import io.hops.hopsworks.api.modelregistry.dto.ModelRegistryDTO;
 import io.hops.hopsworks.api.modelregistry.models.dto.ModelDTO;
+import io.hops.hopsworks.api.modelregistry.models.tags.ModelTagsBuilder;
 import io.hops.hopsworks.common.api.ResourceRequest;
 import io.hops.hopsworks.common.dao.AbstractFacade;
 import io.hops.hopsworks.common.dao.hdfsUser.HdfsUsersFacade;
@@ -51,7 +52,6 @@ import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.restutils.RESTCodes;
 import org.elasticsearch.search.sort.SortOrder;
 import org.javatuples.Pair;
-import org.json.JSONObject;
 
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
@@ -75,8 +75,6 @@ public class ModelsBuilder {
   @EJB
   private ProvStateController provenanceController;
   @EJB
-  private ModelConverter modelConverter;
-  @EJB
   private Settings settings;
   @EJB
   private UserFacade userFacade;
@@ -98,6 +96,8 @@ public class ModelsBuilder {
   private DatasetHelper datasetHelper;
   @EJB
   private ModelUtils modelUtils;
+  @EJB
+  private ModelTagsBuilder tagsBuilder;
   
   public ModelDTO uri(ModelDTO dto, UriInfo uriInfo, Project userProject, Project modelRegistryProject) {
     dto.setHref(uriInfo.getBaseUriBuilder()
@@ -199,8 +199,7 @@ public class ModelsBuilder {
     if (expand(modelDTO, resourceRequest).isExpand()) {
       if (fileProvenanceHit.getXattrs() != null
         && fileProvenanceHit.getXattrs().containsKey(MODEL_SUMMARY_XATTR_NAME)) {
-        JSONObject summary = new JSONObject(fileProvenanceHit.getXattrs().get(MODEL_SUMMARY_XATTR_NAME));
-        ModelDTO modelSummary = modelConverter.unmarshalDescription(summary.toString());
+        ModelDTO modelSummary = modelUtils.convertProvenanceHitToModel(fileProvenanceHit);
         modelDTO.setId(fileProvenanceHit.getMlId());
         modelDTO.setName(modelSummary.getName());
         modelDTO.setVersion(modelSummary.getVersion());
@@ -210,6 +209,8 @@ public class ModelsBuilder {
         modelDTO.setDescription(modelSummary.getDescription());
         modelDTO.setProgram(modelSummary.getProgram());
         modelDTO.setFramework(modelSummary.getFramework());
+        modelDTO.setTags(tagsBuilder.build(uriInfo, resourceRequest, user, userProject, modelRegistryProject,
+            modelSummary));
 
         String modelVersionPath = modelsFolder + "/" + modelDTO.getName() + "/" + modelDTO.getVersion() + "/";
 
@@ -240,6 +241,7 @@ public class ModelsBuilder {
         modelDTO.setExperimentId(modelSummary.getExperimentId());
         modelDTO.setExperimentProjectName(modelSummary.getExperimentProjectName());
         modelDTO.setProjectName(modelSummary.getProjectName());
+        modelDTO.setModelRegistryId(modelRegistryProject.getId());
       }
     }
     return modelDTO;
