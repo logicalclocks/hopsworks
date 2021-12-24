@@ -49,6 +49,8 @@ import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import java.io.IOException;
 import java.sql.Timestamp;
+import java.util.Locale;
+import java.util.UUID;
 import java.util.logging.Level;
 
 @Stateless
@@ -96,6 +98,13 @@ public class CodeController {
         return readNotebookContent(project, user, path, format);
       case PY:
         return readPythonFileContent(project, user, path);
+      case DBC:
+        // For DBC (databricks archive) we read the ipynb version of the file instead so that
+        // we can display it in the UI.
+        return readNotebookContent(project, user,
+            path.replace("." + CodeContentFormat.DBC.toString().toLowerCase(),
+                "." + CodeContentFormat.IPYNB.toString().toLowerCase(Locale.ROOT)),
+            format);
     }
 
     return null;
@@ -126,10 +135,12 @@ public class CodeController {
 
   public FeaturestoreCode registerCode(Project project, Users user, Long codeCommitTimeStamp,
                                        Long fgCommitId, String applicationId, Featuregroup featuregroup,
-                                       String entityId, CodeActions.RunType type)
-          throws FeaturestoreException, ServiceException {
+                                       String entityId, String databricksNotebook, byte[] databricksArchive,
+                                       CodeActions.RunType type)
+      throws ServiceException, FeaturestoreException {
 
-    Inode codeInode = saveCode(project, user, applicationId, featuregroup, entityId, type);
+    Inode codeInode = saveCode(project, user, applicationId, featuregroup, entityId,
+        databricksNotebook, databricksArchive, type);
 
     Timestamp commitTime = new Timestamp(codeCommitTimeStamp);
     FeaturestoreCode featurestoreCode = new FeaturestoreCode(commitTime, codeInode, featuregroup, applicationId);
@@ -146,10 +157,12 @@ public class CodeController {
 
   public FeaturestoreCode registerCode(Project project, Users user, Long codeCommitTimeStamp,
                                        String applicationId, TrainingDataset trainingDataset,
-                                       String entityId, CodeActions.RunType type)
+                                       String entityId, String databricksNotebook, byte[] databricksArchive,
+                                       CodeActions.RunType type)
           throws ServiceException, FeaturestoreException {
 
-    Inode codeInode = saveCode(project, user, applicationId, trainingDataset, entityId, type);
+    Inode codeInode = saveCode(project, user, applicationId, trainingDataset, entityId,
+        databricksNotebook, databricksArchive, type);
 
     Timestamp commitTime = new Timestamp(codeCommitTimeStamp);
     FeaturestoreCode featurestoreCode = new FeaturestoreCode(commitTime, codeInode, trainingDataset, applicationId);
@@ -159,17 +172,20 @@ public class CodeController {
 
   private Inode saveCode(Project project, Users user, String applicationId,
                          Featuregroup featureGroup, String entityId,
+                         String databricksNotebook, byte[] databricksArchive,
                          CodeActions.RunType type)
           throws ServiceException, FeaturestoreException {
 
     Path datasetDir = new Path(Utils.getFeaturestorePath(project, settings));
     String datasetName = Utils.getFeaturegroupName(featureGroup);
 
-    return saveCode(project, user, applicationId, entityId, datasetDir, datasetName, type);
+    return saveCode(project, user, applicationId, entityId, datasetDir, datasetName,
+        databricksNotebook, databricksArchive, type);
   }
 
   private Inode saveCode(Project project, Users user, String applicationId,
                          TrainingDataset trainingDataset, String entityId,
+                         String databricksNotebook, byte[] databricksArchive,
                          CodeActions.RunType type)
           throws ServiceException, FeaturestoreException {
 
@@ -177,11 +193,13 @@ public class CodeController {
             project.getName() + "_" + Settings.ServiceDataset.TRAININGDATASETS.getName());
     String datasetName = Utils.getTrainingDatasetName(trainingDataset);
 
-    return saveCode(project, user, applicationId, entityId, datasetDir, datasetName, type);
+    return saveCode(project, user, applicationId, entityId, datasetDir,
+        datasetName, databricksNotebook, databricksArchive, type);
   }
 
   private Inode saveCode(Project project, Users user, String applicationId,
                          String entityId, Path datasetDir, String datasetName,
+                         String databricksNotebook, byte[] databricksArchive,
                          CodeActions.RunType type)
           throws ServiceException, FeaturestoreException {
 
@@ -197,6 +215,9 @@ public class CodeController {
         break;
       case JOB:
         filePath = saveJob(project, user, entityId, dirPath, applicationId);
+        break;
+      case DATABRICKS:
+        filePath = saveDatabricks(project, user, dirPath, databricksNotebook, databricksArchive);
         break;
       default:
         throw new NotImplementedException();
@@ -218,7 +239,7 @@ public class CodeController {
 
     // generate file path
     String extension = Utils.getExtension(appPath).orElse("");
-    Path path = new Path(dirPath, applicationId + extension);
+    Path path = new Path(dirPath, applicationId + "." + extension);
 
     // read job and save to file path
     String projectUsername = hdfsUsersController.getHdfsUserName(project, user);
@@ -227,6 +248,7 @@ public class CodeController {
       udfso = dfs.getDfsOps(projectUsername);
       String notebookString = udfso.cat(appPath);
       udfso.create(path, notebookString);
+
     } catch (IOException e){
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.CODE_READ_ERROR,
               Level.WARNING, e.getMessage(), e.getMessage(), e);
@@ -235,5 +257,29 @@ public class CodeController {
     }
 
     return path;
+  }
+
+  public Path saveDatabricks(Project project, Users user, Path dirPath,
+                             String databricksNotebook, byte[] databricksArchive)
+      throws FeaturestoreException {
+    //Save contents
+    String uuid = UUID.randomUUID().toString();
+    Path notebookPath = new Path(dirPath, uuid + "." + CodeContentFormat.IPYNB.toString().toLowerCase());
+    Path archivePath = new Path(dirPath, uuid + "." + CodeContentFormat.DBC.toString().toLowerCase());
+
+    String projectUsername = hdfsUsersController.getHdfsUserName(project, user);
+    DistributedFileSystemOps udfso = null;
+    try {
+      udfso = dfs.getDfsOps(projectUsername);
+      udfso.create(notebookPath, databricksNotebook);
+      udfso.create(archivePath, databricksArchive);
+    } catch (IOException e) {
+      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ERROR_SAVING_CODE,
+          Level.WARNING, e.getMessage(), e.getMessage(), e);
+    } finally {
+      dfs.closeDfsClient(udfso);
+    }
+
+    return notebookPath;
   }
 }

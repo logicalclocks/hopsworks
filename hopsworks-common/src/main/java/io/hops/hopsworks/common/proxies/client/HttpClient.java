@@ -136,6 +136,22 @@ public class HttpClient {
     }
   }
 
+  public static class ByteResponseHandler implements ResponseHandler<byte[]> {
+    @Override
+    public byte[] handleResponse(HttpResponse response) throws ClientProtocolException, IOException {
+      byte[] responseByte = EntityUtils.toByteArray(response.getEntity());
+      if (response.getStatusLine().getStatusCode() / 100 == 2) {
+        return responseByte;
+      } else if (response.getStatusLine().getStatusCode() / 100 == 5) {
+        String responseJson = EntityUtils.toString(response.getEntity(), Charset.defaultCharset());
+        throw new IOException(responseJson);
+      } else {
+        String responseJson = EntityUtils.toString(response.getEntity(), Charset.defaultCharset());
+        throw new NotRetryableClientProtocolException(responseJson);
+      }
+    }
+  }
+
   public static class NoBodyResponseHandler<T> implements ResponseHandler<T> {
 
     public NoBodyResponseHandler() {

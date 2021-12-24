@@ -48,80 +48,80 @@ module FeatureStoreCodeHelper
   def save_notebook(application_id, dataset_type)
     settings = get_settings(@project)
 
-	#start notebook
-	json_result = post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/jupyter/start", JSON(settings)
-	expect_status_details(200)
-	jupyter_project = JSON.parse(json_result)
-	port = jupyter_project["port"]
-	token = jupyter_project["token"]
+		#start notebook
+		json_result = post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/jupyter/start", JSON(settings)
+		expect_status_details(200)
+		jupyter_project = JSON.parse(json_result)
+		port = jupyter_project["port"]
+		token = jupyter_project["token"]
 
-	#save header
-	bearer = ""
-	Airborne.configure do |config|
-	  bearer = config.headers["Authorization"]
-	  config.headers["Authorization"] = "token #{token}"
-	end
-	
-	#add code content
-	temp_name = create_notebook(port)
-	update_notebook(port, get_code_content, temp_name)
-	  
-	#create a session for the notebook
-	session_id, kernel_id = create_notebook_session(port, temp_name, temp_name)
-	
-	#reset header
-	Airborne.configure do |config|
-	  config.headers["Authorization"] = bearer
-	end
+		#save header
+		bearer = ""
+		Airborne.configure do |config|
+		  bearer = config.headers["Authorization"]
+		  config.headers["Authorization"] = "token #{token}"
+		end
 
-	#create featuregroup/training dataset
-	featurestore_id = get_featurestore_id(@project.id)
-	parsed_json = create_dataset(featurestore_id, dataset_type)
-	
-	#save code
-	dataset_id = parsed_json["id"]
-	parsed_json = save_code(featurestore_id, dataset_type, dataset_id, kernel_id, "JUPYTER", application_id)
-	  
-	stop_jupyter(@project)
-	
-	return parsed_json, featurestore_id, dataset_id
+		#add code content
+		temp_name = create_notebook(port)
+		update_notebook(port, get_code_content, temp_name)
+
+		#create a session for the notebook
+		_, kernel_id = create_notebook_session(port, temp_name, temp_name)
+
+		#reset header
+		Airborne.configure do |config|
+		  config.headers["Authorization"] = bearer
+		end
+
+		#create featuregroup/training dataset
+		featurestore_id = get_featurestore_id(@project.id)
+		parsed_json = create_dataset(featurestore_id, dataset_type)
+
+		#save code
+		dataset_id = parsed_json["id"]
+		parsed_json = save_code(featurestore_id, dataset_type, dataset_id, kernel_id, "JUPYTER", application_id)
+
+		stop_jupyter(@project)
+
+		return parsed_json, featurestore_id, dataset_id
   end
   
   def save_job(application_id, dataset_type)
-	#update tour project by adding services
-	new_project = {description:"", status: 0, services: ["JOBS","JUPYTER","HIVE","KAFKA","SERVING", "FEATURESTORE"],
-		   projectTeam:[], retentionPeriod: ""}
-	put "#{ENV['HOPSWORKS_API']}/project/#{@project.id}", new_project
+		#update tour project by adding services
+		new_project = {description:"", status: 0, services: ["JOBS","JUPYTER","HIVE","KAFKA","SERVING", "FEATURESTORE"],
+			   projectTeam:[], retentionPeriod: ""}
+		put "#{ENV['HOPSWORKS_API']}/project/#{@project.id}", new_project
 
-	#create featuregroup/training dataset
-	featurestore_id = get_featurestore_id(@project.id)
-	parsed_json = create_dataset(featurestore_id, dataset_type)
-  
-	#create job
-	job_spark_1 = "demo_job_1"
-	create_sparktour_job(@project, job_spark_1, "jar", nil)
-	expect_status(201)
-	
-	#save code
-	dataset_id = parsed_json["id"]
-	return save_code(featurestore_id, dataset_type, dataset_id, job_spark_1, "JOB", application_id), featurestore_id, dataset_id
+		#create featuregroup/training dataset
+		featurestore_id = get_featurestore_id(@project.id)
+		parsed_json = create_dataset(featurestore_id, dataset_type)
+
+		#create job
+		job_spark_1 = "demo_job_1"
+		create_sparktour_job(@project, job_spark_1, "jar", nil)
+		expect_status(201)
+
+		#save code
+		dataset_id = parsed_json["id"]
+		return save_code(featurestore_id, dataset_type, dataset_id, job_spark_1, "JOB", application_id), featurestore_id, dataset_id
   end
   
   def create_dataset(featurestore_id, dataset_type)
-	if dataset_type == "featuregroups"
-	  json_result, _ = create_cached_featuregroup(@project.id, featurestore_id)
-	  expect_status(201)
-	else
-	  connector = get_hopsfs_training_datasets_connector(@project[:projectname])
+		if dataset_type == "featuregroups"
+		  json_result, _ = create_cached_featuregroup(@project.id, featurestore_id)
+		  expect_status(201)
+		else
+		  connector = get_hopsfs_training_datasets_connector(@project[:projectname])
 
-	  features = [
-		{type: "int", name: "testfeature"},
-		{type: "int", name: "testfeature1"}
-	  ]
-	  json_result, _ = create_hopsfs_training_dataset(@project[:id], featurestore_id, connector, features: features)
-	  expect_status(201)
-	end
-	
-	return JSON.parse(json_result)
+		  features = [
+			{type: "int", name: "testfeature"},
+			{type: "int", name: "testfeature1"}
+		  ]
+		  json_result, _ = create_hopsfs_training_dataset(@project[:id], featurestore_id, connector, features: features)
+		  expect_status(201)
+		end
+
+		return JSON.parse(json_result)
   end
 end
