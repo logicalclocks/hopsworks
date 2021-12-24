@@ -112,6 +112,30 @@ public class DatabricksController {
     return databricksClient.getCluster(dbInstanceUrl, clusterId, token);
   }
 
+  public String getNotebookJupyter(Users user, String dbInstanceUrl, String path)
+      throws UserException, FeaturestoreException {
+    Optional<DatabricksInstance> dbInstanceOpt = databricksInstanceFacade.getInstance(user, dbInstanceUrl);
+    if (!dbInstanceOpt.isPresent()) {
+      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.DATABRICKS_INSTANCE_NOT_EXISTS,
+          Level.FINE, "Instance URL: " + dbInstanceUrl);
+    }
+
+    String token = secretsController.get(user, TOKEN_PREFIX + dbInstanceUrl).getPlaintext();
+    return databricksClient.getNotebookJupyter(dbInstanceUrl, token, path);
+  }
+
+  public byte[] getNotebookArchive(Users user, String dbInstanceUrl, String path)
+      throws UserException, FeaturestoreException {
+    Optional<DatabricksInstance> dbInstanceOpt = databricksInstanceFacade.getInstance(user, dbInstanceUrl);
+    if (!dbInstanceOpt.isPresent()) {
+      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.DATABRICKS_INSTANCE_NOT_EXISTS,
+          Level.FINE, "Instance URL: " + dbInstanceUrl);
+    }
+
+    String token = secretsController.get(user, TOKEN_PREFIX + dbInstanceUrl).getPlaintext();
+    return databricksClient.getNotebookArchive(dbInstanceUrl, token, path);
+  }
+
   @TransactionAttribute(TransactionAttributeType.REQUIRED)
   public DatabricksInstance registerInstance(Users user, String dbInstanceUrl, String apiKey)
       throws FeaturestoreException, UserException {

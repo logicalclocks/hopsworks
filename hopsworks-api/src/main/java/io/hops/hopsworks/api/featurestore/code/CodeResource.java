@@ -33,6 +33,8 @@ import io.hops.hopsworks.exceptions.DatasetException;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.exceptions.HopsSecurityException;
 import io.hops.hopsworks.exceptions.ServiceException;
+import io.hops.hopsworks.exceptions.UserException;
+import io.hops.hopsworks.featurestore.databricks.DatabricksController;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
 import io.hops.hopsworks.persistence.entity.featurestore.Featurestore;
 import io.hops.hopsworks.persistence.entity.featurestore.code.FeaturestoreCode;
@@ -77,6 +79,8 @@ public class CodeResource {
   private FeaturegroupController featuregroupController;
   @EJB
   private TrainingDatasetController trainingDatasetController;
+  @EJB
+  private DatabricksController databricksController;
 
   private Project project;
   private Featurestore featurestore;
@@ -182,20 +186,29 @@ public class CodeResource {
                        @Context SecurityContext sc,
                        @QueryParam("entityId") String entityId,
                        @QueryParam("type") CodeActions.RunType type,
+                       @QueryParam("databricksClusterId") String databricksClusterId,
                        CodeDTO codeDTO)
-          throws FeaturestoreException, DatasetException, HopsSecurityException, ServiceException {
+      throws FeaturestoreException, DatasetException, HopsSecurityException, ServiceException, UserException {
 
     Users user = jWTHelper.getUserPrincipal(sc);
+
+    String databricksNotebook = null;
+    byte[] databricksArchive = null;
+    if (type == CodeActions.RunType.DATABRICKS) {
+      databricksNotebook = databricksController.getNotebookJupyter(user, databricksClusterId, entityId);
+      databricksArchive = databricksController.getNotebookArchive(user, databricksClusterId, entityId);
+    }
 
     CodeDTO dto;
     if (featuregroup != null) {
       FeaturestoreCode featurestoreCode = codeController.registerCode(project, user, codeDTO.getCommitTime(),
-              codeDTO.getFeatureGroupCommitId(), codeDTO.getApplicationId(), featuregroup, entityId, type);
+          codeDTO.getFeatureGroupCommitId(), codeDTO.getApplicationId(), featuregroup,
+          entityId, databricksNotebook, databricksArchive, type);
       dto = codeBuilder.build(uriInfo, new ResourceRequest(ResourceRequest.Name.CODE),
               project, user, featuregroup, featurestoreCode, JupyterController.NotebookConversion.HTML);
     } else {
       FeaturestoreCode featurestoreCode = codeController.registerCode(project, user, codeDTO.getCommitTime(),
-              codeDTO.getApplicationId(), trainingDataset, entityId, type);
+              codeDTO.getApplicationId(), trainingDataset, entityId, databricksNotebook, databricksArchive, type);
       dto = codeBuilder.build(uriInfo, new ResourceRequest(ResourceRequest.Name.CODE),
               project, user, trainingDataset, featurestoreCode, JupyterController.NotebookConversion.HTML);
     }

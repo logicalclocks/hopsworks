@@ -19,5 +19,6 @@ package io.hops.hopsworks.common.featurestore.code;
 public enum CodeContentFormat {
   PY,
   IPYNB,
-  JAR
+  JAR,
+  DBC
 }

@@ -40,6 +40,7 @@ public class DatabricksClient {
   private static final String LIST_ENDPOINT = CLUSTERS_ENDPOINT + "/list";
   private static final String EDIT_ENDPOINT = CLUSTERS_ENDPOINT + "/edit";
   private static final String START_ENDPOINT = CLUSTERS_ENDPOINT + "/start";
+  private static final String WORKSPACE_ENDPOINT = API_ENDPOINT + "/workspace";
   private static final String GET_CLUSTER_ENDPOINT = CLUSTERS_ENDPOINT + "/get{?cluster_id}";
 
   private static final String LIBRARIES_INSTALL = API_ENDPOINT + "/libraries/install";
@@ -49,9 +50,53 @@ public class DatabricksClient {
   private static final String DBFS_CLOSE = API_ENDPOINT + "/dbfs/close";
   private static final String DBFS_ADD_BLOCK = API_ENDPOINT + "/dbfs/add-block";
   private static final String DBFS_STATUS = API_ENDPOINT + "/dbfs/get-status{?path}";
+  private static final String NOTEBOOK_EXPORT = WORKSPACE_ENDPOINT + "/export{?path,direct_download,format}";
 
   @EJB
   private HttpClient httpClient;
+
+  public DatabricksClient() {}
+
+  // For testing
+  protected DatabricksClient(HttpClient httpClient) {
+    this.httpClient = httpClient;
+  }
+
+  public String getNotebookJupyter(String dbInstance, String token, String path) throws FeaturestoreException {
+    HttpHost dbInstanceHost = getDbInstanceHost(dbInstance);
+    String uri = UriTemplate.fromTemplate(NOTEBOOK_EXPORT)
+            .set("path", path)
+            .set("direct_download", true)
+            .set("format", "JUPYTER")
+            .expand();
+    HttpGet notebookRequest = new HttpGet(uri);
+    notebookRequest.setHeader(HttpHeaders.AUTHORIZATION, "Bearer " + token);
+
+    return wrapException(new HttpRetryableAction<String>() {
+      @Override
+      public String performAction() throws IOException {
+        return httpClient.execute(dbInstanceHost, notebookRequest, new HttpClient.StringResponseHandler());
+      }
+    });
+  }
+
+  public byte[] getNotebookArchive(String dbInstance, String token, String path) throws FeaturestoreException {
+    HttpHost dbInstanceHost = getDbInstanceHost(dbInstance);
+    String uri = UriTemplate.fromTemplate(NOTEBOOK_EXPORT)
+        .set("path", path)
+        .set("direct_download", true)
+        .set("format", "DBC")
+        .expand();
+    HttpGet notebookRequest = new HttpGet(uri);
+    notebookRequest.setHeader(HttpHeaders.AUTHORIZATION, "Bearer " + token);
+
+    return wrapException(new HttpRetryableAction<byte[]>() {
+      @Override
+      public byte[] performAction() throws IOException {
+        return httpClient.execute(dbInstanceHost, notebookRequest, new HttpClient.ByteResponseHandler());
+      }
+    });
+  }
 
   public List<DbCluster> listClusters(String dbInstance, String token) throws FeaturestoreException {
     HttpHost dbInstanceHost = getDbInstanceHost(dbInstance);
