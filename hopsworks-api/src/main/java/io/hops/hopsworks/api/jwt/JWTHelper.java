@@ -482,4 +482,15 @@ public class JWTHelper {
       return new ElasticJWTResponseDTO("", kibanaUrl,"");
     }
   }
+
+  public ElasticJWTResponseDTO createTokenForELKAsLogUser() throws ElasticException {
+    if(settings.isElasticJWTEnabled()){
+      String token = elasticJWTController.createTokenForELKServices();
+      String kibanaUrl = settings.getKibanaAppUri(token);
+      return new ElasticJWTResponseDTO(token, kibanaUrl,"");
+    }else{
+      String kibanaUrl = settings.getKibanaAppUri();
+      return new ElasticJWTResponseDTO("", kibanaUrl,"");
+    }
+  }
 }
