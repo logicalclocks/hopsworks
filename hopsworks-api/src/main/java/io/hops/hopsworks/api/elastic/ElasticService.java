@@ -220,4 +220,13 @@ public class ElasticService {
     return Response.ok().entity(jWTResponseDTO).build();
   }
 
+  @ApiOperation( value = "Get a jwt token service logs")
+  @GET
+  @Path("jwt/services")
+  @Produces(MediaType.APPLICATION_JSON)
+  @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN"})
+  public Response createJwtToken(@Context SecurityContext sc) throws ElasticException {
+    ElasticJWTResponseDTO jWTResponseDTO = jWTHelper.createTokenForELKAsLogUser();
+    return Response.ok().entity(jWTResponseDTO).build();
+  }
 }
