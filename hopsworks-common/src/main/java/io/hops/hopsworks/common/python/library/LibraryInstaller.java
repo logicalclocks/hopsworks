@@ -645,7 +645,7 @@ public class LibraryInstaller {
   }
 
   public void syncBaseLibraries(CondaCommands cc)
-    throws ServiceException, ServiceDiscoveryException, ProjectException, IOException {
+      throws ServiceException, ServiceDiscoveryException, ProjectException, IOException, PythonException {
     Project project = projectFacade.findById(cc.getProjectId().getId()).orElseThrow(() -> new ProjectException(
       RESTCodes.ProjectErrorCode.PROJECT_NOT_FOUND, Level.FINE, "projectId: " + cc.getProjectId().getId()));
 
@@ -656,6 +656,7 @@ public class LibraryInstaller {
     project = projectFacade.findById(cc.getProjectId().getId()).orElseThrow(() -> new ProjectException(
       RESTCodes.ProjectErrorCode.PROJECT_NOT_FOUND, Level.FINE, "projectId: " + cc.getProjectId().getId()));
 
+    setPipConflicts(project);
     project.setPythonDepCollection(projectDeps);
     projectFacade.update(project);
 
