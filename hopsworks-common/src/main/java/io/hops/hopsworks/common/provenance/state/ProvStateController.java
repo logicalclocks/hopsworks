@@ -71,7 +71,16 @@ public class ProvStateController {
   private ProvAppController appCtrl;
   @EJB
   private ElasticCache cache;
-  
+
+  // For testing
+  public ProvStateController(Settings settings, ElasticClientController client, ElasticCache cache) {
+    this.settings = settings;
+    this.client = client;
+    this.cache = cache;
+  }
+
+  public ProvStateController() {}
+
   public ProvStateDTO provFileStateList(Project project, ProvStateParamBuilder params)
     throws ProvenanceException {
     if(params.base.pagination != null && !params.extensions.appStateFilter.isEmpty()) {

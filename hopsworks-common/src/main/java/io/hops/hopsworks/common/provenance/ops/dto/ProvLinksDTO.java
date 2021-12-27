@@ -18,17 +18,23 @@ package io.hops.hopsworks.common.provenance.ops.dto;
 import io.hops.hopsworks.common.api.RestDTO;
 
 import javax.xml.bind.annotation.XmlRootElement;
-import java.util.ArrayList;
 import java.util.Collections;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+
 
 @XmlRootElement
 public class ProvLinksDTO extends RestDTO<ProvLinksDTO> {
   String appId;
   Map<String, ProvOpsDTO> in = new HashMap<>();
   Map<String, ProvOpsDTO> out = new HashMap<>();
-  
+  ProvOpsDTO root = null;
+  List<ProvLinksDTO> upstreamLinks = new ArrayList<>();
+  List<ProvLinksDTO> downstreamLinks = new ArrayList<>();
+  boolean maxProvenanceGraphSizeReached = false;
+
   public ProvLinksDTO() {}
   
   public ProvLinksDTO(String appId, Map<String, ProvOpsDTO> in, Map<String, ProvOpsDTO> out) {
@@ -58,6 +64,46 @@ public class ProvLinksDTO extends RestDTO<ProvLinksDTO> {
   
   public void setOut(Map<String, ProvOpsDTO> out) {
     this.out = out;
+  }
+
+  public ProvOpsDTO getRoot() {
+    return root;
+  }
+
+  public void setRoot(ProvOpsDTO root) {
+    this.root = root;
+  }
+
+  public List<ProvLinksDTO> getUpstreamLinks() {
+    return upstreamLinks;
+  }
+
+  public void setUpstreamLinks(List<ProvLinksDTO> upstreamLinks) {
+    this.upstreamLinks = upstreamLinks;
+  }
+
+  public void addUpstreamLink(ProvLinksDTO link) {
+    this.upstreamLinks.add(link);
+  }
+
+  public List<ProvLinksDTO> getDownstreamLinks() {
+    return downstreamLinks;
+  }
+
+  public void setDownstreamLinks(List<ProvLinksDTO> downstreamLinks) {
+    this.downstreamLinks = downstreamLinks;
+  }
+
+  public void addDownstreamLink(ProvLinksDTO link) {
+    this.downstreamLinks.add(link);
+  }
+
+  public void setMaxProvenanceGraphSizeReached(boolean maxProvenanceGraphSizeReached) {
+    this.maxProvenanceGraphSizeReached = maxProvenanceGraphSizeReached;
+  }
+
+  public boolean isMaxProvenanceGraphSizeReached() {
+    return maxProvenanceGraphSizeReached;
   }
   
   

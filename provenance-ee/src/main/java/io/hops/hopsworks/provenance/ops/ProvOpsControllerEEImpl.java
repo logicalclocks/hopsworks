@@ -38,6 +38,8 @@ import io.hops.hopsworks.exceptions.GenericException;
 import io.hops.hopsworks.exceptions.ProvenanceException;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.restutils.RESTCodes;
+import org.apache.commons.collections.CollectionUtils;
+import org.elasticsearch.action.search.MultiSearchRequest;
 import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
@@ -49,15 +51,18 @@ import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
+
+import java.util.Collections;
 import java.util.LinkedList;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.HashSet;
+import java.util.HashMap;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Set;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -67,7 +72,7 @@ import java.util.stream.Collectors;
 @TransactionAttribute(TransactionAttributeType.NEVER)
 public class ProvOpsControllerEEImpl implements ProvOpsControllerIface {
   private final static Logger LOGGER = Logger.getLogger(ProvOpsControllerEEImpl.class.getName());
-  
+
   @EJB
   private Settings settings;
   @EJB
@@ -78,7 +83,16 @@ public class ProvOpsControllerEEImpl implements ProvOpsControllerIface {
   private ProvStateController stateCtrl;
   @EJB
   private ProvOpsElasticAggregations provOpsElasticAggregations;
-  
+
+  // For testing
+  protected ProvOpsControllerEEImpl(Settings settings, ElasticClientController client, ProvStateController stateCtrl) {
+    this.settings = settings;
+    this.client = client;
+    this.stateCtrl = stateCtrl;
+  }
+
+  public ProvOpsControllerEEImpl() {}
+
   public ProvOpsDTO provFileOpsList(Project project, ProvOpsParamBuilder params)
     throws ProvenanceException {
     if (!params.getAggregations().isEmpty()) {
@@ -90,11 +104,11 @@ public class ProvOpsControllerEEImpl implements ProvOpsControllerIface {
       throw new ProvenanceException(RESTCodes.ProvenanceErrorCode.UNSUPPORTED, Level.INFO,
         "all searches should be paginated");
     }
-    
+
     ProvOpsDTO fileOps = provFileOpsBase(project.getInode().getId(),
       params.getFileOpsFilterBy(), params.getFileOpsSortBy(),
       params.getPagination().getValue0(), params.getPagination().getValue1());
-    
+
     if (params.hasAppExpansion()) {
       //If withAppStates, update params based on appIds of items files and do a appState index query.
       //After this filter the fileStates based on the results of the appState query
@@ -120,7 +134,7 @@ public class ProvOpsControllerEEImpl implements ProvOpsControllerIface {
     }
     return fileOps;
   }
-  
+
   public ProvOpsDTO provFileOpsCount(Project project, ProvOpsParamBuilder params)
     throws ProvenanceException {
     if (!params.getAggregations().isEmpty()) {
@@ -129,16 +143,16 @@ public class ProvOpsControllerEEImpl implements ProvOpsControllerIface {
     }
     return provFileOpsCount(project.getInode().getId(), params.getFileOpsFilterBy());
   }
-  
+
   public ProvOpsDTO provFileOpsCount(Long projectIId, Map<ProvParser.Field, ProvParser.FilterVal> fileOpsFilters)
     throws ProvenanceException {
-    
+
     CheckedSupplier<SearchRequest, ProvenanceException> srF =
       ElasticHelper.countSearchRequest(
         settings.getProvFileIndex(projectIId))
         .andThen(filterByOpsParams(fileOpsFilters));
     SearchRequest request = srF.get();
-    
+
     try {
       ProvOpsDTO container = new ProvOpsDTO();
       container.setCount(client.searchCount(request));
@@ -169,26 +183,26 @@ public class ProvOpsControllerEEImpl implements ProvOpsControllerIface {
     allAggregations.setItems(aggregationItems);
     return allAggregations;
   }
-  
+
   public Map<ProvOpsAggregations, List> provFileOpsAggs(Long projectIId,
                                                         Map<ProvParser.Field, ProvParser.FilterVal> fileOpsFilters,
                                                         Set<ProvOpsAggregations> aggregations)
     throws ProvenanceException {
-    
+
     Map<ProvOpsAggregations, ElasticAggregationParser<?, ProvenanceException>> aggParsers = new HashMap<>();
     List<AggregationBuilder> aggBuilders = new ArrayList<>();
     for (ProvOpsAggregations aggregation : aggregations) {
       aggParsers.put(aggregation, provOpsElasticAggregations.getAggregationParser(aggregation));
       aggBuilders.add(provOpsElasticAggregations.getAggregationBuilder(aggregation));
     }
-    
+
     CheckedSupplier<SearchRequest, ProvenanceException> srF =
       ElasticHelper.baseSearchRequest(
         settings.getProvFileIndex(projectIId), 0)
         .andThen(filterByOpsParams(fileOpsFilters))
         .andThen(ElasticHelper.withAggregations(aggBuilders));
     SearchRequest request = srF.get();
-    
+
     Map<ProvOpsAggregations, List> aggregationResult;
     try {
       aggregationResult = client.searchAggregations(request, aggParsers);
@@ -198,7 +212,7 @@ public class ProvOpsControllerEEImpl implements ProvOpsControllerIface {
       throw ProvHelper.fromElastic(e, msg, msg + " - file ops");
     }
   }
-  
+
   private Optional<String> getAppId(ProvOpsDTO fileOp) {
     if (fileOp.getAppId().equals("none")) {
       return Optional.empty();
@@ -206,27 +220,7 @@ public class ProvOpsControllerEEImpl implements ProvOpsControllerIface {
       return Optional.of(fileOp.getAppId());
     }
   }
-  
-  public ProvOpsDTO provFileOpsScrolling(Long projectIId, Map<ProvParser.Field, ProvParser.FilterVal> fileOpsFilters,
-                                         List<Pair<ProvParser.Field, SortOrder>> fileOpsSortBy)
-    throws ProvenanceException {
-    CheckedSupplier<SearchRequest, ProvenanceException> srF =
-      ElasticHelper.scrollingSearchRequest(
-        settings.getProvFileIndex(projectIId),
-        settings.getElasticDefaultScrollPageSize())
-        .andThen(filterByOpsParams(fileOpsFilters))
-        .andThen(ElasticHelper.withFileOpsOrder(fileOpsSortBy));
-    SearchRequest request = srF.get();
-    Pair<Long, Try<List<ProvOpsDTO>>> searchResult;
-    try {
-      searchResult = client.searchScrolling(request, ProvOpsHandlerFactory.getHandler());
-    } catch (ElasticException e) {
-      String msg = "provenance - elastic query problem";
-      throw ProvHelper.fromElastic(e, msg, msg + " - file ops");
-    }
-    return ProvOpsHandlerFactory.checkedResult(searchResult);
-  }
-  
+
   public ProvOpsDTO provFileOpsBase(Long projectIId, Map<ProvParser.Field, ProvParser.FilterVal> fileOpsFilters,
                                     List<Pair<ProvParser.Field, SortOrder>> fileOpsSortBy, Integer offset,
                                     Integer limit)
@@ -246,7 +240,7 @@ public class ProvOpsControllerEEImpl implements ProvOpsControllerIface {
     }
     return ProvOpsHandlerFactory.checkedResult(searchResult);
   }
-  
+
   /**
    * @param project
    * @param params
@@ -257,147 +251,93 @@ public class ProvOpsControllerEEImpl implements ProvOpsControllerIface {
   public ProvLinksDTO provLinks(Project project, ProvLinksParamBuilder params, boolean filterAlive)
     throws ProvenanceException {
     HandlerFactory.AppIdMlIdMap linkHandlerFactory = new HandlerFactory.AppIdMlIdMap();
-    ProvLinksDTO.Builder inLinks;
-    ProvLinksDTO.Builder outLinks;
-    if (params.isInArtifactDefined()) {
-      inLinks = provInLinks(provLinks(project.getInode().getId(), params.getInFilterBy(), linkHandlerFactory));
-      if (inLinks.getAppLinks().isEmpty()) {
-        //if the artifacts (in) were not used in any application, there will not be any out artifacts of interest
-        return new ProvLinksDTO();
+    if (params.isInArtifactDefined() || params.isOutArtifactDefined() || params.isAppIdDefined()) {
+      ProvLinksDTO provLinksDTO;
+      if (params.isAppIdDefined()) {
+        provLinksDTO = deepProvLinks(project, params, filterAlive, linkHandlerFactory, false);
+      } else {
+        provLinksDTO = deepProvLinks(project, params, filterAlive, linkHandlerFactory, true);
       }
-      /**
-       * if an app was not defined in the query, we refine step 2 with appIds where the artifacts defined by in query
-       * were used as source
-       */
-      if (!params.isAppIdDefined()) {
-        for (Map.Entry<String, ProvLinksDTO> app : inLinks.getAppLinks().entrySet()) {
-          if (!app.getValue().getIn().isEmpty()) {
-            params.outFilterByField(ProvLinks.FieldsPF.APP_ID, app.getKey());
-          }
-        }
-      }
-      outLinks = provOutLinks(provLinks(project.getInode().getId(), params.getOutFilterBy(), linkHandlerFactory));
-      if (outLinks.getAppLinks().isEmpty()) {
-        return new ProvLinksDTO();
-      }
-    } else if (params.isOutArtifactDefined()) {
-      outLinks = provOutLinks(provLinks(project.getInode().getId(), params.getOutFilterBy(), linkHandlerFactory));
-      if (outLinks.getAppLinks().isEmpty()) {
-        //if the artifacts (out) were not generated in any application, there will not be any in artifacts of interest
-        return new ProvLinksDTO();
-      }
-      /**
-       * if an app was not defined in the query, we refine step 2 with appIds where the artifacts defined by out query
-       * were generated
-       */
-      if (!params.isAppIdDefined()) {
-        for (Map.Entry<String, ProvLinksDTO> app : outLinks.getAppLinks().entrySet()) {
-          if (!app.getValue().getIn().isEmpty()) {
-            params.inFilterByField(ProvLinks.FieldsPF.APP_ID, app.getKey());
-          }
-        }
-      }
-      inLinks = provInLinks(provLinks(project.getInode().getId(), params.getInFilterBy(), linkHandlerFactory));
-      if (inLinks.getAppLinks().isEmpty()) {
-        return new ProvLinksDTO();
-      }
-    } else if (params.isAppIdDefined()) {
-      inLinks = provInLinks(provLinks(project.getInode().getId(), params.getInFilterBy(), linkHandlerFactory));
-      if (inLinks.getAppLinks().isEmpty()) {
-        return new ProvLinksDTO();
-      }
-      outLinks = provOutLinks(provLinks(project.getInode().getId(), params.getOutFilterBy(), linkHandlerFactory));
-      if (outLinks.getAppLinks().isEmpty()) {
-        return new ProvLinksDTO();
-      }
-    }
-    else{
+      return convertToInOut(provLinksDTO, params);
+    } else if (params.isArtifactDefined()) {
+      return deepProvLinks(project, params, filterAlive, linkHandlerFactory, true);
+    } else {
       throw new ProvenanceException(RESTCodes.ProvenanceErrorCode.BAD_REQUEST, Level.INFO,
               "query too vague - please define at least one of APP_ID, IN_ARTIFACT, OUT_ARTIFACT",
               "full provenance link query error");
     }
-    Set<ProvStateDTO> inAlive = null;
-    Set<ProvStateDTO> outAlive = null;
-    if (filterAlive) {
-      inAlive = getLinksAlive(project, splitInLinks(inLinks));
-      outAlive = getLinksAlive(project, splitOutLinks(outLinks));
-    }
-    return mergeLinks(inLinks, outLinks, inAlive, outAlive, params.isFullLink());
   }
-  
-  private ProvLinksDTO mergeLinks(ProvLinksDTO.Builder inLinks, ProvLinksDTO.Builder outLinks,
-                                  Set<ProvStateDTO> inAlive, Set<ProvStateDTO> outAlive, boolean fullLink) {
-    ProvLinksDTO.Builder result = new ProvLinksDTO.Builder();
-    for (Map.Entry<String, ProvLinksDTO> e : inLinks.getAppLinks().entrySet()) {
-      if (inAlive != null) {
-        // remove not alive
-        e.getValue().getIn().entrySet().removeIf(ee -> !inAlive.stream()
-                .anyMatch(provState -> provState.getMlId().equals(ee.getKey())));
-        // set feature group type
-        e.getValue().getIn().entrySet().stream().forEach(ee -> ee.getValue()
-          .setFgType(
-            new Gson().fromJson(
-              inAlive.stream().filter(provState -> provState.getMlId().equals(ee.getKey()))
-                .findFirst().get().getXattrs().getOrDefault("featurestore", ""),
-              FeaturegroupXAttr.FullDTO.class
-            ).getFgType())
-        );
+
+  private ProvLinksDTO convertToInOut(ProvLinksDTO provLinksDTO, ProvLinksParamBuilder params) {
+    ProvLinksDTO finalProvLinksDTO = new ProvLinksDTO();
+    finalProvLinksDTO.setItems(new ArrayList<>());
+    provLinksDTO.getItems().stream().forEach(link -> {
+      if (params.isInArtifactDefined()) {
+        link.setIn(Collections.singletonMap(link.getRoot().getMlId(), link.getRoot()));
+        if(link.getDownstreamLinks().isEmpty()) {
+          finalProvLinksDTO.addItem(link);
+        } else {
+          for (ProvLinksDTO linksDTO: link.getDownstreamLinks()) {
+            linksDTO.setOut(Collections.singletonMap(linksDTO.getRoot().getMlId(), linksDTO.getRoot()));
+            linksDTO.setUpstreamLinks(null);
+            linksDTO.setDownstreamLinks(null);
+            linksDTO.setRoot(null);
+            linksDTO.setIn(link.getIn());
+            finalProvLinksDTO.addItem(linksDTO);
+          }
+        }
+      } else if (params.isOutArtifactDefined() || params.isAppIdDefined()) {
+        link.setIn(link.getUpstreamLinks().stream()
+                .collect(Collectors.toMap(root -> root.getRoot().getMlId(), root -> root.getRoot())));
+        link.setOut(Collections.singletonMap(link.getRoot().getMlId(), link.getRoot()));
+        finalProvLinksDTO.addItem(link);
       }
-      result.addInArtifacts(e.getKey(), e.getValue().getIn());
-    }
-    for (Map.Entry<String, ProvLinksDTO> e : outLinks.getAppLinks().entrySet()) {
-      if (outAlive != null) {
-        // remove not alive
-        e.getValue().getOut().entrySet().removeIf(ee -> !outAlive.stream()
-                .anyMatch(provState -> provState.getMlId().equals(ee.getKey())));
-        // set feature group type
-        e.getValue().getOut().entrySet().stream().forEach(ee -> ee.getValue()
-          .setFgType(
-            new Gson().fromJson(
-              outAlive.stream().filter(provState -> provState.getMlId().equals(ee.getKey()))
-                .findFirst().get().getXattrs().getOrDefault("featurestore", ""),
-              FeaturegroupXAttr.FullDTO.class
-            ).getFgType())
-        );
-      }
-      result.addOutArtifacts(e.getKey(), e.getValue().getOut());
-    }
-    Iterator<Map.Entry<String, ProvLinksDTO>> it = result.getAppLinks().entrySet().iterator();
+      link.setUpstreamLinks(null);
+      link.setDownstreamLinks(null);
+      link.setRoot(null);
+    });
+    Iterator<ProvLinksDTO> it = finalProvLinksDTO.getItems().iterator();
     while (it.hasNext()) {
-      ProvLinksDTO appLinks = it.next().getValue();
+      ProvLinksDTO appLinks = it.next();
       if (appLinks.getIn().isEmpty() && appLinks.getOut().isEmpty()) {
         it.remove();
-      } else if (fullLink && (appLinks.getIn().isEmpty() || appLinks.getOut().isEmpty())) {
+      } else if (params.isFullLink() && (appLinks.getIn().isEmpty() || appLinks.getOut().isEmpty())) {
         it.remove();
       }
     }
-    return result.build();
+    return finalProvLinksDTO;
   }
 
-  private ProvLinksDTO.Builder provInLinks(ProvLinksDTO.Builder raw) {
-    raw.getAppLinks().entrySet().removeIf(e -> e.getValue().getIn().isEmpty());
-    return raw;
-  }
-
-  private ProvLinksDTO.Builder provOutLinks(ProvLinksDTO.Builder raw) {
-    raw.getAppLinks().entrySet().removeIf(e -> e.getValue().getOut().isEmpty());
-    return raw;
+  private Map<String, ProvOpsDTO> updateLive(Map<String, ProvOpsDTO> map, Set<ProvStateDTO> alive){
+    if (alive != null) {
+      // remove not alive
+      Map<String, ProvStateDTO> aliveMap = alive.stream().collect(Collectors.toMap(ProvStateDTO::getMlId, e -> e));
+      map.entrySet().removeIf(ee -> !aliveMap.containsKey(ee.getKey()));
+      // set feature group type
+      map.entrySet().stream().forEach(entry -> {
+        ProvStateDTO aliveState = aliveMap.get(entry.getKey());
+        if(aliveState.getMlType().equals(Provenance.MLType.FEATURE)) {
+          String featurestoreXAttr  = aliveState.getXattrs().getOrDefault("featurestore", "");
+          if(featurestoreXAttr != null) {
+            FeaturegroupXAttr.FGType fgType = new Gson().fromJson(featurestoreXAttr, FeaturegroupXAttr.FullDTO.class)
+                    .getFgType();
+            entry.getValue().setFgType(fgType);
+          }
+        }
+      });
+    }
+    return map;
   }
 
   enum LinkTypes {
     FEATURESTORE,
     ML,
-    OTHER;
-  }
-
-  private Map<LinkTypes, List<ProvOpsDTO>> splitInLinks(ProvLinksDTO.Builder links) {
-    return links.getAppLinks().values().stream().flatMap(appLinks -> appLinks.getIn().values().stream())
-      .collect(Collectors.groupingBy(this::getLinkType));
+    OTHER
   }
 
   private Map<LinkTypes, List<ProvOpsDTO>> splitOutLinks(ProvLinksDTO.Builder links) {
     return links.getAppLinks().values().stream().flatMap(appLinks -> appLinks.getOut().values().stream())
-      .collect(Collectors.groupingBy(this::getLinkType));
+      .distinct().collect(Collectors.groupingBy(this::getLinkType));
   }
 
   private LinkTypes getLinkType(ProvOpsDTO link) {
@@ -445,24 +385,279 @@ public class ProvOpsControllerEEImpl implements ProvOpsControllerIface {
     }
     return outAlive;
   }
-  
-  private <O1, O2> O2 provLinks(Long projectIId, Map<ProvParser.Field, ProvParser.FilterVal> filterByFields,
-                                HandlerFactory<O1, O2> handlerFactory)
-    throws ProvenanceException {
+
+  private Map getFilter(ProvLinks.FieldsPF field, String id, boolean onlyApps) throws ProvenanceException {
+    Map filters = new HashMap<>();
+    ProvParser.addToFilters(filters, field, id);
+    if(onlyApps){
+      ProvParser.addToFilters(filters, ProvLinks.FieldsPF.ONLY_APPS, "none");
+    }
+    return filters;
+  }
+
+  private Map getFilterWithType(ProvLinks.FieldsPF field, Pair<String, List<String>> ml, boolean onlyApps)
+          throws ProvenanceException {
+    Map filters = getFilter(field, ml.getValue0(), onlyApps);
+    for (String type: ml.getValue1()) {
+      ProvParser.addToFilters(filters, ProvLinks.FieldsPF.ARTIFACT_TYPE, type);
+    }
+    return filters;
+  }
+
+  private SearchRequest getProvLinksRequest(Long projectIId, Map<ProvParser.Field, ProvParser.FilterVal> filterByFields)
+          throws ProvenanceException {
     CheckedSupplier<SearchRequest, ProvenanceException> srF =
       ElasticHelper
         .scrollingSearchRequest(settings.getProvFileIndex(projectIId), settings.getElasticDefaultScrollPageSize())
         .andThen(filterByOpsParams(filterByFields))
         .andThen(ElasticHelper.withPagination(null, null, settings.getElasticMaxScrollPageSize()));
-    SearchRequest request = srF.get();
-    Pair<Long, Try<O1>> searchResult;
+    return srF.get();
+  }
+
+  private List<Map<ProvParser.Field, ProvParser.FilterVal>> generateFilter(Set<Pair<String, List<String>>> mlIdList,
+      boolean onlyApps, ProvLinks.FieldsPF field)
+          throws ProvenanceException {
+    List<Map<ProvParser.Field, ProvParser.FilterVal>> filterList = new ArrayList();
+    for (Pair<String, List<String>> ml: mlIdList) {
+      Map filters = getFilterWithType(field, ml, onlyApps);
+      filterList.add(filters);
+    }
+    return filterList;
+  }
+
+  enum StreamDirection {
+    Upstream,
+    Downstream
+  }
+
+  private List<Map<ProvParser.Field, ProvParser.FilterVal>> generateAppIdFilterFromMlIdFilter(Project project,
+      HandlerFactory<Map<String, AppState>, ProvLinksDTO.Builder> handlerFactory,
+      List<Map<ProvParser.Field, ProvParser.FilterVal>> mlIdFilterList, boolean onlyApps, StreamDirection direction)
+          throws ProvenanceException {
+    List<Map<ProvParser.Field, ProvParser.FilterVal>> filterList = new ArrayList();
+    for (ProvLinksDTO.Builder builder: multipleProvLinks(project.getInode().getId(), mlIdFilterList, handlerFactory)) {
+      for (Map.Entry<String, ProvLinksDTO> app: builder.getAppLinks().entrySet()) {
+        if ((!app.getValue().getIn().isEmpty() && direction == StreamDirection.Downstream) ||
+            (!app.getValue().getOut().isEmpty() && direction == StreamDirection.Upstream)) {
+          Map filters = getFilter(ProvLinks.FieldsPF.APP_ID, app.getKey(), onlyApps);
+          filterList.add(filters);
+        }
+      }
+    }
+    return filterList;
+  }
+
+  private Set<Pair<String, List<String>>> generateMlIdFromAppIdFilter(Project project,
+       HandlerFactory<Map<String, AppState>, ProvLinksDTO.Builder> handlerFactory,
+       List<Map<ProvParser.Field, ProvParser.FilterVal>> appIdFilterList, Map<String, ProvLinksDTO> map,
+       boolean filterAlive, StreamDirection direction)
+          throws ProvenanceException {
+    Set<Pair<String, List<String>>> mlIdList = new HashSet<>();
+    if (appIdFilterList.size() > 0) {
+      for (ProvLinksDTO.Builder builder:
+              multipleProvLinks(project.getInode().getId(), appIdFilterList, handlerFactory)) {
+        Set<ProvStateDTO> alive = null;
+        if (filterAlive) {
+          alive = getLinksAlive(project, splitOutLinks(builder));
+        }
+        for (Map.Entry<String, ProvLinksDTO> app: builder.getAppLinks().entrySet()) {
+          if (!map.containsKey(app.getKey())) { // do not query what has already been seen
+            if (direction == StreamDirection.Upstream) {
+              for (Map.Entry<String, ProvOpsDTO> ops : app.getValue().getIn().entrySet()) {
+                mlIdList.add(new Pair(ops.getKey(),
+                        Arrays.asList(ops.getValue().getDocSubType().getPart().toString())));
+              }
+            }
+            Map<String, ProvOpsDTO> out = updateLive(app.getValue().getOut(), alive);// remove dead
+            for (Map.Entry<String, ProvOpsDTO> ops : out.entrySet()) {
+              map.put(ops.getKey(), app.getValue());
+              if (direction == StreamDirection.Downstream) {
+                mlIdList.add(new Pair(ops.getKey(),
+                        Arrays.asList(ops.getValue().getDocSubType().getPart().toString())));
+              }
+            }
+          }
+        }
+      }
+    }
+    return mlIdList;
+  }
+
+  private Pair<Integer, Set<Pair<String, List<String>>>> deepSearch(Project project, Set<Pair<String,
+      List<String>>> idList, HandlerFactory<Map<String, AppState>, ProvLinksDTO.Builder> handlerFactory, Map<String,
+      ProvLinksDTO> map, boolean startWithMlId, boolean onlyApps, boolean filterAlive, StreamDirection direction,
+      int allowedProvenanceGraphSize)
+          throws ProvenanceException {
+    List<Map<ProvParser.Field, ProvParser.FilterVal>> appIdFilterList;
+    if (startWithMlId) {
+      // create filters for mlId
+      List<Map<ProvParser.Field, ProvParser.FilterVal>> mlIdFilterList =
+              generateFilter(idList, onlyApps, ProvLinks.FieldsPF.ARTIFACT);
+
+      // get all links where the provided mlId is the output
+      appIdFilterList = generateAppIdFilterFromMlIdFilter(project, handlerFactory, mlIdFilterList, onlyApps, direction);
+    }
+    else {
+      // create filters for mlId
+      appIdFilterList = generateFilter(idList, onlyApps, ProvLinks.FieldsPF.APP_ID);
+    }
+
+    // trim appIdFilterList if more nodes received than allowed
+    Iterator<Map<ProvParser.Field, ProvParser.FilterVal>> filterByFields = appIdFilterList.iterator();
+    while (filterByFields.hasNext()) {
+      filterByFields.next();
+      if (allowedProvenanceGraphSize <= 0) {
+        filterByFields.remove();
+      } else {
+        allowedProvenanceGraphSize -= 1;
+      }
+    }
+
+    //generate the new mlIdList
+    return new Pair(allowedProvenanceGraphSize, generateMlIdFromAppIdFilter(project, handlerFactory, appIdFilterList,
+            map, filterAlive, direction));
+  }
+
+  private void compileDeepLinks(Map<String, ProvLinksDTO> map, StreamDirection direction){
+    while(map.entrySet().stream().anyMatch(app ->
+            map.keySet().stream().anyMatch(app.getValue().getIn().keySet()::contains))) {
+
+      Map<String, ProvLinksDTO> leafMap = map.entrySet().stream().filter(leaf ->
+          (direction == StreamDirection.Upstream &&
+            !map.keySet().stream().anyMatch(leaf.getValue().getIn().keySet()::contains)) ||
+          (direction == StreamDirection.Downstream &&
+            !map.entrySet().stream().anyMatch(entry ->
+              CollectionUtils.intersection(entry.getValue().getIn().keySet(), leaf.getValue().getOut().keySet())
+                .size() > 0)))
+        .collect(Collectors.toMap(x -> x.getKey(), x -> x.getValue()));
+
+      for (Map.Entry<String, ProvLinksDTO> leaf: leafMap.entrySet()) {
+        ProvLinksDTO link = leaf.getValue();
+        link.setRoot(leaf.getValue().getOut().entrySet().iterator().next().getValue());
+        map.entrySet().stream().filter(entry ->
+            (direction == StreamDirection.Upstream && entry.getValue().getIn().containsKey(link.getRoot().getMlId())) ||
+            (direction == StreamDirection.Downstream && leaf.getValue().getIn().containsKey(entry.getKey())))
+          .forEach(entry -> {
+            if (direction == StreamDirection.Upstream) {
+              entry.getValue().addUpstreamLink(link);
+            } else if (direction == StreamDirection.Downstream) {
+              entry.getValue().addDownstreamLink(link);
+            }
+          });
+        link.getIn().clear();
+        link.getOut().clear();
+      }
+      map.keySet().removeAll(leafMap.keySet());
+    }
+  }
+
+  private Pair<Integer, Map<String, ProvLinksDTO>> deepUpstreamLinks(Project project, Set<Pair<String,
+      List<String>>> idList, boolean filterAlive, HandlerFactory<Map<String, AppState>,
+      ProvLinksDTO.Builder> handlerFactory, ProvLinksParamBuilder params, boolean startWithMlId,
+      int allowedProvenanceGraphSize)
+          throws ProvenanceException {
+    // final Map containing all results
+    Map<String, ProvLinksDTO> map = new HashMap<>();
+
+    int depth = params.getExpand().getValue0();
+    StreamDirection direction = StreamDirection.Upstream;
+
+    do {
+      Pair<Integer, Set<Pair<String, List<String>>>> result = deepSearch(project, idList, handlerFactory, map,
+              startWithMlId, params.isOnlyApps(), filterAlive, direction, allowedProvenanceGraphSize);
+      allowedProvenanceGraphSize = result.getValue0();
+      idList = result.getValue1();
+
+      startWithMlId = true;
+
+      // reduce depth
+      depth -= 1;
+    } while (depth + 1 != 0 && idList.size() > 0 && allowedProvenanceGraphSize > 0);
+
+    //compile the final map
+    compileDeepLinks(map, direction);
+
+    return new Pair(allowedProvenanceGraphSize, map);
+  }
+
+  private Pair<Integer, List<ProvLinksDTO>> deepDownstreamLinks(Project project, Set<Pair<String, List<String>>> idList,
+      boolean filterAlive, HandlerFactory<Map<String, AppState>, ProvLinksDTO.Builder> handlerFactory,
+      ProvLinksParamBuilder params, Map<String, ProvLinksDTO> map, boolean startWithMlId,
+      int allowedProvenanceGraphSize)
+          throws ProvenanceException {
+    int depth = params.getExpand().getValue1();
+    StreamDirection direction = StreamDirection.Downstream;
+
+    while (depth != 0 && idList.size() > 0 && allowedProvenanceGraphSize > 0) {
+      Pair<Integer, Set<Pair<String, List<String>>>> result = deepSearch(project, idList, handlerFactory, map,
+              startWithMlId, params.isOnlyApps(), filterAlive, direction, allowedProvenanceGraphSize);
+      allowedProvenanceGraphSize = result.getValue0();
+      idList = result.getValue1();
+
+      startWithMlId = true;
+
+      // reduce depth
+      depth -= 1;
+    }
+
+    //compile the final map
+    compileDeepLinks(map, direction);
+
+    //clean up the central elements
+    map.entrySet().stream().forEach(entry -> {
+      ProvLinksDTO link = entry.getValue();
+      link.setRoot(entry.getValue().getOut().entrySet().iterator().next().getValue());
+      link.getIn().clear();
+      link.getOut().clear();
+    });
+
+    List<ProvLinksDTO> provLinksDTOList = map.entrySet().stream().map(Map.Entry::getValue).collect(Collectors.toList());
+    return new Pair(allowedProvenanceGraphSize, provLinksDTOList);
+  }
+
+  private ProvLinksDTO deepProvLinks(Project project, ProvLinksParamBuilder params, boolean filterAlive,
+      HandlerFactory<Map<String, AppState>, ProvLinksDTO.Builder> handlerFactory, boolean startWithMlId)
+          throws ProvenanceException {
+    ProvLinksDTO provLinksDTO = new ProvLinksDTO();
+
+    Set<Pair<String, List<String>>> filterSetPair = new HashSet<>();
+    for (String filter: params.getFilterBy()) {
+      filterSetPair.add(new Pair(filter, params.getFilterType()));
+    }
+
+    Pair<Integer, Map<String, ProvLinksDTO>> upstreamResult = deepUpstreamLinks(project, filterSetPair, filterAlive,
+            handlerFactory, params, startWithMlId, settings.getProvenanceGraphMaxSize());
+    Pair<Integer, List<ProvLinksDTO>> downstreamResult = deepDownstreamLinks(project, filterSetPair, filterAlive,
+            handlerFactory, params, upstreamResult.getValue1(), startWithMlId, upstreamResult.getValue0());
+
+    provLinksDTO.addItems(downstreamResult.getValue1());
+    if (downstreamResult.getValue0() == 0) {
+      provLinksDTO.setMaxProvenanceGraphSizeReached(true);
+    }
+    return provLinksDTO;
+  }
+
+  private <O1, O2> List<O2> multipleProvLinks(Long projectIId,
+                                              List<Map<ProvParser.Field, ProvParser.FilterVal>> filterByFieldsList,
+                                              HandlerFactory<O1, O2> handlerFactory)
+          throws ProvenanceException {
+    MultiSearchRequest multiSearchRequest = new MultiSearchRequest();
+    for (Map<ProvParser.Field, ProvParser.FilterVal> filterByFields: filterByFieldsList) {
+      SearchRequest request = getProvLinksRequest(projectIId, filterByFields);
+      multiSearchRequest.add(request);
+    }
+    List<Pair<Long, Try<O1>>> searchResult;
     try {
-      searchResult = client.searchScrolling(request, handlerFactory.getHandler());
+      searchResult = client.multiSearchScrolling(multiSearchRequest, handlerFactory.getHandler());
     } catch (ElasticException e) {
-      String msg = "provenance - elastic query problem";
+      String msg = "provenance - elastic multi query problem";
       throw ProvHelper.fromElastic(e, msg, msg + " - file ops");
     }
-    return handlerFactory.checkedResult(searchResult.getValue1());
+    List<O2> result = new ArrayList<>();
+    for (Pair<Long, Try<O1>> pair: searchResult) {
+      result.add(handlerFactory.checkedResult(pair.getValue1()));
+    }
+    return result;
   }
 
   private CheckedFunction<SearchRequest, SearchRequest, ProvenanceException> filterByOpsParams(
@@ -483,7 +678,7 @@ public class ProvOpsControllerEEImpl implements ProvOpsControllerIface {
         = hit -> ProvOpsParser.tryInstance(BasicElasticHit.instance(hit));
       return ElasticHits.handlerAddToList(parser);
     }
-    
+
     static ProvOpsDTO checkedResult(Pair<Long, Try<List<ProvOpsDTO>>> result)
       throws ProvenanceException {
       try {
@@ -501,13 +696,13 @@ public class ProvOpsControllerEEImpl implements ProvOpsControllerIface {
       }
     }
   }
-  
+
   static class AppState {
     //<ml_id, dto>
     Map<String, ProvOpsDTO> in = new HashMap<>();
     Map<String, ProvOpsDTO> out = new HashMap<>();
   }
-  
+
   /**
    * We assume immutable artifacts, otherwise query is too complex for elastic.
    * This means that if we detect one CREATE operation, this means the whole artifact is being created
@@ -527,7 +722,7 @@ public class ProvOpsControllerEEImpl implements ProvOpsControllerIface {
           }
           // assume immutable artifacts
           appArtifacts.in.remove(hit.getMlId());
-        
+
           ProvOpsDTO s = appArtifacts.out.get(hit.getMlId());
           if (s == null) {
             s = hit.upgradePart();
@@ -566,12 +761,12 @@ public class ProvOpsControllerEEImpl implements ProvOpsControllerIface {
       }
       return Try.apply(() -> state);
     };
-  
+
   interface HandlerFactory<O1, O2> {
     ElasticHits.Handler<ProvOpsDTO, O1> getHandler();
-    
+
     O2 checkedResult(Try<O1> result) throws ProvenanceException;
-    
+
     class AppIdMlIdMap implements HandlerFactory<Map<String, AppState>, ProvLinksDTO.Builder> {
       public ElasticHits.Handler<ProvOpsDTO, Map<String, AppState>> getHandler() {
         ElasticHits.Parser<ProvOpsDTO> parser
@@ -579,7 +774,7 @@ public class ProvOpsControllerEEImpl implements ProvOpsControllerIface {
         Map<String, AppState> initState = new HashMap<>();
         return ElasticHits.handlerBasic(parser, initState, provLinksMerger);
       }
-      
+
       public ProvLinksDTO.Builder checkedResult(Try<Map<String, AppState>> result) throws ProvenanceException {
         try {
           ProvLinksDTO.Builder r = new ProvLinksDTO.Builder();

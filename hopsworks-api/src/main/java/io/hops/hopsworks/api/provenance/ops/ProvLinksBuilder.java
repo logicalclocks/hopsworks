@@ -33,14 +33,15 @@ import javax.inject.Inject;
 public class ProvLinksBuilder {
   @Inject
   private ProvOpsControllerIface opsProvCtrl;
-  
+
   public ProvLinksDTO build(Project project, ProvLinksBeanParams opsParams, PaginationParams pagParams)
-    throws ProvenanceException, GenericException {
+          throws ProvenanceException, GenericException {
     ProvLinksParamBuilder paramBuilder = new ProvLinksParamBuilder()
-      .filterByFields(opsParams.getFilterBy())
-      .onlyApps(opsParams.isOnlyApps())
-      .linkType(opsParams.isFullLink())
-      .paginate(pagParams.getOffset(), pagParams.getLimit());
+            .onlyApps(opsParams.isOnlyApps())
+            .linkType(opsParams.isFullLink())
+            .paginate(pagParams.getOffset(), pagParams.getLimit())
+            .expand(opsParams.getUpstream(), opsParams.getDownstream())
+            .filterByFields(opsParams.getFilterBy());
     return opsProvCtrl.provLinks(project, paramBuilder, true);
   }
 }
