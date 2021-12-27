@@ -274,7 +274,45 @@ public class ElasticClientController {
     Try<S> collectedResults = handler.apply(response.getHits().getHits());
     return Pair.with(response.getHits().getTotalHits().value, collectedResults);
   }
-  
+
+  /**
+   * Performs scrolling search for any request exceeding requested size, finally returning pair a containing totalHits
+   * number and the whole response.
+   * @param response
+   * @param handler
+   * @param request
+   * @param <R>
+   * @param <S>
+   * @return
+   * @throws ElasticException
+   */
+  public <R, S> Pair<Long, Try<S>> scrolling(SearchResponse response, ElasticHits.Handler<R, S> handler,
+                                             SearchRequest request)
+          throws ElasticException {
+    long leftover;
+
+    long totalHits = response.getHits().getTotalHits().value;
+    leftover = Math.min(request.source().size(), totalHits);
+    leftover = leftover - response.getHits().getHits().length;
+    Try<S> result = handler.apply(response.getHits().getHits());
+
+    //make into a scrolling request if not already and there are more hits
+    if(leftover > 0 && response.getScrollId() != null) {
+      response = baseSearch(request);
+    }
+
+    while (leftover > 0 && result.isSuccess()) {
+      SearchScrollRequest next = nextScrollPage(response.getScrollId());
+      response = searchScrollingInt(next);
+      leftover = leftover - response.getHits().getHits().length;
+      result = handler.apply(response.getHits().getHits());
+    }
+    if(response.getScrollId() != null) {//if scrolling request clear context
+      clearScrollingContext(response.getScrollId());
+    }
+    return Pair.with(totalHits, result);
+  }
+
   /**
    * Returns all results matching the search - these results are all built in memory, so use with care.
    * @param request
@@ -285,27 +323,35 @@ public class ElasticClientController {
    * @throws ElasticException
    */
   public <R, S> Pair<Long, Try<S>> searchScrolling(SearchRequest request, ElasticHits.Handler<R, S> handler)
-    throws ElasticException {
-    SearchResponse response;
-    long leftover;
-    response = baseSearch(request);
-    
-    long totalHits = response.getHits().getTotalHits().value;
-    long requested = request.source().size();
-    leftover = Math.min(requested, totalHits);
-    leftover = leftover - response.getHits().getHits().length;
-    Try<S> result = handler.apply(response.getHits().getHits());
-    
-    while (leftover > 0 & result.isSuccess()) {
-      SearchScrollRequest next = nextScrollPage(response.getScrollId());
-      response = searchScrollingInt(next);
-      leftover = leftover - response.getHits().getHits().length;
-      result = handler.apply(response.getHits().getHits());
-    }
-    clearScrollingContext(response.getScrollId());
-    return Pair.with(totalHits, result);
+          throws ElasticException {
+    SearchResponse response = baseSearch(request);
+    return scrolling(response, handler, request);
   }
-  
+
+  /**
+   * Returns all MultiSearch results in a list matching the respective MultiSearch request -
+   * these results are all built in memory, so use with care.
+   * @param multiSearchRequest
+   * @param handler
+   * @param <R>
+   * @param <S>
+   * @return
+   * @throws ElasticException
+   */
+  public <R, S> List<Pair<Long, Try<S>>> multiSearchScrolling(
+          MultiSearchRequest multiSearchRequest, ElasticHits.Handler<R, S> handler)
+          throws ElasticException {
+    MultiSearchResponse multiSearchResponse = multiSearch(multiSearchRequest);
+    List<Pair<Long, Try<S>>> searchResult = new ArrayList<>();
+    int index = 0;
+    for (MultiSearchResponse.Item item: multiSearchResponse) {
+      SearchResponse response = item.getResponse();
+      SearchRequest request = multiSearchRequest.requests().get(index++);
+      searchResult.add(scrolling(response, handler, request));
+    }
+    return searchResult;
+  }
+
   public long searchCount(SearchRequest request) throws ElasticException {
     SearchResponse response;
     LOG.log(Level.FINE, "request:{0}", request.toString());
