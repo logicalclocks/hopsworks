@@ -3622,6 +3622,7 @@ public class Settings implements Serializable {
   //-------------------------------- PROVENANCE ----------------------------------------------//
   private static final String VARIABLE_PROVENANCE_TYPE = "provenance_type"; //disabled/meta/min/full
   private static final String VARIABLE_PROVENANCE_ARCHIVE_SIZE = "provenance_archive_size";
+  private static final String VARIABLE_PROVENANCE_GRAPH_MAX_SIZE = "provenance_graph_max_size";
   private static final String VARIABLE_PROVENANCE_ARCHIVE_DELAY = "provenance_archive_delay";
   private static final String VARIABLE_PROVENANCE_CLEANUP_SIZE = "provenance_cleanup_size";
   private static final String VARIABLE_PROVENANCE_CLEANER_PERIOD = "provenance_cleaner_period";
@@ -3631,6 +3632,7 @@ public class Settings implements Serializable {
   private String PROVENANCE_TYPE_S = PROVENANCE_TYPE.name();
   private Integer PROVENANCE_CLEANUP_SIZE = 5;
   private Integer PROVENANCE_ARCHIVE_SIZE = 100;
+  private Integer PROVENANCE_GRAPH_MAX_SIZE = 10000;
   private Long PROVENANCE_CLEANER_PERIOD = 3600L; //1h in s
   private Long PROVENANCE_ARCHIVE_DELAY = 0l;
   private Integer PROVENANCE_ELASTIC_ARCHIVAL_PAGE_SIZE = 50;
@@ -3650,9 +3652,22 @@ public class Settings implements Serializable {
       PROVENANCE_TYPE_S = PROVENANCE_TYPE.name();
     }
     PROVENANCE_ARCHIVE_SIZE = setIntVar(VARIABLE_PROVENANCE_ARCHIVE_SIZE, PROVENANCE_ARCHIVE_SIZE);
+    PROVENANCE_GRAPH_MAX_SIZE = setIntVar(VARIABLE_PROVENANCE_GRAPH_MAX_SIZE, PROVENANCE_GRAPH_MAX_SIZE);
     PROVENANCE_ARCHIVE_DELAY = setLongVar(VARIABLE_PROVENANCE_ARCHIVE_DELAY, PROVENANCE_ARCHIVE_DELAY);
     PROVENANCE_CLEANUP_SIZE = setIntVar(VARIABLE_PROVENANCE_CLEANUP_SIZE, PROVENANCE_CLEANUP_SIZE);
     PROVENANCE_CLEANER_PERIOD = setLongVar(VARIABLE_PROVENANCE_CLEANER_PERIOD, PROVENANCE_CLEANER_PERIOD);
+  }
+
+  public synchronized Integer getProvenanceGraphMaxSize() {
+    checkCache();
+    return PROVENANCE_GRAPH_MAX_SIZE;
+  }
+
+  public synchronized void setProvenanceGraphMaxSize(Integer size) {
+    if(!PROVENANCE_GRAPH_MAX_SIZE.equals(size)) {
+      em.merge(new Variables(VARIABLE_PROVENANCE_GRAPH_MAX_SIZE, size.toString()));
+      PROVENANCE_GRAPH_MAX_SIZE = size;
+    }
   }
   
   public synchronized Provenance.Type getProvType() {

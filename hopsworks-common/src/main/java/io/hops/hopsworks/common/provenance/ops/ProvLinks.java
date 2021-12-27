@@ -76,6 +76,8 @@ public class ProvLinks {
     IN_TYPE(IntFieldsP.ML_TYPE, ProvParser.FilterType.EXACT),
     OUT_ARTIFACT(ProvOps.FieldsP.ML_ID, ProvParser.FilterType.EXACT),
     OUT_TYPE(IntFieldsP.ML_TYPE, ProvParser.FilterType.EXACT),
+    ARTIFACT(ProvOps.FieldsP.ML_ID, ProvParser.FilterType.EXACT),
+    ARTIFACT_TYPE(IntFieldsP.ML_TYPE, ProvParser.FilterType.EXACT),
     ONLY_APPS(ProvOps.FieldsP.APP_ID, ProvParser.FilterType.NOT);
     
     ProvParser.Field base;
