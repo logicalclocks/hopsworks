@@ -2,8 +2,8 @@
 
 All members of a project in Hopsworks can launch the following types of applications through a project's Jobs service:
 
--  Python (*Hopsworks Enterprise only*)
--  Apache Spark
+- Python (*Hopsworks Enterprise only*)
+- Apache Spark
 - Apache Flink
 - Docker (*Hopsworks Enterprise only*)
 
@@ -134,6 +134,13 @@ You can set the following properties for Python jobs:
 </p>
 
 
+You do not have to upload the Python program via the Hopsworks UI to run it. That can be done so from within the Python program by using
+``upload`` function of the ``dataset`` module of the ``hops`` Python library http://hops-py.logicalclocks.com
+
+To do that, first generate an API key for your project, see :ref:`Generate an API key<api-key-generate>`,
+and then use the ``project.connect()`` function of the same library to connect to a project of your Hopsworks cluster and then ``dataset.upload``.
+
+
 #### Docker
 Docker jobs can currently only be managed from the legacy Hopsworks user interface, see documentation at [Docker jobs](https://hopsworks.readthedocs.io/en/stable/user_guide/hopsworks/jobs.html#docker) for details.
 
@@ -214,7 +221,7 @@ executions page by clicking the `view all executions` link.
     <a  href="../../assets/images/newjob9.png">
       <img src="../../assets/images/newjob9.png" alt="Executions overview">
     </a>
-    <figcaption>Executions overview/figcaption>
+    <figcaption>Executions overview</figcaption>
   </figure>
 </p>
 
@@ -229,3 +236,31 @@ In particular, you get access to the following dashboards/views for every execut
 - RM UI: Applies to Spark/PySpark/Flink jobs only, a new tab will open showing the Apache Hadoop YARN page of the execution
 - Kibana: Applies to Spark/PySpark/Flink jobs only, a new tab will open showing the execution logs in real-time as they are collected from all the containers the execution is distributed at.
 - Logs: Shows the aggregated stdout/stderr logs of the execution. These logs are stored under the `Logs` dataset.
+
+#  Hopsworks IDE Plugin
+
+It is also possible to work on jobs while developing in your IntelliJ/PyCharm IDE by installing the Hopsworks Plugin from the marketplace.
+
+**Usage**
+
+- Open the **Hopsworks Job Preferences** UI for specifying user preferences under **Settings -> Tools -> Hopsworks Job Preferences**.
+- Input the Hopworks project preferences and job details you wish to work on.
+- Open a Project and within the Project Explorer, right click on the program ( .jar, .py, .ipynb) you wish to execute as a job on Hopsworks. Different job actions possible are available in the context menu ( Create, Run, Stop, etc.)
+
+**Actions**
+
+- **Create:** Create or update job as specified in Hopsworks Job Preferences
+- **Run:** Uploads the program first to the HDFS path as specficied and runs job
+- **Stop:** Stops a job
+- **Delete:** Deletes a job
+- **Job Execution Status / Job Execution Logs:** Get the job status or logs respectively. You have the option of retrieving a particular job execution by specifying the execution id in the 'Hopsworks Job Preferences' UI, otherwise default is the last execution for the job name specified.
+
+<p align="center">
+  <figure>
+    <a  href="../../assets/images/newjob10.gif">
+      <img src="../../assets/images/newjob10.gif" alt="    Working with jobs from Hopsworks IntelliJ/PyCharm plugin">
+    </a>
+    <figcaption>Working with jobs from Hopsworks IntelliJ/PyCharm plugin</figcaption>
+  </figure>
+</p>
+
