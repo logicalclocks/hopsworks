@@ -8,8 +8,7 @@ All members of a project in Hopsworks can launch the following types of applicat
 - Docker (*Hopsworks Enterprise only*)
 
 Launching a job of any type is very similar process, what mostly differs between job types is
-the various configuration parameters each job type comes with. Details on running Python and Docker programs are
-provided in the Python section below.
+the various configuration parameters each job type comes with.
 
 ## Manage jobs
 
@@ -134,11 +133,11 @@ You can set the following properties for Python jobs:
 </p>
 
 
-You do not have to upload the Python program via the Hopsworks UI to run it. It can be done programatically from a Python program by using the
-``upload`` function of the ``dataset`` module of the ``hops`` Python library http://hops-py.logicalclocks.com
+You do not have to upload the Python program via the Hopsworks UI to run it. It can be done programmatically from a Python program by using the
+``upload`` function of the ``dataset`` module of the [hops](http://hops-py.logicalclocks.com) Python library 
 
-To do that, first generate an API key for your project, see :ref:`Generate an API key<api-key-generate>`,
-and then use the ``project.connect()`` function of the same library to connect to a project of your Hopsworks cluster and then ``dataset.upload``.
+To do that, first generate an API key for your project, 
+and then use the ``project.connect()`` function of the same library to connect to a project of your Hopsworks cluster and then ``dataset.upload()``.
 
 
 #### Docker
