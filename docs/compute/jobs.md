@@ -150,7 +150,7 @@ Flink jobs can currently only be managed from the legacy Hopsworks user interfac
 ### Alerts
 
 You can attach Hopsworks alerts on a per-job basis if you want to receive notifications for job-specific events.
-Firstly, a Hopsworks administrator needs to setup alert channels from the `Cluster settings` page. Currently supposrted channels are
+Firstly, a Hopsworks administrator needs to setup alert channels from the `Cluster settings` page. Currently supported channels are
 - email
 - slack
 - pagerduty
