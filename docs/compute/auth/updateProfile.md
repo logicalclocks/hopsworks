@@ -13,7 +13,7 @@ account if you wish to change your email address. You can also log out by clicki
   </figure>
 
 ## Update credential
-To update your credential go to the **Authentication** tab as shown in the image bellow.
+To update your credential go to the **Authentication** tab as shown in the image below.
   <figure>
     <a  href="../../../assets/images/auth/updatePassword.png">
       <img src="../../../assets/images/auth/updatePassword.png" alt="Update credentials">

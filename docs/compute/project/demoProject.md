@@ -1,6 +1,6 @@
 # Start with A Demo Project
 
-When you log in to Hopsworks for the first time you will be presented with a landing page as shown in the figure bellow.
+When you log in to Hopsworks for the first time you will be presented with a landing page as shown in the figure below.
 From the landing page you can either create a new project or start with a demo project.
 The demo project is a good place to start if you are new to Hopsworks.
   <figure>
@@ -24,7 +24,7 @@ After creating a demo project you can go in to the project by clicking on **Open
 create a job that in turn will create sample feature groups and training dataset.
 
 If you go to **Jobs** on the side menu you will find the job named **featurestore_tour_job** as shown in the figure 
-bellow.  
+below.  
 
   <figure>
     <a  href="../../../assets/images/project/demo-job.png">
@@ -43,7 +43,7 @@ Wait until the job succeeds.
   </figure>
 
 If the job succeeds you can go to **Feature Groups** on the side menu to inspect the created feature groups. The 
-figure bellow shows some sample feature groups created by the demo job.
+figure below shows some sample feature groups created by the demo job.
   <figure>
     <a  href="../../../assets/images/project/tour-fs.png">
       <img src="../../../assets/images/project/tour-fs.png" alt="Demo project feature groups">

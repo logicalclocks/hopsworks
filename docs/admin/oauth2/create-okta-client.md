@@ -12,7 +12,7 @@ After creating a developer account register a client by going to _Applications_ 
     <figcaption>Okta Applications</figcaption>
   </figure>
 
-This will open a popup as shown in the figure bellow. Select **OIDC** as _Sign-in-method_ and **Web Application** as 
+This will open a popup as shown in the figure below. Select **OIDC** as _Sign-in-method_ and **Web Application** as 
 _Application type_ and click next.
   <figure>
     <a  href="../../../assets/images/admin/oauth2/create-new-app.png">

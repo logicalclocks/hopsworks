@@ -5,7 +5,7 @@ acquire a _client id_ and _client secret_. An example on how to create a client 
 identity provider can be found [here](./create-okta-client.md).
 
 After acquiring the _client id_ and _client secret_ create the client in Hopsworks by giving it a name (the name 
-will be used in the login page) as shown in the figure bellow.
+will be used in the login page) as shown in the figure below.
 
 <figure>
   <a  href="../../../assets/images/admin/oauth2/register-app.png">
@@ -15,7 +15,7 @@ will be used in the login page) as shown in the figure bellow.
 </figure>
 
 Optionally a logo URL to an image can be added. The logo will be shown on the login page with the name as shown in the 
-figure bellow.
+figure below.
 
   <figure>
     <a  href="../../../assets/images/auth/oauth2.png">

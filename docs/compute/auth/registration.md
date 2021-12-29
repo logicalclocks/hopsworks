@@ -13,7 +13,7 @@ The process for registering a new account is as follows:
     <figcaption>Register new account</figcaption>
   </figure>
 
-If second factor authentication is required you will be presented with a page like in the figure bellow. Scan the QR 
+If second factor authentication is required you will be presented with a page like in the figure below. Scan the QR 
 code or type the code in bold to register your account in your authenticator app. 
 
   <figure>
