@@ -244,7 +244,7 @@ It is also possible to work on jobs while developing in your IntelliJ/PyCharm ID
 **Usage**
 
 - Open the **Hopsworks Job Preferences** UI for specifying user preferences under **Settings -> Tools -> Hopsworks Job Preferences**.
-- Input the Hopworks project preferences and job details you wish to work on.
+- Input the Hopsworks project preferences and job details you wish to work on.
 - Open a Project and within the Project Explorer, right click on the program ( .jar, .py, .ipynb) you wish to execute as a job on Hopsworks. Different job actions possible are available in the context menu ( Create, Run, Stop, etc.)
 
 **Actions**
