@@ -155,7 +155,7 @@ Firstly, a Hopsworks administrator needs to setup alert channels from the `Clust
 - slack
 - pagerduty
 
-Once you have configured the alert channels, you can proceed by specifying alert `receivets` from the project's settings page.
+Once you have configured the alert channels, you can proceed by specifying alert `receivers` from the project's settings page.
 Receivers are the destinations to which your alerts will be sent to. You can specify `global` alerts, which means these alerts will be triggered on job events regardless
 of which specific job generated the alert event. Alternatively, you can override the job alerts by adding alerts to a specific job from the job's configuration page as shown below.
 The job events alerts are triggered upon are:
