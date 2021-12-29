@@ -35,7 +35,7 @@ nav:
           - Register Client in Hopsworks: admin/oauth2/create-client.md
           - Create Okta Client: admin/oauth2/create-okta-client.md
       - User: admin/user.md
-      - Project: admin/deleteProject.md
+      - Project: admin/project.md
       - Installation: admin/installation.md
   - Hopsworks.ai: https://docs.hopsworks.ai/hopsworks-cloud/latest/
   - Examples: https://examples.hopsworks.ai/
