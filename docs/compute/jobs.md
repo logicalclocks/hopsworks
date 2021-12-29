@@ -134,7 +134,7 @@ You can set the following properties for Python jobs:
 </p>
 
 
-You do not have to upload the Python program via the Hopsworks UI to run it. That can be done so from within the Python program by using
+You do not have to upload the Python program via the Hopsworks UI to run it. It can be done programatically from a Python program by using the
 ``upload`` function of the ``dataset`` module of the ``hops`` Python library http://hops-py.logicalclocks.com
 
 To do that, first generate an API key for your project, see :ref:`Generate an API key<api-key-generate>`,
