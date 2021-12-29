@@ -39,7 +39,7 @@ sections below.
 
 
 ### New job from scratch
-In addition to te options available with the new job quickstart, from this menu you can set default arguments to be given as input to the job when
+In addition to the options available with the new job quickstart, from this menu you can set default arguments to be given as input to the job when
 executed. You can overwrite these arguments when running a job by providing input arguments for that particular execution of the job.
 
 For example, in the image below the default arguments "a b c" will be passed as space-separated arguments to the job.
