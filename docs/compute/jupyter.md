@@ -1,6 +1,6 @@
 # Jupyter notebooks
 
-Developing with Jupyter notebooks is provided as a service in Hopsworks as part the compute section of a project which you 
+Developing with Jupyter notebooks is provided as a service in Hopsworks as part of the compute section of a project which you 
 can access from the main project menu. The image below shows the Jupyter service page in Hopsworks.
 
 <p align="center">
