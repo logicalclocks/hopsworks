@@ -34,7 +34,7 @@ open Jupyter in a new tab if your browser is blocking this operation by default.
 Jupyter server is using the same configuration options as the Jobs service to run notebooks. Currently, the `Spark/PySpark` 
 and `Python` configuration options are supported. For more information on how to set these options, see the [Jobs](./jobs.md) section 
 and for more information on how to work with Spark and Jupyter in Hopsworks see the `Jupyter + Spark on Hopsworks` below. 
-If you would like to switch between configurations, you will to shut down Jupyter server first.
+If you would like to switch between configurations, you will have to shut down the running Jupyter server first.
 
 After starting a Spark/PySpark notebook, you can view monitoring and logging information as shown in the image below. 
 For Spark/PySpark notebooks, this information is identical to the information provided when running Spark/PySpark jobs 
