@@ -185,7 +185,7 @@ magic commands provided by sparkmagic. You can view a list of all commands by ex
   </figure>
 </p>
 
-### Plotting with Pyspark Kernel
+### Plotting with PySpark Kernel
 
 So far throughout this tutorial, the Jupyter notebook have behaved more or less identical to how it does if you start 
 the notebook server locally on your machine using a Python kernel, without access to a Hopsworks cluster. However, there
