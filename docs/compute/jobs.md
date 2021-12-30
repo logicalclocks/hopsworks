@@ -249,7 +249,7 @@ It is also possible to work on jobs while developing in your IntelliJ/PyCharm ID
 **Actions**
 
 - **Create:** Create or update job as specified in Hopsworks Job Preferences
-- **Run:** Uploads the program first to the HDFS path as specficied and runs job
+- **Run:** Uploads the program first to the HDFS path as specified and runs job
 - **Stop:** Stops a job
 - **Delete:** Deletes a job
 - **Job Execution Status / Job Execution Logs:** Get the job status or logs respectively. You have the option of retrieving a particular job execution by specifying the execution id in the 'Hopsworks Job Preferences' UI, otherwise default is the last execution for the job name specified.
