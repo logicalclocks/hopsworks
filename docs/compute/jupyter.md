@@ -56,7 +56,7 @@ resources will be allocated based on the configuration options Jupyter was start
 
 When you run a notebook, its Jupyter configuration is stored and attached to the notebook.
 You can use this configuration later to start the Jupyter notebook directly from the Jupyter dashboard by clicking 
-`Open in Juptyer` under the `Recent notebooks` section of the dashboard. For example, in the image above you can see a
+`Open in Jupyter` under the `Recent notebooks` section of the dashboard. For example, in the image above you can see a
 notebook called `hello_world.ipynb` which you can start directly. Hopsworks will use the Jupyter server configuration the 
 notebook ran with last time. 
 
