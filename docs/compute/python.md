@@ -43,7 +43,7 @@ Python packages can be installed from the following sources:
 
 ###Install by name and version
 
-Enter the name and optionally the desired version to install.
+Enter the name and, optionally, the desired version to install.
 
 <p align="center">
   <figure>
