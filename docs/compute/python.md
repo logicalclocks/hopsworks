@@ -17,7 +17,7 @@ Managing the project's Python environment is provided as a service on Hopsworks 
   </figure>
 </p>
 
-When a project is created, the python 3.8 environment is automatically enabled. So no manual steps are required to start developing your machine learning application.
+When a project is created, the python 3.8 environment is automatically enabled. So no additional steps are required to start developing your machine learning application.
 
 ##Listing installed libraries
 
