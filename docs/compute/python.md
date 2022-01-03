@@ -38,7 +38,7 @@ Python packages can be installed from the following sources:
 * A conda channel, using conda package manager
 * Packages saved in certain file formats, currently we support .whl or .egg
 * A public or private git repository
-* A requirements.txt file to install many libraries at the same time using pip
+* A requirements.txt file to install multiple libraries at the same time using pip
 * An environment.yml file to install many libraries at the same time using conda and pip
 
 ###Install by name and version
