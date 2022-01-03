@@ -1,6 +1,6 @@
 # Python environment
 
-Hopsworks provides a premade environment for data engineering, machine learning and more general data science development.
+Hopsworks comes out of the box with a Python environment for data engineering, machine learning and more general data science development.
 
 There is one Python environment for each project. A library installed in the project's Python environment can be used in a Job or Jupyter notebook (Python or PySpark) run in the project.
 
