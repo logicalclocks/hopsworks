@@ -79,6 +79,7 @@ import java.nio.file.Paths;
 import java.nio.file.attribute.PosixFileAttributeView;
 import java.nio.file.attribute.PosixFilePermission;
 import java.nio.file.attribute.PosixFilePermissions;
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
@@ -152,29 +153,13 @@ public class CertificateMaterializer {
           .toPath(), PosixFileAttributeView.class, LinkOption.NOFOLLOW_LINKS);
       Set<PosixFilePermission> permissions = fileView.readAttributes()
           .permissions();
-      boolean ownerRead = permissions.contains(PosixFilePermission.OWNER_READ);
-      boolean ownerWrite = permissions.contains(PosixFilePermission
-          .OWNER_WRITE);
-      boolean ownerExecute = permissions.contains(PosixFilePermission
-          .OWNER_EXECUTE);
-      
-      boolean groupRead = permissions.contains(PosixFilePermission.GROUP_READ);
-      boolean groupWrite = permissions.contains(PosixFilePermission
-          .GROUP_WRITE);
-      boolean groupExecute = permissions.contains(PosixFilePermission
-          .GROUP_EXECUTE);
-      
-      boolean othersRead = permissions.contains(PosixFilePermission
-          .OTHERS_READ);
-      boolean othersWrite = permissions.contains(PosixFilePermission
-          .OTHERS_WRITE);
-      boolean othersExecute = permissions.contains(PosixFilePermission
-          .OTHERS_EXECUTE);
-      
+
+      List<PosixFilePermission> legalPermissions = Arrays.asList(PosixFilePermission.OWNER_READ,
+          PosixFilePermission.OWNER_WRITE,
+          PosixFilePermission.OWNER_EXECUTE);
+
       // Permissions should be 750
-      if ((ownerRead && ownerWrite && ownerExecute)
-          && (groupRead && !groupWrite && groupExecute)
-          && (!othersRead && !othersWrite & !othersExecute)) {
+      if (permissions.size() == legalPermissions.size() && permissions.containsAll(legalPermissions)) {
         String owner = fileView.readAttributes().owner().getName();
         String group = fileView.readAttributes().group().getName();
         String permStr = PosixFilePermissions.toString(permissions);
@@ -182,7 +167,7 @@ public class CertificateMaterializer {
             + ". Owner: " + owner + " Group: " + group + " permissions: " + permStr);
       } else {
         throw new IllegalStateException("Wrong permissions for " +
-            tmpDir.getAbsolutePath() + ", it should be 0750");
+            tmpDir.getAbsolutePath() + ", it should be 0700");
       }
     } catch (UnsupportedOperationException ex) {
       LOG.log(Level.WARNING, "Associated filesystem is not POSIX compliant. " +
