@@ -119,7 +119,7 @@ The alert will automatically show if such an issue was found.
   </figure>
 </p>
 
-##Recreating environment
+##Recreating the environment
 
 Sometimes it may be desirable to recreate the environment to start from the default project environment. In order to do that, first click `Remove env`.
 
