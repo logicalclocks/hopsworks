@@ -119,6 +119,17 @@ The alert will automatically show if such an issue was found.
   </figure>
 </p>
 
+##Exporting an environment
+
+An existing Anaconda environment can be exported as a yml file, clicking the `Export env` will download the `environment.yml` file in your browser.
+
+<p align="center">
+  <figure>
+    <img src="../../assets/images/python/export_env.png" alt="Export environment">
+    <figcaption>Export environment</figcaption>
+  </figure>
+</p>
+
 ##Recreating the environment
 
 Sometimes it may be desirable to recreate the environment to start from the default project environment. In order to do that, first click `Remove env`.
@@ -136,16 +147,5 @@ After removing the environment, simply recreate it by clicking `Create Environme
   <figure>
     <img src="../../assets/images/python/create_env.png" alt="Create environment">
     <figcaption>Create environment</figcaption>
-  </figure>
-</p>
-
-##Exporting an environment
-
-An existing Anaconda environment can be exported as a yml file, clicking the `Export env` will download the `environment.yml` file in your browser.
-
-<p align="center">
-  <figure>
-    <img src="../../assets/images/python/export_env.png" alt="Export environment">
-    <figcaption>Export environment</figcaption>
   </figure>
 </p>
