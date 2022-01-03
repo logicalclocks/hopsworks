@@ -21,7 +21,7 @@ When a project is created, the python 3.8 environment is automatically enabled. 
 
 ##Listing installed libraries
 
-The list of installed libraries is displayed on the page. It is possible to filter based on the name and package manager to find a particular library.
+The list of installed libraries is displayed on the page. It is possible to filter based on the name and package manager to search for a particular library.
 
 <p align="center">
   <figure>
