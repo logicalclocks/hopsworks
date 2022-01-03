@@ -252,7 +252,6 @@ public class JupyterController {
         String certificatesDir = Paths.get(jupyterHomePath, "certificates").toString();
         HopsUtils.cleanupCertificatesForUserCustomDir(project_user[1], project
             .getName(), settings.getHdfsTmpCertDir(), certificateMaterializer, certificatesDir, settings);
-        certificateMaterializer.removeCertificatesLocal(project_user[1], project.getName());
       } finally {
         if (dfso != null) {
           dfsService.closeDfsClient(dfso);

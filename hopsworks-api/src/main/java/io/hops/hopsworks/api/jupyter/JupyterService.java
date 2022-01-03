@@ -388,10 +388,6 @@ public class JupyterService {
           JUPYTER_JWT_AUD);
         HopsUtils.materializeCertificatesForUserCustomDir(project.getName(), user.getUsername(),
             settings.getHdfsTmpCertDir(), dfso, certificateMaterializer, settings, dto.getCertificatesDir());
-        // When Livy launches a job it will look in the standard directory for the certificates
-        // We materialize them twice but most probably other operations will need them too, so it is OK
-        // Remember to remove both when stopping Jupyter server or an exception is thrown
-        certificateMaterializer.materializeCertificatesLocal(user.getUsername(), project.getName());
         jupyterManager.waitForStartup(project, hopsworksUser);
       } catch (ServiceException | TimeoutException ex) {
         if (dto != null) {
