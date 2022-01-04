@@ -21,9 +21,9 @@ _Application type_ and click next.
     <figcaption>Create new Application</figcaption>
   </figure>
 
-Give your application a name and select **Client credential** as _Grant Type_. If you want to limit who can access 
-your Hopsworks cluster select _Limit access to selected groups_ and select group(s) you want to give access to. Here 
-we will allow everyone in the organization to access the cluster.
+Give your application a name and select **Client credential** as _Grant Type_. Then add a _Sign-in redirect URI_ 
+that is your Hopsworks cluster domain name (including the port number if needed) with path _/callback_, and a _Sign-out 
+redirect URI_ that is Hopsworks cluster domain name (including the port number if needed) with no path.
 
   <figure>
     <a  href="../../../assets/images/admin/oauth2/new-web-app.png">
@@ -32,15 +32,18 @@ we will allow everyone in the organization to access the cluster.
     <figcaption>New Application</figcaption>
   </figure>
 
+If you want to limit who can access your Hopsworks cluster select _Limit access to selected groups_ and 
+select group(s) you want to give access to. Here we will allow everyone in the organization to access the cluster.
+
   <figure>
-    <a  href="../../../assets/images/admin/oauth2/assinments.png">
+    <a  href="../../../assets/images/admin/oauth2/assignments.png">
       <img src="../../../assets/images/admin/oauth2/assignments.png" alt="Group assignment" />
     </a>
     <figcaption>Group assignment</figcaption>
   </figure>
 
-After the application is created the _client id_ and _client secret_ are generated and can be used in the [client 
-registration](./create-client.md) in Hopsworks.
+After the application is created go back to _Applications_ and click on the application you just created. Use the 
+_client id_ and _client secret_ generated for your app in the [client registration](./create-client.md) in Hopsworks.
 
   <figure>
     <a  href="../../../assets/images/admin/oauth2/overview.png">
