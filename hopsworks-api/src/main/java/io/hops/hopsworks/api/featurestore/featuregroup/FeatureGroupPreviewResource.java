@@ -29,9 +29,11 @@ import io.hops.hopsworks.exceptions.HopsSecurityException;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
 import io.hops.hopsworks.persistence.entity.featurestore.Featurestore;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.Featuregroup;
+import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.FeaturegroupType;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.persistence.entity.user.security.apiKey.ApiScope;
+import io.hops.hopsworks.restutils.RESTCodes;
 import io.swagger.annotations.ApiOperation;
 
 import javax.ejb.EJB;
@@ -46,6 +48,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
 import javax.ws.rs.core.UriInfo;
+import java.util.logging.Level;
 
 @RequestScoped
 @TransactionAttribute(TransactionAttributeType.NEVER)
@@ -88,6 +91,7 @@ public class FeatureGroupPreviewResource {
       throws FeaturestoreException, HopsSecurityException {
     Users user = jwtHelper.getUserPrincipal(sc);
 
+    // validate user input
     if (featureGroupPreviewBeanParam.getLimit() != null && (
         featureGroupPreviewBeanParam.getLimit() < 0  ||
         featureGroupPreviewBeanParam.getLimit() > settings.getFGPreviewLimit())) {
@@ -95,9 +99,25 @@ public class FeatureGroupPreviewResource {
           "Row limit should greater than 0 and lower than: " + settings.getFGPreviewLimit());
     }
 
+    // validate feature group type (we can only return data preview for cached feature groups)
+    if (featuregroup.getFeaturegroupType() == FeaturegroupType.ON_DEMAND_FEATURE_GROUP) {
+      throw new FeaturestoreException(
+          RESTCodes.FeaturestoreErrorCode.PREVIEW_NOT_SUPPORTED_FOR_ON_DEMAND_FEATUREGROUPS,
+          Level.FINE, "featuregroupId: " + featuregroup.getId());
+    }
+
+    // set online flag. if the user doesn't provide the storage flag and the feature group
+    // is available online, return the data from the online feature store as it's faster.
+    boolean online;
+    if (featureGroupPreviewBeanParam.getStorage() == null) {
+      online = featuregroup.getCachedFeaturegroup().isOnlineEnabled();
+    } else {
+      online = featureGroupPreviewBeanParam.getStorage().equals(FeatureGroupStorage.ONLINE);
+    }
+
     PreviewDTO previewDTO = previewBuilder.build(uriInfo, user, project, featuregroup,
         featureGroupPreviewBeanParam.getPartition(),
-        featureGroupPreviewBeanParam.getStorage().equals(FeatureGroupStorage.ONLINE),
+        online,
         featureGroupPreviewBeanParam.getLimit() == null ? 20 : featureGroupPreviewBeanParam.getLimit());
 
     return Response.ok().entity(previewDTO).build();

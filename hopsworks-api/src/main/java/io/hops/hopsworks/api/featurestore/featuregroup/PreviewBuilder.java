@@ -17,7 +17,8 @@
 package io.hops.hopsworks.api.featurestore.featuregroup;
 
 import io.hops.hopsworks.common.api.ResourceRequest;
-import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupController;
+import io.hops.hopsworks.common.featurestore.featuregroup.cached.CachedFeaturegroupController;
+import io.hops.hopsworks.common.featurestore.featuregroup.cached.FeatureGroupStorage;
 import io.hops.hopsworks.common.featurestore.featuregroup.cached.FeaturegroupPreview;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.exceptions.HopsSecurityException;
@@ -41,7 +42,7 @@ import java.util.stream.Collectors;
 public class PreviewBuilder {
 
   @EJB
-  private FeaturegroupController featuregroupController;
+  private CachedFeaturegroupController cachedFeaturegroupController;
 
   private URI uri(UriInfo uriInfo, Project project, Featuregroup featuregroup) {
     return uriInfo.getBaseUriBuilder().path(ResourceRequest.Name.PROJECT.toString().toLowerCase())
@@ -60,11 +61,13 @@ public class PreviewBuilder {
 
     FeaturegroupPreview preview = null;
     try {
-      preview = featuregroupController.getFeaturegroupPreview(featuregroup, project, user, partition, online, limit);
+      preview = cachedFeaturegroupController
+          .getFeaturegroupPreview(featuregroup, project, user, partition, online, limit);
     } catch (SQLException e) {
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.COULD_NOT_PREVIEW_FEATUREGROUP,
           Level.SEVERE, "Feature Group id: " + featuregroup.getId(), e.getMessage(), e);
     }
+    FeatureGroupStorage storage = online ? FeatureGroupStorage.ONLINE : FeatureGroupStorage.OFFLINE;
 
     PreviewDTO previewDTO = new PreviewDTO();
     previewDTO.setHref(uri(uriInfo, project, featuregroup));
@@ -73,7 +76,7 @@ public class PreviewBuilder {
     previewDTO.setItems(preview.getPreview().stream()
         .map(r -> r.getValues().stream()
             .map(c -> new ColumnDTO(c.getValue0(), c.getValue1())).collect(Collectors.toList()))
-        .map(PreviewDTO::new)
+        .map(c -> new PreviewDTO(c, storage))
         .collect(Collectors.toList()));
 
     return previewDTO;
