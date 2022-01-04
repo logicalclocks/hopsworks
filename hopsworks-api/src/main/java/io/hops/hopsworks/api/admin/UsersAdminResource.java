@@ -20,6 +20,7 @@ import io.hops.hopsworks.api.admin.dto.NewUserDTO;
 import io.hops.hopsworks.api.filter.Audience;
 import io.hops.hopsworks.api.filter.apiKey.ApiKeyRequired;
 import io.hops.hopsworks.api.user.BbcGroupDTO;
+import io.hops.hopsworks.api.user.UserIds;
 import io.hops.hopsworks.api.user.UserProfileBuilder;
 import io.hops.hopsworks.api.user.UserProfileDTO;
 import io.hops.hopsworks.api.user.UsersBeanParam;
@@ -141,6 +142,20 @@ public class UsersAdminResource {
     return Response.ok(userProfileDTO).build();
   }
   
+  @ApiOperation(value = "Change role of the user specified by id.", response = UserProfileDTO.class)
+  @PUT
+  @Path("/users/{id}/role")
+  @Produces(MediaType.APPLICATION_JSON)
+  public Response changeRole(@Context HttpServletRequest req, @Context SecurityContext sc, @PathParam("id") Integer id,
+    String role) throws UserException {
+
+    UserProfileDTO  userProfileDTO = userProfileBuilder.changeRole(
+      id,
+      role);
+
+    return Response.ok(userProfileDTO).build();
+  }
+
   @ApiOperation(value = "Accept user specified by id.", response = UserProfileDTO.class)
   @PUT
   @Path("/users/{id}/accepted")
@@ -158,12 +173,29 @@ public class UsersAdminResource {
   @ApiOperation(value = "Reject user specified by id.", response = UserProfileDTO.class)
   @PUT
   @Path("/users/{id}/rejected")
-  public Response rejectUser(@Context HttpServletRequest req, @Context SecurityContext sc,
-    @PathParam("id") Integer id) throws UserException, ServiceException {
+  public Response rejectUser(@Context HttpServletRequest req, @Context SecurityContext sc, @PathParam("id") Integer id)
+    throws UserException, ServiceException {
+
+    UserProfileDTO userProfileDTO = userProfileBuilder.rejectUser(id);
     
-    userProfileBuilder.rejectUser(id);
-    
-    return Response.noContent().build();
+    return Response.ok(userProfileDTO).build();
+  }
+
+  @ApiOperation(value = "Accept users specified by ids.", response = UserProfileDTO.class)
+  @PUT
+  @Path("/users/accepted")
+  @Produces(MediaType.APPLICATION_JSON)
+  public Response acceptUsers(@Context HttpServletRequest req, @Context SecurityContext sc, UserIds userIds) {
+    UserProfileDTO  userProfileDTO = userProfileBuilder.acceptUsers(userIds.getIds(), req);
+    return Response.ok(userProfileDTO).build();
+  }
+
+  @ApiOperation(value = "Reject users specified by ids.", response = UserProfileDTO.class)
+  @PUT
+  @Path("/users/rejected")
+  public Response rejectUsers(@Context HttpServletRequest req, @Context SecurityContext sc, UserIds userIds) {
+    UserProfileDTO userProfileDTO = userProfileBuilder.rejectUsers(userIds.getIds(), req);
+    return Response.ok(userProfileDTO).build();
   }
   
   @ApiOperation(value = "Resend confirmation email to user specified by id.", response = UserProfileDTO.class)
@@ -242,15 +274,15 @@ public class UsersAdminResource {
   @Produces(MediaType.APPLICATION_JSON)
   @ApiKeyRequired(acceptedScopes = {ApiScope.ADMIN, ApiScope.ADMINISTER_USERS, ApiScope.ADMINISTER_USERS_REGISTER},
     allowedUserRoles = {"HOPS_ADMIN"})
-  public Response registerUser(@QueryParam("accountType") UserAccountType accountType,
-    @QueryParam("uuid") String uuid, @QueryParam("email") String email, @QueryParam("password") String password,
+  public Response registerUser(@QueryParam("accountType") UserAccountType accountType, @QueryParam("uuid") String uuid,
+    @QueryParam("email") String email, @QueryParam("password") String password,
     @QueryParam("givenName") String givenName, @QueryParam("surname") String surname,
     @QueryParam("maxNumProjects") int maxNumProjects, @QueryParam("type") RemoteUserType type,
-    @QueryParam("status") UserAccountStatus status, @Context SecurityContext sc, @Context UriInfo uriInfo)
-    throws GenericException, UserException {
+    @QueryParam("role") String role, @QueryParam("status") UserAccountStatus status, @Context SecurityContext sc,
+    @Context UriInfo uriInfo) throws GenericException, UserException {
     switch (accountType) {
       case M_ACCOUNT_TYPE:
-        return createUser(email, password, givenName, surname,  maxNumProjects, status, uriInfo);
+        return createUser(email, password, givenName, surname,  maxNumProjects, role, status, uriInfo);
       case REMOTE_ACCOUNT_TYPE:
         return createRemoteUser(uuid, email, givenName, surname, type, status, uriInfo);
       default:
@@ -259,8 +291,7 @@ public class UsersAdminResource {
   }
   
   private Response createUser(String email, String password, String givenName, String surname, int maxNumProjects,
-                              UserAccountStatus status, UriInfo uriInfo)
-      throws UserException {
+    String role, UserAccountStatus status, UriInfo uriInfo) throws UserException {
     UserDTO newUser = new UserDTO();
     newUser.setEmail(email);
     newUser.setFirstName(givenName);
@@ -272,9 +303,9 @@ public class UsersAdminResource {
     newUser.setRepeatedPassword(passwordGen);
     newUser.setTos(true);
     userValidator.isValidNewUser(newUser, passwordGen.equals(password));
-    UserAccountStatus statusDefault = status != null ? status : UserAccountStatus.NEW_MOBILE_ACCOUNT;
-    Users user =
-      usersController.registerUser(newUser, Settings.DEFAULT_ROLE, statusDefault, UserAccountType.M_ACCOUNT_TYPE);
+    UserAccountStatus statusDefault = status != null ? status : UserAccountStatus.TEMP_PASSWORD;
+    Users user = usersController.registerUser(newUser, role != null ? role : Settings.DEFAULT_ROLE, statusDefault,
+      UserAccountType.M_ACCOUNT_TYPE);
     NewUserDTO newUserDTO = new NewUserDTO(user);
     URI href = uriInfo.getAbsolutePathBuilder().path(user.getUid().toString()).build();
     if (!passwordGen.equals(password)) {

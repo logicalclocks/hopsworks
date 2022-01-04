@@ -39,9 +39,11 @@
 package io.hops.hopsworks.api.user;
 
 import io.hops.hopsworks.common.api.RestDTO;
+import io.hops.hopsworks.persistence.entity.user.BbcGroup;
 import io.hops.hopsworks.persistence.entity.user.Users;
 
 import javax.xml.bind.annotation.XmlRootElement;
+import java.util.Collection;
 import java.util.Date;
 
 @XmlRootElement
@@ -60,6 +62,7 @@ public class UserProfileDTO extends RestDTO<UserProfileDTO> {
   private Integer numCreatedProjects;
   private Integer numActiveProjects;
   private Date activated;
+  private Collection<BbcGroup> role;
 
   public UserProfileDTO() {
   }
@@ -78,6 +81,7 @@ public class UserProfileDTO extends RestDTO<UserProfileDTO> {
     this.numCreatedProjects = user.getNumCreatedProjects();
     this.numActiveProjects = user.getNumActiveProjects();
     this.activated = user.getActivated();
+    this.role = user.getBbcGroupCollection();
   }
   
   public Integer getId() {
@@ -182,5 +186,33 @@ public class UserProfileDTO extends RestDTO<UserProfileDTO> {
 
   public void setActivated(Date activated) {
     this.activated = activated;
+  }
+
+  public Collection<BbcGroup> getRole() {
+    return role;
+  }
+
+  public void setRole(Collection<BbcGroup> role) {
+    this.role = role;
+  }
+
+  @Override
+  public String toString() {
+    return "UserProfileDTO{" +
+      "id=" + id +
+      ", firstname='" + firstname + '\'' +
+      ", lastname='" + lastname + '\'' +
+      ", email='" + email + '\'' +
+      ", username='" + username + '\'' +
+      ", accountType='" + accountType + '\'' +
+      ", twoFactor=" + twoFactor +
+      ", toursState=" + toursState +
+      ", status=" + status +
+      ", maxNumProjects=" + maxNumProjects +
+      ", numCreatedProjects=" + numCreatedProjects +
+      ", numActiveProjects=" + numActiveProjects +
+      ", activated=" + activated +
+      ", role=" + role +
+      '}';
   }
 }

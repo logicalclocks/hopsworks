@@ -958,7 +958,8 @@ public class RESTCodes {
     SECRET_DELETION_FAILED(56, "Failed to delete secret.", Response.Status.BAD_REQUEST),
     USER_SEARCH_NOT_ALLOWED(57, "Search not allowed.", Response.Status.BAD_REQUEST),
     FAILED_TO_GENERATE_QR_CODE(58, "Failed to generate QR code.", Response.Status.EXPECTATION_FAILED),
-    INVALID_OTP(59, "Invalid OTP.", Response.Status.BAD_REQUEST);
+    INVALID_OTP(59, "Invalid OTP.", Response.Status.BAD_REQUEST),
+    OPERATION_NOT_ALLOWED(60, "Operation not allowed for user type", Response.Status.BAD_REQUEST);
 
     private Integer code;
     private String message;

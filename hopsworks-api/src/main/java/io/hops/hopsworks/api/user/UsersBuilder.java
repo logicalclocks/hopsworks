@@ -123,6 +123,8 @@ public class UsersBuilder {
       dto.setNumActiveProjects(user.getNumActiveProjects());
       dto.setToursState(user.getToursState());
       dto.setActivated(user.getActivated());
+      dto.setStatus(user.getStatus().getValue());
+      dto.setRole(user.getBbcGroupCollection());
     }
     return dto;
   }
