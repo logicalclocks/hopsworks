@@ -19,6 +19,7 @@ package io.hops.hopsworks.api.admin;
 import io.hops.hopsworks.api.admin.dto.NewUserDTO;
 import io.hops.hopsworks.api.filter.Audience;
 import io.hops.hopsworks.api.filter.apiKey.ApiKeyRequired;
+import io.hops.hopsworks.api.jwt.JWTHelper;
 import io.hops.hopsworks.api.user.BbcGroupDTO;
 import io.hops.hopsworks.api.user.UserIds;
 import io.hops.hopsworks.api.user.UserProfileBuilder;
@@ -46,6 +47,7 @@ import io.hops.hopsworks.persistence.entity.user.security.apiKey.ApiScope;
 import io.hops.hopsworks.persistence.entity.user.security.ua.UserAccountStatus;
 import io.hops.hopsworks.persistence.entity.user.security.ua.UserAccountType;
 import io.hops.hopsworks.persistence.entity.util.FormatUtils;
+import io.hops.hopsworks.restutils.RESTCodes;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 
@@ -72,6 +74,7 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
 import javax.ws.rs.core.UriInfo;
 import java.net.URI;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 @Path("/admin")
@@ -100,6 +103,8 @@ public class UsersAdminResource {
   protected UsersController usersController;
   @EJB
   private UserValidator userValidator;
+  @EJB
+  private JWTHelper jwtHelper;
   
   @ApiOperation(value = "Get all users profiles.", response = UserProfileDTO.class)
   @GET
@@ -148,7 +153,11 @@ public class UsersAdminResource {
   @Produces(MediaType.APPLICATION_JSON)
   public Response changeRole(@Context HttpServletRequest req, @Context SecurityContext sc, @PathParam("id") Integer id,
     String role) throws UserException {
-
+    Users user = jwtHelper.getUserPrincipal(sc);
+    if (user.getUid() == id) {
+      throw new UserException(RESTCodes.UserErrorCode.OPERATION_NOT_ALLOWED, Level.FINE,
+        "Can not change your own role.");
+    }
     UserProfileDTO  userProfileDTO = userProfileBuilder.changeRole(
       id,
       role);
