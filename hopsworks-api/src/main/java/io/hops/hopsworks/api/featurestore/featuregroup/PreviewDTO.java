@@ -17,6 +17,7 @@
 package io.hops.hopsworks.api.featurestore.featuregroup;
 
 import io.hops.hopsworks.common.api.RestDTO;
+import io.hops.hopsworks.common.featurestore.featuregroup.cached.FeatureGroupStorage;
 
 import javax.xml.bind.annotation.XmlRootElement;
 import java.util.List;
@@ -25,11 +26,13 @@ import java.util.List;
 public class PreviewDTO extends RestDTO<PreviewDTO> {
 
   private List<ColumnDTO> row;
+  private FeatureGroupStorage storage;
 
   public PreviewDTO() {}
 
-  public PreviewDTO(List<ColumnDTO> row) {
+  public PreviewDTO(List<ColumnDTO> row, FeatureGroupStorage storage) {
     this.row = row;
+    this.storage = storage;
   }
 
   public List<ColumnDTO> getRow() {
@@ -38,5 +41,13 @@ public class PreviewDTO extends RestDTO<PreviewDTO> {
 
   public void setRow(List<ColumnDTO> row) {
     this.row = row;
+  }
+
+  public void setStorage(FeatureGroupStorage storage) {
+    this.storage = storage;
+  }
+
+  public FeatureGroupStorage getStorage() {
+    return storage;
   }
 }
