@@ -183,7 +183,8 @@ describe "On #{ENV['OS']}" do
                   percentage: 0.2
               }
           ]
-          json_result, training_dataset_name = create_hopsfs_training_dataset(project.id, featurestore_id, connector, splits: splits)
+          json_result, training_dataset_name = create_hopsfs_training_dataset(project.id, featurestore_id, connector,
+           splits: splits, train_split: "train_split")
           parsed_json = JSON.parse(json_result)
           expect_status_details(201)
           expect(parsed_json.key?("splits")).to be true
@@ -203,6 +204,96 @@ describe "On #{ENV['OS']}" do
           expect(parsed_json["items"][0]["splitStatistics"][0].key?("content")).to be true
           expect(JSON.parse(parsed_json["items"][0]["splitStatistics"][0]["content"])).to eql({"columns" => ["a", "b", "c"]})
           expect(parsed_json["items"][0]["commitTime"]).to eql(1597903688000)
+        end
+
+        it "should be able to create a transformation function related statistics and retrieve content back" do
+          project = get_project
+          featurestore_id = get_featurestore_id(project.id)
+          connector = get_hopsfs_training_datasets_connector(@project[:projectname])
+
+          json_result, training_dataset_name = create_hopsfs_training_dataset(project.id, featurestore_id, connector)
+          parsed_json = JSON.parse(json_result)
+          expect_status_details(201)
+
+          # create general feature statistics content
+          create_statistics_commit(project.id, featurestore_id, "trainingdatasets", parsed_json["id"], forTransformation: false)
+
+          # create feature statistics content for transformation function
+          forTransformationStatistics = '{"columns": ["c"]}'
+          create_statistics_commit(project.id, featurestore_id, "trainingdatasets", parsed_json["id"], stat_content: forTransformationStatistics, forTransformation: true)
+
+          stat_json_result = get_last_statistics_commit(project.id, featurestore_id, "trainingdatasets", parsed_json["id"], for_transformation: false)
+          expect_status_details(200)
+          stat_parsed_json = JSON.parse(stat_json_result)
+          expect(stat_parsed_json.key?("items")).to be true
+          expect(stat_parsed_json.key?("count")).to be true
+          # should contain exactly one item
+          expect(stat_parsed_json["count"]).to eql(1)
+          expect(stat_parsed_json["items"][0].key?("content")).to be true
+          expect(JSON.parse(stat_parsed_json["items"][0]["content"])).to eql({"columns" => ["a", "b", "c"]})
+          expect(stat_parsed_json["items"][0]["commitTime"]).to eql(1597903688000)
+
+          for_transformation_json_result = get_last_statistics_commit(project.id, featurestore_id, "trainingdatasets", parsed_json["id"], for_transformation: true)
+          expect_status_details(200)
+          for_transformation_parsed_json = JSON.parse(for_transformation_json_result)
+          # should contain exactly one item
+          expect(for_transformation_parsed_json["count"]).to eql(1)
+          expect(for_transformation_parsed_json["items"][0].key?("content")).to be true
+          # transformation function statistics was computed for feature "c" only
+          expect(JSON.parse(for_transformation_parsed_json["items"][0]["content"])).to eql({"columns" => ["c"]})
+          expect(for_transformation_parsed_json["items"][0]["commitTime"]).to eql(1597903688000)
+        end
+
+        it "should be able to create a transformation function related split statistics and retrieve content back" do
+          project = get_project
+          featurestore_id = get_featurestore_id(project.id)
+          connector = get_hopsfs_training_datasets_connector(@project[:projectname])
+          splits = [
+              {
+                  name: "train_split",
+                  percentage: 0.8
+              },
+              {
+                  name: "test_split",
+                  percentage: 0.2
+              }
+          ]
+          json_result, training_dataset_name = create_hopsfs_training_dataset(project.id, featurestore_id, connector,
+           splits: splits, train_split: "train_split")
+          parsed_json = JSON.parse(json_result)
+          expect_status_details(201)
+          expect(parsed_json.key?("splits")).to be true
+          expect(parsed_json["splits"].length).to be 2
+
+          # create general feature statistics content
+          splitStatistics = [
+            {"name": "train_split", "content": '{"columns": ["a", "b", "c"]}'},
+            {"name": "test_split", "content": '{"columns": ["a", "b", "c"]}'}
+          ]
+          create_statistics_commit(project.id, featurestore_id, "trainingdatasets", parsed_json["id"], split_statistics: splitStatistics, forTransformation: false)
+
+          # create feature statistics content for transformation function
+          forTransformationStatistics = '{"columns": ["c"]}'
+          create_statistics_commit(project.id, featurestore_id, "trainingdatasets", parsed_json["id"], stat_content: forTransformationStatistics, forTransformation: true)
+
+          json_result = get_last_statistics_commit(project.id, featurestore_id, "trainingdatasets", parsed_json["id"], for_transformation: false)
+          expect_status_details(200)
+          stat_parsed_json = JSON.parse(json_result)
+          expect(stat_parsed_json["items"][0].key?("splitStatistics")).to be true
+          expect(stat_parsed_json["items"][0]["splitStatistics"].length).to be 2
+          expect(stat_parsed_json["items"][0]["splitStatistics"][0].key?("content")).to be true
+          expect(JSON.parse(stat_parsed_json["items"][0]["splitStatistics"][0]["content"])).to eql({"columns" => ["a", "b", "c"]})
+          expect(stat_parsed_json["items"][0]["commitTime"]).to eql(1597903688000)
+
+          for_transformation_json_result = get_last_statistics_commit(project.id, featurestore_id, "trainingdatasets", parsed_json["id"], for_transformation: true)
+          expect_status_details(200)
+          for_transformation_parsed_json = JSON.parse(for_transformation_json_result)
+          # should contain exactly one item
+          expect(for_transformation_parsed_json["count"]).to eql(1)
+          expect(for_transformation_parsed_json["items"][0].key?("content")).to be true
+          # transformation function statistics was computed for feature "c" only
+          expect(JSON.parse(for_transformation_parsed_json["items"][0]["content"])).to eql({"columns" => ["c"]})
+          expect(for_transformation_parsed_json["items"][0]["commitTime"]).to eql(1597903688000)
         end
       end
     end

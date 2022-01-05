@@ -132,6 +132,9 @@ public class TrainingDataset implements Serializable {
   private Collection<TrainingDatasetSplit> splits;
   @OneToMany(cascade = CascadeType.ALL, mappedBy = "trainingDataset")
   private Collection<FeaturestoreActivity> activities;
+  @Basic
+  @Column(name = "train_split")
+  private String trainSplit;
 
   public static long getSerialVersionUID() {
     return serialVersionUID;
@@ -293,6 +296,14 @@ public class TrainingDataset implements Serializable {
     this.statisticsConfig = statisticsConfig;
   }
 
+  public String getTrainSplit() {
+    return trainSplit;
+  }
+
+  public void setTrainSplit(String trainSplit) {
+    this.trainSplit = trainSplit;
+  }
+
   @Override
   public boolean equals(Object o) {
     if (this == o) return true;
@@ -315,6 +326,7 @@ public class TrainingDataset implements Serializable {
     if (trainingDatasetType != that.trainingDatasetType) return false;
     if (!Objects.equals(hopsfsTrainingDataset, that.hopsfsTrainingDataset)) return false;
     if (!Objects.equals(externalTrainingDataset, that.externalTrainingDataset)) return false;
+    if (!Objects.equals(trainSplit, that.trainSplit)) return false;
     return Objects.equals(splits, that.splits);
   }
 
@@ -336,6 +348,7 @@ public class TrainingDataset implements Serializable {
     result = 31 * result + (hopsfsTrainingDataset != null ? hopsfsTrainingDataset.hashCode() : 0);
     result = 31 * result + (externalTrainingDataset != null ? externalTrainingDataset.hashCode() : 0);
     result = 31 * result + (splits != null ? splits.hashCode() : 0);
+    result = 31 * result + (trainSplit != null ? trainSplit.hashCode() : 0);
     return result;
   }
 }

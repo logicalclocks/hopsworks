@@ -44,6 +44,7 @@ public class TrainingDatasetDTO extends FeaturestoreEntityDTO {
   // set defaults so old clients don't get broken
   private List<TrainingDatasetSplitDTO> splits = new ArrayList<>();
   private Long seed = null;
+  private String trainSplit = null;
 
   private FeaturestoreStorageConnectorDTO storageConnector;
 
@@ -72,6 +73,7 @@ public class TrainingDatasetDTO extends FeaturestoreEntityDTO {
         .collect(Collectors.toList());
     this.seed = trainingDataset.getSeed();
     this.fromQuery = trainingDataset.isQuery();
+    this.trainSplit = trainingDataset.getTrainSplit();
   }
   
   @XmlElement
@@ -159,6 +161,14 @@ public class TrainingDatasetDTO extends FeaturestoreEntityDTO {
   public void setFromQuery(Boolean fromQuery) {
     this.fromQuery = fromQuery;
   }
+  
+  public String getTrainSplit() {
+    return trainSplit;
+  }
+  
+  public void setTrainSplit(String trainSplit) {
+    this.trainSplit = trainSplit;
+  }
 
   @Override
   public String toString() {
@@ -167,6 +177,7 @@ public class TrainingDatasetDTO extends FeaturestoreEntityDTO {
       ", trainingDatasetType=" + trainingDatasetType +
       ", splits=" + splits +
       ", seed=" + seed +
+      ", trainSplit=" + trainSplit +
       ", inodeId=" + inodeId +
       '}';
   }

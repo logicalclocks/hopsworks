@@ -80,15 +80,18 @@ public class FeaturestoreStatisticFacade extends AbstractFacade<FeaturestoreStat
   public CollectionInfo findByTrainingDataset(Integer offset, Integer limit,
                                               Set<? extends SortBy> sorts,
                                               Set<? extends FilterBy> filters,
-                                              TrainingDataset trainingDataset) {
+                                              TrainingDataset trainingDataset,
+                                              boolean forTransformation) {
     String queryStr = buildQuery("SELECT s from FeaturestoreStatistic s ", filters,
-        sorts, "s.trainingDataset = :trainingDataset");
+        sorts, "s.trainingDataset = :trainingDataset AND s.forTransformation = :forTransformation");
     String queryCountStr = buildQuery("SELECT COUNT(s.id) from FeaturestoreStatistic s ", filters,
-        sorts, "s.trainingDataset = :trainingDataset");
+        sorts, "s.trainingDataset = :trainingDataset AND s.forTransformation = :forTransformation");
     Query query = em.createQuery(queryStr, FeaturestoreStatistic.class)
-        .setParameter("trainingDataset", trainingDataset);
+        .setParameter("trainingDataset", trainingDataset)
+        .setParameter("forTransformation", forTransformation);
     Query queryCount = em.createQuery(queryCountStr, FeaturestoreStatistic.class)
-        .setParameter("trainingDataset", trainingDataset);
+        .setParameter("trainingDataset", trainingDataset)
+        .setParameter("forTransformation", forTransformation);;
     setFilter(filters, query);
     setFilter(filters, queryCount);
     setOffsetAndLim(offset, limit, query);

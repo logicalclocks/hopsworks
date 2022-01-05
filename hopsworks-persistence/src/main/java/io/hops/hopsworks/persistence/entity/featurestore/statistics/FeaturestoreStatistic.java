@@ -87,6 +87,10 @@ public class FeaturestoreStatistic implements Serializable {
   @JoinColumn(name = "training_dataset_id", referencedColumnName = "id")
   private TrainingDataset trainingDataset;
 
+  @Basic(optional = false)
+  @Column(name = "for_transformation")
+  private boolean forTransformation;
+
   public FeaturestoreStatistic() {
   }
 
@@ -161,7 +165,15 @@ public class FeaturestoreStatistic implements Serializable {
   public void setTrainingDataset(TrainingDataset trainingDataset) {
     this.trainingDataset = trainingDataset;
   }
-  
+
+  public boolean getForTransformation() {
+    return forTransformation;
+  }
+
+  public void setForTransformation(boolean forTransformation) {
+    this.forTransformation = forTransformation;
+  }
+
   @Override
   public boolean equals(Object o) {
     if (this == o) {

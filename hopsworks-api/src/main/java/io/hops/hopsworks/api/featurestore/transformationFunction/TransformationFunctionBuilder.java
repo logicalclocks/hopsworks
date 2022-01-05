@@ -18,6 +18,7 @@ package io.hops.hopsworks.api.featurestore.transformationFunction;
 
 import io.hops.hopsworks.common.api.ResourceRequest;
 import io.hops.hopsworks.common.dao.AbstractFacade;
+import io.hops.hopsworks.common.featurestore.trainingdatasets.TrainingDatasetController;
 import io.hops.hopsworks.common.featurestore.transformationFunction.TransformationFunctionAttachedDTO;
 import io.hops.hopsworks.common.featurestore.transformationFunction.TransformationFunctionDTO;
 import io.hops.hopsworks.common.featurestore.transformationFunction.TransformationFunctionController;
@@ -49,6 +50,8 @@ public class TransformationFunctionBuilder {
   private TransformationFunctionController transformationFunctionController;
   @EJB
   private TransformationFunctionFacade transformationFunctionFacade;
+  @EJB
+  private TrainingDatasetController trainingDatasetController;
 
   private URI uri(UriInfo uriInfo, Project project, Featurestore featurestore) {
     return uriInfo.getBaseUriBuilder().path(ResourceRequest.Name.PROJECT.toString().toLowerCase())
@@ -157,7 +160,7 @@ public class TransformationFunctionBuilder {
         trainingDataset));
     transformationFunctionAttachedDTO.setExpand(expand(resourceRequest));
     if (transformationFunctionAttachedDTO.isExpand()) {
-      transformationFunctionAttachedDTO.setName(tdFeature.getName());
+      transformationFunctionAttachedDTO.setName(trainingDatasetController.checkPrefix(tdFeature));
       transformationFunctionAttachedDTO.setTransformationFunction(transformationFunctionDTO);
     }
 
