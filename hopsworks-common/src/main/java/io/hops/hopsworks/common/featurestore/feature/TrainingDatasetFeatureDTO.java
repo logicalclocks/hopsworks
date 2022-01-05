@@ -24,6 +24,7 @@ public class TrainingDatasetFeatureDTO {
   private String name;
   private String type;
   private FeaturegroupDTO featuregroup;
+  private String featureGroupFeatureName;
   private Integer index;
   private Boolean label = false;
   private TransformationFunctionDTO transformationFunction;
@@ -62,6 +63,14 @@ public class TrainingDatasetFeatureDTO {
 
   public void setFeaturegroup(FeaturegroupDTO featuregroupDTO) {
     this.featuregroup = featuregroupDTO;
+  }
+
+  public String getFeatureGroupFeatureName() {
+    return featureGroupFeatureName;
+  }
+
+  public void setFeatureGroupFeatureName(String featureGroupFeatureName) {
+    this.featureGroupFeatureName = featureGroupFeatureName;
   }
 
   public Integer getIndex() {

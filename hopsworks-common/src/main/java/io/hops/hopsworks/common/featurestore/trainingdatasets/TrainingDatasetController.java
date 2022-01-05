@@ -352,6 +352,7 @@ public class TrainingDatasetController {
     statisticsConfig.setStatisticColumns(trainingDatasetDTO.getStatisticsConfig().getColumns().stream()
       .map(sc -> new StatisticColumn(statisticsConfig, sc)).collect(Collectors.toList()));
     trainingDataset.setStatisticsConfig(statisticsConfig);
+    trainingDataset.setTrainSplit(trainingDatasetDTO.getTrainSplit());
 
     // set features/query
     trainingDataset.setQuery(trainingDatasetDTO.getQueryDTO() != null);
@@ -811,7 +812,7 @@ public class TrainingDatasetController {
   private TransformationFunction getTransformationFunction(
       Feature feature, List<TrainingDatasetFeatureDTO> featureDTOs) throws FeaturestoreException {
     TrainingDatasetFeatureDTO featureDTO = featureDTOs.stream().filter(dto ->
-        feature.getName().equals(dto.getName())).findFirst().orElse(null);
+        feature.getName().equals(dto.getFeatureGroupFeatureName())).findFirst().orElse(null);
     TransformationFunction transformationFunction = null;
     if (featureDTO != null && featureDTO.getTransformationFunction() != null){
       transformationFunction = transformationFunctionFacade.findById(featureDTO.getTransformationFunction().getId())
@@ -823,7 +824,7 @@ public class TrainingDatasetController {
     return transformationFunction;
   }
 
-  private String checkPrefix(TrainingDatasetFeature feature) {
+  public String checkPrefix(TrainingDatasetFeature feature) {
     if (feature.getTrainingDatasetJoin() != null && feature.getTrainingDatasetJoin().getPrefix() != null){
       return feature.getTrainingDatasetJoin().getPrefix() + feature.getName();
     } else {

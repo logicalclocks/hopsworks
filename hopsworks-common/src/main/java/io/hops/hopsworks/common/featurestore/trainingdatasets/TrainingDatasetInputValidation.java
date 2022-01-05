@@ -31,6 +31,7 @@ import io.hops.hopsworks.persistence.entity.featurestore.storageconnector.Featur
 import io.hops.hopsworks.persistence.entity.featurestore.storageconnector.FeaturestoreConnectorType;
 import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.TrainingDatasetType;
 import io.hops.hopsworks.restutils.RESTCodes;
+import joptsimple.internal.Strings;
 import org.apache.commons.lang3.StringUtils;
 
 import javax.ejb.EJB;
@@ -94,6 +95,7 @@ public class TrainingDatasetInputValidation {
     validateSplits(trainingDatasetDTO.getSplits());
     validateFeatures(query, trainingDatasetDTO.getFeatures());
     validateStorageConnector(trainingDatasetDTO.getStorageConnector());
+    validateTrainSplit(trainingDatasetDTO.getTrainSplit(), trainingDatasetDTO.getSplits());
   }
 
   private void validateType(TrainingDatasetType trainingDatasetType) throws FeaturestoreException {
@@ -179,7 +181,8 @@ public class TrainingDatasetInputValidation {
     }
 
     for (TrainingDatasetFeatureDTO featureWithTransformation : featuresWithTransformation) {
-      if (features.stream().noneMatch(f -> f.getName().equals(featureWithTransformation.getName()))) {
+      if (features.stream().noneMatch(f ->
+          f.getName().equals(featureWithTransformation.getFeatureGroupFeatureName()))) {
         throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.FEATURE_WITH_TRANSFORMATION_NOT_FOUND,
             Level.FINE, "feature: " + featureWithTransformation.getName() +
             " is missing and transformation function can't be attached");
@@ -233,6 +236,19 @@ public class TrainingDatasetInputValidation {
       // We only support creating training datasets using HopsFS, S3 or ADLS connectors
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_STORAGE_CONNECTOR_TYPE, Level.FINE,
           "Only HopsFS, S3 and ADLS storage connectors can be used to create training datasets");
+    }
+  }
+
+  void validateTrainSplit(String trainSplit, List<TrainingDatasetSplitDTO> splits)
+    throws FeaturestoreException {
+    if ((splits == null || splits.isEmpty()) && !Strings.isNullOrEmpty(trainSplit)) {
+      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_TRAINING_DATASET_SPLIT_NAME, Level.FINE,
+          "Training data split name provided without splitting the dataset.");
+    }
+    if (splits != null && !splits.isEmpty() &&
+      !splits.stream().map(TrainingDatasetSplitDTO::getName).collect(Collectors.toList()).contains(trainSplit)) {
+      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_TRAINING_DATASET_SPLIT_NAME, Level.FINE,
+        "The provided training data split name `" + trainSplit + "` could not be found among the provided splits.");
     }
   }
 }

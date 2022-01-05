@@ -78,35 +78,15 @@ public class StatisticsController {
   public String readStatisticsContent(Project project, Users user, FeaturestoreStatistic statistic)
       throws FeaturestoreException {
     String path = inodeController.getPath(statistic.getInode());
-
-    DistributedFileSystemOps udfso = null;
-    try {
-      udfso = dfs.getDfsOps(hdfsUsersController.getHdfsUserName(project, user));
-      return udfso.cat(path);
-    } catch (IOException e) {
-      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.STATISTICS_READ_ERROR,
-          Level.WARNING, e.getMessage(), e.getMessage(), e);
-    } finally {
-      dfs.closeDfsClient(udfso);
-    }
+    return readContent(project, user, path);
   }
 
   public String readStatisticsContent(Project project, Users user, FeaturestoreStatistic statistic, String splitName)
-      throws FeaturestoreException {
+          throws FeaturestoreException {
 
     String statisticsPath = inodeController.getPath(statistic.getInode());
     String path = statisticsPath + "/" + splitStatisticsFileName(splitName, statistic.getCommitTime().getTime());
-
-    DistributedFileSystemOps udfso = null;
-    try {
-      udfso = dfs.getDfsOps(hdfsUsersController.getHdfsUserName(project, user));
-      return udfso.cat(path);
-    } catch (IOException e) {
-      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.STATISTICS_READ_ERROR,
-          Level.WARNING, e.getMessage(), e.getMessage(), e);
-    } finally {
-      dfs.closeDfsClient(udfso);
-    }
+    return readContent(project, user, path);
   }
 
   public FeaturestoreStatistic registerStatistics(Project project, Users user, Long statisticsCommitTimeStamp,
@@ -128,12 +108,12 @@ public class StatisticsController {
           featuregroup, featureGroupCommit.getCommittedOn()).orElse(null);
 
       statisticsCommitTimeStamp = statisticsFgCommit == null
-           ? featureGroupCommit.getCommittedOn()
-           : statisticsCommitTimeStamp;
+          ? featureGroupCommit.getCommittedOn()
+          : statisticsCommitTimeStamp;
     }
 
     Inode statisticsInode = registerStatistics(project, user, statisticsCommitTimeStamp, statisticsJson.toString(),
-        featuregroup.getName(), "FeatureGroups", featuregroup.getVersion(), null);
+        featuregroup.getName(), "FeatureGroups", featuregroup.getVersion(), null, false);
     Timestamp commitTime = new Timestamp(statisticsCommitTimeStamp);
 
     FeaturestoreStatistic featurestoreStatistic = new FeaturestoreStatistic(commitTime, statisticsInode, featuregroup);
@@ -150,50 +130,45 @@ public class StatisticsController {
   }
 
   public FeaturestoreStatistic registerStatistics(Project project, Users user, Long commitTimeStamp, String content,
-                                                  TrainingDataset trainingDataset)
+                                                  TrainingDataset trainingDataset, Map<String, String> splitStatistics,
+                                                  boolean forTransformation)
       throws FeaturestoreException, DatasetException, HopsSecurityException, IOException {
 
-    JSONObject statisticsJson = extractJsonFromContent(content);
+    String statContent =  null;
+    if (content != null) {
+      JSONObject statisticsJson = extractJsonFromContent(content);
+      statContent = statisticsJson.toString();
+    }
 
-    Inode statisticsInode = registerStatistics(project, user, commitTimeStamp, statisticsJson.toString(),
-        trainingDataset.getName(), "TrainingDatasets", trainingDataset.getVersion(), null);
+    Map<String, JSONObject> splitStatJson = null;
+    if (splitStatistics != null) {
+      splitStatJson =  new HashMap<>();
+      for (Map.Entry<String, String> entry: splitStatistics.entrySet()){
+        splitStatJson.put(entry.getKey(), extractJsonFromContent(entry.getValue()));
+      }
+    }
+
+    Inode statisticsInode = registerStatistics(project, user, commitTimeStamp, statContent,
+        trainingDataset.getName(), "TrainingDatasets", trainingDataset.getVersion(), splitStatJson,
+        forTransformation);
     Timestamp commitTime = new Timestamp(commitTimeStamp);
     FeaturestoreStatistic featurestoreStatistic =
         new FeaturestoreStatistic(commitTime, statisticsInode, trainingDataset);
+    featurestoreStatistic.setForTransformation(forTransformation);
     featurestoreStatistic = featurestoreStatisticFacade.update(featurestoreStatistic);
 
-    // Log statistics activity
-    fsActivityFacade
-        .logStatisticsActivity(user, trainingDataset, new Date(commitTime.getTime()), featurestoreStatistic);
-
-    return featurestoreStatistic;
-  }
-
-  public FeaturestoreStatistic registerStatistics(Project project, Users user, Long commitTimeStamp,
-                                                  TrainingDataset trainingDataset, Map<String, String> splitStatistics)
-      throws FeaturestoreException, DatasetException, HopsSecurityException, IOException {
-
-    Map<String, JSONObject> splitStatJson =  new HashMap<>();
-    for (Map.Entry<String, String> entry: splitStatistics.entrySet()){
-      splitStatJson.put(entry.getKey(), extractJsonFromContent(entry.getValue()));
+    // Log statistics activity (we don't log if this is for transformation function)
+    if (!forTransformation) {
+      fsActivityFacade
+          .logStatisticsActivity(user, trainingDataset, new Date(commitTime.getTime()), featurestoreStatistic);
     }
-
-    Inode statisticsInode = registerStatistics(project, user, commitTimeStamp, null,
-        trainingDataset.getName(), "TrainingDatasets", trainingDataset.getVersion(), splitStatJson);
-    Timestamp commitTime = new Timestamp(commitTimeStamp);
-    FeaturestoreStatistic featurestoreStatistic =
-      new FeaturestoreStatistic(commitTime, statisticsInode, trainingDataset);
-    featurestoreStatistic = featurestoreStatisticFacade.update(featurestoreStatistic);
-
-    // Log statistics activity
-    fsActivityFacade
-        .logStatisticsActivity(user, trainingDataset, new Date(commitTime.getTime()), featurestoreStatistic);
 
     return featurestoreStatistic;
   }
 
   private Inode registerStatistics(Project project, Users user, Long commitTime, String content, String entityName,
-                                  String entitySubDir, Integer version, Map<String, JSONObject> splitStatistics)
+                                   String entitySubDir, Integer version, Map<String, JSONObject> splitStatistics,
+                                   boolean forTransformation)
       throws DatasetException, HopsSecurityException, IOException {
 
     DistributedFileSystemOps udfso = null;
@@ -221,7 +196,12 @@ public class StatisticsController {
         }
         inode = inodeController.getInodeAtPath(dirPath.toString());
       } else {
-        Path filePath = new Path(dirPath, commitTime + ".json");
+        Path filePath;
+        if (forTransformation) {
+          filePath = new Path(dirPath, transformationFnStatisticsFileName(commitTime));
+        } else {
+          filePath = new Path(dirPath, commitTime + ".json");
+        }
         udfso.create(filePath, content);
         inode = inodeController.getInodeAtPath(filePath.toString());
       }
@@ -232,17 +212,17 @@ public class StatisticsController {
   }
 
   public void deleteStatistics(Project project, Users user, Featuregroup featuregroup)
-    throws FeaturestoreException {
+      throws FeaturestoreException {
     deleteStatistics(project, user, featuregroup.getName(), "FeatureGroups", featuregroup.getVersion());
   }
 
   public void deleteStatistics(Project project, Users user, TrainingDataset trainingDataset)
-    throws FeaturestoreException {
+      throws FeaturestoreException {
     deleteStatistics(project, user, trainingDataset.getName(), "TrainingDatasets", trainingDataset.getVersion());
   }
 
   private void deleteStatistics(Project project, Users user, String entityName, String entitySubDir, Integer version)
-    throws FeaturestoreException {
+      throws FeaturestoreException {
     DistributedFileSystemOps udfso = null;
     try {
       udfso = dfs.getDfsOps(hdfsUsersController.getHdfsUserName(project, user));
@@ -258,7 +238,7 @@ public class StatisticsController {
       udfso.rm(dirPath, true);
     } catch (DatasetException | HopsSecurityException | IOException e) {
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ERROR_DELETING_STATISTICS,
-        Level.WARNING, "", e.getMessage(), e);
+          Level.WARNING, "", e.getMessage(), e);
     } finally {
       dfs.closeDfsClient(udfso);
     }
@@ -307,5 +287,22 @@ public class StatisticsController {
 
   private String splitStatisticsFileName(String name, Long commitTime) {
     return name + "_" +  commitTime + ".json";
+  }
+
+  private String transformationFnStatisticsFileName(Long commitTime) {
+    return "transformation_fn" + "_" +  commitTime + ".json";
+  }
+
+  private String readContent(Project project, Users user, String path) throws FeaturestoreException {
+    DistributedFileSystemOps udfso = null;
+    try {
+      udfso = dfs.getDfsOps(hdfsUsersController.getHdfsUserName(project, user));
+      return udfso.cat(path);
+    } catch (IOException e) {
+      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.STATISTICS_READ_ERROR,
+          Level.WARNING, e.getMessage(), e.getMessage(), e);
+    } finally {
+      dfs.closeDfsClient(udfso);
+    }
   }
 }

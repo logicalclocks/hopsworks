@@ -15,26 +15,32 @@
 
 module FeatureStoreStatisticsHelper
 
-  def create_statistics_commit(project_id, featurestore_id, entity_type, entity_id, split_statistics: nil, commit_time: 1597903688000)
+  def create_statistics_commit(project_id, featurestore_id, entity_type, entity_id, stat_content: nil, split_statistics: nil, commit_time: 1597903688000, forTransformation: false)
     post_statistics_endpoint = "#{ENV['HOPSWORKS_API']}/project/#{project_id}/featurestores/#{featurestore_id}/#{entity_type}/#{entity_id}/statistics"
     json_data = {
         commitTime: commit_time,
     }
 
-    if split_statistics == nil
-       json_data[:content] = '{"columns": ["a", "b", "c"]}'
+    if stat_content == nil
+        if split_statistics == nil
+           json_data[:content] = '{"columns": ["a", "b", "c"]}'
+        else
+           json_data[:splitStatistics] = split_statistics
+        end
     else
-       json_data[:splitStatistics] = split_statistics
+        json_data[:content] = stat_content
     end
+
+    json_data[:forTransformation] = forTransformation
 
     post post_statistics_endpoint, json_data.to_json
   end
 
-  def get_statistics_commit(project_id, featurestore_id, entity_type, entity_id, commit_time: 1597903688000)
-    get "#{ENV['HOPSWORKS_API']}/project/#{project_id}/featurestores/#{featurestore_id}/#{entity_type}/#{entity_id}/statistics?filter_by=commit_time_eq:#{commit_time}&fields=content"
+  def get_statistics_commit(project_id, featurestore_id, entity_type, entity_id, commit_time: 1597903688000, for_transformation: false)
+    get "#{ENV['HOPSWORKS_API']}/project/#{project_id}/featurestores/#{featurestore_id}/#{entity_type}/#{entity_id}/statistics?filter_by=commit_time_eq:#{commit_time}&fields=content&for_transformation=#{for_transformation}"
   end
 
-  def get_last_statistics_commit(project_id, featurestore_id, entity_type, entity_id)
-    get "#{ENV['HOPSWORKS_API']}/project/#{project_id}/featurestores/#{featurestore_id}/#{entity_type}/#{entity_id}/statistics?sort_by=commit_time:desc&offset=0&limit=1&fields=content"
+  def get_last_statistics_commit(project_id, featurestore_id, entity_type, entity_id, for_transformation: false)
+    get "#{ENV['HOPSWORKS_API']}/project/#{project_id}/featurestores/#{featurestore_id}/#{entity_type}/#{entity_id}/statistics?sort_by=commit_time:desc&offset=0&limit=1&fields=content&for_transformation=#{for_transformation}"
   end
 end
