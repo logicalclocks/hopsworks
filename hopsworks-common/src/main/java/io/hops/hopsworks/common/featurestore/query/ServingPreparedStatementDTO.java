@@ -24,6 +24,7 @@ import java.util.List;
 @XmlRootElement
 public class ServingPreparedStatementDTO  extends RestDTO<ServingPreparedStatementDTO> {
 
+  private Integer featureGroupId;
   private Integer preparedStatementIndex;
   private List<PreparedStatementParameterDTO> preparedStatementParameters;
   private String queryOnline;
@@ -31,12 +32,21 @@ public class ServingPreparedStatementDTO  extends RestDTO<ServingPreparedStateme
   public ServingPreparedStatementDTO() {
   }
 
-  public ServingPreparedStatementDTO(Integer preparedStatementIndex,
+  public ServingPreparedStatementDTO(Integer featureGroupId, Integer preparedStatementIndex,
                                      List<PreparedStatementParameterDTO> preparedStatementParameters,
                                      String queryOnline) {
+    this.featureGroupId = featureGroupId;
     this.preparedStatementIndex = preparedStatementIndex;
     this.queryOnline = queryOnline;
     this.preparedStatementParameters = preparedStatementParameters;
+  }
+
+  public Integer getFeatureGroupId() {
+    return featureGroupId;
+  }
+
+  public void setFeatureGroupId(Integer featureGroupId) {
+    this.featureGroupId = featureGroupId;
   }
 
   public Integer getPreparedStatementIndex() {

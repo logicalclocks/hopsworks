@@ -585,7 +585,7 @@ module FeaturestoreHelper
 
   def create_hopsfs_training_dataset(project_id, featurestore_id, hopsfs_connector, name:nil, data_format: nil,
                                      version: 1, splits: [], features: nil, description: nil, query: nil,
-                                     statistics_config: nil)
+                                     statistics_config: nil, train_split: nil)
     trainingDatasetType = "HOPSFS_TRAINING_DATASET"
     create_training_dataset_endpoint = "#{ENV['HOPSWORKS_API']}/project/" + project_id.to_s + "/featurestores/" + featurestore_id.to_s + "/trainingdatasets"
     name = name == nil ? "training_dataset_#{random_id}" : name
@@ -613,7 +613,8 @@ module FeaturestoreHelper
         features: features,
         splits: splits,
         seed: 1234,
-        queryDTO: query
+        queryDTO: query,
+        trainSplit: train_split
     }
 
     unless statistics_config == nil
@@ -631,7 +632,7 @@ module FeaturestoreHelper
   end
 
   def create_external_training_dataset(project_id, featurestore_id, connector_id, name: nil, location: "",
-                                       splits:[], features: nil)
+                                       splits:[], features: nil, train_split: nil)
     trainingDatasetType = "EXTERNAL_TRAINING_DATASET"
     create_training_dataset_endpoint = "#{ENV['HOPSWORKS_API']}/project/#{project_id}/featurestores/#{featurestore_id}/trainingdatasets"
     if name == nil
@@ -659,7 +660,8 @@ module FeaturestoreHelper
         trainingDatasetType: trainingDatasetType,
         features: features == nil ? default_features : features,
         splits: splits,
-        seed: 1234
+        seed: 1234,
+        trainSplit: train_split,
     }
 
     unless connector_id.nil?

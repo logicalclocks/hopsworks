@@ -160,7 +160,8 @@ describe "On #{ENV['OS']}" do
               }
           ]
           json_result, training_dataset_name = create_hopsfs_training_dataset(project.id, featurestore_id, connector,
-                                                                              splits: splits)
+                                                                              splits: splits, train_split:
+                                                                                "train_split")
           parsed_json = JSON.parse(json_result)
           expect_status(201)
           expect(parsed_json.key?("splits")).to be true
@@ -211,7 +212,7 @@ describe "On #{ENV['OS']}" do
               }
           ]
           json_result, training_dataset_name = create_hopsfs_training_dataset(project.id, featurestore_id, connector,
-                                                                              splits: splits)
+                                                                              splits: splits, train_split: "test_split")
           parsed_json = JSON.parse(json_result)
           expect_status(400)
           expect(parsed_json.key?("errorCode")).to be true
@@ -1202,7 +1203,8 @@ describe "On #{ENV['OS']}" do
               }
           ]
           json_result, training_dataset_name = create_external_training_dataset(project.id, featurestore_id,
-                                                                                connector_id, splits: splits)
+                                                                                connector_id, splits: splits,
+                                                                                train_split: "train_split")
 
           parsed_json = JSON.parse(json_result)
           expect_status(201)
@@ -1256,7 +1258,8 @@ describe "On #{ENV['OS']}" do
               }
           ]
           json_result, training_dataset_name = create_external_training_dataset(project.id, featurestore_id,
-                                                                                connector_id, splits: splits)
+                                                                                connector_id, splits: splits,
+                                                                                train_split: "test_split")
 
           parsed_json = JSON.parse(json_result)
           expect_status(400)
@@ -1887,8 +1890,8 @@ describe "On #{ENV['OS']}" do
           }
 
           td_schema = [
-              {type: "INT", name: "a_testfeature1", label: false, transformationFunction: transformation_function},
-              {type: "INT", name: "b_testfeature1", label: false, transformationFunction: transformation_function}
+              {type: "INT", name: "a_testfeature1", featureGroupFeatureName: "a_testfeature1", label: false, transformationFunction: transformation_function},
+              {type: "INT", name: "b_testfeature1", featureGroupFeatureName: "b_testfeature1", label: false, transformationFunction: transformation_function}
           ]
 
           json_result, training_dataset_name = create_hopsfs_training_dataset(@project.id, featurestore_id, nil, query: query, features: td_schema)

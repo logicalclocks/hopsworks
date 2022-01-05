@@ -48,6 +48,7 @@ import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.persistence.entity.user.security.apiKey.ApiScope;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiParam;
 
 import javax.ejb.EJB;
 import javax.ejb.TransactionAttribute;
@@ -55,10 +56,12 @@ import javax.ejb.TransactionAttributeType;
 import javax.enterprise.context.RequestScoped;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.Consumes;
+import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
@@ -116,7 +119,7 @@ public class StatisticsResource {
 
   @GET
   @Produces(MediaType.APPLICATION_JSON)
-  @ApiOperation(value = "Get all available statistics")
+  @ApiOperation(value = "Get all available statistics", response = StatisticsDTO.class)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   @JWTRequired(acceptedTokens = {Audience.API, Audience.JOB}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   @ApiKeyRequired(acceptedScopes = {ApiScope.DATASET_VIEW, ApiScope.FEATURESTORE},
@@ -124,7 +127,10 @@ public class StatisticsResource {
   public Response get(@BeanParam Pagination pagination,
                       @BeanParam StatisticsBeanParam statisticsBeanParam,
                       @Context UriInfo uriInfo,
-                      @Context SecurityContext sc) throws FeaturestoreException {
+                      @Context SecurityContext sc,
+                      @ApiParam(value = "for_transformation", example = "false")
+                      @QueryParam("for_transformation") @DefaultValue("false") Boolean forTransformation)
+      throws FeaturestoreException {
     Users user = jWTHelper.getUserPrincipal(sc);
 
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.STATISTICS);
@@ -138,7 +144,8 @@ public class StatisticsResource {
     if (featuregroup != null) {
       dto = statisticsBuilder.build(uriInfo, resourceRequest, project, user, featurestore, featuregroup);
     } else {
-      dto = statisticsBuilder.build(uriInfo, resourceRequest, project, user, featurestore, trainingDataset);
+      dto = statisticsBuilder.build(uriInfo, resourceRequest, project, user, featurestore, trainingDataset,
+          forTransformation);
     }
     return Response.ok().entity(dto).build();
   }
@@ -166,14 +173,14 @@ public class StatisticsResource {
       dto = statisticsBuilder.build(uriInfo, new ResourceRequest(ResourceRequest.Name.STATISTICS),
           project, user, featuregroup, statistics);
     } else {
-      if (statisticsDTO.getSplitStatistics() != null){
+      if (statisticsDTO.getSplitStatistics() != null && !statisticsDTO.getForTransformation()) {
         Map<String, String> splitStatistics = statisticsDTO.getSplitStatistics().stream()
             .collect(Collectors.toMap(SplitStatisticsDTO::getName, SplitStatisticsDTO::getContent));
-        statistics = statisticsController.registerStatistics(project, user, statisticsDTO.getCommitTime(),
-             trainingDataset, splitStatistics);
+        statistics = statisticsController.registerStatistics(project, user, statisticsDTO.getCommitTime(), null,
+             trainingDataset, splitStatistics, false);
       } else {
         statistics = statisticsController.registerStatistics(project, user, statisticsDTO.getCommitTime(),
-            statisticsDTO.getContent(), trainingDataset);
+            statisticsDTO.getContent(), trainingDataset, null, statisticsDTO.getForTransformation());
       }
       dto = statisticsBuilder.build(uriInfo, new ResourceRequest(ResourceRequest.Name.STATISTICS),
           project, user, trainingDataset, statistics);
