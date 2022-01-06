@@ -781,17 +781,15 @@ public class HopsUtils {
     try {
       udfso = dfs.getDfsOps(hdfsUsername);
       if(udfso == null) {
-        String usrMsg = "Failed to remove files - try to manually remove:" + path;
-        String devMsg = "Could not create udfso to perform operations on the file system";
-        throw new DatasetException(RESTCodes.DatasetErrorCode.INODE_DELETION_ERROR, Level.INFO, usrMsg, devMsg);
+        throw new DatasetException(RESTCodes.DatasetErrorCode.INODE_DELETION_ERROR, Level.INFO,
+          "Failed to remove files - try to manually remove:" + path,
+          "Could not create udfso to perform operations on the file system");
       }
-      try {
-        udfso.rm(path, true);
-      } catch (IOException e) {
-        String usrMsg = "Failed to remove files - try to manually remove:" + path;
-        String devMsg = "File system rm operation failure on:" + path;
-        throw new DatasetException(RESTCodes.DatasetErrorCode.INODE_DELETION_ERROR, Level.INFO, usrMsg, devMsg);
-      }
+      udfso.rm(path, true);
+    } catch (IOException e) {
+      throw new DatasetException(RESTCodes.DatasetErrorCode.INODE_DELETION_ERROR, Level.INFO,
+        "Failed to remove files - try to manually remove:" + path,
+        "File system rm operation failure on:" + path);
     } finally {
       if (udfso != null) {
         dfs.closeDfsClient(udfso);
