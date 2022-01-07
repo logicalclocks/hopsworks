@@ -313,17 +313,17 @@ public class TestProvOpsControllerEEImpl {
                     constructJsonObject("should", Arrays.asList("derived_td1_1"), "ml_id") + constructJsonObject("must_not", Arrays.asList("none"), "app_id"))));
     expectedMultiScrollingQuery.add(Arrays.asList(
             constructSearchScrollingQuery(
-                    constructJsonObject("should", Arrays.asList("4"), "app_id") +  constructJsonObject("must_not", Arrays.asList("none"), "app_id"))));
+                    constructJsonObject("should", Arrays.asList("4"), "app_id"))));
     expectedMultiScrollingQuery.add(Arrays.asList(
             constructSearchScrollingQuery(
-                    constructJsonObject("should", Arrays.asList("raw_fg2_1"), "ml_id") + constructJsonObject("should", Arrays.asList("FEATURE_PART"), "ml_type") + constructJsonObject("must_not", Arrays.asList("none"), "app_id")),
+                    constructJsonObject("should", Arrays.asList("raw_fg3_1"), "ml_id") + constructJsonObject("should", Arrays.asList("FEATURE", "FEATURE_PART"), "ml_type") + constructJsonObject("must_not", Arrays.asList("none"), "app_id")),
             constructSearchScrollingQuery(
-                    constructJsonObject("should", Arrays.asList("raw_fg3_1"), "ml_id") + constructJsonObject("should", Arrays.asList("FEATURE_PART"), "ml_type") + constructJsonObject("must_not", Arrays.asList("none"), "app_id"))));
+                    constructJsonObject("should", Arrays.asList("raw_fg2_1"), "ml_id") + constructJsonObject("should", Arrays.asList("FEATURE", "FEATURE_PART"), "ml_type") + constructJsonObject("must_not", Arrays.asList("none"), "app_id"))));
     expectedMultiScrollingQuery.add(Arrays.asList(
             constructSearchScrollingQuery(
-                    constructJsonObject("should", Arrays.asList("2"), "app_id") + constructJsonObject("must_not", Arrays.asList("none"), "app_id")),
+                    constructJsonObject("should", Arrays.asList("2"), "app_id")),
             constructSearchScrollingQuery(
-                    constructJsonObject("should", Arrays.asList("3"), "app_id") + constructJsonObject("must_not", Arrays.asList("none"), "app_id"))));
+                    constructJsonObject("should", Arrays.asList("3"), "app_id"))));
     //endregion
 
     ArgumentCaptor<MultiSearchRequest> multiRequest = ArgumentCaptor.forClass(MultiSearchRequest.class);
@@ -346,7 +346,7 @@ public class TestProvOpsControllerEEImpl {
 
     //assert
     Mockito.verify(client, Mockito.times(expectedMultiScrollingQuery.size()))
-            .multiSearchScrolling(multiRequest.capture(), Mockito.any(ElasticHits.Handler.class));
+            .multiSearchScrolling(multiRequest.capture(), Mockito.any(ProvOpsControllerEEImpl.HandlerFactory.class));
     for (int i = 0; i < multiRequest.getAllValues().size(); i++) {
       for (int j = 0; j < multiRequest.getAllValues().get(i).requests().size(); j++) {
         JSONAssert.assertEquals(expectedMultiScrollingQuery.get(i).get(j), multiRequest.getAllValues().get(i).requests().get(j).source().toString(), false);
@@ -380,9 +380,9 @@ public class TestProvOpsControllerEEImpl {
                     constructJsonObject("should", Arrays.asList("4"), "app_id"))));
     expectedMultiScrollingQuery.add(Arrays.asList(
             constructSearchScrollingQuery(
-                    constructJsonObject("should", Arrays.asList("raw_fg2_1"), "ml_id") + constructJsonObject("should", Arrays.asList("FEATURE_PART"), "ml_type")),
+                    constructJsonObject("should", Arrays.asList("raw_fg3_1"), "ml_id") + constructJsonObject("should", Arrays.asList("FEATURE", "FEATURE_PART"), "ml_type")),
             constructSearchScrollingQuery(
-                    constructJsonObject("should", Arrays.asList("raw_fg3_1"), "ml_id") + constructJsonObject("should", Arrays.asList("FEATURE_PART"), "ml_type"))));
+                    constructJsonObject("should", Arrays.asList("raw_fg2_1"), "ml_id") + constructJsonObject("should", Arrays.asList("FEATURE", "FEATURE_PART"), "ml_type"))));
     expectedMultiScrollingQuery.add(Arrays.asList(
             constructSearchScrollingQuery(
                     constructJsonObject("should", Arrays.asList("2"), "app_id")),
@@ -417,7 +417,7 @@ public class TestProvOpsControllerEEImpl {
 
     //assert
     Mockito.verify(client, Mockito.times(expectedMultiScrollingQuery.size()))
-            .multiSearchScrolling(multiRequest.capture(), Mockito.any(ElasticHits.Handler.class));
+            .multiSearchScrolling(multiRequest.capture(), Mockito.any(ProvOpsControllerEEImpl.HandlerFactory.class));
     for (int i = 0; i < multiRequest.getAllValues().size(); i++) {
       for (int j = 0; j < multiRequest.getAllValues().get(i).requests().size(); j++) {
         JSONAssert.assertEquals(expectedMultiScrollingQuery.get(i).get(j), multiRequest.getAllValues().get(i).requests().get(j).source().toString(), false);
@@ -455,9 +455,9 @@ public class TestProvOpsControllerEEImpl {
                     constructJsonObject("should", Arrays.asList("4"), "app_id"))));
     expectedMultiScrollingQuery.add(Arrays.asList(
             constructSearchScrollingQuery(
-                    constructJsonObject("should", Arrays.asList("raw_fg2_1"), "ml_id") + constructJsonObject("should", Arrays.asList("FEATURE_PART"), "ml_type")),
+                    constructJsonObject("should", Arrays.asList("raw_fg3_1"), "ml_id") + constructJsonObject("should", Arrays.asList("FEATURE", "FEATURE_PART"), "ml_type")),
             constructSearchScrollingQuery(
-                    constructJsonObject("should", Arrays.asList("raw_fg3_1"), "ml_id") + constructJsonObject("should", Arrays.asList("FEATURE_PART"), "ml_type"))));
+                    constructJsonObject("should", Arrays.asList("raw_fg2_1"), "ml_id") + constructJsonObject("should", Arrays.asList("FEATURE", "FEATURE_PART"), "ml_type"))));
     expectedMultiScrollingQuery.add(Arrays.asList(
             constructSearchScrollingQuery(
                     constructJsonObject("should", Arrays.asList("2"), "app_id")),
@@ -492,7 +492,7 @@ public class TestProvOpsControllerEEImpl {
 
     //assert
     Mockito.verify(client, Mockito.times(expectedMultiScrollingQuery.size()))
-            .multiSearchScrolling(multiRequest.capture(), Mockito.any(ElasticHits.Handler.class));
+            .multiSearchScrolling(multiRequest.capture(), Mockito.any(ProvOpsControllerEEImpl.HandlerFactory.class));
     for (int i = 0; i < multiRequest.getAllValues().size(); i++) {
       for (int j = 0; j < multiRequest.getAllValues().get(i).requests().size(); j++) {
         JSONAssert.assertEquals(expectedMultiScrollingQuery.get(i).get(j), multiRequest.getAllValues().get(i).requests().get(j).source().toString(), false);
@@ -529,15 +529,15 @@ public class TestProvOpsControllerEEImpl {
                     constructJsonObject("should", Arrays.asList("derived_td1_1"), "ml_id") + constructJsonObject("must_not", Arrays.asList("none"), "app_id"))));
     expectedMultiScrollingQuery.add(Arrays.asList(
             constructSearchScrollingQuery(
-                    constructJsonObject("should", Arrays.asList("4"), "app_id") + constructJsonObject("must_not", Arrays.asList("none"), "app_id"))));
+                    constructJsonObject("should", Arrays.asList("4"), "app_id"))));
     expectedMultiScrollingQuery.add(Arrays.asList(
             constructSearchScrollingQuery(
                     constructJsonObject("should", Arrays.asList("derived_td1_1"), "ml_id") + constructJsonObject("must_not", Arrays.asList("none"), "app_id"))));
     expectedMultiScrollingQuery.add(Arrays.asList(
             constructSearchScrollingQuery(
-                    constructJsonObject("should", Arrays.asList("5"), "app_id") + constructJsonObject("must_not", Arrays.asList("none"), "app_id")),
+                    constructJsonObject("should", Arrays.asList("5"), "app_id")),
             constructSearchScrollingQuery(
-                    constructJsonObject("should", Arrays.asList("6"), "app_id") + constructJsonObject("must_not", Arrays.asList("none"), "app_id"))));
+                    constructJsonObject("should", Arrays.asList("6"), "app_id"))));
     //endregion
 
     ArgumentCaptor<MultiSearchRequest> multiRequest = ArgumentCaptor.forClass(MultiSearchRequest.class);
@@ -563,7 +563,7 @@ public class TestProvOpsControllerEEImpl {
 
     //assert
     Mockito.verify(client, Mockito.times(expectedMultiScrollingQuery.size()))
-            .multiSearchScrolling(multiRequest.capture(), Mockito.any(ElasticHits.Handler.class));
+            .multiSearchScrolling(multiRequest.capture(), Mockito.any(ProvOpsControllerEEImpl.HandlerFactory.class));
     for (int i = 0; i < multiRequest.getAllValues().size(); i++) {
       for (int j = 0; j < multiRequest.getAllValues().get(i).requests().size(); j++) {
         JSONAssert.assertEquals(expectedMultiScrollingQuery.get(i).get(j), multiRequest.getAllValues().get(i).requests().get(j).source().toString(), false);
@@ -637,7 +637,7 @@ public class TestProvOpsControllerEEImpl {
 
     //assert
     Mockito.verify(client, Mockito.times(expectedMultiScrollingQuery.size()))
-            .multiSearchScrolling(multiRequest.capture(), Mockito.any(ElasticHits.Handler.class));
+            .multiSearchScrolling(multiRequest.capture(), Mockito.any(ProvOpsControllerEEImpl.HandlerFactory.class));
     for (int i = 0; i < multiRequest.getAllValues().size(); i++) {
       for (int j = 0; j < multiRequest.getAllValues().get(i).requests().size(); j++) {
         JSONAssert.assertEquals(expectedMultiScrollingQuery.get(i).get(j), multiRequest.getAllValues().get(i).requests().get(j).source().toString(), false);
@@ -713,7 +713,7 @@ public class TestProvOpsControllerEEImpl {
 
     //assert
     Mockito.verify(client, Mockito.times(expectedMultiScrollingQuery.size()))
-            .multiSearchScrolling(multiRequest.capture(), Mockito.any(ElasticHits.Handler.class));
+            .multiSearchScrolling(multiRequest.capture(), Mockito.any(ProvOpsControllerEEImpl.HandlerFactory.class));
     for (int i = 0; i < multiRequest.getAllValues().size(); i++) {
       for (int j = 0; j < multiRequest.getAllValues().get(i).requests().size(); j++) {
         JSONAssert.assertEquals(expectedMultiScrollingQuery.get(i).get(j), multiRequest.getAllValues().get(i).requests().get(j).source().toString(), false);
@@ -750,14 +750,14 @@ public class TestProvOpsControllerEEImpl {
                     constructJsonObject("should", Arrays.asList("4"), "app_id") + constructJsonObject("must_not", Arrays.asList("none"), "app_id"))));
     expectedMultiScrollingQuery.add(Arrays.asList(
             constructSearchScrollingQuery(
-                    constructJsonObject("should", Arrays.asList("raw_fg2_1"), "ml_id") + constructJsonObject("should", Arrays.asList("FEATURE_PART"), "ml_type") + constructJsonObject("must_not", Arrays.asList("none"), "app_id")),
+                    constructJsonObject("should", Arrays.asList("raw_fg3_1"), "ml_id") + constructJsonObject("should", Arrays.asList("FEATURE", "FEATURE_PART"), "ml_type") + constructJsonObject("must_not", Arrays.asList("none"), "app_id")),
             constructSearchScrollingQuery(
-                    constructJsonObject("should", Arrays.asList("raw_fg3_1"), "ml_id") + constructJsonObject("should", Arrays.asList("FEATURE_PART"), "ml_type") + constructJsonObject("must_not", Arrays.asList("none"), "app_id"))));
+                    constructJsonObject("should", Arrays.asList("raw_fg2_1"), "ml_id") + constructJsonObject("should", Arrays.asList("FEATURE", "FEATURE_PART"), "ml_type") + constructJsonObject("must_not", Arrays.asList("none"), "app_id"))));
     expectedMultiScrollingQuery.add(Arrays.asList(
             constructSearchScrollingQuery(
-                    constructJsonObject("should", Arrays.asList("2"), "app_id") + constructJsonObject("must_not", Arrays.asList("none"), "app_id")),
+                    constructJsonObject("should", Arrays.asList("2"), "app_id")),
             constructSearchScrollingQuery(
-                    constructJsonObject("should", Arrays.asList("3"), "app_id") + constructJsonObject("must_not", Arrays.asList("none"), "app_id"))));
+                    constructJsonObject("should", Arrays.asList("3"), "app_id"))));
     //endregion
 
     ArgumentCaptor<MultiSearchRequest> multiRequest = ArgumentCaptor.forClass(MultiSearchRequest.class);
@@ -779,7 +779,7 @@ public class TestProvOpsControllerEEImpl {
 
     //assert
     Mockito.verify(client, Mockito.times(expectedMultiScrollingQuery.size()))
-            .multiSearchScrolling(multiRequest.capture(), Mockito.any(ElasticHits.Handler.class));
+            .multiSearchScrolling(multiRequest.capture(), Mockito.any(ProvOpsControllerEEImpl.HandlerFactory.class));
     for (int i = 0; i < multiRequest.getAllValues().size(); i++) {
       for (int j = 0; j < multiRequest.getAllValues().get(i).requests().size(); j++) {
         JSONAssert.assertEquals(expectedMultiScrollingQuery.get(i).get(j), multiRequest.getAllValues().get(i).requests().get(j).source().toString(), false);
@@ -810,9 +810,9 @@ public class TestProvOpsControllerEEImpl {
                     constructJsonObject("should", Arrays.asList("4"), "app_id"))));
     expectedMultiScrollingQuery.add(Arrays.asList(
             constructSearchScrollingQuery(
-                    constructJsonObject("should", Arrays.asList("raw_fg2_1"), "ml_id") + constructJsonObject("should", Arrays.asList("FEATURE_PART"), "ml_type")),
+                    constructJsonObject("should", Arrays.asList("raw_fg3_1"), "ml_id") + constructJsonObject("should", Arrays.asList("FEATURE", "FEATURE_PART"), "ml_type")),
             constructSearchScrollingQuery(
-                    constructJsonObject("should", Arrays.asList("raw_fg3_1"), "ml_id") + constructJsonObject("should", Arrays.asList("FEATURE_PART"), "ml_type"))));
+                    constructJsonObject("should", Arrays.asList("raw_fg2_1"), "ml_id") + constructJsonObject("should", Arrays.asList("FEATURE", "FEATURE_PART"), "ml_type"))));
     expectedMultiScrollingQuery.add(Arrays.asList(
             constructSearchScrollingQuery(
                     constructJsonObject("should", Arrays.asList("2"), "app_id")),
@@ -846,7 +846,7 @@ public class TestProvOpsControllerEEImpl {
 
     //assert
     Mockito.verify(client, Mockito.times(expectedMultiScrollingQuery.size()))
-            .multiSearchScrolling(multiRequest.capture(), Mockito.any(ElasticHits.Handler.class));
+            .multiSearchScrolling(multiRequest.capture(), Mockito.any(ProvOpsControllerEEImpl.HandlerFactory.class));
     for (int i = 0; i < multiRequest.getAllValues().size(); i++) {
       for (int j = 0; j < multiRequest.getAllValues().get(i).requests().size(); j++) {
         JSONAssert.assertEquals(expectedMultiScrollingQuery.get(i).get(j), multiRequest.getAllValues().get(i).requests().get(j).source().toString(), false);
@@ -881,9 +881,9 @@ public class TestProvOpsControllerEEImpl {
                     constructJsonObject("should", Arrays.asList("4"), "app_id"))));
     expectedMultiScrollingQuery.add(Arrays.asList(
             constructSearchScrollingQuery(
-                    constructJsonObject("should", Arrays.asList("raw_fg2_1"), "ml_id") + constructJsonObject("should", Arrays.asList("FEATURE_PART"), "ml_type")),
+                    constructJsonObject("should", Arrays.asList("raw_fg3_1"), "ml_id") + constructJsonObject("should", Arrays.asList("FEATURE", "FEATURE_PART"), "ml_type")),
             constructSearchScrollingQuery(
-                    constructJsonObject("should", Arrays.asList("raw_fg3_1"), "ml_id") + constructJsonObject("should", Arrays.asList("FEATURE_PART"), "ml_type"))));
+                    constructJsonObject("should", Arrays.asList("raw_fg2_1"), "ml_id") + constructJsonObject("should", Arrays.asList("FEATURE", "FEATURE_PART"), "ml_type"))));
     expectedMultiScrollingQuery.add(Arrays.asList(
             constructSearchScrollingQuery(
                     constructJsonObject("should", Arrays.asList("2"), "app_id")),
@@ -917,7 +917,7 @@ public class TestProvOpsControllerEEImpl {
 
     //assert
     Mockito.verify(client, Mockito.times(expectedMultiScrollingQuery.size()))
-            .multiSearchScrolling(multiRequest.capture(), Mockito.any(ElasticHits.Handler.class));
+            .multiSearchScrolling(multiRequest.capture(), Mockito.any(ProvOpsControllerEEImpl.HandlerFactory.class));
     for (int i = 0; i < multiRequest.getAllValues().size(); i++) {
       for (int j = 0; j < multiRequest.getAllValues().get(i).requests().size(); j++) {
         JSONAssert.assertEquals(expectedMultiScrollingQuery.get(i).get(j), multiRequest.getAllValues().get(i).requests().get(j).source().toString(), false);
@@ -958,9 +958,9 @@ public class TestProvOpsControllerEEImpl {
                     constructJsonObject("should", Arrays.asList("4"), "app_id"))));
     expectedMultiScrollingQuery.add(Arrays.asList(
             constructSearchScrollingQuery(
-                    constructJsonObject("should", Arrays.asList("raw_fg2_1"), "ml_id") + constructJsonObject("should", Arrays.asList("FEATURE_PART"), "ml_type")),
+                    constructJsonObject("should", Arrays.asList("raw_fg3_1"), "ml_id") + constructJsonObject("should", Arrays.asList("FEATURE", "FEATURE_PART"), "ml_type")),
             constructSearchScrollingQuery(
-                    constructJsonObject("should", Arrays.asList("raw_fg3_1"), "ml_id") + constructJsonObject("should", Arrays.asList("FEATURE_PART"), "ml_type"))));
+                    constructJsonObject("should", Arrays.asList("raw_fg2_1"), "ml_id") + constructJsonObject("should", Arrays.asList("FEATURE", "FEATURE_PART"), "ml_type"))));
     expectedMultiScrollingQuery.add(Arrays.asList(
             constructSearchScrollingQuery(
                     constructJsonObject("should", Arrays.asList("2"), "app_id")),
@@ -968,7 +968,7 @@ public class TestProvOpsControllerEEImpl {
                     constructJsonObject("should", Arrays.asList("3"), "app_id"))));
     expectedMultiScrollingQuery.add(Arrays.asList(
             constructSearchScrollingQuery(
-                    constructJsonObject("should", Arrays.asList("raw_fg1_1"), "ml_id") + constructJsonObject("should", Arrays.asList("FEATURE_PART"), "ml_type"))));
+                    constructJsonObject("should", Arrays.asList("raw_fg1_1"), "ml_id") + constructJsonObject("should", Arrays.asList("FEATURE", "FEATURE_PART"), "ml_type"))));
     expectedMultiScrollingQuery.add(Arrays.asList(
             constructSearchScrollingQuery(
                     constructJsonObject("should", Arrays.asList("1"), "app_id"))));
@@ -982,15 +982,15 @@ public class TestProvOpsControllerEEImpl {
                     constructJsonObject("should", Arrays.asList("6"), "app_id"))));
     expectedMultiScrollingQuery.add(Arrays.asList(
             constructSearchScrollingQuery(
-                    constructJsonObject("should", Arrays.asList("derived_td2_1"), "ml_id") + constructJsonObject("should", Arrays.asList("TRAINING_DATASET_PART"), "ml_type")),
+                    constructJsonObject("should", Arrays.asList("derived_td2_1"), "ml_id") + constructJsonObject("should", Arrays.asList("TRAINING_DATASET", "TRAINING_DATASET_PART"), "ml_type")),
             constructSearchScrollingQuery(
-                    constructJsonObject("should", Arrays.asList("derived_td3_1"), "ml_id") + constructJsonObject("should", Arrays.asList("TRAINING_DATASET_PART"), "ml_type"))));
+                    constructJsonObject("should", Arrays.asList("derived_td3_1"), "ml_id") + constructJsonObject("should", Arrays.asList("TRAINING_DATASET", "TRAINING_DATASET_PART"), "ml_type"))));
     expectedMultiScrollingQuery.add(Arrays.asList(
             constructSearchScrollingQuery(
                     constructJsonObject("should", Arrays.asList("7"), "app_id"))));
     expectedMultiScrollingQuery.add(Arrays.asList(
             constructSearchScrollingQuery(
-                    constructJsonObject("should", Arrays.asList("derived_td4_1"), "ml_id") + constructJsonObject("should", Arrays.asList("TRAINING_DATASET_PART"), "ml_type"))));
+                    constructJsonObject("should", Arrays.asList("derived_td4_1"), "ml_id") + constructJsonObject("should", Arrays.asList("TRAINING_DATASET", "TRAINING_DATASET_PART"), "ml_type"))));
 
     List<String> expectedAlive = new ArrayList<>();
     expectedAlive.add(constructSearchQuery(Arrays.asList("derived_td1_1")));
@@ -1028,7 +1028,7 @@ public class TestProvOpsControllerEEImpl {
 
     //assert
     Mockito.verify(client, Mockito.times(expectedMultiScrollingQuery.size()))
-            .multiSearchScrolling(multiRequest.capture(), Mockito.any(ElasticHits.Handler.class));
+            .multiSearchScrolling(multiRequest.capture(), Mockito.any(ProvOpsControllerEEImpl.HandlerFactory.class));
     for (int i = 0; i < multiRequest.getAllValues().size(); i++) {
       for (int j = 0; j < multiRequest.getAllValues().get(i).requests().size(); j++) {
         JSONAssert.assertEquals(expectedMultiScrollingQuery.get(i).get(j), multiRequest.getAllValues().get(i).requests().get(j).source().toString(), false);
@@ -1113,9 +1113,9 @@ public class TestProvOpsControllerEEImpl {
                     constructJsonObject("should", Arrays.asList("4"), "app_id"))));
     expectedMultiScrollingQuery.add(Arrays.asList(
             constructSearchScrollingQuery(
-                    constructJsonObject("should", Arrays.asList("raw_fg2_1"), "ml_id") + constructJsonObject("should", Arrays.asList("FEATURE_PART"), "ml_type")),
+                    constructJsonObject("should", Arrays.asList("raw_fg3_1"), "ml_id") + constructJsonObject("should", Arrays.asList("FEATURE", "FEATURE_PART"), "ml_type")),
             constructSearchScrollingQuery(
-                    constructJsonObject("should", Arrays.asList("raw_fg3_1"), "ml_id") + constructJsonObject("should", Arrays.asList("FEATURE_PART"), "ml_type"))));
+                    constructJsonObject("should", Arrays.asList("raw_fg2_1"), "ml_id") + constructJsonObject("should", Arrays.asList("FEATURE", "FEATURE_PART"), "ml_type"))));
     expectedMultiScrollingQuery.add(Arrays.asList(
             constructSearchScrollingQuery(
                     constructJsonObject("should", Arrays.asList("2"), "app_id")),
@@ -1123,7 +1123,7 @@ public class TestProvOpsControllerEEImpl {
                     constructJsonObject("should", Arrays.asList("3"), "app_id"))));
     expectedMultiScrollingQuery.add(Arrays.asList(
             constructSearchScrollingQuery(
-                    constructJsonObject("should", Arrays.asList("raw_fg1_1"), "ml_id") + constructJsonObject("should", Arrays.asList("FEATURE_PART"), "ml_type"))));
+                    constructJsonObject("should", Arrays.asList("raw_fg1_1"), "ml_id") + constructJsonObject("should", Arrays.asList("FEATURE", "FEATURE_PART"), "ml_type"))));
     expectedMultiScrollingQuery.add(Arrays.asList(
             constructSearchScrollingQuery(
                     constructJsonObject("should", Arrays.asList("1"), "app_id"))));
@@ -1159,7 +1159,7 @@ public class TestProvOpsControllerEEImpl {
 
     //assert
     Mockito.verify(client, Mockito.times(expectedMultiScrollingQuery.size()))
-            .multiSearchScrolling(multiRequest.capture(), Mockito.any(ElasticHits.Handler.class));
+            .multiSearchScrolling(multiRequest.capture(), Mockito.any(ProvOpsControllerEEImpl.HandlerFactory.class));
     for (int i = 0; i < multiRequest.getAllValues().size(); i++) {
       for (int j = 0; j < multiRequest.getAllValues().get(i).requests().size(); j++) {
         JSONAssert.assertEquals(expectedMultiScrollingQuery.get(i).get(j), multiRequest.getAllValues().get(i).requests().get(j).source().toString(), false);
@@ -1232,15 +1232,15 @@ public class TestProvOpsControllerEEImpl {
                     constructJsonObject("should", Arrays.asList("6"), "app_id"))));
     expectedMultiScrollingQuery.add(Arrays.asList(
             constructSearchScrollingQuery(
-                    constructJsonObject("should", Arrays.asList("derived_td2_1"), "ml_id") + constructJsonObject("should", Arrays.asList("TRAINING_DATASET_PART"), "ml_type")),
+                    constructJsonObject("should", Arrays.asList("derived_td2_1"), "ml_id") + constructJsonObject("should", Arrays.asList("TRAINING_DATASET", "TRAINING_DATASET_PART"), "ml_type")),
             constructSearchScrollingQuery(
-                    constructJsonObject("should", Arrays.asList("derived_td3_1"), "ml_id") + constructJsonObject("should", Arrays.asList("TRAINING_DATASET_PART"), "ml_type"))));
+                    constructJsonObject("should", Arrays.asList("derived_td3_1"), "ml_id") + constructJsonObject("should", Arrays.asList("TRAINING_DATASET", "TRAINING_DATASET_PART"), "ml_type"))));
     expectedMultiScrollingQuery.add(Arrays.asList(
             constructSearchScrollingQuery(
                     constructJsonObject("should", Arrays.asList("7"), "app_id"))));
     expectedMultiScrollingQuery.add(Arrays.asList(
             constructSearchScrollingQuery(
-                    constructJsonObject("should", Arrays.asList("derived_td4_1"), "ml_id") + constructJsonObject("should", Arrays.asList("TRAINING_DATASET_PART"), "ml_type"))));
+                    constructJsonObject("should", Arrays.asList("derived_td4_1"), "ml_id") + constructJsonObject("should", Arrays.asList("TRAINING_DATASET", "TRAINING_DATASET_PART"), "ml_type"))));
 
     List<String> expectedAlive = new ArrayList<>();
     expectedAlive.add(constructSearchQuery(Arrays.asList("derived_td1_1")));
@@ -1272,7 +1272,7 @@ public class TestProvOpsControllerEEImpl {
 
     //assert
     Mockito.verify(client, Mockito.times(expectedMultiScrollingQuery.size()))
-            .multiSearchScrolling(multiRequest.capture(), Mockito.any(ElasticHits.Handler.class));
+            .multiSearchScrolling(multiRequest.capture(), Mockito.any(ProvOpsControllerEEImpl.HandlerFactory.class));
     for (int i = 0; i < multiRequest.getAllValues().size(); i++) {
       for (int j = 0; j < multiRequest.getAllValues().get(i).requests().size(); j++) {
         JSONAssert.assertEquals(expectedMultiScrollingQuery.get(i).get(j), multiRequest.getAllValues().get(i).requests().get(j).source().toString(), false);
@@ -1337,9 +1337,9 @@ public class TestProvOpsControllerEEImpl {
                     constructJsonObject("should", Arrays.asList("4"), "app_id"))));
     expectedMultiScrollingQuery.add(Arrays.asList(
             constructSearchScrollingQuery(
-                    constructJsonObject("should", Arrays.asList("raw_fg2_1"), "ml_id") + constructJsonObject("should", Arrays.asList("FEATURE_PART"), "ml_type")),
+                    constructJsonObject("should", Arrays.asList("raw_fg3_1"), "ml_id") + constructJsonObject("should", Arrays.asList("FEATURE", "FEATURE_PART"), "ml_type")),
             constructSearchScrollingQuery(
-                    constructJsonObject("should", Arrays.asList("raw_fg3_1"), "ml_id") + constructJsonObject("should", Arrays.asList("FEATURE_PART"), "ml_type"))));
+                    constructJsonObject("should", Arrays.asList("raw_fg2_1"), "ml_id") + constructJsonObject("should", Arrays.asList("FEATURE", "FEATURE_PART"), "ml_type"))));
     expectedMultiScrollingQuery.add(Arrays.asList(
             constructSearchScrollingQuery(
                     constructJsonObject("should", Arrays.asList("2"), "app_id")),
@@ -1385,7 +1385,7 @@ public class TestProvOpsControllerEEImpl {
 
     //assert
     Mockito.verify(client, Mockito.times(expectedMultiScrollingQuery.size()))
-            .multiSearchScrolling(multiRequest.capture(), Mockito.any(ElasticHits.Handler.class));
+            .multiSearchScrolling(multiRequest.capture(), Mockito.any(ProvOpsControllerEEImpl.HandlerFactory.class));
     for (int i = 0; i < multiRequest.getAllValues().size(); i++) {
       for (int j = 0; j < multiRequest.getAllValues().get(i).requests().size(); j++) {
         JSONAssert.assertEquals(expectedMultiScrollingQuery.get(i).get(j), multiRequest.getAllValues().get(i).requests().get(j).source().toString(), false);
@@ -1480,7 +1480,7 @@ public class TestProvOpsControllerEEImpl {
 
     //assert
     Mockito.verify(client, Mockito.times(expectedMultiScrollingQuery.size()))
-            .multiSearchScrolling(multiRequest.capture(), Mockito.any(ElasticHits.Handler.class));
+            .multiSearchScrolling(multiRequest.capture(), Mockito.any(ProvOpsControllerEEImpl.HandlerFactory.class));
     for (int i = 0; i < multiRequest.getAllValues().size(); i++) {
       for (int j = 0; j < multiRequest.getAllValues().get(i).requests().size(); j++) {
         JSONAssert.assertEquals(expectedMultiScrollingQuery.get(i).get(j), multiRequest.getAllValues().get(i).requests().get(j).source().toString(), false);

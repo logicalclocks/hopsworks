@@ -5,6 +5,7 @@ package io.hops.hopsworks.provenance.ops;
 
 import com.google.gson.Gson;
 import com.lambdista.util.Try;
+import io.hops.hopsworks.common.elastic.ElasticClientController;
 import io.hops.hopsworks.common.featurestore.xattr.dto.FeaturegroupXAttr;
 import io.hops.hopsworks.common.provenance.ops.ProvLinksParamBuilder;
 import io.hops.hopsworks.common.integrations.EnterpriseStereotype;
@@ -18,7 +19,6 @@ import io.hops.hopsworks.common.provenance.core.elastic.BasicElasticHit;
 import io.hops.hopsworks.common.provenance.core.elastic.ElasticAggregationParser;
 import io.hops.hopsworks.common.provenance.core.elastic.ElasticHelper;
 import io.hops.hopsworks.common.provenance.core.elastic.ElasticHits;
-import io.hops.hopsworks.common.elastic.ElasticClientController;
 import io.hops.hopsworks.common.provenance.ops.ProvLinks;
 import io.hops.hopsworks.common.provenance.ops.ProvOpsAggregations;
 import io.hops.hopsworks.common.provenance.ops.ProvOpsControllerIface;
@@ -58,7 +58,6 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.HashSet;
 import java.util.HashMap;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 import java.util.Map;
@@ -335,6 +334,11 @@ public class ProvOpsControllerEEImpl implements ProvOpsControllerIface {
     OTHER
   }
 
+  private Map<LinkTypes, List<ProvOpsDTO>> splitInLinks(ProvLinksDTO.Builder links) {
+    return links.getAppLinks().values().stream().flatMap(appLinks -> appLinks.getIn().values().stream())
+            .distinct().collect(Collectors.groupingBy(this::getLinkType));
+  }
+
   private Map<LinkTypes, List<ProvOpsDTO>> splitOutLinks(ProvLinksDTO.Builder links) {
     return links.getAppLinks().values().stream().flatMap(appLinks -> appLinks.getOut().values().stream())
       .distinct().collect(Collectors.groupingBy(this::getLinkType));
@@ -432,17 +436,42 @@ public class ProvOpsControllerEEImpl implements ProvOpsControllerIface {
 
   private List<Map<ProvParser.Field, ProvParser.FilterVal>> generateAppIdFilterFromMlIdFilter(Project project,
       HandlerFactory<Map<String, AppState>, ProvLinksDTO.Builder> handlerFactory,
-      List<Map<ProvParser.Field, ProvParser.FilterVal>> mlIdFilterList, boolean onlyApps, StreamDirection direction)
+      List<Map<ProvParser.Field, ProvParser.FilterVal>> mlIdFilterList, Map<String, ProvLinksDTO> map,
+      boolean filterAlive, StreamDirection direction)
           throws ProvenanceException {
     List<Map<ProvParser.Field, ProvParser.FilterVal>> filterList = new ArrayList();
     for (ProvLinksDTO.Builder builder: multipleProvLinks(project.getInode().getId(), mlIdFilterList, handlerFactory)) {
+
+      boolean found = false;
       for (Map.Entry<String, ProvLinksDTO> app: builder.getAppLinks().entrySet()) {
         if ((!app.getValue().getIn().isEmpty() && direction == StreamDirection.Downstream) ||
             (!app.getValue().getOut().isEmpty() && direction == StreamDirection.Upstream)) {
-          Map filters = getFilter(ProvLinks.FieldsPF.APP_ID, app.getKey(), onlyApps);
+          Map filters = getFilter(ProvLinks.FieldsPF.APP_ID, app.getKey(), false);
           filterList.add(filters);
+          found = true;
         }
       }
+
+      //todo remove region if on-demand fg is created with appId present
+      //region on-demand fg
+      if (!found && !builder.getAppLinks().isEmpty() && direction == StreamDirection.Upstream) {
+        // when upstream and all outputs are empty
+        Map.Entry<String, ProvLinksDTO> entry = builder.getAppLinks().entrySet().iterator().next();
+        ProvLinksDTO provLinks = entry.getValue();
+
+        Set<ProvStateDTO> alive = null;
+        if (filterAlive) {
+          alive = getLinksAlive(project, splitInLinks(builder));
+        }
+        Map<String, ProvOpsDTO> in = updateLive(provLinks.getIn(), alive);// remove dead
+
+        ProvLinksDTO provLinksDTO = new ProvLinksDTO();
+        provLinksDTO.setAppId("none");
+        provLinksDTO.setOut(in);
+
+        map.put(in.entrySet().stream().findFirst().get().getValue().getMlId(), provLinksDTO);
+      }
+      //endregion
     }
     return filterList;
   }
@@ -465,7 +494,7 @@ public class ProvOpsControllerEEImpl implements ProvOpsControllerIface {
             if (direction == StreamDirection.Upstream) {
               for (Map.Entry<String, ProvOpsDTO> ops : app.getValue().getIn().entrySet()) {
                 mlIdList.add(new Pair(ops.getKey(),
-                        Arrays.asList(ops.getValue().getDocSubType().getPart().toString())));
+                  ProvLinks.FieldsPF.ARTIFACT_TYPE.filterValParser().apply(ops.getValue().getDocSubType().toString())));
               }
             }
             Map<String, ProvOpsDTO> out = updateLive(app.getValue().getOut(), alive);// remove dead
@@ -473,7 +502,7 @@ public class ProvOpsControllerEEImpl implements ProvOpsControllerIface {
               map.put(ops.getKey(), app.getValue());
               if (direction == StreamDirection.Downstream) {
                 mlIdList.add(new Pair(ops.getKey(),
-                        Arrays.asList(ops.getValue().getDocSubType().getPart().toString())));
+                  ProvLinks.FieldsPF.ARTIFACT_TYPE.filterValParser().apply(ops.getValue().getDocSubType().toString())));
               }
             }
           }
@@ -483,11 +512,12 @@ public class ProvOpsControllerEEImpl implements ProvOpsControllerIface {
     return mlIdList;
   }
 
-  private Pair<Integer, Set<Pair<String, List<String>>>> deepSearch(Project project, Set<Pair<String,
-      List<String>>> idList, HandlerFactory<Map<String, AppState>, ProvLinksDTO.Builder> handlerFactory, Map<String,
-      ProvLinksDTO> map, boolean startWithMlId, boolean onlyApps, boolean filterAlive, StreamDirection direction,
-      int allowedProvenanceGraphSize)
+  private Pair<Integer, Set<Pair<String, List<String>>>> deepSearch(Project project, Set<Pair<String, List<String>>>
+      idList, HandlerFactory<Map<String, AppState>, ProvLinksDTO.Builder> handlerFactory,
+      Map<String, ProvLinksDTO> map, boolean startWithMlId, boolean onlyApps, boolean filterAlive,
+      StreamDirection direction, int allowedProvenanceGraphSize)
           throws ProvenanceException {
+    int oldMapSize = map.size();
     List<Map<ProvParser.Field, ProvParser.FilterVal>> appIdFilterList;
     if (startWithMlId) {
       // create filters for mlId
@@ -495,7 +525,16 @@ public class ProvOpsControllerEEImpl implements ProvOpsControllerIface {
               generateFilter(idList, onlyApps, ProvLinks.FieldsPF.ARTIFACT);
 
       // get all links where the provided mlId is the output
-      appIdFilterList = generateAppIdFilterFromMlIdFilter(project, handlerFactory, mlIdFilterList, onlyApps, direction);
+      appIdFilterList = generateAppIdFilterFromMlIdFilter(project, handlerFactory, mlIdFilterList, map, filterAlive,
+              direction);
+
+      //todo remove region if on-demand fg is created with appId present
+      //region on-demand fg
+      // reduce the allowed prov graph size by the difference in map size
+      int difference = map.size() - oldMapSize;
+      allowedProvenanceGraphSize -= difference;
+      oldMapSize = map.size();
+      //endregion
     }
     else {
       // create filters for mlId
@@ -503,19 +542,19 @@ public class ProvOpsControllerEEImpl implements ProvOpsControllerIface {
     }
 
     // trim appIdFilterList if more nodes received than allowed
-    Iterator<Map<ProvParser.Field, ProvParser.FilterVal>> filterByFields = appIdFilterList.iterator();
-    while (filterByFields.hasNext()) {
-      filterByFields.next();
-      if (allowedProvenanceGraphSize <= 0) {
-        filterByFields.remove();
-      } else {
-        allowedProvenanceGraphSize -= 1;
-      }
+    if (appIdFilterList.size() > allowedProvenanceGraphSize) {
+      appIdFilterList = appIdFilterList.subList(0, allowedProvenanceGraphSize);
     }
 
     //generate the new mlIdList
-    return new Pair(allowedProvenanceGraphSize, generateMlIdFromAppIdFilter(project, handlerFactory, appIdFilterList,
-            map, filterAlive, direction));
+    Set<Pair<String, List<String>>> mlIdList = generateMlIdFromAppIdFilter(project, handlerFactory, appIdFilterList,
+            map, filterAlive, direction);
+
+    // reduce the allowed prov graph size by the difference in map size
+    int difference = map.size() - oldMapSize;
+    allowedProvenanceGraphSize -= difference;
+
+    return new Pair(allowedProvenanceGraphSize, mlIdList);
   }
 
   private void compileDeepLinks(Map<String, ProvLinksDTO> map, StreamDirection direction){
@@ -533,6 +572,9 @@ public class ProvOpsControllerEEImpl implements ProvOpsControllerIface {
 
       for (Map.Entry<String, ProvLinksDTO> leaf: leafMap.entrySet()) {
         ProvLinksDTO link = leaf.getValue();
+        if(link.getOut().size() == 0) {
+          continue; // with experiments can happen that out is empty since it was already processed
+        }
         link.setRoot(leaf.getValue().getOut().entrySet().iterator().next().getValue());
         map.entrySet().stream().filter(entry ->
             (direction == StreamDirection.Upstream && entry.getValue().getIn().containsKey(link.getRoot().getMlId())) ||
@@ -648,7 +690,7 @@ public class ProvOpsControllerEEImpl implements ProvOpsControllerIface {
     }
     List<Pair<Long, Try<O1>>> searchResult;
     try {
-      searchResult = client.multiSearchScrolling(multiSearchRequest, handlerFactory.getHandler());
+      searchResult = client.multiSearchScrolling(multiSearchRequest, handlerFactory);
     } catch (ElasticException e) {
       String msg = "provenance - elastic multi query problem";
       throw ProvHelper.fromElastic(e, msg, msg + " - file ops");
@@ -762,9 +804,10 @@ public class ProvOpsControllerEEImpl implements ProvOpsControllerIface {
       return Try.apply(() -> state);
     };
 
-  interface HandlerFactory<O1, O2> {
+  interface HandlerFactory<O1, O2> extends ElasticClientController.GenericHandlerFactory<O1, O2, ProvOpsDTO> {
     ElasticHits.Handler<ProvOpsDTO, O1> getHandler();
 
+    @Override
     O2 checkedResult(Try<O1> result) throws ProvenanceException;
 
     class AppIdMlIdMap implements HandlerFactory<Map<String, AppState>, ProvLinksDTO.Builder> {

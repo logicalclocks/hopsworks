@@ -17,10 +17,10 @@ package io.hops.hopsworks.common.elastic;
 
 import com.lambdista.util.FailableSupplier;
 import com.lambdista.util.Try;
-import io.hops.hopsworks.common.provenance.core.elastic.ElasticAggregation;
 import io.hops.hopsworks.common.provenance.core.elastic.ElasticAggregationParser;
 import io.hops.hopsworks.common.provenance.core.elastic.ElasticHelper;
 import io.hops.hopsworks.common.provenance.core.elastic.ElasticHits;
+import io.hops.hopsworks.common.provenance.core.elastic.ElasticAggregation;
 import io.hops.hopsworks.exceptions.ElasticException;
 import io.hops.hopsworks.restutils.RESTCodes;
 import org.elasticsearch.ElasticsearchStatusException;
@@ -297,7 +297,7 @@ public class ElasticClientController {
     Try<S> result = handler.apply(response.getHits().getHits());
 
     //make into a scrolling request if not already and there are more hits
-    if(leftover > 0 && response.getScrollId() != null) {
+    if(leftover > 0 && response.getScrollId() == null) {
       response = baseSearch(request);
     }
 
@@ -332,22 +332,22 @@ public class ElasticClientController {
    * Returns all MultiSearch results in a list matching the respective MultiSearch request -
    * these results are all built in memory, so use with care.
    * @param multiSearchRequest
-   * @param handler
-   * @param <R>
-   * @param <S>
+   * @param handlerFactory
+   * @param <O1>
+   * @param <O2>
    * @return
    * @throws ElasticException
    */
-  public <R, S> List<Pair<Long, Try<S>>> multiSearchScrolling(
-          MultiSearchRequest multiSearchRequest, ElasticHits.Handler<R, S> handler)
+  public <O1, O2, O3> List<Pair<Long, Try<O1>>> multiSearchScrolling(
+          MultiSearchRequest multiSearchRequest, GenericHandlerFactory<O1, O2, O3> handlerFactory)
           throws ElasticException {
     MultiSearchResponse multiSearchResponse = multiSearch(multiSearchRequest);
-    List<Pair<Long, Try<S>>> searchResult = new ArrayList<>();
+    List<Pair<Long, Try<O1>>> searchResult = new ArrayList<>();
     int index = 0;
     for (MultiSearchResponse.Item item: multiSearchResponse) {
       SearchResponse response = item.getResponse();
       SearchRequest request = multiSearchRequest.requests().get(index++);
-      searchResult.add(scrolling(response, handler, request));
+      searchResult.add(scrolling(response, handlerFactory.getHandler(), request));
     }
     return searchResult;
   }
@@ -374,7 +374,7 @@ public class ElasticClientController {
     return aggResults;
   }
   
-  private SearchResponse searchScrollingInt(SearchScrollRequest request) throws ElasticException {
+  SearchResponse searchScrollingInt(SearchScrollRequest request) throws ElasticException {
     FailableSupplier<SearchResponse> query =
       () -> client.getClient().scroll(request, RequestOptions.DEFAULT);
     SearchResponse response = executeElasticQuery(query, "elastic scrolling search", request.toString());
@@ -391,7 +391,7 @@ public class ElasticClientController {
     return ssr;
   }
   
-  private ClearScrollResponse clearScrollingContext(String scrollId) throws ElasticException {
+  ClearScrollResponse clearScrollingContext(String scrollId) throws ElasticException {
     ClearScrollRequest request = new ClearScrollRequest();
     request.addScrollId(scrollId);
     
@@ -517,5 +517,11 @@ public class ElasticClientController {
       throw new ElasticException(RESTCodes.ElasticErrorCode.ELASTIC_INTERNAL_REQ_ERROR, Level.WARNING,
         "error during " + usrMsg, devMsg, e);
     }
+  }
+
+  public interface GenericHandlerFactory<O1, O2, O3> {
+    ElasticHits.Handler<O3, O1> getHandler();
+
+    O2 checkedResult(Try<O1> result) throws Exception;
   }
 }
