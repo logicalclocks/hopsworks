@@ -330,13 +330,13 @@ public class ElasticClientController {
 
   /**
   * Returns all MultiSearch results in a list matching the respective MultiSearch request -
-          * these results are all built in memory, so use with care.
-          * @param multiSearchRequest
+   * these results are all built in memory, so use with care.
+   * @param multiSearchRequest
    * @param handlerFactory
    * @param <O1>
    * @param <O2>
    * @return
-           * @throws ElasticException
+   * @throws ElasticException
    */
   public <O1, O2, O3> List<Pair<Long, Try<O1>>> multiSearchScrolling(
           MultiSearchRequest multiSearchRequest, GenericHandlerFactory<O1, O2, O3> handlerFactory)
