@@ -27,7 +27,6 @@ import io.hops.hopsworks.common.featurestore.feature.FeatureGroupFeatureDTO;
 import io.hops.hopsworks.common.featurestore.featuregroup.cached.CachedFeaturegroupController;
 import io.hops.hopsworks.common.featurestore.featuregroup.cached.CachedFeaturegroupDTO;
 import io.hops.hopsworks.common.featurestore.featuregroup.cached.CachedFeaturegroupFacade;
-import io.hops.hopsworks.common.featurestore.featuregroup.cached.FeaturegroupPreview;
 import io.hops.hopsworks.common.featurestore.featuregroup.ondemand.OnDemandFeaturegroupController;
 import io.hops.hopsworks.common.featurestore.featuregroup.ondemand.OnDemandFeaturegroupDTO;
 import io.hops.hopsworks.common.featurestore.featuregroup.online.OnlineFeaturegroupController;
@@ -591,40 +590,6 @@ public class FeaturegroupController {
 
     // Statistics files need to be deleted explicitly
     statisticsController.deleteStatistics(project, user, featuregroup);
-  }
-
-
-  /**
-   * Previews a given featuregroup by doing a SELECT LIMIT query on the Hive and MySQL Tables
-   *
-   * @param featuregroup
-   * @param project
-   * @param user
-   * @param partition
-   * @param online
-   * @param limit
-   * @return
-   * @throws SQLException
-   * @throws FeaturestoreException
-   * @throws HopsSecurityException
-   */
-  public FeaturegroupPreview getFeaturegroupPreview(Featuregroup featuregroup, Project project, Users user,
-                                                    String partition, boolean online, int limit)
-      throws SQLException, FeaturestoreException, HopsSecurityException {
-    switch (featuregroup.getFeaturegroupType()) {
-      case CACHED_FEATURE_GROUP:
-        return cachedFeaturegroupController.getFeaturegroupPreview(featuregroup, project, user,
-            partition, online, limit);
-      case ON_DEMAND_FEATURE_GROUP:
-        throw new FeaturestoreException(
-            RESTCodes.FeaturestoreErrorCode.PREVIEW_NOT_SUPPORTED_FOR_ON_DEMAND_FEATUREGROUPS,
-            Level.FINE, "featuregroupId: " + featuregroup.getId());
-      default:
-        throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_FEATUREGROUP_TYPE, Level.FINE,
-            ", Recognized Feature group types are: " + FeaturegroupType.ON_DEMAND_FEATURE_GROUP + ", and: " +
-            FeaturegroupType.CACHED_FEATURE_GROUP + ". The provided feature group type was not recognized: "
-            + featuregroup.getFeaturegroupType());
-    }
   }
 
   /**

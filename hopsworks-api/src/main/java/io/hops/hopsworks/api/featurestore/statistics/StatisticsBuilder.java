@@ -125,17 +125,18 @@ public class StatisticsBuilder {
                              TrainingDataset trainingDataset,
                              FeaturestoreStatistic featurestoreStatistic) throws FeaturestoreException {
     StatisticsDTO dto = new StatisticsDTO();
+    List<SplitStatisticsDTO> splitStatistics = new ArrayList<>();
     dto.setHref(uri(uriInfo, project, trainingDataset.getFeaturestore(), trainingDataset, featurestoreStatistic));
     dto.setExpand(expand(resourceRequest));
     if (dto.isExpand()) {
       dto.setCommitTime(featurestoreStatistic.getCommitTime().getTime());
       if (resourceRequest.getField() != null && resourceRequest.getField().contains("content")) {
-        if (trainingDataset.getSplits() != null && !trainingDataset.getSplits().isEmpty()){
-          List<SplitStatisticsDTO> splitStatistics = new ArrayList<>();
-          for (TrainingDatasetSplit trainingDatasetSplit: trainingDataset.getSplits()){
+        if (trainingDataset.getSplits() != null && !trainingDataset.getSplits().isEmpty() &&
+            !featurestoreStatistic.getForTransformation()) {
+          for (TrainingDatasetSplit trainingDatasetSplit : trainingDataset.getSplits()) {
             splitStatistics.add(new SplitStatisticsDTO(trainingDatasetSplit.getName(),
-                statisticsController.readStatisticsContent(project, user, featurestoreStatistic,
-                    trainingDatasetSplit.getName())));
+              statisticsController.readStatisticsContent(project, user, featurestoreStatistic,
+                trainingDatasetSplit.getName())));
           }
           dto.setSplitStatistics(splitStatistics);
         } else {
@@ -170,8 +171,8 @@ public class StatisticsBuilder {
   }
 
   public StatisticsDTO build(UriInfo uriInfo, ResourceRequest resourceRequest,
-                             Project project, Users user, Featurestore featurestore, TrainingDataset trainingDataset)
-      throws FeaturestoreException {
+                             Project project, Users user, Featurestore featurestore, TrainingDataset trainingDataset,
+                             boolean forTransformation) throws FeaturestoreException {
     StatisticsDTO dto = new StatisticsDTO();
     dto.setHref(uri(uriInfo, project, featurestore, trainingDataset));
     dto.setExpand(expand(resourceRequest));
@@ -180,7 +181,8 @@ public class StatisticsBuilder {
           resourceRequest.getLimit(),
           resourceRequest.getSort(),
           resourceRequest.getFilter(),
-          trainingDataset);
+          trainingDataset,
+          forTransformation);
       dto.setCount(collectionInfo.getCount());
 
       for (Object s : collectionInfo.getItems()) {

@@ -60,7 +60,7 @@ def wrapper():
         assert len(meta_obj.model_schema['input_schema']['columnar_schema']) == 3, "schema len incorrect"
         assert meta_obj.model_schema['output_schema']['tensor_schema']['type'] == "float64", "schema type incorrect"
         assert meta_obj.model_schema['output_schema']['tensor_schema']['shape'] == '(8,)', "schema shape incorrect"
-        assert len(meta_obj.input_example['columns']) == 3, "input example columns len incorrect"
+        assert len(meta_obj.input_example) == 3, "input example len incorrect"
         
         assert 'dq23r23ard' in meta_obj.program, "string not in program"
         

@@ -28,6 +28,7 @@ public class StatisticsDTO extends RestDTO<StatisticsDTO> {
   private Long featureGroupCommitId;
   private String content;
   private List<SplitStatisticsDTO> splitStatistics;
+  private boolean forTransformation;
 
   public Long getCommitTime() {
     return commitTime;
@@ -59,5 +60,13 @@ public class StatisticsDTO extends RestDTO<StatisticsDTO> {
 
   public void setSplitStatistics(List<SplitStatisticsDTO> splitStatistics) {
     this.splitStatistics = splitStatistics;
+  }
+
+  public boolean getForTransformation() {
+    return forTransformation;
+  }
+
+  public void setForTransformation(boolean forTransformation) {
+    this.forTransformation = forTransformation;
   }
 }

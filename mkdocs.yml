@@ -1,7 +1,7 @@
 site_name: "Hopsworks Documentation"
 site_description: "Official documentation for Hopsworks and its Feature Store - an open source data-intensive AI platform used for the development and operation of machine learning models at scale."
 site_author: "Logical Clocks"
-site_url: "https://docs.hopsworks.ai"
+site_url: "https://docs.hopsworks.ai/hopsworks/latest"
 
 # Repository
 repo_name: logicalclocks/hopsworks

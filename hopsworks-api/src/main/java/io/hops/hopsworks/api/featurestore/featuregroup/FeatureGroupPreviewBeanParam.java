@@ -27,7 +27,7 @@ public class FeatureGroupPreviewBeanParam {
   @QueryParam("storage")
   @ApiParam(value = "ex. storage=offline", allowableValues = "offline,online")
   private String storageStr;
-  private FeatureGroupStorage storage = FeatureGroupStorage.OFFLINE;
+  private FeatureGroupStorage storage;
 
   @QueryParam("limit")
   @ApiParam(required = false)
@@ -47,7 +47,9 @@ public class FeatureGroupPreviewBeanParam {
     }
     this.limit = limit;
 
-    if (!Strings.isNullOrEmpty(partition) && storage.equals(FeatureGroupStorage.ONLINE)) {
+    if (!Strings.isNullOrEmpty(partition) &&
+        storage != null &&
+        storage.equals(FeatureGroupStorage.ONLINE)) {
       throw new IllegalArgumentException("Preview does not support partition selector for online storage");
     }
     this.partition = partition;

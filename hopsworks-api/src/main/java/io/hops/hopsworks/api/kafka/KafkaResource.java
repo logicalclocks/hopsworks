@@ -421,7 +421,7 @@ public class KafkaResource {
   @ApiOperation(value = "Check if the provided schema is registered under specified subject.")
   @POST
   @Path("/subjects/{subject}")
-  @Consumes(MediaType.APPLICATION_JSON)
+  @Consumes({MediaType.APPLICATION_JSON, "application/vnd.schemaregistry.v1+json"})
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
@@ -482,7 +482,7 @@ public class KafkaResource {
   @ApiOperation(value = "Upload a new schema.")
   @POST
   @Path("/subjects/{subject}/versions")
-  @Consumes(MediaType.APPLICATION_JSON)
+  @Consumes({MediaType.APPLICATION_JSON, "application/vnd.schemaregistry.v1+json"})
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
@@ -564,7 +564,7 @@ public class KafkaResource {
   @ApiOperation(value = "Check if schema is compatible with a specific subject version.")
   @POST
   @Path("/compatibility/subjects/{subject}/versions/{version}")
-  @Consumes(MediaType.APPLICATION_JSON)
+  @Consumes({MediaType.APPLICATION_JSON, "application/vnd.schemaregistry.v1+json"})
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
@@ -642,7 +642,7 @@ public class KafkaResource {
   @ApiOperation(value = "Set subject's compatibility level.")
   @PUT
   @Path("/config/{subject}")
-  @Consumes(MediaType.APPLICATION_JSON)
+  @Consumes({MediaType.APPLICATION_JSON, "application/vnd.schemaregistry.v1+json"})
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER})
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN"})

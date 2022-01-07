@@ -115,7 +115,7 @@ public class TransformationFunctionResource {
   @ApiKeyRequired(acceptedScopes = {ApiScope.FEATURESTORE}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   @ApiOperation(value = "Register transformation function in to a featurestore",
       response = TransformationFunctionDTO.class)
-  public Response attach(@Context UriInfo uriInfo, @Context SecurityContext sc,
+  public Response register(@Context UriInfo uriInfo, @Context SecurityContext sc,
                          TransformationFunctionDTO transformationFunctionDTO)
       throws IOException, FeaturestoreException {
     Users user = jWTHelper.getUserPrincipal(sc);
