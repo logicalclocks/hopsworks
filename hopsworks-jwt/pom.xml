@@ -46,10 +46,6 @@
       <artifactId>hopsworks-persistence</artifactId>
     </dependency>
     <dependency>
-      <groupId>org.eclipse.persistence</groupId>
-      <artifactId>eclipselink</artifactId>
-    </dependency>
-    <dependency>
       <groupId>com.auth0</groupId>
       <artifactId>java-jwt</artifactId>
     </dependency>
