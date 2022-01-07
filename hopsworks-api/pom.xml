@@ -71,11 +71,6 @@
     </dependency>
 
     <dependency>
-      <groupId>org.eclipse.persistence</groupId>
-      <artifactId>eclipselink</artifactId>
-    </dependency>
-
-    <dependency>
       <groupId>io.hops.hopsworks</groupId>
       <artifactId>hopsworks-common</artifactId>
       <exclusions>
@@ -110,6 +105,12 @@
     <dependency>
       <groupId>io.hops.hopsworks</groupId>
       <artifactId>hopsworks-rest-utils</artifactId>
+      <exclusions>
+        <exclusion>
+          <groupId>io.hops</groupId>
+          <artifactId>hadoop-client-api</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
 
     <dependency>
@@ -146,10 +147,6 @@
       <artifactId>swagger-jersey2-jaxrs</artifactId>
     </dependency>
     <dependency>
-      <groupId>com.google.guava</groupId>
-      <artifactId>guava</artifactId>
-    </dependency>
-    <dependency>
       <groupId>io.hops.hopsworks</groupId>
       <artifactId>hopsworks-audit</artifactId>
       <type>ejb</type>
@@ -170,6 +167,12 @@
     <dependency>
       <groupId>commons-fileupload</groupId>
       <artifactId>commons-fileupload</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>io.hops</groupId>
+      <artifactId>hadoop-client-api</artifactId>
+      <!-- this dependency is already in the classpath, we don't need it here as well. -->
+      <scope>provided</scope>
     </dependency>
     <!-- Test dependencies -->
     <dependency>

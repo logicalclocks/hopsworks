@@ -16,7 +16,7 @@
 
 package io.hops.hopsworks.restutils;
 
-import org.apache.commons.lang.exception.ExceptionUtils;
+import org.apache.commons.lang3.exception.ExceptionUtils;
 
 import java.io.Serializable;
 import java.util.logging.Level;
