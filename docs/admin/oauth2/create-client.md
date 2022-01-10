@@ -4,10 +4,11 @@ Before registering your identity provider in Hopsworks you need to create a clie
 acquire a _client id_ and a _client secret_. An example on how to create a client using [Okta](https://www.okta.com/) 
 identity provider can be found [here](./create-okta-client.md).
 
-After acquiring the _client id_ and _client secret_ create the client in Hopsworks by clicking _add another identity 
-provider_ in the [Authentication configuration page](../auth.md). Then set base uri of your identity provider in 
-_Connection URL_ give a name to your identity provider (the name will be used in the login page as an alternative login 
-method) and set the _client id_ and _client secret_ in their respective fields,  as shown in the figure below.
+After acquiring the _client id_ and _client secret_ create the client in Hopsworks by [enabling OAuth2](../auth.md)
+and clicking on _add another identity provider_ in the [Authentication configuration page](../auth.md). Then set 
+base uri of your identity provider in _Connection URL_ give a name to your identity provider (the name will be used 
+in the login page as an alternative login method) and set the _client id_ and _client secret_ in their respective 
+fields,  as shown in the figure below.
 
 <figure>
   <a  href="../../../assets/images/admin/oauth2/register-app.png">
