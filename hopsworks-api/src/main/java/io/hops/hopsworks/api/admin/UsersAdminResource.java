@@ -190,7 +190,8 @@ public class UsersAdminResource {
     return Response.ok(userProfileDTO).build();
   }
 
-  @ApiOperation(value = "Accept users specified by ids.", response = UserProfileDTO.class)
+  @ApiOperation(value = "Accept users specified by ids. Returns the users that were accepted.", response =
+    UserProfileDTO.class)
   @PUT
   @Path("/users/accepted")
   @Produces(MediaType.APPLICATION_JSON)
@@ -200,7 +201,8 @@ public class UsersAdminResource {
     return Response.ok(userProfileDTO).build();
   }
 
-  @ApiOperation(value = "Reject users specified by ids.", response = UserProfileDTO.class)
+  @ApiOperation(value = "Reject users specified by ids. Returns the users that were rejected.", response =
+    UserProfileDTO.class)
   @PUT
   @Path("/users/rejected")
   public Response rejectUsers(@Context HttpServletRequest req, @Context SecurityContext sc, UserIds userIds)
