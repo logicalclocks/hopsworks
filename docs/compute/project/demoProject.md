@@ -54,9 +54,12 @@ The figure below shows some sample feature groups created by the demo job.
 Similarly, you can go to the **Training dataset** on the side menu to inspect the created training dataset.
   <figure>
     <a  href="../../../assets/images/project/tour-td.png">
-      <img src="../../../assets/images/project/tour-td.png" alt="Demo project traning dataset">
+      <img src="../../../assets/images/project/tour-td.png" alt="Demo project training datasets">
     </a>
     <figcaption>Created training dataset</figcaption>
   </figure>
+
+If you want to look at or edit the job that created the feature groups and training datasets go to **Jupyter** on the 
+side menu.
 
 To learn how to create your own project go to [Create a New Project](./createProject.md)

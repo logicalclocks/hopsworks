@@ -1,4 +1,4 @@
-# Register Client in Hopsworks
+# Register Identity Provider in Hopsworks
 
 Before registering your identity provider in Hopsworks you need to create a client application in your identity provider and 
 acquire a _client id_ and a _client secret_. An example on how to create a client using [Okta](https://www.okta.com/) 
@@ -17,7 +17,11 @@ fields,  as shown in the figure below.
   <figcaption>Application overview</figcaption>
 </figure>
 
-- _Connection URL_: (provider Uri) is the base uri of the identity provider's API. 
+- _Connection URL_: (provider Uri) is the base uri of the identity provider's API (URI should contain scheme http:// or 
+  https://). 
+
+Additional configuration can be set here:
+
 - _Verify email_: if checked only users with verified email address (in the identity provider) can log in to Hopsworks. 
 - _Code challenge_: if your identity provider requires code challenge for authorization request check 
   the _code challenge_ check box. This will allow you to choose code challenge method that can be either _plain_ or 

@@ -33,7 +33,7 @@ nav:
       - Authentication:
         - Configure Authentication: admin/auth.md
         - Configure OAuth2:
-          - Register Client in Hopsworks: admin/oauth2/create-client.md
+          - Register an Identity Provider: admin/oauth2/create-client.md
           - Create Okta Client: admin/oauth2/create-okta-client.md
       - User: admin/user.md
       - Project: admin/project.md
