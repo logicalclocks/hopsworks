@@ -16,7 +16,7 @@ In the **Cluster Settings** _Authentication_ tab you can configure how users aut
 2. **OAuth2**: if your organization already have an identity management system compatible with 
    [OpenID Connect (OIDC)](https://openid.net/connect/) you can configure Hopsworks to use your identity provider 
    by enabling **OAuth** as shown in the figure below. After enabling OAuth 
-   you can register your client by clicking on **Add Identity Provider** button. See
+   you can register your identity provider by clicking on **Add Identity Provider** button. See
    [Create client](./oauth2/create-client.md) for details.
 
 <figure>

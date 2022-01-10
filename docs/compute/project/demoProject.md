@@ -21,7 +21,7 @@ project page.
   </figure>
 
 After creating a demo project you can go in to the project by clicking on **Open project**. The demo project will 
-create a job that in turn will create sample feature groups and training dataset.
+create a job that in turn will create sample feature groups and training datasets.
 
 If you go to **Jobs** on the side menu you will find the job named **featurestore_tour_job** as shown in the figure 
 below.  
@@ -42,8 +42,8 @@ Wait until the job succeeds.
     <figcaption>Job succeeded</figcaption>
   </figure>
 
-If the job succeeds you can go to **Feature Groups** on the side menu to inspect the created feature groups. The 
-figure below shows some sample feature groups created by the demo job.
+Once the job has succeeded you can go to **Feature Groups** on the side menu to inspect the created feature groups. 
+The figure below shows some sample feature groups created by the demo job.
   <figure>
     <a  href="../../../assets/images/project/tour-fs.png">
       <img src="../../../assets/images/project/tour-fs.png" alt="Demo project feature groups">

@@ -1,8 +1,8 @@
 # Update your Profile and Credentials
 
 After you have logged in, in the upper right-hand corner of the screen, you will see your name. Click on your name,
-then click on the menu item **Account settings**. The User settings page will open with profile tab selected, from 
-where you can change your first and last name. You cannot change your email address and will need to create a new 
+then click on the menu item **Account settings**. The User settings page will open with profile tab selected. In this tab
+you can change your first and last name. You cannot change your email address and will need to create a new 
 account if you wish to change your email address. You can also log out by clicking on the **Log out** menu item.
 
   <figure>
@@ -34,8 +34,9 @@ is only available if it is enabled from the cluster administration page.
   </figure>
 
 After enabling or resetting two-factor you will be presented with a QR Code. You will then need to scan the QR code 
-to add it on your phone's authenticator application. If you miss this step, you will have to recover your smartphone 
-credentials at a later stage. 
+to add it on your phone's authenticator application 
+(example. [Google Authenticator](https://play.google.com/store/apps/details?id=com.google.android.apps.authenticator2&hl=en&gl=US)). 
+If you miss this step, you will have to recover your smartphone credentials at a later stage. 
   <figure>
     <a  href="../../../assets/images/auth/enable2fa.png">
       <img src="../../../assets/images/auth/enable2fa.png" alt="Register Two-factor Authentication">

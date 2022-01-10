@@ -2,9 +2,10 @@
 
 The process for registering a new account is as follows:
 
-1. Register your email address and details.
-2. Validate your email address by clicking on the link in the validation email you received.
-3. Wait until an administrator has approved your account (you will receive a confirmation email).
+1. Click on the _Register_ button on the login page.
+2. Register your email address and details.
+3. Validate your email address by clicking on the link in the validation email you received.
+4. Wait until an administrator has approved your account (you will receive a confirmation email).
 
   <figure>
     <a  href="../../../assets/images/auth/register.png">
@@ -14,7 +15,8 @@ The process for registering a new account is as follows:
   </figure>
 
 If second factor authentication is required you will be presented with a page like in the figure below. Scan the QR 
-code or type the code in bold to register your account in your authenticator app. 
+code or type the code in bold to register your account in your authenticator app 
+(example. [Google Authenticator](https://play.google.com/store/apps/details?id=com.google.android.apps.authenticator2&hl=en&gl=US)). 
 
   <figure>
     <a  href="../../../assets/images/auth/register-2fa.png">

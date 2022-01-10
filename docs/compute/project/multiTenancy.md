@@ -18,9 +18,9 @@ share Datasets, delete data in a project.
 role is mostly useful for inviting members from other departments of an organization, so they can apply their AI 
 pipelines and develop programs on the data that is owned by the Data Owners.
 
-A Data Owner can invite other members by clicking **Add members** button on the right-hand side of the Members card 
-then search by email of the user to invite. The figure below shows a project project1 with two members, 
-a Data Owner (Admin) and a Data Scientist (OnlineFS). 
+A Data Owner can invite other members by clicking **Add members** button on the right-hand side of the Members card in 
+the general settings page. Then search by email of the user to invite. The figure below shows a project project1 
+with two members, a Data Owner (Admin) and a Data Scientist (OnlineFS). 
 The role of a member can be altered at any time from the same screen by any Data Owner by clicking on **manage 
 members** link.
 
