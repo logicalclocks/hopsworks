@@ -63,7 +63,7 @@ public interface ExecutionController {
   
   Execution stopExecution(Execution execution) throws JobException;
   
-  void delete(Execution execution) throws JobException;
+  void delete(Execution execution, Users user) throws JobException;
   
   Execution authorize(Jobs job, Integer executionId) throws JobException;
   

@@ -42,6 +42,7 @@ package io.hops.hopsworks.common.jobs;
 import com.google.common.base.Strings;
 import io.hops.hopsworks.common.dao.jobhistory.ExecutionFacade;
 import io.hops.hopsworks.common.dao.jobs.description.JobFacade;
+import io.hops.hopsworks.common.util.HopsUtils;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.common.util.SparkConfigurationUtil;
 import io.hops.hopsworks.persistence.entity.jobs.configuration.flink.FlinkJobConfiguration;
@@ -190,6 +191,8 @@ public class JobController {
       LOGGER.log(Level.FINE, "Request to delete job name ={0} job id ={1}",
         new Object[]{job.getName(), job.getId()});
       jobFacade.removeJob(job);
+      String username = hdfsUsersBean.getHdfsUserName(job.getProject(), user);
+      HopsUtils.cleanupJobDatasetResources(job, username, dfs);
       LOGGER.log(Level.FINE, "Deleted job name ={0} job id ={1}", new Object[]{job.getName(), job.getId()});
       String activityMessage = ActivityFacade.DELETED_JOB + job.getName();
       if (!nonFinishedExecutions.isEmpty()) {

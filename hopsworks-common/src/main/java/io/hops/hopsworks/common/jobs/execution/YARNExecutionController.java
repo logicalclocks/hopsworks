@@ -44,10 +44,10 @@ public class YARNExecutionController extends AbstractExecutionController impleme
   }
   
   @Override
-  public void delete(Execution execution) throws JobException {
+  public void delete(Execution execution, Users user) throws JobException {
     if (!execution.getState().isFinalState()) {
       stopExecution(execution);
     }
-    super.delete(execution);
+    super.delete(execution, user);
   }
 }
