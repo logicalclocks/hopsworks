@@ -181,9 +181,10 @@ public class ExecutionsResource {
   @ApiKeyRequired( acceptedScopes = {ApiScope.JOB}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   public Response delete(@ApiParam(value = "execution id", required = true) @PathParam("id") Integer id,
     @Context UriInfo uriInfo, @Context SecurityContext sc) throws JobException {
+    Users user = jWTHelper.getUserPrincipal(sc);
     //If requested execution does not belong to job
     Execution execution = executionController.authorize(job, id);
-    executionController.delete(execution);
+    executionController.delete(execution, user);
     return Response.noContent().build();
   }
   

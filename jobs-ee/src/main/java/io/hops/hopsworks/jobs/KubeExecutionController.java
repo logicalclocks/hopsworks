@@ -167,22 +167,20 @@ public class KubeExecutionController extends AbstractExecutionController impleme
                 }
               }
             }
+
+            //If it is a notebook we need to convert it to a .py file every time the job is run
+            String appPath = ((PythonJobConfiguration) job.getJobConfig()).getAppPath();
+            if (appPath.endsWith(".ipynb")) {
+              executionFacade.updateState(execution, JobState.CONVERTING_NOTEBOOK);
+              String pyAppPath = HopsUtils.prepJupyterNotebookConversion(execution, udfso);
+              ((PythonJobConfiguration) job.getJobConfig()).setAppPath(pyAppPath);
+              jupyterController.convertIPythonNotebook(hdfsUser, appPath, job.getProject(), pyAppPath,
+                      jupyterController.getNotebookConversionType(appPath, user, job.getProject()));
+            }
           } finally {
             if (udfso != null) {
               dfs.closeDfsClient(udfso);
             }
-          }
-
-          //If it is a notebook we need to convert it to a .py file every time the job is run
-          String appPath = ((PythonJobConfiguration) job.getJobConfig()).getAppPath();
-          if (appPath.endsWith(".ipynb")) {
-            executionFacade.updateState(execution, JobState.CONVERTING_NOTEBOOK);
-            String outPath = "hdfs://" + Utils.getProjectPath(job.getProject().getName())
-                    + Settings.PROJECT_STAGING_DIR;
-            String pyAppPath = outPath + "/job_tmp_" + job.getName() + ".py";
-            ((PythonJobConfiguration) job.getJobConfig()).setAppPath(pyAppPath);
-            jupyterController.convertIPythonNotebook(hdfsUser, appPath, job.getProject(), pyAppPath,
-                    jupyterController.getNotebookConversionType(appPath, user, job.getProject()));
           }
         }
         String kubeProjectUser = kubeClientService.getKubeDeploymentName(job.getProject(), user);
@@ -719,13 +717,13 @@ public class KubeExecutionController extends AbstractExecutionController impleme
   }
 
   @Override
-  public void delete(Execution execution) throws JobException {
+  public void delete(Execution execution, Users user) throws JobException {
     if (execution.getJob().getJobType() == JobType.PYTHON || execution.getJob().getJobType() == JobType.DOCKER) {
       stopExecution(execution);
     } else {
       super.stopExecution(execution);
     }
-    super.delete(execution);
+    super.delete(execution, user);
   }
 
   @Override

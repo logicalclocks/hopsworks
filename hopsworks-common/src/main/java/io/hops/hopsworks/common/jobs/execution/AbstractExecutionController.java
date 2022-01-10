@@ -35,6 +35,7 @@ import io.hops.hopsworks.common.jobs.spark.SparkController;
 import io.hops.hopsworks.common.jobs.yarn.YarnExecutionFinalizer;
 import io.hops.hopsworks.common.jobs.yarn.YarnLogUtil;
 import io.hops.hopsworks.common.jobs.yarn.YarnMonitor;
+import io.hops.hopsworks.common.util.HopsUtils;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.common.yarn.YarnClientService;
 import io.hops.hopsworks.common.yarn.YarnClientWrapper;
@@ -239,8 +240,10 @@ public abstract class AbstractExecutionController implements ExecutionController
   }
 
   @Override
-  public void delete(Execution execution) throws JobException {
+  public void delete(Execution execution, Users user) throws JobException {
     executionFacade.remove(execution);
+    String hdfsUser = hdfsUsersController.getHdfsUserName(execution.getJob().getProject(), user);
+    HopsUtils.cleanupExecutionDatasetResources(execution, hdfsUser, dfs);
   }
 
   public void checkExecutionLimit(Jobs job) throws JobException {

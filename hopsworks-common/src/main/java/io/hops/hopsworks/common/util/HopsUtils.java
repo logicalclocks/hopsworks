@@ -39,6 +39,10 @@
 
 package io.hops.hopsworks.common.util;
 
+import io.hops.hopsworks.common.hdfs.DistributedFsService;
+import io.hops.hopsworks.common.hdfs.Utils;
+import io.hops.hopsworks.exceptions.DatasetException;
+import io.hops.hopsworks.exceptions.JobException;
 import io.hops.hopsworks.persistence.entity.certificates.UserCerts;
 import io.hops.hopsworks.persistence.entity.hdfs.inode.Inode;
 import io.hops.hopsworks.persistence.entity.jobs.configuration.DockerJobConfiguration;
@@ -46,6 +50,8 @@ import io.hops.hopsworks.persistence.entity.jobs.configuration.JobConfiguration;
 import io.hops.hopsworks.persistence.entity.jobs.configuration.flink.FlinkJobConfiguration;
 import io.hops.hopsworks.persistence.entity.jobs.configuration.python.PythonJobConfiguration;
 import io.hops.hopsworks.persistence.entity.jobs.configuration.spark.SparkJobConfiguration;
+import io.hops.hopsworks.persistence.entity.jobs.description.Jobs;
+import io.hops.hopsworks.persistence.entity.jobs.history.Execution;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.hdfs.FsPermissions;
@@ -59,8 +65,10 @@ import io.hops.hopsworks.common.util.templates.ConfigReplacementPolicy;
 import io.hops.hopsworks.common.util.templates.IgnoreConfigReplacementPolicy;
 import io.hops.hopsworks.common.util.templates.OverwriteConfigReplacementPolicy;
 import io.hops.hopsworks.exceptions.CryptoPasswordNotFoundException;
+import io.hops.hopsworks.restutils.RESTCodes;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.LineIterator;
+import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.hadoop.yarn.api.records.LocalResourceType;
@@ -723,5 +731,89 @@ public class HopsUtils {
     };
   }
   
+  public static String prepJupyterNotebookConversion(Execution execution, String hdfsUser, DistributedFsService dfs)
+      throws JobException {
+    DistributedFileSystemOps udfso = null;
+    try {
+      udfso = dfs.getDfsOps(hdfsUser);
+      return prepJupyterNotebookConversion(execution, udfso);
+    } finally {
+      if (udfso != null) {
+        dfs.closeDfsClient(udfso);
+      }
+    }
+  }
   
+  public static String prepJupyterNotebookConversion(Execution execution, DistributedFileSystemOps udfso)
+    throws JobException {
+    String outPath =
+      "hdfs://" + Utils.getProjectPath(execution.getJob().getProject().getName()) + Settings.PROJECT_STAGING_DIR;
+    String pyJobPath = outPath + "/jobs/" + execution.getJob().getName();
+    String pyAppPath = pyJobPath + "/" + execution.getId() + ".py";
+    Path pyJobDir = new Path(pyJobPath);
+    try {
+      if (udfso.exists(pyJobDir)) {
+        FileStatus fileStatus = udfso.getFileStatus(pyJobDir);
+        if (!fileStatus.isDirectory()) {
+          throw new JobException(RESTCodes.JobErrorCode.JOB_CREATION_ERROR, Level.INFO,
+            "Failed to convert notebook - Job Directory name is used by a file");
+        }
+      } else {
+        udfso.mkdirs(new org.apache.hadoop.fs.Path(pyJobPath), udfso.getParentPermission(pyJobDir));
+      }
+    } catch (IOException e) {
+      throw new JobException(RESTCodes.JobErrorCode.JOB_CREATION_ERROR, Level.INFO,
+        "Failed to convert notebook.", "HopsFS write failure.", e);
+    }
+    return pyAppPath;
+  }
+  
+  public static void cleanupJobDatasetResources(Jobs job, String hdfsUsername, DistributedFsService dfs)
+      throws JobException {
+    String outPath = "hdfs://" + Utils.getProjectPath(job.getProject().getName()) + Settings.PROJECT_STAGING_DIR;
+    String pyJobPath = outPath + "/jobs/" + job.getName();
+    try {
+      removeFiles(pyJobPath, hdfsUsername, dfs);
+    } catch (DatasetException e) {
+      String msg = "failed to cleanup job dataset resoureces";
+      throw new JobException(RESTCodes.JobErrorCode.JOB_DELETION_ERROR, Level.INFO, msg, msg, e);
+    }
+  }
+  
+  public static void cleanupExecutionDatasetResources(Execution execution, String hdfsUsername,
+                                                      DistributedFsService dfs)
+      throws JobException {
+    String outPath =
+      "hdfs://" + Utils.getProjectPath(execution.getJob().getProject().getName()) + Settings.PROJECT_STAGING_DIR;
+    String pyJobPath = outPath + "/jobs/" + execution.getJob().getName();
+    String pyAppPath = pyJobPath + "/" + execution.getId() + ".py";
+    try {
+      removeFiles(pyAppPath, hdfsUsername, dfs);
+    } catch (DatasetException e) {
+      String msg = "failed to cleanup execution dataset resoureces";
+      throw new JobException(RESTCodes.JobErrorCode.JOB_DELETION_ERROR, Level.INFO, msg, msg, e);
+    }
+  }
+  
+  private static void removeFiles(String path, String hdfsUsername, DistributedFsService dfs)
+    throws DatasetException {
+    DistributedFileSystemOps udfso = null;
+    try {
+      udfso = dfs.getDfsOps(hdfsUsername);
+      if(udfso == null) {
+        throw new DatasetException(RESTCodes.DatasetErrorCode.INODE_DELETION_ERROR, Level.INFO,
+          "Failed to remove files - try to manually remove:" + path,
+          "Could not create udfso to perform operations on the file system");
+      }
+      udfso.rm(path, true);
+    } catch (IOException e) {
+      throw new DatasetException(RESTCodes.DatasetErrorCode.INODE_DELETION_ERROR, Level.INFO,
+        "Failed to remove files - try to manually remove:" + path,
+        "File system rm operation failure on:" + path);
+    } finally {
+      if (udfso != null) {
+        dfs.closeDfsClient(udfso);
+      }
+    }
+  }
 }
