@@ -59,7 +59,4 @@ Similarly, you can go to the **Training dataset** on the side menu to inspect th
     <figcaption>Created training dataset</figcaption>
   </figure>
 
-If you want to look at or edit the job that created the feature groups and training datasets go to **Jupyter** on the 
-side menu.
-
 To learn how to create your own project go to [Create a New Project](./createProject.md)
