@@ -42,8 +42,8 @@ select group(s) you want to give access to. Here we will allow everyone in the o
     <figcaption>Group assignment</figcaption>
   </figure>
 
-After the application is created go back to _Applications_ and click on the application you just created. Use the 
-_client id_ and _client secret_ generated for your app in the [client registration](./create-client.md) in Hopsworks.
+After the application is created go back to _Applications_ and click on the application you just created. Use the
+_Okta domain_ (_Connection URL_), _client id_ and _client secret_ generated for your app in the [client registration](./create-client.md) in Hopsworks.
 
   <figure>
     <a  href="../../../assets/images/admin/oauth2/overview.png">
