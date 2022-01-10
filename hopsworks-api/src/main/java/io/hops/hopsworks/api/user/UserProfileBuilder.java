@@ -76,23 +76,29 @@ public class UserProfileBuilder {
     return new UserProfileDTO(u);
   }
 
-  public UserProfileDTO acceptUsers(List<Integer> ids, HttpServletRequest req) {
+  public UserProfileDTO acceptUsers(List<Integer> ids, HttpServletRequest req) throws UserException {
     UserProfileDTO userProfileDTO = new UserProfileDTO();
     Users target = null;
-    for (Integer id : ids) {
-      try {
-        target = accept(id, null);
-        userProfileDTO.addItem(new UserProfileDTO(target));
-      } catch (UserException | ServiceException e) {
-        LOGGER.log(Level.WARNING, "Failed to accept user with id: {0}", id);
+    if (ids != null && ids.size() > 0) {
+      for (Integer id : ids) {
+        try {
+          target = accept(id, null);
+          userProfileDTO.addItem(new UserProfileDTO(target));
+        } catch (UserException | ServiceException e) {
+          LOGGER.log(Level.WARNING, "Failed to accept user with id: {0}", id);
+        }
+      }
+      if (userProfileDTO.getItems() != null) {
+        userProfileDTO.setCount((long) userProfileDTO.getItems().size());
+      } else {
+        userProfileDTO.setCount(0L);
+      }
+    
+      if (userProfileDTO.getCount() < 1) {
+        throw new UserException(RESTCodes.UserErrorCode.ACCOUNT_ACTIVATION_FAILED, Level.FINE, "Failed to activate " +
+          "users");
       }
     }
-    if (userProfileDTO.getItems() != null) {
-      userProfileDTO.setCount((long) userProfileDTO.getItems().size());
-    } else {
-      userProfileDTO.setCount(0L);
-    }
-
     return userProfileDTO;
   }
 
@@ -122,23 +128,29 @@ public class UserProfileBuilder {
     return new UserProfileDTO(u);
   }
 
-  public UserProfileDTO rejectUsers(List<Integer> ids, HttpServletRequest req) {
+  public UserProfileDTO rejectUsers(List<Integer> ids, HttpServletRequest req) throws UserException {
     UserProfileDTO userProfileDTO = new UserProfileDTO();
     Users target = null;
-    for (Integer id : ids) {
-      try {
-        target = reject(id);
-        userProfileDTO.addItem(new UserProfileDTO(target));
-      } catch (UserException | ServiceException e) {
-        LOGGER.log(Level.WARNING, "Failed to reject user with id: {0}", id);
+    if (ids != null && ids.size() > 0) {
+      for (Integer id : ids) {
+        try {
+          target = reject(id);
+          userProfileDTO.addItem(new UserProfileDTO(target));
+        } catch (UserException | ServiceException e) {
+          LOGGER.log(Level.WARNING, "Failed to reject user with id: {0}", id);
+        }
+      }
+      if (userProfileDTO.getItems() != null) {
+        userProfileDTO.setCount((long) userProfileDTO.getItems().size());
+      } else {
+        userProfileDTO.setCount(0L);
+      }
+    
+      if (userProfileDTO.getCount() < 1) {
+        throw new UserException(RESTCodes.UserErrorCode.ACCOUNT_REJECTION_FAILED, Level.FINE,
+          "Failed to reject users");
       }
     }
-    if (userProfileDTO.getItems() != null) {
-      userProfileDTO.setCount((long) userProfileDTO.getItems().size());
-    } else {
-      userProfileDTO.setCount(0L);
-    }
-
     return userProfileDTO;
   }
 

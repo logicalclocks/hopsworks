@@ -959,7 +959,8 @@ public class RESTCodes {
     USER_SEARCH_NOT_ALLOWED(57, "Search not allowed.", Response.Status.BAD_REQUEST),
     FAILED_TO_GENERATE_QR_CODE(58, "Failed to generate QR code.", Response.Status.EXPECTATION_FAILED),
     INVALID_OTP(59, "Invalid OTP.", Response.Status.BAD_REQUEST),
-    OPERATION_NOT_ALLOWED(60, "Operation not allowed on user", Response.Status.BAD_REQUEST);
+    OPERATION_NOT_ALLOWED(60, "Operation not allowed on user", Response.Status.BAD_REQUEST),
+    ACCOUNT_REJECTION_FAILED(61, "Account rejection failed", Response.Status.BAD_REQUEST);
 
     private Integer code;
     private String message;
