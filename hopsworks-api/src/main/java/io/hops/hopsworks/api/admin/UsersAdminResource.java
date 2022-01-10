@@ -190,7 +190,8 @@ public class UsersAdminResource {
     return Response.ok(userProfileDTO).build();
   }
 
-  @ApiOperation(value = "Accept users specified by ids. Returns the users that were accepted.", response =
+  @ApiOperation(value = "Accept users specified by ids. Returns the requests that were successful." +
+    "5:09\n", response =
     UserProfileDTO.class)
   @PUT
   @Path("/users/accepted")
@@ -201,7 +202,7 @@ public class UsersAdminResource {
     return Response.ok(userProfileDTO).build();
   }
 
-  @ApiOperation(value = "Reject users specified by ids. Returns the users that were rejected.", response =
+  @ApiOperation(value = "Reject users specified by ids. Returns the requests that were successful.", response =
     UserProfileDTO.class)
   @PUT
   @Path("/users/rejected")
