@@ -59,4 +59,9 @@ Similarly, you can go to the **Training dataset** on the side menu to inspect th
     <figcaption>Created training dataset</figcaption>
   </figure>
 
+If you want to experiment with the feature groups and training datasets created in this demo, go to **Jupyter** tab 
+on the side menu. From the [_Jupyter_](../jupyter.md) page you can start _JupyterLab_ and explore the available 
+notebooks. See [Feature Store Notebooks](https://examples.hopsworks.ai/) for more examples on Feature Engineering, 
+Feature Ingestion, Feature Selection/Joining, Training Dataset Creating, Model Training, and Model Serving.
+
 To learn how to create your own project go to [Create a New Project](./createProject.md)
