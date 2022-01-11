@@ -20,8 +20,8 @@ In the **Cluster Settings** _Authentication_ tab you can configure how users aut
    [Create client](./oauth2/create-client.md) for details.
 
 <figure>
-  <a  href="../../../assets/images/admin/auth-config.png">
-    <img src="../../../assets/images/admin/auth-config.png" alt="Authentication config" />
+  <a  href="../../assets/images/admin/auth-config.png">
+    <img src="../../assets/images/admin/auth-config.png" alt="Authentication config" />
   </a>
   <figcaption>Setup Authentication Methods</figcaption>
 </figure>
