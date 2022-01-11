@@ -1,35 +1,35 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"><url>
      <loc>https://docs.hopsworks.ai/hopsworks/latest/compute/</loc>
-     <lastmod>2022-01-10</lastmod>
+     <lastmod>2022-01-11</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://docs.hopsworks.ai/hopsworks/latest/compute/python/</loc>
-     <lastmod>2022-01-10</lastmod>
+     <lastmod>2022-01-11</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://docs.hopsworks.ai/hopsworks/latest/compute/jupyter/</loc>
-     <lastmod>2022-01-10</lastmod>
+     <lastmod>2022-01-11</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://docs.hopsworks.ai/hopsworks/latest/compute/jobs/</loc>
-     <lastmod>2022-01-10</lastmod>
+     <lastmod>2022-01-11</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://docs.hopsworks.ai/hopsworks/latest/admin/</loc>
-     <lastmod>2022-01-10</lastmod>
+     <lastmod>2022-01-11</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://docs.hopsworks.ai/hopsworks/latest/admin/user/</loc>
-     <lastmod>2022-01-10</lastmod>
+     <lastmod>2022-01-11</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://docs.hopsworks.ai/hopsworks/latest/admin/project/</loc>
-     <lastmod>2022-01-10</lastmod>
+     <lastmod>2022-01-11</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://docs.hopsworks.ai/hopsworks/latest/admin/installation/</loc>
-     <lastmod>2022-01-10</lastmod>
+     <lastmod>2022-01-11</lastmod>
      <changefreq>daily</changefreq>
     </url>
 </urlset>
