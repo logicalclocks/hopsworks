@@ -19,7 +19,9 @@ package io.hops.hopsworks.api.admin;
 import io.hops.hopsworks.api.admin.dto.NewUserDTO;
 import io.hops.hopsworks.api.filter.Audience;
 import io.hops.hopsworks.api.filter.apiKey.ApiKeyRequired;
+import io.hops.hopsworks.api.jwt.JWTHelper;
 import io.hops.hopsworks.api.user.BbcGroupDTO;
+import io.hops.hopsworks.api.user.UserIds;
 import io.hops.hopsworks.api.user.UserProfileBuilder;
 import io.hops.hopsworks.api.user.UserProfileDTO;
 import io.hops.hopsworks.api.user.UsersBeanParam;
@@ -117,6 +119,8 @@ public class UsersAdminResource {
   protected UsersController usersController;
   @EJB
   private UserValidator userValidator;
+  @EJB
+  private JWTHelper jwtHelper;
   
   @ApiOperation(value = "Get all users profiles.", response = UserProfileDTO.class)
   @GET
@@ -162,6 +166,27 @@ public class UsersAdminResource {
     return Response.ok(userProfileDTO).build();
   }
   
+  @ApiOperation(value = "Change role of the user specified by id.", response = UserProfileDTO.class)
+  @PUT
+  @Path("/users/{id}/role")
+  @Produces(MediaType.APPLICATION_JSON)
+  @AuditedList({@Audited(type = AuditType.ACCOUNT_AUDIT, action = AuditAction.ACTIVATED_ACCOUNT, message = "Change " +
+    "role"),
+    @Audited(type = AuditType.ROLE_AUDIT, action = AuditAction.ROLE_ADDED, message = "Added role")})
+  public Response changeRole(@Context HttpServletRequest req, @Context SecurityContext sc,
+    @AuditTarget(UserIdentifier.ID) @PathParam("id") Integer id, String role) throws UserException {
+    Users user = jwtHelper.getUserPrincipal(sc);
+    if (user.getUid() == id) {
+      throw new UserException(RESTCodes.UserErrorCode.OPERATION_NOT_ALLOWED, Level.FINE,
+        "Can not change your own role.");
+    }
+    UserProfileDTO  userProfileDTO = userProfileBuilder.changeRole(
+      id,
+      role);
+    
+    return Response.ok(userProfileDTO).build();
+  }
+  
   @ApiOperation(value = "Accept user specified by id.", response = UserProfileDTO.class)
   @PUT
   @Path("/users/{id}/accepted")
@@ -187,10 +212,31 @@ public class UsersAdminResource {
     @Audited(type = AuditType.ROLE_AUDIT, action = AuditAction.ROLE_ADDED, message = "Spam account")})
   public Response rejectUser(@Context HttpServletRequest req, @Context SecurityContext sc,
     @AuditTarget(UserIdentifier.ID) @PathParam("id") Integer id) throws UserException, ServiceException {
+  
+    UserProfileDTO userProfileDTO = userProfileBuilder.rejectUser(id);
     
-    userProfileBuilder.rejectUser(id);
-    
-    return Response.noContent().build();
+    return Response.ok(userProfileDTO).build();
+  }
+  
+  @ApiOperation(value = "Accept users specified by ids. Returns the requests that were successful.", response =
+    UserProfileDTO.class)
+  @PUT
+  @Path("/users/accepted")
+  @Produces(MediaType.APPLICATION_JSON)
+  public Response acceptUsers(@Context HttpServletRequest req, @Context SecurityContext sc, UserIds userIds)
+    throws UserException {
+    UserProfileDTO userProfileDTO = userProfileBuilder.acceptUsers(userIds.getIds(), req);
+    return Response.ok(userProfileDTO).build();
+  }
+  
+  @ApiOperation(value = "Reject users specified by ids. Returns the requests that were successful.", response =
+    UserProfileDTO.class)
+  @PUT
+  @Path("/users/rejected")
+  public Response rejectUsers(@Context HttpServletRequest req, @Context SecurityContext sc, UserIds userIds)
+    throws UserException {
+    UserProfileDTO userProfileDTO = userProfileBuilder.rejectUsers(userIds.getIds(), req);
+    return Response.ok(userProfileDTO).build();
   }
   
   @ApiOperation(value = "Resend confirmation email to user specified by id.", response = UserProfileDTO.class)
@@ -288,12 +334,12 @@ public class UsersAdminResource {
     @AuditTarget(UserIdentifier.EMAIL) @QueryParam("email") String email,
     @QueryParam("password") @Secret String password, @QueryParam("givenName") String givenName,
     @QueryParam("surname") String surname, @QueryParam("maxNumProjects") int maxNumProjects,
-    @QueryParam("type") RemoteUserType type,
+    @QueryParam("type") RemoteUserType type, @QueryParam("role") String role,
     @QueryParam("status") UserAccountStatus status, @Context SecurityContext sc, @Context UriInfo uriInfo)
     throws GenericException, UserException {
     switch (accountType) {
       case M_ACCOUNT_TYPE:
-        return createUser(email, password, givenName, surname,  maxNumProjects, status, uriInfo);
+        return createUser(email, password, givenName, surname,  maxNumProjects, role, status, uriInfo);
       case REMOTE_ACCOUNT_TYPE:
         return createRemoteUser(uuid, email, givenName, surname, type, status, uriInfo);
       default:
@@ -302,8 +348,7 @@ public class UsersAdminResource {
   }
   
   private Response createUser(String email, String password, String givenName, String surname, int maxNumProjects,
-                              UserAccountStatus status, UriInfo uriInfo)
-      throws UserException {
+    String role, UserAccountStatus status, UriInfo uriInfo) throws UserException {
     UserDTO newUser = new UserDTO();
     newUser.setEmail(email);
     newUser.setFirstName(givenName);
@@ -315,9 +360,9 @@ public class UsersAdminResource {
     newUser.setRepeatedPassword(passwordGen);
     newUser.setTos(true);
     userValidator.isValidNewUser(newUser, passwordGen.equals(password));
-    UserAccountStatus statusDefault = status != null ? status : UserAccountStatus.NEW_MOBILE_ACCOUNT;
-    Users user =
-      usersController.registerUser(newUser, Settings.DEFAULT_ROLE, statusDefault, UserAccountType.M_ACCOUNT_TYPE);
+    UserAccountStatus statusDefault = status != null ? status : UserAccountStatus.TEMP_PASSWORD;
+    Users user = usersController.registerUser(newUser, role != null ? role : Settings.DEFAULT_ROLE, statusDefault,
+      UserAccountType.M_ACCOUNT_TYPE);
     NewUserDTO newUserDTO = new NewUserDTO(user);
     URI href = uriInfo.getAbsolutePathBuilder().path(user.getUid().toString()).build();
     if (!passwordGen.equals(password)) {
@@ -343,7 +388,8 @@ public class UsersAdminResource {
       default:
         throw new WebApplicationException("Remote user type not valid.", Response.Status.NOT_FOUND);
     }
-    remoteUserHelper.createRemoteUser(userDTO, email, givenName, surname, type, status);
+    UserAccountStatus statusDefault = status != null ? status : UserAccountStatus.ACTIVATED_ACCOUNT;
+    remoteUserHelper.createRemoteUser(userDTO, email, givenName, surname, type, statusDefault);
     RemoteUser remoteUser = remoteUserHelper.getRemoteUser(uuid);
     RestRemoteUserDTO restRemoteUserDTO = new RestRemoteUserDTO(remoteUser.getUuid(), remoteUser.getUid().getFname(),
       remoteUser.getUid().getLname(), remoteUser.getUid().getEmail());

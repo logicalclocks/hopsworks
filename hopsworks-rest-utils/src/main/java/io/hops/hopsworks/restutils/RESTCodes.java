@@ -969,7 +969,9 @@ public class RESTCodes {
     USER_ACCOUNT_HANDLER_UPDATE_ERROR(61, "Error occurred during user account update handler.",
       Response.Status.INTERNAL_SERVER_ERROR),
     USER_ACCOUNT_HANDLER_REMOVE_ERROR(62, "Error occurred during user account remove handler.",
-      Response.Status.INTERNAL_SERVER_ERROR);
+      Response.Status.INTERNAL_SERVER_ERROR),
+    OPERATION_NOT_ALLOWED(63, "Operation not allowed on user", Response.Status.BAD_REQUEST),
+    ACCOUNT_REJECTION_FAILED(64, "Account rejection failed", Response.Status.BAD_REQUEST);
 
     private Integer code;
     private String message;

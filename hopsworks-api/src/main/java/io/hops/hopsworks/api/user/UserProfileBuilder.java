@@ -15,10 +15,15 @@
  */
 package io.hops.hopsworks.api.user;
 
+import io.hops.hopsworks.api.jwt.JWTHelper;
+import io.hops.hopsworks.audit.helper.AuditAction;
+import io.hops.hopsworks.audit.helper.AuditActionStatus;
 import io.hops.hopsworks.common.dao.user.BbcGroupFacade;
 import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.user.UserAccountHandler;
+import io.hops.hopsworks.common.dao.user.security.audit.AccountAuditFacade;
 import io.hops.hopsworks.common.user.UsersController;
+import io.hops.hopsworks.common.util.HttpUtil;
 import io.hops.hopsworks.exceptions.ServiceException;
 import io.hops.hopsworks.exceptions.UserException;
 import io.hops.hopsworks.persistence.entity.user.BbcGroup;
@@ -33,13 +38,17 @@ import javax.ejb.TransactionAttributeType;
 import javax.enterprise.inject.Any;
 import javax.enterprise.inject.Instance;
 import javax.inject.Inject;
+import javax.servlet.http.HttpServletRequest;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 import java.util.logging.Level;
+import java.util.logging.Logger;
 
 @Stateless
 @TransactionAttribute(TransactionAttributeType.NEVER)
 public class UserProfileBuilder {
+  private final static Logger LOGGER = Logger.getLogger(UserProfileBuilder.class.getName());
   @EJB
   private UsersController usersController;
   @EJB
@@ -49,65 +58,151 @@ public class UserProfileBuilder {
   @Inject
   @Any
   private Instance<UserAccountHandler> userAccountHandlers;
-
-  public UserProfileDTO acceptUser(Integer userId, Users newUser) throws UserException, ServiceException {
+  @EJB
+  private JWTHelper jwtHelper;
+  @EJB
+  private AccountAuditFacade accountAuditFacade;
+  
+  private Users accept(Integer userId, Users newUser) throws UserException, ServiceException {
     Users u = usersController.getUserById(userId);
-    if (u.getStatus().equals(UserAccountStatus.VERIFIED_ACCOUNT)) {
-      Collection<BbcGroup> groups = null;
-      if (newUser != null) {
-        groups = newUser.getBbcGroupCollection();
-      }
-      if (groups == null || groups.isEmpty()) {
-        BbcGroup bbcGroup = bbcGroupFacade.findByGroupName("HOPS_USER");
-        groups = new ArrayList<>();
-        groups.add(bbcGroup);
-      }
-      u.setStatus(UserAccountStatus.ACTIVATED_ACCOUNT);
-      u.setBbcGroupCollection(groups);
-      u = userFacade.update(u);
-      UserAccountHandler.runUserAccountUpdateHandlers(userAccountHandlers, u); // run user update handlers
-      usersController.sendConfirmationMail(u);
-    } else {
-      throw new UserException(RESTCodes.UserErrorCode.TRANSITION_STATUS_ERROR, Level.WARNING,
-        "status: " + u.getStatus().name() + " to status " + UserAccountStatus.ACTIVATED_ACCOUNT.name());
+    Collection<BbcGroup> groups = null;
+    if (newUser != null) {
+      groups = newUser.getBbcGroupCollection();
     }
+    if (groups == null || groups.isEmpty()) {
+      BbcGroup bbcGroup = bbcGroupFacade.findByGroupName("HOPS_USER");
+      groups = new ArrayList<>();
+      groups.add(bbcGroup);
+    }
+    u.setStatus(UserAccountStatus.ACTIVATED_ACCOUNT);
+    u.setBbcGroupCollection(groups);
+    u = userFacade.update(u);
+    UserAccountHandler.runUserAccountUpdateHandlers(userAccountHandlers, u); // run user update handlers
+    usersController.sendConfirmationMail(u);
+    return u;
+  }
+  
+  public UserProfileDTO acceptUser(Integer userId, Users newUser) throws UserException, ServiceException {
+    Users u = accept(userId, newUser);
     return new UserProfileDTO(u);
+  }
+  
+  private void audit(Users target, AuditActionStatus result, HttpServletRequest req, boolean accept) {
+    String message = accept ? "Activated account" : "Rejected user";
+    String roleMessage = accept ? "Added role" : "Spam account";
+    Users initiator = jwtHelper.getUserPrincipal(req);
+    String remoteHost = HttpUtil.extractRemoteHostIp(req);
+    String userAgent = HttpUtil.extractUserAgent(req);
+    accountAuditFacade.registerAccountChange(initiator, AuditAction.CHANGED_STATUS.toString(), result.toString(),
+      message, target, remoteHost, userAgent);
+    accountAuditFacade.registerRoleChange(initiator, AuditAction.ROLE_ADDED.toString(), result.toString(), roleMessage,
+      target, remoteHost, userAgent);
+  }
+  
+  public UserProfileDTO acceptUsers(List<Integer> ids, HttpServletRequest req) throws UserException {
+    UserProfileDTO userProfileDTO = new UserProfileDTO();
+    Users target = null;
+    if (ids != null && ids.size() > 0) {
+      for (Integer id : ids) {
+        try {
+          target = accept(id, null);
+          userProfileDTO.addItem(new UserProfileDTO(target));
+          audit(target, AuditActionStatus.SUCCESS, req, true);
+        } catch (UserException | ServiceException e) {
+          LOGGER.log(Level.WARNING, "Failed to accept user with id: {0}", id);
+          if (target != null) {
+            audit(target, AuditActionStatus.FAILED, req, true);
+          }
+        }
+      }
+      if (userProfileDTO.getItems() != null) {
+        userProfileDTO.setCount((long) userProfileDTO.getItems().size());
+      } else {
+        userProfileDTO.setCount(0L);
+      }
+  
+      if (userProfileDTO.getCount() < 1) {
+        throw new UserException(RESTCodes.UserErrorCode.ACCOUNT_ACTIVATION_FAILED, Level.FINE, "Failed to activate " +
+          "users");
+      }
+    }
+    return userProfileDTO;
+  }
+  
+  public UserProfileDTO changeRole(Integer userId, String role) throws UserException {
+    Users u = usersController.getUserById(userId);
+    Collection<BbcGroup> groups = new ArrayList<>();
+    BbcGroup bbcGroup = bbcGroupFacade.findByGroupName(role);
+    if (bbcGroup == null) {
+      throw new UserException(RESTCodes.UserErrorCode.ROLE_NOT_FOUND, Level.FINE);
+    }
+    groups.add(bbcGroup);
+    u.setBbcGroupCollection(groups);
+    u = userFacade.update(u);
+    // trigger user account handlers
+    UserAccountHandler.runUserAccountUpdateHandlers(userAccountHandlers, u);
+    return new UserProfileDTO(u);
+  }
+  
+  public Users reject(Integer userId) throws UserException, ServiceException {
+    Users u = usersController.getUserById(userId);
+    u.setStatus(UserAccountStatus.SPAM_ACCOUNT);
+    u = userFacade.update(u);
+    UserAccountHandler.runUserAccountUpdateHandlers(userAccountHandlers, u); // run user update handlers
+    usersController.sendRejectionEmail(u);
+    return u;
   }
   
   public UserProfileDTO rejectUser(Integer userId) throws UserException, ServiceException {
-    Users u = userFacade.find(userId);
-    if (u != null) {
-      u.setStatus(UserAccountStatus.SPAM_ACCOUNT);
-      u = userFacade.update(u);
-      UserAccountHandler.runUserAccountUpdateHandlers(userAccountHandlers, u); // run user update handlers
-      usersController.sendRejectionEmail(u);
-    } else {
-      throw new UserException(RESTCodes.UserErrorCode.USER_WAS_NOT_FOUND, Level.FINE);
-    }
+    Users u = reject(userId);
     return new UserProfileDTO(u);
   }
   
-  public UserProfileDTO pendUser(String linkUrl, Integer userId) throws UserException, ServiceException {
-    Users u = userFacade.find(userId);
-    if (u != null) {
-      if (u.getStatus().equals(UserAccountStatus.NEW_MOBILE_ACCOUNT)) {
-        u = usersController.resendAccountVerificationEmail(u, linkUrl);
-      } else {
-        throw new UserException(RESTCodes.UserErrorCode.TRANSITION_STATUS_ERROR, Level.WARNING,
-          "status: "+ u.getStatus().name() + ", to pending status");
+  public UserProfileDTO rejectUsers(List<Integer> ids, HttpServletRequest req) throws UserException {
+    UserProfileDTO userProfileDTO = new UserProfileDTO();
+    Users target = null;
+    if (ids != null && ids.size() > 0) {
+      for (Integer id : ids) {
+        try {
+          target = reject(id);
+          userProfileDTO.addItem(new UserProfileDTO(target));
+          audit(target, AuditActionStatus.SUCCESS, req, false);
+        } catch (UserException | ServiceException e) {
+          LOGGER.log(Level.WARNING, "Failed to reject user with id: {0}", id);
+          if (target != null) {
+            audit(target, AuditActionStatus.FAILED, req, false);
+          }
+        }
       }
+      if (userProfileDTO.getItems() != null) {
+        userProfileDTO.setCount((long) userProfileDTO.getItems().size());
+      } else {
+        userProfileDTO.setCount(0L);
+      }
+    
+      if (userProfileDTO.getCount() < 1) {
+        throw new UserException(RESTCodes.UserErrorCode.ACCOUNT_REJECTION_FAILED, Level.FINE,
+          "Failed to reject users");
+      }
+    }
+    
+    return userProfileDTO;
+  }
+  
+  public UserProfileDTO pendUser(String linkUrl, Integer userId) throws UserException, ServiceException {
+    Users u = usersController.getUserById(userId);
+    if (u.getStatus().equals(UserAccountStatus.NEW_MOBILE_ACCOUNT)) {
+      u = usersController.resendAccountVerificationEmail(u, linkUrl);
     } else {
-      throw new UserException(RESTCodes.UserErrorCode.USER_WAS_NOT_FOUND, Level.FINE);
+      throw new UserException(RESTCodes.UserErrorCode.TRANSITION_STATUS_ERROR, Level.WARNING,
+        "status: " + u.getStatus().name() + ", to pending status");
     }
     
     return new UserProfileDTO(u);
   }
   
   public UserProfileDTO updateUser(Integer userIdToUpdate, Users newUser) throws UserException {
-    Users u = userFacade.find(userIdToUpdate);
-    if (u == null) {
-      throw new UserException(RESTCodes.UserErrorCode.USER_WAS_NOT_FOUND, Level.FINE);
-    }
+    Users u = usersController.getUserById(userIdToUpdate);
     
     if (newUser.getStatus() != null) {
       u.setStatus(newUser.getStatus());

@@ -39,13 +39,13 @@
 package io.hops.hopsworks.common.dao.user;
 
 import io.hops.hopsworks.common.dao.AbstractFacade;
+import io.hops.hopsworks.exceptions.InvalidQueryException;
+import io.hops.hopsworks.persistence.entity.user.BbcGroup;
+import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.persistence.entity.user.security.UserGroup;
 import io.hops.hopsworks.persistence.entity.user.security.UserGroupPK;
 import io.hops.hopsworks.persistence.entity.user.security.ua.UserAccountStatus;
 import io.hops.hopsworks.persistence.entity.user.security.ua.UserAccountType;
-import io.hops.hopsworks.exceptions.InvalidQueryException;
-import io.hops.hopsworks.persistence.entity.user.BbcGroup;
-import io.hops.hopsworks.persistence.entity.user.Users;
 
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
@@ -55,6 +55,7 @@ import javax.persistence.PersistenceContext;
 import javax.persistence.Query;
 import javax.persistence.TypedQuery;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -136,6 +137,15 @@ public class UserFacade extends AbstractFacade<Users> {
     return val;
   }
   
+  private Set<UserAccountStatus> getStatusValues(String field, String values) {
+    String[] statusArr = values.split(",");
+    Set<UserAccountStatus> userAccountStatuses = new HashSet<>();
+    for (String status : statusArr) {
+      userAccountStatuses.add(getStatusValue(field, status));
+    }
+    return userAccountStatuses;
+  }
+  
   private UserAccountStatus getStatusValue(String field, String value) {
     if (value == null || value.isEmpty()) {
       throw new InvalidQueryException("Filter value for " + field + " needs to set an Integer or a valid " + field
@@ -179,6 +189,11 @@ public class UserFacade extends AbstractFacade<Users> {
       case STATUS_GT:
       case STATUS_LT:
         q.setParameter(filterBy.getField(), getStatusValue(filterBy.getField(), filterBy.getParam()));
+        break;
+      case STATUS_IN:
+      case STATUS_NOT_IN:
+        Set<UserAccountStatus> statuses = getStatusValues(filterBy.getField(), filterBy.getParam());
+        q.setParameter(filterBy.getField(), statuses);
         break;
       case IS_ONLINE:
       case FALSE_LOGIN:
@@ -244,6 +259,8 @@ public class UserFacade extends AbstractFacade<Users> {
     STATUS("STATUS", "u.status = :status ", "status", "2"),
     STATUS_LT("STATUS_LT", "u.status < :status_lt ", "status_lt", "2"),
     STATUS_GT("STATUS_GT", "u.status > :status_gt ", "status_gt", "2"),
+    STATUS_IN("STATUS_IN", "u.status IN :status_in ", "status_in", "2, 7"),
+    STATUS_NOT_IN("STATUS_NOT_IN", "u.status NOT IN :status ", "status_not_in", "2, 7"),
     IS_ONLINE("IS_ONLINE", "u.isonline = :isonline ", "isonline", "1"),
     FALSE_LOGIN("FALSE_LOGIN", "u.falseLogin = :falseLogin ", "falseLogin", "20"),
     FALSE_LOGIN_GT("FALSE_LOGIN_GT", "u.falseLogin > :falseLogin_gt ", "falseLogin_gt", "20"),

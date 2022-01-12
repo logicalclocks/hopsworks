@@ -221,14 +221,13 @@ describe "On #{ENV['OS']}" do
 	      expect_json(status: 2)
       end
 
-      it "fails to accept a user with status different than verified" do 
+      it "accept a user with status different than verified" do
         id = user[:uid]
         data = {status: "NEW_MOBILE_ACCOUNT"}
         admin_update_user(id, data)
 	      expect_status(200)
 	      admin_accept_user(id)
-	      expect_status(400)
-	      expect_json(errorCode: 160046)
+	      expect_status(200)
       end
 
       it "fails to accept a user with an invalid id" do
@@ -240,7 +239,7 @@ describe "On #{ENV['OS']}" do
       it "rejects user" do
         id = user[:uid]
         admin_reject_user(id)
-        expect_status(204)
+        expect_status(200)
         admin_get_user_by_id(id)
         expect_status(200)
         expect_json(status: 6)
@@ -338,7 +337,7 @@ describe "On #{ENV['OS']}" do
         register_user_as_admin("#{random_id}@email.com", "name", "last")
         expect_status(201)
         expect(json_body[:maxNumProjects]).to be == 10
-        expect(json_body[:status]).to be == 0
+        expect(json_body[:status]).to be == 7
         expect(json_body[:password]).not_to be_nil
       end
       it "should not add new non-activated user without status to kube config map" do
@@ -433,7 +432,7 @@ describe "On #{ENV['OS']}" do
         register_user_as_admin("#{random_id}@email.com", "name", "last")
         expect_status(201)
         expect(json_body[:maxNumProjects]).to be == 10
-        expect(json_body[:status]).to be == 0
+        expect(json_body[:status]).to be == 7
         expect(json_body[:password]).not_to be_nil
       end
       it "should register new user with api key scope register" do
@@ -442,7 +441,7 @@ describe "On #{ENV['OS']}" do
         register_user_as_admin("#{random_id}@email.com", "name", "last")
         expect_status(201)
         expect(json_body[:maxNumProjects]).to be == 10
-        expect(json_body[:status]).to be == 0
+        expect(json_body[:status]).to be == 7
         expect(json_body[:password]).not_to be_nil
       end
     end
