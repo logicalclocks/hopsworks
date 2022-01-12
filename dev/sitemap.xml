@@ -1,35 +1,87 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"><url>
      <loc>https://docs.hopsworks.ai/hopsworks/latest/compute/</loc>
-     <lastmod>2022-01-11</lastmod>
+     <lastmod>2022-01-12</lastmod>
+     <changefreq>daily</changefreq>
+    </url><url>
+     <loc>https://docs.hopsworks.ai/hopsworks/latest/compute/auth/registration/</loc>
+     <lastmod>2022-01-12</lastmod>
+     <changefreq>daily</changefreq>
+    </url><url>
+     <loc>https://docs.hopsworks.ai/hopsworks/latest/compute/auth/login/</loc>
+     <lastmod>2022-01-12</lastmod>
+     <changefreq>daily</changefreq>
+    </url><url>
+     <loc>https://docs.hopsworks.ai/hopsworks/latest/compute/auth/recoverPassword/</loc>
+     <lastmod>2022-01-12</lastmod>
+     <changefreq>daily</changefreq>
+    </url><url>
+     <loc>https://docs.hopsworks.ai/hopsworks/latest/compute/auth/oauth2/</loc>
+     <lastmod>2022-01-12</lastmod>
+     <changefreq>daily</changefreq>
+    </url><url>
+     <loc>https://docs.hopsworks.ai/hopsworks/latest/compute/auth/updateProfile/</loc>
+     <lastmod>2022-01-12</lastmod>
+     <changefreq>daily</changefreq>
+    </url><url>
+     <loc>https://docs.hopsworks.ai/hopsworks/latest/compute/project/demoProject/</loc>
+     <lastmod>2022-01-12</lastmod>
+     <changefreq>daily</changefreq>
+    </url><url>
+     <loc>https://docs.hopsworks.ai/hopsworks/latest/compute/project/createProject/</loc>
+     <lastmod>2022-01-12</lastmod>
+     <changefreq>daily</changefreq>
+    </url><url>
+     <loc>https://docs.hopsworks.ai/hopsworks/latest/compute/project/multiTenancy/</loc>
+     <lastmod>2022-01-12</lastmod>
+     <changefreq>daily</changefreq>
+    </url><url>
+     <loc>https://docs.hopsworks.ai/hopsworks/latest/compute/project/deleteProject/</loc>
+     <lastmod>2022-01-12</lastmod>
+     <changefreq>daily</changefreq>
+    </url><url>
+     <loc>https://docs.hopsworks.ai/hopsworks/latest/compute/project/reservedNames/</loc>
+     <lastmod>2022-01-12</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://docs.hopsworks.ai/hopsworks/latest/compute/python/</loc>
-     <lastmod>2022-01-11</lastmod>
+     <lastmod>2022-01-12</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://docs.hopsworks.ai/hopsworks/latest/compute/jupyter/</loc>
-     <lastmod>2022-01-11</lastmod>
+     <lastmod>2022-01-12</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://docs.hopsworks.ai/hopsworks/latest/compute/jobs/</loc>
-     <lastmod>2022-01-11</lastmod>
+     <lastmod>2022-01-12</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://docs.hopsworks.ai/hopsworks/latest/admin/</loc>
-     <lastmod>2022-01-11</lastmod>
+     <lastmod>2022-01-12</lastmod>
+     <changefreq>daily</changefreq>
+    </url><url>
+     <loc>https://docs.hopsworks.ai/hopsworks/latest/admin/auth/</loc>
+     <lastmod>2022-01-12</lastmod>
+     <changefreq>daily</changefreq>
+    </url><url>
+     <loc>https://docs.hopsworks.ai/hopsworks/latest/admin/oauth2/create-client/</loc>
+     <lastmod>2022-01-12</lastmod>
+     <changefreq>daily</changefreq>
+    </url><url>
+     <loc>https://docs.hopsworks.ai/hopsworks/latest/admin/oauth2/create-okta-client/</loc>
+     <lastmod>2022-01-12</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://docs.hopsworks.ai/hopsworks/latest/admin/user/</loc>
-     <lastmod>2022-01-11</lastmod>
+     <lastmod>2022-01-12</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://docs.hopsworks.ai/hopsworks/latest/admin/project/</loc>
-     <lastmod>2022-01-11</lastmod>
+     <lastmod>2022-01-12</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
      <loc>https://docs.hopsworks.ai/hopsworks/latest/admin/installation/</loc>
-     <lastmod>2022-01-11</lastmod>
+     <lastmod>2022-01-12</lastmod>
      <changefreq>daily</changefreq>
     </url>
 </urlset>
