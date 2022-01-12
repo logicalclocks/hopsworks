@@ -377,6 +377,10 @@ public class UsersController {
    */
   public String resetPassword(Integer id, String initiator) throws UserException, MessagingException {
     Users user = userFacade.find(id);
+    if (!user.getMode().equals(UserAccountType.M_ACCOUNT_TYPE)) {
+      throw new UserException(RESTCodes.UserErrorCode.OPERATION_NOT_ALLOWED, Level.FINE, "Can not reset password of a" +
+        " remote user");
+    }
     String randomPwd = securityUtils.generateRandomString(UserValidator.TEMP_PASSWORD_LENGTH);
     user.setStatus(UserAccountStatus.TEMP_PASSWORD);
     changePasswordAsAdmin(user, randomPwd);
