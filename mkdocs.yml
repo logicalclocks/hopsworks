@@ -28,6 +28,7 @@ nav:
       - Python: compute/python.md
       - Jupyter: compute/jupyter.md
       - Jobs: compute/jobs.md
+      - Alerts: compute/alerts.md
   - Administration:
       - Introduction: admin/index.md
       - Authentication:
@@ -38,6 +39,7 @@ nav:
       - User: admin/user.md
       - Project: admin/project.md
       - Installation: admin/installation.md
+      - Alerts: admin/alert.md
   - Hopsworks.ai: https://docs.hopsworks.ai/hopsworks-cloud/latest/
   - Examples: https://examples.hopsworks.ai/
   - Community: https://community.hopsworks.ai/
