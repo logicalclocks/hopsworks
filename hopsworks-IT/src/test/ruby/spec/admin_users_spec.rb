@@ -108,7 +108,6 @@ describe "On #{ENV['OS']}" do
 	      expect_status(200)
 	      admin_accept_user(id)
 	      expect_status(200)
-	      expect_json(errorCode: 160046)
       end
 
       it "fails to accept a user with an invalid id" do
