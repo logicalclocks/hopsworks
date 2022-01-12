@@ -13,11 +13,28 @@ nav:
   - Model Management: https://docs.hopsworks.ai/machine-learning-api/latest/
   - Compute Management:
       - Introduction: compute/index.md
+      - Authentication:
+        - Registration: compute/auth/registration.md
+        - Login: compute/auth/login.md
+        - Password Recovery: compute/auth/recoverPassword.md
+        - OAuth2 Authentication: compute/auth/oauth2.md
+        - Update Profile: compute/auth/updateProfile.md
+      - Project:
+        - Start with a Demo Project: compute/project/demoProject.md
+        - Create a New Project: compute/project/createProject.md
+        - Project-based Multi-tenancy: compute/project/multiTenancy.md
+        - Delete a Project: compute/project/deleteProject.md
+        - Project Name Reserved Words: compute/project/reservedNames.md
       - Python: compute/python.md
       - Jupyter: compute/jupyter.md
       - Jobs: compute/jobs.md
   - Administration:
       - Introduction: admin/index.md
+      - Authentication:
+        - Configure Authentication: admin/auth.md
+        - Configure OAuth2:
+          - Register an Identity Provider: admin/oauth2/create-client.md
+          - Create Okta Client: admin/oauth2/create-okta-client.md
       - User: admin/user.md
       - Project: admin/project.md
       - Installation: admin/installation.md
