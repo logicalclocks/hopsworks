@@ -273,21 +273,12 @@ public class ProvOpsControllerEEImpl implements ProvOpsControllerIface {
     provLinksDTO.getItems().stream().forEach(link -> {
       if (params.isInArtifactDefined()) {
         link.setIn(Collections.singletonMap(link.getRoot().getMlId(), link.getRoot()));
-        if(link.getDownstreamLinks().isEmpty()) {
-          finalProvLinksDTO.addItem(link);
-        } else {
-          for (ProvLinksDTO linksDTO: link.getDownstreamLinks()) {
-            linksDTO.setOut(Collections.singletonMap(linksDTO.getRoot().getMlId(), linksDTO.getRoot()));
-            linksDTO.setUpstreamLinks(null);
-            linksDTO.setDownstreamLinks(null);
-            linksDTO.setRoot(null);
-            linksDTO.setIn(link.getIn());
-            finalProvLinksDTO.addItem(linksDTO);
-          }
-        }
+        link.setOut(link.getDownstreamLinks().stream()
+                .collect(Collectors.toMap(e -> e.getRoot().getMlId(), e -> e.getRoot())));
+        finalProvLinksDTO.addItem(link);
       } else if (params.isOutArtifactDefined() || params.isAppIdDefined()) {
         link.setIn(link.getUpstreamLinks().stream()
-                .collect(Collectors.toMap(root -> root.getRoot().getMlId(), root -> root.getRoot())));
+                .collect(Collectors.toMap(e -> e.getRoot().getMlId(), e -> e.getRoot())));
         link.setOut(Collections.singletonMap(link.getRoot().getMlId(), link.getRoot()));
         finalProvLinksDTO.addItem(link);
       }
@@ -572,20 +563,23 @@ public class ProvOpsControllerEEImpl implements ProvOpsControllerIface {
 
       for (Map.Entry<String, ProvLinksDTO> leaf: leafMap.entrySet()) {
         ProvLinksDTO link = leaf.getValue();
-        if(link.getOut().size() == 0) {
-          continue; // with experiments can happen that out is empty since it was already processed
+        for (Map.Entry<String, ProvOpsDTO> outEntry: link.getOut().entrySet()) {
+          ProvLinksDTO provLinksDTO = new ProvLinksDTO();
+          provLinksDTO.setAppId(leaf.getKey());
+          provLinksDTO.setRoot(outEntry.getValue());
+          provLinksDTO.setUpstreamLinks(link.getUpstreamLinks());
+          provLinksDTO.setDownstreamLinks(link.getDownstreamLinks());
+          map.entrySet().stream().filter(entry ->
+              (direction == StreamDirection.Upstream && entry.getValue().getIn().containsKey(outEntry.getKey())) ||
+              (direction == StreamDirection.Downstream && link.getIn().containsKey(entry.getKey())))
+            .forEach(entry -> {
+              if (direction == StreamDirection.Upstream) {
+                entry.getValue().addUpstreamLink(provLinksDTO);
+              } else if (direction == StreamDirection.Downstream) {
+                entry.getValue().addDownstreamLink(provLinksDTO);
+              }
+            });
         }
-        link.setRoot(leaf.getValue().getOut().entrySet().iterator().next().getValue());
-        map.entrySet().stream().filter(entry ->
-            (direction == StreamDirection.Upstream && entry.getValue().getIn().containsKey(link.getRoot().getMlId())) ||
-            (direction == StreamDirection.Downstream && leaf.getValue().getIn().containsKey(entry.getKey())))
-          .forEach(entry -> {
-            if (direction == StreamDirection.Upstream) {
-              entry.getValue().addUpstreamLink(link);
-            } else if (direction == StreamDirection.Downstream) {
-              entry.getValue().addDownstreamLink(link);
-            }
-          });
         link.getIn().clear();
         link.getOut().clear();
       }
@@ -645,15 +639,21 @@ public class ProvOpsControllerEEImpl implements ProvOpsControllerIface {
     //compile the final map
     compileDeepLinks(map, direction);
 
-    //clean up the central elements
-    map.entrySet().stream().forEach(entry -> {
-      ProvLinksDTO link = entry.getValue();
-      link.setRoot(entry.getValue().getOut().entrySet().iterator().next().getValue());
-      link.getIn().clear();
-      link.getOut().clear();
-    });
+    //create provLinksDTOList
+    List<ProvLinksDTO> provLinksDTOList = new ArrayList<>();
+    for (Map.Entry<String, ProvLinksDTO> entry: map.entrySet()) {
+      for (Map.Entry<String, ProvOpsDTO> e: entry.getValue().getOut().entrySet()) {
+        ProvLinksDTO provLinksDTO = new ProvLinksDTO();
+        provLinksDTO.setAppId(entry.getValue().getAppId());
+        provLinksDTO.setRoot(e.getValue());
+        provLinksDTO.setUpstreamLinks(entry.getValue().getUpstreamLinks());
+        provLinksDTO.setDownstreamLinks(entry.getValue().getDownstreamLinks());
+        provLinksDTOList.add(provLinksDTO);
+      }
+      //clear in case any Ops referenced by other Links
+      entry.getValue().getOut().clear();
+    }
 
-    List<ProvLinksDTO> provLinksDTOList = map.entrySet().stream().map(Map.Entry::getValue).collect(Collectors.toList());
     return new Pair(allowedProvenanceGraphSize, provLinksDTOList);
   }
 
