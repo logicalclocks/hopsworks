@@ -490,7 +490,12 @@ public class ProvOpsControllerEEImpl implements ProvOpsControllerIface {
             }
             Map<String, ProvOpsDTO> out = updateLive(app.getValue().getOut(), alive);// remove dead
             for (Map.Entry<String, ProvOpsDTO> ops : out.entrySet()) {
-              map.put(ops.getKey(), app.getValue());
+              //done to ensure ProvLinksDTO are not ref to same object
+              ProvLinksDTO provLinksDTO = new ProvLinksDTO();
+              provLinksDTO.setAppId(app.getValue().getAppId());
+              provLinksDTO.setIn(app.getValue().getIn());
+              provLinksDTO.setOut(app.getValue().getOut());
+              map.put(ops.getKey(), provLinksDTO);
               if (direction == StreamDirection.Downstream) {
                 mlIdList.add(new Pair(ops.getKey(),
                   ProvLinks.FieldsPF.ARTIFACT_TYPE.filterValParser().apply(ops.getValue().getDocSubType().toString())));
@@ -565,7 +570,7 @@ public class ProvOpsControllerEEImpl implements ProvOpsControllerIface {
         ProvLinksDTO link = leaf.getValue();
         for (Map.Entry<String, ProvOpsDTO> outEntry: link.getOut().entrySet()) {
           ProvLinksDTO provLinksDTO = new ProvLinksDTO();
-          provLinksDTO.setAppId(leaf.getKey());
+          provLinksDTO.setAppId(link.getAppId());
           provLinksDTO.setRoot(outEntry.getValue());
           provLinksDTO.setUpstreamLinks(link.getUpstreamLinks());
           provLinksDTO.setDownstreamLinks(link.getDownstreamLinks());
