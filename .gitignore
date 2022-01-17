@@ -36,6 +36,10 @@ nbactions.xml
 ### Intellj ###
 hopsworks-web/overlays/
 
+### VS Code ###
+.vscode
+.devcontainer
+
 ### Java ###
 *.class
 
