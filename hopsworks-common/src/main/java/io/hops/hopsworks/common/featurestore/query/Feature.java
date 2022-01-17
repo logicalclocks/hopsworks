@@ -19,6 +19,8 @@ package io.hops.hopsworks.common.featurestore.query;
 import io.hops.hopsworks.common.featurestore.feature.FeatureGroupFeatureDTO;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.Featuregroup;
 
+import java.util.Objects;
+
 public class Feature {
   private String name;
   private String fgAlias;
@@ -48,17 +50,6 @@ public class Feature {
     this.defaultValue = defaultValue;
     this.prefix = prefix;
     this.featureGroup = featuregroup;
-  }
-
-  public Feature(String name, String fgAlias, String type, String defaultValue, boolean primary,
-      Featuregroup featureGroup, String prefix) {
-    this.name = name;
-    this.fgAlias = fgAlias;
-    this.type = type;
-    this.defaultValue = defaultValue;
-    this.primary = primary;
-    this.featureGroup = featureGroup;
-    this.prefix = prefix;
   }
   
   public Feature(FeatureGroupFeatureDTO featureGroupFeatureDTO, String fgAlias) {
@@ -120,6 +111,17 @@ public class Feature {
     this.fgAlias = fgAlias;
     this.type = type;
     this.defaultValue = defaultValue;
+    this.prefix = prefix;
+  }
+
+  public Feature(String name, String fgAlias, String type, String defaultValue, boolean primary,
+      Featuregroup featureGroup, String prefix) {
+    this.name = name;
+    this.fgAlias = fgAlias;
+    this.type = type;
+    this.defaultValue = defaultValue;
+    this.primary = primary;
+    this.featureGroup = featureGroup;
     this.prefix = prefix;
   }
 
@@ -222,5 +224,26 @@ public class Feature {
   
   public void setIdx(Integer idx) {
     this.idx = idx;
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) {
+      return true;
+    }
+    if (o == null || getClass() != o.getClass()) {
+      return false;
+    }
+    Feature feature = (Feature) o;
+    return primary == feature.primary && Objects.equals(name, feature.name) &&
+        Objects.equals(fgAlias, feature.fgAlias) && Objects.equals(pitFgAlias, feature.pitFgAlias) &&
+        Objects.equals(type, feature.type) && Objects.equals(defaultValue, feature.defaultValue) &&
+        Objects.equals(prefix, feature.prefix) &&
+        Objects.equals(featureGroup, feature.featureGroup) && Objects.equals(idx, feature.idx);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(name, fgAlias, pitFgAlias, type, primary, defaultValue, prefix, featureGroup, idx);
   }
 }

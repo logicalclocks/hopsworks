@@ -1,0 +1,105 @@
+package io.hops.hopsworks.persistence.entity.featurestore.trainingdataset;
+
+import javax.persistence.Basic;
+import javax.persistence.CascadeType;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
+import javax.persistence.OneToOne;
+import javax.persistence.Table;
+import java.io.Serializable;
+import java.util.Objects;
+
+@Entity
+@Table(name = "training_dataset_filter", catalog = "hopsworks")
+public class TrainingDatasetFilter implements Serializable {
+
+  private static final long serialVersionUID = 1L;
+
+  @JoinColumn(name = "training_dataset_id", referencedColumnName = "id")
+  @ManyToOne
+  private TrainingDataset trainingDataset;
+  @OneToOne(cascade = CascadeType.ALL, mappedBy = "trainingDatasetFilter")
+  private TrainingDatasetFilterCondition condition;
+  @Column(name = "type")
+  private String type;
+  @Column(name = "path")
+  private String path;
+  @Id
+  @GeneratedValue(strategy = GenerationType.IDENTITY)
+  @Basic(optional = false)
+  @Column(name = "id")
+  private Integer id;
+
+  public TrainingDatasetFilter() {
+  }
+
+  public TrainingDatasetFilter(
+      TrainingDataset trainingDataset) {
+    this.trainingDataset = trainingDataset;
+  }
+
+  public TrainingDataset getTrainingDataset() {
+    return trainingDataset;
+  }
+
+  public void setTrainingDataset(
+      TrainingDataset trainingDataset) {
+    this.trainingDataset = trainingDataset;
+  }
+
+  public String getPath() {
+    return path;
+  }
+
+  public void setPath(String path) {
+    this.path = path;
+  }
+
+  public TrainingDatasetFilterCondition getCondition() {
+    return condition;
+  }
+
+  public void setCondition(
+      TrainingDatasetFilterCondition condition) {
+    this.condition = condition;
+  }
+
+  public String getType() {
+    return type;
+  }
+
+  public void setType(String type) {
+    this.type = type;
+  }
+
+  public Integer getId() {
+    return id;
+  }
+
+  public void setId(Integer id) {
+    this.id = id;
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) {
+      return true;
+    }
+    if (o == null || getClass() != o.getClass()) {
+      return false;
+    }
+    TrainingDatasetFilter that = (TrainingDatasetFilter) o;
+    return Objects.equals(condition, that.condition) && Objects.equals(type, that.type) &&
+        Objects.equals(path, that.path) && Objects.equals(id, that.id);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(condition, type, path, id);
+  }
+}

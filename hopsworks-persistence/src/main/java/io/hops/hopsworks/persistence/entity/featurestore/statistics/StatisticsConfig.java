@@ -181,20 +181,12 @@ public class StatisticsConfig implements Serializable {
     if (!id.equals(that.id)) {
       return false;
     }
-    if (featuregroup != null ? !featuregroup.equals(that.featuregroup) : that.featuregroup != null) {
-      return false;
-    }
-    if (trainingDataset != null ? !trainingDataset.equals(that.trainingDataset) : that.trainingDataset != null) {
-      return false;
-    }
     return statisticColumns != null ? statisticColumns.equals(that.statisticColumns) : that.statisticColumns == null;
   }
   
   @Override
   public int hashCode() {
     int result = id.hashCode();
-    result = 31 * result + (featuregroup != null ? featuregroup.hashCode() : 0);
-    result = 31 * result + (trainingDataset != null ? trainingDataset.hashCode() : 0);
     result = 31 * result + (statisticColumns != null ? statisticColumns.hashCode() : 0);
     result = 31 * result + (descriptive ? 1 : 0);
     result = 31 * result + (correlations ? 1 : 0);
