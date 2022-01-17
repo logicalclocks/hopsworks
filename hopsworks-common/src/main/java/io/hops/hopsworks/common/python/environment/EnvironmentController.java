@@ -225,9 +225,8 @@ public class EnvironmentController {
     if (projectUtils.isReservedProjectName(proj.getName())) {
       throw new IllegalStateException("Tried to execute a conda env op on a reserved project name");
     }
-    CondaCommands cc = new CondaCommands(settings.getAnacondaUser(),
-        user, op, CondaStatus.NEW, CondaInstallType.ENVIRONMENT, proj, pythonVersion, "", "defaults",
-        new Date(), arg, environmentFile, installJupyter);
+    CondaCommands cc = new CondaCommands(user, op, CondaStatus.NEW, CondaInstallType.ENVIRONMENT, proj,
+        pythonVersion, "", "defaults", new Date(), arg, environmentFile, installJupyter);
     condaCommandFacade.save(cc);
   }
 
@@ -307,7 +306,7 @@ public class EnvironmentController {
     project.setPythonEnvironment(pythonEnvironment);
     project.setDockerImage(settings.getBaseDockerImagePythonName());
 
-    CondaCommands cc = new CondaCommands(settings.getAnacondaUser(), user, CondaOp.SYNC_BASE_ENV, CondaStatus.NEW,
+    CondaCommands cc = new CondaCommands(user, CondaOp.SYNC_BASE_ENV, CondaStatus.NEW,
         CondaInstallType.ENVIRONMENT, project, settings.getDockerBaseImagePythonVersion(),
         null, null, new Date(), null, null, false);
     condaCommandFacade.save(cc);

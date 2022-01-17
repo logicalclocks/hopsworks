@@ -154,7 +154,7 @@ public class CommandsController {
       proj.setPythonDepCollection(depsInProj);
       projectFacade.update(proj);
 
-      CondaCommands cc = new CondaCommands(settings.getAnacondaUser(), user, op,
+      CondaCommands cc = new CondaCommands(user, op,
           CondaStatus.NEW, installType, proj, lib, version, channelUrl,
           new Date(), arg, null, false, gitBackend, apiKeyName);
       condaCommandFacade.save(cc);

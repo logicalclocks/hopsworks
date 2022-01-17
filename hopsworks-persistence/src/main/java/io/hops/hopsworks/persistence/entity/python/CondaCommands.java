@@ -76,9 +76,6 @@ import javax.xml.bind.annotation.XmlRootElement;
   @NamedQuery(name = "CondaCommands.findById",
           query
           = "SELECT c FROM CondaCommands c WHERE c.id = :id"),
-  @NamedQuery(name = "CondaCommands.findByUser",
-          query
-          = "SELECT c FROM CondaCommands c WHERE c.user = :user"),
   @NamedQuery(name = "CondaCommands.findByOp",
           query
           = "SELECT c FROM CondaCommands c WHERE c.op = :op"),
@@ -133,12 +130,6 @@ public class CondaCommands implements Serializable {
   @Basic(optional = false)
   @Column(name = "id")
   private Integer id;
-  @Basic(optional = false)
-  @NotNull
-  @Size(min = 1,
-          max = 52)
-  @Column(name = "user")
-  private String user;
   @JoinColumn(name = "user_id", referencedColumnName = "uid")
   @ManyToOne(optional = false)
   private Users userId;
@@ -205,21 +196,20 @@ public class CondaCommands implements Serializable {
   public CondaCommands() {
   }
 
-  public CondaCommands(String user, Users userId, CondaOp op,
+  public CondaCommands(Users userId, CondaOp op,
                        CondaStatus status, CondaInstallType installType, Project project, String lib, String version,
                        String channelUrl, Date created, String arg, String environmentFile, Boolean installJupyter) {
-    this(user, userId, op, status, installType, project, lib, version, channelUrl, created, arg,
+    this(userId, op, status, installType, project, lib, version, channelUrl, created, arg,
         environmentFile, installJupyter, null, null);
   }
 
-  public CondaCommands(String user, Users userId, CondaOp op,
+  public CondaCommands(Users userId, CondaOp op,
                        CondaStatus status, CondaInstallType installType, Project project, String lib, String version,
                        String channelUrl, Date created, String arg, String environmentFile, Boolean installJupyter,
                        GitBackend gitBackend, String gitApiKeyName) {
-    if (op  == null || user == null || project == null) { 
-      throw new NullPointerException("Op/user/project cannot be null");
+    if (op  == null || project == null) {
+      throw new NullPointerException("Op/project cannot be null");
     }
-    this.user = user;
     this.userId = userId;
     this.op = op;
     this.projectId = project;
@@ -242,14 +232,6 @@ public class CondaCommands implements Serializable {
 
   public void setId(Integer id) {
     this.id = id;
-  }
-
-  public String getUser() {
-    return user;
-  }
-
-  public void setUser(String user) {
-    this.user = user;
   }
 
   public String getChannelUrl() {

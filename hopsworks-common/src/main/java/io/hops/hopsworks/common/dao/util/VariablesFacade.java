@@ -65,12 +65,6 @@ public class VariablesFacade extends AbstractFacade<Variables> {
 
   public VariablesFacade() { super(Variables.class); }
 
-  public void storeVariable(String id, String value) {
-    Variables variable = new Variables(id, value);
-    em.merge(variable);
-    em.flush();
-  }
-
   public String getVariableValue(String id) {
     TypedQuery<Variables> query =
         em.createNamedQuery("Variables.findById", Variables.class)

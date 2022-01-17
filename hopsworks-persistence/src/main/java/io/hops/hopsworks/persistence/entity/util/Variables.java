@@ -76,6 +76,10 @@ public class Variables implements Serializable {
   @NotNull
   @Column(name = "visibility")
   private VariablesVisibility visibility;
+  @NotNull
+  @Column(name = "hide")
+  private boolean hide;
+
 
   public Variables() {
   }
@@ -93,6 +97,13 @@ public class Variables implements Serializable {
     this.id = id;
     this.value = value;
     this.visibility = visibility;
+  }
+
+  public Variables(String id, String value, VariablesVisibility visibility, boolean hide) {
+    this.id = id;
+    this.value = value;
+    this.visibility = visibility;
+    this.hide = hide;
   }
 
   public String getId() {
@@ -117,6 +128,14 @@ public class Variables implements Serializable {
 
   public void setVisibility(VariablesVisibility visibility) {
     this.visibility = visibility;
+  }
+
+  public boolean isHide() {
+    return hide;
+  }
+
+  public void setHide(boolean hide) {
+    this.hide = hide;
   }
 
   @Override
