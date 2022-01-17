@@ -27,8 +27,8 @@ def wrapper():
     import uuid
     import pandas
     import numpy
-    from hsml.utils.schema import Schema
-    from hsml.utils.model_schema import ModelSchema
+    from hsml.schema import Schema
+    from hsml.model_schema import ModelSchema
     from hsml.client.exceptions import RestAPIError
 
     model_path = os.path.join(os.getcwd(), str(uuid.uuid4()))
