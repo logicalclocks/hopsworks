@@ -28,6 +28,11 @@ import io.hops.hopsworks.common.featurestore.query.ConstructorController;
 import io.hops.hopsworks.common.featurestore.query.Feature;
 import io.hops.hopsworks.common.featurestore.query.Query;
 import io.hops.hopsworks.common.featurestore.query.QueryDTO;
+import io.hops.hopsworks.common.featurestore.query.SqlCondition;
+import io.hops.hopsworks.common.featurestore.query.filter.Filter;
+import io.hops.hopsworks.common.featurestore.query.filter.FilterLogic;
+import io.hops.hopsworks.common.featurestore.query.filter.FilterValue;
+import io.hops.hopsworks.common.featurestore.query.filter.SqlFilterLogic;
 import io.hops.hopsworks.common.featurestore.query.join.Join;
 import io.hops.hopsworks.common.featurestore.query.pit.PitJoinController;
 import io.hops.hopsworks.common.featurestore.statistics.StatisticsController;
@@ -61,6 +66,8 @@ import io.hops.hopsworks.persistence.entity.featurestore.storageconnector.Featur
 import io.hops.hopsworks.persistence.entity.featurestore.storageconnector.FeaturestoreConnectorType;
 import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.TrainingDataset;
 import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.TrainingDatasetFeature;
+import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.TrainingDatasetFilter;
+import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.TrainingDatasetFilterCondition;
 import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.TrainingDatasetJoin;
 import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.TrainingDatasetJoinCondition;
 import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.TrainingDatasetType;
@@ -80,6 +87,7 @@ import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
@@ -239,7 +247,7 @@ public class TrainingDatasetController {
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.TRAINING_DATASET_NO_SCHEMA,
           Level.FINE, "The training dataset doesn't have any feature");
     }
-  
+
     // Verify input
     inputValidation.validate(trainingDatasetDTO, query);
 
@@ -325,7 +333,7 @@ public class TrainingDatasetController {
           TrainingDatasetType.EXTERNAL_TRAINING_DATASET + ". The provided training dataset type was not recognized: "
           + trainingDatasetDTO.getTrainingDatasetType());
     }
-    
+
     //Store trainingDataset metadata in Hopsworks
     TrainingDataset trainingDataset = new TrainingDataset();
     trainingDataset.setName(trainingDatasetDTO.getName());
@@ -390,7 +398,62 @@ public class TrainingDatasetController {
     // Convert the joins from the query object into training dataset joins
     List<TrainingDatasetJoin> tdJoins = collectJoins(query, trainingDataset);
     trainingDataset.setJoins(tdJoins);
-    trainingDataset.setFeatures(collectFeatures(query, features, trainingDataset, 0, tdJoins, 0));
+    List<TrainingDatasetFeature> tdFeatures = collectFeatures(query, features, trainingDataset, 0, tdJoins, 0);
+    trainingDataset.setFeatures(tdFeatures);
+    List<TrainingDatasetFilter> filters = convertToFilterEntities(query.getFilter(), trainingDataset, "L");
+    trainingDataset.setFilters(filters);
+  }
+
+  List<TrainingDatasetFilter> convertToFilterEntities(FilterLogic filterLogic, TrainingDataset trainingDataset,
+      String path) {
+    List<TrainingDatasetFilter> filters = new ArrayList<>();
+    if (filterLogic == null) {
+      return filters;
+    }
+    if (filterLogic.getType().equals(SqlFilterLogic.SINGLE)) {
+      if (filterLogic.getLeftFilter() == null) {
+        filters.add(
+            makeTrainingDatasetFilter(path, trainingDataset, filterLogic.getRightFilter(), SqlFilterLogic.SINGLE));
+      } else {
+        filters.add(
+            makeTrainingDatasetFilter(path, trainingDataset, filterLogic.getLeftFilter(), filterLogic.getType()));
+      }
+    } else {
+      filters.add(
+          makeTrainingDatasetFilter(path, trainingDataset, null, filterLogic.getType()));
+      if (filterLogic.getLeftFilter() != null) {
+        filters.add(makeTrainingDatasetFilter(
+            path + ".L", trainingDataset, filterLogic.getLeftFilter(), SqlFilterLogic.SINGLE));
+      }
+      if (filterLogic.getRightFilter() != null) {
+        filters.add(makeTrainingDatasetFilter(
+            path + ".R", trainingDataset, filterLogic.getRightFilter(), SqlFilterLogic.SINGLE));
+      }
+      filters.addAll(convertToFilterEntities(filterLogic.getLeftLogic(), trainingDataset, path + ".L"));
+      filters.addAll(convertToFilterEntities(filterLogic.getRightLogic(), trainingDataset, path + ".R"));
+    }
+    return filters;
+  }
+
+  private TrainingDatasetFilter makeTrainingDatasetFilter(String path, TrainingDataset trainingDataset,
+      Filter filter, SqlFilterLogic type) {
+    TrainingDatasetFilter trainingDatasetFilter = new TrainingDatasetFilter(trainingDataset);
+    TrainingDatasetFilterCondition condition = filter == null ? null : convertFilter(filter, trainingDatasetFilter);
+    trainingDatasetFilter.setCondition(condition);
+    trainingDatasetFilter.setPath(path);
+    trainingDatasetFilter.setType(type.name());
+    return trainingDatasetFilter;
+  }
+
+  private TrainingDatasetFilterCondition convertFilter(Filter filter, TrainingDatasetFilter trainingDatasetFilter) {
+    return new TrainingDatasetFilterCondition(
+        trainingDatasetFilter,
+        filter.getFeatures().get(0).getFeatureGroup(),
+        filter.getFeatures().get(0).getName(),
+        filter.getCondition().toString(),
+        filter.getValue().getFeatureGroupId(),
+        filter.getValue().getValue()
+    );
   }
 
   // Here we need to pass the list of training dataset joins so that we can rebuild the aliases.
@@ -625,7 +688,7 @@ public class TrainingDatasetController {
   public String getTrainingDatasetFolderName(Project project){
     return project.getName() + "_" + Settings.ServiceDataset.TRAININGDATASETS.getName();
   }
-  
+
   /**
    * Helper function that gets the training dataset path from a folder and training dataset name.
    * (path_to_folder/trainingdatasetName_version)
@@ -675,26 +738,31 @@ public class TrainingDatasetController {
       if (!availableFeaturesLookup.containsKey(join.getFeatureGroup().getId())) {
         List<Feature> availableFeatures = featuregroupController.getFeatures(join.getFeatureGroup(), project, user)
           .stream()
-          .map(f -> new Feature(f.getName(),
-            fgAliasLookup.get(join.getId()), f.getType(), f.getPrimary(), f.getDefaultValue(), join.getPrefix()))
+          .map(f -> new Feature(f.getName(), fgAliasLookup.get(join.getId()), f.getType(), f.getDefaultValue(),
+            f.getPrimary(), join.getFeatureGroup(), join.getPrefix()))
           .collect(Collectors.toList());
         availableFeaturesLookup.put(join.getFeatureGroup().getId(), availableFeatures);
       }
     }
-  
+
+    Map<String, Feature> featureLookup = availableFeaturesLookup.values().stream().flatMap(List::stream)
+        .collect(Collectors.toMap(
+          f -> makeFeatureLookupKey(f.getFeatureGroup().getId(), f.getName()), f -> f, (f1, f2) -> f1));
+
     List<Feature> features = new ArrayList<>();
     for (TrainingDatasetFeature requestedFeature : tdFeatures) {
-      features.add(availableFeaturesLookup.get(requestedFeature.getFeatureGroup().getId())
-        .stream()
-        .filter(af -> af.getName().equals(requestedFeature.getName()))
-        // instantiate new feature since alias in available feature is not correct if fg is joined with itself
-        .map(af -> new Feature(af.getName(), fgAliasLookup.get(requestedFeature.getTrainingDatasetJoin().getId()),
-          af.getType(), af.getDefaultValue(), af.getPrefix(), requestedFeature.getFeatureGroup(),
-          requestedFeature.getIndex()))
-        .findFirst()
-        .orElseThrow(() -> new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.FEATURE_DOES_NOT_EXIST, Level.FINE,
-          "Feature: " + requestedFeature.getName() + " not found in feature group: " +
-            requestedFeature.getFeatureGroup().getName())));
+      Feature tdFeature = featureLookup.get(makeFeatureLookupKey(requestedFeature.getFeatureGroup().getId(),
+          requestedFeature.getName()));
+      if (tdFeature == null) {
+        throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.FEATURE_DOES_NOT_EXIST, Level.FINE,
+            "Feature: " + requestedFeature.getName() + " not found in feature group: " +
+                requestedFeature.getFeatureGroup().getName());
+      }
+      // instantiate new feature since alias in available feature is not correct if fg is joined with itself
+      new Feature(tdFeature.getName(), fgAliasLookup.get(requestedFeature.getTrainingDatasetJoin().getId()),
+          tdFeature.getType(), tdFeature.getDefaultValue(), tdFeature.getPrefix(), requestedFeature.getFeatureGroup(),
+          requestedFeature.getIndex());
+      features.add(tdFeature);
     }
 
     // Keep a map feature store id -> feature store name
@@ -717,7 +785,82 @@ public class TrainingDatasetController {
       queryJoins.add(getQueryJoin(query, joins.get(i), fgAliasLookup, fsLookup, availableFeaturesLookup, isHiveEngine));
     }
     query.setJoins(queryJoins);
+    FilterLogic filterLogic = convertToFilterLogic(trainingDataset.getFilters(), featureLookup, "L");
+    query.setFilter(filterLogic);
     return query;
+  }
+
+  /**
+   * Reconstruct {@link io.hops.hopsworks.common.featurestore.query.filter.FilterLogic} from a list of
+   * {@link io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.TrainingDatasetFilter} entity
+   * Logic:
+   * 1. get head node
+   * 2. if type is  single, return Filter
+   *    else get left/right children and assign left/right filterLogic
+   *
+   * @param trainingDatasetFilters
+   * @param features
+   * @param headPath
+   * @return filter logic
+   * @throws FeaturestoreException
+   */
+  FilterLogic convertToFilterLogic(Collection<TrainingDatasetFilter> trainingDatasetFilters,
+      Map<String, Feature> features, String headPath) throws FeaturestoreException {
+
+    FilterLogic filterLogic = new FilterLogic();
+    TrainingDatasetFilter headNode = trainingDatasetFilters.stream()
+        .filter(filter -> filter.getPath().equals(headPath)).findFirst()
+        .orElseThrow(() -> new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.COULD_NOT_GET_QUERY_FILTER,
+            Level.WARNING));
+    filterLogic.setType(SqlFilterLogic.valueOf(headNode.getType()));
+
+    if (headNode.getType().equals(SqlFilterLogic.SINGLE.name())) {
+      Filter filter = convertToFilter(headNode.getCondition(), features);
+      filterLogic.setLeftFilter(filter);
+    } else {
+      List<TrainingDatasetFilter> leftChildren = trainingDatasetFilters.stream()
+          .filter(filter -> filter.getPath().startsWith(headPath+".L"))
+          .collect(Collectors.toList());
+      List<TrainingDatasetFilter> rightChildren = trainingDatasetFilters.stream()
+          .filter(filter -> filter.getPath().startsWith(headPath+".R"))
+          .collect(Collectors.toList());
+      if (!leftChildren.isEmpty()) {
+        if (leftChildren.size() == 1) {
+          filterLogic.setLeftFilter(convertToFilter(leftChildren.get(0).getCondition(), features));
+        } else {
+          filterLogic.setLeftLogic(convertToFilterLogic(leftChildren, features, headPath + ".L"));
+        }
+      }
+      if (!rightChildren.isEmpty()) {
+        if (rightChildren.size() == 1) {
+          filterLogic.setRightFilter(convertToFilter(rightChildren.get(0).getCondition(), features));
+        } else {
+          filterLogic.setRightLogic(convertToFilterLogic(rightChildren, features, headPath + ".R"));
+        }
+      }
+    }
+    return filterLogic;
+  }
+
+  private Filter convertToFilter(TrainingDatasetFilterCondition condition, Map<String, Feature> features) {
+    FilterValue filterValue;
+    if (condition.getValueFeatureGroupId() == null) {
+      filterValue = new FilterValue(condition.getValue());
+    } else {
+      Feature filterValueFeature = features.get(
+          makeFeatureLookupKey(condition.getValueFeatureGroupId(), condition.getValue()));
+      filterValue = new FilterValue(
+          condition.getValueFeatureGroupId(), filterValueFeature.getFgAlias(), condition.getValue());
+    }
+    return new Filter(
+        features.get(makeFeatureLookupKey(condition.getFeatureGroup().getId(), condition.getFeature())),
+        SqlCondition.valueOf(condition.getCondition()),
+        filterValue
+    );
+  }
+
+  private String makeFeatureLookupKey(Integer featureGroupId, String featureName) {
+    return featureGroupId + "." + featureName;
   }
 
   private Map<Integer, String> getAliasLookupTable(List<TrainingDatasetJoin> tdJoins) {

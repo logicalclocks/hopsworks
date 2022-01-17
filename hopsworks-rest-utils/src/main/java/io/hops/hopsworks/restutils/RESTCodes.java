@@ -1593,7 +1593,9 @@ public class RESTCodes {
     JOIN_OPERATOR_MISMATCH(174, "Join features and operator list have different sizes", Response.Status.BAD_REQUEST),
     VALIDATION_RULE_INCOMPLETE(175, "Rule is missing a required field.", Response.Status.BAD_REQUEST),
     COULD_NOT_CREATE_ONLINE_FEATUREGROUP(176, "Could not create online feature group",
-      Response.Status.INTERNAL_SERVER_ERROR);
+      Response.Status.INTERNAL_SERVER_ERROR),
+    COULD_NOT_GET_QUERY_FILTER(177, "Error getting query filter", Response.Status.INTERNAL_SERVER_ERROR),
+    ;
 
     private int code;
     private String message;

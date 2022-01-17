@@ -21,6 +21,7 @@ import io.hops.hopsworks.common.featurestore.query.SqlCondition;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 
 public class Filter {
 
@@ -76,5 +77,22 @@ public class Filter {
     this.value = value;
   }
 
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) {
+      return true;
+    }
+    if (o == null || getClass() != o.getClass()) {
+      return false;
+    }
+    Filter filter = (Filter) o;
+    return Objects.equals(features, filter.features) && condition == filter.condition &&
+        Objects.equals(value, filter.value);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(features, condition, value);
+  }
 }
 

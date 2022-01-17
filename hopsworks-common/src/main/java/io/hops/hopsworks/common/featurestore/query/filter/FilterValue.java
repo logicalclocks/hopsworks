@@ -15,6 +15,8 @@
  */
 package io.hops.hopsworks.common.featurestore.query.filter;
 
+import java.util.Objects;
+
 public class FilterValue {
 
   private Integer featureGroupId;
@@ -43,11 +45,30 @@ public class FilterValue {
     return featureGroupId != null || featureGroupAlias != null;
   }
 
+  public Integer getFeatureGroupId() {
+    return featureGroupId;
+  }
+
   public String makeSqlValue() {
     return featureGroupAlias ==  null ? value : String.format("`%s`.`%s`", featureGroupAlias, value);
   }
 
-  public String toJson() {
-    return String.format("`%s`.`%s`", featureGroupAlias, value);
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) {
+      return true;
+    }
+    if (o == null || getClass() != o.getClass()) {
+      return false;
+    }
+    FilterValue that = (FilterValue) o;
+    return Objects.equals(featureGroupId, that.featureGroupId) &&
+        Objects.equals(featureGroupAlias, that.featureGroupAlias) &&
+        Objects.equals(value, that.value);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(featureGroupId, featureGroupAlias, value);
   }
 }
