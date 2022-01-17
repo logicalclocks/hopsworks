@@ -61,6 +61,7 @@ public class LdapUserController {
     try {
       userDTO = ldapRealm.findAndBind(username, password);// login user
     } catch (EJBException | NamingException ee) {
+      LOGGER.log(Level.INFO, "Error binding user", ee);
       throw new LoginException("Could not reach LDAP server.");
     }
     return remoteUserAuthController.getRemoteUserStatus(userDTO, consent, chosenEmail, RemoteUserType.LDAP,
