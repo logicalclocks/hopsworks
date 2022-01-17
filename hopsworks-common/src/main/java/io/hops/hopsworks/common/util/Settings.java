@@ -131,10 +131,7 @@ public class Settings implements Serializable {
     "python_library_updates_monitor_interval";
   private static final String VARIABLE_PYTHON_KERNEL = "python_kernel";
   private static final String VARIABLE_HADOOP_VERSION = "hadoop_version";
-  private static final String VARIABLE_JAVA_HOME = "JAVA_HOME";
-  private static final String VARIABLE_HOPSWORKS_IP = "hopsworks_ip";
   private static final String VARIABLE_KIBANA_IP = "kibana_ip";
-  private static final String VARIABLE_JHS_IP = "jhs_ip";
   private static final String VARIABLE_LOCALHOST = "localhost";
   private static final String VARIABLE_REQUESTS_VERIFY = "requests_verify";
   private static final String VARIABLE_CLOUD= "cloud";
@@ -144,12 +141,9 @@ public class Settings implements Serializable {
   private static final String VARIABLE_ELASTIC_REST_PORT = "elastic_rest_port";
   private static final String VARIABLE_ELASTIC_LOGS_INDEX_EXPIRATION = "elastic_logs_index_expiration";
   private static final String VARIABLE_SPARK_USER = "spark_user";
-  private static final String VARIABLE_YARN_SUPERUSER = "yarn_user";
   private static final String VARIABLE_HDFS_SUPERUSER = "hdfs_user";
   private static final String VARIABLE_HOPSWORKS_USER = "hopsworks_user";
   private static final String VARIABLE_JUPYTER_GROUP = "jupyter_group";
-  private static final String VARIABLE_JUPYTER_USER = "jupyter_user";
-  private static final String VARIABLE_AIRFLOW_USER = "airflow_user";
   private static final String VARIABLE_STAGING_DIR = "staging_dir";
   private static final String VARIABLE_AIRFLOW_DIR = "airflow_dir";
   private static final String VARIABLE_JUPYTER_DIR = "jupyter_dir";
@@ -198,7 +192,6 @@ public class Settings implements Serializable {
   private static final String VARIABLE_KAFKA_NUM_REPLICAS = "kafka_num_replicas";
   private static final String VARIABLE_HOPSWORKS_SSL_MASTER_PASSWORD = "hopsworks_master_password";
 
-  private static final String VARIABLE_ANACONDA_USER = "anaconda_user";
   private static final String VARIABLE_ANACONDA_DIR = "anaconda_dir";
   private static final String VARIABLE_ANACONDA_ENABLED = "anaconda_enabled";
   private static final String VARIABLE_ANACONDA_DEFAULT_REPO = "conda_default_repo";
@@ -215,7 +208,6 @@ public class Settings implements Serializable {
   private static final String VARIABLE_CERT_MATER_DELAY = "cert_mater_delay";
   private static final String VARIABLE_WHITELIST_USERS_LOGIN = "whitelist_users";
   private static final String VARIABLE_VERIFICATION_PATH = "verification_endpoint";
-  private static final String VARIABLE_ALERT_EMAIL_ADDRS = "alert_email_addrs";
   private static final String VARIABLE_FIRST_TIME_LOGIN = "first_time_login";
   private static final String VARIABLE_CERTIFICATE_USER_VALID_DAYS = "certificate_user_valid_days";
   private static final String VARIABLE_SERVICE_DISCOVERY_DOMAIN = "service_discovery_domain";
@@ -540,16 +532,12 @@ public class Settings implements Serializable {
       IAM_ROLE_CONFIGURED = setBoolVar(VARIABLE_AWS_INSTANCE_ROLE, IAM_ROLE_CONFIGURED);
       REQUESTS_VERIFY = setBoolVar(VARIABLE_REQUESTS_VERIFY, REQUESTS_VERIFY);
       PYTHON_KERNEL = setBoolVar(VARIABLE_PYTHON_KERNEL, PYTHON_KERNEL);
-      JAVA_HOME = setVar(VARIABLE_JAVA_HOME, JAVA_HOME);
       TWOFACTOR_AUTH = setVar(VARIABLE_TWOFACTOR_AUTH, TWOFACTOR_AUTH);
       TWOFACTOR_EXCLUDE = setVar(VARIABLE_TWOFACTOR_EXCLUD, TWOFACTOR_EXCLUDE);
       HOPSWORKS_USER = setVar(VARIABLE_HOPSWORKS_USER, HOPSWORKS_USER);
-      JUPYTER_USER = setVar(VARIABLE_JUPYTER_USER, JUPYTER_USER);
       JUPYTER_GROUP = setVar(VARIABLE_JUPYTER_GROUP, JUPYTER_GROUP);
       JUPYTER_ORIGIN_SCHEME = setVar(VARIABLE_JUPYTER_ORIGIN_SCHEME, JUPYTER_ORIGIN_SCHEME);
-      AIRFLOW_USER = setVar(VARIABLE_AIRFLOW_USER, AIRFLOW_USER);
       HDFS_SUPERUSER = setVar(VARIABLE_HDFS_SUPERUSER, HDFS_SUPERUSER);
-      YARN_SUPERUSER = setVar(VARIABLE_YARN_SUPERUSER, YARN_SUPERUSER);
       SPARK_USER = setVar(VARIABLE_SPARK_USER, SPARK_USER);
       SPARK_DIR = setDirVar(VARIABLE_SPARK_DIR, SPARK_DIR);
       FLINK_USER = setVar(VARIABLE_FLINK_USER, FLINK_USER);
@@ -563,7 +551,6 @@ public class Settings implements Serializable {
       HIVE_SCRATCHDIR_CLEANER_INTERVAL = setStrVar(VARIABLE_HIVE_SCRATCHDIR_CLEANER_INTERVAL,
           HIVE_SCRATCHDIR_CLEANER_INTERVAL);
       HIVE_DB_DEFAULT_QUOTA = setLongVar(VARIABLE_HIVE_DEFAULT_QUOTA, HIVE_DB_DEFAULT_QUOTA);
-      ALERT_EMAIL_ADDRS = setStrVar(VARIABLE_ALERT_EMAIL_ADDRS, "");
       HADOOP_VERSION = setVar(VARIABLE_HADOOP_VERSION, HADOOP_VERSION);
       JUPYTER_DIR = setDirVar(VARIABLE_JUPYTER_DIR, JUPYTER_DIR);
       JUPYTER_WS_PING_INTERVAL_MS = setMillisecondVar(VARIABLE_JUPYTER_WS_PING_INTERVAL, JUPYTER_WS_PING_INTERVAL_MS);
@@ -601,8 +588,6 @@ public class Settings implements Serializable {
           elasticAdminUser, elasticAdminPassword, elasticJWTEnabled,
           elasticJWTUrlParameter, elasticJWTEXPMS, elasticServiceLogUser);
       ELASTIC_LOGS_INDEX_EXPIRATION = setLongVar(VARIABLE_ELASTIC_LOGS_INDEX_EXPIRATION, ELASTIC_LOGS_INDEX_EXPIRATION);
-      HOPSWORKS_IP = setIpVar(VARIABLE_HOPSWORKS_IP, HOPSWORKS_IP);
-      JHS_IP = setIpVar(VARIABLE_JHS_IP, JHS_IP);
       ZK_USER = setVar(VARIABLE_ZK_USER, ZK_USER);
       ZK_DIR = setDirVar(VARIABLE_ZK_DIR, ZK_DIR);
       KIBANA_IP = setIpVar(VARIABLE_KIBANA_IP, KIBANA_IP);
@@ -622,7 +607,6 @@ public class Settings implements Serializable {
       CLUSTER_CERT = setVar(VARIABLE_CLUSTER_CERT, CLUSTER_CERT);
       FILE_PREVIEW_IMAGE_SIZE = setIntVar(VARIABLE_FILE_PREVIEW_IMAGE_SIZE, 10000000);
       FILE_PREVIEW_TXT_SIZE = setIntVar(VARIABLE_FILE_PREVIEW_TXT_SIZE, 100);
-      ANACONDA_USER = setStrVar(VARIABLE_ANACONDA_USER, ANACONDA_USER);
       ANACONDA_DIR = setDirVar(VARIABLE_ANACONDA_DIR, ANACONDA_DIR);
       ANACONDA_DEFAULT_REPO = setStrVar(VARIABLE_ANACONDA_DEFAULT_REPO, ANACONDA_DEFAULT_REPO);
       ANACONDA_ENABLED = Boolean.parseBoolean(setStrVar(
@@ -1022,17 +1006,6 @@ public class Settings implements Serializable {
     return getSparkDir() + "/conf";
   }
 
-  public synchronized String getSparkExampleDir() {
-    checkCache();
-    return SPARK_EXAMPLES_DIR;
-  }
-
-  private final String SPARK_CONF_FILE = "/spark-defaults.conf";
-
-  public synchronized String getSparkConfFile() {
-    return getSparkConfDir() + SPARK_CONF_FILE;
-  }
-
   // "/tmp" by default
   private String STAGING_DIR = "/srv/hops/domains/domain1/staging";
 
@@ -1072,12 +1045,6 @@ public class Settings implements Serializable {
   public synchronized String getAirflowDir() {
     checkCache();
     return AIRFLOW_DIR;
-  }
-
-  private String AIRFLOW_USER = "airflow";
-  public synchronized String getAirflowUser() {
-    checkCache();
-    return AIRFLOW_USER;
   }
 
   private String HADOOP_DIR = "/srv/hops/hadoop";
@@ -1142,13 +1109,6 @@ public class Settings implements Serializable {
     return HIVE_DB_DEFAULT_QUOTA;
   }
 
-  private String HOPSWORKS_IP = "127.0.0.1";
-
-  public synchronized String getHopsworksIp() {
-    checkCache();
-    return HOPSWORKS_IP;
-  }
-
   private String CERTS_DIR = "/srv/hops/certs-dir";
 
   public synchronized String getCertsDir() {
@@ -1174,13 +1134,6 @@ public class Settings implements Serializable {
     return SUDOERS_DIR;
   }
 
-  //User under which yarn is run
-  private String YARN_SUPERUSER = "yarn";
-
-  public synchronized String getYarnSuperUser() {
-    checkCache();
-    return YARN_SUPERUSER;
-  }
   private String HOPSWORKS_USER = "glassfish";
 
   public synchronized String getHopsworksUser() {
@@ -1198,13 +1151,6 @@ public class Settings implements Serializable {
   public synchronized String getSparkUser() {
     checkCache();
     return SPARK_USER;
-  }
-
-  public String JAVA_HOME = "/usr/lib/jvm/default-java";
-
-  public synchronized String getJavaHome() {
-    checkCache();
-    return JAVA_HOME;
   }
 
   private String FLINK_USER = "flink";
@@ -1660,23 +1606,6 @@ public class Settings implements Serializable {
     return SERVICE_DISCOVERY_DOMAIN;
   }
 
-
-  // MapReduce Job History Server
-  private String JHS_IP = "127.0.0.1";
-
-  public synchronized String getJhsIp() {
-    checkCache();
-    return JHS_IP;
-  }
-
-  // Livy Server`
-  private final String LIVY_YARN_MODE = "yarn";
-
-  public synchronized String getLivyYarnMode() {
-    checkCache();
-    return LIVY_YARN_MODE;
-  }
-
   // Kibana
   public static final String KIBANA_INDEX_PREFIX = ".kibana";
   
@@ -1724,13 +1653,6 @@ public class Settings implements Serializable {
     return JUPYTER_DIR;
   }
 
-  private String JUPYTER_USER = "jupyter";
-
-  public synchronized String getJupyterUser() {
-    checkCache();
-    return JUPYTER_USER;
-  }
-
   private String JUPYTER_GROUP = "jupyter";
 
   public synchronized String getJupyterGroup() {
@@ -1776,13 +1698,6 @@ public class Settings implements Serializable {
     return KAFKA_DIR;
   }
 
-  private String ANACONDA_USER = "anaconda";
-
-  public synchronized String getAnacondaUser() {
-    checkCache();
-    return ANACONDA_USER;
-  }
-
   private String ANACONDA_DIR = "/srv/hops/anaconda";
 
   public synchronized String getAnacondaDir() {
@@ -1816,14 +1731,6 @@ public class Settings implements Serializable {
   public synchronized Boolean isDownloadAllowed() {
     checkCache();
     return DOWNLOAD_ALLOWED;
-  }
-
-//  private String CONDA_CHANNEL_URL = "https://repo.continuum.io/pkgs/free/linux-64/";
-  private String CONDA_CHANNEL_URL = "default";
-
-  public synchronized String getCondaChannelUrl() {
-    checkCache();
-    return CONDA_CHANNEL_URL;
   }
 
   /**
@@ -2138,13 +2045,6 @@ public class Settings implements Serializable {
   }
   
   public Settings() {
-  }
-
-  private String ALERT_EMAIL_ADDRS = "";
-
-  public synchronized String getAlertEmailAddrs() {
-    checkCache();
-    return ALERT_EMAIL_ADDRS;
   }
 
   /**
@@ -3700,7 +3600,7 @@ public class Settings implements Serializable {
     return isCloud() || isLocalHost();
   }
   
-  private String FEATURESTORE_JDBC_URL = "jdbc:mysql://" + HOPSWORKS_IP + ":3306/";
+  private String FEATURESTORE_JDBC_URL = "jdbc:mysql://onlinefs.mysql.service.consul:3306/";
   
   public synchronized String getFeaturestoreJdbcUrl() {
     checkCache();

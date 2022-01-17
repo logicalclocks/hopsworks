@@ -42,7 +42,6 @@ package io.hops.hopsworks.common.util;
 import io.hops.hopsworks.exceptions.GenericException;
 import io.hops.hopsworks.persistence.entity.util.FormatUtils;
 import io.hops.hopsworks.restutils.RESTCodes;
-import org.apache.commons.lang.StringEscapeUtils;
 
 import javax.annotation.PreDestroy;
 import javax.ejb.AsyncResult;
@@ -68,7 +67,6 @@ import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.security.cert.X509Certificate;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.Future;
@@ -325,53 +323,4 @@ public class WebCommunication {
     discardClient(client);
     return response;
   }
-
-  public Object anaconda(String hostAddress, String agentPassword, String op,
-          String project, String arg) throws Exception {
-
-    String path = "anaconda/" + settings.getAnacondaUser() + '/' + op.toLowerCase()
-            + "/" + project;
-    String template = "%s://%s:%s/%s";
-    String url = String.format(template, PROTOCOL, hostAddress, PORT, path);
-    Map<String, String> args = null;
-    Response response = getWebResource(url, agentPassword, args);
-    int code = response.getStatus();
-    Family res = Response.Status.Family.familyOf(code);
-    if (res == Response.Status.Family.SUCCESSFUL) {
-      return response.getEntity();
-    }
-    throw new RuntimeException("Error. Failed to execute anaconda command " + op
-            + " on " + project + ". Result was: " + res);
-  }
-
-  public Object conda(String hostAddress, String agentPassword, String op,
-          String project, String channel, String lib, String version) throws
-          Exception {
-
-    String template = "%s://%s:%s/%s";
-    String channelEscaped = StringEscapeUtils.escapeJava(channel);
-    String path = "conda/" + settings.getHopsworksUser() + '/' + op.toLowerCase()
-            + "/" + project + "/" + lib;
-
-    String url = String.format(template, PROTOCOL, hostAddress, PORT, path);
-
-    Map<String, String> args = new HashMap<>();
-
-    if (!channel.isEmpty()) {
-      args.put("channelurl", channelEscaped);
-    }
-    if (!version.isEmpty()) {
-      args.put("version", version);
-    }
-
-    Response response = getWebResource(url, agentPassword, args);
-    int code = response.getStatus();
-    Family res = Response.Status.Family.familyOf(code);
-    if (res == Response.Status.Family.SUCCESSFUL) {
-      return response.getEntity();
-    }
-    throw new RuntimeException("Error. Failed to execute conda command " + op
-            + " on " + project + ". Result was: " + res);
-  }
-
 }

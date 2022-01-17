@@ -212,7 +212,8 @@ public class ResourceRequest {
     TRANSFORMATIONFUNCTIONS,
     MODELREGISTRIES,
     MODELSCHEMA,
-    INPUTEXAMPLE;
+    INPUTEXAMPLE,
+    ADMIN;
 
     public static Name fromString(String name) {
       return valueOf(name.toUpperCase());
