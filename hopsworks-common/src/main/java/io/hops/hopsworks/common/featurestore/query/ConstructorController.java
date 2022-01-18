@@ -42,6 +42,7 @@ import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.Featuregro
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.FeaturegroupType;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.cached.FeatureGroupCommit;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.cached.TimeTravelFormat;
+import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.SqlCondition;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.restutils.RESTCodes;

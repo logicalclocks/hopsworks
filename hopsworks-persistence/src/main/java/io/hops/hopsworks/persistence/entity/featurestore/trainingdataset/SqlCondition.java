@@ -14,18 +14,23 @@
  * If not, see <https://www.gnu.org/licenses/>.
  */
 
-package io.hops.hopsworks.common.featurestore.query.filter;
+package io.hops.hopsworks.persistence.entity.featurestore.trainingdataset;
 
 import org.apache.calcite.sql.fun.SqlStdOperatorTable;
 
-public enum SqlFilterLogic {
-  AND(SqlStdOperatorTable.AND),
-  OR(SqlStdOperatorTable.OR),
-  SINGLE(null);
+public enum SqlCondition {
+  LESS_THAN(SqlStdOperatorTable.LESS_THAN),
+  GREATER_THAN(SqlStdOperatorTable.GREATER_THAN),
+  LESS_THAN_OR_EQUAL(SqlStdOperatorTable.LESS_THAN_OR_EQUAL),
+  GREATER_THAN_OR_EQUAL(SqlStdOperatorTable.GREATER_THAN_OR_EQUAL),
+  EQUALS(SqlStdOperatorTable.EQUALS),
+  NOT_EQUALS(SqlStdOperatorTable.NOT_EQUALS),
+  IN(SqlStdOperatorTable.IN);
   
   public final org.apache.calcite.sql.SqlOperator operator;
   
-  SqlFilterLogic(org.apache.calcite.sql.SqlOperator operator) {
+  SqlCondition(org.apache.calcite.sql.SqlOperator operator) {
     this.operator = operator;
   }
+  
 }

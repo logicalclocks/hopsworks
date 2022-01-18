@@ -20,6 +20,8 @@ import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.Featuregro
 import javax.persistence.Basic;
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
@@ -44,7 +46,8 @@ public class TrainingDatasetFilterCondition implements Serializable {
   @Column(name = "feature_name")
   private String feature;
   @Column(name = "filter_condition")
-  private String condition;
+  @Enumerated(EnumType.STRING)
+  private SqlCondition condition;
   @Column(name = "filter_value_fg_id")
   private Integer valueFeatureGroupId;
   @Column(name = "filter_value")
@@ -60,7 +63,7 @@ public class TrainingDatasetFilterCondition implements Serializable {
 
   public TrainingDatasetFilterCondition(
       TrainingDatasetFilter trainingDatasetFilter,
-      Featuregroup featureGroup, String feature, String condition, Integer valueFeatureGroupId, String value) {
+      Featuregroup featureGroup, String feature, SqlCondition condition, Integer valueFeatureGroupId, String value) {
     this.trainingDatasetFilter = trainingDatasetFilter;
     this.featureGroup = featureGroup;
     this.feature = feature;
@@ -94,11 +97,11 @@ public class TrainingDatasetFilterCondition implements Serializable {
     this.feature = feature;
   }
 
-  public String getCondition() {
+  public SqlCondition getCondition() {
     return condition;
   }
 
-  public void setCondition(String condition) {
+  public void setCondition(SqlCondition condition) {
     this.condition = condition;
   }
 

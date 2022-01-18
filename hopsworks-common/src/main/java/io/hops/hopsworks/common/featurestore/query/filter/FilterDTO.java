@@ -17,7 +17,7 @@
 package io.hops.hopsworks.common.featurestore.query.filter;
 
 import io.hops.hopsworks.common.featurestore.feature.FeatureGroupFeatureDTO;
-import io.hops.hopsworks.common.featurestore.query.SqlCondition;
+import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.SqlCondition;
 
 import javax.xml.bind.annotation.XmlRootElement;
 

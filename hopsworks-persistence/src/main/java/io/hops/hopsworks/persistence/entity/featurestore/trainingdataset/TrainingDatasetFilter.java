@@ -19,6 +19,8 @@ import javax.persistence.Basic;
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
@@ -41,7 +43,8 @@ public class TrainingDatasetFilter implements Serializable {
   @OneToOne(cascade = CascadeType.ALL, mappedBy = "trainingDatasetFilter")
   private TrainingDatasetFilterCondition condition;
   @Column(name = "type")
-  private String type;
+  @Enumerated(EnumType.STRING)
+  private SqlFilterLogic type;
   @Column(name = "path")
   private String path;
   @Id
@@ -84,11 +87,11 @@ public class TrainingDatasetFilter implements Serializable {
     this.condition = condition;
   }
 
-  public String getType() {
+  public SqlFilterLogic getType() {
     return type;
   }
 
-  public void setType(String type) {
+  public void setType(SqlFilterLogic type) {
     this.type = type;
   }
 

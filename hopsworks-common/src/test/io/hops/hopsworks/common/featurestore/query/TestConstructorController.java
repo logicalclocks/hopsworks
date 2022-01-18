@@ -26,7 +26,7 @@ import io.hops.hopsworks.common.featurestore.online.OnlineFeaturestoreController
 import io.hops.hopsworks.common.featurestore.query.filter.Filter;
 import io.hops.hopsworks.common.featurestore.query.filter.FilterController;
 import io.hops.hopsworks.common.featurestore.query.filter.FilterLogic;
-import io.hops.hopsworks.common.featurestore.query.filter.SqlFilterLogic;
+import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.SqlFilterLogic;
 import io.hops.hopsworks.common.featurestore.query.join.Join;
 import io.hops.hopsworks.common.featurestore.query.join.JoinController;
 import io.hops.hopsworks.common.featurestore.query.join.JoinDTO;
@@ -35,6 +35,7 @@ import io.hops.hopsworks.persistence.entity.featurestore.Featurestore;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.Featuregroup;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.cached.CachedFeaturegroup;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.cached.TimeTravelFormat;
+import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.SqlCondition;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.user.Users;
 import org.apache.calcite.sql.JoinType;
