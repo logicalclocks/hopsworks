@@ -28,11 +28,10 @@ import io.hops.hopsworks.common.featurestore.query.ConstructorController;
 import io.hops.hopsworks.common.featurestore.query.Feature;
 import io.hops.hopsworks.common.featurestore.query.Query;
 import io.hops.hopsworks.common.featurestore.query.QueryDTO;
-import io.hops.hopsworks.common.featurestore.query.SqlCondition;
 import io.hops.hopsworks.common.featurestore.query.filter.Filter;
 import io.hops.hopsworks.common.featurestore.query.filter.FilterLogic;
 import io.hops.hopsworks.common.featurestore.query.filter.FilterValue;
-import io.hops.hopsworks.common.featurestore.query.filter.SqlFilterLogic;
+import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.SqlFilterLogic;
 import io.hops.hopsworks.common.featurestore.query.join.Join;
 import io.hops.hopsworks.common.featurestore.query.pit.PitJoinController;
 import io.hops.hopsworks.common.featurestore.statistics.StatisticsController;
@@ -441,7 +440,7 @@ public class TrainingDatasetController {
     TrainingDatasetFilterCondition condition = filter == null ? null : convertFilter(filter, trainingDatasetFilter);
     trainingDatasetFilter.setCondition(condition);
     trainingDatasetFilter.setPath(path);
-    trainingDatasetFilter.setType(type.name());
+    trainingDatasetFilter.setType(type);
     return trainingDatasetFilter;
   }
 
@@ -450,7 +449,7 @@ public class TrainingDatasetController {
         trainingDatasetFilter,
         filter.getFeatures().get(0).getFeatureGroup(),
         filter.getFeatures().get(0).getName(),
-        filter.getCondition().toString(),
+        filter.getCondition(),
         filter.getValue().getFeatureGroupId(),
         filter.getValue().getValue()
     );
@@ -812,9 +811,9 @@ public class TrainingDatasetController {
         .filter(filter -> filter.getPath().equals(headPath)).findFirst()
         .orElseThrow(() -> new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.COULD_NOT_GET_QUERY_FILTER,
             Level.WARNING));
-    filterLogic.setType(SqlFilterLogic.valueOf(headNode.getType()));
+    filterLogic.setType(headNode.getType());
 
-    if (headNode.getType().equals(SqlFilterLogic.SINGLE.name())) {
+    if (headNode.getType().equals(SqlFilterLogic.SINGLE)) {
       Filter filter = convertToFilter(headNode.getCondition(), features);
       filterLogic.setLeftFilter(filter);
     } else {
@@ -854,7 +853,7 @@ public class TrainingDatasetController {
     }
     return new Filter(
         features.get(makeFeatureLookupKey(condition.getFeatureGroup().getId(), condition.getFeature())),
-        SqlCondition.valueOf(condition.getCondition()),
+        condition.getCondition(),
         filterValue
     );
   }

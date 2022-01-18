@@ -188,19 +188,6 @@
       <groupId>com.github.ben-manes.caffeine</groupId>
       <artifactId>caffeine</artifactId>
     </dependency>
-    <dependency>
-      <groupId>org.apache.calcite</groupId>
-      <artifactId>calcite-core</artifactId>
-    </dependency>
-    <!-- Here we are lying to Maven. Calcite has some dependency that depends on protobuf 3.0.0.
-    We are not going to use that codepath as we only use a small subset of calcite code.
-    Still the dependency to protobuf collides with the Hops dependency to protobuf and causes issues
-    during compilation. So here we add the protobuf-java dependency just for the compilation.
-    -->
-    <dependency>
-      <groupId>com.google.protobuf</groupId>
-      <artifactId>protobuf-java</artifactId>
-    </dependency>
 
     <dependency>
       <groupId>com.logicalclocks</groupId>

@@ -17,11 +17,11 @@ package io.hops.hopsworks.common.featurestore.trainingdatasets;
 
 import com.google.common.collect.Maps;
 import io.hops.hopsworks.common.featurestore.query.Feature;
-import io.hops.hopsworks.common.featurestore.query.SqlCondition;
+import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.SqlCondition;
 import io.hops.hopsworks.common.featurestore.query.filter.Filter;
 import io.hops.hopsworks.common.featurestore.query.filter.FilterLogic;
 import io.hops.hopsworks.common.featurestore.query.filter.FilterValue;
-import io.hops.hopsworks.common.featurestore.query.filter.SqlFilterLogic;
+import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.SqlFilterLogic;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.Featuregroup;
 import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.TrainingDataset;
 import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.TrainingDatasetFilter;
@@ -34,6 +34,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import static io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.SqlCondition.GREATER_THAN;
+import static io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.SqlFilterLogic.AND;
+import static io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.SqlFilterLogic.OR;
+import static io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.SqlFilterLogic.SINGLE;
+
 public class TrainingDatasetControllerTest extends TestCase {
 
   TrainingDatasetController target = new TrainingDatasetController();
@@ -45,30 +50,30 @@ public class TrainingDatasetControllerTest extends TestCase {
     TrainingDataset trainingDataset = new TrainingDataset();
     Feature f1 = new Feature("test_f", "fg0");
     FilterLogic head = new FilterLogic();
-    head.setType(SqlFilterLogic.AND);
-    Filter left = new Filter(f1, SqlCondition.GREATER_THAN, "1");
+    head.setType(AND);
+    Filter left = new Filter(f1, GREATER_THAN, "1");
     head.setLeftFilter(left);
     FilterLogic right = new FilterLogic();
-    right.setType(SqlFilterLogic.OR);
-    Filter right_left = new Filter(f1, SqlCondition.GREATER_THAN, "2");
-    Filter right_right = new Filter(f1, SqlCondition.GREATER_THAN, "3");
+    right.setType(OR);
+    Filter right_left = new Filter(f1, GREATER_THAN, "2");
+    Filter right_right = new Filter(f1, GREATER_THAN, "3");
     right.setLeftFilter(right_left);
     right.setRightFilter(right_right);
     head.setRightLogic(right);
 
     List<TrainingDatasetFilter> actual = target.convertToFilterEntities(head, trainingDataset, "L");
     List<TrainingDatasetFilter> expected = new ArrayList<>();
-    expected.add(createTrainingDatasetFilter(null, "AND", "L"));
+    expected.add(createTrainingDatasetFilter(null, AND, "L"));
     expected.add(createTrainingDatasetFilter(
-        createTrainingDatasetFilterCondition("test_f", "GREATER_THAN", "1"),
-        "SINGLE", "L.L"));
-    expected.add(createTrainingDatasetFilter(null, "OR", "L.R"));
+        createTrainingDatasetFilterCondition("test_f", GREATER_THAN, "1"),
+        SINGLE, "L.L"));
+    expected.add(createTrainingDatasetFilter(null, OR, "L.R"));
     expected.add(createTrainingDatasetFilter(
-        createTrainingDatasetFilterCondition("test_f", "GREATER_THAN", "2"),
-        "SINGLE", "L.R.L"));
+        createTrainingDatasetFilterCondition("test_f", GREATER_THAN, "2"),
+        SINGLE, "L.R.L"));
     expected.add(createTrainingDatasetFilter(
-        createTrainingDatasetFilterCondition("test_f", "GREATER_THAN", "3"),
-        "SINGLE", "L.R.R"));
+        createTrainingDatasetFilterCondition("test_f", GREATER_THAN, "3"),
+        SINGLE, "L.R.R"));
 
     Assert.assertEquals(expected.size(), actual.size());
     Assert.assertTrue(expected.containsAll(actual));
@@ -82,33 +87,33 @@ public class TrainingDatasetControllerTest extends TestCase {
     TrainingDataset trainingDataset = new TrainingDataset();
     Feature f1 = new Feature("test_f", "fg0");
     FilterLogic head = new FilterLogic();
-    head.setType(SqlFilterLogic.AND);
+    head.setType(AND);
     FilterLogic left = new FilterLogic();
-    Filter left_left = new Filter(f1, SqlCondition.GREATER_THAN, "1");
-    left.setType(SqlFilterLogic.SINGLE);
+    Filter left_left = new Filter(f1, GREATER_THAN, "1");
+    left.setType(SINGLE);
     left.setLeftFilter(left_left);
     head.setLeftLogic(left);
     FilterLogic right = new FilterLogic();
-    right.setType(SqlFilterLogic.OR);
-    Filter right_left = new Filter(f1, SqlCondition.GREATER_THAN, "2");
-    Filter right_right = new Filter(f1, SqlCondition.GREATER_THAN, "3");
+    right.setType(OR);
+    Filter right_left = new Filter(f1, GREATER_THAN, "2");
+    Filter right_right = new Filter(f1, GREATER_THAN, "3");
     right.setLeftFilter(right_left);
     right.setRightFilter(right_right);
     head.setRightLogic(right);
 
     List<TrainingDatasetFilter> actual = target.convertToFilterEntities(head, trainingDataset, "L");
     List<TrainingDatasetFilter> expected = new ArrayList<>();
-    expected.add(createTrainingDatasetFilter(null, "AND", "L"));
+    expected.add(createTrainingDatasetFilter(null, AND, "L"));
     expected.add(createTrainingDatasetFilter(
-        createTrainingDatasetFilterCondition("test_f", "GREATER_THAN", "1"),
-        "SINGLE", "L.L"));
-    expected.add(createTrainingDatasetFilter(null, "OR", "L.R"));
+        createTrainingDatasetFilterCondition("test_f", GREATER_THAN, "1"),
+        SINGLE, "L.L"));
+    expected.add(createTrainingDatasetFilter(null, OR, "L.R"));
     expected.add(createTrainingDatasetFilter(
-        createTrainingDatasetFilterCondition("test_f", "GREATER_THAN", "2"),
-        "SINGLE", "L.R.L"));
+        createTrainingDatasetFilterCondition("test_f", GREATER_THAN, "2"),
+        SINGLE, "L.R.L"));
     expected.add(createTrainingDatasetFilter(
-        createTrainingDatasetFilterCondition("test_f", "GREATER_THAN", "3"),
-        "SINGLE", "L.R.R"));
+        createTrainingDatasetFilterCondition("test_f", GREATER_THAN, "3"),
+        SINGLE, "L.R.R"));
 
     Assert.assertEquals(expected.size(), actual.size());
     Assert.assertTrue(expected.containsAll(actual));
@@ -122,21 +127,21 @@ public class TrainingDatasetControllerTest extends TestCase {
     TrainingDataset trainingDataset = new TrainingDataset();
     Feature f1 = new Feature("test_f", "fg0");
     FilterLogic head = new FilterLogic();
-    head.setType(SqlFilterLogic.AND);
-    Filter left = new Filter(f1, SqlCondition.GREATER_THAN, "1");
+    head.setType(AND);
+    Filter left = new Filter(f1, GREATER_THAN, "1");
     head.setLeftFilter(left);
-    Filter right = new Filter(f1, SqlCondition.GREATER_THAN, "2");
+    Filter right = new Filter(f1, GREATER_THAN, "2");
     head.setRightFilter(right);
 
     List<TrainingDatasetFilter> actual = target.convertToFilterEntities(head, trainingDataset, "L");
     List<TrainingDatasetFilter> expected = new ArrayList<>();
-    expected.add(createTrainingDatasetFilter(null, "AND", "L"));
+    expected.add(createTrainingDatasetFilter(null, AND, "L"));
     expected.add(createTrainingDatasetFilter(
-        createTrainingDatasetFilterCondition("test_f", "GREATER_THAN", "2"),
-        "SINGLE", "L.R"));
+        createTrainingDatasetFilterCondition("test_f", GREATER_THAN, "2"),
+        SINGLE, "L.R"));
     expected.add(createTrainingDatasetFilter(
-        createTrainingDatasetFilterCondition("test_f", "GREATER_THAN", "1"),
-        "SINGLE", "L.L"));
+        createTrainingDatasetFilterCondition("test_f", GREATER_THAN, "1"),
+        SINGLE, "L.L"));
 
     Assert.assertEquals(expected.size(), actual.size());
     Assert.assertTrue(expected.containsAll(actual));
@@ -150,24 +155,24 @@ public class TrainingDatasetControllerTest extends TestCase {
     TrainingDataset trainingDataset = new TrainingDataset();
     Feature f1 = new Feature("test_f", "fg0");
     FilterLogic head = new FilterLogic();
-    head.setType(SqlFilterLogic.AND);
+    head.setType(AND);
     FilterLogic left = new FilterLogic();
-    Filter left_left = new Filter(f1, SqlCondition.GREATER_THAN, "1");
+    Filter left_left = new Filter(f1, GREATER_THAN, "1");
     left.setLeftFilter(left_left);
-    left.setType(SqlFilterLogic.SINGLE);
+    left.setType(SINGLE);
     head.setLeftLogic(left);
-    Filter right = new Filter(f1, SqlCondition.GREATER_THAN, "2");
+    Filter right = new Filter(f1, GREATER_THAN, "2");
     head.setRightFilter(right);
 
     List<TrainingDatasetFilter> actual = target.convertToFilterEntities(head, trainingDataset, "L");
     List<TrainingDatasetFilter> expected = new ArrayList<>();
-    expected.add(createTrainingDatasetFilter(null, "AND", "L"));
+    expected.add(createTrainingDatasetFilter(null, AND, "L"));
     expected.add(createTrainingDatasetFilter(
-        createTrainingDatasetFilterCondition("test_f", "GREATER_THAN", "2"),
-        "SINGLE", "L.R"));
+        createTrainingDatasetFilterCondition("test_f", GREATER_THAN, "2"),
+        SINGLE, "L.R"));
     expected.add(createTrainingDatasetFilter(
-        createTrainingDatasetFilterCondition("test_f", "GREATER_THAN", "1"),
-        "SINGLE", "L.L"));
+        createTrainingDatasetFilterCondition("test_f", GREATER_THAN, "1"),
+        SINGLE, "L.L"));
 
     Assert.assertEquals(expected.size(), actual.size());
     Assert.assertTrue(expected.containsAll(actual));
@@ -181,15 +186,15 @@ public class TrainingDatasetControllerTest extends TestCase {
     TrainingDataset trainingDataset = new TrainingDataset();
     Feature f1 = new Feature("test_f", "fg0");
     FilterLogic head = new FilterLogic();
-    head.setType(SqlFilterLogic.SINGLE);
-    Filter right = new Filter(f1, SqlCondition.GREATER_THAN, "2");
+    head.setType(SINGLE);
+    Filter right = new Filter(f1, GREATER_THAN, "2");
     head.setRightFilter(right);
 
     List<TrainingDatasetFilter> actual = target.convertToFilterEntities(head, trainingDataset, "L");
     List<TrainingDatasetFilter> expected = new ArrayList<>();
     expected.add(createTrainingDatasetFilter(
-        createTrainingDatasetFilterCondition("test_f", "GREATER_THAN", "2"),
-        "SINGLE", "L"));
+        createTrainingDatasetFilterCondition("test_f", GREATER_THAN, "2"),
+        SINGLE, "L"));
 
     Assert.assertEquals(expected.size(), actual.size());
     Assert.assertTrue(expected.containsAll(actual));
@@ -203,15 +208,15 @@ public class TrainingDatasetControllerTest extends TestCase {
     TrainingDataset trainingDataset = new TrainingDataset();
     Feature f1 = new Feature("test_f", "fg0");
     FilterLogic head = new FilterLogic();
-    head.setType(SqlFilterLogic.SINGLE);
-    Filter right = new Filter(f1, SqlCondition.GREATER_THAN, "2");
+    head.setType(SINGLE);
+    Filter right = new Filter(f1, GREATER_THAN, "2");
     head.setLeftFilter(right);
 
     List<TrainingDatasetFilter> actual = target.convertToFilterEntities(head, trainingDataset, "L");
     List<TrainingDatasetFilter> expected = new ArrayList<>();
     expected.add(createTrainingDatasetFilter(
-        createTrainingDatasetFilterCondition("test_f", "GREATER_THAN", "2"),
-        "SINGLE", "L"));
+        createTrainingDatasetFilterCondition("test_f", GREATER_THAN, "2"),
+        SINGLE, "L"));
 
     Assert.assertEquals(expected.size(), actual.size());
     Assert.assertTrue(expected.containsAll(actual));
@@ -224,23 +229,23 @@ public class TrainingDatasetControllerTest extends TestCase {
     TrainingDataset trainingDataset = new TrainingDataset();
     Feature f1 = new Feature("test_f", "fg0");
     FilterLogic head = new FilterLogic();
-    head.setType(SqlFilterLogic.AND);
+    head.setType(AND);
     FilterValue filterValueLeft = new FilterValue(0,"fg0","test_f1");
-    Filter left = new Filter(f1, SqlCondition.GREATER_THAN, filterValueLeft);
+    Filter left = new Filter(f1, GREATER_THAN, filterValueLeft);
     head.setLeftFilter(left);
     FilterValue filterValueRight = new FilterValue(1,"fg1","test_f2");
-    Filter right = new Filter(f1, SqlCondition.GREATER_THAN, filterValueRight);
+    Filter right = new Filter(f1, GREATER_THAN, filterValueRight);
     head.setRightFilter(right);
 
     List<TrainingDatasetFilter> actual = target.convertToFilterEntities(head, trainingDataset, "L");
     List<TrainingDatasetFilter> expected = new ArrayList<>();
-    expected.add(createTrainingDatasetFilter(null, "AND", "L"));
+    expected.add(createTrainingDatasetFilter(null, AND, "L"));
     expected.add(createTrainingDatasetFilter(
-        createTrainingDatasetFilterCondition("test_f", "GREATER_THAN", "test_f1", null, 0),
-        "SINGLE", "L.L"));
+        createTrainingDatasetFilterCondition("test_f", GREATER_THAN, "test_f1", null, 0),
+        SINGLE, "L.L"));
     expected.add(createTrainingDatasetFilter(
-        createTrainingDatasetFilterCondition("test_f", "GREATER_THAN", "test_f2", null, 1),
-        "SINGLE", "L.R"));
+        createTrainingDatasetFilterCondition("test_f", GREATER_THAN, "test_f2", null, 1),
+        SINGLE, "L.R"));
 
     Assert.assertEquals(expected.size(), actual.size());
     Assert.assertTrue(expected.containsAll(actual));
@@ -248,7 +253,7 @@ public class TrainingDatasetControllerTest extends TestCase {
   }
 
   public TrainingDatasetFilter createTrainingDatasetFilter(
-      TrainingDatasetFilterCondition condition, String type, String path) {
+      TrainingDatasetFilterCondition condition, SqlFilterLogic type, String path) {
     TrainingDatasetFilter filter = new TrainingDatasetFilter();
     filter.setCondition(condition);
     filter.setType(type);
@@ -257,17 +262,17 @@ public class TrainingDatasetControllerTest extends TestCase {
   }
 
   public TrainingDatasetFilterCondition createTrainingDatasetFilterCondition(
-      String feature, String condition, String value) {
+      String feature, SqlCondition condition, String value) {
     return createTrainingDatasetFilterCondition(feature, condition, value, null);
   }
 
   public TrainingDatasetFilterCondition createTrainingDatasetFilterCondition(
-      String feature, String condition, String value, Integer fgId) {
+      String feature, SqlCondition condition, String value, Integer fgId) {
     return  createTrainingDatasetFilterCondition(feature, condition, value, fgId, null);
   }
 
   public TrainingDatasetFilterCondition createTrainingDatasetFilterCondition(
-      String feature, String condition, String value, Integer fgId, Integer filterValueFgId) {
+      String feature, SqlCondition condition, String value, Integer fgId, Integer filterValueFgId) {
     TrainingDatasetFilterCondition filter = new TrainingDatasetFilterCondition();
     filter.setFeature(feature);
     filter.setCondition(condition);
@@ -282,13 +287,13 @@ public class TrainingDatasetControllerTest extends TestCase {
   public void testConvertToFilterLogic_multipleConditions() throws Exception {
     // fg.feature > 1 and fg.feature > 2
     List<TrainingDatasetFilter> filters = new ArrayList<>();
-    filters.add(createTrainingDatasetFilter(null, "AND", "L"));
+    filters.add(createTrainingDatasetFilter(null, AND, "L"));
     filters.add(createTrainingDatasetFilter(
-        createTrainingDatasetFilterCondition("test_f", "GREATER_THAN", "2", 0),
-        "SINGLE", "L.R"));
+        createTrainingDatasetFilterCondition("test_f", GREATER_THAN, "2", 0),
+        SINGLE, "L.R"));
     filters.add(createTrainingDatasetFilter(
-        createTrainingDatasetFilterCondition("test_f", "GREATER_THAN", "1", 0),
-        "SINGLE", "L.L"));
+        createTrainingDatasetFilterCondition("test_f", GREATER_THAN, "1", 0),
+        SINGLE, "L.L"));
 
     Map<String, Feature> featureLookup = Maps.newHashMap();
     Feature feature = new Feature("test_f", "fg0");
@@ -301,10 +306,10 @@ public class TrainingDatasetControllerTest extends TestCase {
 
     Feature f1 = new Feature("test_f", "fg0", null, false, null, null);
     f1.setFeatureGroup(featuregroup);
-    Filter left = new Filter(f1, SqlCondition.GREATER_THAN, "1");
-    Filter right = new Filter(f1, SqlCondition.GREATER_THAN, "2");
+    Filter left = new Filter(f1, GREATER_THAN, "1");
+    Filter right = new Filter(f1, GREATER_THAN, "2");
 
-    Assert.assertEquals(actual.getType(), SqlFilterLogic.AND);
+    Assert.assertEquals(actual.getType(), AND);
     Assert.assertEquals(actual.getLeftFilter(), left);
     Assert.assertNull(actual.getLeftLogic());
     Assert.assertEquals(actual.getRightFilter(), right);
@@ -315,8 +320,8 @@ public class TrainingDatasetControllerTest extends TestCase {
     // fg.feature > 1
     List<TrainingDatasetFilter> filters = new ArrayList<>();
     filters.add(createTrainingDatasetFilter(
-        createTrainingDatasetFilterCondition("test_f", "GREATER_THAN", "1", 0),
-        "SINGLE", "L"));
+        createTrainingDatasetFilterCondition("test_f", GREATER_THAN, "1", 0),
+        SINGLE, "L"));
 
     Map<String, Feature> featureLookup = Maps.newHashMap();
     Feature feature = new Feature("test_f", "fg0");
@@ -329,9 +334,9 @@ public class TrainingDatasetControllerTest extends TestCase {
 
     Feature f1 = new Feature("test_f", "fg0", null, false, null, null);
     f1.setFeatureGroup(featuregroup);
-    Filter left = new Filter(f1, SqlCondition.GREATER_THAN, "1");
+    Filter left = new Filter(f1, GREATER_THAN, "1");
 
-    Assert.assertEquals(actual.getType(), SqlFilterLogic.SINGLE);
+    Assert.assertEquals(actual.getType(), SINGLE);
     Assert.assertEquals(actual.getLeftFilter(), left);
     Assert.assertNull(actual.getLeftLogic());
     Assert.assertNull(actual.getRightFilter());
@@ -342,8 +347,8 @@ public class TrainingDatasetControllerTest extends TestCase {
     // fg.feature > fg.otherFeature
     List<TrainingDatasetFilter> filters = new ArrayList<>();
     filters.add(createTrainingDatasetFilter(
-        createTrainingDatasetFilterCondition("test_f", "GREATER_THAN", "test_f1", 0, 0),
-        "SINGLE", "L"));
+        createTrainingDatasetFilterCondition("test_f", GREATER_THAN, "test_f1", 0, 0),
+        SINGLE, "L"));
 
     Map<String, Feature> featureLookup = Maps.newHashMap();
     Feature feature = new Feature("test_f", "fg0");
@@ -359,9 +364,9 @@ public class TrainingDatasetControllerTest extends TestCase {
 
     FilterLogic actual = target.convertToFilterLogic(filters, featureLookup, "L");
 
-    Filter left = new Filter(feature, SqlCondition.GREATER_THAN, new FilterValue(0, "fg0", "test_f1"));
+    Filter left = new Filter(feature, GREATER_THAN, new FilterValue(0, "fg0", "test_f1"));
 
-    Assert.assertEquals(actual.getType(), SqlFilterLogic.SINGLE);
+    Assert.assertEquals(actual.getType(), SINGLE);
     Assert.assertEquals(actual.getLeftFilter(), left);
     Assert.assertNull(actual.getLeftLogic());
     Assert.assertNull(actual.getRightFilter());
@@ -371,13 +376,13 @@ public class TrainingDatasetControllerTest extends TestCase {
   public void testConvertToFilterLogic_multipleFeatureValueCondition() throws Exception {
     // fg.feature > fg.otherFeature and fg.feature > fg1.otherFeature
     List<TrainingDatasetFilter> filters = new ArrayList<>();
-    filters.add(createTrainingDatasetFilter(null, "AND", "L"));
+    filters.add(createTrainingDatasetFilter(null, AND, "L"));
     filters.add(createTrainingDatasetFilter(
-        createTrainingDatasetFilterCondition("test_f", "GREATER_THAN", "test_f1", 0,0),
-        "SINGLE", "L.L"));
+        createTrainingDatasetFilterCondition("test_f", GREATER_THAN, "test_f1", 0,0),
+        SINGLE, "L.L"));
     filters.add(createTrainingDatasetFilter(
-        createTrainingDatasetFilterCondition("test_f", "GREATER_THAN", "test_f2", 0, 1),
-        "SINGLE", "L.R"));
+        createTrainingDatasetFilterCondition("test_f", GREATER_THAN, "test_f2", 0, 1),
+        SINGLE, "L.R"));
 
     Map<String, Feature> featureLookup = Maps.newHashMap();
     Feature feature = new Feature("test_f", "fg0");
@@ -398,10 +403,10 @@ public class TrainingDatasetControllerTest extends TestCase {
 
     FilterLogic actual = target.convertToFilterLogic(filters, featureLookup, "L");
 
-    Filter left = new Filter(feature, SqlCondition.GREATER_THAN, new FilterValue(0, "fg0", "test_f1"));
-    Filter right = new Filter(feature, SqlCondition.GREATER_THAN, new FilterValue(1, "fg1", "test_f2"));
+    Filter left = new Filter(feature, GREATER_THAN, new FilterValue(0, "fg0", "test_f1"));
+    Filter right = new Filter(feature, GREATER_THAN, new FilterValue(1, "fg1", "test_f2"));
 
-    Assert.assertEquals(actual.getType(), SqlFilterLogic.AND);
+    Assert.assertEquals(actual.getType(), AND);
     Assert.assertEquals(actual.getLeftFilter(), left);
     Assert.assertNull(actual.getLeftLogic());
     Assert.assertEquals(actual.getRightFilter(), right);

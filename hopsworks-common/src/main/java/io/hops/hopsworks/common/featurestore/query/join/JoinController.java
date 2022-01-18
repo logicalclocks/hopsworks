@@ -19,7 +19,7 @@ package io.hops.hopsworks.common.featurestore.query.join;
 import io.hops.hopsworks.common.featurestore.query.ConstructorController;
 import io.hops.hopsworks.common.featurestore.query.Feature;
 import io.hops.hopsworks.common.featurestore.query.Query;
-import io.hops.hopsworks.common.featurestore.query.SqlCondition;
+import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.SqlCondition;
 import org.apache.calcite.sql.JoinConditionType;
 import org.apache.calcite.sql.SqlIdentifier;
 import org.apache.calcite.sql.SqlJoin;

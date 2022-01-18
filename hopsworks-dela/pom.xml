@@ -68,11 +68,6 @@
     </dependency>
 
     <dependency>
-      <groupId>io.hops.hopsworks</groupId>
-      <artifactId>hopsworks-persistence</artifactId>
-    </dependency>
-
-    <dependency>
       <groupId>javax</groupId>
       <artifactId>javaee-api</artifactId>
     </dependency>

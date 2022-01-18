@@ -16,6 +16,8 @@
 
 package io.hops.hopsworks.common.featurestore.query.filter;
 
+import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.SqlFilterLogic;
+
 public class FilterLogic {
   private SqlFilterLogic type;
   private Filter leftFilter;

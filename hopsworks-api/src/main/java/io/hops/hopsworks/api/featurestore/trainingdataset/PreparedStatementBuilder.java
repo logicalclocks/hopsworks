@@ -29,7 +29,7 @@ import io.hops.hopsworks.common.featurestore.query.ServingPreparedStatementDTO;
 import io.hops.hopsworks.common.featurestore.query.filter.Filter;
 import io.hops.hopsworks.common.featurestore.query.filter.FilterController;
 import io.hops.hopsworks.common.featurestore.query.filter.FilterLogic;
-import io.hops.hopsworks.common.featurestore.query.SqlCondition;
+import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.SqlCondition;
 import io.hops.hopsworks.common.featurestore.trainingdatasets.TrainingDatasetController;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.persistence.entity.featurestore.Featurestore;
