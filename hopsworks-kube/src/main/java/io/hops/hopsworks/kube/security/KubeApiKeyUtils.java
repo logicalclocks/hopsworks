@@ -4,6 +4,7 @@
 
 package io.hops.hopsworks.kube.security;
 
+import com.google.common.base.Strings;
 import io.fabric8.kubernetes.api.model.Secret;
 import io.hops.common.Pair;
 import io.hops.hopsworks.common.dao.project.team.ProjectTeamFacade;
@@ -114,13 +115,12 @@ public class KubeApiKeyUtils {
     // Since secrets cannot be shared across namespaces, the serving apikey is copied to each project the user is
     // member of. The apikey is used for downloading the artifact, connecting to the Feature Store from the
     // transformer and sending request to Istio from HSML when running within the Hopsworks cluster, among other things.
-    logger.log(INFO, "Copying APIKey secret for user " + user.getUsername() + " into project " + project.getName());
+    logger.log(INFO,
+      "Copying serving API key secret for user " + user.getUsername() + " into project " + project.getName());
     String rawSecret = null;
     Optional<ApiKey> apiKey = getServingApiKey(user);
     if (!apiKey.isPresent()) {
-//      // if the serving api key is not present, create it
-//    throw new ApiKeyException(RESTCodes.ApiKeyErrorCode.KEY_NOT_FOUND, Level.SEVERE, "Serving api key not found for" +
-//        " user " + user.getUsername());
+      // if the serving api key is not present, create it
       Pair<ApiKey, String> pair = createServingApiKey(user);
       apiKey = Optional.of(pair.getL());
       rawSecret = pair.getR();
@@ -129,10 +129,22 @@ public class KubeApiKeyUtils {
       // get secret from hops-system
       String secretName = getServingApiKeySecretName(apiKey.get().getPrefix());
       Secret secret = kubeClientService.getSecret(KubeServingUtils.HOPS_SYSTEM_NAMESPACE, secretName);
+      if (secret == null) {
+        throw new ApiKeyException(RESTCodes.ApiKeyErrorCode.KEY_NOT_FOUND, Level.SEVERE,
+          "Serving API key secret with name " + secretName + " not found in hops-system");
+      }
+      if (secret.getData() == null) {
+        throw new ApiKeyException(RESTCodes.ApiKeyErrorCode.KEY_NOT_FOUND, Level.SEVERE, "Serving API key secret " +
+          "with name " + secretName + " in hops-system is empty");
+      }
+      if (!secret.getData().containsKey(SERVING_API_KEY_SECRET_KEY)) {
+        throw new ApiKeyException(RESTCodes.ApiKeyErrorCode.KEY_NOT_FOUND, Level.SEVERE, "Serving API key not found " +
+          "in secret " + secretName + " in hops-system");
+      }
       String encodedSecret = secret.getData().get(SERVING_API_KEY_SECRET_KEY);
-      if (encodedSecret == null) {
-        throw new ApiKeyException(RESTCodes.ApiKeyErrorCode.KEY_NOT_FOUND, Level.SEVERE, "Api key secret not found in" +
-          " Kubernetes");
+      if (Strings.isNullOrEmpty(encodedSecret)) {
+        throw new ApiKeyException(RESTCodes.ApiKeyErrorCode.KEY_NOT_FOUND, Level.SEVERE, "Serving API key secret " +
+          "value is null or empty for secret " + secretName + " in hops-system");
       }
       // decode secret
       byte[] secretBytes = Base64.decodeBase64(encodedSecret);
@@ -191,7 +203,7 @@ public class KubeApiKeyUtils {
     Set<ApiScope> scopes = getServingApiKeyScopes();
     String servingApiKeyName = getServingApiKeyName(user);
     String secret = apiKeyController.createNewKey(user, servingApiKeyName, scopes, true);
-    logger.log(INFO, "Created new API Key for user " + user.getUsername());
+    logger.log(INFO, "Created new serving API key for user " + user.getUsername());
     
     // create Kubernetes secrets
     ApiKey apiKey = apiKeyController.getApiKey(secret);
@@ -210,10 +222,27 @@ public class KubeApiKeyUtils {
     String secretName = getServingApiKeySecretName(apiKey.getPrefix());
     Map<String, String> labels = getApiKeySecretLabels(true, apiKey.getName(), user.getUsername(),
       apiKey.getModified());
-  
     Map<String, byte[]> data = getApiKeySecretData(apiKey, secret);
     kubeClientService.createOrUpdateSecret(KubeServingUtils.HOPS_SYSTEM_NAMESPACE, secretName, data, labels);
-    logger.log(INFO, "Created APIKey secret in Hops-system for user " + user.getUsername());
+    logger.log(INFO, "Created serving API key secret in hops-system for user " + user.getUsername());
+    
+    // Wait until secret is available
+    int retry = 3;
+    do {
+      try {
+        Thread.sleep(1000);
+      } catch (InterruptedException e) {
+        logger.log(INFO,
+          "Cannot wait for the creation of the serving API key secret for user " + user.getUsername());
+        e.printStackTrace();
+        break;
+      }
+      Secret kubeSecret = kubeClientService.getSecret(KubeServingUtils.HOPS_SYSTEM_NAMESPACE, secretName);
+      if (kubeSecret != null) return; // kube secret is available
+    } while(retry-- > 0);
+    
+    logger.log(INFO,
+      "Created serving API key secret is not available yet in hops-system for user " + user.getUsername());
   }
   
   private void createProjectServingApiKeySecret(Project project, Users user, ApiKey apiKey, String secret) {
@@ -225,7 +254,8 @@ public class KubeApiKeyUtils {
     data.put(SERVING_API_KEY_SECRET_KEY, secret.getBytes());
     String namespace = kubeClientService.getKubeProjectName(project);
     kubeClientService.createOrUpdateSecret(namespace, secretName, data, labels);
-    logger.log(INFO, "Creating APIKey secret in project " + project.getName() + " for user " + user.getUsername());
+    logger.log(INFO,
+      "Created serving API key secret in project " + project.getName() + " for user " + user.getUsername());
   }
   
   private void deleteServingApiKeySecrets(Users user) {
@@ -233,6 +263,7 @@ public class KubeApiKeyUtils {
     String servingApiKeyName = getServingApiKeyName(user);
     Map<String, String> labels = getApiKeySecretLabels(true, servingApiKeyName, user.getUsername(), null);
     kubeClientService.deleteSecrets(labels);
+    logger.log(INFO, "Deleted serving API key secrets for user " + user.getUsername());
   }
   
   private Map<String, String> getApiKeySecretLabels(Boolean reserved, String apiKeyName, String username,

@@ -47,24 +47,28 @@ public class KubeApiKeyHandler implements ApiKeyHandler, UserAccountHandler, Pro
   
   @Override
   public void create(ApiKey apiKey) {
-    logger.log(INFO, "Creating APIKey secret for user " + apiKey.getUser().getUsername());
     // TODO: (Javier) Update fabric8 to v5 and use PatchContext(Strategy.MergePatch)
+    String secretName = kubeApiKeyUtils.getServingApiKeySecretName(apiKey.getPrefix());
     if (apiKey.getName().startsWith(KubeApiKeyUtils.SERVING_API_KEY_NAME) && apiKey.getReserved()) {
       // if serving api key, noop. The kube secret is created with the raw secret later on
+      logger.log(INFO, "Postponing creation of serving API key secret with name " + secretName + " for user " +
+        apiKey.getUser().getUsername());
       return;
     }
     
     kubeClientService.createOrUpdateSecret(
       KubeServingUtils.HOPS_SYSTEM_NAMESPACE,
-      kubeApiKeyUtils.getServingApiKeySecretName(apiKey.getPrefix()),
+      secretName,
       kubeApiKeyUtils.getApiKeySecretData(apiKey),
       kubeApiKeyUtils.getApiKeySecretLabels(apiKey)
     );
+    logger.log(INFO,
+      "Created serving API key secret with name " + secretName + " for user " + apiKey.getUser().getUsername());
   }
   
   @Override
   public void delete(ApiKey apiKey) {
-    logger.log(INFO, "Deleting APIKey secret for user " + apiKey.getUser().getUsername());
+    logger.log(INFO, "Deleting serving API key secret for user " + apiKey.getUser().getUsername());
     kubeClientService.deleteSecret(KubeServingUtils.HOPS_SYSTEM_NAMESPACE,
       kubeApiKeyUtils.getServingApiKeySecretName(apiKey.getPrefix()));
   }
@@ -89,10 +93,10 @@ public class KubeApiKeyHandler implements ApiKeyHandler, UserAccountHandler, Pro
     // if an user account is created or activated, create a serving api key
     Optional<ApiKey> servingApiKey = kubeApiKeyUtils.getServingApiKey(user);
     if (servingApiKey.isPresent()) {
-      logger.log(INFO, "Serving APIKey already created for user " + user.getUsername());
+      logger.log(INFO, "Serving API key already created for user " + user.getUsername());
       return; // serving api key already created for this user
     }
-    logger.log(INFO, "Create serving APIKey secret for user " + user.getUsername());
+    logger.log(INFO, "Create serving API key secret for user " + user.getUsername());
     kubeApiKeyUtils.createServingApiKey(user);
   }
   
@@ -111,7 +115,7 @@ public class KubeApiKeyHandler implements ApiKeyHandler, UserAccountHandler, Pro
   @Override
   public void remove(Users user) throws Exception {
     // if an user is removed, remove the serving api key
-    logger.log(INFO, "Delete serving APIKey secret for user " + user.getUsername());
+    logger.log(INFO, "Delete serving API key secret for user " + user.getUsername());
     kubeApiKeyUtils.deleteServingApiKey(user);
   }
   
@@ -136,7 +140,7 @@ public class KubeApiKeyHandler implements ApiKeyHandler, UserAccountHandler, Pro
       .collect(Collectors.toCollection(HashSet::new));
     for (Users member : members) {
       if (!users.contains(member.getUsername())) {
-        logger.log(INFO, "Copy serving API Key for user " + member.getUsername() + " and project " + project.getName());
+        logger.log(INFO, "Copy serving API key for user " + member.getUsername() + " and project " + project.getName());
         // if the serving api key of a given user is not already in the project, copy it.
         kubeApiKeyUtils.copyServingApiKeySecret(project, member);
       }

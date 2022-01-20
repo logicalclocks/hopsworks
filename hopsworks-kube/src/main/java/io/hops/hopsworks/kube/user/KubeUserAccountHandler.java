@@ -62,7 +62,7 @@ public class KubeUserAccountHandler implements UserAccountHandler {
     }
     Map<String, String> userAccountMap = new HashMap<>();
     userAccountMap.put(user.getUsername(), roles);
-    logger.log(INFO, "Updating user account " + user.getUsername() + ": " + String.join(", ",
+    logger.log(INFO, "Create or update user account " + user.getUsername() + ": " + String.join(", ",
       userAccountMap.keySet()));
     patch(userAccountMap);
   }
