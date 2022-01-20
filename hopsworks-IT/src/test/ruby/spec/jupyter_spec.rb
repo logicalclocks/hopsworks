@@ -179,6 +179,7 @@ describe "On #{ENV['OS']}" do
         settings = json_body
         settings[:distributionStrategy] = ""
         settings[:shutdownLevel] = shutdownLevel
+        settings[:pythonKernel] = false
         settings[:jobConfig][:"spark.executor.memory"] = 1023
         json_result = post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/jupyter/start", JSON(settings)
         expect_status_details(400)
