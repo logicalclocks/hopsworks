@@ -16,6 +16,7 @@
 
 package io.hops.hopsworks.common.featurestore.featuregroup.cached;
 
+import com.google.common.base.Strings;
 import com.logicalclocks.servicediscoverclient.exceptions.ServiceDiscoveryException;
 import com.logicalclocks.servicediscoverclient.service.Service;
 import io.hops.hopsworks.common.featurestore.FeaturestoreController;
@@ -139,8 +140,10 @@ public class OfflineFeatureGroupController {
     Table table = getEmptyTable(dbName, tableName, hdfsUsersController.getHdfsUserName(project, user), format);
     ThriftHiveMetastore.Client client = getMetaStoreClient(project, user);
 
-    // add table description
-    table.getParameters().put(COMMENT, tableDesc);
+    // add table description, skip if null
+    if (!Strings.isNullOrEmpty(tableDesc)) {
+      table.getParameters().put(COMMENT, tableDesc);
+    }
 
     // Create Schema
     List<SQLDefaultConstraint> defaultConstraints = new ArrayList<>();
