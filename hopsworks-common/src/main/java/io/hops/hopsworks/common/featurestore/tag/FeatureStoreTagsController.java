@@ -17,6 +17,7 @@
 package io.hops.hopsworks.common.featurestore.tag;
 
 import io.hops.hopsworks.common.integrations.CommunityStereotype;
+import io.hops.hopsworks.common.tags.AttachTagResult;
 import io.hops.hopsworks.persistence.entity.featurestore.Featurestore;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.Featuregroup;
 import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.TrainingDataset;

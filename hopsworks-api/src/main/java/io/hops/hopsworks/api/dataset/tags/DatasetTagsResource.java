@@ -24,7 +24,7 @@ import io.hops.hopsworks.api.jwt.JWTHelper;
 import io.hops.hopsworks.common.api.ResourceRequest;
 import io.hops.hopsworks.common.dataset.util.DatasetHelper;
 import io.hops.hopsworks.common.dataset.util.DatasetPath;
-import io.hops.hopsworks.common.featurestore.tag.AttachTagResult;
+import io.hops.hopsworks.common.tags.AttachTagResult;
 import io.hops.hopsworks.common.tags.DatasetTagsControllerIface;
 import io.hops.hopsworks.exceptions.DatasetException;
 import io.hops.hopsworks.exceptions.SchematizedTagException;

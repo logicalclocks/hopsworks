@@ -55,11 +55,9 @@ import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.stream.Collectors;
 
 import static io.hops.hopsworks.api.modelregistry.models.ModelsBuilder.MODEL_SUMMARY_XATTR_NAME;
 
@@ -177,14 +175,6 @@ public class ModelsController {
       jupyterController.versionProgram(accessor.hdfsUser, kernelId, path, accessor.udfso);
       return relativePath;
     }
-  }
-  
-  public List<ModelRegistryDTO> getModelRegistries(Project project) {
-    List<Dataset> modelsDatasets = datasetController.getAllByName(project, Settings.HOPS_MODELS_DATASET);
-    List<ModelRegistryDTO> modelsEndpoints = modelsDatasets.stream()
-      .map(ModelRegistryDTO::fromDataset)
-      .collect(Collectors.toCollection(ArrayList::new));
-    return modelsEndpoints;
   }
   
   public ModelRegistryDTO getModelRegistry(Project project) throws DatasetException {

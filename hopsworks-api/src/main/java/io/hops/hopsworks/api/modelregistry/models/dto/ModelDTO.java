@@ -17,6 +17,7 @@
 package io.hops.hopsworks.api.modelregistry.models.dto;
 
 import io.hops.hopsworks.api.dataset.inode.InodeDTO;
+import io.hops.hopsworks.api.tags.TagsDTO;
 import io.hops.hopsworks.common.api.RestDTO;
 import io.hops.hopsworks.common.featurestore.trainingdatasets.TrainingDatasetDTO;
 
@@ -65,6 +66,8 @@ public class ModelDTO extends RestDTO<ModelDTO> {
   private TrainingDatasetDTO trainingDataset;
 
   private Integer modelRegistryId;
+
+  private TagsDTO tags;
 
   public String getName() {
     return name;
@@ -200,5 +203,13 @@ public class ModelDTO extends RestDTO<ModelDTO> {
 
   public void setModelRegistryId(Integer modelRegistryId) {
     this.modelRegistryId = modelRegistryId;
+  }
+
+  public TagsDTO getTags() {
+    return tags;
+  }
+
+  public void setTags(TagsDTO tags) {
+    this.tags = tags;
   }
 }
