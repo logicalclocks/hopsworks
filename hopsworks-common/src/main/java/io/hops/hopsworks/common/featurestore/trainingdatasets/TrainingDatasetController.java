@@ -758,10 +758,11 @@ public class TrainingDatasetController {
                 requestedFeature.getFeatureGroup().getName());
       }
       // instantiate new feature since alias in available feature is not correct if fg is joined with itself
-      new Feature(tdFeature.getName(), fgAliasLookup.get(requestedFeature.getTrainingDatasetJoin().getId()),
+      Feature featureWithCorrectAlias = new Feature(tdFeature.getName(),
+          fgAliasLookup.get(requestedFeature.getTrainingDatasetJoin().getId()),
           tdFeature.getType(), tdFeature.getDefaultValue(), tdFeature.getPrefix(), requestedFeature.getFeatureGroup(),
           requestedFeature.getIndex());
-      features.add(tdFeature);
+      features.add(featureWithCorrectAlias);
     }
 
     // Keep a map feature store id -> feature store name
@@ -806,6 +807,9 @@ public class TrainingDatasetController {
   FilterLogic convertToFilterLogic(Collection<TrainingDatasetFilter> trainingDatasetFilters,
       Map<String, Feature> features, String headPath) throws FeaturestoreException {
 
+    if (trainingDatasetFilters.size() == 0) {
+      return null;
+    }
     FilterLogic filterLogic = new FilterLogic();
     TrainingDatasetFilter headNode = trainingDatasetFilters.stream()
         .filter(filter -> filter.getPath().equals(headPath)).findFirst()
