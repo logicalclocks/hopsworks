@@ -275,13 +275,14 @@ public class ProjectTeamFacade extends AbstractFacade<ProjectTeam> {
    * @param user
    * @param teamRole
    */
-  public void updateTeamRole(Project project, Users user, String teamRole) {
+  public ProjectTeam updateTeamRole(Project project, Users user, String teamRole) {
     ProjectTeam team = findByPrimaryKey(project, user);
     if (team != null) {
       team.setTeamRole(teamRole);
       team.setTimestamp(new Date());
       em.merge(team);
     }
+    return team;
   }
 
   /**
@@ -292,11 +293,11 @@ public class ProjectTeamFacade extends AbstractFacade<ProjectTeam> {
    * @param email
    * @param teamRole
    */
-  public void updateTeamRole(Project project, String email, String teamRole) {
+  public ProjectTeam updateTeamRole(Project project, String email, String teamRole) {
     TypedQuery<Users> query = em.createNamedQuery("Users.findByEmail",
         Users.class);
     query.setParameter("email", email);
-    updateTeamRole(project, query.getSingleResult(), teamRole);
+    return updateTeamRole(project, query.getSingleResult(), teamRole);
   }
 
   /**

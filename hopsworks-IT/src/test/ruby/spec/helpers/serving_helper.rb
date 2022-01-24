@@ -124,6 +124,11 @@ module ServingHelper
     get "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/serving#{query}"
   end
 
+  def stop_serving(project, serving)
+    post "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/serving/#{serving[:id]}?action=stop"
+    expect_status(200)
+  end
+
   def wait_for_type(serving_name)
     if !kubernetes_installed
       wait_for(60) do
@@ -133,7 +138,7 @@ module ServingHelper
       #Wait a bit more for the actual server to start in the container
       sleep(20)
     else
-      sleep(120)
+      sleep(30)
     end
   end
 
@@ -145,7 +150,7 @@ module ServingHelper
         raise "the process is still running"
       end
     else
-      sleep(120)
+      sleep(30)
     end
   end
 
@@ -168,4 +173,12 @@ module ServingHelper
       else puts "Serving tool value cannot be parsed"
       end
   end
+
+  def get_serving(serving_name)
+    serving_list = get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/"
+    expect_status(200)
+    servings = JSON.parse(serving_list)
+    servings.select { |serving| serving['name'] == serving_name}[0]
+  end
+
 end

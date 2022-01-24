@@ -25,6 +25,6 @@ import io.hops.hopsworks.exceptions.InferenceException;
  * controllers e.g (localhost or Kubernetes) should implement this interface.
  */
 public interface ServingInferenceController {
-  Pair<Integer, String> infer(Serving serving, Integer modelVersion, String verb, String inferenceRequestJson)
-    throws InferenceException;
+  Pair<Integer, String> infer(Serving serving, Integer modelVersion, String verb, String inferenceRequestJson,
+    String authHeader) throws InferenceException;
 }

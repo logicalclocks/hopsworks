@@ -17,6 +17,10 @@
 package io.hops.hopsworks.common.serving;
 
 import com.google.common.base.Strings;
+import com.logicalclocks.servicediscoverclient.exceptions.ServiceDiscoveryException;
+import io.hops.hopsworks.common.hosts.ServiceDiscoveryController;
+import io.hops.hopsworks.common.serving.inference.LocalhostSkLearnInferenceUtils;
+import io.hops.hopsworks.common.serving.inference.LocalhostTfInferenceUtils;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.serving.ModelServer;
 import io.hops.hopsworks.persistence.entity.serving.Serving;
@@ -39,6 +43,7 @@ import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.UUID;
@@ -60,11 +65,17 @@ public class LocalhostServingController implements ServingController {
   @EJB
   private ServingFacade servingFacade;
   @EJB
+  private ServiceDiscoveryController serviceDiscoveryController;
+  @EJB
   private KafkaServingHelper kafkaServingHelper;
   @EJB
   private LocalhostSkLearnServingController skLearnServingController;
   @EJB
   private LocalhostTfServingController tfServingController;
+  @EJB
+  private LocalhostTfInferenceUtils localhostTfInferenceUtils;
+  @EJB
+  private LocalhostSkLearnInferenceUtils localhostSkLearnInferenceUtils;
   
   /**
    * Gets a list of available servings for a project
@@ -73,7 +84,8 @@ public class LocalhostServingController implements ServingController {
    * @return a list of ServingWrapper DTOs with metadata of the servings
    */
   @Override
-  public List<ServingWrapper> getServings(Project project, String modelNameFilter, ServingStatusEnum statusFilter) {
+  public List<ServingWrapper> getServings(Project project, String modelNameFilter, ServingStatusEnum statusFilter)
+      throws ServingException {
     List<Serving> servingList;
     if(Strings.isNullOrEmpty(modelNameFilter)) {
       servingList = servingFacade.findForProject(project);
@@ -102,7 +114,7 @@ public class LocalhostServingController implements ServingController {
    * @return a ServingWrapper with metadata of the serving
    */
   @Override
-  public ServingWrapper getServing(Project project, Integer id) {
+  public ServingWrapper getServing(Project project, Integer id) throws ServingException {
     Serving serving = servingFacade.findByProjectAndId(project, id);
     if (serving == null) {
       return null;
@@ -167,7 +179,7 @@ public class LocalhostServingController implements ServingController {
    * @param serving the serving to get the internal representation for
    * @return internal representation of the serving
    */
-  private ServingWrapper getServingInternal(Serving serving) {
+  private ServingWrapper getServingInternal(Serving serving) throws ServingException {
     ServingWrapper servingWrapper = new ServingWrapper(serving);
 
     ServingStatusEnum status = getServingStatus(serving);
@@ -177,15 +189,38 @@ public class LocalhostServingController implements ServingController {
       case STARTING:
       case UPDATING:
         servingWrapper.setAvailableReplicas(0);
+        servingWrapper.setInternalPort(null);
         break;
       case RUNNING:
         servingWrapper.setAvailableReplicas(1);
-        servingWrapper.setNodePort(serving.getLocalPort());
-
+        servingWrapper.setInternalPort(serving.getLocalPort());
     }
-
+    String internalIP;
+    try {
+      internalIP = serviceDiscoveryController
+        .getAnyAddressOfServiceWithDNS(ServiceDiscoveryController.HopsworksService.HOPSWORKS_APP)
+        .getAddress();
+    } catch (ServiceDiscoveryException e) {
+      String userMsg = "Could not find internal host for serving instance '" + serving.getName() + "'";
+      throw new ServingException(RESTCodes.ServingErrorCode.STATUSERROR, Level.FINE, userMsg);
+    }
+    servingWrapper.setInternalIPs(Collections.singletonList(internalIP));
+    String path;
+    if (serving.getModelServer() == ModelServer.TENSORFLOW_SERVING) {
+      path = localhostTfInferenceUtils.getPath(serving.getName(), serving.getModelVersion(), "");
+    } else if (serving.getModelServer() == ModelServer.FLASK) {
+      path = localhostSkLearnInferenceUtils.getPath("");
+    } else {
+      throw new UnsupportedOperationException("Model server not supported as local serving");
+    }
+    servingWrapper.setInternalPath(path);
+    // These values will be fetched from the location href in the UI (client-side). By doing this, we make sure
+    // that we display the correct host and port to reach Hopsworks. For instance, using proxies or SSH
+    // tunneling, the port might differ from the default 80 or 443 on the client side.
+    servingWrapper.setExternalIP(null);
+    servingWrapper.setExternalPort(null);
+    
     servingWrapper.setKafkaTopicDTO(kafkaServingHelper.buildTopicDTO(serving));
-
     return servingWrapper;
   }
   

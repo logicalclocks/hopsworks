@@ -20,11 +20,13 @@ import com.google.common.base.Strings;
 import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.api.filter.Audience;
 import io.hops.hopsworks.api.filter.apiKey.ApiKeyRequired;
+import io.hops.hopsworks.api.jwt.JWTHelper;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
 import io.hops.hopsworks.common.serving.inference.InferenceController;
 import io.hops.hopsworks.exceptions.InferenceException;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
 import io.hops.hopsworks.persistence.entity.project.Project;
+import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.persistence.entity.user.security.apiKey.ApiScope;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -40,6 +42,7 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
+import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
@@ -58,6 +61,8 @@ public class InferenceResource {
   private InferenceController inferenceController;
   @EJB
   private ProjectFacade projectFacade;
+  @EJB
+  private JWTHelper jWTHelper;
   
   private Project project;
 
@@ -73,19 +78,22 @@ public class InferenceResource {
   @Produces(MediaType.APPLICATION_JSON)
   @ApiOperation(value = "Make inference")
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
-  @JWTRequired(acceptedTokens={Audience.API, Audience.JOB}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
-  @ApiKeyRequired( acceptedScopes = {ApiScope.INFERENCE}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
+  @JWTRequired(acceptedTokens={Audience.API, Audience.JOB, Audience.SERVING}, allowedUserRoles={"HOPS_ADMIN",
+    "HOPS_USER"})
+  @ApiKeyRequired( acceptedScopes = {ApiScope.SERVING}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   public Response infer(
       @ApiParam(value = "Name of the model to query", required = true) @PathParam("modelName") String modelName,
       @ApiParam(value = "Version of the model to query") @PathParam("version") String modelVersion,
       @ApiParam(value = "Type of query") @PathParam("verb") String verb, @Context SecurityContext sc,
-      String inferenceRequestJson) throws InferenceException {
+      @Context HttpHeaders httpHeaders, String inferenceRequestJson) throws InferenceException {
     Integer version = null;
     if (!Strings.isNullOrEmpty(modelVersion)) {
       version = Integer.valueOf(modelVersion.split("/")[2]);
     }
-
-    String inferenceResult = inferenceController.infer(project, modelName, version, verb, inferenceRequestJson);
+    Users user = jWTHelper.getUserPrincipal(sc);
+    String authHeader = httpHeaders.getRequestHeader(HttpHeaders.AUTHORIZATION).get(0);
+    String inferenceResult = inferenceController.infer(project, modelName, version, verb, inferenceRequestJson,
+      authHeader);
     return Response.ok().entity(inferenceResult).build();
   }
 }

@@ -69,8 +69,8 @@ public class LocalhostInferenceController implements ServingInferenceController 
    * @return the inference result returned by the serving server
    * @throws InferenceException
    */
-  public Pair<Integer, String> infer(Serving serving, Integer modelVersion, String verb, String inferenceRequestJson)
-    throws InferenceException {
+  public Pair<Integer, String> infer(Serving serving, Integer modelVersion, String verb,
+    String inferenceRequestJson, String authHeader) throws InferenceException {
   
     if (serving.getCid().equals(CID_STOPPED)) {
       throw new InferenceException(RESTCodes.InferenceErrorCode.SERVING_NOT_RUNNING, Level.FINE);

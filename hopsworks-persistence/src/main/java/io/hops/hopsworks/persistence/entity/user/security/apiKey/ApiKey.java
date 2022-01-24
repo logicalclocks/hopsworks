@@ -107,11 +107,16 @@ public class ApiKey implements Serializable {
       referencedColumnName = "uid")
   @ManyToOne(optional = false)
   private Users user;
-
+  @Basic(optional = false)
+  @NotNull
+  @Column(name = "reserved")
+  private Boolean reserved;
+  
   public ApiKey() {
   }
 
-  public ApiKey(Users user, String prefix, String secret, String salt, Date created, Date modified, String name) {
+  public ApiKey(Users user, String prefix, String secret, String salt, Date created, Date modified, String name,
+      Boolean reserved) {
     this.user = user;
     this.prefix = prefix;
     this.secret = secret;
@@ -119,6 +124,7 @@ public class ApiKey implements Serializable {
     this.created = created;
     this.modified = modified;
     this.name = name;
+    this.reserved = reserved;
   }
 
   public Integer getId() {
@@ -181,6 +187,8 @@ public class ApiKey implements Serializable {
     this.name = name;
   }
 
+  public Boolean getReserved() { return reserved; }
+  
   public Collection<ApiKeyScope> getApiKeyScopeCollection() {
     return apiKeyScopeCollection;
   }

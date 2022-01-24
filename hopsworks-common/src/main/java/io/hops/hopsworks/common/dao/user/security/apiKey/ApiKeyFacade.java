@@ -73,8 +73,9 @@ public class ApiKeyFacade extends AbstractFacade<ApiKey> {
   
   public CollectionInfo findByUser(Integer offset, Integer limit, Set<? extends FilterBy> filter,
     Set<? extends SortBy> sort, Users user) {
-    String queryStr = buildQuery("SELECT a FROM ApiKey a ", filter, sort, "a.user = :user ");
-    String queryCountStr = buildQuery("SELECT COUNT(a.id) FROM ApiKey a ", filter, sort, "a.user = :user ");
+    String queryStr = buildQuery("SELECT a FROM ApiKey a ", filter, sort, "a.user = :user AND a.reserved = 0");
+    String queryCountStr = buildQuery("SELECT COUNT(a.id) FROM ApiKey a ", filter, sort, "a.user = :user " +
+      "AND a.reserved = 0");
     Query query = em.createQuery(queryStr, ApiKey.class).setParameter("user", user);
     Query queryCount = em.createQuery(queryCountStr, ApiKey.class).setParameter("user", user);
     return findAll(offset, limit, filter, query, queryCount);

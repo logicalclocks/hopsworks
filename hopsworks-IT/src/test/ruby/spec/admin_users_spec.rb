@@ -79,6 +79,126 @@ describe "On #{ENV['OS']}" do
         expect_json(status: 3)
       end
 
+      it "should add user to kube config map when user's status changes to activated" do
+        if !kfserving_installed
+          skip "This test only runs with KFServing installed"
+        end
+        id = user[:uid]
+        username = user[:username]
+
+        admin_update_user(id, {status: "DEACTIVATED_ACCOUNT"})
+        expect_status(200)
+        cm = get_users_kube_config_map()
+        expect(cm).not_to be_empty
+        if !cm["data"].nil? # data might not exist
+          expect(cm["data"]).not_to include(username)
+        end
+
+        admin_update_user(id, {status: "ACTIVATED_ACCOUNT", })
+        cm = get_users_kube_config_map()
+        expect(cm).not_to be_empty
+        expect(cm).to include("data")
+        expect(cm["data"]).to include(username)
+      end
+
+      it "should update user role in kube config map when changing roles of a user" do
+        if !kfserving_installed
+          skip "This test only runs with KFServing installed"
+        end
+        newUser = create_user_with_role("HOPS_USER")
+        admin_update_user(newUser.uid, {status: "ACTIVATED_ACCOUNT"})
+        expect_status(200)
+
+        cm = get_users_kube_config_map()
+        expect(cm).not_to be_empty
+        expect(cm).to include("data")
+        expect(cm["data"]).to include(newUser.username)
+        expect(cm["data"][newUser.username]).to eq "HOPS_USER"
+
+        add_user_role(newUser.uid, "HOPS_ADMIN")
+        cm = get_users_kube_config_map()
+        expect(cm).not_to be_empty
+        expect(cm).to include("data")
+        expect(cm["data"]).to include(newUser.username)
+        expect(cm["data"][newUser.username]).to eq "HOPS_USER,HOPS_ADMIN"
+
+        remove_user_role(newUser.uid, "HOPS_USER")
+        cm = get_users_kube_config_map()
+        expect(cm).not_to be_empty
+        expect(cm).to include("data")
+        expect(cm["data"]).to include(newUser.username)
+        expect(cm["data"][newUser.username]).to eq "HOPS_ADMIN"
+      end
+
+      it "should create serving api key when user's status changes to activated" do
+        if !kfserving_installed
+          skip "This test only runs with KFServing installed"
+        end
+        id = user[:uid]
+        username = user[:username]
+        uid = user[:uid]
+        email = user[:email]
+
+        with_valid_project
+        add_member_to_project(@project, email, "Data owner")
+
+        admin_update_user(id, {status: "DEACTIVATED_ACCOUNT"})
+        expect_status(200)
+        secret = get_api_key_kube_hops_serving_secret(username, uid)
+        expect(secret).to be_nil
+
+        admin_update_user(id, {status: "ACTIVATED_ACCOUNT"})
+        secret = get_api_key_kube_hops_serving_secret(username, uid)
+        expect(secret).not_to be_nil
+        expect(secret).to include("data")
+        expect(secret["data"]).to include("apiKey")
+        secret = get_api_key_kube_project_serving_secret(@project[:projectname], username)
+        expect(secret).not_to be_nil
+        expect(secret).to include("data")
+        expect(secret["data"]).to include("apiKey")
+      end
+
+      it "should remove user from kube config map when user's status changes to other than activated" do
+        if !kfserving_installed
+          skip "This test only runs with KFServing installed"
+        end
+        id = user[:uid]
+        username = user[:username]
+
+        admin_update_user(id, {status: "ACTIVATED_ACCOUNT"})
+        expect_status(200)
+        cm = get_users_kube_config_map()
+        expect(cm).not_to be_empty
+        expect(cm).to include("data")
+        expect(cm["data"]).to include(username)
+
+        admin_update_user(id, {status: "DEACTIVATED_ACCOUNT"})
+        cm = get_users_kube_config_map()
+        expect(cm).not_to be_empty
+        expect(cm).to include("data")
+        expect(cm["data"]).not_to include(username)
+      end
+
+      it "should delete serving api key when user's status changes to other than activated" do
+        if !kfserving_installed
+          skip "This test only runs with KFServing installed"
+        end
+        id = user[:uid]
+        username = user[:username]
+        uid = user[:uid]
+
+        admin_update_user(id, {status: "ACTIVATED_ACCOUNT"})
+        expect_status(200)
+        secret = get_api_key_kube_hops_serving_secret(username, uid)
+        expect(secret).not_to be_nil
+        expect(secret).to include("data")
+        expect(secret["data"]).to include("apiKey")
+
+        admin_update_user(id, {status: "DEACTIVATED_ACCOUNT"})
+        secret = get_api_key_kube_hops_serving_secret(username, uid)
+        expect(secret).to be_nil
+      end
+
       it "updates user's max num projects by id" do
         id = user[:uid]
         data = {maxNumProjects: 77}
@@ -170,6 +290,35 @@ describe "On #{ENV['OS']}" do
         expect(json_body[:status]).to be == 2
         expect(json_body[:password]).to be_nil
       end
+      it "should add new activated user to kube config map" do
+        if !kfserving_installed
+          skip "This test only runs with KFServing installed"
+        end
+        register_user_as_admin("#{random_id}@email.com", "name", "last", password: "Pass123", maxNumProjects: "5",
+                               status: "ACTIVATED_ACCOUNT")
+        expect_status(201)
+        username = json_body[:username]
+        cm = get_users_kube_config_map()
+        expect(cm).not_to be_empty
+        expect(cm).to include("data")
+        expect(cm["data"]).to include(username)
+        roles = get_roles(json_body[:email])
+        expect(cm["data"][username]).to eq roles.join(",")
+      end
+      it "should create serving api key for a new activated user" do
+        if !kfserving_installed
+          skip "This test only runs with KFServing installed"
+        end
+        register_user_as_admin("#{random_id}@email.com", "name", "last", password: "Pass123", maxNumProjects: "5",
+                                       status: "ACTIVATED_ACCOUNT")
+        expect_status(201)
+        username = json_body[:username]
+        uid = json_body[:uid]
+        secret = get_api_key_kube_hops_serving_secret(username, uid)
+        expect(secret).not_to be_nil
+        expect(secret).to include("data")
+        expect(secret["data"]).to include("apiKey")
+      end
       it "should register new user with no password" do
         register_user_as_admin("#{random_id}@email.com", "name", "last", maxNumProjects: "5", status: "ACTIVATED_ACCOUNT")
         expect_status(201)
@@ -191,6 +340,30 @@ describe "On #{ENV['OS']}" do
         expect(json_body[:status]).to be == 7
         expect(json_body[:password]).not_to be_nil
       end
+      it "should not add new non-activated user without status to kube config map" do
+        if !kfserving_installed
+          skip "This test only runs with KFServing installed"
+        end
+        register_user_as_admin("#{random_id}@email.com", "name", "last")
+        expect_status(201)
+        username = json_body[:username]
+        cm = get_users_kube_config_map()
+        expect(cm).not_to be_empty
+        expect(cm).to include("data")
+        expect(cm["data"]).not_to include(username)
+      end
+      it "should not create serving api key for a non-activated new user" do
+        if !kfserving_installed
+          skip "This test only runs with KFServing installed"
+        end
+        register_user_as_admin("#{random_id}@email.com", "name", "last")
+        expect_status(201)
+        username = json_body[:username]
+        uid = json_body[:uid]
+        secret = get_api_key_kube_hops_serving_secret(username, uid)
+        expect(secret).to be_nil
+      end
+
       it "should fail to register new user with no name" do
         register_user_as_admin("#{random_id}@email.com", "", "")
         expect_status(400)
@@ -200,6 +373,42 @@ describe "On #{ENV['OS']}" do
         admin_delete_user(newUser[:uid])
         expect_status_details(204)
       end
+      it "should remove deleted user from kube config map" do
+        if !kfserving_installed
+          skip "This test only runs with KFServing installed"
+        end
+        register_user_as_admin("#{random_id}@email.com", "name", "last", maxNumProjects: "5", status: "ACTIVATED_ACCOUNT")
+        newUser = json_body
+        username = newUser[:username]
+        cm = get_users_kube_config_map()
+        expect(cm).not_to be_empty
+        expect(cm).to include("data")
+        expect(cm["data"]).to include(username)
+
+        admin_delete_user(newUser[:id])
+        expect_status_details(204)
+        cm = get_users_kube_config_map()
+        expect(cm).not_to be_empty
+        expect(cm).to include("data")
+        expect(cm["data"]).not_to include(username)
+      end
+
+      it "should remove serving api key when deleting a user" do
+        if !kfserving_installed
+          skip "This test only runs with KFServing installed"
+        end
+        register_user_as_admin("#{random_id}@email.com", "name", "last", maxNumProjects: "5", status: "ACTIVATED_ACCOUNT")
+        newUser = json_body
+        username = newUser[:username]
+        uid = newUser[:uid]
+        secret = get_api_key_kube_hops_serving_secret(username, uid)
+        expect(secret).not_to be_nil
+        admin_delete_user(newUser[:id])
+        expect_status_details(204)
+        secret = get_api_key_kube_hops_serving_secret(username, uid)
+        expect(secret).to be_nil
+      end
+
       it "should fail to delete user with project" do
         newUser = create_user_with_role("HOPS_USER")
         create_session(newUser[:email], "Pass123")

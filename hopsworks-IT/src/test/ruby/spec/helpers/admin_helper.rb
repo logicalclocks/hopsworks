@@ -77,4 +77,27 @@ module AdminHelper
     end
   end
 
+  def get_users_kube_config_map()
+    namespace = "hops-system"
+    cm_name = namespace + "--users"
+    cm = nil
+    kube_user = Variables.find_by(id: "kube_user").value
+    cmd = "sudo su #{kube_user} /bin/bash -c \"kubectl get cm #{cm_name} --namespace=#{namespace} -o=json\""
+    Open3.popen3(cmd) do |_, stdout, _, wait_thr|
+      cm = stdout.read
+    end
+    if !cm.empty?
+      cm = JSON.parse(cm)
+    end
+    cm
+  end
+
+  def add_user_role(uid, role)
+    put "#{ENV['HOPSWORKS_TESTING']}/test/user/#{uid}/addRole?role=#{role}"
+  end
+
+  def remove_user_role(uid, role)
+    put "#{ENV['HOPSWORKS_TESTING']}/test/user/#{uid}/removeRole?role=#{role}"
+  end
+
 end

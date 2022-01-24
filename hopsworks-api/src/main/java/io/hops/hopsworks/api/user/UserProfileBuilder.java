@@ -19,6 +19,7 @@ import io.hops.hopsworks.api.jwt.JWTHelper;
 import io.hops.hopsworks.common.dao.user.BbcGroupFacade;
 import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.dao.user.security.audit.AccountAuditFacade;
+import io.hops.hopsworks.common.user.UserAccountHandler;
 import io.hops.hopsworks.common.user.UsersController;
 import io.hops.hopsworks.exceptions.ServiceException;
 import io.hops.hopsworks.exceptions.UserException;
@@ -32,6 +33,9 @@ import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.servlet.http.HttpServletRequest;
+import javax.enterprise.inject.Any;
+import javax.enterprise.inject.Instance;
+import javax.inject.Inject;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -52,6 +56,9 @@ public class UserProfileBuilder {
   private JWTHelper jwtHelper;
   @EJB
   private AccountAuditFacade accountAuditFacade;
+  @Inject
+  @Any
+  private Instance<UserAccountHandler> userAccountHandlers;
 
   private Users accept(Integer userId, Users newUser) throws UserException, ServiceException {
     Users u = usersController.getUserById(userId);
@@ -67,6 +74,7 @@ public class UserProfileBuilder {
     u.setStatus(UserAccountStatus.ACTIVATED_ACCOUNT);
     u.setBbcGroupCollection(groups);
     u = userFacade.update(u);
+    UserAccountHandler.runUserAccountUpdateHandlers(userAccountHandlers, u); // run user update handlers
     usersController.sendConfirmationMail(u);
     return u;
   }
@@ -119,6 +127,7 @@ public class UserProfileBuilder {
     Users u = usersController.getUserById(userId);
     u.setStatus(UserAccountStatus.SPAM_ACCOUNT);
     u = userFacade.update(u);
+    UserAccountHandler.runUserAccountUpdateHandlers(userAccountHandlers, u); // run user update handlers
     usersController.sendRejectionEmail(u);
     return u;
   }
@@ -179,6 +188,10 @@ public class UserProfileBuilder {
       u.setMaxNumProjects(newUser.getMaxNumProjects());
     }
     u = userFacade.update(u);
+    
+    // run user update handlers
+    UserAccountHandler.runUserAccountUpdateHandlers(userAccountHandlers, u);
+    
     return new UserProfileDTO(u);
   }
 }
