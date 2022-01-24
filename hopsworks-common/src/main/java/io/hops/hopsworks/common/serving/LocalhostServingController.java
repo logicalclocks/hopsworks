@@ -84,7 +84,8 @@ public class LocalhostServingController implements ServingController {
    * @return a list of ServingWrapper DTOs with metadata of the servings
    */
   @Override
-  public List<ServingWrapper> getServings(Project project, String modelNameFilter, ServingStatusEnum statusFilter) {
+  public List<ServingWrapper> getServings(Project project, String modelNameFilter, ServingStatusEnum statusFilter)
+      throws ServingException {
     List<Serving> servingList;
     if(Strings.isNullOrEmpty(modelNameFilter)) {
       servingList = servingFacade.findForProject(project);
