@@ -16,6 +16,7 @@
 
 package io.hops.hopsworks.common.featurestore.tag;
 
+import io.hops.hopsworks.common.tags.AttachTagResult;
 import io.hops.hopsworks.exceptions.DatasetException;
 import io.hops.hopsworks.exceptions.SchematizedTagException;
 import io.hops.hopsworks.exceptions.MetadataException;

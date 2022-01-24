@@ -41,6 +41,9 @@ public class ModelExpansions implements Expansions {
       case INPUTEXAMPLE:
         resourceRequest = new ModelInputExampleResourceRequest(name, queryParam);
         break;
+      case TAGS:
+        resourceRequest = new ResourceRequest(name);
+        break;
       default:
         break;
     }

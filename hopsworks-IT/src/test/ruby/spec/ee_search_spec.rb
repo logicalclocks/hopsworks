@@ -30,10 +30,10 @@ describe "On #{ENV['OS']}" do
 
       with_admin_session
       @tags.each do |tag|
-        create_featurestore_tag(tag, string_schema)
+        create_tag(tag, string_schema)
       end
       @large_tags.each do |tag|
-        create_featurestore_tag(tag, string_schema)
+        create_tag(tag, string_schema)
       end
       reset_session
     end
@@ -41,10 +41,10 @@ describe "On #{ENV['OS']}" do
     after :all do
       with_admin_session
       @tags.each do |tag|
-        delete_featurestore_tag(tag)
+        delete_tag(tag)
       end
       @large_tags.each do |tag|
-        delete_featurestore_tag(tag)
+        delete_tag(tag)
       end
       reset_session
     end
@@ -328,8 +328,8 @@ describe "On #{ENV['OS']}" do
     # it 'three projects with shared content - force cleanup tags' do
     #   clean_all_test_projects(spec: "search")
     #   with_admin_session
-    #   delete_featurestore_tag_checked("search_base_tag")
-    #   delete_featurestore_tag_checked("search_schematized_tag")
+    #   delete_tag_checked("search_base_tag")
+    #   delete_tag_checked("search_schematized_tag")
     #   reset_session
     # end
     #if any test in the next context fails due to tag setup, uncomment above cleanup test and run it manually
@@ -366,8 +366,8 @@ describe "On #{ENV['OS']}" do
         @search_tags = Array.new(2)
         @search_tags[0] = "search_base_tag"
         @search_tags[1] = "search_schematized_tag"
-        create_featurestore_tag_checked(@search_tags[0], string_schema)
-        create_featurestore_tag_checked(@search_tags[1], schema)
+        create_tag_checked(@search_tags[0], string_schema)
+        create_tag_checked(@search_tags[1], schema)
         reset_session
       end
       after :all do
@@ -379,8 +379,8 @@ describe "On #{ENV['OS']}" do
         delete_project(@project2)
 
         with_admin_session
-        delete_featurestore_tag_checked(@search_tags[0])
-        delete_featurestore_tag_checked(@search_tags[1])
+        delete_tag_checked(@search_tags[0])
+        delete_tag_checked(@search_tags[1])
         reset_session
       end
       def schema()

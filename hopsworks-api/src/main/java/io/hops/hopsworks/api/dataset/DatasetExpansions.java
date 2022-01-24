@@ -39,6 +39,7 @@ public class DatasetExpansions implements Expansions {
       case TAGS:
       case USERS:
         resourceRequest = new ResourceRequest(name);
+        break;
       default:
         break;
     }

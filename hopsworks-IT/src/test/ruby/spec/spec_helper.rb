@@ -99,7 +99,7 @@ RSpec.configure do |config|
   config.include ModelRegistryHelper
   config.include ElasticHelper
   config.include AuditHelper
-  config.include FeatureStoreTagHelper
+  config.include TagHelper
   config.include SearchHelper
   config.include XAttrHelper
   config.include EpipeHelper

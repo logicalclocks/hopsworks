@@ -80,14 +80,14 @@ describe "On #{ENV['OS']}" do
     before :all do
       with_admin_session
       @pre_setup_tags.each do |tag|
-        create_featurestore_tag(tag, string_schema)
+        create_tag(tag, string_schema)
       end
       reset_session
     end
     after :all do
       with_admin_session
       @pre_setup_tags.each do |tag|
-        delete_featurestore_tag_checked(tag)
+        delete_tag_checked(tag)
       end
       reset_session
     end
@@ -97,11 +97,11 @@ describe "On #{ENV['OS']}" do
       end
 
       it "should fail to get all tags" do
-        get_featurestore_tags
+        get_tags
         expect_status_details(401)
       end
       it "should fail to get a tag by name" do
-        get_featurestore_tag(@pre_setup_tags[0])
+        get_tag(@pre_setup_tags[0])
         expect_status_details(401)
       end
     end
@@ -111,19 +111,19 @@ describe "On #{ENV['OS']}" do
         with_valid_session
       end
       it "should get all tags" do
-        get_featurestore_tags
+        get_tags
         expect_status_details(200)
       end
       it "should get a tag by name" do
-        get_featurestore_tag(@pre_setup_tags[0])
+        get_tag(@pre_setup_tags[0])
         expect_status_details(200)
       end
       it "should fail to create tags" do
-        create_featurestore_tag(@setup_tags[0], string_schema)
+        create_tag(@setup_tags[0], string_schema)
         expect_status_details(403)
       end
       it "should fail to delete a tag" do
-        delete_featurestore_tag(@pre_setup_tags[0])
+        delete_tag(@pre_setup_tags[0])
         expect_status_details(403)
       end
     end
@@ -134,71 +134,71 @@ describe "On #{ENV['OS']}" do
       end
 
       it "should get all tags" do
-        get_featurestore_tags
+        get_tags
         expect_status_details(200)
       end
       it "should get a tag by name" do
-        get_featurestore_tag(@pre_setup_tags[0])
+        get_tag(@pre_setup_tags[0])
         expect_status_details(200)
       end
       it "should fail to get a non existent tag" do
-        get_featurestore_tag(@setup_tags[0])
+        get_tag(@setup_tags[0])
         expect_status_details(404, error_code: 370000)
       end
       it "should create/delete a tag" do
         begin
-          create_featurestore_tag(@setup_tags[1], string_schema)
+          create_tag(@setup_tags[1], string_schema)
           expect_status_details(201)
-          get_featurestore_tag(@setup_tags[1])
+          get_tag(@setup_tags[1])
           expect_status_details(200)
         ensure
           #should not exist, but making sure it is empty
-          delete_featurestore_tag_checked(@setup_tags[1])
-          delete_featurestore_tag_checked(@setup_tags[2])
+          delete_tag_checked(@setup_tags[1])
+          delete_tag_checked(@setup_tags[2])
         end
-        get_featurestore_tag(@setup_tags[1])
+        get_tag(@setup_tags[1])
         expect_status_details(404, error_code: 370000)
-        get_featurestore_tag(@setup_tags[2])
+        get_tag(@setup_tags[2])
         expect_status_details(404, error_code: 370000)
       end
       it "should fail to create a tag with an existing name" do
-        create_featurestore_tag(@pre_setup_tags[0], string_schema)
+        create_tag(@pre_setup_tags[0], string_schema)
         expect_status_details(409, error_code: 370003)
       end
       it "should fail to create a tag with space in name" do
-        create_featurestore_tag(@setup_custom_tag[0], string_schema)
+        create_tag(@setup_custom_tag[0], string_schema)
         expect_status_details(400, error_code: 370004)
       end
       it "should create max name tag(63)" do
         begin
-          create_featurestore_tag(@setup_custom_tag[1], string_schema)
+          create_tag(@setup_custom_tag[1], string_schema)
           expect_status_details(201)
         ensure
-          delete_featurestore_tag_checked(@setup_custom_tag[1])
+          delete_tag_checked(@setup_custom_tag[1])
         end
       end
       it "should create/delete schematized tag" do
         begin
-          create_featurestore_tag(@setup_tags[6], schema)
+          create_tag(@setup_tags[6], schema)
           expect_status_details(201)
         ensure
-          delete_featurestore_tag_checked(@setup_tags[6])
+          delete_tag_checked(@setup_tags[6])
         end
       end
       it 'should fail to create schematized tag with malformed json' do
         begin
-          create_featurestore_tag(@setup_tags[7], "{")
+          create_tag(@setup_tags[7], "{")
           expect_status_details(400, error_code: 370001)
         ensure
-          delete_featurestore_tag_checked(@setup_tags[7])
+          delete_tag_checked(@setup_tags[7])
         end
       end
       it 'should fail to create schematized tag with malformed schema' do
         begin
-          create_featurestore_tag(@setup_tags[8], malformed_schema)
+          create_tag(@setup_tags[8], malformed_schema)
           expect_status_details(400, error_code: 370001)
         ensure
-          delete_featurestore_tag_checked(@setup_tags[8])
+          delete_tag_checked(@setup_tags[8])
         end
       end
     end
@@ -207,10 +207,10 @@ describe "On #{ENV['OS']}" do
     before :all do
       with_admin_session
       @pre_tags.each do |tag|
-        create_featurestore_tag(tag, string_schema)
+        create_tag(tag, string_schema)
       end
       @pre_schematized_tags.each do |tag|
-        create_featurestore_tag(tag, schema)
+        create_tag(tag, schema)
       end
       reset_session
     end
@@ -220,10 +220,10 @@ describe "On #{ENV['OS']}" do
 
       with_admin_session
       @pre_tags.each do |tag|
-        delete_featurestore_tag_checked(tag)
+        delete_tag_checked(tag)
       end
       @pre_schematized_tags.each do |tag|
-        delete_featurestore_tag_checked(tag)
+        delete_tag_checked(tag)
       end
       reset_session
     end
@@ -507,6 +507,163 @@ describe "On #{ENV['OS']}" do
       end
     end
   end
+  describe "Model registry tag" do
+    before :all do
+      with_admin_session
+      @pre_tags.each do |tag|
+        create_tag(tag, string_schema)
+      end
+      @pre_schematized_tags.each do |tag|
+        create_tag(tag, schema)
+      end
+      reset_session
+    end
+    after :all do
+      delete projects that might contain these tags
+      clean_all_test_projects(spec: "ee_tags")
+
+      with_admin_session
+      @pre_tags.each do |tag|
+        delete_tag_checked(tag)
+      end
+      @pre_schematized_tags.each do |tag|
+        delete_tag_checked(tag)
+      end
+      reset_session
+    end
+
+    context "tagging - same project" do
+      before :all do
+        reset_session
+        with_valid_session
+        @project = create_project
+      end
+      after :all do
+        delete_project(@project)
+        reset_session
+      end
+
+      context "models datasets" do
+        it "should not get any tags" do
+          json_result = create_model(@project, @project.projectname, @project.id, "model", 1)
+          parsed_json = JSON.parse(json_result)
+          json_result = get_model_tags(@project.id, @project.id, parsed_json["id"])
+          expect_status_details(200)
+          tags_json = JSON.parse(json_result)
+          expect(tags_json["items"]).to eq(nil)
+        end
+        it "should not be able to attach tags which are not defined" do
+          json_result = create_model(@project, @project.projectname, @project.id, "model", 2)
+          parsed_json = JSON.parse(json_result)
+          add_model_tag(@project.id, @project.id, parsed_json["id"], @tags[0], "nothing")
+          expect_status_details(404, error_code: 370000)
+        end
+        it "should not be able to get tag which is not attached" do
+          json_result = create_model(@project, @project.projectname, @project.id, "model", 3)
+          model_json = JSON.parse(json_result)
+          get_model_tag(@project.id, @project.id, model_json["id"], @pre_tags[0])
+          expect_status_details(404, error_code: 370002)
+        end
+        it "should be able to attach/delete tags which are defined" do
+          json_result = create_model(@project, @project.projectname, @project.id, "model", 4)
+          model_json = JSON.parse(json_result)
+          add_model_tag_checked(@project.id, @project.id, model_json["id"], @pre_tags[0], "daily")
+          json_result = get_model_tags(@project.id, @project.id, model_json["id"])
+          expect_status_details(200)
+          tags_json = JSON.parse(json_result)
+          expect(tags_json["items"][0]["name"]).to eq(@pre_tags[0])
+          expect(tags_json["items"][0]["value"]).to eq("daily")
+
+          delete_model_tag_checked(@project.id, @project.id, model_json["id"], @pre_tags[0])
+          json_result = get_model_tags(@project.id, @project.id, model_json["id"])
+          expect_status_details(200)
+          tags_json = JSON.parse(json_result)
+          expect(tags_json["items"]).to eq(nil)
+        end
+        it "should be able to attach many tags (>13500) to model" do
+          json_result = create_model(@project, @project.projectname, @project.id, "model", 5)
+          model_json = JSON.parse(json_result)
+          tag_val = "x" * 1000
+          add_model_tag_checked(@project[:id], @project[:id], model_json["id"], @pre_tags[0], tag_val)
+          14.times do |i|
+            add_model_tag_checked(@project[:id], @project[:id], model_json["id"], @pre_tags[i+1], tag_val)
+          end
+        end
+        it "should be able to attach large tags (>13500) to model" do
+          json_result = create_model(@project, @project.projectname, @project.id, "model", 6)
+          model_json = JSON.parse(json_result)
+          tag_val = "x" * 20000
+          add_model_tag_checked(@project[:id], @project[:id], model_json["id"], @pre_tags[0], tag_val)
+        end
+        it "should be able to add schematized tag to a model" do
+          json_result = create_model(@project, @project.projectname, @project.id, "model", 7)
+          model_json = JSON.parse(json_result)
+          tag_val = schematized_tag_val
+          add_model_tag_checked(@project[:id], @project[:id], model_json["id"], @pre_schematized_tags[0], tag_val)
+        end
+        it "should not be able to add bad schematized tag to a model" do
+          json_result = create_model(@project, @project.projectname, @project.id, "model", 8)
+          model_json = JSON.parse(json_result)
+          tag_val = bad_schematized_tag_val
+          add_model_tag(@project[:id], @project[:id], model_json["id"], @pre_schematized_tags[0], tag_val)
+          expect_status_details(400, error_code: 370005)
+        end
+      end
+    end
+    context "shared" do
+      before :all do
+        @user1_params = {email: "user1_#{random_id}@email.com", first_name: "User", last_name: "1", password: "Pass123"}
+        @user1 = create_user_with_role(@user1_params, "HOPS_ADMIN")
+        pp "user email: #{@user1[:email]}" if defined?(@debugOpt) && @debugOpt
+
+        create_session(@user1[:email], @user1_params[:password])
+        @project1 = create_project
+        pp @project1[:projectname] if defined?(@debugOpt) && @debugOpt
+
+        @user2_params = {email: "user2_#{random_id}@email.com", first_name: "User", last_name: "2", password: "Pass123"}
+        @user2 = create_user_with_role(@user2_params, "HOPS_ADMIN")
+        pp "user email: #{@user2[:email]}" if defined?(@debugOpt) && @debugOpt
+
+        create_session(@user2[:email], @user2_params[:password])
+        @project2 = create_project
+        pp @project2[:projectname] if defined?(@debugOpt) && @debugOpt
+
+        create_session(@user1_params[:email], @user1_params[:password])
+        share_dataset_checked(@project1, "Models", @project2[:projectname], datasetType: "DATASET")
+        create_session(@user2_params[:email], @user2_params[:password])
+        accept_dataset_checked(@project2, "#{@project1[:projectname]}::Models", datasetType: "DATASET")
+      end
+      after :all do
+        create_session(@user1[:email], @user1_params[:password])
+        delete_project(@project1)
+        create_session(@user2[:email], @user2_params[:password])
+        delete_project(@project2)
+      end
+      context 'model' do
+        it "should be able to attach/read schematized tag to shared model" do
+          create_session(@user1[:email], @user1_params[:password])
+          json_result = create_model(@project1, @project1[:projectname], @project1[:id], "model", 1)
+          model = JSON.parse(json_result)
+          tag_val = schematized_tag_val
+
+          create_session(@user2[:email], @user2_params[:password])
+          add_model_tag_checked(@project2[:id], @project1[:id], model["id"], @pre_schematized_tags[0], tag_val)
+          get_model_tags_checked(@project2[:id], @project1[:id], model["id"])
+          tags = json_body
+          expect(tags[:count]).to eq(1)
+          tag = tags[:items].select do |item| item[:name] == @pre_schematized_tags[0] end
+          expect(tag.length).to eq(1)
+
+          create_session(@user1[:email], @user1_params[:password])
+          get_model_tags_checked(@project1[:id], @project1[:id], model["id"])
+          tags = json_body
+          expect(tags[:count]).to eq(1)
+          tag = tags[:items].select do |item| item[:name] == @pre_schematized_tags[0] end
+          expect(tag.length).to eq(1)
+        end
+      end
+    end
+  end
   describe "Dataset tag" do
     def clean_projects()
       #delete projects that might contain these tags
@@ -514,20 +671,20 @@ describe "On #{ENV['OS']}" do
 
       with_admin_session
       @pre_tags.each do |tag|
-        delete_featurestore_tag_checked(tag)
+        delete_tag_checked(tag)
       end
       @pre_schematized_tags.each do |tag|
-        delete_featurestore_tag_checked(tag)
+        delete_tag_checked(tag)
       end
       reset_session
     end
     before :all do
       with_admin_session
       @pre_tags.each do |tag|
-        create_featurestore_tag(tag, string_schema)
+        create_tag(tag, string_schema)
       end
       @pre_schematized_tags.each do |tag|
-        create_featurestore_tag(tag, schema)
+        create_tag(tag, schema)
       end
       reset_session
     end

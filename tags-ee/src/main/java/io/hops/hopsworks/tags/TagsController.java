@@ -4,12 +4,12 @@
 package io.hops.hopsworks.tags;
 
 import io.hops.hopsworks.common.dao.featurestore.tag.TagSchemasFacade;
-import io.hops.hopsworks.common.featurestore.tag.AttachTagResult;
 import io.hops.hopsworks.common.featurestore.xattr.dto.FeaturestoreXAttrsConstants;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.hdfs.DistributedFsService;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
 import io.hops.hopsworks.common.hdfs.xattrs.XAttrsController;
+import io.hops.hopsworks.common.tags.AttachTagResult;
 import io.hops.hopsworks.exceptions.DatasetException;
 import io.hops.hopsworks.exceptions.MetadataException;
 import io.hops.hopsworks.exceptions.SchematizedTagException;

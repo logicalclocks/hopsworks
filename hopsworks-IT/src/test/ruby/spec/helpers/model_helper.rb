@@ -38,6 +38,33 @@ module ModelHelper
     expect_status(201)
   end
 
+  def create_model(project, model_project_name, registry_id, name, version)
+
+    get_dataset_stat(project, "Models/" + name)
+    if response.code == 400
+      create_dir_checked(project, "Models/" + name)
+    end
+    create_dir_checked(project, "Models/" + name + "/" + version.to_s)
+
+    json_data = {
+        id: name + "_" + version.to_s,
+        name: name,
+        version: version,
+        project_name: model_project_name
+    }
+
+    json_data = json_data.to_json
+
+    create_model_endpoint = "#{ENV['HOPSWORKS_API']}/project/" + project.id.to_s + "/modelregistries/" + registry_id.to_s + "/models/" + name + "_" + version.to_s
+    json_result = put create_model_endpoint, json_data
+    expect_status_details(201)
+
+    wait_result = epipe_wait_on_provenance(repeat: 5)
+    expect(wait_result["success"]).to be(true), wait_result["msg"]
+
+    return json_result
+  end
+
   def get_models(project_id, query)
     get "#{ENV['HOPSWORKS_API']}/project/#{project_id}/modelregistries/#{project_id}/models#{query}"
   end

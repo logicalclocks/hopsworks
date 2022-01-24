@@ -30,7 +30,7 @@ describe "On #{ENV['OS']}" do
         end
         with_admin_session
         @tags.each do |tag|
-          create_featurestore_tag(tag, string_schema)
+          create_tag(tag, string_schema)
         end
         reset_session
         create_session(@usermail1, "Pass123")
@@ -40,7 +40,7 @@ describe "On #{ENV['OS']}" do
       after :all do
         with_admin_session
         @tags.each do |tag|
-          delete_featurestore_tag(tag)
+          delete_tag(tag)
         end
         reset_session
         create_session(@usermail1, "Pass123")
