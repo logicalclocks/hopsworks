@@ -79,9 +79,9 @@ severity and receiver as explained in the section above.
   <figcaption>Create Feature Validation Alert for New Feature group</figcaption>
 </figure>
 
-To create alerts for an existing feature group go to the feature group overview page. On the bottom of the page you 
-will find the _Alerts_ card. Click on **Add an alert** and choose the trigger, receiver and severity as 
-explained in the [Global Alerts](#global-alerts) section above.
+To create alerts for an existing feature group go to the feature group overview page (by clicking on the magnifying glass 
+icon). On the bottom of the page you will find the _Alerts_ card. Click on **Add an alert** and choose the 
+trigger, receiver and severity as explained in the [Global Alerts](#global-alerts) section above.
 
 <figure>
   <a href="../../assets/images/alerts/create-fg-alert-existing.png">
