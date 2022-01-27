@@ -43,7 +43,8 @@ select group(s) you want to give access to. Here we will allow everyone in the o
   </figure>
 
 After the application is created go back to _Applications_ and click on the application you just created. Use the
-_Okta domain_ (_Connection URL_), _client id_ and _client secret_ generated for your app in the [client registration](./create-client.md) in Hopsworks.
+_Okta domain_ (_Connection URL_), _client id_ and _client secret_ generated for your app in the 
+[Identity Provider registration](./create-client.md) in Hopsworks.
 
   <figure>
     <a  href="../../../assets/images/admin/oauth2/overview.png">
@@ -55,4 +56,4 @@ _Okta domain_ (_Connection URL_), _client id_ and _client secret_ generated for 
 !!! note
 
     When copying the domain in the figure above make sure to add the url scheme (http:// or https://) when using it 
-    in the _Connection URL_ in the [client registration form](./create-client.md).
+    in the _Connection URL_ in the [Identity Provider registration form](./create-client.md).
