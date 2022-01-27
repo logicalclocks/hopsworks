@@ -67,7 +67,7 @@ By first choosing the PagerDuty integration type:
 - _global event routing (routing_key)_: when using PagerDuty integration type `Events API v2`.
 - _service (service_key)_: when using PagerDuty integration type `Prometheus`.
 
-Then adding the Service key/Routing key of the receiver/s. PagerDuty provides 
+Then adding the Service key/Routing key of the receiver(s). PagerDuty provides 
 [documentation](https://www.pagerduty.com/docs/guides/prometheus-integration-guide/) on how to integrate with 
 Prometheus' Alert manager.
 

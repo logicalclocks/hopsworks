@@ -28,14 +28,14 @@ receiver**. Receivers can also be created by an admin when configuring channels 
 </figure>
 
 - Channel: the channel through which the receiver will get alerts.
-- Receiver name: a unique name that will represent the receiver/s.
+- Receiver name: a unique name that will represent the receiver(s).
 - Slack channels/users: channel names or users. This filed will be Emails if the channel chosen is email and service 
   key or routing key if pagerduty is the channel.
 
 !!!note
    
     Receivers created inside a project can only be used by alerts created in that project. Receivers created by an 
-    admin on the otherhand can be used by any alert created in the cluster.
+    admin on the other hand can be used by any alert created in the cluster.
 
 ## Global Alerts
 
