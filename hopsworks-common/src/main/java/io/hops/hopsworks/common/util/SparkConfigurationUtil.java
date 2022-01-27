@@ -41,7 +41,8 @@ public class SparkConfigurationUtil extends ConfigurationUtil {
                                                     Settings settings, String hdfsUser,
                                                     Map<String, String> extraJavaOptions,
                                                     String kafkaBrokersString, String hopsworksRestEndpoint,
-                                                    ServiceDiscoveryController serviceDiscoveryController)
+                                                    ServiceDiscoveryController serviceDiscoveryController,
+                                                    Map<String, String> extraEnvVars)
           throws IOException, ServiceDiscoveryException, JobException {
     SparkJobConfiguration sparkJobConfiguration = (SparkJobConfiguration)jobConfiguration;
 
@@ -184,6 +185,11 @@ public class SparkConfigurationUtil extends ConfigurationUtil {
     addToSparkEnvironment(sparkProps, "SERVICE_DISCOVERY_DOMAIN", settings.getServiceDiscoveryDomain(),
         HopsUtils.IGNORE);
 
+    // add extra env vars
+    if (extraEnvVars != null) {
+      extraEnvVars.forEach((key, value) -> addToSparkEnvironment(sparkProps, key, value, HopsUtils.IGNORE));
+    }
+    
     addLibHdfsOpts(userSparkProperties, settings, sparkProps, sparkJobConfiguration);
   
     //If DynamicExecutors are not enabled, set the user defined number

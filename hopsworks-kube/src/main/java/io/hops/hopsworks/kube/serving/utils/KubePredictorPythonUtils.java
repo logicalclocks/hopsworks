@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021, Logical Clocks AB. All rights reserved
+ * Copyright (C) 2022, Logical Clocks AB. All rights reserved
  */
 
 package io.hops.hopsworks.kube.serving.utils;
@@ -60,51 +60,40 @@ import static io.hops.hopsworks.common.util.Settings.HOPS_USERNAME_SEPARATOR;
 
 @Stateless
 @TransactionAttribute(TransactionAttributeType.NEVER)
-public class KubeSkLearnServingUtils {
+public class KubePredictorPythonUtils {
   
-  private final static String SERVING_ID = "SERVING_ID";
-  private final static String ARTIFACT_PATH = "ARTIFACT_PATH";
-  private final static String DEFAULT_FS = "DEFAULT_FS";
-  private final static String PROJECT_NAME = "PROJECT_NAME";
-  private final static String MODEL_NAME = "MODEL_NAME";
+  private final String ARTIFACT_VERSION = "ARTIFACT_VERSION";
+  private final String ARTIFACT_PATH = "ARTIFACT_PATH";
+  private final String DEFAULT_FS = "DEFAULT_FS";
+  private final String PROJECT_NAME = "PROJECT_NAME";
   
-  @EJB
-  private KubeClientService kubeClientService;
   @EJB
   private Settings settings;
+  @EJB
+  private KubeClientService kubeClientService;
   @EJB
   private ServiceDiscoveryController serviceDiscoveryController;
   @EJB
   private KubeProjectConfigMaps kubeProjectConfigMaps;
   @EJB
   private ProjectUtils projectUtils;
-  
-  public String getDeploymentName(String servingId) {
-    return "sklrn-serving-dep-" + servingId;
-  }
-  
-  public String getServiceName(String servingId) {
-    return "sklrn-serving-ser-" + servingId;
-  }
-  
-  private ObjectMeta getDeploymentMetadata(String servingId) {
-    return new ObjectMetaBuilder()
-      .withName(getDeploymentName(servingId))
-      .build();
-  }
+  @EJB
+  private KubeArtifactUtils kubeArtifactUtils;
+  @EJB
+  private KubePredictorUtils kubePredictorUtils;
+
+  public String getDeploymentName(String servingId) { return "python-server-" + servingId; }
   
   public String getDeploymentPath(String verb) {
     StringBuilder pathBuilder = new StringBuilder().append("/").append(verb.replaceFirst(":", ""));
     return pathBuilder.toString();
   }
   
-  private ObjectMeta getServiceMetadata(String servingId) {
-    return new ObjectMetaBuilder()
-      .withName(getServiceName(servingId))
-      .build();
+  public String getServiceName(String servingId) {
+    return "python-server-" + servingId;
   }
   
-  public Deployment buildServingDeployment(Project project, Users user,
+  public Deployment buildDeployment(Project project, Users user,
     Serving serving) throws ServiceDiscoveryException {
     
     String servingIdStr = String.valueOf(serving.getId());
@@ -116,12 +105,16 @@ public class KubeSkLearnServingUtils {
       buildResourceRequirements(serving.getDockerResourcesConfig());
     
     List<EnvVar> servingEnv = new ArrayList<>();
-    servingEnv.add(new EnvVarBuilder().withName(SERVING_ID).withValue(servingIdStr).build());
+    servingEnv.add(new EnvVarBuilder().withName(KubePredictorServerUtils.SERVING_ID).withValue(servingIdStr).build());
     servingEnv.add(new EnvVarBuilder().withName(PROJECT_NAME).withValue(project.getName()).build());
-    servingEnv.add(new EnvVarBuilder().withName(MODEL_NAME).withValue(serving.getName().toLowerCase()).build());
+    servingEnv.add(new EnvVarBuilder().withName(KubePredictorServerUtils.MODEL_NAME)
+      .withValue(serving.getName().toLowerCase()).build());
+    servingEnv.add(new EnvVarBuilder().withName(ARTIFACT_VERSION)
+      .withValue(String.valueOf(serving.getArtifactVersion())).build());
     servingEnv.add(new EnvVarBuilder().withName(ARTIFACT_PATH)
       .withValue("hdfs://" + serviceDiscoveryController.constructServiceFQDN(
-        ServiceDiscoveryController.HopsworksService.RPC_NAMENODE) + "/" + serving.getModelPath()).build());
+        ServiceDiscoveryController.HopsworksService.RPC_NAMENODE) +"/"+ kubeArtifactUtils.getArtifactFilePath(serving))
+      .build());
     servingEnv.add(new EnvVarBuilder().withName(DEFAULT_FS)
       .withValue("hdfs://" + serviceDiscoveryController.constructServiceFQDN(
         ServiceDiscoveryController.HopsworksService.RPC_NAMENODE)).build());
@@ -129,9 +122,11 @@ public class KubeSkLearnServingUtils {
     servingEnv.add(new EnvVarBuilder().withName("TLS").withValue(String.valueOf(settings.getHopsRpcTls())).build());
     servingEnv.add(new EnvVarBuilder().withName("HADOOP_PROXY_USER").withValue(projectUser).build());
     servingEnv.add(new EnvVarBuilder().withName("HDFS_USER").withValue(projectUser).build());
-    servingEnv.add(new EnvVarBuilder().withName("PYTHONPATH").withValue(
-      settings.getAnacondaProjectDir() + "/bin/python").build());
-    servingEnv.add(new EnvVarBuilder().withName("SCRIPT_NAME").withValue("predict.py").build());
+    servingEnv.add(new EnvVarBuilder().withName("CONDAPATH").withValue(settings.getAnacondaProjectDir()).build());
+    servingEnv.add(new EnvVarBuilder().withName("PYTHONPATH")
+      .withValue(settings.getAnacondaProjectDir() + "/bin/python").build());
+    servingEnv.add(new EnvVarBuilder().withName("SCRIPT_NAME")
+      .withValue(kubePredictorUtils.getPredictorFileName(serving, true)).build());
     servingEnv.add(new EnvVarBuilder().withName("IS_KUBE").withValue("true").build());
     SecretVolumeSource secretVolume = new SecretVolumeSourceBuilder()
       .withSecretName(kubeClientService.getKubeDeploymentName(project, user))
@@ -162,18 +157,18 @@ public class KubeSkLearnServingUtils {
       .withMountPath(hadoopConfDir)
       .build();
     
-    Container skLeanContainer = new ContainerBuilder()
-      .withName("sklearn")
+    Container pythonServerContainer = new ContainerBuilder()
+      .withName("python-server")
       .withImage(projectUtils.getFullDockerImageName(project, false))
       .withImagePullPolicy(settings.getKubeImagePullPolicy())
       .withEnv(servingEnv)
       .withSecurityContext(new SecurityContextBuilder().withRunAsUser(settings.getYarnAppUID()).build())
-      .withCommand("sklearn_serving-launcher.sh")
+      .withCommand("python-server-launcher.sh")
       .withVolumeMounts(secretMount, hadoopConfEnvMount)
       .withResources(resourceRequirements)
       .build();
     
-    List<Container> containerList = Arrays.asList(skLeanContainer);
+    List<Container> containerList = Arrays.asList(pythonServerContainer);
     
     LabelSelector labelSelector = new LabelSelectorBuilder()
       .addToMatchLabels("model", servingIdStr)
@@ -208,7 +203,7 @@ public class KubeSkLearnServingUtils {
       .build();
   }
   
-  public Service buildServingService(Serving serving) {
+  public Service buildService(Serving serving) {
     String servingIdStr = String.valueOf(serving.getId());
     
     Map<String, String> selector = new HashMap<>();
@@ -229,6 +224,18 @@ public class KubeSkLearnServingUtils {
     return new ServiceBuilder()
       .withMetadata(getServiceMetadata(servingIdStr))
       .withSpec(tfServingServiceSpec)
+      .build();
+  }
+  
+  private ObjectMeta getDeploymentMetadata(String servingId) {
+    return new ObjectMetaBuilder()
+      .withName(getDeploymentName(servingId))
+      .build();
+  }
+  
+  private ObjectMeta getServiceMetadata(String servingId) {
+    return new ObjectMetaBuilder()
+      .withName(getServiceName(servingId))
       .build();
   }
 }

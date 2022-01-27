@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021, Logical Clocks AB. All rights reserved
+ * Copyright (C) 2022, Logical Clocks AB. All rights reserved
  */
 
 package io.hops.hopsworks.kube.serving.utils;
@@ -12,7 +12,6 @@ import io.hops.hopsworks.exceptions.DatasetException;
 import io.hops.hopsworks.persistence.entity.dataset.DatasetType;
 import io.hops.hopsworks.persistence.entity.hdfs.inode.Inode;
 import io.hops.hopsworks.persistence.entity.project.Project;
-import io.hops.hopsworks.persistence.entity.serving.ModelServer;
 import io.hops.hopsworks.persistence.entity.serving.Serving;
 import io.hops.hopsworks.persistence.entity.user.Users;
 import org.apache.hadoop.fs.Path;
@@ -38,10 +37,10 @@ public class KubeModelUtils {
   
   public void copyModelFilesToArtifactDir(Project project, Users user, Serving serving) throws DatasetException {
     // Build folder paths
-    Path modelVersionDirFullPath = datasetHelper.getDatasetPath(project, getModelVersionDirPath(serving),
+    Path modelVersionDirFullPath = datasetHelper.getDatasetPath(project, serving.getModelVersionPath(),
       DatasetType.DATASET).getFullPath();
     String modelVersionDirPath = modelVersionDirFullPath.toUri().getRawPath();
-    String artifactRootDirPath = kubeArtifactUtils.getArtifactRootDirPath(serving, modelVersionDirPath);
+    String artifactRootDirPath = kubeArtifactUtils.getArtifactRootDirPath(modelVersionDirPath);
     String artifactDirPath = kubeArtifactUtils.getArtifactDirPath(serving, artifactRootDirPath);
     
     // Iterate over model files
@@ -61,21 +60,5 @@ public class KubeModelUtils {
       datasetController.copy(project, user, sourceFilePath.getFullPath(), destFilePath.getFullPath(),
         sourceFilePath.getDataset(), destFilePath.getDataset());
     }
-  }
-  
-  public String getModelVersionDirPath(Serving serving) {
-    // Format: /Project/<project>/Models/<model>/<version>
-    String path = serving.getModelPath();
-    if (serving.getModelServer() == ModelServer.FLASK) {
-      // If model server is FLASK, the model path points to a python script
-      path = path.substring(0, path.lastIndexOf("/"));
-    } else if (serving.getModelServer() == ModelServer.TENSORFLOW_SERVING) {
-      if (!path.endsWith("/")) {
-        path += "/";
-      }
-      path += serving.getModelVersion();
-    }
-    
-    return path;
   }
 }

@@ -11,11 +11,10 @@ import io.hops.common.Pair;
 import io.hops.hopsworks.common.serving.inference.InferenceHttpClient;
 import io.hops.hopsworks.exceptions.InferenceException;
 import io.hops.hopsworks.kube.common.KubeClientService;
+import io.hops.hopsworks.kube.serving.utils.KubePredictorServerUtils;
+import io.hops.hopsworks.kube.serving.utils.KubePredictorUtils;
 import io.hops.hopsworks.kube.serving.utils.KubeServingUtils;
-import io.hops.hopsworks.kube.serving.utils.KubeSkLearnServingUtils;
-import io.hops.hopsworks.kube.serving.utils.KubeTfServingUtils;
 import io.hops.hopsworks.persistence.entity.serving.Serving;
-import io.hops.hopsworks.persistence.entity.serving.ModelServer;
 import io.hops.hopsworks.restutils.RESTCodes;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpPost;
@@ -40,9 +39,7 @@ public class KubeDeploymentInferenceController {
   @EJB
   private InferenceHttpClient inferenceHttpClient;
   @EJB
-  private KubeTfServingUtils kubeTfServingUtils;
-  @EJB
-  private KubeSkLearnServingUtils kubeSkLearnServingUtils;
+  private KubePredictorUtils kubePredictorUtils;
   @EJB
   private KubeServingUtils kubeServingUtils;
   @EJB
@@ -65,14 +62,8 @@ public class KubeDeploymentInferenceController {
       throw new InferenceException(RESTCodes.InferenceErrorCode.MISSING_VERB, Level.FINE);
     }
     
-    String serviceName;
-    if (serving.getModelServer() == ModelServer.TENSORFLOW_SERVING) {
-      serviceName = kubeTfServingUtils.getServiceName(serving.getId().toString());
-    } else if (serving.getModelServer() == ModelServer.FLASK) {
-      serviceName = kubeSkLearnServingUtils.getServiceName(serving.getId().toString());
-    } else {
-      throw new UnsupportedOperationException("Model server not supported in kube deployment servings.");
-    }
+    KubePredictorServerUtils predictorServerUtils = kubePredictorUtils.getPredictorServerUtils(serving);
+    String serviceName = predictorServerUtils.getServiceName(serving.getId().toString());
     
     // Get node port
     Service serviceInfo;

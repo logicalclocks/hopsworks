@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021, Logical Clocks AB. All rights reserved
+ * Copyright (C) 2022, Logical Clocks AB. All rights reserved
  */
 
 package io.hops.hopsworks.kube.serving.utils;
@@ -65,12 +65,10 @@ import static io.hops.hopsworks.common.util.Settings.HOPS_USERNAME_SEPARATOR;
 
 @Stateless
 @TransactionAttribute(TransactionAttributeType.NEVER)
-public class KubeTfServingUtils {
+public class KubePredictorTensorflowUtils extends KubePredictorServerUtils {
   
-  private static final Logger LOGGER = Logger.getLogger(KubeTfServingUtils.class.getName());
+  private static final Logger LOGGER = Logger.getLogger(KubePredictorTensorflowUtils.class.getName());
   
-  private final static String SERVING_ID = "SERVING_ID";
-  private final static String MODEL_NAME = "MODEL_NAME";
   private final static String MODEL_DIR = "MODEL_DIR";
   private final static String MODEL_VERSION = "MODEL_VERSION";
   
@@ -85,22 +83,12 @@ public class KubeTfServingUtils {
   @EJB
   private KubeProjectConfigMaps kubeProjectConfigMaps;
   
-  private ObjectMeta getDeploymentMetadata(String servingId) {
-    return new ObjectMetaBuilder()
-      .withName(getDeploymentName(servingId))
-      .build();
-  }
-  
-  private ObjectMeta getServiceMetadata(String servingId) {
-    return new ObjectMetaBuilder()
-      .withName(getServiceName(servingId))
-      .build();
-  }
-  
+  @Override
   public String getDeploymentName(String servingId) {
     return "tf-serving-dep-" + servingId;
   }
   
+  @Override
   public String getDeploymentPath(String servingName, Integer modelVersion, String verb) {
     StringBuilder pathBuilder = new StringBuilder()
       .append("/v1/models/")
@@ -115,10 +103,12 @@ public class KubeTfServingUtils {
     return pathBuilder.toString();
   }
   
+  @Override
   public String getServiceName(String servingId) {
     return "tf-serving-ser-" + servingId;
   }
   
+  @Override
   public Deployment buildServingDeployment(Project project, Users user,
     Serving serving) throws ServiceDiscoveryException {
     
@@ -234,6 +224,7 @@ public class KubeTfServingUtils {
       .build();
   }
   
+  @Override
   public Service buildServingService(Serving serving) {
     String servingIdStr = String.valueOf(serving.getId());
     
@@ -258,11 +249,12 @@ public class KubeTfServingUtils {
       .build();
   }
   
-  public JSONObject buildInferenceServicePredictor(String artifactPath, Integer minReplicas,
-    InferenceLogging inferenceLogging, DockerResourcesConfiguration dockerResourcesConfiguration) {
+  @Override
+  public JSONObject buildInferenceServicePredictor(Project project, Users user, Serving serving, String artifactPath) {
+    InferenceLogging inferenceLogging = serving.getInferenceLogging();
     
     // Tensorflow spec
-    JSONObject tensorflow = getInferenceServiceTensorflow(artifactPath, dockerResourcesConfiguration);
+    JSONObject tensorflow = getInferenceServiceTensorflow(artifactPath, serving.getDockerResourcesConfig());
     
     // Inference logging
     boolean logging = inferenceLogging != null;
@@ -283,7 +275,7 @@ public class KubeTfServingUtils {
     // Predictor
     JSONObject inferenceServicePredictorConfig = new JSONObject() {
       {
-        put("minReplicas", minReplicas);
+        put("minReplicas", serving.getInstances());
         put("logger", !logging ? null : new JSONObject() {
           {
             put("mode", finalLoggerMode);
@@ -298,6 +290,18 @@ public class KubeTfServingUtils {
     LOGGER.log(Level.SEVERE, inferenceServicePredictorConfig.toString(2));
     
     return inferenceServicePredictorConfig;
+  }
+  
+  private ObjectMeta getDeploymentMetadata(String servingId) {
+    return new ObjectMetaBuilder()
+      .withName(getDeploymentName(servingId))
+      .build();
+  }
+  
+  private ObjectMeta getServiceMetadata(String servingId) {
+    return new ObjectMetaBuilder()
+      .withName(getServiceName(servingId))
+      .build();
   }
   
   private JSONObject getInferenceServiceTensorflow(String artifactPath,

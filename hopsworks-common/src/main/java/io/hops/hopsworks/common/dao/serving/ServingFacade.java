@@ -142,10 +142,6 @@ public class ServingFacade {
       dbServing.setBatchingEnabled(newServing.isBatchingEnabled());
     }
   
-    if (newServing.getModelServer() != null && newServing.getModelServer() != dbServing.getModelServer()) {
-      throw new ServingException(RESTCodes.ServingErrorCode.UPDATE_SERVING_TYPE_ERROR, Level.FINE);
-    }
-  
     if (newServing.getServingTool() != null) {
       dbServing.setServingTool(newServing.getServingTool());
     }
@@ -157,6 +153,7 @@ public class ServingFacade {
   
     dbServing.setDeployed(newServing.getDeployed());
     dbServing.setRevision(newServing.getRevision());
+    dbServing.setPredictor(newServing.getPredictor());
     dbServing.setTransformer(newServing.getTransformer());
     
     return dbServing;

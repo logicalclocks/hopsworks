@@ -1,6 +1,6 @@
 /*
  * This file is part of Hopsworks
- * Copyright (C) 2018, Logical Clocks AB. All rights reserved
+ * Copyright (C) 2022, Logical Clocks AB. All rights reserved
  *
  * Hopsworks is free software: you can redistribute it and/or modify it under the terms of
  * the GNU Affero General Public License as published by the Free Software Foundation,
@@ -48,6 +48,7 @@ public class ServingView implements Serializable {
   private String modelName;
   private Integer modelVersion;
   private Integer artifactVersion;
+  private String predictor;
   private String transformer;
   private Integer availableInstances;
   private Integer availableTransformerInstances;
@@ -83,6 +84,7 @@ public class ServingView implements Serializable {
     this.id = servingWrapper.getServing().getId();
     this.name = servingWrapper.getServing().getName();
     this.modelPath = servingWrapper.getServing().getModelPath();
+    this.predictor = servingWrapper.getServing().getPredictor();
     this.transformer = servingWrapper.getServing().getTransformer();
     this.modelName = servingWrapper.getServing().getModelName();
     this.modelVersion = servingWrapper.getServing().getModelVersion();
@@ -126,15 +128,19 @@ public class ServingView implements Serializable {
   public void setName(String name) {
     this.name = name;
   }
-
-  @ApiModelProperty(value = "HOPSFS directory path containing the model (tf) or python script (sklearn)")
-  public String getModelPath() {
-    return modelPath;
+  
+  @ApiModelProperty(value = "HOPSFS directory path containing the model")
+  public String getModelPath() { return modelPath; }
+  public void setModelPath(String modelPath) { this.modelPath = modelPath; }
+  
+  @ApiModelProperty(value = "Predictor script name")
+  public String getPredictor() {
+    return predictor;
   }
-  public void setModelPath(String modelPath) {
-    this.modelPath = modelPath;
+  public void setPredictor(String predictor) {
+    this.predictor = predictor;
   }
-
+  
   @ApiModelProperty(value = "Transformer script name")
   public String getTransformer() {
     return transformer;
@@ -266,7 +272,7 @@ public class ServingView implements Serializable {
   public InferenceLogging getInferenceLogging() { return inferenceLogging; }
   public void setInferenceLogging(InferenceLogging inferenceLogging) { this.inferenceLogging = inferenceLogging; }
   
-  @ApiModelProperty(value = "Model server, tf serving or flask")
+  @ApiModelProperty(value = "Model server, Tensorflow Serving or Python")
   public ModelServer getModelServer() {
     return modelServer;
   }
@@ -318,9 +324,9 @@ public class ServingView implements Serializable {
   public ServingWrapper getServingWrapper() {
 
     ServingWrapper servingWrapper = new ServingWrapper(
-        new Serving(id, name, modelPath, transformer, modelName, modelVersion, artifactVersion, requestedInstances,
-          requestedTransformerInstances, batchingEnabled, modelServer, servingTool, inferenceLogging,
-          predictorResourceConfig));
+        new Serving(id, name, modelPath, predictor, transformer, modelName, modelVersion, artifactVersion,
+          requestedInstances, requestedTransformerInstances, batchingEnabled, modelServer, servingTool,
+          inferenceLogging, predictorResourceConfig));
     servingWrapper.setKafkaTopicDTO(kafkaTopicDTO);
 
     return servingWrapper;

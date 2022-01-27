@@ -32,7 +32,8 @@ public class FlinkConfigurationUtil extends ConfigurationUtil {
                                                     Settings settings, String hdfsUser, Map<String, String>
                                                     extraJavaOptions, String kafkaBrokersString,
                                                     String hopsworksRestEndpoint, 
-                                                    ServiceDiscoveryController serviceDiscoveryController)
+                                                    ServiceDiscoveryController serviceDiscoveryController,
+                                                    Map<String, String> extraEnvVars)
       throws IOException {
     FlinkJobConfiguration flinkJobConfiguration = (FlinkJobConfiguration) jobConfiguration;
     

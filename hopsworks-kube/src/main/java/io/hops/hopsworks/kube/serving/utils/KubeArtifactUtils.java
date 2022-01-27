@@ -53,6 +53,8 @@ public class KubeArtifactUtils {
   @EJB
   private KubeModelUtils kubeModelUtils;
   @EJB
+  private KubePredictorUtils kubePredictorUtils;
+  @EJB
   private KubeTransformerUtils kubeTransformerUtils;
   
   public boolean createArtifact(Project project, Users user, Serving serving) throws DatasetException,
@@ -81,6 +83,9 @@ public class KubeArtifactUtils {
     
     // Copy assets into artifact version folder
     kubeModelUtils.copyModelFilesToArtifactDir(project, user, serving);
+    if (serving.getPredictor() != null) {
+      kubePredictorUtils.copyPredictorToArtifactDir(project, user, serving);
+    }
     if (serving.getTransformer() != null) {
       kubeTransformerUtils.copyTransformerToArtifactDir(project, user, serving);
     }
@@ -156,7 +161,7 @@ public class KubeArtifactUtils {
   }
   
   public Boolean isSharedArtifact(Serving serving) {
-    return serving.getTransformer() == null;
+    return serving.getPredictor() == null && serving.getTransformer() == null;
   }
   
   public Integer getNextArtifactVersion(Serving serving) {
@@ -165,10 +170,10 @@ public class KubeArtifactUtils {
   }
   
   public String getArtifactRootDirPath(Serving serving) {
-    return getArtifactRootDirPath(serving, kubeModelUtils.getModelVersionDirPath(serving));
+    return getArtifactRootDirPath(serving.getModelVersionPath());
   }
   
-  public String getArtifactRootDirPath(Serving serving, String modelVersionDirPath) {
+  public String getArtifactRootDirPath(String modelVersionDirPath) {
     // Format: /Project/<project>/Models/<model>/<version>/artifacts
     return modelVersionDirPath + "/" + ARTIFACT_DIR;
   }

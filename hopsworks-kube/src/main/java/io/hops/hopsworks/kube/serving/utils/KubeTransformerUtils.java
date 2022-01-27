@@ -20,7 +20,6 @@ import io.fabric8.kubernetes.api.model.VolumeMountBuilder;
 import io.hops.hopsworks.common.dataset.DatasetController;
 import io.hops.hopsworks.common.dataset.util.DatasetHelper;
 import io.hops.hopsworks.common.dataset.util.DatasetPath;
-import io.hops.hopsworks.common.hdfs.DistributedFsService;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
 import io.hops.hopsworks.common.hdfs.Utils;
 import io.hops.hopsworks.common.hdfs.inode.InodeController;
@@ -34,7 +33,6 @@ import io.hops.hopsworks.kube.common.KubeClientService;
 import io.hops.hopsworks.kube.project.KubeProjectConfigMaps;
 import io.hops.hopsworks.kube.security.KubeApiKeyUtils;
 import io.hops.hopsworks.persistence.entity.dataset.DatasetType;
-import io.hops.hopsworks.persistence.entity.hdfs.inode.Inode;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.serving.Serving;
 import io.hops.hopsworks.persistence.entity.user.Users;
@@ -71,8 +69,6 @@ public class KubeTransformerUtils {
   private DatasetHelper datasetHelper;
   @EJB
   private ServiceDiscoveryController serviceDiscoveryController;
-  @EJB
-  private DistributedFsService dfs;
   @EJB
   private HdfsUsersController hdfsUsersController;
   @EJB
@@ -114,7 +110,7 @@ public class KubeTransformerUtils {
       String[] splits = transformerPath.split("/");
       name = splits[splits.length - 1];
     }
-    if (serving.getTransformer().endsWith(IPYNB_EXTENSION)) {
+    if (transformerPath.endsWith(IPYNB_EXTENSION)) {
       name = name.replace(IPYNB_EXTENSION, PY_EXTENSION);
     }
     return prefix ? TRANSFORMER_NAME_PREFIX + name : name;
@@ -124,17 +120,6 @@ public class KubeTransformerUtils {
     String artifactDirPath = kubeArtifactUtils.getArtifactDirPath(serving);
     String transformerFileName = getTransformerFileName(serving, true);
     return artifactDirPath + "/" + transformerFileName;
-  }
-  
-  public String findTransformerFile(Serving serving) {
-    String artifactDirPath = kubeArtifactUtils.getArtifactDirPath(serving);
-    for (Inode inode : dfs.getChildInodes(artifactDirPath)) {
-      String name = inode.getInodePK().getName();
-      if (name.startsWith(TRANSFORMER_NAME_PREFIX) && !inode.isDir()) {
-        return name;
-      }
-    }
-    return null;
   }
   
   public JSONObject buildInferenceServiceTransformer(Project project, Users user, Serving serving)
@@ -170,7 +155,7 @@ public class KubeTransformerUtils {
       .withName("transformer")
       .withImage(projectUtils.getFullDockerImageName(project, false))
       .withImagePullPolicy(settings.getKubeImagePullPolicy())
-      .withCommand("transformer-launcher.sh")
+      .withCommand("kfserving-component-launcher.sh")
       .withEnv(envVars)
       .withVolumeMounts(volumeMounts)
       .build();

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2020, Logical Clocks AB. All rights reserved
+ * Copyright (C) 2022, Logical Clocks AB. All rights reserved
  */
 
 package io.hops.hopsworks.kube.serving;
@@ -17,8 +17,9 @@ import io.hops.hopsworks.kube.common.KubeClientService;
 import io.hops.hopsworks.kube.common.KubeIstioClientService;
 import io.hops.hopsworks.kube.common.KubeKfServingClientService;
 import io.hops.hopsworks.kube.serving.utils.KubeArtifactUtils;
+import io.hops.hopsworks.kube.serving.utils.KubePredictorServerUtils;
+import io.hops.hopsworks.kube.serving.utils.KubePredictorUtils;
 import io.hops.hopsworks.kube.serving.utils.KubeServingUtils;
-import io.hops.hopsworks.kube.serving.utils.KubeTfServingUtils;
 import io.hops.hopsworks.kube.serving.utils.KubeTransformerUtils;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.serving.Serving;
@@ -31,7 +32,6 @@ import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
-import javax.ws.rs.NotSupportedException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -52,11 +52,11 @@ public class KubeKfServingController extends KubeToolServingController {
   @EJB
   private KubeServingUtils kubeServingUtils;
   @EJB
-  private KubeTfServingUtils kubeTfServingUtils;
-  @EJB
   private KubeTransformerUtils kubeTransformerUtils;
   @EJB
   private KubeArtifactUtils kubeArtifactUtils;
+  @EJB
+  private KubePredictorUtils kubePredictorUtils;
   
   @Override
   public void createInstance(Project project, Users user, Serving serving) throws ServingException {
@@ -224,15 +224,13 @@ public class KubeKfServingController extends KubeToolServingController {
     
     String artifactPath = kubeArtifactUtils.getArtifactFilePath(serving);
     JSONObject pipeline = new JSONObject();
-    
+  
+    KubePredictorServerUtils predictorServerUtils = kubePredictorUtils.getPredictorServerUtils(serving);
     JSONObject predictor;
-    switch (serving.getModelServer()) {
-      case TENSORFLOW_SERVING:
-        predictor = kubeTfServingUtils.buildInferenceServicePredictor(artifactPath, serving.getInstances(),
-          serving.getInferenceLogging(), serving.getDockerResourcesConfig());
-        break;
-      default:
-        throw new NotSupportedException("Model server not supported for KFServing inference services");
+    try {
+      predictor = predictorServerUtils.buildInferenceServicePredictor(project, user, serving, artifactPath);
+    } catch (ServiceDiscoveryException e) {
+      throw new ServingException(RESTCodes.ServingErrorCode.LIFECYCLEERRORINT, Level.INFO, null, e.getMessage(), e);
     }
   
     // Add node selectors if defined

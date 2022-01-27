@@ -24,6 +24,6 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 public enum ModelServer {
   @JsonProperty("TENSORFLOW_SERVING")
   TENSORFLOW_SERVING,
-  @JsonProperty("FLASK")
-  FLASK, //Note: since we map enum directly to the DB the order is important!
+  @JsonProperty("PYTHON")
+  PYTHON, //Note: since we map enum directly to the DB the order is important!
 }

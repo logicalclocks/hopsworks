@@ -1,6 +1,6 @@
 /*
  * This file is part of Hopsworks
- * Copyright (C) 2019, Logical Clocks AB. All rights reserved
+ * Copyright (C) 2022, Logical Clocks AB. All rights reserved
  *
  * Hopsworks is free software: you can redistribute it and/or modify it under the terms of
  * the GNU Affero General Public License as published by the Free Software Foundation,
@@ -17,6 +17,8 @@
 package io.hops.hopsworks.api.serving;
 
 import com.google.common.base.Strings;
+import io.hops.hopsworks.common.dao.kafka.ProjectTopicsFacade;
+import io.hops.hopsworks.common.dao.kafka.TopicDTO;
 import io.hops.hopsworks.common.dao.serving.ServingFacade;
 import io.hops.hopsworks.common.hdfs.Utils;
 import io.hops.hopsworks.common.hdfs.inode.InodeController;
@@ -24,24 +26,30 @@ import io.hops.hopsworks.common.serving.ServingWrapper;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.ServingException;
 import io.hops.hopsworks.persistence.entity.hdfs.inode.Inode;
+import io.hops.hopsworks.persistence.entity.kafka.ProjectTopics;
+import io.hops.hopsworks.persistence.entity.kafka.schemas.Subjects;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.serving.InferenceLogging;
 import io.hops.hopsworks.persistence.entity.serving.ModelServer;
 import io.hops.hopsworks.persistence.entity.serving.Serving;
 import io.hops.hopsworks.persistence.entity.serving.ServingTool;
 import io.hops.hopsworks.restutils.RESTCodes;
+import org.apache.commons.lang.StringUtils;
 
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import java.io.FileNotFoundException;
 import java.io.UnsupportedEncodingException;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
-import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * Utility functions for the serving service, contains common functionality between Localhost and K8 serving
@@ -54,7 +62,12 @@ public class ServingUtil {
   @EJB
   private InodeController inodeController;
   @EJB
+  private ProjectTopicsFacade projectTopicsFacade;
+  @EJB
   private Settings settings;
+  
+  private final HashSet<String> MODEL_FILE_EXTS =
+    Stream.of(".joblib", ".pkl", ".pickle").collect(Collectors.toCollection(HashSet::new));
   
   /**
    * Validates user input before creating or updating a serving. This method contains the common input validation
@@ -72,105 +85,121 @@ public class ServingUtil {
       UnsupportedEncodingException {
     
     Serving serving = servingWrapper.getServing();
+    Serving dbServing = servingFacade.findByProjectAndName(project, serving.getName());
     
-    // Check that the modelName is present
+    setDefaultRequestBatching(serving);
+    
+    // NOTE: order matters
+    validateServingName(serving, dbServing);
+    validateModelPath(serving);
+    validateModelVersion(serving);
+    validateModelServer(serving, dbServing);
+    validateModelName(serving);
+    validateServingTool(serving);
+    validateArtifact(project, serving);
+    validatePredictor(project, serving);
+    validateTransformer(project, serving);
+    validateKafkaTopicSchema(project, serving, servingWrapper.getKafkaTopicDTO());
+    validateInferenceLogging(serving, servingWrapper.getKafkaTopicDTO());
+    validateInstances(serving);
+  }
+  
+  private void validateServingName(Serving serving, Serving dbServing) throws ServingException {
     if (Strings.isNullOrEmpty(serving.getName())) {
       throw new IllegalArgumentException("Serving name not provided");
     } else if (serving.getName().contains(" ")) {
       throw new IllegalArgumentException("Serving name cannot contain spaces");
     }
-    // Check that the modelPath is present
-    if (Strings.isNullOrEmpty(serving.getModelPath())) {
-      throw new IllegalArgumentException("Model path not provided");
-    } else {
-      // Format model path (e.g remove duplicated '/')
-      String formattedModelPath = Paths.get(serving.getModelPath()).toString();
-      serving.setModelPath(formattedModelPath);
-    }
-    if (serving.getModelVersion() == null) {
-      throw new IllegalArgumentException("Model version not provided");
-    }
-    if (serving.getInstances() == null) {
-      throw new IllegalArgumentException("Number of instances not provided");
-    }
+  
     // Check for duplicated entries
-    checkDuplicates(project, servingWrapper);
-    //Validate that serving name follows allowed regex as required by the InferenceResource to use it as a
-    //Rest Endpoint
+    if (dbServing != null && !dbServing.getId().equals(serving.getId())) {
+      // There is already an entry for this project
+      throw new ServingException(RESTCodes.ServingErrorCode.DUPLICATEDENTRY, Level.FINE);
+    }
+  
+    // Check serving name follows allowed regex as required by the InferenceResource to use it as a
+    // REST endpoint
     Pattern urlPattern = Pattern.compile("[a-zA-Z0-9]+");
     Matcher urlMatcher = urlPattern.matcher(serving.getName());
     if(!urlMatcher.matches()){
       throw new IllegalArgumentException("Serving name must follow regex: \"[a-zA-Z0-9]+\"");
     }
-    // Model-server-specific validations
+  }
+  
+  private void validateModelPath(Serving serving) {
+    if (serving.getModelPath() == null) {
+      throw new IllegalArgumentException("Model path not provided");
+    }
+  }
+  
+  private void validateModelVersion(Serving serving) {
+    if (serving.getModelVersion() == null) {
+      throw new IllegalArgumentException("Model version not provided");
+    }
+  }
+  
+  private void validateModelServer(Serving serving, Serving dbServing) throws ServingException {
     if (serving.getModelServer() == null) {
       throw new IllegalArgumentException("Model server not provided or unsupported");
     }
+    if (dbServing != null && dbServing.getModelServer() != serving.getModelServer()) {
+      throw new ServingException(RESTCodes.ServingErrorCode.UPDATE_MODEL_SERVER_ERROR, Level.SEVERE);
+    }
     if (serving.getModelServer() == ModelServer.TENSORFLOW_SERVING) {
-      validateTfUserInput(serving);
+      validateTFServingUserInput(serving); // e.g., tensorflow standard path, batching
     }
-    if (serving.getModelServer() == ModelServer.FLASK) {
-      validatePythonUserInput(project, serving.getModelPath());
+    if (serving.getModelServer() == ModelServer.PYTHON) {
+      validatePythonUserInput(serving); // e.g., model file, python scripts
     }
+  }
   
+  private void validateModelName(Serving serving) {
+    if (serving.getModelName() == null) {
+      // after validating the model path
+      setDefaultModelName(serving);
+    } else {
+      if (!serving.getModelPath().endsWith(serving.getModelName())) {
+        throw new IllegalArgumentException("Model name does not match the model path");
+      }
+    }
+  }
+  
+  private void validateServingTool(Serving serving) throws ServingException {
     // Serving-tool-specific validations
     if (serving.getServingTool() == null) {
       throw new IllegalArgumentException("Serving tool not provided or invalid");
     }
     if (serving.getServingTool() == ServingTool.KFSERVING) {
-      validateKFServingUserInput(project, serving);
+      validateKFServingUserInput(serving);
     }
-  
-    // Transformer
-    if (serving.getTransformer() != null) {
-      validateTransformer(project, serving);
-    }
-    
-    // Artifact validations
-    validateArtifact(serving);
-    
-    // Inference logging validations
-    validateInferenceLogging(servingWrapper, serving);
-    
-    // Requested instances
-    validateInstances(serving);
   }
   
-  /**
-   * Validates user data for creating or updating a Python Serving Instance
-   *
-   * @param project the project to create the serving for
-   * @param scriptPath path to python script
-   * @throws ServingException if the python environment is not activated for the project
-   * @throws java.io.UnsupportedEncodingException
-   */
-  public void validatePythonUserInput(Project project, String scriptPath) throws ServingException,
-    UnsupportedEncodingException {
-    validatePythonUserInput(project, scriptPath, Collections.singletonList(".py"));
+  private void validateInstances(Serving serving) {
+    if (serving.getInstances() == null) {
+      throw new IllegalArgumentException("Number of instances not provided");
+    }
+    if (serving.getTransformer() == null && serving.getTransformerInstances() != null) {
+      throw new IllegalArgumentException("Number of transformer instances cannot be provided without a transformer");
+    }
+    if (serving.getTransformer() != null && serving.getTransformerInstances() == null) {
+      throw new IllegalArgumentException("Number of transformer instances must be provided with a transformer");
+    }
   }
-  
-  /**
-   * Validates user data for creating or updating a Python Serving Instance
-   *
-   * @param project the project to create the serving for
-   * @param scriptPath path to python script
-   * @param extensions file extensions
-   * @throws ServingException if the python environment is not activated for the project
-   * @throws java.io.UnsupportedEncodingException
-   */
-  public void validatePythonUserInput(Project project, String scriptPath, List<String> extensions)
-    throws ServingException, UnsupportedEncodingException {
 
+  private void validatePythonScript(Project project, String scriptPath, List<String> extensions, String component)
+    throws ServingException, UnsupportedEncodingException {
+    
     // Check that the script name is valid and exists
     String scriptName = Utils.getFileName(scriptPath);
     if(extensions.stream().noneMatch(scriptName::endsWith)){
-      throw new IllegalArgumentException("Script name should be a valid python script name: " + String.join(", ",
-        extensions));
+      throw new IllegalArgumentException(StringUtils.capitalize(component) + " script should have a valid extension: "
+        + String.join(", ", extensions));
     }
     //Remove hdfs:// if it is in the path
     String hdfsPath = Utils.prepPath(scriptPath);
     if(!inodeController.existsPath(hdfsPath)){
-      throw new IllegalArgumentException("Python script path does not exist in HDFS");
+      throw new ServingException(RESTCodes.ServingErrorCode.SCRIPT_NOT_FOUND, Level.SEVERE,
+        StringUtils.capitalize(component) + " script does not exist");
     }
     
     //Check that python environment is activated
@@ -179,32 +208,73 @@ public class ServingUtil {
     }
   }
   
-  /**
-   * Validates user data for creating or updating a KFServing Serving Instance
-   *
-   * @param serving the user data
-   * @throws ServingException
-   */
-  public void validateKFServingUserInput(Project project, Serving serving)
-    throws ServingException, UnsupportedEncodingException {
+  private void validateTFServingUserInput(Serving serving) throws ServingException {
+    // Check that the model path respects the TensorFlow standard
+    try {
+      List<Inode> children = inodeController.getChildren(serving.getModelVersionPath());
+      if (children.stream().noneMatch(inode -> inode.getInodePK().getName().equals("variables")) ||
+        children.stream().noneMatch(inode -> inode.getInodePK().getName().contains(".pb"))) {
+        throw new ServingException(RESTCodes.ServingErrorCode.MODEL_FILES_STRUCTURE_NOT_VALID, Level.FINE, "Model " +
+          "path does not respect the Tensorflow standard");
+      }
+    } catch (FileNotFoundException e) {
+      throw new ServingException(RESTCodes.ServingErrorCode.MODEL_PATH_NOT_FOUND, Level.FINE, null);
+    }
+  }
+  
+  private void validatePythonUserInput(Serving serving) throws IllegalArgumentException, ServingException {
+    // Check model files and/or python scripts
+    try {
+      List<Inode> children = inodeController.getChildren(serving.getModelVersionPath());
+      long modelFiles = children.stream().filter(c -> {
+        String name = c.getInodePK().getName();
+        return MODEL_FILE_EXTS.stream().anyMatch(name::endsWith);
+      }).count();
+      if (modelFiles > 1) {
+        // if more than one model file
+        throw new ServingException(RESTCodes.ServingErrorCode.MODEL_FILES_STRUCTURE_NOT_VALID, Level.FINE, "Model " +
+          "path cannot contain more than one model file (i.e., joblib or pickle files)");
+      }
+      if (modelFiles == 0) {
+        // if no model files found
+        if (children.stream().noneMatch(c -> c.getInodePK().getName().endsWith(".py"))) {
+          // and no python script
+          throw new ServingException(RESTCodes.ServingErrorCode.MODEL_FILES_STRUCTURE_NOT_VALID, Level.FINE, "Model" +
+            " path requires either a python script or model file (i.e., joblib or pickle files)");
+        }
+        if (serving.getServingTool() == ServingTool.KFSERVING && serving.getPredictor() == null) {
+          // and KFServing without predictor script selected
+          throw new ServingException(RESTCodes.ServingErrorCode.MODEL_FILES_STRUCTURE_NOT_VALID, Level.FINE,
+            "KFServing deployments without predictor script require a model file");
+        }
+      }
+    } catch (FileNotFoundException e) {
+      throw new ServingException(RESTCodes.ServingErrorCode.MODEL_PATH_NOT_FOUND, Level.FINE, null);
+    }
+    
+    if (serving.isBatchingEnabled()) {
+      throw new ServingException(RESTCodes.ServingErrorCode.REQUEST_BATCHING_NOT_SUPPORTED, Level.SEVERE, "Request " +
+        "batching is not supported in Python deployments");
+    }
+  }
+  
+  private void validateKFServingUserInput(Serving serving)
+    throws ServingException {
     if (!settings.getKubeInstalled()) {
       throw new ServingException(RESTCodes.ServingErrorCode.KUBERNETES_NOT_INSTALLED, Level.SEVERE, "Serving tool not" +
         " supported. KFServing requires Kubernetes to be installed");
     }
-  
+    
     if (!settings.getKubeKFServingInstalled()) {
       throw new ServingException(RESTCodes.ServingErrorCode.KFSERVING_NOT_ENABLED, Level.SEVERE, "Serving tool not " +
         "supported");
     }
     
-    if (serving.getModelServer() == ModelServer.FLASK) {
-      throw new IllegalArgumentException("KFServing not supported for SKLearn models");
+    if (serving.isBatchingEnabled()) {
+      throw new ServingException(RESTCodes.ServingErrorCode.REQUEST_BATCHING_NOT_SUPPORTED, Level.FINE, "Request " +
+        "batching is not supported in KFServing deployments");
     }
     
-    if (serving.isBatchingEnabled()) {
-      throw new IllegalArgumentException("Request batching is not supported in KFServing deployments");
-    }
-  
     // Service name is used as DNS subdomain. It must consist of lower case alphanumeric characters, '-' or '.', and
     // must start and end with an alphanumeric character. (e.g. 'example.com', regex used for validation is '[a-z0-9]
     // ([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*').
@@ -216,131 +286,201 @@ public class ServingUtil {
     }
   }
   
-  /**
-   * Validates user data for creating or updating a Tensorflow Serving Instance
-   *
-   * @param serving the user data
-   * @throws ServingException if the python environment is not activated for the project
-   */
-  public void validateTfUserInput(Serving serving) {
-    // Check that the modelPath respects the TensorFlow standard
-    validateTfModelPath(serving.getModelPath(),
-      serving.getModelVersion());
-    
-    // Check that the batching option has been specified
-    if (serving.isBatchingEnabled() == null) {
-      throw new IllegalArgumentException("Batching is null");
-    }
-  }
-  
-  /**
-   * Validates that the provided model path follows the Tensorflow standard
-   *
-   * @param path the path to validate
-   * @param version the version of the model
-   * @throws IllegalArgumentException
-   */
-  private void validateTfModelPath(String path, Integer version) throws IllegalArgumentException {
-    try {
-      List<Inode> children = inodeController.getChildren(Paths.get(path, version.toString()).toString());
-      
-      if (children.stream().noneMatch(inode -> inode.getInodePK().getName().equals("variables")) ||
-        children.stream().noneMatch(inode -> inode.getInodePK().getName().contains(".pb"))) {
-        throw new IllegalArgumentException("The model path does not respect the TensorFlow standard");
-      }
-    } catch (FileNotFoundException e) {
-      throw new IllegalArgumentException("The model path provided does not exists");
-    }
-  }
-  
-  /**
-   * Check if there is already a serving with the same name as a new/updated serving in the project
-   *
-   * @param project the project to query
-   * @param servingWrapper the serving to compare with the existing servings
-   * @throws ServingException if a duplicate was found in the database
-   */
-  public void checkDuplicates(Project project, ServingWrapper servingWrapper) throws ServingException {
-    Serving serving = servingFacade.findByProjectAndName(project,
-      servingWrapper.getServing().getName());
-    if (serving != null && !serving.getId().equals(servingWrapper.getServing().getId())) {
-      // There is already an entry for this project
-      throw new ServingException(RESTCodes.ServingErrorCode.DUPLICATEDENTRY, Level.FINE);
-    }
-  }
-  
-  private void validateArtifact(Serving serving) throws ServingException, UnsupportedEncodingException {
+  private void validateArtifact(Project project, Serving serving) throws ServingException {
     if (!settings.getKubeInstalled()) {
       // If Kubernetes is not installed
       if (serving.getArtifactVersion() != null) {
+        // and artifact version is not null
         throw new ServingException(RESTCodes.ServingErrorCode.KUBERNETES_NOT_INSTALLED, Level.SEVERE, "Artifacts " +
-          "only supported in Kubernetes or KFServing deployments");
+          "only supported in Kubernetes deployments");
       }
       return; // no more validations needed
     }
-
-    if (serving.getArtifactVersion() != null) {
-      if (serving.getTransformer() != null && serving.getArtifactVersion() == 0) {
-        throw new IllegalArgumentException("Transformers are not supported with MODEL-ONLY artifacts (i.e version 0)");
+    
+    if (serving.getServingTool() == ServingTool.DEFAULT && serving.getModelServer() == ModelServer.TENSORFLOW_SERVING
+      && serving.getArtifactVersion() != null && serving.getArtifactVersion() > 0) {
+      throw new ServingException(RESTCodes.ServingErrorCode.MODEL_ARTIFACT_NOT_VALID, Level.FINE, "Default " +
+        "deployments with Tensorflow Serving only support MODEL-ONLY artifacts");
+    }
+    
+    // get artifact input combination code
+    int artifactInputCode = getArtifactInputCode(serving);
+    
+    boolean newArtifact = serving.getArtifactVersion() == null || serving.getArtifactVersion() == -1;
+    if (serving.getId() == null) { // new serving
+      if (!newArtifact) { // with existing artifact
+        if (serving.getArtifactVersion() == 0) { // MODEL-ONLY artifact version
+          if (artifactInputCode != 0) {
+            throw new ServingException(RESTCodes.ServingErrorCode.MODEL_ARTIFACT_OPERATION_ERROR, Level.FINE,
+              "Predictors and transformers cannot be used in MODEL-ONLY artifacts");
+          }
+        } else { // existing artifact version
+          if (artifactInputCode == 0) {
+            throw new ServingException(RESTCodes.ServingErrorCode.MODEL_ARTIFACT_OPERATION_ERROR, Level.FINE,
+              "Other than MODEL-ONLY artifacts require a predictor or transformer");
+          }
+          if (artifactInputCode != 2) {
+            throw new ServingException(RESTCodes.ServingErrorCode.MODEL_ARTIFACT_OPERATION_ERROR, Level.FINE,
+              "Existing artifacts cannot be modified. To change predictors or transformers, create a new artifact");
+          }
+        }
       }
-      if (serving.getTransformer() == null && serving.getArtifactVersion() > 0) {
-        throw new IllegalArgumentException("Transformer cannot be null for a non-MODEL-ONLY artifact");
+    } else { // update serving
+      if (newArtifact) { // CREATE artifact
+        if (artifactInputCode == 3) {
+          // if one of predictor or transformer is new and the other existing, use the absolute path of the
+          // existing one. This is needed to be able to copy the script into the new artifact.
+          setArtifactAbsolutePaths(project, serving);
+        }
+      } else {
+        if (serving.getArtifactVersion() == 0) { // MODEL-ONLY artifact
+          if (artifactInputCode != 0) {
+            throw new ServingException(RESTCodes.ServingErrorCode.MODEL_ARTIFACT_OPERATION_ERROR, Level.FINE,
+              "Predictors and transformers cannot be used in MODEL-ONLY artifacts");
+          }
+        } else { // existing artifact
+          if (artifactInputCode != 2) {
+            throw new ServingException(RESTCodes.ServingErrorCode.MODEL_ARTIFACT_OPERATION_ERROR, Level.FINE,
+              "Existing artifacts cannot be modified. To change predictors or transformers, create a new artifact");
+          }
+        }
+      }
+    }
+  }
+  
+  private int getArtifactInputCode(Serving serving) {
+    // 0: no pr/tr
+    // 1: at least one new, the rest new or null
+    // 2: at least one existing, the rest existing or null
+    // 3: mixed, one new and the other existing
+    int artifactInputCode = 0;
+    if (serving.getPredictor() == null) {
+      if (serving.getTransformer() != null) {
+        artifactInputCode = serving.getTransformer().contains("/") ? 1 : 2;
+      }
+    } else {
+      artifactInputCode = serving.getPredictor().contains("/") ? 1 : 2;
+      if (serving.getTransformer() != null) {
+        if (serving.getTransformer().contains("/")) {
+          artifactInputCode = artifactInputCode == 1 ? 1 : 3;
+        } else {
+          artifactInputCode = artifactInputCode == 1 ? 3 : 2;
+        }
+      }
+    }
+    return artifactInputCode;
+  }
+  
+  private void setArtifactAbsolutePaths(Project project, Serving serving) {
+    Serving dbServing = servingFacade.findByProjectAndName(project, serving.getName());
+    if (!serving.getPredictor().contains("/")) {
+      Path newPath = Paths.get(dbServing.getArtifactVersionPath(), "predictor-" + serving.getPredictor());
+      serving.setPredictor(newPath.toString());
+    }
+    if (!serving.getTransformer().contains("/")) {
+      Path newPath = Paths.get(dbServing.getArtifactVersionPath(), "transformer-" + serving.getTransformer());
+      serving.setTransformer(newPath.toString());
+    }
+  }
+  
+  private void validatePredictor(Project project, Serving serving) throws UnsupportedEncodingException,
+      ServingException {
+    if (serving.getPredictor() != null) {
+      // if predictor selected
+      if (serving.getModelServer() == ModelServer.TENSORFLOW_SERVING) {
+        // and tensorflow serving
+        throw new ServingException(RESTCodes.ServingErrorCode.PREDICTOR_NOT_SUPPORTED, Level.FINE, "Predictors are " +
+          "not supported with Tensorflow Serving");
+      }
+      // build predictor script path
+      String path = "";
+      if (serving.getArtifactVersion() != null && serving.getArtifactVersion() > 0) {
+        // if existent artifact
+        path +=  serving.getArtifactVersionPath() + "/" + "predictor-";
+      }
+      path += serving.getPredictor();
+      validatePythonScript(project, path, Arrays.asList(".py"), "predictor");
+    } else {
+      // if no predictor selected
+      if (serving.getServingTool() == ServingTool.DEFAULT && serving.getModelServer() == ModelServer.PYTHON) {
+        // and python default deployment)
+        throw new ServingException(RESTCodes.ServingErrorCode.MODEL_ARTIFACT_NOT_VALID, Level.FINE, "Default " +
+          "deployments require a predictor");
       }
     }
   }
   
   private void validateTransformer(Project project, Serving serving)
     throws UnsupportedEncodingException, ServingException {
+    if (serving.getTransformer() == null) return;
+    
     if (serving.getServingTool() != ServingTool.KFSERVING) {
-      throw new IllegalArgumentException("KFServing is required for using transformers");
+      throw new ServingException(RESTCodes.ServingErrorCode.TRANSFORMER_NOT_SUPPORTED, Level.FINE, "Transformers " +
+        "are only supported on KFServing deployments");
     }
-    if (serving.getTransformer().contains("/")) {
-      validatePythonUserInput(project, serving.getTransformer(), Arrays.asList(".py",
-        ".ipynb"));
+    String path = "";
+    if (serving.getArtifactVersion() != null && serving.getArtifactVersion() > 0) {
+      // if existent artifact
+      path += serving.getArtifactVersionPath() + "/" + "transformer-";
+    }
+    path += serving.getTransformer();
+    validatePythonScript(project, path, Arrays.asList(".py", ".ipynb"), "transformer");
+  }
+  
+  private void validateKafkaTopicSchema(Project project, Serving serving, TopicDTO topic) throws ServingException {
+    // if an existing topic, check schema
+    if (topic != null && !topic.getName().equals("NONE") && !topic.getName().equals("CREATE")) {
+      ProjectTopics projectTopic = projectTopicsFacade.findTopicByNameAndProject(project, topic.getName())
+        .orElseThrow(() -> new ServingException(RESTCodes.ServingErrorCode.KAFKA_TOPIC_NOT_FOUND, Level.SEVERE, null));
+      
+      Subjects subjects = projectTopic.getSubjects();
+      if (!subjects.getSubject().equalsIgnoreCase(Settings.INFERENCE_SCHEMANAME)) {
+        throw new ServingException(RESTCodes.ServingErrorCode.KAFKA_TOPIC_NOT_VALID, Level.FINE, "Inference logging" +
+          " requires a Kafka topic with schema '" + Settings.INFERENCE_SCHEMANAME + "'");
+      }
+      if (serving.getServingTool() == ServingTool.DEFAULT && subjects.getVersion() >= 4) {
+        throw new ServingException(RESTCodes.ServingErrorCode.KAFKA_TOPIC_NOT_VALID, Level.FINE, "Inference logging" +
+          " in default deployments requires schema version 3 or lower");
+      }
+      if (serving.getServingTool() == ServingTool.KFSERVING && subjects.getVersion() < 4) {
+        throw new ServingException(RESTCodes.ServingErrorCode.KAFKA_TOPIC_NOT_VALID, Level.FINE, "Inference logging" +
+          " in KFServing deployments requires schema version 4 or greater");
+      }
     }
   }
   
-  private void validateInferenceLogging(ServingWrapper servingWrapper, Serving serving) {
-    boolean withKafkaTopic =
-      servingWrapper.getKafkaTopicDTO() != null && !servingWrapper.getKafkaTopicDTO().getName().equals("NONE");
+  private void validateInferenceLogging(Serving serving, TopicDTO topic) throws ServingException {
+    boolean withKafkaTopic = topic != null && !topic.getName().equals("NONE");
     
     if (!withKafkaTopic) {
       if (serving.getInferenceLogging() != null) {
-        throw new IllegalArgumentException("Inference logger mode provided but no kafka topic specified");
+        throw new IllegalArgumentException("Inference logger mode cannot be provided without a Kafka topic");
       }
       return; // no more validations needed
     }
     
     if (serving.getInferenceLogging() == null) {
-      throw new IllegalArgumentException("Inference logger mode not provided or invalid");
+      throw new IllegalArgumentException("A valid inference logger mode must be provided with a Kafka topic");
     }
     
     if (serving.getServingTool() != ServingTool.KFSERVING) {
       if (serving.getInferenceLogging() != InferenceLogging.ALL) {
-        throw new IllegalArgumentException("Fine-grained inference logger is only supported in KFServing deployments");
+        throw new ServingException(RESTCodes.ServingErrorCode.FINEGRAINED_INF_LOGGING_NOT_SUPPORTED, Level.FINE,
+          "Fine-grained inference logging only supported in KFServing deployments");
       }
     }
   }
   
-  private void validateInstances(Serving serving) {
-    if (serving.getTransformer() == null && serving.getTransformerInstances() != null) {
-      throw new IllegalArgumentException("Number of transformer instances cannot be provided without a transformer");
-    }
-    if (serving.getTransformer() != null && serving.getTransformerInstances() == null) {
-      throw new IllegalArgumentException("Number of transformer instances must be provided when using a transformer");
+  private void setDefaultRequestBatching(Serving serving) {
+    if (serving.isBatchingEnabled() == null) {
+      serving.setBatchingEnabled(false);
     }
   }
-
-  /**
-   * Infer the model name from the modelPath
-   * Assumes modelPath is absolute from /Projects
-   * And starts with the following format /Projects/{project}/Models/{model}
-   *
-   * @param servingWrapper
-   */
-  public void inferModelName(ServingWrapper servingWrapper) {
-    String modelPath = servingWrapper.getServing().getModelPath();
+  
+  private void setDefaultModelName(Serving serving) {
+    if (serving.getModelName() != null) return;
+    String modelPath = serving.getModelPath();
     String[] split = modelPath.split("/");
-    servingWrapper.getServing().setModelName(split[4]);
+    serving.setModelName(split[4]);
   }
 }

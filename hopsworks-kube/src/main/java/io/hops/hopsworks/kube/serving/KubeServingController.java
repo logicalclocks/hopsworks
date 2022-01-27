@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2020, Logical Clocks AB. All rights reserved
+ * Copyright (C) 2022, Logical Clocks AB. All rights reserved
  */
 
 package io.hops.hopsworks.kube.serving;
@@ -13,6 +13,7 @@ import io.hops.hopsworks.common.serving.util.KafkaServingHelper;
 import io.hops.hopsworks.common.serving.util.ServingCommands;
 import io.hops.hopsworks.exceptions.HopsSecurityException;
 import io.hops.hopsworks.exceptions.ServiceException;
+import io.hops.hopsworks.kube.serving.utils.KubePredictorUtils;
 import io.hops.hopsworks.kube.serving.utils.KubeServingUtils;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.DatasetException;
@@ -68,10 +69,12 @@ public class KubeServingController implements ServingController {
   @EJB
   private KubeArtifactUtils kubeArtifactUtils;
   @EJB
+  private KubePredictorUtils kubePredictorUtils;
+  @EJB
   private KubeTransformerUtils kubeTransformerUtils;
   
   @Override
-  public List<ServingWrapper> getServings(Project project, String modelNameFilter, ServingStatusEnum statusFilter)
+  public List<ServingWrapper> getAll(Project project, String modelNameFilter, ServingStatusEnum statusFilter)
     throws ServingException {
     List<Serving> servingList;
     if(Strings.isNullOrEmpty(modelNameFilter)) {
@@ -94,7 +97,7 @@ public class KubeServingController implements ServingController {
   }
   
   @Override
-  public ServingWrapper getServing(Project project, Integer id)
+  public ServingWrapper get(Project project, Integer id)
     throws ServingException {
     Serving serving = servingFacade.findByProjectAndId(project, id);
     if (serving == null) {
@@ -105,7 +108,18 @@ public class KubeServingController implements ServingController {
   }
   
   @Override
-  public void deleteServing(Project project, Integer id) throws ServingException {
+  public ServingWrapper get(Project project, String name)
+    throws ServingException {
+    Serving serving = servingFacade.findByProjectAndName(project, name);
+    if (serving == null) {
+      return null;
+    }
+    
+    return getServingInternal(project, serving);
+  }
+  
+  @Override
+  public void delete(Project project, Integer id) throws ServingException {
     Serving serving = servingFacade.acquireLock(project, id);
     KubeToolServingController toolServingController = getServingController(serving);
     
@@ -136,7 +150,7 @@ public class KubeServingController implements ServingController {
   }
   
   @Override
-  public void deleteServings(Project project) {
+  public void deleteAll(Project project) {
     // Nothing to do here. This function is called when a project is deleted.
     // During the project deletion, the namespace is deleted. Kubernetes takes care of removing
     // pods, namespaces and services
@@ -196,7 +210,7 @@ public class KubeServingController implements ServingController {
   }
   
   @Override
-  public void createOrUpdate(Project project, Users user, ServingWrapper servingWrapper)
+  public void put(Project project, Users user, ServingWrapper servingWrapper)
     throws KafkaException, UserException, ProjectException, ServingException, ExecutionException,
     InterruptedException {
     Serving serving = servingWrapper.getServing();
@@ -214,20 +228,29 @@ public class KubeServingController implements ServingController {
           : 0;
         serving.setArtifactVersion(version);
         Boolean created = kubeArtifactUtils.createArtifact(project, user, serving);
-        if (created && serving.getTransformer() != null) {
-          // Update transformer name
-          serving.setTransformer(kubeTransformerUtils.getTransformerFileName(serving, false));
+        if (created) {
+          if (serving.getPredictor() != null) { // Update predictor name
+            serving.setPredictor(kubePredictorUtils.getPredictorFileName(serving, false));
+          }
+          if (serving.getTransformer() != null) { // Update transformer name
+            serving.setTransformer(kubeTransformerUtils.getTransformerFileName(serving, false));
+          }
         }
       } else {
         // Otherwise, check if the artifact version folder exists
         if (!kubeArtifactUtils.checkArtifactDirExists(serving)) {
           throw new IllegalArgumentException("Artifact with version " + serving.getArtifactVersion().toString() +
-            " does not exist");
+            " does not exist in model " + serving.getModelName() + " with version " + serving.getModelVersion());
         }
-        // Verify that the selected transformer file is available in the artifact version folder. When updating a
-        // serving the user could have changed the transformer script path
-        if (serving.getArtifactVersion() > 0 && !kubeTransformerUtils.checkTransformerExists(serving)) {
-          throw new IllegalArgumentException("Transformer script cannot change in an existent artifact");
+        // Verify that the selected assets are available in the artifact version folder. When updating a
+        // serving the user could have changed the script paths
+        if (serving.getArtifactVersion() > 0) {
+          if (serving.getPredictor() != null && !kubePredictorUtils.checkPredictorExists(serving)) {
+            throw new IllegalArgumentException("Predictor script cannot change in an existent artifact");
+          }
+          if (serving.getTransformer() != null && !kubeTransformerUtils.checkTransformerExists(serving)) {
+            throw new IllegalArgumentException("Transformer script cannot change in an existent artifact");
+          }
         }
       }
     } catch (DatasetException | HopsSecurityException | ServiceException | IOException e) {
@@ -243,16 +266,22 @@ public class KubeServingController implements ServingController {
       
       // Setup the Kafka topic for logging
       kafkaServingHelper.setupKafkaServingTopic(project, servingWrapper, serving, null);
-      
-      servingFacade.merge(serving);
+  
+      Serving newServing = servingFacade.merge(serving);
+      servingWrapper.setServing(newServing);
     } else {
       Serving oldServing = servingFacade.acquireLock(project, serving.getId());
       KubeToolServingController toolServingController = getServingController(oldServing);
       
-      // If artifact already exists, check the transformer script is not modified
-      if (oldServing.getArtifactVersion() > 0 && oldServing.getArtifactVersion() == serving.getArtifactVersion()
-        && !oldServing.getTransformer().equals(serving.getTransformer())) {
-        throw new IllegalArgumentException("Transformer script cannot change in an existent artifact");
+      // If artifact already exists, check the asset scripts are not modified
+      if (oldServing.getModelName() == serving.getModelName() && oldServing.getArtifactVersion() > 0 &&
+          oldServing.getArtifactVersion() == serving.getArtifactVersion()) {
+        if (oldServing.getPredictor() != null && !oldServing.getPredictor().equals(serving.getPredictor())) {
+          throw new IllegalArgumentException("Predictor script cannot change in an existent artifact");
+        }
+        if (oldServing.getTransformer() != null && !oldServing.getTransformer().equals(serving.getTransformer())) {
+          throw new IllegalArgumentException("Transformer script cannot change in an existent artifact");
+        }
       }
       
       // Set missing fields to keep consistency with the stored serving entity
@@ -301,8 +330,9 @@ public class KubeServingController implements ServingController {
               "Instance is already updating. Please, try later.");
           }
         }
-        // Update the object in the database
-        servingFacade.updateDbObject(newServing, project);
+        // Update the serving object in the database and serving wrapper
+        serving = servingFacade.updateDbObject(newServing, project);
+        servingWrapper.setServing(serving);
       } finally {
         servingFacade.releaseLock(project, serving.getId());
       }

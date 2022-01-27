@@ -1159,7 +1159,7 @@ public class RESTCodes {
     LIFECYCLEERRORINT(4, "Serving instance could not be started/stopped",
         Response.Status.INTERNAL_SERVER_ERROR),
     STATUSERROR(5, "Error getting model server instance status", Response.Status.INTERNAL_SERVER_ERROR),
-    PATHNOTFOUND(6, "Model Path not found", Response.Status.BAD_REQUEST),
+    MODEL_PATH_NOT_FOUND(6, "Model path not found", Response.Status.BAD_REQUEST),
     COMMANDNOTRECOGNIZED(7, "Command not recognized", Response.Status.BAD_REQUEST),
     COMMANDNOTPROVIDED(8, "Command not provided", Response.Status.BAD_REQUEST),
     SPECNOTPROVIDED(9, "TFServing spec not provided", Response.Status.BAD_REQUEST),
@@ -1168,10 +1168,22 @@ public class RESTCodes {
       Response.Status.BAD_REQUEST),
     PYTHON_ENVIRONMENT_NOT_ENABLED(12, "Python environment has not been enabled in this project, " +
       "which is required for serving SkLearn Models", Response.Status.BAD_REQUEST),
-    UPDATE_SERVING_TYPE_ERROR(13, "The model server of a serving cannot be updated.",
+    UPDATE_MODEL_SERVER_ERROR(13, "The model server of a deployment cannot be updated.",
       Response.Status.BAD_REQUEST),
     KUBERNETES_NOT_INSTALLED(14, "Kubernetes is not installed", Response.Status.BAD_REQUEST),
-    KFSERVING_NOT_ENABLED(15, "KFServing is not installed or disabled", Response.Status.BAD_REQUEST);
+    KFSERVING_NOT_ENABLED(15, "KFServing is not installed or disabled", Response.Status.BAD_REQUEST),
+    SCRIPT_NOT_FOUND(16, "Script not found", Response.Status.BAD_REQUEST),
+    MODEL_FILES_STRUCTURE_NOT_VALID(17, "Model path does not have a valid file structure",
+      Response.Status.BAD_REQUEST),
+    MODEL_ARTIFACT_NOT_VALID(18, "Model artifact not valid", Response.Status.BAD_REQUEST),
+    MODEL_ARTIFACT_OPERATION_ERROR(19, "Model artifact cannot be created or changed", Response.Status.BAD_REQUEST),
+    PREDICTOR_NOT_SUPPORTED(20, "Predictors not supported", Response.Status.BAD_REQUEST),
+    TRANSFORMER_NOT_SUPPORTED(21, "Transformers not supported", Response.Status.BAD_REQUEST),
+    KAFKA_TOPIC_NOT_FOUND(22, "Kafka topic not found", Response.Status.BAD_REQUEST),
+    KAFKA_TOPIC_NOT_VALID(23, "Kafka topic not valid", Response.Status.BAD_REQUEST),
+    FINEGRAINED_INF_LOGGING_NOT_SUPPORTED(24, "Fine-grained inference logging not supported",
+      Response.Status.BAD_REQUEST),
+    REQUEST_BATCHING_NOT_SUPPORTED(25, "Request batching not supported", Response.Status.BAD_REQUEST);
 
     private Integer code;
     private String message;

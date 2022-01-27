@@ -7,7 +7,6 @@ package io.hops.hopsworks.kube.serving.utils;
 import io.fabric8.kubernetes.api.model.apps.DeploymentStatus;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.persistence.entity.project.Project;
-import io.hops.hopsworks.persistence.entity.serving.ModelServer;
 import io.hops.hopsworks.persistence.entity.serving.Serving;
 import io.hops.hopsworks.persistence.entity.serving.ServingTool;
 import org.apache.commons.lang3.RandomStringUtils;
@@ -33,11 +32,7 @@ public class KubeServingUtils {
   @EJB
   private KubeArtifactUtils kubeArtifactUtils;
   @EJB
-  private KubeModelUtils kubeModelUtils;
-  @EJB
-  private KubeTfServingUtils kubeTfServingUtils;
-  @EJB
-  private KubeSkLearnServingUtils kubeSkLearnServingUtils;
+  private KubePredictorUtils kubePredictorUtils;
   
   // Namespaces
   public final static String HOPS_SYSTEM_NAMESPACE = "hops-system";
@@ -67,6 +62,7 @@ public class KubeServingUtils {
   // Annotations
   public final static String ARTIFACT_PATH_ANNOTATION_NAME = LABEL_PREFIX + "/artifact-path";
   public final static String TRANSFORMER_ANNOTATION_NAME = LABEL_PREFIX + "/transformer";
+  public final static String PREDICTOR_ANNOTATION_NAME = LABEL_PREFIX + "/predictor";
   public final static String TOPIC_NAME_ANNOTATION_NAME = LABEL_PREFIX + "/topic-name";
   
   // Inference logger
@@ -102,6 +98,9 @@ public class KubeServingUtils {
         if (serving.getKafkaTopic() != null) {
           put(TOPIC_NAME_ANNOTATION_NAME, serving.getKafkaTopic().getTopicName());
         }
+        if (serving.getPredictor() != null) {
+          put(PREDICTOR_ANNOTATION_NAME, serving.getPredictor());
+        }
         if (serving.getTransformer() != null) {
           put(TRANSFORMER_ANNOTATION_NAME, serving.getTransformer());
         }
@@ -125,13 +124,8 @@ public class KubeServingUtils {
     if (serving.getServingTool() == ServingTool.KFSERVING) {
       return "/v1/models/" + serving.getName() + verb;
     } else { // default
-      if (serving.getModelServer() == ModelServer.TENSORFLOW_SERVING) {
-        return kubeTfServingUtils.getDeploymentPath(serving.getName(), serving.getModelVersion(), verb);
-      } else if (serving.getModelServer() == ModelServer.FLASK) {
-        return kubeSkLearnServingUtils.getDeploymentPath(verb);
-      } else {
-        throw new UnsupportedOperationException("Model server not supported in kube deployment servings.");
-      }
+      KubePredictorServerUtils predictorServerUtils = kubePredictorUtils.getPredictorServerUtils(serving);
+      return predictorServerUtils.getDeploymentPath(serving.getName(), serving.getModelVersion(), verb);
     }
   }
   

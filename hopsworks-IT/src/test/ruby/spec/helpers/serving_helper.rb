@@ -31,30 +31,25 @@ TRANSFORMER_NB_TOUR_FILE_LOCATION = "/user/hdfs/tensorflow_demo/notebooks/servin
 module ServingHelper
 
   def with_kfserving_tensorflow(project_id, project_name, user)
-    copy_mnist_files(project_id, project_name, user)
+    copy_mnist_files(project_name, user)
     @serving ||= create_kfserving_tensorflow(project_id, project_name)
     @topic = ProjectTopics.find(@serving[:kafka_topic_id])
   end
 
-  def with_tf_serving(project_id, project_name, user)
-    copy_mnist_files(project_id, project_name, user)
-    @serving ||= create_tf_serving(project_id, project_name)
+  def with_kfserving_sklearn(project_id, project_name, user)
+    copy_iris_files(@project[:projectname], @user[:username])
+    @serving ||= create_kfserving_sklearn(project_id, project_name)
+    @topic = ProjectTopics.find(@serving[:kafka_topic_id])
+  end
+
+  def with_tensorflow_serving(project_id, project_name, user)
+    copy_mnist_files(project_name, user)
+    @serving ||= create_tensorflow_serving(project_id, project_name)
     @topic = ProjectTopics.find(@serving[:kafka_topic_id])
   end
 
   def with_sklearn_serving(project_id, project_name, user)
-    # Make Serving Dir
-    mkdir("/Projects/#{project_name}/Models/irisflowerclassifier/1", "#{project_name}__#{user}",
-          "#{project_name}__Models", 750)
-    # Copy model to the servingversion dir
-    copy(SKLEARN_MODEL_TOUR_FILE_LOCATION, "/Projects/#{project_name}/Models/irisflowerclassifier/1/",
-         "#{user}",
-         "#{project_name}__Models", 750, "#{project_name}")
-    # Copy script to the servingversion dir
-    copy(SKLEARN_SCRIPT_TOUR_FILE_LOCATION, "/Projects/#{project_name}/Models/irisflowerclassifier/1/",
-         "#{user}",
-         "#{project_name}__Models", 750, "#{project_name}")
-
+    copy_iris_files(project_name, user)
     @serving ||= create_sklearn_serving(project_id, project_name)
     @topic = ProjectTopics.find(@serving[:kafka_topic_id])
   end
@@ -63,9 +58,9 @@ module ServingHelper
     serving_name = "testmodel#{short_random_id}"
     put "#{ENV['HOPSWORKS_API']}/project/#{project_id}/serving/",
               {name: serving_name,
-               modelPath: "/Projects/#{project_name}/Models/mnist/",
+               modelPath: "/Projects/#{project_name}/Models/mnist",
                modelVersion: 1,
-               artifactVersion: "CREATE",
+               artifactVersion: -1,
                batchingEnabled: false,
                kafkaTopicDTO: {
                   name: "CREATE",
@@ -77,15 +72,37 @@ module ServingHelper
                servingTool: "KFSERVING",
                requestedInstances: 1
               }
-    expect_status(201)
+    expect_status_details(201)
     Serving.find_by(project_id: project_id, name: serving_name)
   end
 
-  def create_tf_serving(project_id, project_name)
+  def create_kfserving_sklearn(project_id, project_name)
+    serving_name = "testmodel#{short_random_id}"
+    put "#{ENV['HOPSWORKS_API']}/project/#{project_id}/serving/",
+              {name: serving_name,
+               modelPath: "/Projects/#{project_name}/Models/irisflowerclassifier",
+               modelVersion: 1,
+               artifactVersion: -1,
+               batchingEnabled: false,
+               kafkaTopicDTO: {
+                  name: "CREATE",
+                  numOfPartitions: 1,
+                  numOfReplicas: 1
+               },
+               inferenceLogging: "ALL",
+               modelServer: "PYTHON",
+               servingTool: "KFSERVING",
+               requestedInstances: 1
+              }
+    expect_status_details(201)
+    Serving.find_by(project_id: project_id, name: serving_name)
+  end
+
+  def create_tensorflow_serving(project_id, project_name)
     serving_name = "testModel#{short_random_id}"
     put "#{ENV['HOPSWORKS_API']}/project/#{project_id}/serving/",
               {name: serving_name,
-               modelPath: "/Projects/#{project_name}/Models/mnist/",
+               modelPath: "/Projects/#{project_name}/Models/mnist",
                modelVersion: 1,
                batchingEnabled: true,
                kafkaTopicDTO: {
@@ -98,15 +115,47 @@ module ServingHelper
                servingTool: "DEFAULT",
                requestedInstances: 1
               }
-    expect_status(201)
+    expect_status_details(201)
+    Serving.find_by(project_id: project_id, name: serving_name)
+  end
+  
+  def create_sklearn_serving(project_id, project_name)
+    serving_name = "testModel#{short_random_id}"
+    put "#{ENV['HOPSWORKS_API']}/project/#{project_id}/serving/",
+        {name: serving_name,
+         modelPath: "/Projects/#{project_name}/Models/irisflowerclassifier",
+         modelVersion: 1,
+         predictor: "/Projects/#{project_name}/Models/irisflowerclassifier/1/#{SKLEARN_SCRIPT_FILE_NAME}",
+         kafkaTopicDTO: {
+             name: "CREATE",
+             numOfPartitions: 1,
+             numOfReplicas: 1
+         },
+         inferenceLogging: "ALL",
+         modelServer: "PYTHON",
+         servingTool: "DEFAULT",
+         requestedInstances: 1
+        }
+    expect_status_details(201)
     Serving.find_by(project_id: project_id, name: serving_name)
   end
 
-  def copy_mnist_files(project_id, project_name, user)
-      mkdir("/Projects/#{project_name}/Models/mnist/", "#{project_name}__#{user}", "#{project_name}__Models", 750)
-      copy(TF_MODEL_TOUR_FILE_LOCATION, "/Projects/#{project_name}/Models/mnist/", "#{user}", "#{project_name}__Models", 750, "#{project_name}")
-      copy(TRANSFORMER_SCRIPT_TOUR_FILE_LOCATION, "/Projects/#{project_name}/Models/mnist/1/", "#{user}", "#{project_name}__Models", 750, "#{project_name}")
-      copy(TRANSFORMER_NB_TOUR_FILE_LOCATION, "/Projects/#{project_name}/Models/mnist/1/", "#{user}", "#{project_name}__Models", 750, "#{project_name}")
+  def copy_mnist_files(project_name, user)
+    mkdir("/Projects/#{project_name}/Models/mnist/", "#{project_name}__#{user}", "#{project_name}__Models", 750)
+    copy(TF_MODEL_TOUR_FILE_LOCATION, "/Projects/#{project_name}/Models/mnist/", "#{user}", "#{project_name}__Models", 750, "#{project_name}")
+    copy(TRANSFORMER_SCRIPT_TOUR_FILE_LOCATION, "/Projects/#{project_name}/Models/mnist/1/", "#{user}", "#{project_name}__Models", 750, "#{project_name}")
+    copy(TRANSFORMER_NB_TOUR_FILE_LOCATION, "/Projects/#{project_name}/Models/mnist/1/", "#{user}", "#{project_name}__Models", 750, "#{project_name}")
+    copy(TRANSFORMER_SCRIPT_TOUR_FILE_LOCATION, "/Projects/#{project_name}/Models/mnist/2/", "#{user}", "#{project_name}__Models", 750, "#{project_name}")
+    copy(TRANSFORMER_NB_TOUR_FILE_LOCATION, "/Projects/#{project_name}/Models/mnist/2/", "#{user}", "#{project_name}__Models", 750, "#{project_name}")
+  end
+
+  def copy_iris_files(project_name, user)
+    mkdir("/Projects/#{project_name}/Models/irisflowerclassifier/", "#{project_name}__#{user}", "#{project_name}__Models", 750)
+    mkdir("/Projects/#{project_name}/Models/irisflowerclassifier/1", "#{project_name}__#{user}", "#{project_name}__Models", 750)
+    copy(SKLEARN_MODEL_TOUR_FILE_LOCATION, "/Projects/#{project_name}/Models/irisflowerclassifier/1/", "#{user}", "#{project_name}__Models", 750, "#{project_name}")
+    copy(SKLEARN_SCRIPT_TOUR_FILE_LOCATION, "/Projects/#{project_name}/Models/irisflowerclassifier/1/", "#{user}", "#{project_name}__Models", 750, "#{project_name}")
+    copy(TRANSFORMER_SCRIPT_TOUR_FILE_LOCATION, "/Projects/#{project_name}/Models/irisflowerclassifier/1/", "#{user}", "#{project_name}__Models", 750, "#{project_name}")
+    copy(TRANSFORMER_NB_TOUR_FILE_LOCATION, "/Projects/#{project_name}/Models/irisflowerclassifier/1/", "#{user}", "#{project_name}__Models", 750, "#{project_name}")
   end
 
   def purge_all_kfserving_instances(project_name="", should_exist=true)
@@ -165,45 +214,24 @@ module ServingHelper
     end
   end
 
-  def create_sklearn_serving(project_id, project_name)
-    serving_name = "testModel#{short_random_id}"
-    put "#{ENV['HOPSWORKS_API']}/project/#{project_id}/serving/",
-        {name: serving_name,
-         modelPath: "/Projects/#{project_name}/Models/irisflowerclassifier/1/#{SKLEARN_SCRIPT_FILE_NAME}",
-         modelVersion: 1,
-         kafkaTopicDTO: {
-             name: "CREATE",
-             numOfPartitions: 1,
-             numOfReplicas: 1
-         },
-         inferenceLogging: "ALL",
-         modelServer: "FLASK",
-         servingTool: "DEFAULT",
-         requestedInstances: 1
-        }
-    expect_status(201)
-    Serving.find_by(project_id: project_id, name: serving_name)
-  end
-
   def purge_all_sklearn_serving_instances()
     if !kubernetes_installed
       system "sudo /bin/bash -c \"pgrep -f sklearn_flask_server | xargs kill\""
     end
   end
 
-  def delete_all_sklearn_serving_instances(project)
-    serving_list = JSON.parse(get "#{ENV['HOPSWORKS_API']}/project/#{project.id}/serving/")
-    expect_status(200)
+  def delete_all_servings(project_id)
+    serving_list = JSON.parse(get "#{ENV['HOPSWORKS_API']}/project/#{project_id}/serving/")
+    expect_status_details(200)
     serving_list.each do |serving|
-      delete "#{ENV['HOPSWORKS_API']}/project/#{project.id}/serving/#{serving["id"]}"
-      expect_status(200)
+      delete "#{ENV['HOPSWORKS_API']}/project/#{project_id}/serving/#{serving["id"]}"
+      expect_status_details(200)
     end
   end
 
   def start_serving(project, serving)
     post "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/serving/#{serving[:id]}?action=start"
     expect_status(200)
-    # Sleep some time while the TfServing server starts
   end
 
   def get_servings(project, query)
@@ -248,7 +276,7 @@ module ServingHelper
   def parse_model_server(value)
     return case
       when value == 0 ; "TENSORFLOW_SERVING"
-      when value == 1 ; "FLASK"
+      when value == 1 ; "PYTHON"
       else puts "Model server value cannot be parsed"
       end
   end
@@ -314,4 +342,11 @@ module ServingHelper
     end
   end
 
+  def wait_for_serving_status(serving_name, status, timeout: 45, delay: 5)
+    wait_result = wait_for_me_time(timeout, delay) do
+      result = get_serving(serving_name)
+      { "success": result['status'] == status, "status": result['status'] }
+    end
+    expect(wait_result[:status]).to eql(status)
+  end
 end

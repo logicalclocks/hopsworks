@@ -1,6 +1,6 @@
 /*
  * This file is part of Hopsworks
- * Copyright (C) 2018, Logical Clocks AB. All rights reserved
+ * Copyright (C) 2022, Logical Clocks AB. All rights reserved
  *
  * Hopsworks is free software: you can redistribute it and/or modify it under the terms of
  * the GNU Affero General Public License as published by the Free Software Foundation,
@@ -41,6 +41,7 @@ import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import javax.xml.bind.annotation.XmlRootElement;
 import java.io.Serializable;
+import java.nio.file.Paths;
 import java.util.Date;
 
 @Entity
@@ -87,6 +88,9 @@ public class Serving implements Serializable {
   @Column(name = "model_path")
   private String modelPath;
   @Size(min = 1, max = 255)
+  @Column(name = "predictor") // <filename>.<ext>
+  private String predictor;
+  @Size(min = 1, max = 255)
   @Column(name = "transformer") // <filename>.<ext>
   private String transformer;
   @Basic(optional = false)
@@ -126,7 +130,7 @@ public class Serving implements Serializable {
   @Enumerated(EnumType.ORDINAL)
   @Column(name = "inference_logging")
   private InferenceLogging inferenceLogging;
-
+  
   @Basic(optional = true)
   @Column(name = "local_port")
   private Integer localPort;
@@ -159,13 +163,14 @@ public class Serving implements Serializable {
 
   public Serving() { }
 
-  public Serving(Integer id, String name, String modelPath, String transformer, String modelName, Integer modelVersion,
-      Integer artifactVersion, Integer nInstances, Integer nTransformerInstances, Boolean batchingEnabled,
-      ModelServer modelServer, ServingTool servingTool, InferenceLogging inferenceLogging,
-      DockerResourcesConfiguration dockerResourcesConfig) {
+  public Serving(Integer id, String name, String modelPath, String predictor, String transformer,
+    String modelName, Integer modelVersion, Integer artifactVersion, Integer nInstances,
+    Integer nTransformerInstances, Boolean batchingEnabled, ModelServer modelServer, ServingTool servingTool,
+    InferenceLogging inferenceLogging, DockerResourcesConfiguration dockerResourcesConfig) {
     this.id = id;
     this.name = name;
     this.modelPath = modelPath;
+    this.predictor = predictor;
     this.transformer = transformer;
     this.modelName = modelName;
     this.modelVersion = modelVersion;
@@ -211,14 +216,26 @@ public class Serving implements Serializable {
     this.name = name;
   }
 
-  public String getModelPath() {
-    return modelPath;
+  public String getModelPath() { return modelPath; }
+  
+  public void setModelPath(String modelPath) { this.modelPath = modelPath; }
+  
+  public String getModelVersionPath() {
+    return Paths.get(getModelPath(), String.valueOf(this.modelVersion)).toString();
   }
-
-  public void setModelPath(String modelPath) {
-    this.modelPath = modelPath;
+  
+  public String getArtifactVersionPath() {
+    return Paths.get(getModelVersionPath(), "Artifacts", String.valueOf(artifactVersion)).toString();
   }
-
+  
+  public String getPredictor() {
+    return predictor;
+  }
+  
+  public void setPredictor(String predictor) {
+    this.predictor = predictor;
+  }
+  
   public String getTransformer() {
     return transformer;
   }
@@ -388,7 +405,8 @@ public class Serving implements Serializable {
     if (created != null ? !created.equals(serving.created) : serving.created != null) return false;
     if (creator != null ? !creator.equals(serving.creator) : serving.creator != null) return false;
     if (!name.equals(serving.name)) return false;
-    if (!modelPath.equals(serving.modelPath)) return false;
+    if (modelPath != null ? !modelPath.equals(serving.modelPath) : serving.modelPath != null) return false;
+    if (predictor != null ? !predictor.equals(serving.predictor) : serving.predictor != null) return false;
     if (transformer != null ? !transformer.equals(serving.transformer) : serving.transformer != null) return false;
     if (!modelVersion.equals(serving.modelVersion)) return false;
     if (!artifactVersion.equals(serving.artifactVersion)) return false;
@@ -420,6 +438,7 @@ public class Serving implements Serializable {
     result = 31 * result + (creator != null ? creator.hashCode() : 0);
     result = 31 * result + name.hashCode();
     result = 31 * result + modelPath.hashCode();
+    result = 31 * result + predictor.hashCode();
     result = 31 * result + transformer.hashCode();
     result = 31 * result + modelVersion.hashCode();
     result = 31 * result + artifactVersion.hashCode();

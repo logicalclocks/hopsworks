@@ -126,29 +126,8 @@ public class KubeApiKeyUtils {
       rawSecret = pair.getR();
     }
     if (rawSecret == null) {
-      // get secret from hops-system
       String secretName = getServingApiKeySecretName(apiKey.get().getPrefix());
-      Secret secret = kubeClientService.getSecret(KubeServingUtils.HOPS_SYSTEM_NAMESPACE, secretName);
-      if (secret == null) {
-        throw new ApiKeyException(RESTCodes.ApiKeyErrorCode.KEY_NOT_FOUND, Level.SEVERE,
-          "Serving API key secret with name " + secretName + " not found in hops-system");
-      }
-      if (secret.getData() == null) {
-        throw new ApiKeyException(RESTCodes.ApiKeyErrorCode.KEY_NOT_FOUND, Level.SEVERE, "Serving API key secret " +
-          "with name " + secretName + " in hops-system is empty");
-      }
-      if (!secret.getData().containsKey(SERVING_API_KEY_SECRET_KEY)) {
-        throw new ApiKeyException(RESTCodes.ApiKeyErrorCode.KEY_NOT_FOUND, Level.SEVERE, "Serving API key not found " +
-          "in secret " + secretName + " in hops-system");
-      }
-      String encodedSecret = secret.getData().get(SERVING_API_KEY_SECRET_KEY);
-      if (Strings.isNullOrEmpty(encodedSecret)) {
-        throw new ApiKeyException(RESTCodes.ApiKeyErrorCode.KEY_NOT_FOUND, Level.SEVERE, "Serving API key secret " +
-          "value is null or empty for secret " + secretName + " in hops-system");
-      }
-      // decode secret
-      byte[] secretBytes = Base64.decodeBase64(encodedSecret);
-      rawSecret = new String(secretBytes,"UTF-8");
+      rawSecret = getServingApiKeyValueFromKubeSecret(secretName);
     }
     
     // copy it to the project namespace
@@ -195,6 +174,32 @@ public class KubeApiKeyUtils {
   public Map<String, String> getApiKeySecretLabels(ApiKey apiKey) {
     return getApiKeySecretLabels(apiKey.getReserved(), apiKey.getName(), apiKey.getUser().getUsername(),
       apiKey.getModified());
+  }
+  
+  public String getServingApiKeyValueFromKubeSecret(String secretName)
+    throws ApiKeyException, UnsupportedEncodingException {
+    // get secret from hops-system
+    Secret secret = kubeClientService.getSecret(KubeServingUtils.HOPS_SYSTEM_NAMESPACE, secretName);
+    if (secret == null) {
+      throw new ApiKeyException(RESTCodes.ApiKeyErrorCode.KEY_NOT_FOUND, Level.SEVERE,
+        "Serving API key secret with name " + secretName + " not found in hops-system");
+    }
+    if (secret.getData() == null) {
+      throw new ApiKeyException(RESTCodes.ApiKeyErrorCode.KEY_NOT_FOUND, Level.SEVERE, "Serving API key secret " +
+        "with name " + secretName + " in hops-system is empty");
+    }
+    if (!secret.getData().containsKey(SERVING_API_KEY_SECRET_KEY)) {
+      throw new ApiKeyException(RESTCodes.ApiKeyErrorCode.KEY_NOT_FOUND, Level.SEVERE, "Serving API key not found " +
+        "in secret " + secretName + " in hops-system");
+    }
+    String encodedSecret = secret.getData().get(SERVING_API_KEY_SECRET_KEY);
+    if (Strings.isNullOrEmpty(encodedSecret)) {
+      throw new ApiKeyException(RESTCodes.ApiKeyErrorCode.KEY_NOT_FOUND, Level.SEVERE, "Serving API key secret " +
+        "value is null or empty for secret " + secretName + " in hops-system");
+    }
+    // decode secret
+    byte[] secretBytes = Base64.decodeBase64(encodedSecret);
+    return new String(secretBytes,"UTF-8");
   }
   
   private Pair<ApiKey, String> createServingApiKeyAndSecrets(Users user) throws ApiKeyException, UserException {

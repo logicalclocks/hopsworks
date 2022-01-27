@@ -37,6 +37,7 @@ import io.fabric8.kubernetes.api.model.apps.Deployment;
 import io.fabric8.kubernetes.api.model.apps.DeploymentBuilder;
 import io.fabric8.kubernetes.api.model.apps.DeploymentSpecBuilder;
 import io.fabric8.kubernetes.client.KubernetesClientException;
+import io.hops.common.Pair;
 import io.hops.hopsworks.common.dao.hdfsUser.HdfsUsersFacade;
 import io.hops.hopsworks.common.dao.jupyter.config.JupyterConfigFilesGenerator;
 import io.hops.hopsworks.common.dao.jupyter.config.JupyterDTO;
@@ -56,9 +57,11 @@ import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.common.util.templates.jupyter.JupyterNotebookConfigTemplate;
 import io.hops.hopsworks.common.util.templates.jupyter.KernelTemplate;
 import io.hops.hopsworks.common.util.templates.jupyter.SparkMagicConfigTemplate;
+import io.hops.hopsworks.exceptions.ApiKeyException;
 import io.hops.hopsworks.exceptions.ServiceException;
 import io.hops.hopsworks.exceptions.JobException;
 import io.hops.hopsworks.kube.common.KubeClientService;
+import io.hops.hopsworks.kube.common.KubeIstioClientService;
 import io.hops.hopsworks.kube.common.KubeStereotype;
 import io.hops.hopsworks.kube.project.KubeProjectConfigMaps;
 import io.hops.hopsworks.kube.security.KubeApiKeyUtils;
@@ -68,6 +71,7 @@ import io.hops.hopsworks.persistence.entity.jupyter.JupyterProject;
 import io.hops.hopsworks.persistence.entity.jupyter.JupyterSettings;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.user.Users;
+import io.hops.hopsworks.persistence.entity.user.security.apiKey.ApiKey;
 import io.hops.hopsworks.restutils.RESTCodes;
 
 import javax.ejb.EJB;
@@ -143,6 +147,8 @@ public class KubeJupyterManager extends JupyterManagerImpl implements JupyterMan
   private JobController jobController;
   @EJB
   private KubeApiKeyUtils kubeApiKeyUtils;
+  @EJB
+  private KubeIstioClientService kubeIstioClientService;
   
   @Override
   @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
@@ -171,12 +177,26 @@ public class KubeJupyterManager extends JupyterManagerImpl implements JupyterMan
       nodePortOptional = jupyterPort(service.getSpec());
       int nodePort = nodePortOptional.orElseThrow(() -> new IOException("NodePort could not be retrieved"));
   
+      // jupyter notebook config
       Writer jupyterNotebookConfig = new StringWriter();
       jupyterConfigFilesGenerator.createJupyterNotebookConfig(jupyterNotebookConfig, project, nodePort,
               jupyterSettings, hdfsUser, jupyterPaths.getCertificatesDir(), allowOrigin);
+      
+      // get serving api key
+      Optional<ApiKey> apiKey = kubeApiKeyUtils.getServingApiKey(user);
+      if (!apiKey.isPresent()) {
+        throw new ApiKeyException(RESTCodes.ApiKeyErrorCode.KEY_NOT_FOUND, Level.SEVERE,
+          "Serving API key for user " + user.getUsername() + " not found");
+      }
+      String secretName = kubeApiKeyUtils.getServingApiKeySecretName(apiKey.get().getPrefix());
+      String secret = kubeApiKeyUtils.getServingApiKeyValueFromKubeSecret(secretName);
+      
+      // spark config
       Writer sparkMagicConfig = new StringWriter();
-      jupyterConfigFilesGenerator.createSparkMagicConfig(sparkMagicConfig,project, jupyterSettings, hdfsUser,
-          jupyterPaths.getConfDirPath());
+      Map<String, String> extraEnvVars = new HashMap<>();
+      extraEnvVars.put("SERVING_API_KEY", secret);
+      jupyterConfigFilesGenerator.createSparkMagicConfig(sparkMagicConfig, project, jupyterSettings, hdfsUser,
+          jupyterPaths.getConfDirPath(), extraEnvVars);
 
       //If user selected Experiments or Spark we should use the default docker config for the Python kernel
       if(!jupyterSettings.isPythonKernel()) {
@@ -218,7 +238,7 @@ public class KubeJupyterManager extends JupyterManagerImpl implements JupyterMan
       kubeClientService.createOrReplaceDeployment(project, deployment);
   
       return new JupyterDTO(nodePort, token, CID, secretConfig, jupyterPaths.getCertificatesDir());
-    } catch (KubernetesClientException | IOException | ServiceDiscoveryException e) {
+    } catch (KubernetesClientException | IOException | ServiceDiscoveryException | ApiKeyException e) {
       logger.log(SEVERE, "Failed to start Jupyter notebook on Kubernetes", e);
       nodePortOptional.ifPresent(nodePort -> {
         try {
@@ -287,6 +307,12 @@ public class KubeJupyterManager extends JupyterManagerImpl implements JupyterMan
     environment.add(new EnvVarBuilder().withName("SERVING_API_KEY").withValueFrom(
       new EnvVarSourceBuilder().withNewSecretKeyRef(KubeApiKeyUtils.SERVING_API_KEY_SECRET_KEY,
         kubeApiKeyUtils.getProjectServingApiKeySecretName(user), false).build()).build());
+    
+    if (settings.getKubeKFServingInstalled()) {
+      Pair<String, Integer> istioIngressHostPort = kubeIstioClientService.getIstioIngressHostPort();
+      environment.add(new EnvVarBuilder().withName("ISTIO_ENDPOINT")
+        .withValue("http://" + istioIngressHostPort.getL() + ":" + istioIngressHostPort.getR()).build());
+    }
 
     List<Container> containers = new ArrayList<>();
     VolumeMount logMount = new VolumeMountBuilder()
