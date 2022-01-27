@@ -33,7 +33,8 @@ public enum ApiScope {
   ADMINISTER_USERS(true),
   ADMINISTER_USERS_REGISTER(true),
   MODELREGISTRY(false),
-  USER(false);
+  USER(false),
+  GIT(false);
 
   private final boolean privileged;
 

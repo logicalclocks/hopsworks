@@ -179,8 +179,6 @@ public class Settings implements Serializable {
   private static final String VARIABLE_KAFKA_DIR = "kafka_dir";
   private static final String VARIABLE_KAFKA_USER = "kafka_user";
   private static final String VARIABLE_KAFKA_MAX_NUM_TOPICS = "kafka_max_num_topics";
-  private static final String VARIABLE_ZK_DIR = "zk_dir";
-  private static final String VARIABLE_ZK_USER = "zk_user";
   private static final String VARIABLE_FILE_PREVIEW_IMAGE_SIZE
       = "file_preview_image_size";
   private static final String VARIABLE_FILE_PREVIEW_TXT_SIZE
@@ -342,6 +340,9 @@ public class Settings implements Serializable {
 
   /*----------------------- Python ------------------------*/
   private final static String VARIABLE_MAX_ENV_YML_BYTE_SIZE = "max_env_yml_byte_size";
+
+  //Git
+  private static final String VARIABLE_GIT_COMMAND_TIMEOUT_MINUTES_DEFAULT = "git_command_timeout_minutes";
   
   public enum KubeType{
     Local("local"),
@@ -581,8 +582,6 @@ public class Settings implements Serializable {
           elasticAdminUser, elasticAdminPassword, elasticJWTEnabled,
           elasticJWTUrlParameter, elasticJWTEXPMS, elasticServiceLogUser);
       ELASTIC_LOGS_INDEX_EXPIRATION = setLongVar(VARIABLE_ELASTIC_LOGS_INDEX_EXPIRATION, ELASTIC_LOGS_INDEX_EXPIRATION);
-      ZK_USER = setVar(VARIABLE_ZK_USER, ZK_USER);
-      ZK_DIR = setDirVar(VARIABLE_ZK_DIR, ZK_DIR);
       KIBANA_IP = setIpVar(VARIABLE_KIBANA_IP, KIBANA_IP);
       KAFKA_MAX_NUM_TOPICS = setIntVar(VARIABLE_KAFKA_MAX_NUM_TOPICS, KAFKA_MAX_NUM_TOPICS);
       HOPSWORKS_DEFAULT_SSL_MASTER_PASSWORD = setVar(VARIABLE_HOPSWORKS_SSL_MASTER_PASSWORD,
@@ -768,7 +767,11 @@ public class Settings implements Serializable {
       LIVY_STARTUP_TIMEOUT = setIntVar(VARIABLE_LIVY_STARTUP_TIMEOUT, LIVY_STARTUP_TIMEOUT);
   
       USER_SEARCH_ENABLED = setBoolVar(VARIABLE_USER_SEARCH, USER_SEARCH_ENABLED);
-  
+
+      //Git
+      GIT_MAX_COMMAND_TIMEOUT_MINUTES = setIntVar(VARIABLE_GIT_COMMAND_TIMEOUT_MINUTES_DEFAULT,
+          GIT_MAX_COMMAND_TIMEOUT_MINUTES);
+      
       cached = true;
     }
   }
@@ -1618,13 +1621,6 @@ public class Settings implements Serializable {
     return  getKibanaAppUri() + ELASTIC_SETTINGS.getElasticJWTURLParameter() + "=" + jwtToken + "&";
   }
 
-  private String ZK_USER = "zk";
-
-  public synchronized String getZkUser() {
-    checkCache();
-    return ZK_USER;
-  }
-
   /*
    * Comma-separated list of user emails that should not be persisted in the
    * userlogins table for auditing.
@@ -1666,6 +1662,26 @@ public class Settings implements Serializable {
     return JUPYTER_WS_PING_INTERVAL_MS;
 
   }
+
+  //Git
+  private String GIT_DIR = "/srv/hops/git";
+
+  public synchronized String getGitDir() {
+    checkCache();
+    return GIT_DIR;
+  }
+
+  private Integer GIT_MAX_COMMAND_TIMEOUT_MINUTES = 60;
+  public synchronized long getGitJwtExpMs() {
+    checkCache();
+    return GIT_MAX_COMMAND_TIMEOUT_MINUTES * 60 * 1000;
+  }
+
+  private String GIT_IMAGE_NAME = "git:0.1.0";
+  public synchronized String getGitImageName() {
+    return GIT_IMAGE_NAME;
+  }
+
 
   // Service key rotation interval
   private static final String JUPYTER_SHUTDOWN_TIMER_INTERVAL = "jupyter_shutdown_timer_interval";
@@ -1795,13 +1811,6 @@ public class Settings implements Serializable {
   public synchronized Integer getKafkaDefaultNumReplicas() {
     checkCache();
     return KAFKA_DEFAULT_NUM_REPLICAS;
-  }
-
-  private String ZK_DIR = "/srv/zookeeper";
-
-  public synchronized String getZkDir() {
-    checkCache();
-    return ZK_DIR;
   }
 
   private String CLUSTER_CERT = "asdasxasx8as6dx8a7sx7asdta8dtasxa8";

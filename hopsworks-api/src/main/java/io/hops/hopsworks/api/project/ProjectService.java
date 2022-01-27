@@ -50,6 +50,7 @@ import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.api.filter.Audience;
 import io.hops.hopsworks.api.filter.NoCacheResponse;
 import io.hops.hopsworks.api.filter.apiKey.ApiKeyRequired;
+import io.hops.hopsworks.api.git.GitResource;
 import io.hops.hopsworks.api.jobs.JobsResource;
 import io.hops.hopsworks.api.jupyter.JupyterService;
 import io.hops.hopsworks.api.jwt.JWTHelper;
@@ -180,6 +181,8 @@ public class ProjectService {
   private JobsResource jobs;
   @Inject
   private PythonResource pythonResource;
+  @Inject
+  private GitResource gitService;
   @EJB
   private DatasetFacade datasetFacade;
   @EJB
@@ -871,5 +874,11 @@ public class ProjectService {
   public ProjectAlertsResource projectAlert(@PathParam("projectId") Integer id) {
     this.projectAlertsResource.setProjectId(id);
     return projectAlertsResource;
+  }
+
+  @Path("{projectId}/git")
+  public GitResource git(@PathParam("projectId") Integer id) {
+    this.gitService.setProjectId(id);
+    return gitService;
   }
 }

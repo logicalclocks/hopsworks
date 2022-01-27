@@ -30,20 +30,20 @@ public class ResourceRequest {
   private Set<? extends AbstractFacade.FilterBy> filter;
   private Set<String> field;
   private Set<ResourceRequest> expansions;
-  
+
   //Only for internal use by child classes
   protected List<String> queryProps;
-  
+
   public ResourceRequest(Name name) {
     this(name, null);
   }
-  
+
   public ResourceRequest(Name name, String queryParam) {
     this.name = name;
     this.queryProps = new ArrayList<>();
     if (!Strings.isNullOrEmpty(queryParam) && queryParam.contains("(")) {
       String[] queryPropsArr = queryParam.substring(queryParam.indexOf('(') + 1, queryParam.lastIndexOf(')')).split(
-        ";");
+          ";");
       for (String queryProp : queryPropsArr) {
         String queryName = queryProp.substring(0, queryProp.indexOf('='));
         String queryVal = queryProp.substring(queryProp.indexOf('=') + 1);
@@ -62,43 +62,43 @@ public class ResourceRequest {
       }
     }
   }
-  
+
   public Name getName() {
     return name;
   }
-  
+
   public void setName(Name name) {
     this.name = name;
   }
-  
+
   public Integer getOffset() {
     return offset;
   }
-  
+
   public void setOffset(Integer offset) {
     this.offset = offset;
   }
-  
+
   public Integer getLimit() {
     return limit;
   }
-  
+
   public void setLimit(Integer limit) {
     this.limit = limit;
   }
-  
+
   public Set<? extends AbstractFacade.SortBy> getSort() {
     return sort;
   }
-  
+
   public void setSort(Set<? extends AbstractFacade.SortBy> sort) {
     this.sort = sort;
   }
-  
+
   public Set<? extends AbstractFacade.FilterBy> getFilter() {
     return filter;
   }
-  
+
   public void setFilter(Set<? extends AbstractFacade.FilterBy> filter) {
     this.filter = filter;
   }
@@ -114,7 +114,7 @@ public class ResourceRequest {
   public Set<ResourceRequest> getExpansions() {
     return expansions;
   }
-  
+
   public void setExpansions(Set<ResourceRequest> expansions) {
     this.expansions = expansions;
   }
@@ -132,7 +132,7 @@ public class ResourceRequest {
     }
     return false;
   }
-  
+
   public ResourceRequest get(Name name) {
     if(expansions != null && !expansions.isEmpty()) {
       for (ResourceRequest expansion : expansions) {
@@ -143,7 +143,7 @@ public class ResourceRequest {
     }
     return null;
   }
-  
+
   /**
    * Name of the resource requested by the user which needs to match the name of the resource in Hopsworks.
    */
@@ -213,16 +213,23 @@ public class ResourceRequest {
     MODELREGISTRIES,
     MODELSCHEMA,
     INPUTEXAMPLE,
-    ADMIN;
+    GIT,
+    REPOSITORY,
+    BRANCH,
+    COMMIT,
+    PROVIDER,
+    REMOTE,
+    ADMIN,
+    EXECUTION;
 
     public static Name fromString(String name) {
       return valueOf(name.toUpperCase());
     }
-    
+
     @Override
     public String toString() {
       return this.name().toLowerCase();
     }
   }
-  
+
 }

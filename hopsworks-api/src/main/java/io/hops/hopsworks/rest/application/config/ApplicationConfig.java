@@ -136,10 +136,14 @@ public class ApplicationConfig extends ResourceConfig {
     register(io.hops.hopsworks.api.elastic.ElasticResource.class);
 
     //uncomment to allow Cross-Origin Resource Sharing
-    //register(io.hops.hopsworks.api.filter.AllowCORSFilter.class);
+    // register(io.hops.hopsworks.filters.AllowCORSFilter.class);
 
     //swagger
     register(io.swagger.jaxrs.listing.ApiListingResource.class);
     register(io.swagger.jaxrs.listing.SwaggerSerializers.class);
+
+    //git
+    register(io.hops.hopsworks.api.git.execution.GitExecutionResource.class);
+    register(io.hops.hopsworks.api.git.GitResource.class);
   }
 }
