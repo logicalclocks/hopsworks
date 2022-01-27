@@ -2257,4 +2257,80 @@ public class RESTCodes {
       return range;
     }
   }
+
+  public enum GitOpErrorCode implements RESTErrorCode {
+    SIGNING_KEY_ERROR(0, "Couldn't get or create the GIT signing key.",
+        Response.Status.INTERNAL_SERVER_ERROR),
+    JWT_NOT_CREATED(1, "Jwt for GIT could not be created.", Response.Status.INTERNAL_SERVER_ERROR),
+    INVALID_GIT_ROLE_USER(3, "Invalid git security role for a user.", Response.Status.UNAUTHORIZED),
+    JWT_MATERIALIZATION_ERROR(4, "Could  not materialize jwt.", Response.Status.INTERNAL_SERVER_ERROR),
+    GIT_PATHS_CREATION_ERROR(5, "Could not create git paths.", Response.Status.INTERNAL_SERVER_ERROR),
+    REPOSITORY_URL_NOT_PROVIDED(6, "Repository url not provided.", Response.Status.BAD_REQUEST),
+    DIRECTORY_PATH_NOT_PROVIDED(7, "Path to directory not provided.", Response.Status.BAD_REQUEST),
+    DIRECTORY_PATH_DOES_NOT_EXIST(8, "The directory does not exist.", Response.Status.BAD_REQUEST),
+    PATH_IS_NOT_DIRECTORY(9, "Path is not a directory.", Response.Status.BAD_REQUEST),
+    GIT_HOME_ERROR(10, "Could not resolve GIT_HOME using DB.", Response.Status.INTERNAL_SERVER_ERROR),
+    GIT_CONTAINER_LAUNCH_ERROR(12, "Could not launch the git container.",
+        Response.Status.INTERNAL_SERVER_ERROR),
+    EXECUTION_OBJECT_NOT_FOUND(13, "Execution object with the id not found.", Response.Status.NOT_FOUND),
+    INVALID_AUTHENTICATION_METHOD(14, "Unknown authentication method.", Response.Status.BAD_REQUEST),
+    INVALID_GITHUB_USERNAME(15, "Invalid git username.", Response.Status.BAD_REQUEST),
+    USER_DOES_NOT_HAVE_PERMISSIONS_TO_GIT_DIR(16, "Git directory security error.",
+        Response.Status.BAD_REQUEST),
+    COMMIT_MESSAGE_IS_EMPTY(17, "Commit command message should not be empty.",
+        Response.Status.BAD_REQUEST),
+    INVALID_BRANCH_NAME(18, "Branch name should not be empty.", Response.Status.BAD_REQUEST),
+    REPOSITORY_NOT_FOUND(19, "Repository not found.", Response.Status.NOT_FOUND),
+    GIT_PROVIDER_NOT_PROVIDED(20, "Git provider not provided.", Response.Status.BAD_REQUEST),
+    INVALID_REPOSITORY_URL(21, "Invalid repository url provided", Response.Status.BAD_REQUEST),
+    DIRECTORY_IS_ALREADY_GIT_REPO(22, "Directory is already a git repository",
+        Response.Status.BAD_REQUEST),
+    INVALID_BRANCH_ACTION(23, "Invalid branch action provided.", Response.Status.BAD_REQUEST),
+    INVALID_REMOTES_ACTION(24, "Invalid remotes action provided", Response.Status.BAD_REQUEST),
+    INVALID_REMOTE_NAME(25, "Invalid remote name provided. Remote name should be empty.",
+        Response.Status.BAD_REQUEST),
+    INVALID_REMOTE_URL_PROVIDED(26, "Invalid remote url provided. Remote url should not be empty.",
+        Response.Status.BAD_REQUEST),
+    GIT_OPERATION_ERROR(27, "Git operation error.", Response.Status.INTERNAL_SERVER_ERROR),
+    GIT_REPOSITORIES_NOT_FOUND(28, "No git repository found in project", Response.Status.NOT_FOUND),
+    GIT_USERNAME_AND_PASSWORD_NOT_SET(29, "Git username and password not set",
+        Response.Status.BAD_REQUEST),
+    COMMIT_FILES_EMPTY(30, "Files to add and commit is empty.", Response.Status.BAD_REQUEST),
+    INVALID_REPOSITORY_ACTION(31, "Invalid repository action.", Response.Status.BAD_REQUEST),
+    REMOTE_NOT_FOUND(32, "Git remote not found.", Response.Status.NOT_FOUND),
+    INVALID_BRANCH_AND_COMMIT_CHECKOUT_COMBINATION(33, "Branch and Hash are mutually exclusive.",
+        Response.Status.BAD_REQUEST),
+    INVALID_GIT_COMMAND_CONFIGURATION(34, "Invalid git command operation",
+        Response.Status.INTERNAL_SERVER_ERROR);
+
+    private Integer code;
+    private String message;
+    private Response.Status respStatus;
+    public final int range = 400000;
+
+    GitOpErrorCode(Integer code, String message, Response.Status respStatus) {
+      this.code = code;
+      this.message = message;
+      this.respStatus = respStatus;
+    }
+
+    @Override
+    public Integer getCode() {
+      return code;
+    }
+
+    @Override
+    public String getMessage() {
+      return message;
+    }
+
+    public Response.StatusType getRespStatus() {
+      return respStatus;
+    }
+
+    @Override
+    public int getRange() {
+      return range;
+    }
+  }
 }

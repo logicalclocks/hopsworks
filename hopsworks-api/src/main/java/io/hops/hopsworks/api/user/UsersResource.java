@@ -60,6 +60,7 @@ import io.hops.hopsworks.common.dao.project.team.ProjectTeamFacade;
 import io.hops.hopsworks.common.dao.user.BbcGroupFacade;
 import io.hops.hopsworks.common.dao.user.UserProjectDTO;
 import io.hops.hopsworks.common.dao.user.security.secrets.SecretPlaintext;
+import io.hops.hopsworks.common.git.util.GitCommandOperationUtil;
 import io.hops.hopsworks.common.project.ProjectController;
 import io.hops.hopsworks.common.security.secrets.SecretsController;
 import io.hops.hopsworks.common.user.AuthController;
@@ -142,6 +143,10 @@ public class UsersResource {
   private Settings settings;
   @EJB
   private AuthController authController;
+  @EJB
+  private GitProvidersSecretsBuilder gitProvidersSecretsBuilder;
+  @EJB
+  private GitCommandOperationUtil gitCommandOperationUtil;
 
   @GET
   @Produces(MediaType.APPLICATION_JSON)
@@ -385,6 +390,36 @@ public class UsersResource {
     }
     userDTO.setRole(pt.getTeamRole());
     return Response.ok().entity(userDTO).build();
+  }
+
+
+  @ApiOperation(value = "Get git providers with the configured secrets", response= GitProviderSecretsDTO.class)
+  @GET
+  @Path("/git/provider")
+  @Produces(MediaType.APPLICATION_JSON)
+  @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
+  @ApiKeyRequired(acceptedScopes = {ApiScope.GIT}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
+  public Response gitProviders(@Context SecurityContext sc, @Context UriInfo uriInfo) {
+    Users user = jWTHelper.getUserPrincipal(sc);
+    GitProviderSecretsDTO dto = gitProvidersSecretsBuilder.build(uriInfo, user);
+    return Response.ok().entity(dto).build();
+  }
+
+  @ApiOperation(value = "Get git providers with the configured secrets", response= GitProviderSecretsDTO.class)
+  @POST
+  @Path("/git/provider")
+  @Produces(MediaType.APPLICATION_JSON)
+  @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
+  @ApiKeyRequired(acceptedScopes = {ApiScope.GIT}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
+  public Response setGitProvider(@Context SecurityContext sc, @Context UriInfo uriInfo,
+                                 GitProviderSecretsDTO gitProviderSecretsDTO) throws UserException {
+    Users user = jWTHelper.getUserPrincipal(sc);
+    gitCommandOperationUtil.createAuthenticationSecret(user,
+        gitProviderSecretsDTO.getUsername(),
+        gitProviderSecretsDTO.getToken(),
+        gitProviderSecretsDTO.getGitProvider());
+    GitProviderSecretsDTO dto = gitProvidersSecretsBuilder.build(uriInfo, user);
+    return Response.ok().entity(dto).build();
   }
   
   @POST

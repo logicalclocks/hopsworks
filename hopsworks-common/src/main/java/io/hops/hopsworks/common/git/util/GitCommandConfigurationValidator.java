@@ -1,0 +1,140 @@
+/*
+ * This file is part of Hopsworks
+ * Copyright (C) 2021, Logical Clocks AB. All rights reserved
+ *
+ * Hopsworks is free software: you can redistribute it and/or modify it under the terms of
+ * the GNU Affero General Public License as published by the Free Software Foundation,
+ * either version 3 of the License, or (at your option) any later version.
+ *
+ * Hopsworks is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+ * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+ * PURPOSE.  See the GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License along with this program.
+ * If not, see <https://www.gnu.org/licenses/>.
+ */
+package io.hops.hopsworks.common.git.util;
+
+import com.google.common.base.Strings;
+import io.hops.hopsworks.common.dao.git.GitRepositoryFacade;
+import io.hops.hopsworks.common.git.BasicAuthSecrets;
+import io.hops.hopsworks.common.git.CloneCommandConfiguration;
+import io.hops.hopsworks.common.git.CommitCommandConfiguration;
+import io.hops.hopsworks.common.hdfs.inode.InodeController;
+import io.hops.hopsworks.exceptions.GitOpException;
+import io.hops.hopsworks.persistence.entity.git.GitRepository;
+import io.hops.hopsworks.persistence.entity.git.config.GitCommandConfiguration;
+import io.hops.hopsworks.persistence.entity.git.config.GitCommandType;
+import io.hops.hopsworks.persistence.entity.git.config.GitProvider;
+import io.hops.hopsworks.persistence.entity.hdfs.inode.Inode;
+import io.hops.hopsworks.persistence.entity.project.Project;
+import io.hops.hopsworks.restutils.RESTCodes;
+
+import javax.ejb.EJB;
+import javax.ejb.Stateless;
+import java.util.Optional;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+@Stateless
+public class GitCommandConfigurationValidator {
+  private static final Logger LOGGER = Logger.getLogger(GitCommandConfigurationValidator.class.getName());
+  private static final Pattern REPO_ATTRS = Pattern.compile("http(s)?://(?<type>.+)/(?<username>.+)/(?<repository>"
+      + ".+)\\.git");
+
+  @EJB
+  private GitRepositoryFacade gitRepositoryFacade;
+  @EJB
+  private InodeController inodeController;
+
+  public void verifyCloneOptions(CloneCommandConfiguration config) throws IllegalArgumentException {
+    if (Strings.isNullOrEmpty(config.getUrl())) {
+      throw new IllegalArgumentException(RESTCodes.GitOpErrorCode.REPOSITORY_URL_NOT_PROVIDED.getMessage());
+    } else if (config.getProvider() == null) {
+      throw new IllegalArgumentException(RESTCodes.GitOpErrorCode.GIT_PROVIDER_NOT_PROVIDED.getMessage()
+          + "Invalid git provider. Git provider should be one of GitHub, GitLab, or BitBucket");
+    }
+    verifyRepositoryPath(config.getPath());
+  }
+
+  public void verifyCommitOptions(CommitCommandConfiguration commitConfiguration)
+      throws IllegalArgumentException {
+    if (Strings.isNullOrEmpty(commitConfiguration.getMessage())) {
+      throw new IllegalArgumentException(RESTCodes.GitOpErrorCode.COMMIT_MESSAGE_IS_EMPTY.getMessage());
+    } else if (!commitConfiguration.isAll() && commitConfiguration.getFiles().isEmpty()) {
+      throw new IllegalArgumentException(RESTCodes.GitOpErrorCode.COMMIT_FILES_EMPTY.getMessage() + ". Please specify" +
+          " set the all option to true if you want to add and commit all the files.");
+    }
+  }
+
+  public void verifyRemoteNameAndBranch(String remoteName, String branchName) throws IllegalArgumentException {
+    if (Strings.isNullOrEmpty(remoteName)) {
+      throw new IllegalArgumentException(RESTCodes.GitOpErrorCode.INVALID_REMOTE_NAME.getMessage());
+    } else if (Strings.isNullOrEmpty(branchName)) {
+      throw new IllegalArgumentException(RESTCodes.GitOpErrorCode.INVALID_BRANCH_NAME.getMessage());
+    }
+  }
+
+  public GitRepository verifyRepository(Project project, Integer repositoryId) throws GitOpException,
+      IllegalArgumentException {
+    Optional<GitRepository> optional = gitRepositoryFacade.findByIdAndProject(project, repositoryId);
+    return optional.orElseThrow(() -> new GitOpException(RESTCodes.GitOpErrorCode.REPOSITORY_NOT_FOUND, Level.SEVERE,
+        "No repository with id [" + repositoryId + "] in project [" + project.getId() + "] found in database."));
+  }
+
+  /**
+   * Verifies if the path to clone is a dir and is not already a git repository
+   *
+   * @param gitPath
+   * @throws IllegalArgumentException
+   */
+  private void verifyRepositoryPath(String gitPath) throws IllegalArgumentException {
+    Inode inode = inodeController.getInodeAtPath(gitPath);
+    if (Strings.isNullOrEmpty(gitPath)) {
+      throw new IllegalArgumentException(RESTCodes.GitOpErrorCode.DIRECTORY_PATH_NOT_PROVIDED.getMessage());
+    } else if (inode == null) {
+      throw new IllegalArgumentException(RESTCodes.GitOpErrorCode.DIRECTORY_PATH_DOES_NOT_EXIST.getMessage());
+    } else {
+      if (!inode.isDir()) {
+        throw new IllegalArgumentException(RESTCodes.GitOpErrorCode.PATH_IS_NOT_DIRECTORY.getMessage());
+      }
+      //Verify if path is not already a git repository
+      if (gitRepositoryFacade.findByInode(inode).isPresent()) {
+        throw new IllegalArgumentException(RESTCodes.GitOpErrorCode.DIRECTORY_IS_ALREADY_GIT_REPO.getMessage());
+      }
+    }
+  }
+
+  public void validateProviderConfiguration(BasicAuthSecrets secrets, GitCommandConfiguration gitCommandConfiguration)
+      throws GitOpException {
+    GitCommandType commandType = gitCommandConfiguration.getCommandType();
+    GitProvider gitProvider = gitCommandConfiguration.getProvider();
+    //For BitBucket it needs username and token/password for clone, pull, and push.
+    //For GitHub and GitLab we can clone without username and token/password if the repository is public. But for
+    // push we still need username and password/token.
+    if (gitProvider == GitProvider.BITBUCKET && (commandType == GitCommandType.PULL
+        || commandType == GitCommandType.PUSH || commandType == GitCommandType.CLONE)
+        && (Strings.isNullOrEmpty(secrets.getUsername()) || Strings.isNullOrEmpty(secrets.getPassword()))) {
+      throw new GitOpException(RESTCodes.GitOpErrorCode.GIT_USERNAME_AND_PASSWORD_NOT_SET, Level.WARNING, ". You " +
+          "should setup secrets for " + gitProvider.getProvider() + " to be able to perform a "
+          + commandType.getGitCommand() + " operation");
+    } else if ((gitProvider == GitProvider.GIT_HUB || gitProvider == GitProvider.GIT_LAB)
+        && (commandType == GitCommandType.PUSH)
+        && (Strings.isNullOrEmpty(secrets.getUsername()) || Strings.isNullOrEmpty(secrets.getPassword()))) {
+      throw new GitOpException(RESTCodes.GitOpErrorCode.GIT_USERNAME_AND_PASSWORD_NOT_SET, Level.WARNING,
+          ". You should setup secrets for " + gitProvider.getProvider() + " to be able to perform a "
+              + commandType.getGitCommand() + " operation");
+    }
+  }
+
+  public String getRepositoryName(String remoteURI) throws IllegalArgumentException {
+    Matcher matcher = REPO_ATTRS.matcher(remoteURI);
+    if (matcher.matches()) {
+      return matcher.group("repository");
+    } else {
+      throw new IllegalArgumentException("Could not parse remote URI: " + remoteURI);
+    }
+  }
+}
