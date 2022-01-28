@@ -1,6 +1,6 @@
 =begin
  This file is part of Hopsworks
- Copyright (C) 2018, Logical Clocks AB. All rights reserved
+ Copyright (C) 2022, Logical Clocks AB. All rights reserved
 
  Hopsworks is free software: you can redistribute it and/or modify it under the terms of
  the GNU Affero General Public License as published by the Free Software Foundation,
@@ -14,12 +14,16 @@
  If not, see <https://www.gnu.org/licenses/>.
 =end
 
+# serving_default_tensorflow_inference_spec.rb: Tests for making inference with tensorflow models on default deployments
+
 describe "On #{ENV['OS']}" do
   after (:all) do
-    clean_all_test_projects(spec: "tf_inference")
+    clean_all_test_projects(spec: "serving_default_tensorflow_inference")
     purge_all_tf_serving_instances
   end
+
   describe 'inference' do
+
     let(:test_data) {[[0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
                        0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
                        0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
@@ -74,139 +78,68 @@ describe "On #{ENV['OS']}" do
                        0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
                        0.0, 0.0, 0.0, 0.0]]}
 
-    describe "#infer" do
-      context 'without authentication', vm: true do
-        before :all do
-          with_valid_project
-          with_tf_serving(@project[:id], @project[:projectname], @user[:username])
-          reset_session
-        end
-
-        it "the inference should fail" do
-          post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/inference/models/#{@serving[:name]}:predict"
-          expect_status_details(401, error_code: 200003)
-        end
-      end
-
-      context 'with authentication and with tf serving', vm: true do
-        before :all do
-          with_valid_project
-          with_tf_serving(@project[:id], @project[:projectname], @user[:username])
-        end
-
-        it "should fail to send a request to a non existing model"  do
-          post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/inference/models/nonexistingmodel:predict"
-          expect_status_details(404, error_code: 250000)
-        end
-
-        it "should fail to send a request to a non running model" do
-          post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/inference/models/#{@serving[:name]}:predict"
-          expect_status_details(400, error_code: 250001)
-        end
-
-        context 'with running model do' do
-
-          before :all do
-            post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/#{@serving[:id]}?action=start"
-            expect_status_details(200)
-
-            # Sleep some time while the TfServing server starts
-            wait_for_type(@serving[:name])
-          end
-
-          it "should succeeds to infer from a serving with kafka logging" do
-            post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/inference/models/#{@serving[:name]}:predict", {
-                signature_name: 'predict_images',
-                instances: test_data
-            }
-            expect_status_details(200)
-            # TODO(Check that the response has the correct format)
-          end
-
-          it "should succeed to infer from a serving with no kafka logging" do
-            put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
-             {id: @serving[:id],
-              name: @serving[:name],
-              modelPath: @serving[:model_path],
-              modelVersion: @serving[:model_version],
-              batchingEnabled: false,
-              kafkaTopicDTO: {
-                 name: "NONE"
-              },
-              modelServer: "TENSORFLOW_SERVING",
-              servingTool: "DEFAULT",
-              requestedInstances: 1
-             }
-            expect_status_details(201)
-
-            # Sleep some time while the TfServing server restarts
-            wait_for_type(@serving[:name])
-
-            post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/inference/models/#{@serving[:name]}:predict", {
-                signature_name: 'predict_images',
-                instances: test_data
-            }
-            expect_status_details(200)
-          end
-
-          it "should receive an error if the input payload is malformed" do
-            post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/inference/models/#{@serving[:name]}:predict", {
-                signature_name: 'predict_images',
-                somethingwrong: test_data
-            }
-            expect_status_details(400, error_code: 250008)
-          end
-
-          it "should receive an error if the input payload is empty" do
-            post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/inference/models/#{@serving[:name]}:predict"
-            expect_status_details(400, error_code: 250008)
-          end
-
-          it "should receive an error if the input payload is malformed" do
-            post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/inference/models/#{@serving[:name]}:predict", {
-                signature_name: 'predict_images',
-                somethingwrong: test_data
-            }
-            expect_status_details(400, error_code: 250008)
-          end
-
-          it "should receive an error if the input payload is empty" do
-            post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/inference/models/#{@serving[:name]}:predict"
-            expect_status_details(400, error_code: 250008)
-          end
-        end
-      end
-    end
-    describe 'with Api key' do
-      before(:all) do
+    context 'with authentication and with tensorflow serving', vm: true do
+      before :all do
         with_valid_project
-        with_tf_serving(@project[:id], @project[:projectname], @user[:username])
-        start_serving(@project, @serving)
-        wait_for_type(@serving[:name])
-        sleep(5)
-        @key = create_api_key('inferenceKey', %w(SERVING))
-        @invalid_key = create_api_key('inferenceKey_invalid', %w(JOB DATASET_VIEW DATASET_CREATE DATASET_DELETE))
-        reset_session
+        with_tensorflow_serving(@project[:id], @project[:projectname], @user[:username])
       end
-      context 'with invalid scope' do
-        before(:all) do
-          set_api_key_to_header(@invalid_key)
+
+      context 'with running model' do
+        before :all do
+          start_serving(@project, @serving)
+          wait_for_type(@serving[:name])
         end
-        it 'should fail to access inference end-point' do
-          post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/inference/models/#{@serving[:name]}:predict"
-          expect_status_details(403, error_code: 320004)
-        end
-      end
-      context 'with valid scope' do
-        before(:all) do
-          set_api_key_to_header(@key)
-        end
-        it 'should succeed to infer' do
+
+        # kafka topic
+
+        it "should succeed to infer from a serving with kafka logging" do
           post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/inference/models/#{@serving[:name]}:predict", {
               signature_name: 'predict_images',
               instances: test_data
           }
           expect_status_details(200)
+          # TODO(Check that the response has the correct format)
+        end
+
+        it "should succeed to infer from a serving with no kafka logging" do
+          put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
+           {id: @serving[:id],
+            name: @serving[:name],
+            modelPath: @serving[:model_path],
+            modelVersion: @serving[:model_version],
+            batchingEnabled: false,
+            kafkaTopicDTO: {
+               name: "NONE"
+            },
+            modelServer: "TENSORFLOW_SERVING",
+            servingTool: "DEFAULT",
+            requestedInstances: 1
+           }
+          expect_status_details(201)
+
+          # Sleep some time while the TfServing server restarts
+          wait_for_type(@serving[:name])
+
+          post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/inference/models/#{@serving[:name]}:predict", {
+              signature_name: 'predict_images',
+              instances: test_data
+          }
+          expect_status_details(200)
+        end
+
+        # inputs payload
+
+        it "should receive an error if the input payload is malformed" do
+          post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/inference/models/#{@serving[:name]}:predict", {
+              signature_name: 'predict_images',
+              somethingwrong: test_data
+          }
+          expect_status_details(400, error_code: 250008)
+        end
+
+        it "should receive an error if the input payload is empty" do
+          post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/inference/models/#{@serving[:name]}:predict"
+          expect_status_details(400, error_code: 250008)
         end
       end
     end

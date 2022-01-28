@@ -44,7 +44,7 @@ angular.module('hopsWorksApp')
 
             self.servingToolKFServing = "KFSERVING";
             self.servingToolDefault = "DEFAULT";
-            self.modelServerFlask = "FLASK";
+            self.modelServerPython = "PYTHON";
             self.modelServerTensorflow = "TENSORFLOW_SERVING";
 
             /**
