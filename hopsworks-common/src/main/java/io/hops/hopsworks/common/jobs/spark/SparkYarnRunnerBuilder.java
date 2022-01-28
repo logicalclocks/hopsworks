@@ -194,7 +194,7 @@ public class SparkYarnRunnerBuilder {
     Map<String, String> finalJobProps = new HashMap<>();
 
     finalJobProps.putAll(sparkConfigurationUtil.setFrameworkProperties(project, job.getJobConfig(), settings,
-            jobUser, extraJavaOptions, kafkaBrokersString, hopsworksRestEndpoint, serviceDiscoveryController));
+            jobUser, extraJavaOptions, kafkaBrokersString, hopsworksRestEndpoint, serviceDiscoveryController, null));
 
     finalJobProps.put(Settings.SPARK_YARN_APPMASTER_SPARK_USER, jobUser);
     finalJobProps.put(Settings.SPARK_EXECUTOR_SPARK_USER, jobUser);

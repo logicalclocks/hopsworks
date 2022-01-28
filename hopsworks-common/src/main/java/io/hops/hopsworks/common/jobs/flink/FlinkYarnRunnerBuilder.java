@@ -135,7 +135,7 @@ public class FlinkYarnRunnerBuilder {
   
     Map<String, String> finalJobProps = flinkConfigurationUtil
       .setFrameworkProperties(project, job.getJobConfig(), settings, jobUser, extraJavaOptions,
-          kafkaBrokersString, hopsworksRestEndpoint, serviceDiscoveryController);
+          kafkaBrokersString, hopsworksRestEndpoint, serviceDiscoveryController, null);
   
     //Parse properties from Spark config file
     Yaml yaml = new Yaml();

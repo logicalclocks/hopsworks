@@ -1280,7 +1280,7 @@ public class ProjectController {
         }
 
         try {
-          servingController.deleteServings(project);
+          servingController.deleteAll(project);
           cleanupLogger.logSuccess("Removed servings");
         } catch (Exception ex) {
           cleanupLogger.logError("Error when removing serving instances");
@@ -1778,7 +1778,7 @@ public class ProjectController {
 
       // Remove servings
       try {
-        servingController.deleteServings(project);
+        servingController.deleteAll(project);
       } catch (ServingException e) {
         throw new IOException(e);
       }

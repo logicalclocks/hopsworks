@@ -1,6 +1,6 @@
 <!--
   ~ This file is part of Hopsworks
-  ~ Copyright (C) 2018, Logical Clocks AB. All rights reserved
+  ~ Copyright (C) 2022, Logical Clocks AB. All rights reserved
   ~
   ~ Hopsworks is free software: you can redistribute it and/or modify it under the terms of
   ~ the GNU Affero General Public License as published by the Free Software Foundation,
@@ -57,14 +57,14 @@
                                                         </md-radio-button>
                                                     </td>
                                                     <td>
-                                                        <md-radio-button value="FLASK" class="md-primary" style="display:
-                                                    inline-block"
-                                                                         ng-click="servingCtrl.setModelServer(servingCtrl.modelServerFlask);">
+                                                        <md-radio-button value="PYTHON" class="md-primary"
+                                                                         style="display: inline-block"
+                                                                         ng-click="servingCtrl.setModelServer(servingCtrl.modelServerPython);">
                                                             Python (SkLearn, XGBoost, ...)
                                                             <i class="fa fa-info-circle" style="pointer-events: all"
                                                                tooltip-placement="auto left"
                                                                tooltip-append-to-body="true"
-                                                               uib-tooltip='Flask server that exposes a model using an user-provided python script'
+                                                               uib-tooltip='Python server that exposes a model using an user-provided python script'
                                                                style="margin-left: 10px"></i>
                                                         </md-radio-button>
                                                     </td>
@@ -80,15 +80,7 @@
                                     <!-- Labels -->
                                     <div class="col-xs-3 col-sm-3 col-md-3 col-lg-3" style="text-align: right;">
                                         <div style="margin-top: 12px;"><label>Serving Name</label></div>
-                                        <div ng-show="servingCtrl.editServing.modelServer === servingCtrl.modelServerFlask"
-                                             style="margin-top: 12px;">
-                                            <label>Python script</label>
-                                            <i class="fa fa-info-circle" tooltip-placement="auto bottom"
-                                               uib-tooltip='Select a python script that implements the Predict class and the predict(inputs) --> prediction function.'
-                                               style="margin-left: 10px"></i>
-                                        </div>
-                                        <div ng-show="servingCtrl.editServing.modelServer === servingCtrl.modelServerTensorflow"
-                                             style="margin-top: 12px;">
+                                        <div style="margin-top: 12px;">
                                             <label>Model</label>
                                             <i class="fa fa-info-circle" tooltip-placement="auto bottom"
                                                uib-tooltip='Select a model directory. The correct directory structure can be found in the documentation'
@@ -112,6 +104,13 @@
                                                uib-tooltip='Deploy a model with KFServing to leverage additional features such as scale-to-zero or online input transformations.'
                                                style="margin-left: 10px"></i>
                                         </div>
+                                        <div style="margin-top: 12px;"
+                                             ng-if="servingCtrl.editServing.modelServer === servingCtrl.modelServerPython">
+                                            <label>Predictor</label>
+                                            <i class="fa fa-info-circle" tooltip-placement="auto bottom"
+                                               uib-tooltip='Select a python script that implements the Predict class and the predict(inputs) function.'
+                                               style="margin-left: 5px"></i>
+                                        </div>
                                         <div style="margin-top: 12px;">
                                             <label>Transformer</label>
                                             <i class="fa fa-info-circle" tooltip-placement="auto bottom"
@@ -134,17 +133,16 @@
                                         <!-- Serving name -->
                                         <input style="margin-top: 6px" name="name" class="form-control" type="text"
                                                ng-model="servingCtrl.editServing.name">
-                                        <!-- Model path -->
+                                        <!-- Model name -->
                                         <div>
                                             <div class="col-xs-8 col-sm-8 col-md-9 col-lg-10" style="padding: 0">
                                                 <ui-select tagging tagging="tagTransform"
-                                                           ng-model="servingCtrl.editServing.modelPath"
+                                                           ng-model="servingCtrl.editServing.modelName"
                                                            style="margin-top:5px;" class="ui-select-height-auto" theme="bootstrap"
                                                            title="Search for servable models"
-                                                           ng-show="servingCtrl.editServing.modelServer === servingCtrl.modelServerTensorflow"
                                                            on-select="servingCtrl.setFullModelPath()">
                                                     <ui-select-match placeholder="Enter model name...">
-                                                        {{servingCtrl.editServing.modelPath}}
+                                                        {{servingCtrl.editServing.modelName}}
                                                     </ui-select-match>
                                                     <ui-select-choices
                                                             refresh="servingCtrl.fetchAsync($select.search)"
@@ -163,45 +161,25 @@
                                                         </div>
                                                     </ui-select-no-choice>
                                                 </ui-select>
-                                                <input style="margin-top: 5px" type="text" class="form-control"
-                                                       ng-model="servingCtrl.editServing.modelPath"
-                                                       ng-show="servingCtrl.editServing.modelServer === servingCtrl.modelServerFlask">
                                             </div>
                                             <div class="col-xs-4 col-sm-4 col-md-3 col-lg-2"
                                                  style="padding: 0 0 0 5px;">
-                                                <div ng-show="servingCtrl.editServing.modelServer === servingCtrl.modelServerTensorflow">
+                                                <div>
                                                     <label style="width: 100%;">
                                                         <button style="margin-top: 5px; width: 100%"
                                                                 class="btn btn-default"
-                                                                ng-click="servingCtrl.selectFile('predictor')">
-                                                            <span>Browse</span>
-                                                        </button>
-                                                    </label>
-                                                </div>
-                                                <div ng-show="servingCtrl.editServing.modelServer === servingCtrl.modelServerFlask">
-                                                    <label style="width: 100%">
-                                                        <button style="margin-top: 5px; width: 100%"
-                                                                class="btn btn-default"
-                                                                ng-click="servingCtrl.selectFile('predictor')">
+                                                                ng-click="servingCtrl.selectFile('model')">
                                                             <span>Browse</span>
                                                         </button>
                                                     </label>
                                                 </div>
                                             </div>
                                         </div>
-                                        <!-- Model version (FLASK) -->
-                                        <input style="margin-top: 5px; width: 30%" name="modelVersion"
-                                               name="modelVersion" class="form-control" type="text"
-                                               ng-model="servingCtrl.editServing.modelVersion"
-                                               ng-options="x for x in servingCtrl.modelVersions"
-                                               ng-if="servingCtrl.editServing.modelServer === servingCtrl.modelServerFlask"
-                                               ng-change="servingCtrl.setModelVersion(servingCtrl.editServing.modelVersion)">
-                                        <!-- Model version (TENSORFLOW) -->
+                                        <!-- Model version -->
                                         <select class="form-control" style="margin-top: 5px; width: 30%"
                                                 name="modelVersion"
                                                 ng-model="servingCtrl.editServing.modelVersion"
                                                 ng-options="x for x in servingCtrl.modelVersions"
-                                                ng-if="servingCtrl.editServing.modelServer === servingCtrl.modelServerTensorflow"
                                                 ng-change="servingCtrl.setModelVersion(servingCtrl.editServing.modelVersion)"></select>
                                         <!-- Artifact version -->
                                         <select class="form-control" style="margin-top: 5px; width: 30%"
@@ -211,27 +189,55 @@
                                                 ng-disabled="!servingCtrl.isKubernetes"
                                                 ng-change="servingCtrl.setArtifactVersion(servingCtrl.artifactVersion)"></select>
                                         <!-- KFServing -->
-                                        <md-checkbox style="margin-top: 7px; margin-bottom: -2px;"
-                                                     class="md-primary"
-                                                     name="kfserving"
-                                                     ng-model="servingCtrl.kfserving"
-                                                     ng-disabled="!servingCtrl.isKFServing || servingCtrl.editServing.modelServer === servingCtrl.modelServerFlask"
-                                                     ng-change="servingCtrl.setKFServing(servingCtrl.kfserving)"></md-checkbox>
+                                        <div>
+                                            <md-checkbox style="margin-top: 7px; margin-bottom: 13px;"
+                                                         class="md-primary"
+                                                         name="kfserving"
+                                                         ng-model="servingCtrl.kfserving"
+                                                         ng-disabled="!servingCtrl.isKFServing"
+                                                         ng-change="servingCtrl.setKFServing(servingCtrl.kfserving)">
+                                                <span style="color: darkred"
+                                                      ng-show="servingCtrl.kfserving && servingCtrl.editServing.modelServer === servingCtrl.modelServerPython && !servingCtrl.editServing.predictor">
+                                                    Sklearn models only
+                                                </span>
+                                            </md-checkbox>
+                                        </div>
+                                        <!-- Predictor -->
+                                        <div ng-if="servingCtrl.editServing.modelServer === servingCtrl.modelServerPython">
+                                            <div class="col-xs-8 col-sm-8 col-md-9 col-lg-10"
+                                                 style="padding: 0">
+                                                <input type="text" class="form-control"
+                                                       ng-model="servingCtrl.editServing.predictor"
+                                                       ng-disabled="servingCtrl.editServing.modelServer === servingCtrl.modelServerTensorflow"
+                                                       ng-change="servingCtrl.setPredictor(servingCtrl.editServing.predictor)">
+                                            </div>
+                                            <div class="col-xs-4 col-sm-4 col-md-3 col-lg-2"
+                                                 style="padding: 0 0 0 5px">
+                                                <label style="width: 100%">
+                                                    <button class="btn btn-default"
+                                                            ng-click="servingCtrl.selectFile('predictor')"
+                                                            ng-disabled="servingCtrl.editServing.modelServer === servingCtrl.modelServerTensorflow"
+                                                            style="width: 100%;">
+                                                        <span>Browse</span>
+                                                    </button>
+                                                </label>
+                                            </div>
+                                        </div>
                                         <!-- Transformer -->
                                         <div>
                                             <div class="col-xs-8 col-sm-8 col-md-9 col-lg-10"
-                                                 style="margin-top: 15px; padding: 0">
+                                                 style="padding: 0">
                                                 <input type="text" class="form-control"
                                                        ng-model="servingCtrl.editServing.transformer"
-                                                       ng-disabled="!servingCtrl.kfserving || servingCtrl.editServing.modelServer === servingCtrl.modelServerFlask"
+                                                       ng-disabled="!servingCtrl.kfserving"
                                                        ng-change="servingCtrl.setTransformer(servingCtrl.editServing.transformer)">
                                             </div>
                                             <div class="col-xs-4 col-sm-4 col-md-3 col-lg-2"
-                                                 style="padding: 0 0 0 5px; margin-top: 15px">
+                                                 style="padding: 0 0 0 5px">
                                                 <label style="width: 100%">
                                                     <button class="btn btn-default"
                                                             ng-click="servingCtrl.selectFile('transformer')"
-                                                            ng-disabled="!servingCtrl.kfserving || servingCtrl.editServing.modelServer === servingCtrl.modelServerFlask"
+                                                            ng-disabled="!servingCtrl.kfserving"
                                                             style="width: 100%;">
                                                         <span>Browse</span>
                                                     </button>
@@ -296,14 +302,14 @@
                                                          style="margin-top: 17px; margin-bottom: -2px;"
                                                          class="md-primary"
                                                          ng-model="servingCtrl.editServing.batchingEnabled"
-                                                         ng-disabled="servingCtrl.kfserving || servingCtrl.editServing.modelServer === servingCtrl.modelServerFlask">
+                                                         ng-disabled="servingCtrl.kfserving || servingCtrl.editServing.modelServer === servingCtrl.modelServerPython">
                                             </md-checkbox>
                                             <!-- Kafka -->
                                             <select class="form-control" style="margin-top: 12px; width: 40%"
                                                     name="kafkaTopicName"
                                                     ng-model="servingCtrl.editServing.kafkaTopicDTO"
                                                     ng-options="x.name for x in servingCtrl.projectKafkaTopics"
-                                                    ng-change="servingCtrl.updateKafkaDetails()"></select>
+                                                    ng-change="servingCtrl.updateKafkaDetails(true)"></select>
                                             <input style="margin-top: 5px; width: 40%" name="kafkaNumPartitions"
                                                    class="form-control"
                                                    type="number" min="1"
@@ -393,7 +399,7 @@
 
                     <div>
                         <div ng-if="servingCtrl.createNewServingMode === false">
-                            <button type="button" ng-click="servingCtrl.showCreateServingForm()"
+                            <button type="button" ng-click="servingCtrl.showCreateServingForm(true)"
                                     class="btn btn-default btn-success control-label" style="margin: 10px">
                                 Create New Serving<i style="margin-left: 10px" class="glyphicon glyphicon-plus">
                             </i>
@@ -421,6 +427,10 @@
                             <th style="width: 9%" ng-click="servingCtrl.sort('artifactVersion')">
                                 Artifact version
                                 <span class="glyphicon sort-icon" ng-show="servingCtrl.sortKey == 'artifactVersion'"
+                            </th>
+                            <th style="width: 12%" ng-click="servingCtrl.sort('predictor')">
+                                Predictor
+                                <span class="glyphicon sort-icon" ng-show="servingCtrl.sortKey == 'predictor'"
                                       ng-class="{'glyphicon-chevron-up':!servingCtrl.reverse,'glyphicon-chevron-down':servingCtrl.reverse}"></span>
                             </th>
                             <th style="width: 12%" ng-click="servingCtrl.sort('transformer')">
@@ -431,18 +441,9 @@
                             <th style="width: 12%" ng-click="servingCtrl.sort('modelServer')">
                                 Model server
                                 <i class="fa fa-info-circle" tooltip-placement="auto top" tooltip-append-to-body="true"
-                                   uib-tooltip='Model server used for running the model, e.g TENSORFLOW_SERVING or FLASK.'
+                                   uib-tooltip='Model server used for running the model, e.g TENSORFLOW_SERVING or PYTHON.'
                                    style="margin-left: 10px"></i>
                                 <span class="glyphicon sort-icon" ng-show="servingCtrl.sortKey == 'modelServer'"
-                                      ng-class="{'glyphicon-chevron-up':!servingCtrl.reverse,'glyphicon-chevron-down':servingCtrl.reverse}"></span>
-                            </th>
-                            <th style="width: 10%" ng-click="servingCtrl.sort('servingTool')">
-                                Serving tool
-                                <i class="fa fa-info-circle" tooltip-placement="auto top" tooltip-append-to-body="true"
-                                   uib-tooltip='Serving tool used to deploy the model server, e.g KFSERVING or DEFAULT. DEFAULT refers to a single
-                                   container (Community) or Kubernetes deployment (Enterprise).'
-                                   style="margin-left: 10px"></i>
-                                <span class="glyphicon sort-icon" ng-show="servingCtrl.sortKey == 'servingTool'"
                                       ng-class="{'glyphicon-chevron-up':!servingCtrl.reverse,'glyphicon-chevron-down':servingCtrl.reverse}"></span>
                             </th>
                             <th style="width: 14%" ng-click="servingCtrl.sort('created')">
@@ -503,9 +504,9 @@
                                 <td> {{serving.modelPath.split("/").pop()}}</td>
                                 <td> {{serving.modelVersion}}</td>
                                 <td> {{serving.artifactVersion !== undefined ? (serving.artifactVersion == 0 ? "MODEL-ONLY" : serving.artifactVersion) : '-'}}</td>
+                                <td> {{serving.predictor ? serving.predictor : '-'}}</td>
                                 <td> {{serving.transformer ? serving.transformer : '-'}}</td>
                                 <td> {{serving.modelServer}}</td>
-                                <td> {{serving.servingTool}}</td>
                                 <td> {{serving.created | date:'medium'}}</td>
                                 </td>
                                 <td> {{serving.status}}</td>
