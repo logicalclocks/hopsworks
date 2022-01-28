@@ -1,6 +1,6 @@
 /*
  * This file is part of Hopsworks
- * Copyright (C) 2018, Logical Clocks AB. All rights reserved
+ * Copyright (C) 2022, Logical Clocks AB. All rights reserved
  *
  * Hopsworks is free software: you can redistribute it and/or modify it under the terms of
  * the GNU Affero General Public License as published by the Free Software Foundation,
@@ -45,6 +45,7 @@ public class ServingView implements Serializable {
   private String modelPath;
   private String modelName;
   private Integer modelVersion;
+  private String predictor;
   private Integer availableInstances;
   private Integer requestedInstances;
   private String externalIP;
@@ -57,15 +58,6 @@ public class ServingView implements Serializable {
   private ModelServer modelServer;
   private ServingTool servingTool;
   private Date deployed;
-  
-  // Hopsworks-ee
-  private Integer artifactVersion;
-  private String transformer;
-  private Integer availableTransformerInstances;
-  private Integer requestedTransformerInstances;
-  private Object inferenceLogging;
-  private Object predictorResourceConfig;
-  private String revision;
   
   // TODO(Fabio): use expansions here
   private String creator;
@@ -82,6 +74,7 @@ public class ServingView implements Serializable {
     this.id = servingWrapper.getServing().getId();
     this.name = servingWrapper.getServing().getName();
     this.modelPath = servingWrapper.getServing().getModelPath();
+    this.predictor = servingWrapper.getServing().getPredictor();
     this.modelName = servingWrapper.getServing().getModelName();
     this.modelVersion = servingWrapper.getServing().getModelVersion();
     this.availableInstances = servingWrapper.getAvailableReplicas();
@@ -120,13 +113,16 @@ public class ServingView implements Serializable {
     this.name = name;
   }
 
-  @ApiModelProperty(value = "HOPSFS directory path containing the model (tf) or python script (sklearn)")
-  public String getModelPath() {
-    return modelPath;
-  }
+  @ApiModelProperty(value = "HOPSFS directory path containing the model")
+  public String getModelPath() { return modelPath; }
+  public void setModelPath(String modelPath) { this.modelPath = modelPath; }
 
-  public void setModelPath(String modelPath) {
-    this.modelPath = modelPath;
+  @ApiModelProperty(value = "Predictor script name")
+  public String getPredictor() {
+    return predictor;
+  }
+  public void setPredictor(String predictor) {
+    this.predictor = predictor;
   }
 
   @ApiModelProperty(value = "Name of the model")
@@ -232,7 +228,7 @@ public class ServingView implements Serializable {
     this.kafkaTopicDTO = kafkaTopicDTO;
   }
   
-  @ApiModelProperty(value = "Model server, tf serving or flask")
+  @ApiModelProperty(value = "Model server, Tensorflow Serving or Python")
   public ModelServer getModelServer() {
     return modelServer;
   }
@@ -263,57 +259,10 @@ public class ServingView implements Serializable {
   public ServingWrapper getServingWrapper() {
 
     ServingWrapper servingWrapper = new ServingWrapper(
-        new Serving(id, name, modelPath, modelName, modelVersion, requestedInstances, batchingEnabled,
+        new Serving(id, name, modelPath, modelName, modelVersion, predictor, requestedInstances, batchingEnabled,
           modelServer, servingTool));
     servingWrapper.setKafkaTopicDTO(kafkaTopicDTO);
 
     return servingWrapper;
-  }
-  
-  // Hopsworks-ee
-  
-  public Integer getArtifactVersion() {
-    return artifactVersion;
-  }
-  public void setArtifactVersion(Integer artifactVersion) {
-    this.artifactVersion = artifactVersion;
-  }
-  
-  public String getTransformer() {
-    return transformer;
-  }
-  public void setTransformer(String transformer) {
-    this.transformer = transformer;
-  }
-  
-  public Integer getAvailableTransformerInstances() {
-    return availableTransformerInstances;
-  }
-  public void setAvailableTransformerInstances(Integer availableInstances) {
-    this.availableTransformerInstances = availableInstances;
-  }
-  
-  public Integer getRequestedTransformerInstances() {
-    return requestedTransformerInstances;
-  }
-  public void setRequestedTransformerInstances(Integer transformerInstances) {
-    this.requestedTransformerInstances = transformerInstances;
-  }
-  
-  public Object getInferenceLogging() { return inferenceLogging; }
-  public void setInferenceLogging(Object inferenceLogging) { this.inferenceLogging = inferenceLogging; }
-  
-  public Object getPredictorResourceConfig() {
-    return predictorResourceConfig;
-  }
-  public void setPredictorResourceConfig(Object predictorResourceConfig) {
-    this.predictorResourceConfig = predictorResourceConfig;
-  }
-
-  public String getRevision() {
-    return revision;
-  }
-  public void setRevision(String revision) {
-    this.revision = revision;
   }
 }

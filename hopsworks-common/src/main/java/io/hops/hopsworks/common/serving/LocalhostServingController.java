@@ -84,7 +84,7 @@ public class LocalhostServingController implements ServingController {
    * @return a list of ServingWrapper DTOs with metadata of the servings
    */
   @Override
-  public List<ServingWrapper> getServings(Project project, String modelNameFilter, ServingStatusEnum statusFilter)
+  public List<ServingWrapper> getAll(Project project, String modelNameFilter, ServingStatusEnum statusFilter)
       throws ServingException {
     List<Serving> servingList;
     if(Strings.isNullOrEmpty(modelNameFilter)) {
@@ -114,12 +114,29 @@ public class LocalhostServingController implements ServingController {
    * @return a ServingWrapper with metadata of the serving
    */
   @Override
-  public ServingWrapper getServing(Project project, Integer id) throws ServingException {
+  public ServingWrapper get(Project project, Integer id) throws ServingException {
     Serving serving = servingFacade.findByProjectAndId(project, id);
     if (serving == null) {
       return null;
     }
 
+    return getServingInternal(serving);
+  }
+  
+  /**
+   * Gets an individual serving with a specific name from the database
+   *
+   * @param project the project where the serving resides
+   * @param name the name of the serving to get
+   * @return a ServingWrapper with metadata of the serving
+   */
+  @Override
+  public ServingWrapper get(Project project, String name) throws ServingException {
+    Serving serving = servingFacade.findByProjectAndName(project, name);
+    if (serving == null) {
+      return null;
+    }
+    
     return getServingInternal(serving);
   }
   
@@ -130,7 +147,7 @@ public class LocalhostServingController implements ServingController {
    * @throws ServingException thrown if a lock for getting the serving could not be acquired
    */
   @Override
-  public void deleteServings(Project project) throws ServingException {
+  public void deleteAll(Project project) throws ServingException {
     List<Serving> servingList = servingFacade.findForProject(project);
     for (Serving serving : servingList) {
       // Acquire lock
@@ -155,7 +172,7 @@ public class LocalhostServingController implements ServingController {
    * @throws ServingException if the lock could not be acquired
    */
   @Override
-  public void deleteServing(Project project, Integer id) throws ServingException {
+  public void delete(Project project, Integer id) throws ServingException {
     Serving serving = servingFacade.acquireLock(project, id);
     ServingStatusEnum status = getServingStatus(serving);
 
@@ -208,7 +225,7 @@ public class LocalhostServingController implements ServingController {
     String path;
     if (serving.getModelServer() == ModelServer.TENSORFLOW_SERVING) {
       path = localhostTfInferenceUtils.getPath(serving.getName(), serving.getModelVersion(), "");
-    } else if (serving.getModelServer() == ModelServer.FLASK) {
+    } else if (serving.getModelServer() == ModelServer.PYTHON) {
       path = localhostSkLearnInferenceUtils.getPath("");
     } else {
       throw new UnsupportedOperationException("Model server not supported as local serving");
@@ -226,7 +243,7 @@ public class LocalhostServingController implements ServingController {
   
   /**
    * Starts or stop a serving instance (depending on the user command). Will call the controller for the corresponding
-   * model server, such as Tensorflow Serving or Flask
+   * model server, such as Tensorflow Serving or Python
    *
    * @param project the project where the serving resides
    * @param user the user making the request
@@ -267,7 +284,7 @@ public class LocalhostServingController implements ServingController {
    *
    * @param project the project of the serving instance
    * @param user the user making the request
-   * @param newServing the serving to create or update
+   * @param servingWrapper the serving to create or update
    * @throws ProjectException
    * @throws ServingException
    * @throws KafkaException
@@ -275,10 +292,10 @@ public class LocalhostServingController implements ServingController {
    * @throws UserException
    */
   @Override
-  public void createOrUpdate(Project project, Users user, ServingWrapper newServing)
+  public void put(Project project, Users user, ServingWrapper servingWrapper)
       throws ProjectException, ServingException, KafkaException, UserException,
-    InterruptedException, ExecutionException, ServiceException {
-    Serving serving = newServing.getServing();
+    InterruptedException, ExecutionException {
+    Serving serving = servingWrapper.getServing();
     if (serving.getId() == null) {
       // Create request
       serving.setCreated(new Date());
@@ -291,20 +308,25 @@ public class LocalhostServingController implements ServingController {
       serving.setInstances(1);
 
       // Setup the Kafka topic for logging
-      kafkaServingHelper.setupKafkaServingTopic(project, newServing, serving, null);
-
-      servingFacade.merge(serving);
+      kafkaServingHelper.setupKafkaServingTopic(project, servingWrapper, serving, null);
+      
+      Serving newServing = servingFacade.merge(serving);
+      servingWrapper.setServing(newServing);
     } else {
       Serving oldDbServing = servingFacade.acquireLock(project, serving.getId());
       // Get the status of the current instance
       ServingStatusEnum status = getServingStatus(oldDbServing);
       // Setup the Kafka topic for logging
-      kafkaServingHelper.setupKafkaServingTopic(project, newServing, serving, oldDbServing);
+      kafkaServingHelper.setupKafkaServingTopic(project, servingWrapper, serving, oldDbServing);
       // Update the object in the database
       Serving dbServing = servingFacade.updateDbObject(serving, project);
       if (status == ServingStatusEnum.RUNNING || status == ServingStatusEnum.UPDATING) {
+        Boolean samePredictor = (oldDbServing.getPredictor() == null && dbServing.getPredictor() == null) ||
+          (oldDbServing.getPredictor() != null && dbServing.getPredictor() != null &&
+            oldDbServing.getPredictor().equals(dbServing.getPredictor()));
         if (!oldDbServing.getName().equals(dbServing.getName()) ||
             !oldDbServing.getModelPath().equals(dbServing.getModelPath()) ||
+            !samePredictor ||
             oldDbServing.isBatchingEnabled() != dbServing.isBatchingEnabled() ||
             oldDbServing.getModelVersion() > dbServing.getModelVersion()) {
           // To update the name and/or the artifact path we need to restart the server and/or the version as been
@@ -324,7 +346,10 @@ public class LocalhostServingController implements ServingController {
         // The instance is not running, nothing else to do. Just release the lock.
         servingFacade.releaseLock(project, serving.getId());
       }
+      serving = dbServing;
     }
+    // Update serving in the serving wrapper
+    servingWrapper.setServing(serving);
   }
   
   /**
@@ -342,7 +367,7 @@ public class LocalhostServingController implements ServingController {
     if(serving.getModelServer() == ModelServer.TENSORFLOW_SERVING){
       tfServingController.startServingInstance(project, user, serving);
     }
-    if(serving.getModelServer() == ModelServer.FLASK){
+    if(serving.getModelServer() == ModelServer.PYTHON){
       skLearnServingController.startServingInstance(project, user, serving);
     }
   }
@@ -352,7 +377,7 @@ public class LocalhostServingController implements ServingController {
     if(serving.getModelServer() == ModelServer.TENSORFLOW_SERVING){
       tfServingController.killServingInstance(project, serving, releaseLock);
     }
-    if(serving.getModelServer() == ModelServer.FLASK){
+    if(serving.getModelServer() == ModelServer.PYTHON){
       skLearnServingController.killServingInstance(project, serving, releaseLock);
     }
   }

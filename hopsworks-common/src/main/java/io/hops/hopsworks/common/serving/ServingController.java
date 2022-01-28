@@ -1,6 +1,6 @@
 /*
  * This file is part of Hopsworks
- * Copyright (C) 2018, Logical Clocks AB. All rights reserved
+ * Copyright (C) 2022, Logical Clocks AB. All rights reserved
  *
  * Hopsworks is free software: you can redistribute it and/or modify it under the terms of
  * the GNU Affero General Public License as published by the Free Software Foundation,
@@ -35,20 +35,23 @@ import java.util.concurrent.ExecutionException;
  */
 public interface ServingController {
 
-  List<ServingWrapper> getServings(Project project, String modelNameFilter, ServingStatusEnum statusFilter)
+  List<ServingWrapper> getAll(Project project, String modelNameFilter, ServingStatusEnum statusFilter)
       throws ServingException, KafkaException, CryptoPasswordNotFoundException;
 
-  ServingWrapper getServing(Project project, Integer id)
+  ServingWrapper get(Project project, Integer id)
       throws ServingException, KafkaException, CryptoPasswordNotFoundException;
+  
+  ServingWrapper get(Project project, String name)
+    throws ServingException, KafkaException, CryptoPasswordNotFoundException;
 
-  void deleteServing(Project project, Integer id) throws ServingException;
+  void delete(Project project, Integer id) throws ServingException;
 
-  void deleteServings(Project project) throws ServingException;
+  void deleteAll(Project project) throws ServingException;
 
   void startOrStop(Project project, Users user, Integer servingId, ServingCommands command)
       throws ServingException;
 
-  void createOrUpdate(Project project, Users user, ServingWrapper newServing)
+  void put(Project project, Users user, ServingWrapper newServing)
       throws KafkaException, UserException, ProjectException, ServiceException, ServingException,
     InterruptedException, ExecutionException;
 
