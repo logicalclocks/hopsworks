@@ -107,7 +107,7 @@ public class LocalhostServingMonitor {
           if (serving.getModelServer() == ModelServer.TENSORFLOW_SERVING) {
             builder.addCommand(tfScript);
           }
-          if (serving.getModelServer() == ModelServer.FLASK) {
+          if (serving.getModelServer() == ModelServer.PYTHON) {
             builder.addCommand(sklearnScript);
           }
           ProcessDescriptor processDescriptor = builder.addCommand("alive")
@@ -129,7 +129,7 @@ public class LocalhostServingMonitor {
               if (serving.getModelServer() == ModelServer.TENSORFLOW_SERVING) {
                 builder.addCommand(tfScript);
               }
-              if (serving.getModelServer() == ModelServer.FLASK) {
+              if (serving.getModelServer() == ModelServer.PYTHON) {
                 builder.addCommand(sklearnScript);
               }
               processDescriptor = builder.addCommand("kill")

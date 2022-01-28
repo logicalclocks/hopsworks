@@ -19,7 +19,6 @@ package io.hops.hopsworks.common.serving.sklearn;
 import com.google.common.base.Strings;
 import com.google.common.io.Files;
 import io.hops.hopsworks.common.dao.serving.ServingFacade;
-import io.hops.hopsworks.common.hdfs.Utils;
 import io.hops.hopsworks.common.security.CertificateMaterializer;
 import io.hops.hopsworks.common.util.OSProcessExecutor;
 import io.hops.hopsworks.common.util.ProcessDescriptor;
@@ -139,14 +138,19 @@ public class LocalhostSkLearnServingController {
     String script = settings.getSudoersDir() + "/sklearn_serving.sh";
     Integer port = ThreadLocalRandom.current().nextInt(40000, 59999);
     Path secretDir = Paths.get(settings.getStagingDir(), SERVING_DIRS + serving.getLocalDir());
+    String predictorFilename = serving.getPredictor();
+    if (serving.getPredictor().contains("/")) {
+      String[] splits = serving.getPredictor().split("/");
+      predictorFilename = splits[splits.length - 1];
+    }
     try {
       
       ProcessDescriptor processDescriptor = new ProcessDescriptor.Builder()
           .addCommand("/usr/bin/sudo")
           .addCommand(script)
           .addCommand("start")
-          .addCommand(Utils.getFileName(Paths.get(serving.getModelPath()).toString()))
-          .addCommand(Paths.get(serving.getModelPath()).toString())
+          .addCommand(predictorFilename)
+          .addCommand(Paths.get(serving.getPredictor()).toString())
           .addCommand(String.valueOf(port))
           .addCommand(secretDir.toString())
           .addCommand(project.getName() + USER_NAME_DELIMITER + user.getUsername())

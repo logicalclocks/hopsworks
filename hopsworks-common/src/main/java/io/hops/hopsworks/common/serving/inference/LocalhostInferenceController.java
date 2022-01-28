@@ -94,7 +94,7 @@ public class LocalhostInferenceController implements ServingInferenceController 
   private String getInferencePath(Serving serving, Integer modelVersion, String verb){
     if (serving.getModelServer() == ModelServer.TENSORFLOW_SERVING) {
       return localhostTfInferenceUtils.getPath(serving.getName(), modelVersion, verb);
-    } else if (serving.getModelServer() == ModelServer.FLASK) {
+    } else if (serving.getModelServer() == ModelServer.PYTHON) {
       return localhostSkLearnInferenceUtils.getPath(verb);
     } else {
       throw new UnsupportedOperationException("Model server not supported as local serving");

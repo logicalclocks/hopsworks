@@ -266,7 +266,8 @@ public class JupyterConfigFilesGenerator {
   }
 
   public void createSparkMagicConfig(Writer out, Project project, JupyterSettings js, String hdfsUser,
-      String confDirPath) throws IOException, ServiceDiscoveryException, JobException {
+      String confDirPath, Map<String, String> extraEnvVars) throws IOException, ServiceDiscoveryException,
+    JobException {
     
     SparkJobConfiguration sparkJobConfiguration = (SparkJobConfiguration) js.getJobConfig();
 
@@ -291,7 +292,8 @@ public class JupyterConfigFilesGenerator {
 
     finalSparkConfiguration.putAll(
         sparkConfigurationUtil.setFrameworkProperties(project, sparkJobConfiguration, settings, hdfsUser,
-            extraJavaOptions, kafkaBrokers.getKafkaBrokersString(), hopsworksRestEndpoint, serviceDiscoveryController));
+            extraJavaOptions, kafkaBrokers.getKafkaBrokersString(), hopsworksRestEndpoint, serviceDiscoveryController,
+            extraEnvVars));
     
     StringBuilder sparkConfBuilder = new StringBuilder();
     ArrayList<String> keys = new ArrayList<>(finalSparkConfiguration.keySet());
@@ -364,7 +366,7 @@ public class JupyterConfigFilesGenerator {
     
     if (!sparkmagic_config_file.exists()) {
       try (Writer out = new FileWriter(sparkmagic_config_file, false)) {
-        createSparkMagicConfig(out, project, js, hdfsUser, confDirPath);
+        createSparkMagicConfig(out, project, js, hdfsUser, confDirPath, null);
       }
     }
   }

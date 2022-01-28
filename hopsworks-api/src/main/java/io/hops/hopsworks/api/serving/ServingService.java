@@ -1,6 +1,6 @@
 /*
  * This file is part of Hopsworks
- * Copyright (C) 2018, Logical Clocks AB. All rights reserved
+ * Copyright (C) 2022, Logical Clocks AB. All rights reserved
  *
  * Hopsworks is free software: you can redistribute it and/or modify it under the terms of
  * the GNU Affero General Public License as published by the Free Software Foundation,
@@ -16,6 +16,7 @@
 
 package io.hops.hopsworks.api.serving;
 
+import com.google.common.base.Strings;
 import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.api.filter.apiKey.ApiKeyRequired;
 import io.hops.hopsworks.api.filter.Audience;
@@ -60,6 +61,8 @@ import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
+import javax.ws.rs.core.UriBuilder;
+import javax.ws.rs.core.UriInfo;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.List;
@@ -84,21 +87,6 @@ public class ServingService {
   @EJB
   private JWTHelper jWTHelper;
 
-  /*
-    @POST
-    project/id/serving/
-
-    Serving {
-      model_path
-      name
-    }
-
-    Get @GET  project/id/serving/
-    Get Single @GET project/id/serving/12
-    Delete @Delete project/id/serving/12
-    POST project/id/serving/12 {action: start | stop}
-   */
-
   private Project project;
 
   public ServingService(){ }
@@ -115,13 +103,25 @@ public class ServingService {
   @ApiOperation(value = "Get the list of serving instances for the project",
       response = ServingView.class,
       responseContainer = "List")
-  public Response getServings(@QueryParam("model") String modelName,
-                              @QueryParam("status") ServingStatusEnum status,
-                              @Context SecurityContext sc) throws ServingException, KafkaException,
-    CryptoPasswordNotFoundException {
+  public Response getAll(
+    @QueryParam("model") String modelName,
+    @QueryParam("status") ServingStatusEnum status,
+    @QueryParam("name") String servingName,
+    @Context SecurityContext sc)
+    throws ServingException, KafkaException, CryptoPasswordNotFoundException {
 
-    List<ServingWrapper> servingDAOList = servingController.getServings(project, modelName, status);
+    // if filter by name, return a single serving
+    if (!Strings.isNullOrEmpty(servingName)) {
+      ServingWrapper servingWrapper = servingController.get(project, servingName);
+      ServingView servingView = new ServingView(servingWrapper);
+      GenericEntity<ServingView> servingEntity = new GenericEntity<ServingView>(servingView){};
+  
+      return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK)
+        .entity(servingEntity)
+        .build();
+    }
     
+    List<ServingWrapper> servingDAOList = servingController.getAll(project, modelName, status);
     ArrayList<ServingView> servingViewList = new ArrayList<>();
     for (ServingWrapper servingWrapper : servingDAOList) {
       servingViewList.add(new ServingView(servingWrapper));
@@ -142,20 +142,22 @@ public class ServingService {
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
   @ApiKeyRequired( acceptedScopes = {ApiScope.SERVING}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   @ApiOperation(value = "Get info about a serving instance for the project", response = ServingView.class)
-  public Response getServing(@Context SecurityContext sc,
-      @ApiParam(value = "Id of the Serving instance", required = true) @PathParam("servingId") Integer servingId)
-      throws ServingException, KafkaException, CryptoPasswordNotFoundException {
+  public Response get(
+    @Context SecurityContext sc,
+    @ApiParam(value = "Id of the Serving instance", required = true)
+    @PathParam("servingId") Integer servingId)
+    throws ServingException, KafkaException, CryptoPasswordNotFoundException {
+    
     if (servingId == null) {
       throw new IllegalArgumentException("servingId was not provided");
     }
-    ServingWrapper servingWrapper = servingController.getServing(project, servingId);
-
+    ServingWrapper servingWrapper = servingController.get(project, servingId);
     ServingView servingView = new ServingView(servingWrapper);
     GenericEntity<ServingView> servingEntity = new GenericEntity<ServingView>(servingView){};
-
+    
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK)
-        .entity(servingEntity)
-        .build();
+      .entity(servingEntity)
+      .build();
   }
 
   @DELETE
@@ -164,15 +166,15 @@ public class ServingService {
   @JWTRequired(acceptedTokens={Audience.API, Audience.JOB}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
   @ApiKeyRequired( acceptedScopes = {ApiScope.SERVING}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   @ApiOperation(value = "Delete a serving instance")
-  public Response deleteServing(@Context SecurityContext sc,
-      @ApiParam(value = "Id of the serving instance", required = true) @PathParam("servingId") Integer servingId)
-      throws ServingException {
+  public Response delete(
+    @Context SecurityContext sc,
+    @ApiParam(value = "Id of the serving instance", required = true) @PathParam("servingId") Integer servingId)
+    throws ServingException {
+    
     if (servingId == null) {
       throw new IllegalArgumentException("servingId was not provided");
     }
-
-    servingController.deleteServing(project, servingId);
-
+    servingController.delete(project, servingId);
     return Response.ok().build();
   }
 
@@ -183,20 +185,26 @@ public class ServingService {
   @JWTRequired(acceptedTokens={Audience.API, Audience.JOB}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
   @ApiKeyRequired( acceptedScopes = {ApiScope.SERVING}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   @ApiOperation(value = "Create or update a serving instance")
-  public Response createOrUpdate(@Context SecurityContext sc,
-      @ApiParam(value = "serving specification", required = true)
-        ServingView serving)
-      throws ServingException, ServiceException, KafkaException, ProjectException, UserException,
-        InterruptedException, ExecutionException, UnsupportedEncodingException {
+  public Response put(
+    @Context SecurityContext sc,
+    @Context UriInfo uriInfo,
+    @ApiParam(value = "serving specification", required = true) ServingView serving)
+    throws ServingException, ServiceException, KafkaException, ProjectException, UserException,
+           InterruptedException, ExecutionException, UnsupportedEncodingException {
+    
     Users user = jWTHelper.getUserPrincipal(sc);
     if (serving == null) {
       throw new IllegalArgumentException("serving was not provided");
     }
     ServingWrapper servingWrapper = serving.getServingWrapper();
     servingUtil.validateUserInput(servingWrapper, project);
-    servingUtil.inferModelName(servingWrapper);
-    servingController.createOrUpdate(project, user, servingWrapper);
-    return Response.status(Response.Status.CREATED).build();
+    servingController.put(project, user, servingWrapper);
+  
+    ServingView servingView = new ServingView(servingWrapper);
+    UriBuilder builder = uriInfo.getAbsolutePathBuilder().path(String.valueOf(servingView.getId()));
+    GenericEntity<ServingView> servingEntity = new GenericEntity<ServingView>(servingView){};
+
+    return Response.created(builder.build()).entity(servingEntity).build();
   }
 
   @POST
@@ -206,11 +214,13 @@ public class ServingService {
   @JWTRequired(acceptedTokens={Audience.API, Audience.JOB}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
   @ApiKeyRequired( acceptedScopes = {ApiScope.SERVING}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   @ApiOperation(value = "Start or stop a Serving instance")
-  public Response startOrStop(@Context SecurityContext sc,
-      @ApiParam(value = "ID of the Serving instance to start/stop", required = true)
+  public Response startOrStop(
+    @Context SecurityContext sc,
+    @ApiParam(value = "ID of the Serving instance to start/stop", required = true)
       @PathParam("servingId") Integer servingId,
-      @ApiParam(value = "Action", required = true) @QueryParam("action") ServingCommands servingCommand)
-      throws ServingException {
+    @ApiParam(value = "Action", required = true) @QueryParam("action") ServingCommands servingCommand)
+    throws ServingException {
+    
     Users user = jWTHelper.getUserPrincipal(sc);
     if (servingId == null) {
       throw new IllegalArgumentException("servingId was not provided");

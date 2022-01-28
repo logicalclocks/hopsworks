@@ -1,6 +1,6 @@
 /*
  * This file is part of Hopsworks
- * Copyright (C) 2018, Logical Clocks AB. All rights reserved
+ * Copyright (C) 2022, Logical Clocks AB. All rights reserved
  *
  * Hopsworks is free software: you can redistribute it and/or modify it under the terms of
  * the GNU Affero General Public License as published by the Free Software Foundation,
@@ -21,11 +21,11 @@
 
 angular.module('hopsWorksApp')
     .controller('servingCtrl', ['$scope', '$routeParams', 'growl', 'ServingService', 'UtilsService', '$location',
-        'PythonService', 'ModalService', '$interval', 'StorageService', '$mdSidenav', 'DataSetService',
-        'KafkaService', 'JobService', 'ElasticService', 'ModelService', 'VariablesService', '$mdToast',
-        function ($scope, $routeParams, growl, ServingService, UtilsService, $location, PythonService,
-                  ModalService, $interval, StorageService, $mdSidenav, DataSetService, KafkaService, JobService,
-                  ElasticService, ModelService, VariablesService, $mdToast) {
+        'ModalService', '$interval', 'StorageService', '$mdSidenav', 'DataSetService', 'KafkaService', 'JobService',
+        'ElasticService', 'ModelService', 'VariablesService', '$mdToast',
+        function ($scope, $routeParams, growl, ServingService, UtilsService, $location, ModalService, $interval,
+                  StorageService, $mdSidenav, DataSetService, KafkaService, JobService, ElasticService, ModelService,
+                  VariablesService, $mdToast) {
 
             var self = this;
 
@@ -115,7 +115,7 @@ angular.module('hopsWorksApp')
             self.artifactsDirName = "Artifacts";
             self.artifactCreate = "CREATE";
             self.artifactModelOnly = "MODEL-ONLY"
-            self.modelServerFlask = "FLASK";
+            self.modelServerPython = "PYTHON";
             self.modelServerTensorflow = "TENSORFLOW_SERVING";
             self.servingToolDefault = "DEFAULT";
             self.servingToolKFServing = "KFSERVING";
@@ -194,38 +194,22 @@ angular.module('hopsWorksApp')
                     self.editServing.inferenceLogging = undefined;
                 }
 
-                // Check that python kernel is enabled if it is a sklearn serving, as the flask serving will be launched
-                // inside the project anaconda environment
-                if (self.editServing.modelServer === self.modelServerFlask) {
-                    PythonService.enabled(self.projectId).then(
-                        function (success) {
-                            self.doCreateOrUpdate()
-                        },
-                        function (error) {
-                            growl.error("You need to enable Python in your project before creating a SkLearn serving" +
-                                " instance.", {
-                                title: 'Error - Python not' +
-                                    ' enabled yet.', ttl: 15000
-                            });
-
-                        });
-                } else {
-                    self.doCreateOrUpdate()
-                }
+                self.doCreateOrUpdate()
             };
 
-            self.updateKafkaDetails = function () {
-                self.inferenceLoggingPredictions = self.inferenceLoggingModelInputs = self.editServing.kafkaTopicDTO.name !== 'NONE';
-
+            self.updateKafkaDetails = function (updateMode) {
+                if (updateMode) {
+                    self.inferenceLoggingPredictions = self.inferenceLoggingModelInputs = self.editServing.kafkaTopicDTO.name !== 'NONE';
+                }
                 if (self.editServing.kafkaTopicDTO.name === 'NONE' || self.editServing.kafkaTopicDTO.name === 'CREATE') {
                     return; // noop
                 }
 
                 KafkaService.getTopicDetails(self.projectId, self.editServing.kafkaTopicDTO.name).then(
                     function (success) {
-                        self.editServing.kafkaTopicDTO.numOfPartitions = success.data.length;
-                        if (success.data.length > 0) {
-                            self.editServing.kafkaTopicDTO.numOfReplicas = success.data[0].replicas.length
+                        self.editServing.kafkaTopicDTO.numOfPartitions = success.data.items.length;
+                        if (success.data.items.length > 0) {
+                            self.editServing.kafkaTopicDTO.numOfReplicas = success.data.items[0].replicas.length
                         }
                     },
                     function (error) {
@@ -236,7 +220,7 @@ angular.module('hopsWorksApp')
                     });
             };
 
-            self.updateKafkaTopics = function () {
+            self.updateKafkaTopics = function (updateMode) {
                 KafkaService.getTopics(self.projectId).then(
                     function (success) {
                         self.projectKafkaTopics = [];
@@ -254,7 +238,7 @@ angular.module('hopsWorksApp')
                         if (typeof self.editServing.kafkaTopicDTO !== "undefined") {
                             topics = self.projectKafkaTopics.filter(self.filterTopics);
                             self.editServing.kafkaTopicDTO = topics[0];
-                            self.updateKafkaDetails();
+                            self.updateKafkaDetails(updateMode);
                         } else {
                             if (self.editServing.id) {
                                 topics = self.projectKafkaTopics.filter(function (t) {
@@ -307,11 +291,7 @@ angular.module('hopsWorksApp')
                     self.transformerSliderOptions.value = serving.requestedTransformerInstances;
                 }
                 self.kfserving = self.editServing.servingTool === self.servingToolKFServing;
-                if (self.editServing.modelServer === self.modelServerTensorflow) {
-                    self.validateTfModelPath(serving.modelPath, serving.name);
-                } else if (self.editServing.modelServer === self.modelServerFlask) {
-                    self.validatePythonScriptPath(serving.modelPath, serving.name, "predictor", [".py"])
-                }
+                self.validateModelPath(serving.modelPath, serving.name)
 
                 if (serving.predictorResourceConfig) {
                     self.editServing.predictorResourceConfig = serving.predictorResourceConfig;
@@ -403,13 +383,13 @@ angular.module('hopsWorksApp')
             };
 
             /**
-             * Check that the directory selected follows the required structure.
+             * Check that the model directory selected follows the required structure.
              * In particular, check that the children are integers (version numbers)
              *
              * @param modelPath path to the model
              * @param name name of the serving
              */
-            self.validateTfModelPath = function (modelPath, name) {
+            self.validateModelPath = function(modelPath, name) {
                 // /Projects/project_name/Models/model_name
                 var pattern = /\/Projects\/\w+\/Models\/\w+/g;
                 if (!pattern.test(modelPath)) {
@@ -447,6 +427,8 @@ angular.module('hopsWorksApp')
                             });
                             return;
                         }
+
+                        self.setModelName(modelPathSplits[modelPathSplits.length - 1])
                         self.setModelPath(modelPath, versions)
                         self.setServingName(name)
                     },
@@ -456,7 +438,7 @@ angular.module('hopsWorksApp')
                             ttl: 15000
                         });
                     });
-            };
+            }
 
             /**
              * Validates that the user-provided path points to a python script
@@ -476,33 +458,8 @@ angular.module('hopsWorksApp')
                 }
 
                 if (component === "predictor") {
-                    // /Projects/project_name/Models/model_name
-                    var pattern = /^\/Projects\/(.+)\/Models\/(.+)\/(\d+)\/(.+)$/g;
-                    var matches = pattern.exec(path);
-                    if (matches === null) {
-                        growl.error("Please, select a python script from Models dataset folder", {
-                            title: 'Error - Invalid python script.',
-                            ttl: 15000
-                        });
-                        return
-                    }
-                    var version = matches[3];
-                    var filename = matches[4];
-
-                    if (typeof name === 'undefined' || name === null || name === "") {
-                        name = filename.replace(".py", "");
-                        name = name.replace(/_/g, "")
-                    }
-
-                    self.editServing.name = name;
-                    self.editServing.modelPath = path;
-                    self.editServing.modelVersion = version;
-
-                    if (self.isKubernetes) {
-                        self.artifactVersions = [{key: "0", value: self.artifactModelOnly}];
-                        self.artifactVersion = self.artifactVersions[0];
-                        self.editServing.artifactVersion = null; // set null to create the artifact if it doesn't exist
-                    }
+                    self.editServing.predictor = path;
+                    self.validatePredictor();
                 } else {
                     self.editServing.transformer = path;
                     self.validateTransformer();
@@ -593,17 +550,16 @@ angular.module('hopsWorksApp')
 
             // Select script for predictor or transformer
             this.selectFile = function (component) {
-                if (component === "predictor") {
-                    if (self.editServing.modelServer === self.modelServerTensorflow) {
-                        ModalService.selectDir('lg', self.projectId, '*', '').then(
-                            function (success) {
-                                self.onDirSelected(success);
-                            },
-                            function (error) {
-                                // Users changed their minds.
-                            });
-                    }
-                    if (self.editServing.modelServer === self.modelServerFlask) {
+                if (component === "model") {
+                    ModalService.selectDir('lg', self.projectId, '*', '').then(
+                        function (success) {
+                            self.onDirSelected(success);
+                        },
+                        function (error) {
+                            // Users changed their minds.
+                        });
+                } else if (component === "predictor") {
+                    if (self.editServing.modelServer === self.modelServerPython) {
                         ModalService.selectFile('lg', self.projectId, self.pythonScriptRegex,
                             self.pythonSelectScriptErrorMsg, false).then(
                             function (success) {
@@ -613,7 +569,7 @@ angular.module('hopsWorksApp')
                             });
                     }
                 } else if (component === "transformer") {
-                    if (self.kfserving && self.editServing.modelServer === self.modelServerTensorflow) {
+                    if (self.kfserving) {
                         ModalService.selectFile('lg', self.projectId, self.pythonScriptRegex,
                             self.pythonSelectScriptErrorMsg, false).then(
                             function (success) {
@@ -626,14 +582,12 @@ angular.module('hopsWorksApp')
             };
 
             /**
-             * Callback when the user selects a model containing a TfServing Model
+             * Callback when the user selects a model path containing a model
              *
              * @param modelPath the directory HDFS path
              */
             self.onDirSelected = function (modelPath) {
-                if (self.editServing.modelServer === self.modelServerTensorflow) {
-                    self.validateTfModelPath(modelPath, undefined);
-                }
+                self.validateModelPath(modelPath, undefined)
             };
 
             /**
@@ -643,7 +597,7 @@ angular.module('hopsWorksApp')
              */
             self.onFileSelected = function (component, path) {
                 if (component === "predictor") {
-                    if (self.editServing.modelServer === self.modelServerFlask) {
+                    if (self.editServing.modelServer === self.modelServerPython) {
                         self.validatePythonScriptPath(path, self.editServing.name, component, [".py"])
                     }
                 } else if (component === "transformer") {
@@ -712,36 +666,10 @@ angular.module('hopsWorksApp')
                 return topic.name === self.editServing.kafkaTopicDTO.name;
             };
 
-            self.download = function (serving, file) {
-                var path = serving.modelPath + "/" + serving.modelVersion + "/";
-                if (file === 'artifact') {
-                    var modelName = serving.modelPath.substring(serving.modelPath.lastIndexOf("/") + 1)
-                    path += modelName + "_" + serving.modelVersion + ".zip"
-                } else {
-                    var transformerName = serving.transformer.substring(serving.transformer.lastIndexOf("/") + 1)
-                    path += transformerName
-                }
-
-                ModalService.confirm('sm', 'Confirm', 'Do you want to download this file?').then(
-                    function (success) {
-                        showToast('Preparing Download..');
-                        datasetService.getDownloadToken(path, "DATASET").then(
-                            function (success) {
-                                var token = success.data.data.value;
-                                closeToast();
-                                datasetService.download(path, token, "DATASET");
-                            }, function (error) {
-                                closeToast();
-                                self.showError(error, '', 4);
-                            });
-                    }
-                );
-            };
-
-            self.showCreateServingForm = function () {
+            self.showCreateServingForm = function (isNewServing) {
                 self.showCreateNewServingForm = true;
                 self.createNewServingMode = true;
-                self.updateKafkaTopics();
+                self.updateKafkaTopics(isNewServing);
                 if (!self.editServing.predictorResourceConfig && self.defaultDockerConfig) {
                     self.editServing.predictorResourceConfig = JSON.parse(JSON.stringify(self.defaultDockerConfig.resourceConfig));
                 }
@@ -758,8 +686,8 @@ angular.module('hopsWorksApp')
 
             self.setFullModelPath = function () {
                 var projectName = UtilsService.getProjectName();
-                self.editServing.modelPath = '/Projects/' + projectName + '/Models/' + self.editServing.modelPath;
-                self.validateTfModelPath(self.editServing.modelPath, undefined);
+                self.editServing.modelPath = '/Projects/' + projectName + '/Models/' + self.editServing.modelName;
+                self.validateModelPath(self.editServing.modelPath, undefined);
             };
 
             self.setServingName = function (name) {
@@ -772,6 +700,10 @@ angular.module('hopsWorksApp')
                         self.editServing.name = modelPathSplits[modelPathSplits.length - 1].replace(/[^a-zA-Z0-9]/g, '');
                     }
                 }
+            }
+
+            self.setModelName = function (modelName) {
+                self.editServing.modelName = modelName;
             }
 
             self.setModelPath = function (modelPath, modelVersions) {
@@ -806,6 +738,7 @@ angular.module('hopsWorksApp')
                     if (version) {
                         self.artifactVersion = version;
                         self.editServing.artifactVersion = version.key;
+                        self.setPredictor();
                         self.setTransformer();
                         return;
                     }
@@ -863,6 +796,7 @@ angular.module('hopsWorksApp')
                             self.editServing.artifactVersion = self.artifactVersion.key;
                         }
 
+                        self.setPredictor();
                         self.setTransformer();
                     },
                     function (error) {
@@ -870,6 +804,7 @@ angular.module('hopsWorksApp')
                             // If artifacts folder is not found
                             self.artifactVersion = self.artifactVersions.slice(-1)[0];
                             self.editServing.artifactVersion = self.artifactVersion.key;
+                            self.setPredictor();
                             self.setTransformer();
                         } else {
                             growl.error(error.data.errorMsg, {
@@ -890,6 +825,56 @@ angular.module('hopsWorksApp')
                 return version;
             };
 
+            self.setPredictor = function(predictor) {
+                if (self.artifactVersion == null) {
+                    return; /* Ignore change */
+                }
+
+                if (self.editServing.modelServer === self.modelServerTensorflow) {
+                    self.editServing.predictor = null;
+                    return; // noop
+                }
+
+                if (predictor || predictor === "") {
+                    self.editServing.predictor = predictor;
+                    self.validatePredictor();
+                    return;
+                }
+
+                var version = self.artifactVersion.value;
+                if (version === self.artifactModelOnly || version === self.artifactCreate) {
+                    self.editServing.predictor = null;
+                    self.validatePredictor();
+                } else {
+                    var slices = self.editServing.modelPath.split("/").slice(3);
+                    slices.push(self.editServing.modelVersion, self.artifactsDirName, version)
+                    var path = slices.join("/");
+                    datasetService.getAllDatasets(path).then(
+                        function (success) {
+                            var files = success.data.items;
+                            var predictor;
+                            for (var idx in files) {
+                                var name = files[idx].attributes.name;
+                                var prefix = "predictor-";
+                                if (name.startsWith(prefix)) {
+                                    predictor = name.slice(prefix.length);
+                                    break
+                                }
+                            }
+                            if (predictor) {
+                                self.editServing.predictor = predictor;
+                                self.validatePredictor();
+                            }
+                        },
+                        function (error) {
+                            growl.error(error.data.errorMsg, {
+                                title: 'Error',
+                                ttl: 15000
+                            });
+                        });
+                }
+            }
+
             self.setTransformer = function (transformer) {
                 if (self.artifactVersion == null) {
                     return; /* Ignore change */
@@ -906,11 +891,6 @@ angular.module('hopsWorksApp')
                     self.editServing.transformer = null;
                     self.validateTransformer();
                 } else {
-                    // if (self.editServing.transformer && !self.editServing.transformer.includes("/")) {
-                    //     self.validateTransformer();
-                    //     return; /* Ignore, transformer already set */
-                    // }
-
                     var slices = self.editServing.modelPath.split("/").slice(3);
                     slices.push(self.editServing.modelVersion, self.artifactsDirName, version)
                     var path = slices.join("/");
@@ -959,6 +939,25 @@ angular.module('hopsWorksApp')
                 }
             }
 
+            self.validatePredictor = function () {
+                if (self.editServing.modelServer === self.modelServerTensorflow) {
+                    return; // noop
+                }
+
+                if (self.editServing.predictor == null) {
+                    self.editServing.kfserving = true;
+                    self.setKFServing();
+                } else {
+                    if (self.editServing.predictor.includes("/")) {
+                        // If user selected a predictor, enable KFServing and set new artifact
+                        if (self.editServing.artifactVersion !== self.artifactCreate) {
+                            self.artifactVersion = self.artifactVersions[0]; // CREATE
+                            self.editServing.artifactVersion = self.artifactVersion.key;
+                        }
+                    }
+                }
+            }
+
             self.validateTransformer = function () {
                 if (self.editServing.transformer == null) {
                     self.transformerSliderOptions.options.disabled = true;
@@ -977,7 +976,7 @@ angular.module('hopsWorksApp')
             };
 
             /**
-             * Function called when the user is swit    ching between the form for creating a TF Serving or Flask
+             * Function called when the user is switching between the form for creating a TF Serving or Python
              *
              * @param modelServer the selected model server
              */
@@ -987,20 +986,18 @@ angular.module('hopsWorksApp')
                 self.editServing.modelName = undefined;
                 self.editServing.modelVersion = undefined;
                 self.editServing.artifactVersion = undefined;
+                self.editServing.predictor = undefined;
+                self.editServing.transformer = undefined;
                 self.editServing.modelServer = modelServer;
 
                 self.artifactVersions = [];
                 self.artifactVersion = null;
 
-                if (modelServer === self.modelServerFlask) {
-                    // request batching is not supported with Flask
-                    self.editServing.batchingEnabled = false;
-                    // kfserving is not supported with Flask yet
-                    self.kfserving = false;
+                self.kfserving = false;
 
-                    if (self.editServing.kafkaTopicDTO.name !== 'NONE') {
-                        self.inferenceLoggingPredictions = self.inferenceLoggingModelInputs = true;
-                    }
+                if (modelServer === self.modelServerPython) {
+                    // request batching is not supported with Python
+                    self.editServing.batchingEnabled = false;
                 }
 
                 // refresh kfserving settings
@@ -1012,14 +1009,13 @@ angular.module('hopsWorksApp')
                     self.kfserving = kfserving;
                 }
 
-                // KFServing currently not supported with Flask model server.
-                if (self.editServing.modelServer === self.modelServerFlask) {
-                    self.kfserving = false;
-                }
                 if (self.kfserving) {
                     self.editServing.servingTool = self.servingToolKFServing;
                     self.editServing.batchingEnabled = false;
                     self.predictorSliderOptions.options.floor = 0;
+                    if (self.editServing.modelServer === self.modelServerTensorflow) {
+                        self.editServing.predictor = null;
+                    }
                 } else {
                     self.editServing.servingTool = self.servingToolDefault;
                     self.editServing.transformer = null;
