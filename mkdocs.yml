@@ -40,6 +40,7 @@ nav:
   - Hopsworks.ai: https://docs.hopsworks.ai/hopsworks-cloud/latest/
   - Examples: https://examples.hopsworks.ai/
   - Community: https://community.hopsworks.ai/
+  - Old Documentation: https://hopsworks.readthedocs.io/en/stable/index.html
 
 theme:
   name: material
