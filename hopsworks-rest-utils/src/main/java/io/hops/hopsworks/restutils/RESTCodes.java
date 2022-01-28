@@ -2306,10 +2306,10 @@ public class RESTCodes {
     private Integer code;
     private String message;
     private Response.Status respStatus;
-    public final int range = 400000;
+    public final int range = 500000;
 
     GitOpErrorCode(Integer code, String message, Response.Status respStatus) {
-      this.code = code;
+      this.code = range + code;
       this.message = message;
       this.respStatus = respStatus;
     }

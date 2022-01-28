@@ -117,7 +117,9 @@ public class GitResource {
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
   @ApiKeyRequired(acceptedScopes = {ApiScope.GIT}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
-  public Response gitRepositories(@Context UriInfo uriInfo, @BeanParam Pagination pagination) {
+  public Response gitRepositories(@Context UriInfo uriInfo,
+                                  @Context SecurityContext sc,
+                                  @BeanParam Pagination pagination) {
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.REPOSITORY);
     // TODO(Fabio): ideally this should be provided by an expansion beam param.
     resourceRequest.setExpansions(Collections.singleton(new ResourceRequest(ResourceRequest.Name.CREATOR)));
@@ -134,8 +136,9 @@ public class GitResource {
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
   @ApiKeyRequired(acceptedScopes = {ApiScope.GIT}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
-  public Response gitRepository(@PathParam("repositoryId") Integer repositoryId, @Context UriInfo uriInfo)
-      throws GitOpException {
+  public Response gitRepository(@PathParam("repositoryId") Integer repositoryId,
+                                @Context SecurityContext sc,
+                                @Context UriInfo uriInfo) throws GitOpException {
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.REPOSITORY);
     // TODO(Fabio): ideally this should be provided by an expansion beam param.
     resourceRequest.setExpansions(Collections.singleton(new ResourceRequest(ResourceRequest.Name.CREATOR)));
@@ -152,7 +155,8 @@ public class GitResource {
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
   @ApiKeyRequired(acceptedScopes = {ApiScope.GIT}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
-  public Response clone(CloneCommandConfiguration commandDTO, @Context SecurityContext sc,
+  public Response clone(CloneCommandConfiguration commandDTO,
+                        @Context SecurityContext sc,
                         @Context UriInfo uriInfo) throws GitOpException, HopsSecurityException,
       IllegalArgumentException, UserException, DatasetException {
     Users hopsworksUser = jWTHelper.getUserPrincipal(sc);
@@ -192,8 +196,10 @@ public class GitResource {
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
   @ApiKeyRequired(acceptedScopes = {ApiScope.GIT}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
-  public Response getRepositoryBranches(@Context UriInfo uriInfo, @BeanParam Pagination pagination, @PathParam(
-      "repositoryId") Integer repositoryId) throws GitOpException {
+  public Response getRepositoryBranches(@Context UriInfo uriInfo,
+                                        @Context SecurityContext sc,
+                                        @BeanParam Pagination pagination,
+                                        @PathParam("repositoryId") Integer repositoryId) throws GitOpException {
     GitRepository repository = commandConfigurationValidator.verifyRepository(project, repositoryId);
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.BRANCH);
     resourceRequest.setOffset(pagination.getOffset());
@@ -234,7 +240,9 @@ public class GitResource {
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
   @ApiKeyRequired(acceptedScopes = {ApiScope.GIT}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
-  public Response getBranchCommits(@Context UriInfo uriInfo, @BeanParam Pagination pagination,
+  public Response getBranchCommits(@Context UriInfo uriInfo,
+                                   @Context SecurityContext sc,
+                                   @BeanParam Pagination pagination,
                                    @PathParam("repositoryId") Integer repositoryId,
                                    @PathParam("branchName") String branchName) throws GitOpException {
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.COMMIT);
@@ -290,7 +298,9 @@ public class GitResource {
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
   @ApiKeyRequired(acceptedScopes = {ApiScope.GIT}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
-  public Response getRepositoryRemotes(@Context UriInfo uriInfo, @PathParam("repositoryId") Integer repositoryId)
+  public Response getRepositoryRemotes(@Context UriInfo uriInfo,
+                                       @Context SecurityContext sc,
+                                       @PathParam("repositoryId") Integer repositoryId)
       throws GitOpException {
     GitRepository repository = commandConfigurationValidator.verifyRepository(project, repositoryId);
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.REMOTE);
@@ -305,7 +315,9 @@ public class GitResource {
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
   @ApiKeyRequired(acceptedScopes = {ApiScope.GIT}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
-  public Response getRepositoryRemote(@Context UriInfo uriInfo, @PathParam("repositoryId") Integer repositoryId,
+  public Response getRepositoryRemote(@Context UriInfo uriInfo,
+                                      @Context SecurityContext sc,
+                                      @PathParam("repositoryId") Integer repositoryId,
                                       @PathParam("remoteName") String remoteName) throws GitOpException {
     if (Strings.isNullOrEmpty(remoteName)) {
       throw new IllegalArgumentException("Remote name is empty");
