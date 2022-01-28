@@ -78,7 +78,9 @@ public class GitExecutionResource {
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
   @ApiKeyRequired(acceptedScopes = {ApiScope.GIT}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
-  public Response getRepositoryExecutions(@Context UriInfo uriInfo, @BeanParam Pagination pagination) {
+  public Response getRepositoryExecutions(@Context UriInfo uriInfo,
+                                          @Context SecurityContext sc,
+                                          @BeanParam Pagination pagination) {
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.EXECUTION);
     // TODO(Fabio): ideally this should be provided by an expansion beam param.
     resourceRequest.setExpansions(
