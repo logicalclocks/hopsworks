@@ -74,6 +74,7 @@ import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
+import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.FormParam;
@@ -132,8 +133,10 @@ public class SystemAdminService {
   @PUT
   @Path("/encryptionPass")
   public Response changeMasterEncryptionPassword(@Context SecurityContext sc,
-    @Secret @FormParam("oldPassword") String oldPassword, @Secret @FormParam("newPassword") String newPassword)
-    throws HopsSecurityException {
+                                                 @Context HttpServletRequest req,
+                                                 @Secret @FormParam("oldPassword") String oldPassword,
+                                                 @Secret @FormParam("newPassword") String newPassword)
+      throws HopsSecurityException {
     LOGGER.log(Level.FINE, "Requested master encryption password change");
     try {
       Users user = jWTHelper.getUserPrincipal(sc);
@@ -156,7 +159,9 @@ public class SystemAdminService {
   
   @GET
   @Path("/encryptionPass/{opId}")
-  public Response getUpdatePasswordStatus(@PathParam("opId") Integer operationId, @Context SecurityContext sc) {
+  public Response getUpdatePasswordStatus(@PathParam("opId") Integer operationId,
+                                          @Context HttpServletRequest req,
+                                          @Context SecurityContext sc) {
     CertificatesMgmService.UPDATE_STATUS status = certificatesMgmService.getOperationStatus(operationId);
     switch (status) {
       case OK:
@@ -172,7 +177,7 @@ public class SystemAdminService {
   
   @POST
   @Path("/variables/refresh")
-  public Response refreshVariables(@Context SecurityContext sc) {
+  public Response refreshVariables(@Context HttpServletRequest req, @Context SecurityContext sc) {
     LOGGER.log(Level.FINE, "Requested refreshing variables");
     settings.refreshCache();
     
@@ -183,7 +188,9 @@ public class SystemAdminService {
   @POST
   @Consumes({MediaType.APPLICATION_JSON})
   @Path("/variables")
-  public Response updateVariables(VariablesRequest variablesRequest, @Context SecurityContext sc) {
+  public Response updateVariables(VariablesRequest variablesRequest,
+                                  @Context HttpServletRequest req,
+                                  @Context SecurityContext sc) {
   
     List<Variables> variables = variablesRequest.getVariables();
     
@@ -199,7 +206,7 @@ public class SystemAdminService {
   
   @POST
   @Path("/rotate")
-  public Response serviceKeyRotate(@Context SecurityContext sc) {
+  public Response serviceKeyRotate(@Context HttpServletRequest req, @Context SecurityContext sc) {
     certificatesMgmService.issueServiceKeyRotationCommand();
     RESTApiJsonResponse
       response = noCacheResponse.buildJsonResponse(Response.Status.NO_CONTENT, "Key rotation commands " +
@@ -209,7 +216,9 @@ public class SystemAdminService {
   
   @POST
   @Path("/kagent/{hostname}")
-  public Response startAgent(@PathParam("hostname") String hostname, @Context SecurityContext sc)
+  public Response startAgent(@PathParam("hostname") String hostname,
+                             @Context HttpServletRequest req,
+                             @Context SecurityContext sc)
     throws ServiceException {
     if (Strings.isNullOrEmpty(hostname)) {
       throw new IllegalArgumentException("Hostname should not be null or empty");
@@ -227,7 +236,9 @@ public class SystemAdminService {
   
   @DELETE
   @Path("/kagent/{hostname}")
-  public Response stopAgent(@PathParam("hostname") String hostname, @Context SecurityContext sc)
+  public Response stopAgent(@PathParam("hostname") String hostname,
+                            @Context HttpServletRequest req,
+                            @Context SecurityContext sc)
     throws ServiceException {
     if (Strings.isNullOrEmpty(hostname)) {
       throw new IllegalArgumentException("Hostname should not be null or empty");
@@ -245,7 +256,9 @@ public class SystemAdminService {
   
   @PUT
   @Path("/kagent/{hostname}")
-  public Response restartAgent(@PathParam("hostname") String hostname, @Context SecurityContext sc)
+  public Response restartAgent(@PathParam("hostname") String hostname,
+                               @Context HttpServletRequest req,
+                               @Context SecurityContext sc)
     throws ServiceException {
     if (Strings.isNullOrEmpty(hostname)) {
       throw new IllegalArgumentException("Hostname should not be null or empty");
@@ -261,7 +274,8 @@ public class SystemAdminService {
   
   @PUT
   @Path("/servicetoken")
-  public Response renewServiceJWT(@Context SecurityContext sc) throws JWTException {
+  public Response renewServiceJWT(@Context SecurityContext sc, @Context HttpServletRequest req)
+      throws JWTException {
     serviceJWTKeepAlive.forceRenewServiceToken();
     return Response.noContent().build();
   }
@@ -271,7 +285,8 @@ public class SystemAdminService {
   @Path("/kafka/settings")
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
   @Produces(MediaType.APPLICATION_JSON)
-  public Response getKafkaSettings(@Context SecurityContext sc) throws KafkaException {
+  public Response getKafkaSettings(@Context SecurityContext sc, @Context HttpServletRequest req)
+      throws KafkaException {
     TopicDefaultValueDTO values = kafkaController.topicDefaultValues();
     
     return Response.ok().entity(values).build();
@@ -279,7 +294,8 @@ public class SystemAdminService {
   
   @GET
   @Path("/elastic/admintoken")
-  public Response getElasticAdminToken(@Context SecurityContext sc) throws ElasticException {
+  public Response getElasticAdminToken(@Context SecurityContext sc, @Context HttpServletRequest req)
+      throws ElasticException {
     ElasticJWTResponseDTO responseDTO = jWTHelper.createTokenForELKAsAdmin();
     return Response.ok().entity(responseDTO).build();
   }

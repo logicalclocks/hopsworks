@@ -129,7 +129,9 @@ public class UsersAdminResource {
   public Response getAllUsers(
     @Context UriInfo uriInfo,
     @BeanParam Pagination pagination,
-    @BeanParam UsersBeanParam usersBeanParam, @Context SecurityContext sc) {
+    @BeanParam UsersBeanParam usersBeanParam,
+    @Context HttpServletRequest req,
+    @Context SecurityContext sc) {
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.USERS);
     resourceRequest.setOffset(pagination.getOffset());
     resourceRequest.setLimit(pagination.getLimit());
@@ -143,7 +145,9 @@ public class UsersAdminResource {
   @GET
   @Path("/users/{id: [0-9]*}")
   @Produces(MediaType.APPLICATION_JSON)
-  public Response getUser(@Context UriInfo uriInfo, @PathParam("id") Integer id, @Context SecurityContext sc)
+  public Response getUser(@Context UriInfo uriInfo, @PathParam("id") Integer id,
+                          @Context HttpServletRequest req,
+                          @Context SecurityContext sc)
     throws UserException {
     UserProfileDTO dto = usersBuilder.buildById(uriInfo, id);
     return Response.ok().entity(dto).build();
@@ -278,7 +282,9 @@ public class UsersAdminResource {
   @GET
   @Path("/users/groups")
   @Produces(MediaType.APPLICATION_JSON)
-  public Response getAllGroups(@Context UriInfo uriInfo, @Context SecurityContext sc) {
+  public Response getAllGroups(@Context UriInfo uriInfo,
+                               @Context HttpServletRequest req,
+                               @Context SecurityContext sc) {
     BbcGroupDTO dto = usersBuilder.buildUserGroups(uriInfo);
     return Response.ok().entity(dto).build();
   }
@@ -286,7 +292,9 @@ public class UsersAdminResource {
   @POST
   @Path("/users/remote/{id}/sync-group")
   @Produces(MediaType.APPLICATION_JSON)
-  public Response syncRemoteGroup(@PathParam("id") Integer id, @Context SecurityContext sc) throws UserException {
+  public Response syncRemoteGroup(@PathParam("id") Integer id,
+                                  @Context HttpServletRequest req,
+                                  @Context SecurityContext sc) throws UserException {
     Users users = userFacade.find(id);
     RemoteUser remoteUser = remoteUserFacade.findByUsers(users);
     remoteGroupMappingHelper.syncMapping(remoteUser);
@@ -296,7 +304,9 @@ public class UsersAdminResource {
   @POST
   @Path("/users/remote/by-email/{email}/sync-group")
   @Produces(MediaType.APPLICATION_JSON)
-  public Response syncRemoteGroupByEmail(@PathParam("email") String email, @Context SecurityContext sc)
+  public Response syncRemoteGroupByEmail(@PathParam("email") String email,
+                                         @Context HttpServletRequest req,
+                                         @Context SecurityContext sc)
     throws UserException {
     Users users = userFacade.findByEmail(email);
     RemoteUser remoteUser = remoteUserFacade.findByUsers(users);
@@ -307,7 +317,7 @@ public class UsersAdminResource {
   @POST
   @Path("/users/remote/sync-group")
   @Produces(MediaType.APPLICATION_JSON)
-  public Response syncRemoteGroup(@Context SecurityContext sc) {
+  public Response syncRemoteGroup(@Context HttpServletRequest req, @Context SecurityContext sc) {
     remoteGroupMappingHelper.syncMappingAsync();
     return Response.accepted().build();
   }
@@ -316,7 +326,9 @@ public class UsersAdminResource {
   @GET
   @Path("/user/{uuid}")
   @Produces(MediaType.APPLICATION_JSON)
-  public Response getRemoteUser(@PathParam("uuid") String uuid, @Context SecurityContext sc) throws UserException {
+  public Response getRemoteUser(@PathParam("uuid") String uuid,
+                                @Context HttpServletRequest req,
+                                @Context SecurityContext sc) throws UserException {
     RemoteUser remoteUser = remoteUserHelper.getRemoteUser(uuid);
     RestRemoteUserDTO userDTO = new RestRemoteUserDTO(remoteUser.getUuid(), remoteUser.getUid().getFname(),
       remoteUser.getUid().getLname(), remoteUser.getUid().getEmail());
@@ -331,11 +343,16 @@ public class UsersAdminResource {
     allowedUserRoles = {"HOPS_ADMIN"})
   @Audited(type = AuditType.ACCOUNT_AUDIT, action = AuditAction.REGISTRATION, message = "Register new user as admin")
   public Response registerUser(@QueryParam("accountType") UserAccountType accountType, @QueryParam("uuid") String uuid,
-    @AuditTarget(UserIdentifier.EMAIL) @QueryParam("email") String email,
-    @QueryParam("password") @Secret String password, @QueryParam("givenName") String givenName,
-    @QueryParam("surname") String surname, @QueryParam("maxNumProjects") int maxNumProjects,
-    @QueryParam("type") RemoteUserType type, @QueryParam("role") String role,
-    @QueryParam("status") UserAccountStatus status, @Context SecurityContext sc, @Context UriInfo uriInfo)
+                               @AuditTarget(UserIdentifier.EMAIL) @QueryParam("email") String email,
+                               @QueryParam("password") @Secret String password,
+                               @QueryParam("givenName") String givenName,
+                               @QueryParam("surname") String surname,
+                               @QueryParam("maxNumProjects") int maxNumProjects,
+                               @QueryParam("type") RemoteUserType type, @QueryParam("role") String role,
+                               @QueryParam("status") UserAccountStatus status,
+                               @Context SecurityContext sc,
+                               @Context HttpServletRequest req,
+                               @Context UriInfo uriInfo)
     throws GenericException, UserException {
     switch (accountType) {
       case M_ACCOUNT_TYPE:

@@ -63,6 +63,7 @@ import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.enterprise.context.RequestScoped;
 import javax.inject.Inject;
+import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.DefaultValue;
@@ -87,9 +88,9 @@ import java.util.logging.Logger;
 @RequestScoped
 @TransactionAttribute(TransactionAttributeType.NEVER)
 public class DatasetResource {
-  
+
   private static final Logger LOGGER = Logger.getLogger(DatasetResource.class.getName());
-  
+
   @EJB
   private DatasetController datasetController;
   @EJB
@@ -124,11 +125,12 @@ public class DatasetResource {
   public void setProjectId(Integer projectId) {
     this.projectId = projectId;
   }
+
   @Logged(logLevel = LogLevel.OFF)
   public void setProjectName(String projectName) {
     this.projectName = projectName;
   }
-  
+
   private Project getProject() throws ProjectException {
     if (this.projectId != null) {
       return projectController.findProjectById(this.projectId);
@@ -137,7 +139,7 @@ public class DatasetResource {
     }
     throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_NOT_FOUND, Level.FINE);
   }
-  
+
   private void checkIfDataOwner(Project project, Users user) throws DatasetException {
     if (!projectTeamFacade.findCurrentRole(project, user).equals(AllowedRoles.DATA_OWNER)) {
       throw new DatasetException(RESTCodes.DatasetErrorCode.DATASET_ACCESS_PERMISSION_DENIED, Level.FINE);
@@ -149,10 +151,12 @@ public class DatasetResource {
   @ApiOperation(value = "Get all datasets.", response = DatasetDTO.class)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
-  @ApiKeyRequired( acceptedScopes = {ApiScope.DATASET_VIEW}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
-  public Response get(@BeanParam Pagination pagination, @BeanParam DatasetBeanParam datasetBeanParam,
-    @Context UriInfo uriInfo, @Context SecurityContext sc)
-    throws ProjectException, DatasetException, MetadataException, SchematizedTagException {
+  @ApiKeyRequired(acceptedScopes = {ApiScope.DATASET_VIEW}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
+  public Response get(@BeanParam Pagination pagination,
+                      @BeanParam DatasetBeanParam datasetBeanParam,
+                      @Context HttpServletRequest req,
+                      @Context UriInfo uriInfo, @Context SecurityContext sc)
+      throws ProjectException, DatasetException, MetadataException, SchematizedTagException {
     Users user = jWTHelper.getUserPrincipal(sc);
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.DATASET);
     resourceRequest.setOffset(pagination.getOffset());
@@ -167,29 +171,35 @@ public class DatasetResource {
     sharedDatasetResourceRequest.setFilter(datasetBeanParam.getSharedWithFilter());
     sharedDatasetResourceRequest.setExpansions(datasetBeanParam.getExpansions().getResources());
     DatasetDTO dto = datasetBuilder.buildItems(uriInfo, resourceRequest, sharedDatasetResourceRequest,
-      this.getProject(), user);
+        this.getProject(), user);
     return Response.ok().entity(dto).build();
   }
-  
+
   @GET
   @Path("{path: .+}")
   @Produces(MediaType.APPLICATION_JSON)
   @ApiOperation(value = "Get or list files in path.", response = InodeDTO.class)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   @JWTRequired(acceptedTokens = {Audience.API, Audience.JOB}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
-  @ApiKeyRequired( acceptedScopes = {ApiScope.DATASET_VIEW}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
-  public Response getByPath(@PathParam("path") String path, @QueryParam("type") DatasetType datasetType,
-    @QueryParam("action") DatasetActions.Get action, @QueryParam("mode") FilePreviewMode mode,
-    @BeanParam Pagination pagination, @BeanParam InodeBeanParam inodeBeanParam,
-    @BeanParam DatasetExpansionBeanParam datasetExpansionBeanParam, @Context UriInfo uriInfo,
-    @Context SecurityContext sc) throws DatasetException, ProjectException, MetadataException, SchematizedTagException {
+  @ApiKeyRequired(acceptedScopes = {ApiScope.DATASET_VIEW}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
+  public Response getByPath(@PathParam("path") String path,
+                            @QueryParam("type") DatasetType datasetType,
+                            @QueryParam("action") DatasetActions.Get action,
+                            @QueryParam("mode") FilePreviewMode mode,
+                            @BeanParam Pagination pagination,
+                            @BeanParam InodeBeanParam inodeBeanParam,
+                            @BeanParam DatasetExpansionBeanParam datasetExpansionBeanParam,
+                            @Context UriInfo uriInfo,
+                            @Context HttpServletRequest req,
+                            @Context SecurityContext sc)
+      throws DatasetException, ProjectException, MetadataException, SchematizedTagException {
     Users user = jwtHelper.getUserPrincipal(sc);
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.INODES);
     resourceRequest.setExpansions(datasetExpansionBeanParam.getResources());
     Project project = this.getProject();
     DatasetPath datasetPath = datasetHelper.getDatasetPathIfFileExist(project, path, datasetType);
     InodeDTO dto;
-    switch (action == null? DatasetActions.Get.STAT : action) {
+    switch (action == null ? DatasetActions.Get.STAT : action) {
       case BLOB:
         dto = inodeBuilder.buildBlob(uriInfo, resourceRequest, user, datasetPath, mode);
         break;
@@ -205,7 +215,7 @@ public class DatasetResource {
           ResourceRequest datasetResourceRequest = new ResourceRequest(ResourceRequest.Name.DATASET);
           datasetResourceRequest.setExpansions(datasetExpansionBeanParam.getResources());
           DatasetDTO datasetDTO = datasetBuilder.build(uriInfo, datasetResourceRequest, user, datasetPath,
-            null, null, true);
+              null, null, true);
           return Response.ok().entity(datasetDTO).build();
         } else {
           dto = inodeBuilder.buildStat(uriInfo, resourceRequest, user, datasetPath);
@@ -216,7 +226,7 @@ public class DatasetResource {
     }
     return Response.ok().entity(dto).build();
   }
-  
+
   @POST
   @Path("{path: .+}")
   @Produces(MediaType.APPLICATION_JSON)
@@ -225,6 +235,7 @@ public class DatasetResource {
   @JWTRequired(acceptedTokens = {Audience.API, Audience.JOB}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   @ApiKeyRequired( acceptedScopes = {ApiScope.DATASET_CREATE}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   public Response postByPath(@Context UriInfo uriInfo, @Context SecurityContext sc,
+                             @Context HttpServletRequest req,
                              @PathParam("path") String path,
                              @QueryParam("type") DatasetType datasetType,
                              @QueryParam("target_project") String targetProjectName,
@@ -235,15 +246,15 @@ public class DatasetResource {
                              @QueryParam("destination_path") String destPath,
                              @QueryParam("destination_type") DatasetType destDatasetType,
                              @DefaultValue("READ_ONLY") @QueryParam("permission") DatasetAccessPermission permission)
-    throws DatasetException, ProjectException, HopsSecurityException, ProvenanceException, MetadataException,
-           SchematizedTagException {
+      throws DatasetException, ProjectException, HopsSecurityException, ProvenanceException, MetadataException,
+      SchematizedTagException {
     Users user = jwtHelper.getUserPrincipal(sc);
     DatasetPath datasetPath;
     DatasetPath distDatasetPath;
     Project project = this.getProject();
-    switch (action == null? DatasetActions.Post.CREATE : action) {
+    switch (action == null ? DatasetActions.Post.CREATE : action) {
       case CREATE:
-        if(datasetType != null && !datasetType.equals(DatasetType.DATASET)) {
+        if (datasetType != null && !datasetType.equals(DatasetType.DATASET)) {
           //can only create dataset
           throw new DatasetException(RESTCodes.DatasetErrorCode.DATASET_OPERATION_INVALID, Level.FINE);
         }
@@ -251,7 +262,7 @@ public class DatasetResource {
         if (datasetPath.isTopLevelDataset()) {
           checkIfDataOwner(project, user);
         }
-        if(datasetPath.isTopLevelDataset() && !datasetHelper.isBasicDatasetProjectParent(project, datasetPath)) {
+        if (datasetPath.isTopLevelDataset() && !datasetHelper.isBasicDatasetProjectParent(project, datasetPath)) {
           //fake shared dataset with :: in dataset name at dataset creation
           throw new DatasetException(RESTCodes.DatasetErrorCode.DATASET_NAME_INVALID, Level.FINE);
         }
@@ -271,8 +282,8 @@ public class DatasetResource {
           datasetHelper.checkIfDatasetExists(project, datasetPath);
           datasetHelper.updateDataset(project, datasetPath);
           datasetController.createDirectory(project, user, datasetPath.getFullPath(), datasetPath.getDatasetName(),
-            datasetPath.isTopLevelDataset(), description,
-            Provenance.getDatasetProvCore(projectProvCore, Provenance.MLType.DATASET), generateReadme, permission);
+              datasetPath.isTopLevelDataset(), description,
+              Provenance.getDatasetProvCore(projectProvCore, Provenance.MLType.DATASET), generateReadme, permission);
           resourceRequest = new ResourceRequest(ResourceRequest.Name.INODES);
           Inode inode = inodeController.getInodeAtPath(datasetPath.getFullPath().toString());
           datasetPath.setInode(inode);
@@ -283,13 +294,13 @@ public class DatasetResource {
         datasetPath = datasetHelper.getDatasetPathIfFileExist(project, path, datasetType);
         distDatasetPath = datasetHelper.getDatasetPath(project, destPath, destDatasetType);
         datasetController.copy(project, user, datasetPath.getFullPath(), distDatasetPath.getFullPath(),
-          datasetPath.getDataset(), distDatasetPath.getDataset());
+            datasetPath.getDataset(), distDatasetPath.getDataset());
         break;
       case MOVE:
         datasetPath = datasetHelper.getDatasetPathIfFileExist(project, path, datasetType);
         distDatasetPath = datasetHelper.getDatasetPath(project, destPath, destDatasetType);
         datasetController.move(project, user, datasetPath.getFullPath(), distDatasetPath.getFullPath(),
-          datasetPath.getDataset(), distDatasetPath.getDataset());
+            datasetPath.getDataset(), distDatasetPath.getDataset());
         break;
       case SHARE:
         checkIfDataOwner(project, user);
@@ -339,7 +350,7 @@ public class DatasetResource {
         Project srcProject = projectController.findProjectByName(targetProjectName);
         datasetPath = datasetHelper.getDatasetPathIfFileExist(srcProject, path, datasetType);
         datasetController.share(project.getName(), datasetPath.getFullPath().toString(),
-          DatasetAccessPermission.READ_ONLY, srcProject, user);
+            DatasetAccessPermission.READ_ONLY, srcProject, user);
         break;
       case UNSHARE_ALL:
         checkIfDataOwner(project, user);
@@ -351,7 +362,7 @@ public class DatasetResource {
     }
     return Response.noContent().build();
   }
-  
+
   @PUT
   @Path("{path: .+}")
   @Produces(MediaType.APPLICATION_JSON)
@@ -361,10 +372,13 @@ public class DatasetResource {
   @JWTRequired(acceptedTokens={Audience.API, Audience.JOB}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
   @ApiKeyRequired( acceptedScopes = {ApiScope.DATASET_CREATE}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   public Response update(@PathParam("path") String path, @QueryParam("type") DatasetType datasetType,
-    @QueryParam("action") DatasetActions.Put action, @QueryParam("description") String description,
-    @DefaultValue("READ_ONLY") @QueryParam("permissions") DatasetAccessPermission datasetPermissions,
-    @QueryParam("target_project") String targetProjectName, @Context UriInfo uriInfo, @Context SecurityContext sc)
-    throws DatasetException, ProjectException, MetadataException, SchematizedTagException {
+                  @QueryParam("action") DatasetActions.Put action, @QueryParam("description") String description,
+                  @DefaultValue("READ_ONLY") @QueryParam("permissions") DatasetAccessPermission datasetPermissions,
+                  @QueryParam("target_project") String targetProjectName,
+                  @Context UriInfo uriInfo,
+                  @Context HttpServletRequest req,
+                  @Context SecurityContext sc)
+      throws DatasetException, ProjectException, MetadataException, SchematizedTagException {
     Project project = this.getProject();
     DatasetPath datasetPath = datasetHelper.getDatasetPath(project, path, datasetType);
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.DATASET);
@@ -379,7 +393,7 @@ public class DatasetResource {
       case SHARE_PERMISSION:
         checkIfDataOwner(project, user);
         datasetController.updateSharePermission(datasetPath.getDataset(), datasetPermissions, project, targetProjectName
-          , user);
+            , user);
         dto = datasetBuilder.build(uriInfo, resourceRequest, user, datasetPath, null, null, false);
         break;
       case DESCRIPTION:
@@ -391,23 +405,26 @@ public class DatasetResource {
     }
     return Response.ok(dto).build();
   }
-  
+
   @DELETE
   @Path("{path: .+}")
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
   @ApiOperation(value = "Delete/unshare dataset")
   @JWTRequired(acceptedTokens={Audience.API, Audience.JOB}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
-  @ApiKeyRequired( acceptedScopes = {ApiScope.DATASET_DELETE}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
-  public Response delete(@PathParam("path") String path, @QueryParam("type") DatasetType datasetType,
-    @QueryParam("action") DatasetActions.Delete action, @QueryParam("target_project") String targetProject,
-    @Context SecurityContext sc) throws DatasetException, ProjectException {
+  @ApiKeyRequired(acceptedScopes = {ApiScope.DATASET_DELETE}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
+  public Response delete(@PathParam("path") String path,
+                         @QueryParam("type") DatasetType datasetType,
+                         @QueryParam("action") DatasetActions.Delete action,
+                         @QueryParam("target_project") String targetProject,
+                         @Context HttpServletRequest req,
+                         @Context SecurityContext sc) throws DatasetException, ProjectException {
     DatasetPath datasetPath = datasetHelper.getDatasetPath(this.getProject(), path, datasetType);
     Users user = jwtHelper.getUserPrincipal(sc);
     Project project = this.getProject();
     if (action == null) {
       datasetController.delete(project, user, datasetPath.getFullPath(), datasetPath.getDataset(),
-        datasetPath.isTopLevelDataset());
+          datasetPath.isTopLevelDataset());
     } else {
       switch (action) {
         case UNSHARE:
@@ -419,7 +436,7 @@ public class DatasetResource {
             throw new IllegalArgumentException("Use DELETE /{datasetName} to delete top level dataset)");
           }
           datasetController
-            .deleteCorrupted(project, user, datasetPath.getFullPath(), datasetPath.getDataset());
+              .deleteCorrupted(project, user, datasetPath.getFullPath(), datasetPath.getDataset());
           break;
         default:
           throw new WebApplicationException("Action not valid.", Response.Status.NOT_FOUND);
@@ -427,14 +444,14 @@ public class DatasetResource {
     }
     return Response.noContent().build();
   }
-  
+
   @Logged(logLevel = LogLevel.OFF)
   @Path("/download")
   public DownloadService download() {
     this.downloadService.setProjectId(this.projectId);
     return this.downloadService;
   }
-  
+
   @Logged(logLevel = LogLevel.OFF)
   @Path("upload/{path: .+}")
   public UploadService upload(@PathParam("path") String path,
@@ -442,7 +459,7 @@ public class DatasetResource {
     this.uploader.setParams(this.projectId, path, datasetType);
     return this.uploader;
   }
-  
+
   @Logged(logLevel = LogLevel.OFF)
   @Path("tags")
   public DatasetTagsResource tags() throws ProjectException {

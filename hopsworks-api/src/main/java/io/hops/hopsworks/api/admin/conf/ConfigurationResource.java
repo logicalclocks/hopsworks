@@ -32,6 +32,7 @@ import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
+import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
@@ -63,7 +64,9 @@ public class ConfigurationResource {
   @GET
   @ApiOperation(value = "Get all configuration values")
   @Produces(MediaType.APPLICATION_JSON)
-  public Response getAll(@Context UriInfo uriInfo, @Context SecurityContext sc) {
+  public Response getAll(@Context UriInfo uriInfo,
+                         @Context HttpServletRequest req,
+                         @Context SecurityContext sc) {
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.CONFIGURATION);
     ConfigurationDTO configurationDTO = configurationBuilder.build(uriInfo, resourceRequest);
     return Response.ok().entity(configurationDTO).build();
@@ -74,7 +77,9 @@ public class ConfigurationResource {
   @Produces(MediaType.APPLICATION_JSON)
   @ApiOperation(value = "Create/Update configuration value")
   @Path("{name}")
-  public Response setConf(@Context UriInfo uriInfo, @Context SecurityContext sc,
+  public Response setConf(@Context UriInfo uriInfo,
+                          @Context HttpServletRequest req,
+                          @Context SecurityContext sc,
                           @PathParam("name") String name,
                           ConfigurationDTO configurationDTO) {
     // Update the value in the database

@@ -34,6 +34,7 @@ import javax.ejb.EJB;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.enterprise.context.RequestScoped;
+import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -104,7 +105,9 @@ public class ProjectActivitiesResource {
   public Response findAllByProject(
       @BeanParam Pagination pagination,
       @BeanParam ActivitiesBeanParam activitiesBeanParam,
-      @Context UriInfo uriInfo, @Context SecurityContext sc) throws ProjectException {
+      @Context UriInfo uriInfo,
+      @Context HttpServletRequest req,
+      @Context SecurityContext sc) throws ProjectException {
     Project project = getProject(); //test if project exist
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.ACTIVITIES);
     resourceRequest.setOffset(pagination.getOffset());
@@ -129,7 +132,9 @@ public class ProjectActivitiesResource {
   public Response findAllById(
       @PathParam("activityId") Integer activityId,
       @BeanParam ExpansionBeanParam expansions,
-      @Context UriInfo uriInfo, @Context SecurityContext sc) throws ProjectException, ActivitiesException {
+      @Context UriInfo uriInfo,
+      @Context HttpServletRequest req,
+      @Context SecurityContext sc) throws ProjectException, ActivitiesException {
     Project project = getProject(); //test if project exist
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.ACTIVITIES);
     resourceRequest.setExpansions(expansions.getResources());

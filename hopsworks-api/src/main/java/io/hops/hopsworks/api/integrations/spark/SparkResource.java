@@ -26,6 +26,7 @@ import javax.ejb.EJB;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.enterprise.context.RequestScoped;
+import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
@@ -69,7 +70,9 @@ public class SparkResource {
   @ApiOperation(value = "Get Spark configuration for external clusters", response = SparkConfigurationDTO.class)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
   @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
-  public Response getConfiguration(@Context UriInfo uriInfo, @Context SecurityContext sc) throws ServiceException {
+  public Response getConfiguration(@Context UriInfo uriInfo,
+                                   @Context HttpServletRequest req,
+                                   @Context SecurityContext sc) throws ServiceException {
     SparkConfigurationDTO sparkConfigurationDTO = sparkConfigurationBuilder.build(uriInfo, project);
     return Response.ok().entity(sparkConfigurationDTO).build();
   }
@@ -80,7 +83,7 @@ public class SparkResource {
   @ApiOperation(value = "Get a one time download token for the client", response = RESTApiJsonResponse.class)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
   @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
-  public Response clientToken(@Context SecurityContext sc) {
+  public Response clientToken(@Context HttpServletRequest req, @Context SecurityContext sc) {
     Users user = jwtHelper.getUserPrincipal(sc);
     RESTApiJsonResponse response = new RESTApiJsonResponse();
     response.setData(jwtHelper.createOneTimeToken(user, CLIENT_TOKEN_ISSUER, null));
@@ -92,7 +95,9 @@ public class SparkResource {
   @Produces({MediaType.APPLICATION_OCTET_STREAM, MediaType.APPLICATION_JSON})
   @ApiOperation(value = "Download the client jars")
   @JWTNotRequired
-  public Response client(@QueryParam("token") String token, @Context SecurityContext sc)
+  public Response client(@QueryParam("token") String token,
+                         @Context HttpServletRequest req,
+                         @Context SecurityContext sc)
       throws FileNotFoundException, SigningKeyNotFoundException, VerificationException {
     jwtHelper.verifyOneTimeToken(token, CLIENT_TOKEN_ISSUER);
     InputStream stream = new FileInputStream(Paths.get(settings.getClientPath(), CLIENTS_FILE_NAME).toFile());

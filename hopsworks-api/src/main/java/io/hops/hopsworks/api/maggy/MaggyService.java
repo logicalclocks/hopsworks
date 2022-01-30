@@ -19,7 +19,6 @@ import com.google.common.base.Strings;
 import io.hops.hopsworks.api.filter.Audience;
 import io.hops.hopsworks.audit.logger.annotation.Logged;
 import io.hops.hopsworks.common.dao.maggy.MaggyFacade;
-import io.hops.hopsworks.exceptions.ServiceException;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
 import io.hops.hopsworks.persistence.entity.maggy.MaggyDriver;
 import io.swagger.annotations.Api;
@@ -77,7 +76,9 @@ public class MaggyService {
   @Path("drivers")
   @ApiOperation(value = "Register a Maggy Driver Endpoint for this YARN appId (called by Spark Driver in maggy).")
   @Consumes(MediaType.APPLICATION_JSON)
-  public Response register(MaggyDriver driver, @Context SecurityContext sc) throws ServiceException {
+  public Response register(MaggyDriver driver,
+                           @Context HttpServletRequest req,
+                           @Context SecurityContext sc) {
     if (driver == null || driver.getAppId() == null) {
       throw new IllegalArgumentException("Driver was null or had no appId");
     }
@@ -89,7 +90,9 @@ public class MaggyService {
   @Path("drivers/{appId}")
   @Produces(MediaType.APPLICATION_JSON)
   @ApiOperation(value = "Deletes all Maggy endpoints associated with an AppId")
-  public Response deleteByAppId(@PathParam("appId") String appId, @Context SecurityContext sc){
+  public Response deleteByAppId(@PathParam("appId") String appId,
+                                @Context HttpServletRequest req,
+                                @Context SecurityContext sc){
     if (Strings.isNullOrEmpty(appId)) {
       throw new IllegalArgumentException("appId was not provided or was empty");
     }

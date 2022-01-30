@@ -52,6 +52,7 @@ import javax.ejb.EJB;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.enterprise.context.RequestScoped;
+import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.DefaultValue;
@@ -107,8 +108,10 @@ public class FeatureGroupAlertResource {
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   public Response get(@BeanParam Pagination pagination,
-      @BeanParam FeatureGroupAlertBeanParam featureGroupAlertBeanParam, @Context UriInfo uriInfo,
-      @Context SecurityContext sc) {
+                      @BeanParam FeatureGroupAlertBeanParam featureGroupAlertBeanParam,
+                      @Context UriInfo uriInfo,
+                      @Context HttpServletRequest req,
+                      @Context SecurityContext sc) {
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.ALERTS);
     resourceRequest.setOffset(pagination.getOffset());
     resourceRequest.setLimit(pagination.getLimit());
@@ -124,7 +127,10 @@ public class FeatureGroupAlertResource {
   @ApiOperation(value = "Find feature group alert by Id.", response = FeatureGroupAlertDTO.class)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
-  public Response getById(@PathParam("id") Integer id, @Context UriInfo uriInfo, @Context SecurityContext sc)
+  public Response getById(@PathParam("id") Integer id,
+                          @Context UriInfo uriInfo,
+                          @Context HttpServletRequest req,
+                          @Context SecurityContext sc)
       throws FeaturestoreException {
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.ALERTS);
     FeatureGroupAlertDTO dto = featureGroupAlertBuilder.build(uriInfo, resourceRequest, this.featuregroup, id);
@@ -137,7 +143,9 @@ public class FeatureGroupAlertResource {
   @ApiOperation(value = "Get values for feature group alert.", response = FeatureGroupAlertValues.class)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
-  public Response getAvailableServices(@Context UriInfo uriInfo, @Context SecurityContext sc)  {
+  public Response getAvailableServices(@Context UriInfo uriInfo,
+                                       @Context HttpServletRequest req,
+                                       @Context SecurityContext sc)  {
     FeatureGroupAlertValues values = new FeatureGroupAlertValues();
     return Response.ok().entity(values).build();
   }
@@ -148,8 +156,11 @@ public class FeatureGroupAlertResource {
   @ApiOperation(value = "Update a feature group alert.", response = FeatureGroupAlertDTO.class)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
-  public Response createOrUpdate(@PathParam("id") Integer id, FeatureGroupAlertDTO dto,
-      @Context UriInfo uriInfo, @Context SecurityContext sc) throws FeaturestoreException {
+  public Response createOrUpdate(@PathParam("id") Integer id,
+                                 FeatureGroupAlertDTO dto,
+                                 @Context UriInfo uriInfo,
+                                 @Context HttpServletRequest req,
+                                 @Context SecurityContext sc) throws FeaturestoreException {
     FeatureGroupAlert featureGroupAlert = featureGroupAlertFacade.findByFeatureGroupAndId(this.featuregroup, id);
     if (featureGroupAlert == null) {
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ALERT_NOT_FOUND, Level.FINE);
@@ -187,8 +198,11 @@ public class FeatureGroupAlertResource {
   @ApiOperation(value = "Create a feature group alert.", response = PostableFeatureGroupAlerts.class)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
-  public Response create(PostableFeatureGroupAlerts dto, @QueryParam("bulk") @DefaultValue("false") Boolean bulk,
-      @Context UriInfo uriInfo, @Context SecurityContext sc) throws FeaturestoreException {
+  public Response create(PostableFeatureGroupAlerts dto,
+                         @QueryParam("bulk") @DefaultValue("false") Boolean bulk,
+                         @Context UriInfo uriInfo,
+                         @Context HttpServletRequest req,
+                         @Context SecurityContext sc) throws FeaturestoreException {
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.ALERTS);
     FeatureGroupAlertDTO featureGroupAlertDTO = createAlert(dto, bulk, uriInfo, resourceRequest);
     return Response.created(featureGroupAlertDTO.getHref()).entity(featureGroupAlertDTO).build();
@@ -226,7 +240,7 @@ public class FeatureGroupAlertResource {
   }
   
   private FeatureGroupAlertDTO createAlert(PostableFeatureGroupAlerts dto, UriInfo uriInfo,
-      ResourceRequest resourceRequest) throws FeaturestoreException {
+                                           ResourceRequest resourceRequest) throws FeaturestoreException {
     validate(dto);
     FeatureGroupAlert featureGroupAlert = new FeatureGroupAlert();
     featureGroupAlert.setStatus(dto.getStatus());
@@ -247,8 +261,10 @@ public class FeatureGroupAlertResource {
   @ApiOperation(value = "Test alert by Id.", response = ProjectAlertsDTO.class)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
-  public Response getTestById(@PathParam("id") Integer id, @Context UriInfo uriInfo, @Context SecurityContext sc)
-      throws AlertException {
+  public Response getTestById(@PathParam("id") Integer id,
+                              @Context UriInfo uriInfo,
+                              @Context HttpServletRequest req,
+                              @Context SecurityContext sc) throws AlertException {
     FeatureGroupAlert featureGroupAlert = featureGroupAlertFacade.findByFeatureGroupAndId(featuregroup, id);
     List<Alert> alerts;
     try {
@@ -265,14 +281,16 @@ public class FeatureGroupAlertResource {
         alertBuilder.getAlertDTOs(uriInfo, resourceRequest, alerts, featuregroup.getFeaturestore().getProject());
     return Response.ok().entity(alertDTO).build();
   }
-  
+
   @DELETE
   @Path("{id}")
   @ApiOperation(value = "Delete feature group alert by Id.")
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
-  public Response deleteById(@PathParam("id") Integer id, @Context UriInfo uriInfo, @Context SecurityContext sc)
-      throws FeaturestoreException {
+  public Response deleteById(@PathParam("id") Integer id,
+                             @Context UriInfo uriInfo,
+                             @Context HttpServletRequest req,
+                             @Context SecurityContext sc) throws FeaturestoreException {
     FeatureGroupAlert featureGroupAlert = featureGroupAlertFacade.findByFeatureGroupAndId(this.featuregroup, id);
     if (featureGroupAlert != null) {
       deleteRoute(featureGroupAlert);
@@ -280,7 +298,6 @@ public class FeatureGroupAlertResource {
     }
     return Response.noContent().build();
   }
-  
   
   private void validate(PostableFeatureGroupAlerts dto) throws FeaturestoreException {
     if (dto == null) {

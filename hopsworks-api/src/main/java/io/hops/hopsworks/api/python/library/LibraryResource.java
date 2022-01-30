@@ -124,8 +124,10 @@ public class LibraryResource {
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   public Response get(@BeanParam Pagination pagination,
-      @BeanParam LibrariesBeanParam librariesBeanParam,
-      @Context UriInfo uriInfo, @Context SecurityContext sc) throws PythonException {
+                      @BeanParam LibrariesBeanParam librariesBeanParam,
+                      @Context UriInfo uriInfo,
+                      @Context HttpServletRequest req,
+                      @Context SecurityContext sc) throws PythonException {
     environmentController.checkCondaEnabled(project, pythonVersion, true);
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.LIBRARIES);
     resourceRequest.setOffset(pagination.getOffset());
@@ -146,7 +148,9 @@ public class LibraryResource {
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   public Response getByName(@PathParam("library") String library, @BeanParam LibraryExpansionBeanParam expansions,
-    @Context UriInfo uriInfo, @Context SecurityContext sc) throws PythonException {
+                            @Context UriInfo uriInfo,
+                            @Context HttpServletRequest req,
+                            @Context SecurityContext sc) throws PythonException {
     validatePattern(library);
     environmentController.checkCondaEnabled(project, pythonVersion, true);
     PythonDep dep = libraryController.getPythonDep(library, project);
@@ -164,8 +168,10 @@ public class LibraryResource {
   @Path("{library}")
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
-  public Response uninstall(@Context SecurityContext sc, @PathParam("library") String library)
-    throws ServiceException, GenericException, PythonException {
+  public Response uninstall(@Context SecurityContext sc,
+                            @Context HttpServletRequest req,
+                            @PathParam("library") String library)
+      throws ServiceException, GenericException, PythonException {
     validatePattern(library);
     Users user = jwtHelper.getUserPrincipal(sc);
     environmentController.checkCondaEnabled(project, pythonVersion, true);
@@ -245,6 +251,7 @@ public class LibraryResource {
                          @QueryParam("query") String query,
                          @QueryParam("channel") String channel,
                          @Context UriInfo uriInfo,
+                         @Context HttpServletRequest req,
                          @Context SecurityContext sc)
     throws ServiceException, PythonException {
     validatePattern(query);

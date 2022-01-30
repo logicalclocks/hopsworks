@@ -32,6 +32,7 @@ import javax.ejb.EJB;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.enterprise.context.RequestScoped;
+import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
@@ -83,7 +84,9 @@ public class DatabricksResource {
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   @ApiOperation(value = "List registered Databricks instances", response = DatabricksInstanceDTO.class)
-  public Response listInstances(@Context UriInfo uriInfo, @Context SecurityContext sc) {
+  public Response listInstances(@Context UriInfo uriInfo,
+                                @Context HttpServletRequest req,
+                                @Context SecurityContext sc) {
     Users user = jWTHelper.getUserPrincipal(sc);
 
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.DATABRICKS);
@@ -98,6 +101,7 @@ public class DatabricksResource {
   @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   @ApiOperation(value = "Register a new Databricks instance", response = DatabricksInstanceDTO.class)
   public Response registerInstance(@Context UriInfo uriInfo,
+                                   @Context HttpServletRequest req,
                                    @Context SecurityContext sc,
                                    @PathParam("instance") String instanceUrl,
                                    DatabricksApiKeyDTO databricksApiKeyDTO)
@@ -116,8 +120,9 @@ public class DatabricksResource {
   @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   @ApiOperation(value = "Delete a Databricks instance")
   public Response deleteInstance(@Context UriInfo uriInfo,
-                                   @Context SecurityContext sc,
-                                   @PathParam("instance") String instanceUrl)
+                                 @Context HttpServletRequest req,
+                                 @Context SecurityContext sc,
+                                 @PathParam("instance") String instanceUrl)
       throws FeaturestoreException, UserException {
     Users user = jWTHelper.getUserPrincipal(sc);
     databricksController.deleteInstance(user, instanceUrl);
@@ -132,6 +137,7 @@ public class DatabricksResource {
   @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   @ApiOperation(value = "List cluster of a Databricks instance", response = DatabricksClusterDTO.class)
   public Response listClusters(@Context UriInfo uriInfo,
+                               @Context HttpServletRequest req,
                                @Context SecurityContext sc,
                                @PathParam("instance") String dbInstance)
       throws FeaturestoreException, UserException {
@@ -155,6 +161,7 @@ public class DatabricksResource {
   @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   @ApiOperation(value = "Get details about a Databricks cluster", response = DatabricksClusterDTO.class)
   public Response getCluster(@Context UriInfo uriInfo,
+                             @Context HttpServletRequest req,
                              @Context SecurityContext sc,
                              @PathParam("instance") String dbInstance,
                              @PathParam("clusterId") String clusterId)
@@ -176,6 +183,7 @@ public class DatabricksResource {
   @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   @ApiOperation(value = "Configure a Databricks cluster", response = DatabricksClusterDTO.class)
   public Response configureCluster(@Context UriInfo uriInfo,
+                                   @Context HttpServletRequest req,
                                    @Context SecurityContext sc,
                                    @PathParam("instance") String dbInstance,
                                    @PathParam("clusterId") String clusterId,

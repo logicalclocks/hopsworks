@@ -54,6 +54,7 @@ import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
+import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.POST;
@@ -105,7 +106,9 @@ public class AgentResource {
       @ApiParam(value = "Agent request", required = true) AgentView request,
       @ApiParam(value = "Action to be performed on agent resource", required = true)
       @QueryParam("action")
-      @DefaultValue("NONE") AgentAction action, @Context SecurityContext sc) throws ServiceException {
+      @DefaultValue("NONE") AgentAction action,
+      @Context HttpServletRequest req,
+      @Context SecurityContext sc) throws ServiceException {
 
     switch (action) {
       case PING:

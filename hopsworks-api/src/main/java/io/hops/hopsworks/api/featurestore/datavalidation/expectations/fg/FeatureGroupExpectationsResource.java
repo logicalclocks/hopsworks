@@ -44,6 +44,7 @@ import javax.ejb.EJB;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.enterprise.context.RequestScoped;
+import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
@@ -101,6 +102,7 @@ public class FeatureGroupExpectationsResource {
     @BeanParam Pagination pagination,
     @BeanParam FeatureGroupExpectationsBeanParam featureGroupExpectationsBeanParam,
     @Context SecurityContext sc,
+    @Context HttpServletRequest req,
     @Context UriInfo uriInfo) {
     
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.EXPECTATIONS);
@@ -126,6 +128,7 @@ public class FeatureGroupExpectationsResource {
     @ApiParam(value = "name of the expectation", required = true) @PathParam("name") String name,
     @BeanParam FeatureGroupExpectationsBeanParam featureGroupExpectationsBeanParam,
     @Context SecurityContext sc,
+    @Context HttpServletRequest req,
     @Context UriInfo uriInfo) throws FeaturestoreException {
   
     FeatureGroupExpectation expectation =
@@ -150,6 +153,7 @@ public class FeatureGroupExpectationsResource {
   public Response attachExpectation(
     @ApiParam(value = "name of the expectation", required = true) @PathParam("name") String name,
     @Context SecurityContext sc,
+    @Context HttpServletRequest req,
     @Context UriInfo uriInfo) throws FeaturestoreException {
     Users user = jWTHelper.getUserPrincipal(sc);
     FeatureGroupExpectation expectation = featureGroupValidationsController.attachExpectation(featuregroup, name,
@@ -172,6 +176,7 @@ public class FeatureGroupExpectationsResource {
   public Response remove(
     @ApiParam(value = "name of the expectation", required = true) @PathParam("name") String name,
     @Context SecurityContext sc,
+    @Context HttpServletRequest req,
     @Context UriInfo uriInfo) throws FeaturestoreException {
 
     featureGroupValidationsController.detachExpectation(featuregroup, name);

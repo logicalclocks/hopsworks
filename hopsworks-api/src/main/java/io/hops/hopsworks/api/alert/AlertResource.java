@@ -45,6 +45,7 @@ import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.enterprise.context.RequestScoped;
 import javax.inject.Inject;
+import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
@@ -111,7 +112,9 @@ public class AlertResource {
   @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
   @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   public Response getAlerts(@BeanParam Pagination pagination, @BeanParam AlertBeanParam alertBeanParam,
-      @Context UriInfo uriInfo, @Context SecurityContext sc) throws ProjectException, AlertException {
+                            @Context HttpServletRequest req,
+                            @Context UriInfo uriInfo, @Context SecurityContext sc)
+      throws ProjectException, AlertException {
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.ALERTS);
     resourceRequest.setOffset(pagination.getOffset());
     resourceRequest.setLimit(pagination.getLimit());
@@ -126,7 +129,9 @@ public class AlertResource {
   @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
   @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   public Response getAlerts(@BeanParam Pagination pagination, @BeanParam AlertFilterBy alertFilterBy,
-      @QueryParam("expand_alert") Boolean expand, @Context UriInfo uriInfo, @Context SecurityContext sc)
+                            @QueryParam("expand_alert") Boolean expand, @Context UriInfo uriInfo,
+                            @Context HttpServletRequest req,
+                            @Context SecurityContext sc)
       throws ProjectException, AlertException {
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.ALERTGROUPS);
     if (expand != null && expand) {
@@ -147,7 +152,9 @@ public class AlertResource {
   @ApiOperation(value = "Create alert in project.", response = ActivitiesDTO.class)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
   @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
-  public Response createAlerts(PostableAlertDTOs alerts, @Context UriInfo uriInfo, @Context SecurityContext sc)
+  public Response createAlerts(PostableAlertDTOs alerts, @Context UriInfo uriInfo,
+                               @Context HttpServletRequest req,
+                               @Context SecurityContext sc)
       throws ProjectException, AlertException {
     if (alerts == null) {
       throw new AlertException(RESTCodes.AlertErrorCode.ILLEGAL_ARGUMENT, Level.FINE, "No payload.");

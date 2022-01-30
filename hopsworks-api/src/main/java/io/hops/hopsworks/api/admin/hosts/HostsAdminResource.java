@@ -37,6 +37,7 @@ import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
+import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
@@ -74,10 +75,10 @@ public class HostsAdminResource {
   @ApiOperation(value = "Get all cluster nodes.",  response = HostsDTO.class)
   @GET
   public Response getAllClusterNodes(@Context SecurityContext sc,
-    @Context UriInfo uriInfo,
-    @BeanParam Pagination pagination,
-    @BeanParam HostsBeanParam hostsBeanParam
-  ) {
+                                     @Context UriInfo uriInfo,
+                                     @Context HttpServletRequest req,
+                                     @BeanParam Pagination pagination,
+                                     @BeanParam HostsBeanParam hostsBeanParam) {
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.HOSTS);
     resourceRequest.setOffset(pagination.getOffset());
     resourceRequest.setLimit(pagination.getLimit());
@@ -90,8 +91,10 @@ public class HostsAdminResource {
   @ApiOperation(value = "Get cluster node by hostname.", response = HostsDTO.class)
   @GET
   @Path("/{hostname}")
-  public Response getClusterNode(@Context SecurityContext sc, @Context UriInfo uriInfo,
-    @PathParam("hostname") String hostname) throws ServiceException {
+  public Response getClusterNode(@Context SecurityContext sc,
+                                 @Context HttpServletRequest req,
+                                 @Context UriInfo uriInfo,
+                                 @PathParam("hostname") String hostname) throws ServiceException {
     HostsDTO dto = hostsBuilder.buildByHostname(uriInfo, hostname);
     return Response.ok().entity(dto).build();
   }
@@ -99,7 +102,9 @@ public class HostsAdminResource {
   @ApiParam(value = "Delete cluster node by hostname.")
   @DELETE
   @Path("/{hostname}")
-  public Response deleteNodeByHostname(@PathParam("hostname") String hostname, @Context SecurityContext sc) {
+  public Response deleteNodeByHostname(@PathParam("hostname") String hostname,
+                                       @Context HttpServletRequest req,
+                                       @Context SecurityContext sc) {
     if (hostsController.removeByHostname(hostname)) {
       return Response.noContent().build();
     } else {
@@ -112,9 +117,12 @@ public class HostsAdminResource {
   @Consumes(MediaType.APPLICATION_JSON)
   @Produces(MediaType.APPLICATION_JSON)
   @Path("/{hostname}")
-  public Response updateClusterNode(@Context UriInfo uriInfo, @Context SecurityContext sc,
-    @PathParam("hostname") String hostname, HostDTO nodeToUpdate) {
-    
+  public Response updateClusterNode(@Context UriInfo uriInfo,
+                                    @Context SecurityContext sc,
+                                    @Context HttpServletRequest req,
+                                    @PathParam("hostname") String hostname,
+                                    HostDTO nodeToUpdate) {
+
     return hostsController.addOrUpdateClusterNode(uriInfo, hostname, nodeToUpdate);
   }
   
@@ -122,12 +130,12 @@ public class HostsAdminResource {
   @GET
   @Path("/{hostname}/services")
   @Produces(MediaType.APPLICATION_JSON)
-  public Response getAllServices(
-    @Context UriInfo uriInfo,
-    @Context SecurityContext sc,
-    @BeanParam Pagination pagination,
-    @BeanParam ServicesBeanParam servicesBeanParam,
-    @PathParam("hostname") String hostname) {
+  public Response getAllServices(@Context UriInfo uriInfo,
+                                 @Context SecurityContext sc,
+                                 @Context HttpServletRequest req,
+                                 @BeanParam Pagination pagination,
+                                 @BeanParam ServicesBeanParam servicesBeanParam,
+                                 @PathParam("hostname") String hostname) {
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.HOSTS);
     resourceRequest.setOffset(pagination.getOffset());
     resourceRequest.setLimit(pagination.getLimit());
@@ -142,9 +150,10 @@ public class HostsAdminResource {
   @Path("/{hostname}/services/{name}")
   @Produces(MediaType.APPLICATION_JSON)
   public Response getService(@Context UriInfo uriInfo,
-    @Context SecurityContext sc,
-    @PathParam("hostname") String hostname,
-    @PathParam("name") String name) throws ServiceException {
+                             @Context HttpServletRequest req,
+                             @Context SecurityContext sc,
+                             @PathParam("hostname") String hostname,
+                             @PathParam("name") String name) throws ServiceException {
     ServiceDTO dto = servicesBuilder.buildItem(uriInfo, hostname, name);
     return Response.ok().entity(dto).build();
   }
@@ -155,10 +164,11 @@ public class HostsAdminResource {
   @Consumes(MediaType.APPLICATION_JSON)
   @Produces({MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN})
   public Response updateService(@Context UriInfo uriInfo,
-    @Context SecurityContext sc,
-    @PathParam("name") String name,
-    @PathParam("hostname") String hostname,
-    ServicesActionDTO action) throws ServiceException, GenericException {
+                                @Context SecurityContext sc,
+                                @Context HttpServletRequest req,
+                                @PathParam("name") String name,
+                                @PathParam("hostname") String hostname,
+                                ServicesActionDTO action) throws ServiceException, GenericException {
     hostServicesController.updateService(hostname, name, action.getAction());
     ServiceDTO dto = servicesBuilder.buildItem(uriInfo, hostname, name);
     return Response.ok().entity(dto).build();

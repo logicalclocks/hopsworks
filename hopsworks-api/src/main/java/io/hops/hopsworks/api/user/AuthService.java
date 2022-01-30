@@ -154,7 +154,8 @@ public class AuthService {
   @JWTRequired(acceptedTokens = {Audience.API},
       allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   @Produces(MediaType.APPLICATION_JSON)
-  public Response jwtSession(@Context SecurityContext sc) {
+  public Response jwtSession(@Context SecurityContext sc,
+                             @Context HttpServletRequest req) {
     RESTApiJsonResponse json = new RESTApiJsonResponse();
     Users user = jWTHelper.getUserPrincipal(sc);
     String remoteUser = user != null ? user.getEmail() : sc.getUserPrincipal().getName();
@@ -317,7 +318,8 @@ public class AuthService {
   @Path("isAdmin")
   @Produces(MediaType.APPLICATION_JSON)
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
-  public Response isAdmin(@Context SecurityContext sc) {
+  public Response isAdmin(@Context SecurityContext sc,
+                          @Context HttpServletRequest req) {
     RESTApiJsonResponse json = new RESTApiJsonResponse();
     json.setData(false);
     if (sc.isUserInRole("HOPS_ADMIN")) {

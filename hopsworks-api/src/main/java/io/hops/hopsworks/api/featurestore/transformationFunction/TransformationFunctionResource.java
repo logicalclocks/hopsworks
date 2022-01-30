@@ -9,7 +9,7 @@
  * Hopsworks is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  *  without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
  *  PURPOSE.  See the GNU Affero General Public License for more details.
- *  
+ *
  *  You should have received a copy of the GNU Affero General Public License along with this program.
  *  If not, see <https://www.gnu.org/licenses/>.
  */
@@ -42,6 +42,7 @@ import javax.ejb.EJB;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.enterprise.context.RequestScoped;
+import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
@@ -97,6 +98,7 @@ public class TransformationFunctionResource {
       @BeanParam TransformationFunctionsBeanParam transformationFunctionsBeanParam,
       @Context SecurityContext sc,
       @Context UriInfo uriInfo,
+      @Context HttpServletRequest req,
       @QueryParam("name") String name,
       @QueryParam("version") Integer version) throws FeaturestoreException {
     Users user = jWTHelper.getUserPrincipal(sc);
@@ -120,7 +122,9 @@ public class TransformationFunctionResource {
   @ApiKeyRequired(acceptedScopes = {ApiScope.FEATURESTORE}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   @ApiOperation(value = "Register transformation function in to a featurestore",
       response = TransformationFunctionDTO.class)
-  public Response register(@Context UriInfo uriInfo, @Context SecurityContext sc,
+  public Response attach(@Context UriInfo uriInfo,
+                         @Context HttpServletRequest req,
+                         @Context SecurityContext sc,
                          TransformationFunctionDTO transformationFunctionDTO)
       throws IOException, FeaturestoreException {
     Users user = jWTHelper.getUserPrincipal(sc);
@@ -146,10 +150,11 @@ public class TransformationFunctionResource {
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   @JWTRequired(acceptedTokens = {Audience.API, Audience.JOB}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
-  @ApiKeyRequired( acceptedScopes = {ApiScope.FEATURESTORE}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
+  @ApiKeyRequired(acceptedScopes = {ApiScope.FEATURESTORE}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   @ApiOperation(value = "Delete a transformation function with a specific id from a featurestore",
       response = TrainingDatasetDTO.class)
   public Response delete(@Context SecurityContext sc,
+                         @Context HttpServletRequest req,
                          @ApiParam(value = "Id of the transformation function dataset", required = true)
                          @PathParam("transformationFunctionId") Integer transformationFunctionId)
       throws FeaturestoreException {

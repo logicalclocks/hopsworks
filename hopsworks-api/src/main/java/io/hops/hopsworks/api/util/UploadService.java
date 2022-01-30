@@ -62,8 +62,6 @@ import io.hops.hopsworks.common.upload.ResumableInfoStorage;
 import io.hops.hopsworks.common.upload.StagingManager;
 import io.hops.hopsworks.common.util.HopsUtils;
 import io.hops.hopsworks.exceptions.DatasetException;
-import io.hops.hopsworks.exceptions.GenericException;
-import io.hops.hopsworks.exceptions.MetadataException;
 import io.hops.hopsworks.exceptions.ProjectException;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
 import io.hops.hopsworks.persistence.entity.dataset.DatasetType;
@@ -304,8 +302,9 @@ public class UploadService {
       @FormDataParam("flowIdentifier") String flowIdentifier,
       @FormDataParam("flowRelativePath") String flowRelativePath,
       @FormDataParam("flowTotalChunks") String flowTotalChunks,
-      @FormDataParam("flowTotalSize") String flowTotalSize, @Context SecurityContext sc)
-      throws IOException, GenericException, MetadataException, DatasetException, ProjectException {
+      @FormDataParam("flowTotalSize") String flowTotalSize,
+      @Context HttpServletRequest req,
+      @Context SecurityContext sc) throws IOException, DatasetException, ProjectException {
     configureUploader(sc);
     RESTApiJsonResponse json = new RESTApiJsonResponse();
 

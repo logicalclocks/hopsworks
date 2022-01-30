@@ -36,6 +36,7 @@ import javax.ejb.EJB;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.enterprise.context.RequestScoped;
+import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
@@ -80,6 +81,7 @@ public class LibraryCommandsResource {
   public Response get(@PathParam("library") String library,
       @BeanParam Pagination pagination,
       @BeanParam CommandBeanParam libraryCommandBeanParam,
+      @Context HttpServletRequest req,
       @Context UriInfo uriInfo, @Context SecurityContext sc) throws PythonException {
     environmentController.checkCondaEnabled(project, pythonVersion, true);
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.COMMANDS);
@@ -98,7 +100,9 @@ public class LibraryCommandsResource {
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   public Response getByName(@PathParam("library") String library, @PathParam("commandId") Integer commandId,
-    @Context UriInfo uriInfo, @Context SecurityContext sc) throws PythonException {
+                            @Context HttpServletRequest req,
+                            @Context UriInfo uriInfo,
+                            @Context SecurityContext sc) throws PythonException {
     environmentController.checkCondaEnabled(project, pythonVersion, true);
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.COMMANDS);
     CommandDTO dto = commandBuilder.build(uriInfo, resourceRequest, project, library, commandId);
@@ -109,8 +113,10 @@ public class LibraryCommandsResource {
   @PUT
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
-  public Response update(@PathParam("library") String library, @Context UriInfo uriInfo, @Context SecurityContext sc)
-    throws PythonException {
+  public Response update(@PathParam("library") String library,
+                         @Context UriInfo uriInfo,
+                         @Context HttpServletRequest req,
+                         @Context SecurityContext sc) throws PythonException {
     environmentController.checkCondaEnabled(project, pythonVersion, true);
     commandsController.retryFailedCondaLibraryOps(project, library);
     return Response.noContent().build();
@@ -120,7 +126,9 @@ public class LibraryCommandsResource {
   @DELETE
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
-  public Response delete(@PathParam("library") String library, @Context SecurityContext sc) throws PythonException {
+  public Response delete(@PathParam("library") String library,
+                         @Context HttpServletRequest req,
+                         @Context SecurityContext sc) throws PythonException {
     environmentController.checkCondaEnabled(project, pythonVersion, true);
     commandsController.deleteCommands(project, library);
     return Response.noContent().build();

@@ -42,6 +42,7 @@ import javax.ejb.EJB;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.enterprise.context.RequestScoped;
+import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.DefaultValue;
@@ -66,7 +67,7 @@ import java.util.logging.Level;
 @RequestScoped
 @TransactionAttribute(TransactionAttributeType.NEVER)
 public class XAttrsResource {
-  
+
   @EJB
   private ProjectFacade projectFacade;
   @EJB
@@ -81,60 +82,61 @@ public class XAttrsResource {
   private HdfsUsersController hdfsUsersController;
   @EJB
   private DatasetHelper datasetHelper;
-  
+
   private Project project;
-  
+
   @Logged(logLevel = LogLevel.OFF)
   public void setProject(Integer projectId) {
     this.project = projectFacade.find(projectId);
   }
-  
-  
-  @ApiOperation( value = "Create or Update an extended attribute for a path.", response = XAttrDTO.class)
+
+
+  @ApiOperation(value = "Create or Update an extended attribute for a path.", response = XAttrDTO.class)
   @PUT
   @Path("{path: .+}")
   @Consumes(MediaType.APPLICATION_JSON)
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
-  @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
-  public Response put(
-    @Context SecurityContext sc, @Context UriInfo uriInfo,
-    @PathParam("path") String path,
-    @QueryParam("pathType") @DefaultValue("DATASET") DatasetType pathType,
-    @QueryParam("name") String xattrName,
-    String metaObj)
-    throws DatasetException, MetadataException {
+  @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
+  public Response put(@Context SecurityContext sc, @Context UriInfo uriInfo,
+                      @Context HttpServletRequest req,
+                      @PathParam("path") String path,
+                      @QueryParam("pathType") @DefaultValue("DATASET") DatasetType pathType,
+                      @QueryParam("name") String xattrName,
+                      String metaObj)
+      throws DatasetException, MetadataException {
     Users user = jWTHelper.getUserPrincipal(sc);
-    
+
     Response.Status status = Response.Status.OK;
     String inodePath = datasetHelper.getDatasetPathIfFileExist(project, path, pathType).getFullPath().toString();
-    if(xattrsController.addXAttr(project, user, inodePath, xattrName, metaObj)){
+    if (xattrsController.addXAttr(project, user, inodePath, xattrName, metaObj)) {
       status = Response.Status.CREATED;
     }
-    
+
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.XATTRS);
     XAttrDTO dto = xattrsBuilder.build(uriInfo, resourceRequest, project, inodePath, xattrName);
-    
-    if(status == Response.Status.CREATED) {
+
+    if (status == Response.Status.CREATED) {
       UriBuilder builder = uriInfo.getAbsolutePathBuilder();
       return Response.created(builder.build()).entity(dto).build();
     } else {
       return Response.ok().entity(dto).build();
     }
   }
-  
-  @ApiOperation( value = "Get extended attributes attached to a path.",
+
+  @ApiOperation(value = "Get extended attributes attached to a path.",
       response = XAttrDTO.class)
   @GET
   @Path("{path: .+}")
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
-  @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
+  @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   public Response get(@Context SecurityContext sc, @Context UriInfo uriInfo,
-    @PathParam("path") String path,
-    @QueryParam("pathType") @DefaultValue("DATASET") DatasetType pathType,
-    @QueryParam("name") String xattrName)
-    throws DatasetException, MetadataException {
+                      @Context HttpServletRequest req,
+                      @PathParam("path") String path,
+                      @QueryParam("pathType") @DefaultValue("DATASET") DatasetType pathType,
+                      @QueryParam("name") String xattrName)
+      throws DatasetException, MetadataException {
     Users user = jWTHelper.getUserPrincipal(sc);
     Map<String, String> result = new HashMap<>();
 
@@ -158,18 +160,19 @@ public class XAttrsResource {
     XAttrDTO dto = xattrsBuilder.build(uriInfo, resourceRequest, project, inodePath, result);
     return Response.ok().entity(dto).build();
   }
-  
-  @ApiOperation( value = "Delete the extended attributes attached to a path.")
+
+  @ApiOperation(value = "Delete the extended attributes attached to a path.")
   @DELETE
   @Path("{path: .+}")
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
-  @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
+  @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   public Response delete(@Context SecurityContext sc,
-    @PathParam("path") String path,
-    @QueryParam("pathType") @DefaultValue("DATASET") DatasetType pathType,
-    @QueryParam("name") String xattrName)
-    throws DatasetException, MetadataException {
+                         @Context HttpServletRequest req,
+                         @PathParam("path") String path,
+                         @QueryParam("pathType") @DefaultValue("DATASET") DatasetType pathType,
+                         @QueryParam("name") String xattrName)
+      throws DatasetException, MetadataException {
     Users user = jWTHelper.getUserPrincipal(sc);
     String inodePath = datasetHelper.getDatasetPathIfFileExist(project, path, pathType).getFullPath().toString();
     xattrsController.removeXAttr(project, user, inodePath, xattrName);

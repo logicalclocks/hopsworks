@@ -31,6 +31,7 @@ import javax.ejb.EJB;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.enterprise.context.RequestScoped;
+import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
@@ -67,7 +68,7 @@ public class RoleMappingResource {
   
   private Integer projectId;
   private String projectName;
-  
+
   @Logged(logLevel = LogLevel.OFF)
   public void setProjectId(Integer projectId) {
     this.projectId = projectId;
@@ -84,8 +85,10 @@ public class RoleMappingResource {
   @JWTRequired(acceptedTokens = {Audience.API, Audience.JOB}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   @ApiKeyRequired( acceptedScopes = {ApiScope.PROJECT}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   public Response getCloudRoleMappings(@BeanParam Pagination pagination,
-    @BeanParam CloudRoleMappingBeanParam mappingBeanParam, @Context UriInfo uriInfo, @Context SecurityContext sc)
-    throws ProjectException {
+                                       @BeanParam CloudRoleMappingBeanParam mappingBeanParam,
+                                       @Context HttpServletRequest req,
+                                       @Context UriInfo uriInfo, @Context SecurityContext sc)
+      throws ProjectException {
     Project project = projectController.findProjectById(this.projectId);
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.CLOUD);
     resourceRequest.setOffset(pagination.getOffset());
@@ -102,8 +105,11 @@ public class RoleMappingResource {
   @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
   @JWTRequired(acceptedTokens = {Audience.API, Audience.JOB}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   @ApiKeyRequired( acceptedScopes = {ApiScope.PROJECT}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
-  public Response getByProjectAndId(@PathParam("id") Integer id, @Context UriInfo uriInfo, @Context SecurityContext sc)
-    throws ProjectException, CloudException {
+  public Response getByProjectAndId(@PathParam("id") Integer id,
+                                    @Context UriInfo uriInfo,
+                                    @Context HttpServletRequest req,
+                                    @Context SecurityContext sc)
+      throws ProjectException, CloudException {
     Project project = projectController.findProjectById(this.projectId);
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.CLOUD);
     CloudRoleMappingDTO dto = cloudRoleMappingBuilder.buildItem(uriInfo, resourceRequest, id, project);
@@ -116,8 +122,9 @@ public class RoleMappingResource {
   @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
   @JWTRequired(acceptedTokens = {Audience.API, Audience.JOB}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   @ApiKeyRequired( acceptedScopes = {ApiScope.PROJECT}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
-  public Response getByProjectDefault(@Context UriInfo uriInfo, @Context SecurityContext sc) throws ProjectException,
-    CloudException {
+  public Response getByProjectDefault(@Context UriInfo uriInfo,
+                                      @Context HttpServletRequest req,
+                                      @Context SecurityContext sc) throws ProjectException, CloudException {
     Users user = jwtHelper.getUserPrincipal(sc);
     Project project = projectController.findProjectById(this.projectId);
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.CLOUD);
@@ -131,8 +138,11 @@ public class RoleMappingResource {
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER})
   @JWTRequired(acceptedTokens = {Audience.API, Audience.JOB}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   @ApiKeyRequired( acceptedScopes = {ApiScope.PROJECT}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
-  public Response updateDefault(@PathParam("id") Integer id, @QueryParam("defaultRole") boolean defaultRole,
-    @Context UriInfo uriInfo, @Context SecurityContext sc) throws ProjectException, CloudException {
+  public Response updateDefault(@PathParam("id") Integer id,
+                                @QueryParam("defaultRole") boolean defaultRole,
+                                @Context UriInfo uriInfo,
+                                @Context HttpServletRequest req,
+                                @Context SecurityContext sc) throws ProjectException, CloudException {
     Project project = projectController.findProjectById(this.projectId);
     CloudRoleMapping cloudRoleMapping = cloudRoleMappingController.setDefault(id, project, defaultRole);
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.CLOUD);
@@ -146,9 +156,11 @@ public class RoleMappingResource {
   @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
   @JWTRequired(acceptedTokens = {Audience.API, Audience.JOB}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   public Response getSessionToken(@Secret @QueryParam("roleARN") String roleARN,
-    @QueryParam("roleSessionName") String roleSessionName,
-    @DefaultValue("3600") @QueryParam("durationSeconds") int durationSeconds, @Context SecurityContext sc)
-    throws ProjectException, CloudException {
+                                  @QueryParam("roleSessionName") String roleSessionName,
+                                  @DefaultValue("3600") @QueryParam("durationSeconds") int durationSeconds,
+                                  @Context HttpServletRequest req,
+                                  @Context SecurityContext sc)
+      throws ProjectException, CloudException {
     Users user = jwtHelper.getUserPrincipal(sc);
     Project project = projectController.findProjectById(this.projectId);
     Credentials credentials = temporaryCredentialsHelper.getTemporaryCredentials(roleARN, roleSessionName,

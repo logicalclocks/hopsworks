@@ -40,6 +40,7 @@ import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.enterprise.context.RequestScoped;
 import javax.persistence.PersistenceException;
+import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
@@ -78,7 +79,7 @@ public class TensorBoardResource {
     this.experimentId = experimentId;
     return this;
   }
-  
+
   @Logged(logLevel = LogLevel.OFF)
   public Project getProject() {
     return project;
@@ -91,7 +92,8 @@ public class TensorBoardResource {
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
-  public Response getTensorBoard(@Context SecurityContext sc) throws TensorBoardException {
+  public Response getTensorBoard(@Context HttpServletRequest req,
+                                 @Context SecurityContext sc) throws TensorBoardException {
     try {
       Users user = jWTHelper.getUserPrincipal(sc);
       TensorBoardDTO tbDTO = tensorBoardController.getTensorBoard(project, user);
@@ -110,7 +112,9 @@ public class TensorBoardResource {
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
-  public Response startTensorBoard(@Context SecurityContext sc, @Context UriInfo uriInfo) throws DatasetException,
+  public Response startTensorBoard(@Context SecurityContext sc,
+                                   @Context HttpServletRequest req,
+                                   @Context UriInfo uriInfo) throws DatasetException,
       ProjectException, TensorBoardException, UnsupportedEncodingException, ServiceDiscoveryException {
 
     DsPath dsPath = pathValidator.validatePath(this.project, "Experiments/" + experimentId);
@@ -127,7 +131,8 @@ public class TensorBoardResource {
   @DELETE
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
-  public Response stopTensorBoard(@Context SecurityContext sc) throws TensorBoardException {
+  public Response stopTensorBoard(@Context HttpServletRequest req,
+                                  @Context SecurityContext sc) throws TensorBoardException {
     Users user = jWTHelper.getUserPrincipal(sc);
     TensorBoardDTO tbDTO = tensorBoardController.getTensorBoard(project, user);
     if (tbDTO == null) {

@@ -42,6 +42,7 @@ import javax.ejb.EJB;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.enterprise.context.RequestScoped;
+import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
@@ -84,8 +85,9 @@ public class AirflowService {
   private Integer projectId;
   // No @EJB annotation for Project, it's injected explicitly in ProjectService.
   private Project project;
-  
+
   private static final Set<PosixFilePermission> DAGS_PERM = new HashSet<>(8);
+
   static {
     //add owners permission
     DAGS_PERM.add(PosixFilePermission.OWNER_READ);
@@ -99,19 +101,19 @@ public class AirflowService {
     DAGS_PERM.add(PosixFilePermission.OTHERS_READ);
     DAGS_PERM.add(PosixFilePermission.OTHERS_EXECUTE);
   }
-  
+
   // Audience for Airflow JWTs
   private static final String[] JWT_AUDIENCE = new String[]{Audience.API};
-  
+
   public AirflowService() {
   }
-  
+
   @Logged(logLevel = LogLevel.OFF)
   public void setProjectId(Integer projectId) {
     this.projectId = projectId;
     this.project = this.projectFacade.find(projectId);
   }
-  
+
   @Logged(logLevel = LogLevel.OFF)
   public Integer getProjectId() {
     return projectId;
@@ -121,25 +123,27 @@ public class AirflowService {
   @Path("/jwt")
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
-  @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
+  @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   @ApiOperation(value = "Generate a JWT for Airflow usage and store it in project's secret directory in Airflow")
-  public Response storeAirflowJWT(@Context SecurityContext sc) throws AirflowException {
+  public Response storeAirflowJWT(@Context HttpServletRequest req,
+                                  @Context SecurityContext sc) throws AirflowException {
     Users user = jwtHelper.getUserPrincipal(sc);
     airflowJWTManager.prepareSecurityMaterial(user, project, JWT_AUDIENCE);
     return Response.noContent().build();
   }
-  
+
   @GET
   @Path("secretDir")
   @Produces(MediaType.TEXT_PLAIN)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
-  @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
+  @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   @ApiOperation(value = "Create project secret directory in Airflow home")
-  public Response secretDir(@Context SecurityContext sc) throws AirflowException {
+  public Response secretDir(@Context HttpServletRequest req,
+                            @Context SecurityContext sc) throws AirflowException {
     String secret = DigestUtils.sha256Hex(Integer.toString(this.projectId));
 
     java.nio.file.Path dagsDir = airflowJWTManager.getProjectDagDirectory(project.getId());
-  
+
     try {
       // Instead of checking and setting the permissions, just set them as it is an idempotent operation
       dagsDir.toFile().mkdirs();
@@ -151,17 +155,19 @@ public class AirflowService {
 
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(secret).build();
   }
-  
+
   @POST
   @Path("/dag")
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
-  @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
+  @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   @ApiOperation(value = "Generate an Airflow Python DAG file from a DAG definition")
-  public Response composeDAG(AirflowDagDTO dagDefinition, @Context SecurityContext sc) throws AirflowException {
+  public Response composeDAG(AirflowDagDTO dagDefinition,
+                             @Context HttpServletRequest req,
+                             @Context SecurityContext sc) throws AirflowException {
     Users user = jwtHelper.getUserPrincipal(sc);
     AirflowDAG dag = AirflowDagDTO.toAirflowDagTemplate(dagDefinition, user, project);
-    
+
     Map<String, Object> dataModel = new HashMap<>(4);
     dataModel.put(AirflowJobLaunchOperator.class.getSimpleName(), AirflowJobLaunchOperator.class);
     dataModel.put(AirflowJobSuccessSensor.class.getSimpleName(), AirflowJobSuccessSensor.class);

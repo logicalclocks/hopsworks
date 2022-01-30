@@ -36,6 +36,7 @@ import javax.ejb.EJB;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.enterprise.context.RequestScoped;
+import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
@@ -84,7 +85,9 @@ public class InferenceResource {
   public Response infer(
       @ApiParam(value = "Name of the model to query", required = true) @PathParam("modelName") String modelName,
       @ApiParam(value = "Version of the model to query") @PathParam("version") String modelVersion,
-      @ApiParam(value = "Type of query") @PathParam("verb") String verb, @Context SecurityContext sc,
+      @ApiParam(value = "Type of query") @PathParam("verb") String verb,
+      @Context HttpServletRequest req,
+      @Context SecurityContext sc,
       @Context HttpHeaders httpHeaders, String inferenceRequestJson) throws InferenceException {
     Integer version = null;
     if (!Strings.isNullOrEmpty(modelVersion)) {

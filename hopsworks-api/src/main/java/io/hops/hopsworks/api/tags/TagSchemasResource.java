@@ -32,6 +32,7 @@ import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.inject.Inject;
+import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
@@ -68,6 +69,7 @@ public class TagSchemasResource {
   @JWTRequired(acceptedTokens={Audience.API, Audience.JOB}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
   @ApiKeyRequired( acceptedScopes = {ApiScope.FEATURESTORE}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
   public Response getAll(@Context SecurityContext sc, @Context UriInfo uriInfo,
+                         @Context HttpServletRequest req,
                          @BeanParam Pagination pagination,
                          @BeanParam TagsBeanParam tagsBeanParam) {
     
@@ -86,6 +88,7 @@ public class TagSchemasResource {
   @JWTRequired(acceptedTokens={Audience.API, Audience.JOB}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
   @ApiKeyRequired( acceptedScopes = {ApiScope.FEATURESTORE}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
   public Response get(@Context SecurityContext sc, @Context UriInfo uriInfo,
+                      @Context HttpServletRequest req,
                       @PathParam("name") String schemaName)
     throws SchematizedTagException {
     
@@ -99,6 +102,7 @@ public class TagSchemasResource {
   @JWTRequired(acceptedTokens={Audience.API, Audience.JOB}, allowedUserRoles={"HOPS_ADMIN"})
   @ApiKeyRequired( acceptedScopes = {ApiScope.FEATURESTORE}, allowedUserRoles={"HOPS_ADMIN"})
   public Response post(@Context SecurityContext sc, @Context UriInfo uriInfo,
+                       @Context HttpServletRequest req,
                        @QueryParam("name") String schemaName,
                        String schema)
     throws SchematizedTagException {
@@ -115,6 +119,7 @@ public class TagSchemasResource {
   @JWTRequired(acceptedTokens={Audience.API, Audience.JOB}, allowedUserRoles={"HOPS_ADMIN"})
   @ApiKeyRequired( acceptedScopes = {ApiScope.FEATURESTORE}, allowedUserRoles={"HOPS_ADMIN"})
   public Response delete(@Context SecurityContext sc, @Context UriInfo uriInfo,
+                         @Context HttpServletRequest req,
                          @PathParam("name") String schemaName) {
     
     TagSchemasController.delete(schemaName);

@@ -43,6 +43,7 @@ import javax.ejb.EJB;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.enterprise.context.RequestScoped;
+import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
@@ -79,7 +80,8 @@ public class AdminSilenceResource {
   @ApiOperation(value = "Get all silences.", response = SilenceDTO.class)
   @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN"})
   public Response get(@BeanParam Pagination pagination, @BeanParam SilenceBeanParam silenceBeanParam,
-      @Context UriInfo uriInfo, @Context SecurityContext sc)
+                      @Context HttpServletRequest req,
+                      @Context UriInfo uriInfo, @Context SecurityContext sc)
       throws AlertException {
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.SILENCES);
     resourceRequest.setOffset(pagination.getOffset());
@@ -94,7 +96,8 @@ public class AdminSilenceResource {
   @ApiOperation(value = "Find silence by Id.", response = SilenceDTO.class)
   @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN"})
   public Response getById(@PathParam("silenceId") String silenceId, @Context UriInfo uriInfo,
-      @Context SecurityContext sc) throws AlertException {
+                          @Context HttpServletRequest req,
+                          @Context SecurityContext sc) throws AlertException {
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.SILENCES);
     SilenceDTO dto = silenceBuilder.build(uriInfo, resourceRequest, silenceId,  null);
     return Response.ok().entity(dto).build();
@@ -105,7 +108,10 @@ public class AdminSilenceResource {
   @Consumes(MediaType.APPLICATION_JSON)
   @ApiOperation(value = "Create a silence.", response = SilenceDTO.class)
   @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN"})
-  public Response create(PostableSilenceDTO postableSilenceDTO, @Context UriInfo uriInfo, @Context SecurityContext sc)
+  public Response create(PostableSilenceDTO postableSilenceDTO,
+                         @Context UriInfo uriInfo,
+                         @Context HttpServletRequest req,
+                         @Context SecurityContext sc)
       throws AlertException, ProjectException {
     if (postableSilenceDTO == null) {
       throw new AlertException(RESTCodes.AlertErrorCode.ILLEGAL_ARGUMENT, Level.FINE, "No payload.");
@@ -122,7 +128,9 @@ public class AdminSilenceResource {
   @ApiOperation(value = "Update a silence.", response = SilenceDTO.class)
   @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN"})
   public Response update(@PathParam("silenceId") String silenceId, PostableSilenceDTO postableSilenceDTO,
-      @Context UriInfo uriInfo, @Context SecurityContext sc) throws AlertException, ProjectException {
+                         @Context HttpServletRequest req,
+                         @Context UriInfo uriInfo,
+                         @Context SecurityContext sc) throws AlertException, ProjectException {
     if (postableSilenceDTO == null) {
       throw new AlertException(RESTCodes.AlertErrorCode.ILLEGAL_ARGUMENT, Level.FINE, "No payload.");
     }
@@ -150,8 +158,10 @@ public class AdminSilenceResource {
   @Path("{silenceId}")
   @ApiOperation(value = "Delete silence by Id.")
   @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN"})
-  public Response deleteById(@PathParam("silenceId") String silenceId, @Context UriInfo uriInfo,
-      @Context SecurityContext sc) throws AlertException {
+  public Response deleteById(@PathParam("silenceId") String silenceId,
+                             @Context UriInfo uriInfo,
+                             @Context HttpServletRequest req,
+                             @Context SecurityContext sc) throws AlertException {
     try {
       return alertManager.deleteSilence(silenceId);
     } catch (AlertManagerClientCreateException | AlertManagerUnreachableException e) {

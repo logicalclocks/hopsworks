@@ -49,6 +49,7 @@ import javax.ejb.EJB;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.enterprise.context.RequestScoped;
+import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.DefaultValue;
@@ -132,7 +133,8 @@ public class FeaturestoreStorageConnectorService {
   @ApiKeyRequired( acceptedScopes = {ApiScope.FEATURESTORE}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   @ApiOperation(value = "Get all storage connectors of a feature store",
     response = FeaturestoreStorageConnectorDTO.class, responseContainer = "List")
-  public Response getStorageConnectors(@Context SecurityContext sc) throws FeaturestoreException {
+  public Response getStorageConnectors(@Context SecurityContext sc,
+                                       @Context HttpServletRequest req) throws FeaturestoreException {
     Users user = jWTHelper.getUserPrincipal(sc);
     List<FeaturestoreStorageConnectorDTO> featurestoreStorageConnectorDTOS =
       storageConnectorController.getConnectorsForFeaturestore(user, project, featurestore);
@@ -151,6 +153,7 @@ public class FeaturestoreStorageConnectorService {
   @ApiOperation(value = "Get a storage connector with a specific name and from a featurestore",
     response = FeaturestoreStorageConnectorDTO.class)
   public Response getStorageConnector(@Context SecurityContext sc,
+                                      @Context HttpServletRequest req,
                                       @ApiParam(value = "Name of the storage connector", required = true)
                                       @PathParam("connectorName") String connectorName,
                                       @QueryParam("temporaryCredentials") boolean temporaryCredentials,
@@ -185,6 +188,7 @@ public class FeaturestoreStorageConnectorService {
   @ApiOperation(value = "Create a new storage connector for the feature store",
     response = FeaturestoreStorageConnectorDTO.class)
   public Response createNewStorageConnector(@Context SecurityContext sc,
+                                            @Context HttpServletRequest req,
                                             FeaturestoreStorageConnectorDTO featurestoreStorageConnectorDTO)
       throws FeaturestoreException, UserException, ProjectException {
     if (featurestoreStorageConnectorDTO == null) {
@@ -216,6 +220,7 @@ public class FeaturestoreStorageConnectorService {
   @ApiKeyRequired( acceptedScopes = {ApiScope.FEATURESTORE}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   @ApiOperation(value = "Delete storage connector with a specific name and type from a featurestore")
   public Response deleteStorageConnector(@Context SecurityContext sc,
+                                         @Context HttpServletRequest req,
                                          @ApiParam(value = "name of the storage connector", required = true)
                                          @PathParam("connectorName") String connectorName) throws UserException {
     Users user = jWTHelper.getUserPrincipal(sc);
@@ -243,6 +248,7 @@ public class FeaturestoreStorageConnectorService {
   public Response updateStorageConnector(@ApiParam(value = "Name of the storage connector", required = true)
                                          @PathParam("connectorName") String connectorName,
                                          FeaturestoreStorageConnectorDTO featurestoreStorageConnectorInputDTO,
+                                         @Context HttpServletRequest req,
                                          @Context SecurityContext sc)
       throws FeaturestoreException, UserException, ProjectException {
     if (featurestoreStorageConnectorInputDTO == null) {
@@ -278,7 +284,8 @@ public class FeaturestoreStorageConnectorService {
   @ApiKeyRequired( acceptedScopes = {ApiScope.FEATURESTORE}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   @ApiOperation(value = "Get online featurestore storage connector for this feature store",
           response = FeaturestoreStorageConnectorDTO.class)
-  public Response getOnlineFeaturestoreStorageConnector(@Context SecurityContext sc) throws FeaturestoreException {
+  public Response getOnlineFeaturestoreStorageConnector(@Context SecurityContext sc,
+                                                        @Context HttpServletRequest req) throws FeaturestoreException {
     if (!settings.isOnlineFeaturestore()) {
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.FEATURESTORE_ONLINE_NOT_ENABLED,
               Level.FINE, "Online Featurestore is not enabled for this Hopsworks cluster.");

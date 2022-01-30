@@ -79,6 +79,7 @@ import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
+import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
@@ -138,14 +139,14 @@ public class DelaService {
   @GET
   @Path("/client")
   @Produces(MediaType.APPLICATION_JSON)
-  public Response getClientType(@Context SecurityContext sc) {
+  public Response getClientType(@Context HttpServletRequest req, @Context SecurityContext sc) {
     DelaClientDTO clientType = new DelaClientDTO(settings.getDelaClientType().type);
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(clientType).build();
   }
   
   @GET
   @Produces(MediaType.APPLICATION_JSON)
-  public Response getPublicDatasets(@Context SecurityContext sc) {
+  public Response getPublicDatasets(@Context HttpServletRequest req, @Context SecurityContext sc) {
     List<Dataset> clusterDatasets = delaDatasetCtrl.getLocalPublicDatasets();
     DistributedFileSystemOps dfso = dfs.getDfsOps();
     List<LocalDatasetDTO> localDS;
@@ -161,8 +162,10 @@ public class DelaService {
   @GET
   @Path("/search")
   @Produces(MediaType.APPLICATION_JSON)
-  public Response publicSearch(@ApiParam(required=true) @QueryParam("query") String query, @Context SecurityContext sc)
-    throws DelaException {
+  public Response publicSearch(@ApiParam(required=true) @QueryParam("query") String query,
+                               @Context HttpServletRequest req,
+                               @Context SecurityContext sc)
+      throws DelaException {
     LOGGER.log(Settings.DELA_DEBUG, "dela:search");
     if (Strings.isNullOrEmpty(query)) {
       throw new DelaException(RESTCodes.DelaErrorCode.ILLEGAL_ARGUMENT, Level.FINE, DelaException.Source.LOCAL,
@@ -187,7 +190,9 @@ public class DelaService {
   @GET
   @Path("/transfers/{publicDSId}")
   @Produces(MediaType.APPLICATION_JSON)
-  public Response details(@PathParam("publicDSId")String publicDSId, @Context SecurityContext sc) throws DelaException {
+  public Response details(@PathParam("publicDSId")String publicDSId,
+                          @Context HttpServletRequest req,
+                          @Context SecurityContext sc) throws DelaException {
     LOGGER.log(Settings.DELA_DEBUG, "dela:dataset:details {0}", publicDSId);
     SearchServiceDTO.ItemDetails result = hopsSite.details(publicDSId);
     String auxResult = new Gson().toJson(result);
@@ -202,7 +207,9 @@ public class DelaService {
   @GET
   @Path("/transfers")
   @Produces(MediaType.APPLICATION_JSON)
-  public Response getContentsForUser(@Context SecurityContext sc, @QueryParam("filter") TransfersFilter filter)
+  public Response getContentsForUser(@Context SecurityContext sc,
+                                     @Context HttpServletRequest req,
+                                     @QueryParam("filter") TransfersFilter filter)
       throws DelaException {
     if (!filter.equals(TransfersFilter.USER)) {
       throw new DelaException(RESTCodes.DelaErrorCode.ILLEGAL_ARGUMENT, Level.FINE, DelaException.Source.LOCAL,
@@ -233,7 +240,8 @@ public class DelaService {
   @Produces(MediaType.APPLICATION_JSON)
   @ApiOperation(value = "Gets readme file from a provided list of peers")
   public Response readme(@PathParam("publicDSId") String publicDSId, BootstrapDTO peersJSON,
-    @Context SecurityContext sc) throws DelaException {
+                         @Context HttpServletRequest req,
+                         @Context SecurityContext sc) throws DelaException {
     Optional<FilePreviewDTO> readme = tryReadmeLocally(publicDSId);
     if (!readme.isPresent()) {
       readme = tryReadmeRemotely(publicDSId, peersJSON);

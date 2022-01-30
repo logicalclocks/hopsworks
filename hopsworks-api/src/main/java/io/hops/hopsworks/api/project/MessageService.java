@@ -61,6 +61,7 @@ import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
+import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
@@ -101,7 +102,8 @@ public class MessageService {
 
   @GET
   @Produces(MediaType.APPLICATION_JSON)
-  public Response getAllMessagesByUser(@Context SecurityContext sc) {
+  public Response getAllMessagesByUser(@Context SecurityContext sc,
+                                       @Context HttpServletRequest req) {
     Users user = jWTHelper.getUserPrincipal(sc);
     List<Message> list = msgFacade.getAllMessagesTo(user);
     GenericEntity<List<Message>> msgs = new GenericEntity<List<Message>>(list) {};
@@ -111,7 +113,8 @@ public class MessageService {
   @GET
   @Path("deleted")
   @Produces(MediaType.APPLICATION_JSON)
-  public Response getAllDeletedMessagesByUser(@Context SecurityContext sc) {
+  public Response getAllDeletedMessagesByUser(@Context SecurityContext sc,
+                                              @Context HttpServletRequest req) {
     Users user = jWTHelper.getUserPrincipal(sc);
     List<Message> list = msgFacade.getAllDeletedMessagesTo(user);
     GenericEntity<List<Message>> msgs = new GenericEntity<List<Message>>(list) {};
@@ -122,7 +125,7 @@ public class MessageService {
   @Path("countUnread")
   @Produces(MediaType.APPLICATION_JSON)
   @Logged(logLevel = LogLevel.FINE)
-  public Response countUnreadMessagesByUser(@Context SecurityContext sc) {
+  public Response countUnreadMessagesByUser(@Context HttpServletRequest req, @Context SecurityContext sc) {
     RESTApiJsonResponse json = new RESTApiJsonResponse();
     Users user = jWTHelper.getUserPrincipal(sc);
     Long unread = msgFacade.countUnreadMessagesTo(user);
@@ -133,8 +136,9 @@ public class MessageService {
   @PUT
   @Path("markAsRead/{msgId}")
   @Produces(MediaType.APPLICATION_JSON)
-  public Response markAsRead(@PathParam("msgId") Integer msgId, @Context SecurityContext sc) throws 
-      RequestException {
+  public Response markAsRead(@PathParam("msgId") Integer msgId,
+                             @Context HttpServletRequest req,
+                             @Context SecurityContext sc) throws RequestException {
     Users user = jWTHelper.getUserPrincipal(sc);
     Message msg = msgFacade.find(msgId);
     //Delete Dataset request from the database
@@ -153,8 +157,9 @@ public class MessageService {
   @PUT
   @Path("moveToTrash/{msgId}")
   @Produces(MediaType.APPLICATION_JSON)
-  public Response moveToTrash(@PathParam("msgId") Integer msgId, @Context SecurityContext sc) throws
-      RequestException {
+  public Response moveToTrash(@PathParam("msgId") Integer msgId,
+                              @Context HttpServletRequest req,
+                              @Context SecurityContext sc) throws RequestException {
     Users user = jWTHelper.getUserPrincipal(sc);
     Message msg = msgFacade.find(msgId);
     if (msg == null) {
@@ -176,8 +181,9 @@ public class MessageService {
   @PUT
   @Path("restoreFromTrash/{msgId}")
   @Produces(MediaType.APPLICATION_JSON)
-  public Response restoreFromTrash(@PathParam("msgId") Integer msgId, @Context SecurityContext sc) throws
-      RequestException {
+  public Response restoreFromTrash(@PathParam("msgId") Integer msgId,
+                                   @Context HttpServletRequest req,
+                                   @Context SecurityContext sc) throws RequestException {
     Users user = jWTHelper.getUserPrincipal(sc);
     Message msg = msgFacade.find(msgId);
     if (msg == null) {
@@ -192,8 +198,9 @@ public class MessageService {
   @DELETE
   @Path("{msgId}")
   @Produces(MediaType.APPLICATION_JSON)
-  public Response deleteMessage(@PathParam("msgId") Integer msgId, @Context SecurityContext sc) throws 
-      RequestException {
+  public Response deleteMessage(@PathParam("msgId") Integer msgId,
+                                @Context HttpServletRequest req,
+                                @Context SecurityContext sc) throws RequestException {
     Users user = jWTHelper.getUserPrincipal(sc);
     Message msg = msgFacade.find(msgId);
     if (msg == null) {
@@ -207,7 +214,7 @@ public class MessageService {
   @DELETE
   @Path("empty")
   @Produces(MediaType.APPLICATION_JSON)
-  public Response emptyTrash(@Context SecurityContext sc) {
+  public Response emptyTrash(@Context HttpServletRequest req, @Context SecurityContext sc) {
     RESTApiJsonResponse json = new RESTApiJsonResponse();
     Users user = jWTHelper.getUserPrincipal(sc);
     int rowsAffected = msgFacade.emptyTrash(user);
@@ -220,8 +227,9 @@ public class MessageService {
   @Path("reply/{msgId}")
   @Produces(MediaType.APPLICATION_JSON)
   @Consumes(MediaType.TEXT_PLAIN)
-  public Response reply(@PathParam("msgId") Integer msgId, String content, @Context SecurityContext sc) throws
-      RequestException {
+  public Response reply(@PathParam("msgId") Integer msgId, String content,
+                        @Context HttpServletRequest req,
+                        @Context SecurityContext sc) throws RequestException {
     Users user = jWTHelper.getUserPrincipal(sc);
     Message msg = msgFacade.find(msgId);
     if (msg == null) {

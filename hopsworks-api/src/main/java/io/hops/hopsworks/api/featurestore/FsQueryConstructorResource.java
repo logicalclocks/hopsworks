@@ -37,6 +37,7 @@ import javax.ejb.EJB;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.enterprise.context.RequestScoped;
+import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Produces;
@@ -82,7 +83,9 @@ public class FsQueryConstructorResource {
   @JWTRequired(acceptedTokens = {Audience.API, Audience.JOB}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   @ApiKeyRequired( acceptedScopes = {ApiScope.FEATURESTORE}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   @ApiOperation(value = "Construct the SQL query to join the requested features", response = FsQueryDTO.class)
-  public Response constructQuery(@Context SecurityContext sc, @Context UriInfo uriInfo,
+  public Response constructQuery(@Context SecurityContext sc,
+                                 @Context UriInfo uriInfo,
+                                 @Context HttpServletRequest req,
                                  QueryDTO queryDto) throws FeaturestoreException, ServiceException {
     Users user = jWTHelper.getUserPrincipal(sc);
     if (queryDto == null) {

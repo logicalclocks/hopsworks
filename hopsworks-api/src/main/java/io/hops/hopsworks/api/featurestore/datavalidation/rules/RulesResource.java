@@ -35,6 +35,7 @@ import javax.ejb.EJB;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.enterprise.context.RequestScoped;
+import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -67,6 +68,7 @@ public class RulesResource {
       @BeanParam Pagination pagination,
       @BeanParam RulesBeanParam ruleDefinitionsBeanParam,
       @Context UriInfo uriInfo,
+      @Context HttpServletRequest req,
       @Context SecurityContext sc) {
 
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.RULES);
@@ -88,7 +90,9 @@ public class RulesResource {
   @ApiKeyRequired( acceptedScopes = {ApiScope.JOB}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   public Response get(
       @ApiParam(value = "name of the rule", required = true) @PathParam("name") Name name,
-      @Context UriInfo uriInfo, @Context SecurityContext sc) throws FeaturestoreException {
+      @Context UriInfo uriInfo,
+      @Context HttpServletRequest req,
+      @Context SecurityContext sc) throws FeaturestoreException {
 
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.RULES);
 

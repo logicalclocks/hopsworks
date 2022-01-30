@@ -37,6 +37,7 @@ import javax.ejb.EJB;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.enterprise.context.RequestScoped;
+import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.GET;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
@@ -64,7 +65,9 @@ public class X509Resource {
   @JWTRequired(acceptedTokens = {Audience.SERVICES, Audience.API}, allowedUserRoles = {"AGENT", "HOPS_ADMIN"})
   @ApiOperation(value = "Get keystore, truststore and password of a project user",
     response = AccessCredentialsDTO.class)
-  public Response getx509(@QueryParam("username") String projectUsername, @Context SecurityContext sc)
+  public Response getx509(@QueryParam("username") String projectUsername,
+                          @Context HttpServletRequest req,
+                          @Context SecurityContext sc)
     throws ProjectException, UserException, HopsSecurityException {
     try {
       String projectName = hdfsUsersController.getProjectName(projectUsername);

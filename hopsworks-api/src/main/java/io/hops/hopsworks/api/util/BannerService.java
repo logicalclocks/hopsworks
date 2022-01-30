@@ -93,7 +93,8 @@ public class BannerService {
   @GET
   @Produces(MediaType.APPLICATION_JSON)
   @JWTNotRequired
-  public Response findBanner(@Context SecurityContext sc) {
+  public Response findBanner(@Context SecurityContext sc,
+                             @Context HttpServletRequest req) {
     Maintenance maintenance = maintenanceController.getMaintenance();
     maintenance.setOtp(settings.getTwoFactorAuth());
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(maintenance).build();
@@ -103,7 +104,8 @@ public class BannerService {
   @Path("user")
   @Produces(MediaType.APPLICATION_JSON)
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
-  public Response findUserBanner(@Context SecurityContext sc) {
+  public Response findUserBanner(@Context SecurityContext sc,
+                                 @Context HttpServletRequest req) {
     Users user = jWTHelper.getUserPrincipal(sc);
     RESTApiJsonResponse json = new RESTApiJsonResponse();
     json.setSuccessMessage("");

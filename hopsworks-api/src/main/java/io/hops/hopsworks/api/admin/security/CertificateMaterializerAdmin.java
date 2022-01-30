@@ -54,6 +54,7 @@ import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
+import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -99,7 +100,7 @@ public class CertificateMaterializerAdmin {
    * @return
    */
   @GET
-  public Response getMaterializerState(@Context SecurityContext sc) {
+  public Response getMaterializerState(@Context HttpServletRequest req, @Context SecurityContext sc) {
   
     CertificateMaterializer.MaterializerState<Map<String, Map<String, Integer>>, Map<String, Map<String, Integer>>,
         Map<String, Set<String>>, Map<String, Boolean>> materializerState = certificateMaterializer.getState();
@@ -151,7 +152,9 @@ public class CertificateMaterializerAdmin {
   @DELETE
   @Path("/local/{name}/{directory}")
   public Response removeLocalMaterializedCrypto(@PathParam("name") String materialName,
-      @PathParam("directory") String directory, @Context SecurityContext sc) {
+                                                @PathParam("directory") String directory,
+                                                @Context HttpServletRequest req,
+                                                @Context SecurityContext sc) {
     if (Strings.isNullOrEmpty(materialName)) {
       throw new IllegalArgumentException("materialName was not provided or was empty");
     }
@@ -195,7 +198,9 @@ public class CertificateMaterializerAdmin {
   @DELETE
   @Path("/remote/{name}/{directory}")
   public Response removeRemoteMaterializedCrypto(@PathParam("name") String materialName,
-      @PathParam("directory") String directory, @Context SecurityContext sc) {
+                                                 @PathParam("directory") String directory,
+                                                 @Context HttpServletRequest req,
+                                                 @Context SecurityContext sc) {
     if (Strings.isNullOrEmpty(materialName)) {
       throw new IllegalArgumentException("materialName was not provided or was empty");
     }

@@ -32,6 +32,7 @@ import javax.ejb.EJB;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.enterprise.context.RequestScoped;
+import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.GET;
 import javax.ws.rs.Produces;
@@ -72,8 +73,9 @@ public class ExperimentResultsResource {
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
   public Response getResults(@Context UriInfo uriInfo,
                              @BeanParam Pagination pagination,
+                             @Context HttpServletRequest req,
                              @BeanParam ExperimentResultsBeanParam experimentResultsBeanParam,
-    @Context SecurityContext sc) throws ExperimentsException {
+                             @Context SecurityContext sc) throws ExperimentsException {
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.RESULTS);
     resourceRequest.setOffset(pagination.getOffset());
     resourceRequest.setLimit(pagination.getLimit());

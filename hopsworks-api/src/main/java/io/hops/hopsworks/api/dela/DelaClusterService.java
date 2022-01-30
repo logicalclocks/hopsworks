@@ -52,6 +52,7 @@ import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
+import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -84,7 +85,7 @@ public class DelaClusterService {
 
   @GET
   @Produces(MediaType.APPLICATION_JSON)
-  public Response getPublicDatasets(@Context SecurityContext sc) {
+  public Response getPublicDatasets(@Context HttpServletRequest req, @Context SecurityContext sc) {
     List<Dataset> clusterDatasets = clusterDatasetCtrl.getPublicDatasets();
     List<DataSetDTO> localDS = new LinkedList<>();
     for(Dataset ds : clusterDatasets) {

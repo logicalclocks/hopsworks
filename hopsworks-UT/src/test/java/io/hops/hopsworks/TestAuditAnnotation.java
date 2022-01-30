@@ -44,6 +44,7 @@ import java.util.Set;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 public class TestAuditAnnotation {
   Set<Class<?>> apiClasses = new HashSet<>();
@@ -161,17 +162,13 @@ public class TestAuditAnnotation {
     assertFalse("No parameter found for method " + m.getName() + " in class " + c.getCanonicalName() +
       ". Method should be annotated with @Logged(logLevel = LogLevel.OFF) or contain parameter that can be " +
       "used to identify the caller of the method.", m.getParameterCount() == 0);
-    boolean canIdentifyCaller = false;
     for (int i = 0; i < m.getParameterCount(); i++) {
-      if (m.getParameterTypes()[i].isAnnotationPresent(Caller.class) ||
-        m.getParameterTypes()[i].isAssignableFrom(SecurityContext.class) ||
-        m.getParameterTypes()[i].isAssignableFrom(HttpServletRequest.class)) {
-        canIdentifyCaller = true;
-        break;
+      if (m.getParameterTypes()[i].isAssignableFrom(HttpServletRequest.class)) {
+        return;
       }
     }
-    assertTrue("No parameter was found that can be used to identify the caller of method " + m.getName() +
-      " in class " + c.getCanonicalName(), canIdentifyCaller);
+    fail("No parameter was found that can be used to identify the caller of method " + m.getName() +
+        " in class " + c.getCanonicalName());
   }
   
   @Test

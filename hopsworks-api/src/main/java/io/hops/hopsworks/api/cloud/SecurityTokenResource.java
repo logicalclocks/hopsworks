@@ -22,6 +22,7 @@ import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
+import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -54,9 +55,12 @@ public class SecurityTokenResource {
   @Produces(MediaType.APPLICATION_JSON)
   @JWTRequired(acceptedTokens = {Audience.SERVICES}, allowedUserRoles = {"AGENT"})
   public Response getSessionTokenAsAgent(@PathParam("projectId") Integer projectId,
-    @PathParam("username") String username, @Secret @QueryParam("roleARN") String roleARN,
-    @QueryParam("roleSessionName") String roleSessionName,
-    @DefaultValue("3600") @QueryParam("durationSeconds") int durationSeconds, @Context SecurityContext sc)
+                                         @PathParam("username") String username,
+                                         @Secret @QueryParam("roleARN") String roleARN,
+                                         @QueryParam("roleSessionName") String roleSessionName,
+                                         @DefaultValue("3600") @QueryParam("durationSeconds") int durationSeconds,
+                                         @Context HttpServletRequest req,
+                                         @Context SecurityContext sc)
     throws CloudException, UserException, ProjectException {
     Users user = userFacade.findByUsername(username);
     if (user == null) {

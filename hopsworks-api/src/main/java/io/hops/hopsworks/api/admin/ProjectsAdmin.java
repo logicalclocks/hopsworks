@@ -182,7 +182,7 @@ public class ProjectsAdmin {
   @GET
   @Produces(MediaType.APPLICATION_JSON)
   @Path("/projects")
-  public Response getProjectsAdminInfo(@Context SecurityContext sc) {
+  public Response getProjectsAdminInfo(@Context HttpServletRequest req, @Context SecurityContext sc) {
 
     List<Project> projects = projectFacade.findAll();
     List<ProjectAdminInfoDTO> projectAdminInfoDTOList = new ArrayList<>();
@@ -207,8 +207,9 @@ public class ProjectsAdmin {
   @GET
   @Produces(MediaType.APPLICATION_JSON)
   @Path("/projects/{id}")
-  public Response getProjectAdminInfo(@PathParam("id") Integer projectId, @Context SecurityContext sc)
-    throws ProjectException {
+  public Response getProjectAdminInfo(@PathParam("id") Integer projectId,
+                                      @Context HttpServletRequest req,
+                                      @Context SecurityContext sc) throws ProjectException {
     Project project = projectFacade.find(projectId);
     if (project == null) {
       throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_NOT_FOUND, Level.FINE, "projectId: " + projectId);
@@ -225,8 +226,9 @@ public class ProjectsAdmin {
   @PUT
   @Consumes(MediaType.APPLICATION_JSON)
   @Path("/projects")
-  public Response setProjectAdminInfo(ProjectAdminInfoDTO projectAdminInfoDTO, @Context SecurityContext sc)
-    throws ProjectException {
+  public Response setProjectAdminInfo(ProjectAdminInfoDTO projectAdminInfoDTO,
+                                      @Context HttpServletRequest req,
+                                      @Context SecurityContext sc) throws ProjectException {
     // for changes in space quotas we need to check that both space and ns options are not null
     QuotasDTO quotasDTO = projectAdminInfoDTO.getProjectQuotas();
     if (quotasDTO != null && (((quotasDTO.getHdfsQuotaInBytes() == null) != (quotasDTO.getHdfsNsQuota() == null))
@@ -250,8 +252,9 @@ public class ProjectsAdmin {
   @DELETE
   @Path("/projects/{name}/force")
   @Produces(MediaType.APPLICATION_JSON)
-  public Response forceDeleteProject(@Context HttpServletRequest request, @Context SecurityContext sc,
-      @PathParam("name") String projectName) {
+  public Response forceDeleteProject(@Context HttpServletRequest request,
+                                     @Context SecurityContext sc,
+                                     @PathParam("name") String projectName) {
     Users user = jWTHelper.getUserPrincipal(sc);
     String[] logs = projectController.forceCleanup(projectName, user.getEmail(), request.getSession().getId());
     ProjectDeletionLog deletionLog = new ProjectDeletionLog(logs[0], logs[1]);
@@ -264,7 +267,9 @@ public class ProjectsAdmin {
   @POST
   @Path("/projects/{id}/fix-permission")
   @Produces(MediaType.APPLICATION_JSON)
-  public Response forcePermissionFix(@PathParam("id") Integer projectId, @Context SecurityContext sc)
+  public Response forcePermissionFix(@PathParam("id") Integer projectId,
+                                     @Context HttpServletRequest req,
+                                     @Context SecurityContext sc)
     throws ProjectException {
     Project project = projectFacade.find(projectId);
     if (project == null) {
@@ -277,7 +282,7 @@ public class ProjectsAdmin {
   @POST
   @Path("/projects/fix-permission")
   @Produces(MediaType.APPLICATION_JSON)
-  public Response forcePermissionFix(@Context SecurityContext sc) {
+  public Response forcePermissionFix(@Context HttpServletRequest req, @Context SecurityContext sc) {
     permissionsCleaner.fixPermissions();
     return Response.accepted().build();
   }
@@ -285,8 +290,10 @@ public class ProjectsAdmin {
   @GET
   @Produces(MediaType.APPLICATION_JSON)
   @Path("/projects/user/{id: [0-9]*}")
-  public Response getProjectsAdminInfo(@PathParam("id") Integer id, @Context UriInfo uriInfo,
-    @Context SecurityContext sc) throws UserException {
+  public Response getProjectsAdminInfo(@PathParam("id") Integer id,
+                                       @Context UriInfo uriInfo,
+                                       @Context HttpServletRequest req,
+                                       @Context SecurityContext sc) throws UserException {
     Users users = userFacade.find(id);
     if (users == null) {
       throw new UserException(RESTCodes.UserErrorCode.USER_WAS_NOT_FOUND, Level.FINE);
@@ -306,5 +313,4 @@ public class ProjectsAdmin {
         .build(), project.getId(), project.getName(), project.getCreated())));
     return dto;
   }
-  
 }

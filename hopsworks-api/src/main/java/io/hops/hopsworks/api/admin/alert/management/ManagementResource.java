@@ -46,6 +46,7 @@ import javax.ejb.EJB;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.enterprise.context.RequestScoped;
+import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
@@ -83,7 +84,7 @@ public class ManagementResource {
   @GET
   @Path("healthy")
   @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN"})
-  public Response healthy(@Context SecurityContext sc) throws AlertException {
+  public Response healthy(@Context HttpServletRequest req, @Context SecurityContext sc) throws AlertException {
     try {
       return alertManager.healthy();
     } catch (AlertManagerClientCreateException | AlertManagerUnreachableException e) {
@@ -96,7 +97,7 @@ public class ManagementResource {
   @GET
   @Path("ready")
   @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN"})
-  public Response ready(@Context SecurityContext sc) throws AlertException {
+  public Response ready(@Context HttpServletRequest req, @Context SecurityContext sc) throws AlertException {
     try {
       return alertManager.ready();
     } catch (AlertManagerClientCreateException | AlertManagerUnreachableException e) {
@@ -110,7 +111,7 @@ public class ManagementResource {
   @Path("status")
   @Produces(MediaType.APPLICATION_JSON)
   @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN"})
-  public Response getStatus(@Context SecurityContext sc) throws AlertException {
+  public Response getStatus(@Context HttpServletRequest req, @Context SecurityContext sc) throws AlertException {
     try {
       AlertmanagerStatus alertmanagerStatus = alertManager.getStatus();
       return Response.ok().entity(alertmanagerStatus).build();
@@ -125,7 +126,7 @@ public class ManagementResource {
   @Path("config")
   @Produces(MediaType.APPLICATION_JSON)
   @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN"})
-  public Response getConfig(@Context SecurityContext sc) throws AlertException {
+  public Response getConfig(@Context HttpServletRequest req, @Context SecurityContext sc) throws AlertException {
     try {
       AlertManagerConfig alertManagerConfig = alertManagerConfiguration.read();
       return Response.ok().entity(alertManagerConfig).build();
@@ -139,7 +140,9 @@ public class ManagementResource {
   @Produces(MediaType.APPLICATION_JSON)
   @Consumes(MediaType.APPLICATION_JSON)
   @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN"})
-  public Response updateConfig(PostableAlertManagerConfig config, @Context SecurityContext sc) throws AlertException {
+  public Response updateConfig(PostableAlertManagerConfig config,
+                               @Context HttpServletRequest req,
+                               @Context SecurityContext sc) throws AlertException {
     try {
       AlertManagerConfig alertManagerConfig = toAlertManagerConfig(config);
       alertManagerConfiguration.writeAndReload(alertManagerConfig);
@@ -177,7 +180,7 @@ public class ManagementResource {
   @POST
   @Path("reload")
   @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN"})
-  public Response reload(@Context SecurityContext sc) throws AlertException {
+  public Response reload(@Context HttpServletRequest req, @Context SecurityContext sc) throws AlertException {
     try {
       return alertManager.reload();
     } catch (AlertManagerClientCreateException | AlertManagerUnreachableException e) {
@@ -192,7 +195,9 @@ public class ManagementResource {
   @Produces(MediaType.APPLICATION_JSON)
   @Consumes(MediaType.APPLICATION_JSON)
   @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN"})
-  public Response updateGlobal(Global global, @Context SecurityContext sc) throws AlertException {
+  public Response updateGlobal(Global global,
+                               @Context HttpServletRequest req,
+                               @Context SecurityContext sc) throws AlertException {
     Global dto;
     try {
       alertManagerConfiguration.updateGlobal(global);
@@ -215,7 +220,8 @@ public class ManagementResource {
   @Produces(MediaType.APPLICATION_JSON)
   @Consumes(MediaType.APPLICATION_JSON)
   @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN"})
-  public Response updateTemplates(TemplatesDTO templates, @Context SecurityContext sc) throws AlertException {
+  public Response updateTemplates(TemplatesDTO templates, @Context HttpServletRequest req,
+                                  @Context SecurityContext sc) throws AlertException {
     TemplatesDTO dto = new TemplatesDTO();
     try {
       alertManagerConfiguration.updateTemplates(templates.getTemplates());
@@ -239,7 +245,8 @@ public class ManagementResource {
   @Produces(MediaType.APPLICATION_JSON)
   @Consumes(MediaType.APPLICATION_JSON)
   @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN"})
-  public Response updateRoute(PostableRouteDTO routeDTO, @Context SecurityContext sc) throws AlertException {
+  public Response updateRoute(PostableRouteDTO routeDTO,
+                              @Context HttpServletRequest req, @Context SecurityContext sc) throws AlertException {
     Route route = routeBuilder.toRoute(routeDTO);
     Route dto;
     try {
@@ -264,7 +271,8 @@ public class ManagementResource {
   @Consumes(MediaType.APPLICATION_JSON)
   @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN"})
   public Response updateInhibitRules(PostableInhibitRulesDTOList postableInhibitRulesDTOList,
-      @Context SecurityContext sc) throws AlertException {
+                                     @Context HttpServletRequest req,
+                                     @Context SecurityContext sc) throws AlertException {
     List<InhibitRule> inhibitRules = toInhibitRules(postableInhibitRulesDTOList);
     InhibitRulesDTO dto = new InhibitRulesDTO();
     try {

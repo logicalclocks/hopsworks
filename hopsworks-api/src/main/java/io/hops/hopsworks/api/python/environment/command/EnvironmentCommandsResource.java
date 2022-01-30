@@ -36,6 +36,7 @@ import javax.ejb.EJB;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.enterprise.context.RequestScoped;
+import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
@@ -80,8 +81,11 @@ public class EnvironmentCommandsResource {
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
-  public Response get(@BeanParam Pagination pagination, @BeanParam CommandBeanParam environmentsCommandBeanParam,
-    @Context UriInfo uriInfo, @Context SecurityContext sc) throws PythonException {
+  public Response get(@BeanParam Pagination pagination,
+                      @BeanParam CommandBeanParam environmentsCommandBeanParam,
+                      @Context HttpServletRequest req,
+                      @Context UriInfo uriInfo,
+                      @Context SecurityContext sc) throws PythonException {
     environmentController.checkCondaEnabled(project, pythonVersion, false);
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.COMMANDS);
     resourceRequest.setOffset(pagination.getOffset());
@@ -98,8 +102,10 @@ public class EnvironmentCommandsResource {
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
-  public Response getByName(@PathParam("commandId") Integer commandId, @Context UriInfo uriInfo,
-    @Context SecurityContext sc) throws PythonException {
+  public Response getByName(@PathParam("commandId") Integer commandId,
+                            @Context UriInfo uriInfo,
+                            @Context HttpServletRequest req,
+                            @Context SecurityContext sc) throws PythonException {
     environmentController.checkCondaEnabled(project, pythonVersion, false);
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.COMMANDS);
     CommandDTO dto = commandBuilder.build(uriInfo, resourceRequest, project, commandId);
@@ -110,7 +116,8 @@ public class EnvironmentCommandsResource {
   @DELETE
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
-  public Response delete(@Context SecurityContext sc) throws PythonException {
+  public Response delete(@Context SecurityContext sc,
+                         @Context HttpServletRequest req) throws PythonException {
     environmentController.checkCondaEnabled(project, pythonVersion, false);
     commandsController.deleteCommands(project);
     return Response.noContent().build();
@@ -120,8 +127,9 @@ public class EnvironmentCommandsResource {
   @PUT
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
-  public Response update(@PathParam("library") String library, @Context UriInfo uriInfo, @Context SecurityContext sc)
-    throws PythonException {
+  public Response update(@Context UriInfo uriInfo,
+                         @Context HttpServletRequest req,
+                         @Context SecurityContext sc) throws PythonException {
     environmentController.checkCondaEnabled(project, pythonVersion, false);
     commandsController.retryFailedCondaEnvOps(project);
     return Response.noContent().build();

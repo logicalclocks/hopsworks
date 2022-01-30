@@ -36,6 +36,7 @@ import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.enterprise.context.RequestScoped;
 import javax.inject.Inject;
+import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -55,13 +56,13 @@ import java.util.logging.Logger;
 @TransactionAttribute(TransactionAttributeType.NEVER)
 public class ElasticResource {
   private static final Logger LOGGER = Logger.getLogger(ElasticResource.class.getName());
-  
+
   @Inject
   private ElasticFeaturestoreBuilder elasticFeaturestoreBuilder;
-  
+
   private Integer projectId;
   private String projectName;
-  
+
   @Logged(logLevel = LogLevel.OFF)
   public void setProjectId(Integer projectId) {
     this.projectId = projectId;
@@ -70,7 +71,7 @@ public class ElasticResource {
   public void setProjectName(String projectName) {
     this.projectName = projectName;
   }
-  
+
   /**
    * Searches for content inside all project accesible featurestores. Hits 'featurestore' index
    * <p/>
@@ -88,15 +89,15 @@ public class ElasticResource {
   @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   // TODO ApiKey scope for search
   // @ApiKeyRequired( acceptedScopes = {ApiScope.DATASET_VIEW}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
-  public Response featurestoreSearch(
-    @PathParam("searchTerm") String searchTerm,
-    @QueryParam("docType") @DefaultValue("ALL")
-      FeaturestoreDocType docType,
-    @QueryParam("from") @ApiParam(value="search pointer position, if none given, it defaults to 0") Integer from,
-    @QueryParam("size") @ApiParam(value="search page size, if none give, it defaults to 100." +
-      "Cannot be negative and cannot be bigger than 10000") Integer size,
-    @Context SecurityContext sc)
-    throws ServiceException, ElasticException, GenericException {
+  public Response featurestoreSearch(@PathParam("searchTerm") String searchTerm,
+      @QueryParam("docType") @DefaultValue("ALL")
+          FeaturestoreDocType docType,
+      @QueryParam("from") @ApiParam(value = "search pointer position, if none given, it defaults to 0") Integer from,
+      @QueryParam("size") @ApiParam(value = "search page size, if none give, it defaults to 100." +
+          "Cannot be negative and cannot be bigger than 10000") Integer size,
+      @Context HttpServletRequest req,
+      @Context SecurityContext sc)
+      throws ServiceException, ElasticException, GenericException {
     if (Strings.isNullOrEmpty(searchTerm)) {
       throw new GenericException(RESTCodes.GenericErrorCode.ILLEGAL_ARGUMENT, Level.WARNING, "no search term provided");
     }
@@ -106,7 +107,7 @@ public class ElasticResource {
     if(size == null) {
       size = 100;
     }
-    
+
     ElasticFeaturestoreDTO dto = elasticFeaturestoreBuilder.build(
         new ElasticFeaturestoreRequest(searchTerm, docType, from, size), projectId);
     return Response.ok().entity(dto).build();

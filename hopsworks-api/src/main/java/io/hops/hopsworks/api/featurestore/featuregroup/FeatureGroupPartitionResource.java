@@ -36,6 +36,7 @@ import javax.ejb.EJB;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.enterprise.context.RequestScoped;
+import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.GET;
 import javax.ws.rs.Produces;
@@ -81,7 +82,10 @@ public class FeatureGroupPartitionResource {
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   @JWTRequired(acceptedTokens={Audience.API, Audience.JOB}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
   @ApiKeyRequired( acceptedScopes = {ApiScope.FEATURESTORE}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
-  public Response getPartitions(@BeanParam Pagination pagination, @Context UriInfo uriInfo, @Context SecurityContext sc)
+  public Response getPartitions(@BeanParam Pagination pagination,
+                                @Context UriInfo uriInfo,
+                                @Context HttpServletRequest req,
+                                @Context SecurityContext sc)
       throws FeaturestoreException {
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.PARTITIONS);
     resourceRequest.setOffset(pagination.getOffset());

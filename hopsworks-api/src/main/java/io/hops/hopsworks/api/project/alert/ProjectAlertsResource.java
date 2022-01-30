@@ -58,6 +58,7 @@ import javax.ejb.EJB;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.enterprise.context.RequestScoped;
+import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
@@ -135,7 +136,8 @@ public class ProjectAlertsResource {
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   public Response get(@BeanParam Pagination pagination, @BeanParam ProjectAlertsBeanParam projectAlertsBeanParam,
-      @Context UriInfo uriInfo, @Context SecurityContext sc) throws ProjectException {
+                      @Context HttpServletRequest req,
+                      @Context UriInfo uriInfo, @Context SecurityContext sc) throws ProjectException {
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.ALERTS);
     resourceRequest.setOffset(pagination.getOffset());
     resourceRequest.setLimit(pagination.getLimit());
@@ -151,7 +153,9 @@ public class ProjectAlertsResource {
   @ApiOperation(value = "Find alert by Id.", response = ProjectAlertsDTO.class)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
-  public Response getById(@PathParam("id") Integer id, @Context UriInfo uriInfo, @Context SecurityContext sc)
+  public Response getById(@PathParam("id") Integer id, @Context UriInfo uriInfo,
+                          @Context HttpServletRequest req,
+                          @Context SecurityContext sc)
       throws ProjectException {
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.ALERTS);
     ProjectAlertsDTO dto = projectAlertsBuilder.build(uriInfo, resourceRequest, getProject(), id);
@@ -164,7 +168,9 @@ public class ProjectAlertsResource {
   @ApiOperation(value = "Get values for services alert.", response = ProjectServiceAlertValues.class)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
-  public Response getAvailableServices(@Context UriInfo uriInfo, @Context SecurityContext sc) {
+  public Response getAvailableServices(@Context UriInfo uriInfo,
+                                       @Context HttpServletRequest req,
+                                       @Context SecurityContext sc)  {
     ProjectServiceAlertValues values = new ProjectServiceAlertValues();
     return Response.ok().entity(values).build();
   }
@@ -175,7 +181,9 @@ public class ProjectAlertsResource {
   @ApiOperation(value = "Get project, job and feature group alerts.", response = ProjectAllAlertsDTO.class)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
-  public Response getAllAlerts(@Context UriInfo uriInfo, @Context SecurityContext sc) throws ProjectException {
+  public Response getAllAlerts(@Context UriInfo uriInfo,
+                               @Context HttpServletRequest req,
+                               @Context SecurityContext sc) throws ProjectException {
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.ALERTS);
     ProjectAlertsDTO projectAlertsDTO = projectAlertsBuilder.buildItemsAll(uriInfo, resourceRequest, getProject());
     JobAlertsDTO jobAlertsDTO = jobAlertsBuilder.buildItems(uriInfo, resourceRequest, getProject());
@@ -195,7 +203,8 @@ public class ProjectAlertsResource {
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   public Response createOrUpdate(@PathParam("id") Integer id, ProjectAlertsDTO projectAlertsDTO,
-      @Context UriInfo uriInfo, @Context SecurityContext sc) throws ProjectException {
+                                 @Context HttpServletRequest req,
+                                 @Context UriInfo uriInfo, @Context SecurityContext sc) throws ProjectException {
     ProjectServiceAlert projectServiceAlert = projectServiceAlertsFacade.findByProjectAndId(getProject(), id);
     if (projectServiceAlert == null) {
       throw new ProjectException(RESTCodes.ProjectErrorCode.ALERT_NOT_FOUND, Level.FINE,
@@ -235,8 +244,10 @@ public class ProjectAlertsResource {
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   public Response create(PostableProjectAlerts projectAlertsDTO,
-      @QueryParam("bulk") @DefaultValue("false") Boolean bulk, @Context UriInfo uriInfo, @Context SecurityContext sc)
-      throws ProjectException {
+                         @QueryParam("bulk") @DefaultValue("false") Boolean bulk,
+                         @Context UriInfo uriInfo,
+                         @Context HttpServletRequest req,
+                         @Context SecurityContext sc) throws ProjectException {
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.ALERTS);
     ProjectAlertsDTO dto = createAlert(projectAlertsDTO, bulk, uriInfo, resourceRequest);
     return Response.created(dto.getHref()).entity(dto).build();
@@ -359,7 +370,9 @@ public class ProjectAlertsResource {
   @ApiOperation(value = "Test alert by Id.", response = ProjectAlertsDTO.class)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
-  public Response getTestById(@PathParam("id") Integer id, @Context UriInfo uriInfo, @Context SecurityContext sc)
+  public Response getTestById(@PathParam("id") Integer id, @Context UriInfo uriInfo,
+                              @Context HttpServletRequest req,
+                              @Context SecurityContext sc)
       throws ProjectException, AlertException {
     Project project = getProject();
     ProjectServiceAlert projectServiceAlert = projectServiceAlertsFacade.findByProjectAndId(project, id);
@@ -383,7 +396,10 @@ public class ProjectAlertsResource {
   @ApiOperation(value = "Delete an alert by Id.")
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
-  public Response deleteById(@PathParam("id") Integer id, @Context UriInfo uriInfo, @Context SecurityContext sc)
+  public Response deleteById(@PathParam("id") Integer id,
+                             @Context UriInfo uriInfo,
+                             @Context HttpServletRequest req,
+                             @Context SecurityContext sc)
       throws ProjectException {
     ProjectServiceAlert projectServiceAlert = projectServiceAlertsFacade.findByProjectAndId(getProject(), id);
     if (projectServiceAlert != null) {

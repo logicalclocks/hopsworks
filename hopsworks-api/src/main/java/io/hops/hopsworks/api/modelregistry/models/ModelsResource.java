@@ -145,6 +145,7 @@ public class ModelsResource {
     @BeanParam Pagination pagination,
     @BeanParam ModelsBeanParam modelsBeanParam,
     @Context UriInfo uriInfo,
+    @Context HttpServletRequest req,
     @Context SecurityContext sc)
           throws ModelRegistryException, GenericException, SchematizedTagException, MetadataException {
     Users user = jwtHelper.getUserPrincipal(sc);
@@ -169,6 +170,7 @@ public class ModelsResource {
     @PathParam("id") String id,
     @BeanParam ModelsBeanParam modelsBeanParam,
     @Context UriInfo uriInfo,
+    @Context HttpServletRequest req,
     @Context SecurityContext sc)
           throws ProvenanceException, ModelRegistryException, DatasetException, GenericException,
           SchematizedTagException, MetadataException {
@@ -217,16 +219,15 @@ public class ModelsResource {
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   @JWTRequired(acceptedTokens={Audience.API, Audience.JOB}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
   @ApiKeyRequired( acceptedScopes = {ApiScope.MODELREGISTRY}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
-  public Response put (
-    @PathParam("id") String id,
-    ModelDTO modelDTO,
-    @QueryParam("jobName") String jobName,
-    @QueryParam("kernelId") String kernelId,
-    @Context HttpServletRequest req,
-    @Context UriInfo uriInfo,
-    @Context SecurityContext sc)
-    throws DatasetException, ModelRegistryException, JobException, ServiceException, PythonException, MetadataException,
-    GenericException, ProjectException {
+  public Response put(@PathParam("id") String id,
+                      ModelDTO modelDTO,
+                      @QueryParam("jobName") String jobName,
+                      @QueryParam("kernelId") String kernelId,
+                      @Context HttpServletRequest req,
+                      @Context UriInfo uriInfo,
+                      @Context SecurityContext sc)
+      throws DatasetException, ModelRegistryException, JobException, ServiceException, PythonException,
+      MetadataException, GenericException, ProjectException {
     if (modelDTO == null) {
       throw new IllegalArgumentException("Model summary not provided");
     }
@@ -251,7 +252,9 @@ public class ModelsResource {
   @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
   @JWTRequired(acceptedTokens={Audience.API, Audience.JOB}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
   @ApiKeyRequired( acceptedScopes = {ApiScope.MODELREGISTRY}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
-  public Response putTag(@Context SecurityContext sc, @Context UriInfo uriInfo,
+  public Response putTag(@Context SecurityContext sc,
+                         @Context HttpServletRequest req,
+                         @Context UriInfo uriInfo,
                          @ApiParam(value = "Id of the model", required = true)
                          @PathParam("id") String id,
                          @ApiParam(value = "Name of the tag", required = true) @PathParam("name") String name,
@@ -285,7 +288,9 @@ public class ModelsResource {
   @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
   @JWTRequired(acceptedTokens={Audience.API, Audience.JOB}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
   @ApiKeyRequired( acceptedScopes = {ApiScope.MODELREGISTRY}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
-  public Response bulkPutTags(@Context SecurityContext sc, @Context UriInfo uriInfo,
+  public Response bulkPutTags(@Context SecurityContext sc,
+                              @Context HttpServletRequest req,
+                              @Context UriInfo uriInfo,
                               @ApiParam(value = "Id of the model", required = true)
                               @PathParam("id") String id,
                               TagsDTO tags)
@@ -329,7 +334,9 @@ public class ModelsResource {
   @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
   @JWTRequired(acceptedTokens={Audience.API, Audience.JOB}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
   @ApiKeyRequired( acceptedScopes = {ApiScope.MODELREGISTRY}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
-  public Response getTags(@Context SecurityContext sc, @Context UriInfo uriInfo,
+  public Response getTags(@Context SecurityContext sc,
+                          @Context HttpServletRequest req,
+                          @Context UriInfo uriInfo,
                           @ApiParam(value = "Id of the model", required = true)
                           @PathParam("id") String id,
                           @BeanParam TagsExpansionBeanParam tagsExpansionBeanParam)
@@ -355,7 +362,9 @@ public class ModelsResource {
   @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
   @JWTRequired(acceptedTokens={Audience.API, Audience.JOB}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
   @ApiKeyRequired( acceptedScopes = {ApiScope.MODELREGISTRY}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
-  public Response getTag(@Context SecurityContext sc, @Context UriInfo uriInfo,
+  public Response getTag(@Context SecurityContext sc,
+                         @Context HttpServletRequest req,
+                         @Context UriInfo uriInfo,
                          @ApiParam(value = "Id of the model", required = true)
                          @PathParam("id") String id,
                          @ApiParam(value = "Name of the tag", required = true) @PathParam("name") String name,
@@ -384,6 +393,7 @@ public class ModelsResource {
   @JWTRequired(acceptedTokens={Audience.API, Audience.JOB}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
   @ApiKeyRequired( acceptedScopes = {ApiScope.MODELREGISTRY}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   public Response deleteTags(@Context SecurityContext sc,
+                             @Context HttpServletRequest req,
                              @ApiParam(value = "Id of the model", required = true)
                              @PathParam("id") String id)
       throws DatasetException, MetadataException, ProvenanceException, ModelRegistryException {
@@ -406,6 +416,7 @@ public class ModelsResource {
   @JWTRequired(acceptedTokens={Audience.API, Audience.JOB}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
   @ApiKeyRequired( acceptedScopes = {ApiScope.MODELREGISTRY}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   public Response deleteTag(@Context SecurityContext sc,
+                            @Context HttpServletRequest req,
                             @ApiParam(value = "Id of the model", required = true)
                             @PathParam("id") String id,
                             @ApiParam(value = "Name of the tag", required = true) @PathParam("name") String name)

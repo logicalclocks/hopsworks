@@ -47,6 +47,7 @@ import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.inject.Inject;
+import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
@@ -71,7 +72,7 @@ import java.util.logging.Logger;
 @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN"})
 @TransactionAttribute(TransactionAttributeType.NEVER)
 public class AdminAlertResource {
-  
+
   private static final Logger LOGGER = Logger.getLogger(AdminAlertResource.class.getName());
   @EJB
   private AlertBuilder alertBuilder;
@@ -85,26 +86,28 @@ public class AdminAlertResource {
   private AdminReceiverResource adminReceiverResource;
   @Inject
   private AdminRouteResource adminRouteResource;
-  
+
   @GET
   @Produces(MediaType.APPLICATION_JSON)
   @ApiOperation(value = "Get alerts.", response = ActivitiesDTO.class)
   public Response getAlerts(@BeanParam Pagination pagination, @BeanParam AlertBeanParam alertBeanParam,
-      @Context UriInfo uriInfo, @Context SecurityContext sc) throws AlertException {
+                            @Context HttpServletRequest req,
+                            @Context UriInfo uriInfo, @Context SecurityContext sc) throws AlertException {
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.ALERTS);
     resourceRequest.setOffset(pagination.getOffset());
     resourceRequest.setLimit(pagination.getLimit());
     AlertDTO alertDTO = alertBuilder.buildItems(uriInfo, resourceRequest, alertBeanParam, null);
     return Response.ok().entity(alertDTO).build();
   }
-  
+
   @GET
   @Path("groups")
   @Produces(MediaType.APPLICATION_JSON)
   @ApiOperation(value = "Get alerts groups.", response = ActivitiesDTO.class)
   public Response getAlertGroups(@BeanParam Pagination pagination, @BeanParam AlertFilterBy alertFilterBy,
-      @QueryParam("expand_alert") Boolean expand, @Context UriInfo uriInfo, @Context SecurityContext sc)
-      throws AlertException {
+                                 @QueryParam("expand_alert") Boolean expand, @Context UriInfo uriInfo,
+                                 @Context HttpServletRequest req,
+                                 @Context SecurityContext sc) throws AlertException {
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.ALERTGROUPS);
     if (expand != null && expand) {
       Set<ResourceRequest> expansions = new HashSet<>();
@@ -116,13 +119,14 @@ public class AdminAlertResource {
     AlertGroupDTO alertGroupDTO = alertBuilder.buildAlertGroupItems(uriInfo, resourceRequest, alertFilterBy, null);
     return Response.ok().entity(alertGroupDTO).build();
   }
-  
+
   @POST
   @Produces(MediaType.APPLICATION_JSON)
   @Consumes(MediaType.APPLICATION_JSON)
   @ApiOperation(value = "Create alert.", response = ActivitiesDTO.class)
-  public Response createAlerts(PostableAlertDTOs alerts, @Context UriInfo uriInfo, @Context SecurityContext sc)
-      throws AlertException {
+  public Response createAlerts(PostableAlertDTOs alerts, @Context UriInfo uriInfo,
+                               @Context HttpServletRequest req,
+                               @Context SecurityContext sc) throws AlertException {
     if (alerts == null) {
       throw new AlertException(RESTCodes.AlertErrorCode.ILLEGAL_ARGUMENT, Level.FINE, "No payload.");
     }
@@ -136,25 +140,25 @@ public class AdminAlertResource {
       throw new AlertException(RESTCodes.AlertErrorCode.ILLEGAL_ARGUMENT, Level.FINE, e.getMessage());
     }
   }
-  
+
   @Logged(logLevel = LogLevel.OFF)
   @Path("management")
   public ManagementResource management() {
     return managementResource;
   }
-  
+
   @Logged(logLevel = LogLevel.OFF)
   @Path("silences")
   public AdminSilenceResource silence() {
     return adminSilenceResource;
   }
-  
+
   @Logged(logLevel = LogLevel.OFF)
   @Path("receivers")
   public AdminReceiverResource receiver() {
     return adminReceiverResource;
   }
-  
+
   @Logged(logLevel = LogLevel.OFF)
   @Path("routes")
   public AdminRouteResource route() {

@@ -138,7 +138,7 @@ public class JupyterService {
 
   private static final Logger LOGGER = Logger.getLogger(JupyterService.class.getName());
   private static final String[] JUPYTER_JWT_AUD = new String[]{Audience.API};
-  
+
   @EJB
   private ProjectFacade projectFacade;
   @EJB
@@ -186,13 +186,13 @@ public class JupyterService {
 
   public JupyterService() {
   }
-  
+
   @Logged(logLevel = LogLevel.OFF)
   public void setProjectId(Integer projectId) {
     this.projectId = projectId;
     this.project = this.projectFacade.find(projectId);
   }
-  
+
   @Logged(logLevel = LogLevel.OFF)
   public Integer getProjectId() {
     return projectId;
@@ -207,8 +207,9 @@ public class JupyterService {
   @GET
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER})
-  @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
-  public Response getAllNotebookServersInProject(@Context SecurityContext sc) throws ServiceException {
+  @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
+  public Response getAllNotebookServersInProject(@Context HttpServletRequest req,
+                                                 @Context SecurityContext sc) throws ServiceException {
 
     Collection<JupyterProject> servers = project.getJupyterProjectCollection();
 
@@ -216,10 +217,10 @@ public class JupyterService {
       throw new ServiceException(RESTCodes.ServiceErrorCode.JUPYTER_SERVERS_NOT_FOUND, Level.FINE);
     }
 
-    List<JupyterProject> listServers = new ArrayList<>();
-    listServers.addAll(servers);
+    List<JupyterProject> listServers = new ArrayList<>(servers);
 
-    GenericEntity<List<JupyterProject>> notebookServers = new GenericEntity<List<JupyterProject>>(listServers) { };
+    GenericEntity<List<JupyterProject>> notebookServers = new GenericEntity<List<JupyterProject>>(listServers) {
+    };
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(notebookServers).build();
   }
 
@@ -227,8 +228,9 @@ public class JupyterService {
   @Path("/livy/sessions")
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
-  @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
-  public Response livySessions(@Context SecurityContext sc) {
+  @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
+  public Response livySessions(@Context SecurityContext sc,
+                               @Context HttpServletRequest req) {
     Users user = jWTHelper.getUserPrincipal(sc);
     List<LivyMsg.Session> sessions = livyController.getLivySessionsForProjectUser(this.project, user);
     List<LivySessionDTO> livySessionDTOS = new ArrayList<>();
@@ -246,8 +248,10 @@ public class JupyterService {
   @Path("/livy/sessions/{appId}")
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
-  @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
-  public Response stopLivySession(@PathParam("appId") String appId, @Context SecurityContext sc) {
+  @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
+  public Response stopLivySession(@PathParam("appId") String appId,
+                                  @Context HttpServletRequest req,
+                                  @Context SecurityContext sc) {
     Users user = jWTHelper.getUserPrincipal(sc);
     jupyterController.stopSession(project, user, appId);
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).build();
@@ -263,8 +267,9 @@ public class JupyterService {
   @Path("/settings")
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
-  @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
-  public Response settings(@Context SecurityContext sc) {
+  @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
+  public Response settings(@Context SecurityContext sc,
+                           @Context HttpServletRequest req) {
 
     Users user = jWTHelper.getUserPrincipal(sc);
     JupyterSettings js = jupyterSettingsFacade.findByProjectUser(project, user.getEmail());
@@ -272,7 +277,7 @@ public class JupyterService {
     if (settings.isPythonKernelEnabled()) {
       js.setPrivateDir(settings.getStagingDir() + Settings.PRIVATE_DIRS + js.getSecret());
     }
-    
+
     js.setGitAvailable(jupyterNbVCSController.isGitAvailable());
     js.setMode(JupyterMode.JUPYTER_LAB);
 
@@ -283,7 +288,7 @@ public class JupyterService {
   @Path("/running")
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
-  @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
+  @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   public Response isRunning(@Context HttpServletRequest req, @Context SecurityContext sc) throws ServiceException {
 
     String hdfsUser = getHdfsUser(sc);
@@ -306,23 +311,23 @@ public class JupyterService {
 
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(jp).build();
   }
-  
+
   @POST
   @Path("/start")
   @Consumes(MediaType.APPLICATION_JSON)
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
-  @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
+  @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   public Response startNotebookServer(JupyterSettings jupyterSettings, @Context HttpServletRequest req,
-      @Context SecurityContext sc, @Context UriInfo uriInfo) throws ProjectException, HopsSecurityException,
-          ServiceException, GenericException, JobException {
-    
+                                      @Context SecurityContext sc, @Context UriInfo uriInfo)
+      throws ProjectException, HopsSecurityException, ServiceException, GenericException, JobException {
+
     Users hopsworksUser = jWTHelper.getUserPrincipal(sc);
     String hdfsUser = hdfsUsersController.getHdfsUserName(project, hopsworksUser);
     //The JupyterSettings bean is serialized without the Project and User when attaching it to the notebook as xattr.
     // .We need to put the user object when we are launching Jupyter from the notebook. The Project object is set
     // from in the front-end
-    if(jupyterSettings.getUsers() == null) {
+    if (jupyterSettings.getUsers() == null) {
       jupyterSettings.setUsers(hopsworksUser);
     }
     if (project.getPaymentType().equals(PaymentType.PREPAID)) {
@@ -331,7 +336,7 @@ public class JupyterService {
         throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_QUOTA_ERROR, Level.FINE);
       }
     }
-    
+
     if (project.getPythonEnvironment() == null) {
       throw new ProjectException(RESTCodes.ProjectErrorCode.ANACONDA_NOT_ENABLED, Level.FINE);
     }
@@ -350,18 +355,18 @@ public class JupyterService {
     // Do not allow auto push on shutdown if api key is missing
     GitConfig gitConfig = jupyterSettings.getGitConfig();
     if (jupyterSettings.isGitBackend() && gitConfig.getShutdownAutoPush()
-      && Strings.isNullOrEmpty(gitConfig.getApiKeyName())) {
+        && Strings.isNullOrEmpty(gitConfig.getApiKeyName())) {
       throw new ServiceException(RESTCodes.ServiceErrorCode.JUPYTER_START_ERROR, Level.FINE,
-        "Auto push not supported if api key is not configured.");
+          "Auto push not supported if api key is not configured.");
     }
 
     // Verify that API token has got write access on the repo if ShutdownAutoPush is enabled
     if (jupyterSettings.isGitBackend() && gitConfig.getShutdownAutoPush()
-      && !jupyterNbVCSController.hasWriteAccess(hopsworksUser, gitConfig.getApiKeyName(),
-      gitConfig.getRemoteGitURL(), gitConfig.getGitBackend())) {
+        && !jupyterNbVCSController.hasWriteAccess(hopsworksUser, gitConfig.getApiKeyName(),
+        gitConfig.getRemoteGitURL(), gitConfig.getGitBackend())) {
       throw new ServiceException(RESTCodes.ServiceErrorCode.JUPYTER_START_ERROR, Level.FINE,
-        "API token " + gitConfig.getApiKeyName() + " does not have write access on "
-          + gitConfig.getRemoteGitURL());
+          "API token " + gitConfig.getApiKeyName() + " does not have write access on "
+              + gitConfig.getRemoteGitURL());
     }
 
     JupyterProject jp = jupyterFacade.findByUser(hdfsUser);
@@ -381,28 +386,28 @@ public class JupyterService {
 
         //Inspect dependencies
         sparkController
-          .inspectDependencies(project, hopsworksUser, (SparkJobConfiguration) jupyterSettings.getJobConfig());
+            .inspectDependencies(project, hopsworksUser, (SparkJobConfiguration) jupyterSettings.getJobConfig());
         dto = jupyterManager.startJupyterServer(project, configSecret, hdfsUser, hopsworksUser,
-          jupyterSettings, allowOrigin);
+            jupyterSettings, allowOrigin);
         jupyterJWTManager.materializeJWT(hopsworksUser, project, jupyterSettings, dto.getCid(), dto.getPort(),
-          JUPYTER_JWT_AUD);
+            JUPYTER_JWT_AUD);
         HopsUtils.materializeCertificatesForUserCustomDir(project.getName(), user.getUsername(),
             settings.getHdfsTmpCertDir(), dfso, certificateMaterializer, settings, dto.getCertificatesDir());
         jupyterManager.waitForStartup(project, hopsworksUser);
       } catch (ServiceException | TimeoutException ex) {
         if (dto != null) {
           jupyterController
-            .shutdownQuietly(project, hdfsUser, hopsworksUser, configSecret, dto.getCid(), dto.getPort());
+              .shutdownQuietly(project, hdfsUser, hopsworksUser, configSecret, dto.getCid(), dto.getPort());
         }
         throw new ServiceException(RESTCodes.ServiceErrorCode.JUPYTER_START_ERROR, Level.SEVERE, ex.getMessage(),
             null, ex);
       } catch (IOException ex) {
         if (dto != null) {
           jupyterController
-            .shutdownQuietly(project, hdfsUser, hopsworksUser, configSecret, dto.getCid(), dto.getPort());
+              .shutdownQuietly(project, hdfsUser, hopsworksUser, configSecret, dto.getCid(), dto.getPort());
         }
         throw new HopsSecurityException(RESTCodes.SecurityErrorCode.CERT_MATERIALIZATION_ERROR, Level.SEVERE,
-          ex.getMessage(), null, ex);
+            ex.getMessage(), null, ex);
       } finally {
         if (dfso != null) {
           dfsService.closeDfsClient(dfso);
@@ -419,16 +424,16 @@ public class JupyterService {
         expirationDate = cal.getTime();
 
         jp = jupyterFacade.saveServer(externalIp, project, configSecret,
-          dto.getPort(), user.getId(), dto.getToken(), dto.getCid(), expirationDate, jupyterSettings.isNoLimit());
+            dto.getPort(), user.getId(), dto.getToken(), dto.getCid(), expirationDate, jupyterSettings.isNoLimit());
 
         //set minutes left until notebook server is killed
         Duration durationLeft = Duration.between(new Date().toInstant(), jp.getExpires().toInstant());
         jp.setMinutesUntilExpiration(durationLeft.toMinutes());
-      } catch(Exception e) {
+      } catch (Exception e) {
         LOGGER.log(Level.SEVERE, "Failed to save Jupyter notebook settings", e);
         jupyterController.shutdownQuietly(project, hdfsUser, hopsworksUser, configSecret, dto.getCid(), dto.getPort());
       }
-      
+
       if (jp == null) {
         throw new ServiceException(RESTCodes.ServiceErrorCode.JUPYTER_SAVE_SETTINGS_ERROR, Level.SEVERE);
       }
@@ -456,40 +461,43 @@ public class JupyterService {
   @Path("/stop")
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
-  @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
-  public Response stopNotebookServer(@Context SecurityContext sc) throws ProjectException, ServiceException {
+  @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
+  public Response stopNotebookServer(@Context HttpServletRequest req,
+                                     @Context SecurityContext sc) throws ProjectException, ServiceException {
     Users user = jWTHelper.getUserPrincipal(sc);
     String hdfsUsername = hdfsUsersController.getHdfsUserName(project, user);
     JupyterProject jp = jupyterFacade.findByUser(hdfsUsername);
     if (jp == null) {
       throw new ProjectException(RESTCodes.ProjectErrorCode.JUPYTER_SERVER_NOT_FOUND, Level.FINE,
-        "hdfsUser: " + hdfsUsername);
+          "hdfsUser: " + hdfsUsername);
     }
     jupyterController.shutdown(project, hdfsUsername, user, jp.getSecret(), jp.getCid(), jp.getPort());
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).build();
   }
-  
+
   @GET
   @Path("/git/branches")
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
-  @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
+  @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   public Response getRemoteGitBranches(@QueryParam("remoteURI") String remoteURI,
-    @QueryParam("keyName") String apiKeyName, @QueryParam("gitBackend") GitBackend gitBackend,
-    @Context SecurityContext sc) throws ServiceException {
+                                       @QueryParam("keyName") String apiKeyName,
+                                       @QueryParam("gitBackend") GitBackend gitBackend,
+                                       @Context HttpServletRequest req,
+                                       @Context SecurityContext sc) throws ServiceException {
     Users user = jWTHelper.getUserPrincipal(sc);
     Set<String> remoteBranches = jupyterNbVCSController.getRemoteBranches(user, apiKeyName, remoteURI, gitBackend);
     GitConfig config = new GitConfig();
     config.setBranches(remoteBranches);
     return Response.ok(config).build();
   }
-  
+
   @GET
   @Path("/git/status")
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
-  public Response getGitStatusOfJupyterRepo(@Context SecurityContext sc)
+  public Response getGitStatusOfJupyterRepo(@Context HttpServletRequest req, @Context SecurityContext sc)
       throws ProjectException, ServiceException {
     Users user = jWTHelper.getUserPrincipal(sc);
     String projectUser = hdfsUsersController.getHdfsUserName(project, user);
@@ -510,19 +518,20 @@ public class JupyterService {
     }
     return Response.ok(status).build();
   }
-  
+
   @GET
   @Path("/convertIPythonNotebook/{path: .+}")
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
-  @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
+  @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   public Response convertIPythonNotebook(@PathParam("path") String path,
-      @Context SecurityContext sc) throws ServiceException {
+                                         @Context HttpServletRequest req,
+                                         @Context SecurityContext sc) throws ServiceException {
     String ipynbPath = Utils.getProjectPath(this.project.getName()) + "/" + path;
     int extensionIndex = ipynbPath.lastIndexOf(".ipynb");
     StringBuilder pathBuilder = new StringBuilder(ipynbPath.substring(0, extensionIndex)).append(".py");
     String pyAppPath = pathBuilder.toString();
     String hdfsUsername = getHdfsUser(sc);
-    Users user  =jWTHelper.getUserPrincipal(sc);
+    Users user = jWTHelper.getUserPrincipal(sc);
     JupyterController.NotebookConversion conversionType = jupyterController
         .getNotebookConversionType(ipynbPath, user, this.project);
     jupyterController.convertIPythonNotebook(hdfsUsername, ipynbPath, project, pyAppPath, conversionType);
@@ -531,7 +540,7 @@ public class JupyterService {
 
   private String getHdfsUser(SecurityContext sc) {
     Users user = jWTHelper.getUserPrincipal(sc);
-    return  hdfsUsersController.getHdfsUserName(project, user);
+    return hdfsUsersController.getHdfsUserName(project, user);
   }
 
   @POST
@@ -539,8 +548,10 @@ public class JupyterService {
   @Consumes(MediaType.APPLICATION_JSON)
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
-  @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
-  public Response updateNotebookServer(JupyterSettings jupyterSettings, @Context SecurityContext sc) {
+  @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
+  public Response updateNotebookServer(JupyterSettings jupyterSettings,
+                                       @Context HttpServletRequest req,
+                                       @Context SecurityContext sc) {
     Users user = jWTHelper.getUserPrincipal(sc);
 
     jupyterController.updateExpirationDate(project, user, jupyterSettings);
@@ -555,7 +566,9 @@ public class JupyterService {
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
   @ApiOperation(value = "Retrieve the list of most recent notebooks edited")
   public Response recent(@QueryParam("count") @DefaultValue("5") @Min(0) @Max(100) int count,
-                         @Context UriInfo uriInfo, @Context SecurityContext sc)
+                         @Context UriInfo uriInfo,
+                         @Context HttpServletRequest req,
+                         @Context SecurityContext sc)
       throws ElasticException {
     NotebookDTO dto = notebookBuilder.build(uriInfo, project, count);
     return Response.ok().entity(dto).build();
@@ -568,12 +581,13 @@ public class JupyterService {
   @Produces(MediaType.APPLICATION_JSON)
   @Consumes(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
-  @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
+  @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   public Response attachJupyterConfigurationToNotebook(@PathParam("hdfsUsername") String hdfsUsername,
                                                        @PathParam("kernelId") String kernelId,
+                                                       @Context HttpServletRequest req,
                                                        @Context SecurityContext sc) throws ServiceException {
     Optional<Users> user = usersController.findByUsername(hdfsUsersController.getUserName(hdfsUsername));
-    if(!user.isPresent()) {
+    if (!user.isPresent()) {
       throw new ServiceException(RESTCodes.ServiceErrorCode
           .WRONG_HDFS_USERNAME_PROVIDED_FOR_ATTACHING_JUPYTER_CONFIGURATION_TO_NOTEBOOK, Level.FINE,
           "HDFS username provided does not exist.");

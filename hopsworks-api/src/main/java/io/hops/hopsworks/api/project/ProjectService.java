@@ -250,7 +250,7 @@ public class ProjectService {
 
   @GET
   @Produces(MediaType.APPLICATION_JSON)
-  public Response findAllByUser(@Context SecurityContext sc) {
+  public Response findAllByUser(@Context HttpServletRequest req, @Context SecurityContext sc) {
     // Get the user according to current session and then get all its projects
     Users user = jWTHelper.getUserPrincipal(sc);
     List<ProjectTeam> list = projectController.findProjectByUser(user.getEmail());
@@ -262,7 +262,7 @@ public class ProjectService {
   @GET
   @Path("/getAll")
   @Produces(MediaType.APPLICATION_JSON)
-  public Response getAllProjects(@Context SecurityContext sc) {
+  public Response getAllProjects(@Context HttpServletRequest req, @Context SecurityContext sc) {
     List<Project> list = projectFacade.findAll();
     GenericEntity<List<Project>> projects = new GenericEntity<List<Project>>(list) {
     };
@@ -276,20 +276,23 @@ public class ProjectService {
   @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
   @ApiKeyRequired( acceptedScopes = {ApiScope.PROJECT}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   @Produces(MediaType.APPLICATION_JSON)
-  public Response getProjectByName(@PathParam("projectName") String projectName, @Context SecurityContext sc)
-    throws ProjectException {
+  public Response getProjectByName(@PathParam("projectName") String projectName,
+                                   @Context HttpServletRequest req, @Context SecurityContext sc)
+      throws ProjectException {
     ProjectDTO proj = projectController.getProjectByName(projectName);
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(proj).build();
   }
-  
+
   @GET
   @Path("/asShared/getProjectInfo/{projectName}")
   @JWTRequired(acceptedTokens = {Audience.API, Audience.JOB},
     allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   @ApiKeyRequired( acceptedScopes = {ApiScope.PROJECT}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   @Produces(MediaType.APPLICATION_JSON)
-  public Response getProjectByNameAsShared(@PathParam("projectName") String projectName, @Context SecurityContext sc)
-    throws ProjectException, GenericException {
+  public Response getProjectByNameAsShared(@PathParam("projectName") String projectName,
+                                           @Context HttpServletRequest req,
+                                           @Context SecurityContext sc)
+      throws ProjectException, GenericException {
     Users user = jWTHelper.getUserPrincipal(sc);
     Project project = projectController.findProjectByName(projectName);
     if(accessCtrl.hasExtendedAccess(user, project)) {
@@ -299,11 +302,13 @@ public class ProjectService {
       throw new GenericException(RESTCodes.GenericErrorCode.NOT_AUTHORIZED_TO_ACCESS, Level.INFO);
     }
   }
-  
+
   @GET
   @Path("/getMoreInfo/proj/{projectId}")
   @Produces(MediaType.APPLICATION_JSON)
-  public Response getMoreInfo(@PathParam("projectId") Integer projectId, @Context SecurityContext sc)
+  public Response getMoreInfo(@PathParam("projectId") Integer projectId,
+                              @Context HttpServletRequest req,
+                              @Context SecurityContext sc)
     throws ProjectException {
     MoreInfoDTO info = null;
 
@@ -322,7 +327,9 @@ public class ProjectService {
   @GET
   @Path("/getMoreInfo/{type: (ds|inode)}/{inodeId}")
   @Produces(MediaType.APPLICATION_JSON)
-  public Response getMoreInfo(@PathParam("inodeId") Long inodeId, @Context SecurityContext sc) throws DatasetException {
+  public Response getMoreInfo(@PathParam("inodeId") Long inodeId,
+                              @Context HttpServletRequest req,
+                              @Context SecurityContext sc) throws DatasetException {
     MoreInfoDTO info = null;
 
     if (inodeId != null) {
@@ -340,7 +347,8 @@ public class ProjectService {
   @Path("{projectId}/getMoreInfo/{type: (ds|inode)}/{inodeId}")
   @Produces(MediaType.APPLICATION_JSON)
   public Response getMoreInfo(@PathParam("projectId") Integer projectId, @PathParam("inodeId") Long id,
-    @Context SecurityContext sc) throws DatasetException {
+                              @Context HttpServletRequest req,
+                              @Context SecurityContext sc) throws DatasetException {
     MoreInfoDTO info = null;
     if (id != null) {
       info = inodeInfo(id, projectId);
@@ -355,7 +363,9 @@ public class ProjectService {
   @GET
   @Path("/readme/byInodeId/{inodeId}")
   @Produces(MediaType.APPLICATION_JSON)
-  public Response getReadmeByInodeId(@PathParam("inodeId") Long inodeId, @Context SecurityContext sc)
+  public Response getReadmeByInodeId(@PathParam("inodeId") Long inodeId,
+                                     @Context HttpServletRequest req,
+                                     @Context SecurityContext sc)
     throws DatasetException {
     if (inodeId == null) {
       throw new IllegalArgumentException("No inodeId provided.");
@@ -421,8 +431,9 @@ public class ProjectService {
   @GET
   @Path("getDatasetInfo/{inodeId}")
   @Produces(MediaType.APPLICATION_JSON)
-  public Response getDatasetInfo(@PathParam("inodeId") Long inodeId, @Context SecurityContext sc)
-    throws DatasetException {
+  public Response getDatasetInfo(@PathParam("inodeId") Long inodeId,
+                                 @Context HttpServletRequest req,
+                                 @Context SecurityContext sc) throws DatasetException {
     Inode inode = inodes.findById(inodeId);
     Project proj = datasetController.getOwningProject(inode);
     Dataset ds = datasetFacade.findByProjectAndInode(proj, inode);
@@ -446,7 +457,8 @@ public class ProjectService {
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.ANYONE})
   public Response getDatasetInfo(@PathParam("projectId") Integer projectId, @PathParam("inodeId") Long inodeId,
-    @Context SecurityContext sc) throws ProjectException, DatasetException {
+                                 @Context HttpServletRequest req,
+                                 @Context SecurityContext sc) throws ProjectException, DatasetException {
     Inode inode = inodes.findById(inodeId);
     if (inode == null) {
       throw new DatasetException(RESTCodes.DatasetErrorCode.INODE_NOT_FOUND, Level.FINE, "inodeId: " + inodeId);
@@ -465,7 +477,9 @@ public class ProjectService {
   @Path("{projectId}/check")
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
-  public Response checkProjectAccess(@PathParam("projectId") Integer id, @Context SecurityContext sc) {
+  public Response checkProjectAccess(@PathParam("projectId") Integer id,
+                                     @Context HttpServletRequest req,
+                                     @Context SecurityContext sc) {
     RESTApiJsonResponse json = new RESTApiJsonResponse();
     json.setData(id);
     return Response.ok(json).build();
@@ -477,7 +491,9 @@ public class ProjectService {
   @JWTRequired(acceptedTokens = {Audience.API, Audience.JOB},
       allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
-  public Response findByProjectID(@PathParam("projectId") Integer id, @Context SecurityContext sc)
+  public Response findByProjectID(@PathParam("projectId") Integer id,
+                                  @Context HttpServletRequest req,
+                                  @Context SecurityContext sc)
     throws ProjectException {
 
     // Get a specific project based on the id, Annotated so that
@@ -493,7 +509,9 @@ public class ProjectService {
   @Produces(MediaType.APPLICATION_JSON)
   @Consumes(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER})
-  public Response updateProject(ProjectDTO projectDTO, @PathParam("projectId") Integer id, @Context SecurityContext sc)
+  public Response updateProject(ProjectDTO projectDTO, @PathParam("projectId") Integer id,
+                                @Context HttpServletRequest req,
+                                @Context SecurityContext sc)
     throws ProjectException, DatasetException, HopsSecurityException, ServiceException, FeaturestoreException,
     ElasticException, SchemaException, KafkaException, ProvenanceException, IOException, UserException {
 
@@ -591,7 +609,7 @@ public class ProjectService {
     String username = user.getUsername();
     List<String> projectServices = new ArrayList<>();
     //save the project
-    
+
     String readMeMessage = null;
     switch (demoType) {
       case KAFKA:
@@ -685,14 +703,14 @@ public class ProjectService {
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(json).build();
 
   }
-  
+
   @Logged(logLevel = LogLevel.OFF)
   @Path("{projectId}/projectMembers")
   public ProjectMembersService projectMembers(@PathParam("projectId") Integer id) {
     this.projectMembers.setProjectId(id);
     return this.projectMembers;
   }
-  
+
   @Logged(logLevel = LogLevel.OFF)
   @Path("{projectId}/dataset")
   public DatasetResource datasetResource(@PathParam("projectId") Integer id) {
@@ -736,8 +754,11 @@ public class ProjectService {
   @Path("{projectId}/downloadCert")
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
-  public Response downloadCerts(@PathParam("projectId") Integer id, @Secret @FormParam("password") String password,
-    @Context SecurityContext sc) throws ProjectException, HopsSecurityException, DatasetException {
+  public Response downloadCerts(@PathParam("projectId") Integer id,
+                                @Secret @FormParam("password") String password,
+                                @Context HttpServletRequest req,
+                                @Context SecurityContext sc)
+      throws ProjectException, HopsSecurityException, DatasetException {
     Users user = jWTHelper.getUserPrincipal(sc);
     if (user.getEmail().equals(Settings.AGENT_EMAIL) || !authController.validatePassword(user, password)) {
       throw new HopsSecurityException(RESTCodes.SecurityErrorCode.CERT_ACCESS_DENIED, Level.FINE);
@@ -778,7 +799,7 @@ public class ProjectService {
     this.kafka.setProjectId(id);
     return this.kafka;
   }
-  
+
   @Logged(logLevel = LogLevel.OFF)
   @Path("{projectId}/jupyter")
   public JupyterService jupyter(@PathParam("projectId") Integer id) {
@@ -806,35 +827,35 @@ public class ProjectService {
     this.modelRegistry.setProjectId(id);
     return this.modelRegistry;
   }
-  
+
   @Logged(logLevel = LogLevel.OFF)
   @Path("{projectId}/airflow")
   public AirflowService airflow(@PathParam("projectId") Integer id) {
     this.airflow.setProjectId(id);
     return this.airflow;
   }
-  
+
   @Logged(logLevel = LogLevel.OFF)
   @Path("{projectId}/serving")
   public ServingService servingService(@PathParam("projectId") Integer id) {
     this.servingService.setProjectId(id);
     return this.servingService;
   }
-  
+
   @Logged(logLevel = LogLevel.OFF)
   @Path("{projectId}/python")
   public PythonResource python(@PathParam("projectId") Integer id) {
     this.pythonResource.setProjectId(id);
     return this.pythonResource;
   }
-  
+
   @Logged(logLevel = LogLevel.OFF)
   @Path("{projectId}/dela")
   public DelaProjectService dela(@PathParam("projectId") Integer id) {
     this.delaService.setProjectId(id);
     return this.delaService;
   }
-  
+
   @Logged(logLevel = LogLevel.OFF)
   @Path("{projectId}/activities")
   public ProjectActivitiesResource activities(@PathParam("projectId") Integer id) {
@@ -846,7 +867,9 @@ public class ProjectService {
   @Path("{projectId}/pia")
   @Consumes(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER})
-  public Response updatePia(Pia pia, @PathParam("projectId") Integer projectId, @Context SecurityContext sc) {
+  public Response updatePia(Pia pia, @PathParam("projectId") Integer projectId,
+                            @Context HttpServletRequest req,
+                            @Context SecurityContext sc) {
     piaFacade.mergeUpdate(pia, projectId);
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).build();
   }
@@ -855,8 +878,10 @@ public class ProjectService {
   @Path("{projectId}/pia")
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
-  public Response getPia(@PathParam("projectId") Integer projectId, @Context SecurityContext sc)
-    throws ProjectException {
+  public Response getPia(@PathParam("projectId") Integer projectId,
+                         @Context HttpServletRequest req,
+                         @Context SecurityContext sc)
+      throws ProjectException {
     Project project = projectController.findProjectById(projectId);
     if (project == null) {
       throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_NOT_FOUND, Level.FINE, "projectId: " + projectId);
@@ -867,7 +892,7 @@ public class ProjectService {
 
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(genericPia).build();
   }
-  
+
   @Logged(logLevel = LogLevel.OFF)
   @ApiOperation(value = "Model inference sub-resource",
       tags = {"Inference"})
@@ -876,28 +901,28 @@ public class ProjectService {
     inference.setProjectId(projectId);
     return inference;
   }
-  
+
   @Logged(logLevel = LogLevel.OFF)
   @Path("{projectId}/featurestores")
   public FeaturestoreService featurestoreService(@PathParam("projectId") Integer projectId) {
     featurestoreService.setProjectId(projectId);
     return featurestoreService;
   }
-  
+
   @Logged(logLevel = LogLevel.OFF)
   @Path("{projectId}/xattrs")
   public XAttrsResource xattrs(@PathParam("projectId") Integer projectId) {
     this.xattrs.setProject(projectId);
     return xattrs;
   }
-  
+
   @Logged(logLevel = LogLevel.OFF)
   @Path("{projectId}/provenance")
   public ProjectProvenanceResource provenance(@PathParam("projectId") Integer id) {
     this.provenance.setProjectId(id);
     return provenance;
   }
-  
+
   @Logged(logLevel = LogLevel.OFF)
   @Path("{projectId}/elastic")
   public ElasticResource elastic(@PathParam("projectId") Integer id) {
@@ -918,14 +943,14 @@ public class ProjectService {
     this.integrationsResource.setProjectId(id);
     return integrationsResource;
   }
-  
+
   @Logged(logLevel = LogLevel.OFF)
   @Path("{projectId}/alerts")
   public AlertResource alerting(@PathParam("projectId") Integer id) {
     this.alertResource.setProjectId(id);
     return alertResource;
   }
-  
+
   @Logged(logLevel = LogLevel.OFF)
   @Path("{projectId}/service/alerts")
   public ProjectAlertsResource projectAlert(@PathParam("projectId") Integer id) {

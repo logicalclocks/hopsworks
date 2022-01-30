@@ -56,6 +56,7 @@ import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
+import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -91,7 +92,9 @@ public class RemoteDelaService {
   @GET
   @Path("/datasets/{publicDSId}/readme")
   @Produces(MediaType.APPLICATION_JSON)
-  public Response readme(@PathParam("publicDSId") String publicDSId, @Context SecurityContext sc) throws DelaException {
+  public Response readme(@PathParam("publicDSId") String publicDSId,
+                         @Context HttpServletRequest req,
+                         @Context SecurityContext sc) throws DelaException {
     LOGGER.log(Settings.DELA_DEBUG, "remote:dela:readme {0}", publicDSId);
     Optional<Dataset> dataset = datasetFacade.findByPublicDsId(publicDSId);
     if (!dataset.isPresent() || !dataset.get().isPublicDs()) {

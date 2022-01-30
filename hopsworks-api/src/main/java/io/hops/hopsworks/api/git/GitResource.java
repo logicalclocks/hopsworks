@@ -119,6 +119,7 @@ public class GitResource {
   @ApiKeyRequired(acceptedScopes = {ApiScope.GIT}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   public Response gitRepositories(@Context UriInfo uriInfo,
                                   @Context SecurityContext sc,
+                                  @Context HttpServletRequest req,
                                   @BeanParam Pagination pagination) {
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.REPOSITORY);
     // TODO(Fabio): ideally this should be provided by an expansion beam param.
@@ -138,6 +139,7 @@ public class GitResource {
   @ApiKeyRequired(acceptedScopes = {ApiScope.GIT}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   public Response gitRepository(@PathParam("repositoryId") Integer repositoryId,
                                 @Context SecurityContext sc,
+                                @Context HttpServletRequest req,
                                 @Context UriInfo uriInfo) throws GitOpException {
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.REPOSITORY);
     // TODO(Fabio): ideally this should be provided by an expansion beam param.
@@ -157,6 +159,7 @@ public class GitResource {
   @ApiKeyRequired(acceptedScopes = {ApiScope.GIT}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   public Response clone(CloneCommandConfiguration commandDTO,
                         @Context SecurityContext sc,
+                        @Context HttpServletRequest req,
                         @Context UriInfo uriInfo) throws GitOpException, HopsSecurityException,
       IllegalArgumentException, UserException, DatasetException {
     Users hopsworksUser = jWTHelper.getUserPrincipal(sc);
@@ -179,6 +182,7 @@ public class GitResource {
                                           @QueryParam("action") GitRepositoryAction action,
                                           RepositoryActionCommandConfiguration configuration,
                                           @Context SecurityContext sc,
+                                          @Context HttpServletRequest req,
                                           @Context UriInfo uriInfo)
       throws GitOpException, HopsSecurityException, IllegalArgumentException {
     Users hopsworksUser = jWTHelper.getUserPrincipal(sc);
@@ -198,6 +202,7 @@ public class GitResource {
   @ApiKeyRequired(acceptedScopes = {ApiScope.GIT}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   public Response getRepositoryBranches(@Context UriInfo uriInfo,
                                         @Context SecurityContext sc,
+                                        @Context HttpServletRequest req,
                                         @BeanParam Pagination pagination,
                                         @PathParam("repositoryId") Integer repositoryId) throws GitOpException {
     GitRepository repository = commandConfigurationValidator.verifyRepository(project, repositoryId);
@@ -242,6 +247,7 @@ public class GitResource {
   @ApiKeyRequired(acceptedScopes = {ApiScope.GIT}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   public Response getBranchCommits(@Context UriInfo uriInfo,
                                    @Context SecurityContext sc,
+                                   @Context HttpServletRequest req,
                                    @BeanParam Pagination pagination,
                                    @PathParam("repositoryId") Integer repositoryId,
                                    @PathParam("branchName") String branchName) throws GitOpException {
@@ -263,7 +269,9 @@ public class GitResource {
   @ApiKeyRequired(acceptedScopes = {ApiScope.GIT}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   public Response updateBranchCommits(@PathParam("repositoryId") Integer repositoryId,
                                       @PathParam("branchName") String branchName,
-                                      BranchCommits commits, @Context SecurityContext sc) throws GitOpException {
+                                      BranchCommits commits,
+                                      @Context HttpServletRequest req,
+                                      @Context SecurityContext sc) throws GitOpException {
     gitController.updateBranchCommits(project, commits, repositoryId, branchName);
     return Response.ok().build();
   }
@@ -277,7 +285,9 @@ public class GitResource {
   @ApiKeyRequired(acceptedScopes = {ApiScope.GIT}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   public Response remotes(@PathParam("repositoryId") Integer repositoryId,
                           @QueryParam("action") GitRemotesAction action, @QueryParam("url") String remoteUrl,
-                          @QueryParam("name") String remoteName, @Context SecurityContext sc,
+                          @QueryParam("name") String remoteName,
+                          @Context HttpServletRequest req,
+                          @Context SecurityContext sc,
                           @Context UriInfo uriInfo) throws GitOpException, HopsSecurityException,
       IllegalArgumentException {
     if (action == null) {
@@ -299,6 +309,7 @@ public class GitResource {
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
   @ApiKeyRequired(acceptedScopes = {ApiScope.GIT}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   public Response getRepositoryRemotes(@Context UriInfo uriInfo,
+                                       @Context HttpServletRequest req,
                                        @Context SecurityContext sc,
                                        @PathParam("repositoryId") Integer repositoryId)
       throws GitOpException {
@@ -316,6 +327,7 @@ public class GitResource {
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
   @ApiKeyRequired(acceptedScopes = {ApiScope.GIT}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   public Response getRepositoryRemote(@Context UriInfo uriInfo,
+                                      @Context HttpServletRequest req,
                                       @Context SecurityContext sc,
                                       @PathParam("repositoryId") Integer repositoryId,
                                       @PathParam("remoteName") String remoteName) throws GitOpException {
@@ -340,7 +352,9 @@ public class GitResource {
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
   @ApiKeyRequired(acceptedScopes = {ApiScope.GIT}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   public Response fileCheckout(@Context UriInfo uriInfo, @PathParam("repositoryId") Integer repositoryId,
-                               @Context SecurityContext sc, GitFileCheckout files) throws GitOpException,
+                               @Context SecurityContext sc,
+                               @Context HttpServletRequest req,
+                               GitFileCheckout files) throws GitOpException,
       HopsSecurityException {
     Users hopsworksUser = jWTHelper.getUserPrincipal(sc);
     GitOpExecution execution = gitController.fileCheckout(project, hopsworksUser, repositoryId, files.getFiles());

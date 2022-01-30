@@ -76,6 +76,7 @@ import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.mail.Message.RecipientType;
 import javax.mail.MessagingException;
+import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
@@ -124,8 +125,10 @@ public class RequestService {
   @POST
   @Path("/access")
   @Produces(MediaType.APPLICATION_JSON)
-  public Response requestAccess(RequestDTO requestDTO, @Context SecurityContext sc) throws DatasetException,
-      ProjectException {
+  public Response requestAccess(RequestDTO requestDTO,
+                                @Context HttpServletRequest req,
+                                @Context SecurityContext sc)
+      throws DatasetException, ProjectException {
     RESTApiJsonResponse json = new RESTApiJsonResponse();
     if (requestDTO == null || requestDTO.getInodeId() == null || requestDTO.getProjectId() == null) {
       throw new IllegalArgumentException("requestDTO was not provided or was incomplete!");
@@ -227,7 +230,9 @@ public class RequestService {
   @POST
   @Path("/join")
   @Produces(MediaType.APPLICATION_JSON)
-  public Response requestJoin(RequestDTO requestDTO, @Context SecurityContext sc) throws ProjectException {
+  public Response requestJoin(RequestDTO requestDTO,
+                              @Context HttpServletRequest req,
+                              @Context SecurityContext sc) throws ProjectException {
     RESTApiJsonResponse json = new RESTApiJsonResponse();
     if (requestDTO == null || requestDTO.getProjectId() == null) {
       throw new IllegalArgumentException("requestDTO wast not provided or was incomplete.");

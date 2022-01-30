@@ -61,6 +61,7 @@ import javax.ejb.EJB;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.enterprise.context.RequestScoped;
+import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.QueryParam;
@@ -101,7 +102,8 @@ public class RatingService {
   @GET
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
   public Response getRating(@ApiParam(required = true) @QueryParam("filter") RatingFilter filter,
-      @Context SecurityContext sc) throws DelaException {
+                            @Context HttpServletRequest req,
+                            @Context SecurityContext sc) throws DelaException {
     switch (filter) {
       case DATASET:
         return getDatasetAllRating();
@@ -131,7 +133,9 @@ public class RatingService {
 
   @POST
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
-  public Response addRating(@Context SecurityContext sc, RatingValueDTO rating) throws DelaException {
+  public Response addRating(@Context SecurityContext sc,
+                            @Context HttpServletRequest req,
+                            RatingValueDTO rating) throws DelaException {
     LOGGER.log(Settings.DELA_DEBUG, "hops-site:rating:add {0}", publicDSId);
     String publicCId = SettingsHelper.clusterId(settings);
     Users user = jWTHelper.getUserPrincipal(sc);

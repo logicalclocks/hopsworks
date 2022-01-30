@@ -50,6 +50,7 @@ import javax.ejb.EJB;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.enterprise.context.RequestScoped;
+import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.POST;
 import javax.ws.rs.GET;
@@ -117,6 +118,7 @@ public class CodeResource {
   public Response get(@BeanParam Pagination pagination,
                       @BeanParam CodeBeanParam codeBeanParam,
                       @Context UriInfo uriInfo,
+                      @Context HttpServletRequest req,
                       @Context SecurityContext sc) throws FeaturestoreException, ServiceException {
 
     Users user = jWTHelper.getUserPrincipal(sc);
@@ -152,6 +154,7 @@ public class CodeResource {
                       @BeanParam CodeBeanParam codeBeanParam,
                       @PathParam("codeId") Integer codeId,
                       @Context UriInfo uriInfo,
+                      @Context HttpServletRequest req,
                       @Context SecurityContext sc) throws FeaturestoreException, ServiceException {
 
     Users user = jWTHelper.getUserPrincipal(sc);
@@ -183,6 +186,7 @@ public class CodeResource {
   @ApiKeyRequired( acceptedScopes = {ApiScope.DATASET_VIEW, ApiScope.FEATURESTORE},
           allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   public Response post(@Context UriInfo uriInfo,
+                       @Context HttpServletRequest req,
                        @Context SecurityContext sc,
                        @QueryParam("entityId") String entityId,
                        @QueryParam("type") CodeActions.RunType type,

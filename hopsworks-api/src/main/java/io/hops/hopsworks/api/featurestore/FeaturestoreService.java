@@ -49,6 +49,7 @@ import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.enterprise.context.RequestScoped;
 import javax.inject.Inject;
+import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
@@ -121,7 +122,8 @@ public class FeaturestoreService {
   @ApiOperation(value = "Get the list of feature stores for the project",
     response = FeaturestoreDTO.class,
     responseContainer = "List")
-  public Response getFeaturestores(@Context SecurityContext sc) throws FeaturestoreException {
+  public Response getFeaturestores(@Context HttpServletRequest req, @Context SecurityContext sc)
+      throws FeaturestoreException {
     List<FeaturestoreDTO> featurestores = featurestoreController.getFeaturestoresForProject(project);
     GenericEntity<List<FeaturestoreDTO>> featurestoresGeneric =
       new GenericEntity<List<FeaturestoreDTO>>(featurestores) {
@@ -143,9 +145,10 @@ public class FeaturestoreService {
   @ApiKeyRequired( acceptedScopes = {ApiScope.FEATURESTORE}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   @ApiOperation(value = "Get featurestore with specific Id",
     response = FeaturestoreDTO.class)
-  public Response getFeaturestore(
-    @ApiParam(value = "Id of the featurestore", required = true)
-    @PathParam("featurestoreId") Integer featurestoreId, @Context SecurityContext sc) throws FeaturestoreException {
+  public Response getFeaturestore(@ApiParam(value = "Id of the featurestore", required = true)
+                                  @PathParam("featurestoreId") Integer featurestoreId,
+                                  @Context HttpServletRequest req,
+                                  @Context SecurityContext sc) throws FeaturestoreException {
     if (featurestoreId == null) {
       throw new IllegalArgumentException(RESTCodes.FeaturestoreErrorCode.FEATURESTORE_ID_NOT_PROVIDED.getMessage());
     }
@@ -169,7 +172,7 @@ public class FeaturestoreService {
   @ApiKeyRequired( acceptedScopes = {ApiScope.FEATURESTORE}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   @ApiOperation(value = "Get featurestore settings",
     response = FeaturestoreClientSettingsDTO.class)
-  public Response getFeaturestoreSettings(@Context SecurityContext sc) {
+  public Response getFeaturestoreSettings(@Context HttpServletRequest req, @Context SecurityContext sc) {
     FeaturestoreClientSettingsDTO featurestoreClientSettingsDTO = new FeaturestoreClientSettingsDTO();
     featurestoreClientSettingsDTO.setOnlineFeaturestoreEnabled(settings.isOnlineFeaturestore());
     featurestoreClientSettingsDTO.setS3IAMRole(settings.isIAMRoleConfigured());
@@ -196,9 +199,10 @@ public class FeaturestoreService {
   @ApiKeyRequired(acceptedScopes = {ApiScope.FEATURESTORE}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   @ApiOperation(value = "Get featurestore with a specific name",
     response = FeaturestoreDTO.class)
-  public Response getFeaturestoreByName(
-    @ApiParam(value = "Id of the featurestore", required = true)
-    @PathParam("name") String name, @Context SecurityContext sc) throws FeaturestoreException {
+  public Response getFeaturestoreByName(@ApiParam(value = "Id of the featurestore", required = true)
+                                        @PathParam("name") String name,
+                                        @Context HttpServletRequest req,
+                                        @Context SecurityContext sc) throws FeaturestoreException {
     verifyNameProvided(name);
     FeaturestoreDTO featurestoreDTO =
       featurestoreController.getFeaturestoreForProjectWithName(project, name);
@@ -297,7 +301,9 @@ public class FeaturestoreService {
   @ApiKeyRequired( acceptedScopes = {ApiScope.FEATURESTORE}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   @JWTRequired(acceptedTokens = {Audience.API, Audience.JOB}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   @ApiOperation(value = "Get available keywords for the featurestore", response = KeywordDTO.class)
-  public Response getUsedKeywords(@Context SecurityContext sc, @Context UriInfo uriInfo) throws FeaturestoreException {
+  public Response getUsedKeywords(@Context SecurityContext sc,
+                                  @Context HttpServletRequest req,
+                                  @Context UriInfo uriInfo) throws FeaturestoreException {
     List<String> keywords = keywordControllerIface.getUsedKeywords();
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.KEYWORDS);
     KeywordDTO dto = featurestoreKeywordBuilder.build(uriInfo, resourceRequest, project, keywords);

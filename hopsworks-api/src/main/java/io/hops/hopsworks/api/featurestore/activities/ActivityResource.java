@@ -41,6 +41,7 @@ import javax.ejb.EJB;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.enterprise.context.RequestScoped;
+import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.GET;
 import javax.ws.rs.Produces;
@@ -100,6 +101,7 @@ public class ActivityResource {
   public Response get(@BeanParam Pagination pagination,
                       @BeanParam ActivitiesBeanParam activitiesBeanParam,
                       @Context UriInfo uriInfo,
+                      @Context HttpServletRequest req,
                       @Context SecurityContext sc) throws FeaturestoreException {
     Users user = jwtHelper.getUserPrincipal(sc);
 

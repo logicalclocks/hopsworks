@@ -45,6 +45,7 @@ import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.enterprise.context.RequestScoped;
 import javax.inject.Inject;
+import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -90,6 +91,7 @@ public class ModelRegistryResource {
     @BeanParam ModelRegistryBeanParam modelRegistryBeanParam,
     @BeanParam Pagination pagination,
     @Context UriInfo uriInfo,
+    @Context HttpServletRequest req,
     @Context SecurityContext sc) throws GenericException, ModelRegistryException, SchematizedTagException,
           MetadataException {
     Users user = jwtHelper.getUserPrincipal(sc);
@@ -113,6 +115,7 @@ public class ModelRegistryResource {
           @BeanParam ModelRegistryBeanParam modelRegistryBeanParam,
           @BeanParam Pagination pagination,
           @Context UriInfo uriInfo,
+          @Context HttpServletRequest req,
           @Context SecurityContext sc) throws GenericException, ModelRegistryException, SchematizedTagException,
           MetadataException {
     Users user = jwtHelper.getUserPrincipal(sc);

@@ -160,7 +160,8 @@ public class DelaProjectService {
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
-  public Response getProjectContents(@Context SecurityContext sc) throws DelaException {
+  public Response getProjectContents(@Context HttpServletRequest req,
+                                     @Context SecurityContext sc) throws DelaException {
 
     List<Integer> projectIds = new LinkedList<>();
     projectIds.add(projectId);
@@ -178,7 +179,8 @@ public class DelaProjectService {
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER})
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
-  public Response publish(@Context SecurityContext sc, InodeIdDTO inodeId) throws DelaException {
+  public Response publish(@Context HttpServletRequest req,
+                          @Context SecurityContext sc, InodeIdDTO inodeId) throws DelaException {
     Inode inode = getInode(inodeId.getId());
     Dataset dataset = getDatasetByInode(inode);
     Users user = jWTHelper.getUserPrincipal(sc);
@@ -194,7 +196,8 @@ public class DelaProjectService {
   @Consumes(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
-  public Response getExtendedDetails(@PathParam("publicDSId") String publicDSId, @Context SecurityContext sc)
+  public Response getExtendedDetails(@Context HttpServletRequest req,
+                                     @PathParam("publicDSId") String publicDSId, @Context SecurityContext sc)
     throws DelaException {
     TorrentId torrentId = new TorrentId(publicDSId);
     TorrentExtendedStatusJSON resp = delaTransferCtrl.details(torrentId);
@@ -206,9 +209,10 @@ public class DelaProjectService {
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER})
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
-  public Response removePublic(@Context SecurityContext sc, @PathParam("publicDSId") String publicDSId,
-    @ApiParam(value="delete dataset", required = true) @QueryParam("clean") boolean clean)
-    throws DelaException, IOException, DatasetException {
+  public Response removePublic(@Context HttpServletRequest req,
+                               @Context SecurityContext sc, @PathParam("publicDSId") String publicDSId,
+                               @ApiParam(value = "delete dataset", required = true) @QueryParam("clean") boolean clean)
+      throws DelaException, IOException, DatasetException {
 
     Dataset dataset = getDatasetByPublicId(publicDSId);
     Users user = jWTHelper.getUserPrincipal(sc);
@@ -228,7 +232,9 @@ public class DelaProjectService {
   @Consumes(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
-  public Response startDownload(@Context SecurityContext sc, @PathParam("publicDSId") String publicDSId,
+  public Response startDownload(@Context SecurityContext sc,
+                                @Context HttpServletRequest req,
+                                @PathParam("publicDSId") String publicDSId,
     HopsworksTransferDTO.Download downloadDTO) throws DelaException, DatasetException, ProvenanceException,
     IOException {
     Users user = jWTHelper.getUserPrincipal(sc);
@@ -244,7 +250,9 @@ public class DelaProjectService {
   @Consumes(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
-  public Response downloadDatasetHdfs(@Context SecurityContext sc, @PathParam("publicDSId") String publicDSId,
+  public Response downloadDatasetHdfs(@Context SecurityContext sc,
+                                      @Context HttpServletRequest req,
+                                      @PathParam("publicDSId") String publicDSId,
     HopsworksTransferDTO.Download downloadDTO) throws DelaException {
     Users user = jWTHelper.getUserPrincipal(sc);
     Dataset dataset = getDatasetByPublicId(downloadDTO.getPublicDSId());
@@ -295,7 +303,9 @@ public class DelaProjectService {
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER})
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
-  public Response showManifest(@Context SecurityContext sc, @PathParam("publicDSId") String publicDSId)
+  public Response showManifest(@Context SecurityContext sc,
+                               @Context HttpServletRequest req,
+                               @PathParam("publicDSId") String publicDSId)
     throws DelaException {
     Dataset dataset = getDatasetByPublicId(publicDSId);
     Users user = jWTHelper.getUserPrincipal(sc);

@@ -40,6 +40,7 @@ import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.enterprise.context.RequestScoped;
 import javax.inject.Inject;
+import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -81,11 +82,11 @@ public class ProvArtifactResource {
   @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
   @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   @ApiOperation(value = "Artifact usage", response = ProvArtifactUsageParentDTO.class)
-  public Response status(
-    @BeanParam ProvUsageBeanParams params,
-    @Context UriInfo uriInfo,
-    @Context SecurityContext sc)
-    throws ProvenanceException, GenericException, DatasetException, MetadataException, SchematizedTagException {
+  public Response status(@BeanParam ProvUsageBeanParams params,
+                         @Context UriInfo uriInfo,
+                         @Context HttpServletRequest req,
+                         @Context SecurityContext sc)
+      throws ProvenanceException, GenericException, DatasetException, MetadataException, SchematizedTagException {
     Users user = jWTHelper.getUserPrincipal(sc);
     ProvArtifactUsageParentDTO status = usageBuilder.buildAccessible(uriInfo, user, targetEndpoint, artifactId,
       params.getUsageType());

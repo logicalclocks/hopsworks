@@ -44,6 +44,7 @@ import javax.ejb.EJB;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.enterprise.context.RequestScoped;
+import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
@@ -101,6 +102,7 @@ public class FeatureGroupValidationsResource {
   public Response getAll(@BeanParam Pagination pagination,
                          @BeanParam FeatureGroupValidationsBeanParam featureGroupValidationsBeanParam,
                          @Context SecurityContext sc,
+                         @Context HttpServletRequest req,
                          @Context UriInfo uriInfo) throws FeaturestoreException {
   
     Users user = jwtHelper.getUserPrincipal(sc);
@@ -129,6 +131,7 @@ public class FeatureGroupValidationsResource {
     @ApiParam(value = "Time when a particular validation started", required = true)
     @PathParam("id") Integer id,
     @Context SecurityContext sc,
+    @Context HttpServletRequest req,
     @Context UriInfo uriInfo) throws FeaturestoreException {
     
     Users user = jwtHelper.getUserPrincipal(sc);
@@ -148,6 +151,7 @@ public class FeatureGroupValidationsResource {
   @ApiKeyRequired( acceptedScopes = {ApiScope.FEATURESTORE}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   public Response putValidationResults(FeatureGroupValidations featureGroupValidations,
                                        @Context SecurityContext sc,
+                                       @Context HttpServletRequest req,
                                        @Context UriInfo uriInfo) throws FeaturestoreException {
     Users user = jwtHelper.getUserPrincipal(sc);
 

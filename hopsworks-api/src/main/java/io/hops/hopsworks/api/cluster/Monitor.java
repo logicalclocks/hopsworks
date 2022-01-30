@@ -59,6 +59,7 @@ import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
+import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
@@ -95,7 +96,8 @@ public class Monitor {
   @GET
   @Path("/services")
   @Produces(MediaType.APPLICATION_JSON)
-  public Response getAllRoles(@Context SecurityContext sc) {
+  public Response getAllRoles(@Context SecurityContext sc,
+                              @Context HttpServletRequest req) {
     List<HostServices> list = hostServicesFacade.findAll();
     GenericEntity<List<HostServices>> services = new GenericEntity<List<HostServices>>(list) {
     };
@@ -105,7 +107,9 @@ public class Monitor {
   @GET
   @Path("/groups/{groupName}")
   @Produces(MediaType.APPLICATION_JSON)
-  public Response getServiceRoles(@PathParam("groupName") String groupName, @Context SecurityContext sc) {
+  public Response getServiceRoles(@PathParam("groupName") String groupName,
+                                  @Context HttpServletRequest req,
+                                  @Context SecurityContext sc) {
     List<HostServices> list = hostServicesFacade.findGroupServices(groupName);
     // Do not leak Host data back to clients!
     List<ServiceStatusDTO> groupStatus = new ArrayList<>();
@@ -119,7 +123,9 @@ public class Monitor {
   @GET
   @Path("/hosts/{hostId}/services")
   @Produces(MediaType.APPLICATION_JSON)
-  public Response getHostRoles(@PathParam("hostId") String hostname, @Context SecurityContext sc) {
+  public Response getHostRoles(@PathParam("hostId") String hostname,
+                               @Context HttpServletRequest req,
+                               @Context SecurityContext sc) {
     List<HostServices> list = hostServicesFacade.findByHostname(hostname);
     GenericEntity<List<HostServices>> services = new GenericEntity<List<HostServices>>(list) {
     };
@@ -129,8 +135,10 @@ public class Monitor {
   @GET
   @Path("/groups/{groupName}/services/{serviceName}")
   @Produces(MediaType.APPLICATION_JSON)
-  public Response getRoles(@PathParam("groupName") String groupName, @PathParam("serviceName") String serviceName,
-    @Context SecurityContext sc) {
+  public Response getRoles(@PathParam("groupName") String groupName,
+                           @PathParam("serviceName") String serviceName,
+                           @Context HttpServletRequest req,
+                           @Context SecurityContext sc) {
     List<HostServices> list = hostServicesFacade.findServices(serviceName);
     GenericEntity<List<HostServices>> services = new GenericEntity<List<HostServices>>(list) {
     };
@@ -141,7 +149,7 @@ public class Monitor {
   @Path("/hosts")
   @RolesAllowed({"HOPS_ADMIN"}) //return the password in the host object
   @Produces(MediaType.APPLICATION_JSON)
-  public Response getHosts(@Context SecurityContext sc) {
+  public Response getHosts(@Context HttpServletRequest req, @Context SecurityContext sc) {
     List<Hosts> list = hostEjb.findAll();
     GenericEntity<List<Hosts>> hosts = new GenericEntity<List<Hosts>>(list) {
     };
@@ -152,7 +160,9 @@ public class Monitor {
   @Path("/hosts/{hostId}")
   @RolesAllowed({"HOPS_ADMIN"}) //return the password in the host object
   @Produces(MediaType.APPLICATION_JSON)
-  public Response getHosts(@PathParam("hostId") String hostId, @Context SecurityContext sc) {
+  public Response getHosts(@PathParam("hostId") String hostId,
+                           @Context HttpServletRequest req,
+                           @Context SecurityContext sc) {
     Optional<Hosts> optional = hostEjb.findByHostname(hostId);
     if (optional.isPresent()) {
       GenericEntity<Hosts> host = new GenericEntity<Hosts>(optional.get()) {
@@ -169,8 +179,10 @@ public class Monitor {
   @RolesAllowed({"HOPS_ADMIN"})
   @Consumes(MediaType.APPLICATION_JSON)
   @Produces(MediaType.APPLICATION_JSON)
-  public Response serviceOp(@PathParam("groupName") String groupName, ServicesActionDTO action,
-    @Context SecurityContext sc) throws GenericException {
+  public Response serviceOp(@PathParam("groupName") String groupName,
+                            ServicesActionDTO action,
+                            @Context HttpServletRequest req,
+                            @Context SecurityContext sc) throws GenericException {
     String result = hostServicesController.groupOp(groupName, action.getAction());
     RESTApiJsonResponse json = new RESTApiJsonResponse();
     json.setSuccessMessage(result);
@@ -182,8 +194,11 @@ public class Monitor {
   @RolesAllowed({"HOPS_ADMIN"})
   @Consumes(MediaType.APPLICATION_JSON)
   @Produces(MediaType.APPLICATION_JSON)
-  public Response serviceOp(@PathParam("groupName") String groupName, @PathParam("serviceName") String serviceName,
-      ServicesActionDTO action, @Context SecurityContext sc) throws GenericException {
+  public Response serviceOp(@PathParam("groupName") String groupName,
+                            @PathParam("serviceName") String serviceName,
+                            ServicesActionDTO action,
+                            @Context HttpServletRequest req,
+                            @Context SecurityContext sc) throws GenericException {
     RESTApiJsonResponse json = new RESTApiJsonResponse();
     json.setSuccessMessage(hostServicesController.serviceOp(serviceName, action.getAction()));
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(json).build();
@@ -195,8 +210,11 @@ public class Monitor {
   @Consumes(MediaType.APPLICATION_JSON)
   @Produces(MediaType.APPLICATION_JSON)
   public Response serviceOnHostOp(@PathParam("groupName") String groupName,
-    @PathParam("serviceName") String serviceName,
-    @PathParam("hostId") String hostId, ServicesActionDTO action, @Context SecurityContext sc)
+                                  @PathParam("serviceName") String serviceName,
+                                  @PathParam("hostId") String hostId,
+                                  ServicesActionDTO action,
+                                  @Context HttpServletRequest req,
+                                  @Context SecurityContext sc)
     throws GenericException, ServiceException {
     RESTApiJsonResponse json = new RESTApiJsonResponse();
     json.setSuccessMessage(hostServicesController.serviceOnHostOp(groupName, serviceName, hostId, action.getAction()));

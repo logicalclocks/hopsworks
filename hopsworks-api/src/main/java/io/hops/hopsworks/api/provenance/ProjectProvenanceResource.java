@@ -87,7 +87,7 @@ import java.util.logging.Logger;
 @Api(value = "Project Provenance Service", description = "Project Provenance Service")
 public class ProjectProvenanceResource {
   private static final Logger logger = Logger.getLogger(ProjectProvenanceResource.class.getName());
-  
+
   @EJB
   private ProjectFacade projectFacade;
   @EJB
@@ -108,124 +108,126 @@ public class ProjectProvenanceResource {
   private DatasetController datasetCtrl;
   @EJB
   private DatasetHelper datasetHelper;
-  
+
   private Project project;
-  
+
   @Logged(logLevel = LogLevel.OFF)
   public void setProjectId(Integer projectId) {
     this.project = projectFacade.find(projectId);
   }
-  
+
   @Logged(logLevel = LogLevel.OFF)
   public void setProject(Project project) {
     this.project = project;
   }
-  
+
   @GET
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.ANYONE})
   @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
-  @ApiKeyRequired( acceptedScopes = {ApiScope.PROJECT}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
+  @ApiKeyRequired(acceptedScopes = {ApiScope.PROJECT}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   @ApiOperation(value = "Get the Provenance Type of PROJECT/DATASET", response = ProvTypeDTO.class)
-  public Response getProvenanceStatus(
-    @QueryParam("type") @DefaultValue("PROJECT") TypeOf typeOf,
-    @Context SecurityContext sc)
-    throws ProvenanceException {
+  public Response getProvenanceStatus(@QueryParam("type") @DefaultValue("PROJECT") TypeOf typeOf,
+                                      @Context HttpServletRequest req,
+                                      @Context SecurityContext sc)
+      throws ProvenanceException {
     Users user = jWTHelper.getUserPrincipal(sc);
-    switch(typeOf) {
+    switch (typeOf) {
       case PROJECT:
         ProvTypeDTO status = fsProvenanceCtrl.getProjectProvType(user, project);
         return Response.ok().entity(status).build();
       case DATASETS:
         GenericEntity<List<ProvDatasetDTO>> result
-          = new GenericEntity<List<ProvDatasetDTO>>(fsProvenanceCtrl.getDatasetsProvType(user, project)) {};
+            = new GenericEntity<List<ProvDatasetDTO>>(fsProvenanceCtrl.getDatasetsProvType(user, project)) {};
         return Response.ok().entity(result).build();
       default:
         throw new ProvenanceException(RESTCodes.ProvenanceErrorCode.UNSUPPORTED, Level.INFO,
-          "return type: " + typeOf + " is not managed");
+            "return type: " + typeOf + " is not managed");
     }
   }
-  
+
   public enum TypeOf {
     PROJECT,
     DATASETS
   }
-  
+
   @GET
   @Path("/states")
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
   @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
-  @ApiKeyRequired( acceptedScopes = {ApiScope.PROJECT}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
+  @ApiKeyRequired(acceptedScopes = {ApiScope.PROJECT}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   @ApiOperation(value = "State Provenance query endpoint", response = ProvStateDTO.class)
   public Response getFileStates(
-    @BeanParam ProvStateBeanParams params,
-    @BeanParam Pagination pagination,
-    @Context HttpServletRequest req,
-    @Context SecurityContext sc) throws ProvenanceException {
+      @BeanParam ProvStateBeanParams params,
+      @BeanParam Pagination pagination,
+      @Context HttpServletRequest req,
+      @Context SecurityContext sc) throws ProvenanceException {
     ProvStateDTO result = stateBuilder.build(project, params, pagination);
     return Response.ok().entity(result).build();
   }
-  
+
   @GET
   @Path("ops")
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
   @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
-  @ApiKeyRequired( acceptedScopes = {ApiScope.PROJECT}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
+  @ApiKeyRequired(acceptedScopes = {ApiScope.PROJECT}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   @ApiOperation(value = "Operations Provenance query endpoint", response = ProvOpsDTO.class)
   public Response getFileOps(
-    @BeanParam ProvOpsBeanParams params,
-    @BeanParam Pagination pagination,
-    @Context HttpServletRequest req,
-    @Context SecurityContext sc,
-    @Context UriInfo uriInfo) throws ProvenanceException, GenericException {
+      @BeanParam ProvOpsBeanParams params,
+      @BeanParam Pagination pagination,
+      @Context HttpServletRequest req,
+      @Context SecurityContext sc,
+      @Context UriInfo uriInfo) throws ProvenanceException, GenericException {
     ProvOpsDTO result = opsBuilder.build(project, params, pagination);
     return Response.ok().entity(result).build();
   }
-  
+
   @GET
   @Path("links")
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
   @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
-  @ApiKeyRequired( acceptedScopes = {ApiScope.PROJECT}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
+  @ApiKeyRequired(acceptedScopes = {ApiScope.PROJECT}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   @ApiOperation(value = "Links Provenance query endpoint - " +
-    "link feature groups/training datasets/experiments/models through their application ids",
-    response = ProvLinksDTO.class)
+      "link feature groups/training datasets/experiments/models through their application ids",
+      response = ProvLinksDTO.class)
   public Response getLinks(
-    @BeanParam ProvLinksBeanParams params,
-    @BeanParam Pagination pagination,
-    @Context HttpServletRequest req,
-    @Context SecurityContext sc) throws ProvenanceException, GenericException {
+      @BeanParam ProvLinksBeanParams params,
+      @BeanParam Pagination pagination,
+      @Context HttpServletRequest req,
+      @Context SecurityContext sc) throws ProvenanceException, GenericException {
     ProvLinksDTO result = linksBuilder.build(project, params, pagination);
     return Response.ok().entity(result).build();
   }
-  
+
   @GET
   @Path("usage")
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
   @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
-  @ApiKeyRequired( acceptedScopes = {ApiScope.PROJECT}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
+  @ApiKeyRequired(acceptedScopes = {ApiScope.PROJECT}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   @ApiOperation(value = "Artifact usage", response = ProvArtifactUsageParentDTO.class)
   public Response usage(
-    @QueryParam("artifact_id") String artifactId,
-    @QueryParam("endpoint_id") Integer endpointId,
-    @QueryParam("artifact_type") DatasetAccessType accessType,
-    @BeanParam ProvUsageBeanParams params,
-    @Context UriInfo uriInfo,
-    @Context SecurityContext sc)
-    throws ProvenanceException, GenericException, DatasetException, MetadataException, SchematizedTagException {
+      @QueryParam("artifact_id") String artifactId,
+      @QueryParam("endpoint_id") Integer endpointId,
+      @QueryParam("artifact_type") DatasetAccessType accessType,
+      @BeanParam ProvUsageBeanParams params,
+      @Context UriInfo uriInfo,
+      @Context HttpServletRequest req,
+      @Context SecurityContext sc)
+      throws ProvenanceException, GenericException, DatasetException, MetadataException, SchematizedTagException {
     Users user = jWTHelper.getUserPrincipal(sc);
-    if(artifactId == null) {
+    if (artifactId == null) {
       throw new GenericException(RESTCodes.GenericErrorCode.ILLEGAL_ARGUMENT, Level.FINE,
-        "artifactId id cannot be null");
+          "artifactId id cannot be null");
     }
     Project targetProject = project;
-    if(endpointId != null) {
-      targetProject = projectFacade.findById(endpointId).orElseThrow(
-        () -> new GenericException(RESTCodes.GenericErrorCode.ILLEGAL_ARGUMENT, Level.FINE, "target project not found")
+    if (endpointId != null) {
+      targetProject =
+          projectFacade.findById(endpointId).orElseThrow(() ->
+              new GenericException(RESTCodes.GenericErrorCode.ILLEGAL_ARGUMENT, Level.FINE, "target project not found")
       );
     }
     Dataset targetEndpoint;
@@ -247,18 +249,18 @@ public class ProjectProvenanceResource {
             break;
           default:
             throw new GenericException(RESTCodes.GenericErrorCode.ILLEGAL_ARGUMENT, Level.FINE,
-              "access type not supports:" + accessType);
+                "access type not supports:" + accessType);
         }
       } catch (FeaturestoreException | DatasetException e) {
         throw new GenericException(RESTCodes.GenericErrorCode.ILLEGAL_STATE, Level.FINE,
-          "cannot access the dataset of the artifact");
+            "cannot access the dataset of the artifact");
       }
     } else {
       throw new GenericException(RESTCodes.GenericErrorCode.ILLEGAL_STATE, Level.FINE, "access type not defined");
     }
     DatasetPath targetEndpointPath = datasetHelper.getTopLevelDatasetPath(project, targetEndpoint);
     ProvArtifactUsageParentDTO status
-      = usageBuilder.buildAccessible(uriInfo, user, targetEndpointPath, artifactId, params.getUsageType());
+        = usageBuilder.buildAccessible(uriInfo, user, targetEndpointPath, artifactId, params.getUsageType());
     return Response.ok().entity(status).build();
   }
 }

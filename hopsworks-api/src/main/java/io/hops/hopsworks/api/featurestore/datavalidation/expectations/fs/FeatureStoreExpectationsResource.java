@@ -42,6 +42,7 @@ import javax.ejb.EJB;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.enterprise.context.RequestScoped;
+import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
@@ -100,6 +101,7 @@ public class FeatureStoreExpectationsResource {
       @BeanParam Pagination pagination,
       @BeanParam FeatureStoreExpectationsBeanParam featureStoreExpectationsBeanParam,
       @Context SecurityContext sc,
+      @Context HttpServletRequest req,
       @Context UriInfo uriInfo) {
 
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.EXPECTATIONS);
@@ -125,6 +127,7 @@ public class FeatureStoreExpectationsResource {
       @ApiParam(value = "name of the expectation", required = true) @PathParam("name") String name,
       @BeanParam FeatureStoreExpectationsBeanParam featureStoreExpectationsBeanParam,
       @Context SecurityContext sc,
+      @Context HttpServletRequest req,
       @Context UriInfo uriInfo) throws FeaturestoreException {
   
     FeatureStoreExpectation  featureStoreExpectation = featureGroupValidationsController.getFeatureStoreExpectation(
@@ -150,6 +153,7 @@ public class FeatureStoreExpectationsResource {
   public Response createExpectation(
      Expectation expectation,
      @Context SecurityContext sc,
+     @Context HttpServletRequest req,
      @Context UriInfo uriInfo) throws FeaturestoreException {
 
     // Workaround to ignore the list initialized from a json like {legalValues: null}
@@ -181,6 +185,7 @@ public class FeatureStoreExpectationsResource {
   public Response delete(
       @ApiParam(value = "name of the rule", required = true) @PathParam("name") String name,
       @Context SecurityContext sc,
+      @Context HttpServletRequest req,
       @Context UriInfo uriInfo) throws FeaturestoreException {
 
     featureGroupValidationsController.deleteExpectation(featurestore, name);

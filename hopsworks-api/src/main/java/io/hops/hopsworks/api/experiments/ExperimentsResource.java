@@ -114,6 +114,7 @@ public class ExperimentsResource {
   public Response getAll(
       @BeanParam Pagination pagination,
       @BeanParam ExperimentsBeanParam experimentsBeanParam,
+      @Context HttpServletRequest req,
       @Context UriInfo uriInfo, @Context SecurityContext sc) throws ExperimentsException {
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.EXPERIMENTS);
     resourceRequest.setOffset(pagination.getOffset());
@@ -136,6 +137,7 @@ public class ExperimentsResource {
     @PathParam("id") String id,
     @BeanParam ExpansionBeanParam expansions,
     @Context UriInfo uriInfo,
+    @Context HttpServletRequest req,
     @Context SecurityContext sc)
     throws ExperimentsException, DatasetException, ProvenanceException, MetadataException, GenericException {
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.EXPERIMENTS);

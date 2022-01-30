@@ -44,6 +44,7 @@ import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.enterprise.context.RequestScoped;
 import javax.inject.Inject;
+import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
@@ -91,7 +92,9 @@ public class ExecutionsResource {
   public Response getExecutions(
     @BeanParam Pagination pagination,
     @BeanParam ExecutionsBeanParam executionsBeanParam,
-    @Context UriInfo uriInfo, @Context SecurityContext sc) {
+    @Context UriInfo uriInfo,
+    @Context HttpServletRequest req,
+    @Context SecurityContext sc) {
   
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.EXECUTIONS);
     resourceRequest.setOffset(pagination.getOffset());
@@ -112,8 +115,10 @@ public class ExecutionsResource {
   @JWTRequired(acceptedTokens={Audience.API, Audience.JOB}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
   @ApiKeyRequired( acceptedScopes = {ApiScope.JOB}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   public Response getExecution(@ApiParam(value = "execution id", required = true) @PathParam("id") Integer id,
-    @BeanParam ExecutionsBeanParam executionsBeanParam,
-    @Context UriInfo uriInfo, @Context SecurityContext sc) throws JobException {
+                               @BeanParam ExecutionsBeanParam executionsBeanParam,
+                               @Context UriInfo uriInfo,
+                               @Context HttpServletRequest req,
+                               @Context SecurityContext sc) throws JobException {
     //If requested execution does not belong to job
     Execution execution = executionController.authorize(job, id);
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.EXECUTIONS);
@@ -136,6 +141,7 @@ public class ExecutionsResource {
     @ApiParam(value = "Id of execution.", required = true) @PathParam("id") Integer id,
     @ApiParam(value = "status to set.", required = true) Status status,
     @Context SecurityContext sc,
+    @Context HttpServletRequest req,
     @Context UriInfo uriInfo) throws JobException {
     
     Execution exec = executionController.stopExecution(id);
@@ -154,6 +160,7 @@ public class ExecutionsResource {
   @ApiKeyRequired( acceptedScopes = {ApiScope.JOB}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   public Response startExecution(
     @ApiParam(value = "Arguments for executing the job") String args,
+    @Context HttpServletRequest req,
     @Context SecurityContext sc,
     @Context UriInfo uriInfo) throws JobException, GenericException, ServiceException, ProjectException {
   
@@ -180,7 +187,9 @@ public class ExecutionsResource {
   @JWTRequired(acceptedTokens={Audience.API, Audience.JOB}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
   @ApiKeyRequired( acceptedScopes = {ApiScope.JOB}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   public Response delete(@ApiParam(value = "execution id", required = true) @PathParam("id") Integer id,
-    @Context UriInfo uriInfo, @Context SecurityContext sc) throws JobException {
+                         @Context HttpServletRequest req,
+                         @Context UriInfo uriInfo,
+                         @Context SecurityContext sc) throws JobException {
     Users user = jWTHelper.getUserPrincipal(sc);
     //If requested execution does not belong to job
     Execution execution = executionController.authorize(job, id);
@@ -197,7 +206,9 @@ public class ExecutionsResource {
   @ApiKeyRequired( acceptedScopes = {ApiScope.JOB}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   public Response getLog(
     @PathParam("id") Integer id,
-    @PathParam("type") JobLogDTO.LogType type, @Context SecurityContext sc) throws JobException {
+    @PathParam("type") JobLogDTO.LogType type,
+    @Context HttpServletRequest req,
+    @Context SecurityContext sc) throws JobException {
     Execution execution = executionController.authorize(job, id);
     JobLogDTO dto = executionController.getLog(execution, type);
     return Response.ok().entity(dto).build();
@@ -212,7 +223,9 @@ public class ExecutionsResource {
   @ApiKeyRequired( acceptedScopes = {ApiScope.JOB}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   public Response retryLog(
     @PathParam("id") Integer id,
-    @PathParam("type") JobLogDTO.LogType type, @Context SecurityContext sc) throws JobException {
+    @PathParam("type") JobLogDTO.LogType type,
+    @Context HttpServletRequest req,
+    @Context SecurityContext sc) throws JobException {
     Execution execution = executionController.authorize(job, id);
     JobLogDTO dto = executionController.retryLogAggregation(execution, type);
     return Response.ok().entity(dto).build();

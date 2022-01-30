@@ -43,6 +43,7 @@ import javax.ejb.EJB;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.enterprise.context.RequestScoped;
+import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
@@ -80,7 +81,9 @@ public class AdminRouteResource {
   @ApiOperation(value = "Get all routes.", response = RouteDTO.class)
   @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN"})
   public Response get(@BeanParam Pagination pagination, @BeanParam RouteBeanParam routeBeanParam,
-      @Context UriInfo uriInfo, @Context SecurityContext sc)
+                      @Context UriInfo uriInfo,
+                      @Context HttpServletRequest req,
+                      @Context SecurityContext sc)
       throws AlertException {
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.ROUTES);
     resourceRequest.setOffset(pagination.getOffset());
@@ -94,8 +97,12 @@ public class AdminRouteResource {
   @Produces(MediaType.APPLICATION_JSON)
   @ApiOperation(value = "Get all routes.", response = RouteDTO.class)
   @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN"})
-  public Response get(@PathParam("receiver") String receiver, @QueryParam("match") List<String> match,
-      @QueryParam("matchRe") List<String> matchRe, @Context UriInfo uriInfo, @Context SecurityContext sc)
+  public Response get(@PathParam("receiver") String receiver,
+                      @QueryParam("match") List<String> match,
+                      @QueryParam("matchRe") List<String> matchRe,
+                      @Context UriInfo uriInfo,
+                      @Context HttpServletRequest req,
+                      @Context SecurityContext sc)
       throws AlertException {
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.ROUTES);
     Route route = new Route(receiver).withMatch(routeBuilder.toMap(match)).withMatchRe(routeBuilder.toMap(matchRe));
@@ -108,7 +115,9 @@ public class AdminRouteResource {
   @Consumes(MediaType.APPLICATION_JSON)
   @ApiOperation(value = "Create a receiver.")
   @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN"})
-  public Response create(PostableRouteDTO routeDTO, @Context UriInfo uriInfo, @Context SecurityContext sc)
+  public Response create(PostableRouteDTO routeDTO, @Context UriInfo uriInfo,
+                         @Context HttpServletRequest req,
+                         @Context SecurityContext sc)
       throws AlertException {
     if (routeDTO == null) {
       throw new AlertException(RESTCodes.AlertErrorCode.ILLEGAL_ARGUMENT, Level.FINE, "No payload.");
@@ -141,8 +150,11 @@ public class AdminRouteResource {
   @ApiOperation(value = "Create a receiver.")
   @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN"})
   public Response update(@PathParam("receiver") String receiver, PostableRouteDTO route,
-      @QueryParam("match") List<String> match, @QueryParam("matchRe") List<String> matchRe, @Context UriInfo uriInfo,
-      @Context SecurityContext sc) throws AlertException {
+                         @QueryParam("match") List<String> match,
+                         @QueryParam("matchRe") List<String> matchRe,
+                         @Context HttpServletRequest req,
+                         @Context UriInfo uriInfo,
+                         @Context SecurityContext sc) throws AlertException {
     if (route == null) {
       throw new AlertException(RESTCodes.AlertErrorCode.ILLEGAL_ARGUMENT, Level.FINE, "No payload.");
     }
@@ -172,8 +184,12 @@ public class AdminRouteResource {
   @Path("{receiver}")
   @ApiOperation(value = "Delete receiver by name.")
   @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN"})
-  public Response delete(@PathParam("receiver") String receiver, @QueryParam("match") List<String> match,
-      @QueryParam("matchRe") List<String> matchRe, @Context UriInfo uriInfo, @Context SecurityContext sc)
+  public Response delete(@PathParam("receiver") String receiver,
+                         @QueryParam("match") List<String> match,
+                         @QueryParam("matchRe") List<String> matchRe,
+                         @Context UriInfo uriInfo,
+                         @Context HttpServletRequest req,
+                         @Context SecurityContext sc)
       throws AlertException {
     Route routeToDelete =
         new Route(receiver).withMatch(routeBuilder.toMap(match)).withMatchRe(routeBuilder.toMap(matchRe));

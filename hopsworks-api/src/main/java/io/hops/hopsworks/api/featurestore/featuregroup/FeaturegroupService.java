@@ -80,6 +80,7 @@ import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.enterprise.context.RequestScoped;
 import javax.inject.Inject;
+import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
@@ -225,6 +226,7 @@ public class FeaturegroupService {
       responseContainer = "List")
   public Response getFeaturegroupsForFeaturestore(
           @BeanParam FeatureGroupBeanParam featureGroupBeanParam,
+          @Context HttpServletRequest req,
           @Context SecurityContext sc)
       throws FeaturestoreException, ServiceException {
     Users user = jWTHelper.getUserPrincipal(sc);
@@ -250,7 +252,9 @@ public class FeaturegroupService {
   @ApiKeyRequired( acceptedScopes = {ApiScope.FEATURESTORE}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   @ApiOperation(value = "Create feature group in a featurestore",
       response = FeaturegroupDTO.class)
-  public Response createFeaturegroup(@Context SecurityContext sc, FeaturegroupDTO featuregroupDTO)
+  public Response createFeaturegroup(@Context SecurityContext sc,
+                                     @Context HttpServletRequest req,
+                                     FeaturegroupDTO featuregroupDTO)
       throws FeaturestoreException, ServiceException, KafkaException, SchemaException, ProjectException, UserException {
     Users user = jWTHelper.getUserPrincipal(sc);
     if(featuregroupDTO == null) {
@@ -288,7 +292,9 @@ public class FeaturegroupService {
   @ApiOperation(value = "Get specific featuregroup from a specific featurestore",
       response = FeaturegroupDTO.class)
   public Response getFeatureGroup(@ApiParam(value = "Id of the featuregroup", required = true)
-                                  @PathParam("featuregroupId") Integer featuregroupId, @Context SecurityContext sc)
+                                  @PathParam("featuregroupId") Integer featuregroupId,
+                                  @Context HttpServletRequest req,
+                                  @Context SecurityContext sc)
       throws FeaturestoreException, ServiceException {
     Users user = jWTHelper.getUserPrincipal(sc);
     verifyIdProvided(featuregroupId);
@@ -318,7 +324,9 @@ public class FeaturegroupService {
   public Response getFeatureGroup(@ApiParam(value = "Name of the feature group", required = true)
                                   @PathParam("name") String name,
                                   @ApiParam(value = "Filter by a specific version")
-                                  @QueryParam("version") Integer version, @Context SecurityContext sc)
+                                  @QueryParam("version") Integer version,
+                                  @Context HttpServletRequest req,
+                                  @Context SecurityContext sc)
       throws FeaturestoreException, ServiceException {
     Users user = jWTHelper.getUserPrincipal(sc);
     verifyNameProvided(name);
@@ -351,7 +359,9 @@ public class FeaturegroupService {
   @ApiKeyRequired( acceptedScopes = {ApiScope.FEATURESTORE}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   @ApiOperation(value = "Delete specific featuregroup from a specific featurestore")
   public Response deleteFeatureGroup(@Context SecurityContext sc,
-      @ApiParam(value = "Id of the featuregroup", required = true) @PathParam("featuregroupId") Integer featuregroupId)
+                                     @Context HttpServletRequest req,
+                                     @ApiParam(value = "Id of the featuregroup", required = true)
+                                       @PathParam("featuregroupId") Integer featuregroupId)
       throws FeaturestoreException, ServiceException, SchemaException, KafkaException {
     verifyIdProvided(featuregroupId);
     Users user = jWTHelper.getUserPrincipal(sc);
@@ -389,7 +399,9 @@ public class FeaturegroupService {
   @ApiKeyRequired( acceptedScopes = {ApiScope.FEATURESTORE}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   @ApiOperation(value = "Delete featuregroup contents")
   public Response deleteFeaturegroupContents(@Context SecurityContext sc,
-      @ApiParam(value = "Id of the featuregroup", required = true) @PathParam("featuregroupId") Integer featuregroupId)
+                                             @Context HttpServletRequest req,
+                                             @ApiParam(value = "Id of the featuregroup", required = true)
+                                               @PathParam("featuregroupId") Integer featuregroupId)
       throws FeaturestoreException, ServiceException, KafkaException, SchemaException, ProjectException, UserException {
     verifyIdProvided(featuregroupId);
     Users user = jWTHelper.getUserPrincipal(sc);
@@ -423,7 +435,7 @@ public class FeaturegroupService {
   @ApiKeyRequired( acceptedScopes = {ApiScope.FEATURESTORE}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   @ApiOperation(value = "Update featuregroup contents", response = FeaturegroupDTO.class)
   public Response updateFeaturegroup(@Context SecurityContext sc,
-      @ApiParam(value = "Id of the featuregroup", required = true)
+      @Context HttpServletRequest req,
       @PathParam("featuregroupId") Integer featuregroupId,
       @ApiParam(value = "updateMetadata", example = "true")
       @QueryParam("updateMetadata") @DefaultValue("false") Boolean updateMetadata,
@@ -484,12 +496,14 @@ public class FeaturegroupService {
   @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
   @JWTRequired(acceptedTokens={Audience.API, Audience.JOB}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
   @ApiKeyRequired( acceptedScopes = {ApiScope.FEATURESTORE}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
-  public Response putTag(@Context SecurityContext sc, @Context UriInfo uriInfo,
+  public Response putTag(@Context SecurityContext sc,
+                         @Context HttpServletRequest req,
+                         @Context UriInfo uriInfo,
                          @ApiParam(value = "Id of the featuregroup", required = true)
                          @PathParam("featuregroupId") Integer featuregroupId,
                          @ApiParam(value = "Name of the tag", required = true) @PathParam("name") String name,
                          @ApiParam(value = "Value to set for the tag") String value)
-    throws MetadataException, FeaturestoreException, SchematizedTagException, DatasetException {
+      throws MetadataException, FeaturestoreException, SchematizedTagException, DatasetException {
     
     verifyIdProvided(featuregroupId);
     Users user = jWTHelper.getUserPrincipal(sc);
@@ -517,10 +531,11 @@ public class FeaturegroupService {
   @JWTRequired(acceptedTokens={Audience.API, Audience.JOB}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
   @ApiKeyRequired( acceptedScopes = {ApiScope.FEATURESTORE}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   public Response bulkPutTags(@Context SecurityContext sc, @Context UriInfo uriInfo,
+                              @Context HttpServletRequest req,
                               @ApiParam(value = "Id of the featuregroup", required = true)
                               @PathParam("featuregroupId") Integer featuregroupId,
                               TagsDTO tags)
-    throws MetadataException, FeaturestoreException, SchematizedTagException, DatasetException {
+      throws MetadataException, FeaturestoreException, SchematizedTagException, DatasetException {
     
     verifyIdProvided(featuregroupId);
     Users user = jWTHelper.getUserPrincipal(sc);
@@ -557,10 +572,11 @@ public class FeaturegroupService {
   @JWTRequired(acceptedTokens={Audience.API, Audience.JOB}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
   @ApiKeyRequired( acceptedScopes = {ApiScope.FEATURESTORE}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   public Response getTags(@Context SecurityContext sc, @Context UriInfo uriInfo,
+                          @Context HttpServletRequest req,
                           @ApiParam(value = "Id of the featuregroup", required = true)
                           @PathParam("featuregroupId") Integer featuregroupId,
                           @BeanParam TagsExpansionBeanParam tagsExpansionBeanParam)
-    throws DatasetException, MetadataException, FeaturestoreException, SchematizedTagException {
+      throws DatasetException, MetadataException, FeaturestoreException, SchematizedTagException {
     
     verifyIdProvided(featuregroupId);
     Users user = jWTHelper.getUserPrincipal(sc);
@@ -582,11 +598,12 @@ public class FeaturegroupService {
   @JWTRequired(acceptedTokens={Audience.API, Audience.JOB}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
   @ApiKeyRequired( acceptedScopes = {ApiScope.FEATURESTORE}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   public Response getTag(@Context SecurityContext sc, @Context UriInfo uriInfo,
+                         @Context HttpServletRequest req,
                          @ApiParam(value = "Id of the featuregroup", required = true)
                          @PathParam("featuregroupId") Integer featuregroupId,
                          @ApiParam(value = "Name of the tag", required = true) @PathParam("name") String name,
                          @BeanParam TagsExpansionBeanParam tagsExpansionBeanParam)
-    throws DatasetException, MetadataException, FeaturestoreException, SchematizedTagException {
+      throws DatasetException, MetadataException, FeaturestoreException, SchematizedTagException {
     
     verifyIdProvided(featuregroupId);
     Users user = jWTHelper.getUserPrincipal(sc);
@@ -609,9 +626,10 @@ public class FeaturegroupService {
   @JWTRequired(acceptedTokens={Audience.API, Audience.JOB}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
   @ApiKeyRequired( acceptedScopes = {ApiScope.FEATURESTORE}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   public Response deleteTags(@Context SecurityContext sc,
+                             @Context HttpServletRequest req,
                              @ApiParam(value = "Id of the featuregroup", required = true)
                              @PathParam("featuregroupId") Integer featuregroupId)
-    throws DatasetException, MetadataException, FeaturestoreException {
+      throws DatasetException, MetadataException, FeaturestoreException {
     
     verifyIdProvided(featuregroupId);
     Users user = jWTHelper.getUserPrincipal(sc);
@@ -629,10 +647,11 @@ public class FeaturegroupService {
   @JWTRequired(acceptedTokens={Audience.API, Audience.JOB}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
   @ApiKeyRequired( acceptedScopes = {ApiScope.FEATURESTORE}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   public Response deleteTag(@Context SecurityContext sc,
+                            @Context HttpServletRequest req,
                             @ApiParam(value = "Id of the featuregroup", required = true)
                             @PathParam("featuregroupId") Integer featuregroupId,
                             @ApiParam(value = "Name of the tag", required = true) @PathParam("name") String name)
-    throws DatasetException, MetadataException, FeaturestoreException {
+      throws DatasetException, MetadataException, FeaturestoreException {
     
     verifyIdProvided(featuregroupId);
     Users user = jWTHelper.getUserPrincipal(sc);
@@ -652,6 +671,7 @@ public class FeaturegroupService {
   @ApiOperation(value = "Prepares environment for uploading data to ingest into the feature group",
       response = IngestionJobDTO.class)
   public Response ingestionJob(@Context SecurityContext sc,
+                               @Context HttpServletRequest req,
                                @Context UriInfo uriInfo,
                                @ApiParam(value = "Id of the featuregroup", required = true)
                                @PathParam("featuregroupId") Integer featuregroupId,
@@ -683,6 +703,7 @@ public class FeaturegroupService {
   @Path("/{featuregroupId}/details")
   @Logged(logLevel = LogLevel.OFF)
   public FeatureGroupDetailsResource getFeatureGroupDetails(
+      @Context HttpServletRequest req,
       @ApiParam(value = "Id of the featuregroup") @PathParam("featuregroupId") Integer featuregroupId)
       throws FeaturestoreException {
     FeatureGroupDetailsResource fgDetailsResource = featureGroupDetailsResource.setProject(project);
@@ -725,8 +746,7 @@ public class FeaturegroupService {
 
   @Path("/{featureGroupId}/code")
   @Logged(logLevel = LogLevel.OFF)
-  public CodeResource code(@PathParam("featureGroupId") Integer featureGroupId)
-          throws FeaturestoreException {
+  public CodeResource code(@PathParam("featureGroupId") Integer featureGroupId) throws FeaturestoreException {
     this.codeResource.setProject(project);
     this.codeResource.setFeatureStore(featurestore);
     this.codeResource.setFeatureGroupId(featureGroupId);
@@ -736,7 +756,7 @@ public class FeaturegroupService {
   @Path("/{featureGroupId}/provenance")
   @Logged(logLevel = LogLevel.OFF)
   public ProvArtifactResource provenance(@PathParam("featureGroupId") Integer featureGroupId)
-    throws FeaturestoreException, GenericException {
+      throws FeaturestoreException, GenericException {
     DatasetPath targetEndpointPath;
     try {
       Dataset targetEndpoint = featurestoreController.getProjectFeaturestoreDataset(featurestore.getProject());
@@ -781,7 +801,6 @@ public class FeaturegroupService {
     this.commitResource.setFeatureGroup(featureGroupId);
     return commitResource;
   }
-
 
   @Path("/{featureGroupId}/keywords")
   @Logged(logLevel = LogLevel.OFF)

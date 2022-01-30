@@ -28,6 +28,7 @@ import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
+import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -53,11 +54,11 @@ public class ServicesResource {
   @ApiOperation(value = "Get metadata of all services.", response = ServiceDTO.class)
   @GET
   @Produces(MediaType.APPLICATION_JSON)
-  public Response getAllServices(
-    @Context UriInfo uriInfo,
-    @Context SecurityContext sc,
-    @BeanParam Pagination pagination,
-    @BeanParam ServicesBeanParam servicesBeanParam) {
+  public Response getAllServices(@Context UriInfo uriInfo,
+                                 @Context HttpServletRequest req,
+                                 @Context SecurityContext sc,
+                                 @BeanParam Pagination pagination,
+                                 @BeanParam ServicesBeanParam servicesBeanParam) {
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.SERVICES);
     resourceRequest.setOffset(pagination.getOffset());
     resourceRequest.setLimit(pagination.getLimit());
@@ -72,8 +73,9 @@ public class ServicesResource {
   @Path("/{name}")
   @Produces(MediaType.APPLICATION_JSON)
   public Response getService(@Context UriInfo uriInfo,
-    @Context SecurityContext sc,
-    @PathParam("name") String name) {
+                             @Context SecurityContext sc,
+                             @Context HttpServletRequest req,
+                             @PathParam("name") String name) {
     ServiceDTO dto = servicesBuilder.buildItems(uriInfo, name);
     return Response.ok().entity(dto).build();
   }

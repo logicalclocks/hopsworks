@@ -152,7 +152,8 @@ public class UsersResource {
   @Produces(MediaType.APPLICATION_JSON)
   @ApiOperation(value = "Get all users.", response = UserDTO.class)
   public Response findAll(@BeanParam Pagination pagination, @BeanParam UsersBeanParam usersBeanParam,
-      @Context UriInfo uriInfo, @Context SecurityContext sc) throws UserException {
+                          @Context HttpServletRequest req,
+                          @Context UriInfo uriInfo, @Context SecurityContext sc) throws UserException {
     if (!settings.isUserSearchEnabled()) {
       throw new UserException(RESTCodes.UserErrorCode.USER_SEARCH_NOT_ALLOWED, Level.FINE);
     }
@@ -172,6 +173,7 @@ public class UsersResource {
   public Response findById(
       @PathParam("userId") Integer userId,
       @Context UriInfo uriInfo,
+      @Context HttpServletRequest req,
       @Context SecurityContext sc) throws UserException {
     Users user = jWTHelper.getUserPrincipal(sc);
     BbcGroup adminGroup = bbcGroupFacade.findByGroupName("HOPS_ADMIN");
@@ -187,7 +189,9 @@ public class UsersResource {
   @Path("profile")
   @Produces(MediaType.APPLICATION_JSON)
   @ApiOperation(value = "Gets logged in User\'s info.", response = UserProfileDTO.class)
-  public Response getUserProfile(@Context UriInfo uriInfo, @Context SecurityContext sc) throws UserException {
+  public Response getUserProfile(@Context UriInfo uriInfo,
+                                 @Context HttpServletRequest req,
+                                 @Context SecurityContext sc) throws UserException {
     Users user = jWTHelper.getUserPrincipal(sc);
     if (user == null) {
       throw new UserException(RESTCodes.UserErrorCode.USER_WAS_NOT_FOUND, Level.FINE);
@@ -257,7 +261,8 @@ public class UsersResource {
   @Produces(MediaType.APPLICATION_JSON)
   @ApiOperation(value = "Retrieves all secrets' names of a user", response = SecretDTO.class)
   @ApiKeyRequired(acceptedScopes = {ApiScope.USER}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
-  public Response getAllSecrets(@Context SecurityContext sc) throws UserException {
+  public Response getAllSecrets(@Context SecurityContext sc,
+                                @Context HttpServletRequest req) throws UserException {
     Users user = jWTHelper.getUserPrincipal(sc);
     List<SecretPlaintext> secrets = secretsController.getAllForUser(user);
     SecretDTO dto = secretsBuilder.build(secrets, false);
@@ -271,6 +276,7 @@ public class UsersResource {
   @JWTRequired(acceptedTokens = {Audience.API, Audience.JOB}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   @ApiKeyRequired(acceptedScopes = {ApiScope.USER}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   public Response getSharedSecret(@QueryParam("name") String secretName, @QueryParam("owner") String ownerUsername,
+                                  @Context HttpServletRequest req,
                                   @Context SecurityContext sc)
     throws UserException, ServiceException, ProjectException {
     Users caller = jWTHelper.getUserPrincipal(sc);
@@ -285,7 +291,9 @@ public class UsersResource {
   @ApiOperation(value = "Gets the value of a private secret", response = SecretDTO.class)
   @JWTRequired(acceptedTokens = {Audience.API, Audience.JOB}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   @ApiKeyRequired(acceptedScopes = {ApiScope.USER}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
-  public Response getSecret(@PathParam("secretName") String name, @Context SecurityContext sc) throws UserException {
+  public Response getSecret(@PathParam("secretName") String name,
+                            @Context HttpServletRequest req,
+                            @Context SecurityContext sc) throws UserException {
     Users user = jWTHelper.getUserPrincipal(sc);
     SecretPlaintext secret = secretsController.get(user, name);
     SecretDTO dto = secretsBuilder.build(Arrays.asList(secret), true);
@@ -360,8 +368,9 @@ public class UsersResource {
   @Path("getQRCode")
   @Produces(MediaType.APPLICATION_JSON)
   @ApiOperation(value = "Gets the logged in User\'s QR code.", response = QrCode.class)
-  public Response getQRCode(@Secret @FormParam("password") String password, @Context HttpServletRequest req,
-    @Context SecurityContext sc) throws UserException {
+  public Response getQRCode(@Secret @FormParam("password") String password,
+                            @Context HttpServletRequest req,
+                            @Context SecurityContext sc) throws UserException {
     Users user = jWTHelper.getUserPrincipal(sc);
     if (user == null) {
       throw new UserException(RESTCodes.UserErrorCode.USER_WAS_NOT_FOUND, Level.FINE);
@@ -378,7 +387,7 @@ public class UsersResource {
   @Produces(MediaType.APPLICATION_JSON)
   @ApiOperation(value = "Gets the logged in User\'s role in project.", response = UserProjectDTO.class)
   public Response getRole(@FormParam("projectId") int projectId, @Context SecurityContext sc,
-    @Context HttpServletRequest req) throws ProjectException {
+                          @Context HttpServletRequest req) throws ProjectException {
     Users user = jWTHelper.getUserPrincipal(sc);
     UserProjectDTO userDTO = new UserProjectDTO();
     userDTO.setEmail(user.getEmail());
@@ -399,7 +408,9 @@ public class UsersResource {
   @Produces(MediaType.APPLICATION_JSON)
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
   @ApiKeyRequired(acceptedScopes = {ApiScope.GIT}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
-  public Response gitProviders(@Context SecurityContext sc, @Context UriInfo uriInfo) {
+  public Response gitProviders(@Context SecurityContext sc,
+                               @Context HttpServletRequest req,
+                               @Context UriInfo uriInfo) {
     Users user = jWTHelper.getUserPrincipal(sc);
     GitProviderSecretsDTO dto = gitProvidersSecretsBuilder.build(uriInfo, user);
     return Response.ok().entity(dto).build();
@@ -411,7 +422,9 @@ public class UsersResource {
   @Produces(MediaType.APPLICATION_JSON)
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
   @ApiKeyRequired(acceptedScopes = {ApiScope.GIT}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
-  public Response setGitProvider(@Context SecurityContext sc, @Context UriInfo uriInfo,
+  public Response setGitProvider(@Context SecurityContext sc,
+                                 @Context HttpServletRequest req,
+                                 @Context UriInfo uriInfo,
                                  GitProviderSecretsDTO gitProviderSecretsDTO) throws UserException {
     Users user = jWTHelper.getUserPrincipal(sc);
     gitCommandOperationUtil.createAuthenticationSecret(user,
@@ -427,7 +440,9 @@ public class UsersResource {
   @Produces(MediaType.APPLICATION_JSON)
   @JWTNotRequired
   @ApiOperation(value = "Validate OTP")
-  public Response validateOTP(@Secret @FormParam("otp") String otp, @Context SecurityContext sc) throws UserException {
+  public Response validateOTP(@Secret @FormParam("otp") String otp,
+                              @Context HttpServletRequest req,
+                              @Context SecurityContext sc) throws UserException {
     Users user = jWTHelper.getUserPrincipal(sc);
     authController.validateOTP(user, otp);
     return Response.ok().build();

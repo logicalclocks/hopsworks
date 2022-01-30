@@ -42,6 +42,7 @@ import javax.ejb.EJB;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.enterprise.context.RequestScoped;
+import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.GET;
 import javax.ws.rs.Produces;
@@ -93,6 +94,7 @@ public class FeatureGroupPreviewResource {
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
   @ApiKeyRequired( acceptedScopes = {ApiScope.FEATURESTORE}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   public Response getPreview(@BeanParam FeatureGroupPreviewBeanParam featureGroupPreviewBeanParam,
+                             @Context HttpServletRequest req,
                              @Context UriInfo uriInfo, @Context SecurityContext sc)
       throws FeaturestoreException, HopsSecurityException {
     Users user = jwtHelper.getUserPrincipal(sc);

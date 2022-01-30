@@ -19,6 +19,7 @@ import io.hops.hopsworks.audit.auditor.annotation.AuditTarget;
 import io.hops.hopsworks.audit.logger.annotation.Caller;
 import io.hops.hopsworks.common.dao.user.UserDTO;
 import io.hops.hopsworks.common.dao.user.UserFacade;
+import io.hops.hopsworks.common.util.HttpUtil;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.persistence.entity.user.Users;
 
@@ -32,7 +33,9 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * EJB Restrictions on Using the Reflection API
@@ -42,7 +45,10 @@ import java.util.List;
 @Stateless
 @TransactionAttribute(TransactionAttributeType.NEVER)
 public class AnnotationHelper {
-  
+
+  public static final String USER_AGENT = "user-agent";
+  public static final String CLIENT_IP = "client-ip";
+
   @EJB
   private UserFacade userFacade;
   
@@ -102,41 +108,55 @@ public class AnnotationHelper {
         if (methodParameters[i].isAnnotationPresent(Caller.class)) {
           return getCaller(methodParameters[i], parameters[i]);
         } else if (parameters[i] instanceof HttpServletRequest &&
-          ((HttpServletRequest) parameters[i]).getRemoteUser() != null) {
+            ((HttpServletRequest) parameters[i]).getRemoteUser() != null) {
           return userFacade.findByEmail(((HttpServletRequest) parameters[i]).getRemoteUser());
         } else if (parameters[i] instanceof SecurityContext &&
-          ((SecurityContext) parameters[i]).getUserPrincipal() != null) {
+            ((SecurityContext) parameters[i]).getUserPrincipal() != null) {
           return userFacade.findByUsername(((SecurityContext) parameters[i]).getUserPrincipal().getName());
         }
       }
     }
     return null;
   }
-  
+
   public String getCallerName(Method method, Object[] parameters) {
     Parameter[] methodParameters = method.getParameters();
-    if (parameters != null && parameters.length > 0) {
+    if (parameters != null) {
       for (int i = 0; i < parameters.length; i++) {
         if (methodParameters[i].isAnnotationPresent(Caller.class)) {
           return getCallerStr(methodParameters[i], parameters[i]);
         } else if (parameters[i] instanceof HttpServletRequest &&
-          ((HttpServletRequest) parameters[i]).getRemoteUser() != null) {
+            ((HttpServletRequest) parameters[i]).getRemoteUser() != null) {
           return ((HttpServletRequest) parameters[i]).getRemoteUser();
         } else if (parameters[i] instanceof SecurityContext &&
-          ((SecurityContext) parameters[i]).getUserPrincipal() != null) {
+            ((SecurityContext) parameters[i]).getUserPrincipal() != null) {
           return ((SecurityContext) parameters[i]).getUserPrincipal().getName();
         }
       }
     }
     return "";
   }
-  
-  public Users getCaller(Parameter methodParameter, Object parameter) {
+
+  public Map<String, String> getClientInfo(Object[] parameters) {
+    Map<String, String> callInfo = new HashMap<>();
+    for (Object parameter : parameters) {
+      if (parameter instanceof HttpServletRequest) {
+        // Extract user agent
+        callInfo.put(USER_AGENT, HttpUtil.extractUserAgent((HttpServletRequest) parameter));
+        // Extract client IP
+        callInfo.put(CLIENT_IP, HttpUtil.extractRemoteHostIp((HttpServletRequest) parameter));
+      }
+    }
+
+    return callInfo;
+  }
+
+  private Users getCaller(Parameter methodParameter, Object parameter) {
     UserIdentifier identifier = methodParameter.getAnnotation(Caller.class).value();
     return getUser(identifier, parameter);
   }
   
-  public String getCallerStr(Parameter methodParameter,Object parameter) {
+  private String getCallerStr(Parameter methodParameter,Object parameter) {
     UserIdentifier identifier = methodParameter.getAnnotation(Caller.class).value();
     return getUserStr(identifier, parameter);
   }
@@ -192,8 +212,7 @@ public class AnnotationHelper {
     if (key.length() <= Settings.USERNAME_LENGTH) {
       throw new IllegalArgumentException("Unrecognized validation key.");
     }
-    String userName = key.substring(0, Settings.USERNAME_LENGTH);
-    return userName;
+    return key.substring(0, Settings.USERNAME_LENGTH);
   }
   
   public Users getUserFromReq(Object userIdentifier) {
@@ -205,12 +224,4 @@ public class AnnotationHelper {
     }
     return null;
   }
-  
-  public Users getUserFromReq(HttpServletRequest req) {
-    if (req != null) {
-      return userFacade.findByEmail(req.getRemoteUser());
-    }
-    return null;
-  }
-  
 }

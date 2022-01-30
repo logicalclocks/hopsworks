@@ -39,6 +39,7 @@ import javax.ejb.EJB;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.enterprise.context.RequestScoped;
+import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
@@ -83,6 +84,7 @@ public class GitExecutionResource {
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
   @ApiKeyRequired(acceptedScopes = {ApiScope.GIT}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   public Response getRepositoryExecutions(@Context UriInfo uriInfo,
+                                          @Context HttpServletRequest req,
                                           @Context SecurityContext sc,
                                           @BeanParam Pagination pagination) {
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.EXECUTION);
@@ -103,7 +105,9 @@ public class GitExecutionResource {
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
   @ApiKeyRequired(acceptedScopes = {ApiScope.GIT}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
-  public Response getExecution(@PathParam("executionId") Integer executionId, @Context SecurityContext sc,
+  public Response getExecution(@PathParam("executionId") Integer executionId,
+                               @Context HttpServletRequest req,
+                               @Context SecurityContext sc,
                                @Context UriInfo uriInfo) throws GitOpException {
     GitOpExecution executionObj = executionController.getExecutionInRepository(gitRepository, executionId);
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.EXECUTION);
@@ -126,7 +130,9 @@ public class GitExecutionResource {
   public Response updateGitCommandExecutionState(@PathParam("executionId") Integer executionId,
                                                  @PathParam("repositoryId") Integer repositoryId,
                                                  GitCommandExecutionStateUpdateDTO stateUpdateDTO,
-                                                 @Context SecurityContext sc, @Context UriInfo uriInfo)
+                                                 @Context SecurityContext sc,
+                                                 @Context HttpServletRequest req,
+                                                 @Context UriInfo uriInfo)
       throws GitOpException, IllegalArgumentException {
     Users hopsworksUser = jwtHelper.getUserPrincipal(sc);
     GitOpExecution newExec = executionController.updateGitExecutionState(project,hopsworksUser, stateUpdateDTO,

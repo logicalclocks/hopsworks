@@ -48,6 +48,7 @@ import javax.ejb.EJB;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.enterprise.context.RequestScoped;
+import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
@@ -86,9 +87,12 @@ public class AdminReceiverResource {
   @Produces(MediaType.APPLICATION_JSON)
   @ApiOperation(value = "Get all receivers.", response = ReceiverDTO.class)
   @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN"})
-  public Response get(@BeanParam Pagination pagination, @BeanParam ReceiverBeanParam receiverBeanParam,
-      @QueryParam("expand") @DefaultValue("false") Boolean expand,
-      @Context UriInfo uriInfo, @Context SecurityContext sc) throws AlertException {
+  public Response get(@BeanParam Pagination pagination,
+                      @BeanParam ReceiverBeanParam receiverBeanParam,
+                      @QueryParam("expand") @DefaultValue("false") Boolean expand,
+                      @Context UriInfo uriInfo,
+                      @Context HttpServletRequest req,
+                      @Context SecurityContext sc) throws AlertException {
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.RECEIVERS);
     resourceRequest.setOffset(pagination.getOffset());
     resourceRequest.setLimit(pagination.getLimit());
@@ -101,8 +105,10 @@ public class AdminReceiverResource {
   @Produces(MediaType.APPLICATION_JSON)
   @ApiOperation(value = "Get receiver by name.", response = ReceiverDTO.class)
   @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN"})
-  public Response getByName(@PathParam("name") String name, @Context UriInfo uriInfo,
-      @Context SecurityContext sc) throws AlertException {
+  public Response getByName(@PathParam("name") String name,
+                            @Context UriInfo uriInfo,
+                            @Context HttpServletRequest req,
+                            @Context SecurityContext sc) throws AlertException {
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.RECEIVERS);
     ReceiverDTO dto = receiverBuilder.build(uriInfo, resourceRequest, name, null);
     return Response.ok().entity(dto).build();
@@ -113,7 +119,9 @@ public class AdminReceiverResource {
   @Produces(MediaType.APPLICATION_JSON)
   @ApiOperation(value = "Check if default receiver configured.", response = GlobalReceiverDefaults.class)
   @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN"})
-  public Response getDefaults(@Context UriInfo uriInfo, @Context SecurityContext sc)
+  public Response getDefaults(@Context UriInfo uriInfo,
+                              @Context HttpServletRequest req,
+                              @Context SecurityContext sc)
       throws AlertManagerConfigCtrlCreateException, AlertManagerConfigReadException {
     return Response.ok().entity(receiverBuilder.build()).build();
   }
@@ -124,9 +132,11 @@ public class AdminReceiverResource {
   @ApiOperation(value = "Create a receiver.")
   @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN"})
   public Response create(PostableReceiverDTO postableReceiverDTO,
-      @QueryParam("defaultName") @DefaultValue("false") Boolean defaultName,
-      @QueryParam("defaultTemplate") @DefaultValue("false") Boolean defaultTemplate,
-      @Context UriInfo uriInfo, @Context SecurityContext sc) throws AlertException {
+                         @QueryParam("defaultName") @DefaultValue("false") Boolean defaultName,
+                         @QueryParam("defaultTemplate") @DefaultValue("false") Boolean defaultTemplate,
+                         @Context UriInfo uriInfo,
+                         @Context HttpServletRequest req,
+                         @Context SecurityContext sc) throws AlertException {
     if (postableReceiverDTO == null) {
       throw new AlertException(RESTCodes.AlertErrorCode.ILLEGAL_ARGUMENT, Level.FINE, "No payload.");
     }
@@ -211,8 +221,11 @@ public class AdminReceiverResource {
   @ApiOperation(value = "Update a receiver.", response = ReceiverDTO.class)
   @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN"})
   public Response update(@PathParam("name") String name,
-      @QueryParam("defaultTemplate") @DefaultValue("false") Boolean defaultTemplate,
-      PostableReceiverDTO postableReceiverDTO, @Context UriInfo uriInfo, @Context SecurityContext sc)
+                         @QueryParam("defaultTemplate") @DefaultValue("false") Boolean defaultTemplate,
+                         PostableReceiverDTO postableReceiverDTO,
+                         @Context UriInfo uriInfo,
+                         @Context HttpServletRequest req,
+                         @Context SecurityContext sc)
       throws AlertException {
     if (postableReceiverDTO == null) {
       throw new AlertException(RESTCodes.AlertErrorCode.ILLEGAL_ARGUMENT, Level.FINE, "No payload.");
@@ -243,8 +256,10 @@ public class AdminReceiverResource {
   @ApiOperation(value = "Delete receiver by name.")
   @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN"})
   public Response deleteById(@PathParam("name") String name,
-      @QueryParam("cascade") @DefaultValue("false") Boolean cascade, @Context UriInfo uriInfo,
-      @Context SecurityContext sc) throws AlertException {
+                             @QueryParam("cascade") @DefaultValue("false") Boolean cascade,
+                             @Context UriInfo uriInfo,
+                             @Context HttpServletRequest req,
+                             @Context SecurityContext sc) throws AlertException {
     try {
       alertManagerConfiguration.removeReceiver(name, cascade);
     } catch (AlertManagerConfigCtrlCreateException | AlertManagerUnreachableException |

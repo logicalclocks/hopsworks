@@ -30,6 +30,7 @@ import javax.ejb.EJB;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.enterprise.context.RequestScoped;
+import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -61,6 +62,7 @@ public class UserActivitiesResource {
       @BeanParam Pagination pagination,
       @BeanParam ActivitiesBeanParam activitiesBeanParam,
       @Context UriInfo uriInfo,
+      @Context HttpServletRequest req,
       @Context SecurityContext sc) {
     Users user = jWTHelper.getUserPrincipal(sc);
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.ACTIVITIES);
@@ -86,6 +88,7 @@ public class UserActivitiesResource {
       @PathParam("activityId") Integer activityId,
       @BeanParam ExpansionBeanParam expansions,
       @Context UriInfo uriInfo,
+      @Context HttpServletRequest req,
       @Context SecurityContext sc) throws ActivitiesException {
     Users user = jWTHelper.getUserPrincipal(sc);
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.ACTIVITIES);

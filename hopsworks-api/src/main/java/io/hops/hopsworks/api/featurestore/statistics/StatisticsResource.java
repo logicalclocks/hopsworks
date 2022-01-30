@@ -54,6 +54,7 @@ import javax.ejb.EJB;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.enterprise.context.RequestScoped;
+import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DefaultValue;
@@ -127,6 +128,7 @@ public class StatisticsResource {
   public Response get(@BeanParam Pagination pagination,
                       @BeanParam StatisticsBeanParam statisticsBeanParam,
                       @Context UriInfo uriInfo,
+                      @Context HttpServletRequest req,
                       @Context SecurityContext sc,
                       @ApiParam(value = "for_transformation", example = "false")
                       @QueryParam("for_transformation") @DefaultValue("false") Boolean forTransformation)
@@ -159,6 +161,7 @@ public class StatisticsResource {
   @ApiKeyRequired( acceptedScopes = {ApiScope.DATASET_VIEW, ApiScope.FEATURESTORE},
       allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   public Response register(@Context UriInfo uriInfo,
+                           @Context HttpServletRequest req,
                            @Context SecurityContext sc,
                            StatisticsDTO statisticsDTO)
       throws FeaturestoreException, DatasetException, HopsSecurityException, IOException {
@@ -197,7 +200,9 @@ public class StatisticsResource {
   @JWTRequired(acceptedTokens = {Audience.API, Audience.JOB}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   @ApiKeyRequired(acceptedScopes = {ApiScope.DATASET_VIEW, ApiScope.FEATURESTORE},
       allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
-  public Response compute(@Context UriInfo uriInfo, @Context SecurityContext sc)
+  public Response compute(@Context UriInfo uriInfo,
+                          @Context HttpServletRequest req,
+                          @Context SecurityContext sc)
       throws FeaturestoreException, ServiceException, JobException, ProjectException, GenericException {
     Users user = jWTHelper.getUserPrincipal(sc);
     Jobs job = fsJobManagerController.setupStatisticsJob(project, user, featurestore, featuregroup, trainingDataset);

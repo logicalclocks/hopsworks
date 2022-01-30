@@ -69,6 +69,7 @@ import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.inject.Inject;
+import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
@@ -118,7 +119,9 @@ public class HopssiteService {
 
   @GET
   @Path("services/{service}")
-  public Response getServiceInfo(@PathParam("service") String service, @Context SecurityContext sc) {
+  public Response getServiceInfo(@PathParam("service") String service,
+                                 @Context HttpServletRequest req,
+                                 @Context SecurityContext sc) {
     boolean delaEnabled = settings.isDelaEnabled();
     HopsSiteServiceInfoDTO serviceInfo;
     if (delaEnabled) {
@@ -134,7 +137,8 @@ public class HopssiteService {
   @GET
   @Path("clusterId")
   @Produces(MediaType.APPLICATION_JSON)
-  public Response getClusterId(@Context SecurityContext sc) throws DelaException {
+  public Response getClusterId(@Context SecurityContext sc,
+                               @Context HttpServletRequest req) throws DelaException {
     String clusterId = settings.getDELA_CLUSTER_ID();
     LOGGER.log(Level.INFO, "Cluster id on hops-site: {0}", clusterId);
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(clusterId).build();
@@ -142,7 +146,8 @@ public class HopssiteService {
 
   @GET
   @Path("userId")
-  public Response getUserId(@Context SecurityContext sc) throws DelaException {
+  public Response getUserId(@Context SecurityContext sc,
+                            @Context HttpServletRequest req) throws DelaException {
     Users user = jWTHelper.getUserPrincipal(sc);
     String id = String.valueOf(hopsSite.getUserId(user.getEmail()));
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(id).build();
@@ -156,7 +161,8 @@ public class HopssiteService {
   @GET
   @Path("datasets")
   public Response getAllDatasets(@ApiParam(required = true) @QueryParam("filter") CategoriesFilter filter,
-    @Context SecurityContext sc) throws DelaException {
+                                 @Context HttpServletRequest req,
+                                 @Context SecurityContext sc) throws DelaException {
     List<HopsSiteDatasetDTO> datasets;
     switch(filter) {
       case ALL : datasets = hopsSite.getAll(); break;
@@ -174,8 +180,10 @@ public class HopssiteService {
 
   @GET
   @Path("datasets/{publicDSId}")
-  public Response getDataset(@PathParam("publicDSId") String publicDSId, @Context SecurityContext sc)
-    throws DelaException {
+  public Response getDataset(@PathParam("publicDSId") String publicDSId,
+                             @Context HttpServletRequest req,
+                             @Context SecurityContext sc)
+      throws DelaException {
     DatasetDTO.Complete datasets = hopsSite.getDataset(publicDSId);
     LOGGER.log(Settings.DELA_DEBUG, "Get a dataset");
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(datasets).build();
@@ -183,7 +191,9 @@ public class HopssiteService {
 
   @GET
   @Path("datasets/{publicDSId}/local")
-  public Response getLocalDataset(@PathParam("publicDSId") String publicDSId, @Context SecurityContext sc) {
+  public Response getLocalDataset(@PathParam("publicDSId") String publicDSId,
+                                  @Context HttpServletRequest req,
+                                  @Context SecurityContext sc) {
     Optional<Dataset> datasets = datasetFacade.findByPublicDsId(publicDSId);
     if (!datasets.isPresent()) {
       return noCacheResponse.getNoCacheResponseBuilder(Response.Status.BAD_REQUEST).build();
@@ -198,7 +208,8 @@ public class HopssiteService {
 
   @GET
   @Path("categories")
-  public Response getDisplayCategories(@Context SecurityContext sc) {
+  public Response getDisplayCategories(@Context SecurityContext sc,
+                                       @Context HttpServletRequest req) {
     CategoryDTO categoryAll = new CategoryDTO(CategoriesFilter.ALL.name(), "All", false);
     CategoryDTO categoryNew = new CategoryDTO(CategoriesFilter.NEW.name(), "Recently added", false);
     CategoryDTO categoryTopRated = new CategoryDTO(CategoriesFilter.TOP_RATED.name(), "Top Rated", false);
@@ -212,7 +223,8 @@ public class HopssiteService {
   @POST
   @Path("datasets/{publicDSId}/issue")
   public Response addDatasetIssue(@PathParam("publicDSId") String publicDSId, DatasetIssueReqDTO datasetIssueReq,
-      @Context SecurityContext sc) throws DelaException {
+                                  @Context HttpServletRequest req,
+                                  @Context SecurityContext sc) throws DelaException {
     if (datasetIssueReq == null) {
       throw new IllegalArgumentException("Dataset issue not set.");
     }

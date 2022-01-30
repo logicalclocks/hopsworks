@@ -49,6 +49,7 @@ import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.enterprise.context.RequestScoped;
 import javax.inject.Inject;
+import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
@@ -108,10 +109,11 @@ public class ServingService {
       response = ServingView.class,
       responseContainer = "List")
   public Response getAll(
-    @QueryParam("model") String modelName,
-    @QueryParam("status") ServingStatusEnum status,
-    @QueryParam("name") String servingName,
-    @Context SecurityContext sc)
+      @QueryParam("model") String modelName,
+      @QueryParam("status") ServingStatusEnum status,
+      @QueryParam("name") String servingName,
+      @Context HttpServletRequest req,
+      @Context SecurityContext sc)
     throws ServingException, KafkaException, CryptoPasswordNotFoundException {
 
     // if filter by name, return a single serving
@@ -148,6 +150,7 @@ public class ServingService {
   @ApiOperation(value = "Get info about a serving instance for the project", response = ServingView.class)
   public Response get(
     @Context SecurityContext sc,
+    @Context HttpServletRequest req,
     @ApiParam(value = "Id of the Serving instance", required = true)
     @PathParam("servingId") Integer servingId)
     throws ServingException, KafkaException, CryptoPasswordNotFoundException {
@@ -171,6 +174,7 @@ public class ServingService {
   @ApiKeyRequired( acceptedScopes = {ApiScope.SERVING}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   @ApiOperation(value = "Delete a serving instance")
   public Response delete(
+    @Context HttpServletRequest req,
     @Context SecurityContext sc,
     @ApiParam(value = "Id of the serving instance", required = true) @PathParam("servingId") Integer servingId)
     throws ServingException {
@@ -190,6 +194,7 @@ public class ServingService {
   @ApiKeyRequired( acceptedScopes = {ApiScope.SERVING}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   @ApiOperation(value = "Create or update a serving instance")
   public Response put(
+    @Context HttpServletRequest req,
     @Context SecurityContext sc,
     @Context UriInfo uriInfo,
     @ApiParam(value = "serving specification", required = true) ServingView serving)
@@ -220,6 +225,7 @@ public class ServingService {
   @ApiOperation(value = "Start or stop a Serving instance")
   public Response startOrStop(
     @Context SecurityContext sc,
+    @Context HttpServletRequest req,
     @ApiParam(value = "ID of the Serving instance to start/stop", required = true)
       @PathParam("servingId") Integer servingId,
     @ApiParam(value = "Action", required = true) @QueryParam("action") ServingCommands servingCommand)

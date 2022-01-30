@@ -64,6 +64,7 @@ import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.inject.Inject;
+import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -106,8 +107,10 @@ public class ElasticService {
   @GET
   @Path("globalsearch/{searchTerm}")
   @Produces(MediaType.APPLICATION_JSON)
-  public Response globalSearch(@PathParam("searchTerm") String searchTerm, @Context SecurityContext sc)
-    throws ServiceException, ElasticException {
+  public Response globalSearch(@PathParam("searchTerm") String searchTerm,
+                               @Context HttpServletRequest req,
+                               @Context SecurityContext sc)
+      throws ServiceException, ElasticException {
 
     if (Strings.isNullOrEmpty(searchTerm)) {
       throw new IllegalArgumentException("searchTerm was not provided or was empty");
@@ -129,8 +132,10 @@ public class ElasticService {
   @Path("projectsearch/{projectId}/{searchTerm}")
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
-  public Response projectSearch(@PathParam("projectId") Integer projectId, @PathParam("searchTerm") String searchTerm,
-    @Context SecurityContext sc) throws ServiceException, ElasticException {
+  public Response projectSearch(@PathParam("projectId") Integer projectId,
+                                @PathParam("searchTerm") String searchTerm,
+                                @Context HttpServletRequest req,
+                                @Context SecurityContext sc) throws ServiceException, ElasticException {
     if (Strings.isNullOrEmpty(searchTerm) || projectId == null) {
       throw new IllegalArgumentException("One or more required parameters were not provided.");
     }
@@ -155,7 +160,9 @@ public class ElasticService {
   public Response datasetSearch(
       @PathParam("projectId") Integer projectId,
       @PathParam("datasetName") String datasetName,
-      @PathParam("searchTerm") String searchTerm, @Context SecurityContext sc)
+      @PathParam("searchTerm") String searchTerm,
+      @Context HttpServletRequest req,
+      @Context SecurityContext sc)
       throws ServiceException, ElasticException {
   
     if (Strings.isNullOrEmpty(searchTerm) || Strings.isNullOrEmpty(datasetName) || projectId == null) {
@@ -186,8 +193,9 @@ public class ElasticService {
     @QueryParam("from") @ApiParam(value="search pointer position, if none given, it defaults to 0") Integer from,
     @QueryParam("size") @ApiParam(value="search page size, if none give, it defaults to 100." +
       "Cannot be negative and cannot be bigger than 10000") Integer size,
+    @Context HttpServletRequest req,
     @Context SecurityContext sc)
-    throws ServiceException, ElasticException, GenericException {
+      throws ServiceException, ElasticException, GenericException {
     if (Strings.isNullOrEmpty(searchTerm)) {
       throw new GenericException(RESTCodes.GenericErrorCode.ILLEGAL_ARGUMENT, Level.WARNING, "no search term provided");
     }
@@ -210,8 +218,9 @@ public class ElasticService {
   @Produces(MediaType.APPLICATION_JSON)
   @JWTRequired(acceptedTokens = {Audience.API, Audience.JOB}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
-  public Response createJwtToken(@Context SecurityContext sc, @PathParam(
-      "projectId") Integer projectId) throws ElasticException {
+  public Response createJwtToken(@Context SecurityContext sc,
+                                 @Context HttpServletRequest req,
+                                 @PathParam("projectId") Integer projectId) throws ElasticException {
     if (projectId == null) {
       throw new IllegalArgumentException("projectId was not provided.");
     }
@@ -225,7 +234,8 @@ public class ElasticService {
   @Path("jwt/services")
   @Produces(MediaType.APPLICATION_JSON)
   @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN"})
-  public Response createJwtToken(@Context SecurityContext sc) throws ElasticException {
+  public Response createJwtToken(@Context HttpServletRequest req,
+                                 @Context SecurityContext sc) throws ElasticException {
     ElasticJWTResponseDTO jWTResponseDTO = jWTHelper.createTokenForELKAsLogUser();
     return Response.ok().entity(jWTResponseDTO).build();
   }

@@ -25,6 +25,7 @@ import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
+import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
@@ -61,8 +62,11 @@ public class CloudRoleMappingResource {
   @GET
   @Path("/role-mappings")
   @Produces(MediaType.APPLICATION_JSON)
-  public Response getAll(@BeanParam Pagination pagination, @BeanParam CloudRoleMappingBeanParam mappingBeanParam,
-    @Context UriInfo uriInfo, @Context SecurityContext sc) {
+  public Response getAll(@BeanParam Pagination pagination,
+                         @BeanParam CloudRoleMappingBeanParam mappingBeanParam,
+                         @Context HttpServletRequest req,
+                         @Context UriInfo uriInfo,
+                         @Context SecurityContext sc) {
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.CLOUD);
     resourceRequest.setOffset(pagination.getOffset());
     resourceRequest.setLimit(pagination.getLimit());
@@ -75,8 +79,10 @@ public class CloudRoleMappingResource {
   @GET
   @Path("/role-mappings/{id: [0-9]*}")
   @Produces(MediaType.APPLICATION_JSON)
-  public Response getAllByProject(@PathParam("id") Integer id, @Context UriInfo uriInfo, @Context SecurityContext sc)
-    throws CloudException {
+  public Response getAllByProject(@PathParam("id") Integer id,
+                                  @Context UriInfo uriInfo,
+                                  @Context HttpServletRequest req,
+                                  @Context SecurityContext sc) throws CloudException {
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.CLOUD);
     CloudRoleMappingDTO dto = cloudRoleMappingBuilder.buildItem(uriInfo, resourceRequest, id);
     return Response.ok().entity(dto).build();
@@ -86,9 +92,13 @@ public class CloudRoleMappingResource {
   @Path("/role-mappings")
   @Produces(MediaType.APPLICATION_JSON)
   public Response addMapping(@Secret @QueryParam("cloudRole") String cloudRole,
-    @QueryParam("projectId") Integer projectId, @QueryParam("projectRole") ProjectRoles projectRole,
-    @QueryParam("defaultRole") Boolean defaultRole, @Context UriInfo uriInfo, @Context SecurityContext sc)
-    throws ProjectException, CloudException {
+                             @QueryParam("projectId") Integer projectId,
+                             @QueryParam("projectRole") ProjectRoles projectRole,
+                             @QueryParam("defaultRole") Boolean defaultRole,
+                             @Context UriInfo uriInfo,
+                             @Context HttpServletRequest req,
+                             @Context SecurityContext sc)
+      throws ProjectException, CloudException {
     Project project = projectController.findProjectById(projectId);
     CloudRoleMapping cloudRoleMapping =
       cloudRoleMappingController.saveMapping(project, cloudRole, projectRole, defaultRole != null && defaultRole);
@@ -100,9 +110,13 @@ public class CloudRoleMappingResource {
   @PUT
   @Path("/role-mappings/{id: [0-9]*}")
   @Produces(MediaType.APPLICATION_JSON)
-  public Response updateMapping(@PathParam("id") Integer id, @Secret @QueryParam("cloudRole") String cloudRole,
-    @QueryParam("projectRole") ProjectRoles projectRole, @QueryParam("defaultRole") Boolean defaultRole,
-    @Context UriInfo uriInfo, @Context SecurityContext sc) throws CloudException {
+  public Response updateMapping(@PathParam("id") Integer id,
+                                @Secret @QueryParam("cloudRole") String cloudRole,
+                                @QueryParam("projectRole") ProjectRoles projectRole,
+                                @QueryParam("defaultRole") Boolean defaultRole,
+                                @Context UriInfo uriInfo,
+                                @Context HttpServletRequest req,
+                                @Context SecurityContext sc) throws CloudException {
     CloudRoleMapping cloudRoleMapping = cloudRoleMappingController.update(id, cloudRole, projectRole, defaultRole);
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.CLOUD);
     CloudRoleMappingDTO dto = cloudRoleMappingBuilder.buildItem(uriInfo, resourceRequest, cloudRoleMapping.getId());
@@ -112,7 +126,10 @@ public class CloudRoleMappingResource {
   @DELETE
   @Path("/role-mappings/{id: [0-9]*}")
   @Produces(MediaType.APPLICATION_JSON)
-  public Response deleteMapping(@PathParam("id") Integer id, @Context UriInfo uriInfo, @Context SecurityContext sc) {
+  public Response deleteMapping(@PathParam("id") Integer id,
+                                @Context UriInfo uriInfo,
+                                @Context HttpServletRequest req,
+                                @Context SecurityContext sc) {
     CloudRoleMapping cloudRoleMapping = cloudRoleMappingFacade.find(id);
     if (cloudRoleMapping != null) {
       cloudRoleMappingFacade.remove(cloudRoleMapping);

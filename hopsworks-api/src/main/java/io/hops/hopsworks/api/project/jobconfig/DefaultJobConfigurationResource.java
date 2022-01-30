@@ -41,6 +41,7 @@ import javax.ejb.EJB;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.enterprise.context.RequestScoped;
+import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
@@ -90,6 +91,7 @@ public class DefaultJobConfigurationResource {
   public Response get(@BeanParam Pagination pagination,
                       @BeanParam DefaultJobConfigurationBeanParam defaultJobConfigurationBeanParam,
                       @Context UriInfo uriInfo,
+                      @Context HttpServletRequest req,
                       @Context SecurityContext sc) throws ProjectException {
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.JOBCONFIG);
     resourceRequest.setOffset(pagination.getOffset());
@@ -113,6 +115,7 @@ public class DefaultJobConfigurationResource {
   @ApiKeyRequired(acceptedScopes = {ApiScope.JOB}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   public Response getByType(@PathParam("type") JobType jobType,
                             @Context UriInfo uriInfo,
+                            @Context HttpServletRequest req,
                             @Context SecurityContext sc) throws ProjectException {
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.JOBCONFIG);
     DefaultJobConfiguration defaultJobConfiguration =
@@ -138,6 +141,7 @@ public class DefaultJobConfigurationResource {
     @ApiParam(value = "Job configuration", required = true) JobConfiguration config,
     @PathParam("type") JobType type,
     @Context UriInfo uriInfo,
+    @Context HttpServletRequest req,
     @Context SecurityContext sc) throws ProjectException {
 
     Response.Status status = Response.Status.CREATED;
@@ -172,6 +176,7 @@ public class DefaultJobConfigurationResource {
   @JWTRequired(acceptedTokens={Audience.API, Audience.JOB}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
   @ApiKeyRequired(acceptedScopes = {ApiScope.JOB}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   public Response delete(@PathParam("type") JobType type,
+                         @Context HttpServletRequest req,
                          @Context SecurityContext sc) {
     projectController.removeProjectDefaultJobConfiguration(this.project, type);
     return Response.noContent().build();
