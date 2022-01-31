@@ -210,7 +210,7 @@ public class ModelsBuilder {
         modelDTO.setProgram(modelSummary.getProgram());
         modelDTO.setFramework(modelSummary.getFramework());
         modelDTO.setTags(tagsBuilder.build(uriInfo, resourceRequest, user, userProject, modelRegistryProject,
-            modelSummary));
+            modelDTO));
 
         String modelVersionPath = modelsFolder + "/" + modelDTO.getName() + "/" + modelDTO.getVersion() + "/";
 
