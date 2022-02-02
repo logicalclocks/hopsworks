@@ -1190,7 +1190,7 @@
           <plugin>
             <groupId>org.owasp</groupId>
             <artifactId>dependency-check-maven</artifactId>
-            <version>6.4.1</version>
+            <version>6.2.2</version>
             <inherited>false</inherited>
             <configuration>
               <suppressionFiles>
@@ -1201,7 +1201,7 @@
             <executions>
               <execution>
                 <goals>
-                  <goal>check</goal>
+                  <goal>aggregate</goal>
                 </goals>
               </execution>
             </executions>
