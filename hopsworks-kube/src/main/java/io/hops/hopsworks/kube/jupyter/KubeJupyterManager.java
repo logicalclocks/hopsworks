@@ -37,7 +37,6 @@ import io.fabric8.kubernetes.api.model.apps.Deployment;
 import io.fabric8.kubernetes.api.model.apps.DeploymentBuilder;
 import io.fabric8.kubernetes.api.model.apps.DeploymentSpecBuilder;
 import io.fabric8.kubernetes.client.KubernetesClientException;
-import io.hops.common.Pair;
 import io.hops.hopsworks.common.dao.hdfsUser.HdfsUsersFacade;
 import io.hops.hopsworks.common.dao.jupyter.config.JupyterConfigFilesGenerator;
 import io.hops.hopsworks.common.dao.jupyter.config.JupyterDTO;
@@ -47,10 +46,11 @@ import io.hops.hopsworks.common.dao.project.ProjectFacade;
 import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
 import io.hops.hopsworks.common.hosts.ServiceDiscoveryController;
+import io.hops.hopsworks.common.jobs.JobController;
 import io.hops.hopsworks.common.jupyter.JupyterManager;
 import io.hops.hopsworks.common.jupyter.JupyterManagerImpl;
 import io.hops.hopsworks.common.jupyter.TokenGenerator;
-import io.hops.hopsworks.common.jobs.JobController;
+import io.hops.hopsworks.common.serving.ServingConfig;
 import io.hops.hopsworks.common.util.HopsUtils;
 import io.hops.hopsworks.common.util.ProjectUtils;
 import io.hops.hopsworks.common.util.Settings;
@@ -58,10 +58,9 @@ import io.hops.hopsworks.common.util.templates.jupyter.JupyterNotebookConfigTemp
 import io.hops.hopsworks.common.util.templates.jupyter.KernelTemplate;
 import io.hops.hopsworks.common.util.templates.jupyter.SparkMagicConfigTemplate;
 import io.hops.hopsworks.exceptions.ApiKeyException;
-import io.hops.hopsworks.exceptions.ServiceException;
 import io.hops.hopsworks.exceptions.JobException;
+import io.hops.hopsworks.exceptions.ServiceException;
 import io.hops.hopsworks.kube.common.KubeClientService;
-import io.hops.hopsworks.kube.common.KubeIstioClientService;
 import io.hops.hopsworks.kube.common.KubeStereotype;
 import io.hops.hopsworks.kube.project.KubeProjectConfigMaps;
 import io.hops.hopsworks.kube.security.KubeApiKeyUtils;
@@ -71,15 +70,16 @@ import io.hops.hopsworks.persistence.entity.jupyter.JupyterProject;
 import io.hops.hopsworks.persistence.entity.jupyter.JupyterSettings;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.user.Users;
-import io.hops.hopsworks.persistence.entity.user.security.apiKey.ApiKey;
 import io.hops.hopsworks.restutils.RESTCodes;
 
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
+import javax.inject.Inject;
 import java.io.IOException;
 import java.io.StringWriter;
+import java.io.UnsupportedEncodingException;
 import java.io.Writer;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -147,8 +147,8 @@ public class KubeJupyterManager extends JupyterManagerImpl implements JupyterMan
   private JobController jobController;
   @EJB
   private KubeApiKeyUtils kubeApiKeyUtils;
-  @EJB
-  private KubeIstioClientService kubeIstioClientService;
+  @Inject
+  private ServingConfig servingConfig;
   
   @Override
   @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
@@ -180,23 +180,12 @@ public class KubeJupyterManager extends JupyterManagerImpl implements JupyterMan
       // jupyter notebook config
       Writer jupyterNotebookConfig = new StringWriter();
       jupyterConfigFilesGenerator.createJupyterNotebookConfig(jupyterNotebookConfig, project, nodePort,
-              jupyterSettings, hdfsUser, jupyterPaths.getCertificatesDir(), allowOrigin);
-      
-      // get serving api key
-      Optional<ApiKey> apiKey = kubeApiKeyUtils.getServingApiKey(user);
-      if (!apiKey.isPresent()) {
-        throw new ApiKeyException(RESTCodes.ApiKeyErrorCode.KEY_NOT_FOUND, Level.SEVERE,
-          "Serving API key for user " + user.getUsername() + " not found");
-      }
-      String secretName = kubeApiKeyUtils.getServingApiKeySecretName(apiKey.get().getPrefix());
-      String secret = kubeApiKeyUtils.getServingApiKeyValueFromKubeSecret(secretName);
+        jupyterSettings, hdfsUser, jupyterPaths.getCertificatesDir(), allowOrigin);
       
       // spark config
       Writer sparkMagicConfig = new StringWriter();
-      Map<String, String> extraEnvVars = new HashMap<>();
-      extraEnvVars.put("SERVING_API_KEY", secret);
-      jupyterConfigFilesGenerator.createSparkMagicConfig(sparkMagicConfig, project, jupyterSettings, hdfsUser,
-          jupyterPaths.getConfDirPath(), extraEnvVars);
+      jupyterConfigFilesGenerator.createSparkMagicConfig(sparkMagicConfig, project, jupyterSettings, hdfsUser, user,
+        jupyterPaths.getConfDirPath());
 
       //If user selected Experiments or Spark we should use the default docker config for the Python kernel
       if(!jupyterSettings.isPythonKernel()) {
@@ -277,7 +266,8 @@ public class KubeJupyterManager extends JupyterManagerImpl implements JupyterMan
   private List<Container> buildContainer(JupyterPaths jupyterPaths, String anacondaEnv, String pythonKernelName,
       String secretDir, String certificatesDir, String hdfsUser, String token,
       ResourceRequirements resourceRequirements, Integer nodePort, String jupyterMode, boolean isGit,
-      Project project, Users user, Map<String, String> filebeatEnv) throws ServiceDiscoveryException {
+      Project project, Users user, Map<String, String> filebeatEnv)
+      throws ServiceDiscoveryException, UnsupportedEncodingException, ApiKeyException {
     String jupyterHome = jupyterPaths.getNotebookPath();
     String hadoopHome = settings.getHadoopSymbolicLinkDir();
     String hadoopConfDir = hadoopHome + "/etc/hadoop";
@@ -304,16 +294,14 @@ public class KubeJupyterManager extends JupyterManagerImpl implements JupyterMan
     environment.add(new EnvVarBuilder().withName("PYTHONHASHSEED").withValue("0").build());
     environment.add(new EnvVarBuilder().withName("IS_GIT").withValue(Boolean.toString(isGit)).build());
     environment.add(new EnvVarBuilder().withName("FLINK_LIB_DIR").withValue(settings.getFlinkLibDir()).build());
+  
+    // serving env vars
     environment.add(new EnvVarBuilder().withName("SERVING_API_KEY").withValueFrom(
       new EnvVarSourceBuilder().withNewSecretKeyRef(KubeApiKeyUtils.SERVING_API_KEY_SECRET_KEY,
         kubeApiKeyUtils.getProjectServingApiKeySecretName(user), false).build()).build());
+    Map<String, String> servingEnvVars = servingConfig.getEnvVars(user, false);
+    servingEnvVars.forEach((key, value) -> environment.add(new EnvVarBuilder().withName(key).withValue(value).build()));
     
-    if (settings.getKubeKFServingInstalled()) {
-      Pair<String, Integer> istioIngressHostPort = kubeIstioClientService.getIstioIngressHostPort();
-      environment.add(new EnvVarBuilder().withName("ISTIO_ENDPOINT")
-        .withValue("http://" + istioIngressHostPort.getL() + ":" + istioIngressHostPort.getR()).build());
-    }
-
     List<Container> containers = new ArrayList<>();
     VolumeMount logMount = new VolumeMountBuilder()
       .withName("logs")
@@ -459,7 +447,7 @@ public class KubeJupyterManager extends JupyterManagerImpl implements JupyterMan
   private Deployment buildDeployment(String name, String kubeProjectUser, JupyterPaths jupyterPaths, String anacondaEnv,
     String pythonKernelName, String secretDir, String certificatesDir, String hadoopUser, String token,
     DockerJobConfiguration dockerConfig, Integer nodePort, String jupyterMode, boolean isGit, Project project,
-    Users user) throws ServiceDiscoveryException {
+    Users user) throws ServiceDiscoveryException, UnsupportedEncodingException, ApiKeyException {
 
     ResourceRequirements resourceRequirements = kubeClientService.
       buildResourceRequirements(dockerConfig.getResourceConfig());

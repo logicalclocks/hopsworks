@@ -48,6 +48,7 @@ import io.hops.hopsworks.common.hdfs.UserGroupInformationService;
 import io.hops.hopsworks.common.hosts.ServiceDiscoveryController;
 import io.hops.hopsworks.common.jupyter.JupyterController;
 import io.hops.hopsworks.common.kafka.KafkaBrokers;
+import io.hops.hopsworks.common.serving.ServingConfig;
 import io.hops.hopsworks.common.util.HopsUtils;
 import io.hops.hopsworks.persistence.entity.jobs.configuration.history.JobState;
 import io.hops.hopsworks.persistence.entity.jobs.history.Execution;
@@ -72,6 +73,7 @@ import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
+import javax.inject.Inject;
 import java.io.IOException;
 import java.security.PrivilegedExceptionAction;
 import java.util.jar.Attributes;
@@ -107,6 +109,8 @@ public class SparkController {
   private KafkaBrokers kafkaBrokers;
   @EJB
   private ServiceDiscoveryController serviceDiscoveryController;
+  @Inject
+  private ServingConfig servingConfig;
 
   /**
    * Start the Spark job as the given user.
@@ -277,7 +281,7 @@ public class SparkController {
         sparkjob = proxyUser.doAs((PrivilegedExceptionAction<SparkJob>) () ->
                 new SparkJob(job, submitter, user, settings.getHadoopSymbolicLinkDir(),
                         hdfsUsersBean.getHdfsUserName(job.getProject(), user),
-                        settings, kafkaBrokers.getKafkaBrokersString(), hopsworksRestEndpoint,
+                        settings, kafkaBrokers.getKafkaBrokersString(), hopsworksRestEndpoint, servingConfig,
                         serviceDiscoveryController));
       } catch (InterruptedException ex) {
         LOGGER.log(Level.SEVERE, null, ex);

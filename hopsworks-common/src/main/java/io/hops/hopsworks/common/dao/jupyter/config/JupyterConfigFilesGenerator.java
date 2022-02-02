@@ -44,6 +44,8 @@ import com.logicalclocks.servicediscoverclient.exceptions.ServiceDiscoveryExcept
 import com.logicalclocks.servicediscoverclient.service.Service;
 import freemarker.template.TemplateException;
 import io.hops.hopsworks.common.jobs.JobController;
+import io.hops.hopsworks.common.serving.ServingConfig;
+import io.hops.hopsworks.exceptions.ApiKeyException;
 import io.hops.hopsworks.exceptions.JobException;
 import io.hops.hopsworks.persistence.entity.jobs.configuration.DockerJobConfiguration;
 import io.hops.hopsworks.common.hive.HiveController;
@@ -65,6 +67,7 @@ import io.hops.hopsworks.common.util.templates.jupyter.KernelTemplateBuilder;
 import io.hops.hopsworks.common.util.templates.jupyter.SparkMagicConfigTemplate;
 import io.hops.hopsworks.common.util.templates.jupyter.SparkMagicConfigTemplateBuilder;
 import io.hops.hopsworks.exceptions.ServiceException;
+import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.restutils.RESTCodes;
 import org.apache.commons.io.FileUtils;
 
@@ -112,12 +115,14 @@ public class JupyterConfigFilesGenerator {
   private HiveController hiveController;
   @EJB
   private JobController jobController;
+  @Inject
+  private ServingConfig servingConfig;
 
   public JupyterPaths generateJupyterPaths(Project project, String hdfsUser, String secretConfig) {
     return new JupyterPaths(settings.getJupyterDir(), project.getName(), hdfsUser, secretConfig);
   }
   
-  public JupyterPaths generateConfiguration(Project project, String secretConfig, String hdfsUser,
+  public JupyterPaths generateConfiguration(Project project, String secretConfig, String hdfsUser, Users hopsworksUser,
     JupyterSettings js, Integer port, String allowOrigin)
     throws ServiceException, JobException {
     boolean newDir = false;
@@ -126,8 +131,8 @@ public class JupyterConfigFilesGenerator {
     
     try {
       newDir = createJupyterDirs(jp);
-      createConfigFiles(jp, hdfsUser, project, port, js, allowOrigin);
-    } catch (IOException | ServiceException | ServiceDiscoveryException e) {
+      createConfigFiles(jp, hdfsUser, hopsworksUser, project, port, js, allowOrigin);
+    } catch (IOException | ServiceException | ServiceDiscoveryException | ApiKeyException e) {
       if (newDir) { // if the folder was newly created delete it
         removeProjectUserDirRecursive(jp);
       }
@@ -269,8 +274,8 @@ public class JupyterConfigFilesGenerator {
   }
 
   public void createSparkMagicConfig(Writer out, Project project, JupyterSettings js, String hdfsUser,
-      String confDirPath, Map<String, String> extraEnvVars) throws IOException, ServiceDiscoveryException,
-    JobException {
+    Users hopsworksUser, String confDirPath) throws IOException, ServiceDiscoveryException,
+    JobException, ApiKeyException {
     
     SparkJobConfiguration sparkJobConfiguration = (SparkJobConfiguration) js.getJobConfig();
 
@@ -294,9 +299,9 @@ public class JupyterConfigFilesGenerator {
         constructServiceFQDNWithPort(ServiceDiscoveryController.HopsworksService.HOPSWORKS_APP);
 
     finalSparkConfiguration.putAll(
-        sparkConfigurationUtil.setFrameworkProperties(project, sparkJobConfiguration, settings, hdfsUser,
-            extraJavaOptions, kafkaBrokers.getKafkaBrokersString(), hopsworksRestEndpoint, serviceDiscoveryController,
-            extraEnvVars));
+        sparkConfigurationUtil.setFrameworkProperties(project, sparkJobConfiguration, settings, hdfsUser, hopsworksUser,
+            extraJavaOptions, kafkaBrokers.getKafkaBrokersString(), hopsworksRestEndpoint, servingConfig,
+            serviceDiscoveryController));
     
     StringBuilder sparkConfBuilder = new StringBuilder();
     ArrayList<String> keys = new ArrayList<>(finalSparkConfiguration.keySet());
@@ -340,9 +345,9 @@ public class JupyterConfigFilesGenerator {
   }
 
   // returns true if one of the conf files were created anew 
-  private void createConfigFiles(JupyterPaths jp, String hdfsUser, Project project,
+  private void createConfigFiles(JupyterPaths jp, String hdfsUser, Users hopsworksUser, Project project,
       Integer port, JupyterSettings js, String allowOrigin)
-          throws IOException, ServiceException, ServiceDiscoveryException, JobException {
+    throws IOException, ServiceException, ServiceDiscoveryException, JobException, ApiKeyException {
     String confDirPath = jp.getConfDirPath();
     String kernelsDir = jp.getKernelsDir();
     String certsDir = jp.getCertificatesDir();
@@ -369,7 +374,7 @@ public class JupyterConfigFilesGenerator {
     
     if (!sparkmagic_config_file.exists()) {
       try (Writer out = new FileWriter(sparkmagic_config_file, false)) {
-        createSparkMagicConfig(out, project, js, hdfsUser, confDirPath, null);
+        createSparkMagicConfig(out, project, js, hdfsUser, hopsworksUser, confDirPath);
       }
     }
   }

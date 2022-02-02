@@ -46,9 +46,11 @@ import io.hops.hopsworks.common.jobs.execution.ExecutionController;
 import io.hops.hopsworks.common.jobs.yarn.YarnLogUtil;
 import io.hops.hopsworks.common.jupyter.JupyterController;
 import io.hops.hopsworks.common.kafka.KafkaBrokers;
+import io.hops.hopsworks.common.serving.ServingConfig;
 import io.hops.hopsworks.common.util.HopsUtils;
 import io.hops.hopsworks.common.util.ProjectUtils;
 import io.hops.hopsworks.common.util.Settings;
+import io.hops.hopsworks.exceptions.ApiKeyException;
 import io.hops.hopsworks.exceptions.GenericException;
 import io.hops.hopsworks.exceptions.JobException;
 import io.hops.hopsworks.exceptions.ProjectException;
@@ -74,6 +76,7 @@ import javax.ejb.EJBException;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
+import javax.inject.Inject;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -128,6 +131,8 @@ public class KubeExecutionController extends AbstractExecutionController impleme
   private KubeProjectConfigMaps kubeProjectConfigMaps;
   @EJB
   private KubeApiKeyUtils kubeApiKeyUtils;
+  @Inject
+  private ServingConfig servingConfig;
 
   @Override
   @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
@@ -568,7 +573,7 @@ public class KubeExecutionController extends AbstractExecutionController impleme
 
   private List<EnvVar> getPrimaryContainerEnv(JobType jobType, Users user, String hadoopUser, Project project,
     Execution execution, String certificatesDir, String secretsDir, String anacondaEnv,
-    DockerJobConfiguration dockerJobConfiguration) throws ServiceDiscoveryException, IOException {
+    DockerJobConfiguration dockerJobConfiguration) throws ServiceDiscoveryException, IOException, ApiKeyException {
     
     List<EnvVar> environment = new ArrayList<>();
     switch (jobType) {
@@ -632,9 +637,14 @@ public class KubeExecutionController extends AbstractExecutionController impleme
         environment.add(new EnvVarBuilder().withName("APP_ARGS").withValue(execution.getArgs()).build());
         environment.add(new EnvVarBuilder().withName("APP_FILES")
           .withValue(((PythonJobConfiguration)dockerJobConfiguration).getFiles()).build());
+        
+        // serving env vars
         environment.add(new EnvVarBuilder().withName("SERVING_API_KEY").withValueFrom(
           new EnvVarSourceBuilder().withNewSecretKeyRef(KubeApiKeyUtils.SERVING_API_KEY_SECRET_KEY,
             kubeApiKeyUtils.getProjectServingApiKeySecretName(user), false).build()).build());
+        Map<String, String> servingEnvVars = servingConfig.getEnvVars(user, false);
+        servingEnvVars.forEach((key, value) -> environment.add(
+          new EnvVarBuilder().withName(key).withValue(value).build()));
         break;
       case DOCKER:
         if (dockerJobConfiguration.getEnvVars() != null && !dockerJobConfiguration.getEnvVars().isEmpty()) {

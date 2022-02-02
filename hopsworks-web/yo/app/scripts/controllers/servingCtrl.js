@@ -791,7 +791,7 @@ angular.module('hopsWorksApp')
                             self.artifactVersion = self.artifactVersions.slice(-1)[0];
                             self.editServing.artifactVersion = self.artifactVersion.key;
                         } else {
-                            version = self.findArtifactVersion(self.editServing.artifactVersion, self.artifactVersions.slice(-1)[0]);
+                            const version = self.findArtifactVersion(self.editServing.artifactVersion, self.artifactVersions.slice(-1)[0]);
                             self.artifactVersion = version;
                             self.editServing.artifactVersion = self.artifactVersion.key;
                         }
@@ -1028,10 +1028,12 @@ angular.module('hopsWorksApp')
                     self.validateTransformer();
                     if (self.artifactVersions && self.artifactVersions.length > 0) {
                         self.artifactVersion = self.artifactVersions[0];
-                        for (var idx in self.artifactVersions) {
-                            if (self.artifactVersions[idx].value === self.artifactModelOnly) {
-                                self.artifactVersion = self.artifactVersions[idx];
-                                break;
+                        if (!self.editServing.predictor) {
+                            for (var idx in self.artifactVersions) {
+                                if (self.artifactVersions[idx].value === self.artifactModelOnly) {
+                                    self.artifactVersion = self.artifactVersions[idx];
+                                    break;
+                                }
                             }
                         }
                         self.editServing.artifactVersion = self.artifactVersion.key;

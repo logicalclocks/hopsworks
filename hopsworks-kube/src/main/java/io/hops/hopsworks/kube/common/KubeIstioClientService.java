@@ -35,6 +35,10 @@ public class KubeIstioClientService {
   @EJB
   private KubeIstioHostPort kubeIstioHostPort;
   
+  public String getIstioEndpoint(Pair<String, Integer> istioIngressHostPort) {
+    return "http://" + istioIngressHostPort.getL() + ":" + istioIngressHostPort.getR();
+  }
+  
   public Pair<String, Integer> getIstioIngressHostPort() {
     return getIstioIngressHostPort(Host.NODE, Port.HTTP);
   }
