@@ -64,7 +64,6 @@
       <groupId>io.hops</groupId>
       <artifactId>service-proxy-core</artifactId>
     </dependency>
-
     <dependency>
       <groupId>io.hops.hopsworks</groupId>
       <artifactId>hopsworks-common</artifactId>
