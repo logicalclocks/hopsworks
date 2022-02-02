@@ -61,7 +61,7 @@ public class ErasureCodeJob extends YarnJob {
   public ErasureCodeJob(Jobs job, AsynchronousJobExecutor services,
           Users user, String jobUser, String hadoopDir, Settings settings, 
           ServiceDiscoveryController serviceDiscoveryController) {
-    super(job, services, user, jobUser, hadoopDir, settings,null, null, serviceDiscoveryController);
+    super(job, services, user, jobUser, hadoopDir, settings,null, null, null, serviceDiscoveryController);
 
     if (!(job.getJobConfig() instanceof ErasureCodeJobConfiguration)) {
       throw new IllegalArgumentException(
