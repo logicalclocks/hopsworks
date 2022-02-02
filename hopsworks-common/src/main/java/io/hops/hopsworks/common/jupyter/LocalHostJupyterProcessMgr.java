@@ -135,7 +135,7 @@ public class LocalHostJupyterProcessMgr extends JupyterManagerImpl implements Ju
     String prog = settings.getSudoersDir() + "/jupyter.sh";
     
     Integer port = ThreadLocalRandom.current().nextInt(40000, 59999);
-    JupyterPaths jp = jupyterConfigFilesGenerator.generateConfiguration(project, secretConfig, hdfsUser,
+    JupyterPaths jp = jupyterConfigFilesGenerator.generateConfiguration(project, secretConfig, hdfsUser, user,
         js, port, allowOrigin);
     String secretDir = settings.getStagingDir() + Settings.PRIVATE_DIRS + js.getSecret();
 

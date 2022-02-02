@@ -42,6 +42,7 @@ package io.hops.hopsworks.common.jobs.flink;
 import com.google.common.base.Strings;
 import com.logicalclocks.servicediscoverclient.exceptions.ServiceDiscoveryException;
 import io.hops.hopsworks.common.hosts.ServiceDiscoveryController;
+import io.hops.hopsworks.common.serving.ServingConfig;
 import io.hops.hopsworks.exceptions.ServiceException;
 import io.hops.hopsworks.persistence.entity.hdfs.inode.Inode;
 import io.hops.hopsworks.persistence.entity.hdfs.user.HdfsUsers;
@@ -79,6 +80,7 @@ import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
+import javax.inject.Inject;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -119,6 +121,8 @@ public class FlinkController {
   private KafkaBrokers kafkaBrokers;
   @EJB
   private ServiceDiscoveryController serviceDiscoveryController;
+  @Inject
+  private ServingConfig servingConfig;
 
   
   public Execution startJob(final Jobs job, final Users user)
@@ -144,7 +148,7 @@ public class FlinkController {
       try {
         flinkjob = proxyUser.doAs((PrivilegedExceptionAction<FlinkJob>) () -> new FlinkJob(job, submitter, user,
             hdfsUsersBean.getHdfsUserName(job.getProject(), job.getCreator()), settings,
-            kafkaBrokers.getKafkaBrokersString(), hopsworksRestEndpoint, serviceDiscoveryController));
+            kafkaBrokers.getKafkaBrokersString(), hopsworksRestEndpoint, servingConfig, serviceDiscoveryController));
       } catch (InterruptedException ex) {
         LOGGER.log(Level.SEVERE, null, ex);
       }

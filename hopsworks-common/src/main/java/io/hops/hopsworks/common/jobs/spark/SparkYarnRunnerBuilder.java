@@ -40,6 +40,8 @@ package io.hops.hopsworks.common.jobs.spark;
 
 import com.google.common.base.Strings;
 import com.logicalclocks.servicediscoverclient.exceptions.ServiceDiscoveryException;
+import io.hops.hopsworks.common.serving.ServingConfig;
+import io.hops.hopsworks.exceptions.ApiKeyException;
 import io.hops.hopsworks.exceptions.JobException;
 import io.hops.hopsworks.persistence.entity.jobs.configuration.spark.SparkJobConfiguration;
 import io.hops.hopsworks.persistence.entity.jobs.description.Jobs;
@@ -54,6 +56,7 @@ import io.hops.hopsworks.common.util.HopsUtils;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.common.util.SparkConfigurationUtil;
 import io.hops.hopsworks.common.util.templates.ConfigProperty;
+import io.hops.hopsworks.persistence.entity.user.Users;
 import org.apache.hadoop.yarn.api.records.LocalResourceType;
 import org.apache.hadoop.yarn.api.records.LocalResourceVisibility;
 import org.apache.hadoop.yarn.client.api.YarnClient;
@@ -116,11 +119,12 @@ public class SparkYarnRunnerBuilder {
    * @return The YarnRunner instance to launch the Spark job on Yarn.
    * @throws IOException If creation failed.
    */
-  public YarnRunner getYarnRunner(Project project, String jobUser, AsynchronousJobExecutor services,
-                                  final DistributedFileSystemOps dfsClient, final YarnClient yarnClient,
-                                  Settings settings, String kafkaBrokersString, String hopsworksRestEndpoint,
+  public YarnRunner getYarnRunner(Project project, String jobUser, Users hopsworksUser,
+                                  AsynchronousJobExecutor services, final DistributedFileSystemOps dfsClient,
+                                  final YarnClient yarnClient, Settings settings, String kafkaBrokersString,
+                                  String hopsworksRestEndpoint, ServingConfig servingConfig,
                                   ServiceDiscoveryController serviceDiscoveryController)
-          throws IOException, ServiceDiscoveryException, JobException {
+    throws IOException, ServiceDiscoveryException, JobException, ApiKeyException {
 
     Map<String, ConfigProperty> jobHopsworksProps = new HashMap<>();
     JobType jobType = job.getJobConfig().getJobType();
@@ -194,7 +198,8 @@ public class SparkYarnRunnerBuilder {
     Map<String, String> finalJobProps = new HashMap<>();
 
     finalJobProps.putAll(sparkConfigurationUtil.setFrameworkProperties(project, job.getJobConfig(), settings,
-            jobUser, extraJavaOptions, kafkaBrokersString, hopsworksRestEndpoint, serviceDiscoveryController, null));
+            jobUser, hopsworksUser, extraJavaOptions, kafkaBrokersString, hopsworksRestEndpoint, servingConfig,
+            serviceDiscoveryController));
 
     finalJobProps.put(Settings.SPARK_YARN_APPMASTER_SPARK_USER, jobUser);
     finalJobProps.put(Settings.SPARK_EXECUTOR_SPARK_USER, jobUser);
