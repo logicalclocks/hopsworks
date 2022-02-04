@@ -68,6 +68,8 @@ import org.codehaus.jackson.annotate.JsonIgnore;
   @NamedQuery(name = "Hosts.findByHostIp",
           query = "SELECT h FROM Hosts h WHERE h.hostIp = :hostIp"),
   @NamedQuery(name = "Host.Count", query = "SELECT count(h.id) FROM Hosts h"),
+  @NamedQuery(name = "Host.CountUnregistered", query = "SELECT count(h.id) FROM Hosts h WHERE h.registered = null OR " +
+    "h.registered = false"),
   @NamedQuery(name = "Host.TotalCores", query = "SELECT SUM(h.cores) FROM Hosts h"),
   @NamedQuery(name = "Host.TotalGPUs", query = "SELECT SUM(h.numGpus) FROM Hosts h"),
   @NamedQuery(name = "Host.TotalMemoryCapacity", query = "SELECT SUM(h.memoryCapacity) FROM Hosts h")})

@@ -154,6 +154,11 @@ public class HostsFacade extends AbstractFacade<Hosts> {
     return query.getSingleResult();
   }
   
+  public long countUnregistered() {
+    TypedQuery<Long> query = em.createNamedQuery("Host.CountUnregistered", Long.class);
+    return query.getSingleResult();
+  }
+  
   public enum Sorts {
     ID("ID", " h.id ", "ASC"),
     HOSTNAME("HOSTNAME", " LOWER(h.hostname) ", "ASC"),

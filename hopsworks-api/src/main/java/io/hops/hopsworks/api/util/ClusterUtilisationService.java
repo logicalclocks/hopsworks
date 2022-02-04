@@ -42,6 +42,7 @@ package io.hops.hopsworks.api.util;
 import com.logicalclocks.servicediscoverclient.exceptions.ServiceDiscoveryException;
 import com.logicalclocks.servicediscoverclient.service.Service;
 import io.hops.hopsworks.api.filter.Audience;
+import io.hops.hopsworks.common.dao.host.HostsFacade;
 import io.hops.hopsworks.common.hosts.ServiceDiscoveryController;
 import io.hops.hopsworks.common.proxies.client.HttpClient;
 import io.hops.hopsworks.exceptions.ServiceException;
@@ -50,6 +51,7 @@ import io.hops.hopsworks.restutils.RESTCodes;
 import io.swagger.annotations.Api;
 import org.apache.http.HttpHost;
 import org.apache.http.client.methods.HttpGet;
+import org.json.JSONObject;
 
 import java.io.IOException;
 import java.util.logging.Level;
@@ -76,6 +78,8 @@ public class ClusterUtilisationService {
   private ServiceDiscoveryController serviceDiscoveryController;
   @EJB
   private HttpClient httpClient;
+  @EJB
+  private HostsFacade hostsFacade;
 
   private static final String METRICS_ENDPOINT = "/ws/v1/cluster/metrics";
 
@@ -100,7 +104,10 @@ public class ClusterUtilisationService {
     } catch (IOException e) {
       throw new ServiceException(RESTCodes.ServiceErrorCode.RM_METRICS_ERROR, Level.FINE);
     }
-
-    return Response.ok().entity(response).build();
+    JSONObject jsonObject = new JSONObject(response);
+    jsonObject.put("deploying", hostsFacade.countUnregistered());
+    return Response.ok()
+      .entity(jsonObject.toString())
+      .build();
   }
 }
