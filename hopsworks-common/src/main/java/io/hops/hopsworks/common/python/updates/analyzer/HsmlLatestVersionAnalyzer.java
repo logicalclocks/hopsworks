@@ -1,6 +1,6 @@
 /*
  * This file is part of Hopsworks
- * Copyright (C) 2021, Logical Clocks AB. All rights reserved
+ * Copyright (C) 2022, Logical Clocks AB. All rights reserved
  *
  * Hopsworks is free software: you can redistribute it and/or modify it under the terms of
  * the GNU Affero General Public License as published by the Free Software Foundation,
@@ -25,21 +25,21 @@ import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 /*
-  hsfs version format:
+  hsml version format:
 
   2.1.0 where the Hopsworks installation number is the first two digits separated by a dot.
   In this case the installation version is 2.1.0 for Hopsworks.
   The ending .0 indicates the bugfix version which in this case is 0.
   For each bugfix release the bugfix version is bumped by + 1, such as 2.1.0 -> 2.1.1 -> 2.1.2.
  */
-public class HsfsLatestVersionAnalyzer extends LatestVersionAnalyzer {
+public class HsmlLatestVersionAnalyzer extends LatestVersionAnalyzer {
 
   private static final Logger LOGGER = Logger.getLogger(
-    HsfsLatestVersionAnalyzer.class.getName());
+    HsmlLatestVersionAnalyzer.class.getName());
 
   @Override
   public String getLibrary() {
-    return "hsfs";
+    return "hsml";
   }
 
 
@@ -52,10 +52,10 @@ public class HsfsLatestVersionAnalyzer extends LatestVersionAnalyzer {
 
       String [] hopsworksVersionSplit = currentHopsworksVersion.split("\\.");
 
-      String hsfsVersionPrefix = hopsworksVersionSplit[0] + "." + hopsworksVersionSplit[1];
+      String hsmlVersionPrefix = hopsworksVersionSplit[0] + "." + hopsworksVersionSplit[1];
 
       List<LibraryVersionDTO> currentVersionSearchHits = searchVersionHits
-        .stream().filter(version -> version.getVersion().startsWith(hsfsVersionPrefix))
+        .stream().filter(version -> version.getVersion().startsWith(hsmlVersionPrefix))
         .collect(Collectors.toList());
 
       currentVersionSearchHits = currentVersionSearchHits

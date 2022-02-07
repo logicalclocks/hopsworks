@@ -45,7 +45,7 @@ public class HopsLatestVersionAnalyzer extends LatestVersionAnalyzer {
   @Override
   public void setLatestVersion(String currentHopsworksVersion, HashMap<String, List<LibraryVersionDTO>> versions) {
 
-    if(versions.containsKey(this.getLibrary()) && !versions.get(this.getLibrary()).isEmpty()) {
+    if(versions != null && !versions.isEmpty() && versions.containsKey(this.getLibrary())) {
 
       List<LibraryVersionDTO> searchVersionHits = versions.get(this.getLibrary());
 
