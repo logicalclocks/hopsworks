@@ -89,7 +89,7 @@ public class LogInterceptor implements Serializable {
         .with("class", className)
         .with("method", methodName)
         .with("parameters", parameters.toString())
-        .with("outcome", outcome)
+        .with("outcome", outcome != null ? outcome : "")
         .with("caller", email)
         .with("client-ip", callInfo.get(AnnotationHelper.CLIENT_IP))
         .with("user-agent", callInfo.get(AnnotationHelper.USER_AGENT));

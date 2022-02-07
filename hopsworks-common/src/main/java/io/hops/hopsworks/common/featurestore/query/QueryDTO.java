@@ -163,11 +163,17 @@ public class QueryDTO {
   }
 
   @Override
-  public int hashCode() {
-    int result = leftFeatureGroup != null ? leftFeatureGroup.hashCode() : 0;
-    result = 31 * result + (leftFeatures != null ? leftFeatures.hashCode() : 0);
-    result = 31 * result + (joins != null ? joins.hashCode() : 0);
-    result = 31 * result + (filter != null ? filter.hashCode() : 0);
-    return result;
+  public String toString() {
+    return "QueryDTO{" +
+        "featureStoreId=" + featureStoreId +
+        ", featureStoreName='" + featureStoreName + '\'' +
+        ", leftFeatureGroup=" + leftFeatureGroup +
+        ", leftFeatures=" + leftFeatures +
+        ", leftFeatureGroupStartTime=" + leftFeatureGroupStartTime +
+        ", leftFeatureGroupEndTime=" + leftFeatureGroupEndTime +
+        ", filter=" + filter +
+        ", hiveEngine=" + hiveEngine +
+        ", joins=" + joins +
+        '}';
   }
 }

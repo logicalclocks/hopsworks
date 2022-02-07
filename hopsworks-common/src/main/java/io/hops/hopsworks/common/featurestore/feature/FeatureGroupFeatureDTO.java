@@ -223,16 +223,35 @@ public class FeatureGroupFeatureDTO {
       ", defaultValue=" + defaultValue +
       '}';
   }
-  
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) return true;
+    if (o == null || getClass() != o.getClass()) return false;
+
+    FeatureGroupFeatureDTO that = (FeatureGroupFeatureDTO) o;
+
+    if (name != null ? !name.equals(that.name) : that.name != null) return false;
+    if (type != null ? !type.equals(that.type) : that.type != null) return false;
+    if (onlineType != null ? !onlineType.equals(that.onlineType) : that.onlineType != null) return false;
+    if (description != null ? !description.equals(that.description) : that.description != null) return false;
+    if (primary != null ? !primary.equals(that.primary) : that.primary != null) return false;
+    if (partition != null ? !partition.equals(that.partition) : that.partition != null) return false;
+    if (hudiPrecombineKey != null ? !hudiPrecombineKey.equals(that.hudiPrecombineKey) : that.hudiPrecombineKey != null)
+      return false;
+    if (defaultValue != null ? !defaultValue.equals(that.defaultValue) : that.defaultValue != null) return false;
+    return featureGroupId != null ? featureGroupId.equals(that.featureGroupId) : that.featureGroupId == null;
+  }
+
   @Override
   public int hashCode() {
-    int result = name.hashCode();
-    result = 31 * result + type.hashCode();
+    int result = name != null ? name.hashCode() : 0;
+    result = 31 * result + (type != null ? type.hashCode() : 0);
     result = 31 * result + (onlineType != null ? onlineType.hashCode() : 0);
     result = 31 * result + (description != null ? description.hashCode() : 0);
-    result = 31 * result + primary.hashCode();
-    result = 31 * result + partition.hashCode();
-    result = 31 * result + hudiPrecombineKey.hashCode();
+    result = 31 * result + (primary != null ? primary.hashCode() : 0);
+    result = 31 * result + (partition != null ? partition.hashCode() : 0);
+    result = 31 * result + (hudiPrecombineKey != null ? hudiPrecombineKey.hashCode() : 0);
     result = 31 * result + (defaultValue != null ? defaultValue.hashCode() : 0);
     result = 31 * result + (featureGroupId != null ? featureGroupId.hashCode() : 0);
     return result;
