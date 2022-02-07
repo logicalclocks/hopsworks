@@ -231,11 +231,12 @@ public class ServingUtil {
         return MODEL_FILE_EXTS.stream().anyMatch(name::endsWith);
       }).count();
       if (modelFiles > 1) {
-        // if more than one model file
-        throw new ServingException(RESTCodes.ServingErrorCode.MODEL_FILES_STRUCTURE_NOT_VALID, Level.FINE, "Model " +
-          "path cannot contain more than one model file (i.e., joblib or pickle files)");
-      }
-      if (modelFiles == 0) {
+        if (serving.getServingTool() == ServingTool.KFSERVING && serving.getPredictor() == null) {
+          // if more than one model file in a KFServing deployment without predictor
+          throw new ServingException(RESTCodes.ServingErrorCode.MODEL_FILES_STRUCTURE_NOT_VALID, Level.FINE, "Model " +
+            "path cannot contain more than one model file (i.e., joblib or pickle files)");
+        }
+      } else if (modelFiles == 0) {
         // if no model files found
         if (children.stream().noneMatch(c -> c.getInodePK().getName().endsWith(".py"))) {
           // and no python script
