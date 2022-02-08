@@ -19,15 +19,18 @@ package io.hops.hopsworks.common.util;
 import com.google.common.base.Strings;
 import com.logicalclocks.servicediscoverclient.exceptions.ServiceDiscoveryException;
 import io.hops.hopsworks.common.hosts.ServiceDiscoveryController;
-import io.hops.hopsworks.exceptions.JobException;
-import io.hops.hopsworks.persistence.entity.project.Project;
-import io.hops.hopsworks.persistence.entity.jobs.configuration.JobConfiguration;
-import io.hops.hopsworks.persistence.entity.jobs.configuration.JobType;
-import io.hops.hopsworks.persistence.entity.jobs.configuration.DistributionStrategy;
-import io.hops.hopsworks.persistence.entity.jobs.configuration.ExperimentType;
-import io.hops.hopsworks.persistence.entity.jobs.configuration.spark.SparkJobConfiguration;
+import io.hops.hopsworks.common.serving.ServingConfig;
 import io.hops.hopsworks.common.util.templates.ConfigProperty;
 import io.hops.hopsworks.common.util.templates.ConfigReplacementPolicy;
+import io.hops.hopsworks.exceptions.ApiKeyException;
+import io.hops.hopsworks.exceptions.JobException;
+import io.hops.hopsworks.persistence.entity.jobs.configuration.DistributionStrategy;
+import io.hops.hopsworks.persistence.entity.jobs.configuration.ExperimentType;
+import io.hops.hopsworks.persistence.entity.jobs.configuration.JobConfiguration;
+import io.hops.hopsworks.persistence.entity.jobs.configuration.JobType;
+import io.hops.hopsworks.persistence.entity.jobs.configuration.spark.SparkJobConfiguration;
+import io.hops.hopsworks.persistence.entity.project.Project;
+import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.restutils.RESTCodes;
 
 import java.io.File;
@@ -37,14 +40,13 @@ import java.util.Map;
 import java.util.logging.Level;
 
 public class SparkConfigurationUtil extends ConfigurationUtil {
+  
   public Map<String, String> setFrameworkProperties(Project project, JobConfiguration jobConfiguration,
-                                                    Settings settings, String hdfsUser,
-                                                    Map<String, String> extraJavaOptions,
-                                                    String kafkaBrokersString, String hopsworksRestEndpoint,
-                                                    ServiceDiscoveryController serviceDiscoveryController,
-                                                    Map<String, String> extraEnvVars)
-          throws IOException, ServiceDiscoveryException, JobException {
-    SparkJobConfiguration sparkJobConfiguration = (SparkJobConfiguration)jobConfiguration;
+    Settings settings, String hdfsUser, Users hopsworksUser, Map<String, String> extraJavaOptions,
+    String kafkaBrokersString, String hopsworksRestEndpoint, ServingConfig servingConfig,
+    ServiceDiscoveryController serviceDiscoveryController)
+    throws IOException, ServiceDiscoveryException, JobException, ApiKeyException {
+    SparkJobConfiguration sparkJobConfiguration = (SparkJobConfiguration) jobConfiguration;
 
     validateExecutorMemory(sparkJobConfiguration.getExecutorMemory(), settings);
 
@@ -186,8 +188,11 @@ public class SparkConfigurationUtil extends ConfigurationUtil {
         HopsUtils.IGNORE);
 
     // add extra env vars
-    if (extraEnvVars != null) {
-      extraEnvVars.forEach((key, value) -> addToSparkEnvironment(sparkProps, key, value, HopsUtils.IGNORE));
+    if (servingConfig != null) {
+      Map<String, String> servingEnvVars = servingConfig.getEnvVars(hopsworksUser, true);
+      if (servingEnvVars != null) {
+        servingEnvVars.forEach((key, value) -> addToSparkEnvironment(sparkProps, key, value, HopsUtils.IGNORE));
+      }
     }
     
     addLibHdfsOpts(userSparkProperties, settings, sparkProps, sparkJobConfiguration);
