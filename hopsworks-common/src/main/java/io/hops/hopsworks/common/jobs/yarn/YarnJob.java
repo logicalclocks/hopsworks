@@ -39,6 +39,7 @@
 
 package io.hops.hopsworks.common.jobs.yarn;
 
+import io.hops.hopsworks.common.serving.ServingConfig;
 import io.hops.hopsworks.persistence.entity.jobs.configuration.yarn.LocalResourceDTO;
 import io.hops.hopsworks.persistence.entity.jobs.configuration.yarn.YarnJobConfiguration;
 import io.hops.hopsworks.persistence.entity.jobs.description.Jobs;
@@ -82,6 +83,7 @@ public abstract class YarnJob extends HopsJob {
   protected Settings settings;
   protected String kafkaBrokersString;
   protected String hopsworksRestEndpoint;
+  protected ServingConfig servingConfig;
 
   protected ServiceDiscoveryController serviceDiscoveryController;
   
@@ -98,7 +100,7 @@ public abstract class YarnJob extends HopsJob {
  YarnJobConfiguration object.
    */
   public YarnJob(Jobs job, AsynchronousJobExecutor services, Users user, String jobUser, String hadoopDir,
-      Settings settings, String kafkaBrokersString, String hopsworksRestEndpoint,
+      Settings settings, String kafkaBrokersString, String hopsworksRestEndpoint, ServingConfig servingConfig,
       ServiceDiscoveryController serviceDiscoveryController) {
     super(job, services, user, hadoopDir);
 
@@ -114,6 +116,7 @@ public abstract class YarnJob extends HopsJob {
     this.settings = settings;
     this.kafkaBrokersString = kafkaBrokersString;
     this.hopsworksRestEndpoint = hopsworksRestEndpoint;
+    this.servingConfig = servingConfig;
     this.serviceDiscoveryController = serviceDiscoveryController;
   }
 

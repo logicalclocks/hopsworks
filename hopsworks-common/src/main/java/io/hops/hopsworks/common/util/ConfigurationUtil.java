@@ -18,19 +18,22 @@ package io.hops.hopsworks.common.util;
 
 import com.logicalclocks.servicediscoverclient.exceptions.ServiceDiscoveryException;
 import io.hops.hopsworks.common.hosts.ServiceDiscoveryController;
+import io.hops.hopsworks.common.serving.ServingConfig;
+import io.hops.hopsworks.exceptions.ApiKeyException;
 import io.hops.hopsworks.exceptions.JobException;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.jobs.configuration.JobConfiguration;
+import io.hops.hopsworks.persistence.entity.user.Users;
 
 import java.io.IOException;
 import java.util.Map;
 
 public abstract class ConfigurationUtil {
   public abstract Map<String, String> setFrameworkProperties(Project project, JobConfiguration jobConfiguration,
-                                                             Settings settings, String hdfsUser,
+                                                             Settings settings, String hdfsUser, Users hopsworksUser,
                                                              Map<String, String> extraJavaOptions,
                                                              String kafkaBrokersString, String hopsworksRestEndpoint,
-                                                             ServiceDiscoveryController serviceDiscoveryController,
-                                                             Map<String, String> extraEnvVars)
-          throws IOException, ServiceDiscoveryException, JobException;
+                                                             ServingConfig servingConfig,
+                                                             ServiceDiscoveryController serviceDiscoveryController)
+          throws IOException, ServiceDiscoveryException, JobException, ApiKeyException;
 }

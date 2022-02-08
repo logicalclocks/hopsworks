@@ -45,6 +45,7 @@ import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.hosts.ServiceDiscoveryController;
 import io.hops.hopsworks.common.jobs.AsynchronousJobExecutor;
 import io.hops.hopsworks.common.jobs.yarn.YarnRunner;
+import io.hops.hopsworks.common.serving.ServingConfig;
 import io.hops.hopsworks.common.util.FlinkConfigurationUtil;
 import io.hops.hopsworks.common.util.ProjectUtils;
 import io.hops.hopsworks.common.util.Settings;
@@ -52,6 +53,7 @@ import io.hops.hopsworks.persistence.entity.jobs.configuration.JobType;
 import io.hops.hopsworks.persistence.entity.jobs.configuration.flink.FlinkJobConfiguration;
 import io.hops.hopsworks.persistence.entity.jobs.description.Jobs;
 import io.hops.hopsworks.persistence.entity.project.Project;
+import io.hops.hopsworks.persistence.entity.user.Users;
 import org.apache.flink.client.deployment.ClusterSpecification;
 import org.apache.flink.yarn.YarnClusterDescriptor;
 import org.apache.hadoop.conf.Configuration;
@@ -105,9 +107,9 @@ public class FlinkYarnRunnerBuilder {
     dynamicProperties.put(name, value);
   }
 
-  YarnRunner getYarnRunner(Project project, String jobUser, DistributedFileSystemOps dfsClient,
+  YarnRunner getYarnRunner(Project project, String jobUser, Users hopsworksUser, DistributedFileSystemOps dfsClient,
                            YarnClient yarnClient, AsynchronousJobExecutor services, Settings settings,
-                           String kafkaBrokersString, String hopsworksRestEndpoint,
+                           String kafkaBrokersString, String hopsworksRestEndpoint, ServingConfig servingConfig,
                            ServiceDiscoveryController serviceDiscoveryController)
       throws IOException, ServiceDiscoveryException {
 
@@ -134,8 +136,8 @@ public class FlinkYarnRunnerBuilder {
       project.getName().toLowerCase() + "," + job.getName() + "," + job.getId() + "," + YarnRunner.APPID_PLACEHOLDER);
   
     Map<String, String> finalJobProps = flinkConfigurationUtil
-      .setFrameworkProperties(project, job.getJobConfig(), settings, jobUser, extraJavaOptions,
-          kafkaBrokersString, hopsworksRestEndpoint, serviceDiscoveryController, null);
+      .setFrameworkProperties(project, job.getJobConfig(), settings, jobUser, hopsworksUser, extraJavaOptions,
+          kafkaBrokersString, hopsworksRestEndpoint, servingConfig, serviceDiscoveryController);
   
     //Parse properties from Spark config file
     Yaml yaml = new Yaml();
