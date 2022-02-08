@@ -38,6 +38,7 @@
  */
 package io.hops.hopsworks.common.jobs.spark;
 
+import io.hops.hopsworks.common.serving.ServingConfig;
 import io.hops.hopsworks.persistence.entity.jobs.configuration.JobType;
 import io.hops.hopsworks.persistence.entity.jobs.configuration.spark.SparkJobConfiguration;
 import io.hops.hopsworks.persistence.entity.jobs.description.Jobs;
@@ -65,8 +66,8 @@ public class SparkJob extends YarnJob {
 
   SparkJob(Jobs job, AsynchronousJobExecutor services, Users user, final String hadoopDir,
            String jobUser, Settings settings, String kafkaBrokersString, String hopsworksRestEndpoint,
-           ServiceDiscoveryController serviceDiscoveryController) {
-    super(job, services, user, jobUser, hadoopDir, settings, kafkaBrokersString, hopsworksRestEndpoint,
+           ServingConfig servingConfig, ServiceDiscoveryController serviceDiscoveryController) {
+    super(job, services, user, jobUser, hadoopDir, settings, kafkaBrokersString, hopsworksRestEndpoint, servingConfig,
         serviceDiscoveryController);
     if (!(job.getJobConfig() instanceof SparkJobConfiguration)) {
       throw new IllegalArgumentException(
@@ -108,9 +109,9 @@ public class SparkJob extends YarnJob {
     try {
       runner = runnerbuilder.
           getYarnRunner(jobs.getProject(),
-              jobUser,
+              jobUser, user,
               services, services.getFileOperations(hdfsUser.getUserName()), yarnClient,
-              settings, kafkaBrokersString, hopsworksRestEndpoint, serviceDiscoveryController);
+              settings, kafkaBrokersString, hopsworksRestEndpoint, servingConfig, serviceDiscoveryController);
     } catch (Exception e) {
       LOG.log(Level.WARNING,
           "Failed to create YarnRunner.", e);
