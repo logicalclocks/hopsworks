@@ -32,6 +32,17 @@ import java.nio.charset.StandardCharsets;
 @TransactionAttribute(TransactionAttributeType.NEVER)
 public class ServingInferenceUtils {
   
+  /**
+   * Builds an inference request to be sent to a model deployment. All implementations of ServingInferenceController
+   * must use this method to build the inference request.
+   *
+   * @param host host of the deployment where the model server is running
+   * @param port port of the deployment where the model server is listening to
+   * @param path inference path
+   * @param json request payload
+   * @return the inference request
+   * @throws URISyntaxException
+   */
   public HttpPost buildInferenceRequest(String host, int port, String path, String json) throws URISyntaxException {
     URI uri = new URIBuilder()
       .setScheme("http")
