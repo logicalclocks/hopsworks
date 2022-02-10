@@ -212,11 +212,6 @@ public class ServingUtil {
         String name = c.getInodePK().getName();
         return MODEL_FILE_EXTS.stream().anyMatch(name::endsWith);
       }).count();
-      if (modelFiles > 1) {
-        // if more than one model file
-        throw new ServingException(RESTCodes.ServingErrorCode.MODEL_FILES_STRUCTURE_NOT_VALID, Level.FINE, "Model " +
-          "path cannot contain more than one model file (i.e., joblib or pickle files)");
-      }
       if (modelFiles == 0) {
         // if no model files found
         if (children.stream().noneMatch(c -> c.getInodePK().getName().endsWith(".py"))) {
