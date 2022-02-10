@@ -15,7 +15,7 @@
  */
 package io.hops.hopsworks.api.git.execution;
 
-import io.hops.hopsworks.api.git.GitRepositoryDTO;
+import io.hops.hopsworks.api.git.repository.GitRepositoryDTO;
 import io.hops.hopsworks.api.user.UserDTO;
 import io.hops.hopsworks.common.api.RestDTO;
 import io.hops.hopsworks.persistence.entity.git.config.GitCommandConfiguration;

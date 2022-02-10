@@ -49,8 +49,6 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
 import javax.ws.rs.core.UriInfo;
-import java.util.Arrays;
-import java.util.HashSet;
 
 @Api(value = "Git Execution Resource")
 @RequestScoped
@@ -80,12 +78,10 @@ public class GitExecutionResource {
   @ApiKeyRequired(acceptedScopes = {ApiScope.GIT}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   public Response getRepositoryExecutions(@Context UriInfo uriInfo,
                                           @Context SecurityContext sc,
+                                          @BeanParam ExecutionBeanParam executionBeanParam,
                                           @BeanParam Pagination pagination) {
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.EXECUTION);
-    // TODO(Fabio): ideally this should be provided by an expansion beam param.
-    resourceRequest.setExpansions(
-        new HashSet<>(Arrays.asList(new ResourceRequest(ResourceRequest.Name.CREATOR),
-            new ResourceRequest(ResourceRequest.Name.REPOSITORY))));
+    resourceRequest.setExpansions(executionBeanParam.getExpansions().getResources());
     resourceRequest.setLimit(pagination.getLimit());
     resourceRequest.setOffset(pagination.getOffset());
     GitOpExecutionDTO dto = gitOpExecutionBuilder.build(uriInfo, resourceRequest, project, gitRepository);
@@ -100,13 +96,11 @@ public class GitExecutionResource {
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
   @ApiKeyRequired(acceptedScopes = {ApiScope.GIT}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   public Response getExecution(@PathParam("executionId") Integer executionId, @Context SecurityContext sc,
-                               @Context UriInfo uriInfo) throws GitOpException {
+                               @Context UriInfo uriInfo,
+                               @BeanParam ExecutionBeanParam executionBeanParam) throws GitOpException {
     GitOpExecution executionObj = executionController.getExecutionInRepository(gitRepository, executionId);
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.EXECUTION);
-    // TODO(Fabio): ideally this should be provided by an expansion beam param.
-    resourceRequest.setExpansions(
-        new HashSet<>(Arrays.asList(new ResourceRequest(ResourceRequest.Name.CREATOR),
-            new ResourceRequest(ResourceRequest.Name.REPOSITORY))));
+    resourceRequest.setExpansions(executionBeanParam.getExpansions().getResources());
     GitOpExecutionDTO dto = gitOpExecutionBuilder.build(uriInfo, resourceRequest, executionObj);
     return Response.ok().entity(dto).build();
   }
@@ -122,16 +116,15 @@ public class GitExecutionResource {
   public Response updateGitCommandExecutionState(@PathParam("executionId") Integer executionId,
                                                  @PathParam("repositoryId") Integer repositoryId,
                                                  GitCommandExecutionStateUpdateDTO stateUpdateDTO,
-                                                 @Context SecurityContext sc, @Context UriInfo uriInfo)
+                                                 @Context SecurityContext sc,
+                                                 @Context UriInfo uriInfo,
+                                                 @BeanParam ExecutionBeanParam executionBeanParam)
       throws GitOpException, IllegalArgumentException {
     Users hopsworksUser = jwtHelper.getUserPrincipal(sc);
     GitOpExecution newExec = executionController.updateGitExecutionState(project,hopsworksUser, stateUpdateDTO,
         repositoryId, executionId);
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.EXECUTION);
-    // TODO(Fabio): ideally this should be provided by an expansion beam param.
-    resourceRequest.setExpansions(
-        new HashSet<>(Arrays.asList(new ResourceRequest(ResourceRequest.Name.CREATOR),
-            new ResourceRequest(ResourceRequest.Name.REPOSITORY))));
+    resourceRequest.setExpansions(executionBeanParam.getExpansions().getResources());
     GitOpExecutionDTO dto = gitOpExecutionBuilder.build(uriInfo, resourceRequest, newExec);
     return Response.ok().entity(dto).build();
   }
