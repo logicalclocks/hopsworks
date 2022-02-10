@@ -7,6 +7,9 @@ package io.hops.hopsworks.kube.security;
 import io.hops.hopsworks.common.project.ProjectTeamRoleHandler;
 import io.hops.hopsworks.common.user.UserAccountHandler;
 import io.hops.hopsworks.common.user.security.apiKey.ApiKeyHandler;
+import io.hops.hopsworks.common.util.Settings;
+import io.hops.hopsworks.exceptions.ApiKeyException;
+import io.hops.hopsworks.exceptions.UserException;
 import io.hops.hopsworks.kube.common.KubeClientService;
 import io.hops.hopsworks.kube.serving.utils.KubeServingUtils;
 import io.hops.hopsworks.persistence.entity.project.Project;
@@ -21,6 +24,7 @@ import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
+import java.io.UnsupportedEncodingException;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
@@ -40,6 +44,8 @@ public class KubeApiKeyHandler implements ApiKeyHandler, UserAccountHandler, Pro
   private KubeClientService kubeClientService;
   @EJB
   private KubeApiKeyUtils kubeApiKeyUtils;
+  @EJB
+  private Settings settings;
   
   // ApiKey handler
   //
@@ -47,6 +53,26 @@ public class KubeApiKeyHandler implements ApiKeyHandler, UserAccountHandler, Pro
   
   @Override
   public void create(ApiKey apiKey) {
+    if (settings.getKubeKFServingInstalled()) {
+      createServingApiKeySecret(apiKey);
+    }
+  }
+  
+  @Override
+  public void delete(ApiKey apiKey) {
+    if (settings.getKubeKFServingInstalled()) {
+      logger.log(INFO, "Deleting serving API key secret for user " + apiKey.getUser().getUsername());
+      kubeClientService.deleteSecret(KubeServingUtils.HOPS_SYSTEM_NAMESPACE,
+        kubeApiKeyUtils.getServingApiKeySecretName(apiKey.getPrefix()));
+    }
+  }
+  
+  @Override
+  public boolean match(Collection<ApiKeyScope> scopes) {
+    return scopes.stream().anyMatch(scope -> scope.getScope() == ApiScope.SERVING);
+  }
+  
+  private void createServingApiKeySecret(ApiKey apiKey) {
     // TODO: (Javier) Update fabric8 to v5 and use PatchContext(Strategy.MergePatch)
     String secretName = kubeApiKeyUtils.getServingApiKeySecretName(apiKey.getPrefix());
     if (apiKey.getName().startsWith(KubeApiKeyUtils.SERVING_API_KEY_NAME) && apiKey.getReserved()) {
@@ -66,18 +92,6 @@ public class KubeApiKeyHandler implements ApiKeyHandler, UserAccountHandler, Pro
       "Created serving API key secret with name " + secretName + " for user " + apiKey.getUser().getUsername());
   }
   
-  @Override
-  public void delete(ApiKey apiKey) {
-    logger.log(INFO, "Deleting serving API key secret for user " + apiKey.getUser().getUsername());
-    kubeClientService.deleteSecret(KubeServingUtils.HOPS_SYSTEM_NAMESPACE,
-      kubeApiKeyUtils.getServingApiKeySecretName(apiKey.getPrefix()));
-  }
-  
-  @Override
-  public boolean match(Collection<ApiKeyScope> scopes) {
-    return scopes.stream().anyMatch(scope -> scope.getScope() == ApiScope.SERVING);
-  }
-  
   // User account handler
   //
   // When an user is created/deleted, create or delete the serving api key in the hops-system namespace in Kubernetes.
@@ -86,10 +100,38 @@ public class KubeApiKeyHandler implements ApiKeyHandler, UserAccountHandler, Pro
   
   @Override
   public void create(Users user) throws Exception {
+    if (settings.getKubeKFServingInstalled()) {
+      replicateUserServingApiKey(user);
+    }
+  }
+  
+  @Override
+  public void update(Users user) throws Exception {
+    if (settings.getKubeKFServingInstalled()) {
+      if (user.getStatus() != UserAccountStatus.ACTIVATED_ACCOUNT) {
+        // if user is not activated, delete serving api key
+        remove(user);
+        return;
+      }
+      // if user is activated, ensure serving api key exists
+      create(user);
+    }
+  }
+  
+  @Override
+  public void remove(Users user) throws Exception {
+    if (settings.getKubeKFServingInstalled()) {
+      // if an user is removed, remove the serving api key
+      logger.log(INFO, "Delete serving API key secret for user " + user.getUsername());
+      kubeApiKeyUtils.deleteServingApiKey(user);
+    }
+  }
+  
+  private void replicateUserServingApiKey(Users user) throws UserException, ApiKeyException {
     if (user.getStatus() != UserAccountStatus.ACTIVATED_ACCOUNT) {
       return; // only create serving api keys for activated users
     }
-    
+  
     // if an user account is created or activated, create a serving api key
     Optional<ApiKey> servingApiKey = kubeApiKeyUtils.getServingApiKey(user);
     if (servingApiKey.isPresent()) {
@@ -100,25 +142,6 @@ public class KubeApiKeyHandler implements ApiKeyHandler, UserAccountHandler, Pro
     kubeApiKeyUtils.createServingApiKey(user);
   }
   
-  @Override
-  public void update(Users user) throws Exception {
-    if (user.getStatus() != UserAccountStatus.ACTIVATED_ACCOUNT) {
-      // if user is not activated, delete serving api key
-      remove(user);
-      return;
-    }
-    
-    // if user is activated, ensure serving api key exists
-    create(user);
-  }
-  
-  @Override
-  public void remove(Users user) throws Exception {
-    // if an user is removed, remove the serving api key
-    logger.log(INFO, "Delete serving API key secret for user " + user.getUsername());
-    kubeApiKeyUtils.deleteServingApiKey(user);
-  }
-  
   // Project team handler
   //
   // When an user is added/removed from a project, copy or delete the serving api key in the project namespace in
@@ -127,23 +150,8 @@ public class KubeApiKeyHandler implements ApiKeyHandler, UserAccountHandler, Pro
   @Override
   public void addMembers(Project project, List<Users> members, ProjectRoleTypes teamRole, boolean serviceUsers)
       throws Exception {
-    if (serviceUsers) { return; /* ignore service users */ }
-    if (teamRole == ProjectRoleTypes.UNDER_REMOVAL) {
-      // if cleaning up, remove existing secrets
-      removeMembers(project, members);
-      return;
-    }
-    
-    // if an user project role is updated, check the existence of a copy of the serving api key
-    HashSet<String> users = kubeApiKeyUtils.getServingApiKeySecrets(project, members).stream()
-      .map(s -> s.getMetadata().getLabels().get(KubeApiKeyUtils.API_KEY_USER_LABEL_NAME))
-      .collect(Collectors.toCollection(HashSet::new));
-    for (Users member : members) {
-      if (!users.contains(member.getUsername())) {
-        logger.log(INFO, "Copy serving API key for user " + member.getUsername() + " and project " + project.getName());
-        // if the serving api key of a given user is not already in the project, copy it.
-        kubeApiKeyUtils.copyServingApiKeySecret(project, member);
-      }
+    if (settings.getKubeKFServingInstalled()) {
+      replicateMembersServingApiKeys(project, members, teamRole, serviceUsers);
     }
   }
   
@@ -154,12 +162,39 @@ public class KubeApiKeyHandler implements ApiKeyHandler, UserAccountHandler, Pro
   
   @Override
   public void removeMembers(Project project, List<Users> members) {
-    // remove serving api keys from project namespace,
-    kubeApiKeyUtils.deleteServingApiKeySecrets(project, members);
+    if (settings.getKubeKFServingInstalled()) {
+      // remove serving api keys from project namespace,
+      kubeApiKeyUtils.deleteServingApiKeySecrets(project, members);
+    }
   }
   
   @Override
   public String getClassName() {
     return KubeApiKeyHandler.class.getName();
+  }
+  
+  private void replicateMembersServingApiKeys(Project project, List<Users> members, ProjectRoleTypes teamRole,
+    boolean serviceUsers) throws UserException, ApiKeyException, UnsupportedEncodingException {
+    if (serviceUsers) {
+      return; /* ignore service users */
+    }
+    if (teamRole == ProjectRoleTypes.UNDER_REMOVAL) {
+      // if cleaning up, remove existing secrets
+      removeMembers(project, members);
+      return;
+    }
+  
+    // if an user project role is updated, check the existence of a copy of the serving api key
+    HashSet<String> users = kubeApiKeyUtils.getServingApiKeySecrets(project, members).stream()
+      .map(s -> s.getMetadata().getLabels().get(KubeApiKeyUtils.API_KEY_USER_LABEL_NAME))
+      .collect(Collectors.toCollection(HashSet::new));
+    for (Users member : members) {
+      if (!users.contains(member.getUsername())) {
+        logger
+          .log(INFO, "Copy serving API key for user " + member.getUsername() + " and project " + project.getName());
+        // if the serving api key of a given user is not already in the project, copy it.
+        kubeApiKeyUtils.copyServingApiKeySecret(project, member);
+      }
+    }
   }
 }

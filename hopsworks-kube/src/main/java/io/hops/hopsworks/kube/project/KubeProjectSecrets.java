@@ -4,6 +4,7 @@
 
 package io.hops.hopsworks.kube.project;
 
+import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.ApiKeyException;
 import io.hops.hopsworks.exceptions.UserException;
 import io.hops.hopsworks.kube.security.KubeApiKeyUtils;
@@ -21,14 +22,20 @@ public class KubeProjectSecrets {
   
   @EJB
   private KubeApiKeyUtils kubeApiKeyUtils;
+  @EJB
+  private Settings settings;
   
   public void createSecrets(Project project) throws ApiKeyException, UserException, UnsupportedEncodingException {
-    // copy serving api key secret of the project owner
-    kubeApiKeyUtils.copyServingApiKeySecret(project, project.getOwner());
+    if (settings.getKubeKFServingInstalled()) {
+      // copy serving api key secret of the project owner
+      kubeApiKeyUtils.copyServingApiKeySecret(project, project.getOwner());
+    }
   }
   
   public void deleteSecrets(Project project) {
-    // delete serving api key secret of the project owner
-    kubeApiKeyUtils.deleteServingApiKeySecret(project, project.getOwner());
+    if (settings.getKubeKFServingInstalled()) {
+      // delete serving api key secret of the project owner
+      kubeApiKeyUtils.deleteServingApiKeySecret(project, project.getOwner());
+    }
   }
 }

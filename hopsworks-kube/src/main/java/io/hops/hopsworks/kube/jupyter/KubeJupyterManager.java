@@ -296,11 +296,14 @@ public class KubeJupyterManager extends JupyterManagerImpl implements JupyterMan
     environment.add(new EnvVarBuilder().withName("FLINK_LIB_DIR").withValue(settings.getFlinkLibDir()).build());
   
     // serving env vars
-    environment.add(new EnvVarBuilder().withName("SERVING_API_KEY").withValueFrom(
-      new EnvVarSourceBuilder().withNewSecretKeyRef(KubeApiKeyUtils.SERVING_API_KEY_SECRET_KEY,
-        kubeApiKeyUtils.getProjectServingApiKeySecretName(user), false).build()).build());
-    Map<String, String> servingEnvVars = servingConfig.getEnvVars(user, false);
-    servingEnvVars.forEach((key, value) -> environment.add(new EnvVarBuilder().withName(key).withValue(value).build()));
+    if (settings.getKubeKFServingInstalled()) {
+      environment.add(new EnvVarBuilder().withName("SERVING_API_KEY").withValueFrom(
+        new EnvVarSourceBuilder().withNewSecretKeyRef(KubeApiKeyUtils.SERVING_API_KEY_SECRET_KEY,
+          kubeApiKeyUtils.getProjectServingApiKeySecretName(user), false).build()).build());
+      Map<String, String> servingEnvVars = servingConfig.getEnvVars(user, false);
+      servingEnvVars.forEach((key, value) -> environment.add(
+          new EnvVarBuilder().withName(key).withValue(value).build()));
+    }
     
     List<Container> containers = new ArrayList<>();
     VolumeMount logMount = new VolumeMountBuilder()

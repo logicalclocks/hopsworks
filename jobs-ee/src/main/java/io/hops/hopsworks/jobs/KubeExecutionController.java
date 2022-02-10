@@ -639,12 +639,14 @@ public class KubeExecutionController extends AbstractExecutionController impleme
           .withValue(((PythonJobConfiguration)dockerJobConfiguration).getFiles()).build());
         
         // serving env vars
-        environment.add(new EnvVarBuilder().withName("SERVING_API_KEY").withValueFrom(
-          new EnvVarSourceBuilder().withNewSecretKeyRef(KubeApiKeyUtils.SERVING_API_KEY_SECRET_KEY,
-            kubeApiKeyUtils.getProjectServingApiKeySecretName(user), false).build()).build());
-        Map<String, String> servingEnvVars = servingConfig.getEnvVars(user, false);
-        servingEnvVars.forEach((key, value) -> environment.add(
-          new EnvVarBuilder().withName(key).withValue(value).build()));
+        if (settings.getKubeKFServingInstalled()) {
+          environment.add(new EnvVarBuilder().withName("SERVING_API_KEY").withValueFrom(
+            new EnvVarSourceBuilder().withNewSecretKeyRef(KubeApiKeyUtils.SERVING_API_KEY_SECRET_KEY,
+              kubeApiKeyUtils.getProjectServingApiKeySecretName(user), false).build()).build());
+          Map<String, String> servingEnvVars = servingConfig.getEnvVars(user, false);
+          servingEnvVars.forEach((key, value) -> environment.add(
+            new EnvVarBuilder().withName(key).withValue(value).build()));
+        }
         break;
       case DOCKER:
         if (dockerJobConfiguration.getEnvVars() != null && !dockerJobConfiguration.getEnvVars().isEmpty()) {

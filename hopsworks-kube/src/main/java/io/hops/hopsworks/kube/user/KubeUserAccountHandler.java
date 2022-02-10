@@ -5,6 +5,7 @@
 package io.hops.hopsworks.kube.user;
 
 import io.hops.hopsworks.common.user.UserAccountHandler;
+import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.kube.common.KubeClientService;
 import io.hops.hopsworks.kube.serving.utils.KubeServingUtils;
 import io.hops.hopsworks.persistence.entity.user.BbcGroup;
@@ -30,28 +31,36 @@ public class KubeUserAccountHandler implements UserAccountHandler {
   
   @EJB
   private KubeClientService kubeClientService;
+  @EJB
+  private Settings settings;
 
   @Override
   public void create(Users user) {
-    updateUser(user);
+    if (settings.getKubeKFServingInstalled()) {
+      updateUsersConfigMap(user);
+    }
   }
   
   @Override
   public void update(Users user) {
-    updateUser(user);
+    if (settings.getKubeKFServingInstalled()) {
+      updateUsersConfigMap(user);
+    }
   }
   
   @Override
   public void remove(Users user) {
-    Map<String, String> userAccountMap = new HashMap<>();
-    userAccountMap.put(user.getUsername(), null);
-    logger.log(INFO, "Removing user account " + user.getUsername() + ": " + String.join(", ",
-      userAccountMap.keySet()));
-    patch(userAccountMap);
+    if (settings.getKubeKFServingInstalled()) {
+      Map<String, String> userAccountMap = new HashMap<>();
+      userAccountMap.put(user.getUsername(), null);
+      logger.log(INFO, "Removing user account " + user.getUsername() + ": " + String.join(", ",
+        userAccountMap.keySet()));
+      patch(userAccountMap);
+    }
   }
   
-  private void updateUser(Users user) {
-    String roles = null;
+  private void updateUsersConfigMap(Users user) {
+    String roles;
     if (user.getStatus() == UserAccountStatus.ACTIVATED_ACCOUNT) {
       // only keep activated users in the config map
       roles = user.getBbcGroupCollection().stream().map(BbcGroup::getGroupName).collect(Collectors.joining(","));
