@@ -112,6 +112,38 @@ You can set the following properties for Spark/PySpark jobs:
   </figure>
 </p>
 
+If you are creating the job programmatically, the following JSON is an example job configuration for a PYSPARK job:
+
+=== "sparkJobConfiguration.json"
+    ```json
+    {
+        "type": "sparkJobConfiguration",
+        "amQueue": "default", // This is the YARN queue to submit the SparkJob too, we only have "default" and it should be set
+        "amMemory": 2048,
+        "amVCores": 1,
+        "jobType": "PYSPARK",
+        "appPath": "hdfs:///Projects/{PROJECT_NAME}/{DATASET_NAME}/{APP_FILE}", // If .py or .ipynb it's a PYSPARK job, if it's a .jar then SPARK job
+        "mainClass": "org.apache.spark.deploy.PythonRunner", // Must be set to "org.apache.spark.deploy.PythonRunner" for PYSPARK jobs, otherwise Main class of configured jar to run.
+        "spark.executor.instances": 1,
+        "spark.executor.cores": 1,
+        "spark.executor.memory": 2048,
+        "spark.executor.gpus": 0,
+        "spark.tensorflow.num.ps": 1,
+        "spark.dynamicAllocation.enabled": true,
+        "spark.dynamicAllocation.minExecutors": 0,
+        "spark.dynamicAllocation.maxExecutors": 1,
+        "spark.dynamicAllocation.initialExecutors": 0,
+        "spark.blacklist.enabled": false,
+        "properties": "", // This is a new-line separated entry of like "spark.yarn.appMasterEnv.envvar=value\nspark.yarn.appMasterEnv.envvar1=value2"
+        "spark.yarn.dist.pyFiles": "hdfs:///Projects/{PROJECT_NAME}/{DATASET_NAME}/{DEPENDENCY}", // Format is comma separated string
+        "spark.yarn.dist.files": "", // Format is comma separated string, accepts any files
+        "spark.yarn.dist.jars": "", // Format is comma separated string, use this to add jars to the job
+        "spark.yarn.dist.archives": "", // Format is comma separated string, use this for archives only
+        "appName": "{JOB_NAME}",
+        "defaultArgs": "", // A string containing the arguments for the app
+    }
+    ```
+
 #### Python
 
 The image below shows an example of a Python job advanced configuration page. If set, these configuration properties will override
@@ -132,6 +164,25 @@ You can set the following properties for Python jobs:
   </figure>
 </p>
 
+If you are creating the job programmatically, the following JSON is an example job configuration for a PYTHON job.
+
+=== "pythonJobConfiguration.json"
+    ```json
+    {
+        "type": "pythonJobConfiguration",
+        "appPath": "hdfs:///Projects/{PROJECT_NAME}/{DATASET_NAME}/{APP_FILE}",
+        "files": "hdfs:///Projects/{PROJECT_NAME}/{DATASET_NAME}/{EXTRA_FILES}", // Format is comma separated string, accepts any files
+        "resourceConfig": {
+            "type": "dockerResourcesConfiguration",
+            "cores": 1,
+            "memory": 1024,
+            "gpus": 0
+        },
+        "logRedirection": true,
+        "appName": "{JOB_NAME}",
+        "defaultArgs": "", // A string containing the arguments for the app
+    }
+    ```
 
 You do not have to upload the Python program via the Hopsworks UI to run it. It can be done programmatically from a Python program by using the
 ``upload`` function of the ``dataset`` module of the [hops](http://hops-py.logicalclocks.com) Python library 
