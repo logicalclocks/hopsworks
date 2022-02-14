@@ -118,7 +118,7 @@ If you are creating the job programmatically, the following JSON is an example j
     ```json
     {
         "type": "sparkJobConfiguration",
-        "amQueue": "default", // This is the YARN queue to submit the SparkJob too, we only have "default" and it should be set
+        "amQueue": "default", // Should be set to "default", represents name of YARN queue
         "amMemory": 2048,
         "amVCores": 1,
         "jobType": "PYSPARK",
