@@ -122,7 +122,7 @@ If you are creating the job programmatically, the following JSON is an example j
         "amMemory": 2048, // Memory in megabytes to configure for Spark driver
         "amVCores": 1, // Virtual cores to configure for Spark driver
         "jobType": "PYSPARK", // Should be SPARK if application is a .jar file, otherwise PYSPARK if .py or .ipynb is configured
-        "appPath": "hdfs:///Projects/{PROJECT_NAME}/{DATASET_NAME}/{APP_FILE}", // If .py or .ipynb it's a PYSPARK job, if it's a .jar then SPARK job
+        "appPath": "hdfs:///Projects/{PROJECT_NAME}/{DATASET_NAME}/{APP_FILE}", // Path to application file to execute, supported files are .jar, .py or .ipynb
         "mainClass": "org.apache.spark.deploy.PythonRunner", // Must be set to "org.apache.spark.deploy.PythonRunner" for PYSPARK jobs, otherwise Main class of configured jar to run.
         "spark.executor.instances": 1,
         "spark.executor.cores": 1,
