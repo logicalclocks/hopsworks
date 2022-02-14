@@ -553,7 +553,7 @@ public class JupyterService {
                                        @Context HttpServletRequest req,
                                        @Context SecurityContext sc) {
     Users user = jWTHelper.getUserPrincipal(sc);
-
+    jupyterSettingsFacade.update(jupyterSettings);
     jupyterController.updateExpirationDate(project, user, jupyterSettings);
 
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(jupyterSettings).build();

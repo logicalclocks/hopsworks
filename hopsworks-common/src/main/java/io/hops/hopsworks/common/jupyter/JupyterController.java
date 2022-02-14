@@ -288,23 +288,19 @@ public class JupyterController {
   }
 
   public void updateExpirationDate(Project project, Users user, JupyterSettings jupyterSettings) {
-
-    //Save the current shutdown level
-    JupyterSettings js = jupyterSettingsFacade.findByProjectUser(project, user.getEmail());
-    js.setShutdownLevel(jupyterSettings.getShutdownLevel());
-    jupyterSettingsFacade.update(js);
-
     //Increase hours on expirationDate
     String hdfsUser = hdfsUsersController.getHdfsUserName(project, user);
     JupyterProject jupyterProject = jupyterFacade.findByUser(hdfsUser);
-    Date expirationDate = jupyterProject.getExpires();
-    Calendar cal = Calendar.getInstance();
-    cal.setTime(expirationDate);
-    cal.add(Calendar.HOUR_OF_DAY, jupyterSettings.getShutdownLevel());
-    expirationDate = cal.getTime();
-    jupyterProject.setExpires(expirationDate);
-    jupyterProject.setNoLimit(jupyterSettings.isNoLimit());
-    jupyterFacade.update(jupyterProject);
+    if (jupyterProject != null) {
+      Date expirationDate = jupyterProject.getExpires();
+      Calendar cal = Calendar.getInstance();
+      cal.setTime(expirationDate);
+      cal.add(Calendar.HOUR_OF_DAY, jupyterSettings.getShutdownLevel());
+      expirationDate = cal.getTime();
+      jupyterProject.setExpires(expirationDate);
+      jupyterProject.setNoLimit(jupyterSettings.isNoLimit());
+      jupyterFacade.update(jupyterProject);
+    }
   }
 
   public void versionProgram(Project project, Users user, String sessionKernelId, Path outputPath)

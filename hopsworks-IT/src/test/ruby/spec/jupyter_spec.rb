@@ -425,6 +425,21 @@ describe "On #{ENV['OS']}" do
         python_file = json_body[:items].detect { |d| d[:attributes][:name] == "[export model].py" }
         expect(python_file).to be_present
       end
+
+      it "should update the jupyter settings without the need of starting a notebook server" do
+        get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/jupyter/settings"
+        expect_status_details(200)
+        settings = json_body
+        settings[:jobConfig][:amVCores] = 10
+        post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/jupyter/update", JSON(settings)
+        expect_status_details(200)
+
+        get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/jupyter/settings"
+        expect(json_body[:jobConfig][:amVCores]).to be 10
+
+        settings[:jobConfig][:amVCores] = 1
+        post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/jupyter/update", JSON(settings)
+      end
     end
 
     describe "Failure scenarios - python " + version do
