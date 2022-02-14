@@ -134,7 +134,7 @@ If you are creating the job programmatically, the following JSON is an example j
         "spark.dynamicAllocation.maxExecutors": 1,
         "spark.dynamicAllocation.initialExecutors": 0,
         "spark.blacklist.enabled": false,
-        "properties": "", // This is a new-line separated entry of like "spark.yarn.appMasterEnv.envvar=value\nspark.yarn.appMasterEnv.envvar1=value2"
+        "properties": "", // New-line separated entry such as "spark.yarn.appMasterEnv.envvar=value\nspark.yarn.appMasterEnv.envvar1=value2"
         "spark.yarn.dist.pyFiles": "hdfs:///Projects/{PROJECT_NAME}/{DATASET_NAME}/{DEPENDENCY}", // Format is comma separated string
         "spark.yarn.dist.files": "", // Format is comma separated string, accepts any files
         "spark.yarn.dist.jars": "", // Format is comma separated string, use this to add jars to the job
