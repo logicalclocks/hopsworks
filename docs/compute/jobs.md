@@ -171,7 +171,7 @@ If you are creating the job programmatically, the following JSON is an example j
     {
         "type": "pythonJobConfiguration",
         "appPath": "hdfs:///Projects/{PROJECT_NAME}/{DATASET_NAME}/{APP_FILE}",
-        "files": "hdfs:///Projects/{PROJECT_NAME}/{DATASET_NAME}/{EXTRA_FILES}", // Format is comma separated string, accepts any files
+        "files": "", // Comma-separated string of paths to additional application files
         "resourceConfig": {
             "type": "dockerResourcesConfiguration",
             "cores": 1,
