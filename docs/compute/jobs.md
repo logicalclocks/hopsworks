@@ -179,7 +179,7 @@ If you are creating the job programmatically, the following JSON is an example j
             "gpus": 0 // GPUs to allocate for the application
         },
         "logRedirection": true,
-        "appName": "{JOB_NAME}",
+        "appName": "{JOB_NAME}", // Name of the job
         "defaultArgs": "", // A string containing the arguments for the app
     }
     ```
