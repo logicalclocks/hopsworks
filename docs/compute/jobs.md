@@ -136,7 +136,7 @@ If you are creating the job programmatically, the following JSON is an example j
         "spark.blacklist.enabled": false,
         "properties": "", // New-line separated entry such as "spark.yarn.appMasterEnv.envvar=value\nspark.yarn.appMasterEnv.envvar1=value2"
         "spark.yarn.dist.pyFiles": "hdfs:///Projects/{PROJECT_NAME}/{DATASET_NAME}/{DEPENDENCY}", // Format is comma separated string
-        "spark.yarn.dist.files": "", // Format is comma separated string, accepts any files
+        "spark.yarn.dist.files": "", // Comma-separated string of paths to additional application files
         "spark.yarn.dist.jars": "", // Format is comma separated string, use this to add jars to the job
         "spark.yarn.dist.archives": "", // Format is comma separated string, use this for archives only
         "appName": "{JOB_NAME}",
