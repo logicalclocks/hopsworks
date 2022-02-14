@@ -135,7 +135,7 @@ If you are creating the job programmatically, the following JSON is an example j
         "spark.dynamicAllocation.initialExecutors": 0,
         "spark.blacklist.enabled": false,
         "properties": "", // New-line separated entry such as "spark.yarn.appMasterEnv.envvar=value\nspark.yarn.appMasterEnv.envvar1=value2"
-        "spark.yarn.dist.pyFiles": "hdfs:///Projects/{PROJECT_NAME}/{DATASET_NAME}/{DEPENDENCY}", // Format is comma separated string
+        "spark.yarn.dist.pyFiles": "", // Comma-separated string of paths to .py files
         "spark.yarn.dist.files": "", // Comma-separated string of paths to additional application files
         "spark.yarn.dist.jars": "", // Comma-separated string of paths to additional jars that should be added to the classpath
         "spark.yarn.dist.archives": "", // Comma-separated string of paths to archives that should be added and extracted
