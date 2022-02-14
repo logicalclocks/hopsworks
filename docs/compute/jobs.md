@@ -176,7 +176,7 @@ If you are creating the job programmatically, the following JSON is an example j
             "type": "dockerResourcesConfiguration",
             "cores": 1,
             "memory": 1024,
-            "gpus": 0
+            "gpus": 0 // GPUs to allocate for the application
         },
         "logRedirection": true,
         "appName": "{JOB_NAME}",
