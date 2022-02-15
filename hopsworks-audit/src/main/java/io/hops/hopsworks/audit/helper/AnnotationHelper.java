@@ -15,12 +15,15 @@
  */
 package io.hops.hopsworks.audit.helper;
 
+import com.auth0.jwt.JWT;
+import com.auth0.jwt.interfaces.DecodedJWT;
 import io.hops.hopsworks.audit.auditor.annotation.AuditTarget;
 import io.hops.hopsworks.audit.logger.annotation.Caller;
 import io.hops.hopsworks.common.dao.user.UserDTO;
 import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.util.HttpUtil;
 import io.hops.hopsworks.common.util.Settings;
+import io.hops.hopsworks.jwt.Constants;
 import io.hops.hopsworks.persistence.entity.user.Users;
 
 import javax.ejb.EJB;
@@ -37,6 +40,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static io.hops.hopsworks.jwt.Constants.BEARER;
+import static javax.ws.rs.core.HttpHeaders.AUTHORIZATION;
+
 /**
  * EJB Restrictions on Using the Reflection API
  * The enterprise bean must not attempt to use the Reflection API to access information that the security rules of
@@ -45,21 +51,21 @@ import java.util.Map;
 @Stateless
 @TransactionAttribute(TransactionAttributeType.NEVER)
 public class AnnotationHelper {
-
+  
   public static final String USER_AGENT = "user-agent";
   public static final String CLIENT_IP = "client-ip";
-
+  
   @EJB
   private UserFacade userFacade;
   
   public <T extends Annotation> T getAnnotation(Class<?> resourceClass, Method method, Class<T> type) {
-    return method.isAnnotationPresent(type)? method.getAnnotation(type) :
+    return method.isAnnotationPresent(type) ? method.getAnnotation(type) :
       resourceClass.getAnnotation(type);
   }
   
   public int getAnnotatedParamIndex(Parameter[] methodParameters, Class<? extends Annotation> type) {
-    int len = methodParameters != null? methodParameters.length : 0;
-    for (int i=0; i < len; i++) {
+    int len = methodParameters != null ? methodParameters.length : 0;
+    for (int i = 0; i < len; i++) {
       if (methodParameters[i].isAnnotationPresent(type)) {
         return i;
       }
@@ -79,8 +85,8 @@ public class AnnotationHelper {
   public List<Object> getParamsExceptAnnotated(Method method, Object[] parameters, Class<? extends Annotation> type) {
     Parameter[] methodParameters = method.getParameters();
     List<Object> params = new ArrayList<>();
-    int len = parameters != null? parameters.length : 0;
-    for (int i=0; i < len; i++) {
+    int len = parameters != null ? parameters.length : 0;
+    for (int i = 0; i < len; i++) {
       if (methodParameters[i].isAnnotationPresent(type)) {
         continue;
       }
@@ -91,8 +97,8 @@ public class AnnotationHelper {
   
   public Users getAuditTarget(Method method, Object[] parameters) {
     Parameter[] methodParameters = method.getParameters();
-    int len = parameters != null? parameters.length : 0;
-    for (int i=0; i < len; i++) {
+    int len = parameters != null ? parameters.length : 0;
+    for (int i = 0; i < len; i++) {
       if (methodParameters[i].isAnnotationPresent(AuditTarget.class)) {
         UserIdentifier identifier = methodParameters[i].getAnnotation(AuditTarget.class).value();
         return getUser(identifier, parameters[i]);
@@ -107,36 +113,59 @@ public class AnnotationHelper {
       for (int i = 0; i < parameters.length; i++) {
         if (methodParameters[i].isAnnotationPresent(Caller.class)) {
           return getCaller(methodParameters[i], parameters[i]);
-        } else if (parameters[i] instanceof HttpServletRequest &&
-            ((HttpServletRequest) parameters[i]).getRemoteUser() != null) {
-          return userFacade.findByEmail(((HttpServletRequest) parameters[i]).getRemoteUser());
+        } else if (parameters[i] instanceof HttpServletRequest) {
+          if (((HttpServletRequest) parameters[i]).getRemoteUser() != null) {
+            return userFacade.findByEmail(((HttpServletRequest) parameters[i]).getRemoteUser());
+          }
+          String subject = getSubjectFromJWT((HttpServletRequest) parameters[i]);
+          if (subject != null && !subject.isEmpty()) {
+            return userFacade.findByEmail(subject);
+          }
         } else if (parameters[i] instanceof SecurityContext &&
-            ((SecurityContext) parameters[i]).getUserPrincipal() != null) {
+          ((SecurityContext) parameters[i]).getUserPrincipal() != null) {
           return userFacade.findByUsername(((SecurityContext) parameters[i]).getUserPrincipal().getName());
         }
       }
     }
     return null;
   }
-
+  
   public String getCallerName(Method method, Object[] parameters) {
     Parameter[] methodParameters = method.getParameters();
     if (parameters != null) {
       for (int i = 0; i < parameters.length; i++) {
         if (methodParameters[i].isAnnotationPresent(Caller.class)) {
           return getCallerStr(methodParameters[i], parameters[i]);
-        } else if (parameters[i] instanceof HttpServletRequest &&
-            ((HttpServletRequest) parameters[i]).getRemoteUser() != null) {
-          return ((HttpServletRequest) parameters[i]).getRemoteUser();
         } else if (parameters[i] instanceof SecurityContext &&
-            ((SecurityContext) parameters[i]).getUserPrincipal() != null) {
+          ((SecurityContext) parameters[i]).getUserPrincipal() != null) {
           return ((SecurityContext) parameters[i]).getUserPrincipal().getName();
+        } else if (parameters[i] instanceof HttpServletRequest) {
+          if (((HttpServletRequest) parameters[i]).getRemoteUser() != null) {
+            return ((HttpServletRequest) parameters[i]).getRemoteUser();
+          }
+          String subject = getSubjectFromJWT((HttpServletRequest) parameters[i]);
+          if (subject != null && !subject.isEmpty()) {
+            return subject;
+          }
         }
       }
     }
     return "";
   }
-
+  
+  public String getSubjectFromJWT(HttpServletRequest req) {
+    String authorizationHeader = req.getHeader(AUTHORIZATION);
+    String token = null;
+    if (authorizationHeader != null && authorizationHeader.startsWith(BEARER)) {
+      token = authorizationHeader.substring(Constants.BEARER.length()).trim();
+    }
+    if (token != null && !token.isEmpty()) {
+      DecodedJWT djwt = JWT.decode(token);
+      return djwt.getSubject();
+    }
+    return null;
+  }
+  
   public Map<String, String> getClientInfo(Object[] parameters) {
     Map<String, String> callInfo = new HashMap<>();
     for (Object parameter : parameters) {
@@ -147,16 +176,16 @@ public class AnnotationHelper {
         callInfo.put(CLIENT_IP, HttpUtil.extractRemoteHostIp((HttpServletRequest) parameter));
       }
     }
-
+    
     return callInfo;
   }
-
+  
   private Users getCaller(Parameter methodParameter, Object parameter) {
     UserIdentifier identifier = methodParameter.getAnnotation(Caller.class).value();
     return getUser(identifier, parameter);
   }
   
-  private String getCallerStr(Parameter methodParameter,Object parameter) {
+  private String getCallerStr(Parameter methodParameter, Object parameter) {
     UserIdentifier identifier = methodParameter.getAnnotation(Caller.class).value();
     return getUserStr(identifier, parameter);
   }

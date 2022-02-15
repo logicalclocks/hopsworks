@@ -4,6 +4,8 @@
 package io.hops.hopsworks.remote.user.api;
 
 import com.google.common.base.Strings;
+import io.hops.hopsworks.audit.logger.annotation.Logged;
+import io.hops.hopsworks.audit.logger.annotation.Secret;
 import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.project.AccessCredentialsDTO;
 import io.hops.hopsworks.common.project.ProjectController;
@@ -58,6 +60,7 @@ import java.util.logging.Logger;
 
 import static javax.ws.rs.core.HttpHeaders.AUTHORIZATION;
 
+@Logged
 @Path("/auth")
 @Stateless
 @Api(value = "Auth",
@@ -97,7 +100,7 @@ public class AuthResource {
   @POST
   @Path("ldap/login")
   @Produces(MediaType.APPLICATION_JSON)
-  public Response ldapLogin(@FormParam("username") String username, @FormParam("password") String password,
+  public Response ldapLogin(@FormParam("username") String username, @Secret @FormParam("password") String password,
       @FormParam("chosenEmail") String chosenEmail, @FormParam("consent") boolean consent,
       @Context HttpServletRequest req) throws LoginException, UserException, NoSuchAlgorithmException,
       SigningKeyNotFoundException, DuplicateSigningKeyException {
@@ -187,22 +190,29 @@ public class AuthResource {
   @POST
   @Path("ldap/downloadCert/{projectId}")
   @Produces(MediaType.APPLICATION_JSON)
-  public Response downloadCerts(@PathParam("projectId") Integer id, @FormParam("password") String password,
+  public Response downloadCerts(@PathParam("projectId") Integer id, @Secret @FormParam("password") String password,
       @Context HttpServletRequest req) throws ProjectException, HopsSecurityException, DatasetException, UserException,
-    SigningKeyNotFoundException, VerificationException, LoginException {
+    SigningKeyNotFoundException, VerificationException {
     Users user = jWTHelper.validateToken(req);
-    RemoteUserStateDTO ldapUserState = ldapUserController.getLdapUser(user, password, false, "");
+    RemoteUserStateDTO ldapUserState;
+    try {
+      ldapUserState = ldapUserController.getLdapUser(user, password, false, "");
+    } catch (LoginException le) {
+      throw new HopsSecurityException(RESTCodes.SecurityErrorCode.CERT_ACCESS_DENIED, Level.FINE);
+    }
     return downloadCerts(ldapUserState, id);
   }
 
   @POST
   @Path("krb/downloadCert/{projectId}")
   @Produces(MediaType.APPLICATION_JSON)
-  public Response downloadCerts(@PathParam("projectId") Integer id, @Context SecurityContext sc) throws
-      ProjectException, HopsSecurityException, DatasetException, LoginException, UserException {
+  public Response downloadCerts(@PathParam("projectId") Integer id, @Context SecurityContext sc,
+    @Context HttpServletRequest req) throws ProjectException, HopsSecurityException, DatasetException, LoginException,
+    UserException {
     String principalName = sc.getUserPrincipal() == null ? "" : sc.getUserPrincipal().getName();
     if (principalName.isEmpty()) {
-      throw new IllegalArgumentException("User Principal Name not set.");
+      throw new HopsSecurityException(RESTCodes.SecurityErrorCode.CERT_ACCESS_DENIED, Level.FINE,
+        "User Principal Name not set.");
     }
     RemoteUserStateDTO ldapUserState = ldapUserController.getKrbLdapUser(principalName, false, "");
     return downloadCerts(ldapUserState, id);

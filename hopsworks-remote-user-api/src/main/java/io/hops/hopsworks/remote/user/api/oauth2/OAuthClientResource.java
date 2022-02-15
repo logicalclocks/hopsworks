@@ -4,6 +4,7 @@
 package io.hops.hopsworks.remote.user.api.oauth2;
 
 import com.google.common.base.Strings;
+import io.hops.hopsworks.audit.logger.annotation.Logged;
 import io.hops.hopsworks.common.dao.remote.oauth.OauthClientFacade;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.RemoteAuthException;
@@ -45,6 +46,7 @@ import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+@Logged
 @Path("/oauth")
 @Stateless
 @Api(value = "OAuth2",
@@ -67,7 +69,7 @@ public class OAuthClientResource {
   @Path("/client")
   @Produces(MediaType.APPLICATION_JSON)
   @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN"})
-  public Response findAll(@Context UriInfo uriInfo) {
+  public Response findAll(@Context UriInfo uriInfo, @Context HttpServletRequest req) {
     OAuthClientDTO oAuthClientDTO = oAuthClientBuilder.buildItems(uriInfo);
     return Response.ok().entity(oAuthClientDTO).build();
   }
@@ -76,7 +78,8 @@ public class OAuthClientResource {
   @Path("/client/{id}")
   @Produces(MediaType.APPLICATION_JSON)
   @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN"})
-  public Response findById(@PathParam("id") Integer id, @Context UriInfo uriInfo) throws RemoteAuthException {
+  public Response findById(@PathParam("id") Integer id, @Context UriInfo uriInfo, @Context HttpServletRequest req)
+    throws RemoteAuthException {
     OAuthClientDTO oAuthClientDTO = oAuthClientBuilder.buildItem(uriInfo, id);
     return Response.ok().entity(oAuthClientDTO).build();
   }
@@ -169,7 +172,7 @@ public class OAuthClientResource {
     return Response.ok(oAuthClientDTO).build();
   }
   
-  public boolean fromBoolean(Boolean val) {
+  private boolean fromBoolean(Boolean val) {
     return val != null? val : false;
   }
   

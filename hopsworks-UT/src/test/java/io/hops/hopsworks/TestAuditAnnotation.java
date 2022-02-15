@@ -61,8 +61,20 @@ public class TestAuditAnnotation {
       }
     }
   
+    for (Class<?> c : reflections.getTypesAnnotatedWith(Path.class, true)) {
+      if (c.getName().startsWith("io.hops.hopsworks.remote.user.api")) {
+        apiClasses.add(c);
+      }
+    }
+  
     for (Class<?> c : reflections.getTypesAnnotatedWith(RequestScoped.class, true)) {
       if (c.getName().startsWith("io.hops.hopsworks.api")) {
+        apiClasses.add(c);
+      }
+    }
+  
+    for (Class<?> c : reflections.getTypesAnnotatedWith(RequestScoped.class, true)) {
+      if (c.getName().startsWith("io.hops.hopsworks.remote.user.api")) {
         apiClasses.add(c);
       }
     }
@@ -163,7 +175,8 @@ public class TestAuditAnnotation {
       ". Method should be annotated with @Logged(logLevel = LogLevel.OFF) or contain parameter that can be " +
       "used to identify the caller of the method.", m.getParameterCount() == 0);
     for (int i = 0; i < m.getParameterCount(); i++) {
-      if (m.getParameterTypes()[i].isAssignableFrom(HttpServletRequest.class)) {
+      if (m.getParameterTypes()[i].isAssignableFrom(SecurityContext.class) ||
+        m.getParameterTypes()[i].isAssignableFrom(HttpServletRequest.class)) {
         return;
       }
     }

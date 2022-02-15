@@ -327,4 +327,36 @@ public class OAuthClientDTO extends RestDTO<OAuthClientDTO> {
   public boolean fromBoolean(Boolean val) {
     return val != null? val : false;
   }
+  
+  @Override
+  public String toString() {
+    return "OAuthClientDTO{" +
+      "id=" + id +
+      ", clientId='" + clientId + '\'' +
+      ", providerLogoUri='" + providerLogoUri + '\'' +
+      ", providerUri='" + providerUri + '\'' +
+      ", redirectUri='" + redirectUri + '\'' +
+      ", authorizationEndpoint='" + authorizationEndpoint + '\'' +
+      ", providerName='" + providerName + '\'' +
+      ", providerDisplayName='" + providerDisplayName + '\'' +
+      ", tokenEndpoint='" + tokenEndpoint + '\'' +
+      ", userInfoEndpoint='" + userInfoEndpoint + '\'' +
+      ", endSessionEndpoint='" + endSessionEndpoint + '\'' +
+      ", logoutRedirectParam='" + logoutRedirectParam + '\'' +
+      ", jwksURI='" + jwksURI + '\'' +
+      ", codeChallengeMethod=" + codeChallengeMethod +
+      ", offlineAccess=" + offlineAccess +
+      ", codeChallenge=" + codeChallenge +
+      ", verifyEmail=" + verifyEmail +
+      ", providerMetadataEndpointSupported=" + providerMetadataEndpointSupported +
+      ", activateUser=" + activateUser +
+      ", groupMapping=" + groupMapping +
+      ", groupMappings='" + groupMappings + '\'' +
+      ", needConsent=" + needConsent +
+      ", registrationDisabled=" + registrationDisabled +
+      ", callbackURI='" + callbackURI + '\'' +
+      ", rejectRemoteNoGroup=" + rejectRemoteNoGroup +
+      ", managedCloudRedirectUri='" + managedCloudRedirectUri + '\'' +
+      '}';
+  }
 }
