@@ -34,7 +34,8 @@ public enum ApiScope {
   ADMINISTER_USERS_REGISTER(true),
   MODELREGISTRY(false),
   USER(false),
-  GIT(false);
+  GIT(false),
+  PYTHON(false);
 
   private final boolean privileged;
 
