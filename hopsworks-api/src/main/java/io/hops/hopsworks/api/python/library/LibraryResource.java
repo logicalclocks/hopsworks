@@ -18,6 +18,7 @@ package io.hops.hopsworks.api.python.library;
 import com.google.common.base.Strings;
 import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.api.filter.Audience;
+import io.hops.hopsworks.api.filter.apiKey.ApiKeyRequired;
 import io.hops.hopsworks.api.jwt.JWTHelper;
 import io.hops.hopsworks.api.python.library.command.LibraryCommandsResource;
 import io.hops.hopsworks.api.python.library.search.LibrarySearchBuilder;
@@ -43,6 +44,7 @@ import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.python.CondaInstallType;
 import io.hops.hopsworks.persistence.entity.python.PythonDep;
 import io.hops.hopsworks.persistence.entity.user.Users;
+import io.hops.hopsworks.persistence.entity.user.security.apiKey.ApiScope;
 import io.hops.hopsworks.restutils.RESTCodes;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -123,6 +125,7 @@ public class LibraryResource {
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
+  @ApiKeyRequired(acceptedScopes = {ApiScope.PYTHON}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   public Response get(@BeanParam Pagination pagination,
                       @BeanParam LibrariesBeanParam librariesBeanParam,
                       @Context UriInfo uriInfo,
@@ -147,6 +150,7 @@ public class LibraryResource {
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
+  @ApiKeyRequired(acceptedScopes = {ApiScope.PYTHON}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   public Response getByName(@PathParam("library") String library, @BeanParam LibraryExpansionBeanParam expansions,
                             @Context UriInfo uriInfo,
                             @Context HttpServletRequest req,
@@ -168,6 +172,7 @@ public class LibraryResource {
   @Path("{library}")
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
+  @ApiKeyRequired(acceptedScopes = {ApiScope.PYTHON}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   public Response uninstall(@Context SecurityContext sc,
                             @Context HttpServletRequest req,
                             @PathParam("library") String library)
@@ -194,6 +199,7 @@ public class LibraryResource {
   @Path("{library}")
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
+  @ApiKeyRequired(acceptedScopes = {ApiScope.PYTHON}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   public Response install(LibrarySpecification librarySpecification,
                           @PathParam("library") String library,
                           @Context UriInfo uriInfo,
@@ -247,6 +253,7 @@ public class LibraryResource {
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
+  @ApiKeyRequired(acceptedScopes = {ApiScope.PYTHON}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   public Response search(@PathParam("search") String search,
                          @QueryParam("query") String query,
                          @QueryParam("channel") String channel,
