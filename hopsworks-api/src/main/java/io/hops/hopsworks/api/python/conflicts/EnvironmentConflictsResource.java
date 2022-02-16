@@ -18,11 +18,13 @@ package io.hops.hopsworks.api.python.conflicts;
 import com.logicalclocks.servicediscoverclient.exceptions.ServiceDiscoveryException;
 import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.api.filter.Audience;
+import io.hops.hopsworks.api.filter.apiKey.ApiKeyRequired;
 import io.hops.hopsworks.common.api.ResourceRequest;
 import io.hops.hopsworks.common.python.environment.EnvironmentController;
 import io.hops.hopsworks.exceptions.PythonException;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
 import io.hops.hopsworks.persistence.entity.project.Project;
+import io.hops.hopsworks.persistence.entity.user.security.apiKey.ApiScope;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 
@@ -68,6 +70,7 @@ public class EnvironmentConflictsResource {
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
+  @ApiKeyRequired(acceptedScopes = {ApiScope.PYTHON}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   public Response get(@BeanParam ConflictBeanParam environmentConflictBeanParam,
     @Context UriInfo uriInfo, @Context SecurityContext sc)
       throws IOException, ServiceDiscoveryException, PythonException {
