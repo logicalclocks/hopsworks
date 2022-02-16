@@ -1,10 +1,13 @@
 # User Management
-Whether you run Hopsworks on-premise or on the cloud hopsworks.ai, you have a Hopsworks cluster which contains projects.
-The cluster can be seen as the highest level entity which contains all of your data.
+Whether you run Hopsworks on-premise or on the cloud hopsworks.ai, you have a Hopsworks cluster which contains 
+all users and projects.
 
 ## Cluster users
 All the users of your Hopsworks instance have access to your cluster with different access rights. 
-You can find them in ```Cluster Settings > Users```.
+You can find them by clicking on your name in the top right corner of the navigation bar and choosing _Cluster 
+Settings_ from the dropdown menu and going to the _Users_ tab (You need to have _Admin_ role to get access to the 
+_Cluster Settings_ page).
+
 <figure>
   <a  href="../../assets/images/admin/user-management/active-users.png">
     <img src="../../assets/images/admin/user-management/active-users.png" alt="active users" />
@@ -14,18 +17,31 @@ You can find them in ```Cluster Settings > Users```.
 
 ### Cluster roles
 
-Roles let you manage the access rights of a user to the cluster configuration
-- Hops user: it's the most restrictive access. This role limits the user to projects only and disable the access to 
-cluster configuration.
-- Hops admin: the highest level of access. This role lets the user manage any parameters of the cluster including 
-validating new members and managing any projects.
+Roles let you manage the access rights of a user to the cluster.
+
+- User: users with this role are only allowed to use the cluster by creating a limited number of projects.
+- Admin: users with this role are allowed to manage the cluster. This includes accepting new users to the cluster or 
+  blocking them, managing user quota, [configure alerts](./alert.md) and setting up [authentication methods](./auth.md).  
 
 ## Validating and blocking users
-By default, user who register on Hopsworks using their own credentials are not granted access to the cluster data. 
-First, a Hopsworks admin needs to validate their account.
+By default, user who register on Hopsworks using their own credentials are not granted access to the cluster. 
+First, a user with an admin role needs to validate their account.
 
-Similarly, you can block a user at any moment. To keep consistency with to history of your datasets, 
-a user can not be deleted but only blocked. You can block a user from ```Cluster Settings > Users```.
+By clicking on the _Review Requests_ button you can open a _user request review_ popup as shown in the image below.
+
+<figure>
+  <a  href="../../assets/images/admin/user-management/user-request-review.png">
+    <img src="../../assets/images/admin/user-management/user-request-review.png" alt="request" />
+  </a>
+  <figcaption>Review user request</figcaption>
+</figure>
+
+On the user request review popup you can activate or block users. Users with a validated email address will have a 
+check mark on their email.  
+
+Similarly, if a user is no longer allowed access to the cluster you can block them. To keep consistency with the
+history of your datasets, a user can not be deleted but only blocked. 
+You can block a user by clicking on the ban icon on the right side of the user in the list.
 
 <figure>
   <a  href="../../assets/images/admin/user-management/blocked-users.png">
@@ -34,12 +50,15 @@ a user can not be deleted but only blocked. You can block a user from ```Cluster
   <figcaption>Blocked Users</figcaption>
 </figure>
 
-<figure>
-  <a  href="../../assets/images/admin/user-management/user-request-review.png">
-    <img src="../../assets/images/admin/user-management/user-request-review.png" alt="request" />
-  </a>
-  <figcaption>Review user request</figcaption>
-</figure>
+Blocked users will appear on the lower section of the page. Click on _display blocked users_ to show all the blocked 
+users in your cluster. If a user is blocked by mistake you can reactivate her/him by clicking on the check mark icon 
+that corresponds to that user in the blocked users list. 
+
+You can also change the role of a user by clicking on the _select dropdown_ that shows the current role of the user.
+
+If there are too many users in you cluster use the search box (available for blocked users too) to filter users by 
+name or email. It is also possible to filter activated users by role. For example to see all administrators in you 
+cluster click on the _select dropdown_ to the right of the search box and choose _Admin_. 
 
 <figure>
   <a  href="../../assets/images/admin/user-management/new-user.png">
