@@ -1619,6 +1619,9 @@ public class RESTCodes {
     COULD_NOT_CREATE_ONLINE_FEATUREGROUP(176, "Could not create online feature group",
       Response.Status.INTERNAL_SERVER_ERROR),
     COULD_NOT_GET_QUERY_FILTER(177, "Error getting query filter", Response.Status.INTERNAL_SERVER_ERROR),
+    ERROR_REGISTER_BUILTIN_TRANSFORMATION_FUNCTION(178, "This branch should not be reached. Please fix automatic " +
+      "registering of the built-in transformation functions upon project creation",
+      Response.Status.INTERNAL_SERVER_ERROR),
     ;
 
     private int code;

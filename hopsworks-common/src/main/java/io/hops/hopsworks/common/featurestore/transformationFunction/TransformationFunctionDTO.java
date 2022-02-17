@@ -37,7 +37,12 @@ public class TransformationFunctionDTO extends RestDTO<TransformationFunctionDTO
 
   public TransformationFunctionDTO(Integer id, String name, String outputType, Integer version,
                                    String sourceCodeContent, Integer featurestoreId){
+    this(name, outputType, version, sourceCodeContent, featurestoreId);
     this.id = id;
+  }
+
+  public TransformationFunctionDTO(String name, String outputType, Integer version,
+    String sourceCodeContent, Integer featurestoreId){
     this.name = name;
     this.outputType = outputType;
     this.version = version;

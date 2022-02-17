@@ -1844,6 +1844,31 @@ describe "On #{ENV['OS']}" do
           expect_status(200)
         end
 
+        it "should be able to retrieve built-in transformation registered during project creation" do
+          featurestore_id = get_featurestore_id(@project.id)
+          endpoint = "#{ENV['HOPSWORKS_API']}/project/#{@project
+          .id}/featurestores/#{featurestore_id}/transformationfunctions"
+          json_result = get endpoint
+          expect_status_details(200)
+          parsed_json = JSON.parse(json_result)
+
+         feature_transformation = parsed_json["items"].select{ |f| f["name"] == "min_max_scaler"}.first
+          expect(feature_transformation["name"]).to eql("min_max_scaler")
+          expect(feature_transformation["outputType"]).to eql("DoubleType()")
+
+          feature_transformation = parsed_json["items"].select{ |f| f["name"] == "standard_scaler"}.first
+          expect(feature_transformation["name"]).to eql("standard_scaler")
+          expect(feature_transformation["outputType"]).to eql("DoubleType()")
+
+          feature_transformation = parsed_json["items"].select{ |f| f["name"] == "robust_scaler"}.first
+          expect(feature_transformation["name"]).to eql("robust_scaler")
+          expect(feature_transformation["outputType"]).to eql("DoubleType()")
+
+          feature_transformation = parsed_json["items"].select{ |f| f["name"] == "label_encoder"}.first
+          expect(feature_transformation["name"]).to eql("label_encoder")
+          expect(feature_transformation["outputType"]).to eql("IntegerType()")
+        end
+
 
         it "should be able to attach transformation function to training_dataset" do
           # featurestore id
