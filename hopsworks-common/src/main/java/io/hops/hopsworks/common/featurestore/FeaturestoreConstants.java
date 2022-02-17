@@ -45,8 +45,8 @@ public class FeaturestoreConstants {
   public static final int S3_STORAGE_CONNECTOR_SECRETKEY_MAX_LENGTH = 1000;
   public static final int S3_STORAGE_SERVER_ENCRYPTION_KEY_MAX_LENGTH = 1000;
   public static final int ON_DEMAND_FEATUREGROUP_SQL_QUERY_MAX_LENGTH = 11000;
-  public static final List<String> TRAINING_DATASET_DATA_FORMATS = Arrays.asList(new String[]{"csv", "tfrecords",
-    "tfrecord", "parquet", "tsv", "hdf5", "npy", "orc", "avro", "image", "petastorm"});
+  public static final List<String> TRAINING_DATASET_DATA_FORMATS = Arrays.asList("csv", "tfrecords",
+    "tfrecord", "parquet", "tsv", "hdf5", "npy", "orc", "avro", "image", "petastorm");
   public static final String JDBC_CONNECTOR_TYPE = FeaturestoreConnectorType.JDBC.name();
   public static final String HOPSFS_CONNECTOR_TYPE = FeaturestoreConnectorType.HOPSFS.name();
   public static final String S3_CONNECTOR_TYPE = FeaturestoreConnectorType.S3.name();
@@ -61,8 +61,8 @@ public class FeaturestoreConstants {
   public static final String HOPSFS_CONNECTOR_DTO_TYPE = "featurestoreHopsfsConnectorDTO";
   public static final String FEATUREGROUP_TYPE = "FEATURE GROUP";
   public static final String TRAINING_DATASET_TYPE = "TRAINING DATASET";
-  public static final List<String> SUGGESTED_HIVE_FEATURE_TYPES = Arrays.asList(new String[]{
-    "None","TINYINT", "SMALLINT", "INT", "BIGINT", "FLOAT", "DOUBLE",
+  public static final List<String> SUGGESTED_HIVE_FEATURE_TYPES = Arrays.asList("None", "TINYINT", "SMALLINT", "INT",
+    "BIGINT", "FLOAT", "DOUBLE",
     "DECIMAL", "TIMESTAMP", "DATE", "STRING",
     "BOOLEAN", "BINARY",
     "ARRAY <TINYINT>", "ARRAY <SMALLINT>", "ARRAY <INT>", "ARRAY <BIGINT>",
@@ -73,29 +73,46 @@ public class FeaturestoreConstants {
     "MAP <FLOAT, FLOAT>", "MAP <FLOAT, STRING>", "MAP <FLOAT, INT>", "MAP <FLOAT, BINARY>",
     "MAP <INT, INT>", "MAP <INT, STRING>", "MAP <INT, BINARY>", "MAP <INT, FLOAT>",
     "MAP <INT, ARRAY <FLOAT> >",
-    "STRUCT < label: STRING, index: INT >", "UNIONTYPE < STRING, INT>"
-  });
+    "STRUCT < label: STRING, index: INT >", "UNIONTYPE < STRING, INT>");
   public static final String S3_BUCKET_TRAINING_DATASETS_FOLDER = "TRAINING_DATASETS";
   public static final List<String> FEATURE_IMPORT_CONNECTORS
-      = Arrays.asList(new String[]{S3_CONNECTOR_TYPE, JDBC_CONNECTOR_TYPE, REDSHIFT_CONNECTOR_TYPE});
+    = Arrays.asList(S3_CONNECTOR_TYPE, JDBC_CONNECTOR_TYPE, REDSHIFT_CONNECTOR_TYPE);
   public static final String ONLINE_FEATURE_STORE_CONNECTOR_PASSWORD_TEMPLATE = "<SECRETPASSWORD>";
   public static final String ONLINE_FEATURE_STORE_CONNECTOR_SUFFIX = "_onlinefeaturestore";
   public static final String ONLINE_FEATURE_STORE_JDBC_PASSWORD_ARG = "password";
   public static final String ONLINE_FEATURE_STORE_JDBC_USER_ARG = "user";
   public static final String ONLINE_FEATURE_STORE_JDBC_DRIVER_ARG = "driver";
-  public static final List<String> SUGGESTED_MYSQL_DATA_TYPES = Arrays.asList(new String[]{
-    "None", "INT(11)", "TINYINT(1)", "SMALLINT(5)", "MEDIUMINT(7)", "BIGINT(20)", "FLOAT", "DOUBLE", "DECIMAL",
+  public static final List<String> SUGGESTED_MYSQL_DATA_TYPES = Arrays.asList("None", "INT(11)", "TINYINT(1)",
+    "SMALLINT(5)", "MEDIUMINT(7)", "BIGINT(20)", "FLOAT", "DOUBLE", "DECIMAL",
     "DATE", "DATETIME", "TIMESTAMP", "TIME", "YEAR", "CHAR", "VARCHAR(25)", "VARCHAR(125)", "VARCHAR(225)",
     "VARCHAR(500)", "VARCHAR(1000)", "VARCHAR(2000)", "VARCHAR(5000)", "VARCHAR(10000)", "BINARY", "VARBINARY(100)",
     "VARBINARY(500)", "VARBINARY(1000)", "BLOB", "TEXT", "TINYBLOB", "TINYTEXT", "MEDIUMBLOB", "MEDIUMTEXT", "LONGBLOB",
-    "LONGTEXT", "JSON"
-  });
+    "LONGTEXT", "JSON");
   public static final int ONLINE_FEATURESTORE_USERNAME_MAX_LENGTH = 32;
   public static final int ONLINE_FEATURESTORE_PW_LENGTH = 32;
   public static final String FEATURESTORE_HIVE_DB_SUFFIX = "_featurestore";
-  public static final List<String> TRANSFORMATION_FUNCTION_OUTPUT_TYPES = Arrays.asList(new String[]{
-      "StringType()", "BinaryType()", "ByteType()", "ShortType()", "IntegerType()", "LongType()", "FloatType()",
-      "DoubleType()", "TimestampType()", "DateType()", "BooleanType()"
-  });
+  public static final List<String> TRANSFORMATION_FUNCTION_OUTPUT_TYPES = Arrays.asList("StringType()", "BinaryType()",
+    "ByteType()", "ShortType()", "IntegerType()", "LongType()", "FloatType()",
+    "DoubleType()", "TimestampType()", "DateType()", "BooleanType()");
   public static final List<String> EVENT_TIME_FEATURE_TYPES = Arrays.asList("TIMESTAMP", "DATE", "BIGINT");
+  public static final List<String> BUILT_IN_TRANSFORMATION_FUNCTION_NAMES = Arrays.asList(
+    "min_max_scaler", "standard_scaler", "robust_scaler", "label_encoder"
+  );
+  public static final String BUILT_IN_TRANSFORMATION_FUNCTION_SOURCE_CODE_MIN_MAX_SCALER =
+    "{\"module_imports\": \"\", \"transformer_code\": \"# Min-Max scaling\\n" +
+      "def min_max_scaler(value, min_value,max_value):\\n" +
+      "    return (value - min_value) / (max_value - min_value)\"}";
+  public static final String BUILT_IN_TRANSFORMATION_FUNCTION_SOURCE_CODE_STANDARD_SCALER =
+    "{\"module_imports\": \"\", \"transformer_code\": \"# Standardization / zcore\\n" +
+      "def standard_scaler(value, mean, std_dev):\\n" +
+      "    return (value - mean) / std_dev\"}";
+  public static final String BUILT_IN_TRANSFORMATION_FUNCTION_SOURCE_CODE_ROBUST_SCALER =
+    "{\"module_imports\": \"\", \"transformer_code\": \"# Robust scaling\\n" +
+      "def robust_scaler(value, p25, p50, p75):\\n" +
+      "    return (value - p50) / (p75 - p25)\"}";
+  public static final String BUILT_IN_TRANSFORMATION_FUNCTION_SOURCE_CODE_LABEL_ENCODER =
+    "{\"module_imports\": \"\", \"transformer_code\": \"# label encoder\\n" +
+      "def label_encoder(value, value_to_index):\\n" +
+      "    # define a mapping of values to integers\\n" +
+      "    return value_to_index[value]\"}";
 }
