@@ -23,6 +23,8 @@ public class ElasticHitDTO {
   private ElasticDatasetDTO datasets;
   private ElasticInodeDTO inodes;
   
+  public ElasticHitDTO() {}
+  
   public ElasticProjectDTO getProjects() {
     return projects;
   }

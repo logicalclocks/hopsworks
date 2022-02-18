@@ -33,12 +33,14 @@ public class ElasticInodeDTO extends RestDTO<ElasticInodeDTO> {
   private String creator;
   private Long size;
   private String path;
-  private Map<String, HighlightField> highlights;
+  private Map<String, String> highlights;
   private Integer parentProjectId;
   private Long parentDatasetIId;
   private Integer parentDatasetId;
   private String parentDatasetName;
   private Map<String, Object> map;
+  
+  public ElasticInodeDTO() {}
   
   public String getElasticId() {
     return elasticId;
@@ -112,13 +114,14 @@ public class ElasticInodeDTO extends RestDTO<ElasticInodeDTO> {
     this.creator = creator;
   }
   
-  public Map<String, HighlightField> getHighlights() {
+  public Map<String, String> getHighlights() {
     return highlights;
   }
   
-  public void setHighlights(
-    Map<String, HighlightField> highlights) {
-    this.highlights = highlights;
+  public void setHighlights(Map<String, HighlightField> highlights) {
+    for(Map.Entry<String,HighlightField> highlight : highlights.entrySet()) {
+      this.highlights.put(highlight.getKey(), highlight.getValue().toString());
+    }
   }
   
   public Integer getParentProjectId() {
