@@ -41,6 +41,7 @@ import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.logging.Level;
@@ -67,6 +68,14 @@ public class TransformationFunctionController {
 
   private static final String TRANSFORMATIONFUNCTIONS_FOLDER = "transformation_functions";
 
+  public TransformationFunctionController() {
+  }
+
+  // for testing
+  public TransformationFunctionController(TransformationFunctionFacade transformationFunctionFacade) {
+    this.transformationFunctionFacade = transformationFunctionFacade;
+  }
+
   public TransformationFunction register(Users user, Project project, Featurestore featurestore,
                                          TransformationFunctionDTO transformationFunctionDTO)
       throws FeaturestoreException, IOException {
@@ -81,6 +90,62 @@ public class TransformationFunctionController {
         user,
         inode);
   }
+
+  public void registerBuiltInTransformationFunctions(Users user, Project project,
+    Featurestore featurestore)
+    throws FeaturestoreException, IOException {
+    List<TransformationFunctionDTO> builtInTransformationFunctionDTOs =
+      this.generateBuiltInTransformationFunctionDTOs(featurestore);
+    for (TransformationFunctionDTO transformationFunctionDTO : builtInTransformationFunctionDTOs) {
+      this.register(user, project, featurestore, transformationFunctionDTO);
+    }
+  }
+
+  public List<TransformationFunctionDTO> generateBuiltInTransformationFunctionDTOs(Featurestore featurestore)
+    throws FeaturestoreException {
+    int version = 1;
+    String sourceCode;
+    String outputType;
+    List<TransformationFunctionDTO> builtInTransformationFunctionDTOs =
+      new ArrayList<>();
+    for (String name : FeaturestoreConstants.BUILT_IN_TRANSFORMATION_FUNCTION_NAMES) {
+      switch (name) {
+        case "min_max_scaler":
+          sourceCode = FeaturestoreConstants.BUILT_IN_TRANSFORMATION_FUNCTION_SOURCE_CODE_MIN_MAX_SCALER;
+          outputType = "DoubleType()";
+          break;
+        case "label_encoder":
+          sourceCode = FeaturestoreConstants.BUILT_IN_TRANSFORMATION_FUNCTION_SOURCE_CODE_LABEL_ENCODER;
+          outputType = "IntegerType()";
+          break;
+        case "standard_scaler":
+          sourceCode = FeaturestoreConstants.BUILT_IN_TRANSFORMATION_FUNCTION_SOURCE_CODE_STANDARD_SCALER;
+          outputType = "DoubleType()";
+          break;
+        case "robust_scaler":
+          sourceCode = FeaturestoreConstants.BUILT_IN_TRANSFORMATION_FUNCTION_SOURCE_CODE_ROBUST_SCALER;
+          outputType = "DoubleType()";
+          break;
+        default:
+          throw new FeaturestoreException(
+            RESTCodes.FeaturestoreErrorCode.ERROR_REGISTER_BUILTIN_TRANSFORMATION_FUNCTION, Level.FINE, "Provided name"
+            + name + "does not match any built-in transformation function source code. Add a case to " +
+            "generateBuiltInTransformationFunctionDTOs or provide an existing name.");
+      }
+
+      TransformationFunctionDTO transformationFunctionDTO = new TransformationFunctionDTO(
+        name,
+        outputType,
+        version,
+        sourceCode,
+        featurestore.getId()
+      );
+      builtInTransformationFunctionDTOs.add(transformationFunctionDTO);
+    }
+    return builtInTransformationFunctionDTOs;
+  }
+
+
 
   public String readContent(Users user, Project project, TransformationFunction transformationFunction)
       throws FeaturestoreException {
@@ -150,6 +215,14 @@ public class TransformationFunctionController {
         .orElseThrow(() ->
             new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.TRANSFORMATION_FUNCTION_DOES_NOT_EXIST,
         Level.FINE, "Could not find transformation function with ID" + transformationFunctionId));
+
+    // Check if trying to delete built in transformation function
+    if (FeaturestoreConstants.BUILT_IN_TRANSFORMATION_FUNCTION_NAMES.contains(transformationFunction.getName())
+      && transformationFunction.getVersion() == 1) {
+      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ERROR_DELETING_TRANSFORMERFUNCTION, Level.FINE,
+        "Deleting built-in transformation function `" + transformationFunction.getName() + "` with version 1 is not " +
+          "allowed. Create a new version instead.");
+    }
 
     DistributedFileSystemOps udfso = null;
     try {

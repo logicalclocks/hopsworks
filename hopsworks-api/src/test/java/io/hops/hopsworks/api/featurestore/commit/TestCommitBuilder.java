@@ -32,7 +32,6 @@ import javax.ws.rs.core.UriInfo;
 import java.util.ArrayList;
 import java.util.HashSet;
 
-import static org.mockito.Matchers.*;
 import static org.mockito.Mockito.verify;
 
 public class TestCommitBuilder {
@@ -48,22 +47,25 @@ public class TestCommitBuilder {
     @Before
     public void setup() {
         featureGroupCommitController = Mockito.mock(FeatureGroupCommitController.class);
-        Mockito.when(featureGroupCommitController.getCommitDetails(anyInt(), anyInt(), anyInt(), anySet(), anySet()))
+        Mockito.when(featureGroupCommitController.getCommitDetails(
+          Mockito.anyInt(), Mockito.anyInt(), Mockito.anyInt(), Mockito.anySet(), Mockito.anySet()))
                 .thenReturn(new AbstractFacade.CollectionInfo(0L, new ArrayList()));
 
         //throws exception if limit or offset is null
         Mockito.when(featureGroupCommitController
-                .getCommitDetails(anyInt(), anyInt(), (Integer) isNull(),anySet(), anySet()))
+                .getCommitDetails(
+                  Mockito.anyInt(), Mockito.anyInt(), Mockito.isNull(),Mockito.anySet(), Mockito.anySet()))
                 .thenThrow(new NullPointerException());
         Mockito.when(featureGroupCommitController
-                .getCommitDetails(anyInt(), (Integer) isNull(), anyInt(), anySet(), anySet()))
+                .getCommitDetails(
+                  Mockito.anyInt(), Mockito.isNull(), Mockito.anyInt(), Mockito.anySet(), Mockito.anySet()))
                 .thenThrow(new NullPointerException());
 
         commitBuilder = new CommitBuilder(featureGroupCommitController);
 
         mockUriInfo = Mockito.mock(UriInfo.class);
         UriBuilder mockUriBuilder = Mockito.mock(UriBuilder.class);
-        Mockito.when(mockUriBuilder.path(anyString()))
+        Mockito.when(mockUriBuilder.path(Mockito.anyString()))
                 .thenReturn(mockUriBuilder);
         Mockito.when(mockUriInfo.getBaseUriBuilder())
                 .thenReturn(mockUriBuilder);
