@@ -17,9 +17,9 @@ package io.hops.hopsworks.api.elastic;
 
 import io.hops.hopsworks.common.api.RestDTO;
 import org.elasticsearch.search.fetch.subphase.highlight.HighlightField;
-
 import javax.xml.bind.annotation.XmlRootElement;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -34,9 +34,11 @@ public class ElasticProjectDTO extends RestDTO<ElasticProjectDTO> {
   private Date created;
   private String creator;
   private Boolean member;
-  private Map<String, HighlightField> highlights;
+  private Map<String, String> highlights = new HashMap<>();
   private List<String> members;
   private Map<String, Object> map;
+  
+  public ElasticProjectDTO() {}
   
   public String getElasticId() {
     return elasticId;
@@ -110,13 +112,14 @@ public class ElasticProjectDTO extends RestDTO<ElasticProjectDTO> {
     this.member = member;
   }
   
-  public Map<String, HighlightField> getHighlights() {
+  public Map<String, String> getHighlights() {
     return highlights;
   }
   
-  public void setHighlights(
-    Map<String, HighlightField> highlights) {
-    this.highlights = highlights;
+  public void setHighlights(Map<String, HighlightField> highlights) {
+    for(Map.Entry<String,HighlightField> highlight : highlights.entrySet()) {
+      this.highlights.put(highlight.getKey(), highlight.getValue().toString());
+    }
   }
   
   public List<String> getMembers() {
