@@ -28,6 +28,7 @@ nav:
       - Python: compute/python.md
       - Jupyter: compute/jupyter.md
       - Jobs: compute/jobs.md
+      - Git Integration: compute/git.md
       - Alerts: compute/alerts.md
   - Administration:
       - Introduction: admin/index.md
