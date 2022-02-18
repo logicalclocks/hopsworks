@@ -210,7 +210,7 @@
     <!-- Test dependencies -->
     <dependency>
       <groupId>org.mockito</groupId>
-      <artifactId>mockito-all</artifactId>
+      <artifactId>mockito-core</artifactId>
     </dependency>
     <!-- enhance functional java - Try construct - used by provenance -->
     <dependency>

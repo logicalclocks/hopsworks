@@ -31,8 +31,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import static org.mockito.Matchers.anyString;
-
 public class TestDatabricksClusterBuilder {
 
     private DatabricksClusterBuilder databricksClusterBuilder;
@@ -47,7 +45,7 @@ public class TestDatabricksClusterBuilder {
 
         mockUriInfo = Mockito.mock(UriInfo.class);
         UriBuilder mockUriBuilder = Mockito.mock(UriBuilder.class);
-        Mockito.when(mockUriBuilder.path(anyString()))
+        Mockito.when(mockUriBuilder.path(Mockito.anyString()))
                 .thenReturn(mockUriBuilder);
         Mockito.when(mockUriInfo.getBaseUriBuilder())
                 .thenReturn(mockUriBuilder);
@@ -86,7 +84,9 @@ public class TestDatabricksClusterBuilder {
         String dbInstance = "testInstance";
 
         List<DbCluster> dbClusters = new ArrayList<>();
-        dbClusters.add(new DbCluster());
+        DbCluster dbCluster = new DbCluster();
+        dbCluster.setId("0");
+        dbClusters.add(dbCluster);
 
         //act
         DatabricksClusterDTO databricksClusterDTO = databricksClusterBuilder.build(

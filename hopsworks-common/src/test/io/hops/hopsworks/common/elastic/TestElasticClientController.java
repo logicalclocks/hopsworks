@@ -35,8 +35,6 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
 
-import static org.mockito.Matchers.any;
-
 public class TestElasticClientController {
 
   private ElasticHits.Handler handler;
@@ -46,7 +44,7 @@ public class TestElasticClientController {
   @Before
   public void setup() {
     handler = Mockito.mock(ElasticHits.Handler.class);
-    Mockito.stub(handler.apply(any())).toReturn(new Try.Success(null));
+    Mockito.when(handler.apply(Mockito.any())).thenReturn(new Try.Success(null));
     client = Mockito.spy(new ElasticClientController());
 
     BytesReference create = new BytesArray("{\n" +
@@ -112,13 +110,13 @@ public class TestElasticClientController {
 
     //region Mock
     Mockito.doReturn(null)
-            .when(client).baseSearch(any());
+            .when(client).baseSearch(Mockito.any());
 
     Mockito.doReturn(null)
-            .when(client).searchScrollingInt(any());
+            .when(client).searchScrollingInt(Mockito.any());
 
     Mockito.doReturn(null)
-            .when(client).clearScrollingContext(any());
+            .when(client).clearScrollingContext(Mockito.any());
     //endregion
 
     //act
@@ -126,9 +124,9 @@ public class TestElasticClientController {
 
     //assert
     Assert.assertEquals(1, result.getValue0().intValue());
-    Mockito.verify(client, Mockito.times(0)).baseSearch(any());
-    Mockito.verify(client, Mockito.times(0)).searchScrollingInt(any());
-    Mockito.verify(client, Mockito.times(1)).clearScrollingContext(any());
+    Mockito.verify(client, Mockito.times(0)).baseSearch(Mockito.any());
+    Mockito.verify(client, Mockito.times(0)).searchScrollingInt(Mockito.any());
+    Mockito.verify(client, Mockito.times(1)).clearScrollingContext(Mockito.any());
   }
 
   @Test
@@ -145,13 +143,13 @@ public class TestElasticClientController {
 
     //region Mock
     Mockito.doReturn(null)
-            .when(client).baseSearch(any());
+            .when(client).baseSearch(Mockito.any());
 
     Mockito.doReturn(null)
-            .when(client).searchScrollingInt(any());
+            .when(client).searchScrollingInt(Mockito.any());
 
     Mockito.doReturn(null)
-            .when(client).clearScrollingContext(any());
+            .when(client).clearScrollingContext(Mockito.any());
     //endregion
 
     //act
@@ -159,9 +157,9 @@ public class TestElasticClientController {
 
     //assert
     Assert.assertEquals(1, result.getValue0().intValue());
-    Mockito.verify(client, Mockito.times(0)).baseSearch(any());
-    Mockito.verify(client, Mockito.times(0)).searchScrollingInt(any());
-    Mockito.verify(client, Mockito.times(0)).clearScrollingContext(any());
+    Mockito.verify(client, Mockito.times(0)).baseSearch(Mockito.any());
+    Mockito.verify(client, Mockito.times(0)).searchScrollingInt(Mockito.any());
+    Mockito.verify(client, Mockito.times(0)).clearScrollingContext(Mockito.any());
   }
 
   @Test
@@ -178,13 +176,13 @@ public class TestElasticClientController {
 
     //region Mock
     Mockito.doReturn(null)
-            .when(client).baseSearch(any());
+            .when(client).baseSearch(Mockito.any());
 
     Mockito.doReturn(createResponse(new SearchHit[] { readHit }, totalHits, ""))
-            .when(client).searchScrollingInt(any());
+            .when(client).searchScrollingInt(Mockito.any());
 
     Mockito.doReturn(null)
-            .when(client).clearScrollingContext(any());
+            .when(client).clearScrollingContext(Mockito.any());
     //endregion
 
     //act
@@ -192,9 +190,9 @@ public class TestElasticClientController {
 
     //assert
     Assert.assertEquals(2, result.getValue0().intValue());
-    Mockito.verify(client, Mockito.times(0)).baseSearch(any());
-    Mockito.verify(client, Mockito.times(1)).searchScrollingInt(any());
-    Mockito.verify(client, Mockito.times(1)).clearScrollingContext(any());
+    Mockito.verify(client, Mockito.times(0)).baseSearch(Mockito.any());
+    Mockito.verify(client, Mockito.times(1)).searchScrollingInt(Mockito.any());
+    Mockito.verify(client, Mockito.times(1)).clearScrollingContext(Mockito.any());
   }
 
   @Test
@@ -211,13 +209,13 @@ public class TestElasticClientController {
 
     //region Mock
     Mockito.doReturn(createResponse(new SearchHit[] { createHit }, totalHits, ""))
-            .when(client).baseSearch(any());
+            .when(client).baseSearch(Mockito.any());
 
     Mockito.doReturn(createResponse(new SearchHit[] { readHit }, totalHits, ""))
-            .when(client).searchScrollingInt(any());
+            .when(client).searchScrollingInt(Mockito.any());
 
     Mockito.doReturn(null)
-            .when(client).clearScrollingContext(any());
+            .when(client).clearScrollingContext(Mockito.any());
     //endregion
 
     //act
@@ -225,8 +223,8 @@ public class TestElasticClientController {
 
     //assert
     Assert.assertEquals(2, result.getValue0().intValue());
-    Mockito.verify(client, Mockito.times(1)).baseSearch(any());
-    Mockito.verify(client, Mockito.times(1)).searchScrollingInt(any());
-    Mockito.verify(client, Mockito.times(1)).clearScrollingContext(any());
+    Mockito.verify(client, Mockito.times(1)).baseSearch(Mockito.any());
+    Mockito.verify(client, Mockito.times(1)).searchScrollingInt(Mockito.any());
+    Mockito.verify(client, Mockito.times(1)).clearScrollingContext(Mockito.any());
   }
 }

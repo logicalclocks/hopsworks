@@ -46,10 +46,14 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 import org.skyscreamer.jsonassert.JSONAssert;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
-
-import static org.mockito.Matchers.*;
 
 public class TestProvOpsControllerEEImpl {
 
@@ -230,13 +234,13 @@ public class TestProvOpsControllerEEImpl {
     //endregion
 
     Settings settings = Mockito.mock(Settings.class);
-    Mockito.stub(settings.getProvFileIndex(anyLong())).toReturn("1__file_prov");
-    Mockito.stub(settings.getElasticDefaultScrollPageSize()).toReturn(1);
-    Mockito.stub(settings.getElasticMaxScrollPageSize()).toReturn(5);
-    Mockito.stub(settings.getProvenanceGraphMaxSize()).toReturn(100);
+    Mockito.when(settings.getProvFileIndex(Mockito.anyLong())).thenReturn("1__file_prov");
+    Mockito.when(settings.getElasticDefaultScrollPageSize()).thenReturn(1);
+    Mockito.when(settings.getElasticMaxScrollPageSize()).thenReturn(5);
+    Mockito.when(settings.getProvenanceGraphMaxSize()).thenReturn(100);
 
     ElasticCache cache = Mockito.mock(ElasticCache.class);
-    Mockito.stub(cache.mngIndexGetMapping(anyString(), anyBoolean())).toReturn(new HashMap<>());
+    Mockito.when(cache.mngIndexGetMapping(Mockito.anyString(), Mockito.anyBoolean())).thenReturn(new HashMap<>());
 
     ProvStateController provStateController = new ProvStateController(settings, client, cache);
 
@@ -331,7 +335,7 @@ public class TestProvOpsControllerEEImpl {
     if(doubleRootQuery) {
       expectedQueries.add(Arrays.asList(rootQuery));
     }
-    Mockito.when(client.multiSearchScrolling(any(), any()))
+    Mockito.when(client.multiSearchScrolling(Mockito.any(), Mockito.any()))
       //upstream
       .thenReturn(searchResult(new HashMap<>()));
   
@@ -386,7 +390,7 @@ public class TestProvOpsControllerEEImpl {
     ArgumentCaptor<MultiSearchRequest> multiRequest = ArgumentCaptor.forClass(MultiSearchRequest.class);
 
     //region Mock graph
-    Mockito.when(client.multiSearchScrolling(any(), any()))
+    Mockito.when(client.multiSearchScrolling(Mockito.any(), Mockito.any()))
             //upstream
             .thenReturn(searchResult(map))
             .thenReturn(searchResult(map1))
@@ -395,7 +399,7 @@ public class TestProvOpsControllerEEImpl {
             //downstream
 
     Try provStateDTOs = new Try.Success<>(builder.aliveList);
-    Mockito.stub(client.search(any(), any())).toReturn(Pair.with(1l, provStateDTOs));
+    Mockito.when(client.search(Mockito.any(), Mockito.any())).thenReturn(Pair.with(1l, provStateDTOs));
     //endregion
 
     //act
@@ -453,7 +457,7 @@ public class TestProvOpsControllerEEImpl {
     ArgumentCaptor<SearchRequest> request = ArgumentCaptor.forClass(SearchRequest.class);
 
     //region Mock graph
-    Mockito.when(client.multiSearchScrolling(any(), any()))
+    Mockito.when(client.multiSearchScrolling(Mockito.any(), Mockito.any()))
             //upstream
             .thenReturn(searchResult(map))
             .thenReturn(searchResult(map1))
@@ -464,7 +468,7 @@ public class TestProvOpsControllerEEImpl {
     builder.aliveList.removeAll(builder.aliveList.stream().filter(s -> s.getMlId().equals("raw_fg2_1")).collect(Collectors.toList()));
     builder.aliveList.removeAll(builder.aliveList.stream().filter(s -> s.getMlId().equals("raw_fg3_1")).collect(Collectors.toList()));
     Try provStateDTOs = new Try.Success<>(builder.aliveList);
-    Mockito.stub(client.search(any(), any())).toReturn(Pair.with(1l, provStateDTOs));
+    Mockito.when(client.search(Mockito.any(), Mockito.any())).thenReturn(Pair.with(1l, provStateDTOs));
     //endregion
 
     //act
@@ -526,7 +530,7 @@ public class TestProvOpsControllerEEImpl {
     ArgumentCaptor<SearchRequest> request = ArgumentCaptor.forClass(SearchRequest.class);
 
     //region Mock graph
-    Mockito.when(client.multiSearchScrolling(any(), any()))
+    Mockito.when(client.multiSearchScrolling(Mockito.any(), Mockito.any()))
             //upstream
             .thenReturn(searchResult(map))
             .thenReturn(searchResult(map1))
@@ -537,7 +541,7 @@ public class TestProvOpsControllerEEImpl {
     builder.aliveList.removeAll(builder.aliveList.stream().filter(s -> s.getMlId().equals("raw_fg2_1")).collect(Collectors.toList()));
     builder.aliveList.removeAll(builder.aliveList.stream().filter(s -> s.getMlId().equals("raw_fg3_1")).collect(Collectors.toList()));
     Try provStateDTOs = new Try.Success<>(builder.aliveList);
-    Mockito.stub(client.search(any(), any())).toReturn(Pair.with(1l, provStateDTOs));
+    Mockito.when(client.search(Mockito.any(), Mockito.any())).thenReturn(Pair.with(1l, provStateDTOs));
     //endregion
 
     //act
@@ -594,7 +598,7 @@ public class TestProvOpsControllerEEImpl {
     ArgumentCaptor<MultiSearchRequest> multiRequest = ArgumentCaptor.forClass(MultiSearchRequest.class);
 
     //region Mock graph
-    Mockito.when(client.multiSearchScrolling(any(), any()))
+    Mockito.when(client.multiSearchScrolling(Mockito.any(), Mockito.any()))
             //upstream
             .thenReturn(searchResult(map))
             .thenReturn(searchResult(map1))
@@ -606,7 +610,7 @@ public class TestProvOpsControllerEEImpl {
     //downstream
 
     Try provStateDTOs = new Try.Success<>(builder.aliveList);
-    Mockito.stub(client.search(any(), any())).toReturn(Pair.with(1l, provStateDTOs));
+    Mockito.when(client.search(Mockito.any(), Mockito.any())).thenReturn(Pair.with(1l, provStateDTOs));
     //endregion
 
     //act
@@ -660,7 +664,7 @@ public class TestProvOpsControllerEEImpl {
     ArgumentCaptor<SearchRequest> request = ArgumentCaptor.forClass(SearchRequest.class);
 
     //region Mock graph
-    Mockito.when(client.multiSearchScrolling(any(), any()))
+    Mockito.when(client.multiSearchScrolling(Mockito.any(), Mockito.any()))
             //upstream
             .thenReturn(searchResult(map))
             .thenReturn(searchResult(map1))
@@ -674,7 +678,7 @@ public class TestProvOpsControllerEEImpl {
     builder.aliveList.removeAll(builder.aliveList.stream().filter(s -> s.getMlId().equals("derived_td2_1")).collect(Collectors.toList()));
     builder.aliveList.removeAll(builder.aliveList.stream().filter(s -> s.getMlId().equals("derived_td3_1")).collect(Collectors.toList()));
     Try provStateDTOs = new Try.Success<>(builder.aliveList);
-    Mockito.stub(client.search(any(), any())).toReturn(Pair.with(1l, provStateDTOs));
+    Mockito.when(client.search(Mockito.any(), Mockito.any())).thenReturn(Pair.with(1l, provStateDTOs));
     //endregion
 
     //act
@@ -732,7 +736,7 @@ public class TestProvOpsControllerEEImpl {
     ArgumentCaptor<SearchRequest> request = ArgumentCaptor.forClass(SearchRequest.class);
 
     //region Mock graph
-    Mockito.when(client.multiSearchScrolling(any(), any()))
+    Mockito.when(client.multiSearchScrolling(Mockito.any(), Mockito.any()))
             //upstream
             .thenReturn(searchResult(map))
             .thenReturn(searchResult(map1))
@@ -746,7 +750,7 @@ public class TestProvOpsControllerEEImpl {
     builder.aliveList.removeAll(builder.aliveList.stream().filter(s -> s.getMlId().equals("derived_td2_1")).collect(Collectors.toList()));
     builder.aliveList.removeAll(builder.aliveList.stream().filter(s -> s.getMlId().equals("derived_td3_1")).collect(Collectors.toList()));
     Try provStateDTOs = new Try.Success<>(builder.aliveList);
-    Mockito.stub(client.search(any(), any())).toReturn(Pair.with(1l, provStateDTOs));
+    Mockito.when(client.search(Mockito.any(), Mockito.any())).thenReturn(Pair.with(1l, provStateDTOs));
     //endregion
 
     //act
@@ -805,7 +809,7 @@ public class TestProvOpsControllerEEImpl {
     ArgumentCaptor<MultiSearchRequest> multiRequest = ArgumentCaptor.forClass(MultiSearchRequest.class);
 
     //region Mock graph
-    Mockito.when(client.multiSearchScrolling(any(), any()))
+    Mockito.when(client.multiSearchScrolling(Mockito.any(), Mockito.any()))
             //upstream
             .thenReturn(searchResult(map1))
             .thenReturn(searchResult(map2))
@@ -813,7 +817,7 @@ public class TestProvOpsControllerEEImpl {
     //downstream
 
     Try provStateDTOs = new Try.Success<>(builder.aliveList);
-    Mockito.stub(client.search(any(), any())).toReturn(Pair.with(1l, provStateDTOs));
+    Mockito.when(client.search(Mockito.any(), Mockito.any())).thenReturn(Pair.with(1l, provStateDTOs));
     //endregion
 
     //act
@@ -868,7 +872,7 @@ public class TestProvOpsControllerEEImpl {
     ArgumentCaptor<SearchRequest> request = ArgumentCaptor.forClass(SearchRequest.class);
 
     //region Mock graph
-    Mockito.when(client.multiSearchScrolling(any(), any()))
+    Mockito.when(client.multiSearchScrolling(Mockito.any(), Mockito.any()))
             //upstream
             .thenReturn(searchResult(map1))
             .thenReturn(searchResult(map2))
@@ -878,7 +882,7 @@ public class TestProvOpsControllerEEImpl {
     builder.aliveList.removeAll(builder.aliveList.stream().filter(s -> s.getMlId().equals("raw_fg2_1")).collect(Collectors.toList()));
     builder.aliveList.removeAll(builder.aliveList.stream().filter(s -> s.getMlId().equals("raw_fg3_1")).collect(Collectors.toList()));
     Try provStateDTOs = new Try.Success<>(builder.aliveList);
-    Mockito.stub(client.search(any(), any())).toReturn(Pair.with(1l, provStateDTOs));
+    Mockito.when(client.search(Mockito.any(), Mockito.any())).thenReturn(Pair.with(1l, provStateDTOs));
     //endregion
 
     //act
@@ -937,7 +941,7 @@ public class TestProvOpsControllerEEImpl {
     ArgumentCaptor<SearchRequest> request = ArgumentCaptor.forClass(SearchRequest.class);
 
     //region Mock graph
-    Mockito.when(client.multiSearchScrolling(any(), any()))
+    Mockito.when(client.multiSearchScrolling(Mockito.any(), Mockito.any()))
             //upstream
             .thenReturn(searchResult(map1))
             .thenReturn(searchResult(map2))
@@ -947,7 +951,7 @@ public class TestProvOpsControllerEEImpl {
     builder.aliveList.removeAll(builder.aliveList.stream().filter(s -> s.getMlId().equals("raw_fg2_1")).collect(Collectors.toList()));
     builder.aliveList.removeAll(builder.aliveList.stream().filter(s -> s.getMlId().equals("raw_fg3_1")).collect(Collectors.toList()));
     Try provStateDTOs = new Try.Success<>(builder.aliveList);
-    Mockito.stub(client.search(any(), any())).toReturn(Pair.with(1l, provStateDTOs));
+    Mockito.when(client.search(Mockito.any(), Mockito.any())).thenReturn(Pair.with(1l, provStateDTOs));
     //endregion
 
     //act
@@ -1044,7 +1048,7 @@ public class TestProvOpsControllerEEImpl {
     ArgumentCaptor<MultiSearchRequest> multiRequest = ArgumentCaptor.forClass(MultiSearchRequest.class);
 
     //region Mock graph
-    Mockito.when(client.multiSearchScrolling(any(), any()))
+    Mockito.when(client.multiSearchScrolling(Mockito.any(), Mockito.any()))
             //upstream
             .thenReturn(searchResult(map))
             .thenReturn(searchResult(map1))
@@ -1061,7 +1065,7 @@ public class TestProvOpsControllerEEImpl {
     //endregion
 
     Try provStateDTOs = new Try.Success<>(builder.aliveList);
-    Mockito.stub(client.search(any(), any())).toReturn(Pair.with(1l, provStateDTOs));
+    Mockito.when(client.search(Mockito.any(), Mockito.any())).thenReturn(Pair.with(1l, provStateDTOs));
 
     //act
     ProvLinksDTO provLinksDTO = provOpsController.provLinks(project, paramBuilder, true);
@@ -1177,7 +1181,7 @@ public class TestProvOpsControllerEEImpl {
     ArgumentCaptor<MultiSearchRequest> multiRequest = ArgumentCaptor.forClass(MultiSearchRequest.class);
 
     //region Mock graph
-    Mockito.when(client.multiSearchScrolling(any(), any()))
+    Mockito.when(client.multiSearchScrolling(Mockito.any(), Mockito.any()))
             //upstream
             .thenReturn(searchResult(map))
             .thenReturn(searchResult(map1))
@@ -1191,7 +1195,7 @@ public class TestProvOpsControllerEEImpl {
     //endregion
 
     Try provStateDTOs = new Try.Success<>(builder.aliveList);
-    Mockito.stub(client.search(any(), any())).toReturn(Pair.with(1l, provStateDTOs));
+    Mockito.when(client.search(Mockito.any(), Mockito.any())).thenReturn(Pair.with(1l, provStateDTOs));
 
     //act
     ProvLinksDTO provLinksDTO = provOpsController.provLinks(project, paramBuilder, true);
@@ -1290,7 +1294,7 @@ public class TestProvOpsControllerEEImpl {
     ArgumentCaptor<MultiSearchRequest> multiRequest = ArgumentCaptor.forClass(MultiSearchRequest.class);
 
     //region Mock graph
-    Mockito.when(client.multiSearchScrolling(any(), any()))
+    Mockito.when(client.multiSearchScrolling(Mockito.any(), Mockito.any()))
             //upstream
             .thenReturn(searchResult(map))
             .thenReturn(searchResult(map1))
@@ -1303,7 +1307,7 @@ public class TestProvOpsControllerEEImpl {
     //endregion
 
     Try provStateDTOs = new Try.Success<>(builder.aliveList);
-    Mockito.stub(client.search(any(), any())).toReturn(Pair.with(1l, provStateDTOs));
+    Mockito.when(client.search(Mockito.any(), Mockito.any())).thenReturn(Pair.with(1l, provStateDTOs));
 
     //act
     ProvLinksDTO provLinksDTO = provOpsController.provLinks(project, paramBuilder, true);
@@ -1400,7 +1404,7 @@ public class TestProvOpsControllerEEImpl {
     ArgumentCaptor<MultiSearchRequest> multiRequest = ArgumentCaptor.forClass(MultiSearchRequest.class);
 
     //region Mock graph
-    Mockito.when(client.multiSearchScrolling(any(), any()))
+    Mockito.when(client.multiSearchScrolling(Mockito.any(), Mockito.any()))
             //upstream
             .thenReturn(searchResult(map))
             .thenReturn(searchResult(map1))
@@ -1414,7 +1418,7 @@ public class TestProvOpsControllerEEImpl {
     //endregion
 
     Try provStateDTOs = new Try.Success<>(builder.aliveList);
-    Mockito.stub(client.search(any(), any())).toReturn(Pair.with(1l, provStateDTOs));
+    Mockito.when(client.search(Mockito.any(), Mockito.any())).thenReturn(Pair.with(1l, provStateDTOs));
 
     //act
     ProvLinksDTO provLinksDTO = provOpsController.provLinks(project, paramBuilder, true);
@@ -1497,7 +1501,7 @@ public class TestProvOpsControllerEEImpl {
     ArgumentCaptor<MultiSearchRequest> multiRequest = ArgumentCaptor.forClass(MultiSearchRequest.class);
 
     //region Mock graph
-    Mockito.when(client.multiSearchScrolling(any(), any()))
+    Mockito.when(client.multiSearchScrolling(Mockito.any(), Mockito.any()))
             //upstream
             .thenReturn(searchResult(map))
             .thenReturn(searchResult(map1));
@@ -1505,7 +1509,7 @@ public class TestProvOpsControllerEEImpl {
     //endregion
 
     Try provStateDTOs = new Try.Success<>(builder.aliveList);
-    Mockito.stub(client.search(any(), any())).toReturn(Pair.with(1l, provStateDTOs));
+    Mockito.when(client.search(Mockito.any(), Mockito.any())).thenReturn(Pair.with(1l, provStateDTOs));
 
     //act
     ProvLinksDTO provLinksDTO = provOpsController.provLinks(project, paramBuilder, true);

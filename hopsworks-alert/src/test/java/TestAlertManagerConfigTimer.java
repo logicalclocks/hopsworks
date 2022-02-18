@@ -68,9 +68,6 @@ import java.util.Random;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import static org.mockito.Matchers.anyObject;
-import static org.mockito.Matchers.anyString;
-
 public class TestAlertManagerConfigTimer {
   private final static Logger LOGGER = Logger.getLogger(TestAlertManagerConfigTimer.class.getName());
   private AlertManagerClient client;
@@ -202,12 +199,12 @@ public class TestAlertManagerConfigTimer {
       Object[] args = invocation.getArguments();
       LOGGER.log(Level.INFO, "Save to database: {0}.", args);
       return null;
-    }).when(alertManagerConfigFacade).save(anyObject());
+    }).when(alertManagerConfigFacade).save(Mockito.any());
     Mockito.doAnswer((Answer<Void>) invocation -> {
       Object[] args = invocation.getArguments();
       LOGGER.log(Level.INFO, "Update database: {0}.", args);
       return null;
-    }).when(alertManagerConfigFacade).update(anyObject());
+    }).when(alertManagerConfigFacade).update(Mockito.any());
     AlertManagerConfig alertManagerConfig = read(new File(alertManagerConfigDBPath));
     AlertManagerConfigEntity alertManagerConfigEntity = new AlertManagerConfigEntity();
     alertManagerConfigEntity.setId(1);
@@ -222,7 +219,7 @@ public class TestAlertManagerConfigTimer {
       Optional<AlertReceiver> alertReceiver =
           receivers.stream().filter(receiver -> receiver.getName().equals(args[0])).findFirst();
       return alertReceiver;
-    }).when(alertReceiverFacade).findByName(anyString());
+    }).when(alertReceiverFacade).findByName(Mockito.any());
     alertManagerConfiguration = new AlertManagerConfiguration(client, alertManagerConfigController,
         alertManagerConfigFacade, alertReceiverFacade);
     alertManagerConfigBackup = alertManagerConfigController.read();
@@ -244,7 +241,7 @@ public class TestAlertManagerConfigTimer {
         assert alertManagerConfig.getReceivers().size() == 9;
       }
       return null;
-    }).when(alertManagerConfigFacade).update(anyObject());
+    }).when(alertManagerConfigFacade).update(Mockito.any());
     alertManagerConfiguration.restoreFromBackup();
     AlertManagerConfig alertManagerConfig = alertManagerConfigController.read();
     assert alertManagerConfig.getRoute().getRoutes().size() == 15;
@@ -266,7 +263,7 @@ public class TestAlertManagerConfigTimer {
         assert alertManagerConfig.getReceivers().size() == 5;
       }
       return null;
-    }).when(alertManagerConfigFacade).save(anyObject());
+    }).when(alertManagerConfigFacade).save(Mockito.any());
     Mockito.when(alertManagerConfigFacade.getLatest()).thenReturn(Optional.empty());
     alertManagerConfiguration.restoreFromBackup();
   }

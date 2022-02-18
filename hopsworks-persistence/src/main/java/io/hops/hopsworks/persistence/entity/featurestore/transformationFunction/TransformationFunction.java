@@ -96,6 +96,13 @@ public class TransformationFunction implements Serializable  {
   @ManyToOne(optional = false)
   private Users creator;
 
+  public TransformationFunction() {}
+
+  // for testing
+  public TransformationFunction(String name, Integer version) {
+    this.name = name;
+    this.version = version;
+  }
 
   public Integer getId() {
     return id;

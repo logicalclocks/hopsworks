@@ -26,7 +26,6 @@ import io.hops.hopsworks.common.featurestore.online.OnlineFeaturestoreController
 import io.hops.hopsworks.common.featurestore.query.filter.Filter;
 import io.hops.hopsworks.common.featurestore.query.filter.FilterController;
 import io.hops.hopsworks.common.featurestore.query.filter.FilterLogic;
-import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.SqlFilterLogic;
 import io.hops.hopsworks.common.featurestore.query.join.Join;
 import io.hops.hopsworks.common.featurestore.query.join.JoinController;
 import io.hops.hopsworks.common.featurestore.query.join.JoinDTO;
@@ -36,6 +35,7 @@ import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.Featuregro
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.cached.CachedFeaturegroup;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.cached.TimeTravelFormat;
 import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.SqlCondition;
+import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.SqlFilterLogic;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.user.Users;
 import org.apache.calcite.sql.JoinType;
@@ -57,8 +57,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-
-import static org.mockito.Matchers.eq;
 
 public class TestConstructorController {
 
@@ -913,7 +911,7 @@ public class TestConstructorController {
     Query query = new Query("fs1", "project_fs1", fgHudi, "fg0", availableLeft, availableLeft);
     query.setOrderByFeatures(availableLeft);
     query.setHiveEngine(true);
-    Mockito.when(cachedFeaturegroupController.dropHudiSpecFeatures(eq(availableLeft))).thenReturn(availableLeft);
+    Mockito.when(cachedFeaturegroupController.dropHudiSpecFeatures(availableLeft)).thenReturn(availableLeft);
     String actual = constructorController.makeOfflineQuery(query);
     String expected = "SELECT `fg0`.`ft1`\n" +
         "FROM `fs1`.`fgHudi_1` `fg0`\n" +
@@ -942,8 +940,8 @@ public class TestConstructorController {
 
     List<Feature> allFeatures = new ArrayList<>(availableLeft);
     allFeatures.addAll(availableRight);
-    Mockito.when(cachedFeaturegroupController.dropHudiSpecFeatures(eq(allFeatures))).thenReturn(allFeatures);
-    Mockito.when(cachedFeaturegroupController.dropHudiSpecFeatures(eq(availableRight))).thenReturn(availableRight);
+    Mockito.when(cachedFeaturegroupController.dropHudiSpecFeatures(allFeatures)).thenReturn(allFeatures);
+    Mockito.when(cachedFeaturegroupController.dropHudiSpecFeatures(availableRight)).thenReturn(availableRight);
 
     String actual = constructorController.makeOfflineQuery(leftQuery);
     String expected = "SELECT `fg0`.`ft1`, `fg1`.`ft1`\n" +
@@ -960,7 +958,7 @@ public class TestConstructorController {
     Query query = new Query("fs1", "project_fs1", fgHudi, "fg0", availableLeft, availableLeft);
     query.setOrderByFeatures(availableLeft);
     query.setHiveEngine(false);
-    Mockito.when(cachedFeaturegroupController.dropHudiSpecFeatures(eq(availableLeft))).thenReturn(availableLeft);
+    Mockito.when(cachedFeaturegroupController.dropHudiSpecFeatures(availableLeft)).thenReturn(availableLeft);
     String actual = constructorController.makeOfflineQuery(query);
     String expected = "SELECT `fg0`.`ft1`\n" +
         "FROM `fg0` `fg0`\n" +
@@ -988,8 +986,8 @@ public class TestConstructorController {
     leftQuery.setOrderByFeatures(availableLeft);
     List<Feature> allFeatures = new ArrayList<>(availableLeft);
     allFeatures.addAll(availableRight);
-    Mockito.when(cachedFeaturegroupController.dropHudiSpecFeatures(eq(allFeatures))).thenReturn(allFeatures);
-    Mockito.when(cachedFeaturegroupController.dropHudiSpecFeatures(eq(availableRight))).thenReturn(availableRight);
+    Mockito.when(cachedFeaturegroupController.dropHudiSpecFeatures(allFeatures)).thenReturn(allFeatures);
+    Mockito.when(cachedFeaturegroupController.dropHudiSpecFeatures(availableRight)).thenReturn(availableRight);
 
     String actual = constructorController.makeOfflineQuery(leftQuery);
     String expected = "SELECT `fg0`.`ft1`, `fg1`.`ft1`\n" +
