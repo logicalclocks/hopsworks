@@ -73,6 +73,7 @@ import io.hops.hopsworks.common.elastic.ElasticController;
 import io.hops.hopsworks.common.experiments.tensorboard.TensorBoardController;
 import io.hops.hopsworks.common.featurestore.FeaturestoreController;
 import io.hops.hopsworks.common.featurestore.online.OnlineFeaturestoreController;
+import io.hops.hopsworks.common.featurestore.transformationFunction.TransformationFunctionController;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.hdfs.DistributedFsService;
 import io.hops.hopsworks.common.hdfs.FsPermissions;
@@ -271,6 +272,8 @@ public class ProjectController {
   private FeaturestoreController featurestoreController;
   @EJB
   private OnlineFeaturestoreController onlineFeaturestoreController;
+  @EJB
+  private TransformationFunctionController transformationFunctionController;
   @Inject
   private ServingController servingController;
   @Inject
@@ -960,6 +963,8 @@ public class ProjectController {
       //Create Hopsworks Dataset of the HiveDb
       hiveController.createDatasetDb(project, user, dfso, featurestoreName, DatasetType.FEATURESTORE, featurestore,
         datasetProvCore);
+      //Register built-in transformation function.
+      transformationFunctionController.registerBuiltInTransformationFunctions(user, project, featurestore);
     } catch (SQLException | IOException | ServiceDiscoveryException ex) {
       LOGGER.log(Level.SEVERE, RESTCodes.FeaturestoreErrorCode.COULD_NOT_CREATE_FEATURESTORE.getMessage(), ex);
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.COULD_NOT_CREATE_FEATURESTORE, Level.SEVERE,
