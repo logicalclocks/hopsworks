@@ -68,6 +68,14 @@ public class TransformationFunctionController {
 
   private static final String TRANSFORMATIONFUNCTIONS_FOLDER = "transformation_functions";
 
+  public TransformationFunctionController() {
+  }
+
+  // for testing
+  public TransformationFunctionController(TransformationFunctionFacade transformationFunctionFacade) {
+    this.transformationFunctionFacade = transformationFunctionFacade;
+  }
+
   public TransformationFunction register(Users user, Project project, Featurestore featurestore,
                                          TransformationFunctionDTO transformationFunctionDTO)
       throws FeaturestoreException, IOException {
@@ -207,6 +215,14 @@ public class TransformationFunctionController {
         .orElseThrow(() ->
             new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.TRANSFORMATION_FUNCTION_DOES_NOT_EXIST,
         Level.FINE, "Could not find transformation function with ID" + transformationFunctionId));
+
+    // Check if trying to delete built in transformation function
+    if (FeaturestoreConstants.BUILT_IN_TRANSFORMATION_FUNCTION_NAMES.contains(transformationFunction.getName())
+      && transformationFunction.getVersion() == 1) {
+      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ERROR_DELETING_TRANSFORMERFUNCTION, Level.FINE,
+        "Deleting built-in transformation function `" + transformationFunction.getName() + "` with version 1 is not " +
+          "allowed. Create a new version instead.");
+    }
 
     DistributedFileSystemOps udfso = null;
     try {
