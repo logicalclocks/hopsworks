@@ -49,7 +49,7 @@ public class TestCloudManager {
         "httpAddress", "rackName", null, null, 0, null, 0);
     report.add(nodeReport);
     YarnClient yarnClient = Mockito.mock(YarnClient.class);
-    Mockito.stub(yarnClient.getNodeReports()).toReturn(report);
+    Mockito.when(yarnClient.getNodeReports()).thenReturn(report);
     HostsController hostsController = Mockito.mock(HostsController.class);
     CAProxy caProxy = Mockito.mock(CAProxy.class);
     DistributedFileSystemOps dfsOps = Mockito.mock(DistributedFileSystemOps.class);
@@ -66,7 +66,7 @@ public class TestCloudManager {
     nodeReport = NodeReport.newInstance(NodeId.newInstance("host1", 0), NodeState.DECOMMISSIONING,
         "httpAddress", "rackName", null, null, 0, null, 0);
     report.add(nodeReport);
-    Mockito.stub(yarnClient.getNodeReports()).toReturn(report);
+    Mockito.when(yarnClient.getNodeReports()).thenReturn(report);
     cloudManager = Mockito.spy(CloudManager.class);
     Mockito.doNothing().when(cloudManager).execute(Mockito.any(RMAdminCLI.class), Mockito.any(String[].class));
     Mockito.doReturn(Instant.now()).when(cloudManager).getBeginningOfHeartbeat();
@@ -83,7 +83,7 @@ public class TestCloudManager {
     nodeReport = NodeReport.newInstance(NodeId.newInstance("host1", 0), NodeState.RUNNING,
         "httpAddress", "rackName", null, null, 0, null, 0);
     report.add(nodeReport);
-    Mockito.stub(yarnClient.getNodeReports()).toReturn(report);
+    Mockito.when(yarnClient.getNodeReports()).thenReturn(report);
     cloudManager = Mockito.spy(CloudManager.class);
     Mockito.doNothing().when(cloudManager).execute(Mockito.any(RMAdminCLI.class), Mockito.any(String[].class));
     Mockito.doReturn(Instant.now()).when(cloudManager).getBeginningOfHeartbeat();
@@ -102,7 +102,7 @@ public class TestCloudManager {
     nodeReport = NodeReport.newInstance(NodeId.newInstance("host3", 0), NodeState.DECOMMISSIONED,
         "httpAddress", "rackName", null, null, 0, null, 0);
     report.add(nodeReport);
-    Mockito.stub(yarnClient.getNodeReports()).toReturn(report);
+    Mockito.when(yarnClient.getNodeReports()).thenReturn(report);
     cloudManager = Mockito.spy(CloudManager.class);
     Mockito.doNothing().when(cloudManager).execute(Mockito.any(RMAdminCLI.class), Mockito.any(String[].class));
     Mockito.doReturn(Instant.now()).when(cloudManager).getBeginningOfHeartbeat();
@@ -121,7 +121,7 @@ public class TestCloudManager {
     nodeReport = NodeReport.newInstance(NodeId.newInstance("host1", 0), NodeState.RUNNING,
         "httpAddress", "rackName", null, null, 0, null, 0);
     report.add(nodeReport);
-    Mockito.stub(yarnClient.getNodeReports()).toReturn(report);
+    Mockito.when(yarnClient.getNodeReports()).thenReturn(report);
     
     status = cloudManager.setAndGetDecommission(new ArrayList<>(), workers, yarnClient, dfsOps, conf, caProxy,
         hostsController, new ArrayList<>());
@@ -161,7 +161,7 @@ public class TestCloudManager {
     nodeReport.setNumApplicationMasters(1);
     report.add(nodeReport);
     YarnClient yarnClient = Mockito.mock(YarnClient.class);
-    Mockito.stub(yarnClient.getNodeReports()).toReturn(report);
+    Mockito.when(yarnClient.getNodeReports()).thenReturn(report);
     HostsController hostsController = Mockito.mock(HostsController.class);
     CAProxy caProxy = Mockito.mock(CAProxy.class);
 
@@ -346,7 +346,7 @@ public class TestCloudManager {
         "httpAddress", "rackName", null, null, 2, null, 0);
     report.add(nodeReport);
     YarnClient yarnClient = Mockito.mock(YarnClient.class);
-    Mockito.stub(yarnClient.getNodeReports()).toReturn(report);
+    Mockito.when(yarnClient.getNodeReports()).thenReturn(report);
     HostsController hostsController = Mockito.mock(HostsController.class);
     CAProxy caProxy = Mockito.mock(CAProxy.class);
 
@@ -404,7 +404,7 @@ public class TestCloudManager {
         "httpAddress", "rackName", null, null, 2, null, 2);
     report.add(nodeReport);
     YarnClient yarnClient = Mockito.mock(YarnClient.class);
-    Mockito.stub(yarnClient.getNodeReports()).toReturn(report);
+    Mockito.when(yarnClient.getNodeReports()).thenReturn(report);
     HostsController hostsController = Mockito.mock(HostsController.class);
     CAProxy caProxy = Mockito.mock(CAProxy.class);
 
@@ -473,7 +473,7 @@ public class TestCloudManager {
     nodeReport.setNumApplicationMasters(1);
     report.add(nodeReport);
     YarnClient yarnClient = Mockito.mock(YarnClient.class);
-    Mockito.stub(yarnClient.getNodeReports()).toReturn(report);
+    Mockito.when(yarnClient.getNodeReports()).thenReturn(report);
     HostsController hostsController = Mockito.mock(HostsController.class);
     CAProxy caProxy = Mockito.mock(CAProxy.class);
 
