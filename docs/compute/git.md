@@ -78,7 +78,7 @@ Additionally the UI asks you to specify which branch you want to clone. By defau
 
 You can select the folder, within your project, on which the repository should be cloned. By default, the repository is going to be cloned within the `Resources` dataset. However, by clicking on the location button, a different location can be selected.
 
-Finally, click on the `Clone Repository` button to trigger the cloning of the repository.
+Finally, click on the `Clone repository` button to trigger the cloning of the repository.
 
 
 ### Repository actions
