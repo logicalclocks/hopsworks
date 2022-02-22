@@ -1,6 +1,6 @@
 # Git integration 
 
-The Git integration allows users to manage and version control their feature engineering codebase and workflows using Git directly from the Hopsworks UI. The integration currently supports repositories hosted on Github, Gitlab and Bitbucket. 
+The Git integration allows users to manage and version control their codebase and workflows using Git directly from the Hopsworks UI. The integration currently supports repositories hosted on Github, Gitlab and Bitbucket. 
 
 !!! warning "Beta"
     The feature is currently in Beta and will be improved in the upcoming releases.
