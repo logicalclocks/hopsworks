@@ -61,7 +61,7 @@ The list of past and ongoing activities on the repositories is also displayed. T
 
 ### Clone a repository
 
-To clone a new repository, click on the `Clone Repository` button on the Git overview page.
+To clone a new repository, click on the `Clone repository` button on the Git overview page.
 
 <p align="center">
   <figure>
