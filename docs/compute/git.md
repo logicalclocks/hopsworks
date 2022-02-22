@@ -45,7 +45,7 @@ Tick the checkbox next to the provider you want to configure and insert the user
 
 ## Repositories 
 
-Repositories are cloned and managed within the scope of a project. The content of the repository will reside on Hopsworks File System. The content of the repository can be edited from Jupyter notebooks and can be used to configure Jobs.
+Repositories are cloned and managed within the scope of a project. The content of the repository will reside on the Hopsworks File System. The content of the repository can be edited from Jupyter notebooks and can for example be used to configure Jobs.
 Repositories can be managed from the Git section in the project settings. The Git overview in the project settings provides a list of repositories currently cloned within the project, the location of their content as well which branch and commit their HEAD is currently at. 
 
 The list of past and ongoing activities on the repositories is also displayed. The list contains the repository on which the activity is performed, the user performing the operation, its status as well as a message describing the outcome.
