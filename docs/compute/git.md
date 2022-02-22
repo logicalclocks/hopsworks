@@ -15,7 +15,7 @@ Documentation on how to generate a token for the supported Git hosting services 
 - [Gitlab](https://docs.gitlab.com/ee/user/profile/personal_access_tokens.html)
 - [Bitbucket](https://confluence.atlassian.com/bitbucketserver/http-access-tokens-939515499.html)
 
-Once the token has been generate, you need to provided it to Hopsworks so that it can be used to authenticate Git operations. In the _Account Settings_ page you can find the _Git Providers_ section. The Git provider section displays which providers have been already configured and can be used to clone new repositories.
+Once the token has been generated, you need to provide it to Hopsworks so that it can be used to authenticate Git operations. In the _Account Settings_ page you can find the _Git Providers_ section. The Git provider section displays which providers have been already configured and can be used to clone new repositories.
 
 <p align="center">
   <figure>
