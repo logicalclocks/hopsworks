@@ -26,7 +26,7 @@ import io.hops.hopsworks.api.featurestore.datavalidation.alert.FeatureGroupAlert
 import io.hops.hopsworks.api.featurestore.datavalidation.validations.FeatureGroupValidationsResource;
 import io.hops.hopsworks.api.featurestore.statistics.StatisticsResource;
 import io.hops.hopsworks.api.featurestore.tag.FeaturestoreTagsBuilder;
-import io.hops.hopsworks.api.tags.TagsDTO;
+import io.hops.hopsworks.common.tags.TagsDTO;
 import io.hops.hopsworks.api.tags.TagsExpansionBeanParam;
 import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.api.filter.Audience;

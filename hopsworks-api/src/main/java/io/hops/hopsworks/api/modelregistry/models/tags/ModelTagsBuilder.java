@@ -19,7 +19,7 @@ package io.hops.hopsworks.api.modelregistry.models.tags;
 import io.hops.hopsworks.api.modelregistry.models.ModelUtils;
 import io.hops.hopsworks.api.modelregistry.models.dto.ModelDTO;
 import io.hops.hopsworks.api.tags.TagsBuilder;
-import io.hops.hopsworks.api.tags.TagsDTO;
+import io.hops.hopsworks.common.tags.TagsDTO;
 import io.hops.hopsworks.common.api.ResourceRequest;
 import io.hops.hopsworks.common.dataset.util.DatasetHelper;
 import io.hops.hopsworks.common.dataset.util.DatasetPath;

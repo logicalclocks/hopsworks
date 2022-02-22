@@ -21,7 +21,7 @@ import io.hops.hopsworks.api.filter.apiKey.ApiKeyRequired;
 import io.hops.hopsworks.api.jwt.JWTHelper;
 import io.hops.hopsworks.api.modelregistry.models.dto.ModelDTO;
 import io.hops.hopsworks.api.modelregistry.models.tags.ModelTagsBuilder;
-import io.hops.hopsworks.api.tags.TagsDTO;
+import io.hops.hopsworks.common.tags.TagsDTO;
 import io.hops.hopsworks.api.tags.TagsExpansionBeanParam;
 import io.hops.hopsworks.api.util.Pagination;
 import io.hops.hopsworks.audit.logger.LogLevel;

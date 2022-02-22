@@ -15,7 +15,7 @@
  */
 package io.hops.hopsworks.api.dataset.tags;
 
-import io.hops.hopsworks.api.tags.TagsDTO;
+import io.hops.hopsworks.common.tags.TagsDTO;
 import io.hops.hopsworks.api.tags.TagsExpansionBeanParam;
 import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.api.filter.Audience;

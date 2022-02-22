@@ -1,6 +1,6 @@
 /*
  * This file is part of Hopsworks
- * Copyright (C) 2020, Logical Clocks AB. All rights reserved
+ * Copyright (C) 2021, Logical Clocks AB. All rights reserved
  *
  * Hopsworks is free software: you can redistribute it and/or modify it under the terms of
  * the GNU Affero General Public License as published by the Free Software Foundation,
@@ -13,38 +13,31 @@
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see <https://www.gnu.org/licenses/>.
  */
-package io.hops.hopsworks.api.tags;
+
+package io.hops.hopsworks.common.featurestore.keyword;
 
 import io.hops.hopsworks.common.api.RestDTO;
 
 import javax.xml.bind.annotation.XmlRootElement;
+import java.util.List;
 
 @XmlRootElement
-public class SchemaDTO extends RestDTO<SchemaDTO> {
-  private String name;
-  private String value;
-  
-  public String getName() {
-    return name;
+public class KeywordDTO extends RestDTO<KeywordDTO> {
+
+  private List<String> keywords;
+
+  public List<String> getKeywords() {
+    return keywords;
   }
-  
-  public void setName(String name) {
-    this.name = name;
+
+  public void setKeywords(List<String> keywords) {
+    this.keywords = keywords;
   }
-  
-  public String getValue() {
-    return value;
-  }
-  
-  public void setValue(String value) {
-    this.value = value;
-  }
-  
+
   @Override
   public String toString() {
-    return "TagsDTO{" +
-      "name='" + name + '\'' +
-      ", value=" + value +
-      '}';
+    return "KeywordDTO{" +
+        "keywords=" + keywords +
+        '}';
   }
 }

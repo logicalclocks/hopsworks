@@ -19,6 +19,7 @@ import io.hops.hopsworks.common.integrations.EnterpriseStereotype;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.exceptions.MetadataException;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.Featuregroup;
+import io.hops.hopsworks.persistence.entity.featurestore.featureview.FeatureView;
 import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.TrainingDataset;
 import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.TrainingDatasetType;
 import io.hops.hopsworks.persistence.entity.project.Project;
@@ -78,6 +79,23 @@ public class KeywordController implements KeywordControllerIface {
     } else {
       return getAll(trainingDataset, udfso);
     }
+  }
+
+  public List<String> getAll(Project project, Users user, FeatureView featureView)
+      throws IOException, MetadataException, FeaturestoreException {
+    DistributedFileSystemOps udfso = dfs.getDfsOps(hdfsUsersController.getHdfsUserName(project, user));
+    String path = getFeatureViewLocation(featureView);
+    String keywords = xAttrsController.getXAttr(path, FeaturestoreXAttrsConstants.KEYWORDS, udfso);
+    if (!Strings.isNullOrEmpty(keywords)) {
+      return objectMapper.readValue(keywords, List.class);
+    } else {
+      return new ArrayList<>();
+    }
+  }
+
+  private String getFeatureViewLocation(FeatureView featureView) {
+    // TODO feature view:
+    return "";
   }
 
   private List<String> getAll(Featuregroup featuregroup, DistributedFileSystemOps udfso)

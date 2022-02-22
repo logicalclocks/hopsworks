@@ -18,6 +18,7 @@ package io.hops.hopsworks.api.tags;
 import io.hops.hopsworks.common.api.ResourceRequest;
 import io.hops.hopsworks.common.dataset.util.DatasetPath;
 import io.hops.hopsworks.common.tags.DatasetTagsControllerIface;
+import io.hops.hopsworks.common.tags.TagsDTO;
 import io.hops.hopsworks.exceptions.DatasetException;
 import io.hops.hopsworks.exceptions.MetadataException;
 import io.hops.hopsworks.exceptions.SchematizedTagException;

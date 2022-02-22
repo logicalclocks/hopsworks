@@ -1622,7 +1622,10 @@ public class RESTCodes {
     ERROR_REGISTER_BUILTIN_TRANSFORMATION_FUNCTION(178, "This branch should not be reached. Please fix automatic " +
       "registering of the built-in transformation functions upon project creation",
       Response.Status.INTERNAL_SERVER_ERROR),
-    ;
+    FEATURE_VIEW_ALREADY_EXISTS(179, "The provided feature view name and version already exists",
+        Response.Status.BAD_REQUEST),
+    FEATURE_VIEW_CREATION_ERROR(180, "Cannot create feature view.", Response.Status.BAD_REQUEST),
+    FEATURE_VIEW_NOT_FOUND(181, "Feature view wasn't found.", Response.Status.NOT_FOUND);
 
     private int code;
     private String message;

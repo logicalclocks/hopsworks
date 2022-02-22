@@ -14,6 +14,7 @@ import io.hops.hopsworks.exceptions.SchematizedTagException;
 import io.hops.hopsworks.exceptions.MetadataException;
 import io.hops.hopsworks.persistence.entity.featurestore.Featurestore;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.Featuregroup;
+import io.hops.hopsworks.persistence.entity.featurestore.featureview.FeatureView;
 import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.TrainingDataset;
 import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.TrainingDatasetType;
 import io.hops.hopsworks.persistence.entity.project.Project;
@@ -81,6 +82,14 @@ public class FeatureStoreTagsEEController implements FeatureStoreTagControllerIf
   
     String path = inodeController.getPath(trainingDataset.getHopsfsTrainingDataset().getInode());
     return tagsController.getAll(accessProject, user, path);
+  }
+
+  @Override
+  public Map<String, String> getAll(Project accessProject, Users user, Featurestore featureStore,
+      FeatureView featureView)
+      throws DatasetException, MetadataException, SchematizedTagException {
+    // TODO feature view
+    return tagsController.getAll(accessProject, user, "");
   }
 
   /**

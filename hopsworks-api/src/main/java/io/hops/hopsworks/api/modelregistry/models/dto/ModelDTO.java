@@ -17,7 +17,7 @@
 package io.hops.hopsworks.api.modelregistry.models.dto;
 
 import io.hops.hopsworks.api.dataset.inode.InodeDTO;
-import io.hops.hopsworks.api.tags.TagsDTO;
+import io.hops.hopsworks.common.tags.TagsDTO;
 import io.hops.hopsworks.common.api.RestDTO;
 import io.hops.hopsworks.common.featurestore.trainingdatasets.TrainingDatasetDTO;
 

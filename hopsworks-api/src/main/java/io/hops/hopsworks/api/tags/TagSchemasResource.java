@@ -20,6 +20,7 @@ import io.hops.hopsworks.api.filter.apiKey.ApiKeyRequired;
 import io.hops.hopsworks.api.util.Pagination;
 import io.hops.hopsworks.audit.logger.annotation.Logged;
 import io.hops.hopsworks.common.api.ResourceRequest;
+import io.hops.hopsworks.common.tags.SchemaDTO;
 import io.hops.hopsworks.common.tags.TagSchemasControllerIface;
 import io.hops.hopsworks.exceptions.SchematizedTagException;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;

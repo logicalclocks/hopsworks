@@ -19,6 +19,7 @@ package io.hops.hopsworks.api.featurestore;
 import com.google.common.base.Strings;
 import io.hops.hopsworks.api.featurestore.datavalidation.expectations.fs.FeatureStoreExpectationsResource;
 import io.hops.hopsworks.api.featurestore.featuregroup.FeaturegroupService;
+import io.hops.hopsworks.api.featurestore.featureview.FeatureViewService;
 import io.hops.hopsworks.api.featurestore.storageconnector.FeaturestoreStorageConnectorService;
 import io.hops.hopsworks.api.featurestore.trainingdataset.TrainingDatasetService;
 import io.hops.hopsworks.api.featurestore.transformationFunction.TransformationFunctionResource;
@@ -33,6 +34,7 @@ import io.hops.hopsworks.common.dao.project.ProjectFacade;
 import io.hops.hopsworks.common.featurestore.FeaturestoreController;
 import io.hops.hopsworks.common.featurestore.FeaturestoreDTO;
 import io.hops.hopsworks.common.featurestore.keyword.KeywordControllerIface;
+import io.hops.hopsworks.common.featurestore.keyword.KeywordDTO;
 import io.hops.hopsworks.common.featurestore.settings.FeaturestoreClientSettingsDTO;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
@@ -84,6 +86,8 @@ public class FeaturestoreService {
   private FeaturegroupService featuregroupService;
   @Inject
   private TrainingDatasetService trainingDatasetService;
+  @Inject
+  private FeatureViewService featureViewService;
   @Inject
   private FeaturestoreStorageConnectorService featurestoreStorageConnectorService;
   @Inject
@@ -248,6 +252,18 @@ public class FeaturestoreService {
     }
     trainingDatasetService.setFeaturestoreId(featurestoreId);
     return trainingDatasetService;
+  }
+
+  @Logged(logLevel = LogLevel.OFF)
+  @Path("/{featurestoreId}/featureview")
+  public FeatureViewService featureViewService(@PathParam("featurestoreId") Integer featurestoreId)
+      throws FeaturestoreException {
+    featureViewService.setProject(project);
+    if (featurestoreId == null) {
+      throw new IllegalArgumentException(RESTCodes.FeaturestoreErrorCode.FEATURESTORE_ID_NOT_PROVIDED.getMessage());
+    }
+    featureViewService.setFeaturestore(featurestoreId);
+    return featureViewService;
   }
 
   /**
