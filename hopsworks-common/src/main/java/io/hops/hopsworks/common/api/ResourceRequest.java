@@ -34,6 +34,10 @@ public class ResourceRequest {
   //Only for internal use by child classes
   protected List<String> queryProps;
 
+  public ResourceRequest(String name) {
+    this(ResourceRequest.Name.valueOf(name.toUpperCase()));
+  }
+  
   public ResourceRequest(Name name) {
     this(name, null);
   }
@@ -220,7 +224,9 @@ public class ResourceRequest {
     PROVIDER,
     REMOTE,
     ADMIN,
-    EXECUTION;
+    EXECUTION,
+    FEATURES,
+    FEATUREVIEW;
 
     public static Name fromString(String name) {
       return valueOf(name.toUpperCase());

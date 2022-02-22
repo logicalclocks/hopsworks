@@ -20,6 +20,7 @@ import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.exceptions.MetadataException;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.Featuregroup;
+import io.hops.hopsworks.persistence.entity.featurestore.featureview.FeatureView;
 import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.TrainingDataset;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.user.Users;
@@ -41,6 +42,10 @@ public interface KeywordControllerIface {
     throw new IllegalArgumentException("API not supported in the community edition");
   }
 
+  default List<String> getAll(Project project, Users user, FeatureView featureView)
+      throws IOException, MetadataException, FeaturestoreException {
+    throw new IllegalArgumentException("API not supported in the community edition");
+  }
 
   default List<String> replaceKeywords(Project project, Users user, Featuregroup featureGroup,
                                        TrainingDataset trainingDataset, List<String> keywords)

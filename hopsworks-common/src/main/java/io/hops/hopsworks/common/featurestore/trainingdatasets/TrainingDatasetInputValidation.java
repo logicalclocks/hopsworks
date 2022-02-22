@@ -78,7 +78,7 @@ public class TrainingDatasetInputValidation {
    * Verifies the user input feature list for a training dataset entity with no query
    * @param trainingDatasetFeatureDTOS the feature list to verify
    */
-  private void verifyTrainingDatasetFeatureList(List<TrainingDatasetFeatureDTO> trainingDatasetFeatureDTOS)
+  public void verifyTrainingDatasetFeatureList(List<TrainingDatasetFeatureDTO> trainingDatasetFeatureDTOS)
     throws FeaturestoreException {
     for (TrainingDatasetFeatureDTO trainingDatasetFeatureDTO : trainingDatasetFeatureDTOS) {
       featurestoreInputValidation.nameValidation(trainingDatasetFeatureDTO.getName());
@@ -155,7 +155,7 @@ public class TrainingDatasetInputValidation {
     }
   }
 
-  private void validateFeatures(Query query, List<TrainingDatasetFeatureDTO> featuresDTOs)
+  public void validateFeatures(Query query, List<TrainingDatasetFeatureDTO> featuresDTOs)
       throws FeaturestoreException {
     if (query == null || featuresDTOs == null) {
       // If the query is null the features are taken from the featuresDTO, so we are guarantee that the label

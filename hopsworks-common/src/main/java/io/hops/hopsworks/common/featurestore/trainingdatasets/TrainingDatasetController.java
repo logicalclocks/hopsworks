@@ -27,10 +27,12 @@ import io.hops.hopsworks.common.featurestore.online.OnlineFeaturestoreController
 import io.hops.hopsworks.common.featurestore.query.ConstructorController;
 import io.hops.hopsworks.common.featurestore.query.Feature;
 import io.hops.hopsworks.common.featurestore.query.Query;
+import io.hops.hopsworks.common.featurestore.query.QueryController;
 import io.hops.hopsworks.common.featurestore.query.QueryDTO;
 import io.hops.hopsworks.common.featurestore.query.filter.Filter;
 import io.hops.hopsworks.common.featurestore.query.filter.FilterLogic;
 import io.hops.hopsworks.common.featurestore.query.filter.FilterValue;
+import io.hops.hopsworks.persistence.entity.featurestore.featureview.FeatureView;
 import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.SqlFilterLogic;
 import io.hops.hopsworks.common.featurestore.query.join.Join;
 import io.hops.hopsworks.common.featurestore.query.pit.PitJoinController;
@@ -148,6 +150,8 @@ public class TrainingDatasetController {
   private TrainingDatasetInputValidation inputValidation;
   @EJB
   private PitJoinController pitJoinController;
+  @EJB
+  private QueryController queryController;
 
   /**
    * Gets all trainingDatasets for a particular featurestore and project
@@ -385,19 +389,20 @@ public class TrainingDatasetController {
     Map<Integer, Featuregroup> fgLookup = new HashMap<>();
     Map<Integer, List<Feature>> availableFeatureLookup = new HashMap<>();
 
-    constructorController.populateFgLookupTables(queryDTO, 0, fgAliasLookup, fgLookup, availableFeatureLookup,
+    queryController.populateFgLookupTables(queryDTO, 0, fgAliasLookup, fgLookup, availableFeatureLookup,
         project, user, null);
-    return constructorController.convertQueryDTO(queryDTO, fgAliasLookup, fgLookup, availableFeatureLookup,
+    return queryController.convertQueryDTO(queryDTO, fgAliasLookup, fgLookup, availableFeatureLookup,
       pitJoinController.isPitEnabled(queryDTO));
   }
 
+  //TODO feature view: remove
   private void setTrainingDatasetQuery(Query query,
                                        List<TrainingDatasetFeatureDTO> features,
                                        TrainingDataset trainingDataset) throws FeaturestoreException {
     // Convert the joins from the query object into training dataset joins
-    List<TrainingDatasetJoin> tdJoins = collectJoins(query, trainingDataset);
+    List<TrainingDatasetJoin> tdJoins = collectJoins(query, trainingDataset, null);
     trainingDataset.setJoins(tdJoins);
-    List<TrainingDatasetFeature> tdFeatures = collectFeatures(query, features, trainingDataset, 0, tdJoins, 0);
+    List<TrainingDatasetFeature> tdFeatures = collectFeatures(query, features, trainingDataset, null, 0, tdJoins, 0);
     trainingDataset.setFeatures(tdFeatures);
     List<TrainingDatasetFilter> filters = convertToFilterEntities(query.getFilter(), trainingDataset, "L");
     trainingDataset.setFilters(filters);
@@ -457,9 +462,9 @@ public class TrainingDatasetController {
 
   // Here we need to pass the list of training dataset joins so that we can rebuild the aliases.
   // and handle correctly the case in which a feature group is joined with itself.
-  private List<TrainingDatasetFeature> collectFeatures(Query query, List<TrainingDatasetFeatureDTO> featureDTOs,
-                                                       TrainingDataset trainingDataset, int featureIndex,
-                                                       List<TrainingDatasetJoin> tdJoins, int joinIndex)
+  public List<TrainingDatasetFeature> collectFeatures(Query query, List<TrainingDatasetFeatureDTO> featureDTOs,
+      TrainingDataset trainingDataset, FeatureView featureView,
+      int featureIndex, List<TrainingDatasetJoin> tdJoins, int joinIndex)
       throws FeaturestoreException {
     List<TrainingDatasetFeature> features = new ArrayList<>();
     boolean isLabel = false;
@@ -471,15 +476,19 @@ public class TrainingDatasetController {
         // get transformation function for this feature
         transformationFunction = getTransformationFunction(f, featureDTOs);
       }
-      features.add(new TrainingDatasetFeature(trainingDataset, tdJoins.get(joinIndex), query.getFeaturegroup(),
-          f.getName(), f.getType(), featureIndex++, isLabel, transformationFunction));
+      features.add(trainingDataset != null ?
+          new TrainingDatasetFeature(trainingDataset, tdJoins.get(joinIndex), query.getFeaturegroup(),
+          f.getName(), f.getType(), featureIndex++, isLabel, transformationFunction):
+          new TrainingDatasetFeature(featureView, tdJoins.get(joinIndex), query.getFeaturegroup(),
+              f.getName(), f.getType(), featureIndex++, isLabel, transformationFunction));
     }
 
     if (query.getJoins() != null) {
       for (Join join : query.getJoins()) {
         joinIndex++;
         List<TrainingDatasetFeature> joinFeatures
-            = collectFeatures(join.getRightQuery(), featureDTOs, trainingDataset, featureIndex, tdJoins, joinIndex);
+            = collectFeatures(join.getRightQuery(), featureDTOs, trainingDataset, featureView, featureIndex, tdJoins,
+            joinIndex);
         features.addAll(joinFeatures);
         featureIndex += joinFeatures.size();
       }
@@ -487,16 +496,18 @@ public class TrainingDatasetController {
     return features;
   }
 
-  private List<TrainingDatasetJoin> collectJoins(Query query, TrainingDataset trainingDataset) {
+  public List<TrainingDatasetJoin> collectJoins(Query query, TrainingDataset trainingDataset,
+      FeatureView featureView) {
     List<TrainingDatasetJoin> joins = new ArrayList<>();
     // add the first feature group
     int index = 0;
     if (query.getFeaturegroup().getFeaturegroupType() == FeaturegroupType.CACHED_FEATURE_GROUP &&
         query.getFeaturegroup().getCachedFeaturegroup().getTimeTravelFormat() == TimeTravelFormat.HUDI){
-      joins.add(new TrainingDatasetJoin(trainingDataset, query.getFeaturegroup(),
+      joins.add(makeTrainingDatasetJoin(trainingDataset, featureView, query.getFeaturegroup(),
           query.getLeftFeatureGroupEndCommitId() , (short) 0, index++, null));
     } else {
-      joins.add(new TrainingDatasetJoin(trainingDataset, query.getFeaturegroup(), (short) 0, index++, null));
+      joins.add(makeTrainingDatasetJoin(trainingDataset, featureView, query.getFeaturegroup(),
+          null, (short) 0, index++, null));
     }
 
     if (query.getJoins() != null && !query.getJoins().isEmpty()) {
@@ -504,13 +515,13 @@ public class TrainingDatasetController {
         TrainingDatasetJoin tdJoin;
         if (query.getFeaturegroup().getFeaturegroupType() == FeaturegroupType.CACHED_FEATURE_GROUP &&
             query.getFeaturegroup().getCachedFeaturegroup().getTimeTravelFormat() == TimeTravelFormat.HUDI){
-          tdJoin = new TrainingDatasetJoin(trainingDataset,
+          tdJoin = makeTrainingDatasetJoin(trainingDataset, featureView,
               join.getRightQuery().getFeaturegroup(), join.getRightQuery().getLeftFeatureGroupEndCommitId(),
               (short) join.getJoinType().ordinal(),
               index++, join.getPrefix());
         } else {
-          tdJoin = new TrainingDatasetJoin(trainingDataset,
-              join.getRightQuery().getFeaturegroup(),
+          tdJoin = makeTrainingDatasetJoin(trainingDataset, featureView,
+              join.getRightQuery().getFeaturegroup(), null,
               (short) join.getJoinType().ordinal(),
               index++, join.getPrefix());
         }
@@ -520,6 +531,16 @@ public class TrainingDatasetController {
     }
 
     return joins;
+  }
+
+  private TrainingDatasetJoin makeTrainingDatasetJoin(TrainingDataset trainingDataset,
+      FeatureView featureView, Featuregroup featureGroup, Long featureGroupCommitId,
+      short type, int index, String prefix) {
+    if (trainingDataset != null) {
+      return new TrainingDatasetJoin(trainingDataset, featureGroup, featureGroupCommitId, type, index, prefix);
+    } else {
+      return new TrainingDatasetJoin(featureView, featureGroup, featureGroupCommitId, type, index, prefix);
+    }
   }
 
   private List<TrainingDatasetJoinCondition> collectJoinConditions(Join join, TrainingDatasetJoin tdJoin) {
@@ -701,6 +722,7 @@ public class TrainingDatasetController {
     return trainingDatasetsFolderPath + "/" + trainingDatasetName + "_" + version;
   }
 
+  //TODO feature view: remove
   /**
    * Reconstruct the query used to generate the training datset, fetching the features and the joins
    * in the proper order from the database.
@@ -866,7 +888,7 @@ public class TrainingDatasetController {
     return featureGroupId + "." + featureName;
   }
 
-  private Map<Integer, String> getAliasLookupTable(List<TrainingDatasetJoin> tdJoins) {
+  public Map<Integer, String> getAliasLookupTable(List<TrainingDatasetJoin> tdJoins) {
     // Keep a map of fg Id to fgAlias;
     int i = 0;
     Map<Integer, String> fgAlias = new HashMap<>();
@@ -880,7 +902,7 @@ public class TrainingDatasetController {
 
   // generally in a query there are several feature groups from the same feature store
   // instead of making a db query for each of it, build an hashmap once and use it while constructing the query
-  private Map<Integer, String> getFsLookupTableJoins(List<TrainingDatasetJoin> tdJoins) {
+  public Map<Integer, String> getFsLookupTableJoins(List<TrainingDatasetJoin> tdJoins) {
     Map<Integer, String> fsLookup = new HashMap<>();
     for (TrainingDatasetJoin join : tdJoins) {
       if (!fsLookup.containsKey(join.getFeatureGroup().getFeaturestore().getId())) {
@@ -892,7 +914,7 @@ public class TrainingDatasetController {
     return fsLookup;
   }
 
-  private Map<Integer, String> getFsLookupTableFeatures(List<TrainingDatasetFeature> tdFeatures) {
+  public Map<Integer, String> getFsLookupTableFeatures(List<TrainingDatasetFeature> tdFeatures) {
     Map<Integer, String> fsLookup = new HashMap<>();
     for (TrainingDatasetFeature tdFeature : tdFeatures) {
       if (tdFeature.getFeatureGroup() != null &&
@@ -928,7 +950,7 @@ public class TrainingDatasetController {
   }
 
   // Rebuild query object so that the query constructor can be build the string
-  private Join getQueryJoin(Query leftQuery, TrainingDatasetJoin rightTdJoin, Map<Integer, String> fgAliasLookup,
+  public Join getQueryJoin(Query leftQuery, TrainingDatasetJoin rightTdJoin, Map<Integer, String> fgAliasLookup,
     Map<Integer, String> fsLookup, Map<Integer, List<Feature>> availableFeaturesLookup, Boolean isHiveEngine)
       throws FeaturestoreException {
 
@@ -951,7 +973,7 @@ public class TrainingDatasetController {
       .map(c -> new Feature(c.getRightFeature())).collect(Collectors.toList());
 
     JoinType joinType = JoinType.values()[rightTdJoin.getType()];
-    return constructorController.extractLeftRightOn(leftQuery, rightQuery, leftOn, rightOn, joinType,
+    return queryController.extractLeftRightOn(leftQuery, rightQuery, leftOn, rightOn, joinType,
         rightTdJoin.getPrefix());
   }
 

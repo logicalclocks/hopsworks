@@ -1,6 +1,6 @@
 /*
  * This file is part of Hopsworks
- * Copyright (C) 2020, Logical Clocks AB. All rights reserved
+ * Copyright (C) 2021, Logical Clocks AB. All rights reserved
  *
  * Hopsworks is free software: you can redistribute it and/or modify it under the terms of
  * the GNU Affero General Public License as published by the Free Software Foundation,
@@ -13,39 +13,27 @@
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see <https://www.gnu.org/licenses/>.
  */
-package io.hops.hopsworks.api.tags;
 
-import io.hops.hopsworks.common.api.RestDTO;
+package io.hops.hopsworks.api.featurestore.featureview;
 
-import javax.xml.bind.annotation.XmlRootElement;
+import io.hops.hopsworks.common.api.Expansions;
+import io.hops.hopsworks.common.api.ResourceRequest;
 
-@XmlRootElement
-public class TagsDTO extends RestDTO<TagsDTO> {
-  private String name;
-  private String value;
-  private SchemaDTO schema;
+public class FeatureViewExpansions implements Expansions {
 
-  public String getName() {
-    return name;
+  private ResourceRequest resourceRequest;
+
+  public FeatureViewExpansions(String queryParam) {
+    resourceRequest = new ResourceRequest(queryParam);
   }
 
-  public void setName(String name) {
-    this.name = name;
+  @Override
+  public ResourceRequest getResourceRequest() {
+    return resourceRequest;
   }
 
-  public String getValue() {
-    return value;
-  }
-
-  public void setValue(String value) {
-    this.value = value;
-  }
-  
-  public SchemaDTO getSchema() {
-    return schema;
-  }
-  
-  public void setSchema(SchemaDTO schema) {
-    this.schema = schema;
+  @Override
+  public void setResourceRequest(ResourceRequest resourceRequest) {
+    this.resourceRequest = resourceRequest;
   }
 }
