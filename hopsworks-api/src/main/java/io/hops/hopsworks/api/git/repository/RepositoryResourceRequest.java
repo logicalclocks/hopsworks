@@ -1,6 +1,6 @@
 /*
  * This file is part of Hopsworks
- * Copyright (C) 2021, Logical Clocks AB. All rights reserved
+ * Copyright (C) 2022, Logical Clocks AB. All rights reserved
  *
  * Hopsworks is free software: you can redistribute it and/or modify it under the terms of
  * the GNU Affero General Public License as published by the Free Software Foundation,
@@ -13,18 +13,13 @@
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see <https://www.gnu.org/licenses/>.
  */
-package io.hops.hopsworks.api.git;
+package io.hops.hopsworks.api.git.repository;
 
-import io.hops.hopsworks.common.api.RestDTO;
+import io.hops.hopsworks.common.api.ResourceRequest;
 
-public class BranchDTO extends RestDTO<BranchDTO> {
-  private String name;
-
-  public BranchDTO() {}
-
-  public BranchDTO(String name) { this.name = name; }
-
-  public String getName() { return name; }
-
-  public void setName(String name) { this.name = name; }
+public class RepositoryResourceRequest extends ResourceRequest {
+  
+  public RepositoryResourceRequest(Name name, String queryParam) {
+    super(name, queryParam);
+  }
 }
