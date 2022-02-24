@@ -15,7 +15,7 @@
  */
 package io.hops.hopsworks.api.git.execution;
 
-import io.hops.hopsworks.api.git.GitRepositoryBuilder;
+import io.hops.hopsworks.api.git.repository.GitRepositoryBuilder;
 import io.hops.hopsworks.api.user.UsersBuilder;
 import io.hops.hopsworks.common.api.ResourceRequest;
 import io.hops.hopsworks.common.dao.AbstractFacade;
@@ -108,7 +108,7 @@ public class GitOpExecutionBuilder {
       dto.setState(execution.getState());
       dto.setRepository(repositoryBuilder.build(uriInfo, resourceRequest.get(ResourceRequest.Name.REPOSITORY),
           execution.getRepository().getProject(), execution.getRepository()));
-      dto.setUser(usersBuilder.build(uriInfo, resourceRequest.get(ResourceRequest.Name.CREATOR),
+      dto.setUser(usersBuilder.build(uriInfo, resourceRequest.get(ResourceRequest.Name.USER),
           execution.getUser()));
     }
     return dto;

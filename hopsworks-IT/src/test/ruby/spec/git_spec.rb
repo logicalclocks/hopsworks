@@ -25,15 +25,7 @@ describe "On #{ENV['OS']}" do
       it 'should indicate all providers as not configured' do
         get_providers()
         expect_status_details(200)
-        expect(json_body[:items].count).to be > 0
-        providers = json_body[:items]
-        all_not_configured = true
-        providers.each do |provider|
-          if provider[:username] != "" && provider[:token] != ""
-            all_not_configured = false
-          end
-        end
-        expect(all_not_configured).to be true
+        expect(json_body[:items].count).to be == 0
       end
       git_providers = ['GitHub', 'GitLab', 'BitBucket']
       git_providers.each do |provider_to_configure|
@@ -86,8 +78,15 @@ describe "On #{ENV['OS']}" do
       it 'should get all repositories in the project' do
         clone_config = get_clone_config("GitHub", @project[:projectname])
         _, repo_path = clone_repo(@project[:id], clone_config)
+
         get_project_git_repositories(@project[:id])
         expect(json_body[:count]).to eq(1)
+        expect(json_body[:items][0][:creator][:email]).to be nil
+
+        get_project_git_repositories(@project[:id], query="?expand=creator")
+        expect(json_body[:count]).to eq(1)
+        expect(json_body[:items][0][:creator][:email]).not_to be_nil
+
         delete_repository(@project, repo_path)
       end
     end
@@ -105,8 +104,16 @@ describe "On #{ENV['OS']}" do
       it "should get executions performed in the repository" do
         clone_config = get_clone_config("GitHub", @project[:projectname], url="https://github.com/logicalclocks/livy-chef.git")
         repository_id, repository_path = clone_repo(@project[:id], clone_config)
+
         get_git_executions(@project[:id], repository_id)
         expect(json_body[:count]).to be > 0
+        expect(json_body[:items][0][:repository][:path]).to be nil
+        expect(json_body[:items][0][:user][:email]).to be nil
+        # Check expansions
+        get_git_executions(@project[:id], repository_id, query="?expand=repository&expand=user")
+        expect(json_body[:count]).to be > 0
+        expect(json_body[:items][0][:repository][:path]).not_to be_nil
+        expect(json_body[:items][0][:user][:email]).not_to be_nil
       end
       it "should get repository default branches after cloning" do
         clone_config = get_clone_config("GitHub", @project[:projectname])
@@ -261,13 +268,10 @@ describe "On #{ENV['OS']}" do
       end
     end
     describe "Operation on big repositories" do
-      big_repositories = ["https://github.com/rstudio/cheatsheets.git", "https://github.com/logicalclocks/hopsworks.git"]
-      big_repositories.each do |big_repo|
-        it "should be able to clone big repositories - #{big_repo}" do
-          clone_config = get_clone_config("GitHub", @project[:projectname], url=big_repo)
-          _, repository_path = clone_repo(@project[:id], clone_config)
-          delete_repository(@project, repository_path)
-        end
+      it "should be able to clone big repositories" do
+        clone_config = get_clone_config("GitHub", @project[:projectname], url="https://github.com/logicalclocks/hops-examples.git")
+        _, repository_path = clone_repo(@project[:id], clone_config)
+        delete_repository(@project, repository_path)
       end
     end
     describe "Git operation" do
@@ -275,70 +279,60 @@ describe "On #{ENV['OS']}" do
         setVar("git_command_timeout_minutes", 60)
         create_session(@project[:username], "Pass123")
       end
-      it 'should get container logs' do
-        clone_config = get_clone_config("GitHub", @project[:projectname])
-        do_clone_git_repo(@project[:id], clone_config)
-        expect_status_details(200)
-
-        sleep(40)
-
-        # Check that the logs are written in the elastic index.
+      it "should indicate ongoing operation in the repository" do
         begin
-          Airborne.configure do |config|
-            config.base_url = ''
-          end
-          response = elastic_get "#{@project[:projectname].downcase}_git_logs*/_search?q=jobname=gitcommandexecution"
-          index = response.body
-        rescue
-          p "git spec: Error calling elastic_get #{$!}"
-        else
-          parsed_index = JSON.parse(index)
-          expect(parsed_index['hits']['total']['value']).to be > 0
+          clone_config = get_clone_config("GitHub", @project[:projectname])
+          do_clone_git_repo(@project[:id], clone_config)
+          expect_status_details(200)
+          repository_id = json_body[:repository][:id]
+          execution_id = json_body[:id]
+          get_repository(@project[:id], repository_id)
+          expect_status_details(200)
+          repository_path = json_body[:path]
+          expect(json_body[:ongoingOperation]).not_to be_nil
+          wait_for_git_operation_completed(@project[:id], repository_id, execution_id, "Success")
         ensure
-          Airborne.configure do |config|
-            config.base_url = "https://#{ENV['WEB_HOST']}:#{ENV['WEB_PORT']}"
-          end
+          delete_repository(@project, repository_path)
         end
       end
-      it "should indicate ongoing operation in the repository" do
-        clone_config = get_clone_config("GitHub", @project[:projectname])
-        do_clone_git_repo(@project[:id], clone_config)
-        expect_status_details(200)
-        repository_id = json_body[:repositoryId]
-        get_repository(@project[:id], repository_id)
-        expect_status_details(200)
-        repository_path = json_body[:path]
-        expect(json_body[:ongoingOperation]).not_to be_nil
-        delete_repository(@project, repository_path)
-      end
       it "should not allow two operations at same time in the same repository" do
-        clone_config = get_clone_config("GitHub", @project[:projectname])
-        repository_id, repository_path = clone_repo(@project[:id], clone_config)
-        git_status(@project[:id], repository_id)
-        expect_status_details(200)
-        execution_id = json_body[:id]
-        #do another operation without waiting
-        git_status(@project[:id], repository_id)
-        expect(json_body[:errorCode]).to be == 27
-        wait_for_git_operation_completed(@project[:id], repository_id, execution_id, "Success")
-        delete_repository(@project, repository_path)
+        begin
+          clone_config = get_clone_config("GitHub", @project[:projectname])
+          repository_id, repository_path = clone_repo(@project[:id], clone_config)
+          git_status(@project[:id], repository_id)
+          expect_status_details(200)
+          execution_id = json_body[:id]
+          get_repository(@project[:id], repository_id)
+          expect_status_details(200)
+          repository_path = json_body[:path]
+          #do another operation without waiting
+          git_status(@project[:id], repository_id)
+          expect(json_body[:errorCode]).to be == 500027
+          wait_for_git_operation_completed(@project[:id], repository_id, execution_id, "Success")
+        ensure
+          delete_repository(@project, repository_path)
+        end
       end
       it "should be killed by timer" do
-        setVar("git_command_timeout_minutes", 1)
-        create_session(@project[:username], "Pass123")
-        #Try cloning a big repository - will take more than a minute
-        clone_config = get_clone_config("GitHub", @project[:projectname], url = "https://github.com/sparklyr/sparklyr.git")
-        do_clone_git_repo(@project[:id], clone_config)
-        expect_status_details(200)
-        repository_id = json_body[:repositoryId]
-        execution_id = json_body[:id]
-        sleep(300)
-        get_git_execution_object(@project[:id], repository_id, execution_id)
-        expect(json_body[:state]).to be == "Timedout"
-        get_repository(@project[:id], repository_id)
-        expect_status_details(200)
-        repository_path = json_body[:path]
-        delete_repository(@project, repository_path)
+        begin
+          setVar("git_command_timeout_minutes", 1)
+          create_session(@project[:username], "Pass123")
+          #Try cloning a big repository - will take more than a minute
+          clone_config = get_clone_config("GitHub", @project[:projectname], url = "https://github.com/tensorflow/tensorflow.git")
+          do_clone_git_repo(@project[:id], clone_config)
+          expect_status_details(200)
+          repository_id = json_body[:repository][:id]
+          execution_id = json_body[:id]
+          get_repository(@project[:id], repository_id)
+          expect_status_details(200)
+          repository_path = json_body[:path]
+          wait_for_git_op do
+            get_git_execution_object(@project[:id], repository_id, execution_id)
+            json_body[:state] == "Timedout"
+          end
+        ensure
+          delete_repository(@project, repository_path)
+        end
       end
     end
   end

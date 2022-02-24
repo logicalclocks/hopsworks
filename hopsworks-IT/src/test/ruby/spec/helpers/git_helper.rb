@@ -67,22 +67,17 @@ module GitHelper
   end
 
   def do_clone_git_repo(project_id, clone_config)
-    post "#{ENV['HOPSWORKS_API']}/project/#{project_id}/git/clone", clone_config
+    post "#{ENV['HOPSWORKS_API']}/project/#{project_id}/git/clone?expand=repository", clone_config
   end
 
   def clone_repo(project_id, clone_config)
     do_clone_git_repo(project_id, clone_config)
     expect_status_details(200)
     execution_id = json_body[:id]
-    uri = URI(json_body[:repository][:href])
-    get_repository_by_url(uri.path)
-    expect_status_details(200)
+    repo_id = json_body[:repository][:id]
     #wait for the clone operation to complete
-    json_result = wait_for_git_operation_completed(project_id, json_body[:id], execution_id, "Success")
-    uri = URI(json_body[:repository][:href])
-    get_repository_by_url(uri.path)
-    expect_status_details(200)
-    return json_body[:id], json_result[:gitCommandConfiguration][:path]
+    json_result = wait_for_git_operation_completed(project_id, repo_id, execution_id, "Success")
+    return repo_id, json_result[:gitCommandConfiguration][:path]
   end
 
   def wait_for_git_operation_completed(project_id, repository_id, execution_id, expected_final_status)
@@ -155,12 +150,12 @@ module GitHelper
     !(state == "Success" || state == "Failed" || state == "Killed" || state == "Initialization_failed" || state == "Timedout")
   end
 
-  def get_project_git_repositories(project_id)
-    get "#{ENV['HOPSWORKS_API']}/project/#{project_id}/git"
+  def get_project_git_repositories(project_id, query="")
+    get "#{ENV['HOPSWORKS_API']}/project/#{project_id}/git#{query}"
   end
 
-  def get_repository(project_id, id)
-    get "#{ENV['HOPSWORKS_API']}/project/#{project_id}/git/repository/#{id}"
+  def get_repository(project_id, id, query="")
+    get "#{ENV['HOPSWORKS_API']}/project/#{project_id}/git/repository/#{id}#{query}"
   end
 
   def get_repository_by_url(url)
@@ -246,8 +241,8 @@ module GitHelper
     get "#{ENV['HOPSWORKS_API']}/project/#{project_id}/git/repository/#{repository_id}/remote"
   end
 
-  def get_git_executions(project_id, repository_id)
-    get "#{ENV['HOPSWORKS_API']}/project/#{project_id}/git/repository/#{repository_id}/execution"
+  def get_git_executions(project_id, repository_id, query="")
+    get "#{ENV['HOPSWORKS_API']}/project/#{project_id}/git/repository/#{repository_id}/execution#{query}"
   end
 
   def git_file_add_or_delete(project, repository_id, repo_full_path, filename, action)
@@ -266,4 +261,18 @@ module GitHelper
     get_git_execution_object(project[:id], repository_id, json_body[:id])
     expect(json_body[:commandResultMessage]).to include(filename)
   end
+
+  def wait_for_git_op(timeout=300, error_msg="Timed out waiting for operation to finish.")
+    start = Time.now
+    x = yield
+    until x
+      if Time.now - start > timeout
+        raise "#{error_msg} Timeout #{timeout} sec"
+      end
+      sleep(1)
+      x = yield
+    end
+  end
+
+    module_function :wait_for_git_op
 end

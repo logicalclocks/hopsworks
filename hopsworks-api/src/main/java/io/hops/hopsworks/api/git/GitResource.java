@@ -19,9 +19,17 @@ import com.google.common.base.Strings;
 import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.api.filter.Audience;
 import io.hops.hopsworks.api.filter.apiKey.ApiKeyRequired;
+import io.hops.hopsworks.api.git.branch.BranchBuilder;
+import io.hops.hopsworks.api.git.branch.BranchDTO;
+import io.hops.hopsworks.api.git.execution.ExecutionBeanParam;
 import io.hops.hopsworks.api.git.execution.GitExecutionResource;
 import io.hops.hopsworks.api.git.execution.GitOpExecutionBuilder;
 import io.hops.hopsworks.api.git.execution.GitOpExecutionDTO;
+import io.hops.hopsworks.api.git.remote.GitRepositoryRemoteBuilder;
+import io.hops.hopsworks.api.git.remote.GitRepositoryRemoteDTO;
+import io.hops.hopsworks.api.git.repository.GitRepositoryBuilder;
+import io.hops.hopsworks.api.git.repository.GitRepositoryDTO;
+import io.hops.hopsworks.api.git.repository.RepositoryBeanParam;
 import io.hops.hopsworks.api.jwt.JWTHelper;
 import io.hops.hopsworks.api.util.Pagination;
 import io.hops.hopsworks.audit.logger.LogLevel;
@@ -71,7 +79,6 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
 import javax.ws.rs.core.UriInfo;
-import java.util.Collections;
 import java.util.logging.Logger;
 
 @Logged
@@ -120,10 +127,10 @@ public class GitResource {
   public Response gitRepositories(@Context UriInfo uriInfo,
                                   @Context SecurityContext sc,
                                   @Context HttpServletRequest req,
-                                  @BeanParam Pagination pagination) {
+                                  @BeanParam Pagination pagination,
+                                  @BeanParam RepositoryBeanParam repositoryBeanParam) {
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.REPOSITORY);
-    // TODO(Fabio): ideally this should be provided by an expansion beam param.
-    resourceRequest.setExpansions(Collections.singleton(new ResourceRequest(ResourceRequest.Name.CREATOR)));
+    resourceRequest.setExpansions(repositoryBeanParam.getExpansions().getResources());
     resourceRequest.setOffset(pagination.getOffset());
     resourceRequest.setLimit(pagination.getLimit());
     GitRepositoryDTO repositories = gitRepositoryBuilder.build(uriInfo, resourceRequest, project);
@@ -140,10 +147,10 @@ public class GitResource {
   public Response gitRepository(@PathParam("repositoryId") Integer repositoryId,
                                 @Context SecurityContext sc,
                                 @Context HttpServletRequest req,
-                                @Context UriInfo uriInfo) throws GitOpException {
+                                @Context UriInfo uriInfo,
+                                @BeanParam RepositoryBeanParam repositoryBeanParam) throws GitOpException {
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.REPOSITORY);
-    // TODO(Fabio): ideally this should be provided by an expansion beam param.
-    resourceRequest.setExpansions(Collections.singleton(new ResourceRequest(ResourceRequest.Name.CREATOR)));
+    resourceRequest.setExpansions(repositoryBeanParam.getExpansions().getResources());
     GitRepository gitRepository = commandConfigurationValidator.verifyRepository(project, repositoryId);
     GitRepositoryDTO dto = gitRepositoryBuilder.build(uriInfo, resourceRequest, project, gitRepository);
     return Response.ok().entity(dto).build();
@@ -160,12 +167,14 @@ public class GitResource {
   public Response clone(CloneCommandConfiguration commandDTO,
                         @Context SecurityContext sc,
                         @Context HttpServletRequest req,
-                        @Context UriInfo uriInfo) throws GitOpException, HopsSecurityException,
+                        @Context UriInfo uriInfo,
+                        @BeanParam ExecutionBeanParam executionBeanParam) throws GitOpException, HopsSecurityException,
       IllegalArgumentException, UserException, DatasetException {
     Users hopsworksUser = jWTHelper.getUserPrincipal(sc);
     GitOpExecution execution = gitController.clone(commandDTO, project, hopsworksUser);
-    GitOpExecutionDTO dto = executionBuilder.build(uriInfo, new ResourceRequest(ResourceRequest.Name.EXECUTION),
-        execution);
+    ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.EXECUTION);
+    resourceRequest.setExpansions(executionBeanParam.getExpansions().getResources());
+    GitOpExecutionDTO dto = executionBuilder.build(uriInfo, resourceRequest, execution);
     return Response.ok().entity(dto).build();
   }
 
@@ -183,13 +192,15 @@ public class GitResource {
                                           RepositoryActionCommandConfiguration configuration,
                                           @Context SecurityContext sc,
                                           @Context HttpServletRequest req,
-                                          @Context UriInfo uriInfo)
+                                          @Context UriInfo uriInfo,
+                                          @BeanParam ExecutionBeanParam executionBeanParam)
       throws GitOpException, HopsSecurityException, IllegalArgumentException {
     Users hopsworksUser = jWTHelper.getUserPrincipal(sc);
     GitOpExecution execution = gitController.executeRepositoryAction(configuration, project, hopsworksUser, action,
         repository);
-    GitOpExecutionDTO dto = executionBuilder.build(uriInfo, new ResourceRequest(ResourceRequest.Name.EXECUTION),
-        execution);
+    ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.EXECUTION);
+    resourceRequest.setExpansions(executionBeanParam.getExpansions().getResources());
+    GitOpExecutionDTO dto = executionBuilder.build(uriInfo, resourceRequest, execution);
     return Response.ok().entity(dto).build();
   }
 
@@ -225,7 +236,10 @@ public class GitResource {
                          @QueryParam("action") GitBranchAction action,
                          @QueryParam("branchName") String branchName,
                          @QueryParam("commit") String commit,
-                         @Context HttpServletRequest req, @Context SecurityContext sc, @Context UriInfo uriInfo)
+                         @Context HttpServletRequest req,
+                         @Context SecurityContext sc,
+                         @Context UriInfo uriInfo,
+                         @BeanParam ExecutionBeanParam executionBeanParam)
       throws IllegalArgumentException, GitOpException, HopsSecurityException {
     if (action == null) {
       throw new IllegalArgumentException(RESTCodes.GitOpErrorCode.INVALID_BRANCH_ACTION.getMessage());
@@ -233,7 +247,9 @@ public class GitResource {
     Users hopsworksUser = jWTHelper.getUserPrincipal(sc);
     GitOpExecution execution = gitController.executeBranchAction(action, project, hopsworksUser, repositoryId,
         branchName, commit);
-    GitOpExecutionDTO dto = executionBuilder.build(uriInfo, new ResourceRequest(ResourceRequest.Name.EXECUTION),
+    ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.EXECUTION);
+    resourceRequest.setExpansions(executionBeanParam.getExpansions().getResources());
+    GitOpExecutionDTO dto = executionBuilder.build(uriInfo, resourceRequest,
         execution);
     return Response.ok().entity(dto).build();
   }
@@ -288,16 +304,18 @@ public class GitResource {
                           @QueryParam("name") String remoteName,
                           @Context HttpServletRequest req,
                           @Context SecurityContext sc,
-                          @Context UriInfo uriInfo) throws GitOpException, HopsSecurityException,
-      IllegalArgumentException {
+                          @Context UriInfo uriInfo,
+                          @BeanParam ExecutionBeanParam executionBeanParam)
+      throws GitOpException, HopsSecurityException, IllegalArgumentException {
     if (action == null) {
       throw new IllegalArgumentException(RESTCodes.GitOpErrorCode.INVALID_REMOTES_ACTION.getMessage());
     }
     Users hopsworksUser = jWTHelper.getUserPrincipal(sc);
     GitOpExecution execution = gitController.addOrDeleteRemote(action, project, hopsworksUser, repositoryId,
         remoteName, remoteUrl);
-    GitOpExecutionDTO dto = executionBuilder.build(uriInfo, new ResourceRequest(ResourceRequest.Name.EXECUTION),
-        execution);
+    ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.EXECUTION);
+    resourceRequest.setExpansions(executionBeanParam.getExpansions().getResources());
+    GitOpExecutionDTO dto = executionBuilder.build(uriInfo, resourceRequest, execution);
     return Response.ok().entity(dto).build();
   }
 
@@ -354,12 +372,14 @@ public class GitResource {
   public Response fileCheckout(@Context UriInfo uriInfo, @PathParam("repositoryId") Integer repositoryId,
                                @Context SecurityContext sc,
                                @Context HttpServletRequest req,
+                               @BeanParam ExecutionBeanParam executionBeanParam,
                                GitFileCheckout files) throws GitOpException,
       HopsSecurityException {
     Users hopsworksUser = jWTHelper.getUserPrincipal(sc);
     GitOpExecution execution = gitController.fileCheckout(project, hopsworksUser, repositoryId, files.getFiles());
-    GitOpExecutionDTO dto = executionBuilder.build(uriInfo, new ResourceRequest(ResourceRequest.Name.EXECUTION),
-        execution);
+    ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.EXECUTION);
+    resourceRequest.setExpansions(executionBeanParam.getExpansions().getResources());
+    GitOpExecutionDTO dto = executionBuilder.build(uriInfo, resourceRequest, execution);
     return Response.ok().entity(dto).build();
   }
 

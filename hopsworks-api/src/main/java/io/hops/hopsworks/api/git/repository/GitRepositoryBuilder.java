@@ -13,7 +13,7 @@
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see <https://www.gnu.org/licenses/>.
  */
-package io.hops.hopsworks.api.git;
+package io.hops.hopsworks.api.git.repository;
 
 import io.hops.hopsworks.api.git.execution.GitOpExecutionBuilder;
 import io.hops.hopsworks.api.user.UsersBuilder;
@@ -82,7 +82,7 @@ public class GitRepositoryBuilder {
   }
 
   public GitRepositoryDTO build(UriInfo uriInfo, ResourceRequest resourceRequest, Project project,
-                                 GitRepository repository) {
+                                GitRepository repository) {
     GitRepositoryDTO repositoryDTO = new GitRepositoryDTO();
     repositoryDTO.setHref(uri(uriInfo, project, repository.getId()));
     repositoryDTO.setExpand(expand(resourceRequest));
