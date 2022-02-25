@@ -16,6 +16,7 @@
 
 describe "On #{ENV['OS']}" do
   before :all do
+    @max_executions_per_job = getVar('executions_per_job_limit').value
     @debugOpt=false
   end
   after(:all) {clean_all_test_projects(spec: "execution")}
@@ -36,7 +37,6 @@ describe "On #{ENV['OS']}" do
       job_types.each do |type|
       context 'with authentication and executable ' + type do
           before :all do
-            @max_executions_per_job = getVar('executions_per_job_limit').value
             setVar('executions_per_job_limit', '2')
             with_valid_tour_project("spark")
           end
