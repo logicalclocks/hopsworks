@@ -17,8 +17,12 @@
 describe "On #{ENV['OS']}" do
   before :all do
     @debugOpt=false
+    @max_executions_per_job = getVar('executions_per_job_limit').value
   end
-  after(:all) {clean_all_test_projects(spec: "execution")}
+  after :all do
+    setVar('executions_per_job_limit', @max_executions_per_job)
+    clean_all_test_projects(spec: "execution")
+  end
   describe 'execution' do
     describe "#create" do
       context 'without authentication' do
@@ -36,6 +40,7 @@ describe "On #{ENV['OS']}" do
       job_types.each do |type|
       context 'with authentication and executable ' + type do
           before :all do
+            setVar('executions_per_job_limit', '2')
             with_valid_tour_project("spark")
           end
           after :each do
@@ -350,6 +355,7 @@ describe "On #{ENV['OS']}" do
         $execution_ids = []
         context 'with authentication' do
           before :all do
+            setVar('executions_per_job_limit', @max_executions_per_job)
             with_valid_tour_project("spark")
             create_sparktour_job(@project, $job_spark_1, 'jar', nil)
             #start 3 executions
