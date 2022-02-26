@@ -200,8 +200,8 @@ public class GitCommandOperationUtil {
         throw new IllegalArgumentException("Unsupported git provider");
     }
 
-    secretsController.add(user, usernameSecretName, username, VisibilityType.PRIVATE, null);
-    secretsController.add(user, tokenSecretName, token, VisibilityType.PRIVATE, null);
+    secretsController.addOrUpdate(user, usernameSecretName, username, VisibilityType.PRIVATE, null);
+    secretsController.addOrUpdate(user, tokenSecretName, token, VisibilityType.PRIVATE, null);
   }
 
   /**
