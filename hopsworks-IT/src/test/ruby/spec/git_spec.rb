@@ -27,26 +27,29 @@ describe "On #{ENV['OS']}" do
         expect_status_details(200)
         expect(json_body[:items].count).to be == 0
       end
-      git_providers = ['GitHub', 'GitLab', 'BitBucket']
-      git_providers.each do |provider_to_configure|
+
+      ['GitHub', 'GitLab', 'BitBucket'].each do |provider_to_configure|
         it "should indicate configured after configuration #{provider_to_configure}" do
           configure_git_provider(provider_to_configure)
           get_providers()
           expect_status_details(200)
-          expect(json_body[:items].count).to be > 0
-          providers = json_body[:items]
-          is_configured = false
-          providers.each do |provider|
-            if provider[:gitProvider] == provider_to_configure
-              if provider[:username] != "" && provider[:token] != ""
-                is_configured = true
-              end
-              break
-            end
-          end
-          expect(is_configured).to be true
+          expect(json_body[:items].count).to eql 1
+          expect(json_body[:items][0][:gitProvider]).to eql provider_to_configure
+          expect(json_body[:items][0][:username]).to eql "username"
+          expect(json_body[:items][0][:token]).to eql "token"
           delete_provider_configuration(provider_to_configure)
         end
+      end
+
+      it "should update a provider configuration" do
+        configure_git_provider("GitHub", token="new token")
+        get_providers()
+        expect_status_details(200)
+        expect(json_body[:items].count).to eql 1
+        expect(json_body[:items][0][:gitProvider]).to eql "GitHub"
+        expect(json_body[:items][0][:username]).to eql "username"
+        expect(json_body[:items][0][:token]).to eql "new token"
+        delete_provider_configuration("GitHub")
       end
     end
     describe "Cloning repositories" do

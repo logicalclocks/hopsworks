@@ -86,7 +86,7 @@ public class SecretsController {
    * @throws UserException
    */
   public Secret add(Users user, String secretName, String secret, VisibilityType visibilityType, Integer projectIdScope)
-    throws UserException {
+      throws UserException {
     SecretId secretId = new SecretId(user.getUid(), secretName);
     if(secretsFacade.findById(secretId) != null) {
       throw new UserException(RESTCodes.UserErrorCode.SECRET_EXISTS, Level.FINE,
@@ -96,7 +96,37 @@ public class SecretsController {
     secretsFacade.persist(storedSecret);
     return storedSecret;
   }
-  
+
+  /**
+   * Adds a new Secret. The secret is encrypted before persisted in the database.
+   * If a secret with the same name already exists for the user, it updates it.
+   *
+   * @param user
+   * @param secretName
+   * @param secretStr
+   * @param visibilityType
+   * @param projectIdScope
+   * @return
+   */
+  @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
+  public Secret addOrUpdate(Users user, String secretName, String secretStr,
+                            VisibilityType visibilityType, Integer projectIdScope) throws UserException {
+    SecretId secretId = new SecretId(user.getUid(), secretName);
+    Secret secret = secretsFacade.findById(secretId);
+    if (secret != null) {
+      Secret generatedSecret = validateAndCreateSecret(secretId, user, secretStr, visibilityType, projectIdScope);
+      secret.setSecret(generatedSecret.getSecret());
+      secret.setAddedOn(generatedSecret.getAddedOn());
+      secret.setVisibilityType(generatedSecret.getVisibilityType());
+      secret.setProjectIdScope(generatedSecret.getProjectIdScope());
+    } else {
+      secret = validateAndCreateSecret(secretId, user, secretStr, visibilityType, projectIdScope);
+    }
+
+    secretsFacade.persist(secret);
+    return secret;
+  }
+
   /**
    *
    * @param user

@@ -15,17 +15,12 @@
 =end
 
 module GitHelper
-  def configure_git_provider(git_provider)
-    if git_provider == "GitLab"
-      add_private_secret("gitlab_token", "token")
-      add_private_secret("gitlab_username", "gitlab_username")
-    elsif git_provider == "GitHub"
-      add_private_secret("github_token", "token")
-      add_private_secret("github_username", "github_username")
-    elsif git_provider == "BitBucket"
-      add_private_secret("bitbucket_token", "token")
-      add_private_secret("bitbucket_username", "bitbucket_username")
-    end
+  def configure_git_provider(git_provider, token="token")
+    post "#{ENV['HOPSWORKS_API']}/users/git/provider", {
+      gitProvider: git_provider,
+      username: 'username',
+      token: token,
+    }
   end
 
   def delete_provider_configuration(git_provider)

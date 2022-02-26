@@ -416,7 +416,7 @@ public class UsersResource {
     return Response.ok().entity(dto).build();
   }
 
-  @ApiOperation(value = "Get git providers with the configured secrets", response= GitProviderSecretsDTO.class)
+  @ApiOperation(value = "Configure a Git Provider secrets", response= GitProviderSecretsDTO.class)
   @POST
   @Path("/git/provider")
   @Produces(MediaType.APPLICATION_JSON)
