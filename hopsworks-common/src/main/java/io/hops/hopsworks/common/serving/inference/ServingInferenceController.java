@@ -17,6 +17,7 @@
 package io.hops.hopsworks.common.serving.inference;
 
 import io.hops.common.Pair;
+import io.hops.hopsworks.exceptions.ApiKeyException;
 import io.hops.hopsworks.persistence.entity.serving.Serving;
 import io.hops.hopsworks.exceptions.InferenceException;
 
@@ -25,6 +26,6 @@ import io.hops.hopsworks.exceptions.InferenceException;
  * controllers e.g (localhost or Kubernetes) should implement this interface.
  */
 public interface ServingInferenceController {
-  Pair<Integer, String> infer(Serving serving, Integer modelVersion, String verb, String inferenceRequestJson,
-    String authHeader) throws InferenceException;
+  Pair<Integer, String> infer(String username, Serving serving, Integer modelVersion, String verb,
+    String inferenceRequestJson, String authHeader) throws InferenceException, ApiKeyException;
 }

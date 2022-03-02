@@ -69,7 +69,7 @@ public class LocalhostInferenceController implements ServingInferenceController 
    * @return the inference result returned by the serving server
    * @throws InferenceException
    */
-  public Pair<Integer, String> infer(Serving serving, Integer modelVersion, String verb,
+  public Pair<Integer, String> infer(String username, Serving serving, Integer modelVersion, String verb,
     String inferenceRequestJson, String authHeader) throws InferenceException {
   
     if (serving.getCid().equals(CID_STOPPED)) {
