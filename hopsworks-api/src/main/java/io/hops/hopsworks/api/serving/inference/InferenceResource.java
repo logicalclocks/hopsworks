@@ -73,7 +73,7 @@ public class InferenceResource {
   }
 
   @POST
-  @Path("/models/{modelName: [a-zA-Z0-9]+}{version:(/versions/[0-9]+)?}{verb:((:predict|:classify|:regress))?}")
+  @Path("/models/{modelName: [a-zA-Z0-9]+}{version:(/versions/[0-9]+)?}{verb:((:predict|:classify|:regress|:test))?}")
   @Consumes(MediaType.APPLICATION_JSON)
   @Produces(MediaType.APPLICATION_JSON)
   @ApiOperation(value = "Make inference")

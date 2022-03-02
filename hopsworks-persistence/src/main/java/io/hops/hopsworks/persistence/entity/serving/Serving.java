@@ -80,6 +80,9 @@ public class Serving implements Serializable {
   @Size(min = 1, max = 255)
   @Column(name = "name")
   private String name;
+  @Size(min = 1, max = 10000)
+  @Column(name = "description")
+  private String description;
   @Basic(optional = false)
   @NotNull
   @Size(min = 1, max = 255)
@@ -143,11 +146,12 @@ public class Serving implements Serializable {
 
   public Serving() { }
 
-  public Serving(Integer id, String name, String modelPath, String modelName, Integer modelVersion,
+  public Serving(Integer id, String name, String description, String modelPath, String modelName, Integer modelVersion,
                  String predictor, Integer nInstances, Boolean batchingEnabled, ModelServer modelServer,
                  ServingTool servingTool) {
     this.id = id;
     this.name = name;
+    this.description = description;
     this.modelPath = modelPath;
     this.modelName = modelName;
     this.modelVersion = modelVersion;
@@ -188,6 +192,14 @@ public class Serving implements Serializable {
 
   public void setName(String name) {
     this.name = name;
+  }
+  
+  public String getDescription() {
+    return description;
+  }
+  
+  public void setDescription(String description) {
+    this.description = description;
   }
 
   public String getModelPath() { return modelPath; }
@@ -333,7 +345,8 @@ public class Serving implements Serializable {
     if (created != null ? !created.equals(serving.created) : serving.created != null) return false;
     if (creator != null ? !creator.equals(serving.creator) : serving.creator != null) return false;
     if (!name.equals(serving.name)) return false;
-    if (!modelPath.equals(serving.modelPath)) return false;
+    if (description != null ? !description.equals(serving.description) : serving.description != null) return false;
+    if (modelPath != null ? !modelPath.equals(serving.modelPath) : serving.modelPath != null) return false;
     if (!modelVersion.equals(serving.modelVersion)) return false;
     if (predictor != null ? !predictor.equals(serving.predictor) : serving.predictor != null) return false;
     if (instances != null ? !instances.equals(serving.instances) : serving.instances != null) return false;
@@ -356,6 +369,7 @@ public class Serving implements Serializable {
     result = 31 * result + (created != null ? created.hashCode() : 0);
     result = 31 * result + (creator != null ? creator.hashCode() : 0);
     result = 31 * result + name.hashCode();
+    result = 31 * result + (description != null ? description.hashCode() : 0);
     result = 31 * result + modelPath.hashCode();
     result = 31 * result + modelVersion.hashCode();
     result = 31 * result + (predictor != null ? predictor.hashCode() : 0);
