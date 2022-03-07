@@ -98,7 +98,7 @@
 
       <li ng-click="projectCtrl.goToFeaturestore()" ng-show="projectCtrl.showFeaturestore()" id="featurestoreTab">
         <a
-                ng-class="{active: projectCtrl.activeService === 'featurestore' || projectCtrl.activeService === 'newfeaturegroup' || projectCtrl.activeService === 'newtrainingdataset' || projectCtrl.activeService === 'newstorageconnector'}">
+                ng-class="{active: projectCtrl.activeService === 'featurestore' }">
           Feature Store<i class="pull-right hopsworks-icon hopsworks-icon-database"/>
         </a>
       </li>
@@ -262,35 +262,5 @@
     tourtip-offset-vertical="-18"
     tourtip-offset-horizontal="-13"
     ></virtual-step>
-  <virtual-step
-          ng-if="projectCtrl.tourService.activeTour === 'fs' && projectCtrl.tourService.currentStep_TourNine === -1"
-          id="TourTwo"
-          class="ng-scope"
-          tourtip="Click Next to navigate to the Feature Store service and follow the Feature Store tour"
-          tourtip-step="0"
-          tourtip-element="#featurestoreTab"
-          tourtip-placement="right"
-          tourtip-next-label="Next"
-          on-proceed="projectCtrl.goToFeaturestore()"
-          tourtip-offset-vertical="-18"
-          tourtip-offset-horizontal="-13"
-  ></virtual-step>
 </tour>
-
-<tour class="ng-scope" step="projectCtrl.tourService.currentStep_TourNine"
-      post-tour="closeTour()"
-      ng-if="projectCtrl.loadedView && projectCtrl.loadedProjectData && projectCtrl.tourService.showTips">
-  <virtual-step
-          ng-if="projectCtrl.tourService.activeTour === 'fs'"
-          id="TourTwo"
-          class="ng-scope"
-          tourtip="Features and feature groups are typically computed by jobs. In the 'Jobs' tab you can create and view jobs in your project."
-          tourtip-step="10"
-          tourtip-element="#jobsTab"
-          tourtip-placement="right"
-          tourtip-next-label="Next"
-          on-proceed="projectCtrl.goToJobs()"
-          tourtip-offset-vertical="-18"
-          tourtip-offset-horizontal="-13"
-  ></virtual-step>
 </tour>

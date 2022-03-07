@@ -78,7 +78,6 @@ angular.module('hopsWorksApp')
             self.parentDS = $rootScope.parentDS;
             self.currentDir = undefined;
             self.tourService = TourService;
-            self.tourService.currentStep_TourNine = 7; //Feature store Tour
 
             // Details of the currently selecte file/dir
             self.selected = null; //The index of the selected file in the files array.

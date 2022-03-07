@@ -62,7 +62,6 @@ angular.module('hopsWorksApp')
             self.cards = [];
             self.projectMembers = [];
             self.tourService = TourService;
-            self.tourService.currentStep_TourNine = -1; //Feature store Tour
             self.location = $location;
             self.cloak = true;
             self.isClosed = true;
@@ -324,16 +323,6 @@ angular.module('hopsWorksApp')
 
             $scope.showHamburger = $location.path().indexOf("project") > -1;
 
-            // Show the searchbar if you are (1) within a project on datasets or (2) on the landing page
-//            $scope.showDatasets = ($location.path().indexOf("datasets") > -1) || ($location.path().length < ($location.path().length + 3));
-
-
-            self.goToHopsworksInstance = function (endpoint, serviceName) {
-              $location.path('http://' + endpoint + '/project/' + self.projectId + '/' + serviceName);
-              $location.search('');
-            };
-
-
             self.goToUrl = function (serviceName) {
               $location.path('project/' + self.projectId + '/' + serviceName);
               $location.search('');
@@ -405,7 +394,7 @@ angular.module('hopsWorksApp')
             };
 
             self.goToFeaturestore = function () {
-                self.goToUrl('featurestore');
+                $window.location.href = '/p/' + self.projectId;
             };
 
             self.goToPython = function () {
