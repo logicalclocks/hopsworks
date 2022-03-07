@@ -532,22 +532,5 @@
       on-proceed="closeTour();projectCtrl.disableTours();"
       ></virtual-step>
   </tour>
-    <tour class="ng-scope" step="jobsCtrl.tourService.currentStep_TourNine"
-          post-tour="closeTour()"
-          ng-if="jobsCtrl.tourService.activeTour === 'fs'
-          && jobsCtrl.tourService.showTips && !projectCtrl.loading && !getAllJobsStatusIsPending ">
-      <virtual-step
-              ng-if="jobsCtrl.tourService.activeTour === 'fs'"
-              class="ng-scope"
-              tourtip="The tour includes a sample job that does feature engineering and creates some example feature groups,
-            this job typically takes 5-15 minutes depending on how busy the cluster is.
-            When this job is completed, you can view the feature groups in the feature registry and you can open Jupyter and run some notebooks to query the sample feature groups."
-              tourtip-step="12"
-              tourtip-element="{{'#' + projectCtrl.tourService.featurestoreTourJobName}}"
-              tourtip-placement="bottom"
-              tourtip-next-label="Finish the Tour"
-              on-proceed="closeTour(); projectCtrl.tourService.resetTours();projectCtrl.disableTours();"
-      ></virtual-step>
-    </tour>
   </div>
 </div>

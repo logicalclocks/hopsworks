@@ -493,40 +493,5 @@
           </div>
       </section>
     </div>
-    <tour class="ng-scope" step="datasetsCtrl.tourService.currentStep_TourNine"
-          post-tour="closeTour()"
-          ng-if="datasetsCtrl.tourService.activeTour === 'fs'
-          && datasetsCtrl.tourService.showTips && !datasetsCtrl.working">
-      <virtual-step
-              ng-if="datasetsCtrl.tourService.activeTour === 'fs'"
-              class="ng-scope"
-              tourtip="The feature groups and features can be found in a dataset called Featurestore.db"
-              tourtip-step="7"
-              tourtip-element="{{'#table-row-' + datasetsCtrl.tourService.currentProjectName + '_featurestore\\.db'}}"
-              tourtip-placement="bottom"
-              tourtip-next-label="Next"
-              on-proceed=""
-      ></virtual-step>
-      <virtual-step
-              ng-if="datasetsCtrl.tourService.activeTour === 'fs'"
-              class="ng-scope"
-              tourtip="The training datasets can be found in a dataset called Training Datasets"
-              tourtip-step="8"
-              tourtip-element="{{'#table-row-' + datasetsCtrl.tourService.currentProjectName + '_Training_Datasets'}}"
-              tourtip-placement="bottom"
-              tourtip-next-label="Next"
-              on-proceed=""
-      ></virtual-step>
-      <virtual-step
-              ng-if="datasetsCtrl.tourService.activeTour === 'fs'"
-              class="ng-scope"
-              tourtip="The tour includes a set of sample notebooks for interacting with the feature store. These notebooks are available in the dataset called 'Jupyter'"
-              tourtip-step="9"
-              tourtip-element="#table-row-Jupyter"
-              tourtip-placement="bottom"
-              tourtip-next-label="Next"
-              on-proceed=""
-      ></virtual-step>
-    </tour>
   </div>
 </div>

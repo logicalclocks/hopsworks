@@ -622,14 +622,6 @@ angular.module('hopsWorksApp')
                 return self.tdLink !== undefined && self.tdLink.name !== undefined;
             };
 
-            self.goToTrainingDataset = function(link) {
-                $location.search('');
-                $location.path('/project/' + link.projId + '/featurestore');
-                $location.search('featurestore', link.fsId);
-                $location.search('trainingDataset', link.name);
-                $location.search('version',link.version);
-            };
-
             self.getLinkInfo = function(link) {
                 /** get project id from project name */
                 ProjectService.getProjectInfo({projectName: link.projName}).$promise.then(

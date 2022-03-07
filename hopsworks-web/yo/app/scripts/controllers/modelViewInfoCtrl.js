@@ -90,15 +90,6 @@ angular.module('hopsWorksApp')
                 self.close();
             };
 
-            self.goToTrainingDataset = function() {
-                $location.search('');
-                $location.path('/project/' + self.tdLink.projId + '/featurestore');
-                $location.search('featurestore', self.tdLink.fsId);
-                $location.search('trainingDataset', self.tdLink.name);
-                $location.search('version', self.tdLink.version);
-                self.close();
-            };
-
             /**
              * Closes the modal
              */
