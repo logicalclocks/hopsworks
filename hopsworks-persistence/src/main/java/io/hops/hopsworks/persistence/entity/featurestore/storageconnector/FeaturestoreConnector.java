@@ -20,6 +20,7 @@ import io.hops.hopsworks.persistence.entity.featurestore.Featurestore;
 import io.hops.hopsworks.persistence.entity.featurestore.storageconnector.adls.FeaturestoreADLSConnector;
 import io.hops.hopsworks.persistence.entity.featurestore.storageconnector.hopsfs.FeaturestoreHopsfsConnector;
 import io.hops.hopsworks.persistence.entity.featurestore.storageconnector.jdbc.FeaturestoreJdbcConnector;
+import io.hops.hopsworks.persistence.entity.featurestore.storageconnector.kafka.FeatureStoreKafkaConnector;
 import io.hops.hopsworks.persistence.entity.featurestore.storageconnector.redshift.FeatureStoreRedshiftConnector;
 import io.hops.hopsworks.persistence.entity.featurestore.storageconnector.s3.FeaturestoreS3Connector;
 import io.hops.hopsworks.persistence.entity.featurestore.storageconnector.snowflake.FeaturestoreSnowflakeConnector;
@@ -104,6 +105,9 @@ public class FeaturestoreConnector implements Serializable {
   @JoinColumn(name = "snowflake_id", referencedColumnName = "id")
   @ManyToOne(cascade = CascadeType.ALL)
   private FeaturestoreSnowflakeConnector snowflakeConnector;
+  @JoinColumn(name = "kafka_id", referencedColumnName = "id")
+  @ManyToOne(cascade = CascadeType.ALL)
+  private FeatureStoreKafkaConnector kafkaConnector;
 
   public static long getSerialVersionUID() {
     return serialVersionUID;
@@ -194,6 +198,14 @@ public class FeaturestoreConnector implements Serializable {
   
   public void setSnowflakeConnector(FeaturestoreSnowflakeConnector snowflakeConnector) {
     this.snowflakeConnector = snowflakeConnector;
+  }
+
+  public FeatureStoreKafkaConnector getKafkaConnector() {
+    return kafkaConnector;
+  }
+
+  public void setKafkaConnector(FeatureStoreKafkaConnector kafkaConnector) {
+    this.kafkaConnector = kafkaConnector;
   }
   
   @Override

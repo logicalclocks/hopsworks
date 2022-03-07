@@ -28,6 +28,8 @@ import io.hops.hopsworks.common.featurestore.storageconnectors.hopsfs.Featuresto
 import io.hops.hopsworks.common.featurestore.storageconnectors.hopsfs.FeaturestoreHopsfsConnectorDTO;
 import io.hops.hopsworks.common.featurestore.storageconnectors.jdbc.FeaturestoreJdbcConnectorController;
 import io.hops.hopsworks.common.featurestore.storageconnectors.jdbc.FeaturestoreJdbcConnectorDTO;
+import io.hops.hopsworks.common.featurestore.storageconnectors.kafka.FeatureStoreKafkaConnectorController;
+import io.hops.hopsworks.common.featurestore.storageconnectors.kafka.FeatureStoreKafkaConnectorDTO;
 import io.hops.hopsworks.common.featurestore.storageconnectors.redshift.FeaturestoreRedshiftConnectorController;
 import io.hops.hopsworks.common.featurestore.storageconnectors.redshift.FeaturestoreRedshiftConnectorDTO;
 import io.hops.hopsworks.common.featurestore.storageconnectors.s3.FeaturestoreS3ConnectorController;
@@ -80,6 +82,8 @@ public class FeaturestoreStorageConnectorController {
   @EJB
   private FeaturestoreSnowflakeConnectorController snowflakeConnectorController;
   @EJB
+  private FeatureStoreKafkaConnectorController kafkaConnectorController;
+  @EJB
   private ActivityFacade activityFacade;
 
   /**
@@ -121,17 +125,19 @@ public class FeaturestoreStorageConnectorController {
       throws FeaturestoreException {
     switch (featurestoreConnector.getConnectorType()) {
       case S3:
-        return s3ConnectorController.getS3ConnectorDTO(user, featurestoreConnector);
+        return s3ConnectorController.getS3ConnectorDTO(featurestoreConnector);
       case JDBC:
         return jdbcConnectorController.getJdbcConnectorDTO(user, project, featurestoreConnector);
       case HOPSFS:
         return hopsfsConnectorController.getHopsfsConnectorDTO(featurestoreConnector);
       case REDSHIFT:
-        return redshiftConnectorController.getRedshiftConnectorDTO(user, featurestoreConnector);
+        return redshiftConnectorController.getRedshiftConnectorDTO(featurestoreConnector);
       case ADLS:
-        return adlsConnectorController.getADLConnectorDTO(user, featurestoreConnector);
+        return adlsConnectorController.getADLConnectorDTO(featurestoreConnector);
       case SNOWFLAKE:
-        return snowflakeConnectorController.getConnector(user, featurestoreConnector);
+        return snowflakeConnectorController.getConnector(featurestoreConnector);
+      case KAFKA:
+        return kafkaConnectorController.getConnector(featurestoreConnector);
       default:
         // We should not reach this point
         throw new IllegalArgumentException("Feature Store connector type not recognized");
@@ -197,6 +203,11 @@ public class FeaturestoreStorageConnectorController {
         featurestoreConnector.setSnowflakeConnector(snowflakeConnectorController.createConnector(user, featurestore,
           (FeaturestoreSnowflakeConnectorDTO) featurestoreStorageConnectorDTO));
         break;
+      case KAFKA:
+        featurestoreConnector.setConnectorType(FeaturestoreConnectorType.KAFKA);
+        featurestoreConnector.setKafkaConnector(kafkaConnectorController.createConnector(user, featurestore,
+          (FeatureStoreKafkaConnectorDTO) featurestoreStorageConnectorDTO));
+        break;
       default:
         // We should not reach this point
         throw new IllegalArgumentException("Feature Store connector type not recognized");
@@ -253,13 +264,17 @@ public class FeaturestoreStorageConnectorController {
             featurestoreConnector.getRedshiftConnector()));
         break;
       case ADLS:
-        featurestoreConnector.setAdlsConnector(adlsConnectorController.updateAdlConnector(user,
+        featurestoreConnector.setAdlsConnector(adlsConnectorController.updateAdlConnector(user, featurestore,
             (FeaturestoreADLSConnectorDTO) featurestoreStorageConnectorDTO, featurestoreConnector.getAdlsConnector()));
         break;
       case SNOWFLAKE:
         featurestoreConnector.setSnowflakeConnector(snowflakeConnectorController.updateConnector(user,
           (FeaturestoreSnowflakeConnectorDTO) featurestoreStorageConnectorDTO,
           featurestoreConnector.getSnowflakeConnector()));
+        break;
+      case KAFKA:
+        featurestoreConnector.setKafkaConnector((kafkaConnectorController.updateConnector(user, featurestore,
+          (FeatureStoreKafkaConnectorDTO) featurestoreStorageConnectorDTO, featurestoreConnector.getKafkaConnector())));
         break;
       default:
         // We should not reach this point

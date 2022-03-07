@@ -1625,7 +1625,9 @@ public class RESTCodes {
     FEATURE_VIEW_ALREADY_EXISTS(179, "The provided feature view name and version already exists",
         Response.Status.BAD_REQUEST),
     FEATURE_VIEW_CREATION_ERROR(180, "Cannot create feature view.", Response.Status.BAD_REQUEST),
-    FEATURE_VIEW_NOT_FOUND(181, "Feature view wasn't found.", Response.Status.NOT_FOUND);
+    FEATURE_VIEW_NOT_FOUND(181, "Feature view wasn't found.", Response.Status.NOT_FOUND),
+    KAFKA_STORAGE_CONNECTOR_STORE_NOT_EXISTING(182, "Provided certificate store location does not exist",
+      Response.Status.BAD_REQUEST);
 
     private int code;
     private String message;

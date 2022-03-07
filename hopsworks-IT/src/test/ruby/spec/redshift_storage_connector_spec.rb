@@ -225,7 +225,7 @@ describe "On #{ENV['OS']}" do
       end
       it "should update connector arguments" do
         copyConnector = @connector.clone
-        copyConnector[:arguments] = "test1,test2,test3"
+        copyConnector[:arguments] = [{name: "option1", value: "value1"}, {name: "option2", value: "value2"}]
         update_redshift_connector(@p1[:id], @featurestore1["featurestoreId"], copyConnector[:name], copyConnector)
         expect_status_details(200)
         check_redshift_connector_update(json_body, copyConnector)
@@ -307,7 +307,7 @@ describe "On #{ENV['OS']}" do
         copyConnector[:databaseUserName] = "databaseUser1"
         copyConnector[:databasePort] = 5455
         copyConnector[:tableName] = "table1"
-        copyConnector[:arguments] = "test1,test2,test3,test4"
+        copyConnector[:arguments] = [{name: "option1", value: "value1"}, {name: "option2", value: "value2"}]
         update_redshift_connector(@p1[:id], @featurestore1["featurestoreId"], copyConnector[:name], copyConnector)
         expect_status_details(200)
         check_redshift_connector_update(json_body, copyConnector)

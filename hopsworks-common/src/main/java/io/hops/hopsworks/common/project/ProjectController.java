@@ -811,6 +811,8 @@ public class ProjectController {
         if (!projectServicesFacade.isServiceEnabledForProject(project, ProjectServiceEnum.KAFKA)) {
           addServiceKafka(project);
         }
+        // add storage connector directory in feature store hive warehouse
+        featurestoreController.createStorageConnectorResourceDirectory(project, user);
         break;
       case KAFKA:
         // might have been enabled by feature store service already

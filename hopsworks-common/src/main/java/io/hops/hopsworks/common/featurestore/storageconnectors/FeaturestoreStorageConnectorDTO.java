@@ -22,6 +22,7 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import io.hops.hopsworks.common.featurestore.storageconnectors.adls.FeaturestoreADLSConnectorDTO;
 import io.hops.hopsworks.common.featurestore.storageconnectors.hopsfs.FeaturestoreHopsfsConnectorDTO;
 import io.hops.hopsworks.common.featurestore.storageconnectors.jdbc.FeaturestoreJdbcConnectorDTO;
+import io.hops.hopsworks.common.featurestore.storageconnectors.kafka.FeatureStoreKafkaConnectorDTO;
 import io.hops.hopsworks.common.featurestore.storageconnectors.redshift.FeaturestoreRedshiftConnectorDTO;
 import io.hops.hopsworks.common.featurestore.storageconnectors.s3.FeaturestoreS3ConnectorDTO;
 import io.hops.hopsworks.common.featurestore.storageconnectors.snowflake.FeaturestoreSnowflakeConnectorDTO;
@@ -41,7 +42,8 @@ import javax.xml.bind.annotation.XmlSeeAlso;
     FeaturestoreRedshiftConnectorDTO.class,
     FeaturestoreS3ConnectorDTO.class,
     FeaturestoreADLSConnectorDTO.class,
-    FeaturestoreSnowflakeConnectorDTO.class})
+    FeaturestoreSnowflakeConnectorDTO.class,
+    FeatureStoreKafkaConnectorDTO.class})
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY)
 @JsonSubTypes({
@@ -50,7 +52,8 @@ import javax.xml.bind.annotation.XmlSeeAlso;
     @JsonSubTypes.Type(value = FeaturestoreRedshiftConnectorDTO.class, name = "FeaturestoreRedshiftConnectorDTO"),
     @JsonSubTypes.Type(value = FeaturestoreS3ConnectorDTO.class, name = "FeaturestoreS3ConnectorDTO"),
     @JsonSubTypes.Type(value = FeaturestoreADLSConnectorDTO.class, name = "FeaturestoreADLSConnectorDTO"),
-    @JsonSubTypes.Type(value = FeaturestoreSnowflakeConnectorDTO.class, name = "FeaturestoreSnowflakeConnectorDTO")}
+    @JsonSubTypes.Type(value = FeaturestoreSnowflakeConnectorDTO.class, name = "FeaturestoreSnowflakeConnectorDTO"),
+    @JsonSubTypes.Type(value = FeatureStoreKafkaConnectorDTO.class, name = "FeatureStoreKafkaConnectorDTO")}
 )
 public class FeaturestoreStorageConnectorDTO {
   private Integer id;

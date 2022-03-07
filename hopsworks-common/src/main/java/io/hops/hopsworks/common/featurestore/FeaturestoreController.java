@@ -18,6 +18,7 @@ package io.hops.hopsworks.common.featurestore;
 import com.logicalclocks.servicediscoverclient.exceptions.ServiceDiscoveryException;
 import io.hops.hopsworks.common.dao.project.team.ProjectTeamFacade;
 import io.hops.hopsworks.common.dao.user.activity.ActivityFacade;
+import io.hops.hopsworks.common.dataset.DatasetController;
 import io.hops.hopsworks.common.featurestore.online.OnlineFeaturestoreController;
 import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupFacade;
 import io.hops.hopsworks.common.featurestore.storageconnectors.FeaturestoreConnectorFacade;
@@ -26,10 +27,16 @@ import io.hops.hopsworks.common.featurestore.storageconnectors.FeaturestoreStora
 import io.hops.hopsworks.common.featurestore.storageconnectors.hopsfs.FeaturestoreHopsfsConnectorDTO;
 import io.hops.hopsworks.common.featurestore.storageconnectors.jdbc.FeaturestoreJdbcConnectorDTO;
 import io.hops.hopsworks.common.featurestore.trainingdatasets.TrainingDatasetFacade;
+import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
+import io.hops.hopsworks.common.hdfs.DistributedFsService;
+import io.hops.hopsworks.common.hdfs.HdfsUsersController;
+import io.hops.hopsworks.common.hdfs.inode.InodeController;
 import io.hops.hopsworks.common.hive.HiveController;
 import io.hops.hopsworks.common.hosts.ServiceDiscoveryController;
 import io.hops.hopsworks.common.util.Settings;
+import io.hops.hopsworks.exceptions.DatasetException;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
+import io.hops.hopsworks.exceptions.HopsSecurityException;
 import io.hops.hopsworks.exceptions.ProjectException;
 import io.hops.hopsworks.exceptions.UserException;
 import io.hops.hopsworks.persistence.entity.dataset.Dataset;
@@ -42,6 +49,7 @@ import io.hops.hopsworks.persistence.entity.project.team.ProjectTeam;
 import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.persistence.entity.user.activity.ActivityFlag;
 import io.hops.hopsworks.restutils.RESTCodes;
+import org.apache.hadoop.fs.Path;
 
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
@@ -80,6 +88,14 @@ public class FeaturestoreController {
   private FeaturestoreStorageConnectorController featurestoreStorageConnectorController;
   @EJB
   private ServiceDiscoveryController serviceDiscoveryController;
+  @EJB
+  private InodeController inodeController;
+  @EJB
+  private DatasetController datasetController;
+  @EJB
+  private DistributedFsService dfs;
+  @EJB
+  private HdfsUsersController hdfsUsersController;
   @EJB
   private ProjectTeamFacade projectTeamFacade;
 
@@ -258,6 +274,32 @@ public class FeaturestoreController {
     return featurestore;
   }
 
+  /**
+   * Create a sub directory to store the uploaded artifacts such as trust/keystore for storage connectors
+   *
+   * @param project
+   * @param user
+   * @throws DatasetException
+   * @throws HopsSecurityException
+   */
+  public void createStorageConnectorResourceDirectory(Project project, Users user)
+      throws DatasetException, HopsSecurityException {
+    DistributedFileSystemOps udfso = null;
+    try {
+      udfso = dfs.getDfsOps(hdfsUsersController.getHdfsUserName(project, user));
+  
+      String featureStoreName = getOfflineFeaturestoreDbName(project);
+      Path featureStoreDbPath = hiveController.getDbPath(featureStoreName);
+      Path storageConnectorPath = new Path(featureStoreDbPath, FeaturestoreConstants.STORAGE_CONNECTOR_SUBDIR);
+      // if not exists create
+      if (!inodeController.existsPath(storageConnectorPath.toString())) {
+        datasetController.createSubDirectory(project, storageConnectorPath, udfso);
+      }
+    } finally {
+      dfs.closeDfsClient(udfso);
+    }
+  }
+
   private void createOnlineFeatureStore(Project project, Users user, Featurestore featurestore)
       throws FeaturestoreException {
     if (!settings.isOnlineFeaturestore()) {
@@ -299,7 +341,9 @@ public class FeaturestoreController {
     }
     String connectionString = HiveController.HIVE_JDBC_PREFIX + hiveEndpoint + "/" + databaseName +
         ";auth=noSasl;ssl=true;twoWay=true;";
-    String arguments = "sslTrustStore,trustStorePassword,sslKeyStore,keyStorePassword";
+    List<OptionDTO> arguments = FeaturestoreConstants.OFFLINE_JDBC_CONNECTOR_ARGS.stream()
+            .map(arg -> new OptionDTO(arg, null))
+            .collect(Collectors.toList());
     FeaturestoreJdbcConnectorDTO featurestoreJdbcConnectorDTO = new FeaturestoreJdbcConnectorDTO();
     featurestoreJdbcConnectorDTO.setStorageConnectorType(FeaturestoreConnectorType.JDBC);
     featurestoreJdbcConnectorDTO.setName(databaseName);

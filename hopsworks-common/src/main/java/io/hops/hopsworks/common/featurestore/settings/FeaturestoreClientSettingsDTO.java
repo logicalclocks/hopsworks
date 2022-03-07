@@ -44,7 +44,7 @@ public class FeaturestoreClientSettingsDTO {
   private int jdbcStorageConnectorConnectionstringMaxLength =
     FeaturestoreConstants.JDBC_STORAGE_CONNECTOR_CONNECTIONSTRING_MAX_LENGTH;
   private int jdbcStorageConnectorArgumentsMaxLength =
-    FeaturestoreConstants.JDBC_STORAGE_CONNECTOR_ARGUMENTS_MAX_LENGTH;
+    FeaturestoreConstants.STORAGE_CONNECTOR_ARGUMENTS_MAX_LENGTH;
   private int s3StorageConnectorBucketMaxLength =
     FeaturestoreConstants.S3_STORAGE_CONNECTOR_BUCKET_MAX_LENGTH;
   private int s3StorageConnectorAccesskeyMaxLength =

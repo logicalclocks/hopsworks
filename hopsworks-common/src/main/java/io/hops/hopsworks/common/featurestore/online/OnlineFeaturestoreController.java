@@ -20,9 +20,11 @@ import io.hops.hopsworks.common.dao.project.team.ProjectTeamFacade;
 import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.dao.user.security.secrets.SecretsFacade;
 import io.hops.hopsworks.common.featurestore.FeaturestoreConstants;
+import io.hops.hopsworks.common.featurestore.OptionDTO;
 import io.hops.hopsworks.common.featurestore.featuregroup.cached.CachedFeaturegroupController;
 import io.hops.hopsworks.common.featurestore.featuregroup.cached.FeaturegroupPreview;
 import io.hops.hopsworks.common.featurestore.storageconnectors.FeaturestoreConnectorFacade;
+import io.hops.hopsworks.common.featurestore.storageconnectors.StorageConnectorUtil;
 import io.hops.hopsworks.common.hosts.ServiceDiscoveryController;
 import io.hops.hopsworks.common.security.secrets.SecretsController;
 import io.hops.hopsworks.common.util.Settings;
@@ -51,11 +53,10 @@ import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.stream.Collectors;
 
 /**
  * Class controlling the interaction with the online featurestore databases in Hopsworks and the associated
@@ -89,6 +90,8 @@ public class OnlineFeaturestoreController {
   private ServiceDiscoveryController serviceDiscoveryController;
   @EJB
   private FeaturestoreConnectorFacade featurestoreConnectorFacade;
+  @EJB
+  private StorageConnectorUtil storageConnectorUtil;
   
   @PostConstruct
   public void init() {
@@ -385,18 +388,15 @@ public class OnlineFeaturestoreController {
     FeaturestoreJdbcConnector featurestoreJdbcConnector = new FeaturestoreJdbcConnector();
     featurestoreJdbcConnector.setConnectionString(settings.getFeaturestoreJdbcUrl() + dbName +
         "?useSSL=false&allowPublicKeyRetrieval=true");
-    Map<String, String> arguments = new HashMap<>();
-    arguments.put(FeaturestoreConstants.ONLINE_FEATURE_STORE_JDBC_PASSWORD_ARG,
-        FeaturestoreConstants.ONLINE_FEATURE_STORE_CONNECTOR_PASSWORD_TEMPLATE);
-    arguments.put(FeaturestoreConstants.ONLINE_FEATURE_STORE_JDBC_USER_ARG, onlineDbUsername);
-    arguments.put(FeaturestoreConstants.ONLINE_FEATURE_STORE_JDBC_DRIVER_ARG, MYSQL_DRIVER);
-    arguments.put("isolationLevel", "NONE");
-    arguments.put("batchsize", "500");
+    List<OptionDTO> arguments = new ArrayList<>();
+    arguments.add(new OptionDTO(FeaturestoreConstants.ONLINE_FEATURE_STORE_JDBC_PASSWORD_ARG,
+        FeaturestoreConstants.ONLINE_FEATURE_STORE_CONNECTOR_PASSWORD_TEMPLATE));
+    arguments.add(new OptionDTO(FeaturestoreConstants.ONLINE_FEATURE_STORE_JDBC_USER_ARG, onlineDbUsername));
+    arguments.add(new OptionDTO(FeaturestoreConstants.ONLINE_FEATURE_STORE_JDBC_DRIVER_ARG, MYSQL_DRIVER));
+    arguments.add(new OptionDTO("isolationLevel", "NONE"));
+    arguments.add(new OptionDTO("batchsize", "500"));
 
-    featurestoreJdbcConnector.setArguments(arguments.entrySet()
-        .stream()
-        .map(e -> e.getKey() + "=" + e.getValue())
-        .collect(Collectors.joining(",")));
+    featurestoreJdbcConnector.setArguments(storageConnectorUtil.fromOptions(arguments));
     featurestoreConnector.setJdbcConnector(featurestoreJdbcConnector);
 
     featurestoreConnectorFacade.update(featurestoreConnector);
