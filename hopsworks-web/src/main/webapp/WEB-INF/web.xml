@@ -58,7 +58,7 @@
   </login-config>
   
   <session-config>
-    <session-timeout>600</session-timeout>
+    <session-timeout>1440</session-timeout>
     <cookie-config>
       <name>SESSION-WEB</name>
       <path>/</path>
