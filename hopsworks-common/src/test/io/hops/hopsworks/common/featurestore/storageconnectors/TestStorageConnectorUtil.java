@@ -1,0 +1,105 @@
+/*Users
+ * This file is part of Hopsworks
+ * Copyright (C) 2021, Logical Clocks AB. All rights reserved
+ *
+ * Hopsworks is free software: you can redistribute it and/or modify it under the terms of
+ * the GNU Affero General Public License as published by the Free Software Foundation,
+ * either version 3 of the License, or (at your option) any later version.
+ *
+ * Hopsworks is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+ * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+ * PURPOSE.  See the GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License along with this program.
+ * If not, see <https://www.gnu.org/licenses/>.
+ */
+
+package io.hops.hopsworks.common.featurestore.storageconnectors;
+
+import io.hops.hopsworks.common.featurestore.OptionDTO;
+import io.hops.hopsworks.persistence.entity.featurestore.storageconnector.FeaturestoreConnectorType;
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.rules.ExpectedException;
+
+import java.util.Arrays;
+import java.util.List;
+
+public class TestStorageConnectorUtil {
+  
+  private StorageConnectorUtil storageConnectorUtil;
+  
+  @Rule
+  public ExpectedException thrown = ExpectedException.none();
+  
+  @Before
+  public void setup() {
+    storageConnectorUtil = new StorageConnectorUtil();
+  }
+  
+  @Test
+  public void testToOptions() throws Exception {
+    String testString = "[{\"name\":\"option1\",\"value\":\"value1\"},{\"name\":\"option2\"},{\"name\":\"option3\",\"value\":\"null\"},{\"name\":\"option4\",\"value\":\"\"}]";
+    List<OptionDTO> result = storageConnectorUtil.toOptions(testString);
+  
+    Assert.assertEquals("option1", result.get(0).getName());
+    Assert.assertEquals("option2", result.get(1).getName());
+    Assert.assertEquals("option3", result.get(2).getName());
+    Assert.assertEquals("option4", result.get(3).getName());
+    Assert.assertEquals("value1", result.get(0).getValue());
+    Assert.assertNull(result.get(1).getValue());
+    Assert.assertEquals("null", result.get(2).getValue());
+    Assert.assertEquals("", result.get(3).getValue());
+  }
+  
+  @Test
+  public void testFromOptions() throws Exception {
+    List<OptionDTO> optionList = Arrays.asList(new OptionDTO("option1", "value1"), new OptionDTO("option2", null),
+      new OptionDTO("option3", "null"), new OptionDTO("option4", ""));
+    String result = storageConnectorUtil.fromOptions(optionList);
+    
+    Assert.assertEquals("[{\"name\":\"option1\",\"value\":\"value1\"},{\"name\":\"option2\"},{\"name\":\"option3\",\"value\":\"null\"},{\"name\":\"option4\",\"value\":\"\"}]", result);
+  }
+  
+  @Test
+  public void testCreateSecretName() throws Exception {
+    String result = storageConnectorUtil.createSecretName(1, "connector name", FeaturestoreConnectorType.REDSHIFT);
+    Assert.assertEquals("redshift_connector_name_1", result);
+  }
+  
+  @Test
+  public void testShouldUpdateString() throws Exception {
+    boolean result;
+    
+    result = storageConnectorUtil.shouldUpdate("old", "new");
+    Assert.assertTrue(result);
+  
+    result = storageConnectorUtil.shouldUpdate("old", "old");
+    Assert.assertFalse(result);
+  
+    result = storageConnectorUtil.shouldUpdate(null, "new");
+    Assert.assertTrue(result);
+  
+    result = storageConnectorUtil.shouldUpdate(null, (String) null);
+    Assert.assertFalse(result);
+  }
+
+  @Test
+  public void testShouldUpdateInteger() throws Exception {
+    boolean result;
+    
+    result = storageConnectorUtil.shouldUpdate(1, 2);
+    Assert.assertTrue(result);
+    
+    result = storageConnectorUtil.shouldUpdate(1, 1);
+    Assert.assertFalse(result);
+    
+    result = storageConnectorUtil.shouldUpdate(null, 1);
+    Assert.assertTrue(result);
+    
+    result = storageConnectorUtil.shouldUpdate(null, (Integer) null);
+    Assert.assertFalse(result);
+  }
+}

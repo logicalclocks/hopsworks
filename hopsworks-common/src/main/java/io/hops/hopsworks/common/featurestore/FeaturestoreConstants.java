@@ -39,11 +39,12 @@ public class FeaturestoreConstants {
   public static final int STORAGE_CONNECTOR_NAME_MAX_LENGTH = 1000;
   public static final int STORAGE_CONNECTOR_DESCRIPTION_MAX_LENGTH = 1000;
   public static final int JDBC_STORAGE_CONNECTOR_CONNECTIONSTRING_MAX_LENGTH = 5000;
-  public static final int JDBC_STORAGE_CONNECTOR_ARGUMENTS_MAX_LENGTH = 2000;
+  public static final int STORAGE_CONNECTOR_ARGUMENTS_MAX_LENGTH = 2000;
   public static final int S3_STORAGE_CONNECTOR_BUCKET_MAX_LENGTH = 5000;
   public static final int S3_STORAGE_CONNECTOR_ACCESSKEY_MAX_LENGTH = 1000;
   public static final int S3_STORAGE_CONNECTOR_SECRETKEY_MAX_LENGTH = 1000;
   public static final int S3_STORAGE_SERVER_ENCRYPTION_KEY_MAX_LENGTH = 1000;
+  public static final int KAFKA_STORAGE_CONNECTOR_BOOTSTRAP_MAX_LENGTH = 1000;
   public static final int ON_DEMAND_FEATUREGROUP_SQL_QUERY_MAX_LENGTH = 11000;
   public static final List<String> TRAINING_DATASET_DATA_FORMATS = Arrays.asList("csv", "tfrecords",
     "tfrecord", "parquet", "tsv", "hdf5", "npy", "orc", "avro", "image", "petastorm");
@@ -91,6 +92,9 @@ public class FeaturestoreConstants {
   public static final int ONLINE_FEATURESTORE_USERNAME_MAX_LENGTH = 32;
   public static final int ONLINE_FEATURESTORE_PW_LENGTH = 32;
   public static final String FEATURESTORE_HIVE_DB_SUFFIX = "_featurestore";
+  public static final List<String> OFFLINE_JDBC_CONNECTOR_ARGS = Arrays.asList(
+          "sslTrustStore", "trustStorePassword", "sslKeyStore", "keyStorePassword");
+  public static final String STORAGE_CONNECTOR_SUBDIR = "storage_connector_resources";
   public static final List<String> TRANSFORMATION_FUNCTION_OUTPUT_TYPES = Arrays.asList("StringType()", "BinaryType()",
     "ByteType()", "ShortType()", "IntegerType()", "LongType()", "FloatType()",
     "DoubleType()", "TimestampType()", "DateType()", "BooleanType()");

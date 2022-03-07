@@ -16,17 +16,14 @@
 
 package io.hops.hopsworks.common.featurestore.storageconnectors.s3;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Strings;
-import io.hops.hopsworks.common.dao.user.UserFacade;
-import io.hops.hopsworks.common.dao.user.security.secrets.SecretPlaintext;
 import io.hops.hopsworks.common.dao.user.security.secrets.SecretsFacade;
 import io.hops.hopsworks.common.featurestore.FeaturestoreConstants;
+import io.hops.hopsworks.common.featurestore.storageconnectors.StorageConnectorUtil;
 import io.hops.hopsworks.common.security.secrets.SecretsController;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.exceptions.ProjectException;
-import io.hops.hopsworks.exceptions.ServiceException;
 import io.hops.hopsworks.exceptions.UserException;
 import io.hops.hopsworks.persistence.entity.featurestore.Featurestore;
 import io.hops.hopsworks.persistence.entity.featurestore.storageconnector.FeaturestoreConnector;
@@ -64,7 +61,7 @@ public class FeaturestoreS3ConnectorController {
   @EJB
   private SecretsFacade secretsFacade;
   @EJB
-  private UserFacade userFacade;
+  private StorageConnectorUtil storageConnectorUtil;
   
   /**
    * Stores an S3 connection as a backend for a feature store
@@ -96,21 +93,12 @@ public class FeaturestoreS3ConnectorController {
     if (keysNotNullOrEmpty(featurestoreS3ConnectorDTO)) {
       String jsonSecretString = createS3AccessAndSecretKeysSecret(featurestoreS3ConnectorDTO.getAccessKey(),
         featurestoreS3ConnectorDTO.getSecretKey());
-      String secretName = createSecretName(featurestore.getId(), featurestoreS3ConnectorDTO.getName());
+      String secretName = storageConnectorUtil.createSecretName(featurestore.getId(),
+        featurestoreS3ConnectorDTO.getName(), featurestoreS3ConnectorDTO.getStorageConnectorType());
       Integer projectId = featurestore.getProject().getId();
       Secret secret = secretsController.createSecretForProject(user, secretName, jsonSecretString, projectId);
       featurestoreS3Connector.setSecret(secret);
     }
-  }
-
-  /**
-   * Creates the secret name as a concatenation of featurestoreId and connector name
-   * @param featurestoreId
-   * @param connectorName
-   * @return the secret name: connectorName_featurestoreId
-   */
-  private String createSecretName(Integer featurestoreId, String connectorName) {
-    return "s3_" + connectorName.replaceAll(" ", "_").toLowerCase() + "_" + featurestoreId;
   }
 
   @TransactionAttribute(TransactionAttributeType.REQUIRED)
@@ -119,24 +107,29 @@ public class FeaturestoreS3ConnectorController {
     FeaturestoreS3ConnectorDTO featurestoreS3ConnectorDTO, FeaturestoreS3Connector featurestoreS3Connector)
       throws FeaturestoreException, UserException, ProjectException {
 
-    if (shouldUpdate(featurestoreS3Connector.getBucket(), featurestoreS3ConnectorDTO.getBucket())) {
+    if (storageConnectorUtil.shouldUpdate(
+      featurestoreS3Connector.getBucket(), featurestoreS3ConnectorDTO.getBucket())) {
       verifyS3ConnectorBucket(featurestoreS3ConnectorDTO.getBucket());
       featurestoreS3Connector.setBucket(featurestoreS3ConnectorDTO.getBucket());
     }
-    if (shouldUpdate(featurestoreS3Connector.getIamRole(), featurestoreS3ConnectorDTO.getIamRole())) {
+    if (storageConnectorUtil.shouldUpdate(
+      featurestoreS3Connector.getIamRole(), featurestoreS3ConnectorDTO.getIamRole())) {
       featurestoreS3Connector.setIamRole(featurestoreS3ConnectorDTO.getIamRole());
     }
 
     Secret secret = null;
-    FeaturestoreS3ConnectorAccessAndSecretKey keys =
-        getS3AccessAndSecretKeySecretForConnector(user, featurestoreS3Connector);
-    if (shouldUpdate(keys.getAccessKey(), featurestoreS3ConnectorDTO.getAccessKey()) ||
-      shouldUpdate(keys.getSecretKey(), featurestoreS3ConnectorDTO.getSecretKey())) {
+    FeaturestoreS3ConnectorAccessAndSecretKey keys = storageConnectorUtil.getSecret(
+      featurestoreS3Connector.getSecret(), FeaturestoreS3ConnectorAccessAndSecretKey.class);
+    if (storageConnectorUtil.shouldUpdate(keys.getAccessKey(), featurestoreS3ConnectorDTO.getAccessKey()) ||
+      storageConnectorUtil.shouldUpdate(keys.getSecretKey(), featurestoreS3ConnectorDTO.getSecretKey())) {
       secret = updateSecret(user, featurestoreS3ConnectorDTO, featurestore, featurestoreS3Connector);
     }
 
-    if (shouldUpdate(featurestoreS3Connector.getServerEncryptionAlgorithm().getAlgorithm(),
-                     featurestoreS3ConnectorDTO.getServerEncryptionAlgorithm())) {
+    String currentEncryptionAlgorithm = featurestoreS3Connector.getServerEncryptionAlgorithm() != null ?
+            featurestoreS3Connector.getServerEncryptionAlgorithm().getAlgorithm() : null;
+
+    if (storageConnectorUtil.shouldUpdate(currentEncryptionAlgorithm,
+        featurestoreS3ConnectorDTO.getServerEncryptionAlgorithm())) {
       if (featurestoreS3ConnectorDTO.getServerEncryptionAlgorithm() != null) {
         FeaturestoreS3ConnectorEncryptionAlgorithm serverEncryptionAlgorithm =
           getEncryptionAlgorithm(featurestoreS3ConnectorDTO.getServerEncryptionAlgorithm());
@@ -205,10 +198,6 @@ public class FeaturestoreS3ConnectorController {
     }
     return secret;
 
-  }
-
-  private boolean shouldUpdate(String oldVal, String newVal) {
-    return (oldVal == null && newVal != null) || (oldVal != null && !oldVal.equals(newVal));
   }
 
   private boolean keysNotNullOrEmpty(FeaturestoreS3ConnectorDTO featurestoreS3ConnectorDTO) {
@@ -338,8 +327,7 @@ public class FeaturestoreS3ConnectorController {
         "S3 IAM role not set.");
     }
   }
-
-
+  
   private FeaturestoreS3ConnectorEncryptionAlgorithm getEncryptionAlgorithm(String s) throws FeaturestoreException {
     if (Strings.isNullOrEmpty(s)) {
       return null;
@@ -366,41 +354,17 @@ public class FeaturestoreS3ConnectorController {
     return new JSONObject(new FeaturestoreS3ConnectorAccessAndSecretKey(accessKey, secretKey)).toString();
   }
 
-  public FeaturestoreS3ConnectorDTO getS3ConnectorDTO(Users user, FeaturestoreConnector featurestoreConnector) {
+  public FeaturestoreS3ConnectorDTO getS3ConnectorDTO(FeaturestoreConnector featurestoreConnector)
+      throws FeaturestoreException {
     FeaturestoreS3ConnectorDTO featurestoreS3ConnectorDTO = new FeaturestoreS3ConnectorDTO(featurestoreConnector);
     if (featurestoreConnector.getS3Connector().getSecret() != null) {
-      FeaturestoreS3ConnectorAccessAndSecretKey accessAndSecretKey =
-        getS3AccessAndSecretKeySecretForConnector(user, featurestoreConnector.getS3Connector());
+      FeaturestoreS3ConnectorAccessAndSecretKey accessAndSecretKey = storageConnectorUtil.getSecret(
+        featurestoreConnector.getS3Connector().getSecret(), FeaturestoreS3ConnectorAccessAndSecretKey.class);
       setAccessAndSecretKeysInDTO(featurestoreS3ConnectorDTO, accessAndSecretKey);
     }
     return featurestoreS3ConnectorDTO;
   }
-  
-  /**
-   * Get the access and secret key pair from the secret store
-   *
-   * @param featurestoreS3Connector the s3 connector
-   * @return FeaturestoreS3ConnectorAccessAndSecretKey object
-   * @throws FeaturestoreException
-   */
-  private FeaturestoreS3ConnectorAccessAndSecretKey getS3AccessAndSecretKeySecretForConnector(Users user,
-    FeaturestoreS3Connector featurestoreS3Connector) {
-    Secret secret = featurestoreS3Connector.getSecret();
-    FeaturestoreS3ConnectorAccessAndSecretKey featurestoreS3ConnectorAccessAndSecretKey =
-      new FeaturestoreS3ConnectorAccessAndSecretKey();
-    if (secret != null) {
-      try {
-        Users owner = userFacade.find(secret.getId().getUid());
-        SecretPlaintext plainText = secretsController.getShared(user, owner, secret.getId().getName());
-        featurestoreS3ConnectorAccessAndSecretKey = new ObjectMapper().readValue(plainText.getPlaintext(),
-          FeaturestoreS3ConnectorAccessAndSecretKey.class);
-      } catch (UserException | IOException | ServiceException | ProjectException e) {
-        //Just return empty
-      }
-    }
-    return featurestoreS3ConnectorAccessAndSecretKey;
-  }
-  
+
   /**
    * Set the access and secret key in the DTO
    *

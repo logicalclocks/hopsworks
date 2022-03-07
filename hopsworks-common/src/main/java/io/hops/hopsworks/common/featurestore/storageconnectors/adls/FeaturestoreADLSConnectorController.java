@@ -17,12 +17,10 @@
 package io.hops.hopsworks.common.featurestore.storageconnectors.adls;
 
 import com.google.common.base.Strings;
-import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.featurestore.OptionDTO;
-import io.hops.hopsworks.common.security.secrets.SecretsController;
+import io.hops.hopsworks.common.featurestore.storageconnectors.StorageConnectorUtil;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.exceptions.ProjectException;
-import io.hops.hopsworks.exceptions.ServiceException;
 import io.hops.hopsworks.exceptions.UserException;
 import io.hops.hopsworks.persistence.entity.featurestore.Featurestore;
 import io.hops.hopsworks.persistence.entity.featurestore.storageconnector.FeaturestoreConnector;
@@ -37,8 +35,6 @@ import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.transaction.Transactional;
-import java.io.IOException;
-import java.security.GeneralSecurityException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
@@ -48,18 +44,17 @@ import java.util.logging.Level;
 public class FeaturestoreADLSConnectorController {
 
   @EJB
-  private SecretsController secretsController;
-  @EJB
-  private UserFacade userFacade;
+  private StorageConnectorUtil storageConnectorUtil;
 
   public FeaturestoreADLSConnector createADLConnector(Users user, Project project, Featurestore featurestore,
                                                       FeaturestoreADLSConnectorDTO adlConnectorDTO)
       throws FeaturestoreException, ProjectException, UserException {
     verifyConnectorDTO(adlConnectorDTO);
 
-    String secretName = createSecretName(featurestore.getId(), adlConnectorDTO.getName());
-    Secret secret = secretsController.createSecretForProject(user, secretName,
-        adlConnectorDTO.getServiceCredential(), project.getId());
+    String secretName = storageConnectorUtil.createSecretName(featurestore.getId(), adlConnectorDTO.getName(),
+      adlConnectorDTO.getStorageConnectorType());
+    Secret secret = storageConnectorUtil.createProjectSecret(user, secretName, featurestore,
+        adlConnectorDTO.getServiceCredential());
 
     FeaturestoreADLSConnector adlConnector = new FeaturestoreADLSConnector();
     adlConnector.setGeneration(adlConnectorDTO.getGeneration());
@@ -72,13 +67,13 @@ public class FeaturestoreADLSConnectorController {
     return adlConnector;
   }
 
-  private String createSecretName(Integer featurestoreId, String connectorName) {
-    return "adls_" + connectorName.replaceAll(" ", "_").toLowerCase() + "_" + featurestoreId;
-  }
 
-  public FeaturestoreADLSConnectorDTO getADLConnectorDTO(Users user, FeaturestoreConnector featurestoreConnector) {
+
+  public FeaturestoreADLSConnectorDTO getADLConnectorDTO(FeaturestoreConnector featurestoreConnector)
+      throws FeaturestoreException {
     FeaturestoreADLSConnectorDTO adlsConnectorDTO = new FeaturestoreADLSConnectorDTO(featurestoreConnector);
-    String serviceCredential = getServiceCredential(user, featurestoreConnector.getAdlsConnector());
+    String serviceCredential = storageConnectorUtil.getSecret(
+      featurestoreConnector.getAdlsConnector().getServiceCredentialSecret(), String.class);
 
     adlsConnectorDTO.setServiceCredential(serviceCredential);
 
@@ -92,20 +87,6 @@ public class FeaturestoreADLSConnectorController {
     }
 
     return adlsConnectorDTO;
-  }
-
-  private String getServiceCredential(Users user, FeaturestoreADLSConnector adlsConnector) {
-    Secret secret = adlsConnector.getServiceCredentialSecret();
-    if (secret != null) {
-      try {
-        Users owner = userFacade.find(secret.getId().getUid());
-        return secretsController.getShared(user, owner, secret.getId().getName()).getPlaintext();
-      } catch (UserException | ServiceException | ProjectException e) {
-        //Just return empty
-      }
-    }
-
-    return null;
   }
 
   private List<OptionDTO> getSparkOptionsGen2(FeaturestoreADLSConnector adlsConnector, String serviceCredential) {
@@ -148,11 +129,11 @@ public class FeaturestoreADLSConnectorController {
 
   @TransactionAttribute(TransactionAttributeType.REQUIRED)
   @Transactional(rollbackOn = FeaturestoreException.class)
-  public FeaturestoreADLSConnector updateAdlConnector(Users user, FeaturestoreADLSConnectorDTO adlConnectorDTO,
+  public FeaturestoreADLSConnector updateAdlConnector(Users user, Featurestore featureStore,
+                                                      FeaturestoreADLSConnectorDTO adlConnectorDTO,
                                                       FeaturestoreADLSConnector adlConnector)
       throws FeaturestoreException, ProjectException, UserException {
     verifyConnectorDTO(adlConnectorDTO);
-    secretsController.checkCanAccessSecret(adlConnector.getServiceCredentialSecret(), user);
 
     adlConnector.setGeneration(adlConnectorDTO.getGeneration());
     adlConnector.setDirectoryId(adlConnectorDTO.getDirectoryId());
@@ -160,13 +141,9 @@ public class FeaturestoreADLSConnectorController {
     adlConnector.setAccountName(adlConnectorDTO.getAccountName());
     adlConnector.setContainerName(adlConnectorDTO.getContainerName());
     // Update the content of the secret
-    Secret secret = adlConnector.getServiceCredentialSecret();
-    try {
-      secret.setSecret(secretsController.encryptSecret(adlConnectorDTO.getServiceCredential()));
-    } catch (IOException | GeneralSecurityException e) {
-      throw new UserException(RESTCodes.UserErrorCode.SECRET_ENCRYPTION_ERROR, Level.SEVERE,
-          "Error encrypting secret", "Could not encrypt Secret " + secret.getId().getName(), e);
-    }
+    storageConnectorUtil.updateProjectSecret(user, adlConnector.getServiceCredentialSecret(),
+      adlConnector.getServiceCredentialSecret().getId().getName(), featureStore,
+      adlConnectorDTO.getServiceCredential());
 
     return adlConnector;
   }

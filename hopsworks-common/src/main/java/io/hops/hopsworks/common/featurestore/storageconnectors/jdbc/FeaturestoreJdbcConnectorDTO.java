@@ -16,11 +16,13 @@
 
 package io.hops.hopsworks.common.featurestore.storageconnectors.jdbc;
 
-import io.hops.hopsworks.persistence.entity.featurestore.storageconnector.FeaturestoreConnector;
+import io.hops.hopsworks.common.featurestore.OptionDTO;
 import io.hops.hopsworks.common.featurestore.storageconnectors.FeaturestoreStorageConnectorDTO;
+import io.hops.hopsworks.persistence.entity.featurestore.storageconnector.FeaturestoreConnector;
 
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
+import java.util.List;
 
 /**
  * DTO containing the human-readable information of a JDBC connection for a feature store, can be converted to JSON or
@@ -30,7 +32,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 public class FeaturestoreJdbcConnectorDTO extends FeaturestoreStorageConnectorDTO {
 
   private String connectionString;
-  private String arguments;
+  private List<OptionDTO> arguments;
 
   public FeaturestoreJdbcConnectorDTO() {
   }
@@ -38,32 +40,31 @@ public class FeaturestoreJdbcConnectorDTO extends FeaturestoreStorageConnectorDT
   public FeaturestoreJdbcConnectorDTO(FeaturestoreConnector featurestoreConnector) {
     super(featurestoreConnector);
     this.connectionString = featurestoreConnector.getJdbcConnector().getConnectionString();
-    this.arguments = featurestoreConnector.getJdbcConnector().getArguments();
   }
 
   @XmlElement
   public String getConnectionString() {
     return connectionString;
   }
-  
+
   public void setConnectionString(String connectionString) {
     this.connectionString = connectionString;
   }
-  
+
   @XmlElement
-  public String getArguments() {
+  public List<OptionDTO> getArguments() {
     return arguments;
   }
   
-  public void setArguments(String arguments) {
+  public void setArguments(List<OptionDTO> arguments) {
     this.arguments = arguments;
   }
 
   @Override
   public String toString() {
     return "FeaturestoreJdbcConnectorDTO{" +
-        "connectionString='" + connectionString + '\'' +
-        ", arguments='" + arguments + '\'' +
-        '}';
+      "connectionString='" + connectionString + '\'' +
+      ", arguments=" + arguments +
+      '}';
   }
 }

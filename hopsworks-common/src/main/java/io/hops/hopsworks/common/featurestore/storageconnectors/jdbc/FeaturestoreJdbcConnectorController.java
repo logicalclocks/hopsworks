@@ -20,7 +20,9 @@ import com.google.common.base.Strings;
 import com.logicalclocks.servicediscoverclient.exceptions.ServiceDiscoveryException;
 import io.hops.hopsworks.common.dao.user.security.secrets.SecretPlaintext;
 import io.hops.hopsworks.common.featurestore.FeaturestoreConstants;
+import io.hops.hopsworks.common.featurestore.OptionDTO;
 import io.hops.hopsworks.common.featurestore.online.OnlineFeaturestoreController;
+import io.hops.hopsworks.common.featurestore.storageconnectors.StorageConnectorUtil;
 import io.hops.hopsworks.common.hosts.ServiceDiscoveryController;
 import io.hops.hopsworks.common.security.secrets.SecretsController;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
@@ -36,6 +38,7 @@ import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.transaction.Transactional;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -52,6 +55,8 @@ public class FeaturestoreJdbcConnectorController {
   private SecretsController secretsController;
   @EJB
   private OnlineFeaturestoreController onlineFeaturestoreController;
+  @EJB
+  private StorageConnectorUtil storageConnectorUtil;
 
   private static final Logger LOGGER = Logger.getLogger(FeaturestoreJdbcConnectorController.class.getName());
 
@@ -59,10 +64,11 @@ public class FeaturestoreJdbcConnectorController {
       FeaturestoreJdbcConnectorDTO featurestoreJdbcConnectorDTO)
       throws FeaturestoreException {
     verifyJdbcConnectorConnectionString(featurestoreJdbcConnectorDTO.getConnectionString());
-    verifyJdbcConnectorArguments(featurestoreJdbcConnectorDTO.getArguments());
+    String argumentsString = storageConnectorUtil.fromOptions(featurestoreJdbcConnectorDTO.getArguments());
+    verifyJdbcConnectorArguments(argumentsString);
 
     FeaturestoreJdbcConnector featurestoreJdbcConnector = new FeaturestoreJdbcConnector();
-    featurestoreJdbcConnector.setArguments(featurestoreJdbcConnectorDTO.getArguments());
+    featurestoreJdbcConnector.setArguments(argumentsString);
     featurestoreJdbcConnector.setConnectionString(featurestoreJdbcConnectorDTO.getConnectionString());
     return featurestoreJdbcConnector;
   }
@@ -78,9 +84,10 @@ public class FeaturestoreJdbcConnectorController {
       featurestoreJdbcConnector.setConnectionString(featurestoreJdbcConnectorDTO.getConnectionString());
     }
 
-    if(!Strings.isNullOrEmpty(featurestoreJdbcConnectorDTO.getArguments())) {
-      verifyJdbcConnectorArguments(featurestoreJdbcConnectorDTO.getArguments());
-      featurestoreJdbcConnector.setArguments(featurestoreJdbcConnectorDTO.getArguments());
+    String argumentsString = storageConnectorUtil.fromOptions(featurestoreJdbcConnectorDTO.getArguments());
+    if(!Strings.isNullOrEmpty(argumentsString)) {
+      verifyJdbcConnectorArguments(argumentsString);
+      featurestoreJdbcConnector.setArguments(argumentsString);
     }
 
     return featurestoreJdbcConnector;
@@ -109,10 +116,10 @@ public class FeaturestoreJdbcConnectorController {
    */
   private void verifyJdbcConnectorArguments(String arguments) throws FeaturestoreException {
     if(!Strings.isNullOrEmpty(arguments)
-        && arguments.length() > FeaturestoreConstants.JDBC_STORAGE_CONNECTOR_ARGUMENTS_MAX_LENGTH) {
+        && arguments.length() > FeaturestoreConstants.STORAGE_CONNECTOR_ARGUMENTS_MAX_LENGTH) {
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_JDBC_CONNECTION_ARGUMENTS, Level.FINE,
               "JDBC connection arguments should not exceed: " +
-                  FeaturestoreConstants.JDBC_STORAGE_CONNECTOR_ARGUMENTS_MAX_LENGTH + " characters");
+                  FeaturestoreConstants.STORAGE_CONNECTOR_ARGUMENTS_MAX_LENGTH + " characters");
     }
   }
 
@@ -121,6 +128,8 @@ public class FeaturestoreJdbcConnectorController {
       throws FeaturestoreException {
     FeaturestoreJdbcConnectorDTO featurestoreJdbcConnectorDTO =
       new FeaturestoreJdbcConnectorDTO(featurestoreConnector);
+    featurestoreJdbcConnectorDTO.setArguments(
+      storageConnectorUtil.toOptions(featurestoreConnector.getJdbcConnector().getArguments()));
     if(featurestoreJdbcConnectorDTO.getName()
         .equals(onlineFeaturestoreController.onlineDbUsername(project, user)
             + FeaturestoreConstants.ONLINE_FEATURE_STORE_CONNECTOR_SUFFIX)) {
@@ -161,10 +170,14 @@ public class FeaturestoreJdbcConnectorController {
                                                           FeaturestoreJdbcConnectorDTO featurestoreJdbcConnectorDTO,
                                                           String projectName) {
     String connectorPassword = getConnectorPlainPasswordFromSecret(user, projectName);
-    if(!Strings.isNullOrEmpty(featurestoreJdbcConnectorDTO.getArguments())
+    if(!Strings.isNullOrEmpty(storageConnectorUtil.fromOptions(featurestoreJdbcConnectorDTO.getArguments()))
       && !Strings.isNullOrEmpty(connectorPassword)) {
-      featurestoreJdbcConnectorDTO.setArguments(featurestoreJdbcConnectorDTO.getArguments()
-        .replaceFirst(FeaturestoreConstants.ONLINE_FEATURE_STORE_CONNECTOR_PASSWORD_TEMPLATE, connectorPassword));
+      List<OptionDTO> arguments = featurestoreJdbcConnectorDTO.getArguments();
+      arguments.forEach((argument) -> {
+        if(argument.getValue().equals(FeaturestoreConstants.ONLINE_FEATURE_STORE_CONNECTOR_PASSWORD_TEMPLATE)){
+          argument.setValue(connectorPassword);
+        }
+      });
     }
   }
 

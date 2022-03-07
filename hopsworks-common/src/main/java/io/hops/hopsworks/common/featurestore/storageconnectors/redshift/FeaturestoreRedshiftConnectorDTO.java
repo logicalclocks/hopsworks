@@ -16,12 +16,14 @@
 package io.hops.hopsworks.common.featurestore.storageconnectors.redshift;
 
 import com.google.common.base.Strings;
+import io.hops.hopsworks.common.featurestore.OptionDTO;
 import io.hops.hopsworks.common.featurestore.storageconnectors.FeaturestoreStorageConnectorDTO;
 import io.hops.hopsworks.persistence.entity.featurestore.storageconnector.FeaturestoreConnector;
 
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import java.time.Instant;
+import java.util.List;
 
 @XmlRootElement
 public class FeaturestoreRedshiftConnectorDTO extends FeaturestoreStorageConnectorDTO {
@@ -36,8 +38,8 @@ public class FeaturestoreRedshiftConnectorDTO extends FeaturestoreStorageConnect
   private String databasePassword;
   private String databaseGroup;
   private String iamRole;
-  private String arguments;
-
+  private List<OptionDTO> arguments;
+  
   private Instant expiration;
 
   public FeaturestoreRedshiftConnectorDTO() {
@@ -55,7 +57,6 @@ public class FeaturestoreRedshiftConnectorDTO extends FeaturestoreStorageConnect
     this.autoCreate = featurestoreConnector.getRedshiftConnector().getAutoCreate();
     this.databaseGroup = featurestoreConnector.getRedshiftConnector().getDatabaseGroup();
     this.iamRole = featurestoreConnector.getRedshiftConnector().getIamRole();
-    this.arguments = featurestoreConnector.getRedshiftConnector().getArguments();
   }
 
   @XmlElement
@@ -175,11 +176,11 @@ public class FeaturestoreRedshiftConnectorDTO extends FeaturestoreStorageConnect
   }
 
   @XmlElement
-  public String getArguments() {
+  public List<OptionDTO> getArguments() {
     return arguments;
   }
 
-  public void setArguments(String arguments) {
+  public void setArguments(List<OptionDTO> arguments) {
     this.arguments = arguments;
   }
 

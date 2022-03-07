@@ -2613,8 +2613,8 @@ describe "On #{ENV['OS']}" do
         expect(parsed_json["storageConnectorType"] == "JDBC").to be true
         expect(parsed_json["name"]).to include("_onlinefeaturestore")
         expect(parsed_json["connectionString"]).to include("jdbc:mysql:")
-        expect(parsed_json["arguments"]).to include("password=")
-        expect(parsed_json["arguments"]).to include("user=")
+        expect(parsed_json["arguments"].find{ |item| item['name'] == 'password' }.key?('value')).to be true
+        expect(parsed_json["arguments"].find{ |item| item['name'] == 'user' }.key?('value')).to be true
         expect_status(200)
       end
     end

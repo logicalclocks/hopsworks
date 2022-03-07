@@ -16,6 +16,21 @@
 
 module StorageConnectorHelper
 
+  def create_test_files
+    copy_from_local("#{ENV['PROJECT_DIR']}/tools/upload_example/sampleStore.jks",
+                    "/Projects/#{@project[:projectname]}/Resources/sampleKeyStore.jks", @user[:username],
+                    "#{@project[:projectname]}__Resources", 750, "#{@project[:projectname]}")
+    copy_from_local("#{ENV['PROJECT_DIR']}/tools/upload_example/sampleStore.jks",
+                    "/Projects/#{@project[:projectname]}/Resources/sampleTrustStore.jks", @user[:username],
+                    "#{@project[:projectname]}__Resources", 750, "#{@project[:projectname]}")
+    copy_from_local("#{ENV['PROJECT_DIR']}/tools/upload_example/sampleStore.jks",
+                    "/Projects/#{@project[:projectname]}/Resources/newSampleTrustStore.jks", @user[:username],
+                    "#{@project[:projectname]}__Resources", 750, "#{@project[:projectname]}")
+    copy_from_local("#{ENV['PROJECT_DIR']}/tools/upload_example/sampleStore.jks",
+                    "/Projects/#{@project[:projectname]}/Resources/newSampleKeyStore.jks", @user[:username],
+                    "#{@project[:projectname]}__Resources", 750, "#{@project[:projectname]}")
+  end
+
   def get_storage_connectors(project_id, featurestore_id, type)
     json_result = get "#{ENV['HOPSWORKS_API']}/project/#{project_id}/featurestores/#{featurestore_id}/storageconnectors/"
     connectors = JSON.parse(json_result)
@@ -139,6 +154,39 @@ module StorageConnectorHelper
     [json_result, connector_name]
   end
 
+  def create_kafka_connector(project_id, featurestore_id, additional_data)
+    type = "featureStoreKafkaConnectorDTO"
+    storageConnectorType = "KAFKA"
+    create_kafka_connector_endpoint = "#{ENV['HOPSWORKS_API']}/project/#{project_id}/featurestores/#{featurestore_id}/storageconnectors"
+    kafka_connector_name = "kafka_connector_#{random_id}"
+    json_data = {
+      name: kafka_connector_name,
+      description: "test KafkaConnector description",
+      type: type,
+      storageConnectorType: storageConnectorType,
+    }
+    json_data = json_data.merge(additional_data)
+
+    json_result = post create_kafka_connector_endpoint, json_data.to_json
+    [json_result, kafka_connector_name]
+  end
+
+  def update_kafka_connector(project_id, featurestore_id, connector_name, additional_data)
+    type = "featureStoreKafkaConnectorDTO"
+    storageConnectorType = "KAFKA"
+    update_kafka_connector_endpoint = "#{ENV['HOPSWORKS_API']}/project/#{project_id}/featurestores/#{featurestore_id}/storageconnectors/#{connector_name}"
+    json_data = {
+      name: connector_name,
+      description: "test KafkaConnector description",
+      type: type,
+      storageConnectorType: storageConnectorType,
+    }
+    json_data = json_data.merge(additional_data)
+
+    json_result = put update_kafka_connector_endpoint, json_data.to_json
+    [json_result, connector_name]
+  end
+
   def create_redshift_connector(project_id, featurestore_id, redshift_connector_name: nil, clusterIdentifier: "redshift-connector",
                                 databaseUserName: "awsUser",  databasePassword: nil, iamRole: nil)
     type = "featurestoreRedshiftConnectorDTO"
@@ -159,7 +207,7 @@ module StorageConnectorHelper
         databaseUserName: databaseUserName,
         databasePassword: databasePassword,
         iamRole: iamRole,
-        arguments: "test1,test2"
+        arguments: [{name: "option1", value: "value1"}, {name: "option2", value: nil}]
     }
     json_result = post create_redshift_connector_endpoint, json_data.to_json
     [json_result, redshift_connector_name]
@@ -277,7 +325,8 @@ module StorageConnectorHelper
     expect(json_body[:databaseGroup]).to eq connector[:databaseGroup]
     expect(json_body[:databasePort]).to eq connector[:databasePort]
     expect(json_body[:tableName]).to eq connector[:tableName]
-    expect(json_body[:arguments]).to eq connector[:arguments]
+    expect(json_body[:arguments].select{ |a| a[:name] == connector[:arguments][0][:name]}.first[:value]).to eq(connector[:arguments][0][:value])
+    expect(json_body[:arguments].select{ |a| a[:name] == connector[:arguments][1][:name]}.first[:value]).to eq(connector[:arguments][1][:value])
     expect(json_body[:iamRole]).to eq connector[:iamRole]
     expect(json_body[:databasePassword]).to eq connector[:databasePassword]
   end

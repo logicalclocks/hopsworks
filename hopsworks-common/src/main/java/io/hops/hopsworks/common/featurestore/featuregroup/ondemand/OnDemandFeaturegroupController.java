@@ -93,7 +93,11 @@ public class OnDemandFeaturegroupController {
     boolean isJDBCType = (connector.getConnectorType() == FeaturestoreConnectorType.JDBC ||
         connector.getConnectorType() == FeaturestoreConnectorType.REDSHIFT ||
         connector.getConnectorType() == FeaturestoreConnectorType.SNOWFLAKE);
-    if (Strings.isNullOrEmpty(onDemandFeaturegroupDTO.getQuery()) && isJDBCType) {
+    if (connector.getConnectorType() == FeaturestoreConnectorType.KAFKA) {
+      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.COULD_NOT_CREATE_ON_DEMAND_FEATUREGROUP,
+        Level.FINE, connector.getConnectorType() + " storage connectors are not supported as source for on demand " +
+        "feature groups");
+    } else if (Strings.isNullOrEmpty(onDemandFeaturegroupDTO.getQuery()) && isJDBCType) {
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.INVALID_SQL_QUERY, Level.FINE,
           "SQL Query cannot be empty");
     } else if (!Strings.isNullOrEmpty(onDemandFeaturegroupDTO.getQuery()) && !isJDBCType) {
