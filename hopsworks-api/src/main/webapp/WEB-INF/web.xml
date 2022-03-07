@@ -370,7 +370,7 @@
     <param-value>true</param-value>
   </context-param>
   <session-config>
-    <session-timeout>600</session-timeout>
+    <session-timeout>1440</session-timeout>
     <cookie-config>
       <name>SESSION</name>
       <path>/</path>
