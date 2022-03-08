@@ -9,11 +9,11 @@ import com.google.common.base.Strings;
 import io.hops.hopsworks.common.featurestore.FeaturestoreConstants;
 import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupController;
 import io.hops.hopsworks.common.featurestore.keyword.KeywordControllerIface;
+import io.hops.hopsworks.common.featurestore.trainingdatasets.TrainingDatasetController;
 import io.hops.hopsworks.common.featurestore.xattr.dto.FeaturestoreXAttrsConstants;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.hdfs.DistributedFsService;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
-import io.hops.hopsworks.common.hdfs.inode.InodeController;
 import io.hops.hopsworks.common.hdfs.xattrs.XAttrsController;
 import io.hops.hopsworks.common.integrations.EnterpriseStereotype;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
@@ -21,7 +21,6 @@ import io.hops.hopsworks.exceptions.MetadataException;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.Featuregroup;
 import io.hops.hopsworks.persistence.entity.featurestore.featureview.FeatureView;
 import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.TrainingDataset;
-import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.TrainingDatasetType;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.restutils.RESTCodes;
@@ -44,8 +43,6 @@ import java.util.logging.Level;
 public class KeywordController implements KeywordControllerIface {
 
   @EJB
-  private InodeController inodeController;
-  @EJB
   private XAttrsController xAttrsController;
   @EJB
   private DistributedFsService dfs;
@@ -53,6 +50,8 @@ public class KeywordController implements KeywordControllerIface {
   private HdfsUsersController hdfsUsersController;
   @EJB
   private FeaturegroupController featuregroupController;
+  @EJB
+  private TrainingDatasetController trainingDatasetController;
   @EJB
   private KeywordsUsedCache keywordsUsedCache;
 
@@ -110,8 +109,8 @@ public class KeywordController implements KeywordControllerIface {
   }
 
   private List<String> getAll(TrainingDataset trainingDataset, DistributedFileSystemOps udfso)
-      throws IOException, MetadataException, FeaturestoreException {
-    String path = getTrainingDatasetLocation(trainingDataset);
+      throws IOException, MetadataException {
+    String path = trainingDatasetController.getTrainingDatasetInodePath(trainingDataset);
     String keywords = xAttrsController.getXAttr(path, FeaturestoreXAttrsConstants.KEYWORDS, udfso);
     if (!Strings.isNullOrEmpty(keywords)) {
       return objectMapper.readValue(keywords, List.class);
@@ -183,9 +182,9 @@ public class KeywordController implements KeywordControllerIface {
 
   private void addTrainingDatasetKeywords(TrainingDataset trainingDataset, Set<String> keywords,
                                           DistributedFileSystemOps udfso)
-      throws IOException, MetadataException, FeaturestoreException {
+      throws IOException, MetadataException {
     String keywordsStr = objectMapper.writeValueAsString(keywords);
-    String path = getTrainingDatasetLocation(trainingDataset);
+    String path = trainingDatasetController.getTrainingDatasetInodePath(trainingDataset);
     xAttrsController.addStrXAttr(path, FeaturestoreXAttrsConstants.KEYWORDS, keywordsStr, udfso);
   }
 
@@ -195,15 +194,6 @@ public class KeywordController implements KeywordControllerIface {
     } catch (ExecutionException e) {
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.KEYWORD_ERROR, Level.FINE,
           "Error fetching used keywords");
-    }
-  }
-
-  private String getTrainingDatasetLocation(TrainingDataset trainingDataset) throws FeaturestoreException {
-    if (trainingDataset.getTrainingDatasetType() == TrainingDatasetType.HOPSFS_TRAINING_DATASET) {
-      return inodeController.getPath(trainingDataset.getHopsfsTrainingDataset().getInode());
-    } else {
-      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.KEYWORD_ERROR, Level.FINE,
-          "Keywords are not supported for external training datasets");
     }
   }
 

@@ -6,20 +6,18 @@ package io.hops.hopsworks.featurestore.tags;
 
 import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupController;
 import io.hops.hopsworks.common.featurestore.tag.FeatureStoreTagControllerIface;
-import io.hops.hopsworks.common.hdfs.inode.InodeController;
+import io.hops.hopsworks.common.featurestore.trainingdatasets.TrainingDatasetController;
 import io.hops.hopsworks.common.integrations.EnterpriseStereotype;
 import io.hops.hopsworks.common.tags.AttachTagResult;
 import io.hops.hopsworks.exceptions.DatasetException;
-import io.hops.hopsworks.exceptions.SchematizedTagException;
 import io.hops.hopsworks.exceptions.MetadataException;
+import io.hops.hopsworks.exceptions.SchematizedTagException;
 import io.hops.hopsworks.persistence.entity.featurestore.Featurestore;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.Featuregroup;
 import io.hops.hopsworks.persistence.entity.featurestore.featureview.FeatureView;
 import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.TrainingDataset;
-import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.TrainingDatasetType;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.user.Users;
-import io.hops.hopsworks.restutils.RESTCodes;
 import io.hops.hopsworks.tags.TagsController;
 
 import javax.ejb.EJB;
@@ -27,7 +25,6 @@ import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import java.util.Map;
-import java.util.logging.Level;
 
 @Stateless
 @EnterpriseStereotype
@@ -37,7 +34,7 @@ public class FeatureStoreTagsEEController implements FeatureStoreTagControllerIf
   @EJB
   private FeaturegroupController featuregroupController;
   @EJB
-  private InodeController inodeController;
+  private TrainingDatasetController trainingDatasetController;
   @EJB
   private TagsController tagsController;
 
@@ -74,13 +71,7 @@ public class FeatureStoreTagsEEController implements FeatureStoreTagControllerIf
   public Map<String, String> getAll(Project accessProject, Users user, Featurestore featureStore,
                                     TrainingDataset trainingDataset)
     throws DatasetException, MetadataException, SchematizedTagException {
-    
-    if(!trainingDataset.getTrainingDatasetType().equals(TrainingDatasetType.HOPSFS_TRAINING_DATASET)) {
-      throw new SchematizedTagException(RESTCodes.SchematizedTagErrorCode.TAG_NOT_ALLOWED,
-        Level.FINE, "Tags are only supported for " + TrainingDatasetType.HOPSFS_TRAINING_DATASET);
-    }
-  
-    String path = inodeController.getPath(trainingDataset.getHopsfsTrainingDataset().getInode());
+    String path = trainingDatasetController.getTrainingDatasetInodePath(trainingDataset);
     return tagsController.getAll(accessProject, user, path);
   }
 
@@ -129,13 +120,7 @@ public class FeatureStoreTagsEEController implements FeatureStoreTagControllerIf
   public String get(Project accessProject, Users user, Featurestore featureStore, TrainingDataset trainingDataset,
                     String name)
     throws DatasetException, MetadataException, SchematizedTagException {
-  
-    if(!trainingDataset.getTrainingDatasetType().equals(TrainingDatasetType.HOPSFS_TRAINING_DATASET)) {
-      throw new SchematizedTagException(RESTCodes.SchematizedTagErrorCode.TAG_NOT_ALLOWED,
-        Level.FINE, "Tags are only supported for " + TrainingDatasetType.HOPSFS_TRAINING_DATASET);
-    }
-  
-    String path = inodeController.getPath(trainingDataset.getHopsfsTrainingDataset().getInode());
+    String path = trainingDatasetController.getTrainingDatasetInodePath(trainingDataset);
     return tagsController.get(accessProject, user, path, name);
   }
 
@@ -176,13 +161,7 @@ public class FeatureStoreTagsEEController implements FeatureStoreTagControllerIf
   public AttachTagResult upsert(Project project, Users user, Featurestore featureStore, TrainingDataset trainingDataset,
                                 String name, String value)
     throws MetadataException, SchematizedTagException {
-  
-    if(!trainingDataset.getTrainingDatasetType().equals(TrainingDatasetType.HOPSFS_TRAINING_DATASET)) {
-      throw new SchematizedTagException(RESTCodes.SchematizedTagErrorCode.TAG_NOT_ALLOWED,
-        Level.FINE, "Tags are only supported for " + TrainingDatasetType.HOPSFS_TRAINING_DATASET);
-    }
-  
-    String path = inodeController.getPath(trainingDataset.getHopsfsTrainingDataset().getInode());
+    String path = trainingDatasetController.getTrainingDatasetInodePath(trainingDataset);
     return tagsController.upsert(project, user, path, name, value);
   }
   
@@ -221,13 +200,7 @@ public class FeatureStoreTagsEEController implements FeatureStoreTagControllerIf
   public AttachTagResult upsert(Project project, Users user, Featurestore featureStore,
                                 TrainingDataset trainingDataset, Map<String, String> newTags)
     throws MetadataException, SchematizedTagException {
-  
-    if(!trainingDataset.getTrainingDatasetType().equals(TrainingDatasetType.HOPSFS_TRAINING_DATASET)) {
-      throw new SchematizedTagException(RESTCodes.SchematizedTagErrorCode.TAG_NOT_ALLOWED,
-        Level.FINE, "Tags are only supported for " + TrainingDatasetType.HOPSFS_TRAINING_DATASET);
-    }
-  
-    String path = inodeController.getPath(trainingDataset.getHopsfsTrainingDataset().getInode());
+    String path = trainingDatasetController.getTrainingDatasetInodePath(trainingDataset);
     return tagsController.upsert(project, user, path, newTags);
   }
   
@@ -260,14 +233,8 @@ public class FeatureStoreTagsEEController implements FeatureStoreTagControllerIf
    */
   @Override
   public void deleteAll(Project accessProject, Users user, Featurestore featureStore, TrainingDataset trainingDataset)
-    throws MetadataException, DatasetException, SchematizedTagException {
-  
-    if(!trainingDataset.getTrainingDatasetType().equals(TrainingDatasetType.HOPSFS_TRAINING_DATASET)) {
-      throw new SchematizedTagException(RESTCodes.SchematizedTagErrorCode.TAG_NOT_ALLOWED,
-        Level.FINE, "Tags are only supported for " + TrainingDatasetType.HOPSFS_TRAINING_DATASET);
-    }
-  
-    String path = inodeController.getPath(trainingDataset.getHopsfsTrainingDataset().getInode());
+    throws MetadataException, DatasetException {
+    String path = trainingDatasetController.getTrainingDatasetInodePath(trainingDataset);
     tagsController.deleteAll(accessProject, user, path);
   }
 
@@ -305,13 +272,7 @@ public class FeatureStoreTagsEEController implements FeatureStoreTagControllerIf
   public void delete(Project accessProject, Users user, Featurestore featureStore, TrainingDataset trainingDataset,
                      String name)
     throws MetadataException, DatasetException, SchematizedTagException {
-  
-    if(!trainingDataset.getTrainingDatasetType().equals(TrainingDatasetType.HOPSFS_TRAINING_DATASET)) {
-      throw new SchematizedTagException(RESTCodes.SchematizedTagErrorCode.TAG_NOT_ALLOWED,
-        Level.FINE, "Tags are only supported for " + TrainingDatasetType.HOPSFS_TRAINING_DATASET);
-    }
-  
-    String path = inodeController.getPath(trainingDataset.getHopsfsTrainingDataset().getInode());
+    String path = trainingDatasetController.getTrainingDatasetInodePath(trainingDataset);
     tagsController.delete(accessProject, user, path, name);
   }
 }

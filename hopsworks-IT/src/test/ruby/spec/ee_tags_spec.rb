@@ -343,7 +343,7 @@ describe "On #{ENV['OS']}" do
           expect(tags_json["items"]).to eq(nil)
         end
       end
-      context "training datasets" do
+      context "hopsfs training datasets" do
         it "should not get any tags" do
           featurestore_id = get_featurestore_id(@project.id)
           connector = get_hopsfs_training_datasets_connector(@project[:projectname])
@@ -419,6 +419,92 @@ describe "On #{ENV['OS']}" do
           fs_id = get_featurestore_id(@project[:id])
           connector = get_hopsfs_training_datasets_connector(@project[:projectname])
           json_result, _ = create_hopsfs_training_dataset(@project[:id], fs_id, connector)
+          td_json = JSON.parse(json_result)
+          tag_val = bad_schematized_tag_val
+          add_training_dataset_tag(@project[:id], td_json["id"], @pre_schematized_tags[0], tag_val)
+          expect_status_details(400, error_code: 370005)
+        end
+      end
+      context "external training datasets" do
+        before :all do
+          with_s3_connector(@project[:id])
+        end
+
+        it "should not get any tags" do
+          featurestore_id = get_featurestore_id(@project.id)
+          connector_id = get_s3_connector_id
+          json_result, _ = create_external_training_dataset(@project.id, featurestore_id, connector_id)
+          parsed_json = JSON.parse(json_result)
+          json_result = get_training_dataset_tags(@project.id, parsed_json["id"])
+          expect_status_details(200)
+          tags_json = JSON.parse(json_result)
+          expect(tags_json["items"]).to eq(nil)
+        end
+        it "should not be able to attach tags which are not defined" do
+          featurestore_id = get_featurestore_id(@project.id)
+          connector_id = get_s3_connector_id
+          json_result, _ = create_external_training_dataset(@project.id, featurestore_id, connector_id)
+          parsed_json = JSON.parse(json_result)
+          add_training_dataset_tag(@project.id, parsed_json["id"], @tags[0], "nothing")
+          expect_status_details(404, error_code: 370000)
+        end
+        it "should not be able to get tag which is not attached" do
+          featurestore_id = get_featurestore_id(@project.id)
+          connector_id = get_s3_connector_id
+          json_result, _ = create_external_training_dataset(@project.id, featurestore_id, connector_id)
+          td_json = JSON.parse(json_result)
+          get_training_dataset_tag(@project.id, td_json["id"], @pre_tags[0])
+          expect_status_details(404, error_code: 370002)
+        end
+        it "should be able to attach/delete tags which are defined" do
+          featurestore_id = get_featurestore_id(@project.id)
+          connector_id = get_s3_connector_id
+          json_result, _ = create_external_training_dataset(@project.id, featurestore_id, connector_id)
+          td_json = JSON.parse(json_result)
+          add_training_dataset_tag_checked(@project.id, td_json["id"], @pre_tags[0], "daily")
+          json_result = get_training_dataset_tags(@project.id, td_json["id"])
+          expect_status_details(200)
+          tags_json = JSON.parse(json_result)
+          expect(tags_json["items"][0]["name"]).to eq(@pre_tags[0])
+          expect(tags_json["items"][0]["value"]).to eq("daily")
+
+          delete_training_dataset_tag_checked(@project.id, td_json["id"], @pre_tags[0])
+          json_result = get_training_dataset_tags(@project.id, td_json["id"])
+          expect_status_details(200)
+          tags_json = JSON.parse(json_result)
+          expect(tags_json["items"]).to eq(nil)
+        end
+        it "should be able to attach many tags (>13500) to training dataset" do
+          featurestore_id = get_featurestore_id(@project[:id])
+          connector_id = get_s3_connector_id
+          json_result, _ = create_external_training_dataset(@project.id, featurestore_id, connector_id)
+          td_json = JSON.parse(json_result)
+          tag_val = "x" * 1000
+          add_training_dataset_tag_checked(@project[:id], td_json["id"], @pre_tags[0], tag_val)
+          14.times do |i|
+            add_training_dataset_tag_checked(@project[:id], td_json["id"], @pre_tags[i+1], tag_val)
+          end
+        end
+        it "should be able to attach large tags (>13500) to training dataset" do
+          featurestore_id = get_featurestore_id(@project[:id])
+          connector_id = get_s3_connector_id
+          json_result, _ = create_external_training_dataset(@project.id, featurestore_id, connector_id)
+          td_json = JSON.parse(json_result)
+          tag_val = "x" * 20000
+          add_training_dataset_tag_checked(@project[:id], td_json["id"], @pre_tags[0], tag_val)
+        end
+        it "should be able to add schematized tag to a training dataset" do
+          featurestore_id = get_featurestore_id(@project[:id])
+          connector_id = get_s3_connector_id
+          json_result, _ = create_external_training_dataset(@project.id, featurestore_id, connector_id)
+          td_json = JSON.parse(json_result)
+          tag_val = schematized_tag_val
+          add_training_dataset_tag_checked(@project[:id], td_json["id"], @pre_schematized_tags[0], tag_val)
+        end
+        it "should not be able to add bad schematized tag to a training dataset" do
+          featurestore_id = get_featurestore_id(@project[:id])
+          connector_id = get_s3_connector_id
+          json_result, _ = create_external_training_dataset(@project.id, featurestore_id, connector_id)
           td_json = JSON.parse(json_result)
           tag_val = bad_schematized_tag_val
           add_training_dataset_tag(@project[:id], td_json["id"], @pre_schematized_tags[0], tag_val)
