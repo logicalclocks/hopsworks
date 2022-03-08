@@ -17,8 +17,6 @@ package io.hops.hopsworks.api.featurestore.trainingdataset;
 
 import io.hops.hopsworks.api.featurestore.statistics.StatisticsResource;
 import io.hops.hopsworks.api.filter.Audience;
-import io.hops.hopsworks.audit.logger.LogLevel;
-import io.hops.hopsworks.audit.logger.annotation.Logged;
 import io.hops.hopsworks.common.featurestore.trainingdatasets.TrainingDatasetDTO;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
@@ -38,7 +36,6 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
 
-@Logged
 @RequestScoped
 @TransactionAttribute(TransactionAttributeType.NEVER)
 public class TrainingDatasetResource {
@@ -120,7 +117,6 @@ public class TrainingDatasetResource {
     return statisticsResource;
   }
 
-  @Logged(logLevel = LogLevel.OFF)
   public void setFeatureView(String name, Integer version) {
 
   }

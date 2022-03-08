@@ -23,8 +23,6 @@ import io.hops.hopsworks.api.featurestore.query.QueryResource;
 import io.hops.hopsworks.api.featurestore.tag.TagResource;
 import io.hops.hopsworks.api.featurestore.trainingdataset.TrainingDatasetResource;
 import io.hops.hopsworks.api.featurestore.transformation.TransformationResource;
-import io.hops.hopsworks.audit.logger.LogLevel;
-import io.hops.hopsworks.audit.logger.annotation.Logged;
 import io.hops.hopsworks.common.featurestore.FeaturestoreController;
 import io.hops.hopsworks.common.featurestore.FeaturestoreDTO;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
@@ -41,7 +39,6 @@ import javax.inject.Inject;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 
-@Logged
 @RequestScoped
 @TransactionAttribute(TransactionAttributeType.NEVER)
 @Api(value = "Feature View service")
@@ -69,7 +66,6 @@ public class FeatureViewService {
   private Featurestore featurestore;
 
   @Path("")
-  @Logged(logLevel = LogLevel.OFF)
   public FeatureViewResource featureViewResource() {
     featureViewResource.setFeaturestore(featurestore);
     featureViewResource.setProject(project);
@@ -77,7 +73,6 @@ public class FeatureViewService {
   }
 
   @Path("/{name: [a-z0-9_]*(?=[a-z])[a-z0-9_]+}/version/{version: [0-9]+}/td")
-  @Logged(logLevel = LogLevel.OFF)
   public TrainingDatasetResource trainingDatasetResource(
       @ApiParam(value = "Name of the feature view", required = true)
       @PathParam("name")
@@ -91,7 +86,6 @@ public class FeatureViewService {
   }
 
   @Path("/{name: [a-z0-9_]*(?=[a-z])[a-z0-9_]+}/version/{version: [0-9]+}/tags")
-  @Logged(logLevel = LogLevel.OFF)
   public TagResource tagResource(
       @ApiParam(value = "Name of the feature view", required = true)
       @PathParam("name")
@@ -105,7 +99,6 @@ public class FeatureViewService {
   }
 
   @Path("/{name: [a-z0-9_]*(?=[a-z])[a-z0-9_]+}/version/{version: [0-9]+}/query")
-  @Logged(logLevel = LogLevel.OFF)
   public QueryResource query(
       @ApiParam(value = "Name of the feature view", required = true)
       @PathParam("name")
@@ -119,7 +112,6 @@ public class FeatureViewService {
   }
 
   @Path("/{name: [a-z0-9_]*(?=[a-z])[a-z0-9_]+}/version/{version: [0-9]+}/keywords")
-  @Logged(logLevel = LogLevel.OFF)
   public FeaturestoreKeywordResource keywords(
       @ApiParam(value = "Name of the feature view", required = true)
       @PathParam("name")
@@ -132,7 +124,6 @@ public class FeatureViewService {
   }
 
   @Path("/{name: [a-z0-9_]*(?=[a-z])[a-z0-9_]+}/version/{version: [0-9]+}/activity")
-  @Logged(logLevel = LogLevel.OFF)
   public ActivityResource activity(
       @ApiParam(value = "Id of the feature view", required = true)
       @PathParam("name")
@@ -145,7 +136,6 @@ public class FeatureViewService {
   }
 
   @Path("/{name: [a-z0-9_]*(?=[a-z])[a-z0-9_]+}/version/{version: [0-9]+}/transformation")
-  @Logged(logLevel = LogLevel.OFF)
   public TransformationResource transformation(
       @ApiParam(value = "Name of the feature view", required = true)
       @PathParam("name")
@@ -158,7 +148,6 @@ public class FeatureViewService {
   }
 
   @Path("/{name: [a-z0-9_]*(?=[a-z])[a-z0-9_]+}/version/{version: [0-9]+}/preparedStatement")
-  @Logged(logLevel = LogLevel.OFF)
   public PreparedStatementResource preparedStatement(
       @ApiParam(value = "Name of the feature view", required = true)
       @PathParam("name")
@@ -170,12 +159,10 @@ public class FeatureViewService {
     return prepareStatementResource;
   }
 
-  @Logged(logLevel = LogLevel.OFF)
   public void setProject(Project project) {
     this.project = project;
   }
 
-  @Logged(logLevel = LogLevel.OFF)
   public void setFeaturestore(Integer id) throws FeaturestoreException {
     FeaturestoreDTO featurestoreDTO = featurestoreController.getFeaturestoreForProjectWithId(project, id);
     this.featurestore = featurestoreController.getFeaturestoreWithId(featurestoreDTO.getFeaturestoreId());

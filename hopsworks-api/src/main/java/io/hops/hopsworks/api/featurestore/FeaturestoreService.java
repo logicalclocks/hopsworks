@@ -244,7 +244,6 @@ public class FeaturestoreService {
     return trainingDatasetService;
   }
 
-  @Logged(logLevel = LogLevel.OFF)
   @Path("/{featurestoreId}/featureview")
   public FeatureViewService featureViewService(@PathParam("featurestoreId") Integer featurestoreId)
       throws FeaturestoreException {

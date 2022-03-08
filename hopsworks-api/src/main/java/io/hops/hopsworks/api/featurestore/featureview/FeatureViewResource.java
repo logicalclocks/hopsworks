@@ -20,8 +20,6 @@ import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.api.filter.Audience;
 import io.hops.hopsworks.api.filter.apiKey.ApiKeyRequired;
 import io.hops.hopsworks.api.jwt.JWTHelper;
-import io.hops.hopsworks.audit.logger.LogLevel;
-import io.hops.hopsworks.audit.logger.annotation.Logged;
 import io.hops.hopsworks.common.api.ResourceRequest;
 import io.hops.hopsworks.common.dao.user.activity.ActivityFacade;
 import io.hops.hopsworks.common.featurestore.featureview.FeatureViewDTO;
@@ -62,7 +60,6 @@ import javax.ws.rs.core.UriInfo;
 import java.io.IOException;
 import java.util.List;
 
-@Logged
 @RequestScoped
 @Api(value = "Feature View Resource")
 @TransactionAttribute(TransactionAttributeType.NEVER)
@@ -247,12 +244,10 @@ public class FeatureViewResource {
     return Response.ok().build();
   }
 
-  @Logged(logLevel = LogLevel.OFF)
   public void setProject(Project project) {
     this.project = project;
   }
 
-  @Logged(logLevel = LogLevel.OFF)
   public void setFeaturestore(Featurestore featurestore) {
     this.featurestore = featurestore;
   }
