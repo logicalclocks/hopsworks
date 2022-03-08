@@ -16,14 +16,16 @@
 
 package io.hops.hopsworks.common.featurestore.trainingdatasets.external;
 
+import com.google.common.base.Strings;
+import io.hops.hopsworks.common.featurestore.FeaturestoreConstants;
 import io.hops.hopsworks.common.featurestore.storageconnectors.FeaturestoreStorageConnectorController;
+import io.hops.hopsworks.common.featurestore.trainingdatasets.TrainingDatasetDTO;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
+import io.hops.hopsworks.persistence.entity.featurestore.storageconnector.FeaturestoreConnector;
 import io.hops.hopsworks.persistence.entity.featurestore.storageconnector.adls.FeaturestoreADLSConnector;
 import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.TrainingDataset;
 import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.external.ExternalTrainingDataset;
-import com.google.common.base.Strings;
-import io.hops.hopsworks.common.featurestore.FeaturestoreConstants;
-import io.hops.hopsworks.common.featurestore.trainingdatasets.TrainingDatasetDTO;
+import io.hops.hopsworks.persistence.entity.hdfs.inode.Inode;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.restutils.RESTCodes;
@@ -44,12 +46,22 @@ public class ExternalTrainingDatasetController {
 
   @EJB
   private FeaturestoreStorageConnectorController storageConnectorController;
+  @EJB
+  private ExternalTrainingDatasetFacade externalTrainingDatasetFacade;
 
   private static final String ABFSS_SCHEME = "abfss://";
   private static final String ABFSS_URI_SUFFIX = ".dfs.core.windows.net";
 
   private static final String ADL_SCHEME = "adl://";
   private static final String ADL_URI_SUFFIX = ".azuredatalakestore.net";
+  
+  public ExternalTrainingDataset create(FeaturestoreConnector connector, String path, Inode inode) {
+    ExternalTrainingDataset externalTrainingDataset = new ExternalTrainingDataset();
+    externalTrainingDataset.setFeaturestoreConnector(connector);
+    externalTrainingDataset.setPath(path);
+    externalTrainingDataset.setInode(inode);
+    return externalTrainingDatasetFacade.createExternalTrainingDataset(externalTrainingDataset);
+  }
 
   public TrainingDatasetDTO convertExternalTrainingDatasetToDTO(Users user, Project project,
                                                                 TrainingDatasetDTO trainingDatasetDTO,

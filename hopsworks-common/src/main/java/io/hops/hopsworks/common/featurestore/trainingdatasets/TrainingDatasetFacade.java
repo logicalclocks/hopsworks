@@ -174,17 +174,4 @@ public class TrainingDatasetFacade extends AbstractFacade<TrainingDataset> {
   protected EntityManager getEntityManager() {
     return em;
   }
-
-  public void removeTrainingDataset(TrainingDataset trainingDataset) {
-    switch (trainingDataset.getTrainingDatasetType()) {
-      case HOPSFS_TRAINING_DATASET:
-        hopsfsTrainingDatasetFacade.remove(trainingDataset.getHopsfsTrainingDataset());
-        break;
-      case EXTERNAL_TRAINING_DATASET:
-        externalTrainingDatasetFacade.remove(trainingDataset.getExternalTrainingDataset());
-        break;
-    }
-
-    remove(trainingDataset);
-  }
 }
