@@ -777,6 +777,19 @@
   </li>
 
         
+          
+          
+          
+
+
+
+  <li class="md-nav__item">
+    <a href="../create-azure-client/" class="md-nav__link">
+      Create Azure Client
+    </a>
+  </li>
+
+        
       </ul>
     </nav>
   </li>
@@ -888,8 +901,9 @@
                 
                 <h1 id="register-identity-provider-in-hopsworks">Register Identity Provider in Hopsworks<a class="headerlink" href="#register-identity-provider-in-hopsworks" title="Permanent link">#</a></h1>
 <p>Before registering your identity provider in Hopsworks you need to create a client application in your identity provider and 
-acquire a <em>client id</em> and a <em>client secret</em>. An example on how to create a client using <a href="https://www.okta.com/">Okta</a> 
-identity provider can be found <a href="../create-okta-client/">here</a>.</p>
+acquire a <em>client id</em> and a <em>client secret</em>. An example on how to create a client using <a href="https://www.okta.com/">Okta</a>
+and <a href="https://portal.azure.com/#blade/Microsoft_AAD_IAM/ActiveDirectoryMenuBlade/Overview">Azure Active Directory</a> 
+identity providers can be found <a href="../create-okta-client/">here</a> and <a href="../create-azure-client/">here</a> respectively.</p>
 <p>After acquiring the <em>client id</em> and <em>client secret</em> create the client in Hopsworks by <a href="../../auth/">enabling OAuth2</a>
 and clicking on <em>add another identity provider</em> in the <a href="../../auth/">Authentication configuration page</a>. Then set 
 base uri of your identity provider in <em>Connection URL</em> give a name to your identity provider (the name will be used 
@@ -915,6 +929,25 @@ fields,  as shown in the figure below.</p>
 <li><em>Logo URL</em>: optionally a logo URL to an image can be added. The logo will be shown on the login page with the name 
   as shown in the figure below.</li>
 </ul>
+<p>Optionally you can add a group mapping from your identity provider to hopsworks groups, by click on your name in the 
+top right corner of the navigation bar and choosing <em>Cluster Settings</em> from the dropdown menu. In the <em>Cluster 
+Settings</em> <em>Configuration</em> tab search for <em>oauth_group_mapping</em> and click on the edit button.</p>
+<figure>
+    <a  href="../../../assets/images/admin/oauth2/sso/oauth-group-mapping.png">
+      <img src="../../../assets/images/admin/oauth2/sso/oauth-group-mapping.png" alt="Set variables">
+    </a>
+    <figcaption>Set Configuration variables</figcaption>
+  </figure>
+
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Setting <em>oauth_group_mapping</em> to <em>ANY_GROUP-&gt;HOPS_USER</em> will assign the role <em>user</em> to any user from any group in 
+your identity provider when they log into hopsworks with OAuth for the first time. You can replace <em>ANY_GROUP</em> with 
+the group of your choice in the identity provider. You can replace <em>HOPS_USER</em> by <em>HOPS_ADMIN</em> if you want the 
+users of the group to be admins in hopsworks. You do several mappings of groups to roles by comma separating them.</p>
+</div>
+<p>Users will now see a new button on the login page. The button has the name you set above for <em>Name</em> and will 
+redirect to your identity provider.</p>
 <figure>
     <a  href="../../../assets/images/auth/oauth2.png">
       <img width="400px" src="../../../assets/images/auth/oauth2.png" alt="OAuth2 login" />
