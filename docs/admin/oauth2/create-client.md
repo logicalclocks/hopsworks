@@ -1,8 +1,9 @@
 # Register Identity Provider in Hopsworks
 
 Before registering your identity provider in Hopsworks you need to create a client application in your identity provider and 
-acquire a _client id_ and a _client secret_. An example on how to create a client using [Okta](https://www.okta.com/) 
-identity provider can be found [here](./create-okta-client.md).
+acquire a _client id_ and a _client secret_. An example on how to create a client using [Okta](https://www.okta.com/)
+and [Azure Active Directory](https://portal.azure.com/#blade/Microsoft_AAD_IAM/ActiveDirectoryMenuBlade/Overview) 
+identity providers can be found [here](./create-okta-client.md) and [here](./create-azure-client.md) respectively.
 
 After acquiring the _client id_ and _client secret_ create the client in Hopsworks by [enabling OAuth2](../auth.md)
 and clicking on _add another identity provider_ in the [Authentication configuration page](../auth.md). Then set 
@@ -28,6 +29,27 @@ Additional configuration can be set here:
   _S256_.
 - _Logo URL_: optionally a logo URL to an image can be added. The logo will be shown on the login page with the name 
   as shown in the figure below.
+
+Optionally you can add a group mapping from your identity provider to hopsworks groups, by click on your name in the 
+top right corner of the navigation bar and choosing *Cluster Settings* from the dropdown menu. In the *Cluster 
+Settings* _Configuration_ tab search for _oauth\_group\_mapping_ and click on the edit button.
+
+  <figure>
+    <a  href="../../../assets/images/admin/oauth2/sso/oauth-group-mapping.png">
+      <img src="../../../assets/images/admin/oauth2/sso/oauth-group-mapping.png" alt="Set variables">
+    </a>
+    <figcaption>Set Configuration variables</figcaption>
+  </figure>
+
+!!! Note
+
+    Setting *oauth_group_mapping* to *ANY_GROUP->HOPS_USER* will assign the role *user* to any user from any group in 
+    your identity provider when they log into hopsworks with OAuth for the first time. You can replace *ANY_GROUP* with 
+    the group of your choice in the identity provider. You can replace *HOPS_USER* by *HOPS_ADMIN* if you want the 
+    users of the group to be admins in hopsworks. You do several mappings of groups to roles by comma separating them.
+
+Users will now see a new button on the login page. The button has the name you set above for _Name_ and will 
+redirect to your identity provider.
 
   <figure>
     <a  href="../../../assets/images/auth/oauth2.png">

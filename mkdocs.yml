@@ -37,6 +37,7 @@ nav:
         - Configure OAuth2:
           - Register an Identity Provider: admin/oauth2/create-client.md
           - Create Okta Client: admin/oauth2/create-okta-client.md
+          - Create Azure Client: admin/oauth2/create-azure-client.md
       - Configure Alerts: admin/alert.md
   - Hopsworks.ai: https://docs.hopsworks.ai/hopsworks-cloud/latest/
   - Examples: https://examples.hopsworks.ai/
