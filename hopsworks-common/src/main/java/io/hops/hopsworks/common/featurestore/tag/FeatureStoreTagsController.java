@@ -20,6 +20,7 @@ import io.hops.hopsworks.common.integrations.CommunityStereotype;
 import io.hops.hopsworks.common.tags.AttachTagResult;
 import io.hops.hopsworks.persistence.entity.featurestore.Featurestore;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.Featuregroup;
+import io.hops.hopsworks.persistence.entity.featurestore.featureview.FeatureView;
 import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.TrainingDataset;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.user.Users;
@@ -41,6 +42,12 @@ public class FeatureStoreTagsController implements FeatureStoreTagControllerIfac
   @Override
   public Map<String, String> getAll(Project project, Users user, Featurestore featureStore,
                                     TrainingDataset trainingDataset) {
+    throw new IllegalArgumentException("API not supported in the community edition");
+  }
+
+  @Override
+  public Map<String, String> getAll(Project project, Users user, Featurestore featureStore,
+      FeatureView featureView) {
     throw new IllegalArgumentException("API not supported in the community edition");
   }
   

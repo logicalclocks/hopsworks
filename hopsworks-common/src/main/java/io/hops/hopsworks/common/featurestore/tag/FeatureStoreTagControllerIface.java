@@ -22,6 +22,7 @@ import io.hops.hopsworks.exceptions.SchematizedTagException;
 import io.hops.hopsworks.exceptions.MetadataException;
 import io.hops.hopsworks.persistence.entity.featurestore.Featurestore;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.Featuregroup;
+import io.hops.hopsworks.persistence.entity.featurestore.featureview.FeatureView;
 import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.TrainingDataset;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.user.Users;
@@ -35,6 +36,9 @@ public interface FeatureStoreTagControllerIface {
   
   Map<String, String> getAll(Project project, Users user, Featurestore featureStore, TrainingDataset trainingDataset)
     throws DatasetException, MetadataException, SchematizedTagException;
+
+  Map<String, String> getAll(Project project, Users user, Featurestore featureStore, FeatureView featureView)
+      throws DatasetException, MetadataException, SchematizedTagException;
   
   String get(Project project, Users user, Featurestore featureStore, Featuregroup featureGroup, String name)
     throws DatasetException, MetadataException, SchematizedTagException;

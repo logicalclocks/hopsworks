@@ -17,7 +17,7 @@
 package io.hops.hopsworks.api.dataset.tags;
 
 import io.hops.hopsworks.api.tags.TagsBuilder;
-import io.hops.hopsworks.api.tags.TagsDTO;
+import io.hops.hopsworks.common.tags.TagsDTO;
 import io.hops.hopsworks.common.api.ResourceRequest;
 import io.hops.hopsworks.common.dataset.util.DatasetPath;
 import io.hops.hopsworks.exceptions.DatasetException;

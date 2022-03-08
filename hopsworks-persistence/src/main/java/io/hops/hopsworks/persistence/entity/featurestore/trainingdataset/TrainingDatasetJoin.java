@@ -16,6 +16,7 @@
 package io.hops.hopsworks.persistence.entity.featurestore.trainingdataset;
 
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.Featuregroup;
+import io.hops.hopsworks.persistence.entity.featurestore.featureview.FeatureView;
 
 import java.io.Serializable;
 import java.util.Collection;
@@ -55,6 +56,8 @@ public class TrainingDatasetJoin implements Serializable {
   private String prefix;
   @JoinColumn(name = "training_dataset", referencedColumnName = "id")
   private TrainingDataset trainingDataset;
+  @JoinColumn(name = "feature_view_id", referencedColumnName = "id")
+  private FeatureView featureView;
   @JoinColumn(name = "feature_group", referencedColumnName = "id")
   private Featuregroup featureGroup;
   @OneToMany(cascade = CascadeType.ALL, mappedBy = "trainingDatasetJoin")
@@ -69,10 +72,20 @@ public class TrainingDatasetJoin implements Serializable {
     this.id = id;
   }
 
-  public TrainingDatasetJoin(TrainingDataset trainingDataset, Featuregroup featureGroup, short type, int index,
-                             String prefix) {
-    this.trainingDataset = trainingDataset;
+  public TrainingDatasetJoin(FeatureView featureView, Featuregroup featureGroup, short type, int index,
+      String prefix) {
+    this.featureView = featureView;
     this.featureGroup = featureGroup;
+    this.type = type;
+    this.index = index;
+    this.prefix = prefix;
+  }
+
+  public TrainingDatasetJoin(FeatureView featureView, Featuregroup featureGroup, Long featureGroupCommitId,
+      short type, int index, String prefix) {
+    this.featureView = featureView;
+    this.featureGroup = featureGroup;
+    this.featureGroupCommitId = featureGroupCommitId;
     this.type = type;
     this.index = index;
     this.prefix = prefix;

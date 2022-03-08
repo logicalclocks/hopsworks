@@ -57,6 +57,10 @@ public class TrainingDatasetDTO extends FeaturestoreEntityDTO {
   private Boolean fromQuery;
   private List<TrainingDatasetFeatureDTO> features;
 
+  private Double sampleRatio;
+  private String eventStartTime;
+  private String eventEndTime;
+
   public TrainingDatasetDTO() {
   }
 

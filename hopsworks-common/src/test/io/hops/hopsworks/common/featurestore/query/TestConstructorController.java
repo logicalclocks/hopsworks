@@ -1,6 +1,6 @@
 /*
  * This file is part of Hopsworks
- * Copyright (C) 2020, Logical Clocks AB. All rights reserved
+ * Copyright (C) 2021, Logical Clocks AB. All rights reserved
  *
  * Hopsworks is free software: you can redistribute it and/or modify it under the terms of
  * the GNU Affero General Public License as published by the Free Software Foundation,
@@ -87,9 +87,10 @@ public class TestConstructorController {
   private OnlineFeaturestoreController onlineFeaturestoreController;
   private CachedFeaturegroupController cachedFeaturegroupController;
 
-  private ConstructorController constructorController;
+  private ConstructorController target;
   private FilterController filterController;
-  
+  private QueryController queryController;
+
   private Project project;
   private Users user;
 
@@ -172,48 +173,21 @@ public class TestConstructorController {
     user = Mockito.mock(Users.class);
     filterController = new FilterController(new ConstructorController());
 
-    constructorController = new ConstructorController(featuregroupController, featurestoreFacade,
+    target = new ConstructorController(featuregroupController, featurestoreFacade,
         featuregroupFacade, onlineFeaturestoreController, cachedFeaturegroupController, filterController,
-      new JoinController(new ConstructorController()));
+        new JoinController(new ConstructorController()));
+    new JoinController(new ConstructorController());
+
+    queryController = new QueryController(featuregroupController, featuregroupFacade, filterController,
+        featurestoreFacade,
+        onlineFeaturestoreController);
   }
 
-  @Test
-  public void testValidateFeatures() throws Exception {
-    List<FeatureGroupFeatureDTO> requestedFeatures = new ArrayList<>();
-    requestedFeatures.add(new FeatureGroupFeatureDTO("fg1_ft2"));
 
-    List<Feature> extractedFeatures =
-        constructorController.validateFeatures(fg1, requestedFeatures, fg1Features);
-    Assert.assertEquals(1, extractedFeatures.size());
-    Assert.assertEquals("fg1_ft2", extractedFeatures.get(0).getName());
-    // Make sure the object returned is the one for the DB with more infomation in (e.g. Type, Primary key)
-    Assert.assertFalse(extractedFeatures.get(0).isPrimary());
-  }
-
-  @Test
-  public void testMissingFeature() throws Exception {
-    List<FeatureGroupFeatureDTO> requestedFeatures = new ArrayList<>();
-    requestedFeatures.add(new FeatureGroupFeatureDTO("fg1_ft3"));
-
-    thrown.expect(FeaturestoreException.class);
-    constructorController.validateFeatures(fg1, requestedFeatures, fg1Features);
-  }
-
-  @Test
-  public void testExtractAllFeatures() throws Exception {
-    List<FeatureGroupFeatureDTO> requestedFeatures = new ArrayList<>();
-    requestedFeatures.add(new FeatureGroupFeatureDTO("*"));
-
-    List<Feature> extractedFeatures =
-        constructorController.validateFeatures(fg1, requestedFeatures, fg1Features);
-    // Make sure both features have been returned.
-    Assert.assertEquals(2, extractedFeatures.size());
-  }
-
-  @Test
+    @Test
   public void testExtractFeaturesBothSides() throws Exception {
     Mockito.when(featuregroupController.getFeatures(Mockito.any(), Mockito.any(), Mockito.any()))
-      .thenReturn(fg1FeaturesDTO, fg2FeaturesDTO);
+        .thenReturn(fg1FeaturesDTO, fg2FeaturesDTO);
     Mockito.when(featuregroupFacade.findById(Mockito.any())).thenReturn(Optional.of(fg1), Optional.of(fg2));
     Mockito.when(featurestoreFacade.getHiveDbName(Mockito.any())).thenReturn("fg1", "fg2");
 
@@ -229,17 +203,17 @@ public class TestConstructorController {
     JoinDTO joinDTO = new JoinDTO(rightQueryDTO, null, null);
 
     QueryDTO queryDTO = new QueryDTO(fg1, requestedFeatures, Arrays.asList(joinDTO));
-  
+
     Map<Integer, String> fgAliasLookup = new HashMap<>();
     Map<Integer, Featuregroup> fgLookup = new HashMap<>();
     Map<Integer, List<Feature>> availableFeatureLookup = new HashMap<>();
-  
-    constructorController.populateFgLookupTables(queryDTO, 1, fgAliasLookup, fgLookup, availableFeatureLookup,
-      project, user, null);
-    Query query = constructorController.convertQueryDTO(queryDTO, fgAliasLookup, fgLookup, availableFeatureLookup,
-            false);
-    
-    List<Feature> extractedFeatures = constructorController.collectFeatures(query);
+
+    queryController.populateFgLookupTables(queryDTO, 1, fgAliasLookup, fgLookup, availableFeatureLookup,
+        project, user, null);
+    Query query = queryController.convertQueryDTO(queryDTO, fgAliasLookup, fgLookup, availableFeatureLookup,
+        false);
+
+    List<Feature> extractedFeatures = target.collectFeatures(query);
     // Make sure both features have been returned.
     // It's going to be 3 as the feature "pr" will be identified as primary key and joining key
     // so it's not going to be duplicated
@@ -281,12 +255,12 @@ public class TestConstructorController {
     Map<Integer, Featuregroup> fgLookup = new HashMap<>();
     Map<Integer, List<Feature>> availableFeatureLookup = new HashMap<>();
 
-    constructorController.populateFgLookupTables(queryDTO, 1, fgAliasLookup, fgLookup, availableFeatureLookup,
+    queryController.populateFgLookupTables(queryDTO, 1, fgAliasLookup, fgLookup, availableFeatureLookup,
         project, user, null);
-    Query query = constructorController.convertQueryDTO(queryDTO, fgAliasLookup, fgLookup, availableFeatureLookup,
-            false);
+    Query query = queryController.convertQueryDTO(queryDTO, fgAliasLookup, fgLookup, availableFeatureLookup,
+        false);
 
-    List<Feature> extractedFeatures = constructorController.collectFeatures(query);
+    List<Feature> extractedFeatures = target.collectFeatures(query);
     // Make sure both features have been returned.
     // It's going to be 3 as the feature "pr" will be identified as primary key and joining key
     // so it's not going to be duplicated
@@ -297,153 +271,66 @@ public class TestConstructorController {
   }
 
   @Test
-  public void testExtractJoinOnMissingFeature() throws Exception {
-    ConstructorController constructorController = new ConstructorController();
-
-    List<Feature> availableLeft = new ArrayList<>();
-    availableLeft.add(new Feature("fg1_ft2"));
-
-    List<Feature> availableRight = new ArrayList<>();
-    availableRight.add(new Feature("ft1"));
-    availableRight.add(new Feature("fg2_ft2"));
-
-    List<Feature> leftOn = new ArrayList<>();
-    leftOn.add(new Feature("ft1"));
-  
-    List<Feature> rightOn = new ArrayList<>();
-    rightOn.add(new Feature("ft1"));
-
-    Query leftQuery = new Query("fs1", "project_fs1", fg1, "fg1", availableLeft, availableLeft);
-    Query rightQuery = new Query("fs1", "project_fs1", fg2, "fg1", availableRight, availableRight);
-
-    thrown.expect(FeaturestoreException.class);
-    constructorController.extractLeftRightOn(leftQuery, rightQuery, leftOn, rightOn, JoinType.INNER, null);
+  public void testGetWithOrWithoutPrefix() throws Exception {
+    Feature feature = new Feature("ft1", "fg1", "int", null, null);
+    Assert.assertEquals("`fg1`.`ft1`",
+        target.getWithOrWithoutPrefix(feature, false)
+            .toSqlString(new SparkSqlDialect(SqlDialect.EMPTY_CONTEXT)).getSql());
   }
 
   @Test
-  public void testExtractJoinLeftRight() throws Exception {
-    ConstructorController constructorController = new ConstructorController();
-
-    List<Feature> availableLeft = new ArrayList<>();
-    availableLeft.add(new Feature("fg1_ft3"));
-
-    List<Feature> availableRight = new ArrayList<>();
-    availableRight.add(new Feature("fg2_ft3"));
-
-    List<Feature> leftOn = Arrays.asList(new Feature("fg1_ft3"));
-    List<Feature> rightOn = Arrays.asList(new Feature("fg2_ft3"));
-    List<SqlCondition> expectedConditionList = Arrays.asList(SqlCondition.EQUALS);
-
-    Query leftQuery = new Query("fs1", "project_fs1", fg1, "fg1", availableLeft, availableLeft);
-    Query rightQuery = new Query("fs1","project_fs1", fg2, "fg1", availableRight, availableRight);
-
-    Join join = constructorController.extractLeftRightOn(leftQuery, rightQuery, leftOn, rightOn, JoinType.INNER, null);
-    Assert.assertEquals(1, join.getLeftOn().size());
-    Assert.assertEquals(1, join.getRightOn().size());
-    Assert.assertEquals(expectedConditionList, join.getJoinOperator());
+  public void testGetWithOrWithoutPrefixWithPrefix() throws Exception {
+    Feature feature = new Feature("ft1", "fg1", "int", null, "right_");
+    Assert.assertEquals("`fg1`.`ft1` `right_ft1`",
+        target.getWithOrWithoutPrefix(feature, true)
+            .toSqlString(new SparkSqlDialect(SqlDialect.EMPTY_CONTEXT)).getSql());
   }
 
   @Test
-  public void testExtractJoinLeftRightWrongSizes() throws Exception {
-    ConstructorController constructorController = new ConstructorController();
-
+  public void testMakeOfflineQuery_hiveQuery() throws Exception {
     List<Feature> availableLeft = new ArrayList<>();
-    availableLeft.add(new Feature("fg1_ft3"));
-
-    List<Feature> availableRight = new ArrayList<>();
-    availableRight.add(new Feature("fg2_ft3"));
-
-    List<Feature> leftOn = Arrays.asList(new Feature("fg1_ft3"), new Feature("additional"));
-    List<Feature> rightOn = Arrays.asList(new Feature("fg2_ft3"));
-
-    Query leftQuery = new Query("fs1", "project_fs1", fg1, "fg1", availableLeft, availableLeft);
-    Query rightQuery = new Query("fs1", "project_fs1", fg2, "fg1", availableRight, availableRight);
-
-    thrown.expect(FeaturestoreException.class);
-    constructorController.extractLeftRightOn(leftQuery, rightQuery, leftOn, rightOn, JoinType.INNER, null);
+    availableLeft.add(new Feature("ft1", "fg0", true));
+    Query query = new Query("fs1", "project_fs1", fgHudi, "fg0", availableLeft, availableLeft);
+    query.setOrderByFeatures(availableLeft);
+    query.setHiveEngine(true);
+    Mockito.when(cachedFeaturegroupController.dropHudiSpecFeatures(availableLeft)).thenReturn(availableLeft);
+    String actual = target.makeOfflineQuery(query);
+    String expected = "SELECT `fg0`.`ft1`\n" +
+        "FROM `fs1`.`fgHudi_1` `fg0`\n" +
+        "ORDER BY `fg0`.`ft1`";
+    Assert.assertEquals(expected, actual);
   }
 
   @Test
-  public void testExtractJoinLeftRightMissingFeature() throws Exception {
-    ConstructorController constructorController = new ConstructorController();
-
+  public void testMakeOfflineQuery_hiveQueryNested() throws Exception {
     List<Feature> availableLeft = new ArrayList<>();
-    availableLeft.add(new Feature("fg1_ft3"));
+    availableLeft.add(new Feature("ft1", "fg0", true));
 
     List<Feature> availableRight = new ArrayList<>();
-    availableRight.add(new Feature("fg2_ft3"));
+    availableRight.add(new Feature("ft1", "fg1", true));
 
-    List<Feature> leftOn = Arrays.asList(new Feature("fg1_ft3"));
-    List<Feature> rightOn = Arrays.asList(new Feature("fg2_ft1"));
+    Query leftQuery = new Query("fs1", "project_fs1", fgHudi, "fg0", availableLeft, availableLeft);
+    Query rightQuery = new Query("fs1", "project_fs1", fgHudi, "fg1", availableRight, availableRight);
 
-    Query leftQuery = new Query("fs1", "project_fs1", fg1, "fg1", availableLeft, availableLeft);
-    Query rightQuery = new Query("fs1", "project_fs1", fg2, "fg1", availableRight, availableRight);
+    leftQuery.setHiveEngine(true);
+    rightQuery.setHiveEngine(true);
 
-    thrown.expect(FeaturestoreException.class);
-    constructorController.extractLeftRightOn(leftQuery, rightQuery, leftOn, rightOn, JoinType.INNER, null);
-  }
+    Join join = new Join(leftQuery, rightQuery, availableLeft, availableRight, JoinType.INNER, null, singleEqualsJoinOperator);
+    leftQuery.setJoins(Arrays.asList(join));
 
-  @Test
-  public void testNoJoiningKeySingle() throws Exception {
-    ConstructorController constructorController = new ConstructorController();
+    leftQuery.setOrderByFeatures(availableLeft);
 
-    List<Feature> availableLeft = new ArrayList<>();
-    availableLeft.add(new Feature("ft1", true));
+    List<Feature> allFeatures = new ArrayList<>(availableLeft);
+    allFeatures.addAll(availableRight);
+    Mockito.when(cachedFeaturegroupController.dropHudiSpecFeatures(allFeatures)).thenReturn(allFeatures);
+    Mockito.when(cachedFeaturegroupController.dropHudiSpecFeatures(availableRight)).thenReturn(availableRight);
 
-    List<Feature> availableRight = new ArrayList<>();
-    availableRight.add(new Feature("ft1", true));
-
-    Query leftQuery = new Query("fs1", "project_fs1", fg1, "fg1", availableLeft, availableLeft);
-    Query rightQuery = new Query("fs1", "project_fs1", fg2, "fg1", availableRight, availableRight);
-
-    List<SqlCondition> expectedConditionList = Arrays.asList(SqlCondition.EQUALS);
-
-    Join join = constructorController.extractPrimaryKeysJoin(leftQuery, rightQuery, JoinType.INNER, null);
-    Assert.assertEquals(1, join.getLeftOn().size());
-    Assert.assertEquals(1, join.getRightOn().size());
-    Assert.assertEquals(expectedConditionList, join.getJoinOperator());
-  }
-
-  @Test
-  public void testNoJoiningKeyMultipleDifferentSizes() throws Exception {
-    ConstructorController constructorController = new ConstructorController();
-
-    List<Feature> availableLeft = new ArrayList<>();
-    availableLeft.add(new Feature("ft1", true));
-    availableLeft.add(new Feature("ft2", true));
-    availableLeft.add(new Feature("ft4", true));
-
-    List<Feature> availableRight = new ArrayList<>();
-    availableRight.add(new Feature("ft1", true));
-    availableRight.add(new Feature("ft2", true));
-    availableRight.add(new Feature("ft3", true));
-
-    Query leftQuery = new Query("fs1", "project_fs1", fg1, "fg1", availableLeft, availableLeft);
-    Query rightQuery = new Query("fs1", "project_fs1", fg2, "fg1", availableRight, availableRight);
-
-    List<SqlCondition> expectedConditionList = Arrays.asList(SqlCondition.EQUALS, SqlCondition.EQUALS);
-
-    Join join = constructorController.extractPrimaryKeysJoin(leftQuery, rightQuery, JoinType.INNER, null);
-    Assert.assertEquals(2, join.getLeftOn().size());
-    Assert.assertEquals(2, join.getRightOn().size());
-    Assert.assertEquals(expectedConditionList, join.getJoinOperator());
-  }
-
-  @Test
-  public void testNoPrimaryKeys() throws Exception {
-    ConstructorController constructorController = new ConstructorController();
-
-    List<Feature> availableLeft = new ArrayList<>();
-    availableLeft.add(new Feature("ft1"));
-
-    List<Feature> availableRight = new ArrayList<>();
-    availableRight.add(new Feature("ft1"));
-
-    Query leftQuery = new Query("fs1", "project_fs1", fg1, "fg1", availableLeft, availableLeft);
-    Query rightQuery = new Query("fs1", "project_fs1", fg2, "fg1", availableRight, availableRight);
-
-    thrown.expect(FeaturestoreException.class);
-    constructorController.extractPrimaryKeysJoin(leftQuery, rightQuery, JoinType.INNER, null);
+    String actual = target.makeOfflineQuery(leftQuery);
+    String expected = "SELECT `fg0`.`ft1`, `fg1`.`ft1`\n" +
+        "FROM `fs1`.`fgHudi_1` `fg0`\n" +
+        "INNER JOIN `fs1`.`fgHudi_1` `fg1` ON `fg0`.`ft1` = `fg1`.`ft1`\n" +
+        "ORDER BY `fg0`.`ft1`";
+    Assert.assertEquals(expected, actual);
   }
 
   @Test
@@ -455,7 +342,7 @@ public class TestConstructorController {
 
     Query singleSideQuery = new Query("fs1", "project_fs1", fg1, "fg0", availableLeft, availableLeft);
     String query = constructorController.generateSQL(singleSideQuery, false)
-      .toSqlString(new SparkSqlDialect(SqlDialect.EMPTY_CONTEXT)).getSql().replace("\n", " ");
+        .toSqlString(new SparkSqlDialect(SqlDialect.EMPTY_CONTEXT)).getSql().replace("\n", " ");
     Assert.assertEquals("SELECT `fg0`.`ft1` FROM `fs1`.`fg1_1` `fg0`", query);
   }
 
@@ -469,7 +356,7 @@ public class TestConstructorController {
     Query singleSideQuery = new Query("fs1", "project_fs1", fg1, "fg0", availableLeft, availableLeft);
     singleSideQuery.setOrderByFeatures(availableLeft);
     String query = constructorController.generateSQL(singleSideQuery, false)
-            .toSqlString(new SparkSqlDialect(SqlDialect.EMPTY_CONTEXT)).getSql().replace("\n", " ");
+        .toSqlString(new SparkSqlDialect(SqlDialect.EMPTY_CONTEXT)).getSql().replace("\n", " ");
     Assert.assertEquals("SELECT `fg0`.`ft1` FROM `fs1`.`fg1_1` `fg0` ORDER BY `fg0`.`ft1`", query);
   }
 
@@ -482,7 +369,7 @@ public class TestConstructorController {
 
     Query singleSideQuery = new Query("fs1", "project_fs1", fg1, "fg0", availableLeft, availableLeft);
     String query = constructorController.generateSQL(singleSideQuery, true)
-      .toSqlString(new SparkSqlDialect(SqlDialect.EMPTY_CONTEXT)).getSql().replace("\n", " ");
+        .toSqlString(new SparkSqlDialect(SqlDialect.EMPTY_CONTEXT)).getSql().replace("\n", " ");
     Assert.assertEquals("SELECT `fg0`.`ft1` FROM `project_fs1`.`fg1_1` `fg0`", query);
   }
 
@@ -496,8 +383,54 @@ public class TestConstructorController {
     Query singleSideQuery = new Query("fs1", "project_fs1", fg1, "fg0", availableLeft, availableLeft);
     singleSideQuery.setOrderByFeatures(availableLeft);
     String query = constructorController.generateSQL(singleSideQuery, true)
-            .toSqlString(new SparkSqlDialect(SqlDialect.EMPTY_CONTEXT)).getSql().replace("\n", " ");
+        .toSqlString(new SparkSqlDialect(SqlDialect.EMPTY_CONTEXT)).getSql().replace("\n", " ");
     Assert.assertEquals("SELECT `fg0`.`ft1` FROM `project_fs1`.`fg1_1` `fg0` ORDER BY `fg0`.`ft1`", query);
+  }
+
+  @Test
+  public void testMakeOfflineQuery_sparkQuery() throws Exception {
+    List<Feature> availableLeft = new ArrayList<>();
+    availableLeft.add(new Feature("ft1", "fg0", true));
+    Query query = new Query("fs1", "project_fs1", fgHudi, "fg0", availableLeft, availableLeft);
+    query.setOrderByFeatures(availableLeft);
+    query.setHiveEngine(false);
+    Mockito.when(cachedFeaturegroupController.dropHudiSpecFeatures(availableLeft)).thenReturn(availableLeft);
+    String actual = target.makeOfflineQuery(query);
+    String expected = "SELECT `fg0`.`ft1`\n" +
+        "FROM `fg0` `fg0`\n" +
+        "ORDER BY `fg0`.`ft1`";
+    Assert.assertEquals(expected, actual);
+  }
+
+  @Test
+  public void testMakeOfflineQuery_sparkQueryNested() throws Exception {
+    List<Feature> availableLeft = new ArrayList<>();
+    availableLeft.add(new Feature("ft1", "fg0", true));
+
+    List<Feature> availableRight = new ArrayList<>();
+    availableRight.add(new Feature("ft1", "fg1", true));
+
+    Query leftQuery = new Query("fs1", "project_fs1", fgHudi, "fg0", availableLeft, availableLeft);
+    Query rightQuery = new Query("fs1", "project_fs1", fgHudi, "fg1", availableRight, availableRight);
+
+    leftQuery.setHiveEngine(false);
+    rightQuery.setHiveEngine(false);
+
+    Join join = new Join(leftQuery, rightQuery, availableLeft, availableLeft, JoinType.INNER, null, singleEqualsJoinOperator);
+    leftQuery.setJoins(Arrays.asList(join));
+
+    leftQuery.setOrderByFeatures(availableLeft);
+    List<Feature> allFeatures = new ArrayList<>(availableLeft);
+    allFeatures.addAll(availableRight);
+    Mockito.when(cachedFeaturegroupController.dropHudiSpecFeatures(allFeatures)).thenReturn(allFeatures);
+    Mockito.when(cachedFeaturegroupController.dropHudiSpecFeatures(availableRight)).thenReturn(availableRight);
+
+    String actual = target.makeOfflineQuery(leftQuery);
+    String expected = "SELECT `fg0`.`ft1`, `fg1`.`ft1`\n" +
+        "FROM `fg0` `fg0`\n" +
+        "INNER JOIN `fg1` `fg1` ON `fg0`.`ft1` = `fg1`.`ft1`\n" +
+        "ORDER BY `fg0`.`ft1`";
+    Assert.assertEquals(expected, actual);
   }
 
   @Test
@@ -513,8 +446,8 @@ public class TestConstructorController {
     Join join = new Join(leftQuery, rightQuery, availableLeft, availableLeft, JoinType.INNER, null, singleEqualsJoinOperator);
     leftQuery.setJoins(Arrays.asList(join));
 
-    String query = constructorController.generateSQL(leftQuery, false)
-      .toSqlString(new SparkSqlDialect(SqlDialect.EMPTY_CONTEXT)).getSql().replace("\n", " ");
+    String query = target.generateSQL(leftQuery, false)
+        .toSqlString(new SparkSqlDialect(SqlDialect.EMPTY_CONTEXT)).getSql().replace("\n", " ");
     Assert.assertEquals("SELECT `fg0`.`ft1`, `fg1`.`ft1` FROM `fs1`.`fg1_1` `fg1` INNER JOIN " +
         "`fs1`.`fg2_1` `fg0` ON `fg1`.`ft1` = `fg0`.`ft1`", query);
   }
@@ -533,8 +466,8 @@ public class TestConstructorController {
     leftQuery.setJoins(Arrays.asList(join));
 
     leftQuery.setOrderByFeatures(availableRight);
-    String query = constructorController.generateSQL(leftQuery, false)
-            .toSqlString(new SparkSqlDialect(SqlDialect.EMPTY_CONTEXT)).getSql().replace("\n", " ");
+    String query = target.generateSQL(leftQuery, false)
+        .toSqlString(new SparkSqlDialect(SqlDialect.EMPTY_CONTEXT)).getSql().replace("\n", " ");
     Assert.assertEquals("SELECT `fg0`.`ft1`, `fg1`.`ft1` FROM `fs1`.`fg1_1` `fg1` INNER JOIN " +
         "`fs1`.`fg2_1` `fg0` ON `fg1`.`ft1` = `fg0`.`ft1` ORDER BY `fg1`.`ft1`", query);
   }
@@ -551,13 +484,13 @@ public class TestConstructorController {
     Query rightQuery = new Query("fs1", "project_fs1", fg2, "fg2", availableRight, availableRight);
 
     Join join = new Join(leftQuery, rightQuery, availableLeft, availableLeft, JoinType.INNER, null,
-      singleEqualsJoinOperator);
+        singleEqualsJoinOperator);
     leftQuery.setJoins(Arrays.asList(join));
 
-    String query = constructorController.generateSQL(leftQuery, true)
-      .toSqlString(new SparkSqlDialect(SqlDialect.EMPTY_CONTEXT)).getSql().replace("\n", " ");
+    String query = target.generateSQL(leftQuery, true)
+        .toSqlString(new SparkSqlDialect(SqlDialect.EMPTY_CONTEXT)).getSql().replace("\n", " ");
     Assert.assertEquals("SELECT `fg1`.`ft1`, `fg2`.`ft1` FROM `project_fs2`.`fg1_1` `fg1` INNER JOIN " +
-       "`project_fs1`.`fg2_1` `fg2` ON `fg1`.`ft1` = `fg2`.`ft1`", query);
+        "`project_fs1`.`fg2_1` `fg2` ON `fg1`.`ft1` = `fg2`.`ft1`", query);
   }
 
   @Test
@@ -572,7 +505,7 @@ public class TestConstructorController {
     Query rightQuery = new Query("fs1", "project_fs1", fg2, "fg2", availableRight, availableRight);
 
     Join join = new Join(leftQuery, rightQuery, availableLeft, availableLeft, JoinType.INNER, null,
-            singleEqualsJoinOperator);
+        singleEqualsJoinOperator);
     leftQuery.setJoins(Arrays.asList(join));
 
     List<Feature> orderByList = new ArrayList<>();
@@ -580,8 +513,8 @@ public class TestConstructorController {
     orderByList.addAll(availableRight);
 
     leftQuery.setOrderByFeatures(orderByList);
-    String query = constructorController.generateSQL(leftQuery, true)
-            .toSqlString(new SparkSqlDialect(SqlDialect.EMPTY_CONTEXT)).getSql().replace("\n", " ");
+    String query = target.generateSQL(leftQuery, true)
+        .toSqlString(new SparkSqlDialect(SqlDialect.EMPTY_CONTEXT)).getSql().replace("\n", " ");
     Assert.assertEquals("SELECT `fg1`.`ft1`, `fg2`.`ft1` FROM `project_fs2`.`fg1_1` `fg1` INNER JOIN " +
         "`project_fs1`.`fg2_1` `fg2` ON `fg1`.`ft1` = `fg2`.`ft1` ORDER BY `fg1`.`ft1`, `fg2`.`ft1`", query);
   }
@@ -603,106 +536,106 @@ public class TestConstructorController {
 
     Join join = new Join(leftQuery, secondQuery, availableFirst, availableSecond, JoinType.INNER, null, singleEqualsJoinOperator);
     Join secondJoin = new Join(leftQuery, thirdQuery, availableFirst, availableFirst, JoinType.INNER, null,
-      singleEqualsJoinOperator);
+        singleEqualsJoinOperator);
     leftQuery.setJoins(Arrays.asList(join, secondJoin));
 
-    String query = constructorController.generateSQL(leftQuery, false)
-      .toSqlString(new SparkSqlDialect(SqlDialect.EMPTY_CONTEXT)).getSql().replace("\n", " ");
+    String query = target.generateSQL(leftQuery, false)
+        .toSqlString(new SparkSqlDialect(SqlDialect.EMPTY_CONTEXT)).getSql().replace("\n", " ");
     Assert.assertEquals("SELECT `fg0`.`ft1`, `fg1`.`ft2`, `fg2`.`ft1` " +
         "FROM `fs1`.`fg1_1` `fg0` " +
         "INNER JOIN `fs1`.`fg2_1` `fg1` ON `fg0`.`ft1` = `fg1`.`ft2` " +
         "INNER JOIN `fs1`.`fg3_1` `fg2` ON `fg0`.`ft1` = `fg2`.`ft1`", query);
   }
-  
+
   @Test
   public void testTreeWayHudiJoinSQLNode() throws Exception {
     List<Feature> availableFirst = new ArrayList<>();
     availableFirst.add(new Feature("ft1", "fg0", "Float", null, null));
-    
+
     List<Feature> availableSecond = new ArrayList<>();
     availableSecond.add(new Feature("ft2", "fg1", "Float", null, null));
-    
+
     List<Feature> availableThird = new ArrayList<>();
     availableThird.add(new Feature("ft1", "fg2", "Float", null, null));
-  
+
     Mockito.when(cachedFeaturegroupController.dropHudiSpecFeatures(Mockito.any()))
-      .thenReturn(availableSecond, availableThird, Stream.of(availableFirst, availableSecond, availableThird)
-        .flatMap(Collection::stream).collect(Collectors.toList()));
-    
+        .thenReturn(availableSecond, availableThird, Stream.of(availableFirst, availableSecond, availableThird)
+            .flatMap(Collection::stream).collect(Collectors.toList()));
+
     fg1.getCachedFeaturegroup().setTimeTravelFormat(TimeTravelFormat.HUDI);
     fg2.getCachedFeaturegroup().setTimeTravelFormat(TimeTravelFormat.HUDI);
     fg3.getCachedFeaturegroup().setTimeTravelFormat(TimeTravelFormat.HUDI);
-  
+
     Query leftQuery = new Query("fs1", "project_fs1", fg1, "fg0", availableFirst, availableFirst);
     Query secondQuery = new Query("fs1", "project_fs1", fg2, "fg1", availableSecond , availableSecond);
     Query thirdQuery = new Query("fs1", "project_fs1", fg3,"fg2", availableThird, availableThird);
-    
+
     Join join = new Join(leftQuery, secondQuery, availableFirst, availableSecond, JoinType.INNER, null, singleEqualsJoinOperator);
     Join secondJoin = new Join(leftQuery, thirdQuery, availableFirst, availableFirst, JoinType.INNER, null,
-      singleEqualsJoinOperator);
+        singleEqualsJoinOperator);
     leftQuery.setJoins(Arrays.asList(join, secondJoin));
-    
-    String query = constructorController.generateSQL(leftQuery, false)
-      .toSqlString(new SparkSqlDialect(SqlDialect.EMPTY_CONTEXT)).getSql().replace("\n", " ");
+
+    String query = target.generateSQL(leftQuery, false)
+        .toSqlString(new SparkSqlDialect(SqlDialect.EMPTY_CONTEXT)).getSql().replace("\n", " ");
     Assert.assertEquals("SELECT `fg0`.`ft1`, `fg1`.`ft2`, `fg2`.`ft1` " +
-      "FROM `fg0` `fg0` " +
-      "INNER JOIN `fg1` `fg1` ON `fg0`.`ft1` = `fg1`.`ft2` " +
-      "INNER JOIN `fg2` `fg2` ON `fg0`.`ft1` = `fg2`.`ft1`", query);
+        "FROM `fg0` `fg0` " +
+        "INNER JOIN `fg1` `fg1` ON `fg0`.`ft1` = `fg1`.`ft2` " +
+        "INNER JOIN `fg2` `fg2` ON `fg0`.`ft1` = `fg2`.`ft1`", query);
   }
-  
-  
+
+
   @Test
   public void testTreeWayHudiJoinSQLNodeHiveEngine() throws Exception {
     List<Feature> availableFirst = new ArrayList<>();
     availableFirst.add(new Feature("ft1", "fg0", "Float", null, null));
-    
+
     List<Feature> availableSecond = new ArrayList<>();
     availableSecond.add(new Feature("ft2", "fg1", "Float", null, null));
-    
+
     List<Feature> availableThird = new ArrayList<>();
     availableThird.add(new Feature("ft1", "fg2", "Float", null, null));
-    
+
     Mockito.when(cachedFeaturegroupController.dropHudiSpecFeatures(Mockito.any()))
-      .thenReturn(availableSecond, availableThird, Stream.of(availableFirst, availableSecond, availableThird)
-        .flatMap(Collection::stream).collect(Collectors.toList()));
-    
+        .thenReturn(availableSecond, availableThird, Stream.of(availableFirst, availableSecond, availableThird)
+            .flatMap(Collection::stream).collect(Collectors.toList()));
+
     fg1.getCachedFeaturegroup().setTimeTravelFormat(TimeTravelFormat.HUDI);
     fg2.getCachedFeaturegroup().setTimeTravelFormat(TimeTravelFormat.HUDI);
     fg3.getCachedFeaturegroup().setTimeTravelFormat(TimeTravelFormat.HUDI);
-    
+
     Query leftQuery = new Query("fs1", "project_fs1", fg1, "fg0", availableFirst, availableFirst, true);
     Query secondQuery = new Query("fs1", "project_fs1", fg2, "fg1", availableSecond , availableSecond, true);
     Query thirdQuery = new Query("fs1", "project_fs1", fg3,"fg2", availableThird, availableThird, true);
-    
+
     Join join = new Join(leftQuery, secondQuery, availableFirst, availableSecond, JoinType.INNER, null, singleEqualsJoinOperator);
     Join secondJoin = new Join(leftQuery, thirdQuery, availableFirst, availableFirst, JoinType.INNER, null,
-      singleEqualsJoinOperator);
+        singleEqualsJoinOperator);
     leftQuery.setJoins(Arrays.asList(join, secondJoin));
-    
-    String query = constructorController.generateSQL(leftQuery, false)
-      .toSqlString(new SparkSqlDialect(SqlDialect.EMPTY_CONTEXT)).getSql().replace("\n", " ");
+
+    String query = target.generateSQL(leftQuery, false)
+        .toSqlString(new SparkSqlDialect(SqlDialect.EMPTY_CONTEXT)).getSql().replace("\n", " ");
     Assert.assertEquals("SELECT `fg0`.`ft1`, `fg1`.`ft2`, `fg2`.`ft1` " +
-      "FROM `fs1`.`fg1_1` `fg0` " +
-      "INNER JOIN `fs1`.`fg2_1` `fg1` ON `fg0`.`ft1` = `fg1`.`ft2` " +
-      "INNER JOIN `fs1`.`fg3_1` `fg2` ON `fg0`.`ft1` = `fg2`.`ft1`", query);
+        "FROM `fs1`.`fg1_1` `fg0` " +
+        "INNER JOIN `fs1`.`fg2_1` `fg1` ON `fg0`.`ft1` = `fg1`.`ft2` " +
+        "INNER JOIN `fs1`.`fg3_1` `fg2` ON `fg0`.`ft1` = `fg2`.`ft1`", query);
   }
-  
+
   @Test
   public void testThreeWayJoinSQLNodeWithFilters() throws Exception {
     List<Feature> availableFirst = new ArrayList<>();
     availableFirst.add(new Feature("ft1", "fg0", "Float", null, null));
-  
+
     List<Feature> availableSecond = new ArrayList<>();
     availableSecond.add(new Feature("ft2", "fg1", "Float", null, null));
-  
+
     List<Feature> availableThird = new ArrayList<>();
     availableThird.add(new Feature("ft1", "fg2", "Float", null, null));
     availableThird.add(new Feature("ft2", "fg2", "Float", null, null));
-  
+
     Query leftQuery = new Query("fs1", "project_fs1", fg1, "fg0", availableFirst, availableFirst);
     Query secondQuery = new Query("fs1", "project_fs1", fg2, "fg1", availableSecond , availableSecond);
     Query thirdQuery = new Query("fs1", "project_fs1", fg3,"fg2", availableThird, availableThird);
-  
+
     FilterLogic firstFilter = new FilterLogic(SqlFilterLogic.AND);
     firstFilter.setLeftFilter(new Filter(Arrays.asList(availableFirst.get(0)), SqlCondition.EQUALS, "10"));
     FilterLogic rightLogic = new FilterLogic(SqlFilterLogic.OR);
@@ -710,31 +643,31 @@ public class TestConstructorController {
     rightLogic.setRightFilter(new Filter(Arrays.asList(availableThird.get(1)), SqlCondition.EQUALS, "10"));
     firstFilter.setRightLogic(rightLogic);
     leftQuery.setFilter(firstFilter);
-  
+
     FilterLogic secondFilter = new FilterLogic(SqlFilterLogic.SINGLE);
     secondFilter.setLeftFilter(new Filter(Arrays.asList(availableSecond.get(0)), SqlCondition.NOT_EQUALS, "10"));
     secondQuery.setFilter(secondFilter);
-    
+
     Join join = new Join(leftQuery, secondQuery, availableFirst, availableSecond, JoinType.INNER, null, singleEqualsJoinOperator);
     Join secondJoin = new Join(leftQuery, thirdQuery, availableFirst, availableFirst, JoinType.INNER, null,
-      singleEqualsJoinOperator);
+        singleEqualsJoinOperator);
     leftQuery.setJoins(Arrays.asList(join, secondJoin));
-  
-    String query = constructorController.generateSQL(leftQuery, false)
-      .toSqlString(new SparkSqlDialect(SqlDialect.EMPTY_CONTEXT)).getSql().replace("\n", " ");
+
+    String query = target.generateSQL(leftQuery, false)
+        .toSqlString(new SparkSqlDialect(SqlDialect.EMPTY_CONTEXT)).getSql().replace("\n", " ");
     Assert.assertEquals("SELECT `fg0`.`ft1`, `fg1`.`ft2`, `fg2`.`ft1`, `fg2`.`ft2` " +
-      "FROM `fs1`.`fg1_1` `fg0` " +
-      "INNER JOIN `fs1`.`fg2_1` `fg1` ON `fg0`.`ft1` = `fg1`.`ft2` " +
-      "INNER JOIN `fs1`.`fg3_1` `fg2` ON `fg0`.`ft1` = `fg2`.`ft1` " +
-      "WHERE `fg0`.`ft1` = 10 AND (`fg2`.`ft1` = 10 OR `fg2`.`ft2` = 10) AND `fg1`.`ft2` <> 10", query);
+        "FROM `fs1`.`fg1_1` `fg0` " +
+        "INNER JOIN `fs1`.`fg2_1` `fg1` ON `fg0`.`ft1` = `fg1`.`ft2` " +
+        "INNER JOIN `fs1`.`fg3_1` `fg2` ON `fg0`.`ft1` = `fg2`.`ft1` " +
+        "WHERE `fg0`.`ft1` = 10 AND (`fg2`.`ft1` = 10 OR `fg2`.`ft2` = 10) AND `fg1`.`ft2` <> 10", query);
   }
 
   @Test
   public void testCaseWhenDefaultStringSpark() {
     Feature feature =
-      new Feature("feature", "fg", "String", false, "hello", null);
-    String output = constructorController.caseWhenDefault(feature)
-      .toSqlString(new SparkSqlDialect(SqlDialect.EMPTY_CONTEXT)).getSql();
+        new Feature("feature", "fg", "String", false, "hello", null);
+    String output = target.caseWhenDefault(feature)
+        .toSqlString(new SparkSqlDialect(SqlDialect.EMPTY_CONTEXT)).getSql();
     String expected = "CASE WHEN `fg`.`feature` IS NULL THEN 'hello' ELSE `fg`.`feature` END";
     Assert.assertEquals(expected, output);
   }
@@ -742,9 +675,9 @@ public class TestConstructorController {
   @Test
   public void testCaseWhenDefaultOtherHive() {
     Feature feature =
-      new Feature("feature", "fg", "Float", false, "10.0", null);
-    String output = constructorController.caseWhenDefault(feature)
-      .toSqlString(new SparkSqlDialect(SqlDialect.EMPTY_CONTEXT)).getSql();
+        new Feature("feature", "fg", "Float", false, "10.0", null);
+    String output = target.caseWhenDefault(feature)
+        .toSqlString(new SparkSqlDialect(SqlDialect.EMPTY_CONTEXT)).getSql();
     String expected = "CASE WHEN `fg`.`feature` IS NULL THEN 10.0 ELSE `fg`.`feature` END";
     Assert.assertEquals(expected, output);
   }
@@ -752,9 +685,9 @@ public class TestConstructorController {
   @Test
   public void testSelectWithDefaultAsSpark() {
     Feature feature =
-      new Feature("feature", "fg", "Float", false, "10.0", null);
-    String output = constructorController.selectWithDefaultAs(feature)
-      .toSqlString(new SparkSqlDialect(SqlDialect.EMPTY_CONTEXT)).getSql();
+        new Feature("feature", "fg", "Float", false, "10.0", null);
+    String output = target.selectWithDefaultAs(feature)
+        .toSqlString(new SparkSqlDialect(SqlDialect.EMPTY_CONTEXT)).getSql();
     String expected = "CASE WHEN `fg`.`feature` IS NULL THEN 10.0 ELSE `fg`.`feature` END `feature`";
     Assert.assertEquals(expected, output);
   }
@@ -762,9 +695,9 @@ public class TestConstructorController {
   @Test
   public void testSelectWithDefaultAsHive() {
     Feature feature =
-      new Feature("feature", "fg", "Float", false, "10.0", null);
-    String output = constructorController.selectWithDefaultAs(feature)
-      .toSqlString(new SparkSqlDialect(SqlDialect.EMPTY_CONTEXT)).getSql();
+        new Feature("feature", "fg", "Float", false, "10.0", null);
+    String output = target.selectWithDefaultAs(feature)
+        .toSqlString(new SparkSqlDialect(SqlDialect.EMPTY_CONTEXT)).getSql();
     String expected = "CASE WHEN `fg`.`feature` IS NULL THEN 10.0 ELSE `fg`.`feature` END `feature`";
     Assert.assertEquals(expected, output);
   }
@@ -796,11 +729,11 @@ public class TestConstructorController {
 
     Join join = new Join(leftQuery, secondQuery, availableFirst, availableSecond, JoinType.INNER, "prefix2_", singleEqualsJoinOperator);
     Join secondJoin = new Join(leftQuery, thirdQuery, availableFirst, availableFirst, JoinType.INNER, "prefix4_",
-      singleEqualsJoinOperator);
+        singleEqualsJoinOperator);
     leftQuery.setJoins(Arrays.asList(join, secondJoin));
 
-    String query = constructorController.generateSQL(leftQuery, true)
-      .toSqlString(new SparkSqlDialect(SqlDialect.EMPTY_CONTEXT)).getSql().replace("\n", " ");
+    String query = target.generateSQL(leftQuery, true)
+        .toSqlString(new SparkSqlDialect(SqlDialect.EMPTY_CONTEXT)).getSql().replace("\n", " ");
     Assert.assertEquals("SELECT `fg0`.`ft1`, `fg1`.`ft2` `prefix2_ft2`, " +
             "`fg2`.`fg4_ft4_1` `prefix4_fg4_ft4_1`, `fg2`.`fg4_ft4_2` `prefix4_fg4_ft4_2` " +
             "FROM `project_fs1`.`fg1_1` `fg0` INNER JOIN `project_fs1`.`fg2_1` `fg1` ON `fg0`.`ft1` = `fg1`.`ft2` " +
@@ -808,192 +741,154 @@ public class TestConstructorController {
         query);
   }
 
-  @Test
-  public void testRemoveDuplicateColumns() throws Exception {
-    List<Feature> joinLeft = new ArrayList<>();
-    joinLeft.add(new Feature("ft1","fg0", "Float", null, null));
 
-    List<Feature> availableLeft = new ArrayList<>(joinLeft);
-    availableLeft.add(new Feature("ft2", "fg0", "int", null, null));
-
-    List<Feature> joinRight = new ArrayList<>();
-    joinRight.add(new Feature("ft1","fg1", "Float", null, null));
-
-    List<Feature> availableRight = new ArrayList<>(joinRight);
-    availableRight.add(new Feature("ft2", "fg1", "int", null, null));
-    availableRight.add(new Feature("ft3", "fg1", "int", null, null));
-
-    Query rightQuery = new Query("fs1", "project_fs1", fg2, "fg0", availableRight, availableRight);
-    Query leftQuery = new Query("fs1", "project_fs1", fg1, "fg1", availableLeft, availableLeft);
-    Join join = new Join(leftQuery, rightQuery, joinLeft, joinRight, JoinType.INNER, null, singleEqualsJoinOperator);
-    leftQuery.setJoins(Arrays.asList(join));
-
-    constructorController.removeDuplicateColumns(leftQuery, false);
-    Assert.assertEquals(2, rightQuery.getFeatures().size());
-    Assert.assertEquals("ft2", rightQuery.getFeatures().get(0).getName());
-    Assert.assertEquals("ft3", rightQuery.getFeatures().get(1).getName());
-  }
 
   @Test
-  public void testRemoveDuplicateColumnsPrefix() throws Exception {
-    List<Feature> joinLeft = new ArrayList<>();
-    joinLeft.add(new Feature("ft1","fg0", "Float", null, null));
+  public void testExtractJoinOnMissingFeature() throws Exception {
+    ConstructorController constructorController = new ConstructorController();
 
-    List<Feature> availableLeft = new ArrayList<>(joinLeft);
-    availableLeft.add(new Feature("ft2", "fg0", "int", null, null));
-
-    List<Feature> joinRight = new ArrayList<>();
-    joinRight.add(new Feature("ft1","fg1", "Float", null, "right_"));
-
-    List<Feature> availableRight = new ArrayList<>(joinRight);
-    availableRight.add(new Feature("ft2", "fg1", "int", null, "right_"));
-    availableRight.add(new Feature("ft3", "fg1", "int", null, "right_"));
-
-    Query rightQuery = new Query("fs1", "project_fs1", fg2, "fg0", availableRight, availableRight);
-    Query leftQuery = new Query("fs1", "project_fs1", fg1, "fg1", availableLeft, availableLeft);
-    Join join = new Join(leftQuery, rightQuery, joinLeft, joinRight, JoinType.INNER, "right_",
-      singleEqualsJoinOperator);
-    leftQuery.setJoins(Arrays.asList(join));
-
-    constructorController.removeDuplicateColumns(leftQuery, false);
-    Assert.assertEquals(3, rightQuery.getFeatures().size());
-  }
-
-  @Test
-  public void testRemoveDuplicateColumnsPitEnabled() throws Exception {
-    List<Feature> joinLeft = new ArrayList<>();
-    joinLeft.add(new Feature("ft1","fg0", "Float", null, null));
-
-    List<Feature> availableLeft = new ArrayList<>(joinLeft);
-    availableLeft.add(new Feature("ft2", "fg0", "int", null, null));
-
-    List<Feature> joinRight = new ArrayList<>();
-    joinRight.add(new Feature("ft1","fg1", "Float", null, "right_"));
-
-    List<Feature> availableRight = new ArrayList<>(joinRight);
-    availableRight.add(new Feature("ft2", "fg1", "int", null, "right_"));
-    availableRight.add(new Feature("ft3", "fg1", "int", null, "right_"));
-
-    fg2.setEventTime("ft3");
-
-    Query rightQuery = new Query("fs1", "project_fs1", fg2, "fg0", availableRight, availableRight);
-    Query leftQuery = new Query("fs1", "project_fs1", fg1, "fg1", availableLeft, availableLeft);
-    Join join = new Join(leftQuery, rightQuery, joinLeft, joinRight, JoinType.INNER, "right_",
-      singleEqualsJoinOperator);
-    leftQuery.setJoins(Arrays.asList(join));
-
-    constructorController.removeDuplicateColumns(leftQuery, true);
-    Assert.assertEquals(2, rightQuery.getFeatures().size());
-    Assert.assertEquals("ft1", rightQuery.getFeatures().get(0).getName());
-    Assert.assertEquals("ft2", rightQuery.getFeatures().get(1).getName());
-  }
-
-  @Test
-  public void testGetWithOrWithoutPrefix() throws Exception {
-    Feature feature = new Feature("ft1", "fg1", "int", null, null);
-    Assert.assertEquals("`fg1`.`ft1`",
-      constructorController.getWithOrWithoutPrefix(feature, false)
-        .toSqlString(new SparkSqlDialect(SqlDialect.EMPTY_CONTEXT)).getSql());
-  }
-
-  @Test
-  public void testGetWithOrWithoutPrefixWithPrefix() throws Exception {
-    Feature feature = new Feature("ft1", "fg1", "int", null, "right_");
-    Assert.assertEquals("`fg1`.`ft1` `right_ft1`",
-      constructorController.getWithOrWithoutPrefix(feature, true)
-        .toSqlString(new SparkSqlDialect(SqlDialect.EMPTY_CONTEXT)).getSql());
-  }
-  
-  @Test
-  public void testMakeOfflineQuery_hiveQuery() throws Exception {
     List<Feature> availableLeft = new ArrayList<>();
-    availableLeft.add(new Feature("ft1", "fg0", true));
-    Query query = new Query("fs1", "project_fs1", fgHudi, "fg0", availableLeft, availableLeft);
-    query.setOrderByFeatures(availableLeft);
-    query.setHiveEngine(true);
-    Mockito.when(cachedFeaturegroupController.dropHudiSpecFeatures(availableLeft)).thenReturn(availableLeft);
-    String actual = constructorController.makeOfflineQuery(query);
-    String expected = "SELECT `fg0`.`ft1`\n" +
-        "FROM `fs1`.`fgHudi_1` `fg0`\n" +
-        "ORDER BY `fg0`.`ft1`";
-    Assert.assertEquals(expected, actual);
-  }
-
-  @Test
-  public void testMakeOfflineQuery_hiveQueryNested() throws Exception {
-    List<Feature> availableLeft = new ArrayList<>();
-    availableLeft.add(new Feature("ft1", "fg0", true));
+    availableLeft.add(new Feature("fg1_ft2"));
 
     List<Feature> availableRight = new ArrayList<>();
-    availableRight.add(new Feature("ft1", "fg1", true));
+    availableRight.add(new Feature("ft1"));
+    availableRight.add(new Feature("fg2_ft2"));
 
-    Query leftQuery = new Query("fs1", "project_fs1", fgHudi, "fg0", availableLeft, availableLeft);
-    Query rightQuery = new Query("fs1", "project_fs1", fgHudi, "fg1", availableRight, availableRight);
+    List<Feature> leftOn = new ArrayList<>();
+    leftOn.add(new Feature("ft1"));
 
-    leftQuery.setHiveEngine(true);
-    rightQuery.setHiveEngine(true);
+    List<Feature> rightOn = new ArrayList<>();
+    rightOn.add(new Feature("ft1"));
 
-    Join join = new Join(leftQuery, rightQuery, availableLeft, availableRight, JoinType.INNER, null, singleEqualsJoinOperator);
-    leftQuery.setJoins(Arrays.asList(join));
+    Query leftQuery = new Query("fs1", "project_fs1", fg1, "fg1", availableLeft, availableLeft);
+    Query rightQuery = new Query("fs1", "project_fs1", fg2, "fg1", availableRight, availableRight);
 
-    leftQuery.setOrderByFeatures(availableLeft);
-
-    List<Feature> allFeatures = new ArrayList<>(availableLeft);
-    allFeatures.addAll(availableRight);
-    Mockito.when(cachedFeaturegroupController.dropHudiSpecFeatures(allFeatures)).thenReturn(allFeatures);
-    Mockito.when(cachedFeaturegroupController.dropHudiSpecFeatures(availableRight)).thenReturn(availableRight);
-
-    String actual = constructorController.makeOfflineQuery(leftQuery);
-    String expected = "SELECT `fg0`.`ft1`, `fg1`.`ft1`\n" +
-        "FROM `fs1`.`fgHudi_1` `fg0`\n" +
-        "INNER JOIN `fs1`.`fgHudi_1` `fg1` ON `fg0`.`ft1` = `fg1`.`ft1`\n" +
-        "ORDER BY `fg0`.`ft1`";
-    Assert.assertEquals(expected, actual);
-  }
-  
-  @Test
-  public void testMakeOfflineQuery_sparkQuery() throws Exception {
-    List<Feature> availableLeft = new ArrayList<>();
-    availableLeft.add(new Feature("ft1", "fg0", true));
-    Query query = new Query("fs1", "project_fs1", fgHudi, "fg0", availableLeft, availableLeft);
-    query.setOrderByFeatures(availableLeft);
-    query.setHiveEngine(false);
-    Mockito.when(cachedFeaturegroupController.dropHudiSpecFeatures(availableLeft)).thenReturn(availableLeft);
-    String actual = constructorController.makeOfflineQuery(query);
-    String expected = "SELECT `fg0`.`ft1`\n" +
-        "FROM `fg0` `fg0`\n" +
-        "ORDER BY `fg0`.`ft1`";
-    Assert.assertEquals(expected, actual);
+    thrown.expect(FeaturestoreException.class);
+    queryController.extractLeftRightOn(leftQuery, rightQuery, leftOn, rightOn, JoinType.INNER, null);
   }
 
   @Test
-  public void testMakeOfflineQuery_sparkQueryNested() throws Exception {
+  public void testExtractJoinLeftRight() throws Exception {
+    ConstructorController constructorController = new ConstructorController();
+
     List<Feature> availableLeft = new ArrayList<>();
-    availableLeft.add(new Feature("ft1", "fg0", true));
+    availableLeft.add(new Feature("fg1_ft3"));
 
     List<Feature> availableRight = new ArrayList<>();
-    availableRight.add(new Feature("ft1", "fg1", true));
+    availableRight.add(new Feature("fg2_ft3"));
 
-    Query leftQuery = new Query("fs1", "project_fs1", fgHudi, "fg0", availableLeft, availableLeft);
-    Query rightQuery = new Query("fs1", "project_fs1", fgHudi, "fg1", availableRight, availableRight);
+    List<Feature> leftOn = Arrays.asList(new Feature("fg1_ft3"));
+    List<Feature> rightOn = Arrays.asList(new Feature("fg2_ft3"));
+    List<SqlCondition> expectedConditionList = Arrays.asList(SqlCondition.EQUALS);
 
-    leftQuery.setHiveEngine(false);
-    rightQuery.setHiveEngine(false);
+    Query leftQuery = new Query("fs1", "project_fs1", fg1, "fg1", availableLeft, availableLeft);
+    Query rightQuery = new Query("fs1","project_fs1", fg2, "fg1", availableRight, availableRight);
 
-    Join join = new Join(leftQuery, rightQuery, availableLeft, availableLeft, JoinType.INNER, null, singleEqualsJoinOperator);
-    leftQuery.setJoins(Arrays.asList(join));
+    Join join = queryController.extractLeftRightOn(leftQuery, rightQuery, leftOn, rightOn, JoinType.INNER, null);
+    Assert.assertEquals(1, join.getLeftOn().size());
+    Assert.assertEquals(1, join.getRightOn().size());
+    Assert.assertEquals(expectedConditionList, join.getJoinOperator());
+  }
 
-    leftQuery.setOrderByFeatures(availableLeft);
-    List<Feature> allFeatures = new ArrayList<>(availableLeft);
-    allFeatures.addAll(availableRight);
-    Mockito.when(cachedFeaturegroupController.dropHudiSpecFeatures(allFeatures)).thenReturn(allFeatures);
-    Mockito.when(cachedFeaturegroupController.dropHudiSpecFeatures(availableRight)).thenReturn(availableRight);
+  @Test
+  public void testExtractJoinLeftRightWrongSizes() throws Exception {
+    ConstructorController constructorController = new ConstructorController();
 
-    String actual = constructorController.makeOfflineQuery(leftQuery);
-    String expected = "SELECT `fg0`.`ft1`, `fg1`.`ft1`\n" +
-        "FROM `fg0` `fg0`\n" +
-        "INNER JOIN `fg1` `fg1` ON `fg0`.`ft1` = `fg1`.`ft1`\n" +
-        "ORDER BY `fg0`.`ft1`";
-    Assert.assertEquals(expected, actual);
+    List<Feature> availableLeft = new ArrayList<>();
+    availableLeft.add(new Feature("fg1_ft3"));
+
+    List<Feature> availableRight = new ArrayList<>();
+    availableRight.add(new Feature("fg2_ft3"));
+
+    List<Feature> leftOn = Arrays.asList(new Feature("fg1_ft3"), new Feature("additional"));
+    List<Feature> rightOn = Arrays.asList(new Feature("fg2_ft3"));
+
+    Query leftQuery = new Query("fs1", "project_fs1", fg1, "fg1", availableLeft, availableLeft);
+    Query rightQuery = new Query("fs1", "project_fs1", fg2, "fg1", availableRight, availableRight);
+
+    thrown.expect(FeaturestoreException.class);
+    queryController.extractLeftRightOn(leftQuery, rightQuery, leftOn, rightOn, JoinType.INNER, null);
+  }
+
+  @Test
+  public void testExtractJoinLeftRightMissingFeature() throws Exception {
+    ConstructorController constructorController = new ConstructorController();
+
+    List<Feature> availableLeft = new ArrayList<>();
+    availableLeft.add(new Feature("fg1_ft3"));
+
+    List<Feature> availableRight = new ArrayList<>();
+    availableRight.add(new Feature("fg2_ft3"));
+
+    List<Feature> leftOn = Arrays.asList(new Feature("fg1_ft3"));
+    List<Feature> rightOn = Arrays.asList(new Feature("fg2_ft1"));
+
+    Query leftQuery = new Query("fs1", "project_fs1", fg1, "fg1", availableLeft, availableLeft);
+    Query rightQuery = new Query("fs1", "project_fs1", fg2, "fg1", availableRight, availableRight);
+
+    thrown.expect(FeaturestoreException.class);
+    queryController.extractLeftRightOn(leftQuery, rightQuery, leftOn, rightOn, JoinType.INNER, null);
+  }
+
+  @Test
+  public void testNoJoiningKeySingle() throws Exception {
+    ConstructorController constructorController = new ConstructorController();
+
+    List<Feature> availableLeft = new ArrayList<>();
+    availableLeft.add(new Feature("ft1", true));
+
+    List<Feature> availableRight = new ArrayList<>();
+    availableRight.add(new Feature("ft1", true));
+
+    Query leftQuery = new Query("fs1", "project_fs1", fg1, "fg1", availableLeft, availableLeft);
+    Query rightQuery = new Query("fs1", "project_fs1", fg2, "fg1", availableRight, availableRight);
+    List<SqlCondition> expectedConditionList = Arrays.asList(SqlCondition.EQUALS);
+
+    Join join = queryController.extractPrimaryKeysJoin(leftQuery, rightQuery, JoinType.INNER, null);
+    Assert.assertEquals(1, join.getLeftOn().size());
+    Assert.assertEquals(1, join.getRightOn().size());
+    Assert.assertEquals(expectedConditionList, join.getJoinOperator());
+  }
+
+  @Test
+  public void testNoJoiningKeyMultipleDifferentSizes() throws Exception {
+    ConstructorController constructorController = new ConstructorController();
+
+    List<Feature> availableLeft = new ArrayList<>();
+    availableLeft.add(new Feature("ft1", true));
+    availableLeft.add(new Feature("ft2", true));
+    availableLeft.add(new Feature("ft4", true));
+
+    List<Feature> availableRight = new ArrayList<>();
+    availableRight.add(new Feature("ft1", true));
+    availableRight.add(new Feature("ft2", true));
+    availableRight.add(new Feature("ft3", true));
+
+    Query leftQuery = new Query("fs1", "project_fs1", fg1, "fg1", availableLeft, availableLeft);
+    Query rightQuery = new Query("fs1", "project_fs1", fg2, "fg1", availableRight, availableRight);
+
+    List<SqlCondition> expectedConditionList = Arrays.asList(SqlCondition.EQUALS, SqlCondition.EQUALS);
+
+    Join join = queryController.extractPrimaryKeysJoin(leftQuery, rightQuery, JoinType.INNER, null);
+    Assert.assertEquals(2, join.getLeftOn().size());
+    Assert.assertEquals(2, join.getRightOn().size());
+    Assert.assertEquals(expectedConditionList, join.getJoinOperator());
+  }
+
+  @Test
+  public void testNoPrimaryKeys() throws Exception {
+    ConstructorController constructorController = new ConstructorController();
+
+    List<Feature> availableLeft = new ArrayList<>();
+    availableLeft.add(new Feature("ft1"));
+
+    List<Feature> availableRight = new ArrayList<>();
+    availableRight.add(new Feature("ft1"));
+
+    Query leftQuery = new Query("fs1", "project_fs1", fg1, "fg1", availableLeft, availableLeft);
+    Query rightQuery = new Query("fs1", "project_fs1", fg2, "fg1", availableRight, availableRight);
+
+    thrown.expect(FeaturestoreException.class);
+    queryController.extractPrimaryKeysJoin(leftQuery, rightQuery, JoinType.INNER, null);
   }
 }

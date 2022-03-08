@@ -17,8 +17,10 @@
 package io.hops.hopsworks.api.featurestore;
 
 import io.hops.hopsworks.common.api.ResourceRequest;
+import io.hops.hopsworks.common.featurestore.keyword.KeywordDTO;
 import io.hops.hopsworks.persistence.entity.featurestore.Featurestore;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.Featuregroup;
+import io.hops.hopsworks.persistence.entity.featurestore.featureview.FeatureView;
 import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.TrainingDataset;
 import io.hops.hopsworks.persistence.entity.project.Project;
 
@@ -67,6 +69,15 @@ public class FeaturestoreKeywordBuilder {
         .build();
   }
 
+  private URI uri(UriInfo uriInfo, Project project,
+      Featurestore featurestore, FeatureView featureView) {
+    return uri(uriInfo, project, featurestore)
+        .path(ResourceRequest.Name.FEATUREVIEW.toString().toLowerCase())
+        .path(Integer.toString(featureView.getId()))
+        .path(ResourceRequest.Name.KEYWORDS.toString().toLowerCase())
+        .build();
+  }
+
   private boolean expand(ResourceRequest resourceRequest) {
     return resourceRequest != null && resourceRequest.contains(ResourceRequest.Name.KEYWORDS);
   }
@@ -91,6 +102,17 @@ public class FeaturestoreKeywordBuilder {
       dto.setHref(uri(uriInfo, project, trainingDataset.getFeaturestore(), trainingDataset));
     }
 
+    dto.setExpand(expand(resourceRequest));
+    if (dto.isExpand()) {
+      dto.setKeywords(keywords);
+    }
+    return dto;
+  }
+
+  public KeywordDTO build(UriInfo uriInfo, ResourceRequest resourceRequest, Project project,
+      FeatureView featureView, List<String> keywords) {
+    KeywordDTO dto = new KeywordDTO();
+    dto.setHref(uri(uriInfo, project, featureView.getFeaturestore(), featureView));
     dto.setExpand(expand(resourceRequest));
     if (dto.isExpand()) {
       dto.setKeywords(keywords);

@@ -17,6 +17,7 @@
 package io.hops.hopsworks.persistence.entity.featurestore.trainingdataset;
 
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.Featuregroup;
+import io.hops.hopsworks.persistence.entity.featurestore.featureview.FeatureView;
 import io.hops.hopsworks.persistence.entity.featurestore.transformationFunction.TransformationFunction;
 
 import javax.persistence.Basic;
@@ -43,6 +44,8 @@ public class TrainingDatasetFeature implements Serializable {
   private Integer id;
   @JoinColumn(name = "training_dataset", referencedColumnName = "id")
   private TrainingDataset trainingDataset;
+  @JoinColumn(name = "feature_view_id", referencedColumnName = "id")
+  private FeatureView featureView;
   @JoinColumn(name = "feature_group", referencedColumnName = "id")
   private Featuregroup featureGroup;
   @JoinColumn(name = "td_join", referencedColumnName = "id")
@@ -63,6 +66,19 @@ public class TrainingDatasetFeature implements Serializable {
   private TransformationFunction transformationFunction;
 
   public TrainingDatasetFeature() {
+  }
+
+  public TrainingDatasetFeature(FeatureView featureView, TrainingDatasetJoin trainingDatasetJoin,
+      Featuregroup featureGroup, String name, String type, Integer index, boolean label,
+      TransformationFunction transformationFunction) {
+    this.featureView = featureView;
+    this.trainingDatasetJoin = trainingDatasetJoin;
+    this.featureGroup = featureGroup;
+    this.name = name;
+    this.type = type;
+    this.index = index;
+    this.label = label;
+    this.transformationFunction = transformationFunction;
   }
 
   public TrainingDatasetFeature(TrainingDataset trainingDataset, TrainingDatasetJoin trainingDatasetJoin,

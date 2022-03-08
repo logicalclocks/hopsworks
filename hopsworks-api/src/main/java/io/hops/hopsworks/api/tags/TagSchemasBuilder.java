@@ -18,6 +18,7 @@ package io.hops.hopsworks.api.tags;
 import io.hops.hopsworks.common.api.ResourceRequest;
 import io.hops.hopsworks.common.dao.AbstractFacade;
 import io.hops.hopsworks.common.dao.featurestore.tag.TagSchemasFacade;
+import io.hops.hopsworks.common.tags.SchemaDTO;
 import io.hops.hopsworks.exceptions.SchematizedTagException;
 import io.hops.hopsworks.persistence.entity.featurestore.tag.TagSchemas;
 import io.hops.hopsworks.restutils.RESTCodes;

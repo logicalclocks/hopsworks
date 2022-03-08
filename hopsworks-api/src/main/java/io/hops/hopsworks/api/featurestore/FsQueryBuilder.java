@@ -16,16 +16,19 @@
 
 package io.hops.hopsworks.api.featurestore;
 
+import io.hops.hopsworks.api.featurestore.featureview.FeatureViewController;
 import io.hops.hopsworks.common.api.ResourceRequest;
 import io.hops.hopsworks.common.featurestore.query.ConstructorController;
 import io.hops.hopsworks.common.featurestore.query.FsQueryDTO;
 import io.hops.hopsworks.common.featurestore.query.Query;
+import io.hops.hopsworks.common.featurestore.query.QueryController;
 import io.hops.hopsworks.common.featurestore.query.QueryDTO;
 import io.hops.hopsworks.common.featurestore.query.pit.PitJoinController;
 import io.hops.hopsworks.common.featurestore.trainingdatasets.TrainingDatasetController;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.exceptions.ServiceException;
 import io.hops.hopsworks.persistence.entity.featurestore.Featurestore;
+import io.hops.hopsworks.persistence.entity.featurestore.featureview.FeatureView;
 import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.TrainingDataset;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.user.Users;
@@ -47,6 +50,10 @@ public class FsQueryBuilder {
   private TrainingDatasetController trainingDatasetController;
   @EJB
   private PitJoinController pitJoinController;
+  @EJB
+  private QueryController queryController;
+  @EJB
+  private FeatureViewController featureViewController;
 
   private URI uri(UriInfo uriInfo, Project project) {
     return uriInfo.getBaseUriBuilder().path(ResourceRequest.Name.PROJECT.toString().toLowerCase())
@@ -57,7 +64,9 @@ public class FsQueryBuilder {
 
   public FsQueryDTO build(UriInfo uriInfo, Project project, Users user, QueryDTO queryDTO)
       throws FeaturestoreException, ServiceException {
-    FsQueryDTO dto = constructorController.construct(queryDTO, project, user);
+    boolean pitEnabled = pitJoinController.isPitEnabled(queryDTO);
+    Query query = queryController.convertQueryDTO(project, user, queryDTO, pitEnabled);
+    FsQueryDTO dto = constructorController.construct(query, pitEnabled, project, user);
     dto.setHref(uri(uriInfo, project));
     return dto;
   }
@@ -67,6 +76,15 @@ public class FsQueryBuilder {
       throws FeaturestoreException, ServiceException {
     TrainingDataset trainingDataset = trainingDatasetController.getTrainingDatasetById(featurestore, trainingDatasetId);
     Query query = trainingDatasetController.getQuery(trainingDataset, withLabel, project, user, isHiveEngine);
+    FsQueryDTO dto = constructorController.construct(query, pitJoinController.isPitEnabled(query), true, project,
+        user);
+    dto.setHref(uri(uriInfo, project));
+    return dto;
+  }
+
+  public FsQueryDTO build(UriInfo uriInfo, Project project, Users user, FeatureView featureView)
+      throws FeaturestoreException, ServiceException {
+    Query query = featureViewController.makeQuery(featureView, project, user);
     FsQueryDTO dto = constructorController.construct(query, pitJoinController.isPitEnabled(query), true, project,
         user);
     dto.setHref(uri(uriInfo, project));

@@ -18,6 +18,7 @@ package io.hops.hopsworks.persistence.entity.featurestore.trainingdataset;
 
 import io.hops.hopsworks.persistence.entity.featurestore.Featurestore;
 import io.hops.hopsworks.persistence.entity.featurestore.activity.FeaturestoreActivity;
+import io.hops.hopsworks.persistence.entity.featurestore.featureview.FeatureView;
 import io.hops.hopsworks.persistence.entity.featurestore.statistics.StatisticsConfig;
 import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.external.ExternalTrainingDataset;
 import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.hopsfs.HopsfsTrainingDataset;
@@ -112,6 +113,14 @@ public class TrainingDataset implements Serializable {
   @Basic
   @Column(name = "query")
   private boolean query;
+  @Basic
+  @Column(name = "start_time")
+  @Temporal(TemporalType.TIMESTAMP)
+  private Date startTime;
+  @Basic
+  @Column(name = "end_time")
+  @Temporal(TemporalType.TIMESTAMP)
+  private Date endTime;
   @OneToOne(cascade = CascadeType.ALL, mappedBy = "trainingDataset")
   private StatisticsConfig statisticsConfig;
   @OneToMany(cascade = CascadeType.ALL, mappedBy = "trainingDataset")
@@ -137,6 +146,9 @@ public class TrainingDataset implements Serializable {
   @Basic
   @Column(name = "train_split")
   private String trainSplit;
+  @JoinColumn(name = "feature_view_id", referencedColumnName = "id")
+  @ManyToOne
+  private FeatureView featureView;
 
   public static long getSerialVersionUID() {
     return serialVersionUID;
