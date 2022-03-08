@@ -23,6 +23,7 @@ import io.hops.hopsworks.api.filter.apiKey.ApiKeyRequired;
 import io.hops.hopsworks.api.jwt.JWTHelper;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
 import io.hops.hopsworks.common.serving.inference.InferenceController;
+import io.hops.hopsworks.common.serving.inference.InferenceVerb;
 import io.hops.hopsworks.exceptions.ApiKeyException;
 import io.hops.hopsworks.exceptions.InferenceException;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
@@ -74,7 +75,7 @@ public class InferenceResource {
   }
 
   @POST
-  @Path("/models/{modelName: [a-zA-Z0-9]+}{version:(/versions/[0-9]+)?}{verb:((:predict|:classify|:regress|:test))?}")
+  @Path("/models/{modelName: [a-zA-Z0-9]+}{version:(/versions/[0-9]+)?}{verb:((" + InferenceVerb.ANNOTATION + "))?}")
   @Consumes(MediaType.APPLICATION_JSON)
   @Produces(MediaType.APPLICATION_JSON)
   @ApiOperation(value = "Make inference")
@@ -85,7 +86,7 @@ public class InferenceResource {
   public Response infer(
       @ApiParam(value = "Name of the model to query", required = true) @PathParam("modelName") String modelName,
       @ApiParam(value = "Version of the model to query") @PathParam("version") String modelVersion,
-      @ApiParam(value = "Type of query") @PathParam("verb") String verb,
+      @ApiParam(value = "Type of query") @PathParam("verb") InferenceVerb verb,
       @Context SecurityContext sc,
       @Context HttpHeaders httpHeaders, String inferenceRequestJson) throws InferenceException, ApiKeyException {
     Integer version = null;

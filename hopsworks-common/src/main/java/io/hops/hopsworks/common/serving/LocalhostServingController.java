@@ -224,9 +224,9 @@ public class LocalhostServingController implements ServingController {
     servingWrapper.setInternalIPs(Collections.singletonList(internalIP));
     String path;
     if (serving.getModelServer() == ModelServer.TENSORFLOW_SERVING) {
-      path = localhostTfInferenceUtils.getPath(serving.getName(), serving.getModelVersion(), "");
+      path = localhostTfInferenceUtils.getPath(serving.getName(), serving.getModelVersion(), null);
     } else if (serving.getModelServer() == ModelServer.PYTHON) {
-      path = localhostSkLearnInferenceUtils.getPath("");
+      path = localhostSkLearnInferenceUtils.getPath(null);
     } else {
       throw new UnsupportedOperationException("Model server not supported as local serving");
     }

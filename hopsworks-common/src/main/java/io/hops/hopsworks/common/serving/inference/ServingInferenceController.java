@@ -26,6 +26,6 @@ import io.hops.hopsworks.exceptions.InferenceException;
  * controllers e.g (localhost or Kubernetes) should implement this interface.
  */
 public interface ServingInferenceController {
-  Pair<Integer, String> infer(String username, Serving serving, Integer modelVersion, String verb,
+  Pair<Integer, String> infer(String username, Serving serving, Integer modelVersion, InferenceVerb verb,
     String inferenceRequestJson, String authHeader) throws InferenceException, ApiKeyException;
 }

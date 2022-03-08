@@ -269,8 +269,8 @@ public class ServingView implements Serializable {
   public ServingWrapper getServingWrapper() {
 
     ServingWrapper servingWrapper = new ServingWrapper(
-        new Serving(id, name, description, modelPath, modelName, modelVersion, predictor, requestedInstances, batchingEnabled,
-          modelServer, servingTool));
+        new Serving(id, name, description, modelPath, modelName, modelVersion, predictor, requestedInstances,
+          batchingEnabled, modelServer, servingTool));
     servingWrapper.setKafkaTopicDTO(kafkaTopicDTO);
 
     return servingWrapper;

@@ -80,7 +80,7 @@ public class Serving implements Serializable {
   @Size(min = 1, max = 255)
   @Column(name = "name")
   private String name;
-  @Size(min = 1, max = 10000)
+  @Size(min = 1, max = 1000)
   @Column(name = "description")
   private String description;
   @Basic(optional = false)

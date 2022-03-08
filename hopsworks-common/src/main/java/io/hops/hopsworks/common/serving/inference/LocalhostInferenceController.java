@@ -69,7 +69,7 @@ public class LocalhostInferenceController implements ServingInferenceController 
    * @return the inference result returned by the serving server
    * @throws InferenceException
    */
-  public Pair<Integer, String> infer(String username, Serving serving, Integer modelVersion, String verb,
+  public Pair<Integer, String> infer(String username, Serving serving, Integer modelVersion, InferenceVerb verb,
     String inferenceRequestJson, String authHeader) throws InferenceException {
   
     if (serving.getCid().equals(CID_STOPPED)) {
@@ -91,7 +91,7 @@ public class LocalhostInferenceController implements ServingInferenceController 
     }
   }
   
-  private String getInferencePath(Serving serving, Integer modelVersion, String verb){
+  private String getInferencePath(Serving serving, Integer modelVersion, InferenceVerb verb){
     if (serving.getModelServer() == ModelServer.TENSORFLOW_SERVING) {
       return localhostTfInferenceUtils.getPath(serving.getName(), modelVersion, verb);
     } else if (serving.getModelServer() == ModelServer.PYTHON) {
