@@ -5,6 +5,7 @@
 package io.hops.hopsworks.kube.serving.utils;
 
 import io.fabric8.kubernetes.api.model.apps.DeploymentStatus;
+import io.hops.hopsworks.common.serving.inference.InferenceVerb;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.serving.Serving;
@@ -120,9 +121,9 @@ public class KubeServingUtils {
       : 0;
   }
   
-  public String getInternalInferencePath(Serving serving, String verb) {
+  public String getInternalInferencePath(Serving serving, InferenceVerb verb) {
     if (serving.getServingTool() == ServingTool.KFSERVING) {
-      return "/v1/models/" + serving.getName() + verb;
+      return "/v1/models/" + serving.getName() + (verb != null ? verb.toString() : "");
     } else { // default
       KubePredictorServerUtils predictorServerUtils = kubePredictorUtils.getPredictorServerUtils(serving);
       return predictorServerUtils.getDeploymentPath(serving.getName(), serving.getModelVersion(), verb);

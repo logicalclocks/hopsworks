@@ -25,7 +25,7 @@ import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
-import java.io.UnsupportedEncodingException;
+import java.nio.charset.StandardCharsets;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -52,6 +52,7 @@ public class KubeApiKeyUtils {
   private ProjectTeamFacade projectTeamFacade;
   
   public final static String AUTH_HEADER_API_KEY_PREFIX = "ApiKey ";
+  public final static String AUTH_HEADER_BEARER_PREFIX = "Bearer ";
   // secrets
   public final static String API_KEY_SECRET_KEY = "secret";
   public final static String API_KEY_SALT_KEY = "salt";
@@ -111,7 +112,7 @@ public class KubeApiKeyUtils {
   }
   
   public void copyServingApiKeySecret(Project project, Users user)
-    throws ApiKeyException, UnsupportedEncodingException, UserException {
+    throws ApiKeyException, UserException {
     // Since secrets cannot be shared across namespaces, the serving apikey is copied to each project the user is
     // member of. The apikey is used for downloading the artifact, connecting to the Feature Store from the
     // transformer and sending request to Istio from HSML when running within the Hopsworks cluster, among other things.
@@ -177,7 +178,7 @@ public class KubeApiKeyUtils {
   }
   
   public String getServingApiKeyValueFromKubeSecret(String secretName)
-    throws ApiKeyException, UnsupportedEncodingException {
+    throws ApiKeyException {
     // get secret from hops-system
     Secret secret = kubeClientService.getSecret(KubeServingUtils.HOPS_SYSTEM_NAMESPACE, secretName);
     if (secret == null) {
@@ -199,7 +200,7 @@ public class KubeApiKeyUtils {
     }
     // decode secret
     byte[] secretBytes = Base64.decodeBase64(encodedSecret);
-    return new String(secretBytes,"UTF-8");
+    return new String(secretBytes, StandardCharsets.UTF_8);
   }
   
   private Pair<ApiKey, String> createServingApiKeyAndSecrets(Users user) throws ApiKeyException, UserException {

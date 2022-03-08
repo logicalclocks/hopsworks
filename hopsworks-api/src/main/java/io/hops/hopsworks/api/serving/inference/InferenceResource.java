@@ -24,6 +24,8 @@ import io.hops.hopsworks.audit.logger.LogLevel;
 import io.hops.hopsworks.audit.logger.annotation.Logged;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
 import io.hops.hopsworks.common.serving.inference.InferenceController;
+import io.hops.hopsworks.common.serving.inference.InferenceVerb;
+import io.hops.hopsworks.exceptions.ApiKeyException;
 import io.hops.hopsworks.exceptions.InferenceException;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
 import io.hops.hopsworks.persistence.entity.project.Project;
@@ -74,7 +76,7 @@ public class InferenceResource {
   }
 
   @POST
-  @Path("/models/{modelName: [a-zA-Z0-9]+}{version:(/versions/[0-9]+)?}{verb:((:predict|:classify|:regress))?}")
+  @Path("/models/{modelName: [a-zA-Z0-9]+}{version:(/versions/[0-9]+)?}{verb:((" + InferenceVerb.ANNOTATION + "))?}")
   @Consumes(MediaType.APPLICATION_JSON)
   @Produces(MediaType.APPLICATION_JSON)
   @ApiOperation(value = "Make inference")
@@ -85,17 +87,17 @@ public class InferenceResource {
   public Response infer(
       @ApiParam(value = "Name of the model to query", required = true) @PathParam("modelName") String modelName,
       @ApiParam(value = "Version of the model to query") @PathParam("version") String modelVersion,
-      @ApiParam(value = "Type of query") @PathParam("verb") String verb,
+      @ApiParam(value = "Type of query") @PathParam("verb") InferenceVerb verb,
       @Context HttpServletRequest req,
       @Context SecurityContext sc,
-      @Context HttpHeaders httpHeaders, String inferenceRequestJson) throws InferenceException {
+      @Context HttpHeaders httpHeaders, String inferenceRequestJson) throws InferenceException, ApiKeyException {
     Integer version = null;
     if (!Strings.isNullOrEmpty(modelVersion)) {
       version = Integer.valueOf(modelVersion.split("/")[2]);
     }
     String authHeader = httpHeaders.getRequestHeader(HttpHeaders.AUTHORIZATION).get(0);
-    String inferenceResult = inferenceController.infer(project, modelName, version, verb, inferenceRequestJson,
-      authHeader);
+    String inferenceResult = inferenceController.infer(project, sc.getUserPrincipal().getName(), modelName, version,
+      verb, inferenceRequestJson, authHeader);
     return Response.ok().entity(inferenceResult).build();
   }
 }

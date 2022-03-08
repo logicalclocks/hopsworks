@@ -21,6 +21,7 @@ import io.fabric8.kubernetes.api.model.VolumeMountBuilder;
 import io.fabric8.kubernetes.api.model.apps.Deployment;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
 import io.hops.hopsworks.common.hosts.ServiceDiscoveryController;
+import io.hops.hopsworks.common.serving.inference.InferenceVerb;
 import io.hops.hopsworks.common.util.ProjectUtils;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.kube.common.KubeClientService;
@@ -69,7 +70,7 @@ public class KubePredictorPythonCustomUtils extends KubePredictorServerUtils {
   public String getDeploymentName(String servingId) { return kubePredictorPythonUtils.getDeploymentName(servingId); }
   
   @Override
-  public String getDeploymentPath(String servingName, Integer modelVersion, String verb) {
+  public String getDeploymentPath(String servingName, Integer modelVersion, InferenceVerb verb) {
     return kubePredictorPythonUtils.getDeploymentPath(verb);
   }
   

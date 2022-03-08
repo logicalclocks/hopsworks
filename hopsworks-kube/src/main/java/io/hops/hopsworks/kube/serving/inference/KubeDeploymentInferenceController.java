@@ -4,11 +4,11 @@
 
 package io.hops.hopsworks.kube.serving.inference;
 
-import com.google.common.base.Strings;
 import io.fabric8.kubernetes.api.model.Service;
 import io.fabric8.kubernetes.client.KubernetesClientException;
 import io.hops.common.Pair;
 import io.hops.hopsworks.common.serving.inference.InferenceHttpClient;
+import io.hops.hopsworks.common.serving.inference.InferenceVerb;
 import io.hops.hopsworks.common.serving.inference.ServingInferenceUtils;
 import io.hops.hopsworks.exceptions.InferenceException;
 import io.hops.hopsworks.kube.common.KubeClientService;
@@ -53,13 +53,8 @@ public class KubeDeploymentInferenceController {
    * @return the inference result returned by the serving server
    * @throws InferenceException
    */
-  public Pair<Integer, String> infer(Serving serving, String verb, String inferenceRequestJson)
+  public Pair<Integer, String> infer(Serving serving, InferenceVerb verb, String inferenceRequestJson)
     throws InferenceException {
-    
-    // Check verb
-    if (Strings.isNullOrEmpty(verb)) {
-      throw new InferenceException(RESTCodes.InferenceErrorCode.MISSING_VERB, Level.FINE);
-    }
     
     KubePredictorServerUtils predictorServerUtils = kubePredictorUtils.getPredictorServerUtils(serving);
     String serviceName = predictorServerUtils.getServiceName(serving.getId().toString());

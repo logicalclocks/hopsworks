@@ -16,10 +16,10 @@
 
 package io.hops.hopsworks.common.serving.inference;
 
-import com.google.common.base.Strings;
 import io.hops.common.Pair;
 import io.hops.hopsworks.common.dao.serving.ServingFacade;
 import io.hops.hopsworks.common.serving.inference.logger.InferenceLogger;
+import io.hops.hopsworks.exceptions.ApiKeyException;
 import io.hops.hopsworks.exceptions.InferenceException;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.serving.Serving;
@@ -69,15 +69,16 @@ public class InferenceController {
    * @return a string representation of the inference result
    * @throws InferenceException
    */
-  public String infer(Project project, String modelName, Integer modelVersion,
-                      String verb, String inferenceRequestJson, String authHeader) throws InferenceException {
+  public String infer(Project project, String username, String modelName, Integer modelVersion,
+                      InferenceVerb verb, String inferenceRequestJson, String authHeader)
+      throws InferenceException, ApiKeyException {
 
     Serving serving = servingFacade.findByProjectAndName(project, modelName);
     if (serving == null) {
       throw new InferenceException(RESTCodes.InferenceErrorCode.SERVING_NOT_FOUND, Level.FINE, "name: " + modelName);
     }
   
-    if (Strings.isNullOrEmpty(verb)) {
+    if (verb == null) {
       throw new InferenceException(RESTCodes.InferenceErrorCode.MISSING_VERB, Level.FINE);
     }
     
@@ -88,7 +89,7 @@ public class InferenceController {
 
     // ServingInferenceController is either localhost or kubernetes inference controller
     Pair<Integer, String> inferenceResult =
-      servingInferenceController.infer(serving, modelVersion, verb, inferenceRequestJson, authHeader);
+      servingInferenceController.infer(username, serving, modelVersion, verb, inferenceRequestJson, authHeader);
 
     // Log the inference
     for (InferenceLogger inferenceLogger : inferenceLoggers) {

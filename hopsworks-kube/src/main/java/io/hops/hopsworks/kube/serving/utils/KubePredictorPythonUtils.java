@@ -38,6 +38,7 @@ import io.fabric8.kubernetes.api.model.apps.DeploymentBuilder;
 import io.fabric8.kubernetes.api.model.apps.DeploymentSpec;
 import io.fabric8.kubernetes.api.model.apps.DeploymentSpecBuilder;
 import io.hops.hopsworks.common.hosts.ServiceDiscoveryController;
+import io.hops.hopsworks.common.serving.inference.InferenceVerb;
 import io.hops.hopsworks.common.util.ProjectUtils;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.kube.common.KubeClientService;
@@ -84,8 +85,11 @@ public class KubePredictorPythonUtils {
 
   public String getDeploymentName(String servingId) { return "python-server-" + servingId; }
   
-  public String getDeploymentPath(String verb) {
-    StringBuilder pathBuilder = new StringBuilder().append("/").append(verb.replaceFirst(":", ""));
+  public String getDeploymentPath(InferenceVerb verb) {
+    StringBuilder pathBuilder = new StringBuilder().append("/");
+    if (verb != null) {
+      pathBuilder.append(verb.toString(false));
+    }
     return pathBuilder.toString();
   }
   

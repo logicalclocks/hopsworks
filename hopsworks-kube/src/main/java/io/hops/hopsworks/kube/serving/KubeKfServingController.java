@@ -145,7 +145,7 @@ public class KubeKfServingController extends KubeToolServingController {
         setConditions(conditions.size() > 0 ? conditions : null);
         setInternalIPs(kubeClientService.getReadyNodeList());
         setInternalPort(internalIngressHostPort.getR());
-        setInternalPath(kubeServingUtils.getInternalInferencePath(serving, ""));
+        setInternalPath(kubeServingUtils.getInternalInferencePath(serving, null));
         // These values will be fetched from the location href in the UI (client-side). By doing this, we make sure
         // that we display the correct host and port to reach Hopsworks. For instance, using proxies or SSH
         // tunneling, the port might differ from the default 80 or 443 on the client side.

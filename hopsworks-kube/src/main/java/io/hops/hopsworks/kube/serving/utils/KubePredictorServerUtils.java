@@ -7,6 +7,7 @@ package io.hops.hopsworks.kube.serving.utils;
 import com.logicalclocks.servicediscoverclient.exceptions.ServiceDiscoveryException;
 import io.fabric8.kubernetes.api.model.Service;
 import io.fabric8.kubernetes.api.model.apps.Deployment;
+import io.hops.hopsworks.common.serving.inference.InferenceVerb;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.serving.Serving;
 import io.hops.hopsworks.persistence.entity.user.Users;
@@ -20,7 +21,7 @@ public abstract class KubePredictorServerUtils {
   // Default
   
   public abstract String getDeploymentName(String servingId);
-  public abstract String getDeploymentPath(String servingName, Integer modelVersion, String verb);
+  public abstract String getDeploymentPath(String servingName, Integer modelVersion, InferenceVerb verb);
   public abstract Deployment buildServingDeployment(Project project, Users user, Serving serving) throws
     ServiceDiscoveryException;
   

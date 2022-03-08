@@ -38,6 +38,7 @@ import io.fabric8.kubernetes.api.model.apps.Deployment;
 import io.fabric8.kubernetes.api.model.apps.DeploymentBuilder;
 import io.fabric8.kubernetes.api.model.apps.DeploymentSpec;
 import io.fabric8.kubernetes.api.model.apps.DeploymentSpecBuilder;
+import io.hops.hopsworks.common.serving.inference.InferenceVerb;
 import io.hops.hopsworks.common.util.ProjectUtils;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.kube.common.KubeClientService;
@@ -89,7 +90,7 @@ public class KubePredictorTensorflowUtils extends KubePredictorServerUtils {
   }
   
   @Override
-  public String getDeploymentPath(String servingName, Integer modelVersion, String verb) {
+  public String getDeploymentPath(String servingName, Integer modelVersion, InferenceVerb verb) {
     StringBuilder pathBuilder = new StringBuilder()
       .append("/v1/models/")
       .append(servingName);
@@ -98,8 +99,9 @@ public class KubePredictorTensorflowUtils extends KubePredictorServerUtils {
     if (modelVersion != null) {
       pathBuilder.append("/versions/").append(modelVersion);
     }
-    
-    pathBuilder.append(verb);
+    if (verb != null) {
+      pathBuilder.append(verb.toString());
+    }
     return pathBuilder.toString();
   }
   

@@ -19,7 +19,6 @@ import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
-import java.io.UnsupportedEncodingException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -38,8 +37,7 @@ public class KubeServingConfig implements ServingConfig {
   private Settings settings;
   
   @Override
-  public Map<String, String> getEnvVars(Users user, boolean includeSecrets) throws ApiKeyException,
-    UnsupportedEncodingException {
+  public Map<String, String> getEnvVars(Users user, boolean includeSecrets) throws ApiKeyException {
     return settings.getKubeKFServingInstalled()
       ? getKFServingEnvVars(user, includeSecrets) // kfserving env vars
       : null;
@@ -50,8 +48,7 @@ public class KubeServingConfig implements ServingConfig {
     return KubeServingConfig.class.getName();
   }
   
-  private Map<String, String> getKFServingEnvVars(Users user, boolean includeSecrets) throws ApiKeyException,
-    UnsupportedEncodingException {
+  private Map<String, String> getKFServingEnvVars(Users user, boolean includeSecrets) throws ApiKeyException {
     Map<String, String> envVars = new HashMap<>();
     
     if (includeSecrets) {

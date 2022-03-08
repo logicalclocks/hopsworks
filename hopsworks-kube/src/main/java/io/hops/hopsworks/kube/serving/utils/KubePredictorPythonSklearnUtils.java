@@ -7,6 +7,7 @@ package io.hops.hopsworks.kube.serving.utils;
 import com.logicalclocks.servicediscoverclient.exceptions.ServiceDiscoveryException;
 import io.fabric8.kubernetes.api.model.Service;
 import io.fabric8.kubernetes.api.model.apps.Deployment;
+import io.hops.hopsworks.common.serving.inference.InferenceVerb;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.serving.DockerResourcesConfiguration;
@@ -33,7 +34,7 @@ public class KubePredictorPythonSklearnUtils extends KubePredictorServerUtils {
   public String getDeploymentName(String servingId) { return kubePredictorPythonUtils.getDeploymentName(servingId); }
   
   @Override
-  public String getDeploymentPath(String servingName, Integer modelVersion, String verb) {
+  public String getDeploymentPath(String servingName, Integer modelVersion, InferenceVerb verb) {
     return kubePredictorPythonUtils.getDeploymentPath(verb);
   }
   

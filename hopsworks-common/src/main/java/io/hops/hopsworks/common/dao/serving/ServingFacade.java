@@ -101,9 +101,12 @@ public class ServingFacade {
     return merge(dbServing);
   }
   
-  public Serving mergeServings(Serving dbServing, Serving newServing) throws ServingException {
+  public Serving mergeServings(Serving dbServing, Serving newServing) {
     if (newServing.getName() != null && !newServing.getName().isEmpty()) {
       dbServing.setName(newServing.getName());
+    }
+    if (newServing.getDescription() != null && !newServing.getDescription().isEmpty()) {
+      dbServing.setDescription(newServing.getDescription());
     }
     if (newServing.getModelPath() != null && !newServing.getModelPath().isEmpty()) {
       dbServing.setModelPath(newServing.getModelPath());

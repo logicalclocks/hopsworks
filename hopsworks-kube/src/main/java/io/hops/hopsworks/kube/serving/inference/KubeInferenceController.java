@@ -5,11 +5,14 @@
 package io.hops.hopsworks.kube.serving.inference;
 
 import io.hops.common.Pair;
+import io.hops.hopsworks.common.serving.inference.InferenceVerb;
 import io.hops.hopsworks.common.serving.inference.ServingInferenceController;
+import io.hops.hopsworks.exceptions.ApiKeyException;
 import io.hops.hopsworks.exceptions.InferenceException;
 import io.hops.hopsworks.kube.common.KubeStereotype;
 import io.hops.hopsworks.persistence.entity.serving.Serving;
 import io.hops.hopsworks.persistence.entity.serving.ServingTool;
+import io.hops.hopsworks.restutils.RESTCodes;
 
 import javax.ejb.ConcurrencyManagement;
 import javax.ejb.ConcurrencyManagementType;
@@ -17,6 +20,7 @@ import javax.ejb.EJB;
 import javax.ejb.Singleton;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
+import java.util.logging.Level;
 
 /**
  * Kube Inference Controller
@@ -28,7 +32,7 @@ import javax.ejb.TransactionAttributeType;
 @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
 @ConcurrencyManagement(ConcurrencyManagementType.BEAN)
 public class KubeInferenceController implements ServingInferenceController {
-  
+
   @EJB
   private KubeKfServingInferenceController kubeKfServingInferenceController;
   @EJB
@@ -45,14 +49,19 @@ public class KubeInferenceController implements ServingInferenceController {
    * @return the inference result returned by the serving server
    * @throws InferenceException
    */
-  public Pair<Integer, String> infer(Serving serving, Integer modelVersion, String verb, String inferenceRequestJson,
-    String authHeader) throws InferenceException {
-
+  public Pair<Integer, String> infer(String username, Serving serving, Integer modelVersion, InferenceVerb verb,
+    String inferenceRequestJson, String authHeader) throws InferenceException, ApiKeyException {
+  
+    // Check verb
+    if (verb == null) {
+      throw new InferenceException(RESTCodes.InferenceErrorCode.MISSING_VERB, Level.FINE);
+    }
+    
     // KFServing
     if (serving.getServingTool() == ServingTool.KFSERVING) {
-      return kubeKfServingInferenceController.infer(serving, verb, inferenceRequestJson, authHeader);
+      return kubeKfServingInferenceController.infer(username, serving, verb, inferenceRequestJson, authHeader);
     }
-    // Elastic
+    // Default
     return kubeDeploymentInferenceController.infer(serving, verb, inferenceRequestJson);
   }
 }
