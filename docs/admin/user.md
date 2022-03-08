@@ -60,12 +60,24 @@ If there are too many users in you cluster use the search box (available for blo
 name or email. It is also possible to filter activated users by role. For example to see all administrators in you 
 cluster click on the _select dropdown_ to the right of the search box and choose _Admin_. 
 
+## Create users 
+
+If you want to allow users to login without registering you can pre-create them by clicking on _New user_.
+
 <figure>
   <a  href="../../assets/images/admin/user-management/new-user.png">
     <img src="../../assets/images/admin/user-management/new-user.png" alt="New user" />
   </a>
   <figcaption>Create new user</figcaption>
 </figure>
+
+After setting the user's name and email chose the type of user you want to create (Hopsworks, Kerberos or LDAP). To 
+create a Kerberos or LDAP user you need to get the users **UUID** from the Kerberos or LDAP server. Hopsworks user 
+can also be assigned a _Role_. Kerberos and LDAP users on the other hand can only be assigned role through group 
+mapping.
+
+A temporary password will be generated and displayed when you click on _Create new user_. Copy the password and pass 
+it securely to the user. 
 
 <figure>
   <a  href="../../assets/images/admin/user-management/create-user.png">
@@ -74,6 +86,13 @@ cluster click on the _select dropdown_ to the right of the search box and choose
   <figcaption>Copy temporary password</figcaption>
 </figure>
 
+## Reset user password
+
+In the unlikely case where a user loses her/his password and can not recover it with the 
+[password recovery](../compute/auth/recoverPassword.md), an administrator can reset it for them.
+
+On the bottom of the _Users_ page click on the _Reset a user password_ link. A popup window with a dropdown for 
+searching users by name or email will open. Find the user and click on _Reset new password_.
 <figure>
   <a  href="../../assets/images/admin/user-management/reset-password.png">
     <img src="../../assets/images/admin/user-management/reset-password.png" alt="reset password" />
@@ -81,9 +100,24 @@ cluster click on the _select dropdown_ to the right of the search box and choose
   <figcaption>Reset user password</figcaption>
 </figure>
 
+A temporary password will be displayed. Copy the password and pass it to the user securely.
+
 <figure>
   <a  href="../../assets/images/admin/user-management/temp-password.png">
     <img src="../../assets/images/admin/user-management/temp-password.png" alt="temp password" />
   </a>
   <figcaption>Copy temporary password</figcaption>
 </figure>
+
+A user with a temporary password will see a warning message when going to _User settings_ **Authentication** tab.
+
+<figure>
+  <a  href="../../assets/images/admin/user-management/change-password.png">
+    <img src="../../assets/images/admin/user-management/change-password.png" alt="change password" />
+  </a>
+  <figcaption>Change password</figcaption>
+</figure>
+
+!!! Note
+
+    A temporary password should be changed as soon as possible.
