@@ -17,6 +17,7 @@
 package io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.external;
 
 import io.hops.hopsworks.persistence.entity.featurestore.storageconnector.FeaturestoreConnector;
+import io.hops.hopsworks.persistence.entity.hdfs.inode.Inode;
 
 import javax.persistence.Basic;
 import javax.persistence.Column;
@@ -25,8 +26,10 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
+import javax.persistence.JoinColumns;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
+import javax.persistence.OneToOne;
 import javax.persistence.Table;
 import javax.xml.bind.annotation.XmlRootElement;
 import java.io.Serializable;
@@ -55,6 +58,12 @@ public class ExternalTrainingDataset implements Serializable {
   private String path;
   @JoinColumn(name = "connector_id", referencedColumnName = "id")
   private FeaturestoreConnector featurestoreConnector;
+  @JoinColumns({
+    @JoinColumn(name = "inode_pid", referencedColumnName = "parent_id"),
+    @JoinColumn(name = "inode_name", referencedColumnName = "name"),
+    @JoinColumn(name = "partition_id", referencedColumnName = "partition_id")})
+  @OneToOne(optional = false)
+  private Inode inode;
 
   public Integer getId() {
     return id;
@@ -78,6 +87,14 @@ public class ExternalTrainingDataset implements Serializable {
     this.featurestoreConnector = featurestoreConnector;
   }
 
+  public Inode getInode() {
+    return inode;
+  }
+
+  public void setInode(Inode inode) {
+    this.inode = inode;
+  }
+  
   @Override
   public boolean equals(Object o) {
     if (this == o) return true;

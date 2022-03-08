@@ -1107,6 +1107,10 @@ describe "On #{ENV['OS']}" do
           expect(parsed_json["storageConnector"]["id"] == connector_id).to be true
           expect(parsed_json["features"].length).to be 2
           expect(parsed_json["seed"] == 1234).to be true
+
+          # make sure inode is created
+          path = "/Projects/#{project['projectname']}/#{project['projectname']}_Training_Datasets/#{training_dataset_name}_1"
+          expect(test_dir(path)).to be true
         end
 
         it "should not be able to add an external training dataset to the featurestore with upper case characters" do
@@ -1250,6 +1254,10 @@ describe "On #{ENV['OS']}" do
               "/featurestores/" + featurestore_id.to_s + "/trainingdatasets/" + training_dataset_id.to_s
           delete delete_training_dataset_endpoint
           expect_status(200)
+
+          # make sure inode is deleted
+          path = "/Projects/#{project['projectname']}/#{project['projectname']}_Training_Datasets/#{training_dataset_name}_1"
+          expect(test_dir(path)).to be false
         end
 
         it "should be able to update the metadata (description) of an external training dataset from the featurestore" do

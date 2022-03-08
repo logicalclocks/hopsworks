@@ -17,7 +17,6 @@
 package io.hops.hopsworks.common.featurestore.trainingdatasets.external;
 
 import io.hops.hopsworks.common.dao.AbstractFacade;
-import io.hops.hopsworks.persistence.entity.featurestore.storageconnector.FeaturestoreConnector;
 import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.external.ExternalTrainingDataset;
 
 import javax.ejb.Stateless;
@@ -40,14 +39,10 @@ public class ExternalTrainingDatasetFacade extends AbstractFacade<ExternalTraini
 
   /**
    * Create and persist an external training dataset
-   * @param connector
-   * @param path
+   * @param externalTrainingDataset
    * @return
    */
-  public ExternalTrainingDataset createExternalTrainingDataset(FeaturestoreConnector connector, String path) {
-    ExternalTrainingDataset externalTrainingDataset = new ExternalTrainingDataset();
-    externalTrainingDataset.setFeaturestoreConnector(connector);
-    externalTrainingDataset.setPath(path);
+  public ExternalTrainingDataset createExternalTrainingDataset(ExternalTrainingDataset externalTrainingDataset) {
     em.persist(externalTrainingDataset);
     em.flush();
     return externalTrainingDataset;
