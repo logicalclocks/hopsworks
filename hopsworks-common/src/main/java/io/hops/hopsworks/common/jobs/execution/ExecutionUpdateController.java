@@ -42,12 +42,18 @@ public class ExecutionUpdateController {
   }
 
   public Execution updateState(JobState newState, Execution execution) {
-    execution = executionFacade.updateState(execution, newState);
-    alertController.sendAlert(newState, execution);
+    return executionFacade.updateState(execution, newState);
+  }
+
+  public Execution updateStateAndSendAlert(Execution execution) {
+    execution = executionFacade.update(execution);
+    alertController.sendAlert(execution.getState(), execution);
     return execution;
   }
 
-  public Execution updateFinalStatus(JobFinalStatus finalStatus, Execution execution) {
-    return executionFacade.updateFinalStatus(execution, finalStatus);
+  public Execution updateFinalStatusAndSendAlert(JobFinalStatus finalStatus, Execution execution) {
+    execution = executionFacade.updateFinalStatus(execution, finalStatus);
+    alertController.sendAlert(finalStatus, execution);
+    return execution;
   }
 }

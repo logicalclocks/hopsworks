@@ -42,6 +42,7 @@ import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.Featuregro
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.datavalidation.FeatureGroupValidation;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.datavalidation.alert.FeatureGroupAlert;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.datavalidation.alert.ValidationRuleAlertStatus;
+import io.hops.hopsworks.persistence.entity.jobs.configuration.history.JobFinalStatus;
 import io.hops.hopsworks.persistence.entity.jobs.configuration.history.JobState;
 import io.hops.hopsworks.persistence.entity.jobs.description.JobAlert;
 import io.hops.hopsworks.persistence.entity.jobs.description.JobAlertStatus;
@@ -96,6 +97,16 @@ public class AlertController {
    * @param execution
    */
   public void sendAlert(JobState newState, Execution execution) {
+    List<PostableAlert> postableAlerts = getAlerts(newState, execution);
+    sendJobAlert(postableAlerts, execution.getJob().getProject(), execution.getJob().getName(), execution.getId());
+  }
+
+  /**
+   * Send job alert
+   * @param newState
+   * @param execution
+   */
+  public void sendAlert(JobFinalStatus newState, Execution execution) {
     List<PostableAlert> postableAlerts = getAlerts(newState, execution);
     sendJobAlert(postableAlerts, execution.getJob().getProject(), execution.getJob().getName(), execution.getId());
   }
@@ -297,23 +308,39 @@ public class AlertController {
   private List<PostableAlert> getAlerts(JobState jobState, Execution execution) {
     List<PostableAlert> postableAlerts = new ArrayList<>();
     if (jobState.isFinalState()) {
-      if (execution.getJob().getJobAlertCollection() != null && !execution.getJob().getJobAlertCollection().isEmpty()) {
-        for (JobAlert alert : execution.getJob().getJobAlertCollection()) {
-          if (alert.getStatus().equals(JobAlertStatus.getJobAlertStatus(jobState))) {
-            PostableAlert postableAlert = getPostableAlert(execution.getJob().getProject(), alert.getAlertType(),
-                alert.getSeverity(), alert.getStatus().getName(), execution.getJob().getName(), execution.getId());
-            postableAlerts.add(postableAlert);
-          }
+      postableAlerts = getAlerts(JobAlertStatus.getJobAlertStatus(jobState),
+        ProjectServiceAlertStatus.getJobAlertStatus(jobState), execution);
+    }
+    return postableAlerts;
+  }
+
+  private List<PostableAlert> getAlerts(JobFinalStatus jobState, Execution execution) {
+    List<PostableAlert> postableAlerts = new ArrayList<>();
+    if (!JobFinalStatus.UNDEFINED.equals(jobState)) {
+      postableAlerts = getAlerts(JobAlertStatus.getJobAlertStatus(jobState),
+        ProjectServiceAlertStatus.getJobAlertStatus(jobState), execution);
+    }
+    return postableAlerts;
+  }
+
+  private List<PostableAlert> getAlerts(JobAlertStatus jobAlertStatus,
+    ProjectServiceAlertStatus projectServiceAlertStatus, Execution execution) {
+    List<PostableAlert> postableAlerts = new ArrayList<>();
+    if (execution.getJob().getJobAlertCollection() != null && !execution.getJob().getJobAlertCollection().isEmpty()) {
+      for (JobAlert alert : execution.getJob().getJobAlertCollection()) {
+        if (alert.getStatus().equals(jobAlertStatus)) {
+          PostableAlert postableAlert = getPostableAlert(execution.getJob().getProject(), alert.getAlertType(),
+            alert.getSeverity(), alert.getStatus().getName(), execution.getJob().getName(), execution.getId());
+          postableAlerts.add(postableAlert);
         }
-      } else if (execution.getJob().getProject().getProjectServiceAlerts() != null &&
-          !execution.getJob().getProject().getProjectServiceAlerts().isEmpty()) {
-        for (ProjectServiceAlert alert : execution.getJob().getProject().getProjectServiceAlerts()) {
-          if (ProjectServiceEnum.JOBS.equals(alert.getService()) &&
-              alert.getStatus().equals(ProjectServiceAlertStatus.getJobAlertStatus(jobState))) {
-            PostableAlert postableAlert = getPostableAlert(execution.getJob().getProject(), alert.getAlertType(),
-                alert.getSeverity(), alert.getStatus().getName(), execution.getJob().getName(), execution.getId());
-            postableAlerts.add(postableAlert);
-          }
+      }
+    } else if (execution.getJob().getProject().getProjectServiceAlerts() != null &&
+      !execution.getJob().getProject().getProjectServiceAlerts().isEmpty()) {
+      for (ProjectServiceAlert alert : execution.getJob().getProject().getProjectServiceAlerts()) {
+        if (ProjectServiceEnum.JOBS.equals(alert.getService()) && alert.getStatus().equals(projectServiceAlertStatus)) {
+          PostableAlert postableAlert = getPostableAlert(execution.getJob().getProject(), alert.getAlertType(),
+            alert.getSeverity(), alert.getStatus().getName(), execution.getJob().getName(), execution.getId());
+          postableAlerts.add(postableAlert);
         }
       }
     }
