@@ -29,7 +29,7 @@ import javax.ejb.TransactionAttributeType;
 @TransactionAttribute(TransactionAttributeType.NEVER)
 public class LocalhostTfInferenceUtils {
   
-  public String getPath(String servingName, Integer modelVersion, String verb) {
+  public String getPath(String servingName, Integer modelVersion, InferenceVerb verb) {
     
     // TODO(Fabio) does Tf model server support TLS?
     StringBuilder pathBuilder = new StringBuilder()
@@ -40,8 +40,9 @@ public class LocalhostTfInferenceUtils {
     if (modelVersion != null) {
       pathBuilder.append("/versions/").append(modelVersion);
     }
-    
-    pathBuilder.append(verb);
+    if (verb != null) {
+      pathBuilder.append(verb.toString());
+    }
     return pathBuilder.toString();
   }
 }

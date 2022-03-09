@@ -42,6 +42,7 @@ public class ServingView implements Serializable {
   
   private Integer id;
   private String name;
+  private String description;
   private String modelPath;
   private String modelName;
   private Integer modelVersion;
@@ -73,6 +74,7 @@ public class ServingView implements Serializable {
   public ServingView(ServingWrapper servingWrapper) {
     this.id = servingWrapper.getServing().getId();
     this.name = servingWrapper.getServing().getName();
+    this.description = servingWrapper.getServing().getDescription();
     this.modelPath = servingWrapper.getServing().getModelPath();
     this.predictor = servingWrapper.getServing().getPredictor();
     this.modelName = servingWrapper.getServing().getModelName();
@@ -113,6 +115,14 @@ public class ServingView implements Serializable {
     this.name = name;
   }
 
+  @ApiModelProperty(value = "Description of the serving")
+  public String getDescription() {
+    return description;
+  }
+  public void setDescription(String description) {
+    this.description = description;
+  }
+  
   @ApiModelProperty(value = "HOPSFS directory path containing the model")
   public String getModelPath() { return modelPath; }
   public void setModelPath(String modelPath) { this.modelPath = modelPath; }
@@ -259,8 +269,8 @@ public class ServingView implements Serializable {
   public ServingWrapper getServingWrapper() {
 
     ServingWrapper servingWrapper = new ServingWrapper(
-        new Serving(id, name, modelPath, modelName, modelVersion, predictor, requestedInstances, batchingEnabled,
-          modelServer, servingTool));
+        new Serving(id, name, description, modelPath, modelName, modelVersion, predictor, requestedInstances,
+          batchingEnabled, modelServer, servingTool));
     servingWrapper.setKafkaTopicDTO(kafkaTopicDTO);
 
     return servingWrapper;

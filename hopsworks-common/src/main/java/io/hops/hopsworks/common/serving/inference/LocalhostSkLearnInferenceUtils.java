@@ -29,8 +29,11 @@ import javax.ejb.TransactionAttributeType;
 @TransactionAttribute(TransactionAttributeType.NEVER)
 public class LocalhostSkLearnInferenceUtils {
   
-  public String getPath(String verb) {
-    StringBuilder pathBuilder = new StringBuilder().append("/").append(verb.replaceFirst(":", ""));
+  public String getPath(InferenceVerb verb) {
+    StringBuilder pathBuilder = new StringBuilder().append("/");
+    if (verb != null) {
+      pathBuilder.append(verb.toString(false));
+    }
     return pathBuilder.toString();
   }
 }
