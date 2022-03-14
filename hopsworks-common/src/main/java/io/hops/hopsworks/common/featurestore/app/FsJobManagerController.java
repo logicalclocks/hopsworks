@@ -19,8 +19,10 @@ package io.hops.hopsworks.common.featurestore.app;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.hops.hopsworks.common.dataset.DatasetController;
 import io.hops.hopsworks.common.featurestore.FeaturestoreController;
+import io.hops.hopsworks.common.featurestore.OptionDTO;
 import io.hops.hopsworks.common.featurestore.featuregroup.IngestionDataFormat;
 import io.hops.hopsworks.common.featurestore.featuregroup.IngestionJob;
+import io.hops.hopsworks.common.featurestore.featuregroup.stream.DeltaStreamerJobConf;
 import io.hops.hopsworks.common.featurestore.query.QueryDTO;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.hdfs.DistributedFsService;
@@ -41,6 +43,7 @@ import io.hops.hopsworks.persistence.entity.dataset.DatasetAccessPermission;
 import io.hops.hopsworks.persistence.entity.featurestore.Featurestore;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.Featuregroup;
 import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.TrainingDataset;
+import io.hops.hopsworks.persistence.entity.jobs.configuration.JobType;
 import io.hops.hopsworks.persistence.entity.jobs.configuration.spark.SparkJobConfiguration;
 import io.hops.hopsworks.persistence.entity.jobs.description.Jobs;
 import io.hops.hopsworks.persistence.entity.project.Project;
@@ -60,6 +63,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Level;
+import java.util.stream.Collectors;
 
 @Stateless
 @TransactionAttribute(TransactionAttributeType.NEVER)
@@ -86,6 +90,7 @@ public class FsJobManagerController {
   private final static String INSERT_FG_OP = "insert_fg";
   private final static String TRAINING_DATASET_OP = "create_td";
   private final static String COMPUTE_STATS_OP = "compute_stats";
+  private final static String DELTA_STREAMER_OP = "offline_fg_backfill";
 
   public IngestionJob setupIngestionJob(Project project, Users user, Featuregroup featureGroup,
                                         SparkJobConfiguration sparkJobConfiguration, IngestionDataFormat dataFormat,
@@ -113,8 +118,8 @@ public class FsJobManagerController {
       writeToHDFS(jobConfigurationPath, jobConfigurationStr, udfso);
 
       Jobs ingestionJob = configureJob(user, project, sparkJobConfiguration,
-          getJobName(INSERT_FG_OP, Utils.getFeaturegroupName(featureGroup)),
-          getJobArgs(INSERT_FG_OP, jobConfigurationPath));
+          getJobName(INSERT_FG_OP, Utils.getFeaturegroupName(featureGroup), true),
+          getJobArgs(INSERT_FG_OP, jobConfigurationPath), JobType.PYSPARK);
 
       // For ingestion we cannot start the job directly, as the client needs to upload the data in the directory
       // we created above. So, we return the information regarding the path and the job.
@@ -170,7 +175,8 @@ public class FsJobManagerController {
     try {
       String entityName = featureGroup != null ? featureGroup.getName() : trainingDataset.getName();
       Integer entityVersion = featureGroup != null ? featureGroup.getVersion() : trainingDataset.getVersion();
-      String jobConfigurationPath = getJobConfigurationPath(project, entityName, entityVersion, "statistics");
+      String jobConfigurationPath = getJobConfigurationPath(project, entityName,
+        entityVersion, "statistics");
 
       jobConfiguration.put("feature_store",
           featurestoreController.getOfflineFeaturestoreDbName(featurestore.getProject()));
@@ -184,8 +190,8 @@ public class FsJobManagerController {
       String jobArgs = getJobArgs(COMPUTE_STATS_OP, jobConfigurationPath);
 
       Jobs statisticsJob = configureJob(user, project, null,
-          getJobName(COMPUTE_STATS_OP, Utils.getFeatureStoreEntityName(entityName, entityVersion)),
-          jobArgs);
+          getJobName(COMPUTE_STATS_OP, Utils.getFeatureStoreEntityName(entityName, entityVersion), true),
+          jobArgs, JobType.PYSPARK);
 
       // Differently from the ingestion job. At this stage, no other action is required by the client.
       // So we can start the job directly
@@ -225,8 +231,8 @@ public class FsJobManagerController {
       String jobArgs = getJobArgs(TRAINING_DATASET_OP, jobConfigurationPath);
 
       Jobs trainingDatasetJob = configureJob(user, project, sparkJobConfiguration,
-          getJobName(TRAINING_DATASET_OP, Utils.getTrainingDatasetName(trainingDataset)),
-          jobArgs);
+          getJobName(TRAINING_DATASET_OP, Utils.getTrainingDatasetName(trainingDataset), true),
+          jobArgs, JobType.PYSPARK);
 
       executionController.start(trainingDatasetJob, jobArgs, user);
 
@@ -238,15 +244,62 @@ public class FsJobManagerController {
       dfs.closeDfsClient(udfso);
     }
   }
-
-  public String getJobConfigurationPath(Project project, String entityName, Integer entityVersion, String prefix) {
-    return Paths.get(Utils.getProjectPath(project.getName()), Settings.BaseDataset.RESOURCES.getName(),
-        String.join("_", new String[]{prefix, entityName,
-                String.valueOf(entityVersion), String.valueOf(System.currentTimeMillis())})).toString();
+  
+  public Jobs setupHudiDeltaStreamerJob(Project project, Users user, Featuregroup featuregroup,
+    DeltaStreamerJobConf deltaStreamerJobConf)
+    throws FeaturestoreException, JobException {
+    DistributedFileSystemOps udfso = dfs.getDfsOps(hdfsUsersController.getHdfsUserName(project, user));
+    Map<String, String> writeOptions = null;
+    SparkJobConfiguration sparkJobConfiguration = null;
+    
+    if (deltaStreamerJobConf != null) {
+      if (deltaStreamerJobConf.getWriteOptions() != null) {
+        writeOptions = deltaStreamerJobConf.getWriteOptions().stream()
+          .collect(Collectors.toMap(OptionDTO::getName, OptionDTO::getValue));
+      }
+      sparkJobConfiguration = deltaStreamerJobConf.getSparkJobConfiguration();
+    }
+  
+    try {
+      String jobConfigurationPath = getJobConfigurationPath(project, featuregroup.getName(), featuregroup.getVersion(),
+        "deltaStreamer");
+      Map<String, Object> jobConfiguration = new HashMap<>();
+      jobConfiguration.put("feature_store",
+        featurestoreController.getOfflineFeaturestoreDbName(featuregroup.getFeaturestore().getProject()));
+      jobConfiguration.put("name", featuregroup.getName());
+      jobConfiguration.put("version", String.valueOf(featuregroup.getVersion()));
+      jobConfiguration.put("write_options", writeOptions);
+      
+      String jobConfigurationStr = objectMapper.writeValueAsString(jobConfiguration);
+      writeToHDFS(jobConfigurationPath, jobConfigurationStr, udfso);
+      String jobArgs = getJobArgs(DELTA_STREAMER_OP, jobConfigurationPath);
+  
+      //setup job
+      return configureJob(user, project, sparkJobConfiguration,
+        getJobName(DELTA_STREAMER_OP, Utils.getFeaturegroupName(featuregroup), false),
+        jobArgs, JobType.SPARK);
+    } catch (IOException e) {
+      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ERROR_JOB_SETUP, Level.SEVERE,
+        "Error setting up delta streamer job", e.getMessage(), e);
+    } finally {
+      dfs.closeDfsClient(udfso);
+    }
   }
-
-  private String getJobName(String op, String entity) {
-    return entity + "_" + op + "_" + formatter.format(new Date());
+  
+  public String getJobConfigurationPath(Project project, String entityName, Integer entityVersion,
+    String prefix) {
+    
+    return Paths.get(Utils.getProjectPath(project.getName()), Settings.BaseDataset.RESOURCES.getName(),
+        String.join("_", new String[]{prefix, entityName, String.valueOf(entityVersion),
+          String.valueOf(System.currentTimeMillis())})).toString();
+  }
+  
+  private String getJobName(String op, String entity, boolean withTimeStamp) {
+    String name = entity + "_" + op;
+    if (withTimeStamp) {
+      name = name + "_" + formatter.format(new Date());
+    }
+    return name;
   }
 
   private String getJobArgs(String op, String jobConfigurationPath) {
@@ -261,7 +314,7 @@ public class FsJobManagerController {
   }
 
   private Jobs configureJob(Users user, Project project, SparkJobConfiguration sparkJobConfiguration,
-                            String jobName, String defaultArgs)
+                            String jobName, String defaultArgs, JobType jobType)
       throws JobException {
     if (sparkJobConfiguration == null) {
       // set defaults for spark job size
@@ -269,10 +322,17 @@ public class FsJobManagerController {
     }
 
     sparkJobConfiguration.setAppName(jobName);
-    sparkJobConfiguration.setMainClass(Settings.SPARK_PY_MAINCLASS);
-    sparkJobConfiguration.setAppPath(settings.getFSJobUtilPath());
+    sparkJobConfiguration.setMainClass(jobType.equals(JobType.PYSPARK) ? Settings.SPARK_PY_MAINCLASS:
+        Settings.HSFS_UTIL_MAIN_CLASS);
+    sparkJobConfiguration.setAppPath(jobType.equals(JobType.PYSPARK) ? settings.getFSPyJobUtilPath():
+        settings.getFSJavaJobUtilPath());
     sparkJobConfiguration.setDefaultArgs(defaultArgs);
 
     return jobController.putJob(user, project, null, sparkJobConfiguration);
+  }
+  
+  public void deleteDeltaStreamerJob(Project project, Users user, Featuregroup featuregroup) throws JobException {
+    jobController.deleteJob(jobController.getJob(project,
+      getJobName(DELTA_STREAMER_OP, Utils.getFeaturegroupName(featuregroup), false)), user);
   }
 }

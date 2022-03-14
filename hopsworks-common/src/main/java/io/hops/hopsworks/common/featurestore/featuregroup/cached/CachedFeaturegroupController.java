@@ -23,6 +23,7 @@ import io.hops.hopsworks.common.featurestore.activity.FeaturestoreActivityFacade
 import io.hops.hopsworks.common.featurestore.feature.FeatureGroupFeatureDTO;
 import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupDTO;
 import io.hops.hopsworks.common.featurestore.featuregroup.online.OnlineFeaturegroupController;
+import io.hops.hopsworks.common.featurestore.featuregroup.stream.StreamFeatureGroupDTO;
 import io.hops.hopsworks.common.featurestore.online.OnlineFeaturestoreController;
 import io.hops.hopsworks.common.featurestore.query.ConstructorController;
 import io.hops.hopsworks.common.featurestore.query.Feature;
@@ -50,6 +51,7 @@ import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.cached.hiv
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.cached.hive.HivePartitionKeys;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.cached.hive.HiveTableParams;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.cached.hive.HiveTbls;
+import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.stream.StreamFeatureGroup;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.restutils.RESTCodes;
@@ -211,7 +213,7 @@ public class CachedFeaturegroupController {
    * @param version          version of the featuregroup
    * @return                 the hive table name of the featuregroup (featuregroup_version)
    */
-  private String getTblName(String featuregroupName, Integer version) {
+  public String getTblName(String featuregroupName, Integer version) {
     return featuregroupName + "_" + version.toString();
   }
 
@@ -258,7 +260,14 @@ public class CachedFeaturegroupController {
                                                            Users user, String partition, int limit)
       throws FeaturestoreException, HopsSecurityException, SQLException {
     String tbl = getTblName(featuregroup.getName(), featuregroup.getVersion());
-    List<FeatureGroupFeatureDTO> features = getFeaturesDTO(featuregroup, project, user);
+    
+    List<FeatureGroupFeatureDTO> features = null;
+  
+    if (featuregroup.getStreamFeatureGroup() != null) {
+      features = getFeaturesDTO(featuregroup.getStreamFeatureGroup(), featuregroup.getFeaturestore(), project, user);
+    } else {
+      features = getFeaturesDTO(featuregroup.getCachedFeaturegroup(), featuregroup.getFeaturestore(), project, user);
+    }
 
     // This is not great, but at the same time the query runs as the user.
     SqlNodeList selectList = new SqlNodeList(SqlParserPos.ZERO);
@@ -368,22 +377,16 @@ public class CachedFeaturegroupController {
   public CachedFeaturegroupDTO convertCachedFeaturegroupToDTO(Featuregroup featuregroup, Project project, Users user)
       throws FeaturestoreException, ServiceException {
     CachedFeaturegroupDTO cachedFeaturegroupDTO = new CachedFeaturegroupDTO(featuregroup);
-    List<FeatureGroupFeatureDTO> featureGroupFeatureDTOS = getFeaturesDTO(featuregroup, project, user);
+    List<FeatureGroupFeatureDTO> featureGroupFeatureDTOS = getFeaturesDTO(featuregroup.getCachedFeaturegroup(),
+      featuregroup.getFeaturestore(), project, user);
 
     if (settings.isOnlineFeaturestore() && featuregroup.getCachedFeaturegroup().isOnlineEnabled()) {
       cachedFeaturegroupDTO.setOnlineEnabled(true);
       cachedFeaturegroupDTO.setOnlineTopicName(onlineFeaturegroupController
               .onlineFeatureGroupTopicName(project.getId(), featuregroup.getId(),
                 Utils.getFeaturegroupName(featuregroup)));
-      List<FeatureGroupFeatureDTO> onlineFeatureGroupFeatureDTOS =
-          onlineFeaturegroupController.getFeaturegroupFeatures(featuregroup);
-      for (FeatureGroupFeatureDTO featureGroupFeatureDTO : featureGroupFeatureDTOS) {
-        for (FeatureGroupFeatureDTO onlineFeatureGroupFeatureDTO : onlineFeatureGroupFeatureDTOS) {
-          if(featureGroupFeatureDTO.getName().equalsIgnoreCase(onlineFeatureGroupFeatureDTO.getName())){
-            featureGroupFeatureDTO.setOnlineType(onlineFeatureGroupFeatureDTO.getType());
-          }
-        }
-      }
+      featureGroupFeatureDTOS = onlineFeaturegroupController.getFeaturegroupFeatures(featuregroup,
+        featureGroupFeatureDTOS);
     }
     cachedFeaturegroupDTO.setFeatures(featureGroupFeatureDTOS);
     cachedFeaturegroupDTO.setName(featuregroup.getName());
@@ -401,18 +404,41 @@ public class CachedFeaturegroupController {
       featuregroup.getCachedFeaturegroup().getHiveTbls().getSdId().getLocation()));
     return cachedFeaturegroupDTO;
   }
-
-  public List<FeatureGroupFeatureDTO> getFeaturesDTO(Featuregroup featureGroup, Project project, Users user)
-      throws FeaturestoreException {
+  
+  public List<FeatureGroupFeatureDTO> getFeaturesDTO(StreamFeatureGroup streamFeatureGroup, Featurestore featurestore,
+    Project project, Users user) throws FeaturestoreException {
     Collection<CachedFeatureExtraConstraints> featureExtraConstraints =
-      featureGroup.getCachedFeaturegroup().getFeaturesExtraConstraints();
-    HiveTbls hiveTable = featureGroup.getCachedFeaturegroup().getHiveTbls();
+      streamFeatureGroup.getFeaturesExtraConstraints();
 
+    HiveTbls hiveTable = streamFeatureGroup.getHiveTbls();
+  
     List<SQLDefaultConstraint> defaultConstraints =
-      offlineFeatureGroupController.getDefaultConstraints(featureGroup.getFeaturestore(), hiveTable.getTblName(),
-        project, user);
-    Collection<CachedFeature> cachedFeatures = featureGroup.getCachedFeaturegroup().getCachedFeatures();
-
+      offlineFeatureGroupController.getDefaultConstraints(featurestore, hiveTable.getTblName(), project, user);
+    Collection<CachedFeature> cachedFeatures = streamFeatureGroup.getCachedFeatures();
+  
+    return getFeatureGroupFeatureDTOS(featureExtraConstraints, defaultConstraints, hiveTable, cachedFeatures,
+      streamFeatureGroup.getId(), true);
+  }
+  
+  public List<FeatureGroupFeatureDTO> getFeaturesDTO(CachedFeaturegroup cachedFeaturegroup, Featurestore featurestore,
+    Project project, Users user) throws FeaturestoreException {
+    Collection<CachedFeatureExtraConstraints> featureExtraConstraints =
+      cachedFeaturegroup.getFeaturesExtraConstraints();
+    HiveTbls hiveTable = cachedFeaturegroup.getHiveTbls();
+  
+    List<SQLDefaultConstraint> defaultConstraints =
+      offlineFeatureGroupController.getDefaultConstraints(featurestore, hiveTable.getTblName(), project, user);
+    
+    Collection<CachedFeature> cachedFeatures = cachedFeaturegroup.getCachedFeatures();
+  
+    return getFeatureGroupFeatureDTOS(featureExtraConstraints, defaultConstraints, hiveTable, cachedFeatures,
+      cachedFeaturegroup.getId(), cachedFeaturegroup.getTimeTravelFormat() == TimeTravelFormat.HUDI);
+  }
+  
+  public List<FeatureGroupFeatureDTO> getFeatureGroupFeatureDTOS(
+    Collection<CachedFeatureExtraConstraints> featureExtraConstraints, List<SQLDefaultConstraint> defaultConstraints,
+    HiveTbls hiveTable, Collection<CachedFeature> cachedFeatures, Integer featureGroupId, boolean hudiFormat) {
+  
     List<FeatureGroupFeatureDTO> featureGroupFeatureDTOS = new ArrayList<>();
     boolean primary;
     boolean hudiPrecombine;
@@ -426,11 +452,11 @@ public class CachedFeaturegroupController {
 
     for (HiveColumns hc : sortedFeatures) {
       primary = getPrimaryFlag(featureExtraConstraints, hc.getHiveColumnsPK().getColumnName());
-      hudiPrecombine = getPrecombineFlag(featureGroup, featureExtraConstraints, hc.getHiveColumnsPK().getColumnName());
+      hudiPrecombine = getPrecombineFlag(featureExtraConstraints, hc.getHiveColumnsPK().getColumnName(), hudiFormat);
       description = getDescription(cachedFeatures, hc.getHiveColumnsPK().getColumnName());
       defaultValue = getDefaultValue(defaultConstraints, hc.getHiveColumnsPK().getColumnName());
       featureGroupFeatureDTOS.add(new FeatureGroupFeatureDTO(hc.getHiveColumnsPK().getColumnName(),
-          hc.getTypeName(), description, primary, false, hudiPrecombine, defaultValue, featureGroup.getId()));
+          hc.getTypeName(), description, primary, false, hudiPrecombine, defaultValue, featureGroupId));
     }
     // Hive stores the partition columns separately
     // sort partition columns reversely cause they are then added at the beginning of list and therefore correct
@@ -442,17 +468,18 @@ public class CachedFeaturegroupController {
 
     for (HivePartitionKeys pk : sortedPartitionKeys) {
       primary = getPrimaryFlag(featureExtraConstraints, pk.getHivePartitionKeysPK().getPkeyName());
-      hudiPrecombine = getPrecombineFlag(featureGroup, featureExtraConstraints,
-          pk.getHivePartitionKeysPK().getPkeyName());
+      hudiPrecombine = getPrecombineFlag(featureExtraConstraints, pk.getHivePartitionKeysPK().getPkeyName(),
+        hudiFormat);
       defaultValue = getDefaultValue(defaultConstraints, pk.getHivePartitionKeysPK().getPkeyName());
       // insert partition keys at beginning
       featureGroupFeatureDTOS.add(0, new FeatureGroupFeatureDTO(pk.getHivePartitionKeysPK().getPkeyName(),
-        pk.getPkeyType(), pk.getPkeyComment(), primary, true, hudiPrecombine, defaultValue, featureGroup.getId()));
+        pk.getPkeyType(), pk.getPkeyComment(), primary, true, hudiPrecombine, defaultValue, featureGroupId));
     }
-    if (featureGroup.getCachedFeaturegroup().getTimeTravelFormat() == TimeTravelFormat.HUDI){
+  
+    if (hudiFormat){
       featureGroupFeatureDTOS = dropHudiSpecFeatureGroupFeature(featureGroupFeatureDTOS);
     }
-
+  
     return featureGroupFeatureDTOS;
   }
   
@@ -472,10 +499,9 @@ public class CachedFeaturegroupController {
         pk.getName().equals(featureName));
   }
 
-  private boolean getPrecombineFlag(Featuregroup featureGroup,
-                                    Collection<CachedFeatureExtraConstraints> featureExtraConstraints,
-                                    String columnName) {
-    if (featureGroup.getCachedFeaturegroup().getTimeTravelFormat() == TimeTravelFormat.HUDI) {
+  private boolean getPrecombineFlag(Collection<CachedFeatureExtraConstraints> featureExtraConstraints,
+    String columnName, boolean hudiFormat) {
+    if (hudiFormat) {
       return featureExtraConstraints.stream().filter(CachedFeatureExtraConstraints::getHudiPrecombineKey)
         .anyMatch(hpk -> hpk.getName().equals(columnName));
     } else {
@@ -619,6 +645,8 @@ public class CachedFeaturegroupController {
    * Persists metadata of a new cached feature group in the cached_feature_group table
    *
    * @param hiveTable the id of the Hive table in the Hive metastore
+   * @param timeTravelFormat time travel format
+   * @param featureGroupFeatureDTOS the list of the feature group feature DTOs
    * @return Entity of the created cached feature group
    */
   private CachedFeaturegroup persistCachedFeaturegroupMetadata(HiveTbls hiveTable, boolean onlineEnabled,
@@ -629,7 +657,7 @@ public class CachedFeaturegroupController {
     cachedFeaturegroup.setOnlineEnabled(onlineEnabled);
     cachedFeaturegroup.setTimeTravelFormat(timeTravelFormat);
     cachedFeaturegroup.setFeaturesExtraConstraints(
-        buildFeatureExtraConstrains(featureGroupFeatureDTOS, cachedFeaturegroup));
+        buildFeatureExtraConstrains(featureGroupFeatureDTOS, cachedFeaturegroup, null));
     cachedFeaturegroup.setCachedFeatures(featureGroupFeatureDTOS.stream()
       // right now we are filtering and saving only features with description separately, if we add more
       // information to the cached_feature table in the future, we might want to change this and persist a row for
@@ -667,7 +695,8 @@ public class CachedFeaturegroupController {
     }
     CachedFeaturegroup cachedFeaturegroup = featuregroup.getCachedFeaturegroup();
 
-    List<FeatureGroupFeatureDTO> features = getFeaturesDTO(featuregroup, project, user);
+    List<FeatureGroupFeatureDTO> features = getFeaturesDTO(featuregroup.getCachedFeaturegroup(),
+      featurestore, project, user);
     if (cachedFeaturegroup.getTimeTravelFormat() == TimeTravelFormat.HUDI){
       features = dropHudiSpecFeatureGroupFeature(features);
     }
@@ -713,26 +742,35 @@ public class CachedFeaturegroupController {
   }
 
   public void updateMetadata(Project project, Users user, Featuregroup featuregroup,
-                             CachedFeaturegroupDTO cachedFeaturegroupDTO)
+    FeaturegroupDTO featuregroupDTO)
     throws FeaturestoreException, SQLException, SchemaException, KafkaException {
-    List<FeatureGroupFeatureDTO> previousSchema = getFeaturesDTO(featuregroup, project, user);
+
+    List<FeatureGroupFeatureDTO> previousSchema = null;
+    if (featuregroupDTO instanceof StreamFeatureGroupDTO) {
+      previousSchema = getFeaturesDTO(featuregroup.getStreamFeatureGroup(), featuregroup.getFeaturestore(), project,
+        user);
+    } else {
+      previousSchema = getFeaturesDTO(featuregroup.getCachedFeaturegroup(), featuregroup.getFeaturestore(), project,
+        user);
+    }
+    
     String tableName = getTblName(featuregroup.getName(), featuregroup.getVersion());
 
     // verify user input specific for cached feature groups - if any
     List<FeatureGroupFeatureDTO> newFeatures = new ArrayList<>();
-    if (cachedFeaturegroupDTO.getFeatures() != null) {
-      verifyPreviousSchemaUnchanged(previousSchema, cachedFeaturegroupDTO.getFeatures());
-      newFeatures = verifyAndGetNewFeatures(previousSchema, cachedFeaturegroupDTO.getFeatures());
+    if (featuregroupDTO.getFeatures() != null) {
+      verifyPreviousSchemaUnchanged(previousSchema, featuregroupDTO.getFeatures());
+      newFeatures = verifyAndGetNewFeatures(previousSchema, featuregroupDTO.getFeatures());
     }
 
     // change table description
-    if (cachedFeaturegroupDTO.getDescription() != null) {
+    if (featuregroupDTO.getDescription() != null) {
       offlineFeatureGroupController.alterHiveTableDescription(
-        featuregroup.getFeaturestore(), tableName, cachedFeaturegroupDTO.getDescription(), project, user);
+        featuregroup.getFeaturestore(), tableName, featuregroupDTO.getDescription(), project, user);
     }
     
     // change feature descriptions
-    updateCachedDescriptions(featuregroup.getCachedFeaturegroup(), cachedFeaturegroupDTO.getFeatures());
+    updateCachedDescriptions(featuregroup.getCachedFeaturegroup(), featuregroupDTO.getFeatures());
 
     // alter table for new additional features
     if (!newFeatures.isEmpty()) {
@@ -742,7 +780,7 @@ public class CachedFeaturegroupController {
       // if online feature group
       if (settings.isOnlineFeaturestore() && featuregroup.getCachedFeaturegroup().isOnlineEnabled()) {
         onlineFeaturegroupController.alterOnlineFeatureGroupSchema(
-          featuregroup, newFeatures, cachedFeaturegroupDTO.getFeatures(), project, user);
+          featuregroup, newFeatures, featuregroupDTO.getFeatures(), project, user);
       }
 
       // Log schema change
@@ -774,7 +812,7 @@ public class CachedFeaturegroupController {
     return cachedFeatures.stream().filter(feature -> feature.getName().equalsIgnoreCase(featureName)).findAny();
   }
 
-  private List<FeatureGroupFeatureDTO> addHudiSpecFeatures(List<FeatureGroupFeatureDTO> features)  {
+  public List<FeatureGroupFeatureDTO> addHudiSpecFeatures(List<FeatureGroupFeatureDTO> features)  {
 
     for (String hudiSpecFeature : HUDI_SPEC_FEATURE_NAMES){
       // 1st check if hudi specific metadata exists in feature dataframe. If not add
@@ -786,7 +824,7 @@ public class CachedFeaturegroupController {
     return features;
   }
 
-  private List<FeatureGroupFeatureDTO> dropHudiSpecFeatureGroupFeature(List<FeatureGroupFeatureDTO> features) {
+  public List<FeatureGroupFeatureDTO> dropHudiSpecFeatureGroupFeature(List<FeatureGroupFeatureDTO> features) {
     return features.stream()
         .filter(feature -> !HUDI_SPEC_FEATURE_NAMES.contains(feature.getName())).collect(Collectors.toList());
   }
@@ -854,8 +892,9 @@ public class CachedFeaturegroupController {
     }
   }
 
-  private List<CachedFeatureExtraConstraints> buildFeatureExtraConstrains(
-      List<FeatureGroupFeatureDTO> featureGroupFeatureDTOS, CachedFeaturegroup cachedFeaturegroup) {
+  public List<CachedFeatureExtraConstraints> buildFeatureExtraConstrains(
+      List<FeatureGroupFeatureDTO> featureGroupFeatureDTOS, CachedFeaturegroup cachedFeaturegroup,
+    StreamFeatureGroup streamFeatureGroup) {
     List<CachedFeatureExtraConstraints> cachedFeatureExtraConstraints = new ArrayList<>();
     List<String> pkNames = featureGroupFeatureDTOS.stream()
         .filter(FeatureGroupFeatureDTO::getPrimary)
@@ -870,7 +909,7 @@ public class CachedFeaturegroupController {
 
     boolean primaryKeyIsHudiPrecombineKey = false;
 
-    if (cachedFeaturegroup.getTimeTravelFormat() == TimeTravelFormat.HUDI){
+    if (streamFeatureGroup != null || cachedFeaturegroup.getTimeTravelFormat() == TimeTravelFormat.HUDI) {
       if (hudiPrecombineKeyName == null) {
         //hudi precombine key is always one feature, we pick up 1st primary key
         hudiPrecombineKeyName = pkNames.get(0);
@@ -882,13 +921,17 @@ public class CachedFeaturegroupController {
     }
 
     for (String pkName : pkNames) {
-      cachedFeatureExtraConstraints.add(new CachedFeatureExtraConstraints(cachedFeaturegroup,
-          pkName, true, pkName.equals(hudiPrecombineKeyName)));
+      cachedFeatureExtraConstraints.add(streamFeatureGroup == null ?
+        new CachedFeatureExtraConstraints(cachedFeaturegroup, pkName, true, pkName.equals(hudiPrecombineKeyName)) :
+        new CachedFeatureExtraConstraints(streamFeatureGroup, pkName, true, pkName.equals(hudiPrecombineKeyName)));
     }
 
-    if (!primaryKeyIsHudiPrecombineKey && cachedFeaturegroup.getTimeTravelFormat() == TimeTravelFormat.HUDI){
-      cachedFeatureExtraConstraints.add(new CachedFeatureExtraConstraints(cachedFeaturegroup,
-          hudiPrecombineKeyName, false, true));
+    if (!primaryKeyIsHudiPrecombineKey && (cachedFeaturegroup.getTimeTravelFormat() == TimeTravelFormat.HUDI ||
+      streamFeatureGroup != null)) {
+      cachedFeatureExtraConstraints.add(
+        streamFeatureGroup == null ?
+          new CachedFeatureExtraConstraints(cachedFeaturegroup, hudiPrecombineKeyName, false, true) :
+          new CachedFeatureExtraConstraints(streamFeatureGroup, hudiPrecombineKeyName, false, true) );
     }
     return cachedFeatureExtraConstraints;
   }

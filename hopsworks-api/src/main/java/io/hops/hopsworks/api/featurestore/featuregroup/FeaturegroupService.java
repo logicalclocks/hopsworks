@@ -26,6 +26,9 @@ import io.hops.hopsworks.api.featurestore.datavalidation.alert.FeatureGroupAlert
 import io.hops.hopsworks.api.featurestore.datavalidation.validations.FeatureGroupValidationsResource;
 import io.hops.hopsworks.api.featurestore.statistics.StatisticsResource;
 import io.hops.hopsworks.api.featurestore.tag.FeaturestoreTagsBuilder;
+import io.hops.hopsworks.api.jobs.JobDTO;
+import io.hops.hopsworks.api.jobs.JobsBuilder;
+import io.hops.hopsworks.common.featurestore.featuregroup.stream.DeltaStreamerJobConf;
 import io.hops.hopsworks.common.tags.TagsDTO;
 import io.hops.hopsworks.api.tags.TagsExpansionBeanParam;
 import io.hops.hopsworks.api.filter.AllowedProjectRoles;
@@ -67,6 +70,7 @@ import io.hops.hopsworks.persistence.entity.featurestore.Featurestore;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.Featuregroup;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.FeaturegroupType;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.cached.ValidationType;
+import io.hops.hopsworks.persistence.entity.jobs.description.Jobs;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.persistence.entity.user.security.apiKey.ApiScope;
@@ -161,6 +165,8 @@ public class FeaturegroupService {
   private FeatureGroupAlertResource featureGroupAlertResource;
   @EJB
   private DatasetHelper datasetHelper;
+  @EJB
+  private JobsBuilder jobsBuilder;
 
   private Project project;
   private Featurestore featurestore;
@@ -250,8 +256,7 @@ public class FeaturegroupService {
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   @JWTRequired(acceptedTokens = {Audience.API, Audience.JOB}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   @ApiKeyRequired( acceptedScopes = {ApiScope.FEATURESTORE}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
-  @ApiOperation(value = "Create feature group in a featurestore",
-      response = FeaturegroupDTO.class)
+  @ApiOperation(value = "Create feature group in a featurestore", response = FeaturegroupDTO.class)
   public Response createFeaturegroup(@Context SecurityContext sc,
                                      @Context HttpServletRequest req,
                                      FeaturegroupDTO featuregroupDTO)
@@ -267,10 +272,9 @@ public class FeaturegroupService {
       }
       FeaturegroupDTO createdFeaturegroup = featuregroupController.createFeaturegroup(featurestore, featuregroupDTO,
         project, user);
-      GenericEntity<FeaturegroupDTO> featuregroupGeneric =
-          new GenericEntity<FeaturegroupDTO>(createdFeaturegroup) {};
+      GenericEntity<FeaturegroupDTO> featuregroupGeneric = new GenericEntity<FeaturegroupDTO>(createdFeaturegroup) {};
       return noCacheResponse.getNoCacheResponseBuilder(Response.Status.CREATED).entity(featuregroupGeneric).build();
-    } catch (SQLException | ProvenanceException | IOException | HopsSecurityException e) {
+    } catch (SQLException | ProvenanceException | IOException | HopsSecurityException | JobException e) {
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.COULD_NOT_CREATE_FEATUREGROUP, Level.SEVERE,
           "project: " + project.getName() + ", featurestoreId: " + featurestore.getId(), e.getMessage(), e);
     }
@@ -370,7 +374,7 @@ public class FeaturegroupService {
     try {
       featuregroupController.deleteFeaturegroup(featuregroup, project, user);
       return Response.ok().build();
-    } catch (SQLException | IOException e) {
+    } catch (SQLException | IOException | JobException e) {
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.COULD_NOT_DELETE_FEATUREGROUP, Level.SEVERE,
           "project: " + project.getName() + ", featurestoreId: " + featurestore.getId() +
               ", featuregroupId: " + featuregroupId, e.getMessage(), e);
@@ -410,7 +414,7 @@ public class FeaturegroupService {
     try {
       FeaturegroupDTO newFeatureGroup = featuregroupController.clearFeaturegroup(featuregroup, project, user);
       return Response.ok().entity(newFeatureGroup).build();
-    } catch (SQLException | IOException | ProvenanceException | HopsSecurityException e) {
+    } catch (SQLException | IOException | ProvenanceException | HopsSecurityException | JobException e) {
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.COULD_NOT_CLEAR_FEATUREGROUP, Level.SEVERE,
           "project: " + project.getName() + ", featurestoreId: " + featurestore.getId() +
               ", featuregroupId: " + featuregroupId, e.getMessage(), e);
@@ -831,5 +835,33 @@ public class FeaturegroupService {
     Featuregroup featuregroup = featuregroupController.getFeaturegroupById(featurestore, featureGroupId);
     featureGroupAlertResource.setFeatureGroup(featuregroup);
     return featureGroupAlertResource;
+  }
+  
+  @POST
+  @Path("/{featuregroupId}/deltastreamer")
+  @Logged(logLevel = LogLevel.OFF)
+  @Consumes(MediaType.APPLICATION_JSON)
+  @Produces(MediaType.APPLICATION_JSON)
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
+  @JWTRequired(acceptedTokens={Audience.API, Audience.JOB}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
+  @ApiKeyRequired( acceptedScopes = {ApiScope.FEATURESTORE}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
+  @ApiOperation(value = "Prepares environment for Hudi DeltaStreamer to materialise data in to the offline " +
+    "feature group", response = JobDTO.class)
+  public Response deltaStreamerJob(@Context SecurityContext sc,
+    @Context UriInfo uriInfo,
+    @ApiParam(value = "Id of the featuregroup", required = true)
+    @PathParam("featuregroupId") Integer featuregroupId,
+    DeltaStreamerJobConf deltaStreamerJobConf)
+    throws FeaturestoreException, JobException {
+    Users user = jWTHelper.getUserPrincipal(sc);
+    verifyIdProvided(featuregroupId);
+    
+    Featuregroup featuregroup = featuregroupController.getFeaturegroupById(featurestore, featuregroupId);
+    
+    Jobs deltaStreamerJob = fsJobManagerController.setupHudiDeltaStreamerJob(project, user, featuregroup,
+      deltaStreamerJobConf);
+    JobDTO jobDTO = jobsBuilder.build(uriInfo, new ResourceRequest(ResourceRequest.Name.JOBS), deltaStreamerJob);
+    
+    return Response.created(jobDTO.getHref()).entity(jobDTO).build();
   }
 }

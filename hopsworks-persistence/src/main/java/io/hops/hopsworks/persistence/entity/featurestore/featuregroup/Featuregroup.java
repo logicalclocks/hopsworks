@@ -23,6 +23,7 @@ import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.cached.Val
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.datavalidation.FeatureGroupExpectation;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.datavalidation.alert.FeatureGroupAlert;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.ondemand.OnDemandFeaturegroup;
+import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.stream.StreamFeatureGroup;
 import io.hops.hopsworks.persistence.entity.featurestore.statistics.StatisticsConfig;
 import io.hops.hopsworks.persistence.entity.user.Users;
 
@@ -114,6 +115,9 @@ public class Featuregroup implements Serializable {
   @JoinColumn(name = "on_demand_feature_group_id", referencedColumnName = "id")
   @OneToOne
   private OnDemandFeaturegroup onDemandFeaturegroup;
+  @JoinColumn(name = "stream_feature_group_id", referencedColumnName = "id")
+  @OneToOne
+  private StreamFeatureGroup streamFeatureGroup;
   @JoinColumn(name = "cached_feature_group_id", referencedColumnName = "id")
   @OneToOne
   private CachedFeaturegroup cachedFeaturegroup;
@@ -207,7 +211,16 @@ public class Featuregroup implements Serializable {
   public void setCachedFeaturegroup(CachedFeaturegroup cachedFeaturegroup) {
     this.cachedFeaturegroup = cachedFeaturegroup;
   }
-
+  
+  public StreamFeatureGroup getStreamFeatureGroup() {
+    return streamFeatureGroup;
+  }
+  
+  public void setStreamFeatureGroup(
+    StreamFeatureGroup streamFeatureGroup) {
+    this.streamFeatureGroup = streamFeatureGroup;
+  }
+  
   public StatisticsConfig getStatisticsConfig() {
     return statisticsConfig;
   }
@@ -273,6 +286,7 @@ public class Featuregroup implements Serializable {
     if (featuregroupType != that.featuregroupType) return false;
     if (!Objects.equals(onDemandFeaturegroup, that.onDemandFeaturegroup)) return false;
     if (!Objects.equals(cachedFeaturegroup, that.cachedFeaturegroup)) return false;
+    if (!Objects.equals(streamFeatureGroup, that.streamFeatureGroup)) return false;
     if (!Objects.equals(eventTime, that.eventTime)) return false;
     return Objects.equals(statisticsConfig, that.statisticsConfig);
   }
@@ -288,6 +302,7 @@ public class Featuregroup implements Serializable {
     result = 31 * result + (featuregroupType != null ? featuregroupType.hashCode() : 0);
     result = 31 * result + (onDemandFeaturegroup != null ? onDemandFeaturegroup.hashCode() : 0);
     result = 31 * result + (cachedFeaturegroup != null ? cachedFeaturegroup.hashCode() : 0);
+    result = 31 * result + (streamFeatureGroup != null ? streamFeatureGroup.hashCode() : 0);
     result = 31 * result + (statisticsConfig != null ? statisticsConfig.hashCode() : 0);
     result = 31 * result + (eventTime != null ? eventTime.hashCode() : 0);
     return result;

@@ -20,10 +20,12 @@ import com.logicalclocks.servicediscoverclient.exceptions.ServiceDiscoveryExcept
 import io.hops.hopsworks.common.featurestore.FeaturestoreFacade;
 import io.hops.hopsworks.common.featurestore.feature.FeatureGroupFeatureDTO;
 import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupController;
+import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupDTO;
 import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupFacade;
 import io.hops.hopsworks.common.featurestore.featuregroup.cached.CachedFeaturegroupController;
 import io.hops.hopsworks.common.featurestore.featuregroup.cached.CachedFeaturegroupDTO;
 import io.hops.hopsworks.common.featurestore.featuregroup.ondemand.OnDemandFeaturegroupDTO;
+import io.hops.hopsworks.common.featurestore.featuregroup.stream.StreamFeatureGroupDTO;
 import io.hops.hopsworks.common.featurestore.online.OnlineFeaturestoreController;
 import io.hops.hopsworks.common.featurestore.query.filter.FilterController;
 import io.hops.hopsworks.common.featurestore.query.join.Join;
@@ -256,8 +258,9 @@ public class ConstructorController {
       tableIdentifierStr.add("`" + query.getProject() + "`");
       tableIdentifierStr.add("`" + query.getFeaturegroup().getName() + "_" + query.getFeaturegroup().getVersion()
           + "`");
-    } else if (query.getFeaturegroup().getCachedFeaturegroup().getTimeTravelFormat() != TimeTravelFormat.HUDI
-        || query.getHiveEngine()) {
+    } else if ((query.getFeaturegroup().getFeaturegroupType() == FeaturegroupType.CACHED_FEATURE_GROUP &&
+      query.getFeaturegroup().getCachedFeaturegroup().getTimeTravelFormat() != TimeTravelFormat.HUDI)
+      || query.getHiveEngine()) {
       tableIdentifierStr.add("`" + query.getFeatureStore() + "`");
       tableIdentifierStr.add("`" + query.getFeaturegroup().getName() + "_" + query.getFeaturegroup().getVersion()
           + "`");
@@ -283,7 +286,7 @@ public class ConstructorController {
    * @return
    */
   public SqlNode generateTableNode(Query query, boolean online) {
-    if (query.getFeaturegroup().getFeaturegroupType() == FeaturegroupType.CACHED_FEATURE_GROUP) {
+    if (query.getFeaturegroup().getFeaturegroupType() != FeaturegroupType.ON_DEMAND_FEATURE_GROUP) {
       return generateCachedTableNode(query, online);
     } else {
       return generateOnDemandTableNode(query);
@@ -293,24 +296,29 @@ public class ConstructorController {
   public List<HudiFeatureGroupAliasDTO> getHudiAliases(Query query, List<HudiFeatureGroupAliasDTO> aliases,
       Project project, Users user)
       throws FeaturestoreException, ServiceException {
-    if (query.getFeaturegroup().getFeaturegroupType() == FeaturegroupType.CACHED_FEATURE_GROUP &&
-        query.getFeaturegroup().getCachedFeaturegroup().getTimeTravelFormat() == TimeTravelFormat.HUDI) {
+    if ((query.getFeaturegroup().getFeaturegroupType() == FeaturegroupType.CACHED_FEATURE_GROUP &&
+        query.getFeaturegroup().getCachedFeaturegroup().getTimeTravelFormat() == TimeTravelFormat.HUDI)) {
+      
       CachedFeaturegroupDTO featuregroupDTO = new CachedFeaturegroupDTO(query.getFeaturegroup());
       Featuregroup featuregroup = query.getFeaturegroup();
-      List<FeatureGroupFeatureDTO> featureGroupFeatureDTOS = cachedFeaturegroupController.getFeaturesDTO(
-          featuregroup, project, user);
+      List<FeatureGroupFeatureDTO> featureGroupFeatureDTOS =
+        cachedFeaturegroupController.getFeaturesDTO(featuregroup.getCachedFeaturegroup(),
+          featuregroup.getFeaturestore(), project, user);
       featuregroupDTO.setFeatures(featureGroupFeatureDTOS);
 
       featuregroupDTO.setLocation(featurestoreUtils.resolveLocationURI(
           featuregroup.getCachedFeaturegroup().getHiveTbls().getSdId().getLocation()));
-
-      if (query.getLeftFeatureGroupStartTimestamp() == null) {
-        aliases.add(new HudiFeatureGroupAliasDTO(query.getAs(), featuregroupDTO,
-            query.getLeftFeatureGroupEndTimestamp()));
-      } else {
-        aliases.add(new HudiFeatureGroupAliasDTO(query.getAs(), featuregroupDTO,
-            query.getLeftFeatureGroupStartTimestamp(), query.getLeftFeatureGroupEndTimestamp()));
-      }
+      aliases = addAliases(aliases, query, featuregroupDTO);
+    } else if (query.getFeaturegroup().getFeaturegroupType() == FeaturegroupType.STREAM_FEATURE_GROUP) {
+      StreamFeatureGroupDTO featuregroupDTO = new StreamFeatureGroupDTO(query.getFeaturegroup());
+      Featuregroup featuregroup = query.getFeaturegroup();
+      List<FeatureGroupFeatureDTO> featureGroupFeatureDTOS =
+        cachedFeaturegroupController.getFeaturesDTO(featuregroup.getStreamFeatureGroup(),
+          featuregroup.getFeaturestore(), project, user);
+      featuregroupDTO.setFeatures(featureGroupFeatureDTOS);
+      featuregroupDTO.setLocation(featurestoreUtils.resolveLocationURI(
+        featuregroup.getStreamFeatureGroup().getHiveTbls().getSdId().getLocation()));
+      aliases = addAliases(aliases, query, featuregroupDTO);
     }
 
     if (query.getJoins() != null && !query.getJoins().isEmpty()) {
@@ -319,6 +327,18 @@ public class ConstructorController {
       }
     }
 
+    return aliases;
+  }
+  
+  private List<HudiFeatureGroupAliasDTO> addAliases (List<HudiFeatureGroupAliasDTO> aliases, Query query,
+    FeaturegroupDTO featuregroupDTO) {
+    if (query.getLeftFeatureGroupStartTimestamp() == null) {
+      aliases.add(new HudiFeatureGroupAliasDTO(query.getAs(), featuregroupDTO,
+        query.getLeftFeatureGroupEndTimestamp()));
+    } else {
+      aliases.add(new HudiFeatureGroupAliasDTO(query.getAs(), featuregroupDTO,
+        query.getLeftFeatureGroupStartTimestamp(), query.getLeftFeatureGroupEndTimestamp()));
+    }
     return aliases;
   }
 
