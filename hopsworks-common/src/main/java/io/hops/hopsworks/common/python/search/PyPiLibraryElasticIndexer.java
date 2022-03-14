@@ -35,6 +35,8 @@ import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
 import javax.ejb.DependsOn;
 import javax.ejb.EJB;
+import javax.ejb.Lock;
+import javax.ejb.LockType;
 import javax.ejb.Singleton;
 import javax.ejb.Startup;
 import javax.ejb.Timeout;
@@ -52,6 +54,7 @@ import static org.elasticsearch.common.xcontent.XContentFactory.jsonBuilder;
 @Singleton
 @Startup
 @DependsOn("Settings")
+@Lock(LockType.READ)
 public class PyPiLibraryElasticIndexer {
 
   @EJB
@@ -65,6 +68,11 @@ public class PyPiLibraryElasticIndexer {
 
   private static final Logger LOGGER = Logger.getLogger(
       PyPiLibraryElasticIndexer.class.getName());
+
+  @Lock(LockType.WRITE)
+  public void setIndexed(boolean indexed) {
+    this.isIndexed = indexed;
+  }
 
   public boolean isIndexed() {
     return this.isIndexed;
@@ -118,7 +126,7 @@ public class PyPiLibraryElasticIndexer {
       GetAliasesResponse pypiAlias = elasticClientCtrl.getAliases(Settings.ELASTIC_PYPI_LIBRARIES_ALIAS);
     
       if(!pypiAlias.getAliases().isEmpty()) {
-        this.isIndexed = true;
+        this.setIndexed(true);
       }
     
       String[] indicesToDelete = elasticClientCtrl.mngIndicesGetBySimplifiedRegex(
@@ -168,7 +176,7 @@ public class PyPiLibraryElasticIndexer {
         String currentSearchIndex = pypiAlias.getAliases().keySet().iterator().next();
         elasticClientCtrl.aliasSwitchIndex(Settings.ELASTIC_PYPI_LIBRARIES_ALIAS, currentSearchIndex, newIndex);
       }
-      this.isIndexed = true;
+      this.setIndexed(true);
     
       LOGGER.log(Level.INFO, "Finished indexing");
     
