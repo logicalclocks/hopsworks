@@ -30,6 +30,8 @@ import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
 import javax.ejb.DependsOn;
 import javax.ejb.EJB;
+import javax.ejb.Lock;
+import javax.ejb.LockType;
 import javax.ejb.Singleton;
 import javax.ejb.Startup;
 import javax.ejb.Timeout;
@@ -51,6 +53,7 @@ import java.util.logging.Logger;
 @Startup
 @DependsOn("Settings")
 @TransactionAttribute(TransactionAttributeType.NEVER)
+@Lock(LockType.READ)
 public class PythonLibraryUpdatesMonitor {
 
   @EJB
