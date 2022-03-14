@@ -16,6 +16,8 @@
 
 package io.hops.hopsworks.persistence.entity.featurestore.featuregroup.cached;
 
+import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.stream.StreamFeatureGroup;
+
 import javax.persistence.Basic;
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -45,6 +47,8 @@ public class CachedFeature implements Serializable {
   private Integer id;
   @JoinColumn(name = "cached_feature_group_id", referencedColumnName = "id")
   private CachedFeaturegroup cachedFeaturegroup;
+  @JoinColumn(name = "stream_feature_group_id", referencedColumnName = "id")
+  private StreamFeatureGroup streamFeatureGroup;
   @Basic(optional = false)
   @Column(name = "name")
   private String name;
@@ -56,6 +60,12 @@ public class CachedFeature implements Serializable {
   
   public CachedFeature(CachedFeaturegroup cachedFeaturegroup, String name, String description) {
     this.cachedFeaturegroup = cachedFeaturegroup;
+    this.name = name;
+    this.description = description;
+  }
+  
+  public CachedFeature(StreamFeatureGroup streamFeatureGroup, String name, String description) {
+    this.streamFeatureGroup = streamFeatureGroup;
     this.name = name;
     this.description = description;
   }
@@ -75,6 +85,15 @@ public class CachedFeature implements Serializable {
   public void setCachedFeaturegroup(
     CachedFeaturegroup cachedFeaturegroup) {
     this.cachedFeaturegroup = cachedFeaturegroup;
+  }
+  
+  public StreamFeatureGroup getStreamFeatureGroup() {
+    return streamFeatureGroup;
+  }
+  
+  public void setStreamFeatureGroup(
+    StreamFeatureGroup streamFeatureGroup) {
+    this.streamFeatureGroup = streamFeatureGroup;
   }
   
   public String getName() {
@@ -106,6 +125,7 @@ public class CachedFeature implements Serializable {
     
     if (!id.equals(that.id)) return false;
     if (!cachedFeaturegroup.equals(that.cachedFeaturegroup)) return false;
+    if (!streamFeatureGroup.equals(that.streamFeatureGroup)) return false;
     if (!name.equals(that.name)) return false;
     return description.equals(that.description);
   }
@@ -114,6 +134,7 @@ public class CachedFeature implements Serializable {
   public int hashCode() {
     int result = id.hashCode();
     result = 31 * result + cachedFeaturegroup.hashCode();
+    result = 31 * result + streamFeatureGroup.hashCode();
     result = 31 * result + name.hashCode();
     result = 31 * result + description.hashCode();
     return result;

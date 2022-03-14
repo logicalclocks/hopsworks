@@ -355,12 +355,22 @@ public class OnlineFeaturegroupController {
    * Queries the metadata in MySQL-Cluster to get the schema information of an online feature group
    *
    * @param featuregroup the online featuregroup to get type information for
+   * @param featureGroupFeatureDTOS list of feature dtos of the online featuregroup
    * @return a list of Feature DTOs with the type information
    */
-  public List<FeatureGroupFeatureDTO> getFeaturegroupFeatures(Featuregroup featuregroup) throws FeaturestoreException {
-    return onlineFeaturestoreFacade.getMySQLFeatures(
+  public List<FeatureGroupFeatureDTO> getFeaturegroupFeatures(Featuregroup featuregroup,
+    List<FeatureGroupFeatureDTO> featureGroupFeatureDTOS) throws FeaturestoreException {
+    List<FeatureGroupFeatureDTO> onlineFeatureGroupFeatureDTOS = onlineFeaturestoreFacade.getMySQLFeatures(
         Utils.getFeatureStoreEntityName(featuregroup.getName(), featuregroup.getVersion()),
         onlineFeaturestoreController.getOnlineFeaturestoreDbName(featuregroup.getFeaturestore().getProject()));
+    for (FeatureGroupFeatureDTO featureGroupFeatureDTO : featureGroupFeatureDTOS) {
+      for (FeatureGroupFeatureDTO onlineFeatureGroupFeatureDTO : onlineFeatureGroupFeatureDTOS) {
+        if(featureGroupFeatureDTO.getName().equalsIgnoreCase(onlineFeatureGroupFeatureDTO.getName())){
+          featureGroupFeatureDTO.setOnlineType(onlineFeatureGroupFeatureDTO.getType());
+        }
+      }
+    }
+    return featureGroupFeatureDTOS;
   }
 
   public Long getFeaturegroupSize(Featuregroup featuregroup) {

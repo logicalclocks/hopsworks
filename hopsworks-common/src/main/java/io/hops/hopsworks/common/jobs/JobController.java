@@ -207,14 +207,18 @@ public class JobController {
   }
   
   public Jobs getJob(Project project, String name) throws JobException {
-    if(Strings.isNullOrEmpty(name)) {
-      throw new IllegalArgumentException("job name was not provided or it was not set.");
-    }
-    Jobs job = jobFacade.findByProjectAndName(project, name);
+    Jobs job = findJob(project, name);
     if (job == null) {
       throw new JobException(RESTCodes.JobErrorCode.JOB_NOT_FOUND, Level.FINEST, "jobId:" + name);
     }
     return job;
+  }
+  
+  private Jobs findJob(Project project, String name) throws JobException {
+    if(Strings.isNullOrEmpty(name)) {
+      throw new IllegalArgumentException("job name was not provided or it was not set.");
+    }
+    return jobFacade.findByProjectAndName(project, name);
   }
   
   @TransactionAttribute(TransactionAttributeType.NEVER)

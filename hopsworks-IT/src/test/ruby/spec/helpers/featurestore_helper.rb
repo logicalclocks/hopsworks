@@ -340,6 +340,54 @@ module FeaturestoreHelper
     return json_result, featuregroup_name
   end
 
+  def create_stream_featuregroup(project_id, featurestore_id, features: nil, featuregroup_name: nil,
+                                 version: 1, featuregroup_description: nil, statistics_config: nil,
+                                 event_time: nil, deltaStreamerJobConf: nil)
+    type = "streamFeatureGroupDTO"
+    featuregroupType = "STREAM_FEATURE_GROUP"
+    features = features == nil ? [{type: "INT", name: "testfeature", description: "testfeaturedescription",
+                                   primary: true, onlineType: "INT", partition: false}] : features
+    featuregroup_name = featuregroup_name == nil ? "featuregroup_#{random_id}" : featuregroup_name
+    featuregroup_description = featuregroup_description == nil ? "testfeaturegroupdescription" : featuregroup_description
+
+    json_data = {
+        name: featuregroup_name,
+        jobs: [],
+        features: features,
+        description: featuregroup_description,
+        version: version,
+        type: type,
+        featuregroupType: featuregroupType,
+        eventTime: event_time,
+        deltaStreamerJobConf: deltaStreamerJobConf
+    }
+    unless statistics_config == nil
+      json_data[:statisticsConfig] = statistics_config
+    end
+
+    if deltaStreamerJobConf.nil?
+      deltaStreamerJobConf = {
+        "writeOptions" => [],
+        "sparkJobConfiguration" => {
+            "type" => "sparkJobConfiguration",
+            "spark.executor.instances" => 2,
+            "spark.executor.cores" => 2,
+            "spark.executor.memory" => 1500,
+            "spark.dynamicAllocation.enabled" => true,
+            "spark.dynamicAllocation.minExecutors" => 2,
+            "spark.dynamicAllocation.maxExecutors" => 10,
+            "spark.dynamicAllocation.initialExecutors" => 1
+        }
+      }
+      json_data[:deltaStreamerJobConf] = deltaStreamerJobConf
+    end
+    json_data = json_data.to_json
+
+    create_featuregroup_endpoint = "#{ENV['HOPSWORKS_API']}/project/" + project_id.to_s + "/featurestores/" + featurestore_id.to_s + "/featuregroups"
+    json_result = post create_featuregroup_endpoint, json_data
+    return json_result, featuregroup_name
+  end
+
   def create_on_demand_featuregroup(project_id, featurestore_id, jdbcconnectorId, name: nil, version: 1, query: nil,
                                     features: nil, data_format: nil, options: nil, event_time: nil)
     type = "onDemandFeaturegroupDTO"

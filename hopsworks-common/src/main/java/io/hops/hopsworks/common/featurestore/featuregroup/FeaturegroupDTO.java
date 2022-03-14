@@ -23,6 +23,7 @@ import io.hops.hopsworks.common.featurestore.FeaturestoreEntityDTO;
 import io.hops.hopsworks.common.featurestore.feature.FeatureGroupFeatureDTO;
 import io.hops.hopsworks.common.featurestore.featuregroup.cached.CachedFeaturegroupDTO;
 import io.hops.hopsworks.common.featurestore.featuregroup.ondemand.OnDemandFeaturegroupDTO;
+import io.hops.hopsworks.common.featurestore.featuregroup.stream.StreamFeatureGroupDTO;
 import io.hops.hopsworks.common.featurestore.statistics.StatisticsConfigDTO;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.Featuregroup;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.cached.ValidationType;
@@ -40,11 +41,12 @@ import java.util.List;
  */
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.FIELD)
-@XmlSeeAlso({CachedFeaturegroupDTO.class, OnDemandFeaturegroupDTO.class})
+@XmlSeeAlso({CachedFeaturegroupDTO.class, StreamFeatureGroupDTO.class, OnDemandFeaturegroupDTO.class})
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY)
 @JsonSubTypes({
-    @JsonSubTypes.Type(value = CachedFeaturegroupDTO.class, name = "OnlineFeaturegroupDTO"),
+    @JsonSubTypes.Type(value = CachedFeaturegroupDTO.class, name = "CachedFeaturegroupDTO"),
+    @JsonSubTypes.Type(value = StreamFeatureGroupDTO.class, name = "StreamFeatureGroupDTO"),
     @JsonSubTypes.Type(value = OnDemandFeaturegroupDTO.class, name = "OnDemandFeaturegroupDTO")})
 public class FeaturegroupDTO extends FeaturestoreEntityDTO {
 
@@ -119,7 +121,7 @@ public class FeaturegroupDTO extends FeaturestoreEntityDTO {
   public void setEventTime(String eventTime) {
     this.eventTime = eventTime;
   }
-
+  
   @Override
   public String toString() {
     return "FeaturegroupDTO{" +

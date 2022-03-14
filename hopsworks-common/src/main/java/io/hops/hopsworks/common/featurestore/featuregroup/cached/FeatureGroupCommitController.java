@@ -23,6 +23,7 @@ import io.hops.hopsworks.common.featurestore.datavalidation.FeatureGroupValidati
 import io.hops.hopsworks.common.hdfs.inode.InodeController;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.Featuregroup;
+import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.FeaturegroupType;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.cached.FeatureGroupCommit;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.cached.hive.HiveTbls;
 import io.hops.hopsworks.persistence.entity.hdfs.inode.Inode;
@@ -122,12 +123,12 @@ public class FeatureGroupCommitController {
       LOGGER.log(Level.SEVERE, "Unable to recognize provided HUDI commitDateString ", e);
     }
 
-    HiveTbls hiveTbls = featuregroup.getCachedFeaturegroup().getHiveTbls();
+    HiveTbls hiveTbls = featuregroup.getFeaturegroupType().equals(FeaturegroupType.STREAM_FEATURE_GROUP) ?
+      featuregroup.getStreamFeatureGroup().getHiveTbls(): featuregroup.getCachedFeaturegroup().getHiveTbls();
     String dbLocation = hiveTbls.getSdId().getLocation();
     Path commitMetadataPath = new Path(HOODIE_METADATA_DIR,commitDateString
         + HOODIE_COMMIT_METADATA_FILE);
     Path commitPath = new Path(dbLocation, commitMetadataPath);
     return commitPath.toString();
   }
-
 }

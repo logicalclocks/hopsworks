@@ -2617,6 +2617,54 @@ describe "On #{ENV['OS']}" do
         expect(parsed_json["arguments"].find{ |item| item['name'] == 'user' }.key?('value')).to be true
         expect_status(200)
       end
+
+      it "should be able to add a stream featuregroup to the featurestore" do
+        project = get_project
+        featurestore_id = get_featurestore_id(project.id)
+        json_result, featuregroup_name = create_stream_featuregroup(project.id, featurestore_id)
+        parsed_json = JSON.parse(json_result)
+        expect_status_details(201)
+        expect(parsed_json.key?("id")).to be true
+        expect(parsed_json.key?("featurestoreName")).to be true
+        expect(parsed_json.key?("name")).to be true
+        expect(parsed_json["featurestoreName"]).to eql(project.projectname.downcase + "_featurestore")
+        expect(parsed_json["name"]).to eql(featuregroup_name)
+        expect(parsed_json["type"]).to eql("streamFeatureGroupDTO")
+        expect(parsed_json["onlineTopicName"]).to eql(project.id.to_s + "_" + parsed_json["id"].to_s + "_" +
+            featuregroup_name + "_" + parsed_json["version"].to_s + "_onlinefs")
+
+        job_name =  featuregroup_name + "_" + parsed_json["version"].to_s + "_" + "offline_fg_backfill"
+        job_json_result = get_job(project.id, job_name)
+        job_parsed_json = JSON.parse(job_json_result)
+        expect(job_parsed_json["name"]).to eql(job_name)
+        expect(job_parsed_json["config"]["mainClass"]).to eql("com.logicalclocks.utils.MainClass")
+        expect(job_parsed_json["config"]["spark.executor.instances"]).to eql(2)
+        expect(job_parsed_json["config"]["spark.executor.cores"]).to eql(2)
+        expect(job_parsed_json["config"]["spark.executor.memory"]).to eql(1500)
+        expect(job_parsed_json["config"]["spark.dynamicAllocation.enabled"]).to eql(true)
+        expect(job_parsed_json["config"]["spark.dynamicAllocation.minExecutors"]).to eql(2)
+        expect(job_parsed_json["config"]["spark.dynamicAllocation.maxExecutors"]).to eql(10)
+        expect(job_parsed_json["config"]["spark.dynamicAllocation.initialExecutors"]).to eql(1)
+        expect(job_parsed_json["config"]["spark.blacklist.enabled"]).to eql(false)
+      end
+
+      it "should delete associated delta streamer job when deleting stream feature group" do
+        project = get_project
+        featurestore_id = get_featurestore_id(project.id)
+        json_result, featuregroup_name = create_stream_featuregroup(project.id, featurestore_id)
+        parsed_json = JSON.parse(json_result)
+        expect_status_details(201)
+        featuregroup_id = parsed_json["id"]
+
+        delete_featuregroup_endpoint = "#{ENV['HOPSWORKS_API']}/project/" + project.id.to_s + "/featurestores/" + featurestore_id.to_s + "/featuregroups/" + featuregroup_id.to_s
+        delete delete_featuregroup_endpoint
+
+        job_name =  featuregroup_name + "_" + parsed_json["version"].to_s + "_" + "offline_fg_backfill"
+        job_json_result = get_job(project.id, job_name)
+        job_parsed_json = JSON.parse(job_json_result)
+        expect_status_details(404)
+        expect(job_parsed_json["name"]).to eql(nil)
+      end
     end
   end
 

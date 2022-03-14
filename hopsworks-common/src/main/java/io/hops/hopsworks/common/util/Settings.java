@@ -300,7 +300,8 @@ public class Settings implements Serializable {
   private static final String VARIABLE_ONLINEFS_THREAD_NUMBER = "onlinefs_service_thread_number";
 
   private static final String VARIABLE_HIVE_CONF_PATH = "hive_conf_path";
-  private static final String VARIABLE_FS_JOB_UTIL_PATH = "fs_job_util";
+  private static final String VARIABLE_FS_PY_JOB_UTIL_PATH = "fs_py_job_util";
+  private static final String VARIABLE_FS_JAVA_JOB_UTIL_PATH = "fs_java_job_util";
 
   //Elastic OpenDistro
   private static final String VARIABLE_ELASTIC_OPENDISTRO_SECURITY_ENABLED = "elastic_opendistro_security_enabled";
@@ -731,8 +732,8 @@ public class Settings implements Serializable {
 
       FG_PREVIEW_LIMIT = setIntVar(VARIABLE_FG_PREVIEW_LIMIT, FG_PREVIEW_LIMIT);
       HIVE_CONF_PATH = setStrVar(VARIABLE_HIVE_CONF_PATH, HIVE_CONF_PATH);
-      FS_JOB_UTIL_PATH = setStrVar(VARIABLE_FS_JOB_UTIL_PATH, FS_JOB_UTIL_PATH);
-
+      FS_PY_JOB_UTIL_PATH = setStrVar(VARIABLE_FS_PY_JOB_UTIL_PATH, FS_PY_JOB_UTIL_PATH);
+      FS_JAVA_JOB_UTIL_PATH  = setStrVar(VARIABLE_FS_JAVA_JOB_UTIL_PATH, FS_JAVA_JOB_UTIL_PATH);
       
 
       YARN_RUNTIME = setStrVar(VARIABLE_YARN_RUNTIME, YARN_RUNTIME);
@@ -1329,6 +1330,7 @@ public class Settings implements Serializable {
   public static final String HOPS_FEATURESTORE_TOUR_JOB_CLASS = "io.hops.examples.featurestore_tour.Main";
   public static final String HOPS_FEATURESTORE_TOUR_JOB_NAME = "featurestore_tour_job";
   public static final String HOPS_FEATURESTORE_TOUR_JOB_INPUT_PARAM = "--input ";
+  public static final String HSFS_UTIL_MAIN_CLASS = "com.logicalclocks.utils.MainClass";
 
 
   //Serving constants
@@ -3436,10 +3438,16 @@ public class Settings implements Serializable {
     return HIVE_CONF_PATH;
   }
 
-  private String FS_JOB_UTIL_PATH = "hdfs:///user/spark/hsfs_util-2.1.0-SNAPSHOT.py";
-  public synchronized String getFSJobUtilPath() {
+  private String FS_PY_JOB_UTIL_PATH = "hdfs:///user/spark/hsfs_util-2.1.0-SNAPSHOT.py";
+  public synchronized String getFSPyJobUtilPath() {
     checkCache();
-    return FS_JOB_UTIL_PATH;
+    return FS_PY_JOB_UTIL_PATH;
+  }
+
+  private String FS_JAVA_JOB_UTIL_PATH = "hdfs:///user/spark/hsfs-utils-2.1.0-SNAPSHOT.jar";
+  public synchronized String getFSJavaJobUtilPath() {
+    checkCache();
+    return FS_JAVA_JOB_UTIL_PATH;
   }
 
   private long FEATURESTORE_DB_DEFAULT_QUOTA = -1;
