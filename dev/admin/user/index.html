@@ -20,7 +20,7 @@
     
     
       
-        <title>Admin User Guide - Hopsworks Documentation</title>
+        <title>User Management - Hopsworks Documentation</title>
       
     
     
@@ -72,7 +72,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#admin-user-guide" class="md-skip">
+        <a href="#user-management" class="md-skip">
           Skip to content
         </a>
       
@@ -103,7 +103,7 @@
         <div class="md-header-nav__topic">
           <span class="md-ellipsis">
             
-              Admin User Guide
+              User Management
             
           </span>
         </div>
@@ -209,13 +209,15 @@
         
   
   
+    
+  
 
 
   
   
   
     <li class="md-tabs__item">
-      <a href="../" class="md-tabs__link">
+      <a href="../" class="md-tabs__link md-tabs__link--active">
         Administration
       </a>
     </li>
@@ -641,12 +643,14 @@
       
 
 
+  
+
 
   
-  <li class="md-nav__item md-nav__item--nested">
+  <li class="md-nav__item md-nav__item--active md-nav__item--nested">
     
     
-      <input class="md-nav__toggle md-toggle" data-md-toggle="nav-4" type="checkbox" id="nav-4" >
+      <input class="md-nav__toggle md-toggle" data-md-toggle="nav-4" type="checkbox" id="nav-4" checked>
     
     <label class="md-nav__link" for="nav-4">
       Administration
@@ -788,6 +792,91 @@
           
 
 
+  
+
+
+  <li class="md-nav__item md-nav__item--active">
+    
+    <input class="md-nav__toggle md-toggle" data-md-toggle="toc" type="checkbox" id="__toc">
+    
+      
+    
+    
+      <label class="md-nav__link md-nav__link--active" for="__toc">
+        User Management
+        <span class="md-nav__icon md-icon"></span>
+      </label>
+    
+    <a href="./" class="md-nav__link md-nav__link--active">
+      User Management
+    </a>
+    
+      
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#cluster-users" class="md-nav__link">
+    Cluster users
+  </a>
+  
+    <nav class="md-nav" aria-label="Cluster users">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#cluster-roles" class="md-nav__link">
+    Cluster roles
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#validating-and-blocking-users" class="md-nav__link">
+    Validating and blocking users
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#create-users" class="md-nav__link">
+    Create users
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#reset-user-password" class="md-nav__link">
+    Reset user password
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+    
+  </li>
+
+        
+          
+          
+          
+
+
 
   <li class="md-nav__item">
     <a href="../alert/" class="md-nav__link">
@@ -871,6 +960,55 @@
     
   
   
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#cluster-users" class="md-nav__link">
+    Cluster users
+  </a>
+  
+    <nav class="md-nav" aria-label="Cluster users">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#cluster-roles" class="md-nav__link">
+    Cluster roles
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#validating-and-blocking-users" class="md-nav__link">
+    Validating and blocking users
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#create-users" class="md-nav__link">
+    Create users
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#reset-user-password" class="md-nav__link">
+    Reset user password
+  </a>
+  
+</li>
+      
+    </ul>
+  
 </nav>
                   </div>
                 </div>
@@ -882,7 +1020,113 @@
               
                 
                 
-                <h1 id="admin-user-guide">Admin User Guide<a class="headerlink" href="#admin-user-guide" title="Permanent link">#</a></h1>
+                <h1 id="user-management">User Management<a class="headerlink" href="#user-management" title="Permanent link">#</a></h1>
+<p>Whether you run Hopsworks on-premise, or on the cloud using <a href="https://managed.hopsworks.ai">hopsworks.ai</a>, 
+you have a Hopsworks cluster which contains all users and projects.</p>
+<h2 id="cluster-users">Cluster users<a class="headerlink" href="#cluster-users" title="Permanent link">#</a></h2>
+<p>All the users of your Hopsworks instance have access to your cluster with different access rights. 
+You can find them by clicking on your name in the top right corner of the navigation bar and choosing <em>Cluster 
+Settings</em> from the dropdown menu and going to the <em>Users</em> tab (You need to have <em>Admin</em> role to get access to the 
+<em>Cluster Settings</em> page).</p>
+<figure>
+  <a  href="../../assets/images/admin/user-management/active-users.png">
+    <img src="../../assets/images/admin/user-management/active-users.png" alt="active users" />
+  </a>
+  <figcaption>Active Users</figcaption>
+</figure>
+
+<h3 id="cluster-roles">Cluster roles<a class="headerlink" href="#cluster-roles" title="Permanent link">#</a></h3>
+<p>Roles let you manage the access rights of a user to the cluster.</p>
+<ul>
+<li>User: users with this role are only allowed to use the cluster by creating a limited number of projects.</li>
+<li>Admin: users with this role are allowed to manage the cluster. This includes accepting new users to the cluster or 
+  blocking them, managing user quota, <a href="../alert/">configure alerts</a> and setting up <a href="../auth/">authentication methods</a>.  </li>
+</ul>
+<h2 id="validating-and-blocking-users">Validating and blocking users<a class="headerlink" href="#validating-and-blocking-users" title="Permanent link">#</a></h2>
+<p>By default, a user who register on Hopsworks using their own credentials are not granted access to the cluster. 
+First, a user with an admin role needs to validate their account.</p>
+<p>By clicking on the <em>Review Requests</em> button you can open a <em>user request review</em> popup as shown in the image below.</p>
+<figure>
+  <a  href="../../assets/images/admin/user-management/user-request-review.png">
+    <img src="../../assets/images/admin/user-management/user-request-review.png" alt="request" />
+  </a>
+  <figcaption>Review user request</figcaption>
+</figure>
+
+<p>On the user request review popup you can activate or block users. Users with a validated email address will have a 
+check mark on their email.  </p>
+<p>Similarly, if a user is no longer allowed access to the cluster you can block them. To keep consistency with the
+history of your datasets, a user can not be deleted but only blocked. If necessary a user can be 
+deleted manually in the cluster using the command line.<br />
+You can block a user by clicking on the block icon on the right side of the user in the list.</p>
+<figure>
+  <a  href="../../assets/images/admin/user-management/blocked-users.png">
+    <img src="../../assets/images/admin/user-management/blocked-users.png" alt="blocked users" />
+  </a>
+  <figcaption>Blocked Users</figcaption>
+</figure>
+
+<p>Blocked users will appear on the lower section of the page. Click on <em>display blocked users</em> to show all the blocked 
+users in your cluster. If a user is blocked by mistake you can reactivate it by clicking on the check mark icon 
+that corresponds to that user in the blocked users list. </p>
+<p>You can also change the role of a user by clicking on the <em>select dropdown</em> that shows the current role of the user.</p>
+<p>If there are too many users in your cluster, use the search box (available for blocked users too) to filter users by 
+name or email. It is also possible to filter activated users by role. For example to see all administrators in you 
+cluster click on the <em>select dropdown</em> to the right of the search box and choose <em>Admin</em>. </p>
+<h2 id="create-users">Create users<a class="headerlink" href="#create-users" title="Permanent link">#</a></h2>
+<p>If you want to allow users to login without registering you can pre-create them by clicking on <em>New user</em>.</p>
+<figure>
+  <a  href="../../assets/images/admin/user-management/new-user.png">
+    <img src="../../assets/images/admin/user-management/new-user.png" alt="New user" />
+  </a>
+  <figcaption>Create new user</figcaption>
+</figure>
+
+<p>After setting the user's name and email chose the type of user you want to create (Hopsworks, Kerberos or LDAP). To 
+create a Kerberos or LDAP user you need to get the users <strong>UUID</strong> from the Kerberos or LDAP server. Hopsworks user 
+can also be assigned a <em>Role</em>. Kerberos and LDAP users on the other hand can only be assigned a role through group 
+mapping.</p>
+<p>A temporary password will be generated and displayed when you click on <em>Create new user</em>. Copy the password and pass 
+it securely to the user. </p>
+<figure>
+  <a  href="../../assets/images/admin/user-management/create-user.png">
+    <img src="../../assets/images/admin/user-management/create-user.png" alt="create user" />
+  </a>
+  <figcaption>Copy temporary password</figcaption>
+</figure>
+
+<h2 id="reset-user-password">Reset user password<a class="headerlink" href="#reset-user-password" title="Permanent link">#</a></h2>
+<p>In the case where a user loses her/his password and can not recover it with the 
+<a href="../../compute/auth/recoverPassword/">password recovery</a>, an administrator can reset it for them.</p>
+<p>On the bottom of the <em>Users</em> page click on the <em>Reset a user password</em> link. A popup window with a dropdown for 
+searching users by name or email will open. Find the user and click on <em>Reset new password</em>.</p>
+<figure>
+  <a  href="../../assets/images/admin/user-management/reset-password.png">
+    <img src="../../assets/images/admin/user-management/reset-password.png" alt="reset password" />
+  </a>
+  <figcaption>Reset user password</figcaption>
+</figure>
+
+<p>A temporary password will be displayed. Copy the password and pass it to the user securely.</p>
+<figure>
+  <a  href="../../assets/images/admin/user-management/temp-password.png">
+    <img src="../../assets/images/admin/user-management/temp-password.png" alt="temp password" />
+  </a>
+  <figcaption>Copy temporary password</figcaption>
+</figure>
+
+<p>A user with a temporary password will see a warning message when going to <em>User settings</em> <strong>Authentication</strong> tab.</p>
+<figure>
+  <a  href="../../assets/images/admin/user-management/change-password.png">
+    <img src="../../assets/images/admin/user-management/change-password.png" alt="change password" />
+  </a>
+  <figcaption>Change password</figcaption>
+</figure>
+
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>A temporary password should be changed as soon as possible.</p>
+</div>
                 
               
               
@@ -897,6 +1141,41 @@
       
         
 <footer class="md-footer">
+  
+    <div class="md-footer-nav">
+      <nav class="md-footer-nav__inner md-grid" aria-label="Footer">
+        
+          <a href="../oauth2/create-azure-client/" class="md-footer-nav__link md-footer-nav__link--prev" rel="prev">
+            <div class="md-footer-nav__button md-icon">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"/></svg>
+            </div>
+            <div class="md-footer-nav__title">
+              <div class="md-ellipsis">
+                <span class="md-footer-nav__direction">
+                  Previous
+                </span>
+                Create Azure Client
+              </div>
+            </div>
+          </a>
+        
+        
+          <a href="../alert/" class="md-footer-nav__link md-footer-nav__link--next" rel="next">
+            <div class="md-footer-nav__title">
+              <div class="md-ellipsis">
+                <span class="md-footer-nav__direction">
+                  Next
+                </span>
+                Configure Alerts
+              </div>
+            </div>
+            <div class="md-footer-nav__button md-icon">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11H4z"/></svg>
+            </div>
+          </a>
+        
+      </nav>
+    </div>
   
   <div class="md-footer-meta md-typeset">
     <div class="md-footer-meta__inner md-grid">
