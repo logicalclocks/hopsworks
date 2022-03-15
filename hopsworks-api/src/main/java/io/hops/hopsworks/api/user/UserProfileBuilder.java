@@ -66,13 +66,16 @@ public class UserProfileBuilder {
     if (newUser != null) {
       groups = newUser.getBbcGroupCollection();
     }
-    if (groups == null || groups.isEmpty()) {
+    if ((groups == null || groups.isEmpty()) &&
+      (u.getBbcGroupCollection() == null || u.getBbcGroupCollection().isEmpty())) {
       BbcGroup bbcGroup = bbcGroupFacade.findByGroupName("HOPS_USER");
       groups = new ArrayList<>();
       groups.add(bbcGroup);
     }
+    if (groups != null && !groups.isEmpty()) {
+      u.setBbcGroupCollection(groups);
+    }
     u.setStatus(UserAccountStatus.ACTIVATED_ACCOUNT);
-    u.setBbcGroupCollection(groups);
     u = userFacade.update(u);
     UserAccountHandler.runUserAccountUpdateHandlers(userAccountHandlers, u); // run user update handlers
     usersController.sendConfirmationMail(u);
