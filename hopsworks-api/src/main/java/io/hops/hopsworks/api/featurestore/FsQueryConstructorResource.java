@@ -87,6 +87,4 @@ public class FsQueryConstructorResource {
     FsQueryDTO fsQueryDTO = fsQueryBuilder.build(uriInfo, project, user, queryDto);
     return Response.ok().entity(fsQueryDTO).build();
   }
-
-
 }

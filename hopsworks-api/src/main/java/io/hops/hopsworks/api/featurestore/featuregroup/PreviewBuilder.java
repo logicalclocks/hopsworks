@@ -20,9 +20,11 @@ import io.hops.hopsworks.common.api.ResourceRequest;
 import io.hops.hopsworks.common.featurestore.featuregroup.cached.CachedFeaturegroupController;
 import io.hops.hopsworks.common.featurestore.featuregroup.cached.FeatureGroupStorage;
 import io.hops.hopsworks.common.featurestore.featuregroup.cached.FeaturegroupPreview;
+import io.hops.hopsworks.common.featurestore.featuregroup.stream.StreamFeatureGroupController;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.exceptions.HopsSecurityException;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.Featuregroup;
+
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.restutils.RESTCodes;
@@ -43,6 +45,9 @@ public class PreviewBuilder {
 
   @EJB
   private CachedFeaturegroupController cachedFeaturegroupController;
+  
+  @EJB
+  private StreamFeatureGroupController streamFeaturegroupController;
 
   private URI uri(UriInfo uriInfo, Project project, Featuregroup featuregroup) {
     return uriInfo.getBaseUriBuilder().path(ResourceRequest.Name.PROJECT.toString().toLowerCase())
@@ -61,8 +66,13 @@ public class PreviewBuilder {
 
     FeaturegroupPreview preview = null;
     try {
-      preview = cachedFeaturegroupController
+      if (featuregroup.getStreamFeatureGroup() != null) {
+        preview = streamFeaturegroupController
           .getFeaturegroupPreview(featuregroup, project, user, partition, online, limit);
+      } else {
+        preview = cachedFeaturegroupController
+          .getFeaturegroupPreview(featuregroup, project, user, partition, online, limit);
+      }
     } catch (SQLException e) {
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.COULD_NOT_PREVIEW_FEATUREGROUP,
           Level.SEVERE, "Feature Group id: " + featuregroup.getId(), e.getMessage(), e);

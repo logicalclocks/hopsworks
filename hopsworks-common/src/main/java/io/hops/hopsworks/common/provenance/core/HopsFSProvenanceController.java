@@ -20,6 +20,7 @@ import io.hops.hopsworks.common.featurestore.feature.TrainingDatasetFeatureDTO;
 import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupDTO;
 import io.hops.hopsworks.common.featurestore.featuregroup.cached.CachedFeaturegroupDTO;
 import io.hops.hopsworks.common.featurestore.featuregroup.ondemand.OnDemandFeaturegroupDTO;
+import io.hops.hopsworks.common.featurestore.featuregroup.stream.StreamFeatureGroupDTO;
 import io.hops.hopsworks.common.featurestore.trainingdatasets.TrainingDatasetDTO;
 import io.hops.hopsworks.common.featurestore.xattr.dto.FeaturegroupXAttr;
 import io.hops.hopsworks.common.featurestore.xattr.dto.FeaturestoreXAttrsConstants;
@@ -338,6 +339,8 @@ public class HopsFSProvenanceController {
             featuregroup.getDescription(), featuregroup.getCreated(), featuregroup.getCreator().getEmail(), features);
     if(featuregroup instanceof CachedFeaturegroupDTO) {
       fullDTO.setFgType(FeaturegroupXAttr.FGType.CACHED);
+    } else if (featuregroup instanceof StreamFeatureGroupDTO) {
+      fullDTO.setFgType(FeaturegroupXAttr.FGType.STREAM);
     } else if (featuregroup instanceof OnDemandFeaturegroupDTO) {
       fullDTO.setFgType(FeaturegroupXAttr.FGType.ON_DEMAND);
     }

@@ -454,7 +454,8 @@ public class RESTCodes {
     FAILED_TO_CREATE_ROUTE(38, "Failed to create route.", Response.Status.BAD_REQUEST),
     FAILED_TO_DELETE_ROUTE(39, "Failed to delete route.", Response.Status.BAD_REQUEST),
     EXECUTIONS_LIMIT_REACHED(40, "Job reached the maximum number of executions.",
-            Response.Status.BAD_REQUEST);
+            Response.Status.BAD_REQUEST),
+    JOB_ALREADY_EXISTS(41, "Job with this name already exists.", Response.Status.BAD_REQUEST);
 
 
     private Integer code;
@@ -1627,7 +1628,8 @@ public class RESTCodes {
     FEATURE_VIEW_CREATION_ERROR(180, "Cannot create feature view.", Response.Status.BAD_REQUEST),
     FEATURE_VIEW_NOT_FOUND(181, "Feature view wasn't found.", Response.Status.NOT_FOUND),
     KAFKA_STORAGE_CONNECTOR_STORE_NOT_EXISTING(182, "Provided certificate store location does not exist",
-      Response.Status.BAD_REQUEST);
+      Response.Status.BAD_REQUEST),
+    VALIDATION_NOT_SUPPORTED(183, "Rule is not supported.", Response.Status.BAD_REQUEST);
 
     private int code;
     private String message;

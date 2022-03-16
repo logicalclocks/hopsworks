@@ -16,6 +16,8 @@
 
 package io.hops.hopsworks.persistence.entity.featurestore.featuregroup.cached;
 
+import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.stream.StreamFeatureGroup;
+
 import javax.persistence.Basic;
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -44,6 +46,8 @@ public class CachedFeatureExtraConstraints implements Serializable {
   private Integer id;
   @JoinColumn(name = "cached_feature_group_id", referencedColumnName = "id")
   private CachedFeaturegroup cachedFeaturegroup;
+  @JoinColumn(name = "stream_feature_group_id", referencedColumnName = "id")
+  private StreamFeatureGroup streamFeatureGroup;
   @Basic(optional = false)
   @Column(name = "name")
   private String name;
@@ -66,7 +70,15 @@ public class CachedFeatureExtraConstraints implements Serializable {
     this.primary = primary;
     this.hudiPrecombineKey = hudiPrecombineKey;
   }
-
+  
+  public CachedFeatureExtraConstraints(StreamFeatureGroup streamFeatureGroup, String name, Boolean primary,
+    Boolean hudiPrecombineKey) {
+    this.streamFeatureGroup = streamFeatureGroup;
+    this.name = name;
+    this.primary = primary;
+    this.hudiPrecombineKey = hudiPrecombineKey;
+  }
+  
   public Integer getId() {
     return id;
   }
@@ -106,7 +118,16 @@ public class CachedFeatureExtraConstraints implements Serializable {
   public void setCachedFeaturegroup(CachedFeaturegroup cachedFeaturegroup) {
     this.cachedFeaturegroup = cachedFeaturegroup;
   }
-
+  
+  public StreamFeatureGroup getStreamFeatureGroup() {
+    return streamFeatureGroup;
+  }
+  
+  public void setStreamFeatureGroup(
+    StreamFeatureGroup streamFeatureGroup) {
+    this.streamFeatureGroup = streamFeatureGroup;
+  }
+  
   @Override
   public boolean equals(Object o) {
     if (this == o) return true;
@@ -117,6 +138,7 @@ public class CachedFeatureExtraConstraints implements Serializable {
     if (!Objects.equals(id, that.id)) return false;
     if (!Objects.equals(name, that.name)) return false;
     if (!Objects.equals(hudiPrecombineKey, that.hudiPrecombineKey)) return false;
+    if (!Objects.equals(streamFeatureGroup, that.streamFeatureGroup)) return false;
     return Objects.equals(primary, that.primary);
   }
 
@@ -126,6 +148,7 @@ public class CachedFeatureExtraConstraints implements Serializable {
     result = 31 * result + (name != null ? name.hashCode() : 0);
     result = 31 * result + (hudiPrecombineKey != null ? hudiPrecombineKey.hashCode() : 0);
     result = 31 * result + (primary != null ? primary.hashCode() : 0);
+    result = 31 * result + (streamFeatureGroup != null ? streamFeatureGroup.hashCode() : 0);
     return result;
   }
 }

@@ -29,12 +29,10 @@ import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
 import javax.persistence.OneToOne;
 import javax.persistence.Table;
-import javax.persistence.Temporal;
-import javax.persistence.TemporalType;
 import javax.validation.constraints.NotNull;
 import javax.xml.bind.annotation.XmlRootElement;
 import java.io.Serializable;
-import java.util.Date;
+import java.sql.Timestamp;
 
 /**
  * Entity class representing the cached_feature_group table in Hopsworks database.
@@ -68,9 +66,8 @@ public class FeatureGroupCommit implements Serializable {
       @JoinColumn(name = "feature_group_id", referencedColumnName = "id", insertable = false, updatable = false)
     })
   @NotNull
-  @Column(name = "committed_on")
-  @Temporal(TemporalType.TIMESTAMP)
-  private Date committedOn;
+  @Column(name = "committed_on", columnDefinition = "TIMESTAMP (6)")
+  private Timestamp committedOn;
   @Column(name = "num_rows_updated")
   private Long numRowsUpdated;
   @Column(name = "num_rows_inserted")
@@ -120,7 +117,7 @@ public class FeatureGroupCommit implements Serializable {
     return committedOn.getTime();
   }
 
-  public void setCommittedOn(Date committedOn) {
+  public void setCommittedOn(Timestamp committedOn) {
     this.committedOn = committedOn;
   }
 

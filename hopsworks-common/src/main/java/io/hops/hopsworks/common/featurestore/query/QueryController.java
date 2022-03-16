@@ -117,8 +117,8 @@ public class QueryController {
     Query query = new Query(featureStore, projectName, fg, fgAliasLookup.get(fgId), requestedFeatures,
         availableFeatureLookup.get(fgId), queryDTO.getHiveEngine());
 
-    if (fg.getCachedFeaturegroup() != null &&
-        fg.getCachedFeaturegroup().getTimeTravelFormat() == TimeTravelFormat.HUDI){
+    if (fg.getStreamFeatureGroup() != null || (fg.getCachedFeaturegroup() != null &&
+        fg.getCachedFeaturegroup().getTimeTravelFormat() == TimeTravelFormat.HUDI)) {
       // if hudi and end hive engine, only possible to get latest snapshot else raise exception
       if (queryDTO.getHiveEngine() && (queryDTO.getLeftFeatureGroupEndTime() != null
           || queryDTO.getJoins().stream().anyMatch(join -> join.getQuery().getLeftFeatureGroupEndTime() != null))) {
