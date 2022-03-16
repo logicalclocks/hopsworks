@@ -106,7 +106,7 @@ public class KubePredictorPythonUtils {
     String hadoopConfDir = hadoopHome + "/etc/hadoop";
 
     ResourceRequirements resourceRequirements = kubeClientService.
-      buildResourceRequirements(serving.getDockerResourcesConfig());
+      buildResourceRequirements(serving.getDockerResourcesConfig(), serving.getDockerResourcesConfig());
     
     List<EnvVar> servingEnv = new ArrayList<>();
     servingEnv.add(new EnvVarBuilder().withName(KubePredictorServerUtils.SERVING_ID).withValue(servingIdStr).build());

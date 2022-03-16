@@ -12,6 +12,7 @@ import io.fabric8.kubernetes.api.model.EnvVar;
 import io.fabric8.kubernetes.api.model.EnvVarBuilder;
 import io.fabric8.kubernetes.api.model.EnvVarSourceBuilder;
 import io.fabric8.kubernetes.api.model.KeyToPathBuilder;
+import io.fabric8.kubernetes.api.model.ResourceRequirements;
 import io.fabric8.kubernetes.api.model.SecretVolumeSourceBuilder;
 import io.fabric8.kubernetes.api.model.Service;
 import io.fabric8.kubernetes.api.model.Volume;
@@ -31,7 +32,6 @@ import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.serving.InferenceLogging;
 import io.hops.hopsworks.persistence.entity.serving.Serving;
 import io.hops.hopsworks.persistence.entity.user.Users;
-import org.json.JSONArray;
 import org.json.JSONObject;
 
 import javax.ejb.EJB;
@@ -65,6 +65,8 @@ public class KubePredictorPythonCustomUtils extends KubePredictorServerUtils {
   private KubePredictorUtils predictorUtils;
   @EJB
   private KubePredictorPythonUtils kubePredictorPythonUtils;
+  @EJB
+  private KubeJsonUtils kubeJsonUtils;
   
   @Override
   public String getDeploymentName(String servingId) { return kubePredictorPythonUtils.getDeploymentName(servingId); }
@@ -112,22 +114,8 @@ public class KubePredictorPythonCustomUtils extends KubePredictorServerUtils {
     } else {
       loggerMode = null;
     }
-    String finalLoggerMode = loggerMode;
     
-    return new JSONObject() {
-      {
-        put("minReplicas", serving.getInstances());
-        put("containers", new JSONArray(containers));
-        put("volumes", new JSONArray(volumes));
-        put("logger", !logging ? null : new JSONObject() {
-          {
-            put("mode", finalLoggerMode);
-            put("url", String.format("http://%s:%s", KubeServingUtils.INFERENCE_LOGGER_HOST,
-              KubeServingUtils.INFERENCE_LOGGER_PORT));
-          }
-        });
-      }
-    };
+    return kubeJsonUtils.buildPredictor(containers, volumes, serving.getInstances(), logging, loggerMode);
   }
   
   private Container buildPredictorContainer(Project project, Users user, Serving serving)
@@ -135,6 +123,9 @@ public class KubePredictorPythonCustomUtils extends KubePredictorServerUtils {
     
     List<EnvVar> envVars = buildEnvironmentVariables(project, user, serving);
     List<VolumeMount> volumeMounts = buildVolumeMounts();
+  
+    ResourceRequirements resourceRequirements = kubeClientService.
+      buildResourceRequirements(serving.getDockerResourcesConfig(), serving.getDockerResourcesConfig());
     
     return new ContainerBuilder()
       .withName("predictor")
@@ -144,6 +135,7 @@ public class KubePredictorPythonCustomUtils extends KubePredictorServerUtils {
       .withArgs(ContainerModelNameArgName, serving.getName())
       .withEnv(envVars)
       .withVolumeMounts(volumeMounts)
+      .withResources(resourceRequirements)
       .build();
   }
   

@@ -44,7 +44,6 @@ import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.kube.common.KubeClientService;
 import io.hops.hopsworks.kube.project.KubeProjectConfigMaps;
 import io.hops.hopsworks.persistence.entity.project.Project;
-import io.hops.hopsworks.persistence.entity.serving.DockerResourcesConfiguration;
 import io.hops.hopsworks.persistence.entity.serving.InferenceLogging;
 import io.hops.hopsworks.persistence.entity.serving.Serving;
 import io.hops.hopsworks.persistence.entity.user.Users;
@@ -59,7 +58,6 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import static io.hops.hopsworks.common.util.Settings.HOPS_USERNAME_SEPARATOR;
@@ -83,6 +81,8 @@ public class KubePredictorTensorflowUtils extends KubePredictorServerUtils {
   private ProjectUtils projectUtils;
   @EJB
   private KubeProjectConfigMaps kubeProjectConfigMaps;
+  @EJB
+  private KubeJsonUtils kubeJsonUtils;
   
   @Override
   public String getDeploymentName(String servingId) {
@@ -120,7 +120,7 @@ public class KubePredictorTensorflowUtils extends KubePredictorServerUtils {
     String hadoopConfDir = hadoopHome + "/etc/hadoop";
     
     ResourceRequirements resourceRequirements = kubeClientService.
-      buildResourceRequirements(serving.getDockerResourcesConfig());
+      buildResourceRequirements(serving.getDockerResourcesConfig(), serving.getDockerResourcesConfig());
     
     List<EnvVar> tfServingEnv = new ArrayList<>();
     tfServingEnv.add(new EnvVarBuilder().withName(SERVING_ID).withValue(servingIdStr).build());
@@ -253,12 +253,9 @@ public class KubePredictorTensorflowUtils extends KubePredictorServerUtils {
   
   @Override
   public JSONObject buildInferenceServicePredictor(Project project, Users user, Serving serving, String artifactPath) {
-    InferenceLogging inferenceLogging = serving.getInferenceLogging();
-    
-    // Tensorflow spec
-    JSONObject tensorflow = getInferenceServiceTensorflow(artifactPath, serving.getDockerResourcesConfig());
     
     // Inference logging
+    InferenceLogging inferenceLogging = serving.getInferenceLogging();
     boolean logging = inferenceLogging != null;
     String loggerMode;
     if (logging) {
@@ -272,26 +269,9 @@ public class KubePredictorTensorflowUtils extends KubePredictorServerUtils {
     } else {
       loggerMode = null;
     }
-    String finalLoggerMode = loggerMode;
     
-    // Predictor
-    JSONObject inferenceServicePredictorConfig = new JSONObject() {
-      {
-        put("minReplicas", serving.getInstances());
-        put("logger", !logging ? null : new JSONObject() {
-          {
-            put("mode", finalLoggerMode);
-            put("url", String.format("http://%s:%s", KubeServingUtils.INFERENCE_LOGGER_HOST,
-              KubeServingUtils.INFERENCE_LOGGER_PORT));
-          }
-        });
-        put("tensorflow", tensorflow);
-      }
-    };
-    
-    LOGGER.log(Level.SEVERE, inferenceServicePredictorConfig.toString(2));
-    
-    return inferenceServicePredictorConfig;
+    return kubeJsonUtils.buildPredictorTensorflow(artifactPath,
+      serving.getDockerResourcesConfig(), serving.getInstances(), logging, loggerMode);
   }
   
   private ObjectMeta getDeploymentMetadata(String servingId) {
@@ -304,46 +284,5 @@ public class KubePredictorTensorflowUtils extends KubePredictorServerUtils {
     return new ObjectMetaBuilder()
       .withName(getServiceName(servingId))
       .build();
-  }
-  
-  private JSONObject getInferenceServiceTensorflow(String artifactPath,
-    DockerResourcesConfiguration dockerResourcesConfiguration) {
-    
-    // Resources configuration
-    String memory = dockerResourcesConfiguration.getMemory() + "Mi";
-    String cores = Double.toString(dockerResourcesConfiguration.getCores() *
-      settings.getKubeDockerCoresFraction());
-    JSONObject resources = new JSONObject() {
-      {
-        put("requests", new JSONObject() {
-          {
-            put("memory", memory);
-            put("cpu", cores);
-          }
-        });
-        put("limits", new JSONObject() {
-          {
-            put("memory", memory);
-            put("cpu", cores);
-          }
-        });
-      }
-    };
-    
-    String runtimeVersion = settings.getTensorflowVersion() +
-      (dockerResourcesConfiguration.getGpus() > 0 ? "-gpu" : "");
-    
-    if (dockerResourcesConfiguration.getGpus() > 0) {
-      resources.getJSONObject("limits").put("nvidia.com/gpu", dockerResourcesConfiguration.getGpus());
-    }
-  
-    // Tensorflow spec
-    return new JSONObject() {
-      {
-        put("storageUri", artifactPath);
-        put("runtimeVersion", runtimeVersion);
-        put("resources", resources);
-      }
-    };
   }
 }

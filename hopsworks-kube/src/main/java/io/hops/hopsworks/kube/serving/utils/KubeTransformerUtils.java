@@ -12,6 +12,7 @@ import io.fabric8.kubernetes.api.model.EnvVar;
 import io.fabric8.kubernetes.api.model.EnvVarBuilder;
 import io.fabric8.kubernetes.api.model.EnvVarSourceBuilder;
 import io.fabric8.kubernetes.api.model.KeyToPathBuilder;
+import io.fabric8.kubernetes.api.model.ResourceRequirements;
 import io.fabric8.kubernetes.api.model.SecretVolumeSourceBuilder;
 import io.fabric8.kubernetes.api.model.Volume;
 import io.fabric8.kubernetes.api.model.VolumeBuilder;
@@ -36,7 +37,6 @@ import io.hops.hopsworks.persistence.entity.dataset.DatasetType;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.serving.Serving;
 import io.hops.hopsworks.persistence.entity.user.Users;
-import org.json.JSONArray;
 import org.json.JSONObject;
 
 import javax.ejb.EJB;
@@ -79,6 +79,8 @@ public class KubeTransformerUtils {
   private KubeArtifactUtils kubeArtifactUtils;
   @EJB
   private KubeApiKeyUtils kubeApiKeyUtils;
+  @EJB
+  private KubeJsonUtils kubeJsonUtils;
   
   public void copyTransformerToArtifactDir(Project project, Users user, Serving serving)
     throws DatasetException, ServiceException {
@@ -124,19 +126,13 @@ public class KubeTransformerUtils {
   
   public JSONObject buildInferenceServiceTransformer(Project project, Users user, Serving serving)
     throws ServiceDiscoveryException {
-    
+
     List<Container> containers = new ArrayList<>();
     containers.add(buildTransformerContainer(project, user, serving));
     
     List<Volume> volumes = buildVolumes(project, user);
     
-    return new JSONObject() {
-      {
-        put("minReplicas", serving.getTransformerInstances());
-        put("containers", new JSONArray(containers));
-        put("volumes", new JSONArray(volumes));
-      }
-    };
+    return kubeJsonUtils.buildPredictor(containers, volumes, serving.getTransformerInstances());
   }
   
   public Boolean checkTransformerExists(Serving serving)
@@ -150,6 +146,9 @@ public class KubeTransformerUtils {
     
     List<EnvVar> envVars = buildEnvironmentVariables(project, user, serving);
     List<VolumeMount> volumeMounts = buildVolumeMounts();
+  
+    ResourceRequirements resourceRequirements = kubeClientService.
+      buildResourceRequirements(serving.getDockerResourcesConfig(), serving.getDockerResourcesConfig());
     
     return new ContainerBuilder()
       .withName("transformer")
@@ -158,6 +157,7 @@ public class KubeTransformerUtils {
       .withCommand("kfserving-component-launcher.sh")
       .withEnv(envVars)
       .withVolumeMounts(volumeMounts)
+      .withResources(resourceRequirements)
       .build();
   }
   

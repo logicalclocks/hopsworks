@@ -8,9 +8,7 @@ import com.logicalclocks.servicediscoverclient.exceptions.ServiceDiscoveryExcept
 import io.fabric8.kubernetes.api.model.Service;
 import io.fabric8.kubernetes.api.model.apps.Deployment;
 import io.hops.hopsworks.common.serving.inference.InferenceVerb;
-import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.persistence.entity.project.Project;
-import io.hops.hopsworks.persistence.entity.serving.DockerResourcesConfiguration;
 import io.hops.hopsworks.persistence.entity.serving.InferenceLogging;
 import io.hops.hopsworks.persistence.entity.serving.Serving;
 import io.hops.hopsworks.persistence.entity.user.Users;
@@ -26,9 +24,9 @@ import javax.ejb.TransactionAttributeType;
 public class KubePredictorPythonSklearnUtils extends KubePredictorServerUtils {
   
   @EJB
-  private Settings settings;
-  @EJB
   private KubePredictorPythonUtils kubePredictorPythonUtils;
+  @EJB
+  private KubeJsonUtils kubeJsonUtils;
   
   @Override
   public String getDeploymentName(String servingId) { return kubePredictorPythonUtils.getDeploymentName(servingId); }
@@ -52,79 +50,24 @@ public class KubePredictorPythonSklearnUtils extends KubePredictorServerUtils {
   
   @Override
   public JSONObject buildInferenceServicePredictor(Project project, Users user, Serving serving, String artifactPath) {
-    InferenceLogging inferenceLogging = serving.getInferenceLogging();
     
-    // Sklearn spec
-    JSONObject sklearn = getInferenceServiceSklearn(artifactPath, serving.getDockerResourcesConfig());
-  
     // Inference logging
+    InferenceLogging inferenceLogging = serving.getInferenceLogging();
     boolean logging = inferenceLogging != null;
-    String loggerMode;
+    String loggingMode;
     if (logging) {
       if (inferenceLogging == InferenceLogging.ALL) {
-        loggerMode = KubeServingUtils.INFERENCE_LOGGER_MODE_ALL;
+        loggingMode = KubeServingUtils.INFERENCE_LOGGER_MODE_ALL;
       } else if (inferenceLogging == InferenceLogging.PREDICTIONS) {
-        loggerMode = KubeServingUtils.INFERENCE_LOGGER_MODE_RESPONSE;
+        loggingMode = KubeServingUtils.INFERENCE_LOGGER_MODE_RESPONSE;
       } else {
-        loggerMode = KubeServingUtils.INFERENCE_LOGGER_MODE_REQUEST;
+        loggingMode = KubeServingUtils.INFERENCE_LOGGER_MODE_REQUEST;
       }
     } else {
-      loggerMode = null;
-    }
-    String finalLoggerMode = loggerMode;
-  
-    // Predictor
-    JSONObject inferenceServicePredictorConfig = new JSONObject() {
-      {
-        put("minReplicas", serving.getInstances());
-        put("logger", !logging ? null : new JSONObject() {
-          {
-            put("mode", finalLoggerMode);
-            put("url", String.format("http://%s:%s", KubeServingUtils.INFERENCE_LOGGER_HOST,
-              KubeServingUtils.INFERENCE_LOGGER_PORT));
-          }
-        });
-        put("sklearn", sklearn);
-      }
-    };
-  
-    return inferenceServicePredictorConfig;
-  }
-  
-  private JSONObject getInferenceServiceSklearn(String artifactPath,
-    DockerResourcesConfiguration dockerResourcesConfiguration) {
-    
-    // Resources configuration
-    String memory = dockerResourcesConfiguration.getMemory() + "Mi";
-    String cores = Double.toString(dockerResourcesConfiguration.getCores() *
-      settings.getKubeDockerCoresFraction());
-    JSONObject resources = new JSONObject() {
-      {
-        put("requests", new JSONObject() {
-          {
-            put("memory", memory);
-            put("cpu", cores);
-          }
-        });
-        put("limits", new JSONObject() {
-          {
-            put("memory", memory);
-            put("cpu", cores);
-          }
-        });
-      }
-    };
-    
-    if (dockerResourcesConfiguration.getGpus() > 0) {
-      resources.getJSONObject("limits").put("nvidia.com/gpu", dockerResourcesConfiguration.getGpus());
+      loggingMode = null;
     }
     
-    // Sklearn spec
-    return new JSONObject() {
-      {
-        put("storageUri", artifactPath);
-        put("resources", resources);
-      }
-    };
+    return kubeJsonUtils.buildPredictorSklearn(artifactPath, serving.getDockerResourcesConfig(),
+      serving.getInstances(), logging, loggingMode);
   }
 }

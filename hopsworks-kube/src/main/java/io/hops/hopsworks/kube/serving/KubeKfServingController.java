@@ -17,6 +17,7 @@ import io.hops.hopsworks.kube.common.KubeClientService;
 import io.hops.hopsworks.kube.common.KubeIstioClientService;
 import io.hops.hopsworks.kube.common.KubeKfServingClientService;
 import io.hops.hopsworks.kube.serving.utils.KubeArtifactUtils;
+import io.hops.hopsworks.kube.serving.utils.KubeJsonUtils;
 import io.hops.hopsworks.kube.serving.utils.KubePredictorServerUtils;
 import io.hops.hopsworks.kube.serving.utils.KubePredictorUtils;
 import io.hops.hopsworks.kube.serving.utils.KubeServingUtils;
@@ -37,7 +38,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
-import java.util.stream.Collectors;
 
 @Stateless
 @TransactionAttribute(TransactionAttributeType.NEVER)
@@ -57,6 +57,8 @@ public class KubeKfServingController extends KubeToolServingController {
   private KubeArtifactUtils kubeArtifactUtils;
   @EJB
   private KubePredictorUtils kubePredictorUtils;
+  @EJB
+  private KubeJsonUtils kubeJsonUtils;
   
   @Override
   public void createInstance(Project project, Users user, Serving serving) throws ServingException {
@@ -96,7 +98,6 @@ public class KubeKfServingController extends KubeToolServingController {
     JSONObject inferenceService;
     DeploymentStatus deploymentStatus;
     DeploymentStatus transformerDeploymentStatus = null;
-    Pair<String, Integer> externalIngressHostPort;
     Pair<String, Integer> internalIngressHostPort;
     
     try {
@@ -222,67 +223,31 @@ public class KubeKfServingController extends KubeToolServingController {
   private JSONObject buildInferenceService(Project project, Users user, Serving serving, String resourceVersion)
       throws ServingException {
     
-    String artifactPath = kubeArtifactUtils.getArtifactFilePath(serving);
-    JSONObject pipeline = new JSONObject();
-  
+    // Metadata
+    JSONObject metadata = kubeJsonUtils.buildInferenceServiceMetadata(getInferenceServiceMetadataObject(project,
+      serving));
+    
+    // Predictor
     KubePredictorServerUtils predictorServerUtils = kubePredictorUtils.getPredictorServerUtils(serving);
     JSONObject predictor;
     try {
+      String artifactPath = kubeArtifactUtils.getArtifactFilePath(serving);
       predictor = predictorServerUtils.buildInferenceServicePredictor(project, user, serving, artifactPath);
     } catch (ServiceDiscoveryException e) {
       throw new ServingException(RESTCodes.ServingErrorCode.LIFECYCLEERRORINT, Level.INFO, null, e.getMessage(), e);
     }
   
-    // Add node selectors if defined
-    JSONObject nodeSelector = null;
-    Map<String, String> nodeSelectorLabels = kubeServingUtils.getServingNodeLabels();
-    if (nodeSelectorLabels != null) {
-      nodeSelector = new JSONObject(nodeSelectorLabels);
-      predictor.put("nodeSelector", nodeSelector);
-    }
-    
-    // Add node tolerations if defined
-    JSONArray tolerations = null;
-    List<Map<String, String>> nodeTolerations = kubeServingUtils.getServingNodeTolerations();
-    if (nodeTolerations != null) {
-      tolerations = new JSONArray(nodeTolerations.stream().map(JSONObject::new).collect(Collectors.toList()));
-      predictor.put("tolerations", tolerations);
-    }
-    
-    pipeline.put("predictor", predictor);
-    
-    JSONObject metadata = getInferenceServingMetadataJSON(project, serving);
-    if (resourceVersion != null) {
-      metadata.put("resourceVersion", resourceVersion);
-    }
-    
     // Add transformer if defined
+    JSONObject transformer = null;
     if (serving.getTransformer() != null) {
       try {
-        JSONObject transformer = kubeTransformerUtils.buildInferenceServiceTransformer(project, user, serving);
-        if (nodeSelector != null) {
-          transformer.put("nodeSelector", nodeSelector);
-        }
-        if (tolerations != null) {
-          transformer.put("tolerations", tolerations);
-        }
-        pipeline.put("transformer", transformer);
+        transformer = kubeTransformerUtils.buildInferenceServiceTransformer(project, user, serving);
       } catch (ServiceDiscoveryException e) {
         throw new ServingException(RESTCodes.ServingErrorCode.LIFECYCLEERRORINT, Level.INFO, null, e.getMessage(), e);
       }
     }
     
-    JSONObject inferenceService = new JSONObject() {
-      {
-        put("apiVersion", String.format("%s/%s", KubeKfServingClientService.INFERENCESERVICE_GROUP,
-          KubeKfServingClientService.INFERENCESERVICE_VERSION));
-        put("kind", KubeKfServingClientService.INFERENCESERVICE_KIND);
-        put("metadata", metadata);
-        put("spec", pipeline);
-      }
-    };
-    
-    return inferenceService;
+    return kubeJsonUtils.buildInferenceService(predictor, metadata, resourceVersion, transformer);
   }
   
   private ObjectMeta getInferenceServiceMetadataObject(Project project, Serving serving) {
@@ -291,28 +256,5 @@ public class KubeKfServingController extends KubeToolServingController {
       .withLabels(kubeServingUtils.getHopsworksServingLabels(project, serving))
       .withAnnotations(kubeServingUtils.getHopsworksServingAnnotations(serving))
       .build();
-  }
-  
-  private JSONObject getInferenceServingMetadataJSON(Project project, Serving serving) {
-    ObjectMeta metadata = getInferenceServiceMetadataObject(project, serving);
-    return new JSONObject() {
-      {
-        put("name", metadata.getName());
-        put("labels", new JSONObject() {
-          {
-            for (Map.Entry<String, String> label : metadata.getLabels().entrySet()) {
-              put(label.getKey(), label.getValue());
-            }
-          }
-        });
-        put("annotations", new JSONObject() {
-          {
-            for (Map.Entry<String, String> annotation : metadata.getAnnotations().entrySet()) {
-              put(annotation.getKey(), annotation.getValue());
-            }
-          }
-        });
-      }
-    };
   }
 }
