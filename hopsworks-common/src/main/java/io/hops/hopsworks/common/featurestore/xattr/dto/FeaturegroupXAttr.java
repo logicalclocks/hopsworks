@@ -237,6 +237,7 @@ public class FeaturegroupXAttr {
 
   public enum FGType {
     ON_DEMAND,
-    CACHED
+    CACHED,
+    STREAM
   }
 }

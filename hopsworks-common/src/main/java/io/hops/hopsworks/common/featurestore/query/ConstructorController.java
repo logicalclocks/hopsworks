@@ -245,8 +245,9 @@ public class ConstructorController {
       }
     }
     // Remove hudi spec metadata features if any
-    if (query.getFeaturegroup().getFeaturegroupType() == FeaturegroupType.CACHED_FEATURE_GROUP &&
-        query.getFeaturegroup().getCachedFeaturegroup().getTimeTravelFormat() == TimeTravelFormat.HUDI) {
+    if (query.getFeaturegroup().getFeaturegroupType() == FeaturegroupType.STREAM_FEATURE_GROUP ||
+      (query.getFeaturegroup().getFeaturegroupType() == FeaturegroupType.CACHED_FEATURE_GROUP &&
+        query.getFeaturegroup().getCachedFeaturegroup().getTimeTravelFormat() == TimeTravelFormat.HUDI)) {
       features = cachedFeaturegroupController.dropHudiSpecFeatures(features);
     }
     return features;
@@ -258,8 +259,9 @@ public class ConstructorController {
       tableIdentifierStr.add("`" + query.getProject() + "`");
       tableIdentifierStr.add("`" + query.getFeaturegroup().getName() + "_" + query.getFeaturegroup().getVersion()
           + "`");
-    } else if ((query.getFeaturegroup().getFeaturegroupType() == FeaturegroupType.CACHED_FEATURE_GROUP &&
-      query.getFeaturegroup().getCachedFeaturegroup().getTimeTravelFormat() != TimeTravelFormat.HUDI)
+    } else if ((query.getFeaturegroup().getFeaturegroupType() == FeaturegroupType.STREAM_FEATURE_GROUP ||
+      (query.getFeaturegroup().getFeaturegroupType() == FeaturegroupType.CACHED_FEATURE_GROUP &&
+      query.getFeaturegroup().getCachedFeaturegroup().getTimeTravelFormat() != TimeTravelFormat.HUDI))
       || query.getHiveEngine()) {
       tableIdentifierStr.add("`" + query.getFeatureStore() + "`");
       tableIdentifierStr.add("`" + query.getFeaturegroup().getName() + "_" + query.getFeaturegroup().getVersion()
@@ -302,7 +304,7 @@ public class ConstructorController {
       CachedFeaturegroupDTO featuregroupDTO = new CachedFeaturegroupDTO(query.getFeaturegroup());
       Featuregroup featuregroup = query.getFeaturegroup();
       List<FeatureGroupFeatureDTO> featureGroupFeatureDTOS =
-        cachedFeaturegroupController.getFeaturesDTO(featuregroup.getCachedFeaturegroup(),
+        cachedFeaturegroupController.getFeaturesDTO(featuregroup.getCachedFeaturegroup(), featuregroup.getId(),
           featuregroup.getFeaturestore(), project, user);
       featuregroupDTO.setFeatures(featureGroupFeatureDTOS);
 
@@ -313,7 +315,7 @@ public class ConstructorController {
       StreamFeatureGroupDTO featuregroupDTO = new StreamFeatureGroupDTO(query.getFeaturegroup());
       Featuregroup featuregroup = query.getFeaturegroup();
       List<FeatureGroupFeatureDTO> featureGroupFeatureDTOS =
-        cachedFeaturegroupController.getFeaturesDTO(featuregroup.getStreamFeatureGroup(),
+        cachedFeaturegroupController.getFeaturesDTO(featuregroup.getStreamFeatureGroup(), featuregroup.getId(),
           featuregroup.getFeaturestore(), project, user);
       featuregroupDTO.setFeatures(featureGroupFeatureDTOS);
       featuregroupDTO.setLocation(featurestoreUtils.resolveLocationURI(

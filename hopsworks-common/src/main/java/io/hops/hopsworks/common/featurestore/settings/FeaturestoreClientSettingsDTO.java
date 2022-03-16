@@ -60,6 +60,7 @@ public class FeaturestoreClientSettingsDTO {
   private String hopsfsConnectorType = FeaturestoreConstants.HOPSFS_CONNECTOR_TYPE;
   private String s3ConnectorType = FeaturestoreConstants.S3_CONNECTOR_TYPE;
   private String cachedFeaturegroupDtoType = FeaturestoreConstants.CACHED_FEATUREGROUP_DTO_TYPE;
+  private String streamFeaturegroupDtoType = FeaturestoreConstants.STREAM_FEATUREGROUP_DTO_TYPE;
   private String onDemandFeaturegroupDtoType = FeaturestoreConstants.ON_DEMAND_FEATUREGROUP_DTO_TYPE;
   private String hopsfsTrainingDatasetType = FeaturestoreConstants.HOPSFS_TRAINING_DATASET_TYPE;
   private String externalTrainingDatasetType = FeaturestoreConstants.EXTERNAL_TRAINING_DATASET_TYPE;
@@ -240,6 +241,15 @@ public class FeaturestoreClientSettingsDTO {
   
   public void setCachedFeaturegroupDtoType(String cachedFeaturegroupDtoType) {
     this.cachedFeaturegroupDtoType = cachedFeaturegroupDtoType;
+  }
+  
+  @XmlElement
+  public String getStreamFeaturegroupDtoType() {
+    return streamFeaturegroupDtoType;
+  }
+  
+  public void setStreamFeaturegroupDtoType(String streamFeaturegroupDtoType) {
+    this.streamFeaturegroupDtoType = streamFeaturegroupDtoType;
   }
   
   @XmlElement

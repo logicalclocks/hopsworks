@@ -438,7 +438,7 @@ public class FeaturegroupController {
       cachedFeaturegroupController
           .updateMetadata(project, user, featuregroup, (CachedFeaturegroupDTO) featuregroupDTO);
     } else if (featuregroup.getFeaturegroupType() == FeaturegroupType.STREAM_FEATURE_GROUP) {
-      cachedFeaturegroupController.updateMetadata(project, user, featuregroup,
+      streamFeatureGroupController.updateMetadata(project, user, featuregroup,
         (StreamFeatureGroupDTO) featuregroupDTO);
     } else if (featuregroup.getFeaturegroupType() == FeaturegroupType.ON_DEMAND_FEATURE_GROUP) {
       onDemandFeaturegroupController.updateOnDemandFeaturegroupMetadata(featuregroup.getOnDemandFeaturegroup(),
@@ -781,10 +781,10 @@ public class FeaturegroupController {
     throws FeaturestoreException {
     switch (featuregroup.getFeaturegroupType()) {
       case CACHED_FEATURE_GROUP:
-        return cachedFeaturegroupController.getFeaturesDTO(featuregroup.getCachedFeaturegroup(),
+        return cachedFeaturegroupController.getFeaturesDTO(featuregroup.getCachedFeaturegroup(), featuregroup.getId(),
           featuregroup.getFeaturestore(), project, user);
       case STREAM_FEATURE_GROUP:
-        return cachedFeaturegroupController.getFeaturesDTO(featuregroup.getStreamFeatureGroup(),
+        return cachedFeaturegroupController.getFeaturesDTO(featuregroup.getStreamFeatureGroup(), featuregroup.getId(),
           featuregroup.getFeaturestore(), project, user);
       case ON_DEMAND_FEATURE_GROUP:
         return featuregroup.getOnDemandFeaturegroup().getFeatures().stream()

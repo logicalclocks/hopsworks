@@ -16,7 +16,9 @@
 
 package io.hops.hopsworks.common.featurestore.featuregroup.stream;
 
+import io.hops.hopsworks.common.featurestore.activity.FeaturestoreActivityFacade;
 import io.hops.hopsworks.common.featurestore.feature.FeatureGroupFeatureDTO;
+import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupDTO;
 import io.hops.hopsworks.common.featurestore.featuregroup.cached.CachedFeaturegroupController;
 import io.hops.hopsworks.common.featurestore.featuregroup.cached.FeaturegroupPreview;
 import io.hops.hopsworks.common.featurestore.featuregroup.cached.OfflineFeatureGroupController;
@@ -25,8 +27,11 @@ import io.hops.hopsworks.common.featurestore.utils.FeaturestoreUtils;
 import io.hops.hopsworks.common.hdfs.Utils;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.exceptions.HopsSecurityException;
+import io.hops.hopsworks.exceptions.KafkaException;
+import io.hops.hopsworks.exceptions.SchemaException;
 import io.hops.hopsworks.exceptions.ServiceException;
 import io.hops.hopsworks.persistence.entity.featurestore.Featurestore;
+import io.hops.hopsworks.persistence.entity.featurestore.activity.FeaturestoreActivityMeta;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.Featuregroup;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.cached.CachedFeature;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.cached.hive.HiveTableParams;
@@ -42,7 +47,9 @@ import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.logging.Level;
 import java.util.stream.Collectors;
 
@@ -63,6 +70,8 @@ public class StreamFeatureGroupController {
   private FeaturestoreUtils featurestoreUtils;
   @EJB
   private CachedFeaturegroupController cachedFeaturegroupController;
+  @EJB
+  private FeaturestoreActivityFacade fsActivityFacade;
   
   /**
    * Converts a StreamFeatureGroup entity into a DTO representation
@@ -79,7 +88,7 @@ public class StreamFeatureGroupController {
         Utils.getFeaturegroupName(featuregroup)));
     List<FeatureGroupFeatureDTO> featureGroupFeatureDTOS =
       onlineFeaturegroupController.getFeaturegroupFeatures(featuregroup,
-        cachedFeaturegroupController.getFeaturesDTO(featuregroup.getStreamFeatureGroup(),
+        cachedFeaturegroupController.getFeaturesDTO(featuregroup.getStreamFeatureGroup(), featuregroup.getId(),
           featuregroup.getFeaturestore(), project, user));
   
     streamFeatureGroupDTO.setFeatures(featureGroupFeatureDTOS);
@@ -181,5 +190,63 @@ public class StreamFeatureGroupController {
     } else {
       return cachedFeaturegroupController.getOfflineFeaturegroupPreview(featuregroup, project, user, partition, limit);
     }
+  }
+  
+  
+  public void updateMetadata(Project project, Users user, Featuregroup featuregroup,
+    FeaturegroupDTO featuregroupDTO)
+    throws FeaturestoreException, SQLException, SchemaException, KafkaException {
+    
+    List<FeatureGroupFeatureDTO> previousSchema =
+      cachedFeaturegroupController.getFeaturesDTO(featuregroup.getStreamFeatureGroup(),
+      featuregroup.getId(), featuregroup.getFeaturestore(), project,
+      user);
+    
+    String tableName = cachedFeaturegroupController.getTblName(featuregroup.getName(), featuregroup.getVersion());
+    
+    // verify user input specific for cached feature groups - if any
+    List<FeatureGroupFeatureDTO> newFeatures = new ArrayList<>();
+    if (featuregroupDTO.getFeatures() != null) {
+      cachedFeaturegroupController.verifyPreviousSchemaUnchanged(previousSchema, featuregroupDTO.getFeatures());
+      newFeatures = cachedFeaturegroupController.verifyAndGetNewFeatures(previousSchema, featuregroupDTO.getFeatures());
+    }
+    
+    // change table description
+    if (featuregroupDTO.getDescription() != null) {
+      offlineFeatureGroupController.alterHiveTableDescription(
+        featuregroup.getFeaturestore(), tableName, featuregroupDTO.getDescription(), project, user);
+    }
+    
+    // change feature descriptions
+    updateCachedDescriptions(featuregroup.getStreamFeatureGroup(), featuregroupDTO.getFeatures());
+    
+    // alter table for new additional features
+    if (!newFeatures.isEmpty()) {
+      offlineFeatureGroupController.alterHiveTableFeatures(
+        featuregroup.getFeaturestore(), tableName, newFeatures, project, user);
+      onlineFeaturegroupController.alterOnlineFeatureGroupSchema(
+        featuregroup, newFeatures, featuregroupDTO.getFeatures(), project, user);
+      // Log schema change
+      String newFeaturesStr = "New features: " + newFeatures.stream().map(FeatureGroupFeatureDTO::getName)
+        .collect(Collectors.joining(","));
+      fsActivityFacade.logMetadataActivity(user, featuregroup, FeaturestoreActivityMeta.FG_ALTERED, newFeaturesStr);
+    }
+  }
+  
+  private void updateCachedDescriptions(StreamFeatureGroup streamFeatureGroup,
+    List<FeatureGroupFeatureDTO> featureGroupFeatureDTOs) {
+    for (FeatureGroupFeatureDTO feature : featureGroupFeatureDTOs) {
+      Optional<CachedFeature> previousCachedFeature =
+        cachedFeaturegroupController.getCachedFeature(streamFeatureGroup.getCachedFeatures(), feature.getName());
+      if (feature.getDescription() != null) {
+        if (previousCachedFeature.isPresent()) {
+          previousCachedFeature.get().setDescription(feature.getDescription());
+        } else {
+          streamFeatureGroup.getCachedFeatures().add(new CachedFeature(streamFeatureGroup, feature.getName(),
+            feature.getDescription()));
+        }
+      }
+    }
+    streamFeatureGroupFacade.updateMetadata(streamFeatureGroup);
   }
 }
