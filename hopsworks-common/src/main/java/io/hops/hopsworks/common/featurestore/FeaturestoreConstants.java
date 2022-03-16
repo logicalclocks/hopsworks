@@ -53,6 +53,7 @@ public class FeaturestoreConstants {
   public static final String S3_CONNECTOR_TYPE = FeaturestoreConnectorType.S3.name();
   public static final String REDSHIFT_CONNECTOR_TYPE = FeaturestoreConnectorType.REDSHIFT.name();
   public static final String CACHED_FEATUREGROUP_DTO_TYPE = "cachedFeaturegroupDTO";
+  public static final String STREAM_FEATUREGROUP_DTO_TYPE = "streamFeatureGroupDTO";
   public static final String ON_DEMAND_FEATUREGROUP_DTO_TYPE = "onDemandFeaturegroupDTO";
   public static final String HOPSFS_TRAINING_DATASET_TYPE = TrainingDatasetType.HOPSFS_TRAINING_DATASET.name();
   public static final String EXTERNAL_TRAINING_DATASET_TYPE = TrainingDatasetType.EXTERNAL_TRAINING_DATASET.name();

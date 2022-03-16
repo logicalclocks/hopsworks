@@ -35,6 +35,16 @@ describe "On #{ENV['OS']}" do
           expect_status_details(200)
         end
 
+        it "should be able to add statistics as a commit to a stream feature group" do
+          project = get_project
+          featurestore_id = get_featurestore_id(project.id)
+          json_result, _ = create_stream_featuregroup(project.id, featurestore_id, backfill_offline: true)
+          expect_status(200)
+          parsed_json = JSON.parse(json_result)
+          create_statistics_commit(project.id, featurestore_id, "featuregroups", parsed_json["id"])
+          expect_status_details(200)
+        end
+
         it "should be able to add statistics as a commit to a training dataset" do
           project = get_project
           featurestore_id = get_featurestore_id(project.id)
@@ -51,6 +61,26 @@ describe "On #{ENV['OS']}" do
           featurestore_id = get_featurestore_id(project.id)
           json_result, _ = create_cached_featuregroup(project.id, featurestore_id)
           expect_status(201)
+          parsed_json = JSON.parse(json_result)
+          create_statistics_commit(project.id, featurestore_id, "featuregroups", parsed_json["id"])
+          expect_status(200)
+          json_result = get_statistics_commit(project.id, featurestore_id, "featuregroups", parsed_json["id"])
+          expect_status_details(200)
+          parsed_json = JSON.parse(json_result)
+          expect(parsed_json.key?("items")).to be true
+          expect(parsed_json.key?("count")).to be true
+          # should contain exactly one item
+          expect(parsed_json["count"] == 1).to be true
+          expect(parsed_json["items"][0].key?("content")).to be true
+          expect(JSON.parse(parsed_json["items"][0]["content"])).to eql({"columns" => ["a", "b", "c"]})
+          expect(parsed_json["items"][0]["commitTime"]).to eql(1597903688000)
+        end
+
+        it "should be able to get a specific statistics commit with content field of a stream feature group" do
+          project = get_project
+          featurestore_id = get_featurestore_id(project.id)
+          json_result, _ = create_stream_featuregroup(project.id, featurestore_id, backfill_offline: true)
+          expect_status(200)
           parsed_json = JSON.parse(json_result)
           create_statistics_commit(project.id, featurestore_id, "featuregroups", parsed_json["id"])
           expect_status(200)
@@ -111,6 +141,30 @@ describe "On #{ENV['OS']}" do
           expect(parsed_json["items"][0]["commitTime"]).to eql(1597990088000)
         end
 
+        it "should be able to get the latest statistics commit for a stream feature group" do
+          project = get_project
+          featurestore_id = get_featurestore_id(project.id)
+          json_result, _ = create_stream_featuregroup(project.id, featurestore_id, backfill_offline: true)
+          expect_status(200)
+          parsed_json = JSON.parse(json_result)
+          create_statistics_commit(project.id, featurestore_id, "featuregroups", parsed_json["id"])
+          expect_status(200)
+          create_statistics_commit(project.id, featurestore_id, "featuregroups", parsed_json["id"],
+                                                 commit_time: 1597990088000)
+          expect_status(200)
+          json_result = get_last_statistics_commit(project.id, featurestore_id, "featuregroups", parsed_json["id"])
+          expect_status_details(200)
+          parsed_json = JSON.parse(json_result)
+          expect(parsed_json.key?("items")).to be true
+          expect(parsed_json.key?("count")).to be true
+          expect(parsed_json["count"]).to eql(2)
+          # should contain exactly one item
+          expect(parsed_json["items"].length == 1).to be true
+          expect(parsed_json["items"][0].key?("content")).to be true
+          expect(JSON.parse(parsed_json["items"][0]["content"])).to eql({"columns" => ["a", "b", "c"]})
+          expect(parsed_json["items"][0]["commitTime"]).to eql(1597990088000)
+        end
+
         it "should be able to get the latest statistics commit for a training dataset" do
           project = get_project
           featurestore_id = get_featurestore_id(project.id)
@@ -141,6 +195,22 @@ describe "On #{ENV['OS']}" do
           featurestore_id = get_featurestore_id(project.id)
           json_result, featuregroup_name = create_cached_featuregroup(project.id, featurestore_id)
           expect_status(201)
+          parsed_json = JSON.parse(json_result)
+          create_statistics_commit(project.id, featurestore_id, "featuregroups", parsed_json["id"])
+          expect_status(200)
+          create_statistics_commit(project.id, featurestore_id, "featuregroups", parsed_json["id"],
+                                                 commit_time: 1597990088000)
+          expect_status(200)
+          delete_featuregroup_checked(project.id, featurestore_id, parsed_json["id"])
+          path = "/Projects/#{project[:projectname]}//Statistics/FeatureGroups/#{featuregroup_name}_1"
+          expect(test_dir(path)).to be false
+        end
+
+        it "deleting a stream feature group should delete all associated statistics commit files from hopsfs" do
+          project = get_project
+          featurestore_id = get_featurestore_id(project.id)
+          json_result, featuregroup_name = create_stream_featuregroup(project.id, featurestore_id, backfill_offline: true)
+          expect_status(200)
           parsed_json = JSON.parse(json_result)
           create_statistics_commit(project.id, featurestore_id, "featuregroups", parsed_json["id"])
           expect_status(200)

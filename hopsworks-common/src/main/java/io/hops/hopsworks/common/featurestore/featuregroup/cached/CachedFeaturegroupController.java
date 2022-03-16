@@ -23,7 +23,6 @@ import io.hops.hopsworks.common.featurestore.activity.FeaturestoreActivityFacade
 import io.hops.hopsworks.common.featurestore.feature.FeatureGroupFeatureDTO;
 import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupDTO;
 import io.hops.hopsworks.common.featurestore.featuregroup.online.OnlineFeaturegroupController;
-import io.hops.hopsworks.common.featurestore.featuregroup.stream.StreamFeatureGroupDTO;
 import io.hops.hopsworks.common.featurestore.online.OnlineFeaturestoreController;
 import io.hops.hopsworks.common.featurestore.query.ConstructorController;
 import io.hops.hopsworks.common.featurestore.query.Feature;
@@ -264,9 +263,11 @@ public class CachedFeaturegroupController {
     List<FeatureGroupFeatureDTO> features = null;
   
     if (featuregroup.getStreamFeatureGroup() != null) {
-      features = getFeaturesDTO(featuregroup.getStreamFeatureGroup(), featuregroup.getFeaturestore(), project, user);
+      features = getFeaturesDTO(featuregroup.getStreamFeatureGroup(), featuregroup.getId(),
+        featuregroup.getFeaturestore(), project, user);
     } else {
-      features = getFeaturesDTO(featuregroup.getCachedFeaturegroup(), featuregroup.getFeaturestore(), project, user);
+      features = getFeaturesDTO(featuregroup.getCachedFeaturegroup(), featuregroup.getId(),
+        featuregroup.getFeaturestore(), project, user);
     }
 
     // This is not great, but at the same time the query runs as the user.
@@ -378,7 +379,7 @@ public class CachedFeaturegroupController {
       throws FeaturestoreException, ServiceException {
     CachedFeaturegroupDTO cachedFeaturegroupDTO = new CachedFeaturegroupDTO(featuregroup);
     List<FeatureGroupFeatureDTO> featureGroupFeatureDTOS = getFeaturesDTO(featuregroup.getCachedFeaturegroup(),
-      featuregroup.getFeaturestore(), project, user);
+      featuregroup.getId(), featuregroup.getFeaturestore(), project, user);
 
     if (settings.isOnlineFeaturestore() && featuregroup.getCachedFeaturegroup().isOnlineEnabled()) {
       cachedFeaturegroupDTO.setOnlineEnabled(true);
@@ -406,7 +407,8 @@ public class CachedFeaturegroupController {
     return cachedFeaturegroupDTO;
   }
   
-  public List<FeatureGroupFeatureDTO> getFeaturesDTO(StreamFeatureGroup streamFeatureGroup, Featurestore featurestore,
+  public List<FeatureGroupFeatureDTO> getFeaturesDTO(StreamFeatureGroup streamFeatureGroup,
+    Integer featureGroupId, Featurestore featurestore,
     Project project, Users user) throws FeaturestoreException {
     Collection<CachedFeatureExtraConstraints> featureExtraConstraints =
       streamFeatureGroup.getFeaturesExtraConstraints();
@@ -418,11 +420,11 @@ public class CachedFeaturegroupController {
     Collection<CachedFeature> cachedFeatures = streamFeatureGroup.getCachedFeatures();
   
     return getFeatureGroupFeatureDTOS(featureExtraConstraints, defaultConstraints, hiveTable, cachedFeatures,
-      streamFeatureGroup.getId(), true);
+      featureGroupId, true);
   }
   
-  public List<FeatureGroupFeatureDTO> getFeaturesDTO(CachedFeaturegroup cachedFeaturegroup, Featurestore featurestore,
-    Project project, Users user) throws FeaturestoreException {
+  public List<FeatureGroupFeatureDTO> getFeaturesDTO(CachedFeaturegroup cachedFeaturegroup, Integer featureGroupId,
+    Featurestore featurestore, Project project, Users user) throws FeaturestoreException {
     Collection<CachedFeatureExtraConstraints> featureExtraConstraints =
       cachedFeaturegroup.getFeaturesExtraConstraints();
     HiveTbls hiveTable = cachedFeaturegroup.getHiveTbls();
@@ -433,7 +435,7 @@ public class CachedFeaturegroupController {
     Collection<CachedFeature> cachedFeatures = cachedFeaturegroup.getCachedFeatures();
   
     return getFeatureGroupFeatureDTOS(featureExtraConstraints, defaultConstraints, hiveTable, cachedFeatures,
-      cachedFeaturegroup.getId(), cachedFeaturegroup.getTimeTravelFormat() == TimeTravelFormat.HUDI);
+      featureGroupId, cachedFeaturegroup.getTimeTravelFormat() == TimeTravelFormat.HUDI);
   }
   
   public List<FeatureGroupFeatureDTO> getFeatureGroupFeatureDTOS(
@@ -696,7 +698,7 @@ public class CachedFeaturegroupController {
     }
     CachedFeaturegroup cachedFeaturegroup = featuregroup.getCachedFeaturegroup();
 
-    List<FeatureGroupFeatureDTO> features = getFeaturesDTO(featuregroup.getCachedFeaturegroup(),
+    List<FeatureGroupFeatureDTO> features = getFeaturesDTO(featuregroup.getCachedFeaturegroup(), featuregroup.getId(),
       featurestore, project, user);
     if (cachedFeaturegroup.getTimeTravelFormat() == TimeTravelFormat.HUDI){
       features = dropHudiSpecFeatureGroupFeature(features);
@@ -746,14 +748,8 @@ public class CachedFeaturegroupController {
     FeaturegroupDTO featuregroupDTO)
     throws FeaturestoreException, SQLException, SchemaException, KafkaException {
 
-    List<FeatureGroupFeatureDTO> previousSchema = null;
-    if (featuregroupDTO instanceof StreamFeatureGroupDTO) {
-      previousSchema = getFeaturesDTO(featuregroup.getStreamFeatureGroup(), featuregroup.getFeaturestore(), project,
-        user);
-    } else {
-      previousSchema = getFeaturesDTO(featuregroup.getCachedFeaturegroup(), featuregroup.getFeaturestore(), project,
-        user);
-    }
+    List<FeatureGroupFeatureDTO> previousSchema = getFeaturesDTO(featuregroup.getCachedFeaturegroup(),
+      featuregroup.getId(), featuregroup.getFeaturestore(), project, user);
     
     String tableName = getTblName(featuregroup.getName(), featuregroup.getVersion());
 
@@ -809,7 +805,7 @@ public class CachedFeaturegroupController {
     cachedFeatureGroupFacade.updateMetadata(cachedFeatureGroup);
   }
   
-  private Optional<CachedFeature> getCachedFeature(Collection<CachedFeature> cachedFeatures, String featureName) {
+  public Optional<CachedFeature> getCachedFeature(Collection<CachedFeature> cachedFeatures, String featureName) {
     return cachedFeatures.stream().filter(feature -> feature.getName().equalsIgnoreCase(featureName)).findAny();
   }
 
