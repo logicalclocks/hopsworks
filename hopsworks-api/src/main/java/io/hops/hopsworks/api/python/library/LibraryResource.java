@@ -196,7 +196,7 @@ public class LibraryResource {
                           @Context SecurityContext sc)
       throws ServiceException, GenericException, PythonException, DatasetException {
 
-    Users user = jwtHelper.getUserPrincipal(req);
+    Users user = jwtHelper.getUserPrincipal(sc);
     environmentController.checkCondaEnabled(project, pythonVersion, true);
 
     PackageSource packageSource = librarySpecification.getPackageSource();
