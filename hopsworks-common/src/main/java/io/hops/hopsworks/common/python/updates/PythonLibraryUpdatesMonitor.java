@@ -19,6 +19,7 @@ package io.hops.hopsworks.common.python.updates;
 import io.hops.hopsworks.common.python.library.LibraryController;
 import io.hops.hopsworks.common.python.library.LibraryVersionDTO;
 import io.hops.hopsworks.common.python.updates.analyzer.HopsLatestVersionAnalyzer;
+import io.hops.hopsworks.common.python.updates.analyzer.HopsworksLatestVersionAnalyzer;
 import io.hops.hopsworks.common.python.updates.analyzer.HsfsLatestVersionAnalyzer;
 import io.hops.hopsworks.common.python.updates.analyzer.HsmlLatestVersionAnalyzer;
 import io.hops.hopsworks.common.python.updates.analyzer.LatestVersionAnalyzer;
@@ -89,6 +90,9 @@ public class PythonLibraryUpdatesMonitor {
 
     HsmlLatestVersionAnalyzer hsmlAnalyzer = new HsmlLatestVersionAnalyzer();
     latestVersionAnalyzerMap.put(hsmlAnalyzer.getLibrary(), hsmlAnalyzer);
+
+    HopsworksLatestVersionAnalyzer hopsworksAnalyzer = new HopsworksLatestVersionAnalyzer();
+    latestVersionAnalyzerMap.put(hopsworksAnalyzer.getLibrary(), hopsworksAnalyzer);
 
     String rawInterval = settings.getPythonLibraryUpdatesMonitorInterval();
     Long intervalValue = settings.getConfTimeValue(rawInterval);
