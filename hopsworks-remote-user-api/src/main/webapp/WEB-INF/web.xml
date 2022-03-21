@@ -14,7 +14,7 @@
     <filter-class>net.sourceforge.spnego.SpnegoHttpFilter</filter-class>
     <init-param>
       <param-name>spnego.allow.basic</param-name>
-      <param-value>true</param-value>
+      <param-value>false</param-value>
     </init-param>
     <init-param>
       <param-name>spnego.allow.localhost</param-name>
@@ -22,7 +22,7 @@
     </init-param>
     <init-param>
       <param-name>spnego.allow.unsecure.basic</param-name>
-      <param-value>true</param-value>
+      <param-value>false</param-value>
     </init-param>
     <init-param>
       <param-name>spnego.login.client.module</param-name>
@@ -42,7 +42,7 @@
     </init-param>
     <init-param>
       <param-name>spnego.prompt.ntlm</param-name>
-      <param-value>true</param-value>
+      <param-value>false</param-value>
     </init-param>
     <init-param>
       <param-name>spnego.logger.level</param-name>

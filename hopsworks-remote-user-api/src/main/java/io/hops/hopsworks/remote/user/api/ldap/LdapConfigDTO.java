@@ -200,6 +200,17 @@ public class LdapConfigDTO extends RestDTO<LdapConfigDTO> {
     return variablesToUpdate;
   }
   
+  public Map<String, String> variables(Settings settings, DefaultConfig defaultConfig) {
+    Map<String, String> variablesToUpdate = new HashMap<>();
+    variablesToUpdate.put(settings.getVarLdapAccountStatus(), this.accountStatus.getValue() + "");
+    variablesToUpdate.put(settings.getVarLdapGroupMapping(), this.groupMapping);
+    variablesToUpdate.put(settings.getVarLdapUserId(), defaultConfig.getUserId());
+    variablesToUpdate.put(settings.getVarLdapUserSearchFilter(), defaultConfig.getSearchFilter());
+    variablesToUpdate.put(settings.getVarKrbUserSearchFilter(), defaultConfig.getKrbSearchFilter());
+    
+    return variablesToUpdate;
+  }
+  
   @Override
   public String toString() {
     return "LdapConfigDTO{" +

@@ -21,6 +21,7 @@ import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
@@ -52,13 +53,17 @@ public class LdapConfigResource {
   @POST
   @Produces(MediaType.APPLICATION_JSON)
   @Consumes(MediaType.APPLICATION_JSON)
-  public Response update(LdapConfigDTO ldapConfigDTO, @Context UriInfo uriInfo, @Context HttpServletRequest req)
-    throws RemoteAuthException {
+  public Response update(LdapConfigDTO ldapConfigDTO, @QueryParam("default") DefaultConfig defaultConfig,
+    @Context UriInfo uriInfo, @Context HttpServletRequest req) throws RemoteAuthException {
     if (settings.isLdapEnabled()) {
       if (ldapConfigDTO == null) {
         throw new RemoteAuthException(RESTCodes.RemoteAuthErrorCode.ILLEGAL_ARGUMENT, Level.FINE, "No payload.");
       }
-      ldapConfigDTO = ldapConfigBuilder.update(ldapConfigDTO, uriInfo);
+      if (!DefaultConfig.MIT_LDAP.equals(defaultConfig)) {
+        throw new RemoteAuthException(RESTCodes.RemoteAuthErrorCode.ILLEGAL_ARGUMENT, Level.FINE, "Default not " +
+          "applicable.");
+      }
+      ldapConfigDTO = ldapConfigBuilder.update(ldapConfigDTO, defaultConfig, uriInfo);
       return Response.ok().entity(ldapConfigDTO).build();
     }
     return Response.status(Response.Status.METHOD_NOT_ALLOWED).build();

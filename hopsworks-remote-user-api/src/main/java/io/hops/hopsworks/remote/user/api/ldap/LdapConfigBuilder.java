@@ -33,10 +33,17 @@ public class LdapConfigBuilder {
     return dto;
   }
   
-  public LdapConfigDTO update(LdapConfigDTO ldapConfigDTO, UriInfo uriInfo) {
-    List<Variables> variablesList = ldapConfigDTO.variables(settings).entrySet().stream()
-      .map(v -> new Variables(v.getKey(), v.getValue(), VariablesVisibility.ADMIN))
-      .collect(Collectors.toList());
+  public LdapConfigDTO update(LdapConfigDTO ldapConfigDTO, DefaultConfig defaultConfig, UriInfo uriInfo) {
+    List<Variables> variablesList;
+    if (defaultConfig != null) {
+      variablesList = ldapConfigDTO.variables(settings, defaultConfig).entrySet().stream()
+        .map(v -> new Variables(v.getKey(), v.getValue(), VariablesVisibility.ADMIN))
+        .collect(Collectors.toList());
+    } else {
+      variablesList = ldapConfigDTO.variables(settings).entrySet().stream()
+        .map(v -> new Variables(v.getKey(), v.getValue(), VariablesVisibility.ADMIN))
+        .collect(Collectors.toList());
+    }
     settings.updateVariables(variablesList);
     LdapConfigDTO dto = new LdapConfigDTO(settings);
     uri(dto, uriInfo);
