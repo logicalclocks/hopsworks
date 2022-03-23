@@ -120,7 +120,7 @@ public class PythonLibraryUpdatesMonitor {
     if(!Strings.isNullOrEmpty(latestVersion)) {
       return latestVersion;
     } else {
-      return "Latest version for this library is not available right now.";
+      return null;
     }
   }
 
