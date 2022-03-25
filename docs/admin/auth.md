@@ -21,7 +21,7 @@ In the **Cluster Settings** _Authentication_ tab you can configure how users aut
 3. **LDAP/Kerberos**: if your organization is using LDAP or Kerberos to manage users and services you can configure 
    Hopsworks to use it as the user management system. You can enable LDAP/Kerberos by clicking on the checkbox and 
    choosing LDAP or Kerberos. For more information on how to configure LDAP and Kerberos see 
-   [Configure LDAP/Kerberos](./ldap/configure.md).
+   [Configure LDAP](./ldap/configure-ldap.md) and [Configure Kerberos](./ldap/configure-krb.md).
 
 <figure>
   <a  href="../../assets/images/admin/auth-config.png">
@@ -31,5 +31,4 @@ In the **Cluster Settings** _Authentication_ tab you can configure how users aut
 </figure>
 
 In the figure above we see a cluster with Two-factor authentication disabled, Oauth enabled with one registered 
-identity provider called Keycloak (Keycloak is an open Source Identity and Access Management system) and LDAP 
-authentication also enabled. 
+identity provider and LDAP authentication enabled. 
