@@ -27,7 +27,7 @@ Finally, click on edit configuration and fill in the attributes.
   <figcaption>Configure LDAP</figcaption>
 </figure>
 
-- Account status: the status a user will be assigned when lodging in for the first time. If a use is assigned a status 
+- Account status: the status a user will be assigned when logging in for the first time. If a use is assigned a status 
   different from _Activated_ an admin needs to manually activate each user from the [User management](../user.md).
 - Group mapping: allows you to specify a mapping between LDAP groups and Hopsworks groups. The mapping is a 
   semicolon separated string in the form ```Directory Administrators->HOPS_ADMIN;IT People-> HOPS_USER```. Default
