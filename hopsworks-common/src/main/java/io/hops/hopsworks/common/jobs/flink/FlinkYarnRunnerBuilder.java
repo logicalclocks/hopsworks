@@ -55,6 +55,7 @@ import io.hops.hopsworks.persistence.entity.jobs.description.Jobs;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.user.Users;
 import org.apache.flink.client.deployment.ClusterSpecification;
+import org.apache.flink.yarn.YarnClientYarnClusterInformationRetriever;
 import org.apache.flink.yarn.YarnClusterDescriptor;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
@@ -101,7 +102,6 @@ public class FlinkYarnRunnerBuilder {
       getJobConfig();
     
   }
-  
 
   void addDynamicProperty(String name, String value) {
     dynamicProperties.put(name, value);
@@ -112,18 +112,18 @@ public class FlinkYarnRunnerBuilder {
                            String kafkaBrokersString, String hopsworksRestEndpoint, ServingConfig servingConfig,
                            ServiceDiscoveryController serviceDiscoveryController)
       throws IOException, ServiceDiscoveryException {
-
+  
     String stagingPath = File.separator + "Projects" + File.separator + project.getName() + File.separator
-            + Settings.PROJECT_STAGING_DIR;
-
+      + Settings.PROJECT_STAGING_DIR;
+  
     Configuration conf = services.getSettings().getConfiguration();
     //Create the YarnRunner builder for Flink, proceed with setting values
     YarnRunner.Builder builder = new YarnRunner.Builder(Settings.FLINK_AM_MAIN);
-    
+  
     org.apache.flink.configuration.Configuration flinkConf
-            = org.apache.flink.configuration.GlobalConfiguration.loadConfiguration(settings.getFlinkConfDir());
+      = org.apache.flink.configuration.GlobalConfiguration.loadConfiguration(settings.getFlinkConfDir());
     YarnConfiguration yarnConf = new YarnConfiguration(conf);
-    
+  
     try {
       yarnConf
         .addResource(new File(settings.getHadoopConfDir() + "/" + Settings.DEFAULT_YARN_CONFFILE_NAME).toURI().toURL());
@@ -137,26 +137,44 @@ public class FlinkYarnRunnerBuilder {
   
     Map<String, String> finalJobProps = flinkConfigurationUtil
       .setFrameworkProperties(project, job.getJobConfig(), settings, jobUser, hopsworksUser, extraJavaOptions,
-          kafkaBrokersString, hopsworksRestEndpoint, servingConfig, serviceDiscoveryController);
+        kafkaBrokersString, hopsworksRestEndpoint, servingConfig, serviceDiscoveryController);
   
-    //Parse properties from Spark config file
+    //Parse properties from Flink config file
     Yaml yaml = new Yaml();
     try (InputStream in = new FileInputStream(new File(settings.getFlinkConfFile()))) {
       Map<String, String> flinkConfProps = (Map<String, String>) yaml.load(in);
-      for(String key : flinkConfProps.keySet()){
+      for (String key : flinkConfProps.keySet()) {
         finalJobProps.putIfAbsent(key, String.valueOf(flinkConfProps.get(key)));
       }
     }
+  
+    addDynamicProperty(Settings.LOGSTASH_JOB_INFO,
+      project.getName().toLowerCase() + "," + job.getName() + "," + job.getId() + "," + YarnRunner.APPID_PLACEHOLDER);
+  
+    for (String key : finalJobProps.keySet()) {
+      flinkConf.setString(key, finalJobProps.get(key));
+    }
+  
+    if (!dynamicProperties.isEmpty()) {
+      for (String s : dynamicProperties.keySet()) {
+        flinkConf.setString(s, dynamicProperties.get(s));
+      }
+    }
+  
+    if (Strings.isNullOrEmpty(flinkJobConfiguration.getAppName())) {
+      flinkJobConfiguration
+        .setAppName("Flink session with " + flinkJobConfiguration.getNumberOfTaskSlots() + " " + "NumberOfTaskSlots");
+    }
+    flinkConf.setString("containerized.master.env.HOPSWORKS_JOB_NAME", flinkJobConfiguration.getAppName());
     
     //Create dynamicProperties from finalJobProps
     YarnClusterDescriptor cluster = new YarnClusterDescriptor(flinkConf,
-            yarnConf, settings.getFlinkConfDir(), yarnClient, true);
+            yarnConf, yarnClient, YarnClientYarnClusterInformationRetriever.create(yarnClient), true);
     
     ClusterSpecification clusterSpecification = new ClusterSpecification.ClusterSpecificationBuilder()
                  .setMasterMemoryMB(flinkJobConfiguration.getJobManagerMemory())
                  .setTaskManagerMemoryMB(flinkJobConfiguration.getTaskManagerMemory())
                  .setSlotsPerTaskManager(flinkJobConfiguration.getNumberOfTaskSlots())
-                 .setNumberTaskManagers(flinkJobConfiguration.getNumberOfTaskManagers())
                  .createClusterSpecification();
     
     cluster.setLocalJarPath(new Path(settings.getLocalFlinkJarPath()));
@@ -168,42 +186,9 @@ public class FlinkYarnRunnerBuilder {
     builder.setFlinkCluster(cluster);
     builder.setFlinkClusterSpecification(clusterSpecification);
     builder.localResourcesBasePath(stagingPath);
-  
-    //If "CONDA" is not the first in order of dynamic properties, the sdk_worker.sh script in chef needs to be updated.
-    addDynamicProperty("CONDA", settings.getCurrentCondaEnvironment());
-    addDynamicProperty(Settings.LOGSTASH_JOB_INFO,
-      project.getName().toLowerCase() + "," + job.getName() + "," + job.getId() + "," + YarnRunner.APPID_PLACEHOLDER);
-  
-    StringBuilder dynamicPropertiesEncoded = new StringBuilder();
-  
-    /*
-     * Split propertes with "@@"
-     * https://github.com/apache/flink/blob/b410c393c960f55c09fadd4f22732d06f801b938/
-     * flink-yarn/src/main/java/org/apache/flink/yarn/cli/FlinkYarnSessionCli.java
-     */
-    if (!dynamicProperties.isEmpty()) {
-      for (String s : dynamicProperties.keySet()) {
-        dynamicPropertiesEncoded.append(s).append("=").append(dynamicProperties.get(s)).append("@@");
-      }
-    }
     
-    for(String key : finalJobProps.keySet()){
-      dynamicPropertiesEncoded.append(key).append("=").append(finalJobProps.get(key)).append("@@");
-    }
-    
-    if (dynamicPropertiesEncoded.length() > 0) {
-      cluster
-        .setDynamicPropertiesEncoded(dynamicPropertiesEncoded.substring(0, dynamicPropertiesEncoded.lastIndexOf("@@")));
-    }
-
     builder.setJobType(JobType.FLINK);
 
-    if (!Strings.isNullOrEmpty(flinkJobConfiguration.getAppName())) {
-      flinkJobConfiguration
-        .setAppName("Flink session with " + flinkJobConfiguration.getNumberOfTaskManagers() + " " + "TaskManagers");
-    }
-    cluster.setName(flinkJobConfiguration.getAppName());
     return builder.build(settings.getFlinkDir(), JobType.FLINK,services);
   }
-
 }

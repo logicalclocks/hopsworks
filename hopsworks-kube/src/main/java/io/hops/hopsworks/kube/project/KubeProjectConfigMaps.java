@@ -81,7 +81,6 @@ public class KubeProjectConfigMaps {
     // create config maps that are reloaded periodically
     createHadoopConfigMap(project);
     createSparkConfigMap(project);
-    createFlinkConfigMap(project);
   }
   
   private void createProjectConfigMaps(Project project) throws IOException {
@@ -102,13 +101,6 @@ public class KubeProjectConfigMaps {
         "spark-env.sh");
     createConfigMap(project, settings.getSparkConfDir(), confFiles,
         SPARK_SUFFIX);
-  }
-  
-  private void createFlinkConfigMap(Project project) throws IOException {
-    List<String> confFiles = Arrays.asList("flink-conf.yaml", "log4j.properties",
-        "logback-yarn.xml", "logback.xml", "sql-client-defaults.yaml", "zoo.cfg");
-    createConfigMap(project, settings.getFlinkConfDir(), confFiles,
-        FLINK_SUFFIX);
   }
   
   private void createProjectTeamsConfigMap(Project project) {

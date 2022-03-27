@@ -72,7 +72,6 @@ module JobHelper
         "jobmanager.heap.size":1024,
         "amVCores":1,
         "jobManagerMemory":1024,
-        "numberOfTaskManagers":1,
         "taskmanager.heap.size":1024,
         "taskmanager.numberOfTaskSlots":1,
         "appName":"#{job_name}",

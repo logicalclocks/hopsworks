@@ -58,7 +58,7 @@ public class FlinkConfigurationUtil extends ConfigurationUtil {
     extraJavaOptions.put(Settings.HOPSWORKS_ELASTIC_ENDPOINT_PROPERTY, settings.getElasticRESTEndpoint());
     extraJavaOptions.put(Settings.HOPSWORKS_PROJECTID_PROPERTY, Integer.toString(project.getId()));
     extraJavaOptions.put(Settings.HOPSWORKS_PROJECTNAME_PROPERTY, project.getName());
-  
+    extraJavaOptions.put(Settings.HOPSWORKS_DOMAIN_CA_TRUSTSTORE_PROPERTY, Settings.DOMAIN_CA_TRUSTSTORE);
     extraJavaOptions.put(Settings.HOPSWORKS_PROJECTUSER_PROPERTY, hdfsUser);
     extraJavaOptions.put(Settings.KAFKA_BROKERADDR_PROPERTY, kafkaBrokersString);
     extraJavaOptions.put(Settings.HOPSWORKS_JOBTYPE_PROPERTY, jobConfiguration.getJobType().name());
@@ -72,7 +72,6 @@ public class FlinkConfigurationUtil extends ConfigurationUtil {
     }
     flinkProps.put(Settings.FLINK_ENV_JAVA_OPTS, new ConfigProperty(
       Settings.FLINK_ENV_JAVA_OPTS, HopsUtils.APPEND_SPACE, extraJavaOptionsSb.toString()));
-    
     
     Map<String, String> validatedFlinkProperties = HopsUtils.parseUserProperties(flinkJobConfiguration.getProperties());
     // Merge system and user defined properties
