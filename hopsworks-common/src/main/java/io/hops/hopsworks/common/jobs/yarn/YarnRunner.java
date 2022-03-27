@@ -293,8 +293,7 @@ public class YarnRunner {
       try {
         ClusterClient<ApplicationId> clusterClient;
         logger.log(Level.FINE, "Deploying Flink cluster.");
-        clusterClient = yarnClusterDescriptor.deploySessionCluster(clusterSpecification);
-        clusterClient.setDetached(true);
+        clusterClient = yarnClusterDescriptor.deploySessionCluster(clusterSpecification).getClusterClient();
     
         appId = clusterClient.getClusterId();
         logger.log(Level.FINE, "Deployed Flink cluster with ID {0}",appId.toString());
@@ -357,11 +356,6 @@ public class YarnRunner {
     //Loop through files to remove
     for (ListIterator<String> i = filesToRemove.listIterator(); i.hasNext();) {
       i.set(i.next().replace(APPID_PLACEHOLDER, id));
-    }
-  
-    if (jobType == JobType.FLINK) {
-      yarnClusterDescriptor.setDynamicPropertiesEncoded(
-        yarnClusterDescriptor.getDynamicPropertiesEncoded().replace(APPID_PLACEHOLDER, id));
     }
   }
 

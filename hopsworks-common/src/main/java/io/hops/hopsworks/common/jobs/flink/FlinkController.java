@@ -68,6 +68,7 @@ import io.hops.hopsworks.exceptions.JobException;
 import io.hops.hopsworks.restutils.RESTCodes;
 import io.hops.security.UserNotFoundException;
 import org.apache.flink.client.program.ClusterClient;
+import org.apache.flink.yarn.YarnClientYarnClusterInformationRetriever;
 import org.apache.flink.yarn.YarnClusterDescriptor;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.security.UserGroupInformation;
@@ -193,10 +194,9 @@ public class FlinkController {
       yarnClientWrapper = ycs.getYarnClientSuper();
       YarnClient yarnClient = yarnClientWrapper.getYarnClient();
       cluster = new YarnClusterDescriptor(flinkConf,
-        yarnConf, settings.getFlinkConfDir(), yarnClient, true);
-      ClusterClient<ApplicationId> clusterClient = cluster.retrieve(ApplicationId.fromString(appId));
-      flinkMasterURL = clusterClient.getClusterConnectionInfo().getHostname() + ":" +
-        clusterClient.getClusterConnectionInfo().getPort();
+        yarnConf, yarnClient, YarnClientYarnClusterInformationRetriever.create(yarnClient), true);
+      ClusterClient<ApplicationId> clusterClient = cluster.retrieve(ApplicationId.fromString(appId)).getClusterClient();
+      flinkMasterURL = clusterClient.getWebInterfaceURL();
     } catch (Exception ex) {
       LOGGER.log(Level.FINE, "Could not retrieve Flink Master URL for applicationID: " + appId, ex);
     } finally {

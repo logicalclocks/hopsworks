@@ -985,7 +985,10 @@ public class Settings implements Serializable {
   public static final String SPARK_EXECUTOR_DOCKER_IMAGE = SPARK_EXECUTOR_ENV + "YARN_CONTAINER_RUNTIME_DOCKER_IMAGE";
   public static final String SPARK_EXECUTOR_DOCKER_MOUNTS = SPARK_EXECUTOR_ENV + "YARN_CONTAINER_RUNTIME_DOCKER_MOUNTS";
   public static final String SPARK_HADOOP_FS_PERMISSIONS_UMASK = "spark.hadoop.fs.permissions.umask-mode";
-
+  
+  public static final String YARN_PROPERTIES_DYNAMIC_PROPERTIES_STRING = "dynamicPropertiesString";
+  public static final String YARN_DYNAMIC_PROPERTIES_SEPARATOR = "@@"; // this has to be a regex for String.split()
+  
   //nccl
   public static final String NCCL_SOCKET_NTHREADS = "NCCL_SOCKET_NTHREADS";
   public static final String NCCL_NSOCKS_PERTHREAD = "NCCL_NSOCKS_PERTHREAD";

@@ -124,12 +124,11 @@ public class FlinkProxyServlet extends ProxyServlet {
             " Flink cluster.");
         return;
       }
-      String theHost = "http://" + flinkMasterURL;
       URI targetUriHost;
-      targetUri = theHost;
+      targetUri = flinkMasterURL;
       try {
         targetUriObj = new URI(targetUri);
-        targetUriHost = new URI(theHost);
+        targetUriHost = new URI(flinkMasterURL);
       } catch (Exception e) {
         LOGGER.log(Level.INFO, "An error occurred serving the request", e);
         return;

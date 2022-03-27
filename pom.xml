@@ -106,8 +106,8 @@
     <eclipse-egit-github-core.version>2.1.5</eclipse-egit-github-core.version>
     <ehcache.version>3.7.0</ehcache.version>
     <elasticsearch-rest-high-level-client.version>7.7.0</elasticsearch-rest-high-level-client.version>
-    <flink-clients_2.11.version>1.9.2</flink-clients_2.11.version>
-    <flink-yarn_2.11.version>1.9.2.1</flink-yarn_2.11.version>
+    <flink-clients_2.11.version>1.14.3</flink-clients_2.11.version>
+    <flink-yarn_2.11.version>1.14.3.0</flink-yarn_2.11.version>
     <freemarker.version>2.3.29</freemarker.version>
     <!-- gitlab4j-api 4.10.15 Switched to the jakarta version of the activation and servlet dependencies. -->
     <gitlab4j-api.version>4.10.14</gitlab4j-api.version>
@@ -409,8 +409,32 @@
         <version>${flink-yarn_2.11.version}</version>
         <exclusions>
           <exclusion>
-            <groupId>org.apache.flink</groupId>
-            <artifactId>flink-shaded-hadoop-2</artifactId>
+            <groupId>org.apache.hadoop</groupId>
+            <artifactId>*</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>org.codehaus.jackson</groupId>
+            <artifactId>*</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>org.eclipse.jetty</groupId>
+            <artifactId>jetty-server</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>net.minidev</groupId>
+            <artifactId>json-smart</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>io.netty</groupId>
+            <artifactId>netty</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>com.nimbusds</groupId>
+            <artifactId>*</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>com.fasterxml.jackson.jaxrs</groupId>
+            <artifactId>*</artifactId>
           </exclusion>
         </exclusions>
       </dependency>

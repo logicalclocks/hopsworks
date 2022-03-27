@@ -94,7 +94,6 @@ describe "On #{ENV['OS']}" do
             default_job_configuration["spark.executor.memory"] = 1337
             default_job_configuration["defaultArgs"] = "some test args"
           elsif type == "flink"
-            default_job_configuration["numberOfTaskManagers"] = 9
             default_job_configuration["taskmanager.heap.size"] = 1333
           elsif type == "python"
             default_job_configuration["files"] = "/some/path"
@@ -115,7 +114,6 @@ describe "On #{ENV['OS']}" do
             expect(project_default_job_configuration["config"]["spark.executor.memory"]).to eq 1337
             expect(project_default_job_configuration["config"]["defaultArgs"]).to eq "some test args"
           elsif type == "flink"
-            expect(project_default_job_configuration["config"]["numberOfTaskManagers"]).to eq 9
             expect(project_default_job_configuration["config"]["taskmanager.heap.size"]).to eq 1333
           elsif type == "python"
             expect(project_default_job_configuration["config"]["files"]).to eq "/some/path"

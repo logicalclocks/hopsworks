@@ -57,8 +57,6 @@ public class FlinkJobConfiguration extends YarnJobConfiguration {
   
   @XmlElement(name="jobmanager.heap.size")
   private int jobManagerMemory = 1024;
-  @XmlElement
-  private int numberOfTaskManagers = 1;
   @XmlElement(name="taskmanager.numberOfTaskSlots")
   private int numberOfTaskSlots = 1;
   @XmlElement(name="taskmanager.heap.size")
@@ -77,26 +75,6 @@ public class FlinkJobConfiguration extends YarnJobConfiguration {
     this.jobManagerMemory = jobManagerMemory;
   }
   
-  public int getNumberOfTaskManagers() {
-    return numberOfTaskManagers;
-  }
-
-  /**
-   * Set the number of task managers to be requested for this job. This should
-   * be greater than or equal to 1.
-   * <p/>
-   * @param numberOfTaskManagers
-   * @throws IllegalArgumentException If the argument is smaller than 1.
-   */
-  public void setNumberOfTaskManagers(int numberOfTaskManagers) throws
-          IllegalArgumentException {
-    if (numberOfTaskManagers < 1) {
-      throw new IllegalArgumentException(
-              "Number of task managers has to be greater than or equal to 1.");
-    }
-    this.numberOfTaskManagers = numberOfTaskManagers;
-  }
-
   public int getNumberOfTaskSlots() {
     return numberOfTaskSlots;
   }
