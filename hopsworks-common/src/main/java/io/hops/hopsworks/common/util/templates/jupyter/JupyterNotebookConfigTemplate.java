@@ -34,8 +34,6 @@ public class JupyterNotebookConfigTemplate extends JupyterTemplate {
   private final Long wsPingInterval;
   private final String apiKey;
   private final String gitBackend;
-  private final String flinkConfDirectory;
-  private final String flinkLibDirectory;
   private final String hadoopClasspathGlob;
   private final Boolean requestsVerify;
   private final String domainCATruststore;
@@ -58,8 +56,6 @@ public class JupyterNotebookConfigTemplate extends JupyterTemplate {
     this.wsPingInterval = builder.getWsPingInterval();
     this.apiKey = builder.getApiKey();
     this.gitBackend = builder.getGitBackend();
-    this.flinkConfDirectory = builder.getFlinkConfDirectory();
-    this.flinkLibDirectory = builder.getFlinkLibDirectory();
     this.hadoopClasspathGlob = builder.getHadoopClasspathGlob();
     this.requestsVerify = builder.getRequestsVerify();
     this.domainCATruststore = builder.getDomainCATruststore();
@@ -121,14 +117,6 @@ public class JupyterNotebookConfigTemplate extends JupyterTemplate {
   
   public String getGitBackend() {
     return gitBackend;
-  }
-  
-  public String getFlinkConfDirectory() {
-    return flinkConfDirectory;
-  }
-  
-  public String getFlinkLibDirectory() {
-    return flinkLibDirectory;
   }
   
   public String getHadoopClasspathGlob() {
