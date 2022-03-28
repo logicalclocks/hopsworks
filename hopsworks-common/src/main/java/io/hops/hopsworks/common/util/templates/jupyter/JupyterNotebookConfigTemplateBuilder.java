@@ -37,8 +37,6 @@ public class JupyterNotebookConfigTemplateBuilder {
   private Long wsPingInterval;
   private String apiKey;
   private String gitBackend;
-  private String flinkConfDirectory;
-  private String flinkLibDirectory;
   private String hadoopClasspathGlob;
   private Boolean requestsVerify;
   private String domainCATruststore;
@@ -201,24 +199,6 @@ public class JupyterNotebookConfigTemplateBuilder {
   
   public JupyterNotebookConfigTemplateBuilder setGitBackend(String gitBackend) {
     this.gitBackend = gitBackend;
-    return this;
-  }
-  
-  public String getFlinkConfDirectory() {
-    return flinkConfDirectory;
-  }
-  
-  public JupyterNotebookConfigTemplateBuilder setFlinkConfDirectory(String flinkConfDirectory) {
-    this.flinkConfDirectory = flinkConfDirectory;
-    return this;
-  }
-  
-  public String getFlinkLibDirectory() {
-    return flinkLibDirectory;
-  }
-  
-  public JupyterNotebookConfigTemplateBuilder setFlinkLibDirectory(String flinkLibDirectory) {
-    this.flinkLibDirectory = flinkLibDirectory;
     return this;
   }
   

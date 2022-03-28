@@ -256,8 +256,6 @@ public class JupyterConfigFilesGenerator {
         .setWsPingInterval(settings.getJupyterWSPingInterval())
         .setApiKey(apiKey)
         .setGitBackend(gitBackend)
-        .setFlinkConfDirectory(settings.getFlinkConfDir())
-        .setFlinkLibDirectory(settings.getFlinkLibDir())
         .setHadoopClasspathGlob(settings.getHadoopClasspathGlob())
         .setRequestsVerify(settings.getRequestsVerify())
         .setDomainCATruststore(Paths.get(certsDir, hdfsUser + Settings.TRUSTSTORE_SUFFIX).toString())

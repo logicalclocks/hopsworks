@@ -27,12 +27,10 @@ public class KubeProjectConfigMaps {
   
   private final String SEPARATOR = "-";
   private final String HADOOP_CONF = "hadoopconf";
-  private final String FLINK = "flink";
   private final String SPARK = "spark";
   private final String PROJECT_TEAMS = "project-teams";
   private final String HADOOP_CONF_SUFFIX = SEPARATOR + HADOOP_CONF;
   private final String SPARK_SUFFIX = SEPARATOR + SPARK;
-  private final String FLINK_SUFFIX = SEPARATOR + FLINK;
   private final String PROJECT_TEAMS_SUFFIX = SEPARATOR + PROJECT_TEAMS;
   
   @EJB
@@ -51,8 +49,6 @@ public class KubeProjectConfigMaps {
     kubeClientService.deleteConfigMap(kubeClientService.getKubeProjectName(project),
         getSparkConfigMapName(project));
     kubeClientService.deleteConfigMap(kubeClientService.getKubeProjectName(project),
-        getFlinkConfigMapName(project));
-    kubeClientService.deleteConfigMap(kubeClientService.getKubeProjectName(project),
         getProjectTeamsConfigMapName(project));
   }
   
@@ -67,10 +63,6 @@ public class KubeProjectConfigMaps {
   
   public String getSparkConfigMapName(Project project){
     return kubeClientService.getKubeProjectName(project) + SPARK_SUFFIX;
-  }
-  
-  public String getFlinkConfigMapName(Project project){
-    return kubeClientService.getKubeProjectName(project) + FLINK_SUFFIX;
   }
   
   public String getProjectTeamsConfigMapName(Project project){

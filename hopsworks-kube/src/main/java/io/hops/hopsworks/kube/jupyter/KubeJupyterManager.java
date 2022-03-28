@@ -106,7 +106,6 @@ public class KubeJupyterManager extends JupyterManagerImpl implements JupyterMan
   private static final String JUPYTER = "jupyter";
   private static final String JWT = "jwt";
   private static final String KERNELS = "kernels";
-  private static final String FLINK = "flink";
   private static final String SPARK = "spark";
   private static final String SEPARATOR = "-";
   private static final String JUPYTER_PREFIX = JUPYTER + SEPARATOR;
@@ -293,7 +292,6 @@ public class KubeJupyterManager extends JupyterManagerImpl implements JupyterMan
     environment.add(new EnvVarBuilder().withName("ANACONDA_ENV").withValue(anacondaEnv).build());
     environment.add(new EnvVarBuilder().withName("PYTHONHASHSEED").withValue("0").build());
     environment.add(new EnvVarBuilder().withName("IS_GIT").withValue(Boolean.toString(isGit)).build());
-    environment.add(new EnvVarBuilder().withName("FLINK_LIB_DIR").withValue(settings.getFlinkLibDir()).build());
   
     // serving env vars
     if (settings.getKubeKFServingInstalled()) {
@@ -349,11 +347,6 @@ public class KubeJupyterManager extends JupyterManagerImpl implements JupyterMan
           .withName(KERNELS)
           .withReadOnly(true)
           .withMountPath("/srv/hops/jupyter/kernels/" + pythonKernelName)
-          .build(),
-        new VolumeMountBuilder()
-          .withName(FLINK)
-          .withReadOnly(true)
-          .withMountPath(settings.getFlinkConfDir())
           .build(),
         new VolumeMountBuilder()
           .withName(SPARK)
@@ -424,13 +417,6 @@ public class KubeJupyterManager extends JupyterManagerImpl implements JupyterMan
           .withConfigMap(
             new ConfigMapVolumeSourceBuilder()
               .withName(kubeProjectUser + KERNELS_SUFFIX)
-              .build())
-          .build(),
-        new VolumeBuilder()
-          .withName(FLINK)
-          .withConfigMap(
-            new ConfigMapVolumeSourceBuilder()
-              .withName(kubeProjectConfigMaps.getFlinkConfigMapName(project))
               .build())
           .build(),
         new VolumeBuilder()
