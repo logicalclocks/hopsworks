@@ -342,7 +342,8 @@ module FeaturestoreHelper
 
   def create_stream_featuregroup(project_id, featurestore_id, features: nil, featuregroup_name: nil,
                                  version: 1, featuregroup_description: nil, statistics_config: nil,
-                                 event_time: nil, deltaStreamerJobConf: nil, backfill_offline: false)
+                                 event_time: nil, deltaStreamerJobConf: nil, backfill_offline: false,
+                                 online_enabled: true)
     type = "streamFeatureGroupDTO"
     featuregroupType = "STREAM_FEATURE_GROUP"
     features = features == nil ? [{type: "INT", name: "testfeature", description: "testfeaturedescription",
@@ -359,7 +360,8 @@ module FeaturestoreHelper
         type: type,
         featuregroupType: featuregroupType,
         eventTime: event_time,
-        deltaStreamerJobConf: deltaStreamerJobConf
+        deltaStreamerJobConf: deltaStreamerJobConf,
+        onlineEnabled: online_enabled
     }
     unless statistics_config == nil
       json_data[:statisticsConfig] = statistics_config

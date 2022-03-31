@@ -28,12 +28,15 @@ import io.hops.hopsworks.common.hdfs.Utils;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.exceptions.HopsSecurityException;
 import io.hops.hopsworks.exceptions.KafkaException;
+import io.hops.hopsworks.exceptions.ProjectException;
 import io.hops.hopsworks.exceptions.SchemaException;
 import io.hops.hopsworks.exceptions.ServiceException;
+import io.hops.hopsworks.exceptions.UserException;
 import io.hops.hopsworks.persistence.entity.featurestore.Featurestore;
 import io.hops.hopsworks.persistence.entity.featurestore.activity.FeaturestoreActivityMeta;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.Featuregroup;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.cached.CachedFeature;
+import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.cached.ValidationType;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.cached.hive.HiveTableParams;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.cached.hive.HiveTbls;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.cached.TimeTravelFormat;
@@ -81,15 +84,22 @@ public class StreamFeatureGroupController {
    */
   public StreamFeatureGroupDTO convertStreamFeatureGroupToDTO(Featuregroup featuregroup, Project project, Users user)
     throws FeaturestoreException, ServiceException {
+    List<FeatureGroupFeatureDTO> featureGroupFeatureDTOS;
     StreamFeatureGroupDTO streamFeatureGroupDTO = new StreamFeatureGroupDTO(featuregroup);
   
-    streamFeatureGroupDTO.setOnlineTopicName(onlineFeaturegroupController
-      .onlineFeatureGroupTopicName(project.getId(), featuregroup.getId(),
-        Utils.getFeaturegroupName(featuregroup)));
-    List<FeatureGroupFeatureDTO> featureGroupFeatureDTOS =
-      onlineFeaturegroupController.getFeaturegroupFeatures(featuregroup,
+    if (featuregroup.getStreamFeatureGroup().isOnlineEnabled()) {
+      streamFeatureGroupDTO.setOnlineTopicName(onlineFeaturegroupController
+        .onlineFeatureGroupTopicName(project.getId(), featuregroup.getId(),
+          Utils.getFeaturegroupName(featuregroup)));
+      featureGroupFeatureDTOS = onlineFeaturegroupController.getFeaturegroupFeatures(featuregroup,
         cachedFeaturegroupController.getFeaturesDTO(featuregroup.getStreamFeatureGroup(), featuregroup.getId(),
-          featuregroup.getFeaturestore(), project, user));
+            featuregroup.getFeaturestore(), project, user));
+    } else {
+      streamFeatureGroupDTO.setOnlineTopicName(offlineStreamFeatureGroupTopicName(project.getId(),
+        featuregroup.getId(), Utils.getFeaturegroupName(featuregroup)));
+      featureGroupFeatureDTOS = cachedFeaturegroupController.getFeaturesDTO(
+        featuregroup.getStreamFeatureGroup(), featuregroup.getId(), featuregroup.getFeaturestore(), project, user);
+    }
   
     streamFeatureGroupDTO.setFeatures(featureGroupFeatureDTOS);
     streamFeatureGroupDTO.setName(featuregroup.getName());
@@ -101,6 +111,7 @@ public class StreamFeatureGroupController {
         .findFirst()
         .orElse("")
     );
+    streamFeatureGroupDTO.setOnlineEnabled(featuregroup.getStreamFeatureGroup().isOnlineEnabled());
     
     streamFeatureGroupDTO.setLocation(featurestoreUtils.resolveLocationURI(
       featuregroup.getStreamFeatureGroup().getHiveTbls().getSdId().getLocation()));
@@ -112,10 +123,11 @@ public class StreamFeatureGroupController {
    *
    * @param hiveTable the id of the Hive table in the Hive metastore
    * @param featureGroupFeatureDTOS the list of the feature group feature DTOs
+   * @param onlineEnabled
    * @return Entity of the created cached feature group
    */
   private StreamFeatureGroup persistStreamFeatureGroupMetadata(HiveTbls hiveTable,
-    List<FeatureGroupFeatureDTO> featureGroupFeatureDTOS) {
+    List<FeatureGroupFeatureDTO> featureGroupFeatureDTOS, Boolean onlineEnabled) {
     StreamFeatureGroup streamFeatureGroup = new StreamFeatureGroup();
     streamFeatureGroup.setHiveTbls(hiveTable);
     streamFeatureGroup.setCachedFeatures(featureGroupFeatureDTOS.stream()
@@ -127,6 +139,7 @@ public class StreamFeatureGroupController {
       .collect(Collectors.toList()));
     streamFeatureGroup.setFeaturesExtraConstraints(
       cachedFeaturegroupController.buildFeatureExtraConstrains(featureGroupFeatureDTOS, null, streamFeatureGroup ));
+    streamFeatureGroup.setOnlineEnabled(onlineEnabled);
   
     streamFeatureGroupFacade.persist(streamFeatureGroup);
     return streamFeatureGroup;
@@ -146,9 +159,9 @@ public class StreamFeatureGroupController {
     cachedFeaturegroupController.verifyPrimaryKey(streamFeatureGroupDTO.getFeatures(), TimeTravelFormat.HUDI);
   
     // for stream feature groups validation is not supported
-    if (streamFeatureGroupDTO.getValidationType() != null) {
-      new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.VALIDATION_NOT_SUPPORTED,
-        Level.WARNING, "", "For stream featuregroups validattion rules are not supported");
+    if (streamFeatureGroupDTO.getValidationType() != ValidationType.NONE) {
+      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.VALIDATION_NOT_SUPPORTED,
+        Level.WARNING, "For stream featuregroups validattion rules are not supported");
     }
     
     //Prepare DDL statement
@@ -161,10 +174,11 @@ public class StreamFeatureGroupController {
     //Get HiveTblId of the newly created table from the metastore
     HiveTbls hiveTbls = streamFeatureGroupFacade.getHiveTableByNameAndDB(tableName, featurestore.getHiveDbId())
       .orElseThrow(() -> new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.COULD_NOT_CREATE_FEATUREGROUP,
-        Level.WARNING, "", "Table created correctly but not in the metastore"));
+        Level.WARNING, "Table created correctly but not in the metastore"));
     
     //Persist stream feature group
-    return persistStreamFeatureGroupMetadata(hiveTbls, streamFeatureGroupDTO.getFeatures());
+    return persistStreamFeatureGroupMetadata(
+      hiveTbls, streamFeatureGroupDTO.getFeatures(), streamFeatureGroupDTO.getOnlineEnabled());
   }
   
   /**
@@ -185,8 +199,10 @@ public class StreamFeatureGroupController {
   public FeaturegroupPreview getFeaturegroupPreview(Featuregroup featuregroup, Project project,
     Users user, String partition, boolean online, int limit)
     throws SQLException, FeaturestoreException, HopsSecurityException {
-    if (online) {
+    if (online && featuregroup.getStreamFeatureGroup().isOnlineEnabled()) {
       return onlineFeaturegroupController.getFeaturegroupPreview(featuregroup, project, user, limit);
+    } else if (online) {
+      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.FEATUREGROUP_NOT_ONLINE, Level.FINE);
     } else {
       return cachedFeaturegroupController.getOfflineFeaturegroupPreview(featuregroup, project, user, partition, limit);
     }
@@ -224,8 +240,13 @@ public class StreamFeatureGroupController {
     if (!newFeatures.isEmpty()) {
       offlineFeatureGroupController.alterHiveTableFeatures(
         featuregroup.getFeaturestore(), tableName, newFeatures, project, user);
-      onlineFeaturegroupController.alterOnlineFeatureGroupSchema(
-        featuregroup, newFeatures, featuregroupDTO.getFeatures(), project, user);
+      if (featuregroup.getStreamFeatureGroup().isOnlineEnabled()) {
+        onlineFeaturegroupController.alterOnlineFeatureGroupSchema(
+          featuregroup, newFeatures, featuregroupDTO.getFeatures(), project, user);
+      } else {
+        alterOfflineStreamFeatureGroupSchema(featuregroup, featuregroupDTO.getFeatures(), project);
+      }
+
       // Log schema change
       String newFeaturesStr = "New features: " + newFeatures.stream().map(FeatureGroupFeatureDTO::getName)
         .collect(Collectors.joining(","));
@@ -248,5 +269,35 @@ public class StreamFeatureGroupController {
       }
     }
     streamFeatureGroupFacade.updateMetadata(streamFeatureGroup);
+  }
+  
+  public void deleteOfflineStreamFeatureGroupTopic(Project project, Featuregroup featureGroup)
+      throws SchemaException, KafkaException {
+    String topicName = offlineStreamFeatureGroupTopicName(
+      project.getId(), featureGroup.getId(), Utils.getFeaturegroupName(featureGroup));
+    onlineFeaturegroupController.deleteFeatureGroupKafkaTopic(project, topicName);
+  }
+  
+  private void alterOfflineStreamFeatureGroupSchema(Featuregroup featureGroup,
+                                                    List<FeatureGroupFeatureDTO> fullNewSchema, Project project)
+      throws SchemaException, KafkaException, FeaturestoreException {
+    String topicName = offlineStreamFeatureGroupTopicName(
+      project.getId(), featureGroup.getId(), Utils.getFeaturegroupName(featureGroup));
+    onlineFeaturegroupController.alterFeatureGroupSchema(featureGroup, fullNewSchema, topicName, project);
+  }
+  
+  public void setupOfflineStreamFeatureGroup(Project project, Featuregroup featureGroup,
+                                             List<FeatureGroupFeatureDTO> features)
+      throws ProjectException, SchemaException, KafkaException, UserException, FeaturestoreException {
+    String featureGroupEntityName = Utils.getFeaturegroupName(featureGroup);
+    String topicName = offlineStreamFeatureGroupTopicName(
+      project.getId(), featureGroup.getId(), featureGroupEntityName);
+    
+    onlineFeaturegroupController.createFeatureGroupKafkaTopic(project, featureGroupEntityName, topicName, features);
+  }
+  
+  public String offlineStreamFeatureGroupTopicName(Integer projectId, Integer featureGroupId,
+                                                   String featureGroupEntityName) {
+    return projectId.toString() + "_" + featureGroupId.toString() + "_" + featureGroupEntityName;
   }
 }

@@ -23,7 +23,8 @@ import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.cached.Val
 public class StreamFeatureGroupDTO extends FeaturegroupDTO {
   private ValidationType validationType = ValidationType.NONE;
   private DeltaStreamerJobConf deltaStreamerJobConf;
-
+  private Boolean onlineEnabled = true;
+  
   public StreamFeatureGroupDTO() {
     super();
   }
@@ -51,11 +52,20 @@ public class StreamFeatureGroupDTO extends FeaturegroupDTO {
     this.deltaStreamerJobConf = deltaStreamerJobConf;
   }
   
+  public Boolean getOnlineEnabled() {
+    return onlineEnabled;
+  }
+  
+  public void setOnlineEnabled(Boolean onlineEnabled) {
+    this.onlineEnabled = onlineEnabled;
+  }
+  
   @Override
   public String toString() {
-    return "StreamFeaturegroupDTO{" +
-                "validationType =" + validationType + "," +
-                "deltaStreamerJobConf =" + deltaStreamerJobConf +
-      "}";
+    return "StreamFeatureGroupDTO{" +
+      "validationType=" + validationType +
+      ", deltaStreamerJobConf=" + deltaStreamerJobConf +
+      ", onlineEnabled=" + onlineEnabled +
+      '}';
   }
 }
