@@ -297,9 +297,17 @@ public class FeaturegroupController {
       cachedFeaturegroup, streamFeatureGroup, onDemandFeaturegroup);
   
     // online feature group needs to be set up after persisting metadata in order to get feature group id
-    if ((featuregroupDTO instanceof CachedFeaturegroupDTO && settings.isOnlineFeaturestore()
-      && featuregroup.getCachedFeaturegroup().isOnlineEnabled()) || featuregroupDTO instanceof StreamFeatureGroupDTO){
+    if (featuregroupDTO instanceof CachedFeaturegroupDTO && settings.isOnlineFeaturestore()
+      && featuregroup.getCachedFeaturegroup().isOnlineEnabled()){
       onlineFeaturegroupController.setupOnlineFeatureGroup(featurestore, featuregroup, featuresNoHudi, project, user);
+    } else if (featuregroupDTO instanceof StreamFeatureGroupDTO) {
+      if (settings.isOnlineFeaturestore() && featuregroup.getStreamFeatureGroup().isOnlineEnabled()) {
+        // setup kafka topic and online feature group in rondb
+        onlineFeaturegroupController.setupOnlineFeatureGroup(featurestore, featuregroup, featuresNoHudi, project, user);
+      } else {
+        // not online enabled so set up only kafka topic
+        streamFeatureGroupController.setupOfflineStreamFeatureGroup(project, featuregroup, featuresNoHudi);
+      }
     }
 
     FeaturegroupDTO completeFeaturegroupDTO = convertFeaturegrouptoDTO(featuregroup, project, user);
@@ -609,7 +617,11 @@ public class FeaturegroupController {
         //Delete hive_table will cascade to stream_featuregroup_table which will cascade to feature_group table
         cachedFeaturegroupController.dropHiveFeaturegroup(featuregroup, project, user);
         //Delete mysql table and metadata
-        onlineFeaturegroupController.disableOnlineFeatureGroup(featuregroup, project, user);
+        if (settings.isOnlineFeaturestore() && featuregroup.getStreamFeatureGroup().isOnlineEnabled()) {
+          onlineFeaturegroupController.disableOnlineFeatureGroup(featuregroup, project, user);
+        } else {
+          // only topics need to be deleted, but no RonDB table
+        }
         //Delete associated delta streamer job
         fsJobManagerController.deleteDeltaStreamerJob(project,user, featuregroup);
         break;
