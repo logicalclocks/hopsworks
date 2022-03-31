@@ -1629,7 +1629,10 @@ public class RESTCodes {
     FEATURE_VIEW_NOT_FOUND(181, "Feature view wasn't found.", Response.Status.NOT_FOUND),
     KAFKA_STORAGE_CONNECTOR_STORE_NOT_EXISTING(182, "Provided certificate store location does not exist",
       Response.Status.BAD_REQUEST),
-    VALIDATION_NOT_SUPPORTED(183, "Rule is not supported.", Response.Status.BAD_REQUEST);
+    VALIDATION_NOT_SUPPORTED(183, "Rule is not supported.", Response.Status.BAD_REQUEST),
+    STREAM_FEATURE_GROUP_ONLINE_DISABLE_ENABLE(184,
+      "Stream feature group cannot be online enabled if it was created as offline only.",
+      Response.Status.BAD_REQUEST);
 
     private int code;
     private String message;

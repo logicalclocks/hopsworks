@@ -1904,6 +1904,53 @@ describe "On #{ENV['OS']}" do
           expect_status(200)
         end
 
+        it "should not be able to get a training dataset serving vector containing offline only stream feature group" do
+          # create first feature group
+          featurestore_id = get_featurestore_id(@project.id)
+          project_name = @project.projectname
+          features = [
+            {type: "INT", name: "a_testfeature", primary: true},
+            {type: "INT", name: "a_testfeature1"},
+          ]
+          json_result, fg_name = create_stream_featuregroup(@project.id, featurestore_id, features: features,
+                                                            featuregroup_name: "test_fg_a_#{short_random_id}",
+                                                            backfill_offline: true, online_enabled: false)
+          parsed_json = JSON.parse(json_result)
+          fg_id = parsed_json["id"]
+          # create second feature group
+          features = [
+            {type: "INT", name: "a_testfeature", primary: true},
+            {type: "INT", name: "b_testfeature1"},
+          ]
+          json_result_b, fg_name_b = create_stream_featuregroup(@project.id, featurestore_id, features: features, featuregroup_name: "test_fg_b_#{short_random_id}", backfill_offline: true)
+          parsed_json_b = JSON.parse(json_result_b)
+          fg_id_b = parsed_json_b["id"]
+          # create queryDTO object
+          query = {
+            leftFeatureGroup: {
+              id: fg_id
+            },
+            leftFeatures: [{name: 'a_testfeature1'}],
+            joins: [{
+                      query: {
+                        leftFeatureGroup: {
+                          id: fg_id_b
+                        },
+                        leftFeatures: [{name: 'b_testfeature1'}]
+                      }
+                    }
+            ]
+          }
+
+          json_result, _ = create_hopsfs_training_dataset(@project.id, featurestore_id, nil, query:query)
+          parsed_json = JSON.parse(json_result)
+          expect_status_details(201)
+          training_dataset_id = parsed_json["id"]
+          json_result = get "#{ENV['HOPSWORKS_API']}/project/#{@project.id}/featurestores/#{featurestore_id}/trainingdatasets/#{training_dataset_id}/preparedstatements"
+          parsed_json = JSON.parse(json_result)
+          expect_status_details(400)
+        end
+
         it "should be able to get a training dataset serving vector in correct order and remove stream feature group with only primary key and label" do
           # create first feature group
           featurestore_id = get_featurestore_id(@project.id)

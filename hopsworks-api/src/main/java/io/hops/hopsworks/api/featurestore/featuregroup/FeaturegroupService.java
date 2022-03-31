@@ -475,6 +475,14 @@ public class FeaturegroupService {
         featuregroup.getCachedFeaturegroup().isOnlineEnabled()){
       updatedFeaturegroupDTO = featuregroupController.disableFeaturegroupOnline(featuregroup, project, user);
     }
+    if (enableOnline && featuregroup.getFeaturegroupType() == FeaturegroupType.STREAM_FEATURE_GROUP) {
+      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.STREAM_FEATURE_GROUP_ONLINE_DISABLE_ENABLE,
+        Level.FINE, "Please create a new version of the feature group to enable online storage.");
+    }
+    if (disableOnline && featuregroup.getFeaturegroupType() == FeaturegroupType.STREAM_FEATURE_GROUP) {
+      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.STREAM_FEATURE_GROUP_ONLINE_DISABLE_ENABLE,
+        Level.FINE, "Please create a new version of the feature group to disable online storage.");
+    }
     if(updateStatsConfig) {
       updatedFeaturegroupDTO = featuregroupController.updateFeatureGroupStatsConfig(
         featurestore, featuregroupDTO, project, user);
