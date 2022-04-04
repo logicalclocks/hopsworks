@@ -6,9 +6,9 @@ configure your hopsworks server see
 
 After configuring the server you can configure Authentication methods by clicking on your name in the top right
 corner of the navigation bar and choosing *Cluster Settings* from the dropdown menu.
-In the **Cluster Settings** _Authentication_ tab you can enable Kerberos by clicking on the Kerberos checkbox.
+In the _Authentication_ tab you can find in **Cluster Settings**, you can enable Kerberos by clicking on the Kerberos checkbox.
 
-If LDAP/Kerberos checkbox is not checked make sure that you configured your application server and enable it by
+If LDAP/Kerberos checkbox is not checked, make sure that you configured your application server and enable it by
 clicking on the checkbox.
 
 <figure>
@@ -27,7 +27,7 @@ Finally, click on edit configuration and fill in the attributes.
   <figcaption>Configure Kerberos</figcaption>
 </figure>
 
-- Account status: the status a user will be assigned when logging in for the first time. If a use is assigned a status
+- Account status: the status a user will be assigned when logging in for the first time. If a user is assigned a status
   different from _Activated_ an admin needs to manually activate each user from the [User management](../user.md).
 - Group mapping: allows you to specify a mapping between LDAP groups and Hopsworks groups. The mapping is a
   semicolon separated string in the form ```Directory Administrators->HOPS_ADMIN;IT People-> HOPS_USER```. Default 
@@ -45,7 +45,7 @@ Finally, click on edit configuration and fill in the attributes.
   empty.
 - Group dn: specify the DN of the container or base point where the groups are stored. Default is empty.
 
-All defaults are taken from OpenLDAP.
+All defaults are taken from [OpenLDAP](https://www.openldap.org/).
 
 The login page will now have the choice to use Kerberos for authentication.
 <figure>
@@ -57,5 +57,5 @@ The login page will now have the choice to use Kerberos for authentication.
 
 !!!Note
 
-    Make sure that you have Kerberos properly configured on your computer and you are loged in.
+    Make sure that you have Kerberos properly configured on your computer and you are logged in.
     Kerberos support must also be configured on the browser to use Kerberos for authentication.

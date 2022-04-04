@@ -6,7 +6,7 @@ configure your hopsworks server see
 
 After configuring the server you can configure Authentication methods by clicking on your name in the top right 
 corner of the navigation bar and choosing *Cluster Settings* from the dropdown menu.
-In the **Cluster Settings** _Authentication_ tab you can enable LDAP by clicking on the LDAP checkbox.
+In the _Authentication_ tab you can find in **Cluster Settings**, you can enable LDAP by clicking on the LDAP checkbox.
 
 If LDAP/Kerberos checkbox is not checked make sure that you configured your application server and enable it by 
 clicking on the checkbox.
@@ -44,7 +44,7 @@ Finally, click on edit configuration and fill in the attributes.
   empty. 
 - Group dn: specify the DN of the container or base point where the groups are stored. Default is empty.
 
-All defaults are taken from OpenLDAP.
+All defaults are taken from [OpenLDAP](https://www.openldap.org/).
 
 The login page will now have the choice to use LDAP for authentication.
 <figure>

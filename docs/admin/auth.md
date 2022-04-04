@@ -19,8 +19,8 @@ In the **Cluster Settings** _Authentication_ tab you can configure how users aut
    you can register your identity provider by clicking on **Add Identity Provider** button. See
    [Create client](./oauth2/create-client.md) for details.
 3. **LDAP/Kerberos**: if your organization is using LDAP or Kerberos to manage users and services you can configure 
-   Hopsworks to use it as the user management system. You can enable LDAP/Kerberos by clicking on the checkbox and 
-   choosing LDAP or Kerberos. For more information on how to configure LDAP and Kerberos see 
+   Hopsworks to use it as the user management system. You can enable LDAP/Kerberos by clicking on the checkbox, 
+   as shown in the figure below, and choosing LDAP or Kerberos. For more information on how to configure LDAP and Kerberos see 
    [Configure LDAP](./ldap/configure-ldap.md) and [Configure Kerberos](./ldap/configure-krb.md).
 
 <figure>
@@ -30,5 +30,5 @@ In the **Cluster Settings** _Authentication_ tab you can configure how users aut
   <figcaption>Setup Authentication Methods</figcaption>
 </figure>
 
-In the figure above we see a cluster with Two-factor authentication disabled, Oauth enabled with one registered 
+In the figure above we see a cluster with Two-factor authentication disabled, OAuth enabled with one registered 
 identity provider and LDAP authentication enabled. 

@@ -1,7 +1,7 @@
 # Configure Server for LDAP and Kerberos
 
-LDAP and Kerberos integration need some configuration in [Karamel](https://github.com/logicalclocks/karamel-chef) 
-cluster definition.
+LDAP and Kerberos integration need some configuration in the [Karamel](https://github.com/logicalclocks/karamel-chef) 
+cluster definition used to deploy your hopsworks cluster.
 
 ## Server Configuration for LDAP 
 
@@ -30,7 +30,7 @@ ldap:
 
 ## Server Configuration for Kerberos
 
-The Kerberos attributes are used to configure SPNEGO.
+The Kerberos attributes are used to configure [SPNEGO](http://spnego.sourceforge.net/).
 SPNEGO is used to establish a secure context between the requester and the application server when using Kerberos 
 authentication.  
 
