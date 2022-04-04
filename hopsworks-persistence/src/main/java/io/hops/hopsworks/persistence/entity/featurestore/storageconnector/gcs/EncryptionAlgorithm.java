@@ -1,6 +1,6 @@
 /*
  * This file is part of Hopsworks
- * Copyright (C) 2020, Logical Clocks AB. All rights reserved
+ * Copyright (C) 2022, Logical Clocks AB. All rights reserved
  *
  * Hopsworks is free software: you can redistribute it and/or modify it under the terms of
  * the GNU Affero General Public License as published by the Free Software Foundation,
@@ -14,15 +14,13 @@
  * If not, see <https://www.gnu.org/licenses/>.
  */
 
-package io.hops.hopsworks.persistence.entity.featurestore.storageconnector;
+package io.hops.hopsworks.persistence.entity.featurestore.storageconnector.gcs;
 
-public enum FeaturestoreConnectorType {
-  JDBC,
-  HOPSFS,
-  S3,
-  REDSHIFT,
-  ADLS,
-  SNOWFLAKE,
-  KAFKA,
-  GCS;
+import javax.xml.bind.annotation.XmlEnum;
+import javax.xml.bind.annotation.XmlEnumValue;
+
+@XmlEnum
+public enum EncryptionAlgorithm {
+  @XmlEnumValue("AES256")
+  AES256;
 }

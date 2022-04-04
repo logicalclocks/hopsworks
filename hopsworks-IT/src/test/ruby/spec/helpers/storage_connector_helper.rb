@@ -29,6 +29,12 @@ module StorageConnectorHelper
     copy_from_local("#{ENV['PROJECT_DIR']}/tools/upload_example/sampleStore.jks",
                     "/Projects/#{@project[:projectname]}/Resources/newSampleKeyStore.jks", @user[:username],
                     "#{@project[:projectname]}__Resources", 750, "#{@project[:projectname]}")
+    copy_from_local("#{ENV['PROJECT_DIR']}/tools/upload_example/Sample.json",
+                    "/Projects/#{@project[:projectname]}/Resources/sampleKey.json", @user[:username],
+                    "#{@project[:projectname]}__Resources", 750, "#{@project[:projectname]}")
+    copy_from_local("#{ENV['PROJECT_DIR']}/tools/upload_example/Sample.json",
+                    "/Projects/#{@project[:projectname]}/Resources/newSampleKey.json", @user[:username],
+                    "#{@project[:projectname]}__Resources", 750, "#{@project[:projectname]}")
   end
 
   def get_storage_connectors(project_id, featurestore_id, type)
@@ -346,4 +352,42 @@ module StorageConnectorHelper
     expect(json_body[:sfOptions]).to eq connector[:sfOptions]
     expect(json_body[:application]).to eq connector[:application]
   end
+
+  def create_gcs_connector(project_id, featurestore_id, key_path, bucket,
+                           algorithm: nil, encryption_key: nil, encryption_key_hash: nil)
+    type = "featureStoreGcsConnectorDTO"
+    storageConnectorType = "GCS"
+    endpoint = "#{ENV['HOPSWORKS_API']}/project/#{project_id}/featurestores/#{featurestore_id}/storageconnectors/"
+    gcs_connector_name = "gcs_connector_#{random_id}"
+    json_data = {
+      name: gcs_connector_name,
+      description: "test gcs connector description",
+      type: type,
+      storageConnectorType: storageConnectorType,
+      keyPath: key_path,
+      bucket: bucket
+    }
+
+    unless encryption_key.nil?
+      json_data["algorithm"] = algorithm
+      json_data["encryptionKey"] = encryption_key
+      json_data["encryptionKeyHash"] = encryption_key_hash
+    end
+
+    json_result = post endpoint, json_data.to_json
+    [json_result, gcs_connector_name]
+  end
+
+  def update_gcs_connector_json(project_id, featurestore_id, connector_name, additional_data)
+
+    update_connector_endpoint = "#{ENV['HOPSWORKS_API']}/project/#{project_id}/featurestores/#{featurestore_id}/storageconnectors/#{connector_name}"
+    json_data = {
+      type: "featureStoreGcsConnectorDTO",
+      storageConnectorType: "GCS"
+    }
+
+    json_data=json_data.merge(additional_data)
+    put update_connector_endpoint, json_data.to_json
+  end
+
 end

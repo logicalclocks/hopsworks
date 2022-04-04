@@ -18,6 +18,7 @@ package io.hops.hopsworks.persistence.entity.featurestore.storageconnector;
 
 import io.hops.hopsworks.persistence.entity.featurestore.Featurestore;
 import io.hops.hopsworks.persistence.entity.featurestore.storageconnector.adls.FeaturestoreADLSConnector;
+import io.hops.hopsworks.persistence.entity.featurestore.storageconnector.gcs.FeatureStoreGcsConnector;
 import io.hops.hopsworks.persistence.entity.featurestore.storageconnector.hopsfs.FeaturestoreHopsfsConnector;
 import io.hops.hopsworks.persistence.entity.featurestore.storageconnector.jdbc.FeaturestoreJdbcConnector;
 import io.hops.hopsworks.persistence.entity.featurestore.storageconnector.kafka.FeatureStoreKafkaConnector;
@@ -108,6 +109,9 @@ public class FeaturestoreConnector implements Serializable {
   @JoinColumn(name = "kafka_id", referencedColumnName = "id")
   @ManyToOne(cascade = CascadeType.ALL)
   private FeatureStoreKafkaConnector kafkaConnector;
+  @ManyToOne(cascade = CascadeType.ALL)
+  @JoinColumn(name = "gcs_id", referencedColumnName = "id")
+  private FeatureStoreGcsConnector gcsConnector;
 
   public static long getSerialVersionUID() {
     return serialVersionUID;
@@ -207,7 +211,13 @@ public class FeaturestoreConnector implements Serializable {
   public void setKafkaConnector(FeatureStoreKafkaConnector kafkaConnector) {
     this.kafkaConnector = kafkaConnector;
   }
-  
+
+  public FeatureStoreGcsConnector getGcsConnector() {return gcsConnector;}
+
+  public void setGcsConnector(FeatureStoreGcsConnector gcsConnector) {
+    this.gcsConnector = gcsConnector;
+  }
+
   @Override
   public boolean equals(Object o) {
     if (this == o) return true;

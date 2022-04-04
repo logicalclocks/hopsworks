@@ -24,6 +24,8 @@ import io.hops.hopsworks.common.featurestore.FeaturestoreConstants;
 import io.hops.hopsworks.common.featurestore.online.OnlineFeaturestoreController;
 import io.hops.hopsworks.common.featurestore.storageconnectors.adls.FeaturestoreADLSConnectorController;
 import io.hops.hopsworks.common.featurestore.storageconnectors.adls.FeaturestoreADLSConnectorDTO;
+import io.hops.hopsworks.common.featurestore.storageconnectors.gcs.FeatureStoreGcsConnectorController;
+import io.hops.hopsworks.common.featurestore.storageconnectors.gcs.FeatureStoreGcsConnectorDTO;
 import io.hops.hopsworks.common.featurestore.storageconnectors.hopsfs.FeaturestoreHopsfsConnectorController;
 import io.hops.hopsworks.common.featurestore.storageconnectors.hopsfs.FeaturestoreHopsfsConnectorDTO;
 import io.hops.hopsworks.common.featurestore.storageconnectors.jdbc.FeaturestoreJdbcConnectorController;
@@ -85,6 +87,8 @@ public class FeaturestoreStorageConnectorController {
   private FeatureStoreKafkaConnectorController kafkaConnectorController;
   @EJB
   private ActivityFacade activityFacade;
+  @EJB
+  private FeatureStoreGcsConnectorController gcsConnectorController;
 
   /**
    * Returns a list with DTOs of all storage connectors for a featurestore
@@ -138,6 +142,8 @@ public class FeaturestoreStorageConnectorController {
         return snowflakeConnectorController.getConnector(featurestoreConnector);
       case KAFKA:
         return kafkaConnectorController.getConnector(featurestoreConnector);
+      case GCS:
+        return gcsConnectorController.getConnector(featurestoreConnector);
       default:
         // We should not reach this point
         throw new IllegalArgumentException("Feature Store connector type not recognized");
@@ -208,6 +214,11 @@ public class FeaturestoreStorageConnectorController {
         featurestoreConnector.setKafkaConnector(kafkaConnectorController.createConnector(user, featurestore,
           (FeatureStoreKafkaConnectorDTO) featurestoreStorageConnectorDTO));
         break;
+      case GCS:
+        featurestoreConnector.setConnectorType(FeaturestoreConnectorType.GCS);
+        featurestoreConnector.setGcsConnector(gcsConnectorController.createConnector(user,
+          featurestore, (FeatureStoreGcsConnectorDTO) featurestoreStorageConnectorDTO));
+        break;
       default:
         // We should not reach this point
         throw new IllegalArgumentException("Feature Store connector type not recognized");
@@ -275,6 +286,10 @@ public class FeaturestoreStorageConnectorController {
       case KAFKA:
         featurestoreConnector.setKafkaConnector((kafkaConnectorController.updateConnector(user, featurestore,
           (FeatureStoreKafkaConnectorDTO) featurestoreStorageConnectorDTO, featurestoreConnector.getKafkaConnector())));
+        break;
+      case GCS:
+        featurestoreConnector.setGcsConnector(gcsConnectorController.updateConnector(user,featurestore,
+          (FeatureStoreGcsConnectorDTO) featurestoreStorageConnectorDTO,featurestoreConnector.getGcsConnector()));
         break;
       default:
         // We should not reach this point
