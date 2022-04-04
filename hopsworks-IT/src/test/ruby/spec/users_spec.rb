@@ -17,6 +17,19 @@
 describe "On #{ENV['OS']}" do
   after(:all) {clean_all_test_projects(spec: "users")}
   describe "users" do
+    describe "user name/surname" do
+      it "should allow users to register with utf8 names/surnames" do
+        user_params = {}
+        user_params[:first_name] = "Michał"
+        user_params[:last_name] = "Michał"
+        register_user(user_params)
+        expect_status_details(200)
+
+        user = User.find_by(fname: "Michał")
+        expect(user[:lname]).to eql "Michał"
+      end
+    end
+
     describe "username_generation" do
       it 'username should only contain alfanumeric chars no matter the user email' do
         user_params = {}

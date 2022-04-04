@@ -29,7 +29,6 @@ public class User {
   private String lname;
   private Date activated;
   private String title;
-  private String orcid;
   private int falseLogin;
   private String status;
   private int isonline;
@@ -56,7 +55,6 @@ public class User {
     this.lname = rs.getString("lname");
     this.activated = rs.getDate("activated");
     this.title = rs.getString("title");
-    this.orcid = rs.getString("orcid");
     this.falseLogin = rs.getInt("false_login");
     this.status = rs.getString("status");
     this.isonline = rs.getInt("isonline");
@@ -137,14 +135,6 @@ public class User {
   
   public void setTitle(String title) {
     this.title = title;
-  }
-  
-  public String getOrcid() {
-    return orcid;
-  }
-  
-  public void setOrcid(String orcid) {
-    this.orcid = orcid;
   }
   
   public int getFalseLogin() {
@@ -286,7 +276,6 @@ public class User {
       ", lname='" + lname + '\'' +
       ", activated=" + activated +
       ", title='" + title + '\'' +
-      ", orcid='" + orcid + '\'' +
       ", falseLogin=" + falseLogin +
       ", status='" + status + '\'' +
       ", isonline=" + isonline +

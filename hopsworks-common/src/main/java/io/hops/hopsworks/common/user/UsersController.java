@@ -252,9 +252,9 @@ public class UsersController {
     int maxNumProjects = newUser.getMaxNumProjects() > 0? newUser.getMaxNumProjects() : settings.getMaxNumProjPerUser();
 
     Users user = new Users(uname, secret.getSha256HexDigest(), newUser.getEmail(), newUser.getFirstName(),
-      newUser.getLastName(), now, "-", "-", accountStatus, otpSecret, activationKey,
-      now, ValidationKeyType.EMAIL, accountType, now, maxNumProjects, newUser.isTwoFactor(),
-      secret.getSalt(), newUser.getToursState());
+        newUser.getLastName(), now, "-", accountStatus, otpSecret, activationKey,
+        now, ValidationKeyType.EMAIL, accountType, now, maxNumProjects, newUser.isTwoFactor(),
+        secret.getSalt(), newUser.getToursState());
     user.setBbcGroupCollection(groups);
     return user;
   }
@@ -273,7 +273,7 @@ public class UsersController {
     List<BbcGroup> groups = new ArrayList<>();
     Secret secret = securityUtils.generateSecret(pwd);
     Users user = new Users(uname, secret.getSha256HexDigest(), email, fname, lname, new Timestamp(new Date().getTime()),
-      "-", "-", accStatus, UserAccountType.REMOTE_ACCOUNT_TYPE, new Timestamp(new Date().getTime()),
+      "-", accStatus, UserAccountType.REMOTE_ACCOUNT_TYPE, new Timestamp(new Date().getTime()),
       settings.getMaxNumProjPerUser(), secret.getSalt());
     user.setBbcGroupCollection(groups);
     return user;

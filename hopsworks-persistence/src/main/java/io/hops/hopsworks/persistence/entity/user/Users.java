@@ -106,9 +106,6 @@ import org.codehaus.jackson.annotate.JsonIgnore;
   @NamedQuery(name = "Users.findByTitle",
       query = "SELECT u FROM Users u WHERE u.title = :title")
   ,
-  @NamedQuery(name = "Users.findByOrcid",
-      query = "SELECT u FROM Users u WHERE u.orcid = :orcid")
-  ,
   @NamedQuery(name = "Users.findByFalseLogin",
       query = "SELECT u FROM Users u WHERE u.falseLogin = :falseLogin")
   ,
@@ -185,9 +182,6 @@ public class Users implements Serializable {
   @Size(max = 10)
   @Column(name = "title")
   private String title;
-  @Size(max = 20)
-  @Column(name = "orcid")
-  private String orcid;
   @Basic(optional = false)
   @NotNull
   @Column(name = "false_login")
@@ -315,7 +309,7 @@ public class Users implements Serializable {
   }
 
   public Users(String username, String password, String email, String fname, String lname, Date activated, String title,
-               String orcid, UserAccountStatus status, String secret, String validationKey, Date validationKeyUpdated,
+               UserAccountStatus status, String secret, String validationKey, Date validationKeyUpdated,
                ValidationKeyType validationKeyType, UserAccountType mode, Date passwordChanged,
                Integer maxNumProjects, boolean twoFactor, String salt, int toursState) {
     this.username = username;
@@ -325,7 +319,6 @@ public class Users implements Serializable {
     this.lname = lname;
     this.activated = activated;
     this.title = title;
-    this.orcid = orcid;
     this.status = status;
     this.secret = secret;
     this.validationKey = validationKey;
@@ -342,7 +335,7 @@ public class Users implements Serializable {
   }
   
   public Users(String username, String password, String email, String fname, String lname, Date activated,
-    String title, String orcid, UserAccountStatus status, UserAccountType mode, Date passwordChanged,
+    String title, UserAccountStatus status, UserAccountType mode, Date passwordChanged,
     Integer maxNumProjects, String salt) {
     this.username = username;
     this.password = password;
@@ -351,7 +344,6 @@ public class Users implements Serializable {
     this.lname = lname;
     this.activated = activated;
     this.title = title;
-    this.orcid = orcid;
     this.status = status;
     this.mode = mode;
     this.passwordChanged = passwordChanged;
@@ -436,16 +428,6 @@ public class Users implements Serializable {
 
   public void setTitle(String title) {
     this.title = title;
-  }
-
-  @XmlTransient
-  @JsonIgnore
-  public String getOrcid() {
-    return orcid;
-  }
-
-  public void setOrcid(String orcid) {
-    this.orcid = orcid;
   }
 
   @XmlTransient
