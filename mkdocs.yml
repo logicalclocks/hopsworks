@@ -18,6 +18,8 @@ nav:
         - Login: compute/auth/login.md
         - Password Recovery: compute/auth/recoverPassword.md
         - OAuth2 Authentication: compute/auth/oauth2.md
+        - LDAP Authentication: compute/auth/ldap.md
+        - Kerberos Authentication: compute/auth/krb.md
         - Update Profile: compute/auth/updateProfile.md
       - Project:
         - Start with a Demo Project: compute/project/demoProject.md
@@ -38,6 +40,10 @@ nav:
           - Register an Identity Provider: admin/oauth2/create-client.md
           - Create Okta Client: admin/oauth2/create-okta-client.md
           - Create Azure Client: admin/oauth2/create-azure-client.md
+        - Configure LDAP/Kerberos:
+          - Configure LDAP: admin/ldap/configure-ldap.md
+          - Configure Kerberos: admin/ldap/configure-krb.md
+          - Configure server for LDAP and Kerberos: admin/ldap/configure-server.md
       - User Management: admin/user.md
       - Configure Alerts: admin/alert.md
   - Hopsworks.ai: https://docs.hopsworks.ai/hopsworks-cloud/latest/
