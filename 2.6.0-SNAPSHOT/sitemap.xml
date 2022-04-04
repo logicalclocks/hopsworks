@@ -31,6 +31,21 @@
          <changefreq>daily</changefreq>
     </url>
     <url>
+         <loc>https://docs.hopsworks.ai/hopsworks/latest/2.6.0-SNAPSHOT/admin/ldap/configure-krb/</loc>
+         <lastmod>2022-04-04</lastmod>
+         <changefreq>daily</changefreq>
+    </url>
+    <url>
+         <loc>https://docs.hopsworks.ai/hopsworks/latest/2.6.0-SNAPSHOT/admin/ldap/configure-ldap/</loc>
+         <lastmod>2022-04-04</lastmod>
+         <changefreq>daily</changefreq>
+    </url>
+    <url>
+         <loc>https://docs.hopsworks.ai/hopsworks/latest/2.6.0-SNAPSHOT/admin/ldap/configure-server/</loc>
+         <lastmod>2022-04-04</lastmod>
+         <changefreq>daily</changefreq>
+    </url>
+    <url>
          <loc>https://docs.hopsworks.ai/hopsworks/latest/2.6.0-SNAPSHOT/admin/oauth2/create-azure-client/</loc>
          <lastmod>2022-04-04</lastmod>
          <changefreq>daily</changefreq>
@@ -72,6 +87,16 @@
     </url>
     <url>
          <loc>https://docs.hopsworks.ai/hopsworks/latest/2.6.0-SNAPSHOT/compute/python/</loc>
+         <lastmod>2022-04-04</lastmod>
+         <changefreq>daily</changefreq>
+    </url>
+    <url>
+         <loc>https://docs.hopsworks.ai/hopsworks/latest/2.6.0-SNAPSHOT/compute/auth/krb/</loc>
+         <lastmod>2022-04-04</lastmod>
+         <changefreq>daily</changefreq>
+    </url>
+    <url>
+         <loc>https://docs.hopsworks.ai/hopsworks/latest/2.6.0-SNAPSHOT/compute/auth/ldap/</loc>
          <lastmod>2022-04-04</lastmod>
          <changefreq>daily</changefreq>
     </url>

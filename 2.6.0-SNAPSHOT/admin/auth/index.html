@@ -481,6 +481,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../../compute/auth/ldap/" class="md-nav__link">
+        LDAP Authentication
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../compute/auth/krb/" class="md-nav__link">
+        Kerberos Authentication
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../compute/auth/updateProfile/" class="md-nav__link">
         Update Profile
       </a>
@@ -846,6 +874,81 @@
 
             
           
+            
+              
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_4_2_3" type="checkbox" id="__nav_4_2_3" >
+      
+      
+      
+      
+        <label class="md-nav__link" for="__nav_4_2_3">
+          Configure LDAP/Kerberos
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" aria-label="Configure LDAP/Kerberos" data-md-level="3">
+        <label class="md-nav__title" for="__nav_4_2_3">
+          <span class="md-nav__icon md-icon"></span>
+          Configure LDAP/Kerberos
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ldap/configure-ldap/" class="md-nav__link">
+        Configure LDAP
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ldap/configure-krb/" class="md-nav__link">
+        Configure Kerberos
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ldap/configure-server/" class="md-nav__link">
+        Configure server for LDAP and Kerberos
+      </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+            
+          
         </ul>
       </nav>
     </li>
@@ -1001,6 +1104,10 @@ enable it before setting it to mandatory.</p>
    you can register your identity provider by clicking on <strong>Add Identity Provider</strong> button. See
    <a href="../oauth2/create-client/">Create client</a> for details.</p>
 </li>
+<li><strong>LDAP/Kerberos</strong>: if your organization is using LDAP or Kerberos to manage users and services you can configure 
+   Hopsworks to use it as the user management system. You can enable LDAP/Kerberos by clicking on the checkbox, 
+   as shown in the figure below, and choosing LDAP or Kerberos. For more information on how to configure LDAP and Kerberos see 
+   <a href="../ldap/configure-ldap/">Configure LDAP</a> and <a href="../ldap/configure-krb/">Configure Kerberos</a>.</li>
 </ol>
 <figure>
   <a  href="../../assets/images/admin/auth-config.png">
@@ -1009,8 +1116,8 @@ enable it before setting it to mandatory.</p>
   <figcaption>Setup Authentication Methods</figcaption>
 </figure>
 
-<p>In the figure above we see a cluster with Two-factor authentication disabled and Oauth enabled with one registered 
-identity provider called Keycloak (Keycloak is an open Source Identity and Access Management system). </p>
+<p>In the figure above we see a cluster with Two-factor authentication disabled, OAuth enabled with one registered 
+identity provider and LDAP authentication enabled. </p>
 
               
             </article>
