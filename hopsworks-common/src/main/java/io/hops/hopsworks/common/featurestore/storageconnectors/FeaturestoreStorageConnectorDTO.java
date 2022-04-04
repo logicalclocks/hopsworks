@@ -20,6 +20,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import io.hops.hopsworks.common.featurestore.storageconnectors.adls.FeaturestoreADLSConnectorDTO;
+import io.hops.hopsworks.common.featurestore.storageconnectors.gcs.FeatureStoreGcsConnectorDTO;
 import io.hops.hopsworks.common.featurestore.storageconnectors.hopsfs.FeaturestoreHopsfsConnectorDTO;
 import io.hops.hopsworks.common.featurestore.storageconnectors.jdbc.FeaturestoreJdbcConnectorDTO;
 import io.hops.hopsworks.common.featurestore.storageconnectors.kafka.FeatureStoreKafkaConnectorDTO;
@@ -43,7 +44,8 @@ import javax.xml.bind.annotation.XmlSeeAlso;
     FeaturestoreS3ConnectorDTO.class,
     FeaturestoreADLSConnectorDTO.class,
     FeaturestoreSnowflakeConnectorDTO.class,
-    FeatureStoreKafkaConnectorDTO.class})
+    FeatureStoreKafkaConnectorDTO.class,
+    FeatureStoreGcsConnectorDTO.class})
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY)
 @JsonSubTypes({
@@ -53,7 +55,8 @@ import javax.xml.bind.annotation.XmlSeeAlso;
     @JsonSubTypes.Type(value = FeaturestoreS3ConnectorDTO.class, name = "FeaturestoreS3ConnectorDTO"),
     @JsonSubTypes.Type(value = FeaturestoreADLSConnectorDTO.class, name = "FeaturestoreADLSConnectorDTO"),
     @JsonSubTypes.Type(value = FeaturestoreSnowflakeConnectorDTO.class, name = "FeaturestoreSnowflakeConnectorDTO"),
-    @JsonSubTypes.Type(value = FeatureStoreKafkaConnectorDTO.class, name = "FeatureStoreKafkaConnectorDTO")}
+    @JsonSubTypes.Type(value = FeatureStoreKafkaConnectorDTO.class, name = "FeatureStoreKafkaConnectorDTO"),
+    @JsonSubTypes.Type(value = FeatureStoreGcsConnectorDTO.class, name="FeatureStoreGcsConnectorDTO")}
 )
 public class FeaturestoreStorageConnectorDTO {
   private Integer id;
