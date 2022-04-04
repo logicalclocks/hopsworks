@@ -1632,7 +1632,9 @@ public class RESTCodes {
     VALIDATION_NOT_SUPPORTED(183, "Rule is not supported.", Response.Status.BAD_REQUEST),
     STREAM_FEATURE_GROUP_ONLINE_DISABLE_ENABLE(184,
       "Stream feature group cannot be online enabled if it was created as offline only.",
-      Response.Status.BAD_REQUEST);
+      Response.Status.BAD_REQUEST),
+    GCS_FIELD_MISSING(185, "Field missing", Response.Status.BAD_REQUEST) ;
+
 
     private int code;
     private String message;
