@@ -34,6 +34,7 @@ describe "On #{ENV['OS']}" do
         expect(parsed_json["featurestoreName"]).to eql(project.projectname.downcase + "_featurestore")
         expect(parsed_json["name"]).to eql(featuregroup_name)
         expect(parsed_json["type"]).to eql("streamFeatureGroupDTO")
+        expect(parsed_json["timeTravelFormat"]).to eql("HUDI")
         expect(parsed_json["onlineTopicName"]).to eql(project.id.to_s + "_" + parsed_json["id"].to_s + "_" +
                                                         featuregroup_name + "_" + parsed_json["version"].to_s + "_onlinefs")
 
