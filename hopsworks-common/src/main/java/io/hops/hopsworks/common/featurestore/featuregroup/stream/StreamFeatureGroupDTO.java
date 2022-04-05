@@ -18,10 +18,12 @@ package io.hops.hopsworks.common.featurestore.featuregroup.stream;
 
 import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupDTO;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.Featuregroup;
+import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.cached.TimeTravelFormat;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.cached.ValidationType;
 
 public class StreamFeatureGroupDTO extends FeaturegroupDTO {
   private ValidationType validationType = ValidationType.NONE;
+  private TimeTravelFormat timeTravelFormat = TimeTravelFormat.HUDI;
   private DeltaStreamerJobConf deltaStreamerJobConf;
   private Boolean onlineEnabled = true;
   
@@ -60,10 +62,20 @@ public class StreamFeatureGroupDTO extends FeaturegroupDTO {
     this.onlineEnabled = onlineEnabled;
   }
   
+  public TimeTravelFormat getTimeTravelFormat() {
+    return timeTravelFormat;
+  }
+  
+  public void setTimeTravelFormat(
+    TimeTravelFormat timeTravelFormat) {
+    this.timeTravelFormat = timeTravelFormat;
+  }
+
   @Override
   public String toString() {
     return "StreamFeatureGroupDTO{" +
       "validationType=" + validationType +
+      ", timeTravelFormat=" + timeTravelFormat +
       ", deltaStreamerJobConf=" + deltaStreamerJobConf +
       ", onlineEnabled=" + onlineEnabled +
       '}';
