@@ -401,6 +401,10 @@
             <groupId>org.bouncycastle</groupId>
             <artifactId>*</artifactId>
           </exclusion>
+          <exclusion>
+            <groupId>com.predic8</groupId>
+            <artifactId>soa-model-core</artifactId>
+          </exclusion>
         </exclusions>
       </dependency>
       <dependency>
