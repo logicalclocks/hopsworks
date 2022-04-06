@@ -17,7 +17,8 @@ package io.hops.hopsworks.api.dataset;
 
 import io.hops.hopsworks.api.dataset.inode.attribute.InodeAttributeBuilder;
 import io.hops.hopsworks.api.dataset.inode.attribute.InodeAttributeDTO;
-import io.hops.hopsworks.api.dataset.tags.DatasetTagsBuilder;
+import io.hops.hopsworks.api.dataset.tags.InodeTagUri;
+import io.hops.hopsworks.api.tags.TagBuilder;
 import io.hops.hopsworks.api.user.UsersBuilder;
 import io.hops.hopsworks.common.api.ResourceRequest;
 import io.hops.hopsworks.common.dao.AbstractFacade;
@@ -75,10 +76,15 @@ public class DatasetBuilder {
   @EJB
   private DatasetHelper datasetHelper;
   @EJB
-  private DatasetTagsBuilder tagsBuilder;
+  private TagBuilder tagsBuilder;
   @EJB
   private UsersBuilder usersBuilder;
   
+  //For testing
+  
+  protected DatasetBuilder() {
+  }
+
   private DatasetDTO uri(DatasetDTO dto, UriInfo uriInfo) {
     dto.setHref(uriInfo.getAbsolutePathBuilder()
       .build());
@@ -125,7 +131,7 @@ public class DatasetBuilder {
       dto.setPermission(dataset.getPermission());
       dto.setAccepted(true);
       dto.setSharedWith(dataset.getDatasetSharedWithCollection().size());
-      dto.setTags(tagsBuilder.build(uriInfo, resourceRequest, user, datasetPath));
+      dto.setTags(tagsBuilder.build(new InodeTagUri(uriInfo), resourceRequest, user, datasetPath));
       if (dto.isShared()) {
         if (datasetPath.getDatasetSharedWith() == null) {
           throw new IllegalStateException("Shared dataset not found.");
