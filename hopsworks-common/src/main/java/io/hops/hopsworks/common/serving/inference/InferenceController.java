@@ -107,6 +107,12 @@ public class InferenceController {
           inferenceResult.getR());
     } else if (inferenceResult.getL() >= 400) {
       logger.log(Level.FINE, "Request error: " + inferenceResult.getL() + " - " + inferenceResult.getR());
+      if (inferenceResult.getL() == 401) {
+        throw new InferenceException(RESTCodes.InferenceErrorCode.UNAUTHORIZED, Level.FINE, inferenceResult.getR());
+      }
+      if (inferenceResult.getL() == 403) {
+        throw new InferenceException(RESTCodes.InferenceErrorCode.FORBIDDEN, Level.FINE, inferenceResult.getR());
+      }
       throw new InferenceException(RESTCodes.InferenceErrorCode.SERVING_INSTANCE_BAD_REQUEST, Level.FINE,
           inferenceResult.getR());
     }

@@ -1230,7 +1230,9 @@ public class RESTCodes {
     ERROR_READING_RESPONSE(6, "Error while reading the response", Response.Status.INTERNAL_SERVER_ERROR),
     SERVING_INSTANCE_INTERNAL(7, "Serving instance internal error", Response.Status.INTERNAL_SERVER_ERROR),
     SERVING_INSTANCE_BAD_REQUEST(8, "Serving instance bad request error", Response.Status.BAD_REQUEST),
-    REQUEST_AUTH_TYPE_NOT_SUPPORTED(9, "Authentication type not supported", Response.Status.BAD_REQUEST);
+    REQUEST_AUTH_TYPE_NOT_SUPPORTED(9, "Authentication type not supported", Response.Status.BAD_REQUEST),
+    UNAUTHORIZED(10, "Unauthorized request", Response.Status.UNAUTHORIZED),
+    FORBIDDEN(11, "Forbidden request", Response.Status.FORBIDDEN);
 
     private int code;
     private String message;
