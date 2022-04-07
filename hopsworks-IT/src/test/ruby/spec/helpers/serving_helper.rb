@@ -252,7 +252,7 @@ module ServingHelper
       #Wait a bit more for the actual server to start in the container
       sleep(20)
     else
-      sleep(30)
+      sleep(45)
     end
   end
 
@@ -305,17 +305,17 @@ module ServingHelper
     servings.select { |serving| serving['name'] == serving_name}[0]
   end
 
-  def get_istio_inference_path(serving)
-    "http://" + serving["internalIPs"][0] + ":" + serving["internalPort"].to_s + serving["internalPath"] + ":predict"
+  def get_istio_inference_path(serving_endpoints)
+    "http://" + serving_endpoints["internalIPs"][0] + ":" + serving_endpoints["internalPort"].to_s + serving_endpoints["internalPath"] + ":predict"
   end
 
   def get_istio_serving_host(project_name, serving_name)
     serving_name + "." + get_kube_project_namespace(project_name) + ".logicalclocks.com"
   end
 
-  def make_prediction_request_istio(project_name, serving, data)
-    endpoint = get_istio_inference_path(serving)
-    host = get_istio_serving_host(project_name, serving["name"])
+  def make_prediction_request_istio(project_name, serving_name, serving_endpoints, data)
+    endpoint = get_istio_inference_path(serving_endpoints)
+    host = get_istio_serving_host(project_name, serving_name)
     json_body = nil
     begin
       Airborne.configure do |config|
@@ -342,11 +342,11 @@ module ServingHelper
     end
   end
 
-  def wait_for_serving_status(serving_name, status, timeout: 45, delay: 5)
+  def wait_for_serving_status(serving_name, status, timeout: 90, delay: 10)
     wait_result = wait_for_me_time(timeout, delay) do
       result = get_serving(serving_name)
-      { "success": result['status'] == status, "status": result['status'] }
+      { 'success' => result['status'].eql?(status), 'status' => result['status'] }
     end
-    expect(wait_result[:status]).to eql(status)
+    expect(wait_result["status"]).to eql(status)
   end
 end

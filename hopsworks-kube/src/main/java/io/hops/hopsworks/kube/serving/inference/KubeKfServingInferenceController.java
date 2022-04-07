@@ -87,7 +87,7 @@ public class KubeKfServingInferenceController {
         authHeader = KubeApiKeyUtils.AUTH_HEADER_API_KEY_PREFIX + rawSecret;
         verb = InferenceVerb.PREDICT;
       }
-    } else if (verb != InferenceVerb.CLASSIFY.PREDICT) {
+    } else if (verb != InferenceVerb.PREDICT) {
       throw new InferenceException(RESTCodes.InferenceErrorCode.BAD_REQUEST, Level.FINE, String.format("Verb %s not" +
         " supported in KFServing deployments", verb.toString()));
     }

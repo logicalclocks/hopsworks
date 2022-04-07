@@ -60,6 +60,10 @@ public class KubeServingUtils {
   
   public final static String COMPONENT_LABEL_NAME = "component";
   
+  public final static String RESERVED_LABEL_NAME = KubeServingUtils.LABEL_PREFIX + "/reserved";
+  public final static String SCOPE_LABEL_NAME = KubeServingUtils.LABEL_PREFIX + "/scope";
+  public final static String SCOPE_SERVING_LABEL_VALUE = "serving";
+  
   // Annotations
   public final static String ARTIFACT_PATH_ANNOTATION_NAME = LABEL_PREFIX + "/artifact-path";
   public final static String TRANSFORMER_ANNOTATION_NAME = LABEL_PREFIX + "/transformer";
@@ -109,6 +113,15 @@ public class KubeServingUtils {
     };
   }
 
+  public Map<String, String> getServingScopeLabels(boolean reserved) {
+    return new HashMap<String, String>() {
+      {
+        put(RESERVED_LABEL_NAME, String.valueOf(reserved));
+        put(SCOPE_LABEL_NAME, SCOPE_SERVING_LABEL_VALUE);
+      }
+    };
+  }
+  
   // Deployment
   
   public String getNewRevisionID() {

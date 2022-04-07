@@ -7,6 +7,7 @@ import com.google.common.collect.ImmutableMap;
 import io.hops.hopsworks.common.util.IoUtils;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.kube.common.KubeClientService;
+import io.hops.hopsworks.kube.serving.utils.KubeServingUtils;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.project.team.ProjectRoleTypes;
 
@@ -35,6 +36,8 @@ public class KubeProjectConfigMaps {
   
   @EJB
   private KubeClientService kubeClientService;
+  @EJB
+  private KubeServingUtils kubeServingUtils;
   @EJB
   private Settings settings;
   
@@ -96,8 +99,9 @@ public class KubeProjectConfigMaps {
   }
   
   private void createProjectTeamsConfigMap(Project project) {
+    Map<String, String> labels = kubeServingUtils.getServingScopeLabels(true);
     kubeClientService.createOrUpdateConfigMap(project, PROJECT_TEAMS_SUFFIX,
-      ImmutableMap.of(project.getOwner().getUsername(), ProjectRoleTypes.DATA_OWNER.getRole()));
+      ImmutableMap.of(project.getOwner().getUsername(), ProjectRoleTypes.DATA_OWNER.getRole()), labels);
   }
   
   private void createConfigMap(Project project, String confDir, List<String> confFiles, String suffix)

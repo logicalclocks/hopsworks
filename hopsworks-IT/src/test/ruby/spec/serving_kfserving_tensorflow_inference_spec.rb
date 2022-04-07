@@ -216,6 +216,9 @@ describe "On #{ENV['OS']}" do
             end
 
             it "should succeed to infer from a serving with no kafka logging" do
+              stop_serving(@project, @serving)
+              wait_for_serving_status(@serving[:name], "Stopped")
+
               put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
                {id: @serving[:id],
                 name: @serving[:name],
@@ -228,6 +231,7 @@ describe "On #{ENV['OS']}" do
                }
               expect_status_details(201)
 
+              start_serving(@project, @serving)
               wait_for_serving_status(@serving[:name], "Running")
 
               post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/inference/models/#{@serving[:name]}:predict", {
@@ -238,6 +242,9 @@ describe "On #{ENV['OS']}" do
             end
 
             it "should succeed to infer from a serving with transformer" do
+              stop_serving(@project, @serving)
+              wait_for_serving_status(@serving[:name], "Stopped")
+
               put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
                {id: @serving[:id],
                 name: @serving[:name],
@@ -255,6 +262,7 @@ describe "On #{ENV['OS']}" do
                }
               expect_status_details(201)
 
+              start_serving(@project, @serving)
               wait_for_serving_status(@serving[:name], "Running")
 
               post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/inference/models/#{@serving[:name]}:predict", {
@@ -270,7 +278,10 @@ describe "On #{ENV['OS']}" do
 
           before :all do
             # refresh serving once it's running to get internal IPs and port
-            @serving = get_serving(@serving[:name])
+            @serving = Serving.find(@serving[:id])
+            wait_for_serving_status(@serving[:name], "Running")
+
+            @serving_endpoints = get_serving(@serving[:name])
           end
 
           context 'with valid API Key' do
@@ -280,7 +291,7 @@ describe "On #{ENV['OS']}" do
             end
 
             it 'should succeed to infer' do
-              make_prediction_request_istio(@project[:projectname], @serving, { signature_name: 'predict_images', instances: test_data })
+              make_prediction_request_istio(@project[:projectname], @serving[:name], @serving_endpoints, { signature_name: 'predict_images', instances: test_data })
               expect_status_details(200)
               expect(json_body).to include :predictions
             end
@@ -291,7 +302,7 @@ describe "On #{ENV['OS']}" do
             it 'should fail to send inference request with invalid raw secret' do
               invalid_key = @key + "typo"
               set_api_key_to_header(invalid_key)
-              make_prediction_request_istio(@project[:projectname], @serving, { signature_name: 'predict_images', instances: test_data })
+              make_prediction_request_istio(@project[:projectname], @serving[:name], @serving_endpoints, { signature_name: 'predict_images', instances: test_data })
               expect_status(401)
               expect_json(userMsg: "could not authenticate API key")
             end
@@ -299,14 +310,14 @@ describe "On #{ENV['OS']}" do
             it 'should fail to send inference request with non-existent prefix' do
               invalid_key = "typo" + @key
               set_api_key_to_header(invalid_key)
-              make_prediction_request_istio(@project[:projectname], @serving, { signature_name: 'predict_images', instances: test_data })
+              make_prediction_request_istio(@project[:projectname], @serving[:name], @serving_endpoints, { signature_name: 'predict_images', instances: test_data })
               expect_status(401)
               expect_json(userMsg: "invalid or non-existent api key")
             end
 
             it 'should fail to send inference request with invalid scope' do
               set_api_key_to_header(@invalid_scope_key)
-              make_prediction_request_istio(@project[:projectname], @serving, { signature_name: 'predict_images', instances: test_data })
+              make_prediction_request_istio(@project[:projectname], @serving[:name], @serving_endpoints, { signature_name: 'predict_images', instances: test_data })
               expect_status(401)
               expect_json(userMsg: "invalid or non-existent api key")
             end
@@ -324,7 +335,7 @@ describe "On #{ENV['OS']}" do
 
               result = update_authenticator_kube_config_map(["HOPS_ADMIN"], authenticator["allowedProjectUserRoles"])
               expect(result).not_to be_nil
-              expect(result).to eql("configmap/hops-system--serving configured\n")
+              expect(result).to eql("configmap/hops-system--serving patched\n")
               restart_authenticator
 
               create_session(@admin_user[:email], "Pass123")
@@ -338,13 +349,13 @@ describe "On #{ENV['OS']}" do
               reset_session
               set_api_key_to_header(key)
 
-              make_prediction_request_istio(project_name, @serving, { signature_name: 'predict_images', instances: test_data })
+              make_prediction_request_istio(project_name, @serving[:name], @serving_endpoints, { signature_name: 'predict_images', instances: test_data })
               expect_status(403)
               expect_json(userMsg: "unauthorized user, user role not allowed")
 
               result = update_authenticator_kube_config_map(authenticator["allowedUserRoles"], authenticator["allowedProjectUserRoles"])
               expect(result).not_to be_nil
-              expect(result).to eql("configmap/hops-system--serving configured\n")
+              expect(result).to eql("configmap/hops-system--serving patched\n")
               restart_authenticator
             end
 
@@ -360,7 +371,7 @@ describe "On #{ENV['OS']}" do
 
               result = update_authenticator_kube_config_map(authenticator["allowedUserRoles"], ["Data owner"])
               expect(result).not_to be_nil
-              expect(result).to eql("configmap/hops-system--serving configured\n")
+              expect(result).to eql("configmap/hops-system--serving patched\n")
               restart_authenticator
 
               create_session(@admin_user[:email], "Pass123")
@@ -375,13 +386,13 @@ describe "On #{ENV['OS']}" do
               reset_session
               set_api_key_to_header(key)
 
-              make_prediction_request_istio(project_name, @serving, { signature_name: 'predict_images', instances: test_data })
+              make_prediction_request_istio(project_name, @serving[:name], @serving_endpoints, { signature_name: 'predict_images', instances: test_data })
               expect_status(403)
               expect_json(userMsg: "unauthorized user, project member roles not allowed")
 
               result = update_authenticator_kube_config_map(authenticator["allowedUserRoles"], authenticator["allowedProjectUserRoles"])
               expect(result).not_to be_nil
-              expect(result).to eql("configmap/hops-system--serving configured\n")
+              expect(result).to eql("configmap/hops-system--serving patched\n")
               restart_authenticator
             end
 
@@ -398,7 +409,7 @@ describe "On #{ENV['OS']}" do
               reset_session
               set_api_key_to_header(key)
 
-              make_prediction_request_istio(project_name, @serving, { signature_name: 'predict_images', instances: test_data })
+              make_prediction_request_istio(project_name, @serving[:name], @serving_endpoints, { signature_name: 'predict_images', instances: test_data })
               expect_status(403)
               expect_json(userMsg: "unauthorized user, not a member of the project")
             end
@@ -416,7 +427,7 @@ describe "On #{ENV['OS']}" do
               reset_session
               set_api_key_to_header(key)
 
-              make_prediction_request_istio(project_name, @serving, { signature_name: 'predict_images', instances: test_data })
+              make_prediction_request_istio(project_name, @serving[:name], @serving_endpoints, { signature_name: 'predict_images', instances: test_data })
               expect_status(403)
               expect_json(userMsg: "unauthorized user, account status not activated")
             end

@@ -704,11 +704,11 @@ describe "On #{ENV['OS']}" do
               index = response.body
               parsed_index = JSON.parse(index)
               hits = parsed_index['hits']['total']['value']
-              { "success": hits > 0, "hits": hits}
+              { 'success' => hits > 0, 'hits' => hits}
             end
             result
           end
-          expect(wait_result[:hits]).to be > 0
+          expect(wait_result["hits"]).to be > 0
         end
 
         it "should fail to start a running instance" do
@@ -742,10 +742,10 @@ describe "On #{ENV['OS']}" do
               index = response.body
               parsed_index = JSON.parse(index)
               hits = parsed_index['hits']['total']['value']
-              { "success": hits > 0, "hits": hits}
+              { 'success' => hits > 0, 'hits' => hits}
             end
           end
-          expect(wait_result[:hits]).to be > 0
+          expect(wait_result["hits"]).to be > 0
 
           post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/#{@serving[:id]}?action=stop"
         end

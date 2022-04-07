@@ -32,6 +32,8 @@ public class KubeUserAccountHandler implements UserAccountHandler {
   @EJB
   private KubeClientService kubeClientService;
   @EJB
+  private KubeServingUtils kubeServingUtils;
+  @EJB
   private Settings settings;
 
   @Override
@@ -77,8 +79,9 @@ public class KubeUserAccountHandler implements UserAccountHandler {
   }
   
   private void patch(Map<String, String> userAccountStatus) {
+    Map<String, String> labels = kubeServingUtils.getServingScopeLabels(true);
     kubeClientService.patchConfigMap(KubeServingUtils.HOPS_SYSTEM_NAMESPACE,
-      KubeServingUtils.HOPS_SYSTEM_USERS, userAccountStatus);
+      KubeServingUtils.HOPS_SYSTEM_USERS, userAccountStatus, labels);
   }
   
   @Override

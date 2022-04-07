@@ -122,7 +122,7 @@ public class KubeClientService {
   
     String kubeProjectNS = getKubeProjectName(execution.getJob().getProject());
     String kubeProjectDeployment = getKubeDeploymentName(execution) + suffix;
-    createOrUpdateConfigMap(kubeProjectNS, kubeProjectDeployment, filenameToContent);
+    createOrUpdateConfigMap(kubeProjectNS, kubeProjectDeployment, filenameToContent, null);
   }
   
   @Asynchronous
@@ -131,27 +131,33 @@ public class KubeClientService {
     
     String kubeProjectNS = getKubeProjectName(project);
     String kubeProjectDeployment = getKubeDeploymentName(kubeProjectNS, user) + suffix;
-    createOrUpdateConfigMap(kubeProjectNS, kubeProjectDeployment, filenameToContent);
+    createOrUpdateConfigMap(kubeProjectNS, kubeProjectDeployment, filenameToContent, null);
   }
   
   @Asynchronous
-  public void createOrUpdateConfigMap(Project project, String suffix, Map<String, String> filenameToContent)
-      throws KubernetesClientException {
+  public void createOrUpdateConfigMap(Project project, String suffix, Map<String, String> filenameToContent) {
+    createOrUpdateConfigMap(project, suffix, filenameToContent, null);
+  }
+  @Asynchronous
+  public void createOrUpdateConfigMap(Project project, String suffix, Map<String, String> filenameToContent,
+    Map<String, String> labels) throws KubernetesClientException {
     
     String kubeProjectNS = getKubeProjectName(project);
     String kubeProjectDeployment = kubeProjectNS + suffix;
-    createOrUpdateConfigMap(kubeProjectNS, kubeProjectDeployment, filenameToContent);
+    createOrUpdateConfigMap(kubeProjectNS, kubeProjectDeployment, filenameToContent, labels);
   }
   
   @Asynchronous
   public void createOrUpdateConfigMap(String kubeProjectNS,
       String kubeProjectDeployment,
-      Map<String, String> filenameToContent) throws KubernetesClientException {
+      Map<String, String> filenameToContent,
+      Map<String, String> labels) throws KubernetesClientException {
     
     ConfigMap configMap = new ConfigMapBuilder()
         .withMetadata(
             new ObjectMetaBuilder()
                 .withName(kubeProjectDeployment)
+                .withLabels(labels)
                 .build())
         .withData(filenameToContent)
         .build();
@@ -160,15 +166,20 @@ public class KubeClientService {
   }
   
   @Asynchronous
-  public void patchConfigMap(String kubeProjectNS, String kubeProjectConfigMap, Map<String, String> data)
-      throws KubernetesClientException {
+  public void patchConfigMap(String kubeProjectNS, String kubeProjectConfigMap, Map<String, String> data,
+    Map<String, String> labels) throws KubernetesClientException {
     // TODO: (Javier) Update fabric8 to v5 and use PatchContext(Strategy.MergePatch)
     ConfigMap cm = getConfigMap(kubeProjectNS, kubeProjectConfigMap);
     if (cm == null) {
       data.values().removeAll(Collections.singleton(null));
-      createOrUpdateConfigMap(kubeProjectNS, kubeProjectConfigMap, data);
+      createOrUpdateConfigMap(kubeProjectNS, kubeProjectConfigMap, data, labels);
       return; // config map was just created
     }
+    if (labels != null) {
+      // patch labels
+      cm.getMetadata().getLabels().putAll(labels);
+    }
+    // patch config map data
     Map<String, String> cmData = cm.getData();
     if (cmData != null) {
       cmData.putAll(data);

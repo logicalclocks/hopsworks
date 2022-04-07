@@ -806,11 +806,11 @@ describe "On #{ENV['OS']}" do
             index = response.body
             parsed_index = JSON.parse(index)
             hits = parsed_index['hits']['total']['value']
-            { "success": hits > 0, "hits": hits}
+            { 'success' => hits > 0, 'hits' => hits}
           end
           result
         end
-        expect(wait_result[:hits]).to be > 0
+        expect(wait_result["hits"]).to be > 0
       end
 
       it "should fail to start a running instance" do
@@ -1001,7 +1001,7 @@ describe "On #{ENV['OS']}" do
 
         it "should return single running serving" do
           start_serving(@project, @tf_serving)
-          wait_for_serving_status(@tf_serving[:name], "Running", timeout: 90, delay: 10)
+          wait_for_serving_status(@tf_serving[:name], "Running")
 
           get_servings(@project, "?status=Running")
           expect_status(200)

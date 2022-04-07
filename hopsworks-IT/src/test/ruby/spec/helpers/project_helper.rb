@@ -304,9 +304,10 @@ module ProjectHelper
 
   def update_authenticator_kube_config_map(user_roles, project_roles)
     kube_user = Variables.find_by(id: "kube_user").value
-    ur = user_roles.map {|r| "\\\"#{r}\\\"" }.join(',')
-    pr = project_roles.map {|r| "\\\"#{r}\\\"" }.join(',')
-    cmd = "sudo su #{kube_user} /bin/bash -c \"kubectl create cm hops-system--serving -n hops-system --from-literal=authenticator='{\\\"allowedUserRoles\\\":[#{ur}], \\\"allowedProjectUserRoles\\\":[#{pr}]}' --dry-run=client -o yaml | kubectl apply -f -\""
+    ur = user_roles.map {|r| "\\\\\\\"#{r}\\\\\\\"" }.join(',')
+    pr = project_roles.map {|r| "\\\\\\\"#{r}\\\\\\\"" }.join(',')
+    # NOTE: we are not including "reSyncCacheSeconds" since it adds complexity and it is not used in ruby tests.
+    cmd = "sudo su #{kube_user} /bin/bash -c \"kubectl patch cm hops-system--serving -n hops-system --type merge -p '{ \\\"data\\\": { \\\"authenticator\\\": \\\"{\\\\\\\"allowedUserRoles\\\\\\\":[#{ur}], \\\\\\\"allowedProjectUserRoles\\\\\\\":[#{pr}]}\\\" }}'\""
     result = nil
     Open3.popen3(cmd) do |_, stdout, _, wait_thr|
       result = stdout.read

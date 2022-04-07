@@ -50,6 +50,8 @@ public class KubeApiKeyUtils {
   private KubeClientService kubeClientService;
   @EJB
   private ProjectTeamFacade projectTeamFacade;
+  @EJB
+  private KubeServingUtils kubeServingUtils;
   
   public final static String AUTH_HEADER_API_KEY_PREFIX = "ApiKey ";
   public final static String AUTH_HEADER_BEARER_PREFIX = "Bearer ";
@@ -63,8 +65,6 @@ public class KubeApiKeyUtils {
   private final static String SERVING_API_KEY_SECRET_PREFIX = "api-key";
   // labels
   public final static String API_KEY_NAME_LABEL_NAME = KubeServingUtils.LABEL_PREFIX + "/name";
-  public final static String API_KEY_RESERVED_LABEL_NAME = KubeServingUtils.LABEL_PREFIX + "/reserved";
-  public final static String API_KEY_SCOPE_LABEL_NAME = KubeServingUtils.LABEL_PREFIX + "/scope";
   public final static String API_KEY_USER_LABEL_NAME = KubeServingUtils.LABEL_PREFIX + "/user";
   public final static String API_KEY_MODIFIED_LABEL_NAME = KubeServingUtils.LABEL_PREFIX + "/modified";
   
@@ -274,15 +274,11 @@ public class KubeApiKeyUtils {
   
   private Map<String, String> getApiKeySecretLabels(Boolean reserved, String apiKeyName, String username,
       Date modified) {
-    return new HashMap<String, String>() {
-      {
-        put(API_KEY_RESERVED_LABEL_NAME, String.valueOf(reserved));
-        put(API_KEY_SCOPE_LABEL_NAME, SERVING_API_KEY_NAME); // serving
-        if (apiKeyName != null) { put(API_KEY_NAME_LABEL_NAME, apiKeyName); }
-        if (username != null) { put(API_KEY_USER_LABEL_NAME, username); }
-        if (modified != null) { put(API_KEY_MODIFIED_LABEL_NAME, String.valueOf(modified.getTime())); }
-      }
-    };
+    Map<String, String> labels = kubeServingUtils.getServingScopeLabels(reserved);
+    if (apiKeyName != null) { labels.put(API_KEY_NAME_LABEL_NAME, apiKeyName); }
+    if (username != null) { labels.put(API_KEY_USER_LABEL_NAME, username); }
+    if (modified != null) { labels.put(API_KEY_MODIFIED_LABEL_NAME, String.valueOf(modified.getTime())); }
+    return labels;
   }
   
   private Pair<String, String[]> getApiKeySecretUserLabelInSelector(List<Users> users) {

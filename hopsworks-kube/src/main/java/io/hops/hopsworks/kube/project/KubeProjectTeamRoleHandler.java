@@ -6,6 +6,7 @@ package io.hops.hopsworks.kube.project;
 
 import io.hops.hopsworks.common.project.ProjectTeamRoleHandler;
 import io.hops.hopsworks.kube.common.KubeClientService;
+import io.hops.hopsworks.kube.serving.utils.KubeServingUtils;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.project.team.ProjectRoleTypes;
 import io.hops.hopsworks.persistence.entity.user.Users;
@@ -32,6 +33,8 @@ public class KubeProjectTeamRoleHandler implements ProjectTeamRoleHandler {
   private KubeClientService kubeClientService;
   @EJB
   private KubeProjectConfigMaps kubeProjectConfigMaps;
+  @EJB
+  private KubeServingUtils kubeServingUtils;
   
   @Override
   public void addMembers(Project project, List<Users> members, ProjectRoleTypes teamRole, boolean serviceUsers) {
@@ -71,8 +74,9 @@ public class KubeProjectTeamRoleHandler implements ProjectTeamRoleHandler {
   }
   
   private void patch(Project project, Map<String, String> userRoleMap) {
+    Map<String, String> labels = kubeServingUtils.getServingScopeLabels(true);
     kubeClientService.patchConfigMap(kubeClientService.getKubeProjectName(project),
-      kubeProjectConfigMaps.getProjectTeamsConfigMapName(project), userRoleMap);
+      kubeProjectConfigMaps.getProjectTeamsConfigMapName(project), userRoleMap, labels);
   }
   
   @Override
