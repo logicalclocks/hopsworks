@@ -6,6 +6,7 @@ package io.hops.hopsworks.kube.project;
 
 import io.fabric8.kubernetes.client.KubernetesClientException;
 import io.hops.hopsworks.common.project.ProjectHandler;
+import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.kube.common.KubeClientService;
 import io.hops.hopsworks.persistence.entity.project.Project;
 
@@ -25,11 +26,15 @@ public class KubeProjectHandler implements ProjectHandler {
   private KubeProjectConfigMaps kubeProjectConfigMaps;
   @EJB
   private KubeProjectSecrets kubeProjectSecrets;
+  @EJB
+  private Settings settings;
   
   @Override
   public void preCreate(Project project) throws EJBException {
     try {
-      kubeClientService.createProjectNamespace(project);
+      if(!settings.shouldSkipNamespaceCreation()) {
+        kubeClientService.createProjectNamespace(project);
+      }
       kubeProjectConfigMaps.createConfigMaps(project);
       kubeProjectSecrets.createSecrets(project);
     } catch (Exception e) {
@@ -58,9 +63,9 @@ public class KubeProjectHandler implements ProjectHandler {
   @Override
   public void postDelete(Project project) throws Exception {
     try {
-      kubeClientService.deleteProjectNamespace(project);
-      kubeProjectConfigMaps.deleteConfigMaps(project);
-      kubeProjectSecrets.deleteSecrets(project);
+      if(!settings.shouldSkipNamespaceCreation()) {
+        kubeClientService.deleteProjectNamespace(project);
+      }
     } catch (KubernetesClientException e) {
       throw new Exception(e);
     }
