@@ -91,9 +91,8 @@ public class KubeTransformerUtils {
     if (serving.getTransformer().endsWith(IPYNB_EXTENSION)) {
       // If transformer file is ipynb, convert it to python script
       String username = hdfsUsersController.getHdfsUserName(project, user);
-      JupyterController.NotebookConversion conversionType = jupyterController
-        .getNotebookConversionType(sourceFilePath, user, project);
-      jupyterController.convertIPythonNotebook(username, sourceFilePath, project, destFilePath, conversionType);
+      jupyterController.convertIPythonNotebook(username, sourceFilePath, project, destFilePath,
+        JupyterController.NotebookConversion.PY_JOB);
     } else {
       // Otherwise, copy transformer file into model artifact
       DatasetPath destFileDatasetPath = datasetHelper.getDatasetPath(project, destFilePath, DatasetType.DATASET);
