@@ -345,6 +345,8 @@ public class Settings implements Serializable {
   //Git
   private static final String VARIABLE_GIT_COMMAND_TIMEOUT_MINUTES_DEFAULT = "git_command_timeout_minutes";
   
+  private static final String VARIABLE_SKIP_NAMESPACE_CREATION =
+      "kube_skip_namespace_creation";
   public enum KubeType{
     Local("local"),
     EKS("eks"),
@@ -772,7 +774,9 @@ public class Settings implements Serializable {
       //Git
       GIT_MAX_COMMAND_TIMEOUT_MINUTES = setIntVar(VARIABLE_GIT_COMMAND_TIMEOUT_MINUTES_DEFAULT,
           GIT_MAX_COMMAND_TIMEOUT_MINUTES);
-      
+  
+      SKIP_NAMESPACE_CREATION = setBoolVar(VARIABLE_SKIP_NAMESPACE_CREATION,
+          SKIP_NAMESPACE_CREATION);
       cached = true;
     }
   }
@@ -3799,5 +3803,26 @@ public class Settings implements Serializable {
   public synchronized boolean isUserSearchEnabled() {
     checkCache();
     return USER_SEARCH_ENABLED;
+  }
+
+  /*
+   * When a user try to connect for the first time with OAuth or LDAP
+   * do not create the user if it does not bellong to any group.
+   * This is to avoid having users that belong to no group poluting the users table
+   */
+  private boolean REJECT_REMOTE_USER_NO_GROUP = false;
+  public synchronized boolean getRejectRemoteNoGroup() {
+    checkCache();
+    return REJECT_REMOTE_USER_NO_GROUP;
+  }
+  
+  public void updateRejectRemoteNoGroup(boolean reject) {
+    updateVariableInternal(VARIABLE_REJECT_REMOTE_USER_NO_GROUP, Boolean.toString(reject), VariablesVisibility.ADMIN);
+  }
+  
+  private boolean SKIP_NAMESPACE_CREATION = false;
+  public synchronized boolean shouldSkipNamespaceCreation() {
+    checkCache();
+    return SKIP_NAMESPACE_CREATION;
   }
 }
