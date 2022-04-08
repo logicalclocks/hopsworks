@@ -23,8 +23,6 @@ import io.hops.hopsworks.api.featurestore.activities.ActivityResource;
 import io.hops.hopsworks.api.featurestore.code.CodeResource;
 import io.hops.hopsworks.api.featurestore.statistics.StatisticsResource;
 import io.hops.hopsworks.api.featurestore.tag.FeaturestoreTagsBuilder;
-import io.hops.hopsworks.common.tags.TagsDTO;
-import io.hops.hopsworks.api.tags.TagsExpansionBeanParam;
 import io.hops.hopsworks.api.featurestore.transformationFunction.TransformationFunctionBuilder;
 import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.api.filter.Audience;
@@ -34,31 +32,33 @@ import io.hops.hopsworks.api.jobs.JobDTO;
 import io.hops.hopsworks.api.jobs.JobsBuilder;
 import io.hops.hopsworks.api.jwt.JWTHelper;
 import io.hops.hopsworks.api.provenance.ProvArtifactResource;
+import io.hops.hopsworks.api.tags.TagsExpansionBeanParam;
+import io.hops.hopsworks.common.api.ResourceRequest;
+import io.hops.hopsworks.common.dao.user.activity.ActivityFacade;
 import io.hops.hopsworks.common.dataset.DatasetController;
 import io.hops.hopsworks.common.dataset.util.DatasetHelper;
 import io.hops.hopsworks.common.dataset.util.DatasetPath;
+import io.hops.hopsworks.common.featurestore.FeaturestoreController;
+import io.hops.hopsworks.common.featurestore.FeaturestoreDTO;
 import io.hops.hopsworks.common.featurestore.OptionDTO;
 import io.hops.hopsworks.common.featurestore.app.FsJobManagerController;
 import io.hops.hopsworks.common.featurestore.query.FsQueryDTO;
-import io.hops.hopsworks.common.featurestore.tag.FeatureStoreTagControllerIface;
 import io.hops.hopsworks.common.featurestore.query.ServingPreparedStatementDTO;
-import io.hops.hopsworks.common.api.ResourceRequest;
-import io.hops.hopsworks.common.dao.user.activity.ActivityFacade;
-import io.hops.hopsworks.common.featurestore.FeaturestoreController;
-import io.hops.hopsworks.common.featurestore.FeaturestoreDTO;
+import io.hops.hopsworks.common.featurestore.tag.FeatureStoreTagControllerIface;
 import io.hops.hopsworks.common.featurestore.trainingdatasets.TrainingDatasetController;
 import io.hops.hopsworks.common.featurestore.trainingdatasets.TrainingDatasetDTO;
 import io.hops.hopsworks.common.featurestore.transformationFunction.TransformationFunctionAttachedDTO;
 import io.hops.hopsworks.common.tags.AttachTagResult;
+import io.hops.hopsworks.common.tags.TagsDTO;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.DatasetException;
-import io.hops.hopsworks.exceptions.SchematizedTagException;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.exceptions.GenericException;
 import io.hops.hopsworks.exceptions.JobException;
 import io.hops.hopsworks.exceptions.MetadataException;
 import io.hops.hopsworks.exceptions.ProjectException;
 import io.hops.hopsworks.exceptions.ProvenanceException;
+import io.hops.hopsworks.exceptions.SchematizedTagException;
 import io.hops.hopsworks.exceptions.ServiceException;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
 import io.hops.hopsworks.persistence.entity.dataset.Dataset;
@@ -588,12 +588,16 @@ public class TrainingDatasetService {
       @ApiParam(value = "get query in hive format", example = "true")
       @QueryParam("hiveQuery")
       @DefaultValue("false")
-          boolean isHiveQuery) throws FeaturestoreException, ServiceException {
+          boolean isHiveQuery,
+      @ApiParam(value = "get pit query with optimizations enabled", example = "true")
+      @QueryParam("optimizedPit")
+      @DefaultValue("false")
+        boolean optimizedPit) throws FeaturestoreException, ServiceException {
     verifyIdProvided(trainingdatasetid);
     Users user = jWTHelper.getUserPrincipal(sc);
   
     FsQueryDTO fsQueryDTO = fsQueryBuilder.build(
-        uriInfo, project, user, featurestore, trainingdatasetid, withLabel, isHiveQuery);
+      uriInfo, project, user, featurestore, trainingdatasetid, withLabel, isHiveQuery, optimizedPit);
     return Response.ok().entity(fsQueryDTO).build();
   }
 

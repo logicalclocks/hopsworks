@@ -25,7 +25,9 @@ public enum SqlCondition {
   GREATER_THAN_OR_EQUAL(SqlStdOperatorTable.GREATER_THAN_OR_EQUAL),
   EQUALS(SqlStdOperatorTable.EQUALS),
   NOT_EQUALS(SqlStdOperatorTable.NOT_EQUALS),
-  IN(SqlStdOperatorTable.IN);
+  IN(SqlStdOperatorTable.IN),
+  PIT(OptimizedPitFunction.optimizedPitFunction);
+  
   
   public final org.apache.calcite.sql.SqlOperator operator;
   

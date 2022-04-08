@@ -103,10 +103,11 @@ public class ConstructorController {
 
   public FsQueryDTO construct(Query query, boolean pitEnabled, Project project, Users user)
       throws FeaturestoreException, ServiceException {
-    return construct(query, pitEnabled, false, project, user);
+    return construct(query, pitEnabled, false, project, user, false);
   }
 
-  public FsQueryDTO construct(Query query, boolean pitEnabled, boolean isTrainingDataset, Project project, Users user)
+  public FsQueryDTO construct(Query query, boolean pitEnabled, boolean isTrainingDataset, Project project, Users user
+    , boolean optimizedPit)
       throws FeaturestoreException, ServiceException {
     FsQueryDTO fsQueryDTO = new FsQueryDTO();
 
@@ -121,7 +122,7 @@ public class ConstructorController {
     }
 
     if (pitEnabled) {
-      fsQueryDTO.setPitQuery(makePitQuery(query, isTrainingDataset));
+      fsQueryDTO.setPitQuery(makePitQuery(query, isTrainingDataset, optimizedPit));
     }
 
     return fsQueryDTO;
@@ -133,8 +134,8 @@ public class ConstructorController {
     return generateSQL(query, false).toSqlString(offlineSqlDialect).getSql();
   }
 
-  String makePitQuery(Query query, boolean isTrainingDataset) {
-    SqlNode pitQuery = pitJoinController.generateSQL(query, isTrainingDataset);
+  String makePitQuery(Query query, boolean isTrainingDataset, boolean optimizedPit) {
+    SqlNode pitQuery = pitJoinController.generateSQL(query, isTrainingDataset, optimizedPit);
     return query.getHiveEngine() ? pitQuery.toSqlString(new HiveSqlDialect(SqlDialect.EMPTY_CONTEXT)).getSql() :
         pitQuery.toSqlString(new SparkSqlDialect(SqlDialect.EMPTY_CONTEXT)).getSql();
   }
