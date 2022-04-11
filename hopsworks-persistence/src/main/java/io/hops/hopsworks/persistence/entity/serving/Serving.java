@@ -16,7 +16,6 @@
 
 package io.hops.hopsworks.persistence.entity.serving;
 
-import io.hops.hopsworks.persistence.entity.jupyter.config.DockerResourcesConverter;
 import io.hops.hopsworks.persistence.entity.kafka.ProjectTopics;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.user.Users;
@@ -151,9 +150,12 @@ public class Serving implements Serializable {
   @Enumerated(EnumType.ORDINAL)
   @Column(name = "serving_tool")
   private ServingTool servingTool = ServingTool.DEFAULT;
-  @Column(name = "docker_resource_config")
-  @Convert(converter = DockerResourcesConverter.class)
-  private DockerResourcesConfiguration dockerResourcesConfig = new DockerResourcesConfiguration();
+  @Column(name = "predictor_resources")
+  @Convert(converter = ComponentResourcesConverter.class)
+  private DeployableComponentResources predictorResources = new DeployableComponentResources();
+  @Column(name = "transformer_resources")
+  @Convert(converter = ComponentResourcesConverter.class)
+  private DeployableComponentResources transformerResources;
   @Basic(optional = true)
   @Column(name = "deployed")
   @Temporal(TemporalType.TIMESTAMP)
@@ -169,7 +171,8 @@ public class Serving implements Serializable {
   public Serving(Integer id, String name, String description, String modelPath, String predictor, String transformer,
     String modelName, Integer modelVersion, Integer artifactVersion, Integer nInstances,
     Integer nTransformerInstances, Boolean batchingEnabled, ModelServer modelServer, ServingTool servingTool,
-    InferenceLogging inferenceLogging, DockerResourcesConfiguration dockerResourcesConfig) {
+    InferenceLogging inferenceLogging, DeployableComponentResources predictorResources,
+    DeployableComponentResources transformerResources) {
     this.id = id;
     this.name = name;
     this.description = description;
@@ -185,7 +188,8 @@ public class Serving implements Serializable {
     this.modelServer = modelServer;
     this.servingTool = servingTool;
     this.inferenceLogging = inferenceLogging;
-    this.dockerResourcesConfig = dockerResourcesConfig;
+    this.predictorResources = predictorResources;
+    this.transformerResources = transformerResources;
   }
 
   public Integer getId() {
@@ -396,12 +400,20 @@ public class Serving implements Serializable {
     this.revision = revision;
   }
 
-  public DockerResourcesConfiguration getDockerResourcesConfig() {
-    return dockerResourcesConfig;
+  public DeployableComponentResources getPredictorResources() {
+    return predictorResources;
   }
 
-  public void setDockerResourcesConfig(DockerResourcesConfiguration dockerResourcesConfig) {
-    this.dockerResourcesConfig = dockerResourcesConfig;
+  public void setPredictorResources(DeployableComponentResources predictorResources) {
+    this.predictorResources = predictorResources;
+  }
+  
+  public DeployableComponentResources getTransformerResources() {
+    return transformerResources;
+  }
+  
+  public void setTransformerResources(DeployableComponentResources transformerResources) {
+    this.transformerResources = transformerResources;
   }
   
   @Override
@@ -437,8 +449,10 @@ public class Serving implements Serializable {
     if (cid != null ? !cid.equals(serving.cid) : serving.cid != null) return false;
     if (modelServer != null ? !modelServer.equals(serving.modelServer) : serving.modelServer != null) return false;
     if (servingTool != null ? !servingTool.equals(serving.servingTool) : serving.servingTool != null) return false;
-    if (dockerResourcesConfig != null ? !servingTool.equals(serving.dockerResourcesConfig) :
-      serving.dockerResourcesConfig != null) return false;
+    if (predictorResources != null ? !predictorResources.equals(serving.predictorResources) :
+      serving.predictorResources != null) return false;
+    if (transformerResources != null ? !transformerResources.equals(serving.transformerResources) :
+      serving.transformerResources != null) return false;
     if (deployed != null ? !deployed.equals(serving.deployed) : serving.deployed != null) return false;
     if (revision != null ? !revision.equals(serving.revision) : serving.revision != null) return false;
     return localDir != null ? localDir.equals(serving.localDir) : serving.localDir == null;
@@ -470,7 +484,8 @@ public class Serving implements Serializable {
     result = 31 * result + (localDir != null ? localDir.hashCode() : 0);
     result = 31 * result + (modelServer != null ? modelServer.hashCode() : 0);
     result = 31 * result + (servingTool != null ? servingTool.hashCode() : 0);
-    result = 31 * result + (dockerResourcesConfig != null ? dockerResourcesConfig.hashCode() : 0);
+    result = 31 * result + (predictorResources != null ? predictorResources.hashCode() : 0);
+    result = 31 * result + (transformerResources != null ? transformerResources.hashCode() : 0);
     result = 31 * result + (deployed != null ? deployed.hashCode() : 0);
     result = 31 * result + (revision != null ? revision.hashCode() : 0);
     return result;

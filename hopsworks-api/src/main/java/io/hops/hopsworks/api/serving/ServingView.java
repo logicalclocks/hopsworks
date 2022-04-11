@@ -21,7 +21,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.hops.hopsworks.common.dao.kafka.TopicDTO;
 import io.hops.hopsworks.common.serving.ServingStatusEnum;
 import io.hops.hopsworks.common.serving.ServingWrapper;
-import io.hops.hopsworks.persistence.entity.serving.DockerResourcesConfiguration;
+import io.hops.hopsworks.persistence.entity.serving.DeployableComponentResources;
 import io.hops.hopsworks.persistence.entity.serving.InferenceLogging;
 import io.hops.hopsworks.persistence.entity.serving.ModelServer;
 import io.hops.hopsworks.persistence.entity.serving.Serving;
@@ -65,7 +65,8 @@ public class ServingView implements Serializable {
   private InferenceLogging inferenceLogging;
   private ModelServer modelServer;
   private ServingTool servingTool;
-  private DockerResourcesConfiguration predictorResourceConfig;
+  private DeployableComponentResources predictorResources;
+  private DeployableComponentResources transformerResources;
   private Date deployed;
   private String revision;
   private List<String> conditions;
@@ -112,7 +113,8 @@ public class ServingView implements Serializable {
     this.conditions = servingWrapper.getConditions();
     Users user = servingWrapper.getServing().getCreator();
     this.creator = user.getFname() + " " + user.getLname();
-    this.predictorResourceConfig = servingWrapper.getServing().getDockerResourcesConfig();
+    this.predictorResources = servingWrapper.getServing().getPredictorResources();
+    this.transformerResources = servingWrapper.getServing().getTransformerResources();
   }
 
   @ApiModelProperty(value = "ID of the Serving entry" )
@@ -323,11 +325,19 @@ public class ServingView implements Serializable {
   }
 
   @ApiModelProperty(value = "Resource configuration for predictor", readOnly = true)
-  public DockerResourcesConfiguration getPredictorResourceConfig() {
-    return predictorResourceConfig;
+  public DeployableComponentResources getPredictorResources() {
+    return predictorResources;
   }
-  public void setPredictorResourceConfig(DockerResourcesConfiguration predictorResourceConfig) {
-    this.predictorResourceConfig = predictorResourceConfig;
+  public void setPredictorResources(DeployableComponentResources predictorResources) {
+    this.predictorResources = predictorResources;
+  }
+  
+  @ApiModelProperty(value = "Resource configuration for transformer", readOnly = true)
+  public DeployableComponentResources getTransformerResources() {
+    return transformerResources;
+  }
+  public void setTransformerResources(DeployableComponentResources transformerResources) {
+    this.transformerResources = transformerResources;
   }
   
   @JsonIgnore
@@ -336,7 +346,7 @@ public class ServingView implements Serializable {
     ServingWrapper servingWrapper = new ServingWrapper(
         new Serving(id, name, description, modelPath, predictor, transformer, modelName, modelVersion, artifactVersion,
           requestedInstances, requestedTransformerInstances, batchingEnabled, modelServer, servingTool,
-          inferenceLogging, predictorResourceConfig));
+          inferenceLogging, predictorResources, transformerResources));
     servingWrapper.setKafkaTopicDTO(kafkaTopicDTO);
 
     return servingWrapper;

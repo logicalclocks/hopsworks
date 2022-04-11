@@ -44,6 +44,7 @@ import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.kube.common.KubeClientService;
 import io.hops.hopsworks.kube.project.KubeProjectConfigMaps;
 import io.hops.hopsworks.persistence.entity.project.Project;
+import io.hops.hopsworks.persistence.entity.serving.DeployableComponentResources;
 import io.hops.hopsworks.persistence.entity.serving.Serving;
 import io.hops.hopsworks.persistence.entity.user.Users;
 
@@ -59,6 +60,9 @@ import java.util.Map;
 
 import static io.hops.hopsworks.common.util.Settings.HOPS_USERNAME_SEPARATOR;
 
+/**
+ * Utils for creating default deployments for Python models on Kubernetes.
+ */
 @Stateless
 @TransactionAttribute(TransactionAttributeType.NEVER)
 public class KubePredictorPythonUtils {
@@ -83,6 +87,8 @@ public class KubePredictorPythonUtils {
   @EJB
   private KubePredictorUtils kubePredictorUtils;
 
+  // Default
+  
   public String getDeploymentName(String servingId) { return "python-server-" + servingId; }
   
   public String getDeploymentPath(InferenceVerb verb) {
@@ -104,9 +110,10 @@ public class KubePredictorPythonUtils {
     String projectUser = project.getName() + HOPS_USERNAME_SEPARATOR + user.getUsername();
     String hadoopHome = settings.getHadoopSymbolicLinkDir();
     String hadoopConfDir = hadoopHome + "/etc/hadoop";
-
+  
+    DeployableComponentResources predictorResources = serving.getPredictorResources();
     ResourceRequirements resourceRequirements = kubeClientService.
-      buildResourceRequirements(serving.getDockerResourcesConfig(), serving.getDockerResourcesConfig());
+      buildResourceRequirements(predictorResources.getLimits(), predictorResources.getRequests());
     
     List<EnvVar> servingEnv = new ArrayList<>();
     servingEnv.add(new EnvVarBuilder().withName(KubePredictorServerUtils.SERVING_ID).withValue(servingIdStr).build());

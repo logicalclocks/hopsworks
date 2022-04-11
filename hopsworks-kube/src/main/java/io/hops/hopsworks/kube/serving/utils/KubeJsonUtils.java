@@ -12,7 +12,7 @@ import io.fabric8.kubernetes.api.model.Volume;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.kube.common.KubeClientService;
 import io.hops.hopsworks.kube.common.KubeKfServingClientService;
-import io.hops.hopsworks.persistence.entity.serving.DockerResourcesConfiguration;
+import io.hops.hopsworks.persistence.entity.serving.DeployableComponentResources;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -113,22 +113,20 @@ public class KubeJsonUtils {
   
   // Predictors
   
-  public JSONObject buildPredictorTensorflow(String artifactPath,
-    DockerResourcesConfiguration dockerResourcesConfiguration, Integer minReplicas, boolean logging,
-    String loggingMode) {
+  public JSONObject buildPredictorTensorflow(String artifactPath, DeployableComponentResources resources,
+    Integer minReplicas, boolean logging, String loggingMode) {
     
     JSONObject inferenceService = buildPredictorBase(minReplicas, logging, loggingMode);
-    inferenceService.put("tensorflow", buildFrameworkTensorflow(artifactPath, dockerResourcesConfiguration));
+    inferenceService.put("tensorflow", buildFrameworkTensorflow(artifactPath, resources));
     
     return inferenceService;
   }
   
-  public JSONObject buildPredictorSklearn(String artifactPath,
-    DockerResourcesConfiguration dockerResourcesConfiguration, Integer minReplicas, boolean logging,
-    String loggingMode) {
+  public JSONObject buildPredictorSklearn(String artifactPath, DeployableComponentResources resources,
+    Integer minReplicas, boolean logging, String loggingMode) {
     
     JSONObject inferenceService = buildPredictorBase(minReplicas, logging, loggingMode);
-    inferenceService.put("sklearn", buildFrameworkSklearn(artifactPath, dockerResourcesConfiguration));
+    inferenceService.put("sklearn", buildFrameworkSklearn(artifactPath, resources));
     
     return inferenceService;
   }
@@ -171,11 +169,10 @@ public class KubeJsonUtils {
   
   // Frameworks predictors
   
-  private JSONObject buildFrameworkTensorflow(String artifactPath,
-    DockerResourcesConfiguration resources) {
+  private JSONObject buildFrameworkTensorflow(String artifactPath, DeployableComponentResources resources) {
     
-    ResourceRequirements resourceRequirements = kubeClientService.
-      buildResourceRequirements(resources, resources);
+    ResourceRequirements resourceRequirements = kubeClientService.buildResourceRequirements(resources.getLimits(),
+      resources.getRequests());
     
     // Tensorflow runtime
     String tensorflowVersion = settings.getTensorflowVersion();
@@ -191,9 +188,9 @@ public class KubeJsonUtils {
     return predictor;
   }
   
-  private JSONObject buildFrameworkSklearn(String artifactPath,
-    DockerResourcesConfiguration resources) {
-    return buildFrameworkBase(artifactPath, kubeClientService.buildResourceRequirements(resources, resources));
+  private JSONObject buildFrameworkSklearn(String artifactPath, DeployableComponentResources resources) {
+    return buildFrameworkBase(artifactPath, kubeClientService.buildResourceRequirements(resources.getLimits(),
+      resources.getRequests()));
   }
   
   private JSONObject buildFrameworkBase(String artifactPath,
@@ -237,7 +234,7 @@ public class KubeJsonUtils {
     JSONObject containerJSON = new JSONObject(container);
     JSONObject resources = containerJSON.getJSONObject("resources");
     buildContainerResources(resources.getJSONObject("requests"), container.getResources().getRequests());
-    buildContainerResources(resources.getJSONObject("limits"), container.getResources().getRequests());
+    buildContainerResources(resources.getJSONObject("limits"), container.getResources().getLimits());
     return containerJSON;
   }
   

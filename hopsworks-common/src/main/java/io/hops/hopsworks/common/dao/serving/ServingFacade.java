@@ -149,9 +149,14 @@ public class ServingFacade {
       dbServing.setServingTool(newServing.getServingTool());
     }
 
-    if(newServing.getDockerResourcesConfig() != null &&
-      !newServing.getDockerResourcesConfig().equals(dbServing.getDockerResourcesConfig())) {
-      dbServing.setDockerResourcesConfig(newServing.getDockerResourcesConfig());
+    if(newServing.getPredictorResources() != null &&
+      !newServing.getPredictorResources().equals(dbServing.getPredictorResources())) {
+      dbServing.setPredictorResources(newServing.getPredictorResources());
+    }
+  
+    if(newServing.getTransformerResources() != null &&
+      !newServing.getTransformerResources().equals(dbServing.getTransformerResources())) {
+      dbServing.setTransformerResources(newServing.getTransformerResources());
     }
   
     dbServing.setDeployed(newServing.getDeployed());

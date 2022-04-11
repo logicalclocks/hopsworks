@@ -35,6 +35,7 @@ import io.hops.hopsworks.kube.project.KubeProjectConfigMaps;
 import io.hops.hopsworks.kube.security.KubeApiKeyUtils;
 import io.hops.hopsworks.persistence.entity.dataset.DatasetType;
 import io.hops.hopsworks.persistence.entity.project.Project;
+import io.hops.hopsworks.persistence.entity.serving.DeployableComponentResources;
 import io.hops.hopsworks.persistence.entity.serving.Serving;
 import io.hops.hopsworks.persistence.entity.user.Users;
 import org.json.JSONObject;
@@ -146,8 +147,9 @@ public class KubeTransformerUtils {
     List<EnvVar> envVars = buildEnvironmentVariables(project, user, serving);
     List<VolumeMount> volumeMounts = buildVolumeMounts();
   
+    DeployableComponentResources transformerResources = serving.getTransformerResources();
     ResourceRequirements resourceRequirements = kubeClientService.
-      buildResourceRequirements(serving.getDockerResourcesConfig(), serving.getDockerResourcesConfig());
+      buildResourceRequirements(transformerResources.getLimits(), transformerResources.getRequests());
     
     return new ContainerBuilder()
       .withName("transformer")

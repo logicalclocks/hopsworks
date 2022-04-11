@@ -44,6 +44,7 @@ import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.kube.common.KubeClientService;
 import io.hops.hopsworks.kube.project.KubeProjectConfigMaps;
 import io.hops.hopsworks.persistence.entity.project.Project;
+import io.hops.hopsworks.persistence.entity.serving.DeployableComponentResources;
 import io.hops.hopsworks.persistence.entity.serving.InferenceLogging;
 import io.hops.hopsworks.persistence.entity.serving.Serving;
 import io.hops.hopsworks.persistence.entity.user.Users;
@@ -62,6 +63,11 @@ import java.util.logging.Logger;
 
 import static io.hops.hopsworks.common.util.Settings.HOPS_USERNAME_SEPARATOR;
 
+/**
+ * Utils for creating deployments for Tensorflow models on Kubernetes.
+ *
+ * It implements methods for both, default and KFServing deployments.
+ */
 @Stateless
 @TransactionAttribute(TransactionAttributeType.NEVER)
 public class KubePredictorTensorflowUtils extends KubePredictorServerUtils {
@@ -83,6 +89,8 @@ public class KubePredictorTensorflowUtils extends KubePredictorServerUtils {
   private KubeProjectConfigMaps kubeProjectConfigMaps;
   @EJB
   private KubeJsonUtils kubeJsonUtils;
+  
+  // Default
   
   @Override
   public String getDeploymentName(String servingId) {
@@ -118,9 +126,10 @@ public class KubePredictorTensorflowUtils extends KubePredictorServerUtils {
     String projectUser = project.getName() + HOPS_USERNAME_SEPARATOR + user.getUsername();
     String hadoopHome = settings.getHadoopSymbolicLinkDir();
     String hadoopConfDir = hadoopHome + "/etc/hadoop";
-    
+  
+    DeployableComponentResources predictorResources = serving.getPredictorResources();
     ResourceRequirements resourceRequirements = kubeClientService.
-      buildResourceRequirements(serving.getDockerResourcesConfig(), serving.getDockerResourcesConfig());
+      buildResourceRequirements(predictorResources.getLimits(), predictorResources.getRequests());
     
     List<EnvVar> tfServingEnv = new ArrayList<>();
     tfServingEnv.add(new EnvVarBuilder().withName(SERVING_ID).withValue(servingIdStr).build());
@@ -251,6 +260,8 @@ public class KubePredictorTensorflowUtils extends KubePredictorServerUtils {
       .build();
   }
   
+  // KFServing
+  
   @Override
   public JSONObject buildInferenceServicePredictor(Project project, Users user, Serving serving, String artifactPath) {
     
@@ -271,7 +282,7 @@ public class KubePredictorTensorflowUtils extends KubePredictorServerUtils {
     }
     
     return kubeJsonUtils.buildPredictorTensorflow(artifactPath,
-      serving.getDockerResourcesConfig(), serving.getInstances(), logging, loggerMode);
+      serving.getPredictorResources(), serving.getInstances(), logging, loggerMode);
   }
   
   private ObjectMeta getDeploymentMetadata(String servingId) {

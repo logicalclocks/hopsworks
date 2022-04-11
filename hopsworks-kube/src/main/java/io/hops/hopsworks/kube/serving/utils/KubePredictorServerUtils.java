@@ -13,6 +13,12 @@ import io.hops.hopsworks.persistence.entity.serving.Serving;
 import io.hops.hopsworks.persistence.entity.user.Users;
 import org.json.JSONObject;
 
+/**
+ * Utils for creating deployments on Kubernetes.
+ *
+ * It defines methods for both, default and KFServing deployments. Implementations for the different types of
+ * deployments on Kubernetes extend this class.
+ */
 public abstract class KubePredictorServerUtils {
   
   public final static String SERVING_ID = "SERVING_ID";

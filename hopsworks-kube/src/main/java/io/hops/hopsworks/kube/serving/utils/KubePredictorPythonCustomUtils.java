@@ -29,11 +29,11 @@ import io.hops.hopsworks.kube.common.KubeClientService;
 import io.hops.hopsworks.kube.project.KubeProjectConfigMaps;
 import io.hops.hopsworks.kube.security.KubeApiKeyUtils;
 import io.hops.hopsworks.persistence.entity.project.Project;
+import io.hops.hopsworks.persistence.entity.serving.DeployableComponentResources;
 import io.hops.hopsworks.persistence.entity.serving.InferenceLogging;
 import io.hops.hopsworks.persistence.entity.serving.Serving;
 import io.hops.hopsworks.persistence.entity.user.Users;
 import org.json.JSONObject;
-
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
@@ -41,6 +41,11 @@ import javax.ejb.TransactionAttributeType;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Utils for creating deployments for custom Python models on Kubernetes.
+ *
+ * It implements methods for KFServing deployments and reuses existing utils methods for default deployments.
+ */
 @Stateless
 @TransactionAttribute(TransactionAttributeType.NEVER)
 public class KubePredictorPythonCustomUtils extends KubePredictorServerUtils {
@@ -68,6 +73,8 @@ public class KubePredictorPythonCustomUtils extends KubePredictorServerUtils {
   @EJB
   private KubeJsonUtils kubeJsonUtils;
   
+  // Default
+  
   @Override
   public String getDeploymentName(String servingId) { return kubePredictorPythonUtils.getDeploymentName(servingId); }
   
@@ -87,6 +94,8 @@ public class KubePredictorPythonCustomUtils extends KubePredictorServerUtils {
   
   @Override
   public Service buildServingService(Serving serving) { return kubePredictorPythonUtils.buildService(serving); }
+  
+  // KFServing
   
   @Override
   public JSONObject buildInferenceServicePredictor(Project project, Users user, Serving serving, String artifactPath)
@@ -124,8 +133,9 @@ public class KubePredictorPythonCustomUtils extends KubePredictorServerUtils {
     List<EnvVar> envVars = buildEnvironmentVariables(project, user, serving);
     List<VolumeMount> volumeMounts = buildVolumeMounts();
   
+    DeployableComponentResources predictorResources = serving.getPredictorResources();
     ResourceRequirements resourceRequirements = kubeClientService.
-      buildResourceRequirements(serving.getDockerResourcesConfig(), serving.getDockerResourcesConfig());
+      buildResourceRequirements(predictorResources.getLimits(), predictorResources.getRequests());
     
     return new ContainerBuilder()
       .withName("predictor")

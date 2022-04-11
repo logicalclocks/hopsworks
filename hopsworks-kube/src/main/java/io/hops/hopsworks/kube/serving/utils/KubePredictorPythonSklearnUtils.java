@@ -19,6 +19,11 @@ import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 
+/**
+ * Utils for creating deployments for Scikit-learn models on Kubernetes.
+ *
+ * It implements methods for KFServing deployments and reuses existing utils methods for default deployments.
+ */
 @Stateless
 @TransactionAttribute(TransactionAttributeType.NEVER)
 public class KubePredictorPythonSklearnUtils extends KubePredictorServerUtils {
@@ -27,6 +32,8 @@ public class KubePredictorPythonSklearnUtils extends KubePredictorServerUtils {
   private KubePredictorPythonUtils kubePredictorPythonUtils;
   @EJB
   private KubeJsonUtils kubeJsonUtils;
+  
+  // Default
   
   @Override
   public String getDeploymentName(String servingId) { return kubePredictorPythonUtils.getDeploymentName(servingId); }
@@ -48,6 +55,8 @@ public class KubePredictorPythonSklearnUtils extends KubePredictorServerUtils {
   @Override
   public Service buildServingService(Serving serving) { return kubePredictorPythonUtils.buildService(serving); }
   
+  // KFServing
+  
   @Override
   public JSONObject buildInferenceServicePredictor(Project project, Users user, Serving serving, String artifactPath) {
     
@@ -67,7 +76,7 @@ public class KubePredictorPythonSklearnUtils extends KubePredictorServerUtils {
       loggingMode = null;
     }
     
-    return kubeJsonUtils.buildPredictorSklearn(artifactPath, serving.getDockerResourcesConfig(),
+    return kubeJsonUtils.buildPredictorSklearn(artifactPath, serving.getPredictorResources(),
       serving.getInstances(), logging, loggingMode);
   }
 }
