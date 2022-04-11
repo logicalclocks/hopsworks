@@ -189,7 +189,7 @@ public class StatisticsController {
       }
 
       Inode inode;
-      if (splitStatistics != null){
+      if (splitStatistics != null && !splitStatistics.isEmpty()){
         for (Map.Entry<String, JSONObject> entry: splitStatistics.entrySet()){
           Path filePath = new Path(dirPath,  splitStatisticsFileName(entry.getKey(), commitTime));
           udfso.create(filePath, entry.getValue().toString());
