@@ -176,7 +176,9 @@ public class StatisticsResource {
       dto = statisticsBuilder.build(uriInfo, new ResourceRequest(ResourceRequest.Name.STATISTICS),
           project, user, featuregroup, statistics);
     } else {
-      if (statisticsDTO.getSplitStatistics() != null && !statisticsDTO.getForTransformation()) {
+      if (statisticsDTO.getSplitStatistics() != null &&
+          !statisticsDTO.getSplitStatistics().isEmpty() &&
+          !statisticsDTO.getForTransformation()) {
         Map<String, String> splitStatistics = statisticsDTO.getSplitStatistics().stream()
             .collect(Collectors.toMap(SplitStatisticsDTO::getName, SplitStatisticsDTO::getContent));
         statistics = statisticsController.registerStatistics(project, user, statisticsDTO.getCommitTime(), null,
