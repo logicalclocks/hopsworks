@@ -139,4 +139,18 @@
     <cpe>cpe:/a:jetty:jetty</cpe>
     <cve>CVE-2021-28165</cve>
   </suppress>
+  <suppress>
+    <notes><![CDATA[
+   file name: zookeeper-3.4.14.jar
+   ]]></notes>
+    <packageUrl regex="true">^pkg:maven/org\.apache\.zookeeper/zookeeper\-*.*$</packageUrl>
+    <cve>CVE-2021-28165</cve>
+  </suppress>
+  <suppress>
+    <notes><![CDATA[
+   file name: flink-shaded-zookeeper-3-3.4.14-14.0.jar
+   ]]></notes>
+    <packageUrl regex="true">^pkg:maven/org\.apache\.flink/flink-shaded-zookeeper-3\-*.*$</packageUrl>
+    <cve>CVE-2021-28165</cve>
+  </suppress>
 </suppressions>
