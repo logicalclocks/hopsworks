@@ -319,10 +319,13 @@ describe "On #{ENV['OS']}" do
         terminate = response.code == resolve_status(200, response.code) || (response.code == resolve_status(404, response.code) && json_body[:errorCode] == 360000)
         begin
           check_experiment_func.call(experiment)
-          return { 'success' => terminate, 'msg' => "wait for experiment in elastic", 'response_code' => response.code,
-            'error_code' => json_body[:errorCode], 'experiment' => experiment}
+          return { 'success' => terminate, 'msg' => "wait for experiment in opensearch",
+                   'response_code' => response.code,
+                   'error_code' => json_body[:errorCode],
+                   'experiment' => experiment}
         rescue => e
-          { 'success' => false, 'msg' => "wait for experiment in elastic", 'response_code' => response.code,
+          { 'success' => false, 'msg' => "wait for experiment in opensearch",
+            'response_code' => response.code,
             'error_code' => json_body[:errorCode], 'exception' => e}
         end
       end

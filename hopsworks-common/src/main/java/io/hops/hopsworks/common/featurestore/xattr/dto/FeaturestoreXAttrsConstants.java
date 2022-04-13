@@ -18,7 +18,7 @@ package io.hops.hopsworks.common.featurestore.xattr.dto;
 import io.hops.hopsworks.common.provenance.core.ProvXAttrs;
 
 public class FeaturestoreXAttrsConstants {
-  public static final String ELASTIC_XATTR = "xattr";
+  public static final String OPENSEARCH_XATTR = "xattr";
   public static final String PROJECT_ID = "project_id";
   public static final String PROJECT_NAME = "project_name";
   public static final String DATASET_INODE_ID = "dataset_iid";
@@ -37,31 +37,25 @@ public class FeaturestoreXAttrsConstants {
   public static final String TAGS = "tags";
   
   public static String getFeaturestoreXAttrKey() {
-    return ProvXAttrs.PROV_XATTR
-      + "." + FEATURESTORE;
+    return ProvXAttrs.PROV_XATTR + "." + FEATURESTORE;
   }
-  public static String getFeaturestoreElasticKey() {
-    return ELASTIC_XATTR
-      + "." + FEATURESTORE;
+  public static String getFeaturestoreOpenSearchKey() {
+    return OPENSEARCH_XATTR + "." + FEATURESTORE;
   }
   
-  public static String getFeaturestoreElasticKey(String... key) {
-    StringBuilder sb = new StringBuilder(getFeaturestoreElasticKey());
+  public static String getFeaturestoreOpenSearchKey(String... key) {
+    StringBuilder sb = new StringBuilder(getFeaturestoreOpenSearchKey());
     for(String part: key) {
       sb.append( "." + part);
     }
     return sb.toString();
   }
   
-  public static String getTagsElasticKey() {
-    return ELASTIC_XATTR
-      + "." + TAGS
-      + ".key";
+  public static String getTagsOpenSearchKey() {
+    return OPENSEARCH_XATTR + "." + TAGS + ".key";
   }
   
-  public static String getTagsElasticValue() {
-    return ELASTIC_XATTR
-      + "." + TAGS
-      + ".value";
+  public static String getTagsOpenSearchValue() {
+    return OPENSEARCH_XATTR + "." + TAGS + ".value";
   }
 }

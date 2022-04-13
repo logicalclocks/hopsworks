@@ -114,7 +114,7 @@ Backend Dependencies
 * org.eclipse.persistence:eclipselink:jar:2.5.2 [EDL](http://www.eclipse.org/org/documents/edl-v10.php)
 * org.eclipse.persistence:org.eclipse.persistence.jpa.modelgen.processor:jar:2.5.2 [EDL](http://www.eclipse.org/org/documents/edl-v10.php)
 * org.ehcache:ehcache:3.7.0 [ApacheV2](https://github.com/ehcache/ehcache3/blob/master/LICENSE)
-* org.elasticsearch:elasticsearch:jar:2.4.1 [ApacheV2](https://github.com/elastic/elasticsearch/blob/master/LICENSE.txt)
+* org.opensearch.client:jar:1.3.1 [ApacheV2](https://github.com/opensearch-project/opensearch-java/blob/main/LICENSE.txt)
 * org.glassfish.jersey.core:jersey-server:jar:2.21 [CDDL](https://jersey.github.io/license.html)
 * org.glassfish.jersey.media:jersey-media-multipart:jar:2.21 [CDDL](https://jersey.github.io/license.html)
 * org.javatuples:javatuples:jar:1.2 [ApacheV2](https://github.com/javatuples/javatuples/blob/master/LICENSE.txt)

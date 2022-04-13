@@ -136,10 +136,10 @@ public class Settings implements Serializable {
   private static final String VARIABLE_REQUESTS_VERIFY = "requests_verify";
   private static final String VARIABLE_CLOUD= "cloud";
   private static final String VARIABLE_AWS_INSTANCE_ROLE = "aws_instance_role";
-  private static final String VARIABLE_ELASTIC_IP = "elastic_ip";
-  private static final String VARIABLE_ELASTIC_PORT = "elastic_port";
-  private static final String VARIABLE_ELASTIC_REST_PORT = "elastic_rest_port";
-  private static final String VARIABLE_ELASTIC_LOGS_INDEX_EXPIRATION = "elastic_logs_index_expiration";
+  private static final String VARIABLE_OPENSEARCH_IP = "elastic_ip";
+  private static final String VARIABLE_OPENSEARCH_PORT = "elastic_port";
+  private static final String VARIABLE_OPENSEARCH_REST_PORT = "elastic_rest_port";
+  private static final String VARIABLE_OPENSEARCH_LOGS_INDEX_EXPIRATION = "elastic_logs_index_expiration";
   private static final String VARIABLE_SPARK_USER = "spark_user";
   private static final String VARIABLE_HDFS_SUPERUSER = "hdfs_user";
   private static final String VARIABLE_HOPSWORKS_USER = "hopsworks_user";
@@ -224,7 +224,7 @@ public class Settings implements Serializable {
   private static final String VARIABLE_EPIPE_VERSION = "epipe_version";
   private static final String VARIABLE_DELA_VERSION = "dela_version";
   private static final String VARIABLE_KAFKA_VERSION = "kafka_version";
-  private static final String VARIABLE_ELASTIC_VERSION = "elastic_version";
+  private static final String VARIABLE_OPENSEARCH_VERSION = "elastic_version";
   private static final String VARIABLE_TENSORFLOW_VERSION = "tensorflow_version";
   private static final String VARIABLE_HOPSWORKS_VERSION = "hopsworks_version";
   private final static String VARIABLE_LIVY_STARTUP_TIMEOUT = "livy_startup_timeout";
@@ -307,16 +307,16 @@ public class Settings implements Serializable {
   private static final String VARIABLE_FS_PY_JOB_UTIL_PATH = "fs_py_job_util";
   private static final String VARIABLE_FS_JAVA_JOB_UTIL_PATH = "fs_java_job_util";
 
-  //Elastic OpenDistro
-  private static final String VARIABLE_ELASTIC_OPENDISTRO_SECURITY_ENABLED = "elastic_opendistro_security_enabled";
-  private static final String VARIABLE_ELASTIC_HTTPS_ENABLED = "elastic_https_enabled";
-  private static final String VARIABLE_ELASTIC_ADMIN_USER = "elastic_admin_user";
-  private static final String VARIABLE_ELASTIC_SERVICE_LOG_USER = "kibana_service_log_viewer";
-  private static final String VARIABLE_ELASTIC_ADMIN_PASSWORD = "elastic_admin_password";
+  //OpenSearch Security
+  private static final String VARIABLE_OPENSEARCH_SECURITY_ENABLED = "elastic_opendistro_security_enabled";
+  private static final String VARIABLE_OPENSEARCH_HTTPS_ENABLED = "elastic_https_enabled";
+  private static final String VARIABLE_OPENSEARCH_ADMIN_USER = "elastic_admin_user";
+  private static final String VARIABLE_OPENSEARCH_SERVICE_LOG_USER = "kibana_service_log_viewer";
+  private static final String VARIABLE_OPENSEARCH_ADMIN_PASSWORD = "elastic_admin_password";
   private static final String VARIABLE_KIBANA_HTTPS_ENABLED = "kibana_https_enabled";
-  private static final String VARIABLE_ELASTIC_JWT_ENABLED = "elastic_jwt_enabled";
-  private static final String VARIABLE_ELASTIC_JWT_URL_PARAMETER = "elastic_jwt_url_parameter";
-  private static final String VARIABLE_ELASTIC_JWT_EXP_MS = "elastic_jwt_exp_ms";
+  private static final String VARIABLE_OPENSEARCH_JWT_ENABLED = "elastic_jwt_enabled";
+  private static final String VARIABLE_OPENSEARCH_JWT_URL_PARAMETER = "elastic_jwt_url_parameter";
+  private static final String VARIABLE_OPENSEARCH_JWT_EXP_MS = "elastic_jwt_exp_ms";
   private static final String VARIABLE_KIBANA_MULTI_TENANCY_ENABLED = "kibana_multi_tenancy_enabled";
 
   private static final String VARIABLE_CLIENT_PATH = "client_path";
@@ -565,33 +565,34 @@ public class Settings implements Serializable {
       CERTIFICATE_USER_VALID_DAYS = setStrVar(VARIABLE_CERTIFICATE_USER_VALID_DAYS, CERTIFICATE_USER_VALID_DAYS);
       SERVICE_DISCOVERY_DOMAIN = setStrVar(VARIABLE_SERVICE_DISCOVERY_DOMAIN, SERVICE_DISCOVERY_DOMAIN);
       AIRFLOW_DIR = setDirVar(VARIABLE_AIRFLOW_DIR, AIRFLOW_DIR);
-      String elasticIps = setStrVar(VARIABLE_ELASTIC_IP,
-          ElasticSettings.ELASTIC_IP_DEFAULT);
-      int elasticPort = setIntVar(VARIABLE_ELASTIC_PORT, ElasticSettings.ELASTIC_PORT_DEFAULT);
-      int elasticRestPort = setIntVar(VARIABLE_ELASTIC_REST_PORT,
-          ElasticSettings.ELASTIC_REST_PORT_DEFAULT);
-      boolean elasticOpenDistroEnabled =
-          setBoolVar(VARIABLE_ELASTIC_OPENDISTRO_SECURITY_ENABLED,
-              ElasticSettings.ELASTIC_OPENDISTRO_SECURTIY_ENABLED_DEFAULT);
-      boolean elasticHttpsEnabled = setBoolVar(VARIABLE_ELASTIC_HTTPS_ENABLED
-          , ElasticSettings.ELASTIC_HTTPS_ENABLED_DEFAULT);
-      String elasticAdminUser = setStrVar(VARIABLE_ELASTIC_ADMIN_USER,
-          ElasticSettings.ELASTIC_ADMIN_USER_DEFAULT);
-      String elasticServiceLogUser = setStrVar(VARIABLE_ELASTIC_SERVICE_LOG_USER,
-          ElasticSettings.ELASTIC_SERVICE_LOG_ROLE);
-      String elasticAdminPassword = setStrVar(VARIABLE_ELASTIC_ADMIN_PASSWORD,
-          ElasticSettings.ELASTIC_ADMIN_PASSWORD_DEFAULT);
-      boolean elasticJWTEnabled =  setBoolVar(VARIABLE_ELASTIC_JWT_ENABLED
-          , ElasticSettings.ELASTIC_JWT_ENABLED_DEFAULT);
-      String elasticJWTUrlParameter = setStrVar(VARIABLE_ELASTIC_JWT_URL_PARAMETER,
-          ElasticSettings.ELASTIC_JWT_URL_PARAMETER_DEFAULT);
-      long elasticJWTEXPMS = setLongVar(VARIABLE_ELASTIC_JWT_EXP_MS,
-          ElasticSettings.ELASTIC_JWT_EXP_MS_DEFAULT);
-      ELASTIC_SETTINGS = new ElasticSettings(elasticIps, elasticPort,
-          elasticRestPort, elasticOpenDistroEnabled, elasticHttpsEnabled,
-          elasticAdminUser, elasticAdminPassword, elasticJWTEnabled,
-          elasticJWTUrlParameter, elasticJWTEXPMS, elasticServiceLogUser);
-      ELASTIC_LOGS_INDEX_EXPIRATION = setLongVar(VARIABLE_ELASTIC_LOGS_INDEX_EXPIRATION, ELASTIC_LOGS_INDEX_EXPIRATION);
+      String openSearchIps = setStrVar(VARIABLE_OPENSEARCH_IP,
+          OpenSearchSettings.OPENSEARCH_IP_DEFAULT);
+      int openSearchPort = setIntVar(VARIABLE_OPENSEARCH_PORT, OpenSearchSettings.OPENSEARCH_PORT_DEFAULT);
+      int openSearchRestPort = setIntVar(VARIABLE_OPENSEARCH_REST_PORT,
+          OpenSearchSettings.OPENSEARCH_REST_PORT_DEFAULT);
+      boolean openSearchSecurityEnabled =
+          setBoolVar(VARIABLE_OPENSEARCH_SECURITY_ENABLED,
+              OpenSearchSettings.OPENSEARCH_SECURTIY_ENABLED_DEFAULT);
+      boolean openSearchHttpsEnabled = setBoolVar(VARIABLE_OPENSEARCH_HTTPS_ENABLED
+          , OpenSearchSettings.OPENSEARCH_HTTPS_ENABLED_DEFAULT);
+      String openSearchAdminUser = setStrVar(VARIABLE_OPENSEARCH_ADMIN_USER,
+          OpenSearchSettings.OPENSEARCH_ADMIN_USER_DEFAULT);
+      String openSearchServiceLogUser = setStrVar(VARIABLE_OPENSEARCH_SERVICE_LOG_USER,
+          OpenSearchSettings.OPENSEARCH_SERVICE_LOG_ROLE);
+      String openSearchAdminPassword = setStrVar(VARIABLE_OPENSEARCH_ADMIN_PASSWORD,
+          OpenSearchSettings.OPENSEARCH_ADMIN_PASSWORD_DEFAULT);
+      boolean openSearchJWTEnabled =  setBoolVar(VARIABLE_OPENSEARCH_JWT_ENABLED
+          , OpenSearchSettings.OPENSEARCH_JWT_ENABLED_DEFAULT);
+      String openSearchJWTUrlParameter = setStrVar(VARIABLE_OPENSEARCH_JWT_URL_PARAMETER,
+          OpenSearchSettings.OPENSEARCH_JWT_URL_PARAMETER_DEFAULT);
+      long openSearchJWTEXPMS = setLongVar(VARIABLE_OPENSEARCH_JWT_EXP_MS,
+          OpenSearchSettings.OPENSEARCH_JWT_EXP_MS_DEFAULT);
+      OPENSEARCH_SETTINGS = new OpenSearchSettings(openSearchIps, openSearchPort,
+          openSearchRestPort, openSearchSecurityEnabled, openSearchHttpsEnabled,
+          openSearchAdminUser, openSearchAdminPassword, openSearchJWTEnabled,
+          openSearchJWTUrlParameter, openSearchJWTEXPMS, openSearchServiceLogUser);
+      OpenSearch_LOGS_INDEX_EXPIRATION = setLongVar(VARIABLE_OPENSEARCH_LOGS_INDEX_EXPIRATION,
+        OpenSearch_LOGS_INDEX_EXPIRATION);
       KIBANA_IP = setIpVar(VARIABLE_KIBANA_IP, KIBANA_IP);
       KAFKA_MAX_NUM_TOPICS = setIntVar(VARIABLE_KAFKA_MAX_NUM_TOPICS, KAFKA_MAX_NUM_TOPICS);
       HOPSWORKS_DEFAULT_SSL_MASTER_PASSWORD = setVar(VARIABLE_HOPSWORKS_SSL_MASTER_PASSWORD,
@@ -651,7 +652,7 @@ public class Settings implements Serializable {
       EPIPE_VERSION = setStrVar(VARIABLE_EPIPE_VERSION, EPIPE_VERSION);
       DELA_VERSION = setStrVar(VARIABLE_DELA_VERSION, DELA_VERSION);
       KAFKA_VERSION = setStrVar(VARIABLE_KAFKA_VERSION, KAFKA_VERSION);
-      ELASTIC_VERSION = setStrVar(VARIABLE_ELASTIC_VERSION, ELASTIC_VERSION);
+      OPENSEARCH_VERSION = setStrVar(VARIABLE_OPENSEARCH_VERSION, OPENSEARCH_VERSION);
       TENSORFLOW_VERSION = setStrVar(VARIABLE_TENSORFLOW_VERSION, TENSORFLOW_VERSION);
       HOPSWORKS_VERSION = setStrVar(VARIABLE_HOPSWORKS_VERSION, HOPSWORKS_VERSION);
       HOPSWORKS_REST_LOG_LEVEL = setLogLevelVar(VARIABLE_HOPSWORKS_REST_LOG_LEVEL, HOPSWORKS_REST_LOG_LEVEL);
@@ -1480,95 +1481,95 @@ public class Settings implements Serializable {
     return (DEFAULT_RESERVED_PROJECT_NAMES + ", " + DEFAULT_RESERVED_HIVE_NAMES).toLowerCase();
   }
   
-  // Elasticsearch
-  ElasticSettings ELASTIC_SETTINGS;
+  // OpenSearch
+  OpenSearchSettings OPENSEARCH_SETTINGS;
   
-  public synchronized List<String> getElasticIps(){
+  public synchronized List<String> getOpenSearchIps(){
     checkCache();
-    return ELASTIC_SETTINGS.getElasticIps();
+    return OPENSEARCH_SETTINGS.getOpenSearchIps();
   }
   
-  public synchronized int getElasticPort() {
+  public synchronized int getOpenSearchPort() {
     checkCache();
-    return ELASTIC_SETTINGS.getElasticPort();
+    return OPENSEARCH_SETTINGS.getOpenSearchPort();
   }
   
-  public synchronized int getElasticRESTPort() {
+  public synchronized int getOpenSearchRESTPort() {
     checkCache();
-    return ELASTIC_SETTINGS.getElasticRESTPort();
+    return OPENSEARCH_SETTINGS.getOpenSearchRESTPort();
   }
   
-  public synchronized String getElasticEndpoint() {
+  public synchronized String getOpenSearchEndpoint() {
     checkCache();
-    return ELASTIC_SETTINGS.getElasticEndpoint();
+    return OPENSEARCH_SETTINGS.getOpenSearchEndpoint();
   }
 
-  public synchronized String getElasticRESTEndpoint() {
+  public synchronized String getOpenSearchRESTEndpoint() {
     checkCache();
-    return ELASTIC_SETTINGS.getElasticRESTEndpoint();
+    return OPENSEARCH_SETTINGS.getOpenSearchRESTEndpoint();
   }
   
-  public synchronized boolean isElasticOpenDistroSecurityEnabled() {
+  public synchronized boolean isOpenSearchSecurityEnabled() {
     checkCache();
-    return ELASTIC_SETTINGS.isOpenDistroSecurityEnabled();
+    return OPENSEARCH_SETTINGS.isOpenSearchSecurityEnabled();
   }
   
-  public synchronized boolean isElasticHTTPSEnabled() {
+  public synchronized boolean isOpenSearchHTTPSEnabled() {
     checkCache();
-    return ELASTIC_SETTINGS.isHttpsEnabled();
+    return OPENSEARCH_SETTINGS.isHttpsEnabled();
   }
   
-  public synchronized String getElasticAdminUser() {
+  public synchronized String getOpenSearchAdminUser() {
     checkCache();
-    return ELASTIC_SETTINGS.getAdminUser();
+    return OPENSEARCH_SETTINGS.getAdminUser();
   }
 
-  public synchronized String getElasticServiceLogUser() {
+  public synchronized String getOpenSearchServiceLogUser() {
     checkCache();
-    return ELASTIC_SETTINGS.getServiceLogUser();
+    return OPENSEARCH_SETTINGS.getServiceLogUser();
   }
   
-  public synchronized String getElasticAdminPassword() {
+  public synchronized String getOpenSearchAdminPassword() {
     checkCache();
-    return ELASTIC_SETTINGS.getAdminPassword();
+    return OPENSEARCH_SETTINGS.getAdminPassword();
   }
   
-  public synchronized boolean isElasticJWTEnabled() {
+  public synchronized boolean isOpenSearchJWTEnabled() {
     checkCache();
-    return ELASTIC_SETTINGS.isElasticJWTEnabled();
+    return OPENSEARCH_SETTINGS.isOpenSearchJWTEnabled();
   }
   
-  public synchronized String getElasticJwtUrlParameter() {
+  public synchronized String getOpenSearchJwtUrlParameter() {
     checkCache();
-    return ELASTIC_SETTINGS.getElasticJWTURLParameter();
+    return OPENSEARCH_SETTINGS.getOpenSearchJWTURLParameter();
   }
   
-  public synchronized long getElasicJwtExpMs() {
+  public synchronized long getOpenSearchJwtExpMs() {
     checkCache();
-    return ELASTIC_SETTINGS.getElasticJWTExpMs();
+    return OPENSEARCH_SETTINGS.getOpenSearchJWTExpMs();
   }
   
-  public synchronized Integer getElasticDefaultScrollPageSize() {
+  public synchronized Integer getOpenSearchDefaultScrollPageSize() {
     checkCache();
-    return ELASTIC_SETTINGS.getDefaultScrollPageSize();
+    return OPENSEARCH_SETTINGS.getDefaultScrollPageSize();
   }
   
-  public synchronized Integer getElasticMaxScrollPageSize() {
+  public synchronized Integer getOpenSearchMaxScrollPageSize() {
     checkCache();
-    return ELASTIC_SETTINGS.getMaxScrollPageSize();
+    return OPENSEARCH_SETTINGS.getMaxScrollPageSize();
   }
 
-  private long ELASTIC_LOGS_INDEX_EXPIRATION = 7 * 24 * 60 * 60 * 1000;
+  private long OpenSearch_LOGS_INDEX_EXPIRATION = 7 * 24 * 60 * 60 * 1000;
 
-  public synchronized long getElasticLogsIndexExpiration() {
+  public synchronized long getOpenSearchLogsIndexExpiration() {
     checkCache();
-    return ELASTIC_LOGS_INDEX_EXPIRATION;
+    return OpenSearch_LOGS_INDEX_EXPIRATION;
   }
 
   private static final int JOB_LOGS_EXPIRATION = 604800;
 
   /**
-   * TTL for job logs in elasticsearch, in seconds.
+   * TTL for job logs in opensearch, in seconds.
    *
    * @return
    */
@@ -1631,11 +1632,11 @@ public class Settings implements Serializable {
   }
   
   public String getKibanaAppUri() {
-    return "/hopsworks-api/kibana/app/kibana?";
+    return "/hopsworks-api/kibana/app/discover?";
   }
   
   public String getKibanaAppUri(String jwtToken) {
-    return  getKibanaAppUri() + ELASTIC_SETTINGS.getElasticJWTURLParameter() + "=" + jwtToken + "&";
+    return  getKibanaAppUri() + OPENSEARCH_SETTINGS.getOpenSearchJWTURLParameter() + "=" + jwtToken + "&";
   }
 
   /*
@@ -1925,7 +1926,7 @@ public class Settings implements Serializable {
   public static final String KAFKA_CONSUMER_GROUPS = "hopsworks.kafka.consumergroups";
   public static final String HOPSWORKS_REST_ENDPOINT_PROPERTY = "hopsworks.restendpoint";
   public static final String HOPSUTIL_INSECURE_PROPERTY = "hopsutil.insecure";
-  public static final String HOPSWORKS_ELASTIC_ENDPOINT_PROPERTY = "hopsworks.elastic.endpoint";
+  public static final String HOPSWORKS_OPENSEARCH_ENDPOINT_PROPERTY = "hopsworks.opensearch.endpoint";
   public static final String HOPSWORKS_DOMAIN_CA_TRUSTSTORE_PROPERTY = "hopsworks.domain.truststore";
 
   private int FILE_PREVIEW_IMAGE_SIZE = 10000000;
@@ -1942,23 +1943,26 @@ public class Settings implements Serializable {
   public static final String FILE_PREVIEW_IMAGE_TYPE = "image";
   public static final String FILE_PREVIEW_MODE_TAIL = "tail";
 
-  //Elastic log index pattern
-  public static final String ELASTIC_LOGS_INDEX = "logs";
-  public static final String ELASTIC_PYPI_LIBRARIES_INDEX_PATTERN_PREFIX = "pypi_libraries_";
-  public static final String ELASTIC_LOGS_INDEX_PATTERN = "_" + Settings.ELASTIC_LOGS_INDEX + "-*";
-  public static final String ELASTIC_SERVING_INDEX = "serving";
-  public static final String ELASTIC_SERVICES_INDEX = ".services";
+  //OpenSearch
+  // log index pattern
+  public static final String OPENSEARCH_LOGS_INDEX = "logs";
+  public static final String OPENSEARCH_PYPI_LIBRARIES_INDEX_PATTERN_PREFIX = "pypi_libraries_";
+  public static final String OPENSEARCH_LOGS_INDEX_PATTERN = "_" + Settings.OPENSEARCH_LOGS_INDEX + "-*";
+  public static final String OPENSEARCH_SERVING_INDEX = "serving";
+  public static final String OPENSEARCH_SERVICES_INDEX = ".services";
 
-  public static final String ELASTIC_LOG_INDEX_REGEX = ".*_" + ELASTIC_LOGS_INDEX + "-\\d{4}.\\d{2}.\\d{2}";
-  public static final String ELASTIC_SERVING_INDEX_REGEX = ".*_" + ELASTIC_SERVING_INDEX + "-\\d{4}.\\d{2}.\\d{2}";
-  public static final String ELASTIC_SERVICES_INDEX_REGEX = ELASTIC_SERVICES_INDEX + "-\\d{4}.\\d{2}.\\d{2}";
-  public static final String ELASTIC_PYPI_LIBRARIES_INDEX_REGEX = ELASTIC_PYPI_LIBRARIES_INDEX_PATTERN_PREFIX + "*";
+  public static final String OPENSEARCH_LOG_INDEX_REGEX = ".*_" + OPENSEARCH_LOGS_INDEX + "-\\d{4}.\\d{2}.\\d{2}";
+  public static final String OPENSEARCH_SERVING_INDEX_REGEX =
+    ".*_" + OPENSEARCH_SERVING_INDEX + "-\\d{4}.\\d{2}.\\d{2}";
+  public static final String OPENSEARCH_SERVICES_INDEX_REGEX = OPENSEARCH_SERVICES_INDEX + "-\\d{4}.\\d{2}.\\d{2}";
+  public static final String OPENSEARCH_PYPI_LIBRARIES_INDEX_REGEX =
+    OPENSEARCH_PYPI_LIBRARIES_INDEX_PATTERN_PREFIX + "*";
 
-  //Other Elastic indexes
-  public static final String ELASTIC_INDEX_APP_PROVENANCE = "app_provenance";
+  //Other OpenSearch indexes
+  public static final String OPENSEARCH_INDEX_APP_PROVENANCE = "app_provenance";
 
-  //Elastic aliases
-  public static final String ELASTIC_PYPI_LIBRARIES_ALIAS = "pypi_libraries";
+  //OpenSearch aliases
+  public static final String OPENSEARCH_PYPI_LIBRARIES_ALIAS = "pypi_libraries";
   
   public String getHopsworksTmpCertDir() {
     return Paths.get(getCertsDir(), "transient").toString();
@@ -3138,11 +3142,11 @@ public class Settings implements Serializable {
     return TENSORFLOW_VERSION;
   }
 
-  private String ELASTIC_VERSION;
+  private String OPENSEARCH_VERSION;
 
-  public synchronized String getElasticVersion() {
+  public synchronized String getOpenSearchVersion() {
     checkCache();
-    return ELASTIC_VERSION;
+    return OPENSEARCH_VERSION;
   }
 
   private String KAFKA_VERSION;
@@ -3654,7 +3658,7 @@ public class Settings implements Serializable {
     return KIBANA_MULTI_TENANCY_ENABELED;
   }
   
-  public static final int ELASTIC_KIBANA_NO_CONNECTIONS = 5;
+  public static final int OPENSEARCH_KIBANA_NO_CONNECTIONS = 5;
 
   //-------------------------------- PROVENANCE ----------------------------------------------//
   private static final String VARIABLE_PROVENANCE_TYPE = "provenance_type"; //disabled/meta/min/full
@@ -3672,8 +3676,8 @@ public class Settings implements Serializable {
   private Integer PROVENANCE_GRAPH_MAX_SIZE = 10000;
   private Long PROVENANCE_CLEANER_PERIOD = 3600L; //1h in s
   private Long PROVENANCE_ARCHIVE_DELAY = 0l;
-  private Integer PROVENANCE_ELASTIC_ARCHIVAL_PAGE_SIZE = 50;
-  public static final Integer PROVENANCE_ELASTIC_PAGE_DEFAULT_SIZE = 1000;
+  private Integer PROVENANCE_OPENSEARCH_ARCHIVAL_PAGE_SIZE = 50;
+  public static final Integer PROVENANCE_OPENSEARCH_PAGE_DEFAULT_SIZE = 1000;
   
   public String getProvFileIndex(Long projectIId) {
     return projectIId.toString() + Settings.PROV_FILE_INDEX_SUFFIX;
@@ -3741,9 +3745,9 @@ public class Settings implements Serializable {
     return PROVENANCE_CLEANUP_SIZE;
   }
   
-  public synchronized Integer getProvElasticArchivalPageSize() {
+  public synchronized Integer getProvOpenSearchArchivalPageSize() {
     checkCache();
-    return PROVENANCE_ELASTIC_ARCHIVAL_PAGE_SIZE;
+    return PROVENANCE_OPENSEARCH_ARCHIVAL_PAGE_SIZE;
   }
   
   public synchronized Long getProvCleanerPeriod() {

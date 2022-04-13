@@ -243,7 +243,7 @@ public class JupyterConfigFilesGenerator {
         .setNamenodePort(String.valueOf(namenode.getPort()))
         .setContentsManager(jcm.getClassName())
         .setHopsworksEndpoint(hopsworksRestEndpoint)
-        .setElasticEndpoint(settings.getElasticEndpoint())
+        .setElasticEndpoint(settings.getOpenSearchEndpoint())
         .setPort(port)
         .setBaseDirectory(js.getBaseDir())
         .setHdfsUser(hdfsUser)

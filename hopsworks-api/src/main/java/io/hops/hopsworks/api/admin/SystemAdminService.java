@@ -43,7 +43,7 @@ import com.google.common.base.Strings;
 import io.hops.hopsworks.api.admin.dto.VariablesRequest;
 import io.hops.hopsworks.api.filter.Audience;
 import io.hops.hopsworks.api.filter.NoCacheResponse;
-import io.hops.hopsworks.api.jwt.ElasticJWTResponseDTO;
+import io.hops.hopsworks.api.jwt.OpenSearchJWTResponseDTO;
 import io.hops.hopsworks.api.jwt.JWTHelper;
 import io.hops.hopsworks.api.util.RESTApiJsonResponse;
 import io.hops.hopsworks.audit.logger.annotation.Logged;
@@ -56,7 +56,7 @@ import io.hops.hopsworks.common.security.CertificatesMgmService;
 import io.hops.hopsworks.common.security.ServiceJWTKeepAlive;
 import io.hops.hopsworks.common.util.RemoteCommandResult;
 import io.hops.hopsworks.common.util.Settings;
-import io.hops.hopsworks.exceptions.ElasticException;
+import io.hops.hopsworks.exceptions.OpenSearchException;
 import io.hops.hopsworks.exceptions.EncryptionMasterPasswordException;
 import io.hops.hopsworks.exceptions.HopsSecurityException;
 import io.hops.hopsworks.exceptions.KafkaException;
@@ -294,9 +294,8 @@ public class SystemAdminService {
   
   @GET
   @Path("/elastic/admintoken")
-  public Response getElasticAdminToken(@Context SecurityContext sc, @Context HttpServletRequest req)
-      throws ElasticException {
-    ElasticJWTResponseDTO responseDTO = jWTHelper.createTokenForELKAsAdmin();
+  public Response getElasticAdminToken(@Context SecurityContext sc) throws OpenSearchException {
+    OpenSearchJWTResponseDTO responseDTO = jWTHelper.createTokenForELKAsAdmin();
     return Response.ok().entity(responseDTO).build();
   }
 }

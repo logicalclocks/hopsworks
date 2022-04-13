@@ -16,64 +16,64 @@
 package io.hops.hopsworks.common.provenance.state;
 
 import com.lambdista.util.Try;
-import io.hops.hopsworks.common.provenance.core.elastic.ElasticHits;
-import io.hops.hopsworks.persistence.entity.project.Project;
+import io.hops.hopsworks.common.opensearch.OpenSearchClientController;
 import io.hops.hopsworks.common.provenance.app.ProvAppController;
-import io.hops.hopsworks.common.provenance.core.ProvParser;
-import io.hops.hopsworks.common.provenance.core.elastic.BasicElasticHit;
-import io.hops.hopsworks.common.provenance.core.elastic.ElasticCache;
-import io.hops.hopsworks.common.elastic.ElasticClientController;
-import io.hops.hopsworks.common.provenance.core.elastic.ElasticHelper;
 import io.hops.hopsworks.common.provenance.app.ProvAppHelper;
-import io.hops.hopsworks.common.provenance.app.dto.ProvAppStateElastic;
-import io.hops.hopsworks.common.provenance.state.dto.ProvStateDTO;
 import io.hops.hopsworks.common.provenance.app.dto.ProvAppStateDTO;
+import io.hops.hopsworks.common.provenance.app.dto.ProvAppStateOpenSearch;
+import io.hops.hopsworks.common.provenance.core.ProvParser;
 import io.hops.hopsworks.common.provenance.core.Provenance;
+import io.hops.hopsworks.common.provenance.core.opensearch.BasicOpenSearchHit;
+import io.hops.hopsworks.common.provenance.core.opensearch.OpenSearchCache;
+import io.hops.hopsworks.common.provenance.core.opensearch.OpenSearchHelper;
+import io.hops.hopsworks.common.provenance.core.opensearch.OpenSearchHits;
+import io.hops.hopsworks.common.provenance.state.dto.ProvStateDTO;
 import io.hops.hopsworks.common.provenance.util.ProvHelper;
 import io.hops.hopsworks.common.provenance.util.functional.CheckedFunction;
 import io.hops.hopsworks.common.provenance.util.functional.CheckedSupplier;
 import io.hops.hopsworks.common.util.Settings;
-import io.hops.hopsworks.exceptions.ElasticException;
+import io.hops.hopsworks.exceptions.OpenSearchException;
 import io.hops.hopsworks.exceptions.ProvenanceException;
+import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.restutils.RESTCodes;
-import org.elasticsearch.action.search.SearchRequest;
-import org.elasticsearch.index.query.BoolQueryBuilder;
-import org.elasticsearch.index.query.QueryBuilder;
-import org.elasticsearch.search.sort.SortOrder;
 import org.javatuples.Pair;
+import org.opensearch.action.search.SearchRequest;
+import org.opensearch.index.query.BoolQueryBuilder;
+import org.opensearch.index.query.QueryBuilder;
+import org.opensearch.search.sort.SortOrder;
 
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.List;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import static org.elasticsearch.index.query.QueryBuilders.boolQuery;
-import static org.elasticsearch.index.query.QueryBuilders.existsQuery;
-import static org.elasticsearch.index.query.QueryBuilders.termQuery;
+import static org.opensearch.index.query.QueryBuilders.boolQuery;
+import static org.opensearch.index.query.QueryBuilders.existsQuery;
+import static org.opensearch.index.query.QueryBuilders.termQuery;
 
 @Stateless
 @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
 public class ProvStateController {
   private final static Logger LOGGER = Logger.getLogger(ProvStateController.class.getName());
-  
+
   @EJB
   private Settings settings;
   @EJB
-  private ElasticClientController client;
+  private OpenSearchClientController client;
   @EJB
   private ProvAppController appCtrl;
   @EJB
-  private ElasticCache cache;
+  private OpenSearchCache cache;
 
   // For testing
-  public ProvStateController(Settings settings, ElasticClientController client, ElasticCache cache) {
+  public ProvStateController(Settings settings, OpenSearchClientController client, OpenSearchCache cache) {
     this.settings = settings;
     this.client = client;
     this.cache = cache;
@@ -83,7 +83,7 @@ public class ProvStateController {
 
   public ProvStateDTO provFileStateList(Project project, ProvStateParamBuilder params)
     throws ProvenanceException {
-    if(params.base.pagination != null && !params.extensions.appStateFilter.isEmpty()) {
+    if (params.base.pagination != null && !params.extensions.appStateFilter.isEmpty()) {
       String msg = "cannot use pagination with app state filtering";
       throw new ProvenanceException(RESTCodes.ProvenanceErrorCode.UNSUPPORTED, Level.INFO, msg);
     }
@@ -94,18 +94,18 @@ public class ProvStateController {
       //After this filter the fileStates based on the results of the appState query
       for (ProvStateDTO fileState : fileStates.getItems()) {
         Optional<String> appId = getAppId(fileState);
-        if(appId.isPresent()) {
+        if (appId.isPresent()) {
           params.withAppExpansion(appId.get());
         }
       }
-      Map<String, Map<Provenance.AppState, ProvAppStateElastic>> appExps
+      Map<String, Map<Provenance.AppState, ProvAppStateOpenSearch>> appExps
         = appCtrl.provAppState(params.extensions.appStateFilter);
       Iterator<ProvStateDTO> fileStateIt = fileStates.getItems().iterator();
-      while(fileStateIt.hasNext()) {
+      while (fileStateIt.hasNext()) {
         ProvStateDTO fileState = fileStateIt.next();
         Optional<String> appId = getAppId(fileState);
-        if(appId.isPresent() && appExps.containsKey(appId.get())) {
-          Map<Provenance.AppState, ProvAppStateElastic> appExp = appExps.get(appId.get());
+        if (appId.isPresent() && appExps.containsKey(appId.get())) {
+          Map<Provenance.AppState, ProvAppStateOpenSearch> appExp = appExps.get(appId.get());
           fileState.setAppState(ProvAppHelper.buildAppState(appExp));
         } else {
           fileState.setAppState(ProvAppStateDTO.unknown());
@@ -114,34 +114,35 @@ public class ProvStateController {
     }
     return fileStates;
   }
-  
+
   /**
-   * @param <R> parsed elastic item
+   * @param <R>  parsed opensearch item
    * @param <S1> intermediate result wrapped in Try
    * @param <S2> final result
    * @return
    * @throws ProvenanceException
    */
   public <R, S1, S2> S2 provFileState(Project project, ProvStateParamBuilder.Base base,
-    HandlerFactory<R, S1, S2> handlerFactory, String index) throws ProvenanceException {
-    
+                                      HandlerFactory<R, S1, S2> handlerFactory, String index)
+    throws ProvenanceException {
+
     checkMapping(base, index);
     return provFileState(project.getInode().getId(),
       base.fileStateFilter, base.fileStateSortBy,
       base.exactXAttrFilter, base.likeXAttrFilter, base.hasXAttrFilter,
       base.xAttrSortBy, base.pagination.getValue0(), base.pagination.getValue1(), handlerFactory);
   }
-  
+
   public ProvStateDTO provFileStateCount(Project project, ProvStateParamBuilder params)
     throws ProvenanceException {
-    if(params.extensions.hasAppExpansion()) {
+    if (params.extensions.hasAppExpansion()) {
       throw new ProvenanceException(RESTCodes.ProvenanceErrorCode.UNSUPPORTED, Level.INFO,
         "provenance file state count does not currently work with app state expansion");
     }
     return provFileStateCount(project.getInode().getId(), params.base.fileStateFilter,
       params.base.exactXAttrFilter, params.base.likeXAttrFilter, params.base.hasXAttrFilter);
   }
-  
+
   private void checkMapping(ProvStateParamBuilder.Base base, String index)
     throws ProvenanceException {
     Map<String, String> mapping;
@@ -149,23 +150,23 @@ public class ProvStateController {
       mapping = cache.mngIndexGetMapping(index, false);
       try {
         base.fixSortBy(index, mapping);
-      } catch(ProvenanceException e) {
+      } catch (ProvenanceException e) {
         mapping = cache.mngIndexGetMapping(index, true);
-        if(mapping.isEmpty()) {
+        if (mapping.isEmpty()) {
           throw new ProvenanceException(RESTCodes.ProvenanceErrorCode.BAD_REQUEST, Level.INFO,
             "provenance file state - no index");
         }
         base.fixSortBy(index, mapping);
       }
-    } catch (ElasticException e) {
-      String msg = "provenance - elastic query problem";
-      throw ProvHelper.fromElastic(e, msg, msg + " - file state mapping");
+    } catch (OpenSearchException e) {
+      String msg = "provenance - opensearch query problem";
+      throw ProvHelper.fromOpenSearch(e, msg, msg + " - file state mapping");
     }
   }
-  
+
   private Optional<String> getAppId(ProvStateDTO fileState) {
-    if(fileState.getAppId().equals("none")) {
-      if(fileState.getXattrs().containsKey("appId")) {
+    if (fileState.getAppId().equals("none")) {
+      if (fileState.getXattrs().containsKey("appId")) {
         return Optional.of(fileState.getXattrs().get("appId"));
       } else {
         return Optional.empty();
@@ -174,9 +175,9 @@ public class ProvStateController {
       return Optional.of(fileState.getAppId());
     }
   }
-  
+
   /**
-   * @param <R> parsed elastic item
+   * @param <R>  parsed opensearch item
    * @param <S1> intermediate result wrapped in Try
    * @param <S2> final result
    * @return
@@ -192,43 +193,44 @@ public class ProvStateController {
     Integer offset, Integer limit, HandlerFactory<R, S1, S2> handlerFactory)
     throws ProvenanceException {
     CheckedSupplier<SearchRequest, ProvenanceException> srF =
-      ElasticHelper.baseSearchRequest(
+      OpenSearchHelper.baseSearchRequest(
         settings.getProvFileIndex(projectIId),
-        settings.getElasticDefaultScrollPageSize())
+        settings.getOpenSearchDefaultScrollPageSize())
         .andThen(filterByStateParams(fileStateFilters, xAttrsFilters, likeXAttrsFilters, hasXAttrsFilters))
-        .andThen(ElasticHelper.withFileStateOrder(fileStateSortBy, xattrSortBy))
-        .andThen(ElasticHelper.withPagination(offset, limit, settings.getElasticMaxScrollPageSize()));
+        .andThen(OpenSearchHelper.withFileStateOrder(fileStateSortBy, xattrSortBy))
+        .andThen(OpenSearchHelper.withPagination(offset, limit, settings.getOpenSearchMaxScrollPageSize()));
     SearchRequest request = srF.get();
     Pair<Long, Try<S1>> searchResult;
     try {
       searchResult = client.search(request, handlerFactory.getHandler());
-    } catch (ElasticException e) {
-      String msg = "provenance - elastic query problem";
-      throw ProvHelper.fromElastic(e, msg, msg + " - file state");
+    } catch (OpenSearchException e) {
+      String msg = "provenance - opensearch query problem";
+      throw ProvHelper.fromOpenSearch(e, msg, msg + " - file state");
     }
     return handlerFactory.checkedResult(searchResult);
   }
-  
+
   private ProvStateDTO provFileStateCount(Long projectIId, Map<ProvParser.Field, ProvParser.FilterVal> fileStateFilters,
-    Map<String, String> xAttrsFilters, Map<String, String> likeXAttrsFilters, Set<String> hasXAttrsFilters)
+                                          Map<String, String> xAttrsFilters, Map<String, String> likeXAttrsFilters,
+                                          Set<String> hasXAttrsFilters)
     throws ProvenanceException {
     CheckedSupplier<SearchRequest, ProvenanceException> srF =
-      ElasticHelper.countSearchRequest(
+      OpenSearchHelper.countSearchRequest(
         settings.getProvFileIndex(projectIId))
         .andThen(filterByStateParams(fileStateFilters, xAttrsFilters, likeXAttrsFilters, hasXAttrsFilters));
     SearchRequest request = srF.get();
     Long searchResult;
     try {
       searchResult = client.searchCount(request);
-    } catch (ElasticException e) {
-      String msg = "provenance - elastic query problem";
-      throw ProvHelper.fromElastic(e, msg, msg + " - file state count");
+    } catch (OpenSearchException e) {
+      String msg = "provenance - opensearch query problem";
+      throw ProvHelper.fromOpenSearch(e, msg, msg + " - file state count");
     }
     ProvStateDTO container = new ProvStateDTO();
     container.setCount(searchResult);
     return container;
   }
-  
+
   private CheckedFunction<SearchRequest, SearchRequest, ProvenanceException> filterByStateParams(
     Map<ProvParser.Field, ProvParser.FilterVal> fileStateFilters, Map<String, String> xAttrsFilters,
     Map<String, String> likeXAttrsFilters, Set<String> hasXAttrsFilters) {
@@ -236,44 +238,45 @@ public class ProvStateController {
       BoolQueryBuilder query = boolQuery()
         .must(termQuery(ProvParser.Fields.ENTRY_TYPE.toString().toLowerCase(),
           ProvParser.EntryType.STATE.toString().toLowerCase()));
-      query = ElasticHelper.filterByBasicFields(query, fileStateFilters);
+      query = OpenSearchHelper.filterByBasicFields(query, fileStateFilters);
       for (Map.Entry<String, String> filter : xAttrsFilters.entrySet()) {
         query = query.must(getXAttrQB(filter.getKey(), filter.getValue()));
       }
       for (Map.Entry<String, String> filter : likeXAttrsFilters.entrySet()) {
         query = query.must(getLikeXAttrQB(filter.getKey(), filter.getValue()));
       }
-      for(String xattrKey : hasXAttrsFilters) {
+      for (String xattrKey : hasXAttrsFilters) {
         query = query.must(hasXAttrQB(xattrKey));
       }
       sr.source().query(query);
       return sr;
     };
   }
-  
+
   public QueryBuilder hasXAttrQB(String xattrAdjustedKey) {
     return existsQuery(xattrAdjustedKey);
   }
-  
+
   public QueryBuilder getXAttrQB(String xattrAdjustedKey, String xattrVal) {
     return termQuery(xattrAdjustedKey, xattrVal.toLowerCase());
   }
-  
+
   public QueryBuilder getLikeXAttrQB(String xattrAdjustedKey, String xattrVal) {
-    return ElasticHelper.fullTextSearch(xattrAdjustedKey, xattrVal);
+    return OpenSearchHelper.fullTextSearch(xattrAdjustedKey, xattrVal);
   }
-  
+
   public interface HandlerFactory<R, S1, S2> {
-    ElasticHits.Handler<R, S1> getHandler();
+    OpenSearchHits.Handler<R, S1> getHandler();
+
     S2 checkedResult(Pair<Long, Try<S1>> result) throws ProvenanceException;
-    
+
     class BaseList implements HandlerFactory<ProvStateDTO, List<ProvStateDTO>, ProvStateDTO> {
-      public ElasticHits.Handler<ProvStateDTO, List<ProvStateDTO>> getHandler() {
-        ElasticHits.Parser<ProvStateDTO> parser =
-          hit -> ProvStateParser.tryInstance(BasicElasticHit.instance(hit));
-        return ElasticHits.handlerAddToList(parser);
+      public OpenSearchHits.Handler<ProvStateDTO, List<ProvStateDTO>> getHandler() {
+        OpenSearchHits.Parser<ProvStateDTO> parser =
+          hit -> ProvStateParser.tryInstance(BasicOpenSearchHit.instance(hit));
+        return OpenSearchHits.handlerAddToList(parser);
       }
-  
+
       public ProvStateDTO checkedResult(Pair<Long, Try<List<ProvStateDTO>>> result) throws ProvenanceException {
         try {
           ProvStateDTO container = new ProvStateDTO();
@@ -290,18 +293,18 @@ public class ProvStateController {
         }
       }
     }
-    
+
     class MLIdSet implements HandlerFactory<ProvStateDTO, Set<ProvStateDTO>, Pair<Long, Set<ProvStateDTO>>> {
       @Override
-      public ElasticHits.Handler<ProvStateDTO, Set<ProvStateDTO>> getHandler() {
-        ElasticHits.Parser<ProvStateDTO> mlIdParser =
-          hit -> ProvStateParser.tryInstance(BasicElasticHit.instance(hit));
-        return ElasticHits.handlerAddToSet(mlIdParser);
+      public OpenSearchHits.Handler<ProvStateDTO, Set<ProvStateDTO>> getHandler() {
+        OpenSearchHits.Parser<ProvStateDTO> mlIdParser =
+          hit -> ProvStateParser.tryInstance(BasicOpenSearchHit.instance(hit));
+        return OpenSearchHits.handlerAddToSet(mlIdParser);
       }
-      
+
       @Override
       public Pair<Long, Set<ProvStateDTO>> checkedResult(Pair<Long, Try<Set<ProvStateDTO>>> result)
-              throws ProvenanceException {
+        throws ProvenanceException {
         try {
           return Pair.with(result.getValue0(), result.getValue1().checkedGet());
         } catch (Throwable t) {

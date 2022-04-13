@@ -31,13 +31,13 @@ import io.hops.hopsworks.common.dataset.util.DatasetHelper;
 import io.hops.hopsworks.common.dataset.util.DatasetPath;
 import io.hops.hopsworks.common.featurestore.FeaturestoreFacade;
 import io.hops.hopsworks.common.featurestore.trainingdatasets.TrainingDatasetDTO;
+import io.hops.hopsworks.common.hdfs.HdfsUsersController;
 import io.hops.hopsworks.common.hdfs.Utils;
 import io.hops.hopsworks.common.provenance.core.ProvParser;
+import io.hops.hopsworks.common.provenance.core.Provenance;
 import io.hops.hopsworks.common.provenance.ops.ProvLinks;
 import io.hops.hopsworks.common.provenance.ops.ProvLinksParamBuilder;
 import io.hops.hopsworks.common.provenance.ops.ProvOpsControllerIface;
-import io.hops.hopsworks.common.hdfs.HdfsUsersController;
-import io.hops.hopsworks.common.provenance.core.Provenance;
 import io.hops.hopsworks.common.provenance.ops.dto.ProvLinksDTO;
 import io.hops.hopsworks.common.provenance.ops.dto.ProvOpsDTO;
 import io.hops.hopsworks.common.provenance.state.ProvStateParamBuilder;
@@ -59,8 +59,8 @@ import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.project.team.ProjectTeam;
 import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.restutils.RESTCodes;
-import org.elasticsearch.search.sort.SortOrder;
 import org.javatuples.Pair;
+import org.opensearch.search.sort.SortOrder;
 
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
@@ -186,7 +186,7 @@ public class ModelsBuilder {
         }
       } catch (ProvenanceException e) {
         if (ProvHelper.missingMappingForField( e)) {
-          LOGGER.log(Level.WARNING, "Could not find elastic mapping for experiments query", e);
+          LOGGER.log(Level.WARNING, "Could not find opensearch mapping for experiments query", e);
           return dto;
         } else {
           throw new ModelRegistryException(RESTCodes.ModelRegistryErrorCode.MODEL_LIST_FAILED, Level.FINE,
@@ -392,7 +392,7 @@ public class ModelsBuilder {
 
   private void validatePagination(ResourceRequest resourceRequest) {
     if(resourceRequest.getLimit() == null || resourceRequest.getLimit() <= 0) {
-      resourceRequest.setLimit(settings.getElasticDefaultScrollPageSize());
+      resourceRequest.setLimit(settings.getOpenSearchDefaultScrollPageSize());
     }
 
     if(resourceRequest.getOffset() == null || resourceRequest.getOffset() <= 0) {

@@ -19,7 +19,7 @@ import io.hops.hopsworks.common.provenance.app.ProvAParser;
 import io.hops.hopsworks.common.provenance.core.ProvParser;
 import io.hops.hopsworks.exceptions.ProvenanceException;
 import io.hops.hopsworks.restutils.RESTCodes;
-import org.elasticsearch.search.sort.SortOrder;
+import org.opensearch.search.sort.SortOrder;
 import org.javatuples.Pair;
 
 import java.util.ArrayList;
@@ -58,11 +58,11 @@ public class ProvStateParamBuilder {
   }
   
   public static class Extensions {
-    Set<ProvParser.ElasticExpansions> expansions = new HashSet<>();
+    Set<ProvParser.OpenSearchExpansions> expansions = new HashSet<>();
     Map<ProvParser.Field, ProvParser.FilterVal> appStateFilter = new HashMap<>();
   
     public boolean hasAppExpansion() {
-      return expansions.contains(ProvParser.ElasticExpansions.APP);
+      return expansions.contains(ProvParser.OpenSearchExpansions.APP);
     }
   }
   
@@ -173,7 +173,7 @@ public class ProvStateParamBuilder {
   }
   
   public ProvStateParamBuilder withAppExpansion() {
-    extensions.expansions.add(ProvParser.ElasticExpansions.APP);
+    extensions.expansions.add(ProvParser.OpenSearchExpansions.APP);
     return this;
   }
   

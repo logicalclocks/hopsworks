@@ -15,14 +15,15 @@
  */
 package io.hops.hopsworks.common.provenance.core;
 
-import io.hops.hopsworks.common.provenance.core.elastic.ElasticHelper;
+import io.hops.hopsworks.common.provenance.core.opensearch.OpenSearchHelper;
 import io.hops.hopsworks.common.provenance.util.functional.CheckedFunction;
 import io.hops.hopsworks.exceptions.ProvenanceException;
 import io.hops.hopsworks.restutils.RESTCodes;
-import org.elasticsearch.index.query.BoolQueryBuilder;
-import org.elasticsearch.index.query.QueryBuilder;
-import org.elasticsearch.index.query.RangeQueryBuilder;
-import org.elasticsearch.search.sort.SortOrder;
+import org.opensearch.index.query.BoolQueryBuilder;
+import org.opensearch.index.query.QueryBuilder;
+import org.opensearch.index.query.RangeQueryBuilder;
+import org.opensearch.search.sort.SortOrder;
+
 import org.javatuples.Pair;
 
 import java.util.Collection;
@@ -34,15 +35,15 @@ import java.util.Set;
 import java.util.StringJoiner;
 import java.util.logging.Level;
 
-import static org.elasticsearch.index.query.QueryBuilders.boolQuery;
-import static org.elasticsearch.index.query.QueryBuilders.rangeQuery;
-import static org.elasticsearch.index.query.QueryBuilders.termQuery;
+import static org.opensearch.index.query.QueryBuilders.boolQuery;
+import static org.opensearch.index.query.QueryBuilders.rangeQuery;
+import static org.opensearch.index.query.QueryBuilders.termQuery;
 
 public class ProvParser {
-  public interface ElasticField {
+  public interface OpenSearchField {
   }
   
-  public enum Fields implements ElasticField {
+  public enum Fields implements OpenSearchField {
     PROJECT_I_ID,
     DATASET_I_ID,
     PARENT_I_ID,
@@ -60,7 +61,7 @@ public class ProvParser {
     }
   }
   
-  public enum AuxField implements ElasticField {
+  public enum AuxField implements OpenSearchField {
     PARTITION_ID,
     PROJECT_NAME;
     
@@ -70,7 +71,7 @@ public class ProvParser {
     }
   }
   
-  public enum XAttrField implements ElasticField {
+  public enum XAttrField implements OpenSearchField {
     XATTR_PROV;
     @Override
     public String toString() {
@@ -152,7 +153,7 @@ public class ProvParser {
   }
   
   public interface Field {
-    String elasticFieldName();
+    String openSearchFieldName();
     String queryFieldName();
     FilterType filterType();
     ValParser<?> filterValParser();
@@ -208,16 +209,16 @@ public class ProvParser {
         switch(fieldFilter.getValue0().filterType()) {
           case EXACT: {
             String sVal = fieldFilter.getValue1().toString();
-            fieldQuery.should(termQuery(fieldFilter.getValue0().elasticFieldName(), sVal));
+            fieldQuery.should(termQuery(fieldFilter.getValue0().openSearchFieldName(), sVal));
           } break;
           case NOT: {
             String sVal = fieldFilter.getValue1().toString();
-            fieldQuery.mustNot(termQuery(fieldFilter.getValue0().elasticFieldName(), sVal));
+            fieldQuery.mustNot(termQuery(fieldFilter.getValue0().openSearchFieldName(), sVal));
           } break;
           case LIKE: {
             if (fieldFilter.getValue1() instanceof String) {
               String sVal = fieldFilter.getValue1().toString();
-              fieldQuery.should(ElasticHelper.fullTextSearch(fieldFilter.getValue0().elasticFieldName(), sVal));
+              fieldQuery.should(OpenSearchHelper.fullTextSearch(fieldFilter.getValue0().openSearchFieldName(), sVal));
             } else {
               throw new ProvenanceException(RESTCodes.ProvenanceErrorCode.BAD_REQUEST, Level.INFO,
                 "like queries only work on string values");
@@ -233,13 +234,13 @@ public class ProvParser {
   }
   
   public static class FilterValRange implements FilterVal {
-    String elasticFieldName;
+    String openSearchFieldName;
     Pair<Field, Object> lower = null;
     Pair<Field, Object> upper = null;
     
     @Override
     public void add(Pair<Field, Object> filter) throws ProvenanceException {
-      elasticFieldName = filter.getValue0().elasticFieldName();
+      openSearchFieldName = filter.getValue0().openSearchFieldName();
       if(lower == null
         && (filter.getValue0().filterType() == FilterType.RANGE_GT
         || filter.getValue0().filterType() == FilterType.RANGE_GTE )) {
@@ -256,7 +257,7 @@ public class ProvParser {
     
     @Override
     public QueryBuilder query() {
-      RangeQueryBuilder fieldQuery = rangeQuery(elasticFieldName);
+      RangeQueryBuilder fieldQuery = rangeQuery(openSearchFieldName);
       if(upper != null) {
         switch(upper.getValue0().filterType()) {
           case RANGE_LT:
@@ -384,12 +385,12 @@ public class ProvParser {
     return keyj.toString();
   }
   
-  public enum ElasticExpansions {
+  public enum OpenSearchExpansions {
     APP("APP");
     
     public final String queryParamName;
     
-    ElasticExpansions(String queryParamName) {
+    OpenSearchExpansions(String queryParamName) {
       this.queryParamName = queryParamName;
     }
     
@@ -420,15 +421,15 @@ public class ProvParser {
     }
   }
   
-  public static void withExpansions(Set<ElasticExpansions> expansions, Set<String> params)
+  public static void withExpansions(Set<OpenSearchExpansions> expansions, Set<String> params)
     throws ProvenanceException {
     for(String param : params) {
       try {
-        expansions.add(ElasticExpansions.valueOf(param));
+        expansions.add(OpenSearchExpansions.valueOf(param));
       } catch (NullPointerException | IllegalArgumentException e) {
         throw new ProvenanceException(RESTCodes.ProvenanceErrorCode.BAD_REQUEST, Level.INFO,
           "param " + param + " not supported - supported params:"
-            + EnumSet.allOf(ElasticExpansions.class),
+            + EnumSet.allOf(OpenSearchExpansions.class),
           "exception extracting FilterBy param", e);
       }
     }

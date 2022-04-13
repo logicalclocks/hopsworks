@@ -28,9 +28,9 @@ import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.dataset.DatasetController;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
 import io.hops.hopsworks.common.provenance.core.Provenance;
+import io.hops.hopsworks.common.provenance.state.ProvStateController;
 import io.hops.hopsworks.common.provenance.state.ProvStateParamBuilder;
 import io.hops.hopsworks.common.provenance.state.ProvStateParser;
-import io.hops.hopsworks.common.provenance.state.ProvStateController;
 import io.hops.hopsworks.common.provenance.state.dto.ProvStateDTO;
 import io.hops.hopsworks.common.provenance.util.ProvHelper;
 import io.hops.hopsworks.common.util.AccessController;
@@ -47,9 +47,9 @@ import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.project.team.ProjectTeam;
 import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.restutils.RESTCodes;
-import org.elasticsearch.search.sort.SortOrder;
 import org.javatuples.Pair;
 import org.json.JSONObject;
+import org.opensearch.search.sort.SortOrder;
 
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
@@ -174,7 +174,7 @@ public class ExperimentsBuilder {
         }
       } catch (ExperimentsException | DatasetException | ProvenanceException | MetadataException | GenericException e) {
         if (e instanceof ProvenanceException && ProvHelper.missingMappingForField((ProvenanceException) e)) {
-          LOGGER.log(Level.WARNING, "Could not find elastic mapping for experiments query", e);
+          LOGGER.log(Level.WARNING, "Could not find opensearch mapping for experiments query", e);
           return dto;
         } else {
           throw new ExperimentsException(RESTCodes.ExperimentsErrorCode.EXPERIMENT_LIST_FAILED, Level.FINE,
@@ -433,7 +433,7 @@ public class ExperimentsBuilder {
 
   private void validatePagination(ResourceRequest resourceRequest) {
     if(resourceRequest.getLimit() == null || resourceRequest.getLimit() <= 0) {
-      resourceRequest.setLimit(settings.getElasticDefaultScrollPageSize());
+      resourceRequest.setLimit(settings.getOpenSearchDefaultScrollPageSize());
     }
 
     if(resourceRequest.getOffset() == null || resourceRequest.getOffset() <= 0) {

@@ -41,10 +41,10 @@ package io.hops.hopsworks.admin.security.ua;
 
 import io.hops.hopsworks.admin.user.administration.UserAdministrationController;
 import io.hops.hopsworks.common.dao.user.UserFacade;
-import io.hops.hopsworks.common.elastic.ElasticJWTController;
+import io.hops.hopsworks.common.opensearch.OpenSearchJWTController;
 import io.hops.hopsworks.common.user.UsersController;
 import io.hops.hopsworks.common.util.Settings;
-import io.hops.hopsworks.exceptions.ElasticException;
+import io.hops.hopsworks.exceptions.OpenSearchException;
 import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.persistence.entity.user.security.ua.UserAccountStatus;
 
@@ -74,7 +74,7 @@ public class RoleEnforcementPoint implements Serializable {
   @EJB
   private AuditedUserAuth auditedUserAuth;
   @EJB
-  private ElasticJWTController elasticJWTController;
+  private OpenSearchJWTController openSearchJWTController;
   @EJB
   private Settings settings;
 
@@ -173,8 +173,8 @@ public class RoleEnforcementPoint implements Serializable {
     return userAdministrationController.getLoginName(principal);
   }
 
-  public String getKibanaServiceLogURL() throws ElasticException {
-    return settings.getKibanaAppUri(elasticJWTController.createTokenForELKServices()) + "" +
+  public String getKibanaServiceLogURL() throws OpenSearchException {
+    return settings.getKibanaAppUri(openSearchJWTController.createTokenForELKServices()) + "" +
         "#/discover?_g=()&_a=(columns:!(service,host,logdate,logger_name,priority,log_message),index:'.services-*'," +
         "interval:auto,sort:!(logdate,desc))";
   }

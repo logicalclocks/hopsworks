@@ -1262,10 +1262,10 @@ describe "On #{ENV['OS']}" do
           start_serving(@project, @serving)
           wait_for_serving_status(@serving[:name], "Running")
 
-          # Check that the logs are written in the elastic index.
+          # Check that the logs are written in the OpenSearch index.
           wait_result = wait_for_me_time(30, 4) do
-            result = elastic_rest do
-              response = elastic_get "#{@project[:projectname].downcase}_serving*/_search?q=serving_name:#{@serving[:name]}"
+            result = opensearch_rest do
+              response = opensearch_get "#{@project[:projectname].downcase}_serving*/_search?q=serving_name:#{@serving[:name]}"
               index = response.body
               parsed_index = JSON.parse(index)
               hits = parsed_index['hits']['total']['value']
@@ -1300,10 +1300,10 @@ describe "On #{ENV['OS']}" do
           start_serving(@project, @serving)
           wait_for_serving_status(@serving[:name], "Running")
 
-          # Check that the logs are written in the elastic index.
+          # Check that the logs are written in the OpenSearch index.
           wait_result = wait_for_me_time(30, 4) do
-            elastic_rest do
-              response = elastic_get "#{@project[:projectname].downcase}_serving*/_search?q=serving_name:#{@serving[:name]}"
+            opensearch_rest do
+              response = opensearch_get "#{@project[:projectname].downcase}_serving*/_search?q=serving_name:#{@serving[:name]}"
               index = response.body
               parsed_index = JSON.parse(index)
               hits = parsed_index['hits']['total']['value']

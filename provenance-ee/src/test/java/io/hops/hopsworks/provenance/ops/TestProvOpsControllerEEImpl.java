@@ -18,12 +18,12 @@ package io.hops.hopsworks.provenance.ops;
 
 import com.google.gson.Gson;
 import com.lambdista.util.Try;
-import io.hops.hopsworks.common.elastic.ElasticClientController;
+import io.hops.hopsworks.common.opensearch.OpenSearchClientController;
 import io.hops.hopsworks.common.featurestore.xattr.dto.FeaturegroupXAttr;
 import io.hops.hopsworks.common.provenance.core.ProvParser;
 import io.hops.hopsworks.common.provenance.core.Provenance;
-import io.hops.hopsworks.common.provenance.core.elastic.ElasticCache;
-import io.hops.hopsworks.common.provenance.core.elastic.ElasticHits;
+import io.hops.hopsworks.common.provenance.core.opensearch.OpenSearchCache;
+import io.hops.hopsworks.common.provenance.core.opensearch.OpenSearchHits;
 import io.hops.hopsworks.common.provenance.ops.ProvLinksParamBuilder;
 import io.hops.hopsworks.common.provenance.ops.ProvOpsControllerIface;
 import io.hops.hopsworks.common.provenance.ops.dto.ProvLinksDTO;
@@ -31,13 +31,13 @@ import io.hops.hopsworks.common.provenance.ops.dto.ProvOpsDTO;
 import io.hops.hopsworks.common.provenance.state.ProvStateController;
 import io.hops.hopsworks.common.provenance.state.dto.ProvStateDTO;
 import io.hops.hopsworks.common.util.Settings;
-import io.hops.hopsworks.exceptions.ElasticException;
+import io.hops.hopsworks.exceptions.OpenSearchException;
 import io.hops.hopsworks.exceptions.ProvenanceException;
 import io.hops.hopsworks.persistence.entity.hdfs.inode.Inode;
 import io.hops.hopsworks.persistence.entity.hdfs.inode.InodePK;
 import io.hops.hopsworks.persistence.entity.project.Project;
-import org.elasticsearch.action.search.MultiSearchRequest;
-import org.elasticsearch.action.search.SearchRequest;
+import org.opensearch.action.search.MultiSearchRequest;
+import org.opensearch.action.search.SearchRequest;
 import org.javatuples.Pair;
 import org.junit.Assert;
 import org.junit.Before;
@@ -58,7 +58,7 @@ import java.util.stream.Collectors;
 public class TestProvOpsControllerEEImpl {
 
   private ProvOpsControllerIface provOpsController;
-  private ElasticClientController client;
+  private OpenSearchClientController client;
   private Project project;
   private Map map, map1, map2, map3, map4, map5, map6, map7, map8, map9;
   private Builder builder;
@@ -130,8 +130,8 @@ public class TestProvOpsControllerEEImpl {
   }
   
   @Before
-  public void setup() throws ElasticException {
-    client = Mockito.mock(ElasticClientController.class);
+  public void setup() throws OpenSearchException {
+    client = Mockito.mock(OpenSearchClientController.class);
     
     builder = new Builder();
     
@@ -235,11 +235,11 @@ public class TestProvOpsControllerEEImpl {
 
     Settings settings = Mockito.mock(Settings.class);
     Mockito.when(settings.getProvFileIndex(Mockito.anyLong())).thenReturn("1__file_prov");
-    Mockito.when(settings.getElasticDefaultScrollPageSize()).thenReturn(1);
-    Mockito.when(settings.getElasticMaxScrollPageSize()).thenReturn(5);
+    Mockito.when(settings.getOpenSearchDefaultScrollPageSize()).thenReturn(1);
+    Mockito.when(settings.getOpenSearchMaxScrollPageSize()).thenReturn(5);
     Mockito.when(settings.getProvenanceGraphMaxSize()).thenReturn(100);
-
-    ElasticCache cache = Mockito.mock(ElasticCache.class);
+    
+    OpenSearchCache cache = Mockito.mock(OpenSearchCache.class);
     Mockito.when(cache.mngIndexGetMapping(Mockito.anyString(), Mockito.anyBoolean())).thenReturn(new HashMap<>());
 
     ProvStateController provStateController = new ProvStateController(settings, client, cache);
@@ -480,7 +480,7 @@ public class TestProvOpsControllerEEImpl {
     compareSearchRequests(expectedMultiScrollingQuery, multiRequest);
 
     Mockito.verify(client, Mockito.times(expectedAlive.size()))
-            .search(request.capture(), Mockito.any(ElasticHits.Handler.class));
+            .search(request.capture(), Mockito.any(OpenSearchHits.Handler.class));
     for (int i = 0; i < request.getAllValues().size(); i++) {
       JSONAssert.assertEquals(expectedAlive.get(i), request.getAllValues().get(i).source().toString(), false);
     }
@@ -553,7 +553,7 @@ public class TestProvOpsControllerEEImpl {
     compareSearchRequests(expectedMultiScrollingQuery, multiRequest);
 
     Mockito.verify(client, Mockito.times(expectedAlive.size()))
-            .search(request.capture(), Mockito.any(ElasticHits.Handler.class));
+            .search(request.capture(), Mockito.any(OpenSearchHits.Handler.class));
     for (int i = 0; i < request.getAllValues().size(); i++) {
       JSONAssert.assertEquals(expectedAlive.get(i), request.getAllValues().get(i).source().toString(), false);
     }
@@ -690,7 +690,7 @@ public class TestProvOpsControllerEEImpl {
     compareSearchRequests(expectedMultiScrollingQuery, multiRequest);
 
     Mockito.verify(client, Mockito.times(expectedAlive.size()))
-            .search(request.capture(), Mockito.any(ElasticHits.Handler.class));
+            .search(request.capture(), Mockito.any(OpenSearchHits.Handler.class));
     for (int i = 0; i < request.getAllValues().size(); i++) {
       JSONAssert.assertEquals(expectedAlive.get(i), request.getAllValues().get(i).source().toString(), false);
     }
@@ -762,7 +762,7 @@ public class TestProvOpsControllerEEImpl {
     compareSearchRequests(expectedMultiScrollingQuery, multiRequest);
 
     Mockito.verify(client, Mockito.times(expectedAlive.size()))
-            .search(request.capture(), Mockito.any(ElasticHits.Handler.class));
+            .search(request.capture(), Mockito.any(OpenSearchHits.Handler.class));
     for (int i = 0; i < request.getAllValues().size(); i++) {
       JSONAssert.assertEquals(expectedAlive.get(i), request.getAllValues().get(i).source().toString(), false);
     }
@@ -894,7 +894,7 @@ public class TestProvOpsControllerEEImpl {
     compareSearchRequests(expectedMultiScrollingQuery, multiRequest);
 
     Mockito.verify(client, Mockito.times(expectedAlive.size()))
-            .search(request.capture(), Mockito.any(ElasticHits.Handler.class));
+            .search(request.capture(), Mockito.any(OpenSearchHits.Handler.class));
     for (int i = 0; i < request.getAllValues().size(); i++) {
       JSONAssert.assertEquals(expectedAlive.get(i), request.getAllValues().get(i).source().toString(), false);
     }
@@ -963,7 +963,7 @@ public class TestProvOpsControllerEEImpl {
     compareSearchRequests(expectedMultiScrollingQuery, multiRequest);
 
     Mockito.verify(client, Mockito.times(expectedAlive.size()))
-            .search(request.capture(), Mockito.any(ElasticHits.Handler.class));
+            .search(request.capture(), Mockito.any(OpenSearchHits.Handler.class));
     for (int i = 0; i < request.getAllValues().size(); i++) {
       JSONAssert.assertEquals(expectedAlive.get(i), request.getAllValues().get(i).source().toString(), false);
     }
@@ -1076,7 +1076,7 @@ public class TestProvOpsControllerEEImpl {
     compareSearchRequests(expectedMultiScrollingQuery, multiRequest);
 
     Mockito.verify(client, Mockito.times(expectedAlive.size()))
-            .search(request.capture(), Mockito.any(ElasticHits.Handler.class));
+            .search(request.capture(), Mockito.any(OpenSearchHits.Handler.class));
     for (int i = 0; i < request.getAllValues().size(); i++) {
       JSONAssert.assertEquals(expectedAlive.get(i), request.getAllValues().get(i).source().toString(), false);
     }
@@ -1206,7 +1206,7 @@ public class TestProvOpsControllerEEImpl {
     compareSearchRequests(expectedMultiScrollingQuery, multiRequest);
 
     Mockito.verify(client, Mockito.times(expectedAlive.size()))
-            .search(request.capture(), Mockito.any(ElasticHits.Handler.class));
+            .search(request.capture(), Mockito.any(OpenSearchHits.Handler.class));
     for (int i = 0; i < request.getAllValues().size(); i++) {
       JSONAssert.assertEquals(expectedAlive.get(i), request.getAllValues().get(i).source().toString(), false);
     }
@@ -1318,7 +1318,7 @@ public class TestProvOpsControllerEEImpl {
     compareSearchRequests(expectedMultiScrollingQuery, multiRequest);
 
     Mockito.verify(client, Mockito.times(expectedAlive.size()))
-            .search(request.capture(), Mockito.any(ElasticHits.Handler.class));
+            .search(request.capture(), Mockito.any(OpenSearchHits.Handler.class));
     for (int i = 0; i < request.getAllValues().size(); i++) {
       JSONAssert.assertEquals(expectedAlive.get(i), request.getAllValues().get(i).source().toString(), false);
     }
@@ -1429,7 +1429,7 @@ public class TestProvOpsControllerEEImpl {
     compareSearchRequests(expectedMultiScrollingQuery, multiRequest);
 
     Mockito.verify(client, Mockito.times(expectedAlive.size()))
-            .search(request.capture(), Mockito.any(ElasticHits.Handler.class));
+            .search(request.capture(), Mockito.any(OpenSearchHits.Handler.class));
     for (int i = 0; i < request.getAllValues().size(); i++) {
       JSONAssert.assertEquals(expectedAlive.get(i), request.getAllValues().get(i).source().toString(), false);
     }
@@ -1520,7 +1520,7 @@ public class TestProvOpsControllerEEImpl {
     compareSearchRequests(expectedMultiScrollingQuery, multiRequest);
 
     Mockito.verify(client, Mockito.times(expectedAlive.size()))
-            .search(request.capture(), Mockito.any(ElasticHits.Handler.class));
+            .search(request.capture(), Mockito.any(OpenSearchHits.Handler.class));
     for (int i = 0; i < request.getAllValues().size(); i++) {
       JSONAssert.assertEquals(expectedAlive.get(i), request.getAllValues().get(i).source().toString(), false);
     }

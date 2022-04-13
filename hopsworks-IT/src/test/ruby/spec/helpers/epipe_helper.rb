@@ -76,7 +76,7 @@ module EpipeHelper
       end
       output[0] = result
     end
-    #short wait for epipe-elasticsearch propagation
+    #short wait for epipe-opensearch propagation
     sleep(3)
     epipe_active(msg: "epipe is dead")
     result[0]

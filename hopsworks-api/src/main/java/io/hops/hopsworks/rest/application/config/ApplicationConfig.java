@@ -54,7 +54,7 @@ public class ApplicationConfig extends ResourceConfig {
    */
   public ApplicationConfig() {
     register(io.hops.hopsworks.api.agent.AgentResource.class);
-    register(io.hops.hopsworks.api.elastic.ElasticService.class);
+    register(io.hops.hopsworks.api.opensearch.OpenSearchService.class);
     register(io.hops.hopsworks.api.exception.mapper.RESTApiThrowableMapper.class);
     register(io.hops.hopsworks.api.filter.ProjectAuthFilter.class);
     register(io.hops.hopsworks.api.filter.AuthFilter.class);
@@ -134,7 +134,7 @@ public class ApplicationConfig extends ResourceConfig {
     register(io.hops.hopsworks.api.provenance.ProjectProvenanceResource.class);
     
     //search
-    register(io.hops.hopsworks.api.elastic.ElasticResource.class);
+    register(io.hops.hopsworks.api.opensearch.OpenSearchResource.class);
     
     //uncomment to allow Cross-Origin Resource Sharing
     //register(io.hops.hopsworks.filters.AllowCORSFilter.class);

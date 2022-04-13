@@ -15,9 +15,9 @@
  */
 package io.hops.hopsworks.common.provenance.ops;
 
-import io.hops.hopsworks.common.provenance.core.elastic.ElasticAggregation;
+import io.hops.hopsworks.common.provenance.core.opensearch.OpenSearchAggregation;
 
-public enum ProvOpsAggregations implements ElasticAggregation {
+public enum ProvOpsAggregations implements OpenSearchAggregation {
   APP_USAGE,
   APP_IDS
 }

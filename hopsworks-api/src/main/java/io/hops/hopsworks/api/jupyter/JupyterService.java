@@ -75,7 +75,7 @@ import io.hops.hopsworks.exceptions.HopsSecurityException;
 import io.hops.hopsworks.exceptions.ProjectException;
 import io.hops.hopsworks.exceptions.ServiceException;
 import io.hops.hopsworks.exceptions.JobException;
-import io.hops.hopsworks.exceptions.ElasticException;
+import io.hops.hopsworks.exceptions.OpenSearchException;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
 import io.hops.hopsworks.persistence.entity.hdfs.user.HdfsUsers;
 import io.hops.hopsworks.persistence.entity.jobs.configuration.spark.SparkJobConfiguration;
@@ -564,12 +564,9 @@ public class JupyterService {
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
-  @ApiOperation(value = "Retrieve the list of most recent notebooks edited")
   public Response recent(@QueryParam("count") @DefaultValue("5") @Min(0) @Max(100) int count,
-                         @Context UriInfo uriInfo,
-                         @Context HttpServletRequest req,
-                         @Context SecurityContext sc)
-      throws ElasticException {
+                         @Context UriInfo uriInfo, @Context SecurityContext sc, @Context HttpServletRequest req)
+      throws OpenSearchException {
     NotebookDTO dto = notebookBuilder.build(uriInfo, project, count);
     return Response.ok().entity(dto).build();
   }

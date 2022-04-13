@@ -94,7 +94,7 @@ public class JobActivityBean {
   }
 
   private void updateFeatureGroup(Featuregroup featureGroup) throws Exception {
-    // Build the params for the elastic query. Filter for feature group (name_version) in a feature store (inodeId)
+    // Build the params for the opensearch query. Filter for feature group (name_version) in a feature store (inodeId)
     // with the timestamp greater than last known application register for this feature group.
     // Look for create file activities.
     ProvOpsParamBuilder params = buildOpsParams(
@@ -123,7 +123,7 @@ public class JobActivityBean {
   }
 
   private void updateTrainingDataset(TrainingDataset trainingDataset) throws Exception {
-    // Build the params for the elastic query. Filter for feature group (name_version) in a feature store (inodeId)
+    // Build the params for the opensearch query. Filter for feature group (name_version) in a feature store (inodeId)
     // with the timestamp greater than last known application register for this feature group.
     // Look for create file activities.
     ProvOpsParamBuilder params = buildOpsParams(

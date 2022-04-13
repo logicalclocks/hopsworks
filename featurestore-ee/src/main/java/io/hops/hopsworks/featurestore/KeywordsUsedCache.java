@@ -20,10 +20,10 @@ import java.util.concurrent.TimeUnit;
 @Singleton
 @TransactionAttribute(TransactionAttributeType.NEVER)
 public class KeywordsUsedCache {
-  // This is a temporary cached used by Hopsworks to avoid hitting elasticsearch with each
+  // This is a temporary cached used by Hopsworks to avoid hitting opensearch with each
   // Query. We use Guava cache with a single key instead of the memoize utilities, so that
   // we can explicitly invalidate the cache when keywords are added or removed
-  // The source of truth will remain elastic.
+  // The source of truth will remain opensearch.
   @EJB
   private ProvStateControllerEE provStateControllerEE;
 

@@ -4,16 +4,16 @@
 
 package io.hops.hopsworks.provenance.state;
 
-import io.hops.hopsworks.common.provenance.core.elastic.ElasticAggregationParser;
-import io.hops.hopsworks.common.provenance.core.elastic.ElasticHelper;
-import io.hops.hopsworks.common.elastic.ElasticClientController;
+import io.hops.hopsworks.common.provenance.core.opensearch.OpenSearchAggregationParser;
+import io.hops.hopsworks.common.provenance.core.opensearch.OpenSearchHelper;
+import io.hops.hopsworks.common.opensearch.OpenSearchClientController;
 import io.hops.hopsworks.common.provenance.state.ProvStateAggregations;
 import io.hops.hopsworks.common.provenance.util.ProvHelper;
 import io.hops.hopsworks.common.provenance.util.functional.CheckedSupplier;
 import io.hops.hopsworks.common.util.Settings;
-import io.hops.hopsworks.exceptions.ElasticException;
+import io.hops.hopsworks.exceptions.OpenSearchException;
 import io.hops.hopsworks.exceptions.ProvenanceException;
-import org.elasticsearch.action.search.SearchRequest;
+import org.opensearch.action.search.SearchRequest;
 
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
@@ -29,24 +29,24 @@ import java.util.Map;
 public class ProvStateControllerEE {
 
   @EJB
-  private ElasticClientController client;
+  private OpenSearchClientController client;
   @EJB
-  private ProvStateElasticAggregations provStateElasticAggregations;
+  private ProvStateOpenSearchAggregations provStateElasticAggregations;
 
   public List<String> keywordAggregation() throws ProvenanceException {
-    Map<ProvStateAggregations, ElasticAggregationParser<?, ProvenanceException>> aggregationParser = new HashMap<>();
+    Map<ProvStateAggregations, OpenSearchAggregationParser<?, ProvenanceException>> aggregationParser = new HashMap<>();
     aggregationParser.put(ProvStateAggregations.FS_KEYWORDS, provStateElasticAggregations.keywordsAggregationParser());
 
     CheckedSupplier<SearchRequest, ProvenanceException> srF =
-        ElasticHelper.baseSearchRequest(Settings.FEATURESTORE_INDEX, 0)
-            .andThen(ElasticHelper.withAggregations(Arrays.asList(provStateElasticAggregations.keywordsAggregation())));
+        OpenSearchHelper.baseSearchRequest(Settings.FEATURESTORE_INDEX, 0)
+        .andThen(OpenSearchHelper.withAggregations(Arrays.asList(provStateElasticAggregations.keywordsAggregation())));
 
     try {
       return client.searchAggregations(srF.get(), aggregationParser)
           .get(ProvStateAggregations.FS_KEYWORDS);
-    } catch (ElasticException e) {
-      String msg = "provenance - elastic query problem";
-      throw ProvHelper.fromElastic(e, msg, msg + " - Keyword aggregation");
+    } catch (OpenSearchException e) {
+      String msg = "provenance - opensearch query problem";
+      throw ProvHelper.fromOpenSearch(e, msg, msg + " - Keyword aggregation");
     }
   }
 

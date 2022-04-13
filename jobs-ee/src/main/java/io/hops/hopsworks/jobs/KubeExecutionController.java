@@ -580,7 +580,7 @@ public class KubeExecutionController extends AbstractExecutionController impleme
       case PYTHON:
         environment.add(new EnvVarBuilder().withName("SPARK_HOME").withValue(settings.getSparkDir()).build());
         environment.add(new EnvVarBuilder().withName("SPARK_CONF_DIR").withValue(settings.getSparkConfDir()).build());
-        environment.add(new EnvVarBuilder().withName("ELASTIC_ENDPOINT").withValue(settings.getElasticRESTEndpoint())
+        environment.add(new EnvVarBuilder().withName("ELASTIC_ENDPOINT").withValue(settings.getOpenSearchRESTEndpoint())
           .build());
         environment.add(new EnvVarBuilder().withName("HADOOP_VERSION").withValue(settings.getHadoopVersion()).build());
         environment.add(new EnvVarBuilder().withName("HOPSWORKS_VERSION").withValue(settings.getHopsworksVersion())

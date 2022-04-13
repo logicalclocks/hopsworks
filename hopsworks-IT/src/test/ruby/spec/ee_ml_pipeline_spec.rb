@@ -228,10 +228,10 @@ describe "On #{ENV['OS']}" do
         expect(trainingdataset_exists(@project1[:id], @td_1)).to be(true)
       end
     end
-    context "elastic health" do
+    context "opensearch health" do
       it 'open scroll contexts' do
-        ids = elastic_nodes_ids
-        open_contexts1 = elastic_nodes_stats(ids[0]["id"])["indices"]["search"]["open_contexts"]
+        ids = opensearch_nodes_ids
+        open_contexts1 = opensearch_nodes_stats(ids[0]["id"])["indices"]["search"]["open_contexts"]
 
         create_session(@user1_params[:email], @user1_params[:password])
         expect(job_exists(@project1[:id], @create_synth_td_job)).to be(true)
@@ -248,7 +248,7 @@ describe "On #{ENV['OS']}" do
         expect(result["items"].length).to be >= 1
         prov_verify_link(result, td_app_id, "#{@base_fgs[0]}_1", "#{@td_1}_1")
 
-        open_contexts2 = elastic_nodes_stats(ids[0]["id"]) ["indices"]["search"]["open_contexts"]
+        open_contexts2 = opensearch_nodes_stats(ids[0]["id"]) ["indices"]["search"]["open_contexts"]
         expect(open_contexts2).to eq(open_contexts1)
       end
     end

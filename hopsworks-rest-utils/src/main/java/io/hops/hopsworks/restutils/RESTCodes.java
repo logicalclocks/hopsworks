@@ -172,7 +172,7 @@ public class RESTCodes {
             "op", Response.Status.NOT_MODIFIED),
     ANACONDA_NOT_ENABLED(66, "First enable Anaconda. Click on 'Python' -> Activate Anaconda",
         Response.Status.PRECONDITION_FAILED),
-    TENSORBOARD_ELASTIC_INDEX_NOT_FOUND(67, "Could not find elastic index for TensorBoard.",
+    TENSORBOARD_OPENSEARCH_INDEX_NOT_FOUND(67, "Could not find OpenSearch index for TensorBoard.",
         Response.Status.NOT_FOUND),
     PROJECT_ROLE_FORBIDDEN(68, "Your project role does not allow to perform this action.",
         Response.Status.FORBIDDEN),
@@ -419,8 +419,8 @@ public class RESTCodes {
     JOB_DELETION_ERROR(12, "Error while deleting job.", Response.Status.BAD_REQUEST),
     JOB_CREATION_ERROR(13, "Error while creating job.", Response.Status.BAD_REQUEST),
 
-    ELASTIC_INDEX_NOT_FOUND(14, "Elasticsearch indices do not exist", Response.Status.BAD_REQUEST),
-    ELASTIC_TYPE_NOT_FOUND(15, "Elasticsearch type does not exist", Response.Status.BAD_REQUEST),
+    OPENSEARCH_INDEX_NOT_FOUND(14, "OpenSearch indices do not exist", Response.Status.BAD_REQUEST),
+    OPENSEARCH_TYPE_NOT_FOUND(15, "OpenSearch type does not exist", Response.Status.BAD_REQUEST),
     TENSORBOARD_ERROR(16, "Error getting the TensorBoard(s) for this application", Response.Status.NO_CONTENT),
     APPLICATIONID_NOT_FOUND(17, "Error while deleting job.", Response.Status.BAD_REQUEST),
     JOB_ACCESS_ERROR(18, "Cannot access job", Response.Status.FORBIDDEN),
@@ -537,9 +537,9 @@ public class RESTCodes {
 
     JUPYTER_ADD_FAILURE(1, "Failed to create Jupyter notebook dir. Jupyter will not work properly. "
         + "Try recreating the following dir manually.", Response.Status.BAD_REQUEST),
-    ELASTIC_SERVER_NOT_AVAILABLE(2, "The Elasticsearch Server is either down or misconfigured.",
+    OPENSEARCH_SERVER_NOT_AVAILABLE(2, "The OpenSearch Server is either down or misconfigured.",
         Response.Status.BAD_REQUEST),
-    ELASTIC_SERVER_NOT_FOUND(3, "Problem when reaching the Elasticsearch server",
+    OPENSEARCH_SERVER_NOT_FOUND(3, "Problem when reaching the OpenSearch server",
         Response.Status.SERVICE_UNAVAILABLE),
 
     //Hive
@@ -556,7 +556,7 @@ public class RESTCodes {
         Response.Status.SERVICE_UNAVAILABLE),
     ANACONDA_NODES_UNAVAILABLE(11, "No conda machine is enabled. Contact the administrator.",
         Response.Status.SERVICE_UNAVAILABLE),
-    ELASTIC_INDEX_CREATION_ERROR(12, "Error while creating index in elastic",
+    OPENSEARCH_INDEX_CREATION_ERROR(12, "Error while creating index in opensearch",
         Response.Status.INTERNAL_SERVER_ERROR),
     ANACONDA_LIST_LIB_FORMAT_ERROR(13,
         "Problem listing libraries. Did conda get upgraded and change its output format?",
@@ -589,9 +589,9 @@ public class RESTCodes {
     ANACONDA_EXPORT_ERROR(29, "Failed to export Anaconda environment.",
         Response.Status.INTERNAL_SERVER_ERROR),
     ANACONDA_LIST_LIB_NOT_FOUND(30, "No results found", Response.Status.NO_CONTENT),
-    ELASTIC_INDEX_NOT_FOUND(31, "Elastic index was not found in elasticsearch",
+    OPENSEARCH_INDEX_NOT_FOUND(31, "Index was not found in OpenSearch",
         Response.Status.NOT_FOUND),
-    ELASTIC_INDEX_TYPE_NOT_FOUND(32, "Elastic index type was not found in elasticsearch",
+    OPENSEARCH_INDEX_TYPE_NOT_FOUND(32, "Index type was not found in OpenSearch",
         Response.Status.NOT_FOUND),
     JUPYTER_SERVERS_NOT_FOUND(33, "Could not find any Jupyter notebook servers for this project.",
         Response.Status.NOT_FOUND),
@@ -1904,7 +1904,7 @@ public class RESTCodes {
     }
   }
   
-  public enum ElasticErrorCode implements RESTErrorCode {
+  public enum OpenSearchErrorCode implements RESTErrorCode {
     
     SIGNING_KEY_ERROR(0, "Couldn't get or create the elk signing key",
         Response.Status.INTERNAL_SERVER_ERROR),
@@ -1912,26 +1912,26 @@ public class RESTCodes {
         Response.Status.INTERNAL_SERVER_ERROR),
     KIBANA_REQ_ERROR(2, "Error while executing Kibana request",
         Response.Status.BAD_REQUEST),
-    ELASTIC_CONNECTION_ERROR(3, "Couldn't connect to Elasticsearch",
+    OPENSEARCH_CONNECTION_ERROR(3, "Couldn't connect to OpenSearch",
         Response.Status.SERVICE_UNAVAILABLE),
-    ELASTIC_INTERNAL_REQ_ERROR(4, "Error while executing Elasticsearch request",
+    OPENSEARCH_INTERNAL_REQ_ERROR(4, "Error while executing OpenSearch request",
         Response.Status.INTERNAL_SERVER_ERROR),
-    ELASTIC_QUERY_ERROR(5, "Error while executing a user query on " +
-        "Elasticsearch", Response.Status.BAD_REQUEST),
-    INVALID_ELASTIC_ROLE(6, "Invalid elastic security role",
+    OPENSEARCH_QUERY_ERROR(5, "Error while executing a user query on " +
+        "OpenSearch", Response.Status.BAD_REQUEST),
+    INVALID_OPENSEARCH_ROLE(6, "Invalid OpenSearch security role",
         Response.Status.INTERNAL_SERVER_ERROR),
-    INVALID_ELASTIC_ROLE_USER(7, "Invalid elastic security role for a user",
+    INVALID_OPENSEARCH_ROLE_USER(7, "Invalid OpenSearch security role for a user",
         Response.Status.UNAUTHORIZED),
-    ELASTIC_QUERY_NO_MAPPING(8, "Elastic query uses a field that is not in the mapping of the index",
+    OPENSEARCH_QUERY_NO_MAPPING(8, "OpenSearch query uses a field that is not in the mapping of the index",
       Response.Status.BAD_REQUEST),
-    ELASTIC_INDEX_NOT_FOUND(9, "Elastic index not found", Response.Status.NOT_FOUND);
+    OPENSEARCH_INDEX_NOT_FOUND(9, "OpenSearch index not found", Response.Status.NOT_FOUND);
     
     private Integer code;
     private String message;
     private Response.StatusType respStatus;
     private final int range = 330000;
   
-    ElasticErrorCode(Integer code, String message, Response.StatusType respStatus) {
+    OpenSearchErrorCode(Integer code, String message, Response.StatusType respStatus) {
       this.code = range + code;
       this.message = message;
       this.respStatus = respStatus;

@@ -1,0 +1,219 @@
+/*
+ * This file is part of Hopsworks
+ * Copyright (C) 2022, Logical Clocks AB. All rights reserved
+ *
+ * Hopsworks is free software: you can redistribute it and/or modify it under the terms of
+ * the GNU Affero General Public License as published by the Free Software Foundation,
+ * either version 3 of the License, or (at your option) any later version.
+ *
+ * Hopsworks is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+ * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+ * PURPOSE.  See the GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License along with this program.
+ * If not, see <https://www.gnu.org/licenses/>.
+ */
+
+package io.hops.hopsworks.api.opensearch;
+
+import com.google.common.base.Strings;
+import io.hops.hopsworks.api.opensearch.featurestore.OpenSearchFeaturestoreBuilder;
+import io.hops.hopsworks.api.opensearch.featurestore.OpenSearchFeaturestoreDTO;
+import io.hops.hopsworks.api.opensearch.featurestore.OpenSearchFeaturestoreRequest;
+import io.hops.hopsworks.api.filter.AllowedProjectRoles;
+import io.hops.hopsworks.api.filter.Audience;
+import io.hops.hopsworks.api.jwt.OpenSearchJWTResponseDTO;
+import io.hops.hopsworks.api.jwt.JWTHelper;
+import io.hops.hopsworks.audit.logger.annotation.Logged;
+import io.hops.hopsworks.common.opensearch.FeaturestoreDocType;
+import io.hops.hopsworks.exceptions.OpenSearchException;
+import io.hops.hopsworks.exceptions.GenericException;
+import io.hops.hopsworks.exceptions.ServiceException;
+import io.hops.hopsworks.jwt.annotation.JWTRequired;
+import io.hops.hopsworks.persistence.entity.user.Users;
+import io.hops.hopsworks.restutils.RESTCodes;
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiParam;
+
+import javax.ejb.EJB;
+import javax.ejb.Stateless;
+import javax.ejb.TransactionAttribute;
+import javax.ejb.TransactionAttributeType;
+import javax.inject.Inject;
+import javax.servlet.http.HttpServletRequest;
+import javax.ws.rs.DefaultValue;
+import javax.ws.rs.GET;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.core.SecurityContext;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
+@Logged
+@Path("/elastic")
+@Stateless
+@JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
+@Produces(MediaType.APPLICATION_JSON)
+@Api(value = "OpenSearch Service", description = "OpenSearch Service")
+@TransactionAttribute(TransactionAttributeType.NEVER)
+public class OpenSearchService {
+
+  private static final Logger logger = Logger.getLogger(OpenSearchService.class.getName());
+
+  @EJB
+  private OpenSearchHitsBuilder elasticHitsBuilder;
+  @EJB
+  private JWTHelper jWTHelper;
+  @Inject
+  private OpenSearchFeaturestoreBuilder elasticFeaturestoreBuilder;
+  
+  /**
+   * Searches for content composed of projects and datasets. Hits two opensearch
+   * indices: 'project' and 'dataset'
+   * <p/>
+   * @param searchTerm
+   * @param sc
+   * @return
+   */
+  @GET
+  @Path("globalsearch/{searchTerm}")
+  @Produces(MediaType.APPLICATION_JSON)
+  public Response globalSearch(@PathParam("searchTerm") String searchTerm,
+                               @Context HttpServletRequest req,
+                               @Context SecurityContext sc)
+      throws ServiceException, OpenSearchException {
+    if (Strings.isNullOrEmpty(searchTerm)) {
+      throw new IllegalArgumentException("searchTerm was not provided or was empty");
+    }
+    Users user = jWTHelper.getUserPrincipal(sc);
+    OpenSearchHitDTO openSearchHitDTO = elasticHitsBuilder.buildOpenSearchHits(searchTerm, user);
+    return Response.ok().entity(openSearchHitDTO).build();
+  }
+
+  /**
+   * Searches for content inside a specific project. Hits 'project' index
+   * <p/>
+   * @param projectId
+   * @param searchTerm
+   * @param sc
+   * @return
+   */
+  @GET
+  @Path("projectsearch/{projectId}/{searchTerm}")
+  @Produces(MediaType.APPLICATION_JSON)
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
+  public Response projectSearch(@PathParam("projectId") Integer projectId,
+                                @PathParam("searchTerm") String searchTerm,
+                                @Context HttpServletRequest req,
+                                @Context SecurityContext sc) throws ServiceException, OpenSearchException {
+    if (Strings.isNullOrEmpty(searchTerm) || projectId == null) {
+      throw new IllegalArgumentException("One or more required parameters were not provided.");
+    }
+    Users user = jWTHelper.getUserPrincipal(sc);
+    OpenSearchHitDTO openSearchHitDTO = elasticHitsBuilder.buildOpenSearchHits(projectId, searchTerm, user);
+    return Response.ok().entity(openSearchHitDTO).build();
+  }
+
+  /**
+   * Searches for content inside a specific dataset. Hits 'dataset' index
+   * <p/>
+   * @param projectId
+   * @param datasetName
+   * @param searchTerm
+   * @param sc
+   * @return
+   */
+  @GET
+  @Path("datasetsearch/{projectId}/{datasetName}/{searchTerm}")
+  @Produces(MediaType.APPLICATION_JSON)
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
+  public Response datasetSearch(
+      @PathParam("projectId") Integer projectId,
+      @PathParam("datasetName") String datasetName,
+      @PathParam("searchTerm") String searchTerm,
+      @Context HttpServletRequest req,
+      @Context SecurityContext sc)
+      throws ServiceException, OpenSearchException {
+  
+    if (Strings.isNullOrEmpty(searchTerm) || Strings.isNullOrEmpty(datasetName) || projectId == null) {
+      throw new IllegalArgumentException("One or more required parameters were not provided.");
+    }
+  
+    Users user = jWTHelper.getUserPrincipal(sc);
+    OpenSearchHitDTO openSearchHitDTO =
+      elasticHitsBuilder.buildOpenSearchHits(projectId, datasetName, searchTerm, user);
+    return Response.ok().entity(openSearchHitDTO).build();
+  }
+  
+  /**
+   * Searches for content inside all featurestore. Hits 'featurestore' index
+   * <p/>
+   * @param searchTerm
+   * @param sc
+   * @return
+   */
+  @ApiOperation(value = "Search all featurestores",
+    notes ="featurestore documents: featuregroups, features, training datasets",
+    response = OpenSearchFeaturestoreDTO.class)
+  @GET
+  @Path("featurestore/{searchTerm}")
+  @Produces(MediaType.APPLICATION_JSON)
+  public Response featurestoreSearch(
+    @PathParam("searchTerm") String searchTerm,
+    @QueryParam("docType") @DefaultValue("ALL") FeaturestoreDocType docType,
+    @QueryParam("from") @ApiParam(value="search pointer position, if none given, it defaults to 0") Integer from,
+    @QueryParam("size") @ApiParam(value="search page size, if none give, it defaults to 100." +
+      "Cannot be negative and cannot be bigger than 10000") Integer size,
+    @Context HttpServletRequest req,
+    @Context SecurityContext sc)
+      throws ServiceException, OpenSearchException, GenericException {
+    if (Strings.isNullOrEmpty(searchTerm)) {
+      throw new GenericException(RESTCodes.GenericErrorCode.ILLEGAL_ARGUMENT, Level.WARNING, "no search term provided");
+    }
+    Users user = jWTHelper.getUserPrincipal(sc);
+    
+    if(from == null) {
+      from = 0;
+    }
+    if(size == null) {
+      size = 100;
+    }
+    OpenSearchFeaturestoreDTO dto = elasticFeaturestoreBuilder.build(user,
+        new OpenSearchFeaturestoreRequest(searchTerm, docType, from, size));
+    return Response.ok().entity(dto).build();
+  }
+  
+  @ApiOperation( value = "Get a jwt token for opensearch.")
+  @GET
+  @Path("jwt/{projectId}")
+  @Produces(MediaType.APPLICATION_JSON)
+  @JWTRequired(acceptedTokens = {Audience.API, Audience.JOB}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
+  public Response createJwtToken(@Context SecurityContext sc,
+                                 @Context HttpServletRequest req,
+                                 @PathParam("projectId") Integer projectId) throws OpenSearchException {
+    if (projectId == null) {
+      throw new IllegalArgumentException("projectId was not provided.");
+    }
+    OpenSearchJWTResponseDTO
+        jWTResponseDTO = jWTHelper.createTokenForELK(sc, projectId);
+    return Response.ok().entity(jWTResponseDTO).build();
+  }
+
+  @ApiOperation( value = "Get a jwt token service logs")
+  @GET
+  @Path("jwt/services")
+  @Produces(MediaType.APPLICATION_JSON)
+  @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN"})
+  public Response createJwtToken(@Context HttpServletRequest req,
+                                 @Context SecurityContext sc) throws OpenSearchException {
+    OpenSearchJWTResponseDTO jWTResponseDTO = jWTHelper.createTokenForELKAsLogUser();
+    return Response.ok().entity(jWTResponseDTO).build();
+  }
+}
