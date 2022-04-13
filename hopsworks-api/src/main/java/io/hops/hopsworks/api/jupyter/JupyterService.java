@@ -70,7 +70,6 @@ import io.hops.hopsworks.common.util.Ip;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.GenericException;
 import io.hops.hopsworks.exceptions.HopsSecurityException;
-import io.hops.hopsworks.exceptions.ElasticException;
 import io.hops.hopsworks.exceptions.ProjectException;
 import io.hops.hopsworks.exceptions.ServiceException;
 import io.hops.hopsworks.exceptions.JobException;

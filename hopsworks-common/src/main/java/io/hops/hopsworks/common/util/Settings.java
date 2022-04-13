@@ -230,6 +230,7 @@ public class Settings implements Serializable {
   private final static String VARIABLE_LIVY_STARTUP_TIMEOUT = "livy_startup_timeout";
   
   private final static String VARIABLE_USER_SEARCH = "enable_user_search";
+  private final static String VARIABLE_REJECT_REMOTE_USER_NO_GROUP = "reject_remote_user_no_group";
   
   //Used by RESTException to include devMsg or not in response
   private static final String VARIABLE_HOPSWORKS_REST_LOG_LEVEL = "hopsworks_rest_log_level";
@@ -584,8 +585,8 @@ public class Settings implements Serializable {
           openSearchRestPort, openSearchSecurityEnabled, openSearchHttpsEnabled,
           openSearchAdminUser, openSearchAdminPassword, openSearchJWTEnabled,
           openSearchJWTUrlParameter, openSearchJWTEXPMS, openSearchServiceLogUser);
-      OpenSearch_LOGS_INDEX_EXPIRATION = setLongVar(VARIABLE_OPENSEARCH_LOGS_INDEX_EXPIRATION,
-        OpenSearch_LOGS_INDEX_EXPIRATION);
+      OPENSEARCH_LOGS_INDEX_EXPIRATION = setLongVar(VARIABLE_OPENSEARCH_LOGS_INDEX_EXPIRATION,
+        OPENSEARCH_LOGS_INDEX_EXPIRATION);
       KIBANA_IP = setIpVar(VARIABLE_KIBANA_IP, KIBANA_IP);
       KAFKA_MAX_NUM_TOPICS = setIntVar(VARIABLE_KAFKA_MAX_NUM_TOPICS, KAFKA_MAX_NUM_TOPICS);
       HOPSWORKS_DEFAULT_SSL_MASTER_PASSWORD = setVar(VARIABLE_HOPSWORKS_SSL_MASTER_PASSWORD,
@@ -1475,7 +1476,7 @@ public class Settings implements Serializable {
   
   // OpenSearch
   OpenSearchSettings OPENSEARCH_SETTINGS;
-  
+
   public synchronized List<String> getOpenSearchIps(){
     checkCache();
     return OPENSEARCH_SETTINGS.getOpenSearchIps();
@@ -1551,17 +1552,17 @@ public class Settings implements Serializable {
     return OPENSEARCH_SETTINGS.getMaxScrollPageSize();
   }
 
-  private long OpenSearch_LOGS_INDEX_EXPIRATION = 7 * 24 * 60 * 60 * 1000;
+  private static long OPENSEARCH_LOGS_INDEX_EXPIRATION = 7 * 24 * 60 * 60 * 1000;
 
   public synchronized long getOpenSearchLogsIndexExpiration() {
     checkCache();
-    return OpenSearch_LOGS_INDEX_EXPIRATION;
+    return OPENSEARCH_LOGS_INDEX_EXPIRATION;
   }
 
   private static final int JOB_LOGS_EXPIRATION = 604800;
 
   /**
-   * TTL for job logs in opensearch, in seconds.
+   * TTL for job logs in OpenSearch, in seconds.
    *
    * @return
    */
@@ -1624,7 +1625,7 @@ public class Settings implements Serializable {
   }
   
   public String getKibanaAppUri() {
-    return "/hopsworks-api/kibana/app/discover?";
+    return "/hopsworks-api/kibana/app/kibana?";
   }
   
   public String getKibanaAppUri(String jwtToken) {
@@ -1935,8 +1936,7 @@ public class Settings implements Serializable {
   public static final String FILE_PREVIEW_IMAGE_TYPE = "image";
   public static final String FILE_PREVIEW_MODE_TAIL = "tail";
 
-  //OpenSearch
-  // log index pattern
+  //OpenSearch log index pattern
   public static final String OPENSEARCH_LOGS_INDEX = "logs";
   public static final String OPENSEARCH_PYPI_LIBRARIES_INDEX_PATTERN_PREFIX = "pypi_libraries_";
   public static final String OPENSEARCH_LOGS_INDEX_PATTERN = "_" + Settings.OPENSEARCH_LOGS_INDEX + "-*";

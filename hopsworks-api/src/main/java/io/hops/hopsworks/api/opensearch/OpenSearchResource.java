@@ -21,8 +21,6 @@ import io.hops.hopsworks.api.opensearch.featurestore.OpenSearchFeaturestoreDTO;
 import io.hops.hopsworks.api.opensearch.featurestore.OpenSearchFeaturestoreRequest;
 import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.api.filter.Audience;
-import io.hops.hopsworks.audit.logger.LogLevel;
-import io.hops.hopsworks.audit.logger.annotation.Logged;
 import io.hops.hopsworks.common.opensearch.FeaturestoreDocType;
 import io.hops.hopsworks.exceptions.OpenSearchException;
 import io.hops.hopsworks.exceptions.GenericException;
@@ -47,14 +45,11 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
 import java.util.logging.Level;
-import java.util.logging.Logger;
 
-@Logged
 @Api(value = "OpenSearch Resource")
 @RequestScoped
 @TransactionAttribute(TransactionAttributeType.NEVER)
 public class OpenSearchResource {
-  private static final Logger LOGGER = Logger.getLogger(OpenSearchResource.class.getName());
   
   @Inject
   private OpenSearchFeaturestoreBuilder openSearchFeaturestoreBuilder;
@@ -93,8 +88,7 @@ public class OpenSearchResource {
       FeaturestoreDocType docType,
     @QueryParam("from") @ApiParam(value="search pointer position, if none given, it defaults to 0") Integer from,
     @QueryParam("size") @ApiParam(value="search page size, if none give, it defaults to 100." +
-      "Cannot be negative and cannot be bigger than 10000") Integer size,
-    @Context SecurityContext sc, @Context HttpServletRequest req)
+      "Cannot be negative and cannot be bigger than 10000") Integer size, @Context SecurityContext sc)
     throws ServiceException, OpenSearchException, GenericException {
     if (Strings.isNullOrEmpty(searchTerm)) {
       throw new GenericException(RESTCodes.GenericErrorCode.ILLEGAL_ARGUMENT, Level.WARNING, "no search term provided");

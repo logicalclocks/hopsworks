@@ -47,7 +47,6 @@ import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.api.filter.Audience;
 import io.hops.hopsworks.api.jwt.OpenSearchJWTResponseDTO;
 import io.hops.hopsworks.api.jwt.JWTHelper;
-import io.hops.hopsworks.audit.logger.annotation.Logged;
 import io.hops.hopsworks.common.opensearch.FeaturestoreDocType;
 import io.hops.hopsworks.exceptions.OpenSearchException;
 import io.hops.hopsworks.exceptions.GenericException;
@@ -106,7 +105,6 @@ public class OpenSearchService {
   @Path("globalsearch/{searchTerm}")
   @Produces(MediaType.APPLICATION_JSON)
   public Response globalSearch(@PathParam("searchTerm") String searchTerm,
-                               @Context HttpServletRequest req,
                                @Context SecurityContext sc)
       throws ServiceException, OpenSearchException {
     if (Strings.isNullOrEmpty(searchTerm)) {
@@ -131,7 +129,6 @@ public class OpenSearchService {
   @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
   public Response projectSearch(@PathParam("projectId") Integer projectId,
                                 @PathParam("searchTerm") String searchTerm,
-                                @Context HttpServletRequest req,
                                 @Context SecurityContext sc) throws ServiceException, OpenSearchException {
     if (Strings.isNullOrEmpty(searchTerm) || projectId == null) {
       throw new IllegalArgumentException("One or more required parameters were not provided.");
@@ -158,7 +155,6 @@ public class OpenSearchService {
       @PathParam("projectId") Integer projectId,
       @PathParam("datasetName") String datasetName,
       @PathParam("searchTerm") String searchTerm,
-      @Context HttpServletRequest req,
       @Context SecurityContext sc)
       throws ServiceException, OpenSearchException {
   
@@ -216,7 +212,6 @@ public class OpenSearchService {
   @JWTRequired(acceptedTokens = {Audience.API, Audience.JOB}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
   public Response createJwtToken(@Context SecurityContext sc,
-                                 @Context HttpServletRequest req,
                                  @PathParam("projectId") Integer projectId) throws OpenSearchException {
     if (projectId == null) {
       throw new IllegalArgumentException("projectId was not provided.");
@@ -231,8 +226,7 @@ public class OpenSearchService {
   @Path("jwt/services")
   @Produces(MediaType.APPLICATION_JSON)
   @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN"})
-  public Response createJwtToken(@Context HttpServletRequest req,
-                                 @Context SecurityContext sc) throws OpenSearchException {
+  public Response createJwtToken(@Context SecurityContext sc) throws OpenSearchException {
     OpenSearchJWTResponseDTO jWTResponseDTO = jWTHelper.createTokenForELKAsLogUser();
     return Response.ok().entity(jWTResponseDTO).build();
   }

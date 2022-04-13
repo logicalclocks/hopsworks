@@ -217,8 +217,6 @@ public class ProjectService {
   private ProjectProvenanceResource provenance;
   @Inject
   private OpenSearchResource openSearch;
-  @Inject
-  private RoleMappingResource roleMappingResource;
   @EJB
   private HopsFSProvenanceController fsProvenanceController;
   @Inject
