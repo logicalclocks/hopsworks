@@ -47,7 +47,7 @@ public class OAuthClientBuilder {
     dto.setProviderDisplayName(oauthClient.getProviderDisplayName());
     dto.setProviderLogoUri(oauthClient.getProviderLogoURI());
     dto.setProviderMetadataEndpointSupported(oauthClient.getProviderMetadataEndpointSupported());
-    dto.setRedirectUri(settings.getOauthRedirectUri());
+    dto.setRedirectUri(settings.getOauthRedirectUri(oauthClient.getProviderName()));
     dto.setProviderUri(oauthClient.getProviderURI());
     dto.setAuthorizationEndpoint(oauthClient.getAuthorisationEndpoint());
     dto.setCodeChallenge(oauthClient.isCodeChallenge());

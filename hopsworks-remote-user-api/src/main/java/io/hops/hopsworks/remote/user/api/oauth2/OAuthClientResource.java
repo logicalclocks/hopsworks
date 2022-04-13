@@ -90,7 +90,8 @@ public class OAuthClientResource {
   public Response getLoginURLByProvider(@PathParam("providerName") String providerName, @Context UriInfo uriInfo,
     @QueryParam("redirect") @DefaultValue("true") boolean redirect, @Context HttpServletRequest req)
     throws URISyntaxException, UnsupportedEncodingException {
-    return getAuthURI(providerName, settings.getOauthRedirectUri(), null, redirect, req.getSession().getId(), uriInfo);
+    return getAuthURI(providerName, settings.getOauthRedirectUri(providerName), null, redirect,
+      req.getSession().getId(), uriInfo);
   }
   
   @GET

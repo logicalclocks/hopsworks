@@ -46,7 +46,7 @@ public class NewClientRegistrationDTO {
     this.responseTypes = new HashSet<>();
     this.responseTypes.add("code");
     this.redirectUris = new HashSet<>();
-    this.redirectUris.add(settings.getOauthRedirectUri());
+    this.redirectUris.add(settings.getOauthRedirectUri(this.clientName));
     this.contacts = new HashSet<>();
     this.contacts.add("");
   }

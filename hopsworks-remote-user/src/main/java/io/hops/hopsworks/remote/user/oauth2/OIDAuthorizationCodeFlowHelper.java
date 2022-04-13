@@ -56,6 +56,7 @@ import io.hops.hopsworks.persistence.entity.remote.oauth.OauthLoginState;
 import io.hops.hopsworks.persistence.entity.remote.oauth.OauthToken;
 import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.restutils.RESTCodes;
+import net.minidev.json.JSONArray;
 import net.minidev.json.JSONObject;
 
 import javax.ejb.EJB;
@@ -73,6 +74,7 @@ import java.security.interfaces.RSAPublicKey;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.logging.Level;
@@ -169,7 +171,7 @@ public class OIDAuthorizationCodeFlowHelper {
     Scope scope = scopes == null || scopes.isEmpty()? getSupportedScope(providerConfig.getScopesSupported(),
       client.isOfflineAccess()) : getScope(scopes);
     //set to database redirect uri if empty
-    redirectUri = Strings.isNullOrEmpty(redirectUri) ? settings.getOauthRedirectUri() : redirectUri;
+    redirectUri = Strings.isNullOrEmpty(redirectUri) ? settings.getOauthRedirectUri(providerName) : redirectUri;
     State state = saveOauthLoginState(sessionId, client, nonce, codeVerifier, redirectUri, scope.toString().replace(
       " ", " ,"));
     URI authEndpoint = new URI(providerConfig.getAuthorizationEndpoint());
@@ -177,7 +179,8 @@ public class OIDAuthorizationCodeFlowHelper {
     ResponseType responseType = new ResponseType(ResponseType.Value.CODE);
     
     AuthenticationRequest authenticationRequest =
-      new AuthenticationRequest.Builder(responseType, scope, clientId, new URI(getRedirectUri(redirectUri)))
+      new AuthenticationRequest.Builder(responseType, scope, clientId,
+        new URI(getRedirectUri(redirectUri, providerName)))
         .state(state)
         .nonce(nonce)
         .codeChallenge(codeVerifier, codeChallengeMethod)
@@ -223,7 +226,7 @@ public class OIDAuthorizationCodeFlowHelper {
      * the hopsworks cluster. For this purpose we pass the cluster url in the state
      */
     if(!settings.getManagedCloudRedirectUri().isEmpty()){
-      state = new State(getRedirectUriPrefix(redirectUri) + "_" + state.getValue());
+      state = new State(getRedirectUriPrefix(redirectUri, client.getProviderName()) + "_" + state.getValue());
     }
     int count = 10;
     OauthLoginState oauthLoginState = oauthLoginStateFacade.findByState(state.getValue());
@@ -234,7 +237,7 @@ public class OIDAuthorizationCodeFlowHelper {
        * the hopsworks cluster. For this purpose we pass the cluster url in the state
        */
       if (!settings.getManagedCloudRedirectUri().isEmpty()) {
-        state = new State(getRedirectUriPrefix(redirectUri) + "_" + state.getValue());
+        state = new State(getRedirectUriPrefix(redirectUri, client.getProviderName()) + "_" + state.getValue());
       }
       oauthLoginState = oauthLoginStateFacade.findByState(state.getValue());
       count--;
@@ -243,22 +246,25 @@ public class OIDAuthorizationCodeFlowHelper {
       throw new IllegalStateException("Failed to create state.");
     }
     
-    oauthLoginState = new OauthLoginState(state.getValue(), client, sessionId, getRedirectUri(redirectUri), scopes);
+    oauthLoginState = new OauthLoginState(state.getValue(), client, sessionId,
+      getRedirectUri(redirectUri, client.getProviderName()), scopes);
     oauthLoginState.setNonce(nonce.getValue());
     oauthLoginState.setCodeChallenge(codeVerifier != null? codeVerifier.getValue() : null);
     oauthLoginStateFacade.save(oauthLoginState);
     return state;
   }
   
-  private String getRedirectUriPrefix(String redirectUri) {
+  private String getRedirectUriPrefix(String redirectUri, String providerName) {
     // equals only if old ui
     // then we need to prefix with OauthRedirectUri skipping managed cloud
-    return settings.getOauthRedirectUri().equals(redirectUri) ? settings.getOauthRedirectUri(true) : redirectUri;
+    return settings.getOauthRedirectUri(providerName).equals(redirectUri) ? settings.getOauthRedirectUri(providerName
+      ,true) : redirectUri;
   }
   
-  private String getRedirectUri(String redirectUri) {
-    //if managed cloud use redirect uri from database
-    return !Strings.isNullOrEmpty(settings.getManagedCloudRedirectUri()) ? settings.getManagedCloudRedirectUri() :
+  private String getRedirectUri(String redirectUri, String providerName) {
+    //if managed cloud and provider is hopsworks.ai use redirect uri from database
+    return Objects.equals(providerName, settings.getManagedCloudProviderName()) &&
+      !Strings.isNullOrEmpty(settings.getManagedCloudRedirectUri()) ? settings.getManagedCloudRedirectUri() :
       redirectUri;
   }
   
@@ -465,6 +471,21 @@ public class OIDAuthorizationCodeFlowHelper {
     return getRemoteUserFromClaims(accessToken, successResponse.getUserInfo(), client);
   }
   
+  private List<String> getListOrStringClaim(UserInfo userInfo, String claimName) {
+    List<String> groups = new ArrayList<>();
+    if (userInfo.toJSONObject().containsKey(claimName)) {
+      JSONArray groupList = userInfo.getClaim(claimName, JSONArray.class);
+      if (groupList != null) {
+        for (Object o : groupList) {
+          groups.add((String) o);
+        }
+      } else {
+        groups.add(userInfo.toJSONObject().getAsString(claimName));
+      }
+    }
+    return groups;
+  }
+  
   private RemoteUserDTO getRemoteUserFromClaims(BearerAccessToken accessToken, UserInfo userInfo, OauthClient client)
     throws LoginException {
     RemoteUserDTO remoteUserDTO = new RemoteUserDTO();
@@ -474,22 +495,15 @@ public class OIDAuthorizationCodeFlowHelper {
     verifyAndSetEmail(remoteUserDTO, userInfo, client, accessToken);
     
     //TODO replace all of this by a system in which we can define the mapping during configuration
-    List<String> groups = new ArrayList<>();
-    if (userInfo.toJSONObject().containsKey(OpenIdConstant.GROUPS)) {
-      groups.add(userInfo.toJSONObject().getAsString(OpenIdConstant.GROUPS));
-    }
-    if (userInfo.toJSONObject().containsKey(OpenIdConstant.ROLES)) {
-      groups.add(userInfo.toJSONObject().getAsString(OpenIdConstant.ROLES));
-    }
+    List<String> groups = getListOrStringClaim(userInfo, OpenIdConstant.GROUPS);
+
+    groups.addAll(getListOrStringClaim(userInfo, OpenIdConstant.ROLES));
     /*
      * this is the way we set the groups in hopsworks.ai
      */
-    if (userInfo.toJSONObject().containsKey(OpenIdConstant.COGNITO_USERS_GROUP)) {
-      groups.add(userInfo.toJSONObject().getAsString(OpenIdConstant.COGNITO_USERS_GROUP));
-    }
-    if (userInfo.toJSONObject().containsKey(OpenIdConstant.COGNITO_ADMINS_GROUP)) {
-      groups.add(userInfo.toJSONObject().getAsString(OpenIdConstant.COGNITO_ADMINS_GROUP));
-    }
+    groups.addAll(getListOrStringClaim(userInfo, OpenIdConstant.COGNITO_USERS_GROUP));
+    groups.addAll(getListOrStringClaim(userInfo, OpenIdConstant.COGNITO_ADMINS_GROUP));
+    
     remoteUserDTO.setGroups(groups);
     validateRemoteUser(remoteUserDTO);
     return remoteUserDTO;

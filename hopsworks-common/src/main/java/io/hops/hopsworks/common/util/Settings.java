@@ -80,6 +80,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.StringTokenizer;
@@ -2692,6 +2693,7 @@ public class Settings implements Serializable {
   private static final String VARIABLE_VALIDATE_REMOTE_USER_EMAIL_VERIFIED = "validate_email_verified";
 
   private static final String VARIABLE_MANAGED_CLOUD_REDIRECT_URI = "managed_cloud_redirect_uri";
+  private static final String VARIABLE_MANAGED_CLOUD_PROVIDER_NAME = "managed_cloud_provider_name";
   
   private String KRB_AUTH = "false";
   private String LDAP_AUTH = "false";
@@ -2733,6 +2735,7 @@ public class Settings implements Serializable {
   private boolean VALIDATE_REMOTE_USER_EMAIL_VERIFIED = false;
 
   private String MANAGED_CLOUD_REDIRECT_URI = "";
+  private String MANAGED_CLOUD_PROVIDER_NAME = "hopsworks.ai";
   
   private void populateLDAPCache() {
     KRB_AUTH = setVar(VARIABLE_KRB_AUTH, KRB_AUTH);
@@ -2777,6 +2780,7 @@ public class Settings implements Serializable {
       setBoolVar(VARIABLE_VALIDATE_REMOTE_USER_EMAIL_VERIFIED, VALIDATE_REMOTE_USER_EMAIL_VERIFIED);
     
     MANAGED_CLOUD_REDIRECT_URI = setStrVar(VARIABLE_MANAGED_CLOUD_REDIRECT_URI, MANAGED_CLOUD_REDIRECT_URI);
+    MANAGED_CLOUD_PROVIDER_NAME = setStrVar(VARIABLE_MANAGED_CLOUD_PROVIDER_NAME, MANAGED_CLOUD_PROVIDER_NAME);
   }
 
   public synchronized String getKRBAuthStatus() {
@@ -2903,17 +2907,18 @@ public class Settings implements Serializable {
     updateVariableInternal(VARIABLE_OAUTH_GROUP_MAPPING, mapping, VariablesVisibility.ADMIN);
   }
   
-  public synchronized String getOauthRedirectUri() {
-    return getOauthRedirectUri(false);
+  public synchronized String getOauthRedirectUri(String providerName) {
+    return getOauthRedirectUri(providerName, false);
   }
   
   /*
    * when using oauth for hopsworks.ai we need to first redirect to hopsworks.ai
    * which then redirect to hopsworks.
    */
-  public synchronized String getOauthRedirectUri(boolean skipManagedCloud) {
+  public synchronized String getOauthRedirectUri(String providerName, boolean skipManagedCloud) {
     checkCache();
-    if (MANAGED_CLOUD_REDIRECT_URI.isEmpty() || skipManagedCloud) {
+    if (MANAGED_CLOUD_REDIRECT_URI.isEmpty() || skipManagedCloud || !Objects.equals(MANAGED_CLOUD_PROVIDER_NAME,
+      providerName)) {
       return OAUTH_REDIRECT_URI;
     }
     return MANAGED_CLOUD_REDIRECT_URI;
@@ -2922,6 +2927,11 @@ public class Settings implements Serializable {
   public synchronized String getManagedCloudRedirectUri() {
     checkCache();
     return MANAGED_CLOUD_REDIRECT_URI;
+  }
+  
+  public synchronized String getManagedCloudProviderName() {
+    checkCache();
+    return MANAGED_CLOUD_PROVIDER_NAME;
   }
   
   public void updateOauthRedirectUri(String uri) {
