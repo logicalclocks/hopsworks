@@ -42,6 +42,21 @@ select group(s) you want to give access to. Here we will allow everyone in the o
     <figcaption>Group assignment</figcaption>
   </figure>
 
+## Group mapping
+
+You can also create mappings from groups in Okta to groups in Hopsworks. To achieve this you need to configure Okta to 
+send _Groups_ with user information. To do this go to _Applications_ and select your application name. In the _Sign 
+On_ tab click edit _OpenID Connect ID Token_ and select **Filter** for _Groups claim type_, then for _Groups claim 
+filter_ add **groups** as the claim name, select **Match Regex** from the dropdown and .* (dot star) as Regex to 
+match all groups. See [Group mapping](../create-client/#group-mapping) on how to do the mapping in Hopsworks.
+
+  <figure>
+    <a  href="../../../assets/images/admin/oauth2/okta-groups.png">
+      <img src="../../../assets/images/admin/oauth2/okta-groups.png" alt="Group claim" />
+    </a>
+    <figcaption>Group claim</figcaption>
+  </figure>
+
 After the application is created go back to _Applications_ and click on the application you just created. Use the
 _Okta domain_ (_Connection URL_), _client id_ and _client secret_ generated for your app in the 
 [Identity Provider registration](./create-client.md) in Hopsworks.
