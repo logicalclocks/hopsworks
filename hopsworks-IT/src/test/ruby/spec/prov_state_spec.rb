@@ -1424,17 +1424,17 @@ describe "On #{ENV['OS']}" do
         sleep(5)
         result = FileProv.where("project_name": @project[:projectname])
         expect(result.length).to be >= 1
-        elastic_rest do
+        opensearch_rest do
           #index exists
-          result = elastic_get project_index
-          elastic_status_details(result, 200)
+          result = opensearch_get project_index
+          opensearch_status_details(result, 200)
           #delete index
-          result = elastic_delete project_index
-          elastic_status_details(result, 200)
+          result = opensearch_delete project_index
+          opensearch_status_details(result, 200)
           sleep(3)
           #make sure index is deleted
-          result = elastic_get project_index
-          elastic_status_details(result, 404, error_type: "index_not_found_exception")
+          result = opensearch_get project_index
+          opensearch_status_details(result, 404, error_type: "index_not_found_exception")
         end
         expect(is_epipe_active).to be(false), "someone restarted epipe, when it was supposed to be stopped"
       end

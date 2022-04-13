@@ -45,7 +45,7 @@ package io.hops.hopsworks.common.jobs.yarn;
  */
 public class ServiceProperties {
 
-  private ElasticProperties elastic;
+  private OpenSearchProperties openSearch;
 
   private Integer projectId;
   private String projectName;
@@ -56,20 +56,20 @@ public class ServiceProperties {
   }
 
   public ServiceProperties(Integer projectId, String projectName, String restEndPoint, String jobName,
-      ElasticProperties elastic) {
+      OpenSearchProperties openSearch) {
     this.projectId = projectId;
     this.projectName = projectName;
     this.restEndpoint = restEndPoint;
     this.jobName = jobName;
-    this.elastic = elastic;
+    this.openSearch = openSearch;
   }
 
-  public ElasticProperties getElastic() {
-    return elastic;
+  public OpenSearchProperties getOpenSearch() {
+    return openSearch;
   }
 
-  public void setElastic(ElasticProperties elastic) {
-    this.elastic = elastic;
+  public void setOpenSearch(OpenSearchProperties openSearch) {
+    this.openSearch = openSearch;
   }
 
   public Integer getProjectId() {

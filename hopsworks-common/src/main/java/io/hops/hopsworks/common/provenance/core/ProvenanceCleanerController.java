@@ -19,14 +19,14 @@ import io.hops.hopsworks.persistence.entity.hdfs.inode.Inode;
 import io.hops.hopsworks.common.dao.hdfs.inode.InodeFacade;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
-import io.hops.hopsworks.common.elastic.ElasticClientController;
+import io.hops.hopsworks.common.opensearch.OpenSearchClientController;
 import io.hops.hopsworks.common.util.Settings;
-import io.hops.hopsworks.exceptions.ElasticException;
+import io.hops.hopsworks.exceptions.OpenSearchException;
 import io.hops.hopsworks.exceptions.ProvenanceException;
 import io.hops.hopsworks.restutils.RESTCodes;
-import org.elasticsearch.ElasticsearchException;
-import org.elasticsearch.action.admin.indices.delete.DeleteIndexRequest;
-import org.elasticsearch.rest.RestStatus;
+import org.opensearch.OpenSearchStatusException;
+import org.opensearch.action.admin.indices.delete.DeleteIndexRequest;
+import org.opensearch.rest.RestStatus;
 import org.javatuples.Pair;
 
 import javax.ejb.EJB;
@@ -42,14 +42,14 @@ public class ProvenanceCleanerController {
   private final static Logger LOGGER = Logger.getLogger(ProvenanceCleanerController.class.getName());
   
   @EJB
-  private ElasticClientController client;
+  private OpenSearchClientController client;
   @EJB
   private ProjectFacade projectFacade;
   @EJB
   private InodeFacade inodeFacade;
   
   public Pair<Integer, String> indexCleanupRound(String nextToCheck, Integer limit)
-    throws ProvenanceException, ElasticException {
+    throws ProvenanceException, OpenSearchException {
     String indexRegex = "*" + Settings.PROV_FILE_INDEX_SUFFIX;
     String[] indices = client.mngIndicesGetBySimplifiedRegex(indexRegex);
     
@@ -95,9 +95,9 @@ public class ProvenanceCleanerController {
     DeleteIndexRequest request = new DeleteIndexRequest(indexName);
     try {
       client.mngIndexDelete(request);
-    } catch (ElasticException e) {
-      if(e.getCause() instanceof ElasticsearchException) {
-        ElasticsearchException ex = (ElasticsearchException)e.getCause();
+    } catch (OpenSearchException e) {
+      if(e.getCause() instanceof OpenSearchException) {
+        OpenSearchStatusException ex = (OpenSearchStatusException)e.getCause();
         if(ex.status() == RestStatus.NOT_FOUND) {
           LOGGER.log(Level.INFO, "trying to delete index:{0} - does not exist", indexName);
           return;

@@ -22,14 +22,14 @@ import io.hops.hopsworks.common.provenance.core.ProvParser;
 import io.hops.hopsworks.common.provenance.core.ProvenanceCleanerController;
 import io.hops.hopsworks.common.provenance.util.dto.WrapperDTO;
 import io.hops.hopsworks.common.util.Settings;
-import io.hops.hopsworks.exceptions.ElasticException;
+import io.hops.hopsworks.exceptions.OpenSearchException;
 import io.hops.hopsworks.exceptions.ProvenanceException;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
 import io.hops.hopsworks.testing.provenance.app.ProvAppBeanParams;
 import io.hops.hopsworks.testing.provenance.app.ProvAppDTO;
 import io.hops.hopsworks.testing.provenance.core.Pagination;
 import io.swagger.annotations.Api;
-import org.elasticsearch.search.sort.SortOrder;
+import org.opensearch.search.sort.SortOrder;
 import org.javatuples.Pair;
 
 import javax.ejb.EJB;
@@ -67,7 +67,7 @@ public class TestProvenanceService {
   @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN"})
   public Response cleanup(
     @QueryParam("size")
-      Integer size) throws ProvenanceException, ElasticException {
+      Integer size) throws ProvenanceException, OpenSearchException {
     if (size == null) {
       size = settings.getProvCleanupSize();
     }
@@ -99,7 +99,7 @@ public class TestProvenanceService {
     }
     Integer limit = pagination.getLimit();
     if(limit == null) {
-      limit = Settings.PROVENANCE_ELASTIC_PAGE_DEFAULT_SIZE;
+      limit = Settings.PROVENANCE_OPENSEARCH_PAGE_DEFAULT_SIZE;
     }
     ProvAppDTO result = ProvAppDTO.withAppStates(provAppController.provAppState(filterBy, sortBy, offset, limit));
     return Response.ok().entity(result).build();

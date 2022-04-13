@@ -105,7 +105,7 @@
     <commons.lang3.version>3.8.1</commons.lang3.version>
     <eclipse-egit-github-core.version>2.1.5</eclipse-egit-github-core.version>
     <ehcache.version>3.7.0</ehcache.version>
-    <elasticsearch-rest-high-level-client.version>7.7.0</elasticsearch-rest-high-level-client.version>
+    <opensearch-rest-high-level-client.version>1.3.1</opensearch-rest-high-level-client.version>
     <flink-clients_2.11.version>1.14.3</flink-clients_2.11.version>
     <flink-yarn_2.11.version>1.14.3.0</flink-yarn_2.11.version>
     <freemarker.version>2.3.29</freemarker.version>
@@ -820,11 +820,11 @@
         <artifactId>ehcache</artifactId>
         <version>${ehcache.version}</version>
       </dependency>
-      <!--Elastic dependency-->
+      <!--OpenSearch dependency-->
       <dependency>
-        <groupId>org.elasticsearch.client</groupId>
-        <artifactId>elasticsearch-rest-high-level-client</artifactId>
-        <version>${elasticsearch-rest-high-level-client.version}</version>
+        <groupId>org.opensearch.client</groupId>
+        <artifactId>opensearch-rest-high-level-client</artifactId>
+        <version>${opensearch-rest-high-level-client.version}</version>
         <exclusions>
           <exclusion>
             <groupId>com.fasterxml.jackson.dataformat</groupId>

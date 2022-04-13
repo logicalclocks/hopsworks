@@ -27,9 +27,9 @@ import io.hops.hopsworks.common.dao.project.ProjectFacade;
 import io.hops.hopsworks.common.hdfs.inode.InodeController;
 import io.hops.hopsworks.common.hdfs.xattrs.XAttrsController;
 import io.hops.hopsworks.common.provenance.core.Provenance;
-import io.hops.hopsworks.common.provenance.core.elastic.ElasticCache;
-import io.hops.hopsworks.common.provenance.core.elastic.dto.ElasticIndexMappingDTO;
-import io.hops.hopsworks.exceptions.ElasticException;
+import io.hops.hopsworks.common.provenance.core.opensearch.OpenSearchCache;
+import io.hops.hopsworks.common.provenance.core.opensearch.dto.OpenSearchIndexMappingDTO;
+import io.hops.hopsworks.exceptions.OpenSearchException;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
 import io.hops.hopsworks.persistence.entity.hdfs.inode.Inode;
 import io.swagger.annotations.Api;
@@ -61,7 +61,7 @@ public class TestProjectProvenanceResource {
   @EJB
   private InodeController inodeCtrl;
   @EJB
-  private ElasticCache cache;
+  private OpenSearchCache cache;
   @EJB
   private XAttrsController xattrCtrl;
   @EJB
@@ -121,9 +121,9 @@ public class TestProjectProvenanceResource {
   @Produces(MediaType.APPLICATION_JSON)
     @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
     @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
-  public Response testGetIndexMapping() throws ElasticException {
+  public Response testGetIndexMapping() throws OpenSearchException {
     String index = Provenance.getProjectIndex(project);
     Map<String, String> mapping = cache.mngIndexGetMapping(index, true);
-    return Response.ok().entity(new ElasticIndexMappingDTO(index, mapping)).build();
+    return Response.ok().entity(new OpenSearchIndexMappingDTO(index, mapping)).build();
   }
 }

@@ -22,11 +22,11 @@ import io.hops.hopsworks.api.user.ServiceJWTDTO;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
 import io.hops.hopsworks.common.dao.user.BbcGroupFacade;
 import io.hops.hopsworks.common.dao.user.UserFacade;
-import io.hops.hopsworks.common.elastic.ElasticJWTController;
+import io.hops.hopsworks.common.opensearch.OpenSearchJWTController;
 import io.hops.hopsworks.common.user.UsersController;
 import io.hops.hopsworks.common.util.DateUtils;
 import io.hops.hopsworks.common.util.Settings;
-import io.hops.hopsworks.exceptions.ElasticException;
+import io.hops.hopsworks.exceptions.OpenSearchException;
 import io.hops.hopsworks.jwt.Constants;
 import io.hops.hopsworks.jwt.JWTController;
 import io.hops.hopsworks.jwt.SignatureAlgorithm;
@@ -88,7 +88,7 @@ public class JWTHelper {
   @EJB
   private ProjectFacade projectFacade;
   @EJB
-  private ElasticJWTController elasticJWTController;
+  private OpenSearchJWTController openSearchJWTController;
 
   /**
    * Get the user from the request header Authorization field.
@@ -434,63 +434,63 @@ public class JWTHelper {
   /**
    * Create a new signing key for ELK
    */
-  public String getSigningKeyForELK() throws ElasticException {
-    return elasticJWTController.getSigningKeyForELK();
+  public String getSigningKeyForELK() throws OpenSearchException {
+    return openSearchJWTController.getSigningKeyForELK();
   }
   
   /**
-   * Create jwt token for a project in elastic.
+   * Create jwt token for a project in opensearch.
    * @param sc
    * @param projectId
    * @return
-   * @throws ElasticException
+   * @throws OpenSearchException
    */
-  public ElasticJWTResponseDTO createTokenForELK(SecurityContext sc,
-      Integer projectId) throws ElasticException {
+  public OpenSearchJWTResponseDTO createTokenForELK(SecurityContext sc,
+                                                    Integer projectId) throws OpenSearchException {
     Users user = getUserPrincipal(sc);
     Project project = projectFacade.find(projectId);
-    if(settings.isElasticJWTEnabled()){
-      String token = elasticJWTController.createTokenForELK(user, project);
+    if(settings.isOpenSearchJWTEnabled()){
+      String token = openSearchJWTController.createTokenForELK(user, project);
       String kibanaUrl = settings.getKibanaAppUri(token);
-      return new ElasticJWTResponseDTO(token, kibanaUrl, project.getName());
+      return new OpenSearchJWTResponseDTO(token, kibanaUrl, project.getName());
     }else{
       String kibanaUrl = settings.getKibanaAppUri();
-      return new ElasticJWTResponseDTO("", kibanaUrl, project.getName());
+      return new OpenSearchJWTResponseDTO("", kibanaUrl, project.getName());
     }
   }
   
-  public ElasticJWTResponseDTO createTokenForELKAsDataOwner(Integer projectId)
-      throws ElasticException {
+  public OpenSearchJWTResponseDTO createTokenForELKAsDataOwner(Integer projectId)
+      throws OpenSearchException {
     Project project = projectFacade.find(projectId);
-    if(settings.isElasticJWTEnabled()){
-      String token = elasticJWTController.createTokenForELKAsDataOwner(project);
+    if(settings.isOpenSearchJWTEnabled()){
+      String token = openSearchJWTController.createTokenForELKAsDataOwner(project);
       String kibanaUrl = settings.getKibanaAppUri(token);
-      return new ElasticJWTResponseDTO(token, kibanaUrl, project.getName());
+      return new OpenSearchJWTResponseDTO(token, kibanaUrl, project.getName());
     }else{
       String kibanaUrl = settings.getKibanaAppUri();
-      return new ElasticJWTResponseDTO("", kibanaUrl, project.getName());
+      return new OpenSearchJWTResponseDTO("", kibanaUrl, project.getName());
     }
   }
   
-  public ElasticJWTResponseDTO createTokenForELKAsAdmin() throws ElasticException {
-    if(settings.isElasticJWTEnabled()){
-      String token = elasticJWTController.createTokenForELKAsAdmin();
+  public OpenSearchJWTResponseDTO createTokenForELKAsAdmin() throws OpenSearchException {
+    if(settings.isOpenSearchJWTEnabled()){
+      String token = openSearchJWTController.createTokenForELKAsAdmin();
       String kibanaUrl = settings.getKibanaAppUri(token);
-      return new ElasticJWTResponseDTO(token, kibanaUrl,"");
+      return new OpenSearchJWTResponseDTO(token, kibanaUrl,"");
     }else{
       String kibanaUrl = settings.getKibanaAppUri();
-      return new ElasticJWTResponseDTO("", kibanaUrl,"");
+      return new OpenSearchJWTResponseDTO("", kibanaUrl,"");
     }
   }
 
-  public ElasticJWTResponseDTO createTokenForELKAsLogUser() throws ElasticException {
-    if(settings.isElasticJWTEnabled()){
-      String token = elasticJWTController.createTokenForELKServices();
+  public OpenSearchJWTResponseDTO createTokenForELKAsLogUser() throws OpenSearchException {
+    if(settings.isOpenSearchJWTEnabled()){
+      String token = openSearchJWTController.createTokenForELKServices();
       String kibanaUrl = settings.getKibanaAppUri(token);
-      return new ElasticJWTResponseDTO(token, kibanaUrl,"");
+      return new OpenSearchJWTResponseDTO(token, kibanaUrl,"");
     }else{
       String kibanaUrl = settings.getKibanaAppUri();
-      return new ElasticJWTResponseDTO("", kibanaUrl,"");
+      return new OpenSearchJWTResponseDTO("", kibanaUrl,"");
     }
   }
 }

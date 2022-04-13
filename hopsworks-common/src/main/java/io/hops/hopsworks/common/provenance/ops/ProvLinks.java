@@ -27,8 +27,9 @@ import java.util.Map;
 import java.util.logging.Level;
 
 /**
- * This class is used to translate Rest Endpoint query params into Elastic field names (or Filters to be more accurate)
- * This uses the State and Ops Prov indices for elastic field names.
+ * This class is used to translate Rest Endpoint query params into OpenSearch field names
+ * (or Filters to be more accurate)
+ * This uses the State and Ops Prov indices for opensearch field names.
  */
 public class ProvLinks {
   public interface Field extends ProvParser.Field{
@@ -40,17 +41,17 @@ public class ProvLinks {
   private enum IntFieldsP implements Field {
     ML_TYPE(ProvParser.Fields.ML_TYPE, new MLLinksTypeValParser());
     
-    ProvParser.ElasticField elasticField;
+    ProvParser.OpenSearchField openSearchField;
     ProvParser.ValParser valParser;
   
-    IntFieldsP(ProvParser.ElasticField elasticField, ProvParser.ValParser valParser) {
-      this.elasticField = elasticField;
+    IntFieldsP(ProvParser.OpenSearchField openSearchField, ProvParser.ValParser valParser) {
+      this.openSearchField = openSearchField;
       this.valParser = valParser;
     }
     
     @Override
-    public String elasticFieldName() {
-      return elasticField.toString().toLowerCase();
+    public String openSearchFieldName() {
+      return openSearchField.toString().toLowerCase();
     }
     
     @Override
@@ -89,8 +90,8 @@ public class ProvLinks {
     }
     
     @Override
-    public String elasticFieldName() {
-      return base.elasticFieldName();
+    public String openSearchFieldName() {
+      return base.openSearchFieldName();
     }
     
     @Override

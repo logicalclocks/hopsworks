@@ -282,9 +282,9 @@ describe "On #{ENV['OS']}" do
           # Sleep a bit to make sure that logs are propagated correctly to the index
           sleep(30)
 
-          # Check that the logs are written in the elastic index.
-          elastic_rest do
-            response = elastic_get "#{@project[:projectname].downcase}_serving*/_search?q=serving_name:#{@serving[:name]}"
+          # Check that the logs are written in the opensearch index.
+          opensearch_rest do
+            response = opensearch_get "#{@project[:projectname].downcase}_serving*/_search?q=serving_name:#{@serving[:name]}"
             index = response.body
             parsed_index = JSON.parse(index)
             expect(parsed_index['hits']['total']['value']).to be > 0

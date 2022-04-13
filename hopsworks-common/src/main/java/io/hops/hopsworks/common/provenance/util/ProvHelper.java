@@ -17,7 +17,7 @@ package io.hops.hopsworks.common.provenance.util;
 
 import io.hops.hopsworks.common.provenance.core.ProvParser;
 import io.hops.hopsworks.common.provenance.util.functional.CheckedFunction;
-import io.hops.hopsworks.exceptions.ElasticException;
+import io.hops.hopsworks.exceptions.OpenSearchException;
 import io.hops.hopsworks.exceptions.ProvenanceException;
 import io.hops.hopsworks.restutils.RESTCodes;
 
@@ -27,50 +27,51 @@ import java.util.logging.Level;
 
 public class ProvHelper {
   
-  public static <C> C extractElasticField(Map<String, Object> fields, ProvParser.Field field)
+  public static <C> C extractOpenSearchField(Map<String, Object> fields, ProvParser.Field field)
     throws ProvenanceException {
-    return extractElasticField(fields, field, false);
+    return extractOpenSearchField(fields, field, false);
   }
   
-  public static <C> C extractElasticField(Map<String, Object> fields, ProvParser.Field field, boolean soft)
+  public static <C> C extractOpenSearchField(Map<String, Object> fields, ProvParser.Field field, boolean soft)
     throws ProvenanceException {
-    Object val = fields.remove(field.elasticFieldName());
+    Object val = fields.remove(field.openSearchFieldName());
     if(val == null) {
       if(soft) {
         return null;
       } else {
         throw new ProvenanceException(RESTCodes.ProvenanceErrorCode.MALFORMED_ENTRY, Level.INFO,
-          "problem parsing elastic field:" + field + " - found null");
+          "problem parsing opensearch field:" + field + " - found null");
       }
     }
     try {
       return (C)field.filterValParser().apply(val);
     } catch (ProvenanceException e) {
       throw new ProvenanceException(RESTCodes.ProvenanceErrorCode.MALFORMED_ENTRY, Level.INFO,
-        "problem parsing elastic field:" + field, "problem parsing elastic field:" + field, e);
+        "problem parsing opensearch field:" + field, "problem parsing opensearch field:" + field, e);
     }
   }
   
-  public static <C> C extractElasticField(Map<String, Object> fields, ProvParser.ElasticField field,
-    CheckedFunction<Object, C, ProvenanceException> parser, boolean soft) throws ProvenanceException {
+  public static <C> C extractOpenSearchField(Map<String, Object> fields, ProvParser.OpenSearchField field,
+                                             CheckedFunction<Object, C, ProvenanceException> parser, boolean soft)
+    throws ProvenanceException {
     Object val = fields.remove(field.toString());
     if(val == null) {
       if(soft) {
         return null;
       } else {
         throw new ProvenanceException(RESTCodes.ProvenanceErrorCode.MALFORMED_ENTRY, Level.INFO,
-          "problem parsing elastic field:" + field + " - found null");
+          "problem parsing opensearch field:" + field + " - found null");
       }
     }
     try {
       return parser.apply(val);
     } catch (ProvenanceException e) {
       throw new ProvenanceException(RESTCodes.ProvenanceErrorCode.MALFORMED_ENTRY, Level.INFO,
-        "problem parsing elastic field:" + field, "problem parsing elastic field:" + field, e);
+        "problem parsing opensearch field:" + field, "problem parsing opensearch field:" + field, e);
     }
   }
   
-  public static <C> C extractElasticField(Object val) throws ProvenanceException {
+  public static <C> C extractOpenSearchField(Object val) throws ProvenanceException {
     if(val == null) {
       throw new ProvenanceException(RESTCodes.ProvenanceErrorCode.MALFORMED_ENTRY, Level.INFO,
         "expected String, found null");
@@ -118,8 +119,8 @@ public class ProvHelper {
   }
   
   //**********************Exception handling helper methods**********************
-  public static ProvenanceException fromElastic(ElasticException e, String userMsg, String devMsg) {
-    if(e.getErrorCode().equals(RESTCodes.ElasticErrorCode.ELASTIC_QUERY_ERROR)) {
+  public static ProvenanceException fromOpenSearch(OpenSearchException e, String userMsg, String devMsg) {
+    if(e.getErrorCode().equals(RESTCodes.OpenSearchErrorCode.OPENSEARCH_QUERY_ERROR)) {
       return new ProvenanceException(RESTCodes.ProvenanceErrorCode.BAD_REQUEST, Level.INFO, userMsg, devMsg, e);
     } else {
       return new ProvenanceException(RESTCodes.ProvenanceErrorCode.INTERNAL_ERROR, Level.WARNING, userMsg, devMsg, e);

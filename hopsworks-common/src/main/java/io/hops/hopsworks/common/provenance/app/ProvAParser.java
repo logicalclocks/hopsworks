@@ -19,7 +19,7 @@ import io.hops.hopsworks.common.provenance.core.Provenance;
 import io.hops.hopsworks.common.provenance.core.ProvParser;
 import io.hops.hopsworks.exceptions.ProvenanceException;
 import io.hops.hopsworks.restutils.RESTCodes;
-import org.elasticsearch.search.sort.SortOrder;
+import org.opensearch.search.sort.SortOrder;
 import org.javatuples.Pair;
 
 import java.util.EnumSet;
@@ -27,7 +27,7 @@ import java.util.logging.Level;
 
 public class ProvAParser {
   
-  public enum BaseField implements ProvParser.ElasticField {
+  public enum BaseField implements ProvParser.OpenSearchField {
     APP_STATE,
     APP_ID,
     TIMESTAMP,
@@ -48,17 +48,17 @@ public class ProvAParser {
     APP_USER(BaseField.APP_USER, new ProvParser.StringValParser()),
     R_TIMESTAMP(BaseField.READABLE_TIMESTAMP, new ProvParser.StringValParser());
     
-    public final BaseField elasticField;
+    public final BaseField openSearchField;
     public final ProvParser.ValParser valParser;
     
-    Field(BaseField elasticField, ProvParser.ValParser valParser) {
-      this.elasticField = elasticField;
+    Field(BaseField openSearchField, ProvParser.ValParser valParser) {
+      this.openSearchField = openSearchField;
       this.valParser = valParser;
     }
     
     @Override
-    public String elasticFieldName() {
-      return elasticField.toString().toLowerCase();
+    public String openSearchFieldName() {
+      return openSearchField.toString().toLowerCase();
     }
     
     @Override

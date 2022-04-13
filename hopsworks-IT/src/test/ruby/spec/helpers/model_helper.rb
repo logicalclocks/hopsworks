@@ -86,7 +86,7 @@ module ModelHelper
       artifact_id = "#{name}_#{version}"
       get_model(project[:id], artifact_id)
       terminate = response.code == resolve_status(200, response.code) || (response.code == resolve_status(404, response.code) && json_body[:errorCode] == 360000)
-      { 'success' => terminate, 'msg' => "wait for model in elastic", 'resp_code' => response.code, 'error_code' => json_body[:errorCode]}
+      { 'success' => terminate, 'msg' => "wait for model in opensearch", 'resp_code' => response.code, 'error_code' => json_body[:errorCode]}
     end
     if result['resp_code'] == resolve_status(200, result['resp_code'])
       true

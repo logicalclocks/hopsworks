@@ -17,12 +17,12 @@ package io.hops.hopsworks.common.provenance.state;
 
 import com.lambdista.util.Try;
 import io.hops.hopsworks.common.provenance.core.ProvParser;
-import io.hops.hopsworks.common.provenance.core.elastic.BasicElasticHit;
+import io.hops.hopsworks.common.provenance.core.opensearch.BasicOpenSearchHit;
 import io.hops.hopsworks.common.provenance.state.dto.ProvStateDTO;
 import io.hops.hopsworks.common.provenance.util.ProvHelper;
 import io.hops.hopsworks.exceptions.ProvenanceException;
 import io.hops.hopsworks.restutils.RESTCodes;
-import org.elasticsearch.search.sort.SortOrder;
+import org.opensearch.search.sort.SortOrder;
 import org.javatuples.Pair;
 
 import java.util.EnumSet;
@@ -32,8 +32,9 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
- * This class is used to translate Rest Endpoint query params into Elastic field names (or Filters to be more accurate)
- * This uses the State Prov indices for elastic field names.
+ * This class is used to translate Rest Endpoint query params into OpenSearch field names
+ * (or Filters to be more accurate)
+ * This uses the State Prov indices for opensearch field names.
  */
 public class ProvStateParser {
   private final static Logger LOGGER = Logger.getLogger(ProvStateParser.class.getName());
@@ -41,7 +42,7 @@ public class ProvStateParser {
   public interface Field extends ProvParser.Field {
   }
   
-  public enum Fields implements ProvParser.ElasticField {
+  public enum Fields implements ProvParser.OpenSearchField {
     CREATE_TIMESTAMP,
     R_CREATE_TIMESTAMP;
     @Override
@@ -68,17 +69,17 @@ public class ProvStateParser {
     R_CREATE_TIMESTAMP(ProvStateParser.Fields.R_CREATE_TIMESTAMP, new ProvParser.StringValParser()),
     ENTRY_TYPE(ProvParser.Fields.ENTRY_TYPE, new ProvParser.StringValParser());
   
-    ProvParser.ElasticField elasticField;
+    ProvParser.OpenSearchField openSearchField;
     ProvParser.ValParser<?> filterValParser;
     
-    FieldsP(ProvParser.ElasticField elasticField, ProvParser.ValParser<?> filterValParser) {
-      this.elasticField = elasticField;
+    FieldsP(ProvParser.OpenSearchField openSearchField, ProvParser.ValParser<?> filterValParser) {
+      this.openSearchField = openSearchField;
       this.filterValParser = filterValParser;
     }
     
     @Override
-    public String elasticFieldName() {
-      return elasticField.toString().toLowerCase();
+    public String openSearchFieldName() {
+      return openSearchField.toString().toLowerCase();
     }
     
     @Override
@@ -114,13 +115,13 @@ public class ProvStateParser {
     }
     
     @Override
-    public String elasticFieldName() {
-      return base.elasticFieldName();
+    public String openSearchFieldName() {
+      return base.openSearchFieldName();
     }
     
     @Override
     public String queryFieldName() {
-      return base.elasticFieldName();
+      return base.openSearchFieldName();
     }
     
     @Override
@@ -184,45 +185,46 @@ public class ProvStateParser {
     return Pair.with(field, sortOrder);
   }
   
-  public static ProvStateDTO instance(BasicElasticHit hit) throws ProvenanceException {
+  public static ProvStateDTO instance(BasicOpenSearchHit hit) throws ProvenanceException {
     ProvStateDTO result = new ProvStateDTO();
     result.setId(hit.getId());
     result.setScore(Float.isNaN(hit.getScore()) ? 0 : hit.getScore());
     return instance(result, new HashMap<>(hit.getSource()));
   }
   
-  public static Try<ProvStateDTO> tryInstance(BasicElasticHit hit) {
+  public static Try<ProvStateDTO> tryInstance(BasicOpenSearchHit hit) {
     return Try.apply(() -> instance(hit));
   }
   
   private static ProvStateDTO instance(ProvStateDTO result, Map<String, Object> auxMap)
     throws ProvenanceException {
     try {
-      result.setProjectInodeId(ProvHelper.extractElasticField(auxMap, ProvStateParser.FieldsP.PROJECT_I_ID));
-      result.setInodeId(ProvHelper.extractElasticField(auxMap, ProvStateParser.FieldsP.FILE_I_ID));
-      result.setAppId(ProvHelper.extractElasticField(auxMap, ProvStateParser.FieldsP.APP_ID));
-      result.setUserId(ProvHelper.extractElasticField(auxMap, ProvStateParser.FieldsP.USER_ID));
-      result.setInodeName(ProvHelper.extractElasticField(auxMap, ProvStateParser.FieldsP.FILE_NAME));
-      result.setCreateTime(ProvHelper.extractElasticField(auxMap, ProvStateParser.FieldsP.CREATE_TIMESTAMP));
-      result.setMlType(ProvHelper.extractElasticField(auxMap, ProvStateParser.FieldsP.ML_TYPE));
-      result.setMlId(ProvHelper.extractElasticField(auxMap, ProvStateParser.FieldsP.ML_ID));
-      result.setDatasetInodeId(ProvHelper.extractElasticField(auxMap, ProvStateParser.FieldsP.DATASET_I_ID));
-      result.setParentInodeId(ProvHelper.extractElasticField(auxMap, ProvStateParser.FieldsP.PARENT_I_ID));
-      result.setPartitionId(ProvHelper.extractElasticField(auxMap, ProvStateParser.FieldsP.PARTITION_ID));
-      result.setProjectName(ProvHelper.extractElasticField(auxMap, ProvStateParser.FieldsP.PROJECT_NAME));
-      result.setReadableCreateTime(ProvHelper.extractElasticField(auxMap, ProvStateParser.FieldsP.R_CREATE_TIMESTAMP));
-      ProvHelper.extractElasticField(auxMap, ProvStateParser.FieldsP.ENTRY_TYPE);
-      result.setXattrs(ProvHelper.extractElasticField(auxMap,
+      result.setProjectInodeId(ProvHelper.extractOpenSearchField(auxMap, ProvStateParser.FieldsP.PROJECT_I_ID));
+      result.setInodeId(ProvHelper.extractOpenSearchField(auxMap, ProvStateParser.FieldsP.FILE_I_ID));
+      result.setAppId(ProvHelper.extractOpenSearchField(auxMap, ProvStateParser.FieldsP.APP_ID));
+      result.setUserId(ProvHelper.extractOpenSearchField(auxMap, ProvStateParser.FieldsP.USER_ID));
+      result.setInodeName(ProvHelper.extractOpenSearchField(auxMap, ProvStateParser.FieldsP.FILE_NAME));
+      result.setCreateTime(ProvHelper.extractOpenSearchField(auxMap, ProvStateParser.FieldsP.CREATE_TIMESTAMP));
+      result.setMlType(ProvHelper.extractOpenSearchField(auxMap, ProvStateParser.FieldsP.ML_TYPE));
+      result.setMlId(ProvHelper.extractOpenSearchField(auxMap, ProvStateParser.FieldsP.ML_ID));
+      result.setDatasetInodeId(ProvHelper.extractOpenSearchField(auxMap, ProvStateParser.FieldsP.DATASET_I_ID));
+      result.setParentInodeId(ProvHelper.extractOpenSearchField(auxMap, ProvStateParser.FieldsP.PARENT_I_ID));
+      result.setPartitionId(ProvHelper.extractOpenSearchField(auxMap, ProvStateParser.FieldsP.PARTITION_ID));
+      result.setProjectName(ProvHelper.extractOpenSearchField(auxMap, ProvStateParser.FieldsP.PROJECT_NAME));
+      result.setReadableCreateTime(
+        ProvHelper.extractOpenSearchField(auxMap, ProvStateParser.FieldsP.R_CREATE_TIMESTAMP));
+      ProvHelper.extractOpenSearchField(auxMap, ProvStateParser.FieldsP.ENTRY_TYPE);
+      result.setXattrs(ProvHelper.extractOpenSearchField(auxMap,
         ProvParser.XAttrField.XATTR_PROV, ProvHelper.asXAttrMap(), true));
       if (result.getXattrs() != null && result.getXattrs().containsKey(ProvStateParser.FieldsP.APP_ID.toString())) {
         //update if we have a value - useful if tls is disabled and out appId is set to none
-        result.setAppId(ProvHelper.extractElasticField(result.getXattrs().get(ProvParser.Fields.APP_ID.toString())));
+        result.setAppId(ProvHelper.extractOpenSearchField(result.getXattrs().get(ProvParser.Fields.APP_ID.toString())));
       }
       if(!auxMap.isEmpty()) {
         LOGGER.log(Level.FINE, "fields:{0} not managed in file state return", auxMap.keySet());
       }
     } catch(ClassCastException e) {
-      String msg = "mismatch between DTO class and ProvSParser field types (elastic)";
+      String msg = "mismatch between DTO class and ProvSParser field types (opensearch)";
       throw new ProvenanceException(RESTCodes.ProvenanceErrorCode.INTERNAL_ERROR, Level.WARNING, msg, msg, e);
     }
     return result;

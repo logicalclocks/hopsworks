@@ -242,7 +242,7 @@ angular.module('hopsWorksApp')
                         var nbInstances = 0;
                         var nbRunningInstances = 0;
                         success.data.forEach(function (status) {
-                          if (status.service == "elasticsearch") {
+                          if (status.service == "opensearch") {
                               if(status.status === "Started") {
                                 nbRunningInstances++;
                               } else {

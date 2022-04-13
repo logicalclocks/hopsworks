@@ -16,8 +16,8 @@
 
 package io.hops.hopsworks.common.provenance.state;
 
-import io.hops.hopsworks.common.provenance.core.elastic.ElasticAggregation;
+import io.hops.hopsworks.common.provenance.core.opensearch.OpenSearchAggregation;
 
-public enum ProvStateAggregations implements ElasticAggregation {
+public enum ProvStateAggregations implements OpenSearchAggregation {
   FS_KEYWORDS
 }

@@ -43,7 +43,7 @@ import io.hops.hopsworks.api.airflow.AirflowService;
 import io.hops.hopsworks.api.alert.AlertResource;
 import io.hops.hopsworks.api.dataset.DatasetResource;
 import io.hops.hopsworks.api.dela.DelaProjectService;
-import io.hops.hopsworks.api.elastic.ElasticResource;
+import io.hops.hopsworks.api.opensearch.OpenSearchResource;
 import io.hops.hopsworks.api.experiments.ExperimentsResource;
 import io.hops.hopsworks.api.featurestore.FeaturestoreService;
 import io.hops.hopsworks.api.filter.AllowedProjectRoles;
@@ -89,7 +89,7 @@ import io.hops.hopsworks.common.user.AuthController;
 import io.hops.hopsworks.common.util.AccessController;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.DatasetException;
-import io.hops.hopsworks.exceptions.ElasticException;
+import io.hops.hopsworks.exceptions.OpenSearchException;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.exceptions.GenericException;
 import io.hops.hopsworks.exceptions.HopsSecurityException;
@@ -216,7 +216,9 @@ public class ProjectService {
   @Inject
   private ProjectProvenanceResource provenance;
   @Inject
-  private ElasticResource elastic;
+  private OpenSearchResource openSearch;
+  @Inject
+  private RoleMappingResource roleMappingResource;
   @EJB
   private HopsFSProvenanceController fsProvenanceController;
   @Inject
@@ -477,7 +479,7 @@ public class ProjectService {
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER})
   public Response updateProject(ProjectDTO projectDTO, @PathParam("projectId") Integer id, @Context SecurityContext sc)
     throws ProjectException, DatasetException, HopsSecurityException, ServiceException, FeaturestoreException,
-    ElasticException, SchemaException, KafkaException, ProvenanceException, IOException, UserException {
+    OpenSearchException, SchemaException, KafkaException, ProvenanceException, IOException, UserException {
 
     RESTApiJsonResponse json = new RESTApiJsonResponse();
     Users user = jWTHelper.getUserPrincipal(sc);
@@ -557,7 +559,7 @@ public class ProjectService {
   @Produces(MediaType.APPLICATION_JSON)
   public Response example(@PathParam("type") String type, @Context HttpServletRequest req, @Context SecurityContext sc)
     throws DatasetException, GenericException, KafkaException, ProjectException, UserException, ServiceException,
-    HopsSecurityException, FeaturestoreException, JobException, IOException, ElasticException, SchemaException,
+    HopsSecurityException, FeaturestoreException, JobException, IOException, OpenSearchException, SchemaException,
     ProvenanceException {
     TourProjectType demoType;
     try {
@@ -637,7 +639,7 @@ public class ProjectService {
   @Consumes(MediaType.APPLICATION_JSON)
   public Response createProject(ProjectDTO projectDTO, @Context HttpServletRequest req, @Context SecurityContext sc)
     throws DatasetException, GenericException, KafkaException, ProjectException, UserException, ServiceException,
-    HopsSecurityException, FeaturestoreException, ElasticException, SchemaException, IOException {
+    HopsSecurityException, FeaturestoreException, OpenSearchException, SchemaException, IOException {
 
     Users user = jWTHelper.getUserPrincipal(sc);
     projectController.createProject(projectDTO, user, req.getSession().getId());
@@ -859,9 +861,9 @@ public class ProjectService {
   }
   
   @Path("{projectId}/elastic")
-  public ElasticResource elastic(@PathParam("projectId") Integer id) {
-    this.elastic.setProjectId(id);
-    return elastic;
+  public OpenSearchResource elastic(@PathParam("projectId") Integer id) {
+    this.openSearch.setProjectId(id);
+    return openSearch;
   }
   
   @Path("{projectId}/alerts")

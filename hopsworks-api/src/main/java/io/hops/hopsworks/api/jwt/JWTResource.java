@@ -20,7 +20,7 @@ import com.auth0.jwt.interfaces.DecodedJWT;
 import io.hops.hopsworks.api.filter.Audience;
 import io.hops.hopsworks.api.user.ServiceJWTDTO;
 import io.hops.hopsworks.common.util.Settings;
-import io.hops.hopsworks.exceptions.ElasticException;
+import io.hops.hopsworks.exceptions.OpenSearchException;
 import io.hops.hopsworks.exceptions.HopsSecurityException;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
 import io.hops.hopsworks.jwt.exception.DuplicateSigningKeyException;
@@ -161,21 +161,22 @@ public class JWTResource {
   @Path("/elk/key")
   @ApiOperation(value = "Get the signing key for ELK if exists otherwise " +
       "create a new one and return")
-  public Response getSigningKeyforELK(@Context SecurityContext sc) throws ElasticException {
+  public Response getSigningKeyforELK(@Context SecurityContext sc,
+                                      @Context HttpServletRequest req) throws OpenSearchException {
     String signingKey = jWTHelper.getSigningKeyForELK();
     return Response.ok().entity(signingKey).build();
   }
   
   @GET
   @Path("/elk/token/{projectId}")
-  @ApiOperation(value = "Create elastic jwt token for the provided project as" +
+  @ApiOperation(value = "Create opensearch jwt token for the provided project as" +
       " Data Owner.")
   public Response createELKTokenAsDataOwner(@PathParam(
-      "projectId") Integer projectId, @Context SecurityContext sc) throws ElasticException {
+      "projectId") Integer projectId, @Context SecurityContext sc) throws OpenSearchException {
     if (projectId == null) {
       throw new IllegalArgumentException("projectId was not provided.");
     }
-    ElasticJWTResponseDTO
+    OpenSearchJWTResponseDTO
         jWTResponseDTO = jWTHelper.createTokenForELKAsDataOwner(projectId);
     return Response.ok().entity(jWTResponseDTO).build();
   }

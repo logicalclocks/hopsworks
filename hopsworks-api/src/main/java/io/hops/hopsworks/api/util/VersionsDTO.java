@@ -91,7 +91,7 @@ public class VersionsDTO {
     versions.add(new Version("epipe", settings.getEpipeVersion()));
     versions.add(new Version("dela", settings.getDelaVersion()));
     versions.add(new Version("kafka", settings.getKafkaVersion()));
-    versions.add(new Version("elastic", settings.getElasticVersion()));
+    versions.add(new Version("opensearch", settings.getOpenSearchVersion()));
     versions.add(new Version("tensorflow", settings.getTensorflowVersion()));
     versions.add(new Version("hopsworks", settings.getHopsworksVersion()));
   }
