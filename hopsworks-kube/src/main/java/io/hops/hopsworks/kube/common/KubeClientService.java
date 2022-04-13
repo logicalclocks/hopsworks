@@ -13,6 +13,8 @@ import io.fabric8.kubernetes.api.model.Node;
 import io.fabric8.kubernetes.api.model.ObjectMeta;
 import io.fabric8.kubernetes.api.model.ObjectMetaBuilder;
 import io.fabric8.kubernetes.api.model.Pod;
+import io.fabric8.kubernetes.api.model.PodStatus;
+import io.fabric8.kubernetes.api.model.PodCondition;
 import io.fabric8.kubernetes.api.model.Quantity;
 import io.fabric8.kubernetes.api.model.QuantityBuilder;
 import io.fabric8.kubernetes.api.model.ResourceRequirements;
@@ -52,6 +54,7 @@ import javax.ejb.ConcurrencyManagement;
 import javax.ejb.ConcurrencyManagementType;
 import javax.ejb.EJB;
 import javax.ejb.Singleton;
+import java.util.StringJoiner;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import java.util.ArrayList;
@@ -405,20 +408,36 @@ public class KubeClientService {
     handleClientOp((client) -> client.apps().deployments().inNamespace(namespace)
             .delete(new DeploymentBuilder().withMetadata(deploymentMetadata).build()));
   }
-  
-  public void waitForDeployment(Project project, String deploymentName, int maxAttempts) throws TimeoutException {
+
+  public void waitForDeployment(Project project, String deploymentName, Map<String, String> podLabels,
+                                int maxAttempts) throws TimeoutException {
     RetryConfig retryConfig = RetryConfig.<Optional<Integer>>custom()
       .maxAttempts(maxAttempts)
       .intervalFunction(IntervalFunction.ofExponentialBackoff(400L, 1.3D))
       .retryOnResult(o -> o.map(replicas -> replicas < 1).orElse(true))
       .build();
     Retry retry = Retry.of("waitForDeployment: " + deploymentName, retryConfig);
-    Retry.decorateSupplier(retry, () -> getDeploymentStatus(project, deploymentName, 1)
+    Optional<Integer> availableReplicas = Retry.decorateSupplier(retry, () -> getDeploymentStatus(project,
+            deploymentName, 1)
       .map(o -> o.getAvailableReplicas()))
-      .get()
-      .orElseThrow(() -> new TimeoutException("Timed out waiting for Jupyter pod startup"));
+      .get();
+    if (!availableReplicas.isPresent()) {
+      //Get the pods
+      List<Pod> podsList = getPodList(project, podLabels);
+      StringJoiner joiner = new StringJoiner(",");
+      if (!podsList.isEmpty()) {
+        //Can there be more than one jupyter pod??
+        Pod pod = podsList.get(0);
+        PodStatus podStatus = pod.getStatus();
+        for (PodCondition condition: podStatus.getConditions()) {
+          //Since we have already timed out, all current pod conditions will be considered unhealthy
+          joiner.add(condition.getType() + ":" + condition.getMessage());
+        }
+      }
+      throw new TimeoutException("Timed out waiting for Jupyter pod startup. " + joiner.toString());
+    }
   }
-  
+
   public Optional<DeploymentStatus> getDeploymentStatus(Project project, String deploymentName, int maxAttempts) {
     RetryConfig retryConfig = RetryConfig.<DeploymentStatus>custom()
       .maxAttempts(maxAttempts)
@@ -502,7 +521,7 @@ public class KubeClientService {
     String kubeProjectNs = getKubeProjectName(project);
     return handleClientOp((client) -> client.services().inNamespace(kubeProjectNs).withName(serviceName).get());
   }
-  
+
   public List<Service> getServices(String label)
     throws KubernetesClientException {
     return handleClientOp((client) -> client.services().inAnyNamespace().withLabel(label).list().getItems());

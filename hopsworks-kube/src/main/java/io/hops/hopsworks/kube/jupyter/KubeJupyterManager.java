@@ -252,7 +252,9 @@ public class KubeJupyterManager extends JupyterManagerImpl implements JupyterMan
   @Override
   public void waitForStartup(Project project, Users user) throws TimeoutException {
     String deploymentName = serviceAndDeploymentName(project, user);
-    kubeClientService.waitForDeployment(project, deploymentName, settings.getKubeAPIMaxAttempts());
+    String kubeProjectUser = kubeClientService.getKubeDeploymentName(project, user);
+    kubeClientService.waitForDeployment(project, deploymentName, ImmutableMap.of(JUPYTER, kubeProjectUser),
+        settings.getKubeAPIMaxAttempts());
   }
   
   public String serviceAndDeploymentName(Project project, Users user) {
