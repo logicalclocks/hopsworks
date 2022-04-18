@@ -118,7 +118,8 @@ public class FeatureGroupPreviewResource {
     // is available online, return the data from the online feature store as it's faster.
     boolean online;
     if (featureGroupPreviewBeanParam.getStorage() == null) {
-      online = featuregroup.getCachedFeaturegroup().isOnlineEnabled();
+      online = (featuregroup.getStreamFeatureGroup() != null && featuregroup.getStreamFeatureGroup().isOnlineEnabled())
+          || (featuregroup.getCachedFeaturegroup() != null && featuregroup.getCachedFeaturegroup().isOnlineEnabled());
     } else {
       online = featureGroupPreviewBeanParam.getStorage().equals(FeatureGroupStorage.ONLINE);
     }
