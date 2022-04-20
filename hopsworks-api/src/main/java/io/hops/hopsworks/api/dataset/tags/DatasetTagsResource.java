@@ -104,8 +104,7 @@ public class DatasetTagsResource {
     Users user = jWTHelper.getUserPrincipal(sc);
     
     AttachTagResult result = tagsController.upsert(user, datasetPath, schemaName, value);
-    InodeTagUri tagUri = new InodeTagUri(uriInfo);
-    TagsDTO dto = tagsBuilder.build(tagUri, datasetPath, result.getItems());
+    TagsDTO dto = tagsBuilder.build(new InodeTagUri(uriInfo), datasetPath, result.getItems());
     
     UriBuilder builder = uriInfo.getAbsolutePathBuilder();
     if(result.isCreated()) {
@@ -142,8 +141,7 @@ public class DatasetTagsResource {
       result = tagsController.upsertAll(user, datasetPath, newTags);
     }
     
-    InodeTagUri tagUri = new InodeTagUri(uriInfo);
-    TagsDTO dto = tagsBuilder.build(tagUri, datasetPath, result.getItems());
+    TagsDTO dto = tagsBuilder.build(new InodeTagUri(uriInfo), datasetPath, result.getItems());
     
     UriBuilder builder = uriInfo.getAbsolutePathBuilder();
     if(result.isCreated()) {
@@ -169,8 +167,7 @@ public class DatasetTagsResource {
     Users user = jWTHelper.getUserPrincipal(sc);
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.TAGS);
     resourceRequest.setExpansions(tagsExpansionBeanParam.getResources());
-    InodeTagUri tagUri = new InodeTagUri(uriInfo);
-    TagsDTO dto = tagsBuilder.build(tagUri, resourceRequest, user, datasetPath);
+    TagsDTO dto = tagsBuilder.build(new InodeTagUri(uriInfo), resourceRequest, user, datasetPath);
     return Response.status(Response.Status.OK).entity(dto).build();
   }
   
@@ -193,8 +190,7 @@ public class DatasetTagsResource {
     
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.TAGS);
     resourceRequest.setExpansions(tagsExpansionBeanParam.getResources());
-    InodeTagUri tagUri = new InodeTagUri(uriInfo);
-    TagsDTO dto = tagsBuilder.build(tagUri, resourceRequest, user, datasetPath, schemaName);
+    TagsDTO dto = tagsBuilder.build(new InodeTagUri(uriInfo), resourceRequest, user, datasetPath, schemaName);
     return Response.status(Response.Status.OK).entity(dto).build();
   }
   

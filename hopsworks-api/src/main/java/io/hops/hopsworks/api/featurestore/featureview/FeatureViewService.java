@@ -86,13 +86,17 @@ public class FeatureViewService {
 
   @Path("/{name: [a-z0-9_]*(?=[a-z])[a-z0-9_]+}/version/{version: [0-9]+}/tags")
   public FeatureViewTagResource tags(
-    @ApiParam(value = "Name of the feature view", required = true)
-    @PathParam("name") String featureViewName,
-    @ApiParam(value = "Version of the feature view", required = true)
-    @PathParam("version") Integer version) {
+      @ApiParam(value = "Name of the feature view", required = true)
+      @PathParam("name")
+          String featureViewName,
+      @ApiParam(value = "Version of the feature view", required = true)
+      @PathParam("version")
+          Integer version
+  ) {
     
     tagResource.setProject(project);
     tagResource.setFeatureStore(featurestore);
+    //TODO get the actual feature view instance
     tagResource.setFeatureView(null);
     return tagResource;
   }
