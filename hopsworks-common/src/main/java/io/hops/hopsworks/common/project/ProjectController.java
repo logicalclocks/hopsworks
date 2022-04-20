@@ -1980,10 +1980,19 @@ public class ProjectController {
   
       //if online-featurestore service is enabled in the project, give new member access to it
       if (projectServiceFacade.isServiceEnabledForProject(project, ProjectServiceEnum.FEATURESTORE) &&
-        settings.isOnlineFeaturestore()) {
+          settings.isOnlineFeaturestore()) {
         Featurestore featurestore = featurestoreController.getProjectFeaturestore(project);
         onlineFeaturestoreController.createDatabaseUser(projectTeam.getUser(),
           featurestore, projectTeam.getTeamRole());
+
+        // give access to the shared online feature stores
+        for (DatasetSharedWith sharedDs : project.getDatasetSharedWithCollection()) {
+          if (sharedDs.getDataset().getDsType() == DatasetType.FEATURESTORE) {
+            onlineFeaturestoreController
+                .shareOnlineFeatureStore(project, newMember, projectTeam.getTeamRole(),
+                    sharedDs.getDataset().getFeatureStore(), sharedDs.getPermission());
+          }
+        }
       }
   
       // TODO: This should now be a REST call
@@ -2209,12 +2218,11 @@ public class ProjectController {
       TensorBoardException, FeaturestoreException {
     Users userToBeRemoved = userFacade.findByEmail(toRemoveEmail);
     if (userToBeRemoved == null) {
-      throw new UserException(RESTCodes.UserErrorCode.USER_WAS_NOT_FOUND, Level.FINE,
-        "user: " + userToBeRemoved.getEmail());
+      throw new UserException(RESTCodes.UserErrorCode.USER_WAS_NOT_FOUND, Level.FINE, "user: " + toRemoveEmail);
     }
     removeMemberFromTeam(project, userToBeRemoved);
-    logActivity(ActivityFacade.REMOVED_MEMBER + userToBeRemoved.getEmail(), user, project, ActivityFlag.
-      MEMBER);
+    logActivity(ActivityFacade.REMOVED_MEMBER + userToBeRemoved.getEmail(), user, project,
+        ActivityFlag.MEMBER);
   }
   
   public void removeMemberFromTeam(Project project, Users userToBeRemoved) throws ProjectException, ServiceException,

@@ -30,6 +30,7 @@ import io.hops.hopsworks.common.security.secrets.SecretsController;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.exceptions.UserException;
+import io.hops.hopsworks.persistence.entity.dataset.DatasetAccessPermission;
 import io.hops.hopsworks.persistence.entity.featurestore.Featurestore;
 import io.hops.hopsworks.persistence.entity.featurestore.storageconnector.FeaturestoreConnector;
 import io.hops.hopsworks.persistence.entity.featurestore.storageconnector.FeaturestoreConnectorType;
@@ -226,7 +227,7 @@ public class OnlineFeaturestoreController {
         Level.FINE, "Online feature store service is not enabled for this Hopsworks instance");
     }
     // Create dataset
-    addOnlineFeatureStoreDB(getOnlineFeaturestoreDbName(featurestore.getProject()));
+    onlineFeaturestoreFacade.createOnlineFeaturestoreDatabase(getOnlineFeaturestoreDbName(featurestore.getProject()));
 
     // Create project owner database user
     createDatabaseUser(user, featurestore, ProjectRoleTypes.DATA_OWNER.getRole());
@@ -267,7 +268,7 @@ public class OnlineFeaturestoreController {
    */
   private String createOnlineFeaturestoreUserSecret(String dbuser, Users user, Project project)
     throws FeaturestoreException {
-    String onlineFsPw = generateRandomUserPw();
+    String onlineFsPw = RandomStringUtils.randomAlphabetic(FeaturestoreConstants.ONLINE_FEATURESTORE_PW_LENGTH);
     try {
       secretsController.delete(user, dbuser); //Delete if the secret already exsits
       secretsController.add(user, dbuser, onlineFsPw, VisibilityType.PRIVATE, project.getId());
@@ -344,21 +345,6 @@ public class OnlineFeaturestoreController {
     } catch(Exception e) {
       //If the connector have already been created, skip this step
     }
-  }
-
-  /**
-   * Creates a new database and database-user for an online featurestore
-   *
-   * @param db the database-name
-   * @throws FeaturestoreException
-   */
-  public void addOnlineFeatureStoreDB(String db) throws FeaturestoreException {
-    if (!settings.isOnlineFeaturestore()) {
-      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.FEATURESTORE_ONLINE_NOT_ENABLED,
-        Level.FINE, "Online Feature Store is not enabled");
-    }
-
-    onlineFeaturestoreFacade.createOnlineFeaturestoreDatabase(db);
   }
 
   /**
@@ -447,6 +433,94 @@ public class OnlineFeaturestoreController {
   }
 
   /**
+   * Share feature store with project.
+   * @param project: project to share the feature store with
+   * @param featurestore: the feature store to share
+   * @param permission: the permissions the project members will have on the feature store
+   * @throws FeaturestoreException
+   */
+  public void shareOnlineFeatureStore(Project project, Featurestore featurestore,
+                                      DatasetAccessPermission permission) throws FeaturestoreException {
+    String featureStoreDb = getOnlineFeaturestoreDbName(featurestore.getProject());
+    if (!checkIfDatabaseExists(featureStoreDb)) {
+      // Nothing to share
+      return;
+    }
+
+    for (ProjectTeam member : projectTeamFacade.findMembersByProject(project)) {
+      shareOnlineFeatureStoreUser(project, member.getUser(), member.getTeamRole(), featureStoreDb, permission);
+    }
+  }
+
+  /**
+   * Share feature store with project user
+   * @param project: project to share the feature store with
+   * @param user: the user to share with
+   * @param role: the role of the user in the target project
+   * @param featurestore: the feature store to share
+   * @param permission: the permissions the project members will have on the feature store
+   * @throws FeaturestoreException
+   */
+  public void shareOnlineFeatureStore(Project project, Users user, String role, Featurestore featurestore,
+                                      DatasetAccessPermission permission) throws FeaturestoreException {
+    String featureStoreDb = getOnlineFeaturestoreDbName(featurestore.getProject());
+    if (!checkIfDatabaseExists(featureStoreDb)) {
+      // Nothing to share
+      return;
+    }
+
+    shareOnlineFeatureStoreUser(project, user, role, featureStoreDb, permission);
+  }
+
+  /**
+   * Set share online feature store for a single user
+   * @param project
+   * @param user
+   * @param role
+   * @param featureStoreDb
+   * @param permission
+   * @throws FeaturestoreException
+   */
+  private void shareOnlineFeatureStoreUser(Project project, Users user, String role,
+                                          String featureStoreDb, DatasetAccessPermission permission)
+      throws FeaturestoreException {
+    String dbUser = onlineDbUsername(project, user);
+    onlineFeaturestoreFacade.revokeUserPrivileges(featureStoreDb, dbUser);
+
+    if (permission == DatasetAccessPermission.READ_ONLY ||
+        (permission == DatasetAccessPermission.EDITABLE_BY_OWNERS &&
+            role.equals(ProjectRoleTypes.DATA_SCIENTIST.getRole()))) {
+      // Read Only
+      onlineFeaturestoreFacade.grantDataScientistPrivileges(featureStoreDb, dbUser);
+    } else {
+      // Write permissions
+      onlineFeaturestoreFacade.grantDataOwnerPrivileges(featureStoreDb, dbUser);
+    }
+  }
+
+  /**
+   * remove project access to a feature store
+   * this method is resilient to the fact that existing installations don't have
+   * the share online feature store setup correctly. The revoke privileges first checks that
+   * there are privileges, if there are, then revokes them.
+   * @param project: project to remove access
+   * @param featurestore: feature store to remove access
+   * @throws FeaturestoreException
+   */
+  public void unshareOnlineFeatureStore(Project project, Featurestore featurestore) {
+    String featureStoreDb = getOnlineFeaturestoreDbName(featurestore.getProject());
+    if (!checkIfDatabaseExists(featureStoreDb)) {
+      // Nothing to share
+      return;
+    }
+
+    for (ProjectTeam member : projectTeamFacade.findMembersByProject(project)) {
+      String dbUser = onlineDbUsername(project, member.getUser());
+      onlineFeaturestoreFacade.revokeUserPrivileges(featureStoreDb, dbUser);
+    }
+  }
+
+  /**
    * Gets the size of an online featurestore database. I.e the size of a MySQL-cluster database.
    *
    * @param featurestore the feature store for which to compute the online size
@@ -455,15 +529,6 @@ public class OnlineFeaturestoreController {
   public Double getDbSize(Featurestore featurestore) {
     String onlineName = getOnlineFeaturestoreDbName(featurestore.getProject());
     return onlineFeaturestoreFacade.getDbSize(onlineName);
-  }
-
-  /**
-   * Generate random user password for the online featurestore.
-   *
-   * @return String password
-   */
-  private String generateRandomUserPw() {
-    return RandomStringUtils.randomAlphabetic(FeaturestoreConstants.ONLINE_FEATURESTORE_PW_LENGTH);
   }
 
   /**

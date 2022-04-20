@@ -239,7 +239,6 @@ public class OnlineFeaturestoreFacade {
    * @param dbUser the database username to revoke privileges for
    */
   public void revokeUserPrivileges(String dbName, String dbUser) {
-    PreparedStatement preparedStatement = null;
     ResultSet resultSet = null;
     try {
       try (Connection connection = featureStoreDataSource.getConnection();
@@ -275,10 +274,8 @@ public class OnlineFeaturestoreFacade {
    * @param dbUser the database-username
    */
   public void grantDataOwnerPrivileges(String dbName, String dbUser) throws FeaturestoreException {
-    //Prepared statements with parameters can only be done for
-    //WHERE/HAVING Clauses, not names of tables or databases
     try {
-      executeUpdate("GRANT ALL PRIVILEGES ON " + dbName + ".* TO " + dbUser + ";");
+      grantUserPrivileges(dbUser, "GRANT ALL PRIVILEGES ON " + dbName + ".* TO " + dbUser + ";");
     } catch (SQLException se) {
       throw new FeaturestoreException(
           RESTCodes.FeaturestoreErrorCode.ERROR_GRANTING_ONLINE_FEATURESTORE_USER_PRIVILEGES, Level.SEVERE,
@@ -294,11 +291,31 @@ public class OnlineFeaturestoreFacade {
    */
   public void grantDataScientistPrivileges(String dbName, String dbUser) throws FeaturestoreException {
     try {
-      executeUpdate("GRANT SELECT ON " + dbName + ".* TO " + dbUser + ";");
+      grantUserPrivileges(dbUser, "GRANT SELECT ON " + dbName + ".* TO " + dbUser + ";");
     } catch (SQLException se) {
       throw new FeaturestoreException(
           RESTCodes.FeaturestoreErrorCode.ERROR_GRANTING_ONLINE_FEATURESTORE_USER_PRIVILEGES, Level.SEVERE,
           "Error running the grant query", se.getMessage(), se);
+    }
+  }
+
+  private void grantUserPrivileges(String dbUser, String grantQuery) throws SQLException {
+    ResultSet resultSet = null;
+    try (Connection connection = featureStoreDataSource.getConnection();
+         PreparedStatement pStmt = connection.prepareStatement(
+             "SELECT COUNT(*) FROM mysql.user WHERE User = ?")){
+      // If the user doesn't exist, the grant permissions will fail blocking the rest of the user assignments
+      // check if the user exists before executing the granting command
+      pStmt.setString(1, dbUser);
+      resultSet = pStmt.executeQuery();
+
+      if (resultSet.next() && resultSet.getInt(1) != 0) {
+        executeUpdate(grantQuery);
+      }
+    } finally {
+      if (resultSet != null) {
+        resultSet.close();
+      }
     }
   }
 
