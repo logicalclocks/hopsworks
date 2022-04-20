@@ -51,6 +51,7 @@ import io.hops.hopsworks.common.dao.project.team.ProjectTeamFacade;
 import io.hops.hopsworks.common.dao.user.activity.ActivityFacade;
 import io.hops.hopsworks.common.dataset.util.CompressionInfo;
 import io.hops.hopsworks.common.featurestore.FeaturestoreConstants;
+import io.hops.hopsworks.common.featurestore.online.OnlineFeaturestoreController;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.hdfs.DistributedFsService;
 import io.hops.hopsworks.common.hdfs.FsPermissions;
@@ -66,6 +67,7 @@ import io.hops.hopsworks.common.util.ProcessDescriptor;
 import io.hops.hopsworks.common.util.ProcessResult;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.DatasetException;
+import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.exceptions.HopsSecurityException;
 import io.hops.hopsworks.exceptions.ProjectException;
 import io.hops.hopsworks.exceptions.ServiceException;
@@ -147,6 +149,8 @@ public class DatasetController {
   private HopsFSProvenanceController fsProvController;
   @EJB
   private JupyterController jupyterController;
+  @EJB
+  private OnlineFeaturestoreController onlineFeaturestoreController;
 
   /**
    * Create a new DataSet. This is, a folder right under the project home
@@ -791,8 +795,10 @@ public class DatasetController {
     }
   }
 
-  public void share(String targetProjectName, String fullPath, DatasetAccessPermission permission, Project project,
-                    Users user) throws DatasetException, ProjectException {
+  public void share(String targetProjectName, String fullPath,
+                    DatasetAccessPermission permission, Project project, Users user)
+      throws DatasetException, ProjectException {
+
     Project targetProject = projectFacade.findByName(targetProjectName);
     Dataset ds = getByProjectAndFullPath(project, fullPath);
     if (targetProject == null) {
@@ -891,7 +897,7 @@ public class DatasetController {
   }
 
   public void acceptShared(Project project, Users user, DatasetSharedWith datasetSharedWith)
-    throws DatasetException {
+    throws DatasetException, FeaturestoreException {
     acceptSharedDs(user, datasetSharedWith);
     if (DatasetType.FEATURESTORE.equals(datasetSharedWith.getDataset().getDsType())) {
       DatasetSharedWith trainingDataset = getOrCreateSharedTrainingDataset(project,
@@ -911,6 +917,11 @@ public class DatasetController {
           datasetSharedWith.getSharedBy(),
           user,
           Settings.ServiceDataset.STATISTICS);
+
+      // Share the online feature store
+      onlineFeaturestoreController.shareOnlineFeatureStore(project,
+          datasetSharedWith.getDataset().getFeatureStore(),
+          datasetSharedWith.getPermission());
     }
   }
 
@@ -1266,6 +1277,8 @@ public class DatasetController {
       }
       unshareFeatureStoreServiceDataset(user, project, targetProject, datasetSharedWith,
           Settings.ServiceDataset.STATISTICS, dfso);
+      // Unshare the online feature store
+      onlineFeaturestoreController.unshareOnlineFeatureStore(targetProject, dataset.getFeatureStore());
     }
     unshareDs(project, user, datasetSharedWith, dfso);
   }
@@ -1397,7 +1410,8 @@ public class DatasetController {
   }
 
   public void updateSharePermission(Dataset ds, DatasetAccessPermission datasetPermissions, Project project,
-    String targetProjectName, Users user) throws DatasetException, ProjectException {
+                                    String targetProjectName, Users user)
+      throws DatasetException, ProjectException, FeaturestoreException {
     if (ds.isShared(project)) {
       throw new DatasetException(RESTCodes.DatasetErrorCode.DATASET_OWNER_ERROR, Level.FINE);
     }
@@ -1414,32 +1428,21 @@ public class DatasetController {
       throw new DatasetException(RESTCodes.DatasetErrorCode.DATASET_NOT_SHARED_WITH_PROJECT, Level.FINE,
         "project: " + targetProject.getName());
     }
-    PermissionTransition permissionTransition = PermissionTransition.valueOf(datasetSharedWith.getPermission(),
-      datasetPermissions);
+    PermissionTransition permissionTransition =
+        PermissionTransition.valueOf(datasetSharedWith.getPermission(), datasetPermissions);
     updateSharePermission(datasetSharedWith, permissionTransition, project, user);
-  }
 
-  public void updateSharePermission(Dataset ds, DatasetAccessPermission datasetPermissions, Project project,
-    String targetProjectName, Users user, DistributedFileSystemOps dfso) throws DatasetException, ProjectException {
-    if (ds.isShared(project)) {
-      throw new DatasetException(RESTCodes.DatasetErrorCode.DATASET_OWNER_ERROR, Level.FINE);
+    if (datasetSharedWith.getDataset().getDsType() == DatasetType.FEATURESTORE) {
+      DatasetSharedWith trainingDataset =
+          getSharedTrainingDataset(targetProject, datasetSharedWith.getDataset().getProject());
+      if (trainingDataset != null) {
+        updateSharePermission(trainingDataset, permissionTransition, project, user);
+      }
+      // Share online feature store will revoke existing permissions
+      onlineFeaturestoreController.shareOnlineFeatureStore(targetProject,
+          datasetSharedWith.getDataset().getFeatureStore(),
+          datasetPermissions);
     }
-    if (ds.isPublicDs()) {
-      throw new DatasetException(RESTCodes.DatasetErrorCode.DATASET_PUBLIC_IMMUTABLE, Level.FINE);
-    }
-    Project targetProject = projectFacade.findByName(targetProjectName);
-    if (targetProject == null) {
-      throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_NOT_FOUND, Level.FINE, "Target project not " +
-        "found.");
-    }
-    DatasetSharedWith datasetSharedWith = datasetSharedWithFacade.findByProjectAndDataset(targetProject, ds);
-    if (datasetSharedWith == null) {
-      throw new DatasetException(RESTCodes.DatasetErrorCode.DATASET_NOT_SHARED_WITH_PROJECT, Level.FINE,
-        "project: " + targetProject.getName());
-    }
-    PermissionTransition permissionTransition = PermissionTransition.valueOf(datasetSharedWith.getPermission(),
-      datasetPermissions);
-    updateSharePermission(datasetSharedWith, permissionTransition, project, user, dfso);
   }
 
   private void updateSharePermission(DatasetSharedWith datasetSharedWith, PermissionTransition permissionTransition,

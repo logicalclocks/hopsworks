@@ -114,7 +114,6 @@ describe "On #{ENV['OS']}" do
       end
     end
 
-
     describe "grant correct permissions for the online feature store" do
       context 'with valid project and online feature store enabled' do
         before :all do
@@ -227,6 +226,172 @@ describe "On #{ENV['OS']}" do
           privileges = SchemaPrivileges.where(TABLE_SCHEMA:demo_demo_project[:projectname], GRANTEE:grantee)
 
           expect(privileges.length).to eq(18)
+        end
+      end
+    end
+
+    describe "grant correct permissions for the shared online feature store" do
+      before :all do
+        if getVar("featurestore_online_enabled") == false
+          skip "Online Feature Store not enabled, skip online featurestore tests"
+        end
+        with_valid_project
+        @shared_project = create_project
+        @shared_user_do = create_user
+        @shared_user_ds = create_user
+        add_member_to_project(@shared_project, @shared_user_do[:email], 'Data owner')
+        add_member_to_project(@shared_project, @shared_user_ds[:email], 'Data scientist')
+      end
+
+      context 'read only' do
+        before :all do
+          featurestore = "#{@project['projectname'].downcase}_featurestore.db"
+          share_dataset(@project, featurestore, @shared_project['projectname'],
+                        permission: "READ_ONLY", datasetType: "&type=FEATURESTORE")
+          accept_dataset(@shared_project, "#{@project['projectname']}::#{featurestore}",
+                         datasetType: "&type=FEATURESTORE")
+        end
+
+        after :all do
+          featurestore = "#{@project['projectname'].downcase}_featurestore.db"
+          unshare_from(@project, featurestore, @shared_project['projectname'], datasetType: "&type=FEATURESTORE")
+        end
+
+        it "should grant data scientist read permissions on a shared read-only online feature store" do
+          online_db_name = "#{@shared_project[:projectname]}_#{@shared_user_ds[:username]}"[0..30]
+          grantee = "'#{online_db_name}'@'%'"
+          privileges = SchemaPrivileges.where(TABLE_SCHEMA:@project[:projectname], GRANTEE:grantee)
+
+          expect(privileges.length).to eq(1)
+        end
+
+        it "should grant data owner read permissions on a shared read-only online feature store" do
+          online_db_name = "#{@shared_project[:projectname]}_#{@shared_user_do[:username]}"[0..30]
+          grantee = "'#{online_db_name}'@'%'"
+          privileges = SchemaPrivileges.where(TABLE_SCHEMA:@project[:projectname], GRANTEE:grantee)
+
+          expect(privileges.length).to eq(1)
+        end
+
+        it "should grant permissions to the shared online feature store to a new project member" do
+          added_user = create_user
+          add_member_to_project(@shared_project, added_user[:email], 'Data owner')
+
+          online_db_name = "#{@shared_project[:projectname]}_#{added_user[:username]}"[0..30]
+          grantee = "'#{online_db_name}'@'%'"
+          privileges = SchemaPrivileges.where(TABLE_SCHEMA:@project[:projectname], GRANTEE:grantee)
+
+          expect(privileges.length).to eq(1)
+        end
+
+        it "should remove permissions to the shared online feature store when a project member is removed" do
+          added_user = create_user
+          add_member_to_project(@shared_project, added_user[:email], 'Data owner')
+
+          online_db_name = "#{@shared_project[:projectname]}_#{added_user[:username]}"[0..30]
+          grantee = "'#{online_db_name}'@'%'"
+          privileges = SchemaPrivileges.where(TABLE_SCHEMA:@project[:projectname], GRANTEE:grantee)
+
+          expect(privileges.length).to eq(1)
+
+          remove_member(@shared_project, added_user[:email])
+
+          # Check that permissions have been revoked
+          online_db_name = "#{@shared_project[:projectname]}_#{added_user[:username]}"[0..30]
+          grantee = "'#{online_db_name}'@'%'"
+          privileges = SchemaPrivileges.where(TABLE_SCHEMA:@project[:projectname], GRANTEE:grantee)
+
+          expect(privileges.length).to eq(0)
+        end
+      end
+
+      context 'editable' do
+        before :all do
+          featurestore = "#{@project['projectname'].downcase}_featurestore.db"
+          share_dataset(@project, featurestore, @shared_project['projectname'],
+                        permission: "EDITABLE", datasetType: "&type=FEATURESTORE")
+          accept_dataset(@shared_project, "#{@project['projectname']}::#{featurestore}",
+                         datasetType: "&type=FEATURESTORE")
+        end
+
+        after :all do
+          featurestore = "#{@project['projectname'].downcase}_featurestore.db"
+          unshare_from(@project, featurestore, @shared_project['projectname'], datasetType: "&type=FEATURESTORE")
+        end
+
+        it "should grant data scientist write permissions on a shared write online feature store" do
+          online_db_name = "#{@shared_project[:projectname]}_#{@shared_user_ds[:username]}"[0..30]
+          grantee = "'#{online_db_name}'@'%'"
+          privileges = SchemaPrivileges.where(TABLE_SCHEMA:@project[:projectname], GRANTEE:grantee)
+
+          expect(privileges.length).to eq(18)
+        end
+
+        it "should grant data owner write permissions on a shared write online feature store" do
+          online_db_name = "#{@shared_project[:projectname]}_#{@shared_user_do[:username]}"[0..30]
+          grantee = "'#{online_db_name}'@'%'"
+          privileges = SchemaPrivileges.where(TABLE_SCHEMA:@project[:projectname], GRANTEE:grantee)
+
+          expect(privileges.length).to eq(18)
+        end
+      end
+
+      context 'editable by data owner' do
+        before :all do
+          featurestore = "#{@project['projectname'].downcase}_featurestore.db"
+          share_dataset(@project, featurestore, @shared_project['projectname'],
+                        permission: "EDITABLE_BY_OWNERS", datasetType: "&type=FEATURESTORE")
+          accept_dataset(@shared_project, "#{@project['projectname']}::#{featurestore}",
+                         datasetType: "&type=FEATURESTORE")
+        end
+
+        after :all do
+          featurestore = "#{@project['projectname'].downcase}_featurestore.db"
+          unshare_from(@project, featurestore, @shared_project['projectname'], datasetType: "&type=FEATURESTORE")
+        end
+
+        it "should grant data scientist read permissions on a shared write data owner only online feature store" do
+          online_db_name = "#{@shared_project[:projectname]}_#{@shared_user_ds[:username]}"[0..30]
+          grantee = "'#{online_db_name}'@'%'"
+          privileges = SchemaPrivileges.where(TABLE_SCHEMA:@project[:projectname], GRANTEE:grantee)
+
+          expect(privileges.length).to eq(1)
+        end
+
+        it "should grant data owner write permissions on a shared write data owner only online feature store" do
+          online_db_name = "#{@shared_project[:projectname]}_#{@shared_user_do[:username]}"[0..30]
+          grantee = "'#{online_db_name}'@'%'"
+          privileges = SchemaPrivileges.where(TABLE_SCHEMA:@project[:projectname], GRANTEE:grantee)
+
+          expect(privileges.length).to eq(18)
+        end
+      end
+
+      context 'permissions change' do
+        before :all do
+          featurestore = "#{@project['projectname'].downcase}_featurestore.db"
+          share_dataset(@project, featurestore, @shared_project['projectname'],
+                        permission: "EDITABLE", datasetType: "&type=FEATURESTORE")
+          accept_dataset(@shared_project, "#{@project['projectname']}::#{featurestore}",
+                         datasetType: "&type=FEATURESTORE")
+        end
+
+        after :all do
+          featurestore = "#{@project['projectname'].downcase}_featurestore.db"
+          unshare_from(@project, featurestore, @shared_project['projectname'], datasetType: "&type=FEATURESTORE")
+        end
+
+        it "should adjust online feature store permissions if the feature store permissions are changed" do
+          online_db_name = "#{@shared_project[:projectname]}_#{@shared_user_ds[:username]}"[0..30]
+          grantee = "'#{online_db_name}'@'%'"
+          privileges = SchemaPrivileges.where(TABLE_SCHEMA:@project[:projectname], GRANTEE:grantee)
+          expect(privileges.length).to eq(18)
+
+          update_dataset_shared_with_permissions(@project, "#{@project['projectname'].downcase}_featurestore.db",
+                                                 @shared_project, "READ_ONLY", datasetType: "&type=FEATURESTORE")
+
+          privileges = SchemaPrivileges.where(TABLE_SCHEMA:@project[:projectname], GRANTEE:grantee)
+          expect(privileges.length).to eq(1)
         end
       end
     end

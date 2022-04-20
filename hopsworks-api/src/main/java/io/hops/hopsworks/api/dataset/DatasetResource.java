@@ -39,6 +39,7 @@ import io.hops.hopsworks.common.provenance.core.HopsFSProvenanceController;
 import io.hops.hopsworks.common.provenance.core.Provenance;
 import io.hops.hopsworks.common.provenance.core.dto.ProvTypeDTO;
 import io.hops.hopsworks.exceptions.DatasetException;
+import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.exceptions.HopsSecurityException;
 import io.hops.hopsworks.exceptions.MetadataException;
 import io.hops.hopsworks.exceptions.ProjectException;
@@ -231,8 +232,8 @@ public class DatasetResource {
                              @QueryParam("destination_path") String destPath,
                              @QueryParam("destination_type") DatasetType destDatasetType,
                              @DefaultValue("READ_ONLY") @QueryParam("permission") DatasetAccessPermission permission)
-    throws DatasetException, ProjectException, HopsSecurityException, ProvenanceException, MetadataException,
-           SchematizedTagException {
+      throws DatasetException, ProjectException, HopsSecurityException, ProvenanceException, MetadataException,
+      SchematizedTagException, FeaturestoreException {
     Users user = jwtHelper.getUserPrincipal(sc);
     DatasetPath datasetPath;
     DatasetPath distDatasetPath;
@@ -357,10 +358,12 @@ public class DatasetResource {
   @JWTRequired(acceptedTokens={Audience.API, Audience.JOB}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
   @ApiKeyRequired( acceptedScopes = {ApiScope.DATASET_CREATE}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   public Response update(@PathParam("path") String path, @QueryParam("type") DatasetType datasetType,
-    @QueryParam("action") DatasetActions.Put action, @QueryParam("description") String description,
-    @DefaultValue("READ_ONLY") @QueryParam("permissions") DatasetAccessPermission datasetPermissions,
-    @QueryParam("target_project") String targetProjectName, @Context UriInfo uriInfo, @Context SecurityContext sc)
-    throws DatasetException, ProjectException, MetadataException, SchematizedTagException {
+                  @QueryParam("action") DatasetActions.Put action, @QueryParam("description") String description,
+                  @DefaultValue("READ_ONLY") @QueryParam("permissions") DatasetAccessPermission datasetPermissions,
+                  @QueryParam("target_project") String targetProjectName,
+                  @Context UriInfo uriInfo,
+                  @Context SecurityContext sc)
+      throws DatasetException, ProjectException, MetadataException, SchematizedTagException, FeaturestoreException {
     Project project = this.getProject();
     DatasetPath datasetPath = datasetHelper.getDatasetPath(project, path, datasetType);
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.DATASET);
