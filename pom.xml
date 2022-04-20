@@ -754,7 +754,7 @@
       <dependency>
         <groupId>org.apache.flink</groupId>
         <artifactId>flink-clients_2.11</artifactId>
-        <version>${flink-clients_2.11.version}</version
+        <version>${flink-clients_2.11.version}</version>
         <exclusions>
           <exclusion>
             <groupId>org.apache.flink</groupId>
