@@ -20,22 +20,13 @@ import io.hops.hopsworks.api.filter.Audience;
 import io.hops.hopsworks.api.filter.apiKey.ApiKeyRequired;
 import io.hops.hopsworks.api.jwt.JWTHelper;
 import io.hops.hopsworks.api.modelregistry.models.dto.ModelDTO;
-import io.hops.hopsworks.api.modelregistry.models.tags.ModelTagsBuilder;
-import io.hops.hopsworks.common.tags.TagsDTO;
-import io.hops.hopsworks.api.tags.TagsExpansionBeanParam;
+import io.hops.hopsworks.api.modelregistry.models.tags.ModelTagResource;
 import io.hops.hopsworks.api.util.Pagination;
 import io.hops.hopsworks.audit.logger.LogLevel;
 import io.hops.hopsworks.audit.logger.annotation.Logged;
 import io.hops.hopsworks.common.api.ResourceRequest;
-import io.hops.hopsworks.common.dao.project.ProjectFacade;
-import io.hops.hopsworks.common.dataset.DatasetController;
 import io.hops.hopsworks.common.hdfs.DistributedFsService;
-import io.hops.hopsworks.common.hdfs.HdfsUsersController;
-import io.hops.hopsworks.common.models.tags.ModelTagControllerIface;
 import io.hops.hopsworks.common.provenance.state.dto.ProvStateDTO;
-import io.hops.hopsworks.common.python.environment.EnvironmentController;
-import io.hops.hopsworks.common.tags.AttachTagResult;
-import io.hops.hopsworks.common.util.AccessController;
 import io.hops.hopsworks.exceptions.DatasetException;
 import io.hops.hopsworks.exceptions.GenericException;
 import io.hops.hopsworks.exceptions.JobException;
@@ -73,10 +64,7 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
-import javax.ws.rs.core.UriBuilder;
 import javax.ws.rs.core.UriInfo;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -88,29 +76,17 @@ public class ModelsResource {
   private static final Logger LOGGER = Logger.getLogger(ModelsResource.class.getName());
 
   @EJB
-  private ProjectFacade projectFacade;
-  @EJB
   private ModelsBuilder modelsBuilder;
   @EJB
   private ModelsController modelsController;
   @EJB
-  private EnvironmentController environmentController;
-  @EJB
   private JWTHelper jwtHelper;
-  @EJB
-  private AccessController accessCtrl;
-  @EJB
-  private DatasetController datasetCtrl;
-  @EJB
-  private HdfsUsersController hdfsUsersController;
   @EJB
   private DistributedFsService dfs;
   @EJB
   private ModelUtils modelUtils;
   @Inject
-  private ModelTagControllerIface tagController;
-  @EJB
-  private ModelTagsBuilder tagBuilder;
+  private ModelTagResource tagResource;
 
   private Project userProject;
 
@@ -244,191 +220,16 @@ public class ModelsResource {
     }
   }
 
-  @ApiOperation( value = "Create or update one tag for a model", response = TagsDTO.class)
-  @PUT
-  @Path("/{id}/tags/{name}")
-  @Consumes(MediaType.APPLICATION_JSON)
-  @Produces(MediaType.APPLICATION_JSON)
-  @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
-  @JWTRequired(acceptedTokens={Audience.API, Audience.JOB}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
-  @ApiKeyRequired( acceptedScopes = {ApiScope.MODELREGISTRY}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
-  public Response putTag(@Context SecurityContext sc,
-                         @Context HttpServletRequest req,
-                         @Context UriInfo uriInfo,
-                         @ApiParam(value = "Id of the model", required = true)
-                         @PathParam("id") String id,
-                         @ApiParam(value = "Name of the tag", required = true) @PathParam("name") String name,
-                         @ApiParam(value = "Value to set for the tag") String value)
-      throws MetadataException, SchematizedTagException, DatasetException, ProvenanceException, ModelRegistryException {
-
-    Users user = jwtHelper.getUserPrincipal(sc);
-    ProvStateDTO fileState = modelsController.getModel(modelRegistryProject, id);
-    ModelDTO model = modelUtils.convertProvenanceHitToModel(fileState);
-
-    AttachTagResult result = tagController.upsert(userProject, user,
-        modelUtils.getModelFullPath(modelRegistryProject, model.getName(), model.getVersion()), name, value);
-
-    ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.TAGS);
-    TagsDTO dto = tagBuilder.build(uriInfo, resourceRequest, userProject, modelRegistryProject,
-        fileState.getMlId(), result.getItems());
-
-    UriBuilder builder = uriInfo.getAbsolutePathBuilder();
-    if(result.isCreated()) {
-      return Response.created(builder.build()).entity(dto).build();
-    } else {
-      return Response.ok(builder.build()).entity(dto).build();
-    }
-  }
-
-  @ApiOperation( value = "Create or update tags(bulk) for a model", response = TagsDTO.class)
-  @PUT
   @Path("/{id}/tags")
-  @Consumes(MediaType.APPLICATION_JSON)
-  @Produces(MediaType.APPLICATION_JSON)
-  @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
-  @JWTRequired(acceptedTokens={Audience.API, Audience.JOB}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
-  @ApiKeyRequired( acceptedScopes = {ApiScope.MODELREGISTRY}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
-  public Response bulkPutTags(@Context SecurityContext sc,
-                              @Context HttpServletRequest req,
-                              @Context UriInfo uriInfo,
-                              @ApiParam(value = "Id of the model", required = true)
-                              @PathParam("id") String id,
-                              TagsDTO tags)
-      throws MetadataException, SchematizedTagException, DatasetException, ProvenanceException, ModelRegistryException {
-
-    Users user = jwtHelper.getUserPrincipal(sc);
+  @Logged(logLevel = LogLevel.OFF)
+  public ModelTagResource tags(@ApiParam(value = "Id of the model", required = true)
+                               @PathParam("id") String id)
+    throws ModelRegistryException, ProvenanceException {
+    this.tagResource.setProject(userProject);
+    this.tagResource.setModelRegistry(modelRegistryProject);
     ProvStateDTO fileState = modelsController.getModel(modelRegistryProject, id);
     ModelDTO model = modelUtils.convertProvenanceHitToModel(fileState);
-
-    AttachTagResult result;
-
-    if(tags.getItems().size() == 0) {
-      result = tagController.upsert(userProject, user,
-          modelUtils.getModelFullPath(modelRegistryProject, model.getName(), model.getVersion()),
-          tags.getName(), tags.getValue());
-    } else {
-      Map<String, String> newTags = new HashMap<>();
-      for(TagsDTO tag : tags.getItems()) {
-        newTags.put(tag.getName(), tag.getValue());
-      }
-      result = tagController.upsertAll(userProject, user,
-          modelUtils.getModelFullPath(modelRegistryProject, model.getName(), model.getVersion()), newTags);
-    }
-
-    ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.TAGS);
-    TagsDTO dto = tagBuilder.build(uriInfo, resourceRequest, userProject, modelRegistryProject,
-        fileState.getMlId(), result.getItems());
-
-    UriBuilder builder = uriInfo.getAbsolutePathBuilder();
-    if(result.isCreated()) {
-      return Response.created(builder.build()).entity(dto).build();
-    } else {
-      return Response.ok(builder.build()).entity(dto).build();
-    }
-  }
-
-  @ApiOperation( value = "Get all tags attached to a model", response = TagsDTO.class)
-  @GET
-  @Path("/{id}/tags")
-  @Produces(MediaType.APPLICATION_JSON)
-  @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
-  @JWTRequired(acceptedTokens={Audience.API, Audience.JOB}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
-  @ApiKeyRequired( acceptedScopes = {ApiScope.MODELREGISTRY}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
-  public Response getTags(@Context SecurityContext sc,
-                          @Context HttpServletRequest req,
-                          @Context UriInfo uriInfo,
-                          @ApiParam(value = "Id of the model", required = true)
-                          @PathParam("id") String id,
-                          @BeanParam TagsExpansionBeanParam tagsExpansionBeanParam)
-      throws DatasetException, MetadataException, SchematizedTagException, ProvenanceException, ModelRegistryException {
-
-    Users user = jwtHelper.getUserPrincipal(sc);
-    ProvStateDTO fileState = modelsController.getModel(modelRegistryProject, id);
-    ModelDTO model = modelUtils.convertProvenanceHitToModel(fileState);
-    Map<String, String> result = tagController.getAll(userProject, user,
-        modelUtils.getModelFullPath(modelRegistryProject, model.getName(), model.getVersion()));
-
-    ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.TAGS);
-    resourceRequest.setExpansions(tagsExpansionBeanParam.getResources());
-    TagsDTO dto = tagBuilder.build(uriInfo, resourceRequest, userProject, modelRegistryProject,
-        fileState.getMlId(), result);
-    return Response.status(Response.Status.OK).entity(dto).build();
-  }
-
-  @ApiOperation( value = "Get tag attached to a model", response = TagsDTO.class)
-  @GET
-  @Path("/{id}/tags/{name}")
-  @Produces(MediaType.APPLICATION_JSON)
-  @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
-  @JWTRequired(acceptedTokens={Audience.API, Audience.JOB}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
-  @ApiKeyRequired( acceptedScopes = {ApiScope.MODELREGISTRY}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
-  public Response getTag(@Context SecurityContext sc,
-                         @Context HttpServletRequest req,
-                         @Context UriInfo uriInfo,
-                         @ApiParam(value = "Id of the model", required = true)
-                         @PathParam("id") String id,
-                         @ApiParam(value = "Name of the tag", required = true) @PathParam("name") String name,
-                         @BeanParam TagsExpansionBeanParam tagsExpansionBeanParam)
-      throws DatasetException, MetadataException, SchematizedTagException, ProvenanceException, ModelRegistryException {
-
-    Users user = jwtHelper.getUserPrincipal(sc);
-    ProvStateDTO fileState = modelsController.getModel(modelRegistryProject, id);
-    ModelDTO model = modelUtils.convertProvenanceHitToModel(fileState);
-    Map<String, String> result = new HashMap<>();
-    result.put(name, tagController.get(userProject, user,
-        modelUtils.getModelFullPath(modelRegistryProject, model.getName(), model.getVersion()), name));
-
-    ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.TAGS);
-    resourceRequest.setExpansions(tagsExpansionBeanParam.getResources());
-    TagsDTO dto = tagBuilder.build(uriInfo, resourceRequest, userProject, modelRegistryProject,
-        fileState.getMlId(), result);
-    return Response.status(Response.Status.OK).entity(dto).build();
-  }
-
-  @ApiOperation( value = "Delete all tags attached to a model")
-  @DELETE
-  @Path("/{id}/tags")
-  @Produces(MediaType.APPLICATION_JSON)
-  @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
-  @JWTRequired(acceptedTokens={Audience.API, Audience.JOB}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
-  @ApiKeyRequired( acceptedScopes = {ApiScope.MODELREGISTRY}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
-  public Response deleteTags(@Context SecurityContext sc,
-                             @Context HttpServletRequest req,
-                             @ApiParam(value = "Id of the model", required = true)
-                             @PathParam("id") String id)
-      throws DatasetException, MetadataException, ProvenanceException, ModelRegistryException {
-
-    Users user = jwtHelper.getUserPrincipal(sc);
-    ProvStateDTO fileState = modelsController.getModel(modelRegistryProject, id);
-    ModelDTO model = modelUtils.convertProvenanceHitToModel(fileState);
-
-    tagController.deleteAll(userProject, user,
-        modelUtils.getModelFullPath(modelRegistryProject, model.getName(), model.getVersion()));
-
-    return Response.noContent().build();
-  }
-
-  @ApiOperation( value = "Delete tag attached to a model")
-  @DELETE
-  @Path("/{id}/tags/{name}")
-  @Produces(MediaType.APPLICATION_JSON)
-  @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
-  @JWTRequired(acceptedTokens={Audience.API, Audience.JOB}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
-  @ApiKeyRequired( acceptedScopes = {ApiScope.MODELREGISTRY}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
-  public Response deleteTag(@Context SecurityContext sc,
-                            @Context HttpServletRequest req,
-                            @ApiParam(value = "Id of the model", required = true)
-                            @PathParam("id") String id,
-                            @ApiParam(value = "Name of the tag", required = true) @PathParam("name") String name)
-      throws DatasetException, MetadataException, ProvenanceException, ModelRegistryException {
-
-    Users user = jwtHelper.getUserPrincipal(sc);
-    ProvStateDTO fileState = modelsController.getModel(modelRegistryProject, id);
-    ModelDTO model = modelUtils.convertProvenanceHitToModel(fileState);
-
-    tagController.delete(userProject, user,
-        modelUtils.getModelFullPath(modelRegistryProject, model.getName(), model.getVersion()), name);
-
-    return Response.noContent().build();
+    this.tagResource.setModel(model, fileState);
+    return this.tagResource;
   }
 }

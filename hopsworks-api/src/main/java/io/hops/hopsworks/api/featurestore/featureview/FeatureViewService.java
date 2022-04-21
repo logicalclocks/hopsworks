@@ -20,7 +20,6 @@ import io.hops.hopsworks.api.featurestore.FeaturestoreKeywordResource;
 import io.hops.hopsworks.api.featurestore.activities.ActivityResource;
 import io.hops.hopsworks.api.featurestore.preparestatement.PreparedStatementResource;
 import io.hops.hopsworks.api.featurestore.query.QueryResource;
-import io.hops.hopsworks.api.featurestore.tag.TagResource;
 import io.hops.hopsworks.api.featurestore.trainingdataset.TrainingDatasetResource;
 import io.hops.hopsworks.api.featurestore.transformation.TransformationResource;
 import io.hops.hopsworks.audit.logger.LogLevel;
@@ -52,7 +51,7 @@ public class FeatureViewService {
   @Inject
   private TrainingDatasetResource trainingDatasetResource;
   @Inject
-  private TagResource tagResource;
+  private FeatureViewTagResource tagResource;
   @Inject
   private QueryResource queryResource;
   @Inject
@@ -92,7 +91,7 @@ public class FeatureViewService {
 
   @Path("/{name: [a-z0-9_]*(?=[a-z])[a-z0-9_]+}/version/{version: [0-9]+}/tags")
   @Logged(logLevel = LogLevel.OFF)
-  public TagResource tagResource(
+  public FeatureViewTagResource tags(
       @ApiParam(value = "Name of the feature view", required = true)
       @PathParam("name")
           String featureViewName,
@@ -100,7 +99,11 @@ public class FeatureViewService {
       @PathParam("version")
           Integer version
   ) {
-    tagResource.setFeatureView(featureViewName, version);
+    
+    tagResource.setProject(project);
+    tagResource.setFeatureStore(featurestore);
+    //TODO get the actual feature view instance
+    tagResource.setFeatureView(null);
     return tagResource;
   }
 

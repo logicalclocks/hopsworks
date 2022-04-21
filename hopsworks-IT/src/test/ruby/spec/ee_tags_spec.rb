@@ -5,6 +5,7 @@
 describe "On #{ENV['OS']}" do
   before :all do
     @debugOpt = false
+    @cleanup = true
     @xattr_row_size = 13500
     @xattr_max_value_size = @xattr_row_size * 255
     @setup_tags = Array.new(9)
@@ -215,7 +216,10 @@ describe "On #{ENV['OS']}" do
       reset_session
     end
     after :all do
-      delete projects that might contain these tags
+      fs_cleanup if @cleanup
+    end
+
+    def fs_cleanup
       clean_all_test_projects(spec: "ee_tags")
 
       with_admin_session
@@ -536,10 +540,14 @@ describe "On #{ENV['OS']}" do
         accept_dataset_checked(@project2, "#{@project1[:projectname]}::#{@project1[:projectname].downcase}_featurestore.db", datasetType: "FEATURESTORE")
       end
       after :all do
+        shared_fs_cleanup if @cleanup
+      end
+
+      def shared_fs_cleanup
         create_session(@user1[:email], @user1_params[:password])
-        delete_project(@project1)
+        delete_project(@project1) if @cleanup
         create_session(@user2[:email], @user2_params[:password])
-        delete_project(@project2)
+        delete_project(@project2) if @cleanup
       end
 
       context 'featuregroup' do
@@ -605,7 +613,6 @@ describe "On #{ENV['OS']}" do
       reset_session
     end
     after :all do
-      delete projects that might contain these tags
       clean_all_test_projects(spec: "ee_tags")
 
       with_admin_session
