@@ -15,6 +15,7 @@
  */
 package io.hops.hopsworks.common.hdfs.xattrs;
 
+import io.hops.hopsworks.common.dataset.util.DatasetPath;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.hdfs.DistributedFsService;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
@@ -55,7 +56,11 @@ public class XAttrsController {
   private HdfsUsersController hdfsUsersController;
   @EJB
   private DistributedFsService dfs;
-
+  
+  public boolean addXAttr(Users user, DatasetPath path, String name, String metaObj)
+    throws DatasetException, MetadataException {
+    return addXAttr(path.getAccessProject(), user, path.getFullPath().toString(), name, metaObj);
+  }
 
   public boolean addXAttr(Project project, Users user, String inodePath,
                           String name, String metaObj)
@@ -92,6 +97,9 @@ public class XAttrsController {
     addXAttrInt(udfso, path, XATTR_USER_NAMESPACE, name, value.getBytes(Charsets.UTF_8));
   }
 
+  public String getXAttr(Users user, DatasetPath path, String name) throws DatasetException, MetadataException {
+    return getXAttr(path.getAccessProject(), user, path.getFullPath().toString(), name);
+  }
   public String getXAttr(Project project, Users user, String inodePath, String name)
       throws DatasetException, MetadataException {
     return getXAttr(project, user, inodePath, XATTR_USER_NAMESPACE, name);
@@ -104,7 +112,10 @@ public class XAttrsController {
   public Map<String, String> getXAttrs(String path, DistributedFileSystemOps udfso) throws MetadataException {
     return getXAttrsInt(path, udfso);
   }
-
+  
+  public boolean removeXAttr(Users user, DatasetPath path, String name) throws MetadataException, DatasetException {
+    return removeXAttr(path.getAccessProject(), user, path.getFullPath().toString(), name);
+  }
   public boolean removeXAttr(Project project, Users user, String inodePath,
                              String name) throws MetadataException, DatasetException {
 

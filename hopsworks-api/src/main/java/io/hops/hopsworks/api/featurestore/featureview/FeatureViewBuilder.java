@@ -18,19 +18,19 @@ package io.hops.hopsworks.api.featurestore.featureview;
 
 import io.hops.hopsworks.api.featurestore.FeaturestoreKeywordBuilder;
 import io.hops.hopsworks.api.featurestore.FsQueryBuilder;
-import io.hops.hopsworks.api.featurestore.tag.FeaturestoreTagsBuilder;
+import io.hops.hopsworks.api.featurestore.tag.FeatureStoreTagUri;
+import io.hops.hopsworks.api.tags.TagBuilder;
 import io.hops.hopsworks.common.api.ResourceRequest;
 import io.hops.hopsworks.common.dao.user.UserDTO;
+import io.hops.hopsworks.common.dataset.util.DatasetPath;
 import io.hops.hopsworks.common.featurestore.feature.TrainingDatasetFeatureDTO;
 import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupDTO;
 import io.hops.hopsworks.common.featurestore.featuregroup.online.OnlineFeaturegroupController;
 import io.hops.hopsworks.common.featurestore.keyword.KeywordControllerIface;
 import io.hops.hopsworks.common.featurestore.keyword.KeywordDTO;
 import io.hops.hopsworks.common.featurestore.featureview.FeatureViewDTO;
-import io.hops.hopsworks.common.featurestore.tag.FeatureStoreTagControllerIface;
 import io.hops.hopsworks.common.featurestore.trainingdatasets.TrainingDatasetController;
 import io.hops.hopsworks.common.hdfs.Utils;
-import io.hops.hopsworks.common.tags.TagsDTO;
 import io.hops.hopsworks.exceptions.DatasetException;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.exceptions.MetadataException;
@@ -69,9 +69,7 @@ public class FeatureViewBuilder {
   @EJB
   private FeaturestoreKeywordBuilder featurestoreKeywordBuilder;
   @EJB
-  private FeaturestoreTagsBuilder tagsBuilder;
-  @Inject
-  private FeatureStoreTagControllerIface tagController;
+  private TagBuilder tagsBuilder;
 
   public FeatureViewBuilder() {
   }
@@ -122,19 +120,16 @@ public class FeatureViewBuilder {
           featureView, keywords);
         base.setKeywords(dto);
       }
-      if (resourceRequest.contains(ResourceRequest.Name.TAGS)) {
-        // TODO feature view: revisit after implementation of tag endpoint
-        Map<String, String> result = tagController.getAll(project, user, featureView.getFeaturestore(), featureView);
-        ResourceRequest tagsResourceRequest = new ResourceRequest(ResourceRequest.Name.TAGS);
-        TagsDTO dto = tagsBuilder.build(uriInfo, tagsResourceRequest, project,
-            featureView.getFeaturestore().getId(), ResourceRequest.Name.FEATUREVIEW.name(), featureView.getId(),
-            result);
-        base.setTags(dto);
-      }
+      //TODO feature view: revisit after implementation of tag endpoint
+      //TODO add correct feature view path
+      DatasetPath path = null;
+      FeatureStoreTagUri tagUri = new FeatureStoreTagUri(uriInfo, featureView.getFeaturestore().getId(),
+        ResourceRequest.Name.FEATUREVIEW, featureView.getId());
+      base.setTags(tagsBuilder.build(tagUri, resourceRequest, user, path));
     }
     return base;
   }
-
+  
   public FeatureViewDTO convertToDTO(FeatureView featureView) {
     FeatureViewDTO featureViewDTO = new FeatureViewDTO();
     featureViewDTO.setFeaturestoreId(featureView.getFeaturestore().getId());

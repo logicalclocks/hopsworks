@@ -19,7 +19,8 @@ import io.hops.hopsworks.api.dataset.inode.InodeBuilder;
 import io.hops.hopsworks.api.dataset.inode.InodeDTO;
 import io.hops.hopsworks.api.modelregistry.dto.ModelRegistryDTO;
 import io.hops.hopsworks.api.modelregistry.models.dto.ModelDTO;
-import io.hops.hopsworks.api.modelregistry.models.tags.ModelTagsBuilder;
+import io.hops.hopsworks.api.modelregistry.models.tags.ModelRegistryTagUri;
+import io.hops.hopsworks.api.tags.TagBuilder;
 import io.hops.hopsworks.common.api.ResourceRequest;
 import io.hops.hopsworks.common.dao.AbstractFacade;
 import io.hops.hopsworks.common.dao.hdfsUser.HdfsUsersFacade;
@@ -97,7 +98,7 @@ public class ModelsBuilder {
   @EJB
   private ModelUtils modelUtils;
   @EJB
-  private ModelTagsBuilder tagsBuilder;
+  private TagBuilder tagsBuilder;
   
   public ModelDTO uri(ModelDTO dto, UriInfo uriInfo, Project userProject, Project modelRegistryProject) {
     dto.setHref(uriInfo.getBaseUriBuilder()
@@ -209,8 +210,12 @@ public class ModelsBuilder {
         modelDTO.setDescription(modelSummary.getDescription());
         modelDTO.setProgram(modelSummary.getProgram());
         modelDTO.setFramework(modelSummary.getFramework());
-        modelDTO.setTags(tagsBuilder.build(uriInfo, resourceRequest, user, userProject, modelRegistryProject,
-            modelDTO));
+        DatasetPath modelDsPath = datasetHelper.getDatasetPath(userProject,
+          modelUtils.getModelFullPath(modelRegistryProject, modelSummary.getName(), modelSummary.getVersion()),
+          DatasetType.DATASET);
+        ModelRegistryTagUri tagUri = new ModelRegistryTagUri(uriInfo, modelRegistryProject,
+          ResourceRequest.Name.MODELS, modelDTO.getId());
+        modelDTO.setTags(tagsBuilder.build(tagUri, resourceRequest, user, modelDsPath));
 
         String modelVersionPath = modelsFolder + "/" + modelDTO.getName() + "/" + modelDTO.getVersion() + "/";
 

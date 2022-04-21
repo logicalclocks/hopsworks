@@ -17,7 +17,8 @@ package io.hops.hopsworks.api.dataset.inode;
 
 import io.hops.hopsworks.api.dataset.inode.attribute.InodeAttributeBuilder;
 import io.hops.hopsworks.api.dataset.inode.attribute.InodeAttributeDTO;
-import io.hops.hopsworks.api.dataset.tags.DatasetTagsBuilder;
+import io.hops.hopsworks.api.dataset.tags.InodeTagUri;
+import io.hops.hopsworks.api.tags.TagBuilder;
 import io.hops.hopsworks.common.dataset.util.DatasetHelper;
 import io.hops.hopsworks.common.dataset.util.DatasetPath;
 import io.hops.hopsworks.api.util.FilePreviewImageTypes;
@@ -67,7 +68,7 @@ public class InodeBuilder {
   @EJB
   private Settings settings;
   @EJB
-  private DatasetTagsBuilder tagsBuilder;
+  private TagBuilder tagsBuilder;
   
   private InodeDTO uri(InodeDTO dto, UriInfo uriInfo) {
     dto.setHref(uriInfo.getAbsolutePathBuilder().build());
@@ -108,7 +109,7 @@ public class InodeBuilder {
       String parentPath = datasetPath.getFullPath().toString();
       dto.setAttributes(inodeAttributeBuilder.build(new InodeAttributeDTO(), resourceRequest, inode, parentPath,
         dirOwner));
-      dto.setTags(tagsBuilder.build(uriInfo, resourceRequest, user, datasetPath));
+      dto.setTags(tagsBuilder.build(new InodeTagUri(uriInfo), resourceRequest, user, datasetPath));
     }
     return dto;
   }
@@ -136,7 +137,7 @@ public class InodeBuilder {
     if (dto.isExpand()) {
       dto.setAttributes(inodeAttributeBuilder.build(new InodeAttributeDTO(), resourceRequest, inode, null, null));
       dto.setZipState(settings.getZipState(dto.getAttributes().getPath()));
-      dto.setTags(tagsBuilder.build(uriInfo, resourceRequest, user, datasetPath));
+      dto.setTags(tagsBuilder.build(new InodeTagUri(uriInfo), resourceRequest, user, datasetPath));
     }
     return dto;
   }
@@ -149,7 +150,7 @@ public class InodeBuilder {
     expand(dto, resourceRequest);
     if (dto.isExpand()) {
       dto.setAttributes(inodeAttributeBuilder.build(new InodeAttributeDTO(), resourceRequest, inode, null, null));
-      dto.setTags(tagsBuilder.build(uriInfo, resourceRequest, user, datasetPath));
+      dto.setTags(tagsBuilder.build(new InodeTagUri(uriInfo), resourceRequest, user, datasetPath));
     }
     List<String> ext = Stream.of(FilePreviewImageTypes.values())
       .map(FilePreviewImageTypes::name)
