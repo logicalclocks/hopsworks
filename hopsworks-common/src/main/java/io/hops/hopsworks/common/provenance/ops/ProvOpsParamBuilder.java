@@ -20,7 +20,7 @@ import io.hops.hopsworks.common.provenance.core.ProvParser;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.ProvenanceException;
 import io.hops.hopsworks.restutils.RESTCodes;
-import org.elasticsearch.search.sort.SortOrder;
+import org.opensearch.search.sort.SortOrder;
 import org.javatuples.Pair;
 
 import java.util.ArrayList;
@@ -35,7 +35,7 @@ import java.util.logging.Level;
 public class ProvOpsParamBuilder {
   Map<ProvParser.Field, ProvParser.FilterVal> fileOpsFilterBy = new HashMap<>();
   List<Pair<ProvParser.Field, SortOrder>> fileOpsSortBy = new ArrayList<>();
-  Set<ProvParser.ElasticExpansions> expansions = new HashSet<>();
+  Set<ProvParser.OpenSearchExpansions> expansions = new HashSet<>();
   Map<ProvParser.Field, ProvParser.FilterVal> appStateFilter = new HashMap<>();
   Pair<Integer, Integer> pagination = null;
   Set<ProvOpsAggregations> aggregations = new HashSet<>();
@@ -76,7 +76,7 @@ public class ProvOpsParamBuilder {
       offset = 0;
     }
     if(limit == null) {
-      limit = Settings.PROVENANCE_ELASTIC_PAGE_DEFAULT_SIZE;
+      limit = Settings.PROVENANCE_OPENSEARCH_PAGE_DEFAULT_SIZE;
     }
     pagination = Pair.with(offset, limit);
     return this;
@@ -99,7 +99,7 @@ public class ProvOpsParamBuilder {
   }
   
   public ProvOpsParamBuilder withAppExpansion() {
-    expansions.add(ProvParser.ElasticExpansions.APP);
+    expansions.add(ProvParser.OpenSearchExpansions.APP);
     return this;
   }
   
@@ -110,7 +110,7 @@ public class ProvOpsParamBuilder {
   }
   
   public boolean hasAppExpansion() {
-    return expansions.contains(ProvParser.ElasticExpansions.APP);
+    return expansions.contains(ProvParser.OpenSearchExpansions.APP);
   }
   
   public ProvOpsParamBuilder withAggregation(ProvOpsAggregations aggregation) {
@@ -148,7 +148,7 @@ public class ProvOpsParamBuilder {
     return fileOpsSortBy;
   }
   
-  public Set<ProvParser.ElasticExpansions> getExpansions() {
+  public Set<ProvParser.OpenSearchExpansions> getExpansions() {
     return expansions;
   }
   

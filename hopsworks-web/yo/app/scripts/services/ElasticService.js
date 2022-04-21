@@ -101,7 +101,7 @@ angular.module('hopsWorksApp')
                 },
                 /**
                  Get Jwt Token for the user in the project to access Kibana and
-                 Elasticsearch.
+                 Opensearch.
                 */
                 getJwtToken : function(projectId){
                   return $http.get('/api/elastic/jwt/' + projectId);

@@ -94,7 +94,7 @@ public class KibanaProxyServlet extends ProxyServlet {
   @Override
   protected HttpClient createHttpClient(HttpParams hcParams) {
     SSLContext sslCtx = null;
-    if (settings.isElasticOpenDistroSecurityEnabled()) {
+    if (settings.isOpenSearchSecurityEnabled()) {
       Path trustStore = Paths
           .get(clientsService.getSuperTrustStorePath());
       char[] trustStorePassword =

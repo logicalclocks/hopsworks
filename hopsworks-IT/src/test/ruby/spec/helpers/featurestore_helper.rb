@@ -822,7 +822,7 @@ module FeaturestoreHelper
     end
   end
 
-  #eventual consistency - epipe+elastic - retry a number of times
+  #eventual consistency - epipe+opensearch - retry a number of times
   def check_featuregroup_usage(project_id, fg_id, check, fs_id: nil, fs_project_id: nil, type: [], retries: 10)
     wait_result = wait_for_me_time(retries) do
       result = featuregroup_usage(project_id, fg_id, fs_id: fs_id, fs_project_id: fs_project_id, type: type)
@@ -904,7 +904,7 @@ module FeaturestoreHelper
     end
   end
 
-  #eventual consistency - epipe+elastic - retry a number of times
+  #eventual consistency - epipe+opensearch - retry a number of times
   def check_trainingdataset_usage(project_id, td_id, check, fs_id: nil, fs_project_id: nil, type: [], retries: 10)
     wait_result = wait_for_me_time(retries) do
       result = trainingdataset_usage(project_id, td_id, fs_id: fs_id, fs_project_id: fs_project_id, type: type)

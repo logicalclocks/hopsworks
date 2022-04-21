@@ -15,7 +15,7 @@
  */
 package io.hops.hopsworks.testing.provenance.app;
 
-import io.hops.hopsworks.common.provenance.app.dto.ProvAppStateElastic;
+import io.hops.hopsworks.common.provenance.app.dto.ProvAppStateOpenSearch;
 import io.hops.hopsworks.common.provenance.core.Provenance;
 
 import javax.xml.bind.annotation.XmlRootElement;
@@ -36,16 +36,16 @@ public class ProvAppDTO {
   public ProvAppDTO() {
   }
   
-  public static ProvAppDTO withAppStates(Map<String, Map<Provenance.AppState, ProvAppStateElastic>> allAppStates) {
+  public static ProvAppDTO withAppStates(Map<String, Map<Provenance.AppState, ProvAppStateOpenSearch>> allAppStates) {
     ProvAppDTO apps = new ProvAppDTO();
     List<ProvAppDTO> appsItems = new ArrayList<>();
     apps.setItems(appsItems);
-    for(Map.Entry<String, Map<Provenance.AppState, ProvAppStateElastic>> appStatesAux : allAppStates.entrySet()) {
+    for(Map.Entry<String, Map<Provenance.AppState, ProvAppStateOpenSearch>> appStatesAux : allAppStates.entrySet()) {
       ProvAppDTO appStates = new ProvAppDTO();
       appsItems.add(appStates);
       List<ProvAppDTO> appStatesItems = new ArrayList<>();
       appStates.setItems(appStatesItems);
-      for(Map.Entry<Provenance.AppState, ProvAppStateElastic> appStateAux : appStatesAux.getValue().entrySet()) {
+      for(Map.Entry<Provenance.AppState, ProvAppStateOpenSearch> appStateAux : appStatesAux.getValue().entrySet()) {
         ProvAppDTO state = new ProvAppDTO();
         state.setAppId(appStateAux.getValue().getAppId());
         state.setAppName(appStateAux.getValue().getAppName());

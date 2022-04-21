@@ -120,7 +120,7 @@ public class ProvAppStateDTO {
         break;
       default:
         throw new ProvenanceException(RESTCodes.ProvenanceErrorCode.INTERNAL_ERROR, Level.WARNING,
-          "unknown app state from elastic:" + appState);
+          "unknown app state from opensearch:" + appState);
     }
   }
 }

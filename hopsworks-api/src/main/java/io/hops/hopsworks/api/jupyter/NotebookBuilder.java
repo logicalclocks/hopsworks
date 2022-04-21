@@ -20,15 +20,15 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.module.jaxb.JaxbAnnotationModule;
 import io.hops.hopsworks.common.api.ResourceRequest;
 import io.hops.hopsworks.common.dao.hdfs.inode.InodeFacade;
-import io.hops.hopsworks.common.elastic.ElasticController;
+import io.hops.hopsworks.common.opensearch.OpenSearchController;
 import io.hops.hopsworks.common.hdfs.inode.InodeController;
 import io.hops.hopsworks.common.jupyter.NotebookDTO;
 import io.hops.hopsworks.common.util.Settings;
-import io.hops.hopsworks.exceptions.ElasticException;
+import io.hops.hopsworks.exceptions.OpenSearchException;
 import io.hops.hopsworks.persistence.entity.hdfs.inode.Inode;
 import io.hops.hopsworks.persistence.entity.jupyter.JupyterSettings;
 import io.hops.hopsworks.persistence.entity.project.Project;
-import org.elasticsearch.search.SearchHit;
+import org.opensearch.search.SearchHit;
 
 import javax.annotation.PostConstruct;
 import javax.ejb.EJB;
@@ -51,7 +51,7 @@ public class NotebookBuilder {
   private static final Logger LOGGER = Logger.getLogger(NotebookBuilder.class.getName());
 
   @EJB
-  private ElasticController elasticController;
+  private OpenSearchController elasticController;
   @EJB
   private InodeController inodeController;
   @EJB
@@ -78,7 +78,7 @@ public class NotebookBuilder {
         .build();
   }
 
-  public NotebookDTO build(UriInfo uriInfo, Project project, int count) throws ElasticException {
+  public NotebookDTO build(UriInfo uriInfo, Project project, int count) throws OpenSearchException {
     NotebookDTO dto = new NotebookDTO();
     dto.setHref(uri(uriInfo, project, count));
     SearchHit[] elasticHits = elasticController.recentJupyterNotebookSearch(count, project.getId());

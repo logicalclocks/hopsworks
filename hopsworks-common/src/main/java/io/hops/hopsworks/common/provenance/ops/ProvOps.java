@@ -19,7 +19,7 @@ import io.hops.hopsworks.common.provenance.core.ProvParser;
 import io.hops.hopsworks.common.provenance.core.Provenance;
 import io.hops.hopsworks.exceptions.ProvenanceException;
 import io.hops.hopsworks.restutils.RESTCodes;
-import org.elasticsearch.search.sort.SortOrder;
+import org.opensearch.search.sort.SortOrder;
 import org.javatuples.Pair;
 
 import java.util.EnumSet;
@@ -29,7 +29,7 @@ public class ProvOps {
   public interface Field extends ProvParser.Field {
   }
   
-  public enum Fields implements ProvParser.ElasticField {
+  public enum Fields implements ProvParser.OpenSearchField {
     INODE_OPERATION,
     TIMESTAMP,
     R_TIMESTAMP,
@@ -60,17 +60,17 @@ public class ProvOps {
     R_TIMESTAMP(Fields.R_TIMESTAMP, new ProvParser.StringValParser()),
     ENTRY_TYPE(ProvParser.Fields.ENTRY_TYPE, new ProvParser.StringValParser());
     
-    ProvParser.ElasticField elasticField;
+    ProvParser.OpenSearchField openSearchField;
     ProvParser.ValParser valParser;
     
-    FieldsP(ProvParser.ElasticField elasticField, ProvParser.ValParser valParser) {
-      this.elasticField = elasticField;
+    FieldsP(ProvParser.OpenSearchField openSearchField, ProvParser.ValParser valParser) {
+      this.openSearchField = openSearchField;
       this.valParser = valParser;
     }
     
     @Override
-    public String elasticFieldName() {
-      return elasticField.toString().toLowerCase();
+    public String openSearchFieldName() {
+      return openSearchField.toString().toLowerCase();
     }
     
     @Override
@@ -106,13 +106,13 @@ public class ProvOps {
     }
     
     @Override
-    public String elasticFieldName() {
-      return base.elasticFieldName();
+    public String openSearchFieldName() {
+      return base.openSearchFieldName();
     }
     
     @Override
     public String queryFieldName() {
-      return base.elasticFieldName();
+      return base.openSearchFieldName();
     }
     
     @Override

@@ -16,21 +16,21 @@
 package io.hops.hopsworks.common.provenance.app;
 
 import io.hops.hopsworks.common.provenance.core.Provenance;
-import io.hops.hopsworks.common.provenance.app.dto.ProvAppStateElastic;
+import io.hops.hopsworks.common.provenance.app.dto.ProvAppStateOpenSearch;
 import io.hops.hopsworks.common.provenance.app.dto.ProvAppStateDTO;
 import io.hops.hopsworks.exceptions.ProvenanceException;
 
 import java.util.Map;
 
 public class ProvAppHelper {
-  public static ProvAppStateDTO buildAppState(Map<Provenance.AppState, ProvAppStateElastic> appStates)
+  public static ProvAppStateDTO buildAppState(Map<Provenance.AppState, ProvAppStateOpenSearch> appStates)
     throws ProvenanceException {
     ProvAppStateDTO mlAssetAppState = new ProvAppStateDTO();
     //app states is an ordered map
     //I assume values will still be ordered based on keys
     //if this is the case, the correct progression is SUBMITTED->RUNNING->FINISHED/KILLED/FAILED
     //as such just iterating over the states will provide us with the correct current state
-    for (ProvAppStateElastic appState : appStates.values()) {
+    for (ProvAppStateOpenSearch appState : appStates.values()) {
       mlAssetAppState.setAppState(appState.getAppState(), appState.getAppStateTimestamp());
     }
     return mlAssetAppState;

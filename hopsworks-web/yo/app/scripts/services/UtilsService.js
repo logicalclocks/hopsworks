@@ -41,7 +41,7 @@
 /*global angular: false */
 
 /*
- * Used by home.js, main.js and project.js to set/define the elastic index 
+ * Used by home.js, main.js and project.js to set/define the opensearch index
  * where the searches will be directed to
  */
 'use strict';

@@ -69,7 +69,7 @@ import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.dao.user.activity.ActivityFacade;
 import io.hops.hopsworks.common.dataset.DatasetController;
 import io.hops.hopsworks.common.dataset.FolderNameValidator;
-import io.hops.hopsworks.common.elastic.ElasticController;
+import io.hops.hopsworks.common.opensearch.OpenSearchController;
 import io.hops.hopsworks.common.experiments.tensorboard.TensorBoardController;
 import io.hops.hopsworks.common.featurestore.FeaturestoreController;
 import io.hops.hopsworks.common.featurestore.online.OnlineFeaturestoreController;
@@ -106,7 +106,7 @@ import io.hops.hopsworks.common.yarn.YarnClientWrapper;
 import io.hops.hopsworks.exceptions.AlertException;
 import io.hops.hopsworks.exceptions.CryptoPasswordNotFoundException;
 import io.hops.hopsworks.exceptions.DatasetException;
-import io.hops.hopsworks.exceptions.ElasticException;
+import io.hops.hopsworks.exceptions.OpenSearchException;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.exceptions.GenericException;
 import io.hops.hopsworks.exceptions.HopsSecurityException;
@@ -255,7 +255,7 @@ public class ProjectController {
   @EJB
   private TensorBoardController tensorBoardController;
   @EJB
-  private ElasticController elasticController;
+  private OpenSearchController openSearchController;
   @EJB
   private CertificateMaterializer certificateMaterializer;
   @EJB
@@ -321,7 +321,7 @@ public class ProjectController {
    */
   public Project createProject(ProjectDTO projectDTO, Users owner, String sessionId) throws DatasetException,
     GenericException, KafkaException, ProjectException, UserException, HopsSecurityException, ServiceException,
-    FeaturestoreException, ElasticException, SchemaException, IOException {
+    FeaturestoreException, OpenSearchException, SchemaException, IOException {
 
     Long startTime = System.currentTimeMillis();
 
@@ -446,11 +446,11 @@ public class ProjectController {
       //Delete old project indices and kibana saved objects to avoid
       // inconsistencies
       try {
-        elasticController.deleteProjectIndices(project);
-        elasticController.deleteProjectSavedObjects(projectName);
-        LOGGER.log(Level.FINE, "PROJECT CREATION TIME. Step 9 (elastic cleanup): {0}",
+        openSearchController.deleteProjectIndices(project);
+        openSearchController.deleteProjectSavedObjects(projectName);
+        LOGGER.log(Level.FINE, "PROJECT CREATION TIME. Step 9 (opensearch cleanup): {0}",
             System.currentTimeMillis() - startTime);
-      } catch (ElasticException ex){
+      } catch (OpenSearchException ex){
         LOGGER.log(Level.FINE, "Error while cleaning old project indices", ex);
       }
 
@@ -737,16 +737,15 @@ public class ProjectController {
   // Used only during project creation
   private List<Future<?>> addService(Project project, ProjectServiceEnum service, Users user,
     DistributedFileSystemOps dfso, ProvTypeDTO projectProvCore) throws ProjectException, ServiceException,
-    DatasetException, HopsSecurityException, UserException, FeaturestoreException, ElasticException, SchemaException,
+    DatasetException, HopsSecurityException, UserException, FeaturestoreException, OpenSearchException, SchemaException,
     KafkaException, IOException {
     return addService(project, service, user, dfso, dfso, projectProvCore);
   }
   
   public List<Future<?>> addService(Project project, ProjectServiceEnum service, Users user,
     DistributedFileSystemOps dfso, DistributedFileSystemOps udfso, ProvTypeDTO projectProvCore) throws ProjectException,
-    ServiceException, DatasetException, HopsSecurityException, FeaturestoreException, ElasticException, SchemaException,
-    KafkaException, IOException, UserException {
-
+    ServiceException, DatasetException, HopsSecurityException, FeaturestoreException, OpenSearchException,
+    SchemaException, KafkaException, IOException, UserException {
     List<Future<?>> futureList = new ArrayList<>();
 
     if (projectServicesFacade.isServiceEnabledForProject(project, service)) {
@@ -888,11 +887,11 @@ public class ProjectController {
   private Future<CertificatesController.CertsResult> addServiceServing(Project project, Users user,
     DistributedFileSystemOps dfso, DistributedFileSystemOps udfso, ProvTypeDTO datasetProvCore)
     throws ProjectException, DatasetException, HopsSecurityException,
-    ElasticException, ServiceException, SchemaException, FeaturestoreException, KafkaException,
+    OpenSearchException, ServiceException, SchemaException, FeaturestoreException, KafkaException,
     IOException, UserException {
 
     addServiceDataset(project, user, Settings.ServiceDataset.SERVING, dfso, udfso, datasetProvCore);
-    elasticController.createIndexPattern(project, user,
+    openSearchController.createIndexPattern(project, user,
         project.getName().toLowerCase() + "_serving-*");
     // If Kafka is not enabled for the project, enable it
     if (!projectServicesFacade.isServiceEnabledForProject(project, ProjectServiceEnum.KAFKA)) {
@@ -1260,12 +1259,12 @@ public class ProjectController {
           cleanupLogger.logError(ex.getMessage());
         }
 
-        // Delete elasticsearch template for this project
+        // Delete OpenSearch template for this project
         try {
-          removeElasticsearch(project);
-          cleanupLogger.logSuccess("Removed ElasticSearch");
+          removeOpenSearch(project);
+          cleanupLogger.logSuccess("Removed OpenSearch");
         } catch (Exception ex) {
-          cleanupLogger.logError("Error when removing elastic during project cleanup");
+          cleanupLogger.logError("Error when removing opensearch during project cleanup");
           cleanupLogger.logError(ex.getMessage());
         }
 
@@ -1410,10 +1409,10 @@ public class ProjectController {
           cleanupLogger.logError(ex.getMessage());
         }
 
-        // Remove ElasticSearch index
+        // Remove OpenSearch index
         try {
-          removeElasticsearch(toDeleteProject);
-          cleanupLogger.logSuccess("Removed ElasticSearch");
+          removeOpenSearch(toDeleteProject);
+          cleanupLogger.logSuccess("Removed OpenSearch");
         } catch (Exception ex) {
           cleanupLogger.logError(ex.getMessage());
         }
@@ -1708,7 +1707,7 @@ public class ProjectController {
       // Run custom handlers for project deletion
       ProjectHandler.runProjectPreDeleteHandlers(projectHandlers, project);
       
-      //log removal to notify elastic search
+      //log removal to notify opensearch search
       logProject(project, OperationType.Delete);
       //change the owner and group of the project folder to hdfs super user
       Path location = new Path(Utils.getProjectPath(project.getName()));
@@ -1771,10 +1770,10 @@ public class ProjectController {
       hiveController.dropDatabases(project, dfso, false);
 
       try {
-        //Delete elasticsearch template for this project
-        removeElasticsearch(project);
-      }catch (ElasticException ex){
-        LOGGER.log(Level.WARNING, "Failure while removing elasticsearch indices", ex);
+        //Delete OpenSearch template for this project
+        removeOpenSearch(project);
+      }catch (OpenSearchException ex){
+        LOGGER.log(Level.WARNING, "Failure while removing OpenSearch indices", ex);
       }
 
       //delete project group and users
@@ -2649,15 +2648,15 @@ public class ProjectController {
     String projectName = project.getName().toLowerCase();
   
     try {
-      elasticController.createIndexPattern(project, user, projectName + Settings.ELASTIC_LOGS_INDEX_PATTERN);
-    } catch (ElasticException e) {
+      openSearchController.createIndexPattern(project, user, projectName + Settings.OPENSEARCH_LOGS_INDEX_PATTERN);
+    } catch (OpenSearchException e) {
       throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_KIBANA_CREATE_INDEX_ERROR, Level.SEVERE, "Could " +
         "provision project on Kibana. Contact an administrator if problem persists. Reason: " + e.getUsrMsg(),
         e.getDevMsg(), e );
     }
   }
 
-  public void removeElasticsearch(Project project) throws ElasticException {
+  public void removeOpenSearch(Project project) throws OpenSearchException {
     List<ProjectServiceEnum> projectServices = projectServicesFacade.
       findEnabledServicesForProject(project);
 
@@ -2666,9 +2665,9 @@ public class ProjectController {
     if (projectServices.contains(ProjectServiceEnum.JOBS)
       || projectServices.contains(ProjectServiceEnum.JUPYTER)
       || projectServices.contains(ProjectServiceEnum.SERVING)) {
-      elasticController.deleteProjectIndices(project);
-      LOGGER.log(Level.FINE, "removeElasticsearch-1:{0}", projectName);
-      elasticController.deleteProjectSavedObjects(projectName);
+      openSearchController.deleteProjectIndices(project);
+      LOGGER.log(Level.FINE, "removeOpenSearch-1:{0}", projectName);
+      openSearchController.deleteProjectSavedObjects(projectName);
     }
   }
 

@@ -80,19 +80,19 @@ describe "On #{ENV['OS']}" do
         password_file = File.join(path2secret, "#{project_username}__cert.key")
         expect(File.file? password_file).to be true
 
-        # Get logs from elasticsearch
+        # Get logs from opensearch
         # Sleep a bit to make sure that logs are propagated correctly to the index
         sleep(30)
 
-        # Check that the logs are written in the elastic index.
+        # Check that the logs are written in the opensearch index.
         begin
           Airborne.configure do |config|
             config.base_url = ''
           end
-          response = elastic_get "#{@project[:projectname].downcase}_logs*/_search?q=jobname=#{@user[:username]}"
+          response = opensearch_get "#{@project[:projectname].downcase}_logs*/_search?q=jobname=#{@user[:username]}"
           index = response.body
         rescue
-          p "jupyter spec: Error calling elastic_get #{$!}"
+          p "jupyter spec: Error calling opensearch_get #{$!}"
         else
           parsed_index = JSON.parse(index)
           expect(parsed_index['hits']['total']['value']).to be > 0

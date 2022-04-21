@@ -18,18 +18,18 @@ package io.hops.hopsworks.common.python.library;
 import com.lambdista.util.Try;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
 import io.hops.hopsworks.common.dao.python.LibraryFacade;
-import io.hops.hopsworks.common.provenance.core.elastic.BasicElasticHit;
-import io.hops.hopsworks.common.provenance.core.elastic.ElasticHelper;
-import io.hops.hopsworks.common.provenance.core.elastic.ElasticHits;
-import io.hops.hopsworks.common.elastic.ElasticClientController;
+import io.hops.hopsworks.common.provenance.core.opensearch.BasicOpenSearchHit;
+import io.hops.hopsworks.common.provenance.core.opensearch.OpenSearchHelper;
+import io.hops.hopsworks.common.provenance.core.opensearch.OpenSearchHits;
+import io.hops.hopsworks.common.opensearch.OpenSearchClientController;
 import io.hops.hopsworks.common.provenance.util.functional.CheckedSupplier;
 import io.hops.hopsworks.common.python.commands.CommandsController;
-import io.hops.hopsworks.common.python.search.PyPiLibraryElasticIndexer;
+import io.hops.hopsworks.common.python.search.PyPiLibraryOpenSearchIndexer;
 import io.hops.hopsworks.common.util.OSProcessExecutor;
 import io.hops.hopsworks.common.util.ProcessDescriptor;
 import io.hops.hopsworks.common.util.ProcessResult;
 import io.hops.hopsworks.common.util.Settings;
-import io.hops.hopsworks.exceptions.ElasticException;
+import io.hops.hopsworks.exceptions.OpenSearchException;
 import io.hops.hopsworks.exceptions.GenericException;
 import io.hops.hopsworks.exceptions.ProvenanceException;
 import io.hops.hopsworks.exceptions.ServiceException;
@@ -42,8 +42,8 @@ import io.hops.hopsworks.persistence.entity.python.CondaOp;
 import io.hops.hopsworks.persistence.entity.python.PythonDep;
 import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.restutils.RESTCodes;
-import org.elasticsearch.action.search.SearchRequest;
-import org.elasticsearch.search.builder.SearchSourceBuilder;
+import org.opensearch.action.search.SearchRequest;
+import org.opensearch.search.builder.SearchSourceBuilder;
 import org.javatuples.Pair;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -84,9 +84,9 @@ public class LibraryController {
   @EJB
   private OSProcessExecutor osProcessExecutor;
   @EJB
-  private ElasticClientController provElasticController;
+  private OpenSearchClientController provOpenSearchController;
   @EJB
-  private PyPiLibraryElasticIndexer pypiIndexer;
+  private PyPiLibraryOpenSearchIndexer pypiIndexer;
 
   public PythonDep getPythonDep(String dependency, Project project) {
     return libraryFacade.findByDependencyAndProject(dependency, project);
@@ -232,7 +232,7 @@ public class LibraryController {
     HashMap<String, List<LibraryVersionDTO>> versions = new HashMap<>();
 
     String[] lines = pipList(query, new HandlerFactory.BaseList(),
-      Settings.ELASTIC_PYPI_LIBRARIES_ALIAS);
+      Settings.OPENSEARCH_PYPI_LIBRARIES_ALIAS);
 
     for (String library : lines) {
       findPipLibPyPi(library, versions);
@@ -283,7 +283,7 @@ public class LibraryController {
   }
 
   /**
-   * @param <R> parsed elastic item
+   * @param <R> parsed opensearch item
    * @param <S1> intermediate result wrapped in Try
    * @param <S2> final result
    * @return
@@ -296,7 +296,7 @@ public class LibraryController {
   }
 
   /**
-   * @param <R> parsed elastic item
+   * @param <R> parsed opensearch item
    * @param <S1> intermediate result wrapped in Try
    * @param <S2> final result
    * @return
@@ -308,16 +308,16 @@ public class LibraryController {
     Pair<Long, Try<S1>> searchResult;
     try {
       CheckedSupplier<SearchRequest, ProvenanceException> srF =
-        ElasticHelper.baseSearchRequest(
+        OpenSearchHelper.baseSearchRequest(
           index,
-          settings.getElasticDefaultScrollPageSize())
-          .andThen(ElasticHelper.withPagination(offset, limit, settings.getElasticDefaultScrollPageSize()));
+          settings.getOpenSearchDefaultScrollPageSize())
+          .andThen(OpenSearchHelper.withPagination(offset, limit, settings.getOpenSearchDefaultScrollPageSize()));
       SearchRequest request = srF.get();
       SearchSourceBuilder sourceBuilder = new SearchSourceBuilder();
-      sourceBuilder.query(ElasticHelper.fullTextSearch("library", query));
+      sourceBuilder.query(OpenSearchHelper.fullTextSearch("library", query));
       request.source(sourceBuilder);
-      searchResult = provElasticController.search(request, handlerFactory.getHandler());
-    } catch(ElasticException | ProvenanceException pe) {
+      searchResult = provOpenSearchController.search(request, handlerFactory.getHandler());
+    } catch(OpenSearchException | ProvenanceException pe) {
       throw new ServiceException(RESTCodes.ServiceErrorCode.ANACONDA_LIST_LIB_ERROR, Level.FINE,
         "Unable to list python libraries", pe.getMessage(), pe);
     }
@@ -325,14 +325,14 @@ public class LibraryController {
   }
 
   public interface HandlerFactory<R, S1, S2> {
-    ElasticHits.Handler<R, S1> getHandler();
+    OpenSearchHits.Handler<R, S1> getHandler();
     S2 checkedResult(Pair<Long, Try<S1>> result) throws ServiceException;
 
     class BaseList implements LibraryController.HandlerFactory<String[], List<String[]>, String[]> {
-      public ElasticHits.Handler<String[], List<String[]>> getHandler() {
-        ElasticHits.Parser<String[]> parser =
-          hit -> LibraryController.tryInstance(BasicElasticHit.instance(hit));
-        return ElasticHits.handlerAddToList(parser);
+      public OpenSearchHits.Handler<String[], List<String[]>> getHandler() {
+        OpenSearchHits.Parser<String[]> parser =
+          hit -> LibraryController.tryInstance(BasicOpenSearchHit.instance(hit));
+        return OpenSearchHits.handlerAddToList(parser);
       }
 
       public String[] checkedResult(Pair<Long, Try<List<String[]>>> result) throws ServiceException {
@@ -350,7 +350,7 @@ public class LibraryController {
     }
   }
 
-  public static Try<String[]> tryInstance(BasicElasticHit hit) {
+  public static Try<String[]> tryInstance(BasicOpenSearchHit hit) {
     return Try.apply(() -> new String[] {hit.getSource().get("library").toString()});
   }
   

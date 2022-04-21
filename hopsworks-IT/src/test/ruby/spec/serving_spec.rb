@@ -799,10 +799,10 @@ describe "On #{ENV['OS']}" do
         start_serving(@project, @serving)
         wait_for_type(@serving[:name])
 
-        # Check that the logs are written in the elastic index.
+        # Check that the logs are written in the opensearch index.
         wait_result = wait_for_me_time(30, 4) do
-          result = elastic_rest do
-            response = elastic_get "#{@project[:projectname].downcase}_serving*/_search?q=serving_name:#{@serving[:name]}"
+          result = opensearch_rest do
+            response = opensearch_get "#{@project[:projectname].downcase}_serving*/_search?q=serving_name:#{@serving[:name]}"
             index = response.body
             parsed_index = JSON.parse(index)
             hits = parsed_index['hits']['total']['value']

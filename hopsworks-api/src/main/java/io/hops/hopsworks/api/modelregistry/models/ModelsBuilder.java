@@ -50,8 +50,8 @@ import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.project.team.ProjectTeam;
 import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.restutils.RESTCodes;
-import org.elasticsearch.search.sort.SortOrder;
 import org.javatuples.Pair;
+import org.opensearch.search.sort.SortOrder;
 
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
@@ -171,7 +171,7 @@ public class ModelsBuilder {
         }
       } catch (ProvenanceException e) {
         if (ProvHelper.missingMappingForField( e)) {
-          LOGGER.log(Level.WARNING, "Could not find elastic mapping for experiments query", e);
+          LOGGER.log(Level.WARNING, "Could not find opensearch mapping for experiments query", e);
           return dto;
         } else {
           throw new ModelRegistryException(RESTCodes.ModelRegistryErrorCode.MODEL_LIST_FAILED, Level.FINE,
@@ -318,7 +318,7 @@ public class ModelsBuilder {
 
   private void validatePagination(ResourceRequest resourceRequest) {
     if(resourceRequest.getLimit() == null || resourceRequest.getLimit() <= 0) {
-      resourceRequest.setLimit(settings.getElasticDefaultScrollPageSize());
+      resourceRequest.setLimit(settings.getOpenSearchDefaultScrollPageSize());
     }
 
     if(resourceRequest.getOffset() == null || resourceRequest.getOffset() <= 0) {
