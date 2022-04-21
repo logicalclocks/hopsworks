@@ -11,7 +11,7 @@ public class DummyCommand extends CloudCommand {
 
   private final String arguments;
 
-  public DummyCommand(Long id, String arguments) {
+  public DummyCommand(String id, String arguments) {
     super(id, CloudCommandType.of("DUMMY_COMMAND"));
     this.arguments = arguments;
   }

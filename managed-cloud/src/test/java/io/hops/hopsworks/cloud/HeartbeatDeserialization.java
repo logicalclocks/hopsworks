@@ -123,9 +123,9 @@ public class HeartbeatDeserialization {
     decommissionedNodes.add(new CloudNode("node2", "host23", "ip", 0, "instanceType", "running"));
     decommissionedNodes.add(new CloudNode("node3", "host24", "ip2", 5, "instanceType5", "running"));
 
-    Map<Long, CommandStatus> commandsStatus = new HashMap<>(2);
-    commandsStatus.put(1L, new CommandStatus(CommandStatus.CLOUD_COMMAND_STATUS.NEW, "message"));
-    commandsStatus.put(2L, new CommandStatus(CommandStatus.CLOUD_COMMAND_STATUS.ONGOING, "message1"));
+    Map<String, CommandStatus> commandsStatus = new HashMap<>(2);
+    commandsStatus.put("1", new CommandStatus(CommandStatus.CLOUD_COMMAND_STATUS.NEW, "message"));
+    commandsStatus.put("2", new CommandStatus(CommandStatus.CLOUD_COMMAND_STATUS.ONGOING, "message1"));
 
     return constructHeartbeatRequest(decommissioningNodes, decommissionedNodes, commandsStatus, -1, -1, -1, -1, -1, -1);
   }
@@ -136,7 +136,7 @@ public class HeartbeatDeserialization {
   }
 
   private HeartbeatRequest constructHeartbeatRequest(List<CloudNode> ingNodes, List<CloudNode> edNodes,
-          Map<Long, CommandStatus> cst, long allocatedVcores, long pendingVcores,
+          Map<String, CommandStatus> cst, long allocatedVcores, long pendingVcores,
           long allocatedMemoryMB, long pendingMemoryMB, long allocatedGPUs, long pendingGPUs) {
     final HeartbeatRequest hr = new HeartbeatRequest(ingNodes, edNodes, cst, allocatedVcores, pendingVcores,
           allocatedMemoryMB, pendingMemoryMB, allocatedGPUs, pendingGPUs);
@@ -152,21 +152,21 @@ public class HeartbeatDeserialization {
     Map<String, Integer> nodesToRemove0 = new HashMap<>();
     nodesToRemove0.put("instance.type.20", 3);
     nodesToRemove0.put("instance.type.10", 2);
-    CloudCommand command0 = new RemoveNodesCommand(1L, nodesToRemove0);
+    CloudCommand command0 = new RemoveNodesCommand("1", nodesToRemove0);
 
     Map<String, Integer> nodesToRemove1 = new HashMap<>();
     nodesToRemove1.put("instance.type.40", 1);
     nodesToRemove1.put("instance.type.30", 6);
-    CloudCommand command1 = new RemoveNodesCommand(2L, nodesToRemove1);
+    CloudCommand command1 = new RemoveNodesCommand("2", nodesToRemove1);
 
-    CloudCommand command2 = new DecommissionNodeCommand(3L, "host", "nodeId");
+    CloudCommand command2 = new DecommissionNodeCommand("3", "host", "nodeId");
     
     List<CloudCommand> commands = new ArrayList<>(3);
     commands.add(command0);
     commands.add(command1);
     commands.add(command2);
-    commands.add(new DummyCommand(12L, "args1"));
-    commands.add(new DummyCommand(13L, "args2"));
+    commands.add(new DummyCommand("12", "args1"));
+    commands.add(new DummyCommand("13", "args2"));
 
     return constructHeartbeatResponse(workers, commands);
   }

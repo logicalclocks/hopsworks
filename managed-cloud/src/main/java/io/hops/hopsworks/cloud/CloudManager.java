@@ -107,7 +107,7 @@ public class CloudManager {
 
   private DecommissionStatus toSend = new DecommissionStatus();
   final Set<CloudNode> decommissionedNodes = new HashSet<>();
-  private final Map<Long, CommandStatus> commandsStatus = new HashMap<>();
+  private final Map<String, CommandStatus> commandsStatus = new HashMap<>();
   private boolean firstHeartbeat = true;
   private Instant beginningOfHeartbeat;
   private boolean shouldLookForMissingNodes = false;
@@ -184,7 +184,7 @@ public class CloudManager {
         throw ex;
       }
 
-      for (Map.Entry<Long, CommandStatus> commandStatus : commandsStatus.entrySet()) {
+      for (Map.Entry<String, CommandStatus> commandStatus : commandsStatus.entrySet()) {
         if (CommandStatus.isFinal(commandStatus.getValue().getStatus())) {
           commandsStatus.remove(commandStatus.getKey());
         }

@@ -12,7 +12,7 @@ import java.util.Map;
 public class HeartbeatRequest extends BaseMessage {
   private final List<CloudNode> decommissioningNodes;
   private final List<CloudNode> decommissionedNodes;
-  private final Map<Long, CommandStatus> commandsStatus;
+  private final Map<String, CommandStatus> commandsStatus;
   private final boolean firstHeartBeat;
   private final long allocatedVcores;
   private final long pendingVcores;
@@ -22,14 +22,14 @@ public class HeartbeatRequest extends BaseMessage {
   private final long pendingGPUs;
   
   public HeartbeatRequest(List<CloudNode> decommissionedNodes, List<CloudNode> decommissioningNodes,
-      Map<Long, CommandStatus> commandsStatus, long allocatedVcores, long pendingVcores,
+      Map<String, CommandStatus> commandsStatus, long allocatedVcores, long pendingVcores,
       long allocatedMemoryMB, long pendingMemoryMB, long allocatedGPUs, long pendingGPUs) {
     this(decommissionedNodes, decommissioningNodes, commandsStatus, false, allocatedVcores, pendingVcores,
         allocatedMemoryMB, pendingMemoryMB, allocatedGPUs, pendingGPUs);
   }
 
   public HeartbeatRequest(List<CloudNode> decommissionedNodes, List<CloudNode> decommissioningNodes,
-      Map<Long, CommandStatus> commandsStatus, boolean firstHeartBeat, long allocatedVcores, long pendingVcores,
+      Map<String, CommandStatus> commandsStatus, boolean firstHeartBeat, long allocatedVcores, long pendingVcores,
       long allocatedMemoryMB, long pendingMemoryMB, long allocatedGPUs, long pendingGPUs) {
     this.decommissionedNodes = decommissionedNodes;
     this.decommissioningNodes = decommissioningNodes;
@@ -51,7 +51,7 @@ public class HeartbeatRequest extends BaseMessage {
     return decommissionedNodes;
   }
 
-  public Map<Long, CommandStatus> getCommandsStatus() {
+  public Map<String, CommandStatus> getCommandsStatus() {
     return commandsStatus;
   }
   

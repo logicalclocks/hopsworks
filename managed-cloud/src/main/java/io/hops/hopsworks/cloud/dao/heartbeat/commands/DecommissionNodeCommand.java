@@ -8,7 +8,7 @@ public class DecommissionNodeCommand extends CloudCommand {
   private final String host;
   private final String nodeId;
 
-  public DecommissionNodeCommand(Long id, String host, String nodeId) {
+  public DecommissionNodeCommand(String id, String host, String nodeId) {
     super(id, CloudCommandType.DECOMMISSION_NODE);
     this.host = host;
     this.nodeId = nodeId;

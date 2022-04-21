@@ -5,15 +5,15 @@ package io.hops.hopsworks.cloud.dao.heartbeat.commands;
 
 public abstract class CloudCommand {
 
-  private final Long id;
+  private final String id;
   private final CloudCommandType type;
 
-  public CloudCommand(Long id, CloudCommandType type) {
+  public CloudCommand(String id, CloudCommandType type) {
     this.id = id;
     this.type = type;
   }
 
-  public Long getId() {
+  public String getId() {
     return id;
   }
 

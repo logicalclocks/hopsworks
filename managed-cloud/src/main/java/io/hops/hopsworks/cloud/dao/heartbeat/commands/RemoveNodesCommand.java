@@ -8,7 +8,7 @@ import java.util.Map;
 public class RemoveNodesCommand extends CloudCommand {
   private final Map<String, Integer> nodesToRemove;
 
-  public RemoveNodesCommand(Long id, Map<String, Integer> nodesToRemove) {
+  public RemoveNodesCommand(String id, Map<String, Integer> nodesToRemove) {
     super(id, CloudCommandType.REMOVE_NODES);
     this.nodesToRemove = nodesToRemove;
   }

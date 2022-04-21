@@ -170,7 +170,7 @@ public class TestCloudManager {
     
     Map<String, Integer> nodesToRemove = new HashMap<>();
     nodesToRemove.put("type1", 1);
-    RemoveNodesCommand request = new RemoveNodesCommand(1L, nodesToRemove);
+    RemoveNodesCommand request = new RemoveNodesCommand("1", nodesToRemove);
     List<RemoveNodesCommand> requests = new ArrayList<>();
     requests.add(request);
 
@@ -206,7 +206,7 @@ public class TestCloudManager {
     
     nodesToRemove = new HashMap<>();
     nodesToRemove.put("type1", 2);
-    request = new RemoveNodesCommand(1L, nodesToRemove);
+    request = new RemoveNodesCommand("1", nodesToRemove);
     requests = new ArrayList<>();
     requests.add(request);
 
@@ -246,7 +246,7 @@ public class TestCloudManager {
     
     nodesToRemove = new HashMap<>();
     nodesToRemove.put("type1", 3);
-    request = new RemoveNodesCommand(1L, nodesToRemove);
+    request = new RemoveNodesCommand("1", nodesToRemove);
     requests = new ArrayList<>();
     requests.add(request);
 
@@ -290,7 +290,7 @@ public class TestCloudManager {
     
     nodesToRemove = new HashMap<>();
     nodesToRemove.put("type1", 4);
-    request = new RemoveNodesCommand(1L, nodesToRemove);
+    request = new RemoveNodesCommand("1", nodesToRemove);
     requests = new ArrayList<>();
     requests.add(request);
 
@@ -355,7 +355,7 @@ public class TestCloudManager {
 
     Map<String, Integer> nodesToRemove = new HashMap<>();
     nodesToRemove.put("type1", 1);
-    RemoveNodesCommand request = new RemoveNodesCommand(1L, nodesToRemove);
+    RemoveNodesCommand request = new RemoveNodesCommand("1", nodesToRemove);
     List<RemoveNodesCommand> requests = new ArrayList<>();
     requests.add(request);
 
@@ -413,7 +413,7 @@ public class TestCloudManager {
 
     Map<String, Integer> nodesToRemove = new HashMap<>();
     nodesToRemove.put("type1", 1);
-    RemoveNodesCommand request = new RemoveNodesCommand(1L, nodesToRemove);
+    RemoveNodesCommand request = new RemoveNodesCommand("1", nodesToRemove);
     List<RemoveNodesCommand> requests = new ArrayList<>();
     requests.add(request);
 
@@ -485,11 +485,11 @@ public class TestCloudManager {
     
     Map<String, Integer> nodesToRemove = new HashMap<>();
     nodesToRemove.put("type1", 2);
-    RemoveNodesCommand request = new RemoveNodesCommand(1L, nodesToRemove);
+    RemoveNodesCommand request = new RemoveNodesCommand("1", nodesToRemove);
     List<RemoveNodesCommand> removeCommands = new ArrayList<>();
     removeCommands.add(request);
     
-    DecommissionNodeCommand decomCmd = new DecommissionNodeCommand(2L, "host2", "nodeId2");
+    DecommissionNodeCommand decomCmd = new DecommissionNodeCommand("2", "host2", "nodeId2");
     List<DecommissionNodeCommand> decomCommands = new ArrayList<>();
     decomCommands.add(decomCmd);
 
