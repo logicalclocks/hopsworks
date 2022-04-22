@@ -1025,5 +1025,50 @@ describe "On #{ENV['OS']}" do
         end
       end
     end
+    describe "without valid project role" do
+      before :all do
+        with_valid_project
+        with_tf_serving(@project[:id], @project[:projectname], @user[:username])
+        @member = create_user
+        add_member_to_project(@project, @member[:email], "Data scientist")
+      end
+      it "should fail to create a serving" do
+        reset_session
+        create_session(@member[:email],"Pass123")
+        put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
+            {name: "testModel1",
+             modelPath: "/Projects/#{@project[:projectname]}/Models/mnist/",
+             modelVersion: 1,
+             batchingEnabled: false,
+             kafkaTopicDTO: {
+               name: "CREATE",
+               numOfPartitions: 1,
+               numOfReplicas: 1
+             },
+             modelServer: "TENSORFLOW_SERVING",
+             servingTool: "DEFAULT",
+             requestedInstances: 1
+            }
+        expect_status(403)
+      end
+      it "should fail to start a serving" do
+        reset_session
+        create_session(@member[:email],"Pass123")
+        post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/#{@serving[:id]}?action=start"
+        expect_status(403)
+      end
+      it "should fail to stop a serving" do
+        reset_session
+        create_session(@member[:email],"Pass123")
+        post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/#{@serving[:id]}?action=stop"
+        expect_status(403)
+      end
+      it "should fail to delete a serving" do
+        reset_session
+        create_session(@member[:email],"Pass123")
+        delete "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/#{@serving[:id]}"
+        expect_status(403)
+      end
+    end
   end
 end
