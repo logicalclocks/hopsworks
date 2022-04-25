@@ -846,9 +846,40 @@
         
       
       
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          Create Okta Client
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
       <a href="./" class="md-nav__link md-nav__link--active">
         Create Okta Client
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#group-mapping" class="md-nav__link">
+    Group mapping
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
       
     </li>
   
@@ -1072,6 +1103,21 @@
     
   
   
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#group-mapping" class="md-nav__link">
+    Group mapping
+  </a>
+  
+</li>
+      
+    </ul>
+  
 </nav>
                   </div>
                 </div>
@@ -1122,6 +1168,19 @@ select group(s) you want to give access to. Here we will allow everyone in the o
       <img src="../../../assets/images/admin/oauth2/assignments.png" alt="Group assignment" />
     </a>
     <figcaption>Group assignment</figcaption>
+  </figure>
+
+<h2 id="group-mapping">Group mapping<a class="headerlink" href="#group-mapping" title="Permanent link">#</a></h2>
+<p>You can also create mappings from groups in Okta to groups in Hopsworks. To achieve this you need to configure Okta to 
+send <em>Groups</em> with user information. To do this go to <em>Applications</em> and select your application name. In the <em>Sign 
+On</em> tab click edit <em>OpenID Connect ID Token</em> and select <strong>Filter</strong> for <em>Groups claim type</em>, then for <em>Groups claim 
+filter</em> add <strong>groups</strong> as the claim name, select <strong>Match Regex</strong> from the dropdown and .* (dot star) as Regex to 
+match all groups. See <a href="../create-client/#group-mapping">Group mapping</a> on how to do the mapping in Hopsworks.</p>
+<figure>
+    <a  href="../../../assets/images/admin/oauth2/okta-groups.png">
+      <img src="../../../assets/images/admin/oauth2/okta-groups.png" alt="Group claim" />
+    </a>
+    <figcaption>Group claim</figcaption>
   </figure>
 
 <p>After the application is created go back to <em>Applications</em> and click on the application you just created. Use the

@@ -832,9 +832,40 @@
         
       
       
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          Register an Identity Provider
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
       <a href="./" class="md-nav__link md-nav__link--active">
         Register an Identity Provider
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#group-mapping" class="md-nav__link">
+    Group mapping
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
       
     </li>
   
@@ -1072,6 +1103,21 @@
     
   
   
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#group-mapping" class="md-nav__link">
+    Group mapping
+  </a>
+  
+</li>
+      
+    </ul>
+  
 </nav>
                   </div>
                 </div>
@@ -1114,7 +1160,8 @@ fields,  as shown in the figure below.</p>
 <li><em>Logo URL</em>: optionally a logo URL to an image can be added. The logo will be shown on the login page with the name 
   as shown in the figure below.</li>
 </ul>
-<p>Optionally you can add a group mapping from your identity provider to hopsworks groups, by click on your name in the 
+<h2 id="group-mapping">Group mapping<a class="headerlink" href="#group-mapping" title="Permanent link">#</a></h2>
+<p>Optionally you can add a group mapping from your identity provider to hopsworks groups, by clicking on your name in the 
 top right corner of the navigation bar and choosing <em>Cluster Settings</em> from the dropdown menu. In the <em>Cluster 
 Settings</em> <em>Configuration</em> tab search for <em>oauth_group_mapping</em> and click on the edit button.</p>
 <figure>
@@ -1129,7 +1176,7 @@ Settings</em> <em>Configuration</em> tab search for <em>oauth_group_mapping</em>
 <p>Setting <em>oauth_group_mapping</em> to <em>ANY_GROUP-&gt;HOPS_USER</em> will assign the role <em>user</em> to any user from any group in 
 your identity provider when they log into hopsworks with OAuth for the first time. You can replace <em>ANY_GROUP</em> with 
 the group of your choice in the identity provider. You can replace <em>HOPS_USER</em> by <em>HOPS_ADMIN</em> if you want the 
-users of the group to be admins in hopsworks. You do several mappings of groups to roles by comma separating them.</p>
+users of that group to be admins in hopsworks. You can do several mappings by separating them with a semicolon.</p>
 </div>
 <p>Users will now see a new button on the login page. The button has the name you set above for <em>Name</em> and will 
 redirect to your identity provider.</p>
