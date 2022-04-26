@@ -165,7 +165,6 @@ public class LocalHostJupyterProcessMgr extends JupyterManagerImpl implements Ju
             .addCommand(token)
             .addCommand(js.getMode().getValue())
             .addCommand(projectUtils.getFullDockerImageName(project, false))
-            .addCommand(Boolean.toString(js.isGitBackend()))
             .redirectErrorStream(true)
             .setCurrentWorkingDirectory(new File(jp.getNotebookPath()))
             .setWaitTimeout(60L, TimeUnit.SECONDS)

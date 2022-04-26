@@ -209,7 +209,7 @@ describe "On #{ENV['OS']}" do
 
 	  it "should allow for creation of a non terminating jupyter session" do
 
-        secret_dir, staging_dir, settings = start_jupyter(@project, expected_status=200, shutdownLevel=6, baseDir=nil, gitConfig=nil, noLimit=true)
+        secret_dir, staging_dir, settings = start_jupyter(@project, expected_status=200, shutdownLevel=6, baseDir=nil, noLimit=true)
 
         json_result = get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/jupyter/running"
         expect_status(200)
@@ -305,81 +305,6 @@ describe "On #{ENV['OS']}" do
 
         notebook = json_body[:content].detect { |content| content[:path] == "shared_notebook.ipynb" }
         expect(notebook).not_to be_nil
-
-      end
-
-      it "should start jupyter with public github repo" do
-
-        if not is_git_available(@project)
-            skip "Git backend not available"
-        end
-
-        git_config = get_git_config("GITHUB", "https://github.com/logicalclocks/hops-util-py.git")
-
-        secret_dir, staging_dir, settings = start_jupyter(@project, expected_status=200, shutdownLevel=6, baseDir=nil, gitConfig=git_config)
-
-        get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/jupyter/running"
-        expect_status(200)
-
-      end
-
-      it "should not start jupyter with non-existing public github repo" do
-
-        if not is_git_available(@project)
-            skip "Git backend not available"
-        end
-
-        git_config = get_git_config("GITHUB", "https://github.com/logicalclocks/this-is-not-a-repo.git")
-
-        secret_dir, staging_dir, settings = start_jupyter(@project, expected_status=400, shutdownLevel=6, baseDir=nil, gitConfig=git_config)
-
-        get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/jupyter/running"
-        expect_status(404)
-
-      end
-
-      it "should start jupyter with public gitlab repo" do
-
-        if not is_git_available(@project)
-            skip "Git backend not available"
-        end
-
-        git_config = get_git_config("GITLAB", "https://gitlab.com/fdroid/fdroidclient.git")
-
-        secret_dir, staging_dir, settings = start_jupyter(@project, expected_status=200, shutdownLevel=6, baseDir=nil, gitConfig=git_config)
-
-        get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/jupyter/running"
-        expect_status(200)
-
-      end
-
-      it "should not start jupyter with non-existing public gitlab repo" do
-
-        if not is_git_available(@project)
-            skip "Git backend not available"
-        end
-
-        git_config = get_git_config("GITLAB", "https://gitlab.com/logicalclocks/this-is-not-a-repo.git")
-
-        secret_dir, staging_dir, settings = start_jupyter(@project, expected_status=400, shutdownLevel=6, baseDir=nil, gitConfig=git_config)
-
-        get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/jupyter/running"
-        expect_status(404)
-
-      end
-
-      it "should not start jupyter with auto push if api key is not set" do
-
-        if not is_git_available(@project)
-            skip "Git backend not available"
-        end
-
-        git_config = get_git_config("GITHUB", "https://github.com/logicalclocks/this-is-not-a-repo.git", shutdown_auto_push=true)
-
-        secret_dir, staging_dir, settings = start_jupyter(@project, expected_status=500, shutdownLevel=6, baseDir=nil, gitConfig=git_config)
-
-        get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/jupyter/running"
-        expect_status(404)
 
       end
 

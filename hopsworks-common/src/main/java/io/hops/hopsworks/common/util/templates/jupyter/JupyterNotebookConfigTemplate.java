@@ -32,8 +32,6 @@ public class JupyterNotebookConfigTemplate extends JupyterTemplate {
   private final String secretDirectory;
   private final String allowOrigin;
   private final Long wsPingInterval;
-  private final String apiKey;
-  private final String gitBackend;
   private final String hadoopClasspathGlob;
   private final Boolean requestsVerify;
   private final String domainCATruststore;
@@ -54,8 +52,6 @@ public class JupyterNotebookConfigTemplate extends JupyterTemplate {
     this.secretDirectory = builder.getSecretDirectory();
     this.allowOrigin = builder.getAllowOrigin();
     this.wsPingInterval = builder.getWsPingInterval();
-    this.apiKey = builder.getApiKey();
-    this.gitBackend = builder.getGitBackend();
     this.hadoopClasspathGlob = builder.getHadoopClasspathGlob();
     this.requestsVerify = builder.getRequestsVerify();
     this.domainCATruststore = builder.getDomainCATruststore();
@@ -110,15 +106,7 @@ public class JupyterNotebookConfigTemplate extends JupyterTemplate {
   public Long getWsPingInterval() {
     return wsPingInterval;
   }
-  
-  public String getApiKey() {
-    return apiKey;
-  }
-  
-  public String getGitBackend() {
-    return gitBackend;
-  }
-  
+
   public String getHadoopClasspathGlob() {
     return hadoopClasspathGlob;
   }

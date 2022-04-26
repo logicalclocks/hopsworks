@@ -105,8 +105,6 @@ public class JupyterController {
   private HdfsUsersFacade hdfsUsersFacade;
   @EJB
   private JupyterJWTManager jupyterJWTManager;
-  @Inject
-  private JupyterNbVCSController jupyterNbVCSController;
   @EJB
   private ProjectUtils projectUtils;
   @EJB
@@ -232,18 +230,6 @@ public class JupyterController {
       JupyterSettings jupyterSettings = jupyterSettingsFacade.findByProjectUser(project, user.getEmail());
       // If we fail to start Jupyter server, then we call this shutdown to clean up
       // Do some sanity check before using jupyter settings
-      if (jupyterProject != null && jupyterSettings != null) {
-        if (jupyterSettings.isGitBackend() && jupyterSettings.getGitConfig().getShutdownAutoPush()) {
-          try {
-            jupyterNbVCSController.push(jupyterProject, jupyterSettings, user);
-          } catch (ServiceException ex) {
-            if (!quiet) {
-              throw ex;
-            }
-            LOGGER.log(Level.WARNING, "Could not push Git repository, shutting down Jupyter nevertheless", ex);
-          }
-        }
-      }
       jupyterManager.stopJupyterServer(project, user, hdfsUser, jupyterHomePath, cid, port);
     } finally {
       String[] project_user = hdfsUser.split(HdfsUsersController.USER_NAME_DELIMITER);
@@ -353,11 +339,6 @@ public class JupyterController {
     DistributedFileSystemOps udfso = null;
     try {
       JupyterSettings jupyterSettings = jupyterSettingsFacade.findByProjectUser(project, user.getEmail());
-      //If Jupyter was started with a git backend, do not attach the xattribute
-      //When we have support git Datasets remove this if statement
-      if(jupyterSettings.isGitBackend()) {
-        return;
-      }
       udfso = dfs.getDfsOps(hdfsUsername);
       String relativeNotebookPath = getNotebookRelativeFilePath(hdfsUsername, kernelId, udfso);
       JSONObject jupyterSettingsMetadataObj = new JSONObject();

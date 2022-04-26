@@ -90,17 +90,6 @@ angular.module('hopsWorksApp')
               },
               convertIPythonNotebook: function (projectId, fileName) {
                 return $http.get('/api/project/' + projectId + '/jupyter/convertIPythonNotebook/' + fileName);
-              },
-              getGitRemoteBranches: function (projectId, repoConf) {
-                var request = {
-                  method: "GET",
-                  url: "/api/project/" + projectId + "/jupyter/git/branches",
-                  params: repoConf
-                }
-                return $http(request);
-              },
-              gitStatus: function (projectId) {
-                return $http.get("/api/project/" + projectId + "/jupyter/git/status");
               }
             };
           }]);
