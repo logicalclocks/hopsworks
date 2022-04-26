@@ -38,27 +38,22 @@
  */
 package io.hops.hopsworks.persistence.entity.jupyter;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.hops.hopsworks.persistence.entity.jobs.configuration.JobConfiguration;
 import io.hops.hopsworks.persistence.entity.jupyter.config.DockerConfigurationConverter;
-import io.hops.hopsworks.persistence.entity.jupyter.config.GitConfig;
 import io.hops.hopsworks.persistence.entity.jupyter.config.JupyterConfigurationConverter;
 import io.hops.hopsworks.persistence.entity.user.Users;
 
 import java.io.Serializable;
 import javax.persistence.Basic;
-import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Convert;
 import javax.persistence.EmbeddedId;
 import javax.persistence.Entity;
-import javax.persistence.FetchType;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
-import javax.persistence.OneToOne;
 import javax.persistence.Table;
 import javax.persistence.Transient;
 import javax.validation.constraints.NotNull;
@@ -146,17 +141,6 @@ public class JupyterSettings implements Serializable {
   @Transient
   private String privateDir = "";
 
-  @Transient
-  private Boolean gitAvailable;
-  
-  @Column(name = "git_backend")
-  private Boolean gitBackend = false;
-  
-  @OneToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
-  @JoinColumn(name = "git_config_id", referencedColumnName = "id")
-  @JsonInclude(JsonInclude.Include.NON_EMPTY)
-  private GitConfig gitConfig;
-  
   @Transient
   private JupyterMode mode;
   
@@ -278,30 +262,6 @@ public class JupyterSettings implements Serializable {
 
   public void setJobConfig(JobConfiguration jobConfig) {
     this.jobConfig = jobConfig;
-  }
-  
-  public Boolean isGitBackend() {
-    return gitBackend;
-  }
-  
-  public void setGitBackend(Boolean gitBackend) {
-    this.gitBackend = gitBackend;
-  }
-  
-  public Boolean getGitAvailable() {
-    return gitAvailable;
-  }
-  
-  public void setGitAvailable(Boolean gitAvailable) {
-    this.gitAvailable = gitAvailable;
-  }
-  
-  public GitConfig getGitConfig() {
-    return gitConfig;
-  }
-  
-  public void setGitConfig(GitConfig gitConfig) {
-    this.gitConfig = gitConfig;
   }
 
   public JobConfiguration getDockerConfig() {

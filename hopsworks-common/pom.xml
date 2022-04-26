@@ -59,7 +59,6 @@
   <properties>
     <maven.deploy.skip>false</maven.deploy.skip>
     <kube.stereotype>io.hops.hopsworks.common.integrations.LocalhostStereotype</kube.stereotype>
-    <jupyter.stereotype>io.hops.hopsworks.common.integrations.NullJupyterNbVCSStereotype</jupyter.stereotype>
     <cloud.stereotype>io.hops.hopsworks.common.integrations.UnmanagedStereotype</cloud.stereotype>
   </properties>
 
@@ -253,10 +252,6 @@
               <value>${kube.stereotype}</value>
             </replacement>
             <replacement>
-              <token>io.hops.hopsworks.common.integrations.NullJupyterNbVCSStereotype</token>
-              <value>${jupyter.stereotype}</value>
-            </replacement>
-            <replacement>
               <token>io.hops.hopsworks.common.integrations.UnmanagedStereotype</token>
               <value>${cloud.stereotype}</value>
             </replacement>
@@ -274,16 +269,6 @@
       </activation>
       <properties>
         <kube.stereotype>io.hops.hopsworks.kube.common.KubeStereotype</kube.stereotype>
-      </properties>
-    </profile>
-
-    <profile>
-      <id>jupyter-git</id>
-      <activation>
-        <activeByDefault>false</activeByDefault>
-      </activation>
-      <properties>
-        <jupyter.stereotype>io.hops.hopsworks.jupyter.git.controllers.GitJupyterNbVCSStereotype</jupyter.stereotype>
       </properties>
     </profile>
 

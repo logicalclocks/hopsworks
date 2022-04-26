@@ -197,20 +197,6 @@
       </dependencies>
     </profile>
     <profile>
-      <id>jupyter-git</id>
-      <activation>
-        <activeByDefault>false</activeByDefault>
-      </activation>
-      <dependencies>
-        <dependency>
-          <groupId>io.hops.hopsworks</groupId>
-          <artifactId>hopsworks-jupyter-git</artifactId>
-          <version>${project.version}</version>
-          <type>ejb</type>
-        </dependency>
-      </dependencies>
-    </profile>
-    <profile>
       <id>testing</id>
       <activation>
         <activeByDefault>false</activeByDefault>

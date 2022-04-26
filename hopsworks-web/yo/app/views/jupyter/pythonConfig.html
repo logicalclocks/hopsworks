@@ -57,7 +57,7 @@
             </select>
         </div>
     </div>
-    <div class="form-group" ng-if="!jupyterCtrl.jupyterSettings.gitAvailable">
+    <div class="form-group">
         <label class="control-label col-sm-3" for="baseDir" uib-tooltip='Dataset to set as base directory for Jupyter'>Base Directory: </label>
         <div class="col-sm-4">
             <select id="baseDir" class="form-control" ng-model="jupyterCtrl.selected" ng-change="jupyterCtrl.changeBaseDir()"required>
@@ -70,33 +70,6 @@
             <div class="col-md-2 jupyter-left"></div>
             <div class="col-md-9 pull-right" style="font-weight: bold; color: orange;">
                 &nbsp {{jupyterCtrl.selected.warning}}
-            </div>
-        </div>
-    </div>
-    <div ng-if="jupyterCtrl.jupyterSettings.gitAvailable">
-        <h5 class="j-tab-advanced" ng-click="sparkConfigCtrl.settings.advanced = !sparkConfigCtrl.settings.advanced" data-toggle="collapse" data-target="#pythonAdvanced">
-            Advanced configuration
-            <i class="fa" ng-class="{'fa-chevron-down': sparkConfigCtrl.settings.advanced, 'fa-chevron-right': !sparkConfigCtrl.settings.advanced}" style="margin-left: 5px"></i>
-        </h5>
-        <div id="pythonAdvanced" ng-class="{'collapse in': sparkConfigCtrl.settings.advanced, 'collapse': !sparkConfigCtrl.settings.advanced}">
-            <div ng-if="sparkConfigCtrl.isJupyter">
-                <div class="form-group" ng-if="!jupyterCtrl.jupyterSettings.gitBackend">
-                    <label class="control-label col-sm-3" for="baseDirEnterprise" uib-tooltip='Dataset to set as base directory for Jupyter'>Base Directory: </label>
-                    <div class="col-sm-4 jupyter-left">
-                        <select id="baseDirEnterprise" class="form-control" ng-model="jupyterCtrl.selected" ng-change="jupyterCtrl.changeBaseDir()"required>
-                            <option ng-selected="jupyterCtrl.selected.id === dir.id"
-                                    ng-repeat="dir in jupyterCtrl.dirs"
-                                    ng-value="dir">{{dir.name}}</option>
-                        </select>
-                    </div>
-                    <div class="row" ng-if="jupyterCtrl.selected.warning">
-                        <div class="col-md-2 jupyter-left"></div>
-                        <div class="col-md-9 pull-right" style="font-weight: bold; color: orange;">
-                            &nbsp {{jupyterCtrl.selected.warning}}
-                        </div>
-                    </div>
-                </div>
-                <div ng-include="'views/jupyter/gitBackendAdvancedConfig.html'"></div>
             </div>
         </div>
     </div>

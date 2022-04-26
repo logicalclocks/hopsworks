@@ -600,12 +600,6 @@
       </dependency>
       <dependency>
         <groupId>io.hops.hopsworks</groupId>
-        <artifactId>hopsworks-jupyter-git</artifactId>
-        <version>${project.version}</version>
-        <type>ejb</type>
-      </dependency>
-      <dependency>
-        <groupId>io.hops.hopsworks</groupId>
         <artifactId>hopsworks-persistence</artifactId>
         <version>${project.version}</version>
       </dependency>
@@ -1170,15 +1164,6 @@
       </activation>
       <modules>
         <module>hopsworks-web</module>
-      </modules>
-    </profile>
-    <profile>
-      <id>jupyter-git</id>
-      <activation>
-        <activeByDefault>false</activeByDefault>
-      </activation>
-      <modules>
-        <module>hopsworks-jupyter-git</module>
       </modules>
     </profile>
     <profile>

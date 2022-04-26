@@ -15,7 +15,7 @@
  ~ If not, see <https://www.gnu.org/licenses/>.
  ~
  -->
-<div class="form-group" ng-if="!jupyterCtrl.jupyterSettings.gitBackend && sparkConfigCtrl.isJupyter">
+<div class="form-group" ng-if="sparkConfigCtrl.isJupyter">
     <label class="control-label col-sm-3" for="baseDir" uib-tooltip='Dataset to set as base directory for Jupyter'>Base Directory: </label>
     <div class="col-sm-4 jupyter-left">
         <select id="baseDir" class="form-control" ng-model="jupyterCtrl.selected" ng-change="jupyterCtrl.changeBaseDir()"required>
@@ -136,7 +136,4 @@
                   title="spark.yarn.am.port=12242&#10;spark.executor.extraJavaOptions=-XX:+PrintGCDetails -XX:+PrintGCTimeStamps">
         </textarea>
     </div>
-</div>
-<div ng-if="sparkConfigCtrl.isJupyter">
-    <div ng-include="'views/jupyter/gitBackendAdvancedConfig.html'"></div>
 </div>

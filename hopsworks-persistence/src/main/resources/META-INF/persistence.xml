@@ -108,7 +108,6 @@
     <class>io.hops.hopsworks.persistence.entity.jobs.description.Jobs</class>
     <class>io.hops.hopsworks.persistence.entity.jupyter.JupyterProject</class>
     <class>io.hops.hopsworks.persistence.entity.jupyter.JupyterSettings</class>
-    <class>io.hops.hopsworks.persistence.entity.jupyter.config.GitConfig</class>
     <class>io.hops.hopsworks.persistence.entity.jwt.InvalidJwt</class>
     <class>io.hops.hopsworks.persistence.entity.jwt.JwtSigningKey</class>
     <class>io.hops.hopsworks.persistence.entity.kafka.ProjectTopics</class>
