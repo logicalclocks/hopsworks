@@ -277,9 +277,8 @@ public class OAuthClientDTO extends RestDTO<OAuthClientDTO> {
       throw new RemoteAuthException(RESTCodes.RemoteAuthErrorCode.ILLEGAL_ARGUMENT, Level.FINE,
         "Provider name not set.");
     }
-    if (Strings.isNullOrEmpty(this.getProviderDisplayName())) {
-      throw new RemoteAuthException(RESTCodes.RemoteAuthErrorCode.ILLEGAL_ARGUMENT, Level.FINE,
-        "Provider display name not set.");
+    if (Strings.isNullOrEmpty(this.getProviderDisplayName()) || this.getProviderDisplayName().trim().isEmpty()) {
+      setProviderDisplayName(this.providerName);
     }
     if (Strings.isNullOrEmpty(this.getProviderUri())) {
       throw new RemoteAuthException(RESTCodes.RemoteAuthErrorCode.ILLEGAL_ARGUMENT, Level.FINE,
