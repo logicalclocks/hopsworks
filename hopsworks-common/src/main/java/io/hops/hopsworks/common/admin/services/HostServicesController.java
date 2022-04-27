@@ -67,7 +67,7 @@ public class HostServicesController {
     Optional<HostServices> service = hostServicesFacade.findByServiceName(name, hostname);
     if (!service.isPresent()) {
       throw new ServiceException(RESTCodes.ServiceErrorCode.SERVICE_NOT_FOUND, Level.WARNING,
-        "name: " + name);
+        "Service not found. name: " + name + " on host: " + hostname);
     }
     return service.get();
   }
@@ -77,7 +77,7 @@ public class HostServicesController {
     Optional<HostServices> service = hostServicesFacade.findByHostnameServiceNameGroup(hostname, group, name);
     if (!service.isPresent()) {
       throw new ServiceException(RESTCodes.ServiceErrorCode.SERVICE_NOT_FOUND, Level.WARNING,
-        "name: " + name + ", hostname: " + hostname + ", group: " + group);
+        "Service not found. name: " + name + ", hostname: " + hostname + ", group: " + group);
     }
     return service.get();
   }
@@ -86,7 +86,8 @@ public class HostServicesController {
     throws ServiceException, GenericException {
     if (!Action.START_SERVICE.equals(action) && !Action.RESTART_SERVICE.equals(action) && !Action.STOP_SERVICE.equals
       (action)) {
-      throw new ServiceException(RESTCodes.ServiceErrorCode.ACTION_FORBIDDEN, Level.WARNING, "action: " + action);
+      throw new ServiceException(RESTCodes.ServiceErrorCode.ACTION_FORBIDDEN, Level.WARNING, "Action not allowed " +
+        "action: " + action);
     }
     HostServices service = findByName(serviceName, hostname);
     webOp(action, Collections.singletonList(service));
