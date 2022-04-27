@@ -214,8 +214,7 @@ public class WebCommunication {
         return content;
       } else {
         throw new GenericException(RESTCodes.GenericErrorCode.UNKNOWN_ERROR,
-          Level.SEVERE, "response status: " + response.getStatus(),
-          "Error code:" + code + " Reason: " + content);
+          Level.SEVERE, content, "Error code:" + code + " Reason: " + content);
       }
     } catch (KeyManagementException | NoSuchAlgorithmException e) {
       logger.log(Level.SEVERE, null, e);
