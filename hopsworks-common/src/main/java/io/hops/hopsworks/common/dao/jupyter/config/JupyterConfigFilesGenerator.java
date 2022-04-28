@@ -237,7 +237,7 @@ public class JupyterConfigFilesGenerator {
         .setSecretDirectory(settings.getStagingDir() + Settings.PRIVATE_DIRS + js.getSecret())
         .setAllowOrigin(allowOrigin)
         .setWsPingInterval(settings.getJupyterWSPingInterval())
-        .setHadoopClasspathGlob(settings.getHadoopClasspathGlob())
+        .setHadoopClasspathGlob(settings.getHadoopClasspathGlob().trim())
         .setRequestsVerify(settings.getRequestsVerify())
         .setDomainCATruststore(Paths.get(certsDir, hdfsUser + Settings.TRUSTSTORE_SUFFIX).toString())
         .setServiceDiscoveryDomain(settings.getServiceDiscoveryDomain())
