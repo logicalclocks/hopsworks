@@ -536,7 +536,7 @@ angular.module('hopsWorksApp')
             };
 
             self.showDetailedInformation = function (serving) {
-                ModalService.viewServingInfo('lg', self.projectId, serving, self.isKubernetes).then(
+                ModalService.viewServingInfo('lg', self.projectId, serving, self.isKubernetes, self.knativeDomainName).then(
                     function (success) {
                     }, function (error) {
                     });
@@ -1123,6 +1123,18 @@ angular.module('hopsWorksApp')
                     function (error) {
                         growl.error(error.data.errorMsg, {
                             title: 'Failed to fetch if kfserving is enabled',
+                            ttl: 15000
+                        });
+                    }
+                );
+
+                VariablesService.knativeDomainName().then(
+                    function (success) {
+                        self.knativeDomainName = success.data.successMessage
+                    },
+                    function (error) {
+                        growl.error(error.data.errorMsg, {
+                            title: 'Failed to fetch knative domain name',
                             ttl: 15000
                         });
                     }

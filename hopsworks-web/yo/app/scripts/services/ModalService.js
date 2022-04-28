@@ -1119,7 +1119,7 @@ angular.module('hopsWorksApp')
                 });
                 return modalInstance.result;
             },
-            viewServingInfo: function (size, projectId, serving, isKubernetes) {
+            viewServingInfo: function (size, projectId, serving, isKubernetes, knativeDomainName) {
                 var modalInstance = $uibModal.open({
                     templateUrl: 'views/servingViewInfo.html',
                     controller: 'servingViewInfoCtrl as servingViewInfoCtrl',
@@ -1141,6 +1141,9 @@ angular.module('hopsWorksApp')
                         },
                         isKubernetes: function () {
                             return isKubernetes;
+                        },
+                        knativeDomainName: function() {
+                            return knativeDomainName;
                         }
                     }
                 });

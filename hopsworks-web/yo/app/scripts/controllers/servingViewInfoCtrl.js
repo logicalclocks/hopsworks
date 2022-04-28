@@ -19,8 +19,8 @@
  */
 angular.module('hopsWorksApp')
     .controller('servingViewInfoCtrl', ['$uibModalInstance', '$scope', '$location', 'ProjectService', 'UtilsService',
-        'growl', 'projectId', 'serving', 'isKubernetes',
-        function ($uibModalInstance, $scope, $location, ProjectService, UtilsService, growl, projectId, serving, isKubernetes) {
+        'growl', 'projectId', 'serving', 'isKubernetes', 'knativeDomainName',
+        function ($uibModalInstance, $scope, $location, ProjectService, UtilsService, growl, projectId, serving, isKubernetes, knativeDomainName) {
 
             /**
              * Initialize controller state
@@ -29,6 +29,7 @@ angular.module('hopsWorksApp')
             self.projectId = projectId;
             self.serving = serving;
             self.isKubernetes = isKubernetes;
+            self.knativeDomainName = knativeDomainName;
 
 
             /**
@@ -150,7 +151,7 @@ angular.module('hopsWorksApp')
              */
             self.getKFServingHostHeader = function(serving) {
                 if (typeof serving.internalPath === 'undefined') { return "-" }
-                return serving.name + "." + UtilsService.getProjectName().replaceAll("_", "-") + ".logicalclocks.com"
+                return serving.name + "." + UtilsService.getProjectName().replaceAll("_", "-") + "." + self.knativeDomainName
             }
 
             /**

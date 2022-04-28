@@ -273,6 +273,7 @@ public class Settings implements Serializable {
   private static final String VARIABLE_KUBE_KFSERVING_INSTALLED = "kube_kfserving_installed";
   private static final String VARIABLE_KUBE_SERVING_NODE_LABELS = "kube_serving_node_labels";
   private static final String VARIABLE_KUBE_SERVING_NODE_TOLERATIONS = "kube_serving_node_tolerations";
+  private static final String VARIABLE_KUBE_KNATIVE_DOMAIN_NAME = "kube_knative_domain_name";
   
 
   /*
@@ -704,6 +705,7 @@ public class Settings implements Serializable {
       KUBE_KFSERVING_INSTALLED = setBoolVar(VARIABLE_KUBE_KFSERVING_INSTALLED, KUBE_KFSERVING_INSTALLED);
       KUBE_SERVING_NODE_LABELS = setStrVar(VARIABLE_KUBE_SERVING_NODE_LABELS, KUBE_SERVING_NODE_LABELS);
       KUBE_SERVING_NODE_TOLERATIONS = setStrVar(VARIABLE_KUBE_SERVING_NODE_TOLERATIONS, KUBE_SERVING_NODE_TOLERATIONS);
+      KUBE_KNATIVE_DOMAIN_NAME = setStrVar(VARIABLE_KUBE_KNATIVE_DOMAIN_NAME, KUBE_KNATIVE_DOMAIN_NAME);
   
       HOPSWORKS_ENTERPRISE = setBoolVar(VARIABLE_HOPSWORKS_ENTERPRISE, HOPSWORKS_ENTERPRISE);
 
@@ -3419,6 +3421,12 @@ public class Settings implements Serializable {
   public synchronized String getKubeServingNodeTolerations() {
     checkCache();
     return KUBE_SERVING_NODE_TOLERATIONS;
+  }
+  
+  private String KUBE_KNATIVE_DOMAIN_NAME = "";
+  public synchronized String getKubeKnativeDomainName() {
+    checkCache();
+    return KUBE_KNATIVE_DOMAIN_NAME;
   }
   
   private Boolean HOPSWORKS_ENTERPRISE = false;

@@ -270,7 +270,7 @@ module ServingHelper
 
   def get_kube_service_host(project, service)
     project.gsub! '_', '-'
-    "#{service}.#{project}.logicalclocks.com"
+    "#{service}.#{project}.hopsworks.ai"
   end
 
   def parse_model_server(value)
@@ -310,7 +310,7 @@ module ServingHelper
   end
 
   def get_istio_serving_host(project_name, serving_name)
-    serving_name + "." + get_kube_project_namespace(project_name) + ".logicalclocks.com"
+    serving_name + "." + get_kube_project_namespace(project_name) + ".hopsworks.ai"
   end
 
   def make_prediction_request_istio(project_name, serving_name, serving_endpoints, data)

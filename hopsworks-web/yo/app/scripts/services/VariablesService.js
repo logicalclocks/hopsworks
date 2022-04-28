@@ -76,6 +76,9 @@ angular.module('hopsWorksApp')
               isKFServing: function () {
                 return $http.get('/api/variables/kube_kfserving_installed');
               },
+              knativeDomainName: function () {
+                return $http.get('/api/variables/kube_knative_domain_name');
+              },
               getFilenameRegex: function (type) {
                 return $http.get('/api/variables/filename-regex?type=' + type);
               }
