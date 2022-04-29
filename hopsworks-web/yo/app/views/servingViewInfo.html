@@ -94,14 +94,14 @@
                 </td>
                 <td>{{servingViewInfoCtrl.getPredictInferenceEndpoint(servingViewInfoCtrl.serving, true)}}</td>
             </tr>
-            <tr ng-if="servingViewInfoCtrl.serving.servingTool === 'KFSERVING'">
+            <tr ng-if="servingViewInfoCtrl.serving.servingTool === 'KSERVE'">
                 <td>
                     Host header
                     <i class="fa fa-info-circle" tooltip-placement="auto left"
                        uib-tooltip="Host to be defined in the request header."
                        style="margin-left: 10px"></i>
                 </td>
-                <td>{{servingViewInfoCtrl.getKFServingHostHeader(servingViewInfoCtrl.serving)}}</td>
+                <td>{{servingViewInfoCtrl.getKServeHostHeader(servingViewInfoCtrl.serving)}}</td>
             </tr>
             <tr>
                 <td>
@@ -199,7 +199,7 @@
             <tr>
                 <td>
                     Serving tool <i class="fa fa-info-circle" tooltip-placement="auto left"
-                                        uib-tooltip="Serving tool used to deploy the model server, e.g KFSERVING or DEFAULT. DEFAULT refers to a single
+                                        uib-tooltip="Serving tool used to deploy the model server, e.g KSERVE or DEFAULT. DEFAULT refers to a single
                                         container (Community) or Kubernetes deployment (Enterprise)."
                                         style="margin-left: 10px"></i>
                 </td>

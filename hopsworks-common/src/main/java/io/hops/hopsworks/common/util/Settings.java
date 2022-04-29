@@ -268,7 +268,7 @@ public class Settings implements Serializable {
   private static final String VARIABLE_KUBE_DOCKER_CORES_FRACTION = "kube_docker_cores_fraction";
   private static final String VARIABLE_KUBE_DOCKER_MAX_CORES_ALLOCATION = "kube_docker_max_cores_allocation";
   private static final String VARIABLE_KUBE_INSTALLED = "kubernetes_installed";
-  private static final String VARIABLE_KUBE_KFSERVING_INSTALLED = "kube_kfserving_installed";
+  private static final String VARIABLE_KUBE_KSERVE_INSTALLED = "kube_kserve_installed";
   
 
   /*
@@ -691,7 +691,7 @@ public class Settings implements Serializable {
         KUBE_DOCKER_MAX_CORES_ALLOCATION);
       KUBE_DOCKER_CORES_FRACTION = setDoubleVar(VARIABLE_KUBE_DOCKER_CORES_FRACTION, KUBE_DOCKER_CORES_FRACTION);
       KUBE_INSTALLED = setBoolVar(VARIABLE_KUBE_INSTALLED, KUBE_INSTALLED);
-      KUBE_KFSERVING_INSTALLED = setBoolVar(VARIABLE_KUBE_KFSERVING_INSTALLED, KUBE_KFSERVING_INSTALLED);
+      KUBE_KSERVE_INSTALLED = setBoolVar(VARIABLE_KUBE_KSERVE_INSTALLED, KUBE_KSERVE_INSTALLED);
   
       HOPSWORKS_ENTERPRISE = setBoolVar(VARIABLE_HOPSWORKS_ENTERPRISE, HOPSWORKS_ENTERPRISE);
 
@@ -3298,10 +3298,10 @@ public class Settings implements Serializable {
     return KUBE_INSTALLED;
   }
   
-  private Boolean KUBE_KFSERVING_INSTALLED = false;
-  public synchronized Boolean getKubeKFServingInstalled() {
+  private Boolean KUBE_KSERVE_INSTALLED = false;
+  public synchronized Boolean getKubeKServeInstalled() {
     checkCache();
-    return KUBE_KFSERVING_INSTALLED;
+    return KUBE_KSERVE_INSTALLED;
   }
   
   private Boolean HOPSWORKS_ENTERPRISE = false;

@@ -77,8 +77,8 @@ describe "On #{ENV['OS']}" do
     # predictor
 
     it "should fail to create a serving with predictor" do
-      if kfserving_installed
-        skip "This test only runs without KFServing installed"
+      if kserve_installed
+        skip "This test only runs without KServe installed"
       end
 
       put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",

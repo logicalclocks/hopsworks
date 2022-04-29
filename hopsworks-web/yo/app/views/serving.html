@@ -99,9 +99,9 @@
                                                style="margin-left: 10px"></i>
                                         </div>
                                         <div style="margin-top: 12px;">
-                                            <label>KFServing</label>
+                                            <label>KServe</label>
                                             <i class="fa fa-info-circle" tooltip-placement="auto bottom"
-                                               uib-tooltip='Deploy a model with KFServing to leverage additional features such as scale-to-zero or online input transformations.'
+                                               uib-tooltip='Deploy a model with KServe to leverage additional features such as scale-to-zero or online input transformations.'
                                                style="margin-left: 10px"></i>
                                         </div>
                                         <div style="margin-top: 12px;"
@@ -188,16 +188,16 @@
                                                 ng-options="x.value for x in servingCtrl.artifactVersions"
                                                 ng-disabled="!servingCtrl.isKubernetes"
                                                 ng-change="servingCtrl.setArtifactVersion(servingCtrl.artifactVersion)"></select>
-                                        <!-- KFServing -->
+                                        <!-- KServe -->
                                         <div>
                                             <md-checkbox style="margin-top: 7px; margin-bottom: 13px;"
                                                          class="md-primary"
-                                                         name="kfserving"
-                                                         ng-model="servingCtrl.kfserving"
-                                                         ng-disabled="!servingCtrl.isKFServing"
-                                                         ng-change="servingCtrl.setKFServing(servingCtrl.kfserving)">
+                                                         name="kserve"
+                                                         ng-model="servingCtrl.kserve"
+                                                         ng-disabled="!servingCtrl.isKServe"
+                                                         ng-change="servingCtrl.setKServe(servingCtrl.kserve)">
                                                 <span style="color: darkred"
-                                                      ng-show="servingCtrl.kfserving && servingCtrl.editServing.modelServer === servingCtrl.modelServerPython && !servingCtrl.editServing.predictor">
+                                                      ng-show="servingCtrl.kserve && servingCtrl.editServing.modelServer === servingCtrl.modelServerPython && !servingCtrl.editServing.predictor">
                                                     Sklearn models only
                                                 </span>
                                             </md-checkbox>
@@ -229,7 +229,7 @@
                                                  style="padding: 0">
                                                 <input type="text" class="form-control"
                                                        ng-model="servingCtrl.editServing.transformer"
-                                                       ng-disabled="!servingCtrl.kfserving"
+                                                       ng-disabled="!servingCtrl.kserve"
                                                        ng-change="servingCtrl.setTransformer(servingCtrl.editServing.transformer)">
                                             </div>
                                             <div class="col-xs-4 col-sm-4 col-md-3 col-lg-2"
@@ -237,7 +237,7 @@
                                                 <label style="width: 100%">
                                                     <button class="btn btn-default"
                                                             ng-click="servingCtrl.selectFile('transformer')"
-                                                            ng-disabled="!servingCtrl.kfserving"
+                                                            ng-disabled="!servingCtrl.kserve"
                                                             style="width: 100%;">
                                                         <span>Browse</span>
                                                     </button>
@@ -257,13 +257,13 @@
                                                 <label>Predictor instances</label>
                                                 <i class="fa fa-info-circle" tooltip-placement="auto bottom"
                                                    uib-tooltip='Number of replicas for the model server. It refers to the exact number of replicas
-                                               for default servings or minimum number of replicas for KFServing deployments.'
+                                               for default servings or minimum number of replicas for KServe deployments.'
                                                    style="margin-left: 10px"></i>
                                             </div>
                                             <div style="margin-top: 30px;">
                                                 <label>Transformer instances</label>
                                                 <i class="fa fa-info-circle" tooltip-placement="auto bottom"
-                                                   uib-tooltip='Minimum number of replicas for the transformer in KFServing deployments.'
+                                                   uib-tooltip='Minimum number of replicas for the transformer in KServe deployments.'
                                                    style="margin-left: 10px"></i>
                                             </div>
                                             <div style="margin-top: 22px;"><label>Request Batching</label></div>
@@ -302,7 +302,7 @@
                                                          style="margin-top: 17px; margin-bottom: -2px;"
                                                          class="md-primary"
                                                          ng-model="servingCtrl.editServing.batchingEnabled"
-                                                         ng-disabled="servingCtrl.kfserving || servingCtrl.editServing.modelServer === servingCtrl.modelServerPython">
+                                                         ng-disabled="servingCtrl.kserve || servingCtrl.editServing.modelServer === servingCtrl.modelServerPython">
                                             </md-checkbox>
                                             <!-- Kafka -->
                                             <select class="form-control" style="margin-top: 12px; width: 40%"
@@ -324,14 +324,14 @@
                                                 <div class="col-sm-3 col-md-3 col-lg-3">
                                                     <md-checkbox style="margin-top: 3px" class="md-primary"
                                                                  ng-model="servingCtrl.inferenceLoggingModelInputs"
-                                                                 ng-disabled="servingCtrl.editServing.kafkaTopicDTO.name === 'NONE' || !servingCtrl.kfserving">
+                                                                 ng-disabled="servingCtrl.editServing.kafkaTopicDTO.name === 'NONE' || !servingCtrl.kserve">
                                                         Model inputs
                                                     </md-checkbox>
                                                 </div>
                                                 <div class="col-sm-3 col-md-3 col-lg-3">
                                                     <md-checkbox style="margin-top: 3px" class="md-primary"
                                                                  ng-model="servingCtrl.inferenceLoggingPredictions"
-                                                                 ng-disabled="servingCtrl.editServing.kafkaTopicDTO.name === 'NONE' || !servingCtrl.kfserving">
+                                                                 ng-disabled="servingCtrl.editServing.kafkaTopicDTO.name === 'NONE' || !servingCtrl.kserve">
                                                         Predictions
                                                     </md-checkbox>
                                                 </div>

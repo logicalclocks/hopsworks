@@ -88,8 +88,8 @@ module VariablesHelper
     getVar("kubernetes_installed").value.eql? "true"
   end
 
-  def kfserving_installed
-    getVar("kube_kfserving_installed").value.eql? "true"
+  def kserve_installed
+    getVar("kube_kserve_installed").value.eql? "true"
   end
 
 end

@@ -159,14 +159,14 @@ describe "On #{ENV['OS']}" do
            requestedInstances: 1
           }
       expect_status_details(400, error_code: 240024)
-      expect_json(usrMsg: "Fine-grained inference logging only supported in KFServing deployments")
+      expect_json(usrMsg: "Fine-grained inference logging only supported in KServe deployments")
     end
 
     # transformer
 
     it "should fail to create a serving with transformer" do
-      if kfserving_installed
-        skip "This test only runs without KFServing installed"
+      if kserve_installed
+        skip "This test only runs without KServe installed"
       end
 
       put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
@@ -225,7 +225,7 @@ describe "On #{ENV['OS']}" do
            requestedInstances: serving[:instances]
           }
       expect_status_details(400, error_code: 240024)
-      expect_json(usrMsg: "Fine-grained inference logging only supported in KFServing deployments")
+      expect_json(usrMsg: "Fine-grained inference logging only supported in KServe deployments")
     end
   end
 end
