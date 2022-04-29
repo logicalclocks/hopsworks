@@ -80,8 +80,8 @@ describe "On #{ENV['OS']}" do
       end
 
       it "should add user to kube config map when user's status changes to activated" do
-        if !kfserving_installed
-          skip "This test only runs with KFServing installed"
+        if !kserve_installed
+          skip "This test only runs with KServe installed"
         end
         id = user[:uid]
         username = user[:username]
@@ -102,8 +102,8 @@ describe "On #{ENV['OS']}" do
       end
 
       it "should update user role in kube config map when changing roles of a user" do
-        if !kfserving_installed
-          skip "This test only runs with KFServing installed"
+        if !kserve_installed
+          skip "This test only runs with KServe installed"
         end
         newUser = create_user_with_role("HOPS_USER")
         admin_update_user(newUser.uid, {status: "ACTIVATED_ACCOUNT"})
@@ -131,8 +131,8 @@ describe "On #{ENV['OS']}" do
       end
 
       it "should create serving api key when user's status changes to activated" do
-        if !kfserving_installed
-          skip "This test only runs with KFServing installed"
+        if !kserve_installed
+          skip "This test only runs with KServe installed"
         end
         id = user[:uid]
         username = user[:username]
@@ -159,8 +159,8 @@ describe "On #{ENV['OS']}" do
       end
 
       it "should remove user from kube config map when user's status changes to other than activated" do
-        if !kfserving_installed
-          skip "This test only runs with KFServing installed"
+        if !kserve_installed
+          skip "This test only runs with KServe installed"
         end
         id = user[:uid]
         username = user[:username]
@@ -180,8 +180,8 @@ describe "On #{ENV['OS']}" do
       end
 
       it "should delete serving api key when user's status changes to other than activated" do
-        if !kfserving_installed
-          skip "This test only runs with KFServing installed"
+        if !kserve_installed
+          skip "This test only runs with KServe installed"
         end
         id = user[:uid]
         username = user[:username]
@@ -291,8 +291,8 @@ describe "On #{ENV['OS']}" do
         expect(json_body[:password]).to be_nil
       end
       it "should add new activated user to kube config map" do
-        if !kfserving_installed
-          skip "This test only runs with KFServing installed"
+        if !kserve_installed
+          skip "This test only runs with KServe installed"
         end
         register_user_as_admin("#{random_id}@email.com", "name", "last", password: "Pass123", maxNumProjects: "5",
                                status: "ACTIVATED_ACCOUNT")
@@ -306,8 +306,8 @@ describe "On #{ENV['OS']}" do
         expect(cm["data"][username]).to eq roles.join(",")
       end
       it "should create serving api key for a new activated user" do
-        if !kfserving_installed
-          skip "This test only runs with KFServing installed"
+        if !kserve_installed
+          skip "This test only runs with KServe installed"
         end
         register_user_as_admin("#{random_id}@email.com", "name", "last", password: "Pass123", maxNumProjects: "5",
                                        status: "ACTIVATED_ACCOUNT")
@@ -341,8 +341,8 @@ describe "On #{ENV['OS']}" do
         expect(json_body[:password]).not_to be_nil
       end
       it "should not add new non-activated user without status to kube config map" do
-        if !kfserving_installed
-          skip "This test only runs with KFServing installed"
+        if !kserve_installed
+          skip "This test only runs with KServe installed"
         end
         register_user_as_admin("#{random_id}@email.com", "name", "last")
         expect_status(201)
@@ -353,8 +353,8 @@ describe "On #{ENV['OS']}" do
         expect(cm["data"]).not_to include(username)
       end
       it "should not create serving api key for a non-activated new user" do
-        if !kfserving_installed
-          skip "This test only runs with KFServing installed"
+        if !kserve_installed
+          skip "This test only runs with KServe installed"
         end
         register_user_as_admin("#{random_id}@email.com", "name", "last")
         expect_status(201)
@@ -374,8 +374,8 @@ describe "On #{ENV['OS']}" do
         expect_status_details(204)
       end
       it "should remove deleted user from kube config map" do
-        if !kfserving_installed
-          skip "This test only runs with KFServing installed"
+        if !kserve_installed
+          skip "This test only runs with KServe installed"
         end
         register_user_as_admin("#{random_id}@email.com", "name", "last", maxNumProjects: "5", status: "ACTIVATED_ACCOUNT")
         newUser = json_body
@@ -394,8 +394,8 @@ describe "On #{ENV['OS']}" do
       end
 
       it "should remove serving api key when deleting a user" do
-        if !kfserving_installed
-          skip "This test only runs with KFServing installed"
+        if !kserve_installed
+          skip "This test only runs with KServe installed"
         end
         register_user_as_admin("#{random_id}@email.com", "name", "last", maxNumProjects: "5", status: "ACTIVATED_ACCOUNT")
         newUser = json_body

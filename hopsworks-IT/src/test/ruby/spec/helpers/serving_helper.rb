@@ -97,7 +97,7 @@ module ServingHelper
     copy(SKLEARN_SCRIPT_TOUR_FILE_LOCATION, "/Projects/#{project_name}/Models/irisflowerclassifier/1/", "#{user}", "#{project_name}__Models", 750, "#{project_name}")
   end
 
-  def purge_all_kfserving_instances(project_name="", should_exist=true)
+  def purge_all_kserve_instances(project_name="", should_exist=true)
 
     if !project_name.empty?
       # Purge all inferenceservices in a namespace
