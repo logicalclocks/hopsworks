@@ -12,11 +12,11 @@ _Cluster Settings_ from the dropdown menu and going to the _Services_ tab.
 </figure>
 
 This page give administrators an overview of which services are running on the cluster. 
-It provides information about their status as reported by Kagent which, in turn, monitor the status of the different 
-SystemD units.
+It provides information about their status as reported by agents that monitor the status of the different 
+Systemd units.
 
 Columns in the services table represent machines in your cluster. Each service running on a machine will have a status
-_running_ (green), _stopped_ (gray), or _bad_ (red). 
+_running_ (green), _stopped_ (gray), or _bad health_ (red). 
 Services are divided into groups, and you can search for a service by its name or group. You can also search for
 machines by their host name.
 
@@ -32,7 +32,7 @@ After you find the correct service you will be able to **start**, **stop** or **
   <a  href="../../assets/images/admin/services/start.png">
     <img src="../../assets/images/admin/services/start.png" alt="start services" />
   </a>
-  <figcaption>Start, Stop and Restart a services</figcaption>
+  <figcaption>Start, Stop and Restart a service</figcaption>
 </figure>
 
 !!!Note
