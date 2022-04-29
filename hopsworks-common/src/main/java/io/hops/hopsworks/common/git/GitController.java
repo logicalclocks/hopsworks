@@ -231,6 +231,7 @@ public class GitController {
   public GitOpExecution pull(PullCommandConfiguration configDTO, Project project, Users hopsworksUser,
                              Integer repositoryId) throws GitOpException, HopsSecurityException,
       IllegalArgumentException {
+    String userFullName = hopsworksUser.getFname() + " " + hopsworksUser.getLname();
     commandConfigurationValidator.verifyRemoteNameAndBranch(configDTO.getRemoteName(), configDTO.getBranchName());
     GitRepository repository = commandConfigurationValidator.verifyRepository(project, repositoryId);
     String repositoryFullPath = inodeController.getPath(repository.getInode());
@@ -240,6 +241,7 @@ public class GitController {
             .setForce(configDTO.isForce())
             .setBranchName(configDTO.getBranchName())
             .setPath(repositoryFullPath)
+            .setCommitter(new CommitterSignature(userFullName, hopsworksUser.getEmail()))
             .build();
     return executionController.createExecution(pullCommandConfiguration, project, hopsworksUser, repository);
   }
