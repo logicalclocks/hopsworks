@@ -119,10 +119,10 @@ public class InferenceController {
           inferenceResult.getR());
     }
   
-    // There is a bug in KFServing when using the inference logging that always returns 200 OK even when the request
+    // There is a bug in KServe when using the inference logging that always returns 200 OK even when the request
     // is malformed. The following check is a workaround to detect this corner case.
     // https://github.com/kubeflow/kfserving/issues/1530
-    if (serving.getServingTool() == ServingTool.KFSERVING && serving.getKafkaTopic() != null) {
+    if (serving.getServingTool() == ServingTool.KSERVE && serving.getKafkaTopic() != null) {
       JSONObject response = new JSONObject(inferenceResult.getR());
       if (response.has("error")){
         String errorStatusCode = "400";

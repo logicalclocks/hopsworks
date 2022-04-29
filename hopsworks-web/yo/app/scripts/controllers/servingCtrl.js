@@ -102,7 +102,7 @@ angular.module('hopsWorksApp')
             self.pythonSelectScriptErrorMsg = "Please select a .py or .ipynb file."
             self.nameRegex = /^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$/;
 
-            self.kfserving = false;
+            self.kserve = false;
 
             self.editServing = {};
             self.editServing.batchingEnabled = false;
@@ -118,7 +118,7 @@ angular.module('hopsWorksApp')
             self.modelServerPython = "PYTHON";
             self.modelServerTensorflow = "TENSORFLOW_SERVING";
             self.servingToolDefault = "DEFAULT";
-            self.servingToolKFServing = "KFSERVING";
+            self.servingToolKServe = "KSERVE";
 
             self.inferenceLoggingDefaultModelInputs = true;
             self.inferenceLoggingDefaultPredictions = true;
@@ -290,7 +290,7 @@ angular.module('hopsWorksApp')
                 if (self.editServing.transformer != null) {
                     self.transformerSliderOptions.value = serving.requestedTransformerInstances;
                 }
-                self.kfserving = self.editServing.servingTool === self.servingToolKFServing;
+                self.kserve = self.editServing.servingTool === self.servingToolKServe;
                 self.validateModelPath(serving.modelPath, serving.name)
 
                 if (serving.predictorResourceConfig) {
@@ -298,7 +298,7 @@ angular.module('hopsWorksApp')
                 }
 
                 self.showCreateServingForm(false);
-                self.setKFServing();
+                self.setKServe();
                 self.setInferenceLogging(self.editServing.inferenceLogging);
             };
 
@@ -569,7 +569,7 @@ angular.module('hopsWorksApp')
                             });
                     }
                 } else if (component === "transformer") {
-                    if (self.kfserving) {
+                    if (self.kserve) {
                         ModalService.selectFile('lg', self.projectId, self.pythonScriptRegex,
                             self.pythonSelectScriptErrorMsg, false).then(
                             function (success) {
@@ -616,7 +616,7 @@ angular.module('hopsWorksApp')
                 self.predictorSliderOptions.value = 1;
                 self.transformerSliderOptions.value = 0;
                 self.showAdvancedForm = false;
-                self.kfserving = false;
+                self.kserve = false;
 
                 self.editServing = {};
                 self.editServing.modelPath = null;
@@ -945,11 +945,11 @@ angular.module('hopsWorksApp')
                 }
 
                 if (self.editServing.predictor == null) {
-                    self.editServing.kfserving = true;
-                    self.setKFServing();
+                    self.editServing.kserve = true;
+                    self.setKServe();
                 } else {
                     if (self.editServing.predictor.includes("/")) {
-                        // If user selected a predictor, enable KFServing and set new artifact
+                        // If user selected a predictor, enable KServe and set new artifact
                         if (self.editServing.artifactVersion !== self.artifactCreate) {
                             self.artifactVersion = self.artifactVersions[0]; // CREATE
                             self.editServing.artifactVersion = self.artifactVersion.key;
@@ -963,15 +963,15 @@ angular.module('hopsWorksApp')
                     self.transformerSliderOptions.options.disabled = true;
                 } else {
                     if (self.editServing.transformer.includes("/")) {
-                        // If user selected a transformer, enable KFServing and set new artifact
+                        // If user selected a transformer, enable KServe and set new artifact
                         if (self.editServing.artifactVersion !== self.artifactCreate) {
                             self.artifactVersion = self.artifactVersions[0]; // CREATE
                             self.editServing.artifactVersion = self.artifactVersion.key;
                         }
                     }
                     self.transformerSliderOptions.options.disabled = false;
-                    self.kfserving = true;
-                    self.setKFServing();
+                    self.kserve = true;
+                    self.setKServe();
                 }
             };
 
@@ -993,24 +993,24 @@ angular.module('hopsWorksApp')
                 self.artifactVersions = [];
                 self.artifactVersion = null;
 
-                self.kfserving = false;
+                self.kserve = false;
 
                 if (modelServer === self.modelServerPython) {
                     // request batching is not supported with Python
                     self.editServing.batchingEnabled = false;
                 }
 
-                // refresh kfserving settings
-                self.setKFServing();
+                // refresh kserve settings
+                self.setKServe();
             };
 
-            self.setKFServing = function (kfserving) {
-                if (typeof kfserving !== 'undefined') {
-                    self.kfserving = kfserving;
+            self.setKServe = function (kserve) {
+                if (typeof kserve !== 'undefined') {
+                    self.kserve = kserve;
                 }
 
-                if (self.kfserving) {
-                    self.editServing.servingTool = self.servingToolKFServing;
+                if (self.kserve) {
+                    self.editServing.servingTool = self.servingToolKServe;
                     self.editServing.batchingEnabled = false;
                     self.predictorSliderOptions.options.floor = 0;
                     if (self.editServing.modelServer === self.modelServerTensorflow) {
@@ -1043,10 +1043,10 @@ angular.module('hopsWorksApp')
 
             // System variables
 
-            self.setIsKFServing = function (isKFServing) {
-                self.isKFServing = isKFServing;
-                if (!self.isKFServing) {
-                    self.kfserving = false;
+            self.setIsKServe = function (isKServe) {
+                self.isKServe = isKServe;
+                if (!self.isKServe) {
+                    self.kserve = false;
                 }
             };
 
@@ -1116,13 +1116,13 @@ angular.module('hopsWorksApp')
                     }
                 );
 
-                VariablesService.isKFServing().then(
+                VariablesService.isKServe().then(
                     function (success) {
-                        self.setIsKFServing(success.data.successMessage === "true")
+                        self.setIsKServe(success.data.successMessage === "true")
                     },
                     function (error) {
                         growl.error(error.data.errorMsg, {
-                            title: 'Failed to fetch if kfserving is enabled',
+                            title: 'Failed to fetch if KServe is enabled',
                             ttl: 15000
                         });
                     }

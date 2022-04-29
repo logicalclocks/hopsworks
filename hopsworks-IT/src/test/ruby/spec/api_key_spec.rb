@@ -101,8 +101,8 @@ describe "On #{ENV['OS']}" do
       expect(json_body[:name]).to eq('firstKey5')
     end
     it "should not create a kube secret when a key is created without serving scope" do
-      if !kfserving_installed
-        skip "This test only runs with KFServing installed"
+      if !kserve_installed
+        skip "This test only runs with KServe installed"
       end
       serving_key = create_api_key('keyWithServingScopeInvalid', %w(JOB))
       expect_status(201)
@@ -112,8 +112,8 @@ describe "On #{ENV['OS']}" do
       expect(secret).to be_nil
     end
     it "should create a kube secret when a key is created with serving scope" do
-      if !kfserving_installed
-        skip "This test only runs with KFServing installed"
+      if !kserve_installed
+        skip "This test only runs with KServe installed"
       end
       serving_key = create_api_key('keyWithServingScope', %w(JOB SERVING))
       expect_status(201)
@@ -133,8 +133,8 @@ describe "On #{ENV['OS']}" do
       expect(json_body[:scope] - %w(SERVING DATASET_CREATE)).to be_empty
     end
     it "should update the kube secret when a key is updated" do
-      if !kfserving_installed
-        skip "This test only runs with KFServing installed"
+      if !kserve_installed
+        skip "This test only runs with KServe installed"
       end
       # remove serving scope
       edit_api_key('keyWithServingScope', %w(JOB))
@@ -160,8 +160,8 @@ describe "On #{ENV['OS']}" do
       expect(json_body[:scope] - %w(SERVING)).to be_empty
     end
     it "should delete kube secret when serving scope is removed" do
-      if !kfserving_installed
-        skip "This test only runs with KFServing installed"
+      if !kserve_installed
+        skip "This test only runs with KServe installed"
       end
       edit_api_key_delete_scope('keyWithServingScope', %w(SERVING))
       expect_status(200)
@@ -176,8 +176,8 @@ describe "On #{ENV['OS']}" do
       expect(json_body[:scope] - %w(JOB DATASET_CREATE SERVING)).to be_empty
     end
     it "should add kube secret when serving scope is added" do
-      if !kfserving_installed
-        skip "This test only runs with KFServing installed"
+      if !kserve_installed
+        skip "This test only runs with KServe installed"
       end
       edit_api_key_add_scope('keyWithServingScope', %w(SERVING))
       expect_status(200)
@@ -195,15 +195,15 @@ describe "On #{ENV['OS']}" do
       expect_status(204)
       get_api_keys
       expect_status(200)
-      if kfserving_installed
+      if kserve_installed
         expect(5).to eq(json_body[:count])
       else
         expect(3).to eq(json_body[:count])
       end
     end
     it "should delete the kube secret of a key with serving scope" do
-      if !kfserving_installed
-        skip "This test only runs with KFServing installed"
+      if !kserve_installed
+        skip "This test only runs with KServe installed"
       end
       get_api_key('keyWithServingScope')
       api_key_prefix=json_body[:prefix]
@@ -216,7 +216,7 @@ describe "On #{ENV['OS']}" do
     end
     it "should delete all keys" do
       serving_key_prefix = nil
-      if kfserving_installed
+      if kserve_installed
         serving_key = create_api_key('keyWithServingScope3', %w(JOB SERVING))
         serving_key_prefix = json_body[:prefix]
       end
@@ -225,7 +225,7 @@ describe "On #{ENV['OS']}" do
       get_api_keys
       expect_status(200)
       expect(0).to eq(json_body[:count])
-      if kfserving_installed
+      if kserve_installed
         # check secret was removed from hops-system namespace
         secret_name = get_api_key_kube_hops_secret_name(serving_key_prefix)
         secret = get_api_key_kube_secret("hops-system", secret_name)

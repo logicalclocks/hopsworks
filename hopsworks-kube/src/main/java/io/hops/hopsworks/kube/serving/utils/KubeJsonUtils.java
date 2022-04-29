@@ -11,7 +11,7 @@ import io.fabric8.kubernetes.api.model.ResourceRequirements;
 import io.fabric8.kubernetes.api.model.Volume;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.kube.common.KubeClientService;
-import io.hops.hopsworks.kube.common.KubeKfServingClientService;
+import io.hops.hopsworks.kube.common.KubeKServeClientService;
 import io.hops.hopsworks.persistence.entity.serving.DeployableComponentResources;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -80,9 +80,9 @@ public class KubeJsonUtils {
     
     return new JSONObject() {
       {
-        put("apiVersion", String.format("%s/%s", KubeKfServingClientService.INFERENCESERVICE_GROUP,
-          KubeKfServingClientService.INFERENCESERVICE_VERSION));
-        put("kind", KubeKfServingClientService.INFERENCESERVICE_KIND);
+        put("apiVersion", String.format("%s/%s", KubeKServeClientService.INFERENCESERVICE_GROUP,
+          KubeKServeClientService.INFERENCESERVICE_VERSION));
+        put("kind", KubeKServeClientService.INFERENCESERVICE_KIND);
         put("metadata", metadata);
         put("spec", pipeline);
       }

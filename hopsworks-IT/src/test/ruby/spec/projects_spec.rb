@@ -430,8 +430,8 @@ describe "On #{ENV['OS']}" do
           expect(memb[:teamRole]).to eq ("Data scientist")
         end
         it "should add new member to kube config map" do
-          if !kfserving_installed
-            skip "This test only runs with KFServing installed"
+          if !kserve_installed
+            skip "This test only runs with KServe installed"
           end
           new_member = create_user
           email = new_member[:email]
@@ -444,8 +444,8 @@ describe "On #{ENV['OS']}" do
           expect(cm["data"][username]).to eql "Data scientist"
         end
         it "should copy kube serving secret when adding a new member" do
-          if !kfserving_installed
-            skip "This test only runs with KFServing installed"
+          if !kserve_installed
+            skip "This test only runs with KServe installed"
           end
           new_member = create_user
           email = new_member[:email]
@@ -466,8 +466,8 @@ describe "On #{ENV['OS']}" do
           expect(memb).to be_nil
         end
         it "should remove old member from kube config map" do
-          if !kfserving_installed
-            skip "This test only runs with KFServing installed"
+          if !kserve_installed
+            skip "This test only runs with KServe installed"
           end
           new_member = create_user
           email = new_member[:email]
@@ -485,8 +485,8 @@ describe "On #{ENV['OS']}" do
           expect(cm["data"]).not_to include(username)
         end
         it "should delete kube serving secret when removing a new member" do
-          if !kfserving_installed
-            skip "This test only runs with KFServing installed"
+          if !kserve_installed
+            skip "This test only runs with KServe installed"
           end
           new_member = create_user
           email = new_member[:email]
@@ -568,8 +568,8 @@ describe "On #{ENV['OS']}" do
           expect(memb[:teamRole]).to eq ("Data scientist")
         end
         it "should update member project role in the kube config map" do
-          if !kfserving_installed
-            skip "This test only runs with KFServing installed"
+          if !kserve_installed
+            skip "This test only runs with KServe installed"
           end
           new_member = create_user
           email = new_member[:email]
@@ -621,8 +621,8 @@ describe "On #{ENV['OS']}" do
           expect(memb2).to be_present
         end
         it "should add multiple members to kube config map" do
-          if !kfserving_installed
-            skip "This test only runs with KFServing installed"
+          if !kserve_installed
+            skip "This test only runs with KServe installed"
           end
           member_1 = create_user
           member_2 = create_user
@@ -643,8 +643,8 @@ describe "On #{ENV['OS']}" do
           expect(cm["data"][member_2[:username]]).to eql "Data owner"
         end
         it "should copy kube secrets when adding multiple members" do
-          if !kfserving_installed
-            skip "This test only runs with KFServing installed"
+          if !kserve_installed
+            skip "This test only runs with KServe installed"
           end
           member_1 = create_user
           member_2 = create_user

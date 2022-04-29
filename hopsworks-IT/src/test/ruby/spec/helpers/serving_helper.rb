@@ -25,20 +25,20 @@ SKLEARN_SCRIPT_FILE_NAME="iris_flower_classifier.py"
 SKLEARN_SCRIPT_TOUR_FILE_LOCATION = "/user/hdfs/tensorflow_demo/notebooks/end_to_end_pipeline/sklearn/#{SKLEARN_SCRIPT_FILE_NAME}"
 TRANSFORMER_SCRIPT_FILE_NAME="transformer.py"
 TRANSFORMER_NB_FILE_NAME="transformer.ipynb"
-TRANSFORMER_SCRIPT_TOUR_FILE_LOCATION = "/user/hdfs/tensorflow_demo/notebooks/serving/kfserving/tensorflow/#{TRANSFORMER_SCRIPT_FILE_NAME}"
-TRANSFORMER_NB_TOUR_FILE_LOCATION = "/user/hdfs/tensorflow_demo/notebooks/serving/kfserving/tensorflow/#{TRANSFORMER_NB_FILE_NAME}"
+TRANSFORMER_SCRIPT_TOUR_FILE_LOCATION = "/user/hdfs/tensorflow_demo/notebooks/serving/kserve/tensorflow/#{TRANSFORMER_SCRIPT_FILE_NAME}"
+TRANSFORMER_NB_TOUR_FILE_LOCATION = "/user/hdfs/tensorflow_demo/notebooks/serving/kserve/tensorflow/#{TRANSFORMER_NB_FILE_NAME}"
 
 module ServingHelper
 
-  def with_kfserving_tensorflow(project_id, project_name, user)
+  def with_kserve_tensorflow(project_id, project_name, user)
     copy_mnist_files(project_name, user)
-    @serving ||= create_kfserving_tensorflow(project_id, project_name)
+    @serving ||= create_kserve_tensorflow(project_id, project_name)
     @topic = ProjectTopics.find(@serving[:kafka_topic_id])
   end
 
-  def with_kfserving_sklearn(project_id, project_name, user)
+  def with_kserve_sklearn(project_id, project_name, user)
     copy_iris_files(@project[:projectname], @user[:username])
-    @serving ||= create_kfserving_sklearn(project_id, project_name)
+    @serving ||= create_kserve_sklearn(project_id, project_name)
     @topic = ProjectTopics.find(@serving[:kafka_topic_id])
   end
 
@@ -54,7 +54,7 @@ module ServingHelper
     @topic = ProjectTopics.find(@serving[:kafka_topic_id])
   end
 
-  def create_kfserving_tensorflow(project_id, project_name)
+  def create_kserve_tensorflow(project_id, project_name)
     serving_name = "testmodel#{short_random_id}"
     put "#{ENV['HOPSWORKS_API']}/project/#{project_id}/serving/",
               {name: serving_name,
@@ -69,14 +69,14 @@ module ServingHelper
                },
                inferenceLogging: "ALL",
                modelServer: "TENSORFLOW_SERVING",
-               servingTool: "KFSERVING",
+               servingTool: "KSERVE",
                requestedInstances: 1
               }
     expect_status_details(201)
     Serving.find_by(project_id: project_id, name: serving_name)
   end
 
-  def create_kfserving_sklearn(project_id, project_name)
+  def create_kserve_sklearn(project_id, project_name)
     serving_name = "testmodel#{short_random_id}"
     put "#{ENV['HOPSWORKS_API']}/project/#{project_id}/serving/",
               {name: serving_name,
@@ -91,7 +91,7 @@ module ServingHelper
                },
                inferenceLogging: "ALL",
                modelServer: "PYTHON",
-               servingTool: "KFSERVING",
+               servingTool: "KSERVE",
                requestedInstances: 1
               }
     expect_status_details(201)
@@ -158,7 +158,7 @@ module ServingHelper
     copy(TRANSFORMER_NB_TOUR_FILE_LOCATION, "/Projects/#{project_name}/Models/irisflowerclassifier/1/", "#{user}", "#{project_name}__Models", 750, "#{project_name}")
   end
 
-  def purge_all_kfserving_instances(project_name="", should_exist=true)
+  def purge_all_kserve_instances(project_name="", should_exist=true)
 
     if !project_name.empty?
       # Purge all inferenceservices in a namespace
@@ -284,7 +284,7 @@ module ServingHelper
   def parse_serving_tool(value)
     return case
       when value == 0 ; "DEFAULT"
-      when value == 1 ; "KFSERVING"
+      when value == 1 ; "KSERVE"
       else puts "Serving tool value cannot be parsed"
       end
   end
@@ -324,7 +324,7 @@ module ServingHelper
       end
       post endpoint, data
     rescue
-      p "kfserving: Error making prediction request through istio - #{$!}"
+      p "kserve: Error making prediction request through istio - #{$!}"
     ensure
       Airborne.configure do |config|
         config.base_url = "https://#{ENV['WEB_HOST']}:#{ENV['WEB_PORT']}"

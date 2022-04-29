@@ -2,13 +2,13 @@
  Copyright (C) 2022, Logical Clocks AB. All rights reserved
 =end
 
-# serving_kfserving_tensorflow_spec.rb: Tests for serving tensorflow models on KFServing
+# serving_kserve_tensorflow_spec.rb: Tests for serving tensorflow models on KServe
 
 require 'json'
 
 describe "On #{ENV['OS']}" do
   after (:all) do
-    clean_all_test_projects(spec: "serving_kfserving_tensorflow")
+    clean_all_test_projects(spec: "serving_kserve_tensorflow")
   end
 
   describe "kubernetes not installed" do
@@ -30,11 +30,11 @@ describe "On #{ENV['OS']}" do
                name: "NONE"
            },
            modelServer: "TENSORFLOW_SERVING",
-           servingTool: "KFSERVING",
+           servingTool: "KSERVE",
            requestedInstances: 1
           }
       expect_status_details(400, error_code: 240014)
-      expect_json(errorMsg: "Kubernetes is not installed", usrMsg: "Serving tool not supported. KFServing requires Kubernetes to be installed")
+      expect_json(errorMsg: "Kubernetes is not installed", usrMsg: "Serving tool not supported. KServe requires Kubernetes to be installed")
     end
   end
 
@@ -45,14 +45,14 @@ describe "On #{ENV['OS']}" do
       end
     end
 
-    describe "kfserving not installed" do
+    describe "kserve not installed" do
       before :all do
-        if kfserving_installed
-          skip "These tests only runs without KFServing installed"
+        if kserve_installed
+          skip "These tests only runs without KServe installed"
         end
       end
 
-      it "should fail to create a serving when KFServing is not installed" do
+      it "should fail to create a serving when KServe is not installed" do
         put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
           {name: "mnist",
            modelPath: "/Projects/#{@project[:projectname]}/Models/mnist",
@@ -62,18 +62,18 @@ describe "On #{ENV['OS']}" do
                name: "NONE"
            },
            modelServer: "TENSORFLOW_SERVING",
-           servingTool: "KFSERVING",
+           servingTool: "KSERVE",
            requestedInstances: 1
           }
         expect_status_details(400, error_code: 240015)
-        expect_json(errorMsg: "KFServing is not installed or disabled", usrMsg: "Serving tool not supported")
+        expect_json(errorMsg: "KServe is not installed or disabled", usrMsg: "Serving tool not supported")
       end
     end
 
-    describe "kfserving installed" do
+    describe "kserve installed" do
       before :all do
-        if !kfserving_installed
-          skip "These tests only runs with KFServing installed"
+        if !kserve_installed
+          skip "These tests only runs with KServe installed"
         end
       end
 
@@ -92,7 +92,7 @@ describe "On #{ENV['OS']}" do
                  modelVersion: 1,
                  batchingEnabled: false,
                  modelServer: "TENSORFLOW_SERVING",
-                 servingTool: "KFSERVING",
+                 servingTool: "KSERVE",
                  requestedInstances: 1
                 }
             expect_status_details(401, error_code: 200003)
@@ -121,7 +121,7 @@ describe "On #{ENV['OS']}" do
                      name: "NONE"
                  },
                  modelServer: "TENSORFLOW_SERVING",
-                 servingTool: "KFSERVING",
+                 servingTool: "KSERVE",
                  requestedInstances: 1
                 }
             expect_status_details(422)
@@ -138,7 +138,7 @@ describe "On #{ENV['OS']}" do
                  batchingEnabled: false,
                  modelVersion: 1,
                  modelServer: "TENSORFLOW_SERVING",
-                 servingTool: "KFSERVING",
+                 servingTool: "KSERVE",
                  requestedInstances: 1
                 }
             expect_status_details(201)
@@ -155,7 +155,7 @@ describe "On #{ENV['OS']}" do
                  batchingEnabled: false,
                  modelVersion: 1,
                  modelServer: "TENSORFLOW_SERVING",
-                 servingTool: "KFSERVING",
+                 servingTool: "KSERVE",
                  transformer: "/Projects/#{@project[:projectname]}/Models/mnist/1/transformer.py",
                  requestedInstances: 1,
                  requestedTransformerInstances: 1
@@ -174,7 +174,7 @@ describe "On #{ENV['OS']}" do
                  modelVersion: 1,
                  artifactVersion: "1",
                  modelServer: "TENSORFLOW_SERVING",
-                 servingTool: "KFSERVING",
+                 servingTool: "KSERVE",
                  requestedInstances: 1
                 }
             expect_status_details(400, error_code: 240019)
@@ -189,7 +189,7 @@ describe "On #{ENV['OS']}" do
                  modelVersion: 1,
                  artifactVersion: "0", # MODEL-ONLY
                  modelServer: "TENSORFLOW_SERVING",
-                 servingTool: "KFSERVING",
+                 servingTool: "KSERVE",
                  transformer: "/Projects/#{@project[:projectname]}/Models/mnist/1/transformer.py",
                  requestedInstances: 1,
                  requestedTransformerInstances: 1
@@ -207,7 +207,7 @@ describe "On #{ENV['OS']}" do
                 modelVersion: 1,
                 artifactVersion: 99,
                 modelServer: "TENSORFLOW_SERVING",
-                servingTool: "KFSERVING",
+                servingTool: "KSERVE",
                 transformer: "transformer.py",
                 requestedInstances: 1,
                 requestedTransformerInstances: 1
@@ -225,7 +225,7 @@ describe "On #{ENV['OS']}" do
                 batchingEnabled: false,
                 modelVersion: 1,
                 modelServer: "TENSORFLOW_SERVING",
-                servingTool: "KFSERVING",
+                servingTool: "KSERVE",
                 predictor: "/Projects/#{@project[:projectname]}/Models/mnist/1/transformer.py",
                 requestedInstances: 1,
                 requestedTransformerInstances: 1
@@ -242,7 +242,7 @@ describe "On #{ENV['OS']}" do
                  batchingEnabled: false,
                  modelVersion: 1,
                  modelServer: "TENSORFLOW_SERVING",
-                 servingTool: "KFSERVING",
+                 servingTool: "KSERVE",
                  transformer: "/Projects/#{@project[:projectname]}/Models/mnist/invalid.ext",
                  requestedInstances: 1,
                  requestedTransformerInstances: 1
@@ -258,7 +258,7 @@ describe "On #{ENV['OS']}" do
                  batchingEnabled: false,
                  modelVersion: 1,
                  modelServer: "TENSORFLOW_SERVING",
-                 servingTool: "KFSERVING",
+                 servingTool: "KSERVE",
                  transformer: "/Projects/#{@project[:projectname]}/Models/mnist/non-existent.py",
                  requestedInstances: 1,
                  requestedTransformerInstances: 1
@@ -275,7 +275,7 @@ describe "On #{ENV['OS']}" do
                  batchingEnabled: false,
                  modelVersion: 1,
                  modelServer: "TENSORFLOW_SERVING",
-                 servingTool: "KFSERVING",
+                 servingTool: "KSERVE",
                  transformer: "/Projects/#{@project[:projectname]}/Models/mnist/1/transformer.py",
                  requestedInstances: 1,
                  requestedTransformerInstances: 1
@@ -294,7 +294,7 @@ describe "On #{ENV['OS']}" do
                  batchingEnabled: false,
                  modelVersion: 1,
                  modelServer: "TENSORFLOW_SERVING",
-                 servingTool: "KFSERVING",
+                 servingTool: "KSERVE",
                  transformer: "/Projects/#{@project[:projectname]}/Models/mnist/1/transformer.ipynb",
                  requestedInstances: 1,
                  requestedTransformerInstances: 1
@@ -317,7 +317,7 @@ describe "On #{ENV['OS']}" do
                  modelVersion: 1,
                  artifactVersion: 1,
                  modelServer: "TENSORFLOW_SERVING",
-                 servingTool: "KFSERVING",
+                 servingTool: "KSERVE",
                  transformer: "/Projects/#{@project[:projectname]}/Models/mnist/1/transformer-copy.py",
                  requestedInstances: 1,
                  requestedTransformerInstances: 1
@@ -343,11 +343,11 @@ describe "On #{ENV['OS']}" do
                  },
                  inferenceLogging: "ALL",
                  modelServer: "TENSORFLOW_SERVING",
-                 servingTool: "KFSERVING",
+                 servingTool: "KSERVE",
                  requestedInstances: 1
                 }
             expect_status_details(400, error_code: 240023)
-            expect_json(usrMsg: "Inference logging in KFServing deployments requires schema version 4 or greater")
+            expect_json(usrMsg: "Inference logging in KServe deployments requires schema version 4 or greater")
           end
       
           it "should fail to create a serving with an existing kafka topic with inferenceschema version 2" do
@@ -365,11 +365,11 @@ describe "On #{ENV['OS']}" do
                  },
                  inferenceLogging: "ALL",
                  modelServer: "TENSORFLOW_SERVING",
-                 servingTool: "KFSERVING",
+                 servingTool: "KSERVE",
                  requestedInstances: 1
                 }
             expect_status_details(400, error_code: 240023)
-            expect_json(usrMsg: "Inference logging in KFServing deployments requires schema version 4 or greater")
+            expect_json(usrMsg: "Inference logging in KServe deployments requires schema version 4 or greater")
           end
       
           it "should fail to create a serving with an existing kafka topic with inferenceschema version 3" do
@@ -387,11 +387,11 @@ describe "On #{ENV['OS']}" do
                  },
                  inferenceLogging: "ALL",
                  modelServer: "TENSORFLOW_SERVING",
-                 servingTool: "KFSERVING",
+                 servingTool: "KSERVE",
                  requestedInstances: 1
                 }
             expect_status_details(400, error_code: 240023)
-            expect_json(usrMsg: "Inference logging in KFServing deployments requires schema version 4 or greater")
+            expect_json(usrMsg: "Inference logging in KServe deployments requires schema version 4 or greater")
           end
       
           it "should create a serving with an existing kafka topic with inferenceschema version 4" do
@@ -410,7 +410,7 @@ describe "On #{ENV['OS']}" do
                  },
                  inferenceLogging: "ALL",
                  modelServer: "TENSORFLOW_SERVING",
-                 servingTool: "KFSERVING",
+                 servingTool: "KSERVE",
                  requestedInstances: 1
                 }
             expect_status_details(201)
@@ -426,7 +426,7 @@ describe "On #{ENV['OS']}" do
       
           # resources config
 
-          it "should create the serving with default predictorResourceConfig if not set" do
+          it "should create the serving with default predictorResources if not set" do
             name = "res1model"
             put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
                 {name: name,
@@ -434,19 +434,19 @@ describe "On #{ENV['OS']}" do
                  modelVersion: 1,
                  batchingEnabled: false,
                  modelServer: "TENSORFLOW_SERVING",
-                 servingTool: "KFSERVING",
+                 servingTool: "KSERVE",
                  requestedInstances: 1
                 }
             expect_status_details(201)
 
             serving_list = get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/"
-            resource_config = JSON.parse(serving_list).select { |serving| serving['name'] == name}[0]['predictorResourceConfig']
-            expect(resource_config['memory']).to be 1024
-            expect(resource_config['cores']).to be 1
-            expect(resource_config['gpus']).to be 0
+            resource_config = JSON.parse(serving_list).select { |serving| serving['name'] == name}[0]['predictorResources']
+            expect(resource_config['requests']['memory']).to be 1024
+            expect(resource_config['requests']['cores']).to be 1
+            expect(resource_config['requests']['gpus']).to be 0
           end
 
-          it "should create the serving with overridden predictorResourceConfig" do
+          it "should create the serving with overridden predictorResources" do
             name = "res2model"
             put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
                 {name: name,
@@ -454,21 +454,31 @@ describe "On #{ENV['OS']}" do
                  modelVersion: 1,
                  batchingEnabled: false,
                  modelServer: "TENSORFLOW_SERVING",
-                 servingTool: "KFSERVING",
+                 servingTool: "KSERVE",
                  requestedInstances: 1,
-                 predictorResourceConfig: {
-                   memory: 3000,
-                   cores: 2,
-                   gpus: 1
+                 predictorResources: {
+                   requests: {
+                    memory: 1000,
+                    cores: 2,
+                    gpus: 1
+                   },
+                   limits: {
+                    memory: 2000,
+                    cores: 3,
+                    gpus: 2
+                   }
                 }
                 }
             expect_status_details(201)
 
             serving_list = get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/"
-            resource_config = JSON.parse(serving_list).select { |serving| serving['name'] == name}[0]['predictorResourceConfig']
-            expect(resource_config['memory']).to be 3000
-            expect(resource_config['cores']).to be 2
-            expect(resource_config['gpus']).to be 1
+            resource_config = JSON.parse(serving_list).select { |serving| serving['name'] == name}[0]['predictorResources']
+            expect(resource_config['requests']['memory']).to be 1000
+            expect(resource_config['requests']['cores']).to be 2
+            expect(resource_config['requests']['gpus']).to be 1
+            expect(resource_config['limits']['memory']).to be 2000
+            expect(resource_config['limits']['cores']).to be 3
+            expect(resource_config['limits']['gpus']).to be 2
           end
 
           # request batching
@@ -483,11 +493,11 @@ describe "On #{ENV['OS']}" do
                      name: "NONE"
                  },
                  modelServer: "TENSORFLOW_SERVING",
-                 servingTool: "KFSERVING",
+                 servingTool: "KSERVE",
                  requestedInstances: 1
                 }
             expect_status_details(400, error_code: 240025)
-            expect_json(usrMsg: "Request batching is not supported in KFServing deployments")
+            expect_json(usrMsg: "Request batching is not supported in KServe deployments")
           end
 
           # transformer instances
@@ -499,7 +509,7 @@ describe "On #{ENV['OS']}" do
                   batchingEnabled: false,
                   modelVersion: 1,
                   modelServer: "TENSORFLOW_SERVING",
-                  servingTool: "KFSERVING",
+                  servingTool: "KSERVE",
                   transformer: "/Projects/#{@project[:projectname]}/Models/mnist/1/transformer.ipynb",
                   requestedInstances: 1
                  }
@@ -514,7 +524,7 @@ describe "On #{ENV['OS']}" do
                   batchingEnabled: false,
                   modelVersion: 1,
                   modelServer: "TENSORFLOW_SERVING",
-                  servingTool: "KFSERVING",
+                  servingTool: "KSERVE",
                   requestedInstances: 1,
                   requestedTransformerInstances: 1
                  }
@@ -529,7 +539,7 @@ describe "On #{ENV['OS']}" do
                   batchingEnabled: false,
                   modelVersion: 1,
                   modelServer: "TENSORFLOW_SERVING",
-                  servingTool: "KFSERVING",
+                  servingTool: "KSERVE",
                   transformer: "/Projects/#{@project[:projectname]}/Models/mnist/1/transformer.ipynb",
                   requestedInstances: 1,
                   requestedTransformerInstances: 1
@@ -542,12 +552,12 @@ describe "On #{ENV['OS']}" do
       describe "#update", vm: true do
         before :all do
           with_valid_project
-          with_kfserving_tensorflow(@project[:id], @project[:projectname], @user[:username])
+          with_kserve_tensorflow(@project[:id], @project[:projectname], @user[:username])
         end
 
         after :all do
           delete_all_servings(@project[:id])
-          purge_all_kfserving_instances(@project[:projectname])
+          purge_all_kserve_instances(@project[:projectname])
         end
 
         after :each do
@@ -685,12 +695,12 @@ describe "On #{ENV['OS']}" do
       describe "#start", vm: true do
         before :all do
           with_valid_project
-          with_kfserving_tensorflow(@project[:id], @project[:projectname], @user[:username])
+          with_kserve_tensorflow(@project[:id], @project[:projectname], @user[:username])
         end
 
         after :all do
           delete_all_servings(@project[:id])
-          purge_all_kfserving_instances(@project[:projectname])
+          purge_all_kserve_instances(@project[:projectname])
         end
 
         it "should be able to start a serving instance" do
@@ -754,7 +764,7 @@ describe "On #{ENV['OS']}" do
       describe "#kill", vm: true do
         before :all do
           with_valid_project
-          with_kfserving_tensorflow(@project[:id], @project[:projectname], @user[:username])
+          with_kserve_tensorflow(@project[:id], @project[:projectname], @user[:username])
         end
 
         after :all do
@@ -784,7 +794,7 @@ describe "On #{ENV['OS']}" do
         end
 
         before :each do
-          @serving = create_kfserving_tensorflow(@project[:id], @project[:projectname])
+          @serving = create_kserve_tensorflow(@project[:id], @project[:projectname])
         end
 
         it "should be able to delete a serving instance" do

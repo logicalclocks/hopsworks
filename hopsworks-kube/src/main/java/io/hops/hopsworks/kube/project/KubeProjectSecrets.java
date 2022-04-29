@@ -26,14 +26,14 @@ public class KubeProjectSecrets {
   private Settings settings;
   
   public void createSecrets(Project project) throws ApiKeyException, UserException, UnsupportedEncodingException {
-    if (settings.getKubeKFServingInstalled()) {
+    if (settings.getKubeKServeInstalled()) {
       // copy serving api key secret of the project owner
       kubeApiKeyUtils.copyServingApiKeySecret(project, project.getOwner());
     }
   }
   
   public void deleteSecrets(Project project) {
-    if (settings.getKubeKFServingInstalled()) {
+    if (settings.getKubeKServeInstalled()) {
       // delete serving api key secret of the project owner
       kubeApiKeyUtils.deleteServingApiKeySecret(project, project.getOwner());
     }

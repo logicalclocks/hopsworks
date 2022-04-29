@@ -270,7 +270,7 @@ public class Settings implements Serializable {
   private static final String VARIABLE_KUBE_DOCKER_MAX_GPUS_ALLOCATION = "kube_docker_max_gpus_allocation";
   private static final String VARIABLE_KUBE_DOCKER_MAX_CORES_ALLOCATION = "kube_docker_max_cores_allocation";
   private static final String VARIABLE_KUBE_INSTALLED = "kubernetes_installed";
-  private static final String VARIABLE_KUBE_KFSERVING_INSTALLED = "kube_kfserving_installed";
+  private static final String VARIABLE_KUBE_KSERVE_INSTALLED = "kube_kserve_installed";
   private static final String VARIABLE_KUBE_SERVING_NODE_LABELS = "kube_serving_node_labels";
   private static final String VARIABLE_KUBE_SERVING_NODE_TOLERATIONS = "kube_serving_node_tolerations";
   private static final String VARIABLE_KUBE_KNATIVE_DOMAIN_NAME = "kube_knative_domain_name";
@@ -702,7 +702,7 @@ public class Settings implements Serializable {
       KUBE_DOCKER_MAX_GPUS_ALLOCATION = setIntVar(VARIABLE_KUBE_DOCKER_MAX_GPUS_ALLOCATION,
           KUBE_DOCKER_MAX_GPUS_ALLOCATION);
       KUBE_INSTALLED = setBoolVar(VARIABLE_KUBE_INSTALLED, KUBE_INSTALLED);
-      KUBE_KFSERVING_INSTALLED = setBoolVar(VARIABLE_KUBE_KFSERVING_INSTALLED, KUBE_KFSERVING_INSTALLED);
+      KUBE_KSERVE_INSTALLED = setBoolVar(VARIABLE_KUBE_KSERVE_INSTALLED, KUBE_KSERVE_INSTALLED);
       KUBE_SERVING_NODE_LABELS = setStrVar(VARIABLE_KUBE_SERVING_NODE_LABELS, KUBE_SERVING_NODE_LABELS);
       KUBE_SERVING_NODE_TOLERATIONS = setStrVar(VARIABLE_KUBE_SERVING_NODE_TOLERATIONS, KUBE_SERVING_NODE_TOLERATIONS);
       KUBE_KNATIVE_DOMAIN_NAME = setStrVar(VARIABLE_KUBE_KNATIVE_DOMAIN_NAME, KUBE_KNATIVE_DOMAIN_NAME);
@@ -3405,10 +3405,10 @@ public class Settings implements Serializable {
     return KUBE_INSTALLED;
   }
   
-  private Boolean KUBE_KFSERVING_INSTALLED = false;
-  public synchronized Boolean getKubeKFServingInstalled() {
+  private Boolean KUBE_KSERVE_INSTALLED = false;
+  public synchronized Boolean getKubeKServeInstalled() {
     checkCache();
-    return KUBE_KFSERVING_INSTALLED;
+    return KUBE_KSERVE_INSTALLED;
   }
   
   private String KUBE_SERVING_NODE_LABELS = "";

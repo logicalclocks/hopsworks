@@ -46,7 +46,7 @@ import static io.hops.hopsworks.common.serving.util.ServingCommands.STOP;
 
 /**
  * Contains the common functionality between kubernetes serving controllers, the specific functionality is provided by
- * tool-specific controllers (e.g DeploymentServingController, KfServingServingController) and serving-type-specific
+ * tool-specific controllers (e.g DeploymentServingController, KServeServingController) and serving-type-specific
  * controllers (e.g SkLearnServingController, TfServingController).
  */
 @KubeStereotype
@@ -61,7 +61,7 @@ public class KubeServingController implements ServingController {
   @EJB
   private KafkaServingHelper kafkaServingHelper;
   @EJB
-  private KubeKfServingController kubeKfServingController;
+  private KubeKServeController kubeKServeController;
   @EJB
   private KubeDeploymentServingController kubeDeploymentServingController;
   @EJB
@@ -373,8 +373,8 @@ public class KubeServingController implements ServingController {
   }
   
   private KubeToolServingController getServingController(Serving serving) {
-    return serving.getServingTool() == ServingTool.KFSERVING
-      ? kubeKfServingController
+    return serving.getServingTool() == ServingTool.KSERVE
+      ? kubeKServeController
       : kubeDeploymentServingController;
   }
 }

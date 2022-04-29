@@ -292,7 +292,7 @@ public class ServingView implements Serializable {
     this.modelServer = modelServer;
   }
   
-  @ApiModelProperty(value = "Serving tool, default or kfserving")
+  @ApiModelProperty(value = "Serving tool, default or kserve")
   public ServingTool getServingTool() {
     return servingTool;
   }

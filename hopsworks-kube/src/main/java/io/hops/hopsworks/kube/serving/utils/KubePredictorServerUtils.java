@@ -16,7 +16,7 @@ import org.json.JSONObject;
 /**
  * Utils for creating deployments on Kubernetes.
  *
- * It defines methods for both, default and KFServing deployments. Implementations for the different types of
+ * It defines methods for both, default and KServe deployments. Implementations for the different types of
  * deployments on Kubernetes extend this class.
  */
 public abstract class KubePredictorServerUtils {
@@ -34,7 +34,7 @@ public abstract class KubePredictorServerUtils {
   public abstract String getServiceName(String servingId);
   public abstract Service buildServingService(Serving serving);
   
-  // KFServing
+  // KServe
   
   public abstract JSONObject buildInferenceServicePredictor(Project project, Users user, Serving serving,
     String artifactPath) throws ServiceDiscoveryException;

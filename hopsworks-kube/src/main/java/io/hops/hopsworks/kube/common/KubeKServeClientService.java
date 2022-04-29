@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2020, Logical Clocks AB. All rights reserved
+ * Copyright (C) 2022, Logical Clocks AB. All rights reserved
  */
 
 package io.hops.hopsworks.kube.common;
@@ -26,12 +26,12 @@ import java.util.logging.Logger;
 
 @Stateless
 @TransactionAttribute(TransactionAttributeType.NEVER)
-public class KubeKfServingClientService {
+public class KubeKServeClientService {
   
-  private static final Logger LOGGER = Logger.getLogger(KubeKfServingClientService.class.getName());
+  private static final Logger LOGGER = Logger.getLogger(KubeKServeClientService.class.getName());
   
   public static final String INFERENCESERVICE_PLURAL = "inferenceservices";
-  public static final String INFERENCESERVICE_GROUP = "serving.kubeflow.org";
+  public static final String INFERENCESERVICE_GROUP = "serving.kserve.io";
   public static final String INFERENCESERVICE_SCOPE = "Namespaced";
   public static final String INFERENCESERVICE_VERSION = "v1beta1";
   public static final String INFERENCESERVICE_KIND = "InferenceService";

@@ -44,7 +44,7 @@ import java.util.List;
 /**
  * Utils for creating deployments for custom Python models on Kubernetes.
  *
- * It implements methods for KFServing deployments and reuses existing utils methods for default deployments.
+ * It implements methods for KServe deployments and reuses existing utils methods for default deployments.
  */
 @Stateless
 @TransactionAttribute(TransactionAttributeType.NEVER)
@@ -95,7 +95,7 @@ public class KubePredictorPythonCustomUtils extends KubePredictorServerUtils {
   @Override
   public Service buildServingService(Serving serving) { return kubePredictorPythonUtils.buildService(serving); }
   
-  // KFServing
+  // KServe
   
   @Override
   public JSONObject buildInferenceServicePredictor(Project project, Users user, Serving serving, String artifactPath)
@@ -141,7 +141,7 @@ public class KubePredictorPythonCustomUtils extends KubePredictorServerUtils {
       .withName("predictor")
       .withImage(projectUtils.getFullDockerImageName(project, false))
       .withImagePullPolicy(settings.getKubeImagePullPolicy())
-      .withCommand("kfserving-component-launcher.sh")
+      .withCommand("kserve-component-launcher.sh")
       .withArgs(ContainerModelNameArgName, serving.getName())
       .withEnv(envVars)
       .withVolumeMounts(volumeMounts)

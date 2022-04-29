@@ -73,8 +73,8 @@ angular.module('hopsWorksApp')
               isKubernetes: function () {
                 return $http.get('/api/variables/kubernetes_installed');
               },
-              isKFServing: function () {
-                return $http.get('/api/variables/kube_kfserving_installed');
+              isKServe: function () {
+                return $http.get('/api/variables/kube_kserve_installed');
               },
               knativeDomainName: function () {
                 return $http.get('/api/variables/kube_knative_domain_name');

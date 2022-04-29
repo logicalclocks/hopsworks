@@ -15,7 +15,7 @@ import io.hops.hopsworks.common.serving.ServingStatusEnum;
 import io.hops.hopsworks.exceptions.ServingException;
 import io.hops.hopsworks.kube.common.KubeClientService;
 import io.hops.hopsworks.kube.common.KubeIstioClientService;
-import io.hops.hopsworks.kube.common.KubeKfServingClientService;
+import io.hops.hopsworks.kube.common.KubeKServeClientService;
 import io.hops.hopsworks.kube.serving.utils.KubeArtifactUtils;
 import io.hops.hopsworks.kube.serving.utils.KubeJsonUtils;
 import io.hops.hopsworks.kube.serving.utils.KubePredictorServerUtils;
@@ -41,12 +41,12 @@ import java.util.logging.Level;
 
 @Stateless
 @TransactionAttribute(TransactionAttributeType.NEVER)
-public class KubeKfServingController extends KubeToolServingController {
+public class KubeKServeController extends KubeToolServingController {
 
   @EJB
   private KubeClientService kubeClientService;
   @EJB
-  private KubeKfServingClientService kubeKfServingClientService;
+  private KubeKServeClientService kubeKServeClientService;
   @EJB
   private KubeIstioClientService kubeIstioClientService;
   @EJB
@@ -68,7 +68,7 @@ public class KubeKfServingController extends KubeToolServingController {
   @Override
   public void updateInstance(Project project, Users user, Serving serving) throws ServingException {
     try {
-      JSONObject metadata = kubeKfServingClientService.getInferenceServiceMetadata(project, serving);
+      JSONObject metadata = kubeKServeClientService.getInferenceServiceMetadata(project, serving);
       if (metadata != null) {
         // When updating an inference service, the current resource version must be indicated
         String resourceVersion = metadata.getString("resourceVersion");
@@ -82,9 +82,9 @@ public class KubeKfServingController extends KubeToolServingController {
   @Override
   public void deleteInstance(Project project, Serving serving) throws ServingException {
     try {
-      JSONObject metadata = kubeKfServingClientService.getInferenceServiceMetadata(project, serving);
+      JSONObject metadata = kubeKServeClientService.getInferenceServiceMetadata(project, serving);
       if (metadata != null) {
-        kubeKfServingClientService
+        kubeKServeClientService
           .deleteInferenceService(project, getInferenceServiceMetadataObject(project, serving));
       }
     } catch (KubernetesClientException e) {
@@ -101,7 +101,7 @@ public class KubeKfServingController extends KubeToolServingController {
     Pair<String, Integer> internalIngressHostPort;
     
     try {
-      inferenceService = kubeKfServingClientService.getInferenceService(project, serving);
+      inferenceService = kubeKServeClientService.getInferenceService(project, serving);
       deploymentStatus = getDeploymentStatus(project, serving, "predictor");
       status = getServingStatus(project, serving, inferenceService);
       if (serving.getTransformer() != null) {
@@ -165,7 +165,7 @@ public class KubeKfServingController extends KubeToolServingController {
   }
   
   private void createOrReplace(Project project, Users user, JSONObject inferenceService) {
-    kubeKfServingClientService.createOrReplaceInferenceService(project, inferenceService);
+    kubeKServeClientService.createOrReplaceInferenceService(project, inferenceService);
   }
   
   private ServingStatusEnum getServingStatus(Project project, Serving serving, JSONObject inferenceService) {

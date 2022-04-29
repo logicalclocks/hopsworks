@@ -296,7 +296,7 @@ public class KubeJupyterManager extends JupyterManagerImpl implements JupyterMan
     environment.add(new EnvVarBuilder().withName("PYTHONHASHSEED").withValue("0").build());
 
     // serving env vars
-    if (settings.getKubeKFServingInstalled()) {
+    if (settings.getKubeKServeInstalled()) {
       environment.add(new EnvVarBuilder().withName("SERVING_API_KEY").withValueFrom(
         new EnvVarSourceBuilder().withNewSecretKeyRef(KubeApiKeyUtils.SERVING_API_KEY_SECRET_KEY,
           kubeApiKeyUtils.getProjectServingApiKeySecretName(user), false).build()).build());

@@ -22,7 +22,7 @@ import io.hops.hopsworks.persistence.entity.serving.Serving;
 import io.hops.hopsworks.exceptions.InferenceException;
 
 /**
- * Interface for sending inference requests to localhost or kfserving serving instances. Different type of serving
+ * Interface for sending inference requests to localhost or kserve serving instances. Different type of serving
  * controllers e.g (localhost or Kubernetes) should implement this interface.
  */
 public interface ServingInferenceController {

@@ -155,7 +155,7 @@ public class KubeTransformerUtils {
       .withName("transformer")
       .withImage(projectUtils.getFullDockerImageName(project, false))
       .withImagePullPolicy(settings.getKubeImagePullPolicy())
-      .withCommand("kfserving-component-launcher.sh")
+      .withCommand("kserve-component-launcher.sh")
       .withEnv(envVars)
       .withVolumeMounts(volumeMounts)
       .withResources(resourceRequirements)

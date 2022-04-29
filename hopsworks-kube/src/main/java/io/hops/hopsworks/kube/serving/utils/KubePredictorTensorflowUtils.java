@@ -66,7 +66,7 @@ import static io.hops.hopsworks.common.util.Settings.HOPS_USERNAME_SEPARATOR;
 /**
  * Utils for creating deployments for Tensorflow models on Kubernetes.
  *
- * It implements methods for both, default and KFServing deployments.
+ * It implements methods for both, default and KServe deployments.
  */
 @Stateless
 @TransactionAttribute(TransactionAttributeType.NEVER)
@@ -260,7 +260,7 @@ public class KubePredictorTensorflowUtils extends KubePredictorServerUtils {
       .build();
   }
   
-  // KFServing
+  // KServe
   
   @Override
   public JSONObject buildInferenceServicePredictor(Project project, Users user, Serving serving, String artifactPath) {

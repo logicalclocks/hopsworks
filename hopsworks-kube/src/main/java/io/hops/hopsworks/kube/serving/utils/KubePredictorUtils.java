@@ -106,7 +106,7 @@ public class KubePredictorUtils {
       case PYTHON:
         return serving.getPredictor() == null ? kubePredictorPythonSklearnUtils : kubePredictorPythonCustomUtils;
       default:
-        throw new NotSupportedException("Model server not supported for KFServing inference services");
+        throw new NotSupportedException("Model server not supported for KServe inference services");
     }
   }
 }

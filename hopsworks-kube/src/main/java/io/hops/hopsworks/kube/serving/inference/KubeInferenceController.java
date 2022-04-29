@@ -34,7 +34,7 @@ import java.util.logging.Level;
 public class KubeInferenceController implements ServingInferenceController {
 
   @EJB
-  private KubeKfServingInferenceController kubeKfServingInferenceController;
+  private KubeKServeInferenceController kubeKServeInferenceController;
   @EJB
   private KubeDeploymentInferenceController kubeDeploymentInferenceController;
   
@@ -57,9 +57,9 @@ public class KubeInferenceController implements ServingInferenceController {
       throw new InferenceException(RESTCodes.InferenceErrorCode.MISSING_VERB, Level.FINE);
     }
     
-    // KFServing
-    if (serving.getServingTool() == ServingTool.KFSERVING) {
-      return kubeKfServingInferenceController.infer(username, serving, verb, inferenceRequestJson, authHeader);
+    // KServe
+    if (serving.getServingTool() == ServingTool.KSERVE) {
+      return kubeKServeInferenceController.infer(username, serving, verb, inferenceRequestJson, authHeader);
     }
     // Default
     return kubeDeploymentInferenceController.infer(serving, verb, inferenceRequestJson);

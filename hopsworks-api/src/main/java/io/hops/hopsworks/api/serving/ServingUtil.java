@@ -169,8 +169,8 @@ public class ServingUtil {
     if (serving.getServingTool() == null) {
       throw new IllegalArgumentException("Serving tool not provided or invalid");
     }
-    if (serving.getServingTool() == ServingTool.KFSERVING) {
-      validateKFServingUserInput(serving);
+    if (serving.getServingTool() == ServingTool.KSERVE) {
+      validateKServeUserInput(serving);
     }
   }
   
@@ -231,8 +231,8 @@ public class ServingUtil {
         return MODEL_FILE_EXTS.stream().anyMatch(name::endsWith);
       }).count();
       if (modelFiles > 1) {
-        if (serving.getServingTool() == ServingTool.KFSERVING && serving.getPredictor() == null) {
-          // if more than one model file in a KFServing deployment without predictor
+        if (serving.getServingTool() == ServingTool.KSERVE && serving.getPredictor() == null) {
+          // if more than one model file in a KServe deployment without predictor
           throw new ServingException(RESTCodes.ServingErrorCode.MODEL_FILES_STRUCTURE_NOT_VALID, Level.FINE, "Model " +
             "path cannot contain more than one model file (i.e., joblib or pickle files)");
         }
@@ -243,10 +243,10 @@ public class ServingUtil {
           throw new ServingException(RESTCodes.ServingErrorCode.MODEL_FILES_STRUCTURE_NOT_VALID, Level.FINE, "Model" +
             " path requires either a python script or model file (i.e., joblib or pickle files)");
         }
-        if (serving.getServingTool() == ServingTool.KFSERVING && serving.getPredictor() == null) {
-          // and KFServing without predictor script selected
+        if (serving.getServingTool() == ServingTool.KSERVE && serving.getPredictor() == null) {
+          // and KServe without predictor script selected
           throw new ServingException(RESTCodes.ServingErrorCode.MODEL_FILES_STRUCTURE_NOT_VALID, Level.FINE,
-            "KFServing deployments without predictor script require a model file");
+            "KServe deployments without predictor script require a model file");
         }
       }
     } catch (FileNotFoundException e) {
@@ -259,21 +259,21 @@ public class ServingUtil {
     }
   }
   
-  private void validateKFServingUserInput(Serving serving)
+  private void validateKServeUserInput(Serving serving)
     throws ServingException {
     if (!settings.getKubeInstalled()) {
       throw new ServingException(RESTCodes.ServingErrorCode.KUBERNETES_NOT_INSTALLED, Level.SEVERE, "Serving tool not" +
-        " supported. KFServing requires Kubernetes to be installed");
+        " supported. KServe requires Kubernetes to be installed");
     }
     
-    if (!settings.getKubeKFServingInstalled()) {
-      throw new ServingException(RESTCodes.ServingErrorCode.KFSERVING_NOT_ENABLED, Level.SEVERE, "Serving tool not " +
+    if (!settings.getKubeKServeInstalled()) {
+      throw new ServingException(RESTCodes.ServingErrorCode.KSERVE_NOT_ENABLED, Level.SEVERE, "Serving tool not " +
         "supported");
     }
     
     if (serving.isBatchingEnabled()) {
       throw new ServingException(RESTCodes.ServingErrorCode.REQUEST_BATCHING_NOT_SUPPORTED, Level.FINE, "Request " +
-        "batching is not supported in KFServing deployments");
+        "batching is not supported in KServe deployments");
     }
     
     // Service name is used as DNS subdomain. It must consist of lower case alphanumeric characters, '-' or '.', and
@@ -415,9 +415,9 @@ public class ServingUtil {
     throws UnsupportedEncodingException, ServingException {
     if (serving.getTransformer() == null) return;
     
-    if (serving.getServingTool() != ServingTool.KFSERVING) {
+    if (serving.getServingTool() != ServingTool.KSERVE) {
       throw new ServingException(RESTCodes.ServingErrorCode.TRANSFORMER_NOT_SUPPORTED, Level.FINE, "Transformers " +
-        "are only supported on KFServing deployments");
+        "are only supported on KServe deployments");
     }
     String path = "";
     if (serving.getArtifactVersion() != null && serving.getArtifactVersion() > 0) {
@@ -443,9 +443,9 @@ public class ServingUtil {
         throw new ServingException(RESTCodes.ServingErrorCode.KAFKA_TOPIC_NOT_VALID, Level.FINE, "Inference logging" +
           " in default deployments requires schema version 3 or lower");
       }
-      if (serving.getServingTool() == ServingTool.KFSERVING && subjects.getVersion() < 4) {
+      if (serving.getServingTool() == ServingTool.KSERVE && subjects.getVersion() < 4) {
         throw new ServingException(RESTCodes.ServingErrorCode.KAFKA_TOPIC_NOT_VALID, Level.FINE, "Inference logging" +
-          " in KFServing deployments requires schema version 4 or greater");
+          " in KServe deployments requires schema version 4 or greater");
       }
     }
   }
@@ -464,10 +464,10 @@ public class ServingUtil {
       throw new IllegalArgumentException("A valid inference logger mode must be provided with a Kafka topic");
     }
     
-    if (serving.getServingTool() != ServingTool.KFSERVING) {
+    if (serving.getServingTool() != ServingTool.KSERVE) {
       if (serving.getInferenceLogging() != InferenceLogging.ALL) {
         throw new ServingException(RESTCodes.ServingErrorCode.FINEGRAINED_INF_LOGGING_NOT_SUPPORTED, Level.FINE,
-          "Fine-grained inference logging only supported in KFServing deployments");
+          "Fine-grained inference logging only supported in KServe deployments");
       }
     }
   }

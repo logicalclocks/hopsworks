@@ -16,6 +16,6 @@ public enum ServingTool {
   DEFAULT,
 
   // (Enterprise only)
-  @JsonProperty("KFSERVING")
-  KFSERVING
+  @JsonProperty("KSERVE")
+  KSERVE
 }

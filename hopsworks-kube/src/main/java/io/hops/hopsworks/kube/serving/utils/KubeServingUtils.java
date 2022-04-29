@@ -135,7 +135,7 @@ public class KubeServingUtils {
   }
   
   public String getInternalInferencePath(Serving serving, InferenceVerb verb) {
-    if (serving.getServingTool() == ServingTool.KFSERVING) {
+    if (serving.getServingTool() == ServingTool.KSERVE) {
       return "/v1/models/" + serving.getName() + (verb != null ? verb.toString() : "");
     } else { // default
       KubePredictorServerUtils predictorServerUtils = kubePredictorUtils.getPredictorServerUtils(serving);

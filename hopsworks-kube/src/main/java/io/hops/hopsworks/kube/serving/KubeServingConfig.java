@@ -38,8 +38,8 @@ public class KubeServingConfig implements ServingConfig {
   
   @Override
   public Map<String, String> getEnvVars(Users user, boolean includeSecrets) throws ApiKeyException {
-    return settings.getKubeKFServingInstalled()
-      ? getKFServingEnvVars(user, includeSecrets) // kfserving env vars
+    return settings.getKubeKServeInstalled()
+      ? getKServeEnvVars(user, includeSecrets) // kserve env vars
       : null;
   }
   
@@ -48,7 +48,7 @@ public class KubeServingConfig implements ServingConfig {
     return KubeServingConfig.class.getName();
   }
   
-  private Map<String, String> getKFServingEnvVars(Users user, boolean includeSecrets) throws ApiKeyException {
+  private Map<String, String> getKServeEnvVars(Users user, boolean includeSecrets) throws ApiKeyException {
     Map<String, String> envVars = new HashMap<>();
     
     if (includeSecrets) {

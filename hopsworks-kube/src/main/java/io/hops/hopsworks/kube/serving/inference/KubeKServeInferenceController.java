@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021, Logical Clocks AB. All rights reserved
+ * Copyright (C) 2022, Logical Clocks AB. All rights reserved
  */
 
 package io.hops.hopsworks.kube.serving.inference;
@@ -13,7 +13,7 @@ import io.hops.hopsworks.common.serving.inference.ServingInferenceUtils;
 import io.hops.hopsworks.exceptions.ApiKeyException;
 import io.hops.hopsworks.exceptions.InferenceException;
 import io.hops.hopsworks.kube.common.KubeIstioClientService;
-import io.hops.hopsworks.kube.common.KubeKfServingClientService;
+import io.hops.hopsworks.kube.common.KubeKServeClientService;
 import io.hops.hopsworks.kube.security.KubeApiKeyUtils;
 import io.hops.hopsworks.kube.serving.utils.KubeServingUtils;
 import io.hops.hopsworks.persistence.entity.project.Project;
@@ -38,10 +38,10 @@ import java.util.logging.Level;
 
 @Stateless
 @TransactionAttribute(TransactionAttributeType.NEVER)
-public class KubeKfServingInferenceController {
+public class KubeKServeInferenceController {
   
   @EJB
-  private KubeKfServingClientService kubeKFServingClientService;
+  private KubeKServeClientService kubeKServeClientService;
   @EJB
   private KubeIstioClientService kubeIstioClientService;
   @EJB
@@ -56,7 +56,7 @@ public class KubeKfServingInferenceController {
   private UserFacade userFacade;
   
   /**
-   * KFServing inference. Sends a JSON request to the REST API of a kfserving server
+   * KServe inference. Sends a JSON request to the REST API of a kserve server
    *
    * @param serving the serving instance to send the request to
    * @param verb the type of inference request (predict, regress, classify)
@@ -78,7 +78,7 @@ public class KubeKfServingInferenceController {
         if (!apiKey.isPresent()) {
           // serving api key not found
           throw new InferenceException(RESTCodes.InferenceErrorCode.REQUEST_AUTH_TYPE_NOT_SUPPORTED, Level.FINE,
-            "Inference requests to KFServing require authentication with API Keys",
+            "Inference requests to KServe require authentication with API Keys",
             String.format("Serving API Key not found for user ", user.getUsername()));
         }
         String secretName = kubeApiKeyUtils.getServingApiKeySecretName(apiKey.get().getPrefix());
@@ -89,18 +89,18 @@ public class KubeKfServingInferenceController {
       }
     } else if (verb != InferenceVerb.PREDICT) {
       throw new InferenceException(RESTCodes.InferenceErrorCode.BAD_REQUEST, Level.FINE, String.format("Verb %s not" +
-        " supported in KFServing deployments", verb.toString()));
+        " supported in KServe deployments", verb.toString()));
     }
     if (!authHeader.startsWith(KubeApiKeyUtils.AUTH_HEADER_API_KEY_PREFIX)) {
-      // JWT not supported for KFServing (Istio auth)
+      // JWT not supported for KServe (Istio auth)
       throw new InferenceException(RESTCodes.InferenceErrorCode.REQUEST_AUTH_TYPE_NOT_SUPPORTED, Level.FINE,
-        "Inference requests to KFServing require authentication with API Keys");
+        "Inference requests to KServe require authentication with API Keys");
     }
     
     Project project = serving.getProject();
     JSONObject inferenceServiceStatus;
     try {
-      inferenceServiceStatus = kubeKFServingClientService.getInferenceServiceStatus(project, serving);
+      inferenceServiceStatus = kubeKServeClientService.getInferenceServiceStatus(project, serving);
     } catch (KubernetesClientException e) {
       throw new InferenceException(RESTCodes.InferenceErrorCode.SERVING_INSTANCE_INTERNAL, Level.SEVERE, null,
         e.getMessage(), e);

@@ -165,7 +165,7 @@ public class KafkaServingHelper {
 
     // Select schema version according to serving mode
     Integer schemaVersion = Settings.INFERENCE_SCHEMAVERSION;
-    if (servingWrapper.getServing().getServingTool() == ServingTool.KFSERVING) {
+    if (servingWrapper.getServing().getServingTool() == ServingTool.KSERVE) {
       // Messages for topics with schema version 4 are produced by the inference logger sidecar in Kubernetes
       schemaVersion = 4;
     }

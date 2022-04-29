@@ -2,83 +2,38 @@
  Copyright (C) 2022, Logical Clocks AB. All rights reserved
 =end
 
-# serving_kfserving_tensorflow_inference_spec.rb: Tests for making inference with tensorflow models on KFServing
+# serving_kserve_sklearn_inference_spec.rb: Tests for making inference with sklearn models on KServe
 
 describe "On #{ENV['OS']}" do
 
   before :all do
-    if !kfserving_installed
-      skip "This test only runs with KFServing installed"
+    if !kserve_installed
+      skip "This test only runs with KServe installed"
     end
     with_admin_session()
     with_valid_project
     admin_update_user(@user[:uid], {status: "ACTIVATED_ACCOUNT"})
     @admin_user = @user
 
-    with_kfserving_tensorflow(@project[:id], @project[:projectname], @user[:username])
+    with_kserve_sklearn(@project[:id], @project[:projectname], @user[:username])
   end
 
   after (:all) do
-    clean_all_test_projects(spec: "serving_kfserving_tensorflow_inference")
-    purge_all_kfserving_instances
+    clean_all_test_projects(spec: "serving_kserve_sklearn_inference")
+    purge_all_kserve_instances
   end
 
   describe 'inference' do
 
-    let(:test_data) {[[0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
-                       0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
-                       0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
-                       0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
-                       0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
-                       0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
-                       0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
-                       0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
-                       0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
-                       0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
-                       0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
-                       0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
-                       0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
-                       0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.3294117748737335, 0.7254902124404907, 0.6235294342041016, 0.5921568870544434, 0.2352941334247589, 0.1411764770746231, 0.0, 0.0,
-                       0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
-                       0.0, 0.0, 0.0, 0.0, 0.0, 0.8705883026123047, 0.9960784912109375, 0.9960784912109375, 0.9960784912109375, 0.9960784912109375, 0.9450981020927429, 0.7764706611633301, 0.7764706611633301, 0.7764706611633301, 0.7764706611633301,
-                       0.7764706611633301, 0.7764706611633301, 0.7764706611633301, 0.7764706611633301, 0.6666666865348816, 0.2039215862751007, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
-                       0.0, 0.0, 0.0, 0.26274511218070984, 0.44705885648727417, 0.2823529541492462, 0.44705885648727417, 0.6392157077789307, 0.8901961445808411, 0.9960784912109375, 0.8823530077934265, 0.9960784912109375, 0.9960784912109375, 0.9960784912109375, 0.9803922176361084,
-                       0.8980392813682556, 0.9960784912109375, 0.9960784912109375, 0.5490196347236633, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
-                       0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.06666667014360428, 0.25882354378700256, 0.05490196496248245, 0.26274511218070984, 0.26274511218070984, 0.26274511218070984, 0.23137256503105164, 0.08235294371843338, 0.9254902601242065,
-                       0.9960784912109375, 0.41568630933761597, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
-                       0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.32549020648002625, 0.9921569228172302, 0.8196079134941101, 0.07058823853731155,
-                       0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
-                       0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.08627451211214066, 0.9137255549430847, 1.0, 0.32549020648002625, 0.0, 0.0, 0.0,
-                       0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
-                       0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.5058823823928833, 0.9960784912109375, 0.9333333969116211, 0.1725490242242813, 0.0, 0.0, 0.0, 0.0, 0.0,
-                       0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
-                       0.0, 0.0, 0.0, 0.23137256503105164, 0.9764706492424011, 0.9960784912109375, 0.24313727021217346, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
-                       0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
-                       0.0, 0.5215686559677124, 0.9960784912109375, 0.7333333492279053, 0.019607843831181526, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
-                       0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.03529411926865578, 0.803921639919281,
-                       0.9725490808486938, 0.22745099663734436, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
-                       0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.4941176772117615, 0.9960784912109375, 0.7137255072593689, 0.0,
-                       0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
-                       0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.29411765933036804, 0.9843137860298157, 0.9411765336990356, 0.22352942824363708, 0.0, 0.0, 0.0,
-                       0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
-                       0.0, 0.0, 0.0, 0.0, 0.0, 0.07450980693101883, 0.8666667342185974, 0.9960784912109375, 0.6509804129600525, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
-                       0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
-                       0.0, 0.0, 0.011764707043766975, 0.7960785031318665, 0.9960784912109375, 0.8588235974311829, 0.13725490868091583, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
-                       0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
-                       0.14901961386203766, 0.9960784912109375, 0.9960784912109375, 0.3019607961177826, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
-                       0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.12156863510608673, 0.8784314393997192, 0.9960784912109375,
-                       0.45098042488098145, 0.003921568859368563, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
-                       0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.5215686559677124, 0.9960784912109375, 0.9960784912109375, 0.2039215862751007, 0.0,
-                       0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
-                       0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.2392157018184662, 0.9490196704864502, 0.9960784912109375, 0.9960784912109375, 0.2039215862751007, 0.0, 0.0, 0.0,
-                       0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
-                       0.0, 0.0, 0.0, 0.0, 0.0, 0.4745098352432251, 0.9960784912109375, 0.9960784912109375, 0.8588235974311829, 0.1568627506494522, 0.0, 0.0, 0.0, 0.0, 0.0,
-                       0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
-                       0.0, 0.0, 0.0, 0.4745098352432251, 0.9960784912109375, 0.8117647767066956, 0.07058823853731155, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
-                       0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
-                       0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
-                       0.0, 0.0, 0.0, 0.0]]}
-
+    let(:test_data) {
+      [
+          [2.496980740040751, 4.7732122731342805, 3.451636599101792, 2.4535334273371285],
+          [2.8691773509649345, 1.5165563288683765, 4.687886086087035, 5.957422837863767],
+          [2.4598251584768143, 3.010853794745395, 2.8037439502023704, 4.918140241551333],
+          [2.6556101758261903, 7.268154644213865, 4.7387524652868445, 4.770835967099467],
+          [3.9682516036046436, 5.571227258700232, 4.226145217398939, 5.221222221285237]
+      ]
+    }
 
     context 'without authentication', vm: true do
 
@@ -88,7 +43,6 @@ describe "On #{ENV['OS']}" do
 
       it "the inference should fail" do
         post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/inference/models/#{@serving[:name]}:predict", {
-            signature_name: 'predict_images',
             instances: test_data
         }
         expect_status_details(401, error_code: 200003)
@@ -103,7 +57,6 @@ describe "On #{ENV['OS']}" do
 
       it "should fail to send a request to a non existing model"  do
         post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/inference/models/nonexistingmodel:predict", {
-            signature_name: 'predict_images',
             instances: test_data
         }
         expect_status_details(404)
@@ -118,14 +71,11 @@ describe "On #{ENV['OS']}" do
 
         after :all do
           stop_serving(@project, @serving)
-
-          # Sleep some time while the inference service stops
-          sleep(10) # 30
+          wait_for_serving_status(@serving[:name], "Stopped")
         end
 
-        it "should fail to infer from a KFServing serving with JWT authentication" do
+        it "should fail to infer from a KServe serving with JWT authentication" do
           post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/inference/models/#{@serving[:name]}:predict", {
-              signature_name: 'predict_images',
               instances: test_data
           }
           expect_status_details(400, error_code: 250009)
@@ -148,7 +98,6 @@ describe "On #{ENV['OS']}" do
 
       it "should fail to send a request to a non existing model"  do
         post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/inference/models/nonexistingmodel:predict", {
-            signature_name: 'predict_images',
             instances: test_data
         }
         expect_status_details(404)
@@ -159,7 +108,6 @@ describe "On #{ENV['OS']}" do
         expect(serving[:status]).not_to eq("RUNNING")
 
         post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/inference/models/#{@serving[:name]}:predict", {
-            signature_name: 'predict_images',
             instances: test_data
         }
         expect_status_details(400, error_code: 250001)
@@ -169,6 +117,11 @@ describe "On #{ENV['OS']}" do
         before :all do
           start_serving(@project, @serving)
           wait_for_serving_status(@serving[:name], "Running")
+        end
+
+        after :all do
+          stop_serving(@project, @serving)
+          wait_for_serving_status(@serving[:name], "Stopped")
         end
 
         context "through Hopsworks REST API" do
@@ -181,7 +134,6 @@ describe "On #{ENV['OS']}" do
 
             it 'should fail to access inference end-point with invalid scope' do
               post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/inference/models/#{@serving[:name]}:predict", {
-                  signature_name: 'predict_images',
                   instances: test_data
               }
               expect_status_details(403, error_code: 320004)
@@ -192,11 +144,23 @@ describe "On #{ENV['OS']}" do
 
             before :all do
               set_api_key_to_header(@key)
+
+              # backup
+              copy("/Projects/#{@project[:projectname]}/Models/irisflowerclassifier/1/iris_knn.pkl",
+                   "/Projects/#{@project[:projectname]}/Models/irisflowerclassifier/iris_knn_copy.pkl",
+                   @admin_user[:username], "#{@project[:projectname]}__Models", 750, "#{@project[:projectname]}")
+
+              mkdir("/Projects/#{@project[:projectname]}/Models/irisflowerclassifiercopy/", @admin_user[:username], "#{@project[:projectname]}__Models", 750)
+
+              copy("/Projects/#{@project[:projectname]}/Models/irisflowerclassifier/*",
+                   "/Projects/#{@project[:projectname]}/Models/irisflowerclassifiercopy/",
+                   @admin_user[:username], "#{@project[:projectname]}__Models", 750, "#{@project[:projectname]}")
+
+              rm("/Projects/#{@project[:projectname]}/Models/irisflowerclassifiercopy/1/iris_knn.pkl")
             end
 
             it "should succeed to infer from a serving with kafka logging" do
               post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/inference/models/#{@serving[:name]}:predict", {
-                  signature_name: 'predict_images',
                   instances: test_data
               }
               expect_status_details(200)
@@ -204,10 +168,9 @@ describe "On #{ENV['OS']}" do
 
             it "should receive an error if the input payload is malformed" do
               post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/inference/models/#{@serving[:name]}:predict", {
-                  signature_name: 'predict_images',
                   somethingwrong: test_data
               }
-              expect_status_details(400, error_code: 250008)
+              expect_status_details(500)
             end
 
             it "should receive an error if the input payload is empty" do
@@ -235,13 +198,41 @@ describe "On #{ENV['OS']}" do
               wait_for_serving_status(@serving[:name], "Running")
 
               post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/inference/models/#{@serving[:name]}:predict", {
-                  signature_name: 'predict_images',
                   instances: test_data
               }
               expect_status_details(200)
+              expect(json_body).to include :predictions
             end
 
-            it "should succeed to infer from a serving with transformer" do
+            it "should succeed to infer from a serving with model file and without predictor and transformer" do
+              stop_serving(@project, @serving)
+              wait_for_serving_status(@serving[:name], "Stopped")
+
+              put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
+               {id: @serving[:id],
+                name: @serving[:name],
+                modelPath: @serving[:model_path],
+                modelVersion: @serving[:model_version],
+                kafkaTopicDTO: {
+                   name: "NONE"
+                },
+                modelServer: parse_model_server(@serving[:model_server]),
+                servingTool: parse_serving_tool(@serving[:serving_tool]),
+                requestedInstances: @serving[:instances]
+               }
+              expect_status_details(201)
+              
+              start_serving(@project, @serving)
+              wait_for_serving_status(@serving[:name], "Running")
+
+              post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/inference/models/#{@serving[:name]}:predict", {
+                  instances: test_data
+              }
+              expect_status_details(200)
+              expect(json_body).to include :predictions
+            end            
+
+            it "should succeed to infer from a serving with model file and transformer and without predictor" do
               stop_serving(@project, @serving)
               wait_for_serving_status(@serving[:name], "Stopped")
 
@@ -256,7 +247,7 @@ describe "On #{ENV['OS']}" do
                 },
                 modelServer: parse_model_server(@serving[:model_server]),
                 servingTool: parse_serving_tool(@serving[:serving_tool]),
-                transformer: "/Projects/#{@project[:projectname]}/Models/mnist/1/transformer.py",
+                transformer: "/Projects/#{@project[:projectname]}/Models/irisflowerclassifier/1/transformer.py",
                 requestedInstances: @serving[:instances],
                 requestedTransformerInstances: 1
                }
@@ -266,10 +257,72 @@ describe "On #{ENV['OS']}" do
               wait_for_serving_status(@serving[:name], "Running")
 
               post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/inference/models/#{@serving[:name]}:predict", {
-                  signature_name: 'predict_images',
                   instances: test_data
               }
               expect_status_details(200)
+              expect(json_body).to include :predictions
+            end
+
+            it "should succeed to infer from a serving without model file and transformer but with predictor" do
+              stop_serving(@project, @serving)
+              wait_for_serving_status(@serving[:name], "Stopped")
+
+              put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
+               {id: @serving[:id],
+                name: @serving[:name],
+                modelPath: "/Projects/#{@project[:projectname]}/Models/irisflowerclassifiercopy",
+                modelVersion: @serving[:model_version],
+                batchingEnabled: false,
+                kafkaTopicDTO: {
+                   name: "NONE"
+                },
+                modelServer: parse_model_server(@serving[:model_server]),
+                servingTool: parse_serving_tool(@serving[:serving_tool]),
+                predictor: "/Projects/#{@project[:projectname]}/Models/irisflowerclassifiercopy/1/#{SKLEARN_SCRIPT_FILE_NAME}",
+                requestedInstances: @serving[:instances]
+               }
+              expect_status_details(201)
+
+              start_serving(@project, @serving)
+              wait_for_serving_status(@serving[:name], "Running")
+
+              post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/inference/models/#{@serving[:name]}:predict", {
+                  inputs: test_data
+              }
+              expect_status_details(200)
+              expect(json_body).to include :predictions
+            end            
+
+            it "should succeed to infer from a serving without model file but with predictor and transformer" do
+              stop_serving(@project, @serving)
+              wait_for_serving_status(@serving[:name], "Stopped")
+
+              put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
+               {id: @serving[:id],
+                name: @serving[:name],
+                modelPath: "/Projects/#{@project[:projectname]}/Models/irisflowerclassifiercopy",
+                modelVersion: @serving[:model_version],
+                batchingEnabled: false,
+                kafkaTopicDTO: {
+                   name: "NONE"
+                },
+                modelServer: parse_model_server(@serving[:model_server]),
+                servingTool: parse_serving_tool(@serving[:serving_tool]),
+                predictor: "/Projects/#{@project[:projectname]}/Models/irisflowerclassifiercopy/1/#{SKLEARN_SCRIPT_FILE_NAME}",
+                transformer: "/Projects/#{@project[:projectname]}/Models/irisflowerclassifiercopy/1/transformer.py",
+                requestedInstances: @serving[:instances],
+                requestedTransformerInstances: 1
+               }
+              expect_status_details(201)
+
+              start_serving(@project, @serving)
+              wait_for_serving_status(@serving[:name], "Running")
+
+              post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/inference/models/#{@serving[:name]}:predict", {
+                  inputs: test_data
+              }
+              expect_status_details(200)
+              expect(json_body).to include :predictions
             end
           end
         end
@@ -291,7 +344,7 @@ describe "On #{ENV['OS']}" do
             end
 
             it 'should succeed to infer' do
-              make_prediction_request_istio(@project[:projectname], @serving[:name], @serving_endpoints, { signature_name: 'predict_images', instances: test_data })
+              make_prediction_request_istio(@project[:projectname], @serving[:name], @serving_endpoints, { inputs: test_data })
               expect_status_details(200)
               expect(json_body).to include :predictions
             end
@@ -302,7 +355,7 @@ describe "On #{ENV['OS']}" do
             it 'should fail to send inference request with invalid raw secret' do
               invalid_key = @key + "typo"
               set_api_key_to_header(invalid_key)
-              make_prediction_request_istio(@project[:projectname], @serving[:name], @serving_endpoints, { signature_name: 'predict_images', instances: test_data })
+              make_prediction_request_istio(@project[:projectname], @serving[:name], @serving_endpoints, { inputs: test_data })
               expect_status(401)
               expect_json(userMsg: "could not authenticate API key")
             end
@@ -310,14 +363,14 @@ describe "On #{ENV['OS']}" do
             it 'should fail to send inference request with non-existent prefix' do
               invalid_key = "typo" + @key
               set_api_key_to_header(invalid_key)
-              make_prediction_request_istio(@project[:projectname], @serving[:name], @serving_endpoints, { signature_name: 'predict_images', instances: test_data })
+              make_prediction_request_istio(@project[:projectname], @serving[:name], @serving_endpoints, { inputs: test_data })
               expect_status(401)
               expect_json(userMsg: "invalid or non-existent api key")
             end
 
             it 'should fail to send inference request with invalid scope' do
               set_api_key_to_header(@invalid_scope_key)
-              make_prediction_request_istio(@project[:projectname], @serving[:name], @serving_endpoints, { signature_name: 'predict_images', instances: test_data })
+              make_prediction_request_istio(@project[:projectname], @serving[:name], @serving_endpoints, { inputs: test_data })
               expect_status(401)
               expect_json(userMsg: "invalid or non-existent api key")
             end
@@ -349,7 +402,7 @@ describe "On #{ENV['OS']}" do
               reset_session
               set_api_key_to_header(key)
 
-              make_prediction_request_istio(project_name, @serving[:name], @serving_endpoints, { signature_name: 'predict_images', instances: test_data })
+              make_prediction_request_istio(project_name, @serving[:name], @serving_endpoints, { inputs: test_data })
               expect_status(403)
               expect_json(userMsg: "unauthorized user, user role not allowed")
 
@@ -386,7 +439,7 @@ describe "On #{ENV['OS']}" do
               reset_session
               set_api_key_to_header(key)
 
-              make_prediction_request_istio(project_name, @serving[:name], @serving_endpoints, { signature_name: 'predict_images', instances: test_data })
+              make_prediction_request_istio(project_name, @serving[:name], @serving_endpoints, { inputs: test_data })
               expect_status(403)
               expect_json(userMsg: "unauthorized user, project member roles not allowed")
 
@@ -409,7 +462,7 @@ describe "On #{ENV['OS']}" do
               reset_session
               set_api_key_to_header(key)
 
-              make_prediction_request_istio(project_name, @serving[:name], @serving_endpoints, { signature_name: 'predict_images', instances: test_data })
+              make_prediction_request_istio(project_name, @serving[:name], @serving_endpoints, { inputs: test_data })
               expect_status(403)
               expect_json(userMsg: "unauthorized user, not a member of the project")
             end
@@ -427,7 +480,7 @@ describe "On #{ENV['OS']}" do
               reset_session
               set_api_key_to_header(key)
 
-              make_prediction_request_istio(project_name, @serving[:name], @serving_endpoints, { signature_name: 'predict_images', instances: test_data })
+              make_prediction_request_istio(project_name, @serving[:name], @serving_endpoints, { inputs: test_data })
               expect_status(403)
               expect_json(userMsg: "unauthorized user, account status not activated")
             end

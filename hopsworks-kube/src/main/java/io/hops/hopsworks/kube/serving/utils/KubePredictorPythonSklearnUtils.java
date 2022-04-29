@@ -22,7 +22,7 @@ import javax.ejb.TransactionAttributeType;
 /**
  * Utils for creating deployments for Scikit-learn models on Kubernetes.
  *
- * It implements methods for KFServing deployments and reuses existing utils methods for default deployments.
+ * It implements methods for KServe deployments and reuses existing utils methods for default deployments.
  */
 @Stateless
 @TransactionAttribute(TransactionAttributeType.NEVER)
@@ -55,7 +55,7 @@ public class KubePredictorPythonSklearnUtils extends KubePredictorServerUtils {
   @Override
   public Service buildServingService(Serving serving) { return kubePredictorPythonUtils.buildService(serving); }
   
-  // KFServing
+  // KServe
   
   @Override
   public JSONObject buildInferenceServicePredictor(Project project, Users user, Serving serving, String artifactPath) {

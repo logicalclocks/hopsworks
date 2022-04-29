@@ -38,21 +38,21 @@ public class KubeUserAccountHandler implements UserAccountHandler {
 
   @Override
   public void create(Users user) {
-    if (settings.getKubeKFServingInstalled()) {
+    if (settings.getKubeKServeInstalled()) {
       updateUsersConfigMap(user);
     }
   }
   
   @Override
   public void update(Users user) {
-    if (settings.getKubeKFServingInstalled()) {
+    if (settings.getKubeKServeInstalled()) {
       updateUsersConfigMap(user);
     }
   }
   
   @Override
   public void remove(Users user) {
-    if (settings.getKubeKFServingInstalled()) {
+    if (settings.getKubeKServeInstalled()) {
       Map<String, String> userAccountMap = new HashMap<>();
       userAccountMap.put(user.getUsername(), null);
       logger.log(INFO, "Removing user account " + user.getUsername() + ": " + String.join(", ",

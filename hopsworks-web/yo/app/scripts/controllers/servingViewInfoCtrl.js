@@ -43,7 +43,7 @@ angular.module('hopsWorksApp')
              * Constants
              */
 
-            self.servingToolKFServing = "KFSERVING";
+            self.servingToolKServe = "KSERVE";
             self.servingToolDefault = "DEFAULT";
             self.modelServerPython = "PYTHON";
             self.modelServerTensorflow = "TENSORFLOW_SERVING";
@@ -145,11 +145,11 @@ angular.module('hopsWorksApp')
             }
 
             /**
-             * Get host header value for inference requests to KFServing
+             * Get host header value for inference requests to KServe
              *
              * @param serving the serving instance
              */
-            self.getKFServingHostHeader = function(serving) {
+            self.getKServeHostHeader = function(serving) {
                 if (typeof serving.internalPath === 'undefined') { return "-" }
                 return serving.name + "." + UtilsService.getProjectName().replaceAll("_", "-") + "." + self.knativeDomainName
             }

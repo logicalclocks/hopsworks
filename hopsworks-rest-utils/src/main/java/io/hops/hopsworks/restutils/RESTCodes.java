@@ -1172,7 +1172,7 @@ public class RESTCodes {
     UPDATE_MODEL_SERVER_ERROR(13, "The model server of a deployment cannot be updated.",
       Response.Status.BAD_REQUEST),
     KUBERNETES_NOT_INSTALLED(14, "Kubernetes is not installed", Response.Status.BAD_REQUEST),
-    KFSERVING_NOT_ENABLED(15, "KFServing is not installed or disabled", Response.Status.BAD_REQUEST),
+    KSERVE_NOT_ENABLED(15, "KServe is not installed or disabled", Response.Status.BAD_REQUEST),
     SCRIPT_NOT_FOUND(16, "Script not found", Response.Status.BAD_REQUEST),
     MODEL_FILES_STRUCTURE_NOT_VALID(17, "Model path does not have a valid file structure",
       Response.Status.BAD_REQUEST),

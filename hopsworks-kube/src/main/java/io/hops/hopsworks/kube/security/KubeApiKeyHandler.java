@@ -53,14 +53,14 @@ public class KubeApiKeyHandler implements ApiKeyHandler, UserAccountHandler, Pro
   
   @Override
   public void create(ApiKey apiKey) {
-    if (settings.getKubeKFServingInstalled()) {
+    if (settings.getKubeKServeInstalled()) {
       createServingApiKeySecret(apiKey);
     }
   }
   
   @Override
   public void delete(ApiKey apiKey) {
-    if (settings.getKubeKFServingInstalled()) {
+    if (settings.getKubeKServeInstalled()) {
       logger.log(INFO, "Deleting serving API key secret for user " + apiKey.getUser().getUsername());
       kubeClientService.deleteSecret(KubeServingUtils.HOPS_SYSTEM_NAMESPACE,
         kubeApiKeyUtils.getServingApiKeySecretName(apiKey.getPrefix()));
@@ -95,19 +95,19 @@ public class KubeApiKeyHandler implements ApiKeyHandler, UserAccountHandler, Pro
   // User account handler
   //
   // When an user is created/deleted, create or delete the serving api key in the hops-system namespace in Kubernetes.
-  // This api key contains the raw secret used by KFServing (download artifacts, connect to the Feature Store) and
+  // This api key contains the raw secret used by KServe (download artifacts, connect to the Feature Store) and
   // HSML (inference requests)
   
   @Override
   public void create(Users user) throws Exception {
-    if (settings.getKubeKFServingInstalled()) {
+    if (settings.getKubeKServeInstalled()) {
       replicateUserServingApiKey(user);
     }
   }
   
   @Override
   public void update(Users user) throws Exception {
-    if (settings.getKubeKFServingInstalled()) {
+    if (settings.getKubeKServeInstalled()) {
       if (user.getStatus() != UserAccountStatus.ACTIVATED_ACCOUNT) {
         // if user is not activated, delete serving api key
         remove(user);
@@ -120,7 +120,7 @@ public class KubeApiKeyHandler implements ApiKeyHandler, UserAccountHandler, Pro
   
   @Override
   public void remove(Users user) throws Exception {
-    if (settings.getKubeKFServingInstalled()) {
+    if (settings.getKubeKServeInstalled()) {
       // if an user is removed, remove the serving api key
       logger.log(INFO, "Delete serving API key secret for user " + user.getUsername());
       kubeApiKeyUtils.deleteServingApiKey(user);
@@ -150,7 +150,7 @@ public class KubeApiKeyHandler implements ApiKeyHandler, UserAccountHandler, Pro
   @Override
   public void addMembers(Project project, List<Users> members, ProjectRoleTypes teamRole, boolean serviceUsers)
       throws Exception {
-    if (settings.getKubeKFServingInstalled()) {
+    if (settings.getKubeKServeInstalled()) {
       replicateMembersServingApiKeys(project, members, teamRole, serviceUsers);
     }
   }
@@ -162,7 +162,7 @@ public class KubeApiKeyHandler implements ApiKeyHandler, UserAccountHandler, Pro
   
   @Override
   public void removeMembers(Project project, List<Users> members) {
-    if (settings.getKubeKFServingInstalled()) {
+    if (settings.getKubeKServeInstalled()) {
       // remove serving api keys from project namespace,
       kubeApiKeyUtils.deleteServingApiKeySecrets(project, members);
     }
