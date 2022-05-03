@@ -68,8 +68,18 @@ public class OpenIdConstant {
   public static final String GROUPS = "groups";
   public static final String ROLES = "roles";
   // the groups used by hopsworks.ai for oauth
+  // all the members of the organization are part of the users_group which is
+  // by default mapped to HOPS_USER
   public static final String COGNITO_USERS_GROUP = "custom:users_group";
+  // The person creating the cluster is mapped to this group it would be better named
+  // owner_group, but we can't rename it for backward compatibilit reasons
+  // This group is mapped to HOPS_ADMIN
   public static final String COGNITO_ADMINS_GROUP = "custom:admins_group";
+  // The admins of the organization are mapped to this group which is by default
+  // maped to HOPS_ADMIN.
+  // Note that the owner of the cluster may not be an admin of the organization
+  public static final String COGNITO_ORGA_ADMINS_GROUP = "custom:orga_admins_group";
+  // end of the groups used by hopsworks.ai for oauth
   public static final String PROFILE = "profile";
   public static final String PICTURE = "picture";
   public static final String WEBSITE = "website";

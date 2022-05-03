@@ -503,7 +503,7 @@ public class OIDAuthorizationCodeFlowHelper {
      */
     groups.addAll(getListOrStringClaim(userInfo, OpenIdConstant.COGNITO_USERS_GROUP));
     groups.addAll(getListOrStringClaim(userInfo, OpenIdConstant.COGNITO_ADMINS_GROUP));
-    
+    groups.addAll(getListOrStringClaim(userInfo, OpenIdConstant.COGNITO_ORGA_ADMINS_GROUP));
     remoteUserDTO.setGroups(groups);
     validateRemoteUser(remoteUserDTO);
     return remoteUserDTO;
