@@ -46,6 +46,7 @@ nav:
           - Configure server for LDAP and Kerberos: admin/ldap/configure-server.md
       - User Management: admin/user.md
       - Configure Alerts: admin/alert.md
+      - Manage Services: admin/services.md
   - Hopsworks.ai: https://docs.hopsworks.ai/hopsworks-cloud/latest/
   - Examples: https://examples.hopsworks.ai/
   - Community: https://community.hopsworks.ai/
