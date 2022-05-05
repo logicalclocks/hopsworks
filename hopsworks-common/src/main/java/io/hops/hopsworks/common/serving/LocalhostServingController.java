@@ -346,10 +346,8 @@ public class LocalhostServingController implements ServingController {
         // The instance is not running, nothing else to do. Just release the lock.
         servingFacade.releaseLock(project, serving.getId());
       }
-      serving = dbServing;
+      servingWrapper.setServing(dbServing);
     }
-    // Update serving in the serving wrapper
-    servingWrapper.setServing(serving);
   }
   
   /**
