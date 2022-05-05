@@ -222,6 +222,18 @@ module ProjectHelper
     return request
   end
 
+  def get_testing_projects()
+    Project.select('distinct(id), projectname, username')
+        .where("projectname LIKE ? or projectname LIKE ? or projectname LIKE ? or projectname LIKE ? or
+                projectname LIKE ? or projectname LIKE ? or projectname LIKE ?",
+               'online_fs',
+               'project\_%',
+               'ProJect\_%',
+               'demo\_%',
+               'HOPSWORKS256%',
+               'hopsworks256%',
+               'prov\_proj\_%')
+  end
 
   # This function must be added under the first describe of each .spec file to ensure test projects are cleaned up properly
   def clean_all_test_projects(spec: "unknown")
@@ -230,10 +242,7 @@ module ProjectHelper
     starting = Process.clock_gettime(Process::CLOCK_MONOTONIC)
     hydra = Typhoeus::Hydra.new(max_concurrency: 10)
 
-    Project.select('distinct(id), projectname, username')
-        .where("projectname LIKE ? or projectname LIKE ? or projectname LIKE ? or projectname LIKE ? or projectname LIKE ?
-                or projectname LIKE ? or projectname LIKE ?", 'online_fs', 'project\_%', 'ProJect\_%', 'demo\_%',
-               'HOPSWORKS256%', 'hopsworks256%', 'prov\_proj\_%').each { |project|
+    get_testing_projects.each { |project|
       response, headers = login_user(project[:username], "Pass123")
       if response.code == 200
         hydra.queue clean_test_project(project, response, headers)

@@ -19,6 +19,11 @@ module ExecutionHelper
     get "#{ENV['HOPSWORKS_API']}/project/#{project_id}/jobs/#{job_name}/executions#{query}"
   end
 
+  def get_executions_checked(project_id, job_name, query: nil)
+    get_executions(project_id, job_name, query)
+    expect_status_details(200)
+  end
+
   def get_execution(project_id, job_name, execution_id)
     get "#{ENV['HOPSWORKS_API']}/project/#{project_id}/jobs/#{job_name}/executions/#{execution_id}"
   end
@@ -29,14 +34,27 @@ module ExecutionHelper
   end
 
   def start_execution(project_id, job_name, args=nil)
-      headers = { 'Content-Type' => 'text/plain' }
-      post "#{ENV['HOPSWORKS_API']}/project/#{project_id}/jobs/#{job_name}/executions", args, headers
-    end
+    pp "active executions:#{get_existing_active_executions()}" if defined?(@debugOpt) && @debugOpt
+    headers = { 'Content-Type' => 'text/plain' }
+    path = "#{ENV['HOPSWORKS_API']}/project/#{project_id}/jobs/#{job_name}/executions"
+    pp "#{path}, #{args}, #{headers}" if defined?(@debugOpt) && @debugOpt
+    post path, args, headers
+  end
+
+  def start_execution_checked(project_id, job_name, args=nil)
+    start_execution(project_id, job_name, args)
+    expect_status_details(201)
+  end
 
   def stop_execution(project_id, job_name, execution_id)
     stateDTO = {}
     stateDTO["state"] = "stopped"
     put "#{ENV['HOPSWORKS_API']}/project/#{project_id}/jobs/#{job_name}/executions/#{execution_id}/status", stateDTO
+  end
+
+  def stop_execution_checked(project_id, job_name, execution_id)
+    stop_execution(project_id, job_name, execution_id)
+    expect_status_details(202)
   end
 
   def delete_execution(project_id, job_name, execution_id)
@@ -48,36 +66,58 @@ module ExecutionHelper
   end
 
   def wait_for_execution_active(project_id, job_name, execution_id, expected_active_state, appOrExecId)
-    id = ''
-    wait_result = wait_for_me_time do
-      get_execution_checked(project_id, job_name, execution_id)
-      pp json_body if defined? (@debugOpt) && @debugOpt
-      if appOrExecId.eql? 'id'
-        id = json_body[:id]
-      else
-        id = json_body[:appId]
+    begin
+      id = ''
+      wait_result = wait_for_me_time do
+        get_execution_checked(project_id, job_name, execution_id)
+        if appOrExecId.eql? 'id'
+          id = json_body[:id]
+        else
+          id = json_body[:appId]
+        end
+        found_state = (json_body[:state].eql? expected_active_state) || !is_execution_active(json_body)
+        pp "waiting execution:<#{execution_id}, #{id}> active - state:#{json_body[:state]}" if defined?(@debugOpt) && @debugOpt
+        { 'success' => found_state, 'msg' => "expected:#{expected_active_state} found:#{json_body[:state]}" }
       end
-      found_state = (json_body[:state].eql? expected_active_state) || !is_execution_active(json_body)
-      pp "waiting execution:<#{execution_id}, #{id}> active - state:#{json_body[:state]}" if defined? (@debugOpt) && @debugOpt
-      { 'success' => found_state, 'msg' => "expected:#{expected_active_state} found:#{json_body[:state]}" }
+      expect(wait_result["success"]).to be(true), wait_result["msg"]
+      expect(id).not_to be_nil
+      id
+    rescue Failure => error
+      wait_for_me_time(timeout=5, delay=5) do
+        stop_execution(project_id, job_name, execution_id)
+        response.code == resolve_status(202, response.code)
+      end
+      raise error
     end
-    expect(wait_result["success"]).to be(true), wait_result["msg"]
-    expect(id).not_to be_nil
-    id
   end
 
   def wait_for_execution_completed(project_id, job_name, execution_id, expected_end_state, expected_final_status: nil)
-    wait_result = wait_for_me_time(timeout=120) do
-      get_execution(project_id, job_name, execution_id)
-      unless is_execution_active(json_body)
-        expect(json_body[:state]).to eq(expected_end_state), "job completed with state:#{json_body[:state]}"
+    begin
+      wait_result = wait_for_me_time do
+        get_execution_checked(project_id, job_name, execution_id)
+        unless is_execution_active(json_body)
+          expect(json_body[:state]).to eq(expected_end_state), "job completed with state:#{json_body[:state]}"
+        end
+        found_state = json_body[:state].eql? expected_end_state
+        pp "waiting execution completed - state:#{json_body[:state]}" if defined?(@debugOpt) && @debugOpt
+        { 'success' => found_state, 'msg' => "expected:#{expected_end_state} found:#{json_body[:state]}", "result" => json_body}
       end
-      found_state = json_body[:state].eql? expected_end_state
-      pp "waiting execution completed - state:#{json_body[:state]}" if defined?(@debugOpt) && @debugOpt
-      { 'success' => found_state, 'msg' => "expected:#{expected_end_state} found:#{json_body[:state]}", "result" => json_body}
+      expect(wait_result["success"]).to be(true), wait_result["msg"]
+      expect(wait_result["result"][:finalStatus]).to eq(expected_final_status) unless expected_final_status.nil?
+    rescue StandardError => error
+      wait_for_me_time(timeout=5, delay=5) do
+        stop_execution(project_id, job_name, execution_id)
+        response.code == resolve_status(202, response.code)
+      end
+      raise error
     end
-    expect(wait_result["success"]).to be(true), wait_result["msg"]
-    expect(wait_result["result"][:finalStatus]).to eq(expected_final_status) unless expected_final_status.nil?
+  end
+
+  def run_execution(project_id, job_name)
+    start_execution_checked(project_id, job_name)
+    execution_id = json_body[:id]
+    wait_for_execution_completed(project_id, job_name, execution_id, "FINISHED")
+    execution_id
   end
 
   def find_executions(job_id)
@@ -89,7 +129,7 @@ module ExecutionHelper
   end
 
   def is_execution_active(execution_dto)
-    state = execution_dto["state"]
+    state = execution_dto[:state]
     !(state == "FINISHED" || state == "FAILED" || state == "KILLED" || state == "INITIALIZATION_FAILED")
   end
 
