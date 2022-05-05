@@ -183,7 +183,9 @@ public class ServingFacade {
   }
 
   public Serving merge(Serving serving) {
-    return em.merge(serving);
+    serving = em.merge(serving);
+    em.flush(); //To get the id.
+    return serving;
   }
 
   public Serving findByProjectAndId(Project project, Integer id) {
