@@ -227,4 +227,41 @@ describe "On #{ENV['OS']}" do
     expect(parsed_result.key?("id")).to be true
     expect(parsed_result["name"]).to eql(connector_name)
   end
+
+  it "should update connector with encryption to without encryption" do
+    project = get_project
+    featurestore_id = get_featurestore_id(project.id)
+    key_path = "/Projects/#{@project['projectname']}/Resources/sampleKey.json"
+    bucket = 'testbucket'
+    encryption_key = "new key"
+    encryption_hash = "new hash"
+    algorithm = "AES256"
+    _, connector_name = create_gcs_connector(project.id, featurestore_id, key_path, bucket, algorithm:algorithm,
+                                             encryption_key:encryption_key, encryption_key_hash:encryption_hash )
+    expect_status_details(201)
+    description = "test gcs updated"
+    key_path = "/Projects/#{@project['projectname']}/Resources/newSampleKey.json"
+    additional_data = {
+      name: connector_name,
+      description: description,
+      keyPath: key_path,
+      bucket: bucket,
+      algorithm: nil
+    }
+
+    update_result = update_gcs_connector_json(project.id, featurestore_id, connector_name, additional_data )
+    parsed_result_update = JSON.parse(update_result)
+    expect_status_details(200)
+    expect(parsed_result_update.key?("id")).to be true
+    expect(parsed_result_update["name"]).to eql(connector_name)
+    expect(parsed_result_update["storageConnectorType"]).to eql("GCS")
+    expect(parsed_result_update["description"]).to eql(description)
+    expect(parsed_result_update["featurestoreId"]).to eql(featurestore_id)
+    expect(parsed_result_update["keyPath"]).to eql(key_path)
+    expect(parsed_result_update['bucket']).to eql(bucket)
+    expect(parsed_result_update.key?("encryptionKey")).to be false
+    expect(parsed_result_update.key?("encryptionKeyHash")).to be false
+    expect(parsed_result_update.key?("algorithm")).to be false
+  end
+
 end

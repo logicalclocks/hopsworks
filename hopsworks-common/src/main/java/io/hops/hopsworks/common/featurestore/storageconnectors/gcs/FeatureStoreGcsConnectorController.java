@@ -105,6 +105,8 @@ public class FeatureStoreGcsConnectorController {
       gcsConnector.setEncryptionSecret(
         storageConnectorUtil.updateProjectSecret(user, gcsConnector.getEncryptionSecret(),
           secretName, featureStore, secretsClass));
+    } else {
+      gcsConnector.setEncryptionSecret(null);
     }
     return gcsConnector;
   }

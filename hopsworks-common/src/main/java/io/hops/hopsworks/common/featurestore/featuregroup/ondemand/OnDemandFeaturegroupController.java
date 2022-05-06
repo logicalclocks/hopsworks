@@ -92,7 +92,8 @@ public class OnDemandFeaturegroupController {
     // However if you are running against a JDBC database, you need to provide a query
     boolean isJDBCType = (connector.getConnectorType() == FeaturestoreConnectorType.JDBC ||
         connector.getConnectorType() == FeaturestoreConnectorType.REDSHIFT ||
-        connector.getConnectorType() == FeaturestoreConnectorType.SNOWFLAKE);
+        connector.getConnectorType() == FeaturestoreConnectorType.SNOWFLAKE ||
+        connector.getConnectorType() == FeaturestoreConnectorType.BIGQUERY);
     if (connector.getConnectorType() == FeaturestoreConnectorType.KAFKA) {
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.COULD_NOT_CREATE_ON_DEMAND_FEATUREGROUP,
         Level.FINE, connector.getConnectorType() + " storage connectors are not supported as source for on demand " +

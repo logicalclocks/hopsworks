@@ -390,4 +390,23 @@ module StorageConnectorHelper
     put update_connector_endpoint, json_data.to_json
   end
 
+  def create_bigquery_connector(project_id, featurestore_id, additional_data)
+    name = "bigq_connector_#{random_id}"
+    json_data = {
+      name: name,
+      description: "test bigq connector",
+      type: "featurestoreBigqueryConnectorDTO",
+      storageConnectorType: "BIGQUERY"
+    }
+    json_data=json_data.merge(additional_data)
+    endpoint = "#{ENV['HOPSWORKS_API']}/project/#{project_id}/featurestores/#{featurestore_id}/storageconnectors/"
+    json_result = post endpoint, json_data.to_json
+    [json_result, name]
+  end
+
+  def update_connector_json(project_id, featurestore_id, connector_name, json_data)
+    update_connector_endpoint = "#{ENV['HOPSWORKS_API']}/project/#{project_id}/featurestores/#{featurestore_id}/storageconnectors/#{connector_name}"
+    put update_connector_endpoint, json_data.to_json
+  end
+
 end

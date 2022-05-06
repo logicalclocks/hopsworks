@@ -1,15 +1,15 @@
 # This file is part of Hopsworks
 # Copyright (C) 2020, Logical Clocks AB. All rights reserved
 #
-# Hopsworks is free software: you can redistribute it and/or modify it under the terms of 
-# the GNU Affero General Public License as published by the Free Software Foundation, 
+# Hopsworks is free software: you can redistribute it and/or modify it under the terms of
+# the GNU Affero General Public License as published by the Free Software Foundation,
 # either version 3 of the License, or (at your option) any later version.
 #
-# Hopsworks is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; 
-# without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR 
+# Hopsworks is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+# without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 # PURPOSE.  See the GNU Affero General Public License for more details.
 #
-# You should have received a copy of the GNU Affero General Public License along with this program.  
+# You should have received a copy of the GNU Affero General Public License along with this program.
 # If not, see <https://www.gnu.org/licenses/>.
 #
 
@@ -921,7 +921,7 @@ describe "On #{ENV['OS']}" do
         expect(parsed_json["items"][0]["commitID"]).to eql(1603650176000)
         expect(parsed_json["items"][1]["commitID"]).to eql(1603577485000)
       end
-	  
+
 	  it "should be able to retrieve commit timeline from existing hudi enabled offline cached featuregroup without providing any parameters" do
         featurestore_id = get_featurestore_id(@project[:id])
         featurestore_name = @project['projectname'].downcase + "_featurestore"
@@ -1641,6 +1641,7 @@ describe "On #{ENV['OS']}" do
 
         with_valid_project
         with_jdbc_connector(@project[:id])
+        create_test_files
       end
 
       it "should be able to add an on-demand featuregroup to the featurestore" do
@@ -2090,6 +2091,85 @@ describe "On #{ENV['OS']}" do
         expect(parsed_json.first["features"][3]["name"]).to eql("ft_d")
         expect(parsed_json.first["features"][4]["name"]).to eql("ft_e")
         expect(parsed_json.first["features"][5]["name"]).to eql("ft_f")
+      end
+
+      it "should be able to create an on-demand featuregroup from bigquery connector" do
+
+        project = get_project
+        featurestore_id = get_featurestore_id(project.id)
+        key_path =  "/Projects/#{@project['projectname']}/Resources/sampleKey.json"
+        parent_project = 'feature-store-testing'
+        material_dataset = 'views'
+        create_data = {
+          keyPath: key_path,
+          parentProject: parent_project,
+          materializationDataset: material_dataset
+        }
+        json_result_bigq, conn_name=create_bigquery_connector(project.id,  featurestore_id, create_data)
+        connector_id = JSON.parse(json_result_bigq)["id"]
+        json_result, featuregroup_name = create_on_demand_featuregroup(project.id, featurestore_id, connector_id)
+        parsed_json = JSON.parse(json_result)
+        expect_status(201)
+        expect(parsed_json.key?("id")).to be true
+        expect(parsed_json.key?("query")).to be true
+        expect(parsed_json.key?("storageConnector")).to be true
+        expect(parsed_json.key?("features")).to be true
+        expect(parsed_json.key?("featurestoreName")).to be true
+        expect(parsed_json.key?("name")).to be true
+        expect(parsed_json.key?("location")).to be true
+        expect(parsed_json["featurestoreName"] == project.projectname.downcase + "_featurestore").to be true
+        expect(parsed_json["name"] == featuregroup_name).to be true
+        expect(parsed_json["type"] == "onDemandFeaturegroupDTO").to be true
+        expect(parsed_json["storageConnector"]["id"]).to eq connector_id
+
+        path = "/apps/hive/warehouse/#{project['projectname'].downcase}_featurestore.db/#{featuregroup_name}_1"
+        expect(test_file(path)).to be true
+      end
+
+
+      it "should be able to create an on-demand featuregroup  without query from gcs connector" do
+
+        project = get_project
+        featurestore_id = get_featurestore_id(project.id)
+        key_path = "/Projects/#{@project['projectname']}/Resources/sampleKey.json"
+        bucket = 'testbucket'
+        json_result_gcs, connector_name = create_gcs_connector(project.id, featurestore_id, key_path,bucket)
+        connector_id = JSON.parse(json_result_gcs)["id"]
+        json_result, featuregroup_name = create_on_demand_featuregroup(project.id, featurestore_id, connector_id,
+                                                                       query: "",
+                                                                       data_format: "CSV")
+        parsed_json = JSON.parse(json_result)
+        expect_status(201)
+        expect(parsed_json.key?("id")).to be true
+        expect(parsed_json["query"]).to eql("")
+        expect(parsed_json["dataFormat"]).to eql("CSV")
+        expect(parsed_json.key?("storageConnector")).to be true
+        expect(parsed_json.key?("features")).to be true
+        expect(parsed_json.key?("featurestoreName")).to be true
+        expect(parsed_json.key?("name")).to be true
+        expect(parsed_json.key?("location")).to be true
+        expect(parsed_json["featurestoreName"] == project.projectname.downcase + "_featurestore").to be true
+        expect(parsed_json["name"] == featuregroup_name).to be true
+        expect(parsed_json["type"] == "onDemandFeaturegroupDTO").to be true
+        expect(parsed_json["storageConnector"]["id"]).to eq connector_id
+
+        path = "/apps/hive/warehouse/#{project['projectname'].downcase}_featurestore.db/#{featuregroup_name}_1"
+        expect(test_file(path)).to be true
+      end
+
+      it "should not be able to create a on-demand feature group with query and gcs connector" do
+
+        project = get_project
+        featurestore_id = get_featurestore_id(project.id)
+        key_path = "/Projects/#{@project['projectname']}/Resources/sampleKey.json"
+        bucket = 'testbucket'
+        json_result_gcs, connector_name = create_gcs_connector(project.id, featurestore_id, key_path,bucket)
+        connector_id = JSON.parse(json_result_gcs)["id"]
+        json_result, _ = create_on_demand_featuregroup(project.id, featurestore_id, connector_id,
+                                                       query: "SELECT * FROM something")
+        expect_status(400)
+        parsed_json = JSON.parse(json_result)
+        expect(parsed_json["errorCode"]).to eql(270044)
       end
     end
   end
