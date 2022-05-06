@@ -24,5 +24,6 @@ public enum FeaturestoreConnectorType {
   ADLS,
   SNOWFLAKE,
   KAFKA,
-  GCS;
+  GCS,
+  BIGQUERY;
 }
