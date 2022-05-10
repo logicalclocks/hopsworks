@@ -648,13 +648,65 @@ describe "On #{ENV['OS']}" do
           expect_status_details(200)
           query = JSON.parse(json_result)
 
-          expect(query['query']).to eql("SELECT `fg0`.`a_testfeature`, `fg0`.`a_testfeature1`, `fg1`.`b_testfeature1`\n" +
+          expect(query['query']).to eql("SELECT `fg0`.`a_testfeature` `a_testfeature`, `fg0`.`a_testfeature1` `a_testfeature1`, `fg1`.`b_testfeature1` `b_testfeature1`\n" +
            "FROM `#{featurestore_name}`.`#{fg_a_name}_1` `fg0`\n" +
            "INNER JOIN `#{featurestore_name}`.`#{fg_b_name}_1` `fg1` ON `fg0`.`a_testfeature` = `fg1`.`a_testfeature`")
 
-          expect(query['queryOnline']).to eql("SELECT `fg0`.`a_testfeature`, `fg0`.`a_testfeature1`, `fg1`.`b_testfeature1`\n" +
+          expect(query['queryOnline']).to eql("SELECT `fg0`.`a_testfeature` `a_testfeature`, `fg0`.`a_testfeature1` `a_testfeature1`, `fg1`.`b_testfeature1` `b_testfeature1`\n" +
            "FROM `#{project_name.downcase}`.`#{fg_a_name}_1` `fg0`\n" +
            "INNER JOIN `#{project_name.downcase}`.`#{fg_b_name}_1` `fg1` ON `fg0`.`a_testfeature` = `fg1`.`a_testfeature`")
+        end
+
+        it "should succeed to replay the query from a query based training dataset with hive query flag" do
+          project_name = @project.projectname
+          featurestore_id = get_featurestore_id(@project.id)
+          featurestore_name = get_featurestore_name(@project.id)
+          features = [
+            {type: "INT", name: "a_testfeature", primary: true},
+            {type: "INT", name: "a_testfeature1"},
+          ]
+          fg_a_name = "test_fg_#{short_random_id}"
+          fg_id = create_cached_featuregroup_checked(@project.id, featurestore_id, fg_a_name, features: features)
+          # create second feature group
+          features = [
+            {type: "INT", name: "a_testfeature", primary: true},
+            {type: "INT", name: "b_testfeature1"},
+          ]
+          fg_b_name = "test_fg_#{short_random_id}"
+          fg_id_b = create_cached_featuregroup_checked(@project.id, featurestore_id, fg_b_name, features: features)
+          # create queryDTO object
+          query = {
+            leftFeatureGroup: {
+              id: fg_id
+            },
+            leftFeatures: [{name: 'a_testfeature'}, {name: 'a_testfeature1'}],
+            joins: [{
+                      query: {
+                        leftFeatureGroup: {
+                          id: fg_id_b
+                        },
+                        leftFeatures: [{name: 'a_testfeature'}, {name: 'b_testfeature1'}]
+                      }
+                    }
+            ]
+          }
+
+          json_result, _ = create_hopsfs_training_dataset(@project.id, featurestore_id, nil, query:query)
+          expect_status_details(201)
+          training_dataset = JSON.parse(json_result)
+
+          json_result = get "#{ENV['HOPSWORKS_API']}/project/#{@project
+                                                                 .id}/featurestores/#{featurestore_id}/trainingdatasets/#{training_dataset['id']}/query?hiveQuery=true"
+          expect_status_details(200)
+          query = JSON.parse(json_result)
+
+          expect(query['query']).to eql("SELECT `fg0`.`a_testfeature` `a_testfeature`, `fg0`.`a_testfeature1` `a_testfeature1`, `fg1`.`b_testfeature1` `b_testfeature1`\n" +
+                                          "FROM `#{featurestore_name}`.`#{fg_a_name}_1` `fg0`\n" +
+                                          "INNER JOIN `#{featurestore_name}`.`#{fg_b_name}_1` `fg1` ON `fg0`.`a_testfeature` = `fg1`.`a_testfeature`")
+
+          expect(query['queryOnline']).to eql("SELECT `fg0`.`a_testfeature` `a_testfeature`, `fg0`.`a_testfeature1` `a_testfeature1`, `fg1`.`b_testfeature1` `b_testfeature1`\n" +
+                                                "FROM `#{project_name.downcase}`.`#{fg_a_name}_1` `fg0`\n" +
+                                                "INNER JOIN `#{project_name.downcase}`.`#{fg_b_name}_1` `fg1` ON `fg0`.`a_testfeature` = `fg1`.`a_testfeature`")
         end
 
         it "should succeed to replay a training dataset query using on-demand and cached feature groups" do
@@ -695,7 +747,7 @@ describe "On #{ENV['OS']}" do
           expect_status_details(200)
           query = JSON.parse(json_result)
 
-          expect(query['query']).to eql("SELECT `fg0`.`anotherfeature`, `fg1`.`testfeature`\n" +
+          expect(query['query']).to eql("SELECT `fg0`.`anotherfeature` `anotherfeature`, `fg1`.`testfeature` `testfeature`\n" +
                                         "FROM `#{featurestore_name}`.`#{fg_name}_1` `fg0`\n" +
                                         "INNER JOIN `fg1` ON `fg0`.`testfeature` = `fg1`.`testfeature`")
           expect(query.key?('onDemandFeatureGroups')).to be true
@@ -752,11 +804,11 @@ describe "On #{ENV['OS']}" do
           expect_status_details(200)
           query = JSON.parse(json_result)
 
-          expect(query['query']).to eql("SELECT `fg0`.`a_testfeature`, `fg0`.`a_testfeature1`, `fg1`.`b_testfeature1`\n" +
+          expect(query['query']).to eql("SELECT `fg0`.`a_testfeature` `a_testfeature`, `fg0`.`a_testfeature1` `a_testfeature1`, `fg1`.`b_testfeature1` `b_testfeature1`\n" +
                                             "FROM `#{featurestore_name}`.`#{fg_a_name}_1` `fg0`\n" +
                                             "INNER JOIN `#{featurestore_name}`.`#{fg_b_name}_1` `fg1` ON `fg0`.`a_testfeature` = `fg1`.`a_testfeature`")
 
-          expect(query['queryOnline']).to eql("SELECT `fg0`.`a_testfeature`, `fg0`.`a_testfeature1`, `fg1`.`b_testfeature1`\n" +
+          expect(query['queryOnline']).to eql("SELECT `fg0`.`a_testfeature` `a_testfeature`, `fg0`.`a_testfeature1` `a_testfeature1`, `fg1`.`b_testfeature1` `b_testfeature1`\n" +
                                                   "FROM `#{project_name.downcase}`.`#{fg_a_name}_1` `fg0`\n" +
                                                   "INNER JOIN `#{project_name.downcase}`.`#{fg_b_name}_1` `fg1` ON `fg0`.`a_testfeature` = `fg1`.`a_testfeature`")
 
@@ -766,11 +818,11 @@ describe "On #{ENV['OS']}" do
           expect_status_details(200)
           query = JSON.parse(json_result)
 
-          expect(query['query']).to eql("SELECT `fg0`.`a_testfeature`, `fg0`.`a_testfeature1`\n" +
+          expect(query['query']).to eql("SELECT `fg0`.`a_testfeature` `a_testfeature`, `fg0`.`a_testfeature1` `a_testfeature1`\n" +
                                             "FROM `#{featurestore_name}`.`#{fg_a_name}_1` `fg0`\n" +
                                             "INNER JOIN `#{featurestore_name}`.`#{fg_b_name}_1` `fg1` ON `fg0`.`a_testfeature` = `fg1`.`a_testfeature`")
 
-          expect(query['queryOnline']).to eql("SELECT `fg0`.`a_testfeature`, `fg0`.`a_testfeature1`\n" +
+          expect(query['queryOnline']).to eql("SELECT `fg0`.`a_testfeature` `a_testfeature`, `fg0`.`a_testfeature1` `a_testfeature1`\n" +
                                                   "FROM `#{project_name.downcase}`.`#{fg_a_name}_1` `fg0`\n" +
                                                   "INNER JOIN `#{project_name.downcase}`.`#{fg_b_name}_1` `fg1` ON `fg0`.`a_testfeature` = `fg1`.`a_testfeature`")
         end
@@ -831,15 +883,15 @@ describe "On #{ENV['OS']}" do
           expect_status_details(200)
           query = JSON.parse(json_result)
 
-          expect(query['query']).to eql("SELECT `fg0`.`a_testfeature1`, " +
+          expect(query['query']).to eql("SELECT `fg0`.`a_testfeature1` `a_testfeature1`, " +
                                         "CASE WHEN `fg0`.`a_testfeature_appended` IS NULL THEN 10.0 ELSE `fg0`.`a_testfeature_appended` END `a_testfeature_appended`, " +
-                                        "`fg1`.`a_testfeature`, " +
-                                        "`fg1`.`b_testfeature1`\n" +
+                                        "`fg1`.`a_testfeature` `a_testfeature`, " +
+                                        "`fg1`.`b_testfeature1` `b_testfeature1`\n" +
                                         "FROM `#{featurestore_name}`.`#{fg_a_name}_1` `fg0`\n" +
                                         "INNER JOIN `#{featurestore_name}`.`#{fg_b_name}_1` `fg1` " +
                                             "ON CASE WHEN `fg0`.`a_testfeature_appended` IS NULL THEN 10.0 ELSE `fg0`.`a_testfeature_appended` END = `fg1`.`a_testfeature`")
 
-          expect(query['queryOnline']).to eql("SELECT `fg0`.`a_testfeature1`, `fg0`.`a_testfeature_appended`, `fg1`.`a_testfeature`, `fg1`.`b_testfeature1`\n" +
+          expect(query['queryOnline']).to eql("SELECT `fg0`.`a_testfeature1` `a_testfeature1`, `fg0`.`a_testfeature_appended` `a_testfeature_appended`, `fg1`.`a_testfeature` `a_testfeature`, `fg1`.`b_testfeature1` `b_testfeature1`\n" +
                                                   "FROM `#{project_name.downcase}`.`#{fg_a_name}_1` `fg0`\n" +
                                                   "INNER JOIN `#{project_name.downcase}`.`#{fg_b_name}_1` `fg1` ON `fg0`.`a_testfeature_appended` = `fg1`.`a_testfeature`")
         end
@@ -880,11 +932,11 @@ describe "On #{ENV['OS']}" do
           expect_status_details(200)
           query = JSON.parse(json_result)
 
-          expect(query['query']).to eql("SELECT `fg0`.`a_testfeature`, `fg1`.`a_testfeature1`\n" +
+          expect(query['query']).to eql("SELECT `fg0`.`a_testfeature` `a_testfeature`, `fg1`.`a_testfeature1` `a_testfeature1`\n" +
               "FROM `#{featurestore_name}`.`#{fg_name}_1` `fg0`\n" +
               "LEFT JOIN `#{featurestore_name}`.`#{fg_name}_1` `fg1` ON `fg0`.`a_testfeature` = `fg1`.`a_testfeature`")
 
-          expect(query['queryOnline']).to eql("SELECT `fg0`.`a_testfeature`, `fg1`.`a_testfeature1`\n" +
+          expect(query['queryOnline']).to eql("SELECT `fg0`.`a_testfeature` `a_testfeature`, `fg1`.`a_testfeature1` `a_testfeature1`\n" +
               "FROM `#{project_name.downcase}`.`#{fg_name}_1` `fg0`\n" +
               "LEFT JOIN `#{project_name.downcase}`.`#{fg_name}_1` `fg1` ON `fg0`.`a_testfeature` = `fg1`.`a_testfeature`")
         end
@@ -1509,7 +1561,7 @@ describe "On #{ENV['OS']}" do
           parsed_json = JSON.parse(json_result)
           expect(parsed_json["items"].first["preparedStatementParameters"].first["index"]).to eql(1)
           expect(parsed_json["items"].first["preparedStatementParameters"].first["name"]).to eql("a")
-          expect(parsed_json["items"].first["queryOnline"]).to eql("SELECT `fg0`.`d`, `fg0`.`c`, `fg0`.`a`, `fg0`.`b`\n"+
+          expect(parsed_json["items"].first["queryOnline"]).to eql("SELECT `fg0`.`d` AS `d`, `fg0`.`c` AS `c`, `fg0`.`a` AS `a`, `fg0`.`b` AS `b`\n"+
                                                                    "FROM `#{project_name.downcase}`.`#{fg_name}_1` AS `fg0`\n" +
                                                                    "WHERE `fg0`.`a` = ?")
         end
@@ -1558,10 +1610,10 @@ describe "On #{ENV['OS']}" do
           parsed_json = JSON.parse(json_result)
           expect(parsed_json["items"].first["preparedStatementParameters"].first["index"]).to eql(1)
           expect(parsed_json["items"].first["preparedStatementParameters"].first["name"]).to eql("a_testfeature")
-          expect(parsed_json["items"].first["queryOnline"]).to eql("SELECT `fg0`.`a_testfeature1`\nFROM `#{project_name.downcase}`.`#{fg_name}_1` AS `fg0`\nWHERE `fg0`.`a_testfeature` = ?")
+          expect(parsed_json["items"].first["queryOnline"]).to eql("SELECT `fg0`.`a_testfeature1` AS `a_testfeature1`\nFROM `#{project_name.downcase}`.`#{fg_name}_1` AS `fg0`\nWHERE `fg0`.`a_testfeature` = ?")
           expect(parsed_json["items"].second["preparedStatementParameters"].first["index"]).to eql(1)
           expect(parsed_json["items"].second["preparedStatementParameters"].first["name"]).to eql("a_testfeature")
-          expect(parsed_json["items"].second["queryOnline"]).to eql("SELECT `fg0`.`b_testfeature1`\nFROM `#{project_name.downcase}`.`#{fg_name_b}_1` AS `fg0`\nWHERE `fg0`.`a_testfeature` = ?")
+          expect(parsed_json["items"].second["queryOnline"]).to eql("SELECT `fg0`.`b_testfeature1` AS `b_testfeature1`\nFROM `#{project_name.downcase}`.`#{fg_name_b}_1` AS `fg0`\nWHERE `fg0`.`a_testfeature` = ?")
           expect_status(200)
         end
 
@@ -1634,10 +1686,10 @@ describe "On #{ENV['OS']}" do
           expect(parsed_json["items"].length).to eql(2)
           expect(parsed_json["items"].first["preparedStatementParameters"].first["index"]).to eql(1)
           expect(parsed_json["items"].first["preparedStatementParameters"].first["name"]).to eql("a_testfeature")
-          expect(parsed_json["items"].first["queryOnline"]).to eql("SELECT `fg0`.`a_testfeature1`\nFROM `#{project_name.downcase}`.`#{fg_name}_1` AS `fg0`\nWHERE `fg0`.`a_testfeature` = ?")
+          expect(parsed_json["items"].first["queryOnline"]).to eql("SELECT `fg0`.`a_testfeature1` AS `a_testfeature1`\nFROM `#{project_name.downcase}`.`#{fg_name}_1` AS `fg0`\nWHERE `fg0`.`a_testfeature` = ?")
           expect(parsed_json["items"].second["preparedStatementParameters"].first["index"]).to eql(1)
           expect(parsed_json["items"].second["preparedStatementParameters"].first["name"]).to eql("a_testfeature")
-          expect(parsed_json["items"].second["queryOnline"]).to eql("SELECT `fg0`.`b_testfeature1`\nFROM `#{project_name.downcase}`.`#{fg_name_b}_1` AS `fg0`\nWHERE `fg0`.`a_testfeature` = ?")
+          expect(parsed_json["items"].second["queryOnline"]).to eql("SELECT `fg0`.`b_testfeature1` AS `b_testfeature1`\nFROM `#{project_name.downcase}`.`#{fg_name_b}_1` AS `fg0`\nWHERE `fg0`.`a_testfeature` = ?")
           expect_status_details(200)
         end
 
@@ -1711,10 +1763,10 @@ describe "On #{ENV['OS']}" do
           expect(parsed_json["items"].length).to eql(2)
           expect(parsed_json["items"].first["preparedStatementParameters"].first["index"]).to eql(1)
           expect(parsed_json["items"].first["preparedStatementParameters"].first["name"]).to eql("a_testfeature")
-          expect(parsed_json["items"].first["queryOnline"]).to eql("SELECT `fg0`.`a_testfeature1`\nFROM `#{project_name.downcase}`.`#{fg_name}_1` AS `fg0`\nWHERE `fg0`.`a_testfeature` IN ?\nORDER BY `fg0`.`a_testfeature`")
+          expect(parsed_json["items"].first["queryOnline"]).to eql("SELECT `fg0`.`a_testfeature1` AS `a_testfeature1`\nFROM `#{project_name.downcase}`.`#{fg_name}_1` AS `fg0`\nWHERE `fg0`.`a_testfeature` IN ?\nORDER BY `fg0`.`a_testfeature`")
           expect(parsed_json["items"].second["preparedStatementParameters"].first["index"]).to eql(1)
           expect(parsed_json["items"].second["preparedStatementParameters"].first["name"]).to eql("d_testfeature1")
-          expect(parsed_json["items"].second["queryOnline"]).to eql("SELECT `fg0`.`b_testfeature1`\nFROM `#{project_name.downcase}`.`#{fg_name_b}_1` AS `fg0`\nWHERE (`fg0`.`d_testfeature1`, `fg0`.`a_testfeature`) IN ?\nORDER BY `fg0`.`d_testfeature1`, `fg0`.`a_testfeature`")
+          expect(parsed_json["items"].second["queryOnline"]).to eql("SELECT `fg0`.`b_testfeature1` AS `b_testfeature1`\nFROM `#{project_name.downcase}`.`#{fg_name_b}_1` AS `fg0`\nWHERE (`fg0`.`d_testfeature1`, `fg0`.`a_testfeature`) IN ?\nORDER BY `fg0`.`d_testfeature1`, `fg0`.`a_testfeature`")
           expect_status_details(200)
         end
 
@@ -1897,10 +1949,10 @@ describe "On #{ENV['OS']}" do
           parsed_json = JSON.parse(json_result)
           expect(parsed_json["items"].first["preparedStatementParameters"].first["index"]).to eql(1)
           expect(parsed_json["items"].first["preparedStatementParameters"].first["name"]).to eql("a_testfeature")
-          expect(parsed_json["items"].first["queryOnline"]).to eql("SELECT `fg0`.`a_testfeature1`\nFROM `#{project_name.downcase}`.`#{fg_name}_1` AS `fg0`\nWHERE `fg0`.`a_testfeature` = ?")
+          expect(parsed_json["items"].first["queryOnline"]).to eql("SELECT `fg0`.`a_testfeature1` AS `a_testfeature1`\nFROM `#{project_name.downcase}`.`#{fg_name}_1` AS `fg0`\nWHERE `fg0`.`a_testfeature` = ?")
           expect(parsed_json["items"].second["preparedStatementParameters"].first["index"]).to eql(1)
           expect(parsed_json["items"].second["preparedStatementParameters"].first["name"]).to eql("a_testfeature")
-          expect(parsed_json["items"].second["queryOnline"]).to eql("SELECT `fg0`.`b_testfeature1`\nFROM `#{project_name.downcase}`.`#{fg_name_b}_1` AS `fg0`\nWHERE `fg0`.`a_testfeature` = ?")
+          expect(parsed_json["items"].second["queryOnline"]).to eql("SELECT `fg0`.`b_testfeature1` AS `b_testfeature1`\nFROM `#{project_name.downcase}`.`#{fg_name_b}_1` AS `fg0`\nWHERE `fg0`.`a_testfeature` = ?")
           expect_status(200)
         end
 
@@ -2020,10 +2072,10 @@ describe "On #{ENV['OS']}" do
           expect(parsed_json["items"].length).to eql(2)
           expect(parsed_json["items"].first["preparedStatementParameters"].first["index"]).to eql(1)
           expect(parsed_json["items"].first["preparedStatementParameters"].first["name"]).to eql("a_testfeature")
-          expect(parsed_json["items"].first["queryOnline"]).to eql("SELECT `fg0`.`a_testfeature1`\nFROM `#{project_name.downcase}`.`#{fg_name}_1` AS `fg0`\nWHERE `fg0`.`a_testfeature` = ?")
+          expect(parsed_json["items"].first["queryOnline"]).to eql("SELECT `fg0`.`a_testfeature1` AS `a_testfeature1`\nFROM `#{project_name.downcase}`.`#{fg_name}_1` AS `fg0`\nWHERE `fg0`.`a_testfeature` = ?")
           expect(parsed_json["items"].second["preparedStatementParameters"].first["index"]).to eql(1)
           expect(parsed_json["items"].second["preparedStatementParameters"].first["name"]).to eql("a_testfeature")
-          expect(parsed_json["items"].second["queryOnline"]).to eql("SELECT `fg0`.`b_testfeature1`\nFROM `#{project_name.downcase}`.`#{fg_name_b}_1` AS `fg0`\nWHERE `fg0`.`a_testfeature` = ?")
+          expect(parsed_json["items"].second["queryOnline"]).to eql("SELECT `fg0`.`b_testfeature1` AS `b_testfeature1`\nFROM `#{project_name.downcase}`.`#{fg_name_b}_1` AS `fg0`\nWHERE `fg0`.`a_testfeature` = ?")
           expect_status_details(200)
         end
 
@@ -2097,10 +2149,10 @@ describe "On #{ENV['OS']}" do
           expect(parsed_json["items"].length).to eql(2)
           expect(parsed_json["items"].first["preparedStatementParameters"].first["index"]).to eql(1)
           expect(parsed_json["items"].first["preparedStatementParameters"].first["name"]).to eql("a_testfeature")
-          expect(parsed_json["items"].first["queryOnline"]).to eql("SELECT `fg0`.`a_testfeature1`\nFROM `#{project_name.downcase}`.`#{fg_name}_1` AS `fg0`\nWHERE `fg0`.`a_testfeature` IN ?\nORDER BY `fg0`.`a_testfeature`")
+          expect(parsed_json["items"].first["queryOnline"]).to eql("SELECT `fg0`.`a_testfeature1` AS `a_testfeature1`\nFROM `#{project_name.downcase}`.`#{fg_name}_1` AS `fg0`\nWHERE `fg0`.`a_testfeature` IN ?\nORDER BY `fg0`.`a_testfeature`")
           expect(parsed_json["items"].second["preparedStatementParameters"].first["index"]).to eql(1)
           expect(parsed_json["items"].second["preparedStatementParameters"].first["name"]).to eql("d_testfeature1")
-          expect(parsed_json["items"].second["queryOnline"]).to eql("SELECT `fg0`.`b_testfeature1`\nFROM `#{project_name.downcase}`.`#{fg_name_b}_1` AS `fg0`\nWHERE (`fg0`.`d_testfeature1`, `fg0`.`a_testfeature`) IN ?\nORDER BY `fg0`.`d_testfeature1`, `fg0`.`a_testfeature`")
+          expect(parsed_json["items"].second["queryOnline"]).to eql("SELECT `fg0`.`b_testfeature1` AS `b_testfeature1`\nFROM `#{project_name.downcase}`.`#{fg_name_b}_1` AS `fg0`\nWHERE (`fg0`.`d_testfeature1`, `fg0`.`a_testfeature`) IN ?\nORDER BY `fg0`.`d_testfeature1`, `fg0`.`a_testfeature`")
           expect_status_details(200)
         end
 
@@ -2265,8 +2317,8 @@ describe "On #{ENV['OS']}" do
           expect_status_details(200)
           query = JSON.parse(json_result)
 
-          expect(query['query']).to eql("SELECT `fg0`.`a_testfeature1`, `fg1`.`c_testfeature1` `prefix_c_c_testfeature1`, `fg2`.`b_testfeature1` `prefix_b_b_testfeature1`\nFROM `#{project_name.downcase}_featurestore`.`#{fg_name_a}_1` `fg0`\nINNER JOIN `#{project_name.downcase}_featurestore`.`#{fg_name_c}_1` `fg1` ON `fg0`.`a_testfeature` = `fg1`.`a_testfeature`\nINNER JOIN `#{project_name.downcase}_featurestore`.`#{fg_name_b}_1` `fg2` ON `fg0`.`a_testfeature` = `fg2`.`a_testfeature`")
-          expect(query['queryOnline']).to eql("SELECT `fg0`.`a_testfeature1`, `fg1`.`c_testfeature1` `prefix_c_c_testfeature1`, `fg2`.`b_testfeature1` `prefix_b_b_testfeature1`\nFROM `#{project_name.downcase}`.`#{fg_name_a}_1` `fg0`\nINNER JOIN `#{project_name.downcase}`.`#{fg_name_c}_1` `fg1` ON `fg0`.`a_testfeature` = `fg1`.`a_testfeature`\nINNER JOIN `#{project_name.downcase}`.`#{fg_name_b}_1` `fg2` ON `fg0`.`a_testfeature` = `fg2`.`a_testfeature`")
+          expect(query['query']).to eql("SELECT `fg0`.`a_testfeature1` `a_testfeature1`, `fg1`.`c_testfeature1` `prefix_c_c_testfeature1`, `fg2`.`b_testfeature1` `prefix_b_b_testfeature1`\nFROM `#{project_name.downcase}_featurestore`.`#{fg_name_a}_1` `fg0`\nINNER JOIN `#{project_name.downcase}_featurestore`.`#{fg_name_c}_1` `fg1` ON `fg0`.`a_testfeature` = `fg1`.`a_testfeature`\nINNER JOIN `#{project_name.downcase}_featurestore`.`#{fg_name_b}_1` `fg2` ON `fg0`.`a_testfeature` = `fg2`.`a_testfeature`")
+          expect(query['queryOnline']).to eql("SELECT `fg0`.`a_testfeature1` `a_testfeature1`, `fg1`.`c_testfeature1` `prefix_c_c_testfeature1`, `fg2`.`b_testfeature1` `prefix_b_b_testfeature1`\nFROM `#{project_name.downcase}`.`#{fg_name_a}_1` `fg0`\nINNER JOIN `#{project_name.downcase}`.`#{fg_name_c}_1` `fg1` ON `fg0`.`a_testfeature` = `fg1`.`a_testfeature`\nINNER JOIN `#{project_name.downcase}`.`#{fg_name_b}_1` `fg2` ON `fg0`.`a_testfeature` = `fg2`.`a_testfeature`")
         end
 
         it "should be able to create training dataset with PIT join and reproduce the PIT query" do
@@ -2350,9 +2402,9 @@ describe "On #{ENV['OS']}" do
           expect_status_details(200)
           query = JSON.parse(json_result)
 
-          expect(query['query']).to eql("SELECT `fg0`.`a_testfeature1`, `fg0`.`event_time`, `fg1`.`c_testfeature1` `prefix_c_c_testfeature1`, `fg2`.`b_testfeature1` `prefix_b_b_testfeature1`\nFROM `#{project_name.downcase}_featurestore`.`#{fg_name_a}_1` `fg0`\nINNER JOIN `#{project_name.downcase}_featurestore`.`#{fg_name_c}_1` `fg1` ON `fg0`.`a_testfeature` = `fg1`.`a_testfeature`\nINNER JOIN `#{project_name.downcase}_featurestore`.`#{fg_name_b}_1` `fg2` ON `fg0`.`a_testfeature` = `fg2`.`a_testfeature`")
-          expect(query['queryOnline']).to eql("SELECT `fg0`.`a_testfeature1`, `fg0`.`event_time`, `fg1`.`c_testfeature1` `prefix_c_c_testfeature1`, `fg2`.`b_testfeature1` `prefix_b_b_testfeature1`\nFROM `#{project_name.downcase}`.`#{fg_name_a}_1` `fg0`\nINNER JOIN `#{project_name.downcase}`.`#{fg_name_c}_1` `fg1` ON `fg0`.`a_testfeature` = `fg1`.`a_testfeature`\nINNER JOIN `#{project_name.downcase}`.`#{fg_name_b}_1` `fg2` ON `fg0`.`a_testfeature` = `fg2`.`a_testfeature`")
-          expect(query['pitQuery']).to eql("WITH right_fg0 AS (SELECT *\nFROM (SELECT `fg0`.`a_testfeature1`, `fg0`.`event_time`, `fg1`.`c_testfeature1` `prefix_c_c_testfeature1`, `fg0`.`a_testfeature` `join_pk_a_testfeature`, `fg0`.`event_time` `join_evt_event_time`, RANK() OVER (PARTITION BY `fg0`.`a_testfeature`, `fg0`.`event_time` ORDER BY `fg1`.`event_time` DESC) pit_rank_hopsworks\nFROM `#{project_name.downcase}_featurestore`.`#{fg_name_a}_1` `fg0`\nINNER JOIN `#{project_name.downcase}_featurestore`.`#{fg_name_c}_1` `fg1` ON `fg0`.`a_testfeature` = `fg1`.`a_testfeature` AND `fg0`.`event_time` >= `fg1`.`event_time`) NA\nWHERE `pit_rank_hopsworks` = 1), right_fg1 AS (SELECT *\nFROM (SELECT `fg0`.`a_testfeature1`, `fg0`.`event_time`, `fg2`.`b_testfeature1` `prefix_b_b_testfeature1`, `fg0`.`a_testfeature` `join_pk_a_testfeature`, `fg0`.`event_time` `join_evt_event_time`, RANK() OVER (PARTITION BY `fg0`.`a_testfeature`, `fg0`.`event_time` ORDER BY `fg2`.`event_time` DESC) pit_rank_hopsworks\nFROM `#{project_name.downcase}_featurestore`.`#{fg_name_a}_1` `fg0`\nINNER JOIN `#{project_name.downcase}_featurestore`.`#{fg_name_b}_1` `fg2` ON `fg0`.`a_testfeature` = `fg2`.`a_testfeature` AND `fg0`.`event_time` >= `fg2`.`event_time`) NA\nWHERE `pit_rank_hopsworks` = 1) (SELECT `right_fg0`.`a_testfeature1`, `right_fg0`.`event_time`, `right_fg0`.`prefix_c_c_testfeature1`, `right_fg1`.`prefix_b_b_testfeature1`\nFROM right_fg0\nINNER JOIN right_fg1 ON `right_fg0`.`join_pk_a_testfeature` = `right_fg1`.`join_pk_a_testfeature` AND `right_fg0`.`join_evt_event_time` = `right_fg1`.`join_evt_event_time`)")
+          expect(query['query']).to eql("SELECT `fg0`.`a_testfeature1` `a_testfeature1`, `fg0`.`event_time` `event_time`, `fg1`.`c_testfeature1` `prefix_c_c_testfeature1`, `fg2`.`b_testfeature1` `prefix_b_b_testfeature1`\nFROM `#{project_name.downcase}_featurestore`.`#{fg_name_a}_1` `fg0`\nINNER JOIN `#{project_name.downcase}_featurestore`.`#{fg_name_c}_1` `fg1` ON `fg0`.`a_testfeature` = `fg1`.`a_testfeature`\nINNER JOIN `#{project_name.downcase}_featurestore`.`#{fg_name_b}_1` `fg2` ON `fg0`.`a_testfeature` = `fg2`.`a_testfeature`")
+          expect(query['queryOnline']).to eql("SELECT `fg0`.`a_testfeature1` `a_testfeature1`, `fg0`.`event_time` `event_time`, `fg1`.`c_testfeature1` `prefix_c_c_testfeature1`, `fg2`.`b_testfeature1` `prefix_b_b_testfeature1`\nFROM `#{project_name.downcase}`.`#{fg_name_a}_1` `fg0`\nINNER JOIN `#{project_name.downcase}`.`#{fg_name_c}_1` `fg1` ON `fg0`.`a_testfeature` = `fg1`.`a_testfeature`\nINNER JOIN `#{project_name.downcase}`.`#{fg_name_b}_1` `fg2` ON `fg0`.`a_testfeature` = `fg2`.`a_testfeature`")
+          expect(query['pitQuery']).to eql("WITH right_fg0 AS (SELECT *\nFROM (SELECT `fg0`.`a_testfeature1` `a_testfeature1`, `fg0`.`event_time` `event_time`, `fg1`.`c_testfeature1` `prefix_c_c_testfeature1`, `fg0`.`a_testfeature` `join_pk_a_testfeature`, `fg0`.`event_time` `join_evt_event_time`, RANK() OVER (PARTITION BY `fg0`.`a_testfeature`, `fg0`.`event_time` ORDER BY `fg1`.`event_time` DESC) pit_rank_hopsworks\nFROM `#{project_name.downcase}_featurestore`.`#{fg_name_a}_1` `fg0`\nINNER JOIN `#{project_name.downcase}_featurestore`.`#{fg_name_c}_1` `fg1` ON `fg0`.`a_testfeature` = `fg1`.`a_testfeature` AND `fg0`.`event_time` >= `fg1`.`event_time`) NA\nWHERE `pit_rank_hopsworks` = 1), right_fg1 AS (SELECT *\nFROM (SELECT `fg0`.`a_testfeature1` `a_testfeature1`, `fg0`.`event_time` `event_time`, `fg2`.`b_testfeature1` `prefix_b_b_testfeature1`, `fg0`.`a_testfeature` `join_pk_a_testfeature`, `fg0`.`event_time` `join_evt_event_time`, RANK() OVER (PARTITION BY `fg0`.`a_testfeature`, `fg0`.`event_time` ORDER BY `fg2`.`event_time` DESC) pit_rank_hopsworks\nFROM `#{project_name.downcase}_featurestore`.`#{fg_name_a}_1` `fg0`\nINNER JOIN `#{project_name.downcase}_featurestore`.`#{fg_name_b}_1` `fg2` ON `fg0`.`a_testfeature` = `fg2`.`a_testfeature` AND `fg0`.`event_time` >= `fg2`.`event_time`) NA\nWHERE `pit_rank_hopsworks` = 1) (SELECT `right_fg0`.`a_testfeature1` `a_testfeature1`, `right_fg0`.`event_time` `event_time`, `right_fg0`.`prefix_c_c_testfeature1` `prefix_c_c_testfeature1`, `right_fg1`.`prefix_b_b_testfeature1` `prefix_b_b_testfeature1`\nFROM right_fg0\nINNER JOIN right_fg1 ON `right_fg0`.`join_pk_a_testfeature` = `right_fg1`.`join_pk_a_testfeature` AND `right_fg0`.`join_evt_event_time` = `right_fg1`.`join_evt_event_time`)")
         end
 
         it "should be able to create and retrieve query with filter" do
@@ -2448,8 +2500,8 @@ describe "On #{ENV['OS']}" do
                   expect_status_details(200)
                   query = JSON.parse(json_result)
 
-                  expect(query['query']).to eql("SELECT `fg0`.`a_testfeature`, `fg1`.`b_testfeature`, `fg2`.`c_testfeature`\nFROM `#{project_name.downcase}_featurestore`.`#{fg_name_a}_1` `fg0`\nINNER JOIN `#{project_name.downcase}_featurestore`.`#{fg_name_b}_1` `fg1` ON `fg0`.`k_testfeature` = `fg1`.`k_testfeature`\nINNER JOIN `#{project_name.downcase}_featurestore`.`#{fg_name_c}_1` `fg2` ON `fg0`.`k_testfeature` = `fg2`.`k_testfeature`\nWHERE `fg0`.`a_testfeature` > 2 AND (`fg1`.`b_testfeature` < 3 OR `fg2`.`c_testfeature` >= `fg1`.`b_testfeature`)")
-                  expect(query['queryOnline']).to eql("SELECT `fg0`.`a_testfeature`, `fg1`.`b_testfeature`, `fg2`.`c_testfeature`\nFROM `#{project_name.downcase}`.`#{fg_name_a}_1` `fg0`\nINNER JOIN `#{project_name.downcase}`.`#{fg_name_b}_1` `fg1` ON `fg0`.`k_testfeature` = `fg1`.`k_testfeature`\nINNER JOIN `#{project_name.downcase}`.`#{fg_name_c}_1` `fg2` ON `fg0`.`k_testfeature` = `fg2`.`k_testfeature`\nWHERE `fg0`.`a_testfeature` > 2 AND (`fg1`.`b_testfeature` < 3 OR `fg2`.`c_testfeature` >= `fg1`.`b_testfeature`)")
+                  expect(query['query']).to eql("SELECT `fg0`.`a_testfeature` `a_testfeature`, `fg1`.`b_testfeature` `b_testfeature`, `fg2`.`c_testfeature` `c_testfeature`\nFROM `#{project_name.downcase}_featurestore`.`#{fg_name_a}_1` `fg0`\nINNER JOIN `#{project_name.downcase}_featurestore`.`#{fg_name_b}_1` `fg1` ON `fg0`.`k_testfeature` = `fg1`.`k_testfeature`\nINNER JOIN `#{project_name.downcase}_featurestore`.`#{fg_name_c}_1` `fg2` ON `fg0`.`k_testfeature` = `fg2`.`k_testfeature`\nWHERE `fg0`.`a_testfeature` > 2 AND (`fg1`.`b_testfeature` < 3 OR `fg2`.`c_testfeature` >= `fg1`.`b_testfeature`)")
+                  expect(query['queryOnline']).to eql("SELECT `fg0`.`a_testfeature` `a_testfeature`, `fg1`.`b_testfeature` `b_testfeature`, `fg2`.`c_testfeature` `c_testfeature`\nFROM `#{project_name.downcase}`.`#{fg_name_a}_1` `fg0`\nINNER JOIN `#{project_name.downcase}`.`#{fg_name_b}_1` `fg1` ON `fg0`.`k_testfeature` = `fg1`.`k_testfeature`\nINNER JOIN `#{project_name.downcase}`.`#{fg_name_c}_1` `fg2` ON `fg0`.`k_testfeature` = `fg2`.`k_testfeature`\nWHERE `fg0`.`a_testfeature` > 2 AND (`fg1`.`b_testfeature` < 3 OR `fg2`.`c_testfeature` >= `fg1`.`b_testfeature`)")
         end
       end
     end

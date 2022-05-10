@@ -276,8 +276,11 @@ public class PitJoinController {
       } else {
         featurePrefixed = f.getName();
       }
-      selectList.add(new SqlIdentifier(
-        Arrays.asList("`" + f.getFgAlias(true) + "`", "`" + featurePrefixed + "`"), SqlParserPos.ZERO));
+      selectList.add(
+        SqlStdOperatorTable.AS.createCall(SqlParserPos.ZERO,
+          new SqlIdentifier(
+            Arrays.asList("`" + f.getFgAlias(true) + "`", "`" + featurePrefixed + "`"), SqlParserPos.ZERO),
+          new SqlIdentifier("`" + featurePrefixed + "`", SqlParserPos.ZERO)));
     }
     SqlSelect body = new SqlSelect(SqlParserPos.ZERO, null, selectList,
             buildWithJoin(newJoins, newJoins.size()-1), null, null, null, null, null, null, null, null);

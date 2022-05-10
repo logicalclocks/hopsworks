@@ -794,9 +794,9 @@ public class TrainingDatasetController {
       }
       // instantiate new feature since alias in available feature is not correct if fg is joined with itself
       Feature featureWithCorrectAlias = new Feature(tdFeature.getName(),
-          fgAliasLookup.get(requestedFeature.getTrainingDatasetJoin().getId()),
-          tdFeature.getType(), tdFeature.getDefaultValue(), tdFeature.getPrefix(), requestedFeature.getFeatureGroup(),
-          requestedFeature.getIndex());
+        fgAliasLookup.get(requestedFeature.getTrainingDatasetJoin().getId()),
+        tdFeature.getType(), tdFeature.getDefaultValue(), tdFeature.getPrefix(), requestedFeature.getFeatureGroup(),
+        requestedFeature.getIndex());
       features.add(featureWithCorrectAlias);
     }
 
