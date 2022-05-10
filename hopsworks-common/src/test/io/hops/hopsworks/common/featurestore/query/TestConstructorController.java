@@ -273,8 +273,8 @@ public class TestConstructorController {
   @Test
   public void testGetWithOrWithoutPrefix() throws Exception {
     Feature feature = new Feature("ft1", "fg1", "int", null, null);
-    Assert.assertEquals("`fg1`.`ft1`",
-        target.getWithOrWithoutPrefix(feature, false)
+    Assert.assertEquals("`fg1`.`ft1` `ft1`",
+        target.getWithOrWithoutAs(feature, true,false)
             .toSqlString(new SparkSqlDialect(SqlDialect.EMPTY_CONTEXT)).getSql());
   }
 
@@ -282,7 +282,7 @@ public class TestConstructorController {
   public void testGetWithOrWithoutPrefixWithPrefix() throws Exception {
     Feature feature = new Feature("ft1", "fg1", "int", null, "right_");
     Assert.assertEquals("`fg1`.`ft1` `right_ft1`",
-        target.getWithOrWithoutPrefix(feature, true)
+        target.getWithOrWithoutAs(feature, true,true)
             .toSqlString(new SparkSqlDialect(SqlDialect.EMPTY_CONTEXT)).getSql());
   }
 
@@ -295,7 +295,7 @@ public class TestConstructorController {
     query.setHiveEngine(true);
     Mockito.when(cachedFeaturegroupController.dropHudiSpecFeatures(availableLeft)).thenReturn(availableLeft);
     String actual = target.makeOfflineQuery(query);
-    String expected = "SELECT `fg0`.`ft1`\n" +
+    String expected = "SELECT `fg0`.`ft1` `ft1`\n" +
         "FROM `fs1`.`fgHudi_1` `fg0`\n" +
         "ORDER BY `fg0`.`ft1`";
     Assert.assertEquals(expected, actual);
@@ -326,7 +326,7 @@ public class TestConstructorController {
     Mockito.when(cachedFeaturegroupController.dropHudiSpecFeatures(availableRight)).thenReturn(availableRight);
 
     String actual = target.makeOfflineQuery(leftQuery);
-    String expected = "SELECT `fg0`.`ft1`, `fg1`.`ft1`\n" +
+    String expected = "SELECT `fg0`.`ft1` `ft1`, `fg1`.`ft1` `ft1`\n" +
         "FROM `fs1`.`fgHudi_1` `fg0`\n" +
         "INNER JOIN `fs1`.`fgHudi_1` `fg1` ON `fg0`.`ft1` = `fg1`.`ft1`\n" +
         "ORDER BY `fg0`.`ft1`";
@@ -343,7 +343,7 @@ public class TestConstructorController {
     Query singleSideQuery = new Query("fs1", "project_fs1", fg1, "fg0", availableLeft, availableLeft);
     String query = constructorController.generateSQL(singleSideQuery, false)
         .toSqlString(new SparkSqlDialect(SqlDialect.EMPTY_CONTEXT)).getSql().replace("\n", " ");
-    Assert.assertEquals("SELECT `fg0`.`ft1` FROM `fs1`.`fg1_1` `fg0`", query);
+    Assert.assertEquals("SELECT `fg0`.`ft1` `ft1` FROM `fs1`.`fg1_1` `fg0`", query);
   }
 
   @Test
@@ -357,7 +357,7 @@ public class TestConstructorController {
     singleSideQuery.setOrderByFeatures(availableLeft);
     String query = constructorController.generateSQL(singleSideQuery, false)
         .toSqlString(new SparkSqlDialect(SqlDialect.EMPTY_CONTEXT)).getSql().replace("\n", " ");
-    Assert.assertEquals("SELECT `fg0`.`ft1` FROM `fs1`.`fg1_1` `fg0` ORDER BY `fg0`.`ft1`", query);
+    Assert.assertEquals("SELECT `fg0`.`ft1` `ft1` FROM `fs1`.`fg1_1` `fg0` ORDER BY `fg0`.`ft1`", query);
   }
 
   @Test
@@ -370,7 +370,7 @@ public class TestConstructorController {
     Query singleSideQuery = new Query("fs1", "project_fs1", fg1, "fg0", availableLeft, availableLeft);
     String query = constructorController.generateSQL(singleSideQuery, true)
         .toSqlString(new SparkSqlDialect(SqlDialect.EMPTY_CONTEXT)).getSql().replace("\n", " ");
-    Assert.assertEquals("SELECT `fg0`.`ft1` FROM `project_fs1`.`fg1_1` `fg0`", query);
+    Assert.assertEquals("SELECT `fg0`.`ft1` `ft1` FROM `project_fs1`.`fg1_1` `fg0`", query);
   }
 
   @Test
@@ -384,7 +384,7 @@ public class TestConstructorController {
     singleSideQuery.setOrderByFeatures(availableLeft);
     String query = constructorController.generateSQL(singleSideQuery, true)
         .toSqlString(new SparkSqlDialect(SqlDialect.EMPTY_CONTEXT)).getSql().replace("\n", " ");
-    Assert.assertEquals("SELECT `fg0`.`ft1` FROM `project_fs1`.`fg1_1` `fg0` ORDER BY `fg0`.`ft1`", query);
+    Assert.assertEquals("SELECT `fg0`.`ft1` `ft1` FROM `project_fs1`.`fg1_1` `fg0` ORDER BY `fg0`.`ft1`", query);
   }
 
   @Test
@@ -396,7 +396,7 @@ public class TestConstructorController {
     query.setHiveEngine(false);
     Mockito.when(cachedFeaturegroupController.dropHudiSpecFeatures(availableLeft)).thenReturn(availableLeft);
     String actual = target.makeOfflineQuery(query);
-    String expected = "SELECT `fg0`.`ft1`\n" +
+    String expected = "SELECT `fg0`.`ft1` `ft1`\n" +
         "FROM `fg0` `fg0`\n" +
         "ORDER BY `fg0`.`ft1`";
     Assert.assertEquals(expected, actual);
@@ -426,7 +426,7 @@ public class TestConstructorController {
     Mockito.when(cachedFeaturegroupController.dropHudiSpecFeatures(availableRight)).thenReturn(availableRight);
 
     String actual = target.makeOfflineQuery(leftQuery);
-    String expected = "SELECT `fg0`.`ft1`, `fg1`.`ft1`\n" +
+    String expected = "SELECT `fg0`.`ft1` `ft1`, `fg1`.`ft1` `ft1`\n" +
         "FROM `fg0` `fg0`\n" +
         "INNER JOIN `fg1` `fg1` ON `fg0`.`ft1` = `fg1`.`ft1`\n" +
         "ORDER BY `fg0`.`ft1`";
@@ -448,7 +448,7 @@ public class TestConstructorController {
 
     String query = target.generateSQL(leftQuery, false)
         .toSqlString(new SparkSqlDialect(SqlDialect.EMPTY_CONTEXT)).getSql().replace("\n", " ");
-    Assert.assertEquals("SELECT `fg0`.`ft1`, `fg1`.`ft1` FROM `fs1`.`fg1_1` `fg1` INNER JOIN " +
+    Assert.assertEquals("SELECT `fg0`.`ft1` `ft1`, `fg1`.`ft1` `ft1` FROM `fs1`.`fg1_1` `fg1` INNER JOIN " +
         "`fs1`.`fg2_1` `fg0` ON `fg1`.`ft1` = `fg0`.`ft1`", query);
   }
 
@@ -468,7 +468,7 @@ public class TestConstructorController {
     leftQuery.setOrderByFeatures(availableRight);
     String query = target.generateSQL(leftQuery, false)
         .toSqlString(new SparkSqlDialect(SqlDialect.EMPTY_CONTEXT)).getSql().replace("\n", " ");
-    Assert.assertEquals("SELECT `fg0`.`ft1`, `fg1`.`ft1` FROM `fs1`.`fg1_1` `fg1` INNER JOIN " +
+    Assert.assertEquals("SELECT `fg0`.`ft1` `ft1`, `fg1`.`ft1` `ft1` FROM `fs1`.`fg1_1` `fg1` INNER JOIN " +
         "`fs1`.`fg2_1` `fg0` ON `fg1`.`ft1` = `fg0`.`ft1` ORDER BY `fg1`.`ft1`", query);
   }
 
@@ -489,7 +489,7 @@ public class TestConstructorController {
 
     String query = target.generateSQL(leftQuery, true)
         .toSqlString(new SparkSqlDialect(SqlDialect.EMPTY_CONTEXT)).getSql().replace("\n", " ");
-    Assert.assertEquals("SELECT `fg1`.`ft1`, `fg2`.`ft1` FROM `project_fs2`.`fg1_1` `fg1` INNER JOIN " +
+    Assert.assertEquals("SELECT `fg1`.`ft1` `ft1`, `fg2`.`ft1` `ft1` FROM `project_fs2`.`fg1_1` `fg1` INNER JOIN " +
         "`project_fs1`.`fg2_1` `fg2` ON `fg1`.`ft1` = `fg2`.`ft1`", query);
   }
 
@@ -515,7 +515,7 @@ public class TestConstructorController {
     leftQuery.setOrderByFeatures(orderByList);
     String query = target.generateSQL(leftQuery, true)
         .toSqlString(new SparkSqlDialect(SqlDialect.EMPTY_CONTEXT)).getSql().replace("\n", " ");
-    Assert.assertEquals("SELECT `fg1`.`ft1`, `fg2`.`ft1` FROM `project_fs2`.`fg1_1` `fg1` INNER JOIN " +
+    Assert.assertEquals("SELECT `fg1`.`ft1` `ft1`, `fg2`.`ft1` `ft1` FROM `project_fs2`.`fg1_1` `fg1` INNER JOIN " +
         "`project_fs1`.`fg2_1` `fg2` ON `fg1`.`ft1` = `fg2`.`ft1` ORDER BY `fg1`.`ft1`, `fg2`.`ft1`", query);
   }
 
@@ -541,7 +541,7 @@ public class TestConstructorController {
 
     String query = target.generateSQL(leftQuery, false)
         .toSqlString(new SparkSqlDialect(SqlDialect.EMPTY_CONTEXT)).getSql().replace("\n", " ");
-    Assert.assertEquals("SELECT `fg0`.`ft1`, `fg1`.`ft2`, `fg2`.`ft1` " +
+    Assert.assertEquals("SELECT `fg0`.`ft1` `ft1`, `fg1`.`ft2` `ft2`, `fg2`.`ft1` `ft1` " +
         "FROM `fs1`.`fg1_1` `fg0` " +
         "INNER JOIN `fs1`.`fg2_1` `fg1` ON `fg0`.`ft1` = `fg1`.`ft2` " +
         "INNER JOIN `fs1`.`fg3_1` `fg2` ON `fg0`.`ft1` = `fg2`.`ft1`", query);
@@ -577,7 +577,7 @@ public class TestConstructorController {
 
     String query = target.generateSQL(leftQuery, false)
         .toSqlString(new SparkSqlDialect(SqlDialect.EMPTY_CONTEXT)).getSql().replace("\n", " ");
-    Assert.assertEquals("SELECT `fg0`.`ft1`, `fg1`.`ft2`, `fg2`.`ft1` " +
+    Assert.assertEquals("SELECT `fg0`.`ft1` `ft1`, `fg1`.`ft2` `ft2`, `fg2`.`ft1` `ft1` " +
         "FROM `fg0` `fg0` " +
         "INNER JOIN `fg1` `fg1` ON `fg0`.`ft1` = `fg1`.`ft2` " +
         "INNER JOIN `fg2` `fg2` ON `fg0`.`ft1` = `fg2`.`ft1`", query);
@@ -614,7 +614,7 @@ public class TestConstructorController {
 
     String query = target.generateSQL(leftQuery, false)
         .toSqlString(new SparkSqlDialect(SqlDialect.EMPTY_CONTEXT)).getSql().replace("\n", " ");
-    Assert.assertEquals("SELECT `fg0`.`ft1`, `fg1`.`ft2`, `fg2`.`ft1` " +
+    Assert.assertEquals("SELECT `fg0`.`ft1` `ft1`, `fg1`.`ft2` `ft2`, `fg2`.`ft1` `ft1` " +
         "FROM `fs1`.`fg1_1` `fg0` " +
         "INNER JOIN `fs1`.`fg2_1` `fg1` ON `fg0`.`ft1` = `fg1`.`ft2` " +
         "INNER JOIN `fs1`.`fg3_1` `fg2` ON `fg0`.`ft1` = `fg2`.`ft1`", query);
@@ -655,7 +655,7 @@ public class TestConstructorController {
 
     String query = target.generateSQL(leftQuery, false)
         .toSqlString(new SparkSqlDialect(SqlDialect.EMPTY_CONTEXT)).getSql().replace("\n", " ");
-    Assert.assertEquals("SELECT `fg0`.`ft1`, `fg1`.`ft2`, `fg2`.`ft1`, `fg2`.`ft2` " +
+    Assert.assertEquals("SELECT `fg0`.`ft1` `ft1`, `fg1`.`ft2` `ft2`, `fg2`.`ft1` `ft1`, `fg2`.`ft2` `ft2` " +
         "FROM `fs1`.`fg1_1` `fg0` " +
         "INNER JOIN `fs1`.`fg2_1` `fg1` ON `fg0`.`ft1` = `fg1`.`ft2` " +
         "INNER JOIN `fs1`.`fg3_1` `fg2` ON `fg0`.`ft1` = `fg2`.`ft1` " +
@@ -734,7 +734,7 @@ public class TestConstructorController {
 
     String query = target.generateSQL(leftQuery, true)
         .toSqlString(new SparkSqlDialect(SqlDialect.EMPTY_CONTEXT)).getSql().replace("\n", " ");
-    Assert.assertEquals("SELECT `fg0`.`ft1`, `fg1`.`ft2` `prefix2_ft2`, " +
+    Assert.assertEquals("SELECT `fg0`.`ft1` `ft1`, `fg1`.`ft2` `prefix2_ft2`, " +
             "`fg2`.`fg4_ft4_1` `prefix4_fg4_ft4_1`, `fg2`.`fg4_ft4_2` `prefix4_fg4_ft4_2` " +
             "FROM `project_fs1`.`fg1_1` `fg0` INNER JOIN `project_fs1`.`fg2_1` `fg1` ON `fg0`.`ft1` = `fg1`.`ft2` " +
             "INNER JOIN `project_fs1`.`fg4_1` `fg2` ON `fg0`.`ft1` = `fg2`.`ft1`",
