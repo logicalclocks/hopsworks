@@ -274,7 +274,7 @@ public class TestConstructorController {
   public void testGetWithOrWithoutPrefix() throws Exception {
     Feature feature = new Feature("ft1", "fg1", "int", null, null);
     Assert.assertEquals("`fg1`.`ft1` `ft1`",
-        target.getWithOrWithoutAs(feature, true,false)
+        target.getWithOrWithoutAs(feature, true, false)
             .toSqlString(new SparkSqlDialect(SqlDialect.EMPTY_CONTEXT)).getSql());
   }
 
@@ -282,7 +282,7 @@ public class TestConstructorController {
   public void testGetWithOrWithoutPrefixWithPrefix() throws Exception {
     Feature feature = new Feature("ft1", "fg1", "int", null, "right_");
     Assert.assertEquals("`fg1`.`ft1` `right_ft1`",
-        target.getWithOrWithoutAs(feature, true,true)
+        target.getWithOrWithoutAs(feature, true, true)
             .toSqlString(new SparkSqlDialect(SqlDialect.EMPTY_CONTEXT)).getSql());
   }
 
