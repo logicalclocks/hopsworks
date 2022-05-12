@@ -3,6 +3,7 @@
  */
 package io.hops.hopsworks.api.admin.cloud;
 
+import io.hops.hopsworks.api.cloud.TemporaryCredentialsHelper;
 import io.hops.hopsworks.api.filter.Audience;
 import io.hops.hopsworks.api.filter.apiKey.ApiKeyRequired;
 import io.hops.hopsworks.api.util.Pagination;
@@ -58,6 +59,17 @@ public class CloudRoleMappingResource {
   private CloudRoleMappingFacade cloudRoleMappingFacade;
   @EJB
   private CloudRoleMappingController cloudRoleMappingController;
+  @EJB
+  private TemporaryCredentialsHelper temporaryCredentialsHelper;
+  
+  @GET
+  @Path("role-mappings/isAvailable")
+  @Produces(MediaType.APPLICATION_JSON)
+  @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
+  @ApiKeyRequired(acceptedScopes = {ApiScope.ADMIN}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
+  public Response check(@Context HttpServletRequest req, @Context UriInfo uriInfo, @Context SecurityContext sc) {
+    return Response.ok(new RoleMappingServiceStatus(temporaryCredentialsHelper.checkService())).build();
+  }
   
   @GET
   @Path("/role-mappings")

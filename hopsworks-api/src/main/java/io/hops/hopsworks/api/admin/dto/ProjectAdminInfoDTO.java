@@ -56,6 +56,7 @@ public class ProjectAdminInfoDTO implements Serializable {
 
   private static final long serialVersionUID = -1L;
 
+  private Integer projectId;
   private String projectName = "";
   private String projectOwner = "";
   private Boolean archived = null;
@@ -68,6 +69,7 @@ public class ProjectAdminInfoDTO implements Serializable {
   public ProjectAdminInfoDTO() { }
 
   public ProjectAdminInfoDTO(Project project, QuotasDTO projectQuotas) {
+    this.projectId = project.getId();
     this.projectName = project.getName();
     this.projectOwner = project.getOwner().getUsername();
     this.archived = project.getArchived();
@@ -75,7 +77,15 @@ public class ProjectAdminInfoDTO implements Serializable {
     this.lastQuotaUpdate = project.getLastQuotaUpdate();
     this.projectQuotas = projectQuotas;
   }
-
+  
+  public Integer getProjectId() {
+    return projectId;
+  }
+  
+  public void setProjectId(Integer projectId) {
+    this.projectId = projectId;
+  }
+  
   public String getProjectName() { return projectName; }
 
   public void setProjectName(String projectName) {

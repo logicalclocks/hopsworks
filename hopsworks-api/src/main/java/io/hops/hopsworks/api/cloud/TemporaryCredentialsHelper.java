@@ -37,6 +37,10 @@ public class TemporaryCredentialsHelper {
   @EJB
   private CloudRoleMappingController cloudRoleMappingController;
   
+  public boolean checkService() {
+    return awsSecurityTokenService.isAWSCloud();
+  }
+  
   public Credentials getTemporaryCredentials(Users user, Project project, int durationSeconds, String roleARN)
     throws CloudException {
     return getTemporaryCredentials(roleARN, null, durationSeconds, user, project);
