@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022, Hopsworks AB. All rights reserved
+ * Copyright (C) 2022, Logical Clocks AB. All rights reserved
  */
 package io.hops.hopsworks.api.admin.cloud;
 
