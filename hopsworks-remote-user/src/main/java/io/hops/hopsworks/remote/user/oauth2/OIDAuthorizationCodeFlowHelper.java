@@ -489,7 +489,7 @@ public class OIDAuthorizationCodeFlowHelper {
   private RemoteUserDTO getRemoteUserFromClaims(BearerAccessToken accessToken, UserInfo userInfo, OauthClient client)
     throws LoginException {
     RemoteUserDTO remoteUserDTO = new RemoteUserDTO();
-    remoteUserDTO.setUuid(getUuid(client, userInfo.getSubject().getValue()));
+    remoteUserDTO.setUuid(OpenIdConstant.getUuid(client.getClientId(), userInfo.getSubject().getValue()));
     remoteUserDTO.setGivenName(userInfo.getGivenName());
     remoteUserDTO.setSurname(userInfo.getFamilyName());
     verifyAndSetEmail(remoteUserDTO, userInfo, client, accessToken);
@@ -507,10 +507,6 @@ public class OIDAuthorizationCodeFlowHelper {
     remoteUserDTO.setGroups(groups);
     validateRemoteUser(remoteUserDTO);
     return remoteUserDTO;
-  }
-  
-  public String getUuid(OauthClient client, String subject) {
-    return client.getClientId() + "." + subject;
   }
   
   private void verifyAndSetEmail(RemoteUserDTO remoteUserDTO, UserInfo userInfo, OauthClient client,

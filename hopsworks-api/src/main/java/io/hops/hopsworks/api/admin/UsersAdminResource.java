@@ -43,6 +43,8 @@ import io.hops.hopsworks.common.remote.RemoteUserDTO;
 import io.hops.hopsworks.common.remote.RemoteUserHelper;
 import io.hops.hopsworks.common.remote.group.mapping.RemoteGroupMappingHelper;
 import io.hops.hopsworks.common.remote.ldap.LdapHelper;
+import io.hops.hopsworks.common.remote.oauth.OAuthHelper;
+import io.hops.hopsworks.common.remote.oauth.OpenIdConstant;
 import io.hops.hopsworks.common.security.utils.SecurityUtils;
 import io.hops.hopsworks.common.user.UserValidator;
 import io.hops.hopsworks.common.user.UsersController;
@@ -85,6 +87,8 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
 import javax.ws.rs.core.UriInfo;
 import java.net.URI;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -113,6 +117,8 @@ public class UsersAdminResource {
   private LdapHelper ldapHelper;
   @Inject
   private RemoteUserHelper remoteUserHelper;
+  @Inject
+  private OAuthHelper oAuthHelper;
   @EJB
   private SecurityUtils securityUtils;
   @EJB
@@ -345,6 +351,8 @@ public class UsersAdminResource {
   public Response registerUser(@QueryParam("accountType") UserAccountType accountType, @QueryParam("uuid") String uuid,
                                @AuditTarget(UserIdentifier.EMAIL) @QueryParam("email") String email,
                                @QueryParam("password") @Secret String password,
+                               @QueryParam("clientId") String clientId,
+                               @QueryParam("subject") String subject,
                                @QueryParam("givenName") String givenName,
                                @QueryParam("surname") String surname,
                                @QueryParam("maxNumProjects") int maxNumProjects,
@@ -354,11 +362,14 @@ public class UsersAdminResource {
                                @Context HttpServletRequest req,
                                @Context UriInfo uriInfo)
     throws GenericException, UserException {
+    if (accountType == null) {
+      throw new GenericException(RESTCodes.GenericErrorCode.ILLEGAL_ARGUMENT, Level.FINE, "Account type not provided.");
+    }
     switch (accountType) {
       case M_ACCOUNT_TYPE:
         return createUser(email, password, givenName, surname,  maxNumProjects, role, status, uriInfo);
       case REMOTE_ACCOUNT_TYPE:
-        return createRemoteUser(uuid, email, givenName, surname, type, status, uriInfo);
+        return createRemoteUser(uuid, clientId, subject, email, givenName, surname, type, status, uriInfo);
       default:
         throw new WebApplicationException("User account type not valid.", Response.Status.NOT_FOUND);
     }
@@ -388,20 +399,50 @@ public class UsersAdminResource {
     return Response.created(href).entity(newUserDTO).build();
   }
   
-  private Response createRemoteUser(String uuid, String email, String givenName, String surname, RemoteUserType type,
-    UserAccountStatus status, UriInfo uriInfo) throws GenericException, UserException {
-    if (email == null || email.isEmpty()) { // email needed for audit
-      throw new GenericException(RESTCodes.GenericErrorCode.ILLEGAL_ARGUMENT, Level.FINE, "Email not provided.");
+  private void validateStringInput(String input, String msg) throws GenericException {
+    if (input == null || input.isEmpty()) { // email needed for audit
+      throw new GenericException(RESTCodes.GenericErrorCode.ILLEGAL_ARGUMENT, Level.FINE, msg);
     }
+  }
+  
+  private void validateRemote(RemoteUserType type) throws GenericException {
+    if (!remoteUserHelper.isRemoteUserAuthAvailable()) {
+      throw new GenericException(RESTCodes.GenericErrorCode.ILLEGAL_ARGUMENT, Level.FINE, "Remote account not " +
+        "supported.");
+    }
+    if (type == null) {
+      throw new GenericException(RESTCodes.GenericErrorCode.ILLEGAL_ARGUMENT, Level.FINE, "Remote account type not " +
+        "provided.");
+    }
+    if ((type.equals(RemoteUserType.KRB) || type.equals(RemoteUserType.LDAP)) && !ldapHelper.isLdapAvailable()) {
+      throw new GenericException(RESTCodes.GenericErrorCode.ILLEGAL_ARGUMENT, Level.FINE, "Remote account type " +
+        "not supported.");
+    }
+    if (type.equals(RemoteUserType.OAUTH2) && !oAuthHelper.oauthAvailable()) {
+      throw new GenericException(RESTCodes.GenericErrorCode.ILLEGAL_ARGUMENT, Level.FINE, "Remote account type " +
+        "not supported.");
+    }
+  }
+  
+  private Response createRemoteUser(String uuid, String clientId, String subject, String email, String givenName,
+    String surname, RemoteUserType type, UserAccountStatus status, UriInfo uriInfo) throws GenericException,
+    UserException {
+    validateRemote(type);
+    validateStringInput(email, "Email not provided.");// email needed for audit
     RemoteUserDTO userDTO;
     switch (type) {
       case KRB:
       case LDAP:
+        validateStringInput(uuid, "uuid not provided.");
         userDTO = ldapHelper.getRemoteUserByUuid(uuid);
         break;
       case OAUTH2:
-        //Oauth does not support querying users without access token.
-        throw new WebApplicationException("OAuth2 remote user create not supported.", Response.Status.NOT_IMPLEMENTED);
+        validateStringInput(clientId, "clientId not provided.");
+        validateStringInput(subject, "subject not provided.");
+        uuid = OpenIdConstant.getUuid(clientId, subject);// replace uuid
+        //Oauth does not support querying users without access token, so we create the user.
+        userDTO = new RemoteUserDTO(uuid, givenName, surname, new ArrayList<>(Collections.singleton("email")));
+        break;
       default:
         throw new WebApplicationException("Remote user type not valid.", Response.Status.NOT_FOUND);
     }
@@ -409,7 +450,7 @@ public class UsersAdminResource {
     remoteUserHelper.createRemoteUser(userDTO, email, givenName, surname, type, statusDefault);
     RemoteUser remoteUser = remoteUserHelper.getRemoteUser(uuid);
     RestRemoteUserDTO restRemoteUserDTO = new RestRemoteUserDTO(remoteUser.getUuid(), remoteUser.getUid().getFname(),
-      remoteUser.getUid().getLname(), remoteUser.getUid().getEmail());
+      remoteUser.getUid().getLname(), remoteUser.getUid().getEmail(), remoteUser.getUid().getUsername());
     URI href = uriInfo.getAbsolutePathBuilder().path(uuid).build();
     return Response.created(href).entity(restRemoteUserDTO).build();
   }

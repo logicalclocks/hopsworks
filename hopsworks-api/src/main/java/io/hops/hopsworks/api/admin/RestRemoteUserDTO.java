@@ -23,6 +23,7 @@ public class RestRemoteUserDTO {
   private String givenName;
   private String surname;
   private String email;
+  private String username;
   
   public RestRemoteUserDTO() {
   }
@@ -32,6 +33,14 @@ public class RestRemoteUserDTO {
     this.givenName = givenName;
     this.surname = surname;
     this.email = email;
+  }
+  
+  public RestRemoteUserDTO(String uuid, String givenName, String surname, String email, String username) {
+    this.uuid = uuid;
+    this.givenName = givenName;
+    this.surname = surname;
+    this.email = email;
+    this.username = username;
   }
   
   public String getUuid() {
@@ -64,5 +73,13 @@ public class RestRemoteUserDTO {
   
   public void setEmail(String email) {
     this.email = email;
+  }
+  
+  public String getUsername() {
+    return username;
+  }
+  
+  public void setUsername(String username) {
+    this.username = username;
   }
 }

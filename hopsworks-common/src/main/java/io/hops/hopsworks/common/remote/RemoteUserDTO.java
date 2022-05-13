@@ -46,7 +46,14 @@ public class RemoteUserDTO {
     this.email = email;
     this.emailVerified = emailVerified;
   }
-
+  
+  public RemoteUserDTO(String uuid, String givenName, String surname, List<String> email) {
+    this.uuid = uuid;
+    this.givenName = givenName;
+    this.surname = surname;
+    this.email = email;
+  }
+  
   @XmlTransient
   @JsonIgnore
   public String getUuid() {

@@ -96,4 +96,8 @@ public class OpenIdConstant {
   public static final String AD_PREFERRED_NAME_CLAIM = "preferred_username";
   //User Principal Name
   public static final String AD_USER_PRINCIPAL_NAME_CLAIM = "upn";
+  
+  public static String getUuid(String clientId, String subject) {
+    return clientId + "." + subject;
+  }
 }
