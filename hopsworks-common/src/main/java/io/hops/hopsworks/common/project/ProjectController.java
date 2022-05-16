@@ -154,6 +154,7 @@ import io.hops.hopsworks.persistence.entity.user.activity.ActivityFlag;
 import io.hops.hopsworks.restutils.RESTCodes;
 import io.hops.hopsworks.restutils.RESTException;
 import org.apache.commons.codec.binary.Base64;
+import org.apache.commons.lang.WordUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.Path;
@@ -176,8 +177,15 @@ import javax.enterprise.inject.Instance;
 import javax.inject.Inject;
 import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.SSLSession;
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
+import java.security.KeyStore;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
+import java.security.UnrecoverableKeyException;
+import java.security.cert.Certificate;
+import java.security.cert.CertificateException;
 import java.sql.SQLException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -188,6 +196,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.EnumSet;
+import java.util.Enumeration;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
@@ -2672,15 +2681,46 @@ public class ProjectController {
   }
 
   private AccessCredentialsDTO getAccessCredentials(Project project, Users user)
-        throws IOException, CryptoPasswordNotFoundException {
+    throws IOException, CryptoPasswordNotFoundException, CertificateException, NoSuchAlgorithmException,
+    KeyStoreException, UnrecoverableKeyException {
     //Read certs from database and stream them out
     certificateMaterializer.materializeCertificatesLocal(user.getUsername(), project.getName());
     CertificateMaterializer.CryptoMaterial material = certificateMaterializer.getUserMaterial(user.getUsername(),
       project.getName());
+    
+    StringBuilder clientKey = new StringBuilder();
+    StringBuilder clientCert = new StringBuilder();
+    
+    KeyStore jksKeyStore = KeyStore.getInstance("JKS");
+    jksKeyStore.load(new ByteArrayInputStream(material.getKeyStore().array()), material.getPassword());
+    Enumeration<String> aliases = jksKeyStore.aliases();
+    while (aliases.hasMoreElements()) {
+      String next = aliases.nextElement();
+  
+      jksKeyStore.getKey(next, material.getPassword());
+      appendBytesToPemStr(clientKey, jksKeyStore.getKey(next, material.getPassword()).getEncoded(), "PRIVATE KEY");
+      
+      for (Certificate certificate : jksKeyStore.getCertificateChain(next)) {
+        appendBytesToPemStr(clientCert, certificate.getEncoded(), "CERTIFICATE");
+      }
+    }
+    
+    StringBuilder caChain = new StringBuilder();
+    KeyStore jksTrustStore = KeyStore.getInstance("JKS");
+    jksTrustStore.load(new ByteArrayInputStream(material.getTrustStore().array()), material.getPassword());
+    aliases = jksTrustStore.aliases();
+    while (aliases.hasMoreElements()) {
+      String next = aliases.nextElement();
+    
+      Certificate cert = jksTrustStore.getCertificate(next);
+      appendBytesToPemStr(caChain, cert.getEncoded(), "CERTIFICATE");
+    }
+    
     String keyStore = Base64.encodeBase64String(material.getKeyStore().array());
     String trustStore = Base64.encodeBase64String(material.getTrustStore().array());
     String certPwd = new String(material.getPassword());
-    return new AccessCredentialsDTO("jks", keyStore, trustStore, certPwd);
+    return new AccessCredentialsDTO("jks", keyStore, trustStore, certPwd, caChain.toString(), clientCert.toString(),
+      clientKey.toString());
   }
 
   public AccessCredentialsDTO credentials(Integer projectId, Users user) throws ProjectException, DatasetException {
@@ -2694,6 +2734,12 @@ public class ProjectController {
     } finally {
       certificateMaterializer.removeCertificatesLocal(user.getUsername(), project.getName());
     }
+  }
+
+  private void appendBytesToPemStr(StringBuilder pemString, byte[] derBytes, String pemType) {
+    pemString.append("-----BEGIN ").append(pemType).append("-----\n")
+      .append(WordUtils.wrap(Base64.encodeBase64String(derBytes), 64, null, true)).append("\n")
+      .append("-----END ").append(pemType).append("-----\n");
   }
 
   /**
