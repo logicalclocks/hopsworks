@@ -98,23 +98,20 @@ describe "On #{ENV['OS']}" do
             create_docker_job(@project, $job_name)
             job_id = json_body[:id]
             #start execution
-            start_execution(@project[:id], $job_name)
+            start_execution_checked(@project[:id], $job_name)
             execution_id = json_body[:id]
-            expect_status(201)
             expect(json_body[:state]).to eq "INITIALIZING"
             #get execution
-            get_execution(@project[:id], $job_name, json_body[:id])
-            expect_status(200)
+            get_execution_checked(@project[:id], $job_name, json_body[:id])
             expect(json_body[:id]).to eq(execution_id)
             #wait till it's finished and start second execution
             wait_for_execution_completed(@project[:id], $job_name, json_body[:id], "FINISHED")
             #start execution
-            start_execution(@project[:id], $job_name)
+            start_execution_checked(@project[:id], $job_name)
             execution_id = json_body[:id]
-            expect_status(201)
 
             #get all executions of job
-            get_executions(@project[:id], $job_name, "")
+            get_executions_checked(@project[:id], $job_name)
             expect(json_body[:items].count).to eq 2
 
             #check database
@@ -128,13 +125,11 @@ describe "On #{ENV['OS']}" do
             create_docker_job(@project, $job_name)
             job_id = json_body[:id]
             #start execution
-            start_execution(@project[:id], $job_name)
+            start_execution_checked(@project[:id], $job_name)
             execution_id = json_body[:id]
-            expect_status(201)
             expect(json_body[:state]).to eq "INITIALIZING"
             #get execution
-            get_execution(@project[:id], $job_name, json_body[:id])
-            expect_status(200)
+            get_execution_checked(@project[:id], $job_name, json_body[:id])
             expect(json_body[:id]).to eq(execution_id)
             #wait till it's finished and start second execution
             wait_for_execution_completed(@project[:id], $job_name, json_body[:id], "FINISHED")
@@ -164,23 +159,20 @@ describe "On #{ENV['OS']}" do
               create_python_job(@project, $job_name, type)
               job_id = json_body[:id]
               #start execution
-              start_execution(@project[:id], $job_name)
+              start_execution_checked(@project[:id], $job_name)
               execution_id = json_body[:id]
-              expect_status(201)
               expect(json_body[:state]).to eq "INITIALIZING"
               #get execution
-              get_execution(@project[:id], $job_name, json_body[:id])
-              expect_status(200)
+              get_execution_checked(@project[:id], $job_name, json_body[:id])
               expect(json_body[:id]).to eq(execution_id)
               #wait till it's finished and start second execution
               wait_for_execution_completed(@project[:id], $job_name, json_body[:id], "FINISHED")
               #start execution
-              start_execution(@project[:id], $job_name)
+              start_execution_checked(@project[:id], $job_name)
               execution_id = json_body[:id]
-              expect_status(201)
 
               #get all executions of job
-              get_executions(@project[:id], $job_name, "")
+              get_executions_checked(@project[:id], $job_name)
               expect(json_body[:items].count).to eq 2
 
               #check database
@@ -194,11 +186,9 @@ describe "On #{ENV['OS']}" do
               expect_status(201)
 
               #start execution
-              start_execution(@project[:id], $job_name)
+              start_execution_checked(@project[:id], $job_name)
               execution_id = json_body[:id]
-              expect_status(201)
-              stop_execution(@project[:id], $job_name, execution_id)
-              expect_status(202)
+              stop_execution_checked(@project[:id], $job_name, execution_id)
               wait_for_execution_completed(@project[:id], $job_name, execution_id, "KILLED")
             end
             it "should fail to start a python job with missing files param" do
@@ -212,46 +202,48 @@ describe "On #{ENV['OS']}" do
             end
             it "should start two executions in parallel" do
               create_python_job(@project, $job_name, type)
-              start_execution(@project[:id], $job_name)
-              expect_status(201)
-              execution_id_1 = json_body[:id]
-              start_execution(@project[:id], $job_name)
-              expect_status(201)
-              execution_id_2 = json_body[:id]
-              wait_for_execution_completed(@project[:id], $job_name, execution_id_1, "FINISHED")
-              wait_for_execution_completed(@project[:id], $job_name, execution_id_2, "FINISHED")
+              begin
+                start_execution_checked(@project[:id], $job_name)
+                execution_id_1 = json_body[:id]
+                start_execution_checked(@project[:id], $job_name)
+                execution_id_2 = json_body[:id]
+              ensure
+                wait_for_execution_completed(@project[:id], $job_name, execution_id_1, "FINISHED") unless execution_id_1.nil?
+                wait_for_execution_completed(@project[:id], $job_name, execution_id_2, "FINISHED") unless execution_id_2.nil?
+              end
             end
             it "should start a job with default args" do
               create_python_job(@project, $job_name, type)
               default_args = json_body[:config][:defaultArgs]
-              start_execution(@project[:id], $job_name, nil)
+              start_execution_checked(@project[:id], $job_name, nil)
               execution_id = json_body[:id]
-              expect_status(201)
-              get_execution(@project[:id], $job_name, execution_id)
-              expect_status(200)
-              expect(json_body[:args]).not_to be_nil
-              expect(default_args).not_to be_nil
-              expect(json_body[:args]).to eq default_args
-              wait_for_execution_completed(@project[:id], $job_name, execution_id, "FINISHED")
+              begin
+                get_execution_checked(@project[:id], $job_name, execution_id)
+                expect(json_body[:args]).not_to be_nil
+                expect(default_args).not_to be_nil
+                expect(json_body[:args]).to eq default_args
+              ensure
+                wait_for_execution_completed(@project[:id], $job_name, execution_id, "FINISHED")
+              end
             end
             it "should start a job with args 123" do
               create_python_job(@project, $job_name, type)
               args = "123"
-              start_execution(@project[:id], $job_name, args)
+              start_execution_checked(@project[:id], $job_name, args)
               execution_id = json_body[:id]
-              expect_status(201)
-              get_execution(@project[:id], $job_name, execution_id)
-              expect_status(200)
-              expect(json_body[:args]).to eq args
-              wait_for_execution_completed(@project[:id], $job_name, execution_id, "FINISHED")
+              begin
+                get_execution_checked(@project[:id], $job_name, execution_id)
+                expect(json_body[:args]).to eq args
+              ensure
+                wait_for_execution_completed(@project[:id], $job_name, execution_id, "FINISHED")
+              end
             end
             it "should start an execution and delete it while running" do
               create_python_job(@project, $job_name, type)
               expect_status(201)
               #start execution
-              start_execution(@project[:id], $job_name)
+              start_execution_checked(@project[:id], $job_name)
               execution_id = json_body[:id]
-              expect_status(201)
               #Wait a few seconds for kubernetes to start the job
               wait_for_kube_job($job_name)
               delete_execution(@project[:id], $job_name, execution_id)
@@ -263,36 +255,24 @@ describe "On #{ENV['OS']}" do
 
               wait_for_kube_job($job_name, should_exist=false)
             end
-            it "should run job and get out and err logs" do
-              create_python_job(@project, $job_name, type)
-              start_execution(@project[:id], $job_name)
-              execution_id = json_body[:id]
-              expect_status(201)
-
-              wait_for_execution_completed(@project[:id], $job_name, execution_id, "FINISHED")
+            def get_logs(project, job_name, execution_id, log_type)
               #wait for log aggregation
               wait_result = wait_for_me_time(120) do
-                get_execution_log(@project[:id], $job_name, execution_id, "out")
+                get_execution_log(project[:id], $job_name, execution_id, log_type)
                 { 'success' => (json_body[:log] != "No log available. If job failed instantaneously, please check again later or try running the job again. Log aggregation can take a few minutes to complete."), 'msg' => "wait for out log aggregation" }
               end
               expect(wait_result["success"]).to be(true), wait_result["msg"]
 
               #get err log
-              get_execution_log(@project[:id], $job_name, execution_id, "out")
-              expect(json_body[:type]).to eq "OUT"
+              get_execution_log(project[:id], job_name, execution_id, log_type)
+              expect(json_body[:type]).to eq log_type.upcase
               expect(json_body[:log]).to be_present
-
-              #wait for log aggregation
-              wait_result = wait_for_me_time(120) do
-                get_execution_log(@project[:id], $job_name, execution_id, "err")
-                { 'success' => (json_body[:log] != "No log available. If job failed instantaneously, please check again later or try running the job again. Log aggregation can take a few minutes to complete."), 'msg' => "wait for err log aggregation" }
-              end
-              expect(wait_result["success"]).to be(true), wait_result["msg"]
-
-              #get err log
-              get_execution_log(@project[:id], $job_name, execution_id, "err")
-              expect(json_body[:type]).to eq "ERR"
-              expect(json_body[:log]).to be_present
+            end
+            it "should run job and get out and err logs" do
+              create_python_job(@project, $job_name, type)
+              execution_id = run_execution(@project[:id], $job_name)
+              get_logs(@project, $job_name, execution_id, "out")
+              get_logs(@project, $job_name, execution_id, "err")
             end
           end
         end

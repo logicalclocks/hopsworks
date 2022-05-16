@@ -79,9 +79,35 @@ module JobHelper
 
   end
 
+  def get_existing_active_executions()
+    active_executions = 0
+    logged_user = @user
+    projects = get_testing_projects
+    projects.each do |project|
+      response, _ = login_user(project[:username], "Pass123")
+      if response.code == 200
+        create_session(project[:username], "Pass123")
+        pp "#{project[:projectname]} id:#{project[:id]}" if defined?(@debugOpt) && @debugOpt
+        get_jobs_checked(project[:id])
+        if json_body.key?(:count) && json_body[:count] > 0
+          for job in json_body[:items]
+            get_executions_checked(project[:id], job[:name])
+            if json_body.key?(:count) && json_body[:count] > 0
+              for execution in json_body[:items]
+                if is_execution_active(execution)
+                  active_executions = active_executions + 1
+                end
+              end
+            end
+          end
+        end
+      end
+    end
+    create_session(logged_user[:email], "Pass123")
+    active_executions
+  end
 
   def create_sparktour_job(project, job_name, type, job_conf=nil)
-
     # need to enable python for conversion .ipynb to .py works
     get "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/python/environments"
     if response.code == 404
@@ -204,6 +230,11 @@ module JobHelper
 
   def get_jobs(project_id, query)
     get "#{ENV['HOPSWORKS_API']}/project/#{project_id}/jobs#{query}"
+  end
+
+  def get_jobs_checked(project_id, query: nil)
+    get_jobs(project_id, query)
+    expect_status_details(200)
   end
 
   def get_job(project_id, job_name, query: "")

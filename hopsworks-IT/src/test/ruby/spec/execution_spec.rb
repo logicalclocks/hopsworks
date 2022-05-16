@@ -53,30 +53,31 @@ describe "On #{ENV['OS']}" do
               create_sparktour_job(@project, $job_name_1, type, nil)
               job_id = json_body[:id]
               #start execution
-              start_execution(@project[:id], $job_name_1)
+              start_execution_checked(@project[:id], $job_name_1)
               execution_id = json_body[:id]
-              expect_status_details(201)
-              expect(json_body[:state]).to eq "INITIALIZING"
-              #get execution
-              get_execution(@project[:id], $job_name_1, json_body[:id])
-              expect_status_details(200)
-              expect(json_body[:id]).to eq(execution_id)
-              #wait till it's finished and start second execution
-              wait_for_execution_completed(@project[:id], $job_name_1, json_body[:id], "FINISHED")
+              begin
+                expect(json_body[:state]).to eq "INITIALIZING"
+                #get execution
+                get_execution_checked(@project[:id], $job_name_1, json_body[:id])
+                expect(json_body[:id]).to eq(execution_id)
+              ensure
+                #wait till it's finished and start second execution
+                wait_for_execution_completed(@project[:id], $job_name_1, json_body[:id], "FINISHED")
+              end
               #start execution
-              start_execution(@project[:id], $job_name_1)
+              start_execution_checked(@project[:id], $job_name_1)
               execution_id = json_body[:id]
-              expect_status_details(201)
+              begin
+                #get all executions of job
+                get_executions_checked(@project[:id], $job_name_1)
+                expect(json_body[:items].count).to eq 2
 
-              #get all executions of job
-              get_executions(@project[:id], $job_name_1, "")
-              expect(json_body[:items].count).to eq 2
-
-              #check database
-              num_executions = count_executions(job_id)
-              expect(num_executions).to eq 2
-
-              wait_for_execution_completed(@project[:id], $job_name_1, execution_id, "FINISHED")
+                #check database
+                num_executions = count_executions(job_id)
+                expect(num_executions).to eq 2
+              ensure
+                wait_for_execution_completed(@project[:id], $job_name_1, execution_id, "FINISHED")
+              end
             end
             it "should start and stop job" do
               $job_name_2 = "demo_job_2_" + type
@@ -84,13 +85,14 @@ describe "On #{ENV['OS']}" do
               expect_status_details(201)
 
               #start execution
-              start_execution(@project[:id], $job_name_2)
+              start_execution_checked(@project[:id], $job_name_2)
               execution_id = json_body[:id]
-              expect_status_details(201)
-              wait_for_execution_active(@project[:id], $job_name_2, execution_id, "ACCEPTED", "appId")
-              stop_execution(@project[:id], $job_name_2, execution_id)
-              expect_status_details(202)
-              wait_for_execution_completed(@project[:id], $job_name_2, execution_id, "KILLED")
+              begin
+                wait_for_execution_active(@project[:id], $job_name_2, execution_id, "ACCEPTED", "appId")
+                stop_execution_checked(@project[:id], $job_name_2, execution_id)
+              ensure
+                wait_for_execution_completed(@project[:id], $job_name_2, execution_id, "KILLED")
+              end
             end
             it "should fail to start a spark job with missing spark.yarn.dist.files" do
               $job_name_2 = "demo_job_2_" + type
@@ -136,21 +138,31 @@ describe "On #{ENV['OS']}" do
             it "should start two executions in parallel" do
               $job_name_3 = "demo_job_3_" + type
               create_sparktour_job(@project, $job_name_3, type, nil)
-              start_execution(@project[:id], $job_name_3)
-              expect_status_details(201)
-              start_execution(@project[:id], $job_name_3)
-              expect_status_details(201)
+              begin
+                start_execution_checked(@project[:id], $job_name_3)
+                execution_id1 = json_body[:id]
+                start_execution_checked(@project[:id], $job_name_3)
+                execution_id2 = json_body[:id]
+              ensure
+                wait_for_execution_completed(@project[:id], $job_name_3, execution_id1, "FINISHED") unless execution_id1.nil?
+                wait_for_execution_completed(@project[:id], $job_name_3, execution_id2, "FINISHED") unless execution_id2.nil?
+              end
             end
             it "should not start more than the allowed maximum number of executions per job" do
               $job_name_3 = "demo_job_3_" + type
               create_sparktour_job(@project, $job_name_3, type)
-              start_execution(@project[:id], $job_name_3)
-              expect_status_details(201)
-              start_execution(@project[:id], $job_name_3)
-              expect_status_details(201)
-              start_execution(@project[:id], $job_name_3)
-              expect_status_details(400)
-              expect(json_body[:errorCode]).to eq 130040
+              begin
+                start_execution_checked(@project[:id], $job_name_3)
+                execution_id1 = json_body[:id]
+                start_execution_checked(@project[:id], $job_name_3)
+                execution_id2 = json_body[:id]
+                start_execution(@project[:id], $job_name_3)
+                expect_status_details(400)
+                expect(json_body[:errorCode]).to eq 130040
+              ensure
+                wait_for_execution_completed(@project[:id], $job_name_3, execution_id1, "FINISHED") unless execution_id1.nil?
+                wait_for_execution_completed(@project[:id], $job_name_3, execution_id2, "FINISHED") unless execution_id2.nil?
+              end
             end
             it "should start a job, delete it and cleanup its executions" do
               #create job
@@ -158,15 +170,13 @@ describe "On #{ENV['OS']}" do
               create_sparktour_job(@project, job_name, 'jar')
               job_id = json_body[:id]
               #start execution
-              start_execution(@project[:id], job_name)
+              start_execution_checked(@project[:id], job_name)
               execution_id = json_body[:id]
-              expect_status_details(201)
               #wait till it's finished and start second execution
-              wait_for_execution_completed(@project[:id], job_name, json_body[:id], "ACCEPTED")
+              wait_for_execution_completed(@project[:id], job_name, execution_id, "ACCEPTED")
               #start execution
-              start_execution(@project[:id], job_name)
+              start_execution_checked(@project[:id], job_name)
               execution_id = json_body[:id]
-              expect_status_details(201)
               wait_for_execution_completed(@project[:id], job_name, execution_id, "ACCEPTED")
 
               # Delete job
@@ -182,36 +192,39 @@ describe "On #{ENV['OS']}" do
               $job_name_3 = "demo_job_3_" + type
               create_sparktour_job(@project, $job_name_3, type, nil)
               default_args = json_body[:config][:defaultArgs]
-              start_execution(@project[:id], $job_name_3, nil)
+              start_execution_checked(@project[:id], $job_name_3, nil)
               execution_id = json_body[:id]
-              expect_status_details(201)
-              get_execution(@project[:id], $job_name_3, execution_id)
-              expect_status_details(200)
-              expect(json_body[:args]).not_to be_nil
-              expect(default_args).not_to be_nil
-              expect(json_body[:args]).to eq default_args
+              begin
+                get_execution_checked(@project[:id], $job_name_3, execution_id)
+                expect(json_body[:args]).not_to be_nil
+                expect(default_args).not_to be_nil
+                expect(json_body[:args]).to eq default_args
+              ensure
+                wait_for_execution_completed(@project[:id], $job_name_3, execution_id, "FINISHED")
+              end
             end
             it "should start a job with args 123" do
               $job_name_3 = "demo_job_3_" + type
-              job = create_sparktour_job(@project, $job_name_3, type, nil)
+              create_sparktour_job(@project, $job_name_3, type, nil)
               args = "123"
-              start_execution(@project[:id], $job_name_3, args)
+              start_execution_checked(@project[:id], $job_name_3, args)
               execution_id = json_body[:id]
-              expect_status_details(201)
-              get_execution(@project[:id], $job_name_3, execution_id)
-              expect_status_details(200)
-              expect(json_body[:args]).to eq args
+              begin
+                get_execution_checked(@project[:id], $job_name_3, execution_id)
+                expect(json_body[:args]).to eq args
+              ensure
+                wait_for_execution_completed(@project[:id], $job_name_3, execution_id, "FINISHED")
+              end
             end
             it "should start an execution and delete it while running" do
               job_name = "demo_job_5_" + type
               create_sparktour_job(@project, job_name, type, nil)
               expect_status_details(201)
               #start execution
-              start_execution(@project[:id], job_name)
+              start_execution_checked(@project[:id], job_name)
               execution_id = json_body[:id]
-              expect_status_details(201)
               wait_for_execution_active(@project[:id], job_name, execution_id, "ACCEPTED", "appId")
-              get_execution(@project[:id], job_name, execution_id)
+              get_execution_checked(@project[:id], job_name, execution_id)
               app_id = json_body[:appId]
               delete_execution(@project[:id], job_name, execution_id)
               expect_status_details(204)
@@ -223,78 +236,43 @@ describe "On #{ENV['OS']}" do
               #Check YARN that the app_id was killed
               wait_for_yarn_app_state(app_id, "KILLED")
             end
+            def get_logs(project, job_name, execution_id, application_id, hdfs_user, log_type)
+              wait_for_me_time(60) do
+                get_execution_log(project[:id], job_name, execution_id, log_type)
+                found_state = json_body.key?(:log) && json_body[:log] != "No log available."
+                { 'success' => found_state, 'msg' => "Timed-out waiting for #{log_type} log aggregation", "result" => json_body}
+              end
+              expect_status_details(200)
+              unless check_log_dir_has_files(hdfs_user, application_id)
+                raise "Log aggregation failed in YARN"
+              end
+              expect(json_body[:log]).not_to eq("No log available.")
+              pp "execution json_body: #{json_body}" if defined?(@debugOpt) && @debugOpt
+              expect(json_body[:type]).to eq log_type.upcase
+            end
+            def run_job_and_get_logs(project, job_name)
+              start_execution_checked(project[:id], job_name)
+              execution_id = json_body[:id]
+              hdfs_user = json_body[:hdfsUser]
+              wait_for_execution_completed(project[:id], job_name, execution_id, "FINISHED")
+              get_execution(project[:id], job_name, execution_id)
+              application_id = json_body[:appId]
+
+              get_logs(project, job_name, execution_id, application_id, hdfs_user, "out")
+              get_logs(project, job_name, execution_id, application_id, hdfs_user, "err")
+            end
             it "should run a job and get out and err logs" do
               $job_name_4 = "demo_job_4_" + type
               create_sparktour_job(@project, $job_name_4, type, nil)
-              project = get_project
-              start_execution(@project[:id], $job_name_4)
-              execution_id = json_body[:id]
-              hdfs_user = json_body[:hdfsUser]
-              expect_status_details(201)
-
-              wait_for_execution_completed(@project[:id], $job_name_4, execution_id, "FINISHED")
-              get_execution(@project[:id], $job_name_4, execution_id)
-              application_id = json_body[:appId]
-
-              #wait for out log aggregation
-              wait_for(60, "Timed-out waiting for out logs") do
-                get_execution_log(@project[:id], $job_name_4, execution_id, "out")
-                json_body[:log] != "No log available."
-              end
-              # Check if logs are in hdfs under YARN user
-              if !check_log_dir_has_files(hdfs_user, application_id)
-                raise "Log aggregation failed in YARN"
-              end
-              expect(json_body[:log]).not_to eq("No log available.")
-              puts "execution1 json_body: #{json_body}" if defined?(@debugOpt) && @debugOpt
-              expect(json_body[:type]).to eq "OUT"
-
-              #wait for error log aggregation
-              wait_for(60, "Timed-out waiting for err logs") do
-                get_execution_log(@project[:id], $job_name_4, execution_id, "err")
-                json_body[:log] != "No log available."
-              end
-              expect(json_body[:log]).not_to eq("No log available.")
-              puts "execution2 json_body: #{json_body}" if defined?(@debugOpt) && @debugOpt
-              expect(json_body[:type]).to eq "ERR"
+              run_job_and_get_logs(@project, $job_name_4)
 
               member = create_user
-              add_member_to_project(project, member[:email], "Data scientist")
+              add_member_to_project(@project, member[:email], "Data scientist")
               create_session(member[:email], "Pass123")
-
-              start_execution(@project[:id], $job_name_4)
-              execution_id = json_body[:id]
-              hdfs_user = json_body[:hdfsUser]
-              expect_status_details(201)
-
-              wait_for_execution_completed(@project[:id], $job_name_4, execution_id, "FINISHED")
-              get_execution(@project[:id], $job_name_4, execution_id)
-              application_id = json_body[:appId]
-
-              #wait for out log aggregation
-              wait_for(60, "Timed-out waiting for out logs") do
-                get_execution_log(@project[:id], $job_name_4, execution_id, "out")
-                json_body[:log] != "No log available."
-              end
-              # Check if logs are in hdfs under YARN user
-              if !check_log_dir_has_files(hdfs_user, application_id)
-                raise "Log aggregation failed in YARN"
-              end
-              expect(json_body[:log]).not_to eq("No log available.")
-              puts "execution3 json_body: #{json_body}" if defined?(@debugOpt) && @debugOpt
-              expect(json_body[:type]).to eq "OUT"
-
-              #wait for error log aggregation
-              wait_for(60, "Timed-out waiting for err logs") do
-                get_execution_log(@project[:id], $job_name_4, execution_id, "err")
-                json_body[:log] != "No log available."
-              end
-              expect(json_body[:log]).not_to eq("No log available.")
-              expect(json_body[:type]).to eq "ERR"
+              run_job_and_get_logs(@project, $job_name_4)
             end
           end
         end
-
       end
 
       describe 'execution with checking nodemanager status enabled' do
@@ -359,7 +337,7 @@ describe "On #{ENV['OS']}" do
             create_sparktour_job(@project, $job_spark_1, 'jar', nil)
             #start 3 executions
             for i in 0..2 do
-              start_execution(@project[:id], $job_spark_1)
+              start_execution_checked(@project[:id], $job_spark_1)
               $execution_ids.push(json_body[:id])
               #wait till it's finished and start second execution
               wait_for_execution_completed(@project[:id], $job_spark_1, json_body[:id], "FINISHED")
@@ -654,27 +632,21 @@ describe "On #{ENV['OS']}" do
         set_yarn_quota(@project, 1)
         set_payment_type(@project, "PREPAID")
         create_sparktour_job(@project, "quota3", 'jar', nil)
-        start_execution(@project[:id], "quota3")
-        expect_status_details(201)
-        execution_id = json_body[:id]
-
-        wait_for_execution_completed(@project[:id], "quota3", execution_id, "FINISHED")
+        run_execution(@project[:id], "quota3")
       end
 
       it 'should be able to run jobs with 0 quota and payment type NOLIMIT' do
         set_yarn_quota(@project, 0)
         set_payment_type(@project, "NOLIMIT")
         create_sparktour_job(@project, "quota4", 'jar', nil)
-        start_execution(@project[:id], "quota4")
-        expect_status_details(201)
+        run_execution(@project[:id], "quota4")
       end
 
       it 'should be able to run jobs with negative quota and payment type NOLIMIT' do
         set_yarn_quota(@project, -10)
         set_payment_type(@project, "NOLIMIT")
         create_sparktour_job(@project, "quota5", 'jar', nil)
-        start_execution(@project[:id], "quota5")
-        expect_status_details(201)
+        run_execution(@project[:id], "quota5")
       end
     end
 
