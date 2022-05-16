@@ -772,6 +772,8 @@ public class ProjectService {
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
   @ApiKeyRequired(acceptedScopes = {ApiScope.PROJECT}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
+  @JWTRequired(acceptedTokens = {Audience.API, Audience.JOB},
+    allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   public Response credentials(@PathParam("projectId") Integer id, @Context HttpServletRequest req,
     @Context SecurityContext sc) throws ProjectException, DatasetException {
     Users user = jWTHelper.getUserPrincipal(sc);

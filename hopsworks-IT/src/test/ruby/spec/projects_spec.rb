@@ -245,6 +245,29 @@ describe "On #{ENV['OS']}" do
           expect_status(200)
         end
       end
+
+      context 'with authentication and project' do
+        before :all do
+          with_valid_project
+        end
+
+        it "should be able to download trust and keystore as well as pem format credentials" do
+          project_id = get_project.id
+          download_cert_endpoint = "#{ENV['HOPSWORKS_API']}/project/" + project_id.to_s + "/downloadCert"
+          data = 'password=Pass123'
+          headers = {"Content-Type" => 'application/x-www-form-urlencoded'}
+          json_result = post download_cert_endpoint, data, headers
+          parsed_json = JSON.parse(json_result)
+          expect_status_details(200)
+          expect(parsed_json["fileExtension"]).to eql("jks")
+          expect(parsed_json.key?("kStore")).to be true
+          expect(parsed_json.key?("tStore")).to be true
+          expect(parsed_json.key?("password")).to be true
+          expect(parsed_json.key?("caChain")).to be true
+          expect(parsed_json.key?("clientCert")).to be true
+          expect(parsed_json.key?("clientKey")).to be true
+        end
+      end
     end
     describe "#delete" do
       context 'without authentication' do
