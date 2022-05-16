@@ -24,6 +24,9 @@ public class AccessCredentialsDTO {
   private String kStore;
   private String tStore;
   private String password;
+  private String caChain;
+  private String clientKey;
+  private String clientCert;
 
   public AccessCredentialsDTO() {
   }
@@ -32,11 +35,15 @@ public class AccessCredentialsDTO {
     this.fileExtension = fileExtension;
   }
 
-  public AccessCredentialsDTO(String fileExtension, String kStore, String tStore, String password) {
+  public AccessCredentialsDTO(String fileExtension, String kStore, String tStore, String password, String caChain,
+                              String clientCert, String clientKey) {
     this.fileExtension = fileExtension;
     this.kStore = kStore;
     this.tStore = tStore;
     this.password = password;
+    this.caChain = caChain;
+    this.clientCert = clientCert;
+    this.clientKey = clientKey;
   }
 
   public String getFileExtension() {
@@ -69,5 +76,29 @@ public class AccessCredentialsDTO {
 
   public void setPassword(String password) {
     this.password = password;
+  }
+  
+  public String getCaChain() {
+    return caChain;
+  }
+  
+  public void setCaChain(String caChain) {
+    this.caChain = caChain;
+  }
+  
+  public String getClientKey() {
+    return clientKey;
+  }
+  
+  public void setClientKey(String clientKey) {
+    this.clientKey = clientKey;
+  }
+  
+  public String getClientCert() {
+    return clientCert;
+  }
+  
+  public void setClientCert(String clientCert) {
+    this.clientCert = clientCert;
   }
 }
