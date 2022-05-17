@@ -119,9 +119,14 @@ public class StatisticColumnController {
 
   public void verifyStatisticColumnsExist(TrainingDatasetDTO trainingDatasetDTO, TrainingDataset trainingDataset)
     throws FeaturestoreException {
-    verifyStatisticColumnsExist(trainingDatasetDTO.getStatisticsConfig().getColumns(),
-      trainingDataset.getFeatures().stream().map(TrainingDatasetFeature::getName).collect(Collectors.toList()),
-      "training dataset " + trainingDatasetDTO.getName(), trainingDatasetDTO.getVersion());
+    List<String> featureNames = trainingDataset.getFeatures().stream()
+        .map(TrainingDatasetFeature::getName).collect(Collectors.toList());
+    if (trainingDataset.getFeatureView() != null) {
+      featureNames.addAll(trainingDataset.getFeatureView().getFeatures().stream()
+          .map(TrainingDatasetFeature::getName).collect(Collectors.toList()));
+    }
+    verifyStatisticColumnsExist(trainingDatasetDTO.getStatisticsConfig().getColumns(), featureNames,
+        "training dataset " + trainingDatasetDTO.getName(), trainingDatasetDTO.getVersion());
   }
 
   public void verifyStatisticColumnsExist(TrainingDatasetDTO trainingDatasetDTO, Query query)

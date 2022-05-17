@@ -22,6 +22,7 @@ import io.hops.hopsworks.common.featurestore.featuregroup.cached.CachedFeaturegr
 import io.hops.hopsworks.common.featurestore.featuregroup.ondemand.OnDemandFeaturegroupDTO;
 import io.hops.hopsworks.common.featurestore.featuregroup.stream.StreamFeatureGroupDTO;
 import io.hops.hopsworks.common.featurestore.trainingdatasets.TrainingDatasetDTO;
+import io.hops.hopsworks.common.featurestore.xattr.dto.FeatureViewXAttrDTO;
 import io.hops.hopsworks.common.featurestore.xattr.dto.FeaturegroupXAttr;
 import io.hops.hopsworks.common.featurestore.xattr.dto.FeaturestoreXAttrsConstants;
 import io.hops.hopsworks.common.featurestore.xattr.dto.TrainingDatasetXAttrDTO;
@@ -41,6 +42,8 @@ import io.hops.hopsworks.exceptions.MetadataException;
 import io.hops.hopsworks.exceptions.ProvenanceException;
 import io.hops.hopsworks.persistence.entity.dataset.Dataset;
 import io.hops.hopsworks.persistence.entity.dataset.DatasetSharedWith;
+import io.hops.hopsworks.persistence.entity.featurestore.featureview.FeatureView;
+import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.TrainingDatasetFeature;
 import io.hops.hopsworks.persistence.entity.hdfs.inode.Inode;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.user.Users;
@@ -282,6 +285,36 @@ public class HopsFSProvenanceController {
           "hopsfs - set xattr - training dataset - error", "hopsfs - set xattr - training dataset - error", e);
     }
   }
+
+  public void featureViewAttachXAttr(String path, FeatureView featureView, DistributedFileSystemOps udfso)
+      throws ProvenanceException {
+    FeatureViewXAttrDTO fv = new FeatureViewXAttrDTO(featureView.getFeaturestore().getId(),
+        featureView.getDescription(),
+        featureView.getCreated(),
+        featureView.getCreator().getEmail(),
+        fromFeatureViewQuery(featureView));
+
+    try {
+      byte[] xattrVal = converter.marshal(fv).getBytes();
+      try{
+        xattrCtrl.upsertProvXAttr(udfso, path, FeaturestoreXAttrsConstants.FEATURESTORE, xattrVal);
+      } catch (MetadataException e) {
+        if (RESTCodes.MetadataErrorCode.METADATA_MAX_SIZE_EXCEEDED.equals(e.getErrorCode())) {
+          LOGGER.log(Level.INFO,
+              "xattr is too large to attach - feature view:{0} will not have features attached", path);
+          fv = new FeatureViewXAttrDTO(featureView.getFeaturestore().getId(), featureView.getDescription(),
+              featureView.getCreated(), featureView.getCreator().getEmail());
+          xattrVal = converter.marshal(fv).getBytes();
+          xattrCtrl.upsertProvXAttr(udfso, path, FeaturestoreXAttrsConstants.FEATURESTORE, xattrVal);
+        } else {
+          throw e;
+        }
+      }
+    } catch (GenericException | MetadataException | DatasetException e) {
+      throw new ProvenanceException(RESTCodes.ProvenanceErrorCode.FS_ERROR, Level.WARNING,
+          "hopsfs - set xattr - feature view - error", "hopsfs - set xattr - feature view - error", e);
+    }
+  }
   
   public ProvTypeDTO getMetaStatus(Users user, Project project, Boolean searchable) throws ProvenanceException {
     if(searchable != null && searchable) {
@@ -295,7 +328,6 @@ public class HopsFSProvenanceController {
       return Provenance.Type.DISABLED.dto;
     }
   }
-
 
   private List<FeaturegroupXAttr.SimplifiedDTO> fromTrainingDataset(TrainingDatasetDTO trainingDatasetDTO) {
     if (trainingDatasetDTO.getFromQuery()) {
@@ -315,6 +347,20 @@ public class HopsFSProvenanceController {
         featuregroup = new FeaturegroupXAttr.SimplifiedDTO(feature.getFeaturegroup().getFeaturestoreId(),
           feature.getFeaturegroup().getName(), feature.getFeaturegroup().getVersion());
         featuregroups.put(feature.getFeaturegroup().getId(), featuregroup);
+      }
+      featuregroup.addFeature(feature.getName());
+    }
+    return new ArrayList<>(featuregroups.values());
+  }
+
+  private List<FeaturegroupXAttr.SimplifiedDTO> fromFeatureViewQuery(FeatureView featureView) {
+    Map<Integer, FeaturegroupXAttr.SimplifiedDTO> featuregroups = new HashMap<>();
+    for(TrainingDatasetFeature feature : featureView.getFeatures()) {
+      FeaturegroupXAttr.SimplifiedDTO featuregroup = featuregroups.get(feature.getFeatureGroup().getId());
+      if(featuregroup == null) {
+        featuregroup = new FeaturegroupXAttr.SimplifiedDTO(feature.getFeatureGroup().getFeaturestore().getId(),
+            feature.getFeatureGroup().getName(), feature.getFeatureGroup().getVersion());
+        featuregroups.put(feature.getFeatureGroup().getId(), featuregroup);
       }
       featuregroup.addFeature(feature.getName());
     }

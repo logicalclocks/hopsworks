@@ -29,6 +29,7 @@ import io.hops.hopsworks.persistence.entity.featurestore.Featurestore;
 import io.hops.hopsworks.persistence.entity.featurestore.activity.ActivityType;
 import io.hops.hopsworks.persistence.entity.featurestore.activity.FeaturestoreActivity;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.Featuregroup;
+import io.hops.hopsworks.persistence.entity.featurestore.featureview.FeatureView;
 import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.TrainingDataset;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.user.Users;
@@ -82,6 +83,17 @@ public class ActivityBuilder {
         .path(Integer.toString(trainingDataset.getId()))
         .path(ResourceRequest.Name.ACTIVITIES.toString().toLowerCase())
         .build();
+  }
+
+  private URI uri(UriInfo uriInfo, Project project,
+                  Featurestore featurestore, FeatureView featureView) {
+    return uri(uriInfo, project, featurestore)
+            .path(ResourceRequest.Name.FEATUREVIEW.toString().toLowerCase())
+            .path(featureView.getName())
+            .path(ResourceRequest.Name.VERSION.toString().toLowerCase())
+            .path(Integer.toString(featureView.getVersion()))
+            .path(ResourceRequest.Name.ACTIVITIES.toString().toLowerCase())
+            .build();
   }
 
   private boolean expand(ResourceRequest resourceRequest) {
@@ -154,6 +166,36 @@ public class ActivityBuilder {
     return dto;
   }
 
+  public ActivityDTO build(UriInfo uriInfo, ResourceRequest resourceRequest, Project project, Users user,
+                           FeatureView featureView, FeaturestoreActivity featurestoreActivity)
+          throws FeaturestoreException {
+    ActivityDTO dto = new ActivityDTO();
+    dto.setHref(uri(uriInfo, project, featureView.getFeaturestore(), featureView));
+    dto.setExpand(expand(resourceRequest));
+    if (dto.isExpand()) {
+      dto.setType(featurestoreActivity.getType());
+      dto.setUser(usersBuilder.build(uriInfo, resourceRequest, featurestoreActivity.getUser()));
+      dto.setTimestamp(featurestoreActivity.getEventTime().getTime());
+
+      if (featurestoreActivity.getType() == ActivityType.JOB) {
+        dto.setJob(jobsBuilder.build(uriInfo, resourceRequest,
+                featurestoreActivity.getExecution().getJob(), featurestoreActivity.getExecution()));
+      } else if (featurestoreActivity.getType() == ActivityType.STATISTICS) {
+        dto.setStatistics(statisticsBuilder.build(uriInfo, resourceRequest, project, user,
+                featureView, featurestoreActivity.getStatistics()));
+      } else {
+        // Metadata change
+        String metadataMsg = featurestoreActivity.getActivityMeta().getValue();
+        if (featurestoreActivity.getActivityMetaMsg() != null) {
+          metadataMsg += " " + featurestoreActivity.getActivityMetaMsg();
+        }
+        dto.setMetadata(metadataMsg);
+      }
+    }
+
+    return dto;
+  }
+
   public ActivityDTO build(UriInfo uriInfo, ResourceRequest resourceRequest,
                            Project project, Users user, Featuregroup featuregroup) throws FeaturestoreException {
     ActivityDTO dto = new ActivityDTO();
@@ -192,6 +234,28 @@ public class ActivityBuilder {
 
       for (FeaturestoreActivity featurestoreActivity : collectionInfo.getItems()) {
         dto.addItem(build(uriInfo, resourceRequest, project, user, trainingDataset, featurestoreActivity));
+      }
+    }
+
+    return dto;
+  }
+
+  public ActivityDTO build(UriInfo uriInfo, ResourceRequest resourceRequest,
+                           Project project, Users user, FeatureView featureView) throws FeaturestoreException {
+    ActivityDTO dto = new ActivityDTO();
+    dto.setHref(uri(uriInfo, project, featureView.getFeaturestore(), featureView));
+    dto.setExpand(expand(resourceRequest));
+    if (dto.isExpand()) {
+      AbstractFacade.CollectionInfo<FeaturestoreActivity> collectionInfo =
+              activityFacade.findByFeatureView(featureView,
+                      resourceRequest.getOffset(),
+                      resourceRequest.getLimit(),
+                      resourceRequest.getFilter(),
+                      resourceRequest.getSort());
+      dto.setCount(collectionInfo.getCount());
+
+      for (FeaturestoreActivity featurestoreActivity : collectionInfo.getItems()) {
+        dto.addItem(build(uriInfo, resourceRequest, project, user, featureView, featurestoreActivity));
       }
     }
 

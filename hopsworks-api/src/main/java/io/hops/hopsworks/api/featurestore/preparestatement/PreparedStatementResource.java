@@ -16,20 +16,23 @@
 
 package io.hops.hopsworks.api.featurestore.preparestatement;
 
+import io.hops.hopsworks.api.featurestore.featureview.FeatureViewController;
 import io.hops.hopsworks.api.featurestore.trainingdataset.PreparedStatementBuilder;
 import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.api.filter.Audience;
 import io.hops.hopsworks.api.filter.apiKey.ApiKeyRequired;
 import io.hops.hopsworks.api.jwt.JWTHelper;
+import io.hops.hopsworks.audit.logger.LogLevel;
 import io.hops.hopsworks.audit.logger.annotation.Logged;
+import io.hops.hopsworks.common.api.ResourceRequest;
 import io.hops.hopsworks.common.featurestore.query.ServingPreparedStatementDTO;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
 import io.hops.hopsworks.persistence.entity.featurestore.Featurestore;
+import io.hops.hopsworks.persistence.entity.featurestore.featureview.FeatureView;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.persistence.entity.user.security.apiKey.ApiScope;
-import io.hops.hopsworks.restutils.RESTCodes;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 
@@ -56,12 +59,30 @@ public class PreparedStatementResource {
   @EJB
   private JWTHelper jWTHelper;
   @EJB
+  private FeatureViewController featureViewController;
+  @EJB
   private PreparedStatementBuilder preparedStatementBuilder;
+
   private Project project;
   private Featurestore featurestore;
-  private Integer trainingDatasetId;
+  private FeatureView featureView;
 
-  @ApiOperation(value = "Get prepared statements used to generate model serving vector from training dataset query",
+  @Logged(logLevel = LogLevel.OFF)
+  public void setProject(Project project) {
+    this.project = project;
+  }
+
+  @Logged(logLevel = LogLevel.OFF)
+  public void setFeatureStore(Featurestore featurestore) {
+    this.featurestore = featurestore;
+  }
+
+  @Logged(logLevel = LogLevel.OFF)
+  public void setFeatureView(String name, Integer version) throws FeaturestoreException {
+    featureView = featureViewController.getByNameVersionAndFeatureStore(name, version, featurestore);
+  }
+
+  @ApiOperation(value = "Get prepared statements used to generate model serving vector from feature view query",
       response = ServingPreparedStatementDTO.class)
   @GET
   @Produces(MediaType.APPLICATION_JSON)
@@ -80,22 +101,9 @@ public class PreparedStatementResource {
       @DefaultValue("false")
           boolean batch)
       throws FeaturestoreException {
-    verifyIdProvided(trainingDatasetId);
     Users user = jWTHelper.getUserPrincipal(sc);
-
-    // refer to TrainingDatasetService.getPreparedStatements() for implementation detail
-    return Response.ok().build();
-  }
-
-  /**
-   * Verify that the user id was provided as a path param
-   *
-   * @param trainingDatasetId
-   *     the training dataset id to verify
-   */
-  private void verifyIdProvided(Integer trainingDatasetId) {
-    if (trainingDatasetId == null) {
-      throw new IllegalArgumentException(RESTCodes.FeaturestoreErrorCode.TRAINING_DATASET_ID_NOT_PROVIDED.getMessage());
-    }
+    ServingPreparedStatementDTO servingPreparedStatementDTO = preparedStatementBuilder.build(uriInfo,
+       new ResourceRequest(ResourceRequest.Name.PREPAREDSTATEMENTS), project, user, featurestore, featureView, batch);
+    return Response.ok().entity(servingPreparedStatementDTO).build();
   }
 }

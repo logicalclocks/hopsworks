@@ -28,6 +28,7 @@ public class FeaturestoreXAttrsConstants {
   public static final String VERSION = "version";
   public static final String FG_FEATURES = "fg_features";
   public static final String TD_FEATURES = "td_features";
+  public static final String FV_FEATURES = "fv_features";
   public static final String DESCRIPTION = "description";
   public static final String CREATE_DATE = "create_date";
   public static final String CREATOR = "creator";

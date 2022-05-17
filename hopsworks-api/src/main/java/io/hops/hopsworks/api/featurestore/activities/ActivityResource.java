@@ -16,6 +16,7 @@
 
 package io.hops.hopsworks.api.featurestore.activities;
 
+import io.hops.hopsworks.api.featurestore.featureview.FeatureViewController;
 import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.api.filter.Audience;
 import io.hops.hopsworks.api.filter.apiKey.ApiKeyRequired;
@@ -30,6 +31,7 @@ import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
 import io.hops.hopsworks.persistence.entity.featurestore.Featurestore;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.Featuregroup;
+import io.hops.hopsworks.persistence.entity.featurestore.featureview.FeatureView;
 import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.TrainingDataset;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.user.Users;
@@ -62,6 +64,8 @@ public class ActivityResource {
   @EJB
   private TrainingDatasetController trainingDatasetController;
   @EJB
+  private FeatureViewController featureViewController;
+  @EJB
   private ActivityBuilder activityBuilder;
   @EJB
   private JWTHelper jwtHelper;
@@ -70,6 +74,7 @@ public class ActivityResource {
   private Featurestore featurestore;
   private Featuregroup featuregroup;
   private TrainingDataset trainingDataset;
+  private FeatureView featureView;
 
   @Logged(logLevel = LogLevel.OFF)
   public void setProject(Project project) {
@@ -89,6 +94,11 @@ public class ActivityResource {
   @Logged(logLevel = LogLevel.OFF)
   public void setTrainingDatasetId(Integer trainingDatasetId) throws FeaturestoreException {
     this.trainingDataset = trainingDatasetController.getTrainingDatasetById(featurestore, trainingDatasetId);
+  }
+
+  @Logged(logLevel = LogLevel.OFF)
+  public void setFeatureView(String name, Integer version) throws FeaturestoreException {
+    this.featureView = featureViewController.getByNameVersionAndFeatureStore(name, version, featurestore);
   }
 
   @GET
@@ -115,8 +125,10 @@ public class ActivityResource {
     ActivityDTO dto = null;
     if (featuregroup != null) {
       dto = activityBuilder.build(uriInfo, resourceRequest, project, user, featuregroup);
-    } else {
+    } else if (trainingDataset != null) {
       dto = activityBuilder.build(uriInfo, resourceRequest, project, user, trainingDataset);
+    } else if (featureView != null) {
+      dto = activityBuilder.build(uriInfo, resourceRequest, project, user, featureView);
     }
 
     return Response.ok().entity(dto).build();

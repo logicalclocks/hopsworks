@@ -42,8 +42,6 @@ public class FeatureViewDTO extends RestDTO<FeatureViewDTO> {
   private String name;
   private Integer id;
   private QueryDTO query;
-  //TODO featrue view: confirm type
-  private String label;
   private List<TrainingDatasetFeatureDTO> features; // contains transformation info
 
   // Below fields do not need to provide
@@ -132,14 +130,6 @@ public class FeatureViewDTO extends RestDTO<FeatureViewDTO> {
 
   public void setQueryString(FsQueryDTO queryString) {
     this.queryString = queryString;
-  }
-
-  public String getLabel() {
-    return label;
-  }
-
-  public void setLabel(String label) {
-    this.label = label;
   }
 
   public List<TrainingDatasetFeatureDTO> getFeatures() {

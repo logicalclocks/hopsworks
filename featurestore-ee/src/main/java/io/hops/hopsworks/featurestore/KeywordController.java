@@ -4,6 +4,7 @@
 
 package io.hops.hopsworks.featurestore;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Strings;
 import io.hops.hopsworks.common.featurestore.FeaturestoreConstants;
@@ -14,6 +15,7 @@ import io.hops.hopsworks.common.featurestore.xattr.dto.FeaturestoreXAttrsConstan
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.hdfs.DistributedFsService;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
+import io.hops.hopsworks.common.hdfs.inode.InodeController;
 import io.hops.hopsworks.common.hdfs.xattrs.XAttrsController;
 import io.hops.hopsworks.common.integrations.EnterpriseStereotype;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
@@ -54,15 +56,18 @@ public class KeywordController implements KeywordControllerIface {
   private TrainingDatasetController trainingDatasetController;
   @EJB
   private KeywordsUsedCache keywordsUsedCache;
+  @EJB
+  private InodeController inodeController;
 
   private ObjectMapper objectMapper = new ObjectMapper();
 
-  public List<String> getAll(Project project, Users user,
-                             Featuregroup featureGroup, TrainingDataset trainingDataset)
+  public List<String> getAll(Project project, Users user, Featuregroup featureGroup, TrainingDataset trainingDataset,
+                             FeatureView featureView)
       throws FeaturestoreException, MetadataException {
     DistributedFileSystemOps udfso = dfs.getDfsOps(hdfsUsersController.getHdfsUserName(project, user));
     try {
-      return getAll(featureGroup, trainingDataset, udfso);
+      String path = getPath(featureGroup, trainingDataset, featureView);
+      return getAll(path, udfso);
     } catch (IOException e) {
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.KEYWORD_ERROR, Level.FINE,
           "Error reading keywords", e.getMessage(), e);
@@ -71,46 +76,8 @@ public class KeywordController implements KeywordControllerIface {
     }
   }
 
-  public List<String> getAll(Featuregroup featureGroup, TrainingDataset trainingDataset, DistributedFileSystemOps udfso)
-      throws IOException, MetadataException, FeaturestoreException {
-    if (featureGroup != null) {
-      return getAll(featureGroup, udfso);
-    } else {
-      return getAll(trainingDataset, udfso);
-    }
-  }
-
-  public List<String> getAll(Project project, Users user, FeatureView featureView)
-      throws IOException, MetadataException, FeaturestoreException {
-    DistributedFileSystemOps udfso = dfs.getDfsOps(hdfsUsersController.getHdfsUserName(project, user));
-    String path = getFeatureViewLocation(featureView);
-    String keywords = xAttrsController.getXAttr(path, FeaturestoreXAttrsConstants.KEYWORDS, udfso);
-    if (!Strings.isNullOrEmpty(keywords)) {
-      return objectMapper.readValue(keywords, List.class);
-    } else {
-      return new ArrayList<>();
-    }
-  }
-
-  private String getFeatureViewLocation(FeatureView featureView) {
-    // TODO feature view:
-    return "";
-  }
-
-  private List<String> getAll(Featuregroup featuregroup, DistributedFileSystemOps udfso)
-      throws IOException, MetadataException {
-    String path = featuregroupController.getFeatureGroupLocation(featuregroup);
-    String keywords = xAttrsController.getXAttr(path, FeaturestoreXAttrsConstants.KEYWORDS, udfso);
-    if (!Strings.isNullOrEmpty(keywords)) {
-      return objectMapper.readValue(keywords, List.class);
-    } else {
-      return new ArrayList<>();
-    }
-  }
-
-  private List<String> getAll(TrainingDataset trainingDataset, DistributedFileSystemOps udfso)
-      throws IOException, MetadataException {
-    String path = trainingDatasetController.getTrainingDatasetInodePath(trainingDataset);
+  private List<String> getAll(String path, DistributedFileSystemOps udfso)
+      throws MetadataException, JsonProcessingException {
     String keywords = xAttrsController.getXAttr(path, FeaturestoreXAttrsConstants.KEYWORDS, udfso);
     if (!Strings.isNullOrEmpty(keywords)) {
       return objectMapper.readValue(keywords, List.class);
@@ -120,19 +87,15 @@ public class KeywordController implements KeywordControllerIface {
   }
 
   public List<String> replaceKeywords(Project project, Users user, Featuregroup featureGroup,
-                                      TrainingDataset trainingDataset, List<String> keywords)
+                                      TrainingDataset trainingDataset, FeatureView featureView, List<String> keywords)
       throws FeaturestoreException, MetadataException {
     validateKeywords(keywords);
-    Set<String> currentKeywords;
+    Set<String> currentKeywords = new HashSet<>(keywords);
     DistributedFileSystemOps udfso = dfs.getDfsOps(hdfsUsersController.getHdfsUserName(project, user));
     try {
-      currentKeywords = new HashSet<>(keywords);
-
-      if (featureGroup != null) {
-        addFeatureGroupKeywords(featureGroup, currentKeywords, udfso);
-      } else {
-        addTrainingDatasetKeywords(trainingDataset, currentKeywords, udfso);
-      }
+      String keywordsStr = objectMapper.writeValueAsString(currentKeywords);
+      String path = getPath(featureGroup, trainingDataset, featureView);
+      xAttrsController.addStrXAttr(path, FeaturestoreXAttrsConstants.KEYWORDS, keywordsStr, udfso);
     } catch (IOException e) {
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.KEYWORD_ERROR, Level.FINE,
           "Error adding keywords", e.getMessage(), e);
@@ -147,19 +110,17 @@ public class KeywordController implements KeywordControllerIface {
   }
 
   public List<String> deleteKeywords(Project project, Users user, Featuregroup featureGroup,
-                                     TrainingDataset trainingDataset, List<String> keywords)
+                                     TrainingDataset trainingDataset, FeatureView featureView, List<String> keywords)
       throws FeaturestoreException, MetadataException {
     Set<String> currentKeywords;
     DistributedFileSystemOps udfso = dfs.getDfsOps(hdfsUsersController.getHdfsUserName(project, user));
     try {
-      currentKeywords = new HashSet<>(getAll(featureGroup, trainingDataset, udfso));
+      String path = getPath(featureGroup, trainingDataset, featureView);
+      currentKeywords = new HashSet<>(getAll(path, udfso));
       currentKeywords.removeAll(keywords);
 
-      if (featureGroup != null) {
-        addFeatureGroupKeywords(featureGroup, currentKeywords, udfso);
-      } else {
-        addTrainingDatasetKeywords(trainingDataset, currentKeywords, udfso);
-      }
+      String keywordsStr = objectMapper.writeValueAsString(currentKeywords);
+      xAttrsController.addStrXAttr(path, FeaturestoreXAttrsConstants.KEYWORDS, keywordsStr, udfso);
     } catch (IOException e) {
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.KEYWORD_ERROR, Level.FINE,
           "Error deleting keywords", e.getMessage(), e);
@@ -173,21 +134,6 @@ public class KeywordController implements KeywordControllerIface {
     return new ArrayList<>(currentKeywords);
   }
 
-  private void addFeatureGroupKeywords(Featuregroup featureGroup, Set<String> keywords,
-                                       DistributedFileSystemOps udfso) throws IOException, MetadataException {
-    String keywordsStr = objectMapper.writeValueAsString(keywords);
-    String path = featuregroupController.getFeatureGroupLocation(featureGroup);
-    xAttrsController.addStrXAttr(path, FeaturestoreXAttrsConstants.KEYWORDS, keywordsStr, udfso);
-  }
-
-  private void addTrainingDatasetKeywords(TrainingDataset trainingDataset, Set<String> keywords,
-                                          DistributedFileSystemOps udfso)
-      throws IOException, MetadataException {
-    String keywordsStr = objectMapper.writeValueAsString(keywords);
-    String path = trainingDatasetController.getTrainingDatasetInodePath(trainingDataset);
-    xAttrsController.addStrXAttr(path, FeaturestoreXAttrsConstants.KEYWORDS, keywordsStr, udfso);
-  }
-
   public List<String> getUsedKeywords() throws FeaturestoreException {
     try {
       return keywordsUsedCache.getUsedKeywords();
@@ -195,6 +141,26 @@ public class KeywordController implements KeywordControllerIface {
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.KEYWORD_ERROR, Level.FINE,
           "Error fetching used keywords");
     }
+  }
+
+  private String getPath(Featuregroup featureGroup, TrainingDataset trainingDataset, FeatureView featureView)
+      throws FeaturestoreException {
+    String path;
+    if (featureGroup != null) {
+      path = featuregroupController.getFeatureGroupLocation(featureGroup);
+    } else if (trainingDataset != null) {
+      path = trainingDatasetController.getTrainingDatasetInodePath(trainingDataset);
+    } else if (featureView != null) {
+      path = getFeatureViewLocation(featureView);
+    } else {
+      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.KEYWORD_ERROR, Level.FINE,
+          "Error fetching keyword path");
+    }
+    return path;
+  }
+
+  private String getFeatureViewLocation(FeatureView featureView) throws FeaturestoreException {
+    return inodeController.getPath(featureView.getInode());
   }
 
   private void validateKeywords(List<String> keywords) throws FeaturestoreException {

@@ -21,6 +21,7 @@ import io.hops.hopsworks.common.dao.AbstractFacade;
 import io.hops.hopsworks.common.featurestore.statistics.FeaturestoreStatisticFacade;
 import io.hops.hopsworks.common.featurestore.statistics.StatisticsController;
 import io.hops.hopsworks.persistence.entity.featurestore.Featurestore;
+import io.hops.hopsworks.persistence.entity.featurestore.featureview.FeatureView;
 import io.hops.hopsworks.persistence.entity.featurestore.statistics.FeaturestoreStatistic;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.Featuregroup;
 import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.TrainingDataset;
@@ -95,6 +96,21 @@ public class StatisticsBuilder {
         .build();
   }
 
+  private URI uri(UriInfo uriInfo, Project project, Featurestore featurestore,
+                  FeatureView featureView, FeaturestoreStatistic statistics) {
+    return uri(uriInfo, project, featurestore)
+        .path(ResourceRequest.Name.FEATUREVIEW.toString().toLowerCase())
+        .path(featureView.getName())
+        .path(ResourceRequest.Name.VERSION.toString().toLowerCase())
+        .path(Integer.toString(featureView.getVersion()))
+        .path(ResourceRequest.Name.TRAININGDATASETS.toString().toLowerCase())
+        .path(Integer.toString(statistics.getTrainingDataset().getId()))
+        .path(ResourceRequest.Name.STATISTICS.toString().toLowerCase())
+        .queryParam("filter_by", "commit_time_eq:" + statistics.getCommitTime())
+        .queryParam("fields", "content")
+        .build();
+  }
+
   private boolean expand(ResourceRequest resourceRequest) {
     return resourceRequest != null && resourceRequest.contains(ResourceRequest.Name.STATISTICS);
   }
@@ -142,6 +158,23 @@ public class StatisticsBuilder {
         } else {
           dto.setContent(statisticsController.readStatisticsContent(project, user, featurestoreStatistic));
         }
+      }
+    }
+
+    return dto;
+  }
+
+  public StatisticsDTO build(UriInfo uriInfo, ResourceRequest resourceRequest,
+                             Project project, Users user,
+                             FeatureView featureView,
+                             FeaturestoreStatistic featurestoreStatistic) throws FeaturestoreException {
+    StatisticsDTO dto = new StatisticsDTO();
+    dto.setHref(uri(uriInfo, project, featureView.getFeaturestore(), featureView, featurestoreStatistic));
+    dto.setExpand(expand(resourceRequest));
+    if (dto.isExpand()) {
+      dto.setCommitTime(featurestoreStatistic.getCommitTime().getTime());
+      if (resourceRequest.getField() != null && resourceRequest.getField().contains("content")) {
+        dto.setContent(statisticsController.readStatisticsContent(project, user, featurestoreStatistic));
       }
     }
 

@@ -16,7 +16,6 @@
 
 package io.hops.hopsworks.common.featurestore.keyword;
 
-import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.exceptions.MetadataException;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.Featuregroup;
@@ -25,36 +24,24 @@ import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.Trainin
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.user.Users;
 
-import java.io.IOException;
 import java.util.List;
 
 public interface KeywordControllerIface {
 
-  default List<String> getAll(Project project, Users user,
-                             Featuregroup featureGroup, TrainingDataset trainingDataset)
+  default List<String> getAll(Project project, Users user, Featuregroup featureGroup, TrainingDataset trainingDataset,
+                              FeatureView featureView)
       throws FeaturestoreException, MetadataException {
     throw new IllegalArgumentException("API not supported in the community edition");
   }
 
-  default List<String> getAll(Featuregroup featureGroup, TrainingDataset trainingDataset,
-                              DistributedFileSystemOps udfso)
-      throws IOException, MetadataException, FeaturestoreException {
-    throw new IllegalArgumentException("API not supported in the community edition");
-  }
-
-  default List<String> getAll(Project project, Users user, FeatureView featureView)
-      throws IOException, MetadataException, FeaturestoreException {
-    throw new IllegalArgumentException("API not supported in the community edition");
-  }
-
   default List<String> replaceKeywords(Project project, Users user, Featuregroup featureGroup,
-                                       TrainingDataset trainingDataset, List<String> keywords)
+                                       TrainingDataset trainingDataset, FeatureView featureView, List<String> keywords)
       throws FeaturestoreException, MetadataException {
     throw new IllegalArgumentException("API not supported in the community edition");
   }
 
   default List<String> deleteKeywords(Project project, Users user, Featuregroup featureGroup,
-                                     TrainingDataset trainingDataset, List<String> keywords)
+                                      TrainingDataset trainingDataset, FeatureView featureView, List<String> keywords)
       throws FeaturestoreException, MetadataException {
     throw new IllegalArgumentException("API not supported in the community edition");
   }

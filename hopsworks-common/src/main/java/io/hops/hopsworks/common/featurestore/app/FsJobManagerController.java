@@ -23,7 +23,11 @@ import io.hops.hopsworks.common.featurestore.OptionDTO;
 import io.hops.hopsworks.common.featurestore.featuregroup.IngestionDataFormat;
 import io.hops.hopsworks.common.featurestore.featuregroup.IngestionJob;
 import io.hops.hopsworks.common.featurestore.featuregroup.stream.DeltaStreamerJobConf;
+import io.hops.hopsworks.common.featurestore.query.Query;
+import io.hops.hopsworks.common.featurestore.query.QueryBuilder;
+import io.hops.hopsworks.common.featurestore.query.QueryController;
 import io.hops.hopsworks.common.featurestore.query.QueryDTO;
+import io.hops.hopsworks.common.featurestore.trainingdatasets.TrainingDatasetController;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.hdfs.DistributedFsService;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
@@ -42,6 +46,7 @@ import io.hops.hopsworks.exceptions.ServiceException;
 import io.hops.hopsworks.persistence.entity.dataset.DatasetAccessPermission;
 import io.hops.hopsworks.persistence.entity.featurestore.Featurestore;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.Featuregroup;
+import io.hops.hopsworks.persistence.entity.featurestore.featureview.FeatureView;
 import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.TrainingDataset;
 import io.hops.hopsworks.persistence.entity.jobs.configuration.JobType;
 import io.hops.hopsworks.persistence.entity.jobs.configuration.spark.SparkJobConfiguration;
@@ -83,12 +88,19 @@ public class FsJobManagerController {
   private ExecutionController executionController;
   @EJB
   private Settings settings;
+  @EJB
+  private TrainingDatasetController trainingDatasetController;
+  @EJB
+  private QueryController queryController;
+  @EJB
+  private QueryBuilder queryBuilder;
 
   private ObjectMapper objectMapper = new ObjectMapper();
   private SimpleDateFormat formatter = new SimpleDateFormat("ddMMyyyyHHmmss");
 
   private final static String INSERT_FG_OP = "insert_fg";
   private final static String TRAINING_DATASET_OP = "create_td";
+  private final static String FEATURE_VIEW_TRAINING_DATASET_OP = "create_fv_td";
   private final static String COMPUTE_STATS_OP = "compute_stats";
   private final static String DELTA_STREAMER_OP = "offline_fg_backfill";
 
@@ -206,32 +218,65 @@ public class FsJobManagerController {
     }
   }
 
+  public Jobs setupTrainingDatasetJob(Project project, Users user, FeatureView featureView,
+      Integer trainingDatasetVersion,
+      Boolean overwrite, Map<String, String> writeOptions, SparkJobConfiguration sparkJobConfiguration)
+      throws FeaturestoreException, JobException, GenericException, ProjectException, ServiceException {
+    TrainingDataset trainingDataset = trainingDatasetController.getTrainingDatasetByFeatureViewAndVersion(
+        featureView, trainingDatasetVersion);
+    Query query = queryController.makeQuery(featureView, project, user, true, false);
+    QueryDTO queryDTO = queryBuilder.build(query, featureView.getFeaturestore(), project, user);
+    return setupTrainingDatasetJob(project, user, trainingDataset, queryDTO, overwrite, writeOptions,
+        sparkJobConfiguration, FEATURE_VIEW_TRAINING_DATASET_OP);
+  }
+
   public Jobs setupTrainingDatasetJob(Project project, Users user, TrainingDataset trainingDataset,
+      QueryDTO queryDTO, Boolean overwrite, Map<String, String> writeOptions,
+      SparkJobConfiguration sparkJobConfiguration)
+      throws FeaturestoreException, JobException, GenericException, ProjectException, ServiceException {
+    return setupTrainingDatasetJob(project, user, trainingDataset, queryDTO, overwrite, writeOptions,
+        sparkJobConfiguration, TRAINING_DATASET_OP);
+  }
+
+  private Jobs setupTrainingDatasetJob(Project project, Users user, TrainingDataset trainingDataset,
                                       QueryDTO queryDTO, Boolean overwrite, Map<String, String> writeOptions,
-                                      SparkJobConfiguration sparkJobConfiguration)
+                                      SparkJobConfiguration sparkJobConfiguration, String jobType)
       throws FeaturestoreException, JobException, GenericException, ProjectException, ServiceException {
     DistributedFileSystemOps udfso = dfs.getDfsOps(hdfsUsersController.getHdfsUserName(project, user));
 
     try {
-      String jobConfigurationPath =
-          getJobConfigurationPath(project, trainingDataset.getName(), trainingDataset.getVersion(), "td");
 
+      String jobConfigurationPath;
       Map<String, Object> jobConfiguration = new HashMap<>();
       jobConfiguration.put("feature_store",
           featurestoreController.getOfflineFeaturestoreDbName(trainingDataset.getFeaturestore().getProject()));
-      jobConfiguration.put("name", trainingDataset.getName());
-      jobConfiguration.put("version", String.valueOf(trainingDataset.getVersion()));
-      jobConfiguration.put("query", queryDTO);
+      if (trainingDataset.getFeatureView() != null) {
+        String featureViewName = trainingDataset.getFeatureView().getName();
+        Integer featureViewVersion = trainingDataset.getFeatureView().getVersion();
+        jobConfiguration.put("name", featureViewName);
+        jobConfiguration.put("version", String.valueOf(featureViewVersion));
+        jobConfiguration.put("td_version", String.valueOf(trainingDataset.getVersion()));
+        jobConfigurationPath =
+            getJobConfigurationPath(project, featureViewName + "_" + featureViewVersion,
+                trainingDataset.getVersion(), "fv_td");
+      } else {
+        jobConfiguration.put("name", trainingDataset.getName());
+        jobConfiguration.put("version", String.valueOf(trainingDataset.getVersion()));
+        jobConfigurationPath =
+            getJobConfigurationPath(project, trainingDataset.getName(), trainingDataset.getVersion(), "td");
+        // For FeatureView, query is constructed from scratch when launching the job.
+        jobConfiguration.put("query", queryDTO);
+      }
       jobConfiguration.put("write_options", writeOptions);
       jobConfiguration.put("overwrite", overwrite);
 
       String jobConfigurationStr = objectMapper.writeValueAsString(jobConfiguration);
       writeToHDFS(jobConfigurationPath, jobConfigurationStr, udfso);
 
-      String jobArgs = getJobArgs(TRAINING_DATASET_OP, jobConfigurationPath);
+      String jobArgs = getJobArgs(jobType, jobConfigurationPath);
 
       Jobs trainingDatasetJob = configureJob(user, project, sparkJobConfiguration,
-          getJobName(TRAINING_DATASET_OP, Utils.getTrainingDatasetName(trainingDataset), true),
+          getJobName(jobType, Utils.getTrainingDatasetName(trainingDataset), true),
           jobArgs, JobType.PYSPARK);
 
       executionController.start(trainingDatasetJob, jobArgs, user);

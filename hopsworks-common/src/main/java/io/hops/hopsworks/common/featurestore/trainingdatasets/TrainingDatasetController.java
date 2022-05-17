@@ -17,11 +17,13 @@
 package io.hops.hopsworks.common.featurestore.trainingdatasets;
 
 import com.logicalclocks.shaded.com.google.common.collect.Streams;
+import io.hops.hopsworks.common.dao.user.activity.ActivityFacade;
 import io.hops.hopsworks.common.featurestore.FeaturestoreFacade;
 import io.hops.hopsworks.common.featurestore.activity.FeaturestoreActivityFacade;
 import io.hops.hopsworks.common.featurestore.feature.TrainingDatasetFeatureDTO;
 import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupController;
 import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupDTO;
+import io.hops.hopsworks.common.featurestore.featuregroup.cached.FeatureGroupCommitController;
 import io.hops.hopsworks.common.featurestore.featuregroup.online.OnlineFeaturegroupController;
 import io.hops.hopsworks.common.featurestore.online.OnlineFeaturestoreController;
 import io.hops.hopsworks.common.featurestore.query.Feature;
@@ -56,6 +58,7 @@ import io.hops.hopsworks.persistence.entity.featurestore.Featurestore;
 import io.hops.hopsworks.persistence.entity.featurestore.activity.FeaturestoreActivityMeta;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.Featuregroup;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.FeaturegroupType;
+import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.cached.FeatureGroupCommit;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.cached.TimeTravelFormat;
 import io.hops.hopsworks.persistence.entity.featurestore.featureview.FeatureView;
 import io.hops.hopsworks.persistence.entity.featurestore.statistics.StatisticColumn;
@@ -77,8 +80,11 @@ import io.hops.hopsworks.persistence.entity.featurestore.transformationFunction.
 import io.hops.hopsworks.persistence.entity.hdfs.inode.Inode;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.user.Users;
+import io.hops.hopsworks.persistence.entity.user.activity.ActivityFlag;
 import io.hops.hopsworks.restutils.RESTCodes;
 import org.apache.calcite.sql.JoinType;
+import org.apache.hadoop.fs.FileStatus;
+import org.apache.hadoop.fs.Path;
 
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
@@ -146,6 +152,10 @@ public class TrainingDatasetController {
   private PitJoinController pitJoinController;
   @EJB
   private QueryController queryController;
+  @EJB
+  private ActivityFacade activityFacade;
+  @EJB
+  private FeatureGroupCommitController featureGroupCommitCommitController;
 
   /**
    * Gets all trainingDatasets for a particular featurestore and project
@@ -174,32 +184,52 @@ public class TrainingDatasetController {
    * @throws ServiceException
    * @throws FeaturestoreException
    */
-  private TrainingDatasetDTO convertTrainingDatasetToDTO(Users user, Project project, TrainingDataset trainingDataset)
+  public TrainingDatasetDTO convertTrainingDatasetToDTO(Users user, Project project, TrainingDataset trainingDataset)
+      throws ServiceException, FeaturestoreException {
+    return convertTrainingDatasetToDTO(user, project, trainingDataset, false);
+  }
+
+  /**
+   * Converts a trainingDataset entity to a TrainingDataset DTO
+   *
+   * @param user
+   * @param project
+   * @param trainingDataset trainingDataset entity
+   * @param skipFeature do not include feature
+   * @return JSON/XML DTO of the trainingDataset
+   * @throws ServiceException
+   * @throws FeaturestoreException
+   */
+  public TrainingDatasetDTO convertTrainingDatasetToDTO(Users user, Project project, TrainingDataset trainingDataset,
+      Boolean skipFeature)
       throws ServiceException, FeaturestoreException {
     TrainingDatasetDTO trainingDatasetDTO = new TrainingDatasetDTO(trainingDataset);
 
     String featurestoreName = featurestoreFacade.getHiveDbName(trainingDataset.getFeaturestore().getHiveDbId());
     trainingDatasetDTO.setFeaturestoreName(featurestoreName);
 
-    // Set features
-    List<TrainingDatasetFeature> tdFeatures = getFeaturesSorted(trainingDataset, true);
-    Map<Integer, String> fsLookupTable = getFsLookupTableFeatures(tdFeatures);
-    trainingDatasetDTO.setFeatures(tdFeatures
-        .stream()
-        .map(f -> new TrainingDatasetFeatureDTO(checkPrefix(f), f.getType(),
-            f.getFeatureGroup() != null ?
-                new FeaturegroupDTO(f.getFeatureGroup().getFeaturestore().getId(),
-                    fsLookupTable.get(f.getFeatureGroup().getFeaturestore().getId()),
-                    f.getFeatureGroup().getId(), f.getFeatureGroup().getName(),
-                    f.getFeatureGroup().getVersion(),
-                    onlineFeaturegroupController.onlineFeatureGroupTopicName(project.getId(),
-                        f.getFeatureGroup().getId(), Utils.getFeaturegroupName(f.getFeatureGroup())))
-                : null,
-            f.getIndex(), f.isLabel()))
-        .collect(Collectors.toList()));
+    if (!skipFeature) {
+      // Set features
+      List<TrainingDatasetFeature> tdFeatures = getFeaturesSorted(trainingDataset, true);
+      Map<Integer, String> fsLookupTable = getFsLookupTableFeatures(tdFeatures);
+      trainingDatasetDTO.setFeatures(tdFeatures
+          .stream()
+          .map(f -> new TrainingDatasetFeatureDTO(checkPrefix(f), f.getType(),
+              f.getFeatureGroup() != null ?
+                  new FeaturegroupDTO(f.getFeatureGroup().getFeaturestore().getId(),
+                      fsLookupTable.get(f.getFeatureGroup().getFeaturestore().getId()),
+                      f.getFeatureGroup().getId(), f.getFeatureGroup().getName(),
+                      f.getFeatureGroup().getVersion(),
+                      onlineFeaturegroupController.onlineFeatureGroupTopicName(project.getId(),
+                          f.getFeatureGroup().getId(), Utils.getFeaturegroupName(f.getFeatureGroup())))
+                  : null,
+              f.getIndex(), f.isLabel()))
+          .collect(Collectors.toList()));
+    }
 
     switch (trainingDataset.getTrainingDatasetType()) {
       case HOPSFS_TRAINING_DATASET:
+      case IN_MEMORY_TRAINING_DATASET:
         return hopsfsTrainingDatasetController.convertHopsfsTrainingDatasetToDTO(trainingDatasetDTO, trainingDataset);
       case EXTERNAL_TRAINING_DATASET:
         return externalTrainingDatasetController.convertExternalTrainingDatasetToDTO(user, project,
@@ -213,28 +243,19 @@ public class TrainingDatasetController {
   }
 
   public TrainingDatasetDTO createTrainingDataset(Users user, Project project, Featurestore featurestore,
-                                                  TrainingDatasetDTO trainingDatasetDTO)
+      FeatureView featureView, TrainingDatasetDTO trainingDatasetDTO)
       throws FeaturestoreException, ProvenanceException, IOException, ServiceException {
+    // Name of Training data = <feature view name>_<feature view version>, version is needed
+    // because there can be multiple training dataset of same name from different version of feature view
+    trainingDatasetDTO.setName(featureView.getName() + "_" + featureView.getVersion());
+    Query query = queryController.makeQuery(featureView, project, user, true, false);
 
-    // if version not provided, get latest and increment
-    if (trainingDatasetDTO.getVersion() == null) {
-      // returns ordered list by desc version
-      List<TrainingDataset> tdPrevious = trainingDatasetFacade.findByNameAndFeaturestoreOrderedDescVersion(
-        trainingDatasetDTO.getName(), featurestore);
-      if (tdPrevious != null && !tdPrevious.isEmpty()) {
-        trainingDatasetDTO.setVersion(tdPrevious.get(0).getVersion() + 1);
-      } else {
-        trainingDatasetDTO.setVersion(1);
-      }
-    }
+    return createTrainingDataset(user, project, featurestore, featureView, trainingDatasetDTO, query, true);
+  }
 
-    // Check that training dataset doesn't already exists
-    if (trainingDatasetFacade.findByNameVersionAndFeaturestore
-        (trainingDatasetDTO.getName(), trainingDatasetDTO.getVersion(), featurestore)
-        .isPresent()) {
-      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.TRAINING_DATASET_ALREADY_EXISTS, Level.FINE,
-          "Training Dataset: " + trainingDatasetDTO.getName() + ", version: " + trainingDatasetDTO.getVersion());
-    }
+  public TrainingDatasetDTO createTrainingDataset(Users user, Project project, Featurestore featurestore,
+                                                 TrainingDatasetDTO trainingDatasetDTO)
+      throws FeaturestoreException, ProvenanceException, IOException, ServiceException {
 
     // If the training dataset is constructed from a query, verify that it compiles correctly
     Query query = null;
@@ -244,13 +265,48 @@ public class TrainingDatasetController {
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.TRAINING_DATASET_NO_SCHEMA,
           Level.FINE, "The training dataset doesn't have any feature");
     }
+    return createTrainingDataset(user, project, featurestore, null, trainingDatasetDTO, query, false);
+  }
+
+
+  private TrainingDatasetDTO createTrainingDataset(Users user, Project project, Featurestore featurestore,
+      FeatureView featureView, TrainingDatasetDTO trainingDatasetDTO, Query query, Boolean skipFeature)
+      throws FeaturestoreException, ProvenanceException, IOException, ServiceException {
+
+    // if version not provided, get latest and increment
+    if (trainingDatasetDTO.getVersion() == null) {
+      // returns ordered list by desc version
+      List<TrainingDataset> tdPrevious;
+      if (featureView != null) {
+        tdPrevious = trainingDatasetFacade.findByFeatureViewAndVersionOrderedDescVersion(featureView);
+      } else {
+        tdPrevious = trainingDatasetFacade.findByNameAndFeaturestoreOrderedDescVersion(
+            trainingDatasetDTO.getName(), featurestore);
+      }
+      if (tdPrevious != null && !tdPrevious.isEmpty()) {
+        trainingDatasetDTO.setVersion(tdPrevious.get(0).getVersion() + 1);
+      } else {
+        trainingDatasetDTO.setVersion(1);
+      }
+    }
+
+    // Check that training dataset doesn't already exists
+    if ((featureView != null && trainingDatasetFacade.findByFeatureViewAndVersionNullable(
+        featureView, trainingDatasetDTO.getVersion()).isPresent()) ||
+        (featureView == null && trainingDatasetFacade.findByNameVersionAndFeaturestore(
+            trainingDatasetDTO.getName(), trainingDatasetDTO.getVersion(), featurestore).isPresent())
+    ) {
+      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.TRAINING_DATASET_ALREADY_EXISTS, Level.FINE,
+          "Training Dataset: " + trainingDatasetDTO.getName() + ", version: " + trainingDatasetDTO.getVersion());
+    }
 
     // Verify input
     inputValidation.validate(trainingDatasetDTO, query);
 
     Inode inode = null;
     FeaturestoreConnector featurestoreConnector;
-    if(trainingDatasetDTO.getTrainingDatasetType() == TrainingDatasetType.HOPSFS_TRAINING_DATASET) {
+    TrainingDatasetDTO completeTrainingDatasetDTO;
+    if (trainingDatasetDTO.getTrainingDatasetType() == TrainingDatasetType.HOPSFS_TRAINING_DATASET) {
       if (trainingDatasetDTO.getStorageConnector() != null &&
           trainingDatasetDTO.getStorageConnector().getId() != null) {
         featurestoreConnector = featurestoreConnectorFacade
@@ -260,7 +316,7 @@ public class TrainingDatasetController {
       } else {
         featurestoreConnector = getDefaultHopsFSTrainingDatasetConnector(featurestore);
       }
-    } else {
+    } else if (trainingDatasetDTO.getTrainingDatasetType() == TrainingDatasetType.EXTERNAL_TRAINING_DATASET) {
       if (trainingDatasetDTO.getStorageConnector() == null) {
         throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.CONNECTOR_NOT_FOUND,
             Level.FINE, "Storage connector is empty");
@@ -270,52 +326,58 @@ public class TrainingDatasetController {
           .findById(trainingDatasetDTO.getStorageConnector().getId())
           .orElseThrow(() -> new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.CONNECTOR_NOT_FOUND,
               Level.FINE, "Connector: " + trainingDatasetDTO.getStorageConnector().getId()));
+    } else {
+      featurestoreConnector = getDefaultHopsFSTrainingDatasetConnector(featurestore);
     }
-  
+
     // for HopsFS TD it will either be the default connector already or it will be a connector pointing to another
     // HopsFS Directory
-    // for external TD we will use default connector
+    // for external TD or in-memory TD we will use default connector
     Dataset trainingDatasetsFolder;
     if (featurestoreConnector.getHopsfsConnector() != null) {
       trainingDatasetsFolder = featurestoreConnector.getHopsfsConnector().getHopsfsDataset();
     } else {
       trainingDatasetsFolder =
-        getDefaultHopsFSTrainingDatasetConnector(featurestore).getHopsfsConnector().getHopsfsDataset();
+          getDefaultHopsFSTrainingDatasetConnector(featurestore).getHopsfsConnector().getHopsfsDataset();
     }
-  
+
     // TODO(Fabio) account for path
     // we allow specifying the path in the training dataset dir, but it is not really used, this option will be
     // deprecated for hopsfs training datasets.
     String trainingDatasetPath = getTrainingDatasetPath(
-      inodeController.getPath(trainingDatasetsFolder.getInode()),
-      trainingDatasetDTO.getName(), trainingDatasetDTO.getVersion());
-  
+        inodeController.getPath(trainingDatasetsFolder.getInode()),
+        trainingDatasetDTO.getName(), trainingDatasetDTO.getVersion());
+
     DistributedFileSystemOps udfso = null;
     String username = hdfsUsersBean.getHdfsUserName(project, user);
     try {
       udfso = dfs.getDfsOps(username);
       udfso.mkdir(trainingDatasetPath);
-    
+
       inode = inodeController.getInodeAtPath(trainingDatasetPath);
-      TrainingDatasetDTO completeTrainingDatasetDTO = createTrainingDatasetMetadata(user, project,
-        featurestore, trainingDatasetDTO, query, featurestoreConnector, inode);
-      fsProvenanceController.trainingDatasetAttachXAttr(trainingDatasetPath, completeTrainingDatasetDTO, udfso);
+      completeTrainingDatasetDTO = createTrainingDatasetMetadata(user, project,
+          featurestore, featureView, trainingDatasetDTO, query, featurestoreConnector, inode, skipFeature);
+      if (featureView == null) {
+        //TODO: do provenance when creating feature view instead
+        fsProvenanceController.trainingDatasetAttachXAttr(trainingDatasetPath, completeTrainingDatasetDTO, udfso);
+      }
+      activityFacade.persistActivity(ActivityFacade.CREATED_TRAINING_DATASET +
+          completeTrainingDatasetDTO.getName(), project, user, ActivityFlag.SERVICE);
       return completeTrainingDatasetDTO;
     } finally {
       if (udfso != null) {
         dfs.closeDfsClient(udfso);
       }
     }
-
   }
-  
+
   private FeaturestoreConnector getDefaultHopsFSTrainingDatasetConnector(Featurestore featurestore)
       throws FeaturestoreException {
     String connectorName =
-      featurestore.getProject().getName() + "_" + Settings.ServiceDataset.TRAININGDATASETS.getName();
+        featurestore.getProject().getName() + "_" + Settings.ServiceDataset.TRAININGDATASETS.getName();
     return featurestoreConnectorFacade.findByFeaturestoreName(featurestore, connectorName)
-      .orElseThrow(() -> new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.HOPSFS_CONNECTOR_NOT_FOUND,
-        Level.FINE, "HOPSFS Connector: " + connectorName));
+        .orElseThrow(() -> new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.HOPSFS_CONNECTOR_NOT_FOUND,
+            Level.FINE, "HOPSFS Connector: " + connectorName));
   }
 
   /**
@@ -323,14 +385,16 @@ public class TrainingDatasetController {
    */
   @TransactionAttribute(TransactionAttributeType.REQUIRED)
   private TrainingDatasetDTO createTrainingDatasetMetadata(Users user, Project project, Featurestore featurestore,
-                                                           TrainingDatasetDTO trainingDatasetDTO, Query query,
-                                                           FeaturestoreConnector featurestoreConnector, Inode inode)
+      FeatureView featureView, TrainingDatasetDTO trainingDatasetDTO, Query query,
+      FeaturestoreConnector featurestoreConnector, Inode inode, Boolean skipFeature)
       throws FeaturestoreException, ServiceException {
     //Create specific dataset type
     HopsfsTrainingDataset hopsfsTrainingDataset = null;
     ExternalTrainingDataset externalTrainingDataset = null;
     switch (trainingDatasetDTO.getTrainingDatasetType()) {
       case HOPSFS_TRAINING_DATASET:
+      case IN_MEMORY_TRAINING_DATASET:
+        // inode is required for keyword and tag for even for in-memory training dataset
         hopsfsTrainingDataset =
             hopsfsTrainingDatasetFacade.createHopsfsTrainingDataset(featurestoreConnector, inode);
         break;
@@ -347,6 +411,14 @@ public class TrainingDatasetController {
 
     //Store trainingDataset metadata in Hopsworks
     TrainingDataset trainingDataset = new TrainingDataset();
+    trainingDataset.setFeatureView(featureView);
+    if (trainingDatasetDTO.getEventStartTime() != null) {
+      trainingDataset.setStartTime(trainingDatasetDTO.getEventStartTime());
+    }
+    if (trainingDatasetDTO.getEventEndTime() != null) {
+      trainingDataset.setEndTime(trainingDatasetDTO.getEventEndTime());
+    }
+    trainingDataset.setSampleRatio(trainingDatasetDTO.getSampleRatio());
     trainingDataset.setName(trainingDatasetDTO.getName());
     trainingDataset.setHopsfsTrainingDataset(hopsfsTrainingDataset);
     trainingDataset.setExternalTrainingDataset(externalTrainingDataset);
@@ -373,21 +445,24 @@ public class TrainingDatasetController {
     trainingDataset.setStatisticsConfig(statisticsConfig);
     trainingDataset.setTrainSplit(trainingDatasetDTO.getTrainSplit());
 
-    // set features/query
-    trainingDataset.setQuery(trainingDatasetDTO.getQueryDTO() != null);
-    if (trainingDataset.isQuery()) {
-      setTrainingDatasetQuery(query, trainingDatasetDTO.getFeatures(), trainingDataset);
-    } else {
-      trainingDataset.setFeatures(getTrainingDatasetFeatures(trainingDatasetDTO.getFeatures(), trainingDataset));
+    // Query info is stored in FeatureView instead of TrainingDataset
+    if (featureView == null) {
+      // set features/query
+      trainingDataset.setQuery(trainingDatasetDTO.getQueryDTO() != null);
+      if (trainingDataset.isQuery()) {
+        setTrainingDatasetQuery(query, trainingDatasetDTO.getFeatures(), trainingDataset);
+      } else if (trainingDatasetDTO.getFeatures() != null) {
+        trainingDataset.setFeatures(getTrainingDatasetFeatures(trainingDatasetDTO.getFeatures(), trainingDataset));
+      }
     }
 
     TrainingDataset dbTrainingDataset = trainingDatasetFacade.update(trainingDataset);
 
     // Log the metadata operation
-    fsActivityFacade.logMetadataActivity(user, dbTrainingDataset, FeaturestoreActivityMeta.TD_CREATED);
+    fsActivityFacade.logMetadataActivity(user, dbTrainingDataset, featureView, FeaturestoreActivityMeta.TD_CREATED);
 
     //Get final entity from the database
-    return convertTrainingDatasetToDTO(user, project, dbTrainingDataset);
+    return convertTrainingDatasetToDTO(user, project, dbTrainingDataset, skipFeature);
   }
 
 
@@ -416,8 +491,18 @@ public class TrainingDatasetController {
     trainingDataset.setFilters(filters);
   }
 
-  List<TrainingDatasetFilter> convertToFilterEntities(FilterLogic filterLogic, TrainingDataset trainingDataset,
-      String path) {
+  List<TrainingDatasetFilter> convertToFilterEntities(FilterLogic filterLogic,
+      TrainingDataset trainingDataset, String path) {
+    return convertToFilterEntities(filterLogic, null, trainingDataset, path);
+  }
+
+  public List<TrainingDatasetFilter> convertToFilterEntities(FilterLogic filterLogic,
+      FeatureView featureView, String path) {
+    return convertToFilterEntities(filterLogic, featureView, null, path);
+  }
+
+  private List<TrainingDatasetFilter> convertToFilterEntities(FilterLogic filterLogic,
+      FeatureView featureView, TrainingDataset trainingDataset, String path) {
     List<TrainingDatasetFilter> filters = new ArrayList<>();
     if (filterLogic == null) {
       return filters;
@@ -425,31 +510,34 @@ public class TrainingDatasetController {
     if (filterLogic.getType().equals(SqlFilterLogic.SINGLE)) {
       if (filterLogic.getLeftFilter() == null) {
         filters.add(
-            makeTrainingDatasetFilter(path, trainingDataset, filterLogic.getRightFilter(), SqlFilterLogic.SINGLE));
+            makeTrainingDatasetFilter(path, featureView, trainingDataset, filterLogic.getRightFilter(),
+                SqlFilterLogic.SINGLE));
       } else {
         filters.add(
-            makeTrainingDatasetFilter(path, trainingDataset, filterLogic.getLeftFilter(), filterLogic.getType()));
+            makeTrainingDatasetFilter(path, featureView, trainingDataset, filterLogic.getLeftFilter(),
+                filterLogic.getType()));
       }
     } else {
       filters.add(
-          makeTrainingDatasetFilter(path, trainingDataset, null, filterLogic.getType()));
+          makeTrainingDatasetFilter(path,featureView, trainingDataset, null, filterLogic.getType()));
       if (filterLogic.getLeftFilter() != null) {
         filters.add(makeTrainingDatasetFilter(
-            path + ".L", trainingDataset, filterLogic.getLeftFilter(), SqlFilterLogic.SINGLE));
+            path + ".L", featureView, trainingDataset, filterLogic.getLeftFilter(), SqlFilterLogic.SINGLE));
       }
       if (filterLogic.getRightFilter() != null) {
         filters.add(makeTrainingDatasetFilter(
-            path + ".R", trainingDataset, filterLogic.getRightFilter(), SqlFilterLogic.SINGLE));
+            path + ".R", featureView, trainingDataset, filterLogic.getRightFilter(), SqlFilterLogic.SINGLE));
       }
-      filters.addAll(convertToFilterEntities(filterLogic.getLeftLogic(), trainingDataset, path + ".L"));
-      filters.addAll(convertToFilterEntities(filterLogic.getRightLogic(), trainingDataset, path + ".R"));
+      filters.addAll(convertToFilterEntities(filterLogic.getLeftLogic(), featureView, trainingDataset, path + ".L"));
+      filters.addAll(convertToFilterEntities(filterLogic.getRightLogic(), featureView, trainingDataset, path + ".R"));
     }
     return filters;
   }
 
-  private TrainingDatasetFilter makeTrainingDatasetFilter(String path, TrainingDataset trainingDataset,
-      Filter filter, SqlFilterLogic type) {
-    TrainingDatasetFilter trainingDatasetFilter = new TrainingDatasetFilter(trainingDataset);
+  private TrainingDatasetFilter makeTrainingDatasetFilter(String path, FeatureView featureView,
+      TrainingDataset trainingDataset, Filter filter, SqlFilterLogic type) {
+    TrainingDatasetFilter trainingDatasetFilter = featureView == null ?
+        new TrainingDatasetFilter(trainingDataset) : new TrainingDatasetFilter(featureView);
     TrainingDatasetFilterCondition condition = filter == null ? null : convertFilter(filter, trainingDatasetFilter);
     trainingDatasetFilter.setCondition(condition);
     trainingDatasetFilter.setPath(path);
@@ -582,6 +670,15 @@ public class TrainingDatasetController {
             Level.FINE, "trainingDatasetId: " + id));
   }
 
+  public TrainingDataset getTrainingDatasetByFeatureViewAndVersion(FeatureView featureView, Integer version)
+      throws FeaturestoreException {
+    return trainingDatasetFacade.findByFeatureViewAndVersion(featureView, version);
+  }
+
+  public List<TrainingDataset> getTrainingDatasetByFeatureView(FeatureView featureView) {
+    return trainingDatasetFacade.findByFeatureView(featureView);
+  }
+
   public List<TrainingDatasetDTO> getWithNameAndFeaturestore(Users user, Project project,
                                                              Featurestore featurestore, String name)
       throws FeaturestoreException, ServiceException {
@@ -612,40 +709,105 @@ public class TrainingDatasetController {
 
   public String delete(Users user, Project project, Featurestore featurestore, Integer trainingDatasetId)
       throws FeaturestoreException {
-
     TrainingDataset trainingDataset =
         trainingDatasetFacade.findByIdAndFeaturestore(trainingDatasetId, featurestore)
-        .orElseThrow(() -> new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.TRAINING_DATASET_NOT_FOUND,
-            Level.FINE, "training dataset id:" + trainingDatasetId));
+            .orElseThrow(() -> new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.TRAINING_DATASET_NOT_FOUND,
+                Level.FINE, "training dataset id:" + trainingDatasetId));
+    return delete(user, project, featurestore, trainingDataset);
+  }
 
+  public void delete(Users user, Project project, Featurestore featurestore, FeatureView featureView,
+      Integer trainingDatasetVersion) throws FeaturestoreException {
+    TrainingDataset trainingDataset = getTrainingDatasetByFeatureViewAndVersion(featureView, trainingDatasetVersion);
+    String trainingDatasetName = delete(user, project, featurestore, trainingDataset);
+    activityFacade.persistActivity(ActivityFacade.DELETED_TRAINING_DATASET + trainingDatasetName
+            + " and version " + trainingDataset.getVersion(),
+        project, user, ActivityFlag.SERVICE);
+  }
+
+  public void delete(Users user, Project project, Featurestore featurestore, FeatureView featureView)
+      throws FeaturestoreException {
+    List<TrainingDataset> trainingDatasets = getTrainingDatasetByFeatureView(featureView);
+
+    // Delete all only if user has the right to delete all versions of training dataset.
+    for (TrainingDataset trainingDataset: trainingDatasets) {
+      featurestoreUtils.verifyUserRole(trainingDataset, featurestore, user, project);
+    }
+
+    for (TrainingDataset trainingDataset: trainingDatasets) {
+      // Since this method is seldomly called, so ok that retrieving TrainingDataset from DB twice.
+      delete(user, project, featurestore, featureView, trainingDataset.getVersion());
+    }
+  }
+
+  public String delete(Users user, Project project, Featurestore featurestore, TrainingDataset trainingDataset)
+      throws FeaturestoreException {
     featurestoreUtils.verifyUserRole(trainingDataset, featurestore, user, project);
 
     statisticsController.deleteStatistics(project, user, trainingDataset);
 
+    trainingDatasetFacade.removeTrainingDataset(trainingDataset);
+    deleteHopsfsTrainingData(user, project, featurestore, trainingDataset, false, false);
+    return trainingDataset.getName();
+  }
+
+  public void deleteDataOnly(Users user, Project project, Featurestore featurestore, FeatureView featureView,
+      Integer trainingDatasetVersion) throws FeaturestoreException {
+    TrainingDataset trainingDataset = getTrainingDatasetByFeatureViewAndVersion(featureView, trainingDatasetVersion);
+    deleteHopsfsTrainingData(user, project, featurestore, trainingDataset, true, true);
+    activityFacade.persistActivity(ActivityFacade.DELETED_TRAINING_DATASET_DATA_ONLY + trainingDataset.getName()
+            + " and version " + trainingDataset.getVersion(),
+        project, user, ActivityFlag.SERVICE);
+  }
+
+  public void deleteDataOnly(Users user, Project project, Featurestore featurestore, FeatureView featureView)
+      throws FeaturestoreException {
+    List<TrainingDataset> trainingDatasets = getTrainingDatasetByFeatureView(featureView);
+
+    // Delete all only if user has the right to delete all versions of training dataset.
+    for (TrainingDataset trainingDataset: trainingDatasets) {
+      featurestoreUtils.verifyUserRole(trainingDataset, featurestore, user, project);
+    }
+
+    for (TrainingDataset trainingDataset: trainingDatasets) {
+      deleteDataOnly(user, project, featurestore, featureView, trainingDataset.getVersion());
+    }
+  }
+
+  public void deleteHopsfsTrainingData(Users user, Project project, Featurestore featurestore,
+      TrainingDataset trainingDataset, Boolean verifyRole, Boolean keepMetadata)
+      throws FeaturestoreException {
+    if (verifyRole) {
+      featurestoreUtils.verifyUserRole(trainingDataset, featurestore, user, project);
+    }
     String dsPath = getTrainingDatasetInodePath(trainingDataset);
     String username = hdfsUsersBean.getHdfsUserName(project, user);
 
-    // we rely on the foreign keys to cascade from inode -> external/hopsfs td -> trainig dataset
     DistributedFileSystemOps udfso = dfs.getDfsOps(username);
     try {
       // TODO(Fabio): if Data owner *In project* do operation as superuser
-      udfso.rm(dsPath, true);
+      if (keepMetadata) {
+        // Since keywords and tags are stored as attribute of the folder, delete contents in the folder only.
+        FileStatus[] fileStatuses = udfso.listStatus(new Path(dsPath));
+        for (FileStatus fileStatus : fileStatuses) {
+          udfso.rm(fileStatus.getPath(), true);
+        }
+      } else {
+        udfso.rm(dsPath, true);
+      }
     } catch (IOException e) {
-
     } finally {
       if (udfso != null) {
         dfs.closeDfsClient(udfso);
       }
     }
-
-    return trainingDataset.getName();
   }
 
   public String getTrainingDatasetInodePath(TrainingDataset trainingDataset) {
-    if (trainingDataset.getTrainingDatasetType() == TrainingDatasetType.HOPSFS_TRAINING_DATASET) {
-      return inodeController.getPath(trainingDataset.getHopsfsTrainingDataset().getInode());
-    } else {
+    if (trainingDataset.getTrainingDatasetType() == TrainingDatasetType.EXTERNAL_TRAINING_DATASET) {
       return inodeController.getPath(trainingDataset.getExternalTrainingDataset().getInode());
+    } else {
+      return inodeController.getPath(trainingDataset.getHopsfsTrainingDataset().getInode());
     }
   }
 
@@ -709,6 +871,10 @@ public class TrainingDatasetController {
       .persistStatisticColumns(trainingDataset, trainingDatasetDTO.getStatisticsConfig().getColumns());
     // get feature group again with persisted columns - this trip to the database can be saved
     trainingDataset = getTrainingDatasetById(featurestore, trainingDatasetDTO.getId());
+
+    activityFacade.persistActivity(ActivityFacade.EDITED_TRAINING_DATASET + trainingDatasetDTO.getName(),
+        project, user, ActivityFlag.SERVICE);
+
     return convertTrainingDatasetToDTO(user, project, trainingDataset);
   }
 
@@ -748,22 +914,38 @@ public class TrainingDatasetController {
 
     if (!trainingDataset.isQuery()) {
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.TRAINING_DATASET_NO_QUERY,
-          Level.FINE, "Inference vector is only available for datasets generated by queries");
+              Level.FINE, "Inference vector is only available for datasets generated by queries");
     }
 
     List<TrainingDatasetJoin> joins = getJoinsSorted(trainingDataset);
-
-    // Convert all the TrainingDatasetFeatures to QueryFeatures
-    Map<Integer, String> fgAliasLookup = getAliasLookupTable(joins);
 
     // These features are for the select part and are from different feature groups
     // to respect the ordering, all selected features are added to the left most Query instead of splitting them
     // over the querys for their respective origin feature group
     List<TrainingDatasetFeature> tdFeatures = getFeaturesSorted(trainingDataset, withLabel);
+    return getQuery(joins, tdFeatures, trainingDataset.getFilters(), project, user, isHiveEngine);
+  }
+
+  private void setCommitTime(Query query) throws FeaturestoreException {
+    if (query.getFeaturegroup().getCachedFeaturegroup() != null &&
+        query.getFeaturegroup().getCachedFeaturegroup().getTimeTravelFormat() == TimeTravelFormat.HUDI) {
+      FeatureGroupCommit endCommit =
+          featureGroupCommitCommitController.findCommitByDate(query.getFeaturegroup(), null);
+      query.setLeftFeatureGroupEndTimestamp(endCommit.getCommittedOn());
+      query.setLeftFeatureGroupEndCommitId(endCommit.getFeatureGroupCommitPK().getCommitId());
+    }
+  }
+
+  public Query getQuery(List<TrainingDatasetJoin> joins, List<TrainingDatasetFeature> tdFeatures,
+                        Collection<TrainingDatasetFilter> trainingDatasetFilters, Project project,
+                        Users user, Boolean isHiveEngine) throws FeaturestoreException {
+
+    // Convert all the TrainingDatasetFeatures to QueryFeatures
+    Map<Integer, String> fgAliasLookup = getAliasLookupTable(joins);
 
     // Check that all the feature groups still exists, if not throw a reasonable error
     if (tdFeatures.stream().anyMatch(j -> j.getFeatureGroup() == null)) {
-      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.TRAINING_DATASET_QUERY_FG_DELETED, Level.FINE);
+      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.QUERY_FAILED_FG_DELETED, Level.FINE);
     }
 
     // Get available features for all involved feature groups once, and save in map fgId -> availableFeatures
@@ -772,8 +954,9 @@ public class TrainingDatasetController {
       if (!availableFeaturesLookup.containsKey(join.getFeatureGroup().getId())) {
         List<Feature> availableFeatures = featuregroupController.getFeatures(join.getFeatureGroup(), project, user)
           .stream()
-          .map(f -> new Feature(f.getName(), fgAliasLookup.get(join.getId()), f.getType(), f.getDefaultValue(),
-            f.getPrimary(), join.getFeatureGroup(), join.getPrefix()))
+          .map(f -> new Feature(f.getName(),
+                  fgAliasLookup.get(join.getId()), f.getType(), f.getPrimary(), f.getDefaultValue(), join.getPrefix(),
+                  join.getFeatureGroup()))
           .collect(Collectors.toList());
         availableFeaturesLookup.put(join.getFeatureGroup().getId(), availableFeatures);
       }
@@ -820,8 +1003,11 @@ public class TrainingDatasetController {
       queryJoins.add(getQueryJoin(query, joins.get(i), fgAliasLookup, fsLookup, availableFeaturesLookup, isHiveEngine));
     }
     query.setJoins(queryJoins);
-    FilterLogic filterLogic = convertToFilterLogic(trainingDataset.getFilters(), featureLookup, "L");
+    FilterLogic filterLogic = convertToFilterLogic(trainingDatasetFilters, featureLookup, "L");
     query.setFilter(filterLogic);
+
+    setCommitTime(query);
+
     return query;
   }
 
@@ -842,7 +1028,7 @@ public class TrainingDatasetController {
   FilterLogic convertToFilterLogic(Collection<TrainingDatasetFilter> trainingDatasetFilters,
       Map<String, Feature> features, String headPath) throws FeaturestoreException {
 
-    if (trainingDatasetFilters.size() == 0) {
+    if (trainingDatasetFilters == null || trainingDatasetFilters.size() == 0) {
       return null;
     }
     FilterLogic filterLogic = new FilterLogic();
@@ -957,7 +1143,11 @@ public class TrainingDatasetController {
   }
 
   public List<TrainingDatasetJoin> getJoinsSorted(TrainingDataset trainingDataset) {
-    return trainingDataset.getJoins().stream()
+    return getJoinsSorted(trainingDataset.getJoins());
+  }
+
+  public List<TrainingDatasetJoin> getJoinsSorted(Collection<TrainingDatasetJoin> joins) {
+    return joins.stream()
         .sorted(Comparator.comparing(TrainingDatasetJoin::getIndex))
         .collect(Collectors.toList());
   }
@@ -978,6 +1168,8 @@ public class TrainingDatasetController {
         new ArrayList<>(),
         availableFeaturesLookup.get(rightTdJoin.getFeatureGroup().getId()),
         isHiveEngine);
+
+    setCommitTime(rightQuery);
 
     List<Feature> leftOn = rightTdJoin.getConditions().stream()
       .map(c -> new Feature(c.getLeftFeature())).collect(Collectors.toList());

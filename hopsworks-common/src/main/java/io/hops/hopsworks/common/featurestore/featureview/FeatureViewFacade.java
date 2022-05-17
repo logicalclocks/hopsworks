@@ -50,13 +50,15 @@ public class FeatureViewFacade extends AbstractFacade<FeatureView> {
 
   public List<FeatureView> findByFeaturestore(Featurestore featurestore, QueryParam queryParam) {
     Boolean latestVersion = false;
-    if (queryParam.getFilters().removeIf(filter -> filter.toString().equals("LATEST_VERSION"))) {
+    if (queryParam != null && queryParam.getFilters().removeIf(filter -> filter.toString().equals("LATEST_VERSION"))) {
       latestVersion = true;
     }
 
     Map<String, Object> extraParam = new HashMap<>();
     extraParam.put("featurestore", featurestore);
-    String queryStr = buildQuery("SELECT fv FROM FeatureView fv ", queryParam.getFilters(), queryParam.getSorts(),
+    String queryStr = buildQuery("SELECT fv FROM FeatureView fv ",
+        queryParam != null ? queryParam.getFilters(): null,
+        queryParam != null ? queryParam.getSorts(): null,
         "fv.featurestore = :featurestore ");
     Query q = makeQuery(queryStr, queryParam, extraParam);
     List<FeatureView> results = q.getResultList();

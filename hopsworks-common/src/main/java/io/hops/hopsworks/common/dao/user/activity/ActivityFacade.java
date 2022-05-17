@@ -84,7 +84,8 @@ public class ActivityFacade extends AbstractFacade<Activity> {
   public static final String CREATED_FEATUREGROUP = " created a new feature group named ";
   public static final String CREATED_TRAINING_DATASET = " created a new training dataset named ";
   public static final String DELETED_FEATUREGROUP = " deleted a feature group named ";
-  public static final String DELETED_TRAINING_DATASET = " deleted a training dataset named ";
+  public static final String DELETED_TRAINING_DATASET = " deleted a training dataset(data and metadata) named ";
+  public static final String DELETED_TRAINING_DATASET_DATA_ONLY = " deleted a training dataset(data only) named ";
   public static final String CREATED_NEW_VERSION_OF_FEATUREGROUP = " created a new version of a feature group named ";
   public static final String EDITED_FEATUREGROUP = " edited feature group named ";
   public static final String EDITED_TRAINING_DATASET = " edited training dataset named ";
@@ -98,6 +99,7 @@ public class ActivityFacade extends AbstractFacade<Activity> {
     "the featurestore with id: ";
   public static final String CREATED_FEATURE_VIEW = " created a new feature view ";
   public static final String DELETED_FEATURE_VIEW = " deleted a feature view ";
+  public static final String EDITED_FEATURE_VIEW = " edited a feature view ";
   
   @PersistenceContext(unitName = "kthfsPU")
   private EntityManager em;

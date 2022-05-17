@@ -489,8 +489,6 @@ public class FeaturegroupService {
     }
   }
   
-  
-
   @POST
   @Path("/{featuregroupId}/ingestion")
   @Consumes(MediaType.APPLICATION_JSON)

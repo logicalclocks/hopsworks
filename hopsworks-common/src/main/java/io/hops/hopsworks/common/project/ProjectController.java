@@ -984,7 +984,7 @@ public class ProjectController {
       Dataset trainingDatasets = datasetController.getByProjectAndDsName(project,
         null, project.getName() + "_" + Settings.ServiceDataset.TRAININGDATASETS.getName());
       Featurestore featurestore = featurestoreController.createProjectFeatureStore(project, user, featurestoreName,
-        trainingDatasets);
+          trainingDatasets);
       //Create Hopsworks Dataset of the HiveDb
       hiveController.createDatasetDb(project, user, dfso, featurestoreName, DatasetType.FEATURESTORE, featurestore,
         datasetProvCore);

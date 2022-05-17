@@ -217,8 +217,6 @@ public class TrainingDatasetService {
     Users user = jWTHelper.getUserPrincipal(sc);
     TrainingDatasetDTO createdTrainingDatasetDTO =
         trainingDatasetController.createTrainingDataset(user, project, featurestore, trainingDatasetDTO);
-    activityFacade.persistActivity(ActivityFacade.CREATED_TRAINING_DATASET +
-        createdTrainingDatasetDTO.getName(), project, user, ActivityFlag.SERVICE);
     GenericEntity<TrainingDatasetDTO> createdTrainingDatasetDTOGeneric =
         new GenericEntity<TrainingDatasetDTO>(createdTrainingDatasetDTO) {};
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.CREATED).entity(createdTrainingDatasetDTOGeneric)
@@ -365,8 +363,6 @@ public class TrainingDatasetService {
     if (updateMetadata) {
       oldTrainingDatasetDTO =
           trainingDatasetController.updateTrainingDatasetMetadata(user, project, featurestore, trainingDatasetDTO);
-      activityFacade.persistActivity(ActivityFacade.EDITED_TRAINING_DATASET + trainingDatasetDTO.getName(),
-          project, user, ActivityFlag.SERVICE);
     }
     if (updateStatsConfig) {
       oldTrainingDatasetDTO =

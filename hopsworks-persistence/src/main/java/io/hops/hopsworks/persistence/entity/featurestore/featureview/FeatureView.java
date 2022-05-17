@@ -20,7 +20,9 @@ import io.hops.hopsworks.persistence.entity.featurestore.Featurestore;
 import io.hops.hopsworks.persistence.entity.featurestore.activity.FeaturestoreActivity;
 import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.TrainingDataset;
 import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.TrainingDatasetFeature;
+import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.TrainingDatasetFilter;
 import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.TrainingDatasetJoin;
+import io.hops.hopsworks.persistence.entity.hdfs.inode.Inode;
 import io.hops.hopsworks.persistence.entity.user.Users;
 
 import javax.persistence.Basic;
@@ -31,6 +33,7 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
+import javax.persistence.JoinColumns;
 import javax.persistence.ManyToOne;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
@@ -87,19 +90,22 @@ public class FeatureView implements Serializable {
   @Basic(optional = false)
   @Column(name = "description")
   private String description;
-  @Basic
-  @Column(name = "label")
-  private String label;
   @OneToMany(cascade = CascadeType.ALL, mappedBy = "featureView")
   private Collection<TrainingDatasetFeature> features;
-  //TODO featureview: add TrainingDatasetFilterCondition;
+  @OneToMany(cascade = CascadeType.ALL, mappedBy = "featureView")
+  private Collection<TrainingDatasetFilter> filters;
   @OneToMany(cascade = CascadeType.ALL, mappedBy = "featureView")
   private Collection<TrainingDatasetJoin> joins;
-  // TODO featureview: can be removed?
   @OneToMany(cascade = CascadeType.ALL, mappedBy = "featureView")
   private Collection<FeaturestoreActivity> activities;
   @OneToMany(cascade = CascadeType.ALL, mappedBy = "featureView")
   private Collection<TrainingDataset> trainingDatasets;
+  @JoinColumns({
+      @JoinColumn(name = "inode_pid", referencedColumnName = "parent_id"),
+      @JoinColumn(name = "inode_name", referencedColumnName = "name"),
+      @JoinColumn(name = "partition_id", referencedColumnName = "partition_id")})
+  @ManyToOne(optional = false)
+  private Inode inode;
 
   public FeatureView() {
   }
@@ -160,14 +166,6 @@ public class FeatureView implements Serializable {
     this.description = description;
   }
 
-  public String getLabel() {
-    return label;
-  }
-
-  public void setLabel(String label) {
-    this.label = label;
-  }
-
   public Collection<TrainingDatasetFeature> getFeatures() {
     return features;
   }
@@ -175,6 +173,15 @@ public class FeatureView implements Serializable {
   public void setFeatures(
       Collection<TrainingDatasetFeature> features) {
     this.features = features;
+  }
+
+  public Collection<TrainingDatasetFilter> getFilters() {
+    return filters;
+  }
+
+  public void setFilters(
+      Collection<TrainingDatasetFilter> filters) {
+    this.filters = filters;
   }
 
   public Collection<TrainingDatasetJoin> getJoins() {
@@ -204,6 +211,14 @@ public class FeatureView implements Serializable {
     this.trainingDatasets = trainingDatasets;
   }
 
+  public Inode getInode() {
+    return inode;
+  }
+
+  public void setInode(Inode inode) {
+    this.inode = inode;
+  }
+
   @Override
   public boolean equals(Object o) {
     if (this == o) {
@@ -216,14 +231,12 @@ public class FeatureView implements Serializable {
     return Objects.equals(id, that.id) && Objects.equals(name, that.name) &&
         Objects.equals(featurestore, that.featurestore) && Objects.equals(created, that.created) &&
         Objects.equals(creator, that.creator) && Objects.equals(version, that.version) &&
-        Objects.equals(description, that.description) && Objects.equals(label, that.label) &&
-        Objects.equals(features, that.features) && Objects.equals(joins, that.joins) &&
-        Objects.equals(trainingDatasets, that.trainingDatasets);
+        Objects.equals(description, that.description) &&
+        Objects.equals(features, that.features) && Objects.equals(joins, that.joins);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(id, name, featurestore, created, creator, version, description, label, features, joins,
-        trainingDatasets);
+    return Objects.hash(id, name, featurestore, created, creator, version, description, features, joins);
   }
 }

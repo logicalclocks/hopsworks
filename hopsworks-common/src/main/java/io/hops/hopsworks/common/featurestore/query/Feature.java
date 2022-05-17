@@ -32,6 +32,7 @@ public class Feature {
   private Featuregroup featureGroup;
   private Integer idx;
 
+  // For testing purposes
   public Feature(String name, String fgAlias, String type, boolean primary, String defaultValue, String prefix) {
     this.name = name;
     this.fgAlias = fgAlias;

@@ -67,15 +67,16 @@ public class HopsfsTrainingDatasetController {
     }
 
     HopsfsTrainingDataset hopsfsTrainingDataset = trainingDataset.getHopsfsTrainingDataset();
+    if (hopsfsTrainingDataset != null) {
+      trainingDatasetDTO.setLocation(new Path(DistributedFileSystemOps.HOPSFS_SCHEME,
+          namenodeService.getAddress() + ":" + namenodeService.getPort(),
+          inodeController.getPath(hopsfsTrainingDataset.getInode())).toString());
+      trainingDatasetDTO.setInodeId(hopsfsTrainingDataset.getInode().getId());
 
-    trainingDatasetDTO.setLocation(new Path(DistributedFileSystemOps.HOPSFS_SCHEME,
-        namenodeService.getAddress() + ":" + namenodeService.getPort(),
-        inodeController.getPath(hopsfsTrainingDataset.getInode())).toString());
-    trainingDatasetDTO.setInodeId(hopsfsTrainingDataset.getInode().getId());
-
-    FeaturestoreHopsfsConnectorDTO hopsfsConnectorDTO =
-        new FeaturestoreHopsfsConnectorDTO(hopsfsTrainingDataset.getFeaturestoreConnector());
-    trainingDatasetDTO.setStorageConnector(hopsfsConnectorDTO);
+      FeaturestoreHopsfsConnectorDTO hopsfsConnectorDTO =
+          new FeaturestoreHopsfsConnectorDTO(hopsfsTrainingDataset.getFeaturestoreConnector());
+      trainingDatasetDTO.setStorageConnector(hopsfsConnectorDTO);
+    }
     return trainingDatasetDTO;
   }
 }

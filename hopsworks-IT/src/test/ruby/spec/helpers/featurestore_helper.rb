@@ -704,6 +704,175 @@ module FeaturestoreHelper
     [json_result, name]
   end
 
+  def create_feature_view(project_id, featurestore_id, query, name: nil,
+                          version: 1, features: nil, description: nil)
+
+    name = name == nil ? "feature_view_#{random_id}" : name
+    description = description == nil ? "testfeatureviewdescription" : description
+
+    json_data = {
+      name: name,
+      version: version,
+      description: description,
+      features: features,
+      query: query
+    }
+
+    create_featureview_endpoint = "#{ENV['HOPSWORKS_API']}/project/#{project_id.to_s}/featurestores/#{featurestore_id.to_s}/featureview"
+    json_result = post create_featureview_endpoint, json_data.to_json
+    [json_result, name]
+  end
+
+  def create_feature_view_from_feature_group(project_id, featurestore_id, fg, name: nil, version: 1, description: nil)
+    features = fg["features"]
+    fg_id = fg["id"]
+  
+    query = {
+      leftFeatureGroup: {
+        id: fg_id
+      },
+      leftFeatures: features,
+      joins: []
+    }
+
+    create_feature_view(project_id, featurestore_id, query, features: features,
+                        name: name, version: version, description: description)
+  end
+  
+  def update_feature_view(project_id, featurestore_id, json_data)
+    create_featureview_endpoint = "#{ENV['HOPSWORKS_API']}/project/#{project_id.to_s}/featurestores/#{featurestore_id.to_s}/featureview"
+    json_result = put create_featureview_endpoint, json_data.to_json
+    return json_result
+  end
+
+  def create_featureview_training_dataset_from_project(project, expected_status_code: 201, data_format: "tfrecords",
+                                                       version: 1, splits: [], description: "testtrainingdatasetdescription",
+                                                       statistics_config: nil, train_split: nil, is_internal: true, connector: nil, location: nil)
+    featurestore_id = get_featurestore_id(project.id)
+    featuregroup_suffix = short_random_id
+    query = make_sample_query(project, featurestore_id, featuregroup_suffix: featuregroup_suffix)
+    json_result, _ = create_feature_view(project.id, featurestore_id, query)
+    expect_status(201)
+    featureview = JSON.parse(json_result)
+
+    if connector == nil
+      connector = get_hopsfs_training_datasets_connector(@project[:projectname])
+    end
+
+    json_result  = create_featureview_training_dataset(
+      project.id, featureview, connector, version: version, splits: splits, description: description,
+      statistics_config: statistics_config, train_split: train_split, data_format: data_format,
+      is_internal: is_internal, location: location)
+    expect_status(expected_status_code)
+    parsed_json = JSON.parse(json_result)
+    {"response" => parsed_json, "connector" => connector, "featureView" => featureview}
+  end
+
+  def create_featureview_training_dataset(project_id, featureview, hopsfs_connector, data_format: "tfrecords",
+                                          version: 1, splits: [], description: "testtrainingdatasetdescription",
+                                          statistics_config: nil, train_split: nil, query_param: nil, is_internal: true, location: nil)
+    trainingDatasetType = is_internal ? "HOPSFS_TRAINING_DATASET": "EXTERNAL_TRAINING_DATASET"
+    create_training_dataset_endpoint = "#{ENV['HOPSWORKS_API']}/project/#{project_id.to_s}/featurestores/#{featureview["featurestoreId"].to_s}" +
+      "/featureview/#{featureview["name"]}/version/#{featureview["version"].to_s}/trainingdatasets"
+    unless query_param != nil
+      create_training_dataset_endpoint = create_training_dataset_endpoint + "?#{query_param}"
+    end
+    json_data = {
+      description: description,
+      version: version,
+      dataFormat: data_format,
+      trainingDatasetType: trainingDatasetType,
+      splits: splits,
+      seed: 1234,
+      trainSplit: train_split,
+      location: location
+    }
+    unless statistics_config == nil
+      json_data[:statisticsConfig] = statistics_config
+    end
+
+    unless hopsfs_connector.nil?
+	    json_data["storageConnector"] = {id: hopsfs_connector[:id]}
+    end
+    json_result = post create_training_dataset_endpoint, json_data.to_json
+    json_result
+  end
+
+  def get_featureview_training_dataset(project, featureview, version: nil, expected_status_code: 200)
+    training_dataset_endpoint = "#{ENV['HOPSWORKS_API']}/project/#{project.id.to_s}" +
+      "/featurestores/#{featureview["featurestoreId"].to_s}/featureview/#{featureview["name"]}/version/#{featureview["version"].to_s}/trainingdatasets"
+    unless version == nil
+      training_dataset_endpoint = training_dataset_endpoint + "/version/#{version.to_s}"
+    end
+    training_datasets = get training_dataset_endpoint
+    expect_status(expected_status_code)
+    training_datasets
+  end
+
+  def delete_featureview_training_dataset(project, featureview, version: nil)
+    training_datasets = JSON.parse(get_featureview_training_dataset(project, featureview, version: version))
+    training_dataset_endpoint = "#{ENV['HOPSWORKS_API']}/project/#{project.id.to_s}" +
+      "/featurestores/#{featureview["featurestoreId"].to_s}/featureview/#{featureview["name"]}/version/#{featureview["version"].to_s}/trainingdatasets"
+    unless version == nil
+      training_dataset_endpoint = training_dataset_endpoint + "/version/#{version.to_s}"
+    end
+    json_result2 = delete training_dataset_endpoint
+    expect_status(200)
+
+    unless version == nil
+      training_datasets = {"items" => [training_datasets]}
+    end
+
+    # Make sure that the directory has been removed correctly
+    training_datasets["items"].each { |training_dataset|
+      get_datasets_in_path(project,
+			   "#{project[:projectname]}_Training_Datasets/#{featureview['name']}_#{training_dataset['version'].to_s}",
+                           query: "&type=DATASET")
+      expect_status(400)
+    }
+  end
+
+  def delete_featureview_training_dataset_data_only(project, featureview, version: nil)
+    training_datasets = JSON.parse(get_featureview_training_dataset(project, featureview, version: version))
+    training_dataset_endpoint = "#{ENV['HOPSWORKS_API']}/project/#{project.id.to_s}" +
+      "/featurestores/#{featureview["featurestoreId"].to_s}/featureview/#{featureview["name"]}/version/#{featureview["version"].to_s}/trainingdatasets"
+    if version == nil
+      training_dataset_endpoint = training_dataset_endpoint + "/data"
+    else
+      training_dataset_endpoint = training_dataset_endpoint + "/version/#{version.to_s}/data"
+    end
+    json_result2 = delete training_dataset_endpoint
+    expect_status(200)
+
+    unless version == nil
+      training_datasets = {"items" => [training_datasets]}
+    end
+
+    training_datasets["items"].each { |training_dataset|
+      get_datasets_in_path(project,
+			   "#{project[:projectname]}_Training_Datasets/#{featureview['name']}_#{featureview['version']}_#{training_dataset['version'].to_s}",
+                           query: "&type=DATASET")
+      expect_status(200)
+    }
+
+    # should be able to retrieve metadata
+    get_featureview_training_dataset(project, featureview, version: version)
+  end
+
+  def update_featureview_training_dataset_metadata(project, featureview, version, json_data)
+    training_dataset_endpoint = "#{ENV['HOPSWORKS_API']}/project/#{project.id.to_s}" +
+      "/featurestores/#{featureview["featurestoreId"].to_s}/featureview/#{featureview["name"]}/version/#{featureview["version"].to_s}/trainingdatasets/version/#{version.to_s}?updateMetadata=true"
+    json_result = put training_dataset_endpoint, json_data.to_json
+    return json_result
+  end
+
+  def update_featureview_training_dataset_stats_config(project, featureview, version, json_data)
+    training_dataset_endpoint = "#{ENV['HOPSWORKS_API']}/project/#{project.id.to_s}" +
+      "/featurestores/#{featureview["featurestoreId"].to_s}/featureview/#{featureview["name"]}/version/#{featureview["version"].to_s}/trainingdatasets/version/#{version.to_s}?updateStatsConfig=true"
+    json_result = put training_dataset_endpoint, json_data.to_json
+    return json_result
+  end
+
   def create_external_training_dataset(project_id, featurestore_id, connector_id, name: nil, location: "",
                                        splits:[], features: nil, train_split: nil)
     trainingDatasetType = "EXTERNAL_TRAINING_DATASET"
@@ -924,6 +1093,7 @@ module FeaturestoreHelper
     end
     raise wait_result["ex"] unless wait_result["success"]
   end
+
   def trainingdataset_usage(project_id, td_id, fs_id: nil, fs_project_id: nil, type: [])
     fs_project_id = project_id if fs_project_id.nil?
     fs_id = get_featurestore(project_id, fs_project_id: fs_project_id)["featurestoreId"] if fs_id.nil?
@@ -938,6 +1108,7 @@ module FeaturestoreHelper
     expect_status_details(200)
     JSON.parse(result)
   end
+
   def register_transformation_fn(project_id, featurestore_id, transformation_fn_metadata: nil)
       plus_one = {
             "name": "plus_one",
@@ -954,5 +1125,51 @@ module FeaturestoreHelper
       json_data = transformation_fn_metadata.to_json
       endpoint = "#{ENV['HOPSWORKS_API']}/project/#{project_id}/featurestores/#{featurestore_id}/transformationfunctions"
       post endpoint, json_data
+  end
+
+  def make_sample_query(project, featurestore_id, featuregroup_suffix: "")
+    features_a = [
+      { type: "INT", name: "a_testfeature", primary: true },
+      { type: "INT", name: "a_testfeature1" },
+      { type: "BIGINT", name: "ts" },
+    ]
+    fg_id = create_cached_featuregroup_checked(project.id, featurestore_id, "test_fg_a#{featuregroup_suffix}",
+                                               features: features_a,
+                                               event_time: "ts")
+    # create second feature group
+    features_b = [
+      { type: "INT", name: "a_testfeature", primary: true },
+      { type: "INT", name: "b_testfeature1" },
+      { type: "BIGINT", name: "ts" },
+    ]
+    fg_id_b = create_cached_featuregroup_checked(project.id, featurestore_id, "test_fg_b#{featuregroup_suffix}",
+                                                 features: features_b, event_time: "ts")
+    query = {
+      leftFeatureGroup: {
+        id: fg_id
+      },
+      leftFeatures: [{ name: 'a_testfeature' }, { name: 'a_testfeature1' }],
+      joins: [{
+                query: {
+                  leftFeatureGroup: {
+                    id: fg_id_b
+                  },
+                  leftFeatures: [{ name: 'a_testfeature' }, { name: 'b_testfeature1' }]
+                }
+              }
+      ],
+      filter: {
+        type: "SINGLE",
+        leftFilter: {
+          feature: {
+            name: "a_testfeature1",
+            featureGroupId: fg_id
+          },
+          condition: "GREATER_THAN",
+          value: "0"
+        }
+      }
+    }
+    query
   end
 end

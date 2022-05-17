@@ -27,7 +27,9 @@ import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.Trainin
 
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -36,7 +38,7 @@ import java.util.stream.Collectors;
  * using jaxb.
  */
 @XmlRootElement
-public class TrainingDatasetDTO extends FeaturestoreEntityDTO {
+public class TrainingDatasetDTO extends FeaturestoreEntityDTO<TrainingDatasetDTO> {
   
   private String dataFormat;
   private Boolean coalesce;
@@ -58,8 +60,10 @@ public class TrainingDatasetDTO extends FeaturestoreEntityDTO {
   private List<TrainingDatasetFeatureDTO> features;
 
   private Double sampleRatio;
-  private String eventStartTime;
-  private String eventEndTime;
+  @XmlJavaTypeAdapter(DateAdapter.class)
+  private Date eventStartTime;
+  @XmlJavaTypeAdapter(DateAdapter.class)
+  private Date eventEndTime;
 
   public TrainingDatasetDTO() {
   }
@@ -78,6 +82,9 @@ public class TrainingDatasetDTO extends FeaturestoreEntityDTO {
     this.seed = trainingDataset.getSeed();
     this.fromQuery = trainingDataset.isQuery();
     this.trainSplit = trainingDataset.getTrainSplit();
+    this.eventStartTime = trainingDataset.getStartTime();
+    this.eventEndTime = trainingDataset.getEndTime();
+    this.sampleRatio = trainingDataset.getSampleRatio();
   }
   
   @XmlElement
@@ -172,6 +179,30 @@ public class TrainingDatasetDTO extends FeaturestoreEntityDTO {
   
   public void setTrainSplit(String trainSplit) {
     this.trainSplit = trainSplit;
+  }
+
+  public Double getSampleRatio() {
+    return sampleRatio;
+  }
+
+  public void setSampleRatio(Double sampleRatio) {
+    this.sampleRatio = sampleRatio;
+  }
+
+  public Date getEventStartTime() {
+    return eventStartTime;
+  }
+
+  public void setEventStartTime(Date eventStartTime) {
+    this.eventStartTime = eventStartTime;
+  }
+
+  public Date getEventEndTime() {
+    return eventEndTime;
+  }
+
+  public void setEventEndTime(Date eventEndTime) {
+    this.eventEndTime = eventEndTime;
   }
 
   @Override

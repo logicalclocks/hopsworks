@@ -444,6 +444,25 @@ describe "On #{ENV['OS']}" do
           tags_json = JSON.parse(json_result)
           expect(tags_json["items"]).to eq(nil)
         end
+      end
+	  context "featureview" do
+        it "should not get any tags" do
+          featurestore_id = get_featurestore_id(@project.id)
+		  
+          json_result, fg_name = create_cached_featuregroup(@project.id, featurestore_id, online:true)
+          parsed_json = JSON.parse(json_result)
+		  
+          json_result, _ = create_feature_view_from_feature_group(@project.id, featurestore_id, parsed_json)
+		  parsed_json = JSON.parse(json_result)
+          expect_status(201)
+          featureview_name = parsed_json["name"]
+          featureview_version = parsed_json["version"]
+		  
+          json_result = get_featureview_tags(@project.id, featureview_name, featureview_version)
+          expect_status_details(200)
+          tags_json = JSON.parse(json_result)
+          expect(tags_json["items"]).to eq(nil)
+        end
         it "should not be able to attach tags which are not defined" do
           featurestore_id = get_featurestore_id(@project.id)
           connector_id = get_s3_connector_id
@@ -471,9 +490,79 @@ describe "On #{ENV['OS']}" do
           tags_json = JSON.parse(json_result)
           expect(tags_json["items"][0]["name"]).to eq(@pre_tags[0])
           expect(tags_json["items"][0]["value"]).to eq("daily")
+        end
+        it "should not be able to attach tags which are not defined" do
+          featurestore_id = get_featurestore_id(@project.id)
+		  
+          json_result, fg_name = create_cached_featuregroup(@project.id, featurestore_id, online:true)
+          parsed_json = JSON.parse(json_result)
+		  
+          json_result, _ = create_feature_view_from_feature_group(@project.id, featurestore_id, parsed_json)
+		  parsed_json = JSON.parse(json_result)
+          expect_status(201)
+          featureview_name = parsed_json["name"]
+          featureview_version = parsed_json["version"]
+		  
+          add_featureview_tag(@project.id, featureview_name, featureview_version, @tags[0], "abc123")
+          expect_status_details(404, error_code: 370000)
+        end
+
+        it "should not be able to get tag which is not attached" do
+          featurestore_id = get_featurestore_id(@project.id)
+		  
+          json_result, fg_name = create_cached_featuregroup(@project.id, featurestore_id, online:true)
+          parsed_json = JSON.parse(json_result)
+		  
+          json_result, _ = create_feature_view_from_feature_group(@project.id, featurestore_id, parsed_json)
+		  parsed_json = JSON.parse(json_result)
+          expect_status(201)
+          featureview_name = parsed_json["name"]
+          featureview_version = parsed_json["version"]
+
+          get_featureview_tag(@project.id, featureview_name, featureview_version, @pre_tags[0])
+          expect_status_details(404, error_code: 370002)
+        end
+
+        it "should not be able to get tag which does not exist" do
+          featurestore_id = get_featurestore_id(@project.id)
+		  
+          json_result, fg_name = create_cached_featuregroup(@project.id, featurestore_id, online:true)
+          parsed_json = JSON.parse(json_result)
+		  
+          json_result, _ = create_feature_view_from_feature_group(@project.id, featurestore_id, parsed_json)
+		  parsed_json = JSON.parse(json_result)
+          expect_status(201)
+          featureview_name = parsed_json["name"]
+          featureview_version = parsed_json["version"]
+		  
+          get_featureview_tag(@project.id, featureview_name, featureview_version, @tags[0])
+          expect_status_details(404, error_code: 370002)
+        end
+
+        it "should be able to attach/delete tags which are defined" do
+          featurestore_id = get_featurestore_id(@project.id)
+		  
+          json_result, fg_name = create_cached_featuregroup(@project.id, featurestore_id, online:true)
+          parsed_json = JSON.parse(json_result)
+		  
+          json_result, _ = create_feature_view_from_feature_group(@project.id, featurestore_id, parsed_json)
+		  parsed_json = JSON.parse(json_result)
+          expect_status(201)
+          featureview_name = parsed_json["name"]
+          featureview_version = parsed_json["version"]
+
+          add_featureview_tag_checked(@project.id, featureview_name, featureview_version, @pre_tags[0], "daily")
+          json_result = get_featureview_tags(@project.id, featureview_name, featureview_version)
+          expect_status_details(200)
+          tags_json = JSON.parse(json_result)
+          expect(tags_json["items"][0]["name"]).to eq(@pre_tags[0])
+          expect(tags_json["items"][0]["value"]).to eq("daily")
 
           delete_training_dataset_tag_checked(@project.id, td_json["id"], @pre_tags[0])
           json_result = get_training_dataset_tags(@project.id, td_json["id"])
+
+          delete_featureview_tag_checked(@project.id, featureview_name, featureview_version, @pre_tags[0])
+          json_result = get_featureview_tags(@project.id, featureview_name, featureview_version)
           expect_status_details(200)
           tags_json = JSON.parse(json_result)
           expect(tags_json["items"]).to eq(nil)
@@ -512,6 +601,72 @@ describe "On #{ENV['OS']}" do
           td_json = JSON.parse(json_result)
           tag_val = bad_schematized_tag_val
           add_training_dataset_tag(@project[:id], td_json["id"], @pre_schematized_tags[0], tag_val)
+        end
+        it "should be able to attach many tags (>13500)" do
+          featurestore_id = get_featurestore_id(@project.id)
+		  
+          json_result, fg_name = create_cached_featuregroup(@project.id, featurestore_id, online:true)
+          parsed_json = JSON.parse(json_result)
+		  
+          json_result, _ = create_feature_view_from_feature_group(@project.id, featurestore_id, parsed_json)
+		  parsed_json = JSON.parse(json_result)
+          expect_status(201)
+          featureview_name = parsed_json["name"]
+          featureview_version = parsed_json["version"]
+		  
+          tag_val = "x" * 1000
+          add_featureview_tag_checked(@project[:id], featureview_name, featureview_version, @pre_tags[0], tag_val)
+          14.times do |i|
+            add_featureview_tag_checked(@project[:id], featureview_name, featureview_version, @pre_tags[i+1], tag_val)
+          end
+        end
+
+        it "should be able to attach large tags (>13500)" do
+          featurestore_id = get_featurestore_id(@project.id)
+		  
+          json_result, fg_name = create_cached_featuregroup(@project.id, featurestore_id, online:true)
+          parsed_json = JSON.parse(json_result)
+		  
+          json_result, _ = create_feature_view_from_feature_group(@project.id, featurestore_id, parsed_json)
+		  parsed_json = JSON.parse(json_result)
+          expect_status(201)
+          featureview_name = parsed_json["name"]
+          featureview_version = parsed_json["version"]
+		  
+          tag_val = "x" * 20000
+          add_featureview_tag_checked(@project[:id], featureview_name, featureview_version, @pre_tags[0], tag_val)
+        end
+
+        it "should be able to add schematized tag to a featuregroup" do
+          featurestore_id = get_featurestore_id(@project.id)
+		  
+          json_result, fg_name = create_cached_featuregroup(@project.id, featurestore_id, online:true)
+          parsed_json = JSON.parse(json_result)
+		  
+          json_result, _ = create_feature_view_from_feature_group(@project.id, featurestore_id, parsed_json)
+		  parsed_json = JSON.parse(json_result)
+          expect_status(201)
+          featureview_name = parsed_json["name"]
+          featureview_version = parsed_json["version"]
+		  
+          tag_val = schematized_tag_val
+          add_featureview_tag_checked(@project[:id], featureview_name, featureview_version, @pre_schematized_tags[0], tag_val)
+        end
+
+        it "should not be able to add bad schematized tag to a featuregroup" do
+          featurestore_id = get_featurestore_id(@project.id)
+		  
+          json_result, fg_name = create_cached_featuregroup(@project.id, featurestore_id, online:true)
+          parsed_json = JSON.parse(json_result)
+		  
+          json_result, _ = create_feature_view_from_feature_group(@project.id, featurestore_id, parsed_json)
+		  parsed_json = JSON.parse(json_result)
+          expect_status(201)
+          featureview_name = parsed_json["name"]
+          featureview_version = parsed_json["version"]
+		  
+          tag_val = bad_schematized_tag_val
+          add_featureview_tag(@project[:id], featureview_name, featureview_version, @pre_schematized_tags[0], tag_val)
           expect_status_details(400, error_code: 370005)
         end
       end
@@ -593,6 +748,38 @@ describe "On #{ENV['OS']}" do
 
           create_session(@user1[:email], @user1_params[:password])
           get_training_dataset_tags_checked(@project1[:id], td["id"])
+          tags = json_body
+          expect(tags[:count]).to eq(1)
+          tag = tags[:items].select do |item| item[:name] == @pre_schematized_tags[0] end
+          expect(tag.length).to eq(1)
+        end
+      end
+	  context 'featureview' do
+        it "should be able to attach/read schematized tag to shared featureview" do
+          create_session(@user1[:email], @user1_params[:password])
+		  
+		  featurestore_id = get_featurestore_id(@project1.id)
+		  
+          json_result, fg_name = create_cached_featuregroup(@project1.id, featurestore_id, online:true)
+          parsed_json = JSON.parse(json_result)
+		  
+          json_result, _ = create_feature_view_from_feature_group(@project1.id, featurestore_id, parsed_json)
+		  parsed_json = JSON.parse(json_result)
+          expect_status(201)
+          featureview_name = parsed_json["name"]
+          featureview_version = parsed_json["version"]
+          tag_val = schematized_tag_val
+
+          create_session(@user2[:email], @user2_params[:password])
+          add_featureview_tag_checked(@project2[:id], featureview_name, featureview_version, @pre_schematized_tags[0], tag_val, featurestore_id: featurestore_id)
+          get_featureview_tags_checked(@project2[:id], featureview_name, featureview_version, fs_id: featurestore_id)
+          tags = json_body
+          expect(tags[:count]).to eq(1)
+          tag = tags[:items].select do |item| item[:name] == @pre_schematized_tags[0] end
+          expect(tag.length).to eq(1)
+
+          create_session(@user1[:email], @user1_params[:password])
+          get_featureview_tags_checked(@project1[:id], featureview_name, featureview_version)
           tags = json_body
           expect(tags[:count]).to eq(1)
           tag = tags[:items].select do |item| item[:name] == @pre_schematized_tags[0] end
