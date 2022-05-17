@@ -113,7 +113,8 @@ public class PitJoinController {
     // we always re-select all primary key columns of the "label group" in order to be able to perform final join
     List<Feature> additionalPkFeatures = query.getAvailableFeatures().stream().filter(Feature::isPrimary)
       .map(f ->
-        new Feature(f.getName(), f.getFgAlias(), f.getType(), f.isPrimary(), f.getDefaultValue(), PK_JOIN_PREFIX))
+        new Feature(f.getName(), f.getFgAlias(), f.getType(), f.isPrimary(), f.getDefaultValue(), PK_JOIN_PREFIX,
+            f.getFeatureGroup()))
       .collect(Collectors.toList());
     additionalPkFeatures.add(new Feature(query.getFeaturegroup().getEventTime(), query.getAs(), (String) null,
       null, EVT_JOIN_PREFIX));

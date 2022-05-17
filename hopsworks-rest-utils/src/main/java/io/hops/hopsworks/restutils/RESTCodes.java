@@ -1523,7 +1523,7 @@ public class RESTCodes {
     TRAINING_DATASET_NO_QUERY(111, "The training dataset wasn't generated from a query",
         Response.Status.BAD_REQUEST),
     TRAINING_DATASET_NO_SCHEMA(112, "No query or feature schema provided", Response.Status.BAD_REQUEST),
-    TRAINING_DATASET_QUERY_FG_DELETED(113, "Cannot generate query, some feature groups were deleted",
+    QUERY_FAILED_FG_DELETED(113, "Cannot generate query, some feature groups were deleted",
         Response.Status.BAD_REQUEST),
     ILLEGAL_FEATUREGROUP_UPDATE(114, "Illegal feature group update", Response.Status.BAD_REQUEST),
     COULD_NOT_ALTER_FEAUTURE_GROUP_METADATA(115, "Failed to alter feature group meta data",
@@ -1635,7 +1635,9 @@ public class RESTCodes {
     STREAM_FEATURE_GROUP_ONLINE_DISABLE_ENABLE(184,
       "Stream feature group cannot be online enabled if it was created as offline only.",
       Response.Status.BAD_REQUEST),
-    GCS_FIELD_MISSING(185, "Field missing", Response.Status.BAD_REQUEST);
+    GCS_FIELD_MISSING(185, "Field missing", Response.Status.BAD_REQUEST),
+    NESTED_JOIN_NOT_ALLOWED(187, "Nested join is not supported.", Response.Status.BAD_REQUEST),
+    FEATURE_NOT_FOUND(188, "Could not find feature.", Response.Status.NOT_FOUND);
 
     private int code;
     private String message;

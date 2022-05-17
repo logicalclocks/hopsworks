@@ -17,9 +17,14 @@ package io.hops.hopsworks.api.featurestore.featureview;
 
 import io.hops.hopsworks.api.featurestore.tag.FeatureStoreTagResource;
 import io.hops.hopsworks.common.api.ResourceRequest;
+import io.hops.hopsworks.common.dataset.util.DatasetHelper;
 import io.hops.hopsworks.common.dataset.util.DatasetPath;
+import io.hops.hopsworks.exceptions.DatasetException;
+import io.hops.hopsworks.exceptions.FeaturestoreException;
+import io.hops.hopsworks.persistence.entity.dataset.DatasetType;
 import io.hops.hopsworks.persistence.entity.featurestore.featureview.FeatureView;
 
+import javax.ejb.EJB;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.enterprise.context.RequestScoped;
@@ -29,20 +34,25 @@ import javax.enterprise.context.RequestScoped;
 public class FeatureViewTagResource extends FeatureStoreTagResource {
   
   private FeatureView featureView;
+  @EJB
+  private DatasetHelper datasetHelper;
+  @EJB
+  private FeatureViewController featureViewController;
   
   /**
    * Sets the feature view of the tag resource
    *
-   * @param featureView
+   * @param name
+   * @param version
    */
-  public void setFeatureView(FeatureView featureView) {
-    this.featureView = featureView;
+  public void setFeatureView(String name, Integer version) throws FeaturestoreException {
+    this.featureView = featureViewController.getByNameVersionAndFeatureStore(name, version, featureStore);
   }
-  
+
   @Override
-  protected DatasetPath getDatasetPath() {
-    //TODO get reliable feature view path
-    return null;
+  protected DatasetPath getDatasetPath() throws DatasetException {
+    return datasetHelper.getDatasetPath(project, featureViewController.getLocation(featureView),
+        DatasetType.DATASET);
   }
   
   @Override

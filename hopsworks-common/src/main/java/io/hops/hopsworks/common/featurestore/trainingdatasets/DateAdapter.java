@@ -1,6 +1,6 @@
 /*
  * This file is part of Hopsworks
- * Copyright (C) 2020, Logical Clocks AB. All rights reserved
+ * Copyright (C) 2022, Logical Clocks AB. All rights reserved
  *
  * Hopsworks is free software: you can redistribute it and/or modify it under the terms of
  * the GNU Affero General Public License as published by the Free Software Foundation,
@@ -14,24 +14,20 @@
  * If not, see <https://www.gnu.org/licenses/>.
  */
 
-package io.hops.hopsworks.persistence.entity.featurestore.activity;
+package io.hops.hopsworks.common.featurestore.trainingdatasets;
 
-public enum FeaturestoreActivityMeta {
-  // Don't change the order
-  FG_CREATED("Feature group was created"),
-  FG_ALTERED("Feature group was altered"),
-  ONLINE_ENABLED("Feature group available online"),
-  ONLINE_DISABLED("Feature group not available online"),
-  TD_CREATED("The training dataset was created"),
-  FV_CREATED("The feature view was created");
+import javax.xml.bind.annotation.adapters.XmlAdapter;
+import java.util.Date;
 
-  private String value;
+public class DateAdapter extends XmlAdapter<Long, Date> {
 
-  FeaturestoreActivityMeta(String value) {
-    this.value = value;
+  @Override
+  public Long marshal(Date v) {
+    return v.getTime();
   }
 
-  public String getValue() {
-    return value;
+  @Override
+  public Date unmarshal(Long v) {
+    return new Date(v);
   }
 }

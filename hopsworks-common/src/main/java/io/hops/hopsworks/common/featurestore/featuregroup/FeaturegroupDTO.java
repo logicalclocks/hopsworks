@@ -48,7 +48,7 @@ import java.util.List;
     @JsonSubTypes.Type(value = CachedFeaturegroupDTO.class, name = "CachedFeaturegroupDTO"),
     @JsonSubTypes.Type(value = StreamFeatureGroupDTO.class, name = "StreamFeatureGroupDTO"),
     @JsonSubTypes.Type(value = OnDemandFeaturegroupDTO.class, name = "OnDemandFeaturegroupDTO")})
-public class FeaturegroupDTO extends FeaturestoreEntityDTO {
+public class FeaturegroupDTO extends FeaturestoreEntityDTO<FeaturegroupDTO> {
 
   @XmlElement
   private List<FeatureGroupFeatureDTO> features;

@@ -84,9 +84,17 @@ public class FsQueryBuilder {
 
   public FsQueryDTO build(UriInfo uriInfo, Project project, Users user, FeatureView featureView)
       throws FeaturestoreException, ServiceException {
-    Query query = featureViewController.makeQuery(featureView, project, user);
+    Query query = queryController.makeQuery(featureView, project, user, false, false);
     FsQueryDTO dto = constructorController.construct(query, pitJoinController.isPitEnabled(query), true, project,
         user);
+    dto.setHref(uri(uriInfo, project));
+    return dto;
+  }
+
+  public FsQueryDTO build(UriInfo uriInfo, Project project, Users user, Query query, Boolean isTrainingDataset)
+      throws FeaturestoreException, ServiceException {
+    FsQueryDTO dto = constructorController.construct(query, pitJoinController.isPitEnabled(query),
+        isTrainingDataset, project, user);
     dto.setHref(uri(uriInfo, project));
     return dto;
   }

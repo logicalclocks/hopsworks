@@ -23,6 +23,7 @@ import io.hops.hopsworks.persistence.entity.featurestore.activity.FeaturestoreAc
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.Featuregroup;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.cached.FeatureGroupCommit;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.datavalidation.FeatureGroupValidation;
+import io.hops.hopsworks.persistence.entity.featurestore.featureview.FeatureView;
 import io.hops.hopsworks.persistence.entity.featurestore.statistics.FeaturestoreStatistic;
 import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.TrainingDataset;
 import io.hops.hopsworks.persistence.entity.jobs.history.Execution;
@@ -65,11 +66,24 @@ public class FeaturestoreActivityFacade extends AbstractFacade<FeaturestoreActiv
     em.persist(fsActivity);
   }
 
-  public void logMetadataActivity(Users user, TrainingDataset trainingDataset,
+  public void logMetadataActivity(Users user, TrainingDataset trainingDataset, FeatureView featureView,
                                   FeaturestoreActivityMeta metadataType) {
     FeaturestoreActivity fsActivity = new FeaturestoreActivity();
     fsActivity.setType(ActivityType.METADATA);
+    //TODO: set activity after merging of activityresource
+//    fsActivity.setfea
     fsActivity.setTrainingDataset(trainingDataset);
+    fsActivity.setUser(user);
+    fsActivity.setEventTime(new Date());
+    fsActivity.setActivityMeta(metadataType);
+    em.persist(fsActivity);
+  }
+
+  public void logMetadataActivity(Users user, FeatureView featureView,
+                                  FeaturestoreActivityMeta metadataType) {
+    FeaturestoreActivity fsActivity = new FeaturestoreActivity();
+    fsActivity.setType(ActivityType.METADATA);
+    fsActivity.setFeatureView(featureView);
     fsActivity.setUser(user);
     fsActivity.setEventTime(new Date());
     fsActivity.setActivityMeta(metadataType);
@@ -224,6 +238,28 @@ public class FeaturestoreActivityFacade extends AbstractFacade<FeaturestoreActiv
 
     Query queryCount = em.createQuery(queryCountStr, FeaturestoreActivity.class)
         .setParameter("trainingDataset", trainingDataset);
+    setFilters(filters, queryCount);
+
+    return new CollectionInfo<FeaturestoreActivity>((Long) queryCount.getSingleResult(), query.getResultList());
+  }
+
+  public CollectionInfo<FeaturestoreActivity> findByFeatureView(FeatureView featureView, Integer offset,
+                                                                Integer limit,
+                                                                Set<? extends FilterBy> filters,
+                                                                Set<? extends AbstractFacade.SortBy> sorts) {
+
+    String queryStr = buildQuery("SELECT a FROM FeaturestoreActivity a ",
+            filters, sorts, "a.featureView = :featureView");
+    String queryCountStr = buildQuery("SELECT COUNT(DISTINCT a.id) FROM FeaturestoreActivity a ",
+            filters, sorts, "a.featureView = :featureView");
+
+    Query query = em.createQuery(queryStr, FeaturestoreActivity.class)
+            .setParameter("featureView", featureView);
+    setFilters(filters, query);
+    setOffsetAndLim(offset, limit, query);
+
+    Query queryCount = em.createQuery(queryCountStr, FeaturestoreActivity.class)
+            .setParameter("featureView", featureView);
     setFilters(filters, queryCount);
 
     return new CollectionInfo<FeaturestoreActivity>((Long) queryCount.getSingleResult(), query.getResultList());

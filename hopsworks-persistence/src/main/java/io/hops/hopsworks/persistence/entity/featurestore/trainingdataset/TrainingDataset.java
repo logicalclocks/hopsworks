@@ -58,21 +58,30 @@ import java.util.Objects;
 @Table(name = "training_dataset", catalog = "hopsworks")
 @XmlRootElement
 @NamedQueries({
-  @NamedQuery(name = "TrainingDataset.findAll", query = "SELECT td FROM TrainingDataset td"),
-  @NamedQuery(name = "TrainingDataset.findById", query = "SELECT td FROM TrainingDataset td WHERE td.id = :id"),
-  @NamedQuery(name = "TrainingDataset.findByFeaturestore", query = "SELECT td FROM TrainingDataset td " +
-    "WHERE td.featurestore = :featurestore"),
-  @NamedQuery(name = "TrainingDataset.countByFeaturestore", query = "SELECT count(td.id) FROM TrainingDataset td " +
+    @NamedQuery(name = "TrainingDataset.findAll", query = "SELECT td FROM TrainingDataset td"),
+    @NamedQuery(name = "TrainingDataset.findById", query = "SELECT td FROM TrainingDataset td WHERE td.id = :id"),
+    @NamedQuery(name = "TrainingDataset.findByFeaturestore", query = "SELECT td FROM TrainingDataset td " +
         "WHERE td.featurestore = :featurestore"),
-  @NamedQuery(name = "TrainingDataset.findByFeaturestoreAndId", query = "SELECT td FROM TrainingDataset td " +
-    "WHERE td.featurestore = :featurestore AND td.id = :id"),
-  @NamedQuery(name = "TrainingDataset.findByFeaturestoreAndNameVersion",
-    query = "SELECT td FROM TrainingDataset td WHERE td.featurestore = :featurestore " +
-      "AND td.name= :name AND td.version = :version"),
-  @NamedQuery(name = "TrainingDataset.findByFeaturestoreAndName", query = "SELECT td FROM TrainingDataset td " +
-    "WHERE td.featurestore = :featurestore AND td.name = :name"),
-  @NamedQuery(name = "TrainingDataset.findByFeaturestoreAndNameOrderedByDescVersion", query = "SELECT td FROM " +
-    "TrainingDataset td WHERE td.featurestore = :featurestore AND td.name = :name ORDER BY td.version DESC")})
+    @NamedQuery(name = "TrainingDataset.countByFeaturestore", query = "SELECT count(td.id) FROM TrainingDataset td " +
+        "WHERE td.featurestore = :featurestore"),
+    @NamedQuery(name = "TrainingDataset.findByFeaturestoreAndId", query = "SELECT td FROM TrainingDataset td " +
+        "WHERE td.featurestore = :featurestore AND td.id = :id"),
+    @NamedQuery(name = "TrainingDataset.findByFeaturestoreAndNameVersion",
+        query = "SELECT td FROM TrainingDataset td WHERE td.featurestore = :featurestore " +
+            "AND td.name= :name AND td.version = :version"),
+    @NamedQuery(name = "TrainingDataset.findByFeaturestoreAndName", query = "SELECT td FROM TrainingDataset td " +
+        "WHERE td.featurestore = :featurestore AND td.name = :name"),
+    @NamedQuery(name = "TrainingDataset.findByFeaturestoreAndNameExcludeFeatureView",
+        query = "SELECT td FROM TrainingDataset td WHERE td.featurestore = :featurestore AND td.name = :name AND " +
+            "td.featureView IS NULL"),
+    @NamedQuery(name = "TrainingDataset.findByFeaturestoreAndNameOrderedByDescVersion", query = "SELECT td FROM " +
+        "TrainingDataset td WHERE td.featurestore = :featurestore AND td.name = :name ORDER BY td.version DESC"),
+    @NamedQuery(name = "TrainingDataset.findByFeatureViewAndVersion", query = "SELECT td FROM TrainingDataset td " +
+        "WHERE td.featureView = :featureView AND td.version = :version"),
+    @NamedQuery(name = "TrainingDataset.findByFeatureView", query = "SELECT td FROM TrainingDataset td " +
+        "WHERE td.featureView = :featureView"),
+    @NamedQuery(name = "TrainingDataset.findByFeatureViewOrderedByDescVersion", query = "SELECT td FROM " +
+        "TrainingDataset td WHERE td.featureView = :featureView ORDER BY td.version DESC")})
 public class TrainingDataset implements Serializable {
   private static final long serialVersionUID = 1L;
   @Id
@@ -149,6 +158,9 @@ public class TrainingDataset implements Serializable {
   @JoinColumn(name = "feature_view_id", referencedColumnName = "id")
   @ManyToOne
   private FeatureView featureView;
+  @Basic
+  @Column(name = "sample_ratio")
+  private Double sampleRatio;
 
   public static long getSerialVersionUID() {
     return serialVersionUID;
@@ -327,6 +339,38 @@ public class TrainingDataset implements Serializable {
     this.trainSplit = trainSplit;
   }
 
+  public Date getStartTime() {
+    return startTime;
+  }
+
+  public void setStartTime(Date startTime) {
+    this.startTime = startTime;
+  }
+
+  public Date getEndTime() {
+    return endTime;
+  }
+
+  public void setEndTime(Date endTime) {
+    this.endTime = endTime;
+  }
+
+  public FeatureView getFeatureView() {
+    return featureView;
+  }
+
+  public void setFeatureView(FeatureView featureView) {
+    this.featureView = featureView;
+  }
+
+  public Double getSampleRatio() {
+    return sampleRatio;
+  }
+
+  public void setSampleRatio(Double sampleRatio) {
+    this.sampleRatio = sampleRatio;
+  }
+
   @Override
   public boolean equals(Object o) {
     if (this == o) return true;
@@ -351,6 +395,10 @@ public class TrainingDataset implements Serializable {
     if (!Objects.equals(hopsfsTrainingDataset, that.hopsfsTrainingDataset)) return false;
     if (!Objects.equals(externalTrainingDataset, that.externalTrainingDataset)) return false;
     if (!Objects.equals(trainSplit, that.trainSplit)) return false;
+    if (!Objects.equals(featureView, that.featureView)) return false;
+    if (!Objects.equals(startTime, that.startTime)) return false;
+    if (!Objects.equals(endTime, that.endTime)) return false;
+    if (!Objects.equals(sampleRatio, that.sampleRatio)) return false;
     return Objects.equals(splits, that.splits);
   }
 
@@ -374,6 +422,10 @@ public class TrainingDataset implements Serializable {
     result = 31 * result + (externalTrainingDataset != null ? externalTrainingDataset.hashCode() : 0);
     result = 31 * result + (splits != null ? splits.hashCode() : 0);
     result = 31 * result + (trainSplit != null ? trainSplit.hashCode() : 0);
+    result = 31 * result + (featureView != null ? featureView.hashCode() : 0);
+    result = 31 * result + (startTime != null ? startTime.hashCode() : 0);
+    result = 31 * result + (endTime != null ? endTime.hashCode() : 0);
+    result = 31 * result + (sampleRatio != null ? sampleRatio.hashCode() : 0);
     return result;
   }
 }

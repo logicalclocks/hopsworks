@@ -25,6 +25,7 @@ import io.hops.hopsworks.common.featurestore.transformationFunction.Transformati
 import io.hops.hopsworks.common.featurestore.transformationFunction.TransformationFunctionFacade;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.persistence.entity.featurestore.Featurestore;
+import io.hops.hopsworks.persistence.entity.featurestore.featureview.FeatureView;
 import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.TrainingDataset;
 import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.TrainingDatasetFeature;
 import io.hops.hopsworks.persistence.entity.featurestore.transformationFunction.TransformationFunction;
@@ -69,6 +70,19 @@ public class TransformationFunctionBuilder {
         .path(ResourceRequest.Name.TRAININGDATASETS.toString().toLowerCase())
         .path(Integer.toString(trainingDataset.getId()))
         .path(ResourceRequest.Name.TRANSFORMATIONFUNCTIONS.toString().toLowerCase()).build();
+  }
+
+  private URI uri(UriInfo uriInfo, Project project, FeatureView featureView) {
+    return uriInfo.getBaseUriBuilder().path(ResourceRequest.Name.PROJECT.toString().toLowerCase())
+        .path(Integer.toString(project.getId()))
+        .path(ResourceRequest.Name.FEATURESTORES.toString().toLowerCase())
+        .path(Integer.toString(featureView.getFeaturestore().getId()))
+        .path(ResourceRequest.Name.FEATUREVIEW.toString().toLowerCase())
+        .path(featureView.getName())
+        .path(ResourceRequest.Name.VERSION.toString().toLowerCase())
+        .path(String.valueOf(featureView.getVersion()))
+        .path(ResourceRequest.Name.TRANSFORMATION.toString().toLowerCase())
+        .build();
   }
 
   private boolean expand(ResourceRequest resourceRequest) {
@@ -143,10 +157,22 @@ public class TransformationFunctionBuilder {
     return transformationFunctionDTO;
   }
 
-  public TransformationFunctionAttachedDTO build (UriInfo uriInfo, ResourceRequest resourceRequest, Users user,
+  public TransformationFunctionAttachedDTO build(UriInfo uriInfo, ResourceRequest resourceRequest, Users user,
                                                   Project project, TrainingDataset trainingDataset,
                                                   TrainingDatasetFeature tdFeature) throws FeaturestoreException {
+    return build(resourceRequest, user, project,
+        uri(uriInfo, project, trainingDataset.getFeaturestore(), trainingDataset), tdFeature);
+  }
 
+  public TransformationFunctionAttachedDTO build(UriInfo uriInfo, ResourceRequest resourceRequest, Users user,
+      Project project, FeatureView featureView,
+      TrainingDatasetFeature tdFeature) throws FeaturestoreException {
+    return build(resourceRequest, user, project,
+        uri(uriInfo, project, featureView.getFeaturestore()), tdFeature);
+  }
+
+  private TransformationFunctionAttachedDTO build(ResourceRequest resourceRequest, Users user,
+      Project project, URI uri, TrainingDatasetFeature tdFeature) throws FeaturestoreException {
     TransformationFunctionAttachedDTO  transformationFunctionAttachedDTO = new TransformationFunctionAttachedDTO();
     TransformationFunctionDTO transformationFunctionDTO =  new TransformationFunctionDTO(
         tdFeature.getTransformationFunction().getId(),
@@ -156,8 +182,7 @@ public class TransformationFunctionBuilder {
         transformationFunctionController.readContent(user, project, tdFeature.getTransformationFunction()),
         tdFeature.getTransformationFunction().getFeaturestore().getId());
 
-    transformationFunctionAttachedDTO.setHref(uri(uriInfo, project, trainingDataset.getFeaturestore(),
-        trainingDataset));
+    transformationFunctionAttachedDTO.setHref(uri);
     transformationFunctionAttachedDTO.setExpand(expand(resourceRequest));
     if (transformationFunctionAttachedDTO.isExpand()) {
       transformationFunctionAttachedDTO.setName(trainingDatasetController.checkPrefix(tdFeature));
@@ -167,7 +192,7 @@ public class TransformationFunctionBuilder {
     return transformationFunctionAttachedDTO;
   }
 
-  public TransformationFunctionAttachedDTO build (UriInfo uriInfo, ResourceRequest resourceRequest, Users user,
+  public TransformationFunctionAttachedDTO build(UriInfo uriInfo, ResourceRequest resourceRequest, Users user,
                                                   Project project, TrainingDataset trainingDataset)
       throws FeaturestoreException {
 
@@ -180,6 +205,29 @@ public class TransformationFunctionBuilder {
       for (TrainingDatasetFeature tdFeature: trainingDataset.getFeatures()){
         if (tdFeature.getTransformationFunction() != null){
           TransformationFunctionAttachedDTO build = build(uriInfo, resourceRequest, user, project, trainingDataset,
+              tdFeature);
+          list.add(build);
+        }
+      }
+      transformationFunctionAttachedDTO.setItems(list);
+      transformationFunctionAttachedDTO.setCount((long)list.size());
+    }
+
+    return transformationFunctionAttachedDTO;
+  }
+
+  public TransformationFunctionAttachedDTO build(UriInfo uriInfo, ResourceRequest resourceRequest, Users user,
+      Project project, FeatureView featureView)
+      throws FeaturestoreException {
+
+    TransformationFunctionAttachedDTO  transformationFunctionAttachedDTO = new TransformationFunctionAttachedDTO();
+    transformationFunctionAttachedDTO.setHref(uri(uriInfo, project, featureView));
+    transformationFunctionAttachedDTO.setExpand(expand(resourceRequest));
+    if (transformationFunctionAttachedDTO.isExpand()) {
+      List<TransformationFunctionAttachedDTO> list = new ArrayList<>();
+      for (TrainingDatasetFeature tdFeature: featureView.getFeatures()){
+        if (tdFeature.getTransformationFunction() != null){
+          TransformationFunctionAttachedDTO build = build(uriInfo, resourceRequest, user, project, featureView,
               tdFeature);
           list.add(build);
         }

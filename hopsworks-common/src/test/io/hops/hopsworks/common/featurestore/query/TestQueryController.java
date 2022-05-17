@@ -16,15 +16,18 @@
 
 package io.hops.hopsworks.common.featurestore.query;
 
+import com.google.common.collect.Lists;
 import io.hops.hopsworks.common.featurestore.FeaturestoreFacade;
 import io.hops.hopsworks.common.featurestore.feature.FeatureGroupFeatureDTO;
 import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupController;
+import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupDTO;
 import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupFacade;
 import io.hops.hopsworks.common.featurestore.featuregroup.cached.CachedFeaturegroupController;
 import io.hops.hopsworks.common.featurestore.online.OnlineFeaturestoreController;
 import io.hops.hopsworks.common.featurestore.query.filter.FilterController;
 import io.hops.hopsworks.common.featurestore.query.join.Join;
 import io.hops.hopsworks.common.featurestore.query.join.JoinController;
+import io.hops.hopsworks.common.featurestore.query.join.JoinDTO;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.persistence.entity.featurestore.Featurestore;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.Featuregroup;
@@ -278,5 +281,45 @@ public class TestQueryController {
     Assert.assertEquals("ft2", rightQuery.getFeatures().get(1).getName());
   }
 
+  @Test
+  public void testCheckNestedJoin_nestedJoinNotExist() throws Exception {
+    FeaturegroupDTO fg1 = new FeaturegroupDTO();
+    fg1.setId(1);
+    FeaturegroupDTO fg2 = new FeaturegroupDTO();
+    fg2.setId(2);
 
+    List<FeatureGroupFeatureDTO> requestedFeatures = new ArrayList<>();
+    requestedFeatures.add(new FeatureGroupFeatureDTO("*"));
+
+    QueryDTO rightQueryDTO = new QueryDTO(fg2, requestedFeatures);
+    JoinDTO joinDTO = new JoinDTO(rightQueryDTO, null, null);
+
+    QueryDTO queryDTO = new QueryDTO(fg1, requestedFeatures, Arrays.asList(joinDTO));
+    target.checkNestedJoin(queryDTO);
+  }
+
+  @Test(expected = FeaturestoreException.class)
+  public void testCheckNestedJoin_nestedJoinExist() throws Exception {
+    // fg1 join (fg2 join fg3)
+    FeaturegroupDTO fg1 = new FeaturegroupDTO();
+    fg1.setId(1);
+    FeaturegroupDTO fg2 = new FeaturegroupDTO();
+    fg2.setId(2);
+    FeaturegroupDTO fg3 = new FeaturegroupDTO();
+    fg2.setId(3);
+
+    List<FeatureGroupFeatureDTO> requestedFeatures = new ArrayList<>();
+    requestedFeatures.add(new FeatureGroupFeatureDTO("*"));
+
+    QueryDTO queryDTO2 = new QueryDTO(fg2, requestedFeatures);
+    JoinDTO joinDTO2 = new JoinDTO(queryDTO2, null, null);
+
+    QueryDTO queryDTO3 = new QueryDTO(fg3, requestedFeatures);
+    queryDTO3.setJoins(Lists.newArrayList(joinDTO2));
+    JoinDTO joinDTO3 = new JoinDTO(queryDTO3, null, null);
+
+
+    QueryDTO queryDTO = new QueryDTO(fg1, requestedFeatures, Arrays.asList(joinDTO3));
+    target.checkNestedJoin(queryDTO);
+  }
 }

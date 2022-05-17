@@ -67,7 +67,7 @@ import java.util.stream.Collectors;
 @Stateless
 @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
 public class FeaturestoreController {
-  
+
   @EJB
   private FeaturestoreFacade featurestoreFacade;
   @EJB
@@ -118,7 +118,7 @@ public class FeaturestoreController {
       throw ex;
     }
   }
-  
+
   /**
    * Return the feature store dataset for the specific project. not the shared ones.
    * @param project
@@ -131,7 +131,7 @@ public class FeaturestoreController {
       .orElseThrow(() -> new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.FEATURESTORE_NOT_FOUND,
         Level.INFO, "Could not find feature store for project: " + project.getName()));
   }
-  
+
   /**
    * Return the feature store for the specific project. not the shared ones.
    * @param project

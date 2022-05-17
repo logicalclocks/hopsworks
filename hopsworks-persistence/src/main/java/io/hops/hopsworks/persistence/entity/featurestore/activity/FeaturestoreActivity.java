@@ -118,6 +118,7 @@ public class FeaturestoreActivity implements Serializable {
 
   @JoinColumn(name = "training_dataset_id", referencedColumnName = "id")
   private TrainingDataset trainingDataset;
+
   @JoinColumn(name = "feature_view_id", referencedColumnName = "id")
   private FeatureView featureView;
 
@@ -225,6 +226,14 @@ public class FeaturestoreActivity implements Serializable {
 
   public void setTrainingDataset(TrainingDataset trainingDataset) {
     this.trainingDataset = trainingDataset;
+  }
+
+  public FeatureView getFeatureView() {
+    return featureView;
+  }
+
+  public void setFeatureView(FeatureView featureView) {
+    this.featureView = featureView;
   }
 
   @Override

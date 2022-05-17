@@ -100,10 +100,13 @@ public class TrainingDatasetInputValidation {
 
   private void validateType(TrainingDatasetType trainingDatasetType) throws FeaturestoreException {
     if (trainingDatasetType != TrainingDatasetType.HOPSFS_TRAINING_DATASET &&
-        trainingDatasetType != TrainingDatasetType.EXTERNAL_TRAINING_DATASET) {
+        trainingDatasetType != TrainingDatasetType.EXTERNAL_TRAINING_DATASET &&
+        trainingDatasetType != TrainingDatasetType.IN_MEMORY_TRAINING_DATASET) {
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_TRAINING_DATASET_TYPE, Level.FINE,
           ", Recognized Training Dataset types are: " + TrainingDatasetType.HOPSFS_TRAINING_DATASET + ", and: " +
-              TrainingDatasetType.EXTERNAL_TRAINING_DATASET+ ". The provided training dataset type was not recognized: "
+              TrainingDatasetType.EXTERNAL_TRAINING_DATASET  + ", and: " +
+              TrainingDatasetType.IN_MEMORY_TRAINING_DATASET +
+              ". The provided training dataset type was not recognized: "
               + trainingDatasetType);
     }
   }

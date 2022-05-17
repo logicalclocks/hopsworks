@@ -15,6 +15,8 @@
  */
 package io.hops.hopsworks.persistence.entity.featurestore.trainingdataset;
 
+import io.hops.hopsworks.persistence.entity.featurestore.featureview.FeatureView;
+
 import javax.persistence.Basic;
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
@@ -40,6 +42,9 @@ public class TrainingDatasetFilter implements Serializable {
   @JoinColumn(name = "training_dataset_id", referencedColumnName = "id")
   @ManyToOne
   private TrainingDataset trainingDataset;
+  @JoinColumn(name = "feature_view_id", referencedColumnName = "id")
+  @ManyToOne
+  private FeatureView featureView;
   @OneToOne(cascade = CascadeType.ALL, mappedBy = "trainingDatasetFilter")
   private TrainingDatasetFilterCondition condition;
   @Column(name = "type")
@@ -57,6 +62,11 @@ public class TrainingDatasetFilter implements Serializable {
   }
 
   public TrainingDatasetFilter(
+      FeatureView featureView) {
+    this.featureView = featureView;
+  }
+
+  public TrainingDatasetFilter(
       TrainingDataset trainingDataset) {
     this.trainingDataset = trainingDataset;
   }
@@ -68,6 +78,14 @@ public class TrainingDatasetFilter implements Serializable {
   public void setTrainingDataset(
       TrainingDataset trainingDataset) {
     this.trainingDataset = trainingDataset;
+  }
+
+  public FeatureView getFeatureView() {
+    return featureView;
+  }
+
+  public void setFeatureView(FeatureView featureView) {
+    this.featureView = featureView;
   }
 
   public String getPath() {

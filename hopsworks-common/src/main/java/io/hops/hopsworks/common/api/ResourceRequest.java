@@ -188,6 +188,7 @@ public class ResourceRequest {
     MODELS,
     HOSTS,
     QUERY,
+    QUERY_STRING,
     TAG_SCHEMAS,
     TAGS,
     SERVICES,
@@ -226,7 +227,9 @@ public class ResourceRequest {
     ADMIN,
     EXECUTION,
     FEATURES,
-    FEATUREVIEW;
+    FEATUREVIEW,
+    VERSION,
+    TRANSFORMATION;
 
     public static Name fromString(String name) {
       return valueOf(name.toUpperCase());
