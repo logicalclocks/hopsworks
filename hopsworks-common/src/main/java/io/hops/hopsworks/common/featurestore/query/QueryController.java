@@ -507,7 +507,7 @@ public class QueryController {
       Long endTimestamp, Boolean withLabel, Boolean isHiveEngine)
       throws FeaturestoreException {
     Date startTime = startTimestamp == null ? null : new Date(startTimestamp);
-    Date endTime = startTimestamp == null ? null : new Date(endTimestamp);
+    Date endTime = endTimestamp == null ? null : new Date(endTimestamp);
     return constructBatchQuery(featureView, project, user, startTime, endTime, withLabel, isHiveEngine);
   }
 
