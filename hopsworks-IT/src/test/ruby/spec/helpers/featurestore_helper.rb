@@ -756,7 +756,7 @@ module FeaturestoreHelper
     featureview = JSON.parse(json_result)
 
     if connector == nil
-      connector = get_hopsfs_training_datasets_connector(@project[:projectname])
+      connector = get_hopsfs_training_datasets_connector(project[:projectname])
     end
 
     json_result  = create_featureview_training_dataset(
