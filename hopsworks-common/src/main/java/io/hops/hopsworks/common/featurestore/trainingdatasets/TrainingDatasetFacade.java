@@ -19,8 +19,11 @@ package io.hops.hopsworks.common.featurestore.trainingdatasets;
 import io.hops.hopsworks.common.dao.AbstractFacade;
 import io.hops.hopsworks.common.featurestore.trainingdatasets.external.ExternalTrainingDatasetFacade;
 import io.hops.hopsworks.common.featurestore.trainingdatasets.hopsfs.HopsfsTrainingDatasetFacade;
+import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.persistence.entity.featurestore.Featurestore;
+import io.hops.hopsworks.persistence.entity.featurestore.featureview.FeatureView;
 import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.TrainingDataset;
+import io.hops.hopsworks.restutils.RESTCodes;
 
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
@@ -30,6 +33,7 @@ import javax.persistence.PersistenceContext;
 import javax.persistence.TypedQuery;
 import java.util.List;
 import java.util.Optional;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
@@ -98,6 +102,21 @@ public class TrainingDatasetFacade extends AbstractFacade<TrainingDataset> {
           .setParameter("name", name)
           .getResultList();
   }
+
+  /**
+   * Retrieves a list of trainingDataset (different versions) given their name and feature store from the database
+   *
+   * @param name name of the trainingDataset
+   * @param featurestore featurestore of the trainingDataset
+   * @return a single TrainingDataset entity
+   */
+  public List<TrainingDataset> findByNameAndFeaturestoreExcludeFeatureView(String name,
+      Featurestore featurestore) {
+    return em.createNamedQuery("TrainingDataset.findByFeaturestoreAndNameExcludeFeatureView", TrainingDataset.class)
+        .setParameter("featurestore", featurestore)
+        .setParameter("name", name)
+        .getResultList();
+  }
   
   /**
    * Retrieves a list of trainingDataset (different versions) given their name and feature store from the database
@@ -143,8 +162,8 @@ public class TrainingDatasetFacade extends AbstractFacade<TrainingDataset> {
    */
   @Override
   public List<TrainingDataset> findAll() {
-    TypedQuery<TrainingDataset> q = em.createNamedQuery("TrainingDataset.findAll", TrainingDataset.class);
-    return q.getResultList();
+    TypedQuery<TrainingDataset> query = em.createNamedQuery("TrainingDataset.findAll", TrainingDataset.class);
+    return query.getResultList();
   }
 
   /**
@@ -154,15 +173,57 @@ public class TrainingDatasetFacade extends AbstractFacade<TrainingDataset> {
    * @return
    */
   public List<TrainingDataset> findByFeaturestore(Featurestore featurestore) {
-    TypedQuery<TrainingDataset> q = em.createNamedQuery("TrainingDataset.findByFeaturestore", TrainingDataset.class)
+    TypedQuery<TrainingDataset> query = em.createNamedQuery("TrainingDataset.findByFeaturestore", TrainingDataset.class)
         .setParameter("featurestore", featurestore);
-    return q.getResultList();
+    return query.getResultList();
   }
 
   public Long countByFeaturestore(Featurestore featurestore) {
     return em.createNamedQuery("TrainingDataset.countByFeaturestore", Long.class)
         .setParameter("featurestore", featurestore)
         .getSingleResult();
+  }
+
+  public TrainingDataset findByFeatureViewAndVersion(FeatureView featureView, Integer version)
+      throws FeaturestoreException {
+    TypedQuery<TrainingDataset> query =
+        em.createNamedQuery("TrainingDataset.findByFeatureViewAndVersion", TrainingDataset.class)
+            .setParameter("featureView", featureView)
+            .setParameter("version", version);
+    return query.getResultList().stream()
+        .findFirst()
+        .orElseThrow(() -> new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.TRAINING_DATASET_NOT_FOUND,
+            Level.FINE, String.format("FeatureView name: %s, version: %s, td version: %s", featureView.getName(),
+            featureView.getVersion(), version)));
+  }
+
+  public Optional<TrainingDataset> findByFeatureViewAndVersionNullable(FeatureView featureView, Integer version) {
+    TypedQuery<TrainingDataset> query =
+        em.createNamedQuery("TrainingDataset.findByFeatureViewAndVersion", TrainingDataset.class)
+            .setParameter("featureView", featureView)
+            .setParameter("version", version);
+    return query.getResultList()
+        .stream()
+        .findFirst();
+  }
+
+  /**
+   * Retrieves a list of trainingDataset (different versions) given a featureView from the database
+   * ordered by their version number in descending order
+   *
+   * @param featureView
+   * @return list of trainingDataset
+   */
+  public List<TrainingDataset> findByFeatureViewAndVersionOrderedDescVersion(FeatureView featureView) {
+    return em.createNamedQuery("TrainingDataset.findByFeatureViewOrderedByDescVersion", TrainingDataset.class)
+        .setParameter("featureView", featureView)
+        .getResultList();
+  }
+
+  public List<TrainingDataset> findByFeatureView(FeatureView featureView) {
+    TypedQuery<TrainingDataset> query = em.createNamedQuery("TrainingDataset.findByFeatureView", TrainingDataset.class)
+        .setParameter("featureView", featureView);
+    return query.getResultList();
   }
 
   /**
@@ -173,5 +234,18 @@ public class TrainingDatasetFacade extends AbstractFacade<TrainingDataset> {
   @Override
   protected EntityManager getEntityManager() {
     return em;
+  }
+
+  public void removeTrainingDataset(TrainingDataset trainingDataset) {
+    switch (trainingDataset.getTrainingDatasetType()) {
+      case HOPSFS_TRAINING_DATASET:
+        hopsfsTrainingDatasetFacade.remove(trainingDataset.getHopsfsTrainingDataset());
+        break;
+      case EXTERNAL_TRAINING_DATASET:
+        externalTrainingDatasetFacade.remove(trainingDataset.getExternalTrainingDataset());
+        break;
+    }
+
+    remove(trainingDataset);
   }
 }

@@ -206,5 +206,37 @@ describe "On #{ENV['OS']}" do
       expect(activity["items"][0]["type"]).to eql("METADATA")
       expect(activity["items"][0]["metadata"]).to eql("The training dataset was created")
     end
+	
+    it "should be able to retrieve feature view creation event" do
+      featurestore_id = get_featurestore_id(@project[:id])
+      json_result, _ = create_cached_featuregroup(@project[:id], featurestore_id)
+      expect_status_details(201)
+	  
+      parsed_json = JSON.parse(json_result)
+      fg_id = parsed_json["id"]
+      # create queryDTO object
+      query = {
+        leftFeatureGroup: {
+          id: fg_id
+        },
+        leftFeatures: ['testfeature'].map do |feat_name|
+          {name: feat_name}
+        end,
+        joins: []
+      }
+
+      json_result, _ = create_feature_view(@project.id, featurestore_id, query)
+      parsed_json = JSON.parse(json_result)
+      expect_status(201)
+
+      feature_view_name = parsed_json["name"]
+      feature_view_version = parsed_json["version"]
+      json_result = get "#{ENV['HOPSWORKS_API']}/project/#{@project.id}/featurestores/#{featurestore_id}/featureview/#{feature_view_name}/version/#{feature_view_version}/activity"
+      expect_status_details(200)
+
+      activity = JSON.parse(response.body)
+      expect(activity["items"][0]["type"]).to eql("METADATA")
+      expect(activity["items"][0]["metadata"]).to eql("The feature view was created")
+    end
   end
 end

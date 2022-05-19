@@ -42,8 +42,11 @@ import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import java.io.IOException;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -57,7 +60,9 @@ public class FilterController {
   private ConstructorController constructorController;
   
   private ObjectMapper objectMapper = new ObjectMapper();
-  
+  private DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+  private DateFormat timestampFormat = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss");
+
   public FilterController() {}
   
   // for testing
@@ -85,6 +90,17 @@ public class FilterController {
       filterLogic.setRightLogic(convertFilterLogic(filterLogicDTO.getRightLogic(), fgLookup, availableFeatureLookup));
     }
     return filterLogic;
+  }
+
+  public String convertToEventTimeFeatureValue(Feature feature, Date date) throws FeaturestoreException {
+    String timeType = feature.getType();
+    if ("date".equals(timeType)) {
+      return dateFormat.format(date);
+    } else if ("timestamp".equals(timeType)) {
+      return timestampFormat.format(date);
+    } else {
+      return String.valueOf(date.getTime());
+    }
   }
   
   void validateFilterLogicDTO(FilterLogicDTO filterLogicDTO) throws FeaturestoreException {

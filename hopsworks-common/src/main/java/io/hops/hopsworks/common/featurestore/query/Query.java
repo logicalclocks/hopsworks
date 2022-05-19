@@ -37,8 +37,6 @@ public class Query {
   // to build the FROM part of the online query
   private String project;
   private Featuregroup featuregroup;
-  private String leftFeatureGroupStartTime;
-  private String leftFeatureGroupEndTime;
   private Long leftFeatureGroupStartTimestamp;
   private Long leftFeatureGroupEndTimestamp;
   private Long leftFeatureGroupEndCommitId;
@@ -140,22 +138,6 @@ public class Query {
 
   public void setFeaturegroup(Featuregroup featuregroup) {
     this.featuregroup = featuregroup;
-  }
-
-  public String getLeftFeatureGroupStartTime() {
-    return leftFeatureGroupStartTime;
-  }
-
-  public void setLeftFeatureGroupStartTime(String leftFeatureGroupStartTime) {
-    this.leftFeatureGroupStartTime = leftFeatureGroupStartTime;
-  }
-
-  public String getLeftFeatureGroupEndTime() {
-    return leftFeatureGroupEndTime;
-  }
-
-  public void setLeftFeatureGroupEndTime(String leftFeatureGroupEndTime) {
-    this.leftFeatureGroupEndTime = leftFeatureGroupEndTime;
   }
 
   public Long getLeftFeatureGroupStartTimestamp() {

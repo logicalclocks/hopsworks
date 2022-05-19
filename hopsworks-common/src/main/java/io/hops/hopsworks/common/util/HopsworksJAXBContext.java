@@ -15,6 +15,7 @@
  */
 package io.hops.hopsworks.common.util;
 
+import io.hops.hopsworks.common.featurestore.xattr.dto.FeatureViewXAttrDTO;
 import io.hops.hopsworks.common.provenance.core.dto.ProvCoreDTO;
 import io.hops.hopsworks.common.featurestore.xattr.dto.FeaturegroupXAttr;
 import io.hops.hopsworks.common.featurestore.xattr.dto.TrainingDatasetXAttrDTO;
@@ -63,7 +64,8 @@ public class HopsworksJAXBContext {
           FeaturegroupXAttr.FullDTO.class,
           FeaturegroupXAttr.SimplifiedDTO.class,
           FeaturegroupXAttr.SimpleFeatureDTO.class,
-          TrainingDatasetXAttrDTO.class
+          TrainingDatasetXAttrDTO.class,
+          FeatureViewXAttrDTO.class
         }, properties);
     } catch (JAXBException e) {
       e.printStackTrace();

@@ -16,16 +16,18 @@
 
 package io.hops.hopsworks.api.featurestore.featureview;
 
+import com.google.api.client.util.Sets;
 import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.api.filter.Audience;
 import io.hops.hopsworks.api.filter.apiKey.ApiKeyRequired;
 import io.hops.hopsworks.api.jwt.JWTHelper;
 import io.hops.hopsworks.common.api.ResourceRequest;
-import io.hops.hopsworks.common.dao.user.activity.ActivityFacade;
+import io.hops.hopsworks.common.dao.QueryParam;
 import io.hops.hopsworks.common.featurestore.featureview.FeatureViewDTO;
 import io.hops.hopsworks.exceptions.DatasetException;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.exceptions.MetadataException;
+import io.hops.hopsworks.exceptions.ProvenanceException;
 import io.hops.hopsworks.exceptions.SchematizedTagException;
 import io.hops.hopsworks.exceptions.ServiceException;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
@@ -33,7 +35,6 @@ import io.hops.hopsworks.persistence.entity.featurestore.Featurestore;
 import io.hops.hopsworks.persistence.entity.featurestore.featureview.FeatureView;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.user.Users;
-import io.hops.hopsworks.persistence.entity.user.activity.ActivityFlag;
 import io.hops.hopsworks.persistence.entity.user.security.apiKey.ApiScope;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -49,6 +50,7 @@ import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
+import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
@@ -58,7 +60,9 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
 import javax.ws.rs.core.UriInfo;
 import java.io.IOException;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @RequestScoped
 @Api(value = "Feature View Resource")
@@ -71,8 +75,7 @@ public class FeatureViewResource {
   private FeatureViewController featureViewController;
   @EJB
   private FeatureViewBuilder featureViewBuilder;
-  @EJB
-  private ActivityFacade activityFacade;
+
   private Project project;
   private Featurestore featurestore;
 
@@ -91,13 +94,26 @@ public class FeatureViewResource {
           SecurityContext sc,
       @Context
           HttpServletRequest req,
-      FeatureViewDTO featureViewDTO) throws FeaturestoreException {
+      @Context
+          UriInfo uriInfo,
+      FeatureViewDTO featureViewDTO) throws FeaturestoreException, ProvenanceException, ServiceException, IOException,
+        SchematizedTagException, MetadataException, DatasetException {
+    if (featureViewDTO == null) {
+      throw new IllegalArgumentException("Input JSON for creating a new Feature View cannot be null");
+    }
     Users user = jWTHelper.getUserPrincipal(sc);
+
     FeatureView featureView = featureViewController.convertFromDTO(project, featurestore, user, featureViewDTO);
-    featureView = featureViewController.createFeatureView(featureView, featurestore);
-    activityFacade.persistActivity(ActivityFacade.CREATED_FEATURE_VIEW +
-        featureView.getName(), project, user, ActivityFlag.SERVICE);
-    return Response.ok().entity(featureViewBuilder.convertToDTO(featureView)).build();
+    featureView = featureViewController.createFeatureView(project, user, featureView, featurestore);
+
+    ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.FEATUREVIEW);
+    Set<ResourceRequest> expansions = Sets.newHashSet();
+    expansions.add(new ResourceRequest(ResourceRequest.Name.QUERY));
+    expansions.add(new ResourceRequest(ResourceRequest.Name.FEATURES));
+    resourceRequest.setExpansions(expansions);
+    featureViewDTO = featureViewBuilder.build(featureView, resourceRequest, project, user, uriInfo);
+
+    return Response.created(featureViewDTO.getHref()).entity(featureViewDTO).build();
   }
 
   @GET
@@ -119,7 +135,9 @@ public class FeatureViewResource {
       SchematizedTagException {
     Users user = jWTHelper.getUserPrincipal(sc);
     ResourceRequest resourceRequest = makeResourceRequest(param);
-    List<FeatureView> featureViews = featureViewController.getByFeatureStore(featurestore, resourceRequest);
+    List<FeatureView> featureViews = featureViewController.getByFeatureStore(featurestore,
+        convertToQueryParam(resourceRequest));
+
     return Response.ok()
         .entity(featureViewBuilder.build(featureViews, resourceRequest, project, user, uriInfo))
         .build();
@@ -149,7 +167,8 @@ public class FeatureViewResource {
     Users user = jWTHelper.getUserPrincipal(sc);
     ResourceRequest resourceRequest = makeResourceRequest(param);
     List<FeatureView> featureViews = featureViewController.getByNameAndFeatureStore(name, featurestore,
-        resourceRequest);
+        convertToQueryParam(resourceRequest));
+
     return Response.ok()
         .entity(featureViewBuilder.build(featureViews, resourceRequest, project, user, uriInfo))
         .build();
@@ -176,26 +195,15 @@ public class FeatureViewResource {
           String name,
       @PathParam("version")
           Integer version
-  ) throws FeaturestoreException, ServiceException, IOException, MetadataException, DatasetException,
+  ) throws FeaturestoreException, ServiceException, MetadataException, DatasetException,
       SchematizedTagException {
     Users user = jWTHelper.getUserPrincipal(sc);
     ResourceRequest resourceRequest = makeResourceRequest(param);
-    List<FeatureView> featureViews =
-        featureViewController.getByNameVersionAndFeatureStore(name, version, featurestore,
-            resourceRequest);
-    return Response.ok()
-        .entity(featureViewBuilder.build(featureViews, resourceRequest, project, user, uriInfo))
-        .build();
-  }
+    FeatureView featureView = featureViewController.getByNameVersionAndFeatureStore(name, version, featurestore);
 
-  private ResourceRequest makeResourceRequest(FeatureViewBeanParam param) {
-    ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.FEATUREVIEW);
-    resourceRequest.setOffset(param.getPagination().getOffset());
-    resourceRequest.setLimit(param.getPagination().getLimit());
-    resourceRequest.setSort(param.getParsedSortBy());
-    resourceRequest.setFilter(param.getFilters());
-    resourceRequest.setExpansions(param.getExpansion().getResources());
-    return resourceRequest;
+    return Response.ok()
+        .entity(featureViewBuilder.build(featureView, resourceRequest, project, user, uriInfo))
+        .build();
   }
 
   @DELETE
@@ -215,8 +223,7 @@ public class FeatureViewResource {
   ) throws FeaturestoreException {
     Users user = jWTHelper.getUserPrincipal(sc);
     featureViewController.delete(user, project, featurestore, name);
-    activityFacade.persistActivity(ActivityFacade.DELETED_FEATURE_VIEW + name,
-        project, user, ActivityFlag.SERVICE);
+
     return Response.ok().build();
   }
 
@@ -239,9 +246,38 @@ public class FeatureViewResource {
   ) throws FeaturestoreException {
     Users user = jWTHelper.getUserPrincipal(sc);
     featureViewController.delete(user, project, featurestore, name, version);
-    activityFacade.persistActivity(ActivityFacade.DELETED_FEATURE_VIEW + name,
-        project, user, ActivityFlag.SERVICE);
+
     return Response.ok().build();
+  }
+
+  @PUT
+  @Produces(MediaType.APPLICATION_JSON)
+  @Consumes(MediaType.APPLICATION_JSON)
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
+  @JWTRequired(acceptedTokens = {Audience.API, Audience.JOB}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
+  @ApiKeyRequired(acceptedScopes = {ApiScope.FEATURESTORE}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
+  @ApiOperation(value = "Update Feature View metadata.")
+  public Response update(
+      @Context
+          SecurityContext sc,
+      @Context
+          HttpServletRequest req,
+      @Context
+          UriInfo uriInfo,
+      @BeanParam
+          FeatureViewBeanParam param,
+      FeatureViewDTO featureViewDTO) throws FeaturestoreException, ProvenanceException, ServiceException, IOException,
+      SchematizedTagException, MetadataException, DatasetException {
+    if (featureViewDTO == null) {
+      throw new IllegalArgumentException("Input JSON for updating a Feature View cannot be null");
+    }
+    Users user = jWTHelper.getUserPrincipal(sc);
+    ResourceRequest resourceRequest = makeResourceRequest(param);
+    FeatureView featureView = featureViewController.update(user, project, featurestore, featureViewDTO);
+
+    return Response.ok()
+        .entity(featureViewBuilder.build(featureView, resourceRequest, project, user, uriInfo))
+        .build();
   }
 
   public void setProject(Project project) {
@@ -250,5 +286,24 @@ public class FeatureViewResource {
 
   public void setFeaturestore(Featurestore featurestore) {
     this.featurestore = featurestore;
+  }
+
+  private ResourceRequest makeResourceRequest(FeatureViewBeanParam param) {
+    ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.FEATUREVIEW);
+    resourceRequest.setOffset(param.getPagination().getOffset());
+    resourceRequest.setLimit(param.getPagination().getLimit());
+    resourceRequest.setSort(param.getParsedSortBy());
+    resourceRequest.setFilter(param.getFilters());
+    resourceRequest.setExpansions(param.getExpansion().getResources());
+    return resourceRequest;
+  }
+
+  private QueryParam convertToQueryParam(ResourceRequest resourceRequest) {
+    return new QueryParam(
+        resourceRequest.getOffset(),
+        resourceRequest.getLimit(),
+        resourceRequest.getFilter() == null ? new HashSet<>() : new HashSet<>(resourceRequest.getFilter()),
+        resourceRequest.getSort() == null ? new HashSet<>() : new HashSet<>(resourceRequest.getSort())
+    );
   }
 }

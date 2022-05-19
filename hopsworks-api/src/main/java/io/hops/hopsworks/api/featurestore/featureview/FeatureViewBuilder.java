@@ -22,6 +22,7 @@ import io.hops.hopsworks.api.featurestore.tag.FeatureStoreTagUri;
 import io.hops.hopsworks.api.tags.TagBuilder;
 import io.hops.hopsworks.common.api.ResourceRequest;
 import io.hops.hopsworks.common.dao.user.UserDTO;
+import io.hops.hopsworks.common.dataset.util.DatasetHelper;
 import io.hops.hopsworks.common.dataset.util.DatasetPath;
 import io.hops.hopsworks.common.featurestore.feature.TrainingDatasetFeatureDTO;
 import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupDTO;
@@ -29,6 +30,9 @@ import io.hops.hopsworks.common.featurestore.featuregroup.online.OnlineFeaturegr
 import io.hops.hopsworks.common.featurestore.keyword.KeywordControllerIface;
 import io.hops.hopsworks.common.featurestore.keyword.KeywordDTO;
 import io.hops.hopsworks.common.featurestore.featureview.FeatureViewDTO;
+import io.hops.hopsworks.common.featurestore.query.Query;
+import io.hops.hopsworks.common.featurestore.query.QueryBuilder;
+import io.hops.hopsworks.common.featurestore.query.QueryController;
 import io.hops.hopsworks.common.featurestore.trainingdatasets.TrainingDatasetController;
 import io.hops.hopsworks.common.hdfs.Utils;
 import io.hops.hopsworks.exceptions.DatasetException;
@@ -36,6 +40,7 @@ import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.exceptions.MetadataException;
 import io.hops.hopsworks.exceptions.SchematizedTagException;
 import io.hops.hopsworks.exceptions.ServiceException;
+import io.hops.hopsworks.persistence.entity.dataset.DatasetType;
 import io.hops.hopsworks.persistence.entity.featurestore.featureview.FeatureView;
 import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.TrainingDatasetFeature;
 import io.hops.hopsworks.persistence.entity.project.Project;
@@ -47,7 +52,7 @@ import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.inject.Inject;
 import javax.ws.rs.core.UriInfo;
-import java.io.IOException;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -61,7 +66,11 @@ public class FeatureViewBuilder {
   @EJB
   private TrainingDatasetController trainingDatasetController;
   @EJB
-  private FsQueryBuilder queryBuilder;
+  private FsQueryBuilder fsQueryBuilder;
+  @EJB
+  private QueryBuilder queryBuilder;
+  @EJB
+  private QueryController queryController;
   @EJB
   private OnlineFeaturegroupController onlineFeaturegroupController;
   @Inject
@@ -70,14 +79,22 @@ public class FeatureViewBuilder {
   private FeaturestoreKeywordBuilder featurestoreKeywordBuilder;
   @EJB
   private TagBuilder tagsBuilder;
+  @EJB
+  private DatasetHelper datasetHelper;
 
   public FeatureViewBuilder() {
   }
 
+  public FeatureViewDTO build(FeatureView featureView, ResourceRequest resourceRequest, Project project,
+                              Users user, UriInfo uriInfo)
+      throws FeaturestoreException, ServiceException, MetadataException, DatasetException, SchematizedTagException {
+    List<FeatureView> featureViews = Arrays.asList(featureView);
+    return build(featureViews, resourceRequest, project, user, uriInfo);
+  }
+
   public FeatureViewDTO build(List<FeatureView> featureViews, ResourceRequest resourceRequest, Project project,
       Users user, UriInfo uriInfo)
-      throws FeaturestoreException, ServiceException, IOException, MetadataException, DatasetException,
-      SchematizedTagException {
+      throws FeaturestoreException, ServiceException, MetadataException, DatasetException, SchematizedTagException {
     FeatureViewDTO featureViewDTO = new FeatureViewDTO();
     featureViewDTO.setHref(uriInfo.getRequestUri());
 
@@ -100,29 +117,31 @@ public class FeatureViewBuilder {
   }
 
   private FeatureViewDTO buildSingle(FeatureView featureView, ResourceRequest resourceRequest, Project project,
-      Users user, UriInfo uriInfo) throws FeaturestoreException, ServiceException, IOException, MetadataException,
-      DatasetException, SchematizedTagException {
+      Users user, UriInfo uriInfo)
+        throws FeaturestoreException, ServiceException, MetadataException, DatasetException, SchematizedTagException {
     FeatureViewDTO base = convertToDTO(featureView);
     if (resourceRequest != null) {
-      if (resourceRequest.contains(ResourceRequest.Name.QUERY)) {
+      if (resourceRequest.contains(ResourceRequest.Name.QUERY_STRING)) {
         // For the overview page of UI
-        base.setQueryString(queryBuilder.build(uriInfo, project, user, featureView));
+        base.setQueryString(fsQueryBuilder.build(uriInfo, project, user, featureView));
+      }
+      if (resourceRequest.contains(ResourceRequest.Name.QUERY)) {
+        Query query = queryController.makeQuery(featureView, project, user, true, false);
+        base.setQuery(queryBuilder.build(query, featureView.getFeaturestore(), project, user));
       }
       if (resourceRequest.contains(ResourceRequest.Name.FEATURES)) {
         base.setFeatures(makeFeatures(featureView, project));
       }
       if (resourceRequest.contains(ResourceRequest.Name.KEYWORDS)) {
-        // TODO feature view: revisit after implementation of keyword endpoint
-        List<String> keywords = keywordControllerIface.getAll(project, user, featureView);
+        List<String> keywords = keywordControllerIface.getAll(project, user, null, null, featureView);
 
         ResourceRequest keywordResourceRequest = new ResourceRequest(ResourceRequest.Name.KEYWORDS);
         KeywordDTO dto = featurestoreKeywordBuilder.build(uriInfo, keywordResourceRequest, project,
           featureView, keywords);
         base.setKeywords(dto);
       }
-      //TODO feature view: revisit after implementation of tag endpoint
-      //TODO add correct feature view path
-      DatasetPath path = null;
+      DatasetPath path = datasetHelper.getDatasetPath(project, featureViewController.getLocation(featureView),
+          DatasetType.DATASET);
       FeatureStoreTagUri tagUri = new FeatureStoreTagUri(uriInfo, featureView.getFeaturestore().getId(),
         ResourceRequest.Name.FEATUREVIEW, featureView.getId());
       base.setTags(tagsBuilder.build(tagUri, resourceRequest, user, path));
@@ -132,6 +151,7 @@ public class FeatureViewBuilder {
   
   public FeatureViewDTO convertToDTO(FeatureView featureView) {
     FeatureViewDTO featureViewDTO = new FeatureViewDTO();
+    featureViewDTO.setId(featureView.getId());
     featureViewDTO.setFeaturestoreId(featureView.getFeaturestore().getId());
     featureViewDTO.setFeaturestoreName(featureView.getFeaturestore().getProject().getName());
     featureViewDTO.setDescription(featureView.getDescription());
@@ -140,7 +160,6 @@ public class FeatureViewBuilder {
     featureViewDTO.setVersion(featureView.getVersion());
     featureViewDTO.setName(featureView.getName());
     featureViewDTO.setId(featureView.getId());
-    featureViewDTO.setLabel(featureView.getLabel());
     return featureViewDTO;
   }
 

@@ -73,7 +73,9 @@ public class FeaturestoreKeywordBuilder {
       Featurestore featurestore, FeatureView featureView) {
     return uri(uriInfo, project, featurestore)
         .path(ResourceRequest.Name.FEATUREVIEW.toString().toLowerCase())
-        .path(Integer.toString(featureView.getId()))
+        .path(featureView.getName())
+        .path(ResourceRequest.Name.VERSION.toString().toLowerCase())
+        .path(Integer.toString(featureView.getVersion()))
         .path(ResourceRequest.Name.KEYWORDS.toString().toLowerCase())
         .build();
   }
@@ -94,13 +96,21 @@ public class FeaturestoreKeywordBuilder {
   }
 
   public KeywordDTO build(UriInfo uriInfo, ResourceRequest resourceRequest, Project project,
-                          Featuregroup featureGroup, TrainingDataset trainingDataset, List<String> keywords) {
+                          Featuregroup featureGroup, List<String> keywords) {
     KeywordDTO dto = new KeywordDTO();
-    if (featureGroup != null) {
-      dto.setHref(uri(uriInfo, project, featureGroup.getFeaturestore(), featureGroup));
-    } else {
-      dto.setHref(uri(uriInfo, project, trainingDataset.getFeaturestore(), trainingDataset));
+    dto.setHref(uri(uriInfo, project, featureGroup.getFeaturestore(), featureGroup));
+
+    dto.setExpand(expand(resourceRequest));
+    if (dto.isExpand()) {
+      dto.setKeywords(keywords);
     }
+    return dto;
+  }
+
+  public KeywordDTO build(UriInfo uriInfo, ResourceRequest resourceRequest, Project project,
+                          TrainingDataset trainingDataset, List<String> keywords) {
+    KeywordDTO dto = new KeywordDTO();
+    dto.setHref(uri(uriInfo, project, trainingDataset.getFeaturestore(), trainingDataset));
 
     dto.setExpand(expand(resourceRequest));
     if (dto.isExpand()) {

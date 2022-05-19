@@ -110,6 +110,10 @@ public class StatisticsResource {
     this.trainingDataset = trainingDatasetController.getTrainingDatasetById(featurestore, trainingDatasetId);
   }
 
+  public void setTrainingDataset(TrainingDataset trainingDataset) {
+    this.trainingDataset = trainingDataset;
+  }
+
   @GET
   @Produces(MediaType.APPLICATION_JSON)
   @ApiOperation(value = "Get all available statistics", response = StatisticsDTO.class)

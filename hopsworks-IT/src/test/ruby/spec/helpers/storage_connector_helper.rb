@@ -269,6 +269,10 @@ module StorageConnectorHelper
     @s3_connector_id
   end
 
+  def make_connector_dto(connector_id)
+    {id: connector_id}
+  end
+
   def with_s3_connector(project_id)
     featurestore_id = get_featurestore_id(project_id)
     json_result, _ = create_s3_connector(project_id, featurestore_id,

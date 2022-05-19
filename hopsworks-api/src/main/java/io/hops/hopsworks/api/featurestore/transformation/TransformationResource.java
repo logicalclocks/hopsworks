@@ -16,9 +16,11 @@
 
 package io.hops.hopsworks.api.featurestore.transformation;
 
-import io.hops.hopsworks.api.featurestore.statistics.StatisticsResource;
+import io.hops.hopsworks.api.featurestore.featureview.FeatureViewController;
 import io.hops.hopsworks.api.featurestore.transformationFunction.TransformationFunctionBuilder;
+import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.api.filter.Audience;
+import io.hops.hopsworks.api.filter.apiKey.ApiKeyRequired;
 import io.hops.hopsworks.api.jwt.JWTHelper;
 import io.hops.hopsworks.common.api.ResourceRequest;
 import io.hops.hopsworks.common.featurestore.trainingdatasets.TrainingDatasetController;
@@ -26,23 +28,19 @@ import io.hops.hopsworks.common.featurestore.transformationFunction.Transformati
 import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
 import io.hops.hopsworks.persistence.entity.featurestore.Featurestore;
-import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.TrainingDataset;
+import io.hops.hopsworks.persistence.entity.featurestore.featureview.FeatureView;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.user.Users;
-import io.hops.hopsworks.restutils.RESTCodes;
+import io.hops.hopsworks.persistence.entity.user.security.apiKey.ApiScope;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiParam;
 
 import javax.ejb.EJB;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.enterprise.context.RequestScoped;
-import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.GET;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
@@ -54,21 +52,22 @@ import javax.ws.rs.core.UriInfo;
 public class TransformationResource {
 
   @EJB
+  private FeatureViewController featureViewController;
+  @EJB
   private TrainingDatasetController trainingDatasetController;
   @EJB
   private TransformationFunctionBuilder transformationFunctionBuilder;
   @EJB
   private JWTHelper jWTHelper;
-  @Inject
-  private StatisticsResource statisticsResource;
+
   private Project project;
   private Featurestore featurestore;
-  private Integer trainingDatasetId;
+  private FeatureView featureView;
 
-  // Copy from traindatasetService
   @GET
-  @Path("/functions")
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   @JWTRequired(acceptedTokens = {Audience.API, Audience.JOB}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
+  @ApiKeyRequired(acceptedScopes = {ApiScope.FEATURESTORE}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   @ApiOperation(value = "Get Transformation functions.", response = TransformationFunctionAttachedDTO.class)
   public Response getTransformationFunction(
       @Context
@@ -79,32 +78,23 @@ public class TransformationResource {
           UriInfo uriInfo
   )
       throws FeaturestoreException {
-    if (trainingDatasetId == null) {
-      throw new IllegalArgumentException(RESTCodes.FeaturestoreErrorCode.TRAINING_DATASET_ID_NOT_PROVIDED.getMessage());
-    }
 
-    TrainingDataset trainingDataset = trainingDatasetController.getTrainingDatasetById(featurestore, trainingDatasetId);
     Users user = jWTHelper.getUserPrincipal(sc);
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.TRANSFORMATIONFUNCTIONS);
     TransformationFunctionAttachedDTO transformationFunctionAttachedDTO =
-        transformationFunctionBuilder.build(uriInfo, resourceRequest, user, project, trainingDataset);
+        transformationFunctionBuilder.build(uriInfo, resourceRequest, user, project, featureView);
     return Response.ok().entity(transformationFunctionAttachedDTO).build();
   }
 
-  @Path("/statistics")
-  @JWTRequired(acceptedTokens = {Audience.API, Audience.JOB}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
-  public StatisticsResource statistics(
-      @Context
-          SecurityContext sc,
-      @Context
-          HttpServletRequest req,
-      @ApiParam(value = "Name of the feature view", required = true)
-      @PathParam("name")
-          String featureViewName,
-      @ApiParam(value = "Version of the feature view", required = true)
-      @PathParam("version")
-          Integer version
-  ) {
-    return statisticsResource;
+  public void setFeatureView(String name, Integer version) throws FeaturestoreException {
+    featureView = featureViewController.getByNameVersionAndFeatureStore(name, version, featurestore);
+  }
+
+  public void setProject(Project project) {
+    this.project = project;
+  }
+
+  public void setFeaturestore(Featurestore featurestore) {
+    this.featurestore = featurestore;
   }
 }

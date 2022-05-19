@@ -335,7 +335,7 @@ public class FeaturegroupController {
    * @param featuregroup the entity to convert
    * @return a DTO representation of the entity
    */
-  private FeaturegroupDTO convertFeaturegrouptoDTO(Featuregroup featuregroup, Project project, Users user)
+  public FeaturegroupDTO convertFeaturegrouptoDTO(Featuregroup featuregroup, Project project, Users user)
           throws FeaturestoreException, ServiceException {
     String featurestoreName = featurestoreFacade.getHiveDbName(featuregroup.getFeaturestore().getHiveDbId());
     switch (featuregroup.getFeaturegroupType()) {

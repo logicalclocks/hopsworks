@@ -19,6 +19,7 @@ package io.hops.hopsworks.common.featurestore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import io.hops.hopsworks.common.api.RestDTO;
 import io.hops.hopsworks.common.dao.user.UserDTO;
 import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupDTO;
 import io.hops.hopsworks.common.featurestore.statistics.StatisticsConfigDTO;
@@ -41,7 +42,7 @@ import java.util.Date;
 @JsonSubTypes({
   @JsonSubTypes.Type(value = FeaturegroupDTO.class, name = "FeaturegroupDTO"),
   @JsonSubTypes.Type(value = TrainingDatasetDTO.class, name = "TrainingDatasetDTO")})
-public abstract class FeaturestoreEntityDTO {
+public abstract class FeaturestoreEntityDTO<T> extends RestDTO<T> {
 
   private Integer featurestoreId;
   private String featurestoreName;

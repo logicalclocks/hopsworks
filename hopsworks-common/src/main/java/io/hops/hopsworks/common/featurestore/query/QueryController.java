@@ -24,14 +24,21 @@ import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupDTO;
 import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupFacade;
 import io.hops.hopsworks.common.featurestore.featuregroup.cached.FeatureGroupCommitController;
 import io.hops.hopsworks.common.featurestore.online.OnlineFeaturestoreController;
+import io.hops.hopsworks.common.featurestore.query.filter.Filter;
 import io.hops.hopsworks.common.featurestore.query.filter.FilterController;
+import io.hops.hopsworks.common.featurestore.query.filter.FilterLogic;
 import io.hops.hopsworks.common.featurestore.query.join.Join;
 import io.hops.hopsworks.common.featurestore.query.join.JoinDTO;
+import io.hops.hopsworks.common.featurestore.trainingdatasets.TrainingDatasetController;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.Featuregroup;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.cached.FeatureGroupCommit;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.cached.TimeTravelFormat;
+import io.hops.hopsworks.persistence.entity.featurestore.featureview.FeatureView;
 import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.SqlCondition;
+import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.SqlFilterLogic;
+import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.TrainingDatasetFeature;
+import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.TrainingDatasetJoin;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.restutils.RESTCodes;
@@ -42,12 +49,16 @@ import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.logging.Level;
 import java.util.stream.Collectors;
+
+import static io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.SqlFilterLogic.AND;
 
 @Stateless
 @TransactionAttribute(TransactionAttributeType.NEVER)
@@ -65,6 +76,8 @@ public class QueryController {
   private FeaturestoreFacade featurestoreFacade;
   @EJB
   private OnlineFeaturestoreController onlineFeaturestoreController;
+  @EJB
+  private TrainingDatasetController trainingDatasetController;
   private final static String ALL_FEATURES = "*";
 
   public QueryController() {
@@ -104,6 +117,7 @@ public class QueryController {
       Map<Integer, Featuregroup> fgLookup, Map<Integer, List<Feature>> availableFeatureLookup,
       boolean pitEnabled)
       throws FeaturestoreException {
+    checkNestedJoin(queryDTO);
     Integer fgId = queryDTO.getLeftFeatureGroup().getId();
     Featuregroup fg = fgLookup.get(fgId);
 
@@ -160,6 +174,60 @@ public class QueryController {
     return query;
   }
 
+  void checkNestedJoin(QueryDTO queryDTO) throws FeaturestoreException {
+    if (queryDTO.getJoins() != null) {
+      for (JoinDTO join : queryDTO.getJoins()) {
+        if (join.getQuery().getJoins() != null && join.getQuery().getJoins().size() > 0) {
+          throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.NESTED_JOIN_NOT_ALLOWED,
+              Level.SEVERE,
+              "Nested join is not supported.");
+        }
+      }
+    }
+  }
+
+  public Query appendFilter(Query query, SqlFilterLogic sqlLogic, FilterLogic filterLogic) {
+    FilterLogic currentFilter = query.getFilter();
+    if(currentFilter != null) {
+      FilterLogic filter = new FilterLogic(sqlLogic, currentFilter, filterLogic);
+      query.setFilter(filter);
+    } else {
+      query.setFilter(filterLogic);
+    }
+    return query;
+  }
+
+  public Query appendEventTimeFilter(Query query, Date startTime, Date endTime) throws FeaturestoreException {
+    query = appendEventTimeFilter(query, startTime, SqlCondition.GREATER_THAN_OR_EQUAL);
+    return appendEventTimeFilter(query, endTime, SqlCondition.LESS_THAN_OR_EQUAL);
+  }
+
+  private Query appendEventTimeFilter(Query query, Date eventTime, SqlCondition sqlCondition)
+      throws FeaturestoreException {
+    if (eventTime != null) {
+      Filter eventTimeFilter = createEventTimeFilter(getEventTimeFeature(query), sqlCondition, eventTime);
+      return appendFilter(query, AND, new FilterLogic(eventTimeFilter));
+    }
+    return query;
+  }
+
+  Feature getEventTimeFeature(Query query) throws FeaturestoreException {
+    String eventTimeFieldName = query.getFeaturegroup().getEventTime();
+    if (eventTimeFieldName == null) {
+      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.EVENT_TIME_FEATURE_NOT_FOUND, Level.FINE,
+          "Cannot find event feature in feature group " + query.getFeaturegroup().getName());
+    }
+    return query.getAvailableFeatures()
+        .stream()
+        .filter(feature -> feature.getName().equals(eventTimeFieldName))
+        .findFirst()
+        .orElseThrow(IllegalStateException::new);
+  }
+
+  Filter createEventTimeFilter(Feature feature, SqlCondition condition, Date time) throws FeaturestoreException {
+    String value = filterController.convertToEventTimeFeatureValue(feature, time);
+    return new Filter(feature, condition, value);
+  }
 
   public int populateFgLookupTables(QueryDTO queryDTO, int fgId, Map<Integer, String> fgAliasLookup,
       Map<Integer, Featuregroup> fgLookup,
@@ -412,4 +480,41 @@ public class QueryController {
     }
   }
 
+  public Query makeQuery(FeatureView featureView, Project project, Users user, boolean withLabel, Boolean isHiveEngine)
+      throws FeaturestoreException {
+    List<TrainingDatasetJoin> joins = featureView.getJoins().stream()
+        .sorted(Comparator.comparing(TrainingDatasetJoin::getIndex))
+        .collect(Collectors.toList());
+
+    List<TrainingDatasetFeature> tdFeatures = featureView.getFeatures().stream()
+        .sorted((t1, t2) -> {
+          if (t1.getIndex() != null) {
+            // compare based on index
+            return t1.getIndex().compareTo(t2.getIndex());
+          } else {
+            // Old training dataset with no index. compare based on name
+            return t1.getName().compareTo(t2.getName());
+          }
+        })
+        // drop label features if desired
+        .filter(f -> !f.isLabel() || withLabel)
+        .collect(Collectors.toList());
+
+    return trainingDatasetController.getQuery(joins, tdFeatures, featureView.getFilters(), project, user, isHiveEngine);
+  }
+
+  public Query constructBatchQuery(FeatureView featureView, Project project, Users user, Long startTimestamp,
+      Long endTimestamp, Boolean withLabel, Boolean isHiveEngine)
+      throws FeaturestoreException {
+    Date startTime = startTimestamp == null ? null : new Date(startTimestamp);
+    Date endTime = endTimestamp == null ? null : new Date(endTimestamp);
+    return constructBatchQuery(featureView, project, user, startTime, endTime, withLabel, isHiveEngine);
+  }
+
+  public Query constructBatchQuery(FeatureView featureView, Project project, Users user, Date startTime,
+      Date endTime, Boolean withLabel, Boolean isHiveEngine)
+      throws FeaturestoreException {
+    Query baseQuery = makeQuery(featureView, project, user, withLabel, isHiveEngine);
+    return appendEventTimeFilter(baseQuery, startTime, endTime);
+  }
 }
