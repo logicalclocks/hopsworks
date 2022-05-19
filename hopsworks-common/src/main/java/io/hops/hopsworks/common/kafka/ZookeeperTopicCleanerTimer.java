@@ -165,7 +165,8 @@ public class ZookeeperTopicCleanerTimer {
     // TODO: This should be removed by HOPSWORKS-2798 and usages of this method should simply call
     //  kafkaBrokers.getBrokerEndpoints() directly
     try {
-      kafkaBrokers.setKafkaBrokers(kafkaBrokers.getBrokerEndpoints());
+      kafkaBrokers.setInternalKafkaBrokers(
+        kafkaBrokers.getBrokerEndpoints(KafkaBrokers.KAFKA_BROKER_PROTOCOL_INTERNAL));
     } catch (Exception ex) {
       LOGGER.log(Level.SEVERE, null, ex);
     }

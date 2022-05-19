@@ -132,7 +132,8 @@ public class KafkaServingHelper {
       // Check that the user is not trying to create a topic with  more replicas than brokers.
       if (servingWrapper.getKafkaTopicDTO().getNumOfReplicas() != null &&
           (servingWrapper.getKafkaTopicDTO().getNumOfReplicas() <= 0 ||
-              servingWrapper.getKafkaTopicDTO().getNumOfReplicas() > kafkaBrokers.getBrokerEndpoints().size())) {
+              servingWrapper.getKafkaTopicDTO().getNumOfReplicas() >
+                kafkaBrokers.getBrokerEndpoints(KafkaBrokers.KAFKA_BROKER_PROTOCOL_INTERNAL).size())) {
         throw new KafkaException(RESTCodes.KafkaErrorCode.TOPIC_REPLICATION_ERROR, Level.FINE);
 
       } else if (servingWrapper.getKafkaTopicDTO().getNumOfReplicas() == null) {

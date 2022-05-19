@@ -129,7 +129,7 @@ public class KafkaController {
     //check if the replication factor is not greater than the
     //number of running brokers
     try {
-      Set<String> brokerEndpoints = kafkaBrokers.getBrokerEndpoints();
+      Set<String> brokerEndpoints = kafkaBrokers.getBrokerEndpoints(KafkaBrokers.KAFKA_BROKER_PROTOCOL_INTERNAL);
       if (brokerEndpoints.size() < topicDto.getNumOfReplicas()) {
         throw new KafkaException(RESTCodes.KafkaErrorCode.TOPIC_REPLICATION_ERROR, Level.FINE,
           "maximum: " + brokerEndpoints.size());
@@ -291,7 +291,7 @@ public class KafkaController {
   
   public TopicDefaultValueDTO topicDefaultValues() throws KafkaException {
     try {
-      Set<String> brokers = kafkaBrokers.getBrokerEndpoints();
+      Set<String> brokers = kafkaBrokers.getBrokerEndpoints(KafkaBrokers.KAFKA_BROKER_PROTOCOL_INTERNAL);
       return new TopicDefaultValueDTO(
         settings.getKafkaDefaultNumReplicas(),
         settings.getKafkaDefaultNumPartitions(),

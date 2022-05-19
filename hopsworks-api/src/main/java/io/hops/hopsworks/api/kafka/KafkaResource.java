@@ -96,6 +96,7 @@ import java.net.URI;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Set;
 import java.util.logging.Logger;
 
 @RequestScoped
@@ -146,9 +147,16 @@ public class KafkaResource {
                              @Context SecurityContext sc,
                              @ApiParam(value = "external", example = "false")
                              @QueryParam("external") @DefaultValue("false") Boolean externalListeners)
-    throws InterruptedException, IOException, KeeperException {
+      throws InterruptedException, IOException, KeeperException {
+    Set<String> brokerEndpoints;
+    if (externalListeners) {
+      brokerEndpoints = kafkaBrokers.getBrokerEndpoints(KafkaBrokers.KAFKA_BROKER_PROTOCOL_EXTERNAL);
+    } else {
+      brokerEndpoints = kafkaBrokers.getBrokerEndpoints(KafkaBrokers.KAFKA_BROKER_PROTOCOL_INTERNAL);
+    }
     KafkaClusterInfoDTO dto = kafkaClusterInfoBuilder.build(
-      uriInfo, project, new ArrayList<>(kafkaBrokers.getBrokerEndpoints()));
+        uriInfo, project,
+        new ArrayList<>(brokerEndpoints));
     return Response.ok().entity(dto).build();
   }
 
