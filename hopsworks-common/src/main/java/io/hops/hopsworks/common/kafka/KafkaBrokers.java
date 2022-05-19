@@ -50,53 +50,54 @@ import java.util.stream.Collectors;
 public class KafkaBrokers {
   private final static Logger LOGGER = Logger.getLogger(KafkaBrokers.class.getName());
   
-  private static final String KAFKA_BROKER_PROTOCOL = "INTERNAL";
+  public static final String KAFKA_BROKER_PROTOCOL_INTERNAL = "INTERNAL";
+  public static final String KAFKA_BROKER_PROTOCOL_EXTERNAL = "EXTERNAL";
   
   @EJB
   private ServiceDiscoveryController serviceDiscoveryController;
   
-  private final Set<String> kafkaBrokers;
+  private final Set<String> internalKafkaBrokers;
   
   public KafkaBrokers() {
-    this.kafkaBrokers = new HashSet<>();
+    this.internalKafkaBrokers = new HashSet<>();
   }
   
   @PostConstruct
   private void init() {
     try {
-      setKafkaBrokers(getBrokerEndpoints());
+      setInternalKafkaBrokers(getBrokerEndpoints(KAFKA_BROKER_PROTOCOL_INTERNAL));
     } catch (Exception ex) {
       LOGGER.log(Level.SEVERE, null, ex);
     }
   }
   
-  public void setKafkaBrokers(Set<String> kafkaBrokers) {
-    this.kafkaBrokers.clear();
-    this.kafkaBrokers.addAll(kafkaBrokers);
+  public void setInternalKafkaBrokers(Set<String> internalKafkaBrokers) {
+    this.internalKafkaBrokers.clear();
+    this.internalKafkaBrokers.addAll(internalKafkaBrokers);
   }
 
   @Lock(LockType.READ)
-  public Set<String> getKafkaBrokers() {
-    return this.kafkaBrokers;
+  public Set<String> getInternalKafkaBrokers() {
+    return this.internalKafkaBrokers;
   }
 
   @Lock(LockType.READ)
   public String getKafkaBrokersString() {
-    if (!kafkaBrokers.isEmpty()) {
-      return StringUtils.join(kafkaBrokers, ",");
+    if (!internalKafkaBrokers.isEmpty()) {
+      return StringUtils.join(internalKafkaBrokers, ",");
     }
     return null;
   }
 
   @Lock(LockType.READ)
   public Optional<String> getAnyKafkaBroker() {
-    return kafkaBrokers.stream()
+    return internalKafkaBrokers.stream()
         .filter(StringUtils::isNoneEmpty)
         .findAny();
   }
   
   @Lock(LockType.READ)
-  public Set<String> getBrokerEndpoints() throws IOException, KeeperException, InterruptedException {
+  public Set<String> getBrokerEndpoints(String protocol) throws IOException, KeeperException, InterruptedException {
     try {
       String zkConnectionString = getZookeeperConnectionString();
       final ZooKeeper zk = new ZooKeeper(zkConnectionString, Settings.ZOOKEEPER_SESSION_TIMEOUT_MS,
@@ -112,7 +113,7 @@ public class KafkaBrokers {
             .filter(StringUtils::isNoneEmpty)
             .map(bi -> bi.split(KafkaConst.DLIMITER))
             .flatMap(Arrays::stream)
-            .filter(this::isValidBrokerInfo)
+            .filter(bi -> isValidBrokerInfo(bi, protocol))
             .collect(Collectors.toSet());
       } finally {
         zk.close();
@@ -148,7 +149,7 @@ public class KafkaBrokers {
     }
   }
   
-  private boolean isValidBrokerInfo(String brokerInfo) {
-    return brokerInfo.startsWith(KAFKA_BROKER_PROTOCOL) && brokerInfo.contains(KafkaConst.SLASH_SEPARATOR);
+  private boolean isValidBrokerInfo(String brokerInfo, String protocol) {
+    return brokerInfo.startsWith(protocol) && brokerInfo.contains(KafkaConst.SLASH_SEPARATOR);
   }
 }

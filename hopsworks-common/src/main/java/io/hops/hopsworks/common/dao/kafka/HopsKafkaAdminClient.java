@@ -79,7 +79,7 @@ public class HopsKafkaAdminClient {
       }
     }
     Properties props = new Properties();
-    Set<String> brokers = kafkaBrokers.getKafkaBrokers();
+    Set<String> brokers = kafkaBrokers.getInternalKafkaBrokers();
     //Keep only INTERNAL protocol brokers
     brokers.removeIf(seed -> seed.split(KafkaConst.COLON_SEPARATOR)[0]
       .equalsIgnoreCase(KafkaConst.KAFKA_BROKER_EXTERNAL_PROTOCOL));

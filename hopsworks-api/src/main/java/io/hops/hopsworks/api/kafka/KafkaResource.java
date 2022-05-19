@@ -78,6 +78,7 @@ import io.hops.hopsworks.persistence.entity.kafka.TopicAcls;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.user.security.apiKey.ApiScope;
 import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiParam;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.zookeeper.KeeperException;
 
@@ -89,12 +90,14 @@ import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
+import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.MediaType;
@@ -107,6 +110,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.logging.Logger;
 
 @Logged
@@ -161,10 +165,19 @@ public class KafkaResource {
   @ApiKeyRequired(acceptedScopes = {ApiScope.KAFKA}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   public Response getBrokers(@Context UriInfo uriInfo,
                              @Context HttpServletRequest req,
-                             @Context SecurityContext sc)
+                             @Context SecurityContext sc,
+                             @ApiParam(value = "external", example = "false")
+                             @QueryParam("external") @DefaultValue("false") Boolean externalListeners)
       throws InterruptedException, IOException, KeeperException {
+    Set<String> brokerEndpoints;
+    if (externalListeners) {
+      brokerEndpoints = kafkaBrokers.getBrokerEndpoints(KafkaBrokers.KAFKA_BROKER_PROTOCOL_EXTERNAL);
+    } else {
+      brokerEndpoints = kafkaBrokers.getBrokerEndpoints(KafkaBrokers.KAFKA_BROKER_PROTOCOL_INTERNAL);
+    }
     KafkaClusterInfoDTO dto = kafkaClusterInfoBuilder.build(
-        uriInfo, project, new ArrayList<>(kafkaBrokers.getBrokerEndpoints()));
+        uriInfo, project,
+        new ArrayList<>(brokerEndpoints));
     return Response.ok().entity(dto).build();
   }
 
