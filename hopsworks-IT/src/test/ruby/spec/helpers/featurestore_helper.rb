@@ -740,8 +740,9 @@ module FeaturestoreHelper
   end
   
   def update_feature_view(project_id, featurestore_id, json_data)
-    create_featureview_endpoint = "#{ENV['HOPSWORKS_API']}/project/#{project_id.to_s}/featurestores/#{featurestore_id.to_s}/featureview"
-    json_result = put create_featureview_endpoint, json_data.to_json
+    update_featureview_endpoint = "#{ENV['HOPSWORKS_API']}/project/#{project_id.to_s}/featurestores" +
+      "/#{featurestore_id.to_s}/featureview/#{json_data["name"]}/version/#{json_data[:version]}"
+    json_result = put update_featureview_endpoint, json_data.to_json
     return json_result
   end
 

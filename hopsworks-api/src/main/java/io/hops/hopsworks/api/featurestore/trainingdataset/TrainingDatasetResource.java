@@ -297,6 +297,7 @@ public class TrainingDatasetResource {
   @Logged(logLevel = LogLevel.OFF)
   public StatisticsResource statistics(
       @ApiParam(value = "Version of the feature view", required = true)
+      @PathParam("version")
           Integer version
   ) throws FeaturestoreException {
     statisticsResource.setProject(project);
