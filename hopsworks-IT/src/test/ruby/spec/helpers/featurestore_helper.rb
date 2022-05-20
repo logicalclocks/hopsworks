@@ -740,8 +740,8 @@ module FeaturestoreHelper
   end
   
   def update_feature_view(project_id, featurestore_id, json_data)
-    create_featureview_endpoint = "#{ENV['HOPSWORKS_API']}/project/#{project_id.to_s}/featurestores/#{featurestore_id.to_s}/featureview"
-    json_result = put create_featureview_endpoint, json_data.to_json
+    update_featureview_endpoint = "#{ENV['HOPSWORKS_API']}/project/#{project_id.to_s}/featurestores/#{featurestore_id.to_s}/featureview"
+    json_result = put update_featureview_endpoint, json_data.to_json
     return json_result
   end
 
@@ -756,7 +756,7 @@ module FeaturestoreHelper
     featureview = JSON.parse(json_result)
 
     if connector == nil
-      connector = get_hopsfs_training_datasets_connector(@project[:projectname])
+      connector = get_hopsfs_training_datasets_connector(project[:projectname])
     end
 
     json_result  = create_featureview_training_dataset(

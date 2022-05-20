@@ -117,8 +117,18 @@ public class QueryBuilder {
     String featureStoreName = query.getFeatureStore();
     // featureStoreId has to match with featureStoreName.
     // Query's featureStoreName may not be the same as current feature store name in the case of shared project.
-    Integer featureStoreId = featurestoreController.getFeaturestoreForProjectWithName(project, featureStoreName)
-        .getFeaturestoreId();
+    try {
+      Integer featureStoreId = featurestoreController.getFeaturestoreForProjectWithName(project, featureStoreName)
+          .getFeaturestoreId();
+      queryDTO.setFeatureStoreId(featureStoreId);
+    } catch (FeaturestoreException e) {
+      if (RESTCodes.FeaturestoreErrorCode.FEATURESTORE_NOT_FOUND.equals(e.getErrorCode())) {
+        // This can happen when accessing an unshared feature store.
+        queryDTO.setFeatureStoreId(null);
+      } else {
+        throw e;
+      }
+    }
     FeaturegroupDTO leftFeatureGroup =
         featuregroupController.convertFeaturegrouptoDTO(query.getFeaturegroup(), project, user);
     leftFeatureGroup.setFeatures(featuregroupController.getFeatures(query.getFeaturegroup(), project, user));
@@ -128,7 +138,6 @@ public class QueryBuilder {
     Boolean hiveEngine = query.getHiveEngine();
     List<JoinDTO> joins = convertToJoinDTOs(
         query.getJoins(), featurestore, project, user, featureToDTO, allJoinedFeatures);
-    queryDTO.setFeatureStoreId(featureStoreId);
     queryDTO.setFeatureStoreName(featureStoreName);
     queryDTO.setLeftFeatureGroup(leftFeatureGroup);
     queryDTO.setLeftFeatures(

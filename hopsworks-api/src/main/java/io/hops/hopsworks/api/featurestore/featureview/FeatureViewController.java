@@ -97,8 +97,6 @@ public class FeatureViewController {
   @EJB
   private FeaturestoreActivityFacade fsActivityFacade;
   @EJB
-  private FeatureViewBuilder featureViewBuilder;
-  @EJB
   private FeaturestoreUtils featurestoreUtils;
   @EJB
   private TrainingDatasetFacade trainingDatasetFacade;
