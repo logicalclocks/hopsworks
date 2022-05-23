@@ -23,6 +23,8 @@ import io.hops.hopsworks.api.filter.Audience;
 import io.hops.hopsworks.api.filter.NoCacheResponse;
 import io.hops.hopsworks.api.jwt.JWTHelper;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
+import io.hops.hopsworks.common.security.QuotaEnforcementException;
+import io.hops.hopsworks.common.security.QuotasEnforcement;
 import io.hops.hopsworks.common.serving.ServingController;
 import io.hops.hopsworks.common.serving.ServingStatusEnum;
 import io.hops.hopsworks.common.serving.ServingWrapper;
@@ -68,6 +70,7 @@ import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
+import java.util.logging.Level;
 
 /**
  * RESTful microservice for model servings on Hopsworks. Supports both Tensorflow and SKLearn models.
@@ -87,6 +90,8 @@ public class ServingService {
   private ProjectFacade projectFacade;
   @EJB
   private JWTHelper jWTHelper;
+  @EJB
+  private QuotasEnforcement quotasEnforcement;
 
   private Project project;
 
@@ -208,6 +213,15 @@ public class ServingService {
       throw new IllegalArgumentException("serving was not provided");
     }
     ServingWrapper servingWrapper = serving.getServingWrapper();
+    if (serving.getId() == null) {
+      // Creating a new deployment, go through quotas enforcement
+      try {
+        quotasEnforcement.enforceModelDeploymentsQuota(project);
+      } catch (QuotaEnforcementException ex) {
+        throw new ServingException(RESTCodes.ServingErrorCode.CREATEERROR, Level.SEVERE,
+                ex.getMessage(), ex.getMessage());
+      }
+    }
     servingUtil.validateUserInput(servingWrapper, project);
     servingController.put(project, user, servingWrapper);
   
@@ -241,6 +255,15 @@ public class ServingService {
   
     if (servingCommand == null) {
       throw new IllegalArgumentException(RESTCodes.ServingErrorCode.COMMANDNOTPROVIDED.getMessage());
+    }
+
+    if (servingCommand.equals(ServingCommands.START)) {
+      try {
+        quotasEnforcement.enforceRunningModelDeploymentsQuota(project);
+      } catch (QuotaEnforcementException ex) {
+        throw new ServingException(RESTCodes.ServingErrorCode.LIFECYCLEERROR, Level.SEVERE,
+                ex.getMessage(), ex.getMessage());
+      }
     }
     
     servingController.startOrStop(project, user, servingId, servingCommand);

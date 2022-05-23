@@ -28,7 +28,7 @@ module ServingHelper
 
   def with_tf_serving(project_id, project_name, user)
     copy_mnist_files(project_id, project_name, user)
-    @serving ||= create_tf_serving(project_id, project_name)
+    @serving ||= create_tensorflow_serving(project_id, project_name)
     @topic = ProjectTopics.find(@serving[:kafka_topic_id])
   end
 
@@ -44,7 +44,7 @@ module ServingHelper
     @topic = ProjectTopics.find(@serving[:kafka_topic_id])
   end
 
-  def create_tf_serving(project_id, project_name)
+  def create_tensorflow_serving(project_id, project_name, expected_status: 201)
     serving_name = "testModel#{short_random_id}"
     put "#{ENV['HOPSWORKS_API']}/project/#{project_id}/serving/",
               {name: serving_name,
@@ -62,7 +62,7 @@ module ServingHelper
                servingTool: "DEFAULT",
                requestedInstances: 1
               }
-    expect_status_details(201)
+    expect_status_details(expected_status)
     Serving.find_by(project_id: project_id, name: serving_name)
   end
   

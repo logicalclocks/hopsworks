@@ -120,7 +120,17 @@ public class ExecutionFacade extends AbstractFacade<Execution> {
     q.setParameter("project", project);
     return q.getResultList();
   }
-  
+
+  public List<Execution> findByProjectAndNotFinished(Project project) {
+    return findByProjectAndStatesQuery(project, JobState.getRunningStates()).getResultList();
+  }
+
+  private TypedQuery<Execution> findByProjectAndStatesQuery(Project project, Set<JobState> states) {
+    return em.createNamedQuery("Execution.findByProjectAndStates", Execution.class)
+            .setParameter("project", project)
+            .setParameter("states", states);
+  }
+
   public List<Execution> findByJob(Jobs job) {
     TypedQuery<Execution> q = em.createNamedQuery("Execution.findByJob",
       Execution.class);
