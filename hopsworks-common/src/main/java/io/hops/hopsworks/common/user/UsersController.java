@@ -42,6 +42,7 @@ package io.hops.hopsworks.common.user;
 import com.google.common.base.Strings;
 import com.google.zxing.WriterException;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
+import io.hops.hopsworks.common.dao.project.team.ProjectTeamFacade;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.user.BbcGroup;
 import io.hops.hopsworks.common.dao.user.BbcGroupFacade;
@@ -116,6 +117,8 @@ public class UsersController {
   private UserStatusValidator userStatusValidator;
   @EJB
   private ProjectFacade projectFacade;
+  @EJB
+  private ProjectTeamFacade projectTeamFacade;
   @Inject
   @Any
   private Instance<UserAccountHandler> userAccountHandlers;
@@ -706,7 +709,7 @@ public class UsersController {
   }
   
   /**
-   * Delete user with no project
+   * Delete user that is not an owner or a member of a project
    * @param id
    * @throws UserException
    */
@@ -714,8 +717,12 @@ public class UsersController {
     Users user = getUserById(id);
     List<Project> projects = projectFacade.findByUser(user);
     if (projects != null && !projects.isEmpty()) {
-      throw new UserException(RESTCodes.UserErrorCode.ACCOUNT_DELETION_ERROR, Level.FINE, "Can not delete user that " +
-          "is a owner of a project.");
+      throw new UserException(RESTCodes.UserErrorCode.ACCOUNT_DELETION_ERROR, Level.FINE, "Can not delete a user that" +
+        " owns a project. Delete the project first and try again.");
+    }
+    if (projectTeamFacade.countByMember(user) > 0) {
+      throw new UserException(RESTCodes.UserErrorCode.ACCOUNT_DELETION_ERROR, Level.FINE, "Can not delete a user that" +
+        " is a member of a project. Remove the user from all projects and try again.");
     }
     deleteUser(user);
   }
