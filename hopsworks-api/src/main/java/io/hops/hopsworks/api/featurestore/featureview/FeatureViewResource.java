@@ -193,6 +193,7 @@ public class FeatureViewResource {
       @ApiParam(value = "Name of the feature view", required = true)
       @PathParam("name")
           String name,
+      @ApiParam(value = "Version of the feature view", required = true)
       @PathParam("version")
           Integer version
   ) throws FeaturestoreException, ServiceException, MetadataException, DatasetException,
@@ -241,6 +242,7 @@ public class FeatureViewResource {
       @ApiParam(value = "Name of the feature view", required = true)
       @PathParam("name")
           String name,
+      @ApiParam(value = "Version of the feature view", required = true)
       @PathParam("version")
           Integer version
   ) throws FeaturestoreException {
@@ -270,6 +272,7 @@ public class FeatureViewResource {
       @ApiParam(value = "Name of the feature view", required = true)
       @PathParam("name")
           String name,
+      @ApiParam(value = "Version of the feature view", required = true)
       @PathParam("version")
           Integer version,
       FeatureViewDTO featureViewDTO) throws FeaturestoreException, ProvenanceException, ServiceException, IOException,
