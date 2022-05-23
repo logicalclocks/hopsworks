@@ -251,6 +251,7 @@ public class FeatureViewResource {
   }
 
   @PUT
+  @Path("/{name: [a-z0-9_]*(?=[a-z])[a-z0-9_]+}/version/{version: [0-9]+}")
   @Produces(MediaType.APPLICATION_JSON)
   @Consumes(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
@@ -266,6 +267,11 @@ public class FeatureViewResource {
           UriInfo uriInfo,
       @BeanParam
           FeatureViewBeanParam param,
+      @ApiParam(value = "Name of the feature view", required = true)
+      @PathParam("name")
+          String name,
+      @PathParam("version")
+          Integer version,
       FeatureViewDTO featureViewDTO) throws FeaturestoreException, ProvenanceException, ServiceException, IOException,
       SchematizedTagException, MetadataException, DatasetException {
     if (featureViewDTO == null) {
@@ -273,7 +279,7 @@ public class FeatureViewResource {
     }
     Users user = jWTHelper.getUserPrincipal(sc);
     ResourceRequest resourceRequest = makeResourceRequest(param);
-    FeatureView featureView = featureViewController.update(user, project, featurestore, featureViewDTO);
+    FeatureView featureView = featureViewController.update(user, project, featurestore, name, version, featureViewDTO);
 
     return Response.ok()
         .entity(featureViewBuilder.build(featureView, resourceRequest, project, user, uriInfo))
