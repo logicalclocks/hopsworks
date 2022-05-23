@@ -1419,6 +1419,41 @@ describe "On #{ENV['OS']}" do
         expect(parsed_json.first["features"][4]["name"]).to eql("ft_e")
         expect(parsed_json.first["features"][5]["name"]).to eql("ft_f")
       end
+
+      describe "with quota enabled" do
+        before :all do
+          setVar("quotas_featuregroups_online_disabled", "1")
+          setVar("quotas_featuregroups_online_enabled", "1")
+        end
+        after :all do
+          setVar("quotas_featuregroups_online_disabled", "-1")
+          setVar("quotas_featuregroups_online_enabled", "-1")
+        end
+        it "should fail to create cached feature groups if quota has been reached" do
+          ## Create new project
+          project = create_project
+          featurestore_id = get_featurestore_id(project.id)
+          ## First attempt should succeed
+          create_cached_featuregroup(project.id, featurestore_id, online: true)
+          expect_status(201)
+          
+          ## This time is should fail because it has reached the online enabled limit
+          result, _ =create_cached_featuregroup(project.id, featurestore_id, online: true)
+          expect_status(500)
+          parsed = JSON.parse(result)
+          expect(parsed['devMsg']).to include("quota")
+
+          ## Online disabled should go through
+          create_cached_featuregroup(project.id, featurestore_id, online: false)
+          expect_status(201)
+
+          ## Now reached limit for online disabled too
+          result, _ = create_cached_featuregroup(project.id, featurestore_id, online: false)
+          expect_status(500)
+          parsed = JSON.parse(result)
+          expect(parsed['devMsg']).to include("quota")
+        end
+      end
     end
   end
 

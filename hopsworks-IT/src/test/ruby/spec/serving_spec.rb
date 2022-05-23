@@ -471,6 +471,25 @@ describe "On #{ENV['OS']}" do
             }
         expect_status_details(201)
       end
+
+      describe "with quota enabled" do
+        before :all do
+          setVar("quotas_model_deployments_total", "1")
+          @local_project = create_project
+        end
+        after :all do
+          setVar("quotas_model_deployments_total", "-1")
+          purge_all_tf_serving_instances
+          delete_all_servings(@local_project.id)
+        end
+        it "should fail to create serving if quota has been reached" do
+          ## This deployument should go through
+          with_tensorflow_serving(@local_project.id, @local_project.projectname, @user.username)
+  
+          ## Second deployment should fail because quota has been reached
+          create_tensorflow_serving(@local_project.id, @local_project.projectname, expected_status: 400)
+        end
+      end
     end
   end
 
@@ -818,6 +837,31 @@ describe "On #{ENV['OS']}" do
         expect_status_details(400, error_code: 240003)
       end
     end
+
+    describe "with quota enabled" do
+      before :all do
+        setVar("quotas_model_deployments_running", "1")
+        @local_project = create_project
+        with_tensorflow_serving(@local_project.id, @local_project.projectname, @user.username)
+      end
+      after :all do
+        setVar("quotas_model_deployments_running", "-1")
+        purge_all_tf_serving_instances
+        delete_all_servings(@local_project.id)
+      end
+      it "should fail to start serving if quota has been reached" do
+        ## This deployment should start
+        start_serving(@local_project, @serving)
+
+        second_serving = create_tensorflow_serving(@local_project.id, @local_project.projectname)
+        ## Starting this one should fail because quota has beed reached
+        post "#{ENV['HOPSWORKS_API']}/project/#{@local_project.id}/serving/#{second_serving.id}?action=start"
+        expect_status(400)
+        parsed = JSON.parse(response)
+        expect(parsed['devMsg']).to include("quota")
+      end
+    end
+
   end
 
   describe "#stop", vm: true do

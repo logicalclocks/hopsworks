@@ -1478,6 +1478,29 @@ describe "On #{ENV['OS']}" do
       end
     end
 
+    describe "with quotas enabled" do
+      before :all do
+        setVar("quotas_training_datasets", "1")
+      end
+      after :all do
+        setVar("quotas_training_datasets", "-1")
+      end
+      it "should fail to created training datasets if quota has been reached" do
+        project = create_project
+        featurestore_id = get_featurestore_id(project.id)
+        connector = get_hopsfs_training_datasets_connector(project.projectname)
+        ## This should go through
+        create_hopsfs_training_dataset(project.id, featurestore_id, connector)
+        expect_status(201)
+
+        ## This request should fail because quota has been reached
+        result, _ = create_hopsfs_training_dataset(project.id, featurestore_id, connector)
+        expect_status(500)
+        parsed = JSON.parse(result)
+        expect(parsed['devMsg']).to include("quota")
+      end
+    end
+
     describe "list" do
       context 'with valid project, featurestore service enabled' do
         before :all do

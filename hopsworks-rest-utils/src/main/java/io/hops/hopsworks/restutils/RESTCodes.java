@@ -1184,7 +1184,8 @@ public class RESTCodes {
     KAFKA_TOPIC_NOT_VALID(23, "Kafka topic not valid", Response.Status.BAD_REQUEST),
     FINEGRAINED_INF_LOGGING_NOT_SUPPORTED(24, "Fine-grained inference logging not supported",
       Response.Status.BAD_REQUEST),
-    REQUEST_BATCHING_NOT_SUPPORTED(25, "Request batching not supported", Response.Status.BAD_REQUEST);
+    REQUEST_BATCHING_NOT_SUPPORTED(25, "Request batching not supported", Response.Status.BAD_REQUEST),
+    CREATEERROR(26, "Serving instance could not be created", Response.Status.BAD_REQUEST);
 
     private Integer code;
     private String message;
@@ -1637,7 +1638,9 @@ public class RESTCodes {
       Response.Status.BAD_REQUEST),
     GCS_FIELD_MISSING(185, "Field missing", Response.Status.BAD_REQUEST),
     NESTED_JOIN_NOT_ALLOWED(187, "Nested join is not supported.", Response.Status.BAD_REQUEST),
-    FEATURE_NOT_FOUND(188, "Could not find feature.", Response.Status.NOT_FOUND);
+    FEATURE_NOT_FOUND(188, "Could not find feature.", Response.Status.NOT_FOUND),
+    TRAINING_DATASET_COULD_NOT_BE_CREATED(186, "Could not create training dataset",
+      Response.Status.INTERNAL_SERVER_ERROR);
 
     private int code;
     private String message;

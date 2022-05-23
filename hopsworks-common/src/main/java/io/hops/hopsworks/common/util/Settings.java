@@ -352,7 +352,24 @@ public class Settings implements Serializable {
 
   //Git
   private static final String VARIABLE_GIT_COMMAND_TIMEOUT_MINUTES_DEFAULT = "git_command_timeout_minutes";
-  
+
+
+  /*
+   * ------------------ QUOTAS ------------------
+   */
+  private static final String QUOTAS_PREFIX = "quotas";
+  private static final String QUOTAS_FEATUREGROUPS_PREFIX = String.format("%s_featuregroups", QUOTAS_PREFIX);
+  private static final String VARIABLE_QUOTAS_ONLINE_ENABLED_FEATUREGROUPS = String.format("%s_online_enabled",
+          QUOTAS_FEATUREGROUPS_PREFIX);
+  private static final String VARIABLE_QUOTAS_ONLINE_DISABLED_FEATUREGROUPS = String.format("%s_online_disabled",
+          QUOTAS_FEATUREGROUPS_PREFIX);
+  private static final String VARIABLE_QUOTAS_TRAINING_DATASETS = String.format("%s_training_datasets", QUOTAS_PREFIX);
+  private static final String QUOTAS_MODEL_DEPLOYMENTS_PREFIX = String.format("%s_model_deployments", QUOTAS_PREFIX);
+  private static final String VARIABLE_QUOTAS_RUNNING_MODEL_DEPLOYMENTS = String.format("%s_running",
+          QUOTAS_MODEL_DEPLOYMENTS_PREFIX);
+  private static final String VARIABLE_QUOTAS_TOTAL_MODEL_DEPLOYMENTS = String.format("%s_total",
+          QUOTAS_MODEL_DEPLOYMENTS_PREFIX);
+
   private static final String VARIABLE_SKIP_NAMESPACE_CREATION =
       "kube_skip_namespace_creation";
   public enum KubeType{
@@ -791,6 +808,16 @@ public class Settings implements Serializable {
   
       SKIP_NAMESPACE_CREATION = setBoolVar(VARIABLE_SKIP_NAMESPACE_CREATION,
           SKIP_NAMESPACE_CREATION);
+
+      QUOTAS_ONLINE_ENABLED_FEATUREGROUPS = setLongVar(VARIABLE_QUOTAS_ONLINE_ENABLED_FEATUREGROUPS,
+              QUOTAS_ONLINE_ENABLED_FEATUREGROUPS);
+      QUOTAS_ONLINE_DISABLED_FEATUREGROUPS = setLongVar(VARIABLE_QUOTAS_ONLINE_DISABLED_FEATUREGROUPS,
+              QUOTAS_ONLINE_DISABLED_FEATUREGROUPS);
+      QUOTAS_TRAINING_DATASETS = setLongVar(VARIABLE_QUOTAS_TRAINING_DATASETS, QUOTAS_TRAINING_DATASETS);
+      QUOTAS_RUNNING_MODEL_DEPLOYMENTS = setLongVar(VARIABLE_QUOTAS_RUNNING_MODEL_DEPLOYMENTS,
+              QUOTAS_RUNNING_MODEL_DEPLOYMENTS);
+      QUOTAS_TOTAL_MODEL_DEPLOYMENTS = setLongVar(VARIABLE_QUOTAS_TOTAL_MODEL_DEPLOYMENTS,
+              QUOTAS_TOTAL_MODEL_DEPLOYMENTS);
       cached = true;
     }
   }
@@ -3965,5 +3992,35 @@ public class Settings implements Serializable {
   public synchronized boolean shouldSkipNamespaceCreation() {
     checkCache();
     return SKIP_NAMESPACE_CREATION;
+  }
+
+  private long QUOTAS_ONLINE_ENABLED_FEATUREGROUPS = -1L;
+  public synchronized long getQuotasOnlineEnabledFeaturegroups() {
+    checkCache();
+    return QUOTAS_ONLINE_ENABLED_FEATUREGROUPS;
+  }
+
+  private long QUOTAS_ONLINE_DISABLED_FEATUREGROUPS = -1L;
+  public synchronized long getQuotasOnlineDisabledFeaturegroups() {
+    checkCache();
+    return QUOTAS_ONLINE_DISABLED_FEATUREGROUPS;
+  }
+
+  private long QUOTAS_TRAINING_DATASETS = -1L;
+  public synchronized long getQuotasTrainingDatasets() {
+    checkCache();
+    return QUOTAS_TRAINING_DATASETS;
+  }
+
+  private long QUOTAS_RUNNING_MODEL_DEPLOYMENTS = -1L;
+  public synchronized long getQuotasRunningModelDeployments() {
+    checkCache();
+    return QUOTAS_RUNNING_MODEL_DEPLOYMENTS;
+  }
+
+  private long QUOTAS_TOTAL_MODEL_DEPLOYMENTS = -1L;
+  public synchronized long getQuotasTotalModelDeployments() {
+    checkCache();
+    return QUOTAS_TOTAL_MODEL_DEPLOYMENTS;
   }
 }
