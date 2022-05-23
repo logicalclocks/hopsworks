@@ -204,7 +204,7 @@ public class KubePredictorPythonCustomUtils extends KubePredictorServerUtils {
     envVars.add(new EnvVarBuilder().withName("PROJECT_NAME").withValue(serving.getProject().getName()).build());
     envVars.add(new EnvVarBuilder().withName("SECRETS_DIR").withValue("/keys").build());
     
-    // HOPS
+    // HOPS / HSML
     envVars.add(new EnvVarBuilder()
       .withName("HOPSWORKS_PROJECT_ID").withValue(String.valueOf(serving.getProject().getId())).build());
     envVars.add(new EnvVarBuilder()
@@ -216,6 +216,14 @@ public class KubePredictorPythonCustomUtils extends KubePredictorServerUtils {
         false)
         .build())
       .build());
+    
+    // DEPLOYMENT INFO
+    envVars.add(new EnvVarBuilder().withName("DEPLOYMENT_NAME").withValue(serving.getName()).build());
+    envVars.add(new EnvVarBuilder().withName("MODEL_NAME").withValue(serving.getModelName()).build());
+    envVars.add(new EnvVarBuilder().withName("MODEL_VERSION")
+      .withValue(String.valueOf(serving.getModelVersion())).build());
+    envVars.add(new EnvVarBuilder().withName("ARTIFACT_VERSION")
+      .withValue(String.valueOf(serving.getArtifactVersion())).build());
     
     return envVars;
   }

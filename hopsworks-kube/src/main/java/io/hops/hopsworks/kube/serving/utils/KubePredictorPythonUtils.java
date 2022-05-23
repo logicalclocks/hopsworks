@@ -10,6 +10,7 @@ import io.fabric8.kubernetes.api.model.Container;
 import io.fabric8.kubernetes.api.model.ContainerBuilder;
 import io.fabric8.kubernetes.api.model.EnvVar;
 import io.fabric8.kubernetes.api.model.EnvVarBuilder;
+import io.fabric8.kubernetes.api.model.EnvVarSourceBuilder;
 import io.fabric8.kubernetes.api.model.IntOrString;
 import io.fabric8.kubernetes.api.model.LabelSelector;
 import io.fabric8.kubernetes.api.model.LabelSelectorBuilder;
@@ -37,12 +38,14 @@ import io.fabric8.kubernetes.api.model.apps.Deployment;
 import io.fabric8.kubernetes.api.model.apps.DeploymentBuilder;
 import io.fabric8.kubernetes.api.model.apps.DeploymentSpec;
 import io.fabric8.kubernetes.api.model.apps.DeploymentSpecBuilder;
+import io.hops.hopsworks.common.hdfs.HdfsUsersController;
 import io.hops.hopsworks.common.hosts.ServiceDiscoveryController;
 import io.hops.hopsworks.common.serving.inference.InferenceVerb;
 import io.hops.hopsworks.common.util.ProjectUtils;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.kube.common.KubeClientService;
 import io.hops.hopsworks.kube.project.KubeProjectConfigMaps;
+import io.hops.hopsworks.kube.security.KubeApiKeyUtils;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.serving.DeployableComponentResources;
 import io.hops.hopsworks.persistence.entity.serving.Serving;
@@ -79,6 +82,10 @@ public class KubePredictorPythonUtils {
   @EJB
   private ServiceDiscoveryController serviceDiscoveryController;
   @EJB
+  private HdfsUsersController hdfsUsersController;
+  @EJB
+  private KubeApiKeyUtils kubeApiKeyUtils;
+  @EJB
   private KubeProjectConfigMaps kubeProjectConfigMaps;
   @EJB
   private ProjectUtils projectUtils;
@@ -107,7 +114,6 @@ public class KubePredictorPythonUtils {
     Serving serving) throws ServiceDiscoveryException {
     
     String servingIdStr = String.valueOf(serving.getId());
-    String projectUser = project.getName() + HOPS_USERNAME_SEPARATOR + user.getUsername();
     String hadoopHome = settings.getHadoopSymbolicLinkDir();
     String hadoopConfDir = hadoopHome + "/etc/hadoop";
   
@@ -115,30 +121,8 @@ public class KubePredictorPythonUtils {
     ResourceRequirements resourceRequirements = kubeClientService.
       buildResourceRequirements(predictorResources.getLimits(), predictorResources.getRequests());
     
-    List<EnvVar> servingEnv = new ArrayList<>();
-    servingEnv.add(new EnvVarBuilder().withName(KubePredictorServerUtils.SERVING_ID).withValue(servingIdStr).build());
-    servingEnv.add(new EnvVarBuilder().withName(PROJECT_NAME).withValue(project.getName()).build());
-    servingEnv.add(new EnvVarBuilder().withName(KubePredictorServerUtils.MODEL_NAME)
-      .withValue(serving.getName().toLowerCase()).build());
-    servingEnv.add(new EnvVarBuilder().withName(ARTIFACT_VERSION)
-      .withValue(String.valueOf(serving.getArtifactVersion())).build());
-    servingEnv.add(new EnvVarBuilder().withName(ARTIFACT_PATH)
-      .withValue("hdfs://" + serviceDiscoveryController.constructServiceFQDN(
-        ServiceDiscoveryController.HopsworksService.RPC_NAMENODE) +"/"+ kubeArtifactUtils.getArtifactFilePath(serving))
-      .build());
-    servingEnv.add(new EnvVarBuilder().withName(DEFAULT_FS)
-      .withValue("hdfs://" + serviceDiscoveryController.constructServiceFQDN(
-        ServiceDiscoveryController.HopsworksService.RPC_NAMENODE)).build());
-    servingEnv.add(new EnvVarBuilder().withName("MATERIAL_DIRECTORY").withValue("/certs").build());
-    servingEnv.add(new EnvVarBuilder().withName("TLS").withValue(String.valueOf(settings.getHopsRpcTls())).build());
-    servingEnv.add(new EnvVarBuilder().withName("HADOOP_PROXY_USER").withValue(projectUser).build());
-    servingEnv.add(new EnvVarBuilder().withName("HDFS_USER").withValue(projectUser).build());
-    servingEnv.add(new EnvVarBuilder().withName("CONDAPATH").withValue(settings.getAnacondaProjectDir()).build());
-    servingEnv.add(new EnvVarBuilder().withName("PYTHONPATH")
-      .withValue(settings.getAnacondaProjectDir() + "/bin/python").build());
-    servingEnv.add(new EnvVarBuilder().withName("SCRIPT_NAME")
-      .withValue(kubePredictorUtils.getPredictorFileName(serving, true)).build());
-    servingEnv.add(new EnvVarBuilder().withName("IS_KUBE").withValue("true").build());
+    List<EnvVar> envVars = buildEnvironmentVariables(project, user, serving);
+
     SecretVolumeSource secretVolume = new SecretVolumeSourceBuilder()
       .withSecretName(kubeClientService.getKubeDeploymentName(project, user))
       .build();
@@ -172,7 +156,7 @@ public class KubePredictorPythonUtils {
       .withName("python-server")
       .withImage(projectUtils.getFullDockerImageName(project, false))
       .withImagePullPolicy(settings.getKubeImagePullPolicy())
-      .withEnv(servingEnv)
+      .withEnv(envVars)
       .withSecurityContext(new SecurityContextBuilder().withRunAsUser(settings.getYarnAppUID()).build())
       .withCommand("python-server-launcher.sh")
       .withVolumeMounts(secretMount, hadoopConfEnvMount)
@@ -248,5 +232,75 @@ public class KubePredictorPythonUtils {
     return new ObjectMetaBuilder()
       .withName(getServiceName(servingId))
       .build();
+  }
+  
+  private List<EnvVar> buildEnvironmentVariables(Project project, Users user, Serving serving)
+      throws ServiceDiscoveryException {
+    String projectUser = project.getName() + HOPS_USERNAME_SEPARATOR + user.getUsername();
+    String servingIdStr = String.valueOf(serving.getId());
+    
+    List<EnvVar> envVars = new ArrayList<>();
+    
+    envVars.add(new EnvVarBuilder().withName(KubePredictorServerUtils.SERVING_ID).withValue(servingIdStr).build());
+    envVars.add(new EnvVarBuilder().withName(PROJECT_NAME).withValue(project.getName()).build());
+    envVars.add(new EnvVarBuilder().withName(KubePredictorServerUtils.MODEL_NAME)
+      .withValue(serving.getName().toLowerCase()).build());
+    envVars.add(new EnvVarBuilder().withName(ARTIFACT_VERSION)
+      .withValue(String.valueOf(serving.getArtifactVersion())).build());
+    envVars.add(new EnvVarBuilder().withName(ARTIFACT_PATH)
+      .withValue("hdfs://" + serviceDiscoveryController.constructServiceFQDN(
+        ServiceDiscoveryController.HopsworksService.RPC_NAMENODE) +"/"+ kubeArtifactUtils.getArtifactFilePath(serving))
+      .build());
+    envVars.add(new EnvVarBuilder().withName(DEFAULT_FS)
+      .withValue("hdfs://" + serviceDiscoveryController.constructServiceFQDN(
+        ServiceDiscoveryController.HopsworksService.RPC_NAMENODE)).build());
+    envVars.add(new EnvVarBuilder().withName("MATERIAL_DIRECTORY").withValue("/certs").build());
+    envVars.add(new EnvVarBuilder().withName("TLS").withValue(String.valueOf(settings.getHopsRpcTls())).build());
+    envVars.add(new EnvVarBuilder().withName("HADOOP_PROXY_USER").withValue(projectUser).build());
+    envVars.add(new EnvVarBuilder().withName("HDFS_USER").withValue(projectUser).build());
+    envVars.add(new EnvVarBuilder().withName("CONDAPATH").withValue(settings.getAnacondaProjectDir()).build());
+    envVars.add(new EnvVarBuilder().withName("PYTHONPATH")
+      .withValue(settings.getAnacondaProjectDir() + "/bin/python").build());
+    envVars.add(new EnvVarBuilder().withName("SCRIPT_NAME")
+      .withValue(kubePredictorUtils.getPredictorFileName(serving, true)).build());
+    envVars.add(new EnvVarBuilder().withName("IS_KUBE").withValue("true").build());
+    
+    // HSFS and HOPS
+    envVars.add(new EnvVarBuilder()
+      .withName("HADOOP_USER_NAME").withValue(hdfsUsersController.getHdfsUserName(project, user)).build());
+    envVars.add(new EnvVarBuilder().withName("REST_ENDPOINT").withValue("https://" + serviceDiscoveryController
+      .constructServiceFQDNWithPort(ServiceDiscoveryController.HopsworksService.HOPSWORKS_APP)).build());
+    envVars.add(new EnvVarBuilder()
+      .withName("REQUESTS_VERIFY").withValue(String.valueOf(settings.getRequestsVerify())).build());
+    envVars.add(new EnvVarBuilder().withName("MATERIAL_DIRECTORY").withValue("/certs").build());
+  
+    // HSFS
+    envVars.add(new EnvVarBuilder()
+      .withName("PROJECT_ID").withValue(String.valueOf(serving.getProject().getId())).build());
+    envVars.add(new EnvVarBuilder().withName("PROJECT_NAME").withValue(serving.getProject().getName()).build());
+    envVars.add(new EnvVarBuilder().withName("SECRETS_DIR").withValue("/keys").build());
+  
+    // HOPS / HSML
+    envVars.add(new EnvVarBuilder()
+      .withName("HOPSWORKS_PROJECT_ID").withValue(String.valueOf(serving.getProject().getId())).build());
+    envVars.add(new EnvVarBuilder()
+      .withName("HOPSWORKS_PROJECT_NAME").withValue(serving.getProject().getName()).build());
+    envVars.add(new EnvVarBuilder().withName("API_KEY").withValueFrom(
+      new EnvVarSourceBuilder().withNewSecretKeyRef(
+        kubeApiKeyUtils.getServingApiKeySecretKeyName(),
+        kubeApiKeyUtils.getProjectServingApiKeySecretName(user),
+        false)
+        .build())
+      .build());
+  
+    // DEPLOYMENT INFO
+    envVars.add(new EnvVarBuilder().withName("DEPLOYMENT_NAME").withValue(serving.getName()).build());
+    envVars.add(new EnvVarBuilder().withName("MODEL_NAME").withValue(serving.getModelName()).build());
+    envVars.add(new EnvVarBuilder().withName("MODEL_VERSION")
+      .withValue(String.valueOf(serving.getModelVersion())).build());
+    envVars.add(new EnvVarBuilder().withName("ARTIFACT_VERSION")
+      .withValue(String.valueOf(serving.getArtifactVersion())).build());
+    
+    return envVars;
   }
 }

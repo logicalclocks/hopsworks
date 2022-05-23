@@ -292,8 +292,14 @@ public class ServingUtil {
       // If Kubernetes is not installed
       if (serving.getArtifactVersion() != null) {
         // and artifact version is not null
-        throw new ServingException(RESTCodes.ServingErrorCode.KUBERNETES_NOT_INSTALLED, Level.SEVERE, "Artifacts " +
-          "only supported in Kubernetes deployments");
+        if (serving.getArtifactVersion() == -1) {
+          // if CREATE, set artifact version to null
+          serving.setArtifactVersion(null);
+        } else {
+          // if != -1, not supported
+          throw new ServingException(RESTCodes.ServingErrorCode.KUBERNETES_NOT_INSTALLED, Level.SEVERE, "Artifacts " +
+            "only supported in Kubernetes deployments");
+        }
       }
       return; // no more validations needed
     }
