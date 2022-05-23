@@ -296,7 +296,7 @@ public class TrainingDatasetResource {
   @Path("/version/{version: [0-9]+}/statistics")
   @Logged(logLevel = LogLevel.OFF)
   public StatisticsResource statistics(
-      @ApiParam(value = "Version of the feature view", required = true)
+      @ApiParam(value = "Version of the training dataset", required = true)
       @PathParam("version")
           Integer version
   ) throws FeaturestoreException {

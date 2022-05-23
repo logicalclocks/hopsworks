@@ -196,6 +196,7 @@ public class FeatureViewResource {
       @ApiParam(value = "Name of the feature view", required = true)
       @PathParam("name")
           String name,
+      @ApiParam(value = "Version of the feature view", required = true)
       @PathParam("version")
           Integer version
   ) throws FeaturestoreException, ServiceException, MetadataException, DatasetException,
@@ -244,6 +245,7 @@ public class FeatureViewResource {
       @ApiParam(value = "Name of the feature view", required = true)
       @PathParam("name")
           String name,
+      @ApiParam(value = "Version of the feature view", required = true)
       @PathParam("version")
           Integer version
   ) throws FeaturestoreException {
@@ -270,6 +272,12 @@ public class FeatureViewResource {
           UriInfo uriInfo,
       @BeanParam
           FeatureViewBeanParam param,
+      @ApiParam(value = "Name of the feature view", required = true)
+      @PathParam("name")
+          String name,
+      @ApiParam(value = "Version of the feature view", required = true)
+      @PathParam("version")
+          Integer version,
       FeatureViewDTO featureViewDTO) throws FeaturestoreException, ProvenanceException, ServiceException, IOException,
       SchematizedTagException, MetadataException, DatasetException {
     if (featureViewDTO == null) {
@@ -277,7 +285,7 @@ public class FeatureViewResource {
     }
     Users user = jWTHelper.getUserPrincipal(sc);
     ResourceRequest resourceRequest = makeResourceRequest(param);
-    FeatureView featureView = featureViewController.update(user, project, featurestore, featureViewDTO);
+    FeatureView featureView = featureViewController.update(user, project, featurestore, name, version, featureViewDTO);
 
     return Response.ok()
         .entity(featureViewBuilder.build(featureView, resourceRequest, project, user, uriInfo))
