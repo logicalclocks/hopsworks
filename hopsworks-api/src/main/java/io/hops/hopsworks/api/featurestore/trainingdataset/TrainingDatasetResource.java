@@ -79,6 +79,8 @@ public class TrainingDatasetResource {
 
   @Inject
   private StatisticsResource statisticsResource;
+  @Inject
+  private TrainingDatasetTagResource tagResource;
   @EJB
   private FeatureViewController featureViewController;
   @EJB
@@ -289,13 +291,8 @@ public class TrainingDatasetResource {
   }
 
   @Path("/version/{version: [0-9]+}/statistics")
-  @JWTRequired(acceptedTokens = {Audience.API, Audience.JOB}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   public StatisticsResource statistics(
-      @Context
-          SecurityContext sc,
-      @Context
-          HttpServletRequest req,
-      @ApiParam(value = "training dataset version")
+      @ApiParam(value = "Version of the training dataset", required = true)
       @PathParam("version")
           Integer version
   ) throws FeaturestoreException {
@@ -305,6 +302,20 @@ public class TrainingDatasetResource {
         featureView, version);
     statisticsResource.setTrainingDataset(trainingDataset);
     return statisticsResource;
+  }
+
+  @Path("/version/{version: [0-9]+}/tags")
+  public TrainingDatasetTagResource tags(
+      @ApiParam(value = "Version of the training dataset", required = true)
+      @PathParam("version")
+          Integer version
+  ) throws FeaturestoreException {
+    tagResource.setProject(project);
+    tagResource.setFeatureStore(featurestore);
+    TrainingDataset trainingDataset = trainingDatasetController.getTrainingDatasetByFeatureViewAndVersion(
+        featureView, version);
+    tagResource.setTrainingDataset(trainingDataset);
+    return tagResource;
   }
 
   @POST
@@ -344,6 +355,7 @@ public class TrainingDatasetResource {
   public void setProject(Project project) {
     this.project = project;
   }
+
   public void setFeaturestore(Featurestore featurestore) {
     this.featurestore = featurestore;
   }

@@ -97,8 +97,6 @@ public class FeatureViewController {
   @EJB
   private FeaturestoreActivityFacade fsActivityFacade;
   @EJB
-  private FeatureViewBuilder featureViewBuilder;
-  @EJB
   private FeaturestoreUtils featurestoreUtils;
   @EJB
   private TrainingDatasetFacade trainingDatasetFacade;
@@ -234,10 +232,10 @@ public class FeatureViewController {
     }
   }
 
-  public FeatureView update(Users user, Project project, Featurestore featurestore, FeatureViewDTO featureViewDTO)
+  public FeatureView update(Users user, Project project, Featurestore featurestore, String name, Integer version,
+                            FeatureViewDTO featureViewDTO)
       throws FeaturestoreException {
-    FeatureView featureView = getByNameVersionAndFeatureStore(featureViewDTO.getName(), featureViewDTO.getVersion(),
-        featurestore);
+    FeatureView featureView = getByNameVersionAndFeatureStore(name, version, featurestore);
 
     featurestoreUtils.verifyUserRole(featureView, featurestore, user, project);
 
