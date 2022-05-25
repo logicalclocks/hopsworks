@@ -126,6 +126,7 @@ public class OpenSearchService {
   @GET
   @Path("projectsearch/{projectId}/{searchTerm}")
   @Produces(MediaType.APPLICATION_JSON)
+  @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
   @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
   public Response projectSearch(@PathParam("projectId") Integer projectId,
                                 @PathParam("searchTerm") String searchTerm,
@@ -150,6 +151,7 @@ public class OpenSearchService {
   @GET
   @Path("datasetsearch/{projectId}/{datasetName}/{searchTerm}")
   @Produces(MediaType.APPLICATION_JSON)
+  @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
   @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
   public Response datasetSearch(
       @PathParam("projectId") Integer projectId,

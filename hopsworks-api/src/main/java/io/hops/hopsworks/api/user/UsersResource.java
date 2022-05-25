@@ -138,12 +138,14 @@ public class UsersResource {
   private GitProvidersSecretsBuilder gitProvidersSecretsBuilder;
   @EJB
   private GitCommandOperationUtil gitCommandOperationUtil;
-
+  
   @GET
   @Produces(MediaType.APPLICATION_JSON)
   @ApiOperation(value = "Get all users.", response = UserDTO.class)
+  @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
   public Response findAll(@BeanParam Pagination pagination, @BeanParam UsersBeanParam usersBeanParam,
-      @Context UriInfo uriInfo, @Context SecurityContext sc) throws UserException {
+                          @Context HttpServletRequest req,
+                          @Context UriInfo uriInfo, @Context SecurityContext sc) throws UserException {
     if (!settings.isUserSearchEnabled()) {
       throw new UserException(RESTCodes.UserErrorCode.USER_SEARCH_NOT_ALLOWED, Level.FINE);
     }
@@ -160,6 +162,7 @@ public class UsersResource {
   @Path("{userId}")
   @Produces(MediaType.APPLICATION_JSON)
   @ApiOperation(value = "Find User by Id.", response = UserProfileDTO.class)
+  @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
   public Response findById(
       @PathParam("userId") Integer userId,
       @Context UriInfo uriInfo,
@@ -178,7 +181,10 @@ public class UsersResource {
   @Path("profile")
   @Produces(MediaType.APPLICATION_JSON)
   @ApiOperation(value = "Gets logged in User\'s info.", response = UserProfileDTO.class)
-  public Response getUserProfile(@Context UriInfo uriInfo, @Context SecurityContext sc) throws UserException {
+  @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
+  public Response getUserProfile(@Context UriInfo uriInfo,
+                                 @Context HttpServletRequest req,
+                                 @Context SecurityContext sc) throws UserException {
     Users user = jWTHelper.getUserPrincipal(sc);
     if (user == null) {
       throw new UserException(RESTCodes.UserErrorCode.USER_WAS_NOT_FOUND, Level.FINE);
@@ -226,10 +232,11 @@ public class UsersResource {
   @Consumes(MediaType.APPLICATION_JSON)
   @Produces(MediaType.APPLICATION_JSON)
   @ApiOperation(value = "Stores a secret for user")
-  @JWTRequired(acceptedTokens = {Audience.API, Audience.JOB}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
-  @ApiKeyRequired( acceptedScopes = {ApiScope.USER}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
-  public Response addSecret(SecretDTO secret, @Context SecurityContext sc, @Context HttpServletRequest req)
-      throws UserException {
+  @JWTRequired(acceptedTokens = {Audience.API, Audience.JOB},
+    allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
+  @ApiKeyRequired(acceptedScopes = {ApiScope.USER}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
+  public Response addSecret(SecretDTO secret, @Context SecurityContext sc,
+    @Context HttpServletRequest req) throws UserException {
     Users user = jWTHelper.getUserPrincipal(sc);
     secretsController.add(user, secret.getName(), secret.getSecret(), secret.getVisibility(),
         secret.getProjectIdScope());
@@ -243,8 +250,11 @@ public class UsersResource {
   @Path("secrets")
   @Produces(MediaType.APPLICATION_JSON)
   @ApiOperation(value = "Retrieves all secrets' names of a user", response = SecretDTO.class)
-  @ApiKeyRequired(acceptedScopes = {ApiScope.USER}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
-  public Response getAllSecrets(@Context SecurityContext sc) throws UserException {
+  @JWTRequired(acceptedTokens = {Audience.API, Audience.JOB},
+    allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
+  @ApiKeyRequired(acceptedScopes = {ApiScope.USER}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
+  public Response getAllSecrets(@Context SecurityContext sc,
+                                @Context HttpServletRequest req) throws UserException {
     Users user = jWTHelper.getUserPrincipal(sc);
     List<SecretPlaintext> secrets = secretsController.getAllForUser(user);
     SecretDTO dto = secretsBuilder.build(secrets, false);
@@ -255,9 +265,11 @@ public class UsersResource {
   @Path("secrets/shared")
   @Produces(MediaType.APPLICATION_JSON)
   @ApiOperation(value = "Gets the value of a shared secret", response = SecretDTO.class)
-  @JWTRequired(acceptedTokens = {Audience.API, Audience.JOB}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
-  @ApiKeyRequired(acceptedScopes = {ApiScope.USER}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
+  @JWTRequired(acceptedTokens = {Audience.API, Audience.JOB},
+    allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
+  @ApiKeyRequired(acceptedScopes = {ApiScope.USER}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
   public Response getSharedSecret(@QueryParam("name") String secretName, @QueryParam("owner") String ownerUsername,
+                                  @Context HttpServletRequest req,
                                   @Context SecurityContext sc)
     throws UserException, ServiceException, ProjectException {
     Users caller = jWTHelper.getUserPrincipal(sc);
@@ -270,9 +282,12 @@ public class UsersResource {
   @Path("secrets/{secretName}")
   @Produces(MediaType.APPLICATION_JSON)
   @ApiOperation(value = "Gets the value of a private secret", response = SecretDTO.class)
-  @JWTRequired(acceptedTokens = {Audience.API, Audience.JOB}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
-  @ApiKeyRequired(acceptedScopes = {ApiScope.USER}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
-  public Response getSecret(@PathParam("secretName") String name, @Context SecurityContext sc) throws UserException {
+  @JWTRequired(acceptedTokens = {Audience.API, Audience.JOB},
+    allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
+  @ApiKeyRequired(acceptedScopes = {ApiScope.USER}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
+  public Response getSecret(@PathParam("secretName") String name,
+                            @Context HttpServletRequest req,
+                            @Context SecurityContext sc) throws UserException {
     Users user = jWTHelper.getUserPrincipal(sc);
     SecretPlaintext secret = secretsController.get(user, name);
     SecretDTO dto = secretsBuilder.build(Arrays.asList(secret), true);
@@ -283,10 +298,11 @@ public class UsersResource {
   @Path("secrets/{secretName}")
   @Produces(MediaType.APPLICATION_JSON)
   @ApiOperation(value = "Deletes a secret by its name")
-  @JWTRequired(acceptedTokens = {Audience.API, Audience.JOB}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
-  @ApiKeyRequired(acceptedScopes = {ApiScope.USER}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
+  @JWTRequired(acceptedTokens = {Audience.API, Audience.JOB},
+    allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
+  @ApiKeyRequired(acceptedScopes = {ApiScope.USER}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
   public Response deleteSecret(@PathParam("secretName") String name, @Context HttpServletRequest req,
-    @Context SecurityContext sc) throws UserException {
+                               @Context SecurityContext sc) throws UserException {
     Users user = jWTHelper.getUserPrincipal(sc);
     secretsController.delete(user, name);
     return Response.ok().build();
@@ -296,8 +312,11 @@ public class UsersResource {
   @Path("secrets")
   @Produces(MediaType.APPLICATION_JSON)
   @ApiOperation(value = "Deletes all secrets of a user")
-  @ApiKeyRequired(acceptedScopes = {ApiScope.USER}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
-  public Response deleteAllSecrets(@Context SecurityContext sc, @Context HttpServletRequest req) throws UserException {
+  @JWTRequired(acceptedTokens = {Audience.API, Audience.JOB},
+    allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
+  @ApiKeyRequired(acceptedScopes = {ApiScope.USER}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
+  public Response deleteAllSecrets(@Context SecurityContext sc,
+    @Context HttpServletRequest req) throws UserException {
     Users user = jWTHelper.getUserPrincipal(sc);
     secretsController.deleteAll(user);
     return Response.ok().build();

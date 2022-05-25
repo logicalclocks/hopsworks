@@ -75,6 +75,7 @@ import javax.ejb.EJB;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.enterprise.context.RequestScoped;
+import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.GET;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
@@ -142,9 +143,11 @@ public class DownloadService {
   @Produces(MediaType.APPLICATION_JSON)
   @ApiOperation(value = "Get a one time download token.", response = RESTApiJsonResponse.class)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
-  @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
-  public Response getDownloadToken(@PathParam("path") String path, @QueryParam("type") DatasetType datasetType,
-    @Context SecurityContext sc) throws DatasetException, ProjectException {
+  @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
+  public Response getDownloadToken(@PathParam("path") String path,
+                                   @QueryParam("type") DatasetType datasetType,
+                                   @Context HttpServletRequest req,
+                                   @Context SecurityContext sc) throws DatasetException, ProjectException {
     if(!settings.isDownloadAllowed()){
       throw new DatasetException(RESTCodes.DatasetErrorCode.DOWNLOAD_NOT_ALLOWED, Level.FINEST);
     }
@@ -197,10 +200,14 @@ public class DownloadService {
   @Produces({MediaType.APPLICATION_OCTET_STREAM, MediaType.APPLICATION_JSON})
   @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
   @ApiOperation(value = "Download file.", response = StreamingOutput.class)
-  @JWTRequired(acceptedTokens = {Audience.API, Audience.JOB}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
-  @ApiKeyRequired(acceptedScopes = {ApiScope.DATASET_VIEW}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
-  public Response downloadFromHDFS(@PathParam("path") String path, @QueryParam("type") DatasetType datasetType,
-    @Context SecurityContext sc) throws DatasetException, ProjectException {
+  @JWTRequired(acceptedTokens = {Audience.API, Audience.JOB},
+    allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
+  @ApiKeyRequired(acceptedScopes = {ApiScope.DATASET_VIEW},
+    allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
+  public Response downloadFromHDFS(@PathParam("path") String path,
+                                   @QueryParam("type") DatasetType datasetType,
+                                   @Context HttpServletRequest req,
+                                   @Context SecurityContext sc) throws DatasetException, ProjectException {
     if (!settings.isDownloadAllowed()) {
       throw new DatasetException(RESTCodes.DatasetErrorCode.DOWNLOAD_NOT_ALLOWED, Level.FINEST);
     }

@@ -62,6 +62,7 @@ import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.enterprise.context.RequestScoped;
 import javax.inject.Inject;
+import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.DefaultValue;
@@ -145,11 +146,14 @@ public class DatasetResource {
   @Produces(MediaType.APPLICATION_JSON)
   @ApiOperation(value = "Get all datasets.", response = DatasetDTO.class)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
-  @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
-  @ApiKeyRequired( acceptedScopes = {ApiScope.DATASET_VIEW}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
-  public Response get(@BeanParam Pagination pagination, @BeanParam DatasetBeanParam datasetBeanParam,
-    @Context UriInfo uriInfo, @Context SecurityContext sc)
-    throws ProjectException, DatasetException, MetadataException, SchematizedTagException {
+  @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
+  @ApiKeyRequired(acceptedScopes = {ApiScope.DATASET_VIEW},
+    allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
+  public Response get(@BeanParam Pagination pagination,
+                      @BeanParam DatasetBeanParam datasetBeanParam,
+                      @Context HttpServletRequest req,
+                      @Context UriInfo uriInfo, @Context SecurityContext sc)
+      throws ProjectException, DatasetException, MetadataException, SchematizedTagException {
     Users user = jWTHelper.getUserPrincipal(sc);
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.DATASET);
     resourceRequest.setOffset(pagination.getOffset());
@@ -173,13 +177,21 @@ public class DatasetResource {
   @Produces(MediaType.APPLICATION_JSON)
   @ApiOperation(value = "Get or list files in path.", response = InodeDTO.class)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
-  @JWTRequired(acceptedTokens = {Audience.API, Audience.JOB}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
-  @ApiKeyRequired( acceptedScopes = {ApiScope.DATASET_VIEW}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
-  public Response getByPath(@PathParam("path") String path, @QueryParam("type") DatasetType datasetType,
-    @QueryParam("action") DatasetActions.Get action, @QueryParam("mode") FilePreviewMode mode,
-    @BeanParam Pagination pagination, @BeanParam InodeBeanParam inodeBeanParam,
-    @BeanParam DatasetExpansionBeanParam datasetExpansionBeanParam, @Context UriInfo uriInfo,
-    @Context SecurityContext sc) throws DatasetException, ProjectException, MetadataException, SchematizedTagException {
+  @JWTRequired(acceptedTokens = {Audience.API, Audience.JOB},
+    allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
+  @ApiKeyRequired(acceptedScopes = {ApiScope.DATASET_VIEW},
+    allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
+  public Response getByPath(@PathParam("path") String path,
+                            @QueryParam("type") DatasetType datasetType,
+                            @QueryParam("action") DatasetActions.Get action,
+                            @QueryParam("mode") FilePreviewMode mode,
+                            @BeanParam Pagination pagination,
+                            @BeanParam InodeBeanParam inodeBeanParam,
+                            @BeanParam DatasetExpansionBeanParam datasetExpansionBeanParam,
+                            @Context UriInfo uriInfo,
+                            @Context HttpServletRequest req,
+                            @Context SecurityContext sc)
+      throws DatasetException, ProjectException, MetadataException, SchematizedTagException {
     Users user = jwtHelper.getUserPrincipal(sc);
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.INODES);
     resourceRequest.setExpansions(datasetExpansionBeanParam.getResources());
@@ -219,9 +231,12 @@ public class DatasetResource {
   @Produces(MediaType.APPLICATION_JSON)
   @ApiOperation(value = "Post an action on a file, dir or dataset.")
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
-  @JWTRequired(acceptedTokens = {Audience.API, Audience.JOB}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
-  @ApiKeyRequired( acceptedScopes = {ApiScope.DATASET_CREATE}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
+  @JWTRequired(acceptedTokens = {Audience.API, Audience.JOB},
+    allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
+  @ApiKeyRequired(acceptedScopes = {ApiScope.DATASET_CREATE},
+    allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
   public Response postByPath(@Context UriInfo uriInfo, @Context SecurityContext sc,
+                             @Context HttpServletRequest req,
                              @PathParam("path") String path,
                              @QueryParam("type") DatasetType datasetType,
                              @QueryParam("target_project") String targetProjectName,
@@ -355,8 +370,10 @@ public class DatasetResource {
   @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
   @ApiOperation(value = "Set permissions (potentially with sticky bit) for datasets",
     notes = "Allow data scientists to create and modify own files in dataset.", response = DatasetDTO.class)
-  @JWTRequired(acceptedTokens={Audience.API, Audience.JOB}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
-  @ApiKeyRequired( acceptedScopes = {ApiScope.DATASET_CREATE}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
+  @JWTRequired(acceptedTokens = {Audience.API, Audience.JOB},
+    allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
+  @ApiKeyRequired(acceptedScopes = {ApiScope.DATASET_CREATE},
+    allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
   public Response update(@PathParam("path") String path, @QueryParam("type") DatasetType datasetType,
                   @QueryParam("action") DatasetActions.Put action, @QueryParam("description") String description,
                   @DefaultValue("READ_ONLY") @QueryParam("permissions") DatasetAccessPermission datasetPermissions,
@@ -396,11 +413,16 @@ public class DatasetResource {
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
   @ApiOperation(value = "Delete/unshare dataset")
-  @JWTRequired(acceptedTokens={Audience.API, Audience.JOB}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
-  @ApiKeyRequired( acceptedScopes = {ApiScope.DATASET_DELETE}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
-  public Response delete(@PathParam("path") String path, @QueryParam("type") DatasetType datasetType,
-    @QueryParam("action") DatasetActions.Delete action, @QueryParam("target_project") String targetProject,
-    @Context SecurityContext sc) throws DatasetException, ProjectException {
+  @JWTRequired(acceptedTokens = {Audience.API, Audience.JOB},
+    allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
+  @ApiKeyRequired(acceptedScopes = {ApiScope.DATASET_DELETE},
+    allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
+  public Response delete(@PathParam("path") String path,
+                         @QueryParam("type") DatasetType datasetType,
+                         @QueryParam("action") DatasetActions.Delete action,
+                         @QueryParam("target_project") String targetProject,
+                         @Context HttpServletRequest req,
+                         @Context SecurityContext sc) throws DatasetException, ProjectException {
     DatasetPath datasetPath = datasetHelper.getDatasetPath(this.getProject(), path, datasetType);
     Users user = jwtHelper.getUserPrincipal(sc);
     Project project = this.getProject();

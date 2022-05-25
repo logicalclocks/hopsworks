@@ -450,7 +450,7 @@ describe "On #{ENV['OS']}" do
             res = json_body[:items]
             res.each do | u |
               role = get_roles(u[:email])            
-              expect(role & ['HOPS_ADMIN', 'AGENT']).not_to be_empty # should be admin or agent to be returned
+              expect(role & ['HOPS_ADMIN', 'AGENT', 'HOPS_SERVICE_USER']).not_to be_empty # should be admin or agent to be returned
             end
           end
           it 'should only get users not in role hops_admin' do
@@ -458,7 +458,7 @@ describe "On #{ENV['OS']}" do
             res = json_body[:items]
             res.each do | u |
               role = get_roles(u[:email])
-              expect(role & ['HOPS_USER', 'AGENT']).not_to be_empty # should be user or agent to be returned
+              expect(role & ['HOPS_USER', 'AGENT', 'HOPS_SERVICE_USER']).not_to be_empty # should be user or agent to be returned
             end
           end
           it 'should only get users not in role agent, cluster_agent' do
@@ -466,7 +466,7 @@ describe "On #{ENV['OS']}" do
             res = json_body[:items]
             res.each do | u |
               role = get_roles(u[:email])
-              expect(role & ["HOPS_ADMIN", "HOPS_USER"]).not_to be_empty # should be user or admin to be returned 
+              expect(role & ['HOPS_ADMIN', 'HOPS_USER', 'HOPS_SERVICE_USER']).not_to be_empty # should be user or admin to be returned
             end
           end
           it 'should only get users not in role hops_admin, agent and cluster_agent' do
@@ -474,11 +474,11 @@ describe "On #{ENV['OS']}" do
             res = json_body[:items]
             res.each do | u |
               role = get_roles(u[:email])
-              expect(role & ['HOPS_USER']).not_to be_empty # should be user to be returned
+              expect(role & ['HOPS_USER', 'HOPS_SERVICE_USER']).not_to be_empty # should be user to be returned
             end
           end
           it 'should only get users not in role hops_admin and hops_user' do
-            get "#{ENV['HOPSWORKS_API']}/users?filter_by=role_neq:hops_admin,hops_user"
+            get "#{ENV['HOPSWORKS_API']}/users?filter_by=role_neq:hops_admin,hops_user,hops_service_user"
             res = json_body[:items]
             res.each do | u |
               role = get_roles(u[:email])

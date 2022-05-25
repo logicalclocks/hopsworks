@@ -311,4 +311,10 @@ module JobHelper
   def get_default_job_configuration(project_id, job_type)
     get "#{ENV['HOPSWORKS_API']}/project/#{project_id}/jobs/#{job_type}/configuration"
   end
+
+  def create_dummy_job(project, job_name, job_conf)
+    put "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/jobs/#{job_name}", job_conf
+    expect_status_details(201)
+    json_body
+  end
 end

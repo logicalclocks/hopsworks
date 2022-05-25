@@ -76,6 +76,7 @@ import io.hops.hopsworks.persistence.entity.kafka.TopicAcls;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.user.security.apiKey.ApiScope;
 import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiParam;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.zookeeper.KeeperException;
 
@@ -83,15 +84,18 @@ import javax.ejb.EJB;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.enterprise.context.RequestScoped;
+import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
+import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.MediaType;
@@ -149,9 +153,15 @@ public class KafkaResource {
   @Path("/clusterinfo")
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
-  @JWTRequired(acceptedTokens={Audience.API, Audience.JOB}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
-  @ApiKeyRequired(acceptedScopes = {ApiScope.KAFKA}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
-  public Response getBrokers(@Context UriInfo uriInfo, @Context SecurityContext sc)
+  @JWTRequired(acceptedTokens = {Audience.API, Audience.JOB},
+    allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
+  @ApiKeyRequired(acceptedScopes = {ApiScope.KAFKA},
+    allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
+  public Response getBrokers(@Context UriInfo uriInfo,
+                             @Context HttpServletRequest req,
+                             @Context SecurityContext sc,
+                             @ApiParam(value = "external", example = "false")
+                             @QueryParam("external") @DefaultValue("false") Boolean externalListeners)
     throws InterruptedException, IOException, KeeperException {
     KafkaClusterInfoDTO dto = kafkaClusterInfoBuilder.build(
       uriInfo, project, new ArrayList<>(kafkaBrokers.getBrokerEndpoints()));
@@ -163,12 +173,15 @@ public class KafkaResource {
   @Path("/topics")
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
-  @JWTRequired(acceptedTokens={Audience.API, Audience.JOB}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
-  @ApiKeyRequired(acceptedScopes = {ApiScope.KAFKA}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
-  public Response getTopics(
-    @Context UriInfo uriInfo,
-    @BeanParam Pagination pagination,
-    @BeanParam TopicsBeanParam topicsBeanParam, @Context SecurityContext sc) {
+  @JWTRequired(acceptedTokens = {Audience.API, Audience.JOB},
+    allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
+  @ApiKeyRequired(acceptedScopes = {ApiScope.KAFKA},
+    allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
+  public Response getTopics(@Context UriInfo uriInfo,
+                            @BeanParam Pagination pagination,
+                            @BeanParam TopicsBeanParam topicsBeanParam,
+                            @Context HttpServletRequest req,
+                            @Context SecurityContext sc) {
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.KAFKA);
     resourceRequest.setOffset(pagination.getOffset());
     resourceRequest.setLimit(pagination.getLimit());
@@ -184,10 +197,12 @@ public class KafkaResource {
   @Consumes(MediaType.APPLICATION_JSON)
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER})
-  @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
-  @ApiKeyRequired(acceptedScopes = {ApiScope.KAFKA}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
-  public Response createTopic(TopicDTO topicDto, @Context UriInfo uriInfo, @Context SecurityContext sc)
-    throws KafkaException, ProjectException, UserException {
+  @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
+  @ApiKeyRequired(acceptedScopes = {ApiScope.KAFKA},
+    allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
+  public Response createTopic(TopicDTO topicDto, @Context UriInfo uriInfo,
+                              @Context HttpServletRequest req,
+                              @Context SecurityContext sc) throws KafkaException, ProjectException, UserException {
     kafkaController.createTopic(project, topicDto);
     URI uri = uriInfo.getAbsolutePathBuilder().path(topicDto.getName()).build();
     topicDto.setHref(uri);
@@ -199,9 +214,12 @@ public class KafkaResource {
   @Path("/topics/{topic}")
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER})
-  @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
-  @ApiKeyRequired(acceptedScopes = {ApiScope.KAFKA}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
-  public Response removeTopic(@PathParam("topic") String topicName, @Context SecurityContext sc) throws KafkaException {
+  @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
+  @ApiKeyRequired(acceptedScopes = {ApiScope.KAFKA},
+    allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
+  public Response removeTopic(@PathParam("topic") String topicName,
+                              @Context HttpServletRequest req,
+                              @Context SecurityContext sc) throws KafkaException {
     kafkaController.removeTopicFromProject(project, topicName);
     return Response.noContent().build();
   }
@@ -211,10 +229,14 @@ public class KafkaResource {
   @Path("/topics/{topic}")
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
-  @JWTRequired(acceptedTokens={Audience.API, Audience.JOB}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
-  @ApiKeyRequired(acceptedScopes = {ApiScope.KAFKA}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
-  public Response getTopic(@Context UriInfo uriInfo, @PathParam("topic") String topicName, @Context SecurityContext sc)
-    throws KafkaException {
+  @JWTRequired(acceptedTokens = {Audience.API, Audience.JOB},
+    allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
+  @ApiKeyRequired(acceptedScopes = {ApiScope.KAFKA},
+    allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
+  public Response getTopic(@Context UriInfo uriInfo,
+                           @PathParam("topic") String topicName,
+                           @Context HttpServletRequest req,
+                           @Context SecurityContext sc) throws KafkaException {
     PartitionDetailsDTO dto = topicsBuilder.buildTopicDetails(uriInfo, project, topicName);
     return Response.ok().entity(dto).build();
   }
@@ -224,7 +246,7 @@ public class KafkaResource {
   @Path("/topics/{topic}/shared/{destProjectName}")
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER})
-  @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
+  @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   public Response shareTopic(@PathParam("topic") String topicName, @PathParam("destProjectName") String destProjectName,
     @Context UriInfo uriInfo, @Context SecurityContext sc) throws KafkaException, ProjectException, UserException {
     URI uri = topicsBuilder.sharedProjectUri(uriInfo, project, topicName).build();
@@ -304,13 +326,15 @@ public class KafkaResource {
   @Path("/topics/{topic}/acls")
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
-  @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
-  @ApiKeyRequired(acceptedScopes = {ApiScope.KAFKA}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
+  @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
+  @ApiKeyRequired(acceptedScopes = {ApiScope.KAFKA},
+    allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
   public Response getTopicAcls(@Context UriInfo uriInfo,
-    @PathParam("topic") String topicName,
-    @BeanParam Pagination pagination,
-    @BeanParam AclsBeanParam aclsBeanParam, @Context SecurityContext sc) {
-    
+                               @PathParam("topic") String topicName,
+                               @BeanParam Pagination pagination,
+                               @BeanParam AclsBeanParam aclsBeanParam,
+                               @Context HttpServletRequest req,
+                               @Context SecurityContext sc) {
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.KAFKA);
     resourceRequest.setOffset(pagination.getOffset());
     resourceRequest.setLimit(pagination.getLimit());
@@ -326,10 +350,12 @@ public class KafkaResource {
   @Consumes(MediaType.APPLICATION_JSON)
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER})
-  @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
-  @ApiKeyRequired(acceptedScopes = {ApiScope.KAFKA}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
+  @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
+  @ApiKeyRequired(acceptedScopes = {ApiScope.KAFKA},
+    allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
   public Response addAclsToTopic(@Context UriInfo uriInfo, @PathParam("topic") String topicName, AclDTO aclDto,
-    @Context SecurityContext sc) throws KafkaException, ProjectException, UserException {
+                                 @Context HttpServletRequest req,
+                                 @Context SecurityContext sc) throws KafkaException, ProjectException, UserException {
     Pair<TopicAcls, Response.Status> aclTuple = kafkaController.addAclsToTopic(topicName, project.getId(), aclDto);
     AclDTO dto = aclBuilder.build(uriInfo, aclTuple.getLeft());
     return Response.status(aclTuple.getRight()).entity(dto).build();
@@ -341,10 +367,12 @@ public class KafkaResource {
   @Consumes(MediaType.APPLICATION_JSON)
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER})
-  @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
-  @ApiKeyRequired(acceptedScopes = {ApiScope.KAFKA}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
+  @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
+  @ApiKeyRequired(acceptedScopes = {ApiScope.KAFKA},
+    allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
   public Response removeAclsFromTopic(@PathParam("topic") String topicName, @PathParam("id") Integer aclId,
-    @Context SecurityContext sc) throws KafkaException {
+                                      @Context HttpServletRequest req,
+                                      @Context SecurityContext sc) throws KafkaException {
     kafkaController.removeAclFromTopic(topicName, aclId);
     return Response.noContent().build();
   }
@@ -354,12 +382,14 @@ public class KafkaResource {
   @Path("/topics/{topic}/acls/{id}")
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER})
-  @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
-  @ApiKeyRequired(acceptedScopes = {ApiScope.KAFKA}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
+  @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
+  @ApiKeyRequired(acceptedScopes = {ApiScope.KAFKA},
+    allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
   public Response getTopicAcl(@Context UriInfo uriInfo,
-    @PathParam("topic") String topicName,
-    @PathParam("id") Integer aclId, @Context SecurityContext sc) throws KafkaException {
-    
+                              @PathParam("topic") String topicName,
+                              @PathParam("id") Integer aclId,
+                              @Context HttpServletRequest req,
+                              @Context SecurityContext sc) throws KafkaException {
     AclDTO dto = aclBuilder.getAclByTopicAndId(uriInfo, project, topicName, aclId);
     return Response.ok().entity(dto).build();
   }
@@ -370,10 +400,13 @@ public class KafkaResource {
   @Consumes(MediaType.APPLICATION_JSON)
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER})
-  @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
-  @ApiKeyRequired(acceptedScopes = {ApiScope.KAFKA}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
+  @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
+  @ApiKeyRequired(acceptedScopes = {ApiScope.KAFKA},
+    allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
   public Response updateTopicAcls(@Context UriInfo uriInfo, @PathParam("topic") String topicName,
-    @PathParam("id") Integer aclId, AclDTO aclDto, @Context SecurityContext sc)
+                                  @PathParam("id") Integer aclId, AclDTO aclDto,
+                                  @Context HttpServletRequest req,
+                                  @Context SecurityContext sc)
       throws KafkaException, ProjectException, UserException {
     
     Integer updatedAclId = kafkaController.updateTopicAcl(project, topicName, aclId, aclDto);
@@ -391,9 +424,12 @@ public class KafkaResource {
   @Consumes(MediaType.APPLICATION_JSON)
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
-  @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
-  @ApiKeyRequired(acceptedScopes = {ApiScope.KAFKA}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
-  public Response getSchema(@PathParam("id") Integer id, @Context SecurityContext sc) {
+  @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
+  @ApiKeyRequired(acceptedScopes = {ApiScope.KAFKA},
+    allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
+  public Response getSchema(@PathParam("id") Integer id,
+                            @Context HttpServletRequest req,
+                            @Context SecurityContext sc) {
     try {
       SubjectDTO dto = schemasController.findSchemaById(project, id);
       return Response.ok().entity(dto).build();
@@ -409,9 +445,11 @@ public class KafkaResource {
   @Path("/subjects")
   @Produces(MediaType.TEXT_PLAIN)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
-  @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
-  @ApiKeyRequired(acceptedScopes = {ApiScope.KAFKA}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
-  public Response getSubjects(@Context SecurityContext sc) {
+  @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
+  @ApiKeyRequired(acceptedScopes = {ApiScope.KAFKA},
+    allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
+  public Response getSubjects(@Context SecurityContext sc,
+                              @Context HttpServletRequest req) {
     List<String> subjects = subjectsController.getSubjects(project);
     String array = Arrays.toString(subjects.toArray());
     GenericEntity<String> entity = new GenericEntity<String>(array) {};
@@ -424,10 +462,12 @@ public class KafkaResource {
   @Consumes({MediaType.APPLICATION_JSON, "application/vnd.schemaregistry.v1+json"})
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
-  @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
-  @ApiKeyRequired(acceptedScopes = {ApiScope.KAFKA}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
+  @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
+  @ApiKeyRequired(acceptedScopes = {ApiScope.KAFKA},
+    allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
   public Response checkIfSubjectRegistered(@PathParam("subject") String subject, SubjectDTO dto,
-    @Context SecurityContext sc) {
+                                           @Context HttpServletRequest req,
+                                           @Context SecurityContext sc) {
     try {
       SubjectDTO res = subjectsController.checkIfSchemaRegistered(project, subject, dto.getSchema());
       return Response.ok().entity(res).build();
@@ -443,10 +483,12 @@ public class KafkaResource {
   @Path("/subjects/{subject}")
   @Produces({MediaType.TEXT_PLAIN, MediaType.APPLICATION_JSON})
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
-  @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
-  @ApiKeyRequired(acceptedScopes = {ApiScope.KAFKA}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
-  public Response deleteSubject(@PathParam("subject") String subject, @Context SecurityContext sc)
-    throws KafkaException {
+  @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
+  @ApiKeyRequired(acceptedScopes = {ApiScope.KAFKA},
+    allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
+  public Response deleteSubject(@PathParam("subject") String subject,
+                                @Context HttpServletRequest req,
+                                @Context SecurityContext sc) throws KafkaException {
     try {
       List<Integer> versions = subjectsController.deleteSubject(project, subject);
       String array = Arrays.toString(versions.toArray());
@@ -464,10 +506,12 @@ public class KafkaResource {
   @Path("/subjects/{subject}/versions/{version}")
   @Produces({MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN})
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
-  @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
-  @ApiKeyRequired(acceptedScopes = {ApiScope.KAFKA}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
+  @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
+  @ApiKeyRequired(acceptedScopes = {ApiScope.KAFKA},
+    allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
   public Response deleteSubjectsVersion(@PathParam("subject") String subject, @PathParam("version") String version,
-    @Context SecurityContext sc) throws KafkaException {
+                                        @Context HttpServletRequest req,
+                                        @Context SecurityContext sc) throws KafkaException {
     try {
       Integer deleted = subjectsController.deleteSubjectsVersion(project, subject, version);
       GenericEntity<Integer> entity = new GenericEntity<Integer>(deleted) {};
@@ -485,10 +529,12 @@ public class KafkaResource {
   @Consumes({MediaType.APPLICATION_JSON, "application/vnd.schemaregistry.v1+json"})
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
-  @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
-  @ApiKeyRequired(acceptedScopes = {ApiScope.KAFKA}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
-  public Response postNewSchema(@PathParam("subject") String subject, SubjectDTO dto, @Context SecurityContext sc)
-    throws KafkaException {
+  @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
+  @ApiKeyRequired(acceptedScopes = {ApiScope.KAFKA},
+    allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
+  public Response postNewSchema(@PathParam("subject") String subject, SubjectDTO dto,
+                                @Context HttpServletRequest req,
+                                @Context SecurityContext sc) throws KafkaException {
     try {
       SubjectDTO res = subjectsController.registerNewSubject(project, subject, dto.getSchema(), false);
       return Response.ok().entity(res).build();
@@ -505,9 +551,12 @@ public class KafkaResource {
   @Consumes(MediaType.APPLICATION_JSON)
   @Produces(MediaType.TEXT_PLAIN)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
-  @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
-  @ApiKeyRequired(acceptedScopes = {ApiScope.KAFKA}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
-  public Response getSubjectVersions(@PathParam("subject") String subject, @Context SecurityContext sc) {
+  @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
+  @ApiKeyRequired(acceptedScopes = {ApiScope.KAFKA},
+    allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
+  public Response getSubjectVersions(@PathParam("subject") String subject,
+                                     @Context HttpServletRequest req,
+                                     @Context SecurityContext sc) {
     try {
       List<Integer> versions = subjectsController.getSubjectVersions(project, subject);
       String array = Arrays.toString(versions.toArray());
@@ -526,10 +575,13 @@ public class KafkaResource {
   @Consumes(MediaType.APPLICATION_JSON)
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
-  @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
-  @ApiKeyRequired(acceptedScopes = {ApiScope.KAFKA}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
-  public Response getSubjectDetails(@PathParam("subject") String subject, @PathParam("version") String version,
-    @Context SecurityContext sc) {
+  @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
+  @ApiKeyRequired(acceptedScopes = {ApiScope.KAFKA},
+    allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
+  public Response getSubjectDetails(@PathParam("subject") String subject,
+                                    @PathParam("version") String version,
+                                    @Context HttpServletRequest req,
+                                    @Context SecurityContext sc) {
     try {
       SubjectDTO dto = subjectsController.getSubjectDetails(project, subject, version);
       return Response.ok().entity(dto).build();
@@ -546,10 +598,13 @@ public class KafkaResource {
   @Consumes(MediaType.APPLICATION_JSON)
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
-  @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
-  @ApiKeyRequired(acceptedScopes = {ApiScope.KAFKA}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
-  public Response getSchema(@PathParam("subject") String subject, @PathParam("version") String version,
-    @Context SecurityContext sc) {
+  @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
+  @ApiKeyRequired(acceptedScopes = {ApiScope.KAFKA},
+    allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
+  public Response getSchema(@PathParam("subject") String subject,
+                            @PathParam("version") String version,
+                            @Context HttpServletRequest req,
+                            @Context SecurityContext sc) {
     try {
       SubjectDTO dto = subjectsController.getSubjectDetails(project, subject, version);
       GenericEntity<String> entity = new GenericEntity<String>(dto.getSchema()) {};
@@ -567,10 +622,13 @@ public class KafkaResource {
   @Consumes({MediaType.APPLICATION_JSON, "application/vnd.schemaregistry.v1+json"})
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
-  @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
-  @ApiKeyRequired(acceptedScopes = {ApiScope.KAFKA}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
+  @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
+  @ApiKeyRequired(acceptedScopes = {ApiScope.KAFKA},
+    allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
   public Response checkSchemaCompatibility(@PathParam("subject") String subject,
-    @PathParam("version") String version, SubjectDTO dto, @Context SecurityContext sc) {
+                                           @PathParam("version") String version, SubjectDTO dto,
+                                           @Context HttpServletRequest req,
+                                           @Context SecurityContext sc) {
     try {
       CompatibilityCheck isCompatible =
         subjectsController.checkIfSchemaCompatible(project, subject, version, dto.getSchema());
@@ -588,9 +646,10 @@ public class KafkaResource {
   @Consumes(MediaType.APPLICATION_JSON)
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
-  @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
-  @ApiKeyRequired(acceptedScopes = {ApiScope.KAFKA}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
-  public Response getProjectCompatibility(@Context SecurityContext sc) {
+  @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
+  @ApiKeyRequired(acceptedScopes = {ApiScope.KAFKA},
+    allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
+  public Response getProjectCompatibility(@Context HttpServletRequest req, @Context SecurityContext sc) {
     try {
       CompatibilityLevel dto = subjectsCompatibilityController.getProjectCompatibilityLevel(project);
       return Response.ok().entity(dto).build();
@@ -607,7 +666,7 @@ public class KafkaResource {
   @Consumes(MediaType.APPLICATION_JSON)
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER})
-  @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN"})
+  @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN"})
   @ApiKeyRequired(acceptedScopes = {ApiScope.KAFKA}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   public Response setProjectCompatibility(Compatibility dto, @Context SecurityContext sc) {
     try {
@@ -626,9 +685,12 @@ public class KafkaResource {
   @Consumes(MediaType.APPLICATION_JSON)
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
-  @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
-  @ApiKeyRequired(acceptedScopes = {ApiScope.KAFKA}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
-  public Response getSubjectCompatibility(@PathParam("subject") String subject, @Context SecurityContext sc) {
+  @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
+  @ApiKeyRequired(acceptedScopes = {ApiScope.KAFKA},
+    allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
+  public Response getSubjectCompatibility(@PathParam("subject") String subject,
+                                          @Context HttpServletRequest req,
+                                          @Context SecurityContext sc) {
     try {
       CompatibilityLevel dto = subjectsCompatibilityController.getSubjectCompatibility(project, subject);
       return Response.ok().entity(dto).build();
@@ -664,10 +726,13 @@ public class KafkaResource {
   @Path("/topics/{topic}/subjects")
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
-  @JWTRequired(acceptedTokens = {Audience.API, Audience.JOB}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
-  @ApiKeyRequired(acceptedScopes = {ApiScope.KAFKA}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "AGENT"})
-  public Response getTopicSubject(@PathParam("topic") String topic, @Context SecurityContext sc) throws KafkaException,
-      ProjectException {
+  @JWTRequired(acceptedTokens = {Audience.API, Audience.JOB},
+    allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
+  @ApiKeyRequired(acceptedScopes = {ApiScope.KAFKA},
+    allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "AGENT", "HOPS_SERVICE_USER"})
+  public Response getTopicSubject(@PathParam("topic") String topic,
+                                  @Context HttpServletRequest req,
+                                  @Context SecurityContext sc) throws KafkaException, ProjectException {
     SubjectDTO subjectDTO = kafkaController.getSubjectForTopic(project, topic);
     return Response.ok().entity(subjectDTO).build();
   }
@@ -677,10 +742,14 @@ public class KafkaResource {
   @Path("/topics/{topic}/subjects/{subject}/versions/{version}")
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
-  @JWTRequired(acceptedTokens = {Audience.API, Audience.JOB}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
-  @ApiKeyRequired(acceptedScopes = {ApiScope.KAFKA}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
+  @JWTRequired(acceptedTokens = {Audience.API, Audience.JOB},
+    allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
+  @ApiKeyRequired(acceptedScopes = {ApiScope.KAFKA},
+    allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
   public Response updateSubjectVersion(@PathParam("topic") String topic, @PathParam("subject") String subject,
-    @PathParam("version") Integer version, @Context SecurityContext sc) throws KafkaException {
+                                       @PathParam("version") Integer version,
+                                       @Context HttpServletRequest req,
+                                       @Context SecurityContext sc) throws KafkaException {
     try {
       kafkaController.updateTopicSubjectVersion(project, topic, subject, version);
       return Response.ok().build();

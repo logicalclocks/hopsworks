@@ -73,6 +73,7 @@ import javax.ejb.EJB;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.enterprise.context.RequestScoped;
+import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.FormParam;
 import javax.ws.rs.GET;
@@ -126,10 +127,10 @@ public class ProjectMembersService {
 
   @GET
   @Produces(MediaType.APPLICATION_JSON)
-  @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
   @JWTRequired(acceptedTokens = {Audience.API},
-      allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
-  public Response findMembersByProjectID(@Context SecurityContext sc) {
+    allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
+  public Response findMembersByProjectID(@Context HttpServletRequest req, @Context SecurityContext sc) {
     List<ProjectTeam> list = projectController.findProjectTeamById(this.projectId);
     GenericEntity<List<ProjectTeam>> projects = new GenericEntity<List<ProjectTeam>>(list) {
     };
@@ -138,10 +139,11 @@ public class ProjectMembersService {
 
   @POST
   @Produces(MediaType.APPLICATION_JSON)
+  @JWTRequired(acceptedTokens = {Audience.API},
+    allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER})
-  @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
-  public Response addMembers(MembersDTO members, @Context SecurityContext sc) throws KafkaException,
-    ProjectException, UserException, FeaturestoreException {
+  public Response addMembers(MembersDTO members, @Context HttpServletRequest req, @Context SecurityContext sc)
+    throws KafkaException, ProjectException, UserException, FeaturestoreException {
 
     Project project = projectController.findProjectById(this.projectId);
     RESTApiJsonResponse json = new RESTApiJsonResponse();
@@ -179,14 +181,17 @@ public class ProjectMembersService {
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
         json).build();
   }
-
+  
   @POST
   @Path("/{email}")
   @Produces(MediaType.APPLICATION_JSON)
+  @JWTRequired(acceptedTokens = {Audience.API},
+    allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER})
-  @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   public Response updateRoleByEmail(@PathParam("email") String email, @FormParam("role") String role,
-      @Context SecurityContext sc) throws ProjectException, UserException, FeaturestoreException, IOException {
+                                    @Context HttpServletRequest req,
+                                    @Context SecurityContext sc)
+      throws ProjectException, UserException, FeaturestoreException, IOException {
     Project project = projectController.findProjectById(this.projectId);
     RESTApiJsonResponse json = new RESTApiJsonResponse();
     Users user = jWTHelper.getUserPrincipal(sc);
@@ -207,11 +212,13 @@ public class ProjectMembersService {
   @DELETE
   @Path("/{email}")
   @Produces(MediaType.APPLICATION_JSON)
-  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   @JWTRequired(acceptedTokens = {Audience.API},
-      allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
-  public Response removeMembersByID(@PathParam("email") String email, @Context SecurityContext sc)
-    throws ProjectException, ServiceException, HopsSecurityException, UserException, GenericException, IOException,
+    allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
+  public Response removeMembersByID(@PathParam("email") String email,
+                                    @Context HttpServletRequest req,
+                                    @Context SecurityContext sc)
+      throws ProjectException, ServiceException, HopsSecurityException, UserException, GenericException, IOException,
     JobException, TensorBoardException, FeaturestoreException {
     Project project = projectController.findProjectById(this.projectId);
     RESTApiJsonResponse json = new RESTApiJsonResponse();
@@ -238,12 +245,15 @@ public class ProjectMembersService {
   }
   
   @GET
-  @Produces(MediaType.APPLICATION_JSON)
-  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
-  @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   @Path("/dataset/{name}")
+  @Produces(MediaType.APPLICATION_JSON)
+  @JWTRequired(acceptedTokens = {Audience.API},
+    allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   public Response getDatasetMembers(@PathParam("name") String dsName,
-    @QueryParam("type") DatasetType datasetType)
+                                    @QueryParam("type") DatasetType datasetType,
+                                    @Context HttpServletRequest req,
+                                    @Context SecurityContext sc)
     throws ProjectException, DatasetException {
     Project project = projectController.findProjectById(this.projectId);
     String path = Utils.getProjectPath(project.getName()) + dsName;

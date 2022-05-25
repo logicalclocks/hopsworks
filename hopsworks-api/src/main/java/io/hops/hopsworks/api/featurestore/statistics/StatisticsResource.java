@@ -52,6 +52,7 @@ import javax.ejb.EJB;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.enterprise.context.RequestScoped;
+import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DefaultValue;
@@ -118,9 +119,10 @@ public class StatisticsResource {
   @Produces(MediaType.APPLICATION_JSON)
   @ApiOperation(value = "Get all available statistics", response = StatisticsDTO.class)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
-  @JWTRequired(acceptedTokens = {Audience.API, Audience.JOB}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
+  @JWTRequired(acceptedTokens = {Audience.API, Audience.JOB},
+    allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
   @ApiKeyRequired(acceptedScopes = {ApiScope.DATASET_VIEW, ApiScope.FEATURESTORE},
-      allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
+    allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
   public Response get(@BeanParam Pagination pagination,
                       @BeanParam StatisticsBeanParam statisticsBeanParam,
                       @Context UriInfo uriInfo,
@@ -152,10 +154,12 @@ public class StatisticsResource {
   @Produces(MediaType.APPLICATION_JSON)
   @ApiOperation(value = "Register new statistics")
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
-  @JWTRequired(acceptedTokens = {Audience.API, Audience.JOB}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
-  @ApiKeyRequired( acceptedScopes = {ApiScope.DATASET_VIEW, ApiScope.FEATURESTORE},
-      allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
+  @JWTRequired(acceptedTokens = {Audience.API, Audience.JOB},
+    allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
+  @ApiKeyRequired(acceptedScopes = {ApiScope.DATASET_VIEW, ApiScope.FEATURESTORE},
+    allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
   public Response register(@Context UriInfo uriInfo,
+                           @Context HttpServletRequest req,
                            @Context SecurityContext sc,
                            StatisticsDTO statisticsDTO)
       throws FeaturestoreException, DatasetException, HopsSecurityException, IOException {
@@ -193,10 +197,13 @@ public class StatisticsResource {
   @Produces(MediaType.APPLICATION_JSON)
   @ApiOperation(value = "Setup job and trigger for computing statistics", response = JobDTO.class)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
-  @JWTRequired(acceptedTokens = {Audience.API, Audience.JOB}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
+  @JWTRequired(acceptedTokens = {Audience.API, Audience.JOB},
+    allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
   @ApiKeyRequired(acceptedScopes = {ApiScope.DATASET_VIEW, ApiScope.FEATURESTORE},
-      allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
-  public Response compute(@Context UriInfo uriInfo, @Context SecurityContext sc)
+    allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
+  public Response compute(@Context UriInfo uriInfo,
+                          @Context HttpServletRequest req,
+                          @Context SecurityContext sc)
       throws FeaturestoreException, ServiceException, JobException, ProjectException, GenericException {
     Users user = jWTHelper.getUserPrincipal(sc);
     Jobs job = fsJobManagerController.setupStatisticsJob(project, user, featurestore, featuregroup, trainingDataset);

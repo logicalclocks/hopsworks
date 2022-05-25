@@ -18,7 +18,7 @@ require 'json'
 
 module ApiKeyHelper
   @@api_key_resource = "#{ENV['HOPSWORKS_API']}/users/apiKey"
-  @@api_key_scopes = %w(JOB DATASET_VIEW DATASET_CREATE DATASET_DELETE SERVING)
+  @@api_key_scopes = %w(PROJECT JOB DATASET_VIEW DATASET_CREATE DATASET_DELETE SERVING)
 
   def set_api_key_to_header(key)
     Airborne.configure do |config|

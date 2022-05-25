@@ -41,6 +41,7 @@ import javax.ejb.EJB;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.enterprise.context.RequestScoped;
+import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
@@ -98,9 +99,11 @@ public class SilenceResource {
   @Produces(MediaType.APPLICATION_JSON)
   @ApiOperation(value = "Get all silences.", response = SilenceDTO.class)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
-  @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
+  @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
   public Response get(@BeanParam Pagination pagination, @BeanParam SilenceBeanParam silenceBeanParam,
-      @Context UriInfo uriInfo, @Context SecurityContext sc) throws AlertException, ProjectException {
+                      @Context HttpServletRequest req,
+                      @Context UriInfo uriInfo,
+                      @Context SecurityContext sc) throws AlertException, ProjectException {
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.SILENCES);
     resourceRequest.setOffset(pagination.getOffset());
     resourceRequest.setLimit(pagination.getLimit());
@@ -113,9 +116,10 @@ public class SilenceResource {
   @Produces(MediaType.APPLICATION_JSON)
   @ApiOperation(value = "Find silence by Id.", response = SilenceDTO.class)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
-  @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
+  @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
   public Response getById(@PathParam("silenceId") String silenceId, @Context UriInfo uriInfo,
-      @Context SecurityContext sc) throws AlertException, ProjectException {
+                          @Context HttpServletRequest req,
+                          @Context SecurityContext sc) throws AlertException, ProjectException {
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.SILENCES);
     SilenceDTO dto = silenceBuilder.build(uriInfo, resourceRequest, silenceId, getProject());
     return Response.ok().entity(dto).build();
@@ -126,9 +130,10 @@ public class SilenceResource {
   @Consumes(MediaType.APPLICATION_JSON)
   @ApiOperation(value = "Create a silence.", response = SilenceDTO.class)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER})
-  @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
-  public Response create(PostableSilenceDTO postableSilenceDTO, @Context UriInfo uriInfo, @Context SecurityContext sc)
-      throws AlertException, ProjectException {
+  @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
+  public Response create(PostableSilenceDTO postableSilenceDTO, @Context UriInfo uriInfo,
+                         @Context HttpServletRequest req,
+                         @Context SecurityContext sc) throws AlertException, ProjectException {
     if (postableSilenceDTO == null) {
       throw new AlertException(RESTCodes.AlertErrorCode.ILLEGAL_ARGUMENT, Level.FINE, "No payload.");
     }
@@ -149,9 +154,11 @@ public class SilenceResource {
   @Consumes(MediaType.APPLICATION_JSON)
   @ApiOperation(value = "Update a silence.", response = SilenceDTO.class)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER})
-  @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
+  @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
   public Response update(@PathParam("silenceId") String silenceId, PostableSilenceDTO postableSilenceDTO,
-      @Context UriInfo uriInfo, @Context SecurityContext sc) throws AlertException, ProjectException {
+                         @Context HttpServletRequest req,
+                         @Context UriInfo uriInfo, @Context SecurityContext sc)
+      throws AlertException, ProjectException {
     if (postableSilenceDTO == null) {
       throw new AlertException(RESTCodes.AlertErrorCode.ILLEGAL_ARGUMENT, Level.FINE, "No payload.");
     }
@@ -183,9 +190,10 @@ public class SilenceResource {
   @Path("{silenceId}")
   @ApiOperation(value = "Delete silence by Id.")
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER})
-  @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
+  @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
   public Response deleteById(@PathParam("silenceId") String silenceId, @Context UriInfo uriInfo,
-      @Context SecurityContext sc) throws AlertException, ProjectException {
+                             @Context HttpServletRequest req,
+                             @Context SecurityContext sc) throws AlertException, ProjectException {
     try {
       return alertManager.deleteSilence(silenceId, getProject());
     } catch (AlertManagerClientCreateException | AlertManagerUnreachableException e) {

@@ -47,6 +47,7 @@ import javax.ejb.EJB;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.enterprise.context.RequestScoped;
+import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
@@ -107,11 +108,13 @@ public class ReceiverResource {
   @Produces(MediaType.APPLICATION_JSON)
   @ApiOperation(value = "Get all receivers.", response = ReceiverDTO.class)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
-  @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
+  @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
   public Response get(@BeanParam Pagination pagination, @BeanParam ReceiverBeanParam receiverBeanParam,
-      @QueryParam("global") @DefaultValue("false") Boolean includeGlobal,
-      @QueryParam("expand") @DefaultValue("false") Boolean expand, @Context UriInfo uriInfo,
-      @Context SecurityContext sc) throws AlertException, ProjectException {
+                      @QueryParam("global") @DefaultValue("false") Boolean includeGlobal,
+                      @QueryParam("expand") @DefaultValue("false") Boolean expand,
+                      @Context UriInfo uriInfo,
+                      @Context HttpServletRequest req,
+                      @Context SecurityContext sc) throws AlertException, ProjectException {
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.RECEIVERS);
     resourceRequest.setOffset(pagination.getOffset());
     resourceRequest.setLimit(pagination.getLimit());
@@ -125,8 +128,11 @@ public class ReceiverResource {
   @Produces(MediaType.APPLICATION_JSON)
   @ApiOperation(value = "Get receiver by name.", response = ReceiverDTO.class)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
-  @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
-  public Response getByName(@PathParam("name") String name, @Context UriInfo uriInfo, @Context SecurityContext sc)
+  @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
+  public Response getByName(@PathParam("name") String name,
+                            @Context UriInfo uriInfo,
+                            @Context HttpServletRequest req,
+                            @Context SecurityContext sc)
       throws AlertException, ProjectException {
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.RECEIVERS);
     ReceiverDTO dto = receiverBuilder.build(uriInfo, resourceRequest, name, getProject());
@@ -138,8 +144,10 @@ public class ReceiverResource {
   @Produces(MediaType.APPLICATION_JSON)
   @ApiOperation(value = "Check if default receiver configured.", response = GlobalReceiverDefaults.class)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
-  @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
-  public Response getDefaults(@Context UriInfo uriInfo, @Context SecurityContext sc)
+  @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
+  public Response getDefaults(@Context UriInfo uriInfo,
+                              @Context HttpServletRequest req,
+                              @Context SecurityContext sc)
       throws AlertManagerConfigCtrlCreateException, AlertManagerConfigReadException {
     return Response.ok().entity(receiverBuilder.build()).build();
   }
@@ -149,10 +157,12 @@ public class ReceiverResource {
   @Consumes(MediaType.APPLICATION_JSON)
   @ApiOperation(value = "Create a receiver.")
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER})
-  @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
+  @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
   public Response create(PostableReceiverDTO postableReceiverDTO,
-      @QueryParam("defaultTemplate") @DefaultValue("false") Boolean defaultTemplate,
-      @Context UriInfo uriInfo, @Context SecurityContext sc)
+                         @QueryParam("defaultTemplate") @DefaultValue("false") Boolean defaultTemplate,
+                         @Context UriInfo uriInfo,
+                         @Context HttpServletRequest req,
+                         @Context SecurityContext sc)
       throws AlertException, ProjectException {
     if (postableReceiverDTO == null) {
       throw new AlertException(RESTCodes.AlertErrorCode.ILLEGAL_ARGUMENT, Level.FINE, "No payload.");
@@ -185,10 +195,13 @@ public class ReceiverResource {
   @Consumes(MediaType.APPLICATION_JSON)
   @ApiOperation(value = "Update a receiver.", response = SilenceDTO.class)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER})
-  @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
+  @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
   public Response update(@PathParam("name") String name,
-      @QueryParam("defaultTemplate") @DefaultValue("false") Boolean defaultTemplate,
-      PostableReceiverDTO postableReceiverDTO, @Context UriInfo uriInfo, @Context SecurityContext sc)
+                         @QueryParam("defaultTemplate") @DefaultValue("false") Boolean defaultTemplate,
+                         PostableReceiverDTO postableReceiverDTO,
+                         @Context UriInfo uriInfo,
+                         @Context HttpServletRequest req,
+                         @Context SecurityContext sc)
       throws AlertException, ProjectException {
     if (postableReceiverDTO == null) {
       throw new AlertException(RESTCodes.AlertErrorCode.ILLEGAL_ARGUMENT, Level.FINE, "No payload.");
@@ -223,10 +236,12 @@ public class ReceiverResource {
   @Path("{name}")
   @ApiOperation(value = "Delete receiver by name.")
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER})
-  @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
+  @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
   public Response deleteById(@PathParam("name") String name,
-      @QueryParam("cascade") @DefaultValue("false") Boolean cascade, @Context UriInfo uriInfo,
-      @Context SecurityContext sc) throws AlertException, ProjectException {
+                             @QueryParam("cascade") @DefaultValue("false") Boolean cascade,
+                             @Context UriInfo uriInfo,
+                             @Context HttpServletRequest req,
+                             @Context SecurityContext sc) throws AlertException, ProjectException {
     Project project = getProject();
     try {
       List<ReceiverName>  receiverNameList = alertManager.getReceivers(project, false);

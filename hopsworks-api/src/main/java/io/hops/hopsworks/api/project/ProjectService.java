@@ -232,7 +232,10 @@ public class ProjectService {
 
   @GET
   @Produces(MediaType.APPLICATION_JSON)
-  public Response findAllByUser(@Context SecurityContext sc) {
+  @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
+  @ApiKeyRequired(acceptedScopes = {ApiScope.PROJECT},
+    allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
+  public Response findAllByUser(@Context HttpServletRequest req, @Context SecurityContext sc) {
     // Get the user according to current session and then get all its projects
     Users user = jWTHelper.getUserPrincipal(sc);
     List<ProjectTeam> list = projectController.findProjectByUser(user.getEmail());
@@ -244,7 +247,10 @@ public class ProjectService {
   @GET
   @Path("/getAll")
   @Produces(MediaType.APPLICATION_JSON)
-  public Response getAllProjects(@Context SecurityContext sc) {
+  @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
+  @ApiKeyRequired(acceptedScopes = {ApiScope.PROJECT},
+    allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
+  public Response getAllProjects(@Context HttpServletRequest req, @Context SecurityContext sc) {
     List<Project> list = projectFacade.findAll();
     GenericEntity<List<Project>> projects = new GenericEntity<List<Project>>(list) {
     };
@@ -253,25 +259,25 @@ public class ProjectService {
 
   @GET
   @Path("/getProjectInfo/{projectName}")
-  @JWTRequired(acceptedTokens = {Audience.API, Audience.JOB},
-      allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
+  @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
+  @ApiKeyRequired(acceptedScopes = {ApiScope.PROJECT},
+    allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
   @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
-  @ApiKeyRequired( acceptedScopes = {ApiScope.PROJECT}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   @Produces(MediaType.APPLICATION_JSON)
-  public Response getProjectByName(@PathParam("projectName") String projectName, @Context SecurityContext sc)
-    throws ProjectException {
+  public Response getProjectByName(@PathParam("projectName") String projectName,
+                                   @Context HttpServletRequest req, @Context SecurityContext sc)
+      throws ProjectException {
     ProjectDTO proj = projectController.getProjectByName(projectName);
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(proj).build();
   }
-  
+
   @GET
   @Path("/asShared/getProjectInfo/{projectName}")
-  @JWTRequired(acceptedTokens = {Audience.API, Audience.JOB},
-    allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
+  @JWTRequired(acceptedTokens = {Audience.API, Audience.JOB}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   @ApiKeyRequired( acceptedScopes = {ApiScope.PROJECT}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   @Produces(MediaType.APPLICATION_JSON)
-  public Response getProjectByNameAsShared(@PathParam("projectName") String projectName, @Context SecurityContext sc)
-    throws ProjectException, GenericException {
+  public Response getProjectByNameAsShared(@PathParam("projectName") String projectName,
+    @Context HttpServletRequest req, @Context SecurityContext sc) throws ProjectException, GenericException {
     Users user = jWTHelper.getUserPrincipal(sc);
     Project project = projectController.findProjectByName(projectName);
     if(accessCtrl.hasExtendedAccess(user, project)) {
@@ -452,22 +458,24 @@ public class ProjectService {
     json.setData(id);
     return Response.ok(json).build();
   }
-
+  
   @GET
   @Path("{projectId}")
   @Produces(MediaType.APPLICATION_JSON)
-  @JWTRequired(acceptedTokens = {Audience.API, Audience.JOB},
-      allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
+  @JWTRequired(acceptedTokens = {Audience.API},
+    allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
+  @ApiKeyRequired(acceptedScopes = {ApiScope.PROJECT},
+    allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
   @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
-  public Response findByProjectID(@PathParam("projectId") Integer id, @Context SecurityContext sc)
-    throws ProjectException {
+  public Response findByProjectID(@PathParam("projectId") Integer id,
+                                  @Context HttpServletRequest req,
+                                  @Context SecurityContext sc) throws ProjectException {
 
     // Get a specific project based on the id, Annotated so that
     // only the user with the allowed role is able to see it
     ProjectDTO proj = projectController.getProjectByID(id);
 
-    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
-        proj).build();
+    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(proj).build();
   }
 
   @PUT

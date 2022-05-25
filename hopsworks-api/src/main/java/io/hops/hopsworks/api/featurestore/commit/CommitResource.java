@@ -40,6 +40,7 @@ import javax.ejb.EJB;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.enterprise.context.RequestScoped;
+import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
@@ -85,11 +86,15 @@ public class CommitResource {
   @POST
   @Produces(MediaType.APPLICATION_JSON)
   @Consumes(MediaType.APPLICATION_JSON)
-  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
-  @JWTRequired(acceptedTokens = {Audience.API, Audience.JOB}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   @ApiOperation(value = "Commit to Feature Group", response = CommitDTO.class)
-  @ApiKeyRequired( acceptedScopes = {ApiScope.FEATURESTORE}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
-  public Response commitFeatureGroup(@Context UriInfo uriInfo, CommitDTO commitDTO, @Context SecurityContext sc)
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
+  @JWTRequired(acceptedTokens = {Audience.API, Audience.JOB},
+    allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
+  @ApiKeyRequired(acceptedScopes = {ApiScope.FEATURESTORE},
+    allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
+  public Response commitFeatureGroup(@Context UriInfo uriInfo, CommitDTO commitDTO,
+                                     @Context HttpServletRequest req,
+                                     @Context SecurityContext sc)
       throws FeaturestoreException {
     Users user = jwtHelper.getUserPrincipal(sc);
     FeatureGroupCommit featureGroupCommit =
@@ -103,12 +108,17 @@ public class CommitResource {
 
   @GET
   @Produces(MediaType.APPLICATION_JSON)
-  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
-  @JWTRequired(acceptedTokens = {Audience.API, Audience.JOB}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   @ApiOperation(value = "Get Feature Group Commit", response = CommitDTO.class)
-  @ApiKeyRequired( acceptedScopes = {ApiScope.FEATURESTORE}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
-  public Response getFeatureGroupCommit(@Context UriInfo uriInfo, @BeanParam Pagination pagination,
-                                        @BeanParam CommitBeanParam commitBeanParam, @Context SecurityContext sc) {
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
+  @JWTRequired(acceptedTokens = {Audience.API, Audience.JOB},
+    allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
+  @ApiKeyRequired(acceptedScopes = {ApiScope.FEATURESTORE},
+    allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
+  public Response getFeatureGroupCommit(@Context UriInfo uriInfo,
+                                        @BeanParam Pagination pagination,
+                                        @BeanParam CommitBeanParam commitBeanParam,
+                                        @Context HttpServletRequest req,
+                                        @Context SecurityContext sc) {
 
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.COMMITS);
     resourceRequest.setOffset(pagination.getOffset());
