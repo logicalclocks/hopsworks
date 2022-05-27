@@ -77,7 +77,7 @@ public class EnvironmentCommandsResource {
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
-    @ApiKeyRequired(acceptedScopes = {ApiScope.PYTHON}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
+    @ApiKeyRequired(acceptedScopes = {ApiScope.PYTHON_LIBRARIES}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   public Response get(@BeanParam Pagination pagination, @BeanParam CommandBeanParam environmentsCommandBeanParam,
     @Context UriInfo uriInfo, @Context SecurityContext sc) throws PythonException {
     environmentController.checkCondaEnabled(project, pythonVersion, false);
@@ -96,7 +96,7 @@ public class EnvironmentCommandsResource {
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
-  @ApiKeyRequired(acceptedScopes = {ApiScope.PYTHON}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
+  @ApiKeyRequired(acceptedScopes = {ApiScope.PYTHON_LIBRARIES}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   public Response getByName(@PathParam("commandId") Integer commandId, @Context UriInfo uriInfo,
     @Context SecurityContext sc) throws PythonException {
     environmentController.checkCondaEnabled(project, pythonVersion, false);
@@ -109,7 +109,7 @@ public class EnvironmentCommandsResource {
   @DELETE
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
-  @ApiKeyRequired(acceptedScopes = {ApiScope.PYTHON}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
+  @ApiKeyRequired(acceptedScopes = {ApiScope.PYTHON_LIBRARIES}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   public Response delete(@Context SecurityContext sc) throws PythonException {
     environmentController.checkCondaEnabled(project, pythonVersion, false);
     commandsController.deleteCommands(project);
@@ -120,7 +120,7 @@ public class EnvironmentCommandsResource {
   @PUT
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
-  @ApiKeyRequired(acceptedScopes = {ApiScope.PYTHON}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
+  @ApiKeyRequired(acceptedScopes = {ApiScope.PYTHON_LIBRARIES}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   public Response update(@PathParam("library") String library, @Context UriInfo uriInfo, @Context SecurityContext sc)
     throws PythonException {
     environmentController.checkCondaEnabled(project, pythonVersion, false);
