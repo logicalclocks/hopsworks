@@ -121,7 +121,7 @@ public class EnvironmentResource {
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
   @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
-  @ApiKeyRequired(acceptedScopes = {ApiScope.PYTHON}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
+  @ApiKeyRequired(acceptedScopes = {ApiScope.PYTHON_LIBRARIES}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   public Response getAll(@BeanParam EnvironmentExpansionBeanParam expansions, @Context UriInfo uriInfo,
     @Context SecurityContext sc) throws PythonException, IOException, ServiceDiscoveryException {
     ResourceRequest resourceRequest = getResourceRequest(expansions);
@@ -135,7 +135,7 @@ public class EnvironmentResource {
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
-  @ApiKeyRequired(acceptedScopes = {ApiScope.PYTHON}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
+  @ApiKeyRequired(acceptedScopes = {ApiScope.PYTHON_LIBRARIES}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   public Response get(@PathParam("version") String version, @BeanParam EnvironmentExpansionBeanParam expansions,
     @Context UriInfo uriInfo, @Context SecurityContext sc) throws PythonException, IOException,
       ServiceDiscoveryException {
@@ -154,7 +154,7 @@ public class EnvironmentResource {
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
   @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
-  @ApiKeyRequired(acceptedScopes = {ApiScope.PYTHON}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
+  @ApiKeyRequired(acceptedScopes = {ApiScope.PYTHON_LIBRARIES}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   public Response post(@PathParam("version") String version,
       @QueryParam("action") EnvironmentDTO.Operation action,
       @Context UriInfo uriInfo,
@@ -182,7 +182,7 @@ public class EnvironmentResource {
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
   @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
-  @ApiKeyRequired(acceptedScopes = {ApiScope.PYTHON}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
+  @ApiKeyRequired(acceptedScopes = {ApiScope.PYTHON_LIBRARIES}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   public Response postImport(EnvironmentImportDTO environmentImportDTO,
     @Context UriInfo uriInfo,
     @Context SecurityContext sc)
@@ -203,7 +203,7 @@ public class EnvironmentResource {
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
-  @ApiKeyRequired(acceptedScopes = {ApiScope.PYTHON}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
+  @ApiKeyRequired(acceptedScopes = {ApiScope.PYTHON_LIBRARIES}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   public Response delete(@PathParam("version") String version, @Context SecurityContext sc) throws PythonException {
     environmentController.removeEnvironment(project);
     return Response.noContent().build();
