@@ -99,7 +99,17 @@ public class ProjectTopics implements Serializable {
   @Size(min = 1, max = 255)
   @Column(name = "topic_name")
   private String topicName;
-  
+
+  // Number of partitions and replicas are used for backup only at this stage
+  // The rest APIs rely on Zookeeper to pull the current status of the partitions and replications
+  @Basic
+  @Column(name = "num_partitions")
+  private Integer numOfPartitions;
+
+  @Basic
+  @Column(name = "num_replicas")
+  private Integer numOfReplicas;
+
   @JoinColumn(name = "project_id",
     referencedColumnName = "id")
   @ManyToOne(optional = false)
@@ -115,8 +125,11 @@ public class ProjectTopics implements Serializable {
   public ProjectTopics() {
   }
 
-  public ProjectTopics(String topicName, Project project, Subjects subjects) {
+  public ProjectTopics(String topicName, Integer numOfPartitions, Integer numOfReplicas,
+                       Project project, Subjects subjects) {
     this.topicName = topicName;
+    this.numOfPartitions = numOfPartitions;
+    this.numOfReplicas = numOfReplicas;
     this.project = project;
     this.subjects = subjects;
   }
@@ -154,6 +167,22 @@ public class ProjectTopics implements Serializable {
     this.subjects = subjects;
   }
 
+  public Integer getNumOfPartitions() {
+    return numOfPartitions;
+  }
+
+  public void setNumOfPartitions(Integer numOfPartitions) {
+    this.numOfPartitions = numOfPartitions;
+  }
+
+  public Integer getNumOfReplicas() {
+    return numOfReplicas;
+  }
+
+  public void setNumOfReplicas(Integer numOfReplicas) {
+    this.numOfReplicas = numOfReplicas;
+  }
+
   @Override
   public boolean equals(Object o) {
     if (this == o) return true;
@@ -173,7 +202,9 @@ public class ProjectTopics implements Serializable {
   @Override
   public int hashCode() {
     int result = id != null ? id.hashCode() : 0;
-    result = 31 * result + topicName.hashCode();
+    result = 31 * result + (topicName != null ? topicName.hashCode() : 0);
+    result = 31 * result + (numOfPartitions != null ? numOfPartitions.hashCode() : 0);
+    result = 31 * result + (numOfReplicas != null ? numOfReplicas.hashCode() : 0);
     result = 31 * result + (project != null ? project.hashCode() : 0);
     result = 31 * result + (topicAclsCollection != null ? topicAclsCollection.hashCode() : 0);
     result = 31 * result + (subjects != null ? subjects.hashCode() : 0);
