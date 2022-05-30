@@ -52,7 +52,6 @@ import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.inject.Inject;
 import javax.ws.rs.core.UriInfo;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -85,25 +84,14 @@ public class FeatureViewBuilder {
   public FeatureViewBuilder() {
   }
 
-  public FeatureViewDTO build(FeatureView featureView, ResourceRequest resourceRequest, Project project,
-                              Users user, UriInfo uriInfo)
-      throws FeaturestoreException, ServiceException, MetadataException, DatasetException, SchematizedTagException {
-    List<FeatureView> featureViews = Arrays.asList(featureView);
-    return build(featureViews, resourceRequest, project, user, uriInfo);
-  }
-
   public FeatureViewDTO build(List<FeatureView> featureViews, ResourceRequest resourceRequest, Project project,
       Users user, UriInfo uriInfo)
       throws FeaturestoreException, ServiceException, MetadataException, DatasetException, SchematizedTagException {
     FeatureViewDTO featureViewDTO = new FeatureViewDTO();
     featureViewDTO.setHref(uriInfo.getRequestUri());
 
-    if (featureViews.size() == 1) {
-      return buildSingle(featureViews.get(0), resourceRequest, project, user, uriInfo);
-    }
-
     for (FeatureView featureView : featureViews) {
-      FeatureViewDTO featureViewItem = buildSingle(featureView, resourceRequest, project, user, uriInfo);
+      FeatureViewDTO featureViewItem = build(featureView, resourceRequest, project, user, uriInfo);
       featureViewItem.setHref(uriInfo.getRequestUriBuilder()
           .path("version")
           .path(featureView.getVersion().toString())
@@ -116,7 +104,7 @@ public class FeatureViewBuilder {
     return featureViewDTO;
   }
 
-  private FeatureViewDTO buildSingle(FeatureView featureView, ResourceRequest resourceRequest, Project project,
+  public FeatureViewDTO build(FeatureView featureView, ResourceRequest resourceRequest, Project project,
       Users user, UriInfo uriInfo)
         throws FeaturestoreException, ServiceException, MetadataException, DatasetException, SchematizedTagException {
     FeatureViewDTO base = convertToDTO(featureView);
