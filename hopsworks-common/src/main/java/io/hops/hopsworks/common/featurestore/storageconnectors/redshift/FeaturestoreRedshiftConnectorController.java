@@ -46,7 +46,7 @@ import java.util.logging.Logger;
 public class FeaturestoreRedshiftConnectorController {
 
   private static final Logger LOGGER = Logger.getLogger(FeaturestoreRedshiftConnectorController.class.getName());
-
+  
   @EJB
   private SecretsController secretsController;
   @EJB
@@ -66,7 +66,7 @@ public class FeaturestoreRedshiftConnectorController {
       storageConnectorUtil.toOptions(featurestoreConnector.getRedshiftConnector().getArguments()));
     return featurestoreRedshiftConnectorDTO;
   }
-
+  
   /**
    *
    * @param featurestore
@@ -82,7 +82,7 @@ public class FeaturestoreRedshiftConnectorController {
     setPassword(user, featurestoreRedshiftConnectorDTO, featurestore, featurestoreRedshiftConnector);
     return featurestoreRedshiftConnector;
   }
-
+  
   private void setConnector(FeatureStoreRedshiftConnector featurestoreRedshiftConnector,
       FeaturestoreRedshiftConnectorDTO featurestoreRedshiftConnectorDTO) {
     featurestoreRedshiftConnector.setClusterIdentifier(
@@ -107,7 +107,7 @@ public class FeaturestoreRedshiftConnectorController {
       storageConnectorUtil.getValueOrNull(
         storageConnectorUtil.fromOptions(featurestoreRedshiftConnectorDTO.getArguments())));
   }
-
+  
   private void setPassword(Users user, FeaturestoreRedshiftConnectorDTO featurestoreRedshiftConnectorDTO,
     Featurestore featurestore, FeatureStoreRedshiftConnector featurestoreRedshiftConnector)
     throws UserException, ProjectException {
@@ -120,7 +120,7 @@ public class FeaturestoreRedshiftConnectorController {
       featurestoreRedshiftConnector.setSecret(secret);
     }
   }
-
+  
   private void verifyCreateDTO(FeaturestoreRedshiftConnectorDTO featurestoreRedshiftConnectorDTO)
       throws FeaturestoreException {
     if (featurestoreRedshiftConnectorDTO == null) {
@@ -170,24 +170,9 @@ public class FeaturestoreRedshiftConnectorController {
     verifyPassword(featurestoreRedshiftConnectorDTO.getIamRole(),
         featurestoreRedshiftConnectorDTO.getDatabasePassword());
   }
-
+  
   private void verifyPassword(String iamRole, String password) throws FeaturestoreException {
-    boolean needPassword = !settings.isIAMRoleConfigured() && Strings.isNullOrEmpty(iamRole);
-    if (needPassword && Strings.isNullOrEmpty(password)) {
-      throw new FeaturestoreException(
-        RESTCodes.FeaturestoreErrorCode.ILLEGAL_STORAGE_CONNECTOR_ARG, Level.FINE, "Database password not set.");
-    } else if (!needPassword && !Strings.isNullOrEmpty(password)) {
-      throw new FeaturestoreException(
-        RESTCodes.FeaturestoreErrorCode.ILLEGAL_STORAGE_CONNECTOR_ARG, Level.FINE, "Database password is not allowed.");
-    }
-  }
-
-  private void verifyPassword(String iamRole, Secret secret) throws FeaturestoreException {
-    boolean needPassword = !settings.isIAMRoleConfigured() && Strings.isNullOrEmpty(iamRole);
-    if (needPassword && secret == null) {
-      throw new FeaturestoreException(
-        RESTCodes.FeaturestoreErrorCode.ILLEGAL_STORAGE_CONNECTOR_ARG, Level.FINE, "Database password not set.");
-    } else if (!needPassword && secret != null) {
+    if (!Strings.isNullOrEmpty(iamRole) && !Strings.isNullOrEmpty(password)) {
       throw new FeaturestoreException(
         RESTCodes.FeaturestoreErrorCode.ILLEGAL_STORAGE_CONNECTOR_ARG, Level.FINE, "Database password is not allowed.");
     }
@@ -212,15 +197,14 @@ public class FeaturestoreRedshiftConnectorController {
     
     featureStoreRedshiftConnector.setArguments(
       storageConnectorUtil.fromOptions(featurestoreRedshiftConnectorDTO.getArguments()));
-
-    verifyPassword(featureStoreRedshiftConnector.getIamRole(), featureStoreRedshiftConnector.getSecret());
+    
     if (featureStoreRedshiftConnector.getSecret() == null && secret != null) {
       secretsFacade.deleteSecret(secret.getId());
     }
 
     return featureStoreRedshiftConnector;
   }
-
+  
   private Secret updatePassword(Users user, FeaturestoreRedshiftConnectorDTO featurestoreRedshiftConnectorDTO,
     Featurestore featurestore, FeatureStoreRedshiftConnector featureStoreRedshiftConnector)
     throws UserException, ProjectException {

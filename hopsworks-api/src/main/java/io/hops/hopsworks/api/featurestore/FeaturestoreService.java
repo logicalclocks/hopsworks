@@ -172,7 +172,6 @@ public class FeaturestoreService {
   public Response getFeaturestoreSettings(@Context SecurityContext sc) {
     FeaturestoreClientSettingsDTO featurestoreClientSettingsDTO = new FeaturestoreClientSettingsDTO();
     featurestoreClientSettingsDTO.setOnlineFeaturestoreEnabled(settings.isOnlineFeaturestore());
-    featurestoreClientSettingsDTO.setS3IAMRole(settings.isIAMRoleConfigured());
     GenericEntity<FeaturestoreClientSettingsDTO> featurestoreClientSettingsDTOGeneric =
       new GenericEntity<FeaturestoreClientSettingsDTO>(featurestoreClientSettingsDTO) {
     };

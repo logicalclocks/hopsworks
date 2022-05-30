@@ -40,10 +40,7 @@ package io.hops.hopsworks.common.util;
 
 import com.google.common.base.Splitter;
 import com.google.common.base.Strings;
-import io.hops.hopsworks.persistence.entity.project.PaymentType;
 import io.hops.hopsworks.common.dao.user.UserFacade;
-import io.hops.hopsworks.persistence.entity.user.Users;
-import io.hops.hopsworks.persistence.entity.util.Variables;
 import io.hops.hopsworks.common.dataset.util.CompressionInfo;
 import io.hops.hopsworks.common.dela.AddressJSON;
 import io.hops.hopsworks.common.dela.DelaClientType;
@@ -51,6 +48,9 @@ import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.provenance.core.Provenance;
 import io.hops.hopsworks.common.provenance.core.dto.ProvTypeDTO;
 import io.hops.hopsworks.exceptions.ProvenanceException;
+import io.hops.hopsworks.persistence.entity.project.PaymentType;
+import io.hops.hopsworks.persistence.entity.user.Users;
+import io.hops.hopsworks.persistence.entity.util.Variables;
 import io.hops.hopsworks.persistence.entity.util.VariablesVisibility;
 import io.hops.hopsworks.restutils.RESTLogLevel;
 import org.apache.hadoop.conf.Configuration;
@@ -80,6 +80,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.StringTokenizer;
@@ -135,8 +136,6 @@ public class Settings implements Serializable {
   private static final String VARIABLE_LOCALHOST = "localhost";
   private static final String VARIABLE_REQUESTS_VERIFY = "requests_verify";
   private static final String VARIABLE_CLOUD= "cloud";
-  private static final String VARIABLE_AWS_INSTANCE_ROLE = "aws_instance_role";
-  private static final String VARIABLE_CLOUD_TYPE = "cloud_type";
   private static final String VARIABLE_OPENSEARCH_IP = "elastic_ip";
   private static final String VARIABLE_OPENSEARCH_PORT = "elastic_port";
   private static final String VARIABLE_OPENSEARCH_REST_PORT = "elastic_rest_port";
@@ -190,6 +189,7 @@ public class Settings implements Serializable {
       = "kafka_num_partitions";
   private static final String VARIABLE_KAFKA_NUM_REPLICAS = "kafka_num_replicas";
   private static final String VARIABLE_HOPSWORKS_SSL_MASTER_PASSWORD = "hopsworks_master_password";
+
   private static final String VARIABLE_ANACONDA_DIR = "anaconda_dir";
   private static final String VARIABLE_ANACONDA_ENABLED = "anaconda_enabled";
   private static final String VARIABLE_ANACONDA_DEFAULT_REPO = "conda_default_repo";
@@ -231,7 +231,7 @@ public class Settings implements Serializable {
   
   private final static String VARIABLE_USER_SEARCH = "enable_user_search";
   private final static String VARIABLE_REJECT_REMOTE_USER_NO_GROUP = "reject_remote_user_no_group";
-  
+
   //Used by RESTException to include devMsg or not in response
   private static final String VARIABLE_HOPSWORKS_REST_LOG_LEVEL = "hopsworks_rest_log_level";
   
@@ -261,14 +261,18 @@ public class Settings implements Serializable {
   private static final String VARIABLE_KUBE_TRUSTSTORE_KEY = "kube_truststore_key";
   private static final String VARIABLE_KUBE_KEYSTORE_PATH = "kube_keystore_path";
   private static final String VARIABLE_KUBE_KEYSTORE_KEY = "kube_keystore_key";
-  private static final String VARIABLE_KUBE_REGISTRY = "kube_registry";
+  private static final String VARIABLE_KUBE_PULL_POLICY = "kube_img_pull_policy";
   private static final String VARIABLE_KUBE_MAX_SERVING = "kube_max_serving_instances";
   private static final String VARIABLE_KUBE_API_MAX_ATTEMPTS = "kube_api_max_attempts";
   private static final String VARIABLE_KUBE_DOCKER_MAX_MEMORY_ALLOCATION = "kube_docker_max_memory_allocation";
   private static final String VARIABLE_KUBE_DOCKER_CORES_FRACTION = "kube_docker_cores_fraction";
+  private static final String VARIABLE_KUBE_DOCKER_MAX_GPUS_ALLOCATION = "kube_docker_max_gpus_allocation";
   private static final String VARIABLE_KUBE_DOCKER_MAX_CORES_ALLOCATION = "kube_docker_max_cores_allocation";
   private static final String VARIABLE_KUBE_INSTALLED = "kubernetes_installed";
   private static final String VARIABLE_KUBE_KSERVE_INSTALLED = "kube_kserve_installed";
+  private static final String VARIABLE_KUBE_SERVING_NODE_LABELS = "kube_serving_node_labels";
+  private static final String VARIABLE_KUBE_SERVING_NODE_TOLERATIONS = "kube_serving_node_tolerations";
+  private static final String VARIABLE_KUBE_KNATIVE_DOMAIN_NAME = "kube_knative_domain_name";
   
 
   /*
@@ -315,6 +319,8 @@ public class Settings implements Serializable {
   private static final String VARIABLE_OPENSEARCH_JWT_URL_PARAMETER = "elastic_jwt_url_parameter";
   private static final String VARIABLE_OPENSEARCH_JWT_EXP_MS = "elastic_jwt_exp_ms";
   private static final String VARIABLE_KIBANA_MULTI_TENANCY_ENABLED = "kibana_multi_tenancy_enabled";
+
+  private static final String VARIABLE_CLIENT_PATH = "client_path";
   
   //Cloud
   private static final String VARIABLE_CLOUD_EVENTS_ENDPOINT=
@@ -345,7 +351,24 @@ public class Settings implements Serializable {
 
   //Git
   private static final String VARIABLE_GIT_COMMAND_TIMEOUT_MINUTES_DEFAULT = "git_command_timeout_minutes";
-  
+
+
+  /*
+   * ------------------ QUOTAS ------------------
+   */
+  private static final String QUOTAS_PREFIX = "quotas";
+  private static final String QUOTAS_FEATUREGROUPS_PREFIX = String.format("%s_featuregroups", QUOTAS_PREFIX);
+  private static final String VARIABLE_QUOTAS_ONLINE_ENABLED_FEATUREGROUPS = String.format("%s_online_enabled",
+          QUOTAS_FEATUREGROUPS_PREFIX);
+  private static final String VARIABLE_QUOTAS_ONLINE_DISABLED_FEATUREGROUPS = String.format("%s_online_disabled",
+          QUOTAS_FEATUREGROUPS_PREFIX);
+  private static final String VARIABLE_QUOTAS_TRAINING_DATASETS = String.format("%s_training_datasets", QUOTAS_PREFIX);
+  private static final String QUOTAS_MODEL_DEPLOYMENTS_PREFIX = String.format("%s_model_deployments", QUOTAS_PREFIX);
+  private static final String VARIABLE_QUOTAS_RUNNING_MODEL_DEPLOYMENTS = String.format("%s_running",
+          QUOTAS_MODEL_DEPLOYMENTS_PREFIX);
+  private static final String VARIABLE_QUOTAS_TOTAL_MODEL_DEPLOYMENTS = String.format("%s_total",
+          QUOTAS_MODEL_DEPLOYMENTS_PREFIX);
+
   private static final String VARIABLE_SKIP_NAMESPACE_CREATION =
       "kube_skip_namespace_creation";
   public enum KubeType{
@@ -467,6 +490,7 @@ public class Settings implements Serializable {
         LOGGER.log(Level.WARNING, "Error - not a long! " + varName + " should be an integer. Value was " + value);
       }
     }
+
     return defaultValue;
   }
 
@@ -510,7 +534,7 @@ public class Settings implements Serializable {
     RESERVED_PROJECT_NAMES_STR = setStrVar(varName, defaultValue);
     return setStringHashSetLowerCase(RESERVED_PROJECT_NAMES_STR, separator, true);
   }
-
+  
   private Set<String> setStringHashSetLowerCase(String values, String separator, boolean toLowerCase) {
     StringTokenizer tokenizer = new StringTokenizer(values, separator);
     HashSet<String> tokens = new HashSet<>(tokenizer.countTokens());
@@ -527,7 +551,6 @@ public class Settings implements Serializable {
       ADMIN_EMAIL = setVar(VARIABLE_ADMIN_EMAIL, ADMIN_EMAIL);
       LOCALHOST = setBoolVar(VARIABLE_LOCALHOST, LOCALHOST);
       CLOUD = setStrVar(VARIABLE_CLOUD, CLOUD);
-      IAM_ROLE_CONFIGURED = setBoolVar(VARIABLE_AWS_INSTANCE_ROLE, IAM_ROLE_CONFIGURED);
       REQUESTS_VERIFY = setBoolVar(VARIABLE_REQUESTS_VERIFY, REQUESTS_VERIFY);
       PYTHON_KERNEL = setBoolVar(VARIABLE_PYTHON_KERNEL, PYTHON_KERNEL);
       TWOFACTOR_AUTH = setVar(VARIABLE_TWOFACTOR_AUTH, TWOFACTOR_AUTH);
@@ -585,8 +608,8 @@ public class Settings implements Serializable {
           openSearchRestPort, openSearchSecurityEnabled, openSearchHttpsEnabled,
           openSearchAdminUser, openSearchAdminPassword, openSearchJWTEnabled,
           openSearchJWTUrlParameter, openSearchJWTEXPMS, openSearchServiceLogUser);
-      OPENSEARCH_LOGS_INDEX_EXPIRATION = setLongVar(VARIABLE_OPENSEARCH_LOGS_INDEX_EXPIRATION,
-        OPENSEARCH_LOGS_INDEX_EXPIRATION);
+      OpenSearch_LOGS_INDEX_EXPIRATION = setLongVar(VARIABLE_OPENSEARCH_LOGS_INDEX_EXPIRATION,
+        OpenSearch_LOGS_INDEX_EXPIRATION);
       KIBANA_IP = setIpVar(VARIABLE_KIBANA_IP, KIBANA_IP);
       KAFKA_MAX_NUM_TOPICS = setIntVar(VARIABLE_KAFKA_MAX_NUM_TOPICS, KAFKA_MAX_NUM_TOPICS);
       HOPSWORKS_DEFAULT_SSL_MASTER_PASSWORD = setVar(VARIABLE_HOPSWORKS_SSL_MASTER_PASSWORD,
@@ -650,6 +673,7 @@ public class Settings implements Serializable {
       TENSORFLOW_VERSION = setStrVar(VARIABLE_TENSORFLOW_VERSION, TENSORFLOW_VERSION);
       HOPSWORKS_VERSION = setStrVar(VARIABLE_HOPSWORKS_VERSION, HOPSWORKS_VERSION);
       HOPSWORKS_REST_LOG_LEVEL = setLogLevelVar(VARIABLE_HOPSWORKS_REST_LOG_LEVEL, HOPSWORKS_REST_LOG_LEVEL);
+      HOPSWORKS_PUBLIC_HOST = setStrVar(VARIABLE_HOPSWORKS_PUBLIC_HOST, HOPSWORKS_PUBLIC_HOST);
 
       PYPI_REST_ENDPOINT = setStrVar(VARIABLE_PYPI_REST_ENDPOINT, PYPI_REST_ENDPOINT);
       PYPI_SIMPLE_ENDPOINT = setStrVar(VARIABLE_PYPI_SIMPLE_ENDPOINT, PYPI_SIMPLE_ENDPOINT);
@@ -682,16 +706,22 @@ public class Settings implements Serializable {
       KUBE_TRUSTSTORE_KEY = setStrVar(VARIABLE_KUBE_TRUSTSTORE_KEY, KUBE_TRUSTSTORE_KEY);
       KUBE_KEYSTORE_PATH = setStrVar(VARIABLE_KUBE_KEYSTORE_PATH, KUBE_KEYSTORE_PATH);
       KUBE_KEYSTORE_KEY = setStrVar(VARIABLE_KUBE_KEYSTORE_KEY, KUBE_KEYSTORE_KEY);
-      KUBE_REGISTRY = setStrVar(VARIABLE_KUBE_REGISTRY, KUBE_REGISTRY);
+      KUBE_PULL_POLICY = setStrVar(VARIABLE_KUBE_PULL_POLICY, KUBE_PULL_POLICY);
       KUBE_MAX_SERVING_INSTANCES = setIntVar(VARIABLE_KUBE_MAX_SERVING, KUBE_MAX_SERVING_INSTANCES);
       KUBE_API_MAX_ATTEMPTS = setIntVar(VARIABLE_KUBE_API_MAX_ATTEMPTS, KUBE_API_MAX_ATTEMPTS);
       KUBE_DOCKER_MAX_MEMORY_ALLOCATION = setIntVar(VARIABLE_KUBE_DOCKER_MAX_MEMORY_ALLOCATION,
           KUBE_DOCKER_MAX_MEMORY_ALLOCATION);
       KUBE_DOCKER_MAX_CORES_ALLOCATION = setIntVar(VARIABLE_KUBE_DOCKER_MAX_CORES_ALLOCATION,
-        KUBE_DOCKER_MAX_CORES_ALLOCATION);
-      KUBE_DOCKER_CORES_FRACTION = setDoubleVar(VARIABLE_KUBE_DOCKER_CORES_FRACTION, KUBE_DOCKER_CORES_FRACTION);
+          KUBE_DOCKER_MAX_CORES_ALLOCATION);
+      KUBE_DOCKER_CORES_FRACTION = setDoubleVar(VARIABLE_KUBE_DOCKER_CORES_FRACTION,
+          KUBE_DOCKER_CORES_FRACTION);
+      KUBE_DOCKER_MAX_GPUS_ALLOCATION = setIntVar(VARIABLE_KUBE_DOCKER_MAX_GPUS_ALLOCATION,
+          KUBE_DOCKER_MAX_GPUS_ALLOCATION);
       KUBE_INSTALLED = setBoolVar(VARIABLE_KUBE_INSTALLED, KUBE_INSTALLED);
       KUBE_KSERVE_INSTALLED = setBoolVar(VARIABLE_KUBE_KSERVE_INSTALLED, KUBE_KSERVE_INSTALLED);
+      KUBE_SERVING_NODE_LABELS = setStrVar(VARIABLE_KUBE_SERVING_NODE_LABELS, KUBE_SERVING_NODE_LABELS);
+      KUBE_SERVING_NODE_TOLERATIONS = setStrVar(VARIABLE_KUBE_SERVING_NODE_TOLERATIONS, KUBE_SERVING_NODE_TOLERATIONS);
+      KUBE_KNATIVE_DOMAIN_NAME = setStrVar(VARIABLE_KUBE_KNATIVE_DOMAIN_NAME, KUBE_KNATIVE_DOMAIN_NAME);
   
       HOPSWORKS_ENTERPRISE = setBoolVar(VARIABLE_HOPSWORKS_ENTERPRISE, HOPSWORKS_ENTERPRISE);
 
@@ -724,7 +754,7 @@ public class Settings implements Serializable {
   
       KIBANA_MULTI_TENANCY_ENABELED = setBoolVar(VARIABLE_KIBANA_MULTI_TENANCY_ENABLED,
           KIBANA_MULTI_TENANCY_ENABELED);
-
+  
       RESERVED_PROJECT_NAMES =
         setStringHashSetLowerCase(VARIABLE_RESERVED_PROJECT_NAMES, DEFAULT_RESERVED_PROJECT_NAMES, ",");
   
@@ -739,7 +769,6 @@ public class Settings implements Serializable {
       FS_PY_JOB_UTIL_PATH = setStrVar(VARIABLE_FS_PY_JOB_UTIL_PATH, FS_PY_JOB_UTIL_PATH);
       FS_JAVA_JOB_UTIL_PATH  = setStrVar(VARIABLE_FS_JAVA_JOB_UTIL_PATH, FS_JAVA_JOB_UTIL_PATH);
       
-
       YARN_RUNTIME = setStrVar(VARIABLE_YARN_RUNTIME, YARN_RUNTIME);
       DOCKER_MOUNTS = setStrVar(VARIABLE_DOCKER_MOUNTS, DOCKER_MOUNTS);
       DOCKER_JOB_MOUNTS_LIST = setStrVar(VARIABLE_DOCKER_JOB_MOUNTS_LIST, DOCKER_JOB_MOUNTS_LIST);
@@ -757,7 +786,8 @@ public class Settings implements Serializable {
 
       YARN_APP_UID = setLongVar(VARIABLE_YARN_APP_UID, YARN_APP_UID);
       populateProvenanceCache();
-
+      
+      CLIENT_PATH = setStrVar(VARIABLE_CLIENT_PATH, CLIENT_PATH);
       KUBE_TYPE = KubeType.fromString(setStrVar(VARIABLE_KUBE_TYPE, KUBE_TYPE.name));
       DOCKER_NAMESPACE = setStrVar(VARIABLE_DOCKER_NAMESPACE, DOCKER_NAMESPACE);
       MANAGED_DOCKER_REGISTRY = setBoolVar(VARIABLE_MANAGED_DOCKER_REGISTRY,
@@ -765,13 +795,11 @@ public class Settings implements Serializable {
 
       MAX_ENV_YML_BYTE_SIZE = setIntVar(VARIABLE_MAX_ENV_YML_BYTE_SIZE, MAX_ENV_YML_BYTE_SIZE);
       SPARK_EXECUTOR_MIN_MEMORY = setIntVar(VARIABLE_SPARK_EXECUTOR_MIN_MEMORY, SPARK_EXECUTOR_MIN_MEMORY);
-
-      CLOUD_TYPE = setStrVar(VARIABLE_CLOUD_TYPE, CLOUD_TYPE);
-
       
       LIVY_STARTUP_TIMEOUT = setIntVar(VARIABLE_LIVY_STARTUP_TIMEOUT, LIVY_STARTUP_TIMEOUT);
   
       USER_SEARCH_ENABLED = setBoolVar(VARIABLE_USER_SEARCH, USER_SEARCH_ENABLED);
+      REJECT_REMOTE_USER_NO_GROUP = setBoolVar(VARIABLE_REJECT_REMOTE_USER_NO_GROUP, REJECT_REMOTE_USER_NO_GROUP);
 
       //Git
       GIT_MAX_COMMAND_TIMEOUT_MINUTES = setIntVar(VARIABLE_GIT_COMMAND_TIMEOUT_MINUTES_DEFAULT,
@@ -779,6 +807,16 @@ public class Settings implements Serializable {
   
       SKIP_NAMESPACE_CREATION = setBoolVar(VARIABLE_SKIP_NAMESPACE_CREATION,
           SKIP_NAMESPACE_CREATION);
+
+      QUOTAS_ONLINE_ENABLED_FEATUREGROUPS = setLongVar(VARIABLE_QUOTAS_ONLINE_ENABLED_FEATUREGROUPS,
+              QUOTAS_ONLINE_ENABLED_FEATUREGROUPS);
+      QUOTAS_ONLINE_DISABLED_FEATUREGROUPS = setLongVar(VARIABLE_QUOTAS_ONLINE_DISABLED_FEATUREGROUPS,
+              QUOTAS_ONLINE_DISABLED_FEATUREGROUPS);
+      QUOTAS_TRAINING_DATASETS = setLongVar(VARIABLE_QUOTAS_TRAINING_DATASETS, QUOTAS_TRAINING_DATASETS);
+      QUOTAS_RUNNING_MODEL_DEPLOYMENTS = setLongVar(VARIABLE_QUOTAS_RUNNING_MODEL_DEPLOYMENTS,
+              QUOTAS_RUNNING_MODEL_DEPLOYMENTS);
+      QUOTAS_TOTAL_MODEL_DEPLOYMENTS = setLongVar(VARIABLE_QUOTAS_TOTAL_MODEL_DEPLOYMENTS,
+              QUOTAS_TOTAL_MODEL_DEPLOYMENTS);
       cached = true;
     }
   }
@@ -872,8 +910,6 @@ public class Settings implements Serializable {
    * Default Directory locations
    */
   public static final String PRIVATE_DIRS = "/private_dirs/";
-
-  public static final String SERVING_DIRS = "/serving/";
 
   public static final String TENSORBOARD_DIRS = "/tensorboard/";
 
@@ -1449,7 +1485,7 @@ public class Settings implements Serializable {
     "UNIQUEJOIN, UPDATE, USER, USING, UTC_TMESTAMP, VALUES, VARCHAR, WHEN, WHERE, WINDOW, WITH, COMMIT, ONLY, " +
     "REGEXP, RLIKE, ROLLBACK, START, CACHE, CONSTRAINT, FOREIGN, PRIMARY, REFERENCES, DAYOFWEEK, EXTRACT, FLOOR, " +
     "INTEGER, PRECISION, VIEWS, TIME, NUMERIC, SYNC";
-
+  
   private Set<String> RESERVED_PROJECT_NAMES;
   private String RESERVED_PROJECT_NAMES_STR;
   
@@ -1459,16 +1495,16 @@ public class Settings implements Serializable {
     RESERVED_PROJECT_NAMES.addAll(getReservedHiveNames());
     return RESERVED_PROJECT_NAMES;
   }
-
+  
   public synchronized Set<String> getReservedHiveNames() {
     return setStringHashSetLowerCase(DEFAULT_RESERVED_HIVE_NAMES, ",", true);
   }
-
+  
   public synchronized String getProjectNameReservedWords() {
     checkCache();
     return (RESERVED_PROJECT_NAMES_STR + ", " + DEFAULT_RESERVED_HIVE_NAMES).toLowerCase();
   }
-
+  
   //Only for unit test
   public synchronized String getProjectNameReservedWordsTest() {
     return (DEFAULT_RESERVED_PROJECT_NAMES + ", " + DEFAULT_RESERVED_HIVE_NAMES).toLowerCase();
@@ -1476,7 +1512,7 @@ public class Settings implements Serializable {
   
   // OpenSearch
   OpenSearchSettings OPENSEARCH_SETTINGS;
-
+  
   public synchronized List<String> getOpenSearchIps(){
     checkCache();
     return OPENSEARCH_SETTINGS.getOpenSearchIps();
@@ -1552,17 +1588,17 @@ public class Settings implements Serializable {
     return OPENSEARCH_SETTINGS.getMaxScrollPageSize();
   }
 
-  private static long OPENSEARCH_LOGS_INDEX_EXPIRATION = 7 * 24 * 60 * 60 * 1000;
+  private long OpenSearch_LOGS_INDEX_EXPIRATION = 7 * 24 * 60 * 60 * 1000;
 
   public synchronized long getOpenSearchLogsIndexExpiration() {
     checkCache();
-    return OPENSEARCH_LOGS_INDEX_EXPIRATION;
+    return OpenSearch_LOGS_INDEX_EXPIRATION;
   }
 
   private static final int JOB_LOGS_EXPIRATION = 604800;
 
   /**
-   * TTL for job logs in OpenSearch, in seconds.
+   * TTL for job logs in opensearch, in seconds.
    *
    * @return
    */
@@ -1625,7 +1661,7 @@ public class Settings implements Serializable {
   }
   
   public String getKibanaAppUri() {
-    return "/hopsworks-api/kibana/app/kibana?";
+    return "/hopsworks-api/kibana/app/discover?";
   }
   
   public String getKibanaAppUri(String jwtToken) {
@@ -1830,6 +1866,13 @@ public class Settings implements Serializable {
     checkCache();
     return CLUSTER_CERT;
   }
+  // HOPSWORKS-3158
+  private String HOPSWORKS_PUBLIC_HOST = "";
+  
+  public String getHopsworksPublicHost() {
+    checkCache();
+    return HOPSWORKS_PUBLIC_HOST;
+  }  
 
   // Hopsworks
   public static final Charset ENCODING = StandardCharsets.UTF_8;
@@ -1936,7 +1979,8 @@ public class Settings implements Serializable {
   public static final String FILE_PREVIEW_IMAGE_TYPE = "image";
   public static final String FILE_PREVIEW_MODE_TAIL = "tail";
 
-  //OpenSearch log index pattern
+  //OpenSearch
+  // log index pattern
   public static final String OPENSEARCH_LOGS_INDEX = "logs";
   public static final String OPENSEARCH_PYPI_LIBRARIES_INDEX_PATTERN_PREFIX = "pypi_libraries_";
   public static final String OPENSEARCH_LOGS_INDEX_PATTERN = "_" + Settings.OPENSEARCH_LOGS_INDEX + "-*";
@@ -2150,7 +2194,7 @@ public class Settings implements Serializable {
       conf.addResource(new Path(confFile.getAbsolutePath()));
       conf.addResource(new Path(hadoopConf.getAbsolutePath()));
       conf.addResource(new Path(hdfsConf.getAbsolutePath()));
-
+      
       addPathToConfig(conf, confFile);
       addPathToConfig(conf, hadoopConf);
       setDefaultConfValues(conf);
@@ -2374,6 +2418,7 @@ public class Settings implements Serializable {
   private static final String VARIABLE_PUBLIC_HTTPS_PORT = "public_https_port";
   private static final String VARIABLE_DELA_SEARCH_ENDPOINT = "dela_search_endpoint";
   private static final String VARIABLE_DELA_TRANSFER_ENDPOINT = "dela_transfer_endpoint";
+  private static final String VARIABLE_HOPSWORKS_PUBLIC_HOST = "hopsworks_public_host";
 
   public static final Level DELA_DEBUG = Level.INFO;
   private String HOPSSITE_HOST = "hops.site";
@@ -2670,13 +2715,21 @@ public class Settings implements Serializable {
   private static final String VARIABLE_LDAP_GROUPS_TARGET = "ldap_groups_target";
   private static final String VARIABLE_OAUTH_ENABLED = "oauth_enabled";
   private static final String VARIABLE_OAUTH_REDIRECT_URI = "oauth_redirect_uri";
+  private static final String VARIABLE_OAUTH_LOGOUT_REDIRECT_URI = "oauth_logout_redirect_uri";
   private static final String VARIABLE_OAUTH_ACCOUNT_STATUS = "oauth_account_status";
   private static final String VARIABLE_OAUTH_GROUP_MAPPING = "oauth_group_mapping";
+  
+  private static final String VARIABLE_REMOTE_AUTH_NEED_CONSENT = "remote_auth_need_consent";
   
   private static final String VARIABLE_DISABLE_PASSWORD_LOGIN = "disable_password_login";
   private static final String VARIABLE_DISABLE_REGISTRATION = "disable_registration";
   private static final String VARIABLE_DISABLE_REGISTRATION_UI = "disable_registration_ui";
   private static final String VARIABLE_LDAP_GROUP_MAPPING_SYNC_INTERVAL = "ldap_group_mapping_sync_interval";
+  
+  private static final String VARIABLE_VALIDATE_REMOTE_USER_EMAIL_VERIFIED = "validate_email_verified";
+
+  private static final String VARIABLE_MANAGED_CLOUD_REDIRECT_URI = "managed_cloud_redirect_uri";
+  private static final String VARIABLE_MANAGED_CLOUD_PROVIDER_NAME = "managed_cloud_provider_name";
   
   private String KRB_AUTH = "false";
   private String LDAP_AUTH = "false";
@@ -2704,12 +2757,21 @@ public class Settings implements Serializable {
   private String OAUTH_ENABLED = "false";
   private boolean IS_OAUTH_ENABLED = false;
   private String OAUTH_GROUP_MAPPING = "";
-  private String OAUTH_REDIRECT_URI = "hopsworks/callback";
+  private String OAUTH_REDIRECT_URI_PATH = "hopsworks/callback";
+  private String OAUTH_LOGOUT_REDIRECT_URI_PATH = "hopsworks/";
+  private String OAUTH_REDIRECT_URI = OAUTH_REDIRECT_URI_PATH;
+  private String OAUTH_LOGOUT_REDIRECT_URI = OAUTH_LOGOUT_REDIRECT_URI_PATH;
   private int OAUTH_ACCOUNT_STATUS = 1;
   private long LDAP_GROUP_MAPPING_SYNC_INTERVAL = 0;
   
+  private boolean REMOTE_AUTH_NEED_CONSENT = true;
+  
   private boolean DISABLE_PASSWORD_LOGIN = false;
   private boolean DISABLE_REGISTRATION = false;
+  private boolean VALIDATE_REMOTE_USER_EMAIL_VERIFIED = false;
+
+  private String MANAGED_CLOUD_REDIRECT_URI = "";
+  private String MANAGED_CLOUD_PROVIDER_NAME = "hopsworks.ai";
   
   private void populateLDAPCache() {
     KRB_AUTH = setVar(VARIABLE_KRB_AUTH, KRB_AUTH);
@@ -2737,102 +2799,111 @@ public class Settings implements Serializable {
     OAUTH_ENABLED = setStrVar(VARIABLE_OAUTH_ENABLED, OAUTH_ENABLED);
     IS_OAUTH_ENABLED = setBoolVar(VARIABLE_OAUTH_ENABLED, IS_OAUTH_ENABLED);
     OAUTH_REDIRECT_URI = setStrVar(VARIABLE_OAUTH_REDIRECT_URI, OAUTH_REDIRECT_URI);
+    OAUTH_LOGOUT_REDIRECT_URI = setStrVar(VARIABLE_OAUTH_LOGOUT_REDIRECT_URI, OAUTH_LOGOUT_REDIRECT_URI);
     OAUTH_ACCOUNT_STATUS = setIntVar(VARIABLE_OAUTH_ACCOUNT_STATUS, OAUTH_ACCOUNT_STATUS);
     OAUTH_GROUP_MAPPING = setStrVar(VARIABLE_OAUTH_GROUP_MAPPING, OAUTH_GROUP_MAPPING);
+  
+    REMOTE_AUTH_NEED_CONSENT = setBoolVar(VARIABLE_REMOTE_AUTH_NEED_CONSENT, REMOTE_AUTH_NEED_CONSENT);
     
     DISABLE_PASSWORD_LOGIN = setBoolVar(VARIABLE_DISABLE_PASSWORD_LOGIN, DISABLE_PASSWORD_LOGIN);
     DISABLE_REGISTRATION = setBoolVar(VARIABLE_DISABLE_REGISTRATION, DISABLE_REGISTRATION);
     DISABLE_REGISTRATION_UI = setBoolVar(VARIABLE_DISABLE_REGISTRATION_UI, DISABLE_REGISTRATION_UI);
-    
+  
     LDAP_GROUP_MAPPING_SYNC_INTERVAL = setLongVar(VARIABLE_LDAP_GROUP_MAPPING_SYNC_INTERVAL,
       LDAP_GROUP_MAPPING_SYNC_INTERVAL);
-  }
   
+    VALIDATE_REMOTE_USER_EMAIL_VERIFIED =
+      setBoolVar(VARIABLE_VALIDATE_REMOTE_USER_EMAIL_VERIFIED, VALIDATE_REMOTE_USER_EMAIL_VERIFIED);
+    
+    MANAGED_CLOUD_REDIRECT_URI = setStrVar(VARIABLE_MANAGED_CLOUD_REDIRECT_URI, MANAGED_CLOUD_REDIRECT_URI);
+    MANAGED_CLOUD_PROVIDER_NAME = setStrVar(VARIABLE_MANAGED_CLOUD_PROVIDER_NAME, MANAGED_CLOUD_PROVIDER_NAME);
+  }
+
   public synchronized String getKRBAuthStatus() {
     checkCache();
     return KRB_AUTH;
   }
-  
+
   public synchronized String getLDAPAuthStatus() {
     checkCache();
     return LDAP_AUTH;
   }
-  
+
   public synchronized  boolean isKrbEnabled() {
     checkCache();
     return IS_KRB_ENABLED;
   }
-  
+
   public synchronized  boolean isLdapEnabled() {
     checkCache();
     return IS_LDAP_ENABLED;
   }
-  
+
   public synchronized String getLdapGroupMapping() {
     checkCache();
     return LDAP_GROUP_MAPPING;
   }
-  
+
   public synchronized String getLdapUserId() {
     checkCache();
     return LDAP_USER_ID;
   }
-  
+
   public synchronized String getLdapUserGivenName() {
     checkCache();
     return LDAP_USER_GIVEN_NAME;
   }
-  
+
   public synchronized String getLdapUserSurname() {
     checkCache();
     return LDAP_USER_SURNAME;
   }
-  
+
   public synchronized String getLdapUserMail() {
     checkCache();
     return LDAP_USER_EMAIL;
   }
-  
+
   public synchronized String getLdapUserSearchFilter() {
     checkCache();
     return LDAP_USER_SEARCH_FILTER;
   }
-  
+
   public synchronized String getLdapGroupSearchFilter() {
     checkCache();
     return LDAP_GROUP_SEARCH_FILTER;
   }
-  
+
   public synchronized String getKrbUserSearchFilter() {
     checkCache();
     return LDAP_KRB_USER_SEARCH_FILTER;
   }
-  
+
   public synchronized String getLdapAttrBinary() {
     checkCache();
     return LDAP_ATTR_BINARY;
   }
-  
+
   public synchronized String getLdapGroupTarget() {
     checkCache();
     return LDAP_GROUP_TARGET;
   }
-  
+
   public synchronized String getLdapDynGroupTarget() {
     checkCache();
     return LDAP_DYNAMIC_GROUP_TARGET;
   }
-  
+
   public synchronized String getLdapUserDN() {
     checkCache();
     return LDAP_USER_DN;
   }
-  
+
   public synchronized String getLdapGroupDN() {
     checkCache();
     return LDAP_GROUP_DN;
   }
-  
+
   public synchronized int getLdapAccountStatus() {
     checkCache();
     return LDAP_ACCOUNT_STATUS;
@@ -2852,25 +2923,74 @@ public class Settings implements Serializable {
     checkCache();
     return LDAP_GROUP_MEMBERS_SEARCH_FILTER;
   }
-  
+
   public synchronized String getOAuthEnabled() {
     checkCache();
     return OAUTH_ENABLED;
   }
-  
+
   public synchronized  boolean isOAuthEnabled() {
     checkCache();
     return IS_OAUTH_ENABLED;
   }
-  
+
   public synchronized String getOAuthGroupMapping() {
     checkCache();
     return OAUTH_GROUP_MAPPING;
   }
   
-  public synchronized String getOauthRedirectUri() {
+  public void updateOAuthGroupMapping(String mapping) {
+    updateVariableInternal(VARIABLE_OAUTH_GROUP_MAPPING, mapping, VariablesVisibility.ADMIN);
+  }
+  
+  public synchronized String getOauthRedirectUri(String providerName) {
+    return getOauthRedirectUri(providerName, false);
+  }
+  
+  /*
+   * when using oauth for hopsworks.ai we need to first redirect to hopsworks.ai
+   * which then redirect to hopsworks.
+   */
+  public synchronized String getOauthRedirectUri(String providerName, boolean skipManagedCloud) {
     checkCache();
-    return OAUTH_REDIRECT_URI;
+    if (MANAGED_CLOUD_REDIRECT_URI.isEmpty() || skipManagedCloud || !Objects.equals(MANAGED_CLOUD_PROVIDER_NAME,
+      providerName)) {
+      return OAUTH_REDIRECT_URI;
+    }
+    return MANAGED_CLOUD_REDIRECT_URI;
+  }
+  
+  public synchronized String getManagedCloudRedirectUri() {
+    checkCache();
+    return MANAGED_CLOUD_REDIRECT_URI;
+  }
+  
+  public synchronized String getManagedCloudProviderName() {
+    checkCache();
+    return MANAGED_CLOUD_PROVIDER_NAME;
+  }
+  
+  public void updateOauthRedirectUri(String uri) {
+    updateVariableInternal(VARIABLE_OAUTH_REDIRECT_URI, uri + OAUTH_REDIRECT_URI_PATH,
+            VariablesVisibility.ADMIN);
+  }
+  
+  public synchronized String getOauthLogoutRedirectUri() {
+    checkCache();
+    return OAUTH_LOGOUT_REDIRECT_URI;
+  }
+  
+  public void addPathAndupdateOauthLogoutRedirectUri(String uri) {
+    updateOauthLogoutRedirectUri(uri + OAUTH_LOGOUT_REDIRECT_URI_PATH);
+  }
+  
+  public void updateOauthLogoutRedirectUri(String uri) {
+    updateVariableInternal(VARIABLE_OAUTH_LOGOUT_REDIRECT_URI, uri,
+        VariablesVisibility.ADMIN);
+  }
+
+  public void updateManagedCloudRedirectUri(String uri) {
+    updateVariableInternal(VARIABLE_MANAGED_CLOUD_REDIRECT_URI, uri , VariablesVisibility.ADMIN);
   }
   
   public synchronized int getOAuthAccountStatus() {
@@ -2878,58 +2998,76 @@ public class Settings implements Serializable {
     return OAUTH_ACCOUNT_STATUS;
   }
   
+  public void updateOAuthAccountStatus(Integer val) {
+    updateVariableInternal(VARIABLE_OAUTH_ACCOUNT_STATUS, val.toString(), VariablesVisibility.ADMIN);
+  }
+  
+  public synchronized  boolean shouldValidateEmailVerified() {
+    checkCache();
+    return VALIDATE_REMOTE_USER_EMAIL_VERIFIED;
+  }
+  
+  public synchronized  boolean remoteAuthNeedConsent() {
+    checkCache();
+    return REMOTE_AUTH_NEED_CONSENT;
+  }
+  
+  public void updateRemoteAuthNeedConsent(boolean needConsent) {
+    updateVariableInternal(VARIABLE_REMOTE_AUTH_NEED_CONSENT, Boolean.toString(needConsent), VariablesVisibility.ADMIN);
+  }
+
   public synchronized String getVarLdapAccountStatus() {
     return VARIABLE_LDAP_ACCOUNT_STATUS;
   }
-  
+
   public synchronized String getVarLdapGroupMapping() {
     return VARIABLE_LDAP_GROUP_MAPPING;
   }
-  
+
   public synchronized String getVarLdapUserId() {
     return VARIABLE_LDAP_USER_ID;
   }
-  
+
   public synchronized String getVarLdapUserGivenName() {
     return VARIABLE_LDAP_USER_GIVEN_NAME;
   }
-  
+
   public synchronized String getVarLdapUserSurname() {
     return VARIABLE_LDAP_USER_SURNAME;
   }
-  
+
   public synchronized String getVarLdapUserMail() {
     return VARIABLE_LDAP_USER_EMAIL;
   }
-  
+
   public synchronized String getVarLdapUserSearchFilter() {
     return VARIABLE_LDAP_USER_SEARCH_FILTER;
   }
-  
+
   public synchronized String getVarLdapGroupSearchFilter() {
     return VARIABLE_LDAP_GROUP_SEARCH_FILTER;
   }
-  
+
   public synchronized String getVarKrbUserSearchFilter() {
     return VARIABLE_LDAP_KRB_USER_SEARCH_FILTER;
   }
-  
+
   public synchronized String getVarLdapAttrBinary() {
     return VARIABLE_LDAP_ATTR_BINARY;
   }
-  
+
   public synchronized String getVarLdapGroupTarget() {
     return VARIABLE_LDAP_GROUP_TARGET;
   }
-  
+
   public synchronized String getVarLdapDynGroupTarget() {
     return VARIABLE_LDAP_DYNAMIC_GROUP_TARGET;
   }
-  
+
   public synchronized String getVarLdapUserDN() {
     return VARIABLE_LDAP_USERDN;
   }
-  
+
   public synchronized String getVarLdapGroupDN() {
     return VARIABLE_LDAP_GROUPDN;
   }
@@ -2947,7 +3085,7 @@ public class Settings implements Serializable {
   public void updateRegistrationDisabled(boolean disable) {
     updateVariableInternal(VARIABLE_DISABLE_REGISTRATION, Boolean.toString(disable), VariablesVisibility.ADMIN);
   }
-  
+
   // Special flag to disable only registration UI but not the backend
   // It is used in managed cloud when user management is MANAGED by hopsworks.ai
   // Variable value is set during instance initialization by ec2-init
@@ -2956,7 +3094,7 @@ public class Settings implements Serializable {
     checkCache();
     return isRegistrationDisabled() || DISABLE_REGISTRATION_UI;
   }
-  
+
   public synchronized long ldapGroupMappingSyncInterval() {
     checkCache();
     return LDAP_GROUP_MAPPING_SYNC_INTERVAL;
@@ -2964,8 +3102,7 @@ public class Settings implements Serializable {
   
   
   //----------------------------END remote user------------------------------------
-  
-  
+
   // Service key rotation enabled
   private static final String SERVICE_KEY_ROTATION_ENABLED_KEY = "service_key_rotation_enabled";
   private boolean serviceKeyRotationEnabled = false;
@@ -3234,11 +3371,10 @@ public class Settings implements Serializable {
     return KUBE_KEYSTORE_KEY;
   }
 
-  private String KUBE_REGISTRY = "registry.docker-registry.svc.cluster.local";
-
-  public synchronized String getKubeRegistry() {
+  private String KUBE_PULL_POLICY = "Always";
+  public synchronized String getKubeImagePullPolicy() {
     checkCache();
-    return KUBE_REGISTRY;
+    return KUBE_PULL_POLICY;
   }
 
   private Integer KUBE_MAX_SERVING_INSTANCES = 10;
@@ -3253,7 +3389,6 @@ public class Settings implements Serializable {
     checkCache();
     return KUBE_API_MAX_ATTEMPTS;
   }
-  
   
   private Boolean ONLINE_FEATURESTORE = false;
   
@@ -3286,6 +3421,12 @@ public class Settings implements Serializable {
     return KUBE_DOCKER_MAX_CORES_ALLOCATION;
   }
 
+  private Integer KUBE_DOCKER_MAX_GPUS_ALLOCATION = 1;
+  public synchronized Integer getKubeDockerMaxGpusAllocation() {
+    checkCache();
+    return KUBE_DOCKER_MAX_GPUS_ALLOCATION;
+  }
+
   private Double KUBE_DOCKER_CORES_FRACTION = 1.0;
   public synchronized Double getKubeDockerCoresFraction() {
     checkCache();
@@ -3302,6 +3443,24 @@ public class Settings implements Serializable {
   public synchronized Boolean getKubeKServeInstalled() {
     checkCache();
     return KUBE_KSERVE_INSTALLED;
+  }
+  
+  private String KUBE_SERVING_NODE_LABELS = "";
+  public synchronized String getKubeServingNodeLabels() {
+    checkCache();
+    return KUBE_SERVING_NODE_LABELS;
+  }
+  
+  private String KUBE_SERVING_NODE_TOLERATIONS = "";
+  public synchronized String getKubeServingNodeTolerations() {
+    checkCache();
+    return KUBE_SERVING_NODE_TOLERATIONS;
+  }
+  
+  private String KUBE_KNATIVE_DOMAIN_NAME = "";
+  public synchronized String getKubeKnativeDomainName() {
+    checkCache();
+    return KUBE_KNATIVE_DOMAIN_NAME;
   }
   
   private Boolean HOPSWORKS_ENTERPRISE = false;
@@ -3492,23 +3651,23 @@ public class Settings implements Serializable {
     return !getCloudProvider().isEmpty();
   }
 
-  private boolean IAM_ROLE_CONFIGURED = false;
-  public synchronized boolean isIAMRoleConfigured() {
-    checkCache();
-    return IAM_ROLE_CONFIGURED;
-  }
-
-  private String CLOUD_TYPE = CLOUD_TYPES.NONE.name();
   public synchronized CLOUD_TYPES getCloudType() {
     checkCache();
-    return CLOUD_TYPES.valueOf(CLOUD_TYPE.toUpperCase());
+    if (CLOUD.isEmpty()) {
+      return CLOUD_TYPES.NONE;
+    }
+    return CLOUD_TYPES.fromString(CLOUD);
   }
-
+  
   public static enum CLOUD_TYPES {
     NONE,
     AWS,
     GCP,
-    AZURE
+    AZURE;
+    
+    public static CLOUD_TYPES fromString(String type) {
+      return CLOUD_TYPES.valueOf(type.toUpperCase());
+    }
   }
 
   public Boolean isHopsUtilInsecure() {
@@ -3585,18 +3744,6 @@ public class Settings implements Serializable {
     PROVENANCE_CLEANUP_SIZE = setIntVar(VARIABLE_PROVENANCE_CLEANUP_SIZE, PROVENANCE_CLEANUP_SIZE);
     PROVENANCE_CLEANER_PERIOD = setLongVar(VARIABLE_PROVENANCE_CLEANER_PERIOD, PROVENANCE_CLEANER_PERIOD);
   }
-
-  public synchronized Integer getProvenanceGraphMaxSize() {
-    checkCache();
-    return PROVENANCE_GRAPH_MAX_SIZE;
-  }
-
-  public synchronized void setProvenanceGraphMaxSize(Integer size) {
-    if(!PROVENANCE_GRAPH_MAX_SIZE.equals(size)) {
-      em.merge(new Variables(VARIABLE_PROVENANCE_GRAPH_MAX_SIZE, size.toString()));
-      PROVENANCE_GRAPH_MAX_SIZE = size;
-    }
-  }
   
   public synchronized Provenance.Type getProvType() {
     checkCache();
@@ -3612,6 +3759,18 @@ public class Settings implements Serializable {
     if(!PROVENANCE_ARCHIVE_SIZE.equals(size)) {
       em.merge(new Variables(VARIABLE_PROVENANCE_ARCHIVE_SIZE, size.toString()));
       PROVENANCE_ARCHIVE_SIZE = size;
+    }
+  }
+
+  public synchronized Integer getProvenanceGraphMaxSize() {
+    checkCache();
+    return PROVENANCE_GRAPH_MAX_SIZE;
+  }
+
+  public synchronized void setProvenanceGraphMaxSize(Integer size) {
+    if(!PROVENANCE_GRAPH_MAX_SIZE.equals(size)) {
+      em.merge(new Variables(VARIABLE_PROVENANCE_GRAPH_MAX_SIZE, size.toString()));
+      PROVENANCE_GRAPH_MAX_SIZE = size;
     }
   }
   
@@ -3649,6 +3808,12 @@ public class Settings implements Serializable {
     }
   }
   //------------------------------ END PROVENANCE --------------------------------------------//
+  
+  private String CLIENT_PATH = "/srv/hops/client.tar.gz";
+  public synchronized String getClientPath() {
+    checkCache();
+    return CLIENT_PATH;
+  }
   
   // CLOUD
   private String CLOUD_EVENTS_ENDPOINT = "";
@@ -3719,7 +3884,7 @@ public class Settings implements Serializable {
     checkCache();
     return DOCKER_BASE_IMAGE_PYTHON_VERSION;
   }
-
+  
   private final static String DOCKER_BASE_NON_PYTHON_IMAGE = "base";
   public synchronized String getBaseNonPythonDockerImage() {
     return DOCKER_BASE_NON_PYTHON_IMAGE + ":" + HOPSWORKS_VERSION;
@@ -3749,7 +3914,7 @@ public class Settings implements Serializable {
     checkCache();
     return MANAGED_DOCKER_REGISTRY && isCloud();
   }
-  
+
   public synchronized String getBaseNonPythonDockerImageWithNoTag(){
     checkCache();
     return DOCKER_BASE_NON_PYTHON_IMAGE;
@@ -3808,10 +3973,55 @@ public class Settings implements Serializable {
     checkCache();
     return USER_SEARCH_ENABLED;
   }
-
+  
+  /*
+   * When a user try to connect for the first time with OAuth or LDAP
+   * do not create the user if it does not bellong to any group.
+   * This is to avoid having users that belong to no group poluting the users table
+   */
+  private boolean REJECT_REMOTE_USER_NO_GROUP = false;
+  public synchronized boolean getRejectRemoteNoGroup() {
+    checkCache();
+    return REJECT_REMOTE_USER_NO_GROUP;
+  }
+  
+  public void updateRejectRemoteNoGroup(boolean reject) {
+    updateVariableInternal(VARIABLE_REJECT_REMOTE_USER_NO_GROUP, Boolean.toString(reject), VariablesVisibility.ADMIN);
+  }
+  
   private boolean SKIP_NAMESPACE_CREATION = false;
   public synchronized boolean shouldSkipNamespaceCreation() {
     checkCache();
     return SKIP_NAMESPACE_CREATION;
+  }
+
+  private long QUOTAS_ONLINE_ENABLED_FEATUREGROUPS = -1L;
+  public synchronized long getQuotasOnlineEnabledFeaturegroups() {
+    checkCache();
+    return QUOTAS_ONLINE_ENABLED_FEATUREGROUPS;
+  }
+
+  private long QUOTAS_ONLINE_DISABLED_FEATUREGROUPS = -1L;
+  public synchronized long getQuotasOnlineDisabledFeaturegroups() {
+    checkCache();
+    return QUOTAS_ONLINE_DISABLED_FEATUREGROUPS;
+  }
+
+  private long QUOTAS_TRAINING_DATASETS = -1L;
+  public synchronized long getQuotasTrainingDatasets() {
+    checkCache();
+    return QUOTAS_TRAINING_DATASETS;
+  }
+
+  private long QUOTAS_RUNNING_MODEL_DEPLOYMENTS = -1L;
+  public synchronized long getQuotasRunningModelDeployments() {
+    checkCache();
+    return QUOTAS_RUNNING_MODEL_DEPLOYMENTS;
+  }
+
+  private long QUOTAS_TOTAL_MODEL_DEPLOYMENTS = -1L;
+  public synchronized long getQuotasTotalModelDeployments() {
+    checkCache();
+    return QUOTAS_TOTAL_MODEL_DEPLOYMENTS;
   }
 }

@@ -23,7 +23,6 @@ describe "On #{ENV['OS']}" do
       end
 
       after :each do
-        setVar("aws_instance_role", "false")
         create_session(@project[:username], "Pass123")
       end
 
@@ -80,20 +79,7 @@ describe "On #{ENV['OS']}" do
         expect(parsed_json["bucket"] == "testbucket").to be true
       end
 
-      it "should not be able to add s3 connector without providing the access and secret key if the IAM Role is set to false" do
-        project = get_project
-        featurestore_id = get_featurestore_id(project.id)
-        json_result, _ = create_s3_connector(project.id, featurestore_id, bucket: "testbucket")
-        parsed_json = JSON.parse(json_result)
-        expect_status(400)
-        expect(parsed_json.key?("errorCode")).to be true
-        expect(parsed_json.key?("errorMsg")).to be true
-        expect(parsed_json.key?("usrMsg")).to be true
-        expect(parsed_json["errorCode"] == 270035 || parsed_json["errorCode"] == 270036).to be true
-      end
-
-      it "should be able to add s3 connector without providing the access and secret key if the IAM Role is set to true" do
-        setVar("aws_instance_role", "true")
+      it "should be able to add s3 connector without providing the access and secret key or iamRole" do
         project = get_project
         create_session(project[:username], "Pass123")
         featurestore_id = get_featurestore_id(project.id)
@@ -111,7 +97,6 @@ describe "On #{ENV['OS']}" do
         expect(parsed_json["name"] == connector_name).to be true
         expect(parsed_json["storageConnectorType"] == "S3").to be true
         expect(parsed_json["bucket"] == "testbucket").to be true
-        setVar("aws_instance_role", "false")
         create_session(project[:username], "Pass123")
       end
 
@@ -248,10 +233,21 @@ describe "On #{ENV['OS']}" do
         expect(parsed_json["errorCode"] == 270104).to be true
       end
 
-      it "should be not able to add s3 connector to the featurestore without access key" do
+      it "should not be able to add s3 connector to the featurestore with secret key and without access key" do
         project = get_project
         featurestore_id = get_featurestore_id(project.id)
         json_result, _ = create_s3_connector(project.id, featurestore_id, secret_key: "test", bucket: "testbucket")
+        parsed_json = JSON.parse(json_result)
+        expect_status(400)
+        expect(parsed_json.key?("errorCode")).to be true
+        expect(parsed_json.key?("errorMsg")).to be true
+        expect(parsed_json.key?("usrMsg")).to be true
+      end
+
+      it "should not be able to add s3 connector to the featurestore with access key and without secret key" do
+        project = get_project
+        featurestore_id = get_featurestore_id(project.id)
+        json_result, _ = create_s3_connector(project.id, featurestore_id, access_key: "test", bucket: "testbucket")
         parsed_json = JSON.parse(json_result)
         expect_status(400)
         expect(parsed_json.key?("errorCode")).to be true
