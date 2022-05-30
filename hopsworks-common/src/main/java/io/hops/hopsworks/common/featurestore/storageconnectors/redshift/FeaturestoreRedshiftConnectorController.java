@@ -172,22 +172,7 @@ public class FeaturestoreRedshiftConnectorController {
   }
   
   private void verifyPassword(String iamRole, String password) throws FeaturestoreException {
-    boolean needPassword = !settings.isIAMRoleConfigured() && Strings.isNullOrEmpty(iamRole);
-    if (needPassword && Strings.isNullOrEmpty(password)) {
-      throw new FeaturestoreException(
-        RESTCodes.FeaturestoreErrorCode.ILLEGAL_STORAGE_CONNECTOR_ARG, Level.FINE, "Database password not set.");
-    } else if (!needPassword && !Strings.isNullOrEmpty(password)) {
-      throw new FeaturestoreException(
-        RESTCodes.FeaturestoreErrorCode.ILLEGAL_STORAGE_CONNECTOR_ARG, Level.FINE, "Database password is not allowed.");
-    }
-  }
-  
-  private void verifyPassword(String iamRole, Secret secret) throws FeaturestoreException {
-    boolean needPassword = !settings.isIAMRoleConfigured() && Strings.isNullOrEmpty(iamRole);
-    if (needPassword && secret == null) {
-      throw new FeaturestoreException(
-        RESTCodes.FeaturestoreErrorCode.ILLEGAL_STORAGE_CONNECTOR_ARG, Level.FINE, "Database password not set.");
-    } else if (!needPassword && secret != null) {
+    if (!Strings.isNullOrEmpty(iamRole) && !Strings.isNullOrEmpty(password)) {
       throw new FeaturestoreException(
         RESTCodes.FeaturestoreErrorCode.ILLEGAL_STORAGE_CONNECTOR_ARG, Level.FINE, "Database password is not allowed.");
     }
@@ -212,8 +197,7 @@ public class FeaturestoreRedshiftConnectorController {
     
     featureStoreRedshiftConnector.setArguments(
       storageConnectorUtil.fromOptions(featurestoreRedshiftConnectorDTO.getArguments()));
-
-    verifyPassword(featureStoreRedshiftConnector.getIamRole(), featureStoreRedshiftConnector.getSecret());
+    
     if (featureStoreRedshiftConnector.getSecret() == null && secret != null) {
       secretsFacade.deleteSecret(secret.getId());
     }

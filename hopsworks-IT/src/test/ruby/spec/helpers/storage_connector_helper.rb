@@ -131,8 +131,11 @@ module StorageConnectorHelper
     end
 
     unless access_key.nil?
-      json_data["secretKey"] = access_key
-      json_data["accessKey"] = secret_key
+      json_data["accessKey"] = access_key
+    end
+
+    unless secret_key.nil?
+      json_data["secretKey"] = secret_key
     end
 
     json_result = post create_s3_connector_endpoint, json_data.to_json

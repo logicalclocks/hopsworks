@@ -117,13 +117,7 @@ public class FeaturestoreS3ConnectorController {
       featurestoreS3Connector.setIamRole(featurestoreS3ConnectorDTO.getIamRole());
     }
   
-    Secret secret = null;
-    FeaturestoreS3ConnectorAccessAndSecretKey keys = storageConnectorUtil.getSecret(
-      featurestoreS3Connector.getSecret(), FeaturestoreS3ConnectorAccessAndSecretKey.class);
-    if (storageConnectorUtil.shouldUpdate(keys.getAccessKey(), featurestoreS3ConnectorDTO.getAccessKey()) ||
-      storageConnectorUtil.shouldUpdate(keys.getSecretKey(), featurestoreS3ConnectorDTO.getSecretKey())) {
-      secret = updateSecret(user, featurestoreS3ConnectorDTO, featurestore, featurestoreS3Connector);
-    }
+    Secret secret = updateSecret(user, featurestoreS3ConnectorDTO, featurestore, featurestoreS3Connector);
 
     String currentEncryptionAlgorithm = featurestoreS3Connector.getServerEncryptionAlgorithm() != null ?
             featurestoreS3Connector.getServerEncryptionAlgorithm().getAlgorithm() : null;
@@ -160,11 +154,7 @@ public class FeaturestoreS3ConnectorController {
   }
   
   private void verifyKeyAndIAMRole(String iamRole, Secret secret) throws FeaturestoreException {
-    boolean needPassword = !settings.isIAMRoleConfigured() && Strings.isNullOrEmpty(iamRole);
-    if (needPassword && secret == null) {
-      throw new FeaturestoreException(
-        RESTCodes.FeaturestoreErrorCode.ILLEGAL_STORAGE_CONNECTOR_ARG, Level.FINE, "S3 Access Keys are not set.");
-    } else if (!needPassword && secret != null) {
+    if (!Strings.isNullOrEmpty(iamRole) && secret != null) {
       throw new FeaturestoreException(
         RESTCodes.FeaturestoreErrorCode.ILLEGAL_STORAGE_CONNECTOR_ARG, Level.FINE, "S3 Access Keys are not allowed");
     }
@@ -287,10 +277,12 @@ public class FeaturestoreS3ConnectorController {
       throw new IllegalArgumentException("Null input data");
     }
     verifyS3ConnectorBucket(featurestoreS3ConnectorDTO.getBucket());
-    
-    if (settings.isIAMRoleConfigured() || !Strings.isNullOrEmpty(featurestoreS3ConnectorDTO.getIamRole())) {
+  
+    if (!Strings.isNullOrEmpty(featurestoreS3ConnectorDTO.getIamRole())) {
       verifySecretAndAccessKeysForIamRole(featurestoreS3ConnectorDTO);
-    } else {
+    }
+    if (!Strings.isNullOrEmpty(featurestoreS3ConnectorDTO.getAccessKey()) ||
+      !Strings.isNullOrEmpty(featurestoreS3ConnectorDTO.getSecretKey())) {
       verifyS3ConnectorAccessKey(featurestoreS3ConnectorDTO.getAccessKey());
       verifyS3ConnectorSecretKey(featurestoreS3ConnectorDTO.getSecretKey());
     }
@@ -316,15 +308,10 @@ public class FeaturestoreS3ConnectorController {
    */
   private void verifySecretAndAccessKeysForIamRole(FeaturestoreS3ConnectorDTO featurestoreS3ConnectorDTO)
     throws FeaturestoreException{
-    if ((settings.isIAMRoleConfigured() || !Strings.isNullOrEmpty(featurestoreS3ConnectorDTO.getIamRole())) &&
-      (!Strings.isNullOrEmpty(featurestoreS3ConnectorDTO.getAccessKey()) ||
-      !Strings.isNullOrEmpty(featurestoreS3ConnectorDTO.getSecretKey()))) {
+    if (!Strings.isNullOrEmpty(featurestoreS3ConnectorDTO.getAccessKey()) ||
+      !Strings.isNullOrEmpty(featurestoreS3ConnectorDTO.getSecretKey())) {
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.S3_KEYS_FORBIDDEN, Level.FINE,
         "S3 Access Keys are not allowed");
-    }
-    if (!settings.isIAMRoleConfigured() && Strings.isNullOrEmpty(featurestoreS3ConnectorDTO.getIamRole())) {
-      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_STORAGE_CONNECTOR_ARG, Level.FINE,
-        "S3 IAM role not set.");
     }
   }
   

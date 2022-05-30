@@ -53,7 +53,6 @@ public class FeaturestoreClientSettingsDTO {
     FeaturestoreConstants.S3_STORAGE_CONNECTOR_SECRETKEY_MAX_LENGTH;
   private int s3StorageServerEncryptionKeyMaxLength =
     FeaturestoreConstants.S3_STORAGE_SERVER_ENCRYPTION_KEY_MAX_LENGTH;
-  private boolean s3IAMRole = false;
   private List<String> trainingDatasetDataFormats = FeaturestoreConstants.TRAINING_DATASET_DATA_FORMATS;
   private String jdbcConnectorType = FeaturestoreConstants.JDBC_CONNECTOR_TYPE;
   private String redshiftConnectorType = FeaturestoreConstants.REDSHIFT_CONNECTOR_TYPE;
@@ -151,15 +150,6 @@ public class FeaturestoreClientSettingsDTO {
   
   public void setJdbcStorageConnectorArgumentsMaxLength(int jdbcStorageConnectorArgumentsMaxLength) {
     this.jdbcStorageConnectorArgumentsMaxLength = jdbcStorageConnectorArgumentsMaxLength;
-  }
-
-  @XmlElement
-  public boolean isS3IAMRole() {
-    return s3IAMRole;
-  }
-
-  public void setS3IAMRole(boolean s3IAMRole) {
-    this.s3IAMRole = s3IAMRole;
   }
 
   @XmlElement

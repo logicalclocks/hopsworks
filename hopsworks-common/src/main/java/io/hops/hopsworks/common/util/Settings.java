@@ -136,7 +136,6 @@ public class Settings implements Serializable {
   private static final String VARIABLE_LOCALHOST = "localhost";
   private static final String VARIABLE_REQUESTS_VERIFY = "requests_verify";
   private static final String VARIABLE_CLOUD= "cloud";
-  private static final String VARIABLE_AWS_INSTANCE_ROLE = "aws_instance_role";
   private static final String VARIABLE_OPENSEARCH_IP = "elastic_ip";
   private static final String VARIABLE_OPENSEARCH_PORT = "elastic_port";
   private static final String VARIABLE_OPENSEARCH_REST_PORT = "elastic_rest_port";
@@ -552,7 +551,6 @@ public class Settings implements Serializable {
       ADMIN_EMAIL = setVar(VARIABLE_ADMIN_EMAIL, ADMIN_EMAIL);
       LOCALHOST = setBoolVar(VARIABLE_LOCALHOST, LOCALHOST);
       CLOUD = setStrVar(VARIABLE_CLOUD, CLOUD);
-      IAM_ROLE_CONFIGURED = setBoolVar(VARIABLE_AWS_INSTANCE_ROLE, IAM_ROLE_CONFIGURED);
       REQUESTS_VERIFY = setBoolVar(VARIABLE_REQUESTS_VERIFY, REQUESTS_VERIFY);
       PYTHON_KERNEL = setBoolVar(VARIABLE_PYTHON_KERNEL, PYTHON_KERNEL);
       TWOFACTOR_AUTH = setVar(VARIABLE_TWOFACTOR_AUTH, TWOFACTOR_AUTH);
@@ -3651,12 +3649,6 @@ public class Settings implements Serializable {
 
   public Boolean isCloud() {
     return !getCloudProvider().isEmpty();
-  }
-
-  private boolean IAM_ROLE_CONFIGURED = false;
-  public synchronized boolean isIAMRoleConfigured() {
-    checkCache();
-    return IAM_ROLE_CONFIGURED;
   }
 
   public synchronized CLOUD_TYPES getCloudType() {
