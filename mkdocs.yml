@@ -38,6 +38,10 @@ nav:
           - Register an Identity Provider: admin/oauth2/create-client.md
           - Create Okta Client: admin/oauth2/create-okta-client.md
       - Configure Alerts: admin/alert.md
+      - High availability / Disaster Recovery: 
+        - Overview: admin/ha-dr/intro.md
+        - High Availability: admin/ha-dr/ha.md
+        - Disaster Recovery: admin/ha-dr/dr.md
   - Hopsworks.ai: https://docs.hopsworks.ai/hopsworks-cloud/latest/
   - Examples: https://examples.hopsworks.ai/
   - Community: https://community.hopsworks.ai/
