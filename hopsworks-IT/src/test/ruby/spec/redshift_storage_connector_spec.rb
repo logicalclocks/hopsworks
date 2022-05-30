@@ -104,9 +104,9 @@ describe "On #{ENV['OS']}" do
                                   iamRole: "arn:aws:iam::123456789012:role/test-role-p1")
         expect_status_details(400)
       end
-      it "should fail to create with no iam and password" do
+      it "should create with no iam and password" do
         create_redshift_connector(@p1[:id], @featurestore1["featurestoreId"], databasePassword: nil, iamRole: nil)
-        expect_status_details(400)
+        expect_status_details(201)
       end
     end
   end
@@ -348,18 +348,18 @@ describe "On #{ENV['OS']}" do
         expect_status_details(200)
         check_redshift_connector_update(json_body, connector)
       end
-      it "should fail to update with no password and iam role" do
+      it "should update with no password and iam role" do
         get_storage_connector(@p2[:id], @featurestore2["featurestoreId"], "redshift_connector_iam")
         connector = json_body
         copyConnector = connector.clone
         copyConnector[:databasePassword] = nil
         copyConnector[:iamRole] = nil
         update_redshift_connector(@p2[:id], @featurestore2["featurestoreId"], copyConnector[:name], copyConnector)
-        expect_status_details(400)
-
-        get_storage_connector(@p2[:id], @featurestore2["featurestoreId"], connector[:name])
         expect_status_details(200)
-        check_redshift_connector_update(json_body, connector)
+
+        get_storage_connector(@p2[:id], @featurestore2["featurestoreId"], copyConnector[:name])
+        expect_status_details(200)
+        check_redshift_connector_update(json_body, copyConnector)
       end
     end
   end
