@@ -245,6 +245,8 @@ public class JupyterConfigFilesGenerator {
         .setDomainCATruststore(Paths.get(certsDir, hdfsUser + Settings.TRUSTSTORE_SUFFIX).toString())
         .setServiceDiscoveryDomain(settings.getServiceDiscoveryDomain())
         .setKafkaBrokers(kafkaBrokers.getKafkaBrokersString())
+        .setHopsworksPublicHost(settings.getHopsworksPublicHost())                                                   
+                                                                             
         .build();
     Map<String, Object> dataModel = new HashMap<>(1);
     dataModel.put("conf", template);

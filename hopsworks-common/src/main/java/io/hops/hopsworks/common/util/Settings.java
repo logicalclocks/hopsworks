@@ -675,6 +675,7 @@ public class Settings implements Serializable {
       TENSORFLOW_VERSION = setStrVar(VARIABLE_TENSORFLOW_VERSION, TENSORFLOW_VERSION);
       HOPSWORKS_VERSION = setStrVar(VARIABLE_HOPSWORKS_VERSION, HOPSWORKS_VERSION);
       HOPSWORKS_REST_LOG_LEVEL = setLogLevelVar(VARIABLE_HOPSWORKS_REST_LOG_LEVEL, HOPSWORKS_REST_LOG_LEVEL);
+      HOPSWORKS_PUBLIC_HOST = setStrVar(VARIABLE_HOPSWORKS_PUBLIC_HOST, HOPSWORKS_PUBLIC_HOST);
 
       PYPI_REST_ENDPOINT = setStrVar(VARIABLE_PYPI_REST_ENDPOINT, PYPI_REST_ENDPOINT);
       PYPI_SIMPLE_ENDPOINT = setStrVar(VARIABLE_PYPI_SIMPLE_ENDPOINT, PYPI_SIMPLE_ENDPOINT);
@@ -1867,6 +1868,13 @@ public class Settings implements Serializable {
     checkCache();
     return CLUSTER_CERT;
   }
+  // HOPSWORKS-3158
+  private String HOPSWORKS_PUBLIC_HOST = "";
+  
+  public String getHopsworksPublicHost() {
+    checkCache();
+    return HOPSWORKS_PUBLIC_HOST;
+  }  
 
   // Hopsworks
   public static final Charset ENCODING = StandardCharsets.UTF_8;
@@ -2412,6 +2420,7 @@ public class Settings implements Serializable {
   private static final String VARIABLE_PUBLIC_HTTPS_PORT = "public_https_port";
   private static final String VARIABLE_DELA_SEARCH_ENDPOINT = "dela_search_endpoint";
   private static final String VARIABLE_DELA_TRANSFER_ENDPOINT = "dela_transfer_endpoint";
+  private static final String VARIABLE_HOPSWORKS_PUBLIC_HOST = "hopsworks_public_host";
 
   public static final Level DELA_DEBUG = Level.INFO;
   private String HOPSSITE_HOST = "hops.site";

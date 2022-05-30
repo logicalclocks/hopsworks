@@ -647,6 +647,9 @@ public class KubeExecutionController extends AbstractExecutionController impleme
           servingEnvVars.forEach((key, value) -> environment.add(
             new EnvVarBuilder().withName(key).withValue(value).build()));
         }
+        //  HOPSWORKS-3158 add public hopsworks hostname
+        environment.add(new EnvVarBuilder().withName("HOPSWORKS_PUBLIC_HOST").
+                                           withValue(settings.getHopsworksPublicHost()).build());
         break;
       case DOCKER:
         if (dockerJobConfiguration.getEnvVars() != null && !dockerJobConfiguration.getEnvVars().isEmpty()) {
