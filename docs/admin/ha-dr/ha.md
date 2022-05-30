@@ -11,7 +11,7 @@ Example deployment:
 
 <figure>
   <a href="../../assets/images/admin/ha_dr/example_ha_cluster.svg">
-    <img src="../../assets/images/admin/ha_dr/example_ha_cluster.svg" alt="Example HA deployment"/>
+    <img width="800px" src="../../assets/images/admin/ha_dr/example_ha_cluster.svg" alt="Example HA deployment"/>
   </a>
   <figcaption>Example High Available deployment</figcaption>
 </figure>
