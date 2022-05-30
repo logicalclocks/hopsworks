@@ -41,7 +41,6 @@ public class TrainingDatasetDTOBuilder {
       FeaturestoreException, ServiceException {
     TrainingDatasetDTO trainingDatasetDTO = trainingDatasetController.convertTrainingDatasetToDTO(user, project,
         trainingDataset, true);
-    trainingDatasetDTO.setHref(uriInfo.getRequestUri());
     return trainingDatasetDTO;
   }
 
