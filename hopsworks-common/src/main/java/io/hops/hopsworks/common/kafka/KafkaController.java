@@ -243,7 +243,8 @@ public class KafkaController {
      * another
      * user. Hence the above schema query will be empty.
      */
-    ProjectTopics pt = new ProjectTopics(topicDto.getName(), project, schema);
+    ProjectTopics pt = new ProjectTopics(topicDto.getName(), topicDto.getNumOfPartitions(),
+        topicDto.getNumOfReplicas(), project, schema);
     
     projectTopicsFacade.save(pt);
     
