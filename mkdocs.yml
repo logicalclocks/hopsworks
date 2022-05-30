@@ -44,6 +44,10 @@ nav:
           - Configure LDAP: admin/ldap/configure-ldap.md
           - Configure Kerberos: admin/ldap/configure-krb.md
           - Configure server for LDAP and Kerberos: admin/ldap/configure-server.md
+      - High availability / Disaster Recovery: 
+        - Overview: admin/ha-dr/intro.md
+        - High Availability: admin/ha-dr/ha.md
+        - Disaster Recovery: admin/ha-dr/dr.md
       - User Management: admin/user.md
       - Configure Alerts: admin/alert.md
       - Manage Services: admin/services.md
