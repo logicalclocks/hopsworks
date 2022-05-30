@@ -186,6 +186,9 @@ public class SparkConfigurationUtil extends ConfigurationUtil {
     addToSparkEnvironment(sparkProps, "DOMAIN_CA_TRUSTSTORE", Settings.DOMAIN_CA_TRUSTSTORE, HopsUtils.IGNORE);
     addToSparkEnvironment(sparkProps, "SERVICE_DISCOVERY_DOMAIN", settings.getServiceDiscoveryDomain(),
         HopsUtils.IGNORE);
+    // HOPSWORKS-3158
+    addToSparkEnvironment(sparkProps, "HOPSWORKS_PUBLIC_HOST", settings.getHopsworksPublicHost(),
+                          HopsUtils.IGNORE);
 
     // add extra env vars
     if (servingConfig != null) {

@@ -39,7 +39,8 @@ public class JupyterNotebookConfigTemplateBuilder {
   private Boolean requestsVerify;
   private String domainCATruststore;
   private String serviceDiscoveryDomain = "consul";
-  private String kafkaBrokers;
+  private String kafkaBrokers;  
+  private String hopsworksPublicHost;
   
   private JupyterNotebookConfigTemplateBuilder() {}
   
@@ -223,6 +224,15 @@ public class JupyterNotebookConfigTemplateBuilder {
 
   public JupyterNotebookConfigTemplateBuilder setKafkaBrokers(String kafkaBrokers) {
     this.kafkaBrokers = kafkaBrokers;
+    return this;
+  }
+  
+  public String getHopsworksPublicHost() {
+    return hopsworksPublicHost;
+  }
+  
+  public JupyterNotebookConfigTemplateBuilder setHopsworksPublicHost(String hopsworksPublicHost) {
+    this.hopsworksPublicHost = hopsworksPublicHost;
     return this;
   }
   

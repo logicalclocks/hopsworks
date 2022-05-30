@@ -37,6 +37,7 @@ public class JupyterNotebookConfigTemplate extends JupyterTemplate {
   private final String domainCATruststore;
   private final String serviceDiscoveryDomain;
   private final String kafkaBrokers;
+  private final String hopsworksPublicHost;
   
   public JupyterNotebookConfigTemplate(JupyterNotebookConfigTemplateBuilder builder) {
     super(builder.getHdfsUser(), builder.getHadoopHome(), builder.getProject());
@@ -57,6 +58,7 @@ public class JupyterNotebookConfigTemplate extends JupyterTemplate {
     this.domainCATruststore = builder.getDomainCATruststore();
     this.serviceDiscoveryDomain = builder.getServiceDiscoveryDomain();
     this.kafkaBrokers = builder.getKafkaBrokers();
+    this.hopsworksPublicHost = builder.getHopsworksPublicHost();
   }
   
   public String getNamenodeIp() {
@@ -125,5 +127,9 @@ public class JupyterNotebookConfigTemplate extends JupyterTemplate {
 
   public String getKafkaBrokers() {
     return kafkaBrokers;
+  }
+  
+  public String getHopsworksPublicHost() {
+    return hopsworksPublicHost;
   }
 }
