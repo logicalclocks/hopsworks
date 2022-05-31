@@ -15,6 +15,7 @@
  */
 package io.hops.hopsworks.api.featurestore.trainingdataset;
 
+import io.hops.hopsworks.api.featurestore.FeaturestoreKeywordResource;
 import io.hops.hopsworks.api.featurestore.featureview.FeatureViewController;
 import io.hops.hopsworks.api.featurestore.statistics.StatisticsResource;
 import io.hops.hopsworks.api.filter.AllowedProjectRoles;
@@ -81,6 +82,8 @@ public class TrainingDatasetResource {
   private StatisticsResource statisticsResource;
   @Inject
   private TrainingDatasetTagResource tagResource;
+  @Inject
+  private FeaturestoreKeywordResource featurestoreKeywordResource;
   @EJB
   private FeatureViewController featureViewController;
   @EJB
@@ -288,6 +291,20 @@ public class TrainingDatasetResource {
     GenericEntity<TrainingDatasetDTO> trainingDatasetDTOGenericEntity =
         new GenericEntity<TrainingDatasetDTO>(oldTrainingDatasetDTO) {};
     return Response.ok().entity(trainingDatasetDTOGenericEntity).build();
+  }
+
+  @Path("/version/{version: [0-9]+}/keywords")
+  public FeaturestoreKeywordResource keywords(
+      @ApiParam(value = "Version of the training dataset", required = true)
+      @PathParam("version")
+          Integer version
+  ) throws FeaturestoreException {
+    this.featurestoreKeywordResource.setProject(project);
+    this.featurestoreKeywordResource.setFeaturestore(featurestore);
+    TrainingDataset trainingDataset = trainingDatasetController.getTrainingDatasetByFeatureViewAndVersion(
+        featureView, version);
+    this.featurestoreKeywordResource.setTrainingDataset(trainingDataset);
+    return this.featurestoreKeywordResource;
   }
 
   @Path("/version/{version: [0-9]+}/statistics")
