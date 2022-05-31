@@ -5,10 +5,7 @@ package io.hops.hopsworks.cloud;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import io.hops.hopsworks.cloud.dao.heartbeat.HeartbeatRequest;
-import io.hops.hopsworks.cloud.dao.heartbeat.HeartbeatResponse;
-import io.hops.hopsworks.cloud.dao.heartbeat.HeartbeatResponseHttpMessage;
-import io.hops.hopsworks.cloud.dao.heartbeat.Version;
+import io.hops.hopsworks.cloud.dao.heartbeat.*;
 import io.hops.hopsworks.cloud.dao.heartbeat.commands.CloudCommand;
 import io.hops.hopsworks.cloud.dao.heartbeat.commands.CloudCommandType;
 import io.hops.hopsworks.cloud.dao.heartbeat.commands.CloudCommandTypeDeserializer;
@@ -116,12 +113,12 @@ public class HeartbeatDeserialization {
   
   private HeartbeatRequest constructHeartbeatRequest() {
     List<CloudNode> decommissioningNodes = new ArrayList<>(2);
-    decommissioningNodes.add(new CloudNode("node0", "host0", "ip", 0, "instanceType", "running"));
-    decommissioningNodes.add(new CloudNode("node1", "host1", "ip", 2, "instanceType1", "running"));
+    decommissioningNodes.add(new CloudNode("node0", "host0", "ip", 0, "instanceType", "running", CloudNodeType.Worker));
+    decommissioningNodes.add(new CloudNode("node1", "host1", "ip", 2, "instanceType1", "running", CloudNodeType.Worker));
 
     List<CloudNode> decommissionedNodes = new ArrayList<>(2);
-    decommissionedNodes.add(new CloudNode("node2", "host23", "ip", 0, "instanceType", "running"));
-    decommissionedNodes.add(new CloudNode("node3", "host24", "ip2", 5, "instanceType5", "running"));
+    decommissionedNodes.add(new CloudNode("node2", "host23", "ip", 0, "instanceType", "running", CloudNodeType.Worker));
+    decommissionedNodes.add(new CloudNode("node3", "host24", "ip2", 5, "instanceType5", "running", CloudNodeType.Worker));
 
     Map<String, CommandStatus> commandsStatus = new HashMap<>(2);
     commandsStatus.put("1", new CommandStatus(CommandStatus.CLOUD_COMMAND_STATUS.NEW, "message"));
@@ -146,8 +143,10 @@ public class HeartbeatDeserialization {
 
   private HeartbeatResponse constructHeartbeatResponse() {
     List<CloudNode> workers = new ArrayList<>(2);
-    workers.add(new CloudNode("node0", "host0", "ip", 0, "instanceType", "running"));
-    workers.add(new CloudNode("node1", "host1", "ip", 2, "instanceType1", "running"));
+    workers.add(new CloudNode("node0", "host0", "ip", 0, "instanceType", "running", CloudNodeType.Worker));
+    workers.add(new CloudNode("node1", "host1", "ip", 2, "instanceType1", "running", CloudNodeType.Worker));
+    workers.add(new CloudNode("node1", "host1", "ip", 2, "instanceType1", "running", CloudNodeType.Secondary));
+    workers.add(new CloudNode("node1", "host1", "ip", 2, "instanceType1", "running", CloudNodeType.Secondary));
 
     Map<String, Integer> nodesToRemove0 = new HashMap<>();
     nodesToRemove0.put("instance.type.20", 3);
@@ -180,8 +179,8 @@ public class HeartbeatDeserialization {
 
   private HeartbeatResponse constructWorkersHeartbeatResponse() {
     List<CloudNode> workers = new ArrayList<>(2);
-    workers.add(new CloudNode("node0", "host0", "ip", 0, "instanceType", "running"));
-    workers.add(new CloudNode("node1", "host1", "ip", 2, "instanceType1", "running"));
+    workers.add(new CloudNode("node0", "host0", "ip", 0, "instanceType", "running", CloudNodeType.Worker));
+    workers.add(new CloudNode("node1", "host1", "ip", 2, "instanceType1", "running", CloudNodeType.Worker));
 
     final HeartbeatResponse hr = new HeartbeatResponse(workers, Collections.EMPTY_LIST, Collections.EMPTY_LIST);
     hr.setVersion(Version.V010);

@@ -4,6 +4,7 @@
 package io.hops.hopsworks.cloud;
 
 import com.google.common.collect.Lists;
+import io.hops.hopsworks.cloud.dao.heartbeat.CloudNodeType;
 import io.hops.hopsworks.cloud.dao.heartbeat.HeartbeatRequest;
 import io.hops.hopsworks.cloud.dao.heartbeat.HeartbeatResponse;
 import io.hops.hopsworks.cloud.dao.heartbeat.commands.CloudCommandType;
@@ -251,14 +252,24 @@ public class CloudManager {
    *
    */
   private Map<String, CloudNode> addWorkers(HeartbeatResponse response) {
+    return addWorkers(response, hostsFacade, hostsController, decommissionedNodes);
+  }
+
+  @VisibleForTesting
+  Map<String, CloudNode> addWorkers(HeartbeatResponse response, HostsFacade hostsFacade,
+                                    HostsController hostsController, Set<CloudNode> decommissionedNodes) {
     Map<String, CloudNode> workers = new HashMap<>(response.getWorkers().size());
     for (CloudNode worker : response.getWorkers()) {
-      workers.put(worker.getHost(), worker);
+
+      if(worker.getNodeType() == CloudNodeType.Worker){
+        workers.put(worker.getHost(), worker);
+      }
+
       // Do not put back nodes that were removed by the previous heartbeat
       // but not yet shutdown
-      if (!worker.getInstanceState().equals("error") && 
+      if (!worker.getInstanceState().equals("error") &&
           !decommissionedNodes.contains(worker) && !hostsFacade.findByHostIp(worker.getIp()).isPresent()) {
-        LOG.log(Level.INFO, "Adding new worker to the database " + worker.getHost());
+        LOG.log(Level.INFO, "Adding new " + worker.getNodeType() + " to the database " + worker.getHost());
         HostDTO hostDTO = new HostDTO();
         hostDTO.setHostname(worker.getHost());
         hostDTO.setHostIp(worker.getIp());

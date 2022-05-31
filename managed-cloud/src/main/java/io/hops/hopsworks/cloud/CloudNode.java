@@ -3,6 +3,8 @@
  */
 package io.hops.hopsworks.cloud;
 
+import io.hops.hopsworks.cloud.dao.heartbeat.CloudNodeType;
+
 public class CloudNode {
 
   private String nodeId;
@@ -12,13 +14,17 @@ public class CloudNode {
   private String instanceType;
   private String instanceState;
 
-  public CloudNode(String nodeId, String host, String ip, Integer numGPUs, String instanceType, String instanceState) {
+  private CloudNodeType nodeType;
+
+  public CloudNode(String nodeId, String host, String ip, Integer numGPUs, String instanceType, String instanceState,
+                   CloudNodeType nodeType) {
     this.nodeId = nodeId;
     this.host = host;
     this.ip = ip;
     this.numGPUs = numGPUs;
     this.instanceType = instanceType;
     this.instanceState = instanceState;
+    this.nodeType = nodeType;
   }
 
   public String getNodeId() {
@@ -69,6 +75,14 @@ public class CloudNode {
     this.instanceState = instanceState;
   }
 
+  public CloudNodeType getNodeType() {
+    return nodeType;
+  }
+
+  public void setNodeType(CloudNodeType nodeType) {
+    this.nodeType = nodeType;
+  }
+
   @Override
   public boolean equals(Object other) {
     if (this == other) {
@@ -95,6 +109,7 @@ public class CloudNode {
             ", numGPUs=" + numGPUs +
             ", instanceType='" + instanceType + '\'' +
             ", instanceState='" + instanceState + '\'' +
+            ", nodeType='" + nodeType + '\''+
             '}';
   }
 }

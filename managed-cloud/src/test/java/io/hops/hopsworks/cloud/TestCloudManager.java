@@ -3,18 +3,20 @@
  */
 package io.hops.hopsworks.cloud;
 
+import io.hops.hopsworks.cloud.dao.heartbeat.CloudNodeType;
 import io.hops.hopsworks.cloud.dao.heartbeat.DecommissionStatus;
+import io.hops.hopsworks.cloud.dao.heartbeat.HeartbeatResponse;
 import io.hops.hopsworks.cloud.dao.heartbeat.commands.DecommissionNodeCommand;
 import io.hops.hopsworks.cloud.dao.heartbeat.commands.RemoveNodesCommand;
+import io.hops.hopsworks.common.dao.host.HostDTO;
+import io.hops.hopsworks.common.dao.host.HostsFacade;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.hosts.HostsController;
 import io.hops.hopsworks.common.proxies.CAProxy;
 import java.io.IOException;
 import java.time.Instant;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.stream.Collectors;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.TransformerConfigurationException;
 import javax.xml.transform.TransformerException;
@@ -27,6 +29,7 @@ import org.apache.hadoop.yarn.client.cli.RMAdminCLI;
 import org.junit.Assert;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
 import org.mockito.Mockito;
 
 
@@ -39,7 +42,7 @@ public class TestCloudManager {
     Mockito.doNothing().when(cloudManager).execute(Mockito.any(RMAdminCLI.class), Mockito.any(String[].class));
     Mockito.doReturn(Instant.now()).when(cloudManager).getBeginningOfHeartbeat();
     Map<String, CloudNode> workers = new HashMap<>();
-    workers.put("host1", new CloudNode("id", "host1", "ip1", 0, "type1", "running"));
+    workers.put("host1", new CloudNode("id", "host1", "ip1", 0, "type1", "running", CloudNodeType.Worker));
     
     Configuration conf = new Configuration();
 
@@ -138,10 +141,10 @@ public class TestCloudManager {
     Mockito.doNothing().when(cloudManager).execute(Mockito.any(RMAdminCLI.class), Mockito.any(String[].class));
     Mockito.doReturn(Instant.now()).when(cloudManager).getBeginningOfHeartbeat();
     Map<String, CloudNode> workers = new HashMap<>();
-    workers.put("host1", new CloudNode("id", "host1", "ip1", 0, "type1", "running"));
-    workers.put("host2", new CloudNode("id", "host2", "ip2", 0, "type1", "running"));
-    workers.put("host3", new CloudNode("id", "host3", "ip3", 0, "type1", "running"));
-    workers.put("host4", new CloudNode("id", "host4", "ip4", 0, "type1", "running"));
+    workers.put("host1", new CloudNode("id", "host1", "ip1", 0, "type1", "running", CloudNodeType.Worker));
+    workers.put("host2", new CloudNode("id", "host2", "ip2", 0, "type1", "running", CloudNodeType.Worker));
+    workers.put("host3", new CloudNode("id", "host3", "ip3", 0, "type1", "running", CloudNodeType.Worker));
+    workers.put("host4", new CloudNode("id", "host4", "ip4", 0, "type1", "running", CloudNodeType.Worker));
     
     Configuration conf = new Configuration();
 
@@ -333,8 +336,8 @@ public class TestCloudManager {
     Mockito.doNothing().when(cloudManager).execute(Mockito.any(RMAdminCLI.class), Mockito.any(String[].class));
     Mockito.doReturn(Instant.now()).when(cloudManager).getBeginningOfHeartbeat();
     Map<String, CloudNode> workers = new HashMap<>();
-    workers.put("host1", new CloudNode("id", "host1", "ip1", 0, "type1", "running"));
-    workers.put("host2", new CloudNode("id", "host2", "ip2", 0, "type1", "running"));
+    workers.put("host1", new CloudNode("id", "host1", "ip1", 0, "type1", "running", CloudNodeType.Worker));
+    workers.put("host2", new CloudNode("id", "host2", "ip2", 0, "type1", "running", CloudNodeType.Worker));
 
     Configuration conf = new Configuration();
 
@@ -391,8 +394,8 @@ public class TestCloudManager {
     Mockito.doNothing().when(cloudManager).execute(Mockito.any(RMAdminCLI.class), Mockito.any(String[].class));
     Mockito.doReturn(Instant.now()).when(cloudManager).getBeginningOfHeartbeat();
     Map<String, CloudNode> workers = new HashMap<>();
-    workers.put("host1", new CloudNode("id", "host1", "ip1", 0, "type1", "running"));
-    workers.put("host2", new CloudNode("id", "host2", "ip2", 0, "type1", "running"));
+    workers.put("host1", new CloudNode("id", "host1", "ip1", 0, "type1", "running", CloudNodeType.Worker));
+    workers.put("host2", new CloudNode("id", "host2", "ip2", 0, "type1", "running", CloudNodeType.Worker));
 
     Configuration conf = new Configuration();
 
@@ -450,10 +453,10 @@ public class TestCloudManager {
     Mockito.doNothing().when(cloudManager).execute(Mockito.any(RMAdminCLI.class), Mockito.any(String[].class));
     Mockito.doReturn(Instant.now()).when(cloudManager).getBeginningOfHeartbeat();
     Map<String, CloudNode> workers = new HashMap<>();
-    workers.put("host1", new CloudNode("id", "host1", "ip1", 0, "type1", "running"));
-    workers.put("host2", new CloudNode("id", "host2", "ip2", 0, "type1", "running"));
-    workers.put("host3", new CloudNode("id", "host3", "ip3", 0, "type1", "running"));
-    workers.put("host4", new CloudNode("id", "host4", "ip4", 0, "type1", "running"));
+    workers.put("host1", new CloudNode("id", "host1", "ip1", 0, "type1", "running", CloudNodeType.Worker));
+    workers.put("host2", new CloudNode("id", "host2", "ip2", 0, "type1", "running", CloudNodeType.Worker));
+    workers.put("host3", new CloudNode("id", "host3", "ip3", 0, "type1", "running", CloudNodeType.Worker));
+    workers.put("host4", new CloudNode("id", "host4", "ip4", 0, "type1", "running", CloudNodeType.Worker));
     
     Configuration conf = new Configuration();
 
@@ -523,5 +526,40 @@ public class TestCloudManager {
     Mockito.verify(dfsOps).updateExcludeList(nodes.capture());
     Assert.assertEquals("host1\nhost3\nhost2", nodes.getValue());
     Mockito.verify(dfsOps).refreshNodes();
+  }
+
+  @Test
+  public void testAllWorkersReturnsOnlyWorkers() throws Exception {
+    CloudManager cloudManager = Mockito.spy(CloudManager.class);
+    Mockito.doNothing().when(cloudManager).execute(Mockito.any(RMAdminCLI.class), Mockito.any(String[].class));
+    Mockito.doReturn(Instant.now()).when(cloudManager).getBeginningOfHeartbeat();
+
+    List<CloudNode> cloudNodes = new ArrayList<>();
+    cloudNodes.add(new CloudNode("id", "host1", "ip1", 0, "type1", "running", CloudNodeType.Worker));
+    cloudNodes.add(new CloudNode("id", "host2", "ip2", 0, "type1", "running", CloudNodeType.Secondary));
+    cloudNodes.add( new CloudNode("id", "host3", "ip3", 0, "type1", "running", CloudNodeType.Secondary));
+    cloudNodes.add(new CloudNode("id", "host4", "ip4", 0, "type1", "running", CloudNodeType.NDB_MGM));
+    cloudNodes.add(new CloudNode("id", "host5", "ip5", 0, "type1", "running", CloudNodeType.Worker));
+
+    HostsController hostsController = Mockito.mock(HostsController.class);
+    HostsFacade hostsFacade = Mockito.mock(HostsFacade.class);
+
+    HeartbeatResponse response = new HeartbeatResponse(cloudNodes, new ArrayList<>(), new ArrayList<>());
+
+    Map<String, CloudNode> workers = cloudManager.addWorkers(response, hostsFacade, hostsController, new HashSet<>());
+
+    Assert.assertEquals(2, workers.size());
+    Assert.assertEquals(CloudNodeType.Worker, workers.get("host1").getNodeType());
+    Assert.assertEquals(CloudNodeType.Worker, workers.get("host5").getNodeType());
+
+    ArgumentCaptor<String> hostArgumentCaptor = ArgumentCaptor.forClass(String.class);
+    ArgumentCaptor<HostDTO> hostDTOArgumentCaptor = ArgumentCaptor.forClass(HostDTO.class);
+
+    Mockito.verify(hostsController, Mockito.times(cloudNodes.size())).addOrUpdateClusterNode(hostArgumentCaptor.capture(),
+        hostDTOArgumentCaptor.capture());
+
+    Assert.assertEquals(Arrays.asList("host1", "host2", "host3", "host4", "host5"), hostArgumentCaptor.getAllValues());
+    Assert.assertEquals(hostArgumentCaptor.getAllValues(),
+        hostDTOArgumentCaptor.getAllValues().stream().map(HostDTO::getHostname).collect(Collectors.toList()));
   }
 }
