@@ -104,8 +104,8 @@ public class FeaturestoreKeywordResource {
   }
 
   @Logged(logLevel = LogLevel.OFF)
-  public void setTrainingDatasetId(Integer trainingDatasetId) throws FeaturestoreException {
-    this.trainingDataset = trainingDatasetController.getTrainingDatasetById(featurestore, trainingDatasetId);
+  public void setTrainingDataset(TrainingDataset trainingDataset) {
+    this.trainingDataset = trainingDataset;
   }
 
   @Logged(logLevel = LogLevel.OFF)

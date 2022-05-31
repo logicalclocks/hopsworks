@@ -306,15 +306,64 @@ describe "On #{ENV['OS']}" do
         end
 
         it "should be able to attach keywords" do
-          # TODO: keyword not implement yet for TD
+          featurestore_id = get_featurestore_id(@project.id)
+          all_metadata = create_featureview_training_dataset_from_project(@project)
+          parsed_json = all_metadata["response"]
+          featureview = all_metadata["featureView"]
+
+          post "#{ENV['HOPSWORKS_API']}/project/#{@project.id}/featurestores/#{featurestore_id}/featureview/#{featureview["name"]}/version/#{featureview["version"]}" +
+            "/trainingdatasets/version/#{parsed_json["version"]}/keywords", {keywords: ['hello', 'this', 'keyword123', 'CAPITAL_LETTERS']}.to_json
+          expect_status_details(200)
+
+          json_result = get "#{ENV['HOPSWORKS_API']}/project/#{@project.id}/featurestores/#{featurestore_id}/featureview/#{featureview["name"]}/version/#{featureview["version"]}" +
+            "/trainingdatasets/version/#{parsed_json["version"]}/keywords"
+          expect_status_details(200)
+          parsed_json = JSON.parse(json_result)
+          expect(parsed_json['keywords']).to include('hello')
+          expect(parsed_json['keywords']).to include('this')
+          expect(parsed_json['keywords']).to include('keyword123')
+          expect(parsed_json['keywords']).to include('CAPITAL_LETTERS')
         end
 
         it "should fail to attach invalid keywords" do
-          # TODO: keyword not implement yet for TD
+          featurestore_id = get_featurestore_id(@project.id)
+          all_metadata = create_featureview_training_dataset_from_project(@project)
+          parsed_json = all_metadata["response"]
+          featureview = all_metadata["featureView"]
+
+          post "#{ENV['HOPSWORKS_API']}/project/#{@project.id}/featurestores/#{featurestore_id}/featureview/#{featureview["name"]}/version/#{featureview["version"]}" +
+            "/trainingdatasets/version/#{parsed_json["version"]}/keywords", {keywords: ['hello', 'this', '@#!@#^(&$']}
+          expect_status(400)
         end
 
         it "should be able to remove keyword" do
-          # TODO: keyword not implement yet for TD
+          featurestore_id = get_featurestore_id(@project.id)
+          all_metadata = create_featureview_training_dataset_from_project(@project)
+          parsed_td = all_metadata["response"]
+          featureview = all_metadata["featureView"]
+
+          post "#{ENV['HOPSWORKS_API']}/project/#{@project.id}/featurestores/#{featurestore_id}/featureview/#{featureview["name"]}/version/#{featureview["version"]}" +
+            "/trainingdatasets/version/#{parsed_td["version"]}/keywords", {keywords: ['hello', 'this', 'keyword123']}.to_json
+
+          json_result = get "#{ENV['HOPSWORKS_API']}/project/#{@project.id}/featurestores/#{featurestore_id}/featureview/#{featureview["name"]}/version/#{featureview["version"]}" +
+            "/trainingdatasets/version/#{parsed_td["version"]}/keywords"
+          expect_status(200)
+          parsed_json = JSON.parse(json_result)
+          expect(parsed_json['keywords']).to include('hello')
+          expect(parsed_json['keywords']).to include('this')
+          expect(parsed_json['keywords']).to include('keyword123')
+
+          delete "#{ENV['HOPSWORKS_API']}/project/#{@project.id}/featurestores/#{featurestore_id}/featureview/#{featureview["name"]}/version/#{featureview["version"]}" +
+            "/trainingdatasets/version/#{parsed_td["version"]}/keywords?keyword=hello"
+          expect_status(200)
+
+          json_result = get "#{ENV['HOPSWORKS_API']}/project/#{@project.id}/featurestores/#{featurestore_id}/featureview/#{featureview["name"]}/version/#{featureview["version"]}" +
+            "/trainingdatasets/version/#{parsed_td["version"]}/keywords"
+          expect_status(200)
+          parsed_json = JSON.parse(json_result)
+          expect(parsed_json['keywords']).not_to include('hello')
+          expect(parsed_json['keywords']).to include('this')
+          expect(parsed_json['keywords']).to include('keyword123')
         end
 
         it "should be able to create a training dataset without statistics settings to test the defaults" do
