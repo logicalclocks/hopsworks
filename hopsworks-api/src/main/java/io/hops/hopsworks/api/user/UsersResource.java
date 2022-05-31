@@ -312,8 +312,7 @@ public class UsersResource {
   @Path("secrets")
   @Produces(MediaType.APPLICATION_JSON)
   @ApiOperation(value = "Deletes all secrets of a user")
-  @JWTRequired(acceptedTokens = {Audience.API, Audience.JOB},
-    allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
+  @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
   @ApiKeyRequired(acceptedScopes = {ApiScope.USER}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
   public Response deleteAllSecrets(@Context SecurityContext sc,
     @Context HttpServletRequest req) throws UserException {

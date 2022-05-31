@@ -247,9 +247,6 @@ public class ProjectService {
   @GET
   @Path("/getAll")
   @Produces(MediaType.APPLICATION_JSON)
-  @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
-  @ApiKeyRequired(acceptedScopes = {ApiScope.PROJECT},
-    allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
   public Response getAllProjects(@Context HttpServletRequest req, @Context SecurityContext sc) {
     List<Project> list = projectFacade.findAll();
     GenericEntity<List<Project>> projects = new GenericEntity<List<Project>>(list) {
@@ -259,7 +256,8 @@ public class ProjectService {
 
   @GET
   @Path("/getProjectInfo/{projectName}")
-  @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
+  @JWTRequired(acceptedTokens = {Audience.API, Audience.JOB},
+    allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
   @ApiKeyRequired(acceptedScopes = {ApiScope.PROJECT},
     allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
   @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
@@ -735,9 +733,10 @@ public class ProjectService {
   @Path("{projectId}/credentials")
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
-  @ApiKeyRequired(acceptedScopes = {ApiScope.PROJECT}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
+  @ApiKeyRequired(acceptedScopes = {ApiScope.PROJECT},
+    allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
   @JWTRequired(acceptedTokens = {Audience.API, Audience.JOB},
-    allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
+    allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
   public Response credentials(@PathParam("projectId") Integer id, @Context HttpServletRequest req,
         @Context SecurityContext sc) throws ProjectException, DatasetException {
     Users user = jWTHelper.getUserPrincipal(sc);
@@ -749,8 +748,10 @@ public class ProjectService {
   @Path("{projectId}/client")
   @Produces(MediaType.APPLICATION_OCTET_STREAM)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
+  @JWTRequired(acceptedTokens = {Audience.API, Audience.JOB},
+    allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
   @ApiKeyRequired(acceptedScopes = {ApiScope.PROJECT},
-      allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
+    allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
   public Response client(@PathParam("projectId") Integer id, @Context HttpServletRequest req,
       @Context SecurityContext sc) throws ProjectException, DatasetException, GenericException {
     throw new GenericException(RESTCodes.GenericErrorCode.ENTERPRISE_FEATURE, Level.FINE);
