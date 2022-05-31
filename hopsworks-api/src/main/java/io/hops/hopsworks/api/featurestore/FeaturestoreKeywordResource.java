@@ -96,8 +96,8 @@ public class FeaturestoreKeywordResource {
     this.featuregroup = featuregroupController.getFeaturegroupById(featurestore, featureGroupId);
   }
 
-  public void setTrainingDatasetId(Integer trainingDatasetId) throws FeaturestoreException {
-    this.trainingDataset = trainingDatasetController.getTrainingDatasetById(featurestore, trainingDatasetId);
+  public void setTrainingDataset(TrainingDataset trainingDataset) {
+    this.trainingDataset = trainingDataset;
   }
 
   public void setFeatureView(String name, Integer version) throws FeaturestoreException {

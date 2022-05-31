@@ -470,7 +470,8 @@ public class TrainingDatasetService {
       throws FeaturestoreException {
     this.featurestoreKeywordResource.setProject(project);
     this.featurestoreKeywordResource.setFeaturestore(featurestore);
-    this.featurestoreKeywordResource.setTrainingDatasetId(trainingDatasetId);
+    TrainingDataset trainingDataset = trainingDatasetController.getTrainingDatasetById(featurestore, trainingDatasetId);
+    this.featurestoreKeywordResource.setTrainingDataset(trainingDataset);
     return featurestoreKeywordResource;
   }
 
