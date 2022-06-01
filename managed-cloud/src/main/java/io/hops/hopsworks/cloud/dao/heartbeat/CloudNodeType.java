@@ -1,3 +1,6 @@
+/*
+ * Copyright (C) 2022, Logical Clocks AB. All rights reserved
+ */
 package io.hops.hopsworks.cloud.dao.heartbeat;
 
 import com.google.gson.annotations.SerializedName;
