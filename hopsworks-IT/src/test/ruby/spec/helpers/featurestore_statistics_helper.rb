@@ -44,3 +44,4 @@ module FeatureStoreStatisticsHelper
     get "#{ENV['HOPSWORKS_API']}/project/#{project_id}/featurestores/#{featurestore_id}/#{entity_type}/#{entity_id}/statistics?sort_by=commit_time:desc&offset=0&limit=1&fields=content&for_transformation=#{for_transformation}"
   end
 end
+

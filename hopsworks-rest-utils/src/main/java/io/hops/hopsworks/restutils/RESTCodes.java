@@ -1637,7 +1637,38 @@ public class RESTCodes {
       Response.Status.BAD_REQUEST),
     GCS_FIELD_MISSING(185, "Field missing", Response.Status.BAD_REQUEST),
     NESTED_JOIN_NOT_ALLOWED(187, "Nested join is not supported.", Response.Status.BAD_REQUEST),
-    FEATURE_NOT_FOUND(188, "Could not find feature.", Response.Status.NOT_FOUND);
+    FEATURE_NOT_FOUND(188, "Could not find feature.", Response.Status.NOT_FOUND),
+    TRAINING_DATASET_COULD_NOT_BE_CREATED(186, "Could not create training dataset",
+      Response.Status.INTERNAL_SERVER_ERROR),
+    EXPECTATION_TYPE_NOT_FOUND(189, "Expectation type not supported.", Response.Status.NOT_FOUND),
+    EXPECTATION_NOT_FOUND(190, "Expectation not found.", Response.Status.NOT_FOUND),
+    NO_EXPECTATION_SUITE_ATTACHED_TO_THIS_FEATUREGROUP(191, "No Expectation Suite attached to this " +
+      "feature group.", Response.Status.NOT_FOUND),
+    VALIDATION_REPORT_NOT_FOUND(192, "Validation report not found.",
+      Response.Status.NOT_FOUND),
+    FAILED_TO_PARSE_EXPECTATION_CONFIG_TO_JSON(193, "Failed to parse expectation config field to json."
+      + " Expectation config must be a valid json to fetch the expectationId from the meta field.",
+      Response.Status.BAD_REQUEST),
+    KEY_NOT_FOUND_OR_INVALID_VALUE_TYPE_IN_JSON_OBJECT(194, "Requested key has not been found in Json " +
+      "object or associated value is not of required type.",
+      Response.Status.BAD_REQUEST),
+    FAILED_TO_PARSE_VALIDATION_RESULT_FOR_OBSERVED_VALUE(195, "Failed to parse result json "
+      + "to get observed_value field", Response.Status.BAD_REQUEST),
+    FAILED_TO_PARSE_EXPECTATION_META_FIELD(196, "Failed to parse expectation meta field.",
+      Response.Status.BAD_REQUEST),
+    VALIDATION_REPORT_IS_NOT_VALID_JSON(197, "Validation report is not a valid JSON.", Response.Status.BAD_REQUEST),
+    ERROR_SAVING_ON_DISK_VALIDATION_REPORT(198, "Error saving full json report to disk.",
+      Response.Status.INTERNAL_SERVER_ERROR),
+    ERROR_DELETING_ON_DISK_VALIDATION_REPORT(199, "Error deleting on-disk validation report.",
+      Response.Status.INTERNAL_SERVER_ERROR),
+    INPUT_FIELD_EXCEEDS_MAX_ALLOWED_CHARACTER(200, "Input field length exceeds max allowed characters.",
+      Response.Status.BAD_REQUEST),
+    INPUT_FIELD_IS_NOT_VALID_JSON(201, "Input field fail to be parsed to valid Json.",
+      Response.Status.BAD_REQUEST),
+    INPUT_FIELD_IS_NOT_NULLABLE(202, "Input field is not nullable.",
+      Response.Status.BAD_REQUEST),
+    ERROR_INFERRING_INGESTION_RESULT(203, "Could not infer ingestion result from validation ingestion policy and " +
+      "validation success.", Response.Status.BAD_REQUEST);
 
     private int code;
     private String message;

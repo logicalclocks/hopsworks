@@ -21,9 +21,11 @@ import io.hops.hopsworks.api.featurestore.FeaturestoreKeywordResource;
 import io.hops.hopsworks.api.featurestore.activities.ActivityResource;
 import io.hops.hopsworks.api.featurestore.code.CodeResource;
 import io.hops.hopsworks.api.featurestore.commit.CommitResource;
-import io.hops.hopsworks.api.featurestore.datavalidation.expectations.fg.FeatureGroupExpectationsResource;
 import io.hops.hopsworks.api.featurestore.datavalidation.alert.FeatureGroupAlertResource;
+import io.hops.hopsworks.api.featurestore.datavalidation.expectations.fg.FeatureGroupExpectationsResource;
 import io.hops.hopsworks.api.featurestore.datavalidation.validations.FeatureGroupValidationsResource;
+import io.hops.hopsworks.api.featurestore.datavalidationv2.reports.ValidationReportResource;
+import io.hops.hopsworks.api.featurestore.datavalidationv2.suites.ExpectationSuiteResource;
 import io.hops.hopsworks.api.featurestore.statistics.StatisticsResource;
 import io.hops.hopsworks.api.jobs.JobDTO;
 import io.hops.hopsworks.api.jobs.JobsBuilder;
@@ -146,6 +148,10 @@ public class FeaturegroupService {
   private FeatureGroupValidationsResource featureGroupValidationsResource;
   @Inject
   private FeatureGroupAlertResource featureGroupAlertResource;
+  @Inject
+  private ExpectationSuiteResource expectationSuiteResource;
+  @Inject
+  private ValidationReportResource validationReportResource;
   @EJB
   private DatasetHelper datasetHelper;
   @EJB
@@ -583,6 +589,24 @@ public class FeaturegroupService {
     this.featureGroupExpectationsResource.setFeaturestore(featurestore);
     this.featureGroupExpectationsResource.setFeatureGroup(featureGroupId);
     return featureGroupExpectationsResource;
+  }
+  
+  @Path("/{featureGroupId}/expectationsuite")
+  public ExpectationSuiteResource expectationSuite(@PathParam("featureGroupId") Integer featureGroupId)
+    throws FeaturestoreException {
+    this.expectationSuiteResource.setProject(project);
+    this.expectationSuiteResource.setFeaturestore(featurestore);
+    this.expectationSuiteResource.setFeatureGroup(featureGroupId);
+    return expectationSuiteResource;
+  }
+
+  @Path("/{featureGroupId}/validationreport")
+  public ValidationReportResource validationReport(@PathParam("featureGroupId") Integer featureGroupId)
+    throws FeaturestoreException {
+    this.validationReportResource.setProject(project);
+    this.validationReportResource.setFeaturestore(featurestore);
+    this.validationReportResource.setFeatureGroup(featureGroupId);
+    return validationReportResource;
   }
   
   @Path("/{featureGroupId}/validations")
