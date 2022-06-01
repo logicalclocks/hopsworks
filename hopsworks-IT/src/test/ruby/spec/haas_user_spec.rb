@@ -69,9 +69,9 @@ describe "On #{ENV['OS']}" do
           expect_status_details(200)
         end
 
-        it "should not allow starting new executions" do
+        it "should allow starting new executions" do
           start_execution(@project[:id], @job[:name])
-          expect_status_details(403)
+          expect_status_details(201)
         end
 
         it "should not allow stopping executions" do
@@ -189,9 +189,9 @@ describe "On #{ENV['OS']}" do
           expect_status_details(200)
         end
 
-        it "should not allow starting new executions" do
+        it "should allow starting new executions" do
           start_execution(@project[:id], @job[:name])
-          expect_status_details(403)
+          expect_status_details(201)
         end
 
         it "should not allow stopping executions" do
