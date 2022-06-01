@@ -91,6 +91,11 @@
     <class>io.hops.hopsworks.persistence.entity.featurestore.featuregroup.datavalidation.FeatureStoreExpectation</class>
     <class>io.hops.hopsworks.persistence.entity.featurestore.featuregroup.datavalidation.FeatureGroupExpectation</class>
     <class>io.hops.hopsworks.persistence.entity.featurestore.featuregroup.datavalidation.FeatureGroupValidation</class>
+    <class>io.hops.hopsworks.persistence.entity.featurestore.featuregroup.datavalidationv2.GreatExpectation</class>
+    <class>io.hops.hopsworks.persistence.entity.featurestore.featuregroup.datavalidationv2.ExpectationSuite</class>
+    <class>io.hops.hopsworks.persistence.entity.featurestore.featuregroup.datavalidationv2.Expectation</class>
+    <class>io.hops.hopsworks.persistence.entity.featurestore.featuregroup.datavalidationv2.ValidationReport</class>
+    <class>io.hops.hopsworks.persistence.entity.featurestore.featuregroup.datavalidationv2.ValidationResult</class>
     <class>io.hops.hopsworks.persistence.entity.featurestore.transformationFunction.TransformationFunction</class>
     <class>io.hops.hopsworks.persistence.entity.hdfs.HdfsDirectoryWithQuotaFeature</class>
     <class>io.hops.hopsworks.persistence.entity.hdfs.HdfsLeDescriptors</class>

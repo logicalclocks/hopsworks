@@ -22,6 +22,8 @@ import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.cached.Cac
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.cached.ValidationType;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.datavalidation.FeatureGroupExpectation;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.datavalidation.alert.FeatureGroupAlert;
+import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.datavalidationv2.ExpectationSuite;
+import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.datavalidationv2.ValidationReport;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.ondemand.OnDemandFeaturegroup;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.stream.StreamFeatureGroup;
 import io.hops.hopsworks.persistence.entity.featurestore.statistics.StatisticsConfig;
@@ -129,6 +131,10 @@ public class Featuregroup implements Serializable {
   private Collection<FeatureGroupExpectation> expectations;
   @OneToMany(cascade = CascadeType.ALL, mappedBy = "featureGroup")
   private Collection<FeatureGroupAlert> featureGroupAlerts;
+  @OneToOne(cascade = CascadeType.ALL, mappedBy = "featuregroup")
+  private ExpectationSuite expectationSuite;
+  @OneToMany(cascade = CascadeType.ALL, mappedBy = "featuregroup")
+  private Collection<ValidationReport> validationReports;
 
   public Featuregroup() { }
 
@@ -269,7 +275,23 @@ public class Featuregroup implements Serializable {
   public void setEventTime(String eventTime) {
     this.eventTime = eventTime;
   }
+  
+  public ExpectationSuite getExpectationSuite() {
+    return expectationSuite;
+  }
+  
+  public void setExpectationSuite(ExpectationSuite expectationSuite) {
+    this.expectationSuite = expectationSuite;
+  }
 
+  public Collection<ValidationReport> getValidationReports() {
+    return validationReports;
+  }
+
+  public void setValidationReports(Collection<ValidationReport> validationReports) {
+    this.validationReports = validationReports;
+  }
+  
   @Override
   public boolean equals(Object o) {
     if (this == o) return true;
@@ -288,6 +310,7 @@ public class Featuregroup implements Serializable {
     if (!Objects.equals(cachedFeaturegroup, that.cachedFeaturegroup)) return false;
     if (!Objects.equals(streamFeatureGroup, that.streamFeatureGroup)) return false;
     if (!Objects.equals(eventTime, that.eventTime)) return false;
+    if (!Objects.equals(expectationSuite, that.expectationSuite)) return false;
     return Objects.equals(statisticsConfig, that.statisticsConfig);
   }
 
@@ -305,6 +328,7 @@ public class Featuregroup implements Serializable {
     result = 31 * result + (streamFeatureGroup != null ? streamFeatureGroup.hashCode() : 0);
     result = 31 * result + (statisticsConfig != null ? statisticsConfig.hashCode() : 0);
     result = 31 * result + (eventTime != null ? eventTime.hashCode() : 0);
+    result = 31 * result + (expectationSuite != null ? expectationSuite.hashCode(): 0);
     return result;
   }
 }

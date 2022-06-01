@@ -18,6 +18,7 @@ package io.hops.hopsworks.api.featurestore;
 
 import com.google.common.base.Strings;
 import io.hops.hopsworks.api.featurestore.datavalidation.expectations.fs.FeatureStoreExpectationsResource;
+import io.hops.hopsworks.api.featurestore.datavalidationv2.greatexpectations.GreatExpectationResource;
 import io.hops.hopsworks.api.featurestore.featuregroup.FeaturegroupService;
 import io.hops.hopsworks.api.featurestore.featureview.FeatureViewService;
 import io.hops.hopsworks.api.featurestore.storageconnector.FeaturestoreStorageConnectorService;
@@ -100,6 +101,8 @@ public class FeaturestoreService {
   private FeatureStoreExpectationsResource featureGroupExpectationsResource;
   @Inject
   private TransformationFunctionResource transformationFunctionResource;
+  @Inject
+  private GreatExpectationResource greatExpectationResource;
 
   private Project project;
 
@@ -354,5 +357,25 @@ public class FeaturestoreService {
     this.transformationFunctionResource.setFeaturestore(
         featurestoreController.getFeaturestoreWithId(featurestoreId));
     return transformationFunctionResource;
+  }
+
+  /**
+   * GreatExpectations sub-resource
+   *
+   * @param featurestoreId id of the featurestore
+   * @return the feature store greatExpectation resource
+   * @throws FeaturestoreException
+   */
+  @Logged(logLevel = LogLevel.OFF)
+  @Path("/{featurestoreId}/greatexpectations")
+  public GreatExpectationResource greatExpectationResource(
+      @PathParam("featurestoreId") Integer featurestoreId) throws FeaturestoreException {
+    this.greatExpectationResource.setProject(project);
+    if (featurestoreId == null) {
+      throw new IllegalArgumentException(RESTCodes.FeaturestoreErrorCode.FEATURESTORE_ID_NOT_PROVIDED.getMessage());
+    }
+    this.greatExpectationResource.setFeaturestore(
+        featurestoreController.getFeaturestoreWithId(featurestoreId));
+    return greatExpectationResource;
   }
 }

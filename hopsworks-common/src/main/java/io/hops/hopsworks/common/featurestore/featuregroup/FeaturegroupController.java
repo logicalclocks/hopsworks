@@ -24,6 +24,8 @@ import io.hops.hopsworks.common.featurestore.app.FsJobManagerController;
 import io.hops.hopsworks.common.featurestore.datavalidation.FeatureGroupExpectationFacade;
 import io.hops.hopsworks.common.featurestore.datavalidation.FeatureGroupValidationsController;
 import io.hops.hopsworks.common.featurestore.datavalidation.FeatureStoreExpectationFacade;
+import io.hops.hopsworks.common.featurestore.datavalidationv2.ExpectationSuiteController;
+import io.hops.hopsworks.common.featurestore.datavalidationv2.ValidationReportController;
 import io.hops.hopsworks.common.featurestore.feature.FeatureGroupFeatureDTO;
 import io.hops.hopsworks.common.featurestore.featuregroup.cached.CachedFeaturegroupController;
 import io.hops.hopsworks.common.featurestore.featuregroup.cached.CachedFeaturegroupDTO;
@@ -143,10 +145,14 @@ public class FeaturegroupController {
   @EJB
   private FeaturestoreUtils featurestoreUtils;
   @EJB
+  private ExpectationSuiteController expectationSuiteController;
+  @EJB
+  private ValidationReportController validationReportController;
+  @EJB
   private QuotasEnforcement quotasEnforcement;
   @Inject
   private FsJobManagerController fsJobManagerController;
-
+  
   /**
    * Gets all featuregroups for a particular featurestore and project, using the userCerts to query Hive
    *
@@ -642,7 +648,8 @@ public class FeaturegroupController {
             + featuregroup.getFeaturegroupType());
     }
 
-    // Statistics files need to be deleted explicitly
+    // Statistics adn validation files need to be deleted explicitly
+    validationReportController.deleteFeaturegroupDataValidationDir(user, featuregroup);
     statisticsController.deleteStatistics(project, user, featuregroup);
   }
 
@@ -769,6 +776,12 @@ public class FeaturegroupController {
     statisticsConfig.setStatisticColumns(featuregroupDTO.getStatisticsConfig().getColumns().stream()
       .map(sc -> new StatisticColumn(statisticsConfig, sc)).collect(Collectors.toList()));
     featuregroup.setStatisticsConfig(statisticsConfig);
+
+    if (featuregroupDTO.getExpectationSuite() != null) {
+      featuregroup.setExpectationSuite(expectationSuiteController.convertExpectationSuiteDTOToPersistentValidated(
+        featuregroup, featuregroupDTO.getExpectationSuite()));
+    }
+    
     if (featuregroupDTO.getExpectationsNames() != null ) {
       List<FeatureGroupExpectation> featureGroupExpectations = new ArrayList<>();
       for (String name : featuregroupDTO.getExpectationsNames()) {

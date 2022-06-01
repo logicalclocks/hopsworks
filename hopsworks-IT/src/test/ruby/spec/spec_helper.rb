@@ -85,6 +85,7 @@ RSpec.configure do |config|
   config.include JobHelper
   config.include ExecutionHelper
   config.include FeaturestoreHelper
+  config.include FeaturestoreValidationHelper
   config.include AgentHelper
   config.include PythonHelper
   config.include QuotaHelper
