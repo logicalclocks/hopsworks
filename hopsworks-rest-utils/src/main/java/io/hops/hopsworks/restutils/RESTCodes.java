@@ -1185,9 +1185,7 @@ public class RESTCodes {
     FINEGRAINED_INF_LOGGING_NOT_SUPPORTED(24, "Fine-grained inference logging not supported",
       Response.Status.BAD_REQUEST),
     REQUEST_BATCHING_NOT_SUPPORTED(25, "Request batching not supported", Response.Status.BAD_REQUEST),
-    CREATEERROR(26, "Serving instance could not be created", Response.Status.BAD_REQUEST),
-    INVALID_INFERENCE_BATCHING_CONFIGURATION(26, "Invalid inference batching configuration",
-        Response.Status.BAD_REQUEST);
+    CREATEERROR(26, "Serving instance could not be created", Response.Status.BAD_REQUEST);
 
     private Integer code;
     private String message;
