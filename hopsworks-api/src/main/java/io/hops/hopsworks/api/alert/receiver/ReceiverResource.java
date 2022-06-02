@@ -113,7 +113,7 @@ public class ReceiverResource {
   @Produces(MediaType.APPLICATION_JSON)
   @ApiOperation(value = "Get all receivers.", response = ReceiverDTO.class)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
-  @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
+  @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
   public Response get(@BeanParam Pagination pagination, @BeanParam ReceiverBeanParam receiverBeanParam,
                       @QueryParam("global") @DefaultValue("false") Boolean includeGlobal,
                       @QueryParam("expand") @DefaultValue("false") Boolean expand,
@@ -133,7 +133,7 @@ public class ReceiverResource {
   @Produces(MediaType.APPLICATION_JSON)
   @ApiOperation(value = "Get receiver by name.", response = ReceiverDTO.class)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
-  @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
+  @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
   public Response getByName(@PathParam("name") String name,
                             @Context UriInfo uriInfo,
                             @Context HttpServletRequest req,
@@ -149,7 +149,7 @@ public class ReceiverResource {
   @Produces(MediaType.APPLICATION_JSON)
   @ApiOperation(value = "Check if default receiver configured.", response = GlobalReceiverDefaults.class)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
-  @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
+  @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
   public Response getDefaults(@Context UriInfo uriInfo,
                               @Context HttpServletRequest req,
                               @Context SecurityContext sc)
@@ -162,7 +162,7 @@ public class ReceiverResource {
   @Consumes(MediaType.APPLICATION_JSON)
   @ApiOperation(value = "Create a receiver.")
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER})
-  @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
+  @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
   public Response create(PostableReceiverDTO postableReceiverDTO,
                          @QueryParam("defaultTemplate") @DefaultValue("false") Boolean defaultTemplate,
                          @Context UriInfo uriInfo,
@@ -200,7 +200,7 @@ public class ReceiverResource {
   @Consumes(MediaType.APPLICATION_JSON)
   @ApiOperation(value = "Update a receiver.", response = SilenceDTO.class)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER})
-  @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
+  @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
   public Response update(@PathParam("name") String name,
                          @QueryParam("defaultTemplate") @DefaultValue("false") Boolean defaultTemplate,
                          PostableReceiverDTO postableReceiverDTO,
@@ -240,7 +240,7 @@ public class ReceiverResource {
   @Path("{name}")
   @ApiOperation(value = "Delete receiver by name.")
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER})
-  @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
+  @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
   public Response deleteById(@PathParam("name") String name,
                              @QueryParam("cascade") @DefaultValue("false") Boolean cascade,
                              @Context UriInfo uriInfo,

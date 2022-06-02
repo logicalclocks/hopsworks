@@ -86,7 +86,7 @@ public class ApiKeyResource {
   @GET
   @Produces(MediaType.APPLICATION_JSON)
   @ApiOperation(value = "Get all api keys.", response = ApiKeyDTO.class)
-  @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
+  @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
   public Response get(@BeanParam Pagination pagination,
                       @Context HttpServletRequest req,
                       @BeanParam ApiKeyBeanParam apikeyBeanParam,
@@ -105,7 +105,7 @@ public class ApiKeyResource {
   @Path("{name}")
   @Produces(MediaType.APPLICATION_JSON)
   @ApiOperation(value = "Find api key by name.", response = ApiKeyDTO.class)
-  @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
+  @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
   public Response getByName(@PathParam("name") String name,
                             @Context UriInfo uriInfo,
                             @Context HttpServletRequest req,
@@ -121,7 +121,7 @@ public class ApiKeyResource {
   @Path("key")
   @Produces(MediaType.APPLICATION_JSON)
   @ApiOperation(value = "Find api key by name.", response = ApiKeyDTO.class)
-  @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
+  @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
   public Response getByKey(@QueryParam("key") String key,
                            @Context UriInfo uriInfo,
                            @Context HttpServletRequest req,
@@ -137,7 +137,7 @@ public class ApiKeyResource {
   @Produces(MediaType.APPLICATION_JSON)
   @Audited(type = AuditType.ACCOUNT_AUDIT, action = AuditAction.PROFILE_UPDATE, message = "User updated an api key")
   @ApiOperation(value = "Update an api key.", response = ApiKeyDTO.class)
-  @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
+  @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
   public Response update(@QueryParam("name") String name, @QueryParam("action") ApiKeyUpdateAction action,
                          @QueryParam("scope") Set<ApiScope> scopes, @Context UriInfo uriInfo,
                          @Context HttpServletRequest req,
@@ -168,7 +168,8 @@ public class ApiKeyResource {
   @Produces(MediaType.APPLICATION_JSON)
   @ApiOperation(value = "Create an api key.", response = ApiKeyDTO.class)
   @Audited(type = AuditType.ACCOUNT_AUDIT, action = AuditAction.PROFILE_UPDATE, message = "User created an api key")
-  @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "AGENT"})
+  @JWTRequired(acceptedTokens = {Audience.API},
+    allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "AGENT", "HOPS_SERVICE_USER"})
   public Response create(@QueryParam("name") String name, @QueryParam("scope") Set<ApiScope> scopes,
                          @Context UriInfo uriInfo, @AuditTarget(UserIdentifier.REQ) @Context SecurityContext sc,
                          @Context HttpServletRequest req) throws ApiKeyException, UserException {
@@ -186,7 +187,7 @@ public class ApiKeyResource {
   @ApiOperation(value = "Delete api key by name.")
   @Audited(type = AuditType.ACCOUNT_AUDIT, action = AuditAction.PROFILE_UPDATE, message = "User deleted an api key")
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
-  @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
+  @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
   public Response deleteByName(@PathParam("name") String name, @Context UriInfo uriInfo,
     @Context HttpServletRequest req, @AuditTarget(UserIdentifier.REQ) @Context SecurityContext sc)
       throws ApiKeyException {
@@ -199,7 +200,7 @@ public class ApiKeyResource {
   @ApiOperation(value = "Delete all api keys.")
   @Audited(type = AuditType.ACCOUNT_AUDIT, action = AuditAction.PROFILE_UPDATE, message = "User deleted all api keys")
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
-  @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
+  @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
   public Response deleteAll(@Context UriInfo uriInfo, @AuditTarget(UserIdentifier.REQ) @Context SecurityContext sc,
                             @Context HttpServletRequest req) throws ApiKeyException {
     Users user = jwtHelper.getUserPrincipal(sc);
@@ -211,7 +212,7 @@ public class ApiKeyResource {
   @Path("scopes")
   @Produces(MediaType.APPLICATION_JSON)
   @ApiOperation(value = "Get all api key scopes.")
-  @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
+  @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
   public Response getScopes(@Context SecurityContext sc,
                             @Context HttpServletRequest req) throws UserException {
     Users user = jwtHelper.getUserPrincipal(sc);
@@ -228,9 +229,9 @@ public class ApiKeyResource {
   @Path("session")
   @Produces(MediaType.APPLICATION_JSON)
   @ApiOperation(value = "Check api key session.")
-  @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
+  @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
   @ApiKeyRequired( acceptedScopes = {ApiScope.DATASET_CREATE, ApiScope.DATASET_DELETE, ApiScope.DATASET_VIEW,
-    ApiScope.JOB, ApiScope.SERVING}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
+    ApiScope.JOB, ApiScope.SERVING}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
   public Response checkSession(@Context SecurityContext sc,
                                @Context HttpServletRequest req) {
     return Response.ok().build();
@@ -264,6 +265,10 @@ public class ApiKeyResource {
     BbcGroup adminGroup = bbcGroupFacade.findByGroupName("HOPS_ADMIN");
     if (user.getBbcGroupCollection().contains(adminGroup)) {
       return ApiScope.getAll();
+    }
+    BbcGroup serviceGroup = bbcGroupFacade.findByGroupName("HOPS_SERVICE_USER");
+    if (user.getBbcGroupCollection().size() == 1 && user.getBbcGroupCollection().contains(serviceGroup)) {
+      return ApiScope.getServiceUserScopes();
     }
     return ApiScope.getUnprivileged();
   }

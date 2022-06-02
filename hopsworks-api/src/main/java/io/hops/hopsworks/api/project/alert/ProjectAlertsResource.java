@@ -33,6 +33,7 @@ import io.hops.hopsworks.api.featurestore.datavalidation.alert.FeatureGroupAlert
 import io.hops.hopsworks.api.featurestore.datavalidation.alert.FeatureGroupAlertDTO;
 import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.api.filter.Audience;
+import io.hops.hopsworks.api.filter.apiKey.ApiKeyRequired;
 import io.hops.hopsworks.api.jobs.alert.JobAlertsBuilder;
 import io.hops.hopsworks.api.jobs.alert.JobAlertsDTO;
 import io.hops.hopsworks.api.util.Pagination;
@@ -50,6 +51,7 @@ import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.project.alert.ProjectServiceAlert;
 import io.hops.hopsworks.persistence.entity.project.alert.ProjectServiceAlertStatus;
 import io.hops.hopsworks.persistence.entity.project.service.ProjectServiceEnum;
+import io.hops.hopsworks.persistence.entity.user.security.apiKey.ApiScope;
 import io.hops.hopsworks.restutils.RESTCodes;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -133,8 +135,10 @@ public class ProjectAlertsResource {
   @GET
   @Produces(MediaType.APPLICATION_JSON)
   @ApiOperation(value = "Get all alerts.", response = ProjectAlertsDTO.class)
+  @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
+  @ApiKeyRequired(acceptedScopes = {ApiScope.PROJECT},
+    allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
-  @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   public Response get(@BeanParam Pagination pagination, @BeanParam ProjectAlertsBeanParam projectAlertsBeanParam,
                       @Context HttpServletRequest req,
                       @Context UriInfo uriInfo, @Context SecurityContext sc) throws ProjectException {
@@ -151,8 +155,10 @@ public class ProjectAlertsResource {
   @Path("{id}")
   @Produces(MediaType.APPLICATION_JSON)
   @ApiOperation(value = "Find alert by Id.", response = ProjectAlertsDTO.class)
+  @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
+  @ApiKeyRequired(acceptedScopes = {ApiScope.PROJECT},
+    allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
-  @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   public Response getById(@PathParam("id") Integer id, @Context UriInfo uriInfo,
                           @Context HttpServletRequest req,
                           @Context SecurityContext sc)
@@ -166,8 +172,10 @@ public class ProjectAlertsResource {
   @Path("values")
   @Produces(MediaType.APPLICATION_JSON)
   @ApiOperation(value = "Get values for services alert.", response = ProjectServiceAlertValues.class)
+  @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
+  @ApiKeyRequired(acceptedScopes = {ApiScope.PROJECT},
+    allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
-  @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   public Response getAvailableServices(@Context UriInfo uriInfo,
                                        @Context HttpServletRequest req,
                                        @Context SecurityContext sc)  {
@@ -179,8 +187,10 @@ public class ProjectAlertsResource {
   @Path("all")
   @Produces(MediaType.APPLICATION_JSON)
   @ApiOperation(value = "Get project, job and feature group alerts.", response = ProjectAllAlertsDTO.class)
+  @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
+  @ApiKeyRequired(acceptedScopes = {ApiScope.PROJECT},
+    allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
-  @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   public Response getAllAlerts(@Context UriInfo uriInfo,
                                @Context HttpServletRequest req,
                                @Context SecurityContext sc) throws ProjectException {
@@ -200,8 +210,10 @@ public class ProjectAlertsResource {
   @Path("{id}")
   @Produces(MediaType.APPLICATION_JSON)
   @ApiOperation(value = "Update an alert.", response = ProjectAlertsDTO.class)
+  @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
+  @ApiKeyRequired(acceptedScopes = {ApiScope.PROJECT},
+    allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
-  @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   public Response createOrUpdate(@PathParam("id") Integer id, ProjectAlertsDTO projectAlertsDTO,
                                  @Context HttpServletRequest req,
                                  @Context UriInfo uriInfo, @Context SecurityContext sc) throws ProjectException {
@@ -241,8 +253,10 @@ public class ProjectAlertsResource {
   @Produces(MediaType.APPLICATION_JSON)
   @Consumes(MediaType.APPLICATION_JSON)
   @ApiOperation(value = "Create an alert.", response = PostableProjectAlerts.class)
+  @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
+  @ApiKeyRequired(acceptedScopes = {ApiScope.PROJECT},
+    allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
-  @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   public Response create(PostableProjectAlerts projectAlertsDTO,
                          @QueryParam("bulk") @DefaultValue("false") Boolean bulk,
                          @Context UriInfo uriInfo,
@@ -369,7 +383,9 @@ public class ProjectAlertsResource {
   @Produces(MediaType.APPLICATION_JSON)
   @ApiOperation(value = "Test alert by Id.", response = ProjectAlertsDTO.class)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
-  @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
+  @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
+  @ApiKeyRequired(acceptedScopes = {ApiScope.PROJECT},
+    allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
   public Response getTestById(@PathParam("id") Integer id, @Context UriInfo uriInfo,
                               @Context HttpServletRequest req,
                               @Context SecurityContext sc)
@@ -395,7 +411,9 @@ public class ProjectAlertsResource {
   @Path("{id}")
   @ApiOperation(value = "Delete an alert by Id.")
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
-  @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
+  @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
+  @ApiKeyRequired(acceptedScopes = {ApiScope.PROJECT},
+    allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
   public Response deleteById(@PathParam("id") Integer id,
                              @Context UriInfo uriInfo,
                              @Context HttpServletRequest req,

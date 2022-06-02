@@ -138,9 +138,8 @@ public class AuthService {
   @GET
   @Path("session")
   @Logged(logLevel = LogLevel.FINE)
-  @RolesAllowed({"HOPS_ADMIN", "HOPS_USER"})
-  @JWTRequired(acceptedTokens = {Audience.API},
-      allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
+  @RolesAllowed({"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
+  @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
   @Produces(MediaType.APPLICATION_JSON)
   public Response session(@Context HttpServletRequest req) {
     RESTApiJsonResponse json = new RESTApiJsonResponse();
@@ -151,8 +150,7 @@ public class AuthService {
   @GET
   @Path("jwt/session")
   @Logged(logLevel = LogLevel.FINE)
-  @JWTRequired(acceptedTokens = {Audience.API},
-      allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
+  @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
   @Produces(MediaType.APPLICATION_JSON)
   public Response jwtSession(@Context SecurityContext sc,
                              @Context HttpServletRequest req) {
@@ -317,7 +315,7 @@ public class AuthService {
   @GET
   @Path("isAdmin")
   @Produces(MediaType.APPLICATION_JSON)
-  @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
+  @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
   public Response isAdmin(@Context SecurityContext sc,
                           @Context HttpServletRequest req) {
     RESTApiJsonResponse json = new RESTApiJsonResponse();
@@ -541,7 +539,7 @@ public class AuthService {
     roles.append(req.isUserInRole("HOPS_USER") ? "{user" : "{");
     roles.append(req.isUserInRole("HOPS_ADMIN") ? " admin" : "");
     roles.append(req.isUserInRole("AGENT") ? " agent" : "");
-    roles.append(req.isUserInRole("CLUSTER_AGENT") ? " cluster-agent}" : "}");
+    roles.append(req.isUserInRole("HOPS_SERVICE_USER") ? " as a service user}" : "}");
     LOGGER.log(Level.FINEST, "[/hopsworks-api] login:\n email: {0}\n session: {1}\n in roles: {2}", new Object[]{
       req.getUserPrincipal(), req.getSession().getId(), roles});
   }

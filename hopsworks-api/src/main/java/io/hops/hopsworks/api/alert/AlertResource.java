@@ -110,7 +110,7 @@ public class AlertResource {
   @Produces(MediaType.APPLICATION_JSON)
   @ApiOperation(value = "Get alerts in project.", response = ActivitiesDTO.class)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
-  @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
+  @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
   public Response getAlerts(@BeanParam Pagination pagination, @BeanParam AlertBeanParam alertBeanParam,
                             @Context HttpServletRequest req,
                             @Context UriInfo uriInfo, @Context SecurityContext sc)
@@ -127,7 +127,7 @@ public class AlertResource {
   @Produces(MediaType.APPLICATION_JSON)
   @ApiOperation(value = "Get alerts groups in project.", response = ActivitiesDTO.class)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
-  @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
+  @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
   public Response getAlerts(@BeanParam Pagination pagination, @BeanParam AlertFilterBy alertFilterBy,
                             @QueryParam("expand_alert") Boolean expand, @Context UriInfo uriInfo,
                             @Context HttpServletRequest req,
@@ -151,7 +151,7 @@ public class AlertResource {
   @Consumes(MediaType.APPLICATION_JSON)
   @ApiOperation(value = "Create alert in project.", response = ActivitiesDTO.class)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
-  @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
+  @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
   public Response createAlerts(PostableAlertDTOs alerts, @Context UriInfo uriInfo,
                                @Context HttpServletRequest req,
                                @Context SecurityContext sc)

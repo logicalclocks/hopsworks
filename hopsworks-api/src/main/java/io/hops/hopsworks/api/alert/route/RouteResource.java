@@ -106,7 +106,7 @@ public class RouteResource {
   @Produces(MediaType.APPLICATION_JSON)
   @ApiOperation(value = "Get all routes.", response = RouteDTO.class)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
-  @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
+  @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
   public Response getAll(@BeanParam Pagination pagination, @BeanParam RouteBeanParam routeBeanParam,
                          @Context HttpServletRequest req,
                          @Context UriInfo uriInfo,
@@ -123,7 +123,7 @@ public class RouteResource {
   @Produces(MediaType.APPLICATION_JSON)
   @ApiOperation(value = "Get a route by receiver and match.", response = RouteDTO.class)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
-  @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
+  @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
   public Response get(@PathParam("receiver") String receiver, @QueryParam("match") List<String> match,
                       @QueryParam("matchRe") List<String> matchRe, @Context UriInfo uriInfo,
                       @Context HttpServletRequest req,
@@ -139,7 +139,7 @@ public class RouteResource {
   @Consumes(MediaType.APPLICATION_JSON)
   @ApiOperation(value = "Create a route.")
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER})
-  @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
+  @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
   public Response create(PostableRouteDTO routeDTO, @Context UriInfo uriInfo,
                          @Context HttpServletRequest req,
                          @Context SecurityContext sc)
@@ -179,7 +179,7 @@ public class RouteResource {
   @Consumes(MediaType.APPLICATION_JSON)
   @ApiOperation(value = "Update a route.")
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER})
-  @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
+  @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
   public Response update(@PathParam("receiver") String receiver, PostableRouteDTO route,
                          @QueryParam("match") List<String> match, @QueryParam("matchRe") List<String> matchRe,
                          @Context UriInfo uriInfo,
@@ -218,7 +218,7 @@ public class RouteResource {
   @Path("{receiver}")
   @ApiOperation(value = "Delete route by receiver and match.")
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER})
-  @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
+  @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
   public Response delete(@PathParam("receiver") String receiver, @QueryParam("match") List<String> match,
                          @QueryParam("matchRe") List<String> matchRe, @Context UriInfo uriInfo,
                          @Context HttpServletRequest req,

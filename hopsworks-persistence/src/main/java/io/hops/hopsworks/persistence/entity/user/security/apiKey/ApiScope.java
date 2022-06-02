@@ -21,26 +21,28 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 public enum ApiScope {
-  JOB(false),
-  DATASET_VIEW(false),
-  DATASET_CREATE(false),
-  DATASET_DELETE(false),
-  SERVING(false),
-  FEATURESTORE(false),
-  PROJECT(false),
-  ADMIN(true),
-  KAFKA(false),
-  ADMINISTER_USERS(true),
-  ADMINISTER_USERS_REGISTER(true),
-  MODELREGISTRY(false),
-  USER(false),
-  GIT(false),
-  PYTHON_LIBRARIES(false);
+  JOB(false, true),
+  DATASET_VIEW(false, true),
+  DATASET_CREATE(false, true),
+  DATASET_DELETE(false, true),
+  SERVING(false, true),
+  FEATURESTORE(false, true),
+  PROJECT(false, true),
+  ADMIN(true, false),
+  KAFKA(false, true),
+  ADMINISTER_USERS(true, false),
+  ADMINISTER_USERS_REGISTER(true, false),
+  MODELREGISTRY(false, true),
+  USER(false, true),
+  GIT(false, false),
+  PYTHON_LIBRARIES(false, false);
 
   private final boolean privileged;
+  private final boolean saas;// Hopsworks as a service user scopes
 
-  ApiScope(boolean privileged) {
+  ApiScope(boolean privileged, boolean saas) {
     this.privileged = privileged;
+    this.saas = saas;
   }
 
   public static ApiScope fromString(String param) {
@@ -61,5 +63,11 @@ public enum ApiScope {
     return Arrays.stream(ApiScope.values())
             .filter(as -> !as.privileged)
             .collect(Collectors.toSet());
+  }
+  
+  public static Set<ApiScope> getServiceUserScopes() {
+    return Arrays.stream(ApiScope.values())
+      .filter(as -> as.saas)
+      .collect(Collectors.toSet());
   }
 }

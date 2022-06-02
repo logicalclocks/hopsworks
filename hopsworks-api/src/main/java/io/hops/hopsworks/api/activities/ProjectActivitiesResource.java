@@ -101,7 +101,7 @@ public class ProjectActivitiesResource {
   @ApiOperation(value = "Finds activities in project.", response = ActivitiesDTO.class)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
   @JWTRequired(acceptedTokens = {Audience.API},
-      allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
+      allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
   public Response findAllByProject(
       @BeanParam Pagination pagination,
       @BeanParam ActivitiesBeanParam activitiesBeanParam,
@@ -128,7 +128,7 @@ public class ProjectActivitiesResource {
   @ApiOperation(value = "Finds an activity in project.", response = ActivitiesDTO.class)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
   @JWTRequired(acceptedTokens = {Audience.API},
-      allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
+      allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
   public Response findAllById(
       @PathParam("activityId") Integer activityId,
       @BeanParam ExpansionBeanParam expansions,
