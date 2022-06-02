@@ -229,7 +229,10 @@ public class ResourceRequest {
     FEATURES,
     FEATUREVIEW,
     VERSION,
-    TRANSFORMATION;
+    TRANSFORMATION,
+    EXPECTATIONSUITE,
+    VALIDATIONREPORT,
+    GREATEXPECTATION;
 
     public static Name fromString(String name) {
       return valueOf(name.toUpperCase());

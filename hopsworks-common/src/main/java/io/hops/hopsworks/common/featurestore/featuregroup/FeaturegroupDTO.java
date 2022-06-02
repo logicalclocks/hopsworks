@@ -20,6 +20,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import io.hops.hopsworks.common.featurestore.FeaturestoreEntityDTO;
+import io.hops.hopsworks.common.featurestore.datavalidationv2.ExpectationSuiteDTO;
 import io.hops.hopsworks.common.featurestore.feature.FeatureGroupFeatureDTO;
 import io.hops.hopsworks.common.featurestore.featuregroup.cached.CachedFeaturegroupDTO;
 import io.hops.hopsworks.common.featurestore.featuregroup.ondemand.OnDemandFeaturegroupDTO;
@@ -55,6 +56,8 @@ public class FeaturegroupDTO extends FeaturestoreEntityDTO<FeaturegroupDTO> {
   @XmlElement
   private List<String> expectationsNames; // List of expectation names
   @XmlElement
+  private ExpectationSuiteDTO expectationSuite = null;
+  @XmlElement
   private ValidationType validationType;
   @XmlElement
   private String onlineTopicName = null;
@@ -75,6 +78,22 @@ public class FeaturegroupDTO extends FeaturestoreEntityDTO<FeaturegroupDTO> {
         featuregroup.getCreator(), featuregroup.getVersion(),
         featuregroup.getId(), new StatisticsConfigDTO(featuregroup.getStatisticsConfig()));
     this.eventTime = featuregroup.getEventTime();
+    if (featuregroup.getExpectationSuite() != null) {
+      this.expectationSuite = new ExpectationSuiteDTO(featuregroup.getExpectationSuite());
+    }
+  }
+
+  public FeaturegroupDTO(Integer featurestoreId, String featurestoreName, Integer id, String name, Integer version,
+    String onlineTopicName, ExpectationSuiteDTO expectationSuite) {
+    super(featurestoreId, featurestoreName, id, name, version);
+    this.onlineTopicName = onlineTopicName;
+    this.expectationSuite = expectationSuite;
+  }
+
+  public FeaturegroupDTO(Integer featurestoreId, String featurestoreName, Integer id, String name, Integer version,
+    ExpectationSuiteDTO expectationSuite) {
+    super(featurestoreId, featurestoreName, id, name, version);
+    this.expectationSuite = expectationSuite;
   }
   
   // for testing
@@ -96,6 +115,14 @@ public class FeaturegroupDTO extends FeaturestoreEntityDTO<FeaturegroupDTO> {
 
   public void setExpectationsNames(List<String> expectationsNames) {
     this.expectationsNames = expectationsNames;
+  }
+
+  public ExpectationSuiteDTO getExpectationSuite() {
+    return expectationSuite;
+  }
+
+  public void setExpectationSuite(ExpectationSuiteDTO expectationSuite) {
+    this.expectationSuite = expectationSuite;
   }
 
   public ValidationType getValidationType() {

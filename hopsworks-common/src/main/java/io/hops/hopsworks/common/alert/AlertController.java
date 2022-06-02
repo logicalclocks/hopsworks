@@ -161,7 +161,7 @@ public class AlertController {
     }
   }
 
-  private void sendFgAlert(List<PostableAlert> postableAlerts, Project project, String name) {
+  public void sendFgAlert(List<PostableAlert> postableAlerts, Project project, String name) {
     try {
       sendAlert(postableAlerts, project);
     } catch (Exception e) {
@@ -267,6 +267,20 @@ public class AlertController {
         .withSummary("Feature group validation " + status.toLowerCase())
         .withDescription("Feature group name=" + featureGroupName + results)
         .build();
+  }
+
+  public PostableAlert getPostableFgAlert(String projectName, AlertType alertType, AlertSeverity severity,
+    String status, String summary, String description, Integer id, String featureStoreName, String featureGroupName,
+    int version) {
+    return new PostableAlertBuilder
+      .Builder(projectName, alertType, severity, status)
+      .withFeatureGroupId(id)
+      .withFeatureStoreName(featureStoreName)
+      .withFeatureGroupName(featureGroupName)
+      .withFeatureGroupVersion(version)
+      .withSummary(summary)
+      .withDescription(description)
+      .build();
   }
 
   private String getExpectationResult(FeatureGroupValidation.Status status, List<ExpectationResult> results) {

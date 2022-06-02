@@ -120,4 +120,18 @@ public class FeaturestoreConstants {
       "def label_encoder(value, value_to_index):\\n" +
       "    # define a mapping of values to integers\\n" +
       "    return value_to_index[value]\"}";
+  public static final int MAX_CHARACTERS_IN_EXPECTATION_SUITE_NAME = 63;
+  public static final int MAX_CHARACTERS_IN_EXPECTATION_SUITE_META = 1000;
+  public static final int MAX_CHARACTERS_IN_GE_CLOUD_ID = 200;
+  public static final int MAX_CHARACTERS_IN_DATA_ASSET_TYPE = 50;
+  public static final int MAX_CHARACTERS_IN_EXPECTATION_META = 1000;
+  public static final int MAX_CHARACTERS_IN_EXPECTATION_KWARGS = 1000;
+  public static final int MAX_CHARACTERS_IN_EXPECTATION_EXPECTATION_TYPE = 150;
+  public static final int MAX_CHARACTERS_IN_VALIDATION_REPORT_EVALUATION_PARAMETERS = 1000;
+  public static final int MAX_CHARACTERS_IN_VALIDATION_REPORT_STATISTICS = 1000;
+  public static final int MAX_CHARACTERS_IN_VALIDATION_REPORT_META = 1000;
+  public static final int MAX_CHARACTERS_IN_VALIDATION_RESULT_META = 1000;
+  public static final int MAX_CHARACTERS_IN_VALIDATION_RESULT_EXCEPTION_INFO = 1000;
+  public static final int MAX_CHARACTERS_IN_VALIDATION_RESULT_EXPECTATION_CONFIG = 2150;
+  public static final int MAX_CHARACTERS_IN_VALIDATION_RESULT_RESULT_FIELD = 1000;
 }
