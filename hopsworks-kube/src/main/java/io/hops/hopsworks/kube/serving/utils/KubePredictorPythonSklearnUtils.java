@@ -77,6 +77,6 @@ public class KubePredictorPythonSklearnUtils extends KubePredictorServerUtils {
     }
     
     return kubeJsonUtils.buildPredictorSklearn(artifactPath, serving.getPredictorResources(),
-      serving.getInstances(), logging, loggingMode);
+      serving.getInstances(), logging, loggingMode, serving.getBatchingConfiguration());
   }
 }

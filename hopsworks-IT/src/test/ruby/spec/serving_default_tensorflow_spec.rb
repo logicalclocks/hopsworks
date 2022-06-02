@@ -38,7 +38,9 @@ describe "On #{ENV['OS']}" do
       put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
           {name: "testModel6",
            modelPath: "/Projects/#{@project[:projectname]}/Models/mnist/",
-           batchingEnabled: false,
+           batchingConfiguration: {
+             batchingEnabled: false
+           },
            modelVersion: 1,
            modelServer: "TENSORFLOW_SERVING",
            servingTool: "DEFAULT",
@@ -57,7 +59,9 @@ describe "On #{ENV['OS']}" do
       put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
           {name: "testModel5",
           modelPath: "/Projects/#{@project[:projectname]}/Models/mnist",
-          batchingEnabled: false,
+           batchingConfiguration: {
+             batchingEnabled: false
+           },
           modelVersion: 1,
           artifactVersion: 99,
           modelServer: "TENSORFLOW_SERVING",
@@ -85,7 +89,9 @@ describe "On #{ENV['OS']}" do
           {name: "testModelwithPredictor",
             modelPath: "/Projects/#{@project[:projectname]}/Models/mnist",
             modelVersion: 1,
-            batchingEnabled: false,
+            batchingConfiguration: {
+              batchingEnabled: false
+            },
             kafkaTopicDTO: {
                 name: "NONE"
             },
@@ -102,15 +108,34 @@ describe "On #{ENV['OS']}" do
 
     it "should create a serving with request batching" do
       put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
-          {name: "testModelBatching",
+          {name: "testRequestBatchingTensorflowDefault1",
            modelPath: "/Projects/#{@project[:projectname]}/Models/mnist/",
            modelVersion: 1,
-           batchingEnabled: true,
+           batchingConfiguration: {
+             batchingEnabled: true
+           },
            modelServer: "TENSORFLOW_SERVING",
            servingTool: "DEFAULT",
            requestedInstances: 1
           }
       expect_status_details(201)
+    end
+
+    it 'should fail to create a serving with request batching enabled (with extra values set)' do
+      put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
+          {name: "testRequestBatchingTensorflowDefault2",
+           modelPath: "/Projects/#{@project[:projectname]}/Models/mnist",
+           modelVersion: 1,
+           batchingConfiguration: {
+             batchingEnabled: true,
+             timeout: 60
+           },
+           modelServer: "TENSORFLOW_SERVING",
+           servingTool: "DEFAULT",
+           requestedInstances: 1
+          }
+      expect_status_details(400, error_code: 240025)
+      expect_json(usrMsg: "Fine-grained request batching is only supported in KServe deployments")
     end
   end
 
@@ -142,7 +167,9 @@ describe "On #{ENV['OS']}" do
            name: serving[:name],
            modelPath: serving[:model_path],
            modelVersion: serving[:model_version],
-           batchingEnabled: true,
+           batchingConfiguration: {
+             batchingEnabled: true
+           },
            kafkaTopicDTO: {
                name: topic[:topic_name]
            },
@@ -154,7 +181,7 @@ describe "On #{ENV['OS']}" do
       expect_status_details(201)
 
       serving = Serving.find(@serving[:id])
-      expect(serving[:enable_batching]).to eql true
+      expect(JSON.parse(serving[:batching_configuration])['batchingEnabled']).to eql true
     end
   end
 

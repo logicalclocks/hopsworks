@@ -327,7 +327,7 @@ public class LocalhostServingController implements ServingController {
         if (!oldDbServing.getName().equals(dbServing.getName()) ||
             !oldDbServing.getModelPath().equals(dbServing.getModelPath()) ||
             !samePredictor ||
-            oldDbServing.isBatchingEnabled() != dbServing.isBatchingEnabled() ||
+            oldDbServing.getBatchingConfiguration() != dbServing.getBatchingConfiguration() ||
             oldDbServing.getModelVersion() > dbServing.getModelVersion()) {
           // To update the name and/or the artifact path we need to restart the server and/or the version as been
           // reduced. We need to restart the server

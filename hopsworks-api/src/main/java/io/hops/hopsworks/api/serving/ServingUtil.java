@@ -29,6 +29,7 @@ import io.hops.hopsworks.persistence.entity.hdfs.inode.Inode;
 import io.hops.hopsworks.persistence.entity.kafka.ProjectTopics;
 import io.hops.hopsworks.persistence.entity.kafka.schemas.Subjects;
 import io.hops.hopsworks.persistence.entity.project.Project;
+import io.hops.hopsworks.persistence.entity.serving.BatchingConfiguration;
 import io.hops.hopsworks.persistence.entity.serving.InferenceLogging;
 import io.hops.hopsworks.persistence.entity.serving.ModelServer;
 import io.hops.hopsworks.persistence.entity.serving.Serving;
@@ -102,8 +103,23 @@ public class ServingUtil {
     validateKafkaTopicSchema(project, serving, servingWrapper.getKafkaTopicDTO());
     validateInferenceLogging(serving, servingWrapper.getKafkaTopicDTO());
     validateInstances(serving);
+    validateBatchingConfiguration(serving);
   }
-  
+
+  private void validateBatchingConfiguration(Serving serving) throws ServingException {
+    BatchingConfiguration batchingConfiguration = serving.getBatchingConfiguration();
+    if (batchingConfiguration != null && batchingConfiguration.isBatchingEnabled()) {
+      if (serving.getModelServer() == ModelServer.PYTHON && serving.getServingTool() != ServingTool.KSERVE) {
+        throw new ServingException(RESTCodes.ServingErrorCode.REQUEST_BATCHING_NOT_SUPPORTED, Level.SEVERE, "Request " +
+            "batching is not supported in Python deployments without kserve");
+      } else if (serving.getServingTool() != ServingTool.KSERVE && (batchingConfiguration.getMaxBatchSize() != null
+          || batchingConfiguration.getMaxLatency() != null || batchingConfiguration.getTimeout() != null)) {
+        throw new ServingException(RESTCodes.ServingErrorCode.REQUEST_BATCHING_NOT_SUPPORTED, Level.FINE,
+            "Fine-grained request batching is only supported in KServe deployments");
+      }
+    }
+  }
+
   private void validateServingName(Serving serving, Serving dbServing) throws ServingException {
     if (Strings.isNullOrEmpty(serving.getName())) {
       throw new IllegalArgumentException("Serving name not provided");
@@ -146,7 +162,7 @@ public class ServingUtil {
       throw new ServingException(RESTCodes.ServingErrorCode.UPDATE_MODEL_SERVER_ERROR, Level.SEVERE);
     }
     if (serving.getModelServer() == ModelServer.TENSORFLOW_SERVING) {
-      validateTFServingUserInput(serving); // e.g., tensorflow standard path, batching
+      validateTFServingUserInput(serving); // e.g., tensorflow standard path
     }
     if (serving.getModelServer() == ModelServer.PYTHON) {
       validatePythonUserInput(serving); // e.g., model file, python scripts
@@ -252,11 +268,6 @@ public class ServingUtil {
     } catch (FileNotFoundException e) {
       throw new ServingException(RESTCodes.ServingErrorCode.MODEL_PATH_NOT_FOUND, Level.FINE, null);
     }
-    
-    if (serving.isBatchingEnabled()) {
-      throw new ServingException(RESTCodes.ServingErrorCode.REQUEST_BATCHING_NOT_SUPPORTED, Level.SEVERE, "Request " +
-        "batching is not supported in Python deployments");
-    }
   }
   
   private void validateKServeUserInput(Serving serving)
@@ -270,12 +281,7 @@ public class ServingUtil {
       throw new ServingException(RESTCodes.ServingErrorCode.KSERVE_NOT_ENABLED, Level.SEVERE, "Serving tool not " +
         "supported");
     }
-    
-    if (serving.isBatchingEnabled()) {
-      throw new ServingException(RESTCodes.ServingErrorCode.REQUEST_BATCHING_NOT_SUPPORTED, Level.FINE, "Request " +
-        "batching is not supported in KServe deployments");
-    }
-    
+
     // Service name is used as DNS subdomain. It must consist of lower case alphanumeric characters, '-' or '.', and
     // must start and end with an alphanumeric character. (e.g. 'example.com', regex used for validation is '[a-z0-9]
     // ([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*').
@@ -479,8 +485,19 @@ public class ServingUtil {
   }
   
   private void setDefaultRequestBatching(Serving serving) {
-    if (serving.isBatchingEnabled() == null) {
-      serving.setBatchingEnabled(false);
+    BatchingConfiguration batchingConfiguration = serving.getBatchingConfiguration();
+    if (batchingConfiguration == null) {
+      batchingConfiguration = new BatchingConfiguration();
+      batchingConfiguration.setBatchingEnabled(false);
+      serving.setBatchingConfiguration(batchingConfiguration);
+    } else if (serving.getServingTool() == ServingTool.KSERVE && (batchingConfiguration.getTimeout() != null
+        || batchingConfiguration.getMaxBatchSize() != null || batchingConfiguration.getMaxLatency() != null)) {
+      //enable the batching configuration if any numbers are set
+      batchingConfiguration.setBatchingEnabled(true);
+      serving.setBatchingConfiguration(batchingConfiguration);
+    } else if (batchingConfiguration.isBatchingEnabled() == null && (batchingConfiguration.getTimeout() == null
+        || batchingConfiguration.getMaxBatchSize() == null || batchingConfiguration.getMaxLatency() == null)) {
+      batchingConfiguration.setBatchingEnabled(false);
     }
   }
   

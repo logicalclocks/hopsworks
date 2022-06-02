@@ -22,6 +22,7 @@ import io.hops.hopsworks.common.dao.kafka.TopicDTO;
 import io.hops.hopsworks.common.serving.ServingStatusEnum;
 import io.hops.hopsworks.common.serving.ServingWrapper;
 import io.hops.hopsworks.persistence.entity.serving.DeployableComponentResources;
+import io.hops.hopsworks.persistence.entity.serving.BatchingConfiguration;
 import io.hops.hopsworks.persistence.entity.serving.InferenceLogging;
 import io.hops.hopsworks.persistence.entity.serving.ModelServer;
 import io.hops.hopsworks.persistence.entity.serving.Serving;
@@ -61,7 +62,6 @@ public class ServingView implements Serializable {
   private Integer internalPort;
   private String internalPath;
   private Date created;
-  private Boolean batchingEnabled;
   private InferenceLogging inferenceLogging;
   private ModelServer modelServer;
   private ServingTool servingTool;
@@ -70,6 +70,7 @@ public class ServingView implements Serializable {
   private Date deployed;
   private String revision;
   private List<String> conditions;
+  private BatchingConfiguration batchingConfiguration;
 
   // TODO(Fabio): use expansions here
   private String creator;
@@ -105,7 +106,6 @@ public class ServingView implements Serializable {
     this.status = servingWrapper.getStatus();
     this.kafkaTopicDTO = servingWrapper.getKafkaTopicDTO();
     this.inferenceLogging = servingWrapper.getServing().getInferenceLogging();
-    this.batchingEnabled = servingWrapper.getServing().isBatchingEnabled();
     this.modelServer = servingWrapper.getServing().getModelServer();
     this.servingTool = servingWrapper.getServing().getServingTool();
     this.deployed = servingWrapper.getServing().getDeployed();
@@ -115,6 +115,7 @@ public class ServingView implements Serializable {
     this.creator = user.getFname() + " " + user.getLname();
     this.predictorResources = servingWrapper.getServing().getPredictorResources();
     this.transformerResources = servingWrapper.getServing().getTransformerResources();
+    this.batchingConfiguration = servingWrapper.getServing().getBatchingConfiguration();
   }
 
   @ApiModelProperty(value = "ID of the Serving entry" )
@@ -265,14 +266,6 @@ public class ServingView implements Serializable {
   public ServingStatusEnum getStatus() {
     return status;
   }
-  
-  @ApiModelProperty(value = "Is request batching enabled")
-  public Boolean isBatchingEnabled() {
-    return batchingEnabled;
-  }
-  public void setBatchingEnabled(Boolean batchingEnabled) {
-    this.batchingEnabled = batchingEnabled;
-  }
 
   public TopicDTO getKafkaTopicDTO() {
     return kafkaTopicDTO;
@@ -339,14 +332,20 @@ public class ServingView implements Serializable {
   public void setTransformerResources(DeployableComponentResources transformerResources) {
     this.transformerResources = transformerResources;
   }
+
+  @ApiModelProperty(value = "Request batching configuration for inference", readOnly = true)
+  public BatchingConfiguration getBatchingConfiguration() { return batchingConfiguration; }
+  public void setBatchingConfiguration(BatchingConfiguration batchingConfiguration) {
+    this.batchingConfiguration = batchingConfiguration;
+  }
   
   @JsonIgnore
   public ServingWrapper getServingWrapper() {
 
     ServingWrapper servingWrapper = new ServingWrapper(
         new Serving(id, name, description, modelPath, predictor, transformer, modelName, modelVersion, artifactVersion,
-          requestedInstances, requestedTransformerInstances, batchingEnabled, modelServer, servingTool,
-          inferenceLogging, predictorResources, transformerResources));
+          requestedInstances, requestedTransformerInstances, modelServer, servingTool,
+          inferenceLogging, predictorResources, transformerResources, batchingConfiguration));
     servingWrapper.setKafkaTopicDTO(kafkaTopicDTO);
 
     return servingWrapper;

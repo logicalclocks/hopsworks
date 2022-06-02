@@ -150,7 +150,7 @@ public class KubePredictorTensorflowUtils extends KubePredictorServerUtils {
     tfServingEnv.add(new EnvVarBuilder().withName("HDFS_USER")
       .withValue(projectUser).build());
     tfServingEnv.add(new EnvVarBuilder().withName("ENABLE_BATCHING")
-      .withValue(serving.isBatchingEnabled() ? "1" : "0").build());
+      .withValue(serving.getBatchingConfiguration().isBatchingEnabled() ? "1" : "0").build());
     tfServingEnv.add(new EnvVarBuilder().withName("IS_KUBE")
       .withValue("true").build());
     tfServingEnv.add(new EnvVarBuilder().withName("FILE_SYSTEM_POLLING_INTERVAL_SECS")
@@ -280,9 +280,9 @@ public class KubePredictorTensorflowUtils extends KubePredictorServerUtils {
     } else {
       loggerMode = null;
     }
-    
+
     return kubeJsonUtils.buildPredictorTensorflow(artifactPath,
-      serving.getPredictorResources(), serving.getInstances(), logging, loggerMode);
+      serving.getPredictorResources(), serving.getInstances(), logging, loggerMode, serving.getBatchingConfiguration());
   }
   
   private ObjectMeta getDeploymentMetadata(String servingId) {

@@ -305,6 +305,47 @@ describe "On #{ENV['OS']}" do
                  "/Projects/#{@project[:projectname]}/Models/irisflowerclassifier/1/iris_knn.pkl",
                  @user[:username], "#{@project[:projectname]}__Models", 750, "#{@project[:projectname]}")
           end
+
+          # request batching
+
+          it "should create a serving with request batching enabled and no extra batching configuration" do
+            put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
+                {name: "testrequestbatchingpythonkserve1",
+                 modelPath: "/Projects/#{@project[:projectname]}/Models/irisflowerclassifier",
+                 modelVersion: 1,
+                 batchingConfiguration: {
+                   batchingEnabled: true
+                 },
+                 kafkaTopicDTO: {
+                   name: "NONE"
+                 },
+                 modelServer: "PYTHON",
+                 servingTool: "KSERVE",
+                 requestedInstances: 1
+                }
+            expect_status_details(201)
+          end
+
+          it "should create a serving with request batching enabled and extra batching configuration provided" do
+            put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
+                {name: "testrequestbatchingpythonkserve2",
+                 modelPath: "/Projects/#{@project[:projectname]}/Models/irisflowerclassifier",
+                 modelVersion: 1,
+                 batchingConfiguration: {
+                   batchingEnabled: true,
+                   maxBatchSize: 32,
+                   maxLatency: 5000,
+                   timeout: 60
+                 },
+                 kafkaTopicDTO: {
+                   name: "NONE"
+                 },
+                 modelServer: "PYTHON",
+                 servingTool: "KSERVE",
+                 requestedInstances: 1
+                }
+            expect_status_details(201)
+          end
           
           # predictor
 
@@ -658,22 +699,6 @@ describe "On #{ENV['OS']}" do
             expect(resource_config['limits']['gpus']).to be 2
           end
 
-          # request batching
-
-          it "should fail to create a serving with request batching" do
-            put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
-                {name: "testmodel9",
-                modelPath: "/Projects/#{@project[:projectname]}/Models/irisflowerclassifier",
-                modelVersion: 1,
-                batchingEnabled: true,
-                modelServer: "PYTHON",
-                servingTool: "KSERVE",
-                requestedInstances: 1
-                }
-            expect_status_details(400, error_code: 240025)
-            expect_json(usrMsg: "Request batching is not supported in Python deployments")
-          end
-
           # transformer instances
 
           it "should fail to create a serving with transformer and without requested instances" do
@@ -681,7 +706,9 @@ describe "On #{ENV['OS']}" do
                   {name: "testmodel25",
                   modelPath: "/Projects/#{@project[:projectname]}/Models/irisflowerclassifier",
                   modelVersion: 1,
-                  batchingEnabled: false,
+                  batchingConfiguration: {
+                    batchingEnabled: false
+                  },
                   modelServer: "PYTHON",
                   servingTool: "KSERVE",
                   transformer: "/Projects/#{@project[:projectname]}/Models/irisflowerclassifier/1/transformer.py",
@@ -696,7 +723,9 @@ describe "On #{ENV['OS']}" do
                 {name: "testmodel26",
                 modelPath: "/Projects/#{@project[:projectname]}/Models/irisflowerclassifier",
                 modelVersion: 1,
-                batchingEnabled: false,
+                batchingConfiguration: {
+                    batchingEnabled: false
+                },
                 modelServer: "PYTHON",
                 servingTool: "KSERVE",
                 requestedInstances: 1,
@@ -711,7 +740,9 @@ describe "On #{ENV['OS']}" do
                 {name: "testmodel25",
                 modelPath: "/Projects/#{@project[:projectname]}/Models/irisflowerclassifier",
                 modelVersion: 1,
-                batchingEnabled: false,
+                batchingConfiguration: {
+                    batchingEnabled: false
+                },
                 modelServer: "PYTHON",
                 servingTool: "KSERVE",
                 transformer: "/Projects/#{@project[:projectname]}/Models/irisflowerclassifier/1/transformer.py",
@@ -748,7 +779,7 @@ describe "On #{ENV['OS']}" do
                modelPath: serving[:model_path],
                modelVersion: serving[:model_version],
                artifactVersion: 0,
-               batchingEnabled: serving[:enable_batching],
+               batchingConfiguration: serving[:batching_configuration],
                modelServer: parse_model_server(serving[:model_server]),
                servingTool: parse_serving_tool(serving[:serving_tool]),
                predictor: "/Projects/#{@project[:projectname]}/Models/irisflowerclassifier/1/#{SKLEARN_SCRIPT_FILE_NAME}",
@@ -767,7 +798,7 @@ describe "On #{ENV['OS']}" do
                modelPath: serving[:model_path],
                modelVersion: serving[:model_version],
                artifactVersion: 0,
-               batchingEnabled: serving[:enable_batching],
+               batchingConfiguration: serving[:batching_configuration],
                modelServer: parse_model_server(serving[:model_server]),
                servingTool: parse_serving_tool(serving[:serving_tool]),
                transformer: "/Projects/#{@project[:projectname]}/Models/irisflowerclassifier/1/transformer.py",
@@ -787,7 +818,7 @@ describe "On #{ENV['OS']}" do
                modelPath: serving[:model_path],
                modelVersion: serving[:model_version],
                artifactVersion: 0,
-               batchingEnabled: serving[:enable_batching],
+               batchingConfiguration: serving[:batching_configuration],
                modelServer: parse_model_server(serving[:model_server]),
                servingTool: parse_serving_tool(serving[:serving_tool]),
                predictor: "/Projects/#{@project[:projectname]}/Models/irisflowerclassifier/1/#{SKLEARN_SCRIPT_FILE_NAME}",
@@ -809,7 +840,7 @@ describe "On #{ENV['OS']}" do
                name: serving[:name],
                modelPath: serving[:model_path],
                modelVersion: serving[:model_version],
-               batchingEnabled: serving[:enable_batching],
+               batchingConfiguration: serving[:batching_configuration],
                modelServer: parse_model_server(serving[:model_server]),
                servingTool: parse_serving_tool(serving[:serving_tool]),
                predictor: "/Projects/#{@project[:projectname]}/Models/irisflowerclassifier/1/#{SKLEARN_SCRIPT_FILE_NAME}",
@@ -836,7 +867,7 @@ describe "On #{ENV['OS']}" do
                name: serving[:name],
                modelPath: serving[:model_path],
                modelVersion: serving[:model_version],
-               batchingEnabled: serving[:enable_batching],
+               batchingConfiguration: serving[:batching_configuration],
                modelServer: parse_model_server(serving[:model_server]),
                servingTool: parse_serving_tool(serving[:serving_tool]),
                predictor: "/Projects/#{@project[:projectname]}/Models/irisflowerclassifier/1/#{SKLEARN_SCRIPT_FILE_NAME}",
@@ -849,7 +880,7 @@ describe "On #{ENV['OS']}" do
                name: serving[:name],
                modelPath: serving[:model_path],
                modelVersion: serving[:model_version],
-               batchingEnabled: serving[:enable_batching],
+               batchingConfiguration: serving[:batching_configuration],
                modelServer: parse_model_server(serving[:model_server]),
                servingTool: parse_serving_tool(serving[:serving_tool]),
                predictor: "#{SKLEARN_SCRIPT_FILE_NAME}",
@@ -866,7 +897,7 @@ describe "On #{ENV['OS']}" do
                name: serving[:name],
                modelPath: serving[:model_path],
                modelVersion: serving[:model_version],
-               batchingEnabled: serving[:enable_batching],
+               batchingConfiguration: serving[:batching_configuration],
                modelServer: parse_model_server(serving[:model_server]),
                servingTool: parse_serving_tool(serving[:serving_tool]),
                predictor: "/Projects/#{@project[:projectname]}/Models/irisflowerclassifier/1/#{SKLEARN_SCRIPT_FILE_NAME}",
@@ -879,7 +910,7 @@ describe "On #{ENV['OS']}" do
                name: serving[:name],
                modelPath: serving[:model_path],
                modelVersion: serving[:model_version],
-               batchingEnabled: serving[:enable_batching],
+               batchingConfiguration: serving[:batching_configuration],
                modelServer: parse_model_server(serving[:model_server]),
                servingTool: parse_serving_tool(serving[:serving_tool]),
                predictor: SKLEARN_SCRIPT_FILE_NAME,
@@ -910,7 +941,7 @@ describe "On #{ENV['OS']}" do
                name: serving[:name],
                modelPath: serving[:model_path],
                modelVersion: serving[:model_version],
-               batchingEnabled: serving[:enable_batching],
+               batchingConfiguration: serving[:batching_configuration],
                modelServer: parse_model_server(serving[:model_server]),
                servingTool: parse_serving_tool(serving[:serving_tool]),
                transformer: "/Projects/#{@project[:projectname]}/Models/irisflowerclassifier/1/transformer.py",
@@ -938,7 +969,7 @@ describe "On #{ENV['OS']}" do
                name: serving[:name],
                modelPath: serving[:model_path],
                modelVersion: serving[:model_version],
-               batchingEnabled: serving[:enable_batching],
+               batchingConfiguration: serving[:batching_configuration],
                modelServer: parse_model_server(serving[:model_server]),
                servingTool: parse_serving_tool(serving[:serving_tool]),
                transformer: "transformer.py",
@@ -957,7 +988,7 @@ describe "On #{ENV['OS']}" do
                name: serving[:name],
                modelPath: serving[:model_path],
                modelVersion: serving[:model_version],
-               batchingEnabled: serving[:enable_batching],
+               batchingConfiguration: serving[:batching_configuration],
                modelServer: parse_model_server(serving[:model_server]),
                servingTool: parse_serving_tool(serving[:serving_tool]),
                transformer: "/Projects/#{@project[:projectname]}/Models/irisflowerclassifier/1/transformer.py",
@@ -971,7 +1002,7 @@ describe "On #{ENV['OS']}" do
                name: serving[:name],
                modelPath: serving[:model_path],
                modelVersion: serving[:model_version],
-               batchingEnabled: serving[:enable_batching],
+               batchingConfiguration: serving[:batching_configuration],
                modelServer: parse_model_server(serving[:model_server]),
                servingTool: parse_serving_tool(serving[:serving_tool]),
                predictor: "/Projects/#{@project[:projectname]}/Models/irisflowerclassifier/1/#{SKLEARN_SCRIPT_FILE_NAME}",
@@ -1005,7 +1036,7 @@ describe "On #{ENV['OS']}" do
                modelPath: serving[:model_path],
                modelVersion: serving[:model_version],
                artifactVersion: serving[:artifact_version],
-               batchingEnabled: serving[:enable_batching],
+               batchingConfiguration: serving[:batching_configuration],
                modelServer: parse_model_server(serving[:model_server]),
                servingTool: parse_serving_tool(serving[:serving_tool]),
                predictor: "/Projects/#{@project[:projectname]}/Models/irisflowerclassifier/1/#{SKLEARN_SCRIPT_FILE_NAME}",
@@ -1023,7 +1054,7 @@ describe "On #{ENV['OS']}" do
                name: serving[:name],
                modelPath: serving[:model_path],
                modelVersion: serving[:model_version],
-               batchingEnabled: serving[:enable_batching],
+               batchingConfiguration: serving[:batching_configuration],
                modelServer: parse_model_server(serving[:model_server]),
                servingTool: parse_serving_tool(serving[:serving_tool]),
                predictor: "/Projects/#{@project[:projectname]}/Models/irisflowerclassifier/1/#{SKLEARN_SCRIPT_FILE_NAME}",
@@ -1037,7 +1068,7 @@ describe "On #{ENV['OS']}" do
                modelPath: serving[:model_path],
                modelVersion: serving[:model_version],
                artifactVersion: serving[:artifact_version],
-               batchingEnabled: serving[:enable_batching],
+               batchingConfiguration: serving[:batching_configuration],
                modelServer: parse_model_server(serving[:model_server]),
                servingTool: parse_serving_tool(serving[:serving_tool]),
                predictor: SKLEARN_SCRIPT_FILE_NAME,
@@ -1055,7 +1086,7 @@ describe "On #{ENV['OS']}" do
                modelPath: serving[:model_path],
                modelVersion: serving[:model_version],
                artifactVersion: serving[:artifact_version],
-               batchingEnabled: serving[:enable_batching],
+               batchingConfiguration: serving[:batching_configuration],
                modelServer: parse_model_server(serving[:model_server]),
                servingTool: parse_serving_tool(serving[:serving_tool]),
                requestedInstances: serving[:instances]
@@ -1089,7 +1120,7 @@ describe "On #{ENV['OS']}" do
                modelPath: serving[:model_path],
                modelVersion: serving[:model_version],
                artifactVersion: serving[:artifact_version],
-               batchingEnabled: serving[:enable_batching],
+               batchingConfiguration: serving[:batching_configuration],
                modelServer: parse_model_server(serving[:model_server]),
                servingTool: parse_serving_tool(serving[:serving_tool]),
                predictor: serving[:predictor],
@@ -1109,7 +1140,7 @@ describe "On #{ENV['OS']}" do
                modelPath: serving[:model_path],
                modelVersion: serving[:model_version],
                artifactVersion: serving[:artifact_version],
-               batchingEnabled: serving[:enable_batching],
+               batchingConfiguration: serving[:batching_configuration],
                modelServer: parse_model_server(serving[:model_server]),
                servingTool: parse_serving_tool(serving[:serving_tool]),
                requestedInstances: serving[:instances]
@@ -1127,7 +1158,7 @@ describe "On #{ENV['OS']}" do
                modelPath: serving[:model_path],
                modelVersion: serving[:model_version],
                artifactVersion: serving[:artifact_version],
-               batchingEnabled: serving[:enable_batching],
+               batchingConfiguration: serving[:batching_configuration],
                modelServer: parse_model_server(serving[:model_server]),
                servingTool: parse_serving_tool(serving[:serving_tool]),
                transformer: "/Projects/#{@project[:projectname]}/Models/irisflowerclassifier/1/transformer.py",
@@ -1162,7 +1193,7 @@ describe "On #{ENV['OS']}" do
               modelPath: serving[:model_path],
               modelVersion: serving[:model_version],
               artifactVersion: serving[:artifact_version],
-              batchingEnabled: serving[:enable_batching],
+              batchingConfiguration: serving[:batching_configuration],
               modelServer: parse_model_server(serving[:model_server]),
               servingTool: parse_serving_tool(serving[:serving_tool]),
               transformer: serving[:transformer],
@@ -1181,7 +1212,7 @@ describe "On #{ENV['OS']}" do
                modelPath: serving[:model_path],
                modelVersion: serving[:model_version],
                artifactVersion: serving[:artifact_version],
-               batchingEnabled: serving[:enable_batching],
+               batchingConfiguration: serving[:batching_configuration],
                modelServer: parse_model_server(serving[:model_server]),
                servingTool: parse_serving_tool(serving[:serving_tool]),
                transformer: "non-existing-#{SKLEARN_SCRIPT_FILE_NAME}",
@@ -1201,7 +1232,7 @@ describe "On #{ENV['OS']}" do
                name: serving[:name],
                modelPath: serving[:model_path],
                modelVersion: serving[:model_version],
-               batchingEnabled: serving[:enable_batching],
+               batchingConfiguration: serving[:batching_configuration],
                kafkaTopicDTO: {
                    name: topic[:topic_name]
                },
@@ -1243,7 +1274,7 @@ describe "On #{ENV['OS']}" do
                modelPath: serving[:model_path],
                modelVersion: serving[:model_version],
                artifactVersion: serving[:artifact_version],
-               batchingEnabled: serving[:enable_batching],
+               batchingConfiguration: serving[:batching_configuration],
                modelServer: parse_model_server(serving[:model_server]),
                servingTool: parse_serving_tool(serving[:serving_tool]),
                transformer: serving[:transformer],
@@ -1297,7 +1328,7 @@ describe "On #{ENV['OS']}" do
                {id: @serving[:id],
                 name: @serving[:name],
                 modelPath: @serving[:model_path],
-                batchingEnabled: @serving[:enable_batching],
+                batchingConfiguration: @serving[:batching_configuration],
                 modelVersion: @serving[:model_version],
                 modelServer: parse_model_server(@serving[:model_server]),
                 servingTool: parse_serving_tool(@serving[:serving_tool]),

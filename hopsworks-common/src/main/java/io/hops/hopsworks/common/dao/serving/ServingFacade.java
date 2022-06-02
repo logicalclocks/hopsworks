@@ -141,8 +141,8 @@ public class ServingFacade {
       dbServing.setLocalPort(newServing.getLocalPort());
     }
   
-    if (newServing.isBatchingEnabled() != null) {
-      dbServing.setBatchingEnabled(newServing.isBatchingEnabled());
+    if (newServing.getBatchingConfiguration() != null) {
+      dbServing.setBatchingConfiguration(newServing.getBatchingConfiguration());
     }
   
     if (newServing.getServingTool() != null) {

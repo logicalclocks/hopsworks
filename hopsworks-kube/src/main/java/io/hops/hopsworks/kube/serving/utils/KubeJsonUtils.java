@@ -12,6 +12,7 @@ import io.fabric8.kubernetes.api.model.Volume;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.kube.common.KubeClientService;
 import io.hops.hopsworks.kube.common.KubeKServeClientService;
+import io.hops.hopsworks.persistence.entity.serving.BatchingConfiguration;
 import io.hops.hopsworks.persistence.entity.serving.DeployableComponentResources;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -114,29 +115,30 @@ public class KubeJsonUtils {
   // Predictors
   
   public JSONObject buildPredictorTensorflow(String artifactPath, DeployableComponentResources resources,
-    Integer minReplicas, boolean logging, String loggingMode) {
+    Integer minReplicas, boolean logging, String loggingMode, BatchingConfiguration batchingConfiguration) {
     
-    JSONObject inferenceService = buildPredictorBase(minReplicas, logging, loggingMode);
+    JSONObject inferenceService = buildPredictorBase(minReplicas, logging, loggingMode, batchingConfiguration);
     inferenceService.put("tensorflow", buildFrameworkTensorflow(artifactPath, resources));
     
     return inferenceService;
   }
   
   public JSONObject buildPredictorSklearn(String artifactPath, DeployableComponentResources resources,
-    Integer minReplicas, boolean logging, String loggingMode) {
+    Integer minReplicas, boolean logging, String loggingMode, BatchingConfiguration batchingConfiguration) {
     
-    JSONObject inferenceService = buildPredictorBase(minReplicas, logging, loggingMode);
+    JSONObject inferenceService = buildPredictorBase(minReplicas, logging, loggingMode, batchingConfiguration);
     inferenceService.put("sklearn", buildFrameworkSklearn(artifactPath, resources));
     
     return inferenceService;
   }
   
-  public JSONObject buildPredictor(List<Container> containers, List<Volume> volumes, Integer minReplicas) {
-    return buildPredictor(containers, volumes, minReplicas, false, null);
+  public JSONObject buildPredictor(List<Container> containers, List<Volume> volumes, Integer minReplicas,
+                                   BatchingConfiguration batchingConfiguration) {
+    return buildPredictor(containers, volumes, minReplicas, false, null, batchingConfiguration);
   }
   
   public JSONObject buildPredictor(List<Container> containers, List<Volume> volumes, Integer minReplicas,
-    boolean logging, String loggingMode) {
+    boolean logging, String loggingMode, BatchingConfiguration batchingConfiguration) {
     
     // Containers
     JSONArray containersJSON = new JSONArray();
@@ -145,14 +147,15 @@ public class KubeJsonUtils {
     }
     
     // Infernce service
-    JSONObject inferenceService = buildPredictorBase(minReplicas, logging, loggingMode);
+    JSONObject inferenceService = buildPredictorBase(minReplicas, logging, loggingMode, batchingConfiguration);
     inferenceService.put("containers", containersJSON);
     inferenceService.put("volumes", new JSONArray(volumes));
     
     return inferenceService;
   }
   
-  private JSONObject buildPredictorBase(Integer minReplicas, boolean logging, String loggingMode) {
+  private JSONObject buildPredictorBase(Integer minReplicas, boolean logging, String loggingMode,
+                                        BatchingConfiguration batchingConfiguration) {
     return new JSONObject() {
       {
         put("minReplicas", minReplicas);
@@ -163,6 +166,15 @@ public class KubeJsonUtils {
               KubeServingUtils.INFERENCE_LOGGER_PORT));
           }
         });
+        if (batchingConfiguration.isBatchingEnabled()) {
+          put("batcher", new JSONObject() {
+            {
+              put("maxBatchSize", batchingConfiguration.getMaxBatchSize());
+              put("maxLatency", batchingConfiguration.getMaxLatency());
+              put("timeout", batchingConfiguration.getTimeout());
+            }
+          });
+        }
       }
     };
   }

@@ -188,6 +188,7 @@
     <class>io.hops.hopsworks.persistence.entity.alertmanager.ConfigConverter</class>
     <class>io.hops.hopsworks.persistence.entity.alertmanager.AlertReceiver</class>
     <class>io.hops.hopsworks.persistence.entity.serving.ComponentResourcesConverter</class>
+    <class>io.hops.hopsworks.persistence.entity.serving.BatchingConfigurationConverter</class>
     <exclude-unlisted-classes>true</exclude-unlisted-classes>
     <shared-cache-mode>NONE</shared-cache-mode>
     <validation-mode>NONE</validation-mode>

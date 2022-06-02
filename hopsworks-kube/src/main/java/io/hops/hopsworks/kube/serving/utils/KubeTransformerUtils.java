@@ -132,7 +132,8 @@ public class KubeTransformerUtils {
     
     List<Volume> volumes = buildVolumes(project, user);
     
-    return kubeJsonUtils.buildPredictor(containers, volumes, serving.getTransformerInstances());
+    return kubeJsonUtils.buildPredictor(containers, volumes, serving.getTransformerInstances(),
+        serving.getBatchingConfiguration());
   }
   
   public Boolean checkTransformerExists(Serving serving)

@@ -165,20 +165,21 @@ describe "On #{ENV['OS']}" do
         end
 
         # request batching
-
         it "should fail to create a serving with request batching enabled" do
           put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
-             {name: "testModel6",
+             {name: "testRequestBatchingPythonDefault1",
               modelPath: "/Projects/#{@project[:projectname]}/Models/irisflowerclassifier",
               modelVersion: 1,
               predictor: "/Projects/#{@project[:projectname]}/Models/irisflowerclassifier/1/#{SKLEARN_SCRIPT_FILE_NAME}",
               modelServer: "PYTHON",
               servingTool: "DEFAULT",
               requestedInstances: 1,
-              batchingEnabled: true
+              batchingConfiguration: {
+                batchingEnabled: true
               }
+             }
           expect_status_details(400, error_code: 240025)
-          expect_json(usrMsg: "Request batching is not supported in Python deployments")
+          expect_json(usrMsg: "Request batching is not supported in Python deployments without kserve")
         end
       end
     end

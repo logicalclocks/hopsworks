@@ -61,7 +61,9 @@ module ServingHelper
                modelPath: "/Projects/#{project_name}/Models/mnist",
                modelVersion: 1,
                artifactVersion: -1,
-               batchingEnabled: false,
+               batchingConfiguration: {
+                 batchingEnabled:false
+               },
                kafkaTopicDTO: {
                   name: "CREATE",
                   numOfPartitions: 1,
@@ -83,7 +85,9 @@ module ServingHelper
                modelPath: "/Projects/#{project_name}/Models/irisflowerclassifier",
                modelVersion: 1,
                artifactVersion: -1,
-               batchingEnabled: false,
+               batchingConfiguration: {
+                 batchingEnabled: false
+               },
                kafkaTopicDTO: {
                   name: "CREATE",
                   numOfPartitions: 1,
@@ -104,7 +108,9 @@ module ServingHelper
               {name: serving_name,
                modelPath: "/Projects/#{project_name}/Models/mnist",
                modelVersion: 1,
-               batchingEnabled: true,
+               batchingConfiguration: {
+                 batchingEnabled: true
+               },
                kafkaTopicDTO: {
                   name: "CREATE",
                   numOfPartitions: 1,

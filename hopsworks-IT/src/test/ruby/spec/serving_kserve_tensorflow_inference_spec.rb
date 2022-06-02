@@ -224,7 +224,7 @@ describe "On #{ENV['OS']}" do
                 name: @serving[:name],
                 modelPath: @serving[:model_path],
                 modelVersion: @serving[:model_version],
-                batchingEnabled: @serving[:enable_batching],
+                batchingConfiguration: @serving[:batching_configuration],
                 modelServer: parse_model_server(@serving[:model_server]),
                 servingTool: parse_serving_tool(@serving[:serving_tool]),
                 requestedInstances: @serving[:instances]
@@ -250,7 +250,9 @@ describe "On #{ENV['OS']}" do
                 name: @serving[:name],
                 modelPath: @serving[:model_path],
                 modelVersion: @serving[:model_version],
-                batchingEnabled: false,
+                batchingConfiguration: {
+                  batchingEnabled: false
+                },
                 kafkaTopicDTO: {
                    name: "NONE"
                 },

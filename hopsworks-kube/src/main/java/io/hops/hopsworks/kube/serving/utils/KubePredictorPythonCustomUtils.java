@@ -124,7 +124,8 @@ public class KubePredictorPythonCustomUtils extends KubePredictorServerUtils {
       loggerMode = null;
     }
     
-    return kubeJsonUtils.buildPredictor(containers, volumes, serving.getInstances(), logging, loggerMode);
+    return kubeJsonUtils.buildPredictor(containers, volumes, serving.getInstances(), logging, loggerMode,
+        serving.getBatchingConfiguration());
   }
   
   private Container buildPredictorContainer(Project project, Users user, Serving serving)

@@ -25,7 +25,9 @@ describe "On #{ENV['OS']}" do
           {name: "mnist",
            modelPath: "/Projects/#{@project[:projectname]}/Models/mnist",
            modelVersion: 1,
-           batchingEnabled: false,
+           batchingConfiguration: {
+               batchingEnabled: false
+           },
            kafkaTopicDTO: {
                name: "NONE"
            },
@@ -57,7 +59,9 @@ describe "On #{ENV['OS']}" do
           {name: "mnist",
            modelPath: "/Projects/#{@project[:projectname]}/Models/mnist",
            modelVersion: 1,
-           batchingEnabled: false,
+           batchingConfiguration: {
+               batchingEnabled: false
+           },
            kafkaTopicDTO: {
                name: "NONE"
            },
@@ -90,7 +94,9 @@ describe "On #{ENV['OS']}" do
                 {name: "testmodel",
                  modelPath: "/Projects/#{@project[:projectname]}/Models/mnist",
                  modelVersion: 1,
-                 batchingEnabled: false,
+                 batchingConfiguration: {
+                  batchingEnabled: false
+                 },
                  modelServer: "TENSORFLOW_SERVING",
                  servingTool: "KSERVE",
                  requestedInstances: 1
@@ -116,7 +122,9 @@ describe "On #{ENV['OS']}" do
                 {name: "invalidName",
                  modelPath: "/Projects/#{@project[:projectname]}/Models/mnist",
                  modelVersion: 1,
-                 batchingEnabled: false,
+                 batchingConfiguration: {
+                   batchingEnabled: false
+                 },
                  kafkaTopicDTO: {
                      name: "NONE"
                  },
@@ -135,7 +143,9 @@ describe "On #{ENV['OS']}" do
             put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
                 {name: name,
                  modelPath: "/Projects/#{@project[:projectname]}/Models/mnist",
-                 batchingEnabled: false,
+                 batchingConfiguration: {
+                   batchingEnabled: false
+                 },
                  modelVersion: 1,
                  modelServer: "TENSORFLOW_SERVING",
                  servingTool: "KSERVE",
@@ -152,7 +162,9 @@ describe "On #{ENV['OS']}" do
             put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
                 {name: name,
                  modelPath: "/Projects/#{@project[:projectname]}/Models/mnist",
-                 batchingEnabled: false,
+                 batchingConfiguration: {
+                   batchingEnabled: false
+                 },
                  modelVersion: 1,
                  modelServer: "TENSORFLOW_SERVING",
                  servingTool: "KSERVE",
@@ -170,7 +182,9 @@ describe "On #{ENV['OS']}" do
             put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
                 {name: "testmodel3",
                  modelPath: "/Projects/#{@project[:projectname]}/Models/mnist",
-                 batchingEnabled: false,
+                 batchingConfiguration: {
+                   batchingEnabled: false
+                 },
                  modelVersion: 1,
                  artifactVersion: "1",
                  modelServer: "TENSORFLOW_SERVING",
@@ -185,7 +199,9 @@ describe "On #{ENV['OS']}" do
             put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
                 {name: "testmodel4",
                  modelPath: "/Projects/#{@project[:projectname]}/Models/mnist",
-                 batchingEnabled: false,
+                 batchingConfiguration: {
+                   batchingEnabled: false
+                 },
                  modelVersion: 1,
                  artifactVersion: "0", # MODEL-ONLY
                  modelServer: "TENSORFLOW_SERVING",
@@ -197,13 +213,15 @@ describe "On #{ENV['OS']}" do
             expect_status_details(400, error_code: 240019)
             expect_json(usrMsg: "Predictors and transformers cannot be used in MODEL-ONLY artifacts")
           end
-          
+
           it "should fail to create a serving with a non-existing artifact version" do
             name = "testmodelnonexistingartifactversion"
             put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
                 {name: name,
                 modelPath: "/Projects/#{@project[:projectname]}/Models/mnist",
-                batchingEnabled: false,
+                batchingConfiguration: {
+                  batchingEnabled: false
+                },
                 modelVersion: 1,
                 artifactVersion: 99,
                 modelServer: "TENSORFLOW_SERVING",
@@ -222,7 +240,9 @@ describe "On #{ENV['OS']}" do
             put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
                {name: "testmodelwithpredictor",
                 modelPath: "/Projects/#{@project[:projectname]}/Models/mnist",
-                batchingEnabled: false,
+                batchingConfiguration: {
+                  batchingEnabled: false
+                },
                 modelVersion: 1,
                 modelServer: "TENSORFLOW_SERVING",
                 servingTool: "KSERVE",
@@ -239,7 +259,9 @@ describe "On #{ENV['OS']}" do
             put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
                 {name: "testmodel14",
                  modelPath: "/Projects/#{@project[:projectname]}/Models/mnist",
-                 batchingEnabled: false,
+                 batchingConfiguration: {
+                   batchingEnabled: false
+                 },
                  modelVersion: 1,
                  modelServer: "TENSORFLOW_SERVING",
                  servingTool: "KSERVE",
@@ -255,7 +277,9 @@ describe "On #{ENV['OS']}" do
             put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
                 {name: "testmodel15",
                  modelPath: "/Projects/#{@project[:projectname]}/Models/mnist",
-                 batchingEnabled: false,
+                 batchingConfiguration: {
+                   batchingEnabled: false
+                 },
                  modelVersion: 1,
                  modelServer: "TENSORFLOW_SERVING",
                  servingTool: "KSERVE",
@@ -272,7 +296,9 @@ describe "On #{ENV['OS']}" do
             put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
                 {name: name,
                  modelPath: "/Projects/#{@project[:projectname]}/Models/mnist",
-                 batchingEnabled: false,
+                 batchingConfiguration: {
+                   batchingEnabled: false
+                 },
                  modelVersion: 1,
                  modelServer: "TENSORFLOW_SERVING",
                  servingTool: "KSERVE",
@@ -291,7 +317,9 @@ describe "On #{ENV['OS']}" do
             put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
                 {name: name,
                  modelPath: "/Projects/#{@project[:projectname]}/Models/mnist",
-                 batchingEnabled: false,
+                 batchingConfiguration: {
+                   batchingEnabled: false
+                 },
                  modelVersion: 1,
                  modelServer: "TENSORFLOW_SERVING",
                  servingTool: "KSERVE",
@@ -313,7 +341,9 @@ describe "On #{ENV['OS']}" do
             put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
                 {name: "testmodel18",
                  modelPath: "/Projects/#{@project[:projectname]}/Models/mnist",
-                 batchingEnabled: false,
+                 batchingConfiguration: {
+                   batchingEnabled: false
+                 },
                  modelVersion: 1,
                  artifactVersion: 1,
                  modelServer: "TENSORFLOW_SERVING",
@@ -331,13 +361,15 @@ describe "On #{ENV['OS']}" do
           it "should fail to create a serving with an existing kafka topic with inferenceschema version 1" do
             # Create kafka topic
             json, topic_name = add_topic(@project[:id], INFERENCE_SCHEMA_NAME, 1)
-      
+
             # Create serving
             put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
                 {name: "testmodeltopicschema1",
                  modelPath: "/Projects/#{@project[:projectname]}/Models/mnist/",
                  modelVersion: 1,
-                 batchingEnabled: false,
+                 batchingConfiguration: {
+                   batchingEnabled: false
+                 },
                  kafkaTopicDTO: {
                      name: topic_name
                  },
@@ -349,17 +381,19 @@ describe "On #{ENV['OS']}" do
             expect_status_details(400, error_code: 240023)
             expect_json(usrMsg: "Inference logging in KServe deployments requires schema version 4 or greater")
           end
-      
+
           it "should fail to create a serving with an existing kafka topic with inferenceschema version 2" do
             # Create kafka topic
             json, topic_name = add_topic(@project[:id], INFERENCE_SCHEMA_NAME, 2)
-      
+
             # Create serving
             put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
                 {name: "testmodeltopicschema2",
                  modelPath: "/Projects/#{@project[:projectname]}/Models/mnist/",
                  modelVersion: 1,
-                 batchingEnabled: false,
+                 batchingConfiguration: {
+                   batchingEnabled: false
+                 },
                  kafkaTopicDTO: {
                      name: topic_name
                  },
@@ -371,17 +405,19 @@ describe "On #{ENV['OS']}" do
             expect_status_details(400, error_code: 240023)
             expect_json(usrMsg: "Inference logging in KServe deployments requires schema version 4 or greater")
           end
-      
+
           it "should fail to create a serving with an existing kafka topic with inferenceschema version 3" do
             # Create kafka topic
             json, topic_name = add_topic(@project[:id], INFERENCE_SCHEMA_NAME, 3)
-      
+
             # Create serving
             put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
                 {name: "testmodeltopicschema3",
                  modelPath: "/Projects/#{@project[:projectname]}/Models/mnist/",
                  modelVersion: 1,
-                 batchingEnabled: false,
+                 batchingConfiguration: {
+                   batchingEnabled: false
+                 },
                  kafkaTopicDTO: {
                      name: topic_name
                  },
@@ -393,18 +429,20 @@ describe "On #{ENV['OS']}" do
             expect_status_details(400, error_code: 240023)
             expect_json(usrMsg: "Inference logging in KServe deployments requires schema version 4 or greater")
           end
-      
+
           it "should create a serving with an existing kafka topic with inferenceschema version 4" do
             # Create kafka topic
             json, topic_name = add_topic(@project[:id], INFERENCE_SCHEMA_NAME, 4)
-      
+
             # Create serving
             name = "testmodeltopicschema4"
             put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
                 {name: name,
                  modelPath: "/Projects/#{@project[:projectname]}/Models/mnist/",
                  modelVersion: 1,
-                 batchingEnabled: false,
+                 batchingConfiguration: {
+                   batchingEnabled: false
+                 },
                  kafkaTopicDTO: {
                      name: topic_name
                  },
@@ -414,16 +452,16 @@ describe "On #{ENV['OS']}" do
                  requestedInstances: 1
                 }
             expect_status_details(201)
-  
+
             # Kafka authorizer needs some time to take up the new permissions.
             sleep(5)
-      
+
             # Check that the serving is actually using that topic
             serving_list = get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/"
             kafka_topic_name = JSON.parse(serving_list).select { |serving| serving['name'] == name}[0]['kafkaTopicDTO']['name']
             expect(kafka_topic_name).to eql topic_name
           end
-      
+
           # resources config
 
           it "should create the serving with default predictorResources if not set" do
@@ -432,7 +470,9 @@ describe "On #{ENV['OS']}" do
                 {name: name,
                  modelPath: "/Projects/#{@project[:projectname]}/Models/mnist",
                  modelVersion: 1,
-                 batchingEnabled: false,
+                 batchingConfiguration: {
+                   batchingEnabled: false
+                 },
                  modelServer: "TENSORFLOW_SERVING",
                  servingTool: "KSERVE",
                  requestedInstances: 1
@@ -452,7 +492,9 @@ describe "On #{ENV['OS']}" do
                 {name: name,
                  modelPath: "/Projects/#{@project[:projectname]}/Models/mnist",
                  modelVersion: 1,
-                 batchingEnabled: false,
+                 batchingConfiguration: {
+                   batchingEnabled: false
+                 },
                  modelServer: "TENSORFLOW_SERVING",
                  servingTool: "KSERVE",
                  requestedInstances: 1,
@@ -483,12 +525,14 @@ describe "On #{ENV['OS']}" do
 
           # request batching
 
-          it "should fail to create a serving with request batching" do
+          it "should create a serving with request batching enabled and no extra batching configuration" do
             put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
-                {name: "testmodel9",
+                {name: "testrequestbatchingtensorflowkserve1",
                  modelPath: "/Projects/#{@project[:projectname]}/Models/mnist",
                  modelVersion: 1,
-                 batchingEnabled: true,
+                 batchingConfiguration: {
+                   batchingEnabled: true
+                 },
                  kafkaTopicDTO: {
                      name: "NONE"
                  },
@@ -496,8 +540,28 @@ describe "On #{ENV['OS']}" do
                  servingTool: "KSERVE",
                  requestedInstances: 1
                 }
-            expect_status_details(400, error_code: 240025)
-            expect_json(usrMsg: "Request batching is not supported in KServe deployments")
+            expect_status_details(201)
+          end
+
+          it "should create a serving with request batching enabled and extra batching configuration provided" do
+            put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
+                {name: "testrequestbatchingtensorflowkserve2",
+                 modelPath: "/Projects/#{@project[:projectname]}/Models/mnist",
+                 modelVersion: 1,
+                 batchingConfiguration: {
+                   batchingEnabled: true,
+                   maxBatchSize: 32,
+                   maxLatency: 5000,
+                   timeout: 60
+                 },
+                 kafkaTopicDTO: {
+                   name: "NONE"
+                 },
+                 modelServer: "TENSORFLOW_SERVING",
+                 servingTool: "KSERVE",
+                 requestedInstances: 1
+                }
+            expect_status_details(201)
           end
 
           # transformer instances
@@ -506,7 +570,9 @@ describe "On #{ENV['OS']}" do
             put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
                  {name: "testmodel25",
                   modelPath: "/Projects/#{@project[:projectname]}/Models/mnist",
-                  batchingEnabled: false,
+                  batchingConfiguration: {
+               batchingEnabled: false
+             },
                   modelVersion: 1,
                   modelServer: "TENSORFLOW_SERVING",
                   servingTool: "KSERVE",
@@ -521,7 +587,9 @@ describe "On #{ENV['OS']}" do
             put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
                  {name: "testmodel26",
                   modelPath: "/Projects/#{@project[:projectname]}/Models/mnist",
-                  batchingEnabled: false,
+                  batchingConfiguration: {
+                    batchingEnabled: false
+                  },
                   modelVersion: 1,
                   modelServer: "TENSORFLOW_SERVING",
                   servingTool: "KSERVE",
@@ -536,7 +604,9 @@ describe "On #{ENV['OS']}" do
             put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
                  {name: "testmodel27",
                   modelPath: "/Projects/#{@project[:projectname]}/Models/mnist",
-                  batchingEnabled: false,
+                  batchingConfiguration: {
+                    batchingEnabled: false
+                  },
                   modelVersion: 1,
                   modelServer: "TENSORFLOW_SERVING",
                   servingTool: "KSERVE",
@@ -579,7 +649,7 @@ describe "On #{ENV['OS']}" do
                modelPath: serving[:model_path],
                modelVersion: serving[:model_version],
                artifactVersion: -1, # New version
-               batchingEnabled: serving[:enable_batching],
+               batchingConfiguration: serving[:batching_configuration],
                modelServer: parse_model_server(serving[:model_server]),
                servingTool: parse_serving_tool(serving[:serving_tool]),
                transformer: "/Projects/#{@project[:projectname]}/Models/mnist/1/transformer-copy-2.py",
@@ -612,7 +682,7 @@ describe "On #{ENV['OS']}" do
                modelPath: serving[:model_path],
                modelVersion: serving[:model_version],
                artifactVersion: serving[:artifact_version],
-               batchingEnabled: serving[:enable_batching],
+               batchingConfiguration: serving[:batching_configuration],
                modelServer: parse_model_server(serving[:model_server]),
                servingTool: parse_serving_tool(serving[:serving_tool]),
                transformer: "/Projects/#{@project[:projectname]}/Models/mnist/1/transformer-copy-3.py",
@@ -633,7 +703,7 @@ describe "On #{ENV['OS']}" do
                name: serving[:name],
                modelPath: serving[:model_path],
                modelVersion: serving[:model_version],
-               batchingEnabled: serving[:enable_batching],
+               batchingConfiguration: serving[:batching_configuration],
                kafkaTopicDTO: {
                    name: topic[:topic_name]
                },
@@ -658,7 +728,7 @@ describe "On #{ENV['OS']}" do
            name: name,
            modelPath: serving[:model_path],
            modelVersion: serving[:model_version],
-           batchingEnabled: serving[:enable_batching],
+           batchingConfiguration: serving[:batching_configuration],
            modelServer: parse_model_server(serving[:model_server]),
            servingTool: parse_serving_tool(serving[:serving_tool]),
            transformer: "/Projects/#{@project[:projectname]}/Models/mnist/1/transformer.py",
@@ -677,7 +747,7 @@ describe "On #{ENV['OS']}" do
                modelPath: serving[:model_path],
                modelVersion: serving[:model_version],
                artifactVersion: serving[:artifact_version],
-               batchingEnabled: serving[:enable_batching],
+               batchingConfiguration: serving[:batching_configuration],
                modelServer: parse_model_server(serving[:model_server]),
                servingTool: parse_serving_tool(serving[:serving_tool]),
                transformer: "transformer.py",
@@ -689,6 +759,56 @@ describe "On #{ENV['OS']}" do
           serving = Serving.find(serving[:id])
           expect(serving[:instances]).to eql 2
           expect(serving[:transformer_instances]).to eql 2
+        end
+
+        # request batching
+
+        it "should should update request batching " do
+          serving = Serving.find(@serving[:id])
+          name = "testupdaterequestbatching"
+          put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
+              {id: serving[:id],
+               name: name,
+               modelPath: serving[:model_path],
+               modelVersion: serving[:model_version],
+               batchingConfiguration: serving[:batching_configuration],
+               modelServer: parse_model_server(serving[:model_server]),
+               servingTool: parse_serving_tool(serving[:serving_tool]),
+               transformer: "/Projects/#{@project[:projectname]}/Models/mnist/1/transformer.py",
+               requestedInstances: 1,
+               requestedTransformerInstances: 1,
+              }
+          expect_status_details(201)
+
+          serving = Serving.find_by(project_id: @project[:id], name: name)
+          expect(JSON.parse(serving[:batching_configuration])['batchingEnabled']).to eql false
+
+          put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
+              {id: serving[:id],
+               name: serving[:name],
+               modelPath: serving[:model_path],
+               modelVersion: serving[:model_version],
+               artifactVersion: serving[:artifact_version],
+               batchingConfiguration: {
+                 batchingEnabled: true,
+                 maxBatchSize: 32,
+                 maxLatency: 5000,
+                 timeout: 60
+               },
+               modelServer: parse_model_server(serving[:model_server]),
+               servingTool: parse_serving_tool(serving[:serving_tool]),
+               transformer: "transformer.py",
+               requestedInstances: 2,
+               requestedTransformerInstances: 2,
+              }
+          expect_status_details(201)
+          expect(JSON.parse(serving[:batching_configuration])['batchingEnabled']).to eql false
+
+          serving = Serving.find(serving[:id])
+          expect(JSON.parse(serving[:batching_configuration])['batchingEnabled']).to eql true
+          expect(JSON.parse(serving[:batching_configuration])['maxBatchSize']).to eql 32
+          expect(JSON.parse(serving[:batching_configuration])['maxLatency']).to eql 5000
+          expect(JSON.parse(serving[:batching_configuration])['timeout']).to eql 60
         end
       end
 
@@ -732,7 +852,7 @@ describe "On #{ENV['OS']}" do
                {id: @serving[:id],
                 name: @serving[:name],
                 modelPath: @serving[:model_path],
-                batchingEnabled: @serving[:enable_batching],
+                batchingConfiguration: @serving[:batching_configuration],
                 modelVersion: @serving[:model_version],
                 modelServer: parse_model_server(@serving[:model_server]),
                 servingTool: parse_serving_tool(@serving[:serving_tool]),

@@ -118,8 +118,6 @@ public class Serving implements Serializable {
   @JoinColumn(name = "project_id", referencedColumnName = "id")
   @ManyToOne(optional = false)
   private Project project;
-  @Column(name = "enable_batching")
-  private Boolean batchingEnabled;
 
   @Column(name = "lock_ip")
   private String lockIP;
@@ -164,15 +162,18 @@ public class Serving implements Serializable {
   @Size(min = 1, max = 8)
   @Column(name = "revision")
   private String revision;
-  
+  @Column(name = "batching_configuration")
+  @NotNull
+  @Convert(converter = BatchingConfigurationConverter.class)
+  private BatchingConfiguration batchingConfiguration;
 
   public Serving() { }
 
   public Serving(Integer id, String name, String description, String modelPath, String predictor, String transformer,
     String modelName, Integer modelVersion, Integer artifactVersion, Integer nInstances,
-    Integer nTransformerInstances, Boolean batchingEnabled, ModelServer modelServer, ServingTool servingTool,
+    Integer nTransformerInstances, ModelServer modelServer, ServingTool servingTool,
     InferenceLogging inferenceLogging, DeployableComponentResources predictorResources,
-    DeployableComponentResources transformerResources) {
+    DeployableComponentResources transformerResources, BatchingConfiguration batchingConfiguration) {
     this.id = id;
     this.name = name;
     this.description = description;
@@ -184,12 +185,12 @@ public class Serving implements Serializable {
     this.artifactVersion = artifactVersion;
     this.instances = nInstances;
     this.transformerInstances = nTransformerInstances;
-    this.batchingEnabled = batchingEnabled;
     this.modelServer = modelServer;
     this.servingTool = servingTool;
     this.inferenceLogging = inferenceLogging;
     this.predictorResources = predictorResources;
     this.transformerResources = transformerResources;
+    this.batchingConfiguration = batchingConfiguration;
   }
 
   public Integer getId() {
@@ -336,14 +337,6 @@ public class Serving implements Serializable {
     this.localDir = localDir;
   }
 
-  public Boolean isBatchingEnabled() {
-    return batchingEnabled;
-  }
-
-  public void setBatchingEnabled(Boolean batching) {
-    this.batchingEnabled = batching;
-  }
-
   public String getLockIP() {
     return lockIP;
   }
@@ -415,7 +408,13 @@ public class Serving implements Serializable {
   public void setTransformerResources(DeployableComponentResources transformerResources) {
     this.transformerResources = transformerResources;
   }
-  
+
+  public BatchingConfiguration getBatchingConfiguration() { return batchingConfiguration; }
+
+  public void setBatchingConfiguration(BatchingConfiguration batchingConfiguration) {
+    this.batchingConfiguration = batchingConfiguration;
+  }
+
   @Override
   public boolean equals(Object o) {
     if (this == o) return true;
@@ -424,7 +423,6 @@ public class Serving implements Serializable {
     Serving serving = (Serving) o;
 
     if (optimized != serving.optimized) return false;
-    if (batchingEnabled != serving.batchingEnabled) return false;
     if (id != null ? !id.equals(serving.id) : serving.id != null) return false;
     if (created != null ? !created.equals(serving.created) : serving.created != null) return false;
     if (creator != null ? !creator.equals(serving.creator) : serving.creator != null) return false;
@@ -455,6 +453,8 @@ public class Serving implements Serializable {
       serving.transformerResources != null) return false;
     if (deployed != null ? !deployed.equals(serving.deployed) : serving.deployed != null) return false;
     if (revision != null ? !revision.equals(serving.revision) : serving.revision != null) return false;
+    if (batchingConfiguration != null ? !batchingConfiguration.equals(serving.batchingConfiguration) :
+        serving.batchingConfiguration != null) return false;
     return localDir != null ? localDir.equals(serving.localDir) : serving.localDir == null;
   }
 
@@ -474,7 +474,6 @@ public class Serving implements Serializable {
     result = 31 * result + (instances != null ? instances.hashCode() : 0);
     result = 31 * result + (transformerInstances != null ? transformerInstances.hashCode() : 0);
     result = 31 * result + (project != null ? project.hashCode() : 0);
-    result = 31 * result + (batchingEnabled ? 1 : 0);
     result = 31 * result + (lockIP != null ? lockIP.hashCode() : 0);
     result = 31 * result + (lockTimestamp != null ? lockTimestamp.hashCode() : 0);
     result = 31 * result + (kafkaTopic != null ? kafkaTopic.hashCode() : 0);
@@ -488,6 +487,7 @@ public class Serving implements Serializable {
     result = 31 * result + (transformerResources != null ? transformerResources.hashCode() : 0);
     result = 31 * result + (deployed != null ? deployed.hashCode() : 0);
     result = 31 * result + (revision != null ? revision.hashCode() : 0);
+    result = 31 * result + (batchingConfiguration != null ? batchingConfiguration.hashCode() : 0);
     return result;
   }
 }
