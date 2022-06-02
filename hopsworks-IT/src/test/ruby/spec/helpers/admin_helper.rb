@@ -100,4 +100,35 @@ module AdminHelper
     put "#{ENV['HOPSWORKS_TESTING']}/test/user/#{uid}/removeRole?role=#{role}"
   end
 
+  def change_role_as_admin(id, role)
+     put "#{ENV['HOPSWORKS_API']}/admin/users/#{id}/role", role
+  end
+
+  def create_project_as_admin(username, projectName)
+    post "#{ENV['HOPSWORKS_API']}/admin/projects/createas", {projectName: projectName, description: "", services:
+    ["JOBS","JUPYTER","HIVE","KAFKA","FEATURESTORE"], owner: username}
+  end
+
+  def with_valid_as_a_service_project
+     with_admin_session
+     givenName = "name"
+     surname = "last"
+     email = "#{random_id}@email.com"
+     password = "Pass123"
+     register_user_as_admin(email, givenName, surname, password: password)
+     user = json_body
+     projectName = "project_#{Time.now.to_i}"
+     create_project_as_admin(user[:username], projectName)
+     create_session(user[:email], password)
+     @project = get_project_by_name(projectName)
+     # create job
+     job_name = "dummy_job"
+     job_conf = get_spark_default_py_config(@project, job_name, "py")
+     @job = create_dummy_job(@project, job_name, job_conf)
+     with_admin_session
+     change_role_as_admin(user[:id], "HOPS_SERVICE_USER")
+     expect_status_details(200)
+     create_session(user[:email], password)
+  end
+
 end

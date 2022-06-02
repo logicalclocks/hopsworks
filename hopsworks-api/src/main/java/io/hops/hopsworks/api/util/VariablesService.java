@@ -94,8 +94,9 @@ public class VariablesService {
   @GET
   @Path("{id}")
   @Produces(MediaType.APPLICATION_JSON)
-  @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
-  @ApiKeyRequired(acceptedScopes = {ApiScope.PROJECT}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
+  @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
+  @ApiKeyRequired(acceptedScopes = {ApiScope.PROJECT},
+    allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
   public Response getVar(@Context SecurityContext sc, @PathParam("id") String id)
       throws ServiceException, HopsSecurityException {
     Variables variable = settings.findById(id)

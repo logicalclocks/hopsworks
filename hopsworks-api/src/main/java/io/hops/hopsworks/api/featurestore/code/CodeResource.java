@@ -47,6 +47,7 @@ import javax.ejb.EJB;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.enterprise.context.RequestScoped;
+import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.POST;
 import javax.ws.rs.GET;
@@ -101,9 +102,10 @@ public class CodeResource {
   @Produces(MediaType.APPLICATION_JSON)
   @ApiOperation(value = "Get all available codes")
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
-  @JWTRequired(acceptedTokens = {Audience.API, Audience.JOB}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
+  @JWTRequired(acceptedTokens = {Audience.API, Audience.JOB},
+    allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
   @ApiKeyRequired(acceptedScopes = {ApiScope.DATASET_VIEW, ApiScope.FEATURESTORE},
-          allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
+    allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
   public Response get(@BeanParam Pagination pagination,
                       @BeanParam CodeBeanParam codeBeanParam,
                       @Context UriInfo uriInfo,
@@ -135,9 +137,10 @@ public class CodeResource {
   @Produces(MediaType.APPLICATION_JSON)
   @ApiOperation(value = "Get specific available code")
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
-  @JWTRequired(acceptedTokens = {Audience.API, Audience.JOB}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
+  @JWTRequired(acceptedTokens = {Audience.API, Audience.JOB},
+    allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
   @ApiKeyRequired(acceptedScopes = {ApiScope.DATASET_VIEW, ApiScope.FEATURESTORE},
-          allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
+    allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
   public Response get(@BeanParam Pagination pagination,
                       @BeanParam CodeBeanParam codeBeanParam,
                       @PathParam("codeId") Integer codeId,
@@ -169,10 +172,12 @@ public class CodeResource {
   @Produces(MediaType.APPLICATION_JSON)
   @ApiOperation(value = "Save new code")
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
-  @JWTRequired(acceptedTokens = {Audience.API, Audience.JOB}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
-  @ApiKeyRequired( acceptedScopes = {ApiScope.DATASET_VIEW, ApiScope.FEATURESTORE},
-          allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
+  @JWTRequired(acceptedTokens = {Audience.API, Audience.JOB},
+    allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
+  @ApiKeyRequired(acceptedScopes = {ApiScope.DATASET_VIEW, ApiScope.FEATURESTORE},
+    allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
   public Response post(@Context UriInfo uriInfo,
+                       @Context HttpServletRequest req,
                        @Context SecurityContext sc,
                        @QueryParam("entityId") String entityId,
                        @QueryParam("type") CodeActions.RunType type,

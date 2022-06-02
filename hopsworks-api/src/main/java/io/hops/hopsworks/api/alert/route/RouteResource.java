@@ -43,6 +43,7 @@ import javax.ejb.EJB;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.enterprise.context.RequestScoped;
+import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
@@ -100,9 +101,11 @@ public class RouteResource {
   @Produces(MediaType.APPLICATION_JSON)
   @ApiOperation(value = "Get all routes.", response = RouteDTO.class)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
-  @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
+  @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
   public Response getAll(@BeanParam Pagination pagination, @BeanParam RouteBeanParam routeBeanParam,
-      @Context UriInfo uriInfo, @Context SecurityContext sc) throws AlertException, ProjectException {
+                         @Context HttpServletRequest req,
+                         @Context UriInfo uriInfo,
+                         @Context SecurityContext sc) throws AlertException, ProjectException {
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.ROUTES);
     resourceRequest.setOffset(pagination.getOffset());
     resourceRequest.setLimit(pagination.getLimit());
@@ -115,10 +118,11 @@ public class RouteResource {
   @Produces(MediaType.APPLICATION_JSON)
   @ApiOperation(value = "Get a route by receiver and match.", response = RouteDTO.class)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
-  @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
+  @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
   public Response get(@PathParam("receiver") String receiver, @QueryParam("match") List<String> match,
-      @QueryParam("matchRe") List<String> matchRe, @Context UriInfo uriInfo, @Context SecurityContext sc)
-      throws AlertException, ProjectException {
+                      @QueryParam("matchRe") List<String> matchRe, @Context UriInfo uriInfo,
+                      @Context HttpServletRequest req,
+                      @Context SecurityContext sc) throws AlertException, ProjectException {
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.ROUTES);
     Route route = new Route(receiver).withMatch(routeBuilder.toMap(match)).withMatchRe(routeBuilder.toMap(matchRe));
     RouteDTO dto = routeBuilder.build(uriInfo, resourceRequest, route, getProject());
@@ -130,8 +134,10 @@ public class RouteResource {
   @Consumes(MediaType.APPLICATION_JSON)
   @ApiOperation(value = "Create a route.")
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER})
-  @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
-  public Response create(PostableRouteDTO routeDTO, @Context UriInfo uriInfo, @Context SecurityContext sc)
+  @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
+  public Response create(PostableRouteDTO routeDTO, @Context UriInfo uriInfo,
+                         @Context HttpServletRequest req,
+                         @Context SecurityContext sc)
       throws AlertException, ProjectException {
     if (routeDTO == null) {
       throw new AlertException(RESTCodes.AlertErrorCode.ILLEGAL_ARGUMENT, Level.FINE, "No payload.");
@@ -168,10 +174,12 @@ public class RouteResource {
   @Consumes(MediaType.APPLICATION_JSON)
   @ApiOperation(value = "Update a route.")
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER})
-  @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
+  @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
   public Response update(@PathParam("receiver") String receiver, PostableRouteDTO route,
-      @QueryParam("match") List<String> match, @QueryParam("matchRe") List<String> matchRe, @Context UriInfo uriInfo,
-      @Context SecurityContext sc) throws AlertException, ProjectException {
+                         @QueryParam("match") List<String> match, @QueryParam("matchRe") List<String> matchRe,
+                         @Context UriInfo uriInfo,
+                         @Context HttpServletRequest req,
+                         @Context SecurityContext sc) throws AlertException, ProjectException {
     if (route == null) {
       throw new AlertException(RESTCodes.AlertErrorCode.ILLEGAL_ARGUMENT, Level.FINE, "No payload.");
     }
@@ -205,9 +213,11 @@ public class RouteResource {
   @Path("{receiver}")
   @ApiOperation(value = "Delete route by receiver and match.")
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER})
-  @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
+  @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
   public Response delete(@PathParam("receiver") String receiver, @QueryParam("match") List<String> match,
-      @QueryParam("matchRe") List<String> matchRe, @Context UriInfo uriInfo, @Context SecurityContext sc)
+                         @QueryParam("matchRe") List<String> matchRe, @Context UriInfo uriInfo,
+                         @Context HttpServletRequest req,
+                         @Context SecurityContext sc)
       throws AlertException, ProjectException {
     Route routeToDelete =
         new Route(receiver).withMatch(routeBuilder.toMap(match)).withMatchRe(routeBuilder.toMap(matchRe));

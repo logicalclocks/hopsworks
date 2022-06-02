@@ -72,6 +72,7 @@ import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.enterprise.context.RequestScoped;
 import javax.inject.Inject;
+import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.DefaultValue;
@@ -173,11 +174,13 @@ public class TrainingDatasetService {
   @GET
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
-  @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
-  @ApiKeyRequired( acceptedScopes = {ApiScope.FEATURESTORE}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
+  @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
+  @ApiKeyRequired(acceptedScopes = {ApiScope.FEATURESTORE},
+    allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
   @ApiOperation(value = "Get the list of training datasets for a featurestore",
       response = TrainingDatasetDTO.class, responseContainer = "List")
-  public Response getAll(@Context SecurityContext sc) throws ServiceException, FeaturestoreException {
+  public Response getAll(@Context SecurityContext sc,
+                         @Context HttpServletRequest req) throws ServiceException, FeaturestoreException {
     Users user = jWTHelper.getUserPrincipal(sc);
     List<TrainingDatasetDTO> trainingDatasetDTOs =
         trainingDatasetController.getTrainingDatasetsForFeaturestore(user, project, featurestore);
@@ -196,11 +199,15 @@ public class TrainingDatasetService {
   @Produces(MediaType.APPLICATION_JSON)
   @Consumes(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
-  @JWTRequired(acceptedTokens = {Audience.API, Audience.JOB}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
-  @ApiKeyRequired( acceptedScopes = {ApiScope.FEATURESTORE}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
+  @JWTRequired(acceptedTokens = {Audience.API, Audience.JOB},
+    allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
+  @ApiKeyRequired(acceptedScopes = {ApiScope.FEATURESTORE},
+    allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
   @ApiOperation(value = "Create training dataset for a featurestore",
       response = TrainingDatasetDTO.class)
-  public Response create(@Context SecurityContext sc, TrainingDatasetDTO trainingDatasetDTO)
+  public Response create(@Context SecurityContext sc,
+                         @Context HttpServletRequest req,
+                         TrainingDatasetDTO trainingDatasetDTO)
       throws FeaturestoreException, ProvenanceException, IOException, ServiceException {
     if(trainingDatasetDTO == null){
       throw new IllegalArgumentException("Input JSON for creating a new Training Dataset cannot be null");
@@ -228,12 +235,15 @@ public class TrainingDatasetService {
   @Path("/{trainingdatasetid: [0-9]+}")
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
-  @JWTRequired(acceptedTokens = {Audience.API, Audience.JOB}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
-  @ApiKeyRequired( acceptedScopes = {ApiScope.FEATURESTORE}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
+  @JWTRequired(acceptedTokens = {Audience.API, Audience.JOB},
+    allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
+  @ApiKeyRequired(acceptedScopes = {ApiScope.FEATURESTORE},
+    allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
   @ApiOperation(value = "Get a training datasets with a specific id from a featurestore",
       response = TrainingDatasetDTO.class)
-  public Response getById(@ApiParam(value = "Id of the training dataset", required = true)
-      @PathParam("trainingdatasetid") Integer trainingdatasetid, @Context SecurityContext sc)
+  public Response getById(@Context HttpServletRequest req,
+                          @ApiParam(value = "Id of the training dataset", required = true)
+                          @PathParam("trainingdatasetid") Integer trainingdatasetid, @Context SecurityContext sc)
       throws FeaturestoreException, ServiceException {
     verifyIdProvided(trainingdatasetid);
 
@@ -256,14 +266,17 @@ public class TrainingDatasetService {
   @Path("/{name: [a-z0-9_]*(?=[a-z])[a-z0-9_]+}")
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
-  @JWTRequired(acceptedTokens = {Audience.API, Audience.JOB}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
-  @ApiKeyRequired( acceptedScopes = {ApiScope.FEATURESTORE}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
+  @JWTRequired(acceptedTokens = {Audience.API, Audience.JOB},
+    allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
+  @ApiKeyRequired(acceptedScopes = {ApiScope.FEATURESTORE},
+    allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
   @ApiOperation(value = "Get a list of training datasets with a specific name, filter by version",
       response = List.class)
-  public Response getByName(@ApiParam(value = "Name of the training dataset", required = true)
-                                           @PathParam("name") String name,
-                                           @ApiParam(value = "Filter by a specific version")
-                                           @QueryParam("version") Integer version, @Context SecurityContext sc)
+  public Response getByName(@Context HttpServletRequest req,
+                            @ApiParam(value = "Name of the training dataset", required = true)
+                            @PathParam("name") String name,
+                            @ApiParam(value = "Filter by a specific version")
+                            @QueryParam("version") Integer version, @Context SecurityContext sc)
       throws FeaturestoreException, ServiceException {
     verifyNameProvided(name);
 
@@ -295,13 +308,15 @@ public class TrainingDatasetService {
   @Path("/{trainingdatasetid: [0-9]+}")
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
-  @JWTRequired(acceptedTokens = {Audience.API, Audience.JOB}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
-  @ApiKeyRequired( acceptedScopes = {ApiScope.FEATURESTORE}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
+  @JWTRequired(acceptedTokens = {Audience.API, Audience.JOB},
+    allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
+  @ApiKeyRequired(acceptedScopes = {ApiScope.FEATURESTORE},
+    allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
   @ApiOperation(value = "Delete a training datasets with a specific id from a featurestore",
       response = TrainingDatasetDTO.class)
-  public Response delete(
-      @Context SecurityContext sc, @ApiParam(value = "Id of the training dataset", required = true)
-      @PathParam("trainingdatasetid") Integer trainingdatasetid)
+  public Response delete(@Context HttpServletRequest req,
+                         @Context SecurityContext sc, @ApiParam(value = "Id of the training dataset", required = true)
+                         @PathParam("trainingdatasetid") Integer trainingdatasetid)
       throws FeaturestoreException {
     verifyIdProvided(trainingdatasetid);
     Users user = jWTHelper.getUserPrincipal(sc);
@@ -326,8 +341,10 @@ public class TrainingDatasetService {
   @Produces(MediaType.APPLICATION_JSON)
   @Consumes(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
-  @JWTRequired(acceptedTokens = {Audience.API, Audience.JOB}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
-  @ApiKeyRequired( acceptedScopes = {ApiScope.FEATURESTORE}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
+  @JWTRequired(acceptedTokens = {Audience.API, Audience.JOB},
+    allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
+  @ApiKeyRequired(acceptedScopes = {ApiScope.FEATURESTORE},
+    allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
   @ApiOperation(value = "Update a training datasets with a specific id from a featurestore",
       response = TrainingDatasetDTO.class)
   public Response updateTrainingDataset(@Context SecurityContext sc,
@@ -386,24 +403,25 @@ public class TrainingDatasetService {
   @Path("/{trainingdatasetid}/query")
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
-  @JWTRequired(acceptedTokens = {Audience.API, Audience.JOB}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
-  @ApiKeyRequired(acceptedScopes = {ApiScope.FEATURESTORE}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
+  @JWTRequired(acceptedTokens = {Audience.API, Audience.JOB},
+    allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
+  @ApiKeyRequired(acceptedScopes = {ApiScope.FEATURESTORE},
+    allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
   public Response getQuery(
-      @Context
-          SecurityContext sc,
-      @Context
-          UriInfo uriInfo,
+      @Context SecurityContext sc,
+      @Context UriInfo uriInfo,
+      @Context HttpServletRequest req,
       @ApiParam(value = "Id of the trainingdatasetid", required = true)
       @PathParam("trainingdatasetid")
-          Integer trainingdatasetid,
+        Integer trainingdatasetid,
       @ApiParam(value = "get query with label features", example = "true")
       @QueryParam("withLabel")
       @DefaultValue("true")
-          boolean withLabel,
+        boolean withLabel,
       @ApiParam(value = "get query in hive format", example = "true")
       @QueryParam("hiveQuery")
       @DefaultValue("false")
-          boolean isHiveQuery) throws FeaturestoreException, ServiceException {
+        boolean isHiveQuery) throws FeaturestoreException, ServiceException {
     verifyIdProvided(trainingdatasetid);
     Users user = jWTHelper.getUserPrincipal(sc);
   
@@ -418,10 +436,12 @@ public class TrainingDatasetService {
   @Produces(MediaType.APPLICATION_JSON)
   @ApiOperation(value = "Setup a job to compute and write a training dataset", response = JobDTO.class)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
-  @JWTRequired(acceptedTokens = {Audience.API, Audience.JOB}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
+  @JWTRequired(acceptedTokens = {Audience.API, Audience.JOB},
+    allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
   @ApiKeyRequired(acceptedScopes = {ApiScope.DATASET_VIEW, ApiScope.FEATURESTORE},
-      allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
+    allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
   public Response compute(@Context UriInfo uriInfo,
+                          @Context HttpServletRequest req,
                           @Context SecurityContext sc,
                           @PathParam("trainingDatasetId") Integer trainingDatasetId,
                           TrainingDatasetJobConf trainingDatasetJobConf)
@@ -514,14 +534,17 @@ public class TrainingDatasetService {
   @Path("/{trainingdatasetid}/preparedstatements")
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
-  @JWTRequired(acceptedTokens={Audience.API, Audience.JOB}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
-  @ApiKeyRequired( acceptedScopes = {ApiScope.FEATURESTORE}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
+  @JWTRequired(acceptedTokens = {Audience.API, Audience.JOB},
+    allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
+  @ApiKeyRequired(acceptedScopes = {ApiScope.FEATURESTORE},
+    allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
   public Response getPreparedStatements(@Context SecurityContext sc,
-                           @Context UriInfo uriInfo,
-                           @ApiParam(value = "Id of the trainingdatasetid", required = true)
-                           @PathParam("trainingdatasetid") Integer trainingDatsetId,
-                           @ApiParam(value = "get batch serving vectors", example = "false")
-                           @QueryParam("batch") @DefaultValue("false") boolean batch)
+                                        @Context HttpServletRequest req,
+                                        @Context UriInfo uriInfo,
+                                        @ApiParam(value = "Id of the trainingdatasetid", required = true)
+                                          @PathParam("trainingdatasetid") Integer trainingDatsetId,
+                                        @ApiParam(value = "get batch serving vectors", example = "false")
+                                          @QueryParam("batch") @DefaultValue("false") boolean batch)
       throws FeaturestoreException {
     verifyIdProvided(trainingDatsetId);
     Users user = jWTHelper.getUserPrincipal(sc);
@@ -537,9 +560,12 @@ public class TrainingDatasetService {
   @Path("/{trainingdatasetid}/transformationfunctions")
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
-  @JWTRequired(acceptedTokens={Audience.API, Audience.JOB}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
-  @ApiKeyRequired( acceptedScopes = {ApiScope.FEATURESTORE}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
+  @JWTRequired(acceptedTokens = {Audience.API, Audience.JOB},
+    allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
+  @ApiKeyRequired(acceptedScopes = {ApiScope.FEATURESTORE},
+    allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
   public Response getTransformationFunction(@Context SecurityContext sc,
+                                            @Context HttpServletRequest req,
                                             @Context UriInfo uriInfo,
                                             @ApiParam(value = "Id of the trainingdatasetid", required = true)
                                             @PathParam("trainingdatasetid") Integer trainingDatasetId)

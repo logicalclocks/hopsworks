@@ -54,7 +54,7 @@ public class UserActivitiesResource {
   @Produces(MediaType.APPLICATION_JSON)
   @ApiOperation(value = "Finds all activities for a user.", response = ActivitiesDTO.class)
   @JWTRequired(acceptedTokens = {Audience.API},
-      allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
+      allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
   public Response findAllByUser(
       @BeanParam Pagination pagination,
       @BeanParam ActivitiesBeanParam activitiesBeanParam,
@@ -79,7 +79,7 @@ public class UserActivitiesResource {
   @Produces(MediaType.APPLICATION_JSON)
   @ApiOperation(value = "Finds an activity for a user by id.", response = ActivitiesDTO.class)
   @JWTRequired(acceptedTokens = {Audience.API},
-      allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
+      allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
   public Response findAllById(
       @PathParam("activityId") Integer activityId,
       @BeanParam ExpansionBeanParam expansions,

@@ -52,6 +52,7 @@ import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.enterprise.context.RequestScoped;
 import javax.inject.Inject;
+import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
@@ -108,12 +109,14 @@ public class JobsResource {
   @GET
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
-  @JWTRequired(acceptedTokens={Audience.API, Audience.JOB}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
-  @ApiKeyRequired( acceptedScopes = {ApiScope.JOB}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
+  @JWTRequired(acceptedTokens = {Audience.API, Audience.JOB},
+    allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
+  @ApiKeyRequired(acceptedScopes = {ApiScope.JOB}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
   public Response getAll(
-    @BeanParam Pagination pagination,
-    @BeanParam JobsBeanParam jobsBeanParam,
-    @Context UriInfo uriInfo, @Context SecurityContext sc) {
+      @BeanParam Pagination pagination,
+      @BeanParam JobsBeanParam jobsBeanParam,
+      @Context HttpServletRequest req,
+      @Context UriInfo uriInfo, @Context SecurityContext sc) {
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.JOBS);
     resourceRequest.setOffset(pagination.getOffset());
     resourceRequest.setLimit(pagination.getLimit());
@@ -130,11 +133,14 @@ public class JobsResource {
   @Path("{name}")
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
-  @JWTRequired(acceptedTokens={Audience.API, Audience.JOB}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
-  @ApiKeyRequired( acceptedScopes = {ApiScope.JOB}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
+  @JWTRequired(acceptedTokens = {Audience.API, Audience.JOB},
+    allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
+  @ApiKeyRequired(acceptedScopes = {ApiScope.JOB}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
   public Response getJob(@PathParam("name") String name,
-    @BeanParam JobsBeanParam jobsBeanParam,
-    @Context UriInfo uriInfo, @Context SecurityContext sc) throws JobException {
+                         @BeanParam JobsBeanParam jobsBeanParam,
+                         @Context UriInfo uriInfo,
+                         @Context HttpServletRequest req,
+                         @Context SecurityContext sc) throws JobException {
     Jobs job = jobController.getJob(project, name);
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.JOBS);
     resourceRequest.setExpansions(jobsBeanParam.getExpansions().getResources());

@@ -45,6 +45,7 @@ import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.enterprise.context.RequestScoped;
 import javax.inject.Inject;
+import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
@@ -108,9 +109,13 @@ public class FeaturestoreKeywordResource {
   @Produces(MediaType.APPLICATION_JSON)
   @ApiOperation(value = "Get keywords")
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
-  @JWTRequired(acceptedTokens = {Audience.API, Audience.JOB}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
-  @ApiKeyRequired(acceptedScopes = {ApiScope.FEATURESTORE}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
-  public Response getKeywords(@Context SecurityContext sc, @Context UriInfo uriInfo)
+  @JWTRequired(acceptedTokens = {Audience.API, Audience.JOB},
+    allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
+  @ApiKeyRequired(acceptedScopes = {ApiScope.FEATURESTORE},
+    allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
+  public Response getKeywords(@Context SecurityContext sc,
+                              @Context HttpServletRequest req,
+                              @Context UriInfo uriInfo)
       throws FeaturestoreException, MetadataException {
     Users user = jwtHelper.getUserPrincipal(sc);
 
@@ -129,15 +134,19 @@ public class FeaturestoreKeywordResource {
     }
     return Response.ok().entity(dto).build();
   }
-
+  
   @POST
   @Consumes(MediaType.APPLICATION_JSON)
   @Produces(MediaType.APPLICATION_JSON)
   @ApiOperation(value = "Create keywords or replace existing ones")
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
-  @JWTRequired(acceptedTokens = {Audience.API, Audience.JOB}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
-  @ApiKeyRequired(acceptedScopes = {ApiScope.FEATURESTORE}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
-  public Response replaceKeywords(@Context SecurityContext sc, @Context UriInfo uriInfo, KeywordDTO keywordDTO)
+  @JWTRequired(acceptedTokens = {Audience.API, Audience.JOB},
+    allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
+  @ApiKeyRequired(acceptedScopes = {ApiScope.FEATURESTORE},
+    allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
+  public Response replaceKeywords(@Context SecurityContext sc,
+                                  @Context HttpServletRequest req,
+                                  @Context UriInfo uriInfo, KeywordDTO keywordDTO)
       throws FeaturestoreException, MetadataException {
     Users user = jwtHelper.getUserPrincipal(sc);
 
@@ -161,10 +170,14 @@ public class FeaturestoreKeywordResource {
   @DELETE
   @ApiOperation(value = "Delete a keyword")
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
-  @JWTRequired(acceptedTokens = {Audience.API, Audience.JOB}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
-  @ApiKeyRequired(acceptedScopes = {ApiScope.FEATURESTORE}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
-  public Response deleteKeywords(@Context SecurityContext sc, @Context UriInfo uriInfo,
-                                @QueryParam("keyword") String keyword)
+  @JWTRequired(acceptedTokens = {Audience.API, Audience.JOB},
+    allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
+  @ApiKeyRequired(acceptedScopes = {ApiScope.FEATURESTORE},
+    allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
+  public Response deleteKeywords(@Context SecurityContext sc,
+                                 @Context UriInfo uriInfo,
+                                 @Context HttpServletRequest req,
+                                 @QueryParam("keyword") String keyword)
       throws FeaturestoreException, MetadataException {
     Users user = jwtHelper.getUserPrincipal(sc);
 

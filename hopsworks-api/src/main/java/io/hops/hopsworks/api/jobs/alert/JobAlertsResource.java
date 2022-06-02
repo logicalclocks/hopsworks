@@ -31,6 +31,7 @@ import io.hops.hopsworks.api.alert.AlertBuilder;
 import io.hops.hopsworks.api.alert.AlertDTO;
 import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.api.filter.Audience;
+import io.hops.hopsworks.api.filter.apiKey.ApiKeyRequired;
 import io.hops.hopsworks.api.project.alert.ProjectAlertsDTO;
 import io.hops.hopsworks.api.util.Pagination;
 import io.hops.hopsworks.common.alert.AlertController;
@@ -43,6 +44,7 @@ import io.hops.hopsworks.persistence.entity.alertmanager.AlertReceiver;
 import io.hops.hopsworks.persistence.entity.jobs.description.JobAlert;
 import io.hops.hopsworks.persistence.entity.jobs.description.JobAlertStatus;
 import io.hops.hopsworks.persistence.entity.jobs.description.Jobs;
+import io.hops.hopsworks.persistence.entity.user.security.apiKey.ApiScope;
 import io.hops.hopsworks.restutils.RESTCodes;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -51,6 +53,7 @@ import javax.ejb.EJB;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.enterprise.context.RequestScoped;
+import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
@@ -104,9 +107,11 @@ public class JobAlertsResource {
   @Produces(MediaType.APPLICATION_JSON)
   @ApiOperation(value = "Get all alerts.", response = JobAlertsDTO.class)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
-  @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
+  @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
+  @ApiKeyRequired(acceptedScopes = {ApiScope.JOB}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
   public Response get(@BeanParam Pagination pagination, @BeanParam JobAlertsBeanParam jobalertsBeanParam,
-      @Context UriInfo uriInfo, @Context SecurityContext sc) {
+                      @Context HttpServletRequest req,
+                      @Context UriInfo uriInfo, @Context SecurityContext sc) {
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.ALERTS);
     resourceRequest.setOffset(pagination.getOffset());
     resourceRequest.setLimit(pagination.getLimit());
@@ -121,8 +126,11 @@ public class JobAlertsResource {
   @Produces(MediaType.APPLICATION_JSON)
   @ApiOperation(value = "Find alert by Id.", response = JobAlertsDTO.class)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
-  @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
-  public Response getById(@PathParam("id") Integer id, @Context UriInfo uriInfo, @Context SecurityContext sc)
+  @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
+  @ApiKeyRequired(acceptedScopes = {ApiScope.JOB}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
+  public Response getById(@PathParam("id") Integer id, @Context UriInfo uriInfo,
+                          @Context HttpServletRequest req,
+                          @Context SecurityContext sc)
       throws JobException {
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.ALERTS);
     JobAlertsDTO dto = jobalertsBuilder.build(uriInfo, resourceRequest, job, id);
@@ -134,8 +142,11 @@ public class JobAlertsResource {
   @Produces(MediaType.APPLICATION_JSON)
   @ApiOperation(value = "Get values for job alert.", response = JobAlertValues.class)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
-  @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
-  public Response getAvailableServices(@Context UriInfo uriInfo, @Context SecurityContext sc)  {
+  @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
+  @ApiKeyRequired(acceptedScopes = {ApiScope.JOB}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
+  public Response getAvailableServices(@Context UriInfo uriInfo,
+                                       @Context HttpServletRequest req,
+                                       @Context SecurityContext sc)  {
     JobAlertValues values = new JobAlertValues();
     return Response.ok().entity(values).build();
   }
@@ -145,9 +156,12 @@ public class JobAlertsResource {
   @Produces(MediaType.APPLICATION_JSON)
   @ApiOperation(value = "Update an alert.", response = JobAlertsDTO.class)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
-  @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
-  public Response createOrUpdate(@PathParam("id") Integer id, JobAlertsDTO jobAlertsDTO, @Context UriInfo uriInfo,
-      @Context SecurityContext sc) throws JobException {
+  @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
+  @ApiKeyRequired(acceptedScopes = {ApiScope.JOB}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
+  public Response createOrUpdate(@PathParam("id") Integer id, JobAlertsDTO jobAlertsDTO,
+                                 @Context HttpServletRequest req,
+                                 @Context UriInfo uriInfo,
+                                 @Context SecurityContext sc) throws JobException {
     JobAlert jobAlert = jobalertsFacade.findByJobAndId(job, id);
     if (jobAlert == null) {
       throw new JobException(RESTCodes.JobErrorCode.JOB_ALERT_NOT_FOUND, Level.FINE,
@@ -184,9 +198,13 @@ public class JobAlertsResource {
   @Consumes(MediaType.APPLICATION_JSON)
   @ApiOperation(value = "Create an alert.", response = PostableJobAlerts.class)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
-  @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
-  public Response create(PostableJobAlerts jobAlertsDTO, @QueryParam("bulk") @DefaultValue("false") Boolean bulk,
-      @Context UriInfo uriInfo, @Context SecurityContext sc) throws JobException {
+  @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
+  @ApiKeyRequired(acceptedScopes = {ApiScope.JOB}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
+  public Response create(PostableJobAlerts jobAlertsDTO,
+                         @QueryParam("bulk") @DefaultValue("false") Boolean bulk,
+                         @Context UriInfo uriInfo,
+                         @Context HttpServletRequest req,
+                         @Context SecurityContext sc) throws JobException {
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.ALERTS);
     JobAlertsDTO dto = createAlert(jobAlertsDTO, bulk, uriInfo, resourceRequest);
     return Response.created(dto.getHref()).entity(dto).build();
@@ -260,8 +278,12 @@ public class JobAlertsResource {
   @Produces(MediaType.APPLICATION_JSON)
   @ApiOperation(value = "Test alert by Id.", response = ProjectAlertsDTO.class)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
-  @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
-  public Response getTestById(@PathParam("id") Integer id, @Context UriInfo uriInfo, @Context SecurityContext sc)
+  @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
+  @ApiKeyRequired(acceptedScopes = {ApiScope.JOB}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
+  public Response getTestById(@PathParam("id") Integer id,
+                              @Context UriInfo uriInfo,
+                              @Context HttpServletRequest req,
+                              @Context SecurityContext sc)
       throws AlertException {
     JobAlert jobAlert = jobalertsFacade.findByJobAndId(job, id);
     List<Alert> alerts;
@@ -283,9 +305,12 @@ public class JobAlertsResource {
   @Path("{id}")
   @ApiOperation(value = "Delete alert by Id.")
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
-  @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
-  public Response deleteById(@PathParam("id") Integer id, @Context UriInfo uriInfo, @Context SecurityContext sc)
-      throws JobException {
+  @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
+  @ApiKeyRequired(acceptedScopes = {ApiScope.JOB}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
+  public Response deleteById(@PathParam("id") Integer id,
+                             @Context UriInfo uriInfo,
+                             @Context HttpServletRequest req,
+                             @Context SecurityContext sc) throws JobException {
     JobAlert jobAlert = jobalertsFacade.findByJobAndId(job, id);
     if (jobAlert != null) {
       deleteRoute(jobAlert);
