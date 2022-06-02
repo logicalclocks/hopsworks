@@ -16,6 +16,7 @@
 
 package io.hops.hopsworks.common.security;
 
+import io.hops.hopsworks.common.dao.jobhistory.ExecutionFacade;
 import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupFacade;
 import io.hops.hopsworks.common.featurestore.trainingdatasets.TrainingDatasetFacade;
 import io.hops.hopsworks.common.serving.ServingController;
@@ -26,6 +27,7 @@ import io.hops.hopsworks.persistence.entity.featurestore.Featurestore;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.Featuregroup;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.cached.CachedFeaturegroup;
 import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.TrainingDataset;
+import io.hops.hopsworks.persistence.entity.jobs.history.Execution;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.serving.Serving;
 import org.junit.Rule;
@@ -296,6 +298,46 @@ public class TestQuotasEnforcement {
     qe.setServingController(servingController);
     qe.enforceModelDeploymentsQuota(project);
     Mockito.verify(servingController, Mockito.never()).getAll(Mockito.any(), Mockito.any(), Mockito.any());
+  }
+
+  @Test
+  public void testQuotasParallelExecutions() throws Exception {
+    Settings settings = Mockito.mock(Settings.class);
+    ExecutionFacade executionFacade = Mockito.mock(ExecutionFacade.class);
+    Mockito.when(settings.getQuotasMaxParallelExecutions()).thenReturn(2L);
+
+    List<Execution> executions = new ArrayList<>();
+    executions.add(new Execution());
+
+    Mockito.when(executionFacade.findByProjectAndNotFinished(Mockito.any())).thenReturn(executions);
+    Project project = new Project();
+    project.setName("project");
+
+    QuotasEnforcement qe = new QuotasEnforcement();
+    qe.setSettings(settings);
+    qe.setExecutionFacade(executionFacade);
+
+    // This time should go through
+    qe.enforceParallelExecutionsQuota(project);
+
+    executions.add(new Execution());
+    thrown.expect(QuotaEnforcementException.class);
+    thrown.expectMessage("Parallel executions quota reached for Project");
+    qe.enforceParallelExecutionsQuota(project);
+  }
+
+  @Test
+  public void testIgnoreQuotasParallelExecutions() throws Exception {
+    Settings settings = Mockito.mock(Settings.class);
+    ExecutionFacade executionFacade = Mockito.mock(ExecutionFacade.class);
+    Mockito.when(settings.getQuotasMaxParallelExecutions()).thenReturn(-1L);
+    Project project = new Project();
+    project.setName("project");
+    QuotasEnforcement qe = new QuotasEnforcement();
+    qe.setSettings(settings);
+    qe.setExecutionFacade(executionFacade);
+    qe.enforceParallelExecutionsQuota(project);
+    Mockito.verify(executionFacade, Mockito.never()).findByProjectAndNotFinished(Mockito.any());
   }
 }
 

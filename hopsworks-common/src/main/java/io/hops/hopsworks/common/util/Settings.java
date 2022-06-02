@@ -368,6 +368,8 @@ public class Settings implements Serializable {
           QUOTAS_MODEL_DEPLOYMENTS_PREFIX);
   private static final String VARIABLE_QUOTAS_TOTAL_MODEL_DEPLOYMENTS = String.format("%s_total",
           QUOTAS_MODEL_DEPLOYMENTS_PREFIX);
+  private static final String VARIABLE_QUOTAS_MAX_PARALLEL_EXECUTIONS = String.format("%s_max_parallel_executions",
+          QUOTAS_PREFIX);
 
   private static final String VARIABLE_SKIP_NAMESPACE_CREATION =
       "kube_skip_namespace_creation";
@@ -809,14 +811,18 @@ public class Settings implements Serializable {
           SKIP_NAMESPACE_CREATION);
 
       QUOTAS_ONLINE_ENABLED_FEATUREGROUPS = setLongVar(VARIABLE_QUOTAS_ONLINE_ENABLED_FEATUREGROUPS,
-              QUOTAS_ONLINE_ENABLED_FEATUREGROUPS);
+          QUOTAS_ONLINE_ENABLED_FEATUREGROUPS);
       QUOTAS_ONLINE_DISABLED_FEATUREGROUPS = setLongVar(VARIABLE_QUOTAS_ONLINE_DISABLED_FEATUREGROUPS,
-              QUOTAS_ONLINE_DISABLED_FEATUREGROUPS);
+          QUOTAS_ONLINE_DISABLED_FEATUREGROUPS);
       QUOTAS_TRAINING_DATASETS = setLongVar(VARIABLE_QUOTAS_TRAINING_DATASETS, QUOTAS_TRAINING_DATASETS);
       QUOTAS_RUNNING_MODEL_DEPLOYMENTS = setLongVar(VARIABLE_QUOTAS_RUNNING_MODEL_DEPLOYMENTS,
-              QUOTAS_RUNNING_MODEL_DEPLOYMENTS);
+          QUOTAS_RUNNING_MODEL_DEPLOYMENTS);
       QUOTAS_TOTAL_MODEL_DEPLOYMENTS = setLongVar(VARIABLE_QUOTAS_TOTAL_MODEL_DEPLOYMENTS,
-              QUOTAS_TOTAL_MODEL_DEPLOYMENTS);
+          QUOTAS_TOTAL_MODEL_DEPLOYMENTS);
+      QUOTAS_MAX_PARALLEL_EXECUTIONS = setLongVar(VARIABLE_QUOTAS_MAX_PARALLEL_EXECUTIONS,
+          QUOTAS_MAX_PARALLEL_EXECUTIONS);
+      QUOTAS_MAX_PARALLEL_EXECUTIONS = setLongVar(VARIABLE_QUOTAS_MAX_PARALLEL_EXECUTIONS,
+          QUOTAS_MAX_PARALLEL_EXECUTIONS);
       cached = true;
     }
   }
@@ -4023,5 +4029,11 @@ public class Settings implements Serializable {
   public synchronized long getQuotasTotalModelDeployments() {
     checkCache();
     return QUOTAS_TOTAL_MODEL_DEPLOYMENTS;
+  }
+
+  private long QUOTAS_MAX_PARALLEL_EXECUTIONS = -1L;
+  public synchronized long getQuotasMaxParallelExecutions() {
+    checkCache();
+    return QUOTAS_MAX_PARALLEL_EXECUTIONS;
   }
 }

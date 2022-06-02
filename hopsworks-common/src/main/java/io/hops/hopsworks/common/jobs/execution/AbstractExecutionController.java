@@ -35,6 +35,8 @@ import io.hops.hopsworks.common.jobs.spark.SparkController;
 import io.hops.hopsworks.common.jobs.yarn.YarnExecutionFinalizer;
 import io.hops.hopsworks.common.jobs.yarn.YarnLogUtil;
 import io.hops.hopsworks.common.jobs.yarn.YarnMonitor;
+import io.hops.hopsworks.common.security.QuotaEnforcementException;
+import io.hops.hopsworks.common.security.QuotasEnforcement;
 import io.hops.hopsworks.common.util.HopsUtils;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.common.yarn.YarnClientService;
@@ -114,11 +116,15 @@ public abstract class AbstractExecutionController implements ExecutionController
   private YarnExecutionFinalizer yarnExecutionFinalizer;
   @EJB
   private HostServicesFacade hostServicesFacade;
+  @EJB
+  private QuotasEnforcement quotasEnforcement;
 
   @Override
   @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
   public Execution start(Jobs job, String args, Users user)
     throws JobException, GenericException, ServiceException, ProjectException {
+
+    enforceParallelExecutionsQuota(job.getProject());
 
     // If the limit for the number of executions for this job has been reached, return an error
     checkExecutionLimit(job);
@@ -130,6 +136,7 @@ public abstract class AbstractExecutionController implements ExecutionController
         throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_QUOTA_ERROR, Level.FINE);
       }
     }
+
 
     //Check if checking for nodemanager status is enabled
     //If enabled and nodemanagers are all offline throw an JobException exception
@@ -253,6 +260,16 @@ public abstract class AbstractExecutionController implements ExecutionController
                              "Maximum number of executions per job: " + settings.getExecutionsPerJobLimit());
     }
   }
+
+  protected void enforceParallelExecutionsQuota(Project project) throws JobException {
+    try {
+      quotasEnforcement.enforceParallelExecutionsQuota(project);
+    } catch (QuotaEnforcementException ex) {
+      throw new JobException(RESTCodes.JobErrorCode.EXECUTIONS_LIMIT_REACHED, Level.INFO,
+          ex.getMessage(), ex.getMessage());
+    }
+  }
+
   //====================================================================================================================
   // Execution logs
   //====================================================================================================================

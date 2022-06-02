@@ -17,6 +17,7 @@
 package io.hops.hopsworks.common.security;
 
 import com.google.common.annotations.VisibleForTesting;
+import io.hops.hopsworks.common.dao.jobhistory.ExecutionFacade;
 import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupFacade;
 import io.hops.hopsworks.common.featurestore.trainingdatasets.TrainingDatasetFacade;
 import io.hops.hopsworks.common.serving.ServingController;
@@ -29,6 +30,7 @@ import io.hops.hopsworks.exceptions.ServingException;
 import io.hops.hopsworks.persistence.entity.featurestore.Featurestore;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.Featuregroup;
 import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.TrainingDataset;
+import io.hops.hopsworks.persistence.entity.jobs.history.Execution;
 import io.hops.hopsworks.persistence.entity.project.Project;
 
 import javax.ejb.EJB;
@@ -56,6 +58,8 @@ public class QuotasEnforcement {
   private FeaturegroupFacade featuregroupFacade;
   @EJB
   private TrainingDatasetFacade trainingDatasetFacade;
+  @EJB
+  private ExecutionFacade executionFacade;
 
   private static final String FEATUREGROUPS_QUOTA_EXCEEDED = "Online %s feature groups quota reached for Project %s. " +
           "Current: %d Max: %d";
@@ -144,13 +148,31 @@ public class QuotasEnforcement {
       List<ServingWrapper> deployments = getAllServings(project);
       if (quotaExceed(deployments.size(), maxNumberOfModelDeployments)) {
         throw new QuotaEnforcementException(String.format("Model deployments quota reached for Project: %s. " +
-                "Current: %s Max: %d", project.getName(), deployments.size(), maxNumberOfModelDeployments));
+                "Current: %d Max: %d", project.getName(), deployments.size(), maxNumberOfModelDeployments));
       }
     } catch (ServingException | KafkaException | CryptoPasswordNotFoundException ex) {
       String msg = "Failed to enforce Model Deployments quotas for Project " + project.getName();
       LOGGER.log(Level.SEVERE, msg, ex);
       throw new QuotaEnforcementException(msg, ex);
     }
+  }
+
+  public void enforceParallelExecutionsQuota(Project project) throws QuotaEnforcementException {
+    LOGGER.log(Level.FINE, "Enforcing Max parallel executions quota for Project: " + project.getName());
+    long maxParallelExecutions = getMaxParallelExecutions();
+    if (shouldIgnoreQuota(maxParallelExecutions)) {
+      LOGGER.log(Level.FINE, "Skip quotas enforcement for parallel executions because configured quota is " + NO_QUOTA);
+      return;
+    }
+    long nonFinishedExecutions = getNonFinishedExecutions(project).size();
+    if (quotaExceed(nonFinishedExecutions, maxParallelExecutions)) {
+      throw new QuotaEnforcementException(String.format("Parallel executions quota reached for Project: %s " +
+          "Current %d Max: %d", project.getName(), nonFinishedExecutions, maxParallelExecutions));
+    }
+  }
+
+  private List<Execution> getNonFinishedExecutions(Project project) {
+    return executionFacade.findByProjectAndNotFinished(project);
   }
 
   private List<ServingWrapper> getAllServings(Project project) throws ServingException, KafkaException,
@@ -213,6 +235,10 @@ public class QuotasEnforcement {
     return settings.getQuotasTotalModelDeployments();
   }
 
+  private long getMaxParallelExecutions() {
+    return settings.getQuotasMaxParallelExecutions();
+  }
+
   @VisibleForTesting
   public void setFeaturegroupFacade(FeaturegroupFacade featuregroupFacade) {
     this.featuregroupFacade = featuregroupFacade;
@@ -231,6 +257,11 @@ public class QuotasEnforcement {
   @VisibleForTesting
   public void setServingController(ServingController servingController) {
     this.servingController = servingController;
+  }
+
+  @VisibleForTesting
+  public void setExecutionFacade(ExecutionFacade executionFacade) {
+    this.executionFacade = executionFacade;
   }
 }
 

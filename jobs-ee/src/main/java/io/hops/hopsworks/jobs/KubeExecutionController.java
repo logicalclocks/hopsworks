@@ -139,6 +139,8 @@ public class KubeExecutionController extends AbstractExecutionController impleme
   public Execution start(Jobs job, String args, Users user) throws JobException, GenericException,
           ServiceException, ProjectException {
 
+    enforceParallelExecutionsQuota(job.getProject());
+
     // If the limit for the number of executions for this job has been reached, return an error
     checkExecutionLimit(job);
 
