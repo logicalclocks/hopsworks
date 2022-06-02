@@ -35,18 +35,21 @@ module AuditHelper
     lastLogFile = (Dir["#{@@Log_file}*"]).max_by {|f| File.mtime(f)}
     lastLine = `tail -n 1 #{lastLogFile}`
     #if last line is by agent get previous
-    if lastLine.include? "Caller: agent@hops.io"
+    if lastLine.include? 'email="agent@hops.io"'
       lastLine = `tail -n 3 #{lastLogFile}`
     end
     lastLine
   end
 
-  def testLog(method, caller, response)
+  def testLog(method, response, email: nil, username: nil)
     logLine = getLogLastLine
-    expect(logLine).to include("Method Called: #{method}")
-    expect(logLine).to include("Caller: #{caller}")
-    expect(logLine).to include("#{response}")
+    expect(logLine).to include("method=\"#{method}\"")
+    unless email.nil?
+      expect(logLine).to include("email=\"#{email}\"")
+    end
+    unless username.nil?
+      expect(logLine).to include("username=\"#{username}\"")
+    end
+    expect(logLine).to include("outcome=\"#{response}\"")
   end
-
-
 end

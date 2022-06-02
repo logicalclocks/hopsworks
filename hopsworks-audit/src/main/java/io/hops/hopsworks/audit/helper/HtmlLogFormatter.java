@@ -15,14 +15,19 @@
  */
 package io.hops.hopsworks.audit.helper;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.logging.Formatter;
 import java.util.logging.Handler;
 import java.util.logging.Level;
 import java.util.logging.LogRecord;
+import java.util.logging.Logger;
 
 public class HtmlLogFormatter extends Formatter {
+  private final ObjectMapper mapper = new ObjectMapper();
   @Override
   public String format(LogRecord logRecord) {
     StringBuffer buf = new StringBuffer();
@@ -89,32 +94,36 @@ public class HtmlLogFormatter extends Formatter {
   }
   
   private String formatMsg(LogRecord logRecord) {
-    String log = formatMessage(logRecord);
-    String[] logParts = log.split(";");
+    StringBuilder stringBuilder = new StringBuilder();
+    try {
+      LogMessage logMessage = mapper.readValue(logRecord.getMessage(), LogMessage.class);
+      //Class
+      stringBuilder.append("\t<td>");
+      stringBuilder.append(logMessage.getClassName());
+      stringBuilder.append("</td>\n");
+      //Method
+      stringBuilder.append("\t<td>");
+      stringBuilder.append(logMessage.getMethodName());
+      stringBuilder.append("</td>\n");
+      //Parameters
+      stringBuilder.append("\t<td>");
+      stringBuilder.append(logMessage.getParameters());
+      stringBuilder.append("</td>\n");
+      //Caller
+      stringBuilder.append("\t<td>");
+      stringBuilder.append(logMessage.getCaller());
+      stringBuilder.append("</td>\n");
+      //Response
+      stringBuilder.append("\t<td>");
+      stringBuilder.append(logMessage.getOutcome());
+      stringBuilder.append("</td>\n");
+    } catch (JsonProcessingException ex) {
+      Logger.getLogger(HtmlLogFormatter.class.getName()).log(Level.SEVERE, null, ex);
+      stringBuilder.append("\t<td>");
+      stringBuilder.append(ex.getMessage());
+      stringBuilder.append("</td>\n");
+    }
     
-    StringBuffer stringBuffer = new StringBuffer();
-    //Class
-    stringBuffer.append("\t<td>");
-    stringBuffer.append(logParts[0].split(":")[1]);
-    stringBuffer.append("</td>\n");
-    //Method
-    stringBuffer.append("\t<td>");
-    stringBuffer.append(logParts[1].split(":")[1]);
-    stringBuffer.append("</td>\n");
-    //Parameters
-    stringBuffer.append("\t<td>");
-    stringBuffer.append(logParts[2].split(":")[1]);
-    stringBuffer.append("</td>\n");
-    //Caller
-    String[] caller = logParts[3].split(":");
-    stringBuffer.append("\t<td>");
-    stringBuffer.append(caller.length > 1? caller[1] : "-");
-    stringBuffer.append("</td>\n");
-    //Response
-    stringBuffer.append("\t<td>");
-    stringBuffer.append(logParts[4].split(":")[1]);
-    stringBuffer.append("</td>\n");
-    
-    return stringBuffer.toString();
+    return stringBuilder.toString();
   }
 }

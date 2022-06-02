@@ -59,7 +59,7 @@ describe "On #{ENV['OS']}" do
         newUser = create_user
         create_session(newUser[:email], "Pass123")
 
-        testLog("login", newUser[:email], "Response: 200")
+        testLog("login", "200", email: newUser[:email])
       end
     end
     context 'role ' do
@@ -68,7 +68,7 @@ describe "On #{ENV['OS']}" do
         adminUser = with_admin_session_return_user
         admin_accept_user(newUser[:uid], user = {})
 
-        testLog("acceptUser", adminUser[:email], "Response: 200")
+        testLog("acceptUser", "200", email: adminUser[:email])
       end
     end
     context 'account ' do
@@ -78,12 +78,12 @@ describe "On #{ENV['OS']}" do
         register_user(params)
         newUser = User.find_by(email: params[:email])
 
-        testLog("register", newUser[:email], "200")
+        testLog("register", "200", email: newUser[:email])
 
         key = newUser.username + newUser.validation_key
         get "#{ENV['HOPSWORKS_ADMIN']}/security/validate_account.xhtml", {params: {key: key}}
 
-        testLog("validateKey", newUser[:username], "Outcome: void")
+        testLog("validateKey", "void", username: newUser[:username])
       end
     end
   end

@@ -15,8 +15,6 @@
  */
 package io.hops.hopsworks.audit.helper;
 
-import io.hops.hopsworks.common.dao.util.VariablesFacade;
-
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 import javax.ejb.EJB;
@@ -27,18 +25,12 @@ import java.util.logging.FileHandler;
 import java.util.logging.Formatter;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.logging.SimpleFormatter;
 
 @Singleton
 public class LoggerFactory {
-  private static final String AUDIT_LOG_FILE_VAR = "audit_log_dir";
-  private static final String AUDIT_LOG_FILE_FORMAT = "audit_log_file_format";
-  private static final String AUDIT_LOG_FILE_SIZE = "audit_log_size_limit";
-  private static final String AUDIT_LOG_FILE_COUNT = "audit_log_count";
-  private static final String AUDIT_LOG_FILE_TYPE = "audit_log_file_type";
 
   @EJB
-  private VariablesFacade variablesFacade;
+  private VariablesHelper variablesHelper;
   
   private FileHandler fileHandler;
   private Logger logger;
@@ -48,19 +40,17 @@ public class LoggerFactory {
     this.logger = Logger.getLogger(LoggerFactory.class.getName());
     this.logger.setUseParentHandlers(false);
 
-    String logDirPath = getStrValue(AUDIT_LOG_FILE_VAR, "/srv/hops/domains/domain1/logs/audit");
-    logDirPath = logDirPath.endsWith("/")? logDirPath : logDirPath + "/";
+    String logDirPath = variablesHelper.getAuditLogDirPath();
     File logDir = new File(logDirPath);
     if(!logDir.exists()) {
       logDir.mkdirs();
     }
 
-    String logFileFormat = getStrValue(AUDIT_LOG_FILE_FORMAT, "server_audit_log%g.log");
-    logFileFormat = logFileFormat.startsWith("/")? logFileFormat.substring(1) : logFileFormat;
+    String logFileFormat = variablesHelper.getAuditLogFileFormat();
 
-    int logFileSize = getIntValue(AUDIT_LOG_FILE_SIZE, 256000000);//256MB
-    int logFileCount = getIntValue(AUDIT_LOG_FILE_COUNT, 10);//10 files
-    String logFileType = getStrValue(AUDIT_LOG_FILE_TYPE, SimpleFormatter.class.getName());
+    int logFileSize = variablesHelper.getAuditLogFileSize();
+    int logFileCount = variablesHelper.getAuditLogFileCount();
+    String logFileType = variablesHelper.getAuditLogFileType();
 
     try {
       fileHandler = new FileHandler( logDirPath + logFileFormat, logFileSize, logFileCount, true);
@@ -84,24 +74,5 @@ public class LoggerFactory {
 
   public Logger getLogger() {
     return this.logger;
-  }
-
-  private int getIntValue(String id, int defaultVal) {
-    String val = variablesFacade.getVariableValue(id);
-    if (val == null) {
-      return defaultVal;
-    }
-    try {
-      return Integer.parseInt(val);
-    } catch (NumberFormatException e) { }
-    return defaultVal;
-  }
-
-  private String getStrValue(String id, String defaultVal) {
-    String val = variablesFacade.getVariableValue(id);
-    if (val == null) {
-      return defaultVal;
-    }
-    return val;
   }
 }

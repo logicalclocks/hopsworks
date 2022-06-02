@@ -128,4 +128,13 @@ public class DatasetBeanParam {
   public void setExpansions(DatasetExpansionBeanParam expansions) {
     this.expansions = expansions;
   }
+  
+  @Override
+  public String toString() {
+    return "DatasetBeanParam{" +
+      "sortBy='" + sortBy + '\'' +
+      ", filter=" + filter +
+      ", expansions=" + expansions +
+      '}';
+  }
 }

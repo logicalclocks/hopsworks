@@ -54,6 +54,7 @@ public class AnnotationHelper {
   
   public static final String USER_AGENT = "user-agent";
   public static final String CLIENT_IP = "client-ip";
+  public static final String PATH_INFO = "pathInfo";
   
   @EJB
   private UserFacade userFacade;
@@ -119,7 +120,7 @@ public class AnnotationHelper {
           }
           String subject = getSubjectFromJWT((HttpServletRequest) parameters[i]);
           if (subject != null && !subject.isEmpty()) {
-            return userFacade.findByEmail(subject);
+            return userFacade.findByUsername(subject);
           }
         } else if (parameters[i] instanceof SecurityContext &&
           ((SecurityContext) parameters[i]).getUserPrincipal() != null) {
@@ -130,27 +131,31 @@ public class AnnotationHelper {
     return null;
   }
   
-  public String getCallerName(Method method, Object[] parameters) {
+  public CallerIdentifier getCallerIdentifier(Method method, Object[] parameters) {
     Parameter[] methodParameters = method.getParameters();
+    CallerIdentifier caller = new CallerIdentifier();
     if (parameters != null) {
       for (int i = 0; i < parameters.length; i++) {
         if (methodParameters[i].isAnnotationPresent(Caller.class)) {
-          return getCallerStr(methodParameters[i], parameters[i]);
+          return getCallerIdentifier(methodParameters[i], parameters[i]);
         } else if (parameters[i] instanceof SecurityContext &&
           ((SecurityContext) parameters[i]).getUserPrincipal() != null) {
-          return ((SecurityContext) parameters[i]).getUserPrincipal().getName();
+          caller.setUsername(((SecurityContext) parameters[i]).getUserPrincipal().getName());
+          return caller;
         } else if (parameters[i] instanceof HttpServletRequest) {
           if (((HttpServletRequest) parameters[i]).getRemoteUser() != null) {
-            return ((HttpServletRequest) parameters[i]).getRemoteUser();
+            caller.setEmail(((HttpServletRequest) parameters[i]).getRemoteUser());
+            return caller;
           }
           String subject = getSubjectFromJWT((HttpServletRequest) parameters[i]);
           if (subject != null && !subject.isEmpty()) {
-            return subject;
+            caller.setUsername(subject);
+            return caller;
           }
         }
       }
     }
-    return "";
+    return caller;
   }
   
   public String getSubjectFromJWT(HttpServletRequest req) {
@@ -174,6 +179,9 @@ public class AnnotationHelper {
         callInfo.put(USER_AGENT, HttpUtil.extractUserAgent((HttpServletRequest) parameter));
         // Extract client IP
         callInfo.put(CLIENT_IP, HttpUtil.extractRemoteHostIp((HttpServletRequest) parameter));
+        // Extract requested path
+        String pathInfo = ((HttpServletRequest) parameter).getPathInfo();
+        callInfo.put(PATH_INFO, pathInfo != null ? pathInfo : "");
       }
     }
     
@@ -185,9 +193,9 @@ public class AnnotationHelper {
     return getUser(identifier, parameter);
   }
   
-  private String getCallerStr(Parameter methodParameter, Object parameter) {
+  private CallerIdentifier getCallerIdentifier(Parameter methodParameter, Object parameter) {
     UserIdentifier identifier = methodParameter.getAnnotation(Caller.class).value();
-    return getUserStr(identifier, parameter);
+    return getCaller(identifier, parameter);
   }
   
   private Users getUser(UserIdentifier identifier, Object userIdentifier) {
@@ -218,20 +226,31 @@ public class AnnotationHelper {
     return user;
   }
   
-  private String getUserStr(UserIdentifier identifier, Object userIdentifier) {
+  private CallerIdentifier getCaller(UserIdentifier identifier, Object userIdentifier) {
+    CallerIdentifier caller = new CallerIdentifier();
     switch (identifier) {
       case ID:
+        caller.setUserId((Integer) userIdentifier);
+        break;
       case EMAIL:
+        caller.setEmail((String) userIdentifier);
+        break;
       case USERNAME:
-        return (String) userIdentifier;
+        caller.setUsername((String) userIdentifier);
+        break;
       case USER_DTO:
-        return ((UserDTO) userIdentifier).getEmail();
+        caller.setEmail(((UserDTO) userIdentifier).getEmail());
+        break;
       case USERS:
-        return ((Users) userIdentifier).getEmail();
+        caller.setEmail(((Users) userIdentifier).getEmail());
+        break;
       case KEY:
-        return getUserFromKey((String) userIdentifier);
+        caller.setUsername(getUserFromKey((String) userIdentifier));
+        break;
+      default:
+        return null;
     }
-    return null;
+    return caller;
   }
   
   private String getUserFromKey(String key) {

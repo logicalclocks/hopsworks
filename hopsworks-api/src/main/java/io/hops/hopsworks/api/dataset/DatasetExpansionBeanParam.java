@@ -49,4 +49,11 @@ public class DatasetExpansionBeanParam {
     }
     return expansions;
   }
+  
+  @Override
+  public String toString() {
+    return "DatasetExpansionBeanParam{" +
+      "expansions=" + expansions +
+      '}';
+  }
 }

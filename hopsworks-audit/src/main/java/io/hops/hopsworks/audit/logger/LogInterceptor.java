@@ -15,9 +15,14 @@
  */
 package io.hops.hopsworks.audit.logger;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.hops.hopsworks.audit.helper.AnnotationHelper;
 import io.hops.hopsworks.audit.helper.AuditHelper;
+import io.hops.hopsworks.audit.helper.CallerIdentifier;
+import io.hops.hopsworks.audit.helper.LogMessage;
 import io.hops.hopsworks.audit.helper.LoggerFactory;
+import io.hops.hopsworks.audit.helper.VariablesHelper;
 import io.hops.hopsworks.audit.logger.annotation.Logged;
 import io.hops.hopsworks.audit.logger.annotation.Secret;
 import io.hops.hopsworks.restutils.RESTException;
@@ -31,9 +36,13 @@ import javax.interceptor.InvocationContext;
 import javax.ws.rs.core.Response;
 import java.io.Serializable;
 import java.lang.reflect.Method;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
+import java.util.logging.Logger;
+import java.util.logging.SimpleFormatter;
 
 @Logged
 @Interceptor
@@ -46,7 +55,10 @@ public class LogInterceptor implements Serializable {
   private AnnotationHelper annotationHelper;
   @Inject
   private LoggerFactory loggerFactory;
-
+  @Inject
+  private VariablesHelper variablesHelper;
+  private final ObjectMapper mapper = new ObjectMapper();
+  
   @AroundInvoke
   public Object collectBasicLoggingInformation(InvocationContext context) throws Exception {
     Method method = context.getMethod();
@@ -57,8 +69,8 @@ public class LogInterceptor implements Serializable {
     if (LogLevel.OFF.equals(logged.logLevel())) {
       return context.proceed();
     }
-
-    String email = annotationHelper.getCallerName(method, context.getParameters());
+  
+    CallerIdentifier caller = annotationHelper.getCallerIdentifier(method, context.getParameters());
     Map<String, String> clientInfo = annotationHelper.getClientInfo(context.getParameters());
     List<Object> params = annotationHelper.getParamsExceptAnnotated(method, context.getParameters(), Secret.class);
 
@@ -66,35 +78,65 @@ public class LogInterceptor implements Serializable {
     try {
       ret = context.proceed();
     } catch (Exception e) {
-      log(resourceClass.getName(), method.getName(), email, clientInfo, params, getExceptionMessage(e), level);
+      log(resourceClass.getName(), method.getName(), caller, clientInfo, params, getExceptionMessage(e), level);
       throw e;
     }
     if (method.getReturnType().equals(Void.TYPE)) {
-      log(resourceClass.getName(), method.getName(), email, clientInfo, params, "void", level);
+      log(resourceClass.getName(), method.getName(), caller, clientInfo, params, "void", level);
     } else {
       Response res = auditHelper.getResponse(ret);
       if (res != null) {
-        log(resourceClass.getName(), method.getName(), email, clientInfo,
-            params, String.valueOf(res.getStatus()), level);
+        log(resourceClass.getName(), method.getName(), caller, clientInfo, params, String.valueOf(res.getStatus()),
+          level);
       } else {
-        log(resourceClass.getName(), method.getName(), email, clientInfo, params, ret.getClass().getName(), level);
+        log(resourceClass.getName(), method.getName(), caller, clientInfo, params, ret.getClass().getName(), level);
       }
     }
     return ret;
   }
 
-  private void log(String className, String methodName, String email,
+  private void log(String className, String methodName, CallerIdentifier caller,
                    Map<String, String> callInfo, List<Object> parameters, String outcome, Level level) {
-    MapMessage mapMessage = new MapMessage()
+    String format = variablesHelper.getAuditLogFileType();
+    if (format.equals(SimpleFormatter.class.getName())) {
+      MapMessage mapMessage = new MapMessage()
         .with("class", className)
         .with("method", methodName)
         .with("parameters", parameters.toString())
         .with("outcome", outcome != null ? outcome : "")
-        .with("caller", email)
+        .with("email", caller.getEmail() != null ? caller.getEmail() : "")
+        .with("username", caller.getUsername() != null ? caller.getUsername() : "")
+        .with("user-id", caller.getUserId() != null ? caller.getUserId() : "")
+        .with("path-info", callInfo.get(AnnotationHelper.PATH_INFO))
         .with("client-ip", callInfo.get(AnnotationHelper.CLIENT_IP))
         .with("user-agent", callInfo.get(AnnotationHelper.USER_AGENT));
-
-    loggerFactory.getLogger().log(level, mapMessage.toString());
+  
+      loggerFactory.getLogger().log(level, mapMessage.toString());
+    } else {
+      String dateFormat = variablesHelper.getAuditLogDateFormat();
+      LogMessage logMessage = new LogMessage();
+      logMessage.setClassName(className);
+      logMessage.setMethodName(methodName);
+      logMessage.setParameters(parameters.toString());
+      logMessage.setCaller(caller);
+      logMessage.setOutcome(outcome != null ? outcome : "");
+      logMessage.setDateTime(new SimpleDateFormat(dateFormat).format(new Date()));
+      logMessage.setUserAgent(callInfo.get(AnnotationHelper.USER_AGENT));
+      logMessage.setClientIp(callInfo.get(AnnotationHelper.CLIENT_IP));
+      logMessage.setPathInfo(callInfo.get(AnnotationHelper.PATH_INFO));
+      
+      loggerFactory.getLogger().log(level, toJson(logMessage));
+    }
+  }
+  
+  private String toJson(LogMessage logMessage) {
+    String jsonInString = null;
+    try {
+      jsonInString = mapper.writeValueAsString(logMessage);
+    } catch (JsonProcessingException ex) {
+      Logger.getLogger(LogInterceptor.class.getName()).log(Level.SEVERE, null, ex);
+    }
+    return jsonInString;
   }
 
   private String getExceptionMessage(Exception e) {
