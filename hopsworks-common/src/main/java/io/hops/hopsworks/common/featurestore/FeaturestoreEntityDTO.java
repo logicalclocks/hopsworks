@@ -26,8 +26,6 @@ import io.hops.hopsworks.common.featurestore.statistics.StatisticsConfigDTO;
 import io.hops.hopsworks.common.featurestore.trainingdatasets.TrainingDatasetDTO;
 import io.hops.hopsworks.persistence.entity.user.Users;
 
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlSeeAlso;
@@ -38,7 +36,6 @@ import java.util.Date;
  * and training dataset entities.
  */
 @XmlRootElement
-@XmlAccessorType(XmlAccessType.FIELD)
 @XmlSeeAlso({FeaturegroupDTO.class, TrainingDatasetDTO.class})
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY)
