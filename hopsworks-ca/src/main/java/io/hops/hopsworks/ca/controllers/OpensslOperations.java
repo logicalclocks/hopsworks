@@ -231,7 +231,24 @@ public class OpensslOperations {
     // it impossibile to revoke the first certificate
     File signedCertificateFile = pki.getCertPath(caType, fileName).toFile();
     if (signedCertificateFile.exists()) {
-      throw new CAException(RESTCodes.CAErrorCode.CERTEXISTS, Level.FINE, CertificateType.PROJECT);
+      // Antonios: This is not the most elegant way to identified if we're running on Managed Cloud aka hopsworks.ai
+      // but it is one way...
+      if (!CAConf.getString(CAConfKeys.CLOUD_EVENTS_ENDPOINT).isEmpty()) {
+        try {
+          // On Managed Cloud we need to be able to re-issue a certificate with the same x509 Subject
+          // when starting Workers after a Custer Stop when Glassfish has been unresponsive
+          // https://github.com/logicalclocks/hopsworks-cloud/issues/3102
+          revokeCertificate(fileName, certType);
+        } catch (IOException | CAException ex) {
+          String usrMsg = "Certificate " + fileName + " already exists. Running on Managed Cloud, tried to revoke " +
+              "old certificate but failed";
+          String devMsg = usrMsg + " Reason: " + ex.getMessage();
+          throw new CAException(RESTCodes.CAErrorCode.CERTEXISTS, Level.SEVERE, certType, usrMsg, devMsg, ex);
+        }
+      } else {
+        // If not running on Managed Cloud throw an exception that the same certificate already exists
+        throw new CAException(RESTCodes.CAErrorCode.CERTEXISTS, Level.FINE, CertificateType.PROJECT);
+      }
     }
 
     List<String> command = new ArrayList<>();

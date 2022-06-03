@@ -69,7 +69,8 @@ public class CAConf {
     KUBE_CA_PASSWORD("kube_ca_password", "adminpw"),
     HOPSWORKS_REST_LOGLEVEL("hopsworks_rest_log_level", "PROD"),
     JWT_ISSUER("jwt_issuer", "hopsworks@logicalclocks.com"),
-    SUDOERS_DIR("sudoers_dir", "/srv/hops/sbin");
+    SUDOERS_DIR("sudoers_dir", "/srv/hops/sbin"),
+    CLOUD_EVENTS_ENDPOINT("cloud_events_endpoint", "");
 
     private String key;
     private String defaultValue;
