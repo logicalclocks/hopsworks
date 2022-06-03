@@ -218,6 +218,10 @@ public class KubePredictorPythonCustomUtils extends KubePredictorServerUtils {
         .build())
       .build());
     
+    // HOPSWORKS PYTHON API
+    envVars.add(new EnvVarBuilder().withName("ELASTIC_ENDPOINT").withValue(settings.getOpenSearchRESTEndpoint())
+      .build());
+    
     // DEPLOYMENT INFO
     envVars.add(new EnvVarBuilder().withName("DEPLOYMENT_NAME").withValue(serving.getName()).build());
     envVars.add(new EnvVarBuilder().withName("MODEL_NAME").withValue(serving.getModelName()).build());

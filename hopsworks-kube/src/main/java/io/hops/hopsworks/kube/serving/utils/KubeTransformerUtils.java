@@ -202,6 +202,10 @@ public class KubeTransformerUtils {
         false)
         .build())
       .build());
+    
+    // HOPSWORKS PYTHON API
+    envVars.add(new EnvVarBuilder().withName("ELASTIC_ENDPOINT").withValue(settings.getOpenSearchRESTEndpoint())
+      .build());
   
     // DEPLOYMENT INFO
     envVars.add(new EnvVarBuilder().withName("DEPLOYMENT_NAME").withValue(serving.getName()).build());

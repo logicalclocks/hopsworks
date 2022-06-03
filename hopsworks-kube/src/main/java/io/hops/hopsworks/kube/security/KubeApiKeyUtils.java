@@ -294,6 +294,7 @@ public class KubeApiKeyUtils {
         add(ApiScope.FEATURESTORE); // transformer: get feature vector and transformations from the feature store
         add(ApiScope.MODELREGISTRY); // predictor and transformer: download model artifact using hsml
         add(ApiScope.SERVING); // hops-util-py/hsml: inference requests through Istio
+        add(ApiScope.PYTHON_LIBRARIES); // hopsworks sdk: opensearch client
       }
     };
   }
