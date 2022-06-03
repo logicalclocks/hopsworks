@@ -42,7 +42,9 @@ describe "On #{ENV['OS']}" do
           {name: name,
            modelPath: "/Projects/#{@project[:projectname]}/Models/mnist/",
            modelVersion: 1,
-           batchingEnabled: false,
+           batchingConfiguration: {
+              batchingEnabled: false
+           },
            kafkaTopicDTO: {
                name: topic_name
            },
@@ -72,7 +74,9 @@ describe "On #{ENV['OS']}" do
           {name: name,
            modelPath: "/Projects/#{@project[:projectname]}/Models/mnist/",
            modelVersion: 1,
-           batchingEnabled: false,
+           batchingConfiguration: {
+               batchingEnabled: false
+           },
            kafkaTopicDTO: {
                name: topic_name
            },
@@ -102,7 +106,9 @@ describe "On #{ENV['OS']}" do
           {name: name,
            modelPath: "/Projects/#{@project[:projectname]}/Models/mnist/",
            modelVersion: 1,
-           batchingEnabled: false,
+           batchingConfiguration: {
+               batchingEnabled: false  
+           },
            kafkaTopicDTO: {
                name: topic_name
            },
@@ -131,7 +137,9 @@ describe "On #{ENV['OS']}" do
           {name: "testModel5",
            modelPath: "/Projects/#{@project[:projectname]}/Models/mnist/",
            modelVersion: 1,
-           batchingEnabled: false,
+           batchingConfiguration: {
+               batchingEnabled: false  
+           },
            kafkaTopicDTO: {
                name: topic_name
            },
@@ -148,7 +156,9 @@ describe "On #{ENV['OS']}" do
       put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
           {name: "testmodelFineGrainedInferenceLogging",
            modelPath: "/Projects/#{@project[:projectname]}/Models/mnist",
-           batchingEnabled: false,
+           batchingConfiguration: {
+               batchingEnabled: false  
+           },
            kafkaTopicDTO: {
             name: "CREATE"
            },
@@ -173,7 +183,9 @@ describe "On #{ENV['OS']}" do
           {name: "testModelwithTransformer",
             modelPath: "/Projects/#{@project[:projectname]}/Models/mnist",
             modelVersion: 1,
-            batchingEnabled: false,
+            batchingConfiguration: {
+                batchingEnabled: false
+            },
             kafkaTopicDTO: {
                 name: "NONE"
             },
@@ -215,7 +227,7 @@ describe "On #{ENV['OS']}" do
            name: serving[:name],
            modelPath: serving[:model_path],
            modelVersion: serving[:model_version],
-           batchingEnabled: serving[:enable_batching],
+           batchingEnabled: serving[:batching_configuration],
            kafkaTopicDTO: {
                name: topic[:topic_name]
            },

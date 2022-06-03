@@ -29,6 +29,7 @@ import io.hops.hopsworks.persistence.entity.hdfs.inode.Inode;
 import io.hops.hopsworks.persistence.entity.kafka.ProjectTopics;
 import io.hops.hopsworks.persistence.entity.kafka.schemas.Subjects;
 import io.hops.hopsworks.persistence.entity.project.Project;
+import io.hops.hopsworks.persistence.entity.serving.BatchingConfiguration;
 import io.hops.hopsworks.persistence.entity.serving.ModelServer;
 import io.hops.hopsworks.persistence.entity.serving.Serving;
 import io.hops.hopsworks.restutils.RESTCodes;
@@ -93,6 +94,17 @@ public class ServingUtil {
     validatePredictor(project, serving);
     validateKafkaTopicSchema(project, serving, servingWrapper.getKafkaTopicDTO());
     validateInstances(serving);
+    validateBatchingConfiguration(serving);
+  }
+
+  private void validateBatchingConfiguration(Serving serving) throws ServingException {
+    BatchingConfiguration batchingConfiguration = serving.getBatchingConfiguration();
+    if (batchingConfiguration != null && batchingConfiguration.isBatchingEnabled() &&
+        (batchingConfiguration.getMaxBatchSize() != null
+        || batchingConfiguration.getMaxLatency() != null || batchingConfiguration.getTimeout() != null)) {
+      throw new ServingException(RESTCodes.ServingErrorCode.REQUEST_BATCHING_NOT_SUPPORTED, Level.FINE,
+          "Fine-grained request batching is only supported in KServe deployments");
+    }
   }
   
   private void validateServingName(Serving serving, Serving dbServing) throws ServingException {
@@ -137,7 +149,7 @@ public class ServingUtil {
       throw new ServingException(RESTCodes.ServingErrorCode.UPDATE_MODEL_SERVER_ERROR, Level.SEVERE);
     }
     if (serving.getModelServer() == ModelServer.TENSORFLOW_SERVING) {
-      validateTFServingUserInput(serving); // e.g., tensorflow standard path, batching
+      validateTFServingUserInput(serving); // e.g., tensorflow standard path
     }
     if (serving.getModelServer() == ModelServer.PYTHON) {
       validatePythonUserInput(serving); // e.g., model file, python scripts
@@ -223,11 +235,6 @@ public class ServingUtil {
     } catch (FileNotFoundException e) {
       throw new ServingException(RESTCodes.ServingErrorCode.MODEL_PATH_NOT_FOUND, Level.FINE, null);
     }
-    
-    if (serving.isBatchingEnabled()) {
-      throw new ServingException(RESTCodes.ServingErrorCode.REQUEST_BATCHING_NOT_SUPPORTED, Level.SEVERE, "Request " +
-        "batching is not supported in Python deployments");
-    }
   }
 
   private void validatePredictor(Project project, Serving serving) throws UnsupportedEncodingException,
@@ -265,17 +272,24 @@ public class ServingUtil {
       }
     }
   }
-   
-  private void setDefaultRequestBatching(Serving serving) {
-    if (serving.isBatchingEnabled() == null) {
-      serving.setBatchingEnabled(false);
-    }
-  }
-  
+
   private void setDefaultModelName(Serving serving) {
     if (serving.getModelName() != null) return;
     String modelPath = serving.getModelPath();
     String[] split = modelPath.split("/");
     serving.setModelName(split[4]);
   }
+
+  private void setDefaultRequestBatching(Serving serving) {
+    BatchingConfiguration batchingConfiguration = serving.getBatchingConfiguration();
+    if (batchingConfiguration == null) {
+      batchingConfiguration = new BatchingConfiguration();
+      batchingConfiguration.setBatchingEnabled(false);
+      serving.setBatchingConfiguration(batchingConfiguration);
+    } else if (batchingConfiguration.isBatchingEnabled() == null) {
+      batchingConfiguration.setBatchingEnabled(false);
+    }
+
+  }
+
 }

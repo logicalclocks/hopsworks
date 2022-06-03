@@ -21,6 +21,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.hops.hopsworks.common.dao.kafka.TopicDTO;
 import io.hops.hopsworks.common.serving.ServingStatusEnum;
 import io.hops.hopsworks.common.serving.ServingWrapper;
+import io.hops.hopsworks.persistence.entity.serving.BatchingConfiguration;
 import io.hops.hopsworks.persistence.entity.serving.ModelServer;
 import io.hops.hopsworks.persistence.entity.serving.Serving;
 import io.hops.hopsworks.persistence.entity.serving.ServingTool;
@@ -59,6 +60,7 @@ public class ServingView implements Serializable {
   private ModelServer modelServer;
   private ServingTool servingTool;
   private Date deployed;
+  private BatchingConfiguration batchingConfiguration;
   
   // TODO(Fabio): use expansions here
   private String creator;
@@ -89,12 +91,12 @@ public class ServingView implements Serializable {
     this.created = servingWrapper.getServing().getCreated();
     this.status = servingWrapper.getStatus();
     this.kafkaTopicDTO = servingWrapper.getKafkaTopicDTO();
-    this.batchingEnabled = servingWrapper.getServing().isBatchingEnabled();
     this.modelServer = servingWrapper.getServing().getModelServer();
     this.servingTool = servingWrapper.getServing().getServingTool();
     this.deployed = servingWrapper.getServing().getDeployed();
     Users user = servingWrapper.getServing().getCreator();
     this.creator = user.getFname() + " " + user.getLname();
+    this.batchingConfiguration = servingWrapper.getServing().getBatchingConfiguration();
   }
 
   @ApiModelProperty(value = "ID of the Serving entry" )
@@ -264,13 +266,20 @@ public class ServingView implements Serializable {
   public void setDeployed(Date deployed) {
     this.deployed = deployed;
   }
+
+  @ApiModelProperty(value = "Request batching configuration for inference", readOnly = true)
+  public BatchingConfiguration getBatchingConfiguration() { return batchingConfiguration; }
+
+  public void setBatchingConfiguration(BatchingConfiguration batchingConfiguration) {
+    this.batchingConfiguration = batchingConfiguration;
+  }
   
   @JsonIgnore
   public ServingWrapper getServingWrapper() {
 
     ServingWrapper servingWrapper = new ServingWrapper(
         new Serving(id, name, description, modelPath, modelName, modelVersion, predictor, requestedInstances,
-          batchingEnabled, modelServer, servingTool));
+          batchingEnabled, modelServer, servingTool, batchingConfiguration));
     servingWrapper.setKafkaTopicDTO(kafkaTopicDTO);
 
     return servingWrapper;

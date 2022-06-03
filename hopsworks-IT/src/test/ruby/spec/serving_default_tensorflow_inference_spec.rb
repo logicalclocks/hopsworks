@@ -107,7 +107,9 @@ describe "On #{ENV['OS']}" do
             name: @serving[:name],
             modelPath: @serving[:model_path],
             modelVersion: @serving[:model_version],
-            batchingEnabled: false,
+            batchingConfiguration: {
+              batchingEnabled: false
+            },
             kafkaTopicDTO: {
                name: "NONE"
             },

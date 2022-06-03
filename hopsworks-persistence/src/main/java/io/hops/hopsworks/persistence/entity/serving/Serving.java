@@ -22,6 +22,7 @@ import io.hops.hopsworks.persistence.entity.user.Users;
 
 import javax.persistence.Basic;
 import javax.persistence.Column;
+import javax.persistence.Convert;
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
@@ -109,8 +110,6 @@ public class Serving implements Serializable {
   @JoinColumn(name = "project_id", referencedColumnName = "id")
   @ManyToOne(optional = false)
   private Project project;
-  @Column(name = "enable_batching")
-  private Boolean batchingEnabled;
 
   @Column(name = "lock_ip")
   private String lockIP;
@@ -144,11 +143,16 @@ public class Serving implements Serializable {
   @Temporal(TemporalType.TIMESTAMP)
   private Date deployed;
 
+  @Column(name = "batching_configuration")
+  @NotNull
+  @Convert(converter = BatchingConfigurationConverter.class)
+  private BatchingConfiguration batchingConfiguration;
+
   public Serving() { }
 
   public Serving(Integer id, String name, String description, String modelPath, String modelName, Integer modelVersion,
                  String predictor, Integer nInstances, Boolean batchingEnabled, ModelServer modelServer,
-                 ServingTool servingTool) {
+                 ServingTool servingTool, BatchingConfiguration batchingConfiguration) {
     this.id = id;
     this.name = name;
     this.description = description;
@@ -157,9 +161,9 @@ public class Serving implements Serializable {
     this.modelVersion = modelVersion;
     this.predictor = predictor;
     this.instances = nInstances;
-    this.batchingEnabled = batchingEnabled;
     this.modelServer = modelServer;
     this.servingTool = servingTool;
+    this.batchingConfiguration = batchingConfiguration;
   }
 
   public Integer getId() {
@@ -280,14 +284,6 @@ public class Serving implements Serializable {
     this.localDir = localDir;
   }
 
-  public Boolean isBatchingEnabled() {
-    return batchingEnabled;
-  }
-
-  public void setBatchingEnabled(Boolean batching) {
-    this.batchingEnabled = batching;
-  }
-
   public String getLockIP() {
     return lockIP;
   }
@@ -331,6 +327,12 @@ public class Serving implements Serializable {
   public void setDeployed(Date deployed) {
     this.deployed = deployed;
   }
+
+  public BatchingConfiguration getBatchingConfiguration() { return batchingConfiguration; }
+
+  public void setBatchingConfiguration(BatchingConfiguration batchingConfiguration) {
+    this.batchingConfiguration = batchingConfiguration;
+  }
   
   @Override
   public boolean equals(Object o) {
@@ -340,7 +342,6 @@ public class Serving implements Serializable {
     Serving serving = (Serving) o;
 
     if (optimized != serving.optimized) return false;
-    if (batchingEnabled != serving.batchingEnabled) return false;
     if (id != null ? !id.equals(serving.id) : serving.id != null) return false;
     if (created != null ? !created.equals(serving.created) : serving.created != null) return false;
     if (creator != null ? !creator.equals(serving.creator) : serving.creator != null) return false;
@@ -360,6 +361,8 @@ public class Serving implements Serializable {
     if (modelServer != null ? !modelServer.equals(serving.modelServer) : serving.modelServer != null) return false;
     if (servingTool != null ? !servingTool.equals(serving.servingTool) : serving.servingTool != null) return false;
     if (deployed != null ? !deployed.equals(serving.deployed) : serving.deployed != null) return false;
+    if (batchingConfiguration != null ? !batchingConfiguration.equals(serving.batchingConfiguration) :
+        serving.batchingConfiguration != null) return false;
     return localDir != null ? localDir.equals(serving.localDir) : serving.localDir == null;
   }
 
@@ -376,7 +379,6 @@ public class Serving implements Serializable {
     result = 31 * result + (optimized ? 1 : 0);
     result = 31 * result + (instances != null ? instances.hashCode() : 0);
     result = 31 * result + (project != null ? project.hashCode() : 0);
-    result = 31 * result + (batchingEnabled ? 1 : 0);
     result = 31 * result + (lockIP != null ? lockIP.hashCode() : 0);
     result = 31 * result + (lockTimestamp != null ? lockTimestamp.hashCode() : 0);
     result = 31 * result + (kafkaTopic != null ? kafkaTopic.hashCode() : 0);
@@ -386,6 +388,7 @@ public class Serving implements Serializable {
     result = 31 * result + (modelServer != null ? modelServer.hashCode() : 0);
     result = 31 * result + (servingTool != null ? servingTool.hashCode() : 0);
     result = 31 * result + (deployed != null ? deployed.hashCode() : 0);
+    result = 31 * result + (batchingConfiguration != null ? batchingConfiguration.hashCode() : 0);
     return result;
   }
 }
