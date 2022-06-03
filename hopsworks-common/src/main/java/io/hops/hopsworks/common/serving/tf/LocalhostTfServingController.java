@@ -212,7 +212,7 @@ public class LocalhostTfServingController {
           .addCommand(String.valueOf(restPort))
           .addCommand(secretDir.toString())
           .addCommand(project.getName() + USER_NAME_DELIMITER + user.getUsername())
-          .addCommand(serving.isBatchingEnabled() ? "1" : "0")
+          .addCommand(serving.getBatchingConfiguration().isBatchingEnabled() ? "1" : "0")
           .addCommand(project.getName().toLowerCase())
           .addCommand(projectUtils.getFullDockerImageName(project, true))
           .setWaitTimeout(2L, TimeUnit.MINUTES)

@@ -175,7 +175,9 @@ describe "On #{ENV['OS']}" do
               modelServer: "PYTHON",
               servingTool: "DEFAULT",
               requestedInstances: 1,
-              batchingEnabled: true
+              batchingConfiguration: {
+                batchingEnabled: true
+              }
               }
           expect_status_details(400, error_code: 240025)
           expect_json(usrMsg: "Request batching is not supported in Python deployments")

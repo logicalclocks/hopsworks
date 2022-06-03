@@ -38,7 +38,9 @@ describe "On #{ENV['OS']}" do
             {name: "testModel",
              modelPath: "/Projects/#{@project[:projectname]}/Models/mnist",
              modelVersion: 1,
-             batchingEnabled: false,
+             batchingConfiguration: {
+               batchingEnabled: false
+             },
              modelServer: "TENSORFLOW_SERVING",
              servingTool: "DEFAULT",
              requestedInstances: 1
@@ -58,7 +60,9 @@ describe "On #{ENV['OS']}" do
       it "should fail to create a serving without a name" do
         put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
             {modelPath: "/Projects/#{@project[:projectname]}/Models/mnist",
-             batchingEnabled: false,
+             batchingConfiguration: {
+               batchingEnabled: false  
+             },
              modelVersion: 1,
              modelServer: "TENSORFLOW_SERVING",
              servingTool: "DEFAULT",
@@ -72,7 +76,9 @@ describe "On #{ENV['OS']}" do
             {name: "test Model1",
              modelPath: "/Projects/#{@project[:projectname]}/Models/mnist",
              modelVersion: 1,
-             batchingEnabled: false,
+             batchingConfiguration: {
+               batchingEnabled: false  
+             },
              kafkaTopicDTO: {
                  name: "CREATE",
                  numOfPartitions: 1,
@@ -91,7 +97,9 @@ describe "On #{ENV['OS']}" do
             {name: "testModelExistingName",
              modelPath: "/Projects/#{@project[:projectname]}/Models/mnist",
              modelVersion: 1,
-             batchingEnabled: false,
+             batchingConfiguration: {
+               batchingEnabled: false  
+             },
              kafkaTopicDTO: {
                  name: "CREATE",
                  numOfPartitions: 1,
@@ -108,7 +116,9 @@ describe "On #{ENV['OS']}" do
            {name: "testModelExistingName",
             modelPath: "/Projects/#{@project[:projectname]}/Models/mnist",
             modelVersion: 1,
-            batchingEnabled: false,
+            batchingConfiguration: {
+               batchingEnabled: false
+            },
             kafkaTopicDTO: {
                 name: "CREATE",
                 numOfPartitions: 1,
@@ -128,7 +138,9 @@ describe "On #{ENV['OS']}" do
       it "should fail to create a serving without a path" do
         put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
             {name: "testModel3",
-             batchingEnabled: false,
+             batchingConfiguration: {
+               batchingEnabled: false  
+             },
              modelVersion: 1,
              modelServer: "TENSORFLOW_SERVING",
              servingTool: "DEFAULT",
@@ -141,7 +153,9 @@ describe "On #{ENV['OS']}" do
         put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
             {name: "testModelNonExistingPath",
              modelPath: "/Projects/#{@project[:projectname]}/DOESNTEXISTS",
-             batchingEnabled: false,
+             batchingConfiguration: {
+               batchingEnabled: false  
+             },
              modelVersion: 1,
              modelServer: "TENSORFLOW_SERVING",
              servingTool: "DEFAULT",
@@ -155,7 +169,9 @@ describe "On #{ENV['OS']}" do
             {name: "testmodel28",
              modelPath: "/Projects/#{@project[:projectname]}/Models/mnist",
              modelVersion: 1,
-             batchingEnabled: false,
+             batchingConfiguration: {
+               batchingEnabled: false  
+             },
              modelServer: "TENSORFLOW_SERVING",
              servingTool: "DEFAULT",
              requestedInstances: 1
@@ -173,7 +189,9 @@ describe "On #{ENV['OS']}" do
         put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
             {name: "testModel4",
              modelPath: "/Projects/#{@project[:projectname]}/Models/mnist",
-             batchingEnabled: false,
+             batchingConfiguration: {
+               batchingEnabled: false  
+             },
              modelServer: "TENSORFLOW_SERVING",
              servingTool: "DEFAULT",
              requestedInstances: 1
@@ -186,7 +204,9 @@ describe "On #{ENV['OS']}" do
             {name: "testModelNoMV",
              modelPath: "/Projects/#{@project[:projectname]}/Models/mnist",
              modelVersion: 99,
-             batchingEnabled: false,
+             batchingConfiguration: {
+               batchingEnabled: false  
+             },
              modelServer: "TENSORFLOW_SERVING",
              servingTool: "DEFAULT",
              requestedInstances: 1
@@ -201,7 +221,9 @@ describe "On #{ENV['OS']}" do
             {name: "testmodel5",
              modelPath: "/Projects/#{@project[:projectname]}/Models/mnist",
              modelVersion: 1,
-             batchingEnabled: false,
+             batchingConfiguration: {
+               batchingEnabled: false  
+             },
              servingTool: "DEFAULT",
              requestedInstances: 1
             }
@@ -214,7 +236,9 @@ describe "On #{ENV['OS']}" do
             {name: "testmodel5",
              modelPath: "/Projects/#{@project[:projectname]}/Models/mnist",
              modelVersion: 1,
-             batchingEnabled: false,
+             batchingConfiguration: {
+               batchingEnabled: false  
+             },
              modelServer: "INVALID",
              servingTool: "DEFAULT",
              requestedInstances: 1
@@ -230,7 +254,9 @@ describe "On #{ENV['OS']}" do
             {name: "testmodel6",
              modelPath: "/Projects/#{@project[:projectname]}/Models/mnist",
              modelVersion: 1,
-             batchingEnabled: false,
+             batchingConfiguration: {
+               batchingEnabled: false  
+             },
              modelServer: "TENSORFLOW_SERVING",
              requestedInstances: 1
             }
@@ -244,7 +270,9 @@ describe "On #{ENV['OS']}" do
             {name: "testmodel6",
              modelPath: "/Projects/#{@project[:projectname]}/Models/mnist",
              modelVersion: 1,
-             batchingEnabled: false,
+             batchingConfiguration: {
+               batchingEnabled: false  
+             },
              modelServer: "TENSORFLOW_SERVING",
              servingTool: "INVALID",
              requestedInstances: 1
@@ -260,7 +288,9 @@ describe "On #{ENV['OS']}" do
             {name: "testModelBadKafka",
              modelPath: "/Projects/#{@project[:projectname]}/Models/mnist",
              modelVersion: 1,
-             batchingEnabled: false,
+             batchingConfiguration: {
+               batchingEnabled: false  
+             },
              kafkaTopicDTO: {
                  name: "CREATE",
                  numOfPartitions: -10,
@@ -280,7 +310,9 @@ describe "On #{ENV['OS']}" do
             {name: "testModelNoKafka",
              modelPath: "/Projects/#{@project[:projectname]}/Models/mnist",
              modelVersion: 1,
-             batchingEnabled: false,
+             batchingConfiguration: {
+               batchingEnabled: false  
+             },
              modelServer: "TENSORFLOW_SERVING",
              servingTool: "DEFAULT",
              requestedInstances: 1
@@ -297,7 +329,9 @@ describe "On #{ENV['OS']}" do
             {name: "testModelNewKafka",
              modelPath: "/Projects/#{@project[:projectname]}/Models/mnist",
              modelVersion: 1,
-             batchingEnabled: false,
+             batchingConfiguration: {
+               batchingEnabled: false  
+             },
              kafkaTopicDTO: {
                  name: "CREATE",
                  numOfPartitions: 1,
@@ -335,7 +369,9 @@ describe "On #{ENV['OS']}" do
             {name: "testModelExistingKafkaNoSchema",
              modelPath: "/Projects/#{@project[:projectname]}/Models/mnist",
              modelVersion: 1,
-             batchingEnabled: false,
+             batchingConfiguration: {
+               batchingEnabled: false  
+             },
              kafkaTopicDTO: {
                  name: topic_name
              },
@@ -353,7 +389,9 @@ describe "On #{ENV['OS']}" do
             {name: "testModelNonExistingKafka",
              modelPath: "/Projects/#{@project[:projectname]}/Models/mnist",
              modelVersion: 1,
-             batchingEnabled: false,
+             batchingConfiguration: {
+               batchingEnabled: false  
+             },
              kafkaTopicDTO: {
                  name: "NON-EXISTING"
              },
@@ -371,7 +409,9 @@ describe "On #{ENV['OS']}" do
         put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
             {name: "testmodelWithoutInferenceLogging",
              modelPath: "/Projects/#{@project[:projectname]}/Models/mnist",
-             batchingEnabled: false,
+             batchingConfiguration: {
+               batchingEnabled: false  
+             },
              kafkaTopicDTO: {
                  name: "CREATE"
              },
@@ -388,7 +428,9 @@ describe "On #{ENV['OS']}" do
         put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
             {name: "testmodelWithInferenceLoggingButNotTopic",
              modelPath: "/Projects/#{@project[:projectname]}/Models/mnist",
-             batchingEnabled: false,
+             batchingConfiguration: {
+               batchingEnabled: false  
+             },
              modelVersion: 1,
              modelServer: "TENSORFLOW_SERVING",
              servingTool: "DEFAULT",
@@ -403,7 +445,9 @@ describe "On #{ENV['OS']}" do
         put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
             {name: "testmodelInvalidInferenceLogging",
              modelPath: "/Projects/#{@project[:projectname]}/Models/mnist",
-             batchingEnabled: false,
+             batchingConfiguration: {
+               batchingEnabled: false  
+             },
              kafkaTopicDTO: {
               name: "CREATE"
              },
@@ -424,7 +468,9 @@ describe "On #{ENV['OS']}" do
               {name: "testmodel7",
                modelPath: "/Projects/#{@project[:projectname]}/Models/mnist",
                modelVersion: 1,
-               batchingEnabled: false,
+               batchingConfiguration: {
+               batchingEnabled: false  
+             },
                modelServer: "TENSORFLOW_SERVING",
                servingTool: "DEFAULT"
               }
@@ -443,7 +489,9 @@ describe "On #{ENV['OS']}" do
              modelPath: "/Projects/#{@project[:projectname]}/Models/mnist",
              modelVersion: 1,
              artifactVersion: 1,
-             batchingEnabled: false,
+             batchingConfiguration: {
+               batchingEnabled: false  
+             },
              kafkaTopicDTO: {
                  name: "NONE"
              },
@@ -464,7 +512,9 @@ describe "On #{ENV['OS']}" do
             {name: "testmodelzipped",
              modelPath: "/Projects/#{@project[:projectname]}/Models/mnist",
              modelVersion: 1,
-             batchingEnabled: false,
+             batchingConfiguration: {
+               batchingEnabled: false  
+             },
              modelServer: "TENSORFLOW_SERVING",
              servingTool: "DEFAULT",
              requestedInstances: 1
@@ -1039,7 +1089,9 @@ describe "On #{ENV['OS']}" do
             {name: "testModel1",
              modelPath: "/Projects/#{@project[:projectname]}/Models/mnist/",
              modelVersion: 1,
-             batchingEnabled: false,
+             batchingConfiguration: {
+               batchingEnabled: false  
+             },
              kafkaTopicDTO: {
                name: "CREATE",
                numOfPartitions: 1,
