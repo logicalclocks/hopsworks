@@ -91,7 +91,7 @@ public class RemoteUser implements Serializable {
   @JoinColumn(name = "uid",
       referencedColumnName = "uid")
   @OneToOne(optional = false,
-      cascade = CascadeType.PERSIST)
+      cascade = {CascadeType.PERSIST, CascadeType.MERGE})
   private Users uid;
   @Basic(optional = false)
   @NotNull
