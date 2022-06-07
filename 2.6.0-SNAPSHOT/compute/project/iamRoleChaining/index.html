@@ -12,14 +12,14 @@
         <meta name="author" content="Logical Clocks">
       
       
-        <link rel="canonical" href="https://docs.hopsworks.ai/hopsworks/latest/2.6.0-SNAPSHOT/compute/project/demoProject/">
+        <link rel="canonical" href="https://docs.hopsworks.ai/hopsworks/latest/2.6.0-SNAPSHOT/compute/project/iamRoleChaining/">
       
       <link rel="icon" href="../../../assets/images/favicon.ico">
       <meta name="generator" content="mkdocs-1.3.0, mkdocs-material-8.2.8">
     
     
       
-        <title>Start with a Demo Project - Hopsworks Documentation</title>
+        <title>Assuming IAM Roles - Hopsworks Documentation</title>
       
     
     
@@ -69,7 +69,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#start-with-a-demo-project" class="md-skip">
+        <a href="#assuming-aws-iam-roles" class="md-skip">
           Skip to content
         </a>
       
@@ -103,7 +103,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Start with a Demo Project
+              Assuming IAM Roles
             
           </span>
         </div>
@@ -558,21 +558,11 @@
               
   
   
-    
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" data-md-toggle="toc" type="checkbox" id="__toc">
-      
-      
-        
-      
-      
-      <a href="./" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="../demoProject/" class="md-nav__link">
         Start with a Demo Project
       </a>
-      
     </li>
   
 
@@ -638,11 +628,59 @@
               
   
   
+    
   
-    <li class="md-nav__item">
-      <a href="../iamRoleChaining/" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" data-md-toggle="toc" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          Assuming IAM Roles
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
         Assuming IAM Roles
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#python" class="md-nav__link">
+    python
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#scala" class="md-nav__link">
+    scala
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -1187,6 +1225,28 @@
     
   
   
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#python" class="md-nav__link">
+    python
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#scala" class="md-nav__link">
+    scala
+  </a>
+  
+</li>
+      
+    </ul>
+  
 </nav>
                   </div>
                 </div>
@@ -1199,70 +1259,41 @@
                 
 
 
-<h1 id="start-with-a-demo-project">Start with A Demo Project<a class="headerlink" href="#start-with-a-demo-project" title="Permanent link">#</a></h1>
-<p>When you log in to Hopsworks for the first time you will be presented with a landing page as shown in the figure below.
-From the landing page you can either create a new project or start with a demo project.
-The demo project is a good place to start if you are new to Hopsworks.
-<br />
+<h1 id="assuming-aws-iam-roles">Assuming AWS IAM Roles<a class="headerlink" href="#assuming-aws-iam-roles" title="Permanent link">#</a></h1>
+<p>When deploying Hopsworks on EC2 instances you might need to assume different roles to access resources on AWS. 
+These roles are configured in AWS and mapped to a project in Hopsworks, for a guide on how to configure this go to 
+<a href="../../../admin/iamRoleChaining/">AWS IAM Role Chaining</a>.</p>
+<p>After an administrator configured role mappings in Hopsworks you can see the roles you can assume in the Project 
+Settings IAM Role Chaining tab.</p>
 <figure>
-    <a  href="../../../assets/images/project/landing-page.png">
-      <img alt="landing page" src="../../../assets/images/project/landing-page.png">
-    </a>
-    <figcaption>Landing page</figcaption>
-  </figure>
-</p>
-<p>You can create a demo project by clicking on the <strong>Run a demo project</strong> button on the landing page or the create 
-project page.</p>
-<figure>
-    <a  href="../../../assets/images/project/demo-fs.png">
-      <img src="../../../assets/images/project/demo-fs.png" alt="Demo feature store">
-    </a>
-    <figcaption>Demo project</figcaption>
-  </figure>
+  <a href="../../../assets/images/iam-role/project-settings.png">
+    <img src="../../../assets/images/iam-role/project-settings.png" alt="Role Chaining"/>
+  </a>
+  <figcaption>Role Chaining</figcaption>
+</figure>
 
-<p>After creating a demo project you can go in to the project by clicking on <strong>Open project</strong>. The demo project will 
-create a job that in turn will create sample feature groups and training datasets.</p>
-<p>If you go to <strong>Jobs</strong> on the side menu you will find the job named <strong>featurestore_tour_job</strong> as shown in the figure 
-below.  </p>
-<figure>
-    <a  href="../../../assets/images/project/demo-job.png">
-      <img src="../../../assets/images/project/demo-job.png" alt="Demo job">
-    </a>
-    <figcaption>Demo job</figcaption>
-  </figure>
-
-<p>Wait until the job succeeds.</p>
-<figure>
-    <a  href="../../../assets/images/project/tour-success.png">
-      <img src="../../../assets/images/project/tour-success.png" alt="Demo job success">
-    </a>
-    <figcaption>Job succeeded</figcaption>
-  </figure>
-
-<p>Once the job has succeeded you can go to <strong>Feature Groups</strong> on the side menu to inspect the created feature groups. 
-The figure below shows some sample feature groups created by the demo job.
-<br />
-<figure>
-    <a  href="../../../assets/images/project/tour-fs.png">
-      <img src="../../../assets/images/project/tour-fs.png" alt="Demo project feature groups">
-    </a>
-    <figcaption>Created feature groups</figcaption>
-  </figure>
-</p>
-<p>Similarly, you can go to the <strong>Training dataset</strong> on the side menu to inspect the created training dataset.
-<br />
-<figure>
-    <a  href="../../../assets/images/project/tour-td.png">
-      <img src="../../../assets/images/project/tour-td.png" alt="Demo project training datasets">
-    </a>
-    <figcaption>Created training dataset</figcaption>
-  </figure>
-</p>
-<p>If you want to experiment with the feature groups and training datasets created in this demo, go to <strong>Jupyter</strong> tab 
-on the side menu. From the <a href="../../jupyter/"><em>Jupyter</em></a> page you can start <em>JupyterLab</em> and explore the available 
-notebooks. See <a href="https://examples.hopsworks.ai/">Feature Store Notebooks</a> for more examples on Feature Engineering, 
-Feature Ingestion, Feature Selection/Joining, Training Dataset Creating, Model Training, and Model Serving.</p>
-<p>To learn how to create your own project go to <a href="../createProject/">Create a New Project</a></p>
+<p>You can then use the <a href="https://hops-py.logicalclocks.com/">Hops python library</a> and 
+<a href="https://github.com/logicalclocks/hops-util">Hops java/scala library</a> to assume the roles listed in your project’s settings page.</p>
+<p>When calling <em>assume_role</em> you can pass the role ARN string or use the get role method that takes the role id 
+as an argument. If you assign a default role for your project you can call <em>assume_role</em> without arguments.</p>
+<p>You can assign (if you are a Data owner in that project) a default role to you project by clicking on the <em>default</em> 
+checkbox of the role you want to make default. You can set one default per project role. If a default is set for 
+a project role (Data scientist or Data owner) and all members (ALL) the default set for the project role will take 
+precedence over the default set for all members.</p>
+<h6 id="python">python<a class="headerlink" href="#python" title="Permanent link">#</a></h6>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">hops.credentials_provider</span> <span class="kn">import</span> <span class="n">get_role</span><span class="p">,</span> <span class="n">assume_role</span>
+<span class="n">credentials</span> <span class="o">=</span> <span class="n">assume_role</span><span class="p">(</span><span class="n">role_arn</span><span class="o">=</span><span class="n">get_role</span><span class="p">(</span><span class="mi">1</span><span class="p">))</span>
+<span class="n">spark</span><span class="o">.</span><span class="n">read</span><span class="o">.</span><span class="n">csv</span><span class="p">(</span><span class="s2">&quot;s3a://resource/test.csv&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</code></pre></div>
+<h6 id="scala">scala<a class="headerlink" href="#scala" title="Permanent link">#</a></h6>
+<div class="highlight"><pre><span></span><code><span class="k">import</span><span class="w"> </span><span class="nn">io</span><span class="p">.</span><span class="nn">hops</span><span class="p">.</span><span class="nn">util</span><span class="p">.</span><span class="nc">CredentialsProvider</span>
+<span class="kd">val</span><span class="w"> </span><span class="n">creds</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">CredentialsProvider</span><span class="p">.</span><span class="n">assumeRole</span><span class="p">(</span><span class="nc">CredentialsProvider</span><span class="p">.</span><span class="n">getRole</span><span class="p">(</span><span class="mi">1</span><span class="p">))</span><span class="w"></span>
+<span class="n">spark</span><span class="p">.</span><span class="n">read</span><span class="p">.</span><span class="n">csv</span><span class="p">(</span><span class="s">&quot;s3a://resource/test.csv&quot;</span><span class="p">).</span><span class="n">show</span><span class="p">()</span><span class="w"></span>
+</code></pre></div>
+<p>The <em>assume_role</em>  method sets spark hadoop configurations that will allow spark to read s3 buckets. The code examples 
+above show how to read s3 buckets using Python and Scala.</p>
+<p>The method also sets environment variables <strong>AWS_ACCESS_KEY_ID</strong>, <strong>AWS_SECRET_ACCESS_KEY</strong> and 
+<strong>AWS_SESSION_TOKEN</strong> so that programs running in the container can use the credentials for the newly assumed role.</p>
 
               
             </article>
@@ -1276,7 +1307,7 @@ Feature Ingestion, Feature Selection/Joining, Training Dataset Creating, Model T
     <nav class="md-footer__inner md-grid" aria-label="Footer">
       
         
-        <a href="../../auth/updateProfile/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Update Profile" rel="prev">
+        <a href="../reservedNames/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Project Name Reserved Words" rel="prev">
           <div class="md-footer__button md-icon">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"/></svg>
           </div>
@@ -1285,20 +1316,20 @@ Feature Ingestion, Feature Selection/Joining, Training Dataset Creating, Model T
               <span class="md-footer__direction">
                 Previous
               </span>
-              Update Profile
+              Project Name Reserved Words
             </div>
           </div>
         </a>
       
       
         
-        <a href="../createProject/" class="md-footer__link md-footer__link--next" aria-label="Next: Create a New Project" rel="next">
+        <a href="../../python/" class="md-footer__link md-footer__link--next" aria-label="Next: Python" rel="next">
           <div class="md-footer__title">
             <div class="md-ellipsis">
               <span class="md-footer__direction">
                 Next
               </span>
-              Create a New Project
+              Python
             </div>
           </div>
           <div class="md-footer__button md-icon">

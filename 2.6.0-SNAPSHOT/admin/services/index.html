@@ -620,6 +620,20 @@
 
             
           
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../compute/project/iamRoleChaining/" class="md-nav__link">
+        Assuming IAM Roles
+      </a>
+    </li>
+  
+
+            
+          
         </ul>
       </nav>
     </li>
@@ -1071,6 +1085,20 @@
 
             
           
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../iamRoleChaining/" class="md-nav__link">
+        IAM Role Chaining
+      </a>
+    </li>
+  
+
+            
+          
         </ul>
       </nav>
     </li>
@@ -1175,8 +1203,8 @@ This information is provided through the Services page.
 You can find the Services page by clicking on your name, in the top right corner of the navigation bar, and choosing 
 <em>Cluster Settings</em> from the dropdown menu and going to the <em>Services</em> tab.</p>
 <figure>
-  <a  href="../../assets/images/admin/services/full.png">
-    <img src="../../assets/images/admin/services/full.png" alt="services page" />
+  <a  href="../../assets/images/admin/services/services-page.png">
+    <img src="../../assets/images/admin/services/services-page.png" alt="services page" />
   </a>
   <figcaption>Services page</figcaption>
 </figure>
@@ -1185,7 +1213,8 @@ You can find the Services page by clicking on your name, in the top right corner
 It provides information about their status as reported by agents that monitor the status of the different 
 Systemd units.</p>
 <p>Columns in the services table represent machines in your cluster. Each service running on a machine will have a status
-<em>running</em> (green), <em>stopped</em> (gray), or <em>bad health</em> (red). 
+<em>running</em> (green) or <em>stopped</em> (red). If a service is not installed on a machine it will have a status <em>not installed</em> 
+(gray). 
 Services are divided into groups, and you can search for a service by its name or group. You can also search for
 machines by their host name.</p>
 <figure>
@@ -1197,8 +1226,8 @@ machines by their host name.</p>
 
 <p>After you find the correct service you will be able to <strong>start</strong>, <strong>stop</strong> or <strong>restart</strong> it, by clicking on its status.</p>
 <figure>
-  <a  href="../../assets/images/admin/services/start.png">
-    <img src="../../assets/images/admin/services/start.png" alt="start services" />
+  <a  href="../../assets/images/admin/services/services-start.png">
+    <img src="../../assets/images/admin/services/services-start.png" alt="start services" />
   </a>
   <figcaption>Start, Stop and Restart a service</figcaption>
 </figure>
@@ -1235,6 +1264,21 @@ access the machine running the service and start it with <code>systemctl start g
           </div>
         </a>
       
+      
+        
+        <a href="../iamRoleChaining/" class="md-footer__link md-footer__link--next" aria-label="Next: IAM Role Chaining" rel="next">
+          <div class="md-footer__title">
+            <div class="md-ellipsis">
+              <span class="md-footer__direction">
+                Next
+              </span>
+              IAM Role Chaining
+            </div>
+          </div>
+          <div class="md-footer__button md-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11H4z"/></svg>
+          </div>
+        </a>
       
     </nav>
   
