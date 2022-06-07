@@ -5,8 +5,8 @@ You can find the Services page by clicking on your name, in the top right corner
 _Cluster Settings_ from the dropdown menu and going to the _Services_ tab.
 
 <figure>
-  <a  href="../../assets/images/admin/services/full.png">
-    <img src="../../assets/images/admin/services/full.png" alt="services page" />
+  <a  href="../../assets/images/admin/services/services-page.png">
+    <img src="../../assets/images/admin/services/services-page.png" alt="services page" />
   </a>
   <figcaption>Services page</figcaption>
 </figure>
@@ -16,7 +16,8 @@ It provides information about their status as reported by agents that monitor th
 Systemd units.
 
 Columns in the services table represent machines in your cluster. Each service running on a machine will have a status
-_running_ (green), _stopped_ (gray), or _bad health_ (red). 
+_running_ (green) or _stopped_ (red). If a service is not installed on a machine it will have a status _not installed_ 
+(gray). 
 Services are divided into groups, and you can search for a service by its name or group. You can also search for
 machines by their host name.
 
@@ -29,8 +30,8 @@ machines by their host name.
 
 After you find the correct service you will be able to **start**, **stop** or **restart** it, by clicking on its status.
 <figure>
-  <a  href="../../assets/images/admin/services/start.png">
-    <img src="../../assets/images/admin/services/start.png" alt="start services" />
+  <a  href="../../assets/images/admin/services/services-start.png">
+    <img src="../../assets/images/admin/services/services-start.png" alt="start services" />
   </a>
   <figcaption>Start, Stop and Restart a service</figcaption>
 </figure>

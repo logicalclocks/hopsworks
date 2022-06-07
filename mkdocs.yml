@@ -27,6 +27,7 @@ nav:
         - Project-based Multi-tenancy: compute/project/multiTenancy.md
         - Delete a Project: compute/project/deleteProject.md
         - Project Name Reserved Words: compute/project/reservedNames.md
+        - Assuming IAM Roles: compute/project/iamRoleChaining.md
       - Python: compute/python.md
       - Jupyter: compute/jupyter.md
       - Jobs: compute/jobs.md
@@ -51,6 +52,7 @@ nav:
       - User Management: admin/user.md
       - Configure Alerts: admin/alert.md
       - Manage Services: admin/services.md
+      - IAM Role Chaining: admin/iamRoleChaining.md
   - Hopsworks.ai: https://docs.hopsworks.ai/hopsworks-cloud/latest/
   - Examples: https://examples.hopsworks.ai/
   - Community: https://community.hopsworks.ai/
