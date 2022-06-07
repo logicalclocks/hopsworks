@@ -5,7 +5,7 @@ that role. To allow for per project access policies you could have your users us
 their programs which is not recommended so you should instead use [Role chaining](https://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles_terms-and-concepts.html#iam-term-role-chaining).
 To use Role chaining, you need to first setup IAM roles in AWS:
 
- step 1. Create an instance profile role with policies that will allow it to assume all resource roles that we can 
+ **Step 1**. Create an instance profile role with policies that will allow it to assume all resource roles that we can 
  assume 
 from the Hopsworks cluster.
 
@@ -29,7 +29,7 @@ from the Hopsworks cluster.
 ```
 <figcaption>Example policy for assuming four roles.</figcaption>
 
- step 2. Create the resource roles and edit trust relationship and add policy document that will allow the instance 
+ **Step 2**. Create the resource roles and edit trust relationship and add policy document that will allow the instance 
  profile 
 to assume this role.
 
