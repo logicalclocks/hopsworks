@@ -1636,64 +1636,47 @@ describe "On #{ENV['OS']}" do
           expect_status_details(200)
         end
 
-        it "should be able to get a training dataset serving vector in correct order and remove feature group with only primary key and label for batch serving" do
+        it "should add primary keys to the prepared statement in batch mode" do
           # create first feature group
           featurestore_id = get_featurestore_id(@project.id)
           project_name = @project.projectname
           features = [
-              {type: "INT", name: "a_testfeature", primary: true},
-              {type: "INT", name: "a_testfeature1"},
+            {type: "INT", name: "a_testfeature", primary: true},
+            {type: "INT", name: "a_testfeature1"},
           ]
           json_result, fg_name = create_cached_featuregroup(@project.id, featurestore_id, features: features, featuregroup_name: "test_fg_a_#{short_random_id}", online:true)
           parsed_json = JSON.parse(json_result)
           fg_id = parsed_json["id"]
           # create second feature group
           features = [
-              {type: "INT", name: "a_testfeature", primary: true},
-              {type: "INT", name: "d_testfeature1", primary: true},
-              {type: "INT", name: "b_testfeature1"},
+            {type: "INT", name: "b_testfeature", primary: true},
+            {type: "INT", name: "b_testfeature1"},
           ]
           json_result_b, fg_name_b = create_cached_featuregroup(@project.id, featurestore_id, features: features, featuregroup_name: "test_fg_b_#{short_random_id}", online:true)
           parsed_json_b = JSON.parse(json_result_b)
           fg_id_b = parsed_json_b["id"]
 
-          # create third feature group
-          features = [
-              {type: "INT", name: "a_testfeature", primary: true},
-              {type: "INT", name: "c_testfeature1",label: true},
-          ]
-          json_result_c, fg_name_c = create_cached_featuregroup(@project.id, featurestore_id, features: features, featuregroup_name: "test_fg_c_#{short_random_id}", online:true)
-          parsed_json_c = JSON.parse(json_result_c)
-          fg_id_c = parsed_json_c["id"]
           # create queryDTO object
           query = {
-              leftFeatureGroup: {
-                  id: fg_id
-              },
-              leftFeatures: [{name: 'a_testfeature1'}],
-              joins: [{
-                          query: {
-                              leftFeatureGroup: {
-                                  id: fg_id_c
-                              },
-                              leftFeatures: [{name: 'c_testfeature1'}]
-                          },
+            leftFeatureGroup: {
+              id: fg_id
+            },
+            leftFeatures: [{name: 'a_testfeature1'}],
+            joins: [{
+                      query: {
+                        leftFeatureGroup: {
+                          id: fg_id_b
+                        },
+                        leftFeatures: [{name: 'b_testfeature1'}]
                       },
-                      {
-                          query: {
-                              leftFeatureGroup: {
-                                  id: fg_id_b
-                              },
-                              leftFeatures: [{name: 'b_testfeature1'}]
-                          },
-                      }
-              ]
+                      leftOn: [{name: 'a_testfeature'}],
+                      rightOn: [{name: 'b_testfeature'}]
+                    }]
           }
 
           td_schema = [
-              {type: "INT", name: "a_testfeature1", label: false},
-              {type: "INT", name: "b_testfeature1", label: false},
-              {type: "INT", name: "c_testfeature1", label: true}
+            {type: "INT", name: "a_testfeature1", label: false},
+            {type: "INT", name: "b_testfeature1", label: false},
           ]
 
           json_result, _ = create_hopsfs_training_dataset(@project.id, featurestore_id, nil, query: query, features: td_schema)
@@ -1706,10 +1689,10 @@ describe "On #{ENV['OS']}" do
           expect(parsed_json["items"].length).to eql(2)
           expect(parsed_json["items"].first["preparedStatementParameters"].first["index"]).to eql(1)
           expect(parsed_json["items"].first["preparedStatementParameters"].first["name"]).to eql("a_testfeature")
-          expect(parsed_json["items"].first["queryOnline"]).to eql("SELECT `fg0`.`a_testfeature1` AS `a_testfeature1`\nFROM `#{project_name.downcase}`.`#{fg_name}_1` AS `fg0`\nWHERE `fg0`.`a_testfeature` IN ?\nORDER BY `fg0`.`a_testfeature`")
+          expect(parsed_json["items"].first["queryOnline"]).to eql("SELECT `fg0`.`a_testfeature1` AS `a_testfeature1`, `fg0`.`a_testfeature` AS `a_testfeature`\nFROM `#{project_name.downcase}`.`#{fg_name}_1` AS `fg0`\nWHERE `fg0`.`a_testfeature` IN ?")
           expect(parsed_json["items"].second["preparedStatementParameters"].first["index"]).to eql(1)
-          expect(parsed_json["items"].second["preparedStatementParameters"].first["name"]).to eql("d_testfeature1")
-          expect(parsed_json["items"].second["queryOnline"]).to eql("SELECT `fg0`.`b_testfeature1` AS `b_testfeature1`\nFROM `#{project_name.downcase}`.`#{fg_name_b}_1` AS `fg0`\nWHERE (`fg0`.`d_testfeature1`, `fg0`.`a_testfeature`) IN ?\nORDER BY `fg0`.`d_testfeature1`, `fg0`.`a_testfeature`")
+          expect(parsed_json["items"].second["preparedStatementParameters"].first["name"]).to eql("b_testfeature")
+          expect(parsed_json["items"].second["queryOnline"]).to eql("SELECT `fg0`.`b_testfeature1` AS `b_testfeature1`, `fg0`.`b_testfeature` AS `b_testfeature`\nFROM `#{project_name.downcase}`.`#{fg_name_b}_1` AS `fg0`\nWHERE `fg0`.`b_testfeature` IN ?")
           expect_status_details(200)
         end
 
@@ -2019,83 +2002,6 @@ describe "On #{ENV['OS']}" do
           expect(parsed_json["items"].second["preparedStatementParameters"].first["index"]).to eql(1)
           expect(parsed_json["items"].second["preparedStatementParameters"].first["name"]).to eql("a_testfeature")
           expect(parsed_json["items"].second["queryOnline"]).to eql("SELECT `fg0`.`b_testfeature1` AS `b_testfeature1`\nFROM `#{project_name.downcase}`.`#{fg_name_b}_1` AS `fg0`\nWHERE `fg0`.`a_testfeature` = ?")
-          expect_status_details(200)
-        end
-
-        it "should be able to get a training dataset serving vector in correct order and remove stream feature group with only primary key and label for batch serving" do
-          # create first feature group
-          featurestore_id = get_featurestore_id(@project.id)
-          project_name = @project.projectname
-          features = [
-              {type: "INT", name: "a_testfeature", primary: true},
-              {type: "INT", name: "a_testfeature1"},
-          ]
-          json_result, fg_name = create_stream_featuregroup(@project.id, featurestore_id, features: features, featuregroup_name: "test_fg_a_#{short_random_id}", backfill_offline: true)
-          parsed_json = JSON.parse(json_result)
-          fg_id = parsed_json["id"]
-          # create second feature group
-          features = [
-              {type: "INT", name: "a_testfeature", primary: true},
-              {type: "INT", name: "d_testfeature1", primary: true},
-              {type: "INT", name: "b_testfeature1"},
-          ]
-          json_result_b, fg_name_b = create_stream_featuregroup(@project.id, featurestore_id, features: features, featuregroup_name: "test_fg_b_#{short_random_id}", backfill_offline: true)
-          parsed_json_b = JSON.parse(json_result_b)
-          fg_id_b = parsed_json_b["id"]
-
-          # create third feature group
-          features = [
-              {type: "INT", name: "a_testfeature", primary: true},
-              {type: "INT", name: "c_testfeature1",label: true},
-          ]
-          json_result_c, fg_name_c = create_stream_featuregroup(@project.id, featurestore_id, features: features, featuregroup_name: "test_fg_c_#{short_random_id}", backfill_offline: true)
-          parsed_json_c = JSON.parse(json_result_c)
-          fg_id_c = parsed_json_c["id"]
-          # create queryDTO object
-          query = {
-              leftFeatureGroup: {
-                  id: fg_id
-              },
-              leftFeatures: [{name: 'a_testfeature1'}],
-              joins: [{
-                          query: {
-                              leftFeatureGroup: {
-                                  id: fg_id_c
-                              },
-                              leftFeatures: [{name: 'c_testfeature1'}]
-                          },
-                      },
-                      {
-                          query: {
-                              leftFeatureGroup: {
-                                  id: fg_id_b
-                              },
-                              leftFeatures: [{name: 'b_testfeature1'}]
-                          },
-                      }
-              ]
-          }
-
-          td_schema = [
-              {type: "INT", name: "a_testfeature1", label: false},
-              {type: "INT", name: "b_testfeature1", label: false},
-              {type: "INT", name: "c_testfeature1", label: true}
-          ]
-
-          json_result, _ = create_hopsfs_training_dataset(@project.id, featurestore_id, nil, query: query, features: td_schema)
-          parsed_json = JSON.parse(json_result)
-          expect_status_details(201)
-          training_dataset_id = parsed_json["id"]
-          get_prep_statement_endpoint = "#{ENV['HOPSWORKS_API']}/project/#{@project.id}/featurestores/#{featurestore_id}/trainingdatasets/#{training_dataset_id}/preparedstatements?batch=true"
-          json_result = get get_prep_statement_endpoint
-          parsed_json = JSON.parse(json_result)
-          expect(parsed_json["items"].length).to eql(2)
-          expect(parsed_json["items"].first["preparedStatementParameters"].first["index"]).to eql(1)
-          expect(parsed_json["items"].first["preparedStatementParameters"].first["name"]).to eql("a_testfeature")
-          expect(parsed_json["items"].first["queryOnline"]).to eql("SELECT `fg0`.`a_testfeature1` AS `a_testfeature1`\nFROM `#{project_name.downcase}`.`#{fg_name}_1` AS `fg0`\nWHERE `fg0`.`a_testfeature` IN ?\nORDER BY `fg0`.`a_testfeature`")
-          expect(parsed_json["items"].second["preparedStatementParameters"].first["index"]).to eql(1)
-          expect(parsed_json["items"].second["preparedStatementParameters"].first["name"]).to eql("d_testfeature1")
-          expect(parsed_json["items"].second["queryOnline"]).to eql("SELECT `fg0`.`b_testfeature1` AS `b_testfeature1`\nFROM `#{project_name.downcase}`.`#{fg_name_b}_1` AS `fg0`\nWHERE (`fg0`.`d_testfeature1`, `fg0`.`a_testfeature`) IN ?\nORDER BY `fg0`.`d_testfeature1`, `fg0`.`a_testfeature`")
           expect_status_details(200)
         end
 

@@ -219,6 +219,15 @@ public class PreparedStatementBuilder {
           .map(tdf -> featureGroupFeatures.get(tdf.getName()))
           .collect(Collectors.toList());
 
+      if (batch) {
+        // to be able to sort the batch correctly and align feature vectors from different feature groups
+        // the hsfs library needs to know which row refers to which entity. We do that by adding the
+        // primary keys in the select statement
+        selectFeatures.addAll(primaryKeys.stream()
+            .filter(primaryKey -> !selectFeatures.contains(primaryKey))
+            .collect(Collectors.toList()));
+      }
+
       // In some cases only label(s) are used from a feature group. In this case they will not be
       // part of the prepared statement thus don't add to this query.
       if (selectFeatures.size() > 0){
@@ -231,7 +240,8 @@ public class PreparedStatementBuilder {
             selectFeatures
         );
         // construct ServingPreparedStatementDTO and add to the list
-        servingPreparedStatementDTOS.add(buildDTO(query, primaryKeys, featuregroup.getId(), join.getIndex(), batch));
+        servingPreparedStatementDTOS.add(
+            buildDTO(query, primaryKeys, featuregroup.getId(), join.getIndex(), batch, join.getPrefix()));
       }
     }
 
@@ -239,7 +249,7 @@ public class PreparedStatementBuilder {
   }
 
   private ServingPreparedStatementDTO buildDTO(Query query, List<Feature> primaryKeys, Integer featureGroupId,
-                                               Integer statementIndex, boolean batch)
+                                               Integer statementIndex, boolean batch, String prefix)
       throws FeaturestoreException {
     // create primary key prepared statement filters for the query
     List<PreparedStatementParameterDTO> stmtParameters = new ArrayList<>();
@@ -261,7 +271,6 @@ public class PreparedStatementBuilder {
     FilterLogic filterLogic;
     if (batch){
       filterLogic = new FilterLogic(new Filter(primaryKeys, SqlCondition.IN, "?"));
-      query.setOrderByFeatures(primaryKeys);
     } else {
       filterLogic = new FilterLogic(new Filter(Arrays.asList(pkFeature), SqlCondition.EQUALS, "?"));
     }
@@ -281,6 +290,6 @@ public class PreparedStatementBuilder {
     // set prepared statement parameters
     return new ServingPreparedStatementDTO(featureGroupId, statementIndex, stmtParameters,
         constructorController.generateSQL(query, true)
-            .toSqlString(new MysqlSqlDialect(SqlDialect.EMPTY_CONTEXT)).getSql());
+            .toSqlString(new MysqlSqlDialect(SqlDialect.EMPTY_CONTEXT)).getSql(), prefix);
   }
 }
