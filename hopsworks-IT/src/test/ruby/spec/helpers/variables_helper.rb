@@ -92,4 +92,7 @@ module VariablesHelper
     getVar("kube_kserve_installed").value.eql? "true"
   end
 
+  def docker_cgroup_enabled
+    getVar("docker_cgroup_enabled").value.eql? "true"
+  end
 end

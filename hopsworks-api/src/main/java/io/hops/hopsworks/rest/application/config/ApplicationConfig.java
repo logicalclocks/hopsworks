@@ -42,6 +42,7 @@ package io.hops.hopsworks.rest.application.config;
 import io.hops.hopsworks.api.admin.UsersAdminResource;
 import io.hops.hopsworks.api.admin.alert.AdminAlertResource;
 import io.hops.hopsworks.api.admin.alert.silence.AdminSilenceResource;
+import io.hops.hopsworks.api.util.PrometheusQueryResource;
 import io.swagger.annotations.Api;
 import org.glassfish.jersey.server.ResourceConfig;
 
@@ -146,5 +147,8 @@ public class ApplicationConfig extends ResourceConfig {
     //git
     register(io.hops.hopsworks.api.git.execution.GitExecutionResource.class);
     register(io.hops.hopsworks.api.git.GitResource.class);
+
+    //prometheus
+    register(PrometheusQueryResource.class);
   }
 }
