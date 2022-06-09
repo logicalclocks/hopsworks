@@ -15,6 +15,7 @@ import io.fabric8.kubernetes.api.model.apps.Deployment;
 import io.fabric8.kubernetes.api.model.apps.DeploymentStatus;
 import io.fabric8.kubernetes.client.KubernetesClientException;
 import io.hops.hopsworks.common.serving.ServingStatusEnum;
+import io.hops.hopsworks.exceptions.ApiKeyException;
 import io.hops.hopsworks.exceptions.ServingException;
 import io.hops.hopsworks.kube.common.KubeClientService;
 import io.hops.hopsworks.kube.serving.utils.KubePredictorServerUtils;
@@ -54,7 +55,7 @@ public class KubeDeploymentServingController extends KubeToolServingController {
       kubeClientService.createOrReplaceDeployment(project, buildDeployment(project, user, serving,
         kubePredictorServerUtils));
       kubeClientService.createOrReplaceService(project, buildService(project, serving, kubePredictorServerUtils));
-    } catch (ServiceDiscoveryException e) {
+    } catch (ServiceDiscoveryException | ApiKeyException e) {
       throw new ServingException(RESTCodes.ServingErrorCode.LIFECYCLEERRORINT, Level.SEVERE, null, e.getMessage(), e);
     }
   }
@@ -70,7 +71,7 @@ public class KubeDeploymentServingController extends KubeToolServingController {
         kubeClientService.createOrReplaceDeployment(project, buildDeployment(project, user, serving,
           kubePredictorServerUtils));
       }
-    } catch (KubernetesClientException | ServiceDiscoveryException e) {
+    } catch (KubernetesClientException | ServiceDiscoveryException | ApiKeyException e) {
       throw new ServingException(RESTCodes.ServingErrorCode.UPDATEERROR, Level.SEVERE, null, e.getMessage(), e);
     }
   }
@@ -177,7 +178,7 @@ public class KubeDeploymentServingController extends KubeToolServingController {
   
   private Deployment buildDeployment(Project project, Users user, Serving serving,
     KubePredictorServerUtils kubePredictorServerUtils)
-    throws ServiceDiscoveryException {
+    throws ServiceDiscoveryException, ApiKeyException {
     Deployment deployment = kubePredictorServerUtils.buildServingDeployment(project, user, serving);
     
     // Add service.hops.works labels

@@ -19,7 +19,6 @@ package io.hops.hopsworks.common.serving;
 import io.hops.hopsworks.exceptions.ApiKeyException;
 import io.hops.hopsworks.persistence.entity.user.Users;
 
-import java.io.UnsupportedEncodingException;
 import java.util.Map;
 
 /**
@@ -28,8 +27,7 @@ import java.util.Map;
  */
 public interface ServingConfig {
  
-  default Map<String, String> getEnvVars(Users user, boolean includeSecrets) throws ApiKeyException,
-    UnsupportedEncodingException {
+  default Map<String, String> getEnvVars(Users user, boolean includeSecrets) throws ApiKeyException {
     return null;
   }
   

@@ -8,6 +8,7 @@ import com.logicalclocks.servicediscoverclient.exceptions.ServiceDiscoveryExcept
 import io.fabric8.kubernetes.api.model.Service;
 import io.fabric8.kubernetes.api.model.apps.Deployment;
 import io.hops.hopsworks.common.serving.inference.InferenceVerb;
+import io.hops.hopsworks.exceptions.ApiKeyException;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.serving.InferenceLogging;
 import io.hops.hopsworks.persistence.entity.serving.Serving;
@@ -48,7 +49,7 @@ public class KubePredictorPythonSklearnUtils extends KubePredictorServerUtils {
   
   @Override
   public Deployment buildServingDeployment(Project project, Users user, Serving serving)
-    throws ServiceDiscoveryException {
+    throws ServiceDiscoveryException, ApiKeyException {
     return kubePredictorPythonUtils.buildDeployment(project, user, serving);
   }
   

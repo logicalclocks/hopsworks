@@ -26,8 +26,10 @@ import io.hops.hopsworks.common.hdfs.Utils;
 import io.hops.hopsworks.common.hdfs.inode.InodeController;
 import io.hops.hopsworks.common.hosts.ServiceDiscoveryController;
 import io.hops.hopsworks.common.jupyter.JupyterController;
+import io.hops.hopsworks.common.serving.ServingConfig;
 import io.hops.hopsworks.common.util.ProjectUtils;
 import io.hops.hopsworks.common.util.Settings;
+import io.hops.hopsworks.exceptions.ApiKeyException;
 import io.hops.hopsworks.exceptions.DatasetException;
 import io.hops.hopsworks.exceptions.ServiceException;
 import io.hops.hopsworks.kube.common.KubeClientService;
@@ -44,9 +46,11 @@ import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
+import javax.inject.Inject;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 @Stateless
 @TransactionAttribute(TransactionAttributeType.NEVER)
@@ -82,6 +86,8 @@ public class KubeTransformerUtils {
   private KubeApiKeyUtils kubeApiKeyUtils;
   @EJB
   private KubeJsonUtils kubeJsonUtils;
+  @Inject
+  private ServingConfig servingConfig;
   
   public void copyTransformerToArtifactDir(Project project, Users user, Serving serving)
     throws DatasetException, ServiceException {
@@ -125,7 +131,7 @@ public class KubeTransformerUtils {
   }
   
   public JSONObject buildInferenceServiceTransformer(Project project, Users user, Serving serving)
-    throws ServiceDiscoveryException {
+    throws ServiceDiscoveryException, ApiKeyException {
 
     List<Container> containers = new ArrayList<>();
     containers.add(buildTransformerContainer(project, user, serving));
@@ -143,7 +149,7 @@ public class KubeTransformerUtils {
   }
   
   private Container buildTransformerContainer(Project project, Users user, Serving serving)
-    throws ServiceDiscoveryException {
+    throws ServiceDiscoveryException, ApiKeyException {
     
     List<EnvVar> envVars = buildEnvironmentVariables(project, user, serving);
     List<VolumeMount> volumeMounts = buildVolumeMounts();
@@ -164,7 +170,7 @@ public class KubeTransformerUtils {
   }
   
   private List<EnvVar> buildEnvironmentVariables(Project project, Users user, Serving serving)
-    throws ServiceDiscoveryException {
+    throws ServiceDiscoveryException, ApiKeyException {
     List<EnvVar> envVars = new ArrayList<>();
     
     // Transformer launcher
@@ -202,6 +208,14 @@ public class KubeTransformerUtils {
         false)
         .build())
       .build());
+    
+    // HSML Serving
+    envVars.add(new EnvVarBuilder().withName("SERVING_API_KEY").withValueFrom(
+      new EnvVarSourceBuilder().withNewSecretKeyRef(KubeApiKeyUtils.SERVING_API_KEY_SECRET_KEY,
+        kubeApiKeyUtils.getProjectServingApiKeySecretName(user), false).build()).build());
+    Map<String, String> servingEnvVars = servingConfig.getEnvVars(user, false);
+    servingEnvVars.forEach((key, value) -> envVars.add(
+      new EnvVarBuilder().withName(key).withValue(value).build()));
     
     // HOPSWORKS PYTHON API
     envVars.add(new EnvVarBuilder().withName("ELASTIC_ENDPOINT").withValue(settings.getOpenSearchRESTEndpoint())

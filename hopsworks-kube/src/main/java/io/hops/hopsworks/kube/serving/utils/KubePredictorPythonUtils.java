@@ -40,9 +40,11 @@ import io.fabric8.kubernetes.api.model.apps.DeploymentSpec;
 import io.fabric8.kubernetes.api.model.apps.DeploymentSpecBuilder;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
 import io.hops.hopsworks.common.hosts.ServiceDiscoveryController;
+import io.hops.hopsworks.common.serving.ServingConfig;
 import io.hops.hopsworks.common.serving.inference.InferenceVerb;
 import io.hops.hopsworks.common.util.ProjectUtils;
 import io.hops.hopsworks.common.util.Settings;
+import io.hops.hopsworks.exceptions.ApiKeyException;
 import io.hops.hopsworks.kube.common.KubeClientService;
 import io.hops.hopsworks.kube.project.KubeProjectConfigMaps;
 import io.hops.hopsworks.kube.security.KubeApiKeyUtils;
@@ -55,6 +57,7 @@ import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
+import javax.inject.Inject;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -93,7 +96,9 @@ public class KubePredictorPythonUtils {
   private KubeArtifactUtils kubeArtifactUtils;
   @EJB
   private KubePredictorUtils kubePredictorUtils;
-
+  @Inject
+  private ServingConfig servingConfig;
+  
   // Default
   
   public String getDeploymentName(String servingId) { return "python-server-" + servingId; }
@@ -111,7 +116,7 @@ public class KubePredictorPythonUtils {
   }
   
   public Deployment buildDeployment(Project project, Users user,
-    Serving serving) throws ServiceDiscoveryException {
+    Serving serving) throws ServiceDiscoveryException, ApiKeyException {
     
     String servingIdStr = String.valueOf(serving.getId());
     String hadoopHome = settings.getHadoopSymbolicLinkDir();
@@ -235,7 +240,7 @@ public class KubePredictorPythonUtils {
   }
   
   private List<EnvVar> buildEnvironmentVariables(Project project, Users user, Serving serving)
-      throws ServiceDiscoveryException {
+    throws ServiceDiscoveryException, ApiKeyException {
     String projectUser = project.getName() + HOPS_USERNAME_SEPARATOR + user.getUsername();
     String servingIdStr = String.valueOf(serving.getId());
     
@@ -292,6 +297,14 @@ public class KubePredictorPythonUtils {
         false)
         .build())
       .build());
+  
+    // HSML Serving
+    envVars.add(new EnvVarBuilder().withName("SERVING_API_KEY").withValueFrom(
+      new EnvVarSourceBuilder().withNewSecretKeyRef(KubeApiKeyUtils.SERVING_API_KEY_SECRET_KEY,
+        kubeApiKeyUtils.getProjectServingApiKeySecretName(user), false).build()).build());
+    Map<String, String> servingEnvVars = servingConfig.getEnvVars(user, false);
+    servingEnvVars.forEach((key, value) -> envVars.add(
+      new EnvVarBuilder().withName(key).withValue(value).build()));
     
     // HOPSWORKS PYTHON API
     envVars.add(new EnvVarBuilder().withName("ELASTIC_ENDPOINT").withValue(settings.getOpenSearchRESTEndpoint())

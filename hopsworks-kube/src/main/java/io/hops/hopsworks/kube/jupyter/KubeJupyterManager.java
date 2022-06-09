@@ -268,7 +268,7 @@ public class KubeJupyterManager extends JupyterManagerImpl implements JupyterMan
                                          ResourceRequirements resourceRequirements, Integer nodePort,
                                          String jupyterMode, Project project, Users user,
                                          Map<String, String> filebeatEnv)
-      throws ServiceDiscoveryException, UnsupportedEncodingException, ApiKeyException {
+      throws ServiceDiscoveryException, ApiKeyException {
 
     String jupyterHome = jupyterPaths.getNotebookPath();
     String hadoopHome = settings.getHadoopSymbolicLinkDir();

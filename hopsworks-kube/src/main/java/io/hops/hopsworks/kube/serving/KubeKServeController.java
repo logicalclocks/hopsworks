@@ -12,6 +12,7 @@ import io.fabric8.kubernetes.api.model.apps.DeploymentStatus;
 import io.fabric8.kubernetes.client.KubernetesClientException;
 import io.hops.common.Pair;
 import io.hops.hopsworks.common.serving.ServingStatusEnum;
+import io.hops.hopsworks.exceptions.ApiKeyException;
 import io.hops.hopsworks.exceptions.ServingException;
 import io.hops.hopsworks.kube.common.KubeClientService;
 import io.hops.hopsworks.kube.common.KubeIstioClientService;
@@ -233,7 +234,7 @@ public class KubeKServeController extends KubeToolServingController {
     try {
       String artifactPath = kubeArtifactUtils.getArtifactFilePath(serving);
       predictor = predictorServerUtils.buildInferenceServicePredictor(project, user, serving, artifactPath);
-    } catch (ServiceDiscoveryException e) {
+    } catch (ServiceDiscoveryException | ApiKeyException e) {
       throw new ServingException(RESTCodes.ServingErrorCode.LIFECYCLEERRORINT, Level.INFO, null, e.getMessage(), e);
     }
   
@@ -242,7 +243,7 @@ public class KubeKServeController extends KubeToolServingController {
     if (serving.getTransformer() != null) {
       try {
         transformer = kubeTransformerUtils.buildInferenceServiceTransformer(project, user, serving);
-      } catch (ServiceDiscoveryException e) {
+      } catch (ServiceDiscoveryException | ApiKeyException e) {
         throw new ServingException(RESTCodes.ServingErrorCode.LIFECYCLEERRORINT, Level.INFO, null, e.getMessage(), e);
       }
     }

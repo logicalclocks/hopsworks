@@ -22,9 +22,11 @@ import io.fabric8.kubernetes.api.model.VolumeMountBuilder;
 import io.fabric8.kubernetes.api.model.apps.Deployment;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
 import io.hops.hopsworks.common.hosts.ServiceDiscoveryController;
+import io.hops.hopsworks.common.serving.ServingConfig;
 import io.hops.hopsworks.common.serving.inference.InferenceVerb;
 import io.hops.hopsworks.common.util.ProjectUtils;
 import io.hops.hopsworks.common.util.Settings;
+import io.hops.hopsworks.exceptions.ApiKeyException;
 import io.hops.hopsworks.kube.common.KubeClientService;
 import io.hops.hopsworks.kube.project.KubeProjectConfigMaps;
 import io.hops.hopsworks.kube.security.KubeApiKeyUtils;
@@ -38,8 +40,10 @@ import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
+import javax.inject.Inject;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Utils for creating deployments for custom Python models on Kubernetes.
@@ -72,6 +76,8 @@ public class KubePredictorPythonCustomUtils extends KubePredictorServerUtils {
   private KubePredictorPythonUtils kubePredictorPythonUtils;
   @EJB
   private KubeJsonUtils kubeJsonUtils;
+  @Inject
+  private ServingConfig servingConfig;
   
   // Default
   
@@ -88,7 +94,7 @@ public class KubePredictorPythonCustomUtils extends KubePredictorServerUtils {
   
   @Override
   public Deployment buildServingDeployment(Project project, Users user, Serving serving)
-      throws ServiceDiscoveryException {
+    throws ServiceDiscoveryException, ApiKeyException {
     return kubePredictorPythonUtils.buildDeployment(project, user, serving);
   }
   
@@ -99,7 +105,7 @@ public class KubePredictorPythonCustomUtils extends KubePredictorServerUtils {
   
   @Override
   public JSONObject buildInferenceServicePredictor(Project project, Users user, Serving serving, String artifactPath)
-    throws ServiceDiscoveryException {
+    throws ServiceDiscoveryException, ApiKeyException {
     
     // Containers
     List<Container> containers = new ArrayList<>();
@@ -129,7 +135,7 @@ public class KubePredictorPythonCustomUtils extends KubePredictorServerUtils {
   }
   
   private Container buildPredictorContainer(Project project, Users user, Serving serving)
-    throws ServiceDiscoveryException {
+    throws ServiceDiscoveryException, ApiKeyException {
     
     List<EnvVar> envVars = buildEnvironmentVariables(project, user, serving);
     List<VolumeMount> volumeMounts = buildVolumeMounts();
@@ -179,7 +185,7 @@ public class KubePredictorPythonCustomUtils extends KubePredictorServerUtils {
   }
   
   private List<EnvVar> buildEnvironmentVariables(Project project, Users user, Serving serving)
-    throws ServiceDiscoveryException {
+    throws ServiceDiscoveryException, ApiKeyException {
     List<EnvVar> envVars = new ArrayList<>();
     
     // Predictor launcher
@@ -217,6 +223,14 @@ public class KubePredictorPythonCustomUtils extends KubePredictorServerUtils {
         false)
         .build())
       .build());
+  
+    // HSML Serving
+    envVars.add(new EnvVarBuilder().withName("SERVING_API_KEY").withValueFrom(
+      new EnvVarSourceBuilder().withNewSecretKeyRef(KubeApiKeyUtils.SERVING_API_KEY_SECRET_KEY,
+        kubeApiKeyUtils.getProjectServingApiKeySecretName(user), false).build()).build());
+    Map<String, String> servingEnvVars = servingConfig.getEnvVars(user, false);
+    servingEnvVars.forEach((key, value) -> envVars.add(
+      new EnvVarBuilder().withName(key).withValue(value).build()));
     
     // HOPSWORKS PYTHON API
     envVars.add(new EnvVarBuilder().withName("ELASTIC_ENDPOINT").withValue(settings.getOpenSearchRESTEndpoint())

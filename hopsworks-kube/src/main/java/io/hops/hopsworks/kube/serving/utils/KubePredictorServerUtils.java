@@ -8,6 +8,7 @@ import com.logicalclocks.servicediscoverclient.exceptions.ServiceDiscoveryExcept
 import io.fabric8.kubernetes.api.model.Service;
 import io.fabric8.kubernetes.api.model.apps.Deployment;
 import io.hops.hopsworks.common.serving.inference.InferenceVerb;
+import io.hops.hopsworks.exceptions.ApiKeyException;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.serving.Serving;
 import io.hops.hopsworks.persistence.entity.user.Users;
@@ -29,7 +30,7 @@ public abstract class KubePredictorServerUtils {
   public abstract String getDeploymentName(String servingId);
   public abstract String getDeploymentPath(String servingName, Integer modelVersion, InferenceVerb verb);
   public abstract Deployment buildServingDeployment(Project project, Users user, Serving serving) throws
-    ServiceDiscoveryException;
+    ServiceDiscoveryException, ApiKeyException;
   
   public abstract String getServiceName(String servingId);
   public abstract Service buildServingService(Serving serving);
@@ -37,5 +38,5 @@ public abstract class KubePredictorServerUtils {
   // KServe
   
   public abstract JSONObject buildInferenceServicePredictor(Project project, Users user, Serving serving,
-    String artifactPath) throws ServiceDiscoveryException;
+    String artifactPath) throws ServiceDiscoveryException, ApiKeyException;
 }
