@@ -28,17 +28,19 @@ public class ServingPreparedStatementDTO  extends RestDTO<ServingPreparedStateme
   private Integer preparedStatementIndex;
   private List<PreparedStatementParameterDTO> preparedStatementParameters;
   private String queryOnline;
+  private String prefix; // the prefix used for feature names in this statement
 
   public ServingPreparedStatementDTO() {
   }
 
   public ServingPreparedStatementDTO(Integer featureGroupId, Integer preparedStatementIndex,
                                      List<PreparedStatementParameterDTO> preparedStatementParameters,
-                                     String queryOnline) {
+                                     String queryOnline, String prefix) {
     this.featureGroupId = featureGroupId;
     this.preparedStatementIndex = preparedStatementIndex;
     this.queryOnline = queryOnline;
     this.preparedStatementParameters = preparedStatementParameters;
+    this.prefix = prefix;
   }
 
   public Integer getFeatureGroupId() {
@@ -71,5 +73,13 @@ public class ServingPreparedStatementDTO  extends RestDTO<ServingPreparedStateme
 
   public void setQueryOnline(String queryOnline) {
     this.queryOnline = queryOnline;
+  }
+
+  public String getPrefix() {
+    return prefix;
+  }
+
+  public void setPrefix(String prefix) {
+    this.prefix = prefix;
   }
 }
