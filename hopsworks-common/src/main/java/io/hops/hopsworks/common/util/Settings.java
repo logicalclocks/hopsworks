@@ -273,7 +273,9 @@ public class Settings implements Serializable {
   private static final String VARIABLE_KUBE_SERVING_NODE_LABELS = "kube_serving_node_labels";
   private static final String VARIABLE_KUBE_SERVING_NODE_TOLERATIONS = "kube_serving_node_tolerations";
   private static final String VARIABLE_KUBE_KNATIVE_DOMAIN_NAME = "kube_knative_domain_name";
-  
+  private static final String VARIABLE_KUBE_TAINTED_NODES = "kube_tainted_nodes";
+  private static final String VARIABLE_KUBE_TAINTED_NODES_MONITOR_INTERVAL =
+      "kube_node_taints_monitor_interval";
 
   /*
    * -------------------- Jupyter ---------------
@@ -370,6 +372,16 @@ public class Settings implements Serializable {
           QUOTAS_MODEL_DEPLOYMENTS_PREFIX);
   private static final String VARIABLE_QUOTAS_MAX_PARALLEL_EXECUTIONS = String.format("%s_max_parallel_executions",
           QUOTAS_PREFIX);
+
+  //Docker cgroups
+  private static final String VARIABLE_DOCKER_CGROUP_ENABLED = "docker_cgroup_enabled";
+  private static final String VARIABLE_DOCKER_CGROUP_HARD_LIMIT_MEMORY = "docker_cgroup_memory_limit_gb";
+  private static final String VARIABLE_DOCKER_CGROUP_SOFT_LIMIT_MEMORY = "docker_cgroup_soft_limit_memory_gb";
+  private static final String VARIABLE_DOCKER_CGROUP_CPU_QUOTA = "docker_cgroup_cpu_quota_percentage";
+  private static final String VARIABLE_DOCKER_CGROUP_CPU_PERIOD = "docker_cgroup_cpu_period";
+  private static final String VARIABLE_DOCKER_CGROUP_MONITOR_INTERVAL = "docker_cgroup_monitor_interval";
+
+  private static final String VARIABLE_PROMETHEUS_PORT = "prometheus_port";
 
   private static final String VARIABLE_SKIP_NAMESPACE_CREATION =
       "kube_skip_namespace_creation";
@@ -724,6 +736,9 @@ public class Settings implements Serializable {
       KUBE_SERVING_NODE_LABELS = setStrVar(VARIABLE_KUBE_SERVING_NODE_LABELS, KUBE_SERVING_NODE_LABELS);
       KUBE_SERVING_NODE_TOLERATIONS = setStrVar(VARIABLE_KUBE_SERVING_NODE_TOLERATIONS, KUBE_SERVING_NODE_TOLERATIONS);
       KUBE_KNATIVE_DOMAIN_NAME = setStrVar(VARIABLE_KUBE_KNATIVE_DOMAIN_NAME, KUBE_KNATIVE_DOMAIN_NAME);
+      KUBE_TAINTED_NODES = setStrVar(VARIABLE_KUBE_TAINTED_NODES, KUBE_TAINTED_NODES);
+      KUBE_TAINTED_NODES_MONITOR_INTERVAL = setStrVar(VARIABLE_KUBE_TAINTED_NODES_MONITOR_INTERVAL,
+          KUBE_TAINTED_NODES_MONITOR_INTERVAL);
   
       HOPSWORKS_ENTERPRISE = setBoolVar(VARIABLE_HOPSWORKS_ENTERPRISE, HOPSWORKS_ENTERPRISE);
 
@@ -806,6 +821,18 @@ public class Settings implements Serializable {
       //Git
       GIT_MAX_COMMAND_TIMEOUT_MINUTES = setIntVar(VARIABLE_GIT_COMMAND_TIMEOUT_MINUTES_DEFAULT,
           GIT_MAX_COMMAND_TIMEOUT_MINUTES);
+
+      DOCKER_CGROUP_ENABLED = setBoolVar(VARIABLE_DOCKER_CGROUP_ENABLED, DOCKER_CGROUP_ENABLED);
+      DOCKER_CGROUP_MEMORY_LIMIT = setStrVar(VARIABLE_DOCKER_CGROUP_HARD_LIMIT_MEMORY,
+          DOCKER_CGROUP_MEMORY_LIMIT);
+      DOCKER_CGROUP_MEMORY_SOFT_LIMIT = setStrVar(VARIABLE_DOCKER_CGROUP_SOFT_LIMIT_MEMORY,
+          DOCKER_CGROUP_MEMORY_SOFT_LIMIT);
+      DOCKER_CGROUP_CPU_QUOTA = setDoubleVar(VARIABLE_DOCKER_CGROUP_CPU_QUOTA, DOCKER_CGROUP_CPU_QUOTA);
+      DOCKER_CGROUP_CPU_PERIOD = setIntVar(VARIABLE_DOCKER_CGROUP_CPU_PERIOD, DOCKER_CGROUP_CPU_PERIOD);
+      DOCKER_CGROUP_MONITOR_INTERVAL = setStrVar(VARIABLE_DOCKER_CGROUP_MONITOR_INTERVAL,
+          DOCKER_CGROUP_MONITOR_INTERVAL);
+
+      PROMETHEUS_PORT = setIntVar(VARIABLE_PROMETHEUS_PORT, PROMETHEUS_PORT);
   
       SKIP_NAMESPACE_CREATION = setBoolVar(VARIABLE_SKIP_NAMESPACE_CREATION,
           SKIP_NAMESPACE_CREATION);
@@ -1716,6 +1743,12 @@ public class Settings implements Serializable {
 
   }
 
+  private Integer PROMETHEUS_PORT = 9089;
+  public synchronized Integer getPrometheusPort() {
+    checkCache();
+    return PROMETHEUS_PORT;
+  }
+
   //Git
   private String GIT_DIR = "/srv/hops/git";
 
@@ -1733,6 +1766,42 @@ public class Settings implements Serializable {
   private String GIT_IMAGE_NAME = "git:0.2.0";
   public synchronized String getGitImageName() {
     return GIT_IMAGE_NAME;
+  }
+
+  private boolean DOCKER_CGROUP_ENABLED = false;
+  public synchronized boolean isDockerCgroupEnabled() {
+    checkCache();
+    return DOCKER_CGROUP_ENABLED;
+  }
+
+  private String DOCKER_CGROUP_MEMORY_LIMIT = "6GB";
+  public synchronized String getDockerCgroupMemoryLimit() {
+    checkCache();
+    return DOCKER_CGROUP_MEMORY_LIMIT;
+  }
+
+  private String DOCKER_CGROUP_MEMORY_SOFT_LIMIT = "2GB";
+  public synchronized String getDockerCgroupSoftLimit() {
+    checkCache();
+    return DOCKER_CGROUP_MEMORY_SOFT_LIMIT;
+  }
+
+  private Double DOCKER_CGROUP_CPU_QUOTA = 100.0;
+  public synchronized Double getDockerCgroupCpuQuota() {
+    checkCache();
+    return DOCKER_CGROUP_CPU_QUOTA;
+  }
+
+  private Integer DOCKER_CGROUP_CPU_PERIOD = 100000;
+  public synchronized Integer getDockerCgroupCpuPeriod() {
+    checkCache();
+    return DOCKER_CGROUP_CPU_PERIOD;
+  }
+
+  private String DOCKER_CGROUP_MONITOR_INTERVAL = "10m";
+  public synchronized String getDockerCgroupIntervalMonitor() {
+    checkCache();
+    return DOCKER_CGROUP_MONITOR_INTERVAL;
   }
 
 
@@ -3468,7 +3537,20 @@ public class Settings implements Serializable {
     checkCache();
     return KUBE_KNATIVE_DOMAIN_NAME;
   }
-  
+
+  //comma seperated list of tainted nodes
+  private String KUBE_TAINTED_NODES = "";
+  public synchronized String getKubeTaintedNodes() {
+    checkCache();
+    return KUBE_TAINTED_NODES;
+  }
+
+  private String KUBE_TAINTED_NODES_MONITOR_INTERVAL = "30m";
+  public synchronized String getKubeTaintedMonitorInterval() {
+    checkCache();
+    return KUBE_TAINTED_NODES_MONITOR_INTERVAL;
+  }
+
   private Boolean HOPSWORKS_ENTERPRISE = false;
   public synchronized Boolean getHopsworksEnterprise() {
     checkCache();

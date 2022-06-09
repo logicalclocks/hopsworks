@@ -47,6 +47,7 @@ import io.hops.hopsworks.audit.logger.annotation.Logged;
 import io.hops.hopsworks.common.dao.host.HostsFacade;
 import io.hops.hopsworks.common.hosts.ServiceDiscoveryController;
 import io.hops.hopsworks.common.proxies.client.HttpClient;
+import io.hops.hopsworks.common.pythonresources.PythonResourcesController;
 import io.hops.hopsworks.exceptions.ServiceException;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
 import io.hops.hopsworks.restutils.RESTCodes;
@@ -83,6 +84,8 @@ public class ClusterUtilisationService {
   private HttpClient httpClient;
   @EJB
   private HostsFacade hostsFacade;
+  @EJB
+  private PythonResourcesController pythonResourcesController;
 
   private static final String METRICS_ENDPOINT = "/ws/v1/cluster/metrics";
 
@@ -113,5 +116,15 @@ public class ClusterUtilisationService {
     return Response.ok()
       .entity(jsonObject.toString())
       .build();
+  }
+
+  @GET
+  @Path("/pythonResources")
+  @Logged(logLevel = LogLevel.OFF)
+  @Produces(MediaType.APPLICATION_JSON)
+  public Response pythonResources() throws ServiceDiscoveryException {
+    return Response.ok()
+        .entity(pythonResourcesController.getPythonResources().toString())
+        .build();
   }
 }

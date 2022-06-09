@@ -625,7 +625,9 @@ public class RESTCodes {
         "configuration to notebook. Wrong hdfs username provided", Response.Status.BAD_REQUEST),
     ATTACHING_JUPYTER_CONFIG_TO_NOTEBOOK_FAILED(55, "Failed to attach jupyter configuration to notebook",
         Response.Status.INTERNAL_SERVER_ERROR),
-    RM_METRICS_ERROR(56, "Failed to fetch utilization metrics", Response.Status.INTERNAL_SERVER_ERROR);
+    RM_METRICS_ERROR(56, "Failed to fetch utilization metrics", Response.Status.INTERNAL_SERVER_ERROR),
+    PROMETHEUS_QUERY_ERROR(57, "Failed to execute prometheus query",
+        Response.Status.INTERNAL_SERVER_ERROR);
 
     private Integer code;
     private String message;
