@@ -49,6 +49,8 @@ import io.hops.hopsworks.common.hdfs.HdfsUsersController;
 import io.hops.hopsworks.common.hdfs.Utils;
 import io.hops.hopsworks.common.hdfs.inode.InodeController;
 import io.hops.hopsworks.common.provenance.core.HopsFSProvenanceController;
+import io.hops.hopsworks.common.security.QuotasEnforcement;
+import io.hops.hopsworks.common.security.QuotaEnforcementException;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.exceptions.ProvenanceException;
@@ -156,6 +158,8 @@ public class TrainingDatasetController {
   private ActivityFacade activityFacade;
   @EJB
   private FeatureGroupCommitController featureGroupCommitCommitController;
+  @EJB
+  private QuotasEnforcement quotasEnforcement;
 
   /**
    * Gets all trainingDatasets for a particular featurestore and project
@@ -272,6 +276,13 @@ public class TrainingDatasetController {
   private TrainingDatasetDTO createTrainingDataset(Users user, Project project, Featurestore featurestore,
       FeatureView featureView, TrainingDatasetDTO trainingDatasetDTO, Query query, Boolean skipFeature)
       throws FeaturestoreException, ProvenanceException, IOException, ServiceException {
+
+    try {
+      quotasEnforcement.enforceTrainingDatasetsQuota(featurestore);
+    } catch (QuotaEnforcementException ex) {
+      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.TRAINING_DATASET_COULD_NOT_BE_CREATED,
+              Level.SEVERE, ex.getMessage(), ex.getMessage(), ex);
+    }
 
     // if version not provided, get latest and increment
     if (trainingDatasetDTO.getVersion() == null) {

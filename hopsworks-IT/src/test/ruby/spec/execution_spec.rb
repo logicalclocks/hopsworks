@@ -648,6 +648,30 @@ describe "On #{ENV['OS']}" do
         create_sparktour_job(@project, "quota5", 'jar', nil)
         run_execution(@project[:id], "quota5")
       end
+
+      describe "#parallel executions" do
+        before :all do
+          setVar("quotas_max_parallel_executions", "1")
+          @cookies_pe = with_admin_session
+          with_valid_tour_project("spark")
+        end
+        after :all do
+          setVar("quotas_max_parallel_executions", "-1")
+          @cookies_pe = nil
+        end
+        it "should not launch more than configured max parallel executions" do
+          create_sparktour_job(@project, "max_parallel_exec", "jar", nil)
+          expect_status(201)
+          start_execution(@project[:id], "max_parallel_exec")
+          expect_status(201)
+
+          # reached limit
+          resp = start_execution(@project[:id], "max_parallel_exec")
+          expect_status(400)
+          parsed = JSON.parse(resp)
+          expect(parsed['usrMsg']).to include("quota")
+        end
+      end
     end
 
     describe '#access' do

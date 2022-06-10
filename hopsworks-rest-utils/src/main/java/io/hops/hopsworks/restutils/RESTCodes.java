@@ -1186,7 +1186,8 @@ public class RESTCodes {
     KAFKA_TOPIC_NOT_VALID(23, "Kafka topic not valid", Response.Status.BAD_REQUEST),
     FINEGRAINED_INF_LOGGING_NOT_SUPPORTED(24, "Fine-grained inference logging not supported",
       Response.Status.BAD_REQUEST),
-    REQUEST_BATCHING_NOT_SUPPORTED(25, "Request batching not supported", Response.Status.BAD_REQUEST);
+    REQUEST_BATCHING_NOT_SUPPORTED(25, "Request batching not supported", Response.Status.BAD_REQUEST),
+    CREATEERROR(26, "Serving instance could not be created", Response.Status.BAD_REQUEST);
 
     private Integer code;
     private String message;

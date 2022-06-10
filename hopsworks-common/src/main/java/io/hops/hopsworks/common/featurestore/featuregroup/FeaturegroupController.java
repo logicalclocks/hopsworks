@@ -48,6 +48,8 @@ import io.hops.hopsworks.common.hdfs.HdfsUsersController;
 import io.hops.hopsworks.common.hdfs.Utils;
 import io.hops.hopsworks.common.hdfs.inode.InodeController;
 import io.hops.hopsworks.common.provenance.core.HopsFSProvenanceController;
+import io.hops.hopsworks.common.security.QuotasEnforcement;
+import io.hops.hopsworks.common.security.QuotaEnforcementException;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.exceptions.HopsSecurityException;
@@ -146,6 +148,8 @@ public class FeaturegroupController {
   private ExpectationSuiteController expectationSuiteController;
   @EJB
   private ValidationReportController validationReportController;
+  @EJB
+  private QuotasEnforcement quotasEnforcement;
   @Inject
   private FsJobManagerController fsJobManagerController;
 
@@ -250,7 +254,8 @@ public class FeaturegroupController {
                                             Project project, Users user)
     throws FeaturestoreException, ServiceException, SQLException, ProvenanceException, IOException,
     KafkaException, SchemaException, ProjectException, UserException, HopsSecurityException, JobException {
-  
+
+    enforceFeaturegroupQuotas(featurestore, featuregroupDTO);
     featureGroupInputValidation.verifySchemaProvided(featuregroupDTO);
     
     // if version not provided, get latest and increment
@@ -776,7 +781,7 @@ public class FeaturegroupController {
       featuregroup.setExpectationSuite(expectationSuiteController.convertExpectationSuiteDTOToPersistentValidated(
         featuregroup, featuregroupDTO.getExpectationSuite()));
     }
-    
+
     if (featuregroupDTO.getExpectationsNames() != null ) {
       List<FeatureGroupExpectation> featureGroupExpectations = new ArrayList<>();
       for (String name : featuregroupDTO.getExpectationsNames()) {
@@ -884,6 +889,22 @@ public class FeaturegroupController {
         expectations.add(featureGroupValidationsController.getFeatureStoreExpectation(featurestore, expectation));
       }
       featureGroupValidationsController.featureValidation(expectations, features);
+    }
+  }
+
+  private void enforceFeaturegroupQuotas(Featurestore featurestore, FeaturegroupDTO featuregroup)
+          throws FeaturestoreException {
+    try {
+      boolean onlineEnabled = false;
+      if (featuregroup instanceof CachedFeaturegroupDTO) {
+        onlineEnabled = ((CachedFeaturegroupDTO) featuregroup).getOnlineEnabled();
+      } else if (featuregroup instanceof StreamFeatureGroupDTO) {
+        onlineEnabled = ((StreamFeatureGroupDTO) featuregroup).getOnlineEnabled();
+      }
+      quotasEnforcement.enforceFeaturegroupsQuota(featurestore, onlineEnabled);
+    } catch (QuotaEnforcementException ex) {
+      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.COULD_NOT_CREATE_FEATUREGROUP, Level.SEVERE,
+              ex.getMessage(), ex.getMessage(), ex);
     }
   }
 }
