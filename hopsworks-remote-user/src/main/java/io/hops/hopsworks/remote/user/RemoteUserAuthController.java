@@ -14,6 +14,7 @@ import io.hops.hopsworks.common.remote.RemoteUserDTO;
 import io.hops.hopsworks.common.remote.RemoteUserStateDTO;
 import io.hops.hopsworks.common.security.utils.SecurityUtils;
 import io.hops.hopsworks.common.user.AuthController;
+import io.hops.hopsworks.common.user.UserAccountHandler;
 import io.hops.hopsworks.common.user.UsersController;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.GenericException;
@@ -33,6 +34,9 @@ import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
+import javax.enterprise.inject.Any;
+import javax.enterprise.inject.Instance;
+import javax.inject.Inject;
 import javax.security.auth.login.LoginException;
 import java.util.List;
 import java.util.logging.Level;
@@ -63,6 +67,9 @@ public class RemoteUserAuthController {
   private SecurityUtils securityUtils;
   @EJB
   private Settings settings;
+  @Inject
+  @Any
+  private Instance<UserAccountHandler> userAccountHandlers;
   
   /**
    * Checks if the user is a remote user and returns the user password with salt
@@ -114,7 +121,7 @@ public class RemoteUserAuthController {
    * @throws LoginException
    */
   public RemoteUserStateDTO getRemoteUserStatus(RemoteUserDTO userDTO, boolean consent, String chosenEmail,
-    RemoteUserType type, UserAccountStatus status) throws LoginException {
+    RemoteUserType type, UserAccountStatus status) throws LoginException, UserException {
     if (userDTO == null || !userDTO.isEmailVerified()) {
       throw new LoginException("User not found.");
     }
@@ -161,7 +168,8 @@ public class RemoteUserAuthController {
    * @param userDTO
    * @param type
    */
-  private RemoteUser updateGroups(RemoteUserDTO userDTO, RemoteUser remoteUser, RemoteUserType type) {
+  private RemoteUser updateGroups(RemoteUserDTO userDTO, RemoteUser remoteUser, RemoteUserType type)
+    throws UserException {
     List<String> groups = remoteUserGroupMapper.getMappedGroups(userDTO.getGroups(), type);
     Users user = remoteUser.getUid();
     BbcGroup group;
@@ -180,6 +188,10 @@ public class RemoteUserAuthController {
       }
     }
     user.getBbcGroupCollection().removeAll(toRemove);
+    
+    // trigger user account handlers
+    UserAccountHandler.runUserAccountUpdateHandlers(userAccountHandlers, remoteUser.getUid());
+  
     return remoteUser;
   }
 
@@ -211,7 +223,7 @@ public class RemoteUserAuthController {
     }
     List<String> groups = remoteUserGroupMapper.getMappedGroups(userDTO.getGroups(), type);
     remoteUser = createRemoteUser(userDTO.getUuid(), chosenEmail, fname, lname, type, status, groups);
-    remoteUserFacade.save(remoteUser);
+    persistRemoteUser(remoteUser);
   }
   
   private String getStringOrDefault(String val, String defaultVal, String msg) throws GenericException {
@@ -255,18 +267,26 @@ public class RemoteUserAuthController {
     return !uid.getFname().equals(user.getGivenName()) || !uid.getLname().equals(user.getSurname());
   }
   
-  private RemoteUser updateRemoteUser(RemoteUserDTO user, RemoteUser remoteUser) {
+  private RemoteUser updateRemoteUser(RemoteUserDTO user, RemoteUser remoteUser) throws UserException {
     if (!remoteUser.getUid().getFname().equals(user.getGivenName())) {
       remoteUser.getUid().setFname(user.getGivenName());
     }
     if (!remoteUser.getUid().getLname().equals(user.getSurname())) {
       remoteUser.getUid().setLname(user.getSurname());
     }
-    return remoteUserFacade.update(remoteUser);
+    RemoteUser updatedUser = remoteUserFacade.update(remoteUser);
+  
+    // trigger user account handlers
+    UserAccountHandler.runUserAccountUpdateHandlers(userAccountHandlers, updatedUser.getUid());
+    
+    return updatedUser;
   }
   
-  private void persistRemoteUser(RemoteUser remoteUser) {
+  private void persistRemoteUser(RemoteUser remoteUser) throws UserException {
     remoteUserFacade.save(remoteUser);
+    
+    // trigger user account handlers
+    UserAccountHandler.runUserAccountCreateHandlers(userAccountHandlers, remoteUser.getUid());
   }
   
   private void validateRemoteUser(RemoteUserDTO user, String chosenEmail) throws LoginException {

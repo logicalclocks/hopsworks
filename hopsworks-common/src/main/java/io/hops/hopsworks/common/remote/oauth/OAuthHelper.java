@@ -17,6 +17,7 @@ package io.hops.hopsworks.common.remote.oauth;
 
 import io.hops.hopsworks.common.remote.RemoteUserStateDTO;
 import io.hops.hopsworks.exceptions.RemoteAuthException;
+import io.hops.hopsworks.exceptions.UserException;
 import io.hops.hopsworks.persistence.entity.remote.oauth.OauthClient;
 
 import javax.security.auth.login.LoginException;
@@ -29,7 +30,7 @@ public interface OAuthHelper {
   
   boolean oauthAvailable();
   RemoteUserStateDTO login(String sessionId, String code, String state, boolean consent, String chosenEmail)
-    throws LoginException, RemoteAuthException;
+    throws LoginException, RemoteAuthException, UserException;
   OpenIdProviderConfig getOpenIdProviderConfiguration(String providerURI) throws IOException,
     URISyntaxException;
   URI getAuthenticationRequestURL(String sessionId, String providerName, String redirectURI, Set<String> scopes)

@@ -79,7 +79,7 @@ public class OAuthController {
    * @throws LoginException
    */
   public RemoteUserStateDTO login(String sessionId, String code, String state, boolean consent, String chosenEmail)
-    throws LoginException, RemoteAuthException {
+    throws LoginException, RemoteAuthException, UserException {
     OauthLoginState oauthLoginState = getClient(state, sessionId);
     OauthClient client = oauthLoginState.getClientId();
   

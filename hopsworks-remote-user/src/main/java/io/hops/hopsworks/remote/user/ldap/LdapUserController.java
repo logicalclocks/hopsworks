@@ -56,7 +56,7 @@ public class LdapUserController {
    * @throws LoginException
    */
   public RemoteUserStateDTO login(String username, String password, boolean consent, String chosenEmail) throws
-    LoginException {
+    LoginException, UserException {
     RemoteUserDTO userDTO = null;
     try {
       userDTO = ldapRealm.findAndBind(username, password);// login user
@@ -78,7 +78,7 @@ public class LdapUserController {
    * @throws LoginException
    */
   public RemoteUserStateDTO getKrbLdapUser(String principalName, boolean consent, String chosenEmail) throws
-    LoginException {
+    LoginException, UserException {
     RemoteUserDTO userDTO = null;
     try {
       userDTO = ldapRealm.findKrbUser(principalName);
@@ -99,7 +99,7 @@ public class LdapUserController {
    * @throws LoginException
    */
   public RemoteUserStateDTO getLdapUser(Users user, String password, boolean consent, String chosenEmail)
-    throws LoginException {
+    throws LoginException, UserException {
     RemoteUserDTO userDTO = null;
     RemoteUser remoteUser = remoteUserFacade.findByUsers(user);
     try {
