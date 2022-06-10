@@ -182,7 +182,8 @@ public class RemoteUserAuthController {
     }
     List<BbcGroup> toRemove = new ArrayList<>();
     for (BbcGroup g : user.getBbcGroupCollection()) {
-      if (!groups.isEmpty() && !groups.contains(g.getGroupName())) {
+      //empty group mapping is used to remove users from cluster in the cloud
+      if (!groups.contains(g.getGroupName())) {
         toRemove.add(g);
         userFacade.removeGroup(user.getEmail(), g.getGid());
       }
