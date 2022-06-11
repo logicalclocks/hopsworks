@@ -41,7 +41,8 @@ public class MonitoringUrlBuilder {
   private static final String PROJECT_NAME_PLACEHOLDER = "%%projectName%%";
   private static final String APP_ID_PLACEHOLDER = "%%appId%%";
   private static final String KIBANA_LIVY =
-      "projectId=%%projectId%%#/discover?_g=()&_a=(columns:!(logdate,host,priority,logger_name," +
+      "projectId=%%projectId%%#/discover?security_tenant=private&_g=()&" +
+          "_a=(columns:!(logdate,host,priority,logger_name," +
           "log_message),filters:!(('$state':(store:appState),meta:(alias:!n,disabled:!f," +
           "index:'%%projectName%%_logs-*'" +
           ",key:jobid,negate:!f,params:(query:notebook,type:phrase),type:phrase,value:notebook)," +
@@ -51,13 +52,15 @@ public class MonitoringUrlBuilder {
           "index:'%%projectName%%_logs-*',interval:auto,query:(language:lucene,query:''),sort:!(logdate,desc))";
   
   private static final String KIBANA =
-      "#/discover?_g=(filters:!())&_a=(columns:!(logdate,host,priority,logger_name,log_message)," +
+      "#/discover?security_tenant=private&_g=(filters:!())&" +
+          "_a=(columns:!(logdate,host,priority,logger_name,log_message)," +
           "filters:!(('$state':(store:appState),meta:(alias:!n,disabled:!f,index:'%%projectName%%_logs-*'," +
           "key:application,negate:!f,params:(query:%%appId%%),type:phrase,value:%%appId%%),query:(match:" +
           "(application:(query:%%appId%%,type:phrase))))),index:'%%projectName%%_logs-*',interval:auto,query:" +
           "(language:kuery,query:''),sort:!(logdate,desc))";
   
-  private static final String KIBANA_KUBE = "#/discover?_g=()&_a=(columns:!('@timestamp',file,log_message)," +
+  private static final String KIBANA_KUBE = "#/discover?security_tenant=private&_g=()" +
+          "&_a=(columns:!('@timestamp',file,log_message)," +
           "filters:!(('$state':(store:appState)," +
           "meta:(alias:!n,disabled:!f,index:'%%projectName%%_logs-*',key:application," +
           "negate:!f,params:(query:%%appId%%),type:phrase,value:%%appId%%)," +
