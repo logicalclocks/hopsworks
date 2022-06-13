@@ -31,12 +31,14 @@ import io.hops.hopsworks.common.featurestore.OptionDTO;
 import io.hops.hopsworks.common.featurestore.app.FsJobManagerController;
 import io.hops.hopsworks.common.featurestore.trainingdatasets.TrainingDatasetController;
 import io.hops.hopsworks.common.featurestore.trainingdatasets.TrainingDatasetDTO;
-import io.hops.hopsworks.common.featurestore.trainingdatasets.TrainingDatasetDTOBuilder;
+import io.hops.hopsworks.exceptions.DatasetException;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.exceptions.GenericException;
 import io.hops.hopsworks.exceptions.JobException;
+import io.hops.hopsworks.exceptions.MetadataException;
 import io.hops.hopsworks.exceptions.ProjectException;
 import io.hops.hopsworks.exceptions.ProvenanceException;
+import io.hops.hopsworks.exceptions.SchematizedTagException;
 import io.hops.hopsworks.exceptions.ServiceException;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
 import io.hops.hopsworks.persistence.entity.featurestore.Featurestore;
@@ -55,6 +57,7 @@ import javax.ejb.TransactionAttributeType;
 import javax.enterprise.context.RequestScoped;
 import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
+import javax.ws.rs.BeanParam;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.DefaultValue;
@@ -142,13 +145,16 @@ public class TrainingDatasetResource {
       @Context
           UriInfo uriInfo,
       @Context
-          HttpServletRequest req
-  ) throws FeaturestoreException, ServiceException {
+          HttpServletRequest req,
+      @BeanParam
+          TrainingDatasetExpansionBeanParam param
+  ) throws FeaturestoreException, ServiceException, MetadataException, DatasetException, SchematizedTagException {
     Users user = jWTHelper.getUserPrincipal(sc);
     List<TrainingDataset> trainingDatasets =
         trainingDatasetController.getTrainingDatasetByFeatureView(featureView);
+    ResourceRequest resourceRequest = makeResourceRequest(param);
     TrainingDatasetDTO trainingDatasetDTO = trainingDatasetDTOBuilder.build(user, project, trainingDatasets,
-        uriInfo);
+        uriInfo, resourceRequest);
     return Response.ok().entity(trainingDatasetDTO).build();
   }
 
@@ -168,16 +174,25 @@ public class TrainingDatasetResource {
           HttpServletRequest req,
       @Context
           UriInfo uriInfo,
+      @BeanParam
+          TrainingDatasetExpansionBeanParam param,
       @ApiParam(value = "training dataset version")
       @PathParam("version")
           Integer version
-  ) throws FeaturestoreException, ServiceException {
+  ) throws FeaturestoreException, ServiceException, MetadataException, DatasetException, SchematizedTagException {
     Users user = jWTHelper.getUserPrincipal(sc);
     TrainingDataset trainingDataset = trainingDatasetController.getTrainingDatasetByFeatureViewAndVersion(featureView,
         version);
-    TrainingDatasetDTO trainingDatasetDTO = trainingDatasetDTOBuilder.build(user, project, trainingDataset, uriInfo);
+    ResourceRequest resourceRequest = makeResourceRequest(param);
+    TrainingDatasetDTO trainingDatasetDTO = trainingDatasetDTOBuilder.build(user, project, trainingDataset, uriInfo,
+        resourceRequest);
     return Response.ok().entity(trainingDatasetDTO).build();
+  }
 
+  private ResourceRequest makeResourceRequest(TrainingDatasetExpansionBeanParam param) {
+    ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.TRAININGDATASETS);
+    resourceRequest.setExpansions(param.getResources());
+    return resourceRequest;
   }
 
   @DELETE
