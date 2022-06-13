@@ -188,7 +188,7 @@ public class ProvUsageBuilder {
   private ExecutionDTO getExecution(UriInfo uriInfo, String appId) {
     if(appId != null && !appId.equals("none")) {
       Optional<Execution> execOptional = executionFacade.findByAppId(appId);
-      if (execOptional.isPresent()) {
+      if (execOptional.isPresent() && execOptional.get().getJob() != null) {
         return executionsBuilder
             .build(uriInfo, new ResourceRequest(ResourceRequest.Name.EXECUTIONS), execOptional.get());
       }
