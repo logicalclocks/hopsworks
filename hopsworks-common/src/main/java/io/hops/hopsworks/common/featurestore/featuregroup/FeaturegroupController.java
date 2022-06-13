@@ -273,6 +273,7 @@ public class FeaturegroupController {
     verifyFeatureGroupInput(featuregroupDTO);
     verifyFeatureGroupValidations(featurestore, featuregroupDTO.getExpectationsNames(), featuregroupDTO.getFeatures());
     verifyFeaturesNoDefaultValue(featuregroupDTO.getFeatures());
+    expectationSuiteController.verifyExpectationSuite(featuregroupDTO.getExpectationSuite());
     return createFeaturegroupNoValidation(featurestore, featuregroupDTO, project, user);
   }
 
@@ -778,7 +779,7 @@ public class FeaturegroupController {
     featuregroup.setStatisticsConfig(statisticsConfig);
 
     if (featuregroupDTO.getExpectationSuite() != null) {
-      featuregroup.setExpectationSuite(expectationSuiteController.convertExpectationSuiteDTOToPersistentValidated(
+      featuregroup.setExpectationSuite(expectationSuiteController.convertExpectationSuiteDTOToPersistent(
         featuregroup, featuregroupDTO.getExpectationSuite()));
     }
     

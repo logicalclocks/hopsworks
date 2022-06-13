@@ -79,7 +79,7 @@ public class TestExpectationSuiteController {
     expectationSuiteDTO.setMeta(null);
     FeaturestoreException nullInputException = assertThrows(
       FeaturestoreException.class,
-      () -> expectationSuiteController.convertExpectationSuiteDTOToPersistentValidated(featuregroup, expectationSuiteDTO)
+      () -> expectationSuiteController.verifyExpectationSuite(expectationSuiteDTO)
     );
     assertEquals("Rest code error corresponding to null input error: ", 202,
       nullInputException.getErrorCode().getCode() - nullInputException.getErrorCode().getRange());
@@ -90,7 +90,7 @@ public class TestExpectationSuiteController {
     expectationSuiteDTO.setMeta(longInput);
     FeaturestoreException longInputException = assertThrows(
       FeaturestoreException.class,
-      () -> expectationSuiteController.convertExpectationSuiteDTOToPersistentValidated(featuregroup, expectationSuiteDTO)
+      () -> expectationSuiteController.verifyExpectationSuite(expectationSuiteDTO)
     );
     assertEquals("Rest code error corresponding to exceed max character error", 200,
       longInputException.getErrorCode().getCode() - longInputException.getErrorCode().getRange());
@@ -100,7 +100,7 @@ public class TestExpectationSuiteController {
     expectationSuiteDTO.setMeta(notAJsonInput);
     FeaturestoreException notAJsonException = assertThrows(
       FeaturestoreException.class,
-      () -> expectationSuiteController.convertExpectationSuiteDTOToPersistentValidated(featuregroup, expectationSuiteDTO)
+      () -> expectationSuiteController.verifyExpectationSuite(expectationSuiteDTO)
     );
     assertEquals("Rest code error corresponding to json parse failure: ", 201,
       notAJsonException.getErrorCode().getCode() - notAJsonException.getErrorCode().getRange());
@@ -114,7 +114,7 @@ public class TestExpectationSuiteController {
       expectationSuiteDTO.setExpectationSuiteName(null);
       FeaturestoreException nullInputException = assertThrows(
         FeaturestoreException.class,
-        () -> expectationSuiteController.convertExpectationSuiteDTOToPersistentValidated(featuregroup, expectationSuiteDTO)
+        () -> expectationSuiteController.verifyExpectationSuite(expectationSuiteDTO)
       );
       assertEquals("Rest code error corresponding to null input error: ", 202,
         nullInputException.getErrorCode().getCode() - nullInputException.getErrorCode().getRange());
@@ -124,7 +124,7 @@ public class TestExpectationSuiteController {
       expectationSuiteDTO.setExpectationSuiteName(longInput);
       FeaturestoreException longInputException = assertThrows(
         FeaturestoreException.class,
-        () -> expectationSuiteController.convertExpectationSuiteDTOToPersistentValidated(featuregroup, expectationSuiteDTO)
+        () -> expectationSuiteController.verifyExpectationSuite(expectationSuiteDTO)
       );
       assertEquals("Rest code error corresponding to exceed max character error: ", 200,
         longInputException.getErrorCode().getCode() - longInputException.getErrorCode().getRange());
@@ -139,7 +139,7 @@ public class TestExpectationSuiteController {
       expectationSuiteDTO.setGeCloudId(longInput);
       FeaturestoreException longInputException = assertThrows(
         FeaturestoreException.class,
-        () -> expectationSuiteController.convertExpectationSuiteDTOToPersistentValidated(featuregroup, expectationSuiteDTO)
+        () -> expectationSuiteController.verifyExpectationSuite(expectationSuiteDTO)
       );
       assertEquals("Rest code error corresponding to exceed max character error: ", 200,
         longInputException.getErrorCode().getCode() - longInputException.getErrorCode().getRange());
@@ -154,7 +154,7 @@ public class TestExpectationSuiteController {
       expectationSuiteDTO.setDataAssetType(longInput);
       FeaturestoreException longInputException = assertThrows(
         FeaturestoreException.class,
-        () -> expectationSuiteController.convertExpectationSuiteDTOToPersistentValidated(featuregroup, expectationSuiteDTO)
+        () -> expectationSuiteController.verifyExpectationSuite(expectationSuiteDTO)
       );
       assertEquals("Rest code error corresponding to exceed max character error: ", 200,
         longInputException.getErrorCode().getCode() - longInputException.getErrorCode().getRange());
@@ -169,7 +169,7 @@ public class TestExpectationSuiteController {
       expectationDTO.setMeta(null);
       FeaturestoreException nullInputException = assertThrows(
         FeaturestoreException.class,
-        () -> expectationSuiteController.convertExpectationDTOToPersistent(new ExpectationSuite(), expectationDTO)
+        () -> expectationSuiteController.verifyExpectationFields(expectationDTO)
       );
       assertEquals("Rest code error corresponding to null input error: ", 202,
         nullInputException.getErrorCode().getCode() - nullInputException.getErrorCode().getRange());
@@ -180,7 +180,7 @@ public class TestExpectationSuiteController {
       expectationDTO.setMeta(longInput);
       FeaturestoreException longInputException = assertThrows(
         FeaturestoreException.class,
-        () -> expectationSuiteController.convertExpectationDTOToPersistent(new ExpectationSuite(), expectationDTO)
+        () -> expectationSuiteController.verifyExpectationFields(expectationDTO)
       );
       assertEquals("Rest code error corresponding to exceed max character error: ", 200,
         longInputException.getErrorCode().getCode() - longInputException.getErrorCode().getRange());
@@ -190,7 +190,7 @@ public class TestExpectationSuiteController {
       expectationDTO.setMeta(notAJsonInput);
       FeaturestoreException notAJsonException = assertThrows(
         FeaturestoreException.class,
-        () -> expectationSuiteController.convertExpectationDTOToPersistent(new ExpectationSuite(), expectationDTO)
+        () -> expectationSuiteController.verifyExpectationFields(expectationDTO)
       );
       assertEquals("Rest code error corresponding to json parse failure: ", 201,
         notAJsonException.getErrorCode().getCode() - notAJsonException.getErrorCode().getRange());
@@ -203,7 +203,7 @@ public class TestExpectationSuiteController {
       expectationDTO.setKwargs(null);
       FeaturestoreException nullInputException = assertThrows(
         FeaturestoreException.class,
-        () -> expectationSuiteController.convertExpectationDTOToPersistent(new ExpectationSuite(), expectationDTO)
+        () -> expectationSuiteController.verifyExpectationFields(expectationDTO)
       );
       assertEquals("Rest code error corresponding to null input error: ", 202,
         nullInputException.getErrorCode().getCode() - nullInputException.getErrorCode().getRange());
@@ -214,7 +214,7 @@ public class TestExpectationSuiteController {
       expectationDTO.setKwargs(longInput);
       FeaturestoreException longInputException = assertThrows(
         FeaturestoreException.class,
-        () -> expectationSuiteController.convertExpectationDTOToPersistent(new ExpectationSuite(), expectationDTO)
+        () -> expectationSuiteController.verifyExpectationFields(expectationDTO)
       );
       assertEquals("Rest code error corresponding to exceed max character error: ", 200,
         longInputException.getErrorCode().getCode() - longInputException.getErrorCode().getRange());
@@ -224,7 +224,7 @@ public class TestExpectationSuiteController {
       expectationDTO.setKwargs(notAJsonInput);
       FeaturestoreException notAJsonException = assertThrows(
         FeaturestoreException.class,
-        () -> expectationSuiteController.convertExpectationDTOToPersistent(new ExpectationSuite(), expectationDTO)
+        () -> expectationSuiteController.verifyExpectationFields(expectationDTO)
       );
       assertEquals("Rest code error corresponding to json parse failure: ", 201,
         notAJsonException.getErrorCode().getCode() - notAJsonException.getErrorCode().getRange());
@@ -238,7 +238,7 @@ public class TestExpectationSuiteController {
       expectationDTO.setExpectationType(null);
       FeaturestoreException nullInputException = assertThrows(
         FeaturestoreException.class,
-        () -> expectationSuiteController.convertExpectationDTOToPersistent(new ExpectationSuite(), expectationDTO)
+        () -> expectationSuiteController.verifyExpectationFields(expectationDTO)
       );
       assertEquals("Rest code error corresponding to null input error: ", 202,
         (int) nullInputException.getErrorCode().getCode() - nullInputException.getErrorCode().getRange());
@@ -248,7 +248,7 @@ public class TestExpectationSuiteController {
       expectationDTO.setExpectationType(longInput);
       FeaturestoreException longInputException = assertThrows(
         FeaturestoreException.class,
-        () -> expectationSuiteController.convertExpectationDTOToPersistent(new ExpectationSuite(), expectationDTO)
+        () -> expectationSuiteController.verifyExpectationFields(expectationDTO)
       );
       assertEquals("Rest code error corresponding to exceed max character error: ", 200,
         longInputException.getErrorCode().getCode() - longInputException.getErrorCode().getRange());
