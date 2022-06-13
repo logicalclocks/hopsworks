@@ -372,7 +372,7 @@ public class Settings implements Serializable {
           QUOTAS_MODEL_DEPLOYMENTS_PREFIX);
   private static final String VARIABLE_QUOTAS_MAX_PARALLEL_EXECUTIONS = String.format("%s_max_parallel_executions",
           QUOTAS_PREFIX);
-
+  
   //Docker cgroups
   private static final String VARIABLE_DOCKER_CGROUP_ENABLED = "docker_cgroup_enabled";
   private static final String VARIABLE_DOCKER_CGROUP_HARD_LIMIT_MEMORY = "docker_cgroup_memory_limit_gb";
@@ -409,6 +409,11 @@ public class Settings implements Serializable {
   private static final String VARIABLE_DOCKER_NAMESPACE = "docker_namespace";
   private static final String VARIABLE_MANAGED_DOCKER_REGISTRY =
       "managed_docker_registry";
+  
+  /*
+   * ------------------ SAAS ------------------
+   */
+  private static final String VARIABLE_LOGIN_PAGE_OVERWRITE = "login_page_overwrite";
   
   private String setVar(String varName, String defaultValue) {
     return setStrVar(varName, defaultValue);
@@ -850,6 +855,9 @@ public class Settings implements Serializable {
           QUOTAS_MAX_PARALLEL_EXECUTIONS);
       QUOTAS_MAX_PARALLEL_EXECUTIONS = setLongVar(VARIABLE_QUOTAS_MAX_PARALLEL_EXECUTIONS,
           QUOTAS_MAX_PARALLEL_EXECUTIONS);
+      
+      LOGIN_PAGE_OVERWRITE = setStrVar(VARIABLE_LOGIN_PAGE_OVERWRITE, LOGIN_PAGE_OVERWRITE);
+      
       cached = true;
     }
   }
@@ -4117,5 +4125,11 @@ public class Settings implements Serializable {
   public synchronized long getQuotasMaxParallelExecutions() {
     checkCache();
     return QUOTAS_MAX_PARALLEL_EXECUTIONS;
+  }
+  
+  private String LOGIN_PAGE_OVERWRITE = null;
+  public synchronized String getLoginPageOverwrite() {
+    checkCache();
+    return LOGIN_PAGE_OVERWRITE;
   }
 }

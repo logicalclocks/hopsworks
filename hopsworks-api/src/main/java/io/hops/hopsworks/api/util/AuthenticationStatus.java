@@ -28,13 +28,14 @@ public class AuthenticationStatus {
   private boolean remoteAuthEnabled;
   private boolean loginDisabled;
   private boolean registerDisabled;
+  private String loginPageOverwrite;
   
   public AuthenticationStatus() {
   }
   
   public AuthenticationStatus(OTPAuthStatus otpAuthStatus, boolean ldapEnabled, boolean krbEnabled,
     boolean oauthEnabled, List<OpenIdProvider> openIdProviders, boolean remoteAuthEnabled, boolean loginDisabled,
-    boolean registerDisabled) {
+    boolean registerDisabled, String loginPageOverwrite) {
     this.otpAuthStatus = otpAuthStatus;
     this.ldapEnabled = ldapEnabled;
     this.krbEnabled = krbEnabled;
@@ -43,6 +44,7 @@ public class AuthenticationStatus {
     this.remoteAuthEnabled = remoteAuthEnabled;
     this.loginDisabled = loginDisabled;
     this.registerDisabled = registerDisabled;
+    this.loginPageOverwrite = loginPageOverwrite;
   }
   
   public OTPAuthStatus getOtpAuthStatus() {
@@ -107,5 +109,13 @@ public class AuthenticationStatus {
   
   public void setRegisterDisabled(boolean registerDisabled) {
     this.registerDisabled = registerDisabled;
+  }
+
+  public String getLoginPageOverwrite() {
+    return loginPageOverwrite;
+  }
+
+  public void setLoginPageOverwrite(String loginPageOverwrite) {
+    this.loginPageOverwrite = loginPageOverwrite;
   }
 }

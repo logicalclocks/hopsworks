@@ -176,7 +176,7 @@ public class VariablesService {
     AuthenticationStatus authenticationStatus = new AuthenticationStatus(
       OTPAuthStatus.fromTwoFactorMode(settings.getTwoFactorAuth()), settings.isLdapEnabled(), settings.isKrbEnabled(),
       settings.isOAuthEnabled(), providers, remoteAuthEnabled, settings.isPasswordLoginDisabled(),
-      settings.isRegistrationUIDisabled());
+      settings.isRegistrationUIDisabled(), settings.getLoginPageOverwrite());
     return Response.ok(authenticationStatus).build();
   }
   
