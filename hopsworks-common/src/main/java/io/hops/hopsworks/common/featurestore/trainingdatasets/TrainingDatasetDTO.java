@@ -18,10 +18,12 @@ package io.hops.hopsworks.common.featurestore.trainingdatasets;
 
 import io.hops.hopsworks.common.featurestore.FeaturestoreEntityDTO;
 import io.hops.hopsworks.common.featurestore.feature.TrainingDatasetFeatureDTO;
+import io.hops.hopsworks.common.featurestore.keyword.KeywordDTO;
 import io.hops.hopsworks.common.featurestore.query.QueryDTO;
 import io.hops.hopsworks.common.featurestore.statistics.StatisticsConfigDTO;
 import io.hops.hopsworks.common.featurestore.storageconnectors.FeaturestoreStorageConnectorDTO;
 import io.hops.hopsworks.common.featurestore.trainingdatasets.split.TrainingDatasetSplitDTO;
+import io.hops.hopsworks.common.tags.TagsDTO;
 import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.TrainingDataset;
 import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.TrainingDatasetType;
 
@@ -64,6 +66,10 @@ public class TrainingDatasetDTO extends FeaturestoreEntityDTO<TrainingDatasetDTO
   private Date eventStartTime;
   @XmlJavaTypeAdapter(DateAdapter.class)
   private Date eventEndTime;
+
+  // Below fields do not need to provide
+  private KeywordDTO keywords;
+  private TagsDTO tags;
 
   public TrainingDatasetDTO() {
   }
@@ -203,6 +209,22 @@ public class TrainingDatasetDTO extends FeaturestoreEntityDTO<TrainingDatasetDTO
 
   public void setEventEndTime(Date eventEndTime) {
     this.eventEndTime = eventEndTime;
+  }
+
+  public KeywordDTO getKeywords() {
+    return keywords;
+  }
+
+  public void setKeywords(KeywordDTO keywords) {
+    this.keywords = keywords;
+  }
+
+  public TagsDTO getTags() {
+    return tags;
+  }
+
+  public void setTags(TagsDTO tags) {
+    this.tags = tags;
   }
 
   @Override
