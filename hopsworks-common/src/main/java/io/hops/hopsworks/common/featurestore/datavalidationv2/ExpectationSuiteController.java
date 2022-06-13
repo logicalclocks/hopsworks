@@ -76,7 +76,7 @@ public class ExpectationSuiteController {
   public ExpectationSuite createExpectationSuite(Featuregroup featureGroup, ExpectationSuiteDTO expectationSuiteDTO)
     throws FeaturestoreException {
     Optional<ExpectationSuite> e = expectationSuiteFacade.findByFeaturegroup(featureGroup);
-    verifyExpectationSuiteFields(expectationSuiteDTO);
+    verifyExpectationSuite(expectationSuiteDTO);
     
     if (e.isPresent()) {
       deleteExpectationSuite(featureGroup);
@@ -101,7 +101,7 @@ public class ExpectationSuiteController {
    * @return a DTO representation of the entity
    */
   public ExpectationSuite convertExpectationSuiteDTOToPersistent(Featuregroup featuregroup,
-    ExpectationSuiteDTO expectationSuiteDTO) throws FeaturestoreException {
+    ExpectationSuiteDTO expectationSuiteDTO) {
     ExpectationSuite expectationSuite = new ExpectationSuite();
     expectationSuite.setFeaturegroup(featuregroup);
     expectationSuite.setMeta(expectationSuiteDTO.getMeta());
@@ -120,17 +120,8 @@ public class ExpectationSuiteController {
 
     return expectationSuite;
   }
-  
-  public ExpectationSuite convertExpectationSuiteDTOToPersistentValidated(Featuregroup featuregroup,
-    ExpectationSuiteDTO expectationSuiteDTO) throws FeaturestoreException {
-    // validating also here cause this method is used by FeatureGroupController directly
-    verifyExpectationSuiteFields(expectationSuiteDTO);
-    return convertExpectationSuiteDTOToPersistent(featuregroup, expectationSuiteDTO);
-  }
 
-  public Expectation convertExpectationDTOToPersistent(ExpectationSuite expectationSuite, ExpectationDTO dto)
-    throws FeaturestoreException {
-    verifyExpectationFields(dto);
+  public Expectation convertExpectationDTOToPersistent(ExpectationSuite expectationSuite, ExpectationDTO dto) {
     Expectation persistentExpectation = new Expectation();
     persistentExpectation.setExpectationSuite(expectationSuite);
     persistentExpectation.setKwargs(dto.getKwargs());
@@ -143,6 +134,14 @@ public class ExpectationSuiteController {
   ////////////////////////////////////////
   //// Input Verification
   ///////////////////////////////////////
+  
+  public void verifyExpectationSuite(ExpectationSuiteDTO dto) throws FeaturestoreException {
+    if (dto == null) return;
+    verifyExpectationSuiteFields(dto);
+    for (ExpectationDTO expectationDTO : dto.getExpectations()) {
+      verifyExpectationFields(expectationDTO);
+    }
+  }
 
   private void verifyExpectationSuiteFields(ExpectationSuiteDTO dto) throws FeaturestoreException {
     verifyExpectationSuiteGeCloudId(dto);
@@ -225,7 +224,7 @@ public class ExpectationSuiteController {
     }
   }
 
-  private void verifyExpectationFields(ExpectationDTO dto) throws FeaturestoreException {
+  void verifyExpectationFields(ExpectationDTO dto) throws FeaturestoreException {
     verifyExpectationExpectationType(dto);
     verifyExpectationKwargs(dto);
     verifyExpectationMeta(dto);
