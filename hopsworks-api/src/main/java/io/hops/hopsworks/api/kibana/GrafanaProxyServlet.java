@@ -77,8 +77,9 @@ public class GrafanaProxyServlet extends ProxyServlet {
   @Override
   protected void service(HttpServletRequest servletRequest, HttpServletResponse servletResponse) 
       throws ServletException, IOException {
-    if (servletRequest.getUserPrincipal() == null || 
-       (!servletRequest.isUserInRole("HOPS_ADMIN") && !servletRequest.isUserInRole("HOPS_USER"))) {
+    if (servletRequest.getUserPrincipal() == null ||
+      (!servletRequest.isUserInRole("HOPS_ADMIN") && !servletRequest.isUserInRole("HOPS_USER") &&
+        !servletRequest.isUserInRole("HOPS_SERVICE_USER"))) {
       servletResponse.sendError(403, "User is not logged in");
       return;
     }
