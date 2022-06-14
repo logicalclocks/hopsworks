@@ -51,12 +51,12 @@
     <group-name>HOPS_USER</group-name>
   </security-role-mapping>
   <security-role-mapping>
-    <role-name>AGENT</role-name>
-    <group-name>AGENT</group-name>
+    <role-name>HOPS_SERVICE_USER</role-name>
+    <group-name>HOPS_SERVICE_USER</group-name>
   </security-role-mapping>
   <security-role-mapping>
-    <role-name>CLUSTER_AGENT</role-name>
-    <group-name>CLUSTER_AGENT</group-name>
+    <role-name>AGENT</role-name>
+    <group-name>AGENT</group-name>
   </security-role-mapping>
   <parameter-encoding default-charset="UTF-8"/>
 </glassfish-web-app>

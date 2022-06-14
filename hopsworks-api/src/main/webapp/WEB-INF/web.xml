@@ -336,7 +336,7 @@
     <role-name>HOPS_USER</role-name>
   </security-role>
   <security-role>
-    <role-name>CLUSTER_AGENT</role-name>
+    <role-name>HOPS_SERVICE_USER</role-name>
   </security-role>
   <security-role>
     <role-name>AGENT</role-name>
