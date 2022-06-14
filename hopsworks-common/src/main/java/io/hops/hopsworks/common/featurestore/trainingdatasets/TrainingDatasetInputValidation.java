@@ -150,6 +150,11 @@ public class TrainingDatasetInputValidation {
               Level.FINE, ", the provided training dataset split percentage is invalid. " +
               "Percentages can only be numeric. Weights will be normalized if they don’t sum up to 1.0.");
         }
+        if (trainingDatasetSplitDTO.getPercentage() <= 0) {
+          throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_TRAINING_DATASET_SPLIT_PERCENTAGE,
+              Level.FINE, ", the provided training dataset split percentage is invalid. " +
+              "Weights must be greater than 0.");
+        }
         if (!splitNames.add(trainingDatasetSplitDTO.getName())) {
           throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.TRAINING_DATASET_DUPLICATE_SPLIT_NAMES,
               Level.FINE, " The split names must be unique");

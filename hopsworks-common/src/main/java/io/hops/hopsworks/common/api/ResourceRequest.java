@@ -232,7 +232,8 @@ public class ResourceRequest {
     TRANSFORMATION,
     EXPECTATIONSUITE,
     VALIDATIONREPORT,
-    GREATEXPECTATION;
+    GREATEXPECTATION,
+    TDDATA;
 
     public static Name fromString(String name) {
       return valueOf(name.toUpperCase());

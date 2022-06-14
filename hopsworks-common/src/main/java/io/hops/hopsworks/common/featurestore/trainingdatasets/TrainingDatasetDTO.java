@@ -70,6 +70,7 @@ public class TrainingDatasetDTO extends FeaturestoreEntityDTO<TrainingDatasetDTO
   // Below fields do not need to provide
   private KeywordDTO keywords;
   private TagsDTO tags;
+  private Boolean dataAvailable;
 
   public TrainingDatasetDTO() {
   }
@@ -225,6 +226,14 @@ public class TrainingDatasetDTO extends FeaturestoreEntityDTO<TrainingDatasetDTO
 
   public void setTags(TagsDTO tags) {
     this.tags = tags;
+  }
+
+  public Boolean isDataAvailable() {
+    return dataAvailable;
+  }
+
+  public void setDataAvailable(Boolean dataAvailable) {
+    this.dataAvailable = dataAvailable;
   }
 
   @Override

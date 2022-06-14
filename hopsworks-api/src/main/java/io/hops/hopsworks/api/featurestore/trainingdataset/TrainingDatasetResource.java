@@ -148,7 +148,8 @@ public class TrainingDatasetResource {
           HttpServletRequest req,
       @BeanParam
           TrainingDatasetExpansionBeanParam param
-  ) throws FeaturestoreException, ServiceException, MetadataException, DatasetException, SchematizedTagException {
+  ) throws FeaturestoreException, ServiceException, MetadataException, DatasetException, SchematizedTagException,
+      IOException {
     Users user = jWTHelper.getUserPrincipal(sc);
     List<TrainingDataset> trainingDatasets =
         trainingDatasetController.getTrainingDatasetByFeatureView(featureView);
@@ -179,7 +180,8 @@ public class TrainingDatasetResource {
       @ApiParam(value = "training dataset version")
       @PathParam("version")
           Integer version
-  ) throws FeaturestoreException, ServiceException, MetadataException, DatasetException, SchematizedTagException {
+  ) throws FeaturestoreException, ServiceException, MetadataException, DatasetException, SchematizedTagException,
+      IOException {
     Users user = jWTHelper.getUserPrincipal(sc);
     TrainingDataset trainingDataset = trainingDatasetController.getTrainingDatasetByFeatureViewAndVersion(featureView,
         version);
