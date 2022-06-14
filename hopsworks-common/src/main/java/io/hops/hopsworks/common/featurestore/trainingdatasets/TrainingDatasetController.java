@@ -104,6 +104,10 @@ import java.util.Optional;
 import java.util.logging.Level;
 import java.util.stream.Collectors;
 
+import static io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.TrainingDatasetType.EXTERNAL_TRAINING_DATASET;
+import static io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.TrainingDatasetType.HOPSFS_TRAINING_DATASET;
+import static io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.TrainingDatasetType.IN_MEMORY_TRAINING_DATASET;
+
 /**
  * Class controlling the interaction with the training_dataset table and required business logic
  */
@@ -240,8 +244,8 @@ public class TrainingDatasetController {
             trainingDatasetDTO, trainingDataset);
       default:
         throw new IllegalArgumentException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_TRAINING_DATASET_TYPE.getMessage() +
-          ", Recognized training dataset types are: " + TrainingDatasetType.HOPSFS_TRAINING_DATASET + ", and: " +
-          TrainingDatasetType.EXTERNAL_TRAINING_DATASET + ". The provided training dataset type was not recognized: "
+          ", Recognized training dataset types are: " + HOPSFS_TRAINING_DATASET + ", and: " +
+          EXTERNAL_TRAINING_DATASET + ". The provided training dataset type was not recognized: "
           + trainingDataset.getTrainingDatasetType());
     }
   }
@@ -317,7 +321,7 @@ public class TrainingDatasetController {
     Inode inode = null;
     FeaturestoreConnector featurestoreConnector;
     TrainingDatasetDTO completeTrainingDatasetDTO;
-    if (trainingDatasetDTO.getTrainingDatasetType() == TrainingDatasetType.HOPSFS_TRAINING_DATASET) {
+    if (trainingDatasetDTO.getTrainingDatasetType() == HOPSFS_TRAINING_DATASET) {
       if (trainingDatasetDTO.getStorageConnector() != null &&
           trainingDatasetDTO.getStorageConnector().getId() != null) {
         featurestoreConnector = featurestoreConnectorFacade
@@ -382,6 +386,54 @@ public class TrainingDatasetController {
     }
   }
 
+  public FeaturestoreConnector getHopsFsConnector(TrainingDataset trainingDataset) throws FeaturestoreException {
+    FeaturestoreConnector featurestoreConnector = null;
+    switch (trainingDataset.getTrainingDatasetType()) {
+      case HOPSFS_TRAINING_DATASET:
+      case IN_MEMORY_TRAINING_DATASET:
+        featurestoreConnector = trainingDataset.getHopsfsTrainingDataset().getFeaturestoreConnector();
+        break;
+      case EXTERNAL_TRAINING_DATASET:
+        featurestoreConnector = getDefaultHopsFSTrainingDatasetConnector(trainingDataset.getFeaturestore());
+        break;
+    }
+    return featurestoreConnector;
+  }
+
+  public Boolean isTrainingDatasetAvailable(TrainingDataset trainingDataset, Users user)
+      throws FeaturestoreException, IOException {
+    switch (trainingDataset.getTrainingDatasetType()) {
+      case IN_MEMORY_TRAINING_DATASET:
+        return false;
+      case EXTERNAL_TRAINING_DATASET:
+        return null;
+      default: {
+        String trainingDatasetRootPath = getTrainingDatasetPath(inodeController.getPath(
+            getHopsFsConnector(trainingDataset).getHopsfsConnector().getHopsfsDataset().getInode()),
+            trainingDataset.getName(), trainingDataset.getVersion());
+
+        String username = hdfsUsersBean.getHdfsUserName(trainingDataset.getFeaturestore().getProject(), user);
+
+        DistributedFileSystemOps dfso = null;
+        try {
+          dfso = dfs.getDfsOps(username);
+          if (!trainingDataset.getSplits().isEmpty()) {
+            for (TrainingDatasetSplit split : trainingDataset.getSplits()) {
+              if (!dfso.exists(trainingDatasetRootPath + Path.SEPARATOR + split.getName())) {
+                return false;
+              }
+            }
+            return true;
+          } else {
+            return dfso.exists(trainingDatasetRootPath + Path.SEPARATOR + trainingDataset.getName());
+          }
+        } finally {
+          dfs.closeDfsClient(dfso);
+        }
+      }
+    }
+  }
+
   private FeaturestoreConnector getDefaultHopsFSTrainingDatasetConnector(Featurestore featurestore)
       throws FeaturestoreException {
     String connectorName =
@@ -415,7 +467,7 @@ public class TrainingDatasetController {
         break;
       default:
         throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_TRAINING_DATASET_TYPE, Level.FINE,
-          ", Recognized training dataset types are: " + TrainingDatasetType.HOPSFS_TRAINING_DATASET + ", and: " +
+          ", Recognized training dataset types are: " + HOPSFS_TRAINING_DATASET + ", and: " +
           TrainingDatasetType.EXTERNAL_TRAINING_DATASET + ". The provided training dataset type was not recognized: "
           + trainingDatasetDTO.getTrainingDatasetType());
     }

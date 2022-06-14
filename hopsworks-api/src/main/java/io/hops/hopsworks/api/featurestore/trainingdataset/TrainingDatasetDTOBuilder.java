@@ -43,6 +43,7 @@ import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.inject.Inject;
 import javax.ws.rs.core.UriInfo;
+import java.io.IOException;
 import java.util.List;
 
 @Stateless
@@ -62,7 +63,8 @@ public class TrainingDatasetDTOBuilder {
 
   public TrainingDatasetDTO build(Users user, Project project, TrainingDataset trainingDataset,
       UriInfo uriInfo,ResourceRequest resourceRequest) throws
-      FeaturestoreException, ServiceException, SchematizedTagException, MetadataException, DatasetException {
+      FeaturestoreException, ServiceException, SchematizedTagException, MetadataException, DatasetException,
+      IOException {
     TrainingDatasetDTO trainingDatasetDTO = trainingDatasetController.convertTrainingDatasetToDTO(user, project,
         trainingDataset, true);
     if (resourceRequest != null) {
@@ -72,6 +74,10 @@ public class TrainingDatasetDTOBuilder {
         KeywordDTO dto = featurestoreKeywordBuilder.build(uriInfo, keywordResourceRequest, project,
             trainingDataset, keywords);
         trainingDatasetDTO.setKeywords(dto);
+      }
+      if (resourceRequest.contains(ResourceRequest.Name.TDDATA)) {
+        trainingDatasetDTO.setDataAvailable(
+            trainingDatasetController.isTrainingDatasetAvailable(trainingDataset, user));
       }
       if (resourceRequest.contains(ResourceRequest.Name.TAGS)) {
         // Tag expansion
@@ -87,7 +93,8 @@ public class TrainingDatasetDTOBuilder {
 
   public TrainingDatasetDTO build(Users user, Project project, List<TrainingDataset> trainingDatasets,
       UriInfo uriInfo, ResourceRequest resourceRequest)
-      throws FeaturestoreException, ServiceException, SchematizedTagException, MetadataException, DatasetException {
+      throws FeaturestoreException, ServiceException, SchematizedTagException, MetadataException, DatasetException,
+      IOException {
     TrainingDatasetDTO trainingDatasetDTO = new TrainingDatasetDTO();
     trainingDatasetDTO.setCount((long) trainingDatasets.size());
     trainingDatasetDTO.setHref(uriInfo.getRequestUri());
