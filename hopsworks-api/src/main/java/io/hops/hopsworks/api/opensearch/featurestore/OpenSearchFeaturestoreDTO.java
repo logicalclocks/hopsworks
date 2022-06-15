@@ -27,12 +27,15 @@ import java.util.Map;
 @XmlRootElement
 public class OpenSearchFeaturestoreDTO {
   private List<OpenSearchFeaturestoreItemDTO.Base> featuregroups = new LinkedList<>();
+  private List<OpenSearchFeaturestoreItemDTO.Base> featureViews = new LinkedList<>();
   private List<OpenSearchFeaturestoreItemDTO.Base> trainingdatasets = new LinkedList<>();
   private List<OpenSearchFeaturestoreItemDTO.Feature> features = new LinkedList<>();
   @JsonIgnore
   private Map<Pair<String, String>, OpenSearchFeaturestoreItemDTO.Feature> featuresAux = new HashMap<>();
   private Integer featuregroupsFrom = 0;
   private Long featuregroupsTotal = 0l;
+  private Integer featureViewsFrom = 0;
+  private Long featureViewsTotal = 0l;
   private Integer trainingdatasetsFrom = 0;
   private Long trainingdatasetsTotal = 0l;
   private Integer featuresFrom = 0;
@@ -47,6 +50,15 @@ public class OpenSearchFeaturestoreDTO {
   
   public void setFeaturegroups(List<OpenSearchFeaturestoreItemDTO.Base> featuregroups) {
     this.featuregroups = featuregroups;
+  }
+  
+  public List<OpenSearchFeaturestoreItemDTO.Base> getFeatureViews() {
+    return featureViews;
+  }
+  
+  public void setFeatureViews(
+    List<OpenSearchFeaturestoreItemDTO.Base> featureViews) {
+    this.featureViews = featureViews;
   }
   
   public List<OpenSearchFeaturestoreItemDTO.Base> getTrainingdatasets() {
@@ -84,6 +96,22 @@ public class OpenSearchFeaturestoreDTO {
     this.featuregroupsTotal = featuregroupsTotal;
   }
   
+  public Integer getFeatureViewsFrom() {
+    return featureViewsFrom;
+  }
+  
+  public void setFeatureViewsFrom(Integer featureViewsFrom) {
+    this.featureViewsFrom = featureViewsFrom;
+  }
+  
+  public Long getFeatureViewsTotal() {
+    return featureViewsTotal;
+  }
+  
+  public void setFeatureViewsTotal(Long featureViewsTotal) {
+    this.featureViewsTotal = featureViewsTotal;
+  }
+  
   public Integer getTrainingdatasetsFrom() {
     return trainingdatasetsFrom;
   }
@@ -118,6 +146,10 @@ public class OpenSearchFeaturestoreDTO {
   
   public void addTrainingdataset(OpenSearchFeaturestoreItemDTO.Base trainingdataset) {
     trainingdatasets.add(trainingdataset);
+  }
+  
+  public void addFeatureView(OpenSearchFeaturestoreItemDTO.Base featureView) {
+    featureViews.add(featureView);
   }
   
   public void addFeaturegroup(OpenSearchFeaturestoreItemDTO.Base featuregroup) {

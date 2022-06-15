@@ -311,6 +311,19 @@ module FeaturestoreHelper
     parsed_json[:id]
   end
 
+  def create_cached_featuregroup_checked2(project_id,  name: nil, version: 1, features: nil, description: nil, event_time: nil,
+                                          featurestore_id: nil, featurestore_project_id: nil,
+                                          expected_status: 201)
+    featurestore_project_id = project_id if featurestore_project_id.nil?
+    featurestore_id = get_featurestore_id(featurestore_project_id) if featurestore_id.nil?
+    result,_ = create_cached_featuregroup(project_id, featurestore_id,
+                                          featuregroup_name: name, version: version, featuregroup_description: description,
+                                          features: features, event_time: event_time)
+    expect_status_details(expected_status)
+    result = JSON.parse(result) if expected_status == 201
+    result
+  end
+
   def create_cached_featuregroup(project_id, featurestore_id, features: nil, featuregroup_name: nil, online:false,
                                  version: 1, featuregroup_description: nil, statistics_config: nil, time_travel_format:
                                  "NONE", event_time: nil, expectation_suite: nil)
@@ -722,8 +735,24 @@ module FeaturestoreHelper
     }
 
     create_featureview_endpoint = "#{ENV['HOPSWORKS_API']}/project/#{project_id.to_s}/featurestores/#{featurestore_id.to_s}/featureview"
+    pp create_featureview_endpoint if defined?(@debugOpt) && @debugOpt
+    pp json_data.to_json if defined?(@debugOpt) && @debugOpt
     json_result = post create_featureview_endpoint, json_data.to_json
+    pp JSON.parse(json_result) if defined?(@debugOpt) && @debugOpt
     [json_result, name]
+  end
+
+  def create_feature_view_from_feature_group2(project_id, fg, name: nil, version: 1, description: nil,
+                                             featurestore_project_id: nil, featurestore_id: nil,
+                                             expected_status: 201)
+    featurestore_project_id = project_id if featurestore_project_id.nil?
+    featurestore_id = get_featurestore_id(featurestore_project_id) if featurestore_id.nil?
+
+    result,_ = create_feature_view_from_feature_group(project_id, featurestore_id, fg,
+                                                      name: name, version: version, description: description)
+    expect_status_details(expected_status)
+    result = JSON.parse(result) if expected_status == 201
+    result
   end
 
   def create_feature_view_from_feature_group(project_id, featurestore_id, fg, name: nil, version: 1, description: nil)
@@ -747,6 +776,16 @@ module FeaturestoreHelper
       "/#{featurestore_id.to_s}/featureview/#{json_data[:name]}/version/#{json_data[:version]}"
     json_result = put update_featureview_endpoint, json_data.to_json
     return json_result
+  end
+
+  def delete_feature_view(project_id, name, version: 1, feature_store_id: nil,
+                       feature_store_project_id: nil, expected_status: 200)
+    feature_store_project_id = project_id if feature_store_project_id.nil?
+    feature_store_id = get_featurestore_id(feature_store_project_id) if feature_store_id.nil?
+    endpoint = "#{ENV['HOPSWORKS_API']}/project/#{project_id}/featurestores/#{feature_store_id}/featureview/#{name}/version/#{version}"
+    pp endpoint if defined?(@debugOpt) && @debugOpt
+    delete endpoint
+    expect_status_details(expected_status)
   end
 
   def create_featureview_training_dataset_from_project(project, expected_status_code: 201, data_format: "tfrecords",

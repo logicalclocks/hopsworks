@@ -83,10 +83,6 @@ public class DatasetAccessController {
     FeaturestoreDocType docType) {
     Map<FeaturestoreDocType, Set<Integer>> searchProjects = new HashMap<>();
   
-    Set<Integer> featuregroupProjects = new HashSet<>();
-    Set<Integer> trainingdatasetProjects = new HashSet<>();
-    Set<Integer> featuresProjects = new HashSet<>();
-  
     /**
      * Split the shared datasets in FEATURESTORE/TD/DATASET and get the parent project they are coming from.
      * Also I am only interested in the parents of the shared datasets - thus the name sharedFromProjects. We need to
@@ -97,37 +93,37 @@ public class DatasetAccessController {
       .filter(DatasetSharedWith::getAccepted)
       .collect(Collectors.groupingBy((ds) -> getDatasetType(ds),
       Collectors.mapping((ds) -> ds.getDataset().getProject().getId(), Collectors.toCollection(HashSet::new))));
+    
     switch(docType) {
-      case FEATUREGROUP:
-        featuregroupProjects.add(targetProject.getId());
-        Optional.ofNullable(sharedFromProjects.get("FEATURESTORE")).ifPresent(featuregroupProjects::addAll);
-        searchProjects.put(FeaturestoreDocType.FEATUREGROUP, featuregroupProjects);
-        break;
-      case TRAININGDATASET:
-        trainingdatasetProjects.add(targetProject.getId());
-        Optional.ofNullable(sharedFromProjects.get("TRAINING_DATASET")).ifPresent(trainingdatasetProjects::addAll);
-        searchProjects.put(FeaturestoreDocType.TRAININGDATASET, trainingdatasetProjects);
-        break;
       case FEATURE:
-        featuresProjects.add(targetProject.getId());
-        Optional.ofNullable(sharedFromProjects.get("FEATURESTORE")).ifPresent(featuresProjects::addAll);
-        searchProjects.put(FeaturestoreDocType.FEATURE, featuresProjects);
+      case FEATUREGROUP:
+        searchProjects.put(docType, getFeaturestoreProjects(targetProject, sharedFromProjects, "FEATURESTORE"));
+        break;
+      case FEATUREVIEW:
+      case TRAININGDATASET:
+        searchProjects.put(docType, getFeaturestoreProjects(targetProject, sharedFromProjects, "TRAINING_DATASET"));
         break;
       case ALL:
-        featuregroupProjects.add(targetProject.getId());
-        Optional.ofNullable(sharedFromProjects.get("FEATURESTORE")).ifPresent(featuregroupProjects::addAll);
-        searchProjects.put(FeaturestoreDocType.FEATUREGROUP, featuregroupProjects);
-  
-        trainingdatasetProjects.add(targetProject.getId());
-        Optional.ofNullable(sharedFromProjects.get("TRAINING_DATASET")).ifPresent(trainingdatasetProjects::addAll);
-        searchProjects.put(FeaturestoreDocType.TRAININGDATASET, trainingdatasetProjects);
-  
-        featuresProjects.add(targetProject.getId());
-        Optional.ofNullable(sharedFromProjects.get("FEATURESTORE")).ifPresent(featuresProjects::addAll);
-        searchProjects.put(FeaturestoreDocType.FEATURE, featuresProjects);
+        searchProjects.put(FeaturestoreDocType.FEATURE,
+          getFeaturestoreProjects(targetProject, sharedFromProjects, "FEATURESTORE"));
+        searchProjects.put(FeaturestoreDocType.FEATUREGROUP,
+          getFeaturestoreProjects(targetProject, sharedFromProjects, "FEATURESTORE"));
+        searchProjects.put(FeaturestoreDocType.FEATUREVIEW,
+          getFeaturestoreProjects(targetProject, sharedFromProjects, "TRAINING_DATASET"));
+        searchProjects.put(FeaturestoreDocType.TRAININGDATASET,
+          getFeaturestoreProjects(targetProject, sharedFromProjects, "TRAINING_DATASET"));
         break;
     }
     return searchProjects;
+  }
+  
+  private Set<Integer> getFeaturestoreProjects(Project targetProject,
+                                               Map<String, Set<Integer>> sharedFromProjects,
+                                               String datasetType) {
+    Set<Integer> projects = new HashSet<>();
+    projects.add(targetProject.getId());
+    Optional.ofNullable(sharedFromProjects.get(datasetType)).ifPresent(projects::addAll);
+    return projects;
   }
   
   public interface DatasetAccessCtrl extends BiConsumer<DatasetDetails, ProjectsCollector> {

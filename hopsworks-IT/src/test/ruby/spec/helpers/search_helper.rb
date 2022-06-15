@@ -123,9 +123,9 @@ module SearchHelper
     end
   end
 
-  def project_search_test(project, term, type, items)
+  def project_search_test(project, term, type, items, result_type: nil)
     search_type = type.upcase
-    result_type = "#{type}s"
+    result_type = "#{type}s" if result_type.nil?
     wait_result = wait_for_me_time(15) do
       search_hits = local_featurestore_search(project, search_type, term)["#{result_type}"]
       error_msg = "search expected:#{items.length}, found:#{search_hits.length}"
@@ -149,9 +149,9 @@ module SearchHelper
     expect(wait_result["success"]).to be(true), wait_result["msg"]
   end
 
-  def global_search_test(term, type, items)
+  def global_search_test(term, type, items, result_type: nil)
     search_type = type.upcase
-    result_type = "#{type}s"
+    result_type = "#{type}s" if result_type.nil?
     wait_result = wait_for_me_time(15) do
       search_hits = global_featurestore_search(search_type, term)["#{result_type}"]
       pp search_hits if defined?(@debugOpt) && @debugOpt

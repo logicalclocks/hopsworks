@@ -122,6 +122,17 @@ public class OpenSearchFeaturestoreBuilder {
           }
           result.setFeaturegroupsTotal(e.getValue().getHits().getTotalHits().value);
         } break;
+        case FEATUREVIEW: {
+          for (SearchHit hitAux : e.getValue().getHits()) {
+            OpenSearchFeaturestoreHit hit = OpenSearchFeaturestoreHit.instance(hitAux);
+            OpenSearchFeaturestoreItemDTO.Base item
+              = openSearchFeaturestoreItemBuilder.fromTrainingDataset(hit, converter);
+            item.setHighlights(getHighlights(hitAux.getHighlightFields()));
+            accessCtrl.accept(inputWrapper(hit), collectorWrapper(item));
+            result.addFeatureView(item);
+          }
+          result.setFeatureViewsTotal(e.getValue().getHits().getTotalHits().value);
+        } break;
         case TRAININGDATASET: {
           for (SearchHit hitAux : e.getValue().getHits()) {
             OpenSearchFeaturestoreHit hit = OpenSearchFeaturestoreHit.instance(hitAux);
@@ -268,6 +279,14 @@ public class OpenSearchFeaturestoreBuilder {
           FeaturestoreXAttrsConstants.FG_FEATURES, FeaturestoreXAttrsConstants.DESCRIPTION))) {
         for(Text t : e.getValue().fragments()) {
           highlights.addFeatureDescription(t.toString());
+        }
+        continue;
+      }
+      if(e.getKey().equals(
+        FeaturestoreXAttrsConstants.getFeaturestoreOpenSearchKey(
+          FeaturestoreXAttrsConstants.FV_FEATURES, FeaturestoreXAttrsConstants.FG_FEATURES))) {
+        for(Text t : e.getValue().fragments()) {
+          highlights.addFeature(t.toString());
         }
         continue;
       }
