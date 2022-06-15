@@ -48,9 +48,15 @@ public class Query {
   private FilterLogic filter;
 
   private List<Feature> orderByFeatures;
+  
+  private List<String> deletedFeatureGroups;
 
   // For testing
   public Query() {
+  }
+  
+  public Query(List<String> deletedFeatureGroups) {
+    this.deletedFeatureGroups = deletedFeatureGroups;
   }
 
   // Constructor for testing
@@ -211,5 +217,13 @@ public class Query {
 
   public void setOrderByFeatures(List<Feature> orderByFeatures) {
     this.orderByFeatures = orderByFeatures;
+  }
+  
+  public List<String> getDeletedFeatureGroups() {
+    return deletedFeatureGroups;
+  }
+  
+  public void setDeletedFeatureGroups(List<String> deletedFeatureGroups) {
+    this.deletedFeatureGroups = deletedFeatureGroups;
   }
 }

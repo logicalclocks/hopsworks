@@ -17,6 +17,7 @@ package io.hops.hopsworks.common.featurestore.trainingdatasets;
 
 import com.google.common.collect.Maps;
 import io.hops.hopsworks.common.featurestore.query.Feature;
+import io.hops.hopsworks.common.featurestore.query.Query;
 import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.SqlCondition;
 import io.hops.hopsworks.common.featurestore.query.filter.Filter;
 import io.hops.hopsworks.common.featurestore.query.filter.FilterLogic;
@@ -24,13 +25,18 @@ import io.hops.hopsworks.common.featurestore.query.filter.FilterValue;
 import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.SqlFilterLogic;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.Featuregroup;
 import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.TrainingDataset;
+import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.TrainingDatasetFeature;
 import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.TrainingDatasetFilter;
 import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.TrainingDatasetFilterCondition;
+import io.hops.hopsworks.persistence.entity.project.Project;
+import io.hops.hopsworks.persistence.entity.user.Users;
 import junit.framework.TestCase;
 import org.junit.Assert;
 import org.junit.Test;
+import org.mockito.Mockito;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -412,5 +418,18 @@ public class TrainingDatasetControllerTest extends TestCase {
     Assert.assertEquals(actual.getRightFilter(), right);
     Assert.assertNull(actual.getRightLogic());
   }
-
+  
+  @Test
+  public void testGetQuery_deletedFeatureGroup() throws Exception {
+    List<TrainingDatasetFeature> tdFeatures = new ArrayList<>();
+    tdFeatures.add(new TrainingDatasetFeature("feature_missing", null));
+    tdFeatures.add(new TrainingDatasetFeature("feature_existing", new Featuregroup()));
+    
+    Query result = target.getQuery(new ArrayList<>(), tdFeatures, Collections.emptyList(), Mockito.mock(Project.class),
+      Mockito.mock(Users.class), false);
+  
+    Assert.assertFalse(result.getDeletedFeatureGroups().isEmpty());
+    Assert.assertEquals(1, result.getDeletedFeatureGroups().size());
+    Assert.assertEquals("feature_missing", result.getDeletedFeatureGroups().get(0));
+  }
 }

@@ -109,6 +109,12 @@ public class ConstructorController {
   public FsQueryDTO construct(Query query, boolean pitEnabled, boolean isTrainingDataset, Project project, Users user)
       throws FeaturestoreException, ServiceException {
     FsQueryDTO fsQueryDTO = new FsQueryDTO();
+    
+    if (query.getDeletedFeatureGroups() != null && !query.getDeletedFeatureGroups().isEmpty()) {
+      fsQueryDTO.setQuery(String.format("Parent feature groups of the following features are not available anymore: " +
+        "%s", String.join(", ", query.getDeletedFeatureGroups())));
+      return fsQueryDTO;
+    }
 
     fsQueryDTO.setQuery(makeOfflineQuery(query));
     fsQueryDTO.setHudiCachedFeatureGroups(getHudiAliases(query, new ArrayList<>(), project, user));
