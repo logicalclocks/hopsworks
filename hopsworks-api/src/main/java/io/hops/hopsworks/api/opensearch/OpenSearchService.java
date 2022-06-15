@@ -220,10 +220,11 @@ public class OpenSearchService {
   @GET
   @Path("jwt/{projectId}")
   @Produces(MediaType.APPLICATION_JSON)
-  @JWTRequired(acceptedTokens = {Audience.API, Audience.JOB}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
+  @JWTRequired(acceptedTokens = {Audience.API, Audience.JOB},
+    allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
   @ApiKeyRequired(acceptedScopes = {ApiScope.PYTHON_LIBRARIES}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER",
     "HOPS_SERVICE_USER"})
-  @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
   public Response createJwtToken(@Context SecurityContext sc,
                                  @Context HttpServletRequest req,
                                  @PathParam("projectId") Integer projectId) throws OpenSearchException {
