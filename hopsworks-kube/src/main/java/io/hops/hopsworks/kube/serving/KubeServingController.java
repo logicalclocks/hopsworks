@@ -361,11 +361,8 @@ public class KubeServingController implements ServingController {
     servingWrapper.setAvailableTransformerReplicas(internalStatus.getAvailableTransformerReplicas());
     servingWrapper.setConditions(internalStatus.getConditions());
   
-    servingWrapper.setExternalIP(internalStatus.getExternalIP());
-    servingWrapper.setExternalPort(internalStatus.getExternalPort());
-    servingWrapper.setInternalIPs(internalStatus.getInternalIPs());
-    servingWrapper.setInternalPort(internalStatus.getInternalPort());
-    servingWrapper.setInternalPath(internalStatus.getInternalPath());
+    servingWrapper.setHopsworksInferencePath(internalStatus.getHopsworksInferencePath());
+    servingWrapper.setModelServerInferencePath(internalStatus.getModelServerInferencePath());
     
     servingWrapper.setKafkaTopicDTO(kafkaServingHelper.buildTopicDTO(serving));
     

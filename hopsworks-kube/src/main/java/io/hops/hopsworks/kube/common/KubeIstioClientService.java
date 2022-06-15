@@ -1,25 +1,28 @@
 /*
- * Copyright (C) 2021, Logical Clocks AB. All rights reserved
+ * Copyright (C) 2022, Logical Clocks AB. All rights reserved
  */
 
 package io.hops.hopsworks.kube.common;
 
-import io.fabric8.kubernetes.api.model.ServiceSpec;
-import io.hops.common.Pair;
-import io.hops.hopsworks.kube.common.KubeIstioHostPort.Host;
-import io.hops.hopsworks.kube.common.KubeIstioHostPort.Port;
+import io.fabric8.kubernetes.api.model.LoadBalancerIngress;
+import io.fabric8.kubernetes.api.model.LoadBalancerStatus;
+import io.hops.hopsworks.common.serving.inference.InferenceEndpoint;
+import io.hops.hopsworks.common.serving.inference.InferenceEndpoint.InferenceEndpointType;
 
 import io.fabric8.kubernetes.api.model.Service;
-import io.fabric8.kubernetes.api.model.ServicePort;
 import io.fabric8.kubernetes.client.KubernetesClientException;
+import io.hops.hopsworks.common.serving.inference.InferencePort;
+import io.hops.hopsworks.common.serving.inference.InferencePort.InferencePortName;
 import org.apache.commons.lang.NotImplementedException;
 
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
-import java.util.Optional;
+import java.util.Collections;
+import java.util.List;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 @Stateless
 @TransactionAttribute(TransactionAttributeType.NEVER)
@@ -32,29 +35,12 @@ public class KubeIstioClientService {
   
   @EJB
   private KubeClientService kubeClientService;
-  @EJB
-  private KubeIstioHostPort kubeIstioHostPort;
   
-  public String getIstioEndpoint(Pair<String, Integer> istioIngressHostPort) {
-    return "http://" + istioIngressHostPort.getL() + ":" + istioIngressHostPort.getR();
-  }
-  
-  public Pair<String, Integer> getIstioIngressHostPort() {
-    return getIstioIngressHostPort(Host.NODE, Port.HTTP);
-  }
-  
-  public Pair<String, Integer> getIstioIngressHostPort(Host hostType, Port portType) {
-    Pair<String, Integer> hostPort = kubeIstioHostPort.getHostPort(hostType, portType);
-    if (hostPort == null) {
-      Service ingressService = getIstioIngressService();
-      String host = getIstioIngressHost(ingressService, hostType);
-      Integer port = getIstioIngressPort(ingressService, portType, withExternalPort(hostType));
-      if (host != null && port != null) {
-        kubeIstioHostPort.cacheHostPort(hostType, host, portType, port);
-      }
-      hostPort = new Pair<>(host, port);
-    }
-    return hostPort;
+  public InferenceEndpoint getIstioIngressEndpoint(InferenceEndpointType endpointType) {
+    Service ingressService = getIstioIngressService();
+    List<String> hosts = getIstioIngressHosts(ingressService, endpointType);
+    List<InferencePort> ports = getIstioIngressPorts(ingressService, withExternalPort(endpointType));
+    return new InferenceEndpoint(endpointType, hosts, ports);
   }
   
   private Service getIstioIngressService() throws KubernetesClientException {
@@ -63,27 +49,32 @@ public class KubeIstioClientService {
         .get());
   }
   
-  private String getIstioIngressHost(Service ingressService, Host hostType) throws KubernetesClientException {
-    ServiceSpec spec = ingressService.getSpec();
-    switch (hostType) {
-      case NODE: return kubeClientService.getRandomReadyNodeIp();
-      case CLUSTER: return spec.getClusterIP();
-      case LOAD_BALANCER: return spec.getLoadBalancerIP();
-      case EXTERNAL: return !spec.getExternalIPs().isEmpty()
-        ? spec.getExternalIPs().get((int) (System.currentTimeMillis() % spec.getExternalIPs().size())) // random
-        : null;
+  private List<String> getIstioIngressHosts(Service ingressService, InferenceEndpointType endpointType)
+      throws KubernetesClientException {
+    switch (endpointType) {
+      case NODE: return kubeClientService.getReadyNodeList(); // random kubernetes node IP
+      case KUBE_CLUSTER:
+        // ingress gateway IP within the k8s network
+        return Collections.singletonList(ingressService.getSpec().getClusterIP());
+      case LOAD_BALANCER: // load balancer external IP
+        LoadBalancerStatus loadBalancer = ingressService.getStatus().getLoadBalancer();
+        if (loadBalancer == null) return null;
+        List<LoadBalancerIngress> ingresses = loadBalancer.getIngress();
+        if (ingresses == null || ingresses.isEmpty()) return null;
+        return ingresses.stream().map(
+          i -> i.getHostname() != null ? i.getHostname() : i.getIp()).collect(Collectors.toList());
       default: throw new NotImplementedException();
     }
   }
   
-  private Integer getIstioIngressPort(Service ingressService, Port portType, boolean external)
-    throws KubernetesClientException {
-    Optional<ServicePort> servicePort = ingressService.getSpec().getPorts().stream()
-      .filter(port -> port.getName().equals(portType.toString())).findFirst();
-    return servicePort.map(external ? ServicePort::getNodePort : ServicePort::getPort).orElse(null);
+  private List<InferencePort> getIstioIngressPorts(Service ingressService, boolean external)
+      throws KubernetesClientException {
+    return ingressService.getSpec().getPorts().stream()
+      .map(p -> new InferencePort(InferencePortName.of(p.getName()), external ? p.getPort() : p.getNodePort()))
+      .collect(Collectors.toList());
   }
   
-  private boolean withExternalPort(Host hostType) {
-    return hostType == Host.NODE || hostType == Host.LOAD_BALANCER;
+  private boolean withExternalPort(InferenceEndpointType endpointType) {
+    return endpointType == InferenceEndpointType.KUBE_CLUSTER || endpointType == InferenceEndpointType.LOAD_BALANCER;
   }
 }

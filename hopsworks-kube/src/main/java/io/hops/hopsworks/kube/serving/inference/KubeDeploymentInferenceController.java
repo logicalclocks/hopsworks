@@ -7,11 +7,13 @@ package io.hops.hopsworks.kube.serving.inference;
 import io.fabric8.kubernetes.api.model.Service;
 import io.fabric8.kubernetes.client.KubernetesClientException;
 import io.hops.common.Pair;
+import io.hops.hopsworks.common.serving.inference.InferenceEndpoint;
 import io.hops.hopsworks.common.serving.inference.InferenceHttpClient;
 import io.hops.hopsworks.common.serving.inference.InferenceVerb;
 import io.hops.hopsworks.common.serving.inference.ServingInferenceUtils;
 import io.hops.hopsworks.exceptions.InferenceException;
 import io.hops.hopsworks.kube.common.KubeClientService;
+import io.hops.hopsworks.kube.common.KubeInferenceEndpoints;
 import io.hops.hopsworks.kube.serving.utils.KubePredictorServerUtils;
 import io.hops.hopsworks.kube.serving.utils.KubePredictorUtils;
 import io.hops.hopsworks.kube.serving.utils.KubeServingUtils;
@@ -42,6 +44,8 @@ public class KubeDeploymentInferenceController {
   @EJB
   private KubeClientService kubeClientService;
   @EJB
+  private KubeInferenceEndpoints kubeInferenceEndpoints;
+  @EJB
   private ServingInferenceUtils servingInferenceUtils;
   
   /**
@@ -59,13 +63,21 @@ public class KubeDeploymentInferenceController {
     KubePredictorServerUtils predictorServerUtils = kubePredictorUtils.getPredictorServerUtils(serving);
     String serviceName = predictorServerUtils.getServiceName(serving.getId().toString());
     
+    // Get any node host
+    InferenceEndpoint endpoint = kubeInferenceEndpoints.getEndpoint(InferenceEndpoint.InferenceEndpointType.NODE);
+    String host = endpoint.getAnyHost();
+    if (host == null) {
+      throw new InferenceException(RESTCodes.InferenceErrorCode.ENDPOINT_NOT_FOUND, Level.SEVERE);
+    }
+
     // Get node port
-    Service serviceInfo;
+    Integer port;
     try {
-      serviceInfo = kubeClientService.getServiceInfo(serving.getProject(), serviceName);
+      Service serviceInfo = kubeClientService.getServiceInfo(serving.getProject(), serviceName);
       if (serviceInfo == null) {
         throw new InferenceException(RESTCodes.InferenceErrorCode.SERVING_NOT_RUNNING, Level.FINE);
       }
+      port = serviceInfo.getSpec().getPorts().get(0).getNodePort(); // Deployment service nodePort
     } catch (KubernetesClientException e) {
       throw new InferenceException(RESTCodes.InferenceErrorCode.SERVING_INSTANCE_INTERNAL, Level.SEVERE, null,
           e.getMessage(), e);
@@ -74,9 +86,8 @@ public class KubeDeploymentInferenceController {
     // Build request
     HttpPost request;
     try {
-      request = servingInferenceUtils.buildInferenceRequest(kubeClientService.getRandomReadyNodeIp(),
-        serviceInfo.getSpec().getPorts().get(0).getNodePort(), kubeServingUtils.getInternalInferencePath(serving,
-          verb), inferenceRequestJson);
+      request = servingInferenceUtils.buildInferenceRequest(host, port,
+        kubeServingUtils.getModelServerInferencePath(serving, verb), inferenceRequestJson);
     } catch (URISyntaxException e) {
       throw new InferenceException(RESTCodes.InferenceErrorCode.REQUEST_ERROR, Level.SEVERE, null, e.getMessage(), e);
     }

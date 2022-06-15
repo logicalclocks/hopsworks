@@ -10,12 +10,10 @@ import io.fabric8.kubernetes.api.model.ObjectMetaBuilder;
 import io.fabric8.kubernetes.api.model.Pod;
 import io.fabric8.kubernetes.api.model.apps.DeploymentStatus;
 import io.fabric8.kubernetes.client.KubernetesClientException;
-import io.hops.common.Pair;
 import io.hops.hopsworks.common.serving.ServingStatusEnum;
 import io.hops.hopsworks.exceptions.ApiKeyException;
 import io.hops.hopsworks.exceptions.ServingException;
 import io.hops.hopsworks.kube.common.KubeClientService;
-import io.hops.hopsworks.kube.common.KubeIstioClientService;
 import io.hops.hopsworks.kube.common.KubeKServeClientService;
 import io.hops.hopsworks.kube.serving.utils.KubeArtifactUtils;
 import io.hops.hopsworks.kube.serving.utils.KubeJsonUtils;
@@ -48,8 +46,6 @@ public class KubeKServeController extends KubeToolServingController {
   private KubeClientService kubeClientService;
   @EJB
   private KubeKServeClientService kubeKServeClientService;
-  @EJB
-  private KubeIstioClientService kubeIstioClientService;
   @EJB
   private KubeServingUtils kubeServingUtils;
   @EJB
@@ -99,7 +95,6 @@ public class KubeKServeController extends KubeToolServingController {
     JSONObject inferenceService;
     DeploymentStatus deploymentStatus;
     DeploymentStatus transformerDeploymentStatus = null;
-    Pair<String, Integer> internalIngressHostPort;
     
     try {
       inferenceService = kubeKServeClientService.getInferenceService(project, serving);
@@ -108,7 +103,6 @@ public class KubeKServeController extends KubeToolServingController {
       if (serving.getTransformer() != null) {
         transformerDeploymentStatus = getDeploymentStatus(project, serving, "transformer");
       }
-      internalIngressHostPort = kubeIstioClientService.getIstioIngressHostPort();
     } catch (KubernetesClientException e) {
       throw new ServingException(RESTCodes.ServingErrorCode.STATUSERROR, Level.SEVERE, null, e.getMessage(), e);
     }
@@ -145,14 +139,8 @@ public class KubeKServeController extends KubeToolServingController {
         setAvailableReplicas(availableReplicas);
         setAvailableTransformerReplicas(finalAvailableTransformerReplicas);
         setConditions(conditions.size() > 0 ? conditions : null);
-        setInternalIPs(kubeClientService.getReadyNodeList());
-        setInternalPort(internalIngressHostPort.getR());
-        setInternalPath(kubeServingUtils.getInternalInferencePath(serving, null));
-        // These values will be fetched from the location href in the UI (client-side). By doing this, we make sure
-        // that we display the correct host and port to reach Hopsworks. For instance, using proxies or SSH
-        // tunneling, the port might differ from the default 80 or 443 on the client side.
-        setExternalIP(null);
-        setExternalPort(null);
+        setModelServerInferencePath(kubeServingUtils.getModelServerInferencePath(serving, null));
+        setHopsworksInferencePath(kubeServingUtils.getHopsworksInferencePath(serving, null));
       }
     };
   }

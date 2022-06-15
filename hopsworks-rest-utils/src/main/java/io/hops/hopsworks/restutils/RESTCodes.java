@@ -1235,7 +1235,8 @@ public class RESTCodes {
     SERVING_INSTANCE_BAD_REQUEST(8, "Serving instance bad request error", Response.Status.BAD_REQUEST),
     REQUEST_AUTH_TYPE_NOT_SUPPORTED(9, "Authentication type not supported", Response.Status.BAD_REQUEST),
     UNAUTHORIZED(10, "Unauthorized request", Response.Status.UNAUTHORIZED),
-    FORBIDDEN(11, "Forbidden request", Response.Status.FORBIDDEN);
+    FORBIDDEN(11, "Forbidden request", Response.Status.FORBIDDEN),
+    ENDPOINT_NOT_FOUND(12, "Inference endpoint not found", Response.Status.INTERNAL_SERVER_ERROR);
 
     private int code;
     private String message;

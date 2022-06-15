@@ -4,11 +4,10 @@
 
 package io.hops.hopsworks.kube.serving;
 
-import io.hops.common.Pair;
 import io.hops.hopsworks.common.serving.ServingConfig;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.ApiKeyException;
-import io.hops.hopsworks.kube.common.KubeIstioClientService;
+import io.hops.hopsworks.kube.common.KubeInferenceEndpoints;
 import io.hops.hopsworks.kube.common.KubeStereotype;
 import io.hops.hopsworks.kube.security.KubeApiKeyUtils;
 import io.hops.hopsworks.persistence.entity.user.Users;
@@ -32,7 +31,7 @@ public class KubeServingConfig implements ServingConfig {
   @EJB
   private KubeApiKeyUtils kubeApiKeyUtils;
   @EJB
-  private KubeIstioClientService kubeIstioClientService;
+  private KubeInferenceEndpoints kubeInferenceEndpoints;
   @EJB
   private Settings settings;
   
@@ -62,11 +61,6 @@ public class KubeServingConfig implements ServingConfig {
       String secret = kubeApiKeyUtils.getServingApiKeyValueFromKubeSecret(secretName);
       envVars.put("SERVING_API_KEY", secret);
     }
-    
-    // add istio endpoint
-    Pair<String, Integer> istioIngressHostPort = kubeIstioClientService.getIstioIngressHostPort();
-    String istioEndpoint = kubeIstioClientService.getIstioEndpoint(istioIngressHostPort);
-    envVars.put("ISTIO_ENDPOINT", istioEndpoint);
     
     return envVars;
   }

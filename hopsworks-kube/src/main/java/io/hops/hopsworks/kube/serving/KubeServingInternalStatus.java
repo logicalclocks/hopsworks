@@ -11,11 +11,8 @@ import java.util.List;
 public class KubeServingInternalStatus {
   
   private ServingStatusEnum servingStatus;
-  private String externalIP;
-  private Integer externalPort;
-  private List<String> internalIPs;
-  private Integer internalPort;
-  private String internalPath;
+  private String hopsworksInferencePath; // Hopsworks REST API
+  private String modelServerInferencePath; // Model server (Ingress gateway)
   private Boolean available; // Whether the service is reachable or not. If so, we can perform actions.
   private Integer availableReplicas;
   private Integer availableTransformerReplicas;
@@ -24,6 +21,8 @@ public class KubeServingInternalStatus {
   public KubeServingInternalStatus() {
   }
   
+  // Status
+  
   public ServingStatusEnum getServingStatus() {
     return servingStatus;
   }
@@ -31,8 +30,13 @@ public class KubeServingInternalStatus {
     this.servingStatus = servingStatus;
   }
   
+  public List<String> getConditions() { return conditions; }
+  public void setConditions(List<String> conditions) { this.conditions = conditions; }
+  
   public Boolean getAvailable() { return available; }
   public void setAvailable(Boolean available) { this.available = available; }
+  
+  // Replicas
   
   public Integer getAvailableReplicas() {
     return availableReplicas;
@@ -48,37 +52,15 @@ public class KubeServingInternalStatus {
     this.availableTransformerReplicas = availableReplicas;
   }
   
-  public String getExternalIP() {
-    return externalIP;
-  }
-  public void setExternalIP(String externalIP) {
-    this.externalIP = externalIP;
+  // Inference path
+  
+  public String getHopsworksInferencePath() { return hopsworksInferencePath; }
+  public void setHopsworksInferencePath(String hopsworksInferencePath) {
+    this.hopsworksInferencePath = hopsworksInferencePath;
   }
   
-  public Integer getExternalPort() {
-    return externalPort;
+  public String getModelServerInferencePath() { return modelServerInferencePath; }
+  public void setModelServerInferencePath(String modelServerInferencePath) {
+    this.modelServerInferencePath = modelServerInferencePath;
   }
-  public void setExternalPort(Integer externalPort) {
-    this.externalPort = externalPort;
-  }
-  
-  public List<String> getInternalIPs() {
-    return internalIPs;
-  }
-  public void setInternalIPs(List<String> internalIPs) {
-    this.internalIPs = internalIPs;
-  }
-  
-  public Integer getInternalPort() {
-    return internalPort;
-  }
-  public void setInternalPort(Integer internalPort) {
-    this.internalPort = internalPort;
-  }
-  
-  public String getInternalPath() { return internalPath; }
-  public void setInternalPath(String internalPath) { this.internalPath = internalPath; }
-  
-  public List<String> getConditions() { return conditions; }
-  public void setConditions(List<String> conditions) { this.conditions = conditions; }
 }

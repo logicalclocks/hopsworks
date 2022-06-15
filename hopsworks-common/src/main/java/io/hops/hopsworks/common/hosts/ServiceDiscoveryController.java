@@ -37,10 +37,12 @@ import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 @Singleton
@@ -131,6 +133,14 @@ public class ServiceDiscoveryController {
       throws ServiceDiscoveryException {
     ServiceDiscoveryClient client = getClient(resolverType);
     return client.getService(serviceQuery);
+  }
+  
+  @Lock(LockType.READ)
+  public List<Service> getAddressesOfServiceWithDNS(HopsworksService serviceName) throws ServiceDiscoveryException {
+    ServiceQuery serviceQuery = ServiceQuery.of(constructServiceFQDN(serviceName), Collections.emptySet());
+    List<Service> services = getService(Type.DNS, serviceQuery).collect(Collectors.toList());
+    if (services.isEmpty()) throw new ServiceNotFoundException("Could not find services with: " + serviceQuery);
+    return services;
   }
   
   @Lock(LockType.READ)

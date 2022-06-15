@@ -24,9 +24,11 @@ import io.hops.hopsworks.audit.logger.LogLevel;
 import io.hops.hopsworks.audit.logger.annotation.Logged;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
 import io.hops.hopsworks.common.serving.inference.InferenceController;
+import io.hops.hopsworks.common.serving.inference.InferenceEndpoint;
 import io.hops.hopsworks.common.serving.inference.InferenceVerb;
 import io.hops.hopsworks.exceptions.ApiKeyException;
 import io.hops.hopsworks.exceptions.InferenceException;
+import io.hops.hopsworks.exceptions.ServingException;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.user.security.apiKey.ApiScope;
@@ -40,15 +42,18 @@ import javax.ejb.TransactionAttributeType;
 import javax.enterprise.context.RequestScoped;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
+import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
+import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
+import java.util.List;
 import java.util.logging.Logger;
 
 /**
@@ -100,5 +105,21 @@ public class InferenceResource {
     String inferenceResult = inferenceController.infer(project, sc.getUserPrincipal().getName(), modelName, version,
       verb, inferenceRequestJson, authHeader);
     return Response.ok().entity(inferenceResult).build();
+  }
+  
+  @GET
+  @Path("/endpoints")
+  @Produces(MediaType.APPLICATION_JSON)
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
+  @JWTRequired(acceptedTokens = {Audience.API, Audience.JOB},
+    allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
+  @ApiKeyRequired(acceptedScopes = {ApiScope.SERVING},
+    allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
+  @ApiOperation(value = "Get inference endpoints for model serving", response = InferenceEndpoint.class,
+    responseContainer = "List")
+  public Response getEndpoints(@Context SecurityContext sc, @Context HttpServletRequest req) throws ServingException {
+    List<InferenceEndpoint> endpoints = inferenceController.getInferenceEndpoints();
+    GenericEntity<List<InferenceEndpoint>> endpointsEntity = new GenericEntity<List<InferenceEndpoint>>(endpoints){};
+    return Response.ok().entity(endpointsEntity).build();
   }
 }

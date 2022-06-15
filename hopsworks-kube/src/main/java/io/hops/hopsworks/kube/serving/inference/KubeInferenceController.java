@@ -5,10 +5,12 @@
 package io.hops.hopsworks.kube.serving.inference;
 
 import io.hops.common.Pair;
+import io.hops.hopsworks.common.serving.inference.InferenceEndpoint;
 import io.hops.hopsworks.common.serving.inference.InferenceVerb;
 import io.hops.hopsworks.common.serving.inference.ServingInferenceController;
 import io.hops.hopsworks.exceptions.ApiKeyException;
 import io.hops.hopsworks.exceptions.InferenceException;
+import io.hops.hopsworks.kube.common.KubeInferenceEndpoints;
 import io.hops.hopsworks.kube.common.KubeStereotype;
 import io.hops.hopsworks.persistence.entity.serving.Serving;
 import io.hops.hopsworks.persistence.entity.serving.ServingTool;
@@ -20,6 +22,8 @@ import javax.ejb.EJB;
 import javax.ejb.Singleton;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.logging.Level;
 
 /**
@@ -37,6 +41,8 @@ public class KubeInferenceController implements ServingInferenceController {
   private KubeKServeInferenceController kubeKServeInferenceController;
   @EJB
   private KubeDeploymentInferenceController kubeDeploymentInferenceController;
+  @EJB
+  private KubeInferenceEndpoints kubeInferenceEndpoints;
   
   /**
    * Kube inference. Sends a JSON request to the REST API of a kube serving server
@@ -63,5 +69,22 @@ public class KubeInferenceController implements ServingInferenceController {
     }
     // Default
     return kubeDeploymentInferenceController.infer(serving, verb, inferenceRequestJson);
+  }
+  
+  public List<InferenceEndpoint> getInferenceEndpoints() {
+    InferenceEndpoint nodeEndpoint =
+      kubeInferenceEndpoints.getEndpoint(InferenceEndpoint.InferenceEndpointType.NODE);
+    InferenceEndpoint loadBalancerEndpoint =
+      kubeInferenceEndpoints.getEndpoint(InferenceEndpoint.InferenceEndpointType.LOAD_BALANCER);
+    return new ArrayList<InferenceEndpoint>(){
+      {
+        if (nodeEndpoint != null) {
+          add(nodeEndpoint);
+        }
+        if (loadBalancerEndpoint != null) {
+          add(loadBalancerEndpoint);
+        }
+      }
+    };
   }
 }

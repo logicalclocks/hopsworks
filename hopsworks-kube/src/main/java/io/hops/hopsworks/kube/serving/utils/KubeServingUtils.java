@@ -134,13 +134,18 @@ public class KubeServingUtils {
       : 0;
   }
   
-  public String getInternalInferencePath(Serving serving, InferenceVerb verb) {
+  public String getModelServerInferencePath(Serving serving, InferenceVerb verb) {
     if (serving.getServingTool() == ServingTool.KSERVE) {
       return "/v1/models/" + serving.getName() + (verb != null ? verb.toString() : "");
     } else { // default
       KubePredictorServerUtils predictorServerUtils = kubePredictorUtils.getPredictorServerUtils(serving);
       return predictorServerUtils.getDeploymentPath(serving.getName(), serving.getModelVersion(), verb);
     }
+  }
+  
+  public String getHopsworksInferencePath(Serving serving, InferenceVerb verb) {
+    return "/project/" +
+      serving.getProject().getId() + "/inference/models/" + serving.getName() + (verb != null ? verb.toString() : "");
   }
   
   // Node selector and tolerations

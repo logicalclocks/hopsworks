@@ -42,7 +42,6 @@ import io.github.resilience4j.retry.IntervalFunction;
 import io.github.resilience4j.retry.Retry;
 import io.github.resilience4j.retry.RetryConfig;
 import io.hops.common.Pair;
-import io.hops.hopsworks.common.hosts.ServiceDiscoveryController;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.persistence.entity.jobs.history.Execution;
 import io.hops.hopsworks.persistence.entity.project.Project;
@@ -95,9 +94,6 @@ public class KubeClientService {
    */
   private KubernetesClient client = null;
   private com.google.common.base.Supplier<List<String>> nodeIPListCache;
-
-  @EJB
-  private ServiceDiscoveryController serviceDiscoveryController;
 
   // Namespaces
   

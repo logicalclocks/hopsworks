@@ -7,12 +7,14 @@ package io.hops.hopsworks.kube.serving.inference;
 import io.fabric8.kubernetes.client.KubernetesClientException;
 import io.hops.common.Pair;
 import io.hops.hopsworks.common.dao.user.UserFacade;
+import io.hops.hopsworks.common.serving.inference.InferenceEndpoint;
 import io.hops.hopsworks.common.serving.inference.InferenceHttpClient;
+import io.hops.hopsworks.common.serving.inference.InferencePort;
 import io.hops.hopsworks.common.serving.inference.InferenceVerb;
 import io.hops.hopsworks.common.serving.inference.ServingInferenceUtils;
 import io.hops.hopsworks.exceptions.ApiKeyException;
 import io.hops.hopsworks.exceptions.InferenceException;
-import io.hops.hopsworks.kube.common.KubeIstioClientService;
+import io.hops.hopsworks.kube.common.KubeInferenceEndpoints;
 import io.hops.hopsworks.kube.common.KubeKServeClientService;
 import io.hops.hopsworks.kube.security.KubeApiKeyUtils;
 import io.hops.hopsworks.kube.serving.utils.KubeServingUtils;
@@ -43,7 +45,7 @@ public class KubeKServeInferenceController {
   @EJB
   private KubeKServeClientService kubeKServeClientService;
   @EJB
-  private KubeIstioClientService kubeIstioClientService;
+  private KubeInferenceEndpoints kubeInferenceEndpoints;
   @EJB
   private KubeServingUtils kubeServingUtils;
   @EJB
@@ -110,22 +112,27 @@ public class KubeKServeInferenceController {
       throw new InferenceException(RESTCodes.InferenceErrorCode.SERVING_NOT_RUNNING, Level.FINE);
     }
 
-    // Get host, hostIP and nodePort
-    String host;
+    // Get host header, istio host and port
+    String hostHeader;
     try {
-      host = (new URI(inferenceServiceStatus.getString("url"))).getHost();
+      hostHeader = (new URI(inferenceServiceStatus.getString("url"))).getHost();
     } catch (URISyntaxException e) {
       throw new InferenceException(RESTCodes.InferenceErrorCode.SERVING_INSTANCE_INTERNAL, Level.SEVERE, null,
         e.getMessage(), e);
     }
-    Pair<String, Integer> ingressHostPort = kubeIstioClientService.getIstioIngressHostPort();
-  
+    InferenceEndpoint endpoint = kubeInferenceEndpoints.getEndpoint(InferenceEndpoint.InferenceEndpointType.NODE);
+    String host = endpoint.getAnyHost();
+    if (host == null) {
+      throw new InferenceException(RESTCodes.InferenceErrorCode.ENDPOINT_NOT_FOUND, Level.SEVERE);
+    }
+    Integer port = endpoint.getPort(InferencePort.InferencePortName.HTTP).getNumber();
+    
     // Build request
     HttpPost request;
     try {
-      request = servingInferenceUtils.buildInferenceRequest(ingressHostPort.getL(), ingressHostPort.getR(),
-        kubeServingUtils.getInternalInferencePath(serving, verb), inferenceRequestJson);
-      request.addHeader("host", host); // needed by Istio to route the request
+      request = servingInferenceUtils.buildInferenceRequest(host, port,
+        kubeServingUtils.getModelServerInferencePath(serving, verb), inferenceRequestJson);
+      request.addHeader("host", hostHeader); // needed by Istio to route the request
       request.addHeader("authorization", authHeader); // istio auth
     } catch (URISyntaxException e) {
       throw new InferenceException(RESTCodes.InferenceErrorCode.REQUEST_ERROR, Level.SEVERE, null, e.getMessage(), e);

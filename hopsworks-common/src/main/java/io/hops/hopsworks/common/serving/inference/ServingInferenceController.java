@@ -18,8 +18,11 @@ package io.hops.hopsworks.common.serving.inference;
 
 import io.hops.common.Pair;
 import io.hops.hopsworks.exceptions.ApiKeyException;
+import io.hops.hopsworks.exceptions.ServingException;
 import io.hops.hopsworks.persistence.entity.serving.Serving;
 import io.hops.hopsworks.exceptions.InferenceException;
+
+import java.util.List;
 
 /**
  * Interface for sending inference requests to localhost or kserve serving instances. Different type of serving
@@ -28,4 +31,6 @@ import io.hops.hopsworks.exceptions.InferenceException;
 public interface ServingInferenceController {
   Pair<Integer, String> infer(String username, Serving serving, Integer modelVersion, InferenceVerb verb,
     String inferenceRequestJson, String authHeader) throws InferenceException, ApiKeyException;
+  
+  List<InferenceEndpoint> getInferenceEndpoints() throws ServingException;
 }

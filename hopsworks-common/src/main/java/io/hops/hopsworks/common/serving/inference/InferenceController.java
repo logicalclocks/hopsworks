@@ -21,6 +21,7 @@ import io.hops.hopsworks.common.dao.serving.ServingFacade;
 import io.hops.hopsworks.common.serving.inference.logger.InferenceLogger;
 import io.hops.hopsworks.exceptions.ApiKeyException;
 import io.hops.hopsworks.exceptions.InferenceException;
+import io.hops.hopsworks.exceptions.ServingException;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.serving.Serving;
 import io.hops.hopsworks.persistence.entity.serving.ServingTool;
@@ -34,6 +35,7 @@ import javax.ejb.TransactionAttributeType;
 import javax.enterprise.inject.Any;
 import javax.enterprise.inject.Instance;
 import javax.inject.Inject;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -57,7 +59,7 @@ public class InferenceController {
   @Any
   private Instance<InferenceLogger> inferenceLoggers;
   
-
+  
   /**
    * Makes an inference request to a running serving instance
    *
@@ -133,5 +135,8 @@ public class InferenceController {
     
     return inferenceResult.getR();
   }
-
+  
+  public List<InferenceEndpoint> getInferenceEndpoints() throws ServingException {
+    return servingInferenceController.getInferenceEndpoints();
+  }
 }
