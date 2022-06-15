@@ -76,7 +76,7 @@ public class ExternalTrainingDatasetController {
   }
 
   /**
-   * This method return the s3 path for external training datasets stored on S3.
+   * This method return the path for external training datasets stored on external sources.
    * @param trainingDataset
    * @return
    */
@@ -86,6 +86,8 @@ public class ExternalTrainingDatasetController {
         return buildDatasetPathS3(trainingDataset);
       case ADLS:
         return buildDatasetPathADL(trainingDataset);
+      case GCS:
+        return buildDatasetPathGCS(trainingDataset);
       default:
         // This shouldn't happen here
         throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_STORAGE_CONNECTOR_TYPE,
@@ -115,5 +117,16 @@ public class ExternalTrainingDatasetController {
         adlsConnector.getContainerName() + "@" + adlsConnector.getAccountName() + ABFSS_URI_SUFFIX;
 
     return scheme + hostname + directory + trainingDataset.getName() + "_" + trainingDataset.getVersion();
+  }
+  
+  private String buildDatasetPathGCS(TrainingDataset trainingDataset) {
+    String bucketFolder = FeaturestoreConstants.TRAINING_DATASETS_FOLDER;
+    if (!Strings.isNullOrEmpty(trainingDataset.getExternalTrainingDataset().getPath())) {
+      bucketFolder = trainingDataset.getExternalTrainingDataset().getPath();
+    }
+    
+    return "gs://" + Paths.get(trainingDataset.getExternalTrainingDataset()
+        .getFeaturestoreConnector().getGcsConnector().getBucket(), bucketFolder,
+      trainingDataset.getName() + "_" + trainingDataset.getVersion()).toString();
   }
 }

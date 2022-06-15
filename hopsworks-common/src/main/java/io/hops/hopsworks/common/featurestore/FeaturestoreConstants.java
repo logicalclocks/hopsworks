@@ -137,4 +137,5 @@ public class FeaturestoreConstants {
   public static final int MAX_CHARACTERS_IN_VALIDATION_RESULT_EXCEPTION_INFO = 1000;
   public static final int MAX_CHARACTERS_IN_VALIDATION_RESULT_EXPECTATION_CONFIG = 2150;
   public static final int MAX_CHARACTERS_IN_VALIDATION_RESULT_RESULT_FIELD = 1000;
+  public static final  String TRAINING_DATASETS_FOLDER = "TRAINING_DATASETS";
 }
