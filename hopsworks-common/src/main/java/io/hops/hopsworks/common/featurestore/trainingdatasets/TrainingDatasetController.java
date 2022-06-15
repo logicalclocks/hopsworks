@@ -1006,9 +1006,12 @@ public class TrainingDatasetController {
     // Convert all the TrainingDatasetFeatures to QueryFeatures
     Map<Integer, String> fgAliasLookup = getAliasLookupTable(joins);
 
-    // Check that all the feature groups still exists, if not throw a reasonable error
+    // Check that all the feature groups still exists, if not collect missing feature names to provide information to
+    // user
     if (tdFeatures.stream().anyMatch(j -> j.getFeatureGroup() == null)) {
-      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.QUERY_FAILED_FG_DELETED, Level.FINE);
+      return new Query(tdFeatures.stream().filter(j -> j.getFeatureGroup() == null)
+        .map(TrainingDatasetFeature::getName)
+        .collect(Collectors.toList()));
     }
 
     // Get available features for all involved feature groups once, and save in map fgId -> availableFeatures

@@ -29,6 +29,7 @@ import io.hops.hopsworks.common.featurestore.query.filter.FilterLogic;
 import io.hops.hopsworks.common.featurestore.query.join.Join;
 import io.hops.hopsworks.common.featurestore.query.join.JoinController;
 import io.hops.hopsworks.common.featurestore.query.join.JoinDTO;
+import io.hops.hopsworks.common.featurestore.trainingdatasets.TrainingDatasetController;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.persistence.entity.featurestore.Featurestore;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.Featuregroup;
@@ -36,6 +37,7 @@ import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.cached.Cac
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.cached.TimeTravelFormat;
 import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.SqlCondition;
 import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.SqlFilterLogic;
+import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.TrainingDatasetFeature;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.user.Users;
 import org.apache.calcite.sql.JoinType;
@@ -51,6 +53,7 @@ import org.mockito.Mockito;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -86,6 +89,7 @@ public class TestConstructorController {
   private FeaturegroupFacade featuregroupFacade;
   private OnlineFeaturestoreController onlineFeaturestoreController;
   private CachedFeaturegroupController cachedFeaturegroupController;
+  private TrainingDatasetController trainingDatasetController;
 
   private ConstructorController target;
   private FilterController filterController;
@@ -169,6 +173,7 @@ public class TestConstructorController {
     featurestoreFacade = Mockito.mock(FeaturestoreFacade.class);
     onlineFeaturestoreController = Mockito.mock(OnlineFeaturestoreController.class);
     cachedFeaturegroupController = Mockito.mock(CachedFeaturegroupController.class);
+    trainingDatasetController = new TrainingDatasetController();
     project = Mockito.mock(Project.class);
     user = Mockito.mock(Users.class);
     filterController = new FilterController(new ConstructorController());
@@ -890,5 +895,18 @@ public class TestConstructorController {
 
     thrown.expect(FeaturestoreException.class);
     queryController.extractPrimaryKeysJoin(leftQuery, rightQuery, JoinType.INNER, null);
+  }
+  
+  @Test
+  public void testConstruct_deletedFeatureGroup() throws Exception {
+    List<TrainingDatasetFeature> tdFeatures = new ArrayList<>();
+    tdFeatures.add(new TrainingDatasetFeature("feature_missing", null));
+    tdFeatures.add(new TrainingDatasetFeature("feature_existing", new Featuregroup()));
+  
+    Query query = trainingDatasetController.getQuery(new ArrayList<>(), tdFeatures, Collections.emptyList(), project,
+      user, false);
+    
+    FsQueryDTO result = target.construct(query, false, false, project, user);
+    Assert.assertEquals("Parent feature groups of the following features are not available anymore: feature_missing", result.getQuery());
   }
 }

@@ -67,6 +67,12 @@ public class TrainingDatasetFeature implements Serializable {
 
   public TrainingDatasetFeature() {
   }
+  
+  // for testing
+  public TrainingDatasetFeature(String name, Featuregroup featureGroup) {
+    this.name = name;
+    this.featureGroup = featureGroup;
+  }
 
   public TrainingDatasetFeature(FeatureView featureView, TrainingDatasetJoin trainingDatasetJoin,
       Featuregroup featureGroup, String name, String type, Integer index, boolean label,
