@@ -5,11 +5,12 @@
 describe "On #{ENV['OS']}" do
   before(:all) do
     @debugOpt = false
+    @cleanUp = true
     epipe_wait_on_provenance(repeat: 2)
     epipe_wait_on_mutations(repeat: 2)
   end
   after(:all) do
-    clean_all_test_projects(spec: "ee_search")
+    clean_all_test_projects(spec: "ee_search") if defined?(@cleanUp) && @cleanUp
     epipe_wait_on_provenance(repeat: 2)
     epipe_wait_on_mutations(repeat: 2)
   end
@@ -40,13 +41,17 @@ describe "On #{ENV['OS']}" do
 
     after :all do
       with_admin_session
+      cleanup_tags if defined?(@cleanUp) && @cleanUp
+      reset_session
+    end
+
+    def cleanup_tags()
       @tags.each do |tag|
         delete_tag(tag)
       end
       @large_tags.each do |tag|
         delete_tag(tag)
       end
-      reset_session
     end
     def featuregroups_setup(project)
       fgs = Array.new
@@ -70,6 +75,30 @@ describe "On #{ENV['OS']}" do
       fgs[3][:id] = create_cached_featuregroup_checked(project[:id], featurestore_id, fgs[3][:name])
       add_featuregroup_tag_checked(project[:id], fgs[3][:id], @tags[0], "cat")
       fgs
+    end
+
+    def feature_view_setup(project, fg)
+      fvs = Array.new
+
+      fvs[0] = {}
+      fvs[0][:name] = "fv0"
+      fvs[0][:val] = create_feature_view_from_feature_group2(project[:id], fg, name: fvs[0][:name])
+      add_featureview_tag_checked(project[:id], fvs[0][:val]["name"], fvs[0][:val]["version"], @tags[1], "val")
+      fvs[1] = {}
+      fvs[1][:name] = "fv1"
+      fvs[1][:val] = create_feature_view_from_feature_group2(project[:id], fg, name: fvs[1][:name])
+      add_featureview_tag_checked(project[:id], fvs[1][:val]["name"], fvs[1][:val]["version"], @tags[0], "some")
+      add_featureview_tag_checked(project[:id], fvs[1][:val]["name"], fvs[1][:val]["version"], @tags[1], "val")
+      fvs[2] = {}
+      fvs[2][:name] = "fv2"
+      fvs[2][:val] = create_feature_view_from_feature_group2(project[:id], fg, name: fvs[2][:name])
+      add_featureview_tag_checked(project[:id], fvs[2][:val]["name"], fvs[2][:val]["version"], @tags[1], "dog")
+      add_featureview_tag_checked(project[:id], fvs[2][:val]["name"], fvs[2][:val]["version"], @tags[2], "val")
+      fvs[3] = {}
+      fvs[3][:name] = "fv3"
+      fvs[3][:val] = create_feature_view_from_feature_group2(project[:id], fg, name: fvs[3][:name])
+      add_featureview_tag_checked(project[:id], fvs[3][:val]["name"], fvs[3][:val]["version"], @tags[0], "cat")
+      fvs
     end
 
     def trainingdataset_setup(project)
@@ -103,11 +132,15 @@ describe "On #{ENV['OS']}" do
       tds
     end
 
-    def cleanup(project, fgs, tds)
+    def cleanup(project, fgs, fv_fg, fvs, tds)
       featurestore_id = get_featurestore_id(project[:id])
       fgs.each do |fg|
         delete_featuregroup_checked(project[:id], featurestore_id, fg[:id])
       end if defined?(fgs) && !fgs.nil?
+      delete_featuregroup_checked(project[:id], featurestore_id, fv_fg["id"]) if defined?(fv_fg) && !fv_fg.nil?
+      fvs.each do |fv|
+        delete_feature_view(project[:id], fv[:val]["name"], version: fv[:val]["version"])
+      end if defined?(fvs) && !fvs.nil?
       tds.each do |td|
         delete_trainingdataset_checked(project[:id], featurestore_id, td[:id])
       end if defined?(tds) && !tds.nil?
@@ -129,11 +162,13 @@ describe "On #{ENV['OS']}" do
 
       context "group" do
         after :each do
-          cleanup(@project, @fgs, @tds)
+          cleanup(@project, @fgs, @fv_fg, @fvs, @tds) if defined?(@cleanUp) && @cleanUp
         end
 
-        it "ee project search featuregroup, training datasets with tags" do
+        it "ee project search featuregroup, feature_views, training datasets with tags" do
           @fgs = featuregroups_setup(@project)
+          @fv_fg = create_cached_featuregroup_checked2(@project.id, name: "fg")
+          @fvs = feature_view_setup(@project, @fv_fg)
           @tds = trainingdataset_setup(@project)
           #search
           wait_result = epipe_wait_on_mutations(wait_time:30, repeat: 2)
@@ -143,10 +178,14 @@ describe "On #{ENV['OS']}" do
                             {:name => @fgs[2][:name], :highlight => "tags", :parentProjectName => @project[:projectname]},
                             {:name => @fgs[3][:name], :highlight => "tags", :parentProjectName => @project[:projectname]}]
           project_search_test(@project, "dog", "featuregroup", expected_hits1)
-          expected_hits2 = [{:name => @tds[1][:name], :highlight => "tags", :parentProjectName => @project[:projectname]},
+          expected_hits2 = [{:name => @fvs[1][:name], :highlight => "tags", :parentProjectName => @project[:projectname]},
+                            {:name => @fvs[2][:name], :highlight => "tags", :parentProjectName => @project[:projectname]},
+                            {:name => @fvs[3][:name], :highlight => "tags", :parentProjectName => @project[:projectname]}]
+          project_search_test(@project, "dog", "featureview", expected_hits2, result_type: "featureViews")
+          expected_hits3 = [{:name => @tds[1][:name], :highlight => "tags", :parentProjectName => @project[:projectname]},
                             {:name => @tds[2][:name], :highlight => "tags", :parentProjectName => @project[:projectname]},
                             {:name => @tds[3][:name], :highlight => "tags", :parentProjectName => @project[:projectname]}]
-          project_search_test(@project, "dog", "trainingdataset", expected_hits2)
+          project_search_test(@project, "dog", "trainingdataset", expected_hits3)
         end
       end
 
@@ -240,28 +279,31 @@ describe "On #{ENV['OS']}" do
         with_valid_session
         @project1 = create_project
         @project2 = create_project
+
+        #share featurestore (with training dataset)
+        featurestore_name = @project1[:projectname].downcase + "_featurestore.db"
+        featurestore1 = get_dataset(@project1, featurestore_name)
+        training_dataset_name = @project1[:projectname] + "_Training_Datasets"
+        request_access_by_dataset(featurestore1, @project2)
+        share_dataset_checked(@project1, featurestore_name, @project2[:projectname], datasetType: "FEATURESTORE")
+        accept_dataset_checked(@project2, "#{@project1[:projectname]}::#{training_dataset_name}", datasetType: "DATASET")
+        @fgs1 = featuregroups_setup(@project1)
+        @fgs2 = featuregroups_setup(@project2)
+        @fv_fg1 = create_cached_featuregroup_checked2(@project1.id, name: "fg")
+        @fvs1 = feature_view_setup(@project1, @fv_fg1)
+        @fv_fg2 = create_cached_featuregroup_checked2(@project2.id, name: "fg")
+        @fvs2 = feature_view_setup(@project2, @fv_fg2)
+        @tds1 = trainingdataset_setup(@project1)
+        @tds2 = trainingdataset_setup(@project2)
+      end
+
+      after :all do
+        cleanup(@project1, @fgs1, @fv_fg1, @fvs1, @tds1) if defined?(@cleanUp) && @cleanUp
+        cleanup(@project2, @fgs2, @fv_fg2, @fvs2, @tds2) if defined?(@cleanUp) && @cleanUp
       end
 
       context "project search with shared fs" do
-        before :all do
-          #share featurestore (with training dataset)
-          featurestore_name = @project1[:projectname].downcase + "_featurestore.db"
-          featurestore1 = get_dataset(@project1, featurestore_name)
-          training_dataset_name = @project1[:projectname] + "_Training_Datasets"
-          request_access_by_dataset(featurestore1, @project2)
-          share_dataset_checked(@project1, featurestore_name, @project2[:projectname], datasetType: "FEATURESTORE")
-          accept_dataset_checked(@project2, "#{@project1[:projectname]}::#{training_dataset_name}", datasetType: "DATASET")
-          @fgs1 = featuregroups_setup(@project1)
-          @fgs2 = featuregroups_setup(@project2)
-          @tds1 = trainingdataset_setup(@project1)
-          @tds2 = trainingdataset_setup(@project2)
-        end
-
-        after :all do
-          cleanup(@project1, @fgs1, @tds1)
-          cleanup(@project2, @fgs2, @tds2)
-        end
-        it "featuregroup, training datasets with tags" do
+        it "featuregroup, feature views, training datasets with tags" do
           #search
           wait_result = epipe_wait_on_mutations(wait_time:30, repeat: 2)
           expect(wait_result["success"]).to be(true), wait_result["msg"]
@@ -278,33 +320,34 @@ describe "On #{ENV['OS']}" do
                             {:name => @fgs1[2][:name], :highlight => "tags", :parentProjectName => @project1[:projectname]},
                             {:name => @fgs1[3][:name], :highlight => "tags", :parentProjectName => @project1[:projectname]}]
           project_search_test(@project2, "dog", "featuregroup", expected_hits2)
-          expected_hits3 = [{:name => @tds1[1][:name], :highlight => "tags", :parentProjectName => @project1[:projectname]},
+          expected_hits3 = [{:name => @fvs1[1][:name], :highlight => "tags", :parentProjectName => @project1[:projectname]},
+                            {:name => @fvs1[2][:name], :highlight => "tags", :parentProjectName => @project1[:projectname]},
+                            {:name => @fvs1[3][:name], :highlight => "tags", :parentProjectName => @project1[:projectname]}]
+          project_search_test(@project1, "dog", "featureview", expected_hits3, result_type: "featureViews")
+          expected_hits4 = [{:name => @fvs2[1][:name], :highlight => "tags", :parentProjectName => @project2[:projectname]},
+                            {:name => @fvs2[2][:name], :highlight => "tags", :parentProjectName => @project2[:projectname]},
+                            {:name => @fvs2[3][:name], :highlight => "tags", :parentProjectName => @project2[:projectname]},
+                            # shared featureviews
+                            {:name => @fvs1[1][:name], :highlight => "tags", :parentProjectName => @project1[:projectname]},
+                            {:name => @fvs1[2][:name], :highlight => "tags", :parentProjectName => @project1[:projectname]},
+                            {:name => @fvs1[3][:name], :highlight => "tags", :parentProjectName => @project1[:projectname]}]
+          project_search_test(@project2, "dog", "featureview", expected_hits4, result_type: "featureViews")
+          expected_hits5 = [{:name => @tds1[1][:name], :highlight => "tags", :parentProjectName => @project1[:projectname]},
                             {:name => @tds1[2][:name], :highlight => "tags", :parentProjectName => @project1[:projectname]},
                             {:name => @tds1[3][:name], :highlight => "tags", :parentProjectName => @project1[:projectname]}]
-          project_search_test(@project1, "dog", "trainingdataset", expected_hits3)
-          expected_hits4 = [{:name => @tds2[1][:name], :highlight => "tags", :parentProjectName => @project2[:projectname]},
+          project_search_test(@project1, "dog", "trainingdataset", expected_hits5)
+          expected_hits6 = [{:name => @tds2[1][:name], :highlight => "tags", :parentProjectName => @project2[:projectname]},
                             {:name => @tds2[2][:name], :highlight => "tags", :parentProjectName => @project2[:projectname]},
                             {:name => @tds2[3][:name], :highlight => "tags", :parentProjectName => @project2[:projectname]},
                             # shared trainingdatasets
                             {:name => @tds1[1][:name], :highlight => "tags", :parentProjectName => @project1[:projectname]},
                             {:name => @tds1[2][:name], :highlight => "tags", :parentProjectName => @project1[:projectname]},
                             {:name => @tds1[3][:name], :highlight => "tags", :parentProjectName => @project1[:projectname]}]
-          project_search_test(@project2, "dog", "trainingdataset", expected_hits4)
+          project_search_test(@project2, "dog", "trainingdataset", expected_hits6)
         end
       end
-
       context "global search" do
-        before :all do
-          @fgs1 = featuregroups_setup(@project1)
-          @fgs2 = featuregroups_setup(@project2)
-          @tds1 = trainingdataset_setup(@project1)
-          @tds2 = trainingdataset_setup(@project2)
-        end
-        after :all do
-          cleanup(@project1, @fgs1, @tds1)
-          cleanup(@project2, @fgs2, @tds2)
-        end
-        it "featuregroup, training datasets with tags" do
+        it "featuregroup, feature views, training datasets with tags" do
           wait_result = epipe_wait_on_mutations(wait_time:30, repeat: 2)
           expect(wait_result["success"]).to be(true), wait_result["msg"]
 
@@ -315,13 +358,20 @@ describe "On #{ENV['OS']}" do
                             {:name => @fgs2[2][:name], :highlight => "tags", :parentProjectName => @project2[:projectname]},
                             {:name => @fgs2[3][:name], :highlight => "tags", :parentProjectName => @project2[:projectname]}]
           global_search_test("dog", "featuregroup", expected_hits1)
-          expected_hits2 = [{:name => @tds1[1][:name], :highlight => "tags", :parentProjectName => @project1[:projectname]},
+          expected_hits2 = [{:name => @fvs1[1][:name], :highlight => "tags", :parentProjectName => @project1[:projectname]},
+                            {:name => @fvs1[2][:name], :highlight => "tags", :parentProjectName => @project1[:projectname]},
+                            {:name => @fvs1[3][:name], :highlight => "tags", :parentProjectName => @project1[:projectname]},
+                            {:name => @fvs2[1][:name], :highlight => "tags", :parentProjectName => @project2[:projectname]},
+                            {:name => @fvs2[2][:name], :highlight => "tags", :parentProjectName => @project2[:projectname]},
+                            {:name => @fvs2[3][:name], :highlight => "tags", :parentProjectName => @project2[:projectname]}]
+          global_search_test("dog", "featureview", expected_hits2, result_type: "featureViews")
+          expected_hits3 = [{:name => @tds1[1][:name], :highlight => "tags", :parentProjectName => @project1[:projectname]},
                             {:name => @tds1[2][:name], :highlight => "tags", :parentProjectName => @project1[:projectname]},
                             {:name => @tds1[3][:name], :highlight => "tags", :parentProjectName => @project1[:projectname]},
                             {:name => @tds2[1][:name], :highlight => "tags", :parentProjectName => @project2[:projectname]},
                             {:name => @tds2[2][:name], :highlight => "tags", :parentProjectName => @project2[:projectname]},
                             {:name => @tds2[3][:name], :highlight => "tags", :parentProjectName => @project2[:projectname]}]
-          global_search_test("dog", "trainingdataset", expected_hits2)
+          global_search_test("dog", "trainingdataset", expected_hits3)
         end
       end
     end
@@ -520,6 +570,61 @@ describe "On #{ENV['OS']}" do
           expected_hits = [{:name => @tds1[0][:name], :highlight => "tags", :parentProjectName => @project1[:projectname]},
                            {:name => @tds1[1][:name], :highlight => "tags", :parentProjectName => @project1[:projectname]}]
           global_search_test("dog", "trainingdataset", expected_hits)
+        end
+      end
+
+      context 'fvs - search by tags' do
+        def tag_featureview_setup(project, fg)
+          fvs = Array.new
+          fvs[0] = {}
+          fvs[0][:name] = "fv_0"
+          fvs[0][:val] = create_feature_view_from_feature_group2(project[:id], fg, name: fvs[0][:name])
+          fvs[1] = {}
+          fvs[1][:name] = "fv_1"
+          fvs[1][:val] = create_feature_view_from_feature_group2(project[:id], fg, name: fvs[1][:name])
+          fvs
+        end
+        before :all do
+          #make sure epipe is free of work
+          wait_result = epipe_wait_on_mutations(wait_time: 30, repeat: 2)
+          expect(wait_result["success"]).to be(true), wait_result["msg"]
+
+          create_session(@user1_params[:email], @user1_params[:password])
+          @fv_fg1 = create_cached_featuregroup_checked2(@project1.id, name: "fg")
+          @fvs1 = tag_featureview_setup(@project1, @fv_fg1)
+          add_featureview_tag_checked(@project1[:id], @fvs1[0][:val]["name"], @fvs1[0][:val]["version"],
+                                       @search_tags[0], "dog")
+          add_featureview_tag_checked(@project1[:id], @fvs1[1][:val]["name"], @fvs1[1][:val]["version"],
+                                       @search_tags[1], schematized_tag_val)
+          create_session(@user2_params[:email], @user2_params[:password])
+          @fv_fg2 = create_cached_featuregroup_checked2(@project2.id, name: "fg")
+          @fvs2 = tag_featureview_setup(@project2, @fv_fg2)
+
+          #make sure epipe is free of work
+          wait_result = epipe_wait_on_mutations(wait_time: 30, repeat: 2)
+          expect(wait_result["success"]).to be(true), wait_result["msg"]
+        end
+        it 'project local search' do
+          wait_result = epipe_wait_on_mutations(wait_time: 30, repeat: 2)
+          expect(wait_result["success"]).to be(true), wait_result["msg"]
+
+          create_session(@user1_params[:email], @user1_params[:password])
+          expected_hits = [{:name => @fvs1[0][:name], :highlight => "tags", :parentProjectName => @project1[:projectname]},
+                           {:name => @fvs1[1][:name], :highlight => "tags", :parentProjectName => @project1[:projectname]}]
+          project_search_test(@project1, "dog", "featureview", expected_hits, result_type: "featureViews")
+        end
+        it 'project shared search' do
+          create_session(@user2_params[:email], @user2_params[:password])
+          expected_hits = [# shared featureviews
+              {:name => @fvs1[0][:name], :highlight => "tags", :parentProjectName => @project1[:projectname]},
+              {:name => @fvs1[1][:name], :highlight => "tags", :parentProjectName => @project1[:projectname]}]
+          project_search_test(@project2, "dog", "featureview", expected_hits, result_type: "featureViews")
+        end
+        it 'global fvs' do
+          create_session(@user1_params[:email], @user1_params[:password])
+          expected_hits = [{:name => @fvs1[0][:name], :highlight => "tags", :parentProjectName => @project1[:projectname]},
+                           {:name => @fvs1[1][:name], :highlight => "tags", :parentProjectName => @project1[:projectname]}]
+          global_search_test("dog", "featureview", expected_hits, result_type: "featureViews")
         end
       end
     end

@@ -214,18 +214,17 @@ module TagHelper
     expect_status_details(200)
   end
 
-  def add_featureview_tag_checked(project_id, featureview_name, featureview_version, name, value, featurestore_id: nil)
-    add_featureview_tag(project_id, featureview_name, featureview_version, name, value, featurestore_id: featurestore_id)
+  def add_featureview_tag_checked(project_id, featureview_name, featureview_version, name, value,
+                                  featurestore_id: nil, featurestore_project_id: nil)
+    add_featureview_tag(project_id, featureview_name, featureview_version, name, value,
+                        featurestore_id: featurestore_id, featurestore_project_id: featurestore_project_id)
     expect_status_details(201)
   end
 
-  def update_featureview_tag_checked(project_id, featureview_name, featureview_version, name, value, featurestore_id: nil)
-    add_featureview_tag(project_id, featureview_name, featureview_version, name, value, featurestore_id: featurestore_id)
-    expect_status_details(200)
-  end
-
-  def add_featureview_tag(project_id, featureview_name, featureview_version, name, value, featurestore_id: nil)
-    featurestore_id = get_featurestore_id(project_id) if featurestore_id.nil?
+  def add_featureview_tag(project_id, featureview_name, featureview_version, name,
+                          value, featurestore_id: nil, featurestore_project_id: nil)
+    featurestore_project_id = project_id if featurestore_project_id.nil?
+    featurestore_id = get_featurestore_id(featurestore_project_id) if featurestore_id.nil?
     path = get_featureview_tag_query(project_id, featurestore_id, featureview_name, featureview_version, name)
     pp "put #{path}, #{value}" if defined?(@debugOpt) && @debugOpt
     put path, value

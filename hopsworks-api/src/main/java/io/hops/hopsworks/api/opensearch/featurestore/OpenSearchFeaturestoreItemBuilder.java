@@ -66,7 +66,7 @@ public class OpenSearchFeaturestoreItemBuilder {
     }
     return item;
   }
-
+  
   public OpenSearchFeaturestoreItemDTO.Base fromTrainingDataset(OpenSearchFeaturestoreHit hit,
                                                                 HopsworksJAXBContext converter)
       throws GenericException {
