@@ -40,6 +40,7 @@
 package io.hops.hopsworks.common.opensearch;
 
 import io.hops.hopsworks.common.featurestore.xattr.dto.FeaturestoreXAttrsConstants;
+import io.hops.hopsworks.exceptions.GenericException;
 import io.hops.hopsworks.persistence.entity.dataset.Dataset;
 import io.hops.hopsworks.persistence.entity.dataset.DatasetSharedWith;
 import io.hops.hopsworks.persistence.entity.project.Project;
@@ -64,17 +65,16 @@ import org.opensearch.search.sort.NestedSortBuilder;
 import org.opensearch.search.sort.SortBuilder;
 import org.opensearch.search.sort.SortBuilders;
 import org.opensearch.search.sort.SortOrder;
-import org.javatuples.Pair;
 import org.json.JSONObject;
 
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -216,7 +216,7 @@ public class OpenSearchController {
    * @param searchTerm
    * @param from
    * @param size
-   * @return even if you passed as type ALL, expect result to contain FEATUREGROUP, TRAININGDATASET, FEATURE
+   * @return even if you passed as type ALL, expect result to contain FEATUREGROUP/FEATUREVIEW/TRAININGDATASET/FEATURE
    * @throws OpenSearchException
    * @throws ServiceException
    */
@@ -230,44 +230,44 @@ public class OpenSearchController {
     }
     
     Map<FeaturestoreDocType, SearchResponse> result = new HashMap<>();
+    SearchResponse response;
     switch(docType) {
-      case FEATUREGROUP: {
-        QueryBuilder fgQB = featuregroupQueryB(searchTerm);
-        SearchResponse response = executeSearchQuery(fgQB, featuregroupHighlighter(), from, size);
-        checkResponse(fgQB, response);
-        result.put(FeaturestoreDocType.FEATUREGROUP, response);
-      } break;
-      case TRAININGDATASET: {
-        QueryBuilder tdQB = trainingdatasetQueryB(searchTerm);
-        SearchResponse response = executeSearchQuery(tdQB, trainingDatasetHighlighter(), from, size);
-        checkResponse(tdQB, response);
-        result.put(FeaturestoreDocType.TRAININGDATASET, response);
-      } break;
-      case FEATURE: {
+      case FEATUREGROUP:
+      case FEATUREVIEW:
+      case TRAININGDATASET:
+        QueryBuilder qb = baseFeatureStoreArtifactQueryB(docType, searchTerm);
+        response = executeSearchQuery(qb, baseFeatureStoreArtifactHighlighter(), from, size);
+        checkResponse(qb, response);
+        result.put(docType, response);
+        break;
+      case FEATURE:
         QueryBuilder fQB = featureQueryB(searchTerm);
         //TODO Alex - v2 use actual from size of features
-        SearchResponse response = executeSearchQuery(fQB, featureHighlighter(), 0, 10000);
+        response = executeSearchQuery(fQB, featureHighlighter(), 0, 10000);
         checkResponse(fQB, response);
         result.put(FeaturestoreDocType.FEATURE, response);
-      } break;
-      case ALL: {
-        List<Pair<QueryBuilder, HighlightBuilder>> qbs = new LinkedList<>();
-        QueryBuilder fgQB = featuregroupQueryB(searchTerm);
-        qbs.add(Pair.with(fgQB, featuregroupHighlighter()));
-        QueryBuilder tdQB = trainingdatasetQueryB(searchTerm);
-        qbs.add(Pair.with(tdQB, trainingDatasetHighlighter()));
-        QueryBuilder fQB = featureQueryB(searchTerm);
-        qbs.add(Pair.with(fQB, featureHighlighter()));
+        break;
+      case ALL:
+        SearchQB[] qbs = new SearchQB[FeaturestoreDocType.values().length-1];
+        for(FeaturestoreDocType type : new FeaturestoreDocType[]{
+          FeaturestoreDocType.FEATUREGROUP, FeaturestoreDocType.FEATUREVIEW, FeaturestoreDocType.TRAININGDATASET}) {
+          qbs[type.ordinal()] = new SearchQB(type,
+            baseFeatureStoreArtifactQueryB(type, searchTerm),
+            baseFeatureStoreArtifactHighlighter());
+        }
+        qbs[FeaturestoreDocType.FEATURE.ordinal()] = new SearchQB(FeaturestoreDocType.FEATURE,
+          featureQueryB(searchTerm),
+          featureHighlighter());
         
-        MultiSearchResponse response = executeSearchQuery(qbs, from, size);
-        
-        checkResponse(fgQB, response.getResponses()[0].getResponse());
-        result.put(FeaturestoreDocType.FEATUREGROUP, response.getResponses()[0].getResponse());
-        checkResponse(fgQB, response.getResponses()[1].getResponse());
-        result.put(FeaturestoreDocType.TRAININGDATASET, response.getResponses()[1].getResponse());
-        checkResponse(fgQB, response.getResponses()[2].getResponse());
-        result.put(FeaturestoreDocType.FEATURE, response.getResponses()[2].getResponse());
-      } break;
+        MultiSearchResponse mResponse = executeSearchQuery(Arrays.asList(qbs), from, size);
+        for(FeaturestoreDocType type : new FeaturestoreDocType[]{
+          FeaturestoreDocType.FEATUREGROUP, FeaturestoreDocType.FEATUREVIEW, FeaturestoreDocType.TRAININGDATASET,
+          FeaturestoreDocType.FEATURE}) {
+          SearchResponse searchResponse = mResponse.getResponses()[type.ordinal()].getResponse();
+          checkResponse(qbs[type.ordinal()].queryBuilder, searchResponse);
+          result.put(type, searchResponse);
+        }
+        break;
     }
     return result;
   }
@@ -275,7 +275,7 @@ public class OpenSearchController {
   /**
    *
    * @param searchTerm
-   * @param docProjectIds - pe specific FEATUREGROUP, TRAININGDATASET, FEATURE. No ALL allowed
+   * @param docProjectIds - be specific FEATUREGROUP/FEATUREVIEW/TRAININGDATASET/FEATURE. No ALL allowed
    * @param from
    * @param size
    * @return
@@ -284,51 +284,53 @@ public class OpenSearchController {
    */
   public Map<FeaturestoreDocType, SearchResponse> featurestoreSearch(String searchTerm,
     Map<FeaturestoreDocType, Set<Integer>> docProjectIds, int from, int size)
-    throws OpenSearchException, ServiceException {
+    throws OpenSearchException, ServiceException, GenericException {
     //check if the indices are up and running
     if (!elasticClientCtrl.mngIndexExists(Settings.FEATURESTORE_INDEX)) {
       throw new ServiceException(RESTCodes.ServiceErrorCode.OPENSEARCH_INDEX_NOT_FOUND,
         Level.SEVERE, "index: " + Settings.FEATURESTORE_INDEX);
     }
   
-    QueryBuilder fgQB = null;
-    QueryBuilder tdQB = null;
-    QueryBuilder fQB = null;
-    List<Pair<QueryBuilder, HighlightBuilder>> qbs = new LinkedList<>();
-    if(docProjectIds.containsKey(FeaturestoreDocType.FEATUREGROUP)) {
-      fgQB = addProjectToQuery(featuregroupQueryB(searchTerm),
-        docProjectIds.get(FeaturestoreDocType.FEATUREGROUP));
-      qbs.add(Pair.with(fgQB, featuregroupHighlighter()));
-    }
-    if(docProjectIds.containsKey(FeaturestoreDocType.TRAININGDATASET)) {
-      tdQB = addProjectToQuery(trainingdatasetQueryB(searchTerm),
-        docProjectIds.get(FeaturestoreDocType.TRAININGDATASET));
-      qbs.add(Pair.with(tdQB, trainingDatasetHighlighter()));
-    }
-    if(docProjectIds.containsKey(FeaturestoreDocType.FEATURE)) {
-      fQB = addProjectToQuery(featureQueryB(searchTerm),
-        docProjectIds.get(FeaturestoreDocType.FEATURE));
-      qbs.add(Pair.with(fQB, featureHighlighter()));
+    List<SearchQB> qbs = new ArrayList<>();
+    for(FeaturestoreDocType docType : FeaturestoreDocType.values()) {
+      if(docProjectIds.containsKey(docType)) {
+        SearchQB searchQB;
+        switch(docType) {
+          case FEATUREGROUP:
+          case FEATUREVIEW:
+          case TRAININGDATASET:
+            searchQB = new SearchQB(docType,
+              addProjectToQuery(baseFeatureStoreArtifactQueryB(docType, searchTerm), docProjectIds.get(docType)),
+              baseFeatureStoreArtifactHighlighter());
+            qbs.add(searchQB);
+            break;
+          case FEATURE:
+            searchQB = new SearchQB(docType,
+              addProjectToQuery(featureQueryB(searchTerm), docProjectIds.get(docType)),
+              featureHighlighter());
+            qbs.add(searchQB);
+            break;
+          default:
+            if (docType != FeaturestoreDocType.ALL) {
+              throw new GenericException(RESTCodes.GenericErrorCode.ILLEGAL_STATE, Level.SEVERE,
+                "internal error - feature store search - unhandled" + docType);
+            }
+        }
+      }
     }
     
     MultiSearchResponse response = executeSearchQuery(qbs, from, size);
+    if(response.getResponses().length != qbs.size()) {
+      throw new GenericException(RESTCodes.GenericErrorCode.ILLEGAL_STATE, Level.SEVERE,
+        "internal error - feature store search");
+    }
     
     Map<FeaturestoreDocType, SearchResponse> result = new HashMap<>();
-    int idx = 0;
-    if(docProjectIds.containsKey(FeaturestoreDocType.FEATUREGROUP)) {
-      checkResponse(fgQB, response.getResponses()[idx].getResponse());
-      result.put(FeaturestoreDocType.FEATUREGROUP, response.getResponses()[idx].getResponse());
-      idx++;
-    }
-    if(docProjectIds.containsKey(FeaturestoreDocType.TRAININGDATASET)) {
-      checkResponse(tdQB, response.getResponses()[idx].getResponse());
-      result.put(FeaturestoreDocType.TRAININGDATASET, response.getResponses()[idx].getResponse());
-      idx++;
-    }
-    if(docProjectIds.containsKey(FeaturestoreDocType.FEATURE)) {
-      checkResponse(fQB, response.getResponses()[idx].getResponse());
-      result.put(FeaturestoreDocType.FEATURE, response.getResponses()[idx].getResponse());
-      idx++;
+    for(int i = 0; i < response.getResponses().length; i++) {
+      SearchResponse searchResponse = response.getResponses()[i].getResponse();
+      SearchQB searchQB = qbs.get(i);
+      checkResponse(searchQB.queryBuilder, searchResponse);
+      result.put(searchQB.docType, searchResponse);
     }
     return result;
   }
@@ -453,16 +455,27 @@ public class OpenSearchController {
     return elasticClientCtrl.baseSearch(searchRequest);
   }
 
-  private MultiSearchResponse executeSearchQuery(List<Pair<QueryBuilder, HighlightBuilder>> searchQB,
-                                                 int from, int size)
+  private static class SearchQB {
+    final FeaturestoreDocType docType;
+    final QueryBuilder queryBuilder;
+    final HighlightBuilder highlightBuilder;
+    
+    public SearchQB(FeaturestoreDocType docType, QueryBuilder queryBuilder, HighlightBuilder highlightBuilder) {
+      this.docType = docType;
+      this.queryBuilder = queryBuilder;
+      this.highlightBuilder = highlightBuilder;
+    }
+  }
+  
+  private MultiSearchResponse executeSearchQuery(Collection<SearchQB> searchQBs, int from, int size)
     throws OpenSearchException {
     //hit the indices - execute the queries
     MultiSearchRequest multiSearchRequest = new MultiSearchRequest();
-    for(Pair<QueryBuilder, HighlightBuilder> qb : searchQB) {
+    for(SearchQB searchQB : searchQBs) {
       SearchRequest searchRequest = new SearchRequest(Settings.FEATURESTORE_INDEX);
       SearchSourceBuilder sb = new SearchSourceBuilder()
-        .query(qb.getValue0())
-        .highlighter(qb.getValue1())
+        .query(searchQB.queryBuilder)
+        .highlighter(searchQB.highlightBuilder)
         .from(from)
         .size(size);
       searchRequest.source(sb);
@@ -535,26 +548,14 @@ public class OpenSearchController {
     return cq;
   }
   
-  private QueryBuilder featuregroupQueryB(String searchTerm) {
+  private QueryBuilder baseFeatureStoreArtifactQueryB(FeaturestoreDocType type, String searchTerm) {
     QueryBuilder termQuery = boolQuery()
       .should(getNameQuery(searchTerm))
       .should(getDescriptionQuery(searchTerm))
       .should(getMetadataQuery(searchTerm));
     
     QueryBuilder query = boolQuery()
-      .must(termQuery("doc_type", FeaturestoreDocType.FEATUREGROUP.toString().toLowerCase()))
-      .must(termQuery);
-    return query;
-  }
-  
-  private QueryBuilder trainingdatasetQueryB(String searchTerm) {
-    QueryBuilder termQuery = boolQuery()
-      .should(getNameQuery(searchTerm))
-      .should(getDescriptionQuery(searchTerm))
-      .should(getMetadataQuery(searchTerm));
-    
-    QueryBuilder query = boolQuery()
-      .must(termQuery("doc_type", FeaturestoreDocType.TRAININGDATASET.toString().toLowerCase()))
+      .must(termQuery("doc_type", type.toString().toLowerCase()))
       .must(termQuery);
     return query;
   }
@@ -577,16 +578,7 @@ public class OpenSearchController {
       .must(nestedQuery);
   }
   
-  private HighlightBuilder featuregroupHighlighter() {
-    HighlightBuilder hb = new HighlightBuilder();
-    hb.field(new HighlightBuilder.Field(FeaturestoreXAttrsConstants.NAME));
-    hb.field(new HighlightBuilder.Field(
-      FeaturestoreXAttrsConstants.getFeaturestoreOpenSearchKey(FeaturestoreXAttrsConstants.DESCRIPTION)));
-    hb.field(new HighlightBuilder.Field(FeaturestoreXAttrsConstants.OPENSEARCH_XATTR + ".*"));
-    return hb;
-  }
-  
-  private HighlightBuilder trainingDatasetHighlighter() {
+  private HighlightBuilder baseFeatureStoreArtifactHighlighter() {
     HighlightBuilder hb = new HighlightBuilder();
     hb.field(new HighlightBuilder.Field(FeaturestoreXAttrsConstants.NAME));
     hb.field(new HighlightBuilder.Field(

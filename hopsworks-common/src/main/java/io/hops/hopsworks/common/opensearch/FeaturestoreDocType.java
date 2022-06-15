@@ -18,6 +18,8 @@ package io.hops.hopsworks.common.opensearch;
 public enum FeaturestoreDocType {
   FEATURE,
   FEATUREGROUP,
+  FEATUREVIEW,
   TRAININGDATASET,
+  //make sure this is the last as ordinal is used as array index
   ALL;
 }
