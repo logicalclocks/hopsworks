@@ -44,9 +44,11 @@ import io.hops.hopsworks.common.dao.project.ProjectFacade;
 import io.hops.hopsworks.common.dao.project.team.ProjectTeamFacade;
 import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
+import io.hops.hopsworks.exceptions.ServiceException;
 import io.hops.hopsworks.persistence.entity.jobs.history.YarnApplicationstate;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.user.Users;
+import io.hops.hopsworks.restutils.RESTCodes;
 
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
@@ -55,6 +57,12 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.core.Response;
 import java.io.IOException;
+import java.net.URLDecoder;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.logging.Level;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -72,7 +80,23 @@ public class GrafanaProxyServlet extends ProxyServlet {
   @EJB
   private ProjectTeamFacade projectTeamFacade;
 
-  private Pattern pattern = Pattern.compile("(application_.*?_.\\d*)");
+  private final String YARN_APP_PATTERN_KEY = "yarnApp";
+  private final String FG_KAFKA_TOPIC_KEY = "fgKafkaTopic";
+  private final String DEPLOYMENT_METRICS_KEY = "deploymentMetrics";
+  private final String USER_STATEMENT_SUMMARIES = "user_statement_summaries";
+
+  private final Map<String, Pattern> patterns = new HashMap<String, Pattern>(){
+    {
+      put(YARN_APP_PATTERN_KEY, Pattern.compile("(application_.*?_.\\d*)"));
+      put(FG_KAFKA_TOPIC_KEY, Pattern.compile(
+          "(?<projectid>[0-9]+)_(?<fgid>[0-9]+)_(?<fgname>[a-z0-9_]+)_(?<fgversion>[0-9]+)_onlinefs"));
+      put(DEPLOYMENT_METRICS_KEY, Pattern.compile("namespace_name=\"(?<projectname>[0-9a-z-]+)\""));
+      put(USER_STATEMENT_SUMMARIES, Pattern.compile("user=\"(?<dbuser>[0-9a-z_]+)\""));
+    }
+  };
+
+  private final List<String> openQueries =
+      Arrays.asList(new String[]{"onlinefs_clusterj_success_write_counter_total"});
 
   @Override
   protected void service(HttpServletRequest servletRequest, HttpServletResponse servletResponse) 
@@ -87,38 +111,96 @@ public class GrafanaProxyServlet extends ProxyServlet {
     if (servletRequest.getRequestURI().contains("query")) {
       String email = servletRequest.getUserPrincipal().getName();
       Users user = userFacade.findByEmail(email);
-      Matcher matcher = pattern.matcher(servletRequest.getQueryString());
-      if (matcher.find()) {
-        String appId = matcher.group(1);
-        YarnApplicationstate appState = yarnApplicationstateFacade.findByAppId(appId);
-        if (appState == null) {
-          servletResponse.sendError(Response.Status.BAD_REQUEST.getStatusCode(),
-                  "You don't have the access right for this application");
+      boolean isAuthorized = false;
+      String queryString = URLDecoder.decode(servletRequest.getParameter("query"), "UTF-8")
+          .replaceAll("\n", "");
+      boolean isAdmin = servletRequest.isUserInRole("HOPS_ADMIN");
+      try {
+        for (String key : patterns.keySet()) {
+          Matcher matcher = patterns.get(key).matcher(queryString);
+          if (matcher.find()) {
+            if (key == YARN_APP_PATTERN_KEY) {
+              String appId = matcher.group(1);
+              validateUserForSparkAppId(user, appId);
+              isAuthorized = true;
+            } else if (key == FG_KAFKA_TOPIC_KEY) {
+              validateUserForOnlineFG(user, matcher.group("projectid"));
+              isAuthorized = true;
+            } else if (key == DEPLOYMENT_METRICS_KEY) {
+              String projectName = matcher.group("projectname").replaceAll("-", "_");
+              validateProjectForUser(projectFacade.findByName(projectName), user);
+              isAuthorized = true;
+            } else if (key == USER_STATEMENT_SUMMARIES) {
+              String projectName = getProjectNameFromDatabaseUsername(user, matcher.group("dbuser"));
+              validateProjectForUser(projectFacade.findByName(projectName), user);
+              isAuthorized = true;
+            }
+            break;
+          }
+        }
+      } catch (ServiceException e) {
+        if (!isAdmin) {
+          servletResponse.sendError(Response.Status.BAD_REQUEST.getStatusCode(), e.getMessage());
           return;
         }
+        //is admin
+        isAuthorized = true;
+      }
 
-        String projectName = hdfsUsersBean.getProjectName(appState.getAppuser());
-        Project project = projectFacade.findByName(projectName);
-        if (project == null) {
-          servletResponse.sendError(Response.Status.BAD_REQUEST.getStatusCode(), "Project does not exists");
-          return;
-        }
-
-        if (!projectTeamFacade.isUserMemberOfProject(project, user)) {
-          servletResponse.sendError(Response.Status.BAD_REQUEST.getStatusCode(),
-              "You don't have the access right for this application");
-          return;
-        }
-      } else {
-        boolean userRole = servletRequest.isUserInRole("HOPS_ADMIN");
-        if (!userRole) {
-          servletResponse.sendError(Response.Status.BAD_REQUEST.getStatusCode(),
-              "You don't have the access right for this application");
-          return;
-        }
+      if (!isAdmin && !isAuthorized && !isQueryOpen(queryString)) {
+        servletResponse.sendError(Response.Status.BAD_REQUEST.getStatusCode(), "Unauthorized to execute query "
+            + queryString);
+        return;
       }
     }
     super.service(servletRequest, servletResponse);
+  }
 
+  public void validateUserForSparkAppId(Users user, String appId) throws ServiceException {
+    YarnApplicationstate appState = yarnApplicationstateFacade.findByAppId(appId);
+    if (appState == null) {
+      throw new ServiceException(RESTCodes.ServiceErrorCode.GRAFANA_PROXY_ERROR, Level.SEVERE,
+          "You don't have the access right for this application");
+    }
+    String projectName = hdfsUsersBean.getProjectName(appState.getAppuser());
+    Project project = projectFacade.findByName(projectName);
+    validateProjectForUser(project, user);
+  }
+
+  public void validateUserForOnlineFG(Users user, String projectId) throws ServiceException {
+    try {
+      Project project = projectFacade.findById(Integer.parseInt(projectId)).orElse(null);
+      validateProjectForUser(project, user);
+    } catch (NumberFormatException e) {
+      throw new ServiceException(RESTCodes.ServiceErrorCode.GRAFANA_PROXY_ERROR, Level.SEVERE,
+          "Invalid project id:  " + projectId);
+    }
+  }
+
+  public void validateProjectForUser(Project project, Users user) throws ServiceException {
+    if (project == null) {
+      throw new ServiceException(RESTCodes.ServiceErrorCode.GRAFANA_PROXY_ERROR, Level.SEVERE, "Project does not " +
+          "exists");
+    } else if (!projectTeamFacade.isUserMemberOfProject(project, user)) {
+      throw new ServiceException(RESTCodes.ServiceErrorCode.GRAFANA_PROXY_ERROR, Level.SEVERE,
+          "User not a member of project");
+    }
+  }
+
+  public String getProjectNameFromDatabaseUsername(Users user, String dbUsername) {
+    String toReplace = "_" + user.getUsername();
+    int start = dbUsername.lastIndexOf(toReplace);
+    StringBuilder builder = new StringBuilder();
+    builder.append(dbUsername.substring(0, start));
+    return builder.append(dbUsername.substring(start + toReplace.length())).toString();
+  }
+
+  /**
+   * Checks query is open
+   * @param query
+   * @return
+   */
+  public boolean isQueryOpen(String query) {
+    return openQueries.stream().anyMatch(q -> query.contains(q));
   }
 }
