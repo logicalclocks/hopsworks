@@ -239,11 +239,12 @@ public class TrainingDatasetInputValidation {
             Level.FINE, "Connector ID: " + connectorDTO.getId()));
 
     if (!(connector.getConnectorType() == FeaturestoreConnectorType.HOPSFS ||
-        connector.getConnectorType() == FeaturestoreConnectorType.S3 ||
-        connector.getConnectorType() == FeaturestoreConnectorType.ADLS)) {
-      // We only support creating training datasets using HopsFS, S3 or ADLS connectors
+      connector.getConnectorType() == FeaturestoreConnectorType.S3 ||
+      connector.getConnectorType() == FeaturestoreConnectorType.ADLS ||
+      connector.getConnectorType() == FeaturestoreConnectorType.GCS)) {
+      // We only support creating training datasets using HopsFS, S3, ADLS or GCS connectors
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_STORAGE_CONNECTOR_TYPE, Level.FINE,
-          "Only HopsFS, S3 and ADLS storage connectors can be used to create training datasets");
+          "Only HopsFS, S3, ADLS and GCS storage connectors can be used to create training datasets");
     }
   }
 

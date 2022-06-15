@@ -1475,6 +1475,23 @@ describe "On #{ENV['OS']}" do
                                                                                  location: "/inner/location")
           expect_status_details(400)
         end
+
+        it "should be able to create a training dataset using a GCS connector" do
+          project = get_project
+          featurestore_id = get_featurestore_id(project.id)
+          create_test_files
+          key_path = "/Projects/#{@project['projectname']}/Resources/sampleKey.json"
+          bucket = 'testbucket'
+          json_result, connector_name = create_gcs_connector(project.id, featurestore_id, key_path, bucket)
+          connector = JSON.parse(json_result)
+          json_result1, training_dataset_name = create_external_training_dataset(project.id, featurestore_id,
+                                                                                 connector["id"],
+                                                                                 location: "/inner/location")
+          parsed_json1 = JSON.parse(json_result1)
+          expect_status_details(201)
+          expect(parsed_json1['location']).to eql("gs://#{bucket}/inner/location/#{training_dataset_name}_1")
+        end
+
       end
     end
 
