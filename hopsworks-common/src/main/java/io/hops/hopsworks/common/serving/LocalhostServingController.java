@@ -258,7 +258,7 @@ public class LocalhostServingController implements ServingController {
 
       String userMsg = "Instance is already " + (command == ServingCommands.START ?
         ServingStatusEnum.STARTED.toString() : ServingStatusEnum.STOPPED.toString()).toLowerCase();
-      throw new ServingException(RESTCodes.ServingErrorCode.LIFECYCLEERROR, Level.FINE, userMsg);
+      throw new ServingException(RESTCodes.ServingErrorCode.LIFECYCLE_ERROR, Level.FINE, userMsg);
     }
   }
   
@@ -341,6 +341,13 @@ public class LocalhostServingController implements ServingController {
   @Override
   public int getMaxNumInstances() {
     return 1;
+  }
+  
+  @Override
+  public List<ServingLogs> getLogs(Project project, Integer servingId, String component, Integer tailingLines)
+    throws ServingException {
+    throw new ServingException(RESTCodes.ServingErrorCode.KUBERNETES_NOT_INSTALLED, Level.FINE, "Direct access to " +
+      "server logs only supported in Kubernetes deployments");
   }
   
   private void startServingInstance(Project project, Users user, Serving serving) throws ServingException {

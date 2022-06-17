@@ -1155,20 +1155,20 @@ public class RESTCodes {
 
   public enum ServingErrorCode implements RESTErrorCode {
 
-    INSTANCENOTFOUND(0, "Serving instance not found", Response.Status.NOT_FOUND),
-    DELETIONERROR(1, "Serving instance could not be deleted",
+    INSTANCE_NOT_FOUND(0, "Serving instance not found", Response.Status.NOT_FOUND),
+    DELETION_ERROR(1, "Serving instance could not be deleted",
         Response.Status.INTERNAL_SERVER_ERROR),
-    UPDATEERROR(2, "Serving instance could not be updated", Response.Status.INTERNAL_SERVER_ERROR),
-    LIFECYCLEERROR(3, "Serving instance could not be started/stopped", Response.Status.BAD_REQUEST),
-    LIFECYCLEERRORINT(4, "Serving instance could not be started/stopped",
+    UPDATE_ERROR(2, "Serving instance could not be updated", Response.Status.INTERNAL_SERVER_ERROR),
+    LIFECYCLE_ERROR(3, "Serving instance could not be started/stopped", Response.Status.BAD_REQUEST),
+    LIFECYCLE_ERROR_INT(4, "Serving instance could not be started/stopped",
         Response.Status.INTERNAL_SERVER_ERROR),
-    STATUSERROR(5, "Error getting model server instance status", Response.Status.INTERNAL_SERVER_ERROR),
+    STATUS_ERROR(5, "Error getting model server instance status", Response.Status.INTERNAL_SERVER_ERROR),
     MODEL_PATH_NOT_FOUND(6, "Model path not found", Response.Status.BAD_REQUEST),
-    COMMANDNOTRECOGNIZED(7, "Command not recognized", Response.Status.BAD_REQUEST),
-    COMMANDNOTPROVIDED(8, "Command not provided", Response.Status.BAD_REQUEST),
-    SPECNOTPROVIDED(9, "TFServing spec not provided", Response.Status.BAD_REQUEST),
+    COMMAND_NOT_RECOGNIZED(7, "Command not recognized", Response.Status.BAD_REQUEST),
+    COMMAND_NOT_PROVIDED(8, "Command not provided", Response.Status.BAD_REQUEST),
+    SPEC_NOT_PROVIDED(9, "TFServing spec not provided", Response.Status.BAD_REQUEST),
     BAD_TOPIC(10, "Topic provided cannot be used for Serving logging", Response.Status.BAD_REQUEST),
-    DUPLICATEDENTRY(11, "An entry with the same name already exists in this project",
+    DUPLICATED_ENTRY(11, "An entry with the same name already exists in this project",
       Response.Status.BAD_REQUEST),
     PYTHON_ENVIRONMENT_NOT_ENABLED(12, "Python environment has not been enabled in this project, " +
       "which is required for serving SkLearn Models", Response.Status.BAD_REQUEST),
@@ -1188,7 +1188,8 @@ public class RESTCodes {
     FINEGRAINED_INF_LOGGING_NOT_SUPPORTED(24, "Fine-grained inference logging not supported",
       Response.Status.BAD_REQUEST),
     REQUEST_BATCHING_NOT_SUPPORTED(25, "Request batching not supported", Response.Status.BAD_REQUEST),
-    CREATEERROR(26, "Serving instance could not be created", Response.Status.BAD_REQUEST);
+    CREATE_ERROR(26, "Serving instance could not be created", Response.Status.BAD_REQUEST),
+    SERVER_LOGS_NOT_AVAILABLE(27, "Server logs not available", Response.Status.NOT_FOUND);
 
     private Integer code;
     private String message;
