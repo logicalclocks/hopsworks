@@ -65,6 +65,7 @@ public class PythonResourcesController {
   private final String CLUSTER_CURRENT_CPU_USAGE = "cluster_current_cpu_usage";
 
   private Integer nodeExporterPort;
+  private String glassfishIp;
 
   @PostConstruct
   public void init() {
@@ -73,6 +74,9 @@ public class PythonResourcesController {
           serviceDiscoveryController.getAnyAddressOfServiceWithDNS(
               ServiceDiscoveryController.HopsworksService.NODE_EXPORTER);
       nodeExporterPort = nodeExporterService.getPort();
+      Service glassfishService = serviceDiscoveryController.getAnyAddressOfServiceWithDNS(
+          ServiceDiscoveryController.HopsworksService.HOPSWORKS_APP);
+      glassfishIp = glassfishService.getAddress();
     } catch (ServiceDiscoveryException e) {
       LOGGER.log(Level.INFO, e.getMessage());
     }
@@ -90,7 +94,6 @@ public class PythonResourcesController {
       pythonResources.put(DOCKER_CURRENT_MEMORY_USAGE_KEY, pythonResources.get(CLUSTER_CURRENT_MEMORY_USAGE));
       pythonResources.put(DOCKER_CURRENT_CPU_USAGE_KEY, pythonResources.get(CLUSTER_CURRENT_CPU_USAGE));
     }
-
     return pythonResources;
   }
 
@@ -109,39 +112,69 @@ public class PythonResourcesController {
   }
 
   private Map<String, String> updatePrometheusQueries() throws ServiceDiscoveryException {
-    Map<String, String> pythonResourcesTypesQueries = new HashMap<String, String>();
-
     if (nodeExporterPort == null) {
       Service nodeExporterService =
           serviceDiscoveryController.getAnyAddressOfServiceWithDNS(
               ServiceDiscoveryController.HopsworksService.NODE_EXPORTER);
       nodeExporterPort = nodeExporterService.getPort();
+    } else if (Strings.isNullOrEmpty(glassfishIp)) {
+      Service glassfishService = serviceDiscoveryController.getAnyAddressOfServiceWithDNS(
+          ServiceDiscoveryController.HopsworksService.HOPSWORKS_APP);
+      glassfishIp = glassfishService.getAddress();
     }
 
+    if (settings.isDockerCgroupEnabled() && !settings.getKubeInstalled()) {
+      //If cgroups are enabled we use metrics from cadvisor
+      Map<String, String> queries = getCadvisorQueries();
+      queries.putAll(getNodeExporterQueriesHeadNode());
+      return queries;
+    } else if (!settings.isDockerCgroupEnabled() && !settings.getKubeInstalled()) {
+      //cgroups not enabled and no kubernetes: only get headnode metrics
+      return getNodeExporterQueriesHeadNode();
+    } else {
+      //On kubernetes get from node exporter and exclude tainted nodes
+      return getNodeExporterQueriesKube();
+    }
+  }
+
+  private Map<String, String> getNodeExporterQueriesKube() {
     String nodeQuery = getExcludedNodesInResourceQuery();
     String nodeQueryNoAppend = nodeQuery.replaceAll(",", "");
-    pythonResourcesTypesQueries.put(CLUSTER_CURRENT_CPU_USAGE,
-        "100 - ((sum((avg by (instance) (rate(node_cpu_seconds_total{mode='idle'" + nodeQuery + "}[1m])) * 100)))/" +
-            "(count(node_memory_Active_bytes{" + nodeQueryNoAppend + "})))");
-    pythonResourcesTypesQueries.put(CLUSTER_CURRENT_MEMORY_USAGE,
-        "sum(node_memory_Active_bytes{" + nodeQueryNoAppend + "})");
-    pythonResourcesTypesQueries.put(CLUSTER_TOTAL_MEMORY_CAPACITY,
-        "sum(node_memory_MemTotal_bytes{" + nodeQueryNoAppend + "})");
+    return new HashMap<String, String>() {
+      {
+        put (CLUSTER_CURRENT_CPU_USAGE,
+            "100 - ((sum((avg by (instance) (rate(node_cpu_seconds_total{mode='idle'" + nodeQuery + "}[1m])) " +
+                "* 100)))/(count(node_memory_Active_bytes{" + nodeQueryNoAppend + "})))");
+        put(CLUSTER_CURRENT_MEMORY_USAGE, "sum(node_memory_Active_bytes{" + nodeQueryNoAppend + "})");
+        put(CLUSTER_TOTAL_MEMORY_CAPACITY, "sum(node_memory_MemTotal_bytes{" + nodeQueryNoAppend + "})");
+      }
+    };
+  }
 
-    //If cgroups are enabled we use metrics from cadvisor
-    //On Kuberbetes we don't use the configured docker cgroups.
-    if (settings.isDockerCgroupEnabled() && !settings.getKubeInstalled()) {
-      pythonResourcesTypesQueries.put(DOCKER_CURRENT_CPU_USAGE_KEY,
-          "sum(avg by (cpu) (rate(container_cpu_usage_seconds_total{id=~'.*/docker/.*'}[60s]) * 100))");
-      pythonResourcesTypesQueries.put(DOCKER_CURRENT_MEMORY_USAGE_KEY,
-          "sum(container_memory_working_set_bytes{id=~'.*/docker/.*'})");
-      pythonResourcesTypesQueries.put(DOCKER_TOTAL_ALLOCATABLE_MEMORY_KEY,
-          "container_spec_memory_limit_bytes{id='/docker'}");
-      pythonResourcesTypesQueries.put(DOCKER_TOTAL_ALLOCATABLE_CPU_KEY,
-          "(container_spec_cpu_quota{id='/docker'}/" + settings.getDockerCgroupCpuPeriod() + ")*100");
-    }
+  private Map<String, String> getCadvisorQueries() {
+    return new HashMap<String, String>() {
+      {
+        put(DOCKER_CURRENT_CPU_USAGE_KEY,
+            "sum(avg by (cpu) (rate(container_cpu_usage_seconds_total{id=~'.*/docker/.*'}[60s]) * 100))");
+        put(DOCKER_TOTAL_ALLOCATABLE_CPU_KEY,
+            "(container_spec_cpu_quota{id='/docker'}/" + settings.getDockerCgroupCpuPeriod() + ")*100");
+        put(DOCKER_CURRENT_MEMORY_USAGE_KEY, "sum(container_memory_working_set_bytes{id=~'.*/docker/.*'})");
+        put(DOCKER_TOTAL_ALLOCATABLE_MEMORY_KEY, "container_spec_memory_limit_bytes{id='/docker'}");
+      }
+    };
+  }
 
-    return pythonResourcesTypesQueries;
+  private Map<String, String> getNodeExporterQueriesHeadNode() {
+    String headNodeQuery = "instance='" + glassfishIp + ":" + nodeExporterPort + "'";
+    return new HashMap<String, String>() {
+      {
+        put(CLUSTER_CURRENT_CPU_USAGE,
+            "100 - ((sum((avg by (instance) (rate(node_cpu_seconds_total{mode='idle', " + headNodeQuery + "}[1m])) " +
+                "* 100)))/(count(node_memory_Active_bytes{" + headNodeQuery + "})))");
+        put(CLUSTER_CURRENT_MEMORY_USAGE, "sum(node_memory_Active_bytes{" + headNodeQuery + "})");
+        put(CLUSTER_TOTAL_MEMORY_CAPACITY, "sum(node_memory_MemTotal_bytes{" + headNodeQuery + "})");
+      }
+    };
   }
 
   private String getExcludedNodesInResourceQuery() {
