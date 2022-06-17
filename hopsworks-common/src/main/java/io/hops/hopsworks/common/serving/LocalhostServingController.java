@@ -17,8 +17,6 @@
 package io.hops.hopsworks.common.serving;
 
 import com.google.common.base.Strings;
-import com.logicalclocks.servicediscoverclient.exceptions.ServiceDiscoveryException;
-import io.hops.hopsworks.common.hosts.ServiceDiscoveryController;
 import io.hops.hopsworks.common.serving.inference.LocalhostSkLearnInferenceUtils;
 import io.hops.hopsworks.common.serving.inference.LocalhostTfInferenceUtils;
 import io.hops.hopsworks.persistence.entity.project.Project;
@@ -43,7 +41,6 @@ import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.UUID;
@@ -64,8 +61,6 @@ public class LocalhostServingController implements ServingController {
 
   @EJB
   private ServingFacade servingFacade;
-  @EJB
-  private ServiceDiscoveryController serviceDiscoveryController;
   @EJB
   private KafkaServingHelper kafkaServingHelper;
   @EJB
@@ -212,16 +207,7 @@ public class LocalhostServingController implements ServingController {
         servingWrapper.setAvailableReplicas(1);
         servingWrapper.setInternalPort(serving.getLocalPort());
     }
-    String internalIP;
-    try {
-      internalIP = serviceDiscoveryController
-        .getAnyAddressOfServiceWithDNS(ServiceDiscoveryController.HopsworksService.HOPSWORKS_APP)
-        .getAddress();
-    } catch (ServiceDiscoveryException e) {
-      String userMsg = "Could not find internal host for serving instance '" + serving.getName() + "'";
-      throw new ServingException(RESTCodes.ServingErrorCode.STATUSERROR, Level.FINE, userMsg);
-    }
-    servingWrapper.setInternalIPs(Collections.singletonList(internalIP));
+    
     String path;
     if (serving.getModelServer() == ModelServer.TENSORFLOW_SERVING) {
       path = localhostTfInferenceUtils.getPath(serving.getName(), serving.getModelVersion(), null);
@@ -230,12 +216,9 @@ public class LocalhostServingController implements ServingController {
     } else {
       throw new UnsupportedOperationException("Model server not supported as local serving");
     }
-    servingWrapper.setInternalPath(path);
-    // These values will be fetched from the location href in the UI (client-side). By doing this, we make sure
-    // that we display the correct host and port to reach Hopsworks. For instance, using proxies or SSH
-    // tunneling, the port might differ from the default 80 or 443 on the client side.
-    servingWrapper.setExternalIP(null);
-    servingWrapper.setExternalPort(null);
+    servingWrapper.setModelServerInferencePath(path);
+    servingWrapper.setHopsworksInferencePath("/project/" + serving.getProject().getId() + "/inference/models/" +
+      serving.getName());
     
     servingWrapper.setKafkaTopicDTO(kafkaServingHelper.buildTopicDTO(serving));
     return servingWrapper;
@@ -359,7 +342,6 @@ public class LocalhostServingController implements ServingController {
   public int getMaxNumInstances() {
     return 1;
   }
-  
   
   private void startServingInstance(Project project, Users user, Serving serving) throws ServingException {
     if(serving.getModelServer() == ModelServer.TENSORFLOW_SERVING){
