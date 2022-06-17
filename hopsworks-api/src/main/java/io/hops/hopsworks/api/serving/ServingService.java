@@ -26,6 +26,7 @@ import io.hops.hopsworks.common.dao.project.ProjectFacade;
 import io.hops.hopsworks.common.security.QuotaEnforcementException;
 import io.hops.hopsworks.common.security.QuotasEnforcement;
 import io.hops.hopsworks.common.serving.ServingController;
+import io.hops.hopsworks.common.serving.ServingLogs;
 import io.hops.hopsworks.common.serving.ServingStatusEnum;
 import io.hops.hopsworks.common.serving.ServingWrapper;
 import io.hops.hopsworks.common.serving.util.ServingCommands;
@@ -52,6 +53,7 @@ import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
+import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
@@ -121,9 +123,12 @@ public class ServingService {
     // if filter by name, return a single serving
     if (!Strings.isNullOrEmpty(servingName)) {
       ServingWrapper servingWrapper = servingController.get(project, servingName);
+      if (servingWrapper == null) {
+        throw new ServingException(RESTCodes.ServingErrorCode.INSTANCE_NOT_FOUND, Level.FINE);
+      }
+      
       ServingView servingView = new ServingView(servingWrapper);
       GenericEntity<ServingView> servingEntity = new GenericEntity<ServingView>(servingView){};
-  
       return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK)
         .entity(servingEntity)
         .build();
@@ -162,9 +167,12 @@ public class ServingService {
       throw new IllegalArgumentException("servingId was not provided");
     }
     ServingWrapper servingWrapper = servingController.get(project, servingId);
+    if (servingWrapper == null) {
+      throw new ServingException(RESTCodes.ServingErrorCode.INSTANCE_NOT_FOUND, Level.FINE);
+    }
+    
     ServingView servingView = new ServingView(servingWrapper);
     GenericEntity<ServingView> servingEntity = new GenericEntity<ServingView>(servingView){};
-    
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK)
       .entity(servingEntity)
       .build();
@@ -218,7 +226,7 @@ public class ServingService {
       try {
         quotasEnforcement.enforceModelDeploymentsQuota(project);
       } catch (QuotaEnforcementException ex) {
-        throw new ServingException(RESTCodes.ServingErrorCode.CREATEERROR, Level.SEVERE,
+        throw new ServingException(RESTCodes.ServingErrorCode.CREATE_ERROR, Level.SEVERE,
                 ex.getMessage(), ex.getMessage());
       }
     }
@@ -254,14 +262,14 @@ public class ServingService {
     }
   
     if (servingCommand == null) {
-      throw new IllegalArgumentException(RESTCodes.ServingErrorCode.COMMANDNOTPROVIDED.getMessage());
+      throw new IllegalArgumentException(RESTCodes.ServingErrorCode.COMMAND_NOT_PROVIDED.getMessage());
     }
 
     if (servingCommand.equals(ServingCommands.START)) {
       try {
         quotasEnforcement.enforceRunningModelDeploymentsQuota(project);
       } catch (QuotaEnforcementException ex) {
-        throw new ServingException(RESTCodes.ServingErrorCode.LIFECYCLEERROR, Level.SEVERE,
+        throw new ServingException(RESTCodes.ServingErrorCode.LIFECYCLE_ERROR, Level.SEVERE,
                 ex.getMessage(), ex.getMessage());
       }
     }
@@ -269,5 +277,39 @@ public class ServingService {
     servingController.startOrStop(project, user, servingId, servingCommand);
 
     return Response.ok().build();
+  }
+  
+  
+  @GET
+  @Path("/{servingId}/logs")
+  @Produces(MediaType.APPLICATION_JSON)
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
+  @JWTRequired(acceptedTokens = {Audience.API, Audience.JOB},
+    allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
+  @ApiKeyRequired(acceptedScopes = {ApiScope.SERVING},
+    allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
+  @ApiOperation(value = "Get logs of a serving instance of the project", response = ServingLogs.class,
+    responseContainer = "List")
+  public Response get(
+    @DefaultValue("predictor") @QueryParam("component") String component,
+    @DefaultValue("5") @QueryParam("tail") Integer tailingLines,
+    @Context SecurityContext sc,
+    @Context HttpServletRequest req,
+    @ApiParam(value = "Id of the Serving instance", required = true)
+    @PathParam("servingId") Integer servingId)
+    throws ServingException, KafkaException, CryptoPasswordNotFoundException {
+    
+    if (servingId == null) {
+      throw new IllegalArgumentException("servingId was not provided");
+    }
+    if (!component.equals("predictor") && !component.equals("transformer")) {
+      throw new IllegalArgumentException("component not valid, possible values are predictor or transformer");
+    }
+    
+    List<ServingLogs> logs = servingController.getLogs(project, servingId, component, tailingLines);
+    GenericEntity<List<ServingLogs>> logsEntity = new GenericEntity<List<ServingLogs>>(logs){};
+    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK)
+      .entity(logsEntity)
+      .build();
   }
 }

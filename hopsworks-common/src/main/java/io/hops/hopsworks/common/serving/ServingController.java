@@ -56,6 +56,9 @@ public interface ServingController {
     InterruptedException, ExecutionException;
 
   int getMaxNumInstances();
+  
+  List<ServingLogs> getLogs(Project project, Integer servingId, String component, Integer tailingLines)
+    throws ServingException;
 
   String getClassName();
 }

@@ -114,7 +114,7 @@ public class LocalhostTfServingController {
       try {
         certificateMaterializer.materializeCertificatesLocal(user.getUsername(), project.getName());
       } catch (IOException e) {
-        throw new ServingException(RESTCodes.ServingErrorCode.LIFECYCLEERRORINT, Level.SEVERE, null,
+        throw new ServingException(RESTCodes.ServingErrorCode.LIFECYCLE_ERROR_INT, Level.SEVERE, null,
           e.getMessage(), e);
       } finally {
         servingFacade.releaseLock(project, serving.getId());
@@ -124,7 +124,7 @@ public class LocalhostTfServingController {
     try {
       osProcessExecutor.execute(processDescriptor);
     } catch (IOException ex) {
-      throw new ServingException(RESTCodes.ServingErrorCode.UPDATEERROR, Level.SEVERE,
+      throw new ServingException(RESTCodes.ServingErrorCode.UPDATE_ERROR, Level.SEVERE,
         "serving id: " + serving.getId(), ex.getMessage(), ex);
     } finally {
       if (settings.getHopsRpcTls()) {
@@ -164,7 +164,7 @@ public class LocalhostTfServingController {
     try {
       osProcessExecutor.execute(processDescriptor);
     } catch (IOException ex) {
-      throw new ServingException(RESTCodes.ServingErrorCode.LIFECYCLEERROR, Level.SEVERE,
+      throw new ServingException(RESTCodes.ServingErrorCode.LIFECYCLE_ERROR, Level.SEVERE,
         "serving id: " + serving.getId(), ex.getMessage(), ex);
     }
 
@@ -220,7 +220,8 @@ public class LocalhostTfServingController {
           .build();
       logger.log(Level.INFO, processDescriptor.toString());
     } catch (ServiceDiscoveryException ex) {
-      throw new ServingException(RESTCodes.ServingErrorCode.LIFECYCLEERRORINT, Level.SEVERE, null, ex.getMessage(), ex);
+      throw new ServingException(RESTCodes.ServingErrorCode.LIFECYCLE_ERROR_INT, Level.SEVERE, null, ex.getMessage(),
+        ex);
     }
 
     // Materialized TLS certificates to be able to read the model
@@ -228,7 +229,7 @@ public class LocalhostTfServingController {
       try {
         certificateMaterializer.materializeCertificatesLocal(user.getUsername(), project.getName());
       } catch (IOException e) {
-        throw new ServingException(RESTCodes.ServingErrorCode.LIFECYCLEERRORINT, Level.SEVERE,
+        throw new ServingException(RESTCodes.ServingErrorCode.LIFECYCLE_ERROR_INT, Level.SEVERE,
             null, e.getMessage(), e);
       } finally {
         // Release lock on the serving entry
@@ -243,7 +244,7 @@ public class LocalhostTfServingController {
         // Startup process failed for some reason
         serving.setCid(CID_STOPPED);
         servingFacade.updateDbObject(serving, project);
-        throw new ServingException(RESTCodes.ServingErrorCode.LIFECYCLEERRORINT, Level.INFO);
+        throw new ServingException(RESTCodes.ServingErrorCode.LIFECYCLE_ERROR_INT, Level.INFO);
       }
 
       // Read the pid for TensorFlow Serving server
@@ -260,7 +261,7 @@ public class LocalhostTfServingController {
       serving.setCid(CID_STOPPED);
       servingFacade.updateDbObject(serving, project);
 
-      throw new ServingException(RESTCodes.ServingErrorCode.LIFECYCLEERRORINT, Level.SEVERE, null,
+      throw new ServingException(RESTCodes.ServingErrorCode.LIFECYCLE_ERROR_INT, Level.SEVERE, null,
           ex.getMessage(), ex);
 
     } finally {

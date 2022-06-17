@@ -117,7 +117,7 @@ public class ServingUtil {
     // Check for duplicated entries
     if (dbServing != null && !dbServing.getId().equals(serving.getId())) {
       // There is already an entry for this project
-      throw new ServingException(RESTCodes.ServingErrorCode.DUPLICATEDENTRY, Level.FINE);
+      throw new ServingException(RESTCodes.ServingErrorCode.DUPLICATED_ENTRY, Level.FINE);
     }
   
     // Check serving name follows allowed regex as required by the InferenceResource to use it as a
