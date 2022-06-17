@@ -19,18 +19,14 @@ package io.hops.hopsworks.common.serving;
 import io.hops.hopsworks.common.dao.kafka.TopicDTO;
 import io.hops.hopsworks.persistence.entity.serving.Serving;
 
-import java.util.List;
-
 public class ServingWrapper {
   private Serving serving;
 
   private ServingStatusEnum status;
   private Integer availableReplicas;
-  private String externalIP;
-  private Integer externalPort;
-  private List<String> internalIPs;
+  private String hopsworksInferencePath;
+  private String modelServerInferencePath;
   private Integer internalPort;
-  private String internalPath;
   
   private TopicDTO kafkaTopicDTO;
 
@@ -62,32 +58,18 @@ public class ServingWrapper {
     this.availableReplicas = availableReplicas;
   }
 
-  public String getExternalIP() {
-    return externalIP;
-  }
-  public void setExternalIP(String externalIP) {
-    this.externalIP = externalIP;
-  }
-  
-  public Integer getExternalPort() {
-    return externalPort;
-  }
-  public void setExternalPort(Integer externalPort) {
-    this.externalPort = externalPort;
-  }
-  
-  public List<String> getInternalIPs() {
-    return internalIPs;
-  }
-  public void setInternalIPs(List<String> internalIPs) {
-    this.internalIPs = internalIPs;
-  }
-  
   public Integer getInternalPort() { return internalPort; }
   public void setInternalPort(Integer internalPort) { this.internalPort = internalPort; }
 
-  public String getInternalPath() { return internalPath; }
-  public void setInternalPath(String internalPath) { this.internalPath = internalPath; }
+  public String getHopsworksInferencePath() { return hopsworksInferencePath; }
+  public void setHopsworksInferencePath(String hopsworksInferencePath) {
+    this.hopsworksInferencePath = hopsworksInferencePath;
+  }
+  
+  public String getModelServerInferencePath() { return modelServerInferencePath; }
+  public void setModelServerInferencePath(String modelServerInferencePath) {
+    this.modelServerInferencePath = modelServerInferencePath;
+  }
   
   public TopicDTO getKafkaTopicDTO() {
     return kafkaTopicDTO;

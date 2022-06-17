@@ -17,10 +17,10 @@
 package io.hops.hopsworks.common.serving.inference;
 
 import io.hops.common.Pair;
-import io.hops.hopsworks.persistence.entity.serving.Serving;
 import io.hops.hopsworks.common.integrations.LocalhostStereotype;
 import io.hops.hopsworks.exceptions.InferenceException;
 import io.hops.hopsworks.persistence.entity.serving.ModelServer;
+import io.hops.hopsworks.persistence.entity.serving.Serving;
 import io.hops.hopsworks.restutils.RESTCodes;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpPost;
@@ -35,6 +35,8 @@ import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import java.net.URISyntaxException;
 import java.nio.charset.UnsupportedCharsetException;
+import java.util.Collections;
+import java.util.List;
 import java.util.logging.Level;
 
 import static io.hops.hopsworks.common.serving.LocalhostServingController.CID_STOPPED;
@@ -78,9 +80,12 @@ public class LocalhostInferenceController implements ServingInferenceController 
     
     String path = getInferencePath(serving, modelVersion, verb);
     
+    InferenceEndpoint endpoint = getNodeInferenceEndpoint();
+    String host = endpoint.getAnyHost();
+    Integer port = serving.getLocalPort(); // use serving local port
+    
     try {
-      HttpPost request = servingInferenceUtils.buildInferenceRequest("localhost", serving.getLocalPort(), path,
-        inferenceRequestJson);
+      HttpPost request = servingInferenceUtils.buildInferenceRequest(host, port, path, inferenceRequestJson);
       HttpContext context = HttpClientContext.create();
       CloseableHttpResponse response = inferenceHttpClient.execute(request, context);
       return inferenceHttpClient.handleInferenceResponse(response);
@@ -91,7 +96,19 @@ public class LocalhostInferenceController implements ServingInferenceController 
     }
   }
   
-  private String getInferencePath(Serving serving, Integer modelVersion, InferenceVerb verb){
+  public List<InferenceEndpoint> getInferenceEndpoints() {
+    InferenceEndpoint endpoint = getNodeInferenceEndpoint();
+    return Collections.singletonList(endpoint);
+  }
+  
+  private InferenceEndpoint getNodeInferenceEndpoint() {
+    List<String> hosts = Collections.singletonList("localhost");
+    List<InferencePort> ports = Collections.singletonList(new InferencePort(InferencePort.InferencePortName.HTTP,
+      null));
+    return new InferenceEndpoint(InferenceEndpoint.InferenceEndpointType.NODE, hosts, ports);
+  }
+  
+  private String getInferencePath(Serving serving, Integer modelVersion, InferenceVerb verb) {
     if (serving.getModelServer() == ModelServer.TENSORFLOW_SERVING) {
       return localhostTfInferenceUtils.getPath(serving.getName(), modelVersion, verb);
     } else if (serving.getModelServer() == ModelServer.PYTHON) {
