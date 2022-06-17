@@ -239,7 +239,7 @@ public class ServingFacade {
     int retries = 5;
 
     if (nodeIP == null) {
-      throw new ServingException(RESTCodes.ServingErrorCode.LIFECYCLEERRORINT, Level.SEVERE);
+      throw new ServingException(RESTCodes.ServingErrorCode.LIFECYCLE_ERROR_INT, Level.SEVERE);
     }
 
     // Acquire DB read lock on the row
@@ -252,7 +252,7 @@ public class ServingFacade {
             .getSingleResult();
 
         if (serving == null) {
-          throw new ServingException(RESTCodes.ServingErrorCode.INSTANCENOTFOUND, Level.WARNING);
+          throw new ServingException(RESTCodes.ServingErrorCode.INSTANCE_NOT_FOUND, Level.WARNING);
         }
 
         if (serving.getLockIP() != null &&
@@ -272,8 +272,8 @@ public class ServingFacade {
       }
     }
 
-    throw new ServingException(RESTCodes.ServingErrorCode.LIFECYCLEERRORINT, Level.FINE, "Instance is busy. Please, " +
-      "try later");
+    throw new ServingException(RESTCodes.ServingErrorCode.LIFECYCLE_ERROR_INT, Level.FINE, "Instance is busy. Please, "
+      + "try later");
   }
 
 
@@ -299,7 +299,7 @@ public class ServingFacade {
     }
 
     // Lock will be claimed
-    throw new ServingException(RESTCodes.ServingErrorCode.LIFECYCLEERRORINT, Level.FINE);
+    throw new ServingException(RESTCodes.ServingErrorCode.LIFECYCLE_ERROR_INT, Level.FINE);
   }
 
   public List<Serving> getLocalhostRunning() {

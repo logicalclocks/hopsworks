@@ -77,6 +77,12 @@ public class KubeServingUtils {
   public final static String INFERENCE_LOGGER_MODE_REQUEST = "request";
   public final static String INFERENCE_LOGGER_MODE_RESPONSE = "response";
   
+  // Server logs
+  public final static Integer LIMIT_BYTES = 50000; // 50kb
+  
+  // Container names
+  public final static String KSERVE_CONTAINER = "kserve-container";
+  
   // Labels and annotations
   
   public Map<String, String> getHopsworksServingLabels(Project project, Serving serving) {

@@ -577,6 +577,18 @@ public class KubeClientService {
     return handleClientOp((client) -> client.pods().inAnyNamespace().withLabels(podLabels).list().getItems());
   }
   
+  public String getLogs(String namespace, String podName, Integer tailingLines,
+    Integer limitBytes) {
+    return handleClientOp((client) -> client.pods().inNamespace(namespace).withName(podName).limitBytes(limitBytes)
+      .tailingLines(tailingLines).getLog());
+  }
+
+  public String getLogs(String namespace, String podName, String containerName, Integer tailingLines,
+    Integer limitBytes) {
+    return handleClientOp((client) -> client.pods().inNamespace(namespace).withName(podName).inContainer(containerName)
+      .limitBytes(limitBytes).tailingLines(tailingLines).getLog());
+  }
+  
   // Names
   
   /* In Kubernetes, most of the regex to validate names do not allow the _.

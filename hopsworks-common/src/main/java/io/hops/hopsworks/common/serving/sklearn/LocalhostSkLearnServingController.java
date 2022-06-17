@@ -107,7 +107,7 @@ public class LocalhostSkLearnServingController {
     try {
       osProcessExecutor.execute(processDescriptor);
     } catch (IOException ex) {
-      throw new ServingException(RESTCodes.ServingErrorCode.LIFECYCLEERROR, Level.SEVERE,
+      throw new ServingException(RESTCodes.ServingErrorCode.LIFECYCLE_ERROR, Level.SEVERE,
         "serving id: " + serving.getId(), ex.getMessage(), ex);
     }
 
@@ -173,7 +173,7 @@ public class LocalhostSkLearnServingController {
         // Startup process failed for some reason
         serving.setCid(CID_STOPPED);
         servingFacade.updateDbObject(serving, project);
-        throw new ServingException(RESTCodes.ServingErrorCode.LIFECYCLEERRORINT, Level.WARNING,
+        throw new ServingException(RESTCodes.ServingErrorCode.LIFECYCLE_ERROR_INT, Level.WARNING,
           "Could not start sklearn serving", "ut:" + processResult.getStdout() + ", err:" + processResult.getStderr());
       }
 
@@ -192,7 +192,7 @@ public class LocalhostSkLearnServingController {
       }
   
       if (Strings.isNullOrEmpty(pidContents)) {
-        throw new ServingException(RESTCodes.ServingErrorCode.LIFECYCLEERRORINT, Level.WARNING,
+        throw new ServingException(RESTCodes.ServingErrorCode.LIFECYCLE_ERROR_INT, Level.WARNING,
           "Could not start sklearn serving because pid file could not be read or was empty");
       }
       logger.log(Level.FINE, "sklearn pidContents:"+pidContents);
@@ -206,7 +206,7 @@ public class LocalhostSkLearnServingController {
       serving.setCid(CID_STOPPED);
       servingFacade.updateDbObject(serving, project);
 
-      throw new ServingException(RESTCodes.ServingErrorCode.LIFECYCLEERRORINT, Level.SEVERE, null,
+      throw new ServingException(RESTCodes.ServingErrorCode.LIFECYCLE_ERROR_INT, Level.SEVERE, null,
           ex.getMessage(), ex);
 
     } finally {

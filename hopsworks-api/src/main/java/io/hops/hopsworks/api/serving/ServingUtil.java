@@ -111,7 +111,7 @@ public class ServingUtil {
     if (batchingConfiguration != null && batchingConfiguration.isBatchingEnabled()) {
       if (serving.getModelServer() == ModelServer.PYTHON && serving.getServingTool() != ServingTool.KSERVE) {
         throw new ServingException(RESTCodes.ServingErrorCode.REQUEST_BATCHING_NOT_SUPPORTED, Level.SEVERE, "Request " +
-            "batching is not supported in Python deployments without kserve");
+            "batching is not supported in Python deployments without KServe");
       } else if (serving.getServingTool() != ServingTool.KSERVE && (batchingConfiguration.getMaxBatchSize() != null
           || batchingConfiguration.getMaxLatency() != null || batchingConfiguration.getTimeout() != null)) {
         throw new ServingException(RESTCodes.ServingErrorCode.REQUEST_BATCHING_NOT_SUPPORTED, Level.FINE,
@@ -130,7 +130,7 @@ public class ServingUtil {
     // Check for duplicated entries
     if (dbServing != null && !dbServing.getId().equals(serving.getId())) {
       // There is already an entry for this project
-      throw new ServingException(RESTCodes.ServingErrorCode.DUPLICATEDENTRY, Level.FINE);
+      throw new ServingException(RESTCodes.ServingErrorCode.DUPLICATED_ENTRY, Level.FINE);
     }
   
     // Check serving name follows allowed regex as required by the InferenceResource to use it as a

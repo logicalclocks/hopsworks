@@ -10,6 +10,7 @@ import io.fabric8.kubernetes.api.model.ObjectMetaBuilder;
 import io.fabric8.kubernetes.api.model.Pod;
 import io.fabric8.kubernetes.api.model.apps.DeploymentStatus;
 import io.fabric8.kubernetes.client.KubernetesClientException;
+import io.hops.hopsworks.common.serving.ServingLogs;
 import io.hops.hopsworks.common.serving.ServingStatusEnum;
 import io.hops.hopsworks.exceptions.ApiKeyException;
 import io.hops.hopsworks.exceptions.ServingException;
@@ -72,7 +73,7 @@ public class KubeKServeController extends KubeToolServingController {
         createOrReplace(project, user, buildInferenceService(project, user, serving, resourceVersion));
       }
     } catch (KubernetesClientException e) {
-      throw new ServingException(RESTCodes.ServingErrorCode.UPDATEERROR, Level.SEVERE, null, e.getMessage(), e);
+      throw new ServingException(RESTCodes.ServingErrorCode.UPDATE_ERROR, Level.SEVERE, null, e.getMessage(), e);
     }
   }
   
@@ -85,7 +86,7 @@ public class KubeKServeController extends KubeToolServingController {
           .deleteInferenceService(project, getInferenceServiceMetadataObject(project, serving));
       }
     } catch (KubernetesClientException e) {
-      throw new ServingException(RESTCodes.ServingErrorCode.DELETIONERROR, Level.SEVERE, null, e.getMessage(), e);
+      throw new ServingException(RESTCodes.ServingErrorCode.DELETION_ERROR, Level.SEVERE, null, e.getMessage(), e);
     }
   }
   
@@ -104,7 +105,7 @@ public class KubeKServeController extends KubeToolServingController {
         transformerDeploymentStatus = getDeploymentStatus(project, serving, "transformer");
       }
     } catch (KubernetesClientException e) {
-      throw new ServingException(RESTCodes.ServingErrorCode.STATUSERROR, Level.SEVERE, null, e.getMessage(), e);
+      throw new ServingException(RESTCodes.ServingErrorCode.STATUS_ERROR, Level.SEVERE, null, e.getMessage(), e);
     }
   
     Integer availableReplicas = kubeServingUtils.getAvailableReplicas(deploymentStatus);
@@ -143,6 +144,18 @@ public class KubeKServeController extends KubeToolServingController {
         setHopsworksInferencePath(kubeServingUtils.getHopsworksInferencePath(serving, null));
       }
     };
+  }
+  
+  @Override
+  public List<ServingLogs> getLogs(Project project, Serving serving, String component, Integer tailingLines) {
+    ArrayList<ServingLogs> logs = new ArrayList<>();
+    List<Pod> pods = getPodList(project, serving, component);
+    for (Pod pod : pods) {
+      String content = kubeClientService.getLogs(pod.getMetadata().getNamespace(), pod.getMetadata().getName(),
+        KubeServingUtils.KSERVE_CONTAINER, tailingLines, KubeServingUtils.LIMIT_BYTES);
+      logs.add(new ServingLogs(pod.getMetadata().getName(), content));
+    }
+    return logs;
   }
   
   public DeploymentStatus getDeploymentStatus(Project project, Serving serving, String component) {
@@ -223,7 +236,7 @@ public class KubeKServeController extends KubeToolServingController {
       String artifactPath = kubeArtifactUtils.getArtifactFilePath(serving);
       predictor = predictorServerUtils.buildInferenceServicePredictor(project, user, serving, artifactPath);
     } catch (ServiceDiscoveryException | ApiKeyException e) {
-      throw new ServingException(RESTCodes.ServingErrorCode.LIFECYCLEERRORINT, Level.INFO, null, e.getMessage(), e);
+      throw new ServingException(RESTCodes.ServingErrorCode.LIFECYCLE_ERROR_INT, Level.INFO, null, e.getMessage(), e);
     }
   
     // Add transformer if defined
@@ -232,7 +245,7 @@ public class KubeKServeController extends KubeToolServingController {
       try {
         transformer = kubeTransformerUtils.buildInferenceServiceTransformer(project, user, serving);
       } catch (ServiceDiscoveryException | ApiKeyException e) {
-        throw new ServingException(RESTCodes.ServingErrorCode.LIFECYCLEERRORINT, Level.INFO, null, e.getMessage(), e);
+        throw new ServingException(RESTCodes.ServingErrorCode.LIFECYCLE_ERROR_INT, Level.INFO, null, e.getMessage(), e);
       }
     }
     

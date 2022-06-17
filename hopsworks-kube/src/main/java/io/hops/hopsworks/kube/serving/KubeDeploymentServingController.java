@@ -14,6 +14,7 @@ import io.fabric8.kubernetes.api.model.TolerationBuilder;
 import io.fabric8.kubernetes.api.model.apps.Deployment;
 import io.fabric8.kubernetes.api.model.apps.DeploymentStatus;
 import io.fabric8.kubernetes.client.KubernetesClientException;
+import io.hops.hopsworks.common.serving.ServingLogs;
 import io.hops.hopsworks.common.serving.ServingStatusEnum;
 import io.hops.hopsworks.exceptions.ApiKeyException;
 import io.hops.hopsworks.exceptions.ServingException;
@@ -56,7 +57,7 @@ public class KubeDeploymentServingController extends KubeToolServingController {
         kubePredictorServerUtils));
       kubeClientService.createOrReplaceService(project, buildService(project, serving, kubePredictorServerUtils));
     } catch (ServiceDiscoveryException | ApiKeyException e) {
-      throw new ServingException(RESTCodes.ServingErrorCode.LIFECYCLEERRORINT, Level.SEVERE, null, e.getMessage(), e);
+      throw new ServingException(RESTCodes.ServingErrorCode.LIFECYCLE_ERROR_INT, Level.SEVERE, null, e.getMessage(), e);
     }
   }
   
@@ -72,7 +73,7 @@ public class KubeDeploymentServingController extends KubeToolServingController {
           kubePredictorServerUtils));
       }
     } catch (KubernetesClientException | ServiceDiscoveryException | ApiKeyException e) {
-      throw new ServingException(RESTCodes.ServingErrorCode.UPDATEERROR, Level.SEVERE, null, e.getMessage(), e);
+      throw new ServingException(RESTCodes.ServingErrorCode.UPDATE_ERROR, Level.SEVERE, null, e.getMessage(), e);
     }
   }
   
@@ -98,7 +99,7 @@ public class KubeDeploymentServingController extends KubeToolServingController {
         kubeClientService.deleteService(project, getServiceMetadata(servingId, kubePredictorServerUtils));
       }
     } catch (KubernetesClientException e) {
-      throw new ServingException(RESTCodes.ServingErrorCode.DELETIONERROR, Level.SEVERE, null, e.getMessage(), e);
+      throw new ServingException(RESTCodes.ServingErrorCode.DELETION_ERROR, Level.SEVERE, null, e.getMessage(), e);
     }
   }
   
@@ -116,7 +117,7 @@ public class KubeDeploymentServingController extends KubeToolServingController {
       podList = getPodList(project, serving);
       instanceService = kubeClientService.getServiceInfo(project, getServiceName(servingId, kubePredictorServerUtils));
     } catch (KubernetesClientException e) {
-      throw new ServingException(RESTCodes.ServingErrorCode.STATUSERROR, Level.SEVERE,
+      throw new ServingException(RESTCodes.ServingErrorCode.STATUS_ERROR, Level.SEVERE,
         "Error while getting service status", e.getMessage(), e);
     }
 
@@ -138,6 +139,18 @@ public class KubeDeploymentServingController extends KubeToolServingController {
         setHopsworksInferencePath(kubeServingUtils.getHopsworksInferencePath(serving, null));
       }
     };
+  }
+  
+  @Override
+  public List<ServingLogs> getLogs(Project project, Serving serving, String component, Integer tailingLines) {
+    ArrayList<ServingLogs> logs = new ArrayList<>();
+    List<Pod> pods = getPodList(project, serving);
+    for (Pod pod : pods) {
+      String content = kubeClientService.getLogs(pod.getMetadata().getNamespace(), pod.getMetadata().getName(),
+        tailingLines, KubeServingUtils.LIMIT_BYTES);
+      logs.add(new ServingLogs(pod.getMetadata().getName(), content));
+    }
+    return logs;
   }
   
   private ServingStatusEnum getServingStatus(Serving serving, DeploymentStatus deploymentStatus, List<Pod> podList) {
