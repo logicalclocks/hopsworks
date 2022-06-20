@@ -83,7 +83,7 @@ public class PythonResourcesController {
     pythonResourcesTypesQueries.forEach((key, query) -> getResourceValue(key, query));
 
     pythonResources.put(CLUSTER_TOTAL_CPU_CAPACITY, 100);
-    if (!settings.isDockerCgroupEnabled() && !settings.getKubeInstalled()) {
+    if (!settings.isDockerCgroupEnabled() || settings.getKubeInstalled()) {
       //use the same values as the cluster
       pythonResources.put(DOCKER_TOTAL_ALLOCATABLE_CPU_KEY, 100);
       pythonResources.put(DOCKER_TOTAL_ALLOCATABLE_MEMORY_KEY, pythonResources.get(CLUSTER_TOTAL_MEMORY_CAPACITY));
@@ -139,14 +139,6 @@ public class PythonResourcesController {
           "container_spec_memory_limit_bytes{id='/docker'}");
       pythonResourcesTypesQueries.put(DOCKER_TOTAL_ALLOCATABLE_CPU_KEY,
           "(container_spec_cpu_quota{id='/docker'}/" + settings.getDockerCgroupCpuPeriod() + ")*100");
-    } else {
-      pythonResourcesTypesQueries.put(DOCKER_CURRENT_CPU_USAGE_KEY,
-          "100 - ((sum((avg by (instance) (rate(node_cpu_seconds_total{mode='idle'" + nodeQuery + "}[1m])) * 100)))/" +
-              "(count(node_memory_Active_bytes{" + nodeQueryNoAppend + "})))");
-      pythonResourcesTypesQueries.put(DOCKER_TOTAL_ALLOCATABLE_MEMORY_KEY,
-          "sum(node_memory_Active_bytes{" + nodeQueryNoAppend + "})");
-      pythonResourcesTypesQueries.put(CLUSTER_TOTAL_MEMORY_CAPACITY,
-          "sum(node_memory_MemTotal_bytes{" + nodeQueryNoAppend + "})");
     }
 
     return pythonResourcesTypesQueries;
