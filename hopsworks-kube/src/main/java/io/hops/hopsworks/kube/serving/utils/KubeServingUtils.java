@@ -77,6 +77,11 @@ public class KubeServingUtils {
   public final static String INFERENCE_LOGGER_MODE_REQUEST = "request";
   public final static String INFERENCE_LOGGER_MODE_RESPONSE = "response";
   
+  // Inference batcher: kserve default values
+  public final static Integer INFERENCE_BATCHER_MAX_BATCH_SIZE = 32;
+  public final static Integer INFERENCE_BATCHER_MAX_LATENCY = 5000;
+  public final static Integer INFERENCE_BATCHER_TIMEOUT = 60;
+  
   // Server logs
   public final static Integer LIMIT_BYTES = 50000; // 50kb
   

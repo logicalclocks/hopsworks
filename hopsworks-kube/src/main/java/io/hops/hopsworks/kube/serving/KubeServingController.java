@@ -12,20 +12,21 @@ import io.hops.hopsworks.common.serving.ServingStatusEnum;
 import io.hops.hopsworks.common.serving.ServingWrapper;
 import io.hops.hopsworks.common.serving.util.KafkaServingHelper;
 import io.hops.hopsworks.common.serving.util.ServingCommands;
-import io.hops.hopsworks.exceptions.HopsSecurityException;
-import io.hops.hopsworks.exceptions.ServiceException;
-import io.hops.hopsworks.kube.serving.utils.KubePredictorUtils;
-import io.hops.hopsworks.kube.serving.utils.KubeServingUtils;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.DatasetException;
+import io.hops.hopsworks.exceptions.HopsSecurityException;
 import io.hops.hopsworks.exceptions.KafkaException;
 import io.hops.hopsworks.exceptions.ProjectException;
+import io.hops.hopsworks.exceptions.ServiceException;
 import io.hops.hopsworks.exceptions.ServingException;
 import io.hops.hopsworks.exceptions.UserException;
 import io.hops.hopsworks.kube.common.KubeStereotype;
 import io.hops.hopsworks.kube.serving.utils.KubeArtifactUtils;
+import io.hops.hopsworks.kube.serving.utils.KubePredictorUtils;
+import io.hops.hopsworks.kube.serving.utils.KubeServingUtils;
 import io.hops.hopsworks.kube.serving.utils.KubeTransformerUtils;
 import io.hops.hopsworks.persistence.entity.project.Project;
+import io.hops.hopsworks.persistence.entity.serving.BatchingConfiguration;
 import io.hops.hopsworks.persistence.entity.serving.Serving;
 import io.hops.hopsworks.persistence.entity.serving.ServingTool;
 import io.hops.hopsworks.persistence.entity.user.Users;
@@ -268,6 +269,9 @@ public class KubeServingController implements ServingController {
       // Setup the Kafka topic for logging
       kafkaServingHelper.setupKafkaServingTopic(project, servingWrapper, serving, null);
   
+      // Setup inference batching if enabled
+      setupDefaultInferenceBatching(serving);
+      
       Serving newServing = servingFacade.merge(serving);
       servingWrapper.setServing(newServing);
     } else {
@@ -290,6 +294,9 @@ public class KubeServingController implements ServingController {
       
       // Setup the Kafka topic for logging
       kafkaServingHelper.setupKafkaServingTopic(project, servingWrapper, serving, oldServing);
+      
+      // Setup inference batching if enabled
+      setupDefaultInferenceBatching(serving);
       
       try {
         // Avoid updating if there are no changes
@@ -399,5 +406,25 @@ public class KubeServingController implements ServingController {
     return serving.getServingTool() == ServingTool.KSERVE
       ? kubeKServeController
       : kubeDeploymentServingController;
+  }
+  
+  private void setupDefaultInferenceBatching(Serving serving) {
+    if (serving.getServingTool() != ServingTool.KSERVE) {
+      return;
+    }
+    BatchingConfiguration batchingConfiguration = serving.getBatchingConfiguration();
+    if (batchingConfiguration == null || !batchingConfiguration.isBatchingEnabled()) {
+      return; // nothing to do
+    }
+    // set empty config with default values
+    if (batchingConfiguration.getMaxBatchSize() == null) {
+      batchingConfiguration.setMaxBatchSize(KubeServingUtils.INFERENCE_BATCHER_MAX_BATCH_SIZE);
+    }
+    if (batchingConfiguration.getMaxLatency() == null) {
+      batchingConfiguration.setMaxLatency(KubeServingUtils.INFERENCE_BATCHER_MAX_LATENCY);
+    }
+    if (batchingConfiguration.getTimeout() == null) {
+      batchingConfiguration.setTimeout(KubeServingUtils.INFERENCE_BATCHER_TIMEOUT);
+    }
   }
 }
