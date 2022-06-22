@@ -14,20 +14,12 @@
  * If not, see <https://www.gnu.org/licenses/>.
  */
 
-package io.hops.hopsworks.api.featurestore.featureview;
+package io.hops.hopsworks.common.featurestore.featureview;
 
 import io.hops.hopsworks.common.dao.QueryParam;
 import io.hops.hopsworks.common.dao.user.activity.ActivityFacade;
 import io.hops.hopsworks.common.featurestore.activity.FeaturestoreActivityFacade;
-import io.hops.hopsworks.common.featurestore.feature.TrainingDatasetFeatureDTO;
-import io.hops.hopsworks.common.featurestore.featureview.FeatureViewDTO;
-import io.hops.hopsworks.common.featurestore.featureview.FeatureViewFacade;
-import io.hops.hopsworks.common.featurestore.query.Query;
-import io.hops.hopsworks.common.featurestore.query.QueryController;
-import io.hops.hopsworks.common.featurestore.query.QueryDTO;
-import io.hops.hopsworks.common.featurestore.query.pit.PitJoinController;
 import io.hops.hopsworks.common.featurestore.storageconnectors.FeaturestoreConnectorFacade;
-import io.hops.hopsworks.common.featurestore.trainingdatasets.TrainingDatasetController;
 import io.hops.hopsworks.common.featurestore.trainingdatasets.TrainingDatasetFacade;
 import io.hops.hopsworks.common.featurestore.utils.FeaturestoreUtils;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
@@ -45,8 +37,6 @@ import io.hops.hopsworks.persistence.entity.featurestore.featureview.FeatureView
 import io.hops.hopsworks.persistence.entity.featurestore.storageconnector.FeaturestoreConnector;
 import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.TrainingDataset;
 import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.TrainingDatasetFeature;
-import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.TrainingDatasetFilter;
-import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.TrainingDatasetJoin;
 import io.hops.hopsworks.persistence.entity.hdfs.inode.Inode;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.user.Users;
@@ -59,10 +49,8 @@ import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
-import javax.inject.Inject;
 import java.io.IOException;
 import java.util.Collection;
-import java.util.Date;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.stream.Collectors;
@@ -77,21 +65,13 @@ public class FeatureViewController {
   @EJB
   private FeatureViewFacade featureViewFacade;
   @EJB
-  private QueryController queryController;
-  @EJB
   private InodeController inodeController;
-  @Inject
-  private PitJoinController pitJoinController;
   @EJB
   private DistributedFsService dfs;
   @EJB
   private HdfsUsersController hdfsUsersBean;
   @EJB
-  private TrainingDatasetController trainingDatasetController;
-  @EJB
   private FeaturestoreConnectorFacade featurestoreConnectorFacade;
-  @EJB
-  private FeatureViewInputValidator featureViewInputValidator;
   @EJB
   private HopsFSProvenanceController fsProvenanceController;
   @EJB
@@ -233,35 +213,20 @@ public class FeatureViewController {
   }
 
   public FeatureView update(Users user, Project project, Featurestore featurestore, String name, Integer version,
-                            FeatureViewDTO featureViewDTO)
+                            String description)
       throws FeaturestoreException {
     FeatureView featureView = getByNameVersionAndFeatureStore(name, version, featurestore);
 
     featurestoreUtils.verifyUserRole(featureView, featurestore, user, project);
 
     // Update metadata
-    featureView.setDescription(featureViewDTO.getDescription());
+    featureView.setDescription(description);
     featureViewFacade.update(featureView);
 
-    activityFacade.persistActivity(ActivityFacade.EDITED_FEATURE_VIEW + featureViewDTO.getName(), project, user,
-        ActivityFlag.SERVICE);
+    activityFacade.persistActivity(ActivityFacade.EDITED_FEATURE_VIEW + name, project, user, ActivityFlag.SERVICE);
 
     // Refetch the updated entry from the database
-    return getByNameVersionAndFeatureStore(featureViewDTO.getName(), featureViewDTO.getVersion(), featurestore);
-  }
-
-  public FeatureView convertFromDTO(Project project, Featurestore featurestore, Users user,
-      FeatureViewDTO featureViewDTO) throws FeaturestoreException {
-    featureViewInputValidator.validate(featureViewDTO, project, user);
-    FeatureView featureView = new FeatureView();
-    featureView.setName(featureViewDTO.getName());
-    featureView.setFeaturestore(featurestore);
-    featureView.setCreated(featureViewDTO.getCreated() == null ? new Date(): featureViewDTO.getCreated());
-    featureView.setCreator(user);
-    featureView.setVersion(featureViewDTO.getVersion());
-    featureView.setDescription(featureViewDTO.getDescription());
-    setQuery(project, user, featureViewDTO.getQuery(), featureView, featureViewDTO.getFeatures());
-    return featureView;
+    return getByNameVersionAndFeatureStore(name, version, featurestore);
   }
 
   public List<TrainingDatasetFeature> getFeaturesSorted(Collection<TrainingDatasetFeature> features) {
@@ -277,22 +242,4 @@ public class FeatureViewController {
         })
         .collect(Collectors.toList());
   }
-
-  private void setQuery(Project project, Users user, QueryDTO queryDTO, FeatureView featureView,
-      List<TrainingDatasetFeatureDTO> featureDTOs)
-      throws FeaturestoreException {
-    if (queryDTO != null) {
-      Query query = queryController.convertQueryDTO(project, user, queryDTO,
-          pitJoinController.isPitEnabled(queryDTO));
-      List<TrainingDatasetJoin> tdJoins = trainingDatasetController.collectJoins(query, null, featureView);
-      featureView.setJoins(tdJoins);
-      List<TrainingDatasetFeature> features = trainingDatasetController.collectFeatures(query, featureDTOs,
-          null, featureView, 0, tdJoins, 0);
-      featureView.setFeatures(features);
-      List<TrainingDatasetFilter> filters = trainingDatasetController.convertToFilterEntities(query.getFilter(),
-          featureView, "L");
-      featureView.setFilters(filters);
-    }
-  }
-
 }

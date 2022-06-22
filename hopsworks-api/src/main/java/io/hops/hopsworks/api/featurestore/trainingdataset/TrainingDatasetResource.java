@@ -16,7 +16,7 @@
 package io.hops.hopsworks.api.featurestore.trainingdataset;
 
 import io.hops.hopsworks.api.featurestore.FeaturestoreKeywordResource;
-import io.hops.hopsworks.api.featurestore.featureview.FeatureViewController;
+import io.hops.hopsworks.common.featurestore.featureview.FeatureViewController;
 import io.hops.hopsworks.api.featurestore.statistics.StatisticsResource;
 import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.api.filter.Audience;

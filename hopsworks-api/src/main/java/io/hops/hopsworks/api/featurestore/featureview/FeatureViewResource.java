@@ -25,7 +25,7 @@ import io.hops.hopsworks.audit.logger.LogLevel;
 import io.hops.hopsworks.audit.logger.annotation.Logged;
 import io.hops.hopsworks.common.api.ResourceRequest;
 import io.hops.hopsworks.common.dao.QueryParam;
-import io.hops.hopsworks.common.featurestore.featureview.FeatureViewDTO;
+import io.hops.hopsworks.common.featurestore.featureview.FeatureViewController;
 import io.hops.hopsworks.exceptions.DatasetException;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.exceptions.MetadataException;
@@ -108,7 +108,7 @@ public class FeatureViewResource {
     }
     Users user = jWTHelper.getUserPrincipal(sc);
 
-    FeatureView featureView = featureViewController.convertFromDTO(project, featurestore, user, featureViewDTO);
+    FeatureView featureView = featureViewBuilder.convertFromDTO(project, featurestore, user, featureViewDTO);
     featureView = featureViewController.createFeatureView(project, user, featureView, featurestore);
 
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.FEATUREVIEW);
@@ -299,7 +299,8 @@ public class FeatureViewResource {
     }
     Users user = jWTHelper.getUserPrincipal(sc);
     ResourceRequest resourceRequest = makeResourceRequest(param);
-    FeatureView featureView = featureViewController.update(user, project, featurestore, name, version, featureViewDTO);
+    FeatureView featureView = featureViewController.update(user, project, featurestore, name, version,
+      featureViewDTO.getDescription());
 
     return Response.ok()
         .entity(featureViewBuilder.build(featureView, resourceRequest, project, user, uriInfo))

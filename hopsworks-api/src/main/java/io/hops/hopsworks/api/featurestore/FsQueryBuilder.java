@@ -16,7 +16,7 @@
 
 package io.hops.hopsworks.api.featurestore;
 
-import io.hops.hopsworks.api.featurestore.featureview.FeatureViewController;
+import io.hops.hopsworks.common.featurestore.featureview.FeatureViewController;
 import io.hops.hopsworks.common.api.ResourceRequest;
 import io.hops.hopsworks.common.featurestore.query.ConstructorController;
 import io.hops.hopsworks.common.featurestore.query.FsQueryDTO;
