@@ -24,6 +24,7 @@ import io.hops.hopsworks.api.featurestore.trainingdataset.TrainingDatasetResourc
 import io.hops.hopsworks.api.featurestore.transformation.TransformationResource;
 import io.hops.hopsworks.common.featurestore.FeaturestoreController;
 import io.hops.hopsworks.common.featurestore.FeaturestoreDTO;
+import io.hops.hopsworks.common.featurestore.featureview.FeatureViewController;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.persistence.entity.featurestore.Featurestore;
 import io.hops.hopsworks.persistence.entity.project.Project;

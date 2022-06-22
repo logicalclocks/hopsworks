@@ -14,7 +14,7 @@
  * If not, see <https://www.gnu.org/licenses/>.
  */
 
-package io.hops.hopsworks.common.featurestore.featureview;
+package io.hops.hopsworks.api.featurestore.featureview;
 
 import io.hops.hopsworks.common.api.RestDTO;
 import io.hops.hopsworks.common.dao.user.UserDTO;
