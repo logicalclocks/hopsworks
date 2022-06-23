@@ -9,12 +9,13 @@
 `git clone https://${GIT_TOKEN}@github.com/${GIT_USER}/hopsworks-ee hopsworks`
 4. Setup ruby env:
   * `cd hopsworks/hopsworks-IT/src/test/ruby`
-  * `cp .env.example .env
+  * `cp .env.example .env`
   * .env setup - PROJECT_DIR=/home/vagrant/hopsworks 
   * .env setup - OS=centos or ubuntu as necessary
 5. 
   * Setup as root
     * `sudo su`
+    * `apt install ruby-dev libmysqlclient-dev`
     * `bundle install`
   * If step above fails
     * ubuntu - `apt-get install bundler`

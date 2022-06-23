@@ -943,6 +943,38 @@ describe "On #{ENV['OS']}" do
           dto_parsed = JSON.parse(json_result)
           expect(dto_parsed["count"]).to eq(0)
         end
+
+        it "expectations should have matching id with expectationId in meta field" do
+          project = get_project
+          featurestore_id = get_featurestore_id(project.id)
+          json_result, featuregroup_name = create_cached_featuregroup(project.id, featurestore_id)
+          fg_json = JSON.parse(json_result)
+          expectation_suite = generate_template_expectation_suite()
+          persist_expectation_suite(project.id, featurestore_id, fg_json["id"], expectation_suite)
+          json_result = get_expectation_suite(project.id, featurestore_id, fg_json["id"])
+          expect_status_details(200)
+          stored_expectation_suite = JSON.parse(json_result)
+          meta = JSON.parse(stored_expectation_suite["expectations"][0]["meta"])
+          expect(stored_expectation_suite["expectations"][0]["id"]).to eq(meta["expectationId"])
+        end
+
+        # When writing a fetched modified expectation suite to DB, expectationId in meta field is not changed.
+        # It is therefore incorrect as recreating the expectation suite changes all ids. On fetching the modified se  
+        # suite incorrect expectationIds should be overwritten by the expectation suite builder.
+        it "updated expectation suite should have correct expectationId in meta fields" do
+          project = get_project
+          featurestore_id = get_featurestore_id(project.id)
+          json_result, featuregroup_name = create_cached_featuregroup(project.id, featurestore_id)
+          fg_json = JSON.parse(json_result)
+          expectation_suite = generate_template_expectation_suite()
+          expectation_suite[:expectations][0][:meta] = expectation_suite[:expectations][0][:meta][0..-2] + ", \"expectationsId\":1}"
+          persist_expectation_suite(project.id, featurestore_id, fg_json["id"], expectation_suite)
+          json_result = get_expectation_suite(project.id, featurestore_id, fg_json["id"])
+          expect_status_details(200)
+          updated_expectation_suite = JSON.parse(json_result)
+          meta = JSON.parse(updated_expectation_suite["expectations"][0]["meta"])
+          expect(updated_expectation_suite["expectations"][0]["id"]).to eq(meta["expectationId"])
+        end
       end
     end
 
