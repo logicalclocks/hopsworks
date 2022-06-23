@@ -16,7 +16,7 @@
 
 package io.hops.hopsworks.api.featurestore.preparestatement;
 
-import io.hops.hopsworks.api.featurestore.featureview.FeatureViewController;
+import io.hops.hopsworks.common.featurestore.featureview.FeatureViewController;
 import io.hops.hopsworks.api.featurestore.trainingdataset.PreparedStatementBuilder;
 import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.api.filter.Audience;

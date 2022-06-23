@@ -27,12 +27,14 @@ import io.hops.hopsworks.common.dataset.util.DatasetPath;
 import io.hops.hopsworks.common.featurestore.feature.TrainingDatasetFeatureDTO;
 import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupDTO;
 import io.hops.hopsworks.common.featurestore.featuregroup.online.OnlineFeaturegroupController;
+import io.hops.hopsworks.common.featurestore.featureview.FeatureViewController;
 import io.hops.hopsworks.common.featurestore.keyword.KeywordControllerIface;
 import io.hops.hopsworks.common.featurestore.keyword.KeywordDTO;
-import io.hops.hopsworks.common.featurestore.featureview.FeatureViewDTO;
 import io.hops.hopsworks.common.featurestore.query.Query;
 import io.hops.hopsworks.common.featurestore.query.QueryBuilder;
 import io.hops.hopsworks.common.featurestore.query.QueryController;
+import io.hops.hopsworks.common.featurestore.query.QueryDTO;
+import io.hops.hopsworks.common.featurestore.query.pit.PitJoinController;
 import io.hops.hopsworks.common.featurestore.trainingdatasets.TrainingDatasetController;
 import io.hops.hopsworks.common.hdfs.Utils;
 import io.hops.hopsworks.exceptions.DatasetException;
@@ -41,8 +43,11 @@ import io.hops.hopsworks.exceptions.MetadataException;
 import io.hops.hopsworks.exceptions.SchematizedTagException;
 import io.hops.hopsworks.exceptions.ServiceException;
 import io.hops.hopsworks.persistence.entity.dataset.DatasetType;
+import io.hops.hopsworks.persistence.entity.featurestore.Featurestore;
 import io.hops.hopsworks.persistence.entity.featurestore.featureview.FeatureView;
 import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.TrainingDatasetFeature;
+import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.TrainingDatasetFilter;
+import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.TrainingDatasetJoin;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.user.Users;
 
@@ -52,6 +57,7 @@ import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.inject.Inject;
 import javax.ws.rs.core.UriInfo;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -80,10 +86,45 @@ public class FeatureViewBuilder {
   private TagBuilder tagsBuilder;
   @EJB
   private DatasetHelper datasetHelper;
+  @EJB
+  private FeatureViewInputValidator featureViewInputValidator;
+  @Inject
+  private PitJoinController pitJoinController;
 
   public FeatureViewBuilder() {
   }
-
+  
+  public FeatureView convertFromDTO(Project project, Featurestore featurestore, Users user,
+                                    FeatureViewDTO featureViewDTO) throws FeaturestoreException {
+    featureViewInputValidator.validate(featureViewDTO, project, user);
+    FeatureView featureView = new FeatureView();
+    featureView.setName(featureViewDTO.getName());
+    featureView.setFeaturestore(featurestore);
+    featureView.setCreated(featureViewDTO.getCreated() == null ? new Date(): featureViewDTO.getCreated());
+    featureView.setCreator(user);
+    featureView.setVersion(featureViewDTO.getVersion());
+    featureView.setDescription(featureViewDTO.getDescription());
+    setQuery(project, user, featureViewDTO.getQuery(), featureView, featureViewDTO.getFeatures());
+    return featureView;
+  }
+  
+  private void setQuery(Project project, Users user, QueryDTO queryDTO, FeatureView featureView,
+                        List<TrainingDatasetFeatureDTO> featureDTOs)
+    throws FeaturestoreException {
+    if (queryDTO != null) {
+      Query query = queryController.convertQueryDTO(project, user, queryDTO,
+        pitJoinController.isPitEnabled(queryDTO));
+      List<TrainingDatasetJoin> tdJoins = trainingDatasetController.collectJoins(query, null, featureView);
+      featureView.setJoins(tdJoins);
+      List<TrainingDatasetFeature> features = trainingDatasetController.collectFeatures(query, featureDTOs,
+        null, featureView, 0, tdJoins, 0);
+      featureView.setFeatures(features);
+      List<TrainingDatasetFilter> filters = trainingDatasetController.convertToFilterEntities(query.getFilter(),
+        featureView, "L");
+      featureView.setFilters(filters);
+    }
+  }
+  
   public FeatureViewDTO build(List<FeatureView> featureViews, ResourceRequest resourceRequest, Project project,
       Users user, UriInfo uriInfo)
       throws FeaturestoreException, ServiceException, MetadataException, DatasetException, SchematizedTagException {
