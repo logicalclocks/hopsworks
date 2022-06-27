@@ -33,11 +33,14 @@ public class KubeInferenceEndpoints {
   
   public InferenceEndpoint getEndpoint(InferenceEndpointType endpointType) {
     InferenceEndpoint endpoint = endpointsMap.getOrDefault(endpointType, null);
-    if (endpoint == null) {
+    if (endpoint == null) {  // if not cached, retrieve it
       endpoint = findEndpoint(endpointType);
-      cacheEndpoint(endpoint);
+      cacheEndpoint(endpoint); // endpoints with null values for hosts or ports are also cached, to avoid re-computation
     }
-    return endpoint;
+    if (endpoint != null && endpoint.getHosts() != null && endpoint.getPorts() != null) {
+      return endpoint;  // if valid, return endpoint
+    }
+    return null;
   }
   
   private void cacheEndpoint(InferenceEndpoint endpoint) {
