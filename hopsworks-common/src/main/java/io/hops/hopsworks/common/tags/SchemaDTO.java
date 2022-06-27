@@ -23,6 +23,8 @@ import javax.xml.bind.annotation.XmlRootElement;
 public class SchemaDTO extends RestDTO<SchemaDTO> {
   private String name;
   private String value;
+  private boolean hasNestedTypes;
+  private boolean hasAdditionalRules;
   
   public String getName() {
     return name;
@@ -40,11 +42,29 @@ public class SchemaDTO extends RestDTO<SchemaDTO> {
     this.value = value;
   }
   
+  public boolean isHasNestedTypes() {
+    return hasNestedTypes;
+  }
+  
+  public void setHasNestedTypes(boolean hasNestedTypes) {
+    this.hasNestedTypes = hasNestedTypes;
+  }
+  
+  public boolean isHasAdditionalRules() {
+    return hasAdditionalRules;
+  }
+  
+  public void setHasAdditionalRules(boolean hasAdditionalRules) {
+    this.hasAdditionalRules = hasAdditionalRules;
+  }
+  
   @Override
   public String toString() {
     return "TagsDTO{" +
       "name='" + name + '\'' +
       ", value=" + value +
+      ", hasNestedTypes=" + hasNestedTypes +
+      ", hasAditionalRules=" + hasAdditionalRules +
       '}';
   }
 }

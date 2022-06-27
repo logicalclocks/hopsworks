@@ -61,7 +61,7 @@ public class TagSchemasResource {
   @EJB
   private TagSchemasBuilder tagSchemasBuilder;
   @Inject
-  private TagSchemasControllerIface TagSchemasController;
+  private TagSchemasControllerIface tagSchemasController;
   
   @ApiOperation(value = "Get all schemas", response = SchemaDTO.class)
   @GET
@@ -72,7 +72,7 @@ public class TagSchemasResource {
   public Response getAll(@Context SecurityContext sc, @Context UriInfo uriInfo,
                          @Context HttpServletRequest req,
                          @BeanParam Pagination pagination,
-                         @BeanParam TagsBeanParam tagsBeanParam) {
+                         @BeanParam TagsBeanParam tagsBeanParam) throws SchematizedTagException {
     
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.TAG_SCHEMAS);
     resourceRequest.setOffset(pagination.getOffset());
@@ -109,7 +109,7 @@ public class TagSchemasResource {
                        String schema)
     throws SchematizedTagException {
     
-    TagSchemasController.create(schemaName, schema);
+    tagSchemasController.create(schemaName, schema);
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.TAG_SCHEMAS);
     SchemaDTO dto = tagSchemasBuilder.build(uriInfo, resourceRequest, schemaName);
     return Response.created(dto.getHref()).entity(dto).build();
@@ -123,7 +123,7 @@ public class TagSchemasResource {
   public Response delete(@Context SecurityContext sc, @Context UriInfo uriInfo,
                          @PathParam("name") String schemaName) {
     
-    TagSchemasController.delete(schemaName);
+    tagSchemasController.delete(schemaName);
     return Response.noContent().build();
   }
 }
