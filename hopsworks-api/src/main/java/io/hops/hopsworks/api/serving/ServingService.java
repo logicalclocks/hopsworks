@@ -119,6 +119,7 @@ public class ServingService {
       responseContainer = "List")
   public Response getAll(
       @QueryParam("model") String modelName,
+      @QueryParam("modelVersion") Integer modelVersion,
       @QueryParam("status") ServingStatusEnum status,
       @QueryParam("name") String servingName,
       @Context HttpServletRequest req,
@@ -139,7 +140,12 @@ public class ServingService {
         .build();
     }
     
-    List<ServingWrapper> servingDAOList = servingController.getAll(project, modelName, status);
+    // if filter by model version, without a model name
+    if (Strings.isNullOrEmpty(modelName) && modelVersion != null) {
+      throw new IllegalArgumentException("Cannot filter by model version without a model name");
+    }
+    
+    List<ServingWrapper> servingDAOList = servingController.getAll(project, modelName, modelVersion, status);
     ArrayList<ServingView> servingViewList = new ArrayList<>();
     for (ServingWrapper servingWrapper : servingDAOList) {
       servingViewList.add(new ServingView(servingWrapper));

@@ -298,10 +298,8 @@ public class ModelsBuilder {
                 if (modelTrainingDataset.isPresent()) {
                   ProvOpsDTO modelProvenanceDTO = modelTrainingDataset.get().getValue();
                   String mlId = modelProvenanceDTO.getMlId();
-
-                  int splitIndex = mlId.lastIndexOf("_");
-                  String[] nameVersionSplit = {mlId.substring(0, splitIndex), mlId.substring(splitIndex + 1)};
-
+                  String[] nameVersionSplit = modelUtils.getModelNameAndVersion(mlId);
+                  
                   TrainingDatasetDTO tdDTO = new TrainingDatasetDTO();
 
                   tdDTO.setName(nameVersionSplit[0]);

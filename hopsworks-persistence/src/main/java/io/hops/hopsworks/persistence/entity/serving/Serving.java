@@ -53,6 +53,8 @@ import java.util.Date;
       "WHERE t.project = :project"),
     @NamedQuery(name = "Serving.findByProjectAndModel", query = "SELECT t FROM Serving t " +
             "WHERE t.project = :project AND t.modelName = :modelName"),
+  @NamedQuery(name = "Serving.findByProjectAndModelVersion", query = "SELECT t FROM Serving t " +
+    "WHERE t.project = :project AND t.modelName = :modelName AND t.modelVersion = :modelVersion"),
     @NamedQuery(name = "Serving.findByProjectAndId", query = "SELECT t FROM Serving t " +
       "WHERE t.project = :project AND t.id = :id"),
     @NamedQuery(name = "Serving.findByCreated", query = "SELECT t FROM Serving t WHERE t.created = :created"),

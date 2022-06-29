@@ -76,13 +76,16 @@ public class KubeServingController implements ServingController {
   private KubeTransformerUtils kubeTransformerUtils;
   
   @Override
-  public List<ServingWrapper> getAll(Project project, String modelNameFilter, ServingStatusEnum statusFilter)
-    throws ServingException {
+  public List<ServingWrapper> getAll(Project project, String modelNameFilter, Integer modelVersionFilter,
+    ServingStatusEnum statusFilter)
+      throws ServingException {
     List<Serving> servingList;
     if (Strings.isNullOrEmpty(modelNameFilter)) {
       servingList = servingFacade.findForProject(project);
-    } else {
+    } else if (modelVersionFilter == null) {
       servingList = servingFacade.findForProjectAndModel(project, modelNameFilter);
+    } else {
+      servingList = servingFacade.findForProjectAndModelVersion(project, modelNameFilter, modelVersionFilter);
     }
   
     List<ServingWrapper> servingWrapperList = new ArrayList<>();

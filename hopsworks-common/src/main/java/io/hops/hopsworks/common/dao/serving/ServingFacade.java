@@ -74,6 +74,14 @@ public class ServingFacade {
             .setParameter("modelName", modelName)
             .getResultList();
   }
+  
+  public List<Serving> findForProjectAndModelVersion(Project project, String modelName, Integer version) {
+    return em.createNamedQuery("Serving.findByProjectAndModelVersion", Serving.class)
+      .setParameter("project", project)
+      .setParameter("modelName", modelName)
+      .setParameter("modelVersion", version)
+      .getResultList();
+  }
 
   public Serving findById(Integer id) {
     return em.createNamedQuery("Serving.findById", Serving.class)

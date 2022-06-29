@@ -172,4 +172,9 @@ public class ModelUtils {
     JSONObject summary = new JSONObject(model.getXattrs().get(ModelsBuilder.MODEL_SUMMARY_XATTR_NAME));
     return modelConverter.unmarshalDescription(summary.toString());
   }
+  
+  public String[] getModelNameAndVersion(String mlId) {
+    int splitIndex = mlId.lastIndexOf("_");
+    return new String[]{mlId.substring(0, splitIndex), mlId.substring(splitIndex + 1)};
+  }
 }

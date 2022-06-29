@@ -2114,7 +2114,8 @@ public class RESTCodes {
     MODEL_REGISTRY_ACCESS_DENIED(7, "Model Registry not accessible.",
             Response.Status.FORBIDDEN),
     MODEL_REGISTRY_MODELS_DATASET_NOT_FOUND(8, "Models dataset does not exist in project.",
-            Response.Status.INTERNAL_SERVER_ERROR);
+            Response.Status.INTERNAL_SERVER_ERROR),
+    MODEL_CANNOT_BE_DELETED(9, "Could not delete the model", Response.Status.BAD_REQUEST);
 
     private int code;
     private String message;
