@@ -179,7 +179,7 @@ public class QuotasEnforcement {
 
   private List<ServingWrapper> getAllServings(Project project) throws ServingException, KafkaException,
           CryptoPasswordNotFoundException {
-    return servingController.getAll(project, null, null);
+    return servingController.getAll(project, null, null, null);
   }
 
   private boolean isDeploymentRunning(ServingWrapper serving) {

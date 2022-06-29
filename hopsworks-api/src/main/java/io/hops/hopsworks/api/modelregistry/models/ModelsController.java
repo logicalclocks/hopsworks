@@ -33,14 +33,19 @@ import io.hops.hopsworks.common.provenance.state.ProvStateParamBuilder;
 import io.hops.hopsworks.common.provenance.state.ProvStateParser;
 import io.hops.hopsworks.common.provenance.state.ProvStateController;
 import io.hops.hopsworks.common.provenance.state.dto.ProvStateDTO;
+import io.hops.hopsworks.common.serving.ServingController;
+import io.hops.hopsworks.common.serving.ServingWrapper;
 import io.hops.hopsworks.common.util.AccessController;
 import io.hops.hopsworks.common.util.Settings;
+import io.hops.hopsworks.exceptions.CryptoPasswordNotFoundException;
 import io.hops.hopsworks.exceptions.DatasetException;
 import io.hops.hopsworks.exceptions.JobException;
+import io.hops.hopsworks.exceptions.KafkaException;
 import io.hops.hopsworks.exceptions.MetadataException;
 import io.hops.hopsworks.exceptions.ModelRegistryException;
 import io.hops.hopsworks.exceptions.ProvenanceException;
 import io.hops.hopsworks.exceptions.ServiceException;
+import io.hops.hopsworks.exceptions.ServingException;
 import io.hops.hopsworks.persistence.entity.dataset.Dataset;
 import io.hops.hopsworks.persistence.entity.dataset.DatasetType;
 import io.hops.hopsworks.persistence.entity.jobs.configuration.spark.SparkJobConfiguration;
@@ -55,6 +60,7 @@ import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
+import javax.inject.Inject;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -87,6 +93,10 @@ public class ModelsController {
   private DatasetController datasetCtrl;
   @EJB
   private ProjectFacade projectFacade;
+  @EJB
+  private ModelUtils modelUtils;
+  @Inject
+  private ServingController servingController;
   
   public void attachModel(DistributedFileSystemOps udfso, Project modelProject, String userFullName,
     ModelDTO modelDTO)
@@ -118,10 +128,12 @@ public class ModelsController {
   }
 
   public void delete(Users user, Project userProject, Project parentProject, ProvStateDTO fileState)
-    throws DatasetException, ModelRegistryException {
+    throws DatasetException, ModelRegistryException, KafkaException, ServingException, CryptoPasswordNotFoundException {
     if(userProject.getId().equals(parentProject.getId())) {
       delete(user, userProject, fileState);
     } else {
+      verifyNoModelDeployments(userProject, fileState);
+      
       JSONObject summary = new JSONObject(fileState.getXattrs().get(MODEL_SUMMARY_XATTR_NAME));
       ModelDTO modelSummary = modelConverter.unmarshalDescription(summary.toString());
       String modelPath = Utils.getProjectPath(userProject.getName())
@@ -132,7 +144,9 @@ public class ModelsController {
   }
 
   public void delete(Users user, Project project, ProvStateDTO fileState) throws DatasetException,
-          ModelRegistryException {
+    ModelRegistryException, KafkaException, ServingException, CryptoPasswordNotFoundException {
+    verifyNoModelDeployments(project, fileState);
+    
     JSONObject summary = new JSONObject(fileState.getXattrs().get(MODEL_SUMMARY_XATTR_NAME));
     ModelDTO modelSummary = modelConverter.unmarshalDescription(summary.toString());
     String modelPath = Utils.getProjectPath(project.getName())
@@ -206,6 +220,18 @@ public class ModelsController {
       throw new ModelRegistryException(RESTCodes.ModelRegistryErrorCode.MODEL_REGISTRY_ACCESS_DENIED, Level.FINE,
               "The current project " + userProject.getName() + " does not have access to model registry of project " +
                       dataset.getProject().getName());
+    }
+  }
+  
+  public void verifyNoModelDeployments(Project project, ProvStateDTO fileState)
+    throws ModelRegistryException, KafkaException, ServingException, CryptoPasswordNotFoundException {
+    String[] nameVersionSplit = modelUtils.getModelNameAndVersion(fileState.getMlId());
+    List<ServingWrapper> deployments = servingController.getAll(project, nameVersionSplit[0],
+      Integer.valueOf(nameVersionSplit[1]), null);
+    if (deployments != null && deployments.size() > 0) {
+      throw new ModelRegistryException(RESTCodes.ModelRegistryErrorCode.MODEL_CANNOT_BE_DELETED, Level.FINE,
+        "The model is used in one or more deployments. Please, delete the deployments before deleting the " +
+          "model.");
     }
   }
   
