@@ -19,6 +19,7 @@ package io.hops.hopsworks.api.featurestore.featureview;
 import io.hops.hopsworks.common.featurestore.query.Query;
 import io.hops.hopsworks.common.featurestore.query.QueryController;
 import io.hops.hopsworks.common.featurestore.trainingdatasets.TrainingDatasetInputValidation;
+import io.hops.hopsworks.common.featurestore.utils.FeaturestoreInputValidation;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.user.Users;
@@ -37,13 +38,15 @@ public class FeatureViewInputValidator {
   @EJB
   private TrainingDatasetInputValidation trainingDatasetInputValidation;
   @EJB
+  private FeaturestoreInputValidation featurestoreInputValidation;
+  @EJB
   private QueryController queryController;
 
   public void validate(FeatureViewDTO featureViewDTO, Project project, Users user) throws FeaturestoreException {
+    featurestoreInputValidation.verifyUserInput(featureViewDTO);
     validateCreationInput(featureViewDTO);
     Query query = queryController.convertQueryDTO(project, user, featureViewDTO.getQuery(), false);
     validateVersion(featureViewDTO.getVersion());
-    // TODO feature view: featurestoreInputValidation.verifyUserInput(trainingDatasetDTO);
     trainingDatasetInputValidation.validateFeatures(query, featureViewDTO.getFeatures());
     if (featureViewDTO.getFeatures() != null) {
       trainingDatasetInputValidation.verifyTrainingDatasetFeatureList(featureViewDTO.getFeatures());
@@ -64,6 +67,4 @@ public class FeatureViewInputValidator {
           " version cannot be negative or zero");
     }
   }
-
-
 }

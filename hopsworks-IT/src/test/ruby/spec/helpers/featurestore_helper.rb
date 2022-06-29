@@ -734,6 +734,10 @@ module FeaturestoreHelper
       query: query
     }
 
+    create_feature_view_with_json(project_id, featurestore_id, json_data)
+  end
+
+  def create_feature_view_with_json(project_id, featurestore_id, json_data)
     create_featureview_endpoint = "#{ENV['HOPSWORKS_API']}/project/#{project_id.to_s}/featurestores/#{featurestore_id.to_s}/featureview"
     pp create_featureview_endpoint if defined?(@debugOpt) && @debugOpt
     pp json_data.to_json if defined?(@debugOpt) && @debugOpt
@@ -758,7 +762,7 @@ module FeaturestoreHelper
   def create_feature_view_from_feature_group(project_id, featurestore_id, fg, name: nil, version: 1, description: nil)
     features = fg["features"]
     fg_id = fg["id"]
-  
+
     query = {
       leftFeatureGroup: {
         id: fg_id
@@ -770,10 +774,17 @@ module FeaturestoreHelper
     create_feature_view(project_id, featurestore_id, query, features: features,
                         name: name, version: version, description: description)
   end
-  
-  def update_feature_view(project_id, featurestore_id, json_data)
+
+  def delete_feature_view(project_id, featurestore_id, name)
+    delete_featureview_endpoint = "#{ENV['HOPSWORKS_API']}/project/#{project_id.to_s}/featurestores" +
+      "/#{featurestore_id.to_s}/featureview/#{name}"
+    json_result = delete delete_featureview_endpoint
+    return json_result
+  end
+
+  def update_feature_view(project_id, featurestore_id, json_data, name, version)
     update_featureview_endpoint = "#{ENV['HOPSWORKS_API']}/project/#{project_id.to_s}/featurestores" +
-      "/#{featurestore_id.to_s}/featureview/#{json_data[:name]}/version/#{json_data[:version]}"
+      "/#{featurestore_id.to_s}/featureview/#{name}/version/#{version}"
     json_result = put update_featureview_endpoint, json_data.to_json
     return json_result
   end
@@ -786,6 +797,27 @@ module FeaturestoreHelper
     pp endpoint if defined?(@debugOpt) && @debugOpt
     delete endpoint
     expect_status_details(expected_status)
+  end
+
+  def get_feature_views(project_id, featurestore_id)
+    get_featureview_endpoint = "#{ENV['HOPSWORKS_API']}/project/#{project_id.to_s}/featurestores" +
+      "/#{featurestore_id.to_s}/featureview"
+    json_result = get get_featureview_endpoint
+    return json_result
+  end
+  
+  def get_feature_view_by_name(project_id, featurestore_id, name)
+    get_featureview_endpoint = "#{ENV['HOPSWORKS_API']}/project/#{project_id.to_s}/featurestores" +
+      "/#{featurestore_id.to_s}/featureview/#{name}"
+    json_result = get get_featureview_endpoint
+    return json_result
+  end
+  
+  def get_feature_view_by_name_and_version(project_id, featurestore_id, name, version)
+    get_featureview_endpoint = "#{ENV['HOPSWORKS_API']}/project/#{project_id.to_s}/featurestores" +
+      "/#{featurestore_id.to_s}/featureview/#{name}/version/#{version}"
+    json_result = get get_featureview_endpoint
+    return json_result
   end
 
   def create_featureview_training_dataset_from_project(project, expected_status_code: 201, data_format: "tfrecords",
