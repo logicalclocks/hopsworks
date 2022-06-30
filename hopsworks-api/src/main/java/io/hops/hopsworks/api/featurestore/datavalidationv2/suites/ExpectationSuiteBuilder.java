@@ -76,10 +76,8 @@ public class ExpectationSuiteBuilder {
       // Set expectationId in the meta field
       try {
         JSONObject meta = new JSONObject(expectation.getMeta());
-        if (!meta.has("expectationId")) {
-          meta.put("expectationId", expectation.getId());
-          expectationDTO.setMeta(meta.toString());
-        }
+        meta.put("expectationId", expectation.getId());
+        expectationDTO.setMeta(meta.toString());
       } catch (JSONException e) {
         // Argument can be made that we simply return it, rather than throwing an exception
         throw new FeaturestoreException(
