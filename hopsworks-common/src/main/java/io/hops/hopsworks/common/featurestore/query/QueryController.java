@@ -276,7 +276,7 @@ public class QueryController {
     } else {
       return featuregroupFacade.findById(featuregroupDTO.getId())
           .orElseThrow(() -> new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.FEATUREGROUP_NOT_FOUND,
-              Level.FINE, "Could not find feature group with ID" + featuregroupDTO.getId()));
+              Level.FINE, "Could not find feature group with ID " + featuregroupDTO.getId()));
     }
   }
 
