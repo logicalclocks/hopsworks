@@ -138,7 +138,7 @@ public class FeatureViewResource {
           UriInfo uriInfo,
       @BeanParam
         FeatureViewBeanParam param
-  ) throws FeaturestoreException, ServiceException, IOException, MetadataException, DatasetException,
+  ) throws FeaturestoreException, ServiceException, MetadataException, DatasetException,
       SchematizedTagException {
     Users user = jWTHelper.getUserPrincipal(sc);
     ResourceRequest resourceRequest = makeResourceRequest(param);
@@ -171,7 +171,7 @@ public class FeatureViewResource {
       @ApiParam(value = "Name of the feature view", required = true)
       @PathParam("name")
           String name
-  ) throws FeaturestoreException, ServiceException, IOException, MetadataException, DatasetException,
+  ) throws FeaturestoreException, ServiceException, MetadataException, DatasetException,
       SchematizedTagException {
     Users user = jWTHelper.getUserPrincipal(sc);
     ResourceRequest resourceRequest = makeResourceRequest(param);
@@ -292,7 +292,7 @@ public class FeatureViewResource {
       @ApiParam(value = "Version of the feature view", required = true)
       @PathParam("version")
           Integer version,
-      FeatureViewDTO featureViewDTO) throws FeaturestoreException, ProvenanceException, ServiceException, IOException,
+      FeatureViewDTO featureViewDTO) throws FeaturestoreException, ServiceException,
       SchematizedTagException, MetadataException, DatasetException {
     if (featureViewDTO == null) {
       throw new IllegalArgumentException("Input JSON for updating a Feature View cannot be null");

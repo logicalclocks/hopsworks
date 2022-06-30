@@ -16,6 +16,7 @@
 
 package io.hops.hopsworks.common.tags;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.hops.hopsworks.common.integrations.CommunityStereotype;
 import io.hops.hopsworks.persistence.entity.featurestore.tag.TagSchemas;
 
@@ -42,6 +43,16 @@ public class TagSchemasController implements TagSchemasControllerIface {
   }
   @Override
   public Map<String, String> getAll() {
+    throw new IllegalArgumentException("API not supported in the community edition");
+  }
+  
+  @Override
+  public boolean schemaHasNestedTypes(String schema) {
+    throw new IllegalArgumentException("API not supported in the community edition");
+  }
+  
+  @Override
+  public boolean schemaHasAdditionalRules(String name, String schema, ObjectMapper objectMapper) {
     throw new IllegalArgumentException("API not supported in the community edition");
   }
 }

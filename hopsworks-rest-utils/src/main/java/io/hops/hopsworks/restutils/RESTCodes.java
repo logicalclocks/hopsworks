@@ -2155,7 +2155,8 @@ public class RESTCodes {
     TAG_ALREADY_EXISTS(3, "Tag with the same name already exists.", Response.Status.CONFLICT),
     INVALID_TAG_NAME(4, "Invalid tag name.", Response.Status.BAD_REQUEST),
     INVALID_TAG_VALUE(5, "Invalid tag value.", Response.Status.BAD_REQUEST),
-    TAG_NOT_ALLOWED(6, "The provided tag is not allowed", Response.Status.BAD_REQUEST);
+    TAG_NOT_ALLOWED(6, "The provided tag is not allowed", Response.Status.BAD_REQUEST),
+    INTERNAL_PROCESSING_ERROR(7, "Internal error while processing tag", Response.Status.INTERNAL_SERVER_ERROR);
     
     private int code;
     private String message;

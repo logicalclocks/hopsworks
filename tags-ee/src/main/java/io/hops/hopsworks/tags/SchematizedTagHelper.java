@@ -3,12 +3,16 @@
  */
 package io.hops.hopsworks.tags;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.hops.hopsworks.common.featurestore.FeaturestoreConstants;
 import io.hops.hopsworks.exceptions.SchematizedTagException;
 import io.hops.hopsworks.restutils.RESTCodes;
 import org.everit.json.schema.ArraySchema;
 import org.everit.json.schema.BooleanSchema;
 import org.everit.json.schema.CombinedSchema;
+import org.everit.json.schema.EmptySchema;
 import org.everit.json.schema.NumberSchema;
 import org.everit.json.schema.ObjectSchema;
 import org.everit.json.schema.Schema;
@@ -21,6 +25,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import org.json.JSONTokener;
 
+import java.util.Map;
 import java.util.logging.Level;
 
 public class SchematizedTagHelper {
@@ -50,7 +55,7 @@ public class SchematizedTagHelper {
   public static void validateTag(String schemaS, String val) throws SchematizedTagException {
     Schema schema = validateSchema(schemaS);
     try {
-      if(schema instanceof ObjectSchema || schema instanceof CombinedSchema) {
+      if(schema instanceof ObjectSchema || schema instanceof CombinedSchema || schema instanceof EmptySchema) {
         schema.validate(new JSONObject(val));
       } else if (schema instanceof ArraySchema) {
         schema.validate(new JSONArray(val));
@@ -93,6 +98,75 @@ public class SchematizedTagHelper {
     } catch (ValidationException | JSONException e) {
       throw new SchematizedTagException(RESTCodes.SchematizedTagErrorCode.INVALID_TAG_VALUE, Level.FINE,
         "error processing tag value", "schema or json validation issue", e);
+    }
+  }
+  
+  public static boolean hasNestedTypes(String value) throws SchematizedTagException {
+    Schema schema = validateSchema(value);
+    if(schema instanceof ObjectSchema) {
+      ObjectSchema oSchema = (ObjectSchema) schema;
+      for(Schema childSchema: oSchema.getPropertySchemas().values()) {
+        if(childSchema instanceof ObjectSchema || childSchema instanceof CombinedSchema
+          || childSchema instanceof EmptySchema) {
+          return true;
+        }
+      }
+      return false;
+    } else {
+      return true;
+    }
+  }
+  
+  private static boolean hasAdditionalRulesInt(String schema, ObjectMapper objectMapper,
+                                               String... uiParsableAttributes) throws JsonProcessingException {
+    JsonNode node = objectMapper.readTree(schema);
+    int uiParsable = 0;
+    for(String uiParsableAttribute : uiParsableAttributes) {
+      if(node.has(uiParsableAttribute)) {
+        uiParsable++;
+      }
+    }
+    return node.size() > uiParsable;
+  }
+  public static boolean hasAdditionalRules(String name, String value, ObjectMapper objectMapper)
+    throws SchematizedTagException {
+    Schema schema = validateSchema(value);
+    if(schema instanceof ObjectSchema) {
+      ObjectSchema oSchema = (ObjectSchema) schema;
+      for(Map.Entry<String, Schema> childEntry: oSchema.getPropertySchemas().entrySet()) {
+        Schema childSchema = childEntry.getValue();
+        if(childSchema instanceof NumberSchema || childSchema instanceof StringSchema
+          || childSchema instanceof BooleanSchema) {
+          try {
+            if(hasAdditionalRulesInt(childSchema.toString(), objectMapper, "type", "description")) {
+              return true;
+            }
+          } catch (JsonProcessingException e) {
+            String usrMsg = "exception processing tag:" + name;
+            String devMsg = usrMsg + " property:" + childEntry.getKey();
+            throw new SchematizedTagException(RESTCodes.SchematizedTagErrorCode.INTERNAL_PROCESSING_ERROR, Level.FINE,
+              usrMsg, devMsg, e);
+          }
+        } else if(childSchema instanceof ArraySchema) {
+          try {
+            if(hasAdditionalRulesInt(childSchema.toString(), objectMapper, "type", "description", "items")) {
+              return true;
+            }
+            if(hasAdditionalRulesInt(((ArraySchema)childSchema).getAllItemSchema().toString(), objectMapper,
+              "type", "description")) {
+              return true;
+            }
+          } catch (JsonProcessingException e) {
+            String usrMsg = "exception processing tag:" + name;
+            String devMsg = usrMsg + " property:" + childEntry.getKey();
+            throw new SchematizedTagException(RESTCodes.SchematizedTagErrorCode.INTERNAL_PROCESSING_ERROR, Level.FINE,
+              usrMsg, devMsg, e);
+          }
+        }
+      }
+      return false;
+    } else {
+      return false;
     }
   }
 }

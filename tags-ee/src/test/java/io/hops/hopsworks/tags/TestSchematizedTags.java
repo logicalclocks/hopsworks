@@ -4,13 +4,15 @@
 
 package io.hops.hopsworks.tags;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import io.hops.hopsworks.exceptions.GenericException;
 import io.hops.hopsworks.exceptions.SchematizedTagException;
-import io.hops.hopsworks.tags.SchematizedTagHelper;
 import org.everit.json.schema.Schema;
 import org.everit.json.schema.SchemaException;
 import org.everit.json.schema.ValidationException;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.junit.Assert;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -308,5 +310,34 @@ public class TestSchematizedTags {
     String schemaS = "{\"$schema\":\"http://json-schema.org/draft-07/schema#\",\"$id\":\"http://heap.com/test.schema" +
       ".json\",\"allOf\":[{\"$ref\":\"#/definitions/hpv_sampling\"},{\"$ref\":\"#/definitions/cancer_properties\"}],\"definitions\":{\"hpv_sampling\":{\"properties\":{\"label_id\":{\"type\":\"string\"},\"gender\":{\"type\":\"string\",\"enum\":[\"Female\",\"Male\",\"Other\"]},\"Disease\":{\"type\":\"string\"},\"ICD_10\":{\"type\":\"string\"},\"HPVDIAG\":{\"type\":\"string\",\"enum\":[\"NEG\",\"POZ\"]},\"sample_taken\":{\"properties\":{\"date\":{\"type\":\"string\",\"format\":\"date\"},\"age\":{\"type\":\"integer\",\"minimum\":20,\"maximum\":100}},\"required\":[\"age\"]}}},\"cancer_properties\":{\"properties\":{\"Cancer type\":{\"type\":\"string\"},\"Cancer status\":{\"type\":\"string\",\"enum\":[\"Control\",\"Case\"]}}}},\"if\":{\"properties\":{\"Disease\":{\"const\":\"Cancer\"}}},\"then\":{\"required\":[\"Cancer type\",\"Cancer status\"]},\"required\":[\"label_id\",\"Disease\",\"sample_taken\"]}";
     SchematizedTagHelper.validateSchema(schemaS);
+  }
+  
+  @Test
+  public void testNestedFieldsFlagEmptySchema() throws SchematizedTagException {
+    String schemaS = "{\"type\":\"object\",\"properties\":{\"address\":{\"street\":{\"type\":\"string\"},\"city\":{\"type\":\"string\"}}},\"required\":[],\"additionalProperties\":false}";
+    Assert.assertTrue(SchematizedTagHelper.hasNestedTypes(schemaS));
+  }
+  @Test
+  public void testNestedFieldsFlagObjectSchema() throws SchematizedTagException {
+    String schemaS = "{\"type\":\"object\",\"properties\":{\"address\":{\"properties\": {\"street\":{\"type\":\"string\"},\"city\":{\"type\":\"string\"}}}},\"required\":[],\"additionalProperties\":false}";
+    Assert.assertTrue(SchematizedTagHelper.hasNestedTypes(schemaS));
+  }
+  
+  @Test
+  public void testAdditionalRulesStringPattern() throws SchematizedTagException, GenericException {
+    String schemaS = "{\"type\":\"object\",\"properties\":{\"id\":{\"type\":\"string\",\"pattern\":\"^[A-Z]{2}[0-9]{4}$\"}},\"required\":[],\"additionalProperties\":false}";
+    Assert.assertTrue(SchematizedTagHelper.hasAdditionalRules("testTag", schemaS, new ObjectMapper()));
+  }
+  
+  @Test
+  public void testAdditionalRulesNumberMinMax() throws SchematizedTagException, GenericException {
+    String schemaS = "{\"type\":\"object\",\"properties\":{\"age\":{\"type\":\"integer\",\"minimum\":0,\"maximum\":150}},\"required\":[],\"additionalProperties\":false}";
+    Assert.assertTrue(SchematizedTagHelper.hasAdditionalRules("testTag", schemaS, new ObjectMapper()));
+  }
+  
+  @Test
+  public void testAdditionalRulesFales() throws SchematizedTagException, GenericException {
+    String schemaS = "{\"name\":\"test\",\"description\":\"lala\",\"properties\":{\"field\":{\"type\":\"string\",\"description\":\"dsds\"}},\"required\":[\"field\"]}";
+    Assert.assertFalse(SchematizedTagHelper.hasAdditionalRules("testTag", schemaS, new ObjectMapper()));
   }
 }

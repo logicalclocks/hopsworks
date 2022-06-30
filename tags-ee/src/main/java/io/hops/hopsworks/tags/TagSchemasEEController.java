@@ -3,6 +3,7 @@
  */
 package io.hops.hopsworks.tags;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.hops.hopsworks.common.dao.featurestore.tag.TagSchemasFacade;
 import io.hops.hopsworks.common.tags.TagSchemasControllerIface;
 import io.hops.hopsworks.common.integrations.EnterpriseStereotype;
@@ -62,5 +63,16 @@ public class TagSchemasEEController implements TagSchemasControllerIface {
       tags.put(tag.getName(), tag.getSchema());
     }
     return tags;
+  }
+  
+  @Override
+  public boolean schemaHasNestedTypes(String schema) throws SchematizedTagException {
+    return SchematizedTagHelper.hasNestedTypes(schema);
+  }
+  
+  @Override
+  public boolean schemaHasAdditionalRules(String name, String schema, ObjectMapper objectMapper)
+    throws SchematizedTagException {
+    return SchematizedTagHelper.hasAdditionalRules(name, schema, objectMapper);
   }
 }
