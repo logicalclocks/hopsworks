@@ -15,10 +15,12 @@
  */
 package io.hops.hopsworks.api.tags;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.hops.hopsworks.common.api.ResourceRequest;
 import io.hops.hopsworks.common.dao.AbstractFacade;
 import io.hops.hopsworks.common.dao.featurestore.tag.TagSchemasFacade;
 import io.hops.hopsworks.common.tags.SchemaDTO;
+import io.hops.hopsworks.common.tags.TagSchemasControllerIface;
 import io.hops.hopsworks.exceptions.SchematizedTagException;
 import io.hops.hopsworks.persistence.entity.featurestore.tag.TagSchemas;
 import io.hops.hopsworks.restutils.RESTCodes;
@@ -27,6 +29,7 @@ import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
+import javax.inject.Inject;
 import javax.ws.rs.core.UriInfo;
 import java.util.List;
 import java.util.logging.Level;
@@ -36,6 +39,8 @@ import java.util.logging.Level;
 public class TagSchemasBuilder {
   @EJB
   private TagSchemasFacade tagSchemasFacade;
+  @Inject
+  private TagSchemasControllerIface tagSchemasCtrl;
   
   public SchemaDTO uri(SchemaDTO dto, UriInfo uriInfo) {
     dto.setHref(uriInfo.getBaseUriBuilder()
@@ -58,10 +63,12 @@ public class TagSchemasBuilder {
     if(tag == null) {
       throw new SchematizedTagException(RESTCodes.SchematizedTagErrorCode.TAG_SCHEMA_NOT_FOUND, Level.FINE);
     }
-    return buildItem(uriInfo, resourceRequest, tag);
+    ObjectMapper objectMapper = new ObjectMapper();
+    return buildItem(uriInfo, resourceRequest, tag, objectMapper);
   }
   
-  public SchemaDTO build(UriInfo uriInfo, ResourceRequest resourceRequest) {
+  public SchemaDTO build(UriInfo uriInfo, ResourceRequest resourceRequest)
+    throws SchematizedTagException {
     SchemaDTO dto = new SchemaDTO();
     uri(dto, uriInfo);
     AbstractFacade.CollectionInfo collectionInfo = tagSchemasFacade.findAll(resourceRequest.getOffset(),
@@ -71,18 +78,25 @@ public class TagSchemasBuilder {
   }
   
   private SchemaDTO items(SchemaDTO dto, UriInfo uriInfo, ResourceRequest resourceRequest,
-                          List<TagSchemas> items) {
-    items.forEach(tag -> dto.addItem(buildItem(uriInfo, resourceRequest, tag)));
+                          List<TagSchemas> items) throws SchematizedTagException {
+    ObjectMapper objectMapper = new ObjectMapper();
+    for(TagSchemas tag : items) {
+      dto.addItem(buildItem(uriInfo, resourceRequest, tag, objectMapper));
+    }
     return dto;
   }
   
-  private SchemaDTO buildItem(UriInfo uriInfo, ResourceRequest resourceRequest, TagSchemas tag) {
+  private SchemaDTO buildItem(UriInfo uriInfo, ResourceRequest resourceRequest, TagSchemas tag,
+                              ObjectMapper objectMapper)
+    throws SchematizedTagException {
     SchemaDTO dto = new SchemaDTO();
     uriItems(dto, uriInfo, tag);
     if (resourceRequest != null && resourceRequest.contains(ResourceRequest.Name.TAG_SCHEMAS)) {
       dto.setExpand(true);
       dto.setName(tag.getName());
       dto.setValue(tag.getSchema());
+      dto.setHasNestedTypes(tagSchemasCtrl.schemaHasNestedTypes(tag.getSchema()));
+      dto.setHasAdditionalRules(tagSchemasCtrl.schemaHasAdditionalRules(tag.getName(), tag.getSchema(), objectMapper));
     }
     return dto;
   }
