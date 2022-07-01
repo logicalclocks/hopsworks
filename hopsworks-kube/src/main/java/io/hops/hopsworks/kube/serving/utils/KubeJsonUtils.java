@@ -187,7 +187,7 @@ public class KubeJsonUtils {
       resources.getRequests());
     
     // Tensorflow runtime
-    String tensorflowVersion = settings.getTensorflowVersion();
+    String tensorflowVersion = settings.getKServeTensorflowVersion();
     if (resourceRequirements.getRequests().containsKey("nvidia.com/gpu") ||
       resourceRequirements.getLimits().containsKey("nvidia.com/gpu")) {
       tensorflowVersion += "-gpu";

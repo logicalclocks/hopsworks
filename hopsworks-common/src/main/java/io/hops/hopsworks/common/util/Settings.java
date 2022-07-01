@@ -226,6 +226,8 @@ public class Settings implements Serializable {
   private static final String VARIABLE_KAFKA_VERSION = "kafka_version";
   private static final String VARIABLE_OPENSEARCH_VERSION = "elastic_version";
   private static final String VARIABLE_TENSORFLOW_VERSION = "tensorflow_version";
+
+  private static final String VARIABLE_KUBE_KSERVE_TENSORFLOW_VERSION = "kube_kserve_tensorflow_version";
   private static final String VARIABLE_HOPSWORKS_VERSION = "hopsworks_version";
   private final static String VARIABLE_LIVY_STARTUP_TIMEOUT = "livy_startup_timeout";
   
@@ -690,6 +692,8 @@ public class Settings implements Serializable {
       KAFKA_VERSION = setStrVar(VARIABLE_KAFKA_VERSION, KAFKA_VERSION);
       OPENSEARCH_VERSION = setStrVar(VARIABLE_OPENSEARCH_VERSION, OPENSEARCH_VERSION);
       TENSORFLOW_VERSION = setStrVar(VARIABLE_TENSORFLOW_VERSION, TENSORFLOW_VERSION);
+      KUBE_KSERVE_TENSORFLOW_VERSION = setStrVar(VARIABLE_KUBE_KSERVE_TENSORFLOW_VERSION,
+          KUBE_KSERVE_TENSORFLOW_VERSION);
       HOPSWORKS_VERSION = setStrVar(VARIABLE_HOPSWORKS_VERSION, HOPSWORKS_VERSION);
       HOPSWORKS_REST_LOG_LEVEL = setLogLevelVar(VARIABLE_HOPSWORKS_REST_LOG_LEVEL, HOPSWORKS_REST_LOG_LEVEL);
       HOPSWORKS_PUBLIC_HOST = setStrVar(VARIABLE_HOPSWORKS_PUBLIC_HOST, HOPSWORKS_PUBLIC_HOST);
@@ -3262,6 +3266,13 @@ public class Settings implements Serializable {
   public synchronized String getHopsworksVersion() {
     checkCache();
     return HOPSWORKS_VERSION;
+  }
+
+  private String KUBE_KSERVE_TENSORFLOW_VERSION;
+
+  public synchronized String getKServeTensorflowVersion() {
+    checkCache();
+    return KUBE_KSERVE_TENSORFLOW_VERSION;
   }
 
   private String TENSORFLOW_VERSION;
