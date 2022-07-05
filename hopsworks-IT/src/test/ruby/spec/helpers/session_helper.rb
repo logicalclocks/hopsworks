@@ -51,11 +51,25 @@ module SessionHelper
     end
     pp "session:#{@user[:email]}" if defined?(@debugOpt) && @debugOpt == true
   end
-  
+
+  def with_user_session_for_proxy
+    user = create_user_without_role({})
+    create_role(user)
+    create_session_for_proxy(user.email, "Pass123")
+    @user = user
+  end
+
   def with_admin_session
     user = create_user_without_role({})
     create_admin_role(user)
     create_session(user.email, "Pass123")
+    @user = user
+  end
+
+  def with_admin_session_for_proxy
+    user = create_user_without_role({})
+    create_admin_role(user)
+    create_session_for_proxy(user.email, "Pass123")
     @user = user
   end
 
@@ -136,6 +150,13 @@ module SessionHelper
     @user = get_user_by_mail(email)
   end
 
+  def create_session_for_proxy(email, password)
+    raw_create_session_for_proxy(email, password)
+    expect_status_details(200)
+    expect_json(sessionID: ->(value){ expect(value).not_to be_empty})
+    @user = get_user_by_mail(email)
+  end
+
   def login_user(email, password)
     reset_session
     response = post "#{ENV['HOPSWORKS_API']}/auth/login", URI.encode_www_form({ email: email, password: password}), {content_type: 'application/x-www-form-urlencoded'}
@@ -158,6 +179,24 @@ module SessionHelper
     Airborne.configure do |config|
       config.headers = {:cookies => @cookies, content_type: 'application/json' }
       config.headers["Authorization"] = @token
+    end
+    @cookies
+    pp "session with user:#{email}" if defined?(@debugOpt) && @debugOpt == true
+    return response
+  end
+
+  def raw_create_session_for_proxy(email, password)
+    reset_session
+    response = post "#{ENV['HOPSWORKS_API']}/auth/login", URI.encode_www_form({ email: email, password: password}), {content_type: 'application/x-www-form-urlencoded'}
+    @cookies = {"SESSIONID"=> json_body[:sessionID]}
+    if !headers["set_cookie"].nil?
+      headers["set_cookie"].each do |c|
+        cookie = c.split(';')[0].split('=')
+        @cookies.store(cookie[0], cookie[1])
+      end
+    end
+    Airborne.configure do |config|
+      config.headers = {:cookies => @cookies, content_type: 'application/json' }
     end
     @cookies
     pp "session with user:#{email}" if defined?(@debugOpt) && @debugOpt == true

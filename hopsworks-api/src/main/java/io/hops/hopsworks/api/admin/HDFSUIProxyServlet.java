@@ -39,30 +39,13 @@
 
 package io.hops.hopsworks.api.admin;
 
+import io.hops.hopsworks.api.jwt.JWTHelper;
 import io.hops.hopsworks.api.kibana.ProxyServlet;
 import io.hops.hopsworks.api.util.CustomSSLProtocolSocketFactory;
 import io.hops.hopsworks.common.dao.hdfs.HdfsLeDescriptorsFacade;
 import io.hops.hopsworks.common.security.BaseHadoopClientsService;
 import io.hops.hopsworks.common.util.Settings;
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.OutputStream;
-import java.net.InetAddress;
-import java.net.URI;
-import java.net.URLEncoder;
-import java.nio.charset.Charset;
-import java.util.Arrays;
-import java.util.Enumeration;
-import java.util.HashSet;
-import javax.ejb.EJB;
-import javax.ejb.Stateless;
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import javax.ws.rs.core.Response;
+import io.hops.hopsworks.persistence.entity.user.Users;
 import org.apache.commons.httpclient.HostConfiguration;
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.HttpMethod;
@@ -75,6 +58,26 @@ import org.apache.http.HttpHost;
 import org.apache.http.HttpRequest;
 import org.apache.http.client.utils.URIUtils;
 
+import javax.ejb.EJB;
+import javax.ejb.Stateless;
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.net.InetAddress;
+import java.net.URI;
+import java.net.URLEncoder;
+import java.nio.charset.Charset;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Enumeration;
+import java.util.HashSet;
+
 @Stateless
 public class HDFSUIProxyServlet extends ProxyServlet {
 
@@ -84,6 +87,8 @@ public class HDFSUIProxyServlet extends ProxyServlet {
   private BaseHadoopClientsService baseHadoopClientsService;
   @EJB
   private HdfsLeDescriptorsFacade hdfsLeDescriptorsFacade;
+  @EJB
+  private JWTHelper jwtHelper;
 
   private static final HashSet<String> PASS_THROUGH_HEADERS
       = new HashSet<String>(
@@ -122,19 +127,14 @@ public class HDFSUIProxyServlet extends ProxyServlet {
   }
 
   @Override
-  protected void service(HttpServletRequest servletRequest,
-      HttpServletResponse servletResponse)
-      throws ServletException, IOException {
+  protected void service(HttpServletRequest servletRequest, HttpServletResponse servletResponse)
+    throws ServletException, IOException {
+    Users user = jwtHelper.validateAndRenewToken(servletRequest, servletResponse,
+      new HashSet<>(Collections.singletonList("HOPS_ADMIN")));
+    if (user == null) {
+      return;
+    }
 
-    if (servletRequest.getUserPrincipal() == null) {
-      servletResponse.sendError(403, "User is not logged in");
-      return;
-    }
-    if (!servletRequest.isUserInRole("HOPS_ADMIN")) {
-      servletResponse.sendError(Response.Status.BAD_REQUEST.getStatusCode(),
-          "You don't have the access right for this service");
-      return;
-    }
     String leaderWebEndpoint = hdfsLeDescriptorsFacade.getLeaderWebEndpoint();
     // If the leader NN went down during the lifecycle of the bean, we need to reinitialize the targetURI and targetHost
     // Otherwise the web UI will forward to a leader NN that is now down
@@ -190,11 +190,7 @@ public class HDFSUIProxyServlet extends ProxyServlet {
           }
         }
       }
-      String user = servletRequest.getRemoteUser();
-      if (user != null && !user.isEmpty()) {
-        m.setRequestHeader("Cookie", "proxy-user" + "="
-            + URLEncoder.encode(user, "ASCII"));
-      }
+      m.setRequestHeader("Cookie", "proxy-user" + "=" + URLEncoder.encode(user.getEmail(), "ASCII"));
 
       client.executeMethod(config, m);
 

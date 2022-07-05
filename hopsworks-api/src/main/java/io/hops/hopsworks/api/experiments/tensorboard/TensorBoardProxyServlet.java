@@ -39,7 +39,7 @@
 
 package io.hops.hopsworks.api.experiments.tensorboard;
 
-import com.google.common.base.Strings;
+import io.hops.hopsworks.api.jwt.JWTHelper;
 import io.hops.hopsworks.api.kibana.ProxyServlet;
 import io.hops.hopsworks.common.dao.jobhistory.YarnApplicationstateFacade;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
@@ -61,6 +61,8 @@ import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.core.Response;
 import java.io.IOException;
 import java.net.URI;
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -81,6 +83,8 @@ public class TensorBoardProxyServlet extends ProxyServlet {
   private ProjectTeamFacade projectTeamFacade;
   @EJB
   private TensorBoardFacade tensorBoardFacade;
+  @EJB
+  private JWTHelper jwtHelper;
  
   private final static Logger LOGGER = Logger.getLogger(TensorBoardProxyServlet.class.getName());
 
@@ -88,16 +92,14 @@ public class TensorBoardProxyServlet extends ProxyServlet {
   // http://127.0.0.1:8080/hopsworks-api/tensorboard/application_1507065031551_0005/hopsworks0:59460/#graphs
   // 
   @Override
-  protected void service(HttpServletRequest servletRequest,
-      HttpServletResponse servletResponse)
-      throws ServletException, IOException {
-    String email = servletRequest.getUserPrincipal().getName();
-
-    if (Strings.isNullOrEmpty(email)) {
-      servletResponse.sendError(Response.Status.FORBIDDEN.getStatusCode(),
-          "You don't have access to this TensorBoard");
+  protected void service(HttpServletRequest servletRequest, HttpServletResponse servletResponse)
+    throws ServletException, IOException {
+    Users user = jwtHelper.validateAndRenewToken(servletRequest, servletResponse,
+      new HashSet<>(Arrays.asList("HOPS_ADMIN", "HOPS_USER")));
+    if (user == null) {
       return;
     }
+
     LOGGER.log(Level.FINE, "Request URL: {0}", servletRequest.getRequestURL());
 
     String uri = servletRequest.getRequestURI();
@@ -124,7 +126,7 @@ public class TensorBoardProxyServlet extends ProxyServlet {
     Matcher elasticMatcher = elasticPattern.matcher(servletRequest.getRequestURI());
     if (elasticMatcher.find()) {
 
-      List<TensorBoard> TBList = tensorBoardFacade.findByUserEmail(email);
+      List<TensorBoard> TBList = tensorBoardFacade.findByUserEmail(user.getEmail());
       if(TBList == null) {
         servletResponse.sendError(Response.Status.FORBIDDEN.getStatusCode(),
             "This TensorBoard is not running right now");
@@ -177,7 +179,7 @@ public class TensorBoardProxyServlet extends ProxyServlet {
                 "You don't have the access right for this application");
         return;
       }
-      Users user = userFacade.findByEmail(email);
+
       String projectName = hdfsUsersBean.getProjectName(appState.getAppuser());
       Project project = projectFacade.findByName(projectName);
       if (project == null) {

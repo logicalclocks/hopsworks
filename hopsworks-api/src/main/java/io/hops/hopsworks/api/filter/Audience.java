@@ -24,4 +24,5 @@ public class Audience {
   public static final String EMAIL ="email";
   public static final String SERVICES ="services";
   public static final String GIT = "git";
+  public static final String PROXY = "proxy";
 }

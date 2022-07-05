@@ -15,10 +15,12 @@
  */
 package io.hops.hopsworks.api.filter;
 
-import io.hops.hopsworks.jwt.JWTController;
+import io.hops.hopsworks.api.jwt.JWTHelper;
+import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
 import io.hops.hopsworks.jwt.exception.JWTException;
 import io.hops.hopsworks.jwt.filter.JWTRenewFilter;
+
 import javax.ejb.EJB;
 import javax.ws.rs.ext.Provider;
 
@@ -27,11 +29,17 @@ import javax.ws.rs.ext.Provider;
 public class JWTAutoRenewFilter extends JWTRenewFilter {
 
   @EJB
-  private JWTController jwtController;
+  private JWTHelper jwtHelper;
+  @EJB
+  private Settings settings;
 
   @Override
   public String renewToken(String token) throws JWTException {
-    return jwtController.autoRenewToken(token);
+    return jwtHelper.autoRenewToken(token);
   }
 
+  @Override
+  public long getTokenLifeMs() {
+    return settings.getJWTLifetimeMsPlusLeeway();
+  }
 }
