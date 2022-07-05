@@ -34,5 +34,9 @@ public class JWTAutoRenewFilter extends JWTRenewFilter{
   public String renewToken(String token) throws JWTException {
     return jwtController.autoRenewToken(token);
   }
-
+  
+  @Override
+  public long getTokenLifeMs() {
+    return 0;// only needed for proxy token
+  }
 }

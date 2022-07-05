@@ -39,11 +39,14 @@
 
 package io.hops.hopsworks.api.kibana;
 
+import io.hops.hopsworks.api.jwt.JWTHelper;
 import io.hops.hopsworks.common.dao.jobhistory.YarnApplicationstateFacade;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
 import io.hops.hopsworks.common.dao.project.team.ProjectTeamFacade;
 import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
+import io.hops.hopsworks.common.user.UsersController;
+import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.ServiceException;
 import io.hops.hopsworks.persistence.entity.jobs.history.YarnApplicationstate;
 import io.hops.hopsworks.persistence.entity.project.Project;
@@ -60,8 +63,10 @@ import java.io.IOException;
 import java.net.URLDecoder;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.logging.Level;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -79,6 +84,12 @@ public class GrafanaProxyServlet extends ProxyServlet {
   private ProjectFacade projectFacade;
   @EJB
   private ProjectTeamFacade projectTeamFacade;
+  @EJB
+  private JWTHelper jwtHelper;
+  @EJB
+  private Settings settings;
+  @EJB
+  private UsersController userController;
 
   private final String YARN_APP_PATTERN_KEY = "yarnApp";
   private final String FG_KAFKA_TOPIC_KEY = "fgKafkaTopic";
@@ -101,36 +112,33 @@ public class GrafanaProxyServlet extends ProxyServlet {
   @Override
   protected void service(HttpServletRequest servletRequest, HttpServletResponse servletResponse) 
       throws ServletException, IOException {
-    if (servletRequest.getUserPrincipal() == null ||
-      (!servletRequest.isUserInRole("HOPS_ADMIN") && !servletRequest.isUserInRole("HOPS_USER") &&
-        !servletRequest.isUserInRole("HOPS_SERVICE_USER"))) {
-      servletResponse.sendError(403, "User is not logged in");
+    Users user = jwtHelper.validateAndRenewToken(servletRequest, servletResponse,
+      new HashSet<>(Arrays.asList("HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER")));
+    if (user == null) {
       return;
     }
 
     if (servletRequest.getRequestURI().contains("query")) {
-      String email = servletRequest.getUserPrincipal().getName();
-      Users user = userFacade.findByEmail(email);
       boolean isAuthorized = false;
       String queryString = URLDecoder.decode(servletRequest.getParameter("query"), "UTF-8")
           .replaceAll("\n", "");
-      boolean isAdmin = servletRequest.isUserInRole("HOPS_ADMIN");
+      boolean isAdmin = userController.isUserInRole(user,"HOPS_ADMIN");
       try {
         for (String key : patterns.keySet()) {
           Matcher matcher = patterns.get(key).matcher(queryString);
           if (matcher.find()) {
-            if (key == YARN_APP_PATTERN_KEY) {
+            if (Objects.equals(key, YARN_APP_PATTERN_KEY)) {
               String appId = matcher.group(1);
               validateUserForSparkAppId(user, appId);
               isAuthorized = true;
-            } else if (key == FG_KAFKA_TOPIC_KEY) {
+            } else if (Objects.equals(key, FG_KAFKA_TOPIC_KEY)) {
               validateUserForOnlineFG(user, matcher.group("projectid"));
               isAuthorized = true;
-            } else if (key == DEPLOYMENT_METRICS_KEY) {
+            } else if (Objects.equals(key, DEPLOYMENT_METRICS_KEY)) {
               String projectName = matcher.group("projectname").replaceAll("-", "_");
               validateProjectForUser(projectFacade.findByName(projectName), user);
               isAuthorized = true;
-            } else if (key == USER_STATEMENT_SUMMARIES) {
+            } else if (Objects.equals(key, USER_STATEMENT_SUMMARIES)) {
               String projectName = getProjectNameFromDatabaseUsername(user, matcher.group("dbuser"));
               validateProjectForUser(projectFacade.findByName(projectName), user);
               isAuthorized = true;

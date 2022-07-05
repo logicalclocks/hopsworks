@@ -9,6 +9,7 @@ import io.hops.hopsworks.remote.user.api.krb.KrbConfigResource;
 import io.hops.hopsworks.remote.user.api.ldap.LdapConfigResource;
 import io.hops.hopsworks.remote.user.api.oauth2.OAuthClientResource;
 import io.hops.hopsworks.remote.user.jwt.AuthFilter;
+import io.hops.hopsworks.remote.user.jwt.JWTAutoRenewFilter;
 import io.swagger.annotations.Api;
 import org.glassfish.jersey.server.ResourceConfig;
 
@@ -26,6 +27,7 @@ public class ApplicationConfig extends ResourceConfig {
     register(KrbConfigResource.class);
     register(RESTApiThrowableMapper.class);
     register(AuthFilter.class);
+    register(JWTAutoRenewFilter.class);
   
     register(org.glassfish.jersey.media.multipart.MultiPartFeature.class);
     //swagger

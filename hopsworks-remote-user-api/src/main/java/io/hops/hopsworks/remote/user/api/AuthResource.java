@@ -23,6 +23,7 @@ import io.hops.hopsworks.jwt.exception.DuplicateSigningKeyException;
 import io.hops.hopsworks.jwt.exception.InvalidationException;
 import io.hops.hopsworks.jwt.exception.SigningKeyNotFoundException;
 import io.hops.hopsworks.jwt.exception.VerificationException;
+import io.hops.hopsworks.jwt.utils.ProxyAuthHelper;
 import io.hops.hopsworks.persistence.entity.remote.user.RemoteUser;
 import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.persistence.entity.user.security.ua.UserAccountType;
@@ -41,6 +42,8 @@ import javax.ejb.TransactionAttributeType;
 import javax.security.auth.login.LoginException;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import javax.ws.rs.CookieParam;
 import javax.ws.rs.FormParam;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
@@ -49,15 +52,17 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
+import javax.ws.rs.core.Cookie;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.NewCookie;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
 import java.net.URI;
 import java.security.NoSuchAlgorithmException;
-import java.util.HashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import static io.hops.hopsworks.jwt.Constants.PROXY_JWT_COOKIE_NAME;
 import static javax.ws.rs.core.HttpHeaders.AUTHORIZATION;
 
 @Logged
@@ -101,9 +106,10 @@ public class AuthResource {
   @Path("ldap/login")
   @Produces(MediaType.APPLICATION_JSON)
   public Response ldapLogin(@FormParam("username") String username, @Secret @FormParam("password") String password,
-      @FormParam("chosenEmail") String chosenEmail, @FormParam("consent") boolean consent,
-      @Context HttpServletRequest req) throws LoginException, UserException, NoSuchAlgorithmException,
-      SigningKeyNotFoundException, DuplicateSigningKeyException {
+    @FormParam("chosenEmail") String chosenEmail, @FormParam("consent") boolean consent,
+    @Context HttpServletRequest req, @Context HttpServletResponse res,
+    @CookieParam(PROXY_JWT_COOKIE_NAME) Cookie cookie) throws LoginException, UserException,
+    NoSuchAlgorithmException, SigningKeyNotFoundException, DuplicateSigningKeyException {
     if (!settings.isLdapEnabled()) {
       return Response.status(Response.Status.METHOD_NOT_ALLOWED).build();
     }
@@ -122,14 +128,15 @@ public class AuthResource {
       ldapUserState = ldapUserController.login(username, password, true,
         ldapUserState.getRemoteUserDTO().getEmail().get(0));
     }
-    return remoteUserLogin(ldapUserState, req);
+    return remoteUserLogin(ldapUserState, req, res, cookie);
   }
 
   @POST
   @Path("krb/login")
   @Produces(MediaType.APPLICATION_JSON)
   public Response krbLogin(@FormParam("chosenEmail") String chosenEmail, @FormParam("consent") boolean consent,
-      @Context SecurityContext sc, @Context HttpServletRequest req) throws LoginException {
+      @Context SecurityContext sc, @Context HttpServletRequest req, @Context HttpServletResponse res,
+    @CookieParam(PROXY_JWT_COOKIE_NAME) Cookie cookie) throws LoginException {
     if (!settings.isKrbEnabled()) {
       return Response.status(Response.Status.METHOD_NOT_ALLOWED).build();
     }
@@ -147,7 +154,7 @@ public class AuthResource {
         krbLdapUserState =
           ldapUserController.getKrbLdapUser(principalName, true, krbLdapUserState.getRemoteUserDTO().getEmail().get(0));
       }
-      return remoteUserLogin(krbLdapUserState, req);
+      return remoteUserLogin(krbLdapUserState, req, res, cookie);
     } catch (NoSuchAlgorithmException | SigningKeyNotFoundException | DuplicateSigningKeyException | LoginException e) {
       RESTException ex =
         new HopsSecurityException(RESTCodes.SecurityErrorCode.EJB_ACCESS_LOCAL, Level.FINE, e.getMessage(), null, e);
@@ -168,8 +175,9 @@ public class AuthResource {
   @Produces(MediaType.APPLICATION_JSON)
   public Response login(@FormParam("code") String code, @FormParam("state") String state,
     @FormParam("chosenEmail") String chosenEmail,
-    @FormParam("consent") boolean consent,
-    @Context HttpServletRequest req) throws SigningKeyNotFoundException, NoSuchAlgorithmException,
+    @FormParam("consent") boolean consent, @Context HttpServletRequest req, @Context HttpServletResponse res,
+    @CookieParam(PROXY_JWT_COOKIE_NAME) Cookie cookie)
+    throws SigningKeyNotFoundException, NoSuchAlgorithmException,
     DuplicateSigningKeyException, UserException, LoginException, RemoteAuthException {
     if (!settings.isOAuthEnabled()) {
       return Response.status(Response.Status.METHOD_NOT_ALLOWED).build();
@@ -184,7 +192,7 @@ public class AuthResource {
       oAuthUserState = oAuthController.login(req.getSession().getId(), code, state,true,
         oAuthUserState.getRemoteUserDTO().getEmail().get(0));
     }
-    return remoteUserLogin(oAuthUserState, req);
+    return remoteUserLogin(oAuthUserState, req, res, cookie);
   }
 
   @POST
@@ -246,24 +254,31 @@ public class AuthResource {
   @Path("logout")
   @Produces(MediaType.APPLICATION_JSON)
   public Response logout(@QueryParam("providerName") String providerName,
-    @QueryParam("redirect_uri") String redirectUri, @Context HttpServletRequest req)
+    @QueryParam("redirect_uri") String redirectUri, @Context HttpServletRequest req,
+    @CookieParam(PROXY_JWT_COOKIE_NAME) Cookie cookie)
     throws UserException, InvalidationException, RemoteAuthException {
     Users user = jWTHelper.getUserPrincipal(req);
-    logoutAndInvalidateSession(req);
+    logoutAndInvalidateSession(req, cookie);
+    NewCookie newCookie = ProxyAuthHelper.getNewCookieForLogout();
     if (settings.isOAuthEnabled() && !Strings.isNullOrEmpty(providerName)) {
       if (!Strings.isNullOrEmpty(settings.getManagedCloudRedirectUri()) || Strings.isNullOrEmpty(redirectUri)) {
         redirectUri = settings.getOauthLogoutRedirectUri();
       }
       URI uri = oAuthController.getLogoutURI(providerName, redirectUri, user);
       if (uri != null) {
-        return Response.ok(uri).build();
+        return Response.ok(uri).cookie(newCookie).build();
       }
     }
-    return Response.ok().build();
+    return Response.ok().cookie(newCookie).build();
   }
-
-  private void logoutAndInvalidateSession(HttpServletRequest req) throws UserException, InvalidationException {
+  
+  private void logoutAndInvalidateSession(HttpServletRequest req, Cookie cookie)
+    throws UserException, InvalidationException {
     jWTHelper.invalidateToken(req);//invalidate iff req contains jwt token
+    if (cookie != null) {
+      // if there is a proxy jwt in cookie invalidate
+      jWTHelper.invalidateToken(cookie.getValue());
+    }
     logoutSession(req);
   }
 
@@ -280,9 +295,8 @@ public class AuthResource {
     }
   }
 
-  private Response login(Users user, String password, HttpServletRequest req) throws UserException,
-    SigningKeyNotFoundException, NoSuchAlgorithmException, DuplicateSigningKeyException {
-    RESTApiJsonResponse json = new RESTApiJsonResponse();
+  private Response login(Users user, String password, HttpServletRequest req, HttpServletResponse res)
+    throws UserException, SigningKeyNotFoundException, NoSuchAlgorithmException, DuplicateSigningKeyException {
     if (user.getBbcGroupCollection() == null || user.getBbcGroupCollection().isEmpty()) {
       throw new UserException(RESTCodes.UserErrorCode.NO_ROLE_FOUND, Level.FINE, RESTCodes.UserErrorCode.NO_ROLE_FOUND.
           getMessage());
@@ -297,16 +311,35 @@ public class AuthResource {
       authController.registerAuthenticationFailure(user);
       throw new UserException(RESTCodes.UserErrorCode.AUTHENTICATION_FAILURE, Level.SEVERE, null, e.getMessage(), e);
     }
-
+  
+    return sendLoginResponse(req, user, res);
+  }
+  
+  private Response sendLoginResponse(HttpServletRequest req, Users user, HttpServletResponse res)
+    throws DuplicateSigningKeyException, SigningKeyNotFoundException, NoSuchAlgorithmException {
+    Response.ResponseBuilder responseBuilder = Response.ok();
+    // JWT claims will be added by JWTHelper
+    String token = jWTHelper.createToken(user, settings.getJWTIssuer(), null);
+    String proxyToken = jWTHelper.createTokenForProxy(user);
+    
+    // add proxy jwt cookie
+    // responseBuilder.cookie(newCookie); removes SESSION and JSESSIONSSO cookies
+    // can be replaced with the above after jsf admin ui is removed
+    res.addCookie(ProxyAuthHelper.getCookie(proxyToken,  settings.getJWTLifetimeMsPlusLeeway()));
+    
+    // add api jwt auth header
+    responseBuilder.header(AUTHORIZATION, Constants.BEARER + token);
+    
+    RESTApiJsonResponse json = new RESTApiJsonResponse();
     json.setSessionID(req.getSession().getId());
     json.setData(user.getEmail());
-    String token = jWTHelper.createToken(user, settings.getJWTIssuer(), new HashMap<>());
-    return Response.ok().header(AUTHORIZATION, Constants.BEARER + token).entity(json).build();
+    return responseBuilder.entity(json).build();
   }
-
-  private Response remoteUserLogin(RemoteUserStateDTO remoteUserState, HttpServletRequest req) throws
-      NoSuchAlgorithmException, SigningKeyNotFoundException, UserException, DuplicateSigningKeyException {
-    if (remoteUserState.isSaved() && !needLogin(req, remoteUserState.getRemoteUser().getUid())) {
+  
+  private Response remoteUserLogin(RemoteUserStateDTO remoteUserState, HttpServletRequest req, HttpServletResponse res,
+    Cookie cookie) throws NoSuchAlgorithmException, SigningKeyNotFoundException, UserException,
+    DuplicateSigningKeyException {
+    if (remoteUserState.isSaved() && !needLogin(req, cookie, remoteUserState.getRemoteUser().getUid())) {
       return Response.ok().build();
     }
     RemoteUser remoteUser = remoteUserState.getRemoteUser();
@@ -317,7 +350,7 @@ public class AuthResource {
     Users user = remoteUser.getUid();
     // Do pre cauth realm check 
     String passwordWithSalt = remoteUserAuthController.preRemoteUserLoginCheck(user, remoteUser.getAuthKey());
-    return login(user, passwordWithSalt, req);
+    return login(user, passwordWithSalt, req, res);
   }
 
   private boolean isUserLoggedIn(String remoteUser, Users tokenUser, boolean validToken, Users user) {
@@ -338,7 +371,7 @@ public class AuthResource {
     return sessionLoggedIn && jwtLoggedIn;
   }
 
-  private boolean needLogin(HttpServletRequest req, Users user) {
+  private boolean needLogin(HttpServletRequest req, Cookie cookie, Users user) {
     String remoteUser = req.getRemoteUser();
     Users tokenUser = jWTHelper.getUserPrincipal(req);
     boolean validToken = jWTHelper.validToken(req, settings.getJWTIssuer());
@@ -347,7 +380,7 @@ public class AuthResource {
       return false;
     } else if (isSomeoneElseLoggedIn(remoteUser, tokenUser, validToken, user)) {
       try {
-        logoutAndInvalidateSession(req);
+        logoutAndInvalidateSession(req, cookie);
       } catch (InvalidationException | UserException ex) {
         LOGGER.log(Level.SEVERE, null, ex.getMessage());
       }

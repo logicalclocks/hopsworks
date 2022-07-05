@@ -44,8 +44,8 @@ import io.hops.hopsworks.api.filter.JWTNotRequired;
 import io.hops.hopsworks.api.filter.NoCacheResponse;
 import io.hops.hopsworks.api.jwt.JWTHelper;
 import io.hops.hopsworks.api.util.RESTApiJsonResponse;
-import io.hops.hopsworks.audit.auditor.annotation.AuditTarget;
 import io.hops.hopsworks.audit.auditor.AuditType;
+import io.hops.hopsworks.audit.auditor.annotation.AuditTarget;
 import io.hops.hopsworks.audit.auditor.annotation.Audited;
 import io.hops.hopsworks.audit.helper.AuditAction;
 import io.hops.hopsworks.audit.helper.UserIdentifier;
@@ -71,6 +71,7 @@ import io.hops.hopsworks.jwt.annotation.JWTRequired;
 import io.hops.hopsworks.jwt.exception.DuplicateSigningKeyException;
 import io.hops.hopsworks.jwt.exception.InvalidationException;
 import io.hops.hopsworks.jwt.exception.SigningKeyNotFoundException;
+import io.hops.hopsworks.jwt.utils.ProxyAuthHelper;
 import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.persistence.entity.util.FormatUtils;
 import io.hops.hopsworks.restutils.RESTCodes;
@@ -85,7 +86,9 @@ import javax.mail.MessagingException;
 import javax.security.auth.login.LoginException;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.Consumes;
+import javax.ws.rs.CookieParam;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.FormParam;
 import javax.ws.rs.GET;
@@ -93,7 +96,9 @@ import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
+import javax.ws.rs.core.Cookie;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.NewCookie;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
 import java.security.GeneralSecurityException;
@@ -107,6 +112,7 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import static io.hops.hopsworks.jwt.Constants.PROXY_JWT_COOKIE_NAME;
 import static javax.ws.rs.core.HttpHeaders.AUTHORIZATION;
 
 @Logged
@@ -168,7 +174,9 @@ public class AuthService {
   @Audited(type = AuditType.USER_LOGIN, action = AuditAction.LOGIN)
   public Response login(@Caller @AuditTarget @FormParam("email") String email,
     @Secret @FormParam("password") String password, @Secret @FormParam("otp") String otp,
-    @Context HttpServletRequest req) throws UserException, SigningKeyNotFoundException, NoSuchAlgorithmException,
+    @Context HttpServletResponse res,
+    @Context HttpServletRequest req, @CookieParam(PROXY_JWT_COOKIE_NAME) Cookie cookie) throws UserException,
+    SigningKeyNotFoundException, NoSuchAlgorithmException,
     LoginException, DuplicateSigningKeyException {
 
     if (settings.isPasswordLoginDisabled()) {
@@ -184,7 +192,7 @@ public class AuthService {
     if (user == null) {
       throw new LoginException("Unrecognized email address. Have you registered yet?");
     }
-    if (!needLogin(req, user)) {
+    if (!needLogin(req, cookie, user)) {
       return Response.ok().build();
     }
 
@@ -195,7 +203,7 @@ public class AuthService {
     String passwordWithSaltPlusOtp = authController.preCustomRealmLoginCheck(user, password, otp);
 
     // Do login
-    Response response = login(user, passwordWithSaltPlusOtp, req);
+    Response response = login(user, passwordWithSaltPlusOtp, req, res);
 
     if (LOGGER.isLoggable(Level.FINEST)) {
       logUserLogin(req);
@@ -209,9 +217,11 @@ public class AuthService {
   @Produces(MediaType.APPLICATION_JSON)
   @JWTNotRequired
   @Audited(type = AuditType.USER_LOGIN, action = AuditAction.LOGOUT)
-  public Response logout(@Context HttpServletRequest req) throws UserException, InvalidationException {
-    logoutAndInvalidateSession(req);
-    return Response.ok().build();
+  public Response logout(@Context HttpServletRequest req, @CookieParam(PROXY_JWT_COOKIE_NAME) Cookie cookie)
+    throws UserException, InvalidationException {
+    logoutAndInvalidateSession(req, cookie);
+    NewCookie newCookie = ProxyAuthHelper.getNewCookieForLogout();
+    return Response.ok().cookie(newCookie).build();
   }
 
   @POST
@@ -232,7 +242,7 @@ public class AuthService {
     if (user == null) {
       throw new LoginException("Could not find registered user with email " + email);
     }
-    if (!needLogin(request, user)) {
+    if (!needLogin(request, null, user)) {
       return Response.ok().build();
     }
     if (!userController.isUserInRole(user, "AGENT")) {
@@ -308,7 +318,7 @@ public class AuthService {
     if (jWTHelper.validToken(request, settings.getJWTIssuer())) {
       jwtController.invalidateServiceToken(jWTHelper.getAuthToken(request), settings.getJWTSigningKeyName());
     }
-    logoutAndInvalidateSession(request);
+    logoutAndInvalidateSession(request, null);
     return Response.ok().build();
   }
   
@@ -442,8 +452,13 @@ public class AuthService {
     return Response.ok().build();
   }
 
-  private void logoutAndInvalidateSession(HttpServletRequest req) throws UserException, InvalidationException {
+  private void logoutAndInvalidateSession(HttpServletRequest req, Cookie cookie) throws UserException,
+    InvalidationException {
     jWTHelper.invalidateToken(req);//invalidate iff req contains jwt token
+    if (cookie != null) {
+      // if there is a proxy jwt in cookie invalidate
+      jWTHelper.invalidateToken(cookie.getValue());
+    }
     logoutSession(req);
   }
 
@@ -460,9 +475,8 @@ public class AuthService {
     }
   }
 
-  private Response login(Users user, String password, HttpServletRequest req) throws UserException,
-      SigningKeyNotFoundException, NoSuchAlgorithmException, DuplicateSigningKeyException {
-    RESTApiJsonResponse json = new RESTApiJsonResponse();
+  private Response login(Users user, String password, HttpServletRequest req, HttpServletResponse res)
+    throws UserException, SigningKeyNotFoundException, NoSuchAlgorithmException, DuplicateSigningKeyException {
     if (user.getBbcGroupCollection() == null || user.getBbcGroupCollection().isEmpty()) {
       throw new UserException(RESTCodes.UserErrorCode.NO_ROLE_FOUND, Level.FINE,
         null, RESTCodes.UserErrorCode.NO_ROLE_FOUND.getMessage());
@@ -476,12 +490,29 @@ public class AuthService {
       authController.registerAuthenticationFailure(user);
       throw new UserException(RESTCodes.UserErrorCode.AUTHENTICATION_FAILURE, Level.FINE, null, e.getMessage(), e);
     }
-
-    json.setSessionID(req.getSession().getId());
-    json.setData(user.getEmail());
+    
+    return sendLoginResponse(req, user, res);
+  }
+  
+  private Response sendLoginResponse(HttpServletRequest req, Users user, HttpServletResponse res)
+    throws DuplicateSigningKeyException, SigningKeyNotFoundException, NoSuchAlgorithmException {
+    Response.ResponseBuilder responseBuilder = Response.ok();
     // JWT claims will be added by JWTHelper
     String token = jWTHelper.createToken(user, settings.getJWTIssuer(), null);
-    return Response.ok().header(AUTHORIZATION, Constants.BEARER + token).entity(json).build();
+    String proxyToken = jWTHelper.createTokenForProxy(user);
+    
+    // add proxy jwt cookie
+    // responseBuilder.cookie(newCookie); removes SESSION and JSESSIONSSO cookies
+    // can be replaced with the above after jsf admin ui is removed
+    res.addCookie(ProxyAuthHelper.getCookie(proxyToken,  settings.getJWTLifetimeMsPlusLeeway()));
+    
+    // add api jwt auth header
+    responseBuilder.header(AUTHORIZATION, Constants.BEARER + token);
+  
+    RESTApiJsonResponse json = new RESTApiJsonResponse();
+    json.setSessionID(req.getSession().getId());
+    json.setData(user.getEmail());
+    return responseBuilder.entity(json).build();
   }
 
   private boolean isUserLoggedIn(String remoteUser, Users tokenUser, boolean validToken, Users user) {
@@ -502,7 +533,7 @@ public class AuthService {
     return sessionLoggedIn && jwtLoggedIn;
   }
 
-  private boolean needLogin(HttpServletRequest req, Users user) {
+  private boolean needLogin(HttpServletRequest req, Cookie cookie, Users user) {
     String remoteUser = req.getRemoteUser();
     Users tokenUser = jWTHelper.getUserPrincipal(req);
     boolean validToken = jWTHelper.validToken(req, settings.getJWTIssuer());
@@ -511,7 +542,7 @@ public class AuthService {
       return false;
     } else if (isSomeoneElseLoggedIn(remoteUser, tokenUser, validToken, user)) {
       try {
-        logoutAndInvalidateSession(req);
+        logoutAndInvalidateSession(req, cookie);
       } catch (InvalidationException | UserException ex) {
         LOGGER.log(Level.SEVERE, null, ex.getMessage());
       }

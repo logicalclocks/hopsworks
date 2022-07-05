@@ -70,7 +70,7 @@ describe "On #{ENV['OS']}" do
       @shared_editable_dataset_read_group = "#{@project1[:inode_name]}__#{@shared_editable_dataset[:inode_name]}__read"
     end
     before(:each) do
-      create_session(@project[:username], "Pass123")# relogin as project owner
+      create_session(@project[:username], "Pass123")# login as project owner
     end
     context 'Write to dataset' do
       it 'should fail to write to a read only dataset' do

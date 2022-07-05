@@ -13,16 +13,32 @@
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see <https://www.gnu.org/licenses/>.
  */
-package io.hops.hopsworks.api.filter;
+package io.hops.hopsworks.remote.user.jwt;
 
+import io.hops.hopsworks.common.util.Settings;
+import io.hops.hopsworks.jwt.annotation.JWTRequired;
+import io.hops.hopsworks.jwt.exception.JWTException;
+import io.hops.hopsworks.jwt.filter.JWTRenewFilter;
 
-public class Audience {
-  public static final String API = "api"; // Used by UI. Can access any rest endpoint
-  public static final String JOB ="job"; // Used by internal services to start or stop jobs
-  public static final String DATASET ="dataset";
-  public static final String SERVING = "serving";
-  public static final String EMAIL ="email";
-  public static final String SERVICES ="services";
-  public static final String GIT = "git";
-  public static final String PROXY = "proxy";
+import javax.ejb.EJB;
+import javax.ws.rs.ext.Provider;
+
+@Provider
+@JWTRequired
+public class JWTAutoRenewFilter extends JWTRenewFilter {
+
+  @EJB
+  private JWTHelper jwtHelper;
+  @EJB
+  private Settings settings;
+
+  @Override
+  public String renewToken(String token) throws JWTException {
+    return jwtHelper.autoRenewToken(token);
+  }
+  
+  @Override
+  public long getTokenLifeMs() {
+    return settings.getJWTLifetimeMsPlusLeeway();
+  }
 }

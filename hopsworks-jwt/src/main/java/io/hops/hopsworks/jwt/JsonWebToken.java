@@ -20,6 +20,7 @@ import com.auth0.jwt.interfaces.DecodedJWT;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+
 import static io.hops.hopsworks.jwt.Constants.DEFAULT_EXPIRY_LEEWAY;
 import static io.hops.hopsworks.jwt.Constants.DEFAULT_RENEWABLE;
 import static io.hops.hopsworks.jwt.Constants.EXPIRY_LEEWAY;
@@ -27,7 +28,6 @@ import static io.hops.hopsworks.jwt.Constants.RENEWABLE;
 import static io.hops.hopsworks.jwt.Constants.ROLES;
 
 public class JsonWebToken {
-
   private SignatureAlgorithm algorithm;
   private String issuer;
   private List<String> audience;
@@ -65,12 +65,14 @@ public class JsonWebToken {
     this.keyId = jwt.getKeyId();
     this.subject = jwt.getSubject();
     Claim renewableClaim = jwt.getClaim(RENEWABLE);
-    this.renewable = renewableClaim != null ? renewableClaim.asBoolean() : DEFAULT_RENEWABLE;
+    this.renewable =
+      renewableClaim != null && !renewableClaim.isNull() ? renewableClaim.asBoolean() : DEFAULT_RENEWABLE;
     Claim expLeewayClaim = jwt.getClaim(EXPIRY_LEEWAY);
-    this.expLeeway = expLeewayClaim == null || expLeewayClaim.asInt() < 1 ? DEFAULT_EXPIRY_LEEWAY : expLeewayClaim.
-        asInt();
+    this.expLeeway = expLeewayClaim == null || expLeewayClaim.isNull() || expLeewayClaim.asInt() < 1 ?
+      DEFAULT_EXPIRY_LEEWAY : expLeewayClaim.
+      asInt();
     Claim roleClaim = jwt.getClaim(ROLES);
-    this.role = roleClaim != null ? roleClaim.asList(String.class) : new ArrayList<>();
+    this.role = roleClaim != null && !roleClaim.isNull() ? roleClaim.asList(String.class) : new ArrayList<>();
   }
 
   public SignatureAlgorithm getAlgorithm() {

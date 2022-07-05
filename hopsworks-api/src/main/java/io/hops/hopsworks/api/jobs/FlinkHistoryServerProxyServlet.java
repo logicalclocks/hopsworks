@@ -17,6 +17,7 @@ package io.hops.hopsworks.api.jobs;
 
 import com.google.common.base.Strings;
 import com.predic8.membrane.core.http.Header;
+import io.hops.hopsworks.api.jwt.JWTHelper;
 import io.hops.hopsworks.api.kibana.MyRequestWrapper;
 import io.hops.hopsworks.api.kibana.ProxyServlet;
 import io.hops.hopsworks.common.dao.user.UserFacade;
@@ -47,6 +48,8 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -61,16 +64,17 @@ public class FlinkHistoryServerProxyServlet extends ProxyServlet {
   private FlinkCompletedJobsCache cache;
   @EJB
   private UserFacade userFacade;
+  @EJB
+  private JWTHelper jwtHelper;
   
   @Override
   protected void service(HttpServletRequest servletRequest, HttpServletResponse servletResponse)
     throws ServletException, IOException {
-    if (servletRequest.getUserPrincipal() == null) {
-      servletResponse.sendError(401, "User is not logged in");
+    Users user = jwtHelper.validateAndRenewToken(servletRequest, servletResponse,
+      new HashSet<>(Arrays.asList("HOPS_ADMIN", "HOPS_USER")));
+    if (user == null) {
       return;
     }
-    
-    String email = servletRequest.getUserPrincipal().getName();
     
     String[] parts = servletRequest.getPathInfo().split("/");
     //Handle /jobs/<jobid>
@@ -79,7 +83,7 @@ public class FlinkHistoryServerProxyServlet extends ProxyServlet {
       && !servletRequest.getPathInfo().startsWith("/jobs/overview")) {
     
       String job = servletRequest.getPathInfo().split("/")[2];
-      if (!Strings.isNullOrEmpty(job) && !cache.hasAccessToFlinkJob(job, email)) {
+      if (!Strings.isNullOrEmpty(job) && !cache.hasAccessToFlinkJob(job, user.getEmail())) {
         servletResponse.sendError(403, "You are not authorized to access this Flink job");
       }
     }
@@ -147,7 +151,7 @@ public class FlinkHistoryServerProxyServlet extends ProxyServlet {
       if (!servletRequest.getPathInfo().startsWith("/jobs/overview")) {
         super.copyResponseEntity(proxyResponse, servletResponse);
       } else {
-        copyResponseEntity(proxyResponse, servletResponse, email);
+        copyResponseEntity(proxyResponse, servletResponse, user.getEmail());
       }
       copyResponseHeaders(proxyResponse, servletRequest, servletResponse);
   

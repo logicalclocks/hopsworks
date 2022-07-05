@@ -31,6 +31,7 @@ import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.servlet.http.HttpServletRequest;
+import javax.ws.rs.CookieParam;
 import javax.ws.rs.core.SecurityContext;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
@@ -88,7 +89,7 @@ public class AnnotationHelper {
     List<Object> params = new ArrayList<>();
     int len = parameters != null ? parameters.length : 0;
     for (int i = 0; i < len; i++) {
-      if (methodParameters[i].isAnnotationPresent(type)) {
+      if (methodParameters[i].isAnnotationPresent(type) || methodParameters[i].isAnnotationPresent(CookieParam.class)) {
         continue;
       }
       params.add(parameters[i]);

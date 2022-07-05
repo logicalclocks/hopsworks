@@ -4,6 +4,7 @@
 package io.hops.hopsworks.remote.user.jwt;
 
 import com.auth0.jwt.interfaces.DecodedJWT;
+import com.google.common.base.Strings;
 import io.hops.hopsworks.common.dao.user.BbcGroupFacade;
 import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.user.UsersController;
@@ -11,6 +12,8 @@ import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.jwt.Constants;
 import io.hops.hopsworks.jwt.JWTController;
 import io.hops.hopsworks.jwt.SignatureAlgorithm;
+import io.hops.hopsworks.jwt.exception.NotRenewableException;
+import io.hops.hopsworks.persistence.entity.user.security.ua.UserAccountStatus;
 import io.hops.hopsworks.remote.user.api.Audience;
 import io.hops.hopsworks.jwt.exception.DuplicateSigningKeyException;
 import io.hops.hopsworks.jwt.exception.InvalidationException;
@@ -29,12 +32,15 @@ import javax.ws.rs.core.SecurityContext;
 import java.security.NoSuchAlgorithmException;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import static io.hops.hopsworks.jwt.Constants.BEARER;
 import static io.hops.hopsworks.jwt.Constants.EXPIRY_LEEWAY;
+import static io.hops.hopsworks.jwt.Constants.RENEWABLE;
+import static io.hops.hopsworks.jwt.Constants.ROLES;
 import static javax.ws.rs.core.HttpHeaders.AUTHORIZATION;
 
 @Stateless
@@ -278,7 +284,7 @@ public class JWTHelper {
    * @throws VerificationException 
    */
   public DecodedJWT verifyOneTimeToken(String token, String issuer) throws SigningKeyNotFoundException, 
-      VerificationException {
+    VerificationException {
     DecodedJWT jwt = null;
     if (token == null || token.trim().isEmpty()) {
       throw new VerificationException("Token not provided.");
@@ -292,5 +298,62 @@ public class JWTHelper {
       throw new VerificationException("Failed to verify one time token.");
     }
     return jwt;
+  }
+  
+  /**
+   *
+   * @param token
+   * @return
+   * @throws NotRenewableException
+   * @throws SigningKeyNotFoundException
+   * @throws InvalidationException
+   */
+  public String autoRenewToken(String token)
+    throws NotRenewableException, SigningKeyNotFoundException, InvalidationException {
+    if (Strings.isNullOrEmpty(token)) {
+      throw new NotRenewableException("Token not set");
+    }
+    DecodedJWT decodedJWT = jwtController.verifyTokenForRenewal(token);
+    boolean isRenewable = jwtController.getRenewableClaim(decodedJWT);
+    // Do not get the user if not renewable
+    if (!isRenewable) {
+      throw new NotRenewableException("Token not renewable.");
+    }
+    // this will be called on every call so do not get user if token not expired
+    Date currentTime = new Date();
+    if (currentTime.before(decodedJWT.getExpiresAt())) {
+      throw new NotRenewableException("Token not expired.");
+    }
+    Users user = userFacade.findByUsername(decodedJWT.getSubject());
+    if (user == null) {
+      throw new NotRenewableException("User not found");
+    }
+    if (!UserAccountStatus.ACTIVATED_ACCOUNT.equals(user.getStatus())) {
+      throw new NotRenewableException("User not active");
+    }
+    List<String> roles = userController.getUserRoles(user);
+    return jwtController.autoRenewToken(decodedJWT, roles.toArray(new String[0]));
+  }
+  
+  /**
+   * Create JWT Token for Proxy
+   * @param user
+   * @return
+   * @throws DuplicateSigningKeyException
+   * @throws SigningKeyNotFoundException
+   * @throws NoSuchAlgorithmException
+   */
+  public String createTokenForProxy(Users user)
+    throws DuplicateSigningKeyException, SigningKeyNotFoundException, NoSuchAlgorithmException {
+    SignatureAlgorithm alg = SignatureAlgorithm.valueOf(settings.getJWTSignatureAlg());
+    Date expiresAt = new Date(System.currentTimeMillis() + settings.getJWTLifetimeMs());
+    String[] userRoles = userController.getUserRoles(user).toArray(new String[0]);
+    String[] audience = new String[] {Audience.PROXY};
+    Map<String, Object> claims = new HashMap<>();
+    claims.put(ROLES, userRoles);
+    claims.put(RENEWABLE, true);
+    claims.put(EXPIRY_LEEWAY, settings.getJWTExpLeewaySec());
+    return jwtController.createTokenForProxy(user.getUsername(), settings.getJWTIssuer(), audience, claims, expiresAt,
+      alg);
   }
 }
