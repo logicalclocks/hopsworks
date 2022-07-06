@@ -16,12 +16,14 @@
 package io.hops.hopsworks.common.dao.git;
 
 import io.hops.hopsworks.common.dao.AbstractFacade;
+import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.persistence.entity.git.GitRepository;
 import io.hops.hopsworks.persistence.entity.git.config.GitProvider;
 import io.hops.hopsworks.persistence.entity.hdfs.inode.Inode;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.user.Users;
 
+import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
@@ -29,6 +31,7 @@ import javax.persistence.PersistenceContext;
 import javax.persistence.Query;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.logging.Logger;
 
 @Stateless
@@ -37,6 +40,8 @@ public class GitRepositoryFacade extends AbstractFacade<GitRepository> {
 
   @PersistenceContext(unitName = "kthfsPU")
   private EntityManager em;
+  @EJB
+  private UserFacade userFacade;
 
   public GitRepositoryFacade() { super(GitRepository.class); }
 
@@ -56,15 +61,18 @@ public class GitRepositoryFacade extends AbstractFacade<GitRepository> {
     }
   }
 
-  public CollectionInfo<GitRepository> getAllInProject(Project project, Integer limit, Integer offset) {
-    Query repoQuery = em.createNamedQuery(
-            "GitRepository.findAllInProject",
-            GitRepository.class);
-    repoQuery.setParameter("project", project);
+  public CollectionInfo<GitRepository> getAllInProject(Project project, Set<? extends FilterBy> filters,
+                                                       Set<? extends AbstractFacade.SortBy> sorts, Integer limit,
+                                                       Integer offset) {
+    String repoQueryStr = buildQuery("SELECT r FROM GitRepository r ", filters, sorts,
+        "r.project = :project ");
+    String countQueryStr = buildQuery("SELECT COUNT(r.id) FROM GitRepository r ", filters, sorts,
+        "r.project = :project ");
+    Query countQuery = em.createQuery(countQueryStr, GitRepository.class).setParameter("project", project);
+    Query repoQuery = em.createQuery(repoQueryStr, GitRepository.class).setParameter("project", project);
+    setFilter(filters, countQuery);
+    setFilter(filters, repoQuery);
     setOffsetAndLim(offset, limit, repoQuery);
-    Query countQuery = em.createQuery("SELECT COUNT(r.id) FROM GitRepository r WHERE r.project = :project",
-        GitRepository.class);
-    countQuery.setParameter("project", project);
     return new CollectionInfo((Long) countQuery.getSingleResult(), repoQuery.getResultList());
   }
 
@@ -114,5 +122,83 @@ public class GitRepositoryFacade extends AbstractFacade<GitRepository> {
   public GitRepository updateRepositoryCid(GitRepository repository, String pid) {
     repository.setCid(pid);
     return updateRepository(repository);
+  }
+
+  private void setFilter(Set<? extends AbstractFacade.FilterBy> filter, Query q) {
+    if (filter == null || filter.isEmpty()) {
+      return;
+    }
+    for (FilterBy aFilter : filter) {
+      setFilterQuery(aFilter, q);
+    }
+  }
+
+  private void setFilterQuery(AbstractFacade.FilterBy filterBy, Query q) {
+    switch (GitRepositoryFacade.Filters.valueOf(filterBy.getValue())) {
+      case NAME:
+        q.setParameter(filterBy.getField(), filterBy.getParam().toLowerCase());
+        break;
+      case USER:
+        q.setParameter(filterBy.getField(), userFacade.findByUsername(filterBy.getParam()));
+        break;
+      default:
+        break;
+    }
+  }
+
+  public enum Sorts {
+    ID("ID", "r.id ", "DESC"),
+    NAME("NAME", "r.name ", "ASC");
+
+    private final String value;
+    private final String sql;
+    private final String defaultParam;
+
+    private Sorts(String value, String sql, String defaultParam) {
+      this.value = value;
+      this.sql = sql;
+      this.defaultParam = defaultParam;
+    }
+
+    public String getValue() { return value; }
+
+    public String getSql() { return sql; }
+
+    public String getDefaultParam() { return defaultParam; }
+
+    public String getJoin() { return null; }
+
+    @Override
+    public String toString() { return value; }
+
+  }
+
+  public enum Filters {
+    NAME("NAME", "LOWER(r.name) LIKE CONCAT('%', :name, '%') ", "name", " "),
+    USER("USER", "r.creator = :user ", "user", " ");
+
+    private final String value;
+    private final String sql;
+    private final String field;
+    private final String defaultParam;
+
+    private Filters(String value, String sql, String field, String defaultParam) {
+      this.value = value;
+      this.sql = sql;
+      this.field = field;
+      this.defaultParam = defaultParam;
+    }
+
+    public String getDefaultParam() { return defaultParam; }
+
+    public String getValue() { return value; }
+
+    public String getSql() { return sql; }
+
+    public String getField() { return field; }
+
+    @Override
+    public String toString() { return value; }
+
   }
 }
