@@ -48,7 +48,7 @@ import java.util.Date;
 @NamedQueries({
     @NamedQuery(name = "GitOpExecution.findAll",
         query
-            = "SELECT e FROM GitOpExecution e"),
+            = "SELECT e FROM GitOpExecution e ORDER BY e.id DESC"),
     @NamedQuery(name = "GitOpExecution.findById",
         query
             = "SELECT e FROM GitOpExecution e WHERE e.id = :id"),
@@ -57,7 +57,7 @@ import java.util.Date;
             = "SELECT e FROM GitOpExecution e WHERE e.submissionTime = :submissionTime"),
     @NamedQuery(name = "GitOpExecution.findAllInRepository",
         query
-            = "SELECT e FROM GitOpExecution e WHERE e.repository = :repository"),
+            = "SELECT e FROM GitOpExecution e WHERE e.repository = :repository ORDER BY e.id DESC"),
     @NamedQuery(name = "GitOpExecution.findRunningInRepository",
         query
             = "SELECT e FROM GitOpExecution e WHERE e.repository = :repository AND e.state NOT IN :finalStates " +

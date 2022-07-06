@@ -133,6 +133,8 @@ public class GitResource {
     resourceRequest.setExpansions(repositoryBeanParam.getExpansions().getResources());
     resourceRequest.setOffset(pagination.getOffset());
     resourceRequest.setLimit(pagination.getLimit());
+    resourceRequest.setFilter(repositoryBeanParam.getFilter());
+    resourceRequest.setSort(repositoryBeanParam.getSortBySet());
     GitRepositoryDTO repositories = gitRepositoryBuilder.build(uriInfo, resourceRequest, project);
     return Response.ok().entity(repositories).build();
   }

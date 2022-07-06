@@ -94,6 +94,42 @@ module GitHelper
     return git_command_result["result"]
   end
 
+  def clone_repositories(projectId, projectName, repoUrls)
+    repos = {}
+    repoUrls.each do |provider, url|
+      config = get_clone_config(provider, projectName, url)
+      id, path = clone_repo(projectId, config)
+      repos.store(id, path)
+    end
+    repos
+  end
+
+  def test_sort_by_id(projectId, order="asc")
+    get_project_git_repositories(projectId, query="?expand=creator&sort_by=id:#{order}")
+    expect_status(200)
+    expect(json_body[:count]).to be > 1
+    sortedItems = get_field_list(json_body[:items], "id")
+    if order == 'asc'
+      sorted = sortedItems.sort
+    else
+      sorted = sortedItems.sort.reverse
+    end
+    expect(sortedItems).to eq(sorted)
+  end
+
+  def test_sort_by_repo_name(projectId, order="asc")
+    get_project_git_repositories(projectId, query="?expand=creator&sort_by=name:#{order}")
+    expect_status(200)
+    expect(json_body[:count]).to be > 1
+    sortedRes = get_field_list(json_body[:items], "name")
+    if order == 'asc'
+      sorted = sortedRes.sort_by(&:downcase)
+    else
+      sorted = sortedRes.sort_by(&:downcase).reverse
+    end
+    expect(sortedRes).to eq(sorted)
+  end
+
   def git_commit(project_id, repository_id, commit_config)
     post "#{ENV['HOPSWORKS_API']}/project/#{project_id}/git/repository/#{repository_id}?action=commit", commit_config
   end
@@ -267,6 +303,10 @@ module GitHelper
       sleep(1)
       x = yield
     end
+  end
+
+  def get_field_list(repositories, field)
+    repositories.map { |o| o[:"#{field}"] }
   end
 
     module_function :wait_for_git_op

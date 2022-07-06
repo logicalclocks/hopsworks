@@ -124,8 +124,8 @@ public class GitRepositoryBuilder {
     if (repoDTO.isExpand()) {
       Integer limit = resourceRequest.getLimit() == null ? DEFAULT_REPOSITORY_LIMIT : resourceRequest.getLimit();
       Integer offset = resourceRequest.getOffset() == null ? 0 : resourceRequest.getOffset();
-      AbstractFacade.CollectionInfo<GitRepository> projectRepos = gitRepositoryFacade.getAllInProject(project, limit,
-          offset);
+      AbstractFacade.CollectionInfo<GitRepository> projectRepos = gitRepositoryFacade.getAllInProject(project,
+          resourceRequest.getFilter(), resourceRequest.getSort(), limit, offset);
       List<GitRepositoryDTO> dtos = projectRepos.getItems().stream().map(r -> build(uriInfo, resourceRequest, project,
           r)).collect(Collectors.toList());
       repoDTO.setItems(dtos);
