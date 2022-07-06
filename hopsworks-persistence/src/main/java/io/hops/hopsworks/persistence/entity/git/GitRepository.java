@@ -80,6 +80,12 @@ public class GitRepository implements Serializable {
   @ManyToOne(optional = false)
   private Inode inode;
 
+  @Basic(optional = false)
+  @Column(name = "inode_name",
+      updatable = false,
+      insertable = false)
+  private String name;
+
   @JoinColumn(name = "project",
       referencedColumnName = "id")
   @ManyToOne(optional = false)
@@ -118,6 +124,7 @@ public class GitRepository implements Serializable {
     this.project = project;
     this.gitProvider = gitProvider;
     this.creator = creator;
+    this.name = inode.getInodePK().getName();
   }
 
   public Integer getId() { return id; }
@@ -151,6 +158,10 @@ public class GitRepository implements Serializable {
   public Users getCreator() { return creator; }
 
   public void setCreator(Users creator) { this.creator = creator; }
+
+  public String getName() { return name; }
+
+  public void setName(String name) { this.name = name; }
 
   @Override
   public int hashCode() {

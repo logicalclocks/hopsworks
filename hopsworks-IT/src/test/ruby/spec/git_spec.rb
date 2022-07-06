@@ -92,6 +92,54 @@ describe "On #{ENV['OS']}" do
 
         delete_repository(@project, repo_path)
       end
+      describe '#sort' do
+        before(:all) do
+          repositories = clone_repositories(@project[:id], @project[:projectname], {"GitHub" => "https://github.com/logicalclocks/livy-chef.git", "GitLab" => "https://gitlab.com/gibchikafa/test_repo.git"})
+          expect(repositories.keys.count).to be > 1
+        end
+        after(:all) do
+          get_project_git_repositories(@project[:id], query="?expand=creator")
+          expect(json_body[:count]).to be > 1
+          repositories = json_body[:items]
+          repositories.each{|r| delete_repository(@project, r[:path])}
+        end
+        it 'should get all repositories sorted by id (asc)' do
+          test_sort_by_id(@project[:id])
+        end
+        it 'should get all repositories sorted by id (desc)' do
+          test_sort_by_id(@project[:id], "desc")
+        end
+        it 'should get all repositories sorted by name (asc)' do
+          test_sort_by_repo_name(@project[:id])
+        end
+        it 'should get all repositories sorted by name (desc)' do
+          test_sort_by_repo_name(@project[:id], "desc")
+        end
+      end
+      describe "#filter" do
+        it 'should filter repositories by user' do
+          clone_config = get_clone_config("GitHub", @project[:projectname])
+          repoId1, path1 = clone_repo(@project[:id], clone_config)
+          member = create_user
+          add_member_to_project(@project, member[:email], "Data scientist")
+          reset_session
+          create_session(member[:email],"Pass123")
+          clone_config = get_clone_config("GitLab", @project[:projectname])
+          repoId2, path2 = clone_repo(@project[:id], clone_config)
+          reset_session
+          create_session(@project[:username], "Pass123")
+          # get all repositories
+          get_project_git_repositories(@project[:id])
+          expect_status_details(200)
+          expect(json_body[:count]).to eq(2)
+          #filter for user 1
+          get_project_git_repositories(@project[:id], "?expand=creator&filter=user:#{member[:username]}")
+          expect(json_body[:count]).to eq(1)
+          expect(json_body[:items][0][:creator][:username]).to eql member[:username]
+          delete_repository(@project, path1)
+          delete_repository(@project, path2)
+        end
+      end
     end
     describe "Perform operations on the cloned repositories" do
       after :each do
@@ -111,12 +159,12 @@ describe "On #{ENV['OS']}" do
         get_git_executions(@project[:id], repository_id)
         expect(json_body[:count]).to be > 0
         expect(json_body[:items][0][:repository][:path]).to be nil
-        expect(json_body[:items][0][:user][:email]).to be nil
+        expect(json_body[:items][0][:creator][:email]).to be nil
         # Check expansions
         get_git_executions(@project[:id], repository_id, query="?expand=repository&expand=user")
         expect(json_body[:count]).to be > 0
         expect(json_body[:items][0][:repository][:path]).not_to be_nil
-        expect(json_body[:items][0][:user][:email]).not_to be_nil
+        expect(json_body[:items][0][:creator][:email]).not_to be_nil
       end
       it "should get repository default branches after cloning" do
         clone_config = get_clone_config("GitHub", @project[:projectname])
