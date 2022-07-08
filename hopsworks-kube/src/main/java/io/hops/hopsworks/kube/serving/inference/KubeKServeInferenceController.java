@@ -27,6 +27,7 @@ import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.protocol.HttpClientContext;
 import org.apache.http.protocol.HttpContext;
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import javax.ejb.EJB;
@@ -37,6 +38,8 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Optional;
 import java.util.logging.Level;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 @Stateless
 @TransactionAttribute(TransactionAttributeType.NEVER)
@@ -56,6 +59,9 @@ public class KubeKServeInferenceController {
   private KubeApiKeyUtils kubeApiKeyUtils;
   @EJB
   private UserFacade userFacade;
+  
+  private final static String TORNADO_ERROR_RESPONSE_PATTERN = "^<html><title>(\\d{3}):(.*?)</title><body>(\\d{3}):(" +
+    ".*?)</body></html>$";
   
   /**
    * KServe inference. Sends a JSON request to the REST API of a kserve server
@@ -143,7 +149,8 @@ public class KubeKServeInferenceController {
       try {
         HttpContext context = HttpClientContext.create();
         CloseableHttpResponse response = inferenceHttpClient.execute(request, context);
-        return inferenceHttpClient.handleInferenceResponse(response);
+        Pair<Integer, String> inferenceResult = inferenceHttpClient.handleInferenceResponse(response);
+        return inferenceResult.getL() >= 400 ? parseInferenceErrorResponse(inferenceResult) : inferenceResult;
       } catch (InferenceException e) {
         // Maybe the node we are trying to send requests to died.
       } finally {
@@ -152,5 +159,30 @@ public class KubeKServeInferenceController {
     }
     
     throw new InferenceException(RESTCodes.InferenceErrorCode.REQUEST_ERROR, Level.INFO);
+  }
+  
+  private Pair<Integer, String> parseInferenceErrorResponse(Pair<Integer, String> inferenceResult) {
+    String reason = inferenceResult.getR();
+    if (reason.startsWith("<html>")) {
+      // if it's an error response with an html template, extract the body
+      // this mainly occurs in deployments for python models without predictor script (sklearnserver)
+      Pattern pattern = Pattern.compile(TORNADO_ERROR_RESPONSE_PATTERN);
+      Matcher matcher = pattern.matcher(reason);
+      if (matcher.find()) {
+        return new Pair<>(inferenceResult.getL(), matcher.group(4));
+      } // if unknown html template, return the original message
+    } else if (reason.startsWith("{")) {
+      // if it's an error response with a json string, extract the error message
+      // this mainly occurs in deployments for tensorflow models
+      try {
+        JSONObject reasonJson = new JSONObject(reason);
+        if (reasonJson.has("error")) {
+          return new Pair<>(inferenceResult.getL(), reasonJson.getString("error"));
+        }
+      } catch (JSONException e) {
+        // if unknown json template, return the original message
+      }
+    }
+    return inferenceResult;
   }
 }
