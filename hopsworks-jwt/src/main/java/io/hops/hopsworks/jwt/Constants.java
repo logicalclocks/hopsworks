@@ -38,4 +38,11 @@ public class Constants {
   public final static String ELK_PROJECT_INODE_ID = "piid";
 
   public final static String GIT_SIGNING_KEY_NAME = "git_jwt_signing_key";
+
+  public final static String PROXY_SIGNING_KEY_NAME = "proxy_jwt_signing_key";
+  public final static String PROXY_JWT_COOKIE_NAME = "proxy_session";
+  public static final String PROXY_JWT_COOKIE_PATH = "/";
+  public static final String PROXY_JWT_COOKIE_COMMENT = "";
+  public static final boolean PROXY_JWT_COOKIE_SECURE = true;
+  public static final boolean PROXY_JWT_COOKIE_HTTP_ONLY = true;
 }

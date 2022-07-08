@@ -35,4 +35,8 @@ public class JWTAutoRenewFilter extends JWTRenewFilter{
     return jwtController.autoRenewToken(token);
   }
 
+  @Override
+  public long getTokenLifeMs() {
+    return 0;// only needed for proxy token
+  }
 }

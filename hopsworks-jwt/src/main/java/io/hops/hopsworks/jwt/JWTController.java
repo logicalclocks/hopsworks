@@ -21,45 +21,45 @@ import com.auth0.jwt.JWTVerifier;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.interfaces.Claim;
 import com.auth0.jwt.interfaces.DecodedJWT;
-import io.hops.hopsworks.persistence.entity.jwt.InvalidJwt;
 import io.hops.hopsworks.jwt.dao.InvalidJwtFacade;
-import io.hops.hopsworks.persistence.entity.jwt.JwtSigningKey;
 import io.hops.hopsworks.jwt.dao.JwtSigningKeyFacade;
-import java.security.NoSuchAlgorithmException;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
-import java.time.temporal.ChronoUnit;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.UUID;
-import java.util.logging.Logger;
-import javax.ejb.EJB;
-import javax.ejb.Stateless;
-import javax.ejb.AccessLocalException;
-import javax.ejb.TransactionAttribute;
-import javax.ejb.TransactionAttributeType;
-import static io.hops.hopsworks.jwt.Constants.DEFAULT_EXPIRY_LEEWAY;
-import static io.hops.hopsworks.jwt.Constants.DEFAULT_RENEWABLE;
-import static io.hops.hopsworks.jwt.Constants.EXPIRY_LEEWAY;
-import static io.hops.hopsworks.jwt.Constants.ONE_TIME_JWT_SIGNING_KEY_NAME;
-import static io.hops.hopsworks.jwt.Constants.RENEWABLE;
-import static io.hops.hopsworks.jwt.Constants.ROLES;
+import io.hops.hopsworks.jwt.exception.AccessException;
 import io.hops.hopsworks.jwt.exception.DuplicateSigningKeyException;
 import io.hops.hopsworks.jwt.exception.InvalidationException;
 import io.hops.hopsworks.jwt.exception.JWTException;
 import io.hops.hopsworks.jwt.exception.NotRenewableException;
 import io.hops.hopsworks.jwt.exception.SigningKeyNotFoundException;
 import io.hops.hopsworks.jwt.exception.VerificationException;
-
+import io.hops.hopsworks.persistence.entity.jwt.InvalidJwt;
+import io.hops.hopsworks.persistence.entity.jwt.JwtSigningKey;
 import org.apache.commons.lang3.tuple.Pair;
 
+import javax.ejb.EJB;
+import javax.ejb.Stateless;
+import javax.ejb.TransactionAttribute;
+import javax.ejb.TransactionAttributeType;
+import java.security.NoSuchAlgorithmException;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.temporal.ChronoUnit;
 import java.util.Calendar;
 import java.util.Collection;
+import java.util.Date;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 import java.util.logging.Level;
+import java.util.logging.Logger;
+
+import static io.hops.hopsworks.jwt.Constants.DEFAULT_EXPIRY_LEEWAY;
+import static io.hops.hopsworks.jwt.Constants.DEFAULT_RENEWABLE;
+import static io.hops.hopsworks.jwt.Constants.EXPIRY_LEEWAY;
+import static io.hops.hopsworks.jwt.Constants.ONE_TIME_JWT_SIGNING_KEY_NAME;
+import static io.hops.hopsworks.jwt.Constants.RENEWABLE;
+import static io.hops.hopsworks.jwt.Constants.ROLES;
 
 @Stateless
 @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
@@ -211,7 +211,8 @@ public class JWTController {
    */
   public int getExpLeewayClaim(DecodedJWT jwt) {
     Claim expLeewayClaim = jwt.getClaim(EXPIRY_LEEWAY);
-    return expLeewayClaim == null? DEFAULT_EXPIRY_LEEWAY : getExpLeewayOrDefault(expLeewayClaim.asInt());
+    return expLeewayClaim == null || expLeewayClaim.isNull() ? DEFAULT_EXPIRY_LEEWAY :
+      getExpLeewayOrDefault(expLeewayClaim.asInt());
   }
   
   /**
@@ -230,7 +231,7 @@ public class JWTController {
    */
   public boolean getRenewableClaim(DecodedJWT jwt) {
     Claim renewableClaim = jwt.getClaim(RENEWABLE);
-    return renewableClaim != null ? renewableClaim.asBoolean() : DEFAULT_RENEWABLE;
+    return renewableClaim != null && !renewableClaim.isNull() ? renewableClaim.asBoolean() : DEFAULT_RENEWABLE;
   }
   
   /**
@@ -240,7 +241,7 @@ public class JWTController {
    */
   public String[] getRolesClaim(DecodedJWT jwt) {
     Claim rolesClaim = jwt.getClaim(ROLES);
-    return rolesClaim == null ? new String[0] : rolesClaim.asArray(String.class);
+    return rolesClaim == null || rolesClaim.isNull() ? new String[0] : rolesClaim.asArray(String.class);
   }
   
   /**
@@ -305,7 +306,7 @@ public class JWTController {
    * @throws VerificationException
    */
   public DecodedJWT verifyToken(String token, String issuer, Set<String> audiences, Set<String> roles) throws
-      SigningKeyNotFoundException, VerificationException {
+    SigningKeyNotFoundException, VerificationException, AccessException {
     JsonWebToken jwt = new JsonWebToken(JWT.decode(token));
     issuer = issuer == null || issuer.isEmpty() ? jwt.getIssuer() : issuer;
     DecodedJWT djwt = verifyToken(token, issuer, jwt.getExpLeeway(), algorithmFactory.getAlgorithm(jwt));
@@ -317,14 +318,14 @@ public class JWTController {
     Set<String> rolesSet = new HashSet<>(jwt.getRole());
     if (roles != null && !roles.isEmpty()) {
       if (!intersect(roles, rolesSet)) {
-        throw new AccessLocalException("Client not authorized for this invocation.");
+        throw new AccessException("Client not authorized for this invocation.");
       }
     }
 
     Set<String> audiencesSet = new HashSet<>(jwt.getAudience());
     if (audiences != null && !audiences.isEmpty()) {
       if (!intersect(audiences, audiencesSet)) {
-        throw new AccessLocalException("Token not issued for this recipient.");
+        throw new AccessException("Token not issued for this recipient.");
       }
     }
     return djwt;
@@ -372,16 +373,31 @@ public class JWTController {
 
   /**
    * Renews a jwt if it is renewable, not invalidated, and expired but within the renewal period.
-   *
+   * Will neither check user status nor update user roles
    * @param token
    * @return
    * @throws SigningKeyNotFoundException
    * @throws NotRenewableException
    * @throws InvalidationException
    */
-  public String autoRenewToken(String token) throws SigningKeyNotFoundException,
-      NotRenewableException, InvalidationException {
+  public String autoRenewToken(String token) throws SigningKeyNotFoundException, NotRenewableException,
+    InvalidationException {
     DecodedJWT jwt = verifyTokenForRenewal(token);
+    return autoRenewToken(jwt, null);
+  }
+
+  /**
+   * Renews a jwt if it is renewable, not invalidated, and expired but within the renewal period.
+   * Will update roles if not null.
+   * @param jwt
+   * @param newRoles
+   * @return
+   * @throws SigningKeyNotFoundException
+   * @throws NotRenewableException
+   * @throws InvalidationException
+   */
+  public String autoRenewToken(DecodedJWT jwt, String[] newRoles) throws SigningKeyNotFoundException,
+    NotRenewableException, InvalidationException {
     boolean isRenewable = getRenewableClaim(jwt);
     if (!isRenewable) {
       throw new NotRenewableException("Token not renewable.");
@@ -399,8 +415,8 @@ public class JWTController {
     _jwt.setNotBefore(new Date());
     
     Map<String, Object> claims = new HashMap<>(3);
-    addDefaultClaimsIfMissing(claims, _jwt.isRenewable(), getExpLeewayOrDefault(_jwt.getExpLeeway()),
-        _jwt.getRole().toArray(new String[1]));
+    String[] roles = newRoles == null ? _jwt.getRole().toArray(new String[0]) : newRoles;
+    addDefaultClaimsIfMissing(claims, _jwt.isRenewable(), getExpLeewayOrDefault(_jwt.getExpLeeway()), roles);
     String renewedToken = createToken(_jwt, claims);
 
     invalidateJWT(jwt.getId(), jwt.getExpiresAt(), _jwt.getExpLeeway());
@@ -591,7 +607,7 @@ public class JWTController {
     return userClaims;
   }
   
-  private DecodedJWT verifyTokenForRenewal(String token) throws SigningKeyNotFoundException, NotRenewableException {
+  public DecodedJWT verifyTokenForRenewal(String token) throws SigningKeyNotFoundException, NotRenewableException {
     DecodedJWT jwt;
     try {
       jwt = verifyToken(token, null);
@@ -758,5 +774,34 @@ public class JWTController {
     return createToken(Constants.ELK_SIGNING_KEY_NAME,
         false, issuer, null, expiresAt, null, subjectName.toLowerCase(),
         claims, alg);
+  }
+
+  /**
+   *
+   * @param alg
+   * @return
+   * @throws NoSuchAlgorithmException
+   */
+  public String getSigningKeyForProxy(SignatureAlgorithm alg) throws NoSuchAlgorithmException {
+    return getOrCreateSigningKey(Constants.PROXY_SIGNING_KEY_NAME, alg).getSecret();
+  }
+
+  /**
+   *
+   * @param subjectName
+   * @param issuer
+   * @param claims
+   * @param expiresAt
+   * @param alg
+   * @return
+   * @throws DuplicateSigningKeyException
+   * @throws NoSuchAlgorithmException
+   * @throws SigningKeyNotFoundException
+   */
+  public String createTokenForProxy(String subjectName, String issuer, String[] audience, Map<String, Object> claims,
+    Date expiresAt, SignatureAlgorithm alg) throws DuplicateSigningKeyException, NoSuchAlgorithmException,
+    SigningKeyNotFoundException {
+    return createToken(Constants.PROXY_SIGNING_KEY_NAME, false, issuer, audience, expiresAt, new Date(),
+      subjectName.toLowerCase(), claims, alg);
   }
 }

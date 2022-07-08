@@ -20,6 +20,14 @@ import com.auth0.jwt.JWTVerifier;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.interfaces.Claim;
 import com.auth0.jwt.interfaces.DecodedJWT;
+import io.hops.hopsworks.jwt.exception.SigningKeyNotFoundException;
+import io.hops.hopsworks.jwt.utils.ProxyAuthHelper;
+
+import javax.ws.rs.container.ContainerRequestContext;
+import javax.ws.rs.container.ContainerRequestFilter;
+import javax.ws.rs.core.HttpHeaders;
+import javax.ws.rs.core.NewCookie;
+import javax.ws.rs.core.Response;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collection;
@@ -28,16 +36,12 @@ import java.util.List;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.ws.rs.container.ContainerRequestContext;
-import javax.ws.rs.container.ContainerRequestFilter;
-import javax.ws.rs.core.HttpHeaders;
-import javax.ws.rs.core.Response;
+
 import static io.hops.hopsworks.jwt.Constants.BEARER;
 import static io.hops.hopsworks.jwt.Constants.DEFAULT_EXPIRY_LEEWAY;
 import static io.hops.hopsworks.jwt.Constants.EXPIRY_LEEWAY;
 import static io.hops.hopsworks.jwt.Constants.ROLES;
 import static io.hops.hopsworks.jwt.Constants.WWW_AUTHENTICATE_VALUE;
-import io.hops.hopsworks.jwt.exception.SigningKeyNotFoundException;
 
 public abstract class JWTFilter implements ContainerRequestFilter {
 
@@ -84,21 +88,25 @@ public abstract class JWTFilter implements ContainerRequestFilter {
     } catch (Exception exception) {
       LOGGER.log(Level.FINE, "JWT Verification Exception: {0}", exception.getMessage());
       responseEntity = responseEntity(Response.Status.UNAUTHORIZED, exception.getMessage());
-      requestContext.abortWith(Response.status(Response.Status.UNAUTHORIZED).header(HttpHeaders.WWW_AUTHENTICATE,
-          WWW_AUTHENTICATE_VALUE).entity(responseEntity).build());
+      // remove cookie
+      NewCookie newCookie = ProxyAuthHelper.getNewCookieForLogout();
+      requestContext.abortWith(Response.status(Response.Status.UNAUTHORIZED).cookie(newCookie)
+        .header(HttpHeaders.WWW_AUTHENTICATE, WWW_AUTHENTICATE_VALUE).entity(responseEntity).build());
       return;
     }
 
     if (!isTokenValid(jwt)) {
       LOGGER.log(Level.FINEST, "JWT Verification Exception: Invalidated token.");
       responseEntity = responseEntity(Response.Status.UNAUTHORIZED, "Invalidated token.");
-      requestContext.abortWith(Response.status(Response.Status.UNAUTHORIZED).header(HttpHeaders.WWW_AUTHENTICATE,
-          WWW_AUTHENTICATE_VALUE).entity(responseEntity).build());
+      // remove cookie
+      NewCookie newCookie = ProxyAuthHelper.getNewCookieForLogout();
+      requestContext.abortWith(Response.status(Response.Status.UNAUTHORIZED).cookie(newCookie)
+        .header(HttpHeaders.WWW_AUTHENTICATE, WWW_AUTHENTICATE_VALUE).entity(responseEntity).build());
       return;
     }
 
     Claim rolesClaim = jwt.getClaim(ROLES);
-    String[] userRoles = rolesClaim == null ? new String[0] : rolesClaim.asArray(String.class);
+    String[] userRoles = rolesClaim == null || rolesClaim.isNull() ? new String[0] : rolesClaim.asArray(String.class);
     Set<String> allowedRolesSet = allowedRoles();
     if (allowedRolesSet != null && !allowedRolesSet.isEmpty()) {
       if (!intersect(allowedRolesSet, Arrays.asList(userRoles))) {

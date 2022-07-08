@@ -3641,6 +3641,11 @@ public class Settings implements Serializable {
     return JWT_EXP_LEEWAY_SEC;
   }
 
+  public synchronized long getJWTLifetimeMsPlusLeeway() {
+    checkCache();
+    return JWT_LIFETIME_MS + (JWT_EXP_LEEWAY_SEC * 1000L);
+  }
+
   public synchronized long getServiceJWTLifetimeMS() {
     checkCache();
     return SERVICE_JWT_LIFETIME_MS;

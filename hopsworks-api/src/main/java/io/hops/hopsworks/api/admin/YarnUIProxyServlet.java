@@ -39,6 +39,7 @@
 package io.hops.hopsworks.api.admin;
 
 import com.logicalclocks.servicediscoverclient.service.Service;
+import io.hops.hopsworks.api.jwt.JWTHelper;
 import io.hops.hopsworks.api.kibana.ProxyServlet;
 import io.hops.hopsworks.common.dao.jobhistory.YarnApplicationstateFacade;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
@@ -46,6 +47,7 @@ import io.hops.hopsworks.common.dao.project.team.ProjectTeamFacade;
 import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
 import io.hops.hopsworks.common.hosts.ServiceDiscoveryController;
+import io.hops.hopsworks.common.user.UsersController;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.persistence.entity.jobs.history.YarnApplicationstate;
 import io.hops.hopsworks.persistence.entity.project.Project;
@@ -113,6 +115,10 @@ public class YarnUIProxyServlet extends ProxyServlet {
   private ProjectTeamFacade projectTeamFacade;
   @EJB
   private ServiceDiscoveryController serviceDiscoveryController;
+  @EJB
+  private JWTHelper jwtHelper;
+  @EJB
+  private UsersController userController;
 
   private String isRemoving = null;
   private Service httpsResourceManager;
@@ -131,16 +137,15 @@ public class YarnUIProxyServlet extends ProxyServlet {
   }
   
   @Override
-  protected void service(HttpServletRequest servletRequest,
-    HttpServletResponse servletResponse)
+  protected void service(HttpServletRequest servletRequest, HttpServletResponse servletResponse)
     throws ServletException, IOException {
-    
-    if (servletRequest.getUserPrincipal() == null || (!servletRequest.isUserInRole("HOPS_ADMIN") && !servletRequest.
-      isUserInRole("HOPS_USER"))) {
-      servletResponse.sendError(403, "User is not logged in");
+    Users user = jwtHelper.validateAndRenewToken(servletRequest, servletResponse,
+      new HashSet<>(Arrays.asList("HOPS_ADMIN", "HOPS_USER")));
+    if (user == null) {
       return;
     }
-    if (!servletRequest.isUserInRole("HOPS_ADMIN")) {
+
+    if (!userController.isUserInRole(user, "HOPS_ADMIN")) {
       if (servletRequest.getRequestURI().contains("proxy/application")
         || servletRequest.getRequestURI().contains("app/application")
         || servletRequest.getRequestURI().contains("appattempt/appattempt")
@@ -149,7 +154,6 @@ public class YarnUIProxyServlet extends ProxyServlet {
         || servletRequest.getRequestURI().contains("history/application")
         || servletRequest.getRequestURI().contains("applications/application")) {
         
-        String email = servletRequest.getUserPrincipal().getName();
         Pattern pattern = Pattern.compile("(application_.*?_.\\d*)");
         Type type = Type.application;
         if (servletRequest.getRequestURI().contains("appattempt/appattempt")) {
@@ -160,7 +164,6 @@ public class YarnUIProxyServlet extends ProxyServlet {
           pattern = Pattern.compile("(container_e.*?_.*?_.\\d*)");
           type = Type.container;
         }
-        Users user = userFacade.findByEmail(email);
         Matcher matcher = pattern.matcher(servletRequest.getRequestURI());
         if (matcher.find()) {
           String appId = matcher.group(1);
@@ -246,11 +249,7 @@ public class YarnUIProxyServlet extends ProxyServlet {
           }
         }
       }
-      String user = servletRequest.getRemoteUser();
-      if (user != null && !user.isEmpty()) {
-        m.setRequestHeader("Cookie", "proxy-user" + "="
-          + URLEncoder.encode(user, "ASCII"));
-      }
+      m.setRequestHeader("Cookie", "proxy-user" + "=" + URLEncoder.encode(user.getEmail(), "ASCII"));
       
       client.executeMethod(config, m);
       

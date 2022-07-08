@@ -15,17 +15,23 @@
  */
 package io.hops.hopsworks.jwt.filter;
 
-import static io.hops.hopsworks.jwt.Constants.BEARER;
 import io.hops.hopsworks.jwt.exception.JWTException;
 import io.hops.hopsworks.jwt.exception.NotRenewableException;
-import java.io.IOException;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import io.hops.hopsworks.jwt.utils.ProxyAuthHelper;
+
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.ContainerResponseContext;
 import javax.ws.rs.container.ContainerResponseFilter;
-import static javax.ws.rs.core.HttpHeaders.AUTHORIZATION;
+import javax.ws.rs.core.Cookie;
+import javax.ws.rs.core.NewCookie;
 import javax.ws.rs.core.Response;
+import java.io.IOException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
+import static io.hops.hopsworks.jwt.Constants.BEARER;
+import static io.hops.hopsworks.jwt.Constants.PROXY_JWT_COOKIE_NAME;
+import static javax.ws.rs.core.HttpHeaders.AUTHORIZATION;
 
 public abstract class JWTRenewFilter implements ContainerResponseFilter {
 
@@ -37,11 +43,11 @@ public abstract class JWTRenewFilter implements ContainerResponseFilter {
     if (!responseContext.getStatusInfo().getFamily().equals(Response.Status.Family.SUCCESSFUL)) {
       return;
     }
-    String authorizationHeader = requestContext.getHeaderString(AUTHORIZATION);
-    if (authorizationHeader == null || !authorizationHeader.startsWith(BEARER)) {
-      return;
-    }
-    String jwt = authorizationHeader.substring(BEARER.length()).trim();
+    renewJWT(requestContext, responseContext);
+    renewProxyJWT(requestContext, responseContext);
+  }
+
+  private String renew(String jwt) {
     String token = null;
     try {
       token = renewToken(jwt);
@@ -52,10 +58,34 @@ public abstract class JWTRenewFilter implements ContainerResponseFilter {
     } catch (Exception e) {
       LOGGER.log(Level.SEVERE, "Failed to renew token.", e);
     }
+    return token;
+  }
+
+  private void renewJWT(ContainerRequestContext requestContext, ContainerResponseContext responseContext) {
+    String authorizationHeader = requestContext.getHeaderString(AUTHORIZATION);
+    if (authorizationHeader == null || !authorizationHeader.startsWith(BEARER)) {
+      return;
+    }
+    String jwt = authorizationHeader.substring(BEARER.length()).trim();
+    String token = renew(jwt);
     if (token != null) {
       responseContext.getHeaders().putSingle(AUTHORIZATION, BEARER + token);
     }
   }
 
+  private void renewProxyJWT(ContainerRequestContext requestContext, ContainerResponseContext responseContext) {
+    if (requestContext.getCookies().containsKey(PROXY_JWT_COOKIE_NAME)) {
+      Cookie cookie = requestContext.getCookies().get(PROXY_JWT_COOKIE_NAME);
+      String token = renew(cookie.getValue());
+      if (token != null) {
+        NewCookie newCookie =
+          ProxyAuthHelper.getNewCookie(token, getTokenLifeMs());
+        responseContext.getHeaders().add("Set-Cookie", newCookie);
+      }
+    }
+  }
+
   public abstract String renewToken(String token) throws JWTException;
+
+  public abstract long getTokenLifeMs();
 }

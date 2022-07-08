@@ -100,20 +100,25 @@ RSpec.configure do |config|
   config.include ModelRegistryHelper
   config.include OpensearchHelper
   config.include AuditHelper
+  config.include TagHelper
   config.include SearchHelper
   config.include XAttrHelper
   config.include EpipeHelper
   config.include ProvHelper
+  config.include ProvOpsHelper
   config.include FeatureStoreStatisticsHelper
   config.include FeatureStoreCodeHelper
   config.include StorageConnectorHelper
   config.include ProvAppHelper
+  config.include CloudRoleMappingHelper
   config.include DefaultJobConfigurationHelper
   config.include AlertHelper
   config.include ProjectServiceAlertHelper
   config.include FeatureGroupAlertHelper
   config.include JobAlertHelper
+  config.include DatasetTagHelper
   config.include GitHelper
+  config.include ProxyAuthHelper
   # uncomment next line if you need to clean hdfs and hopsworks db before test.
   # config.before(:suite) { clean_test_data }
   config.after(:suite) {
