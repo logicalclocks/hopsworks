@@ -39,7 +39,7 @@ describe "On #{ENV['OS']}" do
             {type: "INT", name: "b_testfeature1", featureGroupFeatureName: "b_testfeature1", label: false, transformationFunction: transformation_function}
           ]
 
-          json_result, _ = create_feature_view(@project.id, featurestore_id, query, features: feature_schema)
+          json_result = create_feature_view(@project.id, featurestore_id, query, features: feature_schema)
           parsed_json = JSON.parse(json_result)
           expect_status(201)
           feature_view_name = parsed_json["name"]

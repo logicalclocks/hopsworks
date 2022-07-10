@@ -22,6 +22,7 @@ import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupController
 import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupDTO;
 import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupFacade;
 import io.hops.hopsworks.common.featurestore.featuregroup.cached.CachedFeaturegroupController;
+import io.hops.hopsworks.common.featurestore.featuregroup.cached.FeatureGroupCommitController;
 import io.hops.hopsworks.common.featurestore.online.OnlineFeaturestoreController;
 import io.hops.hopsworks.common.featurestore.query.filter.Filter;
 import io.hops.hopsworks.common.featurestore.query.filter.FilterController;
@@ -34,6 +35,7 @@ import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.persistence.entity.featurestore.Featurestore;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.Featuregroup;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.cached.CachedFeaturegroup;
+import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.cached.FeatureGroupCommit;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.cached.TimeTravelFormat;
 import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.SqlCondition;
 import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.SqlFilterLogic;
@@ -50,6 +52,7 @@ import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.mockito.Mockito;
 
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -90,6 +93,7 @@ public class TestConstructorController {
   private OnlineFeaturestoreController onlineFeaturestoreController;
   private CachedFeaturegroupController cachedFeaturegroupController;
   private TrainingDatasetController trainingDatasetController;
+  private FeatureGroupCommitController featureGroupCommitController;
 
   private ConstructorController target;
   private FilterController filterController;
@@ -113,21 +117,25 @@ public class TestConstructorController {
     fg1.setVersion(1);
     fg1.setCachedFeaturegroup(cachedFeaturegroup);
     fg1.setFeaturestore(fs);
+
     fg2 = new Featuregroup(2);
     fg2.setName("fg2");
     fg2.setVersion(1);
     fg2.setCachedFeaturegroup(cachedFeaturegroup);
     fg2.setFeaturestore(fs);
+
     fg3 = new Featuregroup(3);
     fg3.setName("fg3");
     fg3.setVersion(1);
     fg3.setCachedFeaturegroup(cachedFeaturegroup);
     fg3.setFeaturestore(fs);
+
     fg4 = new Featuregroup(4);
     fg4.setName("fg4");
     fg4.setVersion(1);
     fg4.setCachedFeaturegroup(cachedFeaturegroup);
     fg4.setFeaturestore(fs);
+
     fgHudi = new Featuregroup(5);
     fgHudi.setName("fgHudi");
     fgHudi.setVersion(1);
@@ -173,23 +181,22 @@ public class TestConstructorController {
     featurestoreFacade = Mockito.mock(FeaturestoreFacade.class);
     onlineFeaturestoreController = Mockito.mock(OnlineFeaturestoreController.class);
     cachedFeaturegroupController = Mockito.mock(CachedFeaturegroupController.class);
+    featureGroupCommitController = Mockito.mock(FeatureGroupCommitController.class);
     trainingDatasetController = new TrainingDatasetController();
     project = Mockito.mock(Project.class);
     user = Mockito.mock(Users.class);
     filterController = new FilterController(new ConstructorController());
 
-    target = new ConstructorController(featuregroupController, featurestoreFacade,
-        featuregroupFacade, onlineFeaturestoreController, cachedFeaturegroupController, filterController,
-        new JoinController(new ConstructorController()));
+    target = new ConstructorController(featuregroupController, cachedFeaturegroupController,
+        filterController, new JoinController(new ConstructorController()));
     new JoinController(new ConstructorController());
 
     queryController = new QueryController(featuregroupController, featuregroupFacade, filterController,
-        featurestoreFacade,
-        onlineFeaturestoreController);
+        featurestoreFacade, onlineFeaturestoreController, featureGroupCommitController);
   }
 
 
-    @Test
+  @Test
   public void testExtractFeaturesBothSides() throws Exception {
     Mockito.when(featuregroupController.getFeatures(Mockito.any(), Mockito.any(), Mockito.any()))
         .thenReturn(fg1FeaturesDTO, fg2FeaturesDTO);
@@ -908,5 +915,154 @@ public class TestConstructorController {
     
     FsQueryDTO result = target.construct(query, false, false, project, user);
     Assert.assertEquals("Parent feature groups of the following features are not available anymore: feature_missing", result.getQuery());
+  }
+
+  @Test
+  public void testHudiTimestampsNoAsOf() throws Exception {
+    Mockito.when(featuregroupController.getFeatures(Mockito.any(), Mockito.any(), Mockito.any()))
+        .thenReturn(fg1FeaturesDTO);
+    Mockito.when(featuregroupFacade.findById(Mockito.any())).thenReturn(Optional.of(fgHudi));
+    Mockito.when(featurestoreFacade.getHiveDbName(Mockito.any())).thenReturn("fgHudi");
+
+    FeaturegroupDTO fgHudi = new FeaturegroupDTO();
+    fgHudi.setId(5);
+
+    List<FeatureGroupFeatureDTO> requestedFeatures = new ArrayList<>();
+    requestedFeatures.add(new FeatureGroupFeatureDTO("*"));
+
+    QueryDTO queryDTO = new QueryDTO(fgHudi, requestedFeatures, new ArrayList<>());
+
+    Map<Integer, String> fgAliasLookup = new HashMap<>();
+    Map<Integer, Featuregroup> fgLookup = new HashMap<>();
+    Map<Integer, List<Feature>> availableFeatureLookup = new HashMap<>();
+
+    queryController.populateFgLookupTables(queryDTO, 5, fgAliasLookup, fgLookup, availableFeatureLookup,
+        project, user, null);
+    Query query = queryController.convertQueryDTO(queryDTO, fgAliasLookup, fgLookup, availableFeatureLookup,
+        false);
+
+    Assert.assertNull(query.getLeftFeatureGroupEndTimestamp());
+    Assert.assertNull(query.getLeftFeatureGroupStartTimestamp());
+    Assert.assertNull(query.getLeftFeatureGroupEndCommitId());
+  }
+
+  @Test
+  public void testHudiTimestampsEndCommitExists() throws Exception {
+    Long currentTimestampLong = System.currentTimeMillis();
+    Timestamp currentTimestamp = new Timestamp(currentTimestampLong);
+    Long commitRequest = currentTimestampLong + 1000;
+
+    FeatureGroupCommit commit = new FeatureGroupCommit(5, currentTimestampLong);
+    commit.setCommittedOn(currentTimestamp);
+
+    Mockito.when(featuregroupController.getFeatures(Mockito.any(), Mockito.any(), Mockito.any()))
+        .thenReturn(fg1FeaturesDTO);
+    Mockito.when(featuregroupFacade.findById(Mockito.any())).thenReturn(Optional.of(fgHudi));
+    Mockito.when(featurestoreFacade.getHiveDbName(Mockito.any())).thenReturn("fgHudi");
+    Mockito.when(featureGroupCommitController.findCommitByDate(Mockito.any(), Mockito.eq(commitRequest)))
+        .thenReturn(Optional.of(commit));
+
+    FeaturegroupDTO fgHudi = new FeaturegroupDTO();
+    fgHudi.setId(5);
+
+    List<FeatureGroupFeatureDTO> requestedFeatures = new ArrayList<>();
+    requestedFeatures.add(new FeatureGroupFeatureDTO("*"));
+
+    QueryDTO queryDTO = new QueryDTO(fgHudi, requestedFeatures, new ArrayList<>());
+    queryDTO.setLeftFeatureGroupEndTime(commitRequest);
+
+    Map<Integer, String> fgAliasLookup = new HashMap<>();
+    Map<Integer, Featuregroup> fgLookup = new HashMap<>();
+    Map<Integer, List<Feature>> availableFeatureLookup = new HashMap<>();
+
+    queryController.populateFgLookupTables(queryDTO, 5, fgAliasLookup, fgLookup, availableFeatureLookup,
+        project, user, null);
+    Query query = queryController.convertQueryDTO(queryDTO, fgAliasLookup, fgLookup, availableFeatureLookup, false);
+
+    Assert.assertEquals(currentTimestampLong, query.getLeftFeatureGroupEndTimestamp());
+    Assert.assertEquals(currentTimestampLong, query.getLeftFeatureGroupEndCommitId());
+    Assert.assertNull(query.getLeftFeatureGroupStartTimestamp());
+  }
+
+  @Test
+  public void testHudiTimestampsEndCommitNoExists() throws Exception {
+    Long currentTimestampLong = System.currentTimeMillis();
+    Long commitRequest = currentTimestampLong + 1000;
+
+    Mockito.when(featuregroupController.getFeatures(Mockito.any(), Mockito.any(), Mockito.any()))
+        .thenReturn(fg1FeaturesDTO);
+    Mockito.when(featuregroupFacade.findById(Mockito.any())).thenReturn(Optional.of(fgHudi));
+    Mockito.when(featurestoreFacade.getHiveDbName(Mockito.any())).thenReturn("fgHudi");
+    Mockito.when(featureGroupCommitController.findCommitByDate(Mockito.any(), Mockito.eq(commitRequest)))
+        .thenReturn(Optional.empty());
+
+    FeaturegroupDTO fgHudi = new FeaturegroupDTO();
+    fgHudi.setId(5);
+
+    List<FeatureGroupFeatureDTO> requestedFeatures = new ArrayList<>();
+    requestedFeatures.add(new FeatureGroupFeatureDTO("*"));
+
+    QueryDTO queryDTO = new QueryDTO(fgHudi, requestedFeatures, new ArrayList<>());
+    queryDTO.setLeftFeatureGroupEndTime(commitRequest);
+
+    Map<Integer, String> fgAliasLookup = new HashMap<>();
+    Map<Integer, Featuregroup> fgLookup = new HashMap<>();
+    Map<Integer, List<Feature>> availableFeatureLookup = new HashMap<>();
+
+    queryController.populateFgLookupTables(queryDTO, 5, fgAliasLookup, fgLookup, availableFeatureLookup,
+        project, user, null);
+
+    thrown.expect(FeaturestoreException.class);
+    queryController.convertQueryDTO(queryDTO, fgAliasLookup, fgLookup, availableFeatureLookup, false);
+  }
+
+  @Test
+  public void testHudiTimestampsStartCommit() throws Exception {
+    Long currentTimestampLong = System.currentTimeMillis();
+
+    Long firstCommitLong = currentTimestampLong - 1000;
+    Timestamp firstCommitTimestamp = new Timestamp(firstCommitLong);
+    FeatureGroupCommit firstCommit = new FeatureGroupCommit(5, firstCommitLong);
+    firstCommit.setCommittedOn(firstCommitTimestamp);
+
+    Long secondCommitLong = currentTimestampLong + 1000;
+    Timestamp secondCommitTimestamp = new Timestamp(secondCommitLong);
+    FeatureGroupCommit secondCommit = new FeatureGroupCommit(5, secondCommitLong);
+    secondCommit.setCommittedOn(secondCommitTimestamp);
+
+    Long startRequest = currentTimestampLong;
+    Long endRequest = secondCommitLong + 1000;
+
+    Mockito.when(featuregroupController.getFeatures(Mockito.any(), Mockito.any(), Mockito.any()))
+        .thenReturn(fg1FeaturesDTO);
+    Mockito.when(featuregroupFacade.findById(Mockito.any())).thenReturn(Optional.of(fgHudi));
+    Mockito.when(featurestoreFacade.getHiveDbName(Mockito.any())).thenReturn("fgHudi");
+    Mockito.when(featureGroupCommitController.findCommitByDate(Mockito.any(), Mockito.eq(startRequest)))
+        .thenReturn(Optional.of(firstCommit));
+    Mockito.when(featureGroupCommitController.findCommitByDate(Mockito.any(), Mockito.eq(endRequest)))
+        .thenReturn(Optional.of(secondCommit));
+
+    FeaturegroupDTO fgHudi = new FeaturegroupDTO();
+    fgHudi.setId(5);
+
+    List<FeatureGroupFeatureDTO> requestedFeatures = new ArrayList<>();
+    requestedFeatures.add(new FeatureGroupFeatureDTO("*"));
+
+    QueryDTO queryDTO = new QueryDTO(fgHudi, requestedFeatures, new ArrayList<>());
+    queryDTO.setLeftFeatureGroupStartTime(startRequest);
+    queryDTO.setLeftFeatureGroupEndTime(endRequest);
+
+    Map<Integer, String> fgAliasLookup = new HashMap<>();
+    Map<Integer, Featuregroup> fgLookup = new HashMap<>();
+    Map<Integer, List<Feature>> availableFeatureLookup = new HashMap<>();
+
+    queryController.populateFgLookupTables(queryDTO, 5, fgAliasLookup, fgLookup, availableFeatureLookup,
+        project, user, null);
+    Query query = queryController.convertQueryDTO(queryDTO, fgAliasLookup, fgLookup, availableFeatureLookup, false);
+
+    Assert.assertEquals(secondCommitLong, query.getLeftFeatureGroupEndTimestamp());
+    Assert.assertEquals(secondCommitLong, query.getLeftFeatureGroupEndCommitId());
+
+    Assert.assertEquals(firstCommitLong, query.getLeftFeatureGroupStartTimestamp());
   }
 }

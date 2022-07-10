@@ -23,7 +23,6 @@ import io.hops.hopsworks.common.featurestore.activity.FeaturestoreActivityFacade
 import io.hops.hopsworks.common.featurestore.feature.TrainingDatasetFeatureDTO;
 import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupController;
 import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupDTO;
-import io.hops.hopsworks.common.featurestore.featuregroup.cached.FeatureGroupCommitController;
 import io.hops.hopsworks.common.featurestore.featuregroup.online.OnlineFeaturegroupController;
 import io.hops.hopsworks.common.featurestore.online.OnlineFeaturestoreController;
 import io.hops.hopsworks.common.featurestore.query.Feature;
@@ -60,7 +59,6 @@ import io.hops.hopsworks.persistence.entity.featurestore.Featurestore;
 import io.hops.hopsworks.persistence.entity.featurestore.activity.FeaturestoreActivityMeta;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.Featuregroup;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.FeaturegroupType;
-import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.cached.FeatureGroupCommit;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.cached.TimeTravelFormat;
 import io.hops.hopsworks.persistence.entity.featurestore.featureview.FeatureView;
 import io.hops.hopsworks.persistence.entity.featurestore.statistics.StatisticColumn;
@@ -160,8 +158,6 @@ public class TrainingDatasetController {
   private QueryController queryController;
   @EJB
   private ActivityFacade activityFacade;
-  @EJB
-  private FeatureGroupCommitController featureGroupCommitCommitController;
   @EJB
   private QuotasEnforcement quotasEnforcement;
 
@@ -656,13 +652,16 @@ public class TrainingDatasetController {
   }
 
   public List<TrainingDatasetJoin> collectJoins(Query query, TrainingDataset trainingDataset,
-      FeatureView featureView) {
+                                                FeatureView featureView) {
     List<TrainingDatasetJoin> joins = new ArrayList<>();
     // add the first feature group
+    Featuregroup featuregroup = query.getFeaturegroup();
     int index = 0;
-    if (query.getFeaturegroup().getFeaturegroupType() == FeaturegroupType.CACHED_FEATURE_GROUP &&
-        query.getFeaturegroup().getCachedFeaturegroup().getTimeTravelFormat() == TimeTravelFormat.HUDI){
-      joins.add(makeTrainingDatasetJoin(trainingDataset, featureView, query.getFeaturegroup(),
+    if ((featuregroup.getFeaturegroupType() == FeaturegroupType.CACHED_FEATURE_GROUP &&
+        featuregroup.getCachedFeaturegroup().getTimeTravelFormat() == TimeTravelFormat.HUDI) ||
+        featuregroup.getFeaturegroupType() == FeaturegroupType.STREAM_FEATURE_GROUP
+    ){
+      joins.add(makeTrainingDatasetJoin(trainingDataset, featureView, featuregroup,
           query.getLeftFeatureGroupEndCommitId() , (short) 0, index++, null));
     } else {
       joins.add(makeTrainingDatasetJoin(trainingDataset, featureView, query.getFeaturegroup(),
@@ -672,15 +671,18 @@ public class TrainingDatasetController {
     if (query.getJoins() != null && !query.getJoins().isEmpty()) {
       for (Join join : query.getJoins()) {
         TrainingDatasetJoin tdJoin;
-        if (query.getFeaturegroup().getFeaturegroupType() == FeaturegroupType.CACHED_FEATURE_GROUP &&
-            query.getFeaturegroup().getCachedFeaturegroup().getTimeTravelFormat() == TimeTravelFormat.HUDI){
+        Featuregroup rightFeaturegroup = join.getRightQuery().getFeaturegroup();
+        if ((rightFeaturegroup.getFeaturegroupType() == FeaturegroupType.CACHED_FEATURE_GROUP &&
+            rightFeaturegroup.getCachedFeaturegroup().getTimeTravelFormat() == TimeTravelFormat.HUDI) ||
+            rightFeaturegroup.getFeaturegroupType() == FeaturegroupType.STREAM_FEATURE_GROUP
+        ){
           tdJoin = makeTrainingDatasetJoin(trainingDataset, featureView,
-              join.getRightQuery().getFeaturegroup(), join.getRightQuery().getLeftFeatureGroupEndCommitId(),
+              rightFeaturegroup, join.getRightQuery().getLeftFeatureGroupEndCommitId(),
               (short) join.getJoinType().ordinal(),
               index++, join.getPrefix());
         } else {
           tdJoin = makeTrainingDatasetJoin(trainingDataset, featureView,
-              join.getRightQuery().getFeaturegroup(), null,
+              rightFeaturegroup, null,
               (short) join.getJoinType().ordinal(),
               index++, join.getPrefix());
         }
@@ -989,16 +991,6 @@ public class TrainingDatasetController {
     return getQuery(joins, tdFeatures, trainingDataset.getFilters(), project, user, isHiveEngine);
   }
 
-  private void setCommitTime(Query query) throws FeaturestoreException {
-    if (query.getFeaturegroup().getCachedFeaturegroup() != null &&
-        query.getFeaturegroup().getCachedFeaturegroup().getTimeTravelFormat() == TimeTravelFormat.HUDI) {
-      FeatureGroupCommit endCommit =
-          featureGroupCommitCommitController.findCommitByDate(query.getFeaturegroup(), null);
-      query.setLeftFeatureGroupEndTimestamp(endCommit.getCommittedOn());
-      query.setLeftFeatureGroupEndCommitId(endCommit.getFeatureGroupCommitPK().getCommitId());
-    }
-  }
-
   public Query getQuery(List<TrainingDatasetJoin> joins, List<TrainingDatasetFeature> tdFeatures,
                         Collection<TrainingDatasetFilter> trainingDatasetFilters, Project project,
                         Users user, Boolean isHiveEngine) throws FeaturestoreException {
@@ -1071,8 +1063,6 @@ public class TrainingDatasetController {
     query.setJoins(queryJoins);
     FilterLogic filterLogic = convertToFilterLogic(trainingDatasetFilters, featureLookup, "L");
     query.setFilter(filterLogic);
-
-    setCommitTime(query);
 
     return query;
   }
@@ -1234,8 +1224,6 @@ public class TrainingDatasetController {
         new ArrayList<>(),
         availableFeaturesLookup.get(rightTdJoin.getFeatureGroup().getId()),
         isHiveEngine);
-
-    setCommitTime(rightQuery);
 
     List<Feature> leftOn = rightTdJoin.getConditions().stream()
       .map(c -> new Feature(c.getLeftFeature())).collect(Collectors.toList());

@@ -28,7 +28,6 @@ import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.cached.Fea
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.cached.hive.HiveTbls;
 import io.hops.hopsworks.persistence.entity.hdfs.inode.Inode;
 import io.hops.hopsworks.persistence.entity.user.Users;
-import io.hops.hopsworks.restutils.RESTCodes;
 import org.apache.hadoop.fs.Path;
 
 import javax.ejb.EJB;
@@ -89,18 +88,12 @@ public class FeatureGroupCommitController {
     return featureGroupCommit;
   }
 
-  public FeatureGroupCommit findCommitByDate(Featuregroup featuregroup, Long commitTimestamp)
-      throws FeaturestoreException {
-    Optional<FeatureGroupCommit> featureGroupCommit;
+  public Optional<FeatureGroupCommit> findCommitByDate(Featuregroup featuregroup, Long commitTimestamp) {
     if (commitTimestamp != null){
-      featureGroupCommit = featureGroupCommitFacade.findClosestDateCommit(featuregroup.getId(),  commitTimestamp);
+      return featureGroupCommitFacade.findClosestDateCommit(featuregroup.getId(), commitTimestamp);
     } else {
-      featureGroupCommit = featureGroupCommitFacade.findLatestDateCommit(featuregroup.getId());
+      return featureGroupCommitFacade.findLatestDateCommit(featuregroup.getId());
     }
-
-    return featureGroupCommit.orElseThrow(() -> new FeaturestoreException(
-        RESTCodes.FeaturestoreErrorCode.NO_DATA_AVAILABLE_FEATUREGROUP_COMMITDATE, Level.FINE, "featureGroup: "
-        + featuregroup.getName() + " version " + featuregroup.getVersion()));
   }
 
   public CollectionInfo getCommitDetails(Integer featureGroupId, Integer limit, Integer offset,

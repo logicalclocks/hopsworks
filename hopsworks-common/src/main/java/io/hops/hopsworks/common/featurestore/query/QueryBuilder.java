@@ -148,7 +148,7 @@ public class QueryBuilder {
             .collect(Collectors.toList())
     );
     queryDTO.setLeftFeatureGroupStartTime(leftFeatureGroupStartTime);
-    query.setLeftFeatureGroupEndTimestamp(leftFeatureGroupEndTime);
+    queryDTO.setLeftFeatureGroupEndTime(leftFeatureGroupEndTime);
     queryDTO.setFilter(filter);
     queryDTO.setHiveEngine(hiveEngine);
     queryDTO.setJoins(joins);

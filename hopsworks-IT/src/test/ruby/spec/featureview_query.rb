@@ -30,7 +30,7 @@ describe "On #{ENV['OS']}" do
           featuregroup_suffix = short_random_id
           project_name = @project.projectname.downcase
           query = make_sample_query(@project, featurestore_id, featuregroup_suffix: featuregroup_suffix)
-          json_result, _ = create_feature_view(@project.id, featurestore_id, query)
+          json_result = create_feature_view(@project.id, featurestore_id, query)
           parsed_json = JSON.parse(json_result)
           expect_status(201)
 
@@ -67,7 +67,7 @@ describe "On #{ENV['OS']}" do
           project_name = @project.projectname.downcase
           featuregroup_suffix = short_random_id
           query = make_sample_query(@project, featurestore_id, featuregroup_suffix: featuregroup_suffix)
-          json_result, _ = create_feature_view(@project.id, featurestore_id, query)
+          json_result = create_feature_view(@project.id, featurestore_id, query)
           parsed_json = JSON.parse(json_result)
           expect_status(201)
 
@@ -94,7 +94,7 @@ describe "On #{ENV['OS']}" do
           project_name = @project.projectname.downcase
           featuregroup_suffix = short_random_id
           query = make_sample_query(@project, featurestore_id, featuregroup_suffix: featuregroup_suffix)
-          json_result, _ = create_feature_view(@project.id, featurestore_id, query)
+          json_result = create_feature_view(@project.id, featurestore_id, query)
           expect_status(201)
           parsed_json = JSON.parse(json_result)
 
@@ -103,7 +103,7 @@ describe "On #{ENV['OS']}" do
           query_result = get "#{ENV['HOPSWORKS_API']}/project/#{@project.id}/featurestores/#{featurestore_id}/featureview/#{feature_view_name}/version/#{feature_view_version}/query"
           expect_status_details(200)
           parsed_query_result = JSON.parse(query_result)
-          json_result, _ = create_feature_view(@project.id, featurestore_id, parsed_query_result)
+          json_result = create_feature_view(@project.id, featurestore_id, parsed_query_result)
           expect_status(201)
           parsed_json_new = JSON.parse(json_result)
           feature_view_version_new = parsed_json_new["version"]

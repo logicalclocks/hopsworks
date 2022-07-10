@@ -69,7 +69,7 @@ public class QueryController {
   @EJB
   private FeaturegroupFacade featuregroupFacade;
   @EJB
-  private FeatureGroupCommitController featureGroupCommitCommitController;
+  private FeatureGroupCommitController featureGroupCommitController;
   @EJB
   private FilterController filterController;
   @EJB
@@ -83,15 +83,16 @@ public class QueryController {
   public QueryController() {
   }
 
-  public QueryController(FeaturegroupController featuregroupController,
-      FeaturegroupFacade featuregroupFacade,
-      FilterController filterController, FeaturestoreFacade featurestoreFacade,
-      OnlineFeaturestoreController onlineFeaturestoreController) {
+  public QueryController(FeaturegroupController featuregroupController, FeaturegroupFacade featuregroupFacade,
+                         FilterController filterController, FeaturestoreFacade featurestoreFacade,
+                         OnlineFeaturestoreController onlineFeaturestoreController,
+                         FeatureGroupCommitController featureGroupCommitController) {
     this.featuregroupController = featuregroupController;
     this.featuregroupFacade = featuregroupFacade;
     this.filterController = filterController;
     this.featurestoreFacade = featurestoreFacade;
     this.onlineFeaturestoreController = onlineFeaturestoreController;
+    this.featureGroupCommitController = featureGroupCommitController;
   }
 
   public Query convertQueryDTO(Project project, Users user, QueryDTO queryDTO, boolean pitEnabled)
@@ -104,8 +105,7 @@ public class QueryController {
 
     populateFgLookupTables(queryDTO, 0, fgAliasLookup, fgLookup, availableFeatureLookup, project, user, null);
 
-    Query query = convertQueryDTO(queryDTO, fgAliasLookup, fgLookup, availableFeatureLookup, pitEnabled);
-    return query;
+    return convertQueryDTO(queryDTO, fgAliasLookup, fgLookup, availableFeatureLookup, pitEnabled);
   }
 
   /**
@@ -131,27 +131,40 @@ public class QueryController {
     Query query = new Query(featureStore, projectName, fg, fgAliasLookup.get(fgId), requestedFeatures,
         availableFeatureLookup.get(fgId), queryDTO.getHiveEngine());
 
-    if (fg.getStreamFeatureGroup() != null || (fg.getCachedFeaturegroup() != null &&
+    if (fg.getStreamFeatureGroup() != null ||
+        (fg.getCachedFeaturegroup() != null &&
         fg.getCachedFeaturegroup().getTimeTravelFormat() == TimeTravelFormat.HUDI)) {
       // if hudi and end hive engine, only possible to get latest snapshot else raise exception
       if (queryDTO.getHiveEngine() && (queryDTO.getLeftFeatureGroupEndTime() != null
           || queryDTO.getJoins().stream().anyMatch(join -> join.getQuery().getLeftFeatureGroupEndTime() != null))) {
-        throw new IllegalArgumentException("Hive engine on Python environments does not support incremental or " +
-            "snapshot queries. Read feature group without timestamp to retrieve latest snapshot or switch to " +
+        throw new IllegalArgumentException("Hive engine on Python environments does not support incremental queries. " +
+            "Read feature group without timestamp to retrieve latest snapshot or switch to " +
             "environment with Spark Engine.");
       }
 
-      // If the feature group is hudi, validate and configure start and end commit id/timestamp
-      FeatureGroupCommit endCommit =
-          featureGroupCommitCommitController.findCommitByDate(fg, queryDTO.getLeftFeatureGroupEndTime());
-      query.setLeftFeatureGroupEndTimestamp(endCommit.getCommittedOn());
-      query.setLeftFeatureGroupEndCommitId(endCommit.getFeatureGroupCommitPK().getCommitId());
+      // if a user specified a point in time in the request use it, otherwise set null and let the HSFS
+      // APIs use SNAPSHOT query. the end time field will trigger an INCREMENTAL query. Incremental queries
+      // only take into consideration the active commits, i.e. not the commits that have been archived by Hudi.
+      // By default HUDI keeps the last 20 commits on the active timeline.
+      if (queryDTO.getLeftFeatureGroupEndTime() != null) {
+        FeatureGroupCommit endCommit =
+            featureGroupCommitController.findCommitByDate(fg, queryDTO.getLeftFeatureGroupEndTime())
+                .orElseThrow(() -> new FeaturestoreException(
+                    RESTCodes.FeaturestoreErrorCode.NO_DATA_AVAILABLE_FEATUREGROUP_COMMITDATE, Level.FINE,
+                    "featureGroup: " + fg.getName() + " version " + fg.getVersion()));
+
+        query.setLeftFeatureGroupEndTimestamp(endCommit.getCommittedOn());
+        query.setLeftFeatureGroupEndCommitId(endCommit.getFeatureGroupCommitPK().getCommitId());
+      }
 
       if ((queryDTO.getJoins() == null || queryDTO.getJoins().isEmpty())
           && queryDTO.getLeftFeatureGroupStartTime() != null){
-        Long exactStartCommitTimestamp = featureGroupCommitCommitController.findCommitByDate(
-            query.getFeaturegroup(), queryDTO.getLeftFeatureGroupStartTime()).getCommittedOn();
-        query.setLeftFeatureGroupStartTimestamp(exactStartCommitTimestamp);
+        FeatureGroupCommit startCommit = featureGroupCommitController.findCommitByDate(
+                query.getFeaturegroup(), queryDTO.getLeftFeatureGroupStartTime())
+            .orElseThrow(() -> new FeaturestoreException(
+                RESTCodes.FeaturestoreErrorCode.NO_DATA_AVAILABLE_FEATUREGROUP_COMMITDATE, Level.FINE,
+                "featureGroup: " + fg.getName() + " version " + fg.getVersion()));
+        query.setLeftFeatureGroupStartTimestamp(startCommit.getCommittedOn());
       } else if (queryDTO.getJoins() != null && queryDTO.getLeftFeatureGroupStartTime() != null) {
         throw new IllegalArgumentException("For incremental queries start time must be provided and "
             + "join statements are not allowed");

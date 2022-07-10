@@ -225,7 +225,7 @@ describe "On #{ENV['OS']}" do
         joins: []
       }
 
-      json_result, _ = create_feature_view(@project.id, featurestore_id, query)
+      json_result = create_feature_view(@project.id, featurestore_id, query)
       parsed_json = JSON.parse(json_result)
       expect_status(201)
 

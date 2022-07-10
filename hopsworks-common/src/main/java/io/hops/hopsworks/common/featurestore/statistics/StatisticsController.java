@@ -93,23 +93,20 @@ public class StatisticsController {
                                                   Long fgCommitId, String content, Featuregroup featuregroup)
       throws FeaturestoreException, DatasetException, HopsSecurityException, IOException {
     JSONObject statisticsJson = extractJsonFromContent(content);
-    FeatureGroupCommit featureGroupCommit = null;
-    if (featuregroup.getFeaturegroupType() == FeaturegroupType.CACHED_FEATURE_GROUP &&
-        featuregroup.getCachedFeaturegroup().getTimeTravelFormat() == TimeTravelFormat.HUDI) {
+    Optional<FeatureGroupCommit> featureGroupCommit = Optional.empty();
+    if ((featuregroup.getFeaturegroupType() == FeaturegroupType.CACHED_FEATURE_GROUP &&
+        featuregroup.getCachedFeaturegroup().getTimeTravelFormat() == TimeTravelFormat.HUDI) ||
+        featuregroup.getFeaturegroupType() == FeaturegroupType.STREAM_FEATURE_GROUP
+    ) {
       featureGroupCommit = featureGroupCommitCommitController.findCommitByDate(featuregroup, fgCommitId);
       // Statistics commitTimeStamp will be always system time sent from client if user wants to recompute
       // statistics on particular commit id (i.e. fgCommitId was provided). If fgCommitId is null
       // it means: 1) client issued save or insert method; here statistics commitTimeStamp will be featureGroupCommit;
       // 2) Or it is recomputing statistics of existing time travel enabled feature group. Here latest fg commit
       // timestamp will be used to read dataset and as statistics commit time client system time will be provided.
-
-      // if statistics was never saved for this commit then it will return null
-      FeaturestoreStatistic statisticsFgCommit = featurestoreStatisticFacade.findFGStatisticsByCommitTime(
-          featuregroup, featureGroupCommit.getCommittedOn()).orElse(null);
-
-      statisticsCommitTimeStamp = statisticsFgCommit == null
-          ? featureGroupCommit.getCommittedOn()
-          : statisticsCommitTimeStamp;
+      if (featureGroupCommit.isPresent()) {
+        statisticsCommitTimeStamp = featureGroupCommit.get().getCommittedOn();
+      }
     }
 
     Inode statisticsInode = registerStatistics(project, user, statisticsCommitTimeStamp, statisticsJson.toString(),
@@ -117,10 +114,10 @@ public class StatisticsController {
     Timestamp commitTime = new Timestamp(statisticsCommitTimeStamp);
 
     FeaturestoreStatistic featurestoreStatistic = new FeaturestoreStatistic(commitTime, statisticsInode, featuregroup);
-    if (featuregroup.getFeaturegroupType() == FeaturegroupType.CACHED_FEATURE_GROUP &&
-        featuregroup.getCachedFeaturegroup().getTimeTravelFormat() == TimeTravelFormat.HUDI)  {
-      featurestoreStatistic.setFeatureGroupCommit(featureGroupCommit);
+    if (featureGroupCommit.isPresent()) {
+      featurestoreStatistic.setFeatureGroupCommit(featureGroupCommit.get());
     }
+
     featurestoreStatistic = featurestoreStatisticFacade.update(featurestoreStatistic);
 
     // Log statistics activity

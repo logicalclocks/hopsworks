@@ -45,7 +45,7 @@ describe "On #{ENV['OS']}" do
             joins: []
           }
 		  
-          json_result, _ = create_feature_view(@project.id, featurestore_id, query)
+          json_result = create_feature_view(@project.id, featurestore_id, query)
           parsed_json = JSON.parse(json_result)
           expect_status_details(201)
           feature_view_name = parsed_json["name"]
@@ -85,7 +85,7 @@ describe "On #{ENV['OS']}" do
             joins: []
           }
 		  
-          json_result, _ = create_feature_view(@project.id, featurestore_id, query)
+          json_result = create_feature_view(@project.id, featurestore_id, query)
           parsed_json = JSON.parse(json_result)
           expect_status_details(201)
           feature_view_name = parsed_json["name"]
@@ -126,7 +126,7 @@ describe "On #{ENV['OS']}" do
             joins: []
           }
 
-          json_result, _ = create_feature_view(@project.id, featurestore_id, query)
+          json_result = create_feature_view(@project.id, featurestore_id, query)
           parsed_json = JSON.parse(json_result)
           expect_status_details(201)
           feature_view_name = parsed_json["name"]
@@ -158,7 +158,7 @@ describe "On #{ENV['OS']}" do
             joins: []
           }
 
-          json_result, _ = create_feature_view(@project.id, featurestore_id, query)
+          json_result = create_feature_view(@project.id, featurestore_id, query)
           parsed_json = JSON.parse(json_result)
           expect_status_details(201)
           feature_view_name = parsed_json["name"]
@@ -235,7 +235,7 @@ describe "On #{ENV['OS']}" do
           joins: []
       }
 
-      json_result, _ = create_feature_view(@project1.id, featurestore_id, query)
+      json_result = create_feature_view(@project1.id, featurestore_id, query)
       parsed_json = JSON.parse(json_result)
       expect_status_details(201)
       feature_view_name = parsed_json["name"]

@@ -162,7 +162,6 @@ public class Query {
     this.leftFeatureGroupEndTimestamp = leftFeatureGroupEndTimestamp;
   }
 
-
   public Long getLeftFeatureGroupEndCommitId() {
     return leftFeatureGroupEndCommitId;
   }
