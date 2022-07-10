@@ -165,7 +165,7 @@ describe "On #{ENV['OS']}" do
           featurestore_id = get_featurestore_id(@project.id)
           featuregroup_suffix = short_random_id
           query = make_sample_query(@project, featurestore_id, featuregroup_suffix: featuregroup_suffix)
-          json_result, _ = create_feature_view(@project.id, featurestore_id, query)
+          json_result = create_feature_view(@project.id, featurestore_id, query)
           expect_status(201)
           featureview = JSON.parse(json_result)
           td = create_featureview_training_dataset(@project.id, featureview, nil)
@@ -467,7 +467,7 @@ describe "On #{ENV['OS']}" do
           featurestore_id = get_featurestore_id(@project.id)
           featuregroup_suffix = short_random_id
           query = make_sample_query(@project, featurestore_id, featuregroup_suffix: featuregroup_suffix)
-          json_result, _ = create_feature_view(@project.id, featurestore_id, query)
+          json_result = create_feature_view(@project.id, featurestore_id, query)
           expect_status(201)
           featureview = JSON.parse(json_result)
           create_featureview_training_dataset(@project.id, featureview, nil, is_internal: false)

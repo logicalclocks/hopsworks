@@ -743,7 +743,7 @@ module FeaturestoreHelper
     pp json_data.to_json if defined?(@debugOpt) && @debugOpt
     json_result = post create_featureview_endpoint, json_data.to_json
     pp JSON.parse(json_result) if defined?(@debugOpt) && @debugOpt
-    [json_result, name]
+    json_result
   end
 
   def create_feature_view_from_feature_group2(project_id, fg, name: nil, version: 1, description: nil,
@@ -826,7 +826,7 @@ module FeaturestoreHelper
     featurestore_id = get_featurestore_id(project.id)
     featuregroup_suffix = short_random_id
     query = make_sample_query(project, featurestore_id, featuregroup_suffix: featuregroup_suffix)
-    json_result, _ = create_feature_view(project.id, featurestore_id, query)
+    json_result = create_feature_view(project.id, featurestore_id, query)
     expect_status(201)
     featureview = JSON.parse(json_result)
 

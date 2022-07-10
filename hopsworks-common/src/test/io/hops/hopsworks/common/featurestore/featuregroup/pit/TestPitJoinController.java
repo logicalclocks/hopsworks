@@ -16,12 +16,9 @@
 
 package io.hops.hopsworks.common.featurestore.featuregroup.pit;
 
-import io.hops.hopsworks.common.featurestore.FeaturestoreFacade;
 import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupController;
 import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupDTO;
-import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupFacade;
 import io.hops.hopsworks.common.featurestore.featuregroup.cached.CachedFeaturegroupController;
-import io.hops.hopsworks.common.featurestore.online.OnlineFeaturestoreController;
 import io.hops.hopsworks.common.featurestore.query.ConstructorController;
 import io.hops.hopsworks.common.featurestore.query.Feature;
 import io.hops.hopsworks.common.featurestore.query.Query;
@@ -95,15 +92,12 @@ public class TestPitJoinController {
     fgRight1.setFeaturestore(fs);
     
     FeaturegroupController featuregroupController = Mockito.mock(FeaturegroupController.class);
-    FeaturegroupFacade featuregroupFacade = Mockito.mock(FeaturegroupFacade.class);
-    FeaturestoreFacade featurestoreFacade = Mockito.mock(FeaturestoreFacade.class);
-    OnlineFeaturestoreController onlineFeaturestoreController = Mockito.mock(OnlineFeaturestoreController.class);
     CachedFeaturegroupController cachedFeaturegroupController = Mockito.mock(CachedFeaturegroupController.class);
     FilterController filterController = new FilterController(new ConstructorController());
     JoinController joinController = new JoinController(new ConstructorController());
   
-    ConstructorController constructorController = new ConstructorController(featuregroupController, featurestoreFacade,
-      featuregroupFacade, onlineFeaturestoreController, cachedFeaturegroupController, filterController, joinController);
+    ConstructorController constructorController = new ConstructorController(
+        featuregroupController, cachedFeaturegroupController, filterController, joinController);
     
     pitJoinController = new PitJoinController(constructorController, filterController, joinController);
   }

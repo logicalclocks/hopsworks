@@ -149,7 +149,7 @@ describe "On #{ENV['OS']}" do
                                query: "&type=DATASET")
           expect_status(200)
 
-          delete_feature_view(@project.id, featurestore_id, parsed_json["name"])
+          delete_feature_view(@project.id, parsed_json["name"], feature_store_id: featurestore_id)
           expect_status(200)
         end
 
@@ -324,7 +324,7 @@ describe "On #{ENV['OS']}" do
               },
               leftFeatures: [{name: 'testfeature'}, {name: 'testfeature1'}]
           }
-          json_result, _ = create_feature_view(@project.id, featurestore_id, query)
+          json_result = create_feature_view(@project.id, featurestore_id, query)
           expect_status_details(201)
           feature_view = JSON.parse(json_result)
 
@@ -356,7 +356,7 @@ describe "On #{ENV['OS']}" do
               {type: "INT", name: "testfeature", label: true},
               {type: "INT", name: "testfeature1", label: false},
           ]
-          json_result, _ = create_feature_view(@project.id, featurestore_id, query, features: features)
+          json_result = create_feature_view(@project.id, featurestore_id, query, features: features)
           expect_status_details(201)
           feature_view = JSON.parse(json_result)
 

@@ -76,7 +76,6 @@ public class TestQueryController {
   private FeaturestoreFacade featurestoreFacade;
   private FeaturegroupFacade featuregroupFacade;
   private OnlineFeaturestoreController onlineFeaturestoreController;
-  private CachedFeaturegroupController cachedFeaturegroupController;
 
   private QueryController target;
   private FilterController filterController;
@@ -158,13 +157,12 @@ public class TestQueryController {
     featuregroupFacade = Mockito.mock(FeaturegroupFacade.class);
     featurestoreFacade = Mockito.mock(FeaturestoreFacade.class);
     onlineFeaturestoreController = Mockito.mock(OnlineFeaturestoreController.class);
-    cachedFeaturegroupController = Mockito.mock(CachedFeaturegroupController.class);
     project = Mockito.mock(Project.class);
     user = Mockito.mock(Users.class);
     filterController = new FilterController(new ConstructorController());
 
     target = new QueryController(featuregroupController, featuregroupFacade, filterController, featurestoreFacade,
-        onlineFeaturestoreController);
+        onlineFeaturestoreController, null);
       new JoinController(new ConstructorController());
   }
 

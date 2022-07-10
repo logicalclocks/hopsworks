@@ -50,6 +50,7 @@ import javax.ejb.TransactionAttributeType;
 import java.io.IOException;
 import java.sql.Timestamp;
 import java.util.Locale;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.logging.Level;
 
@@ -145,11 +146,13 @@ public class CodeController {
     Timestamp commitTime = new Timestamp(codeCommitTimeStamp);
     FeaturestoreCode featurestoreCode = new FeaturestoreCode(commitTime, codeInode, featuregroup, applicationId);
 
-    if (featuregroup.getFeaturegroupType() == FeaturegroupType.CACHED_FEATURE_GROUP &&
-            featuregroup.getCachedFeaturegroup().getTimeTravelFormat() == TimeTravelFormat.HUDI) {
-      FeatureGroupCommit featureGroupCommit =
+    if ((featuregroup.getFeaturegroupType() == FeaturegroupType.CACHED_FEATURE_GROUP &&
+        featuregroup.getCachedFeaturegroup().getTimeTravelFormat() == TimeTravelFormat.HUDI) ||
+        featuregroup.getFeaturegroupType() == FeaturegroupType.STREAM_FEATURE_GROUP
+    ) {
+      Optional<FeatureGroupCommit> featureGroupCommit =
               featureGroupCommitCommitController.findCommitByDate(featuregroup, fgCommitId);
-      featurestoreCode.setFeatureGroupCommit(featureGroupCommit);
+      featureGroupCommit.ifPresent(featurestoreCode::setFeatureGroupCommit);
     }
 
     return featurestoreCodeFacade.update(featurestoreCode);

@@ -17,16 +17,11 @@
 package io.hops.hopsworks.common.featurestore.query;
 
 import com.logicalclocks.servicediscoverclient.exceptions.ServiceDiscoveryException;
-import io.hops.hopsworks.common.featurestore.FeaturestoreFacade;
-import io.hops.hopsworks.common.featurestore.feature.FeatureGroupFeatureDTO;
 import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupController;
-import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupDTO;
-import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupFacade;
 import io.hops.hopsworks.common.featurestore.featuregroup.cached.CachedFeaturegroupController;
 import io.hops.hopsworks.common.featurestore.featuregroup.cached.CachedFeaturegroupDTO;
 import io.hops.hopsworks.common.featurestore.featuregroup.ondemand.OnDemandFeaturegroupDTO;
 import io.hops.hopsworks.common.featurestore.featuregroup.stream.StreamFeatureGroupDTO;
-import io.hops.hopsworks.common.featurestore.online.OnlineFeaturestoreController;
 import io.hops.hopsworks.common.featurestore.query.filter.FilterController;
 import io.hops.hopsworks.common.featurestore.query.join.Join;
 import io.hops.hopsworks.common.featurestore.query.join.JoinController;
@@ -89,9 +84,6 @@ public class ConstructorController {
 
   // For testing
   public ConstructorController(FeaturegroupController featuregroupController,
-      FeaturestoreFacade featurestoreFacade,
-      FeaturegroupFacade featuregroupFacade,
-      OnlineFeaturestoreController onlineFeaturestoreController,
       CachedFeaturegroupController cachedFeaturegroupController,
       FilterController filterController,
       JoinController joinController) {
@@ -117,8 +109,8 @@ public class ConstructorController {
     }
 
     fsQueryDTO.setQuery(makeOfflineQuery(query));
-    fsQueryDTO.setHudiCachedFeatureGroups(getHudiAliases(query, new ArrayList<>(), project, user));
-    fsQueryDTO.setOnDemandFeatureGroups(getOnDemandAliases(user, project, query, new ArrayList<>()));
+    fsQueryDTO.setHudiCachedFeatureGroups(getHudiAliases(query));
+    fsQueryDTO.setOnDemandFeatureGroups(getOnDemandAliases(user, project, query));
 
     // if on-demand feature groups are involved in the query, we don't support online queries
     if (fsQueryDTO.getOnDemandFeatureGroups().isEmpty()) {
@@ -301,60 +293,41 @@ public class ConstructorController {
     }
   }
 
-  public List<HudiFeatureGroupAliasDTO> getHudiAliases(Query query, List<HudiFeatureGroupAliasDTO> aliases,
-      Project project, Users user)
-      throws FeaturestoreException, ServiceException {
+  public List<HudiFeatureGroupAliasDTO> getHudiAliases(Query query) throws ServiceException {
+    List<HudiFeatureGroupAliasDTO> aliases = new ArrayList<>();
+
     if ((query.getFeaturegroup().getFeaturegroupType() == FeaturegroupType.CACHED_FEATURE_GROUP &&
         query.getFeaturegroup().getCachedFeaturegroup().getTimeTravelFormat() == TimeTravelFormat.HUDI)) {
-      
+
       CachedFeaturegroupDTO featuregroupDTO = new CachedFeaturegroupDTO(query.getFeaturegroup());
       Featuregroup featuregroup = query.getFeaturegroup();
-      List<FeatureGroupFeatureDTO> featureGroupFeatureDTOS =
-        cachedFeaturegroupController.getFeaturesDTO(featuregroup.getCachedFeaturegroup(), featuregroup.getId(),
-          featuregroup.getFeaturestore(), project, user);
-      featuregroupDTO.setFeatures(featureGroupFeatureDTOS);
-
       featuregroupDTO.setLocation(featurestoreUtils.resolveLocationURI(
           featuregroup.getCachedFeaturegroup().getHiveTbls().getSdId().getLocation()));
-      aliases = addAliases(aliases, query, featuregroupDTO);
+      aliases.add(new HudiFeatureGroupAliasDTO(query.getAs(), featuregroupDTO,
+          query.getLeftFeatureGroupStartTimestamp(), query.getLeftFeatureGroupEndTimestamp()));
     } else if (query.getFeaturegroup().getFeaturegroupType() == FeaturegroupType.STREAM_FEATURE_GROUP) {
       StreamFeatureGroupDTO featuregroupDTO = new StreamFeatureGroupDTO(query.getFeaturegroup());
       Featuregroup featuregroup = query.getFeaturegroup();
-      List<FeatureGroupFeatureDTO> featureGroupFeatureDTOS =
-        cachedFeaturegroupController.getFeaturesDTO(featuregroup.getStreamFeatureGroup(), featuregroup.getId(),
-          featuregroup.getFeaturestore(), project, user);
-      featuregroupDTO.setFeatures(featureGroupFeatureDTOS);
       featuregroupDTO.setLocation(featurestoreUtils.resolveLocationURI(
         featuregroup.getStreamFeatureGroup().getHiveTbls().getSdId().getLocation()));
-      aliases = addAliases(aliases, query, featuregroupDTO);
+      aliases.add(new HudiFeatureGroupAliasDTO(query.getAs(), featuregroupDTO,
+          query.getLeftFeatureGroupStartTimestamp(), query.getLeftFeatureGroupEndTimestamp()));
     }
 
     if (query.getJoins() != null && !query.getJoins().isEmpty()) {
       for (Join join : query.getJoins()) {
-        getHudiAliases(join.getRightQuery(), aliases, project, user);
+        aliases.addAll(getHudiAliases(join.getRightQuery()));
       }
     }
 
     return aliases;
   }
-  
-  private List<HudiFeatureGroupAliasDTO> addAliases (List<HudiFeatureGroupAliasDTO> aliases, Query query,
-    FeaturegroupDTO featuregroupDTO) {
-    if (query.getLeftFeatureGroupStartTimestamp() == null) {
-      aliases.add(new HudiFeatureGroupAliasDTO(query.getAs(), featuregroupDTO,
-        query.getLeftFeatureGroupEndTimestamp()));
-    } else {
-      aliases.add(new HudiFeatureGroupAliasDTO(query.getAs(), featuregroupDTO,
-        query.getLeftFeatureGroupStartTimestamp(), query.getLeftFeatureGroupEndTimestamp()));
-    }
-    return aliases;
-  }
 
   // TODO(Fabio): does it make sense to this in the same pass as where we generate the table nodes?
   // or does the code becomes even more complicated?
-  public List<OnDemandFeatureGroupAliasDTO> getOnDemandAliases(Users user, Project project, Query query,
-      List<OnDemandFeatureGroupAliasDTO> aliases)
+  public List<OnDemandFeatureGroupAliasDTO> getOnDemandAliases(Users user, Project project, Query query)
       throws FeaturestoreException, ServiceException {
+    List<OnDemandFeatureGroupAliasDTO> aliases = new ArrayList<>();
 
     if (query.getFeaturegroup().getFeaturegroupType() == FeaturegroupType.ON_DEMAND_FEATURE_GROUP) {
       FeaturestoreStorageConnectorDTO featurestoreStorageConnectorDTO =
@@ -374,7 +347,7 @@ public class ConstructorController {
 
     if (query.getJoins() != null && !query.getJoins().isEmpty()) {
       for (Join join : query.getJoins()) {
-        getOnDemandAliases(user, project, join.getRightQuery(), aliases);
+        aliases.addAll(getOnDemandAliases(user, project, join.getRightQuery()));
       }
     }
 

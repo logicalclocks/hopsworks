@@ -48,7 +48,7 @@ describe "On #{ENV['OS']}" do
             joins: []
           }
 
-          json_result, _ = create_feature_view(@project.id, featurestore_id, query)
+          json_result = create_feature_view(@project.id, featurestore_id, query)
           parsed_json = JSON.parse(json_result)
           expect_status(201)
 
@@ -101,7 +101,7 @@ describe "On #{ENV['OS']}" do
               ]
           }
 
-          json_result, _ = create_feature_view(@project.id, featurestore_id, query)
+          json_result = create_feature_view(@project.id, featurestore_id, query)
           parsed_json = JSON.parse(json_result)
           expect_status_details(201)
 
@@ -178,7 +178,7 @@ describe "On #{ENV['OS']}" do
               {type: "INT", name: "c_testfeature1", label: true}
           ]
 
-          json_result, _ = create_feature_view(@project.id, featurestore_id, query, features: feature_schema)
+          json_result = create_feature_view(@project.id, featurestore_id, query, features: feature_schema)
           parsed_json = JSON.parse(json_result)
           expect_status_details(201)
 
@@ -241,7 +241,7 @@ describe "On #{ENV['OS']}" do
             {type: "INT", name: "b_testfeature1", label: false},
           ]
 
-          json_result, _ = create_feature_view(@project.id, featurestore_id, query, features: feature_schema)
+          json_result = create_feature_view(@project.id, featurestore_id, query, features: feature_schema)
           parsed_json = JSON.parse(json_result)
           expect_status_details(201)
 
@@ -298,7 +298,7 @@ describe "On #{ENV['OS']}" do
               ]
           }
 
-          json_result, _ = create_feature_view(@project.id, featurestore_id, query)
+          json_result = create_feature_view(@project.id, featurestore_id, query)
           parsed_json = JSON.parse(json_result)
           expect_status_details(201)
 
@@ -345,7 +345,7 @@ describe "On #{ENV['OS']}" do
             ]
           }
 
-          json_result, _ = create_feature_view(@project.id, featurestore_id, query)
+          json_result = create_feature_view(@project.id, featurestore_id, query)
           parsed_json = JSON.parse(json_result)
           expect_status_details(201)
 
@@ -380,7 +380,7 @@ describe "On #{ENV['OS']}" do
               leftFeatures: [{name: 'a_testfeature1'}],
           }
 
-          json_result, _ = create_feature_view(@project.id, featurestore_id, query)
+          json_result = create_feature_view(@project.id, featurestore_id, query)
           parsed_json = JSON.parse(json_result)
           expect_status_details(201)
 
