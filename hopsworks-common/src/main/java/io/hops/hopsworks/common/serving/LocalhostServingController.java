@@ -298,6 +298,7 @@ public class LocalhostServingController implements ServingController {
       
       Serving newServing = servingFacade.merge(serving);
       servingWrapper.setServing(newServing);
+      servingWrapper.setKafkaTopicDTO(kafkaServingHelper.buildTopicDTO(newServing));
     } else {
       Serving oldDbServing = servingFacade.acquireLock(project, serving.getId());
       // Get the status of the current instance
@@ -333,6 +334,7 @@ public class LocalhostServingController implements ServingController {
         servingFacade.releaseLock(project, serving.getId());
       }
       servingWrapper.setServing(dbServing);
+      servingWrapper.setKafkaTopicDTO(kafkaServingHelper.buildTopicDTO(dbServing));
     }
   }
   
