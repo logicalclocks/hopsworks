@@ -25,9 +25,11 @@ import io.hops.hopsworks.api.util.Pagination;
 import io.hops.hopsworks.common.api.ResourceRequest;
 import io.hops.hopsworks.common.hdfs.DistributedFsService;
 import io.hops.hopsworks.common.provenance.state.dto.ProvStateDTO;
+import io.hops.hopsworks.exceptions.CryptoPasswordNotFoundException;
 import io.hops.hopsworks.exceptions.DatasetException;
 import io.hops.hopsworks.exceptions.GenericException;
 import io.hops.hopsworks.exceptions.JobException;
+import io.hops.hopsworks.exceptions.KafkaException;
 import io.hops.hopsworks.exceptions.MetadataException;
 import io.hops.hopsworks.exceptions.ModelRegistryException;
 import io.hops.hopsworks.exceptions.ProjectException;
@@ -35,6 +37,7 @@ import io.hops.hopsworks.exceptions.ProvenanceException;
 import io.hops.hopsworks.exceptions.PythonException;
 import io.hops.hopsworks.exceptions.SchematizedTagException;
 import io.hops.hopsworks.exceptions.ServiceException;
+import io.hops.hopsworks.exceptions.ServingException;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.user.Users;
@@ -177,7 +180,9 @@ public class ModelsResource {
     @PathParam("id") String id,
     @Context HttpServletRequest req,
     @Context UriInfo uriInfo,
-    @Context SecurityContext sc) throws DatasetException, ProvenanceException, ModelRegistryException {
+    @Context SecurityContext sc)
+      throws DatasetException, ProvenanceException, ModelRegistryException, KafkaException, ServingException,
+    CryptoPasswordNotFoundException {
     Users user = jwtHelper.getUserPrincipal(sc);
     ProvStateDTO fileState = modelsController.getModel(userProject, id);
     if(fileState != null) {

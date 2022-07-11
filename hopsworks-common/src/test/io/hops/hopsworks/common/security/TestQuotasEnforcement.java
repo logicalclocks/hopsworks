@@ -262,7 +262,7 @@ public class TestQuotasEnforcement {
     mockServings.add(sw3);
 
     ServingController servingController = Mockito.mock(ServingController.class);
-    Mockito.when(servingController.getAll(Mockito.any(), Mockito.any(), Mockito.any())).thenReturn(mockServings);
+    Mockito.when(servingController.getAll(Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any())).thenReturn(mockServings);
 
     QuotasEnforcement qe = new QuotasEnforcement();
     qe.setSettings(settings);
@@ -293,7 +293,8 @@ public class TestQuotasEnforcement {
     qe.setSettings(settings);
     qe.setServingController(servingController);
     qe.enforceRunningModelDeploymentsQuota(project);
-    Mockito.verify(servingController, Mockito.never()).getAll(Mockito.any(), Mockito.any(), Mockito.any());
+    Mockito.verify(servingController, Mockito.never()).getAll(Mockito.any(), Mockito.any(), Mockito.any(),
+      Mockito.any());
   }
 
   @Test
@@ -309,7 +310,7 @@ public class TestQuotasEnforcement {
     mockServings.add(sw1);
 
     ServingController servingController = Mockito.mock(ServingController.class);
-    Mockito.when(servingController.getAll(Mockito.any(), Mockito.any(), Mockito.any())).thenReturn(mockServings);
+    Mockito.when(servingController.getAll(Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any())).thenReturn(mockServings);
 
     QuotasEnforcement qe = new QuotasEnforcement();
     qe.setSettings(settings);
@@ -340,7 +341,8 @@ public class TestQuotasEnforcement {
     qe.setSettings(settings);
     qe.setServingController(servingController);
     qe.enforceModelDeploymentsQuota(project);
-    Mockito.verify(servingController, Mockito.never()).getAll(Mockito.any(), Mockito.any(), Mockito.any());
+    Mockito.verify(servingController, Mockito.never()).getAll(Mockito.any(), Mockito.any(), Mockito.any(),
+      Mockito.any());
   }
 
   @Test
