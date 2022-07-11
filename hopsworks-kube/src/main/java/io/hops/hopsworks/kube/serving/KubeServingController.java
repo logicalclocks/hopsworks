@@ -277,6 +277,7 @@ public class KubeServingController implements ServingController {
       
       Serving newServing = servingFacade.merge(serving);
       servingWrapper.setServing(newServing);
+      servingWrapper.setKafkaTopicDTO(kafkaServingHelper.buildTopicDTO(newServing));
     } else {
       Serving oldServing = servingFacade.acquireLock(project, serving.getId());
       KubeToolServingController toolServingController = getServingController(oldServing);
@@ -344,6 +345,7 @@ public class KubeServingController implements ServingController {
         // Update the serving object in the database and serving wrapper
         serving = servingFacade.updateDbObject(newServing, project);
         servingWrapper.setServing(serving);
+        servingWrapper.setKafkaTopicDTO(kafkaServingHelper.buildTopicDTO(serving));
       } finally {
         servingFacade.releaseLock(project, serving.getId());
       }
