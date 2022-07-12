@@ -19,6 +19,7 @@ import com.logicalclocks.servicediscoverclient.exceptions.ServiceDiscoveryExcept
 import io.hops.hopsworks.common.dao.project.team.ProjectTeamFacade;
 import io.hops.hopsworks.common.dao.user.activity.ActivityFacade;
 import io.hops.hopsworks.common.dataset.DatasetController;
+import io.hops.hopsworks.common.featurestore.featureview.FeatureViewFacade;
 import io.hops.hopsworks.common.featurestore.online.OnlineFeaturestoreController;
 import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupFacade;
 import io.hops.hopsworks.common.featurestore.storageconnectors.FeaturestoreConnectorFacade;
@@ -98,6 +99,8 @@ public class FeaturestoreController {
   private HdfsUsersController hdfsUsersController;
   @EJB
   private ProjectTeamFacade projectTeamFacade;
+  @EJB
+  private FeatureViewFacade featureViewFacade;
 
   /*
    * Retrieves a list of all featurestores for a particular project
@@ -390,6 +393,7 @@ public class FeaturestoreController {
     featurestoreDTO.setNumFeatureGroups(featuregroupFacade.countByFeaturestore(featurestore));
     featurestoreDTO.setNumTrainingDatasets(trainingDatasetFacade.countByFeaturestore(featurestore));
     featurestoreDTO.setNumStorageConnectors(connectorFacade.countByFeaturestore(featurestore));
+    featurestoreDTO.setNumFeatureViews(featureViewFacade.countByFeaturestore(featurestore));
 
     return featurestoreDTO;
   }
