@@ -46,6 +46,7 @@ public class FeaturestoreDTO {
   private Long numFeatureGroups;
   private Long numTrainingDatasets;
   private Long numStorageConnectors;
+  private Long numFeatureViews;
   
   public FeaturestoreDTO() {
   }
@@ -200,6 +201,14 @@ public class FeaturestoreDTO {
   public void setNumStorageConnectors(Long numStorageConnectors) {
     this.numStorageConnectors = numStorageConnectors;
   }
+  
+  public Long getNumFeatureViews() {
+    return numFeatureViews;
+  }
+  
+  public void setNumFeatureViews(Long numFeatureViews) {
+    this.numFeatureViews = numFeatureViews;
+  }
 
   @Override
   public String toString() {
@@ -221,6 +230,7 @@ public class FeaturestoreDTO {
         ", numFeatureGroups=" + numFeatureGroups +
         ", numTrainingDatasets=" + numTrainingDatasets +
         ", numStorageConnectors=" + numStorageConnectors +
+        ", numFeatureViews=" + numFeatureViews +
         '}';
   }
 }
