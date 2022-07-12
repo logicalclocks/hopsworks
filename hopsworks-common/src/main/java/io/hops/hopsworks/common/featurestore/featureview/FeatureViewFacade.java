@@ -69,6 +69,12 @@ public class FeatureViewFacade extends AbstractFacade<FeatureView> {
     return results;
   }
 
+  public Long countByFeaturestore(Featurestore featurestore) {
+    return em.createNamedQuery("FeatureView.countByFeaturestore", Long.class)
+      .setParameter("featurestore", featurestore)
+      .getSingleResult();
+  }
+
   List<FeatureView> retainLatestVersion(List<FeatureView> featureViews) {
     Map<String, FeatureView> latestVersion = new HashMap<>();
     for (FeatureView featureView : featureViews) {
