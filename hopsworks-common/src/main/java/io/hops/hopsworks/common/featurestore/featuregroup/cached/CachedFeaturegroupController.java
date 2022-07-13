@@ -392,7 +392,6 @@ public class CachedFeaturegroupController {
     cachedFeaturegroupDTO.setFeatures(featureGroupFeatureDTOS);
     cachedFeaturegroupDTO.setName(featuregroup.getName());
     cachedFeaturegroupDTO.setTimeTravelFormat(featuregroup.getCachedFeaturegroup().getTimeTravelFormat());
-    cachedFeaturegroupDTO.setValidationType(featuregroup.getValidationType());
     cachedFeaturegroupDTO.setDescription(
       featuregroup.getCachedFeaturegroup().getHiveTbls().getHiveTableParamsCollection().stream()
         .filter(p -> p.getHiveTableParamsPK().getParamKey().equalsIgnoreCase("COMMENT"))

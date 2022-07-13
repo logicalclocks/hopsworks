@@ -99,10 +99,6 @@ public class ApplicationConfig extends ResourceConfig {
     register(io.hops.hopsworks.api.serving.ServingConfResource.class);
     register(io.hops.hopsworks.api.featurestore.FeaturestoreService.class);
     register(io.hops.hopsworks.api.tags.TagSchemasResource.class);
-    register(io.hops.hopsworks.api.featurestore.datavalidation.rules.RulesResource.class);
-    register(io.hops.hopsworks.api.featurestore.datavalidation.validations.FeatureGroupValidationsResource.class);
-    register(io.hops.hopsworks.api.featurestore.datavalidation.expectations.fs.FeatureStoreExpectationsResource.class);
-    register(io.hops.hopsworks.api.featurestore.datavalidation.expectations.fg.FeatureGroupExpectationsResource.class);
     register(io.hops.hopsworks.api.featurestore.datavalidationv2.greatexpectations.GreatExpectationResource.class);
     register(io.hops.hopsworks.api.tags.TagSchemasResource.class);
 

@@ -21,9 +21,6 @@ import com.logicalclocks.servicediscoverclient.exceptions.ServiceDiscoveryExcept
 import io.hops.hopsworks.common.featurestore.FeaturestoreFacade;
 import io.hops.hopsworks.common.featurestore.activity.FeaturestoreActivityFacade;
 import io.hops.hopsworks.common.featurestore.app.FsJobManagerController;
-import io.hops.hopsworks.common.featurestore.datavalidation.FeatureGroupExpectationFacade;
-import io.hops.hopsworks.common.featurestore.datavalidation.FeatureGroupValidationsController;
-import io.hops.hopsworks.common.featurestore.datavalidation.FeatureStoreExpectationFacade;
 import io.hops.hopsworks.common.featurestore.datavalidationv2.ExpectationSuiteController;
 import io.hops.hopsworks.common.featurestore.datavalidationv2.ValidationReportController;
 import io.hops.hopsworks.common.featurestore.feature.FeatureGroupFeatureDTO;
@@ -66,9 +63,6 @@ import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.Featuregro
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.FeaturegroupType;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.cached.CachedFeaturegroup;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.cached.hive.HivePartitions;
-import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.cached.ValidationType;
-import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.datavalidation.FeatureGroupExpectation;
-import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.datavalidation.FeatureStoreExpectation;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.ondemand.OnDemandFeaturegroup;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.stream.StreamFeatureGroup;
 import io.hops.hopsworks.persistence.entity.featurestore.statistics.StatisticColumn;
@@ -87,8 +81,6 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-import java.util.Optional;
-import java.util.Set;
 import java.util.logging.Level;
 import java.util.stream.Collectors;
 
@@ -121,8 +113,6 @@ public class FeaturegroupController {
   @EJB
   private StatisticsController statisticsController;
   @EJB
-  private FeatureGroupValidationsController featureGroupValidationsController;
-  @EJB
   private DistributedFsService dfs;
   @EJB
   private Settings settings;
@@ -136,10 +126,6 @@ public class FeaturegroupController {
   private FeaturestoreActivityFacade fsActivityFacade;
   @EJB
   private FeaturestoreStorageConnectorController connectorController;
-  @EJB
-  private FeatureGroupExpectationFacade featureGroupExpectationFacade;
-  @EJB
-  private FeatureStoreExpectationFacade featureStoreExpectationFacade;
   @EJB
   private FeatureGroupInputValidation featureGroupInputValidation;
   @EJB
@@ -161,43 +147,7 @@ public class FeaturegroupController {
    */
   public List<FeaturegroupDTO> getFeaturegroupsForFeaturestore(Featurestore featurestore, Project project, Users user)
           throws FeaturestoreException, ServiceException {
-    return getFeaturegroupsForFeaturestore(featurestore, project, user, null);
-  }
-
-  /**
-   * Gets all featuregroups for a particular featurestore and project, using the userCerts to query Hive
-   *
-   * @param featurestore featurestore to query featuregroups for
-   * @return list of XML/JSON DTOs of the featuregroups
-   */
-  public List<FeaturegroupDTO> getFeaturegroupsForFeaturestore(Featurestore featurestore, Project project, Users user,
-                                                               Set<String> expectationNames)
-    throws FeaturestoreException, ServiceException {
-    List<Featuregroup> featuregroups = new ArrayList<>();
-    if (expectationNames != null && !expectationNames.isEmpty()) {
-      for(String name : expectationNames) {
-        for (FeatureGroupExpectation featureGroupExpectation :
-                featureStoreExpectationFacade
-                        .findByFeaturestoreAndName(featurestore, name)
-                        .orElseThrow(() -> new FeaturestoreException(
-                                RESTCodes.FeaturestoreErrorCode.FEATURE_STORE_EXPECTATION_NOT_FOUND,
-                                Level.FINE, name))
-                        .getFeatureGroupExpectations()) {
-          if (featuregroups.isEmpty()) {
-            featuregroups.add(featureGroupExpectation.getFeaturegroup());
-          } else {
-            boolean found = featuregroups
-                              .stream()
-                              .anyMatch(fg -> fg.getId().equals(featureGroupExpectation.getFeaturegroup().getId()));
-            if (!found) {
-              featuregroups.add(featureGroupExpectation.getFeaturegroup());
-            }
-          }
-        }
-      }
-    } else {
-      featuregroups = featuregroupFacade.findByFeaturestore(featurestore);
-    }
+    List<Featuregroup> featuregroups = featuregroupFacade.findByFeaturestore(featurestore);
     List<FeaturegroupDTO> featuregroupDTOS = new ArrayList<>();
     for (Featuregroup featuregroup : featuregroups) {
       featuregroupDTOS.add(convertFeaturegrouptoDTO(featuregroup, project, user));
@@ -271,7 +221,6 @@ public class FeaturegroupController {
     }
 
     verifyFeatureGroupInput(featuregroupDTO);
-    verifyFeatureGroupValidations(featurestore, featuregroupDTO.getExpectationsNames(), featuregroupDTO.getFeatures());
     verifyFeaturesNoDefaultValue(featuregroupDTO.getFeatures());
     expectationSuiteController.verifyExpectationSuite(featuregroupDTO.getExpectationSuite());
     return createFeaturegroupNoValidation(featurestore, featuregroupDTO, project, user);
@@ -569,25 +518,6 @@ public class FeaturegroupController {
   }
 
   /**
-   * Updated validation type for a featuregroup
-   *
-   * @param featuregroup    the feature group to update
-   * @return DTO of the updated feature group
-   * @throws FeaturestoreException
-   */
-  public FeaturegroupDTO updateValidationType(Featuregroup featuregroup,
-                                              ValidationType validationType, Project project,
-                                              Users user) throws FeaturestoreException, ServiceException {
-    Featuregroup toUpdate = featuregroupFacade.findByNameVersionAndFeaturestore(featuregroup.getName(),
-            featuregroup.getVersion(), featuregroup.getFeaturestore()).orElseThrow(() ->
-            new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.FEATUREGROUP_NOT_FOUND, Level.FINE,
-                    "featuregroup: " + featuregroup.getName()));
-    toUpdate.setValidationType(validationType);
-    featuregroupFacade.updateFeaturegroupMetadata(toUpdate);
-    return convertFeaturegrouptoDTO(toUpdate, project, user);
-  }
-
-  /**
    * Check if the feature group described by the DTO exists
    *
    * @param featurestore    the featurestore that the featuregroup belongs to
@@ -749,9 +679,6 @@ public class FeaturegroupController {
     featuregroup.setCreated(new Date());
     featuregroup.setCreator(user);
     featuregroup.setVersion(featuregroupDTO.getVersion());
-    if (featuregroupDTO.getValidationType() != null) {
-      featuregroup.setValidationType(featuregroupDTO.getValidationType());
-    }
     
     if (featuregroupDTO instanceof CachedFeaturegroupDTO) {
       featuregroup.setFeaturegroupType(FeaturegroupType.CACHED_FEATURE_GROUP);
@@ -781,27 +708,6 @@ public class FeaturegroupController {
     if (featuregroupDTO.getExpectationSuite() != null) {
       featuregroup.setExpectationSuite(expectationSuiteController.convertExpectationSuiteDTOToPersistent(
         featuregroup, featuregroupDTO.getExpectationSuite()));
-    }
-    
-    if (featuregroupDTO.getExpectationsNames() != null ) {
-      List<FeatureGroupExpectation> featureGroupExpectations = new ArrayList<>();
-      for (String name : featuregroupDTO.getExpectationsNames()) {
-        FeatureStoreExpectation featureStoreExpectation =
-                featureGroupValidationsController.getFeatureStoreExpectation(featuregroup.getFeaturestore(), name);
-        FeatureGroupExpectation featureGroupExpectation;
-        Optional<FeatureGroupExpectation> e =
-                featureGroupExpectationFacade.findByFeaturegroupAndExpectation(featuregroup, featureStoreExpectation);
-        if (!e.isPresent()) {
-          featureGroupExpectation = new FeatureGroupExpectation();
-          featureGroupExpectation.setFeaturegroup(featuregroup);
-          featureGroupExpectation.setFeatureStoreExpectation(featureStoreExpectation);
-        } else {
-          featureGroupExpectation = e.get();
-        }
-        featureGroupExpectations.add(featureGroupExpectation);
-      }
-      featuregroup.setExpectations(featureGroupExpectations);
-  
     }
     
     featuregroupFacade.persist(featuregroup);
@@ -877,19 +783,6 @@ public class FeaturegroupController {
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_FEATURE_GROUP_FEATURE_DEFAULT_VALUE,
         Level.FINE, "default values for features cannot be set during feature group creation, only allowed for appened"
         + "features");
-    }
-  }
-
-  void verifyFeatureGroupValidations(Featurestore featurestore,
-                                     List<String> expectationNames,
-                                     List<FeatureGroupFeatureDTO> features)
-          throws FeaturestoreException {
-    if (expectationNames != null && !expectationNames.isEmpty()) {
-      List<FeatureStoreExpectation> expectations = new ArrayList<>();
-      for (String expectation : expectationNames) {
-        expectations.add(featureGroupValidationsController.getFeatureStoreExpectation(featurestore, expectation));
-      }
-      featureGroupValidationsController.featureValidation(expectations, features);
     }
   }
 

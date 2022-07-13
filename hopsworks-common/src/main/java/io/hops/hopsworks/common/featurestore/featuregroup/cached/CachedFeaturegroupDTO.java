@@ -20,7 +20,6 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupDTO;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.Featuregroup;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.cached.TimeTravelFormat;
-import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.cached.ValidationType;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
@@ -37,7 +36,6 @@ public class CachedFeaturegroupDTO extends FeaturegroupDTO {
 
   private Boolean onlineEnabled = false;
   private TimeTravelFormat timeTravelFormat = TimeTravelFormat.NONE;
-  private ValidationType validationType = ValidationType.NONE;
 
   public CachedFeaturegroupDTO() {
     super();
@@ -60,21 +58,10 @@ public class CachedFeaturegroupDTO extends FeaturegroupDTO {
   public void setTimeTravelFormat (TimeTravelFormat timeTravelFormat ) { this.timeTravelFormat = timeTravelFormat; }
 
   @Override
-  public ValidationType getValidationType() {
-    return validationType;
-  }
-
-  @Override
-  public void setValidationType(ValidationType validationType) {
-    this.validationType = validationType;
-  }
-
-  @Override
   public String toString() {
     return "CachedFeaturegroupDTO{" +
       ", onlineEnabled=" + onlineEnabled +
       ", timeTravelFormat =" + timeTravelFormat +
-      ", validationType =" + validationType +
       '}';
   }
 }

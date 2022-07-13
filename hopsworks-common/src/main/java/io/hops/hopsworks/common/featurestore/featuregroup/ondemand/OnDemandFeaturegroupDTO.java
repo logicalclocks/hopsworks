@@ -20,7 +20,6 @@ import io.hops.hopsworks.common.featurestore.feature.FeatureGroupFeatureDTO;
 import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupDTO;
 import io.hops.hopsworks.common.featurestore.storageconnectors.FeaturestoreStorageConnectorDTO;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.Featuregroup;
-import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.cached.ValidationType;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.ondemand.OnDemandDataFormat;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.ondemand.OnDemandFeature;
 
@@ -51,8 +50,6 @@ public class OnDemandFeaturegroupDTO extends FeaturegroupDTO {
   // In the future we should consider expanding the concept of options also to cached feature groups.
   private List<OnDemandOptionDTO> options;
 
-  private ValidationType validationType;
-
   public OnDemandFeaturegroupDTO() {
     super();
   }
@@ -69,8 +66,6 @@ public class OnDemandFeaturegroupDTO extends FeaturegroupDTO {
         .map(o -> new OnDemandOptionDTO(o.getName(), o.getValue()))
         .collect(Collectors.toList());
 
-    this.validationType = featuregroup.getValidationType();
-
     setFeaturestoreName(featureStoreName);
     setDescription(featuregroup.getOnDemandFeaturegroup().getDescription());
     setFeatures(featuregroup.getOnDemandFeaturegroup().getFeatures().stream()
@@ -86,7 +81,6 @@ public class OnDemandFeaturegroupDTO extends FeaturegroupDTO {
     this.storageConnector = storageConnectorDTO;
     this.dataFormat = featuregroup.getOnDemandFeaturegroup().getDataFormat();
     this.path = featuregroup.getOnDemandFeaturegroup().getPath();
-    this.validationType = featuregroup.getValidationType();
 
     this.options = featuregroup.getOnDemandFeaturegroup().getOptions().stream()
         .map(o -> new OnDemandOptionDTO(o.getName(), o.getValue()))
@@ -131,13 +125,5 @@ public class OnDemandFeaturegroupDTO extends FeaturegroupDTO {
 
   public void setOptions(List<OnDemandOptionDTO> options) {
     this.options = options;
-  }
-
-  public ValidationType getValidationType() {
-    return validationType;
-  }
-
-  public void setValidationType(ValidationType validationType) {
-    this.validationType = validationType;
   }
 }

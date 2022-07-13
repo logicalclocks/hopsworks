@@ -1,6 +1,6 @@
 /*
  * This file is part of Hopsworks
- * Copyright (C) 2021, Logical Clocks AB. All rights reserved
+ * Copyright (C) 2022, Hopsworks AB. All rights reserved
  *
  * Hopsworks is free software: you can redistribute it and/or modify it under the terms of
  * the GNU Affero General Public License as published by the Free Software Foundation,
@@ -16,6 +16,34 @@
 
 package io.hops.hopsworks.persistence.entity.featurestore.featuregroup.datavalidation;
 
-public enum Predicate {
-  LEGAL_VALUES, ACCEPTED_TYPE, PATTERN, FEATURE
+public enum FeatureGroupValidationStatus {
+  NONE("None", 0),
+  SUCCESS("Success", 1),
+  WARNING("Warning", 2),
+  FAILURE("Failure", 3);
+  
+  private final String name;
+  private final int severity;
+  
+  FeatureGroupValidationStatus(String name, int severity) {
+    this.name = name;
+    this.severity = severity;
+  }
+  
+  public int getSeverity() {
+    return severity;
+  }
+  
+  public static FeatureGroupValidationStatus fromString(String name) {
+    return valueOf(name.toUpperCase());
+  }
+  
+  public String getName() {
+    return name;
+  }
+  
+  @Override
+  public String toString() {
+    return name;
+  }
 }

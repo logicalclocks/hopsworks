@@ -19,7 +19,6 @@ package io.hops.hopsworks.common.featurestore.featuregroup.cached;
 import com.google.common.base.Strings;
 import io.hops.hopsworks.common.dao.AbstractFacade;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.cached.FeatureGroupCommit;
-import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.datavalidation.FeatureGroupValidation;
 
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
@@ -113,16 +112,6 @@ public class FeatureGroupCommitFacade extends AbstractFacade<FeatureGroupCommit>
       query.setMaxResults(limit);
     }
     return new CollectionInfo((Long) queryCount.getSingleResult(), query.getResultList());
-  }
-
-  public Optional<FeatureGroupCommit> findByValidation(FeatureGroupValidation featureGroupValidation) {
-    Query fgcQuery =  em.createNamedQuery("FeatureGroupCommit.findByValidation", FeatureGroupCommit.class)
-            .setParameter("validation", featureGroupValidation);
-    try {
-      return Optional.of((FeatureGroupCommit) fgcQuery.getSingleResult());
-    } catch (NoResultException e) {
-      return Optional.empty();
-    }
   }
 
   /**

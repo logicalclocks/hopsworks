@@ -15,7 +15,7 @@
  */
 package io.hops.hopsworks.persistence.entity.project.alert;
 
-import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.datavalidation.FeatureGroupValidation;
+import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.datavalidation.FeatureGroupValidationStatus;
 import io.hops.hopsworks.persistence.entity.jobs.configuration.history.JobFinalStatus;
 import io.hops.hopsworks.persistence.entity.jobs.configuration.history.JobState;
 
@@ -43,7 +43,7 @@ public enum ProjectServiceAlertStatus {
     return name;
   }
   
-  public static ProjectServiceAlertStatus getStatus(FeatureGroupValidation.Status status) {
+  public static ProjectServiceAlertStatus getStatus(FeatureGroupValidationStatus status) {
     switch (status) {
       case FAILURE:
         return ProjectServiceAlertStatus.VALIDATION_FAILURE;
