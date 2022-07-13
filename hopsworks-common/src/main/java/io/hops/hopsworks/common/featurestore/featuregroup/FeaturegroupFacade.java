@@ -19,7 +19,6 @@ package io.hops.hopsworks.common.featurestore.featuregroup;
 import io.hops.hopsworks.common.dao.AbstractFacade;
 import io.hops.hopsworks.persistence.entity.featurestore.Featurestore;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.Featuregroup;
-import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.datavalidation.FeatureGroupExpectation;
 
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
@@ -199,15 +198,6 @@ public class FeaturegroupFacade extends AbstractFacade<Featuregroup> {
   public Featuregroup updateFeaturegroupMetadata(Featuregroup featuregroup) {
     em.merge(featuregroup);
     return featuregroup;
-  }
-
-  public List<Featuregroup> findByFeatureStoreAndExpectations(Featurestore featurestore,
-                                                              List<FeatureGroupExpectation> expectations) {
-    TypedQuery<Featuregroup> q = em.createNamedQuery("Featuregroup.findByFeaturestoreAndExpectations",
-                                                        Featuregroup.class)
-                                    .setParameter("featurestore", featurestore)
-                                    .setParameter("expectationsList", expectations);
-    return q.getResultList();
   }
 
   public enum Filters {

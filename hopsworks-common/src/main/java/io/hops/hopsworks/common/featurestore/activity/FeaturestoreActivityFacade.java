@@ -22,7 +22,6 @@ import io.hops.hopsworks.persistence.entity.featurestore.activity.FeaturestoreAc
 import io.hops.hopsworks.persistence.entity.featurestore.activity.FeaturestoreActivityMeta;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.Featuregroup;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.cached.FeatureGroupCommit;
-import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.datavalidation.FeatureGroupValidation;
 import io.hops.hopsworks.persistence.entity.featurestore.featureview.FeatureView;
 import io.hops.hopsworks.persistence.entity.featurestore.statistics.FeaturestoreStatistic;
 import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.TrainingDataset;
@@ -164,16 +163,6 @@ public class FeaturestoreActivityFacade extends AbstractFacade<FeaturestoreActiv
 
     fsActivity.setExecutionLastEventTime(executionLastEventTime);
     em.merge(fsActivity);
-  }
-
-  public void logValidationActivity(Featuregroup featureGroup, Users user, FeatureGroupValidation validation) {
-    FeaturestoreActivity fsActivity = new FeaturestoreActivity();
-    fsActivity.setType(ActivityType.VALIDATIONS);
-    fsActivity.setFeatureGroup(featureGroup);
-    fsActivity.setUser(user);
-    fsActivity.setEventTime(validation.getValidationTime());
-    fsActivity.setValidation(validation);
-    em.persist(fsActivity);
   }
 
   public Optional<FeaturestoreActivity> getMostRecentExecution(Featuregroup featuregroup) {

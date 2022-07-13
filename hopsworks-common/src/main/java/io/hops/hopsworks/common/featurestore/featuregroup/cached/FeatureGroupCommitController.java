@@ -19,7 +19,6 @@ package io.hops.hopsworks.common.featurestore.featuregroup.cached;
 import io.hops.hopsworks.common.dao.AbstractFacade;
 import io.hops.hopsworks.common.featurestore.activity.FeaturestoreActivityFacade;
 import io.hops.hopsworks.common.dao.AbstractFacade.CollectionInfo;
-import io.hops.hopsworks.common.featurestore.datavalidation.FeatureGroupValidationFacade;
 import io.hops.hopsworks.common.hdfs.inode.InodeController;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.Featuregroup;
@@ -51,8 +50,6 @@ public class FeatureGroupCommitController {
   @EJB
   private FeatureGroupCommitFacade featureGroupCommitFacade;
   @EJB
-  private FeatureGroupValidationFacade featureGroupValidationFacade;
-  @EJB
   private FeaturestoreActivityFacade fsActivityFacade;
   @EJB
   private InodeController inodeController;
@@ -79,7 +76,7 @@ public class FeatureGroupCommitController {
 
     // Find validation
     if (validationId != null && validationId > 0) {
-      featureGroupCommit.setValidation(featureGroupValidationFacade.findById(validationId));
+      // we might want to add back GE validation tracking here
     }
 
     featureGroupCommit = featureGroupCommitFacade.update(featureGroupCommit);

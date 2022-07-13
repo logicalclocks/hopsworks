@@ -15,7 +15,7 @@
  */
 package io.hops.hopsworks.persistence.entity.featurestore.featuregroup.datavalidation.alert;
 
-import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.datavalidation.FeatureGroupValidation;
+import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.datavalidation.FeatureGroupValidationStatus;
 
 import javax.xml.bind.annotation.XmlEnum;
 
@@ -39,7 +39,7 @@ public enum ValidationRuleAlertStatus {
     return name;
   }
 
-  public static ValidationRuleAlertStatus getStatus(FeatureGroupValidation.Status status) {
+  public static ValidationRuleAlertStatus getStatus(FeatureGroupValidationStatus status) {
     switch (status) {
       case FAILURE:
         return ValidationRuleAlertStatus.FAILURE;

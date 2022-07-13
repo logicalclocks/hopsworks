@@ -17,7 +17,6 @@
 package io.hops.hopsworks.api.featurestore;
 
 import com.google.common.base.Strings;
-import io.hops.hopsworks.api.featurestore.datavalidation.expectations.fs.FeatureStoreExpectationsResource;
 import io.hops.hopsworks.api.featurestore.datavalidationv2.greatexpectations.GreatExpectationResource;
 import io.hops.hopsworks.api.featurestore.featuregroup.FeaturegroupService;
 import io.hops.hopsworks.api.featurestore.featureview.FeatureViewService;
@@ -94,8 +93,6 @@ public class FeaturestoreService {
   private KeywordControllerIface keywordControllerIface;
   @EJB
   private FeaturestoreKeywordBuilder featurestoreKeywordBuilder;
-  @Inject
-  private FeatureStoreExpectationsResource featureGroupExpectationsResource;
   @Inject
   private TransformationFunctionResource transformationFunctionResource;
   @Inject
@@ -282,24 +279,6 @@ public class FeaturestoreService {
     }
     featurestoreStorageConnectorService.setFeaturestoreId(featurestoreId);
     return featurestoreStorageConnectorService;
-  }
-  
-  /**
-   * Expectations sub-resource
-   *
-   * @param featurestoreId id of the featurestore
-   * @return the feature store expectations service
-   * @throws FeaturestoreException
-   */
-  @Path("/{featurestoreId}/expectations")
-  public FeatureStoreExpectationsResource expectationsResource(@PathParam("featurestoreId") Integer featurestoreId)
-    throws FeaturestoreException {
-    this.featureGroupExpectationsResource.setProject(project);
-    if (featurestoreId == null) {
-      throw new IllegalArgumentException(RESTCodes.FeaturestoreErrorCode.FEATURESTORE_ID_NOT_PROVIDED.getMessage());
-    }
-    this.featureGroupExpectationsResource.setFeaturestoreId(featurestoreId);
-    return featureGroupExpectationsResource;
   }
 
   @Path("/query")
