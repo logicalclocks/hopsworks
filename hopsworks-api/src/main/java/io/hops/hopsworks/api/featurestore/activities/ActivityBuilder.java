@@ -17,7 +17,6 @@
 package io.hops.hopsworks.api.featurestore.activities;
 
 import io.hops.hopsworks.api.featurestore.commit.CommitBuilder;
-import io.hops.hopsworks.api.featurestore.datavalidation.validations.FeatureGroupValidationBuilder;
 import io.hops.hopsworks.api.featurestore.statistics.StatisticsBuilder;
 import io.hops.hopsworks.api.jobs.JobsBuilder;
 import io.hops.hopsworks.api.user.UsersBuilder;
@@ -56,9 +55,6 @@ public class ActivityBuilder {
   private StatisticsBuilder statisticsBuilder;
   @EJB
   private UsersBuilder usersBuilder;
-  @EJB
-  private FeatureGroupValidationBuilder validationBuilder;
-
 
   private UriBuilder uri(UriInfo uriInfo, Project project, Featurestore featurestore) {
     return uriInfo.getBaseUriBuilder().path(ResourceRequest.Name.PROJECT.toString().toLowerCase())
@@ -121,8 +117,7 @@ public class ActivityBuilder {
         dto.setStatistics(statisticsBuilder.build(uriInfo, resourceRequest, project, user,
             featuregroup, featurestoreActivity.getStatistics()));
       } else if (featurestoreActivity.getType() == ActivityType.VALIDATIONS) {
-        dto.setValidations(validationBuilder.build(uriInfo, resourceRequest, user, project,
-            featuregroup, featurestoreActivity.getValidation()));
+        // HOPSWORKS-3180 should add back validation activity for GE
       } else {
         // Metadata change
         String metadataMsg = featurestoreActivity.getActivityMeta().getValue();

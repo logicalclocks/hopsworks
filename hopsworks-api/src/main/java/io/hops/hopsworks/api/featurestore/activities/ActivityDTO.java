@@ -17,7 +17,6 @@
 package io.hops.hopsworks.api.featurestore.activities;
 
 import io.hops.hopsworks.api.featurestore.commit.CommitDTO;
-import io.hops.hopsworks.api.featurestore.datavalidation.validations.FeatureGroupValidationDTO;
 import io.hops.hopsworks.api.featurestore.statistics.StatisticsDTO;
 import io.hops.hopsworks.api.jobs.JobDTO;
 import io.hops.hopsworks.api.user.UserDTO;
@@ -34,7 +33,6 @@ public class ActivityDTO extends RestDTO<ActivityDTO> {
   private JobDTO job;
   private StatisticsDTO statistics;
   private CommitDTO commit;
-  private FeatureGroupValidationDTO validations;
 
   public ActivityDTO() { }
 
@@ -92,13 +90,5 @@ public class ActivityDTO extends RestDTO<ActivityDTO> {
 
   public void setCommit(CommitDTO commit) {
     this.commit = commit;
-  }
-
-  public FeatureGroupValidationDTO getValidations() {
-    return validations;
-  }
-
-  public void setValidations(FeatureGroupValidationDTO validations) {
-    this.validations = validations;
   }
 }

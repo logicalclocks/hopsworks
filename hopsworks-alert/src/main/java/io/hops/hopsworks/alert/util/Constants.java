@@ -71,6 +71,9 @@ public class Constants {
   public final static String TEST_ALERT_JOB_NAME = "AlertTestJob";
   public final static String TEST_ALERT_FS_NAME = "AlertTestFeatureStore";
   public final static String TEST_ALERT_FG_NAME = "AlertTestFeatureGroup";
+  public final static String TEST_ALERT_FG_DESCRIPTION = "Alert test description.";
+  public final static String TEST_ALERT_FG_SUMMARY = "Alert test summary.";
+  
   public final static Integer TEST_ALERT_EXECUTION_ID = 1;
   public final static Integer TEST_ALERT_FG_ID = 1;
   public final static Integer TEST_ALERT_FG_VERSION = 1;

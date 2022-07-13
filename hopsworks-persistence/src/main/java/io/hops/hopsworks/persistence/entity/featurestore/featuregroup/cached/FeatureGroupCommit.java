@@ -16,7 +16,6 @@
 
 package io.hops.hopsworks.persistence.entity.featurestore.featuregroup.cached;
 
-import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.datavalidation.FeatureGroupValidation;
 import io.hops.hopsworks.persistence.entity.hdfs.inode.Inode;
 
 import javax.persistence.Column;
@@ -27,7 +26,6 @@ import javax.persistence.JoinColumns;
 import javax.persistence.ManyToOne;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
-import javax.persistence.OneToOne;
 import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
 import javax.xml.bind.annotation.XmlRootElement;
@@ -52,9 +50,7 @@ import java.sql.Timestamp;
     @NamedQuery(name = "FeatureGroupCommit.findLatestCommit",
         query = "SELECT fgc FROM FeatureGroupCommit fgc WHERE fgc.committedOn IN (SELECT MAX(fgc.committedOn) FROM " +
             "FeatureGroupCommit fgc WHERE fgc.featureGroupCommitPK.featureGroupId = :featureGroupId) " +
-            "AND fgc.featureGroupCommitPK.featureGroupId = :featureGroupId"),
-    @NamedQuery(name = "FeatureGroupCommit.findByValidation",
-            query = "SELECT fgc FROM FeatureGroupCommit fgc WHERE fgc.validation = :validation")
+            "AND fgc.featureGroupCommitPK.featureGroupId = :featureGroupId")
      })
 
 public class FeatureGroupCommit implements Serializable {
@@ -84,9 +80,6 @@ public class FeatureGroupCommit implements Serializable {
           referencedColumnName = "partition_id")})
   @ManyToOne(optional = false)
   private Inode inode;
-  @JoinColumn(name = "validation_id", referencedColumnName = "id")
-  @OneToOne
-  private FeatureGroupValidation validation;
 
   public FeatureGroupCommit() {}
 
@@ -143,14 +136,6 @@ public class FeatureGroupCommit implements Serializable {
 
   public void setNumRowsDeleted(Long numRowsDeleted) {
     this.numRowsDeleted = numRowsDeleted;
-  }
-
-  public FeatureGroupValidation getValidation() {
-    return validation;
-  }
-
-  public void setValidation(FeatureGroupValidation validation) {
-    this.validation = validation;
   }
 
   @Override

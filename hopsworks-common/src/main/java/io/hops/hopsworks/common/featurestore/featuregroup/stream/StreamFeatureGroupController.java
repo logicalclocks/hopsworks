@@ -36,7 +36,6 @@ import io.hops.hopsworks.persistence.entity.featurestore.Featurestore;
 import io.hops.hopsworks.persistence.entity.featurestore.activity.FeaturestoreActivityMeta;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.Featuregroup;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.cached.CachedFeature;
-import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.cached.ValidationType;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.cached.hive.HiveTableParams;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.cached.hive.HiveTbls;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.cached.TimeTravelFormat;
@@ -103,7 +102,6 @@ public class StreamFeatureGroupController {
   
     streamFeatureGroupDTO.setFeatures(featureGroupFeatureDTOS);
     streamFeatureGroupDTO.setName(featuregroup.getName());
-    streamFeatureGroupDTO.setValidationType(featuregroup.getValidationType());
     streamFeatureGroupDTO.setDescription(
       featuregroup.getStreamFeatureGroup().getHiveTbls().getHiveTableParamsCollection().stream()
         .filter(p -> p.getHiveTableParamsPK().getParamKey().equalsIgnoreCase("COMMENT"))
@@ -157,12 +155,6 @@ public class StreamFeatureGroupController {
   public StreamFeatureGroup createStreamFeatureGroup(Featurestore featurestore,
     StreamFeatureGroupDTO streamFeatureGroupDTO, Project project, Users user) throws FeaturestoreException {
     cachedFeaturegroupController.verifyPrimaryKey(streamFeatureGroupDTO.getFeatures(), TimeTravelFormat.HUDI);
-  
-    // for stream feature groups validation is not supported
-    if (streamFeatureGroupDTO.getValidationType() != ValidationType.NONE) {
-      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.VALIDATION_NOT_SUPPORTED,
-        Level.WARNING, "For stream featuregroups validattion rules are not supported");
-    }
     
     //Prepare DDL statement
     String tableName = cachedFeaturegroupController.getTblName(streamFeatureGroupDTO.getName(),

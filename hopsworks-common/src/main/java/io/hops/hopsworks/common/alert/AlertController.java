@@ -34,15 +34,11 @@ import io.hops.hopsworks.alerting.exceptions.AlertManagerConfigUpdateException;
 import io.hops.hopsworks.alerting.exceptions.AlertManagerDuplicateEntryException;
 import io.hops.hopsworks.alerting.exceptions.AlertManagerNoSuchElementException;
 import io.hops.hopsworks.alerting.exceptions.AlertManagerResponseException;
-import io.hops.hopsworks.common.featurestore.FeaturestoreFacade;
-import io.hops.hopsworks.common.featurestore.featuregroup.ExpectationResult;
 import io.hops.hopsworks.persistence.entity.alertmanager.AlertReceiver;
 import io.hops.hopsworks.persistence.entity.alertmanager.AlertSeverity;
 import io.hops.hopsworks.persistence.entity.alertmanager.AlertType;
-import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.Featuregroup;
-import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.datavalidation.FeatureGroupValidation;
+import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.datavalidation.FeatureGroupValidationStatus;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.datavalidation.alert.FeatureGroupAlert;
-import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.datavalidation.alert.ValidationRuleAlertStatus;
 import io.hops.hopsworks.persistence.entity.jobs.configuration.history.JobFinalStatus;
 import io.hops.hopsworks.persistence.entity.jobs.configuration.history.JobState;
 import io.hops.hopsworks.persistence.entity.jobs.description.JobAlert;
@@ -75,21 +71,7 @@ public class AlertController {
   @EJB
   private AlertManagerConfiguration alertManagerConfiguration;
   @EJB
-  private FeaturestoreFacade featurestoreFacade;
-  @EJB
   private AlertReceiverFacade alertReceiverFacade;
-
-  /**
-   * send feature group alert
-   * @param featuregroup
-   * @param results
-   * @param status
-   */
-  public void sendAlert(Featuregroup featuregroup, List<ExpectationResult> results,
-      FeatureGroupValidation.Status status) {
-    List<PostableAlert> postableAlerts = getPostableAlerts(featuregroup, results, status);
-    sendFgAlert(postableAlerts, featuregroup.getFeaturestore().getProject(), featuregroup.getName());
-  }
 
   /**
    * Send job alert
@@ -120,7 +102,7 @@ public class AlertController {
       throws AlertManagerUnreachableException, AlertManagerAccessControlException, AlertManagerResponseException,
       AlertManagerClientCreateException {
     return sendFgTestAlert(project, alert.getAlertType(), alert.getSeverity(),
-        FeatureGroupValidation.Status.fromString(alert.getStatus().toString()), alert.getFeatureGroup().getName());
+        FeatureGroupValidationStatus.fromString(alert.getStatus().toString()), alert.getFeatureGroup().getName());
   }
 
   /**
@@ -146,7 +128,7 @@ public class AlertController {
     List<Alert> alerts = null;
     if (ProjectServiceEnum.FEATURESTORE.equals(alert.getService())) {
       alerts = sendFgTestAlert(project, alert.getAlertType(), alert.getSeverity(),
-          FeatureGroupValidation.Status.fromString(alert.getStatus().toString()), null);
+          FeatureGroupValidationStatus.fromString(alert.getStatus().toString()), null);
     } else if (ProjectServiceEnum.JOBS.equals(alert.getService())) {
       alerts = sendJobTestAlert(project, alert.getAlertType(), alert.getSeverity(), alert.getStatus().getName(), null);
     }
@@ -180,13 +162,13 @@ public class AlertController {
   }
 
   private List<Alert> sendFgTestAlert(Project project, AlertType alertType, AlertSeverity severity,
-      FeatureGroupValidation.Status status, String fgName) throws AlertManagerUnreachableException,
+      FeatureGroupValidationStatus status, String fgName) throws AlertManagerUnreachableException,
       AlertManagerAccessControlException, AlertManagerResponseException, AlertManagerClientCreateException {
     String testAlertFgName = Strings.isNullOrEmpty(fgName) ? Constants.TEST_ALERT_FG_NAME : fgName;
     List<PostableAlert> postableAlerts = new ArrayList<>();
-    PostableAlert postableAlert = getPostableAlert(project.getName(), alertType, severity, status.getName(),
-        getExpectationResult(status, new ArrayList<>()), Constants.TEST_ALERT_FG_ID, Constants.TEST_ALERT_FS_NAME,
-        testAlertFgName, Constants.TEST_ALERT_FG_VERSION);
+    PostableAlert postableAlert = getPostableFgAlert(project.getName(), alertType, severity, status.getName(),
+      Constants.TEST_ALERT_FG_SUMMARY, Constants.TEST_ALERT_FG_DESCRIPTION, Constants.TEST_ALERT_FG_ID,
+      Constants.TEST_ALERT_FS_NAME, testAlertFgName, Constants.TEST_ALERT_FG_VERSION);
     postableAlerts.add(postableAlert);
     sendAlert(postableAlerts, project);
     String fgFilter = Constants.FILTER_BY_FG_FORMAT.replace(Constants.FG_PLACE_HOLDER, testAlertFgName) +
@@ -222,53 +204,6 @@ public class AlertController {
     return alerts;
   }
 
-  private List<PostableAlert> getPostableAlerts(Featuregroup featuregroup, List<ExpectationResult> results,
-      FeatureGroupValidation.Status status) {
-    List<PostableAlert> postableAlerts = new ArrayList<>();
-    if (FeatureGroupValidation.Status.NONE.equals(status)) {
-      return postableAlerts;
-    }
-    if (featuregroup.getFeatureGroupAlerts() != null && !featuregroup.getFeatureGroupAlerts().isEmpty()) {
-      for (FeatureGroupAlert alert : featuregroup.getFeatureGroupAlerts()) {
-        if (alert.getStatus().equals(ValidationRuleAlertStatus.getStatus(status))) {
-          String name = featurestoreFacade.getHiveDbName(featuregroup.getFeaturestore().getHiveDbId());
-          PostableAlert postableAlert =
-              getPostableAlert(featuregroup.getFeaturestore().getProject().getName(), alert.getAlertType(),
-                  alert.getSeverity(), alert.getStatus().getName(), getExpectationResult(status, results),
-                  featuregroup.getId(), name, featuregroup.getName(), featuregroup.getVersion());
-          postableAlerts.add(postableAlert);
-        }
-      }
-    } else if (featuregroup.getFeaturestore().getProject().getProjectServiceAlerts() != null &&
-        !featuregroup.getFeaturestore().getProject().getProjectServiceAlerts().isEmpty()) {
-      for (ProjectServiceAlert alert : featuregroup.getFeaturestore().getProject().getProjectServiceAlerts()) {
-        if (ProjectServiceEnum.FEATURESTORE.equals(alert.getService()) &&
-            alert.getStatus().equals(ProjectServiceAlertStatus.getStatus(status))) {
-          String name = featurestoreFacade.getHiveDbName(featuregroup.getFeaturestore().getHiveDbId());
-          PostableAlert postableAlert =
-              getPostableAlert(featuregroup.getFeaturestore().getProject().getName(), alert.getAlertType(),
-                  alert.getSeverity(), alert.getStatus().getName(), getExpectationResult(status, results),
-                  featuregroup.getId(), name, featuregroup.getName(), featuregroup.getVersion());
-          postableAlerts.add(postableAlert);
-        }
-      }
-    }
-    return postableAlerts;
-  }
-
-  private PostableAlert getPostableAlert(String projectName, AlertType alertType, AlertSeverity severity,
-      String status, String results, Integer id, String featureStoreName, String featureGroupName, int version) {
-    return new PostableAlertBuilder
-        .Builder(projectName, alertType, severity, status)
-        .withFeatureGroupId(id)
-        .withFeatureStoreName(featureStoreName)
-        .withFeatureGroupName(featureGroupName)
-        .withFeatureGroupVersion(version)
-        .withSummary("Feature group validation " + status.toLowerCase())
-        .withDescription("Feature group name=" + featureGroupName + results)
-        .build();
-  }
-
   public PostableAlert getPostableFgAlert(String projectName, AlertType alertType, AlertSeverity severity,
     String status, String summary, String description, Integer id, String featureStoreName, String featureGroupName,
     int version) {
@@ -281,31 +216,6 @@ public class AlertController {
       .withSummary(summary)
       .withDescription(description)
       .build();
-  }
-
-  private String getExpectationResult(FeatureGroupValidation.Status status, List<ExpectationResult> results) {
-    if (FeatureGroupValidation.Status.SUCCESS.equals(status)) {
-      return " validation succeeded with warning=0, error=0.";
-    }
-    StringBuilder resultStr = new StringBuilder();
-    resultStr.append(" validation ended with ")
-        .append(status.getName().toLowerCase())
-        .append(".");
-    List<String> detailedResults = new ArrayList<>();
-    for (ExpectationResult result : results) {
-      if (FeatureGroupValidation.Status.WARNING.equals(result.getStatus()) ||
-          FeatureGroupValidation.Status.FAILURE.equals(result.getStatus())) {
-        detailedResults
-            .add("[expectation=" + result.getExpectation().getName() + ", status=" + result.getStatus().getName() +
-                "]");
-      }
-    }
-    if (!detailedResults.isEmpty()) {
-      resultStr.append(" Detail: ")
-          .append(String.join(", ", detailedResults))
-          .append(".");
-    }
-    return resultStr.toString();
   }
 
   private PostableAlert getPostableAlert(Project project, AlertType alertType,  AlertSeverity severity, String status,

@@ -19,8 +19,6 @@ package io.hops.hopsworks.persistence.entity.featurestore.featuregroup;
 import io.hops.hopsworks.persistence.entity.featurestore.Featurestore;
 import io.hops.hopsworks.persistence.entity.featurestore.activity.FeaturestoreActivity;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.cached.CachedFeaturegroup;
-import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.cached.ValidationType;
-import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.datavalidation.FeatureGroupExpectation;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.datavalidation.alert.FeatureGroupAlert;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.datavalidationv2.ExpectationSuite;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.datavalidationv2.ValidationReport;
@@ -75,9 +73,7 @@ import java.util.Objects;
   @NamedQuery(name = "Featuregroup.findByFeaturestoreAndName", query = "SELECT fg FROM Featuregroup fg " +
     "WHERE fg.featurestore = :featurestore AND fg.name = :name"),
   @NamedQuery(name = "Featuregroup.findByFeaturestoreAndNameOrderedByDescVersion", query = "SELECT fg FROM " +
-    "Featuregroup fg WHERE fg.featurestore = :featurestore AND fg.name = :name ORDER BY fg.version DESC"),
-  @NamedQuery(name = "Featuregroup.findByFeaturestoreAndExpectations", query = "SELECT fg FROM " +
-          "Featuregroup fg WHERE fg.featurestore = :featurestore AND fg.expectations in :expectationsList")})
+    "Featuregroup fg WHERE fg.featurestore = :featurestore AND fg.name = :name ORDER BY fg.version DESC")})
 public class Featuregroup implements Serializable {
   private static final long serialVersionUID = 1L;
   @Id
@@ -103,11 +99,6 @@ public class Featuregroup implements Serializable {
   @NotNull
   @Column(name = "version")
   private Integer version;
-  @Basic(optional = false)
-  @NotNull
-  @Enumerated(EnumType.ORDINAL)
-  @Column(name = "validation_type")
-  private ValidationType validationType = ValidationType.NONE;
   @Column(name = "event_time")
   private String eventTime;
   @NotNull
@@ -127,8 +118,6 @@ public class Featuregroup implements Serializable {
   private Collection<FeaturestoreActivity> activities;
   @OneToOne(cascade = CascadeType.ALL, mappedBy = "featuregroup")
   private StatisticsConfig statisticsConfig;
-  @OneToMany(cascade = CascadeType.ALL, mappedBy = "featuregroup")
-  private Collection<FeatureGroupExpectation> expectations;
   @OneToMany(cascade = CascadeType.ALL, mappedBy = "featureGroup")
   private Collection<FeatureGroupAlert> featureGroupAlerts;
   @OneToOne(cascade = CascadeType.ALL, mappedBy = "featuregroup")
@@ -241,22 +230,6 @@ public class Featuregroup implements Serializable {
 
   public void setActivities(Collection<FeaturestoreActivity> activities) {
     this.activities = activities;
-  }
-
-  public ValidationType getValidationType() {
-    return validationType;
-  }
-
-  public void setValidationType(ValidationType validationType) {
-    this.validationType = validationType;
-  }
-
-  public Collection<FeatureGroupExpectation> getExpectations() {
-    return expectations;
-  }
-
-  public void setExpectations(Collection<FeatureGroupExpectation> expectations) {
-    this.expectations = expectations;
   }
 
   public Collection<FeatureGroupAlert> getFeatureGroupAlerts() {

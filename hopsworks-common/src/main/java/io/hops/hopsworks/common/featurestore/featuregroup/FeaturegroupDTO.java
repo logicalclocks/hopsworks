@@ -27,7 +27,6 @@ import io.hops.hopsworks.common.featurestore.featuregroup.ondemand.OnDemandFeatu
 import io.hops.hopsworks.common.featurestore.featuregroup.stream.StreamFeatureGroupDTO;
 import io.hops.hopsworks.common.featurestore.statistics.StatisticsConfigDTO;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.Featuregroup;
-import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.cached.ValidationType;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
@@ -54,11 +53,7 @@ public class FeaturegroupDTO extends FeaturestoreEntityDTO<FeaturegroupDTO> {
   @XmlElement
   private List<FeatureGroupFeatureDTO> features;
   @XmlElement
-  private List<String> expectationsNames; // List of expectation names
-  @XmlElement
   private ExpectationSuiteDTO expectationSuite = null;
-  @XmlElement
-  private ValidationType validationType;
   @XmlElement
   private String onlineTopicName = null;
   @XmlElement
@@ -109,28 +104,12 @@ public class FeaturegroupDTO extends FeaturestoreEntityDTO<FeaturegroupDTO> {
     this.features = features;
   }
 
-  public List<String> getExpectationsNames() {
-    return expectationsNames;
-  }
-
-  public void setExpectationsNames(List<String> expectationsNames) {
-    this.expectationsNames = expectationsNames;
-  }
-
   public ExpectationSuiteDTO getExpectationSuite() {
     return expectationSuite;
   }
 
   public void setExpectationSuite(ExpectationSuiteDTO expectationSuite) {
     this.expectationSuite = expectationSuite;
-  }
-
-  public ValidationType getValidationType() {
-    return validationType;
-  }
-
-  public void setValidationType(ValidationType validationType) {
-    this.validationType = validationType;
   }
 
   public String getOnlineTopicName() {
