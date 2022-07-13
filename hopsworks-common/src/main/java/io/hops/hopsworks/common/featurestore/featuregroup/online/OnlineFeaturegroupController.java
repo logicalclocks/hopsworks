@@ -83,10 +83,9 @@ public class OnlineFeaturegroupController {
   private SubjectsCompatibilityController subjectsCompatibilityController;
   @EJB
   private ProjectController projectController;
-
-  private final static List<String> MYSQL_TYPES = Arrays.asList("INT", "TINYINT", "SMALLINT", "MEDIUMINT", "BIGINT",
-      "FLOAT", "DOUBLE", "DECIMAL", "DATE", "DATETIME", "TIMESTAMP", "TIME", "YEAR", "CHAR", "BINARY", "BLOB", "TEXT",
-      "TINYBLOB", "TINYTEXT", "MEDIUMBLOB", "MEDIUMTEXT", "LONGBLOB", "LONGTEXT");
+  
+  private final static List<String> SUPPORTED_MYSQL_TYPES = Arrays.asList("INT", "TINYINT",
+    "SMALLINT", "BIGINT", "FLOAT", "DOUBLE", "DECIMAL", "DATE", "TIMESTAMP");
 
   private final static String VARBINARY_DEFAULT = "VARBINARY(100)";
   private final static String VARCHAR_DEFAULT = "VARCHAR(100)";
@@ -301,13 +300,12 @@ public class OnlineFeaturegroupController {
       project, user);
   }
 
-  private String getOnlineType(FeatureGroupFeatureDTO featureGroupFeatureDTO) {
+  public String getOnlineType(FeatureGroupFeatureDTO featureGroupFeatureDTO) {
     if (!Strings.isNullOrEmpty(featureGroupFeatureDTO.getOnlineType())) {
-      // TODO(Fabio): Check that it's a valid online type
       return featureGroupFeatureDTO.getOnlineType().toLowerCase();
     }
 
-    for (String mysqlType : MYSQL_TYPES) {
+    for (String mysqlType : SUPPORTED_MYSQL_TYPES) {
       // User startsWith to handle offline types like decimal(X, Y) where X and Y depend on teh context
       // Same for CHAR(X) where X is the length of the char. We are not particularly interested in the
       // type configuration, but rather if we can use the same Hive type on MySQL or if we need
