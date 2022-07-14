@@ -216,7 +216,8 @@ public class OnlineFeaturegroupController {
     dropMySQLTable(featureGroup, project, user);
     String topicName = onlineFeatureGroupTopicName(project.getId(), featureGroup.getId(),
       Utils.getFeaturegroupName(featureGroup));
-    deleteFeatureGroupKafkaTopic(project, topicName);
+    // HOPSWORKS-3252 - we keep kafka topics in order to avoid consumers getting blocked
+    // deleteFeatureGroupKafkaTopic(project, topicName);
   }
 
   public String buildCreateStatement(String dbName, String tableName, List<FeatureGroupFeatureDTO> features) {
