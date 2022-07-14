@@ -566,6 +566,7 @@ public class FeaturegroupController {
           onlineFeaturegroupController.disableOnlineFeatureGroup(featuregroup, project, user);
         } else {
           // only topics need to be deleted, but no RonDB table
+          streamFeatureGroupController.deleteOfflineStreamFeatureGroupTopic(project, featuregroup);
         }
         //Delete associated delta streamer job
         fsJobManagerController.deleteDeltaStreamerJob(project,user, featuregroup);
