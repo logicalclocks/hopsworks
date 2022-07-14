@@ -115,7 +115,7 @@ public class AvroSchemaConstructorController {
       result = avroSchema.map().values(toAvro(mapTypes[1], nullable, nameSpace));
     } else if (sanetizedHiveType.startsWith(Type.STRUCT_TYPE.getName())) {
       // use random name, as user has no possibility to provide it and it doesn't matter for de-/serialization
-      String recordName = "r" + sanetizedHiveType.hashCode();
+      String recordName = "r" + Math.abs(sanetizedHiveType.hashCode());
       String childNameSpace = !Strings.isNullOrEmpty(nameSpace) ? nameSpace + "." + recordName : recordName;
       SchemaBuilder.FieldAssembler<Schema> record = avroSchema.record(recordName).namespace(nameSpace).fields();
       for (String field : parseStructFields(getInnerType(sanetizedHiveType, 6))) {

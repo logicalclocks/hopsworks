@@ -401,7 +401,10 @@ public class FeaturegroupController {
     // Verify general entity related information
     featurestoreInputValidation.verifyDescription(featuregroupDTO);
     featureGroupInputValidation.verifyFeatureGroupFeatureList(featuregroupDTO.getFeatures());
-
+    featureGroupInputValidation.verifyOnlineOfflineTypeMatch(featuregroupDTO);
+    featureGroupInputValidation.verifyOnlineSchemaValid(featuregroupDTO);
+    featureGroupInputValidation.verifyPrimaryKeySupported(featuregroupDTO);
+    
     // Update on-demand feature group metadata
     if (featuregroup.getFeaturegroupType() == FeaturegroupType.CACHED_FEATURE_GROUP) {
       cachedFeaturegroupController
@@ -756,6 +759,9 @@ public class FeaturegroupController {
     // Verify general entity related information
     featureGroupInputValidation.verifyUserInput(featureGroupDTO);
     featureGroupInputValidation.verifyEventTimeFeature(featureGroupDTO.getEventTime(), featureGroupDTO.getFeatures());
+    featureGroupInputValidation.verifyOnlineOfflineTypeMatch(featureGroupDTO);
+    featureGroupInputValidation.verifyOnlineSchemaValid(featureGroupDTO);
+    featureGroupInputValidation.verifyPrimaryKeySupported(featureGroupDTO);
     verifyFeatureGroupVersion(featureGroupDTO.getVersion());
     statisticColumnController.verifyStatisticColumnsExist(featureGroupDTO);
   }

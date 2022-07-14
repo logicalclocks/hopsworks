@@ -19,9 +19,12 @@ package io.hops.hopsworks.common.featurestore.featuregroup;
 import io.hops.hopsworks.common.featurestore.FeaturestoreConstants;
 import io.hops.hopsworks.common.featurestore.feature.FeatureGroupFeatureDTO;
 import io.hops.hopsworks.common.featurestore.featuregroup.cached.CachedFeaturegroupDTO;
+import io.hops.hopsworks.common.featurestore.featuregroup.online.OnlineFeaturegroupController;
+import io.hops.hopsworks.common.featurestore.featuregroup.stream.StreamFeatureGroupDTO;
 import io.hops.hopsworks.common.featurestore.utils.FeaturestoreInputValidation;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.restutils.RESTCodes;
+import org.apache.commons.lang.StringUtils;
 
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
@@ -40,6 +43,8 @@ public class FeatureGroupInputValidation {
   
   @EJB
   private FeaturestoreInputValidation featureStoreInputValidation;
+  @EJB
+  private OnlineFeaturegroupController onlineFeaturegroupController;
   
   /**
    * Verify entity names input by the user for creation of entities in the featurestore
@@ -103,5 +108,181 @@ public class FeatureGroupInputValidation {
         Level.SEVERE,
         "Cannot create an online feature group without a feature schema.");
     }
+  }
+  
+  /**
+   * Make sure online and offline types match.
+   * @param featuregroupDTO
+   * @throws FeaturestoreException
+   */
+  public void verifyOnlineOfflineTypeMatch(FeaturegroupDTO featuregroupDTO) throws FeaturestoreException{
+    if ((featuregroupDTO instanceof CachedFeaturegroupDTO
+       && ((CachedFeaturegroupDTO) featuregroupDTO).getOnlineEnabled()) ||
+       (featuregroupDTO instanceof StreamFeatureGroupDTO
+       && ((StreamFeatureGroupDTO) featuregroupDTO).getOnlineEnabled())) {
+  
+      for (FeatureGroupFeatureDTO feature : featuregroupDTO.getFeatures()) {
+        String offlineType = feature.getType().toLowerCase().replace(" ", "");
+        String onlineType =
+          onlineFeaturegroupController.getOnlineType(feature).toLowerCase().replace(" ", "");
+        
+        if (offlineType.equals(onlineType)) {
+          continue;
+        }
+  
+        if (offlineType.equals("int") &&
+          (onlineType.equals("tinyint") ||
+            onlineType.equals("smallint"))) {
+          continue;
+        }
+        
+        if (offlineType.equals("boolean") &&
+          onlineType.equals("tinyint")) {
+          continue;
+        }
+  
+        if (offlineType.equals("string") &&
+          (onlineType.startsWith("varchar") || onlineType.equals("text"))) {
+          continue;
+        }
+
+        if ((offlineType.startsWith("array") ||
+          offlineType.startsWith("struct") ||
+          offlineType.startsWith("binary")) &&
+          (onlineType.startsWith("varbinary") || onlineType.equals("blob"))) {
+          continue;
+        }
+        
+        throw new FeaturestoreException(
+          COULD_NOT_CREATE_ONLINE_FEATUREGROUP,
+          Level.SEVERE,
+          "Cannot create an online feature group because " +
+            "offline and online types are not compatible. " +
+            "Feature: " + feature.getName() + " " +
+            "(offline type '" + offlineType +
+            "', online type '" + onlineType + "')");
+      }
+    }
+  }
+  
+  /**
+   * Make sure online schema is supported by mysql.
+   * @param featuregroupDTO
+   * @throws FeaturestoreException
+   */
+  public void verifyOnlineSchemaValid(FeaturegroupDTO featuregroupDTO) throws FeaturestoreException{
+    if ((featuregroupDTO instanceof CachedFeaturegroupDTO
+      && ((CachedFeaturegroupDTO) featuregroupDTO).getOnlineEnabled()) ||
+      (featuregroupDTO instanceof StreamFeatureGroupDTO
+        && ((StreamFeatureGroupDTO) featuregroupDTO).getOnlineEnabled())) {
+    
+      if (featuregroupDTO.getFeatures().size() > FeaturestoreConstants.MAX_MYSQL_COLUMNS) {
+        throw new FeaturestoreException(
+          COULD_NOT_CREATE_ONLINE_FEATUREGROUP,
+          Level.SEVERE,
+          "Cannot create an online feature group because it contains > " +
+            FeaturestoreConstants.MAX_MYSQL_COLUMNS + " rows (provided: " +
+            featuregroupDTO.getFeatures().size() + " rows).");
+      }
+      
+      Integer totalBytes = 0;
+      for (FeatureGroupFeatureDTO feature : featuregroupDTO.getFeatures()) {
+        String onlineType =
+          onlineFeaturegroupController.getOnlineType(feature).toLowerCase().replace(" ", "");
+        totalBytes += estimateOnlineSize(onlineType);
+      }
+  
+      if (totalBytes > FeaturestoreConstants.MAX_MYSQL_COLUMN_SIZE) {
+        throw new FeaturestoreException(
+          COULD_NOT_CREATE_ONLINE_FEATUREGROUP,
+          Level.SEVERE,
+          "Cannot create an online feature group because row size > " +
+            FeaturestoreConstants.MAX_MYSQL_COLUMN_SIZE + " bytes (estimated size: " + totalBytes +
+            " bytes).");
+      }
+      
+    }
+  }
+  
+  /**
+   * Make sure primary keys are supported.
+   * @param featuregroupDTO
+   * @throws FeaturestoreException
+   */
+  public void verifyPrimaryKeySupported(FeaturegroupDTO featuregroupDTO) throws FeaturestoreException{
+    if ((featuregroupDTO instanceof CachedFeaturegroupDTO
+      && ((CachedFeaturegroupDTO) featuregroupDTO).getOnlineEnabled()) ||
+      (featuregroupDTO instanceof StreamFeatureGroupDTO
+        && ((StreamFeatureGroupDTO) featuregroupDTO).getOnlineEnabled())) {
+      Integer totalBytes = 0;
+      for (FeatureGroupFeatureDTO feature : featuregroupDTO.getFeatures()) {
+        if (feature.getPrimary()) {
+          String pkType =
+            onlineFeaturegroupController.getOnlineType(feature).toLowerCase().replace(" ", "");
+  
+          Boolean found = false;
+          for (String supportedName : FeaturestoreConstants.SUPPORTED_MYSQL_PRIMARY_KEYS) {
+            if (pkType.startsWith(supportedName.toLowerCase())) {
+              found = true;
+              break;
+            }
+          }
+  
+          totalBytes += estimateOnlineSize(pkType);
+          
+          if (!found) {
+            throw new FeaturestoreException(
+              COULD_NOT_CREATE_ONLINE_FEATUREGROUP,
+              Level.SEVERE,
+              "Cannot create an online feature group because primary key type is not supported. " +
+                "Feature: " + feature.getName() + " " +
+                "(offline type '" + feature.getType() +
+                "', online type '" + onlineFeaturegroupController.getOnlineType(feature) + "')");
+          }
+        }
+      }
+      
+      if (totalBytes > FeaturestoreConstants.MAX_MYSQL_PRIMARY_KEY_SIZE) {
+        throw new FeaturestoreException(
+          COULD_NOT_CREATE_ONLINE_FEATUREGROUP,
+          Level.SEVERE,
+          "Cannot create an online feature group because primary key is > " +
+            FeaturestoreConstants.MAX_MYSQL_PRIMARY_KEY_SIZE + " bytes (estimated size: " +
+            totalBytes + " bytes).");
+      }
+      
+    }
+  }
+  
+  private Integer estimateOnlineSize(String onlineFeatureType) {
+    // conservative estimate of byte size in MySQL
+    if (onlineFeatureType.equals("tinyint")) {
+      return 1;
+    } else if (onlineFeatureType.equals("smallint")) {
+      return 2;
+    } else if (onlineFeatureType.equals("int")) {
+      return 4;
+    } else if (onlineFeatureType.equals("float")) {
+      return 4;
+    } else if (onlineFeatureType.equals("bigint")) {
+      return 8;
+    } else if (onlineFeatureType.equals("double")) {
+      return 8;
+    } else if (onlineFeatureType.startsWith("decimal")) {
+      return 16;
+    } else if (onlineFeatureType.equals("blob") || onlineFeatureType.equals("text")) {
+      return 256;
+    } else if (onlineFeatureType.startsWith("varchar") && onlineFeatureType.contains("latin1")) {
+      return Integer.parseInt(StringUtils.substringBetween(onlineFeatureType, "(", ")"));
+    } else if (onlineFeatureType.startsWith("varchar")) {
+      return Integer.parseInt(StringUtils.substringBetween(onlineFeatureType, "(", ")")) * 4;
+    } else if (onlineFeatureType.startsWith("varbinary")) {
+      // 1.4 factor to account for metadata stored alongside varbinary
+      return Math.round(Integer.parseInt(onlineFeatureType.replace("varbinary(", "").replace(")",
+        "")) * 1.4f);
+    }
+    
+    // default
+    return 8;
   }
 }

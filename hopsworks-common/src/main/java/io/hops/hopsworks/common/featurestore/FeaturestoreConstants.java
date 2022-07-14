@@ -63,19 +63,15 @@ public class FeaturestoreConstants {
   public static final String HOPSFS_CONNECTOR_DTO_TYPE = "featurestoreHopsfsConnectorDTO";
   public static final String FEATUREGROUP_TYPE = "FEATURE GROUP";
   public static final String TRAINING_DATASET_TYPE = "TRAINING DATASET";
-  public static final List<String> SUGGESTED_HIVE_FEATURE_TYPES = Arrays.asList("None", "TINYINT", "SMALLINT", "INT",
-    "BIGINT", "FLOAT", "DOUBLE",
-    "DECIMAL", "TIMESTAMP", "DATE", "STRING",
+  public static final List<String> SUGGESTED_HIVE_FEATURE_TYPES = Arrays.asList("INT",
+    "BIGINT", "FLOAT", "DOUBLE", "DECIMAL", "TIMESTAMP", "DATE", "STRING",
     "BOOLEAN", "BINARY",
     "ARRAY <TINYINT>", "ARRAY <SMALLINT>", "ARRAY <INT>", "ARRAY <BIGINT>",
     "ARRAY <FLOAT>", "ARRAY <DOUBLE>", "ARRAY <DECIMAL>", "ARRAY <TIMESTAMP>",
     "ARRAY <DATE>", "ARRAY <STRING>",
     "ARRAY <BOOLEAN>", "ARRAY <BINARY>", "ARRAY <ARRAY <FLOAT> >",
     "ARRAY <ARRAY <INT> >", "ARRAY <ARRAY <STRING> >",
-    "MAP <FLOAT, FLOAT>", "MAP <FLOAT, STRING>", "MAP <FLOAT, INT>", "MAP <FLOAT, BINARY>",
-    "MAP <INT, INT>", "MAP <INT, STRING>", "MAP <INT, BINARY>", "MAP <INT, FLOAT>",
-    "MAP <INT, ARRAY <FLOAT> >",
-    "STRUCT < label: STRING, index: INT >", "UNIONTYPE < STRING, INT>");
+    "STRUCT < label: STRING, index: INT >");
   public static final String S3_BUCKET_TRAINING_DATASETS_FOLDER = "TRAINING_DATASETS";
   public static final List<String> FEATURE_IMPORT_CONNECTORS
     = Arrays.asList(S3_CONNECTOR_TYPE, JDBC_CONNECTOR_TYPE, REDSHIFT_CONNECTOR_TYPE);
@@ -84,12 +80,16 @@ public class FeaturestoreConstants {
   public static final String ONLINE_FEATURE_STORE_JDBC_PASSWORD_ARG = "password";
   public static final String ONLINE_FEATURE_STORE_JDBC_USER_ARG = "user";
   public static final String ONLINE_FEATURE_STORE_JDBC_DRIVER_ARG = "driver";
-  public static final List<String> SUGGESTED_MYSQL_DATA_TYPES = Arrays.asList("None", "INT(11)", "TINYINT(1)",
-    "SMALLINT(5)", "MEDIUMINT(7)", "BIGINT(20)", "FLOAT", "DOUBLE", "DECIMAL",
-    "DATE", "DATETIME", "TIMESTAMP", "TIME", "YEAR", "CHAR", "VARCHAR(25)", "VARCHAR(125)", "VARCHAR(225)",
-    "VARCHAR(500)", "VARCHAR(1000)", "VARCHAR(2000)", "VARCHAR(5000)", "VARCHAR(10000)", "BINARY", "VARBINARY(100)",
-    "VARBINARY(500)", "VARBINARY(1000)", "BLOB", "TEXT", "TINYBLOB", "TINYTEXT", "MEDIUMBLOB", "MEDIUMTEXT", "LONGBLOB",
-    "LONGTEXT", "JSON");
+  public static final List<String> SUGGESTED_MYSQL_DATA_TYPES = Arrays.asList("INT",
+    "TINYINT", "SMALLINT", "BIGINT", "FLOAT", "DOUBLE", "DECIMAL",
+    "DATE", "TIMESTAMP", "VARCHAR(25)", "VARCHAR(125)", "VARCHAR(225)",
+    "VARCHAR(500)", "VARCHAR(1000)", "VARCHAR(2000)", "VARCHAR(5000)", "VARCHAR(10000)",
+    "VARBINARY(100)", "VARBINARY(500)", "VARBINARY(1000)", "BLOB", "TEXT");
+  public static final Integer MAX_MYSQL_COLUMNS = 500;
+  public static final Integer MAX_MYSQL_COLUMN_SIZE = 30000;
+  public static final Integer MAX_MYSQL_PRIMARY_KEY_SIZE = 4000;
+  public static final List<String> SUPPORTED_MYSQL_PRIMARY_KEYS = Arrays.asList("INT",
+    "TINYINT", "SMALLINT", "BIGINT", "VARCHAR", "VARBINARY");
   public static final int ONLINE_FEATURESTORE_USERNAME_MAX_LENGTH = 32;
   public static final int ONLINE_FEATURESTORE_PW_LENGTH = 32;
   public static final String FEATURESTORE_HIVE_DB_SUFFIX = "_featurestore";
