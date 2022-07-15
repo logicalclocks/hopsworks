@@ -24,8 +24,8 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 public enum FeaturegroupType {
   @JsonProperty("CACHED_FEATURE_GROUP")
   CACHED_FEATURE_GROUP,
-  @JsonProperty("STREAM_FEATURE_GROUP")
-  STREAM_FEATURE_GROUP,
   @JsonProperty("ON_DEMAND_FEATURE_GROUP")
-  ON_DEMAND_FEATURE_GROUP; //Note: since we map enum directly to the DB the order is important!
+  ON_DEMAND_FEATURE_GROUP,
+  @JsonProperty("STREAM_FEATURE_GROUP")
+  STREAM_FEATURE_GROUP; //Note: since we map enum directly to the DB the order is important!
 }
