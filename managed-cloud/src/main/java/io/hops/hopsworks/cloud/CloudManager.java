@@ -191,7 +191,12 @@ public class CloudManager {
         }
       }
 
-      Map<String, CloudNode> workers = addWorkers(response);
+      Map<String, CloudNode> allNodesButHead = new HashMap<>(response.getWorkers().size());
+      for (CloudNode worker : response.getWorkers()) {
+        allNodesButHead.put(worker.getHost(), worker);
+      }
+
+      addNewNodes(response);
       
       checkUsers(response.getBlockedUsers());
       
@@ -214,7 +219,7 @@ public class CloudManager {
             .filter(cc -> cc.getType().equals(CloudCommandType.DECOMMISSION_NODE))
             .map(cc -> (DecommissionNodeCommand) cc).collect(Collectors.toList());
 
-        toSend = setAndGetDecommission(removeNodesRequests, workers, decomissionNodeRequests);
+        toSend = setAndGetDecommission(removeNodesRequests, allNodesButHead, decomissionNodeRequests);
 
         if (firstHeartbeat) {
           firstHeartbeat = false;
@@ -251,20 +256,14 @@ public class CloudManager {
    * add worker nodes to host table if they are not present
    *
    */
-  private Map<String, CloudNode> addWorkers(HeartbeatResponse response) {
-    return addWorkers(response, hostsFacade, hostsController, decommissionedNodes);
+  private void addNewNodes(HeartbeatResponse response) {
+    addNewNodes(response, hostsFacade, hostsController, decommissionedNodes);
   }
 
   @VisibleForTesting
-  Map<String, CloudNode> addWorkers(HeartbeatResponse response, HostsFacade hostsFacade,
+  void addNewNodes(HeartbeatResponse response, HostsFacade hostsFacade,
                                     HostsController hostsController, Set<CloudNode> decommissionedNodes) {
-    Map<String, CloudNode> workers = new HashMap<>(response.getWorkers().size());
     for (CloudNode worker : response.getWorkers()) {
-
-      if(worker.getNodeType() == CloudNodeType.Worker){
-        workers.put(worker.getHost(), worker);
-      }
-
       // Do not put back nodes that were removed by the previous heartbeat
       // but not yet shutdown
       if (!worker.getInstanceState().equals("error") &&
@@ -277,7 +276,6 @@ public class CloudManager {
         hostsController.addOrUpdateClusterNode(worker.getHost(), hostDTO);
       }
     }
-    return workers;
   }
 
   enum Status {
@@ -335,7 +333,7 @@ public class CloudManager {
   }
   
   private DecommissionStatus setAndGetDecommission(List<RemoveNodesCommand> removeNodesCommands,
-      Map<String, CloudNode> workers, List<DecommissionNodeCommand> decomissionNodeRequests)
+      Map<String, CloudNode> allNodesButHead, List<DecommissionNodeCommand> decomissionNodeRequests)
       throws InterruptedException {
     Configuration conf = settings.getConfiguration();
     YarnClientWrapper yarnClientWrapper = null;
@@ -344,19 +342,29 @@ public class CloudManager {
       dfsOps = dfsService.getDfsOps();
       yarnClientWrapper = yarnClientService.getYarnClientSuper(conf);
       //we pass yarnClient, dfsOps, caProxy and hostsController as argument to be able to mock them in testing
-      return setAndGetDecommission(removeNodesCommands, workers, yarnClientWrapper.getYarnClient(),
+      return setAndGetDecommission(removeNodesCommands, allNodesButHead, yarnClientWrapper.getYarnClient(),
           dfsOps, conf, caProxy, hostsController, decomissionNodeRequests);
     } finally {
       dfsService.closeDfsClient(dfsOps);
       yarnClientService.closeYarnClient(yarnClientWrapper);
     }
   }
-  
+
+  protected Map<String, CloudNode> filterCloudNodesByType(Map<String, CloudNode> nodes, CloudNodeType type) {
+    Map<String, CloudNode> filtered = new HashMap<>();
+    for (Map.Entry<String, CloudNode> node : nodes.entrySet()) {
+      if (node.getValue().getNodeType().equals(type)) {
+        filtered.put(node.getKey(), node.getValue());
+      }
+    }
+    return filtered;
+  }
+
   @VisibleForTesting
-  DecommissionStatus setAndGetDecommission(List<RemoveNodesCommand> removeNodesCommands, Map<String, CloudNode> workers,
-      YarnClient yarnClient, DistributedFileSystemOps dfsOps, Configuration conf, CAProxy caProxy,
-      HostsController hostsController, List<DecommissionNodeCommand> decomissionNodeRequests) throws
-      InterruptedException {
+  DecommissionStatus setAndGetDecommission(List<RemoveNodesCommand> removeNodesCommands,
+      Map<String, CloudNode> allNodesButHead, YarnClient yarnClient, DistributedFileSystemOps dfsOps,
+      Configuration conf, CAProxy caProxy, HostsController hostsController,
+      List<DecommissionNodeCommand> decomissionNodeRequests) throws InterruptedException {
 
     try {
       int nbTries = 0;
@@ -375,6 +383,8 @@ public class CloudManager {
       Map<String, Map<Status, Set<CloudNode>>> workerPerType = new HashMap<>();
       //nodes that need to be removed from yarn and hdfs
       Set<String> toRemove = new HashSet<>();
+
+      Map<String, CloudNode> workers = filterCloudNodesByType(allNodesButHead, CloudNodeType.Worker);
       
       for (NodeReport report : nodeReports) {
         handleRepport(report, workers, toRemove, oldDecommissioned, decommissioned, decommissioning, activeNodeReports,
@@ -382,8 +392,8 @@ public class CloudManager {
       }
 
       // These are nodes which haven't heartbeated for more than 2 minutes
-      // 7 minutes after Hopsworks has started
-      Set<String> missingNodes = getMissingNodes(workers);
+      // 10 minutes after Hopsworks has started
+      Set<String> missingNodes = getMissingNodes(allNodesButHead);
       toRemove.addAll(missingNodes);
 
       //find workers that have no report. They may not have register to yarn yet or be in an error state
@@ -499,10 +509,10 @@ public class CloudManager {
     }
   }
 
-  private Set<String> getMissingNodes(Map<String, CloudNode> reportedWorkers) {
+  private Set<String> getMissingNodes(Map<String, CloudNode> allNodesButHead) {
     if (!shouldLookForMissingNodes) {
       // If we've just restarted the cluster, give the agents some time to catch up
-      if (ChronoUnit.MINUTES.between(getBeginningOfHeartbeat(), Instant.now()) >= 7) {
+      if (ChronoUnit.MINUTES.between(getBeginningOfHeartbeat(), Instant.now()) > 10) {
         shouldLookForMissingNodes = true;
       }
       return Collections.EMPTY_SET;
@@ -510,7 +520,7 @@ public class CloudManager {
     List<Hosts> allHosts = hostsFacade.findAll();
     Instant now = Instant.now();
     return allHosts.stream()
-            .filter(h -> !reportedWorkers.containsKey(h.getHostname()))
+            .filter(h -> !allNodesButHead.containsKey(h.getHostname()))
             .filter(h -> !blacklistHostnamesToRemove.contains(h.getHostname()))
             .filter(h -> {
               if(h.getLastHeartbeat() == null){

@@ -29,7 +29,6 @@ import org.apache.hadoop.yarn.client.cli.RMAdminCLI;
 import org.junit.Assert;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
-import org.mockito.Captor;
 import org.mockito.Mockito;
 
 
@@ -529,7 +528,7 @@ public class TestCloudManager {
   }
 
   @Test
-  public void testAllWorkersReturnsOnlyWorkers() throws Exception {
+  public void testRegisterNewNodes() throws Exception {
     CloudManager cloudManager = Mockito.spy(CloudManager.class);
     Mockito.doNothing().when(cloudManager).execute(Mockito.any(RMAdminCLI.class), Mockito.any(String[].class));
     Mockito.doReturn(Instant.now()).when(cloudManager).getBeginningOfHeartbeat();
@@ -546,11 +545,7 @@ public class TestCloudManager {
 
     HeartbeatResponse response = new HeartbeatResponse(cloudNodes, new ArrayList<>(), new ArrayList<>());
 
-    Map<String, CloudNode> workers = cloudManager.addWorkers(response, hostsFacade, hostsController, new HashSet<>());
-
-    Assert.assertEquals(2, workers.size());
-    Assert.assertEquals(CloudNodeType.Worker, workers.get("host1").getNodeType());
-    Assert.assertEquals(CloudNodeType.Worker, workers.get("host5").getNodeType());
+    cloudManager.addNewNodes(response, hostsFacade, hostsController, new HashSet<>());
 
     ArgumentCaptor<String> hostArgumentCaptor = ArgumentCaptor.forClass(String.class);
     ArgumentCaptor<HostDTO> hostDTOArgumentCaptor = ArgumentCaptor.forClass(HostDTO.class);
@@ -561,5 +556,33 @@ public class TestCloudManager {
     Assert.assertEquals(Arrays.asList("host1", "host2", "host3", "host4", "host5"), hostArgumentCaptor.getAllValues());
     Assert.assertEquals(hostArgumentCaptor.getAllValues(),
         hostDTOArgumentCaptor.getAllValues().stream().map(HostDTO::getHostname).collect(Collectors.toList()));
+  }
+
+  @Test
+  public void testFilterCloudNodesByType() {
+    CloudManager cloudManager = new CloudManager();
+    Map<String, CloudNode> allNodes = new HashMap<>();
+    allNodes.put("host1", new CloudNode("id", "host1", "ip1", 0, "type1", "running", CloudNodeType.Worker));
+    allNodes.put("host2", new CloudNode("id", "host2", "ip2", 0, "type1", "running", CloudNodeType.Secondary));
+    allNodes.put("host3", new CloudNode("id", "host3", "ip3", 0, "type1", "running", CloudNodeType.Secondary));
+    allNodes.put("host4", new CloudNode("id", "host4", "ip4", 0, "type1", "running", CloudNodeType.NDB_MGM));
+    allNodes.put("host5", new CloudNode("id", "host5", "ip5", 0, "type1", "running", CloudNodeType.Worker));
+
+    Map<String, CloudNode> filtered = cloudManager.filterCloudNodesByType(allNodes, CloudNodeType.Worker);
+    Assert.assertEquals(2, filtered.size());
+    Assert.assertTrue(filtered.containsKey("host1"));
+    Assert.assertTrue(filtered.containsKey("host5"));
+
+    filtered = cloudManager.filterCloudNodesByType(allNodes, CloudNodeType.NDB_MGM);
+    Assert.assertEquals(1, filtered.size());
+    Assert.assertTrue(filtered.containsKey("host4"));
+
+    filtered = cloudManager.filterCloudNodesByType(allNodes, CloudNodeType.Secondary);
+    Assert.assertEquals(2, filtered.size());
+    Assert.assertTrue(filtered.containsKey("host2"));
+    Assert.assertTrue(filtered.containsKey("host3"));
+
+    filtered = cloudManager.filterCloudNodesByType(allNodes, CloudNodeType.MYSQLD);
+    Assert.assertEquals(0, filtered.size());
   }
 }
