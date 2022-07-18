@@ -28,7 +28,6 @@ describe "On #{ENV['OS']}" do
           featurestore_id = get_featurestore_id(@project.id)
           featurestore_name = get_featurestore_name(@project.id)
           featuregroup_suffix = short_random_id
-          project_name = @project.projectname.downcase
           query = make_sample_query(@project, featurestore_id, featuregroup_suffix: featuregroup_suffix)
           json_result = create_feature_view(@project.id, featurestore_id, query)
           parsed_json = JSON.parse(json_result)
@@ -64,7 +63,6 @@ describe "On #{ENV['OS']}" do
         it "should be able to retrieve original query" do
           featurestore_id = get_featurestore_id(@project.id)
           featurestore_name = get_featurestore_name(@project.id)
-          project_name = @project.projectname.downcase
           featuregroup_suffix = short_random_id
           query = make_sample_query(@project, featurestore_id, featuregroup_suffix: featuregroup_suffix)
           json_result = create_feature_view(@project.id, featurestore_id, query)
@@ -91,7 +89,6 @@ describe "On #{ENV['OS']}" do
         it "should be able to create batch query using retrieved query" do
           featurestore_id = get_featurestore_id(@project.id)
           featurestore_name = get_featurestore_name(@project.id)
-          project_name = @project.projectname.downcase
           featuregroup_suffix = short_random_id
           query = make_sample_query(@project, featurestore_id, featuregroup_suffix: featuregroup_suffix)
           json_result = create_feature_view(@project.id, featurestore_id, query)
@@ -131,6 +128,63 @@ describe "On #{ENV['OS']}" do
           expect(parsed_query_result["filter"]["rightLogic"]["leftFilter"]["feature"]["name"]).to eql("ts")
           expect(parsed_query_result["filter"]["rightLogic"]["leftFilter"]["condition"]).to eql("LESS_THAN_OR_EQUAL")
           expect(parsed_query_result["filter"]["rightLogic"]["leftFilter"]["value"]).to eql("4321")
+        end
+
+
+        it "should be able to create sql string with different type of event time filter" do
+          featurestore_id = get_featurestore_id(@project.id)
+          project_name = @project.projectname.downcase
+          featurestore_name = get_featurestore_name(@project.id)
+          featuregroup_suffix = short_random_id
+          features_a = [
+            { type: "INT", name: "id", primary: true },
+            { type: "DATE", name: "ts_date" },
+            { type: "TIMESTAMP", name: "ts" },
+          ]
+          fg_id = create_cached_featuregroup_checked(@project.id, featurestore_id, "test_fg_a#{featuregroup_suffix}",
+                                                     features: features_a,
+                                                     event_time: "ts")
+          query = {
+            leftFeatureGroup: {
+              id: fg_id
+            },
+            leftFeatures: [{ name: 'ts_date' }, { name: 'ts' }],
+            filter: {
+              type: "AND",
+              leftFilter: {
+                feature: {
+                  name: "ts_date",
+                  featureGroupId: fg_id
+                },
+                condition: "GREATER_THAN",
+                value: "2022-01-01"
+              },
+              rightFilter: {
+                feature: {
+                  name: "ts",
+                  featureGroupId: fg_id
+                },
+                condition: "GREATER_THAN",
+                value: "2022-02-01 00:00:00"
+              }
+            }
+          }
+
+          query_result = put "#{ENV['HOPSWORKS_API']}/project/#{@project.id}/featurestores/query", query.to_json
+          expect_status_details(200)
+          parsed_query_result = JSON.parse(query_result)
+
+          expect(parsed_query_result['query']).to eql(
+                                                    "SELECT `fg0`.`ts_date` `ts_date`, `fg0`.`ts` `ts`\n" +
+                                                      "FROM `#{featurestore_name}`.`test_fg_a#{featuregroup_suffix}_1` `fg0`\n" +
+                                                      "WHERE `fg0`.`ts_date` > DATE '#{query[:filter][:leftFilter][:value]}' AND `fg0`.`ts` > TIMESTAMP '#{query[:filter][:rightFilter][:value]}.000'"
+                                                  )
+
+          expect(parsed_query_result['queryOnline']).to eql(
+                                                          "SELECT `fg0`.`ts_date` `ts_date`, `fg0`.`ts` `ts`\n" +
+                                                "FROM `#{project_name.downcase}`.`test_fg_a#{featuregroup_suffix}_1` `fg0`\n" +
+                                                "WHERE `fg0`.`ts_date` > DATE '#{query[:filter][:leftFilter][:value]}' AND `fg0`.`ts` > TIMESTAMP '#{query[:filter][:rightFilter][:value]}.000'"
+                                                        )
         end
       end
     end
