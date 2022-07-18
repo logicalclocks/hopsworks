@@ -75,6 +75,17 @@ describe "On #{ENV['OS']}" do
           }
       ]
       fgs[6][:id] = create_cached_featuregroup_checked(project[:id], featurestore_id, fgs[6][:name], features: features6)
+      fgs[7] = {}
+      fgs[7][:name] = "fg_othername6"
+      features7 = [
+          {
+              type: "INT",
+              name: "husky",
+              description: "t"*200 + "long description of a dog",
+              primary: true
+          }
+      ]
+      fgs[7][:id] = create_cached_featuregroup_checked(project[:id], featurestore_id, fgs[7][:name], features: features7)
       fgs
     end
     def trainingdataset_setup(project)
@@ -102,6 +113,11 @@ describe "On #{ENV['OS']}" do
       td3_description = "some description about a dog"
       td_json, _ = create_hopsfs_training_dataset_checked(project[:id], featurestore_id, connector, name: tds[3][:name], description: td3_description)
       tds[3][:id] = td_json[:id]
+      tds[4] = {}
+      tds[4][:name] = "td_something5"
+      td4_description = "t"*200 + "long description about a dog"
+      td_json, _ = create_hopsfs_training_dataset_checked(project[:id], featurestore_id, connector, name: tds[4][:name], description: td4_description)
+      tds[4][:id] = td_json[:id]
       # TODO add featuregroup name to search
       tds
     end
@@ -319,11 +335,13 @@ describe "On #{ENV['OS']}" do
           expected_hits1 = [{:name => @fgs1[1][:name], :highlight => 'name', :parentProjectName => @project1[:projectname]},
                             {:name => @fgs1[3][:name], :highlight => {'features' => 'name'}, :parentProjectName => @project1[:projectname]},
                             {:name => @fgs1[5][:name], :highlight => 'description', :parentProjectName => @project1[:projectname]},
-                            {:name => @fgs1[6][:name], :highlight => {'features' => 'description'}, :parentProjectName => @project1[:projectname]}]
+                            {:name => @fgs1[6][:name], :highlight => {'features' => 'description'}, :parentProjectName => @project1[:projectname]},
+                            {:name => @fgs1[7][:name], :highlight => {'features' => 'description'}, :parentProjectName => @project1[:projectname]}]
           project_search_test(@project1, "dog", "featuregroup", expected_hits1)
 
           expected_hits2 = [{:featuregroup => @fgs1[3][:name], :highlight => 'name', :parentProjectName => @project1[:projectname]},
-                            {:featuregroup => @fgs1[6][:name], :highlight => 'description', :parentProjectName => @project1[:projectname]}]
+                            {:featuregroup => @fgs1[6][:name], :highlight => 'description', :parentProjectName => @project1[:projectname]},
+                            {:featuregroup => @fgs1[7][:name], :highlight => 'description', :parentProjectName => @project1[:projectname]}]
           project_search_test(@project1, "dog", "feature", expected_hits2)
         end
         it 'project shared search' do
@@ -332,18 +350,22 @@ describe "On #{ENV['OS']}" do
                             {:name => @fgs2[3][:name], :highlight => {'features' => 'name'}, :parentProjectName => @project2[:projectname]},
                             {:name => @fgs2[5][:name], :highlight => 'description', :parentProjectName => @project2[:projectname]},
                             {:name => @fgs2[6][:name], :highlight => {'features' => 'description'}, :parentProjectName => @project2[:projectname]},
+                            {:name => @fgs2[7][:name], :highlight => {'features' => 'description'}, :parentProjectName => @project2[:projectname]},
                             #shared featuregroups
                             {:name => @fgs1[1][:name], :highlight => 'name', :parentProjectName => @project1[:projectname]},
                             {:name => @fgs1[3][:name], :highlight => {'features' => 'name'}, :parentProjectName => @project1[:projectname]},
                             {:name => @fgs1[5][:name], :highlight => "description", :parentProjectName => @project1[:projectname]},
-                            {:name => @fgs1[6][:name], :highlight => {'features' => 'description'}, :parentProjectName => @project1[:projectname]}]
+                            {:name => @fgs1[6][:name], :highlight => {'features' => 'description'}, :parentProjectName => @project1[:projectname]},
+                            {:name => @fgs1[7][:name], :highlight => {'features' => 'description'}, :parentProjectName => @project1[:projectname]}]
           project_search_test(@project2, "dog", "featuregroup", expected_hits1)
 
           expected_hits2 = [{:featuregroup => @fgs2[3][:name], :highlight => 'name', :parentProjectName => @project2[:projectname]},
                             {:featuregroup => @fgs2[6][:name], :highlight => 'description', :parentProjectName => @project2[:projectname]},
+                            {:featuregroup => @fgs2[7][:name], :highlight => 'description', :parentProjectName => @project2[:projectname]},
                             # shared features
                             {:featuregroup => @fgs1[3][:name], :highlight => 'name', :parentProjectName => @project1[:projectname]},
-                            {:featuregroup => @fgs1[6][:name], :highlight => 'description', :parentProjectName => @project1[:projectname]}]
+                            {:featuregroup => @fgs1[6][:name], :highlight => 'description', :parentProjectName => @project1[:projectname]},
+                            {:featuregroup => @fgs1[7][:name], :highlight => 'description', :parentProjectName => @project1[:projectname]}]
           project_search_test(@project2, "dog", "feature", expected_hits2)
         end
         it 'global search' do
@@ -352,16 +374,20 @@ describe "On #{ENV['OS']}" do
                             {:name => @fgs1[3][:name], :highlight => {'features' => 'name'}, :parentProjectName => @project1[:projectname]},
                             {:name => @fgs1[5][:name], :highlight => 'description', :parentProjectName => @project1[:projectname]},
                             {:name => @fgs1[6][:name], :highlight => {'features' => 'description'}, :parentProjectName => @project1[:projectname]},
+                            {:name => @fgs1[7][:name], :highlight => {'features' => 'description'}, :parentProjectName => @project1[:projectname]},
                             {:name => @fgs2[1][:name], :highlight => 'name', :parentProjectName => @project2[:projectname]},
                             {:name => @fgs2[3][:name], :highlight => {'features' => 'name'}, :parentProjectName => @project2[:projectname]},
                             {:name => @fgs2[5][:name], :highlight => 'description', :parentProjectName => @project2[:projectname]},
-                            {:name => @fgs2[6][:name], :highlight => {'features' => 'description'}, :parentProjectName => @project2[:projectname]}]
+                            {:name => @fgs2[6][:name], :highlight => {'features' => 'description'}, :parentProjectName => @project2[:projectname]},
+                            {:name => @fgs2[7][:name], :highlight => {'features' => 'description'}, :parentProjectName => @project2[:projectname]}]
           global_search_test("dog", "featuregroup", expected_hits1)
 
           expected_hits2 = [{:featuregroup => @fgs1[3][:name], :highlight => 'name', :parentProjectName => @project1[:projectname]},
                             {:featuregroup => @fgs1[6][:name], :highlight => 'description', :parentProjectName => @project1[:projectname]},
+                            {:featuregroup => @fgs1[7][:name], :highlight => 'description', :parentProjectName => @project1[:projectname]},
                             {:featuregroup => @fgs2[3][:name], :highlight => 'name', :parentProjectName => @project2[:projectname]},
-                            {:featuregroup => @fgs2[6][:name], :highlight => 'description', :parentProjectName => @project2[:projectname]}
+                            {:featuregroup => @fgs2[6][:name], :highlight => 'description', :parentProjectName => @project2[:projectname]},
+                            {:featuregroup => @fgs2[7][:name], :highlight => 'description', :parentProjectName => @project2[:projectname]}
           ]
           global_search_test("dog", "feature", expected_hits2)
         end
@@ -388,7 +414,8 @@ describe "On #{ENV['OS']}" do
           create_session(@user1_params[:email], @user1_params[:password])
           expected_hits = [{:name => @tds1[1][:name], :highlight => 'name', :parentProjectName => @project1[:projectname]},
                             {:name => @tds1[2][:name], :highlight => 'features', :parentProjectName => @project1[:projectname]},
-                            {:name => @tds1[3][:name], :highlight => "description", :parentProjectName => @project1[:projectname]}]
+                            {:name => @tds1[3][:name], :highlight => "description", :parentProjectName => @project1[:projectname]},
+                            {:name => @tds1[4][:name], :highlight => "description", :parentProjectName => @project1[:projectname]}]
           project_search_test(@project1, "dog", "trainingdataset", expected_hits)
         end
         it 'project shared search' do
@@ -396,10 +423,12 @@ describe "On #{ENV['OS']}" do
           expected_hits = [{:name => @tds2[1][:name], :highlight => 'name', :parentProjectName => @project2[:projectname]},
                             {:name => @tds2[2][:name], :highlight => 'features', :parentProjectName => @project2[:projectname]},
                             {:name => @tds2[3][:name], :highlight => "description", :parentProjectName => @project2[:projectname]},
+                            {:name => @tds2[4][:name], :highlight => "description", :parentProjectName => @project2[:projectname]},
                             # shared trainingdatasets
                             {:name => @tds1[1][:name], :highlight => 'name', :parentProjectName => @project1[:projectname]},
                             {:name => @tds1[2][:name], :highlight => 'features', :parentProjectName => @project1[:projectname]},
-                            {:name => @tds1[3][:name], :highlight => "description", :parentProjectName => @project1[:projectname]}]
+                            {:name => @tds1[3][:name], :highlight => "description", :parentProjectName => @project1[:projectname]},
+                            {:name => @tds1[4][:name], :highlight => "description", :parentProjectName => @project1[:projectname]}]
           project_search_test(@project2, "dog", "trainingdataset", expected_hits)
         end
         it 'global tds' do
@@ -407,9 +436,11 @@ describe "On #{ENV['OS']}" do
           expected_hits = [{:name => @tds1[1][:name], :highlight => 'name', :parentProjectName => @project1[:projectname]},
                            {:name => @tds1[2][:name], :highlight => 'features', :parentProjectName => @project1[:projectname]},
                            {:name => @tds1[3][:name], :highlight => "description", :parentProjectName => @project1[:projectname]},
+                           {:name => @tds1[4][:name], :highlight => "description", :parentProjectName => @project1[:projectname]},
                            {:name => @tds2[1][:name], :highlight => 'name', :parentProjectName => @project2[:projectname]},
                            {:name => @tds2[2][:name], :highlight => 'features', :parentProjectName => @project2[:projectname]},
-                           {:name => @tds2[3][:name], :highlight => "description", :parentProjectName => @project2[:projectname]}]
+                           {:name => @tds2[3][:name], :highlight => "description", :parentProjectName => @project2[:projectname]},
+                           {:name => @tds2[4][:name], :highlight => "description", :parentProjectName => @project2[:projectname]}]
           global_search_test("dog", "trainingdataset", expected_hits)
         end
       end

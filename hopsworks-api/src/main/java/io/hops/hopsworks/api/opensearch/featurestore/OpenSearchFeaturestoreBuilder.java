@@ -169,7 +169,7 @@ public class OpenSearchFeaturestoreBuilder {
     //<highlighted text, name, description>
     Function<Triplet<String, String, String>, Boolean> matcher = (state) -> {
       //check if highlighted name equals feature name
-      return removeHighlightTags(state.getValue0()).equals(state.getValue1());
+      return state.getValue1().contains(removeHighlightTags(state.getValue0()));
     };
     BiConsumer<OpenSearchFeaturestoreItemDTO.Highlights, String> highlighter =
       OpenSearchFeaturestoreItemDTO.Highlights::setName;
@@ -187,7 +187,7 @@ public class OpenSearchFeaturestoreBuilder {
     //<highlighted text, name, description>
     Function<Triplet<String, String, String>, Boolean> matcher = (state) -> {
       //check if highlighted description equals feature description
-      return removeHighlightTags(state.getValue0()).equals(state.getValue2());
+      return state.getValue2().contains(removeHighlightTags(state.getValue0()));
     };
     BiConsumer<OpenSearchFeaturestoreItemDTO.Highlights, String> highlighter =
       OpenSearchFeaturestoreItemDTO.Highlights::setDescription;
@@ -228,7 +228,8 @@ public class OpenSearchFeaturestoreBuilder {
           }
           //does the feature match the highlight (name/description)
           if (matcher.apply(Triplet.with(ee.toString(), featureNameAux, featureDescriptionAux))) {
-            OpenSearchFeaturestoreItemDTO.Feature feature = result.getFeature(hit.getProjectName(), featureNameAux);
+            OpenSearchFeaturestoreItemDTO.Feature feature = result.getFeature(hit.getProjectName(),
+              hit.getName(), featureNameAux);
             if(feature == null) {
               OpenSearchFeaturestoreItemDTO.Base fgParent
                 = openSearchFeaturestoreItemBuilder.fromFeaturegroup(hit, converter);
