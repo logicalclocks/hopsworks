@@ -65,8 +65,8 @@
       <artifactId>json</artifactId>
     </dependency>
     <dependency>
-      <groupId>org.apache.calcite</groupId>
-      <artifactId>calcite-core</artifactId>
+      <groupId>io.hops.calcite</groupId>
+      <artifactId>calcite-core-shaded-guava-31</artifactId>
     </dependency>
     <!-- Here we are lying to Maven. Calcite has some dependency that depends on protobuf 3.0.0.
     We are not going to use that codepath as we only use a small subset of calcite code.
