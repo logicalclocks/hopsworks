@@ -16,7 +16,7 @@
 package io.hops.hopsworks.api.opensearch.featurestore;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import org.javatuples.Pair;
+import org.javatuples.Triplet;
 
 import javax.xml.bind.annotation.XmlRootElement;
 import java.util.HashMap;
@@ -31,7 +31,7 @@ public class OpenSearchFeaturestoreDTO {
   private List<OpenSearchFeaturestoreItemDTO.Base> trainingdatasets = new LinkedList<>();
   private List<OpenSearchFeaturestoreItemDTO.Feature> features = new LinkedList<>();
   @JsonIgnore
-  private Map<Pair<String, String>, OpenSearchFeaturestoreItemDTO.Feature> featuresAux = new HashMap<>();
+  private Map<Triplet<String, String, String>, OpenSearchFeaturestoreItemDTO.Feature> featuresAux = new HashMap<>();
   private Integer featuregroupsFrom = 0;
   private Long featuregroupsTotal = 0l;
   private Integer featureViewsFrom = 0;
@@ -76,7 +76,8 @@ public class OpenSearchFeaturestoreDTO {
   public void setFeatures(List<OpenSearchFeaturestoreItemDTO.Feature> features) {
     this.features = features;
     for(OpenSearchFeaturestoreItemDTO.Feature feature: features) {
-      featuresAux.put(Pair.with(feature.getParentProjectName(), feature.getName()), feature);
+      featuresAux.put(
+        Triplet.with(feature.getParentProjectName(), feature.getFeaturegroup(), feature.getName()), feature);
     }
   }
   
@@ -158,10 +159,13 @@ public class OpenSearchFeaturestoreDTO {
   
   public void addFeature(OpenSearchFeaturestoreItemDTO.Feature feature) {
     features.add(feature);
-    featuresAux.put(Pair.with(feature.getParentProjectName(), feature.getName()), feature);
+    featuresAux.put(
+      Triplet.with(feature.getParentProjectName(), feature.getFeaturegroup(), feature.getName()), feature);
   }
   
-  public OpenSearchFeaturestoreItemDTO.Feature getFeature(String parentProjectName, String name) {
-    return featuresAux.get(Pair.with(parentProjectName, name));
+  public OpenSearchFeaturestoreItemDTO.Feature getFeature(String parentProjectName,
+                                                          String featuregroupName,
+                                                          String name) {
+    return featuresAux.get(Triplet.with(parentProjectName, featuregroupName, name));
   }
 }
