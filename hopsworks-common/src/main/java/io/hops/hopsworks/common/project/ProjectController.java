@@ -132,8 +132,6 @@ import io.hops.hopsworks.persistence.entity.hdfs.user.HdfsGroups;
 import io.hops.hopsworks.persistence.entity.hdfs.user.HdfsUsers;
 import io.hops.hopsworks.persistence.entity.jobs.configuration.JobConfiguration;
 import io.hops.hopsworks.persistence.entity.jobs.configuration.JobType;
-import io.hops.hopsworks.persistence.entity.jobs.configuration.spark.SparkJobConfiguration;
-import io.hops.hopsworks.persistence.entity.jobs.configuration.yarn.LocalResourceDTO;
 import io.hops.hopsworks.persistence.entity.jobs.description.Jobs;
 import io.hops.hopsworks.persistence.entity.jobs.quota.YarnPriceMultiplicator;
 import io.hops.hopsworks.persistence.entity.jobs.quota.YarnProjectsQuota;
@@ -2530,42 +2528,16 @@ public class ProjectController {
           }
           break;
         case FS:
-          datasetController.createDataset(user, project, tourFilesDataset, "files for guide projects",
-            Provenance.getDatasetProvCore(projectProvCore, Provenance.MLType.DATASET),
-            false, DatasetAccessPermission.EDITABLE, dfso);
-          // Get the JAR from /user/<super user>
-          String featurestoreExampleJarSrc = "/user/" + settings.getSparkUser() + "/"
-            + settings.getHopsExamplesFeaturestoreTourFilename();
-          String featurestoreExampleJarDst = projectPath
-            + tourFilesDataset + "/" + settings.getHopsExamplesFeaturestoreTourFilename();
-          // Get the sample data and notebooks from /user/<super user>/featurestore_demo/
-          String featurestoreExampleDataSrc = "/user/" + settings.getHdfsSuperUser() + "/" +
-            Settings.HOPS_FEATURESTORE_TOUR_DATA + "/data";
-          String featurestoreExampleDataDst = projectPath + tourFilesDataset;
-
           try {
-            //Move example .jar file to HDFS
-            udfso.copyInHdfs(new Path(featurestoreExampleJarSrc), new Path(featurestoreExampleJarDst));
-            String datasetGroup = hdfsUsersController.getHdfsGroupName(project, tourFilesDataset);
-            String userHdfsName = hdfsUsersController.getHdfsUserName(project, user);
-            udfso.setPermission(new Path(featurestoreExampleJarDst),
-              udfso.getParentPermission(new Path(featurestoreExampleJarDst)));
-            udfso.setOwner(new Path(featurestoreExampleJarDst), userHdfsName, datasetGroup);
             //Move example data and notebooks to HDFS
-            udfso.copyInHdfs(new Path(featurestoreExampleDataSrc), new Path(featurestoreExampleDataDst));
-            datasetGroup = hdfsUsersController.getHdfsGroupName(project, tourFilesDataset);
-            userHdfsName = hdfsUsersController.getHdfsUserName(project, user);
-            Inode featurestoreDataDst = inodeController.getInodeAtPath(featurestoreExampleDataDst);
-            datasetController.recChangeOwnershipAndPermission(new Path(featurestoreExampleDataDst),
-              FsPermission.createImmutable(featurestoreDataDst.getPermission()),
-              userHdfsName, datasetGroup, dfso, udfso);
+            String userHdfsName = hdfsUsersController.getHdfsUserName(project, user);
+            String datasetGroup = hdfsUsersController.getHdfsGroupName(project, Settings.HOPS_TOUR_DATASET_JUPYTER);
             //Move example notebooks to Jupyter dataset
-            String featurestoreExampleNotebooksSrc = "/user/" + settings.getHdfsSuperUser() + "/" +
-              Settings.HOPS_FEATURESTORE_TOUR_DATA + "/notebooks";
+            String featurestoreExampleNotebooksSrc =
+                "/user/" + settings.getHdfsSuperUser() + "/" + Settings.HOPS_FEATURESTORE_TOUR_DATA + "/notebooks";
             String featurestoreExampleNotebooksDst = projectPath + Settings.HOPS_TOUR_DATASET_JUPYTER;
-            udfso.copyInHdfs(new Path(featurestoreExampleNotebooksSrc + "/*"),
-              new Path(featurestoreExampleNotebooksDst));
-            datasetGroup = hdfsUsersController.getHdfsGroupName(project, Settings.HOPS_TOUR_DATASET_JUPYTER);
+            udfso.copyInHdfs(
+                new Path(featurestoreExampleNotebooksSrc + "/*"), new Path(featurestoreExampleNotebooksDst));
             Inode featurestoreNotebooksDst = inodeController.getInodeAtPath(featurestoreExampleNotebooksDst);
             datasetController.recChangeOwnershipAndPermission(new Path(featurestoreExampleNotebooksDst),
               FsPermission.createImmutable(featurestoreNotebooksDst.getPermission()),
@@ -2574,30 +2546,6 @@ public class ProjectController {
             throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_TOUR_FILES_ERROR, Level.SEVERE,
               "project: " + project.getName(), ex.getMessage(), ex);
           }
-          SparkJobConfiguration sparkJobConfiguration = new SparkJobConfiguration();
-          sparkJobConfiguration.setAmQueue("default");
-          sparkJobConfiguration.setAmMemory(1024);
-          sparkJobConfiguration.setAmVCores(1);
-          sparkJobConfiguration.setAppPath("hdfs://" + featurestoreExampleJarDst);
-          sparkJobConfiguration.setMainClass(Settings.HOPS_FEATURESTORE_TOUR_JOB_CLASS);
-          sparkJobConfiguration.setDefaultArgs("--input TestJob/data");
-          sparkJobConfiguration.setExecutorInstances(1);
-          sparkJobConfiguration.setExecutorCores(1);
-          sparkJobConfiguration.setExecutorMemory(2024);
-          sparkJobConfiguration.setExecutorGpus(0);
-          sparkJobConfiguration.setDynamicAllocationEnabled(true);
-          sparkJobConfiguration.setDynamicAllocationMinExecutors(1);
-          sparkJobConfiguration.setDynamicAllocationMaxExecutors(3);
-          sparkJobConfiguration.setDynamicAllocationInitialExecutors(1);
-          sparkJobConfiguration.setAppName(Settings.HOPS_FEATURESTORE_TOUR_JOB_NAME);
-          sparkJobConfiguration.setLocalResources(new LocalResourceDTO[0]);
-          Jobs job = jobController.putJob(user, project, null, sparkJobConfiguration);
-          activityFacade.persistActivity(ActivityFacade.CREATED_JOB + job.getName(), project, user,
-            ActivityFlag.SERVICE);
-          executionController
-            .start(job, Settings.HOPS_FEATURESTORE_TOUR_JOB_INPUT_PARAM + tourFilesDataset + "/data", user);
-          activityFacade.persistActivity(ActivityFacade.RAN_JOB + job.getName(), project, user,
-            ActivityFlag.SERVICE);
           break;
         default:
           break;
