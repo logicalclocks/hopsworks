@@ -53,7 +53,7 @@
   <version>3.0.0</version>
   <packaging>ear</packaging>
 
-  <name>hopsworks-ear:2.6.0-SNAPSHOT</name>
+  <name>hopsworks-ear:${project.version}</name>
 
   <build>
     <finalName>hopsworks-ear</finalName>
