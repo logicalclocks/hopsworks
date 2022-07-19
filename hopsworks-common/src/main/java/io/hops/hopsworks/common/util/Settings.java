@@ -2478,11 +2478,6 @@ public class Settings implements Serializable {
     return "hops-examples-spark-" + HOPS_EXAMPLES_VERSION + ".jar";
   }
 
-  public synchronized String getHopsExamplesFeaturestoreTourFilename() {
-    checkCache();
-    return "hops-examples-featurestore-tour-" + HOPS_EXAMPLES_VERSION + ".jar";
-  }
-
   private String VERIFICATION_PATH = "/hopsworks-admin/security/validate_account.xhtml";
 
   public synchronized String getEmailVerificationEndpoint() {
