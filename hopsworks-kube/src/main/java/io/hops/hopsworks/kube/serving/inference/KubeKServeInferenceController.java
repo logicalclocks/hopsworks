@@ -38,12 +38,15 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Optional;
 import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 @Stateless
 @TransactionAttribute(TransactionAttributeType.NEVER)
 public class KubeKServeInferenceController {
+  
+  private static final Logger logger = Logger.getLogger(KubeKServeInferenceController.class.getName());
   
   @EJB
   private KubeKServeClientService kubeKServeClientService;
@@ -76,23 +79,11 @@ public class KubeKServeInferenceController {
   public Pair<Integer, String> infer(String username, Serving serving, InferenceVerb verb, String inferenceRequestJson,
     String authHeader) throws InferenceException, ApiKeyException {
     
+    // validate verb
     if (verb == InferenceVerb.TEST) {
       // if header contains JWT token, replace with API Key
       if (authHeader.startsWith(KubeApiKeyUtils.AUTH_HEADER_BEARER_PREFIX)) {
-        // get user from db
-        Users user = userFacade.findByUsername(username);
-        // get API key from kube secret
-        Optional<ApiKey> apiKey = kubeApiKeyUtils.getServingApiKey(user);
-        if (!apiKey.isPresent()) {
-          // serving api key not found
-          throw new InferenceException(RESTCodes.InferenceErrorCode.REQUEST_AUTH_TYPE_NOT_SUPPORTED, Level.FINE,
-            "Inference requests to KServe require authentication with API Keys",
-            String.format("Serving API Key not found for user ", user.getUsername()));
-        }
-        String secretName = kubeApiKeyUtils.getServingApiKeySecretName(apiKey.get().getPrefix());
-        String rawSecret = kubeApiKeyUtils.getServingApiKeyValueFromKubeSecret(secretName);
-        // replace auth header and verb
-        authHeader = KubeApiKeyUtils.AUTH_HEADER_API_KEY_PREFIX + rawSecret;
+        authHeader = buildApiKeyAuthHeader(username);
         verb = InferenceVerb.PREDICT;
       }
     } else if (verb != InferenceVerb.PREDICT) {
@@ -105,27 +96,81 @@ public class KubeKServeInferenceController {
         "Inference requests to KServe require authentication with API Keys");
     }
     
-    Project project = serving.getProject();
+    String inferenceServiceUrl = getInferenceServiceUrl(serving);
+    HttpPost request = buildInferenceRequest(serving, inferenceServiceUrl, authHeader, verb, inferenceRequestJson);
+    
+    // try sending the inference request (3 attempts)
+    try {
+      Pair<Integer, String> response = sendInferenceRequest(request, 3);
+      return response;
+    } catch (InferenceException e) {
+      if (e.getErrorCode().getCode().intValue() == RESTCodes.InferenceErrorCode.REQUEST_ERROR.getCode().intValue()) {
+        // if if fails to reach the node, it can be that it was destroyed by an autoscaler
+        // invalidate the inference endpoints cache, and retry
+        logger.info("Invalidating inference endpoints cache");
+        kubeInferenceEndpoints.invalidateCache();
+        request = buildInferenceRequest(serving, inferenceServiceUrl, authHeader, verb, inferenceRequestJson);
+      } else {
+        throw e;
+      }
+    }
+    
+    // retry sending the inference request
+    try {
+      Pair<Integer, String> response = sendInferenceRequest(request, 2);
+      return response;
+    } catch (InferenceException e) {
+      // resetting the inference endpoints cache didn't work,
+      // maybe the node we are trying to send requests to died.
+    }
+    throw new InferenceException(RESTCodes.InferenceErrorCode.REQUEST_ERROR, Level.INFO);
+  }
+  
+  private String buildApiKeyAuthHeader(String username) throws ApiKeyException, InferenceException {
+    // get user from db
+    Users user = userFacade.findByUsername(username);
+    // get API key from kube secret
+    Optional<ApiKey> apiKey = kubeApiKeyUtils.getServingApiKey(user);
+    if (!apiKey.isPresent()) {
+      // serving api key not found
+      throw new InferenceException(RESTCodes.InferenceErrorCode.REQUEST_AUTH_TYPE_NOT_SUPPORTED, Level.FINE,
+        "Inference requests to KServe require authentication with API Keys",
+        String.format("Serving API Key not found for user ", user.getUsername()));
+    }
+    String secretName = kubeApiKeyUtils.getServingApiKeySecretName(apiKey.get().getPrefix());
+    String rawSecret = kubeApiKeyUtils.getServingApiKeyValueFromKubeSecret(secretName);
+    // replace auth header and verb
+    return KubeApiKeyUtils.AUTH_HEADER_API_KEY_PREFIX + rawSecret;
+  }
+  
+  private String getInferenceServiceUrl(Serving serving) throws InferenceException {
+    // get inference service url
     JSONObject inferenceServiceStatus;
     try {
+      Project project = serving.getProject();
       inferenceServiceStatus = kubeKServeClientService.getInferenceServiceStatus(project, serving);
     } catch (KubernetesClientException e) {
       throw new InferenceException(RESTCodes.InferenceErrorCode.SERVING_INSTANCE_INTERNAL, Level.SEVERE, null,
         e.getMessage(), e);
     }
-    
     if (inferenceServiceStatus == null) {
       throw new InferenceException(RESTCodes.InferenceErrorCode.SERVING_NOT_RUNNING, Level.FINE);
     }
-
-    // Get host header, istio host and port
+    return inferenceServiceStatus.getString("url");
+  }
+  
+  private HttpPost buildInferenceRequest(Serving serving, String inferenceServiceURL, String authHeader,
+    InferenceVerb verb, String inferenceRequestJson) throws InferenceException {
+    // Get host header
     String hostHeader;
     try {
-      hostHeader = (new URI(inferenceServiceStatus.getString("url"))).getHost();
+      hostHeader = (new URI(inferenceServiceURL)).getHost();
     } catch (URISyntaxException e) {
       throw new InferenceException(RESTCodes.InferenceErrorCode.SERVING_INSTANCE_INTERNAL, Level.SEVERE, null,
         e.getMessage(), e);
     }
+    
+    // Get istio host and port
     InferenceEndpoint endpoint = kubeInferenceEndpoints.getEndpoint(InferenceEndpoint.InferenceEndpointType.NODE);
     String host = endpoint.getAnyHost();
     if (host == null) {
@@ -140,25 +185,30 @@ public class KubeKServeInferenceController {
         kubeServingUtils.getModelServerInferencePath(serving, verb), inferenceRequestJson);
       request.addHeader("host", hostHeader); // needed by Istio to route the request
       request.addHeader("authorization", authHeader); // istio auth
+      return request;
     } catch (URISyntaxException e) {
       throw new InferenceException(RESTCodes.InferenceErrorCode.REQUEST_ERROR, Level.SEVERE, null, e.getMessage(), e);
     }
-    
-    int nRetry = 3;
-    while (nRetry > 0) {
+  }
+  
+  private Pair<Integer, String> sendInferenceRequest(HttpPost request, Integer numRetry) throws InferenceException {
+    InferenceException ex = null;
+    while (numRetry > 0) {
       try {
         HttpContext context = HttpClientContext.create();
         CloseableHttpResponse response = inferenceHttpClient.execute(request, context);
         Pair<Integer, String> inferenceResult = inferenceHttpClient.handleInferenceResponse(response);
         return inferenceResult.getL() >= 400 ? parseInferenceErrorResponse(inferenceResult) : inferenceResult;
       } catch (InferenceException e) {
-        // Maybe the node we are trying to send requests to died.
+        ex = e;
       } finally {
-        nRetry--;
+        numRetry--;
       }
     }
     
-    throw new InferenceException(RESTCodes.InferenceErrorCode.REQUEST_ERROR, Level.INFO);
+    // if all the attempts failed, re-raise exception
+    assert ex != null;
+    throw ex;
   }
   
   private Pair<Integer, String> parseInferenceErrorResponse(Pair<Integer, String> inferenceResult) {

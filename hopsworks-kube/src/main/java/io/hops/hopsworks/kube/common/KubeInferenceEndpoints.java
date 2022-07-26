@@ -43,6 +43,10 @@ public class KubeInferenceEndpoints {
     return null;
   }
   
+  public void invalidateCache() {
+    endpointsMap.clear();
+  }
+  
   private void cacheEndpoint(InferenceEndpoint endpoint) {
     endpointsMap.put(endpoint.getType(), endpoint);
   }
