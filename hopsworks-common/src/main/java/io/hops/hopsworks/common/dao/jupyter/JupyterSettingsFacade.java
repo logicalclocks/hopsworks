@@ -42,12 +42,14 @@ package io.hops.hopsworks.common.dao.jupyter;
 import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.logging.Logger;
+import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import javax.persistence.TypedQuery;
 
 import io.hops.hopsworks.common.hdfs.Utils;
+import io.hops.hopsworks.common.util.ProjectUtils;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.persistence.entity.jobs.configuration.ExperimentType;
 import io.hops.hopsworks.persistence.entity.jobs.configuration.spark.SparkJobConfiguration;
@@ -63,6 +65,9 @@ import org.apache.commons.codec.digest.DigestUtils;
  */
 @Stateless
 public class JupyterSettingsFacade {
+
+  @EJB
+  private ProjectUtils projectUtils;
 
   private static final Logger logger = Logger.getLogger(
           JupyterSettingsFacade.class.
@@ -93,16 +98,21 @@ public class JupyterSettingsFacade {
     js = em.find(JupyterSettings.class, pk);
     if (js == null) {
       String secret = DigestUtils.sha256Hex(Integer.toString(
-              ThreadLocalRandom.current().nextInt()));
+          ThreadLocalRandom.current().nextInt()));
       js = new JupyterSettings(pk);
       js.setSecret(secret);
       js.setJobConfig(new SparkJobConfiguration(ExperimentType.EXPERIMENT));
+      js.setDockerConfig(projectUtils.buildDockerJobConfiguration()); // HOPSWORKS-2660
       js.setBaseDir(Utils.getProjectPath(project.getName()) + Settings.ServiceDataset.JUPYTER.getName());
       persist(js);
     }
     if(js.getJobConfig() == null) {
       js.setJobConfig(new SparkJobConfiguration(ExperimentType.EXPERIMENT));
     }
+    if(js.getDockerConfig() == null) {
+      js.setDockerConfig(projectUtils.buildDockerJobConfiguration()); // HOPSWORKS-2660
+    }
+
     return js;
   }
 
