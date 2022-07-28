@@ -42,7 +42,9 @@ import com.google.common.base.Strings;
 import com.logicalclocks.servicediscoverclient.exceptions.ServiceDiscoveryException;
 import io.hops.hopsworks.common.hosts.ServiceDiscoveryController;
 import io.hops.hopsworks.exceptions.ProjectException;
+import io.hops.hopsworks.persistence.entity.jobs.configuration.DockerJobConfiguration;
 import io.hops.hopsworks.persistence.entity.project.Project;
+import io.hops.hopsworks.persistence.entity.serving.DockerResourcesConfiguration;
 import io.hops.hopsworks.restutils.RESTCodes;
 
 import javax.ejb.EJB;
@@ -225,5 +227,30 @@ public class ProjectUtils {
   
   public String getProjectDockerRepoName(String imageName){
     return imageName.split(":")[0];
+  }
+
+  /**
+   * Build docker job configuration with memory minimum of default and KUBE_DOCKER_MAX_MEMORY_ALLOCATION
+   * @return DockerJobConfiguration
+   */
+  public DockerJobConfiguration buildDockerJobConfiguration(){
+    DockerJobConfiguration dockerConfig = new DockerJobConfiguration();
+    dockerConfig.setResourceConfig(buildDockerResourceConfig());
+
+    return dockerConfig;
+  }
+
+  /**
+   * Build DockerResourcesConfiguration with memory minimum of default and KUBE_DOCKER_MAX_MEMORY_ALLOCATION
+   * @return DockerResourcesConfiguration
+   */
+  public DockerResourcesConfiguration buildDockerResourceConfig(){
+    DockerResourcesConfiguration dockerResourceConfig=new DockerResourcesConfiguration();
+    int defaultMemory = dockerResourceConfig.getMemory(); // get default memory
+    Integer userKubeMaxMem = settings.getKubeDockerMaxMemoryAllocation();
+    if (userKubeMaxMem < defaultMemory) // check KUBE_DOCKER_MAX_MEMORY_ALLOCATION and default memory
+      dockerResourceConfig.setMemory(userKubeMaxMem);
+
+    return dockerResourceConfig;
   }
 }

@@ -40,6 +40,7 @@ package io.hops.hopsworks.persistence.entity.jupyter;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.hops.hopsworks.persistence.entity.jobs.configuration.JobConfiguration;
+import io.hops.hopsworks.persistence.entity.jupyter.config.DockerConfigurationConverter;
 import io.hops.hopsworks.persistence.entity.jupyter.config.JupyterConfigurationConverter;
 import io.hops.hopsworks.persistence.entity.user.Users;
 
@@ -132,6 +133,10 @@ public class JupyterSettings implements Serializable {
   @Column(name = "job_config")
   @Convert(converter = JupyterConfigurationConverter.class)
   private JobConfiguration jobConfig;
+
+  @Column(name = "docker_config")
+  @Convert(converter = DockerConfigurationConverter.class)
+  private JobConfiguration dockerConfig;
   
   @Transient
   private String privateDir = "";
@@ -257,6 +262,14 @@ public class JupyterSettings implements Serializable {
 
   public void setJobConfig(JobConfiguration jobConfig) {
     this.jobConfig = jobConfig;
+  }
+
+  public JobConfiguration getDockerConfig() {
+    return dockerConfig;
+  }
+
+  public void setDockerConfig(JobConfiguration dockerConfig) {
+    this.dockerConfig = dockerConfig;
   }
 
   public boolean isPythonKernel() {
