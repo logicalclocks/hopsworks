@@ -43,6 +43,7 @@ import com.google.common.base.Strings;
 import io.hops.hopsworks.common.dao.jobhistory.ExecutionFacade;
 import io.hops.hopsworks.common.dao.jobs.description.JobFacade;
 import io.hops.hopsworks.common.util.HopsUtils;
+import io.hops.hopsworks.common.util.ProjectUtils;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.common.util.SparkConfigurationUtil;
 import io.hops.hopsworks.persistence.entity.jobs.configuration.flink.FlinkJobConfiguration;
@@ -104,6 +105,8 @@ public class JobController {
   private HdfsUsersController hdfsUsersController;
   @EJB
   private Settings settings;
+  @EJB
+  private ProjectUtils projectUtils;
 
   private static final Logger LOGGER = Logger.getLogger(JobController.class.getName());
   
@@ -240,6 +243,7 @@ public class JobController {
             throw new IllegalArgumentException("Path does not point to a .jar, .py or .ipynb file.");
           }
           return sparkController.inspectProgram((SparkJobConfiguration)jobConf, path, udfso);
+        case DOCKER:
         case FLINK:
           return jobConf;
         default:
@@ -283,6 +287,8 @@ public class JobController {
           return new SparkJobConfiguration();
         case FLINK:
           return new FlinkJobConfiguration();
+        case DOCKER:
+          return projectUtils.buildDockerJobConfiguration();
         default:
           throw new IllegalArgumentException("Job type not supported: " + jobType);
       }

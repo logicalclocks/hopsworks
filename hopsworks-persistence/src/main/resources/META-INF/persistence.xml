@@ -173,6 +173,7 @@
     <class>io.hops.hopsworks.persistence.entity.user.cluster.RegistrationStatusConverter</class>
     <class>io.hops.hopsworks.persistence.entity.jobs.configuration.JobConfigurationConverter</class>
     <class>io.hops.hopsworks.persistence.entity.jupyter.config.JupyterConfigurationConverter</class>
+    <class>io.hops.hopsworks.persistence.entity.jupyter.config.DockerConfigurationConverter</class>
     <class>io.hops.hopsworks.persistence.entity.jupyter.config.DockerResourcesConverter</class>
     <class>io.hops.hopsworks.persistence.entity.featurestore.featuregroup.datavalidation.RuleAssertionsConverter</class>
     <class>io.hops.hopsworks.persistence.entity.alertmanager.ConfigConverter</class>
