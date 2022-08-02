@@ -71,10 +71,6 @@ public class LocalhostTfServingController {
   @EJB
   private ProjectUtils projectUtils;
   
-  public int getMaxNumInstances() {
-    return 1;
-  }
-  
   public String getClassName() {
     return LocalhostTfServingController.class.getName();
   }

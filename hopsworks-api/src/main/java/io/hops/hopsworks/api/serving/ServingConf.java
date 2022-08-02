@@ -25,17 +25,13 @@ import javax.xml.bind.annotation.XmlRootElement;
 @ApiModel(value = "Represent configuration for serving UI")
 public class ServingConf {
   
-  private Integer maxNumInstances;
   private String kafkaTopicSchema;
   private Integer kafkaTopicSchemaVersion;
 
   public ServingConf() {
   }
 
-  public ServingConf(Integer maxNumInstances,
-                     String kafkaTopicSchema,
-                     Integer kafkaTopicSchemaVersion) {
-    this.maxNumInstances = maxNumInstances;
+  public ServingConf(String kafkaTopicSchema, Integer kafkaTopicSchemaVersion) {
     this.kafkaTopicSchema = kafkaTopicSchema;
     this.kafkaTopicSchemaVersion = kafkaTopicSchemaVersion;
   }
@@ -56,14 +52,5 @@ public class ServingConf {
 
   public void setKafkaTopicSchemaVersion(Integer kafkaTopicSchemaVersion) {
     this.kafkaTopicSchemaVersion = kafkaTopicSchemaVersion;
-  }
-
-  @ApiModelProperty(value = "Max number of serving instances of model", readOnly = true)
-  public Integer getMaxNumInstances() {
-    return maxNumInstances;
-  }
-
-  public void setMaxNumInstances(Integer maxNumInstances) {
-    this.maxNumInstances = maxNumInstances;
   }
 }

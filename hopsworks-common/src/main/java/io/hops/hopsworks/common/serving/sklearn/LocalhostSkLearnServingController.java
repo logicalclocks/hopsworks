@@ -71,10 +71,6 @@ public class LocalhostSkLearnServingController {
   @EJB
   private ProjectUtils projectUtils;
   
-  public int getMaxNumInstances() {
-    return 1;
-  }
-  
   public String getClassName() {
     return LocalhostSkLearnServingController.class.getName();
   }
