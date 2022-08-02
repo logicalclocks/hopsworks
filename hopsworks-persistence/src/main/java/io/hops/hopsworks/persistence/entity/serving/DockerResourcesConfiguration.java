@@ -34,8 +34,14 @@ public class DockerResourcesConfiguration {
 
   public DockerResourcesConfiguration(){}
 
+  public DockerResourcesConfiguration(double cores, int memory, int gpus) {
+    this.cores = cores;
+    this.memory = memory;
+    this.gpus = gpus;
+  }
+  
   @XmlElement
-  private int cores = 1;
+  private double cores = 1;
 
   @XmlElement
   private int memory = 1024;
@@ -43,11 +49,11 @@ public class DockerResourcesConfiguration {
   @XmlElement
   private int gpus = 0;
 
-  public int getCores() {
+  public double getCores() {
     return cores;
   }
 
-  public void setCores(int cores) {
+  public void setCores(double cores) {
     this.cores = cores;
   }
 
@@ -79,4 +85,3 @@ public class DockerResourcesConfiguration {
     return true;
   }
 }
-
