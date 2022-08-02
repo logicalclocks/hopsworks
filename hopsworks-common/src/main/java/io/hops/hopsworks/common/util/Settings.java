@@ -264,17 +264,20 @@ public class Settings implements Serializable {
   private static final String VARIABLE_KUBE_KEYSTORE_PATH = "kube_keystore_path";
   private static final String VARIABLE_KUBE_KEYSTORE_KEY = "kube_keystore_key";
   private static final String VARIABLE_KUBE_PULL_POLICY = "kube_img_pull_policy";
-  private static final String VARIABLE_KUBE_MAX_SERVING = "kube_max_serving_instances";
   private static final String VARIABLE_KUBE_API_MAX_ATTEMPTS = "kube_api_max_attempts";
   private static final String VARIABLE_KUBE_DOCKER_MAX_MEMORY_ALLOCATION = "kube_docker_max_memory_allocation";
-  private static final String VARIABLE_KUBE_DOCKER_CORES_FRACTION = "kube_docker_cores_fraction";
   private static final String VARIABLE_KUBE_DOCKER_MAX_GPUS_ALLOCATION = "kube_docker_max_gpus_allocation";
   private static final String VARIABLE_KUBE_DOCKER_MAX_CORES_ALLOCATION = "kube_docker_max_cores_allocation";
   private static final String VARIABLE_KUBE_INSTALLED = "kubernetes_installed";
   private static final String VARIABLE_KUBE_KSERVE_INSTALLED = "kube_kserve_installed";
+  private static final String VARIABLE_KUBE_KNATIVE_DOMAIN_NAME = "kube_knative_domain_name";
   private static final String VARIABLE_KUBE_SERVING_NODE_LABELS = "kube_serving_node_labels";
   private static final String VARIABLE_KUBE_SERVING_NODE_TOLERATIONS = "kube_serving_node_tolerations";
-  private static final String VARIABLE_KUBE_KNATIVE_DOMAIN_NAME = "kube_knative_domain_name";
+  private static final String VARIABLE_KUBE_SERVING_MAX_MEMORY_ALLOCATION = "kube_serving_max_memory_allocation";
+  private static final String VARIABLE_KUBE_SERVING_MAX_CORES_ALLOCATION = "kube_serving_max_cores_allocation";
+  private static final String VARIABLE_KUBE_SERVING_MAX_GPUS_ALLOCATION = "kube_serving_max_gpus_allocation";
+  private static final String VARIABLE_KUBE_SERVING_MAX_NUM_INSTANCES = "kube_serving_max_num_instances";
+  private static final String VARIABLE_KUBE_SERVING_MIN_NUM_INSTANCES = "kube_serving_min_num_instances";
   private static final String VARIABLE_KUBE_TAINTED_NODES = "kube_tainted_nodes";
   private static final String VARIABLE_KUBE_TAINTED_NODES_MONITOR_INTERVAL =
       "kube_node_taints_monitor_interval";
@@ -725,20 +728,27 @@ public class Settings implements Serializable {
       KUBE_KEYSTORE_PATH = setStrVar(VARIABLE_KUBE_KEYSTORE_PATH, KUBE_KEYSTORE_PATH);
       KUBE_KEYSTORE_KEY = setStrVar(VARIABLE_KUBE_KEYSTORE_KEY, KUBE_KEYSTORE_KEY);
       KUBE_PULL_POLICY = setStrVar(VARIABLE_KUBE_PULL_POLICY, KUBE_PULL_POLICY);
-      KUBE_MAX_SERVING_INSTANCES = setIntVar(VARIABLE_KUBE_MAX_SERVING, KUBE_MAX_SERVING_INSTANCES);
       KUBE_API_MAX_ATTEMPTS = setIntVar(VARIABLE_KUBE_API_MAX_ATTEMPTS, KUBE_API_MAX_ATTEMPTS);
       KUBE_DOCKER_MAX_MEMORY_ALLOCATION = setIntVar(VARIABLE_KUBE_DOCKER_MAX_MEMORY_ALLOCATION,
           KUBE_DOCKER_MAX_MEMORY_ALLOCATION);
-      KUBE_DOCKER_MAX_CORES_ALLOCATION = setIntVar(VARIABLE_KUBE_DOCKER_MAX_CORES_ALLOCATION,
+      KUBE_DOCKER_MAX_CORES_ALLOCATION = setDoubleVar(VARIABLE_KUBE_DOCKER_MAX_CORES_ALLOCATION,
           KUBE_DOCKER_MAX_CORES_ALLOCATION);
-      KUBE_DOCKER_CORES_FRACTION = setDoubleVar(VARIABLE_KUBE_DOCKER_CORES_FRACTION,
-          KUBE_DOCKER_CORES_FRACTION);
       KUBE_DOCKER_MAX_GPUS_ALLOCATION = setIntVar(VARIABLE_KUBE_DOCKER_MAX_GPUS_ALLOCATION,
           KUBE_DOCKER_MAX_GPUS_ALLOCATION);
       KUBE_INSTALLED = setBoolVar(VARIABLE_KUBE_INSTALLED, KUBE_INSTALLED);
       KUBE_KSERVE_INSTALLED = setBoolVar(VARIABLE_KUBE_KSERVE_INSTALLED, KUBE_KSERVE_INSTALLED);
       KUBE_SERVING_NODE_LABELS = setStrVar(VARIABLE_KUBE_SERVING_NODE_LABELS, KUBE_SERVING_NODE_LABELS);
       KUBE_SERVING_NODE_TOLERATIONS = setStrVar(VARIABLE_KUBE_SERVING_NODE_TOLERATIONS, KUBE_SERVING_NODE_TOLERATIONS);
+      KUBE_SERVING_MAX_MEMORY_ALLOCATION = setIntVar(VARIABLE_KUBE_SERVING_MAX_MEMORY_ALLOCATION,
+        KUBE_SERVING_MAX_MEMORY_ALLOCATION);
+      KUBE_SERVING_MAX_CORES_ALLOCATION = setDoubleVar(VARIABLE_KUBE_SERVING_MAX_CORES_ALLOCATION,
+        KUBE_SERVING_MAX_CORES_ALLOCATION);
+      KUBE_SERVING_MAX_GPUS_ALLOCATION = setIntVar(VARIABLE_KUBE_SERVING_MAX_GPUS_ALLOCATION,
+        KUBE_SERVING_MAX_GPUS_ALLOCATION);
+      KUBE_SERVING_MAX_NUM_INSTANCES = setIntVar(VARIABLE_KUBE_SERVING_MAX_NUM_INSTANCES,
+        KUBE_SERVING_MAX_NUM_INSTANCES);
+      KUBE_SERVING_MIN_NUM_INSTANCES = setIntVar(VARIABLE_KUBE_SERVING_MIN_NUM_INSTANCES,
+        KUBE_SERVING_MIN_NUM_INSTANCES);
       KUBE_KNATIVE_DOMAIN_NAME = setStrVar(VARIABLE_KUBE_KNATIVE_DOMAIN_NAME, KUBE_KNATIVE_DOMAIN_NAME);
       KUBE_TAINTED_NODES = setStrVar(VARIABLE_KUBE_TAINTED_NODES, KUBE_TAINTED_NODES);
       KUBE_TAINTED_NODES_MONITOR_INTERVAL = setStrVar(VARIABLE_KUBE_TAINTED_NODES_MONITOR_INTERVAL,
@@ -3458,13 +3468,6 @@ public class Settings implements Serializable {
     return KUBE_PULL_POLICY;
   }
 
-  private Integer KUBE_MAX_SERVING_INSTANCES = 10;
-
-  public synchronized Integer getKubeMaxServingInstances() {
-    checkCache();
-    return KUBE_MAX_SERVING_INSTANCES;
-  }
-
   private Integer KUBE_API_MAX_ATTEMPTS = 12;
   public synchronized Integer getKubeAPIMaxAttempts() {
     checkCache();
@@ -3496,8 +3499,8 @@ public class Settings implements Serializable {
     return KUBE_DOCKER_MAX_MEMORY_ALLOCATION;
   }
 
-  private Integer KUBE_DOCKER_MAX_CORES_ALLOCATION = 4;
-  public synchronized Integer getKubeDockerMaxCoresAllocation() {
+  private Double KUBE_DOCKER_MAX_CORES_ALLOCATION = 4.0;
+  public synchronized Double getKubeDockerMaxCoresAllocation() {
     checkCache();
     return KUBE_DOCKER_MAX_CORES_ALLOCATION;
   }
@@ -3506,12 +3509,6 @@ public class Settings implements Serializable {
   public synchronized Integer getKubeDockerMaxGpusAllocation() {
     checkCache();
     return KUBE_DOCKER_MAX_GPUS_ALLOCATION;
-  }
-
-  private Double KUBE_DOCKER_CORES_FRACTION = 1.0;
-  public synchronized Double getKubeDockerCoresFraction() {
-    checkCache();
-    return KUBE_DOCKER_CORES_FRACTION;
   }
   
   private Boolean KUBE_INSTALLED = false;
@@ -3536,6 +3533,39 @@ public class Settings implements Serializable {
   public synchronized String getKubeServingNodeTolerations() {
     checkCache();
     return KUBE_SERVING_NODE_TOLERATIONS;
+  }
+  
+  private Integer KUBE_SERVING_MAX_MEMORY_ALLOCATION = -1; // no upper limit
+  public synchronized Integer getKubeServingMaxMemoryAllocation() {
+    checkCache();
+    return KUBE_SERVING_MAX_MEMORY_ALLOCATION;
+  }
+  
+  private Double KUBE_SERVING_MAX_CORES_ALLOCATION = -1.0;  // no upper limit
+  public synchronized Double getKubeServingMaxCoresAllocation() {
+    checkCache();
+    return KUBE_SERVING_MAX_CORES_ALLOCATION;
+  }
+  
+  private Integer KUBE_SERVING_MAX_GPUS_ALLOCATION = -1; // no upper limit
+  public synchronized Integer getKubeServingMaxGpusAllocation() {
+    checkCache();
+    return KUBE_SERVING_MAX_GPUS_ALLOCATION;
+  }
+  
+  // Maximum number of instances. Possible values >=-1 where -1 means no limit.
+  private Integer KUBE_SERVING_MAX_NUM_INSTANCES = -1;
+  public synchronized Integer getKubeServingMaxNumInstances() {
+    checkCache();
+    return KUBE_SERVING_MAX_NUM_INSTANCES;
+  }
+  
+  // Minimum number of instances. Possible values: >=-1 where -1 means no limit and 0 enforces scale-to-zero
+  // capabilities when available
+  private Integer KUBE_SERVING_MIN_NUM_INSTANCES = -1;
+  public synchronized Integer getKubeServingMinNumInstances() {
+    checkCache();
+    return KUBE_SERVING_MIN_NUM_INSTANCES;
   }
   
   private String KUBE_KNATIVE_DOMAIN_NAME = "";
