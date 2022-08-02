@@ -55,8 +55,6 @@ public interface ServingController {
   void put(Project project, Users user, ServingWrapper newServing)
       throws KafkaException, UserException, ProjectException, ServiceException, ServingException,
     InterruptedException, ExecutionException;
-
-  int getMaxNumInstances();
   
   List<ServingLogs> getLogs(Project project, Integer servingId, String component, Integer tailingLines)
     throws ServingException;

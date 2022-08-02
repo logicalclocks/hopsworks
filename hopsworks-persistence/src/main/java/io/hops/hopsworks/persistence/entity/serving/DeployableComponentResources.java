@@ -20,13 +20,13 @@ import javax.xml.bind.annotation.XmlRootElement;
 @JsonTypeName("deployableComponentResources")
 public class DeployableComponentResources {
   
-  public DeployableComponentResources(){}
+  public DeployableComponentResources() { }
   
   @XmlElement
-  private DockerResourcesConfiguration requests = new DockerResourcesConfiguration();
+  private DockerResourcesConfiguration requests = new DockerResourcesConfiguration(0.2, 32, 0);
   
   @XmlElement
-  private DockerResourcesConfiguration limits = new DockerResourcesConfiguration();
+  private DockerResourcesConfiguration limits = new DockerResourcesConfiguration(-1, -1, -1);
   
   public DockerResourcesConfiguration getRequests() {
     return requests;

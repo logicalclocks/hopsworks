@@ -30,6 +30,7 @@ import io.hops.hopsworks.persistence.entity.kafka.ProjectTopics;
 import io.hops.hopsworks.persistence.entity.kafka.schemas.Subjects;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.serving.BatchingConfiguration;
+import io.hops.hopsworks.persistence.entity.serving.DockerResourcesConfiguration;
 import io.hops.hopsworks.persistence.entity.serving.InferenceLogging;
 import io.hops.hopsworks.persistence.entity.serving.ModelServer;
 import io.hops.hopsworks.persistence.entity.serving.Serving;
@@ -103,6 +104,7 @@ public class ServingUtil {
     validateKafkaTopicSchema(project, serving, servingWrapper.getKafkaTopicDTO());
     validateInferenceLogging(serving, servingWrapper.getKafkaTopicDTO());
     validateInstances(serving);
+    validateResources(serving);
     validateBatchingConfiguration(serving);
   }
 
@@ -200,8 +202,85 @@ public class ServingUtil {
     if (serving.getTransformer() != null && serving.getTransformerInstances() == null) {
       throw new IllegalArgumentException("Number of transformer instances must be provided with a transformer");
     }
+    if (settings.getKubeServingMaxNumInstances() > -1) {
+      if (serving.getInstances() > settings.getKubeServingMaxNumInstances()) {
+        throw new IllegalArgumentException(String.format("Number of instances exceeds maximum number of instances " +
+          "allowed of %s instances", settings.getKubeServingMaxNumInstances()));
+      }
+      if (serving.getTransformerInstances() != null &&
+        serving.getTransformerInstances() > settings.getKubeServingMaxNumInstances()) {
+        throw new IllegalArgumentException(String.format("Number of transformer instances exceeds maximum number of " +
+          "instances allowed of %s instances", settings.getKubeServingMaxNumInstances()));
+      }
+    }
+    if (settings.getKubeServingMinNumInstances() == 0 && serving.getServingTool() == ServingTool.KSERVE) {
+      if (serving.getInstances() != 0) {
+        throw new IllegalArgumentException(String.format("Scale-to-zero is required for KServe deployments in this " +
+          "cluster. Please, set the number of instances to 0."));
+      }
+      if (serving.getTransformerInstances() != null && serving.getTransformerInstances() != 0) {
+        throw new IllegalArgumentException(String.format("Scale-to-zero is required for KServe deployments in this " +
+          "cluster. Please, set the number of transformer instances to 0."));
+      }
+    }
   }
-
+  
+  private void validateResources(Serving serving) {
+    if (!settings.getKubeInstalled()) {
+      return; // validate resources only in kubernetes deployments
+    }
+    DockerResourcesConfiguration requests = serving.getPredictorResources().getRequests();
+    DockerResourcesConfiguration limits = serving.getPredictorResources().getLimits();
+    double maxCores = settings.getKubeServingMaxCoresAllocation();
+    int maxMemory = settings.getKubeServingMaxMemoryAllocation();
+    int maxGpus = settings.getKubeServingMaxGpusAllocation();
+    
+    if (requests != null) {
+      if (maxCores > -1 && requests.getCores() > maxCores) {
+        throw new IllegalArgumentException(String.format("Configured cores allocation of %s exceeds maximum core " +
+          "allocation allowed of %s cores", requests.getCores(), maxCores));
+      }
+      if (maxMemory > -1 && requests.getMemory() > maxMemory) {
+        throw new IllegalArgumentException(String.format("Configured memory allocation of %s exceeds maximum memory " +
+          "allocation allowed of %s MB", requests.getMemory(), maxMemory));
+      }
+      if (maxGpus > -1 && requests.getGpus() > maxGpus) {
+        throw new IllegalArgumentException(String.format("Configured cores allocation of %s exceeds maximum gpu " +
+          "allocation allowed of %s gpus", requests.getGpus(), maxGpus));
+      }
+    }
+    if (limits != null) {
+      if (maxCores > -1 && limits.getCores() > maxCores) {
+        throw new IllegalArgumentException(String.format("Configured cores allocation of %s exceeds maximum core " +
+          "allocation allowed of %s cores", limits.getCores(), maxCores));
+      }
+      if (maxMemory > -1 && limits.getMemory() > maxMemory) {
+        throw new IllegalArgumentException(String.format("Configured memory allocation of %s exceeds maximum memory " +
+          "allocation allowed of %s MB", limits.getMemory(), maxMemory));
+      }
+      if (maxGpus > -1 && limits.getGpus() > maxGpus) {
+        throw new IllegalArgumentException(String.format("Configured gpus allocation of %s exceeds maximum gpu " +
+          "allocation allowed of %s gpus", limits.getGpus(), maxGpus));
+      }
+    }
+  
+    if (requests != null && limits != null) {
+      // compare requests with limits
+      if (requests.getCores() > limits.getCores()) {
+        throw new IllegalArgumentException(String.format("Requested cores allocation of %s exceeds maximum core " +
+          "allocation of %s cores", requests.getCores(), limits.getCores()));
+      }
+      if (requests.getMemory() > limits.getMemory()) {
+        throw new IllegalArgumentException(String.format("Requested memory allocation of %s exceeds maximum memory " +
+          "allocation of %s MB", requests.getMemory(), limits.getMemory()));
+      }
+      if (requests.getGpus() > limits.getGpus()) {
+        throw new IllegalArgumentException(String.format("Requested gpus allocation of %s exceeds maximum gpu " +
+          "allocation of %s gpus", requests.getGpus(), limits.getGpus()));
+      }
+    }
+  }
+  
   private void validatePythonScript(Project project, String scriptPath, List<String> extensions, String component)
     throws ServingException, UnsupportedEncodingException {
     

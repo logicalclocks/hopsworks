@@ -16,7 +16,6 @@
 
 package io.hops.hopsworks.api.serving;
 
-import io.hops.hopsworks.persistence.entity.serving.DockerResourcesConfiguration;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 
@@ -26,22 +25,15 @@ import javax.xml.bind.annotation.XmlRootElement;
 @ApiModel(value = "Represent configuration for serving UI")
 public class ServingConf {
   
-  private Integer maxNumInstances;
   private String kafkaTopicSchema;
   private Integer kafkaTopicSchemaVersion;
-  private DockerResourcesConfiguration predictorResourceConfig;
 
   public ServingConf() {
   }
 
-  public ServingConf(Integer maxNumInstances,
-                     String kafkaTopicSchema,
-                     Integer kafkaTopicSchemaVersion,
-                     DockerResourcesConfiguration predictorResourceConfig) {
-    this.maxNumInstances = maxNumInstances;
+  public ServingConf(String kafkaTopicSchema, Integer kafkaTopicSchemaVersion) {
     this.kafkaTopicSchema = kafkaTopicSchema;
     this.kafkaTopicSchemaVersion = kafkaTopicSchemaVersion;
-    this.predictorResourceConfig = predictorResourceConfig;
   }
 
   @ApiModelProperty(value = "Schema name for the Kafka topic used for logging", readOnly = true)
@@ -60,23 +52,5 @@ public class ServingConf {
 
   public void setKafkaTopicSchemaVersion(Integer kafkaTopicSchemaVersion) {
     this.kafkaTopicSchemaVersion = kafkaTopicSchemaVersion;
-  }
-
-  @ApiModelProperty(value = "Max number of serving instances of model", readOnly = true)
-  public Integer getMaxNumInstances() {
-    return maxNumInstances;
-  }
-
-  public void setMaxNumInstances(Integer maxNumInstances) {
-    this.maxNumInstances = maxNumInstances;
-  }
-
-  @ApiModelProperty(value = "Predictor resource configuration for inference", readOnly = true)
-  public DockerResourcesConfiguration getPredictorResourceConfig() {
-    return predictorResourceConfig;
-  }
-
-  public void setPredictorResourceConfig(DockerResourcesConfiguration predictorResourceConfig) {
-    this.predictorResourceConfig = predictorResourceConfig;
   }
 }

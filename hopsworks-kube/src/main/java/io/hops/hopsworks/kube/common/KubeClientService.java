@@ -669,35 +669,54 @@ public class KubeClientService {
   }
   
   public ResourceRequirements buildResourceRequirements(DockerResourcesConfiguration limitResources) {
+    // only limit resources, used for jobs and jupyter containers as fixed resources
     return buildResourceRequirements(limitResources, null);
   }
   public ResourceRequirements buildResourceRequirements(DockerResourcesConfiguration limitResources,
     DockerResourcesConfiguration requestedResources) {
+    // hard limits can be set using either docker max resources or serving max resources specified by the Hopsworks
+    // variables: kube_docker_max... and kube_serving_max..., respectively.
+    // we can use requestedResources to decide which resource configuration to use.
+    Double maxCores;
+    Integer maxMemory, maxGpus;
+    if (requestedResources != null) {
+      maxMemory = settings.getKubeServingMaxMemoryAllocation();
+      maxCores = settings.getKubeServingMaxCoresAllocation();
+      maxGpus = settings.getKubeServingMaxGpusAllocation();
+    } else {
+      maxMemory = settings.getKubeDockerMaxMemoryAllocation();
+      maxCores = settings.getKubeDockerMaxCoresAllocation();
+      maxGpus = settings.getKubeDockerMaxGpusAllocation();
+    }
     
-    // validate limits
-    validateResources(limitResources);
+    // validate limits: in jobs, jupyter and deployments
+    validateResources(limitResources, maxCores, maxMemory, maxGpus);
   
     // add limits
     ResourceRequirementsBuilder resources = new ResourceRequirementsBuilder();
-    resources
-        .addToLimits("memory", new Quantity(limitResources.getMemory() + "Mi"))
-        .addToLimits("cpu", new QuantityBuilder().withAmount(
-            Double.toString(limitResources.getCores() * settings.getKubeDockerCoresFraction())).build());
+    Integer memoryAmount = limitResources.getMemory() == -1 ? maxMemory : limitResources.getMemory();
+    if (memoryAmount > -1) {
+      resources.addToLimits("memory", new Quantity(memoryAmount + "Mi"));
+    }
+    Double coresAmount = limitResources.getCores() == -1 ? maxCores : limitResources.getCores();
+    if (coresAmount > -1) {
+      resources.addToLimits("cpu", new QuantityBuilder().withAmount(Double.toString(coresAmount)).build());
+    }
     if(limitResources.getGpus() > 0) {
       resources.addToLimits("nvidia.com/gpu", new QuantityBuilder()
           .withAmount(Double.toString(limitResources.getGpus())).build());
     }
     
-    // requests
+    // requests: only in deployments
     if (requestedResources != null) {
       // validate requested resources
-      validateResources(requestedResources, limitResources);
+      validateResources(requestedResources, limitResources, maxCores, maxMemory, maxGpus);
       
       // add requested resources
       resources
         .addToRequests("memory", new Quantity(requestedResources.getMemory() + "Mi"))
         .addToRequests("cpu", new QuantityBuilder().withAmount(
-          Double.toString(requestedResources.getCores() * settings.getKubeDockerCoresFraction())).build());
+          Double.toString(requestedResources.getCores())).build());
       if(requestedResources.getGpus() > 0) {
         resources.addToRequests("nvidia.com/gpu", new QuantityBuilder()
           .withAmount(Double.toString(requestedResources.getGpus())).build());
@@ -707,40 +726,74 @@ public class KubeClientService {
     return resources.build();
   }
   
-  private void validateResources(DockerResourcesConfiguration resources) {
-    validateResources(resources, null);
+  private void validateResources(DockerResourcesConfiguration resources, Double maxCores, Integer maxMemory,
+    Integer maxGpus) {
+    validateResources(resources, null, maxCores, maxMemory, maxGpus);
   }
-  private void validateResources(DockerResourcesConfiguration resources, DockerResourcesConfiguration limitResources) {
-    // max allowed resources
-    Integer maxMemory = settings.getKubeDockerMaxMemoryAllocation();
-    Integer maxCores = settings.getKubeDockerMaxCoresAllocation();
-    Integer maxGpus = settings.getKubeDockerMaxGpusAllocation();
+  private void validateResources(DockerResourcesConfiguration resources, DockerResourcesConfiguration limitResources,
+    Double maxCores, Integer maxMemory, Integer maxGpus ) {
     
-    // check resources
-    if(resources.getMemory() > maxMemory) {
+    // validate resources
+    if(maxMemory > -1 && resources.getMemory() > maxMemory) {
       throw new IllegalArgumentException(String.format("Configured memory allocation of %s MB exceeds maximum memory " +
-        "allocation allowed for Docker containers: %s MB", resources.getMemory(), maxMemory));
-    } else if(resources.getCores() > maxCores) {
+        "allocation allowed of %s MB", resources.getMemory(), maxMemory));
+    } else if(maxCores > -1 && resources.getCores() > maxCores) {
       throw new IllegalArgumentException(String.format("Configured cores allocation of %s exceeds maximum core " +
-        "allocation allowed for Docker containers: %s cores", resources.getCores(), maxCores));
-    } else if(resources.getGpus() > maxGpus) {
+        "allocation allowed of %s cores", resources.getCores(), maxCores));
+    } else if(maxGpus > -1 && resources.getGpus() > maxGpus) {
       throw new IllegalArgumentException(String.format("Configured GPU allocation of %s exceeds maximum GPU " +
-        "allocation allowed for Docker containers: %s GPUs", resources.getGpus(), maxGpus));
+        "allocation allowed of %s GPUs", resources.getGpus(), maxGpus));
     }
     
     if (limitResources != null) {
-      // check limited resources
-      if(resources.getMemory() > limitResources.getMemory()) {
-        throw new IllegalArgumentException(String.format("Configured memory allocation request of %s MB exceeds " +
-          "maximum memory allocation limit of %s MB", resources.getMemory(), limitResources.getMemory()));
-      } else if(resources.getCores() > limitResources.getCores()) {
-        throw new IllegalArgumentException(String.format("Configured cores allocation request of %s exceeds " +
-          "maximum core allocation limit of %s cores", resources.getCores(), limitResources.getCores()));
-      } else if(resources.getGpus() > limitResources.getGpus()) {
-        throw new IllegalArgumentException(String.format("Configured GPU allocation request of %s exceeds " +
-          "maximum GPU allocation limit of %s GPUs", resources.getGpus(), limitResources.getGpus()));
+      // validate memory limits
+      if (maxMemory > -1) {
+        if(limitResources.getMemory() > maxMemory) {
+          throw new IllegalArgumentException(String.format("Configured limit memory allocation of %s MB exceeds maximum"
+            + " memory allocation allowed of %s MB", limitResources.getMemory(), maxMemory));
+        }
+        if(resources.getMemory() > limitResources.getMemory()) {
+          throw new IllegalArgumentException(String.format("Configured memory allocation request of %s MB exceeds " +
+            "limit memory allocation limit of %s MB", resources.getMemory(), limitResources.getMemory()));
+        }
+      }
+      // validate cores limits
+      if (maxCores > -1) {
+        if(limitResources.getCores() > maxCores) {
+          throw new IllegalArgumentException(String.format("Configured limit cores allocation of %s exceeds maximum " +
+            "core allocation allowed of %s cores", limitResources.getCores(), maxCores));
+        }
+        if(resources.getCores() > limitResources.getCores()) {
+          throw new IllegalArgumentException(String.format("Configured cores allocation request of %s exceeds " +
+            "limit core allocation limit of %s cores", resources.getCores(), limitResources.getCores()));
+        }
+      }
+      // validate gpus limits
+      if (maxGpus > -1) {
+        if(limitResources.getGpus() > maxGpus) {
+          throw new IllegalArgumentException(String.format("Configured limit GPU allocation of %s exceeds maximum GPU "
+            + "allocation allowed of %s GPUs", limitResources.getGpus(), maxGpus));
+        }
+        if(resources.getGpus() > limitResources.getGpus()) {
+          throw new IllegalArgumentException(String.format("Configured GPU allocation request of %s exceeds " +
+            "limit GPU allocation limit of %s GPUs", resources.getGpus(), limitResources.getGpus()));
+        }
       }
     }
+  }
+  
+  public Pair<Integer, Integer> getNumReplicasRange(Integer minReplicas) {
+    if (settings.getKubeServingMinNumInstances() == 0 && minReplicas != 0) {
+      // scale-to-zero must be enabled if kube_serving_min_num_instances is 0
+      throw new IllegalArgumentException(String.format("Scale-to-zero is required in this " +
+        "cluster. Please, set the number of instances to 0."));
+    }
+    Integer maxReplicas = settings.getKubeServingMaxNumInstances();
+    if (maxReplicas != -1 && minReplicas > maxReplicas) {
+      throw new IllegalArgumentException(String.format("Configured number of instances %s exceeds the " +
+        "maximum number of instances allowed of %s instances", minReplicas, maxReplicas));
+    }
+    return new Pair<>(minReplicas, maxReplicas);
   }
   
   public List<EnvVar> getEnvVars(Map<String, String> envVarsMap) {

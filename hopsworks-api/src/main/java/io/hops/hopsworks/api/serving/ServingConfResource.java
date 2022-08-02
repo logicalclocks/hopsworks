@@ -20,9 +20,7 @@ import io.hops.hopsworks.api.filter.JWTNotRequired;
 import io.hops.hopsworks.api.filter.NoCacheResponse;
 import io.hops.hopsworks.audit.logger.LogLevel;
 import io.hops.hopsworks.audit.logger.annotation.Logged;
-import io.hops.hopsworks.common.serving.ServingController;
 import io.hops.hopsworks.common.util.Settings;
-import io.hops.hopsworks.persistence.entity.serving.DockerResourcesConfiguration;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 
@@ -30,7 +28,6 @@ import javax.ejb.EJB;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.enterprise.context.RequestScoped;
-import javax.inject.Inject;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
@@ -47,18 +44,14 @@ public class ServingConfResource {
 
   @EJB
   private NoCacheResponse noCacheResponse;
-  @Inject
-  private ServingController servingController;
 
   @GET
   @Produces(MediaType.APPLICATION_JSON)
   @JWTNotRequired
   @ApiOperation(value = "Get UI configuration for serving", response = ServingConf.class)
   public Response getConfiguration() {
-    ServingConf servingConf = new ServingConf(servingController.getMaxNumInstances(),
-        Settings.INFERENCE_SCHEMANAME, Settings.INFERENCE_SCHEMAVERSION, new DockerResourcesConfiguration());
-    GenericEntity<ServingConf> servingConfDTOGenericEntity =
-        new GenericEntity<ServingConf>(servingConf) { };
+    ServingConf servingConf = new ServingConf(Settings.INFERENCE_SCHEMANAME, Settings.INFERENCE_SCHEMAVERSION);
+    GenericEntity<ServingConf> servingConfDTOGenericEntity = new GenericEntity<ServingConf>(servingConf) { };
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(servingConfDTOGenericEntity).build();
   }
 }

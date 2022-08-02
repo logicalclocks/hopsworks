@@ -9,6 +9,7 @@ import io.fabric8.kubernetes.api.model.ObjectMeta;
 import io.fabric8.kubernetes.api.model.Quantity;
 import io.fabric8.kubernetes.api.model.ResourceRequirements;
 import io.fabric8.kubernetes.api.model.Volume;
+import io.hops.common.Pair;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.kube.common.KubeClientService;
 import io.hops.hopsworks.kube.common.KubeKServeClientService;
@@ -156,9 +157,13 @@ public class KubeJsonUtils {
   
   private JSONObject buildPredictorBase(Integer minReplicas, boolean logging, String loggingMode,
                                         BatchingConfiguration batchingConfiguration) {
+    Pair<Integer, Integer> numReplicas = kubeClientService.getNumReplicasRange(minReplicas);
     return new JSONObject() {
       {
-        put("minReplicas", minReplicas);
+        put("minReplicas", numReplicas.getL());
+        if (numReplicas.getR() > -1) {
+          put("maxReplicas", numReplicas.getR());
+        }
         put("logger", !logging ? null : new JSONObject() {
           {
             put("mode", loggingMode);

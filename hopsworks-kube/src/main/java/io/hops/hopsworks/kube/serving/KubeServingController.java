@@ -353,11 +353,6 @@ public class KubeServingController implements ServingController {
   }
   
   @Override
-  public int getMaxNumInstances() {
-    return settings.getKubeMaxServingInstances();
-  }
-  
-  @Override
   public List<ServingLogs> getLogs(Project project, Integer servingId, String component, Integer tailingLines)
     throws ServingException {
     Serving serving = servingFacade.acquireLock(project, servingId);
