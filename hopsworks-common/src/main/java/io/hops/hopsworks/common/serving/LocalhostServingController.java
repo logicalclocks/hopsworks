@@ -338,16 +338,6 @@ public class LocalhostServingController implements ServingController {
     }
   }
   
-  /**
-   * Gets the max number of serving instances, in the localhost serving version there will only be one instance
-   *
-   * @return 1
-   */
-  @Override
-  public int getMaxNumInstances() {
-    return 1;
-  }
-  
   @Override
   public List<ServingLogs> getLogs(Project project, Integer servingId, String component, Integer tailingLines)
     throws ServingException {
