@@ -734,13 +734,13 @@ public class KubeClientService {
     Double maxCores, Integer maxMemory, Integer maxGpus ) {
     
     // validate resources
-    if(maxMemory > -1 && resources.getMemory() > maxMemory) {
+    if(maxMemory > -1 && (resources.getMemory() < 0 || resources.getMemory() > maxMemory)) {
       throw new IllegalArgumentException(String.format("Configured memory allocation of %s MB exceeds maximum memory " +
         "allocation allowed of %s MB", resources.getMemory(), maxMemory));
-    } else if(maxCores > -1 && resources.getCores() > maxCores) {
+    } else if(maxCores > -1 && (resources.getCores() < 0 || resources.getCores() > maxCores)) {
       throw new IllegalArgumentException(String.format("Configured cores allocation of %s exceeds maximum core " +
         "allocation allowed of %s cores", resources.getCores(), maxCores));
-    } else if(maxGpus > -1 && resources.getGpus() > maxGpus) {
+    } else if(maxGpus > -1 && (resources.getGpus() < 0 || resources.getGpus() > maxGpus)) {
       throw new IllegalArgumentException(String.format("Configured GPU allocation of %s exceeds maximum GPU " +
         "allocation allowed of %s GPUs", resources.getGpus(), maxGpus));
     }
@@ -748,7 +748,7 @@ public class KubeClientService {
     if (limitResources != null) {
       // validate memory limits
       if (maxMemory > -1) {
-        if(limitResources.getMemory() > maxMemory) {
+        if(limitResources.getMemory() < 0 || limitResources.getMemory() > maxMemory) {
           throw new IllegalArgumentException(String.format("Configured limit memory allocation of %s MB exceeds maximum"
             + " memory allocation allowed of %s MB", limitResources.getMemory(), maxMemory));
         }
@@ -756,10 +756,15 @@ public class KubeClientService {
           throw new IllegalArgumentException(String.format("Configured memory allocation request of %s MB exceeds " +
             "limit memory allocation limit of %s MB", resources.getMemory(), limitResources.getMemory()));
         }
+      } else {
+        if(resources.getMemory() < 0 && limitResources.getMemory() > -1) {
+          throw new IllegalArgumentException(String.format("Configured memory allocation request of %s MB exceeds " +
+            "limit memory allocation limit of %s MB", resources.getMemory(), limitResources.getMemory()));
+        }
       }
       // validate cores limits
       if (maxCores > -1) {
-        if(limitResources.getCores() > maxCores) {
+        if(limitResources.getCores() < 0 || limitResources.getCores() > maxCores) {
           throw new IllegalArgumentException(String.format("Configured limit cores allocation of %s exceeds maximum " +
             "core allocation allowed of %s cores", limitResources.getCores(), maxCores));
         }
@@ -767,14 +772,24 @@ public class KubeClientService {
           throw new IllegalArgumentException(String.format("Configured cores allocation request of %s exceeds " +
             "limit core allocation limit of %s cores", resources.getCores(), limitResources.getCores()));
         }
+      } else {
+        if(resources.getCores() < 0 && limitResources.getCores() > -1) {
+          throw new IllegalArgumentException(String.format("Configured cores allocation request of %s exceeds " +
+            "limit core allocation limit of %s cores", resources.getCores(), limitResources.getCores()));
+        }
       }
       // validate gpus limits
       if (maxGpus > -1) {
-        if(limitResources.getGpus() > maxGpus) {
+        if(limitResources.getGpus() < 0 || limitResources.getGpus() > maxGpus) {
           throw new IllegalArgumentException(String.format("Configured limit GPU allocation of %s exceeds maximum GPU "
             + "allocation allowed of %s GPUs", limitResources.getGpus(), maxGpus));
         }
         if(resources.getGpus() > limitResources.getGpus()) {
+          throw new IllegalArgumentException(String.format("Configured GPU allocation request of %s exceeds " +
+            "limit GPU allocation limit of %s GPUs", resources.getGpus(), limitResources.getGpus()));
+        }
+      } else {
+        if(resources.getGpus() < 0 && limitResources.getGpus() > -1) {
           throw new IllegalArgumentException(String.format("Configured GPU allocation request of %s exceeds " +
             "limit GPU allocation limit of %s GPUs", resources.getGpus(), limitResources.getGpus()));
         }

@@ -236,29 +236,29 @@ public class ServingUtil {
     int maxGpus = settings.getKubeServingMaxGpusAllocation();
     
     if (requests != null) {
-      if (maxCores > -1 && requests.getCores() > maxCores) {
+      if (maxCores > -1 && (requests.getCores() < 0 || requests.getCores() > maxCores)) {
         throw new IllegalArgumentException(String.format("Configured cores allocation of %s exceeds maximum core " +
           "allocation allowed of %s cores", requests.getCores(), maxCores));
       }
-      if (maxMemory > -1 && requests.getMemory() > maxMemory) {
+      if (maxMemory > -1 && (requests.getMemory() < 0 || requests.getMemory() > maxMemory)) {
         throw new IllegalArgumentException(String.format("Configured memory allocation of %s exceeds maximum memory " +
           "allocation allowed of %s MB", requests.getMemory(), maxMemory));
       }
-      if (maxGpus > -1 && requests.getGpus() > maxGpus) {
+      if (maxGpus > -1 && (requests.getGpus() < 0 || requests.getGpus() > maxGpus)) {
         throw new IllegalArgumentException(String.format("Configured cores allocation of %s exceeds maximum gpu " +
           "allocation allowed of %s gpus", requests.getGpus(), maxGpus));
       }
     }
     if (limits != null) {
-      if (maxCores > -1 && limits.getCores() > maxCores) {
+      if (maxCores > -1 && (limits.getCores() < 0 || limits.getCores() > maxCores)) {
         throw new IllegalArgumentException(String.format("Configured cores allocation of %s exceeds maximum core " +
           "allocation allowed of %s cores", limits.getCores(), maxCores));
       }
-      if (maxMemory > -1 && limits.getMemory() > maxMemory) {
+      if (maxMemory > -1 && (limits.getMemory() < 0 || limits.getMemory() > maxMemory)) {
         throw new IllegalArgumentException(String.format("Configured memory allocation of %s exceeds maximum memory " +
           "allocation allowed of %s MB", limits.getMemory(), maxMemory));
       }
-      if (maxGpus > -1 && limits.getGpus() > maxGpus) {
+      if (maxGpus > -1 && (limits.getGpus() < 0 || limits.getGpus() > maxGpus)) {
         throw new IllegalArgumentException(String.format("Configured gpus allocation of %s exceeds maximum gpu " +
           "allocation allowed of %s gpus", limits.getGpus(), maxGpus));
       }
@@ -266,15 +266,15 @@ public class ServingUtil {
   
     if (requests != null && limits != null) {
       // compare requests with limits
-      if (requests.getCores() > limits.getCores()) {
+      if (limits.getCores() > -1 && (requests.getCores() < 0 || requests.getCores() > limits.getCores())) {
         throw new IllegalArgumentException(String.format("Requested cores allocation of %s exceeds maximum core " +
           "allocation of %s cores", requests.getCores(), limits.getCores()));
       }
-      if (requests.getMemory() > limits.getMemory()) {
+      if (limits.getMemory() > -1 && (requests.getMemory() < 0 || requests.getMemory() > limits.getMemory())) {
         throw new IllegalArgumentException(String.format("Requested memory allocation of %s exceeds maximum memory " +
           "allocation of %s MB", requests.getMemory(), limits.getMemory()));
       }
-      if (requests.getGpus() > limits.getGpus()) {
+      if (limits.getGpus() > -1 && (requests.getGpus() < 0 || requests.getGpus() > limits.getGpus())) {
         throw new IllegalArgumentException(String.format("Requested gpus allocation of %s exceeds maximum gpu " +
           "allocation of %s gpus", requests.getGpus(), limits.getGpus()));
       }

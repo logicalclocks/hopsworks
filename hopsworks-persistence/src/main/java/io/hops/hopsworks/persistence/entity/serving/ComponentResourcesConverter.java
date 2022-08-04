@@ -38,7 +38,7 @@ public class ComponentResourcesConverter implements AttributeConverter<Deployabl
   @Override
   public String convertToDatabaseColumn(DeployableComponentResources config) {
     if(config == null) {
-      config = new DeployableComponentResources();
+      return null;
     }
     try {
       Marshaller marshaller = resourcesJAXBContext.createMarshaller();
