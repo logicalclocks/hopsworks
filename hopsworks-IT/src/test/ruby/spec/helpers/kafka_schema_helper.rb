@@ -21,7 +21,7 @@ module SchemaHelper
 
   def with_test_subject(project)
     register_new_schema(project, "subject_test", "[]")
-    expect_status(200)
+    expect_status_details(200)
     get_subject_details(project, "subject_test", 1)
   end
 

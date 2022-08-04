@@ -24,7 +24,7 @@ module ProvStateHelper
       query = "#{ENV['HOPSWORKS_TESTING']}/test/provenance/cleanup?size=100"
       pp "#{query}" if @debugOpt == true
       result = post "#{query}"
-      expect_status(200)
+      expect_status_details(200)
       parsed_result = JSON.parse(result)
       tries = tries+1
       break if parsed_result["result"]["value"] == 0
@@ -64,12 +64,12 @@ module ProvStateHelper
 
   def prov_create_dir(project, dirname)
     create_dir(project, dirname, query: "")
-    expect_status(201)
+    expect_status_details(201)
   end
 
   def prov_delete_dir(project, path)
     delete "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/dataset/#{path}"
-    expect_status(204)
+    expect_status_details(204)
   end
 
   def prov_create_experiment(project, experiment_name) 
@@ -209,7 +209,7 @@ module ProvStateHelper
     end
     # pp "#{resource}#{query_params}"
     result = get "#{resource}#{query_params}"
-    expect_status(200)
+    expect_status_details(200)
     parsed_result = JSON.parse(result)
     parsed_result
   end
@@ -222,7 +222,7 @@ module ProvStateHelper
     end
     # pp "#{resource}#{query_params}"
     result = get "#{resource}#{query_params}"
-    expect_status(200)
+    expect_status_details(200)
     parsed_result = JSON.parse(result)
     expect(parsed_result["items"].length).to eq 0
     expect(parsed_result["count"]).to eq 0
@@ -234,7 +234,7 @@ module ProvStateHelper
     query_params = append_to_query(query_params, "filter_by=ML_TYPE:#{ml_type}") unless ml_type.nil?
     query_params = append_to_query(query_params, "filter_by=ML_ID:#{ml_id}") unless ml_id.nil?
     get "#{resource}#{query_params}"
-    expect_status(200)
+    expect_status_details(200)
     json_body
   end
 
@@ -246,7 +246,7 @@ module ProvStateHelper
     end
     # pp "#{resource}#{query_params}"
     result = get "#{resource}#{query_params}"
-    expect_status(200)
+    expect_status_details(200)
     parsed_result = JSON.parse(result)
     expect(parsed_result["items"].length).to eq 1
     expect(parsed_result["count"]).to eq 1
@@ -258,7 +258,7 @@ module ProvStateHelper
     query_params = "?filter_by=ML_TYPE:#{ml_type}&filter_by=FILE_NAME_LIKE:#{term}"
     # pp "#{resource}#{query_params}"
     result = get "#{resource}#{query_params}"
-    expect_status(200)
+    expect_status_details(200)
     parsed_result = JSON.parse(result)
     parsed_result["items"]
   end
@@ -268,7 +268,7 @@ module ProvStateHelper
     query_params = "?filter_by=ML_TYPE:#{ml_type}&filter_by=CREATE_TIMESTAMP_LT:#{to}&filter_by=CREATE_TIMESTAMP_GT:#{from}"
     # pp "#{resource}#{query_params}"
     result = get "#{resource}#{query_params}"
-    expect_status(200)
+    expect_status_details(200)
     parsed_result = JSON.parse(result)
     #pp parsed_result
     expect(parsed_result["items"].length).to eq expected
@@ -281,7 +281,7 @@ module ProvStateHelper
     query_params = "?filter_by=ML_TYPE:#{ml_type}&xattr_filter_by=#{xattr_key}:#{xattr_val}"
     # pp "#{resource}#{query_params}"
     result = get "#{resource}#{query_params}"
-    expect_status(200)
+    expect_status_details(200)
     parsed_result = JSON.parse(result)
     parsed_result["items"]
   end
@@ -291,7 +291,7 @@ module ProvStateHelper
     query_params = "?filter_by=ML_TYPE:#{ml_type}&xattr_filter_by=#{xattr_key}:#{xattr_val}&return_type=COUNT"
     pp "#{resource}#{query_params}" if defined?(@debugOpt) && @debugOpt
     result = get "#{resource}#{query_params}"
-    expect_status(200)
+    expect_status_details(200)
     parsed_result = JSON.parse(result)
     pp "#{parsed_result}" if defined?(@debugOpt) && @debugOpt
     expect(parsed_result["count"]).to eq count
@@ -303,7 +303,7 @@ module ProvStateHelper
     query_params = "?filter_by=ML_TYPE:#{ml_type}&xattr_like=#{xattr_key}:#{xattr_val}"
     # pp "#{resource}#{query_params}"
     result = get "#{resource}#{query_params}"
-    expect_status(200)
+    expect_status_details(200)
     parsed_result = JSON.parse(result)
     parsed_result["items"]
   end
@@ -313,7 +313,7 @@ module ProvStateHelper
     query_params = "?filter_by=ML_TYPE:TRAINING_DATASET&xattr_filter_by=features.name:#{feature_name}&return_type=COUNT"
     # pp "#{resource}#{query_params}"
     result = get "#{resource}#{query_params}"
-    expect_status(200)
+    expect_status_details(200)
     parsed_result = JSON.parse(result)
     parsed_result["items"]
   end
@@ -323,7 +323,7 @@ module ProvStateHelper
     query_params = "?filter_by=ML_TYPE:TRAINING_DATASET&xattr_filter_by==features.name:#{feature_name}&return_type=COUNT"
     # pp "#{resource}#{query_params}"
     result = get "#{resource}#{query_params}"
-    expect_status(200)
+    expect_status_details(200)
     parsed_result = JSON.parse(result)
     parsed_result["items"]
   end
@@ -333,7 +333,7 @@ module ProvStateHelper
     param = "?inodeId=#{inode_id}&xattrName=app_id&xattrValue=#{app_id}"
     # pp "#{target}#{param}"
     result = post "#{target}#{param}"
-    expect_status(200)
+    expect_status_details(200)
   end
 
   def prov_with_retries(max_retries, wait_time, expected_code, &block)

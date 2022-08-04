@@ -1052,6 +1052,7 @@ describe "On #{ENV['OS']}" do
           expect(features[2]['type']).to eql("int")
 
           get "#{ENV['HOPSWORKS_API']}/project/#{@project.id}/featurestores/#{featurestore_id}/trainingdatasets/#{training_dataset['id']}/query"
+          # this is returning 200
           expect_status_details(400)
         end
 

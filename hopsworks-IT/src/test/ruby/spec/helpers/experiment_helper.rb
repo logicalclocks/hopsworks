@@ -21,7 +21,7 @@ module ExperimentHelper
     get "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/python/environments"
     if response.code == 404
        post "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/python/environments/#{ENV['PYTHON_VERSION']}?action=create"
-       expect_status(201)
+       expect_status_details(201)
     end
 
     if !test_file("/Projects/#{project[:projectname]}/Resources/" + job_name + ".ipynb")
@@ -35,7 +35,7 @@ module ExperimentHelper
     job_config["spark.executor.memory"] = 2000
 
     put "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/jobs/#{job_name}", job_config
-    expect_status(201)
+    expect_status_details(201)
   end
 
   def create_experiment_opt_job(project, job_name)
@@ -44,7 +44,7 @@ module ExperimentHelper
     get "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/python/environments"
     if response.code == 404
        post "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/python/environments/#{ENV['PYTHON_VERSION']}?action=create"
-       expect_status(201)
+       expect_status_details(201)
     end
 
     if !test_file("/Projects/#{project[:projectname]}/Resources/" + job_name + ".ipynb")
@@ -58,7 +58,7 @@ module ExperimentHelper
     job_config["spark.executor.memory"] = 2000
 
     put "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/jobs/#{job_name}", job_config
-    expect_status(201)
+    expect_status_details(201)
   end
 
   def get_results(project_id, ml_id, query)
@@ -68,7 +68,6 @@ module ExperimentHelper
   def run_experiment_blocking(project, job_name)
     start_execution(project[:id], job_name)
     execution_id = json_body[:id]
-    expect_status(201)
     wait_for_execution_completed(project[:id], job_name, execution_id, "FINISHED", expected_final_status: "SUCCEEDED")
     wait_result = epipe_wait_on_provenance(repeat: 5)
     expect(wait_result["success"]).to be(true), wait_result["msg"]

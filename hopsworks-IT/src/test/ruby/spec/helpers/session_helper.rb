@@ -165,15 +165,17 @@ module SessionHelper
 
   def raw_create_session(email, password)
     reset_session
-    response = post "#{ENV['HOPSWORKS_API']}/auth/login", URI.encode_www_form({ email: email, password: password}), {content_type: 'application/x-www-form-urlencoded'}
-    if !headers["set_cookie"].nil? && !headers["set_cookie"][1].nil?
-      cookie = headers["set_cookie"][1].split(';')[0].split('=')
-      @cookies = {"SESSIONID"=> json_body[:sessionID], cookie[0] => cookie[1]}
-    else
-      @cookies = {"SESSIONID"=> json_body[:sessionID]}
+    response = post "#{ENV['HOPSWORKS_API']}/auth/login", URI.encode_www_form({ email: email, password: password}),
+                    {content_type: 'application/x-www-form-urlencoded'}
+    @cookies = {"SESSIONID"=> json_body[:sessionID]}
+    unless headers["set_cookie"].nil?
+      headers["set_cookie"].each do |c|
+        cookie = c.split(';')[0].split('=')
+        @cookies.store(cookie[0], cookie[1])
+      end
     end
     @token = ''
-    if !headers["authorization"].nil?
+    unless headers["authorization"].nil?
       @token = headers["authorization"]
     end
     Airborne.configure do |config|
@@ -182,25 +184,27 @@ module SessionHelper
     end
     @cookies
     pp "session with user:#{email}" if defined?(@debugOpt) && @debugOpt == true
-    return response
+    response
   end
 
   def raw_create_session_for_proxy(email, password)
     reset_session
-    response = post "#{ENV['HOPSWORKS_API']}/auth/login", URI.encode_www_form({ email: email, password: password}), {content_type: 'application/x-www-form-urlencoded'}
+    response = post "#{ENV['HOPSWORKS_API']}/auth/login", URI.encode_www_form({ email: email, password: password}),
+                    {content_type: 'application/x-www-form-urlencoded'}
     @cookies = {"SESSIONID"=> json_body[:sessionID]}
-    if !headers["set_cookie"].nil?
+    unless headers["set_cookie"].nil?
       headers["set_cookie"].each do |c|
         cookie = c.split(';')[0].split('=')
         @cookies.store(cookie[0], cookie[1])
       end
     end
+    # grafana proxy fails if Authorization header is set
     Airborne.configure do |config|
       config.headers = {:cookies => @cookies, content_type: 'application/json' }
     end
     @cookies
     pp "session with user:#{email}" if defined?(@debugOpt) && @debugOpt == true
-    return response
+    response
   end
   
   def get_user_roles(user)

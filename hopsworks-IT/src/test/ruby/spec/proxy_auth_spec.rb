@@ -24,20 +24,20 @@ describe "On #{ENV['OS']}" do
         reset_session
       end
       it "should not allow access to grafana" do
-        get_grafana
-        expect_status(401)
+        proxy_helper_get_grafana
+        expect_status_details(401)
       end
       it "should not allow access to yarn ui" do
-        get_yarnui
-        expect_status(401)
+        proxy_helper_get_yarnui
+        expect_status_details(401)
       end
       it "should not allow access to hdfs ui" do
-        get_hdfsui
-        expect_status(401)
+        proxy_helper_get_hdfsui
+        expect_status_details(401)
       end
       it "should not allow access to tensorboard" do
-        get_tensorboard
-        expect_status(401)
+        proxy_helper_get_tensorboard
+        expect_status_details(401)
       end
     end
     describe "with admin session" do
@@ -45,20 +45,20 @@ describe "On #{ENV['OS']}" do
         with_admin_session_for_proxy
       end
       it "should allow access to grafana" do
-        get_grafana
-        expect_status(200)
+        proxy_helper_get_grafana
+        expect_status_details(200)
       end
       it "should allow access to yarn ui" do
-        get_yarnui
-        expect_status(200)
+        proxy_helper_get_yarnui
+        expect_status_details(200)
       end
       it "should allow access to hdfs ui" do
-        get_hdfsui
-        expect_status(200)
+        proxy_helper_get_hdfsui
+        expect_status_details(200)
       end
       it "should allow access to tensorboard" do
-        get_tensorboard
-        expect_status(403)
+        proxy_helper_get_tensorboard
+        expect_status_details(403)
         expect(response.body).to include("Access to the specified resource has been forbidden.")
       end
     end
@@ -68,19 +68,19 @@ describe "On #{ENV['OS']}" do
         with_user_session_for_proxy
       end
       it "should allow access to grafana" do
-        get_grafana
+        proxy_helper_get_grafana
         expect_status(200)
       end
       it "should allow access to yarn ui" do
-        get_yarnui
+        proxy_helper_get_yarnui
         expect_status(400)
       end
       it "should allow access to hdfs ui" do
-        get_hdfsui
+        proxy_helper_get_hdfsui
         expect_status(403)
       end
       it "should allow access to tensorboard" do
-        get_tensorboard
+        proxy_helper_get_tensorboard
         expect_status(403)
         expect(response.body).to include("Access to the specified resource has been forbidden.")
       end

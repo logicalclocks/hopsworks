@@ -77,15 +77,15 @@ module HostsHelper
   def update_host_service_on_all_hosts(service, action)
       services = HostServices.where(name: service)
       services.each { |host_service|
-      host = Host.find_by(id: host_service.host_id)
-      hosts_update_host_service(host.hostname, service, action)
-      wait_for do
-        if action.eql?("SERVICE_STOP")
-          is_service_running(service, host.hostname).eql?(false)
-        else
-          is_service_running(service, host.hostname).eql?(true)
+        host = Host.find_by(id: host_service.host_id)
+        hosts_update_host_service(host.hostname, service, action)
+        wait_for do
+          if action.eql?("SERVICE_STOP")
+            is_service_running(service, host.hostname).eql?(false)
+          else
+            is_service_running(service, host.hostname).eql?(true)
+          end
         end
-      end
       }
   end
 
