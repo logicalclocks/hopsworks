@@ -30,8 +30,7 @@ describe "On #{ENV['OS']}" do
           put "#{ENV['HOPSWORKS_API']}/admin/encryptionPass",
               URI.encode_www_form({ oldPassword: 'oldPassword', newPassword: 'newPassword'}),
               { content_type: 'application/x-www-form-urlencoded'}
-          expect_status(401)
-          expect_json(errorCode: 200003)
+          expect_status_details(401, error_code: 200003)
         end
       end
 
@@ -44,7 +43,7 @@ describe "On #{ENV['OS']}" do
           put "#{ENV['HOPSWORKS_API']}/admin/encryptionPass",
               URI.encode_www_form({ oldPassword: 'verysecurepassword', newPassword: 'newPassword'}),
               { content_type: 'application/x-www-form-urlencoded'}
-          expect_status(403)
+          expect_status_details(403)
         end
       end
       
@@ -57,7 +56,7 @@ describe "On #{ENV['OS']}" do
           put "#{ENV['HOPSWORKS_API']}/admin/encryptionPass",
               URI.encode_www_form({ oldPassword: 'hopefully_this_is_a_wrong_password', newPassword: 'newPassword'}),
               { content_type: 'application/x-www-form-urlencoded'}
-          expect_status(403)
+          expect_status_details(403)
         end
 
         it "should succeed with correct password" do
@@ -65,7 +64,7 @@ describe "On #{ENV['OS']}" do
           put "#{ENV['HOPSWORKS_API']}/admin/encryptionPass",
               URI.encode_www_form({ oldPassword: 'verysecurepassword', newPassword: 'verysecurepassword'}),
               { content_type: 'application/x-www-form-urlencoded'}
-          expect_status(201)
+          expect_status_details(201)
           opId = json_body[:successMessage]
           get "#{ENV['HOPSWORKS_API']}/admin/encryptionPass/#{opId}"
           wait_for do
@@ -76,7 +75,7 @@ describe "On #{ENV['OS']}" do
         it "should not get any result for non-existing operation" do
           randOpId = rand(-2147483648..2147483647)
           get "#{ENV['HOPSWORKS_API']}/admin/encryptionPass/#{randOpId}"
-          expect_status(404)
+          expect_status_details(404)
         end
       end
       
@@ -93,7 +92,7 @@ describe "On #{ENV['OS']}" do
       context "#not logged in" do
         it "should fail" do
           get "#{ENV['HOPSWORKS_API']}/admin/credentials/x509?project=some_project&username=some_username"
-          expect_status(401)
+          expect_status_details(401)
         end
       end
 
@@ -104,7 +103,7 @@ describe "On #{ENV['OS']}" do
 
         it "should fail" do
           get "#{ENV['HOPSWORKS_API']}/admin/credentials/x509?project=some_project&username=some_username"
-          expect_status(403)
+          expect_status_details(403)
         end
       end
 
@@ -119,14 +118,14 @@ describe "On #{ENV['OS']}" do
         it "should succeed to get credentials" do
           project_username = @project[:projectname] + "__" + @project_user[:username]
           get "#{ENV['HOPSWORKS_API']}/admin/credentials/x509?username=#{project_username}"
-          expect_status(200)
+          expect_status_details(200)
           expect(json_body[:fileExtension]).to eql("jks")
           expect(json_body[:kStore]).not_to be_nil
           expect(json_body[:tStore]).not_to be_nil
           expect(json_body[:password]).not_to be_nil
           with_agent_session
           get "#{ENV['HOPSWORKS_API']}/admin/credentials/x509?username=#{project_username}"
-          expect_status(200)
+          expect_status_details(200)
         end
       end
     end

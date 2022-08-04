@@ -241,14 +241,14 @@ describe "On #{ENV['OS']}" do
         end
         expect(trainingdataset_exists(@project1[:id], @td_1)).to be(true)
 
-        get_executions(@project1[:id], @create_synth_td_job, "")
+        get_executions(@project1[:id], @create_synth_td_job)
         expect(json_body[:count]).to eq(1)
         td_app_id = json_body[:items][0][:appId]
         result = prov_links_get(@project1, in_artifact: "#{@base_fgs[0]}_1")
         expect(result["items"].length).to be >= 1
         prov_verify_link(result, td_app_id, "#{@base_fgs[0]}_1", "#{@td_1}_1")
 
-        open_contexts2 = opensearch_nodes_stats(ids[0]["id"]) ["indices"]["search"]["open_contexts"]
+        open_contexts2 = opensearch_nodes_stats(ids[0]["id"])["indices"]["search"]["open_contexts"]
         expect(open_contexts2).to eq(open_contexts1)
       end
     end
@@ -293,7 +293,7 @@ describe "On #{ENV['OS']}" do
         featurestore_id = get_featurestore_id(@project1[:id])
 
         get "#{ENV['HOPSWORKS_API']}/project/#{@project1[:id]}/featurestores/#{featurestore_id}/featuregroups/#{fg0["id"]}/activity?filter_by=type:job"
-        expect_status(200)
+        expect_status_details(200)
         activity = JSON.parse(response.body)
         expect(activity["items"].count).to eql(1)
         expect(activity["items"][0]["type"]).to eql("JOB")
@@ -337,7 +337,7 @@ describe "On #{ENV['OS']}" do
         end
         expect(trainingdataset_exists(@project1[:id], @td_1)).to be(true)
 
-        get_executions(@project1[:id], @create_synth_td_job, "")
+        get_executions(@project1[:id], @create_synth_td_job)
         expect(json_body[:count]).to eq(1)
         td_app_id = json_body[:items][0][:appId]
         result = prov_links_get(@project1, in_artifact: "#{@base_fgs[0]}_1")
@@ -353,7 +353,7 @@ describe "On #{ENV['OS']}" do
         end
         expect(featuregroup_exists(@project1[:id], @derived_fg)).to be(true)
 
-        get_executions(@project1[:id], @derive_synth_fg_job, "")
+        get_executions(@project1[:id], @derive_synth_fg_job)
         expect(json_body[:count]).to eq(1)
         app_id = json_body[:items][0][:appId]
         result = prov_links_get(@project1, in_artifact: "#{@base_fgs[0]}_1")
@@ -369,7 +369,7 @@ describe "On #{ENV['OS']}" do
         end
         expect(featuregroup_exists(@project1[:id], @derived_fg)).to be(true)
 
-        get_executions(@project1[:id], @derive_synth_fg_job, "")
+        get_executions(@project1[:id], @derive_synth_fg_job)
         expect(json_body[:count]).to eq(1)
         app_id = json_body[:items][0][:appId]
         result = prov_links_get(@project1, out_artifact: "#{@derived_fg}_1")
@@ -389,7 +389,7 @@ describe "On #{ENV['OS']}" do
         end
         expect(featuregroup_exists(@project1[:id], @derived_synthetic_fg)).to be(true)
 
-        get_executions(@project1[:id], @derive_synth_on_demand_fg_job, "")
+        get_executions(@project1[:id], @derive_synth_on_demand_fg_job)
         expect(json_body[:count]).to eq(1)
         app_id = json_body[:items][0][:appId]
         result = prov_links_get(@project1, out_artifact: "#{@derived_synthetic_fg}_1")
@@ -409,7 +409,7 @@ describe "On #{ENV['OS']}" do
         end
         expect(trainingdataset_exists(@project1[:id], @td_1)).to be(true)
 
-        get_executions(@project1[:id], @create_synth_td_job, "")
+        get_executions(@project1[:id], @create_synth_td_job)
         expect(json_body[:count]).to eq(1)
         td_app_id = json_body[:items][0][:appId]
         result = prov_links_get(@project1, out_artifact: "#{@td_1}_1")

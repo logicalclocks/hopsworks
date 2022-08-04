@@ -15,8 +15,8 @@
 =end
 module JupyterHelper
 
-  def start_jupyter(project, expected_status=200, shutdownLevel=6, baseDir=nil, noLimit=false)
-    settings = get_settings(project)
+  def start_jupyter(project, shutdownLevel=6, baseDir=nil, noLimit=false, settings: nil, expected_status: 200, error_code: nil)
+    settings = get_settings(project) if settings.nil?
 
     if !baseDir.nil?
         settings[:baseDir] = baseDir
@@ -28,25 +28,31 @@ module JupyterHelper
     staging_dir = settings[:privateDir]
 
     post "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/jupyter/start", JSON(settings)
-    expect_status(expected_status)
+    expect_status_details(expected_status, error_code: error_code)
     secret_dir = json_body[:secret]
 
     return secret_dir, staging_dir, settings
   end
 
-  def get_settings(project)
+  def get_settings(project, expected_status: 200)
       get "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/jupyter/settings"
+      expect_status_details(expected_status)
       json_body
   end
 
-  def stop_jupyter(project)
+  def stop_jupyter(project, expected_status: 200)
     get "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/jupyter/stop"
-    expect_status(200)
+    expect_status_details(expected_status)
+  end
+
+  def update_jupyter(project, settings, expected_status: 200)
+    post "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/jupyter/update", JSON(settings)
+    expect_status_details(expected_status)
   end
 
   def create_notebook(jupyter_port)
     json_result = post "/hopsworks-api/jupyter/#{jupyter_port}/api/contents", {type: "notebook", path: ""}
-    expect_status(201)
+    expect_status_details(201)
     parsed_json = JSON.parse(json_result)
     temp_name = parsed_json["name"]
 
@@ -140,5 +146,17 @@ module JupyterHelper
     pp "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/jupyter/attachConfiguration/#{hdfsUsername}/#{kernelId}" if (defined?(@debugOpt)) && @debugOpt
     put "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/jupyter/attachConfiguration/#{hdfsUsername}/#{kernelId}"
     expect_status_details(200)
+  end
+
+  def get_configuration(project, path, expected_status: 200)
+    get "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/xattrs/#{path}?jupyter_configuration"
+    expect_status_details(expected_status)
+  end
+  def jupyter_running(project, expected_status: nil)
+    get "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/jupyter/running"
+    expect_status_details(expected_status)
+  end
+  def wait_notebook_kill()
+    response.code == resolve_status(404, response.code) && json_body[:errorCode] == 130009
   end
 end

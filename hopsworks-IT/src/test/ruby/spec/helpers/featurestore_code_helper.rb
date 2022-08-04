@@ -22,21 +22,21 @@ module FeatureStoreCodeHelper
 		applicationId: application_id
     }
     json_result = post post_statistics_endpoint, json_data.to_json
-	expect_status(200)
+	expect_status_details(200)
 	
 	return JSON.parse(json_result)
   end
 
   def get_all_code(project_id, featurestore_id, dataset_type, dataset_id)
     json_result = get "#{ENV['HOPSWORKS_API']}/project/#{project_id}/featurestores/#{featurestore_id}/#{dataset_type}/#{dataset_id}/code?fields=content"
-	expect_status(200)
+		expect_status_details(200)
 	
 	return JSON.parse(json_result)
   end
 
   def get_code(project_id, featurestore_id, dataset_type, dataset_id, code_id)
     json_result = get "#{ENV['HOPSWORKS_API']}/project/#{project_id}/featurestores/#{featurestore_id}/#{dataset_type}/#{dataset_id}/code/#{code_id}?fields=content"
-	expect_status(200)
+		expect_status_details(200)
 	
 	return JSON.parse(json_result)
   end
@@ -49,11 +49,10 @@ module FeatureStoreCodeHelper
     settings = get_settings(@project)
 
 		#start notebook
-		json_result = post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/jupyter/start", JSON(settings)
+		post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/jupyter/start", JSON(settings)
 		expect_status_details(200)
-		jupyter_project = JSON.parse(json_result)
-		port = jupyter_project["port"]
-		token = jupyter_project["token"]
+		port = json_body[:port]
+		token = json_body[:token]
 
 		#save header
 		bearer = ""
@@ -84,7 +83,7 @@ module FeatureStoreCodeHelper
 
 		stop_jupyter(@project)
 
-		return parsed_json, featurestore_id, dataset_id
+		[parsed_json, featurestore_id, dataset_id]
   end
   
   def save_job(application_id, dataset_type)
@@ -99,8 +98,7 @@ module FeatureStoreCodeHelper
 
 		#create job
 		job_spark_1 = "demo_job_1"
-		create_sparktour_job(@project, job_spark_1, "jar", nil)
-		expect_status(201)
+		create_sparktour_job(@project, job_spark_1, "jar")
 
 		#save code
 		dataset_id = parsed_json["id"]
@@ -110,7 +108,7 @@ module FeatureStoreCodeHelper
   def create_dataset(featurestore_id, dataset_type)
 		if dataset_type == "featuregroups"
 		  json_result, _ = create_cached_featuregroup(@project.id, featurestore_id)
-		  expect_status(201)
+			expect_status_details(201)
 		else
 		  connector = get_hopsfs_training_datasets_connector(@project[:projectname])
 
@@ -119,7 +117,7 @@ module FeatureStoreCodeHelper
 			{type: "int", name: "testfeature1"}
 		  ]
 		  json_result, _ = create_hopsfs_training_dataset(@project[:id], featurestore_id, connector, features: features)
-		  expect_status(201)
+			expect_status_details(201)
 		end
 
 		return JSON.parse(json_result)

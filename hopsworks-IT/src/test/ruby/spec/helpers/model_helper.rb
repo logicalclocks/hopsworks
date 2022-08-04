@@ -21,7 +21,7 @@ module ModelHelper
     get "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/python/environments"
     if response.code == 404
        post "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/python/environments/#{ENV['PYTHON_VERSION']}?action=create"
-       expect_status(201)
+       expect_status_details(201)
     end
 
     if !test_file("/Projects/#{project[:projectname]}/Resources/" + job_name + ".ipynb")
@@ -35,7 +35,7 @@ module ModelHelper
     job_config["spark.executor.memory"] = 2000
 
     put "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/jobs/#{job_name}", job_config
-    expect_status(201)
+    expect_status_details(201)
   end
 
   def create_model(project, model_project_name, registry_id, name, version)

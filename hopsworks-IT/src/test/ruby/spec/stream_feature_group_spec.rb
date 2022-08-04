@@ -39,7 +39,7 @@ describe "On #{ENV['OS']}" do
                                                         featuregroup_name + "_" + parsed_json["version"].to_s + "_onlinefs")
 
         job_name =  featuregroup_name + "_" + parsed_json["version"].to_s + "_" + "offline_fg_backfill"
-        job_json_result = get_job(project.id, job_name)
+        job_json_result = get_job(project.id, job_name, expected_status: 200)
         job_parsed_json = JSON.parse(job_json_result)
         expect(job_parsed_json["name"]).to eql(job_name)
         expect(job_parsed_json["config"]["mainClass"]).to eql("com.logicalclocks.utils.MainClass")
@@ -70,7 +70,7 @@ describe "On #{ENV['OS']}" do
                                                         featuregroup_name + "_" + parsed_json["version"].to_s)
 
         job_name =  featuregroup_name + "_" + parsed_json["version"].to_s + "_" + "offline_fg_backfill"
-        job_json_result = get_job(project.id, job_name)
+        job_json_result = get_job(project.id, job_name, expected_status: 200)
         job_parsed_json = JSON.parse(job_json_result)
         expect(job_parsed_json["name"]).to eql(job_name)
         expect(job_parsed_json["config"]["mainClass"]).to eql("com.logicalclocks.utils.MainClass")
@@ -96,9 +96,8 @@ describe "On #{ENV['OS']}" do
         delete delete_featuregroup_endpoint
 
         job_name =  featuregroup_name + "_" + parsed_json["version"].to_s + "_" + "offline_fg_backfill"
-        job_json_result = get_job(project.id, job_name)
+        job_json_result = get_job(project.id, job_name, expected_status: 404)
         job_parsed_json = JSON.parse(job_json_result)
-        expect_status_details(404)
         expect(job_parsed_json["name"]).to eql(nil)
       end
 

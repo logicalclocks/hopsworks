@@ -29,12 +29,12 @@ describe "On #{ENV['OS']}" do
               expiresAt: "1234",
               nbf: "1234"
             }
-        expect_status(401)
+        expect_status_details(401)
       end
 
       it "should not be able to invalidate JWT" do
         delete "#{ENV['HOPSWORKS_API']}/jwt/service/some_token"
-        expect_status(401)
+        expect_status_details(401)
       end
     end
 
@@ -49,7 +49,7 @@ describe "On #{ENV['OS']}" do
       it "should not be able to login as service" do
         post "#{ENV['HOPSWORKS_API']}/auth/service",
              URI.encode_www_form({ email: @user_email, password: "Pass123"}), { content_type: 'application/x-www-form-urlencoded'}
-        expect_status(403)
+        expect_status_details(403)
       end
     end
 
@@ -57,7 +57,7 @@ describe "On #{ENV['OS']}" do
       it "should be able to login as service" do
         post "#{ENV['HOPSWORKS_API']}/auth/service",
              URI.encode_www_form({ email: "agent@hops.io", password: "admin"}), { content_type: 'application/x-www-form-urlencoded'}
-        expect_status(200)
+        expect_status_details(200)
         expect(headers["authorization"]).not_to be_nil
         expect(headers["authorization"]).not_to be_empty
         renew_tokens = json_body[:renewTokens]
@@ -103,7 +103,7 @@ describe "On #{ENV['OS']}" do
                 nbf: not_before
               }
 
-          expect_status(200)
+          expect_status_details(200)
           
           new_master_token = json_body[:jwt][:token]
           new_one_time_tokens = json_body[:renewTokens]
@@ -125,28 +125,28 @@ describe "On #{ENV['OS']}" do
             config.headers["Authorization"] = "Bearer #{@master_token}"
           end
           get "#{ENV['HOPSWORKS_CA']}/token"
-          expect_status(200)
+          expect_status_details(200)
 
           # Invalidate previous master token
           Airborne.configure do |config|
             config.headers["Authorization"] = "Bearer #{new_master_token}"
           end
           delete "#{ENV['HOPSWORKS_API']}/jwt/service/#{@master_token}"
-          expect_status(200)
+          expect_status_details(200)
 
           # Subsequent calls with the old master key should fail
           Airborne.configure do |config|
             config.headers["Authorization"] = "Bearer #{@master_token}"
           end
           get "#{ENV['HOPSWORKS_CA']}/token"
-          expect_status(401)
+          expect_status_details(401)
 
           # But new master should be still valid...
           Airborne.configure do |config|
             config.headers["Authorization"] = "Bearer #{new_master_token}"
           end
           get "#{ENV['HOPSWORKS_CA']}/token"
-          expect_status(200)
+          expect_status_details(200)
         end
       end
       

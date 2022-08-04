@@ -1171,6 +1171,9 @@ public class CertificateMaterializer {
    */
   private CryptoMaterial getMaterialFromDatabase(MaterialKey key) throws IOException {
     UserCerts projectSpecificCerts = certsFacade.findUserCert(key.projectName, key.username);
+    if (projectSpecificCerts.getUserKey() == null || projectSpecificCerts.getUserCert() == null) {
+      throw new IllegalStateException("Project Specific Certs not found for " + key.projectName + " " + key.username);
+    }
     ByteBuffer keyStore = ByteBuffer.wrap(projectSpecificCerts.getUserKey());
     ByteBuffer trustStore = ByteBuffer.wrap(projectSpecificCerts.getUserCert());
     char[] password = decryptMaterialPassword(key.getExtendedUsername(), projectSpecificCerts.getUserKeyPwd());

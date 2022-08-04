@@ -21,18 +21,18 @@ describe "On #{ENV['OS']}" do
 
     it 'should succeed to fetch the value of a variable' do
       result = get "#{ENV['HOPSWORKS_API']}/variables/hopsworks_user"
-      expect_status(200)
+      expect_status_details(200)
       expect(JSON.parse(result)['successMessage']).to eql("glassfish")
     end
 
     it 'should succeed to fetch a variable with admin visibility' do
       get "#{ENV['HOPSWORKS_API']}/variables/hopsworks_master_password"
-      expect_status(200)
+      expect_status_details(200)
     end
 
     it 'should receive a 404 if the variable does not exists' do
       get "#{ENV['HOPSWORKS_API']}/variables/doesnotexists"
-      expect_status(404)
+      expect_status_details(404)
     end
   end
 
@@ -43,17 +43,17 @@ describe "On #{ENV['OS']}" do
 
     it 'should be able to fetch a variable with notauthenticated visibility' do
       get "#{ENV['HOPSWORKS_API']}/variables/first_time_login"
-      expect_status(200)
+      expect_status_details(200)
     end
 
     it 'should be able to fetch a variable with user visibility' do
       get "#{ENV['HOPSWORKS_API']}/variables/hopsworks_enterprise"
-      expect_status(200)
+      expect_status_details(200)
     end
 
     it 'should fail to fetch a variable with admin visibility' do
       get "#{ENV['HOPSWORKS_API']}/variables/hopsworks_master_password"
-      expect_status(403)
+      expect_status_details(403)
     end
   end
 
@@ -64,7 +64,7 @@ describe "On #{ENV['OS']}" do
 
     it 'should fail to fetch a variable' do
       get "#{ENV['HOPSWORKS_API']}/variables/hopsworks_master_password"
-      expect_status(401)
+      expect_status_details(401)
     end
   end
 end

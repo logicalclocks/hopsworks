@@ -24,7 +24,7 @@ describe "On #{ENV['OS']}" do
         it "should not be able to register a maggy driver" do
           post "#{ENV['HOPSWORKS_API']}/maggy/drivers", {appId: "42", hostIp: "127.0.3.5", port: 12345,
                                                          secret: "magster"}
-          expect_status(401)
+          expect_status_details(401)
         end
       end
         context "logged in" do
@@ -35,7 +35,7 @@ describe "On #{ENV['OS']}" do
         it "should be able to register a maggy driver" do
           post "#{ENV['HOPSWORKS_API']}/maggy/drivers", {appId: "42", hostIp: "127.0.3.5", port: 12345,
                                                          secret: "magster"}
-          expect_status(204)
+          expect_status_details(204)
         end
 
         it "should be able to get the latest registered driver" do
@@ -44,9 +44,9 @@ describe "On #{ENV['OS']}" do
           sleep(1)
           post "#{ENV['HOPSWORKS_API']}/maggy/drivers", {appId: "42", hostIp: "127.0.3.6", port: 54321,
                                                          secret: "magster"}
-          expect_status(204)
+          expect_status_details(204)
           get "#{ENV['HOPSWORKS_API']}/maggy/drivers/42"
-          expect_status(200)
+          expect_status_details(200)
           parsed_json = JSON.parse(response.body)
           expect(parsed_json["appId"] == "42").to be true
           expect(parsed_json["hostIp"] == "127.0.3.6").to be true
@@ -56,9 +56,9 @@ describe "On #{ENV['OS']}" do
 
         it "should be able to delete all registered drivers for an appId" do
           delete "#{ENV['HOPSWORKS_API']}/maggy/drivers/42"
-          expect_status(204)
+          expect_status_details(204)
           get "#{ENV['HOPSWORKS_API']}/maggy/drivers/42"
-          expect_status(404)
+          expect_status_details(404)
         end
       end
     end

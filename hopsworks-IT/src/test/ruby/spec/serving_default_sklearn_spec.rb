@@ -370,7 +370,7 @@ describe "On #{ENV['OS']}" do
 
         it "should delete a serving instance" do
           delete "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/#{@serving[:id]}"
-          expect_status(200)
+          expect_status_details(200)
         end
 
         it "should delete a running serving instance" do
@@ -381,7 +381,7 @@ describe "On #{ENV['OS']}" do
           sleep(30)
 
           delete "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/#{@serving[:id]}"
-          expect_status(200)
+          expect_status_details(200)
         end
       end
     end

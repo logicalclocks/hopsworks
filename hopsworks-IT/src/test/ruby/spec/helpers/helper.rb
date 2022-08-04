@@ -57,6 +57,7 @@ module Helper
         expect(response.code).to eq(resolve_status(expected_status, response.code)), "found code:#{response.code} and no/malformed body"
       end
     end
+    response
   end
 
   def array_contains_one_of(array, &predicate)

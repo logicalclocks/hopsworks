@@ -252,8 +252,9 @@ module DatasetHelper
     post "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/dataset/#{path}?action=move&destination_path=#{destination_path}#{datasetType}"
   end
 
-  def share_dataset(project, path, target_project, permission: "EDITABLE", datasetType: "")
+  def share_dataset(project, path, target_project, permission: "EDITABLE", datasetType: "", expected_status: nil)
     post "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/dataset/#{path}?action=share&target_project=#{target_project}&permission=#{permission}#{datasetType}"
+    expect_status_details(expected_status) unless expected_status.nil?
   end
 
   def share_dataset_checked(project, path, target_project, permission: "EDITABLE", datasetType: "DATASET")
@@ -335,8 +336,9 @@ module DatasetHelper
     expect(dataset.length).to eq(0), "dataset:#{dataset_name} should not be available in project:#{target_project} body:#{JSON.pretty_generate(json_body)}"
   end
 
-  def accept_dataset(project, path, datasetType: "")
+  def accept_dataset(project, path, datasetType: "", expected_status: nil)
     post "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/dataset/#{path}?action=accept#{datasetType}"
+    expect_status_details(expected_status) unless expected_status.nil?
   end
 
   def accept_dataset_checked(project, path, datasetType: "DATASET")

@@ -16,19 +16,19 @@
 
 module ProxyAuthHelper
 
-    def get_grafana()
+    def proxy_helper_get_grafana
       get "#{ENV['HOPSWORKS_BASE_API']}grafana"
     end
 
-    def get_yarnui()
+    def proxy_helper_get_yarnui
       get "#{ENV['HOPSWORKS_BASE_API']}yarnui"
     end
 
-    def get_hdfsui()
+    def proxy_helper_get_hdfsui
       get "#{ENV['HOPSWORKS_BASE_API']}hdfsui"
     end
 
-    def get_tensorboard()
+    def proxy_helper_get_tensorboard
       get "#{ENV['HOPSWORKS_BASE_API']}tensorboard"
     end
 end

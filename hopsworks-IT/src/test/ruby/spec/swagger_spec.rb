@@ -19,7 +19,7 @@ describe "On #{ENV['OS']}" do
       context 'with valid endpoint' do
         it "should get swagger.json with info fields present" do
           get "#{ENV['HOPSWORKS_API']}/swagger.json"
-          expect_status(200)
+          expect_status_details(200)
           parsed_json = JSON.parse(response.body)
           expect(parsed_json.key?("swagger")).to be true
           expect(parsed_json["info"]["version"]).not_to be_empty

@@ -29,7 +29,7 @@ describe "On #{ENV['OS']}" do
       it "should fail" do
         get_experiment(@project[:id], "app_id_4252123_1", nil)
         expect_json(errorCode: 200003)
-        expect_status(401)
+        expect_status_details(401)
       end
     end
     context 'with authentication create, delete, get' do
@@ -39,20 +39,20 @@ describe "On #{ENV['OS']}" do
       end
       it "should not find any experiments" do
         get_experiments(@project[:id], nil)
-        expect_status(200)
+        expect_status_details(200)
         expect(json_body[:items]).to be nil
         expect(json_body[:count]).to eq 0
         expect(URI(json_body[:href]).path).to eq "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/experiments"
       end
       it "should not find specific experiment" do
         get_experiment(@project[:id], "app_id_4254316623_1", nil)
-        expect_status(404)
+        expect_status_details(404)
       end
       it "should run three experiments and check items, count and href" do
         create_experiment_job(@project, experiment_1)
         run_experiment_blocking(@project, experiment_1)
         get_experiments(@project[:id], nil)
-        expect_status(200)
+        expect_status_details(200)
         expect(json_body[:items].count).to eq 3
         expect(json_body[:count]).to eq 3
         json_body[:items].each {|experiment| expect(URI(experiment[:state]).path).to eq "FINISHED"}
@@ -60,9 +60,11 @@ describe "On #{ENV['OS']}" do
       end
       it "should get all existing experiments" do
         get_experiments(@project[:id], nil)
+        expect_status_details(200)
+        expect(json_body[:count]).not_to be_nil
         json_body[:items].each {|experiment|
-        get_experiment(@project[:id], experiment[:id], nil)
-        expect_status(200)
+          get_experiment(@project[:id], experiment[:id], nil)
+          expect_status_details(200)
         }
       end
       it "should delete a tensorboard for experiment" do
@@ -70,22 +72,22 @@ describe "On #{ENV['OS']}" do
         ml_id = json_body[:items][0][:id]
 
         create_tensorboard(@project[:id], ml_id)
-        expect_status(201)
+        expect_status_details(201)
 
         get_tensorboard(@project[:id], ml_id)
-        expect_status(200)
+        expect_status_details(200)
 
         delete_tensorboard(@project[:id], ml_id)
-        expect_status(204)
+        expect_status_details(204)
 
         get_tensorboard(@project[:id], ml_id)
-        expect_status(404)
+        expect_status_details(404)
       end
       it "should delete single experiment using experiment API" do
         get_experiments(@project[:id], nil)
         ml_id = json_body[:items][0][:id]
         delete_experiment(@project[:id], ml_id)
-        expect_status(204)
+        expect_status_details(204)
         wait_result = epipe_wait_on_provenance(repeat: 5)
         expect(wait_result["success"]).to be(true), wait_result["msg"]
 
@@ -96,7 +98,7 @@ describe "On #{ENV['OS']}" do
         get_experiments(@project[:id], nil)
         ml_id = json_body[:items][0][:id]
         delete "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/dataset/Projects/#{@project[:projectname]}/Experiments/#{ml_id}"
-        expect_status(204)
+        expect_status_details(204)
         wait_result = epipe_wait_on_provenance(repeat: 5)
         expect(wait_result["success"]).to be(true), wait_result["msg"]
 
@@ -105,7 +107,7 @@ describe "On #{ENV['OS']}" do
       end
       it "should delete experiment by deleting Experiments dataset" do
         delete "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/dataset/Projects/#{@project[:projectname]}/Experiments"
-        expect_status(204)
+        expect_status_details(204)
         wait_result = epipe_wait_on_provenance(repeat: 5)
         expect(wait_result["success"]).to be(true), wait_result["msg"]
 
@@ -258,37 +260,37 @@ describe "On #{ENV['OS']}" do
       describe "Experiments filter" do
         it "should get 3 experiments with name like experiment" do
           get_experiments(@project[:id], "?filter_by=name_like:mnist")
-          expect_status(200)
+          expect_status_details(200)
           expect(json_body[:count]).to eq 3
           expect(json_body[:items].count).to eq 3
         end
         it "should get 0 experiment with name like not_existing" do
           get_experiments(@project[:id], "?filter_by=name_like:not_existing")
-          expect_status(200)
+          expect_status_details(200)
           expect(json_body[:count]).to eq 0
           expect(json_body[:items]).to eq nil
         end
         it "should get 3 experiments with state FINISHED experiment" do
           get_experiments(@project[:id], "?filter_by=state:FINISHED")
-          expect_status(200)
+          expect_status_details(200)
           expect(json_body[:count]).to eq 4
           expect(json_body[:items].count).to eq 4
         end
         it "should get 0 experiments with state FAILED experiment" do
           get_experiments(@project[:id], "?filter_by=state:FAILED")
-          expect_status(200)
+          expect_status_details(200)
           expect(json_body[:count]).to eq 0
           expect(json_body[:items]).to eq nil
         end
         it "should get 0 experiments with state RUNNING experiment" do
           get_experiments(@project[:id], "?filter_by=state:RUNNING")
-          expect_status(200)
+          expect_status_details(200)
           expect(json_body[:count]).to eq 0
           expect(json_body[:items]).to eq nil
         end
         it "should get 3 experiments with state FINISHED and name like experiment_ experiment" do
           get_experiments(@project[:id], "?filter_by=state:FINISHED&filter_by=name_like:mnist")
-          expect_status(200)
+          expect_status_details(200)
           expect(json_body[:count]).to eq 3
           expect(json_body[:items].count).to eq 3
         end
@@ -296,7 +298,7 @@ describe "On #{ENV['OS']}" do
       describe "Hyperparameters" do
         it "should expand hyperparameters" do
           get_experiments(@project[:id], "?filter_by=name_eq:opt")
-          expect_status(200)
+          expect_status_details(200)
           expect(json_body[:count]).to eq 1
           expect(json_body[:items].count).to eq 1
           ml_id = json_body[:items][0][:id]

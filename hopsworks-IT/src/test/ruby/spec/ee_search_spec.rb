@@ -82,21 +82,21 @@ describe "On #{ENV['OS']}" do
 
       fvs[0] = {}
       fvs[0][:name] = "fv0"
-      fvs[0][:val] = create_feature_view_from_feature_group2(project[:id], fg, name: fvs[0][:name])
+      fvs[0][:val], _ = create_feature_view_from_feature_group2(project[:id], fg, name: fvs[0][:name])
       add_featureview_tag_checked(project[:id], fvs[0][:val]["name"], fvs[0][:val]["version"], @tags[1], "val")
       fvs[1] = {}
       fvs[1][:name] = "fv1"
-      fvs[1][:val] = create_feature_view_from_feature_group2(project[:id], fg, name: fvs[1][:name])
+      fvs[1][:val], _ = create_feature_view_from_feature_group2(project[:id], fg, name: fvs[1][:name])
       add_featureview_tag_checked(project[:id], fvs[1][:val]["name"], fvs[1][:val]["version"], @tags[0], "some")
       add_featureview_tag_checked(project[:id], fvs[1][:val]["name"], fvs[1][:val]["version"], @tags[1], "val")
       fvs[2] = {}
       fvs[2][:name] = "fv2"
-      fvs[2][:val] = create_feature_view_from_feature_group2(project[:id], fg, name: fvs[2][:name])
+      fvs[2][:val], _  = create_feature_view_from_feature_group2(project[:id], fg, name: fvs[2][:name])
       add_featureview_tag_checked(project[:id], fvs[2][:val]["name"], fvs[2][:val]["version"], @tags[1], "dog")
       add_featureview_tag_checked(project[:id], fvs[2][:val]["name"], fvs[2][:val]["version"], @tags[2], "val")
       fvs[3] = {}
       fvs[3][:name] = "fv3"
-      fvs[3][:val] = create_feature_view_from_feature_group2(project[:id], fg, name: fvs[3][:name])
+      fvs[3][:val], _  = create_feature_view_from_feature_group2(project[:id], fg, name: fvs[3][:name])
       add_featureview_tag_checked(project[:id], fvs[3][:val]["name"], fvs[3][:val]["version"], @tags[0], "cat")
       fvs
     end
@@ -578,10 +578,10 @@ describe "On #{ENV['OS']}" do
           fvs = Array.new
           fvs[0] = {}
           fvs[0][:name] = "fv_0"
-          fvs[0][:val] = create_feature_view_from_feature_group2(project[:id], fg, name: fvs[0][:name])
+          fvs[0][:val], _ = create_feature_view_from_feature_group2(project[:id], fg, name: fvs[0][:name])
           fvs[1] = {}
           fvs[1][:name] = "fv_1"
-          fvs[1][:val] = create_feature_view_from_feature_group2(project[:id], fg, name: fvs[1][:name])
+          fvs[1][:val], _ = create_feature_view_from_feature_group2(project[:id], fg, name: fvs[1][:name])
           fvs
         end
         before :all do

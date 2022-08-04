@@ -1122,7 +1122,7 @@ describe "On #{ENV['OS']}" do
     describe "without valid project role" do
       before :all do
         with_valid_project
-        with_tf_serving(@project[:id], @project[:projectname], @user[:username])
+        with_tensorflow_serving(@project[:id], @project[:projectname], @user[:username])
         @member = create_user
         add_member_to_project(@project, @member[:email], "Data scientist")
       end

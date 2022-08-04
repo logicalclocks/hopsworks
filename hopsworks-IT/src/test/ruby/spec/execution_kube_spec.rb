@@ -18,8 +18,7 @@ describe "On #{ENV['OS']}" do
         end
         it "should fail" do
           create_python_job(@project, "demo_job", 'jar')
-          expect_status(401)
-          expect_json(errorCode: 200003)
+          expect_status_details(401, error_code: 200003)
         end
       end
       context 'with authentication and docker job' do
@@ -37,8 +36,7 @@ describe "On #{ENV['OS']}" do
           it "should fail to start a docker job with mounted volumes if not allowed" do
             create_docker_job(@project,  $job_name)
             #start execution
-            start_execution(@project[:id],  $job_name)
-            expect_status(400)
+            start_execution(@project[:id],  $job_name, expected_status: 400)
           end
         end
       end
@@ -57,8 +55,7 @@ describe "On #{ENV['OS']}" do
           it "should fail to start a docker job with a forbidden volume" do
             create_docker_job(@project, $job_name)
             #start execution
-            start_execution(@project[:id], $job_name)
-            expect_status(400)
+            start_execution(@project[:id], $job_name, expected_status: 400)
           end
         end
       end
@@ -77,8 +74,7 @@ describe "On #{ENV['OS']}" do
           it "should fail to start a docker job with provided uid and gid if not allowed" do
             create_docker_job(@project,  $job_name)
             #start execution
-            start_execution(@project[:id], $job_name)
-            expect_status(400)
+            start_execution(@project[:id], $job_name, expected_status: 400)
           end
         end
       end
@@ -98,20 +94,20 @@ describe "On #{ENV['OS']}" do
             create_docker_job(@project, $job_name)
             job_id = json_body[:id]
             #start execution
-            start_execution_checked(@project[:id], $job_name)
+            start_execution(@project[:id], $job_name)
             execution_id = json_body[:id]
             expect(json_body[:state]).to eq "INITIALIZING"
             #get execution
-            get_execution_checked(@project[:id], $job_name, json_body[:id])
+            get_execution(@project[:id], $job_name, json_body[:id])
             expect(json_body[:id]).to eq(execution_id)
             #wait till it's finished and start second execution
             wait_for_execution_completed(@project[:id], $job_name, json_body[:id], "FINISHED")
             #start execution
-            start_execution_checked(@project[:id], $job_name)
+            start_execution(@project[:id], $job_name)
             execution_id = json_body[:id]
 
             #get all executions of job
-            get_executions_checked(@project[:id], $job_name)
+            get_executions(@project[:id], $job_name)
             expect(json_body[:items].count).to eq 2
 
             #check database
@@ -125,11 +121,11 @@ describe "On #{ENV['OS']}" do
             create_docker_job(@project, $job_name)
             job_id = json_body[:id]
             #start execution
-            start_execution_checked(@project[:id], $job_name)
+            start_execution(@project[:id], $job_name)
             execution_id = json_body[:id]
             expect(json_body[:state]).to eq "INITIALIZING"
             #get execution
-            get_execution_checked(@project[:id], $job_name, json_body[:id])
+            get_execution(@project[:id], $job_name, json_body[:id])
             expect(json_body[:id]).to eq(execution_id)
             #wait till it's finished and start second execution
             wait_for_execution_completed(@project[:id], $job_name, json_body[:id], "FINISHED")
@@ -159,20 +155,20 @@ describe "On #{ENV['OS']}" do
               create_python_job(@project, $job_name, type)
               job_id = json_body[:id]
               #start execution
-              start_execution_checked(@project[:id], $job_name)
+              start_execution(@project[:id], $job_name)
               execution_id = json_body[:id]
               expect(json_body[:state]).to eq "INITIALIZING"
               #get execution
-              get_execution_checked(@project[:id], $job_name, json_body[:id])
+              get_execution(@project[:id], $job_name, json_body[:id])
               expect(json_body[:id]).to eq(execution_id)
               #wait till it's finished and start second execution
               wait_for_execution_completed(@project[:id], $job_name, json_body[:id], "FINISHED")
               #start execution
-              start_execution_checked(@project[:id], $job_name)
+              start_execution(@project[:id], $job_name)
               execution_id = json_body[:id]
 
               #get all executions of job
-              get_executions_checked(@project[:id], $job_name)
+              get_executions(@project[:id], $job_name)
               expect(json_body[:items].count).to eq 2
 
               #check database
@@ -183,12 +179,12 @@ describe "On #{ENV['OS']}" do
             end
             it "should start and stop job" do
               create_python_job(@project, $job_name, type)
-              expect_status(201)
+              expect_status_details(201)
 
               #start execution
-              start_execution_checked(@project[:id], $job_name)
+              start_execution(@project[:id], $job_name)
               execution_id = json_body[:id]
-              stop_execution_checked(@project[:id], $job_name, execution_id)
+              stop_execution(@project[:id], $job_name, execution_id)
               wait_for_execution_completed(@project[:id], $job_name, execution_id, "KILLED")
             end
             it "should fail to start a python job with missing files param" do
@@ -197,15 +193,14 @@ describe "On #{ENV['OS']}" do
               config[:'files'] = "hdfs:///Projects/#{@project[:projectname]}/Resources/iamnothere.txt"
               create_python_job(@project, $job_name, type, config)
               #start execution
-              start_execution(@project[:id], $job_name)
-              expect_status(400)
+              start_execution(@project[:id], $job_name, expected_status: 400)
             end
             it "should start two executions in parallel" do
               create_python_job(@project, $job_name, type)
               begin
-                start_execution_checked(@project[:id], $job_name)
+                start_execution(@project[:id], $job_name)
                 execution_id_1 = json_body[:id]
-                start_execution_checked(@project[:id], $job_name)
+                start_execution(@project[:id], $job_name)
                 execution_id_2 = json_body[:id]
               ensure
                 wait_for_execution_completed(@project[:id], $job_name, execution_id_1, "FINISHED") unless execution_id_1.nil?
@@ -215,10 +210,10 @@ describe "On #{ENV['OS']}" do
             it "should start a job with default args" do
               create_python_job(@project, $job_name, type)
               default_args = json_body[:config][:defaultArgs]
-              start_execution_checked(@project[:id], $job_name, nil)
+              start_execution(@project[:id], $job_name)
               execution_id = json_body[:id]
               begin
-                get_execution_checked(@project[:id], $job_name, execution_id)
+                get_execution(@project[:id], $job_name, execution_id)
                 expect(json_body[:args]).not_to be_nil
                 expect(default_args).not_to be_nil
                 expect(json_body[:args]).to eq default_args
@@ -229,10 +224,10 @@ describe "On #{ENV['OS']}" do
             it "should start a job with args 123" do
               create_python_job(@project, $job_name, type)
               args = "123"
-              start_execution_checked(@project[:id], $job_name, args)
+              start_execution(@project[:id], $job_name, args: args)
               execution_id = json_body[:id]
               begin
-                get_execution_checked(@project[:id], $job_name, execution_id)
+                get_execution(@project[:id], $job_name, execution_id)
                 expect(json_body[:args]).to eq args
               ensure
                 wait_for_execution_completed(@project[:id], $job_name, execution_id, "FINISHED")
@@ -240,14 +235,13 @@ describe "On #{ENV['OS']}" do
             end
             it "should start an execution and delete it while running" do
               create_python_job(@project, $job_name, type)
-              expect_status(201)
+              expect_status_details(201)
               #start execution
-              start_execution_checked(@project[:id], $job_name)
+              start_execution(@project[:id], $job_name)
               execution_id = json_body[:id]
               #Wait a few seconds for kubernetes to start the job
               wait_for_kube_job($job_name)
               delete_execution(@project[:id], $job_name, execution_id)
-              expect_status(204)
 
               #check database
               num_executions = count_executions($job_name)

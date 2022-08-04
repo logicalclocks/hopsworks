@@ -108,8 +108,9 @@ module CondaHelper
     return system("docker inspect --type=image " + image_name + "> /dev/null 2>&1")
   end
 
-  def delete_env(projectId, version)
+  def delete_env(projectId, version, expected_status: 204, error_code: nil)
     delete "#{ENV['HOPSWORKS_API']}/project/#{projectId}/python/environments/#{version}"
+    expect_status_details(expected_status, error_code: error_code)
   end
 
   def wait_for_sync
@@ -118,13 +119,12 @@ module CondaHelper
     end
   end
 
-  def create_env(project, version, wait_for_sync_complete=true)
+  def create_env(project, version, wait_for_sync_complete=true, expected_status: 201, error_code: nil)
     env = get_project_env_by_id(project[:id])
     project = get_project_by_name(project[:projectname])
-    if not env.nil?
-      delete_env(project[:id], version)
-    end
+    delete_env(project[:id], version) unless env.nil?
     project = post "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/python/environments/#{version}?action=create"
+    expect_status_details(expected_status, error_code: error_code)
     if wait_for_sync_complete
       wait_for_sync
     end
@@ -144,7 +144,6 @@ module CondaHelper
     project = get_project_by_name(project[:projectname])
     if env.nil?
       create_env(project, version)
-      expect_status(201)
       wait_for_sync
       get_project_by_name(project[:projectname]) #get project from db with updated python version
     else
@@ -153,21 +152,21 @@ module CondaHelper
     end
   end
 
-  def create_env_from_file(projectId, path, installJupyter)
-    post "#{ENV['HOPSWORKS_API']}/project/#{projectId}/python/environments",
-         {path: path, installJupyter: installJupyter}
+  def create_env_from_file(projectId, path, installJupyter, expected_status: 201)
+    post "#{ENV['HOPSWORKS_API']}/project/#{projectId}/python/environments", {path: path, installJupyter: installJupyter}
+    expect_status_details(expected_status)
   end
 
-  def export_env(projectId, version)
+  def export_env(projectId, version, expected_status: 200)
     post "#{ENV['HOPSWORKS_API']}/project/#{projectId}/python/environments/#{version}?action=export"
+    expect_status_details(expected_status)
   end
 
   def list_libraries(projectId, version)
     get "#{ENV['HOPSWORKS_API']}/project/#{projectId}/python/environments/#{version}/libraries"
   end
 
-  def install_library(projectId, version, lib, package_source, lib_version, channel, dependency_url=nil)
-
+  def install_library(projectId, version, lib, package_source, channel, dependency_url=nil, lib_version: nil, expected_status: 201)
     lib_spec = {
       "version": lib_version,
       "packageSource": package_source,
@@ -176,30 +175,38 @@ module CondaHelper
     }
 
     post "#{ENV['HOPSWORKS_API']}/project/#{projectId}/python/environments/#{version}/libraries/#{lib}", lib_spec
+    expect_status_details(expected_status)
   end
 
-  def search_library(projectId, version, package_manager, lib, conda_channel="")
+  def search_library(projectId, version, package_manager, lib, conda_channel="", expected_status: 200)
     request_url = "#{ENV['HOPSWORKS_API']}/project/#{projectId}/python/environments/#{version}/libraries/#{package_manager}?query=#{lib}"
     if not conda_channel.empty?
       request_url += "&channel=#{conda_channel}"
     end
     get request_url
+    expect_status_details(expected_status)
   end
 
-  def uninstall_library(projectId, version, lib)
+  def uninstall_library(projectId, version, lib, expected_status: 204)
     delete "#{ENV['HOPSWORKS_API']}/project/#{projectId}/python/environments/#{version}/libraries/#{lib}"
+    expect_status_details(expected_status)
   end
 
-  def get_env_commands(projectId, version)
+  def get_env_commands(projectId, version, expected_status: 200)
     get "#{ENV['HOPSWORKS_API']}/project/#{projectId}/python/environments/#{version}/commands"
+    expect_status_details(expected_status)
   end
 
-    def get_env_conflicts(projectId, version, query="")
+    def get_env_conflicts(projectId, version, query="", expected_status: 200)
       get "#{ENV['HOPSWORKS_API']}/project/#{projectId}/python/environments/#{version}/conflicts" + query
+      expect_status_details(expected_status)
     end
 
-  def get_library_commands(projectId, version, lib)
-    get "#{ENV['HOPSWORKS_API']}/project/#{projectId}/python/environments/#{version}/libraries/#{lib}/commands"
+  def get_library_commands(projectId, version, lib, expected_status: 200, expected_commands: nil)
+    result = get "#{ENV['HOPSWORKS_API']}/project/#{projectId}/python/environments/#{version}/libraries/#{lib}/commands"
+    expect_status_details(expected_status)
+    expect(json_body[:count]).to be == expected_commands unless expected_commands.nil?
+    result
   end
 
 end

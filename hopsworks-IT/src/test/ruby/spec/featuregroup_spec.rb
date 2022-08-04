@@ -841,7 +841,7 @@ describe "On #{ENV['OS']}" do
         json_result = put create_query_endpoint, json_fs_query
         parsed_json = JSON.parse(json_result)
         expect_status(200)
-        expect(parsed_json["hudiCachedFeatureGroups"][0]["leftFeatureGroupEndTimestamp"]).to be(1603650176000)
+        expect(parsed_json["hudiCachedFeatureGroups"][0]["leftFeatureGroupEndTimestamp"]).to eq(1603650176000)
       end
 
       it "should be able to enable hudi featuregroup as online and retrieve correct online/offline queries" do

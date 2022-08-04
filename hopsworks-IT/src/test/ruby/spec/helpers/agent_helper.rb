@@ -30,6 +30,49 @@ module AgentHelper
     @@port = ENV.fetch('REMOTE_SSH_PORT', '22')
     @@password = ENV.fetch('REMOTE_SSH_PASSWORD', 'vagrant')
 
+    @@hosts = %w[hopsworks0 hopsworks1 hopsworks2]
+    @@all_services = %w[
+        ndb_mgmd
+        alertmanager
+        node_exporter
+        ndbmtd
+        mysqld
+        mysqld_exporter
+        glassfish-domain1
+        kagent
+        consul
+        prometheus
+        grafana
+        pushgateway
+        opensearch
+        elastic_exporter
+        namenode
+        zookeeper
+        kubelet
+        docker
+        datanode
+        kafka
+        airflow-webserver
+        airflow-scheduler
+        epipe
+        historyserver
+        resourcemanager
+        logstash
+        opensearch-dashboards
+        hivemetastore
+        hiveserver2
+        onlinefs
+        livy
+        flinkhistoryserver
+        nodemanager
+        sparkhistoryserver
+        filebeat-spark
+        filebeat-jupyter
+        filebeat-service
+        filebeat-tf-serving
+        filebeat-sklearn-serving
+    ]
+
     def kagent_start(hostname)
         execute_remotely hostname, @@KAGENT_START
     end
@@ -51,10 +94,59 @@ module AgentHelper
       output.strip.eql? "ActiveState=active"
     end
 
+    def is_service_dead(service, hostname)
+        output = execute_remotely hostname, @@SYSTEMCTL_IS_ACTIVE.gsub("unit", service)
+        output.strip.eql? "ActiveState=failed"
+    end
+
+    def is_service_dead_local(service)
+        output = %x[#{@@SYSTEMCTL_IS_ACTIVE.gsub("unit", service)}]
+        output.strip.eql? "ActiveState=failed"
+    end
+
     def execute_remotely(hostname, command)
         Net::SSH.start(hostname, @@username, :port => @@port,
             :password => @@password, :verify_host_key => :never) do |ssh|
             output = ssh.exec!(command)
+        end
+    end
+
+    def test_all_services
+        dead_services = []
+        @@all_services.each { |service|
+            if "#{ENV['OS']}" == "ubuntu"
+                if is_service_dead_local service
+                    dead_services.push("#{service} is dead on hopsworks0")
+                    %x[sudo systemctl start #{service}]
+                end
+            else
+                @@hosts.each { |host|
+                    if is_service_dead service, host
+                        dead_services.push("#{service} is dead on #{host}")
+                        execute_remotely host, "sudo systemctl start #{service}"
+                    end
+                }
+            end
+        }
+        dead_services
+    end
+
+    def wait_for_services(wait_time: 600)
+        dead_services = test_all_services
+        if dead_services.empty?
+            return { "success" => true, "deadServices" => 0 }
+        end
+        wait_for_me_time(wait_time, 60) do
+            dead_services = test_all_services
+            if dead_services.empty?
+                { "success" => true, "deadServices" => 0 }
+            else
+                { "msg" => "Dead services - #{dead_services}", "success" => false, "deadServices" => dead_services.length }
+            end
+        end
+        dead_services = test_all_services
+        unless dead_services.empty?
+            pp "WARNING - Dead services - #{dead_services}"
         end
     end
 end
