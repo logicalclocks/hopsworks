@@ -27,8 +27,7 @@ describe "On #{ENV['OS']}" do
       end
       it "restricts requests for admin resources from non-admin accounts" do
         admin_get_users()
-        expect_status(401)
-        expect_json(errorCode: 200003)
+        expect_status_details(401, error_code: 200003)
       end
     end
 
@@ -39,8 +38,7 @@ describe "On #{ENV['OS']}" do
 
       it "restricts requests for admin resources from a normal user account" do
         admin_get_users()
-        expect_status(403)
-        expect_json(errorCode: 200014)
+        expect_status_details(403, error_code: 200014)
       end
     end
 
@@ -56,7 +54,7 @@ describe "On #{ENV['OS']}" do
       it "gets the list of all users" do
         id = user[:uid] 
         admin_get_users()
-        expect_status(200)
+        expect_status_details(200)
         expect(json_body[:count]).to be > 0
         expect(json_body[:items].find { |i| i[:id] == id }).to_not be_nil
       end
@@ -64,7 +62,7 @@ describe "On #{ENV['OS']}" do
       it "gets user by id" do
         id = user[:uid]
         admin_get_user_by_id(id)
-        expect_status(200)
+        expect_status_details(200)
         expect_json(id: id)
         expect_json(email: user[:email])
       end
@@ -73,9 +71,9 @@ describe "On #{ENV['OS']}" do
         id = user[:uid]
         data = {status: "DEACTIVATED_ACCOUNT"}
         admin_update_user(id, data)
-        expect_status(200)
+        expect_status_details(200)
         admin_get_user_by_id(id)
-        expect_status(200)
+        expect_status_details(200)
         expect_json(status: 3)
       end
 
@@ -87,7 +85,7 @@ describe "On #{ENV['OS']}" do
         username = user[:username]
 
         admin_update_user(id, {status: "DEACTIVATED_ACCOUNT"})
-        expect_status(200)
+        expect_status_details(200)
         cm = get_users_kube_config_map()
         expect(cm).not_to be_empty
         if !cm["data"].nil? # data might not exist
@@ -107,7 +105,7 @@ describe "On #{ENV['OS']}" do
         end
         newUser = create_user_with_role("HOPS_USER")
         admin_update_user(newUser.uid, {status: "ACTIVATED_ACCOUNT"})
-        expect_status(200)
+        expect_status_details(200)
 
         cm = get_users_kube_config_map()
         expect(cm).not_to be_empty
@@ -143,7 +141,7 @@ describe "On #{ENV['OS']}" do
         add_member_to_project(@project, email, "Data owner")
 
         admin_update_user(id, {status: "DEACTIVATED_ACCOUNT"})
-        expect_status(200)
+        expect_status_details(200)
         secret = get_api_key_kube_hops_serving_secret(username, uid)
         expect(secret).to be_nil
 
@@ -166,7 +164,7 @@ describe "On #{ENV['OS']}" do
         username = user[:username]
 
         admin_update_user(id, {status: "ACTIVATED_ACCOUNT"})
-        expect_status(200)
+        expect_status_details(200)
         cm = get_users_kube_config_map()
         expect(cm).not_to be_empty
         expect(cm).to include("data")
@@ -188,7 +186,7 @@ describe "On #{ENV['OS']}" do
         uid = user[:uid]
 
         admin_update_user(id, {status: "ACTIVATED_ACCOUNT"})
-        expect_status(200)
+        expect_status_details(200)
         secret = get_api_key_kube_hops_serving_secret(username, uid)
         expect(secret).not_to be_nil
         expect(secret).to include("data")
@@ -203,9 +201,9 @@ describe "On #{ENV['OS']}" do
         id = user[:uid]
         data = {maxNumProjects: 77}
         admin_update_user(id, data)
-        expect_status(200)
+        expect_status_details(200)
         admin_get_user_by_id(id)
-        expect_status(200)
+        expect_status_details(200)
         expect_json(maxNumProjects: 77)
       end
 
@@ -213,11 +211,11 @@ describe "On #{ENV['OS']}" do
         id = user[:uid]
         data = {status: "VERIFIED_ACCOUNT"}
         admin_update_user(id, data)
-	      expect_status(200)
+        expect_status_details(200)
 	      admin_accept_user(id)
-	      expect_status(200)
+        expect_status_details(200)
 	      admin_get_user_by_id(id)
-	      expect_status(200)
+        expect_status_details(200)
 	      expect_json(status: 2)
       end
 
@@ -225,29 +223,29 @@ describe "On #{ENV['OS']}" do
         id = user[:uid]
         data = {status: "NEW_MOBILE_ACCOUNT"}
         admin_update_user(id, data)
-	      expect_status(200)
+        expect_status_details(200)
 	      admin_accept_user(id)
-	      expect_status(200)
+        expect_status_details(200)
       end
 
       it "fails to accept a user with an invalid id" do
         admin_accept_user(1)
-        expect_status(404)
+        expect_status_details(404)
         expect_json(errorCode: 160002)
       end
 
       it "rejects user" do
         id = user[:uid]
         admin_reject_user(id)
-        expect_status(200)
+        expect_status_details(200)
         admin_get_user_by_id(id)
-        expect_status(200)
+        expect_status_details(200)
         expect_json(status: 6)
       end
 
       it "fails to reject a user with invalid id" do
         admin_reject_user(1)
-        expect_status(404)
+        expect_status_details(404)
         expect_json(errorCode: 160002)
       end
 
@@ -255,37 +253,35 @@ describe "On #{ENV['OS']}" do
         id = user[:uid]
         data = {status: "NEW_MOBILE_ACCOUNT"}
         admin_update_user(id, data)
-	      expect_status(200)
+        expect_status_details(200)
         admin_pend_user(id)
-        expect_status(200)
+        expect_status_details(200)
       end
 
       it "fails to pend user with status other than new account" do
         id = user[:uid]
         data = {status: "VERIFIED_ACCOUNT"}
         admin_update_user(id, data)
-	      expect_status(200)
+        expect_status_details(200)
         admin_pend_user(id)
-        expect_status(400)
-        expect_json(errorCode: 160046)
+        expect_status_details(400, error_code: 160046)
       end
 
       it "fails to pend user with invalid id" do
         admin_pend_user(1)
-        expect_status(404)
-        expect_json(errorCode: 160002)
+        expect_status_details(404, error_code: 160002)
       end
 
       it "gets all user groups" do
         admin_get_user_groups()
-        expect_status(200)
+        expect_status_details(200)
         expect(json_body[:count]).to be > 0
       end
 
       it "should register new user" do
         register_user_as_admin("#{random_id}@email.com", "name", "last", password: "Pass123", maxNumProjects: "5",
                                status: "ACTIVATED_ACCOUNT")
-        expect_status(201)
+        expect_status_details(201)
         expect(json_body[:maxNumProjects]).to be == 5
         expect(json_body[:status]).to be == 2
         expect(json_body[:password]).to be_nil
@@ -296,7 +292,7 @@ describe "On #{ENV['OS']}" do
         end
         register_user_as_admin("#{random_id}@email.com", "name", "last", password: "Pass123", maxNumProjects: "5",
                                status: "ACTIVATED_ACCOUNT")
-        expect_status(201)
+        expect_status_details(201)
         username = json_body[:username]
         cm = get_users_kube_config_map()
         expect(cm).not_to be_empty
@@ -311,7 +307,7 @@ describe "On #{ENV['OS']}" do
         end
         register_user_as_admin("#{random_id}@email.com", "name", "last", password: "Pass123", maxNumProjects: "5",
                                        status: "ACTIVATED_ACCOUNT")
-        expect_status(201)
+        expect_status_details(201)
         username = json_body[:username]
         uid = json_body[:uid]
         secret = get_api_key_kube_hops_serving_secret(username, uid)
@@ -321,21 +317,21 @@ describe "On #{ENV['OS']}" do
       end
       it "should register new user with no password" do
         register_user_as_admin("#{random_id}@email.com", "name", "last", maxNumProjects: "5", status: "ACTIVATED_ACCOUNT")
-        expect_status(201)
+        expect_status_details(201)
         expect(json_body[:maxNumProjects]).to be == 5
         expect(json_body[:status]).to be == 2
         expect(json_body[:password]).not_to be_nil
       end
       it "should register new user with no number of projects" do
         register_user_as_admin("#{random_id}@email.com", "name", "last", status: "ACTIVATED_ACCOUNT")
-        expect_status(201)
+        expect_status_details(201)
         expect(json_body[:maxNumProjects]).to be == 10
         expect(json_body[:status]).to be == 2
         expect(json_body[:password]).not_to be_nil
       end
       it "should register new user with no status" do
         register_user_as_admin("#{random_id}@email.com", "name", "last")
-        expect_status(201)
+        expect_status_details(201)
         expect(json_body[:maxNumProjects]).to be == 10
         expect(json_body[:status]).to be == 7
         expect(json_body[:password]).not_to be_nil
@@ -345,7 +341,7 @@ describe "On #{ENV['OS']}" do
           skip "This test only runs with KServe installed"
         end
         register_user_as_admin("#{random_id}@email.com", "name", "last")
-        expect_status(201)
+        expect_status_details(201)
         username = json_body[:username]
         cm = get_users_kube_config_map()
         expect(cm).not_to be_empty
@@ -357,7 +353,7 @@ describe "On #{ENV['OS']}" do
           skip "This test only runs with KServe installed"
         end
         register_user_as_admin("#{random_id}@email.com", "name", "last")
-        expect_status(201)
+        expect_status_details(201)
         username = json_body[:username]
         uid = json_body[:uid]
         secret = get_api_key_kube_hops_serving_secret(username, uid)
@@ -366,7 +362,7 @@ describe "On #{ENV['OS']}" do
 
       it "should fail to register new user with no name" do
         register_user_as_admin("#{random_id}@email.com", "", "")
-        expect_status(400)
+        expect_status_details(400)
       end
       it "should delete user" do
         newUser = create_validated_user()
@@ -430,7 +426,7 @@ describe "On #{ENV['OS']}" do
         reset_session
         set_api_key_to_header(@key)
         register_user_as_admin("#{random_id}@email.com", "name", "last")
-        expect_status(201)
+        expect_status_details(201)
         expect(json_body[:maxNumProjects]).to be == 10
         expect(json_body[:status]).to be == 7
         expect(json_body[:password]).not_to be_nil
@@ -439,7 +435,7 @@ describe "On #{ENV['OS']}" do
         reset_session
         set_api_key_to_header(@key_register)
         register_user_as_admin("#{random_id}@email.com", "name", "last")
-        expect_status(201)
+        expect_status_details(201)
         expect(json_body[:maxNumProjects]).to be == 10
         expect(json_body[:status]).to be == 7
         expect(json_body[:password]).not_to be_nil

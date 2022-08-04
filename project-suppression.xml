@@ -139,4 +139,40 @@
     <cpe>cpe:/a:jetty:jetty</cpe>
     <cve>CVE-2021-28165</cve>
   </suppress>
+  <suppress>
+    <notes><![CDATA[
+   file name: zookeeper-3.4.14.jar
+   ]]></notes>
+    <packageUrl regex="true">^pkg:maven/org\.apache\.zookeeper/zookeeper\-*.*$</packageUrl>
+    <cve>CVE-2021-28165</cve>
+  </suppress>
+  <suppress>
+    <notes><![CDATA[
+   file name: flink-shaded-zookeeper-3-3.4.14-14.0.jar
+   ]]></notes>
+    <packageUrl regex="true">^pkg:maven/org\.apache\.flink/flink-shaded-zookeeper-3\-*.*$</packageUrl>
+    <cve>CVE-2021-28165</cve>
+  </suppress>
+  <suppress>
+    <notes><![CDATA[
+   file name: flink-hadoop-fs-1.14.3.jar
+   ]]></notes>
+    <packageUrl regex="true">^pkg:maven/org\.apache\.flink/flink-hadoop-fs\-*.*$</packageUrl>
+    <cve>CVE-2022-26612</cve>
+  </suppress>
+  <!--TODO: remove and fix dependency -->
+  <suppress>
+    <notes><![CDATA[
+   file name: htrace-core4-4.2.0-incubating.jar
+   ]]></notes>
+    <packageUrl regex="true">^pkg:maven/org\.apache\.htrace/htrace\-core4@.*$</packageUrl>
+    <cve>CVE-2022-31569</cve>
+  </suppress>
+  <suppress>
+    <notes><![CDATA[
+   file name: hadoop-client-runtime-3.2.0.7-EE-RC0.jar (shaded: com.amazonaws:aws-java-sdk-s3:1.12.53)
+   ]]></notes>
+    <packageUrl regex="true">^pkg:maven/com\.amazonaws/aws\-java\-sdk\-s3@.*$</packageUrl>
+    <vulnerabilityName>CVE-2022-31159</vulnerabilityName>
+  </suppress>
 </suppressions>

@@ -44,13 +44,13 @@ describe "On #{ENV['OS']}" do
         it "should be able to create a kafka schema" do
           project = get_project
           json_result, schema_name = add_schema(project.id)
-          expect_status(200)
+          expect_status_details(200)
         end
 
         it "should not be able to create a kafka schema with a reserved name" do
           project = get_project
           json_result, schema_name = add_schema(project.id, "inferenceschema")
-          expect_status(405)
+          expect_status_details(405)
         end
 
         it "should be able to share the topic with another project" do
@@ -61,7 +61,7 @@ describe "On #{ENV['OS']}" do
           target_project = create_project
           topic = get_topic
           share_topic(org_project, topic, target_project)
-          expect_status(201)
+          expect_status_details(201)
 
           # Check that the topic has been shared correctly
           get_shared_topics(target_project.id)
@@ -76,7 +76,7 @@ describe "On #{ENV['OS']}" do
           target_project = create_project
           topic = get_topic
           share_topic(org_project, topic, target_project)
-          expect_status(201)
+          expect_status_details(201)
 
           # Check that the topic has been shared correctly
           get_shared_topics(target_project.id)
@@ -84,14 +84,14 @@ describe "On #{ENV['OS']}" do
 
           # Unshare topic with request issued from org(owner) project
           unshare_topic_within_owner_project(org_project, topic, target_project)
-          expect_status(204)
+          expect_status_details(204)
 
           share_topic(org_project, topic, target_project)
-          expect_status(201)
+          expect_status_details(201)
 
           # Unshare topic with request issued from org(owner) project
           unshare_topic_within_dest_project(target_project, topic)
-          expect_status(204)
+          expect_status_details(204)
 
         end
 
@@ -103,7 +103,7 @@ describe "On #{ENV['OS']}" do
           target_project = create_project
           topic = get_topic
           share_topic(org_project, topic, target_project)
-          expect_status(201)
+          expect_status_details(201)
 
           # Check that the topic has been shared correctly
           get_shared_topics(target_project.id)
@@ -127,7 +127,7 @@ describe "On #{ENV['OS']}" do
         it "should not be able to delete a kafka schema with a reserved name" do
           project = get_project
           delete_schema(project.id, "inferenceschema", 1)
-          expect_status(405)
+          expect_status_details(405)
         end
       end
     end
@@ -143,7 +143,7 @@ describe "On #{ENV['OS']}" do
         project = get_project
         schema = get_schema
         json_result, kafka_topic_name = add_topic(project.id, schema.subject, 1)
-        expect_status(201)
+        expect_status_details(201)
       end
 
       it "should be able to delete the topic" do
@@ -151,7 +151,7 @@ describe "On #{ENV['OS']}" do
         project = get_project
         topic = get_topic
         delete_topic(project.id, topic)
-        expect_status(204)
+        expect_status_details(204)
       end
 
       it "should be able to share the topic with another project and get the schema" do

@@ -88,10 +88,10 @@ module JobHelper
       if response.code == 200
         create_session(project[:username], "Pass123")
         pp "#{project[:projectname]} id:#{project[:id]}" if defined?(@debugOpt) && @debugOpt
-        get_jobs_checked(project[:id])
+        get_jobs(project[:id])
         if json_body.key?(:count) && json_body[:count] > 0
           for job in json_body[:items]
-            get_executions_checked(project[:id], job[:name])
+            get_executions(project[:id], job[:name])
             if json_body.key?(:count) && json_body[:count] > 0
               for execution in json_body[:items]
                 if is_execution_active(execution)
@@ -107,7 +107,12 @@ module JobHelper
     active_executions
   end
 
-  def create_sparktour_job(project, job_name, type, job_conf=nil)
+  def create_job(project, job_name, job_conf, expected_status: 201, error_code: nil)
+    put "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/jobs/#{job_name}", job_conf
+    expect_status_details(expected_status, error_code: error_code)
+  end
+
+  def create_sparktour_job(project, job_name, type, job_conf: nil, expected_status: 201, error_code: nil)
     # need to enable python for conversion .ipynb to .py works
     get "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/python/environments"
     if response.code == 404
@@ -137,9 +142,6 @@ module JobHelper
             "spark.dynamicAllocation.initialExecutors": 1
         }
       end
-
-      put "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/jobs/#{job_name}", job_conf
-
     elsif type.eql? "py"
       if !test_file("/Projects/#{project[:projectname]}/Resources/#{job_name}.py")
         if !test_file("/Projects/#{project[:projectname]}/Resources/" + job_name + ".ipynb")
@@ -152,7 +154,6 @@ module JobHelper
       if job_conf.nil?
         job_conf = get_spark_default_py_config(project, job_name, "py")
       end
-      put "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/jobs/#{job_name}", job_conf
     else
       if !test_file("/Projects/#{project[:projectname]}/Resources/" + job_name + ".ipynb")
         copy_from_local("#{ENV['PROJECT_DIR']}/hopsworks-IT/src/test/ruby/spec/auxiliary/run_single_experiment.ipynb",
@@ -161,8 +162,8 @@ module JobHelper
       if job_conf.nil?
         job_conf = get_spark_default_py_config(project, job_name, "ipynb")
       end
-      put "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/jobs/#{job_name}", job_conf
     end
+    create_job(project, job_name, job_conf, expected_status: expected_status, error_code: error_code)
   end
 
   def create_python_job(project, job_name, type, job_conf=nil)
@@ -228,21 +229,19 @@ module JobHelper
     end
   end
 
-  def get_jobs(project_id, query)
+  def get_jobs(project_id, query: nil, expected_status: 200, error_code: nil)
     get "#{ENV['HOPSWORKS_API']}/project/#{project_id}/jobs#{query}"
+    expect_status_details(expected_status, error_code: error_code)
   end
 
-  def get_jobs_checked(project_id, query: nil)
-    get_jobs(project_id, query)
-    expect_status_details(200)
-  end
-
-  def get_job(project_id, job_name, query: "")
+  def get_job(project_id, job_name, query: "", expected_status: nil, error_code: nil)
     get "#{ENV['HOPSWORKS_API']}/project/#{project_id}/jobs/#{job_name}/#{query}"
+    expect_status_details(expected_status, error_code: error_code) unless expected_status.nil?
   end
 
-  def delete_job(project_id, job_name)
+  def delete_job(project_id, job_name, expected_status: 204)
     delete "#{ENV['HOPSWORKS_API']}/project/#{project_id}/jobs/#{job_name}"
+    expect_status_details(expected_status)
   end
 
   def get_job_from_db(job_id)
@@ -290,7 +289,7 @@ module JobHelper
       job_config["spark.executor.memory"] = 4096
       job_config["defaultArgs"] = nil
     end
-    create_sparktour_job(project, job_name, job_type, job_config)
+    create_sparktour_job(project, job_name, job_type, job_conf: job_config)
     expect_status_details(201)
   end
 
@@ -303,7 +302,7 @@ module JobHelper
     if job_type == "PYTHON"
       create_python_job(project, job_name, file_type, job_conf = job_config)
     else
-      create_sparktour_job(project, job_name, file_type, job_config)
+      create_sparktour_job(project, job_name, file_type, job_conf: job_config)
     end
     expect_status_details(201)
   end

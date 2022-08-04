@@ -15,50 +15,36 @@
 =end
 module ExecutionHelper
 
-  def get_executions(project_id, job_name, query)
+  def get_executions(project_id, job_name, query: "", expected_status: 200)
     get "#{ENV['HOPSWORKS_API']}/project/#{project_id}/jobs/#{job_name}/executions#{query}"
+    expect_status_details(expected_status)
   end
 
-  def get_executions_checked(project_id, job_name, query: nil)
-    get_executions(project_id, job_name, query)
-    expect_status_details(200)
-  end
-
-  def get_execution(project_id, job_name, execution_id)
+  def get_execution(project_id, job_name, execution_id, expected_status: 200)
     get "#{ENV['HOPSWORKS_API']}/project/#{project_id}/jobs/#{job_name}/executions/#{execution_id}"
+    expect_status_details(expected_status)
   end
 
-  def get_execution_checked(project_id, job_name, execution_id)
-    get_execution(project_id, job_name, execution_id)
-    expect_status_details(200)
-  end
-
-  def start_execution(project_id, job_name, args=nil)
+  def start_execution(project_id, job_name, args: nil, expected_status: 201, error_code: nil)
     pp "active executions:#{get_existing_active_executions()}" if defined?(@debugOpt) && @debugOpt
     headers = { 'Content-Type' => 'text/plain' }
     path = "#{ENV['HOPSWORKS_API']}/project/#{project_id}/jobs/#{job_name}/executions"
     pp "#{path}, #{args}, #{headers}" if defined?(@debugOpt) && @debugOpt
-    post path, args, headers
+    resp = post path, args, headers
+    expect_status_details(expected_status, error_code: error_code)
+    resp
   end
 
-  def start_execution_checked(project_id, job_name, args=nil)
-    start_execution(project_id, job_name, args)
-    expect_status_details(201)
-  end
-
-  def stop_execution(project_id, job_name, execution_id)
+  def stop_execution(project_id, job_name, execution_id, expected_status: 202)
     stateDTO = {}
     stateDTO["state"] = "stopped"
     put "#{ENV['HOPSWORKS_API']}/project/#{project_id}/jobs/#{job_name}/executions/#{execution_id}/status", stateDTO
+    expect_status_details(expected_status)
   end
 
-  def stop_execution_checked(project_id, job_name, execution_id)
-    stop_execution(project_id, job_name, execution_id)
-    expect_status_details(202)
-  end
-
-  def delete_execution(project_id, job_name, execution_id)
+  def delete_execution(project_id, job_name, execution_id, expected_status: 204)
     delete "#{ENV['HOPSWORKS_API']}/project/#{project_id}/jobs/#{job_name}/executions/#{execution_id}"
+    expect_status_details(expected_status)
   end
 
   def get_execution_log(project_id, job_name, execution_id, type)
@@ -69,7 +55,7 @@ module ExecutionHelper
     begin
       id = ''
       wait_result = wait_for_me_time do
-        get_execution_checked(project_id, job_name, execution_id)
+        get_execution(project_id, job_name, execution_id)
         if appOrExecId.eql? 'id'
           id = json_body[:id]
         else
@@ -84,8 +70,13 @@ module ExecutionHelper
       id
     rescue Failure => error
       wait_for_me_time(timeout=5, delay=5) do
-        stop_execution(project_id, job_name, execution_id)
-        response.code == resolve_status(202, response.code)
+        begin
+          stop_execution(project_id, job_name, execution_id)
+        rescue RSpec::Expectations::ExpectationNotMetError => e
+          false
+        else
+          true
+        end
       end
       raise error
     end
@@ -94,7 +85,7 @@ module ExecutionHelper
   def wait_for_execution_completed(project_id, job_name, execution_id, expected_end_state, expected_final_status: nil)
     begin
       wait_result = wait_for_me_time do
-        get_execution_checked(project_id, job_name, execution_id)
+        get_execution(project_id, job_name, execution_id)
         unless is_execution_active(json_body)
           expect(json_body[:state]).to eq(expected_end_state), "job completed with state:#{json_body[:state]}"
         end
@@ -106,15 +97,20 @@ module ExecutionHelper
       expect(wait_result["result"][:finalStatus]).to eq(expected_final_status) unless expected_final_status.nil?
     rescue StandardError => error
       wait_for_me_time(timeout=5, delay=5) do
-        stop_execution(project_id, job_name, execution_id)
-        response.code == resolve_status(202, response.code)
+        begin
+          stop_execution(project_id, job_name, execution_id)
+        rescue RSpec::Expectations::ExpectationNotMetError => e
+          false
+        else
+          true
+        end
       end
       raise error
     end
   end
 
   def run_execution(project_id, job_name)
-    start_execution_checked(project_id, job_name)
+    start_execution(project_id, job_name)
     execution_id = json_body[:id]
     wait_for_execution_completed(project_id, job_name, execution_id, "FINISHED")
     execution_id
@@ -137,8 +133,7 @@ module ExecutionHelper
   def run_job(project, job_name, job_type: "SPARK", args: nil)
     arguments = nil
     arguments = args.join(' ') unless args.nil?
-    start_execution(project[:id], job_name, arguments)
-    expect_status(201)
+    start_execution(project[:id], job_name, args: arguments)
     execution_id = json_body[:id]
     if job_type == "SPARK"
       app_id = wait_for_execution_active(project[:id], job_name, execution_id, "RUNNING", "appId")

@@ -24,8 +24,7 @@ describe "On #{ENV['OS']}" do
       end
       it "should fail" do
         get_project_default_job_configurations(@project[:id])
-        expect_json(errorCode: 200003)
-        expect_status(401)
+        expect_status_details(401, error_code: 200003)
       end
     end
     context 'with authentication create, delete, get' do
@@ -39,7 +38,7 @@ describe "On #{ENV['OS']}" do
 
       it "should get no default job configurations" do
         get_project_default_job_configurations(@project[:id])
-        expect_status(200)
+        expect_status_details(200)
         expect(json_body[:items]).to be nil
         expect(json_body[:count]).to eq nil
         expect(URI(json_body[:href]).path).to eq "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/jobconfig"
@@ -47,10 +46,10 @@ describe "On #{ENV['OS']}" do
 
       it "should fail to set invalid job configuration for job type parameter" do
         flink_job_config = get_default_job_configuration(@project[:id], "flink")
-        expect_status(200)
+        expect_status_details(200)
 
         create_project_default_job_configuration(@project[:id], "spark", flink_job_config)
-        expect_status(422)
+        expect_status_details(422)
       end
 
       job_types = ['spark', 'pyspark', 'flink', 'python', 'docker']
@@ -63,20 +62,20 @@ describe "On #{ENV['OS']}" do
           end
 
           default_job_configuration = get_default_job_configuration(@project[:id], type)
-          expect_status(200)
+          expect_status_details(200)
 
           get_project_default_job_configuration(@project[:id], type)
-          expect_status(404)
+          expect_status_details(404)
 
           create_project_default_job_configuration(@project[:id], type, default_job_configuration)
-          expect_status(201)
+          expect_status_details(201)
 
           get_project_default_job_configuration(@project[:id], type)
-          expect_status(200)
+          expect_status_details(200)
           expect(URI(json_body[:href]).path).to eq "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/jobconfig/#{type}"
 
           get_project_default_job_configuration(@project[:id], type)
-          expect_status(200)
+          expect_status_details(200)
           expect(URI(json_body[:href]).path).to eq "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/jobconfig/#{type}"
         end
 
@@ -87,7 +86,7 @@ describe "On #{ENV['OS']}" do
           end
 
           default_job_configuration = JSON.parse(get_default_job_configuration(@project[:id], type))
-          expect_status(200)
+          expect_status_details(200)
 
           if type == "spark" or type == "pyspark"
             default_job_configuration["amMemory"] = 1025
@@ -104,10 +103,10 @@ describe "On #{ENV['OS']}" do
           end
 
           create_project_default_job_configuration(@project[:id], type, default_job_configuration)
-          expect_status(201)
+          expect_status_details(201)
 
           project_default_job_configuration = JSON.parse(get_project_default_job_configuration(@project[:id], type))
-          expect_status(200)
+          expect_status_details(200)
 
           if type == "spark" or type == "pyspark"
             expect(project_default_job_configuration["config"]["amMemory"]).to eq 1025
@@ -126,12 +125,12 @@ describe "On #{ENV['OS']}" do
           project_default_job_configuration["config"]["defaultArgs"] = "updated args"
 
           updated_project_default_job_configuration = JSON.parse(create_project_default_job_configuration(@project[:id], type, project_default_job_configuration["config"]))
-          expect_status(200)
+          expect_status_details(200)
           
           expect(updated_project_default_job_configuration["config"]["defaultArgs"]).to eq "updated args"
 
           updated_project_default_job_configuration = JSON.parse(get_project_default_job_configuration(@project[:id], type))
-          expect_status(200)
+          expect_status_details(200)
 
           expect(updated_project_default_job_configuration["config"]["defaultArgs"]).to eq "updated args"
         end
@@ -143,19 +142,19 @@ describe "On #{ENV['OS']}" do
           end
 
           spark_config = get_default_job_configuration(@project[:id], type)
-          expect_status(200)
+          expect_status_details(200)
 
           get_project_default_job_configuration(@project[:id], type)
-          expect_status(404)
+          expect_status_details(404)
 
           create_project_default_job_configuration(@project[:id], type, spark_config)
-          expect_status(201)
+          expect_status_details(201)
 
           delete_project_default_job_configuration(@project[:id], type)
-          expect_status(204)
+          expect_status_details(204)
 
           get_project_default_job_configuration(@project[:id], type)
-          expect_status(404)
+          expect_status_details(404)
         end
       end
     end

@@ -75,7 +75,7 @@ module JobAlertHelper
   def with_valid_alert_job
     with_valid_tour_project("spark")
     job_name = "alert_test_job"
-    create_sparktour_job(@project, job_name, "jar", nil)
+    create_sparktour_job(@project, job_name, "jar")
     json_body
   end
 end

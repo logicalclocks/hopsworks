@@ -30,16 +30,16 @@ describe "On #{ENV['OS']}" do
           json_result, fg_name = create_cached_featuregroup(@project.id, featurestore_id, online:true)
           parsed_json = JSON.parse(json_result)
 
-          json_result = create_feature_view_from_feature_group(@project.id, featurestore_id, parsed_json)
+          json_result, _ = create_feature_view_from_feature_group(@project.id, featurestore_id, parsed_json)
           parsed_json = JSON.parse(json_result)
-          expect_status(201)
+          expect_status_details(201)
 
           expect(parsed_json.key?("id")).to be true
-		  expect(parsed_json.key?("featurestoreId")).to be true
+		      expect(parsed_json.key?("featurestoreId")).to be true
           expect(parsed_json.key?("featurestoreName")).to be true
           expect(parsed_json.key?("name")).to be true
-		  expect(parsed_json.key?("description")).to be true
-		  expect(parsed_json.key?("created")).to be true
+		      expect(parsed_json.key?("description")).to be true
+		      expect(parsed_json.key?("created")).to be true
           expect(parsed_json["creator"].key?("email")).to be true
           expect(parsed_json.key?("version")).to be true
           expect(parsed_json.key?("query")).to be true
@@ -47,7 +47,7 @@ describe "On #{ENV['OS']}" do
 
           expect(parsed_json["featurestoreId"] == featurestore_id).to be true
           expect(parsed_json["description"] == "testfeatureviewdescription").to be true
-		  expect(parsed_json["version"] == 1).to be true
+		      expect(parsed_json["version"] == 1).to be true
 
           fv_features = parsed_json['features']
           expect(fv_features.length).to be 1
@@ -63,9 +63,10 @@ describe "On #{ENV['OS']}" do
           json_result, fg_name = create_cached_featuregroup(@project.id, featurestore_id, online:true)
           parsed_json = JSON.parse(json_result)
 
-          json_result = create_feature_view_from_feature_group(@project.id, featurestore_id, parsed_json, name:"TEST_feature_view")
+          json_result, _ = create_feature_view_from_feature_group(@project.id, featurestore_id, parsed_json,
+                                                                name:"TEST_feature_view")
           parsed_json = JSON.parse(json_result)
-          expect_status(400)
+          expect_status_details(400)
 
           expect(parsed_json.key?("errorCode")).to be true
           expect(parsed_json.key?("errorMsg")).to be true
@@ -79,9 +80,9 @@ describe "On #{ENV['OS']}" do
           json_result, fg_name = create_cached_featuregroup(@project.id, featurestore_id, online:true)
           parsed_json = JSON.parse(json_result)
 
-          json_result = create_feature_view_from_feature_group(@project.id, featurestore_id, parsed_json, version:-1)
+          json_result, _ = create_feature_view_from_feature_group(@project.id, featurestore_id, parsed_json, version:-1)
           parsed_json = JSON.parse(json_result)
-          expect_status(400)
+          expect_status_details(400)
 
           expect(parsed_json.key?("errorCode")).to be true
           expect(parsed_json.key?("errorMsg")).to be true
@@ -95,9 +96,10 @@ describe "On #{ENV['OS']}" do
           json_result, fg_name = create_cached_featuregroup(@project.id, featurestore_id, online:true)
           parsed_json = JSON.parse(json_result)
 
-          json_result = create_feature_view_from_feature_group(@project.id, featurestore_id, parsed_json, version:nil)
+          json_result, _ = create_feature_view_from_feature_group(@project.id, featurestore_id, parsed_json,
+                                                                  version:nil)
           parsed_json = JSON.parse(json_result)
-          expect_status(201)
+          expect_status_details(201)
           expect(parsed_json["version"] == 1).to be true
         end
 
@@ -107,14 +109,14 @@ describe "On #{ENV['OS']}" do
           json_result, fg_name = create_cached_featuregroup(@project.id, featurestore_id, online:true)
           parsed_fg_json = JSON.parse(json_result)
 
-          json_result = create_feature_view_from_feature_group(@project.id, featurestore_id, parsed_fg_json)
+          json_result, _ = create_feature_view_from_feature_group(@project.id, featurestore_id, parsed_fg_json)
           parsed_json = JSON.parse(json_result)
-          expect_status(201)
+          expect_status_details(201)
 
           # add second version
-          json_result = create_feature_view_from_feature_group(@project.id, featurestore_id, parsed_fg_json, name:parsed_json["name"], version:nil)
+          json_result, _ = create_feature_view_from_feature_group(@project.id, featurestore_id, parsed_fg_json, name:parsed_json["name"], version:nil)
           parsed_json = JSON.parse(json_result)
-          expect_status(201)
+          expect_status_details(201)
           # version should be incremented to 2
           expect(parsed_json["version"] == 2).to be true
         end
@@ -125,12 +127,12 @@ describe "On #{ENV['OS']}" do
           json_result, fg_name = create_cached_featuregroup(@project.id, featurestore_id, online:true)
           parsed_fg_json = JSON.parse(json_result)
 
-          json_result = create_feature_view_from_feature_group(@project.id, featurestore_id, parsed_fg_json)
+          json_result, _ = create_feature_view_from_feature_group(@project.id, featurestore_id, parsed_fg_json)
           parsed_json = JSON.parse(json_result)
-          expect_status(201)
+          expect_status_details(201)
 
-          json_result = create_feature_view_from_feature_group(@project.id, featurestore_id, parsed_fg_json, name:parsed_json["name"], version:parsed_json["version"])
-          expect_status(400)
+          json_result, _ = create_feature_view_from_feature_group(@project.id, featurestore_id, parsed_fg_json, name:parsed_json["name"], version:parsed_json["version"])
+          expect_status_details(400)
         end
 
         it "should be able to delete a feature view from the featurestore" do
@@ -139,18 +141,18 @@ describe "On #{ENV['OS']}" do
           json_result, fg_name = create_cached_featuregroup(@project.id, featurestore_id, online:true)
           parsed_json = JSON.parse(json_result)
 
-          json_result = create_feature_view_from_feature_group(@project.id, featurestore_id, parsed_json)
+          json_result, _ = create_feature_view_from_feature_group(@project.id, featurestore_id, parsed_json)
           parsed_json = JSON.parse(json_result)
-          expect_status(201)
+          expect_status_details(201)
 
 		  # Make sure that the directory exists
           get_datasets_in_path(@project,
                                "#{@project[:projectname]}_Training_Datasets/.featureviews/#{parsed_json['name']}_#{parsed_json['version']}",
                                query: "&type=DATASET")
-          expect_status(200)
+          expect_status_details(200)
 
           delete_feature_view(@project.id, parsed_json["name"], feature_store_id: featurestore_id)
-          expect_status(200)
+          expect_status_details(200)
         end
 
         it "should not be able to update feature view that doesnt exist" do
@@ -163,7 +165,7 @@ describe "On #{ENV['OS']}" do
           }
 
           update_feature_view(@project.id, featurestore_id, json_data, "feature_view_name", 1)
-          expect_status(404)
+          expect_status_details(404)
         end
 
         it "should be able to update the description of a feature view" do
@@ -172,9 +174,9 @@ describe "On #{ENV['OS']}" do
           json_result, fg_name = create_cached_featuregroup(@project.id, featurestore_id, online:true)
           parsed_json = JSON.parse(json_result)
 
-          json_result = create_feature_view_from_feature_group(@project.id, featurestore_id, parsed_json)
+          json_result, _ = create_feature_view_from_feature_group(@project.id, featurestore_id, parsed_json)
           parsed_json = JSON.parse(json_result)
-          expect_status(201)
+          expect_status_details(201)
           featureview_name = parsed_json["name"]
           featureview_version = parsed_json["version"]
 
@@ -187,7 +189,7 @@ describe "On #{ENV['OS']}" do
 
           json_result = update_feature_view(@project.id, featurestore_id, json_data, featureview_name, featureview_version)
           parsed_json = JSON.parse(json_result)
-          expect_status(200)
+          expect_status_details(200)
 
           expect(parsed_json["description"]).to eql(new_description)
         end
@@ -198,9 +200,9 @@ describe "On #{ENV['OS']}" do
           json_result, fg_name = create_cached_featuregroup(@project.id, featurestore_id, online:true)
           parsed_json = JSON.parse(json_result)
 
-          json_result = create_feature_view_from_feature_group(@project.id, featurestore_id, parsed_json)
+          json_result, _ = create_feature_view_from_feature_group(@project.id, featurestore_id, parsed_json)
           parsed_json = JSON.parse(json_result)
-          expect_status(201)
+          expect_status_details(201)
           featureview_name = parsed_json["name"]
           featureview_version = parsed_json["version"]
 
@@ -211,7 +213,7 @@ describe "On #{ENV['OS']}" do
 
           json_result = update_feature_view(@project.id, featurestore_id, json_data, featureview_name, featureview_version)
           parsed_json = JSON.parse(json_result)
-          expect_status(200)
+          expect_status_details(200)
 
           expect(parsed_json["name"]).to eql(featureview_name)
         end
@@ -223,19 +225,19 @@ describe "On #{ENV['OS']}" do
           json_result, fg_name = create_cached_featuregroup(project.id, featurestore_id, online:true)
           parsed_fg_json = JSON.parse(json_result)
 
-          json_result = create_feature_view_from_feature_group(project.id, featurestore_id, parsed_fg_json, name:"featureview1")
+          json_result, _ = create_feature_view_from_feature_group(project.id, featurestore_id, parsed_fg_json, name:"featureview1")
           parsed_json = JSON.parse(json_result)
-          expect_status(201)
+          expect_status_details(201)
 
           # add second version
-          json_result = create_feature_view_from_feature_group(project.id, featurestore_id, parsed_fg_json, name:"featureview2")
+          json_result, _ = create_feature_view_from_feature_group(project.id, featurestore_id, parsed_fg_json, name:"featureview2")
           parsed_json = JSON.parse(json_result)
-          expect_status(201)
+          expect_status_details(201)
 
           # Get the list
 		  json_result = get_feature_views(project.id, featurestore_id)
           parsed_json = JSON.parse(json_result)
-          expect_status(200)
+          expect_status_details(200)
 
           expect(parsed_json["items"].size).to eq 2
         end
@@ -246,19 +248,19 @@ describe "On #{ENV['OS']}" do
           json_result, fg_name = create_cached_featuregroup(@project.id, featurestore_id, online:true)
           parsed_fg_json = JSON.parse(json_result)
 
-          json_result = create_feature_view_from_feature_group(@project.id, featurestore_id, parsed_fg_json)
+          json_result, _ = create_feature_view_from_feature_group(@project.id, featurestore_id, parsed_fg_json)
           parsed_json = JSON.parse(json_result)
-          expect_status(201)
+          expect_status_details(201)
 
           # add second version
-          json_result = create_feature_view_from_feature_group(@project.id, featurestore_id, parsed_fg_json, name:parsed_json["name"], version:nil)
+          json_result, _ = create_feature_view_from_feature_group(@project.id, featurestore_id, parsed_fg_json, name:parsed_json["name"], version:nil)
           parsed_json = JSON.parse(json_result)
-          expect_status(201)
+          expect_status_details(201)
 
           # Get the list
-		  json_result = get_feature_view_by_name(@project.id, featurestore_id, parsed_json["name"])
+		      json_result = get_feature_view_by_name(@project.id, featurestore_id, parsed_json["name"])
           parsed_json = JSON.parse(json_result)
-          expect_status(200)
+          expect_status_details(200)
 
           expect(parsed_json["items"].size).to eq 2
         end
@@ -269,34 +271,34 @@ describe "On #{ENV['OS']}" do
           json_result, fg_name = create_cached_featuregroup(@project.id, featurestore_id, online:true)
           parsed_fg_json = JSON.parse(json_result)
 
-          json_result = create_feature_view_from_feature_group(@project.id, featurestore_id, parsed_fg_json)
+          json_result, _ = create_feature_view_from_feature_group(@project.id, featurestore_id, parsed_fg_json)
           parsed_json_1 = JSON.parse(json_result)
-          expect_status(201)
-		  featureview_name = parsed_json_1["name"]
+          expect_status_details(201)
+		      featureview_name = parsed_json_1["name"]
 
           # add second version
-          json_result = create_feature_view_from_feature_group(@project.id, featurestore_id, parsed_fg_json, name:featureview_name, version:nil)
+          json_result, _ = create_feature_view_from_feature_group(@project.id, featurestore_id, parsed_fg_json, name:featureview_name, version:nil)
           parsed_json_2 = JSON.parse(json_result)
-          expect_status(201)
+          expect_status_details(201)
 
           # Get the first version
           json_result = get_feature_view_by_name_and_version(@project.id, featurestore_id, parsed_json_1["name"], parsed_json_1["version"])
           parsed_json = JSON.parse(json_result)
-          expect_status(200)
+          expect_status_details(200)
           expect(parsed_json['version']).to be 1
           expect(parsed_json['name']).to eq featureview_name
 
           json_result = get_feature_view_by_name_and_version(@project.id, featurestore_id, parsed_json_2["name"], parsed_json_2["version"])
           parsed_json = JSON.parse(json_result)
-          expect_status(200)
+          expect_status_details(200)
           expect(parsed_json['version']).to be 2
           expect(parsed_json['name']).to eq featureview_name
         end
 
         it "should fail to get a feature view with a name that does not exists" do
           featurestore_id = get_featurestore_id(@project.id)
-		  json_result = get_feature_view_by_name(@project.id, featurestore_id, "doesnotexists")
-          expect_status(404)
+		      json_result = get_feature_view_by_name(@project.id, featurestore_id, "doesnotexists")
+          expect_status_details(404)
         end
 
         it "should fail to create a feature view with no features and no query" do

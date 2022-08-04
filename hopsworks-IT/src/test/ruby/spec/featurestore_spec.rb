@@ -30,7 +30,7 @@ describe "On #{ENV['OS']}" do
           list_project_featurestores_endpoint = "#{ENV['HOPSWORKS_API']}/project/" + project.id.to_s + "/featurestores"
           get list_project_featurestores_endpoint
           parsed_json = JSON.parse(response.body)
-          expect_status(200)
+          expect_status_details(200)
           expect(parsed_json.length == 1)
           expect(parsed_json[0].key?("projectName")).to be true
           expect(parsed_json[0].key?("featurestoreName")).to be true
@@ -44,7 +44,7 @@ describe "On #{ENV['OS']}" do
           list_project_featurestore_with_id = "#{ENV['HOPSWORKS_API']}/project/" + project.id.to_s + "/featurestores/" + featurestore_id.to_s
           get list_project_featurestore_with_id
           parsed_json = JSON.parse(response.body)
-          expect_status(200)
+          expect_status_details(200)
           expect(parsed_json.key?("projectName")).to be true
           expect(parsed_json.key?("featurestoreName")).to be true
           expect(parsed_json["projectName"] == project.projectname).to be true
@@ -59,7 +59,7 @@ describe "On #{ENV['OS']}" do
               "/featurestores/" + featurestore_name.to_s
           get get_project_featurestore_with_name
           parsed_json = JSON.parse(response.body)
-          expect_status(200)
+          expect_status_details(200)
           expect(parsed_json.key?("projectName")).to be true
           expect(parsed_json.key?("featurestoreId")).to be true
           expect(parsed_json["projectName"] == project.projectname).to be true
@@ -76,7 +76,7 @@ describe "On #{ENV['OS']}" do
           list_project_featurestores_endpoint = "#{ENV['HOPSWORKS_API']}/project/#{@project['id']}/featurestores"
           get list_project_featurestores_endpoint
           json_body = JSON.parse(response.body)
-          expect_status(200)
+          expect_status_details(200)
           # The dataset has not been accepted yet, so it should not be returned in the feature store list
           expect(json_body.length == 1)
           project_featurestore = json_body.select {
@@ -91,7 +91,7 @@ describe "On #{ENV['OS']}" do
           list_project_featurestores_endpoint = "#{ENV['HOPSWORKS_API']}/project/#{@project['id']}/featurestores"
           get list_project_featurestores_endpoint
           json_body = JSON.parse(response.body)
-          expect_status(200)
+          expect_status_details(200)
           # The dataset has been accepted, so it should return the second feature store as well
           expect(json_body.length == 2)
           project_featurestore = json_body.select {
@@ -105,7 +105,7 @@ describe "On #{ENV['OS']}" do
               "/featurestores/" + "#{projectname}_featurestore"
           get get_shared_featurestore_with_name
           parsed_json = JSON.parse(response.body)
-          expect_status(200)
+          expect_status_details(200)
           expect(parsed_json.key?("projectName")).to be true
           expect(parsed_json.key?("featurestoreId")).to be true
           expect(parsed_json["projectName"] == projectname).to be true
@@ -185,7 +185,7 @@ describe "On #{ENV['OS']}" do
 
         it "should assign the privileges to the existing users of the project" do
           # Create a project without feature store
-          no_fs_project = create_project(services = [])
+          no_fs_project = create_project(nil, [])
 
           # Add member to the project
           user = create_user

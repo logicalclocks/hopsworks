@@ -29,9 +29,7 @@ describe "On #{ENV['OS']}" do
         reset_session
       end
       it "should fail" do
-        get_job(@project[:id], 1)
-        expect_json(errorCode: 200003)
-        expect_status(401)
+        get_job(@project[:id], 1, expected_status: 401, error_code: 200003)
       end
     end
     context 'with authentication create, delete, get' do
@@ -42,44 +40,37 @@ describe "On #{ENV['OS']}" do
         clean_jobs(@project[:id])
       end
       it "should create three spark jobs" do
-        create_sparktour_job(@project, job_spark_1, "jar", nil)
-        expect_status(201)
-        create_sparktour_job(@project, job_spark_2, "jar", nil)
-        expect_status(201)
-        create_sparktour_job(@project, job_spark_3, "jar", nil)
-        expect_status(201)
+        create_sparktour_job(@project, job_spark_1, "jar")
+        create_sparktour_job(@project, job_spark_2, "jar")
+        create_sparktour_job(@project, job_spark_3, "jar")
       end
       it "should update a job with different job_config" do
-        create_sparktour_job(@project, job_spark_1, "jar", nil)
+        create_sparktour_job(@project, job_spark_1, "jar")
         # get job, change args and config params and put it
         get_job(@project[:id], job_spark_1)
         config = json_body[:config]
         config[:'spark.executor.memory'] = '2048'
-        create_sparktour_job(@project, job_spark_1, "jar", config)
-        expect_status(200)
+        create_sparktour_job(@project, job_spark_1, "jar", job_conf: config)
         get_job(@project[:id], job_spark_1)
         expect(json_body[:config][:'spark.executor.memory']).to eq 2048
       end
       it "should get a single spark job" do
-        create_sparktour_job(@project, job_spark_1, "jar", nil)
-        get_job(@project[:id], job_spark_1)
-        expect_status(200)
+        create_sparktour_job(@project, job_spark_1, "jar")
+        get_job(@project[:id], job_spark_1, expected_status: 200)
       end
       it "should get spark job dto with href" do
-        create_sparktour_job(@project, job_spark_1, "jar", nil)
-        get_job(@project[:id], job_spark_1)
-        expect_status(200)
+        create_sparktour_job(@project, job_spark_1, "jar")
+        get_job(@project[:id], job_spark_1, expected_status: 200)
         #validate href
         expect(URI(json_body[:href]).path).to eq "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/jobs/demo_job_1"
         expect(json_body[:config][:type]).to eq "sparkJobConfiguration"
         expect(json_body[:jobType]).to eq "SPARK"
       end
       it "should get three jobs" do
-        create_sparktour_job(@project, job_spark_1, "jar", nil)
-        create_sparktour_job(@project, job_spark_2, "jar", nil)
-        create_sparktour_job(@project, job_spark_3, "jar", nil)
-        get_jobs(@project[:id], nil)
-        expect_status(200)
+        create_sparktour_job(@project, job_spark_1, "jar")
+        create_sparktour_job(@project, job_spark_2, "jar")
+        create_sparktour_job(@project, job_spark_3, "jar")
+        get_jobs(@project[:id])
         expect(json_body[:items].count).to eq 3
         expect(json_body[:count]).to eq 3
       end
@@ -89,13 +80,11 @@ describe "On #{ENV['OS']}" do
         expect(json_body[:type]).to eq("sparkJobConfiguration")
       end
       it "should delete created job" do
-        create_sparktour_job(@project, job_spark_1, "jar", nil)
+        create_sparktour_job(@project, job_spark_1, "jar")
         delete_job(@project[:id], job_spark_1)
-        expect_status(204)
       end
       it "should fail deleting non-existing job" do
-        delete_job(@project[:id], job_spark_1)
-        expect_status(404)
+        delete_job(@project[:id], job_spark_1, expected_status: 404)
       end
       it "should create one flink job" do
         create_flink_job(@project, job_flink, nil)
@@ -105,25 +94,22 @@ describe "On #{ENV['OS']}" do
       end
       it "should get a single flink job" do
         create_flink_job(@project, job_flink, nil)
-        get_job(@project[:id], job_flink)
-        expect_status(200)
+        get_job(@project[:id], job_flink, expected_status: 200)
       end
       it "should fail to delete job as Data Scientist" do #this test must be the last in this `describe` unit
-        create_sparktour_job(@project, job_spark_1, "jar", nil)
+        create_sparktour_job(@project, job_spark_1, "jar")
         member = create_user
         add_member(member[:email], "Data scientist")
         create_session(member[:email], "Pass123")
-        delete_job(@project[:id], job_spark_1)
-        expect_status(403)
+        delete_job(@project[:id], job_spark_1, expected_status: 403)
       end
       it "should fail to create or update spark job if executor memory is less than the minimum" do
-          create_sparktour_job(@project, job_spark_1, "jar", nil)
+          create_sparktour_job(@project, job_spark_1, "jar")
           #get job, change args and config params and put it.
           get_job(@project[:id], job_spark_1)
           config = json_body[:config]
           config[:'spark.executor.memory'] = '1023'
-          json_result = create_sparktour_job(@project, job_spark_1, "jar", config)
-          expect_status_details(400)
+          json_result = create_sparktour_job(@project, job_spark_1, "jar", job_conf: config, expected_status: 400)
           parsed_json = JSON.parse(json_result)
           expect(parsed_json.key?("errorCode")).to be true
           expect(parsed_json.key?("errorMsg")).to be true
@@ -160,8 +146,8 @@ describe "On #{ENV['OS']}" do
         clean_jobs(@project[:id])
       end
       it 'should delete job with non-finished execution and cleanup tmp files and get status of new job correctly' do
-        create_sparktour_job(@project, job_spark_1, 'jar', nil)
-        create_sparktour_job(@project, job_spark_2, 'jar', nil)
+        create_sparktour_job(@project, job_spark_1, 'jar')
+        create_sparktour_job(@project, job_spark_2, 'jar')
         start_execution(@project[:id], job_spark_1)
         execution_id = json_body[:id]
         hdfsUser = json_body[:hdfsUser]
@@ -198,15 +184,15 @@ describe "On #{ENV['OS']}" do
     context 'with authentication' do
       before :all do
         with_valid_tour_project("spark")
-        create_sparktour_job(@project, job_spark_1, "jar", nil)
-        create_sparktour_job(@project, job_spark_2, "jar", nil)
-        create_sparktour_job(@project, "demo_py_job_1", "py", nil)
-        create_sparktour_job(@project, job_spark_3, "jar", nil)
-        create_sparktour_job(@project, "demo_ipynb_job_1", "ipynb", nil)
-        create_sparktour_job(@project, "demo_job_4", "jar", nil)
-        create_sparktour_job(@project, "demo_job_5", "jar", nil)
-        create_sparktour_job(@project, "demo_py_job_2", "py", nil)
-        create_sparktour_job(@project, "demo_ipynb_job_2", "ipynb", nil)
+        create_sparktour_job(@project, job_spark_1, "jar")
+        create_sparktour_job(@project, job_spark_2, "jar")
+        create_sparktour_job(@project, "demo_py_job_1", "py")
+        create_sparktour_job(@project, job_spark_3, "jar")
+        create_sparktour_job(@project, "demo_ipynb_job_1", "ipynb")
+        create_sparktour_job(@project, "demo_job_4", "jar")
+        create_sparktour_job(@project, "demo_job_5", "jar")
+        create_sparktour_job(@project, "demo_py_job_2", "py")
+        create_sparktour_job(@project, "demo_ipynb_job_2", "ipynb")
         create_flink_job(@project, job_flink, nil)
         create_flink_job(@project, job_flink_2, nil)
       end
@@ -216,202 +202,194 @@ describe "On #{ENV['OS']}" do
       describe "Jobs sort" do
         it "should get all jobs sorted by name" do
           #sort in memory and compare with query
-          get_jobs(@project[:id], nil)
+          get_jobs(@project[:id])
           jobs = json_body[:items].map {|job| job[:name]}
           sorted = jobs.sort_by(&:downcase)
-          get_jobs(@project[:id], "?sort_by=name:asc")
+          get_jobs(@project[:id], query: "?sort_by=name:asc")
           sorted_res = json_body[:items].map {|job| job[:name]}
           expect(sorted_res).to eq(sorted)
         end
         it "should get all jobs sorted by name descending" do
           #sort in memory and compare with query
-          get_jobs(@project[:id], nil)
+          get_jobs(@project[:id])
           jobs = json_body[:items].map {|job| job[:name]}
           sorted = jobs.sort_by(&:downcase).reverse
-          get_jobs(@project[:id], "?sort_by=name:desc")
+          get_jobs(@project[:id], query: "?sort_by=name:desc")
           sorted_res = json_body[:items].map {|job| job[:name]}
           expect(sorted_res).to eq(sorted)
         end
         it "should get all jobs sorted by id" do
           #sort in memory and compare with query
-          get_jobs(@project[:id], nil)
+          get_jobs(@project[:id])
           jobs = json_body[:items].map {|job| job[:id]}
           sorted = jobs.sort
-          get_jobs(@project[:id], "?sort_by=id:asc")
+          get_jobs(@project[:id], query: "?sort_by=id:asc")
           sorted_res = json_body[:items].map {|job| job[:id]}
           expect(sorted_res).to eq(sorted)
         end
         it "should get all jobs sorted by id descending" do
           #sort in memory and compare with query
-          get_jobs(@project[:id], nil)
+          get_jobs(@project[:id])
           jobs = json_body[:items].map {|job| job[:id]}
           sorted = jobs.sort.reverse
-          get_jobs(@project[:id], "?sort_by=id:desc")
+          get_jobs(@project[:id], query: "?sort_by=id:desc")
           sorted_res = json_body[:items].map {|job| job[:id]}
           expect(sorted_res).to eq(sorted)
         end
         it "should get all jobs sorted by date created" do
           #sort in memory and compare with query
-          get_jobs(@project[:id], nil)
+          get_jobs(@project[:id])
           jobs = json_body[:items].map {|job| job[:creationTime]}
           sorted = jobs.sort
-          get_jobs(@project[:id], "?sort_by=date_created:asc")
+          get_jobs(@project[:id], query: "?sort_by=date_created:asc")
           sorted_res = json_body[:items].map {|job| job[:creationTime]}
           time_expect_to_be_eq(sorted_res, sorted)
         end
         it "should get all jobs sorted by date created descending" do
           #sort in memory and compare with query
-          get_jobs(@project[:id], nil)
+          get_jobs(@project[:id])
           jobs = json_body[:items].map {|job| job[:creationTime]}
           sorted = jobs.sort.reverse
-          get_jobs(@project[:id], "?sort_by=date_created:desc")
+          get_jobs(@project[:id], query: "?sort_by=date_created:desc")
           sorted_res = json_body[:items].map {|job| job[:creationTime]}
           time_expect_to_be_eq(sorted_res, sorted)
         end
         it "should get all jobs sorted by type ascending and name ascending" do
           #sort in memory and compare with query
-          get_jobs(@project[:id], nil)
+          get_jobs(@project[:id])
           jobs = json_body[:items].map {|job| "#{job[:jobType]} #{job[:name]}"}
           sorted = jobs.sort
-          get_jobs(@project[:id], "?sort_by=jobtype:asc,name:asc")
+          get_jobs(@project[:id], query: "?sort_by=jobtype:asc,name:asc")
           sorted_res = json_body[:items].map {|job| "#{job[:jobType]} #{job[:name]}"}
           expect(sorted_res).to eq(sorted)
         end
         it "should get all jobs sorted by type ascending and name descending" do
           #sort in memory and compare with query
-          get_jobs(@project[:id], nil)
+          get_jobs(@project[:id])
           s = json_body[:items].sort do |a, b|
             res = (a[:jobType] <=> b[:jobType])
             res = -(a[:name] <=> b[:name]) if res == 0
             res
           end
           sorted = s.map {|o| "#{o[:jobType]} #{o[:name]}"}
-          get_jobs(@project[:id], "?sort_by=jobtype:asc,name:desc")
+          get_jobs(@project[:id], query: "?sort_by=jobtype:asc,name:desc")
           sorted_res = json_body[:items].map {|job| "#{job[:jobType]} #{job[:name]}"}
           expect(sorted_res).to eq(sorted)
         end
         it "should get all jobs sorted by type descending and name ascending" do
           #sort in memory and compare with query
-          get_jobs(@project[:id], nil)
+          get_jobs(@project[:id])
           s = json_body[:items].sort do |a, b|
             res = -(a[:jobType] <=> b[:jobType])
             res = (a[:name] <=> b[:name]) if res == 0
             res
           end
           sorted = s.map {|o| "#{o[:jobType]} #{o[:name]}"}
-          get_jobs(@project[:id], "?sort_by=jobtype:desc,name:asc")
+          get_jobs(@project[:id], query: "?sort_by=jobtype:desc,name:asc")
           sorted_res = json_body[:items].map {|job| "#{job[:jobType]} #{job[:name]}"}
           expect(sorted_res).to eq(sorted)
         end
         it "should fail to sort by unsupported field" do
-          get_jobs(@project[:id], "?sort_by=unsupported:desc,name:asc")
-          expect_status(404)
-          expect_json(errorCode: 120004)
+          get_jobs(@project[:id], query: "?sort_by=unsupported:desc,name:asc", expected_status: 404, error_code: 120004)
         end
       end
       describe "Jobs filter, limit" do
         it "should return limit=x jobs" do
           #sort in memory and compare with query
-          get_jobs(@project[:id], nil)
+          get_jobs(@project[:id])
           jobs = json_body[:items].map {|job| job[:name]}
           sorted = jobs.sort_by(&:downcase)
-          get_jobs(@project[:id], "?limit=2&sort_by=name:asc")
+          get_jobs(@project[:id], query: "?limit=2&sort_by=name:asc")
           sorted_res = json_body[:items].map {|job| job[:name]}
           expect(sorted_res).to eq(sorted.take(2))
         end
         it "should return jobs starting from offset=y" do
           #sort in memory and compare with query
-          get_jobs(@project[:id], nil)
+          get_jobs(@project[:id])
           jobs = json_body[:items].map {|job| job[:name]}
           sorted = jobs.sort_by(&:downcase)
-          get_jobs(@project[:id], "?offset=1&sort_by=name:asc")
+          get_jobs(@project[:id], query: "?offset=1&sort_by=name:asc")
           sorted_res = json_body[:items].map {|job| job[:name]}
           expect(sorted_res).to eq(sorted.drop(1))
         end
         it "should return limit=x jobs with offset=y" do
           #sort in memory and compare with query
-          get_jobs(@project[:id], nil)
+          get_jobs(@project[:id])
           jobs = json_body[:items].map {|job| job[:name]}
           sorted = jobs.sort_by(&:downcase)
-          get_jobs(@project[:id], "?offset=1&limit=2&sort_by=name:asc")
+          get_jobs(@project[:id], query: "?offset=1&limit=2&sort_by=name:asc")
           sorted_res = json_body[:items].map {|job| job[:name]}
           expect(sorted_res).to eq(sorted.drop(1).take(2))
         end
         it "should ignore if limit < 0" do
           #sort in memory and compare with query
-          get_jobs(@project[:id], nil)
+          get_jobs(@project[:id])
           jobs = json_body[:items].map {|job| job[:name]}
           sorted = jobs.sort_by(&:downcase)
-          get_jobs(@project[:id], "?limit<0&sort_by=name:asc")
+          get_jobs(@project[:id], query: "?limit<0&sort_by=name:asc")
           sorted_res = json_body[:items].map {|job| job[:name]}
           expect(sorted_res).to eq(sorted)
         end
         it "should ignore if offset < 0" do
           #sort in memory and compare with query
-          get_jobs(@project[:id], nil)
+          get_jobs(@project[:id])
           jobs = json_body[:items].map {|job| job[:name]}
           sorted = jobs.sort_by(&:downcase)
-          get_jobs(@project[:id], "?offset<0&sort_by=name:asc")
+          get_jobs(@project[:id], query: "?offset<0&sort_by=name:asc")
           sorted_res = json_body[:items].map {|job| job[:name]}
           expect(sorted_res).to eq(sorted)
         end
         it "should ignore if limit = 0" do
           #sort in memory and compare with query
-          get_jobs(@project[:id], nil)
+          get_jobs(@project[:id])
           jobs = json_body[:items].map {|job| job[:name]}
           sorted = jobs.sort_by(&:downcase)
-          get_jobs(@project[:id], "?limit=0&sort_by=name:asc")
+          get_jobs(@project[:id], query: "?limit=0&sort_by=name:asc")
           sorted_res = json_body[:items].map {|job| job[:name]}
           expect(sorted_res).to eq(sorted)
         end
         it "should ignore if offset = 0" do
           #sort in memory and compare with query
-          get_jobs(@project[:id], nil)
+          get_jobs(@project[:id])
           jobs = json_body[:items].map {|job| job[:name]}
           sorted = jobs.sort_by(&:downcase)
-          get_jobs(@project[:id], "?offset=0&sort_by=name:asc")
+          get_jobs(@project[:id], query: "?offset=0&sort_by=name:asc")
           sorted_res = json_body[:items].map {|job| job[:name]}
           expect(sorted_res).to eq(sorted)
         end
         it "should ignore if limit = 0 and offset = 0" do
           #sort in memory and compare with query
-          get_jobs(@project[:id], nil)
+          get_jobs(@project[:id])
           jobs = json_body[:items].map {|job| job[:name]}
           sorted = jobs.sort_by(&:downcase)
-          get_jobs(@project[:id], "?limit=0&offset=0&sort_by=name:asc")
+          get_jobs(@project[:id], query: "?limit=0&offset=0&sort_by=name:asc")
           sorted_res = json_body[:items].map {|job| job[:name]}
           expect(sorted_res).to eq(sorted)
         end
       end
       describe "Jobs filter" do
         it "should get five jobs with type spark" do
-          get_jobs(@project[:id], "?filter_by=jobtype:spark")
-          expect_status(200)
+          get_jobs(@project[:id], query: "?filter_by=jobtype:spark")
           expect(json_body[:items].count).to eq 5
         end
         it "should get four jobs with type pyspark" do
-          get_jobs(@project[:id], "?filter_by=jobtype:pyspark")
-          expect_status(200)
+          get_jobs(@project[:id], query: "?filter_by=jobtype:pyspark")
           expect(json_body[:items].count).to eq 4
         end
         it "should find jobs with type flink" do
-          get_jobs(@project[:id], "?filter_by=jobtype:flink")
-          expect_status(200)
+          get_jobs(@project[:id], query: "?filter_by=jobtype:flink")
           expect(json_body[:items].count).to be 2
         end
         it "should find jobs with name like 'demo'" do
-          get_jobs(@project[:id], "?filter_by=name:demo")
-          expect_status(200)
+          get_jobs(@project[:id], query: "?filter_by=name:demo")
           expect(json_body[:items].count).to eq 9
         end
         it "should find jobs with name like 'demo_job'" do
-          get_jobs(@project[:id], "?filter_by=name:demo")
-          expect_status(200)
+          get_jobs(@project[:id], query: "?filter_by=name:demo")
           expect(json_body[:items].count).to eq 9
         end
         it "should find job with name like" do
-          get_jobs(@project[:id], "?filter_by=name:" + job_spark_1)
-          expect_status(200)
+          get_jobs(@project[:id], query: "?filter_by=name:" + job_spark_1)
           expect(json_body[:items].count).to eq 1
         end
 
@@ -423,33 +401,27 @@ describe "On #{ENV['OS']}" do
             start_execution(@project[:id], job_spark_2)
             execution_id = json_body[:id]
             wait_for_execution_completed(@project[:id], job_spark_2, execution_id, 'FINISHED')
-            get_jobs(@project[:id], "?filter_by=latest_execution:finished")
-            expect_status(200)
+            get_jobs(@project[:id], query: "?filter_by=latest_execution:finished")
             expect(json_body[:items].count).to eq 2
           end
           it "should execute two jobs and search based on finalStatus with query startingWith term" do
-            get_jobs(@project[:id], "?filter_by=latest_execution:finis")
-            expect_status(200)
+            get_jobs(@project[:id], query: "?filter_by=latest_execution:finis")
             expect(json_body[:items].count).to eq 2
           end
           it "should execute two jobs and search based on state" do
-            get_jobs(@project[:id], "?filter_by=latest_execution:succeeded")
-            expect_status(200)
+            get_jobs(@project[:id], query: "?filter_by=latest_execution:succeeded")
             expect(json_body[:items].count).to eq 2
           end
           it "should execute two jobs and search based on state with query startingWith term" do
-            get_jobs(@project[:id], "?filter_by=latest_execution:succee")
-            expect_status(200)
+            get_jobs(@project[:id], query: "?filter_by=latest_execution:succee")
             expect(json_body[:items].count).to eq 2
           end
           it "should execute two jobs and search based on name" do
-            get_jobs(@project[:id], "?filter_by=latest_execution:" + job_spark_1)
-            expect_status(200)
+            get_jobs(@project[:id], query: "?filter_by=latest_execution:" + job_spark_1)
             expect(json_body[:items].count).to eq 1
           end
           it "should execute two jobs and search based on name with query startingWith term" do
-            get_jobs(@project[:id], "?filter_by=latest_execution:demo_job")
-            expect_status(200)
+            get_jobs(@project[:id], query: "?filter_by=latest_execution:demo_job")
             expect(json_body[:items].count).to eq 5
           end
         end
@@ -459,7 +431,7 @@ describe "On #{ENV['OS']}" do
   describe 'with Api key' do
     before(:all) do
       with_valid_tour_project("spark")
-      create_sparktour_job(@project, job_spark_1, "jar", nil)
+      create_sparktour_job(@project, job_spark_1, "jar")
       @key = create_api_key('jobKey', %w(JOB))
       @invalid_key = create_api_key('jobKey_invalid', %w(DATASET_VIEW DATASET_CREATE DATASET_DELETE SERVING))
     end
@@ -471,18 +443,13 @@ describe "On #{ENV['OS']}" do
         set_api_key_to_header(@invalid_key)
       end
       it 'should fail to access job' do
-        get_jobs(@project[:id], "")
-        expect_json(errorCode: 320004)
-        expect_status(403)
+        get_jobs(@project[:id], expected_status: 403, error_code: 320004)
       end
       it 'should fail to create job' do
-        create_sparktour_job(@project, job_spark_1, "jar", nil)
-        expect_json(errorCode: 320004)
-        expect_status(403)
+        create_sparktour_job(@project, job_spark_1, "jar", expected_status: 403, error_code: 320004)
       end
       it 'should fail to delete' do
-        delete_job(@project[:id], job_spark_1)
-        expect_status(403)
+        delete_job(@project[:id], job_spark_1, expected_status: 403)
       end
     end
     context 'with valid scope' do
@@ -490,16 +457,13 @@ describe "On #{ENV['OS']}" do
         set_api_key_to_header(@key)
       end
       it 'should get jobs' do
-        get_jobs(@project[:id], "")
-        expect_status(200)
+        get_jobs(@project[:id])
       end
       it 'should create' do
-        create_sparktour_job(@project, "test_api_job", "jar", nil)
-        expect_status(201)
+        create_sparktour_job(@project, "test_api_job", "jar")
       end
       it 'should delete' do
         delete_job(@project[:id], "test_api_job")
-        expect_status(204)
       end
     end
   end

@@ -32,7 +32,7 @@ describe "On #{ENV['OS']}" do
           # create transformation function
           json_result = register_transformation_fn(@project.id, featurestore_id)
           transformation_function = JSON.parse(json_result)
-          expect_status(200)
+          expect_status_details(200)
 
           feature_schema = [
             {type: "INT", name: "a_testfeature1", featureGroupFeatureName: "a_testfeature1", label: false, transformationFunction: transformation_function},
@@ -41,7 +41,7 @@ describe "On #{ENV['OS']}" do
 
           json_result = create_feature_view(@project.id, featurestore_id, query, features: feature_schema)
           parsed_json = JSON.parse(json_result)
-          expect_status(201)
+          expect_status_details(201)
           feature_view_name = parsed_json["name"]
           feature_view_version = parsed_json["version"]
 

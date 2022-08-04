@@ -21,9 +21,9 @@ describe "On #{ENV['OS']}" do
     @cloud = getVar('cloud').value
   end
   after :all do
-    clean_all_test_projects(spec: "docker_image")
     setVar('managed_docker_registry', @managed_docker_registry)
     setVar('cloud', @cloud)
+    clean_all_test_projects(spec: "docker_image")
   end
   context 'docker image and tags' do
     context 'on default installation' do

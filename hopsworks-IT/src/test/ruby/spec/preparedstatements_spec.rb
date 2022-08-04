@@ -50,7 +50,7 @@ describe "On #{ENV['OS']}" do
 
           json_result = create_feature_view(@project.id, featurestore_id, query)
           parsed_json = JSON.parse(json_result)
-          expect_status(201)
+          expect_status_details(201)
 
           feature_view_name = parsed_json["name"]
           feature_view_version = parsed_json["version"]
@@ -305,7 +305,7 @@ describe "On #{ENV['OS']}" do
           feature_view_name = parsed_json["name"]
           feature_view_version = parsed_json["version"]
           get "#{ENV['HOPSWORKS_API']}/project/#{@project.id}/featurestores/#{featurestore_id}/featureview/#{feature_view_name}/version/#{feature_view_version}/preparedstatement"
-          expect_status(400)
+          expect_status_details(400)
         end
 
         it "should fail when calling get serving vector if a feature group was deleted" do

@@ -152,14 +152,14 @@ describe "On #{ENV['OS']}" do
     project = get_project
     update_result=update_connector_json(project.id, get_featurestore_id(project.id), connector_name, update_data )
     parsed_result_update=JSON.parse(update_result)
-    expect_status(404)
+    expect_status_details(404)
     error_code=270042
     expect(parsed_result_update['errorCode']).to eql(error_code)
   end
 
   it 'should fail to update connector with a different name' do
     parsed_json,connector_name = create_connector_materializationDataset
-    expect_status(201)
+    expect_status_details(201)
     description='test update connector wrong name'
     type_dto = 'featurestoreBigqueryConnectorDTO'
     storage_connector_type = 'BIGQUERY'
@@ -175,26 +175,26 @@ describe "On #{ENV['OS']}" do
     update_result=update_connector_json(project.id, get_featurestore_id(project.id), connector_name, additional_data)
 
     parsed_result_update=JSON.parse(update_result)
-    expect_status(400)
+    expect_status_details(400)
     error_code=270136
     expect(parsed_result_update['errorCode']).to eql(error_code)
   end
 
   it 'should delete bigquery connector' do
     parsed_json,connector_name = create_connector_materializationDataset
-    expect_status(201)
+    expect_status_details(201)
     project=get_project
     result=delete_connector(project.id, get_featurestore_id(project.id), connector_name)
-    expect_status(200)
+    expect_status_details(200)
   end
 
   it 'should get bigquery connector' do
     parsed_json,connector_name = create_connector_materializationDataset
-    expect_status(201)
+    expect_status_details(201)
     project=get_project
     result=get_storage_connector(project.id, get_featurestore_id(project.id), connector_name)
     parsed_result=JSON.parse(result)
-    expect_status(200)
+    expect_status_details(200)
     expect(parsed_result.key?('id')).to be true
     expect(parsed_result['name']).to eql(connector_name)
   end

@@ -66,7 +66,7 @@ module ProjectHelper
     new_project = {projectName: pName, description:"", status: 0, services: services,
                    projectTeam:[], retentionPeriod: ""}
     post "#{ENV['HOPSWORKS_API']}/project", new_project
-    expect_status(201)
+    expect_status_details(201)
     expect_json(successMessage: regex("Project created successfully.*"))
     get_project_by_name(new_project[:projectName])
   end
@@ -125,7 +125,7 @@ module ProjectHelper
 
   def delete_project(project)
     post "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/delete"
-    expect_status(200)
+    expect_status_details(200)
     expect_json(successMessage: "The project and all related files were removed successfully.")
   end
 
@@ -136,18 +136,18 @@ module ProjectHelper
 
   def add_member_to_project(project, member, role)
     post "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/projectMembers", {projectTeam: [{projectTeamPK: {projectId: project[:id],teamMember: member},teamRole: role}]}
-    expect_status(200)
+    expect_status_details(200)
     expect_json(successMessage: "One member added successfully")
   end
 
   def change_member_role(project, member, role)
     post "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/projectMembers/#{member}", URI.encode_www_form({ role: role}), {content_type: 'application/x-www-form-urlencoded'}
-    expect_status(200)
+    expect_status_details(200)
   end
 
   def remove_member(project, member)
     delete "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/projectMembers/#{member}"
-    expect_status(200)
+    expect_status_details(200)
   end
 
   def get_all_projects

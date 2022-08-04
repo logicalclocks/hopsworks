@@ -390,8 +390,10 @@ public class ProjectController {
       // User's certificates should be created before making any call to
       // Hadoop clients. Otherwise the client will fail if RPC TLS is enabled
       // This is an async call
+      Future<CertificatesController.CertsResult> certsResultFuture;
       try {
-        projectCreationFutures.add(certificatesController.generateCertificates(project, owner));
+        certsResultFuture = certificatesController.generateCertificates(project, owner);
+        projectCreationFutures.add(certsResultFuture);
       } catch (Exception ex) {
         cleanup(project, sessionId, projectCreationFutures, true, owner);
         throw new HopsSecurityException(RESTCodes.SecurityErrorCode.CERT_CREATION_ERROR, Level.SEVERE,
@@ -463,6 +465,18 @@ public class ProjectController {
 
       logProject(project, OperationType.Add);
 
+      // wait for certs before adding services
+      try {
+        if (certsResultFuture != null) {
+          certsResultFuture.get();
+        }
+      } catch (InterruptedException | ExecutionException ex) {
+        LOGGER.log(Level.SEVERE, "Error while waiting for the certificate generation thread to finish. Will try to " +
+          "cleanup...", ex);
+        cleanup(project, sessionId, projectCreationFutures);
+        throw new HopsSecurityException(RESTCodes.SecurityErrorCode.CERT_CREATION_ERROR, Level.SEVERE, "Error while " +
+          "generating certificates.", ex.getMessage(), ex);
+      }
       // enable services
       for (ProjectServiceEnum service : projectServices) {
         try {
@@ -480,10 +494,11 @@ public class ProjectController {
           }
         }
       } catch (InterruptedException | ExecutionException ex) {
-        LOGGER.log(Level.SEVERE, "Error while waiting for the certificate generation thread to finish. Will try to " +
+        LOGGER.log(Level.SEVERE, "Error while waiting for project creation future thread to finish. Will try to " +
           "cleanup...", ex);
         cleanup(project, sessionId, projectCreationFutures);
-        throw new HopsSecurityException(RESTCodes.SecurityErrorCode.CERT_CREATION_ERROR, Level.SEVERE);
+        throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_SERVICE_ADD_FAILURE, Level.SEVERE,
+          "Error while adding services.", ex.getMessage(), ex);
       }
 
       // Run the handlers.

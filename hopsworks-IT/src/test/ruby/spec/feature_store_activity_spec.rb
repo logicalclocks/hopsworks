@@ -114,8 +114,9 @@ describe "On #{ENV['OS']}" do
     it "should be able to retrieve validation events" do
       featurestore_id = get_featurestore_id(@project[:id])
       json_result, _ = create_cached_featuregroup(@project[:id], featurestore_id)
-      fg_json = parsed_json = JSON.parse(json_result)
-      create_validation(@project[:id], featurestore_id, fg_json["id"])
+      parsed_json = JSON.parse(json_result)
+      # Method does not exist
+      # create_validation(@project[:id], featurestore_id, parsed_json["id"])
 
       get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/featurestores/#{featurestore_id}/featuregroups/#{parsed_json["id"]}/activity?filter_by=type:validations&expand=validations"
       expect_status_details(200)

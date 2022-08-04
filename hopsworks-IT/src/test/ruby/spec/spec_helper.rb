@@ -135,6 +135,7 @@ RSpec.configure do |config|
     config.filter_run_excluding vm: true
   end
   config.filter_run focus: true
+  config.full_backtrace = true # show error for RSpec::Core::MultipleExceptionError
   config.run_all_when_everything_filtered = true
 end
 

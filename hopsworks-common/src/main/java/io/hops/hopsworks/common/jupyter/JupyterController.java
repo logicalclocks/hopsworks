@@ -143,7 +143,7 @@ public class JupyterController {
           .addCommand(conversionDir.getAbsolutePath())
           .addCommand(notebookConversion.name())
           .addCommand(projectUtils.getFullDockerImageName(project, true))
-          .setWaitTimeout(60l, TimeUnit.SECONDS) //on a TLS VM the timeout needs to be greater than 20s
+          .setWaitTimeout(120L, TimeUnit.SECONDS) //on a TLS VM the timeout needs to be greater than 20s
           .redirectErrorStream(true)
           .build();
 
@@ -154,7 +154,7 @@ public class JupyterController {
       if (!processResult.processExited() || processResult.getExitCode() != 0) {
         LOGGER.log(Level.WARNING, "error code: " + processResult.getExitCode(), "Failed to convert "
             + notebookPath + "\nstderr: " + processResult.getStderr() + "\nstdout: " + processResult.getStdout());
-        throw new ServiceException(RESTCodes.ServiceErrorCode.IPYTHON_CONVERT_ERROR,  Level.SEVERE,
+        throw new ServiceException(RESTCodes.ServiceErrorCode.IPYTHON_CONVERT_ERROR, Level.SEVERE,
             "error code: " + processResult.getExitCode(), "Failed to convert " + notebookPath
             + "\nstderr: " + processResult.getStderr()
             + "\nstdout: " + processResult.getStdout());

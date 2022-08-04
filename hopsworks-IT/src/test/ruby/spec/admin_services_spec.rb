@@ -26,8 +26,7 @@ describe "On #{ENV['OS']}" do
       end
       it "restricts requests for admin resources from non-admin accounts" do
         get_all_host_services()
-        expect_status(401)
-        expect_json(errorCode: 200003)
+        expect_status_details(401, error_code: 200003)
       end
     end
 
@@ -38,8 +37,7 @@ describe "On #{ENV['OS']}" do
 
       it "restricts requests for admin resources from a normal user account" do
         get_all_host_services()
-        expect_status(403)
-        expect_json(errorCode: 200014)
+        expect_status_details(403, error_code: 200014)
       end
     end
 
@@ -50,19 +48,19 @@ describe "On #{ENV['OS']}" do
 
       it "gets metadata of all services" do
         get_all_host_services()
-        expect_status(200)
+        expect_status_details(200)
         expect(json_body[:count]).to be > 0
       end
 
       it "gets metadata of a service by name" do
         get_host_service_by_name("kafka")
-        expect_status(200)
+        expect_status_details(200)
         expect(json_body[:count]).to be > 0
       end
 
       it "fails to get metadata of an unknown service" do
         get_host_service_by_name("#{short_random_id}")
-        expect_status(200)
+        expect_status_details(200)
         expect(json_body[:count]).to eq(0)
       end
 

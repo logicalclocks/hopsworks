@@ -34,17 +34,17 @@ describe "On #{ENV['OS']}" do
       
       it "should not be able to ping" do
         post @ping_resource, {}
-        expect_status(401)
+        expect_status_details(401)
       end
 
       it "should not be able to register" do
         post @register_resource, {"host-id": "host0", password: "password"}
-        expect_status(401)
+        expect_status_details(401)
       end
 
       it "should not be able to heartbeat" do
         post @heartbeat_resource, {"host-id": "host0", agentTime: "1234"}
-        expect_status(401)
+        expect_status_details(401)
       end
     end
 
@@ -54,19 +54,18 @@ describe "On #{ENV['OS']}" do
       end
       it "should be able to ping" do
         post @ping_resource, {}
-        expect_status(200)
+        expect_status_details(200)
       end
 
       it "should not perform any action when action is not specified" do
         post @agent_resource, {}
-        expect_json(errorCode: 120001)
-        expect_status(422)
+        expect_status_details(422, error_code: 120001)
       end
 
       it "should not perform any unknown action" do
         action = "gocrazy"
         post @agent_resource + action, {}
-        expect_status(404)
+        expect_status_details(404)
       end
 
       describe "host does not exist" do
@@ -75,13 +74,12 @@ describe "On #{ENV['OS']}" do
         end
         it "should not be able to register" do
           post @register_resource, {"host-id": @random_host, password: "some_pass"}
-          expect_status(404)
-          expect_json(errorCode: 100025)
+          expect_status_details(404, error_code: 100025)
         end
 
         it "should not be able to heartbeat" do
           post @heartbeat_resource, {"host-id": @random_host, agentTime: "1234"}
-          expect_status(404)
+          expect_status_details(404)
         end
       end
 
@@ -100,7 +98,7 @@ describe "On #{ENV['OS']}" do
           host = find_by_hostname(@hostname)
           expect(host.registered).to eq(false)
           post @register_resource, {"host-id": @hostname, password: "pass123"}
-          expect_status(200)
+          expect_status_details(200)
           host = find_by_hostname(@hostname)
           expect(host.registered).to eq(true)
         end
@@ -109,7 +107,7 @@ describe "On #{ENV['OS']}" do
           post @register_resource, {"host-id": @hostname, password: "pass123"}
           post @heartbeat_resource, {"host-id": @hostname, "num-gpus": 0, "agent-time": 1,
                                      "cores": 4, "memory-capacity": 2}
-          expect_status(200)
+          expect_status_details(200)
           host = find_by_hostname(@hostname)
           expect(host.cores).to eq(4)
         end
@@ -133,19 +131,19 @@ describe "On #{ENV['OS']}" do
           kagent_start(@hostname)
           expect(is_service_running("kagent", @hostname)).to eq(true)
           delete "#{ENV['HOPSWORKS_API']}/admin/kagent/#{@hostname}"
-          expect_status(401)
+          expect_status_details(401)
           expect(is_service_running("kagent", @hostname)).to eq(true)
         end
         it "start" do
           kagent_stop(@hostname)
           expect(is_service_running("kagent", @hostname)).to eq(false)
           post "#{ENV['HOPSWORKS_API']}/admin/kagent/#{@hostname}"
-          expect_status(401)
+          expect_status_details(401)
           expect(is_service_running("kagent", @hostname)).to eq(false)
         end
         it "restart" do
           put "#{ENV['HOPSWORKS_API']}/admin/kagent/#{@hostname}"
-          expect_status(401)
+          expect_status_details(401)
         end
       end
     end
@@ -160,21 +158,21 @@ describe "On #{ENV['OS']}" do
           kagent_start(@hostname)
           expect(is_service_running("kagent", @hostname)).to eq(true)
           delete "#{ENV['HOPSWORKS_API']}/admin/kagent/#{@hostname}"
-          expect_status(200)
+          expect_status_details(200)
           expect(is_service_running("kagent", @hostname)).to eq(false)
         end
         it "start" do
           kagent_stop(@hostname)
           expect(is_service_running("kagent", @hostname)).to eq(false)
           post "#{ENV['HOPSWORKS_API']}/admin/kagent/#{@hostname}"
-          expect_status(200)
+          expect_status_details(200)
           expect(is_service_running("kagent", @hostname)).to eq(true)
         end
         it "restart" do
           kagent_stop(@hostname)
           expect(is_service_running("kagent", @hostname)).to eq(false)
           put "#{ENV['HOPSWORKS_API']}/admin/kagent/#{@hostname}"
-          expect_status(200)
+          expect_status_details(200)
           expect(is_service_running("kagent", @hostname)).to eq(true)
         end
       end
@@ -188,15 +186,15 @@ describe "On #{ENV['OS']}" do
       describe "#it should not be able to" do
         it "stop" do
           delete "#{ENV['HOPSWORKS_API']}/admin/kagent/#{@hostname}"
-          expect_status(403)
+          expect_status_details(403)
         end
         it "start" do
           post "#{ENV['HOPSWORKS_API']}/admin/kagent/#{@hostname}"
-          expect_status(403)
+          expect_status_details(403)
         end
         it "restart" do
           put "#{ENV['HOPSWORKS_API']}/admin/kagent/#{@hostname}"
-          expect_status(403)
+          expect_status_details(403)
         end
       end
     end

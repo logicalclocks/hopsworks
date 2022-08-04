@@ -172,7 +172,7 @@ module ServingHelper
 
   def start_serving(project, serving)
     post "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/serving/#{serving[:id]}?action=start"
-    expect_status(200)
+    expect_status_details(200)
   end
 
   def get_servings(project, query)
@@ -181,7 +181,7 @@ module ServingHelper
 
   def stop_serving(project, serving)
     post "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/serving/#{serving[:id]}?action=stop"
-    expect_status(200)
+    expect_status_details(200)
   end
 
   def wait_for_type(serving_name)
@@ -231,7 +231,7 @@ module ServingHelper
 
   def get_serving(serving_name)
     serving_list = get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/"
-    expect_status(200)
+    expect_status_details(200)
     servings = JSON.parse(serving_list)
     servings.select { |serving| serving['name'] == serving_name}[0]
   end

@@ -55,8 +55,7 @@ describe "On #{ENV['OS']}" do
       end
       describe "Jobs" do
         it "should get jobs" do
-          get_jobs(@project[:id], nil)
-          expect_status_details(200)
+          get_jobs(@project[:id])
         end
 
         it "should not allow creating jobs" do
@@ -65,18 +64,16 @@ describe "On #{ENV['OS']}" do
         end
 
         it "should get all executions" do
-          get_executions(@project[:id], @job[:name], "")
+          get_executions(@project[:id], @job[:name])
           expect_status_details(200)
         end
 
         it "should allow starting new executions" do
           start_execution(@project[:id], @job[:name])
-          expect_status_details(201)
         end
 
         it "should not allow stopping executions" do
-          stop_execution(@project[:id], @job[:name], 1)
-          expect_status_details(403)
+          stop_execution(@project[:id], @job[:name], 1, expected_status: 403)
         end
       end
       describe "Alerts" do
@@ -175,8 +172,7 @@ describe "On #{ENV['OS']}" do
         end
 
         it "should get jobs" do
-          get_jobs(@project[:id], nil)
-          expect_status_details(200)
+          get_jobs(@project[:id])
         end
 
         it "should not allow creating jobs" do
@@ -185,18 +181,15 @@ describe "On #{ENV['OS']}" do
         end
 
         it "should get all executions" do
-          get_executions(@project[:id], @job[:name], "")
-          expect_status_details(200)
+          get_executions(@project[:id], @job[:name])
         end
 
         it "should allow starting new executions" do
           start_execution(@project[:id], @job[:name])
-          expect_status_details(201)
         end
 
         it "should not allow stopping executions" do
-          stop_execution(@project[:id], @job[:name], 1)
-          expect_status_details(403)
+          stop_execution(@project[:id], @job[:name], 1, expected_status: 403)
         end
 
         it "should get all alerts" do
