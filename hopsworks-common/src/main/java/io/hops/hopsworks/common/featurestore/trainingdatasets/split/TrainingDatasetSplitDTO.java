@@ -16,11 +16,15 @@
 
 package io.hops.hopsworks.common.featurestore.trainingdatasets.split;
 
+import io.hops.hopsworks.common.featurestore.trainingdatasets.DateAdapter;
+
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.XmlType;
+//import javax.xml.bind.annotation.XmlType;
+import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
+import java.util.Date;
 
 /**
  * DTO containing the human-readable information of a training dataset split, can be converted to JSON or XML
@@ -28,18 +32,31 @@ import javax.xml.bind.annotation.XmlType;
  */
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.FIELD)
-@XmlType(propOrder = {"name", "percentage"})
 public class TrainingDatasetSplitDTO {
   @XmlElement
   private String name;
   @XmlElement
   private Float percentage;
+  @XmlElement
+  private SplitType splitType;
+  @XmlJavaTypeAdapter(DateAdapter.class)
+  private Date startTime;
+  @XmlJavaTypeAdapter(DateAdapter.class)
+  private Date endTime;
   
   public TrainingDatasetSplitDTO(){}
   
   public TrainingDatasetSplitDTO(String name, Float percentage) {
     this.name = name;
     this.percentage = percentage;
+    this.splitType = SplitType.RANDOM_SPLIT;
+  }
+
+  public TrainingDatasetSplitDTO(String name, Date startTime, Date endTime) {
+    this.name = name;
+    this.startTime = startTime;
+    this.endTime = endTime;
+    this.splitType = SplitType.TIME_SERIES_SPLIT;
   }
   
   public String getName() {
@@ -57,12 +74,28 @@ public class TrainingDatasetSplitDTO {
   public void setPercentage(Float percentage) {
     this.percentage = percentage;
   }
-  
-  @Override
-  public String toString() {
-    return "TrainingDatasetSplitDTO{" +
-      "name='" + name + '\'' +
-      ", percentage=" + percentage +
-      '}';
+
+  public SplitType getSplitType() {
+    return splitType;
+  }
+
+  public void setSplitType(SplitType splitType) {
+    this.splitType = splitType;
+  }
+
+  public Date getStartTime() {
+    return startTime;
+  }
+
+  public void setStartTime(Date startTime) {
+    this.startTime = startTime;
+  }
+
+  public Date getEndTime() {
+    return endTime;
+  }
+
+  public void setEndTime(Date endTime) {
+    this.endTime = endTime;
   }
 }

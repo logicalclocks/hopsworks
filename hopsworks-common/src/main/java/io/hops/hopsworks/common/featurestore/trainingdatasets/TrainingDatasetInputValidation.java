@@ -46,6 +46,8 @@ import java.util.logging.Level;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+import static io.hops.hopsworks.common.featurestore.trainingdatasets.split.SplitType.RANDOM_SPLIT;
+
 @Stateless
 @TransactionAttribute(TransactionAttributeType.NEVER)
 public class TrainingDatasetInputValidation {
@@ -145,12 +147,14 @@ public class TrainingDatasetInputValidation {
               "invalid. Split names can only contain lower case characters, numbers and underscores and cannot be " +
               "longer than " + FeaturestoreConstants.FEATURESTORE_ENTITY_NAME_MAX_LENGTH + " characters or empty.");
         }
-        if (trainingDatasetSplitDTO.getPercentage() == null) {
+        if (RANDOM_SPLIT.equals(trainingDatasetSplitDTO.getSplitType())
+            && trainingDatasetSplitDTO.getPercentage() == null) {
           throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_TRAINING_DATASET_SPLIT_PERCENTAGE,
               Level.FINE, ", the provided training dataset split percentage is invalid. " +
               "Percentages can only be numeric. Weights will be normalized if they don’t sum up to 1.0.");
         }
-        if (trainingDatasetSplitDTO.getPercentage() <= 0) {
+        if (RANDOM_SPLIT.equals(trainingDatasetSplitDTO.getSplitType())
+            && trainingDatasetSplitDTO.getPercentage() <= 0) {
           throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_TRAINING_DATASET_SPLIT_PERCENTAGE,
               Level.FINE, ", the provided training dataset split percentage is invalid. " +
               "Weights must be greater than 0.");

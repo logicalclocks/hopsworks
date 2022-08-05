@@ -102,6 +102,7 @@ import java.util.Optional;
 import java.util.logging.Level;
 import java.util.stream.Collectors;
 
+import static io.hops.hopsworks.common.featurestore.trainingdatasets.split.SplitType.RANDOM_SPLIT;
 import static io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.TrainingDatasetType.EXTERNAL_TRAINING_DATASET;
 import static io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.TrainingDatasetType.HOPSFS_TRAINING_DATASET;
 import static io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.TrainingDatasetType.IN_MEMORY_TRAINING_DATASET;
@@ -490,8 +491,14 @@ public class TrainingDatasetController {
     trainingDataset.setTrainingDatasetType(trainingDatasetDTO.getTrainingDatasetType());
     trainingDataset.setSeed(trainingDatasetDTO.getSeed());
     trainingDataset.setSplits(trainingDatasetDTO.getSplits().stream()
-      .map(tdDTO -> new TrainingDatasetSplit(trainingDataset, tdDTO.getName(), tdDTO.getPercentage())).collect(
-        Collectors.toList()));
+        .map(split -> {
+          if (RANDOM_SPLIT.equals(split.getSplitType())) {
+            return new TrainingDatasetSplit(trainingDataset, split.getName(), split.getPercentage());
+          } else {
+            return new TrainingDatasetSplit(trainingDataset, split.getName(), split.getStartTime(), split.getEndTime());
+          }
+        })
+        .collect(Collectors.toList()));
     trainingDataset.setCoalesce(trainingDatasetDTO.getCoalesce() != null ? trainingDatasetDTO.getCoalesce() : false);
 
     StatisticsConfig statisticsConfig = new StatisticsConfig(trainingDatasetDTO.getStatisticsConfig().getEnabled(),
