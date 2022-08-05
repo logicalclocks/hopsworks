@@ -16,11 +16,14 @@
 
 package io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.split;
 
+import io.hops.hopsworks.common.featurestore.trainingdatasets.split.SplitType;
 import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.TrainingDataset;
 
 import javax.persistence.Basic;
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
@@ -28,9 +31,13 @@ import javax.persistence.JoinColumn;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
 import javax.persistence.Table;
+import javax.persistence.Temporal;
+import javax.persistence.TemporalType;
 import javax.persistence.UniqueConstraint;
 import javax.xml.bind.annotation.XmlRootElement;
 import java.io.Serializable;
+import java.util.Date;
+import java.util.Objects;
 
 /**
  * Entity class representing the training_dataset_split table in Hopsworks database.
@@ -59,16 +66,37 @@ public class TrainingDatasetSplit implements Serializable {
   @Basic(optional = false)
   private String name;
   @Column(name = "percentage")
-  @Basic(optional = false)
+  @Basic(optional = true)
   private Float percentage;
+  @Column(name = "split_type")
+  @Enumerated(EnumType.STRING)
+  @Basic(optional = true)
+  private SplitType splitType;
+  @Basic
+  @Column(name = "start_time")
+  @Temporal(TemporalType.TIMESTAMP)
+  private Date startTime;
+  @Basic
+  @Column(name = "end_time")
+  @Temporal(TemporalType.TIMESTAMP)
+  private Date endTime;
   
   public TrainingDatasetSplit() {
   }
   
   public TrainingDatasetSplit(TrainingDataset trainingDataset, String name, Float percentage) {
     this.trainingDataset = trainingDataset;
+    this.splitType = SplitType.RANDOM_SPLIT;
     this.name = name;
     this.percentage = percentage;
+  }
+
+  public TrainingDatasetSplit(TrainingDataset trainingDataset, String name, Date startTime, Date endTime) {
+    this.trainingDataset = trainingDataset;
+    this.name = name;
+    this.startTime = startTime;
+    this.endTime = endTime;
+    this.splitType = SplitType.TIME_SERIES_SPLIT;
   }
   
   public static long getSerialVersionUID() {
@@ -107,7 +135,31 @@ public class TrainingDatasetSplit implements Serializable {
   public void setPercentage(Float percentage) {
     this.percentage = percentage;
   }
-  
+
+  public SplitType getSplitType() {
+    return splitType;
+  }
+
+  public void setSplitType(SplitType splitType) {
+    this.splitType = splitType;
+  }
+
+  public Date getStartTime() {
+    return startTime;
+  }
+
+  public void setStartTime(Date startTime) {
+    this.startTime = startTime;
+  }
+
+  public Date getEndTime() {
+    return endTime;
+  }
+
+  public void setEndTime(Date endTime) {
+    this.endTime = endTime;
+  }
+
   @Override
   public boolean equals(Object o) {
     if (this == o) {
@@ -116,26 +168,15 @@ public class TrainingDatasetSplit implements Serializable {
     if (o == null || getClass() != o.getClass()) {
       return false;
     }
-    
     TrainingDatasetSplit that = (TrainingDatasetSplit) o;
-    
-    if (Float.compare(that.percentage, percentage) != 0) {
-      return false;
-    }
-    if (id != null ? !id.equals(that.id) : that.id != null) {
-      return false;
-    }
-    if (trainingDataset != null ? !trainingDataset.equals(that.trainingDataset) : that.trainingDataset != null) {
-      return false;
-    }
-    return name != null ? name.equals(that.name) : that.name == null;
+    return id.equals(that.id) && trainingDataset.getId().equals(that.trainingDataset.getId())
+        && name.equals(that.name) &&
+        Objects.equals(percentage, that.percentage) && splitType == that.splitType &&
+        Objects.equals(startTime, that.startTime) && Objects.equals(endTime, that.endTime);
   }
-  
+
   @Override
   public int hashCode() {
-    int result = id != null ? id.hashCode() : 0;
-    result = 31 * result + (name != null ? name.hashCode() : 0);
-    result = 31 * result + (percentage != +0.0f ? Float.floatToIntBits(percentage) : 0);
-    return result;
+    return Objects.hash(id, trainingDataset.getId(), name, percentage, splitType, startTime, endTime);
   }
 }

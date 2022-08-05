@@ -35,6 +35,8 @@ import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import static io.hops.hopsworks.common.featurestore.trainingdatasets.split.SplitType.TIME_SERIES_SPLIT;
+
 /**
  * DTO containing the human-readable information of a trainingDataset, can be converted to JSON or XML representation
  * using jaxb.
@@ -83,8 +85,15 @@ public class TrainingDatasetDTO extends FeaturestoreEntityDTO<TrainingDatasetDTO
     this.dataFormat = trainingDataset.getDataFormat();
     this.coalesce = trainingDataset.getCoalesce();
     this.trainingDatasetType = trainingDataset.getTrainingDatasetType();
-    this.splits =
-      trainingDataset.getSplits().stream().map(tds -> new TrainingDatasetSplitDTO(tds.getName(), tds.getPercentage()))
+    this.splits = trainingDataset.getSplits()
+        .stream()
+        .map(split -> {
+          if (TIME_SERIES_SPLIT.equals(split.getSplitType())) {
+            return new TrainingDatasetSplitDTO(split.getName(), split.getStartTime(), split.getEndTime());
+          } else {
+            return new TrainingDatasetSplitDTO(split.getName(), split.getPercentage());
+          }
+        })
         .collect(Collectors.toList());
     this.seed = trainingDataset.getSeed();
     this.fromQuery = trainingDataset.isQuery();
