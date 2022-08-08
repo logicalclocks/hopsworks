@@ -1674,7 +1674,8 @@ public class RESTCodes {
     INPUT_FIELD_IS_NOT_NULLABLE(202, "Input field is not nullable.",
       Response.Status.BAD_REQUEST),
     ERROR_INFERRING_INGESTION_RESULT(203, "Could not infer ingestion result from validation ingestion policy and " +
-      "validation success.", Response.Status.BAD_REQUEST);
+      "validation success.", Response.Status.BAD_REQUEST),
+    FAILED_TO_DELETE_TD_DATA(204, "Failed to delete training dataset.", Response.Status.BAD_REQUEST);
 
     private int code;
     private String message;
