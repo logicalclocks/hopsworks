@@ -570,7 +570,8 @@ module FeaturestoreHelper
 
   def create_featureview_training_dataset_from_project(project, expected_status_code: 201, data_format: "tfrecords",
                                                        version: 1, splits: [], description: "testtrainingdatasetdescription",
-                                                       statistics_config: nil, train_split: nil, is_internal: true, connector: nil, location: nil)
+                                                       statistics_config: nil, train_split: nil, is_internal: true,
+                                                       connector: nil, location: nil, td_type: "HOPSFS_TRAINING_DATASET")
     featurestore_id = get_featurestore_id(project.id)
     featuregroup_suffix = short_random_id
     query = make_sample_query(project, featurestore_id, featuregroup_suffix: featuregroup_suffix)
@@ -585,7 +586,7 @@ module FeaturestoreHelper
     json_result  = create_featureview_training_dataset(
       project.id, featureview, connector, version: version, splits: splits, description: description,
       statistics_config: statistics_config, train_split: train_split, data_format: data_format,
-      is_internal: is_internal, location: location)
+      is_internal: is_internal, location: location, td_type: td_type)
     expect_status(expected_status_code)
     parsed_json = JSON.parse(json_result)
     {"response" => parsed_json, "connector" => connector, "featureView" => featureview}
@@ -593,8 +594,9 @@ module FeaturestoreHelper
 
   def create_featureview_training_dataset(project_id, featureview, hopsfs_connector, data_format: "tfrecords",
                                           version: 1, splits: [], description: "testtrainingdatasetdescription",
-                                          statistics_config: nil, train_split: nil, query_param: nil, is_internal: true, location: nil)
-    trainingDatasetType = is_internal ? "HOPSFS_TRAINING_DATASET": "EXTERNAL_TRAINING_DATASET"
+                                          statistics_config: nil, train_split: nil, query_param: nil, is_internal: true,
+                                          location: nil, td_type: "HOPSFS_TRAINING_DATASET")
+    trainingDatasetType = is_internal ? td_type: "EXTERNAL_TRAINING_DATASET"
     create_training_dataset_endpoint = "#{ENV['HOPSWORKS_API']}/project/#{project_id.to_s}/featurestores/#{featureview["featurestoreId"].to_s}" +
       "/featureview/#{featureview["name"]}/version/#{featureview["version"].to_s}/trainingdatasets"
     unless query_param != nil
@@ -655,7 +657,7 @@ module FeaturestoreHelper
     }
   end
 
-  def delete_featureview_training_dataset_data_only(project, featureview, version: nil)
+  def delete_featureview_training_dataset_data_only(project, featureview, version: nil, expected_status: 200)
     training_datasets = JSON.parse(get_featureview_training_dataset(project, featureview, version: version))
     training_dataset_endpoint = "#{ENV['HOPSWORKS_API']}/project/#{project.id.to_s}" +
       "/featurestores/#{featureview["featurestoreId"].to_s}/featureview/#{featureview["name"]}/version/#{featureview["version"].to_s}/trainingdatasets"
@@ -665,7 +667,7 @@ module FeaturestoreHelper
       training_dataset_endpoint = training_dataset_endpoint + "/version/#{version.to_s}/data"
     end
     json_result2 = delete training_dataset_endpoint
-    expect_status(200)
+    expect_status(expected_status)
 
     unless version == nil
       training_datasets = {"items" => [training_datasets]}
