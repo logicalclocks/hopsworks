@@ -199,14 +199,30 @@ describe "On #{ENV['OS']}" do
           delete_featureview_training_dataset_data_only(@project, featureview, version: parsed_json["version"])
         end
 
+        it "should not be able to delete a in-memory training dataset" do
+          all_metadata = create_featureview_training_dataset_from_project(@project, td_type: "IN_MEMORY_TRAINING_DATASET")
+          parsed_json = all_metadata["response"]
+          featureview = all_metadata["featureView"]
+
+          delete_featureview_training_dataset_data_only(@project, featureview, version: parsed_json["version"], expected_status: 400)
+        end
+
         it "should be able to delete all hopsfs training dataset (data only)" do
           all_metadata = create_featureview_training_dataset_from_project(@project)
-          parsed_json = all_metadata["response"]
           featureview = all_metadata["featureView"]
           connector = all_metadata["connector"]
           create_featureview_training_dataset(@project.id, featureview, connector, version: nil)
 
           delete_featureview_training_dataset_data_only(@project, featureview)
+        end
+
+        it "should be able to delete all hopsfs training dataset (data only) except in-memory dataset" do
+          all_metadata = create_featureview_training_dataset_from_project(@project, td_type: "IN_MEMORY_TRAINING_DATASET")
+          featureview = all_metadata["featureView"]
+          connector = all_metadata["connector"]
+          create_featureview_training_dataset(@project.id, featureview, connector, version: nil, td_type: "IN_MEMORY_TRAINING_DATASET")
+
+          delete_featureview_training_dataset_data_only(@project, featureview, expected_status: 400)
         end
 
         it "should not be able to update the metadata of a hopsfs training dataset from the featurestore" do
@@ -548,23 +564,23 @@ describe "On #{ENV['OS']}" do
           delete_featureview_training_dataset(@project, featureview)
         end
 
-        it "should be able to delete a training dataset (data only)" do
+        it "should not be able to delete a training dataset (data only)" do
           connector = make_connector_dto(get_s3_connector_id)
           all_metadata = create_featureview_training_dataset_from_project(@project, connector: connector, is_internal: false)
           parsed_json = all_metadata["response"]
           featureview = all_metadata["featureView"]
 
-          delete_featureview_training_dataset_data_only(@project, featureview, version: parsed_json["version"])
+          delete_featureview_training_dataset_data_only(@project, featureview, version: parsed_json["version"], expected_status: 400)
         end
 
-        it "should be able to delete all training dataset (data only)" do
+        it "should not be able to delete all training dataset (data only)" do
           connector = make_connector_dto(get_s3_connector_id)
           all_metadata = create_featureview_training_dataset_from_project(@project, connector: connector, is_internal: false)
           featureview = all_metadata["featureView"]
           connector = all_metadata["connector"]
           create_featureview_training_dataset(@project.id, featureview, connector, version: nil)
 
-          delete_featureview_training_dataset_data_only(@project, featureview)
+          delete_featureview_training_dataset_data_only(@project, featureview, expected_status: 400)
         end
 
         it "should be able to update the metadata (description) of an external training dataset from the featurestore" do

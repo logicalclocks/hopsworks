@@ -16,6 +16,8 @@
 
 package io.hops.hopsworks.common.featurestore.trainingdatasets;
 
+import com.google.common.base.Joiner;
+import com.google.common.collect.Lists;
 import com.logicalclocks.shaded.com.google.common.collect.Streams;
 import io.hops.hopsworks.common.dao.user.activity.ActivityFacade;
 import io.hops.hopsworks.common.featurestore.FeaturestoreFacade;
@@ -105,7 +107,7 @@ import java.util.stream.Collectors;
 import static io.hops.hopsworks.common.featurestore.trainingdatasets.split.SplitType.RANDOM_SPLIT;
 import static io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.TrainingDatasetType.EXTERNAL_TRAINING_DATASET;
 import static io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.TrainingDatasetType.HOPSFS_TRAINING_DATASET;
-import static io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.TrainingDatasetType.IN_MEMORY_TRAINING_DATASET;
+import static io.hops.hopsworks.restutils.RESTCodes.FeaturestoreErrorCode.FAILED_TO_DELETE_TD_DATA;
 
 /**
  * Class controlling the interaction with the training_dataset table and required business logic
@@ -826,6 +828,7 @@ public class TrainingDatasetController {
   public void deleteDataOnly(Users user, Project project, Featurestore featurestore, FeatureView featureView,
       Integer trainingDatasetVersion) throws FeaturestoreException {
     TrainingDataset trainingDataset = getTrainingDatasetByFeatureViewAndVersion(featureView, trainingDatasetVersion);
+    checkDeleteDataOnly(trainingDataset);
     deleteHopsfsTrainingData(user, project, featurestore, trainingDataset, true, true);
     activityFacade.persistActivity(ActivityFacade.DELETED_TRAINING_DATASET_DATA_ONLY + trainingDataset.getName()
             + " and version " + trainingDataset.getVersion(),
@@ -840,9 +843,36 @@ public class TrainingDatasetController {
     for (TrainingDataset trainingDataset: trainingDatasets) {
       featurestoreUtils.verifyUserRole(trainingDataset, featurestore, user, project);
     }
-
+    List<Integer> failedTd = Lists.newArrayList();
     for (TrainingDataset trainingDataset: trainingDatasets) {
-      deleteDataOnly(user, project, featurestore, featureView, trainingDataset.getVersion());
+      try {
+        deleteDataOnly(user, project, featurestore, featureView, trainingDataset.getVersion());
+      } catch (FeaturestoreException e) {
+        if (FAILED_TO_DELETE_TD_DATA.equals(e.getErrorCode())) {
+          failedTd.add(trainingDataset.getVersion());
+        } else {
+          throw e;
+        }
+      }
+    }
+    if (!failedTd.isEmpty()) {
+      throw new FeaturestoreException(
+          FAILED_TO_DELETE_TD_DATA, Level.FINE,
+          String.format("Failed to delete data for training dataset version: %s. "
+                  + "Delete data only is only applicable to 'HOPSFS_TRAINING_DATASET'",
+              Joiner.on(", ").join(failedTd.stream().sorted().collect(Collectors.toList())))
+      );
+    }
+  }
+
+  private void checkDeleteDataOnly(TrainingDataset trainingDataset) throws FeaturestoreException {
+    if (!HOPSFS_TRAINING_DATASET.equals(trainingDataset.getTrainingDatasetType())) {
+      throw new FeaturestoreException(
+          FAILED_TO_DELETE_TD_DATA, Level.FINE,
+          String.format("Failed to delete data for training dataset version: %d. "
+                  + "Delete data only is only applicable to 'HOPSFS_TRAINING_DATASET' but not %s.",
+              trainingDataset.getVersion(), trainingDataset.getTrainingDatasetType())
+      );
     }
   }
 
