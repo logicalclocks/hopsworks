@@ -17,6 +17,7 @@
 package io.hops.hopsworks.common.featurestore.app;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.hops.hopsworks.common.dao.jobs.description.JobFacade;
 import io.hops.hopsworks.common.dataset.DatasetController;
 import io.hops.hopsworks.common.featurestore.FeaturestoreController;
 import io.hops.hopsworks.common.featurestore.OptionDTO;
@@ -84,6 +85,8 @@ public class FsJobManagerController {
   private DatasetController datasetController;
   @EJB
   private JobController jobController;
+  @EJB
+  private JobFacade jobFacade;
   @Inject
   private ExecutionController executionController;
   @EJB
@@ -103,6 +106,7 @@ public class FsJobManagerController {
   private final static String FEATURE_VIEW_TRAINING_DATASET_OP = "create_fv_td";
   private final static String COMPUTE_STATS_OP = "compute_stats";
   private final static String DELTA_STREAMER_OP = "offline_fg_backfill";
+  private final static String GE_VALIDATE_OP = "ge_validate";
 
   public IngestionJob setupIngestionJob(Project project, Users user, Featuregroup featureGroup,
                                         SparkJobConfiguration sparkJobConfiguration, IngestionDataFormat dataFormat,
@@ -177,45 +181,68 @@ public class FsJobManagerController {
       dfs.closeDfsClient(dfso);
     }
   }
-
-  public Jobs setupStatisticsJob(Project project, Users user, Featurestore featurestore,
-                                 Featuregroup featureGroup, TrainingDataset trainingDataset)
+  
+  private Jobs setupAndStartJob(Project project, Users user, Featurestore featurestore, String entityName,
+                                Integer entityVersion, JobEntityType type, String op, String configPrefix)
       throws FeaturestoreException, JobException, GenericException, ProjectException, ServiceException {
     DistributedFileSystemOps udfso = dfs.getDfsOps(hdfsUsersController.getHdfsUserName(project, user));
     Map<String, String> jobConfiguration = new HashMap<>();
 
     try {
-      String entityName = featureGroup != null ? featureGroup.getName() : trainingDataset.getName();
-      Integer entityVersion = featureGroup != null ? featureGroup.getVersion() : trainingDataset.getVersion();
       String jobConfigurationPath = getJobConfigurationPath(project, entityName,
-        entityVersion, "statistics");
+        entityVersion, configPrefix);
 
       jobConfiguration.put("feature_store",
-          featurestoreController.getOfflineFeaturestoreDbName(featurestore.getProject()));
-      jobConfiguration.put("type", featureGroup != null ? "fg" : "td");
+        featurestoreController.getOfflineFeaturestoreDbName(featurestore.getProject()));
+      jobConfiguration.put("type", type.toString());
       jobConfiguration.put("name", entityName);
       jobConfiguration.put("version", String.valueOf(entityVersion));
 
       String jobConfigurationStr = objectMapper.writeValueAsString(jobConfiguration);
       writeToHDFS(jobConfigurationPath, jobConfigurationStr, udfso);
 
-      String jobArgs = getJobArgs(COMPUTE_STATS_OP, jobConfigurationPath);
+      String jobArgs = getJobArgs(op, jobConfigurationPath);
 
-      Jobs statisticsJob = configureJob(user, project, null,
-          getJobName(COMPUTE_STATS_OP, Utils.getFeatureStoreEntityName(entityName, entityVersion), true),
-          jobArgs, JobType.PYSPARK);
+      Jobs job = configureJob(user, project, null,
+        getJobName(op, Utils.getFeatureStoreEntityName(entityName, entityVersion), false),
+        jobArgs, JobType.PYSPARK);
 
       // Differently from the ingestion job. At this stage, no other action is required by the client.
       // So we can start the job directly
-      executionController.start(statisticsJob, jobArgs, user);
+      executionController.start(job, jobArgs, user);
 
-      return statisticsJob;
+      return job;
     } catch (IOException e) {
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ERROR_JOB_SETUP, Level.SEVERE,
-          "Error setting up statistics job", e.getMessage(), e);
+        "Error setting up " + configPrefix + " job", e.getMessage(), e);
     } finally {
       dfs.closeDfsClient(udfso);
     }
+  }
+
+  public Jobs setupStatisticsJob(Project project, Users user, Featurestore featurestore,
+                                 Featuregroup featureGroup, TrainingDataset trainingDataset)
+      throws FeaturestoreException, JobException, GenericException, ProjectException, ServiceException {
+    String entityName;
+    Integer entityVersion;
+    JobEntityType type = JobEntityType.FG;
+    if (featureGroup != null) {
+      entityName = featureGroup.getName();
+      entityVersion = featureGroup.getVersion();
+    } else {
+      entityName = trainingDataset.getName();
+      entityVersion = trainingDataset.getVersion();
+      type = JobEntityType.TD;
+    }
+    
+    return setupAndStartJob(project, user, featurestore, entityName, entityVersion, type, COMPUTE_STATS_OP,
+      "statistics");
+  }
+
+  public Jobs setupValidationJob(Project project, Users user, Featurestore featurestore, Featuregroup featureGroup)
+      throws FeaturestoreException, JobException, GenericException, ProjectException, ServiceException {
+    return setupAndStartJob(project, user, featurestore, featureGroup.getName(), featureGroup.getVersion(),
+      JobEntityType.FG, GE_VALIDATE_OP, "validation");
   }
 
   public Jobs setupTrainingDatasetJob(Project project, Users user, FeatureView featureView,
@@ -361,6 +388,8 @@ public class FsJobManagerController {
   private Jobs configureJob(Users user, Project project, SparkJobConfiguration sparkJobConfiguration,
                             String jobName, String defaultArgs, JobType jobType)
       throws JobException {
+    Jobs job = jobFacade.findByProjectAndName(project, jobName);
+
     if (sparkJobConfiguration == null) {
       // set defaults for spark job size
       sparkJobConfiguration = new SparkJobConfiguration();
@@ -373,7 +402,7 @@ public class FsJobManagerController {
         settings.getFSJavaJobUtilPath());
     sparkJobConfiguration.setDefaultArgs(defaultArgs);
 
-    return jobController.putJob(user, project, null, sparkJobConfiguration);
+    return jobController.putJob(user, project, job, sparkJobConfiguration);
   }
   
   public void deleteDeltaStreamerJob(Project project, Users user, Featuregroup featuregroup) throws JobException {
