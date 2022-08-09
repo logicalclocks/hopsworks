@@ -20,6 +20,7 @@ import io.hops.hopsworks.common.dao.QueryParam;
 import io.hops.hopsworks.common.dao.user.activity.ActivityFacade;
 import io.hops.hopsworks.common.featurestore.activity.FeaturestoreActivityFacade;
 import io.hops.hopsworks.common.featurestore.storageconnectors.FeaturestoreConnectorFacade;
+import io.hops.hopsworks.common.featurestore.trainingdatasets.TrainingDatasetController;
 import io.hops.hopsworks.common.featurestore.trainingdatasets.TrainingDatasetFacade;
 import io.hops.hopsworks.common.featurestore.utils.FeaturestoreUtils;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
@@ -80,6 +81,8 @@ public class FeatureViewController {
   private FeaturestoreUtils featurestoreUtils;
   @EJB
   private TrainingDatasetFacade trainingDatasetFacade;
+  @EJB
+  private TrainingDatasetController trainingDatasetController;
   @EJB
   private ActivityFacade activityFacade;
 
@@ -205,10 +208,27 @@ public class FeatureViewController {
     for (FeatureView fv: featureViews) {
       featurestoreUtils.verifyUserRole(fv, featurestore, user, project);
     }
+    String username = hdfsUsersBean.getHdfsUserName(project, user);
     for (FeatureView fv: featureViews) {
+      trainingDatasetController.delete(user, project, featurestore, fv);
       featureViewFacade.remove(fv);
+      removeFeatureViewDir(username, fv);
       activityFacade.persistActivity(ActivityFacade.DELETED_FEATURE_VIEW + fv.getName(),
           project, user, ActivityFlag.SERVICE);
+    }
+  }
+
+  private void removeFeatureViewDir(String username, FeatureView featureView) throws FeaturestoreException {
+    DistributedFileSystemOps udfso = dfs.getDfsOps(username);
+    try {
+      udfso.rm(getLocation(featureView), true);
+    } catch (IOException e) {
+      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ERROR_DELETING_FEATURE_VIEW,
+          Level.WARNING, "Error removing feature view directory", e.getMessage(), e);
+    } finally {
+      if (udfso != null) {
+        dfs.closeDfsClient(udfso);
+      }
     }
   }
 

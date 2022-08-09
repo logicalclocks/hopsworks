@@ -452,7 +452,7 @@ describe "On #{ENV['OS']}" do
           json_result, fg_name = create_cached_featuregroup(@project.id, featurestore_id, online:true)
           parsed_json = JSON.parse(json_result)
           
-          json_result, _ = create_feature_view_from_feature_group(@project.id, featurestore_id, parsed_json)
+          json_result = create_feature_view_from_feature_group(@project.id, featurestore_id, parsed_json)
           parsed_json = JSON.parse(json_result)
           expect_status(201)
           
@@ -467,7 +467,7 @@ describe "On #{ENV['OS']}" do
           json_result, fg_name = create_cached_featuregroup(@project.id, featurestore_id, online:true)
           parsed_json = JSON.parse(json_result)
 
-          json_result, _ = create_feature_view_from_feature_group(@project.id, featurestore_id, parsed_json)
+          json_result = create_feature_view_from_feature_group(@project.id, featurestore_id, parsed_json)
           parsed_json = JSON.parse(json_result)
           expect_status(201)
 
@@ -480,7 +480,7 @@ describe "On #{ENV['OS']}" do
           json_result, fg_name = create_cached_featuregroup(@project.id, featurestore_id, online:true)
           parsed_json = JSON.parse(json_result)
 
-          json_result, _ = create_feature_view_from_feature_group(@project.id, featurestore_id, parsed_json)
+          json_result = create_feature_view_from_feature_group(@project.id, featurestore_id, parsed_json)
           parsed_json = JSON.parse(json_result)
           expect_status(201)
 
@@ -493,7 +493,7 @@ describe "On #{ENV['OS']}" do
           json_result, fg_name = create_cached_featuregroup(@project.id, featurestore_id, online:true)
           parsed_json = JSON.parse(json_result)
 
-          json_result, _ = create_feature_view_from_feature_group(@project.id, featurestore_id, parsed_json)
+          json_result = create_feature_view_from_feature_group(@project.id, featurestore_id, parsed_json)
           parsed_json = JSON.parse(json_result)
           expect_status(201)
 
@@ -506,7 +506,7 @@ describe "On #{ENV['OS']}" do
           json_result, fg_name = create_cached_featuregroup(@project.id, featurestore_id, online:true)
           parsed_json = JSON.parse(json_result)
 
-          json_result, _ = create_feature_view_from_feature_group(@project.id, featurestore_id, parsed_json)
+          json_result = create_feature_view_from_feature_group(@project.id, featurestore_id, parsed_json)
           parsed_json = JSON.parse(json_result)
           expect_status(201)
 
@@ -531,7 +531,7 @@ describe "On #{ENV['OS']}" do
           json_result, fg_name = create_cached_featuregroup(@project.id, featurestore_id, online:true)
           parsed_json = JSON.parse(json_result)
 
-          json_result, _ = create_feature_view_from_feature_group(@project.id, featurestore_id, parsed_json)
+          json_result = create_feature_view_from_feature_group(@project.id, featurestore_id, parsed_json)
           parsed_json = JSON.parse(json_result)
           expect_status(201)
 
@@ -547,7 +547,7 @@ describe "On #{ENV['OS']}" do
           json_result, fg_name = create_cached_featuregroup(@project.id, featurestore_id, online:true)
           parsed_json = JSON.parse(json_result)
 
-          json_result, _ = create_feature_view_from_feature_group(@project.id, featurestore_id, parsed_json)
+          json_result = create_feature_view_from_feature_group(@project.id, featurestore_id, parsed_json)
           parsed_json = JSON.parse(json_result)
           expect_status(201)
 
@@ -560,7 +560,7 @@ describe "On #{ENV['OS']}" do
           json_result, fg_name = create_cached_featuregroup(@project.id, featurestore_id, online:true)
           parsed_json = JSON.parse(json_result)
 
-          json_result, _ = create_feature_view_from_feature_group(@project.id, featurestore_id, parsed_json)
+          json_result = create_feature_view_from_feature_group(@project.id, featurestore_id, parsed_json)
           parsed_json = JSON.parse(json_result)
           expect_status(201)
 
@@ -573,7 +573,7 @@ describe "On #{ENV['OS']}" do
           json_result, fg_name = create_cached_featuregroup(@project.id, featurestore_id, online:true)
           parsed_json = JSON.parse(json_result)
 
-          json_result, _ = create_feature_view_from_feature_group(@project.id, featurestore_id, parsed_json)
+          json_result = create_feature_view_from_feature_group(@project.id, featurestore_id, parsed_json)
           parsed_json = JSON.parse(json_result)
           expect_status(201)
 
@@ -758,7 +758,7 @@ describe "On #{ENV['OS']}" do
           json_result, fg_name = create_cached_featuregroup(@project1.id, featurestore_id, online:true)
           parsed_json = JSON.parse(json_result)
           
-          json_result, _ = create_feature_view_from_feature_group(@project1.id, featurestore_id, parsed_json)
+          json_result = create_feature_view_from_feature_group(@project1.id, featurestore_id, parsed_json)
           parsed_json = JSON.parse(json_result)
           expect_status(201)
           featureview_name = parsed_json["name"]

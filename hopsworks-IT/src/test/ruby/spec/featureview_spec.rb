@@ -145,7 +145,7 @@ describe "On #{ENV['OS']}" do
           parsed_json = JSON.parse(json_result)
           expect_status_details(201)
 
-		  # Make sure that the directory exists
+          # Make sure that the directory exists
           get_datasets_in_path(@project,
                                "#{@project[:projectname]}_Training_Datasets/.featureviews/#{parsed_json['name']}_#{parsed_json['version']}",
                                query: "&type=DATASET")
@@ -153,6 +153,43 @@ describe "On #{ENV['OS']}" do
 
           delete_feature_view(@project.id, parsed_json["name"], feature_store_id: featurestore_id)
           expect_status_details(200)
+        end
+
+        it "should be able to delete a feature view and all training data from the featurestore" do
+          all_metadata = create_featureview_training_dataset_from_project(@project)
+          parsed_json = all_metadata["response"]
+          featureview = all_metadata["featureView"]
+          connector = all_metadata["connector"]
+          s3_connector = make_connector_dto(get_s3_connector_id)
+          create_featureview_training_dataset(@project.id, featureview, connector, version: nil,
+                                              td_type: "IN_MEMORY_TRAINING_DATASET")
+          create_featureview_training_dataset(@project.id, featureview, s3_connector, version: nil,
+                                              is_internal: false)
+          # Make sure that the directory exists
+          get_datasets_in_path(@project,
+                               "#{@project[:projectname]}_Training_Datasets/.featureviews/#{featureview['name']}_#{featureview['version']}",
+                               query: "&type=DATASET")
+          expect_status(200)
+          # Make sure that training data directory exists
+          get_datasets_in_path(@project,
+                               "#{@project[:projectname]}_Training_Datasets/#{featureview['name']}_#{featureview['version']}_#{parsed_json['version']}",
+                               query: "&type=DATASET")
+          expect_status(200)
+
+          delete_feature_view(@project.id, featureview["name"])
+          expect_status(200)
+
+          # Make sure that the directory get deleted
+          get_datasets_in_path(@project,
+                               "#{@project[:projectname]}_Training_Datasets/.featureviews/#{featureview['name']}_#{featureview['version']}",
+                               query: "&type=DATASET")
+          expect_status(400)
+          # Make sure that training data directory get deleted
+          get_datasets_in_path(@project,
+                               "#{@project[:projectname]}_Training_Datasets/#{featureview['name']}_#{featureview['version']}_#{parsed_json['version']}",
+                               query: "&type=DATASET")
+          expect_status(400)
+
         end
 
         it "should not be able to update feature view that doesnt exist" do
@@ -307,7 +344,7 @@ describe "On #{ENV['OS']}" do
               name: "no_features_no_query",
               version: 1
           }
-		  create_feature_view_with_json(@project.id, featurestore_id, json_data)
+          create_feature_view_with_json(@project.id, featurestore_id, json_data)
           expect_status_details(400)
         end
 		
