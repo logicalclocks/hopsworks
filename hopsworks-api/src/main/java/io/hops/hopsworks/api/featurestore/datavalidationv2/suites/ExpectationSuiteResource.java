@@ -16,6 +16,11 @@
 
 package io.hops.hopsworks.api.featurestore.datavalidationv2.suites;
 
+import io.hops.hopsworks.api.jobs.JobDTO;
+import io.hops.hopsworks.api.jobs.JobsBuilder;
+import io.hops.hopsworks.api.jwt.JWTHelper;
+import io.hops.hopsworks.common.api.ResourceRequest;
+import io.hops.hopsworks.common.featurestore.app.FsJobManagerController;
 import io.hops.hopsworks.common.featurestore.datavalidationv2.ExpectationSuiteDTO;
 import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.api.filter.Audience;
@@ -23,12 +28,19 @@ import io.hops.hopsworks.api.filter.apiKey.ApiKeyRequired;
 import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupController;
 import io.hops.hopsworks.common.featurestore.datavalidationv2.ExpectationSuiteController;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
+import io.hops.hopsworks.exceptions.GenericException;
+import io.hops.hopsworks.exceptions.JobException;
+import io.hops.hopsworks.exceptions.ProjectException;
+import io.hops.hopsworks.exceptions.ServiceException;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
 import io.hops.hopsworks.persistence.entity.featurestore.Featurestore;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.Featuregroup;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.datavalidationv2.ExpectationSuite;
+import io.hops.hopsworks.persistence.entity.jobs.description.Jobs;
 import io.hops.hopsworks.persistence.entity.project.Project;
+import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.persistence.entity.user.security.apiKey.ApiScope;
+import io.hops.hopsworks.restutils.RESTCodes;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 
@@ -39,14 +51,17 @@ import javax.enterprise.context.RequestScoped;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
+import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
 import javax.ws.rs.DELETE;
+import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
 import javax.ws.rs.core.UriInfo;
+import java.util.logging.Level;
 
 @RequestScoped
 @TransactionAttribute(TransactionAttributeType.NEVER)
@@ -54,11 +69,17 @@ import javax.ws.rs.core.UriInfo;
 public class ExpectationSuiteResource {
 
   @EJB
+  private JWTHelper jWTHelper;
+  @EJB
   private FeaturegroupController featuregroupController;
   @EJB
   private ExpectationSuiteBuilder expectationSuiteBuilder;
   @EJB
   private ExpectationSuiteController expectationSuiteController;
+  @EJB
+  private FsJobManagerController fsJobManagerController;
+  @EJB
+  private JobsBuilder jobsBuilder;
 
   private Project project;
   private Featurestore featurestore;
@@ -157,5 +178,32 @@ public class ExpectationSuiteResource {
     expectationSuiteController.deleteExpectationSuite(featuregroup);
 
     return Response.noContent().build();
+  }
+  
+  @Path("validate")
+  @POST
+  @Consumes(MediaType.APPLICATION_JSON)
+  @Produces(MediaType.APPLICATION_JSON)
+  @ApiOperation(value = "Setup job and trigger for evaluating expectation suite", response = JobDTO.class)
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
+  @JWTRequired(acceptedTokens = {Audience.API, Audience.JOB},
+    allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
+  @ApiKeyRequired(acceptedScopes = {ApiScope.DATASET_VIEW, ApiScope.FEATURESTORE},
+    allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
+  public Response compute(@Context UriInfo uriInfo,
+    @Context HttpServletRequest req,
+    @Context SecurityContext sc)
+    throws FeaturestoreException, ServiceException, JobException, ProjectException, GenericException {
+    Users user = jWTHelper.getUserPrincipal(sc);
+    
+    if (expectationSuiteController.getExpectationSuite(featuregroup) == null) {
+      throw new FeaturestoreException(
+        RESTCodes.FeaturestoreErrorCode.NO_EXPECTATION_SUITE_ATTACHED_TO_THIS_FEATUREGROUP,
+        Level.FINE, "Feature Group has no Expectation Suite for data validation attached.");
+    }
+    
+    Jobs job = fsJobManagerController.setupValidationJob(project, user, featurestore, featuregroup);
+    JobDTO jobDTO = jobsBuilder.build(uriInfo, new ResourceRequest(ResourceRequest.Name.JOBS), job);
+    return Response.created(jobDTO.getHref()).entity(jobDTO).build();
   }
 }

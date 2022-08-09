@@ -147,6 +147,43 @@ describe "On #{ENV['OS']}" do
       end
     end
 
+    describe "expectation suite others" do
+      context 'with valid project, featurestore service enabled' do
+        before :all do
+          with_valid_project
+        end
+
+        it "should be able to create and launch the validation job for a feature group with expectation suite" do
+          project = get_project
+          featurestore_id = get_featurestore_id(project.id)
+          json_expectation_suite = generate_template_expectation_suite()
+          json_result, _ = create_cached_featuregroup(project.id, featurestore_id, expectation_suite:
+            json_expectation_suite)
+          expect_status_details(201)
+	        parsed_json = JSON.parse(json_result)
+          expect(parsed_json["expectationSuite"]["expectationSuiteName"]).to eq(json_expectation_suite[:expectationSuiteName])
+
+          post "#{ENV['HOPSWORKS_API']}/project/#{project.id}/featurestores/#{featurestore_id}/featuregroups/#{parsed_json["id"]}/expectationsuite/validate"
+          expect_status_details(201)
+
+          # should work also a second time
+          post "#{ENV['HOPSWORKS_API']}/project/#{project.id}/featurestores/#{featurestore_id}/featuregroups/#{parsed_json["id"]}/expectationsuite/validate"
+          expect_status_details(201)
+        end
+
+        it "should not be able to create and launch the validation job for a feature group without expectation suite" do
+          project = get_project
+          featurestore_id = get_featurestore_id(project.id)
+          json_result, _ = create_cached_featuregroup(project.id, featurestore_id)
+          expect_status_details(201)
+          parsed_json = JSON.parse(json_result)
+
+          post "#{ENV['HOPSWORKS_API']}/project/#{project.id}/featurestores/#{featurestore_id}/featuregroups/#{parsed_json["id"]}/expectationsuite/validate"
+          expect_status_details(404)
+        end
+      end
+    end
+
     describe "CRUD validation report" do
       context 'with valid project, featurestore service enabled, a feature group and an expectation suite' do
         fg_json = {}
