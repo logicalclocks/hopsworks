@@ -1675,7 +1675,9 @@ public class RESTCodes {
       Response.Status.BAD_REQUEST),
     ERROR_INFERRING_INGESTION_RESULT(203, "Could not infer ingestion result from validation ingestion policy and " +
       "validation success.", Response.Status.BAD_REQUEST),
-    FAILED_TO_DELETE_TD_DATA(204, "Failed to delete training dataset.", Response.Status.BAD_REQUEST);
+    FAILED_TO_DELETE_TD_DATA(204, "Failed to delete training dataset.", Response.Status.BAD_REQUEST),
+    ERROR_DELETING_FEATURE_VIEW(205, "Error deleting feature view.",
+        Response.Status.INTERNAL_SERVER_ERROR);
 
     private int code;
     private String message;
