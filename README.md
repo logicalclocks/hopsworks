@@ -38,7 +38,7 @@ Hopsworks is a data platform for ML with a **Python-centric Feature Store** and 
 Hopsworks is available as a serverless app, simply head to [app.hopsworks.ai](https://app.hopsworks.ai) and register with your **Gmail** or **Github** accounts. You will then be able to run a tutorial or access Hopsworks directly and try yourself. This is the prefered way to first experience the platform before diving into more advanced uses and installation requirements. 
 
 ## **Azure, AWS & GCP**
-[Managed Hopsworks](https://managed.hopsworks.ai) is our platform for running Hopsworks and the Feature Store in the cloud and integrates direction with the customer AWS/Azure/GCP environment. It alslo integrates seamlessly with third party platforms such as Databricks, SageMaker and KubeFlow.
+[Managed Hopsworks](https://managed.hopsworks.ai) is our platform for running Hopsworks and the Feature Store in the cloud and integrates directly with the customer AWS/Azure/GCP environment. It also integrates seamlessly with third party platforms such as Databricks, SageMaker and KubeFlow.
 
 If you wish to run Hopsworks on your Azure, AWS or GCP environement, follow one of the following guides in our documentation:
 - [AWS Guide](https://docs.hopsworks.ai/3.0/setup_installation/aws/getting_started/#step-1-connecting-your-aws-account)
