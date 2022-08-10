@@ -93,6 +93,10 @@ public class FeatureGroupCommitController {
     }
   }
 
+  public Integer countCommitsInRange(Featuregroup featuregroup, Long startTimestamp, Long endTimestamp) {
+    return featureGroupCommitFacade.countCommitsInRange(featuregroup.getId(), startTimestamp, endTimestamp);
+  }
+
   public CollectionInfo getCommitDetails(Integer featureGroupId, Integer limit, Integer offset,
                                          Set<? extends AbstractFacade.SortBy> sort,
                                          Set<? extends AbstractFacade.FilterBy> filters) {

@@ -1041,6 +1041,8 @@ public class TestConstructorController {
         .thenReturn(Optional.of(firstCommit));
     Mockito.when(featureGroupCommitController.findCommitByDate(Mockito.any(), Mockito.eq(endRequest)))
         .thenReturn(Optional.of(secondCommit));
+    Mockito.when(featureGroupCommitController.countCommitsInRange(Mockito.any(), Mockito.eq(startRequest), Mockito.eq(endRequest)))
+            .thenReturn(1);
 
     FeaturegroupDTO fgHudi = new FeaturegroupDTO();
     fgHudi.setId(5);
@@ -1063,6 +1065,6 @@ public class TestConstructorController {
     Assert.assertEquals(secondCommitLong, query.getLeftFeatureGroupEndTimestamp());
     Assert.assertEquals(secondCommitLong, query.getLeftFeatureGroupEndCommitId());
 
-    Assert.assertEquals(firstCommitLong, query.getLeftFeatureGroupStartTimestamp());
+    Assert.assertEquals(startRequest, query.getLeftFeatureGroupStartTimestamp());
   }
 }
