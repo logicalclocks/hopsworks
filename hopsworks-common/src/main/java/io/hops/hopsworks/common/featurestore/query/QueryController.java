@@ -157,17 +157,18 @@ public class QueryController {
         query.setLeftFeatureGroupEndCommitId(endCommit.getFeatureGroupCommitPK().getCommitId());
       }
 
-      if ((queryDTO.getJoins() == null || queryDTO.getJoins().isEmpty())
-          && queryDTO.getLeftFeatureGroupStartTime() != null){
-        FeatureGroupCommit startCommit = featureGroupCommitController.findCommitByDate(
-                query.getFeaturegroup(), queryDTO.getLeftFeatureGroupStartTime())
-            .orElseThrow(() -> new FeaturestoreException(
-                RESTCodes.FeaturestoreErrorCode.NO_DATA_AVAILABLE_FEATUREGROUP_COMMITDATE, Level.FINE,
-                "featureGroup: " + fg.getName() + " version " + fg.getVersion()));
-        query.setLeftFeatureGroupStartTimestamp(startCommit.getCommittedOn());
-      } else if (queryDTO.getJoins() != null && queryDTO.getLeftFeatureGroupStartTime() != null) {
-        throw new IllegalArgumentException("For incremental queries start time must be provided and "
-            + "join statements are not allowed");
+      if (queryDTO.getLeftFeatureGroupStartTime() != null) {
+        Integer commitCount = featureGroupCommitController.countCommitsInRange(fg,
+                                queryDTO.getLeftFeatureGroupStartTime(),
+                                queryDTO.getLeftFeatureGroupEndTime());
+
+        if (commitCount == 0) {
+          throw new FeaturestoreException(
+                  RESTCodes.FeaturestoreErrorCode.NO_DATA_AVAILABLE_FEATUREGROUP_COMMITDATE, Level.FINE,
+                  "featureGroup: " + fg.getName() + " version " + fg.getVersion());
+        }
+
+        query.setLeftFeatureGroupStartTimestamp(queryDTO.getLeftFeatureGroupStartTime());
       }
     }
 

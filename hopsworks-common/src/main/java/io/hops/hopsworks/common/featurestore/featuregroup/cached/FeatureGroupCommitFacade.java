@@ -68,6 +68,31 @@ public class FeatureGroupCommitFacade extends AbstractFacade<FeatureGroupCommit>
     }
   }
 
+  public Integer countCommitsInRange(Integer featureGroupId, Long commitStartTimestamp, Long commitEndTimestamp) {
+    Date requestedStartPointInTime = new Timestamp(commitStartTimestamp);
+    Query fgcQuery;
+    if (commitEndTimestamp == null) {
+      fgcQuery =  em.createQuery("SELECT COUNT(fgc) FROM FeatureGroupCommit fgc " +
+                      "WHERE fgc.committedOn > :requestedStartPointInTime " +
+                      "AND fgc.featureGroupCommitPK.featureGroupId = :featureGroupId")
+              .setParameter("featureGroupId", featureGroupId)
+              .setParameter("requestedStartPointInTime", requestedStartPointInTime);
+      return ((Number) fgcQuery.getSingleResult()).intValue();
+    } else {
+      Date requestedEndPointInTime = new Timestamp(commitEndTimestamp);
+
+      fgcQuery =  em.createQuery("SELECT COUNT(fgc) FROM FeatureGroupCommit fgc " +
+                      "WHERE fgc.committedOn > :requestedStartPointInTime " +
+                      "AND fgc.committedOn <= :requestedEndPointInTime " +
+                      "AND fgc.featureGroupCommitPK.featureGroupId = :featureGroupId")
+              .setParameter("featureGroupId", featureGroupId)
+              .setParameter("requestedStartPointInTime", requestedStartPointInTime)
+              .setParameter("requestedEndPointInTime", requestedEndPointInTime);
+    }
+
+    return ((Number) fgcQuery.getSingleResult()).intValue();
+  }
+
   public Optional<FeatureGroupCommit> findLatestDateCommit(Integer featureGroupId) {
     Query fgcQuery =  em.createNamedQuery("FeatureGroupCommit.findLatestCommit", FeatureGroupCommit.class)
         .setParameter("featureGroupId", featureGroupId);
