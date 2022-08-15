@@ -146,7 +146,7 @@ public class TrainingDatasetResource {
       @BeanParam
           TrainingDatasetExpansionBeanParam param
   ) throws FeaturestoreException, ServiceException, MetadataException, DatasetException, SchematizedTagException,
-      IOException {
+    IOException, GenericException {
     Users user = jWTHelper.getUserPrincipal(sc);
     List<TrainingDataset> trainingDatasets =
         trainingDatasetController.getTrainingDatasetByFeatureView(featureView);
@@ -178,7 +178,7 @@ public class TrainingDatasetResource {
       @PathParam("version")
           Integer version
   ) throws FeaturestoreException, ServiceException, MetadataException, DatasetException, SchematizedTagException,
-      IOException {
+    IOException, GenericException {
     Users user = jWTHelper.getUserPrincipal(sc);
     TrainingDataset trainingDataset = trainingDatasetController.getTrainingDatasetByFeatureViewAndVersion(featureView,
         version);

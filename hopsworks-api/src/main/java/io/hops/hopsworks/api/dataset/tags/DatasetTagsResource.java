@@ -28,6 +28,7 @@ import io.hops.hopsworks.common.dataset.util.DatasetHelper;
 import io.hops.hopsworks.common.dataset.util.DatasetPath;
 import io.hops.hopsworks.common.tags.AttachTagResult;
 import io.hops.hopsworks.exceptions.DatasetException;
+import io.hops.hopsworks.exceptions.GenericException;
 import io.hops.hopsworks.exceptions.SchematizedTagException;
 import io.hops.hopsworks.exceptions.MetadataException;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
@@ -102,7 +103,7 @@ public class DatasetTagsResource {
                          @PathParam("path") String path,
                          @QueryParam("datasetType") DatasetType datasetType,
                          @ApiParam(value = "Value to set for the tag") String value)
-      throws DatasetException, MetadataException, SchematizedTagException {
+    throws DatasetException, MetadataException, SchematizedTagException, GenericException {
     DatasetPath datasetPath = datasetHelper.getDatasetPath(project, path, datasetType);
     Users user = jWTHelper.getUserPrincipal(sc);
     
@@ -130,7 +131,7 @@ public class DatasetTagsResource {
                               @PathParam("path") String path,
                               @QueryParam("datasetType") DatasetType datasetType,
                               TagsDTO tags)
-    throws DatasetException, MetadataException, SchematizedTagException {
+    throws DatasetException, MetadataException, SchematizedTagException, GenericException {
     DatasetPath datasetPath = datasetHelper.getDatasetPath(project, path, datasetType);
     Users user = jWTHelper.getUserPrincipal(sc);
     
@@ -170,7 +171,7 @@ public class DatasetTagsResource {
                           @PathParam("path") String path,
                           @QueryParam("datasetType") DatasetType datasetType,
                           @BeanParam TagsExpansionBeanParam tagsExpansionBeanParam)
-    throws DatasetException, SchematizedTagException, MetadataException {
+    throws DatasetException, SchematizedTagException, MetadataException, GenericException {
     DatasetPath datasetPath = datasetHelper.getDatasetPath(project, path, datasetType);
     Users user = jWTHelper.getUserPrincipal(sc);
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.TAGS);
@@ -195,7 +196,7 @@ public class DatasetTagsResource {
                          @PathParam("path") String path,
                          @QueryParam("datasetType") DatasetType datasetType,
                          @BeanParam TagsExpansionBeanParam tagsExpansionBeanParam)
-    throws DatasetException, SchematizedTagException, MetadataException {
+    throws DatasetException, SchematizedTagException, MetadataException, GenericException {
     DatasetPath datasetPath = datasetHelper.getDatasetPath(project, path, datasetType);
     Users user = jWTHelper.getUserPrincipal(sc);
     
@@ -218,7 +219,7 @@ public class DatasetTagsResource {
                              @Context HttpServletRequest req,
                              @PathParam("path") String path,
                              @QueryParam("datasetType") DatasetType datasetType)
-    throws DatasetException, MetadataException {
+    throws DatasetException, MetadataException, GenericException {
     DatasetPath datasetPath = datasetHelper.getDatasetPath(project, path, datasetType);
     Users user = jWTHelper.getUserPrincipal(sc);
     
@@ -242,7 +243,7 @@ public class DatasetTagsResource {
                             @PathParam("schemaName") String schemaName,
                             @PathParam("path") String path,
                             @QueryParam("datasetType") DatasetType datasetType)
-    throws DatasetException, MetadataException {
+    throws DatasetException, MetadataException, GenericException {
     DatasetPath datasetPath = datasetHelper.getDatasetPath(project, path, datasetType);
     Users user = jWTHelper.getUserPrincipal(sc);
     

@@ -800,7 +800,7 @@ public class RESTCodes {
     SECURITY_EXCEPTION(8, "A Java security error occurred.", Response.Status.INTERNAL_SERVER_ERROR),
     ENDPOINT_ANNOTATION_MISSING(9, "The requested endpoint did not have any project role annotation",
         Response.Status.SERVICE_UNAVAILABLE),
-    ENTERPRISE_FEATURE(10, "This feature is only available in the enterprise edition", Response.Status.BAD_REQUEST),
+    ENTERPRISE_FEATURE(10, "This feature is only available in the enterprise edition", Response.Status.NOT_IMPLEMENTED),
     NOT_AUTHORIZED_TO_ACCESS(11, "Project not accessible to user", Response.Status.BAD_REQUEST);
 
     private Integer code;

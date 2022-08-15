@@ -17,6 +17,7 @@ package io.hops.hopsworks.common.tags;
 
 import io.hops.hopsworks.common.dataset.util.DatasetPath;
 import io.hops.hopsworks.exceptions.DatasetException;
+import io.hops.hopsworks.exceptions.GenericException;
 import io.hops.hopsworks.exceptions.MetadataException;
 import io.hops.hopsworks.exceptions.SchematizedTagException;
 import io.hops.hopsworks.persistence.entity.user.Users;
@@ -25,20 +26,20 @@ import java.util.Map;
 
 public interface TagControllerIface {
   String get(Users user, DatasetPath path, String name)
-    throws DatasetException, MetadataException, SchematizedTagException;
+    throws DatasetException, MetadataException, SchematizedTagException, GenericException;
   
   Map<String, String> getAll(Users user, DatasetPath path)
-    throws DatasetException, MetadataException;
+    throws DatasetException, MetadataException, GenericException;
   
   AttachTagResult upsert(Users user, DatasetPath path, String name, String value)
-    throws MetadataException, SchematizedTagException;
+    throws MetadataException, SchematizedTagException, GenericException;
   
   AttachTagResult upsertAll(Users user, DatasetPath path, Map<String, String> newTags)
-    throws MetadataException, SchematizedTagException;
+    throws MetadataException, SchematizedTagException, GenericException;
   
   void delete(Users user, DatasetPath path, String name)
-    throws DatasetException, MetadataException;
+    throws DatasetException, MetadataException, GenericException;
   
   void deleteAll(Users user, DatasetPath path)
-    throws MetadataException, DatasetException;
+    throws MetadataException, DatasetException, GenericException;
 }

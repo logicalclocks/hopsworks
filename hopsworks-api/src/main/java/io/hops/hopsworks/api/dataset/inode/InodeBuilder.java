@@ -30,6 +30,7 @@ import io.hops.hopsworks.common.dataset.DatasetController;
 import io.hops.hopsworks.common.dataset.FilePreviewMode;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.DatasetException;
+import io.hops.hopsworks.exceptions.GenericException;
 import io.hops.hopsworks.exceptions.MetadataException;
 import io.hops.hopsworks.exceptions.SchematizedTagException;
 import io.hops.hopsworks.persistence.entity.hdfs.inode.Inode;
@@ -101,7 +102,7 @@ public class InodeBuilder {
   
   public InodeDTO buildStat(UriInfo uriInfo, ResourceRequest resourceRequest, Users user, DatasetPath datasetPath,
                             Inode inode, Users dirOwner)
-    throws DatasetException, SchematizedTagException, MetadataException {
+    throws DatasetException, SchematizedTagException, MetadataException, GenericException {
     InodeDTO dto = new InodeDTO();
     uri(dto, uriInfo, inode);
     expand(dto, resourceRequest);
@@ -130,7 +131,7 @@ public class InodeBuilder {
    */
   public InodeDTO buildStat(UriInfo uriInfo, ResourceRequest resourceRequest, Users user, DatasetPath datasetPath,
                             Inode inode)
-    throws DatasetException, SchematizedTagException, MetadataException {
+    throws DatasetException, SchematizedTagException, MetadataException, GenericException {
     InodeDTO dto = new InodeDTO();
     uri(dto, uriInfo);
     expand(dto, resourceRequest);
@@ -144,7 +145,7 @@ public class InodeBuilder {
   
   public InodeDTO buildBlob(UriInfo uriInfo, ResourceRequest resourceRequest, Users user, DatasetPath datasetPath,
                             Inode inode, FilePreviewMode mode)
-    throws DatasetException, SchematizedTagException, MetadataException {
+    throws DatasetException, SchematizedTagException, MetadataException, GenericException {
     InodeDTO dto = new InodeDTO();
     uri(dto, uriInfo);
     expand(dto, resourceRequest);
@@ -168,7 +169,7 @@ public class InodeBuilder {
    * @return
    */
   public InodeDTO buildStat(UriInfo uriInfo, ResourceRequest resourceRequest, Users user, DatasetPath datasetPath)
-    throws DatasetException, SchematizedTagException, MetadataException {
+    throws DatasetException, SchematizedTagException, MetadataException, GenericException {
     Inode inode = datasetPath.getInode();
     if (inode == null) {
       throw new DatasetException(RESTCodes.DatasetErrorCode.PATH_NOT_FOUND, Level.FINE);
@@ -187,7 +188,7 @@ public class InodeBuilder {
    */
   public InodeDTO buildBlob(UriInfo uriInfo, ResourceRequest resourceRequest, Users user, DatasetPath datasetPath,
                             FilePreviewMode mode)
-    throws DatasetException, SchematizedTagException, MetadataException {
+    throws DatasetException, SchematizedTagException, MetadataException, GenericException {
     Inode inode = datasetPath.getInode();
     if (inode == null) {
       throw new DatasetException(RESTCodes.DatasetErrorCode.PATH_NOT_FOUND, Level.FINE);
@@ -206,7 +207,7 @@ public class InodeBuilder {
    * @return
    */
   public InodeDTO buildItems(UriInfo uriInfo, ResourceRequest resourceRequest, Users user, DatasetPath datasetPath)
-    throws DatasetException, SchematizedTagException, MetadataException {
+    throws DatasetException, SchematizedTagException, MetadataException, GenericException {
     Inode parent = datasetPath.getInode();
     if (parent == null) {
       throw new DatasetException(RESTCodes.DatasetErrorCode.PATH_NOT_FOUND, Level.FINE);
@@ -219,7 +220,7 @@ public class InodeBuilder {
   
   private InodeDTO build(UriInfo uriInfo, InodeDTO dto, ResourceRequest resourceRequest, Users user,
                          DatasetPath datasetPath, Inode parent)
-    throws DatasetException, SchematizedTagException, MetadataException {
+    throws DatasetException, SchematizedTagException, MetadataException, GenericException {
     uri(dto, uriInfo);
     Users dirOwner = userFacade.findByUsername(parent.getHdfsUser().getUsername());
     datasetHelper.checkResourceRequestLimit(resourceRequest, parent.getChildrenNum());
@@ -229,7 +230,7 @@ public class InodeBuilder {
   
   private InodeDTO items(UriInfo uriInfo, InodeDTO dto, ResourceRequest resourceRequest, Users user,
                          DatasetPath datasetPath, Inode parent, Users dirOwner)
-    throws DatasetException, SchematizedTagException, MetadataException {
+    throws DatasetException, SchematizedTagException, MetadataException, GenericException {
     expand(dto, resourceRequest);
     AbstractFacade.CollectionInfo collectionInfo;
     if (dto.isExpand()) {
@@ -243,7 +244,7 @@ public class InodeBuilder {
   
   private InodeDTO items(UriInfo uriInfo, InodeDTO dto, ResourceRequest resourceRequest, Users user,
                          DatasetPath datasetPath, List<Inode> inodes, Users dirOwner)
-    throws DatasetException, SchematizedTagException, MetadataException {
+    throws DatasetException, SchematizedTagException, MetadataException, GenericException {
     if (inodes != null && !inodes.isEmpty()) {
       for(Inode inode : inodes) {
         dto.addItem(buildStat(uriInfo, resourceRequest, user, datasetPath, inode, dirOwner));

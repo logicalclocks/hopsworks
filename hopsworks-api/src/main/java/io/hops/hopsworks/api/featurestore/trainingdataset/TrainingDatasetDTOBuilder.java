@@ -28,6 +28,7 @@ import io.hops.hopsworks.common.featurestore.trainingdatasets.TrainingDatasetCon
 import io.hops.hopsworks.common.featurestore.trainingdatasets.TrainingDatasetDTO;
 import io.hops.hopsworks.exceptions.DatasetException;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
+import io.hops.hopsworks.exceptions.GenericException;
 import io.hops.hopsworks.exceptions.MetadataException;
 import io.hops.hopsworks.exceptions.SchematizedTagException;
 import io.hops.hopsworks.exceptions.ServiceException;
@@ -63,8 +64,8 @@ public class TrainingDatasetDTOBuilder {
 
   public TrainingDatasetDTO build(Users user, Project project, TrainingDataset trainingDataset,
       UriInfo uriInfo,ResourceRequest resourceRequest) throws
-      FeaturestoreException, ServiceException, SchematizedTagException, MetadataException, DatasetException,
-      IOException {
+    FeaturestoreException, ServiceException, SchematizedTagException, MetadataException, DatasetException,
+    IOException, GenericException {
     TrainingDatasetDTO trainingDatasetDTO = trainingDatasetController.convertTrainingDatasetToDTO(user, project,
         trainingDataset, true);
     if (resourceRequest != null) {
@@ -93,8 +94,8 @@ public class TrainingDatasetDTOBuilder {
 
   public TrainingDatasetDTO build(Users user, Project project, List<TrainingDataset> trainingDatasets,
       UriInfo uriInfo, ResourceRequest resourceRequest)
-      throws FeaturestoreException, ServiceException, SchematizedTagException, MetadataException, DatasetException,
-      IOException {
+    throws FeaturestoreException, ServiceException, SchematizedTagException, MetadataException, DatasetException,
+    IOException, GenericException {
     TrainingDatasetDTO trainingDatasetDTO = new TrainingDatasetDTO();
     trainingDatasetDTO.setCount((long) trainingDatasets.size());
     trainingDatasetDTO.setHref(uriInfo.getRequestUri());

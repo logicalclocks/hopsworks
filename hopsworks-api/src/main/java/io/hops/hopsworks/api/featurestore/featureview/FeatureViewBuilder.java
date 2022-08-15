@@ -39,6 +39,7 @@ import io.hops.hopsworks.common.featurestore.trainingdatasets.TrainingDatasetCon
 import io.hops.hopsworks.common.hdfs.Utils;
 import io.hops.hopsworks.exceptions.DatasetException;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
+import io.hops.hopsworks.exceptions.GenericException;
 import io.hops.hopsworks.exceptions.MetadataException;
 import io.hops.hopsworks.exceptions.SchematizedTagException;
 import io.hops.hopsworks.exceptions.ServiceException;
@@ -127,7 +128,8 @@ public class FeatureViewBuilder {
   
   public FeatureViewDTO build(List<FeatureView> featureViews, ResourceRequest resourceRequest, Project project,
       Users user, UriInfo uriInfo)
-      throws FeaturestoreException, ServiceException, MetadataException, DatasetException, SchematizedTagException {
+    throws FeaturestoreException, ServiceException, MetadataException, DatasetException, SchematizedTagException,
+    GenericException {
     FeatureViewDTO featureViewDTO = new FeatureViewDTO();
     featureViewDTO.setHref(uriInfo.getRequestUri());
 
@@ -147,7 +149,8 @@ public class FeatureViewBuilder {
 
   public FeatureViewDTO build(FeatureView featureView, ResourceRequest resourceRequest, Project project,
       Users user, UriInfo uriInfo)
-        throws FeaturestoreException, ServiceException, MetadataException, DatasetException, SchematizedTagException {
+    throws FeaturestoreException, ServiceException, MetadataException, DatasetException, SchematizedTagException,
+    GenericException {
     FeatureViewDTO base = convertToDTO(featureView);
     if (resourceRequest != null) {
       if (resourceRequest.contains(ResourceRequest.Name.QUERY_STRING)) {

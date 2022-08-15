@@ -21,6 +21,7 @@ import io.hops.hopsworks.common.dao.AbstractFacade;
 import io.hops.hopsworks.common.dao.featurestore.tag.TagSchemasFacade;
 import io.hops.hopsworks.common.tags.SchemaDTO;
 import io.hops.hopsworks.common.tags.TagSchemasControllerIface;
+import io.hops.hopsworks.exceptions.GenericException;
 import io.hops.hopsworks.exceptions.SchematizedTagException;
 import io.hops.hopsworks.persistence.entity.featurestore.tag.TagSchemas;
 import io.hops.hopsworks.restutils.RESTCodes;
@@ -58,7 +59,7 @@ public class TagSchemasBuilder {
   }
   
   public SchemaDTO build(UriInfo uriInfo, ResourceRequest resourceRequest, String value)
-    throws SchematizedTagException {
+    throws SchematizedTagException, GenericException {
     TagSchemas tag = tagSchemasFacade.findByName(value);
     if(tag == null) {
       throw new SchematizedTagException(RESTCodes.SchematizedTagErrorCode.TAG_SCHEMA_NOT_FOUND, Level.FINE);
@@ -68,7 +69,7 @@ public class TagSchemasBuilder {
   }
   
   public SchemaDTO build(UriInfo uriInfo, ResourceRequest resourceRequest)
-    throws SchematizedTagException {
+    throws SchematizedTagException, GenericException {
     SchemaDTO dto = new SchemaDTO();
     uri(dto, uriInfo);
     AbstractFacade.CollectionInfo collectionInfo = tagSchemasFacade.findAll(resourceRequest.getOffset(),
@@ -78,7 +79,7 @@ public class TagSchemasBuilder {
   }
   
   private SchemaDTO items(SchemaDTO dto, UriInfo uriInfo, ResourceRequest resourceRequest,
-                          List<TagSchemas> items) throws SchematizedTagException {
+                          List<TagSchemas> items) throws SchematizedTagException, GenericException {
     ObjectMapper objectMapper = new ObjectMapper();
     for(TagSchemas tag : items) {
       dto.addItem(buildItem(uriInfo, resourceRequest, tag, objectMapper));
@@ -88,7 +89,7 @@ public class TagSchemasBuilder {
   
   private SchemaDTO buildItem(UriInfo uriInfo, ResourceRequest resourceRequest, TagSchemas tag,
                               ObjectMapper objectMapper)
-    throws SchematizedTagException {
+    throws SchematizedTagException, GenericException {
     SchemaDTO dto = new SchemaDTO();
     uriItems(dto, uriInfo, tag);
     if (resourceRequest != null && resourceRequest.contains(ResourceRequest.Name.TAG_SCHEMAS)) {

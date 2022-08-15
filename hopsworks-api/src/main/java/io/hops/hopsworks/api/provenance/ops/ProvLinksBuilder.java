@@ -35,7 +35,7 @@ public class ProvLinksBuilder {
   private ProvOpsControllerIface opsProvCtrl;
 
   public ProvLinksDTO build(Project project, ProvLinksBeanParams opsParams, PaginationParams pagParams)
-          throws ProvenanceException, GenericException {
+    throws ProvenanceException, GenericException {
     ProvLinksParamBuilder paramBuilder = new ProvLinksParamBuilder()
             .onlyApps(opsParams.isOnlyApps())
             .linkType(opsParams.isFullLink())
