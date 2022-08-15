@@ -61,19 +61,19 @@ You need at least one server or virtual machine on which Hopsworks will be insta
 
 <a name="docs"></a>
 # 🎓 Documentation and API
-## **Documentation**
+### **Documentation**
 [Hopsworks documentation](https://docs.hopsworks.ai) includes user guides, feature store documentation and an administration guide. We also include concepts to help user navigates the abstractions and logics of the feature stores and MLOps in general:
 - **Feature Store:** [https://docs.hopsworks.ai/3.0/concepts/fs/](https://docs.hopsworks.ai/3.0/concepts/fs/)
 - **Projects:** [https://docs.hopsworks.ai/3.0/concepts/projects/governance/](https://docs.hopsworks.ai/3.0/concepts/projects/governance/)
 - **MLOps:** [https://docs.hopsworks.ai/3.0/concepts/mlops/prediction_services/](https://docs.hopsworks.ai/3.0/concepts/mlops/prediction_services/)
 
-## **APIs**
+### **APIs**
 Hopsworks API documentation is divided in 3 categories; Hopsworks API covers project level APIs, Feature Store API covers covers feature groups, feature views and connectors, and finally MLOps API covers Model Registry, serving and deployment. 
 - **Hopsworks API** - [https://docs.hopsworks.ai/hopsworks-api/3.0.1/generated/api/connection/](https://docs.hopsworks.ai/hopsworks-api/3.0.1/generated/api/connection/)
 - **Feature Store API** - [https://docs.hopsworks.ai/feature-store-api/3.0.0/generated/api/connection_api/](https://docs.hopsworks.ai/feature-store-api/3.0.0/generated/api/connection_api/)
 - **MLOps API** - [https://docs.hopsworks.ai/machine-learning-api/3.0.0/generated/connection_api/](https://docs.hopsworks.ai/machine-learning-api/3.0.0/generated/connection_api/)
 
-## **Tutorials**
+### **Tutorials**
 Most of the tutorials require you to have at least an account on [app.hopsworks.ai](https://app.hopsworks.ai). You can explore the dedicated [https://github.com/logicalclocks/hopsworks-tutorials](https://github.com/logicalclocks/hopsworks-tutorials) repository containing our tutorials or jump directly in one of the existing use cases:
 - Fraud (batch): [https://github.com/logicalclocks/hopsworks-tutorials/tree/master/fraud_batch](https://github.com/logicalclocks/hopsworks-tutorials/tree/master/fraud_batch)
 - Fraud (online): [https://github.com/logicalclocks/hopsworks-tutorials/tree/master/fraud_online](https://github.com/logicalclocks/hopsworks-tutorials/tree/master/fraud_online)
@@ -83,30 +83,27 @@ Most of the tutorials require you to have at least an account on [app.hopsworks.
 <a name="features"></a>
 # 📦 Main Features
 
-## **Project-based Multi-Tenancy and Team Collaboration**
+### **Project-based Multi-Tenancy and Team Collaboration**
 Hopsworks provides projects as a secure sandbox in which teams can collaborate and share ML assets. Hopsworks' unique multi-tenant project model even enables sensitive data to be stored in a shared cluster, while still providing fine-grained sharing capabilities for ML assets across project boundaries. Projects can be used to structure teams so that they have end-to-end responsibility from raw data to managed features and models. Projects can also be used to create development, staging, and production environments for data teams. All ML assets support versioning, lineage, and provenance provide all Hopsworks users with a complete view of the MLOps life cycle, from feature engineering through model serving.
 
-## **Development and Operations**
+### **Development and Operations**
 Hopsworks provides development tools for Data Science, including conda environments for Python, Jupyter notebooks, jobs, or even notebooks as jobs. You can build production pipelines with the bundled Airflow, and even run ML training pipelines with GPUs in notebooks on Airflow. You can train models on as many GPUs as are installed in a Hopsworks cluster and easily share them among users. You can also run Spark, Spark Streaming, or Flink programs on Hopsworks, with support for elastic workers in the cloud (add/remove workers dynamically).
 
-## **Development and Operational ML on Hopsworks**
-You can develop and run Python, Spark, and Flink applications on Hopsworks - in Jupyter notebooks, as jobs, or even notebooks as jobs. You can build production pipelines with the bundled Airflow, and even run ML training pipelines with GPUs in notebooks on Airflow. You can train models on as many GPUs as are installed in a Hopsworks cluster and easily share them among users.
-
-## **Available on any Platform**
+### **Available on any Platform**
 Hopsworks is available as a both managed platform in the cloud on AWS, Azure, and GCP, and can be installed on any Linux-based virtual machines (Ubuntu/Redhat compatible), even in air-gapped data centers. Hopsworks is also available as a serverless platform that manages and serves both your features and models.
 <br />
 
 <a name="community"></a>
 # 🧑‍🤝‍🧑 Community
 
-## **Contribute**
+### **Contribute**
 We are building the most complete and modular ML platform available in the market, and we count on your support to continuously improve Hopsworks. Feel free to give us suggestions, [report bugs](https://github.com/logicalclocks/hopsworks/issues) and [add features to our library](https://github.com/logicalclocks/feature-store-api) anytime.
 
-## **Join the community**
+### **Join the community**
 - Ask questions and give us feedback in the [Hopsworks Community](https://community.hopsworks.ai/)
 - Join our Public [Slack Channel](https://join.slack.com/t/public-hopsworks/shared_invite/zt-1e9czaq2o-nxNFcSMFN0p5_x4KTBpuUA)
 - Follow us on [Twitter](https://twitter.com/hopsworks)
 - Check out all our latest [product releases](https://github.com/logicalclocks/hopsworks/releases)
 
-## **Open-Source**
+### **Open-Source**
 Hopsworks is available under the **AGPL-V3 license**. In plain English this means that you are free to use Hopsworks and even build paid services on it, but if you modify the source code, you should also release back your changes and any systems built around it as AGPL-V3.
