@@ -107,7 +107,7 @@ module FeaturestoreHelper
   def create_stream_featuregroup(project_id, featurestore_id, features: nil, featuregroup_name: nil,
                                  version: 1, featuregroup_description: nil, statistics_config: nil,
                                  event_time: nil, deltaStreamerJobConf: nil, backfill_offline: false,
-                                 online_enabled: true)
+                                 commit_time: nil, online_enabled: true)
     type = "streamFeatureGroupDTO"
     featuregroupType = "STREAM_FEATURE_GROUP"
     features = features == nil ? [{type: "INT", name: "testfeature", description: "testfeaturedescription",
@@ -157,15 +157,28 @@ module FeaturestoreHelper
       parsed_json = JSON.parse(json_result)
       featuregroup_id = parsed_json["id"]
       featuregroup_version = parsed_json["version"]
-      path = "/apps/hive/warehouse/#{@project['projectname'].downcase}_featurestore.db/#{featuregroup_name}_#{featuregroup_version}"
-      hoodie_path = path + "/.hoodie"
-      mkdir(hoodie_path, getHopsworksUser, getHopsworksUser, 777)
-      touchz(hoodie_path + "/20201024221125.commit", getHopsworksUser, getHopsworksUser)
-      commit_metadata = {commitDateString:20201024221125,commitTime:1603577485000,rowsInserted:4,rowsUpdated:0,rowsDeleted:0}
-      commit_cached_featuregroup(@project[:id], featurestore_id, featuregroup_id, commit_metadata: commit_metadata)
+      backfill_stream_featuregroup(featurestore_id, featuregroup_id, featuregroup_version, featuregroup_name, commit_time)
     end
 
     return json_result, featuregroup_name
+  end
+
+  def backfill_stream_featuregroup(featurestore_id, featuregroup_id, featuregroup_version, featuregroup_name, commit_time)
+      path = "/apps/hive/warehouse/#{@project['projectname'].downcase}_featurestore.db/#{featuregroup_name}_#{featuregroup_version}"
+      hoodie_path = path + "/.hoodie"
+      mkdir(hoodie_path, getHopsworksUser, getHopsworksUser, 777)
+
+      if commit_time.nil?
+        time = Time.now
+        commit_time = time.to_i * 1000
+        commit_date_str = Time.at(time.to_i).strftime("%Y%m%d%H%M%S")
+      else
+        commit_date_str = Time.at(commit_time / 1000).strftime("%Y%m%d%H%M%S")
+      end
+
+      touchz(hoodie_path + "/#{commit_date_str}.commit", getHopsworksUser, getHopsworksUser)
+      commit_metadata = {commitDateString:commit_date_str,commitTime:commit_time,rowsInserted:4,rowsUpdated:0,rowsDeleted:0}
+      commit_cached_featuregroup(@project[:id], featurestore_id, featuregroup_id, commit_metadata: commit_metadata)
   end
 
   def create_on_demand_featuregroup(project_id, featurestore_id, jdbcconnectorId, name: nil, version: 1, query: nil,
@@ -883,7 +896,7 @@ module FeaturestoreHelper
   def commit_cached_featuregroup(project_id, featurestore_id, featuregroup_id, commit_metadata: nil)
     endpoint = "#{ENV['HOPSWORKS_API']}/project/#{project_id}/featurestores/#{featurestore_id}/featuregroups/#{featuregroup_id}/commits"
     commit_metadata = commit_metadata == nil ?
-                          {commitDateString:"20201024221125",rowsInserted:4,rowsUpdated:0,rowsDeleted:0} : commit_metadata
+                          {commitDateString:Time.at(Time.now.to_i).strftime("%Y%m%d%H%M%S"),rowsInserted:4,rowsUpdated:0,rowsDeleted:0} : commit_metadata
     post endpoint, commit_metadata.to_json
   end
 
