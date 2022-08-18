@@ -817,7 +817,7 @@ describe "On #{ENV['OS']}" do
         expect(parsed_json["rowsDeleted"] == 0).to be true
       end
 
-      it "should be able to find latest commit timestamp for existing hudi enabled offline cached featuregroup" do
+      it "should be able to find commit by timestamp for existing hudi enabled offline cached featuregroup" do
         featurestore_id = get_featurestore_id(@project[:id])
         featurestore_name = @project['projectname'].downcase + "_featurestore"
         json_result, featuregroup_name = create_cached_featuregroup_with_partition(@project[:id], featurestore_id, time_travel_format: "HUDI")
@@ -837,11 +837,10 @@ describe "On #{ENV['OS']}" do
         _ = commit_cached_featuregroup(@project[:id], featurestore_id, featuregroup_id, commit_metadata: commit_metadata)
         create_query_endpoint = "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/featurestores/query"
 
-        json_fs_query = '{"leftFeatureGroup":' +  json_result + ',"leftFeatures":' + parsed_json["features"].to_json + ',"joins":[]}'
-        json_result = put create_query_endpoint, json_fs_query
+        json_result = get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/featurestores/#{featurestore_id}/featuregroups/#{featuregroup_id}/commits?sort_by=committed_on:desc&offset=0&filter_by=commited_on_ltoeq:1603650176000"
         parsed_json = JSON.parse(json_result)
         expect_status(200)
-        expect(parsed_json["hudiCachedFeatureGroups"][0]["leftFeatureGroupEndTimestamp"]).to eq(1603650176000)
+        expect(parsed_json["items"][0]["commitID"]).to eql(1603650176000)
       end
 
       it "should be able to enable hudi featuregroup as online and retrieve correct online/offline queries" do
@@ -986,7 +985,7 @@ describe "On #{ENV['OS']}" do
         expect(parsed_json["hudiCachedFeatureGroups"][1]["alias"]).to eql("fg0")
       end
 
-      it "should not allow range queries for join of hudi enabled cached featuregroups" do
+      it "should allow range queries for join of hudi enabled cached featuregroups" do
         featurestore_id = get_featurestore_id(@project[:id])
         featurestore_name = @project['projectname'].downcase + "_featurestore"
 
@@ -999,6 +998,9 @@ describe "On #{ENV['OS']}" do
         mkdir(hoodie_path, getHopsworksUser, getHopsworksUser, 777)
         touchz(hoodie_path + "/20201024221125.commit", getHopsworksUser, getHopsworksUser)
         commit_metadata = {commitDateString: 20201024221125, commitTime:1603577485000, rowsInserted:3,rowsUpdated:0,rowsDeleted:0}
+        _ = commit_cached_featuregroup(@project[:id], featurestore_id, fg_1_id, commit_metadata: commit_metadata)
+        touchz(hoodie_path + "/20201025144554.commit", getHopsworksUser, getHopsworksUser)
+        commit_metadata = {commitDateString: 20201025144554, commitTime:1603633554000, rowsInserted:3,rowsUpdated:0, rowsDeleted:0}
         _ = commit_cached_featuregroup(@project[:id], featurestore_id, fg_1_id, commit_metadata: commit_metadata)
 
         json_result, featuregroup_name = create_cached_featuregroup_with_partition(@project[:id], featurestore_id, time_travel_format: "HUDI")
@@ -1014,13 +1016,13 @@ describe "On #{ENV['OS']}" do
 
         create_query_endpoint = "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/featurestores/query"
         json_fs_query = {
-            leftFeatureGroup: {id: fg_1_id}, leftFeatures: fg_1_features, leftFeatureGroupStartTime: 1603577485000, leftFeatureGroupEndTime: 1603577485000,
+            leftFeatureGroup: {id: fg_1_id}, leftFeatures: fg_1_features, leftFeatureGroupStartTime: 1603577485000, leftFeatureGroupEndTime: 1603633554000,
             joins: {
                 query: {leftFeatureGroup: {id: fg_2_id}, leftFeatures: fg_2_features, leftFeatureGroupEndTime:1603570286000}
             }
         }
         put create_query_endpoint, json_fs_query
-        expect_status(422)
+        expect_status(200)
       end
 
       it "should be able to add correct statistics commit timestamps on time travel enabled feature groups" do

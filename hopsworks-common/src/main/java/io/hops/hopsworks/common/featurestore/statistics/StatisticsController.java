@@ -103,9 +103,14 @@ public class StatisticsController {
       // statistics on particular commit id (i.e. fgCommitId was provided). If fgCommitId is null
       // it means: 1) client issued save or insert method; here statistics commitTimeStamp will be featureGroupCommit;
       // 2) Or it is recomputing statistics of existing time travel enabled feature group. Here latest fg commit
-      // timestamp will be used to read dataset and as statistics commit time client system time will be provided.
-      if (featureGroupCommit.isPresent()) {
-        statisticsCommitTimeStamp = featureGroupCommit.get().getCommittedOn();
+      // timestamp will be used to read dataset and client system time provided will be used as statistics commit time.
+      if (fgCommitId == null && featureGroupCommit.isPresent()) {
+        Optional<FeaturestoreStatistic> featurestoreStatistic =
+          featurestoreStatisticFacade.findByFeatureGroupAndCommitDate(
+            featuregroup, new Date(featureGroupCommit.get().getCommittedOn()));
+        if (!featurestoreStatistic.isPresent()){
+          statisticsCommitTimeStamp = featureGroupCommit.get().getCommittedOn();
+        }
       }
     }
 
