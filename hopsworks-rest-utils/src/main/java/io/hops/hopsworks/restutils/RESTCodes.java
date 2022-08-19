@@ -1397,7 +1397,7 @@ public class RESTCodes {
         Response.Status.INTERNAL_SERVER_ERROR),
     FEATURESTORE_NAME_NOT_PROVIDED(23, "Featurestore name was not provided", Response.Status.BAD_REQUEST),
     UNAUTHORIZED_FEATURESTORE_OPERATION(24, "Only data owners are allowed to delete or update feature groups/" +
-      "feature views/training datasets that are not created by themself.", Response.Status.UNAUTHORIZED),
+      "feature views/training datasets that are not created by themself.", Response.Status.FORBIDDEN),
     STORAGE_CONNECTOR_ID_NOT_PROVIDED(25, "Storage backend id not provided", Response.Status.BAD_REQUEST),
     CANNOT_FETCH_HIVE_SCHEMA_FOR_ON_DEMAND_FEATUREGROUPS(26, "Fetching Hive Schema of On-demand feature groups is not" +
       " supported", Response.Status.BAD_REQUEST),
