@@ -359,7 +359,7 @@ public class FeaturegroupService {
     //Verify that the user has the data-owner role or is the creator of the featuregroup
     Featuregroup featuregroup = featuregroupController.getFeaturegroupById(featurestore, featuregroupId);
     try {
-      featuregroupController.deleteFeaturegroup(featuregroup, project, user);
+      featuregroupController.deleteFeaturegroup(featuregroup, project, featurestore, user);
       return Response.ok().build();
     } catch (SQLException | IOException | JobException e) {
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.COULD_NOT_DELETE_FEATUREGROUP, Level.SEVERE,
@@ -401,7 +401,8 @@ public class FeaturegroupService {
     //Verify that the user has the data-owner role or is the creator of the featuregroup
     Featuregroup featuregroup = featuregroupController.getFeaturegroupById(featurestore, featuregroupId);
     try {
-      FeaturegroupDTO newFeatureGroup = featuregroupController.clearFeaturegroup(featuregroup, project, user);
+      FeaturegroupDTO newFeatureGroup =
+              featuregroupController.clearFeaturegroup(featuregroup, project, featurestore, user);
       return Response.ok().entity(newFeatureGroup).build();
     } catch (SQLException | IOException | ProvenanceException | HopsSecurityException | JobException e) {
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.COULD_NOT_CLEAR_FEATUREGROUP, Level.SEVERE,

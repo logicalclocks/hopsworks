@@ -29,6 +29,7 @@ import io.hops.hopsworks.common.hosts.ServiceDiscoveryController;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.exceptions.ServiceException;
 import io.hops.hopsworks.persistence.entity.featurestore.Featurestore;
+import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.Featuregroup;
 import io.hops.hopsworks.persistence.entity.featurestore.featureview.FeatureView;
 import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.TrainingDataset;
 import io.hops.hopsworks.persistence.entity.project.Project;
@@ -83,6 +84,18 @@ public class FeaturestoreUtils {
           "project: " + project.getName() + ", featurestoreId: " + featurestore.getId() +
               ", FeatureView: " + featureView.getName() + ", userRole:" + userRole +
               ", creator of the FeatureView: " + featureView.getCreator().getEmail());
+    }
+  }
+
+  public void verifyUserRole(Featuregroup featureGroup, Featurestore featurestore, Users user, Project project)
+          throws FeaturestoreException {
+    String userRole = projectTeamFacade.findCurrentRole(project, user);
+    if (!featureGroup.getCreator().equals(user) &&
+        !userRole.equalsIgnoreCase(AllowedRoles.DATA_OWNER)) {
+      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.UNAUTHORIZED_FEATURESTORE_OPERATION, Level.FINE,
+          "project: " + project.getName() + ", featurestoreId: " + featurestore.getId() +
+              ", Featuregroup: " + featureGroup.getName() + ", userRole:" + userRole +
+              ", creator of the FeatureView: " + featureGroup.getCreator().getEmail());
     }
   }
 

@@ -160,20 +160,22 @@ public class FeaturegroupController {
    *
    * @param featuregroup
    * @param project
+   * @param featurestore
    * @param user            the user making the request
    * @return a DTO representation of the cleared feature group
    * @throws FeaturestoreException
    * @throws HopsSecurityException
    * @throws SQLException
    */
-  public FeaturegroupDTO clearFeaturegroup(Featuregroup featuregroup, Project project, Users user)
+  public FeaturegroupDTO clearFeaturegroup(Featuregroup featuregroup, Project project, Featurestore featurestore,
+                                           Users user)
     throws FeaturestoreException, SQLException, ProvenanceException, IOException, ServiceException,
     KafkaException, SchemaException, ProjectException, UserException, HopsSecurityException, JobException {
     switch (featuregroup.getFeaturegroupType()) {
       case CACHED_FEATURE_GROUP:
       case STREAM_FEATURE_GROUP:
         FeaturegroupDTO featuregroupDTO = convertFeaturegrouptoDTO(featuregroup, project, user);
-        deleteFeaturegroup(featuregroup, project, user);
+        deleteFeaturegroup(featuregroup, project, featurestore, user);
         return createFeaturegroupNoValidation(featuregroup.getFeaturestore(), featuregroupDTO, project, user);
       case ON_DEMAND_FEATURE_GROUP:
         throw new FeaturestoreException(
@@ -397,6 +399,9 @@ public class FeaturegroupController {
     // adding new features
     // feature group description
     // feature descriptions
+
+    //Verify user
+    featurestoreUtils.verifyUserRole(featuregroup, featurestore, user, project);
     
     // Verify general entity related information
     featurestoreInputValidation.verifyDescription(featuregroupDTO);
@@ -539,6 +544,7 @@ public class FeaturegroupController {
    * Deletes a featuregroup with a particular id or name from a featurestore
    * @param featuregroup
    * @param project
+   * @param featurestore
    * @param user
    * @return
    * @throws SQLException
@@ -546,9 +552,13 @@ public class FeaturegroupController {
    * @throws ServiceException
    * @throws IOException
    */
-  public void deleteFeaturegroup(Featuregroup featuregroup, Project project, Users user)
+  public void deleteFeaturegroup(Featuregroup featuregroup, Project project, Featurestore featurestore, Users user)
     throws SQLException, FeaturestoreException, ServiceException, IOException, SchemaException, KafkaException,
     JobException {
+
+    //Verify user
+    featurestoreUtils.verifyUserRole(featuregroup, featurestore, user, project);
+
     switch (featuregroup.getFeaturegroupType()) {
       case CACHED_FEATURE_GROUP:
         //Delete hive_table will cascade to cached_featuregroup_table which will cascade to feature_group table
