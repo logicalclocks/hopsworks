@@ -685,7 +685,6 @@ describe "On #{ENV['OS']}" do
       end
 
       def setup_job(user, project, job_name)
-        chmod_local_dir("#{ENV['PROJECT_DIR']}", 777, true)
         src_dir = "#{ENV['PROJECT_DIR']}/hopsworks-IT/src/test/ruby/spec/auxiliary"
         src = "#{src_dir}/hello_world.py"
         dst = "/Projects/#{project[:projectname]}/Resources/#{job_name}.py"

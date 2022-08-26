@@ -50,7 +50,7 @@ describe "On #{ENV['OS']}" do
       @All_users = ["#{@project[:inode_name]}__#{@user[:username]}", @data_owner_hdfs_username,
                     @data_owner1_hdfs_username, @data_scientist_hdfs_username, @data_scientist1_hdfs_username]
 
-      @project1 = create_project_by_name("project_#{short_random_id}")
+      @project1 = create_project
       @shared_read_only_dataset = create_dataset_by_name_checked(@project1, "dataset_#{short_random_id}", permission: "READ_ONLY")
       request_access(@project1, @shared_read_only_dataset, @project)
       share_dataset(@project1, @shared_read_only_dataset[:inode_name], @project[:projectname], permission: "READ_ONLY")
@@ -211,10 +211,10 @@ describe "On #{ENV['OS']}" do
                                                 @shared_owners_only_dataset_read_group)
       end
       it 'should make dataset immutable for all projects it is shared with' do
-        project1 = create_project_by_name("project_#{short_random_id}")
-        project2 = create_project_by_name("project_#{short_random_id}")
-        project3 = create_project_by_name("project_#{short_random_id}")
-        project4 = create_project_by_name("project_#{short_random_id}")
+        project1 = create_project
+        project2 = create_project
+        project3 = create_project
+        project4 = create_project
         data_owner1 = create_user()
         data_owner2 = create_user()
         data_owner3 = create_user()

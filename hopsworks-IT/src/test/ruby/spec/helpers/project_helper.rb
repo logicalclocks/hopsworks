@@ -41,6 +41,11 @@ require 'typhoeus'
 require 'concurrent'
 
 module ProjectHelper
+
+  def getProjectId
+    "#{Process.pid}"
+  end
+    
   def with_valid_project
     @project ||= create_project
     get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/dataset/?action=listing"
@@ -60,9 +65,13 @@ module ProjectHelper
     end
   end
 
-  def create_project(projectName = nil, services = ["JOBS","JUPYTER","HIVE","KAFKA","SERVING", "FEATURESTORE"])
-    with_valid_session
-    pName = projectName == nil ? "ProJect_#{short_random_id}" : projectName
+  def create_project(projectName = nil, 
+                     services: ["JOBS","JUPYTER","HIVE","KAFKA","SERVING", "FEATURESTORE"],
+                     validate_session: true)
+    if validate_session
+      with_valid_session
+    end  
+    pName = projectName == nil ? "project_#{getProjectId}_#{short_random_id}" : projectName
     new_project = {projectName: pName, description:"", status: 0, services: services,
                    projectTeam:[], retentionPeriod: ""}
     post "#{ENV['HOPSWORKS_API']}/project", new_project
@@ -71,10 +80,12 @@ module ProjectHelper
     get_project_by_name(new_project[:projectName])
   end
 
+  # Do not use this method unless *you have to*. Prefer `create_project` instead
+  # which tags the projects with the correct process id and so we are able to delete them.
   def create_project_by_name(projectname)
     with_valid_session
     pp "creating project: #{projectname}" if defined?(@debugOpt) && @debugOpt == true
-    project = create_project_by_name_existing_user(projectname)
+    project = create_project(projectName = projectname, validate_session: false)
     pp "created project: #{project[:projectname]}" if defined?(@debugOpt) && @debugOpt == true
     project
   end
@@ -82,15 +93,6 @@ module ProjectHelper
   def project_expect_status(status)
     body = JSON.parse(response.body)
     expect(response.code).to eq(resolve_status(status, response.code)), "found code:#{response.code} and body:#{body}"
-  end
-
-  def create_project_by_name_existing_user(projectname)
-    new_project = {projectName: projectname, description:"", status: 0, services: ["JOBS","JUPYTER", "HIVE", "KAFKA","SERVING", "FEATURESTORE"],
-                   projectTeam:[], retentionPeriod: ""}
-    post "#{ENV['HOPSWORKS_API']}/project", new_project
-    project_expect_status(201)
-    expect_json(successMessage: regex("Project created successfully.*"))
-    get_project_by_name(new_project[:projectName])
   end
 
   def create_project_tour(tourtype)
@@ -150,11 +152,6 @@ module ProjectHelper
     expect_status_details(200)
   end
 
-  def get_all_projects
-    projects = Project.find_by(username: "#{@user.email}")
-    projects
-  end
-
   def get_project
     @project
   end
@@ -195,7 +192,7 @@ module ProjectHelper
   def clean_projects
     with_valid_session
     get "#{ENV['HOPSWORKS_API']}/project/getAll"
-    if !json_body.empty?
+    unless json_body.empty?
       json_body.map{|project| project[:id]}.each{|i| post "#{ENV['HOPSWORKS_API']}/project/#{i}/delete" }
     end
   end
@@ -219,16 +216,16 @@ module ProjectHelper
   def clean_test_project(project, response, headers)
     request = raw_delete_project(project, response, headers)
     on_complete(request, project)
-    return request
+    request
   end
 
-  def get_testing_projects()
+  def get_testing_projects(project_id: nil)
     Project.select('distinct(id), projectname, username')
         .where("projectname LIKE ? or projectname LIKE ? or projectname LIKE ? or projectname LIKE ? or
                 projectname LIKE ? or projectname LIKE ? or projectname LIKE ?",
                'online_fs',
-               'project\_%',
-               'ProJect\_%',
+               project_id == nil ? "project\_" : "project\_#{project_id}_%",
+               project_id == nil ? "ProJect\_" : "ProJect\_#{project_id}_%",
                'demo\_%',
                'HOPSWORKS256%',
                'hopsworks256%',
@@ -236,13 +233,14 @@ module ProjectHelper
   end
 
   # This function must be added under the first describe of each .spec file to ensure test projects are cleaned up properly
-  def clean_all_test_projects(spec: "unknown")
+  def clean_all_test_projects(spec = "unknown", projectId = nil)
+    projectId = projectId == nil ? getProjectId : projectId
     pp "Cleaning up test projects after #{spec} spec"
 
     starting = Process.clock_gettime(Process::CLOCK_MONOTONIC)
     hydra = Typhoeus::Hydra.new(max_concurrency: 10)
 
-    get_testing_projects.each { |project|
+    get_testing_projects(project_id: projectId).each { |project|
       response, headers = login_user(project[:username], "Pass123")
       if response.code == 200
         hydra.queue clean_test_project(project, response, headers)

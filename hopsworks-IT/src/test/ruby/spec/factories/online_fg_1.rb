@@ -14,7 +14,11 @@
  If not, see <https://www.gnu.org/licenses/>.
 =end
 class OnlineFg < ActiveRecord::Base
+   @@dbName = ""
+  def self.db_name=(dbName)
+    @@dbName = dbName
+  end
   def self.table_name
-    "online_fs.online_fg_1"
+    "#{@@dbName}.online_fg_1"
   end
 end

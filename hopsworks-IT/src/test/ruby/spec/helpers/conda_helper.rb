@@ -60,6 +60,13 @@ module CondaHelper
 
   module_function :wait_for
 
+  def wait_for_running_command(project_id, timeout=600)
+    wait_for(timeout=timeout) do
+      expect(CondaCommands.find_by(status: "FAILED")).to be_nil
+      CondaCommands.find_by(project_id: project_id).nil?
+    end
+  end
+
   def conda_exists(python_version)
     image_name = @@registry + "/python" + python_version.gsub(".","") + ":" + getVar('hopsworks_version').value
     system("docker pull " + image_name + "> /dev/null 2>&1")
@@ -74,8 +81,6 @@ module CondaHelper
   end
 
   def upload_wheel
-      chmod_local_dir("#{ENV['PROJECT_DIR']}".gsub("/hopsworks", ""), 701, false)
-      chmod_local_dir("#{ENV['PROJECT_DIR']}", 777, true)
       copy_from_local("#{ENV['PROJECT_DIR']}/hopsworks-IT/src/test/ruby/spec/auxiliary/lark_parser-0.10.1-py2.py3-none-any.whl",
                       "/Projects/#{@project[:projectname]}/Resources/lark_parser-0.10.1-py2.py3-none-any.whl", @user[:username],
                       "#{@project[:projectname]}__Resources", 750, "#{@project[:projectname]}")
