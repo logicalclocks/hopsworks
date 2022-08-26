@@ -49,13 +49,13 @@ module CloudRoleMappingHelper
 
   def cloud_role_mapping_setup_test
     with_valid_session
-    project1 = create_project_by_name("project_#{short_random_id}")
+    project1 = create_project
     reset_session
     with_valid_session
-    project2 = create_project_by_name("project_#{short_random_id}")
+    project2 = create_project
     reset_session
     with_valid_session
-    project3 = create_project_by_name("project_#{short_random_id}")
+    project3 = create_project
     reset_session
     with_admin_session
     create_cloud_role_mapping(project1, "DATA_SCIENTIST", "arn:aws:iam::123456789012:role/test-role-p1-ds")

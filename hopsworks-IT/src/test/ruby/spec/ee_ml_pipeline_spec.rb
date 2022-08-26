@@ -464,7 +464,6 @@ describe "On #{ENV['OS']}" do
     end
 
     def prepare_mnist_td_data(project, username)
-      chmod_local_dir("#{ENV['PROJECT_DIR']}", 777, true)
       src = "#{MNIST_TOUR_DATA_LOCATION}/MNIST_data"
       dst = "/Projects/#{project[:projectname]}/Resources"
       copy(src, dst, username, "#{project[:projectname]}__Resources", 750, project[:projectname])

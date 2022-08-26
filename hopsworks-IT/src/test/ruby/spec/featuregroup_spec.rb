@@ -2324,7 +2324,7 @@ describe "On #{ENV['OS']}" do
       end
 
       it "should be able to limit the number of rows in a preview" do
-        project = create_project_by_name_existing_user("online_fs")
+        project = create_project(validate_session: false)
         featurestore_id = get_featurestore_id(project.id)
         json_result, _ = create_cached_featuregroup(project.id, featurestore_id, featuregroup_name: 'online_fg', online:true)
         parsed_json = JSON.parse(json_result)
@@ -2332,6 +2332,7 @@ describe "On #{ENV['OS']}" do
         featuregroup_id = parsed_json["id"]
 
         # add sample ros
+        OnlineFg.db_name = project[:projectname]
         OnlineFg.create(testfeature: 1).save
         OnlineFg.create(testfeature: 2).save
 
@@ -2342,7 +2343,7 @@ describe "On #{ENV['OS']}" do
       end
 
       it "should fetch the online feature data if the fg is online enabled and storage not specified" do
-        project = create_project_by_name_existing_user("online_fs1")
+        project = create_project(validate_session: false)
         featurestore_id = get_featurestore_id(project.id)
         json_result, _ = create_cached_featuregroup(project.id, featurestore_id, featuregroup_name: 'online_fg', online:true)
         parsed_json = JSON.parse(json_result)
@@ -2350,8 +2351,9 @@ describe "On #{ENV['OS']}" do
         featuregroup_id = parsed_json["id"]
 
         # add sample ros
-        OnlineFg1.create(testfeature: 1).save
-        OnlineFg1.create(testfeature: 2).save
+        OnlineFg.db_name = project[:projectname]
+        OnlineFg.create(testfeature: 3).save # use different keys which are not in other tests
+        OnlineFg.create(testfeature: 4).save
 
         get "#{ENV['HOPSWORKS_API']}/project/#{project.id}/featurestores/#{featurestore_id}/featuregroups/#{featuregroup_id}/preview?&limit=1"
         expect_status(200)

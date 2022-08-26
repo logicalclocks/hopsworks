@@ -172,8 +172,7 @@ describe "On #{ENV['OS']}" do
           project = get_project
           newUser = create_user
           create_session(newUser[:email], "Pass123")
-          projectname = "project_#{short_random_id}"
-          project1 = create_project_by_name(projectname)
+          project1 = create_project
           get_dataset_stat(project1, "Logs/../../../Projects/#{project[:projectname]}/Logs/README.md", datasetType:
               "&type=DATASET")
           expect_status(400)
@@ -185,8 +184,7 @@ describe "On #{ENV['OS']}" do
           project = get_project
           newUser = create_user
           create_session(newUser[:email], "Pass123")
-          projectname = "project_#{short_random_id}"
-          project1 = create_project_by_name(projectname)
+          project1 = create_project
           file = URI.encode_www_form({flowChunkNumber: 1, flowChunkSize: 1048576,
                                       flowCurrentChunkSize: 3195, flowTotalSize: 3195,
                                       flowIdentifier: "3195-someFiletxt", flowFilename: "someFile.txt",
@@ -200,8 +198,7 @@ describe "On #{ENV['OS']}" do
           project = get_project
           newUser = create_user
           create_session(newUser[:email], "Pass123")
-          projectname = "project_#{short_random_id}"
-          project1 = create_project_by_name(projectname)
+          project1 = create_project
           get_datasets_in_path(project1, "Logs/../../../Projects/#{project[:projectname]}/", query: "&type=DATASET")
           expect_status(400)
           expect_json(errorCode: 110011)
@@ -211,8 +208,7 @@ describe "On #{ENV['OS']}" do
           project = get_project
           newUser = create_user
           create_session(newUser[:email], "Pass123")
-          projectname = "project_#{short_random_id}"
-          project1 = create_project_by_name(projectname)
+          project1 = create_project
           get_datasets_in_path(project1, "Logs/../../Projects/../../Projects/#{project[:projectname]}/", query: "&type=DATASET")
           expect_status(400)
           expect_json(errorCode: 110011)
@@ -222,8 +218,7 @@ describe "On #{ENV['OS']}" do
           project = get_project
           newUser = create_user
           create_session(newUser[:email], "Pass123")
-          projectname = "project_#{short_random_id}"
-          project1 = create_project_by_name(projectname)
+          project1 = create_project
           get_dataset_blob(project1, "Logs/../../../Projects/#{project[:projectname]}/Logs/README.md",
                            datasetType: "&type=DATASET")
           expect_status(400)
@@ -234,8 +229,7 @@ describe "On #{ENV['OS']}" do
           project = get_project
           newUser = create_user
           create_session(newUser[:email], "Pass123")
-          projectname = "project_#{short_random_id}"
-          project1 = create_project_by_name(projectname)
+          project1 = create_project
           get_dataset_stat(project1, "Logs/../../../Projects/#{project[:projectname]}/Logs/README.md", datasetType:
               "&type=DATASET")
           expect_status(400)
@@ -247,8 +241,7 @@ describe "On #{ENV['OS']}" do
           project = get_project
           newUser = create_user
           create_session(newUser[:email], "Pass123")
-          projectname = "project_#{short_random_id}"
-          project1 = create_project_by_name(projectname)
+          project1 = create_project
           get_download_token(project1, "Logs/../../../Projects/#{project[:projectname]}/Logs/README.md",
                              datasetType: "&type=DATASET")
           expect_status(400)
@@ -287,8 +280,7 @@ describe "On #{ENV['OS']}" do
         end
         it "should fail to upload to a shared dataset with permission read only" do
           with_valid_project
-          projectname = "project_#{short_random_id}"
-          project = create_project_by_name(projectname)
+          project = create_project
           dsname = "dataset_#{short_random_id}"
           ds = create_dataset_by_name_checked(@project, dsname, permission: "READ_ONLY")
           request_access(@project, ds, project)
@@ -309,8 +301,7 @@ describe "On #{ENV['OS']}" do
           expect_status(204)
         end
         it "should upload to a shared dataset with permission group writable." do
-          projectname = "project_#{short_random_id}"
-          project = create_project_by_name(projectname)
+          project = create_project
           dsname = "dataset_#{short_random_id}"
           ds = create_dataset_by_name_checked(@project, dsname, permission: "READ_ONLY")
           request_access(@project, ds, project)
@@ -363,8 +354,7 @@ describe "On #{ENV['OS']}" do
           project = get_project
           newUser = create_user
           create_session(newUser[:email], "Pass123")
-          projectname = "project_#{short_random_id}"
-          project1 = create_project_by_name(projectname)
+          project1 = create_project
           delete_dataset(project1, "Logs/../../../Projects/#{project[:projectname]}/Logs/README.md", datasetType: "?type=DATASET")
           expect_status(400)
           expect_json(errorCode: 110011)
@@ -376,9 +366,8 @@ describe "On #{ENV['OS']}" do
           project = get_project
           newUser = create_user
           create_session(newUser[:email], "Pass123")
-          projectname = "project_#{short_random_id}"
-          project1 = create_project_by_name(projectname)
-          hopsworks_user = getHopsworksUser()
+          project1 = create_project
+          hopsworks_user = getHopsworksUser
           touchz("/Projects/#{project[:projectname]}/Logs/corrupted.txt", hopsworks_user, hopsworks_user)
           delete_corrupted_dataset(project1, "Logs/../../../Projects/#{project[:projectname]}/Logs/corrupted.txt", datasetType: "&type=DATASET")
           expect_status(400)
@@ -408,8 +397,7 @@ describe "On #{ENV['OS']}" do
           with_valid_dataset
         end
         it "should fail to send request" do
-          projectname = "project_#{short_random_id}"
-          project = create_project_by_name(projectname)
+          project = create_project
           get_dataset_stat(@project, @dataset[:inode_name], datasetType: "&type=DATASET")
           expect_status(200)
           dataset = json_body
@@ -425,8 +413,7 @@ describe "On #{ENV['OS']}" do
           with_valid_dataset
         end
         it "should send request" do
-          projectname = "project_#{short_random_id}"
-          project = create_project_by_name(projectname)
+          project = create_project
           request_access(@project, @dataset, project)
           expect_status(200)
           create_session(@project[:username], "Pass123") # be the user of the project that owns the dataset
@@ -451,8 +438,7 @@ describe "On #{ENV['OS']}" do
         end
         it "should fail to share dataset" do
           project = get_project
-          projectname = "project_#{short_random_id}"
-          project1 = create_project_by_name(projectname)
+          project1 = create_project
           dsname = "dataset_#{short_random_id}"
           create_session(project[:username], "Pass123")
           create_dataset_by_name_checked(project, dsname, permission: "READ_ONLY")
@@ -469,8 +455,7 @@ describe "On #{ENV['OS']}" do
         end
         it "should fail to share dataset" do
           project = get_project
-          projectname = "project_#{short_random_id}"
-          project1 = create_project_by_name(projectname)
+          project1 = create_project
           dsname = "dataset_#{short_random_id}"
           create_session(project[:username], "Pass123")
           create_dataset_by_name_checked(project, dsname, permission: "READ_ONLY")
@@ -488,8 +473,7 @@ describe "On #{ENV['OS']}" do
         end
 
         it "should share dataset" do
-          projectname = "project_#{short_random_id}"
-          project = create_project_by_name(projectname)
+          project = create_project
           dsname = "dataset_#{short_random_id}"
           create_dataset_by_name_checked(@project, dsname, permission: "READ_ONLY")
           share_dataset(@project, dsname, project[:projectname], permission: "EDITABLE", datasetType: "&type=DATASET")
@@ -511,8 +495,7 @@ describe "On #{ENV['OS']}" do
         end
 
         it "should share a HiveDB" do
-          projectname = "project_#{short_random_id}"
-          project = create_project_by_name(projectname)
+          project = create_project
           share_dataset(@project, "#{@project[:projectname].downcase}.db", project[:projectname],
                         permission: "EDITABLE", datasetType: "&type=HIVEDB")
           get_dataset_stat(project, "#{@project[:projectname]}::#{@project[:projectname].downcase}.db", datasetType:
@@ -522,8 +505,7 @@ describe "On #{ENV['OS']}" do
         end
 
         it "should appear as pending for datasets not requested" do
-          projectname = "project_#{short_random_id}"
-          project = create_project_by_name(projectname)
+          project = create_project
           dsname = "dataset_#{short_random_id}"
           create_dataset_by_name_checked(@project, dsname, permission: "READ_ONLY")
           share_dataset(@project, dsname, project[:projectname], permission: "EDITABLE", datasetType: "&type=DATASET")
@@ -532,8 +514,7 @@ describe "On #{ENV['OS']}" do
           expect(shared_ds[:accepted]).to be false
         end
         it "should appear as accepted for requested datasets" do
-          projectname = "project_#{short_random_id}"
-          project = create_project_by_name(projectname)
+          project = create_project
           dsname = "dataset_#{short_random_id}"
           ds = create_dataset_by_name_checked(@project, dsname, permission: "READ_ONLY")
           request_access(@project, ds, project)
@@ -543,8 +524,7 @@ describe "On #{ENV['OS']}" do
           expect(shared_ds[:accepted]).to be true
         end
         it "should fail to make a shared dataset editable" do
-          projectname = "project_#{short_random_id}"
-          project = create_project_by_name(projectname)
+          project = create_project
           dsname = "dataset_#{short_random_id}"
           permissions = "EDITABLE"
           ds = create_dataset_by_name_checked(@project, dsname, permission: "READ_ONLY")
@@ -553,8 +533,7 @@ describe "On #{ENV['OS']}" do
           expect_status(400)
         end
         it "should fail to write on a non editable shared dataset" do
-          projectname = "project_#{short_random_id}"
-          project = create_project_by_name(projectname)
+          project = create_project
           dsname = "dataset_#{short_random_id}"
           ds = create_dataset_by_name_checked(@project, dsname, permission: "READ_ONLY")
           share_dataset(@project, dsname, project[:projectname], permission: "READ_ONLY")
@@ -583,8 +562,7 @@ describe "On #{ENV['OS']}" do
         end
 
         it "should write in an editable shared dataset" do
-          projectname = "project_#{short_random_id}"
-          project = create_project_by_name(projectname)
+          project = create_project
           dsname = "dataset_#{short_random_id}"
           permissions = "EDITABLE"
           ds = create_dataset_by_name_checked(@project, dsname, permission: "READ_ONLY")
@@ -604,8 +582,7 @@ describe "On #{ENV['OS']}" do
         end
 
         it "should be able to see content shared dataset with a name that already exist in the target project" do
-          projectname = "project_#{short_random_id}"
-          project = create_project_by_name(projectname)
+          project = create_project
           dsname = "dataset_#{short_random_id}"
           create_dataset_by_name_checked(project, dsname, permission: "READ_ONLY")
           ds = create_dataset_by_name_checked(@project, dsname, permission: "READ_ONLY")
@@ -652,8 +629,7 @@ describe "On #{ENV['OS']}" do
           project = get_project
 
           # Create a second project and a dataset in it
-          projectname = "project_#{short_random_id}"
-          second_project = create_project_by_name(projectname)
+          second_project = create_project
           dsname = "dataset_#{short_random_id}"
           create_dataset_by_name_checked(second_project, dsname, permission: "READ_ONLY")
 
@@ -672,8 +648,7 @@ describe "On #{ENV['OS']}" do
           expect(readme[:preview]).not_to be_nil
         end
         it "should share training and statistic dataset when sharing requested feature store" do
-          projectname = "project_#{short_random_id}"
-          project = create_project_by_name(projectname)
+          project = create_project
           featurestore = "#{@project[:projectname].downcase}_featurestore.db"
           trainingDataset =  "#{@project[:projectname]}_Training_Datasets"
           statisticsDataset =  "Statistics"
@@ -688,8 +663,7 @@ describe "On #{ENV['OS']}" do
           expect_status(200)
         end
         it "should share training and statistics dataset when accepting non requested feature store" do
-          projectname = "project_#{short_random_id}"
-          project = create_project_by_name(projectname)
+          project = create_project
           featurestore = "#{@project[:projectname].downcase}_featurestore.db"
           trainingDataset =  "#{@project[:projectname]}_Training_Datasets"
           statisticsDataset =  "Statistics"
@@ -702,8 +676,7 @@ describe "On #{ENV['OS']}" do
           expect_status(200)
         end
         it "should not share training and statistics dataset when sharing non requested feature store" do
-          projectname = "project_#{short_random_id}"
-          project = create_project_by_name(projectname)
+          project = create_project
           featurestore = "#{@project[:projectname].downcase}_featurestore.db"
           trainingDataset =  "#{@project[:projectname]}_Training_Datasets"
           statisticsDataset =  "Statistics"
@@ -715,8 +688,7 @@ describe "On #{ENV['OS']}" do
           expect_status(400)
         end
         it "should accept pending training and statistics dataset when accepting feature store" do
-          projectname = "project_#{short_random_id}"
-          project = create_project_by_name(projectname)
+          project = create_project
           featurestore = "#{@project[:projectname].downcase}_featurestore.db"
           trainingDataset =  "#{@project[:projectname]}_Training_Datasets"
           statisticsDataset =  "Statistics"
@@ -733,8 +705,7 @@ describe "On #{ENV['OS']}" do
           expect_status(200)
         end
         it "should ignore shared training and statistics dataset when accepting feature store" do
-          projectname = "project_#{short_random_id}"
-          project = create_project_by_name(projectname)
+          project = create_project
           featurestore = "#{@project[:projectname].downcase}_featurestore.db"
           trainingDataset =  "#{@project[:projectname]}_Training_Datasets"
           statisticsDataset =  "Statistics"
@@ -758,8 +729,7 @@ describe "On #{ENV['OS']}" do
           expect_status(200)
         end
         it "should unshare training and statistics dataset when unsharing feature store" do
-          projectname = "project_#{short_random_id}"
-          project = create_project_by_name(projectname)
+          project = create_project
           featurestore = "#{@project[:projectname].downcase}_featurestore.db"
           trainingDataset =  "#{@project[:projectname]}_Training_Datasets"
           statisticsDataset =  "Statistics"
@@ -788,8 +758,7 @@ describe "On #{ENV['OS']}" do
           expect_status_details(204)
         end
         it "should unshare training and statistics dataset when deleting feature store" do
-          projectname = "project_#{short_random_id}"
-          project = create_project_by_name(projectname)
+          project = create_project
           featurestore = "#{@project[:projectname].downcase}_featurestore.db"
           trainingDataset =  "#{@project[:projectname]}_Training_Datasets"
           statisticsDataset =  "Statistics"
@@ -813,8 +782,7 @@ describe "On #{ENV['OS']}" do
           with_valid_project
         end
         it "should delete dataset shared with other project" do
-          projectname = "project_#{short_random_id}"
-          project = create_project_by_name(projectname)
+          project = create_project
           dsname = "dataset_#{short_random_id}"
           ds = create_dataset_by_name_checked(@project, dsname, permission: "READ_ONLY")
           request_access(@project, ds, project)
@@ -826,8 +794,7 @@ describe "On #{ENV['OS']}" do
           expect_status(400)
         end
         it "should unshare a dataset and not delete the original" do
-          projectname = "project_#{short_random_id}"
-          project = create_project_by_name(projectname)
+          project = create_project
           dsname = "dataset_#{short_random_id}"
           ds = create_dataset_by_name_checked(@project, dsname, permission: "READ_ONLY")
           request_access(@project, ds, project)
@@ -840,10 +807,8 @@ describe "On #{ENV['OS']}" do
           expect_status(200)
         end
         it "should unshare from one project" do
-          projectname = "project_#{short_random_id}"
-          project = create_project_by_name(projectname)
-          projectname1 = "project_#{short_random_id}"
-          project1 = create_project_by_name(projectname1)
+          project = create_project
+          project1 = create_project
           dsname = "dataset_#{short_random_id}"
           ds = create_dataset_by_name_checked(@project, dsname, permission: "READ_ONLY")
           request_access(@project, ds, project)
@@ -1291,8 +1256,7 @@ describe "On #{ENV['OS']}" do
           project = get_project
           newUser = create_user
           create_session(newUser[:email], "Pass123")
-          projectname = "project_#{short_random_id}"
-          project1 = create_project_by_name(projectname)
+          project1 = create_project
           zip_dataset(project1, "Logs/../../../Projects/#{project[:projectname]}/Logs/README.md", datasetType: "&type=DATASET")
           expect_status(400)
           expect_json(errorCode: 110011) # DataSet not found.
@@ -1302,8 +1266,7 @@ describe "On #{ENV['OS']}" do
           project = get_project
           newUser = create_user
           create_session(newUser[:email], "Pass123")
-          projectname = "project_#{short_random_id}"
-          project1 = create_project_by_name(projectname)
+          project1 = create_project
           unzip_dataset(project1, "Logs/../../../Projects/#{project[:projectname]}/Logs/README.md.zip", datasetType: "&type=DATASET")
           expect_status(400) # bad request
           expect_json(errorCode: 110011) # DataSet not found.
@@ -1453,8 +1416,7 @@ describe "On #{ENV['OS']}" do
         with_valid_project
       end
       it 'should allow .. if path resolves to a valid file' do
-        projectname = "project_#{short_random_id}"
-        project = create_project_by_name(projectname)
+        project = create_project
         dsname = "dataset_#{short_random_id}"
         ds = create_dataset_by_name_checked(@project, dsname, permission: "READ_ONLY")
         request_access(@project, ds, project)

@@ -46,9 +46,7 @@ describe "On #{ENV['OS']}" do
     context 'with authentication' do
       before :all do
         with_valid_project
-        wait_for do
-          CondaCommands.find_by(project_id: @project[:id]).nil?
-        end
+        wait_for_running_command(@project[:id])
       end
       context 'conda enabled' do
         before do
@@ -58,15 +56,11 @@ describe "On #{ENV['OS']}" do
         end
         after :each do
           begin
-            wait_for(10) do
-              CondaCommands.find_by(project_id: @project[:id]).nil?
-            end
+            wait_for_running_command(@project[:id], timeout=10)
           rescue RuntimeError => e
             delete_env(@project[:id], ENV['PYTHON_VERSION'])
             @project = create_env_and_update_project(@project, ENV['PYTHON_VERSION'])
-            wait_for do
-              CondaCommands.find_by(project_id: @project[:id]).nil?
-            end
+            wait_for_running_command(@project[:id])
           end
         end
         context 'environment' do
@@ -87,9 +81,7 @@ describe "On #{ENV['OS']}" do
             expect(json_body[:count]).to be > 0
             expect(json_body[:count]).to be <= num_hosts
 
-            wait_for do
-              CondaCommands.find_by(project_id: @project[:id]).nil?
-            end
+            wait_for_running_command(@project[:id])
 
             get_env_commands(@project[:id], ENV['PYTHON_VERSION'])
             expect(json_body[:count]).to be == 0
@@ -109,9 +101,7 @@ describe "On #{ENV['OS']}" do
             export_env(@project[:id], ENV['PYTHON_VERSION'])
             expect_status(200)
 
-            wait_for do
-              CondaCommands.find_by(project_id: @project[:id]).nil?
-            end
+            wait_for_running_command(@project[:id])
           end
         end
         context 'search' do
@@ -141,9 +131,7 @@ describe "On #{ENV['OS']}" do
             get_library_commands(@project[:id], ENV['PYTHON_VERSION'], 'modin%5Bdask%5D', expected_commands: 1)
             get_library_commands(@project[:id], ENV['PYTHON_VERSION'], 'imageio', expected_commands: 1)
 
-            wait_for do
-              CondaCommands.find_by(project_id: @project[:id]).nil?
-            end
+            wait_for_running_command(@project[:id])
 
             get_library_commands(@project[:id], ENV['PYTHON_VERSION'], 'modin%5Bdask%5D', expected_commands: 0)
 
@@ -162,9 +150,7 @@ describe "On #{ENV['OS']}" do
 
             delete_env(@project[:id], ENV['PYTHON_VERSION'])
 
-            wait_for do
-              CondaCommands.find_by(project_id: @project[:id]).nil?
-            end
+            wait_for_running_command(@project[:id])
           end
           it 'install latest library version' do
             expect(CondaCommands.find_by(project_id: @project[:id])).to be_nil
@@ -176,9 +162,7 @@ describe "On #{ENV['OS']}" do
             get_library_commands(@project[:id], ENV['PYTHON_VERSION'], 'folium', expected_commands: 1)
             get_library_commands(@project[:id], ENV['PYTHON_VERSION'], 'rapidjson', expected_commands: 1)
 
-            wait_for do
-              CondaCommands.find_by(project_id: @project[:id]).nil?
-            end
+            wait_for_running_command(@project[:id])
 
             get_library_commands(@project[:id], ENV['PYTHON_VERSION'], 'folium', expected_commands: 0)
             get_library_commands(@project[:id], ENV['PYTHON_VERSION'], 'rapidjson', expected_commands: 0)
@@ -192,25 +176,18 @@ describe "On #{ENV['OS']}" do
             expect(rapidjson_library[:packageSource]).to eq("CONDA")
 
             delete_env(@project[:id], ENV['PYTHON_VERSION'])
-
-            wait_for do
-              CondaCommands.find_by(project_id: @project[:id]).nil?
-            end
+            wait_for_running_command(@project[:id])
           end
           it 'install from git' do
             expect(CondaCommands.find_by(project_id: @project[:id])).to be_nil
             @project = create_env_and_update_project(@project, ENV['PYTHON_VERSION'])
             uninstall_library(@project[:id], ENV['PYTHON_VERSION'], 'hops')
 
-            wait_for do
-              CondaCommands.find_by(project_id: @project[:id]).nil?
-            end
+            wait_for_running_command(@project[:id])
 
             install_library(@project[:id], ENV['PYTHON_VERSION'], 'hops-util-py.git@branch-2.0', 'GIT', 'git', 'https://github.com/logicalclocks/hops-util-py.git@branch-2.0')
 
-            wait_for do
-              CondaCommands.find_by(project_id: @project[:id]).nil?
-            end
+            wait_for_running_command(@project[:id])
 
             list_libraries(@project[:id], ENV['PYTHON_VERSION'])
 
@@ -224,9 +201,7 @@ describe "On #{ENV['OS']}" do
             upload_wheel
             install_library(@project[:id], ENV['PYTHON_VERSION'], 'lark_parser-0.10.1-py2.py3-none-any.whl', 'WHEEL', 'wheel', "/Projects/#{@project[:projectname]}/Resources/lark_parser-0.10.1-py2.py3-none-any.whl")
 
-            wait_for do
-              CondaCommands.find_by(project_id: @project[:id]).nil?
-            end
+            wait_for_running_command(@project[:id])
 
             list_libraries(@project[:id], ENV['PYTHON_VERSION'])
 
@@ -240,9 +215,7 @@ describe "On #{ENV['OS']}" do
             upload_environment
             install_library(@project[:id], ENV['PYTHON_VERSION'], 'environment.yml', 'ENVIRONMENT_YAML', 'environment', "/Projects/#{@project[:projectname]}/Resources/environment.yml")
 
-            wait_for do
-              CondaCommands.find_by(project_id: @project[:id]).nil?
-            end
+            wait_for_running_command(@project[:id])
 
             list_libraries(@project[:id], ENV['PYTHON_VERSION'])
             dropbox_library = json_body[:items].detect { |library| library[:library] == "dropbox" }
@@ -256,9 +229,7 @@ describe "On #{ENV['OS']}" do
             upload_requirements
             install_library(@project[:id], ENV['PYTHON_VERSION'], 'requirements.txt', 'REQUIREMENTS_TXT', 'requirements', "/Projects/#{@project[:projectname]}/Resources/requirements.txt")
 
-            wait_for do
-              CondaCommands.find_by(project_id: @project[:id]).nil?
-            end
+            wait_for_running_command(@project[:id])
 
             list_libraries(@project[:id], ENV['PYTHON_VERSION'])
             imageio_library = json_body[:items].detect { |library| library[:library] == "imageio" }
@@ -269,9 +240,7 @@ describe "On #{ENV['OS']}" do
             @project = create_env_and_update_project(@project, ENV['PYTHON_VERSION'])
             uninstall_library(@project[:id], ENV['PYTHON_VERSION'], 'imageio')
 
-            wait_for do
-              CondaCommands.find_by(project_id: @project[:id]).nil?
-            end
+            wait_for_running_command(@project[:id])
 
             list_libraries(@project[:id], ENV['PYTHON_VERSION'])
             imageio_library = json_body[:items].detect { |library| library[:library] == "imageio" }
@@ -285,9 +254,7 @@ describe "On #{ENV['OS']}" do
 
           install_library(@project[:id], ENV['PYTHON_VERSION'], 'hops', 'PIP', conda_channel, lib_version: '2.1.0')
 
-          wait_for do
-            CondaCommands.find_by(project_id: @project[:id]).nil?
-          end
+          wait_for_running_command(@project[:id])
         end
         end
       end
@@ -309,9 +276,7 @@ describe "On #{ENV['OS']}" do
     context 'with authentication' do
       before :all do
         with_valid_project
-        wait_for do
-          CondaCommands.find_by(project_id: @project[:id]).nil?
-        end
+        wait_for_running_command(@project[:id])
       end
       context 'conda not enabled' do
         it 'should fail to list envs' do
@@ -394,9 +359,7 @@ describe "On #{ENV['OS']}" do
           rescue RuntimeError => e
             delete_env(@project[:id], ENV['PYTHON_VERSION'])
             @project = create_env_and_update_project(@project, ENV['PYTHON_VERSION'])
-            wait_for do
-              CondaCommands.find_by(project_id: @project[:id]).nil?
-            end
+            wait_for_running_command(@project[:id])
           end
         end
         context 'search' do
@@ -477,16 +440,12 @@ describe "On #{ENV['OS']}" do
             # Install a library to create the new environment
             install_library(@project[:id], ENV['PYTHON_VERSION'], 'htmlmin', 'CONDA', conda_channel, lib_version: '0.1.12')
             # Wait until library is installed
-            wait_for do
-              CondaCommands.find_by(project_id: @project[:id]).nil?
-            end
+            wait_for_running_command(@project[:id])
             @project = get_project_by_name(@project[:projectname])
             non_versioned_project_image = @project.docker_image.rpartition('.').first
             delete_env(@project[:id], ENV['PYTHON_VERSION'])
 
-            wait_for do
-              CondaCommands.find_by(project_id: @project[:id]).nil?
-            end
+            wait_for_running_command(@project[:id])
             wait_result = wait_for_me_time(15, 1) do
               begin
                 # Check if project docker images were removed by kagent
@@ -504,20 +463,16 @@ describe "On #{ENV['OS']}" do
           end
           it 'clean up env of deleted project' do
             expect(CondaCommands.find_by(project_id: @project[:id])).to be_nil
-            projectname = "project_#{short_random_id}"
-            project = create_project_by_name(projectname)
+            project = create_project
             project = create_env_and_update_project(project, ENV['PYTHON_VERSION'])
 
             wait_for do
               CondaCommands.where(["project_id = ? and op = ?", project[:id], "SYNC_BASE_ENV"]).empty?
             end
-
             install_library(project[:id], ENV['PYTHON_VERSION'], 'dropbox', 'CONDA', conda_channel, lib_version: '10.2.0')
             project = get_project_by_name(project[:projectname])
             non_versioned_project_image = project.docker_image.rpartition('.').first
-            wait_for do
-              CondaCommands.find_by(project_id: project[:id]).nil?
-            end
+            wait_for_running_command(@project[:id])
             delete_project(project)
             # Wait for garbage collection
             wait_result = wait_for_me_time(15, 1) do
@@ -543,9 +498,7 @@ describe "On #{ENV['OS']}" do
             expect(check_if_img_exists_locally("python38:" + getVar('hopsworks_version').value)).to be true
 
             delete_env(@project[:id], ENV['PYTHON_VERSION'])
-            wait_for do
-              CondaCommands.find_by(project_id: @project[:id]).nil?
-            end
+            wait_for_running_command(@project[:id])
             expect(check_if_img_exists_locally("python38:" + getVar('hopsworks_version').value)).to be true
           end
           it 'create environment from yml with jupyter install true' do
@@ -554,9 +507,7 @@ describe "On #{ENV['OS']}" do
             delete_env(@project[:id], ENV['PYTHON_VERSION'])
             create_env_from_file(@project[:id], "/Projects/#{@project[:projectname]}/Resources/environment_cpu.yml", true)
 
-            wait_for do
-              CondaCommands.find_by(project_id: @project[:id]).nil?
-            end
+            wait_for_running_command(@project[:id])
 
             @project = get_project_by_name(@project[:projectname])
             expect(ENV['PYTHON_VERSION']).to eq ENV['PYTHON_VERSION']
@@ -566,10 +517,7 @@ describe "On #{ENV['OS']}" do
             upload_yml
             delete_env(@project[:id], ENV['PYTHON_VERSION'])
             create_env_from_file(@project[:id], "/Projects/#{@project[:projectname]}/Resources/environment_cpu.yml", false)
-
-            wait_for do
-              CondaCommands.find_by(project_id: @project[:id]).nil?
-            end
+            wait_for_running_command(@project[:id])
 
             @project = get_project_by_name(@project[:projectname])
             expect(ENV['PYTHON_VERSION']).to eq ENV['PYTHON_VERSION']
@@ -580,9 +528,7 @@ describe "On #{ENV['OS']}" do
             upload_requirements
             create_env_from_file(@project[:id], "/Projects/#{@project[:projectname]}/Resources/requirements.txt", true)
 
-            wait_for do
-              CondaCommands.find_by(project_id: @project[:id]).nil?
-            end
+            wait_for_running_command(@project[:id])
 
             @project = get_project_by_name(@project[:projectname])
             expect(ENV['PYTHON_VERSION']).to eq ENV['PYTHON_VERSION']
@@ -597,10 +543,7 @@ describe "On #{ENV['OS']}" do
             delete_env(@project[:id], ENV['PYTHON_VERSION'])
             upload_requirements
             create_env_from_file(@project[:id], "/Projects/#{@project[:projectname]}/Resources/requirements.txt", false)
-
-            wait_for do
-              CondaCommands.find_by(project_id: @project[:id]).nil?
-            end
+            wait_for_running_command(@project[:id])
 
             @project = get_project_by_name(@project[:projectname])
             expect(ENV['PYTHON_VERSION']).to eq ENV['PYTHON_VERSION']
@@ -626,9 +569,7 @@ describe "On #{ENV['OS']}" do
 
             uninstall_library(@project[:id], ENV['PYTHON_VERSION'], 'tensorboard')
 
-            wait_for do
-              CondaCommands.find_by(project_id: @project[:id]).nil?
-            end
+            wait_for_running_command(@project[:id])
 
             get_env_conflicts(@project[:id], ENV['PYTHON_VERSION'])
             expect(json_body[:count]).to be > 0
@@ -644,9 +585,7 @@ describe "On #{ENV['OS']}" do
 
             uninstall_library(@project[:id], ENV['PYTHON_VERSION'], 'notebook')
 
-            wait_for do
-              CondaCommands.find_by(project_id: @project[:id]).nil?
-            end
+            wait_for_running_command(@project[:id])
 
             get_env_conflicts(@project[:id], ENV['PYTHON_VERSION'], "?filter_by=service:JUPYTER")
             expect(json_body[:count]).to be > 0

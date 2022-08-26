@@ -134,8 +134,8 @@ describe "On #{ENV['OS']}" do
 
         it 'should create a project X containing a dataset Y after deleting a project X containing a dataset Y (issue #425)' do
           check_project_limit(2)
-          projectname = "project_#{short_random_id}"
-          project = create_project_by_name(projectname)
+          project = create_project
+          projectname = project[:projectname]
           dsname = "dataset_#{short_random_id}"
           create_dataset_by_name_checked(project, dsname, permission: "READ_ONLY")
           delete_project(project)

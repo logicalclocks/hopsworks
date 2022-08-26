@@ -111,7 +111,7 @@ describe "On #{ENV['OS']}" do
   context "correct capitalization of project name in hive related ops" do
     before :all do
       #making sure no one changes the default test project to all lowcase
-      @project_name = "ProJect_#{short_random_id}"
+      @project_name = "ProJect_#{getProjectId}_#{short_random_id}"
       create_project_by_name(@project_name)
       @project = get_project_by_name(@project_name)
       pp get_project_inode(@project)[:id] if defined?(@debugOpt) && @debugOpt

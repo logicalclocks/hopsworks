@@ -181,8 +181,7 @@ describe "On #{ENV['OS']}" do
         connector_name = parsed_json["name"]
         reset_session
         #create another project
-        projectname = "project_#{short_random_id}"
-        project1 = create_project_by_name(projectname)
+        project1 = create_project
         reset_session
         # logi with user for project and share dataset
         create_session(project[:username], "Pass123")

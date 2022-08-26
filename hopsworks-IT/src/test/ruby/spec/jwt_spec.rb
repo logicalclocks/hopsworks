@@ -159,7 +159,7 @@ describe "On #{ENV['OS']}" do
     context "#users" do
       before :all do
         with_valid_session
-        @proj = create_project_by_name("Project_DEMO_#{Time.now.to_i}")
+        @proj = create_project
         proj_inode = INode.where("partition_id": @proj[:partition_id],"parent_id": @proj[:inode_pid], "name": @proj[:inode_name])
         expect(proj_inode.length).to eq 1
         @proj_inode_id=proj_inode[0][:id]

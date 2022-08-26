@@ -46,17 +46,6 @@ module HopsHelper
     end
   end
 
-  def chmod_local_dir(src, mode, recursive=true)
-    if recursive
-      system "sudo /bin/bash -c  \"chmod -R #{mode} #{src}\""
-    else
-      system "sudo /bin/bash -c  \"chmod #{mode} #{src}\""
-    end
-    if $?.exitstatus > 0
-      raise "Failed chmod: #{mode} local dir: #{src}"
-    end
-  end
-
   def copy_from_local(src, dest, owner, group, mode, name)
     system "sudo su #{@@hdfs_user} /bin/bash -c \"#{@@hadoop_home}/bin/hdfs dfs -copyFromLocal -f #{src} #{dest}\""
     if $?.exitstatus > 0

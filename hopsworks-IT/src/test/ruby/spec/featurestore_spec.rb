@@ -68,8 +68,8 @@ describe "On #{ENV['OS']}" do
 
         it "should be able to get shared feature stores" do
           project = get_project
-          projectname = "project_#{short_random_id}"
-          second_project = create_project_by_name(projectname)
+          second_project = create_project
+          projectname = second_project.projectname
           share_dataset(second_project, "#{projectname}_featurestore.db", @project['projectname'], permission:
               "EDITABLE", datasetType: "&type=FEATURESTORE")
 
@@ -185,7 +185,7 @@ describe "On #{ENV['OS']}" do
 
         it "should assign the privileges to the existing users of the project" do
           # Create a project without feature store
-          no_fs_project = create_project(nil, [])
+          no_fs_project = create_project(projectName = nil, services = [])
 
           # Add member to the project
           user = create_user
