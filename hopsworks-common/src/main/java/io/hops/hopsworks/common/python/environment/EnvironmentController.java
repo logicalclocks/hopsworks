@@ -17,10 +17,8 @@ package io.hops.hopsworks.common.python.environment;
 
 import com.google.common.base.Strings;
 import com.logicalclocks.servicediscoverclient.exceptions.ServiceDiscoveryException;
-import io.hops.hopsworks.common.agent.AgentController;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
 import io.hops.hopsworks.common.dao.python.CondaCommandFacade;
-import io.hops.hopsworks.common.dao.python.LibraryFacade;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.hdfs.DistributedFsService;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
@@ -75,8 +73,6 @@ public class EnvironmentController {
   @EJB
   private ProjectUtils projectUtils;
   @EJB
-  private AgentController agentController;
-  @EJB
   private LibraryController libraryController;
   @EJB
   private CondaCommandFacade condaCommandFacade;
@@ -86,8 +82,6 @@ public class EnvironmentController {
   private HdfsUsersController hdfsUsersController;
   @EJB
   private DistributedFsService dfs;
-  @EJB
-  private LibraryFacade libraryFacade;
   @EJB
   private OSProcessExecutor osProcessExecutor;
 
@@ -141,7 +135,6 @@ public class EnvironmentController {
     try {
       String condaListOutput = libraryController.condaList(projectUtils.getFullDockerImageName(project, false));
       Collection<PythonDep> projectDeps = libraryController.parseCondaList(condaListOutput);
-      projectDeps = libraryController.persistAndMarkImmutable(projectDeps);
       project = libraryController.syncProjectPythonDepsWithEnv(project, projectDeps);
       project = libraryController.addOngoingOperations(project);
       return project;
@@ -289,12 +282,8 @@ public class EnvironmentController {
   }
 
   public Project createEnv(Project project, Users user) throws PythonException {
-
-    List<CondaStatus> statuses = new ArrayList<>();
-    statuses.add(CondaStatus.NEW);
-    statuses.add(CondaStatus.ONGOING);
-    if(!condaCommandFacade.findByStatusAndCondaOpAndProject(statuses,
-        CondaOp.CREATE, project).isEmpty()) {
+    List<CondaStatus> statuses = Arrays.asList(CondaStatus.NEW, CondaStatus.ONGOING);
+    if(!condaCommandFacade.findByStatusAndCondaOpAndProject(statuses, CondaOp.CREATE, project).isEmpty()) {
       throw new PythonException(RESTCodes.PythonErrorCode.ANACONDA_ENVIRONMENT_INITIALIZING, Level.INFO);
     }
     if (project.getPythonEnvironment() != null) {

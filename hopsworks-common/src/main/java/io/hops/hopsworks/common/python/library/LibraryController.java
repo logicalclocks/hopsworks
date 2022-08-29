@@ -32,10 +32,10 @@ import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.OpenSearchException;
 import io.hops.hopsworks.exceptions.GenericException;
 import io.hops.hopsworks.exceptions.ProvenanceException;
+import io.hops.hopsworks.exceptions.PythonException;
 import io.hops.hopsworks.exceptions.ServiceException;
 import io.hops.hopsworks.persistence.entity.jupyter.config.GitBackend;
 import io.hops.hopsworks.persistence.entity.project.Project;
-import io.hops.hopsworks.persistence.entity.python.AnacondaRepo;
 import io.hops.hopsworks.persistence.entity.python.CondaCommands;
 import io.hops.hopsworks.persistence.entity.python.CondaInstallType;
 import io.hops.hopsworks.persistence.entity.python.CondaOp;
@@ -64,6 +64,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -88,15 +89,15 @@ public class LibraryController {
   @EJB
   private PyPiLibraryOpenSearchIndexer pypiIndexer;
 
-  public PythonDep getPythonDep(String dependency, Project project) {
-    return libraryFacade.findByDependencyAndProject(dependency, project);
+  public PythonDep getPythonDep(String dependency, Project project) throws PythonException {
+    return libraryFacade.findByDependencyAndProject(dependency, project)
+        .orElseThrow(() -> new PythonException(RESTCodes.PythonErrorCode.PYTHON_LIBRARY_NOT_FOUND, Level.FINE));
   }
 
   public void uninstallLibrary(Project project, Users user, String libName) throws GenericException, ServiceException {
     for (PythonDep dep : project.getPythonDepCollection()) {
       if (dep.getDependency().equals(libName)) {
-        uninstallLibrary(project, user,  dep.getInstallType(), dep.getRepoUrl().getUrl(), libName,
-          dep.getVersion());
+        uninstallLibrary(project, user, dep.getInstallType(), dep.getRepoUrl(), libName, dep.getVersion());
         break;
       }
     }
@@ -356,13 +357,10 @@ public class LibraryController {
   
   public Collection<PythonDep> parseCondaList(String condaListStr) throws ServiceException {
     Collection<PythonDep> deps = new ArrayList<>();
-    
     String[] lines = condaListStr.split(System.getProperty("line.separator"));
     
     for (int i = 3; i < lines.length; i++) {
-      
-      String line = lines[i];
-      String[] split = line.split(" +");
+      String[] split = lines[i].split(" +");
       
       String libraryName = split[0];
       String version = split[1];
@@ -375,10 +373,9 @@ public class LibraryController {
       if (!(channel.equals("pypi"))) {
         installType = CondaInstallType.CONDA;
       }
-      AnacondaRepo repo = libraryFacade.getRepo(channel, true);
-      boolean cannotBeRemoved = channel.equals("default");
-      PythonDep pyDep = libraryFacade.getOrCreateDep(repo, installType, libraryName, version,
-        false, cannotBeRemoved);
+
+      PythonDep pyDep = getOrCreateDep(channel, installType, libraryName, version,
+          settings.getImmutablePythonLibraryNames().contains(libraryName));
       deps.add(pyDep);
     }
     return deps;
@@ -390,42 +387,18 @@ public class LibraryController {
       if(condaCommand.getInstallType().equals(CondaInstallType.ENVIRONMENT))
           continue;
 
-      PythonDep pythonDep = new PythonDep();
-      pythonDep.setDependency(condaCommand.getLib());
-      pythonDep.setInstallType(condaCommand.getInstallType());
-      pythonDep.setPreinstalled(false);
-      AnacondaRepo repo = libraryFacade.getRepo(condaCommand.getChannelUrl(), false);
-      pythonDep.setRepoUrl(repo);
-      pythonDep.setVersion(condaCommand.getVersion());
-      pythonDep = libraryFacade.getOrCreateDep(pythonDep);
+      PythonDep pythonDep = getOrCreateDep(condaCommand.getChannelUrl(),
+          condaCommand.getInstallType(),
+          condaCommand.getLib(),
+          condaCommand.getVersion(),
+          false
+      );
 
       if(!project.getPythonDepCollection().contains(pythonDep)) {
         project.getPythonDepCollection().add(pythonDep);
       }
     }
     return projectFacade.update(project);
-  }
-
-  /**
-   * For each library in the conda environment figure out if it should be marked as unmutable.
-   *
-   * @param pyDepsInImage
-   * @return
-   */
-  public Collection<PythonDep> persistAndMarkImmutable(Collection<PythonDep> pyDepsInImage) {
-    Collection<PythonDep> deps = new ArrayList();
-    for (PythonDep dep: pyDepsInImage) {
-      String libraryName = dep.getDependency();
-      if (settings.getImmutablePythonLibraryNames().contains(libraryName)) {
-        PythonDep pyDep = libraryFacade.getOrCreateDep(dep.getRepoUrl(), dep.getInstallType(), libraryName,
-            dep.getVersion(), true, true);
-        deps.add(pyDep);
-      } else {
-        PythonDep pyDep = libraryFacade.getOrCreateDep(dep);
-        deps.add(pyDep);
-      }
-    }
-    return deps;
   }
 
   public String condaList(String dockerImage) throws IOException {
@@ -456,5 +429,28 @@ public class LibraryController {
 
   public boolean isPyPiIndexed() {
     return this.pypiIndexer.isIndexed();
+  }
+
+  // Here we rely on "optimistic" concurrency control. In most cases, in most of our deployments, this method will be
+  // called by a single user at the time. However, if multiple users are creating projects in parallel on a new
+  // deployment, or installing the same library, or installing libraries with the same dependency(ies)
+  // we might receive a ConstraintViolationException from the database. in that case, it means that the
+  // row has been inserted by another thread (or Hopsworks instance) and so we need to re-fetch it from the database
+  public PythonDep getOrCreateDep(String repo, CondaInstallType installType, String dependency,
+                                  String version, boolean preinstalled) {
+    Optional<PythonDep> depOptional = libraryFacade.get(repo, installType, dependency, version);
+    if (depOptional.isPresent()) {
+      return depOptional.get();
+    }
+
+    // dependency not present, try to insert it
+    depOptional = libraryFacade.create(repo, installType, dependency, version, preinstalled);
+    if (depOptional.isPresent()) {
+      return depOptional.get();
+    }
+
+    // the library failed to insert, constraint violation, get it from the database
+    return libraryFacade.get(repo, installType, dependency, version)
+        .orElseGet(null);
   }
 }
