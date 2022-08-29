@@ -50,9 +50,7 @@ import javax.persistence.Enumerated;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
-import javax.persistence.JoinColumn;
 import javax.persistence.ManyToMany;
-import javax.persistence.ManyToOne;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
 import javax.persistence.Table;
@@ -97,26 +95,26 @@ public class PythonDep implements Serializable {
   private Integer id;
   @Basic(optional = false)
   @NotNull
-  @Size(min = 1,
-          max = 128)
+  @Size(min = 1, max = 128)
   @Column(name = "dependency")
   private String dependency;
   @Basic(optional = false)
   @NotNull
-  @Size(min = 1,
-          max = 128)
+  @Size(min = 1, max = 128)
   @Column(name = "version")
   private String version;
-  @Basic(optional = true)
+
   @Column(name = "preinstalled")
   private boolean preinstalled;
 
+  @Basic(optional = false)
+  @NotNull
+  @Size(min = 1, max = 255)
+  @Column(name = "repo_url")
+  private String repoUrl;
+
   @ManyToMany(mappedBy = "pythonDepCollection")
   private Collection<Project> projectCollection;
-  @JoinColumn(name = "repo_id",
-          referencedColumnName = "id")
-  @ManyToOne(optional = false)
-  private AnacondaRepo repoUrl;
 
   @Column(name = "install_type")
   @Enumerated(EnumType.ORDINAL)
@@ -163,11 +161,11 @@ public class PythonDep implements Serializable {
     this.projectCollection = projectCollection;
   }
 
-  public AnacondaRepo getRepoUrl() {
+  public String getRepoUrl() {
     return repoUrl;
   }
 
-  public void setRepoUrl(AnacondaRepo repoUrl) {
+  public void setRepoUrl(String repoUrl) {
     this.repoUrl = repoUrl;
   }
 

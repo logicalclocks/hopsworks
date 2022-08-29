@@ -22,7 +22,6 @@ import io.hops.hopsworks.common.dao.python.CondaCommandFacade;
 import io.hops.hopsworks.common.dataset.DatasetController;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.hdfs.DistributedFsService;
-import io.hops.hopsworks.common.hdfs.HdfsUsersController;
 import io.hops.hopsworks.common.hdfs.Utils;
 import io.hops.hopsworks.common.python.commands.CommandsController;
 import io.hops.hopsworks.common.python.environment.DockerRegistryMngr;
@@ -125,9 +124,7 @@ public class LibraryInstaller {
   private DistributedFsService dfs;
   @EJB
   private SecretsController secretsController;
-  @EJB
-  private HdfsUsersController hdfsUsersController;
-  
+
   @PostConstruct
   public void init() {
     prog =  settings.getSudoersDir() + "/dockerImage.sh";
@@ -651,7 +648,6 @@ public class LibraryInstaller {
 
     String condaListOutput = libraryController.condaList(projectUtils.getFullDockerImageName(project, true));
     Collection<PythonDep> projectDeps = libraryController.parseCondaList(condaListOutput);
-    projectDeps = libraryController.persistAndMarkImmutable(projectDeps);
 
     project = projectFacade.findById(cc.getProjectId().getId()).orElseThrow(() -> new ProjectException(
       RESTCodes.ProjectErrorCode.PROJECT_NOT_FOUND, Level.FINE, "projectId: " + cc.getProjectId().getId()));

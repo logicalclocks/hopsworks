@@ -127,7 +127,6 @@
     <class>io.hops.hopsworks.persistence.entity.project.jobs.DefaultJobConfiguration</class>
     <class>io.hops.hopsworks.persistence.entity.python.PythonEnvironment</class>
     <class>io.hops.hopsworks.persistence.entity.python.PythonDep</class>
-    <class>io.hops.hopsworks.persistence.entity.python.AnacondaRepo</class>
     <class>io.hops.hopsworks.persistence.entity.python.CondaCommands</class>
     <class>io.hops.hopsworks.persistence.entity.remote.user.RemoteUser</class>
     <class>io.hops.hopsworks.persistence.entity.remote.oauth.OauthClient</class>
