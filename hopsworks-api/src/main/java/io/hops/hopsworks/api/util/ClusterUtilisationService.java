@@ -42,6 +42,7 @@ package io.hops.hopsworks.api.util;
 import com.logicalclocks.servicediscoverclient.exceptions.ServiceDiscoveryException;
 import com.logicalclocks.servicediscoverclient.service.Service;
 import io.hops.hopsworks.api.filter.Audience;
+import io.hops.hopsworks.api.filter.apiKey.ApiKeyRequired;
 import io.hops.hopsworks.audit.logger.LogLevel;
 import io.hops.hopsworks.audit.logger.annotation.Logged;
 import io.hops.hopsworks.common.dao.host.HostsFacade;
@@ -50,6 +51,7 @@ import io.hops.hopsworks.common.proxies.client.HttpClient;
 import io.hops.hopsworks.common.pythonresources.PythonResourcesController;
 import io.hops.hopsworks.exceptions.ServiceException;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
+import io.hops.hopsworks.persistence.entity.user.security.apiKey.ApiScope;
 import io.hops.hopsworks.restutils.RESTCodes;
 import io.swagger.annotations.Api;
 import org.apache.http.HttpHost;
@@ -73,6 +75,7 @@ import javax.ws.rs.core.Response;
 @Stateless
 @Path("/clusterUtilisation")
 @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
+@ApiKeyRequired(acceptedScopes = {ApiScope.ADMIN}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
 @Api(value = "Cluster Utilisation Service", description = "Cluster Utilisation Service")
 @TransactionAttribute(TransactionAttributeType.NEVER)
 public class ClusterUtilisationService {
