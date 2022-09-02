@@ -98,6 +98,8 @@ public class GitExecutionController {
                                         Users hopsworksUser, GitRepository repository)
       throws HopsSecurityException, GitOpException {
     String hdfsUsername = hdfsUsersController.getHdfsUserName(project, hopsworksUser);
+    //set the provider to validate secrets for some commands
+    gitCommandConfiguration.setProvider(repository.getGitProvider());
     BasicAuthSecrets authSecrets = gitCommandOperationUtil.getAuthenticationSecrets(hopsworksUser,
         repository.getGitProvider());
     commandConfigurationValidator.validateProviderConfiguration(authSecrets, gitCommandConfiguration);
