@@ -152,6 +152,7 @@
     <class>io.hops.hopsworks.persistence.entity.user.security.audit.Userlogins</class>
     <class>io.hops.hopsworks.persistence.entity.user.security.secrets.Secret</class>
     <class>io.hops.hopsworks.persistence.entity.util.Variables</class>
+    <class>io.hops.hopsworks.persistence.entity.tutorials.Tutorial</class>
     <class>io.hops.hopsworks.persistence.entity.yarn.YarnContainersLog</class>
     <class>io.hops.hopsworks.persistence.entity.integrations.DatabricksInstance</class>
     <class>io.hops.hopsworks.persistence.entity.alertmanager.AlertManagerConfigEntity</class>

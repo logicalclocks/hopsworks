@@ -95,6 +95,7 @@ public class ApplicationConfig extends ResourceConfig {
     register(io.hops.hopsworks.api.util.EndpointService.class);
     register(io.hops.hopsworks.api.util.UploadService.class);
     register(io.hops.hopsworks.api.util.VariablesService.class);
+    register(io.hops.hopsworks.api.tutorials.TutorialsResource.class);
     register(io.hops.hopsworks.api.cluster.Monitor.class);
     register(io.hops.hopsworks.api.serving.ServingConfResource.class);
     register(io.hops.hopsworks.api.featurestore.FeaturestoreService.class);
