@@ -1051,9 +1051,11 @@ describe "On #{ENV['OS']}" do
           expect(features[2]['name']).to eql("b_testfeature1")
           expect(features[2]['type']).to eql("int")
 
-          get "#{ENV['HOPSWORKS_API']}/project/#{@project.id}/featurestores/#{featurestore_id}/trainingdatasets/#{training_dataset['id']}/query"
+          json_result = get "#{ENV['HOPSWORKS_API']}/project/#{@project.id}/featurestores/#{featurestore_id}/trainingdatasets/#{training_dataset['id']}/query"
           # this is returning 200
-          expect_status_details(400)
+          expect_status_details(200)
+          parsed_json = JSON.parse(json_result)
+          expect(parsed_json["query"]).to eql("Parent feature groups of the following features are not available anymore: b_testfeature1")
         end
 
         it "should be able to create a training dataset without statistics settings to test the defaults" do

@@ -134,11 +134,6 @@ describe "On #{ENV['OS']}" do
           logs_storage_policy = get_storage_policy("/Projects/#{@project[:projectname]}/Logs")
           expect(logs_storage_policy).to include("HOT")
         end
-
-        it '/Project dir should have DB storage policy' do
-          projects_storage_policy = get_storage_policy("/Projects/")
-          expect(projects_storage_policy).to include("DB")
-        end
       end
     end
     describe "#access" do

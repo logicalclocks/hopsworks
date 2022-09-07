@@ -41,8 +41,6 @@ public class ConflictBuilder {
 
   @EJB
   private EnvironmentController environmentController;
-  @EJB
-  private Settings settings;
 
   public ConflictDTO uri(ConflictDTO dto, UriInfo uriInfo, Project project) {
     dto.setHref(uriInfo.getAbsolutePathBuilder()
@@ -67,7 +65,7 @@ public class ConflictBuilder {
       if(!Strings.isNullOrEmpty(project.getPythonEnvironment().getConflicts())) {
         conflicts.addAll(Arrays.asList(project.getPythonEnvironment().getConflicts().split("\n")));
       }
-      List<String> jupyterDeps = settings.getJupyterDependencies();
+      List<String> jupyterDeps = Settings.JUPYTER_DEPENDENCIES;
       for(String conflict: conflicts) {
         ConflictDTO conflictDTO = buildItem(conflict, jupyterDeps);
         if(!remove(conflictDTO, resourceRequest)) {

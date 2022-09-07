@@ -95,16 +95,16 @@ public class EnvironmentController {
     List<CondaCommands> syncCommands =
         condaCommandFacade.findByStatusAndCondaOpAndProject(statuses, CondaOp.SYNC_BASE_ENV, project);
 
-    if(!syncCommands.isEmpty()) {
+    if (!syncCommands.isEmpty()) {
       Optional<CondaCommands> ongoingSyncCommand = syncCommands.stream()
           .filter(d -> d.getStatus().name().equals(CondaStatus.NEW.name()) ||
               d.getStatus().name().equals(CondaStatus.ONGOING.name())).findFirst();
-      if(ongoingSyncCommand.isPresent()) {
+      if (ongoingSyncCommand.isPresent()) {
         throw new PythonException(RESTCodes.PythonErrorCode.ANACONDA_ENVIRONMENT_INITIALIZING, Level.FINE);
       }
       Optional<CondaCommands> failedSyncCommand = syncCommands.stream()
           .filter(d -> d.getStatus().name().equals(CondaStatus.FAILED.name())).findFirst();
-      if(failedSyncCommand.isPresent()) {
+      if (failedSyncCommand.isPresent()) {
         throw new PythonException(RESTCodes.PythonErrorCode.ANACONDA_ENVIRONMENT_FAILED_INITIALIZATION, Level.FINE);
       }
     }
@@ -116,7 +116,7 @@ public class EnvironmentController {
         !pythonVersion.equals(project.getPythonEnvironment().getPythonVersion())) {
       throw new PythonException(RESTCodes.PythonErrorCode.ANACONDA_ENVIRONMENT_NOT_FOUND, Level.FINE);
     }
-    if(syncMustBeFinished) {
+    if (syncMustBeFinished) {
       checkCondaSyncFinished(project);
     }
   }
@@ -131,17 +131,28 @@ public class EnvironmentController {
     }
   }
 
-  public Project updateInstalledDependencies(Project project) throws ServiceException, IOException {
+  public Project updateInstalledDependencies(Project project) throws ServiceException, IOException, PythonException {
+    String dockerImage = null;
     try {
-      String condaListOutput = libraryController.condaList(projectUtils.getFullDockerImageName(project, false));
-      Collection<PythonDep> projectDeps = libraryController.parseCondaList(condaListOutput);
-      project = libraryController.syncProjectPythonDepsWithEnv(project, projectDeps);
-      project = libraryController.addOngoingOperations(project);
-      return project;
+      dockerImage = projectUtils.getFullDockerImageName(project, false);
     } catch (ServiceDiscoveryException e) {
       throw new ServiceException(RESTCodes.ServiceErrorCode.SERVICE_DISCOVERY_ERROR, Level.SEVERE, null,
-        e.getMessage(), e);
+          e.getMessage(), e);
     }
+
+    String condaListOutput = libraryController.condaList(dockerImage);
+    // Update installed dependencies
+    Collection<PythonDep> projectDeps = libraryController.parseCondaList(condaListOutput);
+    projectDeps = libraryController.addOngoingOperations(project.getCondaCommandsCollection(), projectDeps);
+    project.setPythonDepCollection(projectDeps);
+
+    // Update PIP conflicts
+    String pipConflictStr = getPipConflicts(dockerImage);
+    setPipConflicts(project, pipConflictStr);
+
+    projectFacade.update(project);
+    projectFacade.flushEm();
+    return project;
   }
 
   @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
@@ -150,13 +161,13 @@ public class EnvironmentController {
     List<CondaStatus> statuses = new ArrayList<>();
     statuses.add(CondaStatus.NEW);
     statuses.add(CondaStatus.ONGOING);
-    if(!condaCommandFacade.findByStatusAndCondaOpAndProject(statuses, CondaOp.CREATE, project).isEmpty()) {
+    if (!condaCommandFacade.findByStatusAndCondaOpAndProject(statuses, CondaOp.CREATE, project).isEmpty()) {
       LOGGER.log(Level.INFO, "There is already a " + CondaOp.CREATE.name() + " operation for this project.");
       return;
     }
     condaEnvironmentOp(CondaOp.CREATE, project.getPythonEnvironment().getPythonVersion(), project, user,
         project.getPythonEnvironment().getPythonVersion(), null, false);
-    if(project.getPythonEnvironment() == null) {
+    if (project.getPythonEnvironment() == null) {
       PythonEnvironment pythonEnvironment = new PythonEnvironment();
       pythonEnvironment.setPythonVersion(settings.getDockerBaseImagePythonVersion());
       pythonEnvironment.setProjectId(project.getId());
@@ -176,17 +187,16 @@ public class EnvironmentController {
     String username = hdfsUsersController.getHdfsUserName(project, user);
     String importContent = validateImportFile(new Path(importPath), username);
 
-    if(!importPath.endsWith(".yml") && !importPath.endsWith("/requirements.txt")) {
+    if (!importPath.endsWith(".yml") && !importPath.endsWith("/requirements.txt")) {
       throw new PythonException(RESTCodes.PythonErrorCode.ANACONDA_ENVIRONMENT_FILE_INVALID, Level.FINE);
     }
 
     String pythonVersion = findPythonVersion(importContent);
-    if(Strings.isNullOrEmpty(pythonVersion)) {
+    if (Strings.isNullOrEmpty(pythonVersion)) {
       pythonVersion = settings.getDockerBaseImagePythonVersion();
     }
 
-    condaEnvironmentOp(CondaOp.IMPORT, pythonVersion, project, user, pythonVersion, importPath,
-        installJupyter);
+    condaEnvironmentOp(CondaOp.IMPORT, pythonVersion, project, user, pythonVersion, importPath, installJupyter);
     PythonEnvironment pythonEnvironment = new PythonEnvironment();
     pythonEnvironment.setPythonVersion(pythonVersion);
     pythonEnvironment.setProjectId(project.getId());
@@ -214,7 +224,7 @@ public class EnvironmentController {
    * @param arg
    */
   private void condaEnvironmentOp(CondaOp op, String pythonVersion, Project proj, Users user,
-      String arg, String environmentFile, Boolean installJupyter) {
+                                  String arg, String environmentFile, Boolean installJupyter) {
     if (projectUtils.isReservedProjectName(proj.getName())) {
       throw new IllegalStateException("Tried to execute a conda env op on a reserved project name");
     }
@@ -232,8 +242,8 @@ public class EnvironmentController {
       udfso.rm(Utils.getProjectPath(project.getName()) + new Path(Settings.PROJECT_PYTHON_ENVIRONMENT_FILE), false);
     } catch (IOException ex) {
       throw new PythonException(RESTCodes.PythonErrorCode.ANACONDA_ENVIRONMENT_REMOVAL_FAILED, Level.SEVERE,
-        "Failed to clean up environment yaml file on path: " +
-          Settings.PROJECT_PYTHON_ENVIRONMENT_FILE, ex.getMessage(), ex);
+          "Failed to clean up environment yaml file on path: " +
+              Settings.PROJECT_PYTHON_ENVIRONMENT_FILE, ex.getMessage(), ex);
     } finally {
       if (udfso != null) {
         dfs.closeDfsClient(udfso);
@@ -250,7 +260,7 @@ public class EnvironmentController {
     List<CondaStatus> statuses = new ArrayList<>();
     statuses.add(CondaStatus.NEW);
     statuses.add(CondaStatus.ONGOING);
-    if(!condaCommandFacade.findByStatusAndCondaOpAndProject(statuses, CondaOp.REMOVE, project).isEmpty()) {
+    if (!condaCommandFacade.findByStatusAndCondaOpAndProject(statuses, CondaOp.REMOVE, project).isEmpty()) {
       LOGGER.log(Level.INFO, "There is already a " + CondaOp.REMOVE.name() + " operation for this project.");
       return;
     }
@@ -277,13 +287,13 @@ public class EnvironmentController {
     }
 
     condaEnvironmentOp(CondaOp.EXPORT, project.getPythonEnvironment().getPythonVersion(), project, user,
-        ymlPath,  null, false);
+        ymlPath, null, false);
     return new String[]{ymlPath};
   }
 
   public Project createEnv(Project project, Users user) throws PythonException {
     List<CondaStatus> statuses = Arrays.asList(CondaStatus.NEW, CondaStatus.ONGOING);
-    if(!condaCommandFacade.findByStatusAndCondaOpAndProject(statuses, CondaOp.CREATE, project).isEmpty()) {
+    if (!condaCommandFacade.findByStatusAndCondaOpAndProject(statuses, CondaOp.CREATE, project).isEmpty()) {
       throw new PythonException(RESTCodes.PythonErrorCode.ANACONDA_ENVIRONMENT_INITIALIZING, Level.INFO);
     }
     if (project.getPythonEnvironment() != null) {
@@ -358,34 +368,53 @@ public class EnvironmentController {
     }
   }
 
-  public String getPipConflicts(Project project) throws ServiceDiscoveryException, IOException, PythonException {
+  public void setPipConflicts(Project project, String conflictStr) {
+    if (Strings.isNullOrEmpty(conflictStr)) {
+      project.getPythonEnvironment().setJupyterConflicts(false);
+      project.getPythonEnvironment().setConflicts(null);
+      return;
+    }
 
+    ArrayList<String> conflicts = new ArrayList<>();
+    String[] lines = conflictStr.split("\n");
+    for (String conflictLine : lines) {
+      conflicts.add(conflictLine.split("\\s+")[0].trim());
+    }
+
+    if (conflicts.isEmpty()) {
+      project.getPythonEnvironment().setJupyterConflicts(false);
+      project.getPythonEnvironment().setConflicts(null);
+    } else {
+      project.getPythonEnvironment().setConflicts(conflictStr.substring(0, Math.min(conflictStr.length(), 12000)));
+      project.getPythonEnvironment().setJupyterConflicts(
+          Settings.JUPYTER_DEPENDENCIES.stream().anyMatch(conflicts::contains));
+    }
+  }
+
+  public String getPipConflicts(String dockerImage) throws IOException, PythonException {
     String prog = settings.getSudoersDir() + "/dockerImage.sh";
 
     ProcessDescriptor processDescriptor = new ProcessDescriptor.Builder()
         .addCommand("/usr/bin/sudo")
         .addCommand(prog)
         .addCommand("check")
-        .addCommand(projectUtils.getFullDockerImageName(project, false))
+        .addCommand(dockerImage)
         .redirectErrorStream(true)
         .setWaitTimeout(300L, TimeUnit.SECONDS)
         .build();
 
     ProcessResult processResult = osProcessExecutor.execute(processDescriptor);
 //From https://github.com/pypa/pip/blob/27d8687144bf38cdaeeb1d81aa72c892b1d0ab88/src/pip/_internal/commands/check.py#L35
-    if(processResult.getExitCode() == 0) {
-      return null;
-    } else {
-
-      if(processResult.getStdout() != null &&
+    if (processResult.getExitCode() == 0) {
+      return "";
+    } else if (processResult.getStdout() != null &&
         (processResult.getStdout().contains("which is not installed")
-        || processResult.getStdout().contains("has requirement"))) {
-        return processResult.getStdout();
-      } else {
-        throw new PythonException(RESTCodes.PythonErrorCode.ANACONDA_PIP_CHECK_FAILED,
-            Level.SEVERE, "Failed to run pip check: "
-            + (Strings.isNullOrEmpty(processResult.getStdout()) ? "" : processResult.getStdout()));
-      }
+            || processResult.getStdout().contains("has requirement"))) {
+      return processResult.getStdout();
+    } else {
+      throw new PythonException(RESTCodes.PythonErrorCode.ANACONDA_PIP_CHECK_FAILED,
+          Level.SEVERE, "Failed to run pip check: "
+          + (Strings.isNullOrEmpty(processResult.getStdout()) ? "" : processResult.getStdout()));
     }
   }
 }
