@@ -30,7 +30,7 @@ describe "On #{ENV['OS']}" do
           json_result, fg_name = create_cached_featuregroup(@project.id, featurestore_id, online:true)
           parsed_json = JSON.parse(json_result)
 
-          json_result, _ = create_feature_view_from_feature_group(@project.id, featurestore_id, parsed_json)
+          json_result = create_feature_view_from_feature_group(@project.id, featurestore_id, parsed_json)
           parsed_json = JSON.parse(json_result)
           expect_status_details(201)
 
@@ -63,7 +63,7 @@ describe "On #{ENV['OS']}" do
           json_result, fg_name = create_cached_featuregroup(@project.id, featurestore_id, online:true)
           parsed_json = JSON.parse(json_result)
 
-          json_result, _ = create_feature_view_from_feature_group(@project.id, featurestore_id, parsed_json,
+          json_result = create_feature_view_from_feature_group(@project.id, featurestore_id, parsed_json,
                                                                 name:"TEST_feature_view")
           parsed_json = JSON.parse(json_result)
           expect_status_details(400)
@@ -80,7 +80,7 @@ describe "On #{ENV['OS']}" do
           json_result, fg_name = create_cached_featuregroup(@project.id, featurestore_id, online:true)
           parsed_json = JSON.parse(json_result)
 
-          json_result, _ = create_feature_view_from_feature_group(@project.id, featurestore_id, parsed_json, version:-1)
+          json_result = create_feature_view_from_feature_group(@project.id, featurestore_id, parsed_json, version:-1)
           parsed_json = JSON.parse(json_result)
           expect_status_details(400)
 
@@ -96,7 +96,7 @@ describe "On #{ENV['OS']}" do
           json_result, fg_name = create_cached_featuregroup(@project.id, featurestore_id, online:true)
           parsed_json = JSON.parse(json_result)
 
-          json_result, _ = create_feature_view_from_feature_group(@project.id, featurestore_id, parsed_json,
+          json_result = create_feature_view_from_feature_group(@project.id, featurestore_id, parsed_json,
                                                                   version:nil)
           parsed_json = JSON.parse(json_result)
           expect_status_details(201)
@@ -109,12 +109,12 @@ describe "On #{ENV['OS']}" do
           json_result, fg_name = create_cached_featuregroup(@project.id, featurestore_id, online:true)
           parsed_fg_json = JSON.parse(json_result)
 
-          json_result, _ = create_feature_view_from_feature_group(@project.id, featurestore_id, parsed_fg_json)
+          json_result = create_feature_view_from_feature_group(@project.id, featurestore_id, parsed_fg_json)
           parsed_json = JSON.parse(json_result)
           expect_status_details(201)
 
           # add second version
-          json_result, _ = create_feature_view_from_feature_group(@project.id, featurestore_id, parsed_fg_json, name:parsed_json["name"], version:nil)
+          json_result = create_feature_view_from_feature_group(@project.id, featurestore_id, parsed_fg_json, name:parsed_json["name"], version:nil)
           parsed_json = JSON.parse(json_result)
           expect_status_details(201)
           # version should be incremented to 2
@@ -127,11 +127,11 @@ describe "On #{ENV['OS']}" do
           json_result, fg_name = create_cached_featuregroup(@project.id, featurestore_id, online:true)
           parsed_fg_json = JSON.parse(json_result)
 
-          json_result, _ = create_feature_view_from_feature_group(@project.id, featurestore_id, parsed_fg_json)
+          json_result = create_feature_view_from_feature_group(@project.id, featurestore_id, parsed_fg_json)
           parsed_json = JSON.parse(json_result)
           expect_status_details(201)
 
-          json_result, _ = create_feature_view_from_feature_group(@project.id, featurestore_id, parsed_fg_json, name:parsed_json["name"], version:parsed_json["version"])
+          json_result = create_feature_view_from_feature_group(@project.id, featurestore_id, parsed_fg_json, name:parsed_json["name"], version:parsed_json["version"])
           expect_status_details(400)
         end
 
@@ -141,7 +141,7 @@ describe "On #{ENV['OS']}" do
           json_result, fg_name = create_cached_featuregroup(@project.id, featurestore_id, online:true)
           parsed_json = JSON.parse(json_result)
 
-          json_result, _ = create_feature_view_from_feature_group(@project.id, featurestore_id, parsed_json)
+          json_result = create_feature_view_from_feature_group(@project.id, featurestore_id, parsed_json)
           parsed_json = JSON.parse(json_result)
           expect_status_details(201)
 
@@ -211,7 +211,7 @@ describe "On #{ENV['OS']}" do
           json_result, fg_name = create_cached_featuregroup(@project.id, featurestore_id, online:true)
           parsed_json = JSON.parse(json_result)
 
-          json_result, _ = create_feature_view_from_feature_group(@project.id, featurestore_id, parsed_json)
+          json_result = create_feature_view_from_feature_group(@project.id, featurestore_id, parsed_json)
           parsed_json = JSON.parse(json_result)
           expect_status_details(201)
           featureview_name = parsed_json["name"]
@@ -237,7 +237,7 @@ describe "On #{ENV['OS']}" do
           json_result, fg_name = create_cached_featuregroup(@project.id, featurestore_id, online:true)
           parsed_json = JSON.parse(json_result)
 
-          json_result, _ = create_feature_view_from_feature_group(@project.id, featurestore_id, parsed_json)
+          json_result = create_feature_view_from_feature_group(@project.id, featurestore_id, parsed_json)
           parsed_json = JSON.parse(json_result)
           expect_status_details(201)
           featureview_name = parsed_json["name"]
@@ -262,12 +262,12 @@ describe "On #{ENV['OS']}" do
           json_result, fg_name = create_cached_featuregroup(project.id, featurestore_id, online:true)
           parsed_fg_json = JSON.parse(json_result)
 
-          json_result, _ = create_feature_view_from_feature_group(project.id, featurestore_id, parsed_fg_json, name:"featureview1")
+          json_result = create_feature_view_from_feature_group(project.id, featurestore_id, parsed_fg_json, name:"featureview1")
           parsed_json = JSON.parse(json_result)
           expect_status_details(201)
 
           # add second version
-          json_result, _ = create_feature_view_from_feature_group(project.id, featurestore_id, parsed_fg_json, name:"featureview2")
+          json_result = create_feature_view_from_feature_group(project.id, featurestore_id, parsed_fg_json, name:"featureview2")
           parsed_json = JSON.parse(json_result)
           expect_status_details(201)
 
@@ -285,12 +285,12 @@ describe "On #{ENV['OS']}" do
           json_result, fg_name = create_cached_featuregroup(@project.id, featurestore_id, online:true)
           parsed_fg_json = JSON.parse(json_result)
 
-          json_result, _ = create_feature_view_from_feature_group(@project.id, featurestore_id, parsed_fg_json)
+          json_result = create_feature_view_from_feature_group(@project.id, featurestore_id, parsed_fg_json)
           parsed_json = JSON.parse(json_result)
           expect_status_details(201)
 
           # add second version
-          json_result, _ = create_feature_view_from_feature_group(@project.id, featurestore_id, parsed_fg_json, name:parsed_json["name"], version:nil)
+          json_result = create_feature_view_from_feature_group(@project.id, featurestore_id, parsed_fg_json, name:parsed_json["name"], version:nil)
           parsed_json = JSON.parse(json_result)
           expect_status_details(201)
 
@@ -308,13 +308,13 @@ describe "On #{ENV['OS']}" do
           json_result, fg_name = create_cached_featuregroup(@project.id, featurestore_id, online:true)
           parsed_fg_json = JSON.parse(json_result)
 
-          json_result, _ = create_feature_view_from_feature_group(@project.id, featurestore_id, parsed_fg_json)
+          json_result = create_feature_view_from_feature_group(@project.id, featurestore_id, parsed_fg_json)
           parsed_json_1 = JSON.parse(json_result)
           expect_status_details(201)
 		      featureview_name = parsed_json_1["name"]
 
           # add second version
-          json_result, _ = create_feature_view_from_feature_group(@project.id, featurestore_id, parsed_fg_json, name:featureview_name, version:nil)
+          json_result = create_feature_view_from_feature_group(@project.id, featurestore_id, parsed_fg_json, name:featureview_name, version:nil)
           parsed_json_2 = JSON.parse(json_result)
           expect_status_details(201)
 

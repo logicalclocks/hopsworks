@@ -513,7 +513,7 @@ module FeaturestoreHelper
     featurestore_project_id = project_id if featurestore_project_id.nil?
     featurestore_id = get_featurestore_id(featurestore_project_id) if featurestore_id.nil?
 
-    result, _ = create_feature_view_from_feature_group(project_id, featurestore_id, fg,
+    result = create_feature_view_from_feature_group(project_id, featurestore_id, fg,
                                                       name: name, version: version, description: description)
     expect_status_details(expected_status)
     result = JSON.parse(result) if expected_status == 201
@@ -532,8 +532,8 @@ module FeaturestoreHelper
       joins: []
     }
 
-    [create_feature_view(project_id, featurestore_id, query, features: features,
-                        name: name, version: version, description: description), name]
+    create_feature_view(project_id, featurestore_id, query, features: features,
+                        name: name, version: version, description: description)
   end
 
   def delete_feature_view(project_id, featurestore_id, name)

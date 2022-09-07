@@ -74,7 +74,6 @@ import java.net.URLClassLoader;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Paths;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -89,7 +88,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
 @Singleton
 @Startup
@@ -3634,21 +3632,15 @@ public class Settings implements Serializable {
   }
 
   //These dependencies were collected by installing jupyterlab in a new environment
-  private String JUPYTER_DEPENDENCIES = "urllib3, chardet, idna, requests, attrs, zipp, importlib-metadata, " +
-      "pyrsistent, six, jsonschema, prometheus-client, pycparser, cffi, argon2-cffi, pyzmq, ipython-genutils, " +
-      "decorator, traitlets, jupyter-core, Send2Trash, tornado, pygments, pickleshare, wcwidth, prompt-toolkit, " +
-      "backcall, ptyprocess, pexpect, parso, jedi, ipython, python-dateutil, jupyter-client, ipykernel, terminado, " +
-      "MarkupSafe, jinja2, mistune, defusedxml, jupyterlab-pygments, pandocfilters, entrypoints, pyparsing, " +
-      "packaging, webencodings, bleach, testpath, nbformat, nest-asyncio, async-generator, nbclient, nbconvert, " +
-      "notebook, json5, jupyterlab-server, jupyterlab, sparkmagic";
+  public static List<String> JUPYTER_DEPENDENCIES = Arrays.asList("urllib3", "chardet", "idna", "requests", "attrs",
+      "zipp", "importlib-metadata", "pyrsistent", "six", "jsonschema", "prometheus-client", "pycparser",
+      "cffi", "argon2-cffi", "pyzmq", "ipython-genutils", "decorator", "traitlets", "jupyter-core", "Send2Trash",
+      "tornado", "pygments", "pickleshare", "wcwidth", "prompt-toolkit", "backcall", "ptyprocess", "pexpect",
+      "parso", "jedi", "ipython", "python-dateutil", "jupyter-client", "ipykernel", "terminado", "MarkupSafe",
+      "jinja2", "mistune", "defusedxml", "jupyterlab-pygments", "pandocfilters", "entrypoints", "pyparsing",
+      "packaging", "webencodings", "bleach", "testpath", "nbformat", "nest-asyncio", "async-generator",
+      "nbclient", "nbconvert", "notebook", "json5", "jupyterlab-server", "jupyterlab", "sparkmagic");
 
-  public synchronized List<String> getJupyterDependencies() {
-    checkCache();
-    List<String> dependencies = new ArrayList<>(Arrays.asList(JUPYTER_DEPENDENCIES.split(",")));
-    dependencies = dependencies.stream().map(x -> x.trim()).collect(Collectors.toList());
-    return dependencies;
-  }
-  
   private String JWT_SIGNATURE_ALGORITHM = "HS512";
   private String JWT_SIGNING_KEY_NAME = "apiKey";
   private String JWT_ISSUER = "hopsworks@logicalclocks.com";
@@ -4021,7 +4013,7 @@ public class Settings implements Serializable {
     checkCache();
     return DOCKER_BASE_IMAGE_PYTHON_VERSION;
   }
-  
+
   private final static String DOCKER_BASE_NON_PYTHON_IMAGE = "base";
   public synchronized String getBaseNonPythonDockerImage() {
     return DOCKER_BASE_NON_PYTHON_IMAGE + ":" + HOPSWORKS_VERSION;

@@ -19,7 +19,6 @@ import com.google.common.base.Strings;
 import com.logicalclocks.servicediscoverclient.exceptions.ServiceDiscoveryException;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
 import io.hops.hopsworks.common.dao.python.CondaCommandFacade;
-import io.hops.hopsworks.common.dataset.DatasetController;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.hdfs.DistributedFsService;
 import io.hops.hopsworks.common.hdfs.Utils;
@@ -78,7 +77,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.stream.Collectors;
 
 @Singleton
 @Startup
@@ -97,6 +95,11 @@ public class LibraryInstaller {
   private String anaconda_dir;
   private String anaconda_project_dir;
 
+  // Docker base image info cache
+  private Collection<PythonDep> baseImageDeps = null;
+  private String baseImageConflictsStr = null;
+  private String baseImageEnvYaml = null;
+
   @Resource
   private TimerService timerService;
   @EJB
@@ -113,8 +116,6 @@ public class LibraryInstaller {
   private OSProcessExecutor osProcessExecutor;
   @EJB
   private EnvironmentController environmentController;
-  @EJB
-  private DatasetController datasetController;
   @EJB
   private Settings settings;
   @Inject
@@ -323,7 +324,6 @@ public class LibraryInstaller {
         project.setDockerImage(initialDockerImage);
         project = projectFacade.update(project);
         projectFacade.flushEm();
-        setPipConflicts(project);
         environmentController.updateInstalledDependencies(project);
         exportEnvironment(project, cc.getUserId(), Utils.getProjectPath(project.getName()) +
                 Settings.PROJECT_PYTHON_ENVIRONMENT_FILE);
@@ -485,10 +485,9 @@ public class LibraryInstaller {
         project.setDockerImage(nextDockerImageName);
         project = projectFacade.update(project);
         projectFacade.flushEm();
-        setPipConflicts(project);
         environmentController.updateInstalledDependencies(project);
-        exportEnvironment(project, cc.getUserId(), Utils.getProjectPath(project.getName()) +
-                Settings.PROJECT_PYTHON_ENVIRONMENT_FILE);
+        exportEnvironment(project, cc.getUserId(),
+            Utils.getProjectPath(project.getName()) + Settings.PROJECT_PYTHON_ENVIRONMENT_FILE);
       }
     } finally {
       FileUtils.deleteDirectory(baseDir);
@@ -553,7 +552,6 @@ public class LibraryInstaller {
         project.setDockerImage(nextDockerImageName);
         project = projectFacade.update(project);
         projectFacade.flushEm();
-        setPipConflicts(project);
         environmentController.updateInstalledDependencies(project);
         exportEnvironment(project, cc.getUserId(), Utils.getProjectPath(project.getName()) +
                 Settings.PROJECT_PYTHON_ENVIRONMENT_FILE);
@@ -575,41 +573,7 @@ public class LibraryInstaller {
     }
   }
 
-  private void setPipConflicts(Project project) throws IOException, ServiceDiscoveryException, ServiceException,
-      PythonException {
-
-    String conflictStr = environmentController.getPipConflicts(project);
-
-    if(Strings.isNullOrEmpty(conflictStr)) {
-      project.getPythonEnvironment().setJupyterConflicts(false);
-      project.getPythonEnvironment().setConflicts(null);
-      return;
-    }
-
-    ArrayList<String> conflicts = new ArrayList<>();
-    String[] lines = conflictStr.split("\n");
-    for(String conflictLine: lines) {
-      conflicts.add(conflictLine.split("\\s+")[0].trim());
-    }
-    List<String> intersect = settings.getJupyterDependencies().stream()
-        .filter(conflicts::contains)
-        .collect(Collectors.toList());
-
-    if(conflicts.isEmpty()) {
-      project.getPythonEnvironment().setJupyterConflicts(false);
-      project.getPythonEnvironment().setConflicts(null);
-    } else {
-      project.getPythonEnvironment().setConflicts(
-          conflictStr.substring(0, Math.min(conflictStr.length(), 12000)));
-      if(intersect != null && intersect.size() > 0) {
-        project.getPythonEnvironment().setJupyterConflicts(true);
-      } else {
-        project.getPythonEnvironment().setJupyterConflicts(false);
-      }
-    }
-  }
-
-  public void exportEnvironment(Project project, Users user, String exportPath)
+  public String exportEnvironment(Project project, Users user, String exportPath)
     throws IOException, ServiceException, ServiceDiscoveryException {
 
     ProcessDescriptor processDescriptor = new ProcessDescriptor.Builder()
@@ -627,8 +591,8 @@ public class LibraryInstaller {
         + " out: " + processResult.getStdout() + "\n err: " + processResult.getStderr() + "||\n";
       throw new IOException(errorMsg);
     } else {
-      environmentController.uploadYmlInProject(project, user, processResult.getStdout(),
-              exportPath);
+      environmentController.uploadYmlInProject(project, user, processResult.getStdout(), exportPath);
+      return processResult.getStdout();
     }
   }
 
@@ -646,18 +610,33 @@ public class LibraryInstaller {
     Project project = projectFacade.findById(cc.getProjectId().getId()).orElseThrow(() -> new ProjectException(
       RESTCodes.ProjectErrorCode.PROJECT_NOT_FOUND, Level.FINE, "projectId: " + cc.getProjectId().getId()));
 
-    String condaListOutput = libraryController.condaList(projectUtils.getFullDockerImageName(project, true));
-    Collection<PythonDep> projectDeps = libraryController.parseCondaList(condaListOutput);
+    String dockerImage = projectUtils.getFullDockerImageName(project, true);
 
-    project = projectFacade.findById(cc.getProjectId().getId()).orElseThrow(() -> new ProjectException(
-      RESTCodes.ProjectErrorCode.PROJECT_NOT_FOUND, Level.FINE, "projectId: " + cc.getProjectId().getId()));
-
-    setPipConflicts(project);
+    Collection<PythonDep> projectDeps = getBaseImageDeps();
+    if (projectDeps == null) {
+      String condaListOutput = libraryController.condaList(dockerImage);
+      projectDeps = libraryController.parseCondaList(condaListOutput);
+      setBaseImageDeps(projectDeps);
+    }
     project.setPythonDepCollection(projectDeps);
+
+    String pipConflictsStr = getBaseImageConflictsStr();
+    if (pipConflictsStr == null) {
+      pipConflictsStr = environmentController.getPipConflicts(dockerImage);
+      setBaseImageConflictsStr(pipConflictsStr);
+    }
+    environmentController.setPipConflicts(project, pipConflictsStr);
     projectFacade.update(project);
 
-    exportEnvironment(project, cc.getUserId(), Utils.getProjectPath(project.getName()) +
-            Settings.PROJECT_PYTHON_ENVIRONMENT_FILE);
+
+    String baseImageEnvYaml = getBaseImageEnvYaml();
+    String exportPath = Utils.getProjectPath(project.getName()) + Settings.PROJECT_PYTHON_ENVIRONMENT_FILE;
+    if (baseImageEnvYaml == null) {
+      baseImageEnvYaml = exportEnvironment(project, cc.getUserId(), exportPath);
+      setBaseImageEnvYaml(baseImageEnvYaml);
+    } else {
+      environmentController.uploadYmlInProject(project, cc.getUserId(), baseImageEnvYaml, exportPath);
+    }
   }
 
   private String getNextDockerImageName(Project project) {
@@ -686,6 +665,32 @@ public class LibraryInstaller {
       }
     }
     return condaCommandsByProject;
+  }
+
+
+  // Cache methods for the base environment
+  public synchronized Collection<PythonDep> getBaseImageDeps() {
+    return baseImageDeps;
+  }
+
+  public synchronized void setBaseImageDeps(Collection<PythonDep> baseImageDeps) {
+    this.baseImageDeps = baseImageDeps;
+  }
+
+  public synchronized String getBaseImageConflictsStr() {
+    return baseImageConflictsStr;
+  }
+
+  public synchronized void setBaseImageConflictsStr(String baseImageConflictsStr) {
+    this.baseImageConflictsStr = baseImageConflictsStr;
+  }
+
+  public synchronized String getBaseImageEnvYaml() {
+    return baseImageEnvYaml;
+  }
+
+  public synchronized void setBaseImageEnvYaml(String baseImageEnvYaml) {
+    this.baseImageEnvYaml = baseImageEnvYaml;
   }
   
   private static class CommandsComparator<T> implements Comparator<T> {

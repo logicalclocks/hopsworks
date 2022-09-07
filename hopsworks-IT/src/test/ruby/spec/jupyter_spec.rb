@@ -27,17 +27,19 @@ describe "On #{ENV['OS']}" do
   end
   after(:all) {clean_all_test_projects(spec: "jupyter")}
   describe "Jupyter core" do
-    describe "Jupyter Dataset" do
-      before :all do
-        with_valid_project
-      end
 
+    before :all do
+      with_valid_project
+    end
+
+    describe "Jupyter Dataset" do
       it "should not have the sticky bit set - HOPSWORKS-750" do
         get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/dataset/?expand=inodes&action=listing"
         ds = json_body[:items].detect { |d| d[:name] == "Jupyter"}
         expect(ds[:attributes][:permission]).not_to include("t", "T")
       end
     end
+
     python_versions = [ENV['PYTHON_VERSION']]
     python_versions.each do |version|
       it 'should get recent jupyter notebooks' do
@@ -112,10 +114,10 @@ describe "On #{ENV['OS']}" do
           shutdownLevel=6
           settings = json_body
           settings[:shutdownLevel] = shutdownLevel
-          start_jupyter(@project, settings: JSON(settings))
-          jupyter_project = JSON.parse(json_body)
-          port = jupyter_project["port"]
-          token = jupyter_project["token"]
+          start_jupyter(@project, settings: settings)
+          jupyter_project = json_body
+          port = jupyter_project[:port]
+          token = jupyter_project[:token]
           notebook_name = "test_attach_xattr_#{kernel}_kernel.ipynb"
 
           Airborne.configure do |config|

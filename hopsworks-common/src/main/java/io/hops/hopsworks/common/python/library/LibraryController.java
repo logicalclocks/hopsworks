@@ -16,7 +16,6 @@
 package io.hops.hopsworks.common.python.library;
 
 import com.lambdista.util.Try;
-import io.hops.hopsworks.common.dao.project.ProjectFacade;
 import io.hops.hopsworks.common.dao.python.LibraryFacade;
 import io.hops.hopsworks.common.provenance.core.opensearch.BasicOpenSearchHit;
 import io.hops.hopsworks.common.provenance.core.opensearch.OpenSearchHelper;
@@ -75,8 +74,6 @@ public class LibraryController {
 
   private static final Logger LOGGER = Logger.getLogger(LibraryController.class.getName());
   @EJB
-  private ProjectFacade projectFacade;
-  @EJB
   private CommandsController commandsController;
   @EJB
   private Settings settings;
@@ -101,13 +98,6 @@ public class LibraryController {
         break;
       }
     }
-  }
-
-  public Project syncProjectPythonDepsWithEnv(Project proj, Collection<PythonDep> newDeps) {
-    proj.setPythonDepCollection(newDeps);
-    proj = projectFacade.update(proj);
-    projectFacade.flushEm();
-    return proj;
   }
 
   public PythonDep installLibrary(Project proj, Users user, CondaInstallType installType, String channelUrl,
@@ -355,7 +345,7 @@ public class LibraryController {
     return Try.apply(() -> new String[] {hit.getSource().get("library").toString()});
   }
   
-  public Collection<PythonDep> parseCondaList(String condaListStr) throws ServiceException {
+  public Collection<PythonDep> parseCondaList(String condaListStr) {
     Collection<PythonDep> deps = new ArrayList<>();
     String[] lines = condaListStr.split(System.getProperty("line.separator"));
     
@@ -381,9 +371,9 @@ public class LibraryController {
     return deps;
   }
 
-  public Project addOngoingOperations(Project project) throws ServiceException {
-    Collection<CondaCommands> commands = project.getCondaCommandsCollection();
-    for(CondaCommands condaCommand: commands) {
+  public Collection<PythonDep> addOngoingOperations(Collection<CondaCommands> projectCondaCommands,
+                                                    Collection<PythonDep> projectDeps) {
+    for(CondaCommands condaCommand: projectCondaCommands) {
       if(condaCommand.getInstallType().equals(CondaInstallType.ENVIRONMENT))
           continue;
 
@@ -394,11 +384,12 @@ public class LibraryController {
           false
       );
 
-      if(!project.getPythonDepCollection().contains(pythonDep)) {
-        project.getPythonDepCollection().add(pythonDep);
+      if(!projectDeps.contains(pythonDep)) {
+        projectDeps.add(pythonDep);
       }
     }
-    return projectFacade.update(project);
+
+    return projectDeps;
   }
 
   public String condaList(String dockerImage) throws IOException {
