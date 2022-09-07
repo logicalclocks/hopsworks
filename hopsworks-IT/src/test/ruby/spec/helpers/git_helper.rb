@@ -46,16 +46,19 @@ module GitHelper
     expect_status(204)
   end
 
-  def get_clone_config(git_provider, project_name, url="", branch="")
+  def get_clone_config(git_provider, project_name, url="", branch="", path="")
     test_repo_urls = {"GitHub" => "https://github.com/logicalclocks/livy-chef.git", "BitBucket" => "https://thegib@bitbucket.org/thegib/demo.git", "GitLab" => "https://gitlab.com/gibchikafa/test_repo.git"}
     repo_url = test_repo_urls[git_provider]
     if url != ""
       repo_url = url
     end
+    if path == ""
+      path = "/Projects/#{project_name}/Jupyter"
+    end
     clone_config = {
       provider: git_provider,
       url: repo_url,
-      path: "/Projects/#{project_name}/Jupyter",
+      path: path,
       branch: branch
     }
     clone_config.to_json
@@ -136,6 +139,10 @@ module GitHelper
 
   def git_pull(project_id, repository_id, remote_name="", branch_name="", force=false)
     post "#{ENV['HOPSWORKS_API']}/project/#{project_id}/git/repository/#{repository_id}?action=pull", {remoteName: remote_name, branchName: branch_name, force:force, type: "pullCommandConfiguration"}.to_json
+  end
+
+  def git_push(project_id, repository_id, remote_name="", branch_name="", force=false)
+    post "#{ENV['HOPSWORKS_API']}/project/#{project_id}/git/repository/#{repository_id}?action=pull", {remoteName: remote_name, branchName: branch_name, force:force, type: "pushCommandConfiguration"}.to_json
   end
 
   def make_commit_in_repo(project, repository_id)

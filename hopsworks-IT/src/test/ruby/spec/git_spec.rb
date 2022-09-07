@@ -77,6 +77,43 @@ describe "On #{ENV['OS']}" do
         end
       end
     end
+    describe "Fail operations on unconfigured provider" do
+      it "should fail to clone a BitBucket repository" do
+        dir_name = "/Projects/#{@project[:projectname]}/Jupyter/testDir#{short_random_id}"
+        create_dir(@project, dir_name, query: "&type=DATASET")
+        expect_status_details(201)
+        clone_config = get_clone_config("BitBucket", @project[:projectname], url="", branch="",  dir_name)
+        do_clone_git_repo(@project[:id], clone_config)
+        expect_status_details(400, error_code: 500029)
+      end
+      it 'should fail to pull a GitLab repository' do
+        dir_name = "/Projects/#{@project[:projectname]}/Jupyter/testDir#{short_random_id}"
+        create_dir(@project, dir_name, query: "&type=DATASET")
+        expect_status_details(201)
+        clone_config = get_clone_config("GitLab", @project[:projectname], url="", branch="", dir_name)
+        repo_id, repo_path = clone_repo(@project[:id], clone_config)
+        expect(repo_id).not_to be_nil
+        expect(repo_path).not_to be_nil
+        git_pull(@project[:id], repo_id, "origin", "master")
+        expect_status_details(400, error_code: 500029)
+        delete_dataset(@project, dir_name)
+      end
+      git_providers = ['GitHub', 'GitLab']
+      git_providers.each do |git_provider|
+        it "should fail to push on a #{git_provider} repository" do
+          dir_name = "/Projects/#{@project[:projectname]}/Jupyter/testDir#{short_random_id}"
+          create_dir(@project, dir_name, query: "&type=DATASET")
+          expect_status_details(201)
+          clone_config = get_clone_config(git_provider, @project[:projectname], url="", branch="", dir_name)
+          repo_id, repo_path = clone_repo(@project[:id], clone_config)
+          expect(repo_id).not_to be_nil
+          expect(repo_path).not_to be_nil
+          git_pull(@project[:id], repo_id, "origin", "master")
+          expect_status_details(400, error_code: 500029)
+          delete_dataset(@project, dir_name)
+        end
+      end
+    end
     describe "Getting project repositories" do
       it 'should get all repositories in the project' do
         clone_config = get_clone_config("GitHub", @project[:projectname])

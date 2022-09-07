@@ -111,21 +111,19 @@ public class GitCommandConfigurationValidator {
       throws GitOpException {
     GitCommandType commandType = gitCommandConfiguration.getCommandType();
     GitProvider gitProvider = gitCommandConfiguration.getProvider();
-    //For BitBucket it needs username and token/password for clone, pull, and push.
-    //For GitHub and GitLab we can clone without username and token/password if the repository is public. But for
-    // push we still need username and password/token.
-    if (gitProvider == GitProvider.BITBUCKET && (commandType == GitCommandType.PULL
-        || commandType == GitCommandType.PUSH || commandType == GitCommandType.CLONE)
-        && (Strings.isNullOrEmpty(secrets.getUsername()) || Strings.isNullOrEmpty(secrets.getPassword()))) {
-      throw new GitOpException(RESTCodes.GitOpErrorCode.GIT_USERNAME_AND_PASSWORD_NOT_SET, Level.WARNING, ". You " +
-          "should setup secrets for " + gitProvider.getProvider() + " to be able to perform a "
-          + commandType.getGitCommand() + " operation");
-    } else if ((gitProvider == GitProvider.GIT_HUB || gitProvider == GitProvider.GIT_LAB)
-        && (commandType == GitCommandType.PUSH)
-        && (Strings.isNullOrEmpty(secrets.getUsername()) || Strings.isNullOrEmpty(secrets.getPassword()))) {
+
+    //BitBucket always require username and token for clone
+    //BitBucket, GitLab always require username and token for pull
+    //BitBucket, GitLab, GitHub always require username and token for push
+    boolean authSecretsConfigured = authSecretsConfigured(secrets);
+    if ((commandType == GitCommandType.PUSH && !authSecretsConfigured)
+            || (commandType == GitCommandType.CLONE && gitProvider == GitProvider.BITBUCKET
+            && !authSecretsConfigured)
+            || (commandType == GitCommandType.PULL && (gitProvider == GitProvider.GIT_LAB ||
+            gitProvider == GitProvider.BITBUCKET) && !authSecretsConfigured)) {
       throw new GitOpException(RESTCodes.GitOpErrorCode.GIT_USERNAME_AND_PASSWORD_NOT_SET, Level.WARNING,
-          ". You should setup secrets for " + gitProvider.getProvider() + " to be able to perform a "
-              + commandType.getGitCommand() + " operation");
+              ". You should setup secrets for " + gitProvider.getProvider() + " to be able to perform a "
+                      + commandType.getGitCommand() + " operation");
     }
   }
 
@@ -136,5 +134,10 @@ public class GitCommandConfigurationValidator {
     } else {
       throw new IllegalArgumentException("Could not parse remote URI: " + remoteURI);
     }
+  }
+
+  private boolean authSecretsConfigured(BasicAuthSecrets basicAuthSecrets) {
+    return !Strings.isNullOrEmpty(basicAuthSecrets.getUsername())
+            && !Strings.isNullOrEmpty(basicAuthSecrets.getPassword());
   }
 }
