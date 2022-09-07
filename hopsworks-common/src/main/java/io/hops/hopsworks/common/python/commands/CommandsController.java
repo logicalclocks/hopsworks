@@ -18,14 +18,13 @@ package io.hops.hopsworks.common.python.commands;
 import com.google.common.base.Strings;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
 import io.hops.hopsworks.common.dao.python.CondaCommandFacade;
-import io.hops.hopsworks.common.dao.python.LibraryFacade;
+import io.hops.hopsworks.common.python.library.LibraryController;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.GenericException;
 import io.hops.hopsworks.exceptions.ProjectException;
 import io.hops.hopsworks.exceptions.ServiceException;
 import io.hops.hopsworks.persistence.entity.jupyter.config.GitBackend;
 import io.hops.hopsworks.persistence.entity.project.Project;
-import io.hops.hopsworks.persistence.entity.python.AnacondaRepo;
 import io.hops.hopsworks.persistence.entity.python.CondaCommands;
 import io.hops.hopsworks.persistence.entity.python.CondaInstallType;
 import io.hops.hopsworks.persistence.entity.python.CondaOp;
@@ -60,11 +59,10 @@ public class CommandsController {
   private Settings settings;
   @EJB
   private ProjectFacade projectFacade;
-  @EJB
-  private LibraryFacade libraryFacade;
-
   private static final Pattern BRACKET_PATTERN = Pattern.compile("^(.*\\[.*\\])$");
-  
+  @EJB
+  private LibraryController libraryController;
+
   public void deleteCommands(Project project, String library) {
     //Failed installation commands should remove
     List<CondaCommands> commands = condaCommandFacade.getFailedCommandsForProjectAndLib(project, library);
@@ -139,11 +137,8 @@ public class CommandsController {
     
     PythonDep dep;
     try {
-      // 1. test if anacondaRepoUrl exists. If not, add it.
-      AnacondaRepo repo = libraryFacade.getRepo(channelUrl, true);
-
       // 2. Test if pythonDep exists. If not, add it.
-      dep = libraryFacade.getOrCreateDep(repo, installType, lib, version, true, false);
+      dep = libraryController.getOrCreateDep(channelUrl, installType, lib, version, false);
 
       Collection<PythonDep> depsInProj = proj.getPythonDepCollection();
       // 3. Add the python library to the join table for the project
@@ -184,8 +179,8 @@ public class CommandsController {
         if (CondaOp.isLibraryOp(opType)) {
           Project project = projectFacade.findById(cc.getProjectId().getId()).orElseThrow(() -> new ProjectException(
             RESTCodes.ProjectErrorCode.PROJECT_NOT_FOUND, Level.FINE, "projectId: " + cc.getProjectId().getId()));
-          PythonDep dep = libraryFacade.getOrCreateDep(libraryFacade.getRepo(cc.getChannelUrl(), false),
-              cc.getInstallType(), cc.getLib(), cc.getVersion(), true, false);
+          PythonDep dep = libraryController.getOrCreateDep(cc.getChannelUrl(), cc.getInstallType(),
+              cc.getLib(), cc.getVersion(), false);
           Collection<PythonDep> deps = project.getPythonDepCollection();
 
           if(isPlaceholderDep(cc, opType) || opType.equals(CondaOp.UNINSTALL)) {

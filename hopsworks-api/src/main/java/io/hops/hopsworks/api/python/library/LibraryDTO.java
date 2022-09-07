@@ -116,7 +116,7 @@ public class LibraryDTO extends RestDTO<LibraryDTO> {
     }
     if (o instanceof PythonDep) {
       PythonDep pd = (PythonDep) o;
-      if (pd.getRepoUrl().getUrl().compareToIgnoreCase(this.channel) == 0
+      if (pd.getRepoUrl().compareToIgnoreCase(this.channel) == 0
           && pd.getInstallType().name().equalsIgnoreCase(this.getPackageSource().name())
           && pd.getDependency().compareToIgnoreCase(this.library) == 0
           && pd.getVersion().compareToIgnoreCase(this.version) == 0

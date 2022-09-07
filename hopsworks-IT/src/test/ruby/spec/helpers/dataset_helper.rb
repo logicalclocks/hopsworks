@@ -156,8 +156,7 @@ module DatasetHelper
   end
 
   def create_shared_datasets(num, accepted)
-    projectname = "project_#{short_random_id}"
-    project = create_project_by_name_existing_user(projectname)
+    project = create_project(validate_session: false)
     x = 0
     while x < num do
       name = (0...7).map { ('a'..'z').to_a[rand(26)] }.join
@@ -195,8 +194,6 @@ module DatasetHelper
   end
 
   def create_files
-    chmod_local_dir("#{ENV['PROJECT_DIR']}".gsub("/hopsworks", ""), 701, false)
-    chmod_local_dir("#{ENV['PROJECT_DIR']}/tools", 777)
     copy_from_local("#{ENV['PROJECT_DIR']}/tools/upload_example/Sample.json",
                     "/Projects/#{@project[:projectname]}/#{@dataset[:inode_name]}/Sample.json", @user[:username],
                     "#{@project[:projectname]}__#{@dataset[:inode_name]}", 750, "#{@project[:projectname]}")

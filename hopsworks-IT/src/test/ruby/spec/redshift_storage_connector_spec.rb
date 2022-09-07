@@ -368,7 +368,7 @@ describe "On #{ENV['OS']}" do
       before :all do
         reset_session
         with_valid_session
-        @p3 = create_project_by_name("project_#{short_random_id}")
+        @p3 = create_project
         reset_session
         create_session(@p1[:username], "Pass123")
         share_dataset_checked(@p1 , "#{@featurestore1["featurestoreName"]}.db", @p3[:projectname], datasetType: "FEATURESTORE")

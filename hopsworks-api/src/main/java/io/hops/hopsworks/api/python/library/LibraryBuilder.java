@@ -156,7 +156,7 @@ public class LibraryBuilder {
       if(monitoredLibraries.contains(libraryName) && dep.getInstallType().equals(CondaInstallType.PIP)) {
         dto.setLatestVersion(pythonLibraryUpdatesMonitor.getLatestVersion(libraryName));
       }
-      dto.setChannel(dep.getRepoUrl().getUrl());
+      dto.setChannel(dep.getRepoUrl());
       dto.setPackageSource(PackageSource.valueOf(dep.getInstallType().name()));
       dto.setPreinstalled(Boolean.toString(dep.isPreinstalled()));
       dto.setCommands(commandBuilder.buildItems(uriInfo, resourceRequest.get(ResourceRequest.Name.COMMANDS), project,

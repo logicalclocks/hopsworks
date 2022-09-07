@@ -16,23 +16,21 @@
 package io.hops.hopsworks.common.dao.python;
 
 import io.hops.hopsworks.common.dao.AbstractFacade;
-import io.hops.hopsworks.exceptions.ServiceException;
 import io.hops.hopsworks.persistence.entity.project.Project;
-import io.hops.hopsworks.persistence.entity.python.AnacondaRepo;
 import io.hops.hopsworks.persistence.entity.python.CondaInstallType;
 import io.hops.hopsworks.persistence.entity.python.CondaStatus;
 import io.hops.hopsworks.persistence.entity.python.PythonDep;
-import io.hops.hopsworks.restutils.RESTCodes;
 
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
+import javax.persistence.PersistenceException;
 import javax.persistence.Query;
-import javax.persistence.TypedQuery;
+import java.sql.SQLIntegrityConstraintViolationException;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
-import java.util.logging.Level;
 
 @Stateless
 public class LibraryFacade extends AbstractFacade<PythonDep> {
@@ -49,63 +47,51 @@ public class LibraryFacade extends AbstractFacade<PythonDep> {
     return em;
   }
 
-  public AnacondaRepo getRepo(String channelUrl, boolean create) throws ServiceException {
-    TypedQuery<AnacondaRepo> query = em.createNamedQuery("AnacondaRepo.findByUrl", AnacondaRepo.class);
-    query.setParameter("url", channelUrl);
-    AnacondaRepo repo = null;
+  public Optional<PythonDep> get(String repo, CondaInstallType installType, String dependency, String version) {
     try {
-      repo = query.getSingleResult();
+      return Optional.of(em.createNamedQuery("PythonDep.findUniqueDependency", PythonDep.class)
+          .setParameter("dependency", dependency)
+          .setParameter("version", version)
+          .setParameter("installType", installType)
+          .setParameter("repoUrl", repo)
+          .getSingleResult());
     } catch (NoResultException ex) {
-      if (create) {
-        repo = new AnacondaRepo();
-        repo.setUrl(channelUrl);
-        em.persist(repo);
-        em.flush();
-      }
-
+      return Optional.empty();
     }
-    if (repo == null) {
-      throw new ServiceException(RESTCodes.ServiceErrorCode.ANACONDA_REPO_ERROR, Level.SEVERE);
-    }
-    return repo;
   }
 
-  public PythonDep getOrCreateDep(PythonDep dep) {
-    return getOrCreateDep(dep.getRepoUrl(), dep.getInstallType(), dep.getDependency(), dep.
-        getVersion(), true, dep.isPreinstalled());
-  }
-  
-  public PythonDep getOrCreateDep(AnacondaRepo repo, CondaInstallType installType,
-                                  String dependency, String version, boolean persist, boolean preinstalled) {
-    TypedQuery<PythonDep> deps = em.createNamedQuery("PythonDep.findUniqueDependency", PythonDep.class);
-    deps.setParameter("dependency", dependency);
-    deps.setParameter("version", version);
-    deps.setParameter("installType", installType);
-    deps.setParameter("repoUrl", repo);
-    PythonDep dep = null;
+  public Optional<PythonDep> create(String repo, CondaInstallType installType, String dependency,
+                                 String version, boolean preinstalled) {
+    PythonDep dep = new PythonDep();
+    dep.setRepoUrl(repo);
+    dep.setDependency(dependency);
+    dep.setVersion(version);
+    dep.setPreinstalled(preinstalled);
+    dep.setInstallType(installType);
+
     try {
-      dep = deps.getSingleResult();
-    } catch (NoResultException ex) {
-      dep = new PythonDep();
-      dep.setRepoUrl(repo);
-      dep.setDependency(dependency);
-      dep.setVersion(version);
-      dep.setPreinstalled(preinstalled);
-      dep.setInstallType(installType);
-      if (persist) {
-        em.persist(dep);
-        em.flush();
+      em.persist(dep);
+      em.flush();
+      return Optional.of(dep);
+    } catch (PersistenceException ex) {
+      // PersistenceException >> DatabaseException >> SqlIntegrityConstraintViolationException
+      if (!(ex.getCause() != null && (ex.getCause().getCause() instanceof SQLIntegrityConstraintViolationException))) {
+        throw ex;
       }
+      // Another thread/Hopsworks instance created the library in the database,
+      // query the database again
+      return Optional.empty();
     }
-    return dep;
   }
-  
-  public PythonDep findByDependencyAndProject(String dependency, Project project) {
+
+  public Optional<PythonDep> findByDependencyAndProject(String dependency, Project project) {
     try {
-      return em.createNamedQuery("PythonDep.findByDependencyAndProject", PythonDep.class)
-        .setParameter("dependency", dependency).setParameter("project", project).getSingleResult();
+      return Optional.of(em.createNamedQuery("PythonDep.findByDependencyAndProject", PythonDep.class)
+          .setParameter("dependency", dependency)
+          .setParameter("project", project)
+          .getSingleResult());
     } catch (NoResultException e) {
-      return null;
+      return Optional.empty();
     }
   }
   

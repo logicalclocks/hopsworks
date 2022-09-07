@@ -20,9 +20,7 @@ import io.hops.hopsworks.common.admin.services.HostServicesController;
 import io.hops.hopsworks.common.dao.command.HeartbeatReplyDTO;
 import io.hops.hopsworks.common.dao.command.SystemCommandFacade;
 import io.hops.hopsworks.common.dao.host.HostsFacade;
-import io.hops.hopsworks.common.dao.python.LibraryFacade;
 import io.hops.hopsworks.common.hosts.HostsController;
-import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.ServiceException;
 import io.hops.hopsworks.persistence.entity.command.CommandStatus;
 import io.hops.hopsworks.persistence.entity.command.SystemCommand;
@@ -49,10 +47,6 @@ public class AgentController {
 
   @EJB
   private HostsFacade hostsFacade;
-  @EJB
-  private Settings settings;
-  @EJB
-  private LibraryFacade libraryFacade;
   @EJB
   private SystemCommandFacade systemCommandFacade;
   @EJB
@@ -130,10 +124,6 @@ public class AgentController {
   private void updateServices(AgentHeartbeatDTO heartbeat) throws ServiceException {
     hostServicesController.updateHostServices(heartbeat);
   }
-
-  //since we only want to show certain predefined libs or those user have installed we need to be selective about
-  //which python deps should be put in the database
-  //check that library is part of preinstalled libs OR in provided library list, only then add it
 
   private void processSystemCommands(AgentHeartbeatDTO heartbeat) {
     if (heartbeat.systemCommands == null) {
