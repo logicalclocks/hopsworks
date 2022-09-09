@@ -38,6 +38,7 @@
  */
 package io.hops.hopsworks.api.kibana;
 
+import io.hops.hopsworks.api.proxy.ProxyServlet;
 import io.hops.hopsworks.common.security.BaseHadoopClientsService;
 import io.hops.hopsworks.common.util.Settings;
 import org.apache.http.HttpStatus;

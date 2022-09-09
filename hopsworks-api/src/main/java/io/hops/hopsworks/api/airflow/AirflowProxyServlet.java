@@ -15,7 +15,7 @@
  */
 package io.hops.hopsworks.api.airflow;
 
-import io.hops.hopsworks.api.kibana.ProxyServlet;
+import io.hops.hopsworks.api.proxy.ProxyServlet;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
 import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.project.ProjectController;

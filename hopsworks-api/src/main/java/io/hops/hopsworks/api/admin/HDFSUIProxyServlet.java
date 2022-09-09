@@ -40,7 +40,7 @@
 package io.hops.hopsworks.api.admin;
 
 import io.hops.hopsworks.api.jwt.JWTHelper;
-import io.hops.hopsworks.api.kibana.ProxyServlet;
+import io.hops.hopsworks.api.proxy.ProxyServlet;
 import io.hops.hopsworks.api.util.CustomSSLProtocolSocketFactory;
 import io.hops.hopsworks.common.dao.hdfs.HdfsLeDescriptorsFacade;
 import io.hops.hopsworks.common.security.BaseHadoopClientsService;

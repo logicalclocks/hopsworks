@@ -17,7 +17,7 @@ package io.hops.hopsworks.api.jobs;
 
 import com.google.common.base.Strings;
 import io.hops.hopsworks.api.filter.apiKey.ApiKeyFilter;
-import io.hops.hopsworks.api.kibana.ProxyServlet;
+import io.hops.hopsworks.api.proxy.ProxyServlet;
 import io.hops.hopsworks.common.dao.hdfsUser.HdfsUsersFacade;
 import io.hops.hopsworks.common.dao.jobhistory.YarnApplicationstateFacade;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
