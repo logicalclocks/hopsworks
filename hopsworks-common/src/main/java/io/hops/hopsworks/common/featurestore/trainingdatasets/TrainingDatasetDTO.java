@@ -20,6 +20,7 @@ import io.hops.hopsworks.common.featurestore.FeaturestoreEntityDTO;
 import io.hops.hopsworks.common.featurestore.feature.TrainingDatasetFeatureDTO;
 import io.hops.hopsworks.common.featurestore.keyword.KeywordDTO;
 import io.hops.hopsworks.common.featurestore.query.QueryDTO;
+import io.hops.hopsworks.common.featurestore.query.filter.FilterLogicDTO;
 import io.hops.hopsworks.common.featurestore.statistics.StatisticsConfigDTO;
 import io.hops.hopsworks.common.featurestore.storageconnectors.FeaturestoreStorageConnectorDTO;
 import io.hops.hopsworks.common.featurestore.trainingdatasets.split.TrainingDatasetSplitDTO;
@@ -62,6 +63,7 @@ public class TrainingDatasetDTO extends FeaturestoreEntityDTO<TrainingDatasetDTO
 
   private Boolean fromQuery;
   private List<TrainingDatasetFeatureDTO> features;
+  private FilterLogicDTO extraFilter;
 
   private Double sampleRatio;
   @XmlJavaTypeAdapter(DateAdapter.class)
@@ -243,6 +245,14 @@ public class TrainingDatasetDTO extends FeaturestoreEntityDTO<TrainingDatasetDTO
 
   public void setDataAvailable(Boolean dataAvailable) {
     this.dataAvailable = dataAvailable;
+  }
+
+  public FilterLogicDTO getExtraFilter() {
+    return extraFilter;
+  }
+
+  public void setExtraFilter(FilterLogicDTO extraFilter) {
+    this.extraFilter = extraFilter;
   }
 
   @Override

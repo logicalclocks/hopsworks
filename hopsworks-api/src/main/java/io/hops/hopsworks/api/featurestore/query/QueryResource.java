@@ -103,11 +103,14 @@ public class QueryResource {
       @ApiParam(value = "Get query in hive format")
       @QueryParam("is_hive_engine")
       @DefaultValue("false")
-          Boolean isHiveEngine
+          Boolean isHiveEngine,
+      @ApiParam(value = "Training data version")
+      @QueryParam("td_version")
+          Integer trainingDataVersion
   ) throws FeaturestoreException, ServiceException {
     Users user = jWTHelper.getUserPrincipal(sc);
     Query query = queryController.constructBatchQuery(
-        featureView, project, user, startTime, endTime, withLabel, isHiveEngine);
+        featureView, project, user, startTime, endTime, withLabel, isHiveEngine, trainingDataVersion);
     return Response.ok().entity(queryBuilder.build(query, featurestore, project, user)).build();
   }
 

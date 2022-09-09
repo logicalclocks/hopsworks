@@ -17,6 +17,7 @@
 package io.hops.hopsworks.common.featurestore.query;
 
 import com.google.common.base.Strings;
+import com.google.common.collect.Lists;
 import io.hops.hopsworks.common.featurestore.FeaturestoreFacade;
 import io.hops.hopsworks.common.featurestore.feature.FeatureGroupFeatureDTO;
 import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupController;
@@ -38,6 +39,7 @@ import io.hops.hopsworks.persistence.entity.featurestore.featureview.FeatureView
 import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.SqlCondition;
 import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.SqlFilterLogic;
 import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.TrainingDatasetFeature;
+import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.TrainingDatasetFilter;
 import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.TrainingDatasetJoin;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.user.Users;
@@ -49,12 +51,14 @@ import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.logging.Level;
 import java.util.stream.Collectors;
 
@@ -108,8 +112,17 @@ public class QueryController {
     return convertQueryDTO(queryDTO, fgAliasLookup, fgLookup, availableFeatureLookup, pitEnabled);
   }
 
+  public Set<Featuregroup> getFeatureGroups(Query query) {
+    // Note that nested join is not allowed.
+    Set<Featuregroup> allFgs = query.getJoins().stream().map(join -> join.getRightQuery().getFeaturegroup()).collect(
+        Collectors.toSet());
+    allFgs.add(query.getFeaturegroup());
+    return allFgs;
+  }
+
   /**
    * Recursively convert the QueryDTO into the internal query representation
+   *
    * @param queryDTO
    * @return
    */
@@ -202,7 +215,7 @@ public class QueryController {
 
   public Query appendFilter(Query query, SqlFilterLogic sqlLogic, FilterLogic filterLogic) {
     FilterLogic currentFilter = query.getFilter();
-    if(currentFilter != null) {
+    if (currentFilter != null) {
       FilterLogic filter = new FilterLogic(sqlLogic, currentFilter, filterLogic);
       query.setFilter(filter);
     } else {
@@ -281,6 +294,7 @@ public class QueryController {
   /**
    * Validate FeatureGroupDTO to make sure it exists. Authorization is done at the storage layer by HopsFS when
    * actually executing the query.
+   *
    * @param featuregroupDTO
    * @return
    */
@@ -299,6 +313,7 @@ public class QueryController {
    * requests actually exists.
    *
    * Users are allowed to pass a list with a single feature named * to select all the features.
+   *
    * @param fg
    * @param requestedFeatures
    * @param availableFeatures
@@ -330,6 +345,7 @@ public class QueryController {
   /**
    * Convert the JoinDTOs into the internal representation of the Join object.
    * The returned list will already contain the correct set of joining keys
+   *
    * @param leftQuery
    * @param joinDTOS
    * @return
@@ -373,6 +389,7 @@ public class QueryController {
   /**
    * In case the user has not specified any joining key, the largest subset of matching primary key will be used
    * for the join. The name should match for the feature to be added in the subset
+   *
    * @param leftQuery
    * @param rightQuery
    * @param joinType
@@ -458,6 +475,7 @@ public class QueryController {
   /**
    * For Join on primary keys or On condition we should remove duplicated (same name) columns.
    * Spark refuses to write dataframes with duplicated column names.
+   *
    * @param query
    */
   void removeDuplicateColumns(Query query, boolean pitEnabled) {
@@ -496,6 +514,12 @@ public class QueryController {
 
   public Query makeQuery(FeatureView featureView, Project project, Users user, boolean withLabel, Boolean isHiveEngine)
       throws FeaturestoreException {
+    return makeQuery(featureView, project, user, withLabel, isHiveEngine, Lists.newArrayList());
+  }
+
+  public Query makeQuery(FeatureView featureView, Project project, Users user, boolean withLabel, Boolean isHiveEngine,
+      Collection<TrainingDatasetFilter> extraFilters)
+      throws FeaturestoreException {
     List<TrainingDatasetJoin> joins = featureView.getJoins().stream()
         .sorted(Comparator.comparing(TrainingDatasetJoin::getIndex))
         .collect(Collectors.toList());
@@ -514,21 +538,30 @@ public class QueryController {
         .filter(f -> !f.isLabel() || withLabel)
         .collect(Collectors.toList());
 
-    return trainingDatasetController.getQuery(joins, tdFeatures, featureView.getFilters(), project, user, isHiveEngine);
+    return trainingDatasetController.getQuery(
+        joins, tdFeatures, featureView.getFilters(), project, user, isHiveEngine, extraFilters);
   }
 
   public Query constructBatchQuery(FeatureView featureView, Project project, Users user, Long startTimestamp,
-      Long endTimestamp, Boolean withLabel, Boolean isHiveEngine)
+      Long endTimestamp, Boolean withLabel, Boolean isHiveEngine, Integer trainingDataVersion)
       throws FeaturestoreException {
     Date startTime = startTimestamp == null ? null : new Date(startTimestamp);
     Date endTime = endTimestamp == null ? null : new Date(endTimestamp);
-    return constructBatchQuery(featureView, project, user, startTime, endTime, withLabel, isHiveEngine);
+    return constructBatchQuery(featureView, project, user, startTime, endTime, withLabel, isHiveEngine,
+        trainingDataVersion);
   }
 
   public Query constructBatchQuery(FeatureView featureView, Project project, Users user, Date startTime,
-      Date endTime, Boolean withLabel, Boolean isHiveEngine)
+      Date endTime, Boolean withLabel, Boolean isHiveEngine, Integer trainingDataVersion)
       throws FeaturestoreException {
-    Query baseQuery = makeQuery(featureView, project, user, withLabel, isHiveEngine);
+    Query baseQuery;
+    if (trainingDataVersion != null) {
+      baseQuery = makeQuery(featureView, project, user, withLabel, isHiveEngine,
+          trainingDatasetController.getTrainingDatasetByFeatureViewAndVersion(featureView, trainingDataVersion)
+              .getFilters());
+    } else {
+      baseQuery = makeQuery(featureView, project, user, withLabel, isHiveEngine);
+    }
     return appendEventTimeFilter(baseQuery, startTime, endTime);
   }
 }

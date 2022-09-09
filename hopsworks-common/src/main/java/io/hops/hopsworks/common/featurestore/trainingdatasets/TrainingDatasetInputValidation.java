@@ -16,10 +16,13 @@
 
 package io.hops.hopsworks.common.featurestore.trainingdatasets;
 
+import com.google.common.base.Joiner;
 import io.hops.hopsworks.common.featurestore.FeaturestoreConstants;
 import io.hops.hopsworks.common.featurestore.feature.TrainingDatasetFeatureDTO;
 import io.hops.hopsworks.common.featurestore.query.Feature;
 import io.hops.hopsworks.common.featurestore.query.Query;
+import io.hops.hopsworks.common.featurestore.query.QueryController;
+import io.hops.hopsworks.common.featurestore.query.filter.FilterLogicDTO;
 import io.hops.hopsworks.common.featurestore.query.join.Join;
 import io.hops.hopsworks.common.featurestore.statistics.columns.StatisticColumnController;
 import io.hops.hopsworks.common.featurestore.storageconnectors.FeaturestoreConnectorFacade;
@@ -27,6 +30,7 @@ import io.hops.hopsworks.common.featurestore.storageconnectors.FeaturestoreStora
 import io.hops.hopsworks.common.featurestore.trainingdatasets.split.TrainingDatasetSplitDTO;
 import io.hops.hopsworks.common.featurestore.utils.FeaturestoreInputValidation;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
+import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.Featuregroup;
 import io.hops.hopsworks.persistence.entity.featurestore.storageconnector.FeaturestoreConnector;
 import io.hops.hopsworks.persistence.entity.featurestore.storageconnector.FeaturestoreConnectorType;
 import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.TrainingDatasetType;
@@ -58,7 +62,8 @@ public class TrainingDatasetInputValidation {
   private StatisticColumnController statisticColumnController;
   @EJB
   private FeaturestoreConnectorFacade connectorFacade;
-
+  @EJB
+  private QueryController queryController;
   /**
    * Verify entity names input by the user for creation of entities in the featurestore
    *
@@ -98,6 +103,44 @@ public class TrainingDatasetInputValidation {
     validateFeatures(query, trainingDatasetDTO.getFeatures());
     validateStorageConnector(trainingDatasetDTO.getStorageConnector());
     validateTrainSplit(trainingDatasetDTO.getTrainSplit(), trainingDatasetDTO.getSplits());
+    validateExtraFilter(trainingDatasetDTO, query);
+  }
+
+  private void validateExtraFilter(TrainingDatasetDTO trainingDatasetDTO, Query query) throws FeaturestoreException {
+    FilterLogicDTO filterLogicDTO = trainingDatasetDTO.getExtraFilter();
+    if (filterLogicDTO != null) {
+      validateExtraFilter(trainingDatasetDTO.getExtraFilter(),
+          queryController.getFeatureGroups(query).stream().map(Featuregroup::getId).collect(Collectors.toSet()));
+    }
+  }
+
+  private void validateExtraFilter(FilterLogicDTO filterLogicDTO, Set<Integer> allFgs) throws FeaturestoreException {
+    if (
+        (
+            filterLogicDTO.getLeftFilter() != null
+                && !allFgs.contains(filterLogicDTO.getLeftFilter().getFeature().getFeatureGroupId())
+        ) ||
+            (
+                filterLogicDTO.getRightFilter() != null
+                    && !allFgs.contains(filterLogicDTO.getRightFilter().getFeature().getFeatureGroupId())
+            )
+    ) {
+      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.FEATUREGROUP_NOT_FOUND, Level.FINE,
+          String.format(
+              "Feature '%s' is from feature group with id '%d' which is not available in the feature view's `Query`."
+              + " All available feature group id in this query are [%s].",
+              filterLogicDTO.getLeftFilter().getFeature().getName(),
+              filterLogicDTO.getLeftFilter().getFeature().getFeatureGroupId(),
+              Joiner.on(", ").join(allFgs)
+          )
+      );
+    }
+    if (filterLogicDTO.getLeftLogic() != null) {
+      validateExtraFilter(filterLogicDTO.getLeftLogic(), allFgs);
+    }
+    if (filterLogicDTO.getRightLogic() != null) {
+      validateExtraFilter(filterLogicDTO.getRightLogic(), allFgs);
+    }
   }
 
   private void validateType(TrainingDatasetType trainingDatasetType) throws FeaturestoreException {
@@ -143,20 +186,20 @@ public class TrainingDatasetInputValidation {
       for (TrainingDatasetSplitDTO trainingDatasetSplitDTO : trainingDatasetSplitDTOs) {
         if (!namePattern.matcher(trainingDatasetSplitDTO.getName()).matches()) {
           throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_TRAINING_DATASET_SPLIT_NAME,
-              Level.FINE, ", the provided training dataset split name " + trainingDatasetSplitDTO.getName() + " is " +
+              Level.FINE, "The provided training dataset split name " + trainingDatasetSplitDTO.getName() + " is " +
               "invalid. Split names can only contain lower case characters, numbers and underscores and cannot be " +
               "longer than " + FeaturestoreConstants.FEATURESTORE_ENTITY_NAME_MAX_LENGTH + " characters or empty.");
         }
         if (RANDOM_SPLIT.equals(trainingDatasetSplitDTO.getSplitType())
             && trainingDatasetSplitDTO.getPercentage() == null) {
           throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_TRAINING_DATASET_SPLIT_PERCENTAGE,
-              Level.FINE, ", the provided training dataset split percentage is invalid. " +
+              Level.FINE, "The provided training dataset split percentage is invalid. " +
               "Percentages can only be numeric. Weights will be normalized if they don’t sum up to 1.0.");
         }
         if (RANDOM_SPLIT.equals(trainingDatasetSplitDTO.getSplitType())
             && trainingDatasetSplitDTO.getPercentage() <= 0) {
           throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_TRAINING_DATASET_SPLIT_PERCENTAGE,
-              Level.FINE, ", the provided training dataset split percentage is invalid. " +
+              Level.FINE, "The provided training dataset split percentage is invalid. " +
               "Weights must be greater than 0.");
         }
         if (!splitNames.add(trainingDatasetSplitDTO.getName())) {
