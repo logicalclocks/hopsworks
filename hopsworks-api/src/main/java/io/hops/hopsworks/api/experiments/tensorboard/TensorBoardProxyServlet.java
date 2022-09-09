@@ -40,7 +40,7 @@
 package io.hops.hopsworks.api.experiments.tensorboard;
 
 import io.hops.hopsworks.api.jwt.JWTHelper;
-import io.hops.hopsworks.api.kibana.ProxyServlet;
+import io.hops.hopsworks.api.proxy.ProxyServlet;
 import io.hops.hopsworks.common.dao.jobhistory.YarnApplicationstateFacade;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
 import io.hops.hopsworks.common.dao.project.team.ProjectTeamFacade;

@@ -332,7 +332,7 @@ public class JWTHelper {
     Set<String> allowedRolesSet) throws IOException {
     String jwt = getCookieValue(servletRequest, PROXY_JWT_COOKIE_NAME);
     if (jwt == null) {
-      servletResponse.sendError(Response.Status.UNAUTHORIZED.getStatusCode(),"Authorization header not set.");
+      servletResponse.sendError(Response.Status.UNAUTHORIZED.getStatusCode(),"Unauthorized access.");
       return null;
     }
     DecodedJWT decodedJWT;

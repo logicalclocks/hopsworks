@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.hops.hopsworks.api.kibana;
+package io.hops.hopsworks.api.proxy;
 
 import org.apache.http.Header;
 import org.apache.http.HttpEntity;
