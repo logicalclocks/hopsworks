@@ -17,14 +17,19 @@
 package io.hops.hopsworks.common.featurestore.query.filter;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.collect.Maps;
 import com.google.gson.Gson;
 import io.hops.hopsworks.common.featurestore.feature.FeatureGroupFeatureDTO;
+import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupController;
 import io.hops.hopsworks.common.featurestore.query.ConstructorController;
 import io.hops.hopsworks.common.featurestore.query.Feature;
 import io.hops.hopsworks.common.featurestore.query.Query;
+import io.hops.hopsworks.common.featurestore.query.QueryController;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.Featuregroup;
 import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.SqlFilterLogic;
+import io.hops.hopsworks.persistence.entity.project.Project;
+import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.restutils.RESTCodes;
 import org.apache.calcite.sql.SqlIdentifier;
 import org.apache.calcite.sql.SqlLiteral;
@@ -50,33 +55,57 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.Function;
 import java.util.logging.Level;
+import java.util.stream.Collectors;
 
 @Stateless
 @TransactionAttribute(TransactionAttributeType.NEVER)
 public class FilterController {
-  
+
   @EJB
   private ConstructorController constructorController;
-  
+  @EJB
+  private QueryController queryController;
+  @EJB
+  private FeaturegroupController featuregroupController;
   private ObjectMapper objectMapper = new ObjectMapper();
   private DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
   private DateFormat timestampFormat = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss");
 
-  public FilterController() {}
-  
+  public FilterController() {
+  }
+
   // for testing
   public FilterController(ConstructorController constructorController) {
     this.constructorController = constructorController;
   }
-  
-  public FilterLogic convertFilterLogic(FilterLogicDTO filterLogicDTO, Map<Integer, Featuregroup> fgLookup,
-                                        Map<Integer, List<Feature>> availableFeatureLookup)
+
+  public FilterLogic convertFilterLogic(Project project, Users users, Query query, FilterLogicDTO filterLogicDTO)
       throws FeaturestoreException {
-    
+    Map<Integer, Featuregroup> fgLookup = queryController.getFeatureGroups(query)
+        .stream()
+        .collect(Collectors.toMap(Featuregroup::getId, Function.identity()));
+    Map<Integer, List<Feature>> availableFeatureLookup = Maps.newHashMap();
+    for (Featuregroup featuregroup : fgLookup.values()) {
+      availableFeatureLookup.put(
+          featuregroup.getId(),
+          featuregroupController.getFeatures(featuregroup, project, users)
+          .stream()
+          .map(f -> new Feature(f, featuregroup))
+          .collect(Collectors.toList())
+      );
+    }
+    return convertFilterLogic(filterLogicDTO, fgLookup, availableFeatureLookup);
+  }
+
+  public FilterLogic convertFilterLogic(FilterLogicDTO filterLogicDTO, Map<Integer, Featuregroup> fgLookup,
+      Map<Integer, List<Feature>> availableFeatureLookup)
+      throws FeaturestoreException {
+
     FilterLogic filterLogic = new FilterLogic(filterLogicDTO.getType());
     validateFilterLogicDTO(filterLogicDTO);
-    
+
     if (filterLogicDTO.getLeftFilter() != null) {
       filterLogic.setLeftFilter(convertFilter(filterLogicDTO.getLeftFilter(), fgLookup, availableFeatureLookup));
     }
@@ -102,7 +131,7 @@ public class FilterController {
       return String.valueOf(date.getTime());
     }
   }
-  
+
   void validateFilterLogicDTO(FilterLogicDTO filterLogicDTO) throws FeaturestoreException {
     // each side of the tree can either only have a filter or another filterLogic object
     // case 1: both filter and logic are set on left side
@@ -111,61 +140,65 @@ public class FilterController {
     // case 3.1: the single filter is assumed to be in the leftFilter field, in this case it's missing
     // case 3.2: any of the other three fields is set
     if ((filterLogicDTO.getLeftFilter() != null && filterLogicDTO.getLeftLogic() != null)
-      || (filterLogicDTO.getRightFilter() != null && filterLogicDTO.getRightLogic() != null)
-      || (filterLogicDTO.getType() == SqlFilterLogic.SINGLE &&
-      (filterLogicDTO.getLeftFilter() == null ||
-        filterLogicDTO.getLeftLogic() != null ||
-        filterLogicDTO.getRightFilter() != null ||
-        filterLogicDTO.getRightLogic() != null))) {
+        || (filterLogicDTO.getRightFilter() != null && filterLogicDTO.getRightLogic() != null)
+        || (filterLogicDTO.getType() == SqlFilterLogic.SINGLE &&
+        (filterLogicDTO.getLeftFilter() == null ||
+            filterLogicDTO.getLeftLogic() != null ||
+            filterLogicDTO.getRightFilter() != null ||
+            filterLogicDTO.getRightLogic() != null))) {
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_FILTER_ARGUMENTS, Level.FINE, "The " +
-        "provided filters for the Query are malformed, please do not access private attributes, contact maintainers " +
-        "with reproducible example.");
+          "provided filters for the Query are malformed, please do not access private attributes, contact maintainers "
+          + "with reproducible example.");
     }
   }
-  
+
   Filter convertFilter(FilterDTO filterDTO, Map<Integer, Featuregroup> fgLookup,
-    Map<Integer, List<Feature>> availableFeatureLookup) throws FeaturestoreException {
+      Map<Integer, List<Feature>> availableFeatureLookup) throws FeaturestoreException {
     return new Filter(Arrays.asList(findFilteredFeature(filterDTO.getFeature(), fgLookup, availableFeatureLookup)),
-      filterDTO.getCondition(), convertFilterValue(filterDTO.getValue(), fgLookup, availableFeatureLookup));
+        filterDTO.getCondition(), convertFilterValue(filterDTO.getValue(), fgLookup, availableFeatureLookup));
   }
-  
+
   FilterValue convertFilterValue(String value, Map<Integer, Featuregroup> fgLookup,
       Map<Integer, List<Feature>> availableFeatureLookup) throws FeaturestoreException {
-    
+
     try {
       FeatureGroupFeatureDTO featureDto = objectMapper.readValue(value, FeatureGroupFeatureDTO.class);
+      // value can be "null"
+      if (featureDto == null) {
+        return new FilterValue("null");
+      }
       Feature feature = findFilteredFeature(featureDto, fgLookup, availableFeatureLookup);
       return new FilterValue(feature.getFeatureGroup().getId(), feature.getFgAlias(), feature.getName());
     } catch (IOException e) {
       return new FilterValue(value);
     }
   }
-  
+
   Feature findFilteredFeature(FeatureGroupFeatureDTO featureDTO, Map<Integer, Featuregroup> fgLookup,
-    Map<Integer, List<Feature>> availableFeatureLookup) throws FeaturestoreException {
+      Map<Integer, List<Feature>> availableFeatureLookup) throws FeaturestoreException {
     Optional<Feature> feature = Optional.empty();
-    
+
     if (featureDTO.getFeatureGroupId() != null) {
       // feature group is specified by user or api
       feature = availableFeatureLookup.get(featureDTO.getFeatureGroupId()).stream()
-        .filter(af -> af.getName().equals(featureDTO.getName()))
-        .findFirst();
+          .filter(af -> af.getName().equals(featureDTO.getName()))
+          .findFirst();
     } else {
       // check all feature groups
       for (Map.Entry<Integer, List<Feature>> pair : availableFeatureLookup.entrySet()) {
         feature = pair.getValue().stream()
-          .filter(af -> af.getName().equals(featureDTO.getName()))
-          .findFirst();
+            .filter(af -> af.getName().equals(featureDTO.getName()))
+            .findFirst();
         if (feature.isPresent()) {
           break;
         }
       }
     }
-    
+
     return feature.orElseThrow(() -> new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.FEATURE_DOES_NOT_EXIST,
-      Level.FINE, "Filtered feature: `" + featureDTO.getName() + "` not found in any of the feature groups."));
+        Level.FINE, "Filtered feature: `" + featureDTO.getName() + "` not found in any of the feature groups."));
   }
-  
+
   public SqlNode generateFilterLogicNode(FilterLogic filterLogic, boolean online) {
     if (filterLogic.getType() == SqlFilterLogic.SINGLE) {
       if (filterLogic.getLeftFilter().getFeatures().size() > 1) {
@@ -178,21 +211,21 @@ public class FilterController {
       }
     } else {
       SqlNode leftNode = filterLogic.getLeftFilter() != null ? generateFilterNode(filterLogic.getLeftFilter(), online) :
-        generateFilterLogicNode(filterLogic.getLeftLogic(), online);
+          generateFilterLogicNode(filterLogic.getLeftLogic(), online);
       SqlNode rightNode = filterLogic.getRightFilter() != null ?
-        generateFilterNode(filterLogic.getRightFilter(), online) :
-        generateFilterLogicNode(filterLogic.getRightLogic(), online);
+          generateFilterNode(filterLogic.getRightFilter(), online) :
+          generateFilterLogicNode(filterLogic.getRightLogic(), online);
       return filterLogic.getType().operator.createCall(SqlParserPos.ZERO, leftNode, rightNode);
     }
   }
-  
+
   public SqlNode generateFilterNode(Filter filter, boolean online) {
     SqlNode sqlNode;
-    Feature feature =  filter.getFeatures().get(0);
+    Feature feature = filter.getFeatures().get(0);
     if (feature.getDefaultValue() == null || online) {
       if (feature.getFgAlias(false) != null) {
         sqlNode = new SqlIdentifier(Arrays.asList("`" + feature.getFgAlias(false) + "`",
-          "`" + feature.getName() + "`"), SqlParserPos.ZERO);
+            "`" + feature.getName() + "`"), SqlParserPos.ZERO);
       } else {
         sqlNode = new SqlIdentifier("`" + feature.getName() + "`", SqlParserPos.ZERO);
       }
@@ -215,15 +248,15 @@ public class FilterController {
       // Value
       filterValue = getSQLNode(feature.getType(), filter.getValue());
     }
-    
+
     return filter.getCondition().operator.createCall(SqlParserPos.ZERO, sqlNode, filterValue);
   }
-  
-  protected SqlNode getSQLNode(String type, String value){
+
+  protected SqlNode getSQLNode(String type, String value) {
     return getSQLNode(type, new FilterValue(value));
   }
 
-  protected SqlNode getSQLNode(String type, FilterValue value){
+  protected SqlNode getSQLNode(String type, FilterValue value) {
     if (value.isFeatureValue()) {
       return new SqlIdentifier(value.makeSqlValue(), SqlParserPos.ZERO);
     }
@@ -247,7 +280,7 @@ public class FilterController {
       SqlNode filter = buildFilterNode(baseQuery, baseQuery.getJoins().get(i).getRightQuery(), i - 1, online);
       if (filter != null && query.getFilter() != null) {
         return SqlStdOperatorTable.AND.createCall(SqlParserPos.ZERO, generateFilterLogicNode(query.getFilter(), online),
-          filter);
+            filter);
       } else if (filter != null) {
         return filter;
       } else if (query.getFilter() != null) {
@@ -256,14 +289,14 @@ public class FilterController {
     }
     return null;
   }
-  
+
   public SqlNode generateFilterNodeList(Filter filter, boolean online) {
     SqlNodeList operandList = new SqlNodeList(SqlParserPos.ZERO);
     for (Feature feature : filter.getFeatures()) {
       if (feature.getDefaultValue() == null || online) {
         if (feature.getFgAlias(false) != null) {
           operandList.add(new SqlIdentifier(Arrays.asList("`" + feature.getFgAlias(false) + "`",
-            "`" + feature.getName() + "`"), SqlParserPos.ZERO));
+              "`" + feature.getName() + "`"), SqlParserPos.ZERO));
         } else {
           operandList.add(new SqlIdentifier("`" + feature.getName() + "`", SqlParserPos.ZERO));
         }
@@ -271,8 +304,8 @@ public class FilterController {
         operandList.add(constructorController.caseWhenDefault(feature));
       }
     }
-    
+
     return SqlStdOperatorTable.IN.createCall(SqlParserPos.ZERO, operandList,
-      new SqlIdentifier("?", SqlParserPos.ZERO));
+        new SqlIdentifier("?", SqlParserPos.ZERO));
   }
 }

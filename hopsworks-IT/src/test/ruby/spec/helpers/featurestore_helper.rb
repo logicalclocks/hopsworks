@@ -608,7 +608,7 @@ module FeaturestoreHelper
   def create_featureview_training_dataset(project_id, featureview, hopsfs_connector, data_format: "tfrecords",
                                           version: 1, splits: [], description: "testtrainingdatasetdescription",
                                           statistics_config: nil, train_split: nil, query_param: nil, is_internal: true,
-                                          location: nil, td_type: "HOPSFS_TRAINING_DATASET")
+                                          location: nil, td_type: "HOPSFS_TRAINING_DATASET", extra_filter: nil)
     trainingDatasetType = is_internal ? td_type: "EXTERNAL_TRAINING_DATASET"
     create_training_dataset_endpoint = "#{ENV['HOPSWORKS_API']}/project/#{project_id.to_s}/featurestores/#{featureview["featurestoreId"].to_s}" +
       "/featureview/#{featureview["name"]}/version/#{featureview["version"].to_s}/trainingdatasets"
@@ -623,7 +623,8 @@ module FeaturestoreHelper
       splits: splits,
       seed: 1234,
       trainSplit: train_split,
-      location: location
+      location: location,
+      extraFilter: extra_filter
     }
     unless statistics_config == nil
       json_data[:statisticsConfig] = statistics_config

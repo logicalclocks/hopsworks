@@ -52,6 +52,14 @@ public class Feature {
     this.prefix = prefix;
     this.featureGroup = featuregroup;
   }
+
+  public Feature(FeatureGroupFeatureDTO featureGroupFeatureDTO, Featuregroup featuregroup) {
+    this.name = featureGroupFeatureDTO.getName();
+    this.type = featureGroupFeatureDTO.getType();
+    this.primary = featureGroupFeatureDTO.getPrimary();
+    this.defaultValue = featureGroupFeatureDTO.getDefaultValue();
+    this.featureGroup = featuregroup;
+  }
   
   public Feature(FeatureGroupFeatureDTO featureGroupFeatureDTO, String fgAlias) {
     this.name = featureGroupFeatureDTO.getName();

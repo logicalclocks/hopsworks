@@ -32,6 +32,7 @@ import io.hops.hopsworks.common.featurestore.query.Query;
 import io.hops.hopsworks.common.featurestore.query.QueryController;
 import io.hops.hopsworks.common.featurestore.query.QueryDTO;
 import io.hops.hopsworks.common.featurestore.query.filter.Filter;
+import io.hops.hopsworks.common.featurestore.query.filter.FilterController;
 import io.hops.hopsworks.common.featurestore.query.filter.FilterLogic;
 import io.hops.hopsworks.common.featurestore.query.filter.FilterValue;
 import io.hops.hopsworks.common.featurestore.query.join.Join;
@@ -163,6 +164,8 @@ public class TrainingDatasetController {
   private ActivityFacade activityFacade;
   @EJB
   private QuotasEnforcement quotasEnforcement;
+  @EJB
+  private FilterController filterController;
 
   /**
    * Gets all trainingDatasets for a particular featurestore and project
@@ -372,7 +375,6 @@ public class TrainingDatasetController {
       completeTrainingDatasetDTO = createTrainingDatasetMetadata(user, project,
           featurestore, featureView, trainingDatasetDTO, query, featurestoreConnector, inode, skipFeature);
       if (featureView == null) {
-        //TODO: do provenance when creating feature view instead
         fsProvenanceController.trainingDatasetAttachXAttr(trainingDatasetPath, completeTrainingDatasetDTO, udfso);
       }
       activityFacade.persistActivity(ActivityFacade.CREATED_TRAINING_DATASET +
@@ -522,6 +524,15 @@ public class TrainingDatasetController {
       } else if (trainingDatasetDTO.getFeatures() != null) {
         trainingDataset.setFeatures(getTrainingDatasetFeatures(trainingDatasetDTO.getFeatures(), trainingDataset));
       }
+    } else {
+      if (trainingDatasetDTO.getExtraFilter() != null) {
+        trainingDataset.setFilters(
+            convertToFilterEntities(
+                filterController.convertFilterLogic(project, user, query, trainingDatasetDTO.getExtraFilter()),
+                trainingDataset,
+                "L")
+        );
+      }
     }
 
     TrainingDataset dbTrainingDataset = trainingDatasetFacade.update(trainingDataset);
@@ -546,7 +557,6 @@ public class TrainingDatasetController {
       pitJoinController.isPitEnabled(queryDTO));
   }
 
-  //TODO feature view: remove
   private void setTrainingDatasetQuery(Query query,
                                        List<TrainingDatasetFeatureDTO> features,
                                        TrainingDataset trainingDataset) throws FeaturestoreException {
@@ -1029,9 +1039,14 @@ public class TrainingDatasetController {
   }
 
   public Query getQuery(List<TrainingDatasetJoin> joins, List<TrainingDatasetFeature> tdFeatures,
-                        Collection<TrainingDatasetFilter> trainingDatasetFilters, Project project,
-                        Users user, Boolean isHiveEngine) throws FeaturestoreException {
+      Collection<TrainingDatasetFilter> trainingDatasetFilters, Project project,
+      Users user, Boolean isHiveEngine) throws FeaturestoreException {
+    return getQuery(joins, tdFeatures, trainingDatasetFilters, project, user, isHiveEngine, Lists.newArrayList());
+  }
 
+  public Query getQuery(List<TrainingDatasetJoin> joins, List<TrainingDatasetFeature> tdFeatures,
+      Collection<TrainingDatasetFilter> trainingDatasetFilters, Project project,
+      Users user, Boolean isHiveEngine, Collection<TrainingDatasetFilter> extraFilters) throws FeaturestoreException {
     // Convert all the TrainingDatasetFeatures to QueryFeatures
     Map<Integer, String> fgAliasLookup = getAliasLookupTable(joins);
 
@@ -1039,8 +1054,8 @@ public class TrainingDatasetController {
     // user
     if (tdFeatures.stream().anyMatch(j -> j.getFeatureGroup() == null)) {
       return new Query(tdFeatures.stream().filter(j -> j.getFeatureGroup() == null)
-        .map(TrainingDatasetFeature::getName)
-        .collect(Collectors.toList()));
+          .map(TrainingDatasetFeature::getName)
+          .collect(Collectors.toList()));
     }
 
     // Get available features for all involved feature groups once, and save in map fgId -> availableFeatures
@@ -1101,6 +1116,11 @@ public class TrainingDatasetController {
     FilterLogic filterLogic = convertToFilterLogic(trainingDatasetFilters, featureLookup, "L");
     query.setFilter(filterLogic);
 
+    if (!extraFilters.isEmpty()) {
+      FilterLogic extraFilterLogic = convertToFilterLogic(extraFilters, featureLookup, "L");
+      queryController.appendFilter(query, SqlFilterLogic.AND, extraFilterLogic);
+    }
+
     return query;
   }
 
@@ -1118,7 +1138,7 @@ public class TrainingDatasetController {
    * @return filter logic
    * @throws FeaturestoreException
    */
-  FilterLogic convertToFilterLogic(Collection<TrainingDatasetFilter> trainingDatasetFilters,
+  public FilterLogic convertToFilterLogic(Collection<TrainingDatasetFilter> trainingDatasetFilters,
       Map<String, Feature> features, String headPath) throws FeaturestoreException {
 
     if (trainingDatasetFilters == null || trainingDatasetFilters.size() == 0) {
