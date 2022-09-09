@@ -40,6 +40,9 @@
 package io.hops.hopsworks.api.kibana;
 
 import io.hops.hopsworks.api.jwt.JWTHelper;
+import io.hops.hopsworks.api.proxy.ModifyHeaderHttpServletRequest;
+import io.hops.hopsworks.api.proxy.MultiReadHttpServletRequest;
+import io.hops.hopsworks.api.proxy.ProxyServlet;
 import io.hops.hopsworks.common.dao.jobhistory.YarnApplicationstateFacade;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
 import io.hops.hopsworks.common.dao.project.team.ProjectTeamFacade;
@@ -52,6 +55,8 @@ import io.hops.hopsworks.persistence.entity.jobs.history.YarnApplicationstate;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.restutils.RESTCodes;
+import joptsimple.internal.Strings;
+import org.apache.commons.io.IOUtils;
 
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
@@ -60,20 +65,22 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.core.Response;
 import java.io.IOException;
-import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 @Stateless
 public class GrafanaProxyServlet extends ProxyServlet {
-
+  private static final Logger LOGGER = Logger.getLogger(GrafanaProxyServlet.class.getName());
   @EJB
   private YarnApplicationstateFacade yarnApplicationstateFacade;
   @EJB
@@ -90,42 +97,51 @@ public class GrafanaProxyServlet extends ProxyServlet {
   private Settings settings;
   @EJB
   private UsersController userController;
-
+  
   private final String YARN_APP_PATTERN_KEY = "yarnApp";
   private final String FG_KAFKA_TOPIC_KEY = "fgKafkaTopic";
   private final String DEPLOYMENT_METRICS_KEY = "deploymentMetrics";
   private final String USER_STATEMENT_SUMMARIES = "user_statement_summaries";
-
-  private final Map<String, Pattern> patterns = new HashMap<String, Pattern>(){
+  
+  private final Map<String, Pattern> patterns = new HashMap<String, Pattern>() {
     {
       put(YARN_APP_PATTERN_KEY, Pattern.compile("(application_.*?_.\\d*)"));
       put(FG_KAFKA_TOPIC_KEY, Pattern.compile(
-          "(?<projectid>[0-9]+)_(?<fgid>[0-9]+)_(?<fgname>[a-z0-9_]+)_(?<fgversion>[0-9]+)_onlinefs"));
-      put(DEPLOYMENT_METRICS_KEY, Pattern.compile("namespace_name=\"(?<projectname>[0-9a-z-]+)\""));
-      put(USER_STATEMENT_SUMMARIES, Pattern.compile("user=\"(?<dbuser>[0-9a-z_]+)\""));
+        "(?<projectid>[0-9]+)_(?<fgid>[0-9]+)_(?<fgname>[a-z0-9_]+)_(?<fgversion>[0-9]+)_onlinefs"));
+      put(DEPLOYMENT_METRICS_KEY, Pattern.compile("namespace_name=\\\\\"(?<projectname>[0-9a-z-]+)\\\\\""));
+      put(USER_STATEMENT_SUMMARIES, Pattern.compile("user=\\\\\"(?<dbuser>[0-9a-z_]+)\\\\\""));
     }
   };
-
-  private final List<String> openQueries =
-      Arrays.asList(new String[]{"onlinefs_clusterj_success_write_counter_total"});
-
+  
+  private final List<String> openQueries = Collections.singletonList("onlinefs_clusterj_success_write_counter_total");
+  
   @Override
-  protected void service(HttpServletRequest servletRequest, HttpServletResponse servletResponse) 
-      throws ServletException, IOException {
+  protected void service(HttpServletRequest servletRequest, HttpServletResponse servletResponse)
+    throws ServletException, IOException {
     Users user = jwtHelper.validateAndRenewToken(servletRequest, servletResponse,
       new HashSet<>(Arrays.asList("HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER")));
     if (user == null) {
       return;
     }
-
-    if (servletRequest.getRequestURI().contains("query")) {
+    
+    boolean isAdmin = userController.isUserInRole(user, "HOPS_ADMIN");
+    ModifyHeaderHttpServletRequest addParamsToHeader = new ModifyHeaderHttpServletRequest(servletRequest);
+    addParamsToHeader.addHeader("X-WEBAUTH-USER", user.getUsername());
+    addParamsToHeader.addHeader("X-WEBAUTH-NAME", user.getFname());
+    addParamsToHeader.addHeader("X-WEBAUTH-EMAIL", user.getEmail());
+    addParamsToHeader.addHeader("X-WEBAUTH-ROLE", isAdmin ? "Admin" : "Viewer");
+    
+    //check /query iff the user is not an admin
+    if (!isAdmin && "POST".equalsIgnoreCase(addParamsToHeader.getMethod()) &&
+      addParamsToHeader.getRequestURI().contains("query")) {
       boolean isAuthorized = false;
-      String queryString = URLDecoder.decode(servletRequest.getParameter("query"), "UTF-8")
-          .replaceAll("\n", "");
-      boolean isAdmin = userController.isUserInRole(user,"HOPS_ADMIN");
+      // wrap request for multi read
+      MultiReadHttpServletRequest multiReadHttpServletRequest = new MultiReadHttpServletRequest(addParamsToHeader);
+      // read body
+      String bodyString = IOUtils.toString(multiReadHttpServletRequest.getInputStream(), StandardCharsets.UTF_8);
       try {
         for (String key : patterns.keySet()) {
-          Matcher matcher = patterns.get(key).matcher(queryString);
+          Matcher matcher = patterns.get(key).matcher(bodyString);
           if (matcher.find()) {
             if (Objects.equals(key, YARN_APP_PATTERN_KEY)) {
               String appId = matcher.group(1);
@@ -147,68 +163,70 @@ public class GrafanaProxyServlet extends ProxyServlet {
           }
         }
       } catch (ServiceException e) {
-        if (!isAdmin) {
-          servletResponse.sendError(Response.Status.BAD_REQUEST.getStatusCode(), e.getMessage());
-          return;
-        }
-        //is admin
-        isAuthorized = true;
-      }
-
-      if (!isAdmin && !isAuthorized && !isQueryOpen(queryString)) {
-        servletResponse.sendError(Response.Status.BAD_REQUEST.getStatusCode(), "Unauthorized to execute query "
-            + queryString);
+        servletResponse.sendError(Response.Status.FORBIDDEN.getStatusCode(), e.getMessage());
         return;
       }
+      // if /query is not authorized, and it is not open
+      if (!isAuthorized && !isQueryOpen(bodyString)) {
+        servletResponse.sendError(Response.Status.FORBIDDEN.getStatusCode(), "Unauthorized to execute query "
+          + bodyString);
+        return;
+      }
+      super.service(multiReadHttpServletRequest, servletResponse);
+      return;
     }
-    super.service(servletRequest, servletResponse);
+    super.service(addParamsToHeader, servletResponse);
   }
-
+  
   public void validateUserForSparkAppId(Users user, String appId) throws ServiceException {
     YarnApplicationstate appState = yarnApplicationstateFacade.findByAppId(appId);
     if (appState == null) {
       throw new ServiceException(RESTCodes.ServiceErrorCode.GRAFANA_PROXY_ERROR, Level.SEVERE,
-          "You don't have the access right for this application");
+        "You don't have the access right for this application");
     }
     String projectName = hdfsUsersBean.getProjectName(appState.getAppuser());
     Project project = projectFacade.findByName(projectName);
     validateProjectForUser(project, user);
   }
-
+  
   public void validateUserForOnlineFG(Users user, String projectId) throws ServiceException {
     try {
       Project project = projectFacade.findById(Integer.parseInt(projectId)).orElse(null);
       validateProjectForUser(project, user);
     } catch (NumberFormatException e) {
       throw new ServiceException(RESTCodes.ServiceErrorCode.GRAFANA_PROXY_ERROR, Level.SEVERE,
-          "Invalid project id:  " + projectId);
+        "Invalid project id:  " + projectId);
     }
   }
-
+  
   public void validateProjectForUser(Project project, Users user) throws ServiceException {
     if (project == null) {
       throw new ServiceException(RESTCodes.ServiceErrorCode.GRAFANA_PROXY_ERROR, Level.SEVERE, "Project does not " +
-          "exists");
+        "exists");
     } else if (!projectTeamFacade.isUserMemberOfProject(project, user)) {
       throw new ServiceException(RESTCodes.ServiceErrorCode.GRAFANA_PROXY_ERROR, Level.SEVERE,
-          "User not a member of project");
+        "User not a member of project");
     }
   }
-
-  public String getProjectNameFromDatabaseUsername(Users user, String dbUsername) {
+  
+  public String getProjectNameFromDatabaseUsername(Users user, String dbUsername) throws ServiceException {
     String toReplace = "_" + user.getUsername();
     int start = dbUsername.lastIndexOf(toReplace);
-    StringBuilder builder = new StringBuilder();
-    builder.append(dbUsername.substring(0, start));
-    return builder.append(dbUsername.substring(start + toReplace.length())).toString();
+    if (start < 0) {
+      throw new ServiceException(RESTCodes.ServiceErrorCode.GRAFANA_PROXY_ERROR, Level.SEVERE,
+        "User not found");
+    }
+    return dbUsername.substring(0, start) +
+      dbUsername.substring(start + toReplace.length());
   }
-
+  
   /**
    * Checks query is open
+   *
    * @param query
    * @return
    */
   public boolean isQueryOpen(String query) {
-    return openQueries.stream().anyMatch(q -> query.contains(q));
+    return !Strings.isNullOrEmpty(query) && openQueries.stream().anyMatch(q -> query.contains(q));
   }
 }

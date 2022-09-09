@@ -19,7 +19,7 @@ import com.google.common.base.Strings;
 import com.predic8.membrane.core.http.Header;
 import io.hops.hopsworks.api.jwt.JWTHelper;
 import io.hops.hopsworks.api.kibana.MyRequestWrapper;
-import io.hops.hopsworks.api.kibana.ProxyServlet;
+import io.hops.hopsworks.api.proxy.ProxyServlet;
 import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.jobs.flink.FlinkCompletedJobsCache;
 import io.hops.hopsworks.persistence.entity.user.Users;
