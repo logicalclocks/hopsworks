@@ -152,11 +152,13 @@ describe "On #{ENV['OS']}" do
           splits = [
               {
                   name: "test_split",
-                  percentage: 0.8
+                  percentage: 0.8,
+                  splitType: "RANDOM_SPLIT"
               },
               {
                   name: "train_split",
-                  percentage: 0.2
+                  percentage: 0.2,
+                  splitType: "RANDOM_SPLIT"
               }
           ]
           json_result, training_dataset_name = create_hopsfs_training_dataset(project.id, featurestore_id, connector,
@@ -172,14 +174,14 @@ describe "On #{ENV['OS']}" do
           project = get_project
           featurestore_id = get_featurestore_id(project.id)
           connector = get_hopsfs_training_datasets_connector(@project[:projectname])
-          split = [{name: "train_split", percentage: "wrong"}]
-          json_result, training_dataset_name = create_hopsfs_training_dataset(project.id, featurestore_id, connector, splits: split)
+          split = [{name: "train", percentage: "wrong", splitType: "RANDOM_SPLIT"}]
+          json_result, training_dataset_name = create_hopsfs_training_dataset(project.id, featurestore_id, connector, splits: split, train_split: "train")
           parsed_json = JSON.parse(json_result)
           expect_status(400)
           expect(parsed_json.key?("errorCode")).to be true
           expect(parsed_json.key?("errorMsg")).to be true
           expect(parsed_json.key?("usrMsg")).to be true
-          expect(parsed_json["errorCode"] == 270099).to be true
+          expect(parsed_json["errorCode"]).to eql(270099)
         end
 
         it "should not be able to add a hopsfs training dataset to the featurestore with a illegal split name" do
@@ -1275,15 +1277,16 @@ describe "On #{ENV['OS']}" do
           project = get_project
           featurestore_id = get_featurestore_id(project.id)
           connector_id = get_s3_connector_id
-          splits = [{name: "train_split", percentage: "wrong"}]
+          splits = [{name: "train", percentage: "wrong", splitType: "RANDOM_SPLIT"}]
           json_result, training_dataset_name = create_external_training_dataset(project.id, featurestore_id,
-                                                                                connector_id, splits: splits)
+                                                                                connector_id, splits: splits,
+                                                                                train_split: "train")
           parsed_json = JSON.parse(json_result)
           expect_status(400)
           expect(parsed_json.key?("errorCode")).to be true
           expect(parsed_json.key?("errorMsg")).to be true
           expect(parsed_json.key?("usrMsg")).to be true
-          expect(parsed_json["errorCode"] == 270099).to be true
+          expect(parsed_json["errorCode"]).to eql(270099)
         end
 
         it "should not be able to add an external training dataset to the featurestore with a illegal split name" do

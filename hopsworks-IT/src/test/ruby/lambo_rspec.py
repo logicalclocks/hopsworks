@@ -18,6 +18,7 @@ import subprocess
 import threading
 import queue
 import time
+from datetime import datetime
 
 from typing import List
 
@@ -25,19 +26,20 @@ spec_queue = queue.Queue()
 output_dir = "out"
 os_name = "ubuntu"
 spec_done = False
-
+only_failures = False
 
 def run_rspec(item: str, thread_id: int) -> None:
     env = os.environ
     env["PROC"] = str(thread_id)
     start_time = time.time()
-    print("Executing {}".format(item))
+    print("Executing {} on {}".format(item, datetime.now().strftime("%d/%m/%Y, %H:%M:%S")))
     subprocess.run(
         " ".join(
             [
                 "rspec",
                 "--format",
                 "RspecJunitFormatter",
+                "--only-failures" if only_failures else "",
                 "--out",
                 "{}_{}.xml".format(os.path.join(output_dir, item), os_name),
                 "spec/{}".format(item),
@@ -47,9 +49,7 @@ def run_rspec(item: str, thread_id: int) -> None:
             ]
         ),
         shell=True,
-        env=env,
-        stdout=subprocess.DEVNULL,
-        stderr=subprocess.DEVNULL,
+        env=env
     )
     print("Finished {} execution in {} mins".format(item, (time.time()-start_time)/60))
 
@@ -61,12 +61,14 @@ def worker(thread_id: int):
         spec_queue.task_done()
 
 
-def list_specs() -> (List[str], List[str]):
+def list_specs(specs=None) -> (List[str], List[str]):
     with open("isolated_tests", "r") as f:
         isolated_tests = f.read().splitlines()
-
+    if specs:
+        filtered_specs = sorted(filter(specs, isolated_tests))
+        return filtered_specs, [spec for spec in specs if spec in set(isolated_tests)]
     specs = os.listdir("spec")
-    return filter(specs, isolated_tests), isolated_tests
+    return sorted(filter(specs, isolated_tests)), isolated_tests
 
 
 def filter(specs: List[str], isolated_test: List[str]) -> List[str]:
@@ -77,6 +79,11 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Too fast too test.")
     parser.add_argument("-proc", help="The number of parallel process to use")
     parser.add_argument("-out", help="The directory where to save the tests results")
+    parser.add_argument("--only-failures", action="store_true", help="Run failed tests only.")
+    parser.add_argument(
+        "-tests", 
+        help="List of tests to be run in parallel. Tests should be comma separated."
+    )
     parser.add_argument(
         "-os",
         help="The operating system on which the script is run (to name the output files)",
@@ -85,9 +92,11 @@ if __name__ == "__main__":
     args = parser.parse_args()
     output_dir = args.out
     os_name = args.os
+    only_failures = args.only_failures
+    tests = args.tests.split(",")
     print("Starting parallel testing with {} process".format(args.proc))
 
-    parallel_specs, isolated_specs = list_specs()
+    parallel_specs, isolated_specs = list_specs(tests)
 
     # Execute isolated specs
     for spec in isolated_specs:
