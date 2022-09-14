@@ -97,11 +97,13 @@ describe "On #{ENV['OS']}" do
           splits = [
             {
               name: "test_split",
-              percentage: 0.8
+              percentage: 0.8,
+              splitType: "RANDOM_SPLIT"
             },
             {
               name: "train_split",
-              percentage: 0.2
+              percentage: 0.2,
+              splitType: "RANDOM_SPLIT"
             }
           ]
           all_metadata = create_featureview_training_dataset_from_project(@project, splits: splits,
@@ -111,14 +113,55 @@ describe "On #{ENV['OS']}" do
           expect(parsed_json["splits"].length).to be 2
         end
 
+        it "should be able to add a hopsfs training dataset to the featurestore with time series splits" do
+          splits = [
+            {
+              name: "train",
+              startTime: 1000,
+              endTime: 2000,
+              splitType: "TIME_SERIES_SPLIT"
+            },
+            {
+              name: "test",
+              startTime: 5000,
+              endTime: 6000,
+              splitType: "TIME_SERIES_SPLIT"
+            },
+            {
+              name: "validation",
+              startTime: 3000,
+              endTime: 4000,
+              splitType: "TIME_SERIES_SPLIT"
+            }
+          ]
+          all_metadata = create_featureview_training_dataset_from_project(@project, splits: splits,
+                                                                          train_split: "train")
+          parsed_json = all_metadata["response"]
+          expect(parsed_json.key?("splits")).to be true
+          expect(parsed_json["splits"].length).to be 3
+          sorted_splits = parsed_json["splits"].sort_by {|split| split["startTime"]}
+          expect(sorted_splits[0]["splitType"]).to eql "TIME_SERIES_SPLIT"
+          expect(sorted_splits[0]["name"]).to eql "train"
+          expect(sorted_splits[0]["startTime"]).to eql 1000
+          expect(sorted_splits[0]["endTime"]).to eql 2000
+          expect(sorted_splits[1]["splitType"]).to eql "TIME_SERIES_SPLIT"
+          expect(sorted_splits[1]["name"]).to eql "validation"
+          expect(sorted_splits[1]["startTime"]).to eql 3000
+          expect(sorted_splits[1]["endTime"]).to eql 4000
+          expect(sorted_splits[2]["splitType"]).to eql "TIME_SERIES_SPLIT"
+          expect(sorted_splits[2]["name"]).to eql "test"
+          expect(sorted_splits[2]["startTime"]).to eql 5000
+          expect(sorted_splits[2]["endTime"]).to eql 6000
+        end
+
         it "should not be able to add a hopsfs training dataset to the featurestore with a non numeric split percentage" do
-          split = [{ name: "train_split", percentage: "wrong" }]
-          all_metadata = create_featureview_training_dataset_from_project(@project, expected_status_code: 400, splits: split)
+          split = [{ name: "train", percentage: "wrong", splitType: "RANDOM_SPLIT"}]
+          all_metadata = create_featureview_training_dataset_from_project(@project, expected_status_code: 400, splits: split, train_split: "train")
           parsed_json = all_metadata["response"]
           expect(parsed_json.key?("errorCode")).to be true
           expect(parsed_json.key?("errorMsg")).to be true
           expect(parsed_json.key?("usrMsg")).to be true
-          expect(parsed_json["errorCode"] == 270099).to be true
+          expect(parsed_json["errorCode"]).to eql(270099)
         end
 
         it "should not be able to add a hopsfs training dataset to the featurestore with a illegal split name" do
@@ -136,11 +179,13 @@ describe "On #{ENV['OS']}" do
           splits = [
             {
               name: "test_split",
-              percentage: 0.8
+              percentage: 0.8,
+              splitType: "RANDOM_SPLIT"
             },
             {
               name: "test_split",
-              percentage: 0.2
+              percentage: 0.2,
+              splitType: "RANDOM_SPLIT"
             }
           ]
           all_metadata = create_featureview_training_dataset_from_project(@project, expected_status_code: 400, splits: splits, train_split: "test_split")
@@ -509,29 +554,72 @@ describe "On #{ENV['OS']}" do
           expect(parsed_json["splits"].length).to be 2
         end
 
-        it "should not be able to add an external training dataset to the featurestore with a non numeric split percentage" do
-          splits = [{ name: "train_split", percentage: "wrong" }]
+        it "should be able to add a external training dataset to the featurestore with time series splits" do
+          splits = [
+            {
+              name: "train",
+              startTime: 1000,
+              endTime: 2000,
+              splitType: "TIME_SERIES_SPLIT"
+            },
+            {
+              name: "test",
+              startTime: 5000,
+              endTime: 6000,
+              splitType: "TIME_SERIES_SPLIT"
+            },
+            {
+              name: "validation",
+              startTime: 3000,
+              endTime: 4000,
+              splitType: "TIME_SERIES_SPLIT"
+            }
+          ]
           connector = make_connector_dto(get_s3_connector_id)
           all_metadata = create_featureview_training_dataset_from_project(
-            @project, connector: connector, is_internal: false, splits: splits, expected_status_code: 400)
+            @project, connector: connector, is_internal: false, splits: splits, train_split: "train")
+          parsed_json = all_metadata["response"]
+          expect(parsed_json.key?("splits")).to be true
+          expect(parsed_json["splits"].length).to be 3
+          sorted_splits = parsed_json["splits"].sort_by {|split| split["startTime"]}
+          expect(sorted_splits[0]["splitType"]).to eql "TIME_SERIES_SPLIT"
+          expect(sorted_splits[0]["name"]).to eql "train"
+          expect(sorted_splits[0]["startTime"]).to eql 1000
+          expect(sorted_splits[0]["endTime"]).to eql 2000
+          expect(sorted_splits[1]["splitType"]).to eql "TIME_SERIES_SPLIT"
+          expect(sorted_splits[1]["name"]).to eql "validation"
+          expect(sorted_splits[1]["startTime"]).to eql 3000
+          expect(sorted_splits[1]["endTime"]).to eql 4000
+          expect(sorted_splits[2]["splitType"]).to eql "TIME_SERIES_SPLIT"
+          expect(sorted_splits[2]["name"]).to eql "test"
+          expect(sorted_splits[2]["startTime"]).to eql 5000
+          expect(sorted_splits[2]["endTime"]).to eql 6000
+        end
+
+        it "should not be able to add an external training dataset to the featurestore with a non numeric split percentage" do
+          splits = [{ name: "train_split", percentage: "wrong", splitType: "RANDOM_SPLIT"}]
+          connector = make_connector_dto(get_s3_connector_id)
+          all_metadata = create_featureview_training_dataset_from_project(
+            @project, connector: connector, is_internal: false, splits: splits, expected_status_code: 400, train_split: "train")
           parsed_json = all_metadata["response"]
           expect_status(400)
           expect(parsed_json.key?("errorCode")).to be true
           expect(parsed_json.key?("errorMsg")).to be true
           expect(parsed_json.key?("usrMsg")).to be true
-          expect(parsed_json["errorCode"] == 270099).to be true
+          expect(parsed_json["errorCode"]).to eql(270099)
         end
 
-        it "should not be able to add an external training dataset to the featurestore with splits of
-        duplicate split names" do
+        it "should not be able to add an external training dataset to the featurestore with splits of duplicate split names" do
           splits = [
             {
               name: "test_split",
-              percentage: 0.8
+              percentage: 0.8,
+              splitType: "RANDOM_SPLIT"
             },
             {
               name: "test_split",
-              percentage: 0.2
+              percentage: 0.2,
+              splitType: "RANDOM_SPLIT"
             }
           ]
           connector = make_connector_dto(get_s3_connector_id)
