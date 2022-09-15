@@ -128,6 +128,9 @@ public class ServingFacade {
     if (newServing.getModelVersion() != null) {
       dbServing.setModelVersion(newServing.getModelVersion());
     }
+    if (newServing.getModelFramework() != null) {
+      dbServing.setModelFramework(newServing.getModelFramework());
+    }
   
     dbServing.setKafkaTopic(newServing.getKafkaTopic());
   

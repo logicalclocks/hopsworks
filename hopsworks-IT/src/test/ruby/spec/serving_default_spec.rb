@@ -50,6 +50,7 @@ describe "On #{ENV['OS']}" do
            },
            inferenceLogging: "ALL",
            modelServer: "TENSORFLOW_SERVING",
+           modelFramework: "TENSORFLOW",
            servingTool: "DEFAULT",
            requestedInstances: 1
            }
@@ -82,6 +83,7 @@ describe "On #{ENV['OS']}" do
            },
            inferenceLogging: "ALL",
            modelServer: "TENSORFLOW_SERVING",
+           modelFramework: "TENSORFLOW",
            servingTool: "DEFAULT",
            requestedInstances: 1
           }
@@ -114,6 +116,7 @@ describe "On #{ENV['OS']}" do
            },
            inferenceLogging: "ALL",
            modelServer: "TENSORFLOW_SERVING",
+           modelFramework: "TENSORFLOW",
            servingTool: "DEFAULT",
            requestedInstances: 1
           }
@@ -145,6 +148,7 @@ describe "On #{ENV['OS']}" do
            },
            inferenceLogging: "ALL",
            modelServer: "TENSORFLOW_SERVING",
+           modelFramework: "TENSORFLOW",
            servingTool: "DEFAULT",
            requestedInstances: 1
           }
@@ -165,6 +169,7 @@ describe "On #{ENV['OS']}" do
            inferenceLogging: "PREDICTIONS",
            modelVersion: 1,
            modelServer: "TENSORFLOW_SERVING",
+           modelFramework: "TENSORFLOW",
            servingTool: "DEFAULT",
            requestedInstances: 1
           }
@@ -190,6 +195,7 @@ describe "On #{ENV['OS']}" do
                 name: "NONE"
             },
             modelServer: "TENSORFLOW_SERVING",
+            modelFramework: "TENSORFLOW",
             servingTool: "DEFAULT",
             transformer: "/Projects/#{@project[:projectname]}/Models/mnist/1/transformer.py",
             requestedInstances: 1,
@@ -233,6 +239,7 @@ describe "On #{ENV['OS']}" do
            },
            inferenceLogging: "PREDICTIONS",
            modelServer: parse_model_server(serving[:model_server]),
+           modelFramework: parse_model_framework(serving[:model_framework]),
            servingTool: parse_serving_tool(serving[:serving_tool]),
            requestedInstances: serving[:instances]
           }

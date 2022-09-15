@@ -51,14 +51,16 @@ module ServingHelper
                modelPath: "/Projects/#{project_name}/Models/mnist",
                modelVersion: 1,
                batchingConfiguration: {
-                 batchingEnabled:false
+                 batchingEnabled: true
                },
                kafkaTopicDTO: {
                   name: "CREATE",
                   numOfPartitions: 1,
                   numOfReplicas: 1
                },
+               inferenceLogging: "ALL",
                modelServer: "TENSORFLOW_SERVING",
+               modelFramework: "TENSORFLOW",
                servingTool: "DEFAULT",
                requestedInstances: 1
               }
@@ -80,6 +82,7 @@ module ServingHelper
          },
          inferenceLogging: "ALL",
          modelServer: "PYTHON",
+         modelFramework: "SKLEARN",
          servingTool: "DEFAULT",
          requestedInstances: 1
         }
@@ -97,56 +100,6 @@ module ServingHelper
     mkdir("/Projects/#{project_name}/Models/irisflowerclassifier/1", "#{project_name}__#{user}", "#{project_name}__Models", 750)
     copy(SKLEARN_MODEL_TOUR_FILE_LOCATION, "/Projects/#{project_name}/Models/irisflowerclassifier/1/", "#{user}", "#{project_name}__Models", 750, "#{project_name}")
     copy(SKLEARN_SCRIPT_TOUR_FILE_LOCATION, "/Projects/#{project_name}/Models/irisflowerclassifier/1/", "#{user}", "#{project_name}__Models", 750, "#{project_name}")
-  end
-
-  def purge_all_kserve_instances(project_name="", should_exist=true)
-
-    if !project_name.empty?
-      # Purge all inferenceservices in a namespace
-      namespace = project_name.gsub("_","-").downcase
-      output = nil
-      inf_services = nil
-
-      if kubernetes_installed
-        kube_user = Variables.find_by(id: "kube_user").value
-
-        #Get all inference services
-        cmd = "sudo su #{kube_user} /bin/bash -c \"kubectl get inferenceservices --namespace=#{namespace} -o=jsonpath='{.items[*].metadata.name}'\""
-        Open3.popen3(cmd) do |_, stdout, _, wait_thr|
-          inf_services = stdout.read.split("\n")
-        end
-        if should_exist
-          expect(inf_services).not_to be_empty
-        end
-
-        #Remove all inference services
-        cmd = "sudo su #{kube_user} /bin/bash -c \"kubectl delete --all inferenceservices --namespace=#{namespace}\""
-        Open3.popen3(cmd) do |_, stdout, _, wait_thr|
-          output = stdout.read
-        end
-
-        if should_exist
-          output != "No resources in #{namespace} namespace." and output != ""
-        else
-          output == "No resources in #{namespace} namespace." or output == ""
-        end
-        if should_exist
-          inf_services.each do |name|
-            expect(output).to include(name)
-          end
-        else
-          inf_services.each do |name|
-            expect(output).not_to include(name)
-          end
-        end
-      end
-    else
-      # Purge all inferenceservices
-      cmd = "sudo su #{kube_user} /bin/bash -c \"kubectl delete --all inferenceservices --all-namespaces\""
-      Open3.popen3(cmd) do |_, stdout, _, wait_thr|
-        output = stdout.read
-      end
-    end
   end
 
   def purge_all_tf_serving_instances()
@@ -224,12 +177,12 @@ module ServingHelper
 
   def parse_model_framework(value)
     return case
-           when value == 0 ; "TENSORFLOW"
-           when value == 1 ; "PYTHON"
-           when value == 2 ; "SKLEARN"
-           when value == 3 ; "TORCH"
-           else puts "Model framework value cannot be parsed"
-           end
+      when value == 0 ; "TENSORFLOW"
+      when value == 1 ; "PYTHON"
+      when value == 2 ; "SKLEARN"
+      when value == 3 ; "TORCH"
+      else puts "Model framework value cannot be parsed"
+      end
   end
 
   def parse_serving_tool(value)

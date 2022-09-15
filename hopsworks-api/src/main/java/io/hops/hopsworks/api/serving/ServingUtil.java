@@ -30,6 +30,7 @@ import io.hops.hopsworks.persistence.entity.kafka.ProjectTopics;
 import io.hops.hopsworks.persistence.entity.kafka.schemas.Subjects;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.serving.BatchingConfiguration;
+import io.hops.hopsworks.persistence.entity.serving.ModelFramework;
 import io.hops.hopsworks.persistence.entity.serving.ModelServer;
 import io.hops.hopsworks.persistence.entity.serving.Serving;
 import io.hops.hopsworks.restutils.RESTCodes;
@@ -88,6 +89,7 @@ public class ServingUtil {
     validateServingName(serving, dbServing);
     validateModelPath(serving);
     validateModelVersion(serving);
+    validateModelFramework(serving);
     validateModelServer(serving, dbServing);
     validateModelName(serving);
     validateServingTool(serving);
@@ -96,7 +98,7 @@ public class ServingUtil {
     validateInstances(serving);
     validateBatchingConfiguration(serving);
   }
-
+  
   private void validateBatchingConfiguration(Serving serving) throws ServingException {
     BatchingConfiguration batchingConfiguration = serving.getBatchingConfiguration();
     if (batchingConfiguration != null && batchingConfiguration.isBatchingEnabled() &&
@@ -113,18 +115,18 @@ public class ServingUtil {
     } else if (serving.getName().contains(" ")) {
       throw new IllegalArgumentException("Serving name cannot contain spaces");
     }
-  
+    
     // Check for duplicated entries
     if (dbServing != null && !dbServing.getId().equals(serving.getId())) {
       // There is already an entry for this project
       throw new ServingException(RESTCodes.ServingErrorCode.DUPLICATED_ENTRY, Level.FINE);
     }
-  
+    
     // Check serving name follows allowed regex as required by the InferenceResource to use it as a
     // REST endpoint
     Pattern urlPattern = Pattern.compile("[a-zA-Z0-9]+");
     Matcher urlMatcher = urlPattern.matcher(serving.getName());
-    if(!urlMatcher.matches()){
+    if (!urlMatcher.matches()) {
       throw new IllegalArgumentException("Serving name must follow regex: \"[a-zA-Z0-9]+\"");
     }
   }
@@ -138,6 +140,18 @@ public class ServingUtil {
   private void validateModelVersion(Serving serving) {
     if (serving.getModelVersion() == null) {
       throw new IllegalArgumentException("Model version not provided");
+    }
+  }
+  
+  private void validateModelFramework(Serving serving) {
+    if (serving.getModelFramework() == null) {
+      throw new IllegalArgumentException("Model framework not provided");
+    }
+    if (serving.getModelFramework() == ModelFramework.TENSORFLOW
+      && serving.getModelServer() != ModelServer.TENSORFLOW_SERVING) {
+      throw new IllegalArgumentException("Tensorflow models require Tensorflow Serving server");
+    } else if (serving.getModelFramework() == ModelFramework.TORCH && serving.getModelServer() != ModelServer.PYTHON) {
+      throw new IllegalArgumentException("Torch models require Python model server");
     }
   }
   
@@ -185,19 +199,19 @@ public class ServingUtil {
     
     // Check that the script name is valid and exists
     String scriptName = Utils.getFileName(scriptPath);
-    if(extensions.stream().noneMatch(scriptName::endsWith)){
+    if (extensions.stream().noneMatch(scriptName::endsWith)) {
       throw new IllegalArgumentException(StringUtils.capitalize(component) + " script should have a valid extension: "
         + String.join(", ", extensions));
     }
     //Remove hdfs:// if it is in the path
     String hdfsPath = Utils.prepPath(scriptPath);
-    if(!inodeController.existsPath(hdfsPath)){
+    if (!inodeController.existsPath(hdfsPath)) {
       throw new ServingException(RESTCodes.ServingErrorCode.SCRIPT_NOT_FOUND, Level.SEVERE,
         StringUtils.capitalize(component) + " script does not exist");
     }
     
     //Check that python environment is activated
-    if(project.getPythonEnvironment() == null){
+    if (project.getPythonEnvironment() == null) {
       throw new ServingException(RESTCodes.ServingErrorCode.PYTHON_ENVIRONMENT_NOT_ENABLED, Level.SEVERE, null);
     }
   }
@@ -236,9 +250,8 @@ public class ServingUtil {
       throw new ServingException(RESTCodes.ServingErrorCode.MODEL_PATH_NOT_FOUND, Level.FINE, null);
     }
   }
-
   private void validatePredictor(Project project, Serving serving) throws UnsupportedEncodingException,
-      ServingException {
+    ServingException {
     if (serving.getPredictor() != null) {
       // if predictor selected
       if (serving.getModelServer() == ModelServer.TENSORFLOW_SERVING) {
@@ -255,9 +268,13 @@ public class ServingUtil {
         throw new ServingException(RESTCodes.ServingErrorCode.MODEL_ARTIFACT_NOT_VALID, Level.FINE, "Default " +
           "deployments require a predictor");
       }
+      if (serving.getModelFramework() == ModelFramework.PYTHON) {
+        throw new IllegalArgumentException("Predictor scripts are required in custom python deployments");
+      } else if (serving.getModelFramework() == ModelFramework.TORCH) {
+        throw new IllegalArgumentException("Predictor scripts are required in torch deployments");
+      }
     }
   }
-
     
   private void validateKafkaTopicSchema(Project project, Serving serving, TopicDTO topic) throws ServingException {
     // if an existing topic, check schema
@@ -272,9 +289,10 @@ public class ServingUtil {
       }
     }
   }
-
   private void setDefaultModelName(Serving serving) {
-    if (serving.getModelName() != null) return;
+    if (serving.getModelName() != null) {
+      return;
+    }
     String modelPath = serving.getModelPath();
     String[] split = modelPath.split("/");
     serving.setModelName(split[4]);

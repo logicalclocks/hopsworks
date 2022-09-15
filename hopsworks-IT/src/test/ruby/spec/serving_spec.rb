@@ -114,22 +114,22 @@ describe "On #{ENV['OS']}" do
         expect_status_details(201)
 
         put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
-            {name: "testModelExistingName",
-             modelPath: "/Projects/#{@project[:projectname]}/Models/mnist",
-             modelVersion: 1,
-             batchingConfiguration: {
-               batchingEnabled: false
-             },
-             kafkaTopicDTO: {
-               name: "CREATE",
-               numOfPartitions: 1,
-               numOfReplicas: 1
-             },
-             inferenceLogging: "ALL",
-             modelServer: "TENSORFLOW_SERVING",
-             modelFramework: "TENSORFLOW",
-             servingTool: "DEFAULT",
-             requestedInstances: 1
+           {name: "testModelExistingName",
+            modelPath: "/Projects/#{@project[:projectname]}/Models/mnist",
+            modelVersion: 1,
+            batchingConfiguration: {
+              batchingEnabled: false
+            },
+            kafkaTopicDTO: {
+                name: "CREATE",
+                numOfPartitions: 1,
+                numOfReplicas: 1
+            },
+            inferenceLogging: "ALL",
+            modelServer: "TENSORFLOW_SERVING",
+            modelFramework: "TENSORFLOW",
+            servingTool: "DEFAULT",
+            requestedInstances: 1
             }
         expect_status_details(400, error_code: 240011)
         expect_json(errorMsg: "An entry with the same name already exists in this project")
@@ -506,16 +506,16 @@ describe "On #{ENV['OS']}" do
 
       it "should fail to create a serving without predictor requested instances" do
         put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
-            {name: "testmodel7",
-             modelPath: "/Projects/#{@project[:projectname]}/Models/mnist",
-             modelVersion: 1,
-             batchingConfiguration: {
-               batchingEnabled: false
-             },
-             modelServer: "TENSORFLOW_SERVING",
-             modelFramework: "TENSORFLOW",
-             servingTool: "DEFAULT"
-            }
+              {name: "testmodel7",
+               modelPath: "/Projects/#{@project[:projectname]}/Models/mnist",
+               modelVersion: 1,
+               batchingConfiguration: {
+                 batchingEnabled: false
+               },
+               modelServer: "TENSORFLOW_SERVING",
+               modelFramework: "TENSORFLOW",
+               servingTool: "DEFAULT"
+              }
         expect_json(usrMsg: "Number of instances not provided")
       end
 
@@ -601,19 +601,19 @@ describe "On #{ENV['OS']}" do
         topic = ProjectTopics.find(@serving[:kafka_topic_id])
 
         put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
-            {id: serving[:id],
-             name: serving[:name],
-             modelPath: serving[:model_path],
-             modelVersion: 2,
-             batchingConfiguration: JSON.parse(serving[:batching_configuration]),
-             kafkaTopicDTO: {
-               name: topic[:topic_name]
-             },
-             inferenceLogging: parse_inference_logging(serving[:inference_logging]),
-             modelServer: parse_model_server(serving[:model_server]),
-             modelFramework: parse_model_framework(serving[:model_framework]),
-             servingTool: parse_serving_tool(serving[:serving_tool]),
-             requestedInstances: serving[:instances]
+           {id: serving[:id],
+            name: serving[:name],
+            modelPath: serving[:model_path],
+            modelVersion: 2,
+            batchingConfiguration: serving[:batching_configuration],
+            kafkaTopicDTO: {
+                name: topic[:topic_name]
+            },
+            inferenceLogging: parse_inference_logging(serving[:inference_logging]),
+            modelServer: parse_model_server(serving[:model_server]),
+            modelFramework: parse_model_framework(serving[:model_framework]),
+            servingTool: parse_serving_tool(serving[:serving_tool]),
+            requestedInstances: serving[:instances]
             }
         expect_status_details(401, error_code: 200003)
       end
@@ -655,19 +655,19 @@ describe "On #{ENV['OS']}" do
         topic = ProjectTopics.find(@serving[:kafka_topic_id])
         put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
             {id: serving[:id],
-             name: "testModelChanged",
-             modelPath: serving[:model_path],
-             modelVersion: serving[:model_version],
-             artifactVersion: serving[:artifact_version],
-             batchingConfiguration: JSON.parse(serving[:batching_configuration]),
-             kafkaTopicDTO: {
-               name: topic[:topic_name]
-             },
-             inferenceLogging: parse_inference_logging(serving[:inference_logging]),
-             modelServer: parse_model_server(serving[:model_server]),
-             modelFramework: parse_model_framework(serving[:model_framework]),
-             servingTool: parse_serving_tool(serving[:serving_tool]),
-             requestedInstances: serving[:instances]
+            name: "testModelChanged",
+            modelPath: serving[:model_path],
+            modelVersion: serving[:model_version],
+            artifactVersion: serving[:artifact_version],
+            batchingConfiguration: serving[:batching_configuration],
+            kafkaTopicDTO: {
+                name: topic[:topic_name]
+            },
+            inferenceLogging: parse_inference_logging(serving[:inference_logging]),
+            modelServer: parse_model_server(serving[:model_server]),
+            modelFramework: parse_model_framework(serving[:model_framework]),
+            servingTool: parse_serving_tool(serving[:serving_tool]),
+            requestedInstances: serving[:instances]
             }
         expect_status_details(201)
 
@@ -685,18 +685,18 @@ describe "On #{ENV['OS']}" do
 
         put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
             {id: serving[:id],
-             name: serving[:name],
-             modelPath: "/Projects/#{@project[:projectname]}/Models/newMnist",
-             modelVersion: serving[:model_version],
-             batchingConfiguration: JSON.parse(serving[:batching_configuration]),
-             kafkaTopicDTO: {
-               name: topic[:topic_name]
-             },
-             inferenceLogging: parse_inference_logging(serving[:inference_logging]),
-             modelServer: parse_model_server(serving[:model_server]),
-             modelFramework: parse_model_framework(serving[:model_framework]),
-             servingTool: parse_serving_tool(serving[:serving_tool]),
-             requestedInstances: serving[:instances]
+            name: serving[:name],
+            modelPath: "/Projects/#{@project[:projectname]}/Models/newMnist",
+            modelVersion: serving[:model_version],
+            batchingConfiguration: serving[:batching_configuration],
+            kafkaTopicDTO: {
+                name: topic[:topic_name]
+            },
+            inferenceLogging: parse_inference_logging(serving[:inference_logging]),
+            modelServer: parse_model_server(serving[:model_server]),
+            modelFramework: parse_model_framework(serving[:model_framework]),
+            servingTool: parse_serving_tool(serving[:serving_tool]),
+            requestedInstances: serving[:instances]
             }
         expect_status_details(201)
 
@@ -712,18 +712,18 @@ describe "On #{ENV['OS']}" do
         topic = ProjectTopics.find(@serving[:kafka_topic_id])
         put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
             {id: serving[:id],
-             name: serving[:name],
-             modelPath: serving[:model_path],
-             modelVersion: 2,
-             batchingConfiguration: JSON.parse(serving[:batching_configuration]),
-             kafkaTopicDTO: {
-               name: topic[:topic_name]
-             },
-             inferenceLogging: parse_inference_logging(serving[:inference_logging]),
-             modelServer: parse_model_server(serving[:model_server]),
-             modelFramework: parse_model_framework(serving[:model_framework]),
-             servingTool: parse_serving_tool(serving[:serving_tool]),
-             requestedInstances: serving[:instances]
+            name: serving[:name],
+            modelPath: serving[:model_path],
+            modelVersion: 2,
+            batchingConfiguration: serving[:batching_configuration],
+            kafkaTopicDTO: {
+                name: topic[:topic_name]
+            },
+            inferenceLogging: parse_inference_logging(serving[:inference_logging]),
+            modelServer: parse_model_server(serving[:model_server]),
+            modelFramework: parse_model_framework(serving[:model_framework]),
+            servingTool: parse_serving_tool(serving[:serving_tool]),
+            requestedInstances: serving[:instances]
             }
         expect_status_details(201)
 
@@ -741,14 +741,14 @@ describe "On #{ENV['OS']}" do
         serving = Serving.find(@serving[:id])
         put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
             {id: serving[:id],
-             name: serving[:name],
-             modelPath: serving[:model_path],
-             modelVersion: 2,
-             batchingConfiguration: JSON.parse(serving[:batching_configuration]),
-             modelServer: parse_model_server(serving[:model_server]),
-             modelFramework: parse_model_framework(serving[:model_framework]),
-             servingTool: parse_serving_tool(serving[:serving_tool]),
-             requestedInstances: serving[:instances]
+            name: serving[:name],
+            modelPath: serving[:model_path],
+            modelVersion: 2,
+            batchingConfiguration: serving[:batching_configuration],
+            modelServer: parse_model_server(serving[:model_server]),
+            modelFramework: parse_model_framework(serving[:model_framework]),
+            servingTool: parse_serving_tool(serving[:serving_tool]),
+            requestedInstances: serving[:instances]
             }
         expect_status_details(201)
 
@@ -774,14 +774,14 @@ describe "On #{ENV['OS']}" do
 
         put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
             {id: serving[:id],
-             name: serving[:name],
-             modelPath: "/Projects/#{@project[:projectname]}/Models/newMnist",
-             modelVersion: serving[:model_version],
-             batchingConfiguration: JSON.parse(serving[:batching_configuration]),
-             modelServer: parse_model_server(serving[:model_server]),
-             modelFramework: parse_model_framework(serving[:model_framework]),
-             servingTool: parse_serving_tool(serving[:serving_tool]),
-             requestedInstances: serving[:instances]
+            name: serving[:name],
+            modelPath: "/Projects/#{@project[:projectname]}/Models/newMnist",
+            modelVersion: serving[:model_version],
+            batchingConfiguration: serving[:batching_configuration],
+            modelServer: parse_model_server(serving[:model_server]),
+            modelFramework: parse_model_framework(serving[:model_framework]),
+            servingTool: parse_serving_tool(serving[:serving_tool]),
+            requestedInstances: serving[:instances]
             }
         expect_status_details(201)
 
@@ -802,15 +802,15 @@ describe "On #{ENV['OS']}" do
         serving = Serving.find(@serving[:id])
         put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
             {id: serving[:id],
-             name: serving[:name],
-             modelPath: serving[:model_path],
-             modelVersion: serving[:model_version],
-             artifactVersion: serving[:artifact_version],
-             batchingConfiguration: JSON.parse(serving[:batching_configuration]),
-             modelServer: "PYTHON",
-             modelFramework: parse_model_framework(serving[:model_framework]),
-             servingTool: parse_serving_tool(serving[:serving_tool]),
-             requestedInstances: serving[:instances]
+            name: serving[:name],
+            modelPath: serving[:model_path],
+            modelVersion: serving[:model_version],
+            artifactVersion: serving[:artifact_version],
+            batchingConfiguration: serving[:batching_configuration],
+            modelServer: "PYTHON",
+            modelFramework: parse_model_framework(serving[:model_framework]),
+            servingTool: parse_serving_tool(serving[:serving_tool]),
+            requestedInstances: serving[:instances]
             }
         expect_status_details(400, error_code: 240013)
       end
@@ -822,19 +822,19 @@ describe "On #{ENV['OS']}" do
         serving = Serving.find(@serving[:id])
         put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
             {id: serving[:id],
-             name: serving[:name],
-             modelPath: serving[:model_path],
-             modelVersion: serving[:model_version],
-             artifactVersion: serving[:artifact_version],
-             batchingConfiguration: JSON.parse(serving[:batching_configuration]),
-             kafkaTopicDTO: {
-               name: topic_name
-             },
-             inferenceLogging: "ALL",
-             modelServer: parse_model_server(serving[:model_server]),
-             modelFramework: parse_model_framework(serving[:model_framework]),
-             servingTool: parse_serving_tool(serving[:serving_tool]),
-             requestedInstances: serving[:instances]
+            name: serving[:name],
+            modelPath: serving[:model_path],
+            modelVersion: serving[:model_version],
+            artifactVersion: serving[:artifact_version],
+            batchingConfiguration: serving[:batching_configuration],
+            kafkaTopicDTO: {
+                name: topic_name
+            },
+            inferenceLogging: "ALL",
+            modelServer: parse_model_server(serving[:model_server]),
+            modelFramework: parse_model_framework(serving[:model_framework]),
+            servingTool: parse_serving_tool(serving[:serving_tool]),
+            requestedInstances: serving[:instances]
             }
         expect_status_details(201)
 
@@ -847,18 +847,18 @@ describe "On #{ENV['OS']}" do
         serving = Serving.find(@serving[:id])
         put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
             {id: serving[:id],
-             name: serving[:name],
-             modelPath: serving[:model_path],
-             modelVersion: serving[:model_version],
-             artifactVersion: serving[:artifact_version],
-             batchingConfiguration: JSON.parse(serving[:batching_configuration]),
-             kafkaTopicDTO: {
-               name: "NONE"
-             },
-             modelServer: parse_model_server(serving[:model_server]),
-             modelFramework: parse_model_framework(serving[:model_framework]),
-             servingTool: parse_serving_tool(serving[:serving_tool]),
-             requestedInstances: serving[:instances]
+            name: serving[:name],
+            modelPath: serving[:model_path],
+            modelVersion: serving[:model_version],
+            artifactVersion: serving[:artifact_version],
+            batchingConfiguration: serving[:batching_configuration],
+            kafkaTopicDTO: {
+                name: "NONE"
+            },
+            modelServer: parse_model_server(serving[:model_server]),
+            modelFramework: parse_model_framework(serving[:model_framework]),
+            servingTool: parse_serving_tool(serving[:serving_tool]),
+            requestedInstances: serving[:instances]
             }
         expect_status_details(201)
 
@@ -870,20 +870,20 @@ describe "On #{ENV['OS']}" do
       it "should be able to create a new kafka topic to write to" do
         serving = Serving.find(@serving[:id])
         put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
-            {id: serving[:id],
-             name: serving[:name],
-             modelPath: serving[:model_path],
-             modelVersion: serving[:model_version],
-             artifactVersion: serving[:artifact_version],
-             batchingConfiguration: JSON.parse(serving[:batching_configuration]),
-             kafkaTopicDTO: {
-               name: "CREATE"
-             },
-             inferenceLogging: "ALL",
-             modelServer: parse_model_server(serving[:model_server]),
-             modelFramework: parse_model_framework(serving[:model_framework]),
-             servingTool: parse_serving_tool(serving[:serving_tool]),
-             requestedInstances: serving[:instances]
+           {id: serving[:id],
+            name: serving[:name],
+            modelPath: serving[:model_path],
+            modelVersion: serving[:model_version],
+            artifactVersion: serving[:artifact_version],
+            batchingConfiguration: serving[:batching_configuration],
+            kafkaTopicDTO: {
+                name: "CREATE"
+            },
+            inferenceLogging: "ALL",
+            modelServer: parse_model_server(serving[:model_server]),
+            modelFramework: parse_model_framework(serving[:model_framework]),
+            servingTool: parse_serving_tool(serving[:serving_tool]),
+            requestedInstances: serving[:instances]
             }
         expect_status_details(201)
 
