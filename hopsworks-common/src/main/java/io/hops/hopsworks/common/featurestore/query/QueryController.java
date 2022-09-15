@@ -226,7 +226,7 @@ public class QueryController {
 
   public Query appendEventTimeFilter(Query query, Date startTime, Date endTime) throws FeaturestoreException {
     query = appendEventTimeFilter(query, startTime, SqlCondition.GREATER_THAN_OR_EQUAL);
-    return appendEventTimeFilter(query, endTime, SqlCondition.LESS_THAN_OR_EQUAL);
+    return appendEventTimeFilter(query, endTime, SqlCondition.LESS_THAN);
   }
 
   private Query appendEventTimeFilter(Query query, Date eventTime, SqlCondition sqlCondition)

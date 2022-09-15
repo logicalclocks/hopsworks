@@ -105,7 +105,7 @@ import java.util.Optional;
 import java.util.logging.Level;
 import java.util.stream.Collectors;
 
-import static io.hops.hopsworks.common.featurestore.trainingdatasets.split.SplitType.RANDOM_SPLIT;
+import static io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.split.SplitType.RANDOM_SPLIT;
 import static io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.TrainingDatasetType.EXTERNAL_TRAINING_DATASET;
 import static io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.TrainingDatasetType.HOPSFS_TRAINING_DATASET;
 import static io.hops.hopsworks.restutils.RESTCodes.FeaturestoreErrorCode.FAILED_TO_DELETE_TD_DATA;

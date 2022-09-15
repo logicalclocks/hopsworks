@@ -154,6 +154,32 @@ describe "On #{ENV['OS']}" do
           expect(sorted_splits[2]["endTime"]).to eql 6000
         end
 
+        it "should not be able to add a hopsfs training dataset to the featurestore with incorrect time series splits" do
+          splits = [
+            {
+              name: "train",
+              startTime: 2000,
+              endTime: 1000,
+              splitType: "TIME_SERIES_SPLIT"
+            },
+            {
+              name: "test",
+              startTime: 2000,
+              endTime: 1000,
+              splitType: "TIME_SERIES_SPLIT"
+            },
+            {
+              name: "validation",
+              startTime: 20000,
+              endTime: 10000,
+              splitType: "TIME_SERIES_SPLIT"
+            }
+          ]
+          all_metadata = create_featureview_training_dataset_from_project(@project, splits: splits,
+                                                                          train_split: "train",
+                                                                          expected_status_code: 400)
+        end
+
         it "should not be able to add a hopsfs training dataset to the featurestore with a non numeric split percentage" do
           split = [{ name: "train", percentage: "wrong", splitType: "RANDOM_SPLIT"}]
           all_metadata = create_featureview_training_dataset_from_project(@project, expected_status_code: 400, splits: split, train_split: "train")
@@ -724,6 +750,33 @@ describe "On #{ENV['OS']}" do
           expect(sorted_splits[2]["name"]).to eql "test"
           expect(sorted_splits[2]["startTime"]).to eql 5000
           expect(sorted_splits[2]["endTime"]).to eql 6000
+        end
+
+        it "should not be able to add a hopsfs training dataset to the featurestore with incorrect time series splits" do
+          splits = [
+            {
+              name: "train",
+              startTime: 2000,
+              endTime: 1000,
+              splitType: "TIME_SERIES_SPLIT"
+            },
+            {
+              name: "test",
+              startTime: 2000,
+              endTime: 1000,
+              splitType: "TIME_SERIES_SPLIT"
+            },
+            {
+              name: "validation",
+              startTime: 20000,
+              endTime: 10000,
+              splitType: "TIME_SERIES_SPLIT"
+            }
+          ]
+          connector = make_connector_dto(get_s3_connector_id)
+          all_metadata = create_featureview_training_dataset_from_project(
+            @project, connector: connector, is_internal: false, splits: splits, train_split: "train",
+            expected_status_code: 400)
         end
 
         it "should not be able to add an external training dataset to the featurestore with a non numeric split percentage" do

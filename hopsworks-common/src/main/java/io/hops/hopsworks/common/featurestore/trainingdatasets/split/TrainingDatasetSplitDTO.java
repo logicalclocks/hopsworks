@@ -17,6 +17,7 @@
 package io.hops.hopsworks.common.featurestore.trainingdatasets.split;
 
 import io.hops.hopsworks.common.featurestore.trainingdatasets.DateAdapter;
+import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.split.SplitType;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
