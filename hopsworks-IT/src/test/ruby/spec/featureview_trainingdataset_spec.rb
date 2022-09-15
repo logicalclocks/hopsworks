@@ -492,6 +492,136 @@ describe "On #{ENV['OS']}" do
           expect(parsed_json2["statisticsConfig"]["exactUniqueness"]).to be false
           expect(parsed_json2["statisticsConfig"]["histograms"]).to be false
         end
+
+        it "should be able to add extra filter to td" do
+          featurestore_id = get_featurestore_id(@project.id)
+          featuregroup_suffix = short_random_id
+          query = make_sample_query(@project, featurestore_id, featuregroup_suffix: featuregroup_suffix)
+          fv_json, _ = create_feature_view(@project.id, featurestore_id, query)
+          fv = JSON.parse(fv_json)
+          extra_filter = {
+            type: "SINGLE",
+            leftFilter: {
+              feature: {
+                name: "a_testfeature1",
+                featureGroupId: query[:leftFeatureGroup][:id]
+              },
+              condition: "LESS_THAN",
+              value: "100"
+            }
+          }
+          td_result = create_featureview_training_dataset(@project.id, fv, nil, extra_filter: extra_filter)
+          td = JSON.parse(td_result)
+          query_result = get "#{ENV['HOPSWORKS_API']}/project/#{@project.id}/featurestores/#{featurestore_id}" +
+                               "/featureview/#{fv['name']}/version/#{fv['version']}/query/batch" +
+                               "?td_version=#{td['version']}"
+          expect_status_details(200)
+          parsed_query_result = JSON.parse(query_result)
+          expect(parsed_query_result["featureStoreId"]).to eql(featurestore_id)
+          expect(parsed_query_result["leftFeatureGroup"]["id"]).to eql(query[:leftFeatureGroup][:id])
+          expect(parsed_query_result["leftFeatures"][0]["name"]).to eql(query[:leftFeatures][0][:name])
+          expect(parsed_query_result["leftFeatures"][1]["name"]).to eql(query[:leftFeatures][1][:name])
+          expect(parsed_query_result["joins"][0]["query"]["leftFeatureGroup"]["id"]).to eql(query[:joins][0][:query][:leftFeatureGroup][:id])
+          expect(parsed_query_result["joins"][0]["query"]["leftFeatures"][0]["name"]).to eql(query[:joins][0][:query][:leftFeatures][1][:name])
+          expect(parsed_query_result["joins"][0]["query"]["leftFeatures"][0]["name"]).to eql(query[:joins][0][:query][:leftFeatures][1][:name])
+          expect(parsed_query_result["filter"]["type"]).to eql("AND")
+          expect(parsed_query_result["filter"]["leftLogic"]["type"]).to eql(query[:filter][:type])
+          expect(parsed_query_result["filter"]["leftLogic"]["leftFilter"]["feature"]["name"]).to eql(query[:filter][:leftFilter][:feature][:name])
+          expect(parsed_query_result["filter"]["leftLogic"]["leftFilter"]["condition"]).to eql(query[:filter][:leftFilter][:condition])
+          expect(parsed_query_result["filter"]["leftLogic"]["leftFilter"]["value"]).to eql(query[:filter][:leftFilter][:value])
+          expect(parsed_query_result["filter"]["rightLogic"]["type"]).to eql(extra_filter[:type])
+          expect(parsed_query_result["filter"]["rightLogic"]["leftFilter"]["feature"]["name"]).to eql(extra_filter[:leftFilter][:feature][:name])
+          expect(parsed_query_result["filter"]["rightLogic"]["leftFilter"]["condition"]).to eql(extra_filter[:leftFilter][:condition])
+          expect(parsed_query_result["filter"]["rightLogic"]["leftFilter"]["value"]).to eql(extra_filter[:leftFilter][:value])
+        end
+
+        it "should be able to add extra filter logic to td" do
+          featurestore_id = get_featurestore_id(@project.id)
+          featuregroup_suffix = short_random_id
+          query = make_sample_query(@project, featurestore_id, featuregroup_suffix: featuregroup_suffix)
+          fv_json, _ = create_feature_view(@project.id, featurestore_id, query)
+          fv = JSON.parse(fv_json)
+          extra_filter = {
+            type: "OR",
+            leftLogic: {
+              type: "SINGLE",
+              leftFilter: {
+                feature: {
+                  name: "a_testfeature1",
+                  featureGroupId: query[:leftFeatureGroup][:id]
+                },
+                condition: "LESS_THAN",
+                value: "10"
+              }
+            },
+            rightLogic: {
+              type: "SINGLE",
+              leftFilter: {
+                feature: {
+                  name: "b_testfeature1",
+                  featureGroupId: query[:joins][0][:query][:leftFeatureGroup][:id]
+                },
+                condition: "LESS_THAN",
+                value: "10"
+              }
+            }
+          }
+          td_result = create_featureview_training_dataset(@project.id, fv, nil, extra_filter: extra_filter)
+          td = JSON.parse(td_result)
+          query_result = get "#{ENV['HOPSWORKS_API']}/project/#{@project.id}/featurestores/#{featurestore_id}" +
+                               "/featureview/#{fv['name']}/version/#{fv['version']}/query/batch" +
+                               "?td_version=#{td['version']}"
+          expect_status_details(200)
+          parsed_query_result = JSON.parse(query_result)
+          expect(parsed_query_result["featureStoreId"]).to eql(featurestore_id)
+          expect(parsed_query_result["leftFeatureGroup"]["id"]).to eql(query[:leftFeatureGroup][:id])
+          expect(parsed_query_result["leftFeatures"][0]["name"]).to eql(query[:leftFeatures][0][:name])
+          expect(parsed_query_result["leftFeatures"][1]["name"]).to eql(query[:leftFeatures][1][:name])
+          expect(parsed_query_result["joins"][0]["query"]["leftFeatureGroup"]["id"]).to eql(query[:joins][0][:query][:leftFeatureGroup][:id])
+          expect(parsed_query_result["joins"][0]["query"]["leftFeatures"][0]["name"]).to eql(query[:joins][0][:query][:leftFeatures][1][:name])
+          expect(parsed_query_result["joins"][0]["query"]["leftFeatures"][0]["name"]).to eql(query[:joins][0][:query][:leftFeatures][1][:name])
+          expect(parsed_query_result["filter"]["type"]).to eql("AND")
+          expect(parsed_query_result["filter"]["leftLogic"]["type"]).to eql(query[:filter][:type])
+          expect(parsed_query_result["filter"]["leftLogic"]["leftFilter"]["feature"]["name"]).to eql(query[:filter][:leftFilter][:feature][:name])
+          expect(parsed_query_result["filter"]["leftLogic"]["leftFilter"]["condition"]).to eql(query[:filter][:leftFilter][:condition])
+          expect(parsed_query_result["filter"]["leftLogic"]["leftFilter"]["value"]).to eql(query[:filter][:leftFilter][:value])
+          expect(parsed_query_result["filter"]["rightLogic"]["type"]).to eql(extra_filter[:type])
+          expect(parsed_query_result["filter"]["rightLogic"]["leftFilter"]["feature"]["name"]).to eql(extra_filter[:leftLogic][:leftFilter][:feature][:name])
+          expect(parsed_query_result["filter"]["rightLogic"]["leftFilter"]["condition"]).to eql(extra_filter[:leftLogic][:leftFilter][:condition])
+          expect(parsed_query_result["filter"]["rightLogic"]["leftFilter"]["value"]).to eql(extra_filter[:leftLogic][:leftFilter][:value])
+          expect(parsed_query_result["filter"]["rightLogic"]["rightFilter"]["feature"]["name"]).to eql(extra_filter[:rightLogic][:leftFilter][:feature][:name])
+          expect(parsed_query_result["filter"]["rightLogic"]["rightFilter"]["condition"]).to eql(extra_filter[:rightLogic][:leftFilter][:condition])
+          expect(parsed_query_result["filter"]["rightLogic"]["rightFilter"]["value"]).to eql(extra_filter[:rightLogic][:leftFilter][:value])
+        end
+
+        it "should not be able to add extra filter to td where required field is not available" do
+          featurestore_id = get_featurestore_id(@project.id)
+          featuregroup_suffix = short_random_id
+          query = make_sample_query(@project, featurestore_id, featuregroup_suffix: featuregroup_suffix)
+          fv_json, _ = create_feature_view(@project.id, featurestore_id, query)
+          fv = JSON.parse(fv_json)
+          features_a = [
+            { type: "INT", name: "c_testfeature", primary: true },
+            { type: "INT", name: "c_testfeature1" },
+            { type: "BIGINT", name: "ts" },
+          ]
+          fg_id = create_cached_featuregroup_checked(@project.id, featurestore_id, "test_fg_c#{featuregroup_suffix}",
+                                                     features: features_a,
+                                                     event_time: "ts")
+          extra_filter = {
+            type: "SINGLE",
+            leftFilter: {
+              feature: {
+                name: "c_testfeature1",
+                featureGroupId: fg_id
+              },
+              condition: "LESS_THAN",
+              value: "100"
+            }
+          }
+          create_featureview_training_dataset(@project.id, fv, nil, extra_filter: extra_filter)
+          expect_status_details(404)
+        end
       end
     end
 

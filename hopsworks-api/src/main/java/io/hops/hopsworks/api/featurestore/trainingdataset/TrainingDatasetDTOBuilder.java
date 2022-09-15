@@ -24,6 +24,9 @@ import io.hops.hopsworks.common.dataset.util.DatasetHelper;
 import io.hops.hopsworks.common.dataset.util.DatasetPath;
 import io.hops.hopsworks.common.featurestore.keyword.KeywordControllerIface;
 import io.hops.hopsworks.common.featurestore.keyword.KeywordDTO;
+import io.hops.hopsworks.common.featurestore.query.Query;
+import io.hops.hopsworks.common.featurestore.query.QueryBuilder;
+import io.hops.hopsworks.common.featurestore.query.QueryController;
 import io.hops.hopsworks.common.featurestore.trainingdatasets.TrainingDatasetController;
 import io.hops.hopsworks.common.featurestore.trainingdatasets.TrainingDatasetDTO;
 import io.hops.hopsworks.exceptions.DatasetException;
@@ -32,6 +35,7 @@ import io.hops.hopsworks.exceptions.MetadataException;
 import io.hops.hopsworks.exceptions.SchematizedTagException;
 import io.hops.hopsworks.exceptions.ServiceException;
 import io.hops.hopsworks.persistence.entity.dataset.DatasetType;
+import io.hops.hopsworks.persistence.entity.featurestore.featureview.FeatureView;
 import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.TrainingDataset;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.user.Users;
@@ -60,6 +64,10 @@ public class TrainingDatasetDTOBuilder {
   private KeywordControllerIface keywordControllerIface;
   @EJB
   private FeaturestoreKeywordBuilder featurestoreKeywordBuilder;
+  @EJB
+  private QueryController queryController;
+  @EJB
+  private QueryBuilder queryBuilder;
 
   public TrainingDatasetDTO build(Users user, Project project, TrainingDataset trainingDataset,
       UriInfo uriInfo,ResourceRequest resourceRequest) throws
@@ -78,6 +86,14 @@ public class TrainingDatasetDTOBuilder {
       if (resourceRequest.contains(ResourceRequest.Name.TDDATA)) {
         trainingDatasetDTO.setDataAvailable(
             trainingDatasetController.isTrainingDatasetAvailable(trainingDataset, user));
+      }
+      if (resourceRequest.contains(ResourceRequest.Name.EXTRAFILTER)) {
+        FeatureView featureView = trainingDataset.getFeatureView();
+        featureView.setFilters(trainingDataset.getFilters());
+        Query query = queryController.makeQuery(featureView, project, user, true, true);
+        trainingDatasetDTO.setExtraFilter(
+            queryBuilder.build(query, trainingDataset.getFeaturestore(), project, user).getFilter()
+        );
       }
       if (resourceRequest.contains(ResourceRequest.Name.TAGS)) {
         // Tag expansion
