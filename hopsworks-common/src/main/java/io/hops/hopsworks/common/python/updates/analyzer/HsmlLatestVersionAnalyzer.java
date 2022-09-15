@@ -50,6 +50,8 @@ public class HsmlLatestVersionAnalyzer extends LatestVersionAnalyzer {
 
       List<LibraryVersionDTO> searchVersionHits = versions.get(this.getLibrary());
 
+      searchVersionHits = super.filterReleases(searchVersionHits);
+
       String [] hopsworksVersionSplit = currentHopsworksVersion.split("\\.");
 
       String hsmlVersionPrefix = hopsworksVersionSplit[0] + "." + hopsworksVersionSplit[1];
