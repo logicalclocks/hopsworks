@@ -93,7 +93,10 @@ if __name__ == "__main__":
     output_dir = args.out
     os_name = args.os
     only_failures = args.only_failures
-    tests = args.tests.split(",")
+    if args.tests:
+        tests = args.tests.split(",")
+    else:
+        tests = []
     print("Starting parallel testing with {} process".format(args.proc))
 
     parallel_specs, isolated_specs = list_specs(tests)
