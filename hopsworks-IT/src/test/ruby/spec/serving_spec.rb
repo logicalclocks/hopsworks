@@ -42,6 +42,7 @@ describe "On #{ENV['OS']}" do
                batchingEnabled: false
              },
              modelServer: "TENSORFLOW_SERVING",
+             modelFramework: "TENSORFLOW",
              servingTool: "DEFAULT",
              requestedInstances: 1
             }
@@ -65,6 +66,7 @@ describe "On #{ENV['OS']}" do
              },
              modelVersion: 1,
              modelServer: "TENSORFLOW_SERVING",
+             modelFramework: "TENSORFLOW",
              servingTool: "DEFAULT",
              requestedInstances: 1
             }
@@ -85,6 +87,7 @@ describe "On #{ENV['OS']}" do
                  numOfReplicas: 1
              },
              modelServer: "TENSORFLOW_SERVING",
+             modelFramework: "TENSORFLOW",
              servingTool: "DEFAULT",
              requestedInstances: 1
             }
@@ -107,6 +110,7 @@ describe "On #{ENV['OS']}" do
              },
              inferenceLogging: "ALL",
              modelServer: "TENSORFLOW_SERVING",
+             modelFramework: "TENSORFLOW",
              servingTool: "DEFAULT",
              requestedInstances: 1
             }
@@ -126,6 +130,7 @@ describe "On #{ENV['OS']}" do
             },
             inferenceLogging: "ALL",
             modelServer: "TENSORFLOW_SERVING",
+            modelFramework: "TENSORFLOW",
             servingTool: "DEFAULT",
             requestedInstances: 1
             }
@@ -143,6 +148,7 @@ describe "On #{ENV['OS']}" do
              },
              modelVersion: 1,
              modelServer: "TENSORFLOW_SERVING",
+             modelFramework: "TENSORFLOW",
              servingTool: "DEFAULT",
              requestedInstances: 1
             }
@@ -158,6 +164,7 @@ describe "On #{ENV['OS']}" do
              },
              modelVersion: 1,
              modelServer: "TENSORFLOW_SERVING",
+             modelFramework: "TENSORFLOW",
              servingTool: "DEFAULT",
              requestedInstances: 1
             }
@@ -173,6 +180,7 @@ describe "On #{ENV['OS']}" do
                batchingEnabled: false
              },
              modelServer: "TENSORFLOW_SERVING",
+             modelFramework: "TENSORFLOW",
              servingTool: "DEFAULT",
              requestedInstances: 1
             }
@@ -193,6 +201,7 @@ describe "On #{ENV['OS']}" do
                batchingEnabled: false
              },
              modelServer: "TENSORFLOW_SERVING",
+             modelFramework: "TENSORFLOW",
              servingTool: "DEFAULT",
              requestedInstances: 1
             }
@@ -208,6 +217,7 @@ describe "On #{ENV['OS']}" do
                batchingEnabled: false
              },
              modelServer: "TENSORFLOW_SERVING",
+             modelFramework: "TENSORFLOW",
              servingTool: "DEFAULT",
              requestedInstances: 1
             }
@@ -224,6 +234,7 @@ describe "On #{ENV['OS']}" do
              batchingConfiguration: {
                batchingEnabled: false
              },
+             modelFramework: "TENSORFLOW",
              servingTool: "DEFAULT",
              requestedInstances: 1
             }
@@ -240,6 +251,7 @@ describe "On #{ENV['OS']}" do
                batchingEnabled: false
              },
              modelServer: "INVALID",
+             modelFramework: "TENSORFLOW",
              servingTool: "DEFAULT",
              requestedInstances: 1
             }
@@ -258,6 +270,7 @@ describe "On #{ENV['OS']}" do
                batchingEnabled: false
              },
              modelServer: "TENSORFLOW_SERVING",
+             modelFramework: "TENSORFLOW",
              requestedInstances: 1
             }
         expect_json(usrMsg: "Serving tool not provided or invalid")
@@ -274,6 +287,7 @@ describe "On #{ENV['OS']}" do
                batchingEnabled: false
              },
              modelServer: "TENSORFLOW_SERVING",
+             modelFramework: "TENSORFLOW",
              servingTool: "INVALID",
              requestedInstances: 1
             }
@@ -298,6 +312,7 @@ describe "On #{ENV['OS']}" do
              },
              inferenceLogging: "ALL",
              modelServer: "TENSORFLOW_SERVING",
+             modelFramework: "TENSORFLOW",
              servingTool: "DEFAULT",
              requestedInstances: 1
             }
@@ -314,6 +329,7 @@ describe "On #{ENV['OS']}" do
                batchingEnabled: false
              },
              modelServer: "TENSORFLOW_SERVING",
+             modelFramework: "TENSORFLOW",
              servingTool: "DEFAULT",
              requestedInstances: 1
             }
@@ -339,6 +355,7 @@ describe "On #{ENV['OS']}" do
              },
              inferenceLogging: "ALL",
              modelServer: "TENSORFLOW_SERVING",
+             modelFramework: "TENSORFLOW",
              servingTool: "DEFAULT",
              requestedInstances: 1
             }
@@ -377,6 +394,7 @@ describe "On #{ENV['OS']}" do
              },
              inferenceLogging: "ALL",
              modelServer: "TENSORFLOW_SERVING",
+             modelFramework: "TENSORFLOW",
              servingTool: "DEFAULT",
              requestedInstances: 1
             }
@@ -397,6 +415,7 @@ describe "On #{ENV['OS']}" do
              },
              inferenceLogging: "ALL",
              modelServer: "TENSORFLOW_SERVING",
+             modelFramework: "TENSORFLOW",
              servingTool: "DEFAULT",
              requestedInstances: 1
             }
@@ -417,6 +436,7 @@ describe "On #{ENV['OS']}" do
              },
              modelVersion: 1,
              modelServer: "TENSORFLOW_SERVING",
+             modelFramework: "TENSORFLOW",
              servingTool: "DEFAULT",
              requestedInstances: 1
             }
@@ -433,6 +453,7 @@ describe "On #{ENV['OS']}" do
              },
              modelVersion: 1,
              modelServer: "TENSORFLOW_SERVING",
+             modelFramework: "TENSORFLOW",
              servingTool: "DEFAULT",
              inferenceLogging: "ALL",
              requestedInstances: 1
@@ -454,6 +475,7 @@ describe "On #{ENV['OS']}" do
              inferenceLogging: "INVALID",
              modelVersion: 1,
              modelServer: "TENSORFLOW_SERVING",
+             modelFramework: "TENSORFLOW",
              servingTool: "DEFAULT",
              requestedInstances: 1
             }
@@ -472,6 +494,7 @@ describe "On #{ENV['OS']}" do
                  batchingEnabled: false
                },
                modelServer: "TENSORFLOW_SERVING",
+               modelFramework: "TENSORFLOW",
                servingTool: "DEFAULT"
               }
         expect_json(usrMsg: "Number of instances not provided")
@@ -496,6 +519,7 @@ describe "On #{ENV['OS']}" do
                  name: "NONE"
              },
              modelServer: "TENSORFLOW_SERVING",
+             modelFramework: "TENSORFLOW",
              servingTool: "DEFAULT",
              requestedInstances: 1
             }
@@ -516,6 +540,7 @@ describe "On #{ENV['OS']}" do
                batchingEnabled: false
              },
              modelServer: "TENSORFLOW_SERVING",
+             modelFramework: "TENSORFLOW",
              servingTool: "DEFAULT",
              requestedInstances: 1
             }
@@ -567,6 +592,7 @@ describe "On #{ENV['OS']}" do
             },
             inferenceLogging: parse_inference_logging(serving[:inference_logging]),
             modelServer: parse_model_server(serving[:model_server]),
+            modelFramework: parse_model_framework(serving[:model_framework]),
             servingTool: parse_serving_tool(serving[:serving_tool]),
             requestedInstances: serving[:instances]
             }
@@ -617,6 +643,7 @@ describe "On #{ENV['OS']}" do
             },
             inferenceLogging: parse_inference_logging(serving[:inference_logging]),
             modelServer: parse_model_server(serving[:model_server]),
+            modelFramework: parse_model_framework(serving[:model_framework]),
             servingTool: parse_serving_tool(serving[:serving_tool]),
             requestedInstances: serving[:instances]
             }
@@ -645,6 +672,7 @@ describe "On #{ENV['OS']}" do
             },
             inferenceLogging: parse_inference_logging(serving[:inference_logging]),
             modelServer: parse_model_server(serving[:model_server]),
+            modelFramework: parse_model_framework(serving[:model_framework]),
             servingTool: parse_serving_tool(serving[:serving_tool]),
             requestedInstances: serving[:instances]
             }
@@ -671,6 +699,7 @@ describe "On #{ENV['OS']}" do
             },
             inferenceLogging: parse_inference_logging(serving[:inference_logging]),
             modelServer: parse_model_server(serving[:model_server]),
+            modelFramework: parse_model_framework(serving[:model_framework]),
             servingTool: parse_serving_tool(serving[:serving_tool]),
             requestedInstances: serving[:instances]
             }
@@ -695,6 +724,7 @@ describe "On #{ENV['OS']}" do
             modelVersion: 2,
             batchingConfiguration: serving[:batching_configuration],
             modelServer: parse_model_server(serving[:model_server]),
+            modelFramework: parse_model_framework(serving[:model_framework]),
             servingTool: parse_serving_tool(serving[:serving_tool]),
             requestedInstances: serving[:instances]
             }
@@ -727,6 +757,7 @@ describe "On #{ENV['OS']}" do
             modelVersion: serving[:model_version],
             batchingConfiguration: serving[:batching_configuration],
             modelServer: parse_model_server(serving[:model_server]),
+            modelFramework: parse_model_framework(serving[:model_framework]),
             servingTool: parse_serving_tool(serving[:serving_tool]),
             requestedInstances: serving[:instances]
             }
@@ -755,6 +786,7 @@ describe "On #{ENV['OS']}" do
             artifactVersion: serving[:artifact_version],
             batchingConfiguration: serving[:batching_configuration],
             modelServer: "PYTHON",
+            modelFramework: parse_model_framework(serving[:model_framework]),
             servingTool: parse_serving_tool(serving[:serving_tool]),
             requestedInstances: serving[:instances]
             }
@@ -778,6 +810,7 @@ describe "On #{ENV['OS']}" do
             },
             inferenceLogging: "ALL",
             modelServer: parse_model_server(serving[:model_server]),
+            modelFramework: parse_model_framework(serving[:model_framework]),
             servingTool: parse_serving_tool(serving[:serving_tool]),
             requestedInstances: serving[:instances]
             }
@@ -801,6 +834,7 @@ describe "On #{ENV['OS']}" do
                 name: "NONE"
             },
             modelServer: parse_model_server(serving[:model_server]),
+            modelFramework: parse_model_framework(serving[:model_framework]),
             servingTool: parse_serving_tool(serving[:serving_tool]),
             requestedInstances: serving[:instances]
             }
@@ -825,6 +859,7 @@ describe "On #{ENV['OS']}" do
             },
             inferenceLogging: "ALL",
             modelServer: parse_model_server(serving[:model_server]),
+            modelFramework: parse_model_framework(serving[:model_framework]),
             servingTool: parse_serving_tool(serving[:serving_tool]),
             requestedInstances: serving[:instances]
             }
@@ -1140,6 +1175,7 @@ describe "On #{ENV['OS']}" do
                numOfReplicas: 1
              },
              modelServer: "TENSORFLOW_SERVING",
+             modelFramework: "TENSORFLOW",
              servingTool: "DEFAULT",
              requestedInstances: 1
             }

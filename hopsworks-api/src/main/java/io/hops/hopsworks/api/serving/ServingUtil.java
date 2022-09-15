@@ -32,6 +32,7 @@ import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.serving.BatchingConfiguration;
 import io.hops.hopsworks.persistence.entity.serving.DockerResourcesConfiguration;
 import io.hops.hopsworks.persistence.entity.serving.InferenceLogging;
+import io.hops.hopsworks.persistence.entity.serving.ModelFramework;
 import io.hops.hopsworks.persistence.entity.serving.ModelServer;
 import io.hops.hopsworks.persistence.entity.serving.Serving;
 import io.hops.hopsworks.persistence.entity.serving.ServingTool;
@@ -84,7 +85,7 @@ public class ServingUtil {
    * @throws java.io.UnsupportedEncodingException
    */
   public void validateUserInput(ServingWrapper servingWrapper, Project project) throws ServingException,
-      UnsupportedEncodingException {
+    UnsupportedEncodingException {
     
     Serving serving = servingWrapper.getServing();
     Serving dbServing = servingFacade.findByProjectAndName(project, serving.getName());
@@ -95,6 +96,7 @@ public class ServingUtil {
     validateServingName(serving, dbServing);
     validateModelPath(serving);
     validateModelVersion(serving);
+    validateModelFramework(serving);
     validateModelServer(serving, dbServing);
     validateModelName(serving);
     validateServingTool(serving);
@@ -107,39 +109,39 @@ public class ServingUtil {
     validateResources(serving);
     validateBatchingConfiguration(serving);
   }
-
+  
   private void validateBatchingConfiguration(Serving serving) throws ServingException {
     BatchingConfiguration batchingConfiguration = serving.getBatchingConfiguration();
     if (batchingConfiguration != null && batchingConfiguration.isBatchingEnabled()) {
       if (serving.getModelServer() == ModelServer.PYTHON && serving.getServingTool() != ServingTool.KSERVE) {
         throw new ServingException(RESTCodes.ServingErrorCode.REQUEST_BATCHING_NOT_SUPPORTED, Level.SEVERE, "Request " +
-            "batching is not supported in Python deployments without KServe");
+          "batching is not supported in Python deployments without KServe");
       } else if (serving.getServingTool() != ServingTool.KSERVE && (batchingConfiguration.getMaxBatchSize() != null
-          || batchingConfiguration.getMaxLatency() != null || batchingConfiguration.getTimeout() != null)) {
+        || batchingConfiguration.getMaxLatency() != null || batchingConfiguration.getTimeout() != null)) {
         throw new ServingException(RESTCodes.ServingErrorCode.REQUEST_BATCHING_NOT_SUPPORTED, Level.FINE,
-            "Fine-grained request batching is only supported in KServe deployments");
+          "Fine-grained request batching is only supported in KServe deployments");
       }
     }
   }
-
+  
   private void validateServingName(Serving serving, Serving dbServing) throws ServingException {
     if (Strings.isNullOrEmpty(serving.getName())) {
       throw new IllegalArgumentException("Serving name not provided");
     } else if (serving.getName().contains(" ")) {
       throw new IllegalArgumentException("Serving name cannot contain spaces");
     }
-  
+    
     // Check for duplicated entries
     if (dbServing != null && !dbServing.getId().equals(serving.getId())) {
       // There is already an entry for this project
       throw new ServingException(RESTCodes.ServingErrorCode.DUPLICATED_ENTRY, Level.FINE);
     }
-  
+    
     // Check serving name follows allowed regex as required by the InferenceResource to use it as a
     // REST endpoint
     Pattern urlPattern = Pattern.compile("[a-zA-Z0-9]+");
     Matcher urlMatcher = urlPattern.matcher(serving.getName());
-    if(!urlMatcher.matches()){
+    if (!urlMatcher.matches()) {
       throw new IllegalArgumentException("Serving name must follow regex: \"[a-zA-Z0-9]+\"");
     }
   }
@@ -153,6 +155,18 @@ public class ServingUtil {
   private void validateModelVersion(Serving serving) {
     if (serving.getModelVersion() == null) {
       throw new IllegalArgumentException("Model version not provided");
+    }
+  }
+  
+  private void validateModelFramework(Serving serving) {
+    if (serving.getModelFramework() == null) {
+      throw new IllegalArgumentException("Model framework not provided");
+    }
+    if (serving.getModelFramework() == ModelFramework.TENSORFLOW
+      && serving.getModelServer() != ModelServer.TENSORFLOW_SERVING) {
+      throw new IllegalArgumentException("Tensorflow models require Tensorflow Serving server");
+    } else if (serving.getModelFramework() == ModelFramework.TORCH && serving.getModelServer() != ModelServer.PYTHON) {
+      throw new IllegalArgumentException("Torch models require Python model server");
     }
   }
   
@@ -286,19 +300,19 @@ public class ServingUtil {
     
     // Check that the script name is valid and exists
     String scriptName = Utils.getFileName(scriptPath);
-    if(extensions.stream().noneMatch(scriptName::endsWith)){
+    if (extensions.stream().noneMatch(scriptName::endsWith)) {
       throw new IllegalArgumentException(StringUtils.capitalize(component) + " script should have a valid extension: "
         + String.join(", ", extensions));
     }
     //Remove hdfs:// if it is in the path
     String hdfsPath = Utils.prepPath(scriptPath);
-    if(!inodeController.existsPath(hdfsPath)){
+    if (!inodeController.existsPath(hdfsPath)) {
       throw new ServingException(RESTCodes.ServingErrorCode.SCRIPT_NOT_FOUND, Level.SEVERE,
         StringUtils.capitalize(component) + " script does not exist");
     }
     
     //Check that python environment is activated
-    if(project.getPythonEnvironment() == null){
+    if (project.getPythonEnvironment() == null) {
       throw new ServingException(RESTCodes.ServingErrorCode.PYTHON_ENVIRONMENT_NOT_ENABLED, Level.SEVERE, null);
     }
   }
@@ -360,13 +374,13 @@ public class ServingUtil {
       throw new ServingException(RESTCodes.ServingErrorCode.KSERVE_NOT_ENABLED, Level.SEVERE, "Serving tool not " +
         "supported");
     }
-
+    
     // Service name is used as DNS subdomain. It must consist of lower case alphanumeric characters, '-' or '.', and
     // must start and end with an alphanumeric character. (e.g. 'example.com', regex used for validation is '[a-z0-9]
     // ([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*').
     Pattern namePattern = Pattern.compile("[a-z0-9]([-a-z0-9]*[a-z0-9])?(\\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*");
     Matcher nameMatcher = namePattern.matcher(serving.getName());
-    if(!nameMatcher.matches()){
+    if (!nameMatcher.matches()) {
       throw new IllegalArgumentException("Serving name must consist of lower case alphanumeric characters, '-' or '" +
         ".', and start and end with an alphanumeric character");
     }
@@ -476,7 +490,7 @@ public class ServingUtil {
   }
   
   private void validatePredictor(Project project, Serving serving) throws UnsupportedEncodingException,
-      ServingException {
+    ServingException {
     if (serving.getPredictor() != null) {
       // if predictor selected
       if (serving.getModelServer() == ModelServer.TENSORFLOW_SERVING) {
@@ -488,7 +502,7 @@ public class ServingUtil {
       String path = "";
       if (serving.getArtifactVersion() != null && serving.getArtifactVersion() > 0) {
         // if existent artifact
-        path +=  serving.getArtifactVersionPath() + "/" + "predictor-";
+        path += serving.getArtifactVersionPath() + "/" + "predictor-";
       }
       path += serving.getPredictor();
       validatePythonScript(project, path, Arrays.asList(".py"), "predictor");
@@ -499,12 +513,19 @@ public class ServingUtil {
         throw new ServingException(RESTCodes.ServingErrorCode.MODEL_ARTIFACT_NOT_VALID, Level.FINE, "Default " +
           "deployments require a predictor");
       }
+      if (serving.getModelFramework() == ModelFramework.PYTHON) {
+        throw new IllegalArgumentException("Predictor scripts are required in custom python deployments");
+      } else if (serving.getModelFramework() == ModelFramework.TORCH) {
+        throw new IllegalArgumentException("Predictor scripts are required in torch deployments");
+      }
     }
   }
   
   private void validateTransformer(Project project, Serving serving)
     throws UnsupportedEncodingException, ServingException {
-    if (serving.getTransformer() == null) return;
+    if (serving.getTransformer() == null) {
+      return;
+    }
     
     if (serving.getServingTool() != ServingTool.KSERVE) {
       throw new ServingException(RESTCodes.ServingErrorCode.TRANSFORMER_NOT_SUPPORTED, Level.FINE, "Transformers " +
@@ -570,18 +591,20 @@ public class ServingUtil {
       batchingConfiguration.setBatchingEnabled(false);
       serving.setBatchingConfiguration(batchingConfiguration);
     } else if (serving.getServingTool() == ServingTool.KSERVE && (batchingConfiguration.getTimeout() != null
-        || batchingConfiguration.getMaxBatchSize() != null || batchingConfiguration.getMaxLatency() != null)) {
+      || batchingConfiguration.getMaxBatchSize() != null || batchingConfiguration.getMaxLatency() != null)) {
       //enable the batching configuration if any numbers are set
       batchingConfiguration.setBatchingEnabled(true);
       serving.setBatchingConfiguration(batchingConfiguration);
     } else if (batchingConfiguration.isBatchingEnabled() == null && (batchingConfiguration.getTimeout() == null
-        || batchingConfiguration.getMaxBatchSize() == null || batchingConfiguration.getMaxLatency() == null)) {
+      || batchingConfiguration.getMaxBatchSize() == null || batchingConfiguration.getMaxLatency() == null)) {
       batchingConfiguration.setBatchingEnabled(false);
     }
   }
   
   private void setDefaultModelName(Serving serving) {
-    if (serving.getModelName() != null) return;
+    if (serving.getModelName() != null) {
+      return;
+    }
     String modelPath = serving.getModelPath();
     String[] split = modelPath.split("/");
     serving.setModelName(split[4]);

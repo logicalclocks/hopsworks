@@ -132,6 +132,9 @@ public class ServingFacade {
     if (newServing.getModelVersion() != null) {
       dbServing.setModelVersion(newServing.getModelVersion());
     }
+    if (newServing.getModelFramework() != null) {
+      dbServing.setModelFramework(newServing.getModelFramework());
+    }
     if (newServing.getArtifactVersion() != null) {
       dbServing.setArtifactVersion(newServing.getArtifactVersion());
     }

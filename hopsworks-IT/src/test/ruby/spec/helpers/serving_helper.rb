@@ -71,6 +71,7 @@ module ServingHelper
                },
                inferenceLogging: "ALL",
                modelServer: "TENSORFLOW_SERVING",
+               modelFramework: "TENSORFLOW",
                servingTool: "KSERVE",
                requestedInstances: 1
               }
@@ -95,6 +96,7 @@ module ServingHelper
                },
                inferenceLogging: "ALL",
                modelServer: "PYTHON",
+               modelFramework: "SKLEARN",
                servingTool: "KSERVE",
                requestedInstances: 1
               }
@@ -118,6 +120,7 @@ module ServingHelper
                },
                inferenceLogging: "ALL",
                modelServer: "TENSORFLOW_SERVING",
+               modelFramework: "TENSORFLOW",
                servingTool: "DEFAULT",
                requestedInstances: 1
               }
@@ -139,6 +142,7 @@ module ServingHelper
          },
          inferenceLogging: "ALL",
          modelServer: "PYTHON",
+         modelFramework: "SKLEARN",
          servingTool: "DEFAULT",
          requestedInstances: 1
         }
@@ -284,6 +288,16 @@ module ServingHelper
       when value == 0 ; "TENSORFLOW_SERVING"
       when value == 1 ; "PYTHON"
       else puts "Model server value cannot be parsed"
+      end
+  end
+
+  def parse_model_framework(value)
+    return case
+      when value == 0 ; "TENSORFLOW"
+      when value == 1 ; "PYTHON"
+      when value == 2 ; "SKLEARN"
+      when value == 3 ; "TORCH"
+      else puts "Model framework value cannot be parsed"
       end
   end
 

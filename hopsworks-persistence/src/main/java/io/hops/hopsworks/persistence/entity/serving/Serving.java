@@ -106,6 +106,10 @@ public class Serving implements Serializable {
   @NotNull
   @Column(name = "model_version")
   private Integer modelVersion;
+  @NotNull
+  @Enumerated(EnumType.ORDINAL)
+  @Column(name = "model_framework")
+  private ModelFramework modelFramework;
   @Basic(optional = false)
   @Column(name = "artifact_version")
   private Integer artifactVersion = 0;
@@ -172,7 +176,7 @@ public class Serving implements Serializable {
   public Serving() { }
 
   public Serving(Integer id, String name, String description, String modelPath, String predictor, String transformer,
-    String modelName, Integer modelVersion, Integer artifactVersion, Integer nInstances,
+    String modelName, Integer modelVersion, ModelFramework modelFramework, Integer artifactVersion, Integer nInstances,
     Integer nTransformerInstances, ModelServer modelServer, ServingTool servingTool,
     InferenceLogging inferenceLogging, DeployableComponentResources predictorResources,
     DeployableComponentResources transformerResources, BatchingConfiguration batchingConfiguration) {
@@ -184,6 +188,7 @@ public class Serving implements Serializable {
     this.transformer = transformer;
     this.modelName = modelName;
     this.modelVersion = modelVersion;
+    this.modelFramework = modelFramework;
     this.artifactVersion = artifactVersion;
     this.instances = nInstances;
     this.transformerInstances = nTransformerInstances;
@@ -277,6 +282,10 @@ public class Serving implements Serializable {
     this.modelVersion = modelVersion;
   }
 
+  public ModelFramework getModelFramework() { return modelFramework; }
+  
+  public void setModelFramework(ModelFramework modelFramework) { this.modelFramework = modelFramework; }
+  
   public Integer getArtifactVersion() { return artifactVersion; }
 
   public void setArtifactVersion(Integer artifactVersion) {
@@ -434,6 +443,8 @@ public class Serving implements Serializable {
     if (predictor != null ? !predictor.equals(serving.predictor) : serving.predictor != null) return false;
     if (transformer != null ? !transformer.equals(serving.transformer) : serving.transformer != null) return false;
     if (!modelVersion.equals(serving.modelVersion)) return false;
+    if (modelFramework != null ? !modelFramework.equals(serving.modelFramework) : serving.modelFramework != null)
+      return false;
     if (!artifactVersion.equals(serving.artifactVersion)) return false;
     if (instances != null ? !instances.equals(serving.instances) : serving.instances != null) return false;
     if (transformerInstances != null ? !transformerInstances.equals(serving.transformerInstances) :
@@ -471,6 +482,7 @@ public class Serving implements Serializable {
     result = 31 * result + predictor.hashCode();
     result = 31 * result + transformer.hashCode();
     result = 31 * result + modelVersion.hashCode();
+    result = 31 * result + (modelFramework != null ? modelFramework.hashCode() : 0);
     result = 31 * result + artifactVersion.hashCode();
     result = 31 * result + (optimized ? 1 : 0);
     result = 31 * result + (instances != null ? instances.hashCode() : 0);

@@ -189,6 +189,7 @@ describe "On #{ENV['OS']}" do
                 modelVersion: @serving[:model_version],
                 batchingConfiguration: @serving[:batching_configuration],
                 modelServer: parse_model_server(@serving[:model_server]),
+                modelFramework: parse_model_framework(serving[:model_framework]),
                 servingTool: parse_serving_tool(@serving[:serving_tool]),
                 requestedInstances: @serving[:instances]
                }
@@ -217,6 +218,7 @@ describe "On #{ENV['OS']}" do
                    name: "NONE"
                 },
                 modelServer: parse_model_server(@serving[:model_server]),
+                modelFramework: parse_model_framework(serving[:model_framework]),
                 servingTool: parse_serving_tool(@serving[:serving_tool]),
                 requestedInstances: @serving[:instances]
                }
@@ -248,6 +250,7 @@ describe "On #{ENV['OS']}" do
                    name: "NONE"
                 },
                 modelServer: parse_model_server(@serving[:model_server]),
+                modelFramework: parse_model_framework(serving[:model_framework]),
                 servingTool: parse_serving_tool(@serving[:serving_tool]),
                 transformer: "/Projects/#{@project[:projectname]}/Models/irisflowerclassifier/1/transformer.py",
                 requestedInstances: @serving[:instances],
@@ -281,6 +284,7 @@ describe "On #{ENV['OS']}" do
                    name: "NONE"
                 },
                 modelServer: parse_model_server(@serving[:model_server]),
+                modelFramework: parse_model_framework(serving[:model_framework]),
                 servingTool: parse_serving_tool(@serving[:serving_tool]),
                 predictor: "/Projects/#{@project[:projectname]}/Models/irisflowerclassifiercopy/1/#{SKLEARN_SCRIPT_FILE_NAME}",
                 requestedInstances: @serving[:instances]
@@ -313,6 +317,7 @@ describe "On #{ENV['OS']}" do
                    name: "NONE"
                 },
                 modelServer: parse_model_server(@serving[:model_server]),
+                modelFramework: parse_model_framework(serving[:model_framework]),
                 servingTool: parse_serving_tool(@serving[:serving_tool]),
                 predictor: "/Projects/#{@project[:projectname]}/Models/irisflowerclassifiercopy/1/#{SKLEARN_SCRIPT_FILE_NAME}",
                 transformer: "/Projects/#{@project[:projectname]}/Models/irisflowerclassifiercopy/1/transformer.py",

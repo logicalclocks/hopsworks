@@ -79,6 +79,7 @@ describe "On #{ENV['OS']}" do
                    name: "NONE"
                },
                modelServer: parse_model_server(serving[:model_server]),
+               modelFramework: parse_model_framework(serving[:model_framework]),
                servingTool: parse_serving_tool(serving[:serving_tool]),
                requestedInstances: 1
               }

@@ -49,6 +49,7 @@ describe "On #{ENV['OS']}" do
                modelVersion: 1,
                predictor: "/Projects/#{@project[:projectname]}/Models/irisflowerclassifier/1/#{SKLEARN_SCRIPT_FILE_NAME}",
                modelServer: "PYTHON",
+               modelFramework: "SKLEARN",
                servingTool: "DEFAULT",
                requestedInstances: 1
               }
@@ -76,6 +77,7 @@ describe "On #{ENV['OS']}" do
                modelPath: "/Projects/#{@project[:projectname]}/Models/irisflowerclassifier",
                modelVersion: 1,
                modelServer: "PYTHON",
+               modelFramework: "SKLEARN",
                servingTool: "DEFAULT",
                requestedInstances: 1
               }
@@ -90,6 +92,7 @@ describe "On #{ENV['OS']}" do
                modelVersion: 1,
                predictor: "/Projects/#{@project[:projectname]}/Models/irisflowerclassifier/1/non-existing.py",
                modelServer: "PYTHON",
+               modelFramework: "SKLEARN",
                servingTool: "DEFAULT",
                requestedInstances: 1
               }
@@ -103,6 +106,7 @@ describe "On #{ENV['OS']}" do
                modelVersion: 1,
                predictor: "/Projects/#{@project[:projectname]}/Models/irisflowerclassifier/1/iris_knn.pkl",
                modelServer: "PYTHON",
+               modelFramework: "SKLEARN",
                servingTool: "DEFAULT",
                requestedInstances: 1
               }
@@ -117,6 +121,7 @@ describe "On #{ENV['OS']}" do
                modelVersion: 1,
                predictor: "/Projects/#{@project[:projectname]}/Models/irisflowerclassifier/1/#{SKLEARN_SCRIPT_FILE_NAME}",
                modelServer: "PYTHON",
+               modelFramework: "SKLEARN",
                servingTool: "DEFAULT",
                requestedInstances: 1
               }
@@ -132,6 +137,7 @@ describe "On #{ENV['OS']}" do
                modelVersion: 1,
                artifactVersion: "1",
                modelServer: "PYTHON",
+               modelFramework: "SKLEARN",
                servingTool: "DEFAULT",
                requestedInstances: 1
               }
@@ -152,6 +158,7 @@ describe "On #{ENV['OS']}" do
                artifactVersion: "0",
                predictor: "/Projects/#{@project[:projectname]}/Models/irisflowerclassifier/1/#{SKLEARN_SCRIPT_FILE_NAME}",
                modelServer: "PYTHON",
+               modelFramework: "SKLEARN",
                servingTool: "DEFAULT",
                requestedInstances: 1
               }
@@ -172,6 +179,7 @@ describe "On #{ENV['OS']}" do
               modelVersion: 1,
               predictor: "/Projects/#{@project[:projectname]}/Models/irisflowerclassifier/1/#{SKLEARN_SCRIPT_FILE_NAME}",
               modelServer: "PYTHON",
+              modelFramework: "SKLEARN",
               servingTool: "DEFAULT",
               requestedInstances: 1,
               batchingConfiguration: {
@@ -225,6 +233,7 @@ describe "On #{ENV['OS']}" do
               },
               inferenceLogging: parse_inference_logging(serving[:inference_logging]),
               modelServer: parse_model_server(serving[:model_server]),
+              modelFramework: parse_model_framework(serving[:model_framework]),
               servingTool: parse_serving_tool(serving[:serving_tool]),
               requestedInstances: serving[:instances]
               }
@@ -250,6 +259,7 @@ describe "On #{ENV['OS']}" do
               },
               inferenceLogging: parse_inference_logging(serving[:inference_logging]),
               modelServer: parse_model_server(serving[:model_server]),
+              modelFramework: parse_model_framework(serving[:model_framework]),
               servingTool: parse_serving_tool(serving[:serving_tool]),
               requestedInstances: serving[:instances]
               }

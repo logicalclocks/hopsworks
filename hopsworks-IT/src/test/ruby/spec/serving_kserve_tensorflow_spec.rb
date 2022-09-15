@@ -32,6 +32,7 @@ describe "On #{ENV['OS']}" do
                name: "NONE"
            },
            modelServer: "TENSORFLOW_SERVING",
+           modelFramework: "TENSORFLOW",
            servingTool: "KSERVE",
            requestedInstances: 1
           }
@@ -66,6 +67,7 @@ describe "On #{ENV['OS']}" do
                name: "NONE"
            },
            modelServer: "TENSORFLOW_SERVING",
+           modelFramework: "TENSORFLOW",
            servingTool: "KSERVE",
            requestedInstances: 1
           }
@@ -98,6 +100,7 @@ describe "On #{ENV['OS']}" do
                   batchingEnabled: false
                  },
                  modelServer: "TENSORFLOW_SERVING",
+                 modelFramework: "TENSORFLOW",
                  servingTool: "KSERVE",
                  requestedInstances: 1
                 }
@@ -129,6 +132,7 @@ describe "On #{ENV['OS']}" do
                      name: "NONE"
                  },
                  modelServer: "TENSORFLOW_SERVING",
+                 modelFramework: "TENSORFLOW",
                  servingTool: "KSERVE",
                  requestedInstances: 1
                 }
@@ -148,6 +152,7 @@ describe "On #{ENV['OS']}" do
                  },
                  modelVersion: 1,
                  modelServer: "TENSORFLOW_SERVING",
+                 modelFramework: "TENSORFLOW",
                  servingTool: "KSERVE",
                  requestedInstances: 1
                 }
@@ -167,6 +172,7 @@ describe "On #{ENV['OS']}" do
                  },
                  modelVersion: 1,
                  modelServer: "TENSORFLOW_SERVING",
+                 modelFramework: "TENSORFLOW",
                  servingTool: "KSERVE",
                  transformer: "/Projects/#{@project[:projectname]}/Models/mnist/1/transformer.py",
                  requestedInstances: 1,
@@ -188,6 +194,7 @@ describe "On #{ENV['OS']}" do
                  modelVersion: 1,
                  artifactVersion: "1",
                  modelServer: "TENSORFLOW_SERVING",
+                 modelFramework: "TENSORFLOW",
                  servingTool: "KSERVE",
                  requestedInstances: 1
                 }
@@ -205,6 +212,7 @@ describe "On #{ENV['OS']}" do
                  modelVersion: 1,
                  artifactVersion: "0", # MODEL-ONLY
                  modelServer: "TENSORFLOW_SERVING",
+                 modelFramework: "TENSORFLOW",
                  servingTool: "KSERVE",
                  transformer: "/Projects/#{@project[:projectname]}/Models/mnist/1/transformer.py",
                  requestedInstances: 1,
@@ -225,6 +233,7 @@ describe "On #{ENV['OS']}" do
                 modelVersion: 1,
                 artifactVersion: 99,
                 modelServer: "TENSORFLOW_SERVING",
+                modelFramework: "TENSORFLOW",
                 servingTool: "KSERVE",
                 transformer: "transformer.py",
                 requestedInstances: 1,
@@ -245,6 +254,7 @@ describe "On #{ENV['OS']}" do
                 },
                 modelVersion: 1,
                 modelServer: "TENSORFLOW_SERVING",
+                modelFramework: "TENSORFLOW",
                 servingTool: "KSERVE",
                 predictor: "/Projects/#{@project[:projectname]}/Models/mnist/1/transformer.py",
                 requestedInstances: 1,
@@ -264,6 +274,7 @@ describe "On #{ENV['OS']}" do
                  },
                  modelVersion: 1,
                  modelServer: "TENSORFLOW_SERVING",
+                 modelFramework: "TENSORFLOW",
                  servingTool: "KSERVE",
                  transformer: "/Projects/#{@project[:projectname]}/Models/mnist/invalid.ext",
                  requestedInstances: 1,
@@ -282,6 +293,7 @@ describe "On #{ENV['OS']}" do
                  },
                  modelVersion: 1,
                  modelServer: "TENSORFLOW_SERVING",
+                 modelFramework: "TENSORFLOW",
                  servingTool: "KSERVE",
                  transformer: "/Projects/#{@project[:projectname]}/Models/mnist/non-existent.py",
                  requestedInstances: 1,
@@ -301,6 +313,7 @@ describe "On #{ENV['OS']}" do
                  },
                  modelVersion: 1,
                  modelServer: "TENSORFLOW_SERVING",
+                 modelFramework: "TENSORFLOW",
                  servingTool: "KSERVE",
                  transformer: "/Projects/#{@project[:projectname]}/Models/mnist/1/transformer.py",
                  requestedInstances: 1,
@@ -322,6 +335,7 @@ describe "On #{ENV['OS']}" do
                  },
                  modelVersion: 1,
                  modelServer: "TENSORFLOW_SERVING",
+                 modelFramework: "TENSORFLOW",
                  servingTool: "KSERVE",
                  transformer: "/Projects/#{@project[:projectname]}/Models/mnist/1/transformer.ipynb",
                  requestedInstances: 1,
@@ -347,6 +361,7 @@ describe "On #{ENV['OS']}" do
                  modelVersion: 1,
                  artifactVersion: 1,
                  modelServer: "TENSORFLOW_SERVING",
+                 modelFramework: "TENSORFLOW",
                  servingTool: "KSERVE",
                  transformer: "/Projects/#{@project[:projectname]}/Models/mnist/1/transformer-copy.py",
                  requestedInstances: 1,
@@ -375,6 +390,7 @@ describe "On #{ENV['OS']}" do
                  },
                  inferenceLogging: "ALL",
                  modelServer: "TENSORFLOW_SERVING",
+                 modelFramework: "TENSORFLOW",
                  servingTool: "KSERVE",
                  requestedInstances: 1
                 }
@@ -399,6 +415,7 @@ describe "On #{ENV['OS']}" do
                  },
                  inferenceLogging: "ALL",
                  modelServer: "TENSORFLOW_SERVING",
+                 modelFramework: "TENSORFLOW",
                  servingTool: "KSERVE",
                  requestedInstances: 1
                 }
@@ -423,6 +440,7 @@ describe "On #{ENV['OS']}" do
                  },
                  inferenceLogging: "ALL",
                  modelServer: "TENSORFLOW_SERVING",
+                 modelFramework: "TENSORFLOW",
                  servingTool: "KSERVE",
                  requestedInstances: 1
                 }
@@ -448,6 +466,7 @@ describe "On #{ENV['OS']}" do
                  },
                  inferenceLogging: "ALL",
                  modelServer: "TENSORFLOW_SERVING",
+                 modelFramework: "TENSORFLOW",
                  servingTool: "KSERVE",
                  requestedInstances: 1
                 }
@@ -474,6 +493,7 @@ describe "On #{ENV['OS']}" do
                    batchingEnabled: false
                  },
                  modelServer: "TENSORFLOW_SERVING",
+                 modelFramework: "TENSORFLOW",
                  servingTool: "KSERVE",
                  requestedInstances: 1
                 }
@@ -496,6 +516,7 @@ describe "On #{ENV['OS']}" do
                    batchingEnabled: false
                  },
                  modelServer: "TENSORFLOW_SERVING",
+                 modelFramework: "TENSORFLOW",
                  servingTool: "KSERVE",
                  requestedInstances: 1,
                  predictorResources: {
@@ -537,6 +558,7 @@ describe "On #{ENV['OS']}" do
                      name: "NONE"
                  },
                  modelServer: "TENSORFLOW_SERVING",
+                 modelFramework: "TENSORFLOW",
                  servingTool: "KSERVE",
                  requestedInstances: 1
                 }
@@ -558,6 +580,7 @@ describe "On #{ENV['OS']}" do
                    name: "NONE"
                  },
                  modelServer: "TENSORFLOW_SERVING",
+                 modelFramework: "TENSORFLOW",
                  servingTool: "KSERVE",
                  requestedInstances: 1
                 }
@@ -575,6 +598,7 @@ describe "On #{ENV['OS']}" do
              },
                   modelVersion: 1,
                   modelServer: "TENSORFLOW_SERVING",
+                  modelFramework: "TENSORFLOW",
                   servingTool: "KSERVE",
                   transformer: "/Projects/#{@project[:projectname]}/Models/mnist/1/transformer.ipynb",
                   requestedInstances: 1
@@ -592,6 +616,7 @@ describe "On #{ENV['OS']}" do
                   },
                   modelVersion: 1,
                   modelServer: "TENSORFLOW_SERVING",
+                  modelFramework: "TENSORFLOW",
                   servingTool: "KSERVE",
                   requestedInstances: 1,
                   requestedTransformerInstances: 1
@@ -609,6 +634,7 @@ describe "On #{ENV['OS']}" do
                   },
                   modelVersion: 1,
                   modelServer: "TENSORFLOW_SERVING",
+                  modelFramework: "TENSORFLOW",
                   servingTool: "KSERVE",
                   transformer: "/Projects/#{@project[:projectname]}/Models/mnist/1/transformer.ipynb",
                   requestedInstances: 1,
@@ -651,6 +677,7 @@ describe "On #{ENV['OS']}" do
                artifactVersion: -1, # New version
                batchingConfiguration: serving[:batching_configuration],
                modelServer: parse_model_server(serving[:model_server]),
+               modelFramework: parse_model_framework(serving[:model_framework]),
                servingTool: parse_serving_tool(serving[:serving_tool]),
                transformer: "/Projects/#{@project[:projectname]}/Models/mnist/1/transformer-copy-2.py",
                requestedInstances: serving[:instances],
@@ -684,6 +711,7 @@ describe "On #{ENV['OS']}" do
                artifactVersion: serving[:artifact_version],
                batchingConfiguration: serving[:batching_configuration],
                modelServer: parse_model_server(serving[:model_server]),
+               modelFramework: parse_model_framework(serving[:model_framework]),
                servingTool: parse_serving_tool(serving[:serving_tool]),
                transformer: "/Projects/#{@project[:projectname]}/Models/mnist/1/transformer-copy-3.py",
                requestedInstances: serving[:instances],
@@ -709,6 +737,7 @@ describe "On #{ENV['OS']}" do
                },
                inferenceLogging: "PREDICTIONS",
                modelServer: parse_model_server(serving[:model_server]),
+               modelFramework: parse_model_framework(serving[:model_framework]),
                servingTool: parse_serving_tool(serving[:serving_tool]),
                requestedInstances: serving[:instances]
               }
@@ -730,6 +759,7 @@ describe "On #{ENV['OS']}" do
            modelVersion: serving[:model_version],
            batchingConfiguration: serving[:batching_configuration],
            modelServer: parse_model_server(serving[:model_server]),
+           modelFramework: parse_model_framework(serving[:model_framework]),
            servingTool: parse_serving_tool(serving[:serving_tool]),
            transformer: "/Projects/#{@project[:projectname]}/Models/mnist/1/transformer.py",
            requestedInstances: 1,
@@ -749,6 +779,7 @@ describe "On #{ENV['OS']}" do
                artifactVersion: serving[:artifact_version],
                batchingConfiguration: serving[:batching_configuration],
                modelServer: parse_model_server(serving[:model_server]),
+               modelFramework: parse_model_framework(serving[:model_framework]),
                servingTool: parse_serving_tool(serving[:serving_tool]),
                transformer: "transformer.py",
                requestedInstances: 2,
@@ -773,6 +804,7 @@ describe "On #{ENV['OS']}" do
                modelVersion: serving[:model_version],
                batchingConfiguration: serving[:batching_configuration],
                modelServer: parse_model_server(serving[:model_server]),
+               modelFramework: parse_model_framework(serving[:model_framework]),
                servingTool: parse_serving_tool(serving[:serving_tool]),
                transformer: "/Projects/#{@project[:projectname]}/Models/mnist/1/transformer.py",
                requestedInstances: 1,
@@ -796,6 +828,7 @@ describe "On #{ENV['OS']}" do
                  timeout: 60
                },
                modelServer: parse_model_server(serving[:model_server]),
+               modelFramework: parse_model_framework(serving[:model_framework]),
                servingTool: parse_serving_tool(serving[:serving_tool]),
                transformer: "transformer.py",
                requestedInstances: 2,
@@ -855,6 +888,7 @@ describe "On #{ENV['OS']}" do
                 batchingConfiguration: @serving[:batching_configuration],
                 modelVersion: @serving[:model_version],
                 modelServer: parse_model_server(@serving[:model_server]),
+                modelFramework: parse_model_framework(serving[:model_framework]),
                 servingTool: parse_serving_tool(@serving[:serving_tool]),
                 transformer: "/Projects/#{@project[:projectname]}/Models/mnist/1/transformer.ipynb",
                 requestedInstances: @serving[:instances],

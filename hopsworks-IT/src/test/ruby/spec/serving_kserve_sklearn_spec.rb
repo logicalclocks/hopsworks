@@ -26,6 +26,7 @@ describe "On #{ENV['OS']}" do
           modelPath: "/Projects/#{@project[:projectname]}/Models/irisflowerclassifier",
           modelVersion: 1,
           modelServer: "PYTHON",
+          modelFramework: "SKLEARN",
           servingTool: "KSERVE",
           requestedInstances: 1
           }
@@ -54,6 +55,7 @@ describe "On #{ENV['OS']}" do
             modelPath: "/Projects/#{@project[:projectname]}/Models/irisflowerclassifier",
             modelVersion: 1,
             modelServer: "PYTHON",
+            modelFramework: "SKLEARN",
             servingTool: "KSERVE",
             requestedInstances: 1
             }
@@ -83,6 +85,7 @@ describe "On #{ENV['OS']}" do
                 modelPath: "/Projects/#{@project[:projectname]}/Models/irisflowerclassifier",
                 modelVersion: 1,
                 modelServer: "PYTHON",
+                modelFramework: "SKLEARN",
                 servingTool: "KSERVE",
                 requestedInstances: 1
                 }
@@ -109,6 +112,7 @@ describe "On #{ENV['OS']}" do
                 modelPath: "/Projects/#{@project[:projectname]}/Models/irisflowerclassifier",
                 modelVersion: 1,
                 modelServer: "PYTHON",
+                modelFramework: "SKLEARN",
                 servingTool: "KSERVE",
                 requestedInstances: 1
                 }
@@ -125,6 +129,7 @@ describe "On #{ENV['OS']}" do
                 modelPath: "/Projects/#{@project[:projectname]}/Models/irisflowerclassifier",
                 modelVersion: 1,
                 modelServer: "PYTHON",
+                modelFramework: "SKLEARN",
                 servingTool: "KSERVE",
                 requestedInstances: 1
                 }
@@ -141,6 +146,7 @@ describe "On #{ENV['OS']}" do
                 modelPath: "/Projects/#{@project[:projectname]}/Models/irisflowerclassifier",
                 modelVersion: 1,
                 modelServer: "PYTHON",
+                modelFramework: "SKLEARN",
                 servingTool: "KSERVE",
                 predictor: "/Projects/#{@project[:projectname]}/Models/irisflowerclassifier/1/#{SKLEARN_SCRIPT_FILE_NAME}",
                 requestedInstances: 1
@@ -158,6 +164,7 @@ describe "On #{ENV['OS']}" do
                 modelPath: "/Projects/#{@project[:projectname]}/Models/irisflowerclassifier",
                 modelVersion: 1,
                 modelServer: "PYTHON",
+                modelFramework: "SKLEARN",
                 servingTool: "KSERVE",
                 transformer: "/Projects/#{@project[:projectname]}/Models/irisflowerclassifier/1/transformer.py",
                 requestedInstances: 1,
@@ -176,6 +183,7 @@ describe "On #{ENV['OS']}" do
                 modelVersion: 1,
                 artifactVersion: 1,
                 modelServer: "PYTHON",
+                modelFramework: "SKLEARN",
                 servingTool: "KSERVE",
                 requestedInstances: 1
                 }
@@ -190,6 +198,7 @@ describe "On #{ENV['OS']}" do
                 modelVersion: 1,
                 artifactVersion: 0, # MODEL-ONLY
                 modelServer: "PYTHON",
+                modelFramework: "SKLEARN",
                 servingTool: "KSERVE",
                 predictor: "/Projects/#{@project[:projectname]}/Models/irisflowerclassifier/1/#{SKLEARN_SCRIPT_FILE_NAME}",
                 requestedInstances: 1
@@ -205,6 +214,7 @@ describe "On #{ENV['OS']}" do
                 modelVersion: 1,
                 artifactVersion: 0, # MODEL-ONLY
                 modelServer: "PYTHON",
+                modelFramework: "SKLEARN",
                 servingTool: "KSERVE",
                 transformer: "/Projects/#{@project[:projectname]}/Models/irisflowerclassifier/1/transformer.py",
                 requestedInstances: 1,
@@ -222,6 +232,7 @@ describe "On #{ENV['OS']}" do
                 modelVersion: 1,
                 artifactVersion: 99,
                 modelServer: "PYTHON",
+                modelFramework: "SKLEARN",
                 servingTool: "KSERVE",
                 transformer: "predictor.py",
                 requestedInstances: 1,
@@ -239,6 +250,7 @@ describe "On #{ENV['OS']}" do
                 modelVersion: 1,
                 artifactVersion: 99,
                 modelServer: "PYTHON",
+                modelFramework: "SKLEARN",
                 servingTool: "KSERVE",
                 transformer: "transformer.py",
                 requestedInstances: 1,
@@ -261,6 +273,7 @@ describe "On #{ENV['OS']}" do
                 modelPath: "/Projects/#{@project[:projectname]}/Models/irisflowerclassifier",
                 modelVersion: 1,
                 modelServer: "PYTHON",
+                modelFramework: "SKLEARN",
                 servingTool: "KSERVE",
                 requestedInstances: 1
                 }
@@ -277,6 +290,7 @@ describe "On #{ENV['OS']}" do
                 modelPath: "/Projects/#{@project[:projectname]}/Models/irisflowerclassifier",
                 modelVersion: 1,
                 modelServer: "PYTHON",
+                modelFramework: "SKLEARN",
                 servingTool: "KSERVE",
                 requestedInstances: 1
                 }
@@ -295,6 +309,7 @@ describe "On #{ENV['OS']}" do
                 modelPath: "/Projects/#{@project[:projectname]}/Models/irisflowerclassifier",
                 modelVersion: 1,
                 modelServer: "PYTHON",
+                modelFramework: "SKLEARN",
                 servingTool: "KSERVE",
                 requestedInstances: 1
                 }
@@ -320,6 +335,7 @@ describe "On #{ENV['OS']}" do
                    name: "NONE"
                  },
                  modelServer: "PYTHON",
+                 modelFramework: "SKLEARN",
                  servingTool: "KSERVE",
                  requestedInstances: 1
                 }
@@ -341,6 +357,7 @@ describe "On #{ENV['OS']}" do
                    name: "NONE"
                  },
                  modelServer: "PYTHON",
+                 modelFramework: "SKLEARN",
                  servingTool: "KSERVE",
                  requestedInstances: 1
                 }
@@ -355,6 +372,7 @@ describe "On #{ENV['OS']}" do
                 modelPath: "/Projects/#{@project[:projectname]}/Models/irisflowerclassifier",
                 modelVersion: 1,
                 modelServer: "PYTHON",
+                modelFramework: "SKLEARN",
                 servingTool: "KSERVE",
                 predictor: "/Projects/#{@project[:projectname]}/Models/irisflowerclassifier/invalid.ext",
                 requestedInstances: 1
@@ -369,6 +387,7 @@ describe "On #{ENV['OS']}" do
                 modelPath: "/Projects/#{@project[:projectname]}/Models/irisflowerclassifier",
                 modelVersion: 1,
                 modelServer: "PYTHON",
+                modelFramework: "SKLEARN",
                 servingTool: "KSERVE",
                 predictor: "/Projects/#{@project[:projectname]}/Models/irisflowerclassifier/1/non-existent.py",
                 requestedInstances: 1
@@ -383,6 +402,7 @@ describe "On #{ENV['OS']}" do
                 modelPath: "/Projects/#{@project[:projectname]}/Models/irisflowerclassifier",
                 modelVersion: 1,
                 modelServer: "PYTHON",
+                modelFramework: "SKLEARN",
                 servingTool: "KSERVE",
                 predictor: "/Projects/#{@project[:projectname]}/Models/irisflowerclassifier/1/#{SKLEARN_SCRIPT_FILE_NAME}",
                 requestedInstances: 1
@@ -404,6 +424,7 @@ describe "On #{ENV['OS']}" do
                 modelVersion: 1,
                 artifactVersion: 1,
                 modelServer: "PYTHON",
+                modelFramework: "SKLEARN",
                 servingTool: "KSERVE",
                 predictor: "/Projects/#{@project[:projectname]}/Models/irisflowerclassifier/1/irisflowerclassifier-copy.py",
                 requestedInstances: 1
@@ -421,6 +442,7 @@ describe "On #{ENV['OS']}" do
                 modelPath: "/Projects/#{@project[:projectname]}/Models/irisflowerclassifier",
                 modelVersion: 1,
                 modelServer: "PYTHON",
+                modelFramework: "SKLEARN",
                 servingTool: "KSERVE",
                 predictor: "/Projects/#{@project[:projectname]}/Models/irisflowerclassifier/1/#{SKLEARN_SCRIPT_FILE_NAME}",
                 requestedInstances: 1
@@ -445,6 +467,7 @@ describe "On #{ENV['OS']}" do
                 modelPath: "/Projects/#{@project[:projectname]}/Models/irisflowerclassifier",
                 modelVersion: 1,
                 modelServer: "PYTHON",
+                modelFramework: "SKLEARN",
                 servingTool: "KSERVE",
                 transformer: "/Projects/#{@project[:projectname]}/Models/irisflowerclassifier/1/transformer.py",
                 requestedInstances: 1,
@@ -464,6 +487,7 @@ describe "On #{ENV['OS']}" do
                 modelPath: "/Projects/#{@project[:projectname]}/Models/irisflowerclassifier",
                 modelVersion: 1,
                 modelServer: "PYTHON",
+                modelFramework: "SKLEARN",
                 servingTool: "KSERVE",
                 transformer: "/Projects/#{@project[:projectname]}/Models/irisflowerclassifier/non-existent.py",
                 requestedInstances: 1,
@@ -480,6 +504,7 @@ describe "On #{ENV['OS']}" do
                 modelPath: "/Projects/#{@project[:projectname]}/Models/irisflowerclassifier",
                 modelVersion: 1,
                 modelServer: "PYTHON",
+                modelFramework: "SKLEARN",
                 servingTool: "KSERVE",
                 transformer: "/Projects/#{@project[:projectname]}/Models/irisflowerclassifier/1/transformer.py",
                 requestedInstances: 1,
@@ -498,6 +523,7 @@ describe "On #{ENV['OS']}" do
                 modelPath: "/Projects/#{@project[:projectname]}/Models/irisflowerclassifier",
                 modelVersion: 1,
                 modelServer: "PYTHON",
+                modelFramework: "SKLEARN",
                 servingTool: "KSERVE",
                 transformer: "/Projects/#{@project[:projectname]}/Models/irisflowerclassifier/1/transformer.ipynb",
                 requestedInstances: 1,
@@ -520,6 +546,7 @@ describe "On #{ENV['OS']}" do
                 modelVersion: 1,
                 artifactVersion: 1,
                 modelServer: "PYTHON",
+                modelFramework: "SKLEARN",
                 servingTool: "KSERVE",
                 transformer: "/Projects/#{@project[:projectname]}/Models/irisflowerclassifier/1/transformer-copy.py",
                 requestedInstances: 1,
@@ -538,6 +565,7 @@ describe "On #{ENV['OS']}" do
                 modelPath: "/Projects/#{@project[:projectname]}/Models/irisflowerclassifier",
                 modelVersion: 1,
                 modelServer: "PYTHON",
+                modelFramework: "SKLEARN",
                 servingTool: "KSERVE",
                 predictor: "/Projects/#{@project[:projectname]}/Models/irisflowerclassifier/1/#{SKLEARN_SCRIPT_FILE_NAME}",
                 transformer: "/Projects/#{@project[:projectname]}/Models/irisflowerclassifier/1/transformer.py",
@@ -566,6 +594,7 @@ describe "On #{ENV['OS']}" do
                 },
                 inferenceLogging: "ALL",
                 modelServer: "PYTHON",
+                modelFramework: "SKLEARN",
                 servingTool: "KSERVE",
                 requestedInstances: 1
                 }
@@ -587,6 +616,7 @@ describe "On #{ENV['OS']}" do
                 },
                 inferenceLogging: "ALL",
                 modelServer: "PYTHON",
+                modelFramework: "SKLEARN",
                 servingTool: "KSERVE",
                 requestedInstances: 1
                 }
@@ -608,6 +638,7 @@ describe "On #{ENV['OS']}" do
                 },
                 inferenceLogging: "ALL",
                 modelServer: "PYTHON",
+                modelFramework: "SKLEARN",
                 servingTool: "KSERVE",
                 requestedInstances: 1
                 }
@@ -630,6 +661,7 @@ describe "On #{ENV['OS']}" do
                 },
                 inferenceLogging: "ALL",
                 modelServer: "PYTHON",
+                modelFramework: "SKLEARN",
                 servingTool: "KSERVE",
                 requestedInstances: 1
                 }
@@ -653,6 +685,7 @@ describe "On #{ENV['OS']}" do
                 modelPath: "/Projects/#{@project[:projectname]}/Models/irisflowerclassifier",
                 modelVersion: 1,
                 modelServer: "PYTHON",
+                modelFramework: "SKLEARN",
                 servingTool: "KSERVE",
                 requestedInstances: 1
                 }
@@ -672,6 +705,7 @@ describe "On #{ENV['OS']}" do
                 modelPath: "/Projects/#{@project[:projectname]}/Models/irisflowerclassifier",
                 modelVersion: 1,
                 modelServer: "PYTHON",
+                modelFramework: "SKLEARN",
                 servingTool: "KSERVE",
                 requestedInstances: 1,
                 predictorResources: {
@@ -710,6 +744,7 @@ describe "On #{ENV['OS']}" do
                     batchingEnabled: false
                   },
                   modelServer: "PYTHON",
+                  modelFramework: "SKLEARN",
                   servingTool: "KSERVE",
                   transformer: "/Projects/#{@project[:projectname]}/Models/irisflowerclassifier/1/transformer.py",
                   requestedInstances: 1
@@ -727,6 +762,7 @@ describe "On #{ENV['OS']}" do
                     batchingEnabled: false
                 },
                 modelServer: "PYTHON",
+                modelFramework: "SKLEARN",
                 servingTool: "KSERVE",
                 requestedInstances: 1,
                 requestedTransformerInstances: 1
@@ -744,6 +780,7 @@ describe "On #{ENV['OS']}" do
                     batchingEnabled: false
                 },
                 modelServer: "PYTHON",
+                modelFramework: "SKLEARN",
                 servingTool: "KSERVE",
                 transformer: "/Projects/#{@project[:projectname]}/Models/irisflowerclassifier/1/transformer.py",
                 requestedInstances: 1,
@@ -781,6 +818,7 @@ describe "On #{ENV['OS']}" do
                artifactVersion: 0,
                batchingConfiguration: serving[:batching_configuration],
                modelServer: parse_model_server(serving[:model_server]),
+               modelFramework: parse_model_framework(serving[:model_framework]),
                servingTool: parse_serving_tool(serving[:serving_tool]),
                predictor: "/Projects/#{@project[:projectname]}/Models/irisflowerclassifier/1/#{SKLEARN_SCRIPT_FILE_NAME}",
                requestedInstances: serving[:instances]
@@ -800,6 +838,7 @@ describe "On #{ENV['OS']}" do
                artifactVersion: 0,
                batchingConfiguration: serving[:batching_configuration],
                modelServer: parse_model_server(serving[:model_server]),
+               modelFramework: parse_model_framework(serving[:model_framework]),
                servingTool: parse_serving_tool(serving[:serving_tool]),
                transformer: "/Projects/#{@project[:projectname]}/Models/irisflowerclassifier/1/transformer.py",
                requestedInstances: serving[:instances],
@@ -820,6 +859,7 @@ describe "On #{ENV['OS']}" do
                artifactVersion: 0,
                batchingConfiguration: serving[:batching_configuration],
                modelServer: parse_model_server(serving[:model_server]),
+               modelFramework: parse_model_framework(serving[:model_framework]),
                servingTool: parse_serving_tool(serving[:serving_tool]),
                predictor: "/Projects/#{@project[:projectname]}/Models/irisflowerclassifier/1/#{SKLEARN_SCRIPT_FILE_NAME}",
                transformer: "/Projects/#{@project[:projectname]}/Models/irisflowerclassifier/1/transformer.py",
@@ -842,6 +882,7 @@ describe "On #{ENV['OS']}" do
                modelVersion: serving[:model_version],
                batchingConfiguration: serving[:batching_configuration],
                modelServer: parse_model_server(serving[:model_server]),
+               modelFramework: parse_model_framework(serving[:model_framework]),
                servingTool: parse_serving_tool(serving[:serving_tool]),
                predictor: "/Projects/#{@project[:projectname]}/Models/irisflowerclassifier/1/#{SKLEARN_SCRIPT_FILE_NAME}",
                requestedInstances: serving[:instances]
@@ -869,6 +910,7 @@ describe "On #{ENV['OS']}" do
                modelVersion: serving[:model_version],
                batchingConfiguration: serving[:batching_configuration],
                modelServer: parse_model_server(serving[:model_server]),
+               modelFramework: parse_model_framework(serving[:model_framework]),
                servingTool: parse_serving_tool(serving[:serving_tool]),
                predictor: "/Projects/#{@project[:projectname]}/Models/irisflowerclassifier/1/#{SKLEARN_SCRIPT_FILE_NAME}",
                requestedInstances: serving[:instances]
@@ -882,6 +924,7 @@ describe "On #{ENV['OS']}" do
                modelVersion: serving[:model_version],
                batchingConfiguration: serving[:batching_configuration],
                modelServer: parse_model_server(serving[:model_server]),
+               modelFramework: parse_model_framework(serving[:model_framework]),
                servingTool: parse_serving_tool(serving[:serving_tool]),
                predictor: "#{SKLEARN_SCRIPT_FILE_NAME}",
                requestedInstances: serving[:instances]
@@ -899,6 +942,7 @@ describe "On #{ENV['OS']}" do
                modelVersion: serving[:model_version],
                batchingConfiguration: serving[:batching_configuration],
                modelServer: parse_model_server(serving[:model_server]),
+               modelFramework: parse_model_framework(serving[:model_framework]),
                servingTool: parse_serving_tool(serving[:serving_tool]),
                predictor: "/Projects/#{@project[:projectname]}/Models/irisflowerclassifier/1/#{SKLEARN_SCRIPT_FILE_NAME}",
                requestedInstances: serving[:instances]
@@ -912,6 +956,7 @@ describe "On #{ENV['OS']}" do
                modelVersion: serving[:model_version],
                batchingConfiguration: serving[:batching_configuration],
                modelServer: parse_model_server(serving[:model_server]),
+               modelFramework: parse_model_framework(serving[:model_framework]),
                servingTool: parse_serving_tool(serving[:serving_tool]),
                predictor: SKLEARN_SCRIPT_FILE_NAME,
                transformer: "/Projects/#{@project[:projectname]}/Models/irisflowerclassifier/1/transformer.py",
@@ -943,6 +988,7 @@ describe "On #{ENV['OS']}" do
                modelVersion: serving[:model_version],
                batchingConfiguration: serving[:batching_configuration],
                modelServer: parse_model_server(serving[:model_server]),
+               modelFramework: parse_model_framework(serving[:model_framework]),
                servingTool: parse_serving_tool(serving[:serving_tool]),
                transformer: "/Projects/#{@project[:projectname]}/Models/irisflowerclassifier/1/transformer.py",
                requestedInstances: serving[:instances],
@@ -971,6 +1017,7 @@ describe "On #{ENV['OS']}" do
                modelVersion: serving[:model_version],
                batchingConfiguration: serving[:batching_configuration],
                modelServer: parse_model_server(serving[:model_server]),
+               modelFramework: parse_model_framework(serving[:model_framework]),
                servingTool: parse_serving_tool(serving[:serving_tool]),
                transformer: "transformer.py",
                requestedInstances: serving[:instances],
@@ -990,6 +1037,7 @@ describe "On #{ENV['OS']}" do
                modelVersion: serving[:model_version],
                batchingConfiguration: serving[:batching_configuration],
                modelServer: parse_model_server(serving[:model_server]),
+               modelFramework: parse_model_framework(serving[:model_framework]),
                servingTool: parse_serving_tool(serving[:serving_tool]),
                transformer: "/Projects/#{@project[:projectname]}/Models/irisflowerclassifier/1/transformer.py",
                requestedInstances: serving[:instances],
@@ -1004,6 +1052,7 @@ describe "On #{ENV['OS']}" do
                modelVersion: serving[:model_version],
                batchingConfiguration: serving[:batching_configuration],
                modelServer: parse_model_server(serving[:model_server]),
+               modelFramework: parse_model_framework(serving[:model_framework]),
                servingTool: parse_serving_tool(serving[:serving_tool]),
                predictor: "/Projects/#{@project[:projectname]}/Models/irisflowerclassifier/1/#{SKLEARN_SCRIPT_FILE_NAME}",
                transformer: "transformer.py",
@@ -1038,6 +1087,7 @@ describe "On #{ENV['OS']}" do
                artifactVersion: serving[:artifact_version],
                batchingConfiguration: serving[:batching_configuration],
                modelServer: parse_model_server(serving[:model_server]),
+               modelFramework: parse_model_framework(serving[:model_framework]),
                servingTool: parse_serving_tool(serving[:serving_tool]),
                predictor: "/Projects/#{@project[:projectname]}/Models/irisflowerclassifier/1/#{SKLEARN_SCRIPT_FILE_NAME}",
                requestedInstances: serving[:instances]
@@ -1056,6 +1106,7 @@ describe "On #{ENV['OS']}" do
                modelVersion: serving[:model_version],
                batchingConfiguration: serving[:batching_configuration],
                modelServer: parse_model_server(serving[:model_server]),
+               modelFramework: parse_model_framework(serving[:model_framework]),
                servingTool: parse_serving_tool(serving[:serving_tool]),
                predictor: "/Projects/#{@project[:projectname]}/Models/irisflowerclassifier/1/#{SKLEARN_SCRIPT_FILE_NAME}",
                requestedInstances: serving[:instances]
@@ -1070,6 +1121,7 @@ describe "On #{ENV['OS']}" do
                artifactVersion: serving[:artifact_version],
                batchingConfiguration: serving[:batching_configuration],
                modelServer: parse_model_server(serving[:model_server]),
+               modelFramework: parse_model_framework(serving[:model_framework]),
                servingTool: parse_serving_tool(serving[:serving_tool]),
                predictor: SKLEARN_SCRIPT_FILE_NAME,
                requestedInstances: serving[:instances]
@@ -1088,6 +1140,7 @@ describe "On #{ENV['OS']}" do
                artifactVersion: serving[:artifact_version],
                batchingConfiguration: serving[:batching_configuration],
                modelServer: parse_model_server(serving[:model_server]),
+               modelFramework: parse_model_framework(serving[:model_framework]),
                servingTool: parse_serving_tool(serving[:serving_tool]),
                requestedInstances: serving[:instances]
               }
@@ -1103,6 +1156,7 @@ describe "On #{ENV['OS']}" do
               modelPath: "/Projects/#{@project[:projectname]}/Models/irisflowerclassifier",
               modelVersion: 1,
               modelServer: "PYTHON",
+              modelFramework: "SKLEARN",
               servingTool: "KSERVE",
               predictor: "/Projects/#{@project[:projectname]}/Models/irisflowerclassifier/1/#{SKLEARN_SCRIPT_FILE_NAME}",
               transformer: "/Projects/#{@project[:projectname]}/Models/irisflowerclassifier/1/transformer.py",
@@ -1122,6 +1176,7 @@ describe "On #{ENV['OS']}" do
                artifactVersion: serving[:artifact_version],
                batchingConfiguration: serving[:batching_configuration],
                modelServer: parse_model_server(serving[:model_server]),
+               modelFramework: parse_model_framework(serving[:model_framework]),
                servingTool: parse_serving_tool(serving[:serving_tool]),
                predictor: serving[:predictor],
                transformer: serving[:transformer],
@@ -1142,6 +1197,7 @@ describe "On #{ENV['OS']}" do
                artifactVersion: serving[:artifact_version],
                batchingConfiguration: serving[:batching_configuration],
                modelServer: parse_model_server(serving[:model_server]),
+               modelFramework: parse_model_framework(serving[:model_framework]),
                servingTool: parse_serving_tool(serving[:serving_tool]),
                requestedInstances: serving[:instances]
               }
@@ -1160,6 +1216,7 @@ describe "On #{ENV['OS']}" do
                artifactVersion: serving[:artifact_version],
                batchingConfiguration: serving[:batching_configuration],
                modelServer: parse_model_server(serving[:model_server]),
+               modelFramework: parse_model_framework(serving[:model_framework]),
                servingTool: parse_serving_tool(serving[:serving_tool]),
                transformer: "/Projects/#{@project[:projectname]}/Models/irisflowerclassifier/1/transformer.py",
                requestedInstances: serving[:instances],
@@ -1177,6 +1234,7 @@ describe "On #{ENV['OS']}" do
               modelPath: "/Projects/#{@project[:projectname]}/Models/irisflowerclassifier",
               modelVersion: 1,
               modelServer: "PYTHON",
+              modelFramework: "SKLEARN",
               servingTool: "KSERVE",
               transformer: "/Projects/#{@project[:projectname]}/Models/irisflowerclassifier/1/transformer.py",
               requestedInstances: 1,
@@ -1195,6 +1253,7 @@ describe "On #{ENV['OS']}" do
               artifactVersion: serving[:artifact_version],
               batchingConfiguration: serving[:batching_configuration],
               modelServer: parse_model_server(serving[:model_server]),
+              modelFramework: parse_model_framework(serving[:model_framework]),
               servingTool: parse_serving_tool(serving[:serving_tool]),
               transformer: serving[:transformer],
               requestedInstances: serving[:instances],
@@ -1214,6 +1273,7 @@ describe "On #{ENV['OS']}" do
                artifactVersion: serving[:artifact_version],
                batchingConfiguration: serving[:batching_configuration],
                modelServer: parse_model_server(serving[:model_server]),
+               modelFramework: parse_model_framework(serving[:model_framework]),
                servingTool: parse_serving_tool(serving[:serving_tool]),
                transformer: "non-existing-#{SKLEARN_SCRIPT_FILE_NAME}",
                requestedInstances: serving[:instances]
@@ -1238,6 +1298,7 @@ describe "On #{ENV['OS']}" do
                },
                inferenceLogging: "PREDICTIONS",
                modelServer: parse_model_server(serving[:model_server]),
+               modelFramework: parse_model_framework(serving[:model_framework]),
                servingTool: parse_serving_tool(serving[:serving_tool]),
                requestedInstances: serving[:instances]
               }
@@ -1257,6 +1318,7 @@ describe "On #{ENV['OS']}" do
               modelPath: "/Projects/#{@project[:projectname]}/Models/irisflowerclassifier",
               modelVersion: 1,
               modelServer: "PYTHON",
+              modelFramework: "SKLEARN",
               servingTool: "KSERVE",
               transformer: "/Projects/#{@project[:projectname]}/Models/irisflowerclassifier/1/transformer.py",
               requestedInstances: 1,
@@ -1276,6 +1338,7 @@ describe "On #{ENV['OS']}" do
                artifactVersion: serving[:artifact_version],
                batchingConfiguration: serving[:batching_configuration],
                modelServer: parse_model_server(serving[:model_server]),
+               modelFramework: parse_model_framework(serving[:model_framework]),
                servingTool: parse_serving_tool(serving[:serving_tool]),
                transformer: serving[:transformer],
                requestedInstances: 2,
@@ -1331,6 +1394,7 @@ describe "On #{ENV['OS']}" do
                 batchingConfiguration: @serving[:batching_configuration],
                 modelVersion: @serving[:model_version],
                 modelServer: parse_model_server(@serving[:model_server]),
+                modelFramework: parse_model_framework(serving[:model_framework]),
                 servingTool: parse_serving_tool(@serving[:serving_tool]),
                 transformer: "/Projects/#{@project[:projectname]}/Models/irisflowerclassifier/1/transformer.ipynb",
                 requestedInstances: @serving[:instances],

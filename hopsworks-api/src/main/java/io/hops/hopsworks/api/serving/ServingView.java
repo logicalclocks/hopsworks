@@ -24,6 +24,7 @@ import io.hops.hopsworks.common.serving.ServingWrapper;
 import io.hops.hopsworks.persistence.entity.serving.DeployableComponentResources;
 import io.hops.hopsworks.persistence.entity.serving.BatchingConfiguration;
 import io.hops.hopsworks.persistence.entity.serving.InferenceLogging;
+import io.hops.hopsworks.persistence.entity.serving.ModelFramework;
 import io.hops.hopsworks.persistence.entity.serving.ModelServer;
 import io.hops.hopsworks.persistence.entity.serving.Serving;
 import io.hops.hopsworks.persistence.entity.serving.ServingTool;
@@ -49,6 +50,7 @@ public class ServingView implements Serializable {
   private String modelPath;
   private String modelName;
   private Integer modelVersion;
+  private ModelFramework modelFramework;
   private Integer artifactVersion;
   private String predictor;
   private String transformer;
@@ -90,6 +92,7 @@ public class ServingView implements Serializable {
     this.transformer = servingWrapper.getServing().getTransformer();
     this.modelName = servingWrapper.getServing().getModelName();
     this.modelVersion = servingWrapper.getServing().getModelVersion();
+    this.modelFramework = servingWrapper.getServing().getModelFramework();
     this.artifactVersion = servingWrapper.getServing().getArtifactVersion();
     this.availableInstances = servingWrapper.getAvailableReplicas();
     this.availableTransformerInstances = servingWrapper.getAvailableTransformerReplicas();
@@ -174,6 +177,10 @@ public class ServingView implements Serializable {
     this.modelVersion = modelVersion;
   }
 
+  @ApiModelProperty(value = "Framework of the model")
+  public ModelFramework getModelFramework() { return modelFramework; }
+  public void setModelFramework(ModelFramework modelFramework) { this.modelFramework = modelFramework;}
+  
   @ApiModelProperty(value = "Version of the artifact")
   public Integer getArtifactVersion() {
     return artifactVersion;
@@ -327,8 +334,8 @@ public class ServingView implements Serializable {
   public ServingWrapper getServingWrapper() {
 
     ServingWrapper servingWrapper = new ServingWrapper(
-        new Serving(id, name, description, modelPath, predictor, transformer, modelName, modelVersion, artifactVersion,
-          requestedInstances, requestedTransformerInstances, modelServer, servingTool,
+        new Serving(id, name, description, modelPath, predictor, transformer, modelName, modelVersion,
+          modelFramework, artifactVersion, requestedInstances, requestedTransformerInstances, modelServer, servingTool,
           inferenceLogging, predictorResources, transformerResources, batchingConfiguration));
     servingWrapper.setKafkaTopicDTO(kafkaTopicDTO);
 

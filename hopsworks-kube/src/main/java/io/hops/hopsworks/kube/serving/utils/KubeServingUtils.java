@@ -49,6 +49,7 @@ public class KubeServingUtils {
   public final static String CREATOR_LABEL_NAME = LABEL_PREFIX + "/creator";
   public final static String MODEL_NAME_LABEL_NAME = LABEL_PREFIX + "/model-name";
   public final static String MODEL_VERSION_LABEL_NAME = LABEL_PREFIX + "/model-version";
+  public final static String MODEL_FRAMEWORK_LABEL_NAME = LABEL_PREFIX + "/model-framework";
   public final static String ARTIFACT_VERSION_LABEL_NAME = LABEL_PREFIX + "/artifact-version";
   public final static String MODEL_SERVER_LABEL_NAME = LABEL_PREFIX + "/model-server";
   public final static String SERVING_TOOL_LABEL_NAME = LABEL_PREFIX + "/tool";
@@ -99,6 +100,7 @@ public class KubeServingUtils {
         put(CREATOR_LABEL_NAME, serving.getCreator().getUsername());
         put(MODEL_NAME_LABEL_NAME, serving.getModelName());
         put(MODEL_VERSION_LABEL_NAME, serving.getModelVersion().toString());
+        put(MODEL_FRAMEWORK_LABEL_NAME, serving.getModelFramework().toString());
         put(ARTIFACT_VERSION_LABEL_NAME, serving.getArtifactVersion().toString());
         put(MODEL_SERVER_LABEL_NAME, serving.getModelServer().toString().toLowerCase());
         put(SERVING_TOOL_LABEL_NAME, serving.getServingTool().toString().toLowerCase());
