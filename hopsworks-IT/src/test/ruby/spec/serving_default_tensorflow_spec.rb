@@ -43,6 +43,7 @@ describe "On #{ENV['OS']}" do
             },
            modelVersion: 1,
            modelServer: "TENSORFLOW_SERVING",
+           modelFramework: "TENSORFLOW",
            servingTool: "DEFAULT",
            requestedInstances: 1
           }
@@ -65,6 +66,7 @@ describe "On #{ENV['OS']}" do
           modelVersion: 1,
           artifactVersion: 99,
           modelServer: "TENSORFLOW_SERVING",
+          modelFramework: "TENSORFLOW",
           servingTool: "DEFAULT",
           requestedInstances: 1,
           requestedTransformerInstances: 1
@@ -96,6 +98,7 @@ describe "On #{ENV['OS']}" do
                 name: "NONE"
             },
             modelServer: "TENSORFLOW_SERVING",
+            modelFramework: "TENSORFLOW",
             servingTool: "DEFAULT",
             predictor: "/Projects/#{@project[:projectname]}/Models/mnist/1/transformer.py",
             requestedInstances: 1,
@@ -115,6 +118,7 @@ describe "On #{ENV['OS']}" do
              batchingEnabled: true
            },
            modelServer: "TENSORFLOW_SERVING",
+           modelFramework: "TENSORFLOW",
            servingTool: "DEFAULT",
            requestedInstances: 1
           }
@@ -131,6 +135,7 @@ describe "On #{ENV['OS']}" do
              timeout: 60
            },
            modelServer: "TENSORFLOW_SERVING",
+           modelFramework: "TENSORFLOW",
            servingTool: "DEFAULT",
            requestedInstances: 1
           }
@@ -175,6 +180,7 @@ describe "On #{ENV['OS']}" do
            },
            inferenceLogging: parse_inference_logging(serving[:inference_logging]),
            modelServer: parse_model_server(serving[:model_server]),
+           modelFramework: parse_model_framework(serving[:model_framework]),
            servingTool: parse_serving_tool(serving[:serving_tool]),
            requestedInstances: serving[:instances]
           }

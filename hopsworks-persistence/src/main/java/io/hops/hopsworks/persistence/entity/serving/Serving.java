@@ -103,6 +103,10 @@ public class Serving implements Serializable {
   @Size(min = 1, max = 255)
   @Column(name = "predictor") // <filename>.<ext>
   private String predictor;
+  @NotNull
+  @Enumerated(EnumType.ORDINAL)
+  @Column(name = "model_framework")
+  private ModelFramework modelFramework;
   @Basic(optional = false)
   @NotNull
   @Column(name = "optimized")
@@ -153,8 +157,8 @@ public class Serving implements Serializable {
   public Serving() { }
 
   public Serving(Integer id, String name, String description, String modelPath, String modelName, Integer modelVersion,
-                 String predictor, Integer nInstances, Boolean batchingEnabled, ModelServer modelServer,
-                 ServingTool servingTool, BatchingConfiguration batchingConfiguration) {
+                 ModelFramework modelFramework, String predictor, Integer nInstances, Boolean batchingEnabled,
+                 ModelServer modelServer, ServingTool servingTool, BatchingConfiguration batchingConfiguration) {
     this.id = id;
     this.name = name;
     this.description = description;
@@ -162,6 +166,7 @@ public class Serving implements Serializable {
     this.modelName = modelName;
     this.modelVersion = modelVersion;
     this.predictor = predictor;
+    this.modelFramework = modelFramework;
     this.instances = nInstances;
     this.modelServer = modelServer;
     this.servingTool = servingTool;
@@ -233,10 +238,14 @@ public class Serving implements Serializable {
   public String getPredictor() {
     return predictor;
   }
-
+  
   public void setPredictor(String predictor) {
     this.predictor = predictor;
   }
+
+  public ModelFramework getModelFramework() { return modelFramework; }
+  
+  public void setModelFramework(ModelFramework modelFramework) { this.modelFramework = modelFramework; }
 
   public Integer getInstances() {
     return instances;
@@ -352,6 +361,8 @@ public class Serving implements Serializable {
     if (modelPath != null ? !modelPath.equals(serving.modelPath) : serving.modelPath != null) return false;
     if (!modelVersion.equals(serving.modelVersion)) return false;
     if (predictor != null ? !predictor.equals(serving.predictor) : serving.predictor != null) return false;
+    if (modelFramework != null ? !modelFramework.equals(serving.modelFramework) : serving.modelFramework != null)
+      return false;
     if (instances != null ? !instances.equals(serving.instances) : serving.instances != null) return false;
     if (project != null ? !project.equals(serving.project) : serving.project != null) return false;
     if (lockIP != null ? !lockIP.equals(serving.lockIP) : serving.lockIP != null) return false;
@@ -378,6 +389,7 @@ public class Serving implements Serializable {
     result = 31 * result + modelPath.hashCode();
     result = 31 * result + modelVersion.hashCode();
     result = 31 * result + (predictor != null ? predictor.hashCode() : 0);
+    result = 31 * result + (modelFramework != null ? modelFramework.hashCode() : 0);
     result = 31 * result + (optimized ? 1 : 0);
     result = 31 * result + (instances != null ? instances.hashCode() : 0);
     result = 31 * result + (project != null ? project.hashCode() : 0);

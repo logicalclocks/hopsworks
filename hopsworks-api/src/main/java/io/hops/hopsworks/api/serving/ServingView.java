@@ -22,6 +22,7 @@ import io.hops.hopsworks.common.dao.kafka.TopicDTO;
 import io.hops.hopsworks.common.serving.ServingStatusEnum;
 import io.hops.hopsworks.common.serving.ServingWrapper;
 import io.hops.hopsworks.persistence.entity.serving.BatchingConfiguration;
+import io.hops.hopsworks.persistence.entity.serving.ModelFramework;
 import io.hops.hopsworks.persistence.entity.serving.ModelServer;
 import io.hops.hopsworks.persistence.entity.serving.Serving;
 import io.hops.hopsworks.persistence.entity.serving.ServingTool;
@@ -46,6 +47,7 @@ public class ServingView implements Serializable {
   private String modelPath;
   private String modelName;
   private Integer modelVersion;
+  private ModelFramework modelFramework;
   private String predictor;
   private Integer availableInstances;
   private Integer requestedInstances;
@@ -78,6 +80,7 @@ public class ServingView implements Serializable {
     this.predictor = servingWrapper.getServing().getPredictor();
     this.modelName = servingWrapper.getServing().getModelName();
     this.modelVersion = servingWrapper.getServing().getModelVersion();
+    this.modelFramework = servingWrapper.getServing().getModelFramework();
     this.availableInstances = servingWrapper.getAvailableReplicas();
     this.requestedInstances = servingWrapper.getServing().getInstances();
     this.internalPort = servingWrapper.getInternalPort(); // community
@@ -149,6 +152,10 @@ public class ServingView implements Serializable {
     this.modelVersion = modelVersion;
   }
 
+  @ApiModelProperty(value = "Framework of the model")
+  public ModelFramework getModelFramework() { return modelFramework; }
+  public void setModelFramework(ModelFramework modelFramework) { this.modelFramework = modelFramework;}
+  
   @ApiModelProperty(value = "Number of serving instances to use for serving")
   public Integer getRequestedInstances() {
     return requestedInstances;
@@ -261,8 +268,8 @@ public class ServingView implements Serializable {
   public ServingWrapper getServingWrapper() {
 
     ServingWrapper servingWrapper = new ServingWrapper(
-        new Serving(id, name, description, modelPath, modelName, modelVersion, predictor, requestedInstances,
-          batchingEnabled, modelServer, servingTool, batchingConfiguration));
+        new Serving(id, name, description, modelPath, modelName, modelVersion, modelFramework, predictor,
+          requestedInstances, batchingEnabled, modelServer, servingTool, batchingConfiguration));
     servingWrapper.setKafkaTopicDTO(kafkaTopicDTO);
 
     return servingWrapper;

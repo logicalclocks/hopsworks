@@ -114,6 +114,7 @@ describe "On #{ENV['OS']}" do
                name: "NONE"
             },
             modelServer: "TENSORFLOW_SERVING",
+            modelFramework: "TENSORFLOW",
             servingTool: "DEFAULT",
             requestedInstances: 1
            }
