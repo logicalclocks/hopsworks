@@ -21,8 +21,11 @@ import io.hops.hopsworks.common.python.library.LibraryVersionDTO;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public abstract class LatestVersionAnalyzer {
+
+  private final String releaseRegex = "^(\\d+[.]\\d+[.]\\d+)$";
 
   protected String latestVersion;
 
@@ -34,6 +37,15 @@ public abstract class LatestVersionAnalyzer {
 
   public abstract void setLatestVersion(String currentHopsworksVersion,
                                            HashMap<String, List<LibraryVersionDTO>> versions);
+
+  /**
+   * We should remove release candidates from the list and only recommend the latest release for this hopsworks version
+   * @param versions
+   * @return
+   */
+  public List<LibraryVersionDTO> filterReleases(List<LibraryVersionDTO> versions) {
+    return versions.stream().filter(v -> v.getVersion().matches(releaseRegex)).collect(Collectors.toList());
+  }
 
   protected class SortByVersionComparator implements Comparator<LibraryVersionDTO> {
     public int compare(LibraryVersionDTO a, LibraryVersionDTO b) {
