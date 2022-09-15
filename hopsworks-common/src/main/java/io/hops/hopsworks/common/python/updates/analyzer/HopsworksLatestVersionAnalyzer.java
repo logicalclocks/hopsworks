@@ -50,6 +50,8 @@ public class HopsworksLatestVersionAnalyzer extends LatestVersionAnalyzer {
 
       List<LibraryVersionDTO> searchVersionHits = versions.get(this.getLibrary());
 
+      searchVersionHits = super.filterReleases(searchVersionHits);
+
       String [] hopsworksVersionSplit = currentHopsworksVersion.split("\\.");
 
       String hopsworksLibVersionPrefix = hopsworksVersionSplit[0] + "." + hopsworksVersionSplit[1];
