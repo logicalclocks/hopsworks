@@ -36,7 +36,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static io.hops.hopsworks.common.featurestore.trainingdatasets.split.SplitType.TIME_SERIES_SPLIT;
+import static io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.split.SplitType.TIME_SERIES_SPLIT;
 
 /**
  * DTO containing the human-readable information of a trainingDataset, can be converted to JSON or XML representation

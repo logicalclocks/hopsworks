@@ -1,6 +1,6 @@
 /*
  * This file is part of Hopsworks
- * Copyright (C) 2022, Logical Clocks AB. All rights reserved
+ * Copyright (C) 2022, Hopsworks AB. All rights reserved
  *
  * Hopsworks is free software: you can redistribute it and/or modify it under the terms of
  * the GNU Affero General Public License as published by the Free Software Foundation,
@@ -14,9 +14,21 @@
  * If not, see <https://www.gnu.org/licenses/>.
  */
 
-package io.hops.hopsworks.common.featurestore.trainingdatasets.split;
+package io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.split;
 
-public enum SplitType {
-  TIME_SERIES_SPLIT,
-  RANDOM_SPLIT;
+public enum SplitName {
+
+  TRAIN("train"),
+  VALIDATION("validation"),
+  TEST("test");
+
+  private String name;
+
+  SplitName(String name) {
+    this.name = name;
+  }
+
+  public String getName() {
+    return name;
+  }
 }

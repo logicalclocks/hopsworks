@@ -16,7 +16,6 @@
 
 package io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.split;
 
-import io.hops.hopsworks.common.featurestore.trainingdatasets.split.SplitType;
 import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.TrainingDataset;
 
 import javax.persistence.Basic;

@@ -43,6 +43,7 @@ import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -50,7 +51,11 @@ import java.util.logging.Level;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-import static io.hops.hopsworks.common.featurestore.trainingdatasets.split.SplitType.RANDOM_SPLIT;
+import static io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.split.SplitName.TEST;
+import static io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.split.SplitName.TRAIN;
+import static io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.split.SplitName.VALIDATION;
+import static io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.split.SplitType.RANDOM_SPLIT;
+import static io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.split.SplitType.TIME_SERIES_SPLIT;
 
 @Stateless
 @TransactionAttribute(TransactionAttributeType.NEVER)
@@ -99,7 +104,8 @@ public class TrainingDatasetInputValidation {
     validateType(trainingDatasetDTO.getTrainingDatasetType());
     validateVersion(trainingDatasetDTO.getVersion());
     validateDataFormat(trainingDatasetDTO.getDataFormat());
-    validateSplits(trainingDatasetDTO.getSplits());
+    String eventTimeFieldName = query.getFeaturegroup().getEventTime();
+    validateSplits(trainingDatasetDTO.getSplits(), eventTimeFieldName);
     validateFeatures(query, trainingDatasetDTO.getFeatures());
     validateStorageConnector(trainingDatasetDTO.getStorageConnector());
     validateTrainSplit(trainingDatasetDTO.getTrainSplit(), trainingDatasetDTO.getSplits());
@@ -178,11 +184,18 @@ public class TrainingDatasetInputValidation {
     }
   }
 
-  private void validateSplits(List<TrainingDatasetSplitDTO> trainingDatasetSplitDTOs)
+  void validateSplits(List<TrainingDatasetSplitDTO> trainingDatasetSplitDTOs, String eventTimeFieldName)
       throws FeaturestoreException {
     if (trainingDatasetSplitDTOs != null && !trainingDatasetSplitDTOs.isEmpty()) {
       Pattern namePattern = FeaturestoreConstants.FEATURESTORE_REGEX;
       Set<String> splitNames = new HashSet<>();
+      Boolean isTimeSplit = false;
+      Date trainStart = null;
+      Date trainEnd = null;
+      Date validationStart = null;
+      Date validationEnd = null;
+      Date testStart = null;
+      Date testEnd = null;
       for (TrainingDatasetSplitDTO trainingDatasetSplitDTO : trainingDatasetSplitDTOs) {
         if (!namePattern.matcher(trainingDatasetSplitDTO.getName()).matches()) {
           throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_TRAINING_DATASET_SPLIT_NAME,
@@ -204,7 +217,88 @@ public class TrainingDatasetInputValidation {
         }
         if (!splitNames.add(trainingDatasetSplitDTO.getName())) {
           throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.TRAINING_DATASET_DUPLICATE_SPLIT_NAMES,
-              Level.FINE, " The split names must be unique");
+              Level.FINE, " The split names must be unique.");
+        }
+        if (TIME_SERIES_SPLIT.equals(trainingDatasetSplitDTO.getSplitType())) {
+          isTimeSplit = true;
+          if (Strings.isNullOrEmpty(eventTimeFieldName)) {
+            throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.EVENT_TIME_FEATURE_NOT_FOUND, Level.FINE,
+                "Failed to define time series split because event time column is not available in "
+                    + "one or more feature groups.");
+          }
+        }
+        if (TIME_SERIES_SPLIT.equals(trainingDatasetSplitDTO.getSplitType())) {
+          if (TRAIN.getName().equals(trainingDatasetSplitDTO.getName())) {
+            trainStart = trainingDatasetSplitDTO.getStartTime();
+            trainEnd = trainingDatasetSplitDTO.getEndTime();
+            if (trainStart == null || trainEnd == null) {
+              throw new FeaturestoreException(
+                  RESTCodes.FeaturestoreErrorCode.ILLEGAL_TRAINING_DATASET_TIME_SERIES_SPLIT,
+                  Level.FINE, "Start/end time of train split is/are not provided.");
+            }
+          }
+          if (VALIDATION.getName().equals(trainingDatasetSplitDTO.getName())) {
+            validationStart = trainingDatasetSplitDTO.getStartTime();
+            validationEnd = trainingDatasetSplitDTO.getEndTime();
+            if (validationStart == null || validationEnd == null) {
+              throw new FeaturestoreException(
+                  RESTCodes.FeaturestoreErrorCode.ILLEGAL_TRAINING_DATASET_TIME_SERIES_SPLIT,
+                  Level.FINE, "Start/end time of validation split is/are not provided.");
+            }
+          }
+          if (TEST.getName().equals(trainingDatasetSplitDTO.getName())) {
+            testStart = trainingDatasetSplitDTO.getStartTime();
+            testEnd = trainingDatasetSplitDTO.getEndTime();
+            if (testStart == null || testEnd == null) {
+              throw new FeaturestoreException(
+                  RESTCodes.FeaturestoreErrorCode.ILLEGAL_TRAINING_DATASET_TIME_SERIES_SPLIT,
+                  Level.FINE, "Start/end time of test split is/are not provided.");
+            }
+          }
+        }
+      }
+      if (isTimeSplit) {
+        // Check if end time is >= start time
+        if (trainStart != null && (trainStart.getTime() > trainEnd.getTime())) {
+          throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_TRAINING_DATASET_TIME_SERIES_SPLIT,
+              Level.FINE,
+              "End time of the train split should be greater than or equal to the start time."
+          );
+        }
+        if (validationStart != null && (validationStart.getTime() > validationEnd.getTime())) {
+          throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_TRAINING_DATASET_TIME_SERIES_SPLIT,
+              Level.FINE,
+              "End time of the validation split should be greater than or equal to the start time."
+          );
+        }
+        if (testStart != null && (testStart.getTime() > testEnd.getTime())) {
+          throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_TRAINING_DATASET_TIME_SERIES_SPLIT,
+              Level.FINE,
+              "End time of the test split should be greater than or equal to the start time."
+          );
+        }
+        if (validationStart != null) {
+          // Check if start time should be in order of train < validation
+          if (validationStart.getTime() == trainStart.getTime() || validationStart.getTime() < trainEnd.getTime()) {
+            throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_TRAINING_DATASET_TIME_SERIES_SPLIT,
+                Level.FINE,
+                "Start time of the validation split should be greater than the start/end time of train split."
+            );
+          }
+          // Check if start time should be in order of validation < test
+          if (testStart.getTime() == validationStart.getTime() || testStart.getTime() < validationEnd.getTime()) {
+            throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_TRAINING_DATASET_TIME_SERIES_SPLIT,
+                Level.FINE,
+                "Start time of the test split should be greater than the start/end time of validation split."
+            );
+          }
+        }
+        // Check if start time should be in order of train < test
+        if (testStart.getTime() == trainStart.getTime() || testStart.getTime() < trainEnd.getTime()) {
+          throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_TRAINING_DATASET_TIME_SERIES_SPLIT,
+              Level.FINE,
+              "Start time of the test split should be greater than the start/end time of train split."
+          );
         }
       }
     }
