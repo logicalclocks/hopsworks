@@ -1677,7 +1677,9 @@ public class RESTCodes {
       "validation success.", Response.Status.BAD_REQUEST),
     FAILED_TO_DELETE_TD_DATA(204, "Failed to delete training dataset.", Response.Status.BAD_REQUEST),
     ERROR_DELETING_FEATURE_VIEW(205, "Error deleting feature view.",
-        Response.Status.INTERNAL_SERVER_ERROR);
+        Response.Status.INTERNAL_SERVER_ERROR),
+    ILLEGAL_TRAINING_DATASET_TIME_SERIES_SPLIT(206, "Illegal training dataset time series split.",
+        Response.Status.BAD_REQUEST);
 
     private int code;
     private String message;
