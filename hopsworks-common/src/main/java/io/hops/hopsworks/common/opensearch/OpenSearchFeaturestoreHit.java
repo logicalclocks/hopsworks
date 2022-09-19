@@ -22,6 +22,7 @@ import org.opensearch.search.SearchHit;
 
 import javax.xml.bind.annotation.XmlRootElement;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -45,7 +46,7 @@ public class OpenSearchFeaturestoreHit implements Comparator<OpenSearchFeaturest
   private Integer projectId;
   private String projectName;
   private Long datasetIId;
-  private Map<String, Object> xattrs;
+  private Map<String, Object> xattrs = new HashMap<>();
 
   public OpenSearchFeaturestoreHit() {
   }

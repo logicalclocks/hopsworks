@@ -20,7 +20,6 @@ import io.hops.hopsworks.common.opensearch.OpenSearchController;
 import io.hops.hopsworks.common.opensearch.FeaturestoreDocType;
 import io.hops.hopsworks.common.opensearch.OpenSearchFeaturestoreHit;
 import io.hops.hopsworks.common.featurestore.xattr.dto.FeaturestoreXAttrsConstants;
-import io.hops.hopsworks.common.util.HopsworksJAXBContext;
 import io.hops.hopsworks.exceptions.OpenSearchException;
 import io.hops.hopsworks.exceptions.GenericException;
 import io.hops.hopsworks.exceptions.ServiceException;
@@ -54,8 +53,6 @@ public class OpenSearchFeaturestoreBuilder {
   private DatasetAccessController datasetAccessCtrl;
   @EJB
   private ProjectFacade projectFacade;
-  @EJB
-  private HopsworksJAXBContext converter;
   @EJB
   private OpenSearchFeaturestoreItemBuilder openSearchFeaturestoreItemBuilder;
   
@@ -115,7 +112,7 @@ public class OpenSearchFeaturestoreBuilder {
           for (SearchHit hitAux : e.getValue().getHits()) {
             OpenSearchFeaturestoreHit hit = OpenSearchFeaturestoreHit.instance(hitAux);
             OpenSearchFeaturestoreItemDTO.Base item =
-              openSearchFeaturestoreItemBuilder.fromFeaturegroup(hit, converter);
+              openSearchFeaturestoreItemBuilder.fromBaseArtifact(hit);
             item.setHighlights(getHighlights(hitAux.getHighlightFields()));
             accessCtrl.accept(inputWrapper(hit), collectorWrapper(item));
             result.addFeaturegroup(item);
@@ -126,7 +123,7 @@ public class OpenSearchFeaturestoreBuilder {
           for (SearchHit hitAux : e.getValue().getHits()) {
             OpenSearchFeaturestoreHit hit = OpenSearchFeaturestoreHit.instance(hitAux);
             OpenSearchFeaturestoreItemDTO.Base item
-              = openSearchFeaturestoreItemBuilder.fromTrainingDataset(hit, converter);
+              = openSearchFeaturestoreItemBuilder.fromBaseArtifact(hit);
             item.setHighlights(getHighlights(hitAux.getHighlightFields()));
             accessCtrl.accept(inputWrapper(hit), collectorWrapper(item));
             result.addFeatureView(item);
@@ -137,7 +134,7 @@ public class OpenSearchFeaturestoreBuilder {
           for (SearchHit hitAux : e.getValue().getHits()) {
             OpenSearchFeaturestoreHit hit = OpenSearchFeaturestoreHit.instance(hitAux);
             OpenSearchFeaturestoreItemDTO.Base item
-              = openSearchFeaturestoreItemBuilder.fromTrainingDataset(hit, converter);
+              = openSearchFeaturestoreItemBuilder.fromBaseArtifact(hit);
             item.setHighlights(getHighlights(hitAux.getHighlightFields()));
             accessCtrl.accept(inputWrapper(hit), collectorWrapper(item));
             result.addTrainingdataset(item);
@@ -232,7 +229,7 @@ public class OpenSearchFeaturestoreBuilder {
               hit.getName(), featureNameAux);
             if(feature == null) {
               OpenSearchFeaturestoreItemDTO.Base fgParent
-                = openSearchFeaturestoreItemBuilder.fromFeaturegroup(hit, converter);
+                = openSearchFeaturestoreItemBuilder.fromBaseArtifact(hit);
               feature = openSearchFeaturestoreItemBuilder.fromFeature(featureNameAux, featureDescriptionAux, fgParent);
               result.addFeature(feature);
               accessCtrl.accept(inputWrapper(hit), collectorWrapper(feature));
