@@ -259,7 +259,12 @@ public class TrainingDatasetController {
     // because there can be multiple training dataset of same name from different version of feature view
     trainingDatasetDTO.setName(featureView.getName() + "_" + featureView.getVersion());
     Query query = queryController.makeQuery(featureView, project, user, true, false);
-
+    if (query.getDeletedFeatureGroups() != null && !query.getDeletedFeatureGroups().isEmpty()) {
+      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.FEATUREGROUP_NOT_FOUND,
+          Level.SEVERE, String.format("Cannot create the training dataset because " +
+          "parent feature groups of the following features are not available anymore: " +
+          "%s", String.join(", ", query.getDeletedFeatureGroups())));
+    }
     return createTrainingDataset(user, project, featurestore, featureView, trainingDatasetDTO, query, true);
   }
 
