@@ -99,6 +99,12 @@ public class QueryBuilder {
 
   public QueryDTO build(Query query, Featurestore featurestore, Project project, Users user)
       throws FeaturestoreException, ServiceException {
+    if (query.getDeletedFeatureGroups() != null && !query.getDeletedFeatureGroups().isEmpty()) {
+      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.FEATUREGROUP_NOT_FOUND,
+          Level.SEVERE, String.format("Cannot construct the query. " +
+          "Parent feature groups of the following features are not available anymore: " +
+          "%s", String.join(", ", query.getDeletedFeatureGroups())));
+    }
     // featureToDTO and allJoinedFeatures are set only once at the top level query.
     Map<FeatureSignature, FeatureGroupFeatureDTO> featureToDTO = makeFeatureToFeatureDTOMap(query, project, user);
 
