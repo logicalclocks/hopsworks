@@ -193,8 +193,8 @@ public class KubeJsonUtils {
     
     // Tensorflow runtime
     String tensorflowVersion = settings.getKServeTensorflowVersion();
-    if (resourceRequirements.getRequests().containsKey("nvidia.com/gpu") ||
-      resourceRequirements.getLimits().containsKey("nvidia.com/gpu")) {
+    if (resourceRequirements.getRequests().containsKey("nvidia.com/gpu") || (resourceRequirements.getLimits() != null
+            && resourceRequirements.getLimits().containsKey("nvidia.com/gpu"))) {
       tensorflowVersion += "-gpu";
     }
     String runtimeVersion = tensorflowVersion;
@@ -225,15 +225,21 @@ public class KubeJsonUtils {
             }
           }
         });
-        put("limits", new JSONObject() {
-          {
-            put("memory", resourceRequirements.getLimits().get("memory"));
-            put("cpu", resourceRequirements.getLimits().get("cpu"));
-            if (resourceRequirements.getLimits().containsKey("nvidia.com/gpu")) {
-              put("nvidia.com/gpu", resourceRequirements.getLimits().get("nvidia.com/gpu"));
+        if (resourceRequirements.getLimits() != null) {
+          put("limits", new JSONObject() {
+            {
+              if (resourceRequirements.getLimits().containsKey("memory")) {
+                put("memory", resourceRequirements.getLimits().get("memory"));
+              }
+              if (resourceRequirements.getLimits().containsKey("cpu")) {
+                put("cpu", resourceRequirements.getLimits().get("cpu"));
+              }
+              if (resourceRequirements.getLimits().containsKey("nvidia.com/gpu")) {
+                put("nvidia.com/gpu", resourceRequirements.getLimits().get("nvidia.com/gpu"));
+              }
             }
-          }
-        });
+          });
+        }
       }
     };
     
@@ -249,9 +255,15 @@ public class KubeJsonUtils {
   
   private JSONObject buildContainer(Container container) {
     JSONObject containerJSON = new JSONObject(container);
-    JSONObject resources = containerJSON.getJSONObject("resources");
-    buildContainerResources(resources.getJSONObject("requests"), container.getResources().getRequests());
-    buildContainerResources(resources.getJSONObject("limits"), container.getResources().getLimits());
+    if (containerJSON.has("resources")) {
+      JSONObject resources = containerJSON.getJSONObject("resources");
+      if (resources.has("requests") && !resources.isNull("requests")) {
+        buildContainerResources(resources.getJSONObject("requests"), container.getResources().getRequests());
+      }
+      if (resources.has("limits") && !resources.isNull("limits")) {
+        buildContainerResources(resources.getJSONObject("limits"), container.getResources().getLimits());
+      }
+    }
     return containerJSON;
   }
   

@@ -259,6 +259,25 @@ describe "On #{ENV['OS']}" do
         expect_status(422)
       end
 
+      # model framework
+
+      it "should fail to create a serving with an invalid model framework" do
+        put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
+            {name: "testmodel5",
+             modelPath: "/Projects/#{@project[:projectname]}/Models/mnist",
+             modelVersion: 1,
+             batchingConfiguration: {
+               batchingEnabled: false
+             },
+             modelServer: "TENSORFLOW_SERVING",
+             modelFramework: "INVALID",
+             servingTool: "DEFAULT",
+             requestedInstances: 1
+            }
+        expect_json(usrMsg: "Model framework not provided or unsupported")
+        expect_status(422)
+      end
+
       # serving tool
 
       it "should fail to create a serving without serving tool" do

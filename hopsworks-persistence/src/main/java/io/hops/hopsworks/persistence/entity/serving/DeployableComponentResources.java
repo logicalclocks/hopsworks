@@ -23,10 +23,10 @@ public class DeployableComponentResources {
   public DeployableComponentResources() { }
   
   @XmlElement
-  private DockerResourcesConfiguration requests = new DockerResourcesConfiguration(0.2, 32, 0);
+  private DockerResourcesConfiguration requests = DeployableComponentResources.getDefaultRequestsResources();
   
   @XmlElement
-  private DockerResourcesConfiguration limits = new DockerResourcesConfiguration(-1, -1, -1);
+  private DockerResourcesConfiguration limits = DeployableComponentResources.getDefaultLimitsResources();
   
   public DockerResourcesConfiguration getRequests() {
     return requests;
@@ -41,7 +41,15 @@ public class DeployableComponentResources {
   public void setLimits(DockerResourcesConfiguration limits) {
     this.limits = limits;
   }
-  
+
+  public static DockerResourcesConfiguration getDefaultRequestsResources() {
+    return new DockerResourcesConfiguration(0.2, 32, 0);
+  }
+
+  public static DockerResourcesConfiguration getDefaultLimitsResources() {
+    return new DockerResourcesConfiguration(-1, -1, -1);
+  }
+
   @Override
   public final boolean equals(Object object) {
     if (!(object instanceof DeployableComponentResources)) {

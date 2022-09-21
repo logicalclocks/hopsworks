@@ -693,8 +693,8 @@ describe "On #{ENV['OS']}" do
 
             serving_list = get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/"
             resource_config = JSON.parse(serving_list).select { |serving| serving['name'] == name}[0]['predictorResources']
-            expect(resource_config['requests']['memory']).to be 1024
-            expect(resource_config['requests']['cores']).to be 1
+            expect(resource_config['requests']['memory']).to be 32
+            expect(resource_config['requests']['cores']).to be 0.2
             expect(resource_config['requests']['gpus']).to be 0
           end
 
@@ -711,12 +711,12 @@ describe "On #{ENV['OS']}" do
                 predictorResources: {
                   requests: {
                    memory: 1000,
-                   cores: 2,
+                   cores: 2.0,
                    gpus: 1
                   },
                   limits: {
                    memory: 2000,
-                   cores: 3,
+                   cores: 3.0,
                    gpus: 2
                   }
                }
@@ -726,10 +726,10 @@ describe "On #{ENV['OS']}" do
             serving_list = get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/"
             resource_config = JSON.parse(serving_list).select { |serving| serving['name'] == name}[0]['predictorResources']
             expect(resource_config['requests']['memory']).to be 1000
-            expect(resource_config['requests']['cores']).to be 2
+            expect(resource_config['requests']['cores']).to be 2.0
             expect(resource_config['requests']['gpus']).to be 1
             expect(resource_config['limits']['memory']).to be 2000
-            expect(resource_config['limits']['cores']).to be 3
+            expect(resource_config['limits']['cores']).to be 3.0
             expect(resource_config['limits']['gpus']).to be 2
           end
 
@@ -1394,7 +1394,7 @@ describe "On #{ENV['OS']}" do
                 batchingConfiguration: @serving[:batching_configuration],
                 modelVersion: @serving[:model_version],
                 modelServer: parse_model_server(@serving[:model_server]),
-                modelFramework: parse_model_framework(serving[:model_framework]),
+                modelFramework: parse_model_framework(@serving[:model_framework]),
                 servingTool: parse_serving_tool(@serving[:serving_tool]),
                 transformer: "/Projects/#{@project[:projectname]}/Models/irisflowerclassifier/1/transformer.ipynb",
                 requestedInstances: @serving[:instances],

@@ -30,6 +30,7 @@ import io.hops.hopsworks.persistence.entity.kafka.ProjectTopics;
 import io.hops.hopsworks.persistence.entity.kafka.schemas.Subjects;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.serving.BatchingConfiguration;
+import io.hops.hopsworks.persistence.entity.serving.DeployableComponentResources;
 import io.hops.hopsworks.persistence.entity.serving.DockerResourcesConfiguration;
 import io.hops.hopsworks.persistence.entity.serving.InferenceLogging;
 import io.hops.hopsworks.persistence.entity.serving.ModelFramework;
@@ -96,8 +97,8 @@ public class ServingUtil {
     validateServingName(serving, dbServing);
     validateModelPath(serving);
     validateModelVersion(serving);
-    validateModelFramework(serving);
     validateModelServer(serving, dbServing);
+    validateModelFramework(serving);
     validateModelName(serving);
     validateServingTool(serving);
     validateArtifact(project, serving);
@@ -160,7 +161,7 @@ public class ServingUtil {
   
   private void validateModelFramework(Serving serving) {
     if (serving.getModelFramework() == null) {
-      throw new IllegalArgumentException("Model framework not provided");
+      throw new IllegalArgumentException("Model framework not provided or unsupported");
     }
     if (serving.getModelFramework() == ModelFramework.TENSORFLOW
       && serving.getModelServer() != ModelServer.TENSORFLOW_SERVING) {
@@ -243,6 +244,9 @@ public class ServingUtil {
     if (!settings.getKubeInstalled()) {
       return; // validate resources only in kubernetes deployments
     }
+
+    setDefaultResources(serving);
+
     DockerResourcesConfiguration requests = serving.getPredictorResources().getRequests();
     DockerResourcesConfiguration limits = serving.getPredictorResources().getLimits();
     double maxCores = settings.getKubeServingMaxCoresAllocation();
@@ -602,11 +606,36 @@ public class ServingUtil {
   }
   
   private void setDefaultModelName(Serving serving) {
-    if (serving.getModelName() != null) {
-      return;
-    }
     String modelPath = serving.getModelPath();
     String[] split = modelPath.split("/");
     serving.setModelName(split[4]);
+  }
+
+  private void setDefaultResources(Serving serving) {
+    DeployableComponentResources predictorResources = serving.getPredictorResources();
+    if (predictorResources == null) {
+      serving.setPredictorResources(new DeployableComponentResources());
+    } else {
+      if (predictorResources.getRequests() == null) {
+        predictorResources.setRequests(DeployableComponentResources.getDefaultRequestsResources());
+      }
+      if (predictorResources.getLimits() == null) {
+        predictorResources.setLimits(DeployableComponentResources.getDefaultLimitsResources());
+      }
+    }
+
+    if (serving.getTransformer() == null) return;
+
+    DeployableComponentResources transformerResources = serving.getTransformerResources();
+    if (transformerResources == null) {
+      serving.setTransformerResources(new DeployableComponentResources());
+    } else {
+      if (transformerResources.getRequests() == null) {
+        transformerResources.setRequests(DeployableComponentResources.getDefaultRequestsResources());
+      }
+      if (transformerResources.getLimits() == null) {
+        transformerResources.setLimits(DeployableComponentResources.getDefaultLimitsResources());
+      }
+    }
   }
 }

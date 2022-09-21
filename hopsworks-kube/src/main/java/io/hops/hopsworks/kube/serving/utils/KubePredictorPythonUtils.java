@@ -271,8 +271,7 @@ public class KubePredictorPythonUtils {
     envVars.add(new EnvVarBuilder().withName("IS_KUBE").withValue("true").build());
     
     // HSFS and HOPS
-    envVars.add(new EnvVarBuilder()
-      .withName("HADOOP_USER_NAME").withValue(hdfsUsersController.getHdfsUserName(project, user)).build());
+    // if "HADOOP_USER_NAME" is added, downloading the artifact fails with impersonate user error
     envVars.add(new EnvVarBuilder().withName("REST_ENDPOINT").withValue("https://" + serviceDiscoveryController
       .constructServiceFQDNWithPort(ServiceDiscoveryController.HopsworksService.HOPSWORKS_APP)).build());
     envVars.add(new EnvVarBuilder()

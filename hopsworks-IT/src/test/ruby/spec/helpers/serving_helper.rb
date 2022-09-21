@@ -325,16 +325,28 @@ module ServingHelper
     servings.select { |serving| serving['name'] == serving_name}[0]
   end
 
-  def get_istio_inference_path(serving_endpoints)
-    "http://" + serving_endpoints["internalIPs"][0] + ":" + serving_endpoints["internalPort"].to_s + serving_endpoints["internalPath"] + ":predict"
+  def get_inference_endpoints()
+    inference_endpoint = get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/inference/endpoints"
+    expect_status_details(200)
+    inference_endpoint
+  end
+
+  def get_inference_endpoint(inference_endpoints, type)
+    inference_endpoints_json = JSON.parse(inference_endpoints)
+    inference_endpoints_json.select { |endpoint| endpoint['type'] == type}[0]
+  end
+
+  def get_istio_inference_path(serving_name, inference_endpoint)
+    port = inference_endpoint["ports"].select { |port| port['name'] == "HTTP" }[0]
+    "http://" + inference_endpoint["hosts"][0] + ":" + port['number'].to_s + "/v1/models/" + serving_name + ":predict"
   end
 
   def get_istio_serving_host(project_name, serving_name)
     serving_name + "." + get_kube_project_namespace(project_name) + ".hopsworks.ai"
   end
 
-  def make_prediction_request_istio(project_name, serving_name, serving_endpoints, data)
-    endpoint = get_istio_inference_path(serving_endpoints)
+  def make_prediction_request_istio(project_name, serving_name, inference_endpoint, data)
+    endpoint = get_istio_inference_path(serving_name, inference_endpoint)
     host = get_istio_serving_host(project_name, serving_name)
     json_body = nil
     begin

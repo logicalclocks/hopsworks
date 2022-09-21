@@ -187,7 +187,7 @@ describe "On #{ENV['OS']}" do
               }
              }
           expect_status_details(400, error_code: 240025)
-          expect_json(usrMsg: "Request batching is not supported in Python deployments without kserve")
+          expect_json(usrMsg: "Request batching is not supported in Python deployments without KServe")
         end
       end
     end
