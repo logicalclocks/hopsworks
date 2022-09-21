@@ -195,6 +195,20 @@ describe "On #{ENV['OS']}" do
               #start execution
               start_execution(@project[:id], $job_name, expected_status: 400)
             end
+            it "should fail with ContainerCannotRun" do
+              # Check that we set the Reason why a container failed if something other than the application program caused it to fail
+              # In this case we set the memory to 4MB so the docker container can't even boot
+              create_python_job(@project, $job_name, type)
+              config = json_body[:config]
+              config[:'resourceConfig'][:'memory'] = 4
+              create_python_job(@project, $job_name, type, config)
+              start_execution(@project[:id], $job_name, expected_status: 201)
+              execution_id = json_body[:id]
+              wait_for_execution_completed(@project[:id], $job_name, execution_id, "FAILED")
+              get_execution_log(@project[:id], $job_name, execution_id, "err")
+              expect(json_body[:log]).to be_present
+              expect(json_body[:log]).to include("Reason: ContainerCannotRun")
+            end
             it "should start two executions in parallel" do
               create_python_job(@project, $job_name, type)
               begin

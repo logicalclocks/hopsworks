@@ -6,6 +6,7 @@ package io.hops.hopsworks.jobs;
 
 import com.google.common.base.Strings;
 import io.fabric8.kubernetes.api.model.ContainerState;
+import io.fabric8.kubernetes.api.model.ContainerStateTerminated;
 import io.fabric8.kubernetes.api.model.ContainerStatus;
 import io.fabric8.kubernetes.api.model.Pod;
 import io.hops.hopsworks.common.dao.jobhistory.ExecutionFacade;
@@ -87,9 +88,38 @@ public class KubeJobsMonitor implements JobsMonitor {
                   || containerStatus.getName().equals(JobType.DOCKER.getName().toLowerCase())) {
                 ContainerState containerState = containerStatus.getState();
                 if (containerState.getTerminated() != null) {
-                  LOGGER.log(Level.FINEST, "reason: " + containerState.getTerminated().getReason() + ", pod: " + pod);
-                  execution.setState(KubeJobType.getAsJobState(containerState.getTerminated().getReason()));
+                  ContainerStateTerminated containerStateTerminated = containerState.getTerminated();
+                  String reason = containerStateTerminated.getReason();
+                  String message = containerStateTerminated.getMessage();
+                  Integer exitCode = containerStateTerminated.getExitCode();
+                  execution.setState(KubeJobType.getAsJobState(reason));
                   cleanUpExecution(execution, pod);
+                  // Exitcode 0 is successful execution and logs comes from the container
+                  // Exitcode 1 is application failure and logs comes from container
+                  if(exitCode != 0 &&
+                    exitCode != 1 &&
+                    !Strings.isNullOrEmpty(reason)) {
+                    LOGGER.log(Level.FINEST, "reason: " + reason + ", pod: " + pod);
+                    // Write log in Logs dataset
+                    DistributedFileSystemOps udfso = null;
+                    try {
+                      udfso = dfs.getDfsOps(execution.getHdfsUser());
+                      String logMessage = "Job was terminated with" +
+                        " docker exit code: " + exitCode +
+                        ", Reason: " + reason;
+                      if(!Strings.isNullOrEmpty(message)) {
+                        logMessage += ", Message: " + message;
+                      }
+                      if(exitCode == 137) { //137 is the exit code for when a docker container was killed due to oom
+                        logMessage += "\n\nTry increasing the memory for the job.";
+                      }
+                      YarnLogUtil.writeLog(udfso, execution.getStderrPath(), logMessage);
+                    } finally {
+                      if (udfso != null) {
+                        dfs.closeDfsClient(udfso);
+                      }
+                    }
+                  }
                 } else if (containerState.getWaiting() != null) {
                   String reason = containerState.getWaiting().getReason();
                   String message = containerState.getWaiting().getMessage();
