@@ -43,6 +43,7 @@ import io.hops.hopsworks.common.featurestore.FeaturestoreController;
 import io.hops.hopsworks.common.featurestore.FeaturestoreDTO;
 import io.hops.hopsworks.common.featurestore.OptionDTO;
 import io.hops.hopsworks.common.featurestore.app.FsJobManagerController;
+import io.hops.hopsworks.common.featurestore.featuregroup.ImportFgJobConf;
 import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupController;
 import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupDTO;
 import io.hops.hopsworks.common.featurestore.featuregroup.IngestionJob;
@@ -714,4 +715,28 @@ public class FeaturegroupService {
     this.tagResource.setFeatureGroup(featuregroup);
     return this.tagResource;
   }
+
+  @POST
+  @Path("/import")
+  @Consumes(MediaType.APPLICATION_JSON)
+  @Produces(MediaType.APPLICATION_JSON)
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
+  @JWTRequired(acceptedTokens = {Audience.API, Audience.JOB},
+          allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
+  @ApiKeyRequired(acceptedScopes = {ApiScope.FEATURESTORE},
+          allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
+  @ApiOperation(value = "Import data into a feature group",
+          response = JobDTO.class)
+  public Response importFeatureGroup(@Context SecurityContext sc,
+                               @Context HttpServletRequest req,
+                               @Context UriInfo uriInfo,
+                               ImportFgJobConf importFgJobConf)
+          throws FeaturestoreException, JobException, ProjectException, ServiceException, GenericException {
+
+    Users user = jWTHelper.getUserPrincipal(sc);
+    Jobs importDataJob = fsJobManagerController.setupImportFgJob(project, user, featurestore, importFgJobConf);
+    JobDTO jobDTO = jobsBuilder.build(uriInfo, new ResourceRequest(ResourceRequest.Name.JOBS), importDataJob);
+    return Response.created(jobDTO.getHref()).entity(jobDTO).build();
+  }
+
 }
