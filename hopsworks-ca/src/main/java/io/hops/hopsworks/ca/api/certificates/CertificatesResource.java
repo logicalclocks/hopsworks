@@ -39,11 +39,31 @@
 
 package io.hops.hopsworks.ca.api.certificates;
 
+import io.hops.hopsworks.ca.api.filter.Audience;
+import io.hops.hopsworks.ca.api.filter.NoCacheResponse;
+import io.hops.hopsworks.ca.controllers.CAException;
+import io.hops.hopsworks.ca.controllers.PKI;
+import io.hops.hopsworks.ca.controllers.PKIUtils;
+import io.hops.hopsworks.jwt.annotation.JWTRequired;
+import io.hops.hopsworks.persistence.entity.pki.PKICertificate;
 import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiParam;
 
+import javax.ejb.EJB;
 import javax.enterprise.context.RequestScoped;
 import javax.inject.Inject;
+import javax.ws.rs.GET;
 import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
+import javax.ws.rs.core.GenericEntity;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
+import java.io.IOException;
+import java.security.GeneralSecurityException;
+import java.security.cert.X509Certificate;
 
 @Path("/certificate")
 @RequestScoped
@@ -62,6 +82,12 @@ public class CertificatesResource {
   private ProjectCertsResource projectCertsResource;
   @Inject
   private CRLResource crlResource;
+  @EJB
+  private PKI pki;
+  @EJB
+  private PKIUtils pkiUtils;
+  @EJB
+  private NoCacheResponse noCacheResponse;
 
   @Path("/host")
   public HostCertsResource getHostCertsResource() {
@@ -91,5 +117,27 @@ public class CertificatesResource {
   @Path("/crl")
   public CRLResource getCrlResource() {
     return crlResource;
+  }
+
+  @GET
+  @Path("/{name}")
+  @Produces(MediaType.APPLICATION_JSON)
+  @ApiOperation(value = "Get x509 certificate in pem format", response = CSRView.class)
+  @JWTRequired(acceptedTokens={Audience.SERVICES, Audience.API}, allowedUserRoles={"HOPS_ADMIN"})
+  public Response getCertificate(
+      @ApiParam(value = "X.500 name of the Certificate", required = true)
+      @PathParam("name") String name,
+      @ApiParam(value = "Status of certificate", required = true, allowableValues = "VALID, REVOKED, EXPIRED")
+      @QueryParam("status") PKICertificate.Status status
+  ) throws CAException, IOException {
+    try {
+      X509Certificate certificate = pki.loadCertificate(name, status);
+      String pemified = pkiUtils.convertToPEM(certificate);
+      CSRView cert = new CSRView(pemified, null, null);
+      GenericEntity<CSRView> csrViewGenericEntity = new GenericEntity<CSRView>(cert) { };
+      return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(csrViewGenericEntity).build();
+    } catch (GeneralSecurityException ex) {
+      throw pkiUtils.certificateLoadingExceptionConvertToCAException(ex);
+    }
   }
 }

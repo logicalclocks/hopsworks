@@ -51,6 +51,7 @@ public class ApplicationConfig extends ResourceConfig {
    * adding manually all the restful services of the application.
    */
   public ApplicationConfig() {
+    register(io.hops.hopsworks.ca.api.certificates.PKIResource.class);
     register(io.hops.hopsworks.ca.api.certificates.CertificatesResource.class);
     register(io.hops.hopsworks.ca.api.certificates.ProjectCertsResource.class);
     register(io.hops.hopsworks.ca.api.certificates.HostCertsResource.class);

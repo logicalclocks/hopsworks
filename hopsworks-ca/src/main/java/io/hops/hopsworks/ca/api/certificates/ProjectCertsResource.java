@@ -20,16 +20,19 @@ import com.google.common.base.Strings;
 import io.hops.hopsworks.ca.api.filter.Audience;
 import io.hops.hopsworks.ca.api.filter.NoCacheResponse;
 import io.hops.hopsworks.ca.controllers.CAException;
-import io.hops.hopsworks.ca.controllers.OpensslOperations;
+import io.hops.hopsworks.ca.controllers.CAInitializationException;
 import io.hops.hopsworks.ca.controllers.PKI;
+import io.hops.hopsworks.ca.controllers.PKIUtils;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
-import org.javatuples.Pair;
+import org.apache.commons.lang3.tuple.Pair;
+import org.bouncycastle.operator.OperatorCreationException;
 
 import javax.ejb.EJB;
 import javax.enterprise.context.RequestScoped;
+import javax.naming.InvalidNameException;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.POST;
@@ -39,6 +42,8 @@ import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.io.IOException;
+import java.security.GeneralSecurityException;
+import java.security.cert.X509Certificate;
 
 import static io.hops.hopsworks.ca.controllers.CertificateType.PROJECT;
 
@@ -47,9 +52,9 @@ import static io.hops.hopsworks.ca.controllers.CertificateType.PROJECT;
 public class ProjectCertsResource {
 
   @EJB
-  private OpensslOperations opensslOperations;
-  @EJB
   private NoCacheResponse noCacheResponse;
+  @EJB
+  private PKIUtils pkiUtils;
   @EJB
   private PKI pki;
 
@@ -63,12 +68,16 @@ public class ProjectCertsResource {
       throw new IllegalArgumentException("Empty CSR");
     }
 
-    String signedCert = opensslOperations.signCertificateRequest(csrView.getCsr(), PROJECT);
-
-    Pair<String, String> chainOfTrust = pki.getChainOfTrust(pki.getResponsibileCA(PROJECT));
-    CSRView signedCsr = new CSRView(signedCert, chainOfTrust.getValue0(), chainOfTrust.getValue1());
-    GenericEntity<CSRView> csrViewGenericEntity = new GenericEntity<CSRView>(signedCsr) { };
-    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(csrViewGenericEntity).build();
+    try {
+      X509Certificate signedCert = pki.signCertificateSigningRequest(csrView.getCsr(), PROJECT);
+      String stringifiedCert = pkiUtils.convertToPEM(signedCert);
+      Pair<String, String> chainOfTrust = pki.getChainOfTrust(pkiUtils.getResponsibleCA(PROJECT));
+      CSRView signedCsr = new CSRView(stringifiedCert, chainOfTrust.getLeft(), chainOfTrust.getRight());
+      GenericEntity<CSRView> csrViewGenericEntity = new GenericEntity<CSRView>(signedCsr) { };
+      return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(csrViewGenericEntity).build();
+    } catch (IOException | GeneralSecurityException | OperatorCreationException | CAInitializationException ex) {
+      throw pkiUtils.csrSigningExceptionConvertToCAException(ex, PROJECT);
+    }
   }
 
   @ApiOperation(value = "Revoke Project certificate")
@@ -82,7 +91,11 @@ public class ProjectCertsResource {
       throw new IllegalArgumentException("Empty certificate identifier");
     }
 
-    opensslOperations.revokeCertificate(certId, PROJECT);
-    return Response.ok().build();
+    try {
+      pki.revokeCertificate(certId, PROJECT);
+      return Response.ok().build();
+    } catch (InvalidNameException | GeneralSecurityException | CAInitializationException ex) {
+      throw pkiUtils.certificateRevocationExceptionConvertToCAException(ex, PROJECT);
+    }
   }
 }

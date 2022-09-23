@@ -38,321 +38,957 @@
  */
 package io.hops.hopsworks.ca.controllers;
 
-import io.hops.hopsworks.ca.controllers.CAConf.CAConfKeys;
-import org.apache.commons.io.FileUtils;
-import org.javatuples.Pair;
+import com.google.common.annotations.VisibleForTesting;
+import io.hops.hadoop.shaded.com.google.gson.Gson;
+import io.hops.hopsworks.ca.configuration.CAConf;
+import io.hops.hopsworks.ca.configuration.CAConfiguration;
+import io.hops.hopsworks.ca.configuration.CAsConfiguration;
+import io.hops.hopsworks.ca.configuration.KubeCAConfiguration;
+import io.hops.hopsworks.ca.configuration.SubjectAlternativeName;
+import io.hops.hopsworks.ca.persistence.CRLFacade;
+import io.hops.hopsworks.ca.persistence.KeyFacade;
+import io.hops.hopsworks.ca.persistence.SerialNumberFacade;
+import io.hops.hopsworks.ca.persistence.PKICertificateFacade;
+import io.hops.hopsworks.persistence.entity.pki.CAType;
+import io.hops.hopsworks.persistence.entity.pki.PKICertificateId;
+import io.hops.hopsworks.persistence.entity.pki.PKICrl;
+import io.hops.hopsworks.persistence.entity.pki.PKIKey;
+import io.hops.hopsworks.persistence.entity.pki.KeyIdentifier;
+import io.hops.hopsworks.persistence.entity.pki.PKICertificate;
+import org.apache.commons.lang3.tuple.Pair;
+import org.bouncycastle.asn1.x500.X500Name;
+import org.bouncycastle.asn1.x500.X500NameBuilder;
+import org.bouncycastle.asn1.x500.style.BCStrictStyle;
+import org.bouncycastle.asn1.x500.style.BCStyle;
+import org.bouncycastle.asn1.x509.AuthorityKeyIdentifier;
+import org.bouncycastle.asn1.x509.BasicConstraints;
+import org.bouncycastle.asn1.x509.CRLReason;
+import org.bouncycastle.asn1.x509.Extension;
+import org.bouncycastle.asn1.x509.ExtensionsGenerator;
+import org.bouncycastle.asn1.x509.GeneralName;
+import org.bouncycastle.asn1.x509.GeneralNames;
+import org.bouncycastle.asn1.x509.KeyUsage;
+import org.bouncycastle.asn1.x509.SubjectKeyIdentifier;
+import org.bouncycastle.cert.CertIOException;
+import org.bouncycastle.cert.X509CRLHolder;
+import org.bouncycastle.cert.X509CertificateHolder;
+import org.bouncycastle.cert.X509v2CRLBuilder;
+import org.bouncycastle.cert.X509v3CertificateBuilder;
+import org.bouncycastle.cert.jcajce.JcaX509CRLConverter;
+import org.bouncycastle.cert.jcajce.JcaX509CertificateConverter;
+import org.bouncycastle.cert.jcajce.JcaX509CertificateHolder;
+import org.bouncycastle.cert.jcajce.JcaX509ExtensionUtils;
+import org.bouncycastle.cert.jcajce.JcaX509v2CRLBuilder;
+import org.bouncycastle.cert.jcajce.JcaX509v3CertificateBuilder;
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
+import org.bouncycastle.openssl.PEMParser;
+import org.bouncycastle.operator.ContentSigner;
+import org.bouncycastle.operator.OperatorCreationException;
+import org.bouncycastle.operator.jcajce.JcaContentSignerBuilder;
+import org.bouncycastle.pkcs.PKCS10CertificationRequest;
 
 import javax.annotation.PostConstruct;
+import javax.ejb.DependsOn;
 import javax.ejb.EJB;
-import javax.ejb.Stateless;
-import java.io.File;
+import javax.ejb.Singleton;
+import javax.ejb.TransactionAttribute;
+import javax.ejb.TransactionAttributeType;
+import javax.naming.InvalidNameException;
 import java.io.IOException;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.text.SimpleDateFormat;
+import java.io.StringReader;
+import java.math.BigInteger;
+import java.security.GeneralSecurityException;
+import java.security.InvalidKeyException;
+import java.security.KeyException;
+import java.security.KeyFactory;
+import java.security.KeyPair;
+import java.security.KeyPairGenerator;
+import java.security.NoSuchAlgorithmException;
+import java.security.PrivateKey;
+import java.security.Provider;
+import java.security.PublicKey;
+import java.security.Security;
+import java.security.SignatureException;
+import java.security.cert.CRLException;
+import java.security.cert.CertificateEncodingException;
+import java.security.cert.CertificateException;
+import java.security.cert.X509CRL;
+import java.security.cert.X509Certificate;
+import java.security.spec.InvalidKeySpecException;
+import java.security.spec.PKCS8EncodedKeySpec;
+import java.security.spec.RSAKeyGenParameterSpec;
+import java.security.spec.X509EncodedKeySpec;
+import java.time.Duration;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
+import java.time.temporal.TemporalAmount;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
-import java.util.TimeZone;
-import java.util.concurrent.TimeUnit;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import java.util.Optional;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.Function;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
-@Stateless
+@Singleton
+@DependsOn("CAConf")
+@TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
 public class PKI {
+  private static final Logger LOGGER = Logger.getLogger(PKI.class.getName());
+  private final RSAKeyGenParameterSpec keyGenSpecs = new RSAKeyGenParameterSpec(4096, RSAKeyGenParameterSpec.F4);
+  private final Map<CAType, KeyPair> caKeys = new HashMap<>(3);
+  private final Map<CAType, X509Certificate> caCertificates = new HashMap<>(3);
+
+  public static final String SIGNATURE_ALGORITHM = "SHA256WithRSAEncryption";
+  private static final CRLReason REVOCATION_REASON = CRLReason.lookup(CRLReason.privilegeWithdrawn);
+
+  private final AtomicBoolean CA_INITIALIZED = new AtomicBoolean(false);
 
   @EJB
-  private CAConf CAConf;
+  private SerialNumberFacade serialNumberFacade;
+  @EJB
+  private KeyFacade keyFacade;
+  @EJB
+  private PKICertificateFacade pkiCertificateFacade;
+  @EJB
+  private PKIUtils pkiUtils;
+  @EJB
+  private CRLFacade crlFacade;
+  @EJB
+  private CAConf caConf;
 
-  private Map<CAType, String> caPubCertCache = new HashMap<>();
-  private SimpleDateFormat dateFormat = null;
-
-  private final static long TEN_YEARS = 3650;
-  private static final Map<String, TimeUnit> TIME_SUFFIXES;
-
-  private static final Pattern SUBJECT_PATTERN = Pattern.compile("(([\\w\\.]+\\s?)=(\\s?[\\w\\.\\-@~\\+\\?%:]+))");
-  private static final String SUBJECT = "subject=";
-
-  private static final String CERTIFICATE_TYPE_NOT_RECOGNIZED_ERR = "Certificate type not recognized";
-  private static final String CA_TYPE_NOT_RECOGNIZED_ERR = "CA type not recognized";
+  private KeyPairGenerator keyPairGenerator;
+  private KeyFactory keyFactory;
+  private JcaX509CertificateConverter converter;
+  private JcaX509CRLConverter crlConverter;
+  private CAsConfiguration conf;
+  private static final Map<CAType, X500Name> CA_SUBJECT_NAME = new HashMap<>(3);
 
   static {
-    TIME_SUFFIXES = new HashMap<>(5);
-    TIME_SUFFIXES.put("ms", TimeUnit.MILLISECONDS);
-    TIME_SUFFIXES.put("s", TimeUnit.SECONDS);
-    TIME_SUFFIXES.put("m", TimeUnit.MINUTES);
-    TIME_SUFFIXES.put("h", TimeUnit.HOURS);
-    TIME_SUFFIXES.put("d", TimeUnit.DAYS);
-  }
-  private static final Pattern TIME_CONF_PATTERN = Pattern.compile("([0-9]+)([a-z]+)?");
+    X500NameBuilder rootNameBuilder = new X500NameBuilder(BCStrictStyle.INSTANCE);
+    rootNameBuilder.addRDN(BCStyle.C, "SE");
+    rootNameBuilder.addRDN(BCStyle.O, "Hopsworks");
+    rootNameBuilder.addRDN(BCStyle.OU, "core");
+    rootNameBuilder.addRDN(BCStyle.CN, "HopsRootCA");
+    X500Name rootCAName = rootNameBuilder.build();
+    CA_SUBJECT_NAME.put(CAType.ROOT, rootCAName);
 
+    X500NameBuilder intermediateNameBuilder = new X500NameBuilder(BCStrictStyle.INSTANCE);
+    intermediateNameBuilder.addRDN(BCStyle.C, "SE");
+    intermediateNameBuilder.addRDN(BCStyle.O, "Hopsworks");
+    intermediateNameBuilder.addRDN(BCStyle.OU, "core");
+    intermediateNameBuilder.addRDN(BCStyle.CN, "HopsIntermediateCA");
+    X500Name intermediateCAName = intermediateNameBuilder.build();
+    CA_SUBJECT_NAME.put(CAType.INTERMEDIATE, intermediateCAName);
+
+    X500NameBuilder kubeNameBuilder = new X500NameBuilder(BCStrictStyle.INSTANCE);
+    kubeNameBuilder.addRDN(BCStyle.C, "SE");
+    kubeNameBuilder.addRDN(BCStyle.O, "Hopsworks");
+    kubeNameBuilder.addRDN(BCStyle.OU, "core");
+    kubeNameBuilder.addRDN(BCStyle.CN, "KubeHopsIntermediateCA");
+    X500Name kubeName = kubeNameBuilder.build();
+    CA_SUBJECT_NAME.put(CAType.KUBECA, kubeName);
+  }
 
   @PostConstruct
   public void init() {
-    dateFormat = new SimpleDateFormat("yyMMddHHmmss");
-    dateFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
-  }
+    try {
+      Security.addProvider(new BouncyCastleProvider());
+      Provider[] providers = Security.getProviders();
 
-  public String getCertFileName(CertificateType certType, Map<String, String> subject) {
-    switch (certType) {
-      case APP:
-        return subject.get("CN") + "__" + subject.get("O") + "__" + subject.get("OU");
-      case HOST:
-        return subject.get("CN") + "__" + subject.get("L") + "__" + subject.get("OU");
-      default:
-        return subject.get("CN");
+      keyPairGenerator = KeyPairGenerator
+          .getInstance("RSA", new BouncyCastleProvider());
+      keyPairGenerator.initialize(keyGenSpecs);
+
+      keyFactory = KeyFactory.getInstance("RSA");
+      converter = new JcaX509CertificateConverter().setProvider(new BouncyCastleProvider());
+      crlConverter = new JcaX509CRLConverter().setProvider(new BouncyCastleProvider());
+      configure();
+    } catch (GeneralSecurityException ex) {
+      throw new RuntimeException("Failed to initialize PKI", ex);
     }
   }
 
-  public String getValidityPeriod(CertificateType certType) {
-    switch (certType) {
-      case APP:
-        return getAppCertificateValidityPeriod();
-      case HOST:
-        return getServiceCertificateValidityPeriod();
-      case DELA: case KUBE: case PROJECT:
-        return getExpirationDateASN1(TimeUnit.MILLISECONDS.convert(TEN_YEARS, TimeUnit.DAYS));
-      default:
-        throw new IllegalArgumentException(CERTIFICATE_TYPE_NOT_RECOGNIZED_ERR);
+  public void configure() {
+    conf = loadConfiguration();
+    overrideCAX500Names(conf);
+  }
+
+  protected static final CAsConfiguration EMPTY_CONFIGURATION = new CAsConfiguration(null, null, null);
+
+  protected CAsConfiguration loadConfiguration() {
+    String rawConf = caConf.getString(CAConf.CAConfKeys.CA_CONFIGURATION);
+    if (rawConf.isEmpty()) {
+      return EMPTY_CONFIGURATION;
+    }
+    Gson gson = new Gson();
+    return gson.fromJson(rawConf, CAsConfiguration.class);
+  };
+
+  protected void overrideCAX500Names(CAsConfiguration conf) {
+    conf.getRootCA().flatMap(CAConfiguration::getX509Name).ifPresent((v) -> CA_SUBJECT_NAME.put(CAType.ROOT,
+        new X500Name(BCStyle.INSTANCE, v)));
+    conf.getIntermediateCA().flatMap(CAConfiguration::getX509Name)
+        .ifPresent((v) -> CA_SUBJECT_NAME.put(CAType.INTERMEDIATE, new X500Name(BCStyle.INSTANCE, v)));
+    conf.getKubernetesCA().flatMap(CAConfiguration::getX509Name).ifPresent((v) -> CA_SUBJECT_NAME.put(CAType.KUBECA,
+        new X500Name(BCStyle.INSTANCE, v)));
+  }
+
+  protected void maybeInitializeCA() throws GeneralSecurityException, IOException, OperatorCreationException {
+    if (!CA_INITIALIZED.getAndSet(true)) {
+      try {
+        initializeCertificateAuthorities();
+      } catch (Exception ex) {
+        CA_INITIALIZED.set(false);
+        throw ex;
+      }
     }
   }
 
-  private String getServiceCertificateValidityPeriod() {
-    long validityMs = -1;
-    if (!CAConf.getBoolean(CAConfKeys.SERVICE_KEY_ROTATION_ENABLED)){
-      validityMs = TimeUnit.MILLISECONDS.convert(TEN_YEARS, TimeUnit.DAYS);
-    } else {
-      // Add 4 days just to be sure.
-      validityMs = getCertificateValidityInMS(CAConf.getString(CAConfKeys.SERVICE_KEY_ROTATION_INTERVAL) +
-        TimeUnit.MILLISECONDS.convert(4, TimeUnit.DAYS));
+  public Pair<String, String> getChainOfTrust(CAType type) throws CAInitializationException, IOException,
+      GeneralSecurityException {
+    try {
+      maybeInitializeCA();
+    } catch (Exception ex) {
+      LOGGER.log(Level.SEVERE, "Failed to initialize CA", ex);
+      throw new CAInitializationException(ex);
     }
-
-    return getExpirationDateASN1(validityMs);
-  }
-
-  private String getAppCertificateValidityPeriod() {
-    return getExpirationDateASN1(
-        getCertificateValidityInMS(CAConf.getString(CAConfKeys.APPLICATION_CERTIFICATE_VALIDITY_PERIOD)));
-  }
-
-  private long getCertificateValidityInMS(String rawConfigurationProperty) {
-    Long timeValue = getConfTimeValue(rawConfigurationProperty);
-    TimeUnit unitValue = getConfTimeTimeUnit(rawConfigurationProperty);
-    return TimeUnit.MILLISECONDS.convert(timeValue, unitValue);
-  }
-
-  private static final long FIVE_MINUTES_IN_MS = TimeUnit.MINUTES.toMillis(5);
-  public String getStartDateASN1() {
-    return dateFormat.format(new Date(System.currentTimeMillis() - FIVE_MINUTES_IN_MS)) + 'Z';
-  }
-
-  /**
-   * Format date ASN1 UTCTime
-   */
-  private String getExpirationDateASN1(long validityMS) {
-    return dateFormat.format(new Date(System.currentTimeMillis() + validityMS)) + 'Z';
-  }
-
-  public Map<String, String> getKeyValuesFromSubject(String subject) {
-    if (subject == null || subject.isEmpty()) {
-      return null;
+    String intermediateCert = null;
+    if (type != CAType.ROOT) {
+      intermediateCert = pkiUtils.convertToPEM(caCertificates.get(type));
     }
-
-    // Remove front subject= before using the regex
-    subject = subject.replaceFirst(SUBJECT, "");
-    Matcher matcher = SUBJECT_PATTERN.matcher(subject);
-
-    HashMap<String, String> keyValStore = new HashMap<>();
-    while (matcher.find()) {
-      keyValStore.put(matcher.group(2).trim(), matcher.group(3).trim());
-    }
-
-    return keyValStore;
+    String rootCert = pkiUtils.convertToPEM(caCertificates.get(CAType.ROOT));
+    return Pair.of(rootCert, intermediateCert);
   }
 
+  public String getCertificateRevocationListPEM(CAType type) throws CAInitializationException,
+      GeneralSecurityException, IOException {
+    try {
+      maybeInitializeCA();
+    } catch (Exception ex) {
+      LOGGER.log(Level.SEVERE, "Failed to initialize CA", ex);
+      throw new CAInitializationException(ex);
+    }
+    X509CRL crl = loadCRL(type);
+    return pkiUtils.convertToPEM(crl);
+  }
 
-  /**
-   * This function provides a mapping between certificate types and the corresponding CA
-   * @param certType
-   * @return
-   */
-  public CAType getResponsibileCA(CertificateType certType) {
-    switch (certType) {
-      case HOST: case DELA: case APP: case PROJECT:
-        return CAType.INTERMEDIATE;
-      case KUBE:
-        return CAType.KUBECA;
-      default:
-        throw new IllegalArgumentException(CERTIFICATE_TYPE_NOT_RECOGNIZED_ERR);
+  protected void initializeCertificateAuthorities() throws GeneralSecurityException, IOException,
+      OperatorCreationException {
+    for (CAType ca : CAType.values()) {
+      initializeCertificateAuthority(ca);
     }
   }
 
-  public enum CAType {
-    ROOT,
-    INTERMEDIATE,
-    KUBECA
+  private void initializeCertificateAuthority(CAType caType) throws IOException, GeneralSecurityException,
+      OperatorCreationException {
+    caInitializeSerialNumber(caType);
+
+    caInitializeKeys(caType);
+
+    caInitializeCertificate(caType);
+
+    caInitializeCRL(caType);
   }
 
-  public String getCAParentPath(CAType caType) {
-    switch (caType) {
+  protected void caInitializeSerialNumber(CAType type) {
+    if (!serialNumberFacade.isInitialized(type)) {
+      serialNumberFacade.initialize(type);
+    }
+  }
+
+  protected void caInitializeKeys(CAType type) throws InvalidKeySpecException {
+    Pair<Boolean, KeyPair> kp = loadOrGenerateKeypair(type.name());
+    if (!kp.getLeft()) {
+      LOGGER.log(Level.INFO, "Saving key pair for " + type.name());
+      PKIKey privateKey = new PKIKey(new KeyIdentifier(type.name(), PKIKey.Type.PRIVATE),
+          kp.getRight().getPrivate().getEncoded());
+      PKIKey publicKey = new PKIKey(new KeyIdentifier(type.name(), PKIKey.Type.PUBLIC),
+          kp.getRight().getPublic().getEncoded());
+      saveKeys(privateKey, publicKey);
+    }
+    caKeys.put(type, kp.getRight());
+  }
+
+  protected void caInitializeCertificate(CAType type) throws IOException, GeneralSecurityException,
+      OperatorCreationException {
+    Pair<Boolean, X509Certificate> certificatePair = loadOrGenerateCACertificate(type);
+    X509Certificate certificate = certificatePair.getRight();
+    if (!certificatePair.getLeft()) {
+      LOGGER.log(Level.INFO, "Saving certificate for " + type);
+      saveNewCertificate(CAType.ROOT, certificate);
+    }
+    caCertificates.put(type, certificate);
+  }
+
+  protected void caInitializeCRL(CAType type) throws GeneralSecurityException, CertIOException {
+    LOGGER.log(Level.INFO, "Initializing Certificate Revocation List for " + type);
+    if (crlFacade.exist(type)) {
+      LOGGER.log(Level.INFO, "Skip CRL initialization for " + type + " as it already exists");
+      return;
+    }
+    KeyPair keyPair = getCAKeyPair(type);
+    X509Certificate certificate = getCACertificate(type);
+    Instant now = Instant.now();
+    LOGGER.log(Level.INFO, "Generating initial CRL for " + type);
+    X509v2CRLBuilder builder = new JcaX509v2CRLBuilder(certificate, Date.from(now));
+    Instant nextUpdate = now.plus(1, ChronoUnit.DAYS);
+    builder.setNextUpdate(Date.from(nextUpdate));
+
+    JcaX509ExtensionUtils extUtils = new JcaX509ExtensionUtils();
+    builder.addExtension(Extension.authorityKeyIdentifier, false,
+        extUtils.createAuthorityKeyIdentifier(certificate));
+    try {
+      ContentSigner signer = new JcaContentSignerBuilder(SIGNATURE_ALGORITHM)
+          .setProvider(new BouncyCastleProvider())
+          .build(keyPair.getPrivate());
+      X509CRLHolder holder = builder.build(signer);
+      X509CRL crl = crlConverter.getCRL(holder);
+      initCRL(type, crl);
+      LOGGER.log(Level.INFO, "Finished initializing CRL for " + type);
+    } catch (OperatorCreationException ex) {
+      throw new GeneralSecurityException(ex);
+    }
+  }
+
+  protected void initCRL(CAType type, X509CRL crl) throws CRLException {
+    PKICrl pkiCrl = new PKICrl(type, crl.getEncoded());
+    crlFacade.init(pkiCrl);
+  }
+
+  protected void updateCRL(CAType type, X509CRL crl) throws CRLException {
+    PKICrl pkiCrl = new PKICrl(type, crl.getEncoded());
+    crlFacade.update(pkiCrl);
+  }
+
+  protected void saveNewCertificate(CAType caType, X509Certificate certificate) throws CertificateEncodingException {
+    Long serialNumber = certificate.getSerialNumber().longValue();
+    String subject = certificate.getSubjectDN().toString();
+    byte[] certEncoded = certificate.getEncoded();
+    PKICertificateId id = new PKICertificateId(PKICertificate.Status.VALID, subject);
+    PKICertificate certificateToSave = new PKICertificate(id, caType, serialNumber, certEncoded,
+        certificate.getNotBefore(), certificate.getNotAfter());
+    pkiCertificateFacade.saveCertificate(certificateToSave);
+  }
+
+  protected Pair<Boolean, KeyPair> loadOrGenerateKeypair(String owner) throws InvalidKeySpecException {
+    LOGGER.log(Level.INFO, "Loading key pair for " + owner);
+    Optional<KeyPair> kp = loadKeypair(owner);
+    if (kp.isPresent()) {
+      LOGGER.log(Level.INFO, "Loaded key pair for " + owner);
+      return Pair.of(true, kp.get());
+    }
+    LOGGER.log(Level.INFO, "Key pair for " + owner + " does NOT exist, generating new");
+    return Pair.of(false, generateKeyPair());
+  }
+
+  @TransactionAttribute(TransactionAttributeType.NEVER)
+  protected KeyPair generateKeyPair() {
+    return keyPairGenerator.generateKeyPair();
+  }
+
+  protected Optional<KeyPair> loadKeypair(String owner) throws InvalidKeySpecException {
+    byte[] privateKey = keyFacade.getEncodedKey(owner, PKIKey.Type.PRIVATE);
+    if (privateKey != null) {
+      byte[] publicKey = keyFacade.getEncodedKey(owner, PKIKey.Type.PUBLIC);
+      return Optional.of(restoreKeypair(privateKey, publicKey));
+    }
+    return Optional.empty();
+  }
+
+  protected void saveKeys(PKIKey privateKey, PKIKey publicKey) {
+    keyFacade.saveKey(privateKey);
+    keyFacade.saveKey(publicKey);
+    LOGGER.log(Level.INFO, "Saved keys");
+  }
+
+  private KeyPair restoreKeypair(byte[] privateKey, byte[] publicKey) throws InvalidKeySpecException {
+    PrivateKey prK = keyFactory.generatePrivate(new PKCS8EncodedKeySpec(privateKey));
+    PublicKey puK = keyFactory.generatePublic(new X509EncodedKeySpec(publicKey));
+    return new KeyPair(puK, prK);
+  }
+
+  protected Pair<Boolean, X509Certificate> loadOrGenerateCACertificate(CAType type) throws IOException,
+      CertificateException, NoSuchAlgorithmException, CertificateException, KeyException, OperatorCreationException {
+    LOGGER.log(Level.INFO, "Loading certificate for " + type);
+
+    X500Name name = CA_SUBJECT_NAME.get(type);
+    Optional<X509Certificate> cert = loadCertificate(name.toString());
+    if (cert.isPresent()) {
+      LOGGER.log(Level.INFO, "Loaded ROOT CA certificate");
+      return Pair.of(true, cert.get());
+    }
+
+    switch (type) {
       case ROOT:
-        return CAConf.getString(CAConfKeys.CERTS_DIR);
+        LOGGER.log(Level.INFO, "Root CA certificate does not exist, generating...");
+        return Pair.of(false, generateRootCACertificate());
       case INTERMEDIATE:
-        return CAConf.getString(CAConfKeys.CERTS_DIR) + "/intermediate";
+        LOGGER.log(Level.INFO, "Intermediate CA certificate does not exist, generating...");
+        return Pair.of(false, generateCertificate(prepareIntermediateCAGenerationParams()));
       case KUBECA:
-        return CAConf.getString(CAConfKeys.CERTS_DIR) + "/kube";
+        LOGGER.log(Level.INFO, "Kubernetes CA certificate does not exist, generating...");
+        return Pair.of(false, generateCertificate(prepareKubernetesCAGenerationParams()));
       default:
-        throw new IllegalArgumentException(CA_TYPE_NOT_RECOGNIZED_ERR);
+        throw new RuntimeException("Unknown CA type " + type);
     }
   }
 
-  public String getCAKeyPassword(CAType caType) {
-    switch (caType) {
-      case ROOT: case INTERMEDIATE:
-        return CAConf.getString(CAConfKeys.HOPSWORKS_SSL_MASTER_PASSWORD);
-      case KUBECA:
-        return CAConf.getString(CAConfKeys.KUBE_CA_PASSWORD);
-      default:
-        throw new IllegalArgumentException(CA_TYPE_NOT_RECOGNIZED_ERR);
+  protected Optional<X509Certificate> loadCertificate(String subject) throws IOException, CertificateException {
+    LOGGER.log(Level.INFO, "Loading certificate with subject " + subject);
+    Optional<PKICertificate> pkiCert = pkiCertificateFacade.findBySubjectAndStatus(subject,
+        PKICertificate.Status.VALID);
+    if (!pkiCert.isPresent()) {
+      LOGGER.log(Level.INFO, "There is no certificate with subject: " + subject);
+      return Optional.empty();
     }
+    LOGGER.log(Level.INFO, "Found encoded certificate and decoding it to " + X509Certificate.class.getName());
+    byte[] encoded = pkiCert.get().getCertificate();
+    X509Certificate certificate = converter.getCertificate(new X509CertificateHolder(encoded));
+    return Optional.of(certificate);
   }
 
-  public Path getCAConfPath(CAType caType) {
-    switch (caType) {
-      case ROOT:
-        return Paths.get(getCAParentPath(CAType.ROOT), "openssl-ca.cnf");
-      case INTERMEDIATE:
-        return Paths.get(getCAParentPath(CAType.INTERMEDIATE), "openssl-intermediate.cnf");
-      case KUBECA:
-        return Paths.get(getCAParentPath(CAType.KUBECA), "kube-ca.cnf");
-      default:
-        throw new IllegalArgumentException(CA_TYPE_NOT_RECOGNIZED_ERR);
+  private final Duration ROOT_CA_DEFAULT_VALIDITY_PERIOD = Duration.of(PKIUtils.TEN_YEARS, ChronoUnit.DAYS);
+  private final Duration INTERMEDIATE_CA_DEFAULT_VALIDITY_PERIOD = Duration.of(PKIUtils.TEN_YEARS, ChronoUnit.DAYS);
+  private final Duration KUBERNETES_CA_DEFAULT_VALIDITY_PERIOD = Duration.of(PKIUtils.TEN_YEARS, ChronoUnit.DAYS);
+  private Duration getCAValidityPeriod(Optional<CAConfiguration> conf, Duration defaultDuration) {
+    if (conf.isPresent() && conf.get().getValidityDuration().isPresent()) {
+      return pkiUtils.parseDuration(conf.get().getValidityDuration().get());
     }
+    return defaultDuration;
   }
 
-  public Path getCACertsDir(CAType caType) {
-    return Paths.get(getCAParentPath(caType), "certs");
-  }
-
-  public Path getCAKeysDir(CAType caType) {
-    return Paths.get(getCAParentPath(caType), "private");
-  }
-
-  public Path getCACRLPath(CAType caType){
-    switch (caType) {
-      case ROOT:
-        return Paths.get(getCAParentPath(CAType.ROOT), "crl", "ca.crl.pem");
-      case INTERMEDIATE:
-        return Paths.get(getCAParentPath(CAType.INTERMEDIATE), "crl", "intermediate.crl.pem");
-      case KUBECA:
-        return Paths.get(getCAParentPath(CAType.KUBECA), "crl", "kube-ca.crl.pem");
-      default:
-        throw new IllegalArgumentException(CA_TYPE_NOT_RECOGNIZED_ERR);
-    }
-  }
-
-  public String getEffectiveExtensions(CAType caType) {
-    switch (caType) {
-      case ROOT:
-        return "v3_intermediate_ca";
-      case INTERMEDIATE:
-        return "usr_cert";
-      case KUBECA:
-        return "v3_ext";
-      default:
-        throw new IllegalArgumentException(CA_TYPE_NOT_RECOGNIZED_ERR);
-    }
-  }
-
-  public Path getCertPath(CAType caType, String certFileName) {
-    return Paths.get(getCACertsDir(caType).toString(), certFileName + ".cert.pem");
-  }
-
-  public Path getKeyPath(CAType caType, String keyFileName) {
-    return Paths.get(getCAKeysDir(caType).toString(), keyFileName + ".cert.pem");
-  }
-
-  public Path getCACertPath(CAType caType) {
-    switch (caType) {
-      case ROOT:
-        return getCertPath(caType, "ca");
-      case INTERMEDIATE:
-        return getCertPath(caType, "intermediate");
-      case KUBECA:
-        return getCertPath(caType, "kube-ca");
-      default:
-        throw new IllegalArgumentException(CA_TYPE_NOT_RECOGNIZED_ERR);
-    }
-  }
-
-  /**
-   * This method differs from the next one as this returns the file on the local fs
-   * fo the chain of trust. File that contains the certificates of all the CAs in the chain
-   * based on the intermediate CA
-   * @param caType
-   * @return
-   */
-  public Path getChainOfTrustFilePath(CAType caType) {
-    switch (caType) {
-      case ROOT:
-        return getCertPath(caType,"ca");
-      case INTERMEDIATE: case KUBECA:
-        return getCertPath(caType, "ca-chain");
-      default:
-        throw new IllegalArgumentException(CA_TYPE_NOT_RECOGNIZED_ERR);
-    }
-  }
-
-  /**
-   *  This is an attempt to cache the certificate of the CAs.
-   *  Certificates for CAs will stay in memory until the ejb is evicted from the pool
-   *
-   *  Rotation of intermediate CA private key will require a restart of Hopsworks
-   */
-  public Pair<String, String> getChainOfTrust(CAType caType) throws IOException {
-    String intermediateCaCert = null;
-    if (caType != CAType.ROOT) {
-      intermediateCaCert = getCert(caType);
+  protected X509Certificate generateRootCACertificate()
+      throws KeyException, NoSuchAlgorithmException, CertificateException, CertIOException, OperatorCreationException {
+    KeyPair keyPair = caKeys.get(CAType.ROOT);
+    if (keyPair == null) {
+      String msg = "Could not find Root CA key pair in cache. Have you initialized?";
+      LOGGER.log(Level.SEVERE, msg);
+      throw new KeyException(msg);
     }
 
-    String rootCaCert = getCert(CAType.ROOT);
-
-    return new Pair<>(rootCaCert, intermediateCaCert);
+    Long sn = serialNumberFacade.nextSerialNumber(CAType.ROOT);
+    Duration validityPeriod =  getCAValidityPeriod(conf.getRootCA(), ROOT_CA_DEFAULT_VALIDITY_PERIOD);
+    Instant notBefore = Instant.now().minus(3, ChronoUnit.MINUTES);
+    Instant notAfter = notBefore.plus(validityPeriod);
+    X500Name name = CA_SUBJECT_NAME.get(CAType.ROOT);
+    X509v3CertificateBuilder builder = new JcaX509v3CertificateBuilder(
+        name,
+        BigInteger.valueOf(sn),
+        Date.from(notBefore),
+        Date.from(notAfter),
+        name,
+        keyPair.getPublic());
+    JcaX509ExtensionUtils extUtils = new JcaX509ExtensionUtils();
+    SubjectKeyIdentifier subjectKeyIdentifier = extUtils.createSubjectKeyIdentifier(keyPair.getPublic());
+    AuthorityKeyIdentifier authorityKeyIdentifier = extUtils.createAuthorityKeyIdentifier(keyPair.getPublic());
+    builder
+        .addExtension(Extension.basicConstraints, true, new BasicConstraints(10))
+        .addExtension(Extension.keyUsage, true,
+            new KeyUsage(KeyUsage.keyCertSign | KeyUsage.cRLSign | KeyUsage.digitalSignature))
+        .addExtension(Extension.subjectKeyIdentifier, false, subjectKeyIdentifier)
+        .addExtension(Extension.authorityKeyIdentifier, false, authorityKeyIdentifier);
+    ContentSigner signer = new JcaContentSignerBuilder(SIGNATURE_ALGORITHM)
+        .setProvider(new BouncyCastleProvider())
+        .build(keyPair.getPrivate());
+    X509CertificateHolder holder = builder.build(signer);
+    X509Certificate certificate = converter.getCertificate(holder);
+    LOGGER.log(Level.INFO, "Generated ROOT CA certificate");
+    return certificate;
   }
 
+  protected CertificateGenerationParameters prepareIntermediateCAGenerationParams()
+      throws KeyException, CertificateException {
+    KeyPair rootCAKeypair = getCAKeyPair(CAType.ROOT);
+    X509Certificate rootCACert = getCACertificate(CAType.ROOT);
+    final CertificateSigner signer = new CertificateSigner(rootCAKeypair, rootCACert);
+    KeyPair intermediateKeypair = getCAKeyPair(CAType.INTERMEDIATE);
+    Long serialNumber = serialNumberFacade.nextSerialNumber(CAType.ROOT);
+    X500Name name = CA_SUBJECT_NAME.get(CAType.INTERMEDIATE);
 
-  private String getCert(CAType caType) throws IOException {
-    String caPubCert = caPubCertCache.get(caType);
-    if (caPubCert == null) {
-      synchronized (caPubCertCache) {
-        if (caPubCertCache.get(caType) == null) {
-          File caPubCertFile = getCACertPath(caType).toFile();
-          caPubCert = FileUtils.readFileToString(caPubCertFile);
-          caPubCertCache.put(caType, caPubCert);
+    Duration validityDuration = getCAValidityPeriod(conf.getIntermediateCA(), INTERMEDIATE_CA_DEFAULT_VALIDITY_PERIOD);
+    Instant notBefore = Instant.now().minus(3, ChronoUnit.MINUTES);
+    Instant notAfter = notBefore.plus(validityDuration);
+
+    final CertificateValidityPeriod validityPeriod = new CertificateValidityPeriod(notBefore, notAfter);
+
+    return new CertificateGenerationParameters(
+        signer,
+        intermediateKeypair,
+        serialNumber,
+        name,
+        validityPeriod,
+        INTERMEDIATE_EXTENSIONS);
+  }
+
+  protected CertificateGenerationParameters prepareKubernetesCAGenerationParams()
+      throws KeyException, CertificateException {
+    KeyPair rootCAKeypair = getCAKeyPair(CAType.ROOT);
+    X509Certificate rootCACert = getCACertificate(CAType.ROOT);
+    final CertificateSigner signer = new CertificateSigner(rootCAKeypair, rootCACert);
+    KeyPair intermediateKeypair = getCAKeyPair(CAType.KUBECA);
+    Long serialNumber = serialNumberFacade.nextSerialNumber(CAType.ROOT);
+    X500Name name = CA_SUBJECT_NAME.get(CAType.KUBECA);
+
+    Duration validityDuration = getCAValidityPeriod(conf.getKubernetesCA(), KUBERNETES_CA_DEFAULT_VALIDITY_PERIOD);
+    Instant notBefore = Instant.now().minus(3, ChronoUnit.MINUTES);
+    Instant notAfter = notBefore.plus(validityDuration);
+
+    final CertificateValidityPeriod validityPeriod = new CertificateValidityPeriod(notBefore, notAfter);
+
+    return new CertificateGenerationParameters(
+        signer,
+        intermediateKeypair,
+        serialNumber,
+        name,
+        validityPeriod,
+        INTERMEDIATE_EXTENSIONS);
+  }
+
+  protected X509Certificate generateCertificate(CertificateGenerationParameters params)
+      throws NoSuchAlgorithmException, CertificateException, CertIOException, OperatorCreationException {
+
+    CertificateSigner signer = params.signer;
+    Long sn = params.serialNumber;
+
+    X509v3CertificateBuilder builder = new JcaX509v3CertificateBuilder(
+        signer.certificate,
+        BigInteger.valueOf(sn),
+        Date.from(params.validityPeriod.notBefore),
+        Date.from(params.validityPeriod.notAfter),
+        params.x500Name,
+        params.ownerKeypair.getPublic());
+    JcaX509ExtensionUtils extUtils = new JcaX509ExtensionUtils();
+    SubjectKeyIdentifier subjectKeyIdentifier = extUtils.createSubjectKeyIdentifier(params.ownerKeypair.getPublic());
+    AuthorityKeyIdentifier authorityKeyIdentifier = extUtils.createAuthorityKeyIdentifier(signer.keyPair.getPublic());
+    builder
+        .addExtension(Extension.subjectKeyIdentifier, false, subjectKeyIdentifier)
+        .addExtension(Extension.authorityKeyIdentifier, false, authorityKeyIdentifier);
+    try {
+      params.populateExtensions.apply(builder);
+    } catch (RuntimeException ex) {
+      throw new CertIOException("Failed to add certificate extensions", ex.getCause());
+    }
+
+    ContentSigner contentSigner = new JcaContentSignerBuilder(SIGNATURE_ALGORITHM)
+        .setProvider(new BouncyCastleProvider())
+        .build(signer.keyPair.getPrivate());
+    X509CertificateHolder holder = builder.build(contentSigner);
+    X509Certificate certificate = converter.getCertificate(holder);
+    LOGGER.log(Level.INFO, "Generated certificate");
+    return certificate;
+  }
+
+  public X509Certificate signCertificateSigningRequest(String csrStr, CertificateType certificateType)
+      throws CAInitializationException, IOException, CertificateEncodingException, CACertificateNotFoundException,
+      CertificateAlreadyExistsException, KeyException, NoSuchAlgorithmException, CertIOException,
+      OperatorCreationException, CertificateException, InvalidKeyException, SignatureException,
+      CertificationRequestValidationException {
+    try {
+      maybeInitializeCA();
+    } catch (Exception ex) {
+      LOGGER.log(Level.SEVERE, "Failed to initialize CA", ex);
+      throw new CAInitializationException(ex);
+    }
+    CAType caType = pkiUtils.getResponsibleCA(certificateType);
+    Function<X509v3CertificateBuilder, Void> certificateExtensionsBuilder = getExtensionsBuilder(caType);
+    X509Certificate certificate = signCertificateSigningRequest(csrStr, certificateType, caType,
+        certificateExtensionsBuilder);
+    LOGGER.log(Level.FINE, "Signed certificate and going to Save");
+    saveNewCertificate(caType, certificate);
+    LOGGER.log(Level.FINE, "Saved certificate");
+    LOGGER.log(Level.INFO, "Generated and saved certificate with name " + certificate.getSubjectDN().toString());
+    return certificate;
+  }
+
+  protected final static Function<X509v3CertificateBuilder, Void> EMPTY_CERTIFICATE_EXTENSIONS_BUILDER = (b) -> null;
+  protected final Function<X509v3CertificateBuilder, Void> KUBE_CERTIFICATE_EXTENSIONS_BUILDER = (b) -> {
+    if (conf.getKubernetesCA().isPresent()) {
+      KubeCAConfiguration kubeCAConf = (KubeCAConfiguration) conf.getKubernetesCA().get();
+      if (kubeCAConf.getSubjectAlternativeName().isPresent()) {
+        SubjectAlternativeName san = kubeCAConf.getSubjectAlternativeName().get();
+        List<GeneralName> generalNames = null;
+
+        if (san.getDns().isPresent()) {
+          List<String> dns = san.getDns().get();
+          if (!dns.isEmpty()) {
+            generalNames = new ArrayList<>();
+            for (String s : dns) {
+              generalNames.add(new GeneralName(GeneralName.dNSName, s));
+            }
+          }
+        }
+
+        if (san.getIp().isPresent()) {
+          List<String> ips = san.getIp().get();
+          if (!ips.isEmpty()) {
+            if (generalNames == null) {
+              generalNames = new ArrayList<>();
+            }
+            for (String s : ips) {
+              generalNames.add(new GeneralName(GeneralName.iPAddress, s));
+            }
+          }
+        }
+
+        if (generalNames != null) {
+          try {
+            GeneralName[] gn = generalNames.toArray(new GeneralName[0]);
+            b.addExtension(Extension.subjectAlternativeName, false, new GeneralNames(gn));
+          } catch (CertIOException ex) {
+            throw new RuntimeException(ex);
+          }
         }
       }
     }
+    return null;
+  };
 
-    return caPubCert;
+  protected Function<X509v3CertificateBuilder, Void> getExtensionsBuilder(CAType caType) {
+    return caType.equals(CAType.KUBECA) ? KUBE_CERTIFICATE_EXTENSIONS_BUILDER : EMPTY_CERTIFICATE_EXTENSIONS_BUILDER;
   }
 
-  private Long getConfTimeValue(String configurationTime) {
-    Matcher matcher = TIME_CONF_PATTERN.matcher(configurationTime.toLowerCase());
-    if (!matcher.matches()) {
-      throw new IllegalArgumentException("Invalid time in configuration: " + configurationTime);
+  protected X509Certificate signCertificateSigningRequest(String csrStr, CertificateType certificateType, CAType caType,
+      Function<X509v3CertificateBuilder, Void> extensionsBuilder)
+      throws IOException, CertificateEncodingException, CACertificateNotFoundException,
+      CertificateAlreadyExistsException, KeyException, NoSuchAlgorithmException, CertIOException,
+      OperatorCreationException, CertificateException, InvalidKeyException, SignatureException,
+      CertificationRequestValidationException {
+    LOGGER.log(Level.FINE, "Signing CSR for type " + certificateType);
+    PKCS10CertificationRequest csr = parseCertificateRequest(csrStr);
+    validateCertificateSigningRequest(csr, caType);
+    KeyPair signerKeyPair = getCAKeyPair(caType);
+    X509Certificate signerCertificate = getCACertificate(certificateType);
+    X500Name signerName = new JcaX509CertificateHolder(signerCertificate).getSubject();
+    Optional<PKICertificate> exists = pkiCertificateFacade.findBySubjectAndStatus(csr.getSubject().toString(),
+        PKICertificate.Status.VALID);
+    if (exists.isPresent()) {
+      // Antonios: This is not the most elegant way to identified if we're running on Managed Cloud aka hopsworks.ai
+      // but it is one way...
+      if (certificateType.equals(CertificateType.HOST)
+          && !caConf.getString(CAConf.CAConfKeys.CLOUD_EVENTS_ENDPOINT).isEmpty()) {
+        try {
+          // On Managed Cloud we need to be able to re-issue a certificate with the same x509 Subject
+          // when starting Workers after a Custer Stop when Glassfish has been unresponsive
+          // https://github.com/logicalclocks/hopsworks-cloud/issues/3102
+          revokeCertificate(csr.getSubject(), certificateType);
+        } catch (Exception ex) {
+          String msg = "Certificate with Subject " + csr.getSubject() + " already exists. Because running on Managed " +
+              "Cloud we tried to revoke the previous certificate but we failed";
+          LOGGER.log(Level.SEVERE, msg, ex);
+          throw new CertificateAlreadyExistsException(msg, ex);
+        }
+      } else {
+        throw new CertificateAlreadyExistsException("Certificate with Subject name " + csr.getSubject() + " already " +
+            "exists");
+      }
     }
-    return Long.parseLong(matcher.group(1));
+    LOGGER.log(Level.FINE, "CSR subject: " + csr.getSubject().toString());
+    Long serialNumber = serialNumberFacade.nextSerialNumber(caType);
+    Instant notBefore = Instant.now().minus(3, ChronoUnit.MINUTES);
+    Instant notAfter = getCertificateNotAfter(certificateType, notBefore);
+    JcaX509ExtensionUtils extUtils = new JcaX509ExtensionUtils();
+
+    X509v3CertificateBuilder builder = new X509v3CertificateBuilder(
+        signerName,
+        BigInteger.valueOf(serialNumber),
+        Date.from(notBefore),
+        Date.from(notAfter),
+        csr.getSubject(),
+        csr.getSubjectPublicKeyInfo());
+    builder
+        .addExtension(Extension.basicConstraints, true, new BasicConstraints(false))
+        .addExtension(Extension.keyUsage, true,
+            new KeyUsage(KeyUsage.digitalSignature | KeyUsage.keyEncipherment | KeyUsage.dataEncipherment))
+        .addExtension(Extension.authorityKeyIdentifier, false, extUtils.createAuthorityKeyIdentifier(signerCertificate))
+        .addExtension(Extension.subjectKeyIdentifier, false,
+            extUtils.createSubjectKeyIdentifier(csr.getSubjectPublicKeyInfo()));
+    try {
+      extensionsBuilder.apply(builder);
+    } catch (Exception ex) {
+      throw new CertIOException("Failed to add extension to certificate", ex);
+    }
+
+    LOGGER.log(Level.FINE, "Built Certificate builder");
+    ContentSigner signer = new JcaContentSignerBuilder(SIGNATURE_ALGORITHM)
+        .setProvider(new BouncyCastleProvider())
+        .build(signerKeyPair.getPrivate());
+    X509CertificateHolder holder = builder.build(signer);
+    LOGGER.log(Level.FINE, "Signed certificate");
+    X509Certificate signedCertificate = converter.getCertificate(holder);
+    LOGGER.log(Level.FINE, "Converted to X509Certificate");
+    signedCertificate.verify(signerKeyPair.getPublic(), new BouncyCastleProvider());
+    LOGGER.log(Level.FINE, "Verified certificate");
+
+    return signedCertificate;
   }
 
-  private TimeUnit getConfTimeTimeUnit(String configurationTime) {
-    Matcher matcher = TIME_CONF_PATTERN.matcher(configurationTime.toLowerCase());
-    if (!matcher.matches()) {
-      throw new IllegalArgumentException("Invalid time in configuration: " + configurationTime);
+  private Instant getCertificateNotAfter(CertificateType certificateType, Instant notBefore) {
+    TemporalAmount validity = pkiUtils.getValidityPeriod(certificateType);
+    return notBefore.plus(validity);
+  }
+
+  private KeyPair getCAKeyPair(CAType type) throws KeyException {
+    KeyPair keyPair = caKeys.get(type);
+    if (keyPair == null) {
+      throw new KeyException("Could not load Key pair from cache for " + type);
     }
-    String timeUnitStr = matcher.group(2);
-    if (null != timeUnitStr && !TIME_SUFFIXES.containsKey(timeUnitStr.toLowerCase())) {
-      throw new IllegalArgumentException("Invalid time suffix in configuration: " + configurationTime);
+    return keyPair;
+  }
+
+  private X509Certificate getCACertificate(CertificateType certificateType) throws CACertificateNotFoundException {
+    CAType caType = null;
+    switch (certificateType) {
+      case APP:
+      case PROJECT:
+      case HOST:
+      case DELA:
+        caType = CAType.INTERMEDIATE;
+        break;
+      case KUBE:
+        caType = CAType.KUBECA;
+        break;
+      default:
+        throw new CACertificateNotFoundException("Could not find suitable CA for " + certificateType);
     }
-    return timeUnitStr == null ? TimeUnit.MINUTES : TIME_SUFFIXES.get(timeUnitStr.toLowerCase());
+    return getCACertificate(caType);
+  }
+
+  private X509Certificate getCACertificate(CAType type) throws CACertificateNotFoundException {
+    X509Certificate cert = caCertificates.get(type);
+    if (cert == null) {
+      throw new CACertificateNotFoundException("Failed to load " + type + " X509 certificate");
+    }
+    return cert;
+  }
+
+  protected void validateCertificateSigningRequest(PKCS10CertificationRequest csr, CAType caType)
+      throws CertificationRequestValidationException {
+
+    X500Name requestedName = csr.getSubject();
+    LOGGER.log(Level.FINE, "Validating CSR name against CA names");
+    for (X500Name n : CA_SUBJECT_NAME.values()) {
+      if (n.equals(requestedName)) {
+        throw new CertificationRequestValidationException("Requested Name " + requestedName + " collides with " +
+            "Certificate Authority name");
+      }
+    }
+  }
+
+  private PKCS10CertificationRequest parseCertificateRequest(String csr)
+      throws IOException, CertificateEncodingException {
+    PEMParser pemParser = new PEMParser(new StringReader(csr));
+    Object csrObject = pemParser.readObject();
+    if (csrObject instanceof PKCS10CertificationRequest) {
+      return (PKCS10CertificationRequest) csrObject;
+    }
+    throw new CertificateEncodingException("Failed to parse CSR to " + PKCS10CertificationRequest.class.getName());
+  }
+
+  public void revokeCertificate(String identifier, CertificateType certificateType)
+      throws CAInitializationException, InvalidNameException, CertificateException, KeyException, CRLException {
+    X500Name certificateName = pkiUtils.parseCertificateSubjectName(identifier, certificateType);
+    revokeCertificate(certificateName, certificateType);
+  }
+
+  public void revokeCertificate(X500Name certificateName, CertificateType certificateType)
+      throws CAInitializationException, CertificateException, KeyException, CRLException {
+    try {
+      maybeInitializeCA();
+    } catch (Exception ex) {
+      LOGGER.log(Level.SEVERE, "Failed to initialize CA", ex);
+      throw new CAInitializationException(ex);
+    }
+    LOGGER.log(Level.FINE, "Revoking certificate with Subject " + certificateName);
+    Optional<PKICertificate> maybeCert = pkiCertificateFacade.findBySubjectAndStatus(certificateName.toString(),
+        PKICertificate.Status.VALID);
+    if (!maybeCert.isPresent()) {
+      throw new CertificateNotFoundException("Could not find certificate with Name " + certificateName.toString()
+          + " to revoke");
+    }
+    PKICertificate pkiCert = maybeCert.get();
+    LOGGER.log(Level.FINE, "Deleted certificate " + certificateName + " from database");
+    byte[] encoded = pkiCert.getCertificate();
+    X509Certificate certificate;
+    try {
+      certificate = converter.getCertificate(new X509CertificateHolder(encoded));
+    } catch (IOException ex) {
+      throw new CertificateException("Failed to decode certificate from CA database", ex);
+    }
+    CAType caType = pkiUtils.getResponsibleCA(certificateType);
+    X509CRL newCRL = addRevocationToCRL(caType, certificate);
+    updateCRL(caType, newCRL);
+    LOGGER.log(Level.FINE, "Updated CRL");
+
+    updateRevokedCertificate(pkiCert);
+    LOGGER.log(Level.INFO, "Revoked certificate with X.509 name " + certificate.getSubjectDN().toString());
+  }
+
+  @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
+  protected void updateRevokedCertificate(PKICertificate certificate) {
+    PKICertificate revoked = pkiCertificateFacade.findById(certificate.getCertificateId());
+    revoked.getCertificateId().setStatus(PKICertificate.Status.REVOKED);
+    revoked.setCertificate(null);
+    pkiCertificateFacade.updateCertificate(revoked);
+    pkiCertificateFacade.deleteCertificate(certificate);
+  }
+
+  protected X509CRL loadCRL(CAType type) throws CRLException, IOException {
+    Optional<PKICrl> maybeCrl = crlFacade.getCRL(type);
+    if (!maybeCrl.isPresent()) {
+      throw new CRLException("CRL for " + type + " is not present");
+    }
+    return crlConverter.getCRL(new X509CRLHolder(maybeCrl.get().getCrl()));
+  }
+
+  protected X509CRL addRevocationToCRL(CAType caType, X509Certificate certificate)
+      throws CRLException, KeyException {
+    try {
+      X509CRL crl = loadCRL(caType);
+      KeyPair keyPair = getCAKeyPair(caType);
+      X509v2CRLBuilder builder = new JcaX509v2CRLBuilder(crl);
+      builder.setNextUpdate(Date.from(Instant.now().plus(1, ChronoUnit.DAYS)));
+      ExtensionsGenerator extGen = new ExtensionsGenerator();
+
+      extGen.addExtension(Extension.reasonCode, false, REVOCATION_REASON);
+      builder.addCRLEntry(certificate.getSerialNumber(), new Date(), extGen.generate());
+
+      ContentSigner signer = new JcaContentSignerBuilder(SIGNATURE_ALGORITHM)
+          .setProvider(new BouncyCastleProvider()).build(keyPair.getPrivate());
+      return crlConverter.getCRL(builder.build(signer));
+    } catch (OperatorCreationException | IOException ex) {
+      throw new CRLException(ex);
+    }
+  }
+
+  public X509Certificate loadCertificate(String name, PKICertificate.Status status)
+      throws CertificateNotFoundException, CertificateException {
+    Optional<PKICertificate> maybeCertificate = pkiCertificateFacade.findBySubjectAndStatus(name, status);
+    if (!maybeCertificate.isPresent()) {
+      throw new CertificateNotFoundException("Certificate with subject " + name + " and Status " + status + " does " +
+          "not exist");
+    }
+    PKICertificate pkiCertificate = maybeCertificate.get();
+    byte[] encoded = pkiCertificate.getCertificate();
+    try {
+      return converter.getCertificate(new X509CertificateHolder(encoded));
+    } catch (IOException ex) {
+      throw new CertificateException("Failed to decode certificate from CA database", ex);
+    }
+  }
+
+  private static final Function<X509v3CertificateBuilder, Void> INTERMEDIATE_EXTENSIONS = (builder) -> {
+    try {
+      builder.addExtension(Extension.basicConstraints, true, new BasicConstraints(0));
+      builder.addExtension(Extension.keyUsage, true,
+          new KeyUsage(KeyUsage.keyCertSign | KeyUsage.cRLSign | KeyUsage.digitalSignature));
+      return null;
+    } catch (CertIOException ex) {
+      throw new RuntimeException(ex);
+    }
+  };
+
+  public static class CertificateValidityPeriod {
+    private final Instant notBefore;
+    private final Instant notAfter;
+
+    public CertificateValidityPeriod(Instant notBefore, Instant notAfter) {
+      this.notBefore = notBefore;
+      this.notAfter = notAfter;
+    }
+
+    public Instant getNotBefore() {
+      return notBefore;
+    }
+
+    public Instant getNotAfter() {
+      return notAfter;
+    }
+  }
+
+  public static class CertificateSigner {
+    private final KeyPair keyPair;
+    private final X509Certificate certificate;
+
+    public CertificateSigner(KeyPair keyPair, X509Certificate certificate) {
+      this.keyPair = keyPair;
+      this.certificate = certificate;
+    }
+
+    public KeyPair getKeyPair() {
+      return keyPair;
+    }
+
+    public X509Certificate getCertificate() {
+      return certificate;
+    }
+  }
+
+  public static class CertificateGenerationParameters {
+    private final CertificateSigner signer;
+    private final KeyPair ownerKeypair;
+    private final Long serialNumber;
+    private final X500Name x500Name;
+    private final CertificateValidityPeriod validityPeriod;
+    private final Function<X509v3CertificateBuilder, Void> populateExtensions;
+
+    public CertificateGenerationParameters(CertificateSigner signer, KeyPair ownerKeypair, Long serialNumber,
+        X500Name x500Name, CertificateValidityPeriod validityPeriod,
+        Function<X509v3CertificateBuilder, Void> populateExtensions) {
+      this.signer = signer;
+      this.ownerKeypair = ownerKeypair;
+      this.serialNumber = serialNumber;
+      this.x500Name = x500Name;
+      this.validityPeriod = validityPeriod;
+      this.populateExtensions = populateExtensions;
+    }
+  }
+
+  @VisibleForTesting
+  protected void setSerialNumberFacade(SerialNumberFacade serialNumberFacade) {
+    this.serialNumberFacade = serialNumberFacade;
+  }
+
+  @VisibleForTesting
+  protected void setCaConf(CAConf caConf) {
+    this.caConf = caConf;
+  }
+
+  @VisibleForTesting
+  protected void setKeyFacade(KeyFacade keyFacade) {
+    this.keyFacade = keyFacade;
+  }
+
+  @VisibleForTesting
+  protected void setPkiCertificateFacade(PKICertificateFacade pkiCertificateFacade) {
+    this.pkiCertificateFacade = pkiCertificateFacade;
+  }
+
+  @VisibleForTesting
+  protected Map<CAType, X500Name> getCaSubjectNames() {
+    return CA_SUBJECT_NAME;
+  }
+
+  @VisibleForTesting
+  protected Map<CAType, KeyPair> getCaKeys() {
+    return caKeys;
+  }
+
+  @VisibleForTesting
+  protected Map<CAType, X509Certificate> getCaCertificates() {
+    return caCertificates;
+  }
+
+  @VisibleForTesting
+  protected void setCRLFacade(CRLFacade crlFacade) {
+    this.crlFacade = crlFacade;
+  }
+
+  @VisibleForTesting
+  protected void setPKIUtils(PKIUtils pkiUtils) {
+    this.pkiUtils = pkiUtils;
   }
 }
