@@ -41,45 +41,19 @@ require 'file/tail'
 require 'openssl'
 
 module CaHelper
-  def check_certificate_exists(ca_path, cert_name, subject)
-    expect(File.exist?(ca_path + "certs/" + cert_name + ".cert.pem")).to be true
-    expect(File.zero?(ca_path + "certs/" + cert_name + ".cert.pem")).to be false
-
-    # No matter what's the openssl version the index.txt format still has /
-    subject.gsub! ",", "/"
-
-    File.open(ca_path + "index.txt") do |index|
-      index.extend(File::Tail)
-      index.backward(1).tail { |line|
-        if line.match("^V").nil?  || line.match(subject).nil?
-          raise "Certificate hasn't been signed"
-        else
-          return
-        end
-      }
-    end
+  def check_certificate_exists(subject, status = 0)
+    certificate = PKICertificate.find_by(subject: subject, status: status)
+    expect(certificate).not_to be_nil
+    return certificate
   end
 
-  def check_certificate_not_empty(ca_path, cert_name)
-    expect(File.zero?(ca_path + "certs/" + cert_name + ".cert.pem")).to be false
+  def check_certificate_not_empty(subject)
+    certificate = check_certificate_exists(subject)
+    expect(certificate.certificate).not_to be_empty
   end
 
-  def check_certificate_revoked(ca_path, cert_name, subject)
-    expect(File.exist?(ca_path + "certs/" + cert_name + ".cert.pem")).to be false
-
-    # No matter what's the openssl version the index.txt format still has /
-    subject.gsub! ",", "/"
-
-    File.open(ca_path + "index.txt") do |index|
-      index.extend(File::Tail)
-      index.backward(1).tail { |line|
-        if line.match("^R").nil?  || line.match(subject).nil?
-          raise "Certificate hasn't been revoked"
-        else
-          return
-        end
-      }
-    end
+  def check_certificate_revoked(subject)
+    check_certificate_exists(subject, status=1)
   end
 
   def check_expiration_date(ca_path, cert_name)

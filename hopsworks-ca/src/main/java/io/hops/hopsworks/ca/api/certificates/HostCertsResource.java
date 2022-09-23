@@ -43,16 +43,20 @@ import com.google.common.base.Strings;
 import io.hops.hopsworks.ca.api.filter.Audience;
 import io.hops.hopsworks.ca.api.filter.NoCacheResponse;
 import io.hops.hopsworks.ca.controllers.CAException;
-import io.hops.hopsworks.ca.controllers.OpensslOperations;
+import io.hops.hopsworks.ca.controllers.CAInitializationException;
 import io.hops.hopsworks.ca.controllers.PKI;
+import io.hops.hopsworks.ca.controllers.PKIUtils;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
-import org.javatuples.Pair;
+import org.apache.commons.lang3.tuple.Pair;
+import org.bouncycastle.asn1.x500.X500Name;
+import org.bouncycastle.operator.OperatorCreationException;
 
 import javax.ejb.EJB;
 import javax.enterprise.context.RequestScoped;
+import javax.naming.InvalidNameException;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.POST;
@@ -63,7 +67,9 @@ import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.io.IOException;
-import java.util.regex.Pattern;
+import java.security.GeneralSecurityException;
+import java.security.cert.X509Certificate;
+import java.util.List;
 
 import static io.hops.hopsworks.ca.controllers.CertificateType.HOST;
 
@@ -74,9 +80,9 @@ public class HostCertsResource {
   private static final String REVOKE_CERTIFICATES_PATTERN = "^%s__.*__[0-9]+.*";
 
   @EJB
-  private OpensslOperations opensslOperations;
-  @EJB
   private NoCacheResponse noCacheResponse;
+  @EJB
+  private PKIUtils pkiUtils;
   @EJB
   private PKI pki;
 
@@ -87,17 +93,21 @@ public class HostCertsResource {
   @Produces(MediaType.APPLICATION_JSON)
   @ApiOperation(value = "Sing Host CSR with IntermediateHopsCA", response = CSRView.class)
   @JWTRequired(acceptedTokens={Audience.SERVICES}, allowedUserRoles={"AGENT"})
-  public Response signCSR(CSRView csrView) throws IOException, CAException {
+  public Response signCSR(CSRView csrView) throws CAException {
     if (csrView == null || csrView.getCsr() == null || csrView.getCsr().isEmpty()) {
       throw new IllegalArgumentException("Empty CSR");
     }
 
-    String signedCert = opensslOperations.signCertificateRequest(csrView.getCsr(), HOST);
-    Pair<String, String> chainOfTrust = pki.getChainOfTrust(pki.getResponsibileCA(HOST));
-
-    CSRView signedCsr = new CSRView(signedCert, chainOfTrust.getValue0(), chainOfTrust.getValue1());
-    GenericEntity<CSRView> csrViewGenericEntity = new GenericEntity<CSRView>(signedCsr) { };
-    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(csrViewGenericEntity).build();
+    try {
+      X509Certificate signedCert = pki.signCertificateSigningRequest(csrView.getCsr(), HOST);
+      String stringifiedCert = pkiUtils.convertToPEM(signedCert);
+      Pair<String, String> chainOfTrust = pki.getChainOfTrust(pkiUtils.getResponsibleCA(HOST));
+      CSRView signedCsr = new CSRView(stringifiedCert, chainOfTrust.getLeft(), chainOfTrust.getRight());
+      GenericEntity<CSRView> csrViewGenericEntity = new GenericEntity<CSRView>(signedCsr) { };
+      return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(csrViewGenericEntity).build();
+    } catch (IOException | GeneralSecurityException | OperatorCreationException | CAInitializationException ex) {
+      throw pkiUtils.csrSigningExceptionConvertToCAException(ex, HOST);
+    }
   }
 
   @DELETE
@@ -106,13 +116,17 @@ public class HostCertsResource {
   public Response revokeCertificate(
           @ApiParam(value = "Identifier of the Certificate to revoke", required = true)
           @QueryParam("certId") String certId)
-          throws IOException, CAException {
-    if (certId == null || certId.isEmpty()) {
+          throws CAException {
+    if (Strings.isNullOrEmpty(certId)) {
       throw new IllegalArgumentException("Empty certificate identifier");
     }
 
-    opensslOperations.revokeCertificate(certId, HOST);
-    return Response.ok().build();
+    try {
+      pki.revokeCertificate(certId, HOST);
+      return Response.ok().build();
+    } catch (InvalidNameException | GeneralSecurityException | CAInitializationException ex) {
+      throw pkiUtils.certificateRevocationExceptionConvertToCAException(ex, HOST);
+    }
   }
 
   @Path("all")
@@ -122,12 +136,19 @@ public class HostCertsResource {
   public Response revokeCertificateGlob(
           @ApiParam(value = "Hostname of the node to revoke certificates for", required = true)
           @QueryParam("hostname")
-          String hostname) throws IOException, CAException {
+          String hostname) throws CAException {
     if (Strings.isNullOrEmpty(hostname)) {
       throw new IllegalArgumentException("Empty hostname to revoke");
     }
-    opensslOperations.revokeCertificateGlob(Pattern.compile(String.format(REVOKE_CERTIFICATES_PATTERN,
-            Pattern.quote(hostname))), HOST);
-    return Response.ok().build();
+    List<String> subjectsToRevoke = pkiUtils.findAllHostCertificateSubjectsForHost(hostname);
+    try {
+      for (String subject : subjectsToRevoke) {
+        pki.revokeCertificate(new X500Name(subject), HOST);
+      }
+      return Response.ok().build();
+    } catch (GeneralSecurityException | CAInitializationException ex) {
+      throw pkiUtils.certificateRevocationExceptionConvertToCAException(ex, HOST);
+    }
   }
 }
+

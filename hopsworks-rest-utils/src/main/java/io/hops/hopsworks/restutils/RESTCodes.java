@@ -1072,10 +1072,20 @@ public class RESTCodes {
 
   public enum CAErrorCode implements RESTErrorCode {
 
-    BADSIGNREQUEST(0, "No CSR provided", Response.Status.BAD_REQUEST),
+    BADSIGNREQUEST(0, "No CSR provided or CSR is malformed", Response.Status.BAD_REQUEST),
     BADREVOKATIONREQUEST(1, "No certificate identifier provided", Response.Status.BAD_REQUEST),
-    CERTNOTFOUND(2, "Certificate file not found", Response.Status.NO_CONTENT),
-    CERTEXISTS(3, "Certificate with the same identifier already exists", Response.Status.BAD_REQUEST);
+    CERTNOTFOUND(2, "Certificate not found", Response.Status.NO_CONTENT),
+    CERTEXISTS(3, "Certificate with the same identifier already exists", Response.Status.BAD_REQUEST),
+    BAD_SUBJECT_NAME(4, "Invalid certificate subject name", Response.Status.BAD_REQUEST),
+    CERTIFICATE_DECODING_ERROR(5, "Could not decode certificate", Response.Status.INTERNAL_SERVER_ERROR),
+    CERTIFICATE_REVOCATION_FAILURE(6, "Failed to revoke certificate", Response.Status.INTERNAL_SERVER_ERROR),
+    CERTIFICATE_REVOCATION_LIST_READ(7, "Failed to read Certificate Revocation List",
+        Response.Status.INTERNAL_SERVER_ERROR),
+    CSR_GENERIC_ERROR(8, "Error handling certificate signing request", Response.Status.INTERNAL_SERVER_ERROR),
+    CSR_SIGNING_ERROR(9, "Could not sign Certificate Signing Request", Response.Status.INTERNAL_SERVER_ERROR),
+    CA_INITIALIZATION_ERROR(10, "Error while initializing Certificate Authorities",
+        Response.Status.INTERNAL_SERVER_ERROR),
+    PKI_GENERIC_ERROR(11, "Generic PKI error", Response.Status.INTERNAL_SERVER_ERROR);
 
     private Integer code;
     private String message;

@@ -14,7 +14,7 @@
  * If not, see <https://www.gnu.org/licenses/>.
  */
 
-package io.hops.hopsworks.ca.controllers;
+package io.hops.hopsworks.ca.configuration;
 
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
@@ -70,7 +70,8 @@ public class CAConf {
     HOPSWORKS_REST_LOGLEVEL("hopsworks_rest_log_level", "PROD"),
     JWT_ISSUER("jwt_issuer", "hopsworks@logicalclocks.com"),
     SUDOERS_DIR("sudoers_dir", "/srv/hops/sbin"),
-    CLOUD_EVENTS_ENDPOINT("cloud_events_endpoint", "");
+    CLOUD_EVENTS_ENDPOINT("cloud_events_endpoint", ""),
+    CA_CONFIGURATION("pki_ca_configuration", "");
 
     private String key;
     private String defaultValue;

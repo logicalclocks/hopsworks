@@ -42,16 +42,20 @@ package io.hops.hopsworks.ca.api.certificates;
 import io.hops.hopsworks.ca.api.filter.Audience;
 import io.hops.hopsworks.ca.api.filter.NoCacheResponse;
 import io.hops.hopsworks.ca.controllers.CAException;
-import io.hops.hopsworks.ca.controllers.OpensslOperations;
+import io.hops.hopsworks.ca.controllers.CAInitializationException;
 import io.hops.hopsworks.ca.controllers.PKI;
+import io.hops.hopsworks.ca.controllers.PKIUtils;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
+import io.hops.hopsworks.restutils.RESTCodes;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
-import org.javatuples.Pair;
+import org.apache.commons.lang3.tuple.Pair;
+import org.bouncycastle.operator.OperatorCreationException;
 
 import javax.ejb.EJB;
 import javax.enterprise.context.RequestScoped;
+import javax.naming.InvalidNameException;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
@@ -62,6 +66,9 @@ import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.io.IOException;
+import java.security.GeneralSecurityException;
+import java.security.cert.X509Certificate;
+import java.util.logging.Level;
 
 import static io.hops.hopsworks.ca.controllers.CertificateType.KUBE;
 
@@ -70,9 +77,9 @@ import static io.hops.hopsworks.ca.controllers.CertificateType.KUBE;
 public class KubeCertsResource{
 
   @EJB
-  private OpensslOperations opensslOperations;
-  @EJB
   private NoCacheResponse noCacheResponse;
+  @EJB
+  private PKIUtils pkiUtils;
   @EJB
   private PKI pki;
 
@@ -81,17 +88,22 @@ public class KubeCertsResource{
   @Consumes(MediaType.APPLICATION_JSON)
   @Produces(MediaType.APPLICATION_JSON)
   @JWTRequired(acceptedTokens={Audience.SERVICES}, allowedUserRoles={"AGENT"})
-  public Response signCSR(CSRView csrView) throws IOException, CAException {
+  public Response signCSR(CSRView csrView) throws CAException {
     if (csrView == null || csrView.getCsr() == null || csrView.getCsr().isEmpty()) {
       throw new IllegalArgumentException("Empty CSR");
     }
 
-    String signedCert = opensslOperations.signCertificateRequest(csrView.getCsr(), KUBE);
-    Pair<String, String> chainOfTrust = pki.getChainOfTrust(pki.getResponsibileCA(KUBE));
-
-    CSRView signedCsr = new CSRView(signedCert, chainOfTrust.getValue0(), chainOfTrust.getValue1());
-    GenericEntity<CSRView> csrViewGenericEntity = new GenericEntity<CSRView>(signedCsr) { };
-    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(csrViewGenericEntity).build();
+    try {
+      X509Certificate signedCert = pki.signCertificateSigningRequest(csrView.getCsr(), KUBE);
+      String stringifiedCert = pkiUtils.convertToPEM(signedCert);
+      Pair<String, String> chainOfTrust = pki.getChainOfTrust(pkiUtils.getResponsibleCA(KUBE));
+      CSRView signedCsr = new CSRView(stringifiedCert, chainOfTrust.getLeft(), chainOfTrust.getRight());
+      GenericEntity<CSRView> csrViewGenericEntity = new GenericEntity<CSRView>(signedCsr) {
+      };
+      return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(csrViewGenericEntity).build();
+    } catch (IOException | GeneralSecurityException | OperatorCreationException | CAInitializationException ex) {
+      throw pkiUtils.csrSigningExceptionConvertToCAException(ex, KUBE);
+    }
   }
 
   @ApiOperation(value = "Revoke KubeCA certificates")
@@ -99,23 +111,33 @@ public class KubeCertsResource{
   @JWTRequired(acceptedTokens={Audience.SERVICES}, allowedUserRoles={"AGENT"})
   public Response revokeCertificate(
       @ApiParam(value = "Identifier of the Certificate to revoke", required = true) @QueryParam("certId") String certId)
-      throws IOException, CAException {
+      throws CAException {
     if (certId == null || certId.isEmpty()) {
       throw new IllegalArgumentException("Empty certificate identifier");
     }
 
-    opensslOperations.revokeCertificate(certId, KUBE);
-    return Response.ok().build();
+    try {
+      pki.revokeCertificate(certId, KUBE);
+      return Response.ok().build();
+    } catch (InvalidNameException | GeneralSecurityException | CAInitializationException ex) {
+      throw pkiUtils.certificateRevocationExceptionConvertToCAException(ex, KUBE);
+    }
   }
 
   @ApiOperation(value = "Get KubeCA certificate", response = CSRView.class)
   @GET
   @Produces(MediaType.APPLICATION_JSON)
   @JWTRequired(acceptedTokens={Audience.SERVICES}, allowedUserRoles={"AGENT"})
-  public Response getCACert() throws IOException {
-    Pair<String, String> chainOfTrust = pki.getChainOfTrust(pki.getResponsibileCA(KUBE));
-    CSRView csrView = new CSRView(chainOfTrust.getValue0(), chainOfTrust.getValue1());
-    GenericEntity<CSRView> csrViewGenericEntity = new GenericEntity<CSRView>(csrView) { };
-    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(csrViewGenericEntity).build();
+  public Response getCACert() throws CAException {
+    try {
+      Pair<String, String> chainOfTrust = pki.getChainOfTrust(pkiUtils.getResponsibleCA(KUBE));
+      CSRView csrView = new CSRView(chainOfTrust.getLeft(), chainOfTrust.getRight());
+      GenericEntity<CSRView> csrViewGenericEntity = new GenericEntity<CSRView>(csrView) {
+      };
+      return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(csrViewGenericEntity).build();
+    } catch (CAInitializationException | GeneralSecurityException | IOException ex) {
+      throw new CAException(RESTCodes.CAErrorCode.CA_INITIALIZATION_ERROR, Level.SEVERE, KUBE,
+          "Failed to get chain of trust", "Failed to get chain of trust for KUBE certificates", ex);
+    }
   }
 }

@@ -40,8 +40,8 @@
 package io.hops.hopsworks.ca.api.exception.mapper;
 
 
-import io.hops.hopsworks.ca.controllers.CAConf;
-import io.hops.hopsworks.ca.controllers.CAConf.CAConfKeys;
+import io.hops.hopsworks.ca.configuration.CAConf;
+import io.hops.hopsworks.ca.configuration.CAConf.CAConfKeys;
 import io.hops.hopsworks.restutils.RESTException;
 import io.hops.hopsworks.restutils.RESTLogLevel;
 import io.hops.hopsworks.restutils.ThrowableMapper;

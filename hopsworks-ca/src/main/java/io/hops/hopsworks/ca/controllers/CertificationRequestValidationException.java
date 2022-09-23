@@ -1,6 +1,6 @@
 /*
  * This file is part of Hopsworks
- * Copyright (C) 2018, Logical Clocks AB. All rights reserved
+ * Copyright (C) 2022, Hopsworks AB. All rights reserved
  *
  * Hopsworks is free software: you can redistribute it and/or modify it under the terms of
  * the GNU Affero General Public License as published by the Free Software Foundation,
@@ -13,10 +13,26 @@
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see <https://www.gnu.org/licenses/>.
  */
+package io.hops.hopsworks.ca.controllers;
 
-package io.hops.hopsworks.ca.api.filter;
+import java.security.GeneralSecurityException;
 
-public class Audience {
-  public static final String SERVICES = "services";
-  public static final String API = "api";
+public class CertificationRequestValidationException extends GeneralSecurityException {
+  private static final long serialVersionUID = 3192535253797119798L;
+
+  public CertificationRequestValidationException() {
+  }
+
+  public CertificationRequestValidationException(String msg) {
+    super(msg);
+  }
+
+  public CertificationRequestValidationException(String message, Throwable cause) {
+    super(message, cause);
+  }
+
+  public CertificationRequestValidationException(Throwable cause) {
+    super(cause);
+  }
+
 }
