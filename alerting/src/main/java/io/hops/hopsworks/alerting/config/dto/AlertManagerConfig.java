@@ -15,31 +15,18 @@
  */
 package io.hops.hopsworks.alerting.config.dto;
 
+import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 import java.util.List;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@JsonPropertyOrder({
-  "global",
-  "templates",
-  "route",
-  "inhibit_rules",
-  "receivers"
-  })
 public class AlertManagerConfig {
-
-  @JsonProperty("global")
   private Global global;
-  @JsonProperty("templates")
   private List<String> templates = null;
-  @JsonProperty("route")
   private Route route;
-  @JsonProperty("inhibit_rules")
+  @JsonAlias({"inhibit_rules"})
   private List<InhibitRule> inhibitRules = null;
-  @JsonProperty("receivers")
   private List<Receiver> receivers = null;
 
   public AlertManagerConfig() {
@@ -61,12 +48,10 @@ public class AlertManagerConfig {
     this.receivers = receivers;
   }
 
-  @JsonProperty("global")
   public Global getGlobal() {
     return global;
   }
 
-  @JsonProperty("global")
   public void setGlobal(Global global) {
     this.global = global;
   }
@@ -76,12 +61,10 @@ public class AlertManagerConfig {
     return this;
   }
 
-  @JsonProperty("templates")
   public List<String> getTemplates() {
     return templates;
   }
 
-  @JsonProperty("templates")
   public void setTemplates(List<String> templates) {
     this.templates = templates;
   }
@@ -91,12 +74,10 @@ public class AlertManagerConfig {
     return this;
   }
 
-  @JsonProperty("route")
   public Route getRoute() {
     return route;
   }
 
-  @JsonProperty("route")
   public void setRoute(Route route) {
     this.route = route;
   }
@@ -106,12 +87,10 @@ public class AlertManagerConfig {
     return this;
   }
 
-  @JsonProperty("inhibit_rules")
   public List<InhibitRule> getInhibitRules() {
     return inhibitRules;
   }
 
-  @JsonProperty("inhibit_rules")
   public void setInhibitRules(List<InhibitRule> inhibitRules) {
     this.inhibitRules = inhibitRules;
   }
@@ -121,12 +100,10 @@ public class AlertManagerConfig {
     return this;
   }
 
-  @JsonProperty("receivers")
   public List<Receiver> getReceivers() {
     return receivers;
   }
 
-  @JsonProperty("receivers")
   public void setReceivers(List<Receiver> receivers) {
     this.receivers = receivers;
   }

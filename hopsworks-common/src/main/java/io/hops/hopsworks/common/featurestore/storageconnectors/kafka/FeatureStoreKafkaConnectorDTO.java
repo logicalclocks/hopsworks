@@ -16,6 +16,8 @@
 
 package io.hops.hopsworks.common.featurestore.storageconnectors.kafka;
 
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import com.fasterxml.jackson.annotation.JsonTypeName;
 import io.hops.hopsworks.common.featurestore.OptionDTO;
 import io.hops.hopsworks.common.featurestore.storageconnectors.FeaturestoreStorageConnectorDTO;
 import io.hops.hopsworks.persistence.entity.featurestore.storageconnector.FeaturestoreConnector;
@@ -27,6 +29,11 @@ import java.util.ArrayList;
 import java.util.List;
 
 @XmlRootElement
+@JsonTypeInfo(
+  use=JsonTypeInfo.Id.NAME,
+  include=JsonTypeInfo.As.PROPERTY,
+  property="type")
+@JsonTypeName("featureStoreKafkaConnectorDTO")
 public class FeatureStoreKafkaConnectorDTO extends FeaturestoreStorageConnectorDTO {
   private String bootstrapServers;
   private SecurityProtocol securityProtocol;

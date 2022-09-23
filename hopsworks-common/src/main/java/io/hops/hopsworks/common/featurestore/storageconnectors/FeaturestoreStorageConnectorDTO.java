@@ -49,17 +49,21 @@ import javax.xml.bind.annotation.XmlSeeAlso;
     FeatureStoreGcsConnectorDTO.class,
     FeaturestoreBigqueryConnectorDTO.class})
 @JsonIgnoreProperties(ignoreUnknown = true)
-@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY)
+@JsonTypeInfo(
+  use=JsonTypeInfo.Id.NAME,
+  include=JsonTypeInfo.As.PROPERTY,
+  property="type",
+  defaultImpl= FeaturestoreStorageConnectorDTO.class)
 @JsonSubTypes({
-    @JsonSubTypes.Type(value = FeaturestoreHopsfsConnectorDTO.class, name = "FeaturestoreHopsfsConnectorDTO"),
-    @JsonSubTypes.Type(value = FeaturestoreJdbcConnectorDTO.class, name = "FeaturestoreJdbcConnectorDTO"),
-    @JsonSubTypes.Type(value = FeaturestoreRedshiftConnectorDTO.class, name = "FeaturestoreRedshiftConnectorDTO"),
-    @JsonSubTypes.Type(value = FeaturestoreS3ConnectorDTO.class, name = "FeaturestoreS3ConnectorDTO"),
-    @JsonSubTypes.Type(value = FeaturestoreADLSConnectorDTO.class, name = "FeaturestoreADLSConnectorDTO"),
-    @JsonSubTypes.Type(value = FeaturestoreSnowflakeConnectorDTO.class, name = "FeaturestoreSnowflakeConnectorDTO"),
-    @JsonSubTypes.Type(value = FeatureStoreKafkaConnectorDTO.class, name = "FeatureStoreKafkaConnectorDTO"),
-    @JsonSubTypes.Type(value = FeatureStoreGcsConnectorDTO.class, name="FeatureStoreGcsConnectorDTO"),
-    @JsonSubTypes.Type(value = FeaturestoreBigqueryConnectorDTO.class, name = "FeaturestoreBigqueryConnectorDTO")}
+    @JsonSubTypes.Type(value = FeaturestoreHopsfsConnectorDTO.class, name = "featurestoreHopsfsConnectorDTO"),
+    @JsonSubTypes.Type(value = FeaturestoreJdbcConnectorDTO.class, name = "featurestoreJdbcConnectorDTO"),
+    @JsonSubTypes.Type(value = FeaturestoreRedshiftConnectorDTO.class, name = "featurestoreRedshiftConnectorDTO"),
+    @JsonSubTypes.Type(value = FeaturestoreS3ConnectorDTO.class, name = "featurestoreS3ConnectorDTO"),
+    @JsonSubTypes.Type(value = FeaturestoreADLSConnectorDTO.class, name = "featurestoreADLSConnectorDTO"),
+    @JsonSubTypes.Type(value = FeaturestoreSnowflakeConnectorDTO.class, name = "featurestoreSnowflakeConnectorDTO"),
+    @JsonSubTypes.Type(value = FeatureStoreKafkaConnectorDTO.class, name = "featureStoreKafkaConnectorDTO"),
+    @JsonSubTypes.Type(value = FeatureStoreGcsConnectorDTO.class, name="featureStoreGcsConnectorDTO"),
+    @JsonSubTypes.Type(value = FeaturestoreBigqueryConnectorDTO.class, name = "featurestoreBigqueryConnectorDTO")}
 )
 public class FeaturestoreStorageConnectorDTO {
   private Integer id;

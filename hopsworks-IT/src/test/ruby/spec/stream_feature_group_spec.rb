@@ -477,6 +477,7 @@ describe "On #{ENV['OS']}" do
         json_result, featuregroup_name = create_stream_featuregroup(@project.id, featurestore_id, featuregroup_name: fg_a_name, features: features, backfill_offline: true)
         parsed_json = JSON.parse(json_result)
         fg_id = parsed_json["id"]
+        fg_type = parsed_json["type"]
         # create second feature group
         features = [
           {type: "INT", name: "a_testfeature", primary: true},
@@ -487,16 +488,19 @@ describe "On #{ENV['OS']}" do
         json_result, featuregroup_name = create_stream_featuregroup(@project.id, featurestore_id, featuregroup_name: fg_b_name, features: features, backfill_offline: true)
         parsed_json = JSON.parse(json_result)
         fg_id_b = parsed_json["id"]
+        fg_b_type = parsed_json["type"]
         # create queryDTO object
         query = {
           leftFeatureGroup: {
-            id: fg_id
+            id: fg_id,
+            type: fg_type
           },
           leftFeatures: [{name: 'a_testfeature'}, {name: 'a_testfeature1'}],
           joins: [{
                     query: {
                       leftFeatureGroup: {
-                        id: fg_id_b
+                        id: fg_id_b,
+                        type: fg_b_type
                       },
                       leftFeatures: [{name: 'a_testfeature'}, {name: 'b_testfeature1'}],
                       filter: {
@@ -553,6 +557,7 @@ describe "On #{ENV['OS']}" do
         json_result, featuregroup_name = create_stream_featuregroup(@project.id, featurestore_id, featuregroup_name: fg_a_name, features: features, event_time: "event_time", backfill_offline: true)
         parsed_json = JSON.parse(json_result)
         fg_id = parsed_json["id"]
+        fg_type = parsed_json["type"]
         # create second feature group
         features = [
           {type: "INT", name: "a_testfeature", primary: true},
@@ -564,19 +569,21 @@ describe "On #{ENV['OS']}" do
         json_result, featuregroup_name = create_stream_featuregroup(@project.id, featurestore_id, featuregroup_name: fg_b_name, features: features, event_time: "event_time", backfill_offline: true)
         parsed_json = JSON.parse(json_result)
         fg_id_b = parsed_json["id"]
-
+        fg_b_type = parsed_json["type"]
         # create queryDTO object
         query = {
           leftFeatureGroup: {
             id: fg_id,
-            eventTime: "event_time"
+            eventTime: "event_time",
+            type:fg_type
           },
           leftFeatures: [{name: 'a_testfeature'}, {name: 'a_testfeature1'}],
           joins: [{
                     query: {
                       leftFeatureGroup: {
                         id: fg_id_b,
-                        eventTime: "event_time"
+                        eventTime: "event_time",
+                        type: fg_b_type
                       },
                       leftFeatures: [{name: 'a_testfeature'}, {name: 'b_testfeature1'}],
                       filter: {

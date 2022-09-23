@@ -16,28 +16,18 @@
 
 package io.hops.hopsworks.api.experiments;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.hops.hopsworks.api.experiments.dto.ExperimentDTO;
 import io.hops.hopsworks.api.experiments.dto.results.ExperimentResultSummaryDTO;
 import io.hops.hopsworks.exceptions.ExperimentsException;
 import io.hops.hopsworks.restutils.RESTCodes;
-import org.eclipse.persistence.jaxb.JAXBContextFactory;
-import org.eclipse.persistence.jaxb.MarshallerProperties;
 
-import javax.annotation.PostConstruct;
 import javax.ejb.ConcurrencyManagement;
 import javax.ejb.ConcurrencyManagementType;
 import javax.ejb.Singleton;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
-import javax.ws.rs.core.MediaType;
-import javax.xml.bind.JAXBContext;
-import javax.xml.bind.JAXBException;
-import javax.xml.bind.Marshaller;
-import javax.xml.bind.Unmarshaller;
-import javax.xml.transform.stream.StreamSource;
-import java.io.IOException;
-import java.io.StringReader;
-import java.io.StringWriter;
 import java.nio.charset.StandardCharsets;
 import java.util.logging.Level;
 
@@ -46,66 +36,35 @@ import java.util.logging.Level;
 @ConcurrencyManagement(ConcurrencyManagementType.BEAN)
 public class ExperimentConverter {
   
-  private static JAXBContext jaxbExperimentContext;
-  
-  @PostConstruct
-  public void init() {
+  private <T> T readValue(String jsonConfig, Class<T> resultClass) throws ExperimentsException {
+    ObjectMapper objectMapper = new ObjectMapper();
     try {
-      Class[] serializedClasses = new Class[]{
-        ExperimentDTO.class,
-        ModelXAttr.class,
-        ExperimentResultSummaryDTO.class
-      };
-      jaxbExperimentContext = JAXBContextFactory.createContext(serializedClasses, null);
-    } catch (JAXBException e) {
-      e.printStackTrace();
+      return objectMapper.readValue(jsonConfig, resultClass);
+    } catch (JsonProcessingException e) {
+      throw new ExperimentsException(RESTCodes.ExperimentsErrorCode.EXPERIMENT_MARSHALLING_FAILED, Level.FINE,
+        "Failed to unmarshal", "Error occurred during unmarshalling:" + jsonConfig, e);
     }
   }
   
-  private Marshaller createMarshaller() throws ExperimentsException {
+  private String writeValue(Object value) throws ExperimentsException {
+    String jsonConfig;
+    ObjectMapper objectMapper = new ObjectMapper();
     try {
-      Marshaller marshaller = jaxbExperimentContext.createMarshaller();
-      marshaller.setProperty(MarshallerProperties.JSON_INCLUDE_ROOT, false);
-      marshaller.setProperty(MarshallerProperties.MEDIA_TYPE, MediaType.APPLICATION_JSON);
-      return marshaller;
-    } catch(JAXBException e) {
-      throw new ExperimentsException(RESTCodes.ExperimentsErrorCode.EXPERIMENT_MARSHALLING_FAILED, Level.INFO,
-        "Failed to unmarshal", "Error occurred during unmarshalling setup", e);
-    }
-  }
-  
-  private Unmarshaller createUnmarshaller() throws ExperimentsException {
-    try {
-      Unmarshaller unmarshaller = jaxbExperimentContext.createUnmarshaller();
-      unmarshaller.setProperty(MarshallerProperties.JSON_INCLUDE_ROOT, false);
-      unmarshaller.setProperty(MarshallerProperties.MEDIA_TYPE, MediaType.APPLICATION_JSON);
-      return unmarshaller;
-    } catch(JAXBException e) {
-      throw new ExperimentsException(RESTCodes.ExperimentsErrorCode.EXPERIMENT_MARSHALLING_FAILED, Level.INFO,
-        "Failed to unmarshal", "Error occurred during unmarshalling setup", e);
-    }
-  }
-  
-  public byte[] marshal(Object value) throws ExperimentsException {
-    Marshaller marshaller = createMarshaller();
-    try(StringWriter sw = new StringWriter()) {
-      marshaller.marshal(value, sw);
-      return sw.toString().getBytes(StandardCharsets.UTF_8);
-    } catch (JAXBException | IOException e) {
+      jsonConfig = objectMapper.writeValueAsString(value);
+    } catch (JsonProcessingException e) {
       throw new ExperimentsException(RESTCodes.ExperimentsErrorCode.EXPERIMENT_MARSHALLING_FAILED, Level.FINE,
         "Failed to marshal", "Failed to marshal:" + value.toString(), e);
     }
+    return jsonConfig;
+  }
+  
+  public byte[] marshal(Object value) throws ExperimentsException {
+    String sw = writeValue(value);
+    return sw != null ? sw.getBytes(StandardCharsets.UTF_8) : null;
   }
   
   public <O> O unmarshal(String value, Class<O> resultClass) throws ExperimentsException {
-    Unmarshaller unmarshaller = createUnmarshaller();
-    try (StringReader sr = new StringReader(value)) {
-      StreamSource json = new StreamSource(sr);
-      return unmarshaller.unmarshal(json, resultClass).getValue();
-    } catch (JAXBException e) {
-      throw new ExperimentsException(RESTCodes.ExperimentsErrorCode.EXPERIMENT_MARSHALLING_FAILED, Level.FINE,
-        "Failed to unmarshal", "Error occurred during unmarshalling:" + value, e);
-    }
+    return readValue(value, resultClass);
   }
   
   public ExperimentDTO unmarshalDescription(String jsonConfig) throws ExperimentsException {

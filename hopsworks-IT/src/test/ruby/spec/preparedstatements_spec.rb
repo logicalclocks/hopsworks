@@ -37,10 +37,12 @@ describe "On #{ENV['OS']}" do
                                                             featuregroup_name: "test_fg_a_#{short_random_id}", online:true)
           parsed_json = JSON.parse(json_result)
           fg_id = parsed_json["id"]
+          fg_type = parsed_json["type"]
           # create queryDTO object
           query = {
             leftFeatureGroup: {
-              id: fg_id
+              id: fg_id,
+              type: fg_type
             },
             leftFeatures: ['d', 'c', 'a', 'b'].map do |feat_name|
               {name: feat_name}
@@ -76,6 +78,7 @@ describe "On #{ENV['OS']}" do
           json_result, fg_name = create_cached_featuregroup(@project.id, featurestore_id, features: features, featuregroup_name: "test_fg_a_#{short_random_id}", online:true)
           parsed_json = JSON.parse(json_result)
           fg_id = parsed_json["id"]
+          fg_type = parsed_json["type"]
           # create second feature group
           features = [
               {type: "INT", name: "a_testfeature", primary: true},
@@ -84,16 +87,19 @@ describe "On #{ENV['OS']}" do
           json_result_b, fg_name_b = create_cached_featuregroup(@project.id, featurestore_id, features: features, featuregroup_name: "test_fg_b_#{short_random_id}", online:true)
           parsed_json_b = JSON.parse(json_result_b)
           fg_id_b = parsed_json_b["id"]
+          fg_b_type = parsed_json_b["type"]
           # create queryDTO object
           query = {
               leftFeatureGroup: {
-                  id: fg_id
+                  id: fg_id,
+                  type: fg_type
               },
               leftFeatures: [{name: 'a_testfeature1'}],
               joins: [{
                        query: {
                            leftFeatureGroup: {
-                               id: fg_id_b
+                               id: fg_id_b,
+                               type: fg_b_type
                            },
                            leftFeatures: [{name: 'b_testfeature1'}]
                        }
@@ -130,6 +136,7 @@ describe "On #{ENV['OS']}" do
           json_result, fg_name = create_cached_featuregroup(@project.id, featurestore_id, features: features, featuregroup_name: "test_fg_a_#{short_random_id}", online:true)
           parsed_json = JSON.parse(json_result)
           fg_id = parsed_json["id"]
+          fg_type = parsed_json["type"]
           # create second feature group
           features = [
               {type: "INT", name: "a_testfeature", primary: true},
@@ -138,7 +145,7 @@ describe "On #{ENV['OS']}" do
           json_result_b, fg_name_b = create_cached_featuregroup(@project.id, featurestore_id, features: features, featuregroup_name: "test_fg_b_#{short_random_id}", online:true)
           parsed_json_b = JSON.parse(json_result_b)
           fg_id_b = parsed_json_b["id"]
-
+          fg_b_type = parsed_json_b["type"]
           # create third feature group
           features = [
               {type: "INT", name: "a_testfeature", primary: true},
@@ -147,16 +154,19 @@ describe "On #{ENV['OS']}" do
           json_result_c, fg_name_c = create_cached_featuregroup(@project.id, featurestore_id, features: features, featuregroup_name: "test_fg_c_#{short_random_id}", online:true)
           parsed_json_c = JSON.parse(json_result_c)
           fg_id_c = parsed_json_c["id"]
+          fg_c_type = parsed_json_c["type"]
           # create queryDTO object
           query = {
               leftFeatureGroup: {
-                  id: fg_id
+                  id: fg_id,
+                  type: fg_type
               },
               leftFeatures: [{name: 'a_testfeature1'}],
               joins: [{
                           query: {
                               leftFeatureGroup: {
-                                  id: fg_id_c
+                                  id: fg_id_c,
+                                  type: fg_c_type
                               },
                               leftFeatures: [{name: 'c_testfeature1'}]
                           },
@@ -164,7 +174,8 @@ describe "On #{ENV['OS']}" do
                       {
                           query: {
                               leftFeatureGroup: {
-                                  id: fg_id_b
+                                  id: fg_id_b,
+                                  type: fg_b_type
                               },
                               leftFeatures: [{name: 'b_testfeature1'}]
                           },
@@ -208,6 +219,7 @@ describe "On #{ENV['OS']}" do
           json_result, fg_name = create_cached_featuregroup(@project.id, featurestore_id, features: features, featuregroup_name: "test_fg_a_#{short_random_id}", online:true)
           parsed_json = JSON.parse(json_result)
           fg_id = parsed_json["id"]
+          fg_type = parsed_json["type"]
           # create second feature group
           features = [
             {type: "INT", name: "b_testfeature", primary: true},
@@ -216,17 +228,19 @@ describe "On #{ENV['OS']}" do
           json_result_b, fg_name_b = create_cached_featuregroup(@project.id, featurestore_id, features: features, featuregroup_name: "test_fg_b_#{short_random_id}", online:true)
           parsed_json_b = JSON.parse(json_result_b)
           fg_id_b = parsed_json_b["id"]
-
+          fg_b_type = parsed_json_b["type"]
           # create queryDTO object
           query = {
             leftFeatureGroup: {
-              id: fg_id
+              id: fg_id,
+              type: fg_type
             },
             leftFeatures: [{name: 'a_testfeature1'}],
             joins: [{
                       query: {
                         leftFeatureGroup: {
-                          id: fg_id_b
+                          id: fg_id_b,
+                          type: fg_b_type
                         },
                         leftFeatures: [{name: 'b_testfeature1'}],
                       },
@@ -273,6 +287,7 @@ describe "On #{ENV['OS']}" do
           json_result, fg_name_a = create_cached_featuregroup(@project.id, featurestore_id, features: features, featuregroup_name: "test_fg_a_#{short_random_id}", online:true)
           parsed_json = JSON.parse(json_result)
           fg_id = parsed_json["id"]
+          fg_type = parsed_json["type"]
           # create second feature group
           features = [
               {type: "INT", name: "a_testfeature", primary: true},
@@ -281,16 +296,19 @@ describe "On #{ENV['OS']}" do
           json_result_b, fg_name_b = create_cached_featuregroup(@project.id, featurestore_id, features: features, featuregroup_name: "test_fg_b_#{short_random_id}", online:false)
           parsed_json_b = JSON.parse(json_result_b)
           fg_id_b = parsed_json_b["id"]
+          fg_b_type = parsed_json_b["type"]
           # create queryDTO object
           query = {
               leftFeatureGroup: {
-                  id: fg_id
+                  id: fg_id,
+                  type: fg_type
               },
               leftFeatures: [{name: 'a_testfeature1'}],
               joins: [{
                        query: {
                            leftFeatureGroup: {
-                               id: fg_id_b
+                               id: fg_id_b,
+                               type: fg_b_type
                            },
                            leftFeatures: [{name: 'b_testfeature1'}]
                        }
@@ -320,6 +338,7 @@ describe "On #{ENV['OS']}" do
           json_result, fg_name_a = create_cached_featuregroup(@project.id, featurestore_id, features: features, featuregroup_name: "test_fg_a_#{short_random_id}", online:true)
           parsed_json = JSON.parse(json_result)
           fg_id = parsed_json["id"]
+          fg_type = parsed_json["type"]
           # create second feature group
           features = [
             {type: "INT", name: "a_testfeature", primary: true},
@@ -328,16 +347,19 @@ describe "On #{ENV['OS']}" do
           json_result_b, fg_name_b = create_cached_featuregroup(@project.id, featurestore_id, features: features, featuregroup_name: "test_fg_b_#{short_random_id}", online:false)
           parsed_json_b = JSON.parse(json_result_b)
           fg_id_b = parsed_json_b["id"]
+          fg_b_type = parsed_json_b["type"]
           # create queryDTO object
           query = {
             leftFeatureGroup: {
-              id: fg_id
+              id: fg_id,
+              type: fg_type
             },
             leftFeatures: [{name: 'a_testfeature1'}],
             joins: [{
                       query: {
                         leftFeatureGroup: {
-                          id: fg_id_b
+                          id: fg_id_b,
+                          type: fg_b_type
                         },
                         leftFeatures: [{name: 'b_testfeature1'}]
                       }
@@ -370,12 +392,13 @@ describe "On #{ENV['OS']}" do
           json_result, fg_name = create_cached_featuregroup(@project.id, featurestore_id, features: features, featuregroup_name: "test_fg_a_#{short_random_id}", online:true)
           parsed_json = JSON.parse(json_result)
           fg_id = parsed_json["id"]
-
+          fg_type = parsed_json["type"]
 
           # create queryDTO object
           query = {
               leftFeatureGroup: {
-                  id: fg_id
+                  id: fg_id,
+                  type: fg_type
               },
               leftFeatures: [{name: 'a_testfeature1'}],
           }

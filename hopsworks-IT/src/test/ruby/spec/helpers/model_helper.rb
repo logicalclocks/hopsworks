@@ -50,7 +50,7 @@ module ModelHelper
         id: name + "_" + version.to_s,
         name: name,
         version: version,
-        project_name: model_project_name
+        projectName: model_project_name
     }
 
     json_data = json_data.to_json

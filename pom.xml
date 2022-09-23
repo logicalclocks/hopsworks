@@ -119,7 +119,6 @@
     <hive.version>3.0.0.11</hive.version>
     <hops.version>3.2.0.7-RC0</hops.version>
     <jackson-core-asl.version>1.9.13</jackson-core-asl.version>
-    <jackson-module-jaxb-annotations.version>2.12.4</jackson-module-jaxb-annotations.version>
     <jackson.version>2.12.4</jackson.version>
     <javaee-api.version>7.0</javaee-api.version>
     <javaee-web-api.version>7.0</javaee-web-api.version>
@@ -127,9 +126,9 @@
     <javax-enterprise-concurrent-api.version>1.1</javax-enterprise-concurrent-api.version>
     <javax-mail.version>1.4.7</javax-mail.version>
     <javax-validation-api.version>2.0.1.Final</javax-validation-api.version>
-    <jersey.client.version>2.21</jersey.client.version>
-    <jersey.media.multipart.version>2.21</jersey.media.multipart.version>
-    <jersey.server.version>2.21</jersey.server.version>
+    <jersey.client.version>2.26</jersey.client.version>
+    <jersey.media.multipart.version>2.26</jersey.media.multipart.version>
+    <jersey.server.version>2.26</jersey.server.version>
     <jettison.version>1.1</jettison.version>
     <jsch.version>0.1.54</jsch.version>
     <json-schema.version>1.12.1</json-schema.version>
@@ -204,7 +203,12 @@
       <dependency>
         <groupId>com.fasterxml.jackson.module</groupId>
         <artifactId>jackson-module-jaxb-annotations</artifactId>
-        <version>${jackson-module-jaxb-annotations.version}</version>
+        <version>${jackson.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.fasterxml.jackson.datatype</groupId>
+        <artifactId>jackson-datatype-jdk8</artifactId>
+        <version>${jackson.version}</version>
       </dependency>
       <dependency>
         <groupId>com.github.ben-manes.caffeine</groupId>
@@ -792,11 +796,6 @@
         <version>${bcprov-jdk15on.version}</version>
       </dependency>
       <dependency>
-        <groupId>org.codehaus.jackson</groupId>
-        <artifactId>jackson-core-asl</artifactId>
-        <version>${jackson-core-asl.version}</version>
-      </dependency>
-      <dependency>
         <groupId>org.codehaus.jettison</groupId>
         <artifactId>jettison</artifactId>
         <version>${jettison.version}</version>
@@ -866,6 +865,11 @@
       <dependency>
         <groupId>org.glassfish.jersey.media</groupId>
         <artifactId>jersey-media-multipart</artifactId>
+        <version>${jersey.media.multipart.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.glassfish.jersey.media</groupId>
+        <artifactId>jersey-media-json-jackson</artifactId>
         <version>${jersey.media.multipart.version}</version>
       </dependency>
       <dependency>
@@ -945,6 +949,11 @@
         <groupId>software.amazon.awssdk</groupId>
         <artifactId>ecr</artifactId>
         <version>${awssdk.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>javax.json.bind</groupId>
+        <artifactId>javax.json.bind-api</artifactId>
+        <version>1.0</version>
       </dependency>
     </dependencies>
   </dependencyManagement>

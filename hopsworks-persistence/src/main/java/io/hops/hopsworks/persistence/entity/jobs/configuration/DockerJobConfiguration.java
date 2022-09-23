@@ -21,49 +21,26 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import io.hops.hopsworks.persistence.entity.serving.DockerResourcesConfiguration;
 
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import java.util.List;
 
 @XmlRootElement
-@XmlAccessorType(XmlAccessType.FIELD)
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "type")
 @JsonTypeName("dockerJobConfiguration")
 public class DockerJobConfiguration extends JobConfiguration {
 
   public DockerJobConfiguration(){}
-
-  @XmlElement
   private DockerResourcesConfiguration resourceConfig = new DockerResourcesConfiguration();
-
-  @XmlElement
   private String imagePath;
-
-  @XmlElement
   private List<String> volumes;
-
-  @XmlElement
   private List<String> envVars;
-
-  @XmlElement
   private List<String> command;
-
-  @XmlElement
   private List<String> inputPaths;
-
-  @XmlElement
   private String outputPath;
-
-  @XmlElement
   private Long uid;
-
-  @XmlElement
   private Long gid;
-
-  @XmlElement
   private Boolean logRedirection = true;
 
   public DockerResourcesConfiguration getResourceConfig() {

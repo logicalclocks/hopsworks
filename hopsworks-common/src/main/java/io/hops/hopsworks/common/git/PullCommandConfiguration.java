@@ -17,17 +17,13 @@ package io.hops.hopsworks.common.git;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
 
-import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
 @XmlRootElement
 @JsonTypeName("pullCommandConfiguration")
 public class PullCommandConfiguration extends RepositoryActionCommandConfiguration {
-  @XmlElement
   private String remoteName;
-  @XmlElement
   private String branchName;
-  @XmlElement
   private boolean force;
 
   public PullCommandConfiguration() {}

@@ -16,6 +16,8 @@
 
 package io.hops.hopsworks.common.featurestore.storageconnectors.gcs;
 
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import com.fasterxml.jackson.annotation.JsonTypeName;
 import io.hops.hopsworks.common.featurestore.storageconnectors.FeaturestoreStorageConnectorDTO;
 import io.hops.hopsworks.persistence.entity.featurestore.storageconnector.FeaturestoreConnector;
 import io.hops.hopsworks.persistence.entity.featurestore.storageconnector.gcs.EncryptionAlgorithm;
@@ -23,6 +25,11 @@ import io.hops.hopsworks.persistence.entity.featurestore.storageconnector.gcs.En
 import javax.xml.bind.annotation.XmlRootElement;
 
 @XmlRootElement
+@JsonTypeInfo(
+  use=JsonTypeInfo.Id.NAME,
+  include=JsonTypeInfo.As.PROPERTY,
+  property="type")
+@JsonTypeName("featureStoreGcsConnectorDTO")
 public class FeatureStoreGcsConnectorDTO extends FeaturestoreStorageConnectorDTO {
 
   private String keyPath;

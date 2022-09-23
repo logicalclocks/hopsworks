@@ -16,24 +16,17 @@
 
 package io.hops.hopsworks.common.featurestore.datavalidationv2;
 
-import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.datavalidationv2.ValidationResult;
 
 @XmlRootElement
 public class ValidationResultDTO {
-  @XmlElement
   private Integer id;
-  @XmlElement
   private String expectationConfig;
-  @XmlElement
   private String result;
-  @XmlElement
   private Boolean success;
-  @XmlElement
   private String meta;
-  @XmlElement
   private String exceptionInfo;
 
   public ValidationResultDTO() {}

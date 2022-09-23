@@ -29,7 +29,7 @@ describe "On #{ENV['OS']}" do
         it "should be able to create cached feature group with expectation suite" do
           project = get_project
           featurestore_id = get_featurestore_id(project.id)
-          json_expectation_suite = generate_template_expectation_suite()
+          json_expectation_suite = generate_template_expectation_suite
           json_result, featuregroup_name = create_cached_featuregroup(project.id, featurestore_id, expectation_suite: json_expectation_suite)
           expect_status_details(201)
 	        parsed_json = JSON.parse(json_result)
@@ -50,9 +50,9 @@ describe "On #{ENV['OS']}" do
           featurestore_id = get_featurestore_id(project.id)
           json_result, featuregroup_name = create_cached_featuregroup(project.id, featurestore_id)
           fg_json = JSON.parse(json_result)
-          expectation_suite = generate_template_expectation_suite()
+          expectation_suite = generate_template_expectation_suite
           dto = persist_expectation_suite(project.id, featurestore_id, fg_json["id"], expectation_suite)
-          template_suite = generate_template_expectation_suite()
+          template_suite = generate_template_expectation_suite
 	        expect_status_details(200)
 	        dto_parsed = JSON.parse(dto)
 	        expect(dto_parsed["expectationSuiteName"]).to eq(template_suite[:expectationSuiteName])

@@ -22,7 +22,6 @@ import io.hops.hopsworks.alerting.config.dto.Route;
 import io.hops.hopsworks.alerting.exceptions.AlertManagerConfigCtrlCreateException;
 import io.hops.hopsworks.alerting.exceptions.AlertManagerConfigReadException;
 import io.hops.hopsworks.alerting.exceptions.AlertManagerNoSuchElementException;
-import io.hops.hopsworks.api.alert.Entry;
 import io.hops.hopsworks.common.api.ResourceRequest;
 import io.hops.hopsworks.common.api.RestDTO;
 import io.hops.hopsworks.common.dao.AbstractFacade;
@@ -46,7 +45,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.stream.Collectors;
 
 @Stateless
 @TransactionAttribute(TransactionAttributeType.NEVER)
@@ -130,21 +128,6 @@ public class RouteBuilder {
       dto.setMatchRe(route.getMatchRe());
     }
     return dto;
-  }
-
-  public Route toRoute(PostableRouteDTO postableRouteDTO) {
-    return new Route(postableRouteDTO.getReceiver())
-        .withGroupBy(postableRouteDTO.getGroupBy())
-        .withGroupWait(postableRouteDTO.getGroupWait())
-        .withGroupInterval(postableRouteDTO.getGroupInterval())
-        .withRoutes(postableRouteDTO.getRoutes())
-        .withContinue(postableRouteDTO.getContinue())
-        .withMatch(postableRouteDTO.getMatch() != null? postableRouteDTO.getMatch().stream()
-            .filter(entry -> entry.getKey() != null && entry.getValue() != null)
-            .collect(Collectors.toMap(Entry::getKey, Entry::getValue)) : null)
-        .withMatchRe(postableRouteDTO.getMatchRe() != null? postableRouteDTO.getMatchRe().stream()
-            .filter(entry -> entry.getKey() != null && entry.getValue() != null)
-            .collect(Collectors.toMap(Entry::getKey, Entry::getValue)) : null);
   }
 
   public Map<String, String> toMap(List<String> params) {
@@ -234,7 +217,7 @@ public class RouteBuilder {
     }
   }
 
-  class RouteComparator implements Comparator<RouteDTO> {
+  static class RouteComparator implements Comparator<RouteDTO> {
 
     Set<RouteSortBy> sortBy;
 

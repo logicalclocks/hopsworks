@@ -180,7 +180,7 @@ describe "On #{ENV['OS']}" do
 
       def get_td_features(fg_name, fg_features)
         td_features = Array.new(fg_features.size()) do |i|
-          { name:  fg_features[i][:name], featuregroup: fg_name, version: 1, type: "INT", description: "" }
+          { name:  fg_features[i][:name], featureGroupFeatureName: fg_name, version: 1, type: "INT", description: "" }
         end
         return td_features
       end

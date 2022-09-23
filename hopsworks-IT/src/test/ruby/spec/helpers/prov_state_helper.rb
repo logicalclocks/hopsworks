@@ -26,8 +26,8 @@ module ProvStateHelper
       result = post "#{query}"
       expect_status_details(200)
       parsed_result = JSON.parse(result)
-      tries = tries+1
-      break if parsed_result["result"]["value"] == 0
+      tries = tries + 1
+      break if parsed_result["result"] == 0
       break if tries == 10
     end
     expect(tries).to be <= 10

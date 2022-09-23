@@ -226,10 +226,12 @@ describe "On #{ENV['OS']}" do
           expect_json(compatibilityLevel: "FULL")
         end
 
+        #Cannot deserialize value of type `io.hops.hopsworks.persistence.entity.kafka.schemas.SchemaCompatibility`
+        # from String \"INVALID\": not one of the values accepted for Enum class:
+        # [BACKWARD_TRANSITIVE, BACKWARD, FORWARD, NONE, FORWARD_TRANSITIVE, FULL_TRANSITIVE, FULL]
         it 'fails to set an invalid compatibility for a project' do
           update_project_config(project, "INVALID")
-          expect_status(422)
-          expect_json(error_code: 42203)
+          expect_status(400)
         end
 
 	      it 'fails to get subject compatibility that was not created before' do
@@ -253,10 +255,12 @@ describe "On #{ENV['OS']}" do
           expect_json(error_code: 40401)
         end
 
+        #Cannot deserialize value of type `io.hops.hopsworks.persistence.entity.kafka.schemas.SchemaCompatibility`
+        # from String \"INVALID\": not one of the values accepted for Enum class:
+        # [BACKWARD_TRANSITIVE, BACKWARD, FORWARD, NONE, FORWARD_TRANSITIVE, FULL_TRANSITIVE, FULL]
         it 'fails to set invalid compatibility for a subject' do
           update_subject_config(project, test_subject['subject'], "INVALID")
-          expect_status(422)
-          expect_json(error_code: 42203)
+          expect_status(400)
         end
 
         it 'checks that schema is compatible' do

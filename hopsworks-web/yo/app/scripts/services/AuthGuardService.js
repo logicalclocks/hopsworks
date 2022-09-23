@@ -37,7 +37,8 @@ angular.module('hopsWorksApp')
               if (isAdmin != 'true' && isAdmin != 'false') {
                 AuthService.isAdmin().then(
                   function (success) {
-                    sessionStorage.setItem("isAdmin", success.data.data.value);
+                    console.log('isAdmin: ', success.data.data);
+                    sessionStorage.setItem("isAdmin", success.data.data);
                   }, function (error) {
                     sessionStorage.setItem("isAdmin", null);
                 });
@@ -48,7 +49,7 @@ angular.module('hopsWorksApp')
                 var deferred = $q.defer();
                 AuthService.session().then(
                     function (success) {
-                      saveEmail(success.data.data.value);
+                      saveEmail(success.data.data);
                       checkIsAdmin();
                       return deferred.resolve(success);
                     },
@@ -63,7 +64,7 @@ angular.module('hopsWorksApp')
               noGuard: function ($q) {
                 AuthService.session().then(
                     function (success) {
-                      saveEmail(success.data.data.value);
+                      saveEmail(success.data.data);
                       goToHome();
                       return $q.when(success);
                     },

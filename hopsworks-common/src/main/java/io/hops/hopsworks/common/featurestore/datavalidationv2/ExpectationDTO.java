@@ -19,18 +19,13 @@ package io.hops.hopsworks.common.featurestore.datavalidationv2;
 
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.datavalidationv2.Expectation;
 
-import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
 @XmlRootElement
 public class ExpectationDTO {
-  @XmlElement
   private Integer id;
-  @XmlElement
   private String expectationType;
-  @XmlElement
   private String kwargs;
-  @XmlElement
   private String meta = "{}";
 
   public ExpectationDTO() {}

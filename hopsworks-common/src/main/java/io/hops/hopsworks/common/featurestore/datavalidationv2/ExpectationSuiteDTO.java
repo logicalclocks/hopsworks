@@ -24,7 +24,6 @@ import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.datavalida
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
 /**
@@ -36,21 +35,13 @@ import javax.xml.bind.annotation.XmlRootElement;
 
 @XmlRootElement
 public class ExpectationSuiteDTO extends RestDTO<ExpectationSuiteDTO> {
-  @XmlElement
   private Integer id;
-  @XmlElement
   private String dataAssetType = null;
-  @XmlElement
   private String expectationSuiteName;
-  @XmlElement
   private List<ExpectationDTO> expectations;
-  @XmlElement
   private String meta = "{\"great_expectations_version\": \"0.14.12\"}";
-  @XmlElement
   private String geCloudId = null;
-  @XmlElement
   private ValidationIngestionPolicy validationIngestionPolicy = ValidationIngestionPolicy.ALWAYS;
-  @XmlElement
   private boolean runValidation = true;
 
   public ExpectationSuiteDTO() {}

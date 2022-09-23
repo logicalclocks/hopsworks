@@ -45,6 +45,7 @@ import javax.ejb.EJB;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.enterprise.context.RequestScoped;
+import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
@@ -161,7 +162,7 @@ public class ManagementResource {
         .withTemplates(config.getTemplates())
         .withInhibitRules(toInhibitRules(config.getInhibitRules()))
         .withReceivers(toReceivers(config.getReceivers()))
-        .withRoute(routeBuilder.toRoute(config.getRoute()));
+        .withRoute(config.getRoute().toRoute());
   }
 
   private List<Receiver> toReceivers(List<PostableReceiverDTO> receivers) throws AlertException {
@@ -190,7 +191,8 @@ public class ManagementResource {
   @Produces(MediaType.APPLICATION_JSON)
   @Consumes(MediaType.APPLICATION_JSON)
   @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN"})
-  public Response updateGlobal(Global global, @Context SecurityContext sc) throws AlertException {
+  public Response updateGlobal(Global global, @Context HttpServletRequest req, @Context SecurityContext sc)
+    throws AlertException {
     Global dto;
     try {
       alertManagerConfiguration.updateGlobal(global);
@@ -237,8 +239,9 @@ public class ManagementResource {
   @Produces(MediaType.APPLICATION_JSON)
   @Consumes(MediaType.APPLICATION_JSON)
   @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN"})
-  public Response updateRoute(PostableRouteDTO routeDTO, @Context SecurityContext sc) throws AlertException {
-    Route route = routeBuilder.toRoute(routeDTO);
+  public Response updateRoute(PostableRouteDTO routeDTO,
+                              @Context HttpServletRequest req, @Context SecurityContext sc) throws AlertException {
+    Route route = routeDTO.toRoute();
     Route dto;
     try {
       alertManagerConfiguration.updateRoute(route);
@@ -285,7 +288,7 @@ public class ManagementResource {
   private List<InhibitRule> toInhibitRules(PostableInhibitRulesDTOList postableInhibitRulesDTOList) {
     if (postableInhibitRulesDTOList != null && postableInhibitRulesDTOList.getPostableInhibitRulesDTOs() != null &&
         !postableInhibitRulesDTOList.getPostableInhibitRulesDTOs().isEmpty()) {
-      return postableInhibitRulesDTOList.getPostableInhibitRulesDTOs().stream().map(p -> toInhibitRule(p))
+      return postableInhibitRulesDTOList.getPostableInhibitRulesDTOs().stream().map(this::toInhibitRule)
           .collect(Collectors.toList());
     }
     return null;
@@ -316,4 +319,5 @@ public class ManagementResource {
     }
     return inhibitRule;
   }
+
 }

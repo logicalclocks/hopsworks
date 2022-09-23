@@ -91,7 +91,7 @@ describe "On #{ENV['OS']}" do
         create_receivers_checked(@project, receiver)
         route = create_route(@project, receiver: receiver[:name])
         route[:match] = nil
-        route[:matchRe] = [create_match(@project[:projectname])]
+        route[:matchRe] = create_match(@project[:projectname])
         create_routes(@project, route)
         expect_status_details(201)
         check_backup_contains_route(json_body)
@@ -103,7 +103,7 @@ describe "On #{ENV['OS']}" do
         get_routes(@project)
         expect_status_details(200)
         newRoute = json_body[:items].detect { |r| r[:receiver] == route[:receiver] }
-        expect(newRoute[:matchRe]).to eq({:entry=>[{:key=>"project", :value=>"#{@project[:projectname]}"}, {:key=>"type", :value=>"project-alert"}]})
+        expect(newRoute[:matchRe]).to eq({:project=>@project[:projectname], :type=>"project-alert"})
       end
       it "should fail to create with receiver name that does not exist" do
         route = create_route(@project)
@@ -120,7 +120,7 @@ describe "On #{ENV['OS']}" do
         receiver = create_receiver(@project, emailConfigs: [create_email_config])
         create_receivers_checked(@project, receiver)
         route = create_route(@project, receiver: receiver[:name])
-        route[:match] = [create_match("project1")]
+        route[:match] = create_match("project1")
         create_routes(@project, route)
         expect_status_details(201)
         get_routes_by_receiver(@project, route[:receiver], query: "?match=project:#{@project[:projectname]}&match=type:project-alert")
@@ -142,7 +142,7 @@ describe "On #{ENV['OS']}" do
         create_receivers_checked(@project, receiver)
         route = create_route(@project, receiver: receiver[:name])
         route[:match] = nil
-        route[:matchRe] = [create_match(@project[:projectname])]
+        route[:matchRe] = create_match(@project[:projectname])
         create_routes(@project, route)
         expect_status_details(201)
 

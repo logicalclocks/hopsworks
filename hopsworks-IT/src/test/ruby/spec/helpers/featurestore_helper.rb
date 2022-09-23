@@ -59,6 +59,17 @@ module FeaturestoreHelper
     parsed_json[:id]
   end
 
+  def create_cached_featuregroup_checked_return_fg(project_id, featurestore_id, featuregroup_name, features: nil,
+                                         featuregroup_description: nil, event_time: nil)
+    pp "create featuregroup:#{featuregroup_name}" if defined?(@debugOpt) && @debugOpt == true
+    json_result, _ = create_cached_featuregroup(project_id, featurestore_id, featuregroup_name: featuregroup_name,
+                                                features: features, featuregroup_description: featuregroup_description,
+                                                event_time: event_time)
+    expect_status_details(201)
+    parsed_json = JSON.parse(json_result, :symbolize_names => true)
+    parsed_json
+  end
+
   def create_cached_featuregroup_checked2(project_id,  name: nil, version: 1, features: nil, description: nil, event_time: nil,
                                           featurestore_id: nil, featurestore_project_id: nil,
                                           expected_status: 201)
@@ -332,7 +343,8 @@ module FeaturestoreHelper
             exactUniqueness: false,
             columns: statisticColumns,
             enabled: false
-        }
+        },
+        type: "trainingDatasetDTO"
     }
     if illegal
       json_data[:statisticsConfig][:enabled] = false
@@ -397,7 +409,8 @@ module FeaturestoreHelper
         trainingDatasetType: trainingDatasetType,
         storageConnector: {
             id: hopsfs_connector.id
-        }
+        },
+        type: "trainingDatasetDTO"
     }
     json_data = json_data.to_json
     json_result = put update_training_dataset_metadata_endpoint, json_data
@@ -417,7 +430,8 @@ module FeaturestoreHelper
         trainingDatasetType: trainingDatasetType,
         storageConnector: {
             id: s3_connector_id
-        }
+        },
+        type: "trainingDatasetDTO"
     }
     json_data = json_data.to_json
     json_result = put update_training_dataset_metadata_endpoint, json_data
@@ -436,6 +450,7 @@ module FeaturestoreHelper
   def create_hopsfs_training_dataset(project_id, featurestore_id, hopsfs_connector, name:nil, data_format: nil,
                                      version: 1, splits: [], features: nil, description: nil, query: nil,
                                      statistics_config: nil, train_split: nil)
+    type = "trainingDatasetDTO"
     trainingDatasetType = "HOPSFS_TRAINING_DATASET"
     create_training_dataset_endpoint = "#{ENV['HOPSWORKS_API']}/project/" + project_id.to_s + "/featurestores/" + featurestore_id.to_s + "/trainingdatasets"
     name = name == nil ? "training_dataset_#{random_id}" : name
@@ -464,7 +479,8 @@ module FeaturestoreHelper
         splits: splits,
         seed: 1234,
         queryDTO: query,
-        trainSplit: train_split
+        trainSplit: train_split,
+        type: type
     }
 
     unless statistics_config == nil
@@ -483,7 +499,7 @@ module FeaturestoreHelper
 
   def create_feature_view(project_id, featurestore_id, query, name: nil,
                           version: 1, features: nil, description: nil)
-
+    type = "featureViewDTO"
     name = name == nil ? "feature_view_#{random_id}" : name
     description = description == nil ? "testfeatureviewdescription" : description
 
@@ -492,7 +508,8 @@ module FeaturestoreHelper
       version: version,
       description: description,
       features: features,
-      query: query
+      query: query,
+      type: type,
     }
 
     create_feature_view_with_json(project_id, featurestore_id, json_data)
@@ -521,19 +538,16 @@ module FeaturestoreHelper
   end
 
   def create_feature_view_from_feature_group(project_id, featurestore_id, fg, name: nil, version: 1, description: nil)
-    features = fg["features"]
-    fg_id = fg["id"]
-
     query = {
       leftFeatureGroup: {
-        id: fg_id
+        id: fg["id"],
+        type: fg["type"],
       },
-      leftFeatures: features,
+      leftFeatures: fg["features"],
       joins: []
     }
 
-    create_feature_view(project_id, featurestore_id, query, features: features,
-                        name: name, version: version, description: description)
+    create_feature_view(project_id, featurestore_id, query, name: name, version: version, description: description)
   end
 
   def delete_feature_view(project_id, featurestore_id, name)
@@ -601,7 +615,13 @@ module FeaturestoreHelper
       statistics_config: statistics_config, train_split: train_split, data_format: data_format,
       is_internal: is_internal, location: location, td_type: td_type)
     expect_status(expected_status_code)
-    parsed_json = JSON.parse(json_result)
+
+    begin
+      parsed_json = JSON.parse(json_result)
+    rescue JSON::ParserError
+      parsed_json = json_result
+    end
+
     {"response" => parsed_json, "connector" => connector, "featureView" => featureview}
   end
 
@@ -609,6 +629,7 @@ module FeaturestoreHelper
                                           version: 1, splits: [], description: "testtrainingdatasetdescription",
                                           statistics_config: nil, train_split: nil, query_param: nil, is_internal: true,
                                           location: nil, td_type: "HOPSFS_TRAINING_DATASET", extra_filter: nil)
+    type = "trainingDatasetDTO"
     trainingDatasetType = is_internal ? td_type: "EXTERNAL_TRAINING_DATASET"
     create_training_dataset_endpoint = "#{ENV['HOPSWORKS_API']}/project/#{project_id.to_s}/featurestores/#{featureview["featurestoreId"].to_s}" +
       "/featureview/#{featureview["name"]}/version/#{featureview["version"].to_s}/trainingdatasets"
@@ -624,7 +645,8 @@ module FeaturestoreHelper
       seed: 1234,
       trainSplit: train_split,
       location: location,
-      extraFilter: extra_filter
+      extraFilter: extra_filter,
+      type: type,
     }
     unless statistics_config == nil
       json_data[:statisticsConfig] = statistics_config
@@ -714,6 +736,7 @@ module FeaturestoreHelper
 
   def create_external_training_dataset(project_id, featurestore_id, connector_id, name: nil, location: "",
                                        splits:[], features: nil, train_split: nil)
+    type = "trainingDatasetDTO"
     trainingDatasetType = "EXTERNAL_TRAINING_DATASET"
     create_training_dataset_endpoint = "#{ENV['HOPSWORKS_API']}/project/#{project_id}/featurestores/#{featurestore_id}/trainingdatasets"
     if name == nil
@@ -743,6 +766,7 @@ module FeaturestoreHelper
         splits: splits,
         seed: 1234,
         trainSplit: train_split,
+        type: type,
     }
 
     unless connector_id.nil?
@@ -972,7 +996,7 @@ module FeaturestoreHelper
       { type: "INT", name: "a_testfeature1" },
       { type: "BIGINT", name: "ts" },
     ]
-    fg_id = create_cached_featuregroup_checked(project.id, featurestore_id, "test_fg_a#{featuregroup_suffix}",
+    fg = create_cached_featuregroup_checked_return_fg(project.id, featurestore_id, "test_fg_a#{featuregroup_suffix}",
                                                features: features_a,
                                                event_time: "ts")
     # create second feature group
@@ -981,17 +1005,19 @@ module FeaturestoreHelper
       { type: "INT", name: "b_testfeature1" },
       { type: "BIGINT", name: "ts" },
     ]
-    fg_id_b = create_cached_featuregroup_checked(project.id, featurestore_id, "test_fg_b#{featuregroup_suffix}",
+    fg_b = create_cached_featuregroup_checked_return_fg(project.id, featurestore_id, "test_fg_b#{featuregroup_suffix}",
                                                  features: features_b, event_time: "ts")
     query = {
       leftFeatureGroup: {
-        id: fg_id
+        id: fg[:id],
+        type: fg[:type],
       },
       leftFeatures: [{ name: 'a_testfeature' }, { name: 'a_testfeature1' }],
       joins: [{
                 query: {
                   leftFeatureGroup: {
-                    id: fg_id_b
+                    id: fg_b[:id],
+                    type: fg_b[:type],
                   },
                   leftFeatures: [{ name: 'a_testfeature' }, { name: 'b_testfeature1' }]
                 }
@@ -1002,7 +1028,7 @@ module FeaturestoreHelper
         leftFilter: {
           feature: {
             name: "a_testfeature1",
-            featureGroupId: fg_id
+            featureGroupId: fg[:id]
           },
           condition: "GREATER_THAN",
           value: "0"

@@ -21,7 +21,6 @@ import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.datavalida
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.datavalidationv2.ValidationReport;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.datavalidationv2.ValidationResult;
 
-import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import java.util.ArrayList;
 import java.util.Date;
@@ -37,25 +36,15 @@ import java.util.List;
 
 @XmlRootElement
 public class ValidationReportDTO extends RestDTO<ValidationReportDTO> {
-  @XmlElement
   private Integer id;
-  @XmlElement
   private String evaluationParameters;
-  @XmlElement
   private String statistics;
-  @XmlElement
   private List<ValidationResultDTO> results;
-  @XmlElement
   private String meta;
-  @XmlElement
   private Boolean success;
-  @XmlElement
   private Date validationTime;
-  @XmlElement
   private String fullReportPath = null;
-  @XmlElement
   private String fullJson;
-  @XmlElement
   private IngestionResult ingestionResult;
 
 

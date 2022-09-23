@@ -5,16 +5,11 @@
 package io.hops.hopsworks.persistence.entity.serving;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonTypeName;
 
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 
 @XmlRootElement
-@XmlAccessorType(XmlAccessType.FIELD)
 @JsonIgnoreProperties(ignoreUnknown = true)
-@JsonTypeName("batchingConfiguration")
 public class BatchingConfiguration {
   private Boolean batchingEnabled;
   private Integer maxBatchSize;

@@ -141,12 +141,14 @@ describe "On #{ENV['OS']}" do
             { type: "DATE", name: "ts_date" },
             { type: "TIMESTAMP", name: "ts" },
           ]
-          fg_id = create_cached_featuregroup_checked(@project.id, featurestore_id, "test_fg_a#{featuregroup_suffix}",
+          fg = create_cached_featuregroup_checked_return_fg(@project.id, featurestore_id,
+                                                         "test_fg_a#{featuregroup_suffix}",
                                                      features: features_a,
                                                      event_time: "ts")
           query = {
             leftFeatureGroup: {
-              id: fg_id
+              id: fg[:id],
+              type: fg[:type]
             },
             leftFeatures: [{ name: 'ts_date' }, { name: 'ts' }],
             filter: {
@@ -154,7 +156,7 @@ describe "On #{ENV['OS']}" do
               leftFilter: {
                 feature: {
                   name: "ts_date",
-                  featureGroupId: fg_id
+                  featureGroupId: fg[:id]
                 },
                 condition: "GREATER_THAN",
                 value: "2022-01-01"
@@ -162,7 +164,7 @@ describe "On #{ENV['OS']}" do
               rightFilter: {
                 feature: {
                   name: "ts",
-                  featureGroupId: fg_id
+                  featureGroupId: fg[:id]
                 },
                 condition: "GREATER_THAN",
                 value: "2022-02-01 00:00:00"

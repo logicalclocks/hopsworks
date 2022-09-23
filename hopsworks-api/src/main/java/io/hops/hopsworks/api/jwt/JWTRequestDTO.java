@@ -30,6 +30,7 @@ import java.util.Date;
 public class JWTRequestDTO {
 
   private String subject;
+  @XmlJavaTypeAdapter(ArrayAdapter.class)
   private String[] audiences;
   private String keyName;
   @XmlJavaTypeAdapter(DateTimeAdapter.class)
