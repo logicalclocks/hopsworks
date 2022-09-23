@@ -70,6 +70,7 @@ public class CAConf {
     HOPSWORKS_REST_LOGLEVEL("hopsworks_rest_log_level", "PROD"),
     JWT_ISSUER("jwt_issuer", "hopsworks@logicalclocks.com"),
     SUDOERS_DIR("sudoers_dir", "/srv/hops/sbin"),
+    CLOUD_EVENTS_ENDPOINT("cloud_events_endpoint", ""),
     CA_CONFIGURATION("pki_ca_configuration", "");
 
     private String key;
