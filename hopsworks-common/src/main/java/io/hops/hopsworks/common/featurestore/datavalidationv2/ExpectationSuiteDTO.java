@@ -45,7 +45,7 @@ public class ExpectationSuiteDTO extends RestDTO<ExpectationSuiteDTO> {
   @XmlElement
   private List<ExpectationDTO> expectations;
   @XmlElement
-  private String meta = "{\"great_expectations_version\": \"0.14.3\"}";
+  private String meta = "{\"great_expectations_version\": \"0.14.12\"}";
   @XmlElement
   private String geCloudId = null;
   @XmlElement
