@@ -81,7 +81,6 @@ module CondaHelper
   end
 
   def upload_wheel
-      #chmod_local_dir("#{ENV['PROJECT_DIR']}".gsub("/hopsworks", ""), 701, false)
       chmod_local_dir("#{ENV['PROJECT_DIR']}", 777, true)
       copy_from_local("#{ENV['PROJECT_DIR']}/hopsworks-IT/src/test/ruby/spec/auxiliary/lark_parser-0.10.1-py2.py3-none-any.whl",
                       "/Projects/#{@project[:projectname]}/Resources/lark_parser-0.10.1-py2.py3-none-any.whl", @user[:username],
