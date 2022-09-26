@@ -35,9 +35,9 @@ import java.util.logging.Level;
 @TransactionAttribute(TransactionAttributeType.NEVER)
 @ConcurrencyManagement(ConcurrencyManagementType.BEAN)
 public class ExperimentConverter {
+  final ObjectMapper objectMapper = new ObjectMapper();
   
   private <T> T readValue(String jsonConfig, Class<T> resultClass) throws ExperimentsException {
-    ObjectMapper objectMapper = new ObjectMapper();
     try {
       return objectMapper.readValue(jsonConfig, resultClass);
     } catch (JsonProcessingException e) {
@@ -48,7 +48,6 @@ public class ExperimentConverter {
   
   private String writeValue(Object value) throws ExperimentsException {
     String jsonConfig;
-    ObjectMapper objectMapper = new ObjectMapper();
     try {
       jsonConfig = objectMapper.writeValueAsString(value);
     } catch (JsonProcessingException e) {

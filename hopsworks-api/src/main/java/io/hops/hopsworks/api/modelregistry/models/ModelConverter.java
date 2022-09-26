@@ -34,6 +34,7 @@ import java.util.logging.Level;
 @TransactionAttribute(TransactionAttributeType.NEVER)
 @ConcurrencyManagement(ConcurrencyManagementType.BEAN)
 public class ModelConverter {
+  final ObjectMapper objectMapper = new ObjectMapper();
   
   public byte[] marshalDescription(ModelDTO modelDTO) throws ModelRegistryException {
     String modelSummaryStr = writeValue(modelDTO);
@@ -45,7 +46,6 @@ public class ModelConverter {
   }
   
   private ModelDTO readValue(String jsonConfig) throws ModelRegistryException {
-    ObjectMapper objectMapper = new ObjectMapper();
     try {
       return objectMapper.readValue(jsonConfig, ModelDTO.class);
     } catch (JsonProcessingException e) {
@@ -56,7 +56,6 @@ public class ModelConverter {
   
   private String writeValue(ModelDTO modelDTO) throws ModelRegistryException {
     String jsonConfig;
-    ObjectMapper objectMapper = new ObjectMapper();
     try {
       jsonConfig = objectMapper.writeValueAsString(modelDTO);
     } catch (JsonProcessingException e) {
