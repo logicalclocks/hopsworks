@@ -312,6 +312,7 @@ public class Settings implements Serializable {
   private static final String VARIABLE_HIVE_CONF_PATH = "hive_conf_path";
   private static final String VARIABLE_FS_PY_JOB_UTIL_PATH = "fs_py_job_util";
   private static final String VARIABLE_FS_JAVA_JOB_UTIL_PATH = "fs_java_job_util";
+  private static final String VARIABLE_FS_STORAGE_CONNECTOR_SESSION_DURATION = "fs_storage_connector_session_duration";
 
   //OpenSearch Security
   private static final String VARIABLE_OPENSEARCH_SECURITY_ENABLED = "elastic_opendistro_security_enabled";
@@ -802,7 +803,9 @@ public class Settings implements Serializable {
       HIVE_CONF_PATH = setStrVar(VARIABLE_HIVE_CONF_PATH, HIVE_CONF_PATH);
       FS_PY_JOB_UTIL_PATH = setStrVar(VARIABLE_FS_PY_JOB_UTIL_PATH, FS_PY_JOB_UTIL_PATH);
       FS_JAVA_JOB_UTIL_PATH  = setStrVar(VARIABLE_FS_JAVA_JOB_UTIL_PATH, FS_JAVA_JOB_UTIL_PATH);
-      
+      FS_STORAGE_CONNECTOR_SESSION_DURATION  = setIntVar(VARIABLE_FS_STORAGE_CONNECTOR_SESSION_DURATION,
+        FS_STORAGE_CONNECTOR_SESSION_DURATION);
+  
       YARN_RUNTIME = setStrVar(VARIABLE_YARN_RUNTIME, YARN_RUNTIME);
       DOCKER_MOUNTS = setStrVar(VARIABLE_DOCKER_MOUNTS, DOCKER_MOUNTS);
       DOCKER_JOB_MOUNTS_LIST = setStrVar(VARIABLE_DOCKER_JOB_MOUNTS_LIST, DOCKER_JOB_MOUNTS_LIST);
@@ -3747,6 +3750,12 @@ public class Settings implements Serializable {
   public synchronized String getFSJavaJobUtilPath() {
     checkCache();
     return FS_JAVA_JOB_UTIL_PATH;
+  }
+  
+  private int FS_STORAGE_CONNECTOR_SESSION_DURATION = 3600;
+  public synchronized int getFSStorageConnectorSessionDuration() {
+    checkCache();
+    return FS_STORAGE_CONNECTOR_SESSION_DURATION;
   }
 
   private long FEATURESTORE_DB_DEFAULT_QUOTA = -1;

@@ -161,7 +161,7 @@ public class FeaturestoreStorageConnectorService {
                                       @ApiParam(value = "Name of the storage connector", required = true)
                                       @PathParam("connectorName") String connectorName,
                                       @QueryParam("temporaryCredentials") boolean temporaryCredentials,
-                                      @DefaultValue("3600") @QueryParam("durationSeconds") int durationSeconds)
+                                      @DefaultValue("-1") @QueryParam("durationSeconds") int durationSeconds)
       throws FeaturestoreException, CloudException {
 
     Users user = jWTHelper.getUserPrincipal(sc);

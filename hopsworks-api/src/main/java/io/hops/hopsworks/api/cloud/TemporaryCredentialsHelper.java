@@ -13,6 +13,7 @@ import io.hops.hopsworks.common.cloud.Credentials;
 import io.hops.hopsworks.common.featurestore.storageconnectors.FeaturestoreStorageConnectorDTO;
 import io.hops.hopsworks.common.featurestore.storageconnectors.redshift.FeaturestoreRedshiftConnectorDTO;
 import io.hops.hopsworks.common.featurestore.storageconnectors.s3.FeaturestoreS3ConnectorDTO;
+import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.CloudException;
 import io.hops.hopsworks.persistence.entity.cloud.CloudRoleMapping;
 import io.hops.hopsworks.persistence.entity.project.Project;
@@ -36,6 +37,8 @@ public class TemporaryCredentialsHelper {
   private AWSClusterCredentialsService awsClusterCredentialsService;
   @EJB
   private CloudRoleMappingController cloudRoleMappingController;
+  @EJB
+  private Settings settings;
   
   public boolean checkService() {
     return awsSecurityTokenService.isAWSCloud();
@@ -74,6 +77,9 @@ public class TemporaryCredentialsHelper {
   
   public void setTemporaryCredentials(boolean temporaryCredentials, Users user, Project project, int durationSeconds,
     FeaturestoreStorageConnectorDTO featurestoreStorageConnectorDTO) throws CloudException {
+    if (durationSeconds < 0) {
+      durationSeconds = settings.getFSStorageConnectorSessionDuration();
+    }
     if (temporaryCredentials) {
       switch (featurestoreStorageConnectorDTO.getStorageConnectorType()) {
         case S3:
