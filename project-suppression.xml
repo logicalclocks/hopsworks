@@ -180,13 +180,11 @@
   <suppress>
     <notes><![CDATA[file name: avatica-core-1.22.0.jar]]></notes>
     <packageUrl regex="true">^pkg:maven/org\.apache\.calcite\.avatica/avatica\-core@.*$</packageUrl>
-    <cve>CVE-2022-36364</cve>
     <cve>CVE-2022-39135</cve>
   </suppress>
   <suppress>
     <notes><![CDATA[file name: avatica-metrics-1.22.0.jar]]></notes>
     <packageUrl regex="true">^pkg:maven/org\.apache\.calcite\.avatica/avatica\-metrics@.*$</packageUrl>
-    <cve>CVE-2022-36364</cve>
     <cve>CVE-2022-39135</cve>
   </suppress>
 </suppressions>
