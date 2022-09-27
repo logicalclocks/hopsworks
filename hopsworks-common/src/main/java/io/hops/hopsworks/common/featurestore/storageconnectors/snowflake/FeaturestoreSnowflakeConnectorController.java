@@ -49,6 +49,16 @@ public class FeaturestoreSnowflakeConnectorController {
   private SecretsController secretsController;
   @EJB
   private StorageConnectorUtil storageConnectorUtil;
+
+  // added for unit testing
+  public FeaturestoreSnowflakeConnectorController(SecretsController secretsController,
+      StorageConnectorUtil storageConnectorUtil) {
+    this.secretsController = secretsController;
+    this.storageConnectorUtil = storageConnectorUtil;
+  }
+  
+  public FeaturestoreSnowflakeConnectorController() {
+  }
   
   public FeaturestoreSnowflakeConnectorDTO getConnector(FeaturestoreConnector featurestoreConnector)
       throws FeaturestoreException {
@@ -151,7 +161,7 @@ public class FeaturestoreSnowflakeConnectorController {
     return existingSecret;
   }
   
-  private void verifyConnectorDTO(FeaturestoreSnowflakeConnectorDTO featurestoreSnowflakeConnectorDTO)
+  public void verifyConnectorDTO(FeaturestoreSnowflakeConnectorDTO featurestoreSnowflakeConnectorDTO)
       throws FeaturestoreException {
     if (featurestoreSnowflakeConnectorDTO == null) {
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_STORAGE_CONNECTOR_ARG, Level.FINE,
@@ -182,6 +192,10 @@ public class FeaturestoreSnowflakeConnectorController {
         !Strings.isNullOrEmpty(featurestoreSnowflakeConnectorDTO.getToken())) {
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_STORAGE_CONNECTOR_ARG, Level.FINE,
           "Only one authentication method is allowed");
+    }
+    if (storageConnectorUtil.isNullOrWhitespace(featurestoreSnowflakeConnectorDTO.getWarehouse())) {
+      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_STORAGE_CONNECTOR_ARG, Level.FINE,
+        "Warehouse can not be empty");
     }
   }
 }

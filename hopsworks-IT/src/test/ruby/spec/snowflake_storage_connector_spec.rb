@@ -47,10 +47,9 @@ describe "On #{ENV['OS']}" do
       check_snowflake_connector_update(json_body, connector)
   end
 
-  it "should create a connector without warehouse, table and role" do
+  it "should create a connector without table and role" do
       connector = @connector.clone
       connector[:name] = "snowflake_connector_#{random_id}"
-      connector[:warehouse] = nil
       connector[:table] = nil
       connector[:role] = nil
       post @connector_endpoint, connector.to_json
@@ -169,4 +168,13 @@ describe "On #{ENV['OS']}" do
       expect_status_details(200)
       check_snowflake_connector_update(json_body, connector)
   end
+
+    it "should fail to create a connector if warehouse is not set" do
+        connector = @connector.clone
+        connector[:name] = "snowflake_connector_#{random_id}"
+        connector[:warehouse] = nil
+        post @connector_endpoint, connector.to_json
+        expect_status_details(400)
+    end
+
 end
