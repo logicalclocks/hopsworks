@@ -17,10 +17,9 @@ package io.hops.hopsworks.common.git;
 
 import io.hops.hopsworks.persistence.entity.git.GitCommit;
 
-import javax.xml.bind.annotation.XmlRootElement;
+
 import java.util.List;
 
-@XmlRootElement
 public class BranchCommits {
   private List<GitCommit> commits;
 

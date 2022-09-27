@@ -17,9 +17,6 @@ package io.hops.hopsworks.common.git;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
 
-import javax.xml.bind.annotation.XmlRootElement;
-
-@XmlRootElement
 @JsonTypeName("pushCommandConfiguration")
 public class PushCommandConfiguration extends RepositoryActionCommandConfiguration {
   private String remoteName;
