@@ -41,6 +41,7 @@ package io.hops.hopsworks.common.jupyter;
 
 import io.hops.hopsworks.common.util.HopsUtils;
 import io.hops.hopsworks.exceptions.JobException;
+import io.hops.hopsworks.persistence.entity.jobs.configuration.DockerJobConfiguration;
 import io.hops.hopsworks.persistence.entity.jupyter.JupyterProject;
 import io.hops.hopsworks.persistence.entity.jupyter.JupyterSettings;
 import io.hops.hopsworks.persistence.entity.project.Project;
@@ -138,6 +139,7 @@ public class LocalHostJupyterProcessMgr extends JupyterManagerImpl implements Ju
     JupyterPaths jp = jupyterConfigFilesGenerator.generateConfiguration(project, secretConfig, hdfsUser, user,
         js, port, allowOrigin);
     String secretDir = settings.getStagingDir() + Settings.PRIVATE_DIRS + js.getSecret();
+    DockerJobConfiguration dockerJobConfiguration = (DockerJobConfiguration)js.getDockerConfig();
 
     String token = TokenGenerator.generateToken(TOKEN_LENGTH);
     String cid = "";
@@ -165,6 +167,8 @@ public class LocalHostJupyterProcessMgr extends JupyterManagerImpl implements Ju
             .addCommand(token)
             .addCommand(js.getMode().getValue())
             .addCommand(projectUtils.getFullDockerImageName(project, false))
+            .addCommand(String.valueOf(dockerJobConfiguration.getResourceConfig().getMemory()))
+            .addCommand(String.valueOf(dockerJobConfiguration.getResourceConfig().getCores()))
             .redirectErrorStream(true)
             .setCurrentWorkingDirectory(new File(jp.getNotebookPath()))
             .setWaitTimeout(60L, TimeUnit.SECONDS)

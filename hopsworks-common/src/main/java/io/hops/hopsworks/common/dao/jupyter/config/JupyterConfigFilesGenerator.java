@@ -218,6 +218,7 @@ public class JupyterConfigFilesGenerator {
         .getAnyAddressOfServiceWithDNS(ServiceDiscoveryController.HopsworksService.RPC_NAMENODE);
     String hopsworksRestEndpoint = "https://" + serviceDiscoveryController
         .constructServiceFQDNWithPort(ServiceDiscoveryController.HopsworksService.HOPSWORKS_APP);
+    DockerJobConfiguration dockerJobConfiguration = (DockerJobConfiguration)js.getDockerConfig();
 
     JupyterContentsManager jcm = JupyterContentsManager.HDFS_CONTENTS_MANAGER;
     JupyterNotebookConfigTemplate template = JupyterNotebookConfigTemplateBuilder.newBuilder()
@@ -242,8 +243,9 @@ public class JupyterConfigFilesGenerator {
         .setDomainCATruststore(Paths.get(certsDir, hdfsUser + Settings.TRUSTSTORE_SUFFIX).toString())
         .setServiceDiscoveryDomain(settings.getServiceDiscoveryDomain())
         .setKafkaBrokers(kafkaBrokers.getKafkaBrokersString())
-        .setHopsworksPublicHost(settings.getHopsworksPublicHost())                                                   
-                                                                             
+        .setHopsworksPublicHost(settings.getHopsworksPublicHost())
+        .setAllocatedNotebookMBs(dockerJobConfiguration.getResourceConfig().getMemory())
+        .setAllocatedNotebookCores(dockerJobConfiguration.getResourceConfig().getCores())
         .build();
     Map<String, Object> dataModel = new HashMap<>(1);
     dataModel.put("conf", template);

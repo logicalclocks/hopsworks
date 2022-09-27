@@ -22,7 +22,6 @@ public class JupyterNotebookConfigTemplateBuilder {
   private String hdfsUser;
   private String hadoopHome;
   private Project project;
-  
   private String namenodeIp;
   private String namenodePort;
   private String contentsManager;
@@ -41,6 +40,8 @@ public class JupyterNotebookConfigTemplateBuilder {
   private String serviceDiscoveryDomain = "consul";
   private String kafkaBrokers;  
   private String hopsworksPublicHost;
+  private Integer allocatedNotebookMBs;
+  private Double allocatedNotebookCores;
   
   private JupyterNotebookConfigTemplateBuilder() {}
   
@@ -240,4 +241,21 @@ public class JupyterNotebookConfigTemplateBuilder {
     return new JupyterNotebookConfigTemplate(this);
   }
 
+  public Integer getAllocatedNotebookMBs() {
+    return allocatedNotebookMBs;
+  }
+
+  public JupyterNotebookConfigTemplateBuilder setAllocatedNotebookMBs(Integer allocatedNotebookMBs) {
+    this.allocatedNotebookMBs = allocatedNotebookMBs;
+    return this;
+  }
+
+  public Double getAllocatedNotebookCores() {
+    return allocatedNotebookCores;
+  }
+
+  public JupyterNotebookConfigTemplateBuilder setAllocatedNotebookCores(Double allocatedNotebookCores) {
+    this.allocatedNotebookCores = allocatedNotebookCores;
+    return this;
+  }
 }
