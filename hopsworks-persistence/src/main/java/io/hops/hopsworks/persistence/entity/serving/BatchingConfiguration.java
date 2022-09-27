@@ -16,6 +16,9 @@ public class BatchingConfiguration {
   private Integer maxLatency;
   private Integer timeout;
 
+  public BatchingConfiguration() {
+  }
+
   public Boolean isBatchingEnabled() { return batchingEnabled; }
 
   public void setBatchingEnabled(boolean batchingEnabled) { this.batchingEnabled = batchingEnabled; }
