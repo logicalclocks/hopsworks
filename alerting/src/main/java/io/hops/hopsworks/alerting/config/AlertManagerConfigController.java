@@ -18,6 +18,7 @@ package io.hops.hopsworks.alerting.config;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.PropertyNamingStrategies;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.fasterxml.jackson.dataformat.yaml.YAMLGenerator;
 import com.google.common.base.Strings;
@@ -88,6 +89,7 @@ public class AlertManagerConfigController {
     YAMLFactory yamlFactory = new YAMLFactory().enable(YAMLGenerator.Feature.MINIMIZE_QUOTES);
     ObjectMapper objectMapper = new ObjectMapper(yamlFactory);
     objectMapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
+    objectMapper.setPropertyNamingStrategy(new PropertyNamingStrategies.SnakeCaseStrategy());
     try {
       objectMapper.writeValue(configFile, alertManagerConfig);
     } catch (IOException e) {
@@ -558,7 +560,7 @@ public class AlertManagerConfigController {
     AlertManagerConfig alertManagerConfig = read();
     getIndexOfReceiver(alertManagerConfig, route.getReceiver());//check if receiver exists
     int index = getIndexOfRoute(alertManagerConfig, routeToUpdate);
-    if (!routeToUpdate.equals(route.getReceiver()) && alertManagerConfig.getRoute().getRoutes().contains(route)) {
+    if (!routeToUpdate.equals(route) && alertManagerConfig.getRoute().getRoutes().contains(route)) {
       throw new AlertManagerDuplicateEntryException("A route with the same mather and receiver name already exists.");
     }
     alertManagerConfig.getRoute().getRoutes().remove(index);

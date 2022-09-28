@@ -39,6 +39,7 @@
 
 package io.hops.hopsworks.persistence.entity.jobs.configuration.flink;
 
+import com.fasterxml.jackson.annotation.JsonTypeName;
 import io.hops.hopsworks.persistence.entity.jobs.configuration.JobType;
 import io.hops.hopsworks.persistence.entity.jobs.configuration.yarn.YarnJobConfiguration;
 
@@ -52,7 +53,8 @@ import javax.xml.bind.annotation.XmlRootElement;
  * configuration.
  */
 @XmlRootElement
-@XmlAccessorType(XmlAccessType.NONE)
+@XmlAccessorType(XmlAccessType.FIELD)
+@JsonTypeName("flinkJobConfiguration")
 public class FlinkJobConfiguration extends YarnJobConfiguration {
   
   @XmlElement(name="jobmanager.heap.size")

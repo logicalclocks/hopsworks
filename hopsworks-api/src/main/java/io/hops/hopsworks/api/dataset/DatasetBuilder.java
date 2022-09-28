@@ -81,7 +81,7 @@ public class DatasetBuilder {
   private UsersBuilder usersBuilder;
   
   //For testing
-  protected DatasetBuilder() {
+  public DatasetBuilder() {
   }
 
   private DatasetDTO uri(DatasetDTO dto, UriInfo uriInfo) {

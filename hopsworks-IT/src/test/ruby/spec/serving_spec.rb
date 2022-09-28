@@ -255,8 +255,9 @@ describe "On #{ENV['OS']}" do
              servingTool: "DEFAULT",
              requestedInstances: 1
             }
-        expect_json(usrMsg: "Model server not provided or unsupported")
-        expect_status(422)
+        # response: from String \"INVALID\": not one of the values accepted for Enum class: [TENSORFLOW_SERVING, PYTHON]
+        #expect_json(usrMsg: "Model server not provided or unsupported")
+        expect_status(400)
       end
 
       # model framework
@@ -292,8 +293,9 @@ describe "On #{ENV['OS']}" do
              modelFramework: "TENSORFLOW",
              requestedInstances: 1
             }
-        expect_json(usrMsg: "Serving tool not provided or invalid")
-        expect_status(422)
+        # response: from String \"INVALID\": not one of the values accepted for Enum class: [DEFAULT, KSERVE]
+        #expect_json(usrMsg: "Serving tool not provided or invalid")
+        expect_status(400)
       end
 
       
@@ -477,8 +479,9 @@ describe "On #{ENV['OS']}" do
              inferenceLogging: "ALL",
              requestedInstances: 1
             }
-        expect_status_details(422)
-        expect_json(usrMsg: "Inference logger mode cannot be provided without a Kafka topic")
+        expect_status_details(400)
+        # response: from String \"INVALID\": not one of the values accepted for Enum class: [ALL, PREDICTIONS, MODEL_INPUTS]
+        #expect_json(usrMsg: "Inference logger mode cannot be provided without a Kafka topic")
       end
 
       it "should fail to create a serving with invalid inference logging mode" do
@@ -605,7 +608,7 @@ describe "On #{ENV['OS']}" do
             name: serving[:name],
             modelPath: serving[:model_path],
             modelVersion: 2,
-            batchingConfiguration: serving[:batching_configuration],
+            batchingConfiguration: JSON.parse(serving[:batching_configuration]),
             kafkaTopicDTO: {
                 name: topic[:topic_name]
             },
@@ -656,7 +659,7 @@ describe "On #{ENV['OS']}" do
             modelPath: serving[:model_path],
             modelVersion: serving[:model_version],
             artifactVersion: serving[:artifact_version],
-            batchingConfiguration: serving[:batching_configuration],
+            batchingConfiguration: JSON.parse(serving[:batching_configuration]),
             kafkaTopicDTO: {
                 name: topic[:topic_name]
             },
@@ -685,7 +688,7 @@ describe "On #{ENV['OS']}" do
             name: serving[:name],
             modelPath: "/Projects/#{@project[:projectname]}/Models/newMnist",
             modelVersion: serving[:model_version],
-            batchingConfiguration: serving[:batching_configuration],
+            batchingConfiguration: JSON.parse(serving[:batching_configuration]),
             kafkaTopicDTO: {
                 name: topic[:topic_name]
             },
@@ -712,7 +715,7 @@ describe "On #{ENV['OS']}" do
             name: serving[:name],
             modelPath: serving[:model_path],
             modelVersion: 2,
-            batchingConfiguration: serving[:batching_configuration],
+            batchingConfiguration: JSON.parse(serving[:batching_configuration]),
             kafkaTopicDTO: {
                 name: topic[:topic_name]
             },
@@ -741,7 +744,7 @@ describe "On #{ENV['OS']}" do
             name: serving[:name],
             modelPath: serving[:model_path],
             modelVersion: 2,
-            batchingConfiguration: serving[:batching_configuration],
+            batchingConfiguration: JSON.parse(serving[:batching_configuration]),
             modelServer: parse_model_server(serving[:model_server]),
             modelFramework: parse_model_framework(serving[:model_framework]),
             servingTool: parse_serving_tool(serving[:serving_tool]),
@@ -774,7 +777,7 @@ describe "On #{ENV['OS']}" do
             name: serving[:name],
             modelPath: "/Projects/#{@project[:projectname]}/Models/newMnist",
             modelVersion: serving[:model_version],
-            batchingConfiguration: serving[:batching_configuration],
+            batchingConfiguration: JSON.parse(serving[:batching_configuration]),
             modelServer: parse_model_server(serving[:model_server]),
             modelFramework: parse_model_framework(serving[:model_framework]),
             servingTool: parse_serving_tool(serving[:serving_tool]),
@@ -803,7 +806,7 @@ describe "On #{ENV['OS']}" do
             modelPath: serving[:model_path],
             modelVersion: serving[:model_version],
             artifactVersion: serving[:artifact_version],
-            batchingConfiguration: serving[:batching_configuration],
+            batchingConfiguration: JSON.parse(serving[:batching_configuration]),
             modelServer: "PYTHON",
             modelFramework: parse_model_framework(serving[:model_framework]),
             servingTool: parse_serving_tool(serving[:serving_tool]),
@@ -823,7 +826,7 @@ describe "On #{ENV['OS']}" do
             modelPath: serving[:model_path],
             modelVersion: serving[:model_version],
             artifactVersion: serving[:artifact_version],
-            batchingConfiguration: serving[:batching_configuration],
+            batchingConfiguration: JSON.parse(serving[:batching_configuration]),
             kafkaTopicDTO: {
                 name: topic_name
             },
@@ -848,7 +851,7 @@ describe "On #{ENV['OS']}" do
             modelPath: serving[:model_path],
             modelVersion: serving[:model_version],
             artifactVersion: serving[:artifact_version],
-            batchingConfiguration: serving[:batching_configuration],
+            batchingConfiguration: JSON.parse(serving[:batching_configuration]),
             kafkaTopicDTO: {
                 name: "NONE"
             },
@@ -872,7 +875,7 @@ describe "On #{ENV['OS']}" do
             modelPath: serving[:model_path],
             modelVersion: serving[:model_version],
             artifactVersion: serving[:artifact_version],
-            batchingConfiguration: serving[:batching_configuration],
+            batchingConfiguration: JSON.parse(serving[:batching_configuration]),
             kafkaTopicDTO: {
                 name: "CREATE"
             },

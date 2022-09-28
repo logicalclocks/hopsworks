@@ -102,7 +102,6 @@ module SessionHelper
     user[:chosenPassword]   = params[:password] ? params[:password] : "Pass123"
     user[:repeatedPassword] = params[:password] ? params[:password] : "Pass123"
     user[:tos]              = params[:tos] ? params[:tos] :  true
-    user[:authType]         = params[:auth_type] ? params[:auth_type] : "Mobile"
     user[:twoFactor]        = params[:twoFactor] ? params[:twoFactor] : 0
     user[:testUser]         = true
     

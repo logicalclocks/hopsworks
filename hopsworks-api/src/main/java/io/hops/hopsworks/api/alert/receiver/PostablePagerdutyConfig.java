@@ -18,10 +18,13 @@ package io.hops.hopsworks.api.alert.receiver;
 import io.hops.hopsworks.alerting.config.dto.HttpConfig;
 import io.hops.hopsworks.alerting.config.dto.Imageconfig;
 import io.hops.hopsworks.alerting.config.dto.LinkConfig;
+import io.hops.hopsworks.alerting.config.dto.PagerdutyConfig;
 import io.hops.hopsworks.api.alert.Entry;
 
 import javax.xml.bind.annotation.XmlRootElement;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @XmlRootElement
 public class PostablePagerdutyConfig {
@@ -132,5 +135,27 @@ public class PostablePagerdutyConfig {
   
   public void setHttpConfig(HttpConfig httpConfig) {
     this.httpConfig = httpConfig;
+  }
+  
+  public PagerdutyConfig toPagerdutyConfig() {
+    Map<String, String> details = null;
+    if (this.getDetails() != null && !this.getDetails().isEmpty()) {
+      details = this.getDetails().stream()
+        .filter(entry -> entry != null && entry.getKey() != null && entry.getValue() != null)
+        .collect(Collectors.toMap(Entry::getKey, Entry::getValue));
+    }
+    return new PagerdutyConfig()
+      .withSendResolved(this.getSendResolved())
+      .withRoutingKey(this.getRoutingKey())
+      .withServiceKey(this.getServiceKey())
+      .withUrl(this.getUrl())
+      .withClient(this.getClient())
+      .withClientUrl(this.getClientUrl())
+      .withDescription(this.getDescription())
+      .withSeverity(this.getSeverity())
+      .withDetails(details)
+      .withImages(this.getImages())
+      .withLinks(this.getLinks())
+      .withHttpConfig(this.getHttpConfig());
   }
 }

@@ -37,7 +37,8 @@ describe "On #{ENV['OS']}" do
           # create queryDTO object
           query = {
             leftFeatureGroup: {
-              id: fg_id
+              id: fg_id,
+              type: parsed_json["type"],
             },
             leftFeatures: ['d', 'c', 'a', 'b'].map do |feat_name|
               {name: feat_name}
@@ -77,7 +78,8 @@ describe "On #{ENV['OS']}" do
           # create queryDTO object
           query = {
             leftFeatureGroup: {
-              id: fg_id
+              id: fg_id,
+              type: parsed_json["type"],
             },
             leftFeatures: ['d', 'c', 'a', 'b'].map do |feat_name|
               {name: feat_name}
@@ -118,7 +120,8 @@ describe "On #{ENV['OS']}" do
           # create queryDTO object
           query = {
             leftFeatureGroup: {
-              id: fg_id
+              id: fg_id,
+              type: parsed_json["type"],
             },
             leftFeatures: ['d', 'c', 'a', 'b'].map do |feat_name|
               {name: feat_name}
@@ -150,7 +153,8 @@ describe "On #{ENV['OS']}" do
           # create queryDTO object
           query = {
             leftFeatureGroup: {
-              id: fg_id
+              id: fg_id,
+              type: parsed_json["type"],
             },
             leftFeatures: ['d', 'c', 'a', 'b'].map do |feat_name|
               {name: feat_name}
@@ -227,7 +231,8 @@ describe "On #{ENV['OS']}" do
       # create queryDTO object
       query = {
         leftFeatureGroup: {
-          id: fg_id
+          id: fg_id,
+          type: parsed_json["type"],
         },
         leftFeatures: ['d', 'c', 'a', 'b'].map do |feat_name|
           {name: feat_name}

@@ -16,6 +16,7 @@
 package io.hops.hopsworks.audit.auditor;
 
 import io.hops.hopsworks.audit.auditor.annotation.Audited;
+import io.hops.hopsworks.audit.auditor.annotation.AuditedList;
 import io.hops.hopsworks.audit.helper.AnnotationHelper;
 import io.hops.hopsworks.audit.helper.AuditActionStatus;
 import io.hops.hopsworks.audit.helper.AuditHelper;
@@ -57,17 +58,26 @@ public class AuditedInterceptor implements Serializable {
     Users initiator = annotationHelper.getCaller(method, parameters);
     Users target = annotationHelper.getAuditTarget(method, parameters);
     Class<?> resourceClass = method.getDeclaringClass();
-    Audited audited = annotationHelper.getAnnotation(resourceClass, method, Audited.class);
+    Audited[] auditedList = getAuditedAnnotations(resourceClass, method);
     Object ret;
     try {
       ret = context.proceed();
     } catch (Exception e) {
-      auditHelper.saveAudit(audited, method, parameters, initiator, target, remoteHost, userAgent,
+      auditHelper.saveAudit(auditedList, method, parameters, initiator, target, remoteHost, userAgent,
         AuditActionStatus.FAILED);
       throw e;
     }
-    auditHelper.saveAudit(audited, method, parameters, initiator, target, remoteHost, userAgent,
+    auditHelper.saveAudit(auditedList, method, parameters, initiator, target, remoteHost, userAgent,
       AuditActionStatus.SUCCESS);
     return ret;
+  }
+  
+  private Audited[] getAuditedAnnotations(Class<?> resourceClass, Method method) {
+    Audited audited = annotationHelper.getAnnotation(resourceClass, method, Audited.class);
+    if (audited != null) {
+      return new Audited[]{audited};
+    }
+    AuditedList auditedList = annotationHelper.getAnnotation(resourceClass, method, AuditedList.class);
+    return auditedList.value();
   }
 }

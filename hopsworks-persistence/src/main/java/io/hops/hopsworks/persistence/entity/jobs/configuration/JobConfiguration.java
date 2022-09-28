@@ -50,6 +50,7 @@ import io.hops.hopsworks.persistence.entity.jobs.configuration.yarn.YarnJobConfi
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlSeeAlso;
 import java.util.concurrent.ThreadLocalRandom;
@@ -63,15 +64,16 @@ import java.util.concurrent.ThreadLocalRandom;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "type")
 @JsonSubTypes({
-  @JsonSubTypes.Type(value = YarnJobConfiguration.class, name = "YarnJobConfiguration"),
-  @JsonSubTypes.Type(value = DockerJobConfiguration.class, name = "DockerJobConfiguration")}
+  @JsonSubTypes.Type(value = YarnJobConfiguration.class, name = "yarnJobConfiguration"),
+  @JsonSubTypes.Type(value = DockerJobConfiguration.class, name = "dockerJobConfiguration")}
 )
 public abstract class JobConfiguration {
-
+  
+  @XmlElement
   protected String appName;
-
+  @XmlElement
   protected String defaultArgs;
-
+  @XmlElement
   protected ScheduleDTO schedule;
 
   protected JobConfiguration() {

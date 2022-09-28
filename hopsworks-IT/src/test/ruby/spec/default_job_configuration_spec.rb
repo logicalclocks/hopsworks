@@ -99,7 +99,7 @@ describe "On #{ENV['OS']}" do
             default_job_configuration["appPath"] = "/some/file.py"
           elsif type == "docker"
             default_job_configuration["imagePath"] = "someimg"
-            default_job_configuration["command"] = "some command"
+            default_job_configuration["command"] = ["some command"]
           end
 
           create_project_default_job_configuration(@project[:id], type, default_job_configuration)

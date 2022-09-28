@@ -19,6 +19,9 @@ package io.hops.hopsworks.common.featurestore.feature;
 import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupDTO;
 import io.hops.hopsworks.common.featurestore.transformationFunction.TransformationFunctionDTO;
 
+import javax.xml.bind.annotation.XmlRootElement;
+
+@XmlRootElement
 public class TrainingDatasetFeatureDTO {
 
   private String name;

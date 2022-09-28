@@ -84,7 +84,7 @@ public class RemoteUserAuthController {
     if (!(user.getMode().equals(UserAccountType.REMOTE_ACCOUNT_TYPE))) {
       throw new IllegalArgumentException("User is not registerd as a remote user.");
     }
-    return authController.getPasswordPlusSalt(password, user.getSalt()) + Settings.MOBILE_OTP_PADDING;
+    return authController.getPasswordPlusSalt(password, user.getSalt());
   }
   
   /**

@@ -16,21 +16,11 @@
 package io.hops.hopsworks.alerting.config.dto;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@JsonPropertyOrder({
-  "href",
-  "source",
-  "alt"
-  })
 public class Imageconfig {
-  @JsonProperty("href")
   private String href;
-  @JsonProperty("source")
   private String source;
-  @JsonProperty("alt")
   private String alt;
   
   public Imageconfig() {
@@ -42,32 +32,26 @@ public class Imageconfig {
     this.alt = alt;
   }
   
-  @JsonProperty("href")
   public String getHref() {
     return href;
   }
   
-  @JsonProperty("href")
   public void setHref(String href) {
     this.href = href;
   }
   
-  @JsonProperty("source")
   public String getSource() {
     return source;
   }
   
-  @JsonProperty("source")
   public void setSource(String source) {
     this.source = source;
   }
   
-  @JsonProperty("alt")
   public String getAlt() {
     return alt;
   }
   
-  @JsonProperty("alt")
   public void setAlt(String alt) {
     this.alt = alt;
   }

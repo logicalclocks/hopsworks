@@ -48,6 +48,7 @@ import javax.xml.bind.annotation.XmlSeeAlso;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import com.fasterxml.jackson.annotation.JsonTypeName;
 import io.hops.hopsworks.persistence.entity.jobs.configuration.JobConfiguration;
 import io.hops.hopsworks.persistence.entity.jobs.configuration.JobType;
 import io.hops.hopsworks.persistence.entity.jobs.configuration.flink.FlinkJobConfiguration;
@@ -59,16 +60,16 @@ import io.hops.hopsworks.persistence.entity.util.Settings;
  * <p/>
  */
 @XmlRootElement
-@XmlAccessorType(XmlAccessType.NONE)
+@XmlAccessorType(XmlAccessType.FIELD)
 @XmlSeeAlso({SparkJobConfiguration.class, FlinkJobConfiguration.class})
 @JsonIgnoreProperties(ignoreUnknown = true)
-@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY)
+@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "type")
+@JsonTypeName("yarnJobConfiguration")
 @JsonSubTypes({
-  @JsonSubTypes.Type(value = FlinkJobConfiguration.class, name = "FlinkJobConfiguration"),
-  @JsonSubTypes.Type(value = SparkJobConfiguration.class, name = "SparkJobConfiguration") }
+  @JsonSubTypes.Type(value = FlinkJobConfiguration.class, name = "flinkJobConfiguration"),
+  @JsonSubTypes.Type(value = SparkJobConfiguration.class, name = "sparkJobConfiguration") }
 )
 public class YarnJobConfiguration extends JobConfiguration {
-
   @XmlElement
   private String amQueue = "default";
   @XmlElement

@@ -78,6 +78,12 @@ describe "On #{ENV['OS']}" do
       it "should update global" do
         update_global_admin(get_global_admin)
         expect_status_details(200)
+
+        expect(json_body[:smtpSmarthost]).to eql(get_global_admin[:smtpSmarthost])
+        expect(json_body[:smtpFrom]).to eql(get_global_admin[:smtpFrom])
+        expect(json_body[:smtpAuthUsername]).to eql(get_global_admin[:smtpAuthUsername])
+        expect(json_body[:smtpAuthIdentity]).to eql(get_global_admin[:smtpAuthIdentity])
+        expect(json_body[:smtpAuthPassword]).to eql(get_global_admin[:smtpAuthPassword])
       end
       it "should update template" do
         update_templates_admin(get_templates_admin)

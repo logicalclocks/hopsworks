@@ -38,7 +38,9 @@
   ~ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
   -->
 
-<web-app version="3.1" xmlns="http://xmlns.jcp.org/xml/ns/javaee" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://xmlns.jcp.org/xml/ns/javaee http://xmlns.jcp.org/xml/ns/javaee/web-app_3_1.xsd">
+<web-app version="3.1" xmlns="http://xmlns.jcp.org/xml/ns/javaee"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://xmlns.jcp.org/xml/ns/javaee http://xmlns.jcp.org/xml/ns/javaee/web-app_3_1.xsd">
   <context-param>
     <param-name>javax.faces.PROJECT_STAGE</param-name>
     <param-value>Development</param-value>
@@ -103,7 +105,7 @@
       <param-name>log</param-name>
       <param-value>true</param-value>
     </init-param>
-  </servlet>        
+  </servlet>
   <servlet-mapping>
     <servlet-name>rstudio</servlet-name>
     <url-pattern>/rstudio</url-pattern>
@@ -111,9 +113,9 @@
   <servlet-mapping>
     <servlet-name>rstudio</servlet-name>
     <url-pattern>/rstudio/*</url-pattern>
-  </servlet-mapping>                    
-                                                            
-    
+  </servlet-mapping>
+
+
   <!-- Grafana proxy servlet -->
   <servlet>
     <servlet-name>GrafanaProxyServlet</servlet-name>
@@ -345,12 +347,12 @@
     <display-name>Metadata SocketConstraint</display-name>
     <web-resource-collection>
       <web-resource-name>MetadataWebSocket</web-resource-name>
-      <description>Security constraint for  metadata designer websocket endpoint</description>
+      <description>Security constraint for metadata designer websocket endpoint</description>
       <url-pattern>/wspoint/*</url-pattern>
       <http-method>GET</http-method>
     </web-resource-collection>
     <auth-constraint>
-      <description>definition of which roles  may access the quote endpoint</description>
+      <description>definition of which roles may access the quote endpoint</description>
       <role-name>HOPS_ADMIN</role-name>
       <role-name>HOPS_USER</role-name>
     </auth-constraint>

@@ -89,12 +89,8 @@ describe "On #{ENV['OS']}" do
             #start execution
             start_execution(@project[:id], $job_name_2)
             execution_id = json_body[:id]
-            begin
-              wait_for_execution_active(@project[:id], $job_name_2, execution_id, "ACCEPTED", "appId")
-              stop_execution(@project[:id], $job_name_2, execution_id)
-            ensure
-              wait_for_execution_completed(@project[:id], $job_name_2, execution_id, "KILLED")
-            end
+            wait_for_execution_active(@project[:id], $job_name_2, execution_id, "ACCEPTED", "appId")
+            stop_execution(@project[:id], $job_name_2, execution_id)
           end
           it "should start two executions in parallel" do
             $job_name_3 = "demo_job_3_" + type
@@ -703,7 +699,7 @@ describe "On #{ENV['OS']}" do
           end
         end
       end
-      def get_execution(project, job_name)
+      def get_execution_(project, job_name)
         get_executions(project["id"], job_name)
         expect(json_body[:items].length).to be > 0
         json_body[:items][0]
@@ -738,7 +734,7 @@ describe "On #{ENV['OS']}" do
       proxied_pages.each do |p|
         it 'data owner should see ' + p[:type] do
           raw_create_session(@user_data_owner[:email], "Pass123")
-          execution = get_execution(@project, @job_name)
+          execution = get_execution_(@project, @job_name)
           uri = p[:uri].(execution[:appId], 1)
           pp "uri: #{uri}" if defined?(@debugOpt) && @debugOpt
           get uri
@@ -746,7 +742,7 @@ describe "On #{ENV['OS']}" do
         end
         it 'data scientist should see ' + p[:type] do
           raw_create_session(@user_data_scientist[:email], "Pass123")
-          execution = get_execution(@project, @job_name)
+          execution = get_execution_(@project, @job_name)
           uri = p[:uri].(execution[:appId], 1)
           pp "uri: #{uri}" if defined?(@debugOpt) && @debugOpt
           get uri
@@ -754,7 +750,7 @@ describe "On #{ENV['OS']}" do
         end
         it 'other user should not see ' + p[:type] do
           raw_create_session(@user_data_owner[:email], "Pass123")
-          execution = get_execution(@project, @job_name)
+          execution = get_execution_(@project, @job_name)
           raw_create_session(@user_other[:email], "Pass123")
           uri = p[:uri].(execution[:appId], 1)
           pp "uri: #{uri}" if defined?(@debugOpt) && @debugOpt

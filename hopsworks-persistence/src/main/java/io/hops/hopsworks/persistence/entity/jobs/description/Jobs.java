@@ -46,7 +46,7 @@ import io.hops.hopsworks.persistence.entity.jobs.configuration.JobConfigurationC
 import io.hops.hopsworks.persistence.entity.jobs.configuration.JobType;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.user.Users;
-import org.codehaus.jackson.annotate.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import javax.persistence.Basic;
 import javax.persistence.CascadeType;

@@ -151,5 +151,8 @@ public class ApplicationConfig extends ResourceConfig {
 
     //prometheus
     register(PrometheusQueryResource.class);
+  
+    register(org.glassfish.jersey.jackson.JacksonFeature.class);
+    register(io.hops.hopsworks.filters.CustomJsonProvider.class);
   }
 }

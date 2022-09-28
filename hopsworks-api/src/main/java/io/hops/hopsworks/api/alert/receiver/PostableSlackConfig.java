@@ -1,6 +1,6 @@
 /*
  * This file is part of Hopsworks
- * Copyright (C) 2021, Logical Clocks AB. All rights reserved
+ * Copyright (C) 2022, Hopsworks AB. All rights reserved
  *
  * Hopsworks is free software: you can redistribute it and/or modify it under the terms of
  * the GNU Affero General Public License as published by the Free Software Foundation,
@@ -13,59 +13,45 @@
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see <https://www.gnu.org/licenses/>.
  */
-package io.hops.hopsworks.alerting.config.dto;
+package io.hops.hopsworks.api.alert.receiver;
 
-import com.fasterxml.jackson.annotation.JsonAlias;
-import com.fasterxml.jackson.annotation.JsonInclude;
+import com.google.common.base.Strings;
+import io.hops.hopsworks.alert.util.Constants;
+import io.hops.hopsworks.alerting.config.dto.ActionConfig;
+import io.hops.hopsworks.alerting.config.dto.FieldConfig;
+import io.hops.hopsworks.alerting.config.dto.HttpConfig;
+import io.hops.hopsworks.alerting.config.dto.SlackConfig;
 
+import javax.xml.bind.annotation.XmlRootElement;
 import java.util.List;
-import java.util.Objects;
 
-@JsonInclude(JsonInclude.Include.NON_NULL)
-public class SlackConfig {
-  
-  @JsonAlias({"send_resolved"})
+@XmlRootElement
+public class PostableSlackConfig {
   private Boolean sendResolved;
-  @JsonAlias({"api_url"})
   private String apiUrl;
   private String channel;
-  @JsonAlias({"icon_emoji"})
   private String iconEmoji;
-  @JsonAlias({"icon_url"})
   private String iconUrl;
-  @JsonAlias({"link_names"})
   private Boolean linkNames;
   private String username;
   private List<ActionConfig> actions;
-  @JsonAlias({"callback_id"})
   private String callbackId;
   private String color;
   private String fallback;
   private List<FieldConfig> fields;
   private String footer;
-  @JsonAlias({"mrkdwn_in"})
   private List<String> mrkdwnIn;
-  @JsonAlias({"short_fields"})
   private Boolean shortFields;
   private String text;
   private String title;
-  @JsonAlias({"title_link"})
   private String titleLink;
-  @JsonAlias({"image_url"})
   private String imageUrl;
-  @JsonAlias({"thumb_url"})
   private String thumbUrl;
-  @JsonAlias({"http_config"})
   private HttpConfig httpConfig;
   
-  public SlackConfig() {
+  public PostableSlackConfig() {
   }
   
-  public SlackConfig(String apiUrl, String channel) {
-    this.apiUrl = apiUrl;
-    this.channel = channel;
-  }
-
   public Boolean getSendResolved() {
     return sendResolved;
   }
@@ -74,11 +60,6 @@ public class SlackConfig {
     this.sendResolved = sendResolved;
   }
   
-  public SlackConfig withSendResolved(Boolean sendResolved) {
-    this.sendResolved = sendResolved;
-    return this;
-  }
-
   public String getApiUrl() {
     return apiUrl;
   }
@@ -95,11 +76,6 @@ public class SlackConfig {
     this.channel = channel;
   }
   
-  public SlackConfig withChannel(String channel) {
-    this.channel = channel;
-    return this;
-  }
-
   public String getIconEmoji() {
     return iconEmoji;
   }
@@ -108,87 +84,52 @@ public class SlackConfig {
     this.iconEmoji = iconEmoji;
   }
   
-  public SlackConfig withIconEmoji(String iconEmoji) {
-    this.iconEmoji = iconEmoji;
-    return this;
-  }
-  
   public String getIconUrl() {
     return iconUrl;
   }
-
+  
   public void setIconUrl(String iconUrl) {
     this.iconUrl = iconUrl;
-  }
-  
-  public SlackConfig withIconUrl(String iconUrl) {
-    this.iconUrl = iconUrl;
-    return this;
   }
   
   public Boolean getLinkNames() {
     return linkNames;
   }
-
+  
   public void setLinkNames(Boolean linkNames) {
     this.linkNames = linkNames;
-  }
-  
-  public SlackConfig withLinkNames(Boolean linkNames) {
-    this.linkNames = linkNames;
-    return this;
   }
   
   public String getUsername() {
     return username;
   }
-
+  
   public void setUsername(String username) {
     this.username = username;
   }
   
-  public SlackConfig withUsername(String username) {
-    this.username = username;
-    return this;
-  }
-
   public List<ActionConfig> getActions() {
     return actions;
   }
-
+  
   public void setActions(List<ActionConfig> actions) {
     this.actions = actions;
   }
   
-  public SlackConfig withActions(List<ActionConfig> actions) {
-    this.actions = actions;
-    return this;
-  }
-
   public String getCallbackId() {
     return callbackId;
   }
-
+  
   public void setCallbackId(String callbackId) {
     this.callbackId = callbackId;
   }
   
-  public SlackConfig withCallbackId(String callbackId) {
-    this.callbackId = callbackId;
-    return this;
-  }
-
   public String getColor() {
     return color;
   }
   
   public void setColor(String color) {
     this.color = color;
-  }
-  
-  public SlackConfig withColor(String color) {
-    this.color = color;
-    return this;
   }
   
   public String getFallback() {
@@ -199,22 +140,12 @@ public class SlackConfig {
     this.fallback = fallback;
   }
   
-  public SlackConfig withFallback(String fallback) {
-    this.fallback = fallback;
-    return this;
-  }
-  
   public List<FieldConfig> getFields() {
     return fields;
   }
   
   public void setFields(List<FieldConfig> fields) {
     this.fields = fields;
-  }
-  
-  public SlackConfig withFields(List<FieldConfig> fields) {
-    this.fields = fields;
-    return this;
   }
   
   public String getFooter() {
@@ -225,22 +156,12 @@ public class SlackConfig {
     this.footer = footer;
   }
   
-  public SlackConfig withFooter(String footer) {
-    this.footer = footer;
-    return this;
-  }
-
   public List<String> getMrkdwnIn() {
     return mrkdwnIn;
   }
-
+  
   public void setMrkdwnIn(List<String> mrkdwnIn) {
     this.mrkdwnIn = mrkdwnIn;
-  }
-  
-  public SlackConfig withMrkdwnIn(List<String> mrkdwnIn) {
-    this.mrkdwnIn = mrkdwnIn;
-    return this;
   }
   
   public Boolean getShortFields() {
@@ -251,22 +172,12 @@ public class SlackConfig {
     this.shortFields = shortFields;
   }
   
-  public SlackConfig withShortFields(Boolean shortFields) {
-    this.shortFields = shortFields;
-    return this;
-  }
-
   public String getText() {
     return text;
   }
   
   public void setText(String text) {
     this.text = text;
-  }
-  
-  public SlackConfig withText(String text) {
-    this.text = text;
-    return this;
   }
   
   public String getTitle() {
@@ -277,24 +188,14 @@ public class SlackConfig {
     this.title = title;
   }
   
-  public SlackConfig withTitle(String title) {
-    this.title = title;
-    return this;
-  }
-  
   public String getTitleLink() {
     return titleLink;
   }
-
+  
   public void setTitleLink(String titleLink) {
     this.titleLink = titleLink;
   }
   
-  public SlackConfig withTitleLink(String titleLink) {
-    this.titleLink = titleLink;
-    return this;
-  }
-
   public String getImageUrl() {
     return imageUrl;
   }
@@ -303,24 +204,14 @@ public class SlackConfig {
     this.imageUrl = imageUrl;
   }
   
-  public SlackConfig withImageUrl(String imageUrl) {
-    this.imageUrl = imageUrl;
-    return this;
-  }
-  
   public String getThumbUrl() {
     return thumbUrl;
   }
-
+  
   public void setThumbUrl(String thumbUrl) {
     this.thumbUrl = thumbUrl;
   }
   
-  public SlackConfig withThumbUrl(String thumbUrl) {
-    this.thumbUrl = thumbUrl;
-    return this;
-  }
-
   public HttpConfig getHttpConfig() {
     return httpConfig;
   }
@@ -329,40 +220,53 @@ public class SlackConfig {
     this.httpConfig = httpConfig;
   }
   
-  public SlackConfig withHttpConfig(HttpConfig httpConfig) {
-    this.httpConfig = httpConfig;
-    return this;
-  }
-  
-  @Override
-  public boolean equals(Object o) {
-    if (this == o) {
-      return true;
+  public SlackConfig toSlackConfig(Boolean defaultTemplate) {
+    SlackConfig slackConfig = new SlackConfig(this.apiUrl, this.channel);
+    slackConfig.withSendResolved(this.sendResolved)
+      .withIconEmoji(this.iconEmoji)
+      .withIconUrl(this.iconUrl)
+      .withLinkNames(this.linkNames)
+      .withUsername(this.username)
+      .withActions(this.actions)
+      .withCallbackId(this.callbackId)
+      .withColor(this.color)
+      .withFallback(this.fallback)
+      .withFields(this.fields)
+      .withFooter(this.footer)
+      .withMrkdwnIn(this.mrkdwnIn)
+      .withShortFields(this.shortFields)
+      .withText(this.text)
+      .withTitle(this.title)
+      .withTitleLink(this.titleLink)
+      .withImageUrl(this.imageUrl)
+      .withThumbUrl(this.thumbUrl)
+      .withHttpConfig(this.httpConfig);
+    
+    if (defaultTemplate) {
+      if (Strings.isNullOrEmpty(slackConfig.getIconUrl())) {
+        slackConfig.setIconUrl(Constants.DEFAULT_SLACK_ICON_URL);
+      }
+      if (Strings.isNullOrEmpty(slackConfig.getText())) {
+        slackConfig.setText(Constants.DEFAULT_SLACK_TEXT);
+      }
+      if (Strings.isNullOrEmpty(slackConfig.getTitle())) {
+        slackConfig.setTitle(Constants.DEFAULT_SLACK_TITLE);
+      }
     }
-    if (o == null || getClass() != o.getClass()) {
-      return false;
-    }
-    SlackConfig that = (SlackConfig) o;
-    return Objects.equals(apiUrl, that.apiUrl) && Objects.equals(channel, that.channel);
-  }
-  
-  @Override
-  public int hashCode() {
-    return Objects.hash(apiUrl, channel);
+    return slackConfig;
   }
   
   @Override
   public String toString() {
-    return "SlackConfig{" +
+    return "PostableSlackConfig{" +
       "sendResolved=" + sendResolved +
-      ", apiUrl='" + apiUrl + '\'' +
       ", channel='" + channel + '\'' +
       ", iconEmoji='" + iconEmoji + '\'' +
       ", iconUrl='" + iconUrl + '\'' +
       ", linkNames=" + linkNames +
       ", username='" + username + '\'' +
       ", actions=" + actions +
-      ", callback_id='" + callbackId + '\'' +
+      ", callbackId='" + callbackId + '\'' +
       ", color='" + color + '\'' +
       ", fallback='" + fallback + '\'' +
       ", fields=" + fields +
@@ -372,8 +276,8 @@ public class SlackConfig {
       ", text='" + text + '\'' +
       ", title='" + title + '\'' +
       ", titleLink='" + titleLink + '\'' +
-      ", image_url='" + imageUrl + '\'' +
-      ", thumb_url='" + thumbUrl + '\'' +
+      ", imageUrl='" + imageUrl + '\'' +
+      ", thumbUrl='" + thumbUrl + '\'' +
       ", httpConfig=" + httpConfig +
       '}';
   }

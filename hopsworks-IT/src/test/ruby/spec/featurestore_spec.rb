@@ -185,7 +185,7 @@ describe "On #{ENV['OS']}" do
 
         it "should assign the privileges to the existing users of the project" do
           # Create a project without feature store
-          no_fs_project = create_project(projectName = nil, services = [])
+          no_fs_project = create_project(services: [])
 
           # Add member to the project
           user = create_user

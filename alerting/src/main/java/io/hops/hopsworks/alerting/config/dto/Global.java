@@ -15,76 +15,54 @@
  */
 package io.hops.hopsworks.alerting.config.dto;
 
+import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@JsonPropertyOrder({
-  "smtp_smarthost",
-  "smtp_from",
-  "smtp_auth_username",
-  "smtp_auth_password",
-  "smtp_auth_identity",
-  "smtp_auth_secret",
-  "smtp_require_tls",
-  "slack_api_url",
-  "victorops_api_key",
-  "victorops_api_url",
-  "pagerduty_url",
-  "opsgenie_api_key",
-  "opsgenie_api_url",
-  "wechat_api_url",
-  "wechat_api_secret",
-  "wechat_api_corp_id",
-  "http_config",
-  "resolve_timeout"
-  })
 public class Global {
-  
-  @JsonProperty("smtp_smarthost")
+
+  @JsonAlias({"smtp_smarthost"})
   private String smtpSmarthost;
-  @JsonProperty("smtp_from")
+  @JsonAlias({"smtp_from"})
   private String smtpFrom;
-  @JsonProperty("smtp_auth_username")
+  @JsonAlias({"smtp_auth_username"})
   private String smtpAuthUsername;
-  @JsonProperty("smtp_auth_password")
+  @JsonAlias({"smtp_auth_password"})
   private String smtpAuthPassword;
-  @JsonProperty("smtp_auth_identity")
+  @JsonAlias({"smtp_auth_identity"})
   private String smtpAuthIdentity;
-  @JsonProperty("smtp_auth_secret")
+  @JsonAlias({"smtp_auth_secret"})
   private String smtpAuthSecret;
-  @JsonProperty("smtp_require_tls")
+  @JsonAlias({"smtp_require_tls"})
   private String smtpRequireTls;
+  @JsonAlias({"smtp_hello"})
+  private String smtpHello;
   
   // The API URL to use for Slack notifications.
-  @JsonProperty("slack_api_url")
+  @JsonAlias({"slack_api_url"})
   private String slackApiUrl;
   
-  @JsonProperty("victorops_api_key")
+  @JsonAlias({"victorops_api_key"})
   private String victoropsApiKey;
-  @JsonProperty("victorops_api_url")
+  @JsonAlias({"victorops_api_url"})
   private String victoropsApiUrl;
-  
-  @JsonProperty("pagerduty_url")
+  @JsonAlias({"pagerduty_url"})
   private String pagerdutyUrl;
-  
-  @JsonProperty("opsgenie_api_key")
+  @JsonAlias({"opsgenie_api_key"})
   private String opsgenieApiKey;
-  @JsonProperty("opsgenie_api_url")
+  @JsonAlias({"opsgenie_api_url"})
   private String opsgenieApiUrl;
-  
-  @JsonProperty("wechat_api_url")
+  @JsonAlias({"wechat_api_url"})
   private String wechatApiUrl;
-  @JsonProperty("wechat_api_secret")
+  @JsonAlias({"wechat_api_secret"})
   private String wechatApiSecret;
-  @JsonProperty("wechat_api_corp_id")
+  @JsonAlias({"wechat_api_corp_id"})
   private String wechatApiCorpId;
   //The default HTTP client configuration
-  @JsonProperty("http_config")
+  @JsonAlias({"http_config"})
   private HttpConfig httpConfig;
   //ResolveTimeout is the default value used by alertmanager if the alert does not include EndsAt
-  @JsonProperty("resolve_timeout")
+  @JsonAlias({"resolve_timeout"})
   private String resolveTimeout;
   
   /**
@@ -106,13 +84,11 @@ public class Global {
     this.smtpAuthUsername = smtpAuthUsername;
     this.smtpAuthPassword = smtpAuthPassword;
   }
-  
-  @JsonProperty("smtp_smarthost")
+
   public String getSmtpSmarthost() {
     return smtpSmarthost;
   }
   
-  @JsonProperty("smtp_smarthost")
   public void setSmtpSmarthost(String smtpSmarthost) {
     this.smtpSmarthost = smtpSmarthost;
   }
@@ -122,12 +98,10 @@ public class Global {
     return this;
   }
   
-  @JsonProperty("smtp_from")
   public String getSmtpFrom() {
     return smtpFrom;
   }
   
-  @JsonProperty("smtp_from")
   public void setSmtpFrom(String smtpFrom) {
     this.smtpFrom = smtpFrom;
   }
@@ -137,12 +111,10 @@ public class Global {
     return this;
   }
   
-  @JsonProperty("smtp_auth_username")
   public String getSmtpAuthUsername() {
     return smtpAuthUsername;
   }
   
-  @JsonProperty("smtp_auth_username")
   public void setSmtpAuthUsername(String smtpAuthUsername) {
     this.smtpAuthUsername = smtpAuthUsername;
   }
@@ -151,13 +123,11 @@ public class Global {
     this.smtpAuthUsername = smtpAuthUsername;
     return this;
   }
-  
-  @JsonProperty("smtp_auth_password")
+
   public String getSmtpAuthPassword() {
     return smtpAuthPassword;
   }
   
-  @JsonProperty("smtp_auth_password")
   public void setSmtpAuthPassword(String smtpAuthPassword) {
     this.smtpAuthPassword = smtpAuthPassword;
   }
@@ -166,13 +136,11 @@ public class Global {
     this.smtpAuthPassword = smtpAuthPassword;
     return this;
   }
-  
-  @JsonProperty("smtp_auth_identity")
+
   public String getSmtpAuthIdentity() {
     return smtpAuthIdentity;
   }
   
-  @JsonProperty("smtp_auth_identity")
   public void setSmtpAuthIdentity(String smtpAuthIdentity) {
     this.smtpAuthIdentity = smtpAuthIdentity;
   }
@@ -181,13 +149,11 @@ public class Global {
     this.smtpAuthIdentity = smtpAuthIdentity;
     return this;
   }
-  
-  @JsonProperty("smtp_auth_secret")
+
   public String getSmtpAuthSecret() {
     return smtpAuthSecret;
   }
   
-  @JsonProperty("smtp_auth_secret")
   public void setSmtpAuthSecret(String smtpAuthSecret) {
     this.smtpAuthSecret = smtpAuthSecret;
   }
@@ -196,13 +162,11 @@ public class Global {
     this.smtpAuthSecret = smtpAuthSecret;
     return this;
   }
-  
-  @JsonProperty("smtp_require_tls")
+
   public String getSmtpRequireTls() {
     return smtpRequireTls;
   }
   
-  @JsonProperty("smtp_require_tls")
   public void setSmtpRequireTls(String smtpRequireTls) {
     this.smtpRequireTls = smtpRequireTls;
   }
@@ -212,12 +176,23 @@ public class Global {
     return this;
   }
   
-  @JsonProperty("slack_api_url")
+  public String getSmtpHello() {
+    return smtpHello;
+  }
+  
+  public void setSmtpHello(String smtpHello) {
+    this.smtpHello = smtpHello;
+  }
+  
+  public Global withSmtpHello(String smtpHello) {
+    this.smtpHello = smtpHello;
+    return this;
+  }
+  
   public String getSlackApiUrl() {
     return slackApiUrl;
   }
   
-  @JsonProperty("slack_api_url")
   public void setSlackApiUrl(String slackApiUrl) {
     this.slackApiUrl = slackApiUrl;
   }
@@ -226,13 +201,11 @@ public class Global {
     this.slackApiUrl = slackApiUrl;
     return this;
   }
-  
-  @JsonProperty("victorops_api_key")
+
   public String getVictoropsApiKey() {
     return victoropsApiKey;
   }
   
-  @JsonProperty("victorops_api_key")
   public void setVictoropsApiKey(String victoropsApiKey) {
     this.victoropsApiKey = victoropsApiKey;
   }
@@ -242,12 +215,10 @@ public class Global {
     return this;
   }
   
-  @JsonProperty("victorops_api_url")
   public String getVictoropsApiUrl() {
     return victoropsApiUrl;
   }
   
-  @JsonProperty("victorops_api_url")
   public void setVictoropsApiUrl(String victoropsApiUrl) {
     this.victoropsApiUrl = victoropsApiUrl;
   }
@@ -257,12 +228,10 @@ public class Global {
     return this;
   }
   
-  @JsonProperty("pagerduty_url")
   public String getPagerdutyUrl() {
     return pagerdutyUrl;
   }
-  
-  @JsonProperty("pagerduty_url")
+
   public void setPagerdutyUrl(String pagerdutyUrl) {
     this.pagerdutyUrl = pagerdutyUrl;
   }
@@ -271,13 +240,11 @@ public class Global {
     this.pagerdutyUrl = pagerdutyUrl;
     return this;
   }
-  
-  @JsonProperty("opsgenie_api_key")
+
   public String getOpsgenieApiKey() {
     return opsgenieApiKey;
   }
   
-  @JsonProperty("opsgenie_api_key")
   public void setOpsgenieApiKey(String opsgenieApiKey) {
     this.opsgenieApiKey = opsgenieApiKey;
   }
@@ -286,13 +253,11 @@ public class Global {
     this.opsgenieApiKey = opsgenieApiKey;
     return this;
   }
-  
-  @JsonProperty("opsgenie_api_url")
+
   public String getOpsgenieApiUrl() {
     return opsgenieApiUrl;
   }
   
-  @JsonProperty("opsgenie_api_url")
   public void setOpsgenieApiUrl(String opsgenieApiUrl) {
     this.opsgenieApiUrl = opsgenieApiUrl;
   }
@@ -301,13 +266,11 @@ public class Global {
     this.opsgenieApiUrl = opsgenieApiUrl;
     return this;
   }
-  
-  @JsonProperty("wechat_api_url")
+
   public String getWechatApiUrl() {
     return wechatApiUrl;
   }
   
-  @JsonProperty("wechat_api_url")
   public void setWechatApiUrl(String wechatApiUrl) {
     this.wechatApiUrl = wechatApiUrl;
   }
@@ -317,12 +280,10 @@ public class Global {
     return this;
   }
   
-  @JsonProperty("wechat_api_secret")
   public String getWechatApiSecret() {
     return wechatApiSecret;
   }
   
-  @JsonProperty("wechat_api_secret")
   public void setWechatApiSecret(String wechatApiSecret) {
     this.wechatApiSecret = wechatApiSecret;
   }
@@ -331,13 +292,11 @@ public class Global {
     this.wechatApiSecret = wechatApiSecret;
     return this;
   }
-  
-  @JsonProperty("wechat_api_corp_id")
+
   public String getWechatApiCorpId() {
     return wechatApiCorpId;
   }
   
-  @JsonProperty("wechat_api_corp_id")
   public void setWechatApiCorpId(String wechatApiCorpId) {
     this.wechatApiCorpId = wechatApiCorpId;
   }
@@ -346,13 +305,11 @@ public class Global {
     this.wechatApiCorpId = wechatApiCorpId;
     return this;
   }
-  
-  @JsonProperty("http_config")
+
   public HttpConfig getHttpConfig() {
     return httpConfig;
   }
   
-  @JsonProperty("http_config")
   public void setHttpConfig(HttpConfig httpConfig) {
     this.httpConfig = httpConfig;
   }
@@ -361,13 +318,11 @@ public class Global {
     this.httpConfig = httpConfig;
     return this;
   }
-  
-  @JsonProperty("resolve_timeout")
+
   public String getResolveTimeout() {
     return resolveTimeout;
   }
-  
-  @JsonProperty("resolve_timeout")
+
   public void setResolveTimeout(String resolveTimeout) {
     this.resolveTimeout = resolveTimeout;
   }

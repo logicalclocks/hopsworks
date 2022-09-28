@@ -15,6 +15,8 @@
  */
 package io.hops.hopsworks.common.featurestore.storageconnectors.redshift;
 
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.google.common.base.Strings;
 import io.hops.hopsworks.common.featurestore.OptionDTO;
 import io.hops.hopsworks.common.featurestore.storageconnectors.FeaturestoreStorageConnectorDTO;
@@ -26,6 +28,11 @@ import java.time.Instant;
 import java.util.List;
 
 @XmlRootElement
+@JsonTypeInfo(
+  use=JsonTypeInfo.Id.NAME,
+  include=JsonTypeInfo.As.PROPERTY,
+  property="type")
+@JsonTypeName("featurestoreRedshiftConnectorDTO")
 public class FeaturestoreRedshiftConnectorDTO extends FeaturestoreStorageConnectorDTO {
   private String clusterIdentifier;
   private String databaseDriver;

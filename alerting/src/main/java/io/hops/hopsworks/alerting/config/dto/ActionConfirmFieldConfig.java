@@ -15,25 +15,16 @@
  */
 package io.hops.hopsworks.alerting.config.dto;
 
+import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@JsonPropertyOrder({
-  "text",
-  "dismiss_text",
-  "ok_text",
-  "title"
-  })
 public class ActionConfirmFieldConfig {
-  @JsonProperty("text")
   private String text;
-  @JsonProperty("dismiss_text")
+  @JsonAlias({"dismiss_text"})
   private String dismissText;
-  @JsonProperty("ok_text")
+  @JsonAlias({"ok_text"})
   private String okText;
-  @JsonProperty("title")
   private String title;
   
   public ActionConfirmFieldConfig() {
@@ -43,22 +34,18 @@ public class ActionConfirmFieldConfig {
     this.text = text;
   }
   
-  @JsonProperty("text")
   public String getText() {
     return text;
   }
   
-  @JsonProperty("text")
   public void setText(String text) {
     this.text = text;
   }
   
-  @JsonProperty("dismiss_text")
   public String getDismissText() {
     return dismissText;
   }
   
-  @JsonProperty("dismiss_text")
   public void setDismissText(String dismissText) {
     this.dismissText = dismissText;
   }
@@ -67,13 +54,11 @@ public class ActionConfirmFieldConfig {
     this.dismissText = dismissText;
     return this;
   }
-  
-  @JsonProperty("ok_text")
+
   public String getOkText() {
     return okText;
   }
   
-  @JsonProperty("ok_text")
   public void setOkText(String okText) {
     this.okText = okText;
   }
@@ -82,13 +67,11 @@ public class ActionConfirmFieldConfig {
     this.okText = okText;
     return this;
   }
-  
-  @JsonProperty("title")
+
   public String getTitle() {
     return title;
   }
-  
-  @JsonProperty("title")
+
   public void setTitle(String title) {
     this.title = title;
   }

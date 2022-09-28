@@ -15,11 +15,16 @@
  */
 package io.hops.hopsworks.api.alert.receiver;
 
+import com.google.common.base.Strings;
+import io.hops.hopsworks.alert.util.Constants;
+import io.hops.hopsworks.alerting.config.dto.EmailConfig;
 import io.hops.hopsworks.alerting.config.dto.TlsConfig;
 import io.hops.hopsworks.api.alert.Entry;
 
 import javax.xml.bind.annotation.XmlRootElement;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @XmlRootElement
 public class PostableEmailConfig {
@@ -148,5 +153,32 @@ public class PostableEmailConfig {
   
   public void setHeaders(List<Entry> headers) {
     this.headers = headers;
+  }
+  
+  public EmailConfig toEmailConfig(Boolean defaultTemplate) {
+    EmailConfig emailConfig = new EmailConfig(this.getTo())
+      .withFrom(this.getFrom())
+      .withSmarthost(this.getSmarthost())
+      .withHello(this.getHello())
+      .withAuthIdentity(this.getAuthIdentity())
+      .withAuthPassword(this.getAuthPassword())
+      .withAuthSecret(this.getAuthSecret())
+      .withAuthUsername(this.getAuthUsername())
+      .withHtml(this.getHtml())
+      .withText(this.getText())
+      .withRequireTls(this.getRequireTls())
+      .withTlsConfig(this.getTlsConfig())
+      .withSendResolved(this.getSendResolved());
+    if (this.getHeaders() != null && !this.getHeaders().isEmpty()) {
+      Map<String, String> headers;
+      headers = this.getHeaders().stream()
+        .filter(entry -> entry != null && entry.getKey() != null && entry.getValue() != null)
+        .collect(Collectors.toMap(Entry::getKey, Entry::getValue));
+      emailConfig.setHeaders(headers);
+    }
+    if (defaultTemplate && Strings.isNullOrEmpty(emailConfig.getHtml())) {
+      emailConfig.setHtml(Constants.DEFAULT_EMAIL_HTML);
+    }
+    return emailConfig;
   }
 }

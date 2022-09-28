@@ -113,7 +113,7 @@ public class AdminRouteResource {
   @POST
   @Produces(MediaType.APPLICATION_JSON)
   @Consumes(MediaType.APPLICATION_JSON)
-  @ApiOperation(value = "Create a receiver.")
+  @ApiOperation(value = "Create a route.")
   @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN"})
   public Response create(PostableRouteDTO routeDTO, @Context UriInfo uriInfo,
                          @Context HttpServletRequest req,
@@ -122,7 +122,7 @@ public class AdminRouteResource {
     if (routeDTO == null) {
       throw new AlertException(RESTCodes.AlertErrorCode.ILLEGAL_ARGUMENT, Level.FINE, "No payload.");
     }
-    Route route = routeBuilder.toRoute(routeDTO);
+    Route route = routeDTO.toRoute();
     try {
       alertManagerConfiguration.addRoute(route);
     } catch (AlertManagerConfigCtrlCreateException | AlertManagerUnreachableException |
@@ -147,7 +147,7 @@ public class AdminRouteResource {
   @Path("{receiver}")
   @Produces(MediaType.APPLICATION_JSON)
   @Consumes(MediaType.APPLICATION_JSON)
-  @ApiOperation(value = "Create a receiver.")
+  @ApiOperation(value = "Update a route.")
   @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN"})
   public Response update(@PathParam("receiver") String receiver, PostableRouteDTO route,
                          @QueryParam("match") List<String> match,
@@ -160,7 +160,7 @@ public class AdminRouteResource {
     }
     Route routeToUpdate =
         new Route(receiver).withMatch(routeBuilder.toMap(match)).withMatchRe(routeBuilder.toMap(matchRe));
-    Route updatedRoute = routeBuilder.toRoute(route);
+    Route updatedRoute = route.toRoute();
     try {
       alertManagerConfiguration.updateRoute(routeToUpdate, updatedRoute);
     } catch (AlertManagerConfigCtrlCreateException | AlertManagerUnreachableException |
@@ -182,7 +182,7 @@ public class AdminRouteResource {
   
   @DELETE
   @Path("{receiver}")
-  @ApiOperation(value = "Delete receiver by name.")
+  @ApiOperation(value = "Delete route.")
   @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN"})
   public Response delete(@PathParam("receiver") String receiver,
                          @QueryParam("match") List<String> match,

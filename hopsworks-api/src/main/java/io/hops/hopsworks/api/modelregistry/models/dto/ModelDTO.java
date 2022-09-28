@@ -21,12 +21,19 @@ import io.hops.hopsworks.common.tags.TagsDTO;
 import io.hops.hopsworks.common.api.RestDTO;
 import io.hops.hopsworks.common.featurestore.trainingdatasets.TrainingDatasetDTO;
 
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlAnyAttribute;
 import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.namespace.QName;
+import java.util.Arrays;
+import java.util.HashMap;
 
 /**
  * Contains configuration and other information about a model
  */
 @XmlRootElement
+@XmlAccessorType(XmlAccessType.FIELD)
 public class ModelDTO extends RestDTO<ModelDTO> {
 
   public ModelDTO() {
@@ -50,8 +57,9 @@ public class ModelDTO extends RestDTO<ModelDTO> {
   private InodeDTO modelSchema;
 
   private Long created;
-
-  private ModelResult metrics;
+  
+  @XmlAnyAttribute
+  private HashMap<QName, Double> metrics;
 
   private String description;
 
@@ -100,15 +108,15 @@ public class ModelDTO extends RestDTO<ModelDTO> {
   public void setUserFullName(String userFullName) {
     this.userFullName = userFullName;
   }
-
-  public ModelResult getMetrics() {
+  
+  public HashMap<QName, Double> getMetrics() {
     return metrics;
   }
-
-  public void setMetrics(ModelResult metrics) {
+  
+  public void setMetrics(HashMap<QName, Double> metrics) {
     this.metrics = metrics;
   }
-
+  
   public Long getCreated() {
     return created;
   }
@@ -211,5 +219,29 @@ public class ModelDTO extends RestDTO<ModelDTO> {
 
   public void setTags(TagsDTO tags) {
     this.tags = tags;
+  }
+  
+  @Override
+  public String toString() {
+    return "ModelDTO{" +
+      "id='" + id + '\'' +
+      ", name='" + name + '\'' +
+      ", version=" + version +
+      ", projectName='" + projectName + '\'' +
+      ", userFullName='" + userFullName + '\'' +
+      ", inputExample=" + inputExample +
+      ", framework='" + framework + '\'' +
+      ", modelSchema=" + modelSchema +
+      ", created=" + created +
+      ", metrics=" + metrics +
+      ", description='" + description + '\'' +
+      ", environment=" + Arrays.toString(environment) +
+      ", program='" + program + '\'' +
+      ", experimentId='" + experimentId + '\'' +
+      ", experimentProjectName='" + experimentProjectName + '\'' +
+      ", trainingDataset=" + trainingDataset +
+      ", modelRegistryId=" + modelRegistryId +
+      ", tags=" + tags +
+      '}';
   }
 }

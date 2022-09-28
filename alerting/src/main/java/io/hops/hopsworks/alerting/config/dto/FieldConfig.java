@@ -17,18 +17,10 @@ package io.hops.hopsworks.alerting.config.dto;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@JsonPropertyOrder({
-  "title",
-  "value",
-  "short"
-  })
 public class FieldConfig {
-  @JsonProperty("title")
   private String title;
-  @JsonProperty("value")
   private String value;
   @JsonProperty("short")
   private Boolean _short;
@@ -41,32 +33,26 @@ public class FieldConfig {
     this.value = value;
   }
   
-  @JsonProperty("title")
   public String getTitle() {
     return title;
   }
   
-  @JsonProperty("title")
   public void setTitle(String title) {
     this.title = title;
   }
   
-  @JsonProperty("value")
   public String getValue() {
     return value;
   }
   
-  @JsonProperty("value")
   public void setValue(String value) {
     this.value = value;
   }
   
-  @JsonProperty("short")
   public Boolean getShort() {
     return _short;
   }
   
-  @JsonProperty("short")
   public void setShort(Boolean _short) {
     this._short = _short;
   }

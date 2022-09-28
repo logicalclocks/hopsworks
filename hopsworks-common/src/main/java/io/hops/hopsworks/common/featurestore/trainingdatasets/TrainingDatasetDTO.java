@@ -16,6 +16,7 @@
 
 package io.hops.hopsworks.common.featurestore.trainingdatasets;
 
+import com.fasterxml.jackson.annotation.JsonTypeName;
 import io.hops.hopsworks.common.featurestore.FeaturestoreEntityDTO;
 import io.hops.hopsworks.common.featurestore.feature.TrainingDatasetFeatureDTO;
 import io.hops.hopsworks.common.featurestore.keyword.KeywordDTO;
@@ -28,7 +29,8 @@ import io.hops.hopsworks.common.tags.TagsDTO;
 import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.TrainingDataset;
 import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.TrainingDatasetType;
 
-import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 import java.util.ArrayList;
@@ -43,6 +45,8 @@ import static io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.
  * using jaxb.
  */
 @XmlRootElement
+@XmlAccessorType(XmlAccessType.FIELD)
+@JsonTypeName("trainingDatasetDTO")
 public class TrainingDatasetDTO extends FeaturestoreEntityDTO<TrainingDatasetDTO> {
   
   private String dataFormat;
@@ -105,7 +109,6 @@ public class TrainingDatasetDTO extends FeaturestoreEntityDTO<TrainingDatasetDTO
     this.sampleRatio = trainingDataset.getSampleRatio();
   }
   
-  @XmlElement
   public String getDataFormat() {
     return dataFormat;
   }
@@ -137,8 +140,7 @@ public class TrainingDatasetDTO extends FeaturestoreEntityDTO<TrainingDatasetDTO
   public void setInodeId(Long inodeId) {
     this.inodeId = inodeId;
   }
-
-  @XmlElement
+  
   public TrainingDatasetType getTrainingDatasetType() {
     return trainingDatasetType;
   }
@@ -147,8 +149,7 @@ public class TrainingDatasetDTO extends FeaturestoreEntityDTO<TrainingDatasetDTO
     TrainingDatasetType trainingDatasetType) {
     this.trainingDatasetType = trainingDatasetType;
   }
-
-  @XmlElement
+  
   public List<TrainingDatasetSplitDTO> getSplits() {
     return splits;
   }
@@ -158,7 +159,6 @@ public class TrainingDatasetDTO extends FeaturestoreEntityDTO<TrainingDatasetDTO
     this.splits = splits;
   }
   
-  @XmlElement
   public Long getSeed() {
     return seed;
   }

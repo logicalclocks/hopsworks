@@ -15,6 +15,7 @@
  */
 package io.hops.hopsworks.alerting.config.dto;
 
+import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
@@ -37,23 +38,20 @@ import java.util.Objects;
   })
 public class Route {
   
-  @JsonProperty("group_by")
+  @JsonAlias({"group_by"})
   private List<String> groupBy = null;
-  @JsonProperty("group_wait")
+  @JsonAlias({"group_wait"})
   private String groupWait;
-  @JsonProperty("group_interval")
+  @JsonAlias({"group_interval"})
   private String groupInterval;
-  @JsonProperty("repeat_interval")
+  @JsonAlias({"repeat_interval"})
   private String repeatInterval;
-  @JsonProperty("receiver")
   private String receiver;
-  @JsonProperty("routes")
   private List<Route> routes = null;
   @JsonProperty("continue")
   private Boolean _continue;
-  @JsonProperty("match")
   private Map<String, String> match;
-  @JsonProperty("match_re")
+  @JsonAlias({"match_re"})
   private Map<String, String> matchRe;
   
   public Route() {
@@ -62,13 +60,11 @@ public class Route {
   public Route(String receiver) {
     this.receiver = receiver;
   }
-  
-  @JsonProperty("group_by")
+
   public List<String> getGroupBy() {
     return groupBy;
   }
   
-  @JsonProperty("group_by")
   public void setGroupBy(List<String> groupBy) {
     this.groupBy = groupBy;
   }
@@ -77,13 +73,11 @@ public class Route {
     this.groupBy = groupBy;
     return this;
   }
-  
-  @JsonProperty("group_wait")
+
   public String getGroupWait() {
     return groupWait;
   }
   
-  @JsonProperty("group_wait")
   public void setGroupWait(String groupWait) {
     this.groupWait = groupWait;
   }
@@ -92,13 +86,11 @@ public class Route {
     this.groupWait = groupWait;
     return this;
   }
-  
-  @JsonProperty("group_interval")
+
   public String getGroupInterval() {
     return groupInterval;
   }
   
-  @JsonProperty("group_interval")
   public void setGroupInterval(String groupInterval) {
     this.groupInterval = groupInterval;
   }
@@ -107,13 +99,11 @@ public class Route {
     this.groupInterval = groupInterval;
     return this;
   }
-  
-  @JsonProperty("repeat_interval")
+
   public String getRepeatInterval() {
     return repeatInterval;
   }
   
-  @JsonProperty("repeat_interval")
   public void setRepeatInterval(String repeatInterval) {
     this.repeatInterval = repeatInterval;
   }
@@ -122,23 +112,19 @@ public class Route {
     this.repeatInterval = repeatInterval;
     return this;
   }
-  
-  @JsonProperty("receiver")
+
   public String getReceiver() {
     return receiver;
   }
   
-  @JsonProperty("receiver")
   public void setReceiver(String receiver) {
     this.receiver = receiver;
   }
-  
-  @JsonProperty("routes")
+
   public List<Route> getRoutes() {
     return routes;
   }
-  
-  @JsonProperty("routes")
+
   public void setRoutes(List<Route> routes) {
     this.routes = routes;
   }
@@ -148,12 +134,10 @@ public class Route {
     return this;
   }
   
-  @JsonProperty("continue")
   public Boolean getContinue() {
     return _continue;
   }
   
-  @JsonProperty("continue")
   public void setContinue(Boolean _continue) {
     this._continue = _continue;
   }
@@ -163,12 +147,10 @@ public class Route {
     return this;
   }
   
-  @JsonProperty("match")
   public Map<String, String> getMatch() {
     return match;
   }
   
-  @JsonProperty("match")
   public void setMatch(Map<String, String> match) {
     this.match = match;
   }
@@ -177,13 +159,11 @@ public class Route {
     this.match = match;
     return this;
   }
-  
-  @JsonProperty("match_re")
+
   public Map<String, String> getMatchRe() {
     return matchRe;
   }
-  
-  @JsonProperty("match_re")
+
   public void setMatchRe(Map<String, String> matchRe) {
     this.matchRe = matchRe;
   }

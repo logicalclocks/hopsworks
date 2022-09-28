@@ -14,8 +14,9 @@
  * If not, see <https://www.gnu.org/licenses/>.
  */
 
-package io.hops.hopsworks.api.featurestore.featureview;
+package io.hops.hopsworks.common.featurestore.featureview;
 
+import com.fasterxml.jackson.annotation.JsonTypeName;
 import io.hops.hopsworks.common.featurestore.FeaturestoreEntityDTO;
 import io.hops.hopsworks.common.featurestore.feature.TrainingDatasetFeatureDTO;
 import io.hops.hopsworks.common.featurestore.keyword.KeywordDTO;
@@ -27,6 +28,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 import java.util.List;
 
 @XmlRootElement
+@JsonTypeName("featureViewDTO")
 public class FeatureViewDTO extends FeaturestoreEntityDTO<FeatureViewDTO> {
 
   private QueryDTO query;

@@ -38,7 +38,7 @@ module AlertHelper
                 "slackConfigs": nil,  "opsgenieConfigs": nil, "webhookConfigs": nil, "victoropsConfigs": nil,
                 "wechatConfigs": nil}
 
-  @@global = { "smtpsmarthost": "smtp.gmail.com:587",
+  @@global = { "smtpSmarthost": "smtp.gmail.com:587",
                "smtpFrom": "admin@hopsworks.ai",
                "smtpAuthUsername": "admin@hopsworks.ai",
                "smtpAuthIdentity": "admin@hopsworks.ai",
@@ -109,7 +109,7 @@ module AlertHelper
   def create_route(project, receiver: nil)
     route = @@route.clone
     route[:receiver] = receiver ? receiver : get_receiver_name(project[:projectname], "#{random_id_len(10)}")
-    route[:match] = [create_match(project[:projectname])]
+    route[:match] = create_match(project[:projectname])
     return route
   end
 
@@ -159,8 +159,8 @@ module AlertHelper
   end
 
   def check_eq_match(json_body, project)
-    projectEntry = json_body[:match][:entry].detect { |e| e[:key] == "project" }
-    expect(projectEntry[:value]).to eq(project[:projectname])
+    projectEntry = json_body[:match][:project]
+    expect(projectEntry).to eq(project[:projectname])
   end
 
   def create_random_alerts(project, num: 3)
@@ -454,10 +454,6 @@ module AlertHelper
     get "#{@@admin_alert_receiver_resource}#{query}"
   end
 
-  def get_receivers_admin(query: "")
-    get "#{@@admin_alert_receiver_resource}#{query}"
-  end
-
   def get_receivers_by_name_admin(name)
     get "#{@@admin_alert_receiver_resource}/#{name}"
   end
@@ -521,31 +517,21 @@ module AlertHelper
     r = receivers.detect { |r| r["name"] == receiver[:name] }
     r1 = {}
     r1["name"] = receiver[:name]
-    r1["email_configs"] = receiver[:emailConfigs]
-    r1["slack_configs"] = receiver[:slackConfigs]
-    r1["pagerduty_configs"] = receiver[:pagerdutyConfigs]
+    r1["emailConfigs"] = receiver[:emailConfigs]
+    r1["slackConfigs"] = receiver[:slackConfigs]
+    r1["pagerdutyConfigs"] = receiver[:pagerdutyConfigs]
     expect(r).to eq(JSON.parse(r1.compact.to_json))
-  end
-
-  def toHash(key_value)
-    if key_value && key_value.kind_of?(Array)
-      list = key_value[0]
-    elsif key_value
-      list = key_value[:entry]
-    end
-    kv = list ? list.map { |r| %W[#{r[:key]} #{r[:value]}] } : nil
-    return kv ? Hash[kv] : nil
   end
 
   def check_backup_contains_route(route)
     config = AlertManagerConfig.order(created: :desc).first
     routes = JSON.parse(config[:content])["route"]["routes"]
     r1 = {}
-    r1["match"] = toHash(route[:match])
-    r1["match_re"] = toHash(route[:matchRe])
+    r1["match"] = route[:match]
+    r1["matchRe"] = route[:matchRe]
     r1["receiver"] = route[:receiver]
     r1["continue"] = route[:continue]
-    r1["group_by"] = route[:groupBy]
+    r1["groupBy"] = route[:groupBy]
     r = routes.detect { |r| r == JSON.parse(r1.compact.to_json) }
     expect(r).to be_present
   end

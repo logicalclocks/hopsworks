@@ -1,6 +1,6 @@
 /*
  * This file is part of Hopsworks
- * Copyright (C) 2021, Logical Clocks AB. All rights reserved
+ * Copyright (C) 2022, Hopsworks AB. All rights reserved
  *
  * Hopsworks is free software: you can redistribute it and/or modify it under the terms of
  * the GNU Affero General Public License as published by the Free Software Foundation,
@@ -13,28 +13,23 @@
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see <https://www.gnu.org/licenses/>.
  */
-package io.hops.hopsworks.alerting.config.dto;
+package io.hops.hopsworks.api.alert.receiver;
 
-import com.fasterxml.jackson.annotation.JsonAlias;
-import com.fasterxml.jackson.annotation.JsonInclude;
+import io.hops.hopsworks.alerting.config.dto.HttpConfig;
+import io.hops.hopsworks.alerting.config.dto.WebhookConfig;
 
-@JsonInclude(JsonInclude.Include.NON_NULL)
-public class WebhookConfig {
-  @JsonAlias({"send_resolved"})
+import javax.xml.bind.annotation.XmlRootElement;
+
+@XmlRootElement
+public class PostableWebhookConfig {
   private Boolean sendResolved;
   private String url;
-  @JsonAlias({"max_alerts"})
   private String maxAlerts;
-  @JsonAlias({"http_config"})
   private HttpConfig httpConfig;
   
-  public WebhookConfig() {
+  public PostableWebhookConfig() {
   }
   
-  public WebhookConfig(String url) {
-    this.url = url;
-  }
-
   public Boolean getSendResolved() {
     return sendResolved;
   }
@@ -43,15 +38,10 @@ public class WebhookConfig {
     this.sendResolved = sendResolved;
   }
   
-  public WebhookConfig withSendResolved(Boolean sendResolved) {
-    this.sendResolved = sendResolved;
-    return this;
-  }
-
   public String getUrl() {
     return url;
   }
-
+  
   public void setUrl(String url) {
     this.url = url;
   }
@@ -64,11 +54,6 @@ public class WebhookConfig {
     this.maxAlerts = maxAlerts;
   }
   
-  public WebhookConfig withMaxAlerts(String maxAlerts) {
-    this.maxAlerts = maxAlerts;
-    return this;
-  }
-  
   public HttpConfig getHttpConfig() {
     return httpConfig;
   }
@@ -77,18 +62,9 @@ public class WebhookConfig {
     this.httpConfig = httpConfig;
   }
   
-  public WebhookConfig withHttpConfig(HttpConfig httpConfig) {
-    this.httpConfig = httpConfig;
-    return this;
-  }
-  
-  @Override
-  public String toString() {
-    return "WebhookConfig{" +
-      "sendResolved=" + sendResolved +
-      ", url='" + url + '\'' +
-      ", maxAlerts='" + maxAlerts + '\'' +
-      ", httpConfig=" + httpConfig +
-      '}';
+  public WebhookConfig toWebhookConfig() {
+    return new WebhookConfig(this.url).withSendResolved(this.sendResolved)
+      .withMaxAlerts(this.maxAlerts)
+      .withHttpConfig(this.httpConfig);
   }
 }

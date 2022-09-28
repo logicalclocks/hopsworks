@@ -50,7 +50,7 @@ describe "On #{ENV['OS']}" do
         get_job(@project[:id], job_spark_1)
         config = json_body[:config]
         config[:'spark.executor.memory'] = '2048'
-        create_sparktour_job(@project, job_spark_1, "jar", job_conf: config)
+        create_sparktour_job(@project, job_spark_1, "jar", job_conf: config, expected_status: 200)
         get_job(@project[:id], job_spark_1)
         expect(json_body[:config][:'spark.executor.memory']).to eq 2048
       end
@@ -104,7 +104,7 @@ describe "On #{ENV['OS']}" do
         delete_job(@project[:id], job_spark_1, expected_status: 403)
       end
       it "should fail to create or update spark job if executor memory is less than the minimum" do
-          create_sparktour_job(@project, job_spark_1, "jar")
+          create_sparktour_job(@project, job_spark_1, "jar", expected_status: 200)
           #get job, change args and config params and put it.
           get_job(@project[:id], job_spark_1)
           config = json_body[:config]

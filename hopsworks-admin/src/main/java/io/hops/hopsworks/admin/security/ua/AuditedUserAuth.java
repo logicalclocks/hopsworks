@@ -47,7 +47,7 @@ public class AuditedUserAuth {
   @Audited(type = AuditType.USER_LOGIN, action = AuditAction.LOGIN)
   public void login(@Caller(UserIdentifier.USERS) @AuditTarget(UserIdentifier.USERS) Users user,
     @Secret String password, @Secret String otp, HttpServletRequest req) throws UserException, ServletException {
-    String passwordWithSaltPlusOtp = authController.preCustomRealmLoginCheck(user, password, otp);
+    String passwordWithSaltPlusOtp = authController.preLoginCheck(user, password, otp);
     req.login(user.getEmail(), passwordWithSaltPlusOtp);
     authController.registerLogin(user);
   }

@@ -38,6 +38,7 @@
  */
 package io.hops.hopsworks.common.user;
 
+import com.google.common.base.Strings;
 import io.hops.hopsworks.common.dao.certificates.CertsFacade;
 import io.hops.hopsworks.persistence.entity.certificates.UserCerts;
 import io.hops.hopsworks.persistence.entity.project.Project;
@@ -121,7 +122,7 @@ public class AuthController {
   }
 
   /**
-   * Pre check for custom realm login.
+   * Pre-check for login.
    *
    * @param user
    * @param password
@@ -129,27 +130,20 @@ public class AuthController {
    * @return
    * @throws UserException
    */
-  public String preCustomRealmLoginCheck(Users user, String password, String otp) throws UserException {
+  public String preLoginCheck(Users user, String password, String otp) throws UserException {
     validateUser(user);
     if (isTwoFactorEnabled(user)) {
-      if ((otp == null || otp.isEmpty()) && user.getMode().equals(UserAccountType.M_ACCOUNT_TYPE)) {
+      if (Strings.isNullOrEmpty(otp)) {
         if (checkPasswordAndStatus(user, password)) {
           throw new IllegalStateException("Second factor required.");
+        } else {
+          throw new UserException(RESTCodes.UserErrorCode.AUTHENTICATION_FAILURE, Level.FINE,
+            "Incorrect username and/or password");
         }
       }
+      validateOTP(user, otp);
     }
-
-    // Add padding if custom realm is disabled
-    if (otp == null || otp.isEmpty() && user.getMode().equals(UserAccountType.M_ACCOUNT_TYPE)) {
-      otp = Settings.MOBILE_OTP_PADDING;
-    }
-    String newPassword = getPasswordPlusSalt(password, user.getSalt());
-    if (otp.length() == Settings.MOBILE_OTP_PADDING.length() && user.getMode().equals(UserAccountType.M_ACCOUNT_TYPE)) {
-      newPassword = newPassword + otp;
-    } else {
-      throw new IllegalArgumentException("Could not recognize the account type. Report a bug.");
-    }
-    return newPassword;
+    return getPasswordPlusSalt(password, user.getSalt());
   }
 
   /**
@@ -491,24 +485,23 @@ public class AuthController {
    * @return
    */
   public boolean isTwoFactorEnabled(Users user) {
+    if (!user.getMode().equals(UserAccountType.M_ACCOUNT_TYPE)) {
+      return false;
+    }
     String twoFactorAuth = settings.getTwoFactorAuth();
     String twoFactorExclude = settings.getTwoFactorExclude();
     String twoFactorMode = (twoFactorAuth != null ? twoFactorAuth : "");
     String excludes = (twoFactorExclude != null ? twoFactorExclude : "");
     String[] groups = (!excludes.isEmpty() ? excludes.split(";") : new String[]{});
-
+    
     for (String group : groups) {
       if (isUserInRole(user, group)) {
-        return false; //will allow anyone if one of the users groups are in the exclude list
+        return false; //will allow anyone if one of the users groups are in the excluded list
       }
     }
     if (twoFactorMode.equals(Settings.TwoFactorMode.MANDATORY.getName())) {
       return true;
-    } else if (twoFactorMode.equals(Settings.TwoFactorMode.OPTIONAL.getName()) && user.getTwoFactor()) {
-      return true;
-    }
-
-    return false;
+    } else return twoFactorMode.equals(Settings.TwoFactorMode.OPTIONAL.getName()) && user.getTwoFactor();
   }
 
   /**

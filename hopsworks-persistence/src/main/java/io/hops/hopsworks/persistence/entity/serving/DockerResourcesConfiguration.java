@@ -2,23 +2,13 @@
  * Copyright (C) 2021, Logical Clocks AB. All rights reserved
  */
 
-
 package io.hops.hopsworks.persistence.entity.serving;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
-import com.fasterxml.jackson.annotation.JsonTypeName;
-
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
 @XmlRootElement
-@XmlAccessorType(XmlAccessType.FIELD)
 @JsonIgnoreProperties(ignoreUnknown = true)
-@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "type")
-@JsonTypeName("dockerResourcesConfiguration")
 public class DockerResourcesConfiguration {
 
   public DockerResourcesConfiguration(){}
@@ -29,13 +19,10 @@ public class DockerResourcesConfiguration {
     this.gpus = gpus;
   }
   
-  @XmlElement
   private double cores = 1;
-
-  @XmlElement
+  
   private int memory = 1024;
 
-  @XmlElement
   private int gpus = 0;
 
   public double getCores() {

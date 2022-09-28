@@ -2018,9 +2018,6 @@ public class Settings implements Serializable {
   // Issuer of the QrCode
   public static final String ISSUER = "hops.io";
 
-  // For padding when password field is empty: 6 chars
-  public static final String MOBILE_OTP_PADDING = "@@@@@@";
-
   // Used to indicate that a python version is unknown
   public static final String UNKNOWN_LIBRARY_VERSION = "UNKNOWN";
 

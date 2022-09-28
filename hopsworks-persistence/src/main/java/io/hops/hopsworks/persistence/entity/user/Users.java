@@ -73,7 +73,7 @@ import io.hops.hopsworks.persistence.entity.tensorflow.TensorBoard;
 import io.hops.hopsworks.persistence.entity.user.security.ua.UserAccountStatus;
 import io.hops.hopsworks.persistence.entity.user.security.ua.UserAccountType;
 import io.hops.hopsworks.persistence.entity.user.security.ua.ValidationKeyType;
-import org.codehaus.jackson.annotate.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 @Entity
 @Table(name = "users", catalog = "hopsworks")

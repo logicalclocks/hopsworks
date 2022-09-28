@@ -38,6 +38,7 @@
  */
 package io.hops.hopsworks.persistence.entity.project;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.hops.hopsworks.persistence.entity.dataset.Dataset;
 import io.hops.hopsworks.persistence.entity.dataset.DatasetSharedWith;
 import io.hops.hopsworks.persistence.entity.hdfs.inode.Inode;
@@ -54,7 +55,6 @@ import io.hops.hopsworks.persistence.entity.serving.Serving;
 import io.hops.hopsworks.persistence.entity.tensorflow.TensorBoard;
 import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.persistence.entity.user.activity.Activity;
-import org.codehaus.jackson.annotate.JsonIgnore;
 
 import javax.persistence.Basic;
 import javax.persistence.CascadeType;

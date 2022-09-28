@@ -25,7 +25,7 @@ describe "On #{ENV['OS']}" do
       it 'should indicate all providers as not configured' do
         get_providers()
         expect_status_details(200)
-        expect(json_body[:items].count).to be == 0
+        expect(json_body[:count]).to eq(0)
       end
 
       ['GitHub', 'GitLab', 'BitBucket'].each do |provider_to_configure|
@@ -33,7 +33,7 @@ describe "On #{ENV['OS']}" do
           configure_git_provider(provider_to_configure)
           get_providers()
           expect_status_details(200)
-          expect(json_body[:items].count).to eql 1
+          expect(json_body[:count]).to eq(1)
           expect(json_body[:items][0][:gitProvider]).to eql provider_to_configure
           expect(json_body[:items][0][:username]).to eql "username"
           expect(json_body[:items][0][:token]).to eql "token"
@@ -45,7 +45,7 @@ describe "On #{ENV['OS']}" do
         configure_git_provider("GitHub", token="new token")
         get_providers()
         expect_status_details(200)
-        expect(json_body[:items].count).to eql 1
+        expect(json_body[:count]).to eq(1)
         expect(json_body[:items][0][:gitProvider]).to eql "GitHub"
         expect(json_body[:items][0][:username]).to eql "username"
         expect(json_body[:items][0][:token]).to eql "new token"

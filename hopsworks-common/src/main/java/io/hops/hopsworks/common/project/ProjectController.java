@@ -496,6 +496,8 @@ public class ProjectController {
         try {
           projectCreationFutures.addAll(addService(project, service, owner, dfso, provType));
         } catch (RESTException | IOException ex) {
+          LOGGER.log(Level.SEVERE, "Error enabling service {0}: {1}. Will try to cleanup...", new Object[]{service,
+            ex.getMessage()});
           cleanup(project, sessionId, projectCreationFutures);
           throw ex;
         }
@@ -519,6 +521,8 @@ public class ProjectController {
       try {
         ProjectHandler.runProjectPostCreateHandlers(projectHandlers, project);
       } catch (ProjectException ex) {
+        LOGGER.log(Level.SEVERE, "Error running Project Post Create Handlers {0}. Will try to cleanup...",
+          ex.getMessage());
         cleanup(project, sessionId, projectCreationFutures);
         throw ex;
       }
@@ -526,6 +530,7 @@ public class ProjectController {
       try {
         project = environmentController.createEnv(project, owner);
       } catch (PythonException | EJBException ex) {
+        LOGGER.log(Level.SEVERE, "Error creating environment {0}. Will try to cleanup...", ex.getMessage());
         cleanup(project, sessionId, projectCreationFutures);
         throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_ANACONDA_ENABLE_ERROR, Level.SEVERE,
           "project: " + projectName, ex.getMessage(), ex);
@@ -1688,8 +1693,7 @@ public class ProjectController {
         Collection<ProjectTeam> team = project.getProjectTeamCollection();
         Set<String> hdfsUsers = new HashSet<>();
         for (ProjectTeam pt : team) {
-          String hdfsUsername = hdfsUsersController.getHdfsUserName(project, pt.
-            getUser());
+          String hdfsUsername = hdfsUsersController.getHdfsUserName(project, pt.getUser());
           hdfsUsers.add(hdfsUsername);
         }
         List<ApplicationReport> projectsApps = getYarnApplications(hdfsUsers, client);

@@ -1358,14 +1358,14 @@ describe "On #{ENV['OS']}" do
         it "should fail to download with a token issued for a different file path" do
           get_download_token(@project, "Resources/README.md", datasetType: "?type=DATASET")
           expect_status(200)
-          token = json_body[:data][:value]
+          token = json_body[:data]
           download_dataset_with_token(@project, "Logs/README.md", token, datasetType: "&type=DATASET")
           expect_status(401)
         end
         it "should fail to download more than one file with a single token" do
           get_download_token(@project, "Resources/README.md", datasetType: "?type=DATASET")
           expect_status(200)
-          token = json_body[:data][:value]
+          token = json_body[:data]
           download_dataset_with_token(@project, "Resources/README.md", token, datasetType: "&type=DATASET")
           expect_status(200)
           download_dataset_with_token(@project, "Resources/README.md", token, datasetType: "&type=DATASET")
@@ -1771,7 +1771,8 @@ describe "On #{ENV['OS']}" do
           test_offset_limit(@project, @datasets, "", -1, 10)
         end
         it 'should get 0 result if offset >= len.' do
-          test_offset_limit(@project, @datasets, "", 2500, 10)
+          get_datasets_in_path(@project, "", query: "&sort_by=id:asc&limit=10&offset=2500")
+          expect(json_body[:items]).to be nil
         end
       end
       context 'dataset content' do
@@ -1794,7 +1795,8 @@ describe "On #{ENV['OS']}" do
           test_offset_limit_attr(@project, @dataset_content, @dataset[:inode_name], -1, 10)
         end
         it 'should get 0 result if offset >= len.' do
-          test_offset_limit_attr(@project, @dataset_content, @dataset[:inode_name], 2500, 10)
+          get_datasets_in_path(@project, @dataset[:inode_name], query: "&sort_by=id:asc&limit=10&offset=2500")
+          expect(json_body[:items]).to be nil
         end
       end
     end

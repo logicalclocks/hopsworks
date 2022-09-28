@@ -8,21 +8,22 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
 import io.hops.hopsworks.persistence.entity.jobs.configuration.DockerJobConfiguration;
 import io.hops.hopsworks.persistence.entity.jobs.configuration.JobType;
 
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
 @XmlRootElement
+@XmlAccessorType(XmlAccessType.FIELD)
 @JsonTypeName("pythonJobConfiguration")
 public class PythonJobConfiguration extends DockerJobConfiguration {
+  @XmlElement
+  private String appPath;
+  @XmlElement
+  private String files;
   
   public PythonJobConfiguration() {
   }
-
-  @XmlElement
-  private String appPath;
-  
-  @XmlElement
-  private String files;
   
   public String getAppPath() {
     return appPath;

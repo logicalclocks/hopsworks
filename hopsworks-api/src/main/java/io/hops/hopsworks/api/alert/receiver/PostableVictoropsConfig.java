@@ -1,6 +1,6 @@
 /*
  * This file is part of Hopsworks
- * Copyright (C) 2021, Logical Clocks AB. All rights reserved
+ * Copyright (C) 2022, Hopsworks AB. All rights reserved
  *
  * Hopsworks is free software: you can redistribute it and/or modify it under the terms of
  * the GNU Affero General Public License as published by the Free Software Foundation,
@@ -13,39 +13,28 @@
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see <https://www.gnu.org/licenses/>.
  */
-package io.hops.hopsworks.alerting.config.dto;
+package io.hops.hopsworks.api.alert.receiver;
 
-import com.fasterxml.jackson.annotation.JsonAlias;
-import com.fasterxml.jackson.annotation.JsonInclude;
+import io.hops.hopsworks.alerting.config.dto.HttpConfig;
+import io.hops.hopsworks.alerting.config.dto.VictoropsConfig;
 
-@JsonInclude(JsonInclude.Include.NON_NULL)
-public class VictoropsConfig {
-  @JsonAlias({"send_resolved"})
+import javax.xml.bind.annotation.XmlRootElement;
+
+@XmlRootElement
+public class PostableVictoropsConfig {
   private Boolean sendResolved;
-  @JsonAlias({"api_key"})
   private String apiKey;
-  @JsonAlias({"api_url"})
   private String apiUrl;
-  @JsonAlias({"routing_key"})
   private String routingKey;
-  @JsonAlias({"message_type"})
   private String messageType;
-  @JsonAlias({"entity_display_name"})
   private String entityDisplayName;
-  @JsonAlias({"state_message"})
   private String stateMessage;
-  @JsonAlias({"monitoring_tool"})
   private String monitoringTool;
-  @JsonAlias({"http_config"})
   private HttpConfig httpConfig;
   
-  public VictoropsConfig() {
+  public PostableVictoropsConfig() {
   }
   
-  public VictoropsConfig(String routingKey) {
-    this.routingKey = routingKey;
-  }
-
   public Boolean getSendResolved() {
     return sendResolved;
   }
@@ -54,11 +43,6 @@ public class VictoropsConfig {
     this.sendResolved = sendResolved;
   }
   
-  public VictoropsConfig withSendResolved(Boolean sendResolved) {
-    this.sendResolved = sendResolved;
-    return this;
-  }
-
   public String getApiKey() {
     return apiKey;
   }
@@ -67,32 +51,22 @@ public class VictoropsConfig {
     this.apiKey = apiKey;
   }
   
-  public VictoropsConfig withApiKey(String apiKey) {
-    this.apiKey = apiKey;
-    return this;
-  }
-  
   public String getApiUrl() {
     return apiUrl;
   }
-
+  
   public void setApiUrl(String apiUrl) {
     this.apiUrl = apiUrl;
   }
   
-  public VictoropsConfig withApiUrl(String apiUrl) {
-    this.apiUrl = apiUrl;
-    return this;
-  }
-
   public String getRoutingKey() {
     return routingKey;
   }
-
+  
   public void setRoutingKey(String routingKey) {
     this.routingKey = routingKey;
   }
-
+  
   public String getMessageType() {
     return messageType;
   }
@@ -101,11 +75,6 @@ public class VictoropsConfig {
     this.messageType = messageType;
   }
   
-  public VictoropsConfig withMessageType(String messageType) {
-    this.messageType = messageType;
-    return this;
-  }
-
   public String getEntityDisplayName() {
     return entityDisplayName;
   }
@@ -114,22 +83,12 @@ public class VictoropsConfig {
     this.entityDisplayName = entityDisplayName;
   }
   
-  public VictoropsConfig withEntityDisplayName(String entityDisplayName) {
-    this.entityDisplayName = entityDisplayName;
-    return this;
-  }
-
   public String getStateMessage() {
     return stateMessage;
   }
   
   public void setStateMessage(String stateMessage) {
     this.stateMessage = stateMessage;
-  }
-  
-  public VictoropsConfig withStateMessage(String stateMessage) {
-    this.stateMessage = stateMessage;
-    return this;
   }
   
   public String getMonitoringTool() {
@@ -140,11 +99,6 @@ public class VictoropsConfig {
     this.monitoringTool = monitoringTool;
   }
   
-  public VictoropsConfig withMonitoringTool(String monitoringTool) {
-    this.monitoringTool = monitoringTool;
-    return this;
-  }
-  
   public HttpConfig getHttpConfig() {
     return httpConfig;
   }
@@ -153,23 +107,14 @@ public class VictoropsConfig {
     this.httpConfig = httpConfig;
   }
   
-  public VictoropsConfig withHttpConfig(HttpConfig httpConfig) {
-    this.httpConfig = httpConfig;
-    return this;
-  }
-  
-  @Override
-  public String toString() {
-    return "VictoropsConfig{" +
-      "sendResolved=" + sendResolved +
-      ", apiKey='" + apiKey + '\'' +
-      ", apiUrl='" + apiUrl + '\'' +
-      ", routingKey='" + routingKey + '\'' +
-      ", messageType='" + messageType + '\'' +
-      ", entityDisplayName='" + entityDisplayName + '\'' +
-      ", stateMessage='" + stateMessage + '\'' +
-      ", monitoringTool='" + monitoringTool + '\'' +
-      ", httpConfig=" + httpConfig +
-      '}';
+  public VictoropsConfig toVictoropsConfig() {
+    return new VictoropsConfig(this.routingKey).withApiKey(this.apiKey)
+      .withApiUrl(this.apiUrl)
+      .withSendResolved(this.sendResolved)
+      .withMessageType(this.messageType)
+      .withEntityDisplayName(this.entityDisplayName)
+      .withStateMessage(this.stateMessage)
+      .withMonitoringTool(this.monitoringTool)
+      .withHttpConfig(this.httpConfig);
   }
 }

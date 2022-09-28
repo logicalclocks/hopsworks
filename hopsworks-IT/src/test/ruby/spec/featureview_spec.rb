@@ -198,7 +198,8 @@ describe "On #{ENV['OS']}" do
           json_data = {
             name: "feature_view_name",
             version: 1,
-            description: "testfeatureviewdescription"
+            description: "testfeatureviewdescription",
+            type: "featureViewDTO"
           }
 
           update_feature_view(@project.id, featurestore_id, json_data, "feature_view_name", 1)
@@ -221,7 +222,8 @@ describe "On #{ENV['OS']}" do
           json_data = {
             name: featureview_name,
             version: featureview_version,
-            description: new_description
+            description: new_description,
+            type: "featureViewDTO"
           }
 
           json_result = update_feature_view(@project.id, featurestore_id, json_data, featureview_name, featureview_version)
@@ -245,7 +247,8 @@ describe "On #{ENV['OS']}" do
 
           json_data = {
             name: "new_testfeatureviewname",
-			version: featureview_version
+			      version: featureview_version,
+            type: "featureViewDTO"
           }
 
           json_result = update_feature_view(@project.id, featurestore_id, json_data, featureview_name, featureview_version)
@@ -342,7 +345,8 @@ describe "On #{ENV['OS']}" do
           featurestore_id = get_featurestore_id(@project.id)
           json_data = {
               name: "no_features_no_query",
-              version: 1
+              version: 1,
+              type: "featureViewDTO"
           }
           create_feature_view_with_json(@project.id, featurestore_id, json_data)
           expect_status_details(400)
@@ -355,11 +359,13 @@ describe "On #{ENV['OS']}" do
               {type: "INT", name: "testfeature", primary: true},
               {type: "INT", name: "testfeature1"},
           ]
-          fg_id = create_cached_featuregroup_checked(@project.id, featurestore_id, "test_fg_#{short_random_id}", features: features)
+          fg = create_cached_featuregroup_checked_return_fg(@project.id, featurestore_id, "test_fg_#{short_random_id}",
+                                                   features: features)
           # create queryDTO object
           query = {
               leftFeatureGroup: {
-                  id: fg_id
+                id: fg[:id],
+                type: fg[:type],
               },
               leftFeatures: [{name: 'testfeature'}, {name: 'testfeature1'}]
           }
@@ -371,9 +377,9 @@ describe "On #{ENV['OS']}" do
           td_features = feature_view['features']
           expect(td_features.count).to eql(2)
           expect(td_features.select{|feature| feature['index'] == 0}[0]['name']).to eql("testfeature")
-          expect(td_features.select{|feature| feature['index'] == 0}[0]['featuregroup']['id']).to eql(fg_id)
+          expect(td_features.select{|feature| feature['index'] == 0}[0]['featuregroup']['id']).to eql(fg[:id])
           expect(td_features.select{|feature| feature['index'] == 1}[0]['name']).to eql("testfeature1")
-          expect(td_features.select{|feature| feature['index'] == 1}[0]['featuregroup']['id']).to eql(fg_id)
+          expect(td_features.select{|feature| feature['index'] == 1}[0]['featuregroup']['id']).to eql(fg[:id])
         end
 
         it "should be able to create a feature view from a query object with label" do
@@ -383,11 +389,13 @@ describe "On #{ENV['OS']}" do
               {type: "INT", name: "testfeature", primary: true},
               {type: "INT", name: "testfeature1"},
           ]
-          fg_id = create_cached_featuregroup_checked(@project.id, featurestore_id, "test_fg_#{short_random_id}", features: features)
+          fg = create_cached_featuregroup_checked_return_fg(@project.id, featurestore_id, "test_fg_#{short_random_id}",
+                                                   features: features)
           # create queryDTO object
           query = {
               leftFeatureGroup: {
-                  id: fg_id
+                id: fg[:id],
+                type: fg[:type],
               },
               leftFeatures: [{name: 'testfeature'}, {name: 'testfeature1'}]
           }
@@ -413,11 +421,13 @@ describe "On #{ENV['OS']}" do
             {type: "INT", name: "testfeature", primary: true},
             {type: "INT", name: "testfeature1"},
           ]
-          fg_id = create_cached_featuregroup_checked(@project.id, featurestore_id, "test_fg_#{short_random_id}", features: features)
+          fg = create_cached_featuregroup_checked_return_fg(@project.id, featurestore_id, "test_fg_#{short_random_id}",
+                                                   features: features)
           # create queryDTO object
           query = {
             leftFeatureGroup: {
-              id: fg_id
+              id: fg[:id],
+              type: fg[:type],
             },
             leftFeatures: [{name: 'testfeature'}, {name: 'testfeature1'}]
           }
@@ -435,11 +445,13 @@ describe "On #{ENV['OS']}" do
               {type: "INT", name: "testfeature", primary: true},
               {type: "INT", name: "testfeature1"},
           ]
-          fg_id = create_cached_featuregroup_checked(@project.id, featurestore_id, "test_fg_#{short_random_id}", features: features)
+          fg = create_cached_featuregroup_checked_return_fg(@project.id, featurestore_id, "test_fg_#{short_random_id}",
+                                                   features: features)
           # create queryDTO object
           query = {
               leftFeatureGroup: {
-                  id: fg_id
+                id: fg[:id],
+                type: fg[:type],
               },
               leftFeatures: [{name: 'does_not_exists'}]
           }
@@ -454,23 +466,25 @@ describe "On #{ENV['OS']}" do
               {type: "INT", name: "a_testfeature", primary: true},
               {type: "INT", name: "a_testfeature1"},
           ]
-          fg_id = create_cached_featuregroup_checked(@project.id, featurestore_id, "test_fg_#{short_random_id}", features: features)
+          fg = create_cached_featuregroup_checked_return_fg(@project.id, featurestore_id, "test_fg_#{short_random_id}", features: features)
           # create second feature group
           features = [
               {type: "INT", name: "a_testfeature", primary: true},
               {type: "INT", name: "b_testfeature1"},
           ]
-          fg_id_b = create_cached_featuregroup_checked(@project.id, featurestore_id, "test_fg_b_#{short_random_id}", features: features)
+          fg_b = create_cached_featuregroup_checked_return_fg(@project.id, featurestore_id, "test_fg_b_#{short_random_id}", features: features)
           # create queryDTO object
           query = {
               leftFeatureGroup: {
-                  id: fg_id
+                  id: fg[:id],
+                  type: fg[:type],
               },
               leftFeatures: [{name: 'a_testfeature'}, {name: 'a_testfeature1'}],
               joins: [{
                        query: {
                            leftFeatureGroup: {
-                               id: fg_id_b
+                             id: fg_b[:id],
+                             type: fg_b[:type],
                            },
                            leftFeatures: [{name: 'a_testfeature'}, {name: 'b_testfeature1'}]
                        }
@@ -487,11 +501,11 @@ describe "On #{ENV['OS']}" do
           expect(td_features.length).to eql(3)
           # check that all the features are indexed correctly and that they are picked from the correct feature group
           expect(td_features.select{|feature| feature['index'] == 0}[0]['name']).to eql("a_testfeature")
-          expect(td_features.select{|feature| feature['index'] == 0}[0]['featuregroup']['id']).to eql(fg_id)
+          expect(td_features.select{|feature| feature['index'] == 0}[0]['featuregroup']['id']).to eql(fg[:id])
           expect(td_features.select{|feature| feature['index'] == 1}[0]['name']).to eql("a_testfeature1")
-          expect(td_features.select{|feature| feature['index'] == 1}[0]['featuregroup']['id']).to eql(fg_id)
+          expect(td_features.select{|feature| feature['index'] == 1}[0]['featuregroup']['id']).to eql(fg[:id])
           expect(td_features.select{|feature| feature['index'] == 2}[0]['name']).to eql("b_testfeature1")
-          expect(td_features.select{|feature| feature['index'] == 2}[0]['featuregroup']['id']).to eql(fg_id_b)
+          expect(td_features.select{|feature| feature['index'] == 2}[0]['featuregroup']['id']).to eql(fg_b[:id])
         end
       end
     end

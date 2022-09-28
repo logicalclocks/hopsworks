@@ -15,52 +15,29 @@
  */
 package io.hops.hopsworks.alerting.config.dto;
 
+import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 import java.util.List;
 import java.util.Map;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@JsonPropertyOrder({
-  "send_resolved",
-  "api_key",
-  "api_url",
-  "message",
-  "description",
-  "source",
-  "details",
-  "responders",
-  "tags",
-  "note",
-  "priority",
-  "http_config"
-  })
 public class OpsgenieConfig {
-  @JsonProperty("send_resolved")
+  @JsonAlias({"send_resolved"})
   private Boolean sendResolved;
-  @JsonProperty("api_key")
+  @JsonAlias({"api_key"})
   private String apiKey;
-  @JsonProperty("api_url")
+  @JsonAlias({"api_url"})
   private String apiUrl;
-  @JsonProperty("message")
   private String message;
-  @JsonProperty("description")
   private String description;
-  @JsonProperty("source")
   private String source;
-  @JsonProperty("details")
   private Map<String, String> details;
-  @JsonProperty("responders")
   private List<Responder> responders;
-  @JsonProperty("tags")
   private String tags;
-  @JsonProperty("note")
   private String note;
-  @JsonProperty("priority")
   private String priority;
-  @JsonProperty("http_config")
+  @JsonAlias({"http_config"})
   private HttpConfig httpConfig;
   
   public OpsgenieConfig() {
@@ -69,13 +46,11 @@ public class OpsgenieConfig {
   public OpsgenieConfig(List<Responder> responders) {
     this.responders = responders;
   }
-  
-  @JsonProperty("send_resolved")
+
   public Boolean getSendResolved() {
     return sendResolved;
   }
   
-  @JsonProperty("send_resolved")
   public void setSendResolved(Boolean sendResolved) {
     this.sendResolved = sendResolved;
   }
@@ -85,12 +60,10 @@ public class OpsgenieConfig {
     return this;
   }
   
-  @JsonProperty("api_key")
   public String getApiKey() {
     return apiKey;
   }
   
-  @JsonProperty("api_key")
   public void setApiKey(String apiKey) {
     this.apiKey = apiKey;
   }
@@ -100,12 +73,10 @@ public class OpsgenieConfig {
     return this;
   }
   
-  @JsonProperty("api_url")
   public String getApiUrl() {
     return apiUrl;
   }
   
-  @JsonProperty("api_url")
   public void setApiUrl(String apiUrl) {
     this.apiUrl = apiUrl;
   }
@@ -115,12 +86,10 @@ public class OpsgenieConfig {
     return this;
   }
   
-  @JsonProperty("message")
   public String getMessage() {
     return message;
   }
   
-  @JsonProperty("message")
   public void setMessage(String message) {
     this.message = message;
   }
@@ -130,12 +99,10 @@ public class OpsgenieConfig {
     return this;
   }
   
-  @JsonProperty("description")
   public String getDescription() {
     return description;
   }
   
-  @JsonProperty("description")
   public void setDescription(String description) {
     this.description = description;
   }
@@ -145,12 +112,10 @@ public class OpsgenieConfig {
     return this;
   }
   
-  @JsonProperty("source")
   public String getSource() {
     return source;
   }
   
-  @JsonProperty("source")
   public void setSource(String source) {
     this.source = source;
   }
@@ -160,12 +125,10 @@ public class OpsgenieConfig {
     return this;
   }
   
-  @JsonProperty("details")
   public Map<String, String> getDetails() {
     return details;
   }
   
-  @JsonProperty("details")
   public void setDetails(Map<String, String> details) {
     this.details = details;
   }
@@ -175,12 +138,10 @@ public class OpsgenieConfig {
     return this;
   }
   
-  @JsonProperty("responders")
   public List<Responder> getResponders() {
     return responders;
   }
   
-  @JsonProperty("responders")
   public void setResponders(List<Responder> responders) {
     this.responders = responders;
   }
@@ -190,12 +151,10 @@ public class OpsgenieConfig {
     return this;
   }
   
-  @JsonProperty("tags")
   public String getTags() {
     return tags;
   }
   
-  @JsonProperty("tags")
   public void setTags(String tags) {
     this.tags = tags;
   }
@@ -205,12 +164,10 @@ public class OpsgenieConfig {
     return this;
   }
   
-  @JsonProperty("note")
   public String getNote() {
     return note;
   }
   
-  @JsonProperty("note")
   public void setNote(String note) {
     this.note = note;
   }
@@ -220,12 +177,10 @@ public class OpsgenieConfig {
     return this;
   }
   
-  @JsonProperty("priority")
   public String getPriority() {
     return priority;
   }
   
-  @JsonProperty("priority")
   public void setPriority(String priority) {
     this.priority = priority;
   }
@@ -234,13 +189,11 @@ public class OpsgenieConfig {
     this.priority = priority;
     return this;
   }
-  
-  @JsonProperty("http_config")
+
   public HttpConfig getHttpConfig() {
     return httpConfig;
   }
-  
-  @JsonProperty("http_config")
+
   public void setHttpConfig(HttpConfig httpConfig) {
     this.httpConfig = httpConfig;
   }

@@ -16,33 +16,15 @@
 package io.hops.hopsworks.alerting.config.dto;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@JsonPropertyOrder({
-  "text",
-  "type",
-  "url",
-  "name",
-  "value",
-  "confirm",
-  "style"
-  })
 public class ActionConfig {
-  @JsonProperty("text")
   private String text;
-  @JsonProperty("type")
   private String type;
-  @JsonProperty("url")
   private String url;
-  @JsonProperty("name")
   private String name;
-  @JsonProperty("value")
   private String value;
-  @JsonProperty("confirm")
   private ActionConfirmFieldConfig confirm;
-  @JsonProperty("style")
   private String style;
   
   public ActionConfig() {
@@ -53,32 +35,26 @@ public class ActionConfig {
     this.type = type;
   }
   
-  @JsonProperty("text")
   public String getText() {
     return text;
   }
   
-  @JsonProperty("text")
   public void setText(String text) {
     this.text = text;
   }
   
-  @JsonProperty("type")
   public String getType() {
     return type;
   }
   
-  @JsonProperty("type")
   public void setType(String type) {
     this.type = type;
   }
   
-  @JsonProperty("url")
   public String getUrl() {
     return url;
   }
   
-  @JsonProperty("url")
   public void setUrl(String url) {
     this.url = url;
   }
@@ -88,12 +64,10 @@ public class ActionConfig {
     return this;
   }
   
-  @JsonProperty("name")
   public String getName() {
     return name;
   }
   
-  @JsonProperty("name")
   public void setName(String name) {
     this.name = name;
   }
@@ -103,12 +77,10 @@ public class ActionConfig {
     return this;
   }
   
-  @JsonProperty("value")
   public String getValue() {
     return value;
   }
   
-  @JsonProperty("value")
   public void setValue(String value) {
     this.value = value;
   }
@@ -118,12 +90,10 @@ public class ActionConfig {
     return this;
   }
   
-  @JsonProperty("confirm")
   public ActionConfirmFieldConfig getConfirm() {
     return confirm;
   }
   
-  @JsonProperty("confirm")
   public void setConfirm(ActionConfirmFieldConfig confirm) {
     this.confirm = confirm;
   }
@@ -133,12 +103,10 @@ public class ActionConfig {
     return this;
   }
   
-  @JsonProperty("style")
   public String getStyle() {
     return style;
   }
   
-  @JsonProperty("style")
   public void setStyle(String style) {
     this.style = style;
   }

@@ -16,6 +16,8 @@
 
 package io.hops.hopsworks.common.featurestore.storageconnectors.hopsfs;
 
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import com.fasterxml.jackson.annotation.JsonTypeName;
 import io.hops.hopsworks.persistence.entity.featurestore.storageconnector.FeaturestoreConnector;
 import io.hops.hopsworks.common.featurestore.storageconnectors.FeaturestoreStorageConnectorDTO;
 
@@ -27,6 +29,11 @@ import javax.xml.bind.annotation.XmlRootElement;
  * XML representation using jaxb.
  */
 @XmlRootElement
+@JsonTypeInfo(
+  use=JsonTypeInfo.Id.NAME,
+  include=JsonTypeInfo.As.PROPERTY,
+  property="type")
+@JsonTypeName("featurestoreHopsfsConnectorDTO")
 public class FeaturestoreHopsfsConnectorDTO extends FeaturestoreStorageConnectorDTO {
 
   private String hopsfsPath;

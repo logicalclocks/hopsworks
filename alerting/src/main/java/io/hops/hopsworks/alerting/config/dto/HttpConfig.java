@@ -15,44 +15,30 @@
  */
 package io.hops.hopsworks.alerting.config.dto;
 
+import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.google.common.base.Strings;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@JsonPropertyOrder({
-  "basic_auth",
-  "bearer_token",
-  "bearer_token_file",
-  "tls_config",
-  "proxy_url"
-  })
-/**
- * Note that `basic_auth`, `bearer_token` and `bearer_token_file` options are
- * mutually exclusive.
- */
 public class HttpConfig {
-  @JsonProperty("basic_auth")
+  @JsonAlias({"basic_auth"})
   private BasicAuth basicAuth;
-  @JsonProperty("bearer_token")
+  @JsonAlias({"bearer_token"})
   private String bearerToken;
-  @JsonProperty("bearer_token_file")
+  @JsonAlias({"bearer_token_file"})
   private String bearerTokenFile;
-  @JsonProperty("tls_config")
+  @JsonAlias({"tls_config"})
   private TlsConfig tlsConfig;
-  @JsonProperty("proxy_url")
+  @JsonAlias({"proxy_url"})
   private String proxyUrl;
   
   public HttpConfig() {
   }
   
-  @JsonProperty("basic_auth")
   public BasicAuth getBasicAuth() {
     return basicAuth;
   }
   
-  @JsonProperty("basic_auth")
   public void setBasicAuth(BasicAuth basicAuth) {
     this.basicAuth = basicAuth;
   }
@@ -66,12 +52,10 @@ public class HttpConfig {
     return this;
   }
   
-  @JsonProperty("bearer_token")
   public String getBearerToken() {
     return bearerToken;
   }
-  
-  @JsonProperty("bearer_token")
+
   public void setBearerToken(String bearerToken) {
     this.bearerToken = bearerToken;
   }
@@ -85,12 +69,10 @@ public class HttpConfig {
     return this;
   }
   
-  @JsonProperty("bearer_token_file")
   public String getBearerTokenFile() {
     return bearerTokenFile;
   }
   
-  @JsonProperty("bearer_token_file")
   public void setBearerTokenFile(String bearerTokenFile) {
     this.bearerTokenFile = bearerTokenFile;
   }
@@ -104,12 +86,10 @@ public class HttpConfig {
     return this;
   }
   
-  @JsonProperty("tls_config")
   public TlsConfig getTlsConfig() {
     return tlsConfig;
   }
   
-  @JsonProperty("tls_config")
   public void setTlsConfig(TlsConfig tlsConfig) {
     this.tlsConfig = tlsConfig;
   }
@@ -119,12 +99,10 @@ public class HttpConfig {
     return this;
   }
   
-  @JsonProperty("proxy_url")
   public String getProxyUrl() {
     return proxyUrl;
   }
   
-  @JsonProperty("proxy_url")
   public void setProxyUrl(String proxyUrl) {
     this.proxyUrl = proxyUrl;
   }

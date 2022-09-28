@@ -175,12 +175,12 @@ public class ExperimentResultsBuilder {
     }
 
     private Comparable getSortValue(ExperimentResultsDTO experiment, String sortKey) {
-      for (Map.Entry<QName, String> entry: experiment.getParameters().getAttributes().entrySet()) {
+      for (Map.Entry<QName, String> entry: experiment.getParameters().entrySet()) {
         if (entry.getKey().getLocalPart().compareTo(sortKey) == 0) {
           return getComparable(entry.getValue());
         }
       }
-      for (Map.Entry<QName, String> entry : experiment.getOutputs().getAttributes().entrySet()) {
+      for (Map.Entry<QName, String> entry : experiment.getOutputs().entrySet()) {
         if (entry.getKey().getLocalPart().compareTo(sortKey) == 0) {
           return getComparable(entry.getValue());
         }

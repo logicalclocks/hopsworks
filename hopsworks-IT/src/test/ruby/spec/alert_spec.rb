@@ -50,8 +50,7 @@ describe "On #{ENV['OS']}" do
         create_random_alerts(project)
         get_alerts(project)
         expect_status_details(200)
-        entry = {"key": "project", "value": project[:projectname]}
-        alert = json_body[:items].map { |a| a if a[:labels][:entry].include? entry }
+        alert = json_body[:items].map {|a| a if a[:labels][:project] == project[:projectname]}
         expect(json_body[:count]).to eq(alert.length)
       end
       it "should get groups" do

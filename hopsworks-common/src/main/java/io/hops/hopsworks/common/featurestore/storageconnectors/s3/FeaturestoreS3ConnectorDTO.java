@@ -16,6 +16,8 @@
 
 package io.hops.hopsworks.common.featurestore.storageconnectors.s3;
 
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import com.fasterxml.jackson.annotation.JsonTypeName;
 import io.hops.hopsworks.persistence.entity.featurestore.storageconnector.FeaturestoreConnector;
 import io.hops.hopsworks.common.featurestore.storageconnectors.FeaturestoreStorageConnectorDTO;
 import io.hops.hopsworks.persistence.entity.featurestore.storageconnector.s3.FeaturestoreS3ConnectorEncryptionAlgorithm;
@@ -28,6 +30,11 @@ import javax.xml.bind.annotation.XmlRootElement;
  * XML representation using jaxb.
  */
 @XmlRootElement
+@JsonTypeInfo(
+  use=JsonTypeInfo.Id.NAME,
+  include=JsonTypeInfo.As.PROPERTY,
+  property="type")
+@JsonTypeName("featurestoreS3ConnectorDTO")
 public class FeaturestoreS3ConnectorDTO extends FeaturestoreStorageConnectorDTO {
   
   private String accessKey;

@@ -84,8 +84,8 @@ angular.module('hopsWorksApp')
                           $scope.registerForm.$setPristine();
                           self.successMessage = success.data.successMessage;
                           self.working = false;
-                          if (success.data.QRCode) {
-                              $location.path("/qrCode/register/" + success.data.QRCode);
+                          if (success.data.qrcode) {
+                              $location.path("/qrCode/register/" + success.data.qrcode);
                               $location.replace();
                           }
                       }, function (error) {
