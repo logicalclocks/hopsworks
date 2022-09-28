@@ -882,7 +882,8 @@ describe "On #{ENV['OS']}" do
         create_query_endpoint = "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/featurestores/query"
         json_fs_query = {
             leftFeatureGroup: {
-                id: parsed_json["id"]
+                id: parsed_json["id"],
+                type: parsed_json["type"]
             },
             leftFeatures: parsed_json["features"],
             leftFeatureGroupStartTime: 1603577485000,
@@ -949,6 +950,7 @@ describe "On #{ENV['OS']}" do
         json_result, featuregroup_name = create_cached_featuregroup_with_partition(@project[:id], featurestore_id, time_travel_format: "HUDI")
         parsed_json = JSON.parse(json_result)
         fg_1_id = parsed_json["id"]
+        fg_1_type = parsed_json["type"]
         fg_1_features = parsed_json["features"]
         path = "/apps/hive/warehouse/#{featurestore_name}.db/#{featuregroup_name}_1"
         hoodie_path = path + "/.hoodie"
@@ -960,6 +962,7 @@ describe "On #{ENV['OS']}" do
         json_result, featuregroup_name = create_cached_featuregroup_with_partition(@project[:id], featurestore_id, time_travel_format: "HUDI")
         parsed_json = JSON.parse(json_result)
         fg_2_id = parsed_json["id"]
+        fg_2_type = parsed_json["type"]
         fg_2_features = parsed_json["features"]
         path = "/apps/hive/warehouse/#{featurestore_name}.db/#{featuregroup_name}_1"
         hoodie_path = path + "/.hoodie"
@@ -970,10 +973,21 @@ describe "On #{ENV['OS']}" do
 
         create_query_endpoint = "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/featurestores/query"
         json_fs_query = {
-            leftFeatureGroup: {id: fg_1_id}, leftFeatures: fg_1_features, leftFeatureGroupEndTime: 1603577485000,
-            joins: {
-                query: {leftFeatureGroup: {id: fg_2_id}, leftFeatures: fg_2_features, leftFeatureGroupEndTime: 1603570286000}
-            }
+            leftFeatureGroup: {
+              id: fg_1_id,
+              type: fg_1_type
+            },
+            leftFeatures: fg_1_features,
+            leftFeatureGroupEndTime: 1603577485000,
+            joins: [{
+                query: {
+                  leftFeatureGroup: {
+                    id: fg_2_id,
+                    type: fg_2_type
+                  },
+                  leftFeatures: fg_2_features,
+                  leftFeatureGroupEndTime: 1603570286000}
+            }]
         }
         json_result = put create_query_endpoint, json_fs_query
         parsed_json = JSON.parse(json_result)
@@ -992,6 +1006,7 @@ describe "On #{ENV['OS']}" do
         json_result, featuregroup_name = create_cached_featuregroup_with_partition(@project[:id], featurestore_id, time_travel_format: "HUDI")
         parsed_json = JSON.parse(json_result)
         fg_1_id = parsed_json["id"]
+        fg_1_type = parsed_json["type"]
         fg_1_features = parsed_json["features"]
         path = "/apps/hive/warehouse/#{featurestore_name}.db/#{featuregroup_name}_1"
         hoodie_path = path + "/.hoodie"
@@ -1006,6 +1021,7 @@ describe "On #{ENV['OS']}" do
         json_result, featuregroup_name = create_cached_featuregroup_with_partition(@project[:id], featurestore_id, time_travel_format: "HUDI")
         parsed_json = JSON.parse(json_result)
         fg_2_id = parsed_json["id"]
+        fg_2_type = parsed_json["type"]
         fg_2_features = parsed_json["features"]
         path = "/apps/hive/warehouse/#{featurestore_name}.db/#{featuregroup_name}_1"
         hoodie_path = path + "/.hoodie"
@@ -1016,10 +1032,19 @@ describe "On #{ENV['OS']}" do
 
         create_query_endpoint = "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/featurestores/query"
         json_fs_query = {
-            leftFeatureGroup: {id: fg_1_id}, leftFeatures: fg_1_features, leftFeatureGroupStartTime: 1603577485000, leftFeatureGroupEndTime: 1603633554000,
-            joins: {
-                query: {leftFeatureGroup: {id: fg_2_id}, leftFeatures: fg_2_features, leftFeatureGroupEndTime:1603570286000}
-            }
+            leftFeatureGroup: {
+              id: fg_1_id,
+              type: fg_1_type
+            },
+            leftFeatures: fg_1_features, leftFeatureGroupStartTime: 1603577485000, leftFeatureGroupEndTime: 1603577485000,
+            joins: [{
+                query: {
+                  leftFeatureGroup: {
+                    id: fg_2_id,
+                    type: fg_2_type
+                  },
+                  leftFeatures: fg_2_features, leftFeatureGroupEndTime:1603570286000}
+            }]
         }
         put create_query_endpoint, json_fs_query
         expect_status(200)
@@ -1246,7 +1271,8 @@ describe "On #{ENV['OS']}" do
             {type: "INT", name: "a_testfeature1"},
         ]
         fg_a_name = "test_fg_#{short_random_id}"
-        fg_id = create_cached_featuregroup_checked(@project.id, featurestore_id, fg_a_name, features: features)
+        fg = create_cached_featuregroup_checked_return_fg(@project.id, featurestore_id, fg_a_name, features: features)
+        fg_id = fg[:id]
         # create second feature group
         features = [
             {type: "INT", name: "a_testfeature", primary: true},
@@ -1254,17 +1280,20 @@ describe "On #{ENV['OS']}" do
             {type: "INT", name: "b_testfeature2"}
         ]
         fg_b_name = "test_fg_#{short_random_id}"
-        fg_id_b = create_cached_featuregroup_checked(@project.id, featurestore_id, fg_b_name, features: features)
+        fg_b = create_cached_featuregroup_checked_return_fg(@project.id, featurestore_id, fg_b_name, features: features)
+        fg_id_b = fg_b[:id]
         # create queryDTO object
         query = {
             leftFeatureGroup: {
-                id: fg_id
+                id: fg_id,
+                type: fg[:type]
             },
             leftFeatures: [{name: 'a_testfeature'}, {name: 'a_testfeature1'}],
             joins: [{
                         query: {
                             leftFeatureGroup: {
-                                id: fg_id_b
+                              id: fg_id_b,
+                              type: fg_b[:type]
                             },
                             leftFeatures: [{name: 'a_testfeature'}, {name: 'b_testfeature1'}],
                             filter: {
@@ -1318,8 +1347,9 @@ describe "On #{ENV['OS']}" do
           {type: "TIMESTAMP", name: "event_time"}
         ]
         fg_a_name = "test_fg_#{short_random_id}"
-        fg_id = create_cached_featuregroup_checked(@project.id, featurestore_id, fg_a_name, features: features,
+        fg = create_cached_featuregroup_checked_return_fg(@project.id, featurestore_id, fg_a_name, features: features,
                                                    event_time: "event_time")
+        fg_id = fg[:id]
         # create second feature group
         features = [
           {type: "INT", name: "a_testfeature", primary: true},
@@ -1328,13 +1358,14 @@ describe "On #{ENV['OS']}" do
           {type: "TIMESTAMP", name: "event_time"}
         ]
         fg_b_name = "test_fg_#{short_random_id}"
-        fg_id_b = create_cached_featuregroup_checked(@project.id, featurestore_id, fg_b_name, features: features,
+        fg_b = create_cached_featuregroup_checked_return_fg(@project.id, featurestore_id, fg_b_name, features: features,
                                                      event_time: "event_time")
-
+        fg_id_b = fg_b[:id]
         # create queryDTO object
         query = {
           leftFeatureGroup: {
             id: fg_id,
+            type: fg[:type],
             eventTime: "event_time"
           },
           leftFeatures: [{name: 'a_testfeature'}, {name: 'a_testfeature1'}],
@@ -1342,6 +1373,7 @@ describe "On #{ENV['OS']}" do
                     query: {
                       leftFeatureGroup: {
                         id: fg_id_b,
+                        type: fg_b[:type],
                         eventTime: "event_time"
                       },
                       leftFeatures: [{name: 'a_testfeature'}, {name: 'b_testfeature1'}],
@@ -1962,7 +1994,8 @@ describe "On #{ENV['OS']}" do
 
         query = {
             leftFeatureGroup: {
-                id: fg_id
+                id: fg_id,
+                type: parsed_json["type"]
             },
             leftFeatures: [{name: 'testfeature'}]
         }
@@ -1983,18 +2016,20 @@ describe "On #{ENV['OS']}" do
         expect_status(201)
         parsed_json = JSON.parse(json_result)
         fg_ond_id = parsed_json["id"]
+        fg_ond_type = parsed_json["type"]
 
         features = [{type: "INT", name: "testfeature", description: "testfeaturedescription", primary: true},
                     {type: "INT", name: "anotherfeature", primary: false}]
         json_result, fg_name = create_cached_featuregroup(@project[:id], featurestore_id, features: features)
         parsed_json = JSON.parse(json_result)
         fg_cached_id = parsed_json["id"]
+        fg_cached_type = parsed_json["type"]
 
         query = {
-            leftFeatureGroup: {id: fg_cached_id},
+            leftFeatureGroup: {id: fg_cached_id, type: fg_cached_type},
             leftFeatures: [{name: 'anotherfeature'}],
             joins: [{query: {
-                        leftFeatureGroup: {id: fg_ond_id},
+                        leftFeatureGroup: {id: fg_ond_id, type: fg_ond_type},
                         leftFeatures: [{name: 'testfeature'}]
             }}]}
         json_result = put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/featurestores/query", query
@@ -2018,6 +2053,7 @@ describe "On #{ENV['OS']}" do
         expect_status(201)
         parsed_json = JSON.parse(json_result)
         fg_ond_id = parsed_json["id"]
+        fg_ond_type = parsed_json["type"]
 
         features = [{type: "INT", name: "testfeature", description: "testfeaturedescription", primary: true},
                     {type: "INT", name: "anotherfeature", primary: false},
@@ -2026,12 +2062,13 @@ describe "On #{ENV['OS']}" do
                                                           event_time: "event_time")
         parsed_json = JSON.parse(json_result)
         fg_cached_id = parsed_json["id"]
+        fg_cached_type = parsed_json["type"]
 
         query = {
-          leftFeatureGroup: {id: fg_cached_id, eventTime: "event_time"},
+          leftFeatureGroup: {id: fg_cached_id, type: fg_cached_type, eventTime: "event_time"},
           leftFeatures: [{name: 'anotherfeature'}, {name: "event_time"}],
           joins: [{query: {
-            leftFeatureGroup: {id: fg_ond_id, eventTime: "event_time"},
+            leftFeatureGroup: {id: fg_ond_id, type: fg_ond_type, eventTime: "event_time"},
             leftFeatures: [{name: 'testfeature'}]
           }}]}
         json_result = put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/featurestores/query", query
@@ -2060,18 +2097,20 @@ describe "On #{ENV['OS']}" do
         expect_status(201)
         parsed_json = JSON.parse(json_result)
         fg_ond_id = parsed_json["id"]
+        fg_ond_type = parsed_json["type"]
 
         features = [{type: "INT", name: "testfeature", description: "testfeaturedescription", primary: true},
                     {type: "INT", name: "anotherfeature", primary: false}]
         json_result, fg_name = create_cached_featuregroup(@project[:id], featurestore_id, features: features)
         parsed_json = JSON.parse(json_result)
         fg_cached_id = parsed_json["id"]
+        fg_cached_type = parsed_json["type"]
 
         query = {
-            leftFeatureGroup: {id: fg_cached_id},
+            leftFeatureGroup: {id: fg_cached_id, type: fg_cached_type},
             leftFeatures: [{name: 'anotherfeature'}],
             joins: [{query: {
-                leftFeatureGroup: {id: fg_ond_id},
+                leftFeatureGroup: {id: fg_ond_id, type: fg_ond_type},
                 leftFeatures: [{name: 'testfeature'}],
                 filter: {
                     type: "SINGLE",

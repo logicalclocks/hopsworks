@@ -21,6 +21,7 @@ import io.hops.hopsworks.api.alert.Entry;
 
 import javax.xml.bind.annotation.XmlRootElement;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @XmlRootElement
 public class PostableRouteDTO {
@@ -108,5 +109,20 @@ public class PostableRouteDTO {
 
   public void setMatchRe(List<Entry> matchRe) {
     this.matchRe = matchRe;
+  }
+
+  public Route toRoute() {
+    return new Route(this.getReceiver())
+      .withGroupBy(this.getGroupBy())
+      .withGroupWait(this.getGroupWait())
+      .withGroupInterval(this.getGroupInterval())
+      .withRoutes(this.getRoutes())
+      .withContinue(this.getContinue())
+      .withMatch(this.getMatch() != null? this.getMatch().stream()
+        .filter(entry -> entry.getKey() != null && entry.getValue() != null)
+        .collect(Collectors.toMap(Entry::getKey, Entry::getValue)) : null)
+      .withMatchRe(this.getMatchRe() != null? this.getMatchRe().stream()
+        .filter(entry -> entry.getKey() != null && entry.getValue() != null)
+        .collect(Collectors.toMap(Entry::getKey, Entry::getValue)) : null);
   }
 }

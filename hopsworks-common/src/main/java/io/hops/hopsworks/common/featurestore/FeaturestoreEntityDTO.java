@@ -22,6 +22,7 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import io.hops.hopsworks.common.api.RestDTO;
 import io.hops.hopsworks.common.dao.user.UserDTO;
 import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupDTO;
+import io.hops.hopsworks.common.featurestore.featureview.FeatureViewDTO;
 import io.hops.hopsworks.common.featurestore.statistics.StatisticsConfigDTO;
 import io.hops.hopsworks.common.featurestore.trainingdatasets.TrainingDatasetDTO;
 import io.hops.hopsworks.persistence.entity.user.Users;
@@ -36,12 +37,13 @@ import java.util.Date;
  * and training dataset entities.
  */
 @XmlRootElement
-@XmlSeeAlso({FeaturegroupDTO.class, TrainingDatasetDTO.class})
+@XmlSeeAlso({FeaturegroupDTO.class, FeatureViewDTO.class, TrainingDatasetDTO.class})
 @JsonIgnoreProperties(ignoreUnknown = true)
-@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY)
+@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property="type")
 @JsonSubTypes({
-  @JsonSubTypes.Type(value = FeaturegroupDTO.class, name = "FeaturegroupDTO"),
-  @JsonSubTypes.Type(value = TrainingDatasetDTO.class, name = "TrainingDatasetDTO")})
+  @JsonSubTypes.Type(value = FeaturegroupDTO.class, name = "featuregroupDTO"),
+  @JsonSubTypes.Type(value = FeatureViewDTO.class, name = "featureViewDTO"),
+  @JsonSubTypes.Type(value = TrainingDatasetDTO.class, name = "trainingDatasetDTO")})
 public abstract class FeaturestoreEntityDTO<T> extends RestDTO<T> {
 
   private Integer featurestoreId;

@@ -89,7 +89,7 @@ module StorageConnectorHelper
         type: type,
         storageConnectorType: storageConnectorType,
         connectionString: connectionString,
-        arguments: "test1,test2"
+        arguments: [{name: "test1", value: "test2"}]
     }
     json_data = json_data.to_json
     json_result = post create_jdbc_connector_endpoint, json_data
@@ -106,7 +106,7 @@ module StorageConnectorHelper
         type: type,
         storageConnectorType: storageConnectorType,
         connectionString: connectionString,
-        arguments: "test1,test2"
+        arguments: [{name: "test1", value: "test2"}]
     }
     put update_jdbc_connector_endpoint, json_data.to_json
   end

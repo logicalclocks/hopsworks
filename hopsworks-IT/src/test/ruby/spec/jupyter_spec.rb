@@ -24,7 +24,11 @@ describe "On #{ENV['OS']}" do
     RSpec.configure do |c|
       c.example_status_persistence_file_path  = 'jupyter_debug.txt' if @debugOpt
     end
+    with_valid_project
   end
+
+  before(:each) {get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/jupyter/stop"}
+
   after(:all) {clean_all_test_projects(spec: "jupyter")}
   describe "Jupyter core" do
 
@@ -93,6 +97,8 @@ describe "On #{ENV['OS']}" do
         rescue
           p "jupyter spec: Error calling opensearch_get #{$!}"
         else
+          response = opensearch_get "#{@project[:projectname].downcase}_logs*/_search?q=jobname=#{@user[:username]}"
+          index = response.body
           parsed_index = JSON.parse(index)
           expect(parsed_index['hits']['total']['value']).to be > 0
         ensure
@@ -248,7 +254,7 @@ describe "On #{ENV['OS']}" do
         settings[:shutdownLevel] = shutdownLevel
         settings[:pythonKernel] = false
         settings[:jobConfig][:"spark.executor.memory"] = 1023
-        start_jupyter(@project, settings: JSON(settings), expected_status: 400, error_code: 130029)
+        start_jupyter(@project, settings: settings, expected_status: 400, error_code: 130029)
       end
 
       it "should not allow starting multiple notebook servers" do
@@ -275,7 +281,7 @@ describe "On #{ENV['OS']}" do
         jupyter_running(@project, expected_status: 200)
         stop_jupyter(@project)
         jupyter_running(@project, expected_status: 404)
-        start_jupyter(@project, settings: JSON(settings))
+        start_jupyter(@project, settings: settings)
         stop_jupyter(@project)
         jupyter_running(@project, expected_status: 404)
       end
@@ -314,11 +320,11 @@ describe "On #{ENV['OS']}" do
         get_settings(@project)
         settings = json_body
         settings[:jobConfig][:amVCores] = 10
-        update_jupyter(@project, JSON(settings))
+        update_jupyter(@project, settings)
         get_settings(@project)
         expect(json_body[:jobConfig][:amVCores]).to be 10
         settings[:jobConfig][:amVCores] = 1
-        update_jupyter(@project, JSON(settings))
+        update_jupyter(@project, settings)
       end
 
       context "Failure scenarios - python " + version do

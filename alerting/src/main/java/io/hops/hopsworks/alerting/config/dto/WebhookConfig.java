@@ -15,25 +15,17 @@
  */
 package io.hops.hopsworks.alerting.config.dto;
 
+import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@JsonPropertyOrder({
-  "send_resolved",
-  "url",
-  "max_alerts",
-  "http_config"
-  })
 public class WebhookConfig {
-  @JsonProperty("send_resolved")
+  @JsonAlias({"send_resolved"})
   private Boolean sendResolved;
-  @JsonProperty("url")
   private String url;
-  @JsonProperty("max_alerts")
+  @JsonAlias({"max_alerts"})
   private String maxAlerts;
-  @JsonProperty("http_config")
+  @JsonAlias({"http_config"})
   private HttpConfig httpConfig;
 
   public WebhookConfig() {
@@ -43,12 +35,10 @@ public class WebhookConfig {
     this.url = url;
   }
 
-  @JsonProperty("send_resolved")
   public Boolean getSendResolved() {
     return sendResolved;
   }
 
-  @JsonProperty("send_resolved")
   public void setSendResolved(Boolean sendResolved) {
     this.sendResolved = sendResolved;
   }
@@ -58,22 +48,18 @@ public class WebhookConfig {
     return this;
   }
 
-  @JsonProperty("url")
   public String getUrl() {
     return url;
   }
 
-  @JsonProperty("url")
   public void setUrl(String url) {
     this.url = url;
   }
 
-  @JsonProperty("max_alerts")
   public String getMaxAlerts() {
     return maxAlerts;
   }
 
-  @JsonProperty("max_alerts")
   public void setMaxAlerts(String maxAlerts) {
     this.maxAlerts = maxAlerts;
   }
@@ -83,12 +69,10 @@ public class WebhookConfig {
     return this;
   }
 
-  @JsonProperty("http_config")
   public HttpConfig getHttpConfig() {
     return httpConfig;
   }
 
-  @JsonProperty("http_config")
   public void setHttpConfig(HttpConfig httpConfig) {
     this.httpConfig = httpConfig;
   }

@@ -57,7 +57,7 @@ import javax.xml.bind.annotation.XmlTransient;
 
 import io.hops.hopsworks.persistence.entity.kagent.HostServices;
 import io.hops.hopsworks.persistence.entity.util.FormatUtils;
-import org.codehaus.jackson.annotate.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 @Entity
 @Table(name = "hosts", catalog = "hopsworks")

@@ -293,7 +293,6 @@ module JobHelper
   end
 
   def prepare_job(project, username, job_name, job_type, file_type, job_config: nil, src_dir: "#{ENV['PROJECT_DIR']}/hopsworks-IT/src/test/ruby/spec/auxiliary")
-    chmod_local_dir("#{ENV['PROJECT_DIR']}", 777, true)
     src = "#{src_dir}/#{job_name}.#{file_type}"
     dst = "/Projects/#{project[:projectname]}/Resources/#{job_name}.#{file_type}"
     group = "#{project[:projectname]}__Jupyter"

@@ -16,6 +16,8 @@
 
 package io.hops.hopsworks.common.featurestore.storageconnectors.bigquery;
 
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import com.fasterxml.jackson.annotation.JsonTypeName;
 import io.hops.hopsworks.common.featurestore.OptionDTO;
 import io.hops.hopsworks.common.featurestore.storageconnectors.FeaturestoreStorageConnectorDTO;
 import io.hops.hopsworks.persistence.entity.featurestore.storageconnector.FeaturestoreConnector;
@@ -24,6 +26,11 @@ import javax.xml.bind.annotation.XmlRootElement;
 import java.util.List;
 
 @XmlRootElement
+@JsonTypeInfo(
+  use=JsonTypeInfo.Id.NAME,
+  include=JsonTypeInfo.As.PROPERTY,
+  property="type")
+@JsonTypeName("featurestoreBigqueryConnectorDTO")
 public class FeaturestoreBigqueryConnectorDTO extends FeaturestoreStorageConnectorDTO {
   
   private String keyPath;

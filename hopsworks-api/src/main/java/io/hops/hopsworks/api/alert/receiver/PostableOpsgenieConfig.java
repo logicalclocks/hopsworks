@@ -16,11 +16,14 @@
 package io.hops.hopsworks.api.alert.receiver;
 
 import io.hops.hopsworks.alerting.config.dto.HttpConfig;
+import io.hops.hopsworks.alerting.config.dto.OpsgenieConfig;
 import io.hops.hopsworks.alerting.config.dto.Responder;
 import io.hops.hopsworks.api.alert.Entry;
 
 import javax.xml.bind.annotation.XmlRootElement;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @XmlRootElement
 public class PostableOpsgenieConfig {
@@ -131,5 +134,27 @@ public class PostableOpsgenieConfig {
 
   public void setHttpConfig(HttpConfig httpConfig) {
     this.httpConfig = httpConfig;
+  }
+
+  public OpsgenieConfig toOpsgenieConfig() {
+    Map<String, String> details = null;
+    if (this.getDetails() != null && !this.getDetails().isEmpty()) {
+      details = this.getDetails().stream()
+        .filter(entry -> entry != null && entry.getKey() != null && entry.getValue() != null)
+        .collect(Collectors.toMap(Entry::getKey, Entry::getValue));
+    }
+    return new OpsgenieConfig()
+      .withSendResolved(this.getSendResolved())
+      .withApiKey(this.getApiKey())
+      .withApiUrl(this.getApiUrl())
+      .withMessage(this.getMessage())
+      .withDescription(this.getDescription())
+      .withSource(this.getSource())
+      .withDetails(details)
+      .withResponders(this.getResponders())
+      .withTags(this.getTags())
+      .withNote(this.getNote())
+      .withPriority(this.getPriority())
+      .withHttpConfig(this.getHttpConfig());
   }
 }

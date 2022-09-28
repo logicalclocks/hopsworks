@@ -16,6 +16,7 @@
 
 package io.hops.hopsworks.common.featurestore.featuregroup.ondemand;
 
+import com.fasterxml.jackson.annotation.JsonTypeName;
 import io.hops.hopsworks.common.featurestore.feature.FeatureGroupFeatureDTO;
 import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupDTO;
 import io.hops.hopsworks.common.featurestore.storageconnectors.FeaturestoreStorageConnectorDTO;
@@ -23,8 +24,6 @@ import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.Featuregro
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.ondemand.OnDemandDataFormat;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.ondemand.OnDemandFeature;
 
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 import java.util.Comparator;
 import java.util.List;
@@ -35,7 +34,7 @@ import java.util.stream.Collectors;
  * converted to JSON or XML representation using jaxb.
  */
 @XmlRootElement
-@XmlAccessorType(XmlAccessType.FIELD)
+@JsonTypeName("onDemandFeaturegroupDTO")
 public class OnDemandFeaturegroupDTO extends FeaturegroupDTO {
 
   private FeaturestoreStorageConnectorDTO storageConnector;

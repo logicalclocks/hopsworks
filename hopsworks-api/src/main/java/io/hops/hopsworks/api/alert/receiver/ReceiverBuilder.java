@@ -21,20 +21,22 @@ import io.hops.hopsworks.alert.AlertManager;
 import io.hops.hopsworks.alert.AlertManagerConfiguration;
 import io.hops.hopsworks.alert.exception.AlertManagerAccessControlException;
 import io.hops.hopsworks.alert.exception.AlertManagerUnreachableException;
-import io.hops.hopsworks.alert.util.Constants;
 import io.hops.hopsworks.alerting.api.alert.dto.ReceiverName;
 import io.hops.hopsworks.alerting.config.dto.AlertManagerConfig;
 import io.hops.hopsworks.alerting.config.dto.EmailConfig;
 import io.hops.hopsworks.alerting.config.dto.OpsgenieConfig;
 import io.hops.hopsworks.alerting.config.dto.PagerdutyConfig;
+import io.hops.hopsworks.alerting.config.dto.PushoverConfig;
 import io.hops.hopsworks.alerting.config.dto.Receiver;
 import io.hops.hopsworks.alerting.config.dto.SlackConfig;
+import io.hops.hopsworks.alerting.config.dto.VictoropsConfig;
+import io.hops.hopsworks.alerting.config.dto.WebhookConfig;
+import io.hops.hopsworks.alerting.config.dto.WechatConfig;
 import io.hops.hopsworks.alerting.exceptions.AlertManagerClientCreateException;
 import io.hops.hopsworks.alerting.exceptions.AlertManagerConfigCtrlCreateException;
 import io.hops.hopsworks.alerting.exceptions.AlertManagerConfigReadException;
 import io.hops.hopsworks.alerting.exceptions.AlertManagerNoSuchElementException;
 import io.hops.hopsworks.alerting.exceptions.AlertManagerResponseException;
-import io.hops.hopsworks.api.alert.Entry;
 import io.hops.hopsworks.common.api.ResourceRequest;
 import io.hops.hopsworks.common.api.RestDTO;
 import io.hops.hopsworks.common.dao.AbstractFacade;
@@ -52,7 +54,6 @@ import java.util.Comparator;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -254,27 +255,24 @@ public class ReceiverBuilder {
 
   public Receiver build(PostableReceiverDTO postableReceiverDTO, Boolean defaultTemplate, boolean checkUnique)
       throws AlertException {
-    Receiver receiver = new Receiver(postableReceiverDTO.getName())
+    return new Receiver(postableReceiverDTO.getName())
         .withEmailConfigs(toEmailConfig(postableReceiverDTO.getEmailConfigs(), defaultTemplate, checkUnique))
         .withSlackConfigs(toSlackConfig(postableReceiverDTO.getSlackConfigs(), defaultTemplate, checkUnique))
-        .withPagerdutyConfigs(
-            toPagerdutyConfig(postableReceiverDTO.getPagerdutyConfigs(), defaultTemplate, checkUnique))
+        .withPagerdutyConfigs(toPagerdutyConfig(postableReceiverDTO.getPagerdutyConfigs(), checkUnique))
         .withOpsgenieConfigs(toOpsgenieConfig(postableReceiverDTO.getOpsgenieConfigs()))
-        .withPushoverConfigs(postableReceiverDTO.getPushoverConfigs())
-        .withVictoropsConfigs(postableReceiverDTO.getVictoropsConfigs())
-        .withWebhookConfigs(postableReceiverDTO.getWebhookConfigs())
-        .withWechatConfigs(postableReceiverDTO.getWechatConfigs());
-    return receiver;
+        .withPushoverConfigs(toPushoverConfig(postableReceiverDTO.getPushoverConfigs()))
+        .withVictoropsConfigs(toVictoropsConfig(postableReceiverDTO.getVictoropsConfigs()))
+        .withWebhookConfigs(toWebhookConfig(postableReceiverDTO.getWebhookConfigs()))
+        .withWechatConfigs(toWechatConfig(postableReceiverDTO.getWechatConfigs()));
   }
 
   private List<EmailConfig> toEmailConfig(List<PostableEmailConfig> postableEmailConfigs, Boolean defaultTemplate,
       boolean checkUnique) throws AlertException {
     if (postableEmailConfigs != null && !postableEmailConfigs.isEmpty()) {
-      List<EmailConfig> emailConfigs = postableEmailConfigs.stream().map(p -> toEmailConfig(p, defaultTemplate))
+      List<EmailConfig> emailConfigs = postableEmailConfigs.stream().map(p -> p.toEmailConfig(defaultTemplate))
           .collect(Collectors.toList());
       if (checkUnique) {
-        Set<EmailConfig> emailConfigSet = new HashSet<>();
-        emailConfigSet.addAll(emailConfigs);
+        Set<EmailConfig> emailConfigSet = new HashSet<>(emailConfigs);
         if (emailConfigs.size() != emailConfigSet.size()) {
           throw new AlertException(RESTCodes.AlertErrorCode.ILLEGAL_ARGUMENT, Level.FINE, "Emails are not unique.");
         }
@@ -284,41 +282,13 @@ public class ReceiverBuilder {
     return null;
   }
 
-  private EmailConfig toEmailConfig(PostableEmailConfig postableEmailConfigs, Boolean defaultTemplate) {
-    EmailConfig emailConfig = new EmailConfig(postableEmailConfigs.getTo())
-        .withFrom(postableEmailConfigs.getFrom())
-        .withSmarthost(postableEmailConfigs.getSmarthost())
-        .withHello(postableEmailConfigs.getHello())
-        .withAuthIdentity(postableEmailConfigs.getAuthIdentity())
-        .withAuthPassword(postableEmailConfigs.getAuthPassword())
-        .withAuthSecret(postableEmailConfigs.getAuthSecret())
-        .withAuthUsername(postableEmailConfigs.getAuthUsername())
-        .withHtml(postableEmailConfigs.getHtml())
-        .withText(postableEmailConfigs.getText())
-        .withRequireTls(postableEmailConfigs.getRequireTls())
-        .withTlsConfig(postableEmailConfigs.getTlsConfig())
-        .withSendResolved(postableEmailConfigs.getSendResolved());
-    if (postableEmailConfigs.getHeaders() != null && !postableEmailConfigs.getHeaders().isEmpty()) {
-      Map<String, String> headers;
-      headers = postableEmailConfigs.getHeaders().stream()
-          .filter(entry -> entry != null && entry.getKey() != null && entry.getValue() != null)
-          .collect(Collectors.toMap(Entry::getKey, Entry::getValue));
-      emailConfig.setHeaders(headers);
-    }
-    if (defaultTemplate && Strings.isNullOrEmpty(emailConfig.getHtml())) {
-      emailConfig.setHtml(Constants.DEFAULT_EMAIL_HTML);
-    }
-    return emailConfig;
-  }
-
-  private List<SlackConfig> toSlackConfig(List<SlackConfig> slackConfigs, Boolean defaultTemplate, boolean checkUnique)
-      throws AlertException {
+  private List<SlackConfig> toSlackConfig(List<PostableSlackConfig> slackConfigs, Boolean defaultTemplate,
+    boolean checkUnique) throws AlertException {
     if (slackConfigs != null && !slackConfigs.isEmpty()) {
-      List<SlackConfig> slackConfigList = slackConfigs.stream().map(p -> toSlackConfig(p, defaultTemplate))
+      List<SlackConfig> slackConfigList = slackConfigs.stream().map(p -> p.toSlackConfig(defaultTemplate))
           .collect(Collectors.toList());
       if (checkUnique) {
-        Set<SlackConfig> slackConfigSet = new HashSet<>();
-        slackConfigSet.addAll(slackConfigList);
+        Set<SlackConfig> slackConfigSet = new HashSet<>(slackConfigList);
         if (slackConfigList.size() != slackConfigSet.size()) {
           throw new AlertException(RESTCodes.AlertErrorCode.ILLEGAL_ARGUMENT, Level.FINE, "Slack channels are not " +
               "unique.");
@@ -329,32 +299,15 @@ public class ReceiverBuilder {
     return null;
   }
 
-  private SlackConfig toSlackConfig(SlackConfig slackConfig, Boolean defaultTemplate) {
-    if (defaultTemplate) {
-      if (Strings.isNullOrEmpty(slackConfig.getIconUrl())) {
-        slackConfig.setIconUrl(Constants.DEFAULT_SLACK_ICON_URL);
-      }
-      if (Strings.isNullOrEmpty(slackConfig.getText())) {
-        slackConfig.setText(Constants.DEFAULT_SLACK_TEXT);
-      }
-      if (Strings.isNullOrEmpty(slackConfig.getTitle())) {
-        slackConfig.setTitle(Constants.DEFAULT_SLACK_TITLE);
-      }
-    }
-    return slackConfig;
-  }
-
-  private List<PagerdutyConfig> toPagerdutyConfig(List<PostablePagerdutyConfig> pagerdutyConfigs,
-      Boolean defaultTemplate, boolean checkUnique) throws AlertException {
+  private List<PagerdutyConfig> toPagerdutyConfig(List<PostablePagerdutyConfig> pagerdutyConfigs, boolean checkUnique)
+    throws AlertException {
     if (pagerdutyConfigs != null && !pagerdutyConfigs.isEmpty()) {
       List<PagerdutyConfig> pagerdutyConfigList =
-          pagerdutyConfigs.stream().map(p -> toPagerdutyConfig(p, defaultTemplate)).collect(Collectors.toList());
+          pagerdutyConfigs.stream().map(PostablePagerdutyConfig::toPagerdutyConfig).collect(Collectors.toList());
       if (checkUnique) {
-        Set<PagerdutyConfig> pagerdutyConfigSet = new HashSet<>();
-        pagerdutyConfigSet.addAll(pagerdutyConfigList);
+        Set<PagerdutyConfig> pagerdutyConfigSet = new HashSet<>(pagerdutyConfigList);
         if (pagerdutyConfigList.size() != pagerdutyConfigSet.size()) {
-          throw new AlertException(RESTCodes.AlertErrorCode.ILLEGAL_ARGUMENT, Level.FINE, "Pagerdutys are not " +
-              "unique.");
+          throw new AlertException(RESTCodes.AlertErrorCode.ILLEGAL_ARGUMENT, Level.FINE, "Pagerdutys are not unique.");
         }
       }
       return pagerdutyConfigList;
@@ -362,56 +315,44 @@ public class ReceiverBuilder {
     return null;
   }
 
-  private PagerdutyConfig toPagerdutyConfig(PostablePagerdutyConfig p, Boolean defaultTemplate) {
-    Map<String, String> details = null;
-    if (p.getDetails() != null && !p.getDetails().isEmpty()) {
-      details = p.getDetails().stream()
-          .filter(entry -> entry != null && entry.getKey() != null && entry.getValue() != null)
-          .collect(Collectors.toMap(Entry::getKey, Entry::getValue));
-    }
-    return new PagerdutyConfig()
-        .withSendResolved(p.getSendResolved())
-        .withRoutingKey(p.getRoutingKey())
-        .withServiceKey(p.getServiceKey())
-        .withUrl(p.getUrl())
-        .withClient(p.getClient())
-        .withClientUrl(p.getClientUrl())
-        .withDescription(p.getDescription())
-        .withSeverity(p.getSeverity())
-        .withDetails(details)
-        .withImages(p.getImages())
-        .withLinks(p.getLinks())
-        .withHttpConfig(p.getHttpConfig());
-  }
-
   private List<OpsgenieConfig> toOpsgenieConfig(List<PostableOpsgenieConfig> opsgenieConfigs) {
     if (opsgenieConfigs != null && !opsgenieConfigs.isEmpty()) {
-      return opsgenieConfigs.stream().map(p -> toOpsgenieConfig(p))
+      return opsgenieConfigs.stream().map(PostableOpsgenieConfig::toOpsgenieConfig)
           .collect(Collectors.toList());
     }
     return null;
   }
 
-  private OpsgenieConfig toOpsgenieConfig(PostableOpsgenieConfig p) {
-    Map<String, String> details = null;
-    if (p.getDetails() != null && !p.getDetails().isEmpty()) {
-      details = p.getDetails().stream()
-          .filter(entry -> entry != null && entry.getKey() != null && entry.getValue() != null)
-          .collect(Collectors.toMap(Entry::getKey, Entry::getValue));
+  private List<WechatConfig> toWechatConfig(List<PostableWechatConfig> wechatConfigs) {
+    if (wechatConfigs != null && !wechatConfigs.isEmpty()) {
+      return wechatConfigs.stream().map(PostableWechatConfig::toWechatConfig)
+        .collect(Collectors.toList());
     }
-    return new OpsgenieConfig()
-        .withSendResolved(p.getSendResolved())
-        .withApiKey(p.getApiKey())
-        .withApiUrl(p.getApiUrl())
-        .withMessage(p.getMessage())
-        .withDescription(p.getDescription())
-        .withSource(p.getSource())
-        .withDetails(details)
-        .withResponders(p.getResponders())
-        .withTags(p.getTags())
-        .withNote(p.getNote())
-        .withPriority(p.getPriority())
-        .withHttpConfig(p.getHttpConfig());
+    return null;
+  }
+
+  private List<WebhookConfig> toWebhookConfig(List<PostableWebhookConfig> webhookConfigs) {
+    if (webhookConfigs != null && !webhookConfigs.isEmpty()) {
+      return webhookConfigs.stream().map(PostableWebhookConfig::toWebhookConfig)
+        .collect(Collectors.toList());
+    }
+    return null;
+  }
+
+  private List<VictoropsConfig> toVictoropsConfig(List<PostableVictoropsConfig> victoropsConfigs) {
+    if (victoropsConfigs != null && !victoropsConfigs.isEmpty()) {
+      return victoropsConfigs.stream().map(PostableVictoropsConfig::toVictoropsConfig)
+        .collect(Collectors.toList());
+    }
+    return null;
+  }
+
+  private List<PushoverConfig> toPushoverConfig(List<PostablePushoverConfig> pushoverConfigs) {
+    if (pushoverConfigs != null && !pushoverConfigs.isEmpty()) {
+      return pushoverConfigs.stream().map(PostablePushoverConfig::toPushoverConfig)
+        .collect(Collectors.toList());
+    }
+    return null;
   }
 
   public GlobalReceiverDefaults build() throws AlertManagerConfigCtrlCreateException, AlertManagerConfigReadException {
@@ -438,7 +379,7 @@ public class ReceiverBuilder {
     return globalReceiverDefaults;
   }
 
-  class ReceiverComparator implements Comparator<ReceiverDTO> {
+  static class ReceiverComparator implements Comparator<ReceiverDTO> {
 
     Set<ReceiverSortBy> sortBy;
 
@@ -447,12 +388,10 @@ public class ReceiverBuilder {
     }
 
     private int compare(ReceiverDTO a, ReceiverDTO b, ReceiverSortBy sortBy) {
-      switch (sortBy.getSortBy()) {
-        case NAME:
-          return order(a.getName(), b.getName(), sortBy.getParam());
-        default:
-          throw new UnsupportedOperationException("Sort By " + sortBy + " not supported");
+      if (sortBy.getSortBy() == ReceiverSortBy.SortBys.NAME) {
+        return order(a.getName(), b.getName(), sortBy.getParam());
       }
+      throw new UnsupportedOperationException("Sort By " + sortBy + " not supported");
     }
 
     private int order(String a, String b, AbstractFacade.OrderBy orderBy) {

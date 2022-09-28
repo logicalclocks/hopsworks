@@ -142,7 +142,7 @@ public class RouteResource {
     if (routeDTO == null) {
       throw new AlertException(RESTCodes.AlertErrorCode.ILLEGAL_ARGUMENT, Level.FINE, "No payload.");
     }
-    Route route = routeBuilder.toRoute(routeDTO);
+    Route route = routeDTO.toRoute();
     try {
       alertManagerConfiguration.addRoute(route, getProject());
     } catch (AlertManagerConfigCtrlCreateException | AlertManagerUnreachableException |
@@ -185,7 +185,7 @@ public class RouteResource {
     }
     Route routeToUpdate =
         new Route(receiver).withMatch(routeBuilder.toMap(match)).withMatchRe(routeBuilder.toMap(matchRe));
-    Route updatedRoute = routeBuilder.toRoute(route);
+    Route updatedRoute =route.toRoute();
     try {
       alertManagerConfiguration.updateRoute(routeToUpdate, updatedRoute, getProject());
     } catch (AlertManagerConfigCtrlCreateException | AlertManagerUnreachableException |

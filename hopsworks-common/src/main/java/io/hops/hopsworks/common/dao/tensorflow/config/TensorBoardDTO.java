@@ -20,7 +20,7 @@ import io.hops.hopsworks.common.api.RestDTO;
 import io.hops.hopsworks.persistence.entity.tensorflow.TensorBoard;
 import io.hops.hopsworks.common.dao.user.UserDTO;
 import io.hops.hopsworks.common.project.ProjectDTO;
-import org.codehaus.jackson.annotate.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import java.util.Date;
 

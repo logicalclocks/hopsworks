@@ -19,6 +19,7 @@ package io.hops.hopsworks.common.featurestore.featuregroup;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import com.fasterxml.jackson.annotation.JsonTypeName;
 import io.hops.hopsworks.common.featurestore.FeaturestoreEntityDTO;
 import io.hops.hopsworks.common.featurestore.datavalidationv2.ExpectationSuiteDTO;
 import io.hops.hopsworks.common.featurestore.feature.FeatureGroupFeatureDTO;
@@ -28,9 +29,6 @@ import io.hops.hopsworks.common.featurestore.featuregroup.stream.StreamFeatureGr
 import io.hops.hopsworks.common.featurestore.statistics.StatisticsConfigDTO;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.Featuregroup;
 
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlSeeAlso;
 import java.util.List;
@@ -40,23 +38,19 @@ import java.util.List;
  * using jaxb.
  */
 @XmlRootElement
-@XmlAccessorType(XmlAccessType.FIELD)
 @XmlSeeAlso({CachedFeaturegroupDTO.class, StreamFeatureGroupDTO.class, OnDemandFeaturegroupDTO.class})
 @JsonIgnoreProperties(ignoreUnknown = true)
-@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY)
+@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property="type")
+@JsonTypeName("featuregroupDTO")
 @JsonSubTypes({
-    @JsonSubTypes.Type(value = CachedFeaturegroupDTO.class, name = "CachedFeaturegroupDTO"),
-    @JsonSubTypes.Type(value = StreamFeatureGroupDTO.class, name = "StreamFeatureGroupDTO"),
-    @JsonSubTypes.Type(value = OnDemandFeaturegroupDTO.class, name = "OnDemandFeaturegroupDTO")})
+    @JsonSubTypes.Type(value = CachedFeaturegroupDTO.class, name = "cachedFeaturegroupDTO"),
+    @JsonSubTypes.Type(value = StreamFeatureGroupDTO.class, name = "streamFeatureGroupDTO"),
+    @JsonSubTypes.Type(value = OnDemandFeaturegroupDTO.class, name = "onDemandFeaturegroupDTO")})
 public class FeaturegroupDTO extends FeaturestoreEntityDTO<FeaturegroupDTO> {
 
-  @XmlElement
   private List<FeatureGroupFeatureDTO> features;
-  @XmlElement
   private ExpectationSuiteDTO expectationSuite = null;
-  @XmlElement
   private String onlineTopicName = null;
-  @XmlElement
   private String eventTime = null;
   
   public FeaturegroupDTO() {

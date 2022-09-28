@@ -72,8 +72,7 @@ module ProjectHelper
       with_valid_session
     end  
     pName = projectName == nil ? "project_#{getProjectId}_#{short_random_id}" : projectName
-    new_project = {projectName: pName, description:"", status: 0, services: services,
-                   projectTeam:[], retentionPeriod: ""}
+    new_project = {projectName: pName, description:"", services: services, projectTeam:[], retentionPeriod: ""}
     post "#{ENV['HOPSWORKS_API']}/project", new_project
     expect_status_details(201)
     expect_json(successMessage: regex("Project created successfully.*"))
@@ -93,6 +92,15 @@ module ProjectHelper
   def project_expect_status(status)
     body = JSON.parse(response.body)
     expect(response.code).to eq(resolve_status(status, response.code)), "found code:#{response.code} and body:#{body}"
+  end
+
+  def create_project_by_name_existing_user(projectname)
+    new_project = {projectName: projectname, description:"", services: ["JOBS","JUPYTER", "HIVE", "KAFKA","SERVING", "FEATURESTORE"],
+                   projectTeam:[], retentionPeriod: ""}
+    post "#{ENV['HOPSWORKS_API']}/project", new_project
+    project_expect_status(201)
+    expect_json(successMessage: regex("Project created successfully.*"))
+    get_project_by_name(new_project[:projectName])
   end
 
   def create_project_tour(tourtype)
@@ -222,14 +230,15 @@ module ProjectHelper
   def get_testing_projects(project_id: nil)
     Project.select('distinct(id), projectname, username')
         .where("projectname LIKE ? or projectname LIKE ? or projectname LIKE ? or projectname LIKE ? or
-                projectname LIKE ? or projectname LIKE ? or projectname LIKE ?",
-               'online_fs',
-               project_id == nil ? "project\_" : "project\_#{project_id}_%",
-               project_id == nil ? "ProJect\_" : "ProJect\_#{project_id}_%",
+                projectname LIKE ? or projectname LIKE ? or projectname LIKE ? or projectname LIKE ?",
+               'online_fs%',
+               project_id == nil ? "project\_%" : "project\_#{project_id}_%",
+               project_id == nil ? "ProJect\_%" : "ProJect\_#{project_id}_%",
                'demo\_%',
                'HOPSWORKS256%',
                'hopsworks256%',
-               'prov\_proj\_%')
+               'prov\_proj\_%',
+               'Project_DEMO_%')
   end
 
   # This function must be added under the first describe of each .spec file to ensure test projects are cleaned up properly

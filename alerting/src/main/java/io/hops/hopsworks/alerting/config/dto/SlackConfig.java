@@ -15,81 +15,47 @@
  */
 package io.hops.hopsworks.alerting.config.dto;
 
+import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 import java.util.List;
 import java.util.Objects;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@JsonPropertyOrder({
-  "send_resolved",
-  "api_url",
-  "channel",
-  "icon_emoji",
-  "icon_url",
-  "link_names",
-  "username",
-  "actions",
-  "callback_id",
-  "color",
-  "fallback",
-  "fields",
-  "footer",
-  "mrkdwn_in",
-  "pretext",
-  "short_fields",
-  "text",
-  "title",
-  "title_link",
-  "image_url",
-  "thumb_url",
-  "http_config"
-  })
 public class SlackConfig {
 
-  @JsonProperty("send_resolved")
+  @JsonAlias({"send_resolved"})
   private Boolean sendResolved;
-  @JsonProperty("api_url")
+  @JsonAlias({"api_url"})
   private String apiUrl;
-  @JsonProperty("channel")
   private String channel;
-  @JsonProperty("icon_emoji")
+  @JsonAlias({"icon_emoji"})
   private String iconEmoji;
-  @JsonProperty("icon_url")
+  @JsonAlias({"icon_url"})
   private String iconUrl;
-  @JsonProperty("link_names")
+  @JsonAlias({"link_names"})
   private Boolean linkNames;
-  @JsonProperty("username")
   private String username;
-  @JsonProperty("actions")
   private List<ActionConfig> actions;
-  @JsonProperty("callback_id")
+  @JsonAlias({"callback_id"})
   private String callbackId;
-  @JsonProperty("color")
   private String color;
-  @JsonProperty("fallback")
   private String fallback;
-  @JsonProperty("fields")
   private List<FieldConfig> fields;
-  @JsonProperty("footer")
   private String footer;
-  @JsonProperty("mrkdwn_in")
+  @JsonAlias({"mrkdwn_in"})
   private List<String> mrkdwnIn;
-  @JsonProperty("short_fields")
+  @JsonAlias({"short_fields"})
   private Boolean shortFields;
-  @JsonProperty("text")
   private String text;
-  @JsonProperty("title")
   private String title;
-  @JsonProperty("title_link")
+  @JsonAlias({"title_link"})
   private String titleLink;
-  @JsonProperty("image_url")
+  @JsonAlias({"image_url"})
   private String imageUrl;
-  @JsonProperty("thumb_url")
+  @JsonAlias({"thumb_url"})
   private String thumbUrl;
-  @JsonProperty("http_config")
+  @JsonAlias({"http_config"})
   private HttpConfig httpConfig;
 
   public SlackConfig() {
@@ -100,12 +66,10 @@ public class SlackConfig {
     this.channel = channel;
   }
 
-  @JsonProperty("send_resolved")
   public Boolean getSendResolved() {
     return sendResolved;
   }
 
-  @JsonProperty("send_resolved")
   public void setSendResolved(Boolean sendResolved) {
     this.sendResolved = sendResolved;
   }
@@ -115,22 +79,18 @@ public class SlackConfig {
     return this;
   }
 
-  @JsonProperty("api_url")
   public String getApiUrl() {
     return apiUrl;
   }
 
-  @JsonProperty("api_url")
   public void setApiUrl(String apiUrl) {
     this.apiUrl = apiUrl;
   }
 
-  @JsonProperty("channel")
   public String getChannel() {
     return channel;
   }
 
-  @JsonProperty("channel")
   public void setChannel(String channel) {
     this.channel = channel;
   }
@@ -140,12 +100,10 @@ public class SlackConfig {
     return this;
   }
 
-  @JsonProperty("icon_emoji")
   public String getIconEmoji() {
     return iconEmoji;
   }
 
-  @JsonProperty("icon_emoji")
   public void setIconEmoji(String iconEmoji) {
     this.iconEmoji = iconEmoji;
   }
@@ -155,12 +113,10 @@ public class SlackConfig {
     return this;
   }
 
-  @JsonProperty("icon_url")
   public String getIconUrl() {
     return iconUrl;
   }
 
-  @JsonProperty("icon_url")
   public void setIconUrl(String iconUrl) {
     this.iconUrl = iconUrl;
   }
@@ -170,12 +126,10 @@ public class SlackConfig {
     return this;
   }
 
-  @JsonProperty("link_names")
   public Boolean getLinkNames() {
     return linkNames;
   }
 
-  @JsonProperty("link_names")
   public void setLinkNames(Boolean linkNames) {
     this.linkNames = linkNames;
   }
@@ -185,12 +139,10 @@ public class SlackConfig {
     return this;
   }
 
-  @JsonProperty("username")
   public String getUsername() {
     return username;
   }
 
-  @JsonProperty("username")
   public void setUsername(String username) {
     this.username = username;
   }
@@ -200,12 +152,10 @@ public class SlackConfig {
     return this;
   }
 
-  @JsonProperty("actions")
   public List<ActionConfig> getActions() {
     return actions;
   }
 
-  @JsonProperty("actions")
   public void setActions(List<ActionConfig> actions) {
     this.actions = actions;
   }
@@ -215,12 +165,10 @@ public class SlackConfig {
     return this;
   }
 
-  @JsonProperty("callback_id")
   public String getCallbackId() {
     return callbackId;
   }
 
-  @JsonProperty("callback_id")
   public void setCallbackId(String callbackId) {
     this.callbackId = callbackId;
   }
@@ -230,12 +178,10 @@ public class SlackConfig {
     return this;
   }
 
-  @JsonProperty("color")
   public String getColor() {
     return color;
   }
 
-  @JsonProperty("color")
   public void setColor(String color) {
     this.color = color;
   }
@@ -245,12 +191,10 @@ public class SlackConfig {
     return this;
   }
 
-  @JsonProperty("fallback")
   public String getFallback() {
     return fallback;
   }
 
-  @JsonProperty("fallback")
   public void setFallback(String fallback) {
     this.fallback = fallback;
   }
@@ -260,12 +204,10 @@ public class SlackConfig {
     return this;
   }
 
-  @JsonProperty("fields")
   public List<FieldConfig> getFields() {
     return fields;
   }
 
-  @JsonProperty("fields")
   public void setFields(List<FieldConfig> fields) {
     this.fields = fields;
   }
@@ -275,12 +217,10 @@ public class SlackConfig {
     return this;
   }
 
-  @JsonProperty("footer")
   public String getFooter() {
     return footer;
   }
 
-  @JsonProperty("footer")
   public void setFooter(String footer) {
     this.footer = footer;
   }
@@ -290,12 +230,10 @@ public class SlackConfig {
     return this;
   }
 
-  @JsonProperty("mrkdwn_in")
   public List<String> getMrkdwnIn() {
     return mrkdwnIn;
   }
 
-  @JsonProperty("mrkdwn_in")
   public void setMrkdwnIn(List<String> mrkdwnIn) {
     this.mrkdwnIn = mrkdwnIn;
   }
@@ -305,12 +243,10 @@ public class SlackConfig {
     return this;
   }
 
-  @JsonProperty("short_fields")
   public Boolean getShortFields() {
     return shortFields;
   }
 
-  @JsonProperty("short_fields")
   public void setShortFields(Boolean shortFields) {
     this.shortFields = shortFields;
   }
@@ -320,12 +256,10 @@ public class SlackConfig {
     return this;
   }
 
-  @JsonProperty("text")
   public String getText() {
     return text;
   }
 
-  @JsonProperty("text")
   public void setText(String text) {
     this.text = text;
   }
@@ -335,12 +269,10 @@ public class SlackConfig {
     return this;
   }
 
-  @JsonProperty("title")
   public String getTitle() {
     return title;
   }
 
-  @JsonProperty("title")
   public void setTitle(String title) {
     this.title = title;
   }
@@ -350,12 +282,10 @@ public class SlackConfig {
     return this;
   }
 
-  @JsonProperty("title_link")
   public String getTitleLink() {
     return titleLink;
   }
 
-  @JsonProperty("title_link")
   public void setTitleLink(String titleLink) {
     this.titleLink = titleLink;
   }
@@ -365,12 +295,10 @@ public class SlackConfig {
     return this;
   }
 
-  @JsonProperty("image_url")
   public String getImageUrl() {
     return imageUrl;
   }
 
-  @JsonProperty("image_url")
   public void setImageUrl(String imageUrl) {
     this.imageUrl = imageUrl;
   }
@@ -380,12 +308,10 @@ public class SlackConfig {
     return this;
   }
 
-  @JsonProperty("thumb_url")
   public String getThumbUrl() {
     return thumbUrl;
   }
 
-  @JsonProperty("thumb_url")
   public void setThumbUrl(String thumbUrl) {
     this.thumbUrl = thumbUrl;
   }
@@ -395,12 +321,10 @@ public class SlackConfig {
     return this;
   }
 
-  @JsonProperty("http_config")
   public HttpConfig getHttpConfig() {
     return httpConfig;
   }
 
-  @JsonProperty("http_config")
   public void setHttpConfig(HttpConfig httpConfig) {
     this.httpConfig = httpConfig;
   }

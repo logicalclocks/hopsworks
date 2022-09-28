@@ -59,7 +59,7 @@ public class AlertBuilder {
 
   public RestDTO uri(RestDTO dto, UriInfo uriInfo) {
     dto.setHref(uriInfo.getAbsolutePathBuilder()
-        .build());
+      .build());
     return dto;
   }
 
@@ -71,15 +71,15 @@ public class AlertBuilder {
 
   private void uri(AlertDTO dto, UriInfo uriInfo, Project project) {
     dto.setHref(uriInfo.getBaseUriBuilder().path(ResourceRequest.Name.PROJECT.toString().toLowerCase())
-        .path(Integer.toString(project.getId()))
-        .path(ResourceRequest.Name.ALERTS.toString().toLowerCase())
-        .build());
+      .path(Integer.toString(project.getId()))
+      .path(ResourceRequest.Name.ALERTS.toString().toLowerCase())
+      .build());
   }
 
   private void uri(AlertDTO dto, UriInfo uriInfo, Project project, Alert alert) {
     UriBuilder builder = uriInfo.getBaseUriBuilder().path(ResourceRequest.Name.PROJECT.toString().toLowerCase())
-        .path(Integer.toString(project.getId()))
-        .path(ResourceRequest.Name.ALERTS.toString().toLowerCase());
+      .path(Integer.toString(project.getId()))
+      .path(ResourceRequest.Name.ALERTS.toString().toLowerCase());
     dto.setHref(addQuery(builder, alert.getLabels()).build());
   }
 
@@ -158,11 +158,11 @@ public class AlertBuilder {
     dto.setEndsAt(alert.getEndsAt());
     dto.setStartsAt(alert.getStartsAt());
     dto.setLabels(alert.getLabels().stream()
-        .filter(entry -> entry.getKey() != null && entry.getValue() != null)
-        .collect(Collectors.toMap(Entry::getKey, Entry::getValue)));
+      .filter(entry -> entry.getKey() != null && entry.getValue() != null)
+      .collect(Collectors.toMap(Entry::getKey, Entry::getValue)));
     dto.setAnnotations(alert.getAnnotations().stream()
-        .filter(entry -> entry.getKey() != null && entry.getValue() != null)
-        .collect(Collectors.toMap(Entry::getKey, Entry::getValue)));
+      .filter(entry -> entry.getKey() != null && entry.getValue() != null)
+      .collect(Collectors.toMap(Entry::getKey, Entry::getValue)));
     dto.setGeneratorURL(alert.getGeneratorURL());
     return dto;
   }
@@ -181,17 +181,17 @@ public class AlertBuilder {
   }
 
   public AlertDTO buildItems(UriInfo uriInfo, ResourceRequest resourceRequest, AlertBeanParam alertBeanParam,
-      Project project) throws AlertException {
+    Project project) throws AlertException {
     return items(new AlertDTO(), uriInfo, resourceRequest, alertBeanParam, project);
   }
 
   public AlertGroupDTO buildAlertGroupItems(UriInfo uriInfo, ResourceRequest resourceRequest,
-      AlertFilterBy alertFilterBy, Project project) throws AlertException {
+    AlertFilterBy alertFilterBy, Project project) throws AlertException {
     return items(new AlertGroupDTO(), uriInfo, resourceRequest, alertFilterBy, project);
   }
 
   private AlertDTO items(AlertDTO dto, UriInfo uriInfo, ResourceRequest resourceRequest, AlertBeanParam alertBeanParam,
-      Project project) throws AlertException {
+    Project project) throws AlertException {
     uri(dto, uriInfo);
     expand(dto, resourceRequest);
     if (dto.isExpand()) {
@@ -199,14 +199,14 @@ public class AlertBuilder {
       try {
         if (project != null) {
           alerts = alertManager.getAlerts(alertBeanParam.getAlertFilterBy().isActive(),
-              alertBeanParam.getAlertFilterBy().isSilenced(), alertBeanParam.getAlertFilterBy().isInhibited(),
-              alertBeanParam.isUnprocessed(), alertBeanParam.getAlertFilterBy().getFilter(),
-              alertBeanParam.getAlertFilterBy().getReceiver(), project);
+            alertBeanParam.getAlertFilterBy().isSilenced(), alertBeanParam.getAlertFilterBy().isInhibited(),
+            alertBeanParam.isUnprocessed(), alertBeanParam.getAlertFilterBy().getFilter(),
+            alertBeanParam.getAlertFilterBy().getReceiver(), project);
         } else {
           alerts = alertManager.getAlerts(alertBeanParam.getAlertFilterBy().isActive(),
-              alertBeanParam.getAlertFilterBy().isSilenced(), alertBeanParam.getAlertFilterBy().isInhibited(),
-              alertBeanParam.isUnprocessed(), alertBeanParam.getAlertFilterBy().getFilter(),
-              alertBeanParam.getAlertFilterBy().getReceiver());
+            alertBeanParam.getAlertFilterBy().isSilenced(), alertBeanParam.getAlertFilterBy().isInhibited(),
+            alertBeanParam.isUnprocessed(), alertBeanParam.getAlertFilterBy().getFilter(),
+            alertBeanParam.getAlertFilterBy().getReceiver());
         }
       } catch (AlertManagerResponseException a) {
         throw new AlertException(RESTCodes.AlertErrorCode.RESPONSE_ERROR, Level.FINE, a.getMessage());
@@ -222,7 +222,7 @@ public class AlertBuilder {
   }
 
   private AlertGroupDTO items(AlertGroupDTO dto, UriInfo uriInfo, ResourceRequest resourceRequest,
-      AlertFilterBy alertFilterBy, Project project) throws AlertException {
+    AlertFilterBy alertFilterBy, Project project) throws AlertException {
     uri(dto, uriInfo);
     expandAlertGroups(dto, resourceRequest);
     if (dto.isExpand()) {
@@ -230,10 +230,10 @@ public class AlertBuilder {
       try {
         if (project != null) {
           alertGroups = alertManager.getAlertGroups(alertFilterBy.isActive(), alertFilterBy.isSilenced(),
-              alertFilterBy.isInhibited(), alertFilterBy.getFilter(), alertFilterBy.getReceiver(), project);
+            alertFilterBy.isInhibited(), alertFilterBy.getFilter(), alertFilterBy.getReceiver(), project);
         } else {
           alertGroups = alertManager.getAlertGroups(alertFilterBy.isActive(), alertFilterBy.isSilenced(),
-              alertFilterBy.isInhibited(), alertFilterBy.getFilter(), alertFilterBy.getReceiver());
+            alertFilterBy.isInhibited(), alertFilterBy.getFilter(), alertFilterBy.getReceiver());
         }
       } catch (AlertManagerResponseException a) {
         throw new AlertException(RESTCodes.AlertErrorCode.RESPONSE_ERROR, Level.FINE, a.getMessage());
@@ -243,17 +243,17 @@ public class AlertBuilder {
         throw new AlertException(RESTCodes.AlertErrorCode.ACCESS_CONTROL_EXCEPTION, Level.FINE, e.getMessage());
       }
       dto.setCount((long) alertGroups.size());
-      return items(dto, uriInfo, resourceRequest,  alertGroups);
+      return items(dto, uriInfo, resourceRequest, alertGroups);
     }
     return dto;
   }
 
   private AlertDTO items(AlertDTO dto, UriInfo uriInfo, ResourceRequest resourceRequest, AlertBeanParam alertBeanParam,
-      List<Alert> alerts) {
+    List<Alert> alerts) {
     if (alerts != null && !alerts.isEmpty()) {
       alerts.forEach((alert) -> dto.addItem(build(uriInfo, resourceRequest, alert)));
       if (dto.getItems() != null && dto.getItems().size() > 1 &&
-          alertBeanParam.getSortBySet() != null && !alertBeanParam.getSortBySet().isEmpty()) {
+        alertBeanParam.getSortBySet() != null && !alertBeanParam.getSortBySet().isEmpty()) {
         AlertComparator alertComparator = new AlertComparator(alertBeanParam.getSortBySet());
         dto.getItems().sort(alertComparator);
       }
@@ -267,14 +267,14 @@ public class AlertBuilder {
     uri(dto, uriInfo, project);
     expandAlertGroups(dto, resourceRequest);
     dto.setCount((long) alerts.size());
-    if (alerts != null && !alerts.isEmpty()) {
+    if (!alerts.isEmpty()) {
       alerts.forEach((alert) -> dto.addItem(build(uriInfo, resourceRequest, project, alert)));
     }
     return dto;
   }
 
   private AlertGroupDTO items(AlertGroupDTO dto, UriInfo uriInfo, ResourceRequest resourceRequest,
-      List<AlertGroup> alertGroups) {
+    List<AlertGroup> alertGroups) {
     if (alertGroups != null && !alertGroups.isEmpty()) {
       alertGroups.forEach((alertGroup) -> dto.addItem(build(uriInfo, resourceRequest, alertGroup)));
       paginate(dto, resourceRequest);
@@ -287,11 +287,11 @@ public class AlertBuilder {
       int offset = resourceRequest.getOffset() != null ? resourceRequest.getOffset() : 0;
       int limit = resourceRequest.getLimit() != null ? resourceRequest.getLimit() : restDTO.getItems().size();
       restDTO.getItems()
-          .subList(Math.min(restDTO.getItems().size(), offset), Math.min(restDTO.getItems().size(), offset + limit));
+        .subList(Math.min(restDTO.getItems().size(), offset), Math.min(restDTO.getItems().size(), offset + limit));
     }
   }
 
-  class AlertComparator implements Comparator<AlertDTO> {
+  static class AlertComparator implements Comparator<AlertDTO> {
 
     Set<AlertSortBy> sortBy;
 
@@ -327,7 +327,7 @@ public class AlertBuilder {
     public int compare(AlertDTO a, AlertDTO b) {
       Iterator<AlertSortBy> sort = sortBy.iterator();
       int c = compare(a, b, sort.next());
-      for (; sort.hasNext() && c == 0;) {
+      while (sort.hasNext() && c == 0) {
         c = compare(a, b, sort.next());
       }
       return c;

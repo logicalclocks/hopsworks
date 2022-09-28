@@ -42,6 +42,7 @@ import javax.ejb.EJB;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.enterprise.context.RequestScoped;
+import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
@@ -104,14 +105,15 @@ public class AdminRouteResource {
   @POST
   @Produces(MediaType.APPLICATION_JSON)
   @Consumes(MediaType.APPLICATION_JSON)
-  @ApiOperation(value = "Create a receiver.")
+  @ApiOperation(value = "Create a route.")
   @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN"})
-  public Response create(PostableRouteDTO routeDTO, @Context UriInfo uriInfo, @Context SecurityContext sc)
-      throws AlertException {
+  public Response create(PostableRouteDTO routeDTO, @Context UriInfo uriInfo,
+                         @Context HttpServletRequest req,
+                         @Context SecurityContext sc) throws AlertException {
     if (routeDTO == null) {
       throw new AlertException(RESTCodes.AlertErrorCode.ILLEGAL_ARGUMENT, Level.FINE, "No payload.");
     }
-    Route route = routeBuilder.toRoute(routeDTO);
+    Route route = routeDTO.toRoute();
     try {
       alertManagerConfiguration.addRoute(route);
     } catch (AlertManagerConfigCtrlCreateException | AlertManagerUnreachableException |
@@ -136,17 +138,18 @@ public class AdminRouteResource {
   @Path("{receiver}")
   @Produces(MediaType.APPLICATION_JSON)
   @Consumes(MediaType.APPLICATION_JSON)
-  @ApiOperation(value = "Create a receiver.")
+  @ApiOperation(value = "Update a route.")
   @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN"})
   public Response update(@PathParam("receiver") String receiver, PostableRouteDTO route,
-      @QueryParam("match") List<String> match, @QueryParam("matchRe") List<String> matchRe, @Context UriInfo uriInfo,
-      @Context SecurityContext sc) throws AlertException {
+                         @QueryParam("match") List<String> match,
+                         @QueryParam("matchRe") List<String> matchRe,
+                         @Context UriInfo uriInfo, @Context SecurityContext sc) throws AlertException {
     if (route == null) {
       throw new AlertException(RESTCodes.AlertErrorCode.ILLEGAL_ARGUMENT, Level.FINE, "No payload.");
     }
     Route routeToUpdate =
         new Route(receiver).withMatch(routeBuilder.toMap(match)).withMatchRe(routeBuilder.toMap(matchRe));
-    Route updatedRoute = routeBuilder.toRoute(route);
+    Route updatedRoute = route.toRoute();
     try {
       alertManagerConfiguration.updateRoute(routeToUpdate, updatedRoute);
     } catch (AlertManagerConfigCtrlCreateException | AlertManagerUnreachableException |
@@ -168,11 +171,12 @@ public class AdminRouteResource {
 
   @DELETE
   @Path("{receiver}")
-  @ApiOperation(value = "Delete receiver by name.")
+  @ApiOperation(value = "Delete route.")
   @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN"})
-  public Response delete(@PathParam("receiver") String receiver, @QueryParam("match") List<String> match,
-      @QueryParam("matchRe") List<String> matchRe, @Context UriInfo uriInfo, @Context SecurityContext sc)
-      throws AlertException {
+  public Response delete(@PathParam("receiver") String receiver,
+                         @QueryParam("match") List<String> match,
+                         @QueryParam("matchRe") List<String> matchRe,
+                         @Context UriInfo uriInfo, @Context SecurityContext sc) throws AlertException {
     Route routeToDelete =
         new Route(receiver).withMatch(routeBuilder.toMap(match)).withMatchRe(routeBuilder.toMap(matchRe));
     try {

@@ -54,7 +54,7 @@ import io.hops.hopsworks.persistence.entity.util.Settings;
  * Contains Spark-specific run information for a Spark job, on top of Yarn configuration.
  */
 @XmlRootElement
-@XmlAccessorType(XmlAccessType.NONE)
+@XmlAccessorType(XmlAccessType.FIELD)
 @JsonTypeName("sparkJobConfiguration")
 public class SparkJobConfiguration extends YarnJobConfiguration {
 
@@ -71,19 +71,14 @@ public class SparkJobConfiguration extends YarnJobConfiguration {
   public SparkJobConfiguration(ExperimentType experimentType) {
     this.experimentType = experimentType;
   }
-  
   @XmlElement
   private String appPath;
-
   @XmlElement
   private String mainClass;
-
   @XmlElement
   private String properties;
-
   @XmlElement
   private ExperimentType experimentType;
-
   @XmlElement
   private DistributionStrategy distributionStrategy;
 

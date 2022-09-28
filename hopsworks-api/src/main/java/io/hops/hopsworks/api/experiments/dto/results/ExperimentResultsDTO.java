@@ -16,32 +16,40 @@
 
 package io.hops.hopsworks.api.experiments.dto.results;
 
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlAnyAttribute;
 import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.namespace.QName;
+import java.util.HashMap;
 
 @XmlRootElement
+@XmlAccessorType(XmlAccessType.FIELD)
 public class ExperimentResultsDTO {
 
   public ExperimentResultsDTO() {
     //Needed for JAXB
   }
 
-  private ExperimentResult parameters;
+  @XmlAnyAttribute
+  private HashMap<QName, String> parameters;
 
-  private ExperimentResult outputs;
+  @XmlAnyAttribute
+  private HashMap<QName, String> outputs;
 
-  public ExperimentResult getParameters() {
+  public HashMap<QName, String> getParameters() {
     return parameters;
   }
 
-  public void setParameters(ExperimentResult parameters) {
+  public void setParameters(HashMap<QName, String> parameters) {
     this.parameters = parameters;
   }
 
-  public ExperimentResult getOutputs() {
+  public HashMap<QName, String> getOutputs() {
     return outputs;
   }
 
-  public void setOutputs(ExperimentResult outputs) {
+  public void setOutputs(HashMap<QName, String> outputs) {
     this.outputs = outputs;
   }
 }

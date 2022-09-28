@@ -36,9 +36,7 @@ module ExecutionHelper
   end
 
   def stop_execution(project_id, job_name, execution_id, expected_status: 202)
-    stateDTO = {}
-    stateDTO["state"] = "stopped"
-    put "#{ENV['HOPSWORKS_API']}/project/#{project_id}/jobs/#{job_name}/executions/#{execution_id}/status", stateDTO
+    put "#{ENV['HOPSWORKS_API']}/project/#{project_id}/jobs/#{job_name}/executions/#{execution_id}/status"
     expect_status_details(expected_status)
   end
 
@@ -68,14 +66,14 @@ module ExecutionHelper
       expect(wait_result["success"]).to be(true), wait_result["msg"]
       expect(id).not_to be_nil
       id
-    rescue Failure => error
+    rescue StandardError => error
       wait_for_me_time(timeout=5, delay=5) do
         begin
           stop_execution(project_id, job_name, execution_id)
         rescue RSpec::Expectations::ExpectationNotMetError => e
-          false
+          { 'success' => false }
         else
-          true
+          { 'success' => true }
         end
       end
       raise error
@@ -100,9 +98,9 @@ module ExecutionHelper
         begin
           stop_execution(project_id, job_name, execution_id)
         rescue RSpec::Expectations::ExpectationNotMetError => e
-          false
+          { 'success' => false }
         else
-          true
+          { 'success' => true }
         end
       end
       raise error

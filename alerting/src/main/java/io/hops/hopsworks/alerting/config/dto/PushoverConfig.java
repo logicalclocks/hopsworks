@@ -15,55 +15,32 @@
  */
 package io.hops.hopsworks.alerting.config.dto;
 
+import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@JsonPropertyOrder({
-  "send_resolved",
-  "user_key",
-  "token",
-  "title",
-  "message",
-  "url",
-  "priority",
-  "retry",
-  "expire",
-  "http_config"
-  })
 public class PushoverConfig {
-
-  @JsonProperty("send_resolved")
+  @JsonAlias({"send_resolved"})
   private Boolean sendResolved;
-  @JsonProperty("user_key")
+  @JsonAlias({"user_key"})
   private String userKey;
-  @JsonProperty("token")
   private String token;
-  @JsonProperty("title")
   private String title;
-  @JsonProperty("message")
   private String message;
-  @JsonProperty("url")
   private String url;
-  @JsonProperty("priority")
   private String priority;
-  @JsonProperty("retry")
   private String retry;
-  @JsonProperty("expire")
   private String expire;
-  @JsonProperty("http_config")
+  @JsonAlias({"http_config"})
   private HttpConfig httpConfig;
 
   public PushoverConfig() {
   }
 
-  @JsonProperty("send_resolved")
   public Boolean getSendResolved() {
     return sendResolved;
   }
 
-  @JsonProperty("send_resolved")
   public void setSendResolved(Boolean sendResolved) {
     this.sendResolved = sendResolved;
   }
@@ -73,12 +50,10 @@ public class PushoverConfig {
     return this;
   }
 
-  @JsonProperty("user_key")
   public String getUserKey() {
     return userKey;
   }
 
-  @JsonProperty("user_key")
   public void setUserKey(String userKey) {
     this.userKey = userKey;
   }
@@ -88,12 +63,10 @@ public class PushoverConfig {
     return this;
   }
 
-  @JsonProperty("token")
   public String getToken() {
     return token;
   }
 
-  @JsonProperty("token")
   public void setToken(String token) {
     this.token = token;
   }
@@ -103,12 +76,10 @@ public class PushoverConfig {
     return this;
   }
 
-  @JsonProperty("title")
   public String getTitle() {
     return title;
   }
 
-  @JsonProperty("title")
   public void setTitle(String title) {
     this.title = title;
   }
@@ -118,12 +89,10 @@ public class PushoverConfig {
     return this;
   }
 
-  @JsonProperty("message")
   public String getMessage() {
     return message;
   }
 
-  @JsonProperty("message")
   public void setMessage(String message) {
     this.message = message;
   }
@@ -133,12 +102,10 @@ public class PushoverConfig {
     return this;
   }
 
-  @JsonProperty("url")
   public String getUrl() {
     return url;
   }
 
-  @JsonProperty("url")
   public void setUrl(String url) {
     this.url = url;
   }
@@ -148,12 +115,10 @@ public class PushoverConfig {
     return this;
   }
 
-  @JsonProperty("priority")
   public String getPriority() {
     return priority;
   }
 
-  @JsonProperty("priority")
   public void setPriority(String priority) {
     this.priority = priority;
   }
@@ -163,12 +128,10 @@ public class PushoverConfig {
     return this;
   }
 
-  @JsonProperty("retry")
   public String getRetry() {
     return retry;
   }
 
-  @JsonProperty("retry")
   public void setRetry(String retry) {
     this.retry = retry;
   }
@@ -178,12 +141,10 @@ public class PushoverConfig {
     return this;
   }
 
-  @JsonProperty("expire")
   public String getExpire() {
     return expire;
   }
 
-  @JsonProperty("expire")
   public void setExpire(String expire) {
     this.expire = expire;
   }
@@ -193,12 +154,10 @@ public class PushoverConfig {
     return this;
   }
 
-  @JsonProperty("http_config")
   public HttpConfig getHttpConfig() {
     return httpConfig;
   }
 
-  @JsonProperty("http_config")
   public void setHttpConfig(HttpConfig httpConfig) {
     this.httpConfig = httpConfig;
   }

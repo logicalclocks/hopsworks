@@ -406,7 +406,7 @@ describe "On #{ENV['OS']}" do
         copyConnector[:databaseName] = "database-p3"
         copyConnector[:databaseUserName] = "databaseUser-p3"
         copyConnector[:databasePort] = 5456
-        copyConnector[:arguments] = "test1,test2,test3,test4,p3"
+        copyConnector[:arguments] = [{name: "test1", value: "test2"}, {name: "test3", value: "test4"}, {name: "db", value: "p3"}]
         update_redshift_connector(@p3[:id], @featurestore1["featurestoreId"], copyConnector[:name], copyConnector)
         expect_status_details(403)
         get_storage_connector(@p3[:id], @featurestore1["featurestoreId"], connector[:name])

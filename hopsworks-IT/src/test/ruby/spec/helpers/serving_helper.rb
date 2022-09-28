@@ -222,11 +222,30 @@ module ServingHelper
       end
   end
 
+  def parse_model_framework(value)
+    return case
+           when value == 0 ; "TENSORFLOW"
+           when value == 1 ; "PYTHON"
+           when value == 2 ; "SKLEARN"
+           when value == 3 ; "TORCH"
+           else puts "Model framework value cannot be parsed"
+           end
+  end
+
   def parse_serving_tool(value)
     return case
       when value == 0 ; "DEFAULT"
       else puts "Serving tool value cannot be parsed"
       end
+  end
+
+  def parse_inference_logging(value)
+    return case
+           when value == 0 ; "PREDICTIONS"
+           when value == 1 ; "MODEL_INPUTS"
+           when value == 2 ; "ALL"
+           else puts "Inference logging value cannot be parsed"
+           end
   end
 
   def get_serving(serving_name)

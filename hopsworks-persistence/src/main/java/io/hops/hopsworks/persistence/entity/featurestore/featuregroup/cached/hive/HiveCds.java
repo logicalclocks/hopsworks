@@ -15,7 +15,7 @@
  */
 package io.hops.hopsworks.persistence.entity.featurestore.featuregroup.cached.hive;
 
-import org.codehaus.jackson.annotate.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import javax.persistence.Basic;
 import javax.persistence.CascadeType;

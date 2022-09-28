@@ -115,7 +115,7 @@ describe "On #{ENV['OS']}" do
       featurestore_id = get_featurestore_id(@project[:id])
       json_result, _ = create_cached_featuregroup(@project[:id], featurestore_id)
       parsed_json = JSON.parse(json_result)
-      # Method does not exist
+      # Method does not exist HOPSWORKS-3180(Add Great Expectations Validation Activity)
       # create_validation(@project[:id], featurestore_id, parsed_json["id"])
 
       get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/featurestores/#{featurestore_id}/featuregroups/#{parsed_json["id"]}/activity?filter_by=type:validations&expand=validations"
@@ -214,11 +214,11 @@ describe "On #{ENV['OS']}" do
       expect_status_details(201)
 	  
       parsed_json = JSON.parse(json_result)
-      fg_id = parsed_json["id"]
       # create queryDTO object
       query = {
         leftFeatureGroup: {
-          id: fg_id
+          id: parsed_json["id"],
+          type: parsed_json["type"],
         },
         leftFeatures: ['testfeature'].map do |feat_name|
           {name: feat_name}

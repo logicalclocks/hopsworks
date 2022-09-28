@@ -61,7 +61,7 @@ import javax.xml.bind.annotation.XmlTransient;
 
 import io.hops.hopsworks.persistence.entity.kafka.schemas.Subjects;
 import io.hops.hopsworks.persistence.entity.project.Project;
-import org.codehaus.jackson.annotate.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 @Entity
 @Table(name = "project_topics",

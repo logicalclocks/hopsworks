@@ -40,7 +40,7 @@
 package io.hops.hopsworks.persistence.entity.message;
 
 import io.hops.hopsworks.persistence.entity.user.Users;
-import org.codehaus.jackson.annotate.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import javax.persistence.Basic;
 import javax.persistence.Column;

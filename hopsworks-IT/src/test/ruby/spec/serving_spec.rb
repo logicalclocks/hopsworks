@@ -1,15 +1,12 @@
 =begin
  This file is part of Hopsworks
  Copyright (C) 2022, Logical Clocks AB. All rights reserved
-
  Hopsworks is free software: you can redistribute it and/or modify it under the terms of
  the GNU Affero General Public License as published by the Free Software Foundation,
  either version 3 of the License, or (at your option) any later version.
-
  Hopsworks is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
  PURPOSE.  See the GNU Affero General Public License for more details.
-
  You should have received a copy of the GNU Affero General Public License along with this program.
  If not, see <https://www.gnu.org/licenses/>.
 =end
@@ -42,6 +39,7 @@ describe "On #{ENV['OS']}" do
                batchingEnabled: false
              },
              modelServer: "TENSORFLOW_SERVING",
+             modelFramework: "TENSORFLOW",
              servingTool: "DEFAULT",
              requestedInstances: 1
             }
@@ -61,10 +59,11 @@ describe "On #{ENV['OS']}" do
         put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
             {modelPath: "/Projects/#{@project[:projectname]}/Models/mnist",
              batchingConfiguration: {
-               batchingEnabled: false  
+               batchingEnabled: false
              },
              modelVersion: 1,
              modelServer: "TENSORFLOW_SERVING",
+             modelFramework: "TENSORFLOW",
              servingTool: "DEFAULT",
              requestedInstances: 1
             }
@@ -77,14 +76,15 @@ describe "On #{ENV['OS']}" do
              modelPath: "/Projects/#{@project[:projectname]}/Models/mnist",
              modelVersion: 1,
              batchingConfiguration: {
-               batchingEnabled: false  
+               batchingEnabled: false
              },
              kafkaTopicDTO: {
-                 name: "CREATE",
-                 numOfPartitions: 1,
-                 numOfReplicas: 1
+               name: "CREATE",
+               numOfPartitions: 1,
+               numOfReplicas: 1
              },
              modelServer: "TENSORFLOW_SERVING",
+             modelFramework: "TENSORFLOW",
              servingTool: "DEFAULT",
              requestedInstances: 1
             }
@@ -98,36 +98,38 @@ describe "On #{ENV['OS']}" do
              modelPath: "/Projects/#{@project[:projectname]}/Models/mnist",
              modelVersion: 1,
              batchingConfiguration: {
-               batchingEnabled: false  
+               batchingEnabled: false
              },
              kafkaTopicDTO: {
-                 name: "CREATE",
-                 numOfPartitions: 1,
-                 numOfReplicas: 1
+               name: "CREATE",
+               numOfPartitions: 1,
+               numOfReplicas: 1
              },
              inferenceLogging: "ALL",
              modelServer: "TENSORFLOW_SERVING",
+             modelFramework: "TENSORFLOW",
              servingTool: "DEFAULT",
              requestedInstances: 1
             }
         expect_status_details(201)
 
         put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
-           {name: "testModelExistingName",
-            modelPath: "/Projects/#{@project[:projectname]}/Models/mnist",
-            modelVersion: 1,
-            batchingConfiguration: {
+            {name: "testModelExistingName",
+             modelPath: "/Projects/#{@project[:projectname]}/Models/mnist",
+             modelVersion: 1,
+             batchingConfiguration: {
                batchingEnabled: false
-            },
-            kafkaTopicDTO: {
-                name: "CREATE",
-                numOfPartitions: 1,
-                numOfReplicas: 1
-            },
-            inferenceLogging: "ALL",
-            modelServer: "TENSORFLOW_SERVING",
-            servingTool: "DEFAULT",
-            requestedInstances: 1
+             },
+             kafkaTopicDTO: {
+               name: "CREATE",
+               numOfPartitions: 1,
+               numOfReplicas: 1
+             },
+             inferenceLogging: "ALL",
+             modelServer: "TENSORFLOW_SERVING",
+             modelFramework: "TENSORFLOW",
+             servingTool: "DEFAULT",
+             requestedInstances: 1
             }
         expect_status_details(400, error_code: 240011)
         expect_json(errorMsg: "An entry with the same name already exists in this project")
@@ -139,10 +141,11 @@ describe "On #{ENV['OS']}" do
         put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
             {name: "testModel3",
              batchingConfiguration: {
-               batchingEnabled: false  
+               batchingEnabled: false
              },
              modelVersion: 1,
              modelServer: "TENSORFLOW_SERVING",
+             modelFramework: "TENSORFLOW",
              servingTool: "DEFAULT",
              requestedInstances: 1
             }
@@ -154,10 +157,11 @@ describe "On #{ENV['OS']}" do
             {name: "testModelNonExistingPath",
              modelPath: "/Projects/#{@project[:projectname]}/DOESNTEXISTS",
              batchingConfiguration: {
-               batchingEnabled: false  
+               batchingEnabled: false
              },
              modelVersion: 1,
              modelServer: "TENSORFLOW_SERVING",
+             modelFramework: "TENSORFLOW",
              servingTool: "DEFAULT",
              requestedInstances: 1
             }
@@ -170,9 +174,10 @@ describe "On #{ENV['OS']}" do
              modelPath: "/Projects/#{@project[:projectname]}/Models/mnist",
              modelVersion: 1,
              batchingConfiguration: {
-               batchingEnabled: false  
+               batchingEnabled: false
              },
              modelServer: "TENSORFLOW_SERVING",
+             modelFramework: "TENSORFLOW",
              servingTool: "DEFAULT",
              requestedInstances: 1
             }
@@ -190,9 +195,10 @@ describe "On #{ENV['OS']}" do
             {name: "testModel4",
              modelPath: "/Projects/#{@project[:projectname]}/Models/mnist",
              batchingConfiguration: {
-               batchingEnabled: false  
+               batchingEnabled: false
              },
              modelServer: "TENSORFLOW_SERVING",
+             modelFramework: "TENSORFLOW",
              servingTool: "DEFAULT",
              requestedInstances: 1
             }
@@ -205,9 +211,10 @@ describe "On #{ENV['OS']}" do
              modelPath: "/Projects/#{@project[:projectname]}/Models/mnist",
              modelVersion: 99,
              batchingConfiguration: {
-               batchingEnabled: false  
+               batchingEnabled: false
              },
              modelServer: "TENSORFLOW_SERVING",
+             modelFramework: "TENSORFLOW",
              servingTool: "DEFAULT",
              requestedInstances: 1
             }
@@ -222,8 +229,9 @@ describe "On #{ENV['OS']}" do
              modelPath: "/Projects/#{@project[:projectname]}/Models/mnist",
              modelVersion: 1,
              batchingConfiguration: {
-               batchingEnabled: false  
+               batchingEnabled: false
              },
+             modelFramework: "TENSORFLOW",
              servingTool: "DEFAULT",
              requestedInstances: 1
             }
@@ -237,13 +245,34 @@ describe "On #{ENV['OS']}" do
              modelPath: "/Projects/#{@project[:projectname]}/Models/mnist",
              modelVersion: 1,
              batchingConfiguration: {
-               batchingEnabled: false  
+               batchingEnabled: false
              },
              modelServer: "INVALID",
+             modelFramework: "TENSORFLOW",
              servingTool: "DEFAULT",
              requestedInstances: 1
             }
-        expect_json(usrMsg: "Model server not provided or unsupported")
+        # response: from String \"INVALID\": not one of the values accepted for Enum class: [TENSORFLOW_SERVING, PYTHON]
+        #expect_json(usrMsg: "Model server not provided or unsupported")
+        expect_status(400)
+      end
+
+      # model framework
+
+      it "should fail to create a serving with an invalid model framework" do
+        put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
+            {name: "testmodel5",
+             modelPath: "/Projects/#{@project[:projectname]}/Models/mnist",
+             modelVersion: 1,
+             batchingConfiguration: {
+               batchingEnabled: false
+             },
+             modelServer: "TENSORFLOW_SERVING",
+             modelFramework: "INVALID",
+             servingTool: "DEFAULT",
+             requestedInstances: 1
+            }
+        expect_json(usrMsg: "Model framework not provided or unsupported")
         expect_status(422)
       end
 
@@ -255,25 +284,28 @@ describe "On #{ENV['OS']}" do
              modelPath: "/Projects/#{@project[:projectname]}/Models/mnist",
              modelVersion: 1,
              batchingConfiguration: {
-               batchingEnabled: false  
+               batchingEnabled: false
              },
              modelServer: "TENSORFLOW_SERVING",
+             modelFramework: "TENSORFLOW",
              requestedInstances: 1
             }
-        expect_json(usrMsg: "Serving tool not provided or invalid")
-        expect_status(422)
+        # response: from String \"INVALID\": not one of the values accepted for Enum class: [DEFAULT, KSERVE]
+        #expect_json(usrMsg: "Serving tool not provided or invalid")
+        expect_status(400)
       end
 
-      
+
       it "should fail to create a serving with an invalid serving tool" do
         put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
             {name: "testmodel6",
              modelPath: "/Projects/#{@project[:projectname]}/Models/mnist",
              modelVersion: 1,
              batchingConfiguration: {
-               batchingEnabled: false  
+               batchingEnabled: false
              },
              modelServer: "TENSORFLOW_SERVING",
+             modelFramework: "TENSORFLOW",
              servingTool: "INVALID",
              requestedInstances: 1
             }
@@ -289,15 +321,16 @@ describe "On #{ENV['OS']}" do
              modelPath: "/Projects/#{@project[:projectname]}/Models/mnist",
              modelVersion: 1,
              batchingConfiguration: {
-               batchingEnabled: false  
+               batchingEnabled: false
              },
              kafkaTopicDTO: {
-                 name: "CREATE",
-                 numOfPartitions: -10,
-                 numOfReplicas: 5
+               name: "CREATE",
+               numOfPartitions: -10,
+               numOfReplicas: 5
              },
              inferenceLogging: "ALL",
              modelServer: "TENSORFLOW_SERVING",
+             modelFramework: "TENSORFLOW",
              servingTool: "DEFAULT",
              requestedInstances: 1
             }
@@ -311,9 +344,10 @@ describe "On #{ENV['OS']}" do
              modelPath: "/Projects/#{@project[:projectname]}/Models/mnist",
              modelVersion: 1,
              batchingConfiguration: {
-               batchingEnabled: false  
+               batchingEnabled: false
              },
              modelServer: "TENSORFLOW_SERVING",
+             modelFramework: "TENSORFLOW",
              servingTool: "DEFAULT",
              requestedInstances: 1
             }
@@ -330,15 +364,16 @@ describe "On #{ENV['OS']}" do
              modelPath: "/Projects/#{@project[:projectname]}/Models/mnist",
              modelVersion: 1,
              batchingConfiguration: {
-               batchingEnabled: false  
+               batchingEnabled: false
              },
              kafkaTopicDTO: {
-                 name: "CREATE",
-                 numOfPartitions: 1,
-                 numOfReplicas: 1
+               name: "CREATE",
+               numOfPartitions: 1,
+               numOfReplicas: 1
              },
              inferenceLogging: "ALL",
              modelServer: "TENSORFLOW_SERVING",
+             modelFramework: "TENSORFLOW",
              servingTool: "DEFAULT",
              requestedInstances: 1
             }
@@ -370,13 +405,14 @@ describe "On #{ENV['OS']}" do
              modelPath: "/Projects/#{@project[:projectname]}/Models/mnist",
              modelVersion: 1,
              batchingConfiguration: {
-               batchingEnabled: false  
+               batchingEnabled: false
              },
              kafkaTopicDTO: {
-                 name: topic_name
+               name: topic_name
              },
              inferenceLogging: "ALL",
              modelServer: "TENSORFLOW_SERVING",
+             modelFramework: "TENSORFLOW",
              servingTool: "DEFAULT",
              requestedInstances: 1
             }
@@ -390,13 +426,14 @@ describe "On #{ENV['OS']}" do
              modelPath: "/Projects/#{@project[:projectname]}/Models/mnist",
              modelVersion: 1,
              batchingConfiguration: {
-               batchingEnabled: false  
+               batchingEnabled: false
              },
              kafkaTopicDTO: {
-                 name: "NON-EXISTING"
+               name: "NON-EXISTING"
              },
              inferenceLogging: "ALL",
              modelServer: "TENSORFLOW_SERVING",
+             modelFramework: "TENSORFLOW",
              servingTool: "DEFAULT",
              requestedInstances: 1
             }
@@ -410,13 +447,14 @@ describe "On #{ENV['OS']}" do
             {name: "testmodelWithoutInferenceLogging",
              modelPath: "/Projects/#{@project[:projectname]}/Models/mnist",
              batchingConfiguration: {
-               batchingEnabled: false  
+               batchingEnabled: false
              },
              kafkaTopicDTO: {
-                 name: "CREATE"
+               name: "CREATE"
              },
              modelVersion: 1,
              modelServer: "TENSORFLOW_SERVING",
+             modelFramework: "TENSORFLOW",
              servingTool: "DEFAULT",
              requestedInstances: 1
             }
@@ -429,16 +467,18 @@ describe "On #{ENV['OS']}" do
             {name: "testmodelWithInferenceLoggingButNotTopic",
              modelPath: "/Projects/#{@project[:projectname]}/Models/mnist",
              batchingConfiguration: {
-               batchingEnabled: false  
+               batchingEnabled: false
              },
              modelVersion: 1,
              modelServer: "TENSORFLOW_SERVING",
+             modelFramework: "TENSORFLOW",
              servingTool: "DEFAULT",
              inferenceLogging: "ALL",
              requestedInstances: 1
             }
-        expect_status_details(422)
-        expect_json(usrMsg: "Inference logger mode cannot be provided without a Kafka topic")
+        expect_status_details(400)
+        # response: from String \"INVALID\": not one of the values accepted for Enum class: [ALL, PREDICTIONS, MODEL_INPUTS]
+        #expect_json(usrMsg: "Inference logger mode cannot be provided without a Kafka topic")
       end
 
       it "should fail to create a serving with invalid inference logging mode" do
@@ -446,14 +486,15 @@ describe "On #{ENV['OS']}" do
             {name: "testmodelInvalidInferenceLogging",
              modelPath: "/Projects/#{@project[:projectname]}/Models/mnist",
              batchingConfiguration: {
-               batchingEnabled: false  
+               batchingEnabled: false
              },
              kafkaTopicDTO: {
-              name: "CREATE"
+               name: "CREATE"
              },
              inferenceLogging: "INVALID",
              modelVersion: 1,
              modelServer: "TENSORFLOW_SERVING",
+             modelFramework: "TENSORFLOW",
              servingTool: "DEFAULT",
              requestedInstances: 1
             }
@@ -465,15 +506,16 @@ describe "On #{ENV['OS']}" do
 
       it "should fail to create a serving without predictor requested instances" do
         put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
-              {name: "testmodel7",
-               modelPath: "/Projects/#{@project[:projectname]}/Models/mnist",
-               modelVersion: 1,
-               batchingConfiguration: {
-               batchingEnabled: false  
+            {name: "testmodel7",
+             modelPath: "/Projects/#{@project[:projectname]}/Models/mnist",
+             modelVersion: 1,
+             batchingConfiguration: {
+               batchingEnabled: false
              },
-               modelServer: "TENSORFLOW_SERVING",
-               servingTool: "DEFAULT"
-              }
+             modelServer: "TENSORFLOW_SERVING",
+             modelFramework: "TENSORFLOW",
+             servingTool: "DEFAULT"
+            }
         expect_json(usrMsg: "Number of instances not provided")
       end
 
@@ -490,12 +532,13 @@ describe "On #{ENV['OS']}" do
              modelVersion: 1,
              artifactVersion: 1,
              batchingConfiguration: {
-               batchingEnabled: false  
+               batchingEnabled: false
              },
              kafkaTopicDTO: {
-                 name: "NONE"
+               name: "NONE"
              },
              modelServer: "TENSORFLOW_SERVING",
+             modelFramework: "TENSORFLOW",
              servingTool: "DEFAULT",
              requestedInstances: 1
             }
@@ -513,9 +556,10 @@ describe "On #{ENV['OS']}" do
              modelPath: "/Projects/#{@project[:projectname]}/Models/mnist",
              modelVersion: 1,
              batchingConfiguration: {
-               batchingEnabled: false  
+               batchingEnabled: false
              },
              modelServer: "TENSORFLOW_SERVING",
+             modelFramework: "TENSORFLOW",
              servingTool: "DEFAULT",
              requestedInstances: 1
             }
@@ -535,7 +579,7 @@ describe "On #{ENV['OS']}" do
         it "should fail to create serving if quota has been reached" do
           ## This deployument should go through
           with_tensorflow_serving(@local_project.id, @local_project.projectname, @user.username)
-  
+
           ## Second deployment should fail because quota has been reached
           create_tensorflow_serving(@local_project.id, @local_project.projectname, expected_status: 400)
         end
@@ -557,18 +601,19 @@ describe "On #{ENV['OS']}" do
         topic = ProjectTopics.find(@serving[:kafka_topic_id])
 
         put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
-           {id: serving[:id],
-            name: serving[:name],
-            modelPath: serving[:model_path],
-            modelVersion: 2,
-            batchingEnabled: serving[:enable_batching],
-            kafkaTopicDTO: {
-                name: topic[:topic_name]
-            },
-            inferenceLogging: parse_inference_logging(serving[:inference_logging]),
-            modelServer: parse_model_server(serving[:model_server]),
-            servingTool: parse_serving_tool(serving[:serving_tool]),
-            requestedInstances: serving[:instances]
+            {id: serving[:id],
+             name: serving[:name],
+             modelPath: serving[:model_path],
+             modelVersion: 2,
+             batchingConfiguration: JSON.parse(serving[:batching_configuration]),
+             kafkaTopicDTO: {
+               name: topic[:topic_name]
+             },
+             inferenceLogging: parse_inference_logging(serving[:inference_logging]),
+             modelServer: parse_model_server(serving[:model_server]),
+             modelFramework: parse_model_framework(serving[:model_framework]),
+             servingTool: parse_serving_tool(serving[:serving_tool]),
+             requestedInstances: serving[:instances]
             }
         expect_status_details(401, error_code: 200003)
       end
@@ -583,8 +628,8 @@ describe "On #{ENV['OS']}" do
               "#{@project[:projectname]}__Models", 750)
 
         copy("/Projects/#{@project[:projectname]}/Models/mnist/*",
-            "/Projects/#{@project[:projectname]}/Models/newMnist/",
-            @user[:username], "#{@project[:projectname]}__Models", 750, "#{@project[:projectname]}")
+             "/Projects/#{@project[:projectname]}/Models/newMnist/",
+             @user[:username], "#{@project[:projectname]}__Models", 750, "#{@project[:projectname]}")
 
         start_serving(@project, @serving)
         wait_for_type(@serving[:name])
@@ -602,23 +647,27 @@ describe "On #{ENV['OS']}" do
 
       # serving name
 
+
+
+
       it "should be able to update the name" do
         serving = Serving.find(@serving[:id])
         topic = ProjectTopics.find(@serving[:kafka_topic_id])
         put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
             {id: serving[:id],
-            name: "testModelChanged",
-            modelPath: serving[:model_path],
-            modelVersion: serving[:model_version],
-            artifactVersion: serving[:artifact_version],
-            batchingEnabled: serving[:enable_batching],
-            kafkaTopicDTO: {
-                name: topic[:topic_name]
-            },
-            inferenceLogging: parse_inference_logging(serving[:inference_logging]),
-            modelServer: parse_model_server(serving[:model_server]),
-            servingTool: parse_serving_tool(serving[:serving_tool]),
-            requestedInstances: serving[:instances]
+             name: "testModelChanged",
+             modelPath: serving[:model_path],
+             modelVersion: serving[:model_version],
+             artifactVersion: serving[:artifact_version],
+             batchingConfiguration: JSON.parse(serving[:batching_configuration]),
+             kafkaTopicDTO: {
+               name: topic[:topic_name]
+             },
+             inferenceLogging: parse_inference_logging(serving[:inference_logging]),
+             modelServer: parse_model_server(serving[:model_server]),
+             modelFramework: parse_model_framework(serving[:model_framework]),
+             servingTool: parse_serving_tool(serving[:serving_tool]),
+             requestedInstances: serving[:instances]
             }
         expect_status_details(201)
 
@@ -636,17 +685,18 @@ describe "On #{ENV['OS']}" do
 
         put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
             {id: serving[:id],
-            name: serving[:name],
-            modelPath: "/Projects/#{@project[:projectname]}/Models/newMnist",
-            modelVersion: serving[:model_version],
-            batchingEnabled: serving[:enable_batching],
-            kafkaTopicDTO: {
-                name: topic[:topic_name]
-            },
-            inferenceLogging: parse_inference_logging(serving[:inference_logging]),
-            modelServer: parse_model_server(serving[:model_server]),
-            servingTool: parse_serving_tool(serving[:serving_tool]),
-            requestedInstances: serving[:instances]
+             name: serving[:name],
+             modelPath: "/Projects/#{@project[:projectname]}/Models/newMnist",
+             modelVersion: serving[:model_version],
+             batchingConfiguration: JSON.parse(serving[:batching_configuration]),
+             kafkaTopicDTO: {
+               name: topic[:topic_name]
+             },
+             inferenceLogging: parse_inference_logging(serving[:inference_logging]),
+             modelServer: parse_model_server(serving[:model_server]),
+             modelFramework: parse_model_framework(serving[:model_framework]),
+             servingTool: parse_serving_tool(serving[:serving_tool]),
+             requestedInstances: serving[:instances]
             }
         expect_status_details(201)
 
@@ -662,17 +712,18 @@ describe "On #{ENV['OS']}" do
         topic = ProjectTopics.find(@serving[:kafka_topic_id])
         put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
             {id: serving[:id],
-            name: serving[:name],
-            modelPath: serving[:model_path],
-            modelVersion: 2,
-            batchingEnabled: serving[:enable_batching],
-            kafkaTopicDTO: {
-                name: topic[:topic_name]
-            },
-            inferenceLogging: parse_inference_logging(serving[:inference_logging]),
-            modelServer: parse_model_server(serving[:model_server]),
-            servingTool: parse_serving_tool(serving[:serving_tool]),
-            requestedInstances: serving[:instances]
+             name: serving[:name],
+             modelPath: serving[:model_path],
+             modelVersion: 2,
+             batchingConfiguration: JSON.parse(serving[:batching_configuration]),
+             kafkaTopicDTO: {
+               name: topic[:topic_name]
+             },
+             inferenceLogging: parse_inference_logging(serving[:inference_logging]),
+             modelServer: parse_model_server(serving[:model_server]),
+             modelFramework: parse_model_framework(serving[:model_framework]),
+             servingTool: parse_serving_tool(serving[:serving_tool]),
+             requestedInstances: serving[:instances]
             }
         expect_status_details(201)
 
@@ -690,13 +741,14 @@ describe "On #{ENV['OS']}" do
         serving = Serving.find(@serving[:id])
         put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
             {id: serving[:id],
-            name: serving[:name],
-            modelPath: serving[:model_path],
-            modelVersion: 2,
-            batchingEnabled: serving[:enable_batching],
-            modelServer: parse_model_server(serving[:model_server]),
-            servingTool: parse_serving_tool(serving[:serving_tool]),
-            requestedInstances: serving[:instances]
+             name: serving[:name],
+             modelPath: serving[:model_path],
+             modelVersion: 2,
+             batchingConfiguration: JSON.parse(serving[:batching_configuration]),
+             modelServer: parse_model_server(serving[:model_server]),
+             modelFramework: parse_model_framework(serving[:model_framework]),
+             servingTool: parse_serving_tool(serving[:serving_tool]),
+             requestedInstances: serving[:instances]
             }
         expect_status_details(201)
 
@@ -722,13 +774,14 @@ describe "On #{ENV['OS']}" do
 
         put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
             {id: serving[:id],
-            name: serving[:name],
-            modelPath: "/Projects/#{@project[:projectname]}/Models/newMnist",
-            modelVersion: serving[:model_version],
-            batchingEnabled: serving[:enable_batching],
-            modelServer: parse_model_server(serving[:model_server]),
-            servingTool: parse_serving_tool(serving[:serving_tool]),
-            requestedInstances: serving[:instances]
+             name: serving[:name],
+             modelPath: "/Projects/#{@project[:projectname]}/Models/newMnist",
+             modelVersion: serving[:model_version],
+             batchingConfiguration: JSON.parse(serving[:batching_configuration]),
+             modelServer: parse_model_server(serving[:model_server]),
+             modelFramework: parse_model_framework(serving[:model_framework]),
+             servingTool: parse_serving_tool(serving[:serving_tool]),
+             requestedInstances: serving[:instances]
             }
         expect_status_details(201)
 
@@ -749,14 +802,15 @@ describe "On #{ENV['OS']}" do
         serving = Serving.find(@serving[:id])
         put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
             {id: serving[:id],
-            name: serving[:name],
-            modelPath: serving[:model_path],
-            modelVersion: serving[:model_version],
-            artifactVersion: serving[:artifact_version],
-            batchingEnabled: serving[:enable_batching],
-            modelServer: "PYTHON",
-            servingTool: parse_serving_tool(serving[:serving_tool]),
-            requestedInstances: serving[:instances]
+             name: serving[:name],
+             modelPath: serving[:model_path],
+             modelVersion: serving[:model_version],
+             artifactVersion: serving[:artifact_version],
+             batchingConfiguration: JSON.parse(serving[:batching_configuration]),
+             modelServer: "PYTHON",
+             modelFramework: parse_model_framework(serving[:model_framework]),
+             servingTool: parse_serving_tool(serving[:serving_tool]),
+             requestedInstances: serving[:instances]
             }
         expect_status_details(400, error_code: 240013)
       end
@@ -768,18 +822,19 @@ describe "On #{ENV['OS']}" do
         serving = Serving.find(@serving[:id])
         put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
             {id: serving[:id],
-            name: serving[:name],
-            modelPath: serving[:model_path],
-            modelVersion: serving[:model_version],
-            artifactVersion: serving[:artifact_version],
-            batchingEnabled: serving[:enable_batching],
-            kafkaTopicDTO: {
-                name: topic_name
-            },
-            inferenceLogging: "ALL",
-            modelServer: parse_model_server(serving[:model_server]),
-            servingTool: parse_serving_tool(serving[:serving_tool]),
-            requestedInstances: serving[:instances]
+             name: serving[:name],
+             modelPath: serving[:model_path],
+             modelVersion: serving[:model_version],
+             artifactVersion: serving[:artifact_version],
+             batchingConfiguration: JSON.parse(serving[:batching_configuration]),
+             kafkaTopicDTO: {
+               name: topic_name
+             },
+             inferenceLogging: "ALL",
+             modelServer: parse_model_server(serving[:model_server]),
+             modelFramework: parse_model_framework(serving[:model_framework]),
+             servingTool: parse_serving_tool(serving[:serving_tool]),
+             requestedInstances: serving[:instances]
             }
         expect_status_details(201)
 
@@ -792,17 +847,18 @@ describe "On #{ENV['OS']}" do
         serving = Serving.find(@serving[:id])
         put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
             {id: serving[:id],
-            name: serving[:name],
-            modelPath: serving[:model_path],
-            modelVersion: serving[:model_version],
-            artifactVersion: serving[:artifact_version],
-            batchingEnabled: serving[:enable_batching],
-            kafkaTopicDTO: {
-                name: "NONE"
-            },
-            modelServer: parse_model_server(serving[:model_server]),
-            servingTool: parse_serving_tool(serving[:serving_tool]),
-            requestedInstances: serving[:instances]
+             name: serving[:name],
+             modelPath: serving[:model_path],
+             modelVersion: serving[:model_version],
+             artifactVersion: serving[:artifact_version],
+             batchingConfiguration: JSON.parse(serving[:batching_configuration]),
+             kafkaTopicDTO: {
+               name: "NONE"
+             },
+             modelServer: parse_model_server(serving[:model_server]),
+             modelFramework: parse_model_framework(serving[:model_framework]),
+             servingTool: parse_serving_tool(serving[:serving_tool]),
+             requestedInstances: serving[:instances]
             }
         expect_status_details(201)
 
@@ -814,19 +870,20 @@ describe "On #{ENV['OS']}" do
       it "should be able to create a new kafka topic to write to" do
         serving = Serving.find(@serving[:id])
         put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
-           {id: serving[:id],
-            name: serving[:name],
-            modelPath: serving[:model_path],
-            modelVersion: serving[:model_version],
-            artifactVersion: serving[:artifact_version],
-            batchingEnabled: serving[:enable_batching],
-            kafkaTopicDTO: {
-                name: "CREATE"
-            },
-            inferenceLogging: "ALL",
-            modelServer: parse_model_server(serving[:model_server]),
-            servingTool: parse_serving_tool(serving[:serving_tool]),
-            requestedInstances: serving[:instances]
+            {id: serving[:id],
+             name: serving[:name],
+             modelPath: serving[:model_path],
+             modelVersion: serving[:model_version],
+             artifactVersion: serving[:artifact_version],
+             batchingConfiguration: JSON.parse(serving[:batching_configuration]),
+             kafkaTopicDTO: {
+               name: "CREATE"
+             },
+             inferenceLogging: "ALL",
+             modelServer: parse_model_server(serving[:model_server]),
+             modelFramework: parse_model_framework(serving[:model_framework]),
+             servingTool: parse_serving_tool(serving[:serving_tool]),
+             requestedInstances: serving[:instances]
             }
         expect_status_details(201)
 
@@ -839,7 +896,7 @@ describe "On #{ENV['OS']}" do
   end
 
   describe "#start", vm: true do
-    
+
     context 'without authentication' do
       before :all do
         with_valid_project
@@ -915,7 +972,7 @@ describe "On #{ENV['OS']}" do
   end
 
   describe "#stop", vm: true do
-        
+
     context 'without authentication' do
       before :all do
         with_valid_project
@@ -952,7 +1009,7 @@ describe "On #{ENV['OS']}" do
       after :all do
         purge_all_tf_serving_instances
         delete_all_servings(@project[:id])
-      end 
+      end
 
       it "should be able to kill a running serving instance" do
         post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/#{@serving[:id]}?action=stop"
@@ -1012,7 +1069,7 @@ describe "On #{ENV['OS']}" do
         purge_all_tf_serving_instances
         delete_all_servings(@project[:id])
       end
-  
+
       it "should fail to delete a serving instance" do
         delete "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/#{@serving[:id]}"
         expect_status_details(401, error_code: 200003)
@@ -1133,15 +1190,14 @@ describe "On #{ENV['OS']}" do
             {name: "testModel1",
              modelPath: "/Projects/#{@project[:projectname]}/Models/mnist/",
              modelVersion: 1,
-             batchingConfiguration: {
-               batchingEnabled: false  
-             },
+             batchingEnabled: false,
              kafkaTopicDTO: {
                name: "CREATE",
                numOfPartitions: 1,
                numOfReplicas: 1
              },
              modelServer: "TENSORFLOW_SERVING",
+             modelFramework: "TENSORFLOW",
              servingTool: "DEFAULT",
              requestedInstances: 1
             }

@@ -79,7 +79,7 @@ module GitHelper
   end
 
   def wait_for_git_operation_completed(project_id, repository_id, execution_id, expected_final_status)
-    git_command_result = wait_for_me_time(timeout=1800, delay=1) do
+    git_command_result = wait_for_me_time(timeout=180, delay=1) do
       #start polling
       get_git_execution_object(project_id, repository_id, execution_id)
       expect_status_details(200)

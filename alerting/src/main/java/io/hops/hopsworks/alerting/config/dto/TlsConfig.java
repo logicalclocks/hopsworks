@@ -15,28 +15,20 @@
  */
 package io.hops.hopsworks.alerting.config.dto;
 
+import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@JsonPropertyOrder({
-  "ca_file",
-  "cert_file",
-  "key_file",
-  "server_name",
-  "insecure_skip_verify"
-  })
 public class TlsConfig {
-  @JsonProperty("ca_file")
+  @JsonAlias({"ca_file"})
   private String caFile;
-  @JsonProperty("cert_file")
+  @JsonAlias({"cert_file"})
   private String certFile;
-  @JsonProperty("key_file")
+  @JsonAlias({"key_file"})
   private String keyFile;
-  @JsonProperty("server_name")
+  @JsonAlias({"server_name"})
   private String serverName;
-  @JsonProperty("insecure_skip_verify")
+  @JsonAlias({"insecure_skip_verify"})
   private String insecureSkipVerify;
 
   public TlsConfig() {
@@ -50,52 +42,42 @@ public class TlsConfig {
     this.insecureSkipVerify = insecureSkipVerify;
   }
 
-  @JsonProperty("ca_file")
   public String getCaFile() {
     return caFile;
   }
 
-  @JsonProperty("ca_file")
   public void setCaFile(String caFile) {
     this.caFile = caFile;
   }
 
-  @JsonProperty("cert_file")
   public String getCertFile() {
     return certFile;
   }
 
-  @JsonProperty("cert_file")
   public void setCertFile(String certFile) {
     this.certFile = certFile;
   }
 
-  @JsonProperty("key_file")
   public String getKeyFile() {
     return keyFile;
   }
 
-  @JsonProperty("key_file")
   public void setKeyFile(String keyFile) {
     this.keyFile = keyFile;
   }
 
-  @JsonProperty("server_name")
   public String getServerName() {
     return serverName;
   }
 
-  @JsonProperty("server_name")
   public void setServerName(String serverName) {
     this.serverName = serverName;
   }
 
-  @JsonProperty("insecure_skip_verify")
   public String getInsecureSkipVerify() {
     return insecureSkipVerify;
   }
 
-  @JsonProperty("insecure_skip_verify")
   public void setInsecureSkipVerify(String insecureSkipVerify) {
     this.insecureSkipVerify = insecureSkipVerify;
   }

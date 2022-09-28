@@ -15,9 +15,8 @@
  */
 package io.hops.hopsworks.alerting.config.dto;
 
+import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.google.common.base.Strings;
 
 import java.util.List;
@@ -25,45 +24,23 @@ import java.util.Map;
 import java.util.Objects;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@JsonPropertyOrder({
-  "send_resolved",
-  "routing_key",
-  "service_key",
-  "url",
-  "client",
-  "client_url",
-  "description",
-  "severity",
-  "details",
-  "images",
-  "links",
-  "http_config"
-  })
 public class PagerdutyConfig {
-
-  @JsonProperty("send_resolved")
+  @JsonAlias({"send_resolved"})
   private Boolean sendResolved;
-  @JsonProperty("routing_key")
+  @JsonAlias({"routing_key"})
   private String routingKey;
-  @JsonProperty("service_key")
+  @JsonAlias({"service_key"})
   private String serviceKey;
-  @JsonProperty("url")
   private String url;
-  @JsonProperty("client")
   private String client;
-  @JsonProperty("client_url")
+  @JsonAlias({"client_url"})
   private String clientUrl;
-  @JsonProperty("description")
   private String description;
-  @JsonProperty("severity")
   private String severity;
-  @JsonProperty("details")
   private Map<String, String> details;
-  @JsonProperty("images")
   private List<Imageconfig> images;
-  @JsonProperty("links")
   private List<LinkConfig> links;
-  @JsonProperty("http_config")
+  @JsonAlias({"http_config"})
   private HttpConfig httpConfig;
 
   public PagerdutyConfig() {
@@ -76,12 +53,10 @@ public class PagerdutyConfig {
     this.serviceKey = serviceKey;
   }
 
-  @JsonProperty("service_key")
   public String getServiceKey() {
     return serviceKey;
   }
 
-  @JsonProperty("service_key")
   public void setServiceKey(String serviceKey) {
     this.serviceKey = serviceKey;
   }
@@ -94,12 +69,10 @@ public class PagerdutyConfig {
     return this;
   }
 
-  @JsonProperty("send_resolved")
   public Boolean getSendResolved() {
     return sendResolved;
   }
 
-  @JsonProperty("send_resolved")
   public void setSendResolved(Boolean sendResolved) {
     this.sendResolved = sendResolved;
   }
@@ -109,12 +82,10 @@ public class PagerdutyConfig {
     return this;
   }
 
-  @JsonProperty("routing_key")
   public String getRoutingKey() {
     return routingKey;
   }
 
-  @JsonProperty("routing_key")
   public void setRoutingKey(String routingKey) {
     this.routingKey = routingKey;
   }
@@ -127,12 +98,10 @@ public class PagerdutyConfig {
     return this;
   }
 
-  @JsonProperty("url")
   public String getUrl() {
     return url;
   }
 
-  @JsonProperty("url")
   public void setUrl(String url) {
     this.url = url;
   }
@@ -142,12 +111,10 @@ public class PagerdutyConfig {
     return this;
   }
 
-  @JsonProperty("client")
   public String getClient() {
     return client;
   }
 
-  @JsonProperty("client")
   public void setClient(String client) {
     this.client = client;
   }
@@ -157,12 +124,10 @@ public class PagerdutyConfig {
     return this;
   }
 
-  @JsonProperty("client_url")
   public String getClientUrl() {
     return clientUrl;
   }
 
-  @JsonProperty("client_url")
   public void setClientUrl(String clientUrl) {
     this.clientUrl = clientUrl;
   }
@@ -172,12 +137,10 @@ public class PagerdutyConfig {
     return this;
   }
 
-  @JsonProperty("description")
   public String getDescription() {
     return description;
   }
 
-  @JsonProperty("description")
   public void setDescription(String description) {
     this.description = description;
   }
@@ -187,12 +150,10 @@ public class PagerdutyConfig {
     return this;
   }
 
-  @JsonProperty("severity")
   public String getSeverity() {
     return severity;
   }
 
-  @JsonProperty("severity")
   public void setSeverity(String severity) {
     this.severity = severity;
   }
@@ -202,12 +163,10 @@ public class PagerdutyConfig {
     return this;
   }
 
-  @JsonProperty("details")
   public Map<String, String> getDetails() {
     return details;
   }
 
-  @JsonProperty("details")
   public void setDetails(Map<String, String> details) {
     this.details = details;
   }
@@ -217,12 +176,10 @@ public class PagerdutyConfig {
     return this;
   }
 
-  @JsonProperty("images")
   public List<Imageconfig> getImages() {
     return images;
   }
 
-  @JsonProperty("images")
   public void setImages(List<Imageconfig> images) {
     this.images = images;
   }
@@ -232,12 +189,10 @@ public class PagerdutyConfig {
     return this;
   }
 
-  @JsonProperty("links")
   public List<LinkConfig> getLinks() {
     return links;
   }
 
-  @JsonProperty("links")
   public void setLinks(List<LinkConfig> links) {
     this.links = links;
   }
@@ -247,12 +202,10 @@ public class PagerdutyConfig {
     return this;
   }
 
-  @JsonProperty("http_config")
   public HttpConfig getHttpConfig() {
     return httpConfig;
   }
 
-  @JsonProperty("http_config")
   public void setHttpConfig(HttpConfig httpConfig) {
     this.httpConfig = httpConfig;
   }

@@ -16,10 +16,15 @@
 
 package io.hops.hopsworks.common.featurestore.featuregroup.stream;
 
+import com.fasterxml.jackson.annotation.JsonTypeName;
 import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupDTO;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.Featuregroup;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.cached.TimeTravelFormat;
 
+import javax.xml.bind.annotation.XmlRootElement;
+
+@XmlRootElement
+@JsonTypeName("streamFeatureGroupDTO")
 public class StreamFeatureGroupDTO extends FeaturegroupDTO {
   private TimeTravelFormat timeTravelFormat = TimeTravelFormat.HUDI;
   private DeltaStreamerJobConf deltaStreamerJobConf;

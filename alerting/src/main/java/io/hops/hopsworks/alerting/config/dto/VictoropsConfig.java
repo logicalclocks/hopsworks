@@ -15,40 +15,28 @@
  */
 package io.hops.hopsworks.alerting.config.dto;
 
+import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@JsonPropertyOrder({
-  "send_resolved",
-  "api_key",
-  "api_url",
-  "routing_key",
-  "message_type",
-  "entity_display_name",
-  "state_message",
-  "monitoring_tool",
-  "http_config"
-  })
 public class VictoropsConfig {
-  @JsonProperty("send_resolved")
+  @JsonAlias({"send_resolved"})
   private Boolean sendResolved;
-  @JsonProperty("api_key")
+  @JsonAlias({"api_key"})
   private String apiKey;
-  @JsonProperty("api_url")
+  @JsonAlias({"api_url"})
   private String apiUrl;
-  @JsonProperty("routing_key")
+  @JsonAlias({"routing_key"})
   private String routingKey;
-  @JsonProperty("message_type")
+  @JsonAlias({"message_type"})
   private String messageType;
-  @JsonProperty("entity_display_name")
+  @JsonAlias({"entity_display_name"})
   private String entityDisplayName;
-  @JsonProperty("state_message")
+  @JsonAlias({"state_message"})
   private String stateMessage;
-  @JsonProperty("monitoring_tool")
+  @JsonAlias({"monitoring_tool"})
   private String monitoringTool;
-  @JsonProperty("http_config")
+  @JsonAlias({"http_config"})
   private HttpConfig httpConfig;
 
   public VictoropsConfig() {
@@ -58,12 +46,10 @@ public class VictoropsConfig {
     this.routingKey = routingKey;
   }
 
-  @JsonProperty("send_resolved")
   public Boolean getSendResolved() {
     return sendResolved;
   }
 
-  @JsonProperty("send_resolved")
   public void setSendResolved(Boolean sendResolved) {
     this.sendResolved = sendResolved;
   }
@@ -73,12 +59,10 @@ public class VictoropsConfig {
     return this;
   }
 
-  @JsonProperty("api_key")
   public String getApiKey() {
     return apiKey;
   }
 
-  @JsonProperty("api_key")
   public void setApiKey(String apiKey) {
     this.apiKey = apiKey;
   }
@@ -88,12 +72,10 @@ public class VictoropsConfig {
     return this;
   }
 
-  @JsonProperty("api_url")
   public String getApiUrl() {
     return apiUrl;
   }
 
-  @JsonProperty("api_url")
   public void setApiUrl(String apiUrl) {
     this.apiUrl = apiUrl;
   }
@@ -103,22 +85,18 @@ public class VictoropsConfig {
     return this;
   }
 
-  @JsonProperty("routing_key")
   public String getRoutingKey() {
     return routingKey;
   }
 
-  @JsonProperty("routing_key")
   public void setRoutingKey(String routingKey) {
     this.routingKey = routingKey;
   }
 
-  @JsonProperty("message_type")
   public String getMessageType() {
     return messageType;
   }
 
-  @JsonProperty("message_type")
   public void setMessageType(String messageType) {
     this.messageType = messageType;
   }
@@ -128,12 +106,10 @@ public class VictoropsConfig {
     return this;
   }
 
-  @JsonProperty("entity_display_name")
   public String getEntityDisplayName() {
     return entityDisplayName;
   }
 
-  @JsonProperty("entity_display_name")
   public void setEntityDisplayName(String entityDisplayName) {
     this.entityDisplayName = entityDisplayName;
   }
@@ -143,12 +119,10 @@ public class VictoropsConfig {
     return this;
   }
 
-  @JsonProperty("state_message")
   public String getStateMessage() {
     return stateMessage;
   }
 
-  @JsonProperty("state_message")
   public void setStateMessage(String stateMessage) {
     this.stateMessage = stateMessage;
   }
@@ -158,12 +132,10 @@ public class VictoropsConfig {
     return this;
   }
 
-  @JsonProperty("monitoring_tool")
   public String getMonitoringTool() {
     return monitoringTool;
   }
 
-  @JsonProperty("monitoring_tool")
   public void setMonitoringTool(String monitoringTool) {
     this.monitoringTool = monitoringTool;
   }
@@ -173,12 +145,10 @@ public class VictoropsConfig {
     return this;
   }
 
-  @JsonProperty("http_config")
   public HttpConfig getHttpConfig() {
     return httpConfig;
   }
 
-  @JsonProperty("http_config")
   public void setHttpConfig(HttpConfig httpConfig) {
     this.httpConfig = httpConfig;
   }

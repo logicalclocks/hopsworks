@@ -396,7 +396,7 @@ module DatasetHelper
   def download_dataset(project, path, datasetType: "")
     get_download_token(project, path, datasetType: "?#{datasetType}")
     expect_status(200)
-    token = json_body[:data][:value]
+    token = json_body[:data]
     download_dataset_with_token(project, path, token, datasetType: "&#{datasetType}")
   end
 

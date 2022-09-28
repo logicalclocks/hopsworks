@@ -16,7 +16,6 @@
 package io.hops.hopsworks.api.user;
 
 import com.google.common.base.Strings;
-import io.hops.hopsworks.common.api.ResourceRequest;
 import io.hops.hopsworks.common.git.util.GitCommandOperationUtil;
 import io.hops.hopsworks.common.git.BasicAuthSecrets;
 import io.hops.hopsworks.persistence.entity.git.config.GitProvider;
@@ -41,17 +40,14 @@ public class GitProvidersSecretsBuilder {
   @EJB
   private GitCommandOperationUtil gitCommandOperationUtil;
 
-  public URI uri(UriInfo uriInfo, Users user) {
+  public URI uri(UriInfo uriInfo) {
     return uriInfo.getAbsolutePathBuilder()
-        .path(ResourceRequest.Name.USERS.toString())
-        .path(ResourceRequest.Name.GIT.toString())
-        .path(ResourceRequest.Name.PROVIDER.toString())
         .build();
   }
 
   public GitProviderSecretsDTO build(UriInfo uriInfo, Users user) {
     GitProviderSecretsDTO dto = new GitProviderSecretsDTO();
-    dto.setHref(uri(uriInfo, user));
+    dto.setHref(uri(uriInfo));
     List<GitProviderSecretsDTO> dtos = new ArrayList<>();
     Arrays.stream(GitProvider.values()).forEach(provider -> {
       BasicAuthSecrets secrets = gitCommandOperationUtil.getAuthenticationSecrets(user, provider);
@@ -60,7 +56,7 @@ public class GitProvidersSecretsBuilder {
       }
     });
     dto.setItems(dtos);
-    dto.setCount(dto.getCount());
+    dto.setCount((long) dtos.size());
     return dto;
   }
 }

@@ -15,44 +15,31 @@
  */
 package io.hops.hopsworks.alerting.config.dto;
 
+import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 import java.util.List;
 import java.util.Objects;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@JsonPropertyOrder({
-  "name",
-  "email_configs",
-  "pagerduty_configs",
-  "pushover_configs",
-  "slack_configs",
-  "opsgenie_configs",
-  "webhook_configs",
-  "victorops_configs",
-  "wechat_configs"
-  })
 public class Receiver {
 
-  @JsonProperty("name")
   private String name;
-  @JsonProperty("email_configs")
+  @JsonAlias({"email_configs"})
   private List<EmailConfig> emailConfigs = null;
-  @JsonProperty("pagerduty_configs")
+  @JsonAlias({"pagerduty_configs"})
   private List<PagerdutyConfig> pagerdutyConfigs = null;
-  @JsonProperty("pushover_configs")
+  @JsonAlias({"pushover_configs"})
   private List<PushoverConfig> pushoverConfigs = null;
-  @JsonProperty("slack_configs")
+  @JsonAlias({"slack_configs"})
   private List<SlackConfig> slackConfigs = null;
-  @JsonProperty("opsgenie_configs")
+  @JsonAlias({"opsgenie_configs"})
   private List<OpsgenieConfig> opsgenieConfigs = null;
-  @JsonProperty("webhook_configs")
+  @JsonAlias({"webhook_configs"})
   private List<WebhookConfig> webhookConfigs = null;
-  @JsonProperty("victorops_configs")
+  @JsonAlias({"victorops_configs"})
   private List<VictoropsConfig> victoropsConfigs = null;
-  @JsonProperty("wechat_configs")
+  @JsonAlias({"wechat_configs"})
   private List<WechatConfig> wechatConfigs = null;
 
   public Receiver() {
@@ -65,22 +52,18 @@ public class Receiver {
     this.name = name;
   }
 
-  @JsonProperty("name")
   public String getName() {
     return name;
   }
 
-  @JsonProperty("name")
   public void setName(String name) {
     this.name = name;
   }
 
-  @JsonProperty("email_configs")
   public List<EmailConfig> getEmailConfigs() {
     return emailConfigs;
   }
 
-  @JsonProperty("email_configs")
   public void setEmailConfigs(List<EmailConfig> emailConfigs) {
     this.emailConfigs = emailConfigs;
   }
@@ -90,12 +73,10 @@ public class Receiver {
     return this;
   }
 
-  @JsonProperty("pagerduty_configs")
   public List<PagerdutyConfig> getPagerdutyConfigs() {
     return pagerdutyConfigs;
   }
 
-  @JsonProperty("pagerduty_configs")
   public void setPagerdutyConfigs(List<PagerdutyConfig> pagerdutyConfigs) {
     this.pagerdutyConfigs = pagerdutyConfigs;
   }
@@ -105,12 +86,10 @@ public class Receiver {
     return this;
   }
 
-  @JsonProperty("pushover_configs")
   public List<PushoverConfig> getPushoverConfigs() {
     return pushoverConfigs;
   }
 
-  @JsonProperty("pushover_configs")
   public void setPushoverConfigs(List<PushoverConfig> pushoverConfigs) {
     this.pushoverConfigs = pushoverConfigs;
   }
@@ -120,12 +99,10 @@ public class Receiver {
     return this;
   }
 
-  @JsonProperty("slack_configs")
   public List<SlackConfig> getSlackConfigs() {
     return slackConfigs;
   }
 
-  @JsonProperty("slack_configs")
   public void setSlackConfigs(List<SlackConfig> slackConfigs) {
     this.slackConfigs = slackConfigs;
   }
@@ -135,12 +112,10 @@ public class Receiver {
     return this;
   }
 
-  @JsonProperty("opsgenie_configs")
   public List<OpsgenieConfig> getOpsgenieConfigs() {
     return opsgenieConfigs;
   }
 
-  @JsonProperty("opsgenie_configs")
   public void setOpsgenieConfigs(List<OpsgenieConfig> opsgenieConfigs) {
     this.opsgenieConfigs = opsgenieConfigs;
   }
@@ -150,12 +125,10 @@ public class Receiver {
     return this;
   }
 
-  @JsonProperty("webhook_configs")
   public List<WebhookConfig> getWebhookConfigs() {
     return webhookConfigs;
   }
 
-  @JsonProperty("webhook_configs")
   public void setWebhookConfigs(List<WebhookConfig> webhookConfigs) {
     this.webhookConfigs = webhookConfigs;
   }
@@ -165,12 +138,10 @@ public class Receiver {
     return this;
   }
 
-  @JsonProperty("victorops_configs")
   public List<VictoropsConfig> getVictoropsConfigs() {
     return victoropsConfigs;
   }
 
-  @JsonProperty("victorops_configs")
   public void setVictoropsConfigs(List<VictoropsConfig> victoropsConfigs) {
     this.victoropsConfigs = victoropsConfigs;
   }
@@ -180,12 +151,10 @@ public class Receiver {
     return this;
   }
 
-  @JsonProperty("wechat_configs")
   public List<WechatConfig> getWechatConfigs() {
     return wechatConfigs;
   }
 
-  @JsonProperty("wechat_configs")
   public void setWechatConfigs(List<WechatConfig> wechatConfigs) {
     this.wechatConfigs = wechatConfigs;
   }

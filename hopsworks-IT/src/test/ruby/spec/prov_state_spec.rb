@@ -1389,14 +1389,14 @@ describe "On #{ENV['OS']}" do
       result = post "#{query}"
       expect_status(200)
       parsed_result = JSON.parse(result)
-      expect(parsed_result["result"]["value"]).to eq 2
+      expect(parsed_result["result"]).to eq 2
 
       query = "#{ENV['HOPSWORKS_TESTING']}/test/provenance/cleanup?size=2"
       #pp "#{query}"
       result = post "#{query}"
       expect_status(200)
       parsed_result = JSON.parse(result)
-      expect(parsed_result["result"]["value"]).to eq 0
+      expect(parsed_result["result"]).to eq 0
       reset_session
       create_session(@email, "Pass123")
     end
