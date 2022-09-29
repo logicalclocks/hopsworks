@@ -59,7 +59,8 @@
   <properties>
     <maven.deploy.skip>false</maven.deploy.skip>
     <kube.stereotype>io.hops.hopsworks.common.integrations.LocalhostStereotype</kube.stereotype>
-    <cloud.stereotype>io.hops.hopsworks.common.integrations.UnmanagedStereotype</cloud.stereotype>
+    <managed.stereotype>io.hops.hopsworks.common.integrations.UnmanagedStereotype</managed.stereotype>
+    <cloud.stereotype>io.hops.hopsworks.common.integrations.OnPremiseStereotype</cloud.stereotype>
   </properties>
 
   <dependencies>
