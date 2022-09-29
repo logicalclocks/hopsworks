@@ -196,7 +196,7 @@ angular.module('hopsWorksApp')
               self.downloadLog = function () {
                   dataSetService.getDownloadToken(self.log.path, 'DATASET').then(
                       function (success) {
-                          var token = success.data.data.value;
+                          var token = success.data.data;
                           $mdToast.hide();
                           dataSetService.download(self.log.path, token, 'DATASET');
                       }, function (error) {
