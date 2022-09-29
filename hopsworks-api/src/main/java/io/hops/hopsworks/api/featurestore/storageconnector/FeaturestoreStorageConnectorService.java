@@ -17,7 +17,7 @@
 package io.hops.hopsworks.api.featurestore.storageconnector;
 
 import com.google.common.base.Strings;
-import io.hops.hopsworks.api.cloud.TemporaryCredentialsHelper;
+import io.hops.hopsworks.common.cloud.TemporaryCredentialsHelper;
 import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.api.filter.Audience;
 import io.hops.hopsworks.api.filter.NoCacheResponse;

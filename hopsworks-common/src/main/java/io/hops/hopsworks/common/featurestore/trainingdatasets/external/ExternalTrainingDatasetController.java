@@ -20,6 +20,9 @@ import com.google.common.base.Strings;
 import io.hops.hopsworks.common.featurestore.FeaturestoreConstants;
 import io.hops.hopsworks.common.featurestore.storageconnectors.FeaturestoreStorageConnectorController;
 import io.hops.hopsworks.common.featurestore.trainingdatasets.TrainingDatasetDTO;
+import io.hops.hopsworks.common.cloud.TemporaryCredentialsHelper;
+import io.hops.hopsworks.common.featurestore.storageconnectors.FeaturestoreStorageConnectorDTO;
+import io.hops.hopsworks.exceptions.CloudException;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.persistence.entity.featurestore.storageconnector.FeaturestoreConnector;
 import io.hops.hopsworks.persistence.entity.featurestore.storageconnector.adls.FeaturestoreADLSConnector;
@@ -48,6 +51,8 @@ public class ExternalTrainingDatasetController {
   private FeaturestoreStorageConnectorController storageConnectorController;
   @EJB
   private ExternalTrainingDatasetFacade externalTrainingDatasetFacade;
+  @EJB
+  private TemporaryCredentialsHelper temporaryCredentialsHelper;
 
   private static final String ABFSS_SCHEME = "abfss://";
   private static final String ABFSS_URI_SUFFIX = ".dfs.core.windows.net";
@@ -66,10 +71,12 @@ public class ExternalTrainingDatasetController {
   public TrainingDatasetDTO convertExternalTrainingDatasetToDTO(Users user, Project project,
                                                                 TrainingDatasetDTO trainingDatasetDTO,
                                                                 TrainingDataset trainingDataset)
-      throws FeaturestoreException {
+      throws FeaturestoreException, CloudException {
     ExternalTrainingDataset externalTrainingDataset = trainingDataset.getExternalTrainingDataset();
-    trainingDatasetDTO.setStorageConnector(storageConnectorController
-        .convertToConnectorDTO(user, project, externalTrainingDataset.getFeaturestoreConnector()));
+    FeaturestoreStorageConnectorDTO storageConnectorDTO = storageConnectorController
+      .convertToConnectorDTO(user, project, externalTrainingDataset.getFeaturestoreConnector());
+    temporaryCredentialsHelper.setTemporaryCredentials(true, user, project, -1, storageConnectorDTO);
+    trainingDatasetDTO.setStorageConnector(storageConnectorDTO);
     trainingDatasetDTO.setLocation(buildDatasetPath(trainingDataset));
 
     return trainingDatasetDTO;

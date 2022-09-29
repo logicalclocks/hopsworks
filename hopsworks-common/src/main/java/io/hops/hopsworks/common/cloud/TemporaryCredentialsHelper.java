@@ -1,15 +1,10 @@
 /*
  * Copyright (C) 2020, Logical Clocks AB. All rights reserved
  */
-package io.hops.hopsworks.api.cloud;
+package io.hops.hopsworks.common.cloud;
 
 
 import com.google.common.base.Strings;
-import io.hops.hopsworks.common.cloud.AWSClusterCredentials;
-import io.hops.hopsworks.common.cloud.AWSClusterCredentialsService;
-import io.hops.hopsworks.common.cloud.AWSSecurityTokenService;
-import io.hops.hopsworks.common.cloud.CloudRoleMappingController;
-import io.hops.hopsworks.common.cloud.Credentials;
 import io.hops.hopsworks.common.featurestore.storageconnectors.FeaturestoreStorageConnectorDTO;
 import io.hops.hopsworks.common.featurestore.storageconnectors.redshift.FeaturestoreRedshiftConnectorDTO;
 import io.hops.hopsworks.common.featurestore.storageconnectors.s3.FeaturestoreS3ConnectorDTO;

@@ -253,6 +253,10 @@
             </replacement>
             <replacement>
               <token>io.hops.hopsworks.common.integrations.UnmanagedStereotype</token>
+              <value>${managed.stereotype}</value>
+            </replacement>
+            <replacement>
+              <token>io.hops.hopsworks.common.integrations.OnPremiseStereotype</token>
               <value>${cloud.stereotype}</value>
             </replacement>
           </replacements>
@@ -278,7 +282,17 @@
         <activeByDefault>false</activeByDefault>
       </activation>
       <properties>
-        <cloud.stereotype>io.hops.hopsworks.cloud.ManagedStereotype</cloud.stereotype>
+        <managed.stereotype>io.hops.hopsworks.cloud.ManagedStereotype</managed.stereotype>
+      </properties>
+    </profile>
+
+    <profile>
+      <id>cloud</id>
+      <activation>
+        <activeByDefault>false</activeByDefault>
+      </activation>
+      <properties>
+        <cloud.stereotype>io.hops.hopsworks.common.integrations.CloudStereotype</cloud.stereotype>
       </properties>
     </profile>
   </profiles>

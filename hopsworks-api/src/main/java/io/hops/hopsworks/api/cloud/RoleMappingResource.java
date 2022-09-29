@@ -17,6 +17,7 @@ import io.hops.hopsworks.audit.logger.annotation.Secret;
 import io.hops.hopsworks.common.api.ResourceRequest;
 import io.hops.hopsworks.common.cloud.CloudRoleMappingController;
 import io.hops.hopsworks.common.cloud.Credentials;
+import io.hops.hopsworks.common.cloud.TemporaryCredentialsHelper;
 import io.hops.hopsworks.common.project.ProjectController;
 import io.hops.hopsworks.exceptions.CloudException;
 import io.hops.hopsworks.exceptions.ProjectException;

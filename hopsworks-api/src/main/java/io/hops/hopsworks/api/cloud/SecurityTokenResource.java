@@ -7,6 +7,7 @@ import io.hops.hopsworks.api.filter.Audience;
 import io.hops.hopsworks.audit.logger.annotation.Logged;
 import io.hops.hopsworks.audit.logger.annotation.Secret;
 import io.hops.hopsworks.common.cloud.Credentials;
+import io.hops.hopsworks.common.cloud.TemporaryCredentialsHelper;
 import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.project.ProjectController;
 import io.hops.hopsworks.exceptions.CloudException;

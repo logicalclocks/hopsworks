@@ -35,6 +35,7 @@ import io.hops.hopsworks.common.featurestore.query.filter.Filter;
 import io.hops.hopsworks.common.featurestore.query.filter.FilterController;
 import io.hops.hopsworks.common.featurestore.query.filter.FilterLogic;
 import io.hops.hopsworks.common.featurestore.query.filter.FilterValue;
+import io.hops.hopsworks.exceptions.CloudException;
 import io.hops.hopsworks.common.featurestore.query.join.Join;
 import io.hops.hopsworks.common.featurestore.query.pit.PitJoinController;
 import io.hops.hopsworks.common.featurestore.statistics.StatisticsController;
@@ -175,7 +176,7 @@ public class TrainingDatasetController {
    */
   public List<TrainingDatasetDTO> getTrainingDatasetsForFeaturestore(Users user, Project project,
                                                                      Featurestore featurestore)
-      throws ServiceException, FeaturestoreException {
+      throws ServiceException, FeaturestoreException, CloudException {
     List<TrainingDatasetDTO> trainingDatasets = new ArrayList<>();
     for (TrainingDataset td : trainingDatasetFacade.findByFeaturestore(featurestore)) {
       trainingDatasets.add(convertTrainingDatasetToDTO(user, project, td));
@@ -195,7 +196,7 @@ public class TrainingDatasetController {
    * @throws FeaturestoreException
    */
   public TrainingDatasetDTO convertTrainingDatasetToDTO(Users user, Project project, TrainingDataset trainingDataset)
-      throws ServiceException, FeaturestoreException {
+     throws ServiceException, FeaturestoreException, CloudException {
     return convertTrainingDatasetToDTO(user, project, trainingDataset, false);
   }
 
@@ -212,7 +213,7 @@ public class TrainingDatasetController {
    */
   public TrainingDatasetDTO convertTrainingDatasetToDTO(Users user, Project project, TrainingDataset trainingDataset,
       Boolean skipFeature)
-      throws ServiceException, FeaturestoreException {
+      throws ServiceException, FeaturestoreException, CloudException {
     TrainingDatasetDTO trainingDatasetDTO = new TrainingDatasetDTO(trainingDataset);
 
     String featurestoreName = featurestoreFacade.getHiveDbName(trainingDataset.getFeaturestore().getHiveDbId());
@@ -254,7 +255,7 @@ public class TrainingDatasetController {
 
   public TrainingDatasetDTO createTrainingDataset(Users user, Project project, Featurestore featurestore,
       FeatureView featureView, TrainingDatasetDTO trainingDatasetDTO)
-      throws FeaturestoreException, ProvenanceException, IOException, ServiceException {
+      throws FeaturestoreException, ProvenanceException, IOException, ServiceException, CloudException {
     // Name of Training data = <feature view name>_<feature view version>, version is needed
     // because there can be multiple training dataset of same name from different version of feature view
     trainingDatasetDTO.setName(featureView.getName() + "_" + featureView.getVersion());
@@ -270,7 +271,7 @@ public class TrainingDatasetController {
 
   public TrainingDatasetDTO createTrainingDataset(Users user, Project project, Featurestore featurestore,
                                                  TrainingDatasetDTO trainingDatasetDTO)
-      throws FeaturestoreException, ProvenanceException, IOException, ServiceException {
+      throws FeaturestoreException, ProvenanceException, IOException, ServiceException, CloudException {
 
     // If the training dataset is constructed from a query, verify that it compiles correctly
     Query query = null;
@@ -286,7 +287,7 @@ public class TrainingDatasetController {
 
   private TrainingDatasetDTO createTrainingDataset(Users user, Project project, Featurestore featurestore,
       FeatureView featureView, TrainingDatasetDTO trainingDatasetDTO, Query query, Boolean skipFeature)
-      throws FeaturestoreException, ProvenanceException, IOException, ServiceException {
+      throws FeaturestoreException, ProvenanceException, IOException, ServiceException, CloudException {
 
     try {
       quotasEnforcement.enforceTrainingDatasetsQuota(featurestore);
@@ -456,7 +457,7 @@ public class TrainingDatasetController {
   private TrainingDatasetDTO createTrainingDatasetMetadata(Users user, Project project, Featurestore featurestore,
       FeatureView featureView, TrainingDatasetDTO trainingDatasetDTO, Query query,
       FeaturestoreConnector featurestoreConnector, Inode inode, Boolean skipFeature)
-      throws FeaturestoreException, ServiceException {
+      throws FeaturestoreException, ServiceException, CloudException {
     //Create specific dataset type
     HopsfsTrainingDataset hopsfsTrainingDataset = null;
     ExternalTrainingDataset externalTrainingDataset = null;
@@ -748,7 +749,7 @@ public class TrainingDatasetController {
 
   public TrainingDatasetDTO getTrainingDatasetWithIdAndFeaturestore(Users user, Project project,
                                                                     Featurestore featurestore, Integer id)
-    throws FeaturestoreException, ServiceException {
+      throws FeaturestoreException, ServiceException, CloudException {
     TrainingDataset trainingDataset = getTrainingDatasetById(featurestore, id);
     return convertTrainingDatasetToDTO(user, project, trainingDataset);
   }
@@ -770,7 +771,7 @@ public class TrainingDatasetController {
 
   public List<TrainingDatasetDTO> getWithNameAndFeaturestore(Users user, Project project,
                                                              Featurestore featurestore, String name)
-      throws FeaturestoreException, ServiceException {
+      throws FeaturestoreException, ServiceException, CloudException {
     List<TrainingDataset> trainingDatasetList = trainingDatasetFacade.findByNameAndFeaturestore(name, featurestore);
     if (trainingDatasetList == null || trainingDatasetList.isEmpty()) {
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.TRAINING_DATASET_NOT_FOUND,
@@ -787,7 +788,7 @@ public class TrainingDatasetController {
 
   public TrainingDatasetDTO getWithNameVersionAndFeaturestore(Users user, Project project, Featurestore featurestore,
                                                               String name, Integer version)
-      throws FeaturestoreException, ServiceException {
+      throws FeaturestoreException, ServiceException, CloudException {
 
     Optional<TrainingDataset> trainingDataset =
         trainingDatasetFacade.findByNameVersionAndFeaturestore(name, version, featurestore);
@@ -942,7 +943,7 @@ public class TrainingDatasetController {
   public TrainingDatasetDTO updateTrainingDatasetMetadata(Users user, Project project,
                                                           Featurestore featurestore,
                                                           TrainingDatasetDTO trainingDatasetDTO)
-      throws FeaturestoreException, ServiceException {
+      throws FeaturestoreException, ServiceException, CloudException {
     TrainingDataset trainingDataset =
         trainingDatasetFacade.findByIdAndFeaturestore(trainingDatasetDTO.getId(), featurestore)
             .orElseThrow(() -> new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.TRAINING_DATASET_NOT_FOUND,
@@ -966,7 +967,7 @@ public class TrainingDatasetController {
 
   public TrainingDatasetDTO updateTrainingDatasetStatsConfig(Users user, Project project, Featurestore featurestore,
                                                              TrainingDatasetDTO trainingDatasetDTO)
-      throws FeaturestoreException, ServiceException {
+      throws FeaturestoreException, ServiceException, CloudException {
     TrainingDataset trainingDataset = getTrainingDatasetById(featurestore, trainingDatasetDTO.getId());
     if (trainingDatasetDTO.getStatisticsConfig().getEnabled() != null) {
       trainingDataset.getStatisticsConfig().setDescriptive(trainingDatasetDTO.getStatisticsConfig().getEnabled());

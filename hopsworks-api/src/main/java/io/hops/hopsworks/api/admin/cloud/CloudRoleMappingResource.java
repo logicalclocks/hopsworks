@@ -3,7 +3,7 @@
  */
 package io.hops.hopsworks.api.admin.cloud;
 
-import io.hops.hopsworks.api.cloud.TemporaryCredentialsHelper;
+import io.hops.hopsworks.common.cloud.TemporaryCredentialsHelper;
 import io.hops.hopsworks.api.filter.Audience;
 import io.hops.hopsworks.api.filter.apiKey.ApiKeyRequired;
 import io.hops.hopsworks.api.util.Pagination;

@@ -31,6 +31,7 @@ import io.hops.hopsworks.common.featurestore.OptionDTO;
 import io.hops.hopsworks.common.featurestore.app.FsJobManagerController;
 import io.hops.hopsworks.common.featurestore.trainingdatasets.TrainingDatasetController;
 import io.hops.hopsworks.common.featurestore.trainingdatasets.TrainingDatasetDTO;
+import io.hops.hopsworks.exceptions.CloudException;
 import io.hops.hopsworks.exceptions.DatasetException;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.exceptions.GenericException;
@@ -124,7 +125,7 @@ public class TrainingDatasetResource {
       @Context
           UriInfo uriInfo,
       TrainingDatasetDTO trainingDatasetDTO)
-      throws FeaturestoreException, ProvenanceException, IOException, ServiceException {
+      throws FeaturestoreException, ProvenanceException, IOException, ServiceException, CloudException {
     Users user = jWTHelper.getUserPrincipal(sc);
     TrainingDatasetDTO createdTrainingDatasetDTO =
         trainingDatasetController.createTrainingDataset(user, project, featurestore, featureView, trainingDatasetDTO);
@@ -149,7 +150,7 @@ public class TrainingDatasetResource {
       @BeanParam
           TrainingDatasetExpansionBeanParam param
   ) throws FeaturestoreException, ServiceException, MetadataException, DatasetException, SchematizedTagException,
-      IOException {
+      IOException, CloudException {
     Users user = jWTHelper.getUserPrincipal(sc);
     List<TrainingDataset> trainingDatasets =
         trainingDatasetController.getTrainingDatasetByFeatureView(featureView);
@@ -181,7 +182,7 @@ public class TrainingDatasetResource {
       @PathParam("version")
           Integer version
   ) throws FeaturestoreException, ServiceException, MetadataException, DatasetException, SchematizedTagException,
-      IOException {
+      IOException, CloudException {
     Users user = jWTHelper.getUserPrincipal(sc);
     TrainingDataset trainingDataset = trainingDatasetController.getTrainingDatasetByFeatureViewAndVersion(featureView,
         version);
@@ -302,7 +303,7 @@ public class TrainingDatasetResource {
                                         @PathParam("version")
                                             Integer version,
                                         TrainingDatasetDTO trainingDatasetDTO)
-      throws FeaturestoreException, ServiceException {
+      throws FeaturestoreException, ServiceException, CloudException {
     if (trainingDatasetDTO == null) {
       throw new IllegalArgumentException("Input JSON for updating a Training Dataset cannot be null");
     }

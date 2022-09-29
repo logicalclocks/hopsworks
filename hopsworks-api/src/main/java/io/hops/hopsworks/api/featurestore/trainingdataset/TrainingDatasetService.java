@@ -48,6 +48,7 @@ import io.hops.hopsworks.common.featurestore.trainingdatasets.TrainingDatasetCon
 import io.hops.hopsworks.common.featurestore.trainingdatasets.TrainingDatasetDTO;
 import io.hops.hopsworks.common.featurestore.transformationFunction.TransformationFunctionAttachedDTO;
 import io.hops.hopsworks.common.util.Settings;
+import io.hops.hopsworks.exceptions.CloudException;
 import io.hops.hopsworks.exceptions.DatasetException;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.exceptions.GenericException;
@@ -185,7 +186,8 @@ public class TrainingDatasetService {
   @ApiOperation(value = "Get the list of training datasets for a featurestore",
       response = TrainingDatasetDTO.class, responseContainer = "List")
   public Response getAll(@Context SecurityContext sc,
-                         @Context HttpServletRequest req) throws ServiceException, FeaturestoreException {
+                         @Context HttpServletRequest req)
+      throws ServiceException, FeaturestoreException, CloudException {
     Users user = jWTHelper.getUserPrincipal(sc);
     List<TrainingDatasetDTO> trainingDatasetDTOs =
         trainingDatasetController.getTrainingDatasetsForFeaturestore(user, project, featurestore);
@@ -213,7 +215,7 @@ public class TrainingDatasetService {
   public Response create(@Context SecurityContext sc,
                          @Context HttpServletRequest req,
                          TrainingDatasetDTO trainingDatasetDTO)
-      throws FeaturestoreException, ProvenanceException, IOException, ServiceException {
+      throws FeaturestoreException, ProvenanceException, IOException, ServiceException, CloudException {
     if (trainingDatasetDTO == null) {
       throw new IllegalArgumentException("Input JSON for creating a new Training Dataset cannot be null");
     }
@@ -248,7 +250,7 @@ public class TrainingDatasetService {
   public Response getById(@Context HttpServletRequest req,
                           @ApiParam(value = "Id of the training dataset", required = true)
                           @PathParam("trainingdatasetid") Integer trainingdatasetid, @Context SecurityContext sc)
-      throws FeaturestoreException, ServiceException {
+      throws FeaturestoreException, ServiceException, CloudException {
     verifyIdProvided(trainingdatasetid);
 
     Users user = jWTHelper.getUserPrincipal(sc);
@@ -281,7 +283,7 @@ public class TrainingDatasetService {
                             @PathParam("name") String name,
                             @ApiParam(value = "Filter by a specific version")
                             @QueryParam("version") Integer version, @Context SecurityContext sc)
-      throws FeaturestoreException, ServiceException {
+      throws FeaturestoreException, ServiceException, CloudException {
     verifyNameProvided(name);
 
     Users user = jWTHelper.getUserPrincipal(sc);
@@ -361,7 +363,7 @@ public class TrainingDatasetService {
                                         @QueryParam("updateStatsConfig") @DefaultValue("false")
                                             Boolean updateStatsConfig,
                                         TrainingDatasetDTO trainingDatasetDTO)
-      throws FeaturestoreException, ServiceException {
+      throws FeaturestoreException, ServiceException, CloudException {
     if (trainingDatasetDTO == null) {
       throw new IllegalArgumentException("Input JSON for updating a Training Dataset cannot be null");
     }
