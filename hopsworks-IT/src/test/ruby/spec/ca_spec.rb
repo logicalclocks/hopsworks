@@ -47,7 +47,7 @@ describe "On #{ENV['OS']}" do
     # Test csr
     before :all do
 
-      @host_subject = "CN=test,L=tester,OU=1"
+      @host_subject = "C=SE,CN=test,L=tester,OU=1"
       @host_cert_id = "test__tester__1"
 
       @app_subject = "CN=test,O=application_1,OU=1"
@@ -118,6 +118,18 @@ describe "On #{ENV['OS']}" do
         it 'should return no-content if the revokation is triggered twice'  do
           delete "#{ENV['HOPSWORKS_CA']}/certificate/host?certId=#{@host_cert_id}"
           expect_status_details(204)
+        end
+
+        it 'should revoke a certificate when an exact x509 name is supplied' do
+          post "#{ENV['HOPSWORKS_CA']}/certificate/host", {csr: generate_csr(@host_subject)}
+          expect_status_details(200)
+
+          check_certificate_exists(@host_subject)
+
+          delete "#{ENV['HOPSWORKS_CA']}/certificate/host?certId=#{@host_subject}&exact=true"
+          expect_status_details(200)
+
+          check_certificate_revoked(@host_subject)
         end
 
         it 'should sign a certificate with - in the hostname', vm: true do

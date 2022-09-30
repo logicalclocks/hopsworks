@@ -48,9 +48,9 @@ CREATE TABLE IF NOT EXISTS `pki_certificate` (
         @NamedQuery(name = "PKICertificate.findByStatusAndSubject",
                   query = "SELECT c FROM PKICertificate c WHERE c.certificateId.status = :status AND c.certificateId" +
                       ".subject = :subject"),
-        @NamedQuery(name = "PKICertificate.findSubjectByStatusAndCN",
+        @NamedQuery(name = "PKICertificate.findSubjectByStatusAndPartialSubject",
                   query = "SELECT c.certificateId.subject FROM PKICertificate c WHERE c.certificateId.status = " +
-                      ":status AND c.certificateId.subject LIKE CONCAT('%CN=', :cn, '%')")
+                      ":status AND c.certificateId.subject LIKE CONCAT('%', :subject, '%')")
   })
 public class PKICertificate implements Serializable {
   private static final long serialVersionUID = 1L;

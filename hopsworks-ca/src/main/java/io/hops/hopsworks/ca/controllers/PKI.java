@@ -803,8 +803,9 @@ public class PKI {
       throw new CAInitializationException(ex);
     }
     LOGGER.log(Level.FINE, "Revoking certificate with Subject " + certificateName);
-    Optional<PKICertificate> maybeCert = pkiCertificateFacade.findBySubjectAndStatus(certificateName.toString(),
-        PKICertificate.Status.VALID);
+    Optional<PKICertificate> maybeCert = pkiCertificateFacade.findById(
+        new PKICertificateId(PKICertificate.Status.VALID, certificateName.toString()));
+
     if (!maybeCert.isPresent()) {
       throw new CertificateNotFoundException("Could not find certificate with Name " + certificateName.toString()
           + " to revoke");
@@ -829,7 +830,13 @@ public class PKI {
 
   @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
   protected void updateRevokedCertificate(PKICertificate certificate) {
-    PKICertificate revoked = pkiCertificateFacade.findById(certificate.getCertificateId());
+    Optional<PKICertificate> maybeRevoked = pkiCertificateFacade.findById(certificate.getCertificateId());
+    if (!maybeRevoked.isPresent()) {
+      LOGGER.log(Level.WARNING, "Tried to update revoked certificate " + certificate.getCertificateId() + " but " +
+          "certificate does not exist in database. Skip updating");
+      return;
+    }
+    PKICertificate revoked = maybeRevoked.get();
     revoked.getCertificateId().setStatus(PKICertificate.Status.REVOKED);
     revoked.setCertificate(null);
     pkiCertificateFacade.updateCertificate(revoked);
