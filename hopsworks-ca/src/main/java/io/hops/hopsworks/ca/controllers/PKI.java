@@ -815,17 +815,37 @@ public class PKI {
     byte[] encoded = pkiCert.getCertificate();
     X509Certificate certificate;
     try {
-      certificate = converter.getCertificate(new X509CertificateHolder(encoded));
+      certificate = converter.getCertificate(parseToX509CertificateHolder(encoded));
     } catch (IOException ex) {
       throw new CertificateException("Failed to decode certificate from CA database", ex);
     }
-    CAType caType = pkiUtils.getResponsibleCA(certificateType);
-    X509CRL newCRL = addRevocationToCRL(caType, certificate);
-    updateCRL(caType, newCRL);
-    LOGGER.log(Level.FINE, "Updated CRL");
+
+    if (!shouldCertificateTypeSkipCRL(certificateType)) {
+      CAType caType = pkiUtils.getResponsibleCA(certificateType);
+      X509CRL newCRL = addRevocationToCRL(caType, certificate);
+      updateCRL(caType, newCRL);
+      LOGGER.log(Level.FINE, "Updated CRL");
+    } else {
+      if (certificate != null) {
+        // Check is here only to ease testing, certificate should never be null at this point
+        LOGGER.log(Level.FINE, "Certificate " + certificate.getSubjectDN().toString() + " of type "
+            + certificateType + " is not added to CRL");
+      }
+    }
 
     updateRevokedCertificate(pkiCert);
-    LOGGER.log(Level.INFO, "Revoked certificate with X.509 name " + certificate.getSubjectDN().toString());
+    if (certificate!= null) {
+      // Check is here only to ease testing, certificate should never be null at this point
+      LOGGER.log(Level.INFO, "Revoked certificate with X.509 name " + certificate.getSubjectDN().toString());
+    }
+  }
+
+  protected boolean shouldCertificateTypeSkipCRL(CertificateType certificateType) {
+    return certificateType.equals(CertificateType.APP);
+  }
+
+  protected X509CertificateHolder parseToX509CertificateHolder(byte[] encoded) throws IOException {
+    return new X509CertificateHolder(encoded);
   }
 
   @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
@@ -997,5 +1017,10 @@ public class PKI {
   @VisibleForTesting
   protected void setPKIUtils(PKIUtils pkiUtils) {
     this.pkiUtils = pkiUtils;
+  }
+
+  @VisibleForTesting
+  protected void setConverter(JcaX509CertificateConverter converter) {
+    this.converter = converter;
   }
 }

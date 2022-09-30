@@ -21,6 +21,7 @@ import io.hops.hopsworks.persistence.entity.pki.PKICertificate;
 import io.hops.hopsworks.persistence.entity.pki.PKICertificateId;
 import org.apache.commons.lang3.SerializationUtils;
 import org.bouncycastle.asn1.x500.X500Name;
+import org.bouncycastle.cert.jcajce.JcaX509CertificateConverter;
 import org.bouncycastle.operator.jcajce.JcaContentSignerBuilder;
 import org.bouncycastle.pkcs.PKCS10CertificationRequest;
 import org.bouncycastle.pkcs.jcajce.JcaPKCS10CertificationRequestBuilder;
@@ -134,7 +135,7 @@ public class TestCertificateRevocation extends PKIMocking {
     pki.initializeCertificateAuthorities();
 
     PKIUtils mockPKIUtils = Mockito.mock(PKIUtils.class);
-    Mockito.when(mockPKIUtils.getValidityPeriod(Mockito.eq(CertificateType.APP)))
+    Mockito.when(mockPKIUtils.getValidityPeriod(Mockito.eq(CertificateType.HOST)))
         .thenReturn(Duration.ofMinutes(10));
     Mockito.when(mockPKIUtils.getResponsibleCA(Mockito.any())).thenCallRealMethod();
     pki.setPKIUtils(mockPKIUtils);
@@ -148,7 +149,7 @@ public class TestCertificateRevocation extends PKIMocking {
         new JcaContentSignerBuilder("SHA256withRSA").build(requesterKeypair.getPrivate()));
     String stringifiedCSR = stringifyCSR(csr);
 
-    pki.signCertificateSigningRequest(stringifiedCSR, CertificateType.APP);
+    pki.signCertificateSigningRequest(stringifiedCSR, CertificateType.HOST);
     Mockito.verify(pkiCertificateFacade, Mockito.atLeastOnce()).saveCertificate(pkiCertificateCaptor.capture());
     // First 3 captures come from PKI initialization
     PKICertificate pkiCertificate = pkiCertificateCaptor.getAllValues().get(3);
@@ -159,7 +160,38 @@ public class TestCertificateRevocation extends PKIMocking {
     Mockito.doNothing().when(pki).updateCRL(Mockito.any(), Mockito.any());
     Mockito.doNothing().when(pki).updateRevokedCertificate(Mockito.any());
 
-    pki.revokeCertificate(new X500Name(pkiCertificate.getCertificateId().getSubject()), CertificateType.APP);
+    pki.revokeCertificate(new X500Name(pkiCertificate.getCertificateId().getSubject()), CertificateType.HOST);
     Mockito.verify(pki).addRevocationToCRL(Mockito.any(), Mockito.any());
+  }
+
+  @Test
+  public void testRevokeCertificateSkipCRL() throws Exception {
+    setupBasicPKI();
+    Mockito.doNothing().when(pki).maybeInitializeCA();
+    Mockito.when(pkiCertificateFacade.findById(Mockito.any())).thenReturn(Optional.of(new PKICertificate()));
+
+    JcaX509CertificateConverter mockConverter = Mockito.mock(JcaX509CertificateConverter.class);
+    Mockito.when(mockConverter.getCertificate(Mockito.any())).thenReturn(null);
+
+    pki.setConverter(mockConverter);
+    Mockito.doReturn(null).when(pki).parseToX509CertificateHolder(Mockito.any());
+    Mockito.doReturn(true).when(pki).shouldCertificateTypeSkipCRL(Mockito.any());
+    Mockito.doNothing().when(pki).updateRevokedCertificate(Mockito.any());
+
+    pki.revokeCertificate(new X500Name("CN=hello"), CertificateType.APP);
+    Mockito.verify(pki, Mockito.never()).addRevocationToCRL(Mockito.any(), Mockito.any());
+    Mockito.verify(pki).updateRevokedCertificate(Mockito.any());
+  }
+
+  @Test
+  public void testCertificateTypeSkipCRL() {
+    PKI pki = new PKI();
+    for (CertificateType t : CertificateType.values()) {
+      boolean expected = false;
+      if (t.equals(CertificateType.APP)) {
+        expected = true;
+      }
+      Assert.assertEquals(expected, pki.shouldCertificateTypeSkipCRL(t));
+    }
   }
 }
