@@ -43,18 +43,23 @@ import com.google.common.base.Strings;
 import io.hops.hopsworks.ca.api.filter.Audience;
 import io.hops.hopsworks.ca.api.filter.NoCacheResponse;
 import io.hops.hopsworks.ca.controllers.CAException;
-import io.hops.hopsworks.ca.controllers.OpensslOperations;
+import io.hops.hopsworks.ca.controllers.CAInitializationException;
 import io.hops.hopsworks.ca.controllers.PKI;
+import io.hops.hopsworks.ca.controllers.PKIUtils;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
+import io.hops.hopsworks.restutils.RESTCodes;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
-import org.javatuples.Pair;
+import org.apache.commons.lang3.tuple.Pair;
+import org.bouncycastle.operator.OperatorCreationException;
 
 import javax.ejb.EJB;
 import javax.enterprise.context.RequestScoped;
+import javax.naming.InvalidNameException;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
+import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
@@ -62,6 +67,10 @@ import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.io.IOException;
+import java.security.GeneralSecurityException;
+import java.security.cert.X509Certificate;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import static io.hops.hopsworks.ca.controllers.CertificateType.APP;
 
@@ -69,29 +78,38 @@ import static io.hops.hopsworks.ca.controllers.CertificateType.APP;
 @Api(value = "App certificate service", description = "Manage App certificates")
 public class AppCertsResource {
 
+  private static final Logger LOGGER = Logger.getLogger(AppCertsResource.class.getName());
+
   @EJB
-  private OpensslOperations opensslOperations;
+  private PKI pki;
   @EJB
   private NoCacheResponse noCacheResponse;
   @EJB
-  private PKI pki;
+  private PKIUtils pkiUtils;
 
   @ApiOperation(value = "Sign App certificate with IntermediateHopsCA", response = CSRView.class)
   @POST
   @Consumes(MediaType.APPLICATION_JSON)
   @Produces(MediaType.APPLICATION_JSON)
   @JWTRequired(acceptedTokens={Audience.SERVICES}, allowedUserRoles={"AGENT"})
-  public Response signCSR(CSRView csrView) throws IOException, CAException {
+  public Response signCSR(CSRView csrView) throws CAException {
     if (csrView == null || Strings.isNullOrEmpty(csrView.getCsr())) {
       throw new IllegalArgumentException("Empty CSR");
     }
 
-    String signedCert = opensslOperations.signCertificateRequest(csrView.getCsr(), APP);
-
-    Pair<String, String> chainOfTrust = pki.getChainOfTrust(pki.getResponsibileCA(APP));
-    CSRView signedCsr = new CSRView(signedCert, chainOfTrust.getValue0(), chainOfTrust.getValue1());
-    GenericEntity<CSRView> csrViewGenericEntity = new GenericEntity<CSRView>(signedCsr) { };
-    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(csrViewGenericEntity).build();
+    try {
+      X509Certificate signedCert = pki.signCertificateSigningRequest(csrView.getCsr(), APP);
+      String stringifiedCert = pkiUtils.convertToPEM(signedCert);
+      Pair<String, String> chainOfTrust = pki.getChainOfTrust(pkiUtils.getResponsibleCA(APP));
+      CSRView signedCsr = new CSRView(stringifiedCert, chainOfTrust.getLeft(), chainOfTrust.getRight());
+      GenericEntity<CSRView> csrViewGenericEntity = new GenericEntity<CSRView>(signedCsr) {
+      };
+      LOGGER.log(Level.INFO, "PEM certificate: " + stringifiedCert);
+      LOGGER.log(Level.INFO, "Done with CSR");
+      return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(csrViewGenericEntity).build();
+    } catch (IOException | GeneralSecurityException | OperatorCreationException | CAInitializationException ex) {
+      throw pkiUtils.csrSigningExceptionConvertToCAException(ex, APP);
+    }
   }
 
   @ApiOperation(value = "Revoke App certificate")
@@ -99,13 +117,32 @@ public class AppCertsResource {
   @JWTRequired(acceptedTokens={Audience.SERVICES}, allowedUserRoles={"AGENT"})
   public Response revokeCertificate(
       @ApiParam(value = "Identifier of the Certificate to revoke", required = true) @QueryParam("certId") String certId)
-    throws IOException, CAException {
+    throws CAException {
 
     if (Strings.isNullOrEmpty(certId)) {
       throw new IllegalArgumentException("Empty certificate identifier");
     }
 
-    opensslOperations.revokeCertificate(certId, APP);
-    return Response.ok().build();
+    try {
+      pki.revokeCertificate(certId, APP);
+      return Response.ok().build();
+    } catch (InvalidNameException | GeneralSecurityException | CAInitializationException ex) {
+      throw pkiUtils.certificateRevocationExceptionConvertToCAException(ex, APP);
+    }
+  }
+
+  @ApiOperation(value = "Get chain of trust for this type of certificates")
+  @GET
+  public Response getChainOfTrust() throws CAException {
+    try {
+      Pair<String, String> chainOfTrust = pki.getChainOfTrust(pkiUtils.getResponsibleCA(APP));
+      CSRView csrView = new CSRView(chainOfTrust.getLeft(), chainOfTrust.getRight());
+      GenericEntity<CSRView> csrViewGenericEntity = new GenericEntity<CSRView>(csrView) {
+      };
+      return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(csrViewGenericEntity).build();
+    } catch (CAInitializationException | GeneralSecurityException | IOException ex) {
+      throw new CAException(RESTCodes.CAErrorCode.CA_INITIALIZATION_ERROR, Level.SEVERE, APP,
+          "Failed to get chain of trust", "Failed to get chain of trust for APP certificates", ex);
+    }
   }
 }

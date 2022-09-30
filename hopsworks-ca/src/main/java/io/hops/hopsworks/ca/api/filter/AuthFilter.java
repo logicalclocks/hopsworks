@@ -19,7 +19,7 @@ package io.hops.hopsworks.ca.api.filter;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import io.hops.hopsworks.ca.api.exception.mapper.CAJsonResponse;
-import io.hops.hopsworks.ca.controllers.CAConf;
+import io.hops.hopsworks.ca.configuration.CAConf;
 import io.hops.hopsworks.restutils.JsonResponse;
 import io.hops.hopsworks.restutils.RESTCodes;
 import io.hops.hopsworks.jwt.AlgorithmFactory;
@@ -42,7 +42,7 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 import javax.ws.rs.ext.Provider;
 
-import static io.hops.hopsworks.ca.controllers.CAConf.CAConfKeys.JWT_ISSUER;
+import static io.hops.hopsworks.ca.configuration.CAConf.CAConfKeys.JWT_ISSUER;
 
 @Provider
 @JWTRequired

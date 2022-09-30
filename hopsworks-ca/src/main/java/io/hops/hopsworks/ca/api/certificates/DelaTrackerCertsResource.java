@@ -42,16 +42,19 @@ package io.hops.hopsworks.ca.api.certificates;
 import io.hops.hopsworks.ca.api.filter.Audience;
 import io.hops.hopsworks.ca.api.filter.NoCacheResponse;
 import io.hops.hopsworks.ca.controllers.CAException;
-import io.hops.hopsworks.ca.controllers.OpensslOperations;
+import io.hops.hopsworks.ca.controllers.CAInitializationException;
 import io.hops.hopsworks.ca.controllers.PKI;
+import io.hops.hopsworks.ca.controllers.PKIUtils;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
-import org.javatuples.Pair;
+import org.apache.commons.lang3.tuple.Pair;
+import org.bouncycastle.operator.OperatorCreationException;
 
 import javax.ejb.EJB;
 import javax.enterprise.context.RequestScoped;
+import javax.naming.InvalidNameException;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.POST;
@@ -63,6 +66,8 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
 import java.io.IOException;
+import java.security.GeneralSecurityException;
+import java.security.cert.X509Certificate;
 
 import static io.hops.hopsworks.ca.controllers.CertificateType.DELA;
 
@@ -73,9 +78,9 @@ public class DelaTrackerCertsResource {
   @EJB
   private NoCacheResponse noCacheResponse;
   @EJB
-  private PKI pki;
+  private PKIUtils pkiUtils;
   @EJB
-  private OpensslOperations opensslOperations;
+  private PKI pki;
 
   @ApiOperation(value = "Sign Dela certificate with IntermediateHopsCA", response = CSRView.class)
   @POST
@@ -83,17 +88,22 @@ public class DelaTrackerCertsResource {
   @Produces(MediaType.APPLICATION_JSON)
   @JWTRequired(acceptedTokens={Audience.SERVICES}, allowedUserRoles={"AGENT"})
   public Response signCSR(@Context SecurityContext sc, CSRView csrView)
-      throws IOException, CAException {
+      throws CAException {
 
     if (csrView == null || csrView.getCsr() == null || csrView.getCsr().isEmpty()) {
       throw new IllegalArgumentException("Empty CSR");
     }
 
-    String signedCert = opensslOperations.signCertificateRequest(csrView.getCsr(), DELA);
-    Pair<String, String> chainOfTrust = pki.getChainOfTrust(pki.getResponsibileCA(DELA));
-    CSRView signedCsr = new CSRView(signedCert, chainOfTrust.getValue0(), chainOfTrust.getValue1());
-    GenericEntity<CSRView> csrViewGenericEntity = new GenericEntity<CSRView>(signedCsr) { };
-    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(csrViewGenericEntity).build();
+    try {
+      X509Certificate signedCert = pki.signCertificateSigningRequest(csrView.getCsr(), DELA);
+      String stringifiedCert = pkiUtils.convertToPEM(signedCert);
+      Pair<String, String> chainOfTrust = pki.getChainOfTrust(pkiUtils.getResponsibleCA(DELA));
+      CSRView signedCsr = new CSRView(stringifiedCert, chainOfTrust.getLeft(), chainOfTrust.getRight());
+      GenericEntity<CSRView> csrViewGenericEntity = new GenericEntity<CSRView>(signedCsr) { };
+      return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(csrViewGenericEntity).build();
+    } catch (IOException | GeneralSecurityException | OperatorCreationException | CAInitializationException ex) {
+      throw pkiUtils.csrSigningExceptionConvertToCAException(ex, DELA);
+    }
   }
 
   @ApiOperation(value = "Revoke Dela certificate")
@@ -101,12 +111,16 @@ public class DelaTrackerCertsResource {
   @JWTRequired(acceptedTokens={Audience.SERVICES}, allowedUserRoles={"AGENT"})
   public Response revokeCertificate(
       @ApiParam(value = "Identifier of the certificate to revoke", required = true) @QueryParam("certId") String certId)
-      throws IOException, CAException {
+      throws CAException {
     if (certId == null || certId.isEmpty()) {
       throw new IllegalArgumentException("Empty certificate identifier");
     }
 
-    opensslOperations.revokeCertificate(certId, DELA);
-    return Response.ok().build();
+    try {
+      pki.revokeCertificate(certId, DELA);
+      return Response.ok().build();
+    } catch (InvalidNameException | GeneralSecurityException | CAInitializationException ex) {
+      throw pkiUtils.certificateRevocationExceptionConvertToCAException(ex, DELA);
+    }
   }
 }
