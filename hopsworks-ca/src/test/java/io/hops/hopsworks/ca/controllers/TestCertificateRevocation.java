@@ -64,7 +64,7 @@ public class TestCertificateRevocation extends PKIMocking {
     PKICertificate toRevokeClone = SerializationUtils.clone(toRevoke);
 
     PKICertificateFacade pkiCertificateFacade = Mockito.mock(PKICertificateFacade.class);
-    Mockito.when(pkiCertificateFacade.findById(Mockito.any())).thenReturn(toRevokeClone);
+    Mockito.when(pkiCertificateFacade.findById(Mockito.any())).thenReturn(Optional.of(toRevokeClone));
     Mockito.doNothing()
             .when(pkiCertificateFacade).updateCertificate(pkiCertificateCaptor.capture());
     Mockito.doNothing()
@@ -153,9 +153,7 @@ public class TestCertificateRevocation extends PKIMocking {
     // First 3 captures come from PKI initialization
     PKICertificate pkiCertificate = pkiCertificateCaptor.getAllValues().get(3);
     Assert.assertNotNull(pkiCertificate);
-    Mockito.when(pkiCertificateFacade.findBySubjectAndStatus(
-        Mockito.eq(pkiCertificate.getCertificateId().getSubject()), Mockito.any()))
-            .thenReturn(Optional.of(pkiCertificate));
+    Mockito.when(pkiCertificateFacade.findById(Mockito.any())).thenReturn(Optional.of(pkiCertificate));
 
     Mockito.doReturn(null).when(pki).addRevocationToCRL(Mockito.any(), Mockito.any());
     Mockito.doNothing().when(pki).updateCRL(Mockito.any(), Mockito.any());

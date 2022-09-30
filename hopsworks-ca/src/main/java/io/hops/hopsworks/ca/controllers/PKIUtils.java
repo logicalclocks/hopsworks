@@ -181,7 +181,12 @@ public class PKIUtils {
   }
 
   public List<String> findAllHostCertificateSubjectsForHost(String hostname) {
-    return pkiCertificateFacade.findAllSubjectsWithCNAndStatus(hostname, PKICertificate.Status.VALID);
+    return pkiCertificateFacade.findAllSubjectsWithStatusAndPartialSubject(String.format("CN=%s", hostname),
+        PKICertificate.Status.VALID);
+  }
+
+  public List<String> findAllValidSubjectsWithPartialMatch(String partialSubject) {
+    return pkiCertificateFacade.findAllSubjectsWithStatusAndPartialSubject(partialSubject, PKICertificate.Status.VALID);
   }
 
   public String convertToPEM(X509Extension certificate) throws IOException {
