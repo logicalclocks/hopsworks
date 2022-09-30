@@ -104,8 +104,7 @@ public class AppCertsResource {
       CSRView signedCsr = new CSRView(stringifiedCert, chainOfTrust.getLeft(), chainOfTrust.getRight());
       GenericEntity<CSRView> csrViewGenericEntity = new GenericEntity<CSRView>(signedCsr) {
       };
-      LOGGER.log(Level.INFO, "PEM certificate: " + stringifiedCert);
-      LOGGER.log(Level.INFO, "Done with CSR");
+      LOGGER.log(Level.FINE, "Signed certificate: " + stringifiedCert);
       return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(csrViewGenericEntity).build();
     } catch (IOException | GeneralSecurityException | OperatorCreationException | CAInitializationException ex) {
       throw pkiUtils.csrSigningExceptionConvertToCAException(ex, APP);
