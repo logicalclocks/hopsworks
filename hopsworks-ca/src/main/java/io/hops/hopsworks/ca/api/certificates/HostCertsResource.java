@@ -44,6 +44,7 @@ import io.hops.hopsworks.ca.api.filter.Audience;
 import io.hops.hopsworks.ca.api.filter.NoCacheResponse;
 import io.hops.hopsworks.ca.controllers.CAException;
 import io.hops.hopsworks.ca.controllers.CAInitializationException;
+import io.hops.hopsworks.ca.controllers.CertificateNotFoundException;
 import io.hops.hopsworks.ca.controllers.PKI;
 import io.hops.hopsworks.ca.controllers.PKIUtils;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
@@ -69,6 +70,7 @@ import javax.ws.rs.core.Response;
 import java.io.IOException;
 import java.security.GeneralSecurityException;
 import java.security.cert.X509Certificate;
+import java.util.ArrayList;
 import java.util.List;
 
 import static io.hops.hopsworks.ca.controllers.CertificateType.HOST;
@@ -115,14 +117,30 @@ public class HostCertsResource {
   @JWTRequired(acceptedTokens={Audience.SERVICES}, allowedUserRoles={"AGENT"})
   public Response revokeCertificate(
           @ApiParam(value = "Identifier of the Certificate to revoke", required = true)
-          @QueryParam("certId") String certId)
+          @QueryParam("certId") String certId,
+          @ApiParam(value = "Flag whether certId is a full RFC4514 Distinguished Name string")
+          @QueryParam("exact") Boolean exact)
           throws CAException {
     if (Strings.isNullOrEmpty(certId)) {
       throw new IllegalArgumentException("Empty certificate identifier");
     }
 
+    final List<X500Name> subjectsToRevoke = new ArrayList<>();
     try {
-      pki.revokeCertificate(certId, HOST);
+      if (exact == null || !exact) {
+        X500Name certificateName = pkiUtils.parseCertificateSubjectName(certId, HOST);
+        List<String> subjects = pkiUtils.findAllValidSubjectsWithPartialMatch(certificateName.toString());
+        subjects.forEach(s -> subjectsToRevoke.add(new X500Name(s)));
+      } else {
+        subjectsToRevoke.add(new X500Name(certId));
+      }
+      if (subjectsToRevoke.isEmpty()) {
+        throw new CertificateNotFoundException("Could not find a VALID certificate with ID: " + certId + " Is " +
+            "exact X509 Name: " + exact);
+      }
+      for (X500Name n : subjectsToRevoke) {
+        pki.revokeCertificate(n, HOST);
+      }
       return Response.ok().build();
     } catch (InvalidNameException | GeneralSecurityException | CAInitializationException ex) {
       throw pkiUtils.certificateRevocationExceptionConvertToCAException(ex, HOST);

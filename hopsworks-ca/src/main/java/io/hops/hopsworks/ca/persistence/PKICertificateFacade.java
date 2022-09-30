@@ -48,9 +48,9 @@ public class PKICertificateFacade {
     }
   }
 
-  public List<String> findAllSubjectsWithCNAndStatus(String cn, PKICertificate.Status status) {
-    return em.createNamedQuery("PKICertificate.findSubjectByStatusAndCN", String.class)
-        .setParameter("cn", cn)
+  public List<String> findAllSubjectsWithStatusAndPartialSubject(String partialSubject, PKICertificate.Status status) {
+    return em.createNamedQuery("PKICertificate.findSubjectByStatusAndPartialSubject", String.class)
+        .setParameter("subject", partialSubject)
         .setParameter("status", status)
         .getResultList();
   }
@@ -59,8 +59,8 @@ public class PKICertificateFacade {
     em.persist(certificate);
   }
 
-  public PKICertificate findById(PKICertificateId id) {
-    return em.find(PKICertificate.class, id);
+  public Optional<PKICertificate> findById(PKICertificateId id) {
+    return Optional.ofNullable(em.find(PKICertificate.class, id));
   }
 
   public void updateCertificate(PKICertificate certificate) {
