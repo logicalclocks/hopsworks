@@ -38,6 +38,8 @@ public class JupyterNotebookConfigTemplate extends JupyterTemplate {
   private final String serviceDiscoveryDomain;
   private final String kafkaBrokers;
   private final String hopsworksPublicHost;
+  private final Integer allocatedNotebookMBs;
+  private final Double allocatedNotebookCores;
   
   public JupyterNotebookConfigTemplate(JupyterNotebookConfigTemplateBuilder builder) {
     super(builder.getHdfsUser(), builder.getHadoopHome(), builder.getProject());
@@ -59,6 +61,8 @@ public class JupyterNotebookConfigTemplate extends JupyterTemplate {
     this.serviceDiscoveryDomain = builder.getServiceDiscoveryDomain();
     this.kafkaBrokers = builder.getKafkaBrokers();
     this.hopsworksPublicHost = builder.getHopsworksPublicHost();
+    this.allocatedNotebookMBs = builder.getAllocatedNotebookMBs();
+    this.allocatedNotebookCores = builder.getAllocatedNotebookCores();
   }
   
   public String getNamenodeIp() {
@@ -131,5 +135,13 @@ public class JupyterNotebookConfigTemplate extends JupyterTemplate {
   
   public String getHopsworksPublicHost() {
     return hopsworksPublicHost;
+  }
+
+  public Integer getAllocatedNotebookMBs() {
+    return allocatedNotebookMBs;
+  }
+
+  public Double getAllocatedNotebookCores() {
+    return allocatedNotebookCores;
   }
 }
