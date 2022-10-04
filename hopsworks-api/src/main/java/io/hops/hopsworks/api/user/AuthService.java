@@ -357,9 +357,8 @@ public class AuthService {
   @Path("/recover/password")
   @Produces(MediaType.APPLICATION_JSON)
   @JWTNotRequired
-  public Response recoverPassword(@FormParam("email") String email,
-                                  @Context HttpServletRequest req) throws UserException,
-      MessagingException {
+  public Response recoverPassword(@FormParam("email") String email, @Context HttpServletRequest req)
+    throws UserException, MessagingException {
     RESTApiJsonResponse json = new RESTApiJsonResponse();
     String reqUrl = FormatUtils.getUserURL(req);
     userController.sendPasswordRecoveryEmail(email, reqUrl);
@@ -418,8 +417,10 @@ public class AuthService {
   @Produces(MediaType.APPLICATION_JSON)
   @JWTNotRequired
   public Response validateUserMail(@FormParam("key") String key, @Context HttpServletRequest req) throws UserException {
+    RESTApiJsonResponse json = new RESTApiJsonResponse();
     authController.validateEmail(key);
-    return Response.ok().build();
+    json.setSuccessMessage(ResponseMessages.EMAIL_VERIFIED);
+    return Response.ok(json).build();
   }
 
   private void logoutAndInvalidateSession(HttpServletRequest req, Cookie cookie) throws UserException,

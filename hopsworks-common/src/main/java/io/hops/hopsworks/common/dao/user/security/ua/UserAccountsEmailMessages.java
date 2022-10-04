@@ -44,6 +44,8 @@ import io.hops.hopsworks.persistence.entity.user.security.apiKey.ApiScope;
 import java.util.Date;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class UserAccountsEmailMessages {
 
@@ -99,35 +101,6 @@ public class UserAccountsEmailMessages {
    */
   public final static String API_KEY_CREATED_SUBJECT = "Api key created";
   public final static String API_KEY_DELETED_SUBJECT = "Api key deleted";
-
-  /**
-   * Build an email message for mobile users upon registration.
-   *
-   * @param path
-   * @param key
-   * @return
-   */
-  @Deprecated
-  public static String buildMobileRequestMessage(String path, String key) {
-
-    String message;
-
-    String l1 = GREETINGS_HEADER + ",\n\n"
-            + "We received an account request for Hopsworks on your behalf.\n\n";
-    String l2
-            = "Please click on the following link to verify your email address. We"
-            + " will activate your account within "
-            + ACCOUNT_ACTIVATION_PERIOD
-            + " hours after validating your email address.\n\n\n";
-
-    String url = path + "/hopsworks-admin/security/validate_account.xhtml?key=" + key;
-
-    String l3 = "To confirm your email click " + url + " \n\n";
-    String l4 = "If you have any questions please visit https://community.hopsworks.ai/";
-
-    message = l1 + l2 + l3 + l4;
-    return message;
-  }
   
     /**
    * Build an email message for mobile users upon registration.
@@ -152,7 +125,6 @@ public class UserAccountsEmailMessages {
     String l5 = "If you have any questions please visit https://community.hopsworks.ai/";
 
     message = l1 + l2 + l3 + l4 + l5;
-
     return message;
   }
 
@@ -170,7 +142,7 @@ public class UserAccountsEmailMessages {
     String l1 = GREETINGS_HEADER + ",\n\n We received a password recovery request for Hopsworks on your behalf.\n\n";
     String l2 = "Please click on the following link to recover your password: \n";
 
-    String url = path + "/hopsworks/#!/passwordRecovery?key=" + key;
+    String url = path + "/recover?key=" + key;
 
     String l3 = url + " \n\n";
     String l4 = "If you did not request a password reset, please ignore this email. This password reset link is only " +
@@ -178,7 +150,6 @@ public class UserAccountsEmailMessages {
     String l5 = "If you have any questions please visit https://community.hopsworks.ai/";
 
     message = l1 + l2 + l3 + l4 + l5;
-
     return message;
   }
   
@@ -189,7 +160,7 @@ public class UserAccountsEmailMessages {
     String l1 = GREETINGS_HEADER + ",\n\n We received a lost mobile recovery request for Hopsworks on your behalf.\n\n";
     String l2 = "Please click on the following link to recover your QR code: \n";
     
-    String url = path + "/hopsworks/#!/qrRecovery?key=" + key;
+    String url = path + "/qrRecovery?key=" + key;
     
     String l3 = url + " \n\n";
     String l4 = "If you did not request a QR code reset, please ignore this email. This QR code reset link is only " +

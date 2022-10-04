@@ -46,6 +46,8 @@ public class ResponseMessages {
   public final static String QR_CODE_RESET = "Your QR code reset email has been sent. Please check your inbox.";
   public final static String PASSWORD_CHANGED = "Your password was successfully changed.";
   public final static String NOTHING_TO_UPDATE = "Nothing to update";
+  public final static String EMAIL_VERIFIED = "Your email has been verified. An administrator needs to activate your " +
+    "account before you can login.";
 
   //project error response
   public final static String PROJECT_NOT_FOUND = "Project wasn't found.";

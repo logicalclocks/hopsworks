@@ -72,9 +72,8 @@ public class UserStatusValidator {
   public void checkNewUserStatus(UserAccountStatus status) throws UserException {
     switch (status) {
       case NEW_MOBILE_ACCOUNT:
-        return;
       case VERIFIED_ACCOUNT:
-        throw new UserException(RESTCodes.UserErrorCode.ACCOUNT_INACTIVE, Level.FINE);
+        return;
       case ACTIVATED_ACCOUNT:
         throw new UserException(RESTCodes.UserErrorCode.ACCOUNT_ALREADY_VERIFIED, Level.FINE);
       case LOST_MOBILE:

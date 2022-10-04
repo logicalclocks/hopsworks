@@ -382,7 +382,11 @@ public class AuthController {
   }
   
   private void checkUserStatusAndKey(Users user, ValidationKeyType type, boolean newUser) throws UserException {
-    checkUserStatus(user, newUser);
+    try {
+      checkUserStatus(user, newUser);
+    } catch (UserException e) {
+      throw new UserException(RESTCodes.UserErrorCode.INCORRECT_VALIDATION_KEY, Level.FINE);
+    }
     if (user.getValidationKeyType() == null || !type.equals(user.getValidationKeyType())) {
       throw new UserException(RESTCodes.UserErrorCode.INCORRECT_VALIDATION_KEY, Level.FINE);
     }
