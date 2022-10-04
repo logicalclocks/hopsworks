@@ -49,6 +49,7 @@ import io.hops.hopsworks.exceptions.JobException;
 import io.hops.hopsworks.common.hive.HiveController;
 import io.hops.hopsworks.common.hosts.ServiceDiscoveryController;
 import io.hops.hopsworks.common.kafka.KafkaBrokers;
+import io.hops.hopsworks.persistence.entity.jobs.configuration.DockerJobConfiguration;
 import io.hops.hopsworks.persistence.entity.jobs.configuration.JobType;
 import io.hops.hopsworks.persistence.entity.jupyter.JupyterSettings;
 import io.hops.hopsworks.persistence.entity.project.Project;
