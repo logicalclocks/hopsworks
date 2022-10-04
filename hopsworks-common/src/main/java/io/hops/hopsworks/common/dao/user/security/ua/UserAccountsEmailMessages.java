@@ -44,8 +44,6 @@ import io.hops.hopsworks.persistence.entity.user.security.apiKey.ApiScope;
 import java.util.Date;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 public class UserAccountsEmailMessages {
 
