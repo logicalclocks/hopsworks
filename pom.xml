@@ -149,7 +149,7 @@
     <primefaces-resources-codemirror.version>6.1.1</primefaces-resources-codemirror.version>
     <primefaces.version>6.1</primefaces.version>
     <projectlombok.version>1.18.6</projectlombok.version>
-    <protobuf-java.version>3.9.1</protobuf-java.version>
+    <protobuf-java.version>3.16.3</protobuf-java.version>
     <reflections.version>0.9.12</reflections.version>
     <resilience4j-retry.version>0.16.0</resilience4j-retry.version>
     <selenium.version>3.141.59</selenium.version>
