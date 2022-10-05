@@ -1777,7 +1777,7 @@ public class Settings implements Serializable {
     return GIT_MAX_COMMAND_TIMEOUT_MINUTES * 60 * 1000;
   }
 
-  private String GIT_IMAGE_NAME = "git:0.1.0";
+  private String GIT_IMAGE_NAME = "git:0.2.0";
   public synchronized String getGitImageName() {
     return GIT_IMAGE_NAME;
   }
