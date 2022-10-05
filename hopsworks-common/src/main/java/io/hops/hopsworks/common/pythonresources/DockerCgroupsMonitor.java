@@ -58,7 +58,7 @@ public class DockerCgroupsMonitor {
     Long intervalValue = settings.getConfTimeValue(rawInterval);
     TimeUnit intervalTimeunit = settings.getConfTimeTimeUnit(rawInterval);
     intervalValue = intervalTimeunit.toMillis(intervalValue);
-    timerService.createIntervalTimer(intervalValue, intervalValue,
+    timerService.createIntervalTimer(0, intervalValue,
         new TimerConfig("Docker Cgroup Monitor", false));
   }
 
