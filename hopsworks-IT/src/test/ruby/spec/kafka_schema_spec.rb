@@ -41,32 +41,32 @@ describe "On #{ENV['OS']}" do
         it 'gets list o subjects' do
           get_subjects(project)
           res = response.body[1...-1].delete(' ').split(",")
-          expect_status(200)
+          expect_status_details(200)
           expect(res.count).to be > 0
           expect(res.find { |i| i == "inferenceschema" }).to_not be_nil
         end
 
         it 'adds a new subject' do
           register_new_schema(project, "test", "[]")
-          expect_status(200)
+          expect_status_details(200)
 	      end
         
         it 'returns schema by its id' do
           get_schema_by_id(project, test_subject['id'])
-          expect_status(200)
+          expect_status_details(200)
           expect("[]").to eq(json_body[:schema])
         end
 
         it 'fails to return schema with invalid id' do
           get_schema_by_id(project, -1)
-          expect_status(404)
+          expect_status_details(404)
           expect_json(error_code: 40403)
           expect_json(message: "Schema not found")
         end
 
         it 'returns a list of versions' do
           get_subject_versions(project, "inferenceschema")
-          expect_status(200)
+          expect_status_details(200)
           res = response.body[1...-1].delete(' ').split(",")
           expect(res).to eq(["1", "2", "3"])
         end
@@ -78,106 +78,106 @@ describe "On #{ENV['OS']}" do
           register_new_schema(project, id, schema_v3)
           # check if the schemas were registered correctly
           get_subject_versions(project, "inferenceschema")
-          expect_status(200)
+          expect_status_details(200)
           res = response.body[1...-1].delete(' ').split(",")
           expect(res).to eq(["1", "2", "3"])
           # remove subject
           delete_subject(project, id)
-          expect_status(200)
+          expect_status_details(200)
           res = response.body[1...-1].delete(' ').split(",")
           expect(res).to eq(["1", "2", "3"])
           # try to remove again and fail
           delete_subject(project, id)
-          expect_status(404)
+          expect_status_details(404)
           expect_json(error_code: 40401)
         end 
 
         it 'gets details of a specified subject version' do
           get_subject_details(project, "inferenceschema", 1)
-          expect_status(200)
+          expect_status_details(200)
           expect_json(subject: "inferenceschema")
           expect_json(version: 1)
         end
 
         it 'gets details of the latest subject version' do
           get_subject_details(project, "inferenceschema", "latest")
-          expect_status(200)
+          expect_status_details(200)
           expect_json(subject: "inferenceschema")
           expect_json(version: 3)
         end
 
         it 'fails to get details of a random subject' do
           get_subject_details(project, "#{short_random_id}", 1)
-          expect_status(404)
+          expect_status_details(404)
           expect_json(error_code: 40401)
         end
 
         it 'fails to get details of a wrong subject version' do
           get_subject_details(project, "inferenceschema", 999)
-          expect_status(404)
+          expect_status_details(404)
           expect_json(error_code: 40402)
         end
 
         it 'fails to get details of an invalid version' do
           get_subject_details(project, "inferenceschema", -1)
-          expect_status(422)
+          expect_status_details(422)
           expect_json(error_code: 42202)
         end
 
         it 'gets schema for specified version of a subject' do
           get_subject_schema(project, "inferenceschema", 1)
-          expect_status(200)
+          expect_status_details(200)
         end
 
         it 'fails to get schema for an unknown subject' do
           get_subject_schema(project, "#{short_random_id}", 1)
-          expect_status(404)
+          expect_status_details(404)
           expect_json(error_code: 40401)
         end
 
         it 'fails to get schema for an unknown version of a subject' do
           get_subject_schema(project, "inferenceschema", 9999)
-          expect_status(404)
+          expect_status_details(404)
           expect_json(error_code: 40402)
         end
 
         it 'fails to get schema with an invalid version' do
           get_subject_schema(project, "inferenceschema", "invalid")
-          expect_status(422)
+          expect_status_details(422)
           expect_json(error_code: 42202)
         end
 
         it 'fails to register invalid Avro schema' do
           register_new_schema(project, "#{short_random_id}", invalid_schema)
-          expect_status(422)
+          expect_status_details(422)
           expect_json(error_code: 42201)
         end
 
         it 'fails to register incompatible Avro schema' do
           register_new_schema(project, "test_incompatible", schema_v1)
-          expect_status(200)
+          expect_status_details(200)
           register_new_schema(project, "test_incompatible", incompatible_schema)
-          expect_status(409)
+          expect_status_details(409)
           expect_json(error_code: 40901)
           expect_json(message: "Incompatible Avro schema")
         end
 
         it 'checks if reference schema is already registered' do
           check_if_schema_registered(project, "inferenceschema", "{\"fields\": [{\"name\": \"modelId\", \"type\": \"int\"}, { \"name\": \"modelName\", \"type\": \"string\" }, {  \"name\": \"modelVersion\",  \"type\": \"int\" }, {  \"name\": \"requestTimestamp\",  \"type\": \"long\" }, {  \"name\": \"responseHttpCode\",  \"type\": \"int\" }, {  \"name\": \"inferenceRequest\",  \"type\": \"string\" }, {  \"name\": \"inferenceResponse\",  \"type\": \"string\" }  ],  \"name\": \"inferencelog\",  \"type\": \"record\" }")
-          expect_status(200)
+          expect_status_details(200)
           expect_json(subject: "inferenceschema")
           expect_json(version: 1)
         end
 
         it 'checks if schema is registered and fails to find a random subject' do
           check_if_schema_registered(project, "#{short_random_id}", "[]")
-          expect_status(404)
+          expect_status_details(404)
           expect_json(error_code: 40401)
         end
 
         it 'checks if schema is registered and fails to find the schema' do
           check_if_schema_registered(project, "inferenceschema", "[]")
-          expect_status(404)
+          expect_status_details(404)
           expect_json(error_code: 40403)
         end
 
@@ -186,43 +186,43 @@ describe "On #{ENV['OS']}" do
           register_new_schema(project, subject, schema_v1)
           register_new_schema(project, subject, schema_v2)
           delete_subject_version(project, subject, "latest")
-          expect_status(200)
+          expect_status_details(200)
           expect(response.body).to eq("2")
           delete_subject_version(project, subject, 1)
-          expect_status(200)
+          expect_status_details(200)
           expect(response.body).to eq("1")
         end
 
         it 'fails to delete a version of a subject that does not exist' do
           delete_subject_version(project, "#{short_random_id}", "latest")
-          expect_status(404)
+          expect_status_details(404)
           expect_json(error_code: 40401)
         end
 
         it 'fails to delete a version of a subject with unknown version' do
           delete_subject_version(project, test_subject['subject'], 9999)
-          expect_status(404)
+          expect_status_details(404)
           expect_json(error_code: 40402)
         end
 
         it 'fails to delete a version of a subject with invalid version' do
           delete_subject_version(project, test_subject['subject'], "blah")
-          expect_status(422)
+          expect_status_details(422)
           expect_json(error_code: 42202)
         end
 
         it 'gets project compatibility config' do
           get_project_config(project)
-          expect_status(200)
+          expect_status_details(200)
           expect(compatibilities_array).to include(json_body[:compatibilityLevel])
         end
 
         it 'sets project compatibility level' do
           update_project_config(project, "FULL")
-          expect_status(200)
+          expect_status_details(200)
           expect_json(compatibility: "FULL")
           get_project_config(project)
-          expect_status(200)
+          expect_status_details(200)
           expect_json(compatibilityLevel: "FULL")
         end
 
@@ -231,27 +231,27 @@ describe "On #{ENV['OS']}" do
         # [BACKWARD_TRANSITIVE, BACKWARD, FORWARD, NONE, FORWARD_TRANSITIVE, FULL_TRANSITIVE, FULL]
         it 'fails to set an invalid compatibility for a project' do
           update_project_config(project, "INVALID")
-          expect_status(400)
+          expect_status_details(400)
         end
 
 	      it 'fails to get subject compatibility that was not created before' do
           get_subject_config(project, test_subject['subject'])
-          expect_status(404)
+          expect_status_details(404)
           expect_json(error_code: 40401)
         end
         
         it 'sets the subject compatibility' do
           update_subject_config(project, test_subject['subject'], "FULL")
-          expect_status(200)
+          expect_status_details(200)
           expect_json(compatibility: "FULL")
           get_subject_config(project, test_subject['subject'])
-          expect_status(200)
+          expect_status_details(200)
           expect_json(compatibilityLevel: "FULL")
         end
 
         it 'fails to get subject compatibility for unknown subject' do
           get_subject_config(project, "#{short_random_id}")
-          expect_status(404)
+          expect_status_details(404)
           expect_json(error_code: 40401)
         end
 
@@ -260,49 +260,49 @@ describe "On #{ENV['OS']}" do
         # [BACKWARD_TRANSITIVE, BACKWARD, FORWARD, NONE, FORWARD_TRANSITIVE, FULL_TRANSITIVE, FULL]
         it 'fails to set invalid compatibility for a subject' do
           update_subject_config(project, test_subject['subject'], "INVALID")
-          expect_status(400)
+          expect_status_details(400)
         end
 
         it 'checks that schema is compatible' do
           subject = "#{short_random_id}"
           register_new_schema(project, subject, schema_v1)
           check_compatibility(project, subject, "latest", schema_v2)
-          expect_status(200)
+          expect_status_details(200)
           expect_json(is_compatible: true)
         end
 
         it 'fails to check compatibility for unknown subject' do
           subject = "#{short_random_id}"
           check_compatibility(project, subject, "latest", "[]")
-          expect_status(404)
+          expect_status_details(404)
           expect_json(error_code: 40401)
         end
 
         it 'fails to check compatibility for unknown version' do
           check_compatibility(project, "inferenceschema", 999, "[]")
-          expect_status(404)
+          expect_status_details(404)
           expect_json(error_code: 40402)
         end
 
         it 'fails to check compatibility for invalid Avro schema' do
           check_compatibility(project, test_subject['subject'], "latest", invalid_schema)
-          expect_status(422)
+          expect_status_details(422)
           expect_json(error_code: 42201)
         end
 
         it 'fails to check compatibility for invalid version' do
           check_compatibility(project, test_subject['subject'], -1, "[]")
-          expect_status(422)
+          expect_status_details(422)
           expect_json(error_code: 42202)
           check_compatibility(project, test_subject['subject'], "blah", "[]")
-          expect_status(422)
+          expect_status_details(422)
           expect_json(error_code: 42202)
 	      end
 
 	      it 'gets topic subject details' do
 	        json, topic_name = add_topic(project.id, test_subject['subject'], 1)
 	        get_topic_subject_details(project, topic_name)
-	        expect_status(200)
+	        expect_status_details(200)
 	        expect_json(subject: test_subject['subject'])
 	        expect_json(version: 1)
 	        expect_json(schema: "[]")

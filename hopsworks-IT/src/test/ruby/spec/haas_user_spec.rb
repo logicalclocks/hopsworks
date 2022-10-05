@@ -137,7 +137,7 @@ describe "On #{ENV['OS']}" do
 
         it "should get session with api key" do
           get_api_key_session
-          expect_status(200)
+          expect_status_details(200)
         end
 
         it "should get project" do

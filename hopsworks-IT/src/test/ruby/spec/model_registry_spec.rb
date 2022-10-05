@@ -23,7 +23,7 @@ describe "On #{ENV['OS']}" do
       end
       it "should fail" do
         get_model_registries(@project[:id], nil)
-        expect_status(401)
+        expect_status_details(401)
       end
     end
     context 'with authentication' do
@@ -63,7 +63,7 @@ describe "On #{ENV['OS']}" do
         create_session(@user2_params[:email], @user2_params[:password])
 
         get_model_registries(@project2[:id], nil)
-        expect_status(200)
+        expect_status_details(200)
 
         expect(json_body[:items].count).to eq 1
         expect(json_body[:count]).to eq 1
@@ -78,7 +78,7 @@ describe "On #{ENV['OS']}" do
         create_session(@user1_params[:email], @user1_params[:password])
 
         get_model_registries(@project1[:id], nil)
-        expect_status(200)
+        expect_status_details(200)
         expect(json_body[:items].count).to eq 2
         expect(json_body[:count]).to eq 2
 
@@ -93,21 +93,21 @@ describe "On #{ENV['OS']}" do
         create_session(@user1_params[:email], @user1_params[:password])
 
         get_model_registry(@project1[:id], @project1[:id], nil)
-        expect_status(200)
+        expect_status_details(200)
       end
 
       it "should have access to model registry shared with project" do
         create_session(@user1_params[:email], @user1_params[:password])
 
         get_model_registry(@project1[:id], @project2[:id], nil)
-        expect_status(200)
+        expect_status_details(200)
       end
 
       it "should not have access to model registry not shared with project" do
         create_session(@user1_params[:email], @user1_params[:password])
 
         get_model_registry(@project1[:id], @project3[:id], nil)
-        expect_status(403)
+        expect_status_details(403)
       end
     end
   end

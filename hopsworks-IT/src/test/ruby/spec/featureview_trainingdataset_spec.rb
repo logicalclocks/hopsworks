@@ -88,7 +88,7 @@ describe "On #{ENV['OS']}" do
           json_result, _ = create_featureview_training_dataset(@project.id, featureview, connector,
                                                                version: nil)
           parsed_json = JSON.parse(json_result)
-          expect_status(201)
+          expect_status_details(201)
           # version should be incremented to 2
           expect(parsed_json["version"] == 2).to be true
         end
@@ -183,7 +183,7 @@ describe "On #{ENV['OS']}" do
         it "should not be able to add a hopsfs training dataset to the featurestore with a non numeric split percentage" do
           split = [{ name: "train", percentage: "wrong", splitType: "RANDOM_SPLIT"}]
           create_featureview_training_dataset_from_project(@project, expected_status_code: 400, splits: split, train_split: "train")
-          expect_status(400)
+          expect_status_details(400)
           # error is unexpected token at 'Cannot deserialize value of type `java.lang.Float` from String "wrong"
           # parsed_json = all_metadata["response"]
           # expect(parsed_json.key?("errorCode")).to be true
@@ -231,7 +231,7 @@ describe "On #{ENV['OS']}" do
           connector = all_metadata["connector"]
 
           create_featureview_training_dataset(@project.id, featureview, connector, version: parsed_json["version"])
-          expect_status(400)
+          expect_status_details(400)
         end
 
         it "should be able to add a hopsfs training dataset to the featurestore without specifying a hopsfs connector" do
@@ -239,7 +239,7 @@ describe "On #{ENV['OS']}" do
           featuregroup_suffix = short_random_id
           query = make_sample_query(@project, featurestore_id, featuregroup_suffix: featuregroup_suffix)
           json_result = create_feature_view(@project.id, featurestore_id, query)
-          expect_status(201)
+          expect_status_details(201)
           featureview = JSON.parse(json_result)
           td = create_featureview_training_dataset(@project.id, featureview, nil)
           parsed_json = JSON.parse(td)
@@ -311,7 +311,7 @@ describe "On #{ENV['OS']}" do
 
           json_result2 = update_featureview_training_dataset_metadata(@project, featureview, parsed_json["version"], json_data)
           parsed_json2 = JSON.parse(json_result2)
-          expect_status(200)
+          expect_status_details(200)
           expect(parsed_json2.key?("id")).to be true
           expect(parsed_json2.key?("name")).to be true
           expect(parsed_json2["creator"].key?("email")).to be true
@@ -338,7 +338,7 @@ describe "On #{ENV['OS']}" do
 
           json_result2 = update_featureview_training_dataset_metadata(@project, featureview, parsed_json["version"], json_data)
           parsed_json2 = JSON.parse(json_result2)
-          expect_status(200)
+          expect_status_details(200)
 
           expect(parsed_json2["version"]).to eql(parsed_json["version"])
           # make sure the name didn't change
@@ -358,7 +358,7 @@ describe "On #{ENV['OS']}" do
 
           json_result2 = update_featureview_training_dataset_metadata(@project, featureview, parsed_json["version"], json_data)
           parsed_json2 = JSON.parse(json_result2)
-          expect_status(200)
+          expect_status_details(200)
 
           expect(parsed_json2["description"]).to eql("new_testtrainingdatasetdescription")
           expect(parsed_json2["version"]).to eql(parsed_json["version"])
@@ -374,7 +374,7 @@ describe "On #{ENV['OS']}" do
           create_featureview_training_dataset(@project.id, featureview, connector, version: nil)
 
           json_result = get_featureview_training_dataset(@project, featureview)
-          expect_status(200)
+          expect_status_details(200)
           parsed_json = JSON.parse(json_result)
           expect(parsed_json["count"]).to eq 2
         end
@@ -425,7 +425,7 @@ describe "On #{ENV['OS']}" do
 
           post "#{ENV['HOPSWORKS_API']}/project/#{@project.id}/featurestores/#{featurestore_id}/featureview/#{featureview["name"]}/version/#{featureview["version"]}" +
             "/trainingdatasets/version/#{parsed_json["version"]}/keywords", {keywords: ['hello', 'this', '@#!@#^(&$']}
-          expect_status(400)
+          expect_status_details(400)
         end
 
         it "should be able to remove keyword" do
@@ -439,7 +439,7 @@ describe "On #{ENV['OS']}" do
 
           json_result = get "#{ENV['HOPSWORKS_API']}/project/#{@project.id}/featurestores/#{featurestore_id}/featureview/#{featureview["name"]}/version/#{featureview["version"]}" +
             "/trainingdatasets/version/#{parsed_td["version"]}/keywords"
-          expect_status(200)
+          expect_status_details(200)
           parsed_json = JSON.parse(json_result)
           expect(parsed_json['keywords']).to include('hello')
           expect(parsed_json['keywords']).to include('this')
@@ -447,11 +447,11 @@ describe "On #{ENV['OS']}" do
 
           delete "#{ENV['HOPSWORKS_API']}/project/#{@project.id}/featurestores/#{featurestore_id}/featureview/#{featureview["name"]}/version/#{featureview["version"]}" +
             "/trainingdatasets/version/#{parsed_td["version"]}/keywords?keyword=hello"
-          expect_status(200)
+          expect_status_details(200)
 
           json_result = get "#{ENV['HOPSWORKS_API']}/project/#{@project.id}/featurestores/#{featurestore_id}/featureview/#{featureview["name"]}/version/#{featureview["version"]}" +
             "/trainingdatasets/version/#{parsed_td["version"]}/keywords"
-          expect_status(200)
+          expect_status_details(200)
           parsed_json = JSON.parse(json_result)
           expect(parsed_json['keywords']).not_to include('hello')
           expect(parsed_json['keywords']).to include('this')
@@ -516,7 +516,7 @@ describe "On #{ENV['OS']}" do
 
           json_result2 = update_featureview_training_dataset_stats_config(@project, featureview, parsed_json["version"], json_data)
           parsed_json2 = JSON.parse(json_result2)
-          expect_status(200)
+          expect_status_details(200)
           expect(parsed_json2["statisticsConfig"]["columns"].length).to eql(1)
           expect(parsed_json2["statisticsConfig"]["columns"][0]).to eql("a_testfeature")
           expect(parsed_json2["statisticsConfig"]["enabled"]).to be false
@@ -691,10 +691,10 @@ describe "On #{ENV['OS']}" do
           featuregroup_suffix = short_random_id
           query = make_sample_query(@project, featurestore_id, featuregroup_suffix: featuregroup_suffix)
           json_result = create_feature_view(@project.id, featurestore_id, query)
-          expect_status(201)
+          expect_status_details(201)
           featureview = JSON.parse(json_result)
           create_featureview_training_dataset(@project.id, featureview, nil, is_internal: false)
-          expect_status(404)
+          expect_status_details(404)
         end
 
         it "should be able to add an external training dataset to the featurestore with splits" do
@@ -790,7 +790,7 @@ describe "On #{ENV['OS']}" do
           connector = make_connector_dto(get_s3_connector_id)
           create_featureview_training_dataset_from_project(
             @project, connector: connector, is_internal: false, splits: splits, expected_status_code: 400, train_split: "train")
-          expect_status(400)
+          expect_status_details(400)
           # error is unexpected token at 'Cannot deserialize value of type `java.lang.Float` from String "wrong"
           # expect(parsed_json.key?("errorCode")).to be true
           # expect(parsed_json.key?("errorMsg")).to be true
@@ -874,7 +874,7 @@ describe "On #{ENV['OS']}" do
 
           json_result2 = update_featureview_training_dataset_metadata(@project, featureview, parsed_json["version"], json_data)
           parsed_json2 = JSON.parse(json_result2)
-          expect_status(200)
+          expect_status_details(200)
           expect(parsed_json2.key?("id")).to be true
           expect(parsed_json2.key?("featurestoreName")).to be true
           expect(parsed_json2.key?("name")).to be true
@@ -910,7 +910,7 @@ describe "On #{ENV['OS']}" do
 
           json_result2 = update_featureview_training_dataset_metadata(@project, featureview, parsed_json["version"], json_data)
           parsed_json2 = JSON.parse(json_result2)
-          expect_status(200)
+          expect_status_details(200)
 
           expect(parsed_json2["version"]).to eql(parsed_json["version"])
           # make sure the name didn't change

@@ -24,7 +24,7 @@ describe "On #{ENV['OS']}" do
   context "#not logged in" do
     it "should not be able to compose DAG" do
       post "#{ENV['HOPSWORKS_API']}/project/0/airflow/dag", @dag_definition
-      expect_status(401)
+      expect_status_details(401)
     end
   end
 
@@ -35,7 +35,7 @@ describe "On #{ENV['OS']}" do
     describe "#without project" do
       it "should not be able to compose DAG" do
         post "#{ENV['HOPSWORKS_API']}/project/0/airflow/dag", @dag_definition
-        expect_status(404)
+        expect_status_details(404)
         expect_json(errorCode: 150004)
       end
     end
@@ -47,11 +47,11 @@ describe "On #{ENV['OS']}" do
 
       it "should be able to compose DAG" do
         get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/airflow/secretDir"
-        expect_status(200)
+        expect_status_details(200)
         secret_dir = response.body
         
         post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/airflow/dag", @dag_definition
-        expect_status(200)
+        expect_status_details(200)
         airflow_dir = Variables.find_by(id: "airflow_dir")
         dag_file = File.join(airflow_dir.value, "dags", secret_dir, "#{@dag_name}.py")
         expect(File.exists?(dag_file)).to be true

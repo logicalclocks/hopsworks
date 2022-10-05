@@ -29,7 +29,7 @@ describe "On #{ENV['OS']}" do
         featurestore_id = get_featurestore_id(project.id)
         json_result, featuregroup_name = create_cached_featuregroup(project.id, featurestore_id)
         parsed_json = JSON.parse(json_result)
-        expect_status(201)
+        expect_status_details(201)
         expect(parsed_json.key?("id")).to be true
         expect(parsed_json["creator"].key?("email")).to be true
         expect(parsed_json.key?("featurestoreName")).to be true
@@ -45,11 +45,11 @@ describe "On #{ENV['OS']}" do
         json_result, featuregroup_name = create_cached_featuregroup(project.id, featurestore_id,
                                                                     featuregroup_name: "duplicatedname")
         parsed_json = JSON.parse(json_result)
-        expect_status(201)
+        expect_status_details(201)
         json_result, featuregroup_name = create_cached_featuregroup(project.id, featurestore_id,
                                                                     featuregroup_name: "duplicatedname")
         parsed_json = JSON.parse(json_result)
-        expect_status(400)
+        expect_status_details(400)
       end
 
       it "should be able to add a offline cached featuregroup with hive partitioning to the featurestore" do
@@ -57,7 +57,7 @@ describe "On #{ENV['OS']}" do
         featurestore_id = get_featurestore_id(project.id)
         json_result, featuregroup_name = create_cached_featuregroup_with_partition(project.id, featurestore_id)
         parsed_json = JSON.parse(json_result)
-        expect_status(201)
+        expect_status_details(201)
         expect(parsed_json.key?("id")).to be true
         expect(parsed_json.key?("featurestoreName")).to be true
         expect(parsed_json["creator"].key?("email")).to be true
@@ -82,7 +82,7 @@ describe "On #{ENV['OS']}" do
         featurestore_id = get_featurestore_id(project.id)
         json_result, featuregroup_name = create_cached_featuregroup(project.id, featurestore_id, features: nil, featuregroup_name: "TEST_!%$1--")
         parsed_json = JSON.parse(json_result)
-        expect_status(400)
+        expect_status_details(400)
         expect(parsed_json.key?("errorCode")).to be true
         expect(parsed_json.key?("errorMsg")).to be true
         expect(parsed_json.key?("usrMsg")).to be true
@@ -95,7 +95,7 @@ describe "On #{ENV['OS']}" do
         json_result, featuregroup_name = create_cached_featuregroup(project.id, featurestore_id, features: nil,
                                                                     version: -1)
         parsed_json = JSON.parse(json_result)
-        expect_status(400)
+        expect_status_details(400)
         expect(parsed_json.key?("errorCode")).to be true
         expect(parsed_json.key?("errorMsg")).to be true
         expect(parsed_json.key?("usrMsg")).to be true
@@ -108,7 +108,7 @@ describe "On #{ENV['OS']}" do
         json_result, featuregroup_name = create_cached_featuregroup(project.id, featurestore_id, features: nil,
                                                                     featuregroup_name: "no_version_fg", version: nil)
         parsed_json = JSON.parse(json_result)
-        expect_status(201)
+        expect_status_details(201)
         expect(parsed_json["version"] == 1).to be true
       end
 
@@ -118,7 +118,7 @@ describe "On #{ENV['OS']}" do
         json_result, featuregroup_name = create_cached_featuregroup(project.id, featurestore_id, features: nil,
                                                                     featuregroup_name: "no_version_fg_add")
         parsed_json = JSON.parse(json_result)
-        expect_status(201)
+        expect_status_details(201)
         # add second version
         json_result, featuregroup_name = create_cached_featuregroup(project.id, featurestore_id, features: nil,
                                                                     featuregroup_name: "no_version_fg_add", version: nil)
@@ -160,7 +160,7 @@ describe "On #{ENV['OS']}" do
             }
         ]
         _, _ = create_cached_featuregroup(project.id, featurestore_id, features:features, online:true)
-        expect_status(201)
+        expect_status_details(201)
       end
 
       it "should be able to create a feature group with complex types" do
@@ -175,7 +175,7 @@ describe "On #{ENV['OS']}" do
             }
         ]
         _, _ = create_cached_featuregroup(project.id, featurestore_id, features:features, online:true)
-        expect_status(201)
+        expect_status_details(201)
       end
 
       it "should be able to create a featuregroup with event time feature" do
@@ -215,7 +215,7 @@ describe "On #{ENV['OS']}" do
         ]
         json_result, featuregroup_name = create_cached_featuregroup(project.id, featurestore_id, features:features)
         parsed_json = JSON.parse(json_result)
-        expect_status(201)
+        expect_status_details(201)
         expect(parsed_json["features"].length).to be 1
         expect(parsed_json["features"].first["description"] == "").to be true
       end
@@ -239,7 +239,7 @@ describe "On #{ENV['OS']}" do
                                        featuregroup_description:"this description contains ' and ;'%*")
 
         parsed_json = JSON.parse(json_result)
-        expect_status(201)
+        expect_status_details(201)
         expect(parsed_json["description"]).to eql("this description contains ' and ;'%*")
         expect(parsed_json["features"].length).to be 1
         expect(parsed_json["features"].first["description"]).to eql("this description contains ' and ;'")
@@ -250,12 +250,12 @@ describe "On #{ENV['OS']}" do
         featurestore_id = get_featurestore_id(project.id)
         json_result, featuregroup_name = create_cached_featuregroup(project.id, featurestore_id)
         parsed_json = JSON.parse(json_result)
-        expect_status(201)
+        expect_status_details(201)
         featuregroup_id = parsed_json["id"]
         preview_featuregroup_endpoint = "#{ENV['HOPSWORKS_API']}/project/" + project.id.to_s + "/featurestores/" + featurestore_id.to_s + "/featuregroups/" + featuregroup_id.to_s + "/preview"
         get preview_featuregroup_endpoint
         parsed_json = JSON.parse(response.body)
-        expect_status(200)
+        expect_status_details(200)
       end
 
       it "should be able to get a feature group based on name and version" do
@@ -265,18 +265,18 @@ describe "On #{ENV['OS']}" do
         # Create first version
         json_result, featuregroup_name = create_cached_featuregroup(project.id, featurestore_id)
         parsed_json = JSON.parse(json_result)
-        expect_status(201)
+        expect_status_details(201)
 
         # Create second version
         json_result, featuregroup_name = create_cached_featuregroup(project.id, featurestore_id, featuregroup_name: featuregroup_name, version: 2)
         parsed_json = JSON.parse(json_result)
-        expect_status(201)
+        expect_status_details(201)
 
         # Get the first version
         get_featuregroup_endpoint = "#{ENV['HOPSWORKS_API']}/project/#{project.id}/featurestores/#{featurestore_id}/featuregroups/#{featuregroup_name}?version=1"
         get get_featuregroup_endpoint
         parsed_json = JSON.parse(response.body)
-        expect_status(200)
+        expect_status_details(200)
         expect(parsed_json[0]["name"]).to eq featuregroup_name
         expect(parsed_json[0]["version"]).to eq 1
 
@@ -284,7 +284,7 @@ describe "On #{ENV['OS']}" do
         get_featuregroup_endpoint = "#{ENV['HOPSWORKS_API']}/project/#{project.id}/featurestores/#{featurestore_id}/featuregroups/#{featuregroup_name}?version=2"
         get get_featuregroup_endpoint
         parsed_json = JSON.parse(response.body)
-        expect_status(200)
+        expect_status_details(200)
         expect(parsed_json[0]["name"]).to eq featuregroup_name
         expect(parsed_json[0]["version"]).to eq 2
       end
@@ -296,18 +296,18 @@ describe "On #{ENV['OS']}" do
         # Create first version
         json_result, featuregroup_name = create_cached_featuregroup(project.id, featurestore_id)
         parsed_json = JSON.parse(json_result)
-        expect_status(201)
+        expect_status_details(201)
 
         # Create second version
         json_result, featuregroup_name = create_cached_featuregroup(project.id, featurestore_id, featuregroup_name: featuregroup_name, version: 2)
         parsed_json = JSON.parse(json_result)
-        expect_status(201)
+        expect_status_details(201)
 
         # Get the list
         get_featuregroup_endpoint = "#{ENV['HOPSWORKS_API']}/project/#{project.id}/featurestores/#{featurestore_id}/featuregroups/#{featuregroup_name}"
         get get_featuregroup_endpoint
         parsed_json = JSON.parse(response.body)
-        expect_status(200)
+        expect_status_details(200)
         expect(parsed_json.size).to eq 2
       end
 
@@ -318,7 +318,7 @@ describe "On #{ENV['OS']}" do
         get_featuregroup_endpoint = "#{ENV['HOPSWORKS_API']}/project/#{project.id}/featurestores/#{featurestore_id}/featuregroups/doesnotexists?version=1"
         get get_featuregroup_endpoint
         parsed_json = JSON.parse(response.body)
-        expect_status(404)
+        expect_status_details(404)
       end
 
       it "should be able to get the hive schema of a cached offline featuregroup in the featurestore" do
@@ -326,12 +326,12 @@ describe "On #{ENV['OS']}" do
         featurestore_id = get_featurestore_id(project.id)
         json_result, featuregroup_name = create_cached_featuregroup(project.id, featurestore_id)
         parsed_json = JSON.parse(json_result)
-        expect_status(201)
+        expect_status_details(201)
         featuregroup_id = parsed_json["id"]
         get_featuregroup_schema_endpoint = "#{ENV['HOPSWORKS_API']}/project/" + project.id.to_s + "/featurestores/" + featurestore_id.to_s + "/featuregroups/" + featuregroup_id.to_s + "/details"
         get get_featuregroup_schema_endpoint
         parsed_json = JSON.parse(response.body)
-        expect_status(200)
+        expect_status_details(200)
         expect(parsed_json.key?("schema")).to be true
       end
 
@@ -340,11 +340,11 @@ describe "On #{ENV['OS']}" do
         featurestore_id = get_featurestore_id(project.id)
         json_result, featuregroup_name = create_cached_featuregroup(project.id, featurestore_id)
         parsed_json = JSON.parse(json_result)
-        expect_status(201)
+        expect_status_details(201)
         featuregroup_id = parsed_json["id"]
         delete_featuregroup_endpoint = "#{ENV['HOPSWORKS_API']}/project/" + project.id.to_s + "/featurestores/" + featurestore_id.to_s + "/featuregroups/" + featuregroup_id.to_s
         delete delete_featuregroup_endpoint
-        expect_status(200)
+        expect_status_details(200)
       end
 
       it "should be able to clear the contents of a cached featuregroup in the featurestore" do
@@ -352,11 +352,11 @@ describe "On #{ENV['OS']}" do
         featurestore_id = get_featurestore_id(project.id)
         json_result, featuregroup_name = create_cached_featuregroup(project.id, featurestore_id)
         parsed_json = JSON.parse(json_result)
-        expect_status(201)
+        expect_status_details(201)
         featuregroup_id = parsed_json["id"]
         clear_featuregroup_contents_endpoint = "#{ENV['HOPSWORKS_API']}/project/" + project.id.to_s + "/featurestores/" + featurestore_id.to_s + "/featuregroups/" + featuregroup_id.to_s + "/clear"
         post clear_featuregroup_contents_endpoint
-        expect_status(200)
+        expect_status_details(200)
       end
 
       it "should not be able to create a cached featuregroup with feature default value in the featurestore" do
@@ -388,7 +388,7 @@ describe "On #{ENV['OS']}" do
         featurestore_id = get_featurestore_id(project.id)
         json_result, featuregroup_name = create_cached_featuregroup(project.id, featurestore_id)
         parsed_json = JSON.parse(json_result)
-        expect_status(201)
+        expect_status_details(201)
         featuregroup_id = parsed_json["id"]
         featuregroup_version = parsed_json["version"]
 
@@ -439,7 +439,7 @@ describe "On #{ENV['OS']}" do
         featurestore_id = get_featurestore_id(project.id)
         json_result, featuregroup_name = create_cached_featuregroup(project.id, featurestore_id)
         parsed_json = JSON.parse(json_result)
-        expect_status(201)
+        expect_status_details(201)
         featuregroup_id = parsed_json["id"]
         featuregroup_version = parsed_json["version"]
         new_description = "changed description"
@@ -480,7 +480,7 @@ describe "On #{ENV['OS']}" do
         featurestore_id = get_featurestore_id(project.id)
         json_result, featuregroup_name = create_cached_featuregroup(project.id, featurestore_id)
         parsed_json = JSON.parse(json_result)
-        expect_status(201)
+        expect_status_details(201)
         featuregroup_id = parsed_json["id"]
         featuregroup_version = parsed_json["version"]
         new_description = "changed description"
@@ -498,7 +498,7 @@ describe "On #{ENV['OS']}" do
         featurestore_id = get_featurestore_id(project.id)
         json_result, featuregroup_name = create_cached_featuregroup(project.id, featurestore_id)
         parsed_json = JSON.parse(json_result)
-        expect_status(201)
+        expect_status_details(201)
         featuregroup_id = parsed_json["id"]
         featuregroup_version = parsed_json["version"]
         new_schema = [
@@ -535,7 +535,7 @@ describe "On #{ENV['OS']}" do
         featurestore_id = get_featurestore_id(project.id)
         json_result, featuregroup_name = create_cached_featuregroup(project.id, featurestore_id)
         parsed_json = JSON.parse(json_result)
-        expect_status(201)
+        expect_status_details(201)
         featuregroup_id = parsed_json["id"]
         featuregroup_version = parsed_json["version"]
         new_schema = [
@@ -589,7 +589,7 @@ describe "On #{ENV['OS']}" do
         featurestore_id = get_featurestore_id(project.id)
         json_result, featuregroup_name = create_cached_featuregroup(project.id, featurestore_id, online:true)
         parsed_json = JSON.parse(json_result)
-        expect_status(201)
+        expect_status_details(201)
         featuregroup_id = parsed_json["id"]
         featuregroup_version = parsed_json["version"]
         new_description = "changed description"
@@ -685,7 +685,7 @@ describe "On #{ENV['OS']}" do
         project = get_project
         featurestore_id = get_featurestore_id(project.id)
         json_result, _ = create_cached_featuregroup(project.id, featurestore_id)
-        expect_status(201)
+        expect_status_details(201)
         parsed_json = JSON.parse(json_result)
         featuregroup_id = parsed_json["id"]
         featuregroup_version = parsed_json["version"]
@@ -705,7 +705,7 @@ describe "On #{ENV['OS']}" do
         project = get_project
         featurestore_id = get_featurestore_id(project.id)
         json_result, _ = create_cached_featuregroup(project.id, featurestore_id)
-        expect_status(201)
+        expect_status_details(201)
         parsed_json = JSON.parse(json_result)
         featuregroup_id = parsed_json["id"]
         featuregroup_version = parsed_json["version"]
@@ -725,7 +725,7 @@ describe "On #{ENV['OS']}" do
         featurestore_id = get_featurestore_id(project.id)
         json_result, featuregroup_name = create_cached_featuregroup_with_partition(project.id, featurestore_id, time_travel_format: "HUDI")
         parsed_json = JSON.parse(json_result)
-        expect_status(201)
+        expect_status_details(201)
         expect(parsed_json.key?("id")).to be true
         expect(parsed_json.key?("featurestoreName")).to be true
         expect(parsed_json.key?("name")).to be true
@@ -736,7 +736,7 @@ describe "On #{ENV['OS']}" do
         expect(parsed_json["timeTravelFormat"] == "HUDI").to be true
 
         json_result = get "#{ENV['HOPSWORKS_API']}/project/#{@project['id']}/featurestores/#{featurestore_id}/featuregroups/#{parsed_json['id']}/details"
-        expect_status(200)
+        expect_status_details(200)
         fg_details = JSON.parse(json_result)
         expect(fg_details["inputFormat"]).to eql("org.apache.hudi.hadoop.HoodieParquetInputFormat")
 
@@ -759,14 +759,14 @@ describe "On #{ENV['OS']}" do
         project = get_project
         featurestore_id = get_featurestore_id(project.id)
         create_cached_featuregroup(project.id, featurestore_id, features: features, time_travel_format: "HUDI")
-        expect_status(400)
+        expect_status_details(400)
       end
 
       it "should not fail when creating hudi cached featuregroup without partition key" do
         project = get_project
         featurestore_id = get_featurestore_id(project.id)
         create_cached_featuregroup(project.id, featurestore_id, time_travel_format: "HUDI")
-        expect_status(201)
+        expect_status_details(201)
       end
 
       it "should be able to bulk insert into existing hudi enabled offline cached featuregroup" do
@@ -782,7 +782,7 @@ describe "On #{ENV['OS']}" do
         commit_metadata = {commitDateString:20201024221125,commitTime:1603577485000,rowsInserted:4,rowsUpdated:0,rowsDeleted:0}
         json_result = commit_cached_featuregroup(@project[:id], featurestore_id, featuregroup_id, commit_metadata: commit_metadata)
         parsed_json = JSON.parse(json_result)
-        expect_status(200)
+        expect_status_details(200)
         expect(parsed_json.key?("commitID")).to be true
         expect(parsed_json["commitID"] == 1603577485000).to be true
         expect(parsed_json["commitTime"] == 1603577485000).to be true
@@ -808,7 +808,7 @@ describe "On #{ENV['OS']}" do
         json_result = commit_cached_featuregroup(@project[:id], featurestore_id, featuregroup_id, commit_metadata: commit_metadata)
         parsed_json = JSON.parse(json_result)
 
-        expect_status(200)
+        expect_status_details(200)
         expect(parsed_json.key?("commitID")).to be true
         expect(parsed_json["commitID"] == 1603650176000).to be true
         expect(parsed_json["commitTime"] == 1603650176000).to be true
@@ -839,7 +839,7 @@ describe "On #{ENV['OS']}" do
 
         json_result = get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/featurestores/#{featurestore_id}/featuregroups/#{featuregroup_id}/commits?sort_by=committed_on:desc&offset=0&filter_by=commited_on_ltoeq:1603650176000"
         parsed_json = JSON.parse(json_result)
-        expect_status(200)
+        expect_status_details(200)
         expect(parsed_json["items"][0]["commitID"]).to eql(1603650176000)
       end
 
@@ -891,7 +891,7 @@ describe "On #{ENV['OS']}" do
         }
         json_result = put create_query_endpoint, json_fs_query
         parsed_json = JSON.parse(json_result)
-        expect_status(200)
+        expect_status_details(200)
         expect(parsed_json["hudiCachedFeatureGroups"][0]["leftFeatureGroupStartTimestamp"]).to eql(1603577485000)
         expect(parsed_json["hudiCachedFeatureGroups"][0]["leftFeatureGroupEndTimestamp"]).to eql(1603650176000)
       end
@@ -991,7 +991,7 @@ describe "On #{ENV['OS']}" do
         }
         json_result = put create_query_endpoint, json_fs_query
         parsed_json = JSON.parse(json_result)
-        expect_status(200)
+        expect_status_details(200)
         expect(parsed_json["hudiCachedFeatureGroups"].length).to eql(2)
         expect(parsed_json["hudiCachedFeatureGroups"][0]["leftFeatureGroupEndTimestamp"]).to eql(1603577485000)
         expect(parsed_json["hudiCachedFeatureGroups"][0]["alias"]).to eql("fg1")
@@ -1047,7 +1047,7 @@ describe "On #{ENV['OS']}" do
             }]
         }
         put create_query_endpoint, json_fs_query
-        expect_status(200)
+        expect_status_details(200)
       end
 
       it "should be able to add correct statistics commit timestamps on time travel enabled feature groups" do
@@ -1129,10 +1129,10 @@ describe "On #{ENV['OS']}" do
         featuregroup_id = parsed_json["id"]
         post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/featurestores/#{featurestore_id}/featuregroups/#{featuregroup_id}/keywords",
             {keywords: ['hello', 'this', 'keyword123', 'CAPITAL_LETTERS']}.to_json
-        expect_status(200)
+        expect_status_details(200)
 
         json_result = get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/featurestores/#{featurestore_id}/featuregroups/#{featuregroup_id}/keywords"
-        expect_status(200)
+        expect_status_details(200)
         parsed_json = JSON.parse(json_result)
         expect(parsed_json['keywords']).to include('hello')
         expect(parsed_json['keywords']).to include('this')
@@ -1166,7 +1166,7 @@ describe "On #{ENV['OS']}" do
         featuregroup_id = parsed_json["id"]
         post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/featurestores/#{featurestore_id}/featuregroups/#{featuregroup_id}/keywords",
              {keywords: ['hello', 'this', '@#!@#^(&$']}
-        expect_status(400)
+        expect_status_details(400)
       end
 
       it "should be able to remove keyword" do
@@ -1176,20 +1176,20 @@ describe "On #{ENV['OS']}" do
         featuregroup_id = parsed_json["id"]
         post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/featurestores/#{featurestore_id}/featuregroups/#{featuregroup_id}/keywords",
              {keywords: ['hello', 'this', 'keyword123']}.to_json
-        expect_status(200)
+        expect_status_details(200)
 
         json_result = get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/featurestores/#{featurestore_id}/featuregroups/#{featuregroup_id}/keywords"
-        expect_status(200)
+        expect_status_details(200)
         parsed_json = JSON.parse(json_result)
         expect(parsed_json['keywords']).to include('hello')
         expect(parsed_json['keywords']).to include('this')
         expect(parsed_json['keywords']).to include('keyword123')
 
         delete "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/featurestores/#{featurestore_id}/featuregroups/#{featuregroup_id}/keywords?keyword=hello"
-        expect_status(200)
+        expect_status_details(200)
 
         json_result = get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/featurestores/#{featurestore_id}/featuregroups/#{featuregroup_id}/keywords"
-        expect_status(200)
+        expect_status_details(200)
         parsed_json = JSON.parse(json_result)
         expect(parsed_json['keywords']).not_to include('hello')
         expect(parsed_json['keywords']).to include('this')
@@ -1212,13 +1212,13 @@ describe "On #{ENV['OS']}" do
         json_result, featuregroup_name = create_cached_featuregroup(@project[:id], featurestore_id, features: features)
 
         parsed_json = JSON.parse(json_result)
-        expect_status(201)
+        expect_status_details(201)
 
         # Get the first version
         get_featuregroup_endpoint = "#{ENV['HOPSWORKS_API']}/project/#{project.id}/featurestores/#{featurestore_id}/featuregroups/#{featuregroup_name}?version=1"
         json_result = get get_featuregroup_endpoint
         parsed_json = JSON.parse(json_result)
-        expect_status(200)
+        expect_status_details(200)
 
         expect(parsed_json.first["features"].select{ |f| f["name"] == "testfeature"}.first["primary"]).to be true
         expect(parsed_json.first["features"].select{ |f| f["name"] == "testfeature"}.first["partition"]).to be true
@@ -1248,13 +1248,13 @@ describe "On #{ENV['OS']}" do
         json_result, featuregroup_name = create_cached_featuregroup(@project[:id], featurestore_id, features: features, time_travel_format: "HUDI")
 
         parsed_json = JSON.parse(json_result)
-        expect_status(201)
+        expect_status_details(201)
 
         # Get the first version
         get_featuregroup_endpoint = "#{ENV['HOPSWORKS_API']}/project/#{project.id}/featurestores/#{featurestore_id}/featuregroups/#{featuregroup_name}?version=1"
         json_result = get get_featuregroup_endpoint
         parsed_json = JSON.parse(json_result)
-        expect_status(200)
+        expect_status_details(200)
 
         expect(parsed_json.first["timeTravelFormat"] == "HUDI").to be true
         expect(parsed_json.first["features"].select{ |f| f["name"] == "testfeature"}.first["primary"]).to be true
@@ -1469,21 +1469,21 @@ describe "On #{ENV['OS']}" do
           featurestore_id = get_featurestore_id(project.id)
           ## First attempt should succeed
           create_cached_featuregroup(project.id, featurestore_id, online: true)
-          expect_status(201)
+          expect_status_details(201)
           
           ## This time is should fail because it has reached the online enabled limit
           result, _ =create_cached_featuregroup(project.id, featurestore_id, online: true)
-          expect_status(500)
+          expect_status_details(500)
           parsed = JSON.parse(result)
           expect(parsed['devMsg']).to include("quota")
 
           ## Online disabled should go through
           create_cached_featuregroup(project.id, featurestore_id, online: false)
-          expect_status(201)
+          expect_status_details(201)
 
           ## Now reached limit for online disabled too
           result, _ = create_cached_featuregroup(project.id, featurestore_id, online: false)
-          expect_status(500)
+          expect_status_details(500)
           parsed = JSON.parse(result)
           expect(parsed['devMsg']).to include("quota")
         end
@@ -1656,7 +1656,7 @@ describe "On #{ENV['OS']}" do
         featurestore_id = get_featurestore_id(project.id)
         json_result, featuregroup_name = create_cached_featuregroup(project.id, featurestore_id)
         parsed_json = JSON.parse(json_result)
-        expect_status(201)
+        expect_status_details(201)
         featuregroup_id = parsed_json["id"]
         featuregroup_version = parsed_json["version"]
         # search
@@ -1719,7 +1719,7 @@ describe "On #{ENV['OS']}" do
         connector_id = get_jdbc_connector_id
         json_result, featuregroup_name = create_on_demand_featuregroup(project.id, featurestore_id, connector_id)
         parsed_json = JSON.parse(json_result)
-        expect_status(201)
+        expect_status_details(201)
         expect(parsed_json.key?("id")).to be true
         expect(parsed_json.key?("query")).to be true
         expect(parsed_json.key?("storageConnector")).to be true
@@ -1744,7 +1744,7 @@ describe "On #{ENV['OS']}" do
         connector_id = json_body[:id]
         json_result, featuregroup_name = create_on_demand_featuregroup(project.id, featurestore_id, connector_id)
         parsed_json = JSON.parse(json_result)
-        expect_status(201)
+        expect_status_details(201)
         expect(parsed_json.key?("id")).to be true
         expect(parsed_json.key?("query")).to be true
         expect(parsed_json.key?("storageConnector")).to be true
@@ -1768,7 +1768,7 @@ describe "On #{ENV['OS']}" do
         connector_id = json_body[:id]
         json_result, featuregroup_name = create_on_demand_featuregroup(project.id, featurestore_id, connector_id)
         parsed_json = JSON.parse(json_result)
-        expect_status(201)
+        expect_status_details(201)
         expect(parsed_json.key?("id")).to be true
         expect(parsed_json.key?("query")).to be true
         expect(parsed_json.key?("storageConnector")).to be true
@@ -1791,7 +1791,7 @@ describe "On #{ENV['OS']}" do
         connector_id = get_jdbc_connector_id
         json_result, _ = create_on_demand_featuregroup(project.id, featurestore_id, connector_id, name: "TEST_ondemand_fg")
         parsed_json = JSON.parse(json_result)
-        expect_status(400)
+        expect_status_details(400)
         expect(parsed_json.key?("errorCode")).to be true
         expect(parsed_json.key?("errorMsg")).to be true
         expect(parsed_json.key?("usrMsg")).to be true
@@ -1804,7 +1804,7 @@ describe "On #{ENV['OS']}" do
         connector_id = get_jdbc_connector_id
         json_result, _ = create_on_demand_featuregroup(project.id, featurestore_id, connector_id, query: "")
         parsed_json = JSON.parse(json_result)
-        expect_status(400)
+        expect_status_details(400)
         expect(parsed_json.key?("errorCode")).to be true
         expect(parsed_json.key?("errorMsg")).to be true
         expect(parsed_json.key?("usrMsg")).to be true
@@ -1820,7 +1820,7 @@ describe "On #{ENV['OS']}" do
                                                        query: "",
                                                        data_format: "CSV")
         parsed_json = JSON.parse(json_result)
-        expect_status(201)
+        expect_status_details(201)
 		expect(parsed_json.key?("location")).to be true
         expect(parsed_json["query"]).to eql("")
         expect(parsed_json["dataFormat"]).to eql("CSV")
@@ -1833,7 +1833,7 @@ describe "On #{ENV['OS']}" do
         connector_id = JSON.parse(connector_json)["id"]
         json_result, _ = create_on_demand_featuregroup(project.id, featurestore_id, connector_id,
                                                        query: "SELECT * FROM something")
-        expect_status(400)
+        expect_status_details(400)
         parsed_json = JSON.parse(json_result)
         expect(parsed_json["errorCode"]).to eql(270044)
       end
@@ -1844,7 +1844,7 @@ describe "On #{ENV['OS']}" do
         connector_json, _ = create_s3_connector(project.id, featurestore_id, access_key: "test", secret_key: "test")
         connector_id = JSON.parse(connector_json)["id"]
         json_result, _ = create_on_demand_featuregroup(project.id, featurestore_id, connector_id, query: "")
-        expect_status(400)
+        expect_status_details(400)
         parsed_json = JSON.parse(json_result)
         expect(parsed_json["errorCode"]).to eql(270140)
       end
@@ -1860,7 +1860,7 @@ describe "On #{ENV['OS']}" do
                                                        data_format: "CSV",
                                                        options: options)
         parsed_json = JSON.parse(json_result)
-        expect_status(201)
+        expect_status_details(201)
 		expect(parsed_json.key?("location")).to be true
         expect(parsed_json["query"]).to eql("")
         expect(parsed_json["dataFormat"]).to eql("CSV")
@@ -1874,10 +1874,10 @@ describe "On #{ENV['OS']}" do
         connector_id = get_jdbc_connector_id
         json_result, featuregroup_name = create_on_demand_featuregroup(project.id, featurestore_id, connector_id)
         parsed_json = JSON.parse(json_result)
-        expect_status(201)
+        expect_status_details(201)
         featuregroup_id = parsed_json["id"]
         delete "#{ENV['HOPSWORKS_API']}/project/#{project.id}/featurestores/#{featurestore_id}/featuregroups/#{featuregroup_id}"
-        expect_status(200)
+        expect_status_details(200)
 
         path = "/apps/hive/warehouse/#{project['projectname'].downcase}_featurestore.db/#{featuregroup_name}_1"
         expect(test_file(path)).to be false
@@ -1889,7 +1889,7 @@ describe "On #{ENV['OS']}" do
         connector_id = get_jdbc_connector_id
         json_result, featuregroup_name = create_on_demand_featuregroup(project.id, featurestore_id, connector_id)
         parsed_json = JSON.parse(json_result)
-        expect_status(201)
+        expect_status_details(201)
         featuregroup_id = parsed_json["id"]
         featuregroup_version = parsed_json["version"]
         features =  [
@@ -1913,7 +1913,7 @@ describe "On #{ENV['OS']}" do
                                                         featuregroup_desc: "new description",
                                                         features: features)
         parsed_json = JSON.parse(json_result)
-        expect_status(200)
+        expect_status_details(200)
         expect(parsed_json["version"]).to eql(featuregroup_version)
         expect(parsed_json["description"]).to eql("new description")
         expect(parsed_json["features"].length).to eql(2)
@@ -1927,7 +1927,7 @@ describe "On #{ENV['OS']}" do
         connector_id = get_jdbc_connector_id
         json_result, featuregroup_name = create_on_demand_featuregroup(project.id, featurestore_id, connector_id)
         parsed_json = JSON.parse(json_result)
-        expect_status(201)
+        expect_status_details(201)
         featuregroup_id = parsed_json["id"]
         featuregroup_version = parsed_json["version"]
         features =  [
@@ -1945,7 +1945,7 @@ describe "On #{ENV['OS']}" do
                                                        featuregroup_desc: "new description",
                                                        features: features)
         parsed_json = JSON.parse(json_result)
-        expect_status(400)
+        expect_status_details(400)
         expect(parsed_json["errorCode"]).to eql(270114)
       end
 
@@ -1955,7 +1955,7 @@ describe "On #{ENV['OS']}" do
         connector_id = get_jdbc_connector_id
         json_result, featuregroup_name = create_on_demand_featuregroup(project.id, featurestore_id, connector_id)
         parsed_json = JSON.parse(json_result)
-        expect_status(201)
+        expect_status_details(201)
         featuregroup_id = parsed_json["id"]
         featuregroup_version = parsed_json["version"]
         features =  [
@@ -1979,7 +1979,7 @@ describe "On #{ENV['OS']}" do
                                                        featuregroup_desc: "new description",
                                                        features: features)
         parsed_json = JSON.parse(json_result)
-        expect_status(400)
+        expect_status_details(400)
         expect(parsed_json["errorCode"]).to eql(270114)
       end
 
@@ -1988,7 +1988,7 @@ describe "On #{ENV['OS']}" do
         connector_id = get_jdbc_connector_id
         features = [{type: "INT", name: "testfeature", description: "testfeaturedescription", primary: true}]
         json_result, _ = create_on_demand_featuregroup(@project[:id], featurestore_id, connector_id, features: features)
-        expect_status(201)
+        expect_status_details(201)
         parsed_json = JSON.parse(json_result)
         fg_id = parsed_json["id"]
 
@@ -2013,7 +2013,7 @@ describe "On #{ENV['OS']}" do
         connector_id = get_jdbc_connector_id
         features = [{type: "INT", name: "testfeature", description: "testfeaturedescription", primary: true}]
         json_result, _ = create_on_demand_featuregroup(@project[:id], featurestore_id, connector_id, features: features)
-        expect_status(201)
+        expect_status_details(201)
         parsed_json = JSON.parse(json_result)
         fg_ond_id = parsed_json["id"]
         fg_ond_type = parsed_json["type"]
@@ -2050,7 +2050,7 @@ describe "On #{ENV['OS']}" do
                     {type: "TIMESTAMP", name: "event_time"}]
         json_result, _ = create_on_demand_featuregroup(@project[:id], featurestore_id, connector_id, features:
           features, event_time: "event_time")
-        expect_status(201)
+        expect_status_details(201)
         parsed_json = JSON.parse(json_result)
         fg_ond_id = parsed_json["id"]
         fg_ond_type = parsed_json["type"]
@@ -2094,7 +2094,7 @@ describe "On #{ENV['OS']}" do
         connector_id = get_jdbc_connector_id
         features = [{type: "INT", name: "testfeature", description: "testfeaturedescription", primary: true}]
         json_result, _ = create_on_demand_featuregroup(@project[:id], featurestore_id, connector_id, features: features)
-        expect_status(201)
+        expect_status_details(201)
         parsed_json = JSON.parse(json_result)
         fg_ond_id = parsed_json["id"]
         fg_ond_type = parsed_json["type"]
@@ -2185,7 +2185,7 @@ describe "On #{ENV['OS']}" do
         connector_id = JSON.parse(json_result_bigq)["id"]
         json_result, featuregroup_name = create_on_demand_featuregroup(project.id, featurestore_id, connector_id)
         parsed_json = JSON.parse(json_result)
-        expect_status(201)
+        expect_status_details(201)
         expect(parsed_json.key?("id")).to be true
         expect(parsed_json.key?("query")).to be true
         expect(parsed_json.key?("storageConnector")).to be true
@@ -2215,7 +2215,7 @@ describe "On #{ENV['OS']}" do
                                                                        query: "",
                                                                        data_format: "CSV")
         parsed_json = JSON.parse(json_result)
-        expect_status(201)
+        expect_status_details(201)
         expect(parsed_json.key?("id")).to be true
         expect(parsed_json["query"]).to eql("")
         expect(parsed_json["dataFormat"]).to eql("CSV")
@@ -2243,7 +2243,7 @@ describe "On #{ENV['OS']}" do
         connector_id = JSON.parse(json_result_gcs)["id"]
         json_result, _ = create_on_demand_featuregroup(project.id, featurestore_id, connector_id,
                                                        query: "SELECT * FROM something")
-        expect_status(400)
+        expect_status_details(400)
         parsed_json = JSON.parse(json_result)
         expect(parsed_json["errorCode"]).to eql(270044)
       end
@@ -2265,7 +2265,7 @@ describe "On #{ENV['OS']}" do
         featurestore_id = get_featurestore_id(project.id)
         json_result, featuregroup_name = create_cached_featuregroup(project.id, featurestore_id, online:true)
         parsed_json = JSON.parse(json_result)
-        expect_status(201)
+        expect_status_details(201)
         expect(parsed_json.key?("id")).to be true
         expect(parsed_json.key?("featurestoreName")).to be true
         expect(parsed_json.key?("onlineEnabled")).to be true
@@ -2298,10 +2298,10 @@ describe "On #{ENV['OS']}" do
         featurestore_id = get_featurestore_id(project.id)
         json_result, _ = create_cached_featuregroup(project.id, featurestore_id, online:true)
         parsed_json = JSON.parse(json_result)
-        expect_status(201)
+        expect_status_details(201)
         featuregroup_id = parsed_json["id"]
         get "#{ENV['HOPSWORKS_API']}/project/" + project.id.to_s + "/featurestores/" + featurestore_id.to_s + "/featuregroups/" + featuregroup_id.to_s + "/preview?storage=offline"
-        expect_status(200)
+        expect_status_details(200)
       end
 
       it "should be able to get a specific partition" do
@@ -2309,10 +2309,10 @@ describe "On #{ENV['OS']}" do
         featurestore_id = get_featurestore_id(project.id)
         json_result, _ = create_cached_featuregroup_with_partition(project.id, featurestore_id)
         parsed_json = JSON.parse(json_result)
-        expect_status(201)
+        expect_status_details(201)
         featuregroup_id = parsed_json["id"]
         get "#{ENV['HOPSWORKS_API']}/project/" + project.id.to_s + "/featurestores/" + featurestore_id.to_s + "/featuregroups/" + featuregroup_id.to_s + "/preview?storage=offline&partition=testfeature2=1"
-        expect_status(200)
+        expect_status_details(200)
       end
 
       it "should be able to preview a online featuregroup in the featurestore" do
@@ -2320,10 +2320,10 @@ describe "On #{ENV['OS']}" do
         featurestore_id = get_featurestore_id(project.id)
         json_result, _ = create_cached_featuregroup(project.id, featurestore_id, online:true)
         parsed_json = JSON.parse(json_result)
-        expect_status(201)
+        expect_status_details(201)
         featuregroup_id = parsed_json["id"]
         get "#{ENV['HOPSWORKS_API']}/project/" + project.id.to_s + "/featurestores/" + featurestore_id.to_s + "/featuregroups/" + featuregroup_id.to_s + "/preview?storage=online"
-        expect_status(200)
+        expect_status_details(200)
       end
 
       it "should be able to limit the number of rows in a preview" do
@@ -2331,7 +2331,7 @@ describe "On #{ENV['OS']}" do
         featurestore_id = get_featurestore_id(project.id)
         json_result, _ = create_cached_featuregroup(project.id, featurestore_id, featuregroup_name: 'online_fg', online:true)
         parsed_json = JSON.parse(json_result)
-        expect_status(201)
+        expect_status_details(201)
         featuregroup_id = parsed_json["id"]
 
         # add sample ros
@@ -2340,7 +2340,7 @@ describe "On #{ENV['OS']}" do
         OnlineFg.create(testfeature: 2).save
 
         get "#{ENV['HOPSWORKS_API']}/project/" + project.id.to_s + "/featurestores/" + featurestore_id.to_s + "/featuregroups/" + featuregroup_id.to_s + "/preview?storage=online&limit=1"
-        expect_status(200)
+        expect_status_details(200)
         parsed_json = JSON.parse(response.body)
         expect(parsed_json['items'].length).to eql 1
       end
@@ -2350,7 +2350,7 @@ describe "On #{ENV['OS']}" do
         featurestore_id = get_featurestore_id(project.id)
         json_result, _ = create_cached_featuregroup(project.id, featurestore_id, featuregroup_name: 'online_fg', online:true)
         parsed_json = JSON.parse(json_result)
-        expect_status(201)
+        expect_status_details(201)
         featuregroup_id = parsed_json["id"]
 
         # add sample ros
@@ -2359,7 +2359,7 @@ describe "On #{ENV['OS']}" do
         OnlineFg.create(testfeature: 4).save
 
         get "#{ENV['HOPSWORKS_API']}/project/#{project.id}/featurestores/#{featurestore_id}/featuregroups/#{featuregroup_id}/preview?&limit=1"
-        expect_status(200)
+        expect_status_details(200)
         parsed_json = JSON.parse(response.body)
         expect(parsed_json['items'].length).to eql 1
         expect(parsed_json['items'][0]['storage']).to eql "ONLINE"
@@ -2370,10 +2370,10 @@ describe "On #{ENV['OS']}" do
         featurestore_id = get_featurestore_id(project.id)
         json_result, _ = create_cached_featuregroup(project.id, featurestore_id, online:true)
         parsed_json = JSON.parse(json_result)
-        expect_status(201)
+        expect_status_details(201)
         featuregroup_id = parsed_json["id"]
         get "#{ENV['HOPSWORKS_API']}/project/" + project.id.to_s + "/featurestores/" + featurestore_id.to_s + "/featuregroups/" + featuregroup_id.to_s + "/details"
-        expect_status(200)
+        expect_status_details(200)
         parsed_json = JSON.parse(response.body)
         expect(parsed_json.key?("schema")).to be true
       end
@@ -2383,11 +2383,11 @@ describe "On #{ENV['OS']}" do
         featurestore_id = get_featurestore_id(project.id)
         json_result, featuregroup_name = create_cached_featuregroup(project.id, featurestore_id, online:true)
         parsed_json = JSON.parse(json_result)
-        expect_status(201)
+        expect_status_details(201)
         featuregroup_id = parsed_json["id"]
         delete_featuregroup_endpoint = "#{ENV['HOPSWORKS_API']}/project/" + project.id.to_s + "/featurestores/" + featurestore_id.to_s + "/featuregroups/" + featuregroup_id.to_s
         delete delete_featuregroup_endpoint
-        expect_status(200)
+        expect_status_details(200)
       end
 
       it "should be able to update the metadata of a cached online featuregroup from the featurestore" do
@@ -2395,7 +2395,7 @@ describe "On #{ENV['OS']}" do
         featurestore_id = get_featurestore_id(project.id)
         json_result, featuregroup_name = create_cached_featuregroup(project.id, featurestore_id, online:true)
         parsed_json = JSON.parse(json_result)
-        expect_status(201)
+        expect_status_details(201)
         featuregroup_id = parsed_json["id"]
         featuregroup_version = parsed_json["version"]
         new_description = "changed description"
@@ -2435,7 +2435,7 @@ describe "On #{ENV['OS']}" do
         featurestore_id = get_featurestore_id(project.id)
         json_result, featuregroup_name = create_cached_featuregroup(project.id, featurestore_id, online: true)
         parsed_json = JSON.parse(json_result)
-        expect_status(201)
+        expect_status_details(201)
         featuregroup_id = parsed_json["id"]
         featuregroup_version = parsed_json["version"]
         new_description = "changed description"
@@ -2453,7 +2453,7 @@ describe "On #{ENV['OS']}" do
         featurestore_id = get_featurestore_id(project.id)
         json_result, featuregroup_name = create_cached_featuregroup(project.id, featurestore_id, online: true)
         parsed_json = JSON.parse(json_result)
-        expect_status(201)
+        expect_status_details(201)
         featuregroup_id = parsed_json["id"]
         featuregroup_version = parsed_json["version"]
         new_schema = [
@@ -2490,7 +2490,7 @@ describe "On #{ENV['OS']}" do
         featurestore_id = get_featurestore_id(project.id)
         json_result, featuregroup_name = create_cached_featuregroup(project.id, featurestore_id, online: true)
         parsed_json = JSON.parse(json_result)
-        expect_status(201)
+        expect_status_details(201)
         featuregroup_id = parsed_json["id"]
         featuregroup_version = parsed_json["version"]
         new_schema = [
@@ -2544,7 +2544,7 @@ describe "On #{ENV['OS']}" do
         featurestore_id = get_featurestore_id(project.id)
         json_result, featuregroup_name = create_cached_featuregroup(project.id, featurestore_id, online:true)
         parsed_json = JSON.parse(json_result)
-        expect_status(201)
+        expect_status_details(201)
         featuregroup_id = parsed_json["id"]
         featuregroup_version = parsed_json["version"]
         new_description = "changed description"
@@ -2581,11 +2581,11 @@ describe "On #{ENV['OS']}" do
         featurestore_id = get_featurestore_id(project.id)
         json_result, featuregroup_name = create_cached_featuregroup(project.id, featurestore_id, online:false)
         parsed_json = JSON.parse(json_result)
-        expect_status(201)
+        expect_status_details(201)
         featuregroup_id = parsed_json["id"]
         featuregroup_version = parsed_json["version"]
         enable_cached_featuregroup_online(project.id, featurestore_id, featuregroup_id)
-        expect_status(200)
+        expect_status_details(200)
         new_description = "changed description"
         new_schema = [
             {
@@ -2622,7 +2622,7 @@ describe "On #{ENV['OS']}" do
         featurestore_id = get_featurestore_id(project.id)
         json_result, featuregroup_name = create_cached_featuregroup(project.id, featurestore_id, online:false)
         parsed_json = JSON.parse(json_result)
-        expect_status(201)
+        expect_status_details(201)
         featuregroup_id = parsed_json["id"]
         featuregroup_version = parsed_json["version"]
         new_description = "changed description"
@@ -2655,7 +2655,7 @@ describe "On #{ENV['OS']}" do
         expect(parsed_json["features"].select{ |f| f["name"] == "testfeature"}.first["defaultValue"]).to be nil
         expect(parsed_json["features"].select{ |f| f["name"] == "testfeature2"}.first["defaultValue"]).to eql("10.0")
         enable_cached_featuregroup_online(project.id, featurestore_id, featuregroup_id)
-        expect_status(200)
+        expect_status_details(200)
       end
 
       it "should be able to enable online serving for a offline cached feature group" do
@@ -2663,11 +2663,11 @@ describe "On #{ENV['OS']}" do
         featurestore_id = get_featurestore_id(project.id)
         json_result, featuregroup_name = create_cached_featuregroup(project.id, featurestore_id, online:false)
         parsed_json = JSON.parse(json_result)
-        expect_status(201)
+        expect_status_details(201)
         featuregroup_id = parsed_json["id"]
         featuregroup_version = parsed_json["version"]
         json_result = enable_cached_featuregroup_online(project.id, featurestore_id, featuregroup_id)
-        expect_status(200)
+        expect_status_details(200)
         parsed_json = JSON.parse(json_result)
         expect(parsed_json["onlineTopicName"]).to eql(project.id.to_s + "_" + parsed_json["id"].to_s + "_" +
             featuregroup_name + "_" + parsed_json["version"].to_s + "_onlinefs")
@@ -2678,11 +2678,11 @@ describe "On #{ENV['OS']}" do
         featurestore_id = get_featurestore_id(project.id)
         json_result, featuregroup_name = create_cached_featuregroup(project.id, featurestore_id, online:true)
         parsed_json = JSON.parse(json_result)
-        expect_status(201)
+        expect_status_details(201)
         featuregroup_id = parsed_json["id"]
         featuregroup_version = parsed_json["version"]
         disable_cached_featuregroup_online(project.id, featurestore_id, featuregroup_id, featuregroup_version)
-        expect_status(200)
+        expect_status_details(200)
       end
 
       it "should delete kafka topic and schema when disabling online serving for a feature group" do
@@ -2715,7 +2715,7 @@ describe "On #{ENV['OS']}" do
         featurestore_id = get_featurestore_id(project.id)
         json_result, featuregroup_name = create_cached_featuregroup(project.id, featurestore_id, online:true)
         parsed_json = JSON.parse(json_result)
-        expect_status(201)
+        expect_status_details(201)
         new_schema = [
             {
                 type: "INT",
@@ -2773,7 +2773,7 @@ describe "On #{ENV['OS']}" do
         expect(parsed_json["connectionString"]).to include("jdbc:mysql:")
         expect(parsed_json["arguments"].find{ |item| item['name'] == 'password' }.key?('value')).to be true
         expect(parsed_json["arguments"].find{ |item| item['name'] == 'user' }.key?('value')).to be true
-        expect_status(200)
+        expect_status_details(200)
       end
     end
   end
@@ -2790,13 +2790,13 @@ describe "On #{ENV['OS']}" do
         get_featuregroups_endpoint = "#{ENV['HOPSWORKS_API']}/project/" + project.id.to_s + "/featurestores/" + featurestore_id.to_s + "/featuregroups"
         get get_featuregroups_endpoint
         parsed_json = JSON.parse(response.body)
-        expect_status(200)
+        expect_status_details(200)
         expect(parsed_json.length == 0).to be true
         json_result, featuregroup_name = create_cached_featuregroup(project.id, featurestore_id)
-        expect_status(201)
+        expect_status_details(201)
         get get_featuregroups_endpoint
         parsed_json = JSON.parse(response.body)
-        expect_status(200)
+        expect_status_details(200)
         expect(parsed_json.length == 1).to be true
         expect(parsed_json[0].key?("id")).to be true
         expect(parsed_json[0].key?("featurestoreName")).to be true
@@ -2809,14 +2809,14 @@ describe "On #{ENV['OS']}" do
         project = get_project
         featurestore_id = get_featurestore_id(project.id)
         json_result, featuregroup_name = create_cached_featuregroup(project.id, featurestore_id)
-        expect_status(201)
+        expect_status_details(201)
         parsed_json = JSON.parse(json_result)
-        expect_status(201)
+        expect_status_details(201)
         featuregroup_id = parsed_json["id"]
         get_featuregroup_endpoint = "#{ENV['HOPSWORKS_API']}/project/" + project.id.to_s + "/featurestores/" + featurestore_id.to_s + "/featuregroups/" + featuregroup_id.to_s
         get get_featuregroup_endpoint
         parsed_json = JSON.parse(response.body)
-        expect_status(200)
+        expect_status_details(200)
         expect(parsed_json.key?("id")).to be true
         expect(parsed_json.key?("featurestoreName")).to be true
         expect(parsed_json.key?("featurestoreId")).to be true

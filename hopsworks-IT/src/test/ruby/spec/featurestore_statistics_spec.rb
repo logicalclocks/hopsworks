@@ -81,7 +81,7 @@ describe "On #{ENV['OS']}" do
           featurestore_id = get_featurestore_id(project.id)
           json_result, _ = create_stream_featuregroup(project.id, featurestore_id, backfill_offline: true,
                                                       commit_time: 1597903688000)
-          expect_status(200)
+          expect_status_details(200)
           parsed_json = JSON.parse(json_result)
           create_statistics_commit(project.id, featurestore_id, "featuregroups", parsed_json["id"])
           expect_status_details(200)
@@ -103,9 +103,9 @@ describe "On #{ENV['OS']}" do
           connector = get_hopsfs_training_datasets_connector(@project[:projectname])
           json_result, _ = create_hopsfs_training_dataset(project.id, featurestore_id, connector)
           parsed_json = JSON.parse(json_result)
-          expect_status(201)
+          expect_status_details(201)
           create_statistics_commit(project.id, featurestore_id, "trainingdatasets", parsed_json["id"])
-          expect_status(200)
+          expect_status_details(200)
           json_result = get_statistics_commit(project.id, featurestore_id, "trainingdatasets", parsed_json["id"])
           expect_status_details(200)
           parsed_json = JSON.parse(json_result)
@@ -122,7 +122,7 @@ describe "On #{ENV['OS']}" do
           project = get_project
           featurestore_id = get_featurestore_id(project.id)
           json_result, _ = create_cached_featuregroup(project.id, featurestore_id)
-          expect_status(201)
+          expect_status_details(201)
           parsed_json = JSON.parse(json_result)
           create_statistics_commit(project.id, featurestore_id, "featuregroups", parsed_json["id"])
           expect_status_details(200)
@@ -150,16 +150,16 @@ describe "On #{ENV['OS']}" do
           parsed_json = JSON.parse(json_result)
           featuregroup_id = parsed_json["id"]
           featuregroup_version = parsed_json["version"]
-          expect_status(200)
+          expect_status_details(200)
 
           create_statistics_commit(project.id, featurestore_id, "featuregroups", featuregroup_id,
                                                       commit_time: 1597990088000)
-          expect_status(200)
+          expect_status_details(200)
 
           backfill_stream_featuregroup(featurestore_id, featuregroup_id, featuregroup_version, featuregroup_name, 1598990088000)
-          expect_status(200)
+          expect_status_details(200)
           create_statistics_commit(project.id, featurestore_id, "featuregroups", featuregroup_id, commit_time: 1598990088000)
-          expect_status(200)
+          expect_status_details(200)
 
           json_result = get_last_statistics_commit(project.id, featurestore_id, "featuregroups", featuregroup_id)
           expect_status_details(200)
@@ -220,13 +220,13 @@ describe "On #{ENV['OS']}" do
           featurestore_id = get_featurestore_id(project.id)
           json_result, featuregroup_name = create_stream_featuregroup(project.id, featurestore_id, backfill_offline: true,
                                                 commit_time: 1597990088000)
-          expect_status(200)
+          expect_status_details(200)
           parsed_json = JSON.parse(json_result)
           create_statistics_commit(project.id, featurestore_id, "featuregroups", parsed_json["id"])
           expect_status_details(200)
           create_statistics_commit(project.id, featurestore_id, "featuregroups", parsed_json["id"],
                                                 commit_time: 1597990088000)
-          expect_status(200)
+          expect_status_details(200)
           delete_featuregroup_checked(project.id, featurestore_id, parsed_json["id"])
           path = "/Projects/#{project[:projectname]}//Statistics/FeatureGroups/#{featuregroup_name}_1"
           expect(test_dir(path)).to be false

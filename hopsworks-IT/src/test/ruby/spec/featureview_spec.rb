@@ -169,26 +169,26 @@ describe "On #{ENV['OS']}" do
           get_datasets_in_path(@project,
                                "#{@project[:projectname]}_Training_Datasets/.featureviews/#{featureview['name']}_#{featureview['version']}",
                                query: "&type=DATASET")
-          expect_status(200)
+          expect_status_details(200)
           # Make sure that training data directory exists
           get_datasets_in_path(@project,
                                "#{@project[:projectname]}_Training_Datasets/#{featureview['name']}_#{featureview['version']}_#{parsed_json['version']}",
                                query: "&type=DATASET")
-          expect_status(200)
+          expect_status_details(200)
 
           delete_feature_view(@project.id, featureview["name"])
-          expect_status(200)
+          expect_status_details(200)
 
           # Make sure that the directory get deleted
           get_datasets_in_path(@project,
                                "#{@project[:projectname]}_Training_Datasets/.featureviews/#{featureview['name']}_#{featureview['version']}",
                                query: "&type=DATASET")
-          expect_status(400)
+          expect_status_details(400)
           # Make sure that training data directory get deleted
           get_datasets_in_path(@project,
                                "#{@project[:projectname]}_Training_Datasets/#{featureview['name']}_#{featureview['version']}_#{parsed_json['version']}",
                                query: "&type=DATASET")
-          expect_status(400)
+          expect_status_details(400)
 
         end
 

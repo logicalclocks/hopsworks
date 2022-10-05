@@ -141,7 +141,7 @@ describe "On #{ENV['OS']}" do
         write_group = "#{@project[:inode_name]}__#{dataset[:inode_name]}"
         test_members_editable_dataset(@All_users_no_project_owner, write_group, read_group)
         update_dataset_permissions(@project, dataset[:inode_name], "READ_ONLY", datasetType: "&type=DATASET")
-        expect_status(200)
+        expect_status_details(200)
         test_members_read_only_dataset(@All_users_no_project_owner, write_group, read_group)
       end
       it 'should move members to write group when changing permission from read only to editable' do

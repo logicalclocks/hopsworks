@@ -61,7 +61,7 @@ describe "On #{ENV['OS']}" do
           query = URI.encode_www_form({description: "test dataset", searchable: true, generate_readme: true})
           create_dir(@project, dsname, query: "&#{query}")
           expect_json(errorCode: 200003)
-          expect_status(401)
+          expect_status_details(401)
         end
       end
 
@@ -75,7 +75,7 @@ describe "On #{ENV['OS']}" do
           create_dir(@project, dsname, query: "&#{query}")
           expect_status_details(201)
           get_dataset_stat(@project, dsname, datasetType: "&type=DATASET")
-          expect_status(200)
+          expect_status_details(200)
           ds = json_body
           expect(ds[:description]).to eq ("test dataset")
           expect(ds[:attributes][:owner]).to eq ("#{@user[:fname]} #{@user[:lname]}")
@@ -88,46 +88,46 @@ describe "On #{ENV['OS']}" do
         it 'should work with valid params and no README.md' do
           dsname = create_random_dataset(@project, true, false)
           get_dataset_stat(@project, dsname, datasetType: "&type=DATASET")
-          expect_status(200)
+          expect_status_details(200)
           ds = json_body
           expect(ds[:description]).to eq ("test dataset")
           expect(ds[:attributes][:owner]).to eq ("#{@user[:fname]} #{@user[:lname]}")
           expect(ds[:permission]).to eq ("READ_ONLY")
           get_datasets_in_path(@project, dsname, query: "&type=DATASET")
           expect(json_body[:count]).to be == 0
-          expect_status(200)
+          expect_status_details(200)
         end
 
         it 'should fail to create a dataset with space in the name' do
           query = URI.encode_www_form({description: "test dataset", searchable: true, generate_readme: true})
           create_dir(@project, "test%20dataset", query: "&#{query}")
           expect_json(errorCode: 110028)
-          expect_status(400)
+          expect_status_details(400)
         end
 
         it 'should create a folder with space in the name' do
           dataset = "dataset_#{short_random_id}"
           create_dir(@project, dataset, query: "&type=DATASET")
-          expect_status(201)
+          expect_status_details(201)
           dirname = "#{dataset}/test%20dir"
           create_dir(@project, dirname, query: "&type=DATASET")
-          expect_status(201)
+          expect_status_details(201)
           get_dataset_stat(@project, dirname, datasetType: "&type=DATASET")
-          expect_status(200)
+          expect_status_details(200)
         end
 
         it 'should fail to create a dataset with Ö in the name' do
           query = URI.encode_www_form({description: "test dataset", searchable: true, generate_readme: true})
           create_dir(@project, "test%C3%96jdataset", query: "&#{query}")
           expect_json(errorCode: 110028)
-          expect_status(400)
+          expect_status_details(400)
         end
 
         it 'should fail to create a dataset with a name that ends with a .' do
           query = URI.encode_www_form({description: "test dataset.", searchable: true, generate_readme: true})
           create_dir(@project, "testdot.", query: "&#{query}")
           expect_json(errorCode: 110028)
-          expect_status(400)
+          expect_status_details(400)
         end
 
         it 'Logs dataset should have HOT storage policy' do
@@ -145,7 +145,7 @@ describe "On #{ENV['OS']}" do
         it "should fail to get dataset list" do
           get_datasets_in_path(@project, '')
           expect_json(errorCode: 200003)
-          expect_status(401)
+          expect_status_details(401)
         end
       end
       context 'with authentication' do
@@ -155,11 +155,11 @@ describe "On #{ENV['OS']}" do
         it "should return dataset list" do
           get_datasets_in_path(@project, '')
           expect(json_body[:count]).to be > 5
-          expect_status(200)
+          expect_status_details(200)
         end
         it "should fail to return dataset list from Projects if path contains ../" do
           get_datasets_in_path(@project, 'Logs/../../../Projects', query: "&type=DATASET")
-          expect_status(400)
+          expect_status_details(400)
           expect_json(errorCode: 110011)
           reset_session
         end
@@ -170,7 +170,7 @@ describe "On #{ENV['OS']}" do
           project1 = create_project
           get_dataset_stat(project1, "Logs/../../../Projects/#{project[:projectname]}/Logs/README.md", datasetType:
               "&type=DATASET")
-          expect_status(400)
+          expect_status_details(400)
           expect_json(errorCode: 110011)
           reset_session
         end
@@ -185,7 +185,7 @@ describe "On #{ENV['OS']}" do
                                       flowIdentifier: "3195-someFiletxt", flowFilename: "someFile.txt",
                                       flowRelativePath: "someFile.txt", flowTotalChunks: 1})
           get "#{ENV['HOPSWORKS_API']}/project/#{project1[:id]}/dataset/upload/Logs/../../../Projects/#{project[:projectname]}/Logs/?#{file}", {content_type: "multipart/form-data"}
-          expect_status(400)
+          expect_status_details(400)
           expect_json(errorCode: 110011)
           reset_session
         end
@@ -195,7 +195,7 @@ describe "On #{ENV['OS']}" do
           create_session(newUser[:email], "Pass123")
           project1 = create_project
           get_datasets_in_path(project1, "Logs/../../../Projects/#{project[:projectname]}/", query: "&type=DATASET")
-          expect_status(400)
+          expect_status_details(400)
           expect_json(errorCode: 110011)
           reset_session
         end
@@ -205,7 +205,7 @@ describe "On #{ENV['OS']}" do
           create_session(newUser[:email], "Pass123")
           project1 = create_project
           get_datasets_in_path(project1, "Logs/../../Projects/../../Projects/#{project[:projectname]}/", query: "&type=DATASET")
-          expect_status(400)
+          expect_status_details(400)
           expect_json(errorCode: 110011)
           reset_session
         end
@@ -216,7 +216,7 @@ describe "On #{ENV['OS']}" do
           project1 = create_project
           get_dataset_blob(project1, "Logs/../../../Projects/#{project[:projectname]}/Logs/README.md",
                            datasetType: "&type=DATASET")
-          expect_status(400)
+          expect_status_details(400)
           expect_json(errorCode: 110011)
           reset_session
         end
@@ -227,7 +227,7 @@ describe "On #{ENV['OS']}" do
           project1 = create_project
           get_dataset_stat(project1, "Logs/../../../Projects/#{project[:projectname]}/Logs/README.md", datasetType:
               "&type=DATASET")
-          expect_status(400)
+          expect_status_details(400)
           expect_json(errorCode: 110011)
           reset_session
         end
@@ -239,7 +239,7 @@ describe "On #{ENV['OS']}" do
           project1 = create_project
           get_download_token(project1, "Logs/../../../Projects/#{project[:projectname]}/Logs/README.md",
                              datasetType: "&type=DATASET")
-          expect_status(400)
+          expect_status_details(400)
           expect_json(errorCode: 110011)
           reset_session
         end
@@ -255,7 +255,7 @@ describe "On #{ENV['OS']}" do
           project = get_project
           uploadFile(project, "Logs", "#{ENV['PROJECT_DIR']}/tools/upload_example/Sample.json")
           expect_json(errorCode: 200003)
-          expect_status(401)
+          expect_status_details(401)
         end
       end
       context 'with authentication but insufficient privilege' do
@@ -270,7 +270,7 @@ describe "On #{ENV['OS']}" do
           create_session(member[:email], "Pass123")
           uploadFile(@project, dsname, "#{ENV['PROJECT_DIR']}/tools/upload_example/Sample.json")
           expect_json(errorCode: 200002)
-          expect_status(403)
+          expect_status_details(403)
           reset_session
         end
         it "should fail to upload to a shared dataset with permission read only" do
@@ -282,7 +282,7 @@ describe "On #{ENV['OS']}" do
           share_dataset(@project, dsname, project[:projectname], permission: "READ_ONLY")
           uploadFile(project, "#{@project[:projectname]}::#{dsname}", "#{ENV['PROJECT_DIR']}/tools/upload_example/Sample.json")
           expect_json(errorCode: 200002)
-          expect_status(403)
+          expect_status_details(403)
         end
       end
       context 'with authentication and sufficient privilege' do
@@ -293,7 +293,7 @@ describe "On #{ENV['OS']}" do
           dsname = "dataset_#{short_random_id}"
           ds = create_dataset_by_name_checked(@project, dsname, permission: "READ_ONLY")
           uploadFile(@project, dsname, "#{ENV['PROJECT_DIR']}/tools/upload_example/Sample.json")
-          expect_status(204)
+          expect_status_details(204)
         end
         it "should upload to a shared dataset with permission group writable." do
           project = create_project
@@ -303,7 +303,7 @@ describe "On #{ENV['OS']}" do
           share_dataset(@project, dsname, project[:projectname], permission: "EDITABLE")
           update_dataset_permissions(@project, dsname, "EDITABLE", datasetType: "&type=DATASET")
           uploadFile(project, "#{@project[:projectname]}::#{dsname}", "#{ENV['PROJECT_DIR']}/tools/upload_example/Sample.json")
-          expect_status(204)
+          expect_status_details(204)
         end
         it "should upload to a dataset with permission owner only if Data owner" do
           dsname = "dataset_#{short_random_id}"
@@ -312,7 +312,7 @@ describe "On #{ENV['OS']}" do
           add_member_to_project(@project, member[:email], "Data owner")
           create_session(member[:email], "Pass123")
           uploadFile(@project, dsname, "#{ENV['PROJECT_DIR']}/tools/upload_example/Sample.json")
-          expect_status(204)
+          expect_status_details(204)
           reset_session
         end
       end
@@ -327,7 +327,7 @@ describe "On #{ENV['OS']}" do
           project = get_project
           delete_dataset(project, "Logs", datasetType: "?type=DATASET")
           expect_json(errorCode: 200003)
-          expect_status(401)
+          expect_status_details(401)
         end
       end
       context 'with authentication but insufficient privilege' do
@@ -340,7 +340,7 @@ describe "On #{ENV['OS']}" do
           add_member_to_project(project, member[:email], "Data scientist")
           create_session(member[:email], "Pass123")
           delete_dataset(project, "Logs", datasetType: "?type=DATASET")
-          expect_status(403)
+          expect_status_details(403)
           expect_json(errorCode: 110050)
           reset_session
         end
@@ -351,7 +351,7 @@ describe "On #{ENV['OS']}" do
           create_session(newUser[:email], "Pass123")
           project1 = create_project
           delete_dataset(project1, "Logs/../../../Projects/#{project[:projectname]}/Logs/README.md", datasetType: "?type=DATASET")
-          expect_status(400)
+          expect_status_details(400)
           expect_json(errorCode: 110011)
           expect(test_file("/Projects/#{project[:projectname]}/Logs/README.md")).to eq(true)
           reset_session
@@ -365,7 +365,7 @@ describe "On #{ENV['OS']}" do
           hopsworks_user = getHopsworksUser
           touchz("/Projects/#{project[:projectname]}/Logs/corrupted.txt", hopsworks_user, hopsworks_user)
           delete_corrupted_dataset(project1, "Logs/../../../Projects/#{project[:projectname]}/Logs/corrupted.txt", datasetType: "&type=DATASET")
-          expect_status(400)
+          expect_status_details(400)
           expect_json(errorCode: 110011) #DataSet not found. /Projects/#{project[:projectname]}/Logs
           reset_session
         end
@@ -376,7 +376,7 @@ describe "On #{ENV['OS']}" do
         end
         it "should delete dataset" do
           delete_dataset(@project, "Logs", datasetType: "?type=DATASET")
-          expect_status(204)
+          expect_status_details(204)
         end
         it "should create-delete-create dataset" do
           dsname = create_random_dataset(@project, true, false)
@@ -394,12 +394,12 @@ describe "On #{ENV['OS']}" do
         it "should fail to send request" do
           project = create_project
           get_dataset_stat(@project, @dataset[:inode_name], datasetType: "&type=DATASET")
-          expect_status(200)
+          expect_status_details(200)
           dataset = json_body
           reset_session
           request_dataset_access(project, dataset[:attributes][:id])
           expect_json(errorCode: 200003)
-          expect_status(401)
+          expect_status_details(401)
         end
       end
       context 'with authentication' do
@@ -410,7 +410,7 @@ describe "On #{ENV['OS']}" do
         it "should send request" do
           project = create_project
           request_access(@project, @dataset, project)
-          expect_status(200)
+          expect_status_details(200)
           create_session(@project[:username], "Pass123") # be the user of the project that owns the dataset
           get "#{ENV['HOPSWORKS_API']}/message"
           msg = json_body.detect { |e| e[:content].include? "Dataset name: #{@dataset[:inode_name]}" }
@@ -418,10 +418,10 @@ describe "On #{ENV['OS']}" do
         end
         it "should fail to send request to the same project" do
           get_dataset_stat(@project, @dataset[:inode_name], datasetType: "&type=DATASET")
-          expect_status(200)
+          expect_status_details(200)
           dataset = json_body
           request_dataset_access(@project, dataset[:attributes][:id])
-          expect_status(400)
+          expect_status_details(400)
         end
       end
     end
@@ -440,7 +440,7 @@ describe "On #{ENV['OS']}" do
           reset_session
           share_dataset(project, dsname, project1[:name], permission: "EDITABLE", datasetType: "&type=DATASET")
           expect_json(errorCode: 200003)
-          expect_status(401)
+          expect_status_details(401)
         end
       end
       context 'with authentication but insufficient privilege' do
@@ -458,7 +458,7 @@ describe "On #{ENV['OS']}" do
           add_member_to_project(project, member[:email], "Data scientist")
           create_session(member[:email], "Pass123")
           share_dataset(project, dsname, project1[:name], permission: "EDITABLE", datasetType: "&type=DATASET")
-          expect_status(403)
+          expect_status_details(403)
         end
       end
       context 'with authentication and sufficient privilege' do
@@ -472,7 +472,7 @@ describe "On #{ENV['OS']}" do
           dsname = "dataset_#{short_random_id}"
           create_dataset_by_name_checked(@project, dsname, permission: "READ_ONLY")
           share_dataset(@project, dsname, project[:projectname], permission: "EDITABLE", datasetType: "&type=DATASET")
-          expect_status(204)
+          expect_status_details(204)
         end
 
         it "should show the user that shared the dataset" do
@@ -525,7 +525,7 @@ describe "On #{ENV['OS']}" do
           ds = create_dataset_by_name_checked(@project, dsname, permission: "READ_ONLY")
           share_dataset(@project, dsname, project[:projectname], permission: "EDITABLE")
           update_dataset_permissions(project, "#{@project[:projectname]}::#{dsname}", permissions, datasetType: "&type=DATASET")
-          expect_status(400)
+          expect_status_details(400)
         end
         it "should fail to write on a non editable shared dataset" do
           project = create_project
@@ -536,7 +536,7 @@ describe "On #{ENV['OS']}" do
           accept_dataset(project, "#{@project[:projectname]}::#{dsname}", datasetType: "&type=DATASET")
           # try to write
           create_dir(project, "#{@project[:projectname]}::#{dsname}/testdir", query: "&type=DATASET")
-          expect_status(403)
+          expect_status_details(403)
         end
 
         it "should show the user that accepted the dataset" do
@@ -569,7 +569,7 @@ describe "On #{ENV['OS']}" do
           accept_dataset(project, "#{@project[:projectname]}::#{dsname}", datasetType: "&type=DATASET")
           # Create a directory - from the "target" project
           create_dir(project, "#{@project[:projectname]}::#{dsname}/testdir", query: "&type=DATASET")
-          expect_status(201)
+          expect_status_details(201)
           # Check if the directory is present
           get_datasets_in_path(@project, dsname, query: "&type=DATASET")
           ds = json_body[:items].detect { |d| d[:attributes][:name] == "testdir" }
@@ -584,9 +584,9 @@ describe "On #{ENV['OS']}" do
           request_dataset_access(project, ds[:inode_id])
           share_dataset(@project, dsname, project[:projectname], permission: "EDITABLE", datasetType: "&type=DATASET")
           get_datasets_in_path(project, "#{@project[:projectname]}::#{dsname}")
-          expect_status(200)
+          expect_status_details(200)
           get_datasets_in_path(project, dsname)
-          expect_status(200)
+          expect_status_details(200)
         end
 
         it "should correctly set sharedBy and acceptedBy when requesting a dataset" do
@@ -653,9 +653,9 @@ describe "On #{ENV['OS']}" do
           share_dataset(@project, featurestore, project[:projectname], permission: "EDITABLE", datasetType:
               "&type=FEATURESTORE")
           get_dataset_stat(project, "#{@project[:projectname]}::#{trainingDataset}", datasetType: "&type=DATASET")
-          expect_status(200)
+          expect_status_details(200)
           get_dataset_stat(project, "#{@project[:projectname]}::#{statisticsDataset}", datasetType: "&type=DATASET")
-          expect_status(200)
+          expect_status_details(200)
         end
         it "should share training and statistics dataset when accepting non requested feature store" do
           project = create_project
@@ -666,9 +666,9 @@ describe "On #{ENV['OS']}" do
               "&type=FEATURESTORE")
           accept_dataset(project, "#{@project[:projectname]}::#{featurestore}", datasetType: "&type=FEATURESTORE")
           get_dataset_stat(project, "#{@project[:projectname]}::#{trainingDataset}", datasetType: "&type=DATASET")
-          expect_status(200)
+          expect_status_details(200)
           get_dataset_stat(project, "#{@project[:projectname]}::#{statisticsDataset}", datasetType: "&type=DATASET")
-          expect_status(200)
+          expect_status_details(200)
         end
         it "should not share training and statistics dataset when sharing non requested feature store" do
           project = create_project
@@ -678,9 +678,9 @@ describe "On #{ENV['OS']}" do
           share_dataset(@project, featurestore, project[:projectname], permission: "EDITABLE", datasetType:
               "&type=FEATURESTORE")
           get_dataset_stat(project, "#{@project[:projectname]}::#{trainingDataset}", datasetType: "&type=DATASET")
-          expect_status(400)
+          expect_status_details(400)
           get_dataset_stat(project, "#{@project[:projectname]}::#{statisticsDataset}", datasetType: "&type=DATASET")
-          expect_status(400)
+          expect_status_details(400)
         end
         it "should accept pending training and statistics dataset when accepting feature store" do
           project = create_project
@@ -695,9 +695,9 @@ describe "On #{ENV['OS']}" do
               "&type=FEATURESTORE")
           accept_dataset(project, "#{@project[:projectname]}::#{featurestore}", datasetType: "&type=FEATURESTORE")
           get_dataset_stat(project, "#{@project[:projectname]}::#{trainingDataset}", datasetType: "&type=DATASET")
-          expect_status(200)
+          expect_status_details(200)
           get_dataset_stat(project, "#{@project[:projectname]}::#{statisticsDataset}", datasetType: "&type=DATASET")
-          expect_status(200)
+          expect_status_details(200)
         end
         it "should ignore shared training and statistics dataset when accepting feature store" do
           project = create_project
@@ -708,20 +708,20 @@ describe "On #{ENV['OS']}" do
               "&type=DATASET")
           accept_dataset(project, "#{@project[:projectname]}::#{trainingDataset}", datasetType: "&type=DATASET")
           get_dataset_stat(project, "#{@project[:projectname]}::#{trainingDataset}", datasetType: "&type=DATASET")
-          expect_status(200)
+          expect_status_details(200)
           share_dataset(@project, statisticsDataset, project[:projectname],permission: "EDITABLE", datasetType:
               "&type=DATASET")
           accept_dataset(project, "#{@project[:projectname]}::#{statisticsDataset}", datasetType: "&type=DATASET")
           get_dataset_stat(project, "#{@project[:projectname]}::#{statisticsDataset}", datasetType: "&type=DATASET")
-          expect_status(200)
+          expect_status_details(200)
           share_dataset(@project, featurestore, project[:projectname], permission: "EDITABLE", datasetType:
               "&type=FEATURESTORE")
           accept_dataset(project, "#{@project[:projectname]}::#{featurestore}", datasetType: "&type=FEATURESTORE")
-          expect_status(204)
+          expect_status_details(204)
           get_dataset_stat(project, "#{@project[:projectname]}::#{trainingDataset}", datasetType: "&type=DATASET")
-          expect_status(200)
+          expect_status_details(200)
           get_dataset_stat(project, "#{@project[:projectname]}::#{statisticsDataset}", datasetType: "&type=DATASET")
-          expect_status(200)
+          expect_status_details(200)
         end
         it "should unshare training and statistics dataset when unsharing feature store" do
           project = create_project
@@ -732,15 +732,15 @@ describe "On #{ENV['OS']}" do
               "&type=FEATURESTORE")
           accept_dataset(project, "#{@project[:projectname]}::#{featurestore}", datasetType: "&type=FEATURESTORE")
           get_dataset_stat(project, "#{@project[:projectname]}::#{trainingDataset}", datasetType: "&type=DATASET")
-          expect_status(200)
+          expect_status_details(200)
           get_dataset_stat(project, "#{@project[:projectname]}::#{statisticsDataset}", datasetType: "&type=DATASET")
-          expect_status(200)
+          expect_status_details(200)
           unshare_from(@project, featurestore, project[:projectname], datasetType: "&type=FEATURESTORE")
           get_dataset_stat(project, "#{@project[:projectname]}::#{trainingDataset}", datasetType: "&type=DATASET")
-          expect_status(400)
+          expect_status_details(400)
           expect_json(errorCode: 110011)
           get_dataset_stat(project, "#{@project[:projectname]}::#{statisticsDataset}", datasetType: "&type=DATASET")
-          expect_status(400)
+          expect_status_details(400)
           expect_json(errorCode: 110011)
         end
         it "should unshare a not-accepted shared feature store" do
@@ -761,14 +761,14 @@ describe "On #{ENV['OS']}" do
               "&type=FEATURESTORE")
           accept_dataset(project, "#{@project[:projectname]}::#{featurestore}", datasetType: "&type=FEATURESTORE")
           get_dataset_stat(project, "#{@project[:projectname]}::#{trainingDataset}", datasetType: "&type=DATASET")
-          expect_status(200)
+          expect_status_details(200)
           get_dataset_stat(project, "#{@project[:projectname]}::#{statisticsDataset}", datasetType: "&type=DATASET")
-          expect_status(200)
+          expect_status_details(200)
           delete_dataset(project, "#{@project[:projectname]}::#{featurestore}", datasetType: "?type=FEATURESTORE")
           get_dataset_stat(project, "#{@project[:projectname]}::#{trainingDataset}", datasetType: "&type=DATASET")
-          expect_status(400)
+          expect_status_details(400)
           get_dataset_stat(project, "#{@project[:projectname]}::#{statisticsDataset}", datasetType: "&type=DATASET")
-          expect_status(400)
+          expect_status_details(400)
         end
       end
       context 'delete' do
@@ -783,10 +783,10 @@ describe "On #{ENV['OS']}" do
           request_access(@project, ds, project)
           share_dataset(@project, dsname, project[:projectname], permission: "EDITABLE")
           get_dataset_stat(project, "#{@project[:projectname]}::#{dsname}", datasetType: "&type=DATASET")
-          expect_status(200)
+          expect_status_details(200)
           delete_dataset(@project, "#{dsname}", datasetType: "?type=DATASET")
           get_dataset_stat(project, "#{@project[:projectname]}::#{dsname}", datasetType: "&type=DATASET")
-          expect_status(400)
+          expect_status_details(400)
         end
         it "should unshare a dataset and not delete the original" do
           project = create_project
@@ -797,9 +797,9 @@ describe "On #{ENV['OS']}" do
           get_dataset_stat(project, "#{@project[:projectname]}::#{dsname}", datasetType: "&type=DATASET")
           delete_dataset(project, "#{@project[:projectname]}::#{dsname}", datasetType: "?type=DATASET")
           get_dataset_stat(project, "#{@project[:projectname]}::#{dsname}", datasetType: "&type=DATASET")
-          expect_status(400)
+          expect_status_details(400)
           get_dataset_stat(@project, "#{dsname}", datasetType: "&type=DATASET")
-          expect_status(200)
+          expect_status_details(200)
         end
         it "should unshare from one project" do
           project = create_project
@@ -811,14 +811,14 @@ describe "On #{ENV['OS']}" do
           share_dataset(@project, dsname, project[:projectname], permission: "EDITABLE")
           share_dataset(@project, dsname, project1[:projectname], permission: "EDITABLE")
           get_dataset_stat(project, "#{@project[:projectname]}::#{dsname}", datasetType: "&type=DATASET")
-          expect_status(200)
+          expect_status_details(200)
           get_dataset_stat(project1, "#{@project[:projectname]}::#{dsname}", datasetType: "&type=DATASET")
-          expect_status(200)
+          expect_status_details(200)
           unshare_dataset(@project, "#{dsname}", datasetType: "&type=DATASET&target_project=#{project[:projectname]}")
           get_dataset_stat(project, "#{@project[:projectname]}::#{dsname}", datasetType: "&type=DATASET")
-          expect_status(400)
+          expect_status_details(400)
           get_dataset_stat(project1, "#{@project[:projectname]}::#{dsname}", datasetType: "&type=DATASET")
-          expect_status(200)
+          expect_status_details(200)
         end
       end
     end
@@ -1039,7 +1039,7 @@ describe "On #{ENV['OS']}" do
           create_session(member[:email], "Pass123")
           update_dataset_permissions(project, dsname, permissions, datasetType: "&type=DATASET")
           expect_json(errorCode: 110050)
-          expect_status(403)
+          expect_status_details(403)
         end
       end
 
@@ -1050,10 +1050,10 @@ describe "On #{ENV['OS']}" do
 
         it "should make the dataset editable" do
           update_dataset_permissions(@project, @dataset[:inode_name], "EDITABLE", datasetType: "&type=DATASET")
-          expect_status(200)
+          expect_status_details(200)
           # check for correct permissions
           get_dataset_stat(@project, @dataset[:inode_name], datasetType: "&type=DATASET")
-          expect_status(200)
+          expect_status_details(200)
           ds = json_body
           expect(ds[:permission]).to eq ("EDITABLE")
         end
@@ -1064,7 +1064,7 @@ describe "On #{ENV['OS']}" do
           add_member_to_project(@project, member[:email], "Data scientist")
           create_session(member[:email], "Pass123")
           create_dir(@project, dirname, query: "&type=DATASET")
-          expect_status(201)
+          expect_status_details(201)
           get_datasets_in_path(@project, @dataset[:inode_name], query: "&type=DATASET")
           createdDir = json_body[:items].detect { |inode| inode[:attributes][:name] == "testDir" }
           expect(createdDir[:attributes][:permission]).to eq ("rwxrwx---")
@@ -1078,7 +1078,7 @@ describe "On #{ENV['OS']}" do
           create_session(member[:email], "Pass123")
           delete_dataset(@project, "#{@dataset[:inode_name]}/testDir", datasetType: "?type=DATASET")
           expect_json(errorCode: 110050) # Permission denied.
-          expect_status(403)
+          expect_status_details(403)
           # Directory should still be there
           get_datasets_in_path(@project, @dataset[:inode_name], query: "&type=DATASET")
           createdDir = json_body[:items].detect { |inode| inode[:attributes][:name] == "testDir" }
@@ -1088,7 +1088,7 @@ describe "On #{ENV['OS']}" do
         it "should make the dataset not editable" do
           create_session(@project[:username], "Pass123") # be the user of the project that owns the dataset
           update_dataset_permissions(@project, @dataset[:inode_name], "READ_ONLY", datasetType: "&type=DATASET")
-          expect_status(200)
+          expect_status_details(200)
           # check for permission
           get_dataset_stat(@project, @dataset[:inode_name], datasetType: "&type=DATASET")
           ds = json_body
@@ -1106,7 +1106,7 @@ describe "On #{ENV['OS']}" do
           add_member_to_project(@project, member[:email], "Data scientist")
           create_session(member[:email], "Pass123")
           create_dir(@project, dirname, query: "&type=DATASET")
-          expect_status(403)
+          expect_status_details(403)
           get_datasets_in_path(@project, @dataset[:inode_name], query: "&type=DATASET")
           createdDir = json_body[:items].detect { |inode| inode[:attributes][:name] == "afterDir" }
           expect(createdDir).to be_nil
@@ -1122,7 +1122,7 @@ describe "On #{ENV['OS']}" do
         it "should be able to download a file created by another user" do
           # Make the dataset writable by other members of the project
           update_dataset_permissions(@project, @dataset[:inode_name], "EDITABLE", datasetType: "&type=DATASET")
-          expect_status(200)
+          expect_status_details(200)
 
           dirname = @dataset[:inode_name] + "/afterDir"
           project_owner = @user
@@ -1132,18 +1132,18 @@ describe "On #{ENV['OS']}" do
 
           # Create a subdirectory
           create_dir(@project, dirname, query: "&type=DATASET")
-          expect_status(201)
+          expect_status_details(201)
 
           # Copy README.md to the subdirectory
           copy_dataset(@project, "#{@dataset[:inode_name]}/README.md", "/Projects/#{@project[:projectname]}/#{dirname}/README.md", datasetType: "&type=DATASET")
-          expect_status(204)
+          expect_status_details(204)
 
           # Log in as project owner, if the project owner is in the dataset group, it should be able to preview
           # the copied README.md file.
           create_session(project_owner[:email], "Pass123")
           # Try to preview the README.md
           get_dataset_blob(@project, "#{dirname}/README.md", datasetType: "&type=DATASET")
-          expect_status(200)
+          expect_status_details(200)
         end
       end
     end
@@ -1160,19 +1160,19 @@ describe "On #{ENV['OS']}" do
 
           ds2name = ds1name + "/testDir"
           create_dir(@project, ds2name)
-          expect_status(201)
+          expect_status_details(201)
 
           ds3name = ds2name + "/subDir"
           create_dir(@project, ds3name)
-          expect_status(201)
+          expect_status_details(201)
 
           ds4name = ds1name + "/test%20Dir"
           create_dir(@project, ds4name)
-          expect_status(201)
+          expect_status_details(201)
 
           ds5name = ds4name + "/sub%20Dir"
           create_dir(@project, ds5name)
-          expect_status(201)
+          expect_status_details(201)
 
           get_dataset_stat(@project, ds1name, datasetType: "&type=DATASET")
           ds = json_body
@@ -1198,7 +1198,7 @@ describe "On #{ENV['OS']}" do
 
         it 'zip directory' do
           zip_dataset(@project, "#{@dataset[:inode_name]}/testDir", datasetType: "&type=DATASET")
-          expect_status(204)
+          expect_status_details(204)
 
           wait_for do
             get_datasets_in_path(@project, @dataset[:inode_name], query: "&type=DATASET")
@@ -1209,10 +1209,10 @@ describe "On #{ENV['OS']}" do
 
         it 'unzip directory' do
           delete_dataset(@project, "#{@dataset[:inode_name]}/testDir", datasetType: "?type=DATASET")
-          expect_status(204)
+          expect_status_details(204)
 
           unzip_dataset(@project, "#{@dataset[:inode_name]}/testDir.zip", datasetType: "&type=DATASET")
-          expect_status(204)
+          expect_status_details(204)
 
           wait_for do
             get_datasets_in_path(@project, @dataset[:inode_name], query: "&type=DATASET")
@@ -1223,7 +1223,7 @@ describe "On #{ENV['OS']}" do
 
         it 'zip directory with spaces' do
           zip_dataset(@project, "#{@dataset[:inode_name]}/test%20Dir/sub%20Dir", datasetType: "&type=DATASET")
-          expect_status(204)
+          expect_status_details(204)
 
           wait_for do
             get_datasets_in_path(@project, "#{@dataset[:inode_name]}/test%20Dir", query: "&type=DATASET")
@@ -1235,10 +1235,10 @@ describe "On #{ENV['OS']}" do
         it 'unzip directory with spaces' do
 
           delete_dataset(@project, "#{@dataset[:inode_name]}/test%20Dir/sub%20Dir", datasetType: "?type=DATASET")
-          expect_status(204)
+          expect_status_details(204)
 
           unzip_dataset(@project, "#{@dataset[:inode_name]}/test%20Dir/sub%20Dir.zip", datasetType: "&type=DATASET")
-          expect_status(204)
+          expect_status_details(204)
 
           wait_for do
             get_datasets_in_path(@project, "#{@dataset[:inode_name]}/test%20Dir", query: "&type=DATASET")
@@ -1253,7 +1253,7 @@ describe "On #{ENV['OS']}" do
           create_session(newUser[:email], "Pass123")
           project1 = create_project
           zip_dataset(project1, "Logs/../../../Projects/#{project[:projectname]}/Logs/README.md", datasetType: "&type=DATASET")
-          expect_status(400)
+          expect_status_details(400)
           expect_json(errorCode: 110011) # DataSet not found.
           reset_session
         end
@@ -1263,7 +1263,7 @@ describe "On #{ENV['OS']}" do
           create_session(newUser[:email], "Pass123")
           project1 = create_project
           unzip_dataset(project1, "Logs/../../../Projects/#{project[:projectname]}/Logs/README.md.zip", datasetType: "&type=DATASET")
-          expect_status(400) # bad request
+          expect_status_details(400) # bad request
           expect_json(errorCode: 110011) # DataSet not found.
           reset_session
         end
@@ -1281,10 +1281,10 @@ describe "On #{ENV['OS']}" do
             topDataset = "#{@dataset[:inode_name]}/top%253ADir"
             subDataset = "#{topDataset}/sub%2520Dir"
             get_datasets_in_path(@project, topDataset, query: "&type=DATASET")
-            expect_status(200)
+            expect_status_details(200)
 
             zip_dataset(@project, subDataset, datasetType: "&type=DATASET")
-            expect_status(204)
+            expect_status_details(204)
 
             wait_for do
               get_datasets_in_path(@project, topDataset, query: "&type=DATASET")
@@ -1297,10 +1297,10 @@ describe "On #{ENV['OS']}" do
             topDataset = "#{@dataset[:inode_name]}/top%253ADir"
             subDataset = "#{topDataset}/sub%2520Dir"
             delete_dataset(@project, subDataset, datasetType: "?type=DATASET")
-            expect_status(204)
+            expect_status_details(204)
 
             unzip_dataset(@project, "#{subDataset}.zip", datasetType: "&type=DATASET")
-            expect_status(204)
+            expect_status_details(204)
 
             wait_for do
               get_datasets_in_path(@project, topDataset, query: "&type=DATASET")
@@ -1321,26 +1321,26 @@ describe "On #{ENV['OS']}" do
         it "should fail to get a download token" do
           get_download_token(@project, "Logs/README.md", datasetType: "?type=DATASET")
           expect_json(errorCode: 200003)
-          expect_status(401)
+          expect_status_details(401)
         end
         it "should fail to download file without a token" do
           get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/dataset/download/with_token/Logs/README.md?type=DATASET"
           expect_json(errorCode: 200003)
-          expect_status(401)
+          expect_status_details(401)
         end
         it "should fail to download file without auth" do
           download_dataset_with_auth(@project, "Logs/README.md", datasetType: "type=DATASET")
-          expect_status(401)
+          expect_status_details(401)
         end
         it "should fail to download file with an empty string token" do
           download_dataset_with_token(@project, "Logs/README.md", " ", datasetType: "&type=DATASET")
           expect_json(errorCode: 200003)
-          expect_status(401)
+          expect_status_details(401)
         end
         it "should fail to download file with an empty token" do
           download_dataset_with_token(@project, "Logs/README.md", "", datasetType: "&type=DATASET")
           expect_json(errorCode: 200003)
-          expect_status(401)
+          expect_status_details(401)
         end
       end
       context 'with authentication and sufficient privileges' do
@@ -1349,34 +1349,34 @@ describe "On #{ENV['OS']}" do
         end
         it "should download Logs/README.md" do
           download_dataset_with_auth(@project, "Logs/README.md", datasetType: "type=DATASET")
-          expect_status(200)
+          expect_status_details(200)
         end
         it "should download Logs/README.md with token" do
           download_dataset(@project, "Logs/README.md", datasetType: "type=DATASET")
-          expect_status(200)
+          expect_status_details(200)
         end
         it "should fail to download with a token issued for a different file path" do
           get_download_token(@project, "Resources/README.md", datasetType: "?type=DATASET")
-          expect_status(200)
+          expect_status_details(200)
           token = json_body[:data]
           download_dataset_with_token(@project, "Logs/README.md", token, datasetType: "&type=DATASET")
-          expect_status(401)
+          expect_status_details(401)
         end
         it "should fail to download more than one file with a single token" do
           get_download_token(@project, "Resources/README.md", datasetType: "?type=DATASET")
-          expect_status(200)
+          expect_status_details(200)
           token = json_body[:data]
           download_dataset_with_token(@project, "Resources/README.md", token, datasetType: "&type=DATASET")
-          expect_status(200)
+          expect_status_details(200)
           download_dataset_with_token(@project, "Resources/README.md", token, datasetType: "&type=DATASET")
-          expect_status(401)
+          expect_status_details(401)
         end
         it 'should fail to download a file if variable download_allowed is false' do
           user = @user[:email]
           setVar("download_allowed", 'false')
           create_session(user, "Pass123")
           download_dataset_with_auth(@project, "Logs/README.md", datasetType: "type=DATASET")
-          expect_status(403)
+          expect_status_details(403)
           #set var back to true
           setVar("download_allowed", "true")
           expect(getVar("download_allowed").value).to eq "true"
@@ -1386,7 +1386,7 @@ describe "On #{ENV['OS']}" do
           setVar("download_allowed", 'false')
           create_session(user, "Pass123")
           get_download_token(@project, "Logs/README.md", datasetType: "?type=DATASET")
-          expect_status(403)
+          expect_status_details(403)
           #set var back to true
           setVar("download_allowed", "true")
           expect(getVar("download_allowed").value).to eq "true"
@@ -1399,7 +1399,7 @@ describe "On #{ENV['OS']}" do
           key_view = create_api_key('datasetKey', %w(DATASET_VIEW))
           set_api_key_to_header(key_view)
           download_dataset_with_auth(@project, "Logs/README.md", datasetType: "type=DATASET")
-          expect_status(403)
+          expect_status_details(403)
           #set var back to true
           setVar("download_allowed", "true")
           expect(getVar("download_allowed").value).to eq "true"
@@ -1425,28 +1425,28 @@ describe "On #{ENV['OS']}" do
         dsname = "dataset_#{short_random_id}"
         ds = create_dataset_by_name_checked(@project, dsname, permission: "READ_ONLY")
         get_dataset_stat(@project, "Logs/../../../../Projects/#{@project[:projectname]}/#{dsname}", datasetType: "&type=DATASET")
-        expect_status(400) # bad request
+        expect_status_details(400) # bad request
         expect_json(errorCode: 110011) # DataSet not found.
       end
       it 'should not let users create dataset with type Hive' do
         dsname = "dataset_#{short_random_id}"
         create_dir(@project, dsname, query: "&type=HIVEDB")
-        expect_status(400)
+        expect_status_details(400)
       end
       it 'should not let users create dataset with type FS' do
         dsname = "dataset_#{short_random_id}"
         create_dir(@project, dsname, query: "&type=FEATURESTORE")
-        expect_status(400)
+        expect_status_details(400)
       end
       it 'should not let users create dirs within featurestore' do
         featurestore_dataset_name = "#{@project[:projectname]}_featurestore.db".downcase
         create_dir(@project, "#{featurestore_dataset_name}/test_#{short_random_id}", query: "&type=FEATURESTORE")
-        expect_status(400)
+        expect_status_details(400)
       end
       it 'should not let users create dirs within hivedb' do
         hivedb_dataset_name = "#{@project[:projectname]}.db".downcase
         create_dir(@project, "#{hivedb_dataset_name}/test_#{short_random_id}", query: "&type=HIVEDB")
-        expect_status(400)
+        expect_status_details(400)
       end
       it 'should not allow :: in dataset name' do
         create_dataset_by_name(@project, "test::dataset_#{short_random_id}", permission: "READ_ONLY")
@@ -1815,52 +1815,52 @@ describe "On #{ENV['OS']}" do
         it 'should fail to access datasets' do
           get_datasets_in_path(@project, '')
           expect_json(errorCode: 320004)
-          expect_status(403)
+          expect_status_details(403)
         end
         it 'should fail to create a dataset' do
           create_dir(@project, "dataset_#{Time.now.to_i}", query: "&type=DATASET")
           expect_json(errorCode: 320004)
-          expect_status(403)
+          expect_status_details(403)
         end
         it 'should fail to delete a dataset' do
           delete_dataset(@project, "Logs", datasetType: "?type=DATASET")
-          expect_status(403)
+          expect_status_details(403)
         end
       end
       context 'with valid scope' do
         it 'should get ' do
           set_api_key_to_header(@key_view)
           get_datasets_in_path(@project, '')
-          expect_status(200)
+          expect_status_details(200)
         end
         it 'should create' do
           set_api_key_to_header(@key_create)
           create_dataset_by_name_checked(@project, "dataset_#{Time.now.to_i}", permission: "READ_ONLY")
-          expect_status(201)
+          expect_status_details(201)
         end
         it 'should move a dataset' do
           set_api_key_to_header(@key_create)
           create_dir(@project, "Resources/test1", query: "&type=DATASET")
-          expect_status(201)
+          expect_status_details(201)
           move_dataset(@project, "Resources/test1", "/Projects/#{@project[:projectname]}/Logs/test1", datasetType: "&type=DATASET")
-          expect_status(204)
+          expect_status_details(204)
         end
         it 'should copy a dataset' do
           set_api_key_to_header(@key_create)
           create_dir(@project, "Resources/test2", query: "&type=DATASET")
-          expect_status(201)
+          expect_status_details(201)
           copy_dataset(@project, "Resources/test2", "/Projects/#{@project[:projectname]}/Logs/test2", datasetType: "&type=DATASET")
-          expect_status(204)
+          expect_status_details(204)
         end
         it 'should download Logs/README.md' do
           set_api_key_to_header(@key_view)
           download_dataset_with_auth(@project, "Logs/README.md", datasetType: "type=DATASET")
-          expect_status(200)
+          expect_status_details(200)
         end
         it 'should delete' do
           set_api_key_to_header(@key_delete)
           delete_dataset(@project, "Logs", datasetType: "?type=DATASET")
-          expect_status(204)
+          expect_status_details(204)
         end
       end
     end

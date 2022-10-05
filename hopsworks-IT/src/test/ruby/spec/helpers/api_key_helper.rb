@@ -33,7 +33,7 @@ module ApiKeyHelper
   def test_api_key_on_jwt_endpoint
     get "#{ENV['HOPSWORKS_API']}/auth/jwt/session"
     expect_json(errorCode: 200003)
-    expect_status(401)
+    expect_status_details(401)
   end
 
   def get_api_keys
