@@ -77,7 +77,8 @@ public class DockerCgroupsMonitor {
           memorySoftLimit = dbDockerCgroupSoftLimit;
           cpuQuota = dbDockerCgroupCpuQuota;
           cpuPeriod = dbDockerCgroupCpuPeriod;
-          Long cpuQuotaValue =  Math.round((dbDockerCgroupCpuQuota/100) * cpuPeriod);
+          Long cpuQuotaValue =  Math.round((dbDockerCgroupCpuQuota/100) * cpuPeriod *
+            Runtime.getRuntime().availableProcessors());
           //update the cgroups
           String prog = settings.getSudoersDir() + "/docker-cgroup-rewrite.sh";
           ProcessDescriptor processDescriptor = new ProcessDescriptor.Builder()
