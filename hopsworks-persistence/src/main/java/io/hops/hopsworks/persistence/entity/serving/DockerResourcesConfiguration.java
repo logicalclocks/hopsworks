@@ -21,7 +21,7 @@ public class DockerResourcesConfiguration {
   
   private double cores = 1;
   
-  private int memory = 1024;
+  private int memory = 2048;
 
   private int gpus = 0;
 
