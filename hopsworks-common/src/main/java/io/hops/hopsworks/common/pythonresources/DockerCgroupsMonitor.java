@@ -58,7 +58,7 @@ public class DockerCgroupsMonitor {
     Long intervalValue = settings.getConfTimeValue(rawInterval);
     TimeUnit intervalTimeunit = settings.getConfTimeTimeUnit(rawInterval);
     intervalValue = intervalTimeunit.toMillis(intervalValue);
-    timerService.createIntervalTimer(intervalValue, intervalValue,
+    timerService.createIntervalTimer(0, intervalValue,
         new TimerConfig("Docker Cgroup Monitor", false));
   }
 
@@ -77,7 +77,8 @@ public class DockerCgroupsMonitor {
           memorySoftLimit = dbDockerCgroupSoftLimit;
           cpuQuota = dbDockerCgroupCpuQuota;
           cpuPeriod = dbDockerCgroupCpuPeriod;
-          Long cpuQuotaValue =  Math.round((dbDockerCgroupCpuQuota/100) * cpuPeriod);
+          Long cpuQuotaValue =  Math.round((dbDockerCgroupCpuQuota/100) * cpuPeriod *
+            Runtime.getRuntime().availableProcessors());
           //update the cgroups
           String prog = settings.getSudoersDir() + "/docker-cgroup-rewrite.sh";
           ProcessDescriptor processDescriptor = new ProcessDescriptor.Builder()
