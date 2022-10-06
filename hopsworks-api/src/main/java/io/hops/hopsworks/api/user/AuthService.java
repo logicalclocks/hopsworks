@@ -379,8 +379,7 @@ public class AuthService {
   @JWTNotRequired
   @Audited(type = AuditType.ACCOUNT_AUDIT, action = AuditAction.RECOVERY, message = "Start password recovery")
   public Response recoverPassword(@Caller @AuditTarget @FormParam("email") String email,
-                                  @Context HttpServletRequest req) throws UserException,
-      MessagingException {
+    @Context HttpServletRequest req) throws UserException, MessagingException {
     RESTApiJsonResponse json = new RESTApiJsonResponse();
     String reqUrl = FormatUtils.getUserURL(req);
     userController.sendPasswordRecoveryEmail(email, reqUrl);
@@ -448,8 +447,10 @@ public class AuthService {
     message = "Account email verification")
   public Response validateUserMail(@Caller(UserIdentifier.KEY) @AuditTarget(UserIdentifier.KEY) @Secret
     @FormParam("key") String key, @Context HttpServletRequest req) throws UserException {
+    RESTApiJsonResponse json = new RESTApiJsonResponse();
     authController.validateEmail(key);
-    return Response.ok().build();
+    json.setSuccessMessage(ResponseMessages.EMAIL_VERIFIED);
+    return Response.ok(json).build();
   }
 
   private void logoutAndInvalidateSession(HttpServletRequest req, Cookie cookie) throws UserException,
