@@ -166,7 +166,6 @@ angular.module('hopsWorksApp')
                       headers: {
                           'Content-Type': 'application/json'
                       },
-                      data: '{"state":"stopped"}'
                   };
                   return $http(req);
               },
