@@ -172,7 +172,7 @@ angular.module('hopsWorksApp')
             self.downloadJars = function() {
                 FsIntegrationService.downloadJarsToken(self.projectId).then(
                     function(success) {
-                        FsIntegrationService.downloadJars(self.projectId, success.data.data.value);
+                        FsIntegrationService.downloadJars(self.projectId, success.data.data);
                     }, function(error) {
                         growl.error(error.data.errorMsg, {
                             title: 'Failed to download clients',

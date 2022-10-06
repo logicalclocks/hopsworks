@@ -502,7 +502,7 @@ angular.module('hopsWorksApp')
             self.downloadFile = function(filePath) {
               dataSetService.getDownloadToken(filePath, "DATASET").then(
                       function (success) {
-                        var token = success.data.data.value;
+                        var token = success.data.data;
                         dataSetService.download(filePath, token, "DATASET");
                       },function (error) {
                         growl.error("", {

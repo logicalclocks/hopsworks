@@ -1371,7 +1371,7 @@ angular.module('hopsWorksApp')
                           showToast('Preparing Download..');
                           dataSetService.getDownloadToken(file.attributes.path, self.datasetType).then(
                                   function (success) {
-                                    var token = success.data.data.value;
+                                    var token = success.data.data;
                                     closeToast();
                                     dataSetService.download(file.attributes.path, token, self.datasetType);
                                   },function (error) {
