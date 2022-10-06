@@ -135,7 +135,6 @@ public class ExecutionsResource {
   @ApiKeyRequired( acceptedScopes = {ApiScope.JOB}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   public Response stopExecution(
     @ApiParam(value = "Id of execution.", required = true) @PathParam("id") Integer id,
-    @ApiParam(value = "status to set.", required = true) Status status,
     @Context SecurityContext sc,
     @Context UriInfo uriInfo) throws JobException {
     

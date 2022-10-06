@@ -29,7 +29,7 @@ angular.module('hopsWorksApp')
                     self.working = false;
                     AuthService.saveToken(success.headers('Authorization'));
                     if (success.data) {
-                        StorageService.store("email", success.data.data.value);
+                        StorageService.store("email", success.data.data);
                     }
                     $location.path('/');
                 }, function (error) {

@@ -144,7 +144,7 @@ angular.module('hopsWorksApp')
               self.errorMessage = '';
               AuthService.krbLogin(user).then(function (success) {
                   self.working = false;
-                  StorageService.store("email", success.data.data.value);
+                  StorageService.store("email", success.data.data);
                   $location.path('/');
                 }, function (error) {
                   self.working = false;

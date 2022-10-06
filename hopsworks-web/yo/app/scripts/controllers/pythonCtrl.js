@@ -506,7 +506,7 @@ angular.module('hopsWorksApp')
                 dataSetService.getDatasetStat(environmentPath, datasetType).then(function (success) {
                     dataSetService.getDownloadToken(environmentPath, datasetType).then(
                             function (success) {
-                              var token = success.data.data.value;
+                              var token = success.data.data;
                               dataSetService.download(environmentPath, token, datasetType);
                             },function (error) {
                             showErrorGrowl(error);
