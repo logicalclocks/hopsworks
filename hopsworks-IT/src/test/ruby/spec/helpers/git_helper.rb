@@ -43,7 +43,7 @@ module GitHelper
   def delete_repository(project, path)
     dsname = path.gsub("/Projects/#{project[:projectname]}", "")
     delete_dataset(project, "#{dsname}", datasetType: "?type=DATASET")
-    expect_status(204)
+    expect_status_details(204)
   end
 
   def get_clone_config(git_provider, project_name, url="", branch="", path="")
@@ -109,7 +109,7 @@ module GitHelper
 
   def test_sort_by_id(projectId, order="asc")
     get_project_git_repositories(projectId, query="?expand=creator&sort_by=id:#{order}")
-    expect_status(200)
+    expect_status_details(200)
     expect(json_body[:count]).to be > 1
     sortedItems = get_field_list(json_body[:items], "id")
     if order == 'asc'
@@ -122,7 +122,7 @@ module GitHelper
 
   def test_sort_by_repo_name(projectId, order="asc")
     get_project_git_repositories(projectId, query="?expand=creator&sort_by=name:#{order}")
-    expect_status(200)
+    expect_status_details(200)
     expect(json_body[:count]).to be > 1
     sortedRes = get_field_list(json_body[:items], "name")
     if order == 'asc'
@@ -290,7 +290,7 @@ module GitHelper
       expect_status_details(204)
     elsif action == "delete"
       delete_dataset(project, "#{dsname}/#{filename}", datasetType: "?type=DATASET")
-      expect_status(204)
+      expect_status_details(204)
     end
     #do git status
     git_status(project[:id], repository_id)

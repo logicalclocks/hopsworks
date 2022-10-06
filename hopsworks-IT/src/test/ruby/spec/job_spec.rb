@@ -76,7 +76,7 @@ describe "On #{ENV['OS']}" do
       end
       it "should inspect spark app jar and get configuration" do
         get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/jobs/spark/inspection?path=/Projects/#{@project[:projectname]}/TestJob/spark-examples.jar"
-        expect_status(200)
+        expect_status_details(200)
         expect(json_body[:type]).to eq("sparkJobConfiguration")
       end
       it "should delete created job" do
@@ -131,7 +131,7 @@ describe "On #{ENV['OS']}" do
         app_id = wait_for_execution_active(@project[:id], job_flink, execution_id, 'RUNNING', "appId")
         #Get flink master
         get "#{ENV['HOPSWORKS_BASE_API']}/flinkmaster/#{app_id}"
-        expect_status(200)
+        expect_status_details(200)
         #Kill job
         stop_execution(@project[:id], job_flink, execution_id)
       end

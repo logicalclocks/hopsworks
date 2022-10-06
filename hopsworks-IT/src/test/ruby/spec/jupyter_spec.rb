@@ -238,7 +238,7 @@ describe "On #{ENV['OS']}" do
 
         # List all notebooks and files in Jupyter
         list_content(json_body[:port], json_body[:token])
-        expect_status(200)
+        expect_status_details(200)
 
         notebook = json_body[:content].detect { |content| content[:path] == "shared_notebook.ipynb" }
         expect(notebook).not_to be_nil

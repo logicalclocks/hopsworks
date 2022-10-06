@@ -169,7 +169,7 @@ describe "On #{ENV['OS']}" do
         target_project = create_project
         topic = get_topic
         share_topic(org_project, topic, target_project)
-        expect_status(201)
+        expect_status_details(201)
 
         # Check that the topic has been shared correctly
         get_shared_topics(target_project.id)
@@ -177,7 +177,7 @@ describe "On #{ENV['OS']}" do
 
         # Get the topic's schema from the target_project
         get_topic_subject_details(target_project, topic)
-        expect_status(200)
+        expect_status_details(200)
       end
       it "should not be able to get the schema of a non-shared topic" do
         with_kafka_topic(@project[:id])
@@ -188,7 +188,7 @@ describe "On #{ENV['OS']}" do
 
         # Get the topic's schema from the target_project
         get_topic_subject_details(target_project, topic)
-        expect_status(404)
+        expect_status_details(404)
       end
     end
 
@@ -216,7 +216,7 @@ describe "On #{ENV['OS']}" do
 
         # share topic with the first_project
         share_topic(second_project, topic_name, first_project)
-        expect_status(201)
+        expect_status_details(201)
 
         # get all topics for the first project
         get_all_topics(first_project.id)
@@ -240,7 +240,7 @@ describe "On #{ENV['OS']}" do
 
             # share topic with the first_project
             share_topic(second_project, topic_name, project)
-            expect_status(201)
+            expect_status_details(201)
 
             # get all project topics for the first project
             get_project_topics(project.id)

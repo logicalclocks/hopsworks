@@ -254,7 +254,7 @@ module StorageConnectorHelper
     featurestore_id = get_featurestore_id(project_id)
     json_result, connector_name = create_jdbc_connector(project_id, featurestore_id, connectionString: "jdbc://test2")
     parsed_json = JSON.parse(json_result)
-    expect_status(201)
+    expect_status_details(201)
     connector_id = parsed_json["id"]
     @jdbc_connector_id = connector_id
   end

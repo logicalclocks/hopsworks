@@ -603,7 +603,7 @@ module FeaturestoreHelper
     featuregroup_suffix = short_random_id
     query = make_sample_query(project, featurestore_id, featuregroup_suffix: featuregroup_suffix)
     json_result = create_feature_view(project.id, featurestore_id, query)
-    expect_status(201)
+    expect_status_details(201)
     featureview = JSON.parse(json_result)
 
     if connector == nil
@@ -614,7 +614,7 @@ module FeaturestoreHelper
       project.id, featureview, connector, version: version, splits: splits, description: description,
       statistics_config: statistics_config, train_split: train_split, data_format: data_format,
       is_internal: is_internal, location: location, td_type: td_type)
-    expect_status(expected_status_code)
+    expect_status_details(expected_status_code)
 
     begin
       parsed_json = JSON.parse(json_result)
@@ -666,7 +666,7 @@ module FeaturestoreHelper
       training_dataset_endpoint = training_dataset_endpoint + "/version/#{version.to_s}"
     end
     training_datasets = get training_dataset_endpoint
-    expect_status(expected_status_code)
+    expect_status_details(expected_status_code)
     training_datasets
   end
 
@@ -678,7 +678,7 @@ module FeaturestoreHelper
       training_dataset_endpoint = training_dataset_endpoint + "/version/#{version.to_s}"
     end
     json_result2 = delete training_dataset_endpoint
-    expect_status(200)
+    expect_status_details(200)
 
     unless version == nil
       training_datasets = {"items" => [training_datasets]}
@@ -689,7 +689,7 @@ module FeaturestoreHelper
       get_datasets_in_path(project,
 			   "#{project[:projectname]}_Training_Datasets/#{featureview['name']}_#{training_dataset['version'].to_s}",
                            query: "&type=DATASET")
-      expect_status(400)
+      expect_status_details(400)
     }
   end
 
@@ -703,7 +703,7 @@ module FeaturestoreHelper
       training_dataset_endpoint = training_dataset_endpoint + "/version/#{version.to_s}/data"
     end
     json_result2 = delete training_dataset_endpoint
-    expect_status(expected_status)
+    expect_status_details(expected_status)
 
     unless version == nil
       training_datasets = {"items" => [training_datasets]}
@@ -713,7 +713,7 @@ module FeaturestoreHelper
       get_datasets_in_path(project,
 			   "#{project[:projectname]}_Training_Datasets/#{featureview['name']}_#{featureview['version']}_#{training_dataset['version'].to_s}",
                            query: "&type=DATASET")
-      expect_status(200)
+      expect_status_details(200)
     }
 
     # should be able to retrieve metadata
@@ -899,7 +899,7 @@ module FeaturestoreHelper
 
   def get_trainingdataset_checked(project_id, name, version: 1, fs_id: nil, fs_project_id: nil)
     result = get_trainingdataset(project_id, name, version: version, fs_id: fs_id, fs_project_id: fs_project_id)
-    expect_status(200)
+    expect_status_details(200)
     parsed_result = JSON.parse(result)
     parsed_result[0]
   end

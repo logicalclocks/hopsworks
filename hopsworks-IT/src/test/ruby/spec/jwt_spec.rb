@@ -167,7 +167,7 @@ describe "On #{ENV['OS']}" do
 
       it "should be able to generate a jwt token with valid attributes" do
         get "#{ENV['HOPSWORKS_API']}/elastic/jwt/#{@proj[:id]}"
-        expect_status(200)
+        expect_status_details(200)
         token = JWT.decode json_body[:token], nil, false
         expect(token[0]['sub']).to eql(@proj[:projectname].downcase)
         expect(token[0]['pn']).to eql(@proj[:projectname].downcase.gsub('_',''))

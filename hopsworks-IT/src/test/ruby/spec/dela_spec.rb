@@ -34,12 +34,12 @@ describe "On #{ENV['OS']}" do
   #
   #     it 'should fail to sign the certificate with empty csr' do
   #       post "#{ENV['HOPSWORKS_DELA_TRACKER']}/cluster/certificate", {}
-  #       expect_status(422)
+  #       expect_status_details(422)
   #     end
   #
   #     it 'should fail to sign the certificate with no db entry in the db' do
   #       post "#{ENV['HOPSWORKS_DELA_TRACKER']}/cluster/certificate", {csr: generate_csr(@subject)}
-  #       expect_status(400)
+  #       expect_status_details(400)
   #     end
   #
   #     it 'should sign the dela certificate with entry in the db', vm: true do
@@ -62,7 +62,7 @@ describe "On #{ENV['OS']}" do
   #                          organizational_unit_name: "1",
   #                          registration_status: "Registered")
   #       post "#{ENV['HOPSWORKS_DELA_TRACKER']}/cluster/certificate", {csr: generate_csr(@subject)}
-  #       expect_status(200)
+  #       expect_status_details(200)
   #
   #       # Check that the certificate is on the local fs. this assumes you are running the
   #       # tests on a proper vm
@@ -71,12 +71,12 @@ describe "On #{ENV['OS']}" do
   #
   #     it 'should fail to sign twice a certificate for the same cluster' do
   #       post "#{ENV['HOPSWORKS_DELA_TRACKER']}/cluster/certificate", {csr: generate_csr(@subject)}
-  #       expect_status(400)
+  #       expect_status_details(400)
   #     end
   #
   #     it 'should revoke the certificate' do
   #       delete "#{ENV['HOPSWORKS_DELA_TRACKER']}/cluster/certificate?certId=test"
-  #       expect_status(200)
+  #       expect_status_details(200)
   #     end
   #   end
   end

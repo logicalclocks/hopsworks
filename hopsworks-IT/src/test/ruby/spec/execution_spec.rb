@@ -291,10 +291,10 @@ describe "On #{ENV['OS']}" do
           before :all do
             with_valid_tour_project("spark")
             oldStatus = getVar("check_nodemanagers_status")
-            expect_status(200)
+            expect_status_details(200)
             with_admin_session()
             nodemanagers_request = get "#{ENV['HOPSWORKS_API']}/services/nodemanager"
-            expect_status(200)
+            expect_status_details(200)
             nodemanagers = JSON.parse(nodemanagers_request)["items"]
             expect(nodemanagers != nil)
             nodemanagers.each do |nodemanager|
@@ -307,7 +307,7 @@ describe "On #{ENV['OS']}" do
             with_admin_session()
             hostnames.each do |hostname|
               hosts_update_host_service(hostname, "nodemanager", "SERVICE_START")
-              expect_status(200)
+              expect_status_details(200)
             end
             reset_session
             create_session(@project[:username],"Pass123")

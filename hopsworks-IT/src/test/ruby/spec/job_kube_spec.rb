@@ -36,11 +36,11 @@ describe "On #{ENV['OS']}" do
       end
       it "should create three python jobs" do
         create_python_job(@project, job_python_1, "py")
-        expect_status(201)
+        expect_status_details(201)
         create_python_job(@project, job_python_2, "py")
-        expect_status(201)
+        expect_status_details(201)
         create_python_job(@project, job_python_3, "py")
-        expect_status(201)
+        expect_status_details(201)
       end
       it "should get a single python job" do
         create_python_job(@project, job_python_1, "py")
@@ -68,11 +68,11 @@ describe "On #{ENV['OS']}" do
       end
       it "should create three docker jobs" do
         create_docker_job(@project, job_docker_1)
-        expect_status(201)
+        expect_status_details(201)
         create_docker_job(@project, job_docker_2)
-        expect_status(201)
+        expect_status_details(201)
         create_docker_job(@project, job_docker_3)
-        expect_status(201)
+        expect_status_details(201)
       end
       it "should get a single docker job" do
         create_docker_job(@project, job_docker_1)

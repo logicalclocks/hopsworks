@@ -307,7 +307,7 @@ describe "On #{ENV['OS']}" do
               invalid_key = @key + "typo"
               set_api_key_to_header(invalid_key)
               make_prediction_request_istio(@project[:projectname], @serving[:name], @inference_endpoint, { signature_name: 'predict_images', instances: test_data })
-              expect_status(401)
+              expect_status_details(401)
               expect_json(userMsg: "could not authenticate API key")
             end
 
@@ -315,14 +315,14 @@ describe "On #{ENV['OS']}" do
               invalid_key = "typo" + @key
               set_api_key_to_header(invalid_key)
               make_prediction_request_istio(@project[:projectname], @serving[:name], @inference_endpoint, { signature_name: 'predict_images', instances: test_data })
-              expect_status(401)
+              expect_status_details(401)
               expect_json(userMsg: "invalid or non-existent api key")
             end
 
             it 'should fail to send inference request with invalid scope' do
               set_api_key_to_header(@invalid_scope_key)
               make_prediction_request_istio(@project[:projectname], @serving[:name], @inference_endpoint, { signature_name: 'predict_images', instances: test_data })
-              expect_status(401)
+              expect_status_details(401)
               expect_json(userMsg: "invalid or non-existent api key")
             end
 
@@ -345,7 +345,7 @@ describe "On #{ENV['OS']}" do
               create_session(@admin_user[:email], "Pass123")
               newUser = create_user_with_role("HOPS_USER")
               admin_update_user(newUser.uid, {status: "ACTIVATED_ACCOUNT"})
-              expect_status(200)
+              expect_status_details(200)
               add_member_to_project(@project, newUser[:email], "Data owner")
               create_session(newUser[:email], "Pass123")
               key = create_api_key("serving_test_#{random_id_len(4)}", %w(SERVING))
@@ -354,7 +354,7 @@ describe "On #{ENV['OS']}" do
               set_api_key_to_header(key)
 
               make_prediction_request_istio(project_name, @serving[:name], @inference_endpoint, { signature_name: 'predict_images', instances: test_data })
-              expect_status(403)
+              expect_status_details(403)
               expect_json(userMsg: "unauthorized user, user role not allowed")
 
               result = update_authenticator_kube_config_map(authenticator["allowedUserRoles"], authenticator["allowedProjectUserRoles"])
@@ -381,7 +381,7 @@ describe "On #{ENV['OS']}" do
               create_session(@admin_user[:email], "Pass123")
               newUser = create_user_with_role("HOPS_ADMIN")
               admin_update_user(newUser.uid, {status: "ACTIVATED_ACCOUNT"})
-              expect_status(200)
+              expect_status_details(200)
               add_member_to_project(@project, newUser[:email], "Data scientist")
 
               create_session(newUser[:email], "Pass123")
@@ -391,7 +391,7 @@ describe "On #{ENV['OS']}" do
               set_api_key_to_header(key)
 
               make_prediction_request_istio(project_name, @serving[:name], @inference_endpoint, { signature_name: 'predict_images', instances: test_data })
-              expect_status(403)
+              expect_status_details(403)
               expect_json(userMsg: "unauthorized user, project member roles not allowed")
 
               result = update_authenticator_kube_config_map(authenticator["allowedUserRoles"], authenticator["allowedProjectUserRoles"])
@@ -406,7 +406,7 @@ describe "On #{ENV['OS']}" do
               create_session(@admin_user[:email], "Pass123")
               newUser = create_user_with_role("HOPS_ADMIN")
               admin_update_user(newUser.uid, {status: "ACTIVATED_ACCOUNT"})
-              expect_status(200)
+              expect_status_details(200)
               create_session(newUser[:email], "Pass123")
               key = create_api_key("serving_test_#{random_id_len(4)}", %w(SERVING))
 
@@ -414,7 +414,7 @@ describe "On #{ENV['OS']}" do
               set_api_key_to_header(key)
 
               make_prediction_request_istio(project_name, @serving[:name], @inference_endpoint, { signature_name: 'predict_images', instances: test_data })
-              expect_status(403)
+              expect_status_details(403)
               expect_json(userMsg: "unauthorized user, not a member of the project")
             end
 
@@ -423,7 +423,7 @@ describe "On #{ENV['OS']}" do
 
               create_session(@admin_user[:email], "Pass123")
               newUser = create_user_with_role("HOPS_ADMIN")
-              expect_status(200)
+              expect_status_details(200)
               add_member(newUser[:email], "Data scientist")
               create_session(newUser[:email], "Pass123")
               key = create_api_key("serving_test_#{random_id_len(4)}", %w(SERVING))
@@ -432,7 +432,7 @@ describe "On #{ENV['OS']}" do
               set_api_key_to_header(key)
 
               make_prediction_request_istio(project_name, @serving[:name], @inference_endpoint, { signature_name: 'predict_images', instances: test_data })
-              expect_status(403)
+              expect_status_details(403)
               expect_json(userMsg: "unauthorized user, account status not activated")
             end
           end

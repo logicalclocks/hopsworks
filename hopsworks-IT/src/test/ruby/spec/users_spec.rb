@@ -575,13 +575,13 @@ describe "On #{ENV['OS']}" do
         secret = "my_secret"
         
         add_private_secret private_secret_name, secret
-        expect_status(200)
+        expect_status_details(200)
 
         add_shared_secret shared_secret_name, secret, @project[:id]
-        expect_status(200)
+        expect_status_details(200)
 
         get_secrets_name
-        expect_status(200)
+        expect_status_details(200)
         secrets = json_body[:items]
         private_found = false
         shared_found = false
@@ -603,10 +603,10 @@ describe "On #{ENV['OS']}" do
         secret_name = "another_secret_name"
         
         add_private_secret secret_name, "secret"
-        expect_status(200)
+        expect_status_details(200)
         
         delete_secret secret_name
-        expect_status(200)
+        expect_status_details(200)
 
         get_secrets_name
         items = json_body[:items]
@@ -623,10 +623,10 @@ describe "On #{ENV['OS']}" do
       it "should not be able to add duplicate Secret" do
         secret_name = "my_secret_name"
         add_private_secret secret_name, "secret"
-        expect_status(200)
+        expect_status_details(200)
 
         add_private_secret secret_name, "another_secret"
-        expect_status(409)
+        expect_status_details(409)
       end
 
       it "should be able to delete all secrets" do
@@ -634,7 +634,7 @@ describe "On #{ENV['OS']}" do
         (1..NUM_OF_SECRETS).each do |idx|
           secret_name = "secret-#{idx}"
           add_private_secret secret_name, "some_secret"
-          expect_status(200)
+          expect_status_details(200)
         end
 
         get_secrets_name
@@ -654,7 +654,7 @@ describe "On #{ENV['OS']}" do
         end
 
         delete_secrets
-        expect_status(200)
+        expect_status_details(200)
 
         get_secrets_name
         expect_json_types(items: :null)
@@ -662,17 +662,17 @@ describe "On #{ENV['OS']}" do
       
       it "should not be able to add empty secret" do
         add_private_secret "", "secret"
-        expect_status(404)
+        expect_status_details(404)
       end
 
       it "member of Project should be able to access only Shared secret" do
         private_secret_name = "private_secret"
         shared_secret_name = "shared_secret"
         add_private_secret private_secret_name, "secret"
-        expect_status(200)
+        expect_status_details(200)
 
         add_shared_secret shared_secret_name, "another_secret", @project[:id]
-        expect_status(200)
+        expect_status_details(200)
 
         owner_username = @user[:username]
         # Create user and add it as member to project
@@ -681,36 +681,36 @@ describe "On #{ENV['OS']}" do
         create_session(member[:email], "Pass123")
         
         get_private_secret private_secret_name
-        expect_status(404)
+        expect_status_details(404)
         # Private secret should not be available
         get_shared_secret private_secret_name, owner_username
-        expect_status(403)
+        expect_status_details(403)
 
         get_shared_secret shared_secret_name, owner_username
-        expect_status(200)
+        expect_status_details(200)
 
         # Create 
         not_member = create_user
         create_session(not_member[:email], "Pass123")
         get_shared_secret shared_secret_name, owner_username
-        expect_status(403)        
+        expect_status_details(403)
       end
 
       it "member of Project should not be able to delete secret he does not own" do
         shared_secret_name = "shared_secret_1"
         add_shared_secret shared_secret_name, "secret", @project[:id]
-        expect_status(200)
+        expect_status_details(200)
         owner = @user
         
         not_member = create_user
         create_session not_member[:email], "Pass123"
 
         delete_secret shared_secret_name
-        expect_status(200)
+        expect_status_details(200)
 
         create_session owner[:email], "Pass123"
         get_secrets_name
-        expect_status(200)
+        expect_status_details(200)
         secrets = json_body[:items]
         found = false
         secrets.each do |secret|

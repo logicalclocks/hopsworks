@@ -454,7 +454,7 @@ describe "On #{ENV['OS']}" do
           
           json_result = create_feature_view_from_feature_group(@project.id, featurestore_id, parsed_json)
           parsed_json = JSON.parse(json_result)
-          expect_status(201)
+          expect_status_details(201)
           
           json_result = get_featureview_tags(@project.id, parsed_json["name"], parsed_json["version"])
           expect_status_details(200)
@@ -469,7 +469,7 @@ describe "On #{ENV['OS']}" do
 
           json_result = create_feature_view_from_feature_group(@project.id, featurestore_id, parsed_json)
           parsed_json = JSON.parse(json_result)
-          expect_status(201)
+          expect_status_details(201)
 
           add_featureview_tag(@project.id, parsed_json["name"], parsed_json["version"], @tags[0], "nothing")
           expect_status_details(404, error_code: 370000)
@@ -482,7 +482,7 @@ describe "On #{ENV['OS']}" do
 
           json_result = create_feature_view_from_feature_group(@project.id, featurestore_id, parsed_json)
           parsed_json = JSON.parse(json_result)
-          expect_status(201)
+          expect_status_details(201)
 
           get_featureview_tag(@project.id, parsed_json["name"], parsed_json["version"], @pre_tags[0])
           expect_status_details(404, error_code: 370002)
@@ -495,7 +495,7 @@ describe "On #{ENV['OS']}" do
 
           json_result = create_feature_view_from_feature_group(@project.id, featurestore_id, parsed_json)
           parsed_json = JSON.parse(json_result)
-          expect_status(201)
+          expect_status_details(201)
 
           get_featureview_tag(@project.id, parsed_json["name"], parsed_json["version"], @tags[0])
           expect_status_details(404, error_code: 370002)
@@ -508,7 +508,7 @@ describe "On #{ENV['OS']}" do
 
           json_result = create_feature_view_from_feature_group(@project.id, featurestore_id, parsed_json)
           parsed_json = JSON.parse(json_result)
-          expect_status(201)
+          expect_status_details(201)
 
           add_featureview_tag_checked(@project.id, parsed_json["name"], parsed_json["version"], @pre_tags[0], "daily")
           json_result = get_featureview_tags(@project.id, parsed_json["name"], parsed_json["version"])
@@ -533,7 +533,7 @@ describe "On #{ENV['OS']}" do
 
           json_result = create_feature_view_from_feature_group(@project.id, featurestore_id, parsed_json)
           parsed_json = JSON.parse(json_result)
-          expect_status(201)
+          expect_status_details(201)
 
           tag_val = "x" * 1000
           add_featureview_tag_checked(@project[:id], parsed_json["name"], parsed_json["version"], @pre_tags[0], tag_val)
@@ -549,7 +549,7 @@ describe "On #{ENV['OS']}" do
 
           json_result = create_feature_view_from_feature_group(@project.id, featurestore_id, parsed_json)
           parsed_json = JSON.parse(json_result)
-          expect_status(201)
+          expect_status_details(201)
 
           tag_val = "x" * 20000
           add_featureview_tag_checked(@project[:id], parsed_json["name"], parsed_json["version"], @pre_tags[0], tag_val)
@@ -562,7 +562,7 @@ describe "On #{ENV['OS']}" do
 
           json_result = create_feature_view_from_feature_group(@project.id, featurestore_id, parsed_json)
           parsed_json = JSON.parse(json_result)
-          expect_status(201)
+          expect_status_details(201)
 
           tag_val = schematized_tag_val
           add_featureview_tag_checked(@project[:id], parsed_json["name"], parsed_json["version"], @pre_schematized_tags[0], tag_val)
@@ -575,7 +575,7 @@ describe "On #{ENV['OS']}" do
 
           json_result = create_feature_view_from_feature_group(@project.id, featurestore_id, parsed_json)
           parsed_json = JSON.parse(json_result)
-          expect_status(201)
+          expect_status_details(201)
 
           tag_val = bad_schematized_tag_val
           add_featureview_tag(@project[:id], parsed_json["name"], parsed_json["version"], @pre_schematized_tags[0], tag_val)
@@ -760,7 +760,7 @@ describe "On #{ENV['OS']}" do
           
           json_result = create_feature_view_from_feature_group(@project1.id, featurestore_id, parsed_json)
           parsed_json = JSON.parse(json_result)
-          expect_status(201)
+          expect_status_details(201)
           featureview_name = parsed_json["name"]
           featureview_version = parsed_json["version"]
           tag_val = schematized_tag_val
@@ -790,7 +790,7 @@ describe "On #{ENV['OS']}" do
           all_metadata = create_featureview_training_dataset_from_project(@project1)
           parsed_json = all_metadata["response"]
           featureview = all_metadata["featureView"]
-          expect_status(201)
+          expect_status_details(201)
           tag_val = schematized_tag_val
 
           create_session(@user2[:email], @user2_params[:password])
