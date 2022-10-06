@@ -138,11 +138,11 @@ describe "On #{ENV['OS']}" do
         featurestore_id = get_featurestore_id(project.id)
         json_result, featuregroup_name = create_stream_featuregroup(project.id, featurestore_id)
         parsed_json = JSON.parse(json_result)
-        expect_status(201)
+        expect_status_details(201)
         featuregroup_id = parsed_json["id"]
         delete_featuregroup_endpoint = "#{ENV['HOPSWORKS_API']}/project/" + project.id.to_s + "/featurestores/" + featurestore_id.to_s + "/featuregroups/" + featuregroup_id.to_s
         delete delete_featuregroup_endpoint
-        expect_status(200)
+        expect_status_details(200)
       end
 
       it "should be able to update the metadata of a stream featuregroup from the featurestore" do
@@ -150,7 +150,7 @@ describe "On #{ENV['OS']}" do
         featurestore_id = get_featurestore_id(project.id)
         json_result, featuregroup_name = create_stream_featuregroup(project.id, featurestore_id)
         parsed_json = JSON.parse(json_result)
-        expect_status(201)
+        expect_status_details(201)
         featuregroup_id = parsed_json["id"]
         featuregroup_version = parsed_json["version"]
         new_description = "changed description"
@@ -189,7 +189,7 @@ describe "On #{ENV['OS']}" do
         featurestore_id = get_featurestore_id(project.id)
         json_result, featuregroup_name = create_stream_featuregroup(project.id, featurestore_id)
         parsed_json = JSON.parse(json_result)
-        expect_status(201)
+        expect_status_details(201)
         featuregroup_id = parsed_json["id"]
         featuregroup_version = parsed_json["version"]
         new_description = "changed description"
@@ -207,7 +207,7 @@ describe "On #{ENV['OS']}" do
         featurestore_id = get_featurestore_id(project.id)
         json_result, featuregroup_name = create_stream_featuregroup(project.id, featurestore_id)
         parsed_json = JSON.parse(json_result)
-        expect_status(201)
+        expect_status_details(201)
         featuregroup_id = parsed_json["id"]
         featuregroup_version = parsed_json["version"]
         new_schema = [
@@ -244,7 +244,7 @@ describe "On #{ENV['OS']}" do
         featurestore_id = get_featurestore_id(project.id)
         json_result, featuregroup_name = create_stream_featuregroup(project.id, featurestore_id)
         parsed_json = JSON.parse(json_result)
-        expect_status(201)
+        expect_status_details(201)
         featuregroup_id = parsed_json["id"]
         featuregroup_version = parsed_json["version"]
         new_schema = [
@@ -298,7 +298,7 @@ describe "On #{ENV['OS']}" do
         featurestore_id = get_featurestore_id(project.id)
         json_result, featuregroup_name = create_stream_featuregroup(project.id, featurestore_id)
         parsed_json = JSON.parse(json_result)
-        expect_status(201)
+        expect_status_details(201)
         featuregroup_id = parsed_json["id"]
         featuregroup_version = parsed_json["version"]
         new_description = "changed description"
@@ -335,7 +335,7 @@ describe "On #{ENV['OS']}" do
         featurestore_id = get_featurestore_id(project.id)
         json_result, featuregroup_name = create_stream_featuregroup(project.id, featurestore_id, online_enabled: false)
         parsed_json = JSON.parse(json_result)
-        expect_status(201)
+        expect_status_details(201)
         featuregroup_id = parsed_json["id"]
         featuregroup_version = parsed_json["version"]
         new_description = "changed description"
@@ -372,7 +372,7 @@ describe "On #{ENV['OS']}" do
         featurestore_id = get_featurestore_id(project.id)
         json_result, _ = create_stream_featuregroup(project.id, featurestore_id, online_enabled: false)
         parsed_json = JSON.parse(json_result)
-        expect_status(201)
+        expect_status_details(201)
         featuregroup_id = parsed_json["id"]
         get "#{ENV['HOPSWORKS_API']}/project/" + project.id.to_s + "/featurestores/" + featurestore_id.to_s +
               "/featuregroups/" + featuregroup_id.to_s + "/preview?storage=online"
@@ -384,7 +384,7 @@ describe "On #{ENV['OS']}" do
         featurestore_id = get_featurestore_id(project.id)
         json_result, featuregroup_name = create_stream_featuregroup(project.id, featurestore_id)
         parsed_json = JSON.parse(json_result)
-        expect_status(201)
+        expect_status_details(201)
         new_schema = [
           {
             type: "INT",
@@ -427,7 +427,7 @@ describe "On #{ENV['OS']}" do
         featurestore_id = get_featurestore_id(project.id)
         json_result, featuregroup_name = create_stream_featuregroup(project.id, featurestore_id, online_enabled: false)
         parsed_json = JSON.parse(json_result)
-        expect_status(201)
+        expect_status_details(201)
         new_schema = [
           {
             type: "INT",

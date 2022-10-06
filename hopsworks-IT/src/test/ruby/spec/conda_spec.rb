@@ -99,7 +99,7 @@ describe "On #{ENV['OS']}" do
             delete_env(@project[:id], ENV['PYTHON_VERSION'])
             @project = create_env_and_update_project(@project, ENV['PYTHON_VERSION'])
             export_env(@project[:id], ENV['PYTHON_VERSION'])
-            expect_status(200)
+            expect_status_details(200)
 
             wait_for_running_command(@project[:id])
           end
@@ -286,7 +286,7 @@ describe "On #{ENV['OS']}" do
             delete_env(@project[:id], ENV['PYTHON_VERSION'])
           end
           list_envs(@project[:id])
-          expect_status(404)
+          expect_status_details(404)
         end
 
         it 'should fail to get an environment' do
@@ -315,7 +315,7 @@ describe "On #{ENV['OS']}" do
             delete_env(@project[:id], ENV['PYTHON_VERSION'])
           end
           list_libraries(@project[:id], ENV['PYTHON_VERSION'])
-          expect_status(404)
+          expect_status_details(404)
         end
 
         it 'should fail to list library commands' do

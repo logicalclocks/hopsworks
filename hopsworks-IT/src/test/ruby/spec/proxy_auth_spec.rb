@@ -69,19 +69,19 @@ describe "On #{ENV['OS']}" do
       end
       it "should allow access to grafana" do
         proxy_helper_get_grafana
-        expect_status(200)
+        expect_status_details(200)
       end
       it "should allow access to yarn ui" do
         proxy_helper_get_yarnui
-        expect_status(400)
+        expect_status_details(400)
       end
       it "should allow access to hdfs ui" do
         proxy_helper_get_hdfsui
-        expect_status(403)
+        expect_status_details(403)
       end
       it "should allow access to tensorboard" do
         proxy_helper_get_tensorboard
-        expect_status(403)
+        expect_status_details(403)
         expect(response.body).to include("Access to the specified resource has been forbidden.")
       end
     end

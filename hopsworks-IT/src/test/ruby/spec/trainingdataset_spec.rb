@@ -34,7 +34,7 @@ describe "On #{ENV['OS']}" do
               {type: "int", name: "testfeature1"}
           ]
           json_result, training_dataset_name = create_hopsfs_training_dataset(project.id, featurestore_id, connector, features: features)
-          expect_status(201)
+          expect_status_details(201)
           parsed_json = JSON.parse(json_result)
 
           expect(parsed_json.key?("id")).to be true
@@ -83,7 +83,7 @@ describe "On #{ENV['OS']}" do
           training_dataset_name = "TEST_training_dataset"
           json_result, training_dataset_name = create_hopsfs_training_dataset(project.id, featurestore_id, connector, name:training_dataset_name)
           parsed_json = JSON.parse(json_result)
-          expect_status(400)
+          expect_status_details(400)
           expect(parsed_json.key?("errorCode")).to be true
           expect(parsed_json.key?("errorMsg")).to be true
           expect(parsed_json.key?("usrMsg")).to be true
@@ -96,7 +96,7 @@ describe "On #{ENV['OS']}" do
           connector = get_hopsfs_training_datasets_connector(@project[:projectname])
           json_result, training_dataset_name = create_hopsfs_training_dataset(project.id, featurestore_id, connector, data_format: "")
           parsed_json = JSON.parse(json_result)
-          expect_status(400)
+          expect_status_details(400)
           expect(parsed_json.key?("errorCode")).to be true
           expect(parsed_json.key?("errorMsg")).to be true
           expect(parsed_json.key?("usrMsg")).to be true
@@ -110,7 +110,7 @@ describe "On #{ENV['OS']}" do
           json_result, training_dataset_name = create_hopsfs_training_dataset(project.id, featurestore_id, connector,
                                                                               version: -1)
           parsed_json = JSON.parse(json_result)
-          expect_status(400)
+          expect_status_details(400)
           expect(parsed_json.key?("errorCode")).to be true
           expect(parsed_json.key?("errorMsg")).to be true
           expect(parsed_json.key?("usrMsg")).to be true
@@ -124,7 +124,7 @@ describe "On #{ENV['OS']}" do
           json_result, training_dataset_name = create_hopsfs_training_dataset(project.id, featurestore_id, connector,
                                                                               name: "no_version_td", version: nil)
           parsed_json = JSON.parse(json_result)
-          expect_status(201)
+          expect_status_details(201)
           expect(parsed_json["version"] == 1).to be true
         end
 
@@ -135,12 +135,12 @@ describe "On #{ENV['OS']}" do
           json_result, training_dataset_name = create_hopsfs_training_dataset(project.id, featurestore_id, connector,
                                                                               name: "no_version_td_add")
           parsed_json = JSON.parse(json_result)
-          expect_status(201)
+          expect_status_details(201)
           # add second version
           json_result, training_dataset_name = create_hopsfs_training_dataset(project.id, featurestore_id, connector,
                                                                               name: "no_version_td_add", version: nil)
           parsed_json = JSON.parse(json_result)
-          expect_status(201)
+          expect_status_details(201)
           # version should be incremented to 2
           expect(parsed_json["version"] == 2).to be true
         end
@@ -165,7 +165,7 @@ describe "On #{ENV['OS']}" do
                                                                               splits: splits, train_split:
                                                                                 "train_split")
           parsed_json = JSON.parse(json_result)
-          expect_status(201)
+          expect_status_details(201)
           expect(parsed_json.key?("splits")).to be true
           expect(parsed_json["splits"].length).to be 2
         end
@@ -176,7 +176,7 @@ describe "On #{ENV['OS']}" do
           connector = get_hopsfs_training_datasets_connector(@project[:projectname])
           split = [{name: "train", percentage: "wrong", splitType: "RANDOM_SPLIT"}]
           create_hopsfs_training_dataset(project.id, featurestore_id, connector, splits: split, train_split: "train")
-          expect_status(400)
+          expect_status_details(400)
           # error is unexpected token at 'Cannot deserialize value of type `java.lang.Float` from String "wrong"
           # expect(parsed_json.key?("errorCode")).to be true
           # expect(parsed_json.key?("errorMsg")).to be true
@@ -191,7 +191,7 @@ describe "On #{ENV['OS']}" do
           split = [{name: "ILLEGALNAME!!!", percentage: 0.8}]
           json_result, training_dataset_name = create_hopsfs_training_dataset(project.id, featurestore_id, connector, splits: split)
           parsed_json = JSON.parse(json_result)
-          expect_status(400)
+          expect_status_details(400)
           expect(parsed_json.key?("errorCode")).to be true
           expect(parsed_json.key?("errorMsg")).to be true
           expect(parsed_json.key?("usrMsg")).to be true
@@ -216,7 +216,7 @@ describe "On #{ENV['OS']}" do
           json_result, training_dataset_name = create_hopsfs_training_dataset(project.id, featurestore_id, connector,
                                                                               splits: splits, train_split: "test_split")
           parsed_json = JSON.parse(json_result)
-          expect_status(400)
+          expect_status_details(400)
           expect(parsed_json.key?("errorCode")).to be true
           expect(parsed_json.key?("errorMsg")).to be true
           expect(parsed_json.key?("usrMsg")).to be true
@@ -229,10 +229,10 @@ describe "On #{ENV['OS']}" do
           connector = get_hopsfs_training_datasets_connector(@project[:projectname])
           json_result, training_dataset_name = create_hopsfs_training_dataset(project.id, featurestore_id, connector)
           parsed_json = JSON.parse(json_result)
-          expect_status(201)
+          expect_status_details(201)
 
           create_hopsfs_training_dataset(project.id, featurestore_id, connector, name: training_dataset_name)
-          expect_status(400)
+          expect_status_details(400)
         end
 
         it "should be able to add a hopsfs training dataset to the featurestore without specifying a hopsfs connector" do
@@ -240,7 +240,7 @@ describe "On #{ENV['OS']}" do
           featurestore_id = get_featurestore_id(project.id)
           json_result, _ = create_hopsfs_training_dataset(project.id, featurestore_id, nil)
           parsed_json = JSON.parse(json_result)
-          expect_status(201)
+          expect_status_details(201)
           expect(parsed_json["storageConnector"]["name"] == "#{project['projectname']}_Training_Datasets")
         end
 
@@ -264,7 +264,7 @@ describe "On #{ENV['OS']}" do
                                                                               name: "no_version_td", version: nil,
                                                                               features: features)
           parsed_json = JSON.parse(json_result)
-          expect_status(201)
+          expect_status_details(201)
           td_features = parsed_json['features']
           expect(td_features.length).to be 2
           expect(td_features.select{|feature| feature['index'] == 0}[0]['label']).to be true
@@ -291,7 +291,7 @@ describe "On #{ENV['OS']}" do
                                                                               name: "no_version_td", version: nil,
                                                                               features: features)
           parsed_json = JSON.parse(json_result)
-          expect_status(201)
+          expect_status_details(201)
           td_features = parsed_json['features']
           expect(td_features.length).to be 2
           expect(td_features.select{|feature| feature['index'] == 0}[0]['label']).to be true
@@ -304,18 +304,18 @@ describe "On #{ENV['OS']}" do
           connector = get_hopsfs_training_datasets_connector(@project[:projectname])
           json_result1, _ = create_hopsfs_training_dataset(project.id, featurestore_id, connector)
           parsed_json1 = JSON.parse(json_result1)
-          expect_status(201)
+          expect_status_details(201)
           training_dataset_id = parsed_json1["id"]
           delete_training_dataset_endpoint = "#{ENV['HOPSWORKS_API']}/project/" + project.id.to_s +
               "/featurestores/" + featurestore_id.to_s + "/trainingdatasets/" + training_dataset_id.to_s
           json_result2 = delete delete_training_dataset_endpoint
-          expect_status(200)
+          expect_status_details(200)
 
           # Make sure that the directory has been removed correctly
           get_datasets_in_path(project,
                                "#{project[:projectname]}_Training_Datasets/#{parsed_json1['name']}_#{parsed_json1['version']}",
                                query: "&type=DATASET")
-          expect_status(400)
+          expect_status_details(400)
         end
 
         it "should not be able to update the metadata of a hopsfs training dataset from the featurestore" do
@@ -324,11 +324,11 @@ describe "On #{ENV['OS']}" do
           connector = get_hopsfs_training_datasets_connector(@project[:projectname])
           json_result1, training_dataset_name = create_hopsfs_training_dataset(project.id, featurestore_id, connector)
           parsed_json1 = JSON.parse(json_result1)
-          expect_status(201)
+          expect_status_details(201)
           training_dataset_id = parsed_json1["id"]
           json_result2 = update_hopsfs_training_dataset_metadata(project.id, featurestore_id, training_dataset_id, "petastorm", connector)
           parsed_json2 = JSON.parse(json_result2)
-          expect_status(200)
+          expect_status_details(200)
           expect(parsed_json2.key?("id")).to be true
           expect(parsed_json2.key?("name")).to be true
           expect(parsed_json2["creator"].key?("email")).to be true
@@ -348,13 +348,13 @@ describe "On #{ENV['OS']}" do
           connector = get_hopsfs_training_datasets_connector(@project[:projectname])
           json_result1, training_dataset_name = create_hopsfs_training_dataset(project.id, featurestore_id, connector)
           parsed_json1 = JSON.parse(json_result1)
-          expect_status(201)
+          expect_status_details(201)
 
           training_dataset_id = parsed_json1["id"]
           json_result2 = update_hopsfs_training_dataset_metadata(project.id, featurestore_id,
                                                                  training_dataset_id, "tfrecords", connector)
           parsed_json2 = JSON.parse(json_result2)
-          expect_status(200)
+          expect_status_details(200)
 
           # make sure the name didn't change
           expect(parsed_json2["name"]).to eql(training_dataset_name)
@@ -366,13 +366,13 @@ describe "On #{ENV['OS']}" do
           connector = get_hopsfs_training_datasets_connector(@project[:projectname])
           json_result1, training_dataset_name = create_hopsfs_training_dataset(project.id, featurestore_id, connector)
           parsed_json1 = JSON.parse(json_result1)
-          expect_status(201)
+          expect_status_details(201)
 
           training_dataset_id = parsed_json1["id"]
           json_result2 = update_hopsfs_training_dataset_metadata(project.id, featurestore_id,
                                                                  training_dataset_id, "tfrecords", connector)
           parsed_json2 = JSON.parse(json_result2)
-          expect_status(200)
+          expect_status_details(200)
 
           expect(parsed_json2["description"]).to eql("new_testtrainingdatasetdescription")
           # make sure the name didn't change
@@ -384,16 +384,16 @@ describe "On #{ENV['OS']}" do
           featurestore_id = get_featurestore_id(project.id)
           connector = get_hopsfs_training_datasets_connector(@project[:projectname])
           json_result, training_dataset_name = create_hopsfs_training_dataset(project.id, featurestore_id, connector)
-          expect_status(201)
+          expect_status_details(201)
 
           json_result, training_dataset_name = create_hopsfs_training_dataset(project.id, featurestore_id, connector, name: training_dataset_name, version: 2)
-          expect_status(201)
+          expect_status_details(201)
 
           # Get the list
           get_training_datasets_endpoint = "#{ENV['HOPSWORKS_API']}/project/#{project.id}/featurestores/#{featurestore_id}/trainingdatasets/#{training_dataset_name}"
           get get_training_datasets_endpoint
           parsed_json = JSON.parse(response.body)
-          expect_status(200)
+          expect_status_details(200)
           expect(parsed_json.size).to eq 2
         end
 
@@ -402,22 +402,22 @@ describe "On #{ENV['OS']}" do
           featurestore_id = get_featurestore_id(project.id)
           connector = get_hopsfs_training_datasets_connector(@project[:projectname])
           json_result, training_dataset_name = create_hopsfs_training_dataset(project.id, featurestore_id, connector)
-          expect_status(201)
+          expect_status_details(201)
 
           json_result, training_dataset_name = create_hopsfs_training_dataset(project.id, featurestore_id, connector, name: training_dataset_name, version: 2)
-          expect_status(201)
+          expect_status_details(201)
 
           # Get the first version
           get_training_datasets_endpoint = "#{ENV['HOPSWORKS_API']}/project/#{project.id}/featurestores/#{featurestore_id}/trainingdatasets/#{training_dataset_name}?version=1"
           get get_training_datasets_endpoint
           parsed_json = JSON.parse(response.body)
-          expect_status(200)
+          expect_status_details(200)
           expect(parsed_json[0]['version']).to be 1
           expect(parsed_json[0]['name']).to eq training_dataset_name
 
           get_training_datasets_endpoint = "#{ENV['HOPSWORKS_API']}/project/#{project.id}/featurestores/#{featurestore_id}/trainingdatasets/#{training_dataset_name}?version=2"
           get get_training_datasets_endpoint
-          expect_status(200)
+          expect_status_details(200)
           parsed_json = JSON.parse(response.body)
           expect(parsed_json[0]['version']).to be 2
           expect(parsed_json[0]['name']).to eq training_dataset_name
@@ -429,7 +429,7 @@ describe "On #{ENV['OS']}" do
           featurestore_id = get_featurestore_id(project.id)
           get_training_datasets_endpoint = "#{ENV['HOPSWORKS_API']}/project/#{project.id}/featurestores/#{featurestore_id}/trainingdatasets/doesnotexists/"
           get get_training_datasets_endpoint
-          expect_status(404)
+          expect_status_details(404)
         end
 
         it "should fail to create a training dataset with no features and no query" do
@@ -735,7 +735,7 @@ describe "On #{ENV['OS']}" do
           with_jdbc_connector(@project[:id])
           features = [{type: "INT", name: "testfeature", description: "testfeaturedescription", primary: true}]
           json_result, _ = create_on_demand_featuregroup(@project[:id], featurestore_id, @jdbc_connector_id, features: features)
-          expect_status(201)
+          expect_status_details(201)
           parsed_json = JSON.parse(json_result)
           fg_ond_id = parsed_json["id"]
           fg_ond_type = parsed_json["type"]
@@ -1180,7 +1180,7 @@ describe "On #{ENV['OS']}" do
           connector_id = get_s3_connector_id
           json_result, training_dataset_name = create_external_training_dataset(project.id, featurestore_id, connector_id)
           parsed_json = JSON.parse(json_result)
-          expect_status(201)
+          expect_status_details(201)
           expect(parsed_json.key?("id")).to be true
           expect(parsed_json.key?("featurestoreName")).to be true
           expect(parsed_json.key?("name")).to be true
@@ -1212,7 +1212,7 @@ describe "On #{ENV['OS']}" do
           json_result, training_dataset_name = create_external_training_dataset(project.id, featurestore_id, connector_id,
                                                                                 name:training_dataset_name)
           parsed_json = JSON.parse(json_result)
-          expect_status(400)
+          expect_status_details(400)
           expect(parsed_json.key?("errorCode")).to be true
           expect(parsed_json.key?("errorMsg")).to be true
           expect(parsed_json.key?("usrMsg")).to be true
@@ -1223,7 +1223,7 @@ describe "On #{ENV['OS']}" do
           project = get_project
           featurestore_id = get_featurestore_id(project.id)
           json_result, training_dataset_name = create_external_training_dataset(project.id, featurestore_id, nil)
-          expect_status(404)
+          expect_status_details(404)
         end
 
         it "should be able to add an external training dataset to the featurestore with splits" do
@@ -1245,7 +1245,7 @@ describe "On #{ENV['OS']}" do
                                                                                 train_split: "train_split")
 
           parsed_json = JSON.parse(json_result)
-          expect_status(201)
+          expect_status_details(201)
           expect(parsed_json.key?("splits")).to be true
           expect(parsed_json["splits"].length).to be 2
         end
@@ -1256,7 +1256,7 @@ describe "On #{ENV['OS']}" do
           connector_id = get_s3_connector_id
           splits = [{name: "train", percentage: "wrong", splitType: "RANDOM_SPLIT"}]
           create_external_training_dataset(project.id, featurestore_id, connector_id, splits: splits, train_split: "train")
-          expect_status(400)
+          expect_status_details(400)
           # error is unexpected token at 'Cannot deserialize value of type `java.lang.Float` from String "wrong"
           # expect(parsed_json.key?("errorCode")).to be true
           # expect(parsed_json.key?("errorMsg")).to be true
@@ -1272,7 +1272,7 @@ describe "On #{ENV['OS']}" do
           json_result, training_dataset_name = create_external_training_dataset(project.id, featurestore_id,
                                                                                 connector_id, splits: splits)
           parsed_json = JSON.parse(json_result)
-          expect_status(400)
+          expect_status_details(400)
           expect(parsed_json.key?("errorCode")).to be true
           expect(parsed_json.key?("errorMsg")).to be true
           expect(parsed_json.key?("usrMsg")).to be true
@@ -1299,7 +1299,7 @@ describe "On #{ENV['OS']}" do
                                                                                 train_split: "test_split")
 
           parsed_json = JSON.parse(json_result)
-          expect_status(400)
+          expect_status_details(400)
           expect(parsed_json.key?("errorCode")).to be true
           expect(parsed_json.key?("errorMsg")).to be true
           expect(parsed_json.key?("usrMsg")).to be true
@@ -1325,7 +1325,7 @@ describe "On #{ENV['OS']}" do
           json_result, training_dataset_name = create_external_training_dataset(project.id, featurestore_id,
                                                                                 connector_id, features: features)
           parsed_json = JSON.parse(json_result)
-          expect_status(201)
+          expect_status_details(201)
           td_features = parsed_json['features']
           expect(td_features.count).to eql(2)
           expect(td_features.select{|feature| feature['index'] == 0}[0]['label']).to be true
@@ -1338,12 +1338,12 @@ describe "On #{ENV['OS']}" do
           connector_id = get_s3_connector_id
           json_result1, training_dataset_name = create_external_training_dataset(project.id, featurestore_id, connector_id)
           parsed_json1 = JSON.parse(json_result1)
-          expect_status(201)
+          expect_status_details(201)
           training_dataset_id = parsed_json1["id"]
           delete_training_dataset_endpoint = "#{ENV['HOPSWORKS_API']}/project/" + project.id.to_s +
               "/featurestores/" + featurestore_id.to_s + "/trainingdatasets/" + training_dataset_id.to_s
           delete delete_training_dataset_endpoint
-          expect_status(200)
+          expect_status_details(200)
 
           # make sure inode is deleted
           path = "/Projects/#{project['projectname']}/#{project['projectname']}_Training_Datasets/#{training_dataset_name}_1"
@@ -1356,13 +1356,13 @@ describe "On #{ENV['OS']}" do
           connector_id = get_s3_connector_id
           json_result1, training_dataset_name = create_external_training_dataset(project.id, featurestore_id, connector_id)
           parsed_json1 = JSON.parse(json_result1)
-          expect_status(201)
+          expect_status_details(201)
           training_dataset_id = parsed_json1["id"]
           json_result2 = update_external_training_dataset_metadata(project.id, featurestore_id, training_dataset_id,
                                                                    training_dataset_name, "new description",
                                                                    connector_id)
           parsed_json2 = JSON.parse(json_result2)
-          expect_status(200)
+          expect_status_details(200)
           expect(parsed_json2.key?("id")).to be true
           expect(parsed_json2.key?("featurestoreName")).to be true
           expect(parsed_json2.key?("name")).to be true
@@ -1383,7 +1383,7 @@ describe "On #{ENV['OS']}" do
           connector_id = get_s3_connector_id
           json_result1, training_dataset_name = create_external_training_dataset(project.id, featurestore_id, connector_id)
           parsed_json1 = JSON.parse(json_result1)
-          expect_status(201)
+          expect_status_details(201)
 
           training_dataset_id = parsed_json1["id"]
           json_new_connector, _ = create_s3_connector(project.id, featurestore_id)
@@ -1393,7 +1393,7 @@ describe "On #{ENV['OS']}" do
                                                                    training_dataset_id, training_dataset_name, "desc",
                                                                    new_connector['id'])
           parsed_json2 = JSON.parse(json_result2)
-          expect_status(200)
+          expect_status_details(200)
 
           # make sure the name didn't change
           expect(parsed_json2["storageConnector"]["id"]).to be connector_id
@@ -1407,7 +1407,7 @@ describe "On #{ENV['OS']}" do
                                                                                  connector_id,
                                                                                  location: "/inner/location")
           parsed_json1 = JSON.parse(json_result1)
-          expect_status(201)
+          expect_status_details(201)
           expect(parsed_json1['location']).to eql("s3://testbucket/inner/location/#{training_dataset_name}_1")
         end
 
@@ -1489,11 +1489,11 @@ describe "On #{ENV['OS']}" do
         connector = get_hopsfs_training_datasets_connector(project.projectname)
         ## This should go through
         create_hopsfs_training_dataset(project.id, featurestore_id, connector)
-        expect_status(201)
+        expect_status_details(201)
 
         ## This request should fail because quota has been reached
         result, _ = create_hopsfs_training_dataset(project.id, featurestore_id, connector)
-        expect_status(500)
+        expect_status_details(500)
         parsed = JSON.parse(result)
         expect(parsed['devMsg']).to include("quota")
       end
@@ -1512,13 +1512,13 @@ describe "On #{ENV['OS']}" do
           get_training_datasets_endpoint = "#{ENV['HOPSWORKS_API']}/project/" + project.id.to_s + "/featurestores/" + featurestore_id.to_s + "/trainingdatasets"
           json_result1 = get get_training_datasets_endpoint
           parsed_json1 = JSON.parse(response.body)
-          expect_status(200)
+          expect_status_details(200)
           expect(parsed_json1.length == 0).to be true
           json_result2, training_dataset_name = create_hopsfs_training_dataset(project.id, featurestore_id, connector)
-          expect_status(201)
+          expect_status_details(201)
           json_result3 = get get_training_datasets_endpoint
           parsed_json2 = JSON.parse(json_result3)
-          expect_status(200)
+          expect_status_details(200)
           expect(parsed_json2.length == 1).to be true
           expect(parsed_json2[0].key?("id")).to be true
           expect(parsed_json2[0].key?("featurestoreName")).to be true
@@ -1532,14 +1532,14 @@ describe "On #{ENV['OS']}" do
           featurestore_id = get_featurestore_id(project.id)
           connector = get_hopsfs_training_datasets_connector(@project[:projectname])
           json_result1, training_dataset_name = create_hopsfs_training_dataset(project.id, featurestore_id, connector)
-          expect_status(201)
+          expect_status_details(201)
           parsed_json1 = JSON.parse(json_result1)
-          expect_status(201)
+          expect_status_details(201)
           training_dataset_id = parsed_json1["id"]
           get_training_dataset_endpoint = "#{ENV['HOPSWORKS_API']}/project/" + project.id.to_s + "/featurestores/" + featurestore_id.to_s + "/trainingdatasets/" + training_dataset_id.to_s
           json_result2 = get get_training_dataset_endpoint
           parsed_json2 = JSON.parse(json_result2)
-          expect_status(200)
+          expect_status_details(200)
           expect(parsed_json2.key?("id")).to be true
           expect(parsed_json2.key?("featurestoreName")).to be true
           expect(parsed_json2.key?("featurestoreId")).to be true
@@ -1577,7 +1577,7 @@ describe "On #{ENV['OS']}" do
 
           json_result, _ = create_hopsfs_training_dataset(@project.id, featurestore_id, nil, query:query)
           parsed_json = JSON.parse(json_result)
-          expect_status(201)
+          expect_status_details(201)
           training_dataset_id = parsed_json["id"]
           json_result = get "#{ENV['HOPSWORKS_API']}/project/#{@project.id}/featurestores/#{featurestore_id}/trainingdatasets/#{training_dataset_id}/preparedstatements"
           expect_status_details(200)
@@ -1631,7 +1631,7 @@ describe "On #{ENV['OS']}" do
 
           json_result, _ = create_hopsfs_training_dataset(@project.id, featurestore_id, nil, query:query)
           parsed_json = JSON.parse(json_result)
-          expect_status(201)
+          expect_status_details(201)
           training_dataset_id = parsed_json["id"]
           json_result = get "#{ENV['HOPSWORKS_API']}/project/#{@project.id}/featurestores/#{featurestore_id}/trainingdatasets/#{training_dataset_id}/preparedstatements"
           parsed_json = JSON.parse(json_result)
@@ -1641,7 +1641,7 @@ describe "On #{ENV['OS']}" do
           expect(parsed_json["items"].second["preparedStatementParameters"].first["index"]).to eql(1)
           expect(parsed_json["items"].second["preparedStatementParameters"].first["name"]).to eql("a_testfeature")
           expect(parsed_json["items"].second["queryOnline"]).to eql("SELECT `fg0`.`b_testfeature1` AS `b_testfeature1`\nFROM `#{project_name.downcase}`.`#{fg_name_b}_1` AS `fg0`\nWHERE `fg0`.`a_testfeature` = ?")
-          expect_status(200)
+          expect_status_details(200)
         end
 
         it "should be able to get a training dataset serving vector in correct order and remove feature group with only primary key and label" do
@@ -1831,10 +1831,10 @@ describe "On #{ENV['OS']}" do
 
           json_result, _ = create_hopsfs_training_dataset(@project.id, featurestore_id, nil, query:query)
           parsed_json = JSON.parse(json_result)
-          expect_status(201)
+          expect_status_details(201)
           training_dataset_id = parsed_json["id"]
           get "#{ENV['HOPSWORKS_API']}/project/#{@project.id}/featurestores/#{featurestore_id}/trainingdatasets/#{training_dataset_id}/preparedstatements"
-          expect_status(400)
+          expect_status_details(400)
         end
 
         it "should fail when calling get serving vector if a feature group was deleted" do
@@ -1914,21 +1914,21 @@ describe "On #{ENV['OS']}" do
 
           json_result, _ = create_hopsfs_training_dataset(@project.id, featurestore_id, nil, query:query)
           parsed_json = JSON.parse(json_result)
-          expect_status(201)
+          expect_status_details(201)
           training_dataset_id = parsed_json["id"]
           get "#{ENV['HOPSWORKS_API']}/project/#{@project.id}/featurestores/#{featurestore_id}/trainingdatasets/#{training_dataset_id}/preparedstatements"
-          expect_status(400)
+          expect_status_details(400)
         end
 
         it "should be able to create and then delete transformation function" do
           featurestore_id = get_featurestore_id(@project.id)
           json_result = register_transformation_fn(@project.id, featurestore_id)
           parsed_json = JSON.parse(json_result)
-          expect_status(200)
+          expect_status_details(200)
           transformation_function_id = parsed_json["id"]
           endpoint = "#{ENV['HOPSWORKS_API']}/project/#{@project.id}/featurestores/#{featurestore_id}/transformationfunctions/#{transformation_function_id}"
           delete endpoint
-          expect_status(200)
+          expect_status_details(200)
         end
 
 
@@ -1974,7 +1974,7 @@ describe "On #{ENV['OS']}" do
 
           json_result, _ = create_hopsfs_training_dataset(@project.id, featurestore_id, nil, query:query)
           parsed_json = JSON.parse(json_result)
-          expect_status(201)
+          expect_status_details(201)
           training_dataset_id = parsed_json["id"]
           json_result = get "#{ENV['HOPSWORKS_API']}/project/#{@project.id}/featurestores/#{featurestore_id}/trainingdatasets/#{training_dataset_id}/preparedstatements"
           parsed_json = JSON.parse(json_result)
@@ -1984,7 +1984,7 @@ describe "On #{ENV['OS']}" do
           expect(parsed_json["items"].second["preparedStatementParameters"].first["index"]).to eql(1)
           expect(parsed_json["items"].second["preparedStatementParameters"].first["name"]).to eql("a_testfeature")
           expect(parsed_json["items"].second["queryOnline"]).to eql("SELECT `fg0`.`b_testfeature1` AS `b_testfeature1`\nFROM `#{project_name.downcase}`.`#{fg_name_b}_1` AS `fg0`\nWHERE `fg0`.`a_testfeature` = ?")
-          expect_status(200)
+          expect_status_details(200)
         end
 
         it "should not be able to get a training dataset serving vector containing offline only stream feature group" do
@@ -2152,7 +2152,7 @@ describe "On #{ENV['OS']}" do
           # create transformation function
           json_result = register_transformation_fn(@project.id, featurestore_id)
           transformation_function = JSON.parse(json_result)
-          expect_status(200)
+          expect_status_details(200)
 
           # create first feature group
           project_name = @project.projectname

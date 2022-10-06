@@ -554,7 +554,7 @@ describe "On #{ENV['OS']}" do
         query_params = "?filter_by=ML_TYPE:#{mlType}&xattr_sort_by=#{xattr}:asc"
       #pp "#{resource}#{query_params}"
         result = get "#{resource}#{query_params}"
-        expect_status(500)
+        expect_status_details(500)
         parsed_result = JSON.parse(result)
         expect(parsed_result["errorCode"]).to eq 340002
       end
@@ -1249,7 +1249,7 @@ describe "On #{ENV['OS']}" do
             query = "#{ENV['HOPSWORKS_API']}/project/#{@project1[:id]}/provenance/states?filter_by_has_xattr=#{xattr_key1}"
             #pp "#{query}"
             result = get "#{query}"
-            expect_status(200)
+            expect_status_details(200)
             parsed_result = JSON.parse(result)
             pp "#{parsed_result}" if defined?(@debugOpt) && @debugOpt
             expect(parsed_result["count"]).to eq 2
@@ -1315,7 +1315,7 @@ describe "On #{ENV['OS']}" do
         query = "#{ENV['HOPSWORKS_TESTING']}/test/project/#{project[:id]}/provenance/index/mapping"
       #pp "#{query}"
         result = get "#{query}"
-        expect_status(200)
+        expect_status_details(200)
         parsed_result = JSON.parse(result)
       #pp parsed_result["mapping"]["entry"]
         e1 = parsed_result["mapping"]["entry"].select { |e| e["key"] == "xattr_prov.xattr_string.value" }
@@ -1337,7 +1337,7 @@ describe "On #{ENV['OS']}" do
         query = "#{ENV['HOPSWORKS_TESTING']}/test/project/#{project[:id]}/provenance/index/mapping"
       #pp "#{query}"
         result = get "#{query}"
-        expect_status(200)
+        expect_status_details(200)
         parsed_result = JSON.parse(result)
       #pp parsed_result["mapping"]["entry"]
         e1 = parsed_result["mapping"]["entry"].select { |e| e["key"] == "xattr_prov.xattr_string.value" }
@@ -1353,22 +1353,22 @@ describe "On #{ENV['OS']}" do
         query = "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/provenance/states?xattr_sort_by=xattr_string:ASC"
       #pp "#{query}"
         result = get "#{query}"
-        expect_status(200)
+        expect_status_details(200)
 
         query = "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/provenance/states?xattr_sort_by=xattr_long:ASC"
       #pp "#{query}"
         result = get "#{query}"
-        expect_status(200)
+        expect_status_details(200)
 
         query = "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/provenance/states?xattr_sort_by=xattr_json.xattr_long:ASC"
       #pp "#{query}"
         result = get "#{query}"
-        expect_status(200)
+        expect_status_details(200)
 
         query = "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/provenance/states?xattr_sort_by=xattr_json.xattr_string:ASC"
       #pp "#{query}"
         result = get "#{query}"
-        expect_status(200)
+        expect_status_details(200)
       end
     end
   end
@@ -1387,14 +1387,14 @@ describe "On #{ENV['OS']}" do
       query = "#{ENV['HOPSWORKS_TESTING']}/test/provenance/cleanup?size=2"
       #pp "#{query}"
       result = post "#{query}"
-      expect_status(200)
+      expect_status_details(200)
       parsed_result = JSON.parse(result)
       expect(parsed_result["result"]).to eq 2
 
       query = "#{ENV['HOPSWORKS_TESTING']}/test/provenance/cleanup?size=2"
       #pp "#{query}"
       result = post "#{query}"
-      expect_status(200)
+      expect_status_details(200)
       parsed_result = JSON.parse(result)
       expect(parsed_result["result"]).to eq 0
       reset_session
@@ -1409,7 +1409,7 @@ describe "On #{ENV['OS']}" do
         project1 = create_project
         query = "#{ENV['HOPSWORKS_TESTING']}/test/project/#{project1[:id]}/provenance/index/mapping"
         result = get "#{query}"
-        expect_status(200)
+        expect_status_details(200)
       end
     end
   end

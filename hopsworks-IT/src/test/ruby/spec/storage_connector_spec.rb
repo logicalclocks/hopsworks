@@ -31,7 +31,7 @@ describe "On #{ENV['OS']}" do
         featurestore_id = get_featurestore_id(project.id)
         json_result, connector_name = create_hopsfs_connector(project.id, featurestore_id, datasetName: "Resources")
         parsed_json = JSON.parse(json_result)
-        expect_status(201)
+        expect_status_details(201)
         expect(parsed_json.key?("id")).to be true
         expect(parsed_json.key?("name")).to be true
         expect(parsed_json.key?("description")).to be true
@@ -49,7 +49,7 @@ describe "On #{ENV['OS']}" do
         featurestore_id = get_featurestore_id(project.id)
         json_result, connector_name = create_hopsfs_connector(project.id, featurestore_id, datasetName: "-")
         parsed_json = JSON.parse(json_result)
-        expect_status(400)
+        expect_status_details(400)
         expect(parsed_json.key?("errorCode")).to be true
         expect(parsed_json.key?("errorMsg")).to be true
         expect(parsed_json.key?("usrMsg")).to be true
@@ -65,7 +65,7 @@ describe "On #{ENV['OS']}" do
                                                           secret_key: "secret_key")
 
         parsed_json = JSON.parse(json_result)
-        expect_status(201)
+        expect_status_details(201)
         expect(parsed_json.key?("id")).to be true
         expect(parsed_json.key?("name")).to be true
         expect(parsed_json.key?("description")).to be true
@@ -85,7 +85,7 @@ describe "On #{ENV['OS']}" do
         featurestore_id = get_featurestore_id(project.id)
         json_result, connector_name = create_s3_connector(project.id, featurestore_id, bucket: "testbucket")
         parsed_json = JSON.parse(json_result)
-        expect_status(201)
+        expect_status_details(201)
         expect(parsed_json.key?("id")).to be true
         expect(parsed_json.key?("name")).to be true
         expect(parsed_json.key?("description")).to be true
@@ -108,7 +108,7 @@ describe "On #{ENV['OS']}" do
                                                           secret_key: "test", access_key: "test",
                                                           bucket: "testbucket")
         parsed_json = JSON.parse(json_result)
-        expect_status(201)
+        expect_status_details(201)
         expect(parsed_json.key?("id")).to be true
         expect(parsed_json.key?("name")).to be true
         expect(parsed_json.key?("description")).to be true
@@ -135,7 +135,7 @@ describe "On #{ENV['OS']}" do
                                                           access_key: "test", secret_key: "test",
                                                           bucket: "testbucket")
         parsed_json = JSON.parse(json_result)
-        expect_status(201)
+        expect_status_details(201)
         expect(parsed_json.key?("id")).to be true
         expect(parsed_json.key?("name")).to be true
         expect(parsed_json.key?("description")).to be true
@@ -206,7 +206,7 @@ describe "On #{ENV['OS']}" do
         json_result, _ = create_s3_connector(project.id, featurestore_id, encryption_algorithm: "WRONG-ALGORITHM",
                                              access_key: "test", secret_key: "test", bucket: "testbucket")
         parsed_json = JSON.parse(json_result)
-        expect_status(400)
+        expect_status_details(400)
         expect(parsed_json.key?("errorCode")).to be true
         expect(parsed_json.key?("errorMsg")).to be true
         expect(parsed_json.key?("usrMsg")).to be true
@@ -225,7 +225,7 @@ describe "On #{ENV['OS']}" do
                                              bucket: "testbucket")
 
         parsed_json = JSON.parse(json_result)
-        expect_status(400)
+        expect_status_details(400)
         expect(parsed_json.key?("errorCode")).to be true
         expect(parsed_json.key?("errorMsg")).to be true
         expect(parsed_json.key?("usrMsg")).to be true
@@ -237,7 +237,7 @@ describe "On #{ENV['OS']}" do
         featurestore_id = get_featurestore_id(project.id)
         json_result, _ = create_s3_connector(project.id, featurestore_id, secret_key: "test", bucket: "testbucket")
         parsed_json = JSON.parse(json_result)
-        expect_status(400)
+        expect_status_details(400)
         expect(parsed_json.key?("errorCode")).to be true
         expect(parsed_json.key?("errorMsg")).to be true
         expect(parsed_json.key?("usrMsg")).to be true
@@ -248,7 +248,7 @@ describe "On #{ENV['OS']}" do
         featurestore_id = get_featurestore_id(project.id)
         json_result, _ = create_s3_connector(project.id, featurestore_id, access_key: "test", bucket: "testbucket")
         parsed_json = JSON.parse(json_result)
-        expect_status(400)
+        expect_status_details(400)
         expect(parsed_json.key?("errorCode")).to be true
         expect(parsed_json.key?("errorMsg")).to be true
         expect(parsed_json.key?("usrMsg")).to be true
@@ -260,7 +260,7 @@ describe "On #{ENV['OS']}" do
         json_result, _ = create_s3_connector(project.id, featurestore_id,
                                              access_key: "test", secret_key: "test", bucket: nil)
         parsed_json = JSON.parse(json_result)
-        expect_status(400)
+        expect_status_details(400)
         expect(parsed_json.key?("errorCode")).to be true
         expect(parsed_json.key?("errorMsg")).to be true
         expect(parsed_json.key?("usrMsg")).to be true
@@ -272,7 +272,7 @@ describe "On #{ENV['OS']}" do
         featurestore_id = get_featurestore_id(project.id)
         json_result, connector_name = create_jdbc_connector(project.id, featurestore_id, connectionString: "jdbc://test2")
         parsed_json = JSON.parse(json_result)
-        expect_status(201)
+        expect_status_details(201)
         expect(parsed_json.key?("id")).to be true
         expect(parsed_json.key?("name")).to be true
         expect(parsed_json.key?("description")).to be true
@@ -290,7 +290,7 @@ describe "On #{ENV['OS']}" do
         featurestore_id = get_featurestore_id(project.id)
         json_result, _ = create_jdbc_connector(project.id, featurestore_id, connectionString: nil)
         parsed_json = JSON.parse(json_result)
-        expect_status(400)
+        expect_status_details(400)
         expect(parsed_json.key?("errorCode")).to be true
         expect(parsed_json.key?("errorMsg")).to be true
         expect(parsed_json.key?("usrMsg")).to be true
@@ -302,11 +302,11 @@ describe "On #{ENV['OS']}" do
         featurestore_id = get_featurestore_id(project.id)
         json_result, _ = create_hopsfs_connector(project.id, featurestore_id, datasetName: "Resources")
         parsed_json = JSON.parse(json_result)
-        expect_status(201)
+        expect_status_details(201)
         connector_name = parsed_json["name"]
         delete_connector_endpoint = "#{ENV['HOPSWORKS_API']}/project/#{project.id}/featurestores/#{featurestore_id}/storageconnectors/#{connector_name}"
         delete delete_connector_endpoint
-        expect_status(200)
+        expect_status_details(200)
       end
 
       it "should be able to delete a s3 connector from the featurestore" do
@@ -316,11 +316,11 @@ describe "On #{ENV['OS']}" do
         json_result, connector_name = create_s3_connector(project.id, featurestore_id, access_key: "test",
                                                        secret_key: "test", bucket: "testbucket")
         parsed_json = JSON.parse(json_result)
-        expect_status(201)
+        expect_status_details(201)
         connector_name = parsed_json["name"]
         delete_connector_endpoint = "#{ENV['HOPSWORKS_API']}/project/#{project.id}/featurestores/#{featurestore_id}/storageconnectors/#{connector_name}"
         delete delete_connector_endpoint
-        expect_status(200)
+        expect_status_details(200)
       end
 
       it "should be able to delete a JDBC connector from the featurestore" do
@@ -329,11 +329,11 @@ describe "On #{ENV['OS']}" do
         featurestore_id = get_featurestore_id(project.id)
         json_result, connector_name = create_jdbc_connector(project.id, featurestore_id, connectionString: "jdbc://test2")
         parsed_json = JSON.parse(json_result)
-        expect_status(201)
+        expect_status_details(201)
         connector_name = parsed_json["name"]
         delete_connector_endpoint = "#{ENV['HOPSWORKS_API']}/project/#{project.id}/featurestores/#{featurestore_id}/storageconnectors/#{connector_name}"
         delete delete_connector_endpoint
-        expect_status(200)
+        expect_status_details(200)
       end
 
       it "should be able to update hopsfs connector in the featurestore" do
@@ -341,7 +341,7 @@ describe "On #{ENV['OS']}" do
         create_session(project[:username], "Pass123")
         featurestore_id = get_featurestore_id(project.id)
         json_result1, connector_name = create_hopsfs_connector(project.id, featurestore_id, datasetName: "Resources")
-        expect_status(201)
+        expect_status_details(201)
 
         json_result2, _ = update_hopsfs_connector(project.id, featurestore_id, connector_name, datasetName: "Experiments")
         parsed_json2 = JSON.parse(json_result2)
@@ -365,7 +365,7 @@ describe "On #{ENV['OS']}" do
                                                            encryption_algorithm: "AES256",
                                                            access_key: "test", secret_key: "test",
                                                            bucket: "testbucket")
-        expect_status(201)
+        expect_status_details(201)
 
         update_s3_connector(project.id, featurestore_id, s3_connector_name,
                             access_key: "testdifferent", secret_key: "test",
@@ -385,7 +385,7 @@ describe "On #{ENV['OS']}" do
                                                             bucket: "testbucket")
 
         parsed_json1 = JSON.parse(json_result1)
-        expect_status(201)
+        expect_status_details(201)
 
         json_result2, _ = update_s3_connector(project.id, featurestore_id, connector_name,
                                                             access_key: "testdifferent", secret_key: "test",
@@ -410,7 +410,7 @@ describe "On #{ENV['OS']}" do
         create_session(project[:username], "Pass123")
         featurestore_id = get_featurestore_id(project.id)
         json_result1, connector_name = create_jdbc_connector(project.id, featurestore_id, connectionString: "jdbc://test2")
-        expect_status(201)
+        expect_status_details(201)
         json_result2 = update_jdbc_connector(project.id, featurestore_id, connector_name, connectionString: "jdbc://test3")
         parsed_json2 = JSON.parse(json_result2)
         expect(parsed_json2.key?("id")).to be true

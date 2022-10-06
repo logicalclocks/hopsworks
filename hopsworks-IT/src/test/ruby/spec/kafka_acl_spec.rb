@@ -27,7 +27,7 @@ describe "On #{ENV['OS']}" do
           new_member = create_user[:email]
           post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/projectMembers", {projectTeam: [{projectTeamPK: {projectId: @project[:id], teamMember: new_member}, teamRole: "Data scientist"}]}
           expect_json(successMessage: "One member added successfully")
-          expect_status(200)
+          expect_status_details(200)
           with_kafka_schema(project.id)
           with_kafka_topic(project.id)
         end
@@ -41,7 +41,7 @@ describe "On #{ENV['OS']}" do
           get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/projectMembers"
           usersInProject = json_body.size
           get_kafka_acls(project, topic_name)
-          expect_status(200)
+          expect_status_details(200)
           expect(json_body[:items].count).to eq(usersInProject)
         end
         it 'should add a new acl after adding a new member to the project' do
@@ -55,7 +55,7 @@ describe "On #{ENV['OS']}" do
           project = get_project
           topic_name = get_topic
           get_kafka_acls(project, topic_name)
-          expect_status(200)
+          expect_status_details(200)
           expect(json_body[:items].count).to eq(usersInProjectUpdated)
         end
         it 'should remove all acls related to a member after removing this member from a project' do
@@ -91,7 +91,7 @@ describe "On #{ENV['OS']}" do
           acls_before = json_body[:items].count
           user = get_user
           add_kafka_acl(project, topic_name, project[:projectname], user.email, "allow", "read", "*", "Data Scientist")
-          expect_status(201)
+          expect_status_details(201)
           get_kafka_acls(project, topic_name)
           expect(json_body[:items].count).to eq(acls_before + 1)
         end
@@ -100,15 +100,15 @@ describe "On #{ENV['OS']}" do
           topic_name = get_topic
           user = get_user
           add_kafka_acl(project, topic_name, project[:projectname], user.email, "allow", "write", "1.1.1.1", "Data Scientist")
-          expect_status(201)
+          expect_status_details(201)
           add_kafka_acl(project, topic_name, project[:projectname], user.email, "allow", "write", "1.1.1.1", "Data Scientist")
-          expect_status(200)
+          expect_status_details(200)
         end
         it 'should throw an error when adding an acl with * email address' do
           project = get_project
           topic_name = get_topic
           add_kafka_acl(project, topic_name, project[:projectname], "*", "allow", "write", "*", "Data Scientist")
-          expect_status(400)
+          expect_status_details(400)
           expect_json(errorCode: 190020)
         end
         it 'should return metadata of an acl for a specified id' do
@@ -118,7 +118,7 @@ describe "On #{ENV['OS']}" do
           add_kafka_acl(project, topic_name, project[:projectname], user.email, "allow", "write", "2.3.4.5", "Data Scientist")
           acl_id = json_body[:id]
           get_kafka_acl(project, topic_name, acl_id)
-          expect_status(200)
+          expect_status_details(200)
           expect(json_body[:projectName]).to eq(project[:projectname])
           expect(json_body[:host]).to eq("2.3.4.5")
           expect(json_body[:id]).to eq(acl_id)
@@ -134,11 +134,11 @@ describe "On #{ENV['OS']}" do
           add_kafka_acl(project, topic_name, project[:projectname], user.email, "allow", "write", "2.3.4.6", "Data Scientist")
           acl_id = json_body[:id]
           get_kafka_acl(project, topic_name, acl_id)
-          expect_status(200)
+          expect_status_details(200)
           delete_kafka_acl(project, topic_name, acl_id)
-          expect_status(204)
+          expect_status_details(204)
           get_kafka_acl(project, topic_name, acl_id)
-          expect_status(404)
+          expect_status_details(404)
           expect_json(errorCode: 190012)
         end
         it 'should delete all acls belonging to a topic when deleting this topic' do
@@ -148,7 +148,7 @@ describe "On #{ENV['OS']}" do
           expect(json_body[:items].count).to be > 0
           delete_topic(project.id, topic_name)
           get_kafka_acls(project, topic_name)
-          expect_status(200)
+          expect_status_details(200)
           expect(json_body[:count]).to eq(0)
         end
         it 'should add acls for a second project after sharing a topic' do
@@ -176,7 +176,7 @@ describe "On #{ENV['OS']}" do
         new_member = create_user[:email]
         post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/projectMembers", {projectTeam: [{projectTeamPK: {projectId: @project[:id], teamMember: new_member}, teamRole: "Data scientist"}]}
         expect_json(successMessage: "One member added successfully")
-        expect_status(200)
+        expect_status_details(200)
         other_project = create_project
         share_topic(project, topic, other_project)
         create_kafka_acls(project, topic, other_project)

@@ -89,7 +89,7 @@ describe "On #{ENV['OS']}" do
              requestedInstances: 1
             }
         expect_json(usrMsg: "Serving name cannot contain spaces")
-        expect_status(422)
+        expect_status_details(422)
       end
 
       it "should fail to create a serving with an existing name" do
@@ -236,7 +236,7 @@ describe "On #{ENV['OS']}" do
              requestedInstances: 1
             }
         expect_json(usrMsg: "Model server not provided or unsupported")
-        expect_status(422)
+        expect_status_details(422)
       end
 
       it "should fail to create a serving with an invalid model server" do
@@ -254,7 +254,7 @@ describe "On #{ENV['OS']}" do
             }
         # response: from String \"INVALID\": not one of the values accepted for Enum class: [TENSORFLOW_SERVING, PYTHON]
         #expect_json(usrMsg: "Model server not provided or unsupported")
-        expect_status(400)
+        expect_status_details(400)
       end
 
       # model framework
@@ -273,7 +273,7 @@ describe "On #{ENV['OS']}" do
              requestedInstances: 1
             }
         expect_json(usrMsg: "Model framework not provided or unsupported")
-        expect_status(422)
+        expect_status_details(422)
       end
 
       # serving tool
@@ -292,7 +292,7 @@ describe "On #{ENV['OS']}" do
             }
         # response: from String \"INVALID\": not one of the values accepted for Enum class: [DEFAULT, KSERVE]
         #expect_json(usrMsg: "Serving tool not provided or invalid")
-        expect_status(400)
+        expect_status_details(400)
       end
 
 
@@ -310,7 +310,7 @@ describe "On #{ENV['OS']}" do
              requestedInstances: 1
             }
         expect_json(usrMsg: "Serving tool not provided or invalid")
-        expect_status(422)
+        expect_status_details(422)
       end
 
       # kafka topic
@@ -335,7 +335,7 @@ describe "On #{ENV['OS']}" do
              requestedInstances: 1
             }
         expect_json(errorMsg: "Maximum topic replication factor exceeded")
-        expect_status(400)
+        expect_status_details(400)
       end
 
       it "should create a serving without kafka topic" do
@@ -963,7 +963,7 @@ describe "On #{ENV['OS']}" do
         second_serving = create_tensorflow_serving(@local_project.id, @local_project.projectname)
         ## Starting this one should fail because quota has beed reached
         post "#{ENV['HOPSWORKS_API']}/project/#{@local_project.id}/serving/#{second_serving.id}?action=start"
-        expect_status(400)
+        expect_status_details(400)
         parsed = JSON.parse(response)
         expect(parsed['devMsg']).to include("quota")
       end
@@ -1098,7 +1098,7 @@ describe "On #{ENV['OS']}" do
         wait_for_type(@serving[:name])
 
         delete "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/#{@serving[:id]}"
-        expect_status(200)
+        expect_status_details(200)
 
         sleep(5)
 
@@ -1116,7 +1116,7 @@ describe "On #{ENV['OS']}" do
 
       it "should fail to get servings" do
         get_servings(@project, nil)
-        expect_status(401)
+        expect_status_details(401)
       end
     end
 
@@ -1131,7 +1131,7 @@ describe "On #{ENV['OS']}" do
 
       it "should return all servings" do
         get_servings(@project, nil)
-        expect_status(200)
+        expect_status_details(200)
         json_body.each {|model| expect(model[:status]).to eq "Stopped"}
         expect(json_body.length).to eq 3
       end
@@ -1139,14 +1139,14 @@ describe "On #{ENV['OS']}" do
       describe "#status" do
         it "should return all stopped servings" do
           get_servings(@project, "?status=Stopped")
-          expect_status(200)
+          expect_status_details(200)
           json_body.each {|model| expect(model[:status]).to eq "Stopped"}
           expect(json_body.length).to eq 3
         end
 
         it "should return no running servings" do
           get_servings(@project, "?status=Running")
-          expect_status(200)
+          expect_status_details(200)
           expect(json_body.length).to eq 0
         end
 
@@ -1155,7 +1155,7 @@ describe "On #{ENV['OS']}" do
           wait_for_serving_status(@tf_serving[:name], "Running")
 
           get_servings(@project, "?status=Running")
-          expect_status(200)
+          expect_status_details(200)
           json_body.each {|model| expect(model[:status]).to eq "Running"}
           expect(json_body.length).to eq 1
         end
@@ -1164,13 +1164,13 @@ describe "On #{ENV['OS']}" do
       describe "#model" do
         it "should return no servings for non-existent model" do
           get_servings(@project, "?model=cifar")
-          expect_status(200)
+          expect_status_details(200)
           expect(json_body.length).to eq 0
         end
 
         it "should return all servings for mnist model" do
           get_servings(@project, "?model=mnist")
-          expect_status(200)
+          expect_status_details(200)
           json_body.each {|model| expect(model[:modelName]).to eq "mnist"}
           expect(json_body.length).to eq 3
         end
@@ -1201,25 +1201,25 @@ describe "On #{ENV['OS']}" do
              servingTool: "DEFAULT",
              requestedInstances: 1
             }
-        expect_status(403)
+        expect_status_details(403)
       end
       it "should fail to start a serving" do
         reset_session
         create_session(@member[:email],"Pass123")
         post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/#{@serving[:id]}?action=start"
-        expect_status(403)
+        expect_status_details(403)
       end
       it "should fail to stop a serving" do
         reset_session
         create_session(@member[:email],"Pass123")
         post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/#{@serving[:id]}?action=stop"
-        expect_status(403)
+        expect_status_details(403)
       end
       it "should fail to delete a serving" do
         reset_session
         create_session(@member[:email],"Pass123")
         delete "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/#{@serving[:id]}"
-        expect_status(403)
+        expect_status_details(403)
       end
     end
   end

@@ -27,7 +27,7 @@ describe "On #{ENV['OS']}" do
       end
       it "restricts requests for admin resources from non-admin accounts" do
         admin_get_all_cluster_nodes()
-        expect_status(401)
+        expect_status_details(401)
         expect_json(errorCode: 200003)
       end
     end
@@ -39,7 +39,7 @@ describe "On #{ENV['OS']}" do
 
       it "restricts requests for admin resources from a normal user account" do
         admin_get_all_cluster_nodes()
-        expect_status(403)
+        expect_status_details(403)
         expect_json(errorCode: 200014)
       end
     end
@@ -56,7 +56,7 @@ describe "On #{ENV['OS']}" do
 
       it "gets the list of all cluster nodes" do
         admin_get_all_cluster_nodes()
-        expect_status(200)
+        expect_status_details(200)
         expect(json_body[:count]).to be > 0
       end
 
@@ -64,12 +64,12 @@ describe "On #{ENV['OS']}" do
         admin_get_all_cluster_nodes()
         hostname = json_body[:items].first[:hostname]
         admin_get_cluster_node_by_hostname(hostname)
-        expect_status(200)
+        expect_status_details(200)
       end
 
       it "fails to get cluster node by random hostname" do
         admin_get_cluster_node_by_hostname("#{short_random_id}")
-        expect_status(404)
+        expect_status_details(404)
         expect_json(errorCode: 100025)
       end
 
@@ -81,7 +81,7 @@ describe "On #{ENV['OS']}" do
           "hostIp": ip
         }
         admin_create_update_cluster_node(hostname, json_data)
-        expect_status(201)
+        expect_status_details(201)
         expect_json(hostname: hostname)
         expect_json(hostIp: ip)
       end
@@ -94,16 +94,16 @@ describe "On #{ENV['OS']}" do
           "hostIp": ip
         }
         admin_create_update_cluster_node(hostname, json_data)
-        expect_status(201)
+        expect_status_details(201)
         new_ip = "#{short_random_id}"
         json_data = {
           "hostname": hostname,
           "hostIp": new_ip
         }
         admin_create_update_cluster_node(hostname, json_data)
-        expect_status(204)
+        expect_status_details(204)
         admin_get_cluster_node_by_hostname(hostname)
-        expect_status(200)
+        expect_status_details(200)
         expect_json(hostIp: new_ip)
       end
 
@@ -115,14 +115,14 @@ describe "On #{ENV['OS']}" do
           "hostIp": ip
         }
         admin_create_update_cluster_node(hostname, json_data)
-        expect_status(201)
+        expect_status_details(201)
         admin_delete_cluster_node_by_hostname(hostname)
-        expect_status(204)
+        expect_status_details(204)
       end
 
       it "fails to delete a cluster node with random hostname" do
         admin_delete_cluster_node_by_hostname("#{short_random_id}")
-        expect_status(404)
+        expect_status_details(404)
       end
     end
 
@@ -134,7 +134,7 @@ describe "On #{ENV['OS']}" do
 
       it "gets list of services of a hostname" do
         hosts_get_host_services(@hostname)
-        expect_status(200)
+        expect_status_details(200)
         expect(json_body[:count]).to be > 0
       end
 
@@ -142,7 +142,7 @@ describe "On #{ENV['OS']}" do
         hosts_get_host_services(@hostname)
         name = json_body[:items].first[:name]
         hosts_get_host_service_by_name(@hostname, name)
-        expect_status(200)
+        expect_status_details(200)
         expect(json_body[:name]).to eq(name)
       end
 
@@ -150,7 +150,7 @@ describe "On #{ENV['OS']}" do
         sparkhistoryserver_start(@hostname)
         expect(is_service_running("sparkhistoryserver", @hostname)).to eq(true)
         hosts_update_host_service(@hostname, "sparkhistoryserver", "SERVICE_STOP")
-        expect_status(200)
+        expect_status_details(200)
         # wait for service to stop
         sleep(10)
         expect(is_service_running("sparkhistoryserver", @hostname)).to eq(false)
@@ -160,7 +160,7 @@ describe "On #{ENV['OS']}" do
         sparkhistoryserver_stop(@hostname)
         expect(is_service_running("sparkhistoryserver", @hostname)).to eq(false)
         hosts_update_host_service(@hostname, "sparkhistoryserver", "SERVICE_START")
-        expect_status(200)
+        expect_status_details(200)
         # wait for service to stop
         sleep(10)
         expect(is_service_running("sparkhistoryserver", @hostname)).to eq(true)
@@ -168,7 +168,7 @@ describe "On #{ENV['OS']}" do
 
       it "restart a service" do
         hosts_update_host_service(@hostname, "sparkhistoryserver", "SERVICE_RESTART")
-        expect_status(200)
+        expect_status_details(200)
         # wait for service to stop
         sleep(10)
         expect(is_service_running("sparkhistoryserver", @hostname)).to eq(true)
