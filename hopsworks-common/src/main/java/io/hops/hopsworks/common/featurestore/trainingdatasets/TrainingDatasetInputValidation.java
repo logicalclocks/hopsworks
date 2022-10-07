@@ -104,7 +104,7 @@ public class TrainingDatasetInputValidation {
     validateType(trainingDatasetDTO.getTrainingDatasetType());
     validateVersion(trainingDatasetDTO.getVersion());
     validateDataFormat(trainingDatasetDTO.getDataFormat());
-    String eventTimeFieldName = query.getFeaturegroup().getEventTime();
+    String eventTimeFieldName = query != null ? query.getFeaturegroup().getEventTime() : null;
     validateSplits(trainingDatasetDTO.getSplits(), eventTimeFieldName);
     validateFeatures(query, trainingDatasetDTO.getFeatures());
     validateStorageConnector(trainingDatasetDTO.getStorageConnector());
