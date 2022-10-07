@@ -21,6 +21,8 @@ import io.hops.hopsworks.common.dao.jobs.description.JobFacade;
 import io.hops.hopsworks.common.dataset.DatasetController;
 import io.hops.hopsworks.common.featurestore.FeaturestoreController;
 import io.hops.hopsworks.common.featurestore.OptionDTO;
+import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupFacade;
+import io.hops.hopsworks.common.featurestore.featuregroup.ImportFgJobConf;
 import io.hops.hopsworks.common.featurestore.featuregroup.IngestionDataFormat;
 import io.hops.hopsworks.common.featurestore.featuregroup.IngestionJob;
 import io.hops.hopsworks.common.featurestore.featuregroup.stream.DeltaStreamerJobConf;
@@ -28,6 +30,7 @@ import io.hops.hopsworks.common.featurestore.query.Query;
 import io.hops.hopsworks.common.featurestore.query.QueryBuilder;
 import io.hops.hopsworks.common.featurestore.query.QueryController;
 import io.hops.hopsworks.common.featurestore.query.QueryDTO;
+import io.hops.hopsworks.common.featurestore.storageconnectors.FeaturestoreStorageConnectorDTO;
 import io.hops.hopsworks.common.featurestore.trainingdatasets.TrainingDatasetController;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.hdfs.DistributedFsService;
@@ -48,6 +51,7 @@ import io.hops.hopsworks.persistence.entity.dataset.DatasetAccessPermission;
 import io.hops.hopsworks.persistence.entity.featurestore.Featurestore;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.Featuregroup;
 import io.hops.hopsworks.persistence.entity.featurestore.featureview.FeatureView;
+import io.hops.hopsworks.persistence.entity.featurestore.storageconnector.FeaturestoreConnectorType;
 import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.TrainingDataset;
 import io.hops.hopsworks.persistence.entity.jobs.configuration.JobType;
 import io.hops.hopsworks.persistence.entity.jobs.configuration.spark.SparkJobConfiguration;
@@ -67,6 +71,7 @@ import java.nio.file.Paths;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.stream.Collectors;
@@ -97,6 +102,8 @@ public class FsJobManagerController {
   private QueryController queryController;
   @EJB
   private QueryBuilder queryBuilder;
+  @EJB
+  private FeaturegroupFacade featuregroupFacade;
 
   private ObjectMapper objectMapper = new ObjectMapper();
   private SimpleDateFormat formatter = new SimpleDateFormat("ddMMyyyyHHmmss");
@@ -107,6 +114,7 @@ public class FsJobManagerController {
   private final static String COMPUTE_STATS_OP = "compute_stats";
   private final static String DELTA_STREAMER_OP = "offline_fg_backfill";
   private final static String GE_VALIDATE_OP = "ge_validate";
+  private final static String IMPORT_FEATUREGROUP_OP = "import_fg";
 
   public IngestionJob setupIngestionJob(Project project, Users user, Featuregroup featureGroup,
                                         SparkJobConfiguration sparkJobConfiguration, IngestionDataFormat dataFormat,
@@ -215,6 +223,57 @@ public class FsJobManagerController {
     } catch (IOException e) {
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ERROR_JOB_SETUP, Level.SEVERE,
         "Error setting up " + configPrefix + " job", e.getMessage(), e);
+    } finally {
+      dfs.closeDfsClient(udfso);
+    }
+  }
+  
+  /**
+   *  setup job configuration passed as argument for creating and launching job
+   * @param project
+   * @param user
+   * @param featurestore
+   * @param entityName
+   * @param entityVersion
+   * @param type
+   * @param op
+   * @param configPrefix
+   * @param jobConfiguration
+   * @return Jobs
+   * @throws FeaturestoreException
+   * @throws JobException
+   * @throws GenericException
+   * @throws ProjectException
+   * @throws ServiceException
+   */
+  private Jobs setupAndStartJob(Project project, Users user, Featurestore featurestore, String entityName,
+    Integer entityVersion, JobEntityType type, String op, String configPrefix,
+                                Map<String, String> jobConfiguration)
+          throws FeaturestoreException, JobException, GenericException, ProjectException, ServiceException {
+    
+    DistributedFileSystemOps udfso = dfs.getDfsOps(hdfsUsersController.getHdfsUserName(project, user));
+    try {
+      String jobConfigurationPath = getJobConfigurationPath(project, entityName,
+              Integer.valueOf(entityVersion), configPrefix);
+      jobConfiguration.put("feature_store",
+        featurestoreController.getOfflineFeaturestoreDbName(featurestore.getProject()));
+      jobConfiguration.put("type", type.toString());
+      String jobConfigurationStr = objectMapper.writeValueAsString(jobConfiguration);
+      writeToHDFS(jobConfigurationPath, jobConfigurationStr, udfso);
+      
+      String jobArgs = getJobArgs(op, jobConfigurationPath);
+      Jobs job = configureJob(user, project, null,
+              getJobName(op,
+                      Utils.getFeatureStoreEntityName(entityName,
+                              Integer.valueOf(entityVersion)),
+                              false),
+              jobArgs, JobType.PYSPARK);
+
+      executionController.start(job, jobArgs, user);
+      return job;
+    } catch (IOException e) {
+      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ERROR_JOB_SETUP, Level.SEVERE,
+              "Error setting up " + configPrefix + " job", e.getMessage(), e);
     } finally {
       dfs.closeDfsClient(udfso);
     }
@@ -409,4 +468,68 @@ public class FsJobManagerController {
     jobController.deleteJob(jobController.getJob(project,
       getJobName(DELTA_STREAMER_OP, Utils.getFeaturegroupName(featuregroup), false)), user);
   }
+
+  public Jobs setupImportFgJob(Project project, Users user, Featurestore featurestore, ImportFgJobConf importFgJobConf)
+          throws FeaturestoreException, JobException, GenericException, ProjectException, ServiceException {
+
+    Map jobConfiguration =new HashMap<>();
+    FeaturestoreStorageConnectorDTO storageConnector = importFgJobConf.getStorageConnectorDTO();
+    FeaturestoreConnectorType connectorType = storageConnector.getStorageConnectorType();
+    HashMap<String, String> options = new HashMap<String, String>();
+    // set spark options as per connector type
+    if (importFgJobConf.getTable() != null) {
+      switch (connectorType) {
+        case SNOWFLAKE:
+        case REDSHIFT:
+          options.put("dbtable", importFgJobConf.getTable());
+          break;
+        case BIGQUERY:
+          options.put("table", importFgJobConf.getTable());
+          break;
+        default:
+          break;
+      }
+    }
+    // get new version
+    int version = getNewFeatureGroupVersion(featurestore,importFgJobConf.getFeatureGroupName());
+
+    jobConfiguration.put("storageConnectorName", storageConnector.getName());
+    jobConfiguration.put("featureGroupName", importFgJobConf.getFeatureGroupName());
+    jobConfiguration.put("query", importFgJobConf.getQuery());
+    jobConfiguration.put("primaryKey", importFgJobConf.getPrimaryKey());
+    jobConfiguration.put("version", String.valueOf(version));
+    jobConfiguration.put("options", options);
+    jobConfiguration.put("connectorType", connectorType.name());
+    // optional fields
+    if (importFgJobConf.getPartitionKey() != null) {
+      jobConfiguration.put("partitionKey", importFgJobConf.getPartitionKey());
+    }
+    if (importFgJobConf.getStatisticsConfigDTO() != null) {
+      jobConfiguration.put("statisticsConfig", importFgJobConf.getStatisticsConfigDTO());
+    }
+    if ( importFgJobConf.isOnlineEnabled()) {
+      jobConfiguration.put("onlineEnabled", importFgJobConf.isOnlineEnabled());
+    }
+    if ( importFgJobConf.getEventTime() != null) {
+      jobConfiguration.put("eventTime", importFgJobConf.getEventTime());
+    }
+    if ( importFgJobConf.getDescription() != null) {
+      jobConfiguration.put("description", importFgJobConf.getDescription());
+    }
+  
+    return setupAndStartJob(project, user, featurestore, importFgJobConf.getFeatureGroupName(),
+      version,JobEntityType.FG,IMPORT_FEATUREGROUP_OP,
+      "importData", jobConfiguration);
+  }
+  
+  public int getNewFeatureGroupVersion(Featurestore featurestore, String featureGroupName){
+    List<Featuregroup> fgPrevious = featuregroupFacade.findByNameAndFeaturestoreOrderedDescVersion(
+      featureGroupName, featurestore);
+    if (fgPrevious != null && !fgPrevious.isEmpty()) {
+      return fgPrevious.get(0).getVersion()+1;
+    } else {
+      return 1;
+    }
+  }
+  
 }
