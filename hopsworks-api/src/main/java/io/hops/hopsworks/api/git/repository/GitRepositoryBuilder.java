@@ -28,6 +28,7 @@ import io.hops.hopsworks.persistence.entity.git.GitCommit;
 import io.hops.hopsworks.persistence.entity.git.GitOpExecution;
 import io.hops.hopsworks.persistence.entity.git.GitRepository;
 import io.hops.hopsworks.persistence.entity.project.Project;
+import io.hops.hopsworks.persistence.entity.user.Users;
 
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
@@ -117,15 +118,15 @@ public class GitRepositoryBuilder {
     return repositoryDTO;
   }
 
-  public GitRepositoryDTO build(UriInfo uriInfo, ResourceRequest resourceRequest, Project project) {
+  public GitRepositoryDTO build(UriInfo uriInfo, ResourceRequest resourceRequest, Project project, Users user) {
     GitRepositoryDTO repoDTO = new GitRepositoryDTO();
     repoDTO.setHref(uri(uriInfo, project));
     repoDTO.setExpand(expand(resourceRequest));
     if (repoDTO.isExpand()) {
       Integer limit = resourceRequest.getLimit() == null ? DEFAULT_REPOSITORY_LIMIT : resourceRequest.getLimit();
       Integer offset = resourceRequest.getOffset() == null ? 0 : resourceRequest.getOffset();
-      AbstractFacade.CollectionInfo<GitRepository> projectRepos = gitRepositoryFacade.getAllInProject(project,
-          resourceRequest.getFilter(), resourceRequest.getSort(), limit, offset);
+      AbstractFacade.CollectionInfo<GitRepository> projectRepos = gitRepositoryFacade.getAllInProjectForUser(project,
+              user, resourceRequest.getFilter(), resourceRequest.getSort(), limit, offset);
       List<GitRepositoryDTO> dtos = projectRepos.getItems().stream().map(r -> build(uriInfo, resourceRequest, project,
           r)).collect(Collectors.toList());
       repoDTO.setItems(dtos);
