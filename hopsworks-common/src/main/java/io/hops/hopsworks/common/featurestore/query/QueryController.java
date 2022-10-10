@@ -147,13 +147,6 @@ public class QueryController {
     if (fg.getStreamFeatureGroup() != null ||
         (fg.getCachedFeaturegroup() != null &&
         fg.getCachedFeaturegroup().getTimeTravelFormat() == TimeTravelFormat.HUDI)) {
-      // if hudi and end hive engine, only possible to get latest snapshot else raise exception
-      if (queryDTO.getHiveEngine() && (queryDTO.getLeftFeatureGroupEndTime() != null
-          || queryDTO.getJoins().stream().anyMatch(join -> join.getQuery().getLeftFeatureGroupEndTime() != null))) {
-        throw new IllegalArgumentException("Hive engine on Python environments does not support incremental queries. " +
-            "Read feature group without timestamp to retrieve latest snapshot or switch to " +
-            "environment with Spark Engine.");
-      }
 
       // if a user specified a point in time in the request use it, otherwise set null and let the HSFS
       // APIs use SNAPSHOT query. the end time field will trigger an INCREMENTAL query. Incremental queries
