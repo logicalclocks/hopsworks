@@ -407,7 +407,7 @@ public class ValidationReportController {
 
       shortResultJson.put("unexpected_count", resultJson.getInt("unexpected_count"));
       shortResultJson.put("unexpected_percent", resultJson.getFloat("unexpected_percent"));
-      shortResultJson.put("unexpected_percent_nonmissing", resultJson.getFloat("unexpected_percent_missing"));
+      shortResultJson.put("unexpected_percent_nonmissing", resultJson.getFloat("unexpected_percent_nonmissing"));
       shortResultJson.put("partial_unexpected_list", resultJson.getString("partial_unexpected_list"));
 
       if (shortResultJson.toString().length() > MAX_CHARACTERS_IN_VALIDATION_RESULT_RESULT_FIELD) {
