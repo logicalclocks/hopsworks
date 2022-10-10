@@ -131,7 +131,6 @@ public class PKIUtils {
         return getAppCertificateValidityPeriod();
       case HOST:
         return getServiceCertificateValidityPeriod();
-      case DELA:
       case KUBE:
       case PROJECT:
         return Duration.ofSeconds(TimeUnit.SECONDS.convert(TEN_YEARS, TimeUnit.DAYS));
@@ -171,7 +170,7 @@ public class PKIUtils {
    */
   public CAType getResponsibleCA(CertificateType certType) {
     switch (certType) {
-      case HOST: case DELA: case APP: case PROJECT:
+      case HOST: case APP: case PROJECT:
         return CAType.INTERMEDIATE;
       case KUBE:
         return CAType.KUBECA;

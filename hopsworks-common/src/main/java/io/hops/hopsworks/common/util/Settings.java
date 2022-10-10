@@ -42,8 +42,6 @@ import com.google.common.base.Splitter;
 import com.google.common.base.Strings;
 import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.dataset.util.CompressionInfo;
-import io.hops.hopsworks.common.dela.AddressJSON;
-import io.hops.hopsworks.common.dela.DelaClientType;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.provenance.core.Provenance;
 import io.hops.hopsworks.common.provenance.core.dto.ProvTypeDTO;
@@ -220,7 +218,6 @@ public class Settings implements Serializable {
   private static final String VARIABLE_SPARK_VERSION = "spark_version";
   private static final String VARIABLE_FLINK_VERSION = "flink_version";
   private static final String VARIABLE_EPIPE_VERSION = "epipe_version";
-  private static final String VARIABLE_DELA_VERSION = "dela_version";
   private static final String VARIABLE_KAFKA_VERSION = "kafka_version";
   private static final String VARIABLE_OPENSEARCH_VERSION = "elastic_version";
   private static final String VARIABLE_TENSORFLOW_VERSION = "tensorflow_version";
@@ -675,7 +672,6 @@ public class Settings implements Serializable {
       jupyterShutdownTimerInterval = setStrVar(JUPYTER_SHUTDOWN_TIMER_INTERVAL, jupyterShutdownTimerInterval);
       checkNodemanagersStatus = setBoolVar(VARIABLE_CHECK_NODEMANAGERS_STATUS, checkNodemanagersStatus);
 
-      populateDelaCache();
       populateLDAPCache();
 
       ZOOKEEPER_VERSION = setStrVar(VARIABLE_ZOOKEEPER_VERSION, ZOOKEEPER_VERSION);
@@ -690,7 +686,6 @@ public class Settings implements Serializable {
       SPARK_VERSION = setStrVar(VARIABLE_SPARK_VERSION, SPARK_VERSION);
       FLINK_VERSION = setStrVar(VARIABLE_FLINK_VERSION, FLINK_VERSION);
       EPIPE_VERSION = setStrVar(VARIABLE_EPIPE_VERSION, EPIPE_VERSION);
-      DELA_VERSION = setStrVar(VARIABLE_DELA_VERSION, DELA_VERSION);
       KAFKA_VERSION = setStrVar(VARIABLE_KAFKA_VERSION, KAFKA_VERSION);
       OPENSEARCH_VERSION = setStrVar(VARIABLE_OPENSEARCH_VERSION, OPENSEARCH_VERSION);
       TENSORFLOW_VERSION = setStrVar(VARIABLE_TENSORFLOW_VERSION, TENSORFLOW_VERSION);
@@ -2494,66 +2489,18 @@ public class Settings implements Serializable {
   }
 
   //Dela START
-  private static final String VARIABLE_HOPSSITE_BASE_URI = "hops_site_endpoint";
-  private static final String VARIABLE_HOPSSITE_BASE_URI_HOST = "hops_site_host";
   private static final String VARIABLE_CLUSTER_CERT = "hopsworks_certificate";
-  private static final String VARIABLE_DELA_ENABLED = "dela_enabled";
-  private static final String VARIABLE_DELA_CLIENT_TYPE = "dela_client_type";
-  private static final String VARIABLE_HOPSSITE_HEARTBEAT_INTERVAL = "hopssite_heartbeat_interval";
-
-  private static final String VARIABLE_DELA_CLUSTER_ID = "cluster_id";
-  private static final String VARIABLE_DELA_CLUSTER_IP = "dela_cluster_ip";
-  private static final String VARIABLE_DELA_CLUSTER_HTTP_PORT = "dela_cluster_http_port";
-  private static final String VARIABLE_DELA_PUBLIC_HOPSWORKS_PORT = "dela_hopsworks_public_port";
-  private static final String VARIABLE_PUBLIC_HTTPS_PORT = "public_https_port";
-  private static final String VARIABLE_DELA_SEARCH_ENDPOINT = "dela_search_endpoint";
-  private static final String VARIABLE_DELA_TRANSFER_ENDPOINT = "dela_transfer_endpoint";
   private static final String VARIABLE_HOPSWORKS_PUBLIC_HOST = "hopsworks_public_host";
 
-  public static final Level DELA_DEBUG = Level.INFO;
-  private String HOPSSITE_HOST = "hops.site";
-  private String HOPSSITE = "http://hops.site:5081/hops-site/api";
   private Boolean DELA_ENABLED = false; // set to false if not found in variables table
-  private DelaClientType DELA_CLIENT_TYPE = DelaClientType.FULL_CLIENT;
 
-  private long HOPSSITE_HEARTBEAT_RETRY = 10 * 1000l; //10s
-  private long HOPSSITE_HEARTBEAT_INTERVAL = 10 * 60 * 1000l;//10min
-
-  private String DELA_TRANSFER_IP = "localhost";
-  private String DELA_TRANSFER_HTTP_PORT = "42000";
-  private String DELA_PUBLIC_HOPSWORK_PORT = "8080";
-  private String PUBLIC_HTTPS_PORT = "8181";
-
-  //set on registration after Dela is contacted to detect public port
-  private String DELA_SEARCH_ENDPOINT = "";
-  private String DELA_TRANSFER_ENDPOINT = "";
-  //set on cluster registration
-  private String DELA_CLUSTER_ID = null;
-  //
-  private AddressJSON DELA_PUBLIC_ENDPOINT = null;
-  //
-  public static final String MANIFEST_FILE = "manifest.json";
   public static final String README_FILE = "README.md";
-
-  private void populateDelaCache() {
-    DELA_ENABLED = setBoolVar(VARIABLE_DELA_ENABLED, DELA_ENABLED);
-    DELA_CLIENT_TYPE = DelaClientType.from(setVar(VARIABLE_DELA_CLIENT_TYPE, DELA_CLIENT_TYPE.type));
-    HOPSSITE_CLUSTER_NAME = setVar(VARIABLE_HOPSSITE_CLUSTER_NAME, HOPSSITE_CLUSTER_NAME);
-    HOPSSITE_CLUSTER_PSWD = setVar(VARIABLE_HOPSSITE_CLUSTER_PSWD, HOPSSITE_CLUSTER_PSWD);
-    HOPSSITE_CLUSTER_PSWD_AUX = setVar(VARIABLE_HOPSSITE_CLUSTER_PSWD_AUX, HOPSSITE_CLUSTER_PSWD_AUX);
-    HOPSSITE_HOST = setVar(VARIABLE_HOPSSITE_BASE_URI_HOST, HOPSSITE_HOST);
-    HOPSSITE = setVar(VARIABLE_HOPSSITE_BASE_URI, HOPSSITE);
-    HOPSSITE_HEARTBEAT_INTERVAL = setLongVar(VARIABLE_HOPSSITE_HEARTBEAT_INTERVAL, HOPSSITE_HEARTBEAT_INTERVAL);
-
-    DELA_TRANSFER_IP = setStrVar(VARIABLE_DELA_CLUSTER_IP, DELA_TRANSFER_IP);
-    DELA_TRANSFER_HTTP_PORT = setStrVar(VARIABLE_DELA_CLUSTER_HTTP_PORT, DELA_TRANSFER_HTTP_PORT);
-    DELA_SEARCH_ENDPOINT = setStrVar(VARIABLE_DELA_SEARCH_ENDPOINT, DELA_SEARCH_ENDPOINT);
-    DELA_TRANSFER_ENDPOINT = setStrVar(VARIABLE_DELA_TRANSFER_ENDPOINT, DELA_TRANSFER_ENDPOINT);
-    DELA_PUBLIC_HOPSWORK_PORT = setStrVar(VARIABLE_DELA_PUBLIC_HOPSWORKS_PORT, DELA_PUBLIC_HOPSWORK_PORT);
-    PUBLIC_HTTPS_PORT = setStrVar(VARIABLE_PUBLIC_HTTPS_PORT, PUBLIC_HTTPS_PORT);
-    DELA_CLUSTER_ID = setStrVar(VARIABLE_DELA_CLUSTER_ID, DELA_CLUSTER_ID);
+  
+  public synchronized Boolean isDelaEnabled() {
+    checkCache();
+    return DELA_ENABLED;
   }
-
+  
   private void populateServiceJWTCache() {
     SERVICE_MASTER_JWT = setStrVar(VARIABLE_SERVICE_MASTER_JWT, SERVICE_MASTER_JWT);
     RENEW_TOKENS = new String[NUM_OF_SERVICE_RENEW_TOKENS];
@@ -2563,215 +2510,7 @@ public class Settings implements Serializable {
       RENEW_TOKENS[i] = token;
     }
   }
-
-  public synchronized Boolean isDelaEnabled() {
-    checkCache();
-    return DELA_ENABLED;
-  }
-
-  public synchronized DelaClientType getDelaClientType() {
-    return DELA_CLIENT_TYPE;
-  }
-
-  public synchronized String getHOPSSITE_HOST() {
-    checkCache();
-    return HOPSSITE_HOST;
-  }
-
-  public synchronized String getHOPSSITE() {
-    checkCache();
-    return HOPSSITE;
-  }
-
-  public synchronized long getHOPSSITE_HEARTBEAT_RETRY() {
-    checkCache();
-    return HOPSSITE_HEARTBEAT_RETRY;
-  }
-
-  public synchronized long getHOPSSITE_HEARTBEAT_INTERVAL() {
-    checkCache();
-    return HOPSSITE_HEARTBEAT_INTERVAL;
-  }
-
-  public synchronized String getDELA_TRANSFER_IP() {
-    checkCache();
-    return DELA_TRANSFER_IP;
-  }
-
-  public synchronized String getDELA_TRANSFER_HTTP_PORT() {
-    checkCache();
-    return DELA_TRANSFER_HTTP_PORT;
-  }
-
-  public synchronized String getDELA_TRANSFER_HTTP_ENDPOINT() {
-    checkCache();
-    return "http://" + DELA_TRANSFER_IP + ":" + DELA_TRANSFER_HTTP_PORT + "/";
-  }
-
-  public synchronized String getDELA_HOPSWORKS_PORT() {
-    checkCache();
-    return DELA_PUBLIC_HOPSWORK_PORT;
-  }
-
-  public synchronized String getPUBLIC_HTTPS_PORT() {
-    checkCache();
-    return PUBLIC_HTTPS_PORT;
-  }
-
-  public synchronized AddressJSON getDELA_PUBLIC_ENDPOINT() {
-    return DELA_PUBLIC_ENDPOINT;
-  }
-
-  public synchronized String getDELA_SEARCH_ENDPOINT() {
-    checkCache();
-    if (DELA_SEARCH_ENDPOINT != null) {
-      return DELA_SEARCH_ENDPOINT;
-    }
-    return setStrVar(DELA_SEARCH_ENDPOINT, null);
-  }
-
-  public synchronized String getDELA_TRANSFER_ENDPOINT() {
-    checkCache();
-    if (DELA_TRANSFER_ENDPOINT != null) {
-      return DELA_TRANSFER_ENDPOINT;
-    }
-    return setStrVar(DELA_TRANSFER_ENDPOINT, null);
-  }
-
-  public synchronized void setDELA_PUBLIC_ENDPOINT(AddressJSON endpoint) {
-    DELA_PUBLIC_ENDPOINT = endpoint;
-
-    String delaSearchEndpoint = "https://" + endpoint.getIp() + ":"
-        + getPUBLIC_HTTPS_PORT() + "/hopsworks-api/api";
-    String delaTransferEndpoint = endpoint.getIp() + ":" + endpoint.getPort() + "/" + endpoint.getId();
-
-    if (getDELA_SEARCH_ENDPOINT() == null) {
-      em.persist(new Variables(VARIABLE_DELA_SEARCH_ENDPOINT, delaSearchEndpoint));
-    } else {
-      em.merge(new Variables(VARIABLE_DELA_SEARCH_ENDPOINT, delaSearchEndpoint));
-    }
-    DELA_SEARCH_ENDPOINT = delaSearchEndpoint;
-
-    if (getDELA_TRANSFER_ENDPOINT() == null) {
-      em.persist(new Variables(VARIABLE_DELA_TRANSFER_ENDPOINT, delaTransferEndpoint));
-    } else {
-      em.merge(new Variables(VARIABLE_DELA_TRANSFER_ENDPOINT, delaTransferEndpoint));
-    }
-    DELA_TRANSFER_ENDPOINT = delaTransferEndpoint;
-  }
-
-  public synchronized void setDELA_CLUSTER_ID(String id) {
-    if (getDELA_CLUSTER_ID() == null) {
-      em.persist(new Variables(VARIABLE_DELA_CLUSTER_ID, id));
-    } else {
-      em.merge(new Variables(VARIABLE_DELA_CLUSTER_ID, id));
-    }
-    DELA_CLUSTER_ID = id;
-  }
-
-  public synchronized String getDELA_CLUSTER_ID() {
-    checkCache();
-    if (DELA_CLUSTER_ID != null) {
-      return DELA_CLUSTER_ID;
-    }
-    return setStrVar(VARIABLE_DELA_CLUSTER_ID, null);
-  }
-
-  public synchronized String getDELA_DOMAIN() {
-    if (DELA_PUBLIC_ENDPOINT != null) {
-      return DELA_PUBLIC_ENDPOINT.getIp();
-    }
-    return null;
-  }
-
-  //************************************************CERTIFICATES********************************************************
-  private static final String HOPS_SITE_CA_DIR = "hops-site-certs";
-  private final static String HOPS_SITE_CERTFILE = "/pub.pem";
-  private final static String HOPS_SITE_CA_CERTFILE = "/ca_pub.pem";
-  private final static String HOPS_SITE_INTERMEDIATE_CERTFILE = "/intermediate_ca_pub.pem";
-  private final static String HOPS_SITE_KEY_STORE = "/keystores/keystore.jks";
-  private final static String HOPS_SITE_TRUST_STORE = "/keystores/truststore.jks";
-
-  private static final String VARIABLE_HOPSSITE_CLUSTER_NAME = "hops_site_cluster_name";
-  private static final String VARIABLE_HOPSSITE_CLUSTER_PSWD = "hops_site_cluster_pswd";
-  private static final String VARIABLE_HOPSSITE_CLUSTER_PSWD_AUX = "hops_site_cluster_pswd_aux";
-
-  private String HOPSSITE_CLUSTER_NAME = null;
-  private String HOPSSITE_CLUSTER_PSWD = null;
-  private String HOPSSITE_CLUSTER_PSWD_AUX = "1234";
-
-  public synchronized Optional<String> getHopsSiteClusterName() {
-    checkCache();
-    return Optional.ofNullable(HOPSSITE_CLUSTER_NAME);
-  }
-
-  public synchronized void setHopsSiteClusterName(String clusterName) {
-    if (getHopsSiteClusterName().isPresent()) {
-      em.merge(new Variables(VARIABLE_HOPSSITE_CLUSTER_NAME, clusterName));
-    } else {
-      em.persist(new Variables(VARIABLE_HOPSSITE_CLUSTER_NAME, clusterName));
-    }
-    HOPSSITE_CLUSTER_NAME = clusterName;
-  }
-
-  public synchronized void deleteHopsSiteClusterName() {
-    if (getHopsSiteClusterName().isPresent()) {
-      Optional<Variables> v = findById(VARIABLE_HOPSSITE_CLUSTER_NAME);
-      if (v.isPresent()) {
-        em.remove(v);
-        HOPSSITE_CLUSTER_NAME = null;
-      }
-    }
-  }
-
-  public synchronized String getHopsSiteClusterPswdAux() {
-    checkCache();
-    return HOPSSITE_CLUSTER_PSWD_AUX;
-  }
-
-  public synchronized Optional<String> getHopsSiteClusterPswd() {
-    checkCache();
-    return Optional.ofNullable(HOPSSITE_CLUSTER_PSWD);
-  }
-
-  public synchronized void setHopsSiteClusterPswd(String pswd) {
-    if (getHopsSiteClusterPswd().isPresent()) {
-      em.merge(new Variables(VARIABLE_HOPSSITE_CLUSTER_PSWD, pswd));
-    } else {
-      em.persist(new Variables(VARIABLE_HOPSSITE_CLUSTER_PSWD, pswd));
-    }
-    HOPSSITE_CLUSTER_PSWD = pswd;
-  }
-
-  public synchronized String getHopsSiteCaDir() {
-    return getCertsDir() + File.separator + HOPS_SITE_CA_DIR;
-  }
-
-  public synchronized String getHopsSiteCaScript() {
-    return getSudoersDir() + File.separator + "ca-keystore.sh";
-  }
-
-  public synchronized String getHopsSiteCert() {
-    return getHopsSiteCaDir() + HOPS_SITE_CERTFILE;
-  }
-
-  public synchronized String getHopsSiteCaCert() {
-    return getHopsSiteCaDir() + HOPS_SITE_CA_CERTFILE;
-  }
-
-  public synchronized String getHopsSiteIntermediateCert() {
-    return getHopsSiteCaDir() + HOPS_SITE_INTERMEDIATE_CERTFILE;
-  }
-
-  public synchronized String getHopsSiteKeyStorePath() {
-    return getHopsSiteCaDir() + HOPS_SITE_KEY_STORE;
-  }
-
-  public synchronized String getHopsSiteTrustStorePath() {
-    return getHopsSiteCaDir() + HOPS_SITE_TRUST_STORE;
-  }
-  //Dela END
-
+  
   //************************************************ZOOKEEPER********************************************************
   public static final int ZOOKEEPER_SESSION_TIMEOUT_MS = 30 * 1000;//30 seconds
   public static final int ZOOKEEPER_CONNECTION_TIMEOUT_MS = 30 * 1000;// 30 seconds
@@ -3297,13 +3036,6 @@ public class Settings implements Serializable {
   public synchronized String getKafkaVersion() {
     checkCache();
     return KAFKA_VERSION;
-  }
-
-  private String DELA_VERSION;
-
-  public synchronized String getDelaVersion() {
-    checkCache();
-    return DELA_VERSION;
   }
 
   private String EPIPE_VERSION;

@@ -1009,67 +1009,6 @@ public class RESTCodes {
     }
   }
 
-  public enum DelaErrorCode implements RESTErrorCode {
-
-    //response for validation error
-    THIRD_PARTY_ERROR(0, "Generic third party error.", Response.Status.INTERNAL_SERVER_ERROR),
-    CLUSTER_NOT_REGISTERED(1, "Cluster not registered.", Response.Status.UNAUTHORIZED),
-    HEAVY_PING(2, "Heavy ping required.", Response.Status.BAD_REQUEST),
-    USER_NOT_REGISTERED(3, "User not registered.", Response.Status.UNAUTHORIZED),
-    DATASET_EXISTS(4, "Dataset exists.", Response.Status.CONFLICT),
-    DATASET_DOES_NOT_EXIST(5, "Dataset does not exist.", Response.Status.NOT_FOUND),
-    DATASET_PUBLISH_PERMISSION_ERROR(6, "Dataset shared - only owner can publish.",
-        Response.Status.FORBIDDEN),
-    ILLEGAL_ARGUMENT(7, "Illegal Argument.", Response.Status.BAD_REQUEST),
-    README_RETRIEVAL_FAILED(8, "Readme retrieval failed.", Response.Status.EXPECTATION_FAILED),
-    README_ACCESS_PROBLEM(9, "Readme access problem.", Response.Status.BAD_REQUEST),
-    COMMUNICATION_FAILURE(10, "Communication failure.", Response.Status.EXPECTATION_FAILED),
-    DATASET_EMPTY(11, "Dataset empty.", Response.Status.BAD_REQUEST),
-    SUBDIRS_NOT_SUPPORTED(12, "Subdirectories not supported.", Response.Status.BAD_REQUEST),
-    ACCESS_ERROR(13, "Access error.", Response.Status.BAD_REQUEST),
-    MISCONFIGURED(14, "misconfigured", Response.Status.EXPECTATION_FAILED),
-    USER_NOT_FOUND(15, "user not found.", Response.Status.FORBIDDEN),
-    DATASET_DELETE_ERROR(16, "Delete dataset error.", Response.Status.EXPECTATION_FAILED),
-    DELA_NOT_AVAILABLE(17, "Dela not available.", Response.Status.BAD_REQUEST),
-    HOPSSITE_NOT_AVAILABLE(18, "hopssite not available", Response.Status.BAD_REQUEST),
-    REMOTE_DELA_NOT_AVAILABLE(19, "Remote dela not available.", Response.Status.BAD_REQUEST),
-    DELA_TRANSFER_NOT_AVAILABLE(20, "Dela transfer not available.", Response.Status.BAD_REQUEST),
-    MANIFEST_ENCODING_ERROR(21, "Manifest cannot be read as UTF", Response.Status.BAD_REQUEST),
-    DATASET_NOT_PUBLIC(22, "dataset not public - no manifest", Response.Status.BAD_REQUEST),
-    INODE_NOT_FOUND(23, "Inode not found.", Response.Status.BAD_REQUEST);
-
-    private Integer code;
-    private String message;
-    private Response.StatusType respStatus;
-    public final int range = 170000;
-
-
-    DelaErrorCode(Integer code, String message, Response.StatusType respStatus) {
-      this.code = range + code;
-      this.message = message;
-      this.respStatus = respStatus;
-    }
-
-    @Override
-    public Integer getCode() {
-      return code;
-    }
-
-    @Override
-    public String getMessage() {
-      return message;
-    }
-
-    public Response.StatusType getRespStatus() {
-      return respStatus;
-    }
-
-    @Override
-    public int getRange() {
-      return range;
-    }
-  }
-
   public enum CAErrorCode implements RESTErrorCode {
 
     BADSIGNREQUEST(0, "No CSR provided or CSR is malformed", Response.Status.BAD_REQUEST),

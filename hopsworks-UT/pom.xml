@@ -50,11 +50,6 @@
     </dependency>
     <dependency>
       <groupId>io.hops.hopsworks</groupId>
-      <artifactId>hopsworks-dela</artifactId>
-      <type>ejb</type>
-    </dependency>
-    <dependency>
-      <groupId>io.hops.hopsworks</groupId>
       <artifactId>hopsworks-rest-utils</artifactId>
     </dependency>
     <dependency>

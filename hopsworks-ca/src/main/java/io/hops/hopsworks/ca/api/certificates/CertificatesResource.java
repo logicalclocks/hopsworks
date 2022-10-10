@@ -75,8 +75,6 @@ public class CertificatesResource {
   @Inject
   private AppCertsResource appCertsResource;
   @Inject
-  private DelaTrackerCertsResource delaTrackerCertsResource;
-  @Inject
   private KubeCertsResource kubeCertsResource;
   @Inject
   private ProjectCertsResource projectCertsResource;
@@ -97,11 +95,6 @@ public class CertificatesResource {
   @Path("/app")
   public AppCertsResource getAppCertsResource() {
     return appCertsResource;
-  }
-
-  @Path("/dela")
-  public DelaTrackerCertsResource getDelaTrackerCertsResource() {
-    return delaTrackerCertsResource;
   }
 
   @Path("/kube")

@@ -89,7 +89,6 @@ public class VersionsDTO {
     versions.add(new Version("spark", settings.getSparkVersion()));
     versions.add(new Version("flink", settings.getFlinkVersion()));
     versions.add(new Version("epipe", settings.getEpipeVersion()));
-    versions.add(new Version("dela", settings.getDelaVersion()));
     versions.add(new Version("kafka", settings.getKafkaVersion()));
     versions.add(new Version("opensearch", settings.getOpenSearchVersion()));
     versions.add(new Version("tensorflow", settings.getTensorflowVersion()));
