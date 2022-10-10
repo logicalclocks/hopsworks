@@ -745,7 +745,6 @@ public class PKI {
       case APP:
       case PROJECT:
       case HOST:
-      case DELA:
         caType = CAType.INTERMEDIATE;
         break;
       case KUBE:

@@ -127,8 +127,7 @@ public class CertificatesController {
   private CertificateFactory certificateFactory = null;
 
   private enum Endpoint {
-    PROJECT("project"),
-    DELA("dela");
+    PROJECT("project");
 
     private final String endpointPath;
 
@@ -231,16 +230,6 @@ public class CertificatesController {
     }
   }
 
-  public CSR signDelaClusterCertificate(CSR csr)
-      throws GenericException, HopsSecurityException, UnsupportedEncodingException {
-    return signCSR(csr, Endpoint.DELA);
-  }
-
-  public void revokeDelaClusterCertificate(String certificateIdentifier)
-      throws GenericException, HopsSecurityException {
-    revokeCertificate(certificateIdentifier, Endpoint.DELA);
-  }
-
   public BigInteger extractSerialNumberFromCert(String certificate) throws CertificateException {
     InputStream certStream = new ByteArrayInputStream(certificate.getBytes());
     CertificateFactory cf = CertificateFactory.getInstance("X.509");
@@ -322,8 +311,6 @@ public class CertificatesController {
     switch (endpoint) {
       case PROJECT:
         return caProxy.signProjectCSR(csr);
-      case DELA:
-        return caProxy.signDelaCSR(csr);
       default:
         throw new HopsSecurityException(RESTCodes.SecurityErrorCode.CSR_ERROR, Level.FINE,
             null, "Unknown CSR type " + endpoint.toString());
@@ -335,9 +322,6 @@ public class CertificatesController {
     switch (endpoint) {
       case PROJECT:
         caProxy.revokeProjectX509(certificateIdentifier);
-        break;
-      case DELA:
-        caProxy.revokeDelaX509(certificateIdentifier);
         break;
       default:
         throw new HopsSecurityException(RESTCodes.SecurityErrorCode.CERTIFICATE_REVOKATION_ERROR,

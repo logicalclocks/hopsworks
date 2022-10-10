@@ -78,12 +78,6 @@
     </dependency>
     <dependency>
       <groupId>io.hops.hopsworks</groupId>
-      <artifactId>hopsworks-dela</artifactId>
-      <type>ejb</type>
-      <scope>provided</scope>
-    </dependency>
-    <dependency>
-      <groupId>io.hops.hopsworks</groupId>
       <artifactId>hopsworks-jwt</artifactId>
       <type>ejb</type>
       <scope>provided</scope>

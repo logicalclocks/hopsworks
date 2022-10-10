@@ -81,12 +81,6 @@
     </dependency>
     <dependency>
       <groupId>io.hops.hopsworks</groupId>
-      <artifactId>hopsworks-dela</artifactId>
-      <version>${project.version}</version>
-      <type>ejb</type>
-    </dependency>
-    <dependency>
-      <groupId>io.hops.hopsworks</groupId>
       <artifactId>hopsworks-jwt</artifactId>
       <version>${project.version}</version>
       <type>ejb</type>
@@ -117,21 +111,6 @@
     </dependency>
   </dependencies>
   <profiles>
-    <profile>
-      <id>hops-site</id>
-      <activation>
-        <activeByDefault>false</activeByDefault>
-      </activation>
-      <dependencies>
-        <dependency>
-          <groupId>io.hops.hopsworks</groupId>
-          <artifactId>hopsworks-cluster</artifactId>
-          <version>${project.version}</version>
-          <type>war</type>
-        </dependency>
-      </dependencies>
-    </profile>
-
     <profile>
       <id>testing</id>
       <activation>

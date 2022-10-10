@@ -42,7 +42,6 @@ import io.hops.hopsworks.api.activities.ProjectActivitiesResource;
 import io.hops.hopsworks.api.airflow.AirflowService;
 import io.hops.hopsworks.api.alert.AlertResource;
 import io.hops.hopsworks.api.dataset.DatasetResource;
-import io.hops.hopsworks.api.dela.DelaProjectService;
 import io.hops.hopsworks.api.opensearch.OpenSearchResource;
 import io.hops.hopsworks.api.experiments.ExperimentsResource;
 import io.hops.hopsworks.api.featurestore.FeaturestoreService;
@@ -203,8 +202,6 @@ public class ProjectService {
   private PiaFacade piaFacade;
   @EJB
   private JWTHelper jWTHelper;
-  @Inject
-  private DelaProjectService delaService;
   @Inject
   private InferenceResource inference;
   @Inject
@@ -804,13 +801,7 @@ public class ProjectService {
     this.pythonResource.setProjectId(id);
     return this.pythonResource;
   }
-  
-  @Path("{projectId}/dela")
-  public DelaProjectService dela(@PathParam("projectId") Integer id) {
-    this.delaService.setProjectId(id);
-    return this.delaService;
-  }
-  
+
   @Path("{projectId}/activities")
   public ProjectActivitiesResource activities(@PathParam("projectId") Integer id) {
     this.activitiesResource.setProjectId(id);

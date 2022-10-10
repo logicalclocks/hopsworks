@@ -70,7 +70,6 @@ public class CAProxy {
   
   private enum CA_PATH {
     PROJECT_CA_PATH(CA_BASE_PATH + "project"),
-    DELA_CA_PATH(CA_BASE_PATH + "dela"),
     HOST_CA_PATH(CA_BASE_PATH + "host");
     
     private final String path;
@@ -99,11 +98,7 @@ public class CAProxy {
   public CSR signProjectCSR(CSR csr) throws HopsSecurityException, GenericException {
     return signCSR(csr, CA_PATH.PROJECT_CA_PATH);
   }
-  
-  public CSR signDelaCSR(CSR csr) throws HopsSecurityException, GenericException {
-    return signCSR(csr, CA_PATH.DELA_CA_PATH);
-  }
-  
+
   private CSR signCSR(CSR csr, CA_PATH path) throws HopsSecurityException, GenericException{
     try {
       String csrJSON = objectMapper.writeValueAsString(csr);
@@ -133,10 +128,6 @@ public class CAProxy {
   
   public void revokeProjectX509(String certificateIdentifier) throws HopsSecurityException, GenericException {
     revokeX509(CERTIFICATE_IDENTIFIER, certificateIdentifier, CA_PATH.PROJECT_CA_PATH.path);
-  }
-  
-  public void revokeDelaX509(String certificateIdentifier) throws HopsSecurityException, GenericException {
-    revokeX509(CERTIFICATE_IDENTIFIER, certificateIdentifier, CA_PATH.DELA_CA_PATH.path);
   }
 
   public void revokeHostX509(String hostname) throws HopsSecurityException, GenericException {

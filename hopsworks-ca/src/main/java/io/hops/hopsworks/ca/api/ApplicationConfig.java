@@ -56,7 +56,6 @@ public class ApplicationConfig extends ResourceConfig {
     register(io.hops.hopsworks.ca.api.certificates.ProjectCertsResource.class);
     register(io.hops.hopsworks.ca.api.certificates.HostCertsResource.class);
     register(io.hops.hopsworks.ca.api.certificates.AppCertsResource.class);
-    register(io.hops.hopsworks.ca.api.certificates.DelaTrackerCertsResource.class);
     register(io.hops.hopsworks.ca.api.token.TokenResources.class);
     register(io.hops.hopsworks.ca.api.certificates.CRLResource.class);
 

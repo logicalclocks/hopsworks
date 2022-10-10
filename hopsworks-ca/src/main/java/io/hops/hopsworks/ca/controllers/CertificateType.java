@@ -43,8 +43,7 @@ public enum CertificateType {
   PROJECT("Project"),
   HOST("Host"),
   APP("App"),
-  KUBE("Kube"),
-  DELA("Dela");
+  KUBE("Kube");
 
   private final String certType;
 
