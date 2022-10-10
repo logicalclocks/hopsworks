@@ -16,7 +16,7 @@
 module OpensearchHelper
   def opensearch_post(path, body)
     uri = URI.parse("https://#{ENV['ELASTIC_API']}/#{path}")
-    request = Net::HTTP::Post.new(uri)
+    request = Net::HTTP::Post.new(uri, 'Content-Type' => 'application/json')
     request.basic_auth("#{ENV['ELASTIC_USER']}", "#{ENV['ELASTIC_PASS']}")
     request.body = body
 
@@ -28,10 +28,11 @@ module OpensearchHelper
     Net::HTTP.start(uri.hostname, uri.port, req_options) do |http| http.request(request) end
   end
 
-  def opensearch_get(path)
+  def opensearch_get(path, body: nil)
     uri = URI.parse("https://#{ENV['ELASTIC_API']}/#{path}")
-    request = Net::HTTP::Get.new(uri)
+    request = Net::HTTP::Get.new(uri, 'Content-Type' => 'application/json')
     request.basic_auth("#{ENV['ELASTIC_USER']}", "#{ENV['ELASTIC_PASS']}")
+    request.body = body unless body.nil?
 
     req_options = {
         use_ssl: uri.scheme == "https",
@@ -120,5 +121,16 @@ module OpensearchHelper
       opensearch_status_details(response, 200)
       JSON.parse(response.body)["nodes"][node_id]
     end
+  end
+
+  def opensearch_basic_search(index, terms, size: 10)
+    path = "#{index}/_search"
+    terms_query = []
+    terms.each do |key,value|
+      terms_query.append({"term"=>{key=>{"value"=>value}}})
+    end
+    query = {"size"=>size,"query"=>{"bool"=>{"must"=>terms_query}}}.to_json
+    pp query if defined?(@debugOpt) && @debugOpt
+    opensearch_get(path, body: query)
   end
 end

@@ -10,9 +10,10 @@ describe "On #{ENV['OS']}" do
     @old_provenance_type, @old_provenance_archive_size = setup_cluster_prov(@new_provenance_type, @new_provenance_archive_size)
     $stdout.sync = true
     @debugOpt = false
+    @cleanup = true
   end
   after :all do
-    clean_all_test_projects(spec: "prov_ops")
+    clean_all_test_projects(spec: "prov_ops") if defined?(@cleanup) && @cleanup
     epipe_wait_on_provenance
     restore_cluster_prov(@new_provenance_type, @new_provenance_archive_size, @old_provenance_type, @old_provenance_archive_size)
   end
@@ -135,6 +136,119 @@ describe "On #{ENV['OS']}" do
       result[:ops]["items"].each { |op|
         expect(op["projectName"]).to eq(@project_name)
       }
+    end
+  end
+
+  context "resource folders" do
+    before :all do
+      with_valid_project
+      wait_result = epipe_wait_on_provenance(repeat: 5)
+      expect(wait_result["success"]).to be(true), wait_result["msg"]
+      @project = get_project
+      pp "create project: #{@project[:projectname]}"
+    end
+
+    context "of feature groups" do
+      resource_dirs = ["code", "storage_connector_resources"]
+      resource_dirs.each do |resource_dir|
+        it resource_dir + " - should not have a ops - not a feature group" do
+          featurestore = @project[:projectname].downcase + "_featurestore.db"
+          subdir = "#{resource_dir}_fg_test"
+          subdir_path = "/apps/hive/warehouse/#{featurestore}/#{resource_dir}/#{subdir}"
+          pp subdir_path if defined?(@debugOpt) && @debugOpt
+          epipe_stop_restart do
+            record = FileProv.where("project_name": @project["inode_name"], "i_name": subdir)
+            expect(record.length).to eq 0
+            mkdir(subdir_path, getHopsworksUser, getHopsworksUser, 777)
+            record = FileProv.where("project_name": @project["inode_name"], "i_name": subdir)
+            expect(record.length).to eq 1
+          end
+
+          wait_result = epipe_wait_on_provenance(repeat: 10)
+          expect(wait_result["success"]).to be(true), wait_result["msg"]
+          sleep(1)
+
+          terms = {"inode_name"=>subdir, "project_name"=> @project[:projectname]}
+          response = opensearch_basic_search(prov_index(@project), terms)
+          pp JSON.parse(response.body) if defined?(@debugOpt) && @debugOpt
+          expect(JSON.parse(response.body)['hits']['total']['value']).to eq 0
+        end
+      end
+
+      it "other - should have a ops - as a malformed feature group" do
+        featurestore = @project[:projectname].downcase + "_featurestore.db"
+        resource_dir="other"
+        subdir = "#{resource_dir}_fg_test"
+        subdir_path = "/apps/hive/warehouse/#{featurestore}/#{resource_dir}/#{subdir}"
+        pp subdir_path if defined?(@debugOpt) && @debugOpt
+        epipe_stop_restart do
+          record = FileProv.where("project_name": @project["inode_name"], "i_name": subdir)
+          expect(record.length).to eq 0
+          mkdir(subdir_path, getHopsworksUser, getHopsworksUser, 777)
+          record = FileProv.where("project_name": @project["inode_name"], "i_name": subdir)
+          expect(record.length).to eq 1
+        end
+
+        wait_result = epipe_wait_on_provenance(repeat: 10)
+        expect(wait_result["success"]).to be(true), wait_result["msg"]
+        sleep(1)
+
+        terms = {"inode_name"=>subdir, "project_name"=> @project[:projectname]}
+        response = opensearch_basic_search(prov_index(@project), terms)
+        pp JSON.parse(response.body) if defined?(@debugOpt) && @debugOpt
+        expect(JSON.parse(response.body)['hits']['total']['value']).not_to eq 0
+      end
+    end
+    context "of training datasets" do
+      resource_dirs = ["code", "transformation_functions"]
+      resource_dirs.each do |resource_dir|
+        it resource_dir + " - should not have a ops - not a training dataset" do
+          dataset = @project[:projectname] + "_Training_Datasets"
+          subdir = "#{resource_dir}_td_test"
+          subdir_path = "/Projects/#{@project[:projectname]}/#{dataset}/#{resource_dir}/#{subdir}"
+          pp subdir_path if defined?(@debugOpt) && @debugOpt
+          epipe_stop_restart do
+            record = FileProv.where("project_name": @project["inode_name"], "i_name": subdir)
+            expect(record.length).to eq 0
+            mkdir(subdir_path, getHopsworksUser, getHopsworksUser, 777)
+            record = FileProv.where("project_name": @project["inode_name"], "i_name": subdir)
+            expect(record.length).to eq 1
+          end
+
+          wait_result = epipe_wait_on_provenance(repeat: 10)
+          expect(wait_result["success"]).to be(true), wait_result["msg"]
+          sleep(1)
+
+          terms = {"inode_name"=>subdir, "project_name"=> @project[:projectname]}
+          response = opensearch_basic_search(prov_index(@project), terms)
+          pp JSON.parse(response.body) if defined?(@debugOpt) && @debugOpt
+          expect(JSON.parse(response.body)['hits']['total']['value']).to eq 0
+        end
+      end
+
+      it "other - should have ops - as a malformed training dataset" do
+        dataset = @project[:projectname] + "_Training_Datasets"
+        resource_dir="other"
+        subdir = "#{resource_dir}_td_test"
+        subdir_path = "/Projects/#{@project[:projectname]}/#{dataset}/#{resource_dir}/#{subdir}"
+        pp subdir_path if defined?(@debugOpt) && @debugOpt
+        epipe_stop_restart do
+          record = FileProv.where("project_name": @project["inode_name"], "i_name": subdir)
+          expect(record.length).to eq 0
+          mkdir(subdir_path, getHopsworksUser, getHopsworksUser, 777)
+          record = FileProv.where("project_name": @project["inode_name"], "i_name": subdir)
+          expect(record.length).to eq 1
+        end
+
+        wait_result = epipe_wait_on_provenance(repeat: 10)
+        expect(wait_result["success"]).to be(true), wait_result["msg"]
+        sleep(1)
+
+        terms = {"inode_name"=>subdir, "project_name"=> @project[:projectname]}
+        response = opensearch_basic_search(prov_index(@project), terms)
+        pp JSON.parse(response.body) if defined?(@debugOpt) && @debugOpt
+        expect(JSON.parse(response.body)['hits']['total']['value']).not_to eq 0
+      end
     end
   end
 end

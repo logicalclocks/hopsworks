@@ -71,4 +71,9 @@ module ProvHelper
   def hive_file_prov_log_ops(project_name: nil, inode_name: nil)
     file_prov_log_ops(project_name: project_name.downcase, inode_name: inode_name)
   end
+
+  def prov_index(project)
+    project_inode = INode.where("partition_id": project[:partition_id],"parent_id": project[:inode_pid], "name": project[:inode_name]).first
+    "#{project_inode[:id]}__file_prov"
+  end
 end
