@@ -17,9 +17,6 @@ package io.hops.hopsworks.common.git;
 
 import io.hops.hopsworks.persistence.entity.git.config.GitOpExecutionState;
 
-import javax.xml.bind.annotation.XmlRootElement;
-
-@XmlRootElement
 public class GitCommandExecutionStateUpdateDTO {
   private GitOpExecutionState executionState;
   private String message;

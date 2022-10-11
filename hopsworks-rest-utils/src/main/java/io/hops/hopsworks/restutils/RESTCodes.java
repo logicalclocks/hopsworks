@@ -2260,7 +2260,7 @@ public class RESTCodes {
         Response.Status.BAD_REQUEST),
     INVALID_BRANCH_ACTION(23, "Invalid branch action provided.", Response.Status.BAD_REQUEST),
     INVALID_REMOTES_ACTION(24, "Invalid remotes action provided", Response.Status.BAD_REQUEST),
-    INVALID_REMOTE_NAME(25, "Invalid remote name provided. Remote name should be empty.",
+    INVALID_REMOTE_NAME(25, "Invalid remote name provided. Remote name should not be empty.",
         Response.Status.BAD_REQUEST),
     INVALID_REMOTE_URL_PROVIDED(26, "Invalid remote url provided. Remote url should not be empty.",
         Response.Status.BAD_REQUEST),

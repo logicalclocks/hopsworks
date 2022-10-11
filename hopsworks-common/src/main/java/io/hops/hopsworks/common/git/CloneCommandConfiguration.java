@@ -17,9 +17,6 @@ package io.hops.hopsworks.common.git;
 
 import io.hops.hopsworks.persistence.entity.git.config.GitProvider;
 
-import javax.xml.bind.annotation.XmlRootElement;
-
-@XmlRootElement
 public class CloneCommandConfiguration {
   private String path;
   private String url;

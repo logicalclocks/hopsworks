@@ -18,10 +18,8 @@ package io.hops.hopsworks.common.git;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.hops.hopsworks.common.api.RestDTO;
 
-import javax.xml.bind.annotation.XmlRootElement;
 import java.util.Date;
 
-@XmlRootElement
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class GitCommitDTO extends RestDTO<GitCommitDTO> {
   private String name;

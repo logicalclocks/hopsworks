@@ -68,18 +68,23 @@ module GitHelper
     post "#{ENV['HOPSWORKS_API']}/project/#{project_id}/git/clone?expand=repository", clone_config
   end
 
-  def clone_repo(project_id, clone_config)
+  def clone_repo(project_id, clone_config, big_repo=false)
     do_clone_git_repo(project_id, clone_config)
     expect_status_details(200)
     execution_id = json_body[:id]
     repo_id = json_body[:repository][:id]
+    timeout=180
+    if big_repo
+      # 15 minutes max for cloning the big repository
+      timeout = 900
+    end
     #wait for the clone operation to complete
-    json_result = wait_for_git_operation_completed(project_id, repo_id, execution_id, "Success")
+    json_result = wait_for_git_operation_completed(project_id, repo_id, execution_id, "Success", timeout)
     return repo_id, json_result[:gitCommandConfiguration][:path]
   end
 
-  def wait_for_git_operation_completed(project_id, repository_id, execution_id, expected_final_status)
-    git_command_result = wait_for_me_time(timeout=180, delay=1) do
+  def wait_for_git_operation_completed(project_id, repository_id, execution_id, expected_final_status, timeout=180, delay=1)
+    git_command_result = wait_for_me_time(timeout=timeout, delay=delay) do
       #start polling
       get_git_execution_object(project_id, repository_id, execution_id)
       expect_status_details(200)
@@ -137,12 +142,12 @@ module GitHelper
     post "#{ENV['HOPSWORKS_API']}/project/#{project_id}/git/repository/#{repository_id}?action=commit", commit_config
   end
 
-  def git_pull(project_id, repository_id, remote_name="", branch_name="", force=false)
+  def git_pull(project_id, repository_id, remote_name="origin", branch_name="master", force=false)
     post "#{ENV['HOPSWORKS_API']}/project/#{project_id}/git/repository/#{repository_id}?action=pull", {remoteName: remote_name, branchName: branch_name, force:force, type: "pullCommandConfiguration"}.to_json
   end
 
-  def git_push(project_id, repository_id, remote_name="", branch_name="", force=false)
-    post "#{ENV['HOPSWORKS_API']}/project/#{project_id}/git/repository/#{repository_id}?action=pull", {remoteName: remote_name, branchName: branch_name, force:force, type: "pushCommandConfiguration"}.to_json
+  def git_push(project_id, repository_id, remote_name="origin", branch_name="master", force=false)
+    post "#{ENV['HOPSWORKS_API']}/project/#{project_id}/git/repository/#{repository_id}?action=push", {remoteName: remote_name, branchName: branch_name, force:force, type: "pushCommandConfiguration"}.to_json
   end
 
   def make_commit_in_repo(project, repository_id)
@@ -253,7 +258,7 @@ module GitHelper
   end
 
   def git_status(project_id, repository_id)
-    post "#{ENV['HOPSWORKS_API']}/project/#{project_id}/git/repository/#{repository_id}?action=status", {}.to_json
+    post "#{ENV['HOPSWORKS_API']}/project/#{project_id}/git/repository/#{repository_id}?action=status"
   end
 
   def add_remote(project_id, repository_id, remote_name, remote_url)
