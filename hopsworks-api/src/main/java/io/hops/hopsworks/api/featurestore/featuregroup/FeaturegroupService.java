@@ -127,8 +127,6 @@ public class FeaturegroupService {
   @Inject
   private FeatureGroupPartitionResource featureGroupPartitionResource;
   @Inject
-  private FeatureGroupDetailsResource featureGroupDetailsResource;
-  @Inject
   private StatisticsResource statisticsResource;
   @Inject
   private CodeResource codeResource;
@@ -538,18 +536,6 @@ public class FeaturegroupService {
         writeOptions, dataOptions);
     IngestionJobDTO ingestionJobDTO = ingestionJobBuilder.build(uriInfo, project, featuregroup, ingestionJob);
     return Response.ok().entity(ingestionJobDTO).build();
-  }
-
-  @Path("/{featuregroupId}/details")
-  @Logged(logLevel = LogLevel.OFF)
-  public FeatureGroupDetailsResource getFeatureGroupDetails(
-      @Context HttpServletRequest req,
-      @ApiParam(value = "Id of the featuregroup") @PathParam("featuregroupId") Integer featuregroupId)
-      throws FeaturestoreException {
-    FeatureGroupDetailsResource fgDetailsResource = featureGroupDetailsResource.setProject(project);
-    fgDetailsResource.setFeaturestore(featurestore);
-    fgDetailsResource.setFeatureGroupId(featuregroupId);
-    return fgDetailsResource;
   }
 
   @Path("/{featuregroupId}/preview")
