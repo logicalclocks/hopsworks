@@ -15,6 +15,8 @@
  */
 package io.hops.hopsworks.persistence.entity.git;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
+
 import javax.persistence.Basic;
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -30,11 +32,9 @@ import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
-import javax.xml.bind.annotation.XmlRootElement;
 import java.io.Serializable;
 import java.util.Date;
 
-@XmlRootElement
 @Entity
 @Table(name = "git_commits", catalog = "hopsworks")
 @NamedQueries({
@@ -100,6 +100,8 @@ public class GitCommit implements Serializable {
 
   @Column(name = "date")
   @Temporal(TemporalType.TIMESTAMP)
+  // Date format from hops-git is RFC3339
+  @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ssXXX")
   private Date date;
 
   public GitCommit() {}

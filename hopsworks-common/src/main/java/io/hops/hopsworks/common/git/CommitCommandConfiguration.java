@@ -17,12 +17,11 @@ package io.hops.hopsworks.common.git;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
 
-import javax.xml.bind.annotation.XmlRootElement;
 import java.util.List;
 
-@XmlRootElement
 @JsonTypeName("commitCommandConfiguration")
 public class CommitCommandConfiguration extends RepositoryActionCommandConfiguration {
+
   private String message;
   private boolean all;
   //Files to add and commit

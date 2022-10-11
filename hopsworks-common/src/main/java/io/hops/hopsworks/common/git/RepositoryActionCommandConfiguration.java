@@ -19,20 +19,12 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.XmlSeeAlso;
-
-@XmlRootElement
-@XmlAccessorType(XmlAccessType.NONE)
 @JsonIgnoreProperties(ignoreUnknown = true)
-@XmlSeeAlso({CommitCommandConfiguration.class, PullCommandConfiguration.class, PushCommandConfiguration.class})
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "type")
 @JsonSubTypes({
-    @JsonSubTypes.Type(value = CommitCommandConfiguration.class, name = "CommitCommandConfigurationDTO"),
-    @JsonSubTypes.Type(value = PullCommandConfiguration.class, name = "PullCommandConfigurationDTO"),
-    @JsonSubTypes.Type(value = PushCommandConfiguration.class, name = "PushCommandConfigurationDTO")})
-public class RepositoryActionCommandConfiguration {
+    @JsonSubTypes.Type(value = CommitCommandConfiguration.class, name = "commitCommandConfiguration"),
+    @JsonSubTypes.Type(value = PullCommandConfiguration.class, name = "pullCommandConfiguration"),
+    @JsonSubTypes.Type(value = PushCommandConfiguration.class, name = "pushCommandConfiguration")})
+public abstract class RepositoryActionCommandConfiguration {
   public RepositoryActionCommandConfiguration() {}
 }

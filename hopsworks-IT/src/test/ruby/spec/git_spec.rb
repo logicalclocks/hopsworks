@@ -53,10 +53,21 @@ describe "On #{ENV['OS']}" do
       end
     end
     describe "Cloning repositories" do
+      before(:all) do
+        @dir_name = "/Projects/#{@project[:projectname]}/Jupyter/testDir#{short_random_id}"
+        create_dir(@project, @dir_name, query: "&type=DATASET")
+        expect_status_details(201)
+      end
+      after(:all) do
+        delete_dataset(@project, @dir_name)
+      end
       git_providers = ['GitHub', 'GitLab']
       git_providers.each do |git_provider|
         it "should clone a #{git_provider} repository" do
-          clone_config = get_clone_config(git_provider, @project[:projectname])
+          clone_dir = "#{@dir_name}/testDir#{short_random_id}"
+          create_dir(@project, clone_dir, query: "&type=DATASET")
+          expect_status_details(201)
+          clone_config = get_clone_config(git_provider, @project[:projectname],  url="", branch="", path=clone_dir)
           repo_id, repo_path = clone_repo(@project[:id], clone_config)
           expect(repo_id).not_to be_nil
           expect(repo_path).not_to be_nil
@@ -69,7 +80,10 @@ describe "On #{ENV['OS']}" do
           elsif git_provider == "GitLab"
             branch = "hopsworks"
           end
-          clone_config = get_clone_config(git_provider, @project[:projectname], url="", branch=branch)
+          clone_dir = "#{@dir_name}/testDir#{short_random_id}"
+          create_dir(@project, clone_dir, query: "&type=DATASET")
+          expect_status_details(201)
+          clone_config = get_clone_config(git_provider, @project[:projectname], url="", branch=branch, path=clone_dir)
           repo_id, repo_path = clone_repo(@project[:id], clone_config)
           expect(repo_id).not_to be_nil
           expect(repo_path).not_to be_nil
@@ -94,7 +108,7 @@ describe "On #{ENV['OS']}" do
         repo_id, repo_path = clone_repo(@project[:id], clone_config)
         expect(repo_id).not_to be_nil
         expect(repo_path).not_to be_nil
-        git_pull(@project[:id], repo_id, "origin", "master")
+        git_pull(@project[:id], repo_id)
         expect_status_details(400, error_code: 500029)
         delete_dataset(@project, dir_name)
       end
@@ -108,73 +122,76 @@ describe "On #{ENV['OS']}" do
           repo_id, repo_path = clone_repo(@project[:id], clone_config)
           expect(repo_id).not_to be_nil
           expect(repo_path).not_to be_nil
-          git_pull(@project[:id], repo_id, "origin", "master")
+          git_push(@project[:id], repo_id)
           expect_status_details(400, error_code: 500029)
           delete_dataset(@project, dir_name)
         end
       end
     end
     describe "Getting project repositories" do
+      before (:all) do
+        @project1 = create_project
+      end
       it 'should get all repositories in the project' do
-        clone_config = get_clone_config("GitHub", @project[:projectname])
-        _, repo_path = clone_repo(@project[:id], clone_config)
+        clone_config = get_clone_config("GitHub", @project1[:projectname])
+        _, repo_path = clone_repo(@project1[:id], clone_config)
 
-        get_project_git_repositories(@project[:id])
+        get_project_git_repositories(@project1[:id])
         expect(json_body[:count]).to eq(1)
         expect(json_body[:items][0][:creator][:email]).to be nil
 
-        get_project_git_repositories(@project[:id], query="?expand=creator")
+        get_project_git_repositories(@project1[:id], query="?expand=creator")
         expect(json_body[:count]).to eq(1)
         expect(json_body[:items][0][:creator][:email]).not_to be_nil
 
-        delete_repository(@project, repo_path)
+        delete_repository(@project1, repo_path)
       end
       describe '#sort' do
         before(:all) do
-          repositories = clone_repositories(@project[:id], @project[:projectname], {"GitHub" => "https://github.com/logicalclocks/livy-chef.git", "GitLab" => "https://gitlab.com/gibchikafa/test_repo.git"})
+          repositories = clone_repositories(@project1[:id], @project1[:projectname], {"GitHub" => "https://github.com/logicalclocks/livy-chef.git", "GitLab" => "https://gitlab.com/gibchikafa/test_repo.git"})
           expect(repositories.keys.count).to be > 1
         end
         after(:all) do
-          get_project_git_repositories(@project[:id], query="?expand=creator")
+          get_project_git_repositories(@project1[:id], query="?expand=creator")
           expect(json_body[:count]).to be > 1
           repositories = json_body[:items]
-          repositories.each{|r| delete_repository(@project, r[:path])}
+          repositories.each{|r| delete_repository(@project1, r[:path])}
         end
         it 'should get all repositories sorted by id (asc)' do
-          test_sort_by_id(@project[:id])
+          test_sort_by_id(@project1[:id])
         end
         it 'should get all repositories sorted by id (desc)' do
-          test_sort_by_id(@project[:id], "desc")
+          test_sort_by_id(@project1[:id], "desc")
         end
         it 'should get all repositories sorted by name (asc)' do
-          test_sort_by_repo_name(@project[:id])
+          test_sort_by_repo_name(@project1[:id])
         end
         it 'should get all repositories sorted by name (desc)' do
-          test_sort_by_repo_name(@project[:id], "desc")
+          test_sort_by_repo_name(@project1[:id], "desc")
         end
       end
       describe "#filter" do
         it 'should filter repositories by user' do
-          clone_config = get_clone_config("GitHub", @project[:projectname])
-          repoId1, path1 = clone_repo(@project[:id], clone_config)
+          clone_config = get_clone_config("GitHub", @project1[:projectname])
+          repoId1, path1 = clone_repo(@project1[:id], clone_config)
           member = create_user
-          add_member_to_project(@project, member[:email], "Data scientist")
+          add_member_to_project(@project1, member[:email], "Data scientist")
           reset_session
           create_session(member[:email],"Pass123")
-          clone_config = get_clone_config("GitLab", @project[:projectname])
-          repoId2, path2 = clone_repo(@project[:id], clone_config)
+          clone_config = get_clone_config("GitLab", @project1[:projectname])
+          repoId2, path2 = clone_repo(@project1[:id], clone_config)
           reset_session
-          create_session(@project[:username], "Pass123")
+          create_session(@project1[:username], "Pass123")
           # get all repositories
-          get_project_git_repositories(@project[:id])
+          get_project_git_repositories(@project1[:id])
           expect_status_details(200)
           expect(json_body[:count]).to eq(2)
           #filter for user 1
-          get_project_git_repositories(@project[:id], "?expand=creator&filter=user:#{member[:username]}")
+          get_project_git_repositories(@project1[:id], "?expand=creator&filter=user:#{member[:username]}")
           expect(json_body[:count]).to eq(1)
           expect(json_body[:items][0][:creator][:username]).to eql member[:username]
-          delete_repository(@project, path1)
-          delete_repository(@project, path2)
+          delete_repository(@project1, path1)
+          delete_repository(@project1, path2)
         end
       end
     end
@@ -196,12 +213,12 @@ describe "On #{ENV['OS']}" do
         get_git_executions(@project[:id], repository_id)
         expect(json_body[:count]).to be > 0
         expect(json_body[:items][0][:repository][:path]).to be nil
-        expect(json_body[:items][0][:creator][:email]).to be nil
+        expect(json_body[:items][0][:user][:email]).to be nil
         # Check expansions
         get_git_executions(@project[:id], repository_id, query="?expand=repository&expand=user")
         expect(json_body[:count]).to be > 0
         expect(json_body[:items][0][:repository][:path]).not_to be_nil
-        expect(json_body[:items][0][:creator][:email]).not_to be_nil
+        expect(json_body[:items][0][:user][:email]).not_to be_nil
       end
       it "should get repository default branches after cloning" do
         clone_config = get_clone_config("GitHub", @project[:projectname])
@@ -323,7 +340,7 @@ describe "On #{ENV['OS']}" do
         create_branch(@project[:id], repository_id, "test_branch")
         checkout_branch(@project[:id], repository_id, "test_branch")
         make_commit_in_repo(@project, repository_id)
-        git_pull(@project[:id], repository_id, "origin", "master")
+        git_pull(@project[:id], repository_id, remote_name="origin", branch_name="test_branch")
         wait_for_git_operation_completed(@project[:id], repository_id, json_body[:id], "Success")
       end
       it 'should get all repository remotes' do
@@ -337,7 +354,7 @@ describe "On #{ENV['OS']}" do
         clone_config = get_clone_config("GitHub", @project[:projectname])
         repository_id, repository_path = clone_repo(@project[:id], clone_config)
         test_remote_name = "test_remote"
-        test_remote_url = "https://github.com/gibchikafa/hopsworks-ee.git"
+        test_remote_url = "https://github.com/logicalclocks/hopsworks-ee.git"
         add_remote(@project[:id], repository_id, test_remote_name, test_remote_url)
         expect_status_details(200)
         wait_for_git_operation_completed(@project[:id], repository_id, json_body[:id], "Success")
@@ -358,7 +375,7 @@ describe "On #{ENV['OS']}" do
     describe "Operation on big repositories" do
       it "should be able to clone big repositories" do
         clone_config = get_clone_config("GitHub", @project[:projectname], url="https://github.com/logicalclocks/hops-examples.git")
-        _, repository_path = clone_repo(@project[:id], clone_config)
+        _, repository_path = clone_repo(@project[:id], clone_config, big_repo=true)
         delete_repository(@project, repository_path)
       end
     end
