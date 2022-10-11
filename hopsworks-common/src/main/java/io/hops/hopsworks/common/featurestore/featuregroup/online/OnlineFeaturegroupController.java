@@ -347,18 +347,6 @@ public class OnlineFeaturegroupController {
   }
 
   /**
-   * Gets the SQL schema of an online feature group
-   *
-   * @param featuregroup the online featuregroup to get the SQL schema of
-   * @return a String with the "SHOW CREATE TABLE" result
-   */
-  public String getFeaturegroupSchema(Featuregroup featuregroup) throws FeaturestoreException {
-    return onlineFeaturestoreFacade.getMySQLSchema(
-        Utils.getFeatureStoreEntityName(featuregroup.getName(), featuregroup.getVersion()),
-        onlineFeaturestoreController.getOnlineFeaturestoreDbName(featuregroup.getFeaturestore().getProject()));
-  }
-
-  /**
    * Queries the metadata in MySQL-Cluster to get the schema information of an online feature group
    *
    * @param featuregroup the online featuregroup to get type information for
@@ -378,11 +366,5 @@ public class OnlineFeaturegroupController {
       }
     }
     return featureGroupFeatureDTOS;
-  }
-
-  public Long getFeaturegroupSize(Featuregroup featuregroup) {
-    return onlineFeaturestoreFacade.getTblSize(
-        Utils.getFeatureStoreEntityName(featuregroup.getName(), featuregroup.getVersion()),
-        onlineFeaturestoreController.getOnlineFeaturestoreDbName(featuregroup.getFeaturestore().getProject()));
   }
 }

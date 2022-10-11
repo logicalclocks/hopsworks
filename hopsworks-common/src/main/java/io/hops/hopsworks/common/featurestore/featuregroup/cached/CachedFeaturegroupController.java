@@ -63,7 +63,6 @@ import org.apache.calcite.sql.SqlSelect;
 import org.apache.calcite.sql.dialect.HiveSqlDialect;
 import org.apache.calcite.sql.fun.SqlStdOperatorTable;
 import org.apache.calcite.sql.parser.SqlParserPos;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.hive.metastore.api.SQLDefaultConstraint;
 import org.javatuples.Pair;
 
@@ -170,39 +169,6 @@ public class CachedFeaturegroupController {
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.COULD_NOT_INITIATE_HIVE_CONNECTION, Level.SEVERE,
           "project: " + project.getName() + ", hive database: " + databaseName, e.getMessage(), e);
     }
-  }
-
-  /**
-   * Executes "SHOW CREATE TABLE" on the hive table of the featuregroup formats it as a string and returns it
-   *
-   * @param featuregroup    the featuregroup to get the schema for
-   * @param project         project from which the user is making the request
-   * @param user            the user making the request
-   * @return                JSON/XML DTO with the schema
-   * @throws FeaturestoreException
-   * @throws HopsSecurityException
-   */
-  public String getDDLSchema(Featuregroup featuregroup, Project project, Users user)
-      throws FeaturestoreException, HopsSecurityException {
-    try {
-      return parseSqlSchemaResult(getSQLSchemaForFeaturegroup(featuregroup, project, user));
-    } catch (SQLException e) {
-      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.COULD_NOT_FETCH_FEATUREGROUP_SHOW_CREATE_SCHEMA,
-          Level.SEVERE, "Internal error fetching the schema of the feature group", e.getMessage(), e);
-    }
-  }
-
-  /**
-   * SHOW CREATE TABLE tblName in Hive returns a table with a single column but multiple rows (cut by String length)
-   * this utility method converts the list of rows into a single long string indented with "\n" between rows.
-   *
-   * @param preview rows result from running SHOW CREATE TABLE
-   * @return String representation of SHOW CREATE TABLE in Hive
-   */
-  private String parseSqlSchemaResult(FeaturegroupPreview preview){
-    return StringUtils.join(preview.getPreview().stream()
-        .map(row -> row.getValues().get(0).getValue1())
-        .collect(Collectors.toList()), "\n");
   }
 
   /**
@@ -508,24 +474,6 @@ public class CachedFeaturegroupController {
     } else {
       return false;
     }
-  }
-
-  /**
-   * Gets the SQL schema that was used to create the Hive table for a featuregroup
-   *
-   * @param featuregroup    featuregroup
-   * @param project         the project of the user making the request
-   * @param user            the user making the request
-   * @throws SQLException
-   * @throws FeaturestoreException
-   * @throws HopsSecurityException
-   */
-  private FeaturegroupPreview getSQLSchemaForFeaturegroup(Featuregroup featuregroup, Project project, Users user)
-      throws SQLException, FeaturestoreException, HopsSecurityException {
-    String tbl = getTblName(featuregroup.getName(), featuregroup.getVersion());
-    String query = "SHOW CREATE TABLE " + tbl;
-    String db = featurestoreController.getOfflineFeaturestoreDbName(featuregroup.getFeaturestore().getProject());
-    return executeReadHiveQuery(query, db, project, user);
   }
 
   /**

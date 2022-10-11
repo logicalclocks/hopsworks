@@ -82,38 +82,6 @@ public class OnlineFeaturestoreFacade {
   }
 
   /**
-   * Gets the size of an online featurestore database. I.e the size of a MySQL-cluster database.
-   *
-   * @param dbName the name of the database
-   * @param tableName the name of the table
-   * @return the size in MB
-   */
-  public Long getTblSize(String tableName, String dbName) {
-    try {
-      ResultSet resultSet = null;
-      try (Connection connection = featureStoreDataSource.getConnection();
-           PreparedStatement pStmt = connection.prepareStatement(
-               "SELECT (`TABLES`.`data_length` + `TABLES`.`index_length`) `size` " +
-               "FROM information_schema.`TABLES` WHERE table_schema=? AND table_name=?;")) {
-        pStmt.setString(1, dbName);
-        pStmt.setString(2, tableName);
-        resultSet = pStmt.executeQuery();
-        if (resultSet.next()) {
-          return resultSet.getLong("size");
-        }
-      } finally {
-        if (resultSet != null) {
-          resultSet.close();
-        }
-      }
-    } catch (SQLException se) {
-      LOGGER.log(Level.SEVERE, "Could not get table size", se);
-    }
-
-    return 0L;
-  }
-
-  /**
    * Gets the features of a online featuregroup from the MySQL metadata
    *
    * @param tableName the name of the table of the online featuregroup
@@ -148,33 +116,6 @@ public class OnlineFeaturestoreFacade {
     }
 
     return featureGroupFeatureDTOS;
-  }
-
-  /**
-   * Gets the features of a online featuregroup from the MySQL metadata
-   *
-   * @param tableName the name of the table of the online featuregroup
-   * @param db the name of the mysql database
-   * @return list of featureDTOs with name,type,comment
-   */
-  public String getMySQLSchema(String tableName, String db) throws FeaturestoreException {
-    try {
-      ResultSet resultSet = null;
-      try (Connection connection = featureStoreDataSource.getConnection();
-           PreparedStatement pStmt = connection.prepareStatement(
-               "SHOW CREATE TABLE `" + db + "`.`" + tableName + "`;")) {
-        resultSet = pStmt.executeQuery();
-        resultSet.next();
-        return resultSet.getString(2);
-      } finally {
-        if (resultSet != null) {
-          resultSet.close();
-        }
-      }
-    } catch (SQLException se) {
-      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ERROR_ONLINE_GENERIC, Level.SEVERE,
-          "Error feching the feature group schema", se.getMessage(), se);
-    }
   }
 
   /**
