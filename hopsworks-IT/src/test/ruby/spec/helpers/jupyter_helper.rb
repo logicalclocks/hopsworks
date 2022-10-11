@@ -22,7 +22,6 @@ module JupyterHelper
         settings[:baseDir] = baseDir
     end
 
-    settings[:distributionStrategy] = ""
     settings[:shutdownLevel] = shutdownLevel
     settings[:noLimit] = noLimit
     staging_dir = settings[:privateDir]

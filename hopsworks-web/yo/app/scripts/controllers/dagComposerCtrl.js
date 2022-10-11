@@ -26,11 +26,7 @@ angular.module('hopsWorksApp')
         self.newDagDefined = false;
         // DAG properties
         self.dag = {
-            // Fill it in backend
-            projectId: self.projectId,
             name: "",
-            // Fill it in backend
-            owner: "meb10000",
             scheduleInterval: "@once",
             operators: []
         };
@@ -157,7 +153,20 @@ angular.module('hopsWorksApp')
                     {title: "Could not create workflow", ttl: 5000, referenceId: "dag_comp_growl"});
                 return;
             }
-            AirflowService.generateDag(self.projectId, self.dag).then(
+
+            //Construct new dag to send, backend does not accept sending unknown fields such as HAS_JOB_NAME_ATTR or attributesMask
+            var newDag = {'name': self.dag.name, 'scheduleInterval': self.dag.scheduleInterval, 'operators': []};
+            for (var i = 0; i < self.dag.operators.length; i++) {
+              var operator = self.dag.operators[i];
+              newDag.operators.push({'name': operator.name,
+                                       'wait': operator.wait,
+                                       'id': operator.id,
+                                       'jobName': operator.jobName,
+                                       'dependsOn': operator.dependsOn,
+                                       'jobArgs': operator.jobArgs});
+            }
+
+            AirflowService.generateDag(self.projectId, newDag).then(
                 function(success) {
                     growl.info("Generated DAG " + self.dag.name,
                         {title: "Success", ttl: 3000, referenceId: "dag_comp_growl"});
