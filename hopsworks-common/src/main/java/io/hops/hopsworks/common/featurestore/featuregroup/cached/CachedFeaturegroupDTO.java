@@ -17,7 +17,9 @@
 package io.hops.hopsworks.common.featurestore.featuregroup.cached;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonSetter;
 import com.fasterxml.jackson.annotation.JsonTypeName;
+import com.fasterxml.jackson.annotation.Nulls;
 import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupDTO;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.Featuregroup;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.cached.TimeTravelFormat;
@@ -28,12 +30,13 @@ import javax.xml.bind.annotation.XmlRootElement;
  * DTO containing the human-readable information of a cached feature group in the Hopsworks feature store,
  * can be converted to JSON or XML representation using jaxb.
  */
-@XmlRootElement
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonTypeName("cachedFeaturegroupDTO")
 public class CachedFeaturegroupDTO extends FeaturegroupDTO {
 
+  @JsonSetter(nulls = Nulls.SKIP)
   private Boolean onlineEnabled = false;
+  @JsonSetter(nulls = Nulls.SKIP)
   private TimeTravelFormat timeTravelFormat = TimeTravelFormat.NONE;
 
   public CachedFeaturegroupDTO() {

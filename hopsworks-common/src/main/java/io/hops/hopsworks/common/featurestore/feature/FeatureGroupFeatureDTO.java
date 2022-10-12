@@ -16,23 +16,27 @@
 
 package io.hops.hopsworks.common.featurestore.feature;
 
-import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlRootElement;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonSetter;
+import com.fasterxml.jackson.annotation.Nulls;
 
 /**
  * DTO containing the human-readable information of a feature, can be converted to JSON or XML representation
  * using jaxb.
  */
-@XmlRootElement
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class FeatureGroupFeatureDTO {
 
   private String name;
   private String type;
   private String onlineType;
   private String description;
+  @JsonSetter(nulls = Nulls.SKIP)
   private Boolean primary = false;
+  @JsonSetter(nulls = Nulls.SKIP)
   private Boolean partition = false;
-  private Boolean hudiPrecombineKey  = false;
+  @JsonSetter(nulls = Nulls.SKIP)
+  private Boolean hudiPrecombineKey = false;
   private String defaultValue = null;
   private Integer featureGroupId = null;
 
@@ -127,47 +131,38 @@ public class FeatureGroupFeatureDTO {
     this.name = name;
   }
 
-  @XmlElement
   public String getName() {
     return name;
   }
 
-  @XmlElement
   public String getType() {
     return type;
   }
 
-  @XmlElement
   public String getDescription() {
     return description;
   }
 
-  @XmlElement
   public Boolean getPrimary() {
     return primary;
   }
 
-  @XmlElement
   public Boolean getPartition() {
     return partition;
   }
 
-  @XmlElement
   public Boolean getHudiPrecombineKey() {
     return hudiPrecombineKey;
   }
 
-  @XmlElement
   public String getOnlineType() {
     return onlineType;
   }
-  
-  @XmlElement(nillable = true)
+
   public String getDefaultValue() {
     return defaultValue;
   }
 
-  @XmlElement
   public Integer getFeatureGroupId() {
     return featureGroupId;
   }
