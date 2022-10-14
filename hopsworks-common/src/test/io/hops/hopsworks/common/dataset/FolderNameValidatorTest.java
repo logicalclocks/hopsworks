@@ -250,12 +250,27 @@ public class FolderNameValidatorTest {
     }
     Pattern projectNameRegexValidator = Pattern.compile(FolderNameValidator.getProjectNameRegexStr(tokens),
       Pattern.CASE_INSENSITIVE);
-    Matcher m = projectNameRegexValidator.matcher("VIEWS");
+
+    Matcher m = projectNameRegexValidator.matcher("git");
     boolean isValid = m.find();
     Assert.assertFalse(isValid);
+
+    m = projectNameRegexValidator.matcher("airflow");
+    isValid = m.find();
+    Assert.assertFalse(isValid);
+
+    m = projectNameRegexValidator.matcher("onlinefs");
+    isValid = m.find();
+    Assert.assertFalse(isValid);
+
+    m = projectNameRegexValidator.matcher("VIEWS");
+    isValid = m.find();
+    Assert.assertFalse(isValid);
+
     m = projectNameRegexValidator.matcher("views");
     isValid = m.find();
     Assert.assertFalse(isValid);
+
     m = projectNameRegexValidator.matcher("viewss");
     isValid = m.find();
     Assert.assertTrue(isValid);

@@ -110,6 +110,13 @@ describe "On #{ENV['OS']}" do
           expect_status_details(409, error_code: 150001)
         end
 
+        it 'should fail to create a project named the same as preinstalled python docker image' do
+          with_valid_project
+          docker_base_image_name = getVar('docker_base_image_python_name').value
+          post "#{ENV['HOPSWORKS_API']}/project", {projectName: docker_base_image_name, description: "", services: ["JOBS","HIVE"], projectTeam:[], retentionPeriod: ""}
+          expect_status_details(400, error_code: 150073)
+        end
+
         it 'Should fail to create two projects with the same name but different capitalization - HOPSWORKS-256' do
           check_project_limit(2)
           projectName = "HOPSWORKS256#{short_random_id}"
@@ -306,7 +313,6 @@ describe "On #{ENV['OS']}" do
           get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/jupyter/settings"
           expect_status_details(200)
           settings = json_body
-          settings[:distributionStrategy] = ""
           post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/jupyter/start", JSON(settings)
           expect_status_details(200)
           get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/jupyter/running"
