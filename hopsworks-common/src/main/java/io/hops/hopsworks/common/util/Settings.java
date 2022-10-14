@@ -1507,10 +1507,10 @@ public class Settings implements Serializable {
   public static final String PROJECT_STAGING_DIR = "Resources";
   // Any word added to reserved words in DEFAULT_RESERVED_PROJECT_NAMES and DEFAULT_RESERVED_HIVE_NAMES should
   // also be added in the documentation in:
-  // https://hopsworks.readthedocs.io/en/<hopsworksDocVersion>/user_guide/hopsworks/newProject.html
+  // https://docs.hopsworks.ai/latest/user_guides/projects/project/create_project/#reserved-project-names
   private final static String DEFAULT_RESERVED_PROJECT_NAMES = "hops-system,hopsworks,information_schema,airflow," +
-      "glassfish_timers,grafana,hops,metastore,mysql,ndbinfo,performance_schema,sqoop,sys," +
-      "base,python37,python38,filebeat";
+    "glassfish_timers,grafana,hops,metastore,mysql,ndbinfo,performance_schema,sqoop,sys,base,python37,python38," +
+    "python39,python310,filebeat,airflow,git,onlinefs,sklearnserver";
   //Hive reserved words can be found at:
   //https://cwiki.apache.org/confluence/display/hive/LanguageManual+DDL#LanguageManualDDL-Keywords,Non-
   //reservedKeywordsandReservedKeywords
@@ -3728,7 +3728,7 @@ public class Settings implements Serializable {
     }
   }
 
-  private String DOCKER_BASE_IMAGE_PYTHON_VERSION = "3.7";
+  private String DOCKER_BASE_IMAGE_PYTHON_VERSION = "3.8";
 
   public synchronized String getDockerBaseImagePythonVersion() {
     checkCache();
