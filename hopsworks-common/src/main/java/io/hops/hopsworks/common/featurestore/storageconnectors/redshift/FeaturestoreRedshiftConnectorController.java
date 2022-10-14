@@ -20,7 +20,6 @@ import io.hops.hopsworks.common.dao.user.security.secrets.SecretsFacade;
 import io.hops.hopsworks.common.featurestore.FeaturestoreConstants;
 import io.hops.hopsworks.common.featurestore.storageconnectors.StorageConnectorUtil;
 import io.hops.hopsworks.common.security.secrets.SecretsController;
-import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.exceptions.ProjectException;
 import io.hops.hopsworks.exceptions.UserException;
@@ -52,10 +51,19 @@ public class FeaturestoreRedshiftConnectorController {
   @EJB
   private SecretsFacade secretsFacade;
   @EJB
-  private Settings settings;
-  @EJB
   private StorageConnectorUtil storageConnectorUtil;
 
+  
+  public FeaturestoreRedshiftConnectorController(SecretsController secretsController, SecretsFacade secretsFacade,
+      StorageConnectorUtil storageConnectorUtil) {
+    this.secretsController = secretsController;
+    this.secretsFacade = secretsFacade;
+    this.storageConnectorUtil = storageConnectorUtil;
+  }
+  
+  public FeaturestoreRedshiftConnectorController() {
+  }
+  
   public FeaturestoreRedshiftConnectorDTO getRedshiftConnectorDTO(FeaturestoreConnector featurestoreConnector)
       throws FeaturestoreException {
     FeaturestoreRedshiftConnectorDTO featurestoreRedshiftConnectorDTO =
@@ -87,8 +95,12 @@ public class FeaturestoreRedshiftConnectorController {
       FeaturestoreRedshiftConnectorDTO featurestoreRedshiftConnectorDTO) {
     featurestoreRedshiftConnector.setClusterIdentifier(
       storageConnectorUtil.getValueOrNull(featurestoreRedshiftConnectorDTO.getClusterIdentifier()));
-    featurestoreRedshiftConnector.setDatabaseDriver(
-      storageConnectorUtil.getValueOrNull(featurestoreRedshiftConnectorDTO.getDatabaseDriver()));
+    if (featurestoreRedshiftConnectorDTO.getDatabaseDriver() != null) {
+      featurestoreRedshiftConnector.setDatabaseDriver(
+        storageConnectorUtil.getValueOrNull(featurestoreRedshiftConnectorDTO.getDatabaseDriver()));
+    } else {
+      featurestoreRedshiftConnector.setDatabaseDriver(FeaturestoreConstants.DEFAULT_REDSHIFT_DRIVER);
+    }
     featurestoreRedshiftConnector.setDatabaseEndpoint(
       storageConnectorUtil.getValueOrNull(featurestoreRedshiftConnectorDTO.getDatabaseEndpoint()));
     featurestoreRedshiftConnector.setDatabaseName(
@@ -121,7 +133,7 @@ public class FeaturestoreRedshiftConnectorController {
     }
   }
   
-  private void verifyCreateDTO(FeaturestoreRedshiftConnectorDTO featurestoreRedshiftConnectorDTO)
+  public void verifyCreateDTO(FeaturestoreRedshiftConnectorDTO featurestoreRedshiftConnectorDTO)
       throws FeaturestoreException {
     if (featurestoreRedshiftConnectorDTO == null) {
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_STORAGE_CONNECTOR_ARG, Level.FINE,
@@ -130,10 +142,6 @@ public class FeaturestoreRedshiftConnectorController {
     if (storageConnectorUtil.isNullOrWhitespace(featurestoreRedshiftConnectorDTO.getClusterIdentifier())) {
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_STORAGE_CONNECTOR_ARG, Level.FINE,
           "Cluster identifier can not be empty.");
-    }
-    if (storageConnectorUtil.isNullOrWhitespace(featurestoreRedshiftConnectorDTO.getDatabaseDriver())) {
-      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_STORAGE_CONNECTOR_ARG, Level.FINE,
-          "Database driver can not be empty.");
     }
     if (storageConnectorUtil.isNullOrWhitespace(featurestoreRedshiftConnectorDTO.getDatabaseEndpoint())) {
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_STORAGE_CONNECTOR_ARG, Level.FINE,
