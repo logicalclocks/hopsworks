@@ -5,6 +5,7 @@ require 'pp'
 
 describe "On #{ENV['OS']}" do
   before :all do
+    skip "Skip this test suite for now until explicit provenance (https://hopsworks.atlassian.net/browse/FSTORE-334) is merged"
     @new_provenance_type = "FULL"
     @new_provenance_archive_size = "0"
     @old_provenance_type, @old_provenance_archive_size = setup_cluster_prov(@new_provenance_type, @new_provenance_archive_size)
