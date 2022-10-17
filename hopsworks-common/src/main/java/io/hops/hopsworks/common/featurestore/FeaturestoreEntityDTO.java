@@ -17,8 +17,10 @@
 package io.hops.hopsworks.common.featurestore;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonSetter;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import com.fasterxml.jackson.annotation.Nulls;
 import io.hops.hopsworks.common.api.RestDTO;
 import io.hops.hopsworks.common.dao.user.UserDTO;
 import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupDTO;
@@ -27,17 +29,12 @@ import io.hops.hopsworks.common.featurestore.statistics.StatisticsConfigDTO;
 import io.hops.hopsworks.common.featurestore.trainingdatasets.TrainingDatasetDTO;
 import io.hops.hopsworks.persistence.entity.user.Users;
 
-import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.XmlSeeAlso;
 import java.util.Date;
 
 /**
  * Abstract storage entity in the featurestore. Contains the common fields and functionality between feature groups
  * and training dataset entities.
  */
-@XmlRootElement
-@XmlSeeAlso({FeaturegroupDTO.class, FeatureViewDTO.class, TrainingDatasetDTO.class})
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property="type")
 @JsonSubTypes({
@@ -55,6 +52,7 @@ public abstract class FeaturestoreEntityDTO<T> extends RestDTO<T> {
   private String name;
   private Integer id;
   private String location = null;
+  @JsonSetter(nulls = Nulls.SKIP)
   private StatisticsConfigDTO statisticsConfig = new StatisticsConfigDTO();
   
   public FeaturestoreEntityDTO() {
@@ -83,52 +81,42 @@ public abstract class FeaturestoreEntityDTO<T> extends RestDTO<T> {
     this.version = version;
   }
   
-  @XmlElement
   public Date getCreated() {
     return created;
   }
   
-  @XmlElement
   public UserDTO getCreator() {
     return creator;
   }
   
-  @XmlElement
   public String getDescription() {
     return description;
   }
   
-  @XmlElement
   public Integer getVersion() {
     return version;
   }
   
-  @XmlElement
   public Integer getFeaturestoreId() {
     return featurestoreId;
   }
   
-  @XmlElement
   public String getFeaturestoreName() {
     return featurestoreName;
   }
   
-  @XmlElement
   public String getName() {
     return name;
   }
   
-  @XmlElement
   public Integer getId() {
     return id;
   }
 
-  @XmlElement
   public String getLocation() {
     return location;
   }
 
-  @XmlElement
   public StatisticsConfigDTO getStatisticsConfig() {
     return statisticsConfig;
   }
