@@ -24,8 +24,6 @@ import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupDTO;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.Featuregroup;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.cached.TimeTravelFormat;
 
-import javax.xml.bind.annotation.XmlRootElement;
-
 /**
  * DTO containing the human-readable information of a cached feature group in the Hopsworks feature store,
  * can be converted to JSON or XML representation using jaxb.
