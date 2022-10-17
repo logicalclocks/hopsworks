@@ -1454,6 +1454,57 @@ describe "On #{ENV['OS']}" do
         expect(parsed_json.first["features"][5]["name"]).to eql("ft_f")
       end
 
+      it "should be able to create cached feature group with optional null value. (Test for payara 5)" do
+        fg_name = "featuregroup_#{random_id}"
+        featurestore_id = get_featurestore_id(@project.id)
+        features = [
+          {type: "INT", name: "ft_a", description: nil, primary: true, onlineType: nil,
+           partition: nil, hudiPrecombineKey: nil, defaultValue: nil, featureGroupId: nil}
+        ]
+        json_data = {
+          name: fg_name,
+          jobs: [],
+          features: features,
+          description: "",
+          version: 1,
+          type: "cachedFeaturegroupDTO",
+          onlineEnabled: nil,
+          timeTravelFormat: nil,
+          eventTime: nil,
+          statisticsConfig: nil,
+          expectationSuite: nil
+        }
+        create_featuregroup_endpoint = "#{ENV['HOPSWORKS_API']}/project/" + @project.id.to_s + "/featurestores/" + featurestore_id.to_s + "/featuregroups"
+        json_result = post create_featuregroup_endpoint, json_data
+        expect_status_details(201)
+
+        # Get the first version
+        get_featuregroup_endpoint = "#{ENV['HOPSWORKS_API']}/project/#{@project.id}/featurestores/#{featurestore_id}/featuregroups/#{fg_name}?version=1"
+        json_result = get get_featuregroup_endpoint
+        parsed_json = JSON.parse(json_result)
+        expect_status_details(200)
+
+        expect(parsed_json.first.key?("onlineEnabled")).to be true
+        expect(parsed_json.first.key?("timeTravelFormat")).to be true
+        expect(parsed_json.first.key?("features")).to be true
+        expect(parsed_json.first.key?("expectationSuite")).to be false
+        expect(parsed_json.first.key?("onlineTopicName")).to be false
+        expect(parsed_json.first.key?("eventTime")).to be false
+
+        expect(parsed_json.first["features"][0].key?("name")).to be true
+        expect(parsed_json.first["features"][0]["name"]).to eql("ft_a")
+        expect(parsed_json.first["features"][0].key?("type")).to be true
+        expect(parsed_json.first["features"][0]["type"]).to eql("int")
+        expect(parsed_json.first["features"][0].key?("onlineType")).to be false
+        expect(parsed_json.first["features"][0].key?("description")).to be false
+        expect(parsed_json.first["features"][0].key?("primary")).to be true
+        expect(parsed_json.first["features"][0]["primary"]).to eql(true)
+        expect(parsed_json.first["features"][0].key?("partition")).to be true
+        expect(parsed_json.first["features"][0].key?("hudiPrecombineKey")).to be true
+        expect(parsed_json.first["features"][0].key?("defaultValue")).to be false
+        expect(parsed_json.first["features"][0].key?("featureGroupId")).to be true
+      end
+
       describe "with quota enabled" do
         before :all do
           setVar("quotas_featuregroups_online_disabled", "1")
