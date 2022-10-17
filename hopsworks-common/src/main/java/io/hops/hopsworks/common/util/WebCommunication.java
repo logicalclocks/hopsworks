@@ -40,16 +40,12 @@
 package io.hops.hopsworks.common.util;
 
 import io.hops.hopsworks.exceptions.GenericException;
-import io.hops.hopsworks.persistence.entity.util.FormatUtils;
 import io.hops.hopsworks.restutils.RESTCodes;
 
 import javax.annotation.PreDestroy;
 import javax.ejb.AsyncResult;
 import javax.ejb.Asynchronous;
-import javax.ejb.EJB;
 import javax.ejb.Stateless;
-import javax.json.Json;
-import javax.json.JsonObject;
 import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLSession;
@@ -57,12 +53,9 @@ import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
-import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.WebTarget;
-import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status.Family;
-import java.io.Reader;
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
@@ -87,8 +80,6 @@ public class WebCommunication {
       new ConcurrentLinkedQueue<>();
   private final ConcurrentLinkedQueue<Client> availableClientPool =
       new ConcurrentLinkedQueue<>();
-  @EJB
-  private Settings settings;
 
   public WebCommunication() {
   }
@@ -103,17 +94,6 @@ public class WebCommunication {
       client.close();
       client = null;
     }
-  }
-  
-  public Response getWebResponse(String url, String agentPassword) {
-    Response response;
-    try {
-      response = getWebResource(url, agentPassword);
-      return response;
-    } catch (Exception ex) {
-      logger.log(Level.SEVERE, null, ex);
-    }
-    return null;
   }
 
   /**
@@ -136,62 +116,6 @@ public class WebCommunication {
       String agentPassword, String group, String service) throws GenericException {
     String url = createUrl(operation, hostAddress, group, service);
     return new AsyncResult<>(fetchContent(url, agentPassword));
-  }
-  
-  public String getConfig(String hostAddress, String agentPassword,
-      String group, String service) throws GenericException {
-    String url = createUrl("config", hostAddress, group, service);
-    return fetchContent(url, agentPassword);
-  }
-
-  public String executeRun(String hostAddress, String agentPassword,
-                           String group, String service, String command,
-                           String[] params) throws Exception {
-    return execute("execute/run", hostAddress, agentPassword, group, service, command, params);
-  }
-
-  public String executeStart(String hostAddress, String agentPassword,
-                             String group, String service, String command,
-                             String[] params) throws Exception {
-    return execute("execute/start", hostAddress, agentPassword, group, service, command, params);
-  }
-
-  public String executeContinue(String hostAddress, String agentPassword,
-                                String group, String service, String command,
-                                String[] params) throws Exception {
-    return execute("execute/continue", hostAddress, agentPassword, group, service, command, params);
-  }
-
-  private String execute(String path, String hostAddress, String agentPassword,
-          String group, String service, String command,
-          String[] params) throws Exception {
-    String url = createUrl(path, hostAddress, group, service, command);
-    String optionsAndParams = "";
-    for (String param : params) {
-      optionsAndParams += optionsAndParams.isEmpty() ? param : " " + param;
-    }
-    Response response = postWebResource(url, agentPassword,
-            optionsAndParams);
-    int code = response.getStatus();
-    Family res = Response.Status.Family.familyOf(code);
-    if (res == Response.Status.Family.SUCCESSFUL) {
-      String responseString = response.readEntity(String.class);
-      if (path.equalsIgnoreCase("execute/continue")) {
-        JsonObject json = Json.createReader(response.readEntity(Reader.class)).
-                readObject();
-        responseString = json.getString("before");
-      }
-      return FormatUtils.stdoutToHtml(responseString);
-    }
-    throw new RuntimeException("Did not succeed to execute command.");
-  }
-
-  public Response doCommand(String hostAddress, String agentPassword,
-          String cluster, String group, String service, String command) throws
-          Exception {
-    String url = createUrl("do", hostAddress, agentPassword, cluster, group,
-            service, command);
-    return getWebResource(url, agentPassword);
   }
 
   private String createUrl(String context, String hostAddress, String... args) {
@@ -302,24 +226,5 @@ public class WebCommunication {
     } else {
       return ClientBuilder.newClient();
     }
-  }
-  
-  private Response postWebResource(String url, String agentPassword,
-          String body) throws Exception {
-    return postWebResource(url, agentPassword, "", "", body);
-  }
-
-  private Response postWebResource(String url, String agentPassword,
-          String channelUrl, String version, String body) throws Exception {
-    Client client = getClient();
-    WebTarget webResource = client.target(url);
-    webResource.queryParam("username", Settings.AGENT_EMAIL);
-    webResource.queryParam("password", agentPassword);
-
-    Response response = webResource.request()
-            .header("Accept-Encoding", "gzip,deflate")
-            .post(Entity.entity(body, MediaType.TEXT_PLAIN), Response.class);
-    discardClient(client);
-    return response;
   }
 }

@@ -41,13 +41,9 @@ package io.hops.hopsworks.persistence.entity.util;
 
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.Date;
-import java.util.List;
 
 import javax.servlet.http.HttpServletRequest;
-import org.apache.commons.text.StringEscapeUtils;
-import org.apache.commons.lang3.StringUtils;
 
 public class FormatUtils {
 
@@ -118,25 +114,10 @@ public class FormatUtils {
     return df.format(d);
   }
 
-  public static String stdoutToHtml(String text) {
-    String html = StringEscapeUtils.escapeHtml4(text);
-    html = html.replaceAll("\n", "<br>");
-    html = html.replaceAll("\t", StringUtils.repeat("&nbsp;", 8));
-    html = html.replaceAll(" ", StringUtils.repeat("&nbsp;", 1));
-    return html;
-  }
-
   public static String getUserURL(HttpServletRequest req) {
     String domain = req.getRequestURL().toString();
     String cpath = req.getContextPath();
 
     return domain.substring(0, domain.indexOf(cpath));
-  }
-
-  public static List<String> rrdChartFormats() {
-    List<String> formats = new ArrayList<>();
-    formats.add("%5.2lf");
-    formats.add("%5.2lf %S");
-    return formats;
   }
 }
