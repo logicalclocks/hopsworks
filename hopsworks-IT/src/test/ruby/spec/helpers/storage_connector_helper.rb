@@ -197,7 +197,7 @@ module StorageConnectorHelper
   end
 
   def create_redshift_connector(project_id, featurestore_id, redshift_connector_name: nil, clusterIdentifier: "redshift-connector",
-                                databaseUserName: "awsUser",  databasePassword: nil, iamRole: nil)
+                                databaseUserName: "awsUser",  databasePassword: nil, iamRole: nil, databaseDriver: nil)
     type = "featurestoreRedshiftConnectorDTO"
     storageConnectorType = "REDSHIFT"
     create_redshift_connector_endpoint = "#{ENV['HOPSWORKS_API']}/project/#{project_id}/featurestores/#{featurestore_id}/storageconnectors/"
@@ -208,7 +208,7 @@ module StorageConnectorHelper
         type: type,
         storageConnectorType: storageConnectorType,
         clusterIdentifier: clusterIdentifier,
-        databaseDriver: "com.amazon.redshift.jdbc42.Driver",
+        databaseDriver: databaseDriver,
         databaseEndpoint: "abc123xyz789.us-west-1.redshift.amazonaws.com",
         databaseName: "dev",
         databasePort: 5439,

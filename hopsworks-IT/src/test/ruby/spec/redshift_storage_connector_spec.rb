@@ -108,6 +108,21 @@ describe "On #{ENV['OS']}" do
         create_redshift_connector(@p1[:id], @featurestore1["featurestoreId"], databasePassword: nil, iamRole: nil)
         expect_status_details(201)
       end
+      it "should create with default database driver" do
+        json_result, redshift_connector_name = create_redshift_connector(@p1[:id], @featurestore1["featurestoreId"],
+                                                                         databasePassword: nil, iamRole: nil)
+        parsed_result = JSON.parse(json_result)
+        expect_status_details(201)
+        expect(parsed_result["databaseDriver"]).to eql("com.amazon.redshift.jdbc42.Driver")
+      end
+      it "should create with user defined database driver" do
+        json_result, redshift_connector_name = create_redshift_connector(@p1[:id], @featurestore1["featurestoreId"],
+                                                                         databasePassword: nil, iamRole: nil,
+                                                                         databaseDriver: "org.postgresql.Driver")
+        parsed_result = JSON.parse(json_result)
+        expect_status_details(201)
+        expect(parsed_result["databaseDriver"]).to eql("org.postgresql.Driver")
+      end
     end
   end
   describe "update" do
