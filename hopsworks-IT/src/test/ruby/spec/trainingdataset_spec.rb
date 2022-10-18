@@ -2186,19 +2186,19 @@ describe "On #{ENV['OS']}" do
 
          feature_transformation = parsed_json["items"].select{ |f| f["name"] == "min_max_scaler"}.first
           expect(feature_transformation["name"]).to eql("min_max_scaler")
-          expect(feature_transformation["outputType"]).to eql("DoubleType()")
+          expect(feature_transformation["outputType"]).to eql("DOUBLE")
 
           feature_transformation = parsed_json["items"].select{ |f| f["name"] == "standard_scaler"}.first
           expect(feature_transformation["name"]).to eql("standard_scaler")
-          expect(feature_transformation["outputType"]).to eql("DoubleType()")
+          expect(feature_transformation["outputType"]).to eql("DOUBLE")
 
           feature_transformation = parsed_json["items"].select{ |f| f["name"] == "robust_scaler"}.first
           expect(feature_transformation["name"]).to eql("robust_scaler")
-          expect(feature_transformation["outputType"]).to eql("DoubleType()")
+          expect(feature_transformation["outputType"]).to eql("DOUBLE")
 
           feature_transformation = parsed_json["items"].select{ |f| f["name"] == "label_encoder"}.first
           expect(feature_transformation["name"]).to eql("label_encoder")
-          expect(feature_transformation["outputType"]).to eql("IntegerType()")
+          expect(feature_transformation["outputType"]).to eql("INT")
         end
 
 
