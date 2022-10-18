@@ -123,7 +123,7 @@
     <jersey.client.version>2.26</jersey.client.version>
     <jersey.media.multipart.version>2.26</jersey.media.multipart.version>
     <jersey.server.version>2.26</jersey.server.version>
-    <jettison.version>1.1</jettison.version>
+    <jettison.version>1.5.1</jettison.version>
     <jsch.version>0.1.54</jsch.version>
     <json-schema.version>1.12.1</json-schema.version>
     <jsoup.version>1.14.2</jsoup.version>
