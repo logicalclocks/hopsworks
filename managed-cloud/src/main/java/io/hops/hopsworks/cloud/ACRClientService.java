@@ -3,9 +3,11 @@
  */
 package io.hops.hopsworks.cloud;
 
+import com.logicalclocks.servicediscoverclient.exceptions.ServiceDiscoveryException;
 import io.hops.hopsworks.common.util.OSProcessExecutor;
 import io.hops.hopsworks.common.util.ProcessDescriptor;
 import io.hops.hopsworks.common.util.ProcessResult;
+import io.hops.hopsworks.common.util.ProjectUtils;
 import io.hops.hopsworks.common.util.Settings;
 
 import javax.annotation.PostConstruct;
@@ -34,19 +36,24 @@ public class ACRClientService {
   Settings settings;
   @EJB
   private OSProcessExecutor osProcessExecutor;
+  @EJB
+  private ProjectUtils projectUtils;
   
   @PostConstruct
   private void initClient() {
   }
   
   public List<String> deleteImagesWithTagPrefix(final String repositoryName,
-      final String imageTagPrefix) {
+      final String imageTagPrefix) throws ServiceDiscoveryException {
+    
+    String registry = projectUtils.getRegistryAddress();
     
     String prog = settings.getSudoersDir() + "/dockerImage.sh";
     ProcessDescriptor processDescriptor = new ProcessDescriptor.Builder()
         .addCommand("/usr/bin/sudo")
         .addCommand(prog)
         .addCommand("delete-acr")
+        .addCommand(registry)
         .addCommand(repositoryName)
         .addCommand(imageTagPrefix)
         .redirectErrorStream(true)
