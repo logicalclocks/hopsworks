@@ -19,6 +19,7 @@ import io.hops.hopsworks.common.jobs.yarn.YarnLogUtil;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.kube.common.KubeClientService;
 import io.hops.hopsworks.persistence.entity.jobs.configuration.JobType;
+import io.hops.hopsworks.persistence.entity.jobs.configuration.history.JobFinalStatus;
 import io.hops.hopsworks.persistence.entity.jobs.configuration.history.JobState;
 import io.hops.hopsworks.persistence.entity.jobs.history.Execution;
 
@@ -92,7 +93,9 @@ public class KubeJobsMonitor implements JobsMonitor {
                   String reason = containerStateTerminated.getReason();
                   String message = containerStateTerminated.getMessage();
                   Integer exitCode = containerStateTerminated.getExitCode();
-                  execution.setState(KubeJobType.getAsJobState(reason));
+                  JobState jobState = KubeJobType.getAsJobState(reason);
+                  execution.setState(jobState);
+                  execution.setFinalStatus(KubeJobType.getAsJobFinalStatus(jobState));
                   cleanUpExecution(execution, pod);
                   // Exitcode 0 is successful execution and logs comes from the container
                   // Exitcode 1 is application failure and logs comes from container
@@ -129,7 +132,9 @@ public class KubeJobsMonitor implements JobsMonitor {
                     !reason.equals("ContainerCreating") &&
                     execution.getExecutionDuration() > Settings.PYTHON_JOB_KUBE_WAITING_TIMEOUT_MS) {
                     LOGGER.log(Level.FINEST, "reason: " + containerState + ", pod: " + pod);
-                    execution.setState(KubeJobType.getAsJobState(reason));
+                    JobState jobState = KubeJobType.getAsJobState(reason);
+                    execution.setState(jobState);
+                    execution.setFinalStatus(KubeJobType.getAsJobFinalStatus(jobState));
                     cleanUpExecution(execution, pod);
                     // Write log in Logs dataset
                     DistributedFileSystemOps udfso = null;
@@ -162,6 +167,7 @@ public class KubeJobsMonitor implements JobsMonitor {
           // be marked as failed. Therefore we give some margin to kubernetes to actually start the job.
           if (execution.getExecutionDuration() > 20000) {
             updateState(JobState.FAILED, execution);
+            updateFinalStatus(JobFinalStatus.FAILED, execution);
             execution.setExecutionStop(System.currentTimeMillis());
             execution.setProgress(1);
           }
@@ -177,7 +183,8 @@ public class KubeJobsMonitor implements JobsMonitor {
     if (execution.getExecutionStop() < 1) {
       execution.setExecutionStop(System.currentTimeMillis());
       execution.setProgress(1);
-      execution = executionUpdateController.updateStateAndSendAlert(execution);
+      execution = executionUpdateController.
+        updateFinalStatusAndSendAlert(KubeJobType.getAsJobFinalStatus(execution.getState()), execution);
     }
     jobsJWTManager.cleanJWT(new ExecutionJWT(execution));
     kubeClientService.deleteJob(pod.getMetadata().getNamespace(), pod.getMetadata().getLabels()
@@ -193,7 +200,11 @@ public class KubeJobsMonitor implements JobsMonitor {
   public Execution updateState(JobState newState, Execution execution) {
     return executionUpdateController.updateState(newState, execution);
   }
-  
+
+  private Execution updateFinalStatus(JobFinalStatus finalStatus, Execution execution) {
+    return executionUpdateController.updateFinalStatusAndSendAlert(finalStatus, execution);
+  }
+
   private enum KubeJobType {
     FAILED("Failed"), // taken from kubernetes fabric8 API
     COMPLETED("Completed"); //taken from kubernetes fabric8 API
@@ -215,6 +226,14 @@ public class KubeJobsMonitor implements JobsMonitor {
       }
       return JobState.FAILED;
     }
+
+    public static JobFinalStatus getAsJobFinalStatus(JobState jobState) {
+      if(jobState.equals(JobState.FAILED)) {
+        return JobFinalStatus.FAILED;
+      } else if(jobState.equals(JobState.KILLED)) {
+        return JobFinalStatus.KILLED;
+      }
+      return JobFinalStatus.SUCCEEDED;
+    }
   }
-  
 }

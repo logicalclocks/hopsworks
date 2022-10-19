@@ -138,7 +138,7 @@ module ExecutionHelper
       wait_for_execution_completed(project[:id], job_name, execution_id, "FINISHED", expected_final_status: "SUCCEEDED")
     elsif job_type == "PYTHON"
       app_id = wait_for_execution_active(project[:id], job_name, execution_id, "RUNNING", "id")
-      wait_for_execution_completed(project[:id], job_name, execution_id, "FINISHED")
+      wait_for_execution_completed(project[:id], job_name, execution_id, "FINISHED", expected_final_status: "SUCCEEDED")
     else
       app_id = wait_for_execution_active(project[:id], job_name, execution_id, "RUNNING", "id")
     end

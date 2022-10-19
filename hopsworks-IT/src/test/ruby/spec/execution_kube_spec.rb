@@ -97,11 +97,12 @@ describe "On #{ENV['OS']}" do
             start_execution(@project[:id], $job_name)
             execution_id = json_body[:id]
             expect(json_body[:state]).to eq "INITIALIZING"
+            expect(json_body[:finalStatus]).to eq "UNDEFINED"
             #get execution
             get_execution(@project[:id], $job_name, json_body[:id])
             expect(json_body[:id]).to eq(execution_id)
             #wait till it's finished and start second execution
-            wait_for_execution_completed(@project[:id], $job_name, json_body[:id], "FINISHED")
+            wait_for_execution_completed(@project[:id], $job_name, json_body[:id], "FINISHED", expected_final_status: "SUCCEEDED")
             #start execution
             start_execution(@project[:id], $job_name)
             execution_id = json_body[:id]
@@ -114,7 +115,7 @@ describe "On #{ENV['OS']}" do
             num_executions = count_executions(job_id)
             expect(num_executions).to eq 2
 
-            wait_for_execution_completed(@project[:id], $job_name, execution_id, "FINISHED")
+            wait_for_execution_completed(@project[:id], $job_name, execution_id, "FINISHED", expected_final_status: "SUCCEEDED")
           end
           it "should start a job that outputs a file and asserts the file is in datasets." do
             #create job
@@ -128,7 +129,7 @@ describe "On #{ENV['OS']}" do
             get_execution(@project[:id], $job_name, json_body[:id])
             expect(json_body[:id]).to eq(execution_id)
             #wait till it's finished and start second execution
-            wait_for_execution_completed(@project[:id], $job_name, json_body[:id], "FINISHED")
+            wait_for_execution_completed(@project[:id], $job_name, json_body[:id], "FINISHED", expected_final_status: "SUCCEEDED")
 
             # wait for Kubernetes handler to copy to hdfs
             wait_for_docker_job_output("/Projects/#{@project[:projectname]}/Resources/README_DV.md")
@@ -158,11 +159,12 @@ describe "On #{ENV['OS']}" do
               start_execution(@project[:id], $job_name)
               execution_id = json_body[:id]
               expect(json_body[:state]).to eq "INITIALIZING"
+              expect(json_body[:finalStatus]).to eq "UNDEFINED"
               #get execution
               get_execution(@project[:id], $job_name, json_body[:id])
               expect(json_body[:id]).to eq(execution_id)
               #wait till it's finished and start second execution
-              wait_for_execution_completed(@project[:id], $job_name, json_body[:id], "FINISHED")
+              wait_for_execution_completed(@project[:id], $job_name, json_body[:id], "FINISHED", expected_final_status: "SUCCEEDED")
               #start execution
               start_execution(@project[:id], $job_name)
               execution_id = json_body[:id]
@@ -175,7 +177,7 @@ describe "On #{ENV['OS']}" do
               num_executions = count_executions(job_id)
               expect(num_executions).to eq 2
 
-              wait_for_execution_completed(@project[:id], $job_name, execution_id, "FINISHED")
+              wait_for_execution_completed(@project[:id], $job_name, execution_id, "FINISHED", expected_final_status: "SUCCEEDED")
             end
             it "should start and stop job" do
               create_python_job(@project, $job_name, type)
@@ -185,7 +187,7 @@ describe "On #{ENV['OS']}" do
               start_execution(@project[:id], $job_name)
               execution_id = json_body[:id]
               stop_execution(@project[:id], $job_name, execution_id)
-              wait_for_execution_completed(@project[:id], $job_name, execution_id, "KILLED")
+              wait_for_execution_completed(@project[:id], $job_name, execution_id, "KILLED", expected_final_status: "KILLED")
             end
             it "should fail to start a python job with missing files param" do
               create_python_job(@project, $job_name, type)
@@ -195,19 +197,19 @@ describe "On #{ENV['OS']}" do
               #start execution
               start_execution(@project[:id], $job_name, expected_status: 400)
             end
-            it "should fail with ContainerCannotRun" do
+            it "should fail with OOMKilled" do
               # Check that we set the Reason why a container failed if something other than the application program caused it to fail
-              # In this case we set the memory to 4MB so the docker container can't even boot
+              # In this case we set the memory to 10MB so the docker container runs out of memory
               create_python_job(@project, $job_name, type)
               config = json_body[:config]
-              config[:'resourceConfig'][:'memory'] = 4
+              config[:'resourceConfig'][:'memory'] = 10
               create_python_job(@project, $job_name, type, config)
               start_execution(@project[:id], $job_name, expected_status: 201)
               execution_id = json_body[:id]
-              wait_for_execution_completed(@project[:id], $job_name, execution_id, "FAILED")
+              wait_for_execution_completed(@project[:id], $job_name, execution_id, "FAILED", expected_final_status: "FAILED")
               get_execution_log(@project[:id], $job_name, execution_id, "err")
               expect(json_body[:log]).to be_present
-              expect(json_body[:log]).to include("Reason: ContainerCannotRun")
+              expect(json_body[:log]).to include("Reason: OOMKilled")
             end
             it "should start two executions in parallel" do
               create_python_job(@project, $job_name, type)
@@ -217,8 +219,8 @@ describe "On #{ENV['OS']}" do
                 start_execution(@project[:id], $job_name)
                 execution_id_2 = json_body[:id]
               ensure
-                wait_for_execution_completed(@project[:id], $job_name, execution_id_1, "FINISHED") unless execution_id_1.nil?
-                wait_for_execution_completed(@project[:id], $job_name, execution_id_2, "FINISHED") unless execution_id_2.nil?
+                wait_for_execution_completed(@project[:id], $job_name, execution_id_1, "FINISHED", expected_final_status: "SUCCEEDED") unless execution_id_1.nil?
+                wait_for_execution_completed(@project[:id], $job_name, execution_id_2, "FINISHED", expected_final_status: "SUCCEEDED") unless execution_id_2.nil?
               end
             end
             it "should start a job with default args" do
@@ -232,7 +234,7 @@ describe "On #{ENV['OS']}" do
                 expect(default_args).not_to be_nil
                 expect(json_body[:args]).to eq default_args
               ensure
-                wait_for_execution_completed(@project[:id], $job_name, execution_id, "FINISHED")
+                wait_for_execution_completed(@project[:id], $job_name, execution_id, "FINISHED", expected_final_status: "SUCCEEDED")
               end
             end
             it "should start a job with args 123" do
@@ -244,7 +246,7 @@ describe "On #{ENV['OS']}" do
                 get_execution(@project[:id], $job_name, execution_id)
                 expect(json_body[:args]).to eq args
               ensure
-                wait_for_execution_completed(@project[:id], $job_name, execution_id, "FINISHED")
+                wait_for_execution_completed(@project[:id], $job_name, execution_id, "FINISHED", expected_final_status: "SUCCEEDED")
               end
             end
             it "should start an execution and delete it while running" do

@@ -61,6 +61,7 @@ import io.hops.hopsworks.kube.project.KubeProjectConfigMaps;
 import io.hops.hopsworks.kube.security.KubeApiKeyUtils;
 import io.hops.hopsworks.persistence.entity.jobs.configuration.DockerJobConfiguration;
 import io.hops.hopsworks.persistence.entity.jobs.configuration.JobType;
+import io.hops.hopsworks.persistence.entity.jobs.configuration.history.JobFinalStatus;
 import io.hops.hopsworks.persistence.entity.jobs.configuration.history.JobState;
 import io.hops.hopsworks.persistence.entity.jobs.configuration.python.PythonJobConfiguration;
 import io.hops.hopsworks.persistence.entity.jobs.description.Jobs;
@@ -84,7 +85,6 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -225,6 +225,7 @@ public class KubeExecutionController extends AbstractExecutionController impleme
         execution.setExecutionStop(System.currentTimeMillis());
         execution.setProgress(1);
         execution.setState(JobState.FAILED);
+        execution.setFinalStatus(JobFinalStatus.FAILED);
         executionFacade.update(execution);
 
         String usrMsg = "";
@@ -693,17 +694,6 @@ public class KubeExecutionController extends AbstractExecutionController impleme
     return environment;
   }
 
-  private Optional<Exception> runCatchAndLog(Runnable runnable, String errorMessage,
-                                             Optional<Exception> previousError) {
-    try {
-      runnable.run();
-    } catch (Exception e) {
-      LOGGER.log(SEVERE, errorMessage, e);
-      return previousError.isPresent() ? previousError : Optional.of(e);
-    }
-    return previousError;
-  }
-
   @Override
   public Execution stop(Jobs job) throws JobException {
     return super.stop(job);
@@ -722,13 +712,12 @@ public class KubeExecutionController extends AbstractExecutionController impleme
 
   @Override
   public Execution stopExecution(Execution execution) throws JobException {
-    Optional<Exception> t = Optional.empty();
-    // Set state to failed as execution was terminated by user
-    t = runCatchAndLog(() -> executionFacade.updateState(execution, JobState.KILLED),
-            RESTCodes.JobErrorCode.JOB_STOP_FAILED.getMessage(), t);
-    if (t.isPresent()) {
+    try {
+      executionFacade.updateState(execution, JobState.KILLED);
+      executionFacade.updateFinalStatus(execution, JobFinalStatus.KILLED);
+    } catch (Exception e) {
       throw new JobException(RESTCodes.JobErrorCode.JOB_STOP_FAILED, SEVERE,
-              "Job: " + execution.getJob().getName() + ", Execution: " + execution.getId(), null, t.get());
+        "Job: " + execution.getJob().getName() + ", Execution: " + execution.getId(), null, e);
     }
     return execution;
   }
