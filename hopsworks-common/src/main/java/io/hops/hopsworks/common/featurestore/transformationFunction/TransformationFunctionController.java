@@ -112,19 +112,19 @@ public class TransformationFunctionController {
       switch (name) {
         case "min_max_scaler":
           sourceCode = FeaturestoreConstants.BUILT_IN_TRANSFORMATION_FUNCTION_SOURCE_CODE_MIN_MAX_SCALER;
-          outputType = "DoubleType()";
+          outputType = "DOUBLE";
           break;
         case "label_encoder":
           sourceCode = FeaturestoreConstants.BUILT_IN_TRANSFORMATION_FUNCTION_SOURCE_CODE_LABEL_ENCODER;
-          outputType = "IntegerType()";
+          outputType = "INT";
           break;
         case "standard_scaler":
           sourceCode = FeaturestoreConstants.BUILT_IN_TRANSFORMATION_FUNCTION_SOURCE_CODE_STANDARD_SCALER;
-          outputType = "DoubleType()";
+          outputType = "DOUBLE";
           break;
         case "robust_scaler":
           sourceCode = FeaturestoreConstants.BUILT_IN_TRANSFORMATION_FUNCTION_SOURCE_CODE_ROBUST_SCALER;
-          outputType = "DoubleType()";
+          outputType = "DOUBLE";
           break;
         default:
           throw new FeaturestoreException(

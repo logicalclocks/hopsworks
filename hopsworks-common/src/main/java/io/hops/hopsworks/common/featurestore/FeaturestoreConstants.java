@@ -96,9 +96,8 @@ public class FeaturestoreConstants {
   public static final List<String> OFFLINE_JDBC_CONNECTOR_ARGS = Arrays.asList(
           "sslTrustStore", "trustStorePassword", "sslKeyStore", "keyStorePassword");
   public static final String STORAGE_CONNECTOR_SUBDIR = "storage_connector_resources";
-  public static final List<String> TRANSFORMATION_FUNCTION_OUTPUT_TYPES = Arrays.asList("StringType()", "BinaryType()",
-    "ByteType()", "ShortType()", "IntegerType()", "LongType()", "FloatType()",
-    "DoubleType()", "TimestampType()", "DateType()", "BooleanType()");
+  public static final List<String> TRANSFORMATION_FUNCTION_OUTPUT_TYPES = Arrays.asList("STRING", "BINARY", "BYTE",
+    "SHORT", "INT", "LONG", "FLOAT", "DOUBLE", "TIMESTAMP", "DATE", "BOOLEAN");
   public static final List<String> EVENT_TIME_FEATURE_TYPES = Arrays.asList("TIMESTAMP", "DATE", "BIGINT");
   public static final List<String> BUILT_IN_TRANSFORMATION_FUNCTION_NAMES = Arrays.asList(
     "min_max_scaler", "standard_scaler", "robust_scaler", "label_encoder"
