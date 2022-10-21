@@ -200,13 +200,19 @@ public class ProjectUtils {
     return registry.getName() + ":" + registry.getPort();
   }
   
+  public String getRegistryAddress() throws ServiceDiscoveryException {
+    com.logicalclocks.servicediscoverclient.service.Service registry = serviceDiscoveryController
+        .getAnyAddressOfServiceWithDNSSRVOnly(ServiceDiscoveryController.HopsworksService.REGISTRY);
+    return registry.getAddress();
+  }
+  
   public String getInitialDockerImageName(Project project) {
     String initialImageTag =
         System.currentTimeMillis() + "-" + settings.getHopsworksVersion() +
             ".0";
     if (settings.isManagedDockerRegistry()) {
       return settings.getBaseNonPythonDockerImageWithNoTag() + ":" +
-          project.getName().toLowerCase() + "_" + initialImageTag;
+          project.getName().toLowerCase() + "__" + initialImageTag;
     } else {
       return project.getName().toLowerCase() + ":" + initialImageTag;
     }
@@ -219,7 +225,7 @@ public class ProjectUtils {
   
   public String getProjectNameFromDockerImageName(String imageName) {
     if (settings.isManagedDockerRegistry()) {
-      return imageName.split(":")[1].split("_")[0];
+      return imageName.split(":")[1].split("__")[0];
     } else {
       return getProjectDockerRepoName(imageName);
     }
