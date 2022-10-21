@@ -219,7 +219,7 @@ describe "On #{ENV['OS']}" do
               stop_serving(@project, @serving)
               wait_for_serving_status(@serving[:name], "Stopped")
 
-              put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
+              put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/", parse_serving_json(
                {id: @serving[:id],
                 name: @serving[:name],
                 modelPath: @serving[:model_path],
@@ -229,7 +229,7 @@ describe "On #{ENV['OS']}" do
                 modelFramework: parse_model_framework(@serving[:model_framework]),
                 servingTool: parse_serving_tool(@serving[:serving_tool]),
                 requestedInstances: @serving[:instances]
-               }
+               })
               expect_status_details(201)
 
               start_serving(@project, @serving)
@@ -246,7 +246,7 @@ describe "On #{ENV['OS']}" do
               stop_serving(@project, @serving)
               wait_for_serving_status(@serving[:name], "Stopped")
 
-              put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
+              put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/", parse_serving_json(
                {id: @serving[:id],
                 name: @serving[:name],
                 modelPath: @serving[:model_path],
@@ -263,7 +263,7 @@ describe "On #{ENV['OS']}" do
                 transformer: "/Projects/#{@project[:projectname]}/Models/mnist/1/transformer.py",
                 requestedInstances: @serving[:instances],
                 requestedTransformerInstances: 1
-               }
+               })
               expect_status_details(201)
 
               start_serving(@project, @serving)

@@ -5,10 +5,12 @@
 package io.hops.hopsworks.persistence.entity.serving;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import javax.xml.bind.annotation.XmlRootElement;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonSetter;
+import com.fasterxml.jackson.annotation.Nulls;
 
-@XmlRootElement
 @JsonIgnoreProperties(ignoreUnknown = true)
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class DockerResourcesConfiguration {
 
   public DockerResourcesConfiguration(){}
@@ -19,16 +21,20 @@ public class DockerResourcesConfiguration {
     this.gpus = gpus;
   }
   
+  @JsonSetter(nulls = Nulls.SKIP)
   private double cores = 1;
   
+  @JsonSetter(nulls = Nulls.SKIP)
   private int memory = 2048;
-
+  
+  @JsonSetter(nulls = Nulls.SKIP)
   private int gpus = 0;
 
   public double getCores() {
     return cores;
   }
-
+  
+  @JsonSetter(nulls = Nulls.SKIP)
   public void setCores(double cores) {
     this.cores = cores;
   }
@@ -36,7 +42,8 @@ public class DockerResourcesConfiguration {
   public int getMemory() {
     return memory;
   }
-
+  
+  @JsonSetter(nulls = Nulls.SKIP)
   public void setMemory(int memory) {
     this.memory = memory;
   }
@@ -44,7 +51,8 @@ public class DockerResourcesConfiguration {
   public int getGpus() {
     return gpus;
   }
-
+  
+  @JsonSetter(nulls = Nulls.SKIP)
   public void setGpus(int gpus) {
     this.gpus = gpus;
   }

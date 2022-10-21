@@ -43,9 +43,7 @@ import io.hops.hopsworks.common.api.RestDTO;
 
 import java.io.Serializable;
 import javax.ws.rs.core.UriInfo;
-import javax.xml.bind.annotation.XmlRootElement;
 
-@XmlRootElement
 public class TopicDTO extends RestDTO<TopicDTO> implements Serializable {
 
   private String name;

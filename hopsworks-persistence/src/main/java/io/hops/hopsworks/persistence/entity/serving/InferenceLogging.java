@@ -4,6 +4,7 @@
 
 package io.hops.hopsworks.persistence.entity.serving;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 /**
@@ -17,5 +18,20 @@ public enum InferenceLogging {
   @JsonProperty("MODEL_INPUTS")
   MODEL_INPUTS,
   @JsonProperty("ALL")
-  ALL,
+  ALL;
+  
+  @JsonCreator
+  public static InferenceLogging fromString(String mode) {
+    if (mode != null) {
+      switch (mode) {
+        case "PREDICTIONS":
+          return PREDICTIONS;
+        case "MODEL_INPUTS":
+          return MODEL_INPUTS;
+        case "ALL":
+          return ALL;
+      }
+    }
+    return null;
+  }
 }

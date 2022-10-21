@@ -38,7 +38,7 @@ describe "On #{ENV['OS']}" do
 
       # Create serving
       name = "testModel2"
-      put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
+      put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/", parse_serving_json(
           {name: name,
            modelPath: "/Projects/#{@project[:projectname]}/Models/mnist/",
            modelVersion: 1,
@@ -53,7 +53,7 @@ describe "On #{ENV['OS']}" do
            modelFramework: "TENSORFLOW",
            servingTool: "DEFAULT",
            requestedInstances: 1
-           }
+           })
       expect_status_details(201)
 
       # Kafka authorizer needs some time to take up the new permissions.
@@ -71,7 +71,7 @@ describe "On #{ENV['OS']}" do
 
       # Create serving
       name = "testModel3"
-      put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
+      put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/", parse_serving_json(
           {name: name,
            modelPath: "/Projects/#{@project[:projectname]}/Models/mnist/",
            modelVersion: 1,
@@ -86,7 +86,7 @@ describe "On #{ENV['OS']}" do
            modelFramework: "TENSORFLOW",
            servingTool: "DEFAULT",
            requestedInstances: 1
-          }
+          })
       expect_status_details(201)
 
       # Kafka authorizer needs some time to take up the new permissions.
@@ -104,7 +104,7 @@ describe "On #{ENV['OS']}" do
 
       # Create serving
       name = "testModel4"
-      put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
+      put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/", parse_serving_json(
           {name: name,
            modelPath: "/Projects/#{@project[:projectname]}/Models/mnist/",
            modelVersion: 1,
@@ -119,7 +119,7 @@ describe "On #{ENV['OS']}" do
            modelFramework: "TENSORFLOW",
            servingTool: "DEFAULT",
            requestedInstances: 1
-          }
+          })
       expect_status_details(201)
 
       # Kafka authorizer needs some time to take up the new permissions.
@@ -136,7 +136,7 @@ describe "On #{ENV['OS']}" do
       json, topic_name = add_topic(@project[:id], INFERENCE_SCHEMA_NAME, 4)
 
       # Create serving
-      put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
+      put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/", parse_serving_json(
           {name: "testModel5",
            modelPath: "/Projects/#{@project[:projectname]}/Models/mnist/",
            modelVersion: 1,
@@ -151,13 +151,13 @@ describe "On #{ENV['OS']}" do
            modelFramework: "TENSORFLOW",
            servingTool: "DEFAULT",
            requestedInstances: 1
-          }
+          })
       expect_status_details(400, error_code: 240023)
       expect_json(usrMsg: "Inference logging in default deployments requires schema version 3 or lower")
     end
 
     it "should fail to create a serving with fine-grained inference logging" do
-      put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
+      put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/", parse_serving_json(
           {name: "testmodelFineGrainedInferenceLogging",
            modelPath: "/Projects/#{@project[:projectname]}/Models/mnist",
            batchingConfiguration: {
@@ -172,7 +172,7 @@ describe "On #{ENV['OS']}" do
            modelFramework: "TENSORFLOW",
            servingTool: "DEFAULT",
            requestedInstances: 1
-          }
+          })
       expect_status_details(400, error_code: 240024)
       expect_json(usrMsg: "Fine-grained inference logging only supported in KServe deployments")
     end
@@ -184,7 +184,7 @@ describe "On #{ENV['OS']}" do
         skip "This test only runs without KServe installed"
       end
 
-      put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
+      put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/", parse_serving_json(
           {name: "testModelwithTransformer",
             modelPath: "/Projects/#{@project[:projectname]}/Models/mnist",
             modelVersion: 1,
@@ -200,7 +200,7 @@ describe "On #{ENV['OS']}" do
             transformer: "/Projects/#{@project[:projectname]}/Models/mnist/1/transformer.py",
             requestedInstances: 1,
             requestedTransformerInstances: 1
-          }
+          })
       expect_status_details(400, error_code: 240021)
     end
   end
@@ -228,7 +228,7 @@ describe "On #{ENV['OS']}" do
     it "should fail to update the inference logging mode" do
       serving = Serving.find(@serving[:id])
       topic = ProjectTopics.find(@serving[:kafka_topic_id])
-      put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
+      put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/", parse_serving_json(
           {id: serving[:id],
            name: serving[:name],
            modelPath: serving[:model_path],
@@ -242,7 +242,7 @@ describe "On #{ENV['OS']}" do
            modelFramework: parse_model_framework(serving[:model_framework]),
            servingTool: parse_serving_tool(serving[:serving_tool]),
            requestedInstances: serving[:instances]
-          }
+          })
       expect_status_details(400, error_code: 240024)
       expect_json(usrMsg: "Fine-grained inference logging only supported in KServe deployments")
     end

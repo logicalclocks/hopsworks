@@ -168,6 +168,22 @@ module ServingHelper
     copy(TRANSFORMER_NB_TOUR_FILE_LOCATION, "/Projects/#{project_name}/Models/irisflowerclassifier/1/", "#{user}", "#{project_name}__Models", 750, "#{project_name}")
   end
 
+  def parse_serving_json(serving)
+    if serving[:batchingConfiguration].is_a?(String)
+      serving[:batchingConfiguration] = JSON.parse(serving[:batchingConfiguration])
+    end
+    if serving[:predictorResources].is_a?(String)
+      serving[:predictorResources] = JSON.parse(serving[:predictorResources])
+    end
+    if serving[:transformerResources].is_a?(String)
+      serving[:transformerResources] = JSON.parse(serving[:transformerResources])
+    end
+    if serving[:kafkaTopicDTO].is_a?(String)
+      serving[:kafkaTopicDTO] = JSON.parse(serving[:kafkaTopicDTO])
+    end
+    return serving
+  end
+
   def purge_all_kserve_instances(project_name="", should_exist=true)
 
     if !project_name.empty?

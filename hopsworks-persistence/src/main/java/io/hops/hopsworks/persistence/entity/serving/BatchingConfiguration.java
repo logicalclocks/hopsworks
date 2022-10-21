@@ -5,12 +5,12 @@
 package io.hops.hopsworks.persistence.entity.serving;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonInclude;
 
-import javax.xml.bind.annotation.XmlRootElement;
-
-@XmlRootElement
 @JsonIgnoreProperties(ignoreUnknown = true)
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class BatchingConfiguration {
+
   private Boolean batchingEnabled;
   private Integer maxBatchSize;
   private Integer maxLatency;
@@ -20,19 +20,15 @@ public class BatchingConfiguration {
   }
   
   public Boolean isBatchingEnabled() { return batchingEnabled; }
-
   public void setBatchingEnabled(boolean batchingEnabled) { this.batchingEnabled = batchingEnabled; }
 
   public Integer getMaxBatchSize() { return maxBatchSize; }
-
   public void setMaxBatchSize(Integer maxBatchSize) { this.maxBatchSize = maxBatchSize; }
 
   public Integer getMaxLatency() { return maxLatency; }
-
   public void setMaxLatency(Integer maxLatency) { this.maxLatency = maxLatency; }
 
   public Integer getTimeout() { return timeout; }
-
   public void setTimeout(Integer timeout) { this.timeout = timeout; }
 
   @Override

@@ -102,7 +102,7 @@ describe "On #{ENV['OS']}" do
         end
 
         it "should succeed to infer from a serving with no kafka logging" do
-          put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
+          put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/", parse_serving_json(
            {id: @serving[:id],
             name: @serving[:name],
             modelPath: @serving[:model_path],
@@ -117,7 +117,7 @@ describe "On #{ENV['OS']}" do
             modelFramework: "TENSORFLOW",
             servingTool: "DEFAULT",
             requestedInstances: 1
-           }
+           })
           expect_status_details(201)
 
           # Sleep some time while the TfServing server restarts

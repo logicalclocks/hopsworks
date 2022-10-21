@@ -34,7 +34,7 @@ describe "On #{ENV['OS']}" do
       end
 
       it "should fail to create a serving" do
-        put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
+        put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/", parse_serving_json(
             {name: "testModel",
              modelPath: "/Projects/#{@project[:projectname]}/Models/mnist",
              modelVersion: 1,
@@ -45,7 +45,7 @@ describe "On #{ENV['OS']}" do
              modelFramework: "TENSORFLOW",
              servingTool: "DEFAULT",
              requestedInstances: 1
-            }
+            })
         expect_status_details(401, error_code: 200003)
       end
     end
@@ -59,7 +59,7 @@ describe "On #{ENV['OS']}" do
       # serving name
 
       it "should fail to create a serving without a name" do
-        put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
+        put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/", parse_serving_json(
             {modelPath: "/Projects/#{@project[:projectname]}/Models/mnist",
              batchingConfiguration: {
                batchingEnabled: false
@@ -69,12 +69,12 @@ describe "On #{ENV['OS']}" do
              modelFramework: "TENSORFLOW",
              servingTool: "DEFAULT",
              requestedInstances: 1
-            }
+            })
         expect_json(usrMsg: "Serving name not provided")
       end
 
       it "should fail to create a serving with space in the name" do
-        put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
+        put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/", parse_serving_json(
             {name: "test Model1",
              modelPath: "/Projects/#{@project[:projectname]}/Models/mnist",
              modelVersion: 1,
@@ -90,13 +90,13 @@ describe "On #{ENV['OS']}" do
              modelFramework: "TENSORFLOW",
              servingTool: "DEFAULT",
              requestedInstances: 1
-            }
+            })
         expect_json(usrMsg: "Serving name cannot contain spaces")
         expect_status_details(422)
       end
 
       it "should fail to create a serving with an existing name" do
-        put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
+        put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/", parse_serving_json(
             {name: "testModelExistingName",
              modelPath: "/Projects/#{@project[:projectname]}/Models/mnist",
              modelVersion: 1,
@@ -113,10 +113,10 @@ describe "On #{ENV['OS']}" do
              modelFramework: "TENSORFLOW",
              servingTool: "DEFAULT",
              requestedInstances: 1
-            }
+            })
         expect_status_details(201)
 
-        put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
+        put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/", parse_serving_json(
            {name: "testModelExistingName",
             modelPath: "/Projects/#{@project[:projectname]}/Models/mnist",
             modelVersion: 1,
@@ -133,7 +133,7 @@ describe "On #{ENV['OS']}" do
             modelFramework: "TENSORFLOW",
             servingTool: "DEFAULT",
             requestedInstances: 1
-            }
+            })
         expect_status_details(400, error_code: 240011)
         expect_json(errorMsg: "An entry with the same name already exists in this project")
       end
@@ -141,7 +141,7 @@ describe "On #{ENV['OS']}" do
       # model path
 
       it "should fail to create a serving without a path" do
-        put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
+        put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/", parse_serving_json(
             {name: "testModel3",
              batchingConfiguration: {
                batchingEnabled: false
@@ -151,12 +151,12 @@ describe "On #{ENV['OS']}" do
              modelFramework: "TENSORFLOW",
              servingTool: "DEFAULT",
              requestedInstances: 1
-            }
+            })
         expect_json(usrMsg: "Model path not provided")
       end
 
       it "should fail to create a serving with a non-existing path" do
-        put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
+        put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/", parse_serving_json(
             {name: "testModelNonExistingPath",
              modelPath: "/Projects/#{@project[:projectname]}/DOESNTEXISTS",
              batchingConfiguration: {
@@ -167,12 +167,12 @@ describe "On #{ENV['OS']}" do
              modelFramework: "TENSORFLOW",
              servingTool: "DEFAULT",
              requestedInstances: 1
-            }
+            })
         expect_status_details(400, error_code: 240006)
       end
 
       it "should set the model name from model path" do
-        put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
+        put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/", parse_serving_json(
             {name: "testmodel28",
              modelPath: "/Projects/#{@project[:projectname]}/Models/mnist",
              modelVersion: 1,
@@ -183,7 +183,7 @@ describe "On #{ENV['OS']}" do
              modelFramework: "TENSORFLOW",
              servingTool: "DEFAULT",
              requestedInstances: 1
-            }
+            })
         expect_status_details(201)
 
         serving_list = get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/"
@@ -194,7 +194,7 @@ describe "On #{ENV['OS']}" do
       # model version
 
       it "should fail to create a serving without a model version" do
-        put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
+        put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/", parse_serving_json(
             {name: "testModel4",
              modelPath: "/Projects/#{@project[:projectname]}/Models/mnist",
              batchingConfiguration: {
@@ -204,12 +204,12 @@ describe "On #{ENV['OS']}" do
              modelFramework: "TENSORFLOW",
              servingTool: "DEFAULT",
              requestedInstances: 1
-            }
+            })
         expect_json(usrMsg: "Model version not provided")
       end
 
       it "should fail to create a serving with a non-existing model version" do
-        put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
+        put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/", parse_serving_json(
             {name: "testModelNoMV",
              modelPath: "/Projects/#{@project[:projectname]}/Models/mnist",
              modelVersion: 99,
@@ -220,14 +220,14 @@ describe "On #{ENV['OS']}" do
              modelFramework: "TENSORFLOW",
              servingTool: "DEFAULT",
              requestedInstances: 1
-            }
+            })
         expect_status_details(400, error_code: 240006)
       end
 
       # model server
 
       it "should fail to create a serving without model server" do
-        put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
+        put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/", parse_serving_json(
             {name: "testmodel5",
              modelPath: "/Projects/#{@project[:projectname]}/Models/mnist",
              modelVersion: 1,
@@ -237,13 +237,13 @@ describe "On #{ENV['OS']}" do
              modelFramework: "TENSORFLOW",
              servingTool: "DEFAULT",
              requestedInstances: 1
-            }
+            })
         expect_json(usrMsg: "Model server not provided or unsupported")
-        expect_status_details(422)
+        expect_status_details(422, error_code: 120001)
       end
 
       it "should fail to create a serving with an invalid model server" do
-        put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
+        put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/", parse_serving_json(
             {name: "testmodel5",
              modelPath: "/Projects/#{@project[:projectname]}/Models/mnist",
              modelVersion: 1,
@@ -254,16 +254,15 @@ describe "On #{ENV['OS']}" do
              modelFramework: "TENSORFLOW",
              servingTool: "DEFAULT",
              requestedInstances: 1
-            }
-        # response: from String \"INVALID\": not one of the values accepted for Enum class: [TENSORFLOW_SERVING, PYTHON]
-        #expect_json(usrMsg: "Model server not provided or unsupported")
-        expect_status_details(400)
+            })
+        expect_json(usrMsg: "Model server not provided or unsupported")
+        expect_status_details(422, error_code: 120001)
       end
 
       # model framework
 
       it "should fail to create a serving with an invalid model framework" do
-        put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
+        put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/", parse_serving_json(
             {name: "testmodel5",
              modelPath: "/Projects/#{@project[:projectname]}/Models/mnist",
              modelVersion: 1,
@@ -274,15 +273,15 @@ describe "On #{ENV['OS']}" do
              modelFramework: "INVALID",
              servingTool: "DEFAULT",
              requestedInstances: 1
-            }
+            })
         expect_json(usrMsg: "Model framework not provided or unsupported")
-        expect_status_details(422)
+        expect_status_details(422, error_code: 120001)
       end
 
       # serving tool
 
       it "should fail to create a serving without serving tool" do
-        put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
+        put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/", parse_serving_json(
             {name: "testmodel6",
              modelPath: "/Projects/#{@project[:projectname]}/Models/mnist",
              modelVersion: 1,
@@ -292,15 +291,14 @@ describe "On #{ENV['OS']}" do
              modelServer: "TENSORFLOW_SERVING",
              modelFramework: "TENSORFLOW",
              requestedInstances: 1
-            }
-        # response: from String \"INVALID\": not one of the values accepted for Enum class: [DEFAULT, KSERVE]
-        #expect_json(usrMsg: "Serving tool not provided or invalid")
-        expect_status_details(400)
+            })
+        expect_json(usrMsg: "Serving tool not provided or invalid")
+        expect_status_details(422, error_code: 120001)
       end
 
       
       it "should fail to create a serving with an invalid serving tool" do
-        put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
+        put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/", parse_serving_json(
             {name: "testmodel6",
              modelPath: "/Projects/#{@project[:projectname]}/Models/mnist",
              modelVersion: 1,
@@ -311,15 +309,15 @@ describe "On #{ENV['OS']}" do
              modelFramework: "TENSORFLOW",
              servingTool: "INVALID",
              requestedInstances: 1
-            }
+            })
         expect_json(usrMsg: "Serving tool not provided or invalid")
-        expect_status_details(422)
+        expect_status_details(422, error_code: 120001)
       end
 
       # kafka topic
 
       it "should fail to create a serving with bad kafka configuration" do
-        put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
+        put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/", parse_serving_json(
             {name: "testModelBadKafka",
              modelPath: "/Projects/#{@project[:projectname]}/Models/mnist",
              modelVersion: 1,
@@ -336,13 +334,13 @@ describe "On #{ENV['OS']}" do
              modelFramework: "TENSORFLOW",
              servingTool: "DEFAULT",
              requestedInstances: 1
-            }
+            })
         expect_json(errorMsg: "Maximum topic replication factor exceeded")
         expect_status_details(400)
       end
 
       it "should create a serving without kafka topic" do
-        put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
+        put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/", parse_serving_json(
             {name: "testModelNoKafka",
              modelPath: "/Projects/#{@project[:projectname]}/Models/mnist",
              modelVersion: 1,
@@ -353,7 +351,7 @@ describe "On #{ENV['OS']}" do
              modelFramework: "TENSORFLOW",
              servingTool: "DEFAULT",
              requestedInstances: 1
-            }
+            })
         expect_status_details(201)
 
         serving_list = get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/"
@@ -362,7 +360,7 @@ describe "On #{ENV['OS']}" do
       end
 
       it "should create the serving with a new kafka topic" do
-        put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
+        put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/", parse_serving_json(
             {name: "testModelNewKafka",
              modelPath: "/Projects/#{@project[:projectname]}/Models/mnist",
              modelVersion: 1,
@@ -379,7 +377,7 @@ describe "On #{ENV['OS']}" do
              modelFramework: "TENSORFLOW",
              servingTool: "DEFAULT",
              requestedInstances: 1
-            }
+            })
         expect_status_details(201)
 
         # Kafka authorizer needs some time to take up the new permissions.
@@ -403,7 +401,7 @@ describe "On #{ENV['OS']}" do
         json, topic_name = add_topic(@project[:id], schema_name, 1)
 
         # Create serving
-        put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
+        put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/", parse_serving_json(
             {name: "testModelExistingKafkaNoSchema",
              modelPath: "/Projects/#{@project[:projectname]}/Models/mnist",
              modelVersion: 1,
@@ -418,13 +416,13 @@ describe "On #{ENV['OS']}" do
              modelFramework: "TENSORFLOW",
              servingTool: "DEFAULT",
              requestedInstances: 1
-            }
+            })
         expect_status_details(400, error_code: 240023)
         expect_json(usrMsg: "Inference logging requires a Kafka topic with schema 'inferenceschema'")
       end
 
       it "should fail to create a serving with a non-existing kafka topic" do
-        put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
+        put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/", parse_serving_json(
             {name: "testModelNonExistingKafka",
              modelPath: "/Projects/#{@project[:projectname]}/Models/mnist",
              modelVersion: 1,
@@ -439,14 +437,14 @@ describe "On #{ENV['OS']}" do
              modelFramework: "TENSORFLOW",
              servingTool: "DEFAULT",
              requestedInstances: 1
-            }
+            })
         expect_status_details(400, error_code: 240022)
       end
 
       # inference logging mode
 
       it "should fail to create a serving with kafka topic but without inference logging defined" do
-        put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
+        put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/", parse_serving_json(
             {name: "testmodelWithoutInferenceLogging",
              modelPath: "/Projects/#{@project[:projectname]}/Models/mnist",
              batchingConfiguration: {
@@ -460,13 +458,13 @@ describe "On #{ENV['OS']}" do
              modelFramework: "TENSORFLOW",
              servingTool: "DEFAULT",
              requestedInstances: 1
-            }
-        expect_status_details(422)
+            })
+        expect_status_details(422, error_code: 120001)
         expect_json(usrMsg: "A valid inference logger mode must be provided with a Kafka topic")
       end
 
       it "should fail to create a serving with inference logging mode but without kafka topic" do
-        put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
+        put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/", parse_serving_json(
             {name: "testmodelWithInferenceLoggingButNotTopic",
              modelPath: "/Projects/#{@project[:projectname]}/Models/mnist",
              batchingConfiguration: {
@@ -478,14 +476,13 @@ describe "On #{ENV['OS']}" do
              servingTool: "DEFAULT",
              inferenceLogging: "ALL",
              requestedInstances: 1
-            }
-        expect_status_details(400)
-        # response: from String \"INVALID\": not one of the values accepted for Enum class: [ALL, PREDICTIONS, MODEL_INPUTS]
-        #expect_json(usrMsg: "Inference logger mode cannot be provided without a Kafka topic")
+            })
+        expect_status_details(422, error_code: 120001)
+        expect_json(usrMsg: "Inference logger mode cannot be provided without a Kafka topic")
       end
 
       it "should fail to create a serving with invalid inference logging mode" do
-        put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
+        put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/", parse_serving_json(
             {name: "testmodelInvalidInferenceLogging",
              modelPath: "/Projects/#{@project[:projectname]}/Models/mnist",
              batchingConfiguration: {
@@ -500,15 +497,15 @@ describe "On #{ENV['OS']}" do
              modelFramework: "TENSORFLOW",
              servingTool: "DEFAULT",
              requestedInstances: 1
-            }
-        expect_status_details(422)
+            })
+        expect_status_details(422, error_code: 120001)
         expect_json(usrMsg: "A valid inference logger mode must be provided with a Kafka topic")
       end
 
       # resources config
 
       it "should fail to create a serving without predictor requested instances" do
-        put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
+        put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/", parse_serving_json(
               {name: "testmodel7",
                modelPath: "/Projects/#{@project[:projectname]}/Models/mnist",
                modelVersion: 1,
@@ -518,7 +515,7 @@ describe "On #{ENV['OS']}" do
                modelServer: "TENSORFLOW_SERVING",
                modelFramework: "TENSORFLOW",
                servingTool: "DEFAULT"
-              }
+              })
         expect_json(usrMsg: "Number of instances not provided")
       end
 
@@ -529,7 +526,7 @@ describe "On #{ENV['OS']}" do
           skip "This test only runs without Kubernetes installed"
         end
 
-        put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
+        put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/", parse_serving_json(
             {name: "mnist",
              modelPath: "/Projects/#{@project[:projectname]}/Models/mnist",
              modelVersion: 1,
@@ -544,7 +541,7 @@ describe "On #{ENV['OS']}" do
              modelFramework: "TENSORFLOW",
              servingTool: "DEFAULT",
              requestedInstances: 1
-            }
+            })
         expect_status_details(400, error_code: 240014)
         expect_json(errorMsg: "Kubernetes is not installed", usrMsg: "Artifacts only supported in Kubernetes deployments")
       end
@@ -554,7 +551,7 @@ describe "On #{ENV['OS']}" do
           skip "This test only runs with Kubernetes installed"
         end
 
-        put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
+        put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/", parse_serving_json(
             {name: "testmodelzipped",
              modelPath: "/Projects/#{@project[:projectname]}/Models/mnist",
              modelVersion: 1,
@@ -565,7 +562,7 @@ describe "On #{ENV['OS']}" do
              modelFramework: "TENSORFLOW",
              servingTool: "DEFAULT",
              requestedInstances: 1
-            }
+            })
         expect_status_details(201)
       end
 
@@ -603,7 +600,7 @@ describe "On #{ENV['OS']}" do
         serving = Serving.find(@serving[:id])
         topic = ProjectTopics.find(@serving[:kafka_topic_id])
 
-        put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
+        put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/", parse_serving_json(
            {id: serving[:id],
             name: serving[:name],
             modelPath: serving[:model_path],
@@ -617,7 +614,7 @@ describe "On #{ENV['OS']}" do
             modelFramework: parse_model_framework(serving[:model_framework]),
             servingTool: parse_serving_tool(serving[:serving_tool]),
             requestedInstances: serving[:instances]
-            }
+            })
         expect_status_details(401, error_code: 200003)
       end
     end
@@ -653,7 +650,7 @@ describe "On #{ENV['OS']}" do
       it "should be able to update the name" do
         serving = Serving.find(@serving[:id])
         topic = ProjectTopics.find(@serving[:kafka_topic_id])
-        put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
+        put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/", parse_serving_json(
             {id: serving[:id],
             name: "testModelChanged",
             modelPath: serving[:model_path],
@@ -668,7 +665,7 @@ describe "On #{ENV['OS']}" do
             modelFramework: parse_model_framework(serving[:model_framework]),
             servingTool: parse_serving_tool(serving[:serving_tool]),
             requestedInstances: serving[:instances]
-            }
+            })
         expect_status_details(201)
 
         serving = Serving.find(@serving[:id])
@@ -683,7 +680,7 @@ describe "On #{ENV['OS']}" do
 
         expect(serving[:model_name]).to eq "mnist"
 
-        put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
+        put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/", parse_serving_json(
             {id: serving[:id],
             name: serving[:name],
             modelPath: "/Projects/#{@project[:projectname]}/Models/newMnist",
@@ -697,7 +694,7 @@ describe "On #{ENV['OS']}" do
             modelFramework: parse_model_framework(serving[:model_framework]),
             servingTool: parse_serving_tool(serving[:serving_tool]),
             requestedInstances: serving[:instances]
-            }
+            })
         expect_status_details(201)
 
         serving = Serving.find(@serving[:id])
@@ -710,7 +707,7 @@ describe "On #{ENV['OS']}" do
       it "should be able to update the model version" do
         serving = Serving.find(@serving[:id])
         topic = ProjectTopics.find(@serving[:kafka_topic_id])
-        put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
+        put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/", parse_serving_json(
             {id: serving[:id],
             name: serving[:name],
             modelPath: serving[:model_path],
@@ -724,7 +721,7 @@ describe "On #{ENV['OS']}" do
             modelFramework: parse_model_framework(serving[:model_framework]),
             servingTool: parse_serving_tool(serving[:serving_tool]),
             requestedInstances: serving[:instances]
-            }
+            })
         expect_status_details(201)
 
         serving = Serving.find(@serving[:id])
@@ -739,7 +736,7 @@ describe "On #{ENV['OS']}" do
         end
 
         serving = Serving.find(@serving[:id])
-        put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
+        put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/", parse_serving_json(
             {id: serving[:id],
             name: serving[:name],
             modelPath: serving[:model_path],
@@ -749,7 +746,7 @@ describe "On #{ENV['OS']}" do
             modelFramework: parse_model_framework(serving[:model_framework]),
             servingTool: parse_serving_tool(serving[:serving_tool]),
             requestedInstances: serving[:instances]
-            }
+            })
         expect_status_details(201)
 
         serving = Serving.find(@serving[:id])
@@ -772,7 +769,7 @@ describe "On #{ENV['OS']}" do
 
         rmdir("/Projects/#{@project[:projectname]}/Models/newMnist/#{serving[:model_version]}/Artifacts")
 
-        put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
+        put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/", parse_serving_json(
             {id: serving[:id],
             name: serving[:name],
             modelPath: "/Projects/#{@project[:projectname]}/Models/newMnist",
@@ -782,7 +779,7 @@ describe "On #{ENV['OS']}" do
             modelFramework: parse_model_framework(serving[:model_framework]),
             servingTool: parse_serving_tool(serving[:serving_tool]),
             requestedInstances: serving[:instances]
-            }
+            })
         expect_status_details(201)
 
         serving = Serving.find(@serving[:id])
@@ -800,7 +797,7 @@ describe "On #{ENV['OS']}" do
 
       it "should not be able to update the model server" do
         serving = Serving.find(@serving[:id])
-        put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
+        put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/", parse_serving_json(
             {id: serving[:id],
             name: serving[:name],
             modelPath: serving[:model_path],
@@ -811,7 +808,7 @@ describe "On #{ENV['OS']}" do
             modelFramework: parse_model_framework(serving[:model_framework]),
             servingTool: parse_serving_tool(serving[:serving_tool]),
             requestedInstances: serving[:instances]
-            }
+            })
         expect_status_details(400, error_code: 240013)
       end
 
@@ -820,7 +817,7 @@ describe "On #{ENV['OS']}" do
       it "should be able to change the kafka topic it's writing to"  do
         json_result, topic_name = add_topic(@project[:id], INFERENCE_SCHEMA_NAME, INFERENCE_SCHEMA_VERSION)
         serving = Serving.find(@serving[:id])
-        put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
+        put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/", parse_serving_json(
             {id: serving[:id],
             name: serving[:name],
             modelPath: serving[:model_path],
@@ -835,7 +832,7 @@ describe "On #{ENV['OS']}" do
             modelFramework: parse_model_framework(serving[:model_framework]),
             servingTool: parse_serving_tool(serving[:serving_tool]),
             requestedInstances: serving[:instances]
-            }
+            })
         expect_status_details(201)
 
         serving = Serving.find(@serving[:id])
@@ -845,7 +842,7 @@ describe "On #{ENV['OS']}" do
 
       it "should be able to stop writing to a kafka topic" do
         serving = Serving.find(@serving[:id])
-        put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
+        put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/", parse_serving_json(
             {id: serving[:id],
             name: serving[:name],
             modelPath: serving[:model_path],
@@ -859,7 +856,7 @@ describe "On #{ENV['OS']}" do
             modelFramework: parse_model_framework(serving[:model_framework]),
             servingTool: parse_serving_tool(serving[:serving_tool]),
             requestedInstances: serving[:instances]
-            }
+            })
         expect_status_details(201)
 
         serving = Serving.find(@serving[:id])
@@ -869,7 +866,7 @@ describe "On #{ENV['OS']}" do
 
       it "should be able to create a new kafka topic to write to" do
         serving = Serving.find(@serving[:id])
-        put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
+        put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/", parse_serving_json(
            {id: serving[:id],
             name: serving[:name],
             modelPath: serving[:model_path],
@@ -884,7 +881,7 @@ describe "On #{ENV['OS']}" do
             modelFramework: parse_model_framework(serving[:model_framework]),
             servingTool: parse_serving_tool(serving[:serving_tool]),
             requestedInstances: serving[:instances]
-            }
+            })
         expect_status_details(201)
 
         serving = Serving.find(@serving[:id])
@@ -1186,7 +1183,7 @@ describe "On #{ENV['OS']}" do
       it "should fail to create a serving" do
         reset_session
         create_session(@member[:email],"Pass123")
-        put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
+        put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/", parse_serving_json(
             {name: "testModel1",
              modelPath: "/Projects/#{@project[:projectname]}/Models/mnist/",
              modelVersion: 1,
@@ -1200,7 +1197,7 @@ describe "On #{ENV['OS']}" do
              modelFramework: "TENSORFLOW",
              servingTool: "DEFAULT",
              requestedInstances: 1
-            }
+            })
         expect_status_details(403)
       end
       it "should fail to start a serving" do

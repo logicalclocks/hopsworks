@@ -18,6 +18,7 @@
 package io.hops.hopsworks.api.serving;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.hops.hopsworks.common.dao.kafka.TopicDTO;
 import io.hops.hopsworks.common.serving.ServingStatusEnum;
 import io.hops.hopsworks.common.serving.ServingWrapper;
@@ -32,14 +33,12 @@ import io.hops.hopsworks.persistence.entity.user.Users;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 
-import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlRootElement;
 import java.io.Serializable;
 import java.util.Date;
 import java.util.List;
 
-@XmlRootElement
 @ApiModel(value = "Represents a Serving model")
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class ServingView implements Serializable {
 
   private static final long serialVersionUID = 1L;
@@ -75,7 +74,6 @@ public class ServingView implements Serializable {
   // TODO(Fabio): use expansions here
   private String creator;
 
-  @XmlElement
   private ServingStatusEnum status;
 
   // TODO(Fabio): use expansions here

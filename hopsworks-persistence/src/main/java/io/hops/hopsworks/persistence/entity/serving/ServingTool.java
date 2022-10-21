@@ -4,6 +4,7 @@
 
 package io.hops.hopsworks.persistence.entity.serving;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 /**
@@ -14,8 +15,20 @@ public enum ServingTool {
   // Docker container (Community) or Kubernetes deployment (Enterprise)
   @JsonProperty("DEFAULT")
   DEFAULT,
-
   // (Enterprise only)
   @JsonProperty("KSERVE")
-  KSERVE
+  KSERVE;
+  
+  @JsonCreator
+  public static ServingTool fromString(String servingTool) {
+    if (servingTool != null) {
+      switch (servingTool) {
+        case "DEFAULT":
+          return DEFAULT;
+        case "KSERVE":
+          return KSERVE;
+      }
+    }
+    return null;
+  }
 }

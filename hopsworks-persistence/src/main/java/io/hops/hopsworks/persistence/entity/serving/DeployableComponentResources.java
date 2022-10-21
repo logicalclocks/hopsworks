@@ -5,25 +5,26 @@
 package io.hops.hopsworks.persistence.entity.serving;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonSetter;
+import com.fasterxml.jackson.annotation.Nulls;
 
-import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlRootElement;
-
-@XmlRootElement
 @JsonIgnoreProperties(ignoreUnknown = true)
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class DeployableComponentResources {
   
   public DeployableComponentResources() { }
   
-  @XmlElement
+  @JsonSetter(nulls = Nulls.SKIP)
   private DockerResourcesConfiguration requests = DeployableComponentResources.getDefaultRequestsResources();
   
-  @XmlElement
+  @JsonSetter(nulls = Nulls.SKIP)
   private DockerResourcesConfiguration limits = DeployableComponentResources.getDefaultLimitsResources();
   
   public DockerResourcesConfiguration getRequests() {
     return requests;
   }
+  @JsonSetter(nulls = Nulls.SKIP)
   public void setRequests(DockerResourcesConfiguration requests) {
     this.requests = requests;
   }
@@ -31,6 +32,7 @@ public class DeployableComponentResources {
   public DockerResourcesConfiguration getLimits() {
     return limits;
   }
+  @JsonSetter(nulls = Nulls.SKIP)
   public void setLimits(DockerResourcesConfiguration limits) {
     this.limits = limits;
   }

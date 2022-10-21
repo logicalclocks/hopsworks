@@ -43,7 +43,7 @@ describe "On #{ENV['OS']}" do
         end
 
         it "should fail to create the serving" do
-          put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
+          put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/", parse_serving_json(
               {name: "testModel",
                modelPath: "/Projects/#{@project[:projectname]}/Models/irisflowerclassifier",
                modelVersion: 1,
@@ -52,7 +52,7 @@ describe "On #{ENV['OS']}" do
                modelFramework: "SKLEARN",
                servingTool: "DEFAULT",
                requestedInstances: 1
-              }
+              })
           expect_status_details(400, error_code: 240012)
         end
       end
@@ -72,7 +72,7 @@ describe "On #{ENV['OS']}" do
         # predictor
 
         it "should fail to create a serving without predictor script" do
-          put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
+          put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/", parse_serving_json(
               {name: "testModel",
                modelPath: "/Projects/#{@project[:projectname]}/Models/irisflowerclassifier",
                modelVersion: 1,
@@ -80,13 +80,13 @@ describe "On #{ENV['OS']}" do
                modelFramework: "SKLEARN",
                servingTool: "DEFAULT",
                requestedInstances: 1
-              }
+              })
           expect_status_details(400, error_code: 240018)
           expect_json(usrMsg: "Default deployments require a predictor")
         end
 
         it "should fail to create a serving with non-existing predictor script path" do
-          put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
+          put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/", parse_serving_json(
               {name: "testModel",
                modelPath: "/Projects/#{@project[:projectname]}/Models/irisflowerclassifier",
                modelVersion: 1,
@@ -95,12 +95,12 @@ describe "On #{ENV['OS']}" do
                modelFramework: "SKLEARN",
                servingTool: "DEFAULT",
                requestedInstances: 1
-              }
+              })
           expect_status_details(400, error_code: 240016)
         end
 
         it "should fail to create a serving with non-python predictor script" do
-          put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
+          put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/", parse_serving_json(
               {name: "testModel",
                modelPath: "/Projects/#{@project[:projectname]}/Models/irisflowerclassifier",
                modelVersion: 1,
@@ -109,13 +109,13 @@ describe "On #{ENV['OS']}" do
                modelFramework: "SKLEARN",
                servingTool: "DEFAULT",
                requestedInstances: 1
-              }
+              })
           expect_status_details(422)
           expect_json(usrMsg: "Predictor script should have a valid extension: .py")
         end
 
         it "should create a serving with a predictor script" do
-          put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
+          put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/", parse_serving_json(
               {name: "testModel",
                modelPath: "/Projects/#{@project[:projectname]}/Models/irisflowerclassifier",
                modelVersion: 1,
@@ -124,14 +124,14 @@ describe "On #{ENV['OS']}" do
                modelFramework: "SKLEARN",
                servingTool: "DEFAULT",
                requestedInstances: 1
-              }
+              })
           expect_status_details(201)
         end
 
         # artifact version
 
         it "should fail to create a serving with artifact version but without predictor" do
-          put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
+          put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/", parse_serving_json(
               {name: "testModel4",
                modelPath: "/Projects/#{@project[:projectname]}/Models/irisflowerclassifier",
                modelVersion: 1,
@@ -140,7 +140,7 @@ describe "On #{ENV['OS']}" do
                modelFramework: "SKLEARN",
                servingTool: "DEFAULT",
                requestedInstances: 1
-              }
+              })
           if kubernetes_installed
             expect_status_details(400, error_code: 240019)
             expect_json(usrMsg: "Other than MODEL-ONLY artifacts require a predictor or transformer")
@@ -151,7 +151,7 @@ describe "On #{ENV['OS']}" do
         end
 
         it "should fail to create a serving with MODEL-ONLY artifact and predictor" do
-          put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
+          put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/", parse_serving_json(
               {name: "testModel5",
                modelPath: "/Projects/#{@project[:projectname]}/Models/irisflowerclassifier",
                modelVersion: 1,
@@ -161,7 +161,7 @@ describe "On #{ENV['OS']}" do
                modelFramework: "SKLEARN",
                servingTool: "DEFAULT",
                requestedInstances: 1
-              }
+              })
           if kubernetes_installed
             expect_status_details(400, error_code: 240019)
             expect_json(usrMsg: "Predictors and transformers cannot be used in MODEL-ONLY artifacts")
@@ -173,7 +173,7 @@ describe "On #{ENV['OS']}" do
 
         # request batching
         it "should fail to create a serving with request batching enabled" do
-          put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
+          put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/", parse_serving_json(
              {name: "testRequestBatchingPythonDefault1",
               modelPath: "/Projects/#{@project[:projectname]}/Models/irisflowerclassifier",
               modelVersion: 1,
@@ -185,7 +185,7 @@ describe "On #{ENV['OS']}" do
               batchingConfiguration: {
                 batchingEnabled: true
               }
-             }
+             })
           expect_status_details(400, error_code: 240025)
           expect_json(usrMsg: "Request batching is not supported in Python deployments without KServe")
         end
@@ -221,7 +221,7 @@ describe "On #{ENV['OS']}" do
 
           serving = Serving.find(@serving[:id])
           topic = ProjectTopics.find(@serving[:kafka_topic_id])
-          put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
+          put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/", parse_serving_json(
              {id: serving[:id],
               name: serving[:name],
               modelPath: serving[:model_path],
@@ -236,7 +236,7 @@ describe "On #{ENV['OS']}" do
               modelFramework: parse_model_framework(serving[:model_framework]),
               servingTool: parse_serving_tool(serving[:serving_tool]),
               requestedInstances: serving[:instances]
-              }
+              })
           expect_status_details(400, error_code: 240019)
           expect_json(usrMsg: "Existing artifacts cannot be modified. To change predictors or transformers, create a new artifact")
         end
@@ -248,7 +248,7 @@ describe "On #{ENV['OS']}" do
 
           serving = Serving.find(@serving[:id])
           topic = ProjectTopics.find(@serving[:kafka_topic_id])
-          put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
+          put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/", parse_serving_json(
              {id: serving[:id],
               name: serving[:name],
               modelPath: serving[:model_path],
@@ -262,7 +262,7 @@ describe "On #{ENV['OS']}" do
               modelFramework: parse_model_framework(serving[:model_framework]),
               servingTool: parse_serving_tool(serving[:serving_tool]),
               requestedInstances: serving[:instances]
-              }
+              })
           expect_status_details(201)
 
           new_serving = Serving.find(@serving[:id])

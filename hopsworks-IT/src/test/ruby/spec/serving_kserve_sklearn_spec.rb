@@ -21,7 +21,7 @@ describe "On #{ENV['OS']}" do
     end
 
     it "should fail to create a serving when Kubernetes is not installed" do
-      put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
+      put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/", parse_serving_json(
           {name: "irisflowerclassifier",
           modelPath: "/Projects/#{@project[:projectname]}/Models/irisflowerclassifier",
           modelVersion: 1,
@@ -29,7 +29,7 @@ describe "On #{ENV['OS']}" do
           modelFramework: "SKLEARN",
           servingTool: "KSERVE",
           requestedInstances: 1
-          }
+          })
       expect_status_details(400, error_code: 240014)
       expect_json(errorMsg: "Kubernetes is not installed", usrMsg: "Serving tool not supported. KServe requires Kubernetes to be installed")
     end
@@ -50,7 +50,7 @@ describe "On #{ENV['OS']}" do
       end
 
       it "should fail to create a serving when KServe is not installed" do
-        put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
+        put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/", parse_serving_json(
             {name: "irisflowerclassifier",
             modelPath: "/Projects/#{@project[:projectname]}/Models/irisflowerclassifier",
             modelVersion: 1,
@@ -58,7 +58,7 @@ describe "On #{ENV['OS']}" do
             modelFramework: "SKLEARN",
             servingTool: "KSERVE",
             requestedInstances: 1
-            }
+            })
         expect_status_details(400, error_code: 240015)
         expect_json(errorMsg: "KServe is not installed or disabled", usrMsg: "Serving tool not supported")
       end
@@ -80,7 +80,7 @@ describe "On #{ENV['OS']}" do
           end
 
           it "should fail to create the serving" do
-            put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
+            put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/", parse_serving_json(
                 {name: "irisflowerclassifier",
                 modelPath: "/Projects/#{@project[:projectname]}/Models/irisflowerclassifier",
                 modelVersion: 1,
@@ -88,7 +88,7 @@ describe "On #{ENV['OS']}" do
                 modelFramework: "SKLEARN",
                 servingTool: "KSERVE",
                 requestedInstances: 1
-                }
+                })
             expect_status_details(401, error_code: 200003)
           end
         end
@@ -107,7 +107,7 @@ describe "On #{ENV['OS']}" do
           # serving name
 
           it "should fail to create a serving with an invalid name" do
-            put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
+            put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/", parse_serving_json(
                 {name: "invalidName",
                 modelPath: "/Projects/#{@project[:projectname]}/Models/irisflowerclassifier",
                 modelVersion: 1,
@@ -115,7 +115,7 @@ describe "On #{ENV['OS']}" do
                 modelFramework: "SKLEARN",
                 servingTool: "KSERVE",
                 requestedInstances: 1
-                }
+                })
             expect_status_details(422)
             expect_json(usrMsg: "Serving name must consist of lower case alphanumeric characters, '-' or '.', and start and end with an alphanumeric character")
           end
@@ -124,7 +124,7 @@ describe "On #{ENV['OS']}" do
 
           it "should create a serving with a MODEL-ONLY artifact without predictor and transformer" do
             name = "testmodel1"
-            put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
+            put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/", parse_serving_json(
                 {name: name,
                 modelPath: "/Projects/#{@project[:projectname]}/Models/irisflowerclassifier",
                 modelVersion: 1,
@@ -132,7 +132,7 @@ describe "On #{ENV['OS']}" do
                 modelFramework: "SKLEARN",
                 servingTool: "KSERVE",
                 requestedInstances: 1
-                }
+                })
             expect_status_details(201)
 
             serving = Serving.find_by(project_id: @project[:id], name: name)
@@ -141,7 +141,7 @@ describe "On #{ENV['OS']}" do
           
           it "should create a serving with a new artifact version when artifact version is CREATE and a predictor is specified" do
             name = "testmodelwithpred"
-            put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
+            put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/", parse_serving_json(
                 {name: name,
                 modelPath: "/Projects/#{@project[:projectname]}/Models/irisflowerclassifier",
                 modelVersion: 1,
@@ -150,7 +150,7 @@ describe "On #{ENV['OS']}" do
                 servingTool: "KSERVE",
                 predictor: "/Projects/#{@project[:projectname]}/Models/irisflowerclassifier/1/#{SKLEARN_SCRIPT_FILE_NAME}",
                 requestedInstances: 1
-                }
+                })
             expect_status_details(201)
 
             serving = Serving.find_by(project_id: @project[:id], name: name)
@@ -159,7 +159,7 @@ describe "On #{ENV['OS']}" do
 
           it "should create a serving with a new artifact version when artifact version is CREATE and a transformer is specified" do
             name = "testmodelwithtrans"
-            put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
+            put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/", parse_serving_json(
                 {name: name,
                 modelPath: "/Projects/#{@project[:projectname]}/Models/irisflowerclassifier",
                 modelVersion: 1,
@@ -169,7 +169,7 @@ describe "On #{ENV['OS']}" do
                 transformer: "/Projects/#{@project[:projectname]}/Models/irisflowerclassifier/1/transformer.py",
                 requestedInstances: 1,
                 requestedTransformerInstances: 1
-                }
+                })
             expect_status_details(201)
 
             serving = Serving.find_by(project_id: @project[:id], name: name)
@@ -177,7 +177,7 @@ describe "On #{ENV['OS']}" do
           end
 
           it "should fail to create a serving with an artifact version and without transformer and predictor" do
-            put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
+            put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/", parse_serving_json(
                 {name: "testmodel28",
                 modelPath: "/Projects/#{@project[:projectname]}/Models/irisflowerclassifier",
                 modelVersion: 1,
@@ -186,13 +186,13 @@ describe "On #{ENV['OS']}" do
                 modelFramework: "SKLEARN",
                 servingTool: "KSERVE",
                 requestedInstances: 1
-                }
+                })
             expect_status_details(400, error_code: 240019)
             expect_json(usrMsg: "Other than MODEL-ONLY artifacts require a predictor or transformer")
           end
 
           it "should fail to create a serving with MODEL-ONLY artifact and predictor" do
-            put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
+            put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/", parse_serving_json(
                 {name: "testmodelmodelonlyandpred",
                 modelPath: "/Projects/#{@project[:projectname]}/Models/irisflowerclassifier",
                 modelVersion: 1,
@@ -202,13 +202,13 @@ describe "On #{ENV['OS']}" do
                 servingTool: "KSERVE",
                 predictor: "/Projects/#{@project[:projectname]}/Models/irisflowerclassifier/1/#{SKLEARN_SCRIPT_FILE_NAME}",
                 requestedInstances: 1
-                }
+                })
             expect_status_details(400, error_code: 240019)
             expect_json(usrMsg: "Predictors and transformers cannot be used in MODEL-ONLY artifacts")
           end
           
           it "should fail to create a serving with MODEL-ONLY artifact and transformer" do
-            put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
+            put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/", parse_serving_json(
                 {name: "testmodel29",
                 modelPath: "/Projects/#{@project[:projectname]}/Models/irisflowerclassifier",
                 modelVersion: 1,
@@ -219,14 +219,14 @@ describe "On #{ENV['OS']}" do
                 transformer: "/Projects/#{@project[:projectname]}/Models/irisflowerclassifier/1/transformer.py",
                 requestedInstances: 1,
                 requestedTransformerInstances: 1
-                }
+                })
             expect_status_details(400, error_code: 240019)
             expect_json(usrMsg: "Predictors and transformers cannot be used in MODEL-ONLY artifacts")
           end
           
           it "should fail to create a serving with a non-existing artifact version and a predictor" do
             name = "testmodelnonexistingartifactversion"
-            put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
+            put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/", parse_serving_json(
                 {name: name,
                 modelPath: "/Projects/#{@project[:projectname]}/Models/irisflowerclassifier",
                 modelVersion: 1,
@@ -237,14 +237,14 @@ describe "On #{ENV['OS']}" do
                 transformer: "predictor.py",
                 requestedInstances: 1,
                 requestedTransformerInstances: 1
-                }
+                })
             expect_status_details(400, error_code: 240016)
             expect_json(usrMsg: "Transformer script does not exist")
           end
 
           it "should fail to create a serving with a non-existing artifact version and a transformer" do
             name = "testmodelnonexistingartifactversion"
-            put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
+            put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/", parse_serving_json(
                 {name: name,
                 modelPath: "/Projects/#{@project[:projectname]}/Models/irisflowerclassifier",
                 modelVersion: 1,
@@ -255,7 +255,7 @@ describe "On #{ENV['OS']}" do
                 transformer: "transformer.py",
                 requestedInstances: 1,
                 requestedTransformerInstances: 1
-                }
+                })
             expect_status_details(400, error_code: 240016)
             expect_json(usrMsg: "Transformer script does not exist")
           end
@@ -268,7 +268,7 @@ describe "On #{ENV['OS']}" do
                  @user[:username], "#{@project[:projectname]}__Models", 750, "#{@project[:projectname]}")
 
             name = "testmodelmodelfile"
-            put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
+            put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/", parse_serving_json(
                 {name: name,
                 modelPath: "/Projects/#{@project[:projectname]}/Models/irisflowerclassifier",
                 modelVersion: 1,
@@ -276,7 +276,7 @@ describe "On #{ENV['OS']}" do
                 modelFramework: "SKLEARN",
                 servingTool: "KSERVE",
                 requestedInstances: 1
-                }
+                })
             expect_status_details(400, error_code: 240017)
             expect_json(usrMsg: "Model path cannot contain more than one model file (i.e., joblib or pickle files)")
             
@@ -285,7 +285,7 @@ describe "On #{ENV['OS']}" do
 
           it "should create a serving with model file only" do
             name = "testmodelmodelfileonly"
-            put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
+            put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/", parse_serving_json(
                 {name: name,
                 modelPath: "/Projects/#{@project[:projectname]}/Models/irisflowerclassifier",
                 modelVersion: 1,
@@ -293,7 +293,7 @@ describe "On #{ENV['OS']}" do
                 modelFramework: "SKLEARN",
                 servingTool: "KSERVE",
                 requestedInstances: 1
-                }
+                })
             expect_status_details(201)
 
             serving = Serving.find_by(project_id: @project[:id], name: name)
@@ -304,7 +304,7 @@ describe "On #{ENV['OS']}" do
             rm("/Projects/#{@project[:projectname]}/Models/irisflowerclassifier/1/iris_knn.pkl")
 
             name = "testmodelnothing"
-            put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
+            put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/", parse_serving_json(
                 {name: name,
                 modelPath: "/Projects/#{@project[:projectname]}/Models/irisflowerclassifier",
                 modelVersion: 1,
@@ -312,7 +312,7 @@ describe "On #{ENV['OS']}" do
                 modelFramework: "SKLEARN",
                 servingTool: "KSERVE",
                 requestedInstances: 1
-                }
+                })
             expect_status_details(400, error_code: 240017)
             expect_json(usrMsg: "KServe deployments without predictor script require a model file")
 
@@ -324,7 +324,7 @@ describe "On #{ENV['OS']}" do
           # request batching
 
           it "should create a serving with request batching enabled and no extra batching configuration" do
-            put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
+            put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/", parse_serving_json(
                 {name: "testrequestbatchingpythonkserve1",
                  modelPath: "/Projects/#{@project[:projectname]}/Models/irisflowerclassifier",
                  modelVersion: 1,
@@ -338,12 +338,12 @@ describe "On #{ENV['OS']}" do
                  modelFramework: "SKLEARN",
                  servingTool: "KSERVE",
                  requestedInstances: 1
-                }
+                })
             expect_status_details(201)
           end
 
           it "should create a serving with request batching enabled and extra batching configuration provided" do
-            put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
+            put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/", parse_serving_json(
                 {name: "testrequestbatchingpythonkserve2",
                  modelPath: "/Projects/#{@project[:projectname]}/Models/irisflowerclassifier",
                  modelVersion: 1,
@@ -360,14 +360,14 @@ describe "On #{ENV['OS']}" do
                  modelFramework: "SKLEARN",
                  servingTool: "KSERVE",
                  requestedInstances: 1
-                }
+                })
             expect_status_details(201)
           end
           
           # predictor
 
           it "should fail to create a serving with invalid predictor script path" do
-            put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
+            put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/", parse_serving_json(
                 {name: "testmodelinvalidpred",
                 modelPath: "/Projects/#{@project[:projectname]}/Models/irisflowerclassifier",
                 modelVersion: 1,
@@ -376,13 +376,13 @@ describe "On #{ENV['OS']}" do
                 servingTool: "KSERVE",
                 predictor: "/Projects/#{@project[:projectname]}/Models/irisflowerclassifier/invalid.ext",
                 requestedInstances: 1
-                }
+                })
             expect_status_details(422)
             expect_json(usrMsg: "Predictor script should have a valid extension: .py")
           end
 
           it "should fail to create a serving with non-existent predictor script" do
-            put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
+            put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/", parse_serving_json(
                 {name: "testmodelnonextpred",
                 modelPath: "/Projects/#{@project[:projectname]}/Models/irisflowerclassifier",
                 modelVersion: 1,
@@ -391,13 +391,13 @@ describe "On #{ENV['OS']}" do
                 servingTool: "KSERVE",
                 predictor: "/Projects/#{@project[:projectname]}/Models/irisflowerclassifier/1/non-existent.py",
                 requestedInstances: 1
-                }
+                })
             expect_status_details(400, error_code: 240016)
           end
 
           it "should create a serving with a python script as predictor" do
             name = "testmodel16"
-            put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
+            put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/", parse_serving_json(
                 {name: name,
                 modelPath: "/Projects/#{@project[:projectname]}/Models/irisflowerclassifier",
                 modelVersion: 1,
@@ -406,7 +406,7 @@ describe "On #{ENV['OS']}" do
                 servingTool: "KSERVE",
                 predictor: "/Projects/#{@project[:projectname]}/Models/irisflowerclassifier/1/#{SKLEARN_SCRIPT_FILE_NAME}",
                 requestedInstances: 1
-                }
+                })
             expect_status_details(201)
 
             serving = Serving.find_by(project_id: @project[:id], name: name)
@@ -418,7 +418,7 @@ describe "On #{ENV['OS']}" do
                  "/Projects/#{@project[:projectname]}/Models/irisflowerclassifier/1/irisflowerclassifier-copy.py",
                  @user[:username], "#{@project[:projectname]}__Models", 750, "#{@project[:projectname]}")
 
-            put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
+            put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/", parse_serving_json(
                 {name: "testmodel18",
                 modelPath: "/Projects/#{@project[:projectname]}/Models/irisflowerclassifier",
                 modelVersion: 1,
@@ -428,7 +428,7 @@ describe "On #{ENV['OS']}" do
                 servingTool: "KSERVE",
                 predictor: "/Projects/#{@project[:projectname]}/Models/irisflowerclassifier/1/irisflowerclassifier-copy.py",
                 requestedInstances: 1
-                }
+                })
             expect_status_details(400, error_code: 240019)
             expect_json(usrMsg: "Existing artifacts cannot be modified. To change predictors or transformers, create a new artifact")
           end
@@ -437,7 +437,7 @@ describe "On #{ENV['OS']}" do
             rm("/Projects/#{@project[:projectname]}/Models/irisflowerclassifier/1/iris_knn.pkl")
 
             name = "testmodelonlypred"
-            put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
+            put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/", parse_serving_json(
                 {name: name,
                 modelPath: "/Projects/#{@project[:projectname]}/Models/irisflowerclassifier",
                 modelVersion: 1,
@@ -446,7 +446,7 @@ describe "On #{ENV['OS']}" do
                 servingTool: "KSERVE",
                 predictor: "/Projects/#{@project[:projectname]}/Models/irisflowerclassifier/1/#{SKLEARN_SCRIPT_FILE_NAME}",
                 requestedInstances: 1
-                }
+                })
             expect_status_details(201)
 
             serving = Serving.find_by(project_id: @project[:id], name: name)
@@ -462,7 +462,7 @@ describe "On #{ENV['OS']}" do
           it "should fail to create a serving with transformer only" do
             rm("/Projects/#{@project[:projectname]}/Models/irisflowerclassifier/1/iris_knn.pkl")
 
-            put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
+            put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/", parse_serving_json(
                 {name: "testmodel14",
                 modelPath: "/Projects/#{@project[:projectname]}/Models/irisflowerclassifier",
                 modelVersion: 1,
@@ -472,7 +472,7 @@ describe "On #{ENV['OS']}" do
                 transformer: "/Projects/#{@project[:projectname]}/Models/irisflowerclassifier/1/transformer.py",
                 requestedInstances: 1,
                 requestedTransformerInstances: 1
-                }
+                })
             expect_status_details(400, error_code: 240017)
             expect_json(usrMsg: "KServe deployments without predictor script require a model file")
 
@@ -482,7 +482,7 @@ describe "On #{ENV['OS']}" do
           end
 
           it "should fail to create a serving with non-existent transformer script" do
-            put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
+            put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/", parse_serving_json(
                 {name: "testmodel15",
                 modelPath: "/Projects/#{@project[:projectname]}/Models/irisflowerclassifier",
                 modelVersion: 1,
@@ -492,14 +492,14 @@ describe "On #{ENV['OS']}" do
                 transformer: "/Projects/#{@project[:projectname]}/Models/irisflowerclassifier/non-existent.py",
                 requestedInstances: 1,
                 requestedTransformerInstances: 1
-                }
+                })
             expect_status_details(400, error_code: 240016)
             expect_json(usrMsg: "Transformer script does not exist")
           end
 
           it "should create a serving with a python script as transformer" do
             name = "testmodelpytrans"
-            put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
+            put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/", parse_serving_json(
                 {name: name,
                 modelPath: "/Projects/#{@project[:projectname]}/Models/irisflowerclassifier",
                 modelVersion: 1,
@@ -509,7 +509,7 @@ describe "On #{ENV['OS']}" do
                 transformer: "/Projects/#{@project[:projectname]}/Models/irisflowerclassifier/1/transformer.py",
                 requestedInstances: 1,
                 requestedTransformerInstances: 1
-                }
+                })
             expect_status_details(201)
 
             serving = Serving.find_by(project_id: @project[:id], name: name)
@@ -518,7 +518,7 @@ describe "On #{ENV['OS']}" do
 
           it "should create a serving with a jupyter notebook as transformer" do
             name = "testmodel17"
-            put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
+            put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/", parse_serving_json(
                 {name: name,
                 modelPath: "/Projects/#{@project[:projectname]}/Models/irisflowerclassifier",
                 modelVersion: 1,
@@ -528,7 +528,7 @@ describe "On #{ENV['OS']}" do
                 transformer: "/Projects/#{@project[:projectname]}/Models/irisflowerclassifier/1/transformer.ipynb",
                 requestedInstances: 1,
                 requestedTransformerInstances: 1
-                }
+                })
             expect_status_details(201)
 
             serving = Serving.find_by(project_id: @project[:id], name: name)
@@ -540,7 +540,7 @@ describe "On #{ENV['OS']}" do
                  "/Projects/#{@project[:projectname]}/Models/irisflowerclassifier/1/transformer-copy.py",
                  @user[:username], "#{@project[:projectname]}__Models", 750, "#{@project[:projectname]}")
 
-            put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
+            put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/", parse_serving_json(
                 {name: "testmodel18",
                 modelPath: "/Projects/#{@project[:projectname]}/Models/irisflowerclassifier",
                 modelVersion: 1,
@@ -551,7 +551,7 @@ describe "On #{ENV['OS']}" do
                 transformer: "/Projects/#{@project[:projectname]}/Models/irisflowerclassifier/1/transformer-copy.py",
                 requestedInstances: 1,
                 requestedTransformerInstances: 1
-                }
+                })
             expect_status_details(400, error_code: 240019)
             expect_json(usrMsg: "Existing artifacts cannot be modified. To change predictors or transformers, create a new artifact")
           end
@@ -560,7 +560,7 @@ describe "On #{ENV['OS']}" do
 
           it "should create a serving with predictor and transformer" do
             name = "testmodelpredandtrans"
-            put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
+            put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/", parse_serving_json(
                 {name: name,
                 modelPath: "/Projects/#{@project[:projectname]}/Models/irisflowerclassifier",
                 modelVersion: 1,
@@ -571,7 +571,7 @@ describe "On #{ENV['OS']}" do
                 transformer: "/Projects/#{@project[:projectname]}/Models/irisflowerclassifier/1/transformer.py",
                 requestedInstances: 1,
                 requestedTransformerInstances: 1
-                }
+                })
             expect_status_details(201)
 
             serving = Serving.find_by(project_id: @project[:id], name: name)
@@ -585,7 +585,7 @@ describe "On #{ENV['OS']}" do
             json, topic_name = add_topic(@project[:id], INFERENCE_SCHEMA_NAME, 1)
       
             # Create serving
-            put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
+            put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/", parse_serving_json(
                 {name: "testmodeltopicschema1",
                 modelPath: "/Projects/#{@project[:projectname]}/Models/irisflowerclassifier",
                 modelVersion: 1,
@@ -597,7 +597,7 @@ describe "On #{ENV['OS']}" do
                 modelFramework: "SKLEARN",
                 servingTool: "KSERVE",
                 requestedInstances: 1
-                }
+                })
             expect_status_details(400, error_code: 240023)
             expect_json(usrMsg: "Inference logging in KServe deployments requires schema version 4 or greater")
           end
@@ -607,7 +607,7 @@ describe "On #{ENV['OS']}" do
             json, topic_name = add_topic(@project[:id], INFERENCE_SCHEMA_NAME, 2)
       
             # Create serving
-            put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
+            put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/", parse_serving_json(
                 {name: "testmodeltopicschema2",
                 modelPath: "/Projects/#{@project[:projectname]}/Models/irisflowerclassifier",
                 modelVersion: 1,
@@ -619,7 +619,7 @@ describe "On #{ENV['OS']}" do
                 modelFramework: "SKLEARN",
                 servingTool: "KSERVE",
                 requestedInstances: 1
-                }
+                })
             expect_status_details(400, error_code: 240023)
             expect_json(usrMsg: "Inference logging in KServe deployments requires schema version 4 or greater")
           end
@@ -629,7 +629,7 @@ describe "On #{ENV['OS']}" do
             json, topic_name = add_topic(@project[:id], INFERENCE_SCHEMA_NAME, 3)
       
             # Create serving
-            put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
+            put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/", parse_serving_json(
                 {name: "testmodeltopicschema3",
                 modelPath: "/Projects/#{@project[:projectname]}/Models/irisflowerclassifier",
                 modelVersion: 1,
@@ -641,7 +641,7 @@ describe "On #{ENV['OS']}" do
                 modelFramework: "SKLEARN",
                 servingTool: "KSERVE",
                 requestedInstances: 1
-                }
+                })
             expect_status_details(400,error_code: 240023)
             expect_json(usrMsg: "Inference logging in KServe deployments requires schema version 4 or greater")
           end
@@ -652,7 +652,7 @@ describe "On #{ENV['OS']}" do
       
             # Create serving
             name = "testmodeltopicschema4"
-            put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
+            put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/", parse_serving_json(
                 {name: name,
                 modelPath: "/Projects/#{@project[:projectname]}/Models/irisflowerclassifier",
                 modelVersion: 1,
@@ -664,7 +664,7 @@ describe "On #{ENV['OS']}" do
                 modelFramework: "SKLEARN",
                 servingTool: "KSERVE",
                 requestedInstances: 1
-                }
+                })
             expect_status_details(201)
   
             # Kafka authorizer needs some time to take up the new permissions.
@@ -680,7 +680,7 @@ describe "On #{ENV['OS']}" do
 
           it "should create the serving with default predictorResources if not set" do
             name = "res1model"
-            put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
+            put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/", parse_serving_json(
                 {name: name,
                 modelPath: "/Projects/#{@project[:projectname]}/Models/irisflowerclassifier",
                 modelVersion: 1,
@@ -688,7 +688,7 @@ describe "On #{ENV['OS']}" do
                 modelFramework: "SKLEARN",
                 servingTool: "KSERVE",
                 requestedInstances: 1
-                }
+                })
             expect_status_details(201)
 
             serving_list = get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/"
@@ -700,7 +700,7 @@ describe "On #{ENV['OS']}" do
 
           it "should create the serving with overridden predictorResources" do
             name = "res2model"
-            put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
+            put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/", parse_serving_json(
                 {name: name,
                 modelPath: "/Projects/#{@project[:projectname]}/Models/irisflowerclassifier",
                 modelVersion: 1,
@@ -720,7 +720,7 @@ describe "On #{ENV['OS']}" do
                    gpus: 2
                   }
                }
-                }
+                })
             expect_status_details(201)
 
             serving_list = get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/"
@@ -736,7 +736,7 @@ describe "On #{ENV['OS']}" do
           # transformer instances
 
           it "should fail to create a serving with transformer and without requested instances" do
-            put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
+            put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/", parse_serving_json(
                   {name: "testmodel25",
                   modelPath: "/Projects/#{@project[:projectname]}/Models/irisflowerclassifier",
                   modelVersion: 1,
@@ -748,13 +748,13 @@ describe "On #{ENV['OS']}" do
                   servingTool: "KSERVE",
                   transformer: "/Projects/#{@project[:projectname]}/Models/irisflowerclassifier/1/transformer.py",
                   requestedInstances: 1
-                  }
+                  })
             expect_status_details(422)
             expect_json(usrMsg: "Number of transformer instances must be provided with a transformer")
           end
 
           it "should fail to create a serving with transformer instances but without transformer" do
-            put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
+            put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/", parse_serving_json(
                 {name: "testmodel26",
                 modelPath: "/Projects/#{@project[:projectname]}/Models/irisflowerclassifier",
                 modelVersion: 1,
@@ -766,13 +766,13 @@ describe "On #{ENV['OS']}" do
                 servingTool: "KSERVE",
                 requestedInstances: 1,
                 requestedTransformerInstances: 1
-                }
+                })
             expect_status_details(422)
             expect_json(usrMsg: "Number of transformer instances cannot be provided without a transformer")
           end
 
           it "should create a serving with transformer and requested transformer instances" do
-            put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
+            put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/", parse_serving_json(
                 {name: "testmodel25",
                 modelPath: "/Projects/#{@project[:projectname]}/Models/irisflowerclassifier",
                 modelVersion: 1,
@@ -785,7 +785,7 @@ describe "On #{ENV['OS']}" do
                 transformer: "/Projects/#{@project[:projectname]}/Models/irisflowerclassifier/1/transformer.py",
                 requestedInstances: 1,
                 requestedTransformerInstances: 1
-                }
+                })
             expect_status_details(201)
           end
         end
@@ -810,7 +810,7 @@ describe "On #{ENV['OS']}" do
         it "should fail to update a serving with model-only artifact and a new predictor" do
           serving = Serving.find(@serving[:id])
 
-          put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
+          put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/", parse_serving_json(
               {id: serving[:id],
                name: serving[:name],
                modelPath: serving[:model_path],
@@ -822,7 +822,7 @@ describe "On #{ENV['OS']}" do
                servingTool: parse_serving_tool(serving[:serving_tool]),
                predictor: "/Projects/#{@project[:projectname]}/Models/irisflowerclassifier/1/#{SKLEARN_SCRIPT_FILE_NAME}",
                requestedInstances: serving[:instances]
-              }
+              })
           expect_status_details(400, error_code: 240019)
           expect_json(usrMsg: "Predictors and transformers cannot be used in MODEL-ONLY artifacts")
         end
@@ -830,7 +830,7 @@ describe "On #{ENV['OS']}" do
         it "should fail to update a serving with model-only artifact and a new transformer" do
           serving = Serving.find(@serving[:id])
 
-          put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
+          put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/", parse_serving_json(
               {id: serving[:id],
                name: serving[:name],
                modelPath: serving[:model_path],
@@ -843,7 +843,7 @@ describe "On #{ENV['OS']}" do
                transformer: "/Projects/#{@project[:projectname]}/Models/irisflowerclassifier/1/transformer.py",
                requestedInstances: serving[:instances],
                requestedTransformerInstances: 1
-              }
+              })
           expect_status_details(400, error_code: 240019)
           expect_json(usrMsg: "Predictors and transformers cannot be used in MODEL-ONLY artifacts")
         end
@@ -851,7 +851,7 @@ describe "On #{ENV['OS']}" do
         it "should fail to update a serving with model-only artifact and a new predictor and transformer" do
           serving = Serving.find(@serving[:id])
 
-          put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
+          put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/", parse_serving_json(
               {id: serving[:id],
                name: serving[:name],
                modelPath: serving[:model_path],
@@ -865,7 +865,7 @@ describe "On #{ENV['OS']}" do
                transformer: "/Projects/#{@project[:projectname]}/Models/irisflowerclassifier/1/transformer.py",
                requestedInstances: serving[:instances],
                requestedTransformerInstances: 1
-              }
+              })
           expect_status_details(400, error_code: 240019)
           expect_json(usrMsg: "Predictors and transformers cannot be used in MODEL-ONLY artifacts")
         end
@@ -875,7 +875,7 @@ describe "On #{ENV['OS']}" do
         it "should be able to update a serving without artifact version and a new predictor" do
           serving = Serving.find(@serving[:id])
 
-          put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
+          put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/", parse_serving_json(
               {id: serving[:id],
                name: serving[:name],
                modelPath: serving[:model_path],
@@ -886,7 +886,7 @@ describe "On #{ENV['OS']}" do
                servingTool: parse_serving_tool(serving[:serving_tool]),
                predictor: "/Projects/#{@project[:projectname]}/Models/irisflowerclassifier/1/#{SKLEARN_SCRIPT_FILE_NAME}",
                requestedInstances: serving[:instances]
-              }
+              })
           expect_status_details(201)
 
           serving = Serving.find(@serving[:id])
@@ -903,7 +903,7 @@ describe "On #{ENV['OS']}" do
         it "should fail to update a serving without artifact version and reusing a predictor" do
           serving = Serving.find(@serving[:id])
 
-          put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
+          put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/", parse_serving_json(
               {id: serving[:id],
                name: serving[:name],
                modelPath: serving[:model_path],
@@ -914,10 +914,10 @@ describe "On #{ENV['OS']}" do
                servingTool: parse_serving_tool(serving[:serving_tool]),
                predictor: "/Projects/#{@project[:projectname]}/Models/irisflowerclassifier/1/#{SKLEARN_SCRIPT_FILE_NAME}",
                requestedInstances: serving[:instances]
-              }
+              })
           expect_status_details(201)
 
-          put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
+          put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/", parse_serving_json(
               {id: serving[:id],
                name: serving[:name],
                modelPath: serving[:model_path],
@@ -928,14 +928,14 @@ describe "On #{ENV['OS']}" do
                servingTool: parse_serving_tool(serving[:serving_tool]),
                predictor: "#{SKLEARN_SCRIPT_FILE_NAME}",
                requestedInstances: serving[:instances]
-              }
+              })
           expect_status_details(400, error_code: 240016)
         end
 
         it "should be able to update a serving without artifact version, reusing a predictor and adding a transformer" do
           serving = Serving.find(@serving[:id])
 
-          put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
+          put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/", parse_serving_json(
               {id: serving[:id],
                name: serving[:name],
                modelPath: serving[:model_path],
@@ -946,10 +946,10 @@ describe "On #{ENV['OS']}" do
                servingTool: parse_serving_tool(serving[:serving_tool]),
                predictor: "/Projects/#{@project[:projectname]}/Models/irisflowerclassifier/1/#{SKLEARN_SCRIPT_FILE_NAME}",
                requestedInstances: serving[:instances]
-              }
+              })
           expect_status_details(201)
 
-          put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
+          put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/", parse_serving_json(
               {id: serving[:id],
                name: serving[:name],
                modelPath: serving[:model_path],
@@ -962,7 +962,7 @@ describe "On #{ENV['OS']}" do
                transformer: "/Projects/#{@project[:projectname]}/Models/irisflowerclassifier/1/transformer.py",
                requestedInstances: serving[:instances],
                requestedTransformerInstances: 1
-              }
+              })
           expect_status_details(201)
 
           serving = Serving.find(@serving[:id])
@@ -981,7 +981,7 @@ describe "On #{ENV['OS']}" do
         it "should be able to update a serving without artifact version, adding a transformer" do
           serving = Serving.find(@serving[:id])
 
-          put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
+          put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/", parse_serving_json(
               {id: serving[:id],
                name: serving[:name],
                modelPath: serving[:model_path],
@@ -993,7 +993,7 @@ describe "On #{ENV['OS']}" do
                transformer: "/Projects/#{@project[:projectname]}/Models/irisflowerclassifier/1/transformer.py",
                requestedInstances: serving[:instances],
                requestedTransformerInstances: 1
-              }
+              })
           expect_status_details(201)
 
           serving = Serving.find(@serving[:id])
@@ -1010,7 +1010,7 @@ describe "On #{ENV['OS']}" do
         it "should fail to update a serving without artifact version and reusing a transformer" do
           serving = Serving.find(@serving[:id])
 
-          put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
+          put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/", parse_serving_json(
               {id: serving[:id],
                name: serving[:name],
                modelPath: serving[:model_path],
@@ -1022,7 +1022,7 @@ describe "On #{ENV['OS']}" do
                transformer: "transformer.py",
                requestedInstances: serving[:instances],
                requestedTransformerInstances: 1
-              }
+              })
           expect_status_details(400, error_code: 240016)
           expect_json(usrMsg: "Transformer script does not exist")
         end
@@ -1030,7 +1030,7 @@ describe "On #{ENV['OS']}" do
         it "should be able to update a serving without artifact version, adding a predictor and reusing a transformer" do
           serving = Serving.find(@serving[:id])
 
-          put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
+          put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/", parse_serving_json(
               {id: serving[:id],
                name: serving[:name],
                modelPath: serving[:model_path],
@@ -1042,10 +1042,10 @@ describe "On #{ENV['OS']}" do
                transformer: "/Projects/#{@project[:projectname]}/Models/irisflowerclassifier/1/transformer.py",
                requestedInstances: serving[:instances],
                requestedTransformerInstances: serving[:instances]
-              }
+              })
           expect_status_details(201)
 
-          put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
+          put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/", parse_serving_json(
               {id: serving[:id],
                name: serving[:name],
                modelPath: serving[:model_path],
@@ -1058,7 +1058,7 @@ describe "On #{ENV['OS']}" do
                transformer: "transformer.py",
                requestedInstances: serving[:instances],
                requestedTransformerInstances: serving[:instances]
-              }
+              })
           expect_status_details(201)
 
           serving = Serving.find(@serving[:id])
@@ -1079,7 +1079,7 @@ describe "On #{ENV['OS']}" do
         it "should fail to update a serving with existing artifact version and new predictor" do
           serving = Serving.find(@serving[:id])
 
-          put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
+          put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/", parse_serving_json(
               {id: serving[:id],
                name: serving[:name],
                modelPath: serving[:model_path],
@@ -1091,7 +1091,7 @@ describe "On #{ENV['OS']}" do
                servingTool: parse_serving_tool(serving[:serving_tool]),
                predictor: "/Projects/#{@project[:projectname]}/Models/irisflowerclassifier/1/#{SKLEARN_SCRIPT_FILE_NAME}",
                requestedInstances: serving[:instances]
-              }
+              })
           expect_status_details(400, error_code: 240019)
           expect_json(usrMsg: "Existing artifacts cannot be modified. To change predictors or transformers, create a new artifact")
         end
@@ -1099,7 +1099,7 @@ describe "On #{ENV['OS']}" do
         it "should be able to update a serving with existing artifact version and reusing predictor" do
           serving = Serving.find(@serving[:id])
 
-          put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
+          put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/", parse_serving_json(
               {id: serving[:id],
                name: serving[:name],
                modelPath: serving[:model_path],
@@ -1110,10 +1110,10 @@ describe "On #{ENV['OS']}" do
                servingTool: parse_serving_tool(serving[:serving_tool]),
                predictor: "/Projects/#{@project[:projectname]}/Models/irisflowerclassifier/1/#{SKLEARN_SCRIPT_FILE_NAME}",
                requestedInstances: serving[:instances]
-              }
+              })
           expect_status_details(201)
 
-          put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
+          put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/", parse_serving_json(
               {id: serving[:id],
                name: serving[:name],
                modelPath: serving[:model_path],
@@ -1125,14 +1125,14 @@ describe "On #{ENV['OS']}" do
                servingTool: parse_serving_tool(serving[:serving_tool]),
                predictor: SKLEARN_SCRIPT_FILE_NAME,
                requestedInstances: serving[:instances]
-              }
+              })
           expect_status_details(201)
         end
 
         it "should fail to update a serving with existing artifact version without predictor and transformer" do
           serving = Serving.find(@serving[:id])
 
-          put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
+          put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/", parse_serving_json(
               {id: serving[:id],
                name: serving[:name],
                modelPath: serving[:model_path],
@@ -1143,7 +1143,7 @@ describe "On #{ENV['OS']}" do
                modelFramework: parse_model_framework(serving[:model_framework]),
                servingTool: parse_serving_tool(serving[:serving_tool]),
                requestedInstances: serving[:instances]
-              }
+              })
           expect_status_details(400, error_code: 240019)
           expect_json(usrMsg: "Existing artifacts cannot be modified. To change predictors or transformers, create a new artifact")
         end
@@ -1151,7 +1151,7 @@ describe "On #{ENV['OS']}" do
         it "should be able to update a serving with existing artifact version and reusing predictor and transformer" do
           # create serving with both predictor and transformer
           name = "testmodelfull"
-          put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
+          put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/", parse_serving_json(
               {name: name,
               modelPath: "/Projects/#{@project[:projectname]}/Models/irisflowerclassifier",
               modelVersion: 1,
@@ -1162,13 +1162,13 @@ describe "On #{ENV['OS']}" do
               transformer: "/Projects/#{@project[:projectname]}/Models/irisflowerclassifier/1/transformer.py",
               requestedInstances: 1,
               requestedTransformerInstances: 1
-              }
+              })
           expect_status_details(201)
 
           serving = Serving.find_by(project_id: @project[:id], name: name)
 
           # update serving reusing predictor and transformer
-          put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
+          put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/", parse_serving_json(
               {id: serving[:id],
                name: serving[:name],
                modelPath: serving[:model_path],
@@ -1182,14 +1182,14 @@ describe "On #{ENV['OS']}" do
                transformer: serving[:transformer],
                requestedInstances: serving[:instances],
                requestedTransformerInstances: 1
-              }
+              })
           expect_status_details(201)
         end
 
         it "should fail to update a serving with existing artifact version and without predictor and transformer" do
           serving = Serving.find(@serving[:id])
 
-          put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
+          put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/", parse_serving_json(
               {id: serving[:id],
                name: serving[:name],
                modelPath: serving[:model_path],
@@ -1200,7 +1200,7 @@ describe "On #{ENV['OS']}" do
                modelFramework: parse_model_framework(serving[:model_framework]),
                servingTool: parse_serving_tool(serving[:serving_tool]),
                requestedInstances: serving[:instances]
-              }
+              })
           expect_status_details(400, error_code: 240019)
           expect_json(usrMsg: "Existing artifacts cannot be modified. To change predictors or transformers, create a new artifact")
         end
@@ -1208,7 +1208,7 @@ describe "On #{ENV['OS']}" do
         it "should fail to update a serving with existing artifact version and new transformer" do
           serving = Serving.find(@serving[:id])
 
-          put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
+          put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/", parse_serving_json(
               {id: serving[:id],
                name: serving[:name],
                modelPath: serving[:model_path],
@@ -1221,7 +1221,7 @@ describe "On #{ENV['OS']}" do
                transformer: "/Projects/#{@project[:projectname]}/Models/irisflowerclassifier/1/transformer.py",
                requestedInstances: serving[:instances],
                requestedTransformerInstances: 1
-              }
+              })
           expect_status_details(400, error_code: 240019)
           expect_json(usrMsg: "Existing artifacts cannot be modified. To change predictors or transformers, create a new artifact")
         end
@@ -1229,7 +1229,7 @@ describe "On #{ENV['OS']}" do
         it "should be able to update a serving with existing artifact version and reusing transformer" do
           # create serving with transformer only
           name = "testmodelonlytrans"
-          put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
+          put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/", parse_serving_json(
               {name: name,
               modelPath: "/Projects/#{@project[:projectname]}/Models/irisflowerclassifier",
               modelVersion: 1,
@@ -1239,13 +1239,13 @@ describe "On #{ENV['OS']}" do
               transformer: "/Projects/#{@project[:projectname]}/Models/irisflowerclassifier/1/transformer.py",
               requestedInstances: 1,
               requestedTransformerInstances: 1
-              }
+              })
           expect_status_details(201)
 
           serving = Serving.find_by(project_id: @project[:id], name: name)
 
           # update serving reusing transformer
-          put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
+          put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/", parse_serving_json(
               {id: serving[:id],
               name: serving[:name],
               modelPath: serving[:model_path],
@@ -1258,14 +1258,14 @@ describe "On #{ENV['OS']}" do
               transformer: serving[:transformer],
               requestedInstances: serving[:instances],
               requestedTransformerInstances: 1
-              }
+              })
           expect_status_details(201)
         end
 
         it "should fail to update a serving with existing artifact version, pretending to reuse non-existing transformer" do
           serving = Serving.find(@serving[:id])
 
-          put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
+          put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/", parse_serving_json(
               {id: serving[:id],
                name: serving[:name],
                modelPath: serving[:model_path],
@@ -1277,7 +1277,7 @@ describe "On #{ENV['OS']}" do
                servingTool: parse_serving_tool(serving[:serving_tool]),
                transformer: "non-existing-#{SKLEARN_SCRIPT_FILE_NAME}",
                requestedInstances: serving[:instances]
-              }
+              })
           expect_status_details(400, error_code: 240016)
           expect_json(usrMsg: "Transformer script does not exist")
         end
@@ -1287,7 +1287,7 @@ describe "On #{ENV['OS']}" do
         it "should be able to update the inference logging mode" do
           serving = Serving.find(@serving[:id])
           topic = ProjectTopics.find(@serving[:kafka_topic_id])
-          put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
+          put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/", parse_serving_json(
               {id: serving[:id],
                name: serving[:name],
                modelPath: serving[:model_path],
@@ -1301,7 +1301,7 @@ describe "On #{ENV['OS']}" do
                modelFramework: parse_model_framework(serving[:model_framework]),
                servingTool: parse_serving_tool(serving[:serving_tool]),
                requestedInstances: serving[:instances]
-              }
+              })
           expect_status_details(201)
 
           serving = Serving.find(@serving[:id])
@@ -1313,7 +1313,7 @@ describe "On #{ENV['OS']}" do
         it "should be able to update the number of instances of the predictor and transformer" do
           serving = Serving.find(@serving[:id])
           name = "testmodelonlytrans2"
-          put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
+          put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/", parse_serving_json(
               {name: name,
               modelPath: "/Projects/#{@project[:projectname]}/Models/irisflowerclassifier",
               modelVersion: 1,
@@ -1323,14 +1323,14 @@ describe "On #{ENV['OS']}" do
               transformer: "/Projects/#{@project[:projectname]}/Models/irisflowerclassifier/1/transformer.py",
               requestedInstances: 1,
               requestedTransformerInstances: 1
-              }
+              })
           expect_status_details(201)
 
           serving = Serving.find_by(project_id: @project[:id], name: name)
           expect(serving[:instances]).to eql 1
           expect(serving[:transformer_instances]).to eql 1
 
-          put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
+          put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/", parse_serving_json(
               {id: serving[:id],
                name: serving[:name],
                modelPath: serving[:model_path],
@@ -1343,7 +1343,7 @@ describe "On #{ENV['OS']}" do
                transformer: serving[:transformer],
                requestedInstances: 2,
                requestedTransformerInstances: 2
-              }
+              })
           expect_status_details(201)
 
           serving = Serving.find(serving[:id])
@@ -1387,7 +1387,7 @@ describe "On #{ENV['OS']}" do
         end
 
         it "should be able to start a serving instance with transformer" do
-          put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
+          put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/", parse_serving_json(
                {id: @serving[:id],
                 name: @serving[:name],
                 modelPath: @serving[:model_path],
@@ -1399,7 +1399,7 @@ describe "On #{ENV['OS']}" do
                 transformer: "/Projects/#{@project[:projectname]}/Models/irisflowerclassifier/1/transformer.ipynb",
                 requestedInstances: @serving[:instances],
                 requestedTransformerInstances: 1
-               }
+               })
           expect_status_details(201)
 
           start_serving(@project, @serving)
