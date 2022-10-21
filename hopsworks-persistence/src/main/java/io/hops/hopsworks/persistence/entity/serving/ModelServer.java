@@ -16,6 +16,7 @@
 
 package io.hops.hopsworks.persistence.entity.serving;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 /**
@@ -25,5 +26,18 @@ public enum ModelServer {
   @JsonProperty("TENSORFLOW_SERVING")
   TENSORFLOW_SERVING,
   @JsonProperty("PYTHON")
-  PYTHON, //Note: since we map enum directly to the DB the order is important!
+  PYTHON; //Note: since we map enum directly to the DB the order is important!
+  
+  @JsonCreator
+  public static ModelServer fromString(String modelServer) {
+    if (modelServer != null) {
+      switch (modelServer) {
+        case "TENSORFLOW_SERVING":
+          return TENSORFLOW_SERVING;
+        case "PYTHON":
+          return PYTHON;
+      }
+    }
+    return null;
+  }
 }

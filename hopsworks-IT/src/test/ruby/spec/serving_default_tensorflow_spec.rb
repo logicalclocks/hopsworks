@@ -35,7 +35,7 @@ describe "On #{ENV['OS']}" do
     it "should fail to create a serving with a non-standard path" do
       rm("/Projects/#{@project[:projectname]}/Models/mnist/1/saved_model.pb")
 
-      put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
+      put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/", parse_serving_json(
           {name: "testModel6",
            modelPath: "/Projects/#{@project[:projectname]}/Models/mnist/",
             batchingConfiguration: {
@@ -46,7 +46,7 @@ describe "On #{ENV['OS']}" do
            modelFramework: "TENSORFLOW",
            servingTool: "DEFAULT",
            requestedInstances: 1
-          }
+          })
       expect_status_details(400, error_code: 240017)
       expect_json(usrMsg: "Model path does not respect the Tensorflow standard")
 
@@ -57,7 +57,7 @@ describe "On #{ENV['OS']}" do
     # artifact version
 
     it "should fail to create a serving with a non-zero artifact version" do
-      put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
+      put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/", parse_serving_json(
           {name: "testModel5",
           modelPath: "/Projects/#{@project[:projectname]}/Models/mnist",
           batchingConfiguration: {
@@ -70,7 +70,7 @@ describe "On #{ENV['OS']}" do
           servingTool: "DEFAULT",
           requestedInstances: 1,
           requestedTransformerInstances: 1
-          }
+          })
       if kubernetes_installed
         expect_status_details(400, error_code: 240018)
         expect_json(usrMsg: "Default deployments with Tensorflow Serving only support MODEL-ONLY artifacts")
@@ -87,7 +87,7 @@ describe "On #{ENV['OS']}" do
         skip "This test only runs without KServe installed"
       end
 
-      put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
+      put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/", parse_serving_json(
           {name: "testModelwithPredictor",
             modelPath: "/Projects/#{@project[:projectname]}/Models/mnist",
             modelVersion: 1,
@@ -103,14 +103,14 @@ describe "On #{ENV['OS']}" do
             predictor: "/Projects/#{@project[:projectname]}/Models/mnist/1/transformer.py",
             requestedInstances: 1,
             requestedTransformerInstances: 1
-          }
+          })
       expect_status_details(400, error_code: 240020)
     end
     
     # request batching
 
     it "should create a serving with request batching" do
-      put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
+      put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/", parse_serving_json(
           {name: "testRequestBatchingTensorflowDefault1",
            modelPath: "/Projects/#{@project[:projectname]}/Models/mnist/",
            modelVersion: 1,
@@ -121,12 +121,12 @@ describe "On #{ENV['OS']}" do
            modelFramework: "TENSORFLOW",
            servingTool: "DEFAULT",
            requestedInstances: 1
-          }
+          })
       expect_status_details(201)
     end
 
     it 'should fail to create a serving with request batching enabled (with extra values set)' do
-      put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
+      put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/", parse_serving_json(
           {name: "testRequestBatchingTensorflowDefault2",
            modelPath: "/Projects/#{@project[:projectname]}/Models/mnist",
            modelVersion: 1,
@@ -138,7 +138,7 @@ describe "On #{ENV['OS']}" do
            modelFramework: "TENSORFLOW",
            servingTool: "DEFAULT",
            requestedInstances: 1
-          }
+          })
       expect_status_details(400, error_code: 240025)
       expect_json(usrMsg: "Fine-grained request batching is only supported in KServe deployments")
     end
@@ -167,7 +167,7 @@ describe "On #{ENV['OS']}" do
     it "should be able to update the request batching" do
       serving = Serving.find(@serving[:id])
       topic = ProjectTopics.find(@serving[:kafka_topic_id])
-      put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
+      put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/", parse_serving_json(
           {id: serving[:id],
            name: serving[:name],
            modelPath: serving[:model_path],
@@ -183,7 +183,7 @@ describe "On #{ENV['OS']}" do
            modelFramework: parse_model_framework(serving[:model_framework]),
            servingTool: parse_serving_tool(serving[:serving_tool]),
            requestedInstances: serving[:instances]
-          }
+          })
       expect_status_details(201)
 
       serving = Serving.find(@serving[:id])

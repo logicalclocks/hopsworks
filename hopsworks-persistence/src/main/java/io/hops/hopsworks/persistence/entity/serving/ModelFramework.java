@@ -16,6 +16,7 @@
 
 package io.hops.hopsworks.persistence.entity.serving;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 /**
@@ -30,5 +31,22 @@ public enum ModelFramework {
   @JsonProperty("SKLEARN")
   SKLEARN,
   @JsonProperty("TORCH")
-  TORCH
+  TORCH;
+  
+  @JsonCreator
+  public static ModelFramework fromString(String modelFramework) {
+    if (modelFramework != null) {
+      switch (modelFramework) {
+        case "TENSORFLOW":
+          return TENSORFLOW;
+        case "PYTHON":
+          return PYTHON;
+        case "SKLEARN":
+          return SKLEARN;
+        case "TORCH":
+          return TORCH;
+      }
+    }
+    return null;
+  }
 }
