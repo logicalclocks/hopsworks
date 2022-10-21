@@ -15,7 +15,7 @@
  */
 
 
-package io.hops.hopsworks.common.featurestore.datavalidationv2;
+package io.hops.hopsworks.common.featurestore.datavalidationv2.suites;
 
 import io.hops.hopsworks.common.dao.AbstractFacade;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.Featuregroup;
@@ -79,6 +79,31 @@ public class ExpectationSuiteFacade extends AbstractFacade<ExpectationSuite> {
         .setParameter("featureGroup", featuregroup).getSingleResult());
     } catch (NoResultException e) {
       return Optional.empty();
+    }
+  }
+
+  public Optional<ExpectationSuite> findById(Integer expectationSuiteId) {
+    try {
+      return Optional.of(em.createNamedQuery("ExpectationSuite.findById", ExpectationSuite.class)
+        .setParameter("expectationSuiteId", expectationSuiteId).getSingleResult());
+    } catch (NoResultException e) {
+      return Optional.empty();
+    }
+  }
+
+  /**
+   * Transaction to create a new expectation suite in the database
+   *
+   * @param expectationSuite
+   *   the expectation to update
+   */
+  @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
+  public void updateExpectationSuite(ExpectationSuite expectationSuite) {
+    try {
+      em.merge(expectationSuite);
+      em.flush();
+    } catch (ConstraintViolationException cve) {
+      LOGGER.log(Level.WARNING, "Could not update the Expectation Suite", cve);
     }
   }
 }

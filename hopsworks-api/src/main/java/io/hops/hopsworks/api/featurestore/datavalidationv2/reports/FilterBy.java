@@ -17,7 +17,7 @@
 package io.hops.hopsworks.api.featurestore.datavalidationv2.reports;
 
 import io.hops.hopsworks.common.dao.AbstractFacade;
-import io.hops.hopsworks.common.featurestore.datavalidationv2.ValidationReportFacade;
+import io.hops.hopsworks.common.featurestore.datavalidationv2.reports.ValidationReportFacade;
 
 public class FilterBy implements AbstractFacade.FilterBy {
 

@@ -16,9 +16,10 @@
 
 package io.hops.hopsworks.common.featurestore.datavalidationv2;
 
+import io.hops.hopsworks.common.featurestore.datavalidationv2.expectations.ExpectationDTO;
+import io.hops.hopsworks.common.featurestore.datavalidationv2.suites.ExpectationSuiteController;
+import io.hops.hopsworks.common.featurestore.datavalidationv2.suites.ExpectationSuiteDTO;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
-import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.Featuregroup;
-import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.datavalidationv2.ExpectationSuite;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.datavalidationv2.ValidationIngestionPolicy;
 import org.apache.commons.lang3.StringUtils;
 import org.junit.Test;
@@ -26,9 +27,6 @@ import org.junit.Test;
 import java.util.ArrayList;
 
 import static io.hops.hopsworks.common.featurestore.FeaturestoreConstants.MAX_CHARACTERS_IN_DATA_ASSET_TYPE;
-import static io.hops.hopsworks.common.featurestore.FeaturestoreConstants.MAX_CHARACTERS_IN_EXPECTATION_EXPECTATION_TYPE;
-import static io.hops.hopsworks.common.featurestore.FeaturestoreConstants.MAX_CHARACTERS_IN_EXPECTATION_KWARGS;
-import static io.hops.hopsworks.common.featurestore.FeaturestoreConstants.MAX_CHARACTERS_IN_EXPECTATION_META;
 import static io.hops.hopsworks.common.featurestore.FeaturestoreConstants.MAX_CHARACTERS_IN_EXPECTATION_SUITE_META;
 import static io.hops.hopsworks.common.featurestore.FeaturestoreConstants.MAX_CHARACTERS_IN_EXPECTATION_SUITE_NAME;
 import static io.hops.hopsworks.common.featurestore.FeaturestoreConstants.MAX_CHARACTERS_IN_GE_CLOUD_ID;
@@ -38,7 +36,6 @@ import static org.junit.Assert.assertThrows;
 public class TestExpectationSuiteController {
 
   private ExpectationSuiteController expectationSuiteController = new ExpectationSuiteController();
-  private Featuregroup featuregroup = new Featuregroup();
 
   private ExpectationSuiteDTO makeValidExpectationSuiteDTO() {
     ExpectationSuiteDTO dto = new ExpectationSuiteDTO();
@@ -160,97 +157,4 @@ public class TestExpectationSuiteController {
         longInputException.getErrorCode().getCode() - longInputException.getErrorCode().getRange());
     }
 
-    // Expectation Input Validation
-
-    @Test
-    public void testVerifyExpectationMeta() {
-      ExpectationDTO expectationDTO = makeValidExpectationDTO();
-      // Null
-      expectationDTO.setMeta(null);
-      FeaturestoreException nullInputException = assertThrows(
-        FeaturestoreException.class,
-        () -> expectationSuiteController.verifyExpectationFields(expectationDTO)
-      );
-      assertEquals("Rest code error corresponding to null input error: ", 202,
-        nullInputException.getErrorCode().getCode() - nullInputException.getErrorCode().getRange());
-
-      // Long input
-      String longInput = ("{\"longInput\": \"" +
-        StringUtils.repeat("A", MAX_CHARACTERS_IN_EXPECTATION_META + 10) + "\"}");
-      expectationDTO.setMeta(longInput);
-      FeaturestoreException longInputException = assertThrows(
-        FeaturestoreException.class,
-        () -> expectationSuiteController.verifyExpectationFields(expectationDTO)
-      );
-      assertEquals("Rest code error corresponding to exceed max character error: ", 200,
-        longInputException.getErrorCode().getCode() - longInputException.getErrorCode().getRange());
-
-      // Invalid Json
-      String notAJsonInput = "I am not a Json";
-      expectationDTO.setMeta(notAJsonInput);
-      FeaturestoreException notAJsonException = assertThrows(
-        FeaturestoreException.class,
-        () -> expectationSuiteController.verifyExpectationFields(expectationDTO)
-      );
-      assertEquals("Rest code error corresponding to json parse failure: ", 201,
-        notAJsonException.getErrorCode().getCode() - notAJsonException.getErrorCode().getRange());
-    }
-
-    @Test
-    public void testVerifyExpectationKwargs() {
-      ExpectationDTO expectationDTO = makeValidExpectationDTO();
-      // Null
-      expectationDTO.setKwargs(null);
-      FeaturestoreException nullInputException = assertThrows(
-        FeaturestoreException.class,
-        () -> expectationSuiteController.verifyExpectationFields(expectationDTO)
-      );
-      assertEquals("Rest code error corresponding to null input error: ", 202,
-        nullInputException.getErrorCode().getCode() - nullInputException.getErrorCode().getRange());
-
-      // Long input
-      String longInput = ("{\"longInput\": \"" +
-          StringUtils.repeat("A", MAX_CHARACTERS_IN_EXPECTATION_KWARGS + 10) + "\"}");
-      expectationDTO.setKwargs(longInput);
-      FeaturestoreException longInputException = assertThrows(
-        FeaturestoreException.class,
-        () -> expectationSuiteController.verifyExpectationFields(expectationDTO)
-      );
-      assertEquals("Rest code error corresponding to exceed max character error: ", 200,
-        longInputException.getErrorCode().getCode() - longInputException.getErrorCode().getRange());
-
-      // Invalid Json
-      String notAJsonInput = "I am not a Json";
-      expectationDTO.setKwargs(notAJsonInput);
-      FeaturestoreException notAJsonException = assertThrows(
-        FeaturestoreException.class,
-        () -> expectationSuiteController.verifyExpectationFields(expectationDTO)
-      );
-      assertEquals("Rest code error corresponding to json parse failure: ", 201,
-        notAJsonException.getErrorCode().getCode() - notAJsonException.getErrorCode().getRange());
-    }
-
-    @Test
-    public void testVerifyExpectationExpectationType() {
-      ExpectationDTO expectationDTO = makeValidExpectationDTO();
-
-      // Null
-      expectationDTO.setExpectationType(null);
-      FeaturestoreException nullInputException = assertThrows(
-        FeaturestoreException.class,
-        () -> expectationSuiteController.verifyExpectationFields(expectationDTO)
-      );
-      assertEquals("Rest code error corresponding to null input error: ", 202,
-        (int) nullInputException.getErrorCode().getCode() - nullInputException.getErrorCode().getRange());
-
-      // Long input
-      String longInput = StringUtils.repeat("A", MAX_CHARACTERS_IN_EXPECTATION_EXPECTATION_TYPE + 10);
-      expectationDTO.setExpectationType(longInput);
-      FeaturestoreException longInputException = assertThrows(
-        FeaturestoreException.class,
-        () -> expectationSuiteController.verifyExpectationFields(expectationDTO)
-      );
-      assertEquals("Rest code error corresponding to exceed max character error: ", 200,
-        longInputException.getErrorCode().getCode() - longInputException.getErrorCode().getRange());
-    }
-}
+  }

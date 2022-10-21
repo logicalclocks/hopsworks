@@ -18,9 +18,9 @@ package io.hops.hopsworks.api.featurestore.datavalidationv2.reports;
 
 import io.hops.hopsworks.common.api.ResourceRequest;
 import io.hops.hopsworks.common.dao.AbstractFacade.CollectionInfo;
-import io.hops.hopsworks.common.featurestore.datavalidationv2.ValidationReportController;
-import io.hops.hopsworks.common.featurestore.datavalidationv2.ValidationReportDTO;
-import io.hops.hopsworks.common.featurestore.datavalidationv2.ValidationResultDTO;
+import io.hops.hopsworks.common.featurestore.datavalidationv2.reports.ValidationReportController;
+import io.hops.hopsworks.common.featurestore.datavalidationv2.reports.ValidationReportDTO;
+import io.hops.hopsworks.common.featurestore.datavalidationv2.results.ValidationResultDTO;
 import io.hops.hopsworks.common.hdfs.inode.InodeController;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.Featuregroup;

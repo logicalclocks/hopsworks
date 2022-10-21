@@ -14,7 +14,7 @@
  * If not, see <https://www.gnu.org/licenses/>.
  */
 
-package io.hops.hopsworks.common.featurestore.datavalidationv2;
+package io.hops.hopsworks.common.featurestore.datavalidationv2.results;
 
 import javax.xml.bind.annotation.XmlRootElement;
 

@@ -14,9 +14,10 @@
  * If not, see <https://www.gnu.org/licenses/>.
  */
 
-package io.hops.hopsworks.common.featurestore.datavalidationv2;
+package io.hops.hopsworks.common.featurestore.datavalidationv2.reports;
 
 import io.hops.hopsworks.common.api.RestDTO;
+import io.hops.hopsworks.common.featurestore.datavalidationv2.results.ValidationResultDTO;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.datavalidationv2.IngestionResult;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.datavalidationv2.ValidationReport;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.datavalidationv2.ValidationResult;

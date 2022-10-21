@@ -63,6 +63,17 @@ public class TestFeatureStoreInputValidation {
   @Test
   public void testVerifyDescription() throws Exception {
     FeaturegroupDTO featuregroupDTO = new FeaturegroupDTO(1, "featurestore", 1, "wrong_name", 1, "online_topic_name");
+    
+    // description is null
+    featuregroupDTO.setDescription(null);
+    thrown.expect(FeaturestoreException.class);
+    featurestoreInputValidation.verifyUserInput(featuregroupDTO);
+    
+    // description is empty
+    featuregroupDTO.setDescription("");
+    thrown.expect(FeaturestoreException.class);
+    featurestoreInputValidation.verifyUserInput(featuregroupDTO);
+    
     // description is too long
     featuregroupDTO.setDescription(StringUtils.repeat("a", 260));
     thrown.expect(FeaturestoreException.class);

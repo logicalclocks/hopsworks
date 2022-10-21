@@ -20,6 +20,7 @@ import com.google.common.base.Strings;
 import com.logicalclocks.servicediscoverclient.exceptions.ServiceDiscoveryException;
 import io.hops.hopsworks.common.featurestore.FeaturestoreController;
 import io.hops.hopsworks.common.featurestore.activity.FeaturestoreActivityFacade;
+import io.hops.hopsworks.common.featurestore.datavalidationv2.suites.ExpectationSuiteController;
 import io.hops.hopsworks.common.featurestore.feature.FeatureGroupFeatureDTO;
 import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupDTO;
 import io.hops.hopsworks.common.featurestore.featuregroup.online.OnlineFeaturegroupController;
@@ -118,6 +119,8 @@ public class CachedFeaturegroupController {
   private FeaturestoreUtils featurestoreUtils;
   @EJB
   private FeaturestoreActivityFacade fsActivityFacade;
+  @EJB
+  private ExpectationSuiteController expectationSuiteController;
 
   private static final Logger LOGGER = Logger.getLogger(CachedFeaturegroupController.class.getName());
   private static final List<String> HUDI_SPEC_FEATURE_NAMES = Arrays.asList("_hoodie_record_key",
@@ -343,6 +346,10 @@ public class CachedFeaturegroupController {
    */
   public CachedFeaturegroupDTO convertCachedFeaturegroupToDTO(Featuregroup featuregroup, Project project, Users user)
       throws FeaturestoreException, ServiceException {
+    if (featuregroup.getExpectationSuite() != null) {
+      featuregroup.setExpectationSuite(
+        expectationSuiteController.addAllExpectationIdToMetaField(featuregroup.getExpectationSuite()));
+    }
     CachedFeaturegroupDTO cachedFeaturegroupDTO = new CachedFeaturegroupDTO(featuregroup);
     List<FeatureGroupFeatureDTO> featureGroupFeatureDTOS = getFeaturesDTO(featuregroup.getCachedFeaturegroup(),
       featuregroup.getId(), featuregroup.getFeaturestore(), project, user);

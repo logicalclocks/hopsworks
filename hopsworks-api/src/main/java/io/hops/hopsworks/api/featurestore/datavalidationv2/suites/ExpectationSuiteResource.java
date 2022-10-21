@@ -16,17 +16,18 @@
 
 package io.hops.hopsworks.api.featurestore.datavalidationv2.suites;
 
+import io.hops.hopsworks.api.featurestore.datavalidationv2.expectations.ExpectationResource;
+import io.hops.hopsworks.api.filter.AllowedProjectRoles;
+import io.hops.hopsworks.api.filter.Audience;
+import io.hops.hopsworks.api.filter.apiKey.ApiKeyRequired;
 import io.hops.hopsworks.api.jobs.JobDTO;
 import io.hops.hopsworks.api.jobs.JobsBuilder;
 import io.hops.hopsworks.api.jwt.JWTHelper;
 import io.hops.hopsworks.common.api.ResourceRequest;
 import io.hops.hopsworks.common.featurestore.app.FsJobManagerController;
-import io.hops.hopsworks.common.featurestore.datavalidationv2.ExpectationSuiteDTO;
-import io.hops.hopsworks.api.filter.AllowedProjectRoles;
-import io.hops.hopsworks.api.filter.Audience;
-import io.hops.hopsworks.api.filter.apiKey.ApiKeyRequired;
+import io.hops.hopsworks.common.featurestore.datavalidationv2.suites.ExpectationSuiteController;
+import io.hops.hopsworks.common.featurestore.datavalidationv2.suites.ExpectationSuiteDTO;
 import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupController;
-import io.hops.hopsworks.common.featurestore.datavalidationv2.ExpectationSuiteController;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.exceptions.GenericException;
 import io.hops.hopsworks.exceptions.JobException;
@@ -48,13 +49,15 @@ import javax.ejb.EJB;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.enterprise.context.RequestScoped;
+import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
+import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
-import javax.ws.rs.DELETE;
 import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
@@ -80,6 +83,8 @@ public class ExpectationSuiteResource {
   private FsJobManagerController fsJobManagerController;
   @EJB
   private JobsBuilder jobsBuilder;
+  @Inject
+  private ExpectationResource expectationResource;
 
   private Project project;
   private Featurestore featurestore;
@@ -125,12 +130,15 @@ public class ExpectationSuiteResource {
 
   /**
    * Create expectation suite attached to a featuregroup
-   * @param expectationSuiteDTO json representation of an expectation suite to attached to a featuregroup
+   *
+   * @param expectationSuiteDTO
+   *   json representation of an expectation suite to attached to a featuregroup
    * @return JSON information about the created expectation suite
    * @throws FeaturestoreException
    */
-  @ApiOperation(value = "Create an expectation suite attached to a feature group", response = ExpectationSuiteDTO.class)
-  @PUT
+  @ApiOperation(value = "Create or Update an expectation suite attached to a feature group",
+    response = ExpectationSuiteDTO.class)
+  @POST
   @Consumes(MediaType.APPLICATION_JSON)
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
@@ -146,7 +154,91 @@ public class ExpectationSuiteResource {
       UriInfo uriInfo,
     ExpectationSuiteDTO expectationSuiteDTO) throws FeaturestoreException {
 
+    if (expectationSuiteController.getExpectationSuite(featuregroup) != null) {
+      throw new FeaturestoreException(
+        RESTCodes.FeaturestoreErrorCode.EXPECTATION_SUITE_ALREADY_EXISTS,
+        Level.WARNING);
+    }
+
     ExpectationSuite expectationSuite = expectationSuiteController.createExpectationSuite(
+      featuregroup, expectationSuiteDTO);
+
+    ExpectationSuiteDTO dto = expectationSuiteBuilder.build(
+      uriInfo, project, featuregroup, expectationSuite);
+
+    return Response.created(dto.getHref()).entity(dto).build();
+  }
+
+  /**
+   * Update expectation suite attached to a featuregroup
+   *
+   * @param expectationSuiteDTO
+   *   json representation of an expectation suite to attached to a featuregroup
+   * @return JSON information about the created expectation suite
+   * @throws FeaturestoreException
+   */
+  @ApiOperation(value = "Update an expectation suite attached to a feature group",
+    response = ExpectationSuiteDTO.class)
+  @PUT
+  @Path("/{expectationSuiteId: [0-9]+}")
+  @Consumes(MediaType.APPLICATION_JSON)
+  @Produces(MediaType.APPLICATION_JSON)
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
+  @JWTRequired(acceptedTokens = {Audience.API, Audience.JOB},
+    allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
+  @ApiKeyRequired(acceptedScopes = {ApiScope.JOB}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
+  public Response updateExpectationSuite(
+    @Context
+      SecurityContext sc,
+    @Context
+      HttpServletRequest req,
+    @Context
+      UriInfo uriInfo,
+    @PathParam("expectationSuiteId")
+      Integer expectationSuiteId,
+    ExpectationSuiteDTO expectationSuiteDTO) throws FeaturestoreException {
+
+    ExpectationSuite expectationSuite = expectationSuiteController.updateExpectationSuite(
+      featuregroup, expectationSuiteDTO);
+
+    ExpectationSuiteDTO dto = expectationSuiteBuilder.build(
+      uriInfo, project, featuregroup, expectationSuite);
+
+    return Response.ok().entity(dto).build();
+  }
+
+  /**
+   * Edit metadata of an expectation suite attached to a featuregroup.
+   * Discard any expectations attached to the DTO
+   *
+   * @param expectationSuiteDTO
+   *   json representation of an expectation suite with updated metadata.
+   * @return JSON information about the created expectation suite
+   * @throws FeaturestoreException
+   */
+  @Path("/{expectationSuiteId: [0-9]+}/metadata")
+  @ApiOperation(value = "Update metadata only of an expectation suite attached to a feature group",
+    response = ExpectationSuiteDTO.class)
+  @PUT
+  @Consumes(MediaType.APPLICATION_JSON)
+  @Produces(MediaType.APPLICATION_JSON)
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
+  @JWTRequired(acceptedTokens = {Audience.API, Audience.JOB},
+    allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
+  @ApiKeyRequired(acceptedScopes = {ApiScope.JOB}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
+  public Response updateMetadataExpectationSuite(
+    @Context
+      SecurityContext sc,
+    @Context
+      HttpServletRequest req,
+    @Context
+      UriInfo uriInfo,
+    @PathParam("expectationSuiteId")
+      Integer expectationSuiteId,
+    ExpectationSuiteDTO expectationSuiteDTO) throws FeaturestoreException {
+
+    // Expectations list of the DTO is discarded
+    ExpectationSuite expectationSuite = expectationSuiteController.updateMetadataExpectationSuite(
       featuregroup, expectationSuiteDTO);
 
     ExpectationSuiteDTO dto = expectationSuiteBuilder.build(
@@ -162,6 +254,7 @@ public class ExpectationSuiteResource {
    */
   @ApiOperation(value = "Delete an expectation suite attached to a feature group", response = ExpectationSuiteDTO.class)
   @DELETE
+  @Path("/{expectationSuiteId: [0-9]+}")
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
   @JWTRequired(acceptedTokens = {Audience.API, Audience.JOB},
@@ -173,13 +266,15 @@ public class ExpectationSuiteResource {
     @Context
       HttpServletRequest req,
     @Context
-      UriInfo uriInfo) throws FeaturestoreException {
+      UriInfo uriInfo,
+    @PathParam("expectationSuiteId")
+      Integer expectationSuiteId) throws FeaturestoreException {
 
     expectationSuiteController.deleteExpectationSuite(featuregroup);
 
     return Response.noContent().build();
   }
-  
+
   @Path("validate")
   @POST
   @Consumes(MediaType.APPLICATION_JSON)
@@ -190,20 +285,40 @@ public class ExpectationSuiteResource {
     allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
   @ApiKeyRequired(acceptedScopes = {ApiScope.DATASET_VIEW, ApiScope.FEATURESTORE},
     allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER", "HOPS_SERVICE_USER"})
-  public Response compute(@Context UriInfo uriInfo,
-    @Context HttpServletRequest req,
-    @Context SecurityContext sc)
+  public Response compute(
+    @Context
+      UriInfo uriInfo,
+    @Context
+      HttpServletRequest req,
+    @Context
+      SecurityContext sc)
     throws FeaturestoreException, ServiceException, JobException, ProjectException, GenericException {
     Users user = jWTHelper.getUserPrincipal(sc);
-    
+
     if (expectationSuiteController.getExpectationSuite(featuregroup) == null) {
       throw new FeaturestoreException(
         RESTCodes.FeaturestoreErrorCode.NO_EXPECTATION_SUITE_ATTACHED_TO_THIS_FEATUREGROUP,
         Level.FINE, "Feature Group has no Expectation Suite for data validation attached.");
     }
-    
+
     Jobs job = fsJobManagerController.setupValidationJob(project, user, featurestore, featuregroup);
     JobDTO jobDTO = jobsBuilder.build(uriInfo, new ResourceRequest(ResourceRequest.Name.JOBS), job);
     return Response.created(jobDTO.getHref()).entity(jobDTO).build();
+
+  }
+  /////////////////////////////////////////
+  //// Single Expectation Service
+  ////////////////////////////////////////
+
+  @Path("/{expectationSuiteId: [0-9]+}/expectations")
+  public ExpectationResource expectationResource(
+    @PathParam("expectationSuiteId")
+      Integer expectationSuiteId)
+    throws FeaturestoreException {
+    this.expectationResource.setProject(project);
+    this.expectationResource.setFeaturestore(featurestore);
+    this.expectationResource.setFeatureGroup(featuregroup.getId());
+    this.expectationResource.setExpectationSuite(expectationSuiteId);
+    return expectationResource;
   }
 }

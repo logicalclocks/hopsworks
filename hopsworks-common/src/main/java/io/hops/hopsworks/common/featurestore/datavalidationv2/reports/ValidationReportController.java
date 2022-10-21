@@ -14,7 +14,7 @@
  * If not, see <https://www.gnu.org/licenses/>.
  */
 
-package io.hops.hopsworks.common.featurestore.datavalidationv2;
+package io.hops.hopsworks.common.featurestore.datavalidationv2.reports;
 
 import io.hops.hopsworks.alerting.api.alert.dto.PostableAlert;
 import io.hops.hopsworks.common.alert.AlertController;
@@ -23,6 +23,9 @@ import io.hops.hopsworks.common.dao.AbstractFacade.FilterBy;
 import io.hops.hopsworks.common.dao.AbstractFacade.SortBy;
 import io.hops.hopsworks.common.dataset.DatasetController;
 import io.hops.hopsworks.common.featurestore.FeaturestoreFacade;
+import io.hops.hopsworks.common.featurestore.datavalidationv2.expectations.ExpectationFacade;
+import io.hops.hopsworks.common.featurestore.datavalidationv2.results.ValidationResultDTO;
+import io.hops.hopsworks.common.featurestore.datavalidationv2.suites.ExpectationSuiteController;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.hdfs.DistributedFsService;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;

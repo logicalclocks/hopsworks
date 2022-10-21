@@ -21,8 +21,8 @@ import com.logicalclocks.servicediscoverclient.exceptions.ServiceDiscoveryExcept
 import io.hops.hopsworks.common.featurestore.FeaturestoreFacade;
 import io.hops.hopsworks.common.featurestore.activity.FeaturestoreActivityFacade;
 import io.hops.hopsworks.common.featurestore.app.FsJobManagerController;
-import io.hops.hopsworks.common.featurestore.datavalidationv2.ExpectationSuiteController;
-import io.hops.hopsworks.common.featurestore.datavalidationv2.ValidationReportController;
+import io.hops.hopsworks.common.featurestore.datavalidationv2.reports.ValidationReportController;
+import io.hops.hopsworks.common.featurestore.datavalidationv2.suites.ExpectationSuiteController;
 import io.hops.hopsworks.common.featurestore.feature.FeatureGroupFeatureDTO;
 import io.hops.hopsworks.common.featurestore.featuregroup.cached.CachedFeaturegroupController;
 import io.hops.hopsworks.common.featurestore.featuregroup.cached.CachedFeaturegroupDTO;

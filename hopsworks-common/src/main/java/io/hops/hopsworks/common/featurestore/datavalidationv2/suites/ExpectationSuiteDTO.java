@@ -14,9 +14,10 @@
  * If not, see <https://www.gnu.org/licenses/>.
  */
 
-package io.hops.hopsworks.common.featurestore.datavalidationv2;
+package io.hops.hopsworks.common.featurestore.datavalidationv2.suites;
 
 import io.hops.hopsworks.common.api.RestDTO;
+import io.hops.hopsworks.common.featurestore.datavalidationv2.expectations.ExpectationDTO;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.datavalidationv2.Expectation;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.datavalidationv2.ExpectationSuite;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.datavalidationv2.ValidationIngestionPolicy;
@@ -57,9 +58,7 @@ public class ExpectationSuiteDTO extends RestDTO<ExpectationSuiteDTO> {
     
     ArrayList<ExpectationDTO> expectationDTOs = new ArrayList<>();
     for(Expectation expectation: expectationSuite.getExpectations()) {
-      ExpectationDTO expectationDTO = new ExpectationDTO(
-        expectation.getExpectationType(), expectation.getKwargs(), expectation.getMeta()
-      );
+      ExpectationDTO expectationDTO = new ExpectationDTO(expectation);
       expectationDTOs.add(expectationDTO);
     }
     this.expectations = expectationDTOs;

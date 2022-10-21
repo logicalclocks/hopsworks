@@ -16,7 +16,8 @@
 
 package io.hops.hopsworks.api.featurestore.datavalidationv2.reports;
 
-import io.hops.hopsworks.common.featurestore.datavalidationv2.ValidationReportDTO;
+import io.hops.hopsworks.common.featurestore.datavalidationv2.reports.ValidationReportController;
+import io.hops.hopsworks.common.featurestore.datavalidationv2.reports.ValidationReportDTO;
 import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.api.filter.Audience;
 import io.hops.hopsworks.api.filter.apiKey.ApiKeyRequired;
@@ -24,7 +25,6 @@ import io.hops.hopsworks.api.jwt.JWTHelper;
 import io.hops.hopsworks.api.util.Pagination;
 import io.hops.hopsworks.common.api.ResourceRequest;
 import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupController;
-import io.hops.hopsworks.common.featurestore.datavalidationv2.ValidationReportController;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
 import io.hops.hopsworks.persistence.entity.featurestore.Featurestore;
@@ -188,7 +188,7 @@ public class ValidationReportResource {
     ValidationReportDTO dto = validationReportBuilder.build(
       uriInfo, project, featuregroup, validationReport);
 
-    return Response.ok().entity(dto).build();
+    return Response.created(dto.getHref()).entity(dto).build();
   }
 
   /**
