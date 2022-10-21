@@ -17,6 +17,10 @@
 package io.hops.hopsworks.common.featurestore.datavalidationv2;
 
 import com.logicalclocks.shaded.org.apache.commons.lang3.StringUtils;
+
+import io.hops.hopsworks.common.featurestore.datavalidationv2.reports.ValidationReportController;
+import io.hops.hopsworks.common.featurestore.datavalidationv2.reports.ValidationReportDTO;
+import io.hops.hopsworks.common.featurestore.datavalidationv2.results.ValidationResultDTO;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
 
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.Featuregroup;

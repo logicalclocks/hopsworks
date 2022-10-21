@@ -14,27 +14,22 @@
  * If not, see <https://www.gnu.org/licenses/>.
  */
 
-package io.hops.hopsworks.common.featurestore.datavalidationv2;
+package io.hops.hopsworks.common.featurestore.datavalidationv2.expectations;
 
 
+import io.hops.hopsworks.common.api.RestDTO;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.datavalidationv2.Expectation;
 
 import javax.xml.bind.annotation.XmlRootElement;
 
 @XmlRootElement
-public class ExpectationDTO {
+public class ExpectationDTO extends RestDTO<ExpectationDTO> {
   private Integer id;
   private String expectationType;
   private String kwargs;
   private String meta = "{}";
 
   public ExpectationDTO() {}
-
-  public ExpectationDTO(String expectationType, String kwargs, String meta) {
-    this.expectationType = expectationType;
-    this.kwargs = kwargs;
-    this.meta = meta;
-  }
 
   public ExpectationDTO(Expectation expectation) {
     this.id = expectation.getId();

@@ -44,6 +44,10 @@ import java.util.Objects;
   @NamedQuery(
     name = "ExpectationSuite.findByFeatureGroup",
     query = "SELECT es FROM ExpectationSuite es WHERE es.featuregroup=:featureGroup"
+  ),
+  @NamedQuery(
+    name = "ExpectationSuite.findById",
+    query = "SELECT es FROM ExpectationSuite es WHERE es.id=:expectationSuiteId"
   )})
 @XmlRootElement
 public class ExpectationSuite implements Serializable {

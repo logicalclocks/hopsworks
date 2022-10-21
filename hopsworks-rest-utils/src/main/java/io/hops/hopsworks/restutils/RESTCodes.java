@@ -1626,9 +1626,15 @@ public class RESTCodes {
       "validation success.", Response.Status.BAD_REQUEST),
     FAILED_TO_DELETE_TD_DATA(204, "Failed to delete training dataset.", Response.Status.BAD_REQUEST),
     ERROR_DELETING_FEATURE_VIEW(205, "Error deleting feature view.",
-        Response.Status.INTERNAL_SERVER_ERROR),
+      Response.Status.INTERNAL_SERVER_ERROR),
     ILLEGAL_TRAINING_DATASET_TIME_SERIES_SPLIT(206, "Illegal training dataset time series split.",
-        Response.Status.BAD_REQUEST);
+        Response.Status.BAD_REQUEST),
+    ILLEGAL_EXPECTATION_UPDATE(207, "Illegal Expectation update. To preserve the validation history this " + 
+      "update is not allowed. Create a new Expectation by removing expectationId from meta field instead.", 
+      Response.Status.BAD_REQUEST),
+    EXPECTATION_SUITE_ALREADY_EXISTS(208, "An expectation suite is already attached to this " +
+      "feature group. Either update the existing suite via the update endpoint or delete it first.",
+      Response.Status.CONFLICT);
 
     private int code;
     private String message;

@@ -35,6 +35,6 @@ public class ApplicationConfig extends ResourceConfig {
     register(io.swagger.jaxrs.listing.SwaggerSerializers.class);
   
     //uncomment to allow Cross-Origin Resource Sharing
-    //register(io.hops.hopsworks.filters.AllowCORSFilter.class);
+    register(io.hops.hopsworks.filters.AllowCORSFilter.class);
   }
 }

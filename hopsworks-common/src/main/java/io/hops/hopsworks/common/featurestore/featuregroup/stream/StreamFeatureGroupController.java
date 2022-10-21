@@ -17,6 +17,7 @@
 package io.hops.hopsworks.common.featurestore.featuregroup.stream;
 
 import io.hops.hopsworks.common.featurestore.activity.FeaturestoreActivityFacade;
+import io.hops.hopsworks.common.featurestore.datavalidationv2.suites.ExpectationSuiteController;
 import io.hops.hopsworks.common.featurestore.feature.FeatureGroupFeatureDTO;
 import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupDTO;
 import io.hops.hopsworks.common.featurestore.featuregroup.cached.CachedFeaturegroupController;
@@ -74,6 +75,8 @@ public class StreamFeatureGroupController {
   private CachedFeaturegroupController cachedFeaturegroupController;
   @EJB
   private FeaturestoreActivityFacade fsActivityFacade;
+  @EJB
+  private ExpectationSuiteController expectationSuiteController;
   
   /**
    * Converts a StreamFeatureGroup entity into a DTO representation
@@ -84,6 +87,10 @@ public class StreamFeatureGroupController {
   public StreamFeatureGroupDTO convertStreamFeatureGroupToDTO(Featuregroup featuregroup, Project project, Users user)
     throws FeaturestoreException, ServiceException {
     List<FeatureGroupFeatureDTO> featureGroupFeatureDTOS;
+    if (featuregroup.getExpectationSuite() != null) {
+      featuregroup.setExpectationSuite(
+        expectationSuiteController.addAllExpectationIdToMetaField(featuregroup.getExpectationSuite()));
+    }
     StreamFeatureGroupDTO streamFeatureGroupDTO = new StreamFeatureGroupDTO(featuregroup);
   
     if (featuregroup.getStreamFeatureGroup().isOnlineEnabled()) {

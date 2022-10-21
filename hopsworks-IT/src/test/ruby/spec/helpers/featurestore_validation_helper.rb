@@ -36,9 +36,9 @@ module FeaturestoreValidationHelper
     }
   end
   
-  def persist_expectation_suite(project_id, featurestore_id, featuregroup_id, expectation_suite)
+  def create_expectation_suite(project_id, featurestore_id, featuregroup_id, expectation_suite)
     endpoint = "#{ENV['HOPSWORKS_API']}/project/#{project_id}/featurestores/#{featurestore_id}/featuregroups/#{featuregroup_id}/expectationsuite"
-    put endpoint, expectation_suite
+    post endpoint, expectation_suite
   end
 
   def get_expectation_suite(project_id, featurestore_id, featuregroup_id)
@@ -46,8 +46,38 @@ module FeaturestoreValidationHelper
     get endpoint
   end
 
-  def delete_expectation_suite(project_id, featurestore_id, featuregroup_id)
-    endpoint = "#{ENV["HOPSWORKS_API"]}/project/#{project_id}/featurestores/#{featurestore_id}/featuregroups/#{featuregroup_id}/expectationsuite"
+  def delete_expectation_suite(project_id, featurestore_id, featuregroup_id, expectation_suite_id)
+    endpoint = "#{ENV["HOPSWORKS_API"]}/project/#{project_id}/featurestores/#{featurestore_id}/featuregroups/#{featuregroup_id}/expectationsuite/#{expectation_suite_id}"
+    delete endpoint
+  end
+
+  def update_metadata_expectation_suite(project_id, featurestore_id, featuregroup_id, expectation_suite)
+    endpoint = "#{ENV['HOPSWORKS_API']}/project/#{project_id}/featurestores/#{featurestore_id}/featuregroups/#{featuregroup_id}/expectationsuite/#{expectation_suite["id"]}/metadata"
+    put endpoint, expectation_suite
+  end
+
+  def update_expectation_suite(project_id, featurestore_id, featuregroup_id, expectation_suite)
+    endpoint = "#{ENV['HOPSWORKS_API']}/project/#{project_id}/featurestores/#{featurestore_id}/featuregroups/#{featuregroup_id}/expectationsuite/#{expectation_suite["id"]}"
+    put endpoint, expectation_suite
+  end
+
+  def create_expectation(project_id, featurestore_id, featuregroup_id, expectation_suite_id, expectation)
+    endpoint = "#{ENV['HOPSWORKS_API']}/project/#{project_id}/featurestores/#{featurestore_id}/featuregroups/#{featuregroup_id}/expectationsuite/#{expectation_suite_id}/expectations"
+    post endpoint, expectation
+  end
+
+  def update_expectation(project_id, featurestore_id, featuregroup_id, expectation_suite_id, expectation_id, expectation)
+    endpoint = "#{ENV['HOPSWORKS_API']}/project/#{project_id}/featurestores/#{featurestore_id}/featuregroups/#{featuregroup_id}/expectationsuite/#{expectation_suite_id}/expectations/#{expectation_id}"
+    put endpoint, expectation
+  end
+
+  def get_expectation(project_id, featurestore_id, featuregroup_id, expectation_suite_id, expectation_id)
+    endpoint = "#{ENV['HOPSWORKS_API']}/project/#{project_id}/featurestores/#{featurestore_id}/featuregroups/#{featuregroup_id}/expectationsuite/#{expectation_suite_id}/expectations/#{expectation_id}"
+    get endpoint
+  end
+
+  def delete_expectation(project_id, featurestore_id, featuregroup_id, expectation_suite_id, expectation_id)
+    endpoint = "#{ENV["HOPSWORKS_API"]}/project/#{project_id}/featurestores/#{featurestore_id}/featuregroups/#{featuregroup_id}/expectationsuite/#{expectation_suite_id}/expectations/#{expectation_id}"
     delete endpoint
   end
 
@@ -65,7 +95,7 @@ module FeaturestoreValidationHelper
     template_validation_result = generate_template_validation_result()
     {
       "evaluationParameters": "{}",
-      "meta": "{\"great_expectations_version\":\"0.14.10\",\"expectation_suite_name\":\"expecations_suite_101\",\"run_id\":{\"run_time\":\"2022-03-11T13:06:24.481236+00:00\",\"run_name\":null},\"batch_kwargs\":{\"ge_batch_id\":\"0d0afc48-a13c-11ec-b113-020f94a1da7f\"},\"batch_markers\":{},\"batch_parameters\":{},\"validation_time\":\"20220311T130624.481059Z\",\"expectation_suite_meta\":{\"great_expectations_version\":\"0.14.10\"}}",
+      "meta": "{\"great_expectations_version\":\"0.14.12\",\"expectation_suite_name\":\"expecations_suite_101\",\"run_id\":{\"run_time\":\"2022-03-11T13:06:24.481236+00:00\",\"run_name\":null},\"batch_kwargs\":{\"ge_batch_id\":\"0d0afc48-a13c-11ec-b113-020f94a1da7f\"},\"batch_markers\":{},\"batch_parameters\":{},\"validation_time\":\"20220311T130624.481059Z\",\"expectation_suite_meta\":{\"great_expectations_version\":\"0.14.12\"}}",
       "results": [template_validation_result],
       "success": false,
       "statistics": "{\"evaluated_expectations\":7,\"successful_expectations\":5,\"unsuccessful_expectations\":2,\"success_percent\":71.42857142857143}"

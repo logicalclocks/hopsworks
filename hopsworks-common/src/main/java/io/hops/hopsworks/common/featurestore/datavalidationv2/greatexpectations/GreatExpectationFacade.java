@@ -15,9 +15,10 @@
  */
 
 
-package io.hops.hopsworks.common.featurestore.datavalidationv2;
+package io.hops.hopsworks.common.featurestore.datavalidationv2.greatexpectations;
 
 import io.hops.hopsworks.common.dao.AbstractFacade;
+import io.hops.hopsworks.common.featurestore.datavalidationv2.suites.ExpectationSuiteFacade;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.datavalidationv2.GreatExpectation;
 
 import javax.ejb.Stateless;

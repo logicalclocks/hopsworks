@@ -16,29 +16,29 @@
 
 package io.hops.hopsworks.api.featurestore.datavalidationv2.suites;
 
+import io.hops.hopsworks.api.featurestore.datavalidationv2.expectations.ExpectationBuilder;
 import io.hops.hopsworks.common.api.ResourceRequest;
-import io.hops.hopsworks.common.featurestore.datavalidationv2.ExpectationDTO;
-import io.hops.hopsworks.common.featurestore.datavalidationv2.ExpectationSuiteDTO;
+import io.hops.hopsworks.common.featurestore.datavalidationv2.expectations.ExpectationDTO;
+import io.hops.hopsworks.common.featurestore.datavalidationv2.suites.ExpectationSuiteDTO;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.Featuregroup;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.datavalidationv2.Expectation;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.datavalidationv2.ExpectationSuite;
 import io.hops.hopsworks.persistence.entity.project.Project;
-import io.hops.hopsworks.restutils.RESTCodes;
-import org.json.JSONException;
-import org.json.JSONObject;
 
+import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.ws.rs.core.UriInfo;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.logging.Level;
 
 @Stateless
 @TransactionAttribute(TransactionAttributeType.NEVER)
 public class ExpectationSuiteBuilder {
+  @EJB
+  ExpectationBuilder expectationBuilder;
 
   public ExpectationSuiteDTO uri(ExpectationSuiteDTO dto, UriInfo uriInfo, Project project, Featuregroup featuregroup) {
     dto.setHref(
@@ -71,23 +71,10 @@ public class ExpectationSuiteBuilder {
     List<ExpectationDTO> expectationDTOs = new ArrayList<ExpectationDTO>();
 
     for (Expectation expectation : expectationSuite.getExpectations()) {
-      ExpectationDTO expectationDTO = new ExpectationDTO(expectation);
-
-      // Set expectationId in the meta field
-      try {
-        JSONObject meta = new JSONObject(expectation.getMeta());
-        meta.put("expectationId", expectation.getId());
-        expectationDTO.setMeta(meta.toString());
-      } catch (JSONException e) {
-        // Argument can be made that we simply return it, rather than throwing an exception
-        throw new FeaturestoreException(
-          RESTCodes.FeaturestoreErrorCode.FAILED_TO_PARSE_EXPECTATION_META_FIELD, Level.SEVERE,
-          String.format("Expectation meta field is not valid json : %s", expectation.getMeta())
-        );
-      }
-      expectationDTOs.add(expectationDTO);
+      expectationDTOs.add(expectationBuilder.build(uriInfo, project, featureGroup, expectationSuite, expectation));
     }
     dto.setExpectations(expectationDTOs);
+    
     return dto;
   }
 
