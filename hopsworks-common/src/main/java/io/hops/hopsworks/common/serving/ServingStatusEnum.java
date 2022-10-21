@@ -38,54 +38,55 @@
  */
 package io.hops.hopsworks.common.serving;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonValue;
 
-import javax.xml.bind.annotation.XmlEnum;
-import javax.xml.bind.annotation.XmlEnumValue;
-
-@XmlEnum
 public enum ServingStatusEnum {
-  @XmlEnumValue("Running")
+  
   RUNNING("Running"),
-  @XmlEnumValue("Stopped")
   STOPPED("Stopped"),
-  @XmlEnumValue("Started")
   STARTED("Started"),
-  @XmlEnumValue("Starting")
   STARTING("Starting"),
-  @XmlEnumValue("Updating")
   UPDATING("Updating"),
-  @XmlEnumValue("Stopping")
   STOPPING("Stopping"),
-  @XmlEnumValue("Transforming")
   TRANSFORMING("Transforming");
 
   private final String readable;
 
-  private ServingStatusEnum(String readable) {
+  ServingStatusEnum(String readable) {
     this.readable = readable;
   }
 
-  public static ServingStatusEnum fromString(String shortName) {
-    switch (shortName) {
-      case "Running":
-        return ServingStatusEnum.RUNNING;
-      case "Stopped":
-        return ServingStatusEnum.STOPPED;
-      case "Started":
-        return ServingStatusEnum.STARTED;
-      case "Starting":
-        return ServingStatusEnum.STARTING;
-      case "Updating":
-        return ServingStatusEnum.UPDATING;
-      case "Stopping":
-        return ServingStatusEnum.STOPPING;
-      case "Transforming":
-        return ServingStatusEnum.TRANSFORMING;
-      default:
-        throw new IllegalArgumentException("ShortName [" + shortName + "] not supported.");
-    }
+  @JsonValue
+  public String getReadable() {
+    return readable;
   }
-
+  
+  @JsonCreator
+  public static ServingStatusEnum fromString(String status) {
+    if (status != null) {
+      switch (status.toLowerCase()) {
+        case "running":
+          return RUNNING;
+        case "stopped":
+          return STOPPED;
+        case "started":
+          return STARTED;
+        case "starting":
+          return STARTING;
+        case "updating":
+          return UPDATING;
+        case "stopping":
+          return STOPPING;
+        case "transforming":
+          return TRANSFORMING;
+        default:
+          throw new IllegalArgumentException("Unknown status '" + status + "'");
+      }
+    }
+    return null;
+  }
+  
   @Override
   public String toString() {
     return this.readable;

@@ -68,7 +68,7 @@ describe "On #{ENV['OS']}" do
 
         it "should succeed to infer from a serving with no kafka logging" do
           serving = Serving.find(@serving[:id])
-          put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/",
+          put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/", parse_serving_json(
               {id: serving[:id],
                name: serving[:name],
                modelPath: serving[:model_path],
@@ -82,7 +82,7 @@ describe "On #{ENV['OS']}" do
                modelFramework: parse_model_framework(serving[:model_framework]),
                servingTool: parse_serving_tool(serving[:serving_tool]),
                requestedInstances: 1
-              }
+              })
           expect_status_details(201)
 
           # Sleep a bit to avoid race condition and Flask server restarts
