@@ -42,9 +42,6 @@ package io.hops.hopsworks.persistence.entity.jobs.configuration;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
-import io.hops.hopsworks.persistence.entity.jobs.configuration.erasureCode.ErasureCodeJobConfiguration;
-import io.hops.hopsworks.persistence.entity.jobs.configuration.flink.FlinkJobConfiguration;
-import io.hops.hopsworks.persistence.entity.jobs.configuration.spark.SparkJobConfiguration;
 import io.hops.hopsworks.persistence.entity.jobs.configuration.yarn.YarnJobConfiguration;
 
 import javax.xml.bind.annotation.XmlAccessType;
@@ -124,32 +121,4 @@ public abstract class JobConfiguration {
     this.defaultArgs = defaultArgs;
   }
 
-  public static class JobConfigurationFactory {
-
-    /**
-     * Get a new JobConfiguration object with the given type.
-     * <p/>
-     * @param type
-     * @return
-     */
-    public static JobConfiguration getJobConfigurationTemplate(JobType type) {
-      JobConfiguration conf;
-      switch (type) {
-        case SPARK:
-        case PYSPARK:
-          conf = new SparkJobConfiguration();
-          break;
-        case FLINK:
-          conf = new FlinkJobConfiguration();
-          break;
-        case ERASURE_CODING:
-          conf = new ErasureCodeJobConfiguration();
-          break;
-        default:
-          throw new UnsupportedOperationException(
-                  "The given job type is not supported yet.");
-      }
-      return conf;
-    }
-  }
 }

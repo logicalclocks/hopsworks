@@ -206,7 +206,7 @@ public class SubjectsController {
       case BACKWARD:
         return new SchemaValidatorBuilder().canReadStrategy().validateLatest();
       case BACKWARD_TRANSITIVE:
-        new SchemaValidatorBuilder().canReadStrategy().validateAll();
+        return new SchemaValidatorBuilder().canReadStrategy().validateAll();
       case FORWARD:
         return new SchemaValidatorBuilder().canBeReadStrategy().validateLatest();
       case FORWARD_TRANSITIVE:

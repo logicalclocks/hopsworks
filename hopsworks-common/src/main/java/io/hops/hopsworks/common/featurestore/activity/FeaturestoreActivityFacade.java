@@ -272,6 +272,7 @@ public class FeaturestoreActivityFacade extends AbstractFacade<FeaturestoreActiv
       case TIMESTAMP_GT:
       case TIMESTAMP_LT:
         query.setParameter(filterBy.getField(), new Date(Long.parseLong(filterBy.getParam())));
+        break;
       default:
         break;
     }

@@ -148,7 +148,7 @@ public class UsersController {
       // trigger user account handlers
       UserAccountHandler.runUserAccountCreateHandlers(userAccountHandlers, user);
       
-      qrCode = getQrCode(user);
+      qrCode = getQRCode(user);
     } catch (MessagingException ex) {
       throw new UserException(RESTCodes.UserErrorCode.ACCOUNT_REGISTRATION_ERROR, Level.SEVERE,
         "user: " + newUser.getUsername(), ex.getMessage(), ex);
@@ -347,7 +347,7 @@ public class UsersController {
   
   private QrCode resetQRCode(Users user) throws UserException {
     updateUserSecret(user);
-    return getQrCode(user);
+    return getQRCode(user);
   }
   
   private byte[] resetQRCodeByte(Users user) throws UserException {
@@ -543,7 +543,7 @@ public class UsersController {
     } else {
       user.setTwoFactor(true);
       userFacade.update(user);
-      return getQrCode(user);
+      return getQRCode(user);
     }
     return null;
   }
@@ -565,10 +565,10 @@ public class UsersController {
     if (!authController.isTwoFactorEnabled(user)) {
       throw new UserException(RESTCodes.UserErrorCode.TWO_FA_DISABLED, Level.FINE);
     }
-    return getQrCode(user);
+    return getQRCode(user);
   }
   
-  private QrCode getQrCode(Users user) throws UserException {
+  private QrCode getQRCode(Users user) throws UserException {
     try {
       byte[] img = QRCodeGenerator.getQRCodeBytes(user.getEmail(), Settings.ISSUER, user.getSecret());
       return new QrCode(img, user.getSecret(), Settings.ISSUER, user.getEmail());

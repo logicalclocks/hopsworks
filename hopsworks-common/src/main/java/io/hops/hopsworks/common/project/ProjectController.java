@@ -173,8 +173,6 @@ import javax.ejb.TransactionAttributeType;
 import javax.enterprise.inject.Any;
 import javax.enterprise.inject.Instance;
 import javax.inject.Inject;
-import javax.net.ssl.HostnameVerifier;
-import javax.net.ssl.SSLSession;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
@@ -1619,18 +1617,6 @@ public class ProjectController {
       projectNames.add(project.getName());
     }
     return projectNames;
-  }
-  
-  private static class InsecureHostnameVerifier implements HostnameVerifier {
-    static InsecureHostnameVerifier INSTANCE = new InsecureHostnameVerifier();
-
-    InsecureHostnameVerifier() {
-    }
-
-    @Override
-    public boolean verify(String string, SSLSession ssls) {
-      return true;
-    }
   }
 
   public void cleanup(Project project, String sessionId) throws GenericException {

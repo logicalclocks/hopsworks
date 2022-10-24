@@ -366,8 +366,7 @@ public class JobFacade extends AbstractFacade<Jobs> {
     JOBTYPE("JOBTYPE", "j.type IN :types ", "types",
       JobType.SPARK.toString().toUpperCase() + "," + JobType.PYSPARK.toString().toUpperCase()),
     JOBTYPE_NEQ("JOBTYPE_NEQ", "j.type NOT IN :types_neq ", "types_neq",
-      JobType.FLINK.toString().toUpperCase() + "," + JobType.YARN.toString().toUpperCase()
-        + "," + JobType.ERASURE_CODING.toString().toUpperCase()),
+      JobType.FLINK.toString().toUpperCase() + "," + JobType.YARN.toString().toUpperCase()),
     DATE_CREATED("DATE_CREATED", "j.creationTime = :creationTime ","creationTime",""),
     DATE_CREATED_GT("DATE_CREATED_GT", "j.creationTime > :creationTimeFrom ","creationTimeFrom",""),
     DATE_CREATED_LT("DATE_CREATED_LT", "j.creationTime < :creationTimeTo ","creationTimeTo",""),
