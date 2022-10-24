@@ -1,0 +1,40 @@
+name: java
+
+on: pull_request
+
+jobs:
+  hopsworks-unit-tests:
+    name: Hopsworks Unit Tests
+    runs-on: ubuntu-18.04
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Set up JDK 8
+        uses: actions/setup-java@v3
+        with:
+          java-version: '8'
+          distribution: 'adopt'
+
+      - name: Test
+        working-directory: ./java
+        run: mvn --batch-mode test
+
+  hopsworks-license-checker:
+    name: Hopsworks License Checker
+    runs-on: ubuntu-18.04
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Checkout hops-testing-ee
+        uses: actions/checkout@v3
+        with:
+          repository: logicalclocks/hops-testing-ee
+          path: hops-testing-ee
+          fetch-depth: 0
+
+      - name: Run license checker
+        run: hops-testing-ee/scripts/check_licenses.sh
