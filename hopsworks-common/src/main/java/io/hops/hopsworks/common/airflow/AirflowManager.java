@@ -146,25 +146,30 @@ public class AirflowManager {
   @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
   public void init() {
     Path airflowPath = Paths.get(settings.getAirflowDir());
+    // This requires airflow::install to run before hopsworks is deployed.
     if (airflowPath.toFile().isDirectory()) {
-      try {
-        airflowGroup = Files.getFileAttributeView(airflowPath, PosixFileAttributeView.class,
-            LinkOption.NOFOLLOW_LINKS).readAttributes().group();
-        try {
-          recover();
-        } catch (Exception ex) {
-          LOG.log(Level.WARNING, "AirflowManager failed to recover, some already running workloads might be " +
-              "disrupted");
-        }
-        // This is a dummy query to initialize airflowPool metrics for Prometheus
-        airflowDagFacade.getAllWithLimit(1);
-        long interval = Math.max(1000L, settings.getJWTExpLeewaySec() * 1000 / 2);
-        timerService.createIntervalTimer(10L, interval, new TimerConfig("Airflow JWT renewal", false));
-        initialized = true;
-      } catch (IOException | SQLException ex) {
-        LOG.log(Level.SEVERE, "Failed to initialize AirflowManager", ex);
-      }
+      long interval = Math.max(1000L, settings.getJWTExpLeewaySec() * 1000L / 2);
+      timerService.createIntervalTimer(10L, interval, new TimerConfig("Airflow init/JWT renewal timer", false));
     }
+  }
+  
+  private void initAirflow() {
+    Path airflowPath = Paths.get(settings.getAirflowDir());
+    try {
+      airflowGroup = Files.getFileAttributeView(airflowPath, PosixFileAttributeView.class,
+        LinkOption.NOFOLLOW_LINKS).readAttributes().group();
+      try {
+        recover();
+      } catch (Exception ex) {
+        LOG.log(Level.WARNING, "AirflowManager failed to recover, some already running workloads might be disrupted");
+      }
+      // This is a dummy query to initialize airflowPool metrics for Prometheus
+      airflowDagFacade.getAllWithLimit(1);
+      initialized = true;
+    } catch (IOException | SQLException ex) {
+      LOG.log(Level.SEVERE, "Failed to initialize AirflowManager", ex);
+    }
+    LOG.log(Level.SEVERE, "AirflowManager initialized");
   }
   
   /**
@@ -378,6 +383,10 @@ public class AirflowManager {
   @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
   @Timeout
   public void monitorSecurityMaterial(Timer timer) {
+    if (!initialized) {
+      initAirflow();
+      return;
+    }
     try {
       LocalDateTime now = DateUtils.getNow();
       // Clean unused token files and X.509 certificates
