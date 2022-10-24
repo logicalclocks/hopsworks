@@ -1,6 +1,6 @@
 /*
  * This file is part of Hopsworks
- * Copyright (C) 2022, Logical Clocks AB. All rights reserved
+ * Copyright (C) 2022, Hopsworks AB. All rights reserved
  *
  * Hopsworks is free software: you can redistribute it and/or modify it under the terms of
  * the GNU Affero General Public License as published by the Free Software Foundation,
@@ -254,11 +254,7 @@ public class ExpectationSuiteController {
   @Transactional(rollbackOn = {FeaturestoreException.class})
   public ExpectationSuite smartUpdateExpectationSuite(Featuregroup featuregroup,
     ExpectationSuiteDTO expectationSuiteDTO, ExpectationSuite oldExpectationSuite) throws FeaturestoreException {
-    verifyExpectationSuite(expectationSuiteDTO);
-
-    ExpectationSuite newExpectationSuite =
-      convertExpectationSuiteMetadataDTOToPersistent(featuregroup, expectationSuiteDTO);
-    newExpectationSuite.setId(oldExpectationSuite.getId());
+    ExpectationSuite newExpectationSuite = updateMetadataExpectationSuite(featuregroup, expectationSuiteDTO);
 
     ArrayList<Expectation> newExpectationList = new ArrayList<>();
 
@@ -278,10 +274,10 @@ public class ExpectationSuiteController {
   //// Smart update helper functions to preserve expectations and associated result
   ////////////////////////////////////////////////////////
 
-
   // Update only metadata of the ExpectationSuite (everything but Expectation list)
   public ExpectationSuite updateMetadataExpectationSuite(Featuregroup featuregroup,
     ExpectationSuiteDTO expectationSuiteDTO) throws FeaturestoreException {
+    verifyExpectationSuite(expectationSuiteDTO);
 
     ExpectationSuite oldExpectationSuite = getExpectationSuite(featuregroup);
 

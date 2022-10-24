@@ -140,6 +140,7 @@ describe "On #{ENV['OS']}" do
           expectation_suite["runValidation"] = false
           expectation_suite["id"] = parsed_first_persist_suite["id"]
           update_metadata_expectation_suite(project.id, featurestore_id, fg_json["id"], expectation_suite)
+          expect_status_details(200)
           json_suite = get_expectation_suite(project.id, featurestore_id, fg_json["id"])
           parsed_suite = JSON.parse(json_suite)
           expect(parsed_suite["id"]).to eq(parsed_first_persist_suite["id"])
@@ -160,10 +161,15 @@ describe "On #{ENV['OS']}" do
           json_fetched_expectation_suite = get_expectation_suite(project.id, featurestore_id, fg_json["id"])
           parsed_fetched_expectation_suite = JSON.parse(json_fetched_expectation_suite)
           parsed_fetched_expectation_suite["expectations"].pop()
+          # Edit suite metadata to make sure both are edited on smart update
+          edited_name = "edited_name"
+          parsed_fetched_expectation_suite["expectationSuiteName"] = edited_name
           update_expectation_suite(project.id, featurestore_id, fg_json["id"], parsed_fetched_expectation_suite)
+          expect_status_details(200)
           json_edited_suite = get_expectation_suite(project.id, featurestore_id, fg_json["id"])
           parsed_edited_suite = JSON.parse(json_edited_suite)
           expect(parsed_edited_suite["expectations"].length).to eq(0)
+          expect(parsed_edited_suite["expectationSuiteName"]).to eq(edited_name)
         end
         
         it "should be able to smart edit the list of expectation: update of an expectation" do
@@ -179,6 +185,7 @@ describe "On #{ENV['OS']}" do
           new_kwargs = "{\"min_value\":-10, \"max_value\":10}"
           parsed_fetched_expectation_suite["expectations"][0]["kwargs"] = "{\"min_value\":-10, \"max_value\":10}"
           update_expectation_suite(project.id, featurestore_id, fg_json["id"], parsed_fetched_expectation_suite)
+          expect_status_details(200)
           json_edited_suite = get_expectation_suite(project.id, featurestore_id, fg_json["id"])
           parsed_edited_suite = JSON.parse(json_edited_suite)
           expect(parsed_edited_suite["expectations"][0]["id"]).to eq(to_be_preserved_expectation_id)
@@ -199,6 +206,7 @@ describe "On #{ENV['OS']}" do
           new_kwargs = "{\"min_value\":-10, \"max_value\":10}"
           parsed_fetched_expectation_suite["expectations"][0]["kwargs"] = "{\"min_value\":-10, \"max_value\":10}"
           update_expectation_suite(project.id, featurestore_id, fg_json["id"], parsed_fetched_expectation_suite)
+          expect_status_details(200)
           json_edited_suite = get_expectation_suite(project.id, featurestore_id, fg_json["id"])
           parsed_edited_suite = JSON.parse(json_edited_suite)
           expect(parsed_edited_suite["expectations"][0]["id"]).to eq(to_be_preserved_expectation_id)
@@ -215,9 +223,10 @@ describe "On #{ENV['OS']}" do
           json_fetched_expectation_suite = get_expectation_suite(project.id, featurestore_id, fg_json["id"])
           parsed_fetched_expectation_suite = JSON.parse(json_fetched_expectation_suite)
           new_expectation = generate_template_expectation()
-          new_expectation["expectation_type"] = "expect_column_median_to_be_between"
+          new_expectation["expectationType"] = "expect_column_median_to_be_between"
           parsed_fetched_expectation_suite["expectations"].append(new_expectation)
           update_expectation_suite(project.id, featurestore_id, fg_json["id"], parsed_fetched_expectation_suite)
+          expect_status_details(200)
           json_edited_suite = get_expectation_suite(project.id, featurestore_id, fg_json["id"])
           parsed_edited_suite = JSON.parse(json_edited_suite)
           expect(parsed_edited_suite["expectations"].length).to eq(2)
