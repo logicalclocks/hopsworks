@@ -104,6 +104,10 @@ module AdminHelper
      put "#{ENV['HOPSWORKS_API']}/admin/users/#{id}/role", role
   end
 
+  def add_new_role(gid, group_name, group_desc)
+    BbcGroup.find_or_create_by(gid: gid, group_name: group_name, group_desc: group_desc)
+  end
+
   def create_project_as_admin(username, projectName)
     post "#{ENV['HOPSWORKS_API']}/admin/projects/createas", {projectName: projectName, description: "", services:
     ["JOBS","JUPYTER","HIVE","KAFKA","FEATURESTORE"], owner: username}
@@ -126,6 +130,7 @@ module AdminHelper
      job_conf = get_spark_default_py_config(@project, job_name, "py")
      @job = create_dummy_job(@project, job_name, job_conf)
      with_admin_session
+     add_new_role(1008,'HOPS_SERVICE_USER', 'Hopsworks as a service user')
      change_role_as_admin(user[:id], "HOPS_SERVICE_USER")
      expect_status_details(200)
      create_session(user[:email], password)
