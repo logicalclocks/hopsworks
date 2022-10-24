@@ -40,13 +40,9 @@
 package io.hops.hopsworks.common.hdfs;
 
 import io.hops.hopsworks.persistence.entity.hdfs.inode.Inode;
-import io.hops.hopsworks.common.util.Settings;
-import io.hops.metadata.hdfs.entity.EncodingPolicy;
-import io.hops.metadata.hdfs.entity.EncodingStatus;
 
 import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
-import java.io.File;
 import java.io.IOException;
 import java.net.URI;
 import java.security.PrivilegedExceptionAction;
@@ -58,7 +54,6 @@ import java.util.logging.Logger;
 
 import io.hops.metadata.hdfs.entity.MetaStatus;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.ContentSummary;
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileStatus;
@@ -69,7 +64,6 @@ import org.apache.hadoop.fs.permission.AclEntry;
 import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.hadoop.hdfs.DistributedFileSystem;
 import org.apache.hadoop.hdfs.protocol.HdfsConstants;
-import org.apache.hadoop.hdfs.protocol.LastUpdatedContentSummary;
 import org.apache.hadoop.security.UserGroupInformation;
 
 public class DistributedFileSystemOps {
@@ -83,7 +77,6 @@ public class DistributedFileSystemOps {
 
   private final DistributedFileSystem dfs;
   private Configuration conf;
-  private String hadoopConfDir;
   private final String effectiveUser;
 
   public enum StoragePolicy {
@@ -343,29 +336,6 @@ public class DistributedFileSystemOps {
   }
 
   /**
-   * Move the file from the source path to the destination path.
-   * <p/>
-   * @param source
-   * @param destination
-   * @throws IOException
-   * @thows IllegalArgumentException If the destination path contains an invalid
-   * folder name.
-   */
-  public void renameInHdfs(String source, String destination) throws IOException {
-    //Check if source and destination are the same
-    if (source.equals(destination)) {
-      return;
-    }
-    Path src = new Path(source);
-    Path dst = new Path(destination);
-    
-    if (!dfs.exists(dst.getParent())) {
-      dfs.mkdirs(dst.getParent());
-    }
-    moveWithinHdfs(src, dst);
-  }
-
-  /**
    * Check if the path exists in HDFS.
    * <p/>
    * @param path
@@ -523,36 +493,6 @@ public class DistributedFileSystemOps {
     dfs.setQuota(src, numberOfFiles, diskspaceQuotaInBytes);
   }
 
-  /**
-   *
-   * @param path
-   * @return hdfs quota size in GB
-   * @throws IOException
-   */
-  public long getHdfsSpaceQuotaInMbs(Path path) throws IOException {
-    return dfs.getContentSummary(path).getSpaceQuota() / DistributedFileSystemOps.MB;
-  }
-
-  /**
-   *
-   * @param path
-   * @return the number of files allowed to be created
-   * @throws IOException
-   */
-  public long getHdfsNumFilesQuota(Path path) throws IOException {
-    return dfs.getContentSummary(path).getQuota();
-  }
-
-  /**
-   *
-   * @param path
-   * @return number of bytes stored in this subtree in bytes
-   * @throws IOException
-   */
-  public long getUsedQuotaInMbs(Path path) throws IOException {
-    return dfs.getContentSummary(path).getSpaceConsumed() / DistributedFileSystemOps.MB;
-  }
-
   public FSDataInputStream open(Path location) throws IOException {
     return this.dfs.open(location);
   }
@@ -568,45 +508,6 @@ public class DistributedFileSystemOps {
 
   public void setConf(Configuration conf) {
     this.conf = conf;
-  }
-
-  /**
-   * Compress a file from the given location
-   * <p/>
-   * @param p
-   * @return
-   * @throws IOException
-   */
-  public boolean compress(String p) throws IOException, IllegalStateException {
-    Path location = new Path(p);
-    //add the erasure coding configuration file
-    File erasureCodingConfFile = new File(hadoopConfDir, Settings.ERASURE_CODING_CONFIG);
-    if (!erasureCodingConfFile.exists()) {
-      logger.log(Level.SEVERE, "Unable to locate configuration file in {0}", erasureCodingConfFile);
-      throw new IllegalStateException("No erasure coding conf file: " + Settings.ERASURE_CODING_CONFIG);
-    }
-
-    this.conf.addResource(new Path(erasureCodingConfFile.getAbsolutePath()));
-
-    DistributedFileSystem localDfs = this.dfs;
-    localDfs.setConf(this.conf);
-
-    EncodingPolicy policy = new EncodingPolicy("src", (short) 1);
-
-    String path = location.toUri().getPath();
-    localDfs.encodeFile(path, policy);
-
-    EncodingStatus encodingStatus;
-    while (!(encodingStatus = localDfs.getEncodingStatus(path)).isEncoded()) {
-      try {
-        Thread.sleep(1000);
-        logger.log(Level.INFO, "ongoing file compression of {0} ", path);
-      } catch (InterruptedException e) {
-        logger.log(Level.SEVERE, "Wait for encoding thread was interrupted.");
-        return false;
-      }
-    }
-    return true;
   }
 
   /**
@@ -675,28 +576,6 @@ public class DistributedFileSystemOps {
     Path path = new Path(location);
     setMetaStatus(path, status);
   }
-  
-  /**
-   * Returns the number of blocks of a file in the given path.
-   * The path has to resolve to a file.
-   * <p/>
-   * @param location
-   * @return
-   * @throws IOException
-   */
-  public String getFileBlocks(String location) throws IOException {
-    Path path = new Path(location);
-    if (this.dfs.isFile(path)) {
-      FileStatus filestatus = this.dfs.getFileStatus(path);
-      //get the size of the file in bytes
-      long filesize = filestatus.getLen();
-      long noOfBlocks = (long) Math.ceil(filesize / filestatus.getBlockSize());
-      logger.log(Level.INFO, "File: {0}, Num of blocks: {1}", new Object[]{path,
-        noOfBlocks});
-      return "" + noOfBlocks;
-    }
-    return "-1";
-  }
 
   /**
    * Closes the distributed file system.
@@ -709,30 +588,6 @@ public class DistributedFileSystemOps {
     }
   }
 
-  public long getlength(String path) {
-    try {
-      return dfs.getLength(new Path(path));
-    } catch (IOException ex) {
-      logger.log(Level.SEVERE, "Error while getting length of file", ex);
-    }
-    return -1;
-  }
-
-  public long getLength(Path path) throws IOException {
-    return dfs.getLength(path);
-  }
-  
-  public long getDatasetSize(Path datasetPath) throws IOException {
-    ContentSummary cs = dfs.getContentSummary(datasetPath);
-    return cs.getLength();
-  }
-  
-  public long getLastUpdatedDatasetSize(Path datasetPath) throws IOException {
-    LastUpdatedContentSummary cs = dfs.getLastUpdatedContentSummary(datasetPath);
-    return cs.getSpaceConsumed();
-  }
-  
-  
   public void addUser(String userName) throws IOException{
     dfs.addUser(userName);
   }

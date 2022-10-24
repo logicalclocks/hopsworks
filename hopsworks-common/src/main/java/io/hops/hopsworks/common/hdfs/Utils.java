@@ -49,16 +49,11 @@ import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.common.util.Settings;
 
 import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.StringReader;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.util.Optional;
-import java.util.Scanner;
 import java.util.logging.Logger;
-import javax.json.Json;
-import javax.json.stream.JsonParsingException;
 import org.apache.hadoop.fs.Path;
 
 public final class Utils {
@@ -163,46 +158,6 @@ public final class Utils {
     return CharMatcher.is('/').countIn(path);
   }
 
-  /**
-   * Checks if a given file contains actual json content.
-   * <p/>
-   * @param pathName
-   * @return
-   * @throws FileNotFoundException
-   */
-  public static boolean checkJsonValidity(String pathName) throws
-          FileNotFoundException {
-
-    String fileContent = Utils.getFileContents(pathName);
-
-    if (fileContent == null) {
-      return false;
-    }
-
-    try {
-      //check if the file content is actually a json string
-      Json.createReader(new StringReader(fileContent)).readObject();
-    } catch (JsonParsingException e) {
-      return false;
-    }
-
-    return true;
-  }
-
-  public static String getFileContents(String filePath) throws
-          FileNotFoundException {
-    File file = new File(filePath);
-    Scanner scanner = new Scanner(file);
-
-    //check if the file is empty
-    if (!scanner.hasNext()) {
-      return null;
-    }
-
-    //fetch the whole file content at once
-    return scanner.useDelimiter("\\Z").next();
-  }
-  
   /**
    * take a String corresponding to a file uri and return only the path part of the it.
    * And transform shared path into there full path.

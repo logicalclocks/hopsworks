@@ -253,8 +253,7 @@ public class FsJobManagerController {
     
     DistributedFileSystemOps udfso = dfs.getDfsOps(hdfsUsersController.getHdfsUserName(project, user));
     try {
-      String jobConfigurationPath = getJobConfigurationPath(project, entityName,
-              Integer.valueOf(entityVersion), configPrefix);
+      String jobConfigurationPath = getJobConfigurationPath(project, entityName, entityVersion, configPrefix);
       jobConfiguration.put("feature_store",
         featurestoreController.getOfflineFeaturestoreDbName(featurestore.getProject()));
       jobConfiguration.put("type", type.toString());
@@ -263,10 +262,7 @@ public class FsJobManagerController {
       
       String jobArgs = getJobArgs(op, jobConfigurationPath);
       Jobs job = configureJob(user, project, null,
-              getJobName(op,
-                      Utils.getFeatureStoreEntityName(entityName,
-                              Integer.valueOf(entityVersion)),
-                              false),
+              getJobName(op, Utils.getFeatureStoreEntityName(entityName, entityVersion), false),
               jobArgs, JobType.PYSPARK);
 
       executionController.start(job, jobArgs, user);

@@ -292,31 +292,29 @@ public class LocalHostJupyterProcessMgr extends JupyterManagerImpl implements Ju
     List<JupyterProject> allNotebooks = jupyterFacade.getAllNotebookServers();
 
     executeJupyterCommand("list");
-
     File file = new File(Settings.JUPYTER_PIDS);
 
     List<String> cidsRunning = new ArrayList<>();
     try {
-      Scanner scanner = new Scanner(file);
-      while (scanner.hasNextLine()) {
-        String line = scanner.nextLine();
-        cidsRunning.add(line);
+      try (Scanner scanner = new Scanner(file)) {
+        while (scanner.hasNextLine()) {
+          cidsRunning.add(scanner.nextLine());
+        }
       }
     } catch (FileNotFoundException e) {
       LOGGER.warning("Invalid pids in file: " + Settings.JUPYTER_PIDS);
     }
 
-    List<String> cidsOrphaned = new ArrayList<>();
-    cidsOrphaned.addAll(cidsRunning);
+    List<String> cidsOrphaned = new ArrayList<>(cidsRunning);
 
     for (String cid : cidsRunning) {
       boolean foundCid = false;
-      for (JupyterProject jp : allNotebooks) {
-        if (cid == jp.getCid()) {
+      int i = 0;
+      while (i < allNotebooks.size() && !foundCid) {
+        if (cid.equals(allNotebooks.get(i).getCid())) {
           foundCid = true;
-        }
-        if (foundCid) {
           cidsOrphaned.remove(cid);
+          i += 1;
         }
       }
     }

@@ -179,7 +179,6 @@ public class Settings implements Serializable {
   private static final String VARIABLE_FILE_PREVIEW_TXT_SIZE
       = "file_preview_txt_size";
   private static final String VARIABLE_HOPS_RPC_TLS = "hops_rpc_tls";
-  public static final String ERASURE_CODING_CONFIG = "erasure-coding-site.xml";
 
   private static final String VARIABLE_KAFKA_NUM_PARTITIONS
       = "kafka_num_partitions";
@@ -3364,8 +3363,8 @@ public class Settings implements Serializable {
   }
 
   //These dependencies were collected by installing jupyterlab in a new environment
-  public static List<String> JUPYTER_DEPENDENCIES = Arrays.asList("urllib3", "chardet", "idna", "requests", "attrs",
-      "zipp", "importlib-metadata", "pyrsistent", "six", "jsonschema", "prometheus-client", "pycparser",
+  public  static final List<String> JUPYTER_DEPENDENCIES = Arrays.asList("urllib3", "chardet", "idna", "requests",
+      "attrs", "zipp", "importlib-metadata", "pyrsistent", "six", "jsonschema", "prometheus-client", "pycparser",
       "cffi", "argon2-cffi", "pyzmq", "ipython-genutils", "decorator", "traitlets", "jupyter-core", "Send2Trash",
       "tornado", "pygments", "pickleshare", "wcwidth", "prompt-toolkit", "backcall", "ptyprocess", "pexpect",
       "parso", "jedi", "ipython", "python-dateutil", "jupyter-client", "ipykernel", "terminado", "MarkupSafe",

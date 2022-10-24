@@ -40,8 +40,6 @@
 package io.hops.hopsworks.common.constants.message;
 
 public class ResponseMessages {
-  public final static String PASSWORD_RESET_SUCCESSFUL
-          = "Your password was successfully reset, your new password have been sent to your email.";
   public final static String PASSWORD_RESET = "Your password reset email has been sent. Please check your inbox.";
   public final static String QR_CODE_RESET = "Your QR code reset email has been sent. Please check your inbox.";
   public final static String PASSWORD_CHANGED = "Your password was successfully changed.";
@@ -51,8 +49,6 @@ public class ResponseMessages {
 
   //project error response
   public final static String PROJECT_NOT_FOUND = "Project wasn't found.";
-  public final static String FILE_NOT_FOUND = "File not found.";
-  public final static String NO_MEMBER_ADD = " No member added.";
 
   //project success messages
   public final static String PROJECT_CREATED = "Project created successfully.";
@@ -71,17 +67,6 @@ public class ResponseMessages {
   public final static String MEMBER_ROLE_UPDATED = "Role updated successfully.";
   public final static String MEMBER_REMOVED_FROM_TEAM
           = "Member removed from team.";
-
-  //DataSet
-  public final static String FILE_CORRUPTED_REMOVED_FROM_HDFS
-          = "Corrupted file removed from hdfs.";
-  public final static String DATASET_REMOVED_FROM_HDFS
-          = "DataSet removed from hdfs.";
-  public final static String SHARED_DATASET_REMOVED
-          = "The shared dataset has been removed from this project.";
   public final static String DOWNLOAD_PERMISSION_ERROR
       = "Your role does not allow to download this file";
-
-  public final static String JOB_DETAILS
-          = "Details for a job";
 }

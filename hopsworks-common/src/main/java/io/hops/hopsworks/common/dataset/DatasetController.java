@@ -415,30 +415,27 @@ public class DatasetController {
     if (!path.endsWith("README.md")) {
       throw new IllegalArgumentException("Path does not contain readme file.");
     }
-    FilePreviewDTO filePreviewDTO = null;
-    DataInputStream dis = null;
     try {
       if (!dfso.exists(path) || dfso.isDir(path)) {
         throw new IOException("The file does not exist");
       }
-      dis = new DataInputStream(dfso.open(path));
-      long fileSize = dfso.getFileStatus(new org.apache.hadoop.fs.Path(
-          path)).getLen();
+
+      long fileSize = dfso.getFileStatus(new org.apache.hadoop.fs.Path(path)).getLen();
       if (fileSize > Settings.FILE_PREVIEW_TXT_SIZE_BYTES) {
         throw new IllegalArgumentException("README.md must be smaller than"
-            + Settings.FILE_PREVIEW_TXT_SIZE_BYTES
-            + " to be previewd");
+            + Settings.FILE_PREVIEW_TXT_SIZE_BYTES + " to be previewed");
       }
+
       byte[] headContent = new byte[(int) fileSize];
-      dis.readFully(headContent, 0, (int) fileSize);
-      filePreviewDTO = new FilePreviewDTO("text", "md", new String(headContent));
+      try (DataInputStream dis = new DataInputStream(dfso.open(path))) {
+        dis.readFully(headContent, 0, (int) fileSize);
+      }
+      return new FilePreviewDTO("text", "md", new String(headContent));
     } catch (AccessControlException ex) {
-      throw new AccessControlException(
-          "Permission denied: You can not view the file.");
+      throw new AccessControlException("Permission denied: You can not view the file.");
     } finally {
       dfs.closeDfsClient(dfso);
     }
-    return filePreviewDTO;
   }
 
   public void logDataset(Project project, Dataset dataset, OperationType type) {

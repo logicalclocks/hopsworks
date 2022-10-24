@@ -32,6 +32,7 @@ import javax.ejb.TransactionAttributeType;
 
 import java.util.Optional;
 import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import static io.hops.hopsworks.common.featurestore.FeaturestoreConstants.MAX_CHARACTERS_IN_EXPECTATION_EXPECTATION_TYPE;
 import static io.hops.hopsworks.common.featurestore.FeaturestoreConstants.MAX_CHARACTERS_IN_EXPECTATION_KWARGS;
@@ -40,6 +41,9 @@ import static io.hops.hopsworks.common.featurestore.FeaturestoreConstants.MAX_CH
 @Stateless
 @TransactionAttribute(TransactionAttributeType.NEVER)
 public class ExpectationController {
+
+  private final static Logger LOGGER = Logger.getLogger(ExpectationController.class.getName());
+
   @EJB
   ExpectationFacade expectationFacade;
 
@@ -109,7 +113,7 @@ public class ExpectationController {
       }
     } catch (JSONException e) {
       // This should never happen as verify methods should have thrown exception earlier
-      e.printStackTrace();
+      LOGGER.log(Level.SEVERE, e.getMessage(), e);
     }
 
     return expectationId;

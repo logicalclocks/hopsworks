@@ -40,7 +40,6 @@
 package io.hops.hopsworks.common.kafka;
 
 import com.google.common.base.Strings;
-import io.hops.hopsworks.common.dao.certificates.CertsFacade;
 import io.hops.hopsworks.common.dao.kafka.AclDTO;
 import io.hops.hopsworks.common.dao.kafka.AclUser;
 import io.hops.hopsworks.common.dao.kafka.HopsKafkaAdminClient;
@@ -63,7 +62,6 @@ import io.hops.hopsworks.exceptions.KafkaException;
 import io.hops.hopsworks.exceptions.ProjectException;
 import io.hops.hopsworks.exceptions.SchemaException;
 import io.hops.hopsworks.exceptions.UserException;
-import io.hops.hopsworks.persistence.entity.certificates.UserCerts;
 import io.hops.hopsworks.persistence.entity.kafka.ProjectTopics;
 import io.hops.hopsworks.persistence.entity.kafka.SharedTopics;
 import io.hops.hopsworks.persistence.entity.kafka.TopicAcls;
@@ -85,8 +83,6 @@ import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.ws.rs.core.Response;
-import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -110,8 +106,6 @@ public class KafkaController {
 
   private final static Logger LOGGER = Logger.getLogger(KafkaController.class.getName());
 
-  @EJB
-  private CertsFacade userCerts;
   @EJB
   private Settings settings;
   @EJB
@@ -545,43 +539,6 @@ public class KafkaController {
         new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_NOT_FOUND, Level.FINE,
           "project: " + st.getSharedTopicsPK().getProjectId()));
       topicAclsFacade.removeAclFromTopic(topicName, projectACLs);
-    }
-  }
-  
-  public String getKafkaCertPaths(Project project) {
-    UserCerts userCert = userCerts.findUserCert(project.getName(), project.
-        getOwner().getUsername());
-    //Check if the user certificate was actually retrieved
-    if (userCert.getUserCert() != null
-        && userCert.getUserCert().length > 0
-        && userCert.getUserKey() != null
-        && userCert.getUserKey().length > 0) {
-
-      File certDir = new File(settings.getHopsworksTrueTempCertDir() + "/" + project.getName());
-
-      if (!certDir.exists()) {
-        try {
-          certDir.mkdirs();
-        } catch (Exception ex) {
-
-        }
-      }
-      try {
-        FileOutputStream fos;
-        fos = new FileOutputStream(certDir.getAbsolutePath() + "/keystore.jks");
-        fos.write(userCert.getUserKey());
-        fos.close();
-
-        fos = new FileOutputStream(certDir.getAbsolutePath() + "/truststore.jks");
-        fos.write(userCert.getUserCert());
-        fos.close();
-
-      } catch (Exception e) {
-
-      }
-      return certDir.getAbsolutePath();
-    } else {
-      return null;
     }
   }
 

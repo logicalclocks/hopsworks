@@ -103,10 +103,6 @@ public class DbCluster {
   private Object sparkEnvVars;
 
   @Getter @Setter
-  @JsonProperty("autotermination_minutes")
-  private Integer autoterminationMinutes;
-
-  @Getter @Setter
   @JsonProperty("enable_elastic_disk")
   private Boolean enableElasticDisk;
 
