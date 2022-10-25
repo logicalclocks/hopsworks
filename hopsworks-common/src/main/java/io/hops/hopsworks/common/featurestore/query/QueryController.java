@@ -318,7 +318,8 @@ public class QueryController {
     List<Feature> featureList = new ArrayList<>();
 
     if (requestedFeatures == null || requestedFeatures.isEmpty()) {
-      throw new IllegalArgumentException("Invalid requested features");
+      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.FEATURE_DOES_NOT_EXIST,
+          Level.FINE, String.format("No feature is selected from feature group %s.", fg.getName()));
     } else if (requestedFeatures.size() == 1 && requestedFeatures.get(0).getName().equals(ALL_FEATURES)) {
       // Users can specify * to request all the features in a specific feature group
       featureList.addAll(availableFeatures);
@@ -531,6 +532,14 @@ public class QueryController {
         .filter(f -> !f.isLabel() || withLabel)
         .collect(Collectors.toList());
 
+    // remove join if it contains only with label feature and withLabel is false.
+    // Otherwise `validateFeatures` will be failed when constructing query string because no feature is contained in
+    // that join.
+    Set<Featuregroup> labelOnlyFgs = featureView.getFeatures().stream().map(TrainingDatasetFeature::getFeatureGroup)
+        .collect(Collectors.toSet());
+    labelOnlyFgs.removeAll(tdFeatures.stream().map(TrainingDatasetFeature::getFeatureGroup)
+        .collect(Collectors.toSet()));
+    joins.removeIf(join -> labelOnlyFgs.contains(join.getFeatureGroup()));
     return trainingDatasetController.getQuery(
         joins, tdFeatures, featureView.getFilters(), project, user, isHiveEngine, extraFilters);
   }
