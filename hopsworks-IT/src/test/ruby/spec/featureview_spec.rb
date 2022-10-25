@@ -413,6 +413,54 @@ describe "On #{ENV['OS']}" do
           expect(td_features.select{|feature| feature['index'] == 0}[0]['label']).to be true
           expect(td_features.select{|feature| feature['index'] == 1}[0]['label']).to be false
         end
+
+        it "should be able to create a feature view from a query object with label containing feature group" do
+          # create feature group
+          featurestore_id = get_featurestore_id(@project.id)
+          features = [
+            {type: "INT", name: "testfeature", primary: true},
+            {type: "INT", name: "testfeature1"},
+          ]
+          fg = create_cached_featuregroup_checked_return_fg(@project.id, featurestore_id, "test_fg_#{short_random_id}",
+                                                            features: features)
+          fg1 = create_cached_featuregroup_checked_return_fg(@project.id, featurestore_id, "test_fg_#{short_random_id}",
+                                                            features: features)
+          # create queryDTO object
+          query = {
+            leftFeatureGroup: {
+              id: fg[:id],
+              type: fg[:type],
+            },
+            leftFeatures: [{name: 'testfeature', featureGroupId: fg[:id]}],
+            joins: [{
+                      query: {
+                        leftFeatureGroup: {
+                          id: fg1[:id],
+                          type: fg1[:type],
+                        },
+                        leftFeatures: [{ name: 'testfeature', featureGroupId: fg1[:id]}]
+                      },
+                      prefix: "fg1_"
+                    }
+            ]
+          }
+          features = [
+            {type: "INT", name: "testfeature", featuregroup: fg1, label: true}
+          ]
+          json_result = create_feature_view(@project.id, featurestore_id, query, features: features)
+          expect_status_details(201)
+          feature_view = JSON.parse(json_result)
+
+          expect(feature_view.key?('query')).to be true
+          td_features = feature_view['features']
+          expect(td_features.count).to eql(2)
+          expect(td_features.select{|feature| feature['index'] == 0}[0]['featuregroup']['id']).to eql(fg[:id])
+          expect(td_features.select{|feature| feature['index'] == 0}[0]['name']).to eql("testfeature")
+          expect(td_features.select{|feature| feature['index'] == 0}[0]['label']).to be false
+          expect(td_features.select{|feature| feature['index'] == 1}[0]['featuregroup']['id']).to eql(fg1[:id])
+          expect(td_features.select{|feature| feature['index'] == 1}[0]['name']).to eql("fg1_testfeature")
+          expect(td_features.select{|feature| feature['index'] == 1}[0]['label']).to be true
+        end
 		
         it "should be able to create a feature view from a query object with missing label" do
           # create feature group

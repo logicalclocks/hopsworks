@@ -651,7 +651,11 @@ public class TrainingDatasetController {
     for (Feature f : query.getFeatures()) {
       if (featureDTOs != null && !featureDTOs.isEmpty()) {
         // identify if feature is label
-        isLabel = featureDTOs.stream().anyMatch(dto -> f.getName().equals(dto.getName()) && dto.getLabel());
+        isLabel = featureDTOs.stream().anyMatch(dto ->
+            f.getName().equals(dto.getName()) && dto.getLabel()
+                // If feature group is null, it assumes matching name of the label only.
+                && (dto.getFeaturegroup() == null || f.getFeatureGroup().getId().equals(dto.getFeaturegroup().getId()))
+        );
         // get transformation function for this feature
         transformationFunction = getTransformationFunction(f, featureDTOs);
       }
