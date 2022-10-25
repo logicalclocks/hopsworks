@@ -16,7 +16,9 @@
 
 package io.hops.hopsworks.common.featurestore.code;
 
+import io.hops.hopsworks.common.dao.jobhistory.ExecutionFacade;
 import io.hops.hopsworks.common.dao.jobs.description.JobFacade;
+import io.hops.hopsworks.common.featurestore.activity.FeaturestoreActivityFacade;
 import io.hops.hopsworks.common.featurestore.featuregroup.cached.FeatureGroupCommitController;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.hdfs.DistributedFsService;
@@ -75,6 +77,10 @@ public class CodeController {
   private FeaturestoreCodeFacade featurestoreCodeFacade;
   @EJB
   private FeatureGroupCommitController featureGroupCommitCommitController;
+  @EJB
+  private FeaturestoreActivityFacade featurestoreActivityFacade;
+  @EJB
+  private ExecutionFacade executionFacade;
 
   private static final String CODE = "code";
 
@@ -182,6 +188,12 @@ public class CodeController {
 
     Path datasetDir = new Path(Utils.getFeaturestorePath(project, settings));
     String datasetName = Utils.getFeaturegroupName(featureGroup);
+
+    if (type == CodeActions.RunType.JOB) {
+      // Log the job activity before saving the code
+      executionFacade.findByAppId(applicationId)
+          .ifPresent(execution -> featurestoreActivityFacade.logExecutionActivity(featureGroup, execution));
+    }
 
     return saveCode(project, user, applicationId, entityId, datasetDir, datasetName,
         databricksNotebook, databricksArchive, type);

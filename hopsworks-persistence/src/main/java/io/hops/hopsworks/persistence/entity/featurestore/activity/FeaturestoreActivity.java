@@ -96,9 +96,6 @@ public class FeaturestoreActivity implements Serializable {
   @JoinColumn(name = "execution_id", referencedColumnName = "id")
   private Execution execution;
 
-  @Column(name = "execution_last_event_time")
-  private Long executionLastEventTime;
-
   @JoinColumn(name = "statistics_id", referencedColumnName = "id")
   private FeaturestoreStatistic statistics;
 
@@ -173,14 +170,6 @@ public class FeaturestoreActivity implements Serializable {
 
   public void setExecution(Execution execution) {
     this.execution = execution;
-  }
-
-  public Long getExecutionLastEventTime() {
-    return executionLastEventTime;
-  }
-
-  public void setExecutionLastEventTime(Long executionLastEventTime) {
-    this.executionLastEventTime = executionLastEventTime;
   }
 
   public FeaturestoreStatistic getStatistics() {

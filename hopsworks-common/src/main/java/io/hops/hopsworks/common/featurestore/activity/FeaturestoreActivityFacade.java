@@ -30,11 +30,9 @@ import io.hops.hopsworks.persistence.entity.user.Users;
 
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
-import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
 import javax.persistence.Query;
 import java.util.Date;
-import java.util.Optional;
 import java.util.Set;
 
 @Stateless
@@ -69,8 +67,7 @@ public class FeaturestoreActivityFacade extends AbstractFacade<FeaturestoreActiv
                                   FeaturestoreActivityMeta metadataType) {
     FeaturestoreActivity fsActivity = new FeaturestoreActivity();
     fsActivity.setType(ActivityType.METADATA);
-    //TODO: set activity after merging of activityresource
-//    fsActivity.setfea
+    fsActivity.setFeatureView(featureView);
     fsActivity.setTrainingDataset(trainingDataset);
     fsActivity.setUser(user);
     fsActivity.setEventTime(new Date());
@@ -121,72 +118,14 @@ public class FeaturestoreActivityFacade extends AbstractFacade<FeaturestoreActiv
     em.persist(fsActivity);
   }
 
-  public void logExecutionActivity(Featuregroup featuregroup, Execution execution, Long executionLastEventTime) {
-    // If the execution already exists, updated it, otherwise create a new one
-    FeaturestoreActivity fsActivity = null;
-    try {
-      fsActivity = em.createNamedQuery("FeaturestoreActivity.findByFgExecution",
-          FeaturestoreActivity.class)
-          .setParameter("featureGroup", featuregroup)
-          .setParameter("execution", execution)
-          .getSingleResult();
-    } catch (NoResultException e) {
-      fsActivity = new FeaturestoreActivity();
-      fsActivity.setType(ActivityType.JOB);
-      fsActivity.setFeatureGroup(featuregroup);
-      fsActivity.setUser(execution.getUser());
-      fsActivity.setEventTime(execution.getSubmissionTime());
-      fsActivity.setExecution(execution);
-    }
-
-    fsActivity.setExecutionLastEventTime(executionLastEventTime);
+  public void logExecutionActivity(Featuregroup featuregroup, Execution execution) {
+    FeaturestoreActivity fsActivity = new FeaturestoreActivity();
+    fsActivity.setType(ActivityType.JOB);
+    fsActivity.setFeatureGroup(featuregroup);
+    fsActivity.setUser(execution.getUser());
+    fsActivity.setEventTime(execution.getSubmissionTime());
+    fsActivity.setExecution(execution);
     em.merge(fsActivity);
-  }
-
-  public void logExecutionActivity(TrainingDataset trainingDataset, Execution execution, Long executionLastEventTime) {
-    // If the execution already exists, updated it, otherwise create a new one
-    FeaturestoreActivity fsActivity = null;
-    try {
-      fsActivity = em.createNamedQuery("FeaturestoreActivity.findByTdExecution",
-          FeaturestoreActivity.class)
-          .setParameter("trainingDataset", trainingDataset)
-          .setParameter("execution", execution)
-          .getSingleResult();
-    } catch (NoResultException e) {
-      fsActivity = new FeaturestoreActivity();
-      fsActivity.setType(ActivityType.JOB);
-      fsActivity.setTrainingDataset(trainingDataset);
-      fsActivity.setUser(execution.getUser());
-      fsActivity.setEventTime(execution.getSubmissionTime());
-      fsActivity.setExecution(execution);
-    }
-
-    fsActivity.setExecutionLastEventTime(executionLastEventTime);
-    em.merge(fsActivity);
-  }
-
-  public Optional<FeaturestoreActivity> getMostRecentExecution(Featuregroup featuregroup) {
-    try {
-      return Optional.of(em.createNamedQuery("FeaturestoreActivity.lastFgExecution", FeaturestoreActivity.class)
-          .setParameter("featureGroup", featuregroup)
-          .setParameter("type", ActivityType.JOB)
-          .setMaxResults(1)
-          .getSingleResult());
-    } catch (NoResultException e) {
-      return Optional.empty();
-    }
-  }
-
-  public Optional<FeaturestoreActivity> getMostRecentExecution(TrainingDataset trainingDataset) {
-    try {
-      return Optional.of(em.createNamedQuery("FeaturestoreActivity.lastTdExecution", FeaturestoreActivity.class)
-          .setParameter("trainingDataset", trainingDataset)
-          .setParameter("type", ActivityType.JOB)
-          .setMaxResults(1)
-          .getSingleResult());
-    } catch (NoResultException e) {
-      return Optional.empty();
-    }
   }
 
   public CollectionInfo<FeaturestoreActivity> findByFeaturegroup(Featuregroup featuregroup, Integer offset,
