@@ -28,6 +28,7 @@ import io.hops.hopsworks.persistence.entity.git.config.GitCommandType;
 import io.hops.hopsworks.persistence.entity.git.config.GitProvider;
 import io.hops.hopsworks.persistence.entity.hdfs.inode.Inode;
 import io.hops.hopsworks.persistence.entity.project.Project;
+import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.restutils.RESTCodes;
 
 import javax.ejb.EJB;
@@ -77,11 +78,19 @@ public class GitCommandConfigurationValidator {
     }
   }
 
-  public GitRepository verifyRepository(Project project, Integer repositoryId) throws GitOpException,
-      IllegalArgumentException {
+  public GitRepository verifyRepository(Project project, Users user, Integer repositoryId) throws GitOpException {
+    GitRepository repository = verifyRepository(project, repositoryId);
+    if (user.equals(repository.getCreator())) {
+      return repository;
+    }
+    throw new GitOpException(RESTCodes.GitOpErrorCode.USER_IS_NOT_REPOSITORY_OWNER, Level.INFO,
+            "Git operation forbidden. Only repository owners can execute a git command in repository");
+  }
+
+  public GitRepository verifyRepository(Project project, Integer repositoryId) throws GitOpException {
     Optional<GitRepository> optional = gitRepositoryFacade.findByIdAndProject(project, repositoryId);
-    return optional.orElseThrow(() -> new GitOpException(RESTCodes.GitOpErrorCode.REPOSITORY_NOT_FOUND, Level.SEVERE,
-        "No repository with id [" + repositoryId + "] in project [" + project.getId() + "] found in database."));
+    return optional.orElseThrow(() -> new GitOpException(RESTCodes.GitOpErrorCode.REPOSITORY_NOT_FOUND, Level.INFO,
+            "No repository with id [" + repositoryId + "] in project [" + project.getId() + "] found in database."));
   }
 
   /**

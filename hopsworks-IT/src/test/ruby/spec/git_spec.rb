@@ -170,7 +170,7 @@ describe "On #{ENV['OS']}" do
           test_sort_by_repo_name(@project1[:id], "desc")
         end
       end
-      describe "#filter" do
+      describe "#user repositories" do
         it 'should filter repositories by user' do
           clone_config = get_clone_config("GitHub", @project1[:projectname])
           repoId1, path1 = clone_repo(@project1[:id], clone_config)
@@ -180,24 +180,42 @@ describe "On #{ENV['OS']}" do
           create_session(member[:email],"Pass123")
           clone_config = get_clone_config("GitLab", @project1[:projectname])
           repoId2, path2 = clone_repo(@project1[:id], clone_config)
-          reset_session
-          create_session(@project1[:username], "Pass123")
-          # get all repositories
-          get_project_git_repositories(@project1[:id])
-          expect_status_details(200)
-          expect(json_body[:count]).to eq(2)
-          #filter for user 1
-          get_project_git_repositories(@project1[:id], "?expand=creator&filter=user:#{member[:username]}")
+          get_project_git_repositories(@project1[:id], "?expand=creator")
           expect(json_body[:count]).to eq(1)
           expect(json_body[:items][0][:creator][:username]).to eql member[:username]
+          reset_session
+          create_session(@project1[:username], "Pass123")
+          get_project_git_repositories(@project1[:id], "?expand=creator")
+          expect(json_body[:count]).to eq(1)
+          expect(json_body[:items][0][:creator][:username]).to eql @user[:username]
           delete_repository(@project1, path1)
           delete_repository(@project1, path2)
         end
       end
     end
+    describe "unauthorized user" do
+      before (:all) do
+        @project2 = create_project
+      end
+      after (:each) do
+        reset_session
+        create_session(@project[:username],"Pass123")
+      end
+      it 'it should fail to do a git operation if the user is not the owner of the repository' do
+        clone_config = get_clone_config("GitHub", @project2[:projectname])
+        repoId, path = clone_repo(@project2[:id], clone_config)
+        member = create_user
+        add_member_to_project(@project2, member[:email], "Data scientist")
+        reset_session
+        create_session(member[:email],"Pass123")
+        # try performing a git operation
+        do_create_branch(@project2[:id], repoId, "hopper")
+        expect_status_details(403, error_code: 500035)
+      end
+    end
     describe "Perform operations on the cloned repositories" do
       after :each do
-        delete_repository(@project, "/Projects/#{@project[:projectname]}/Jupyter/livy-chef")
+        delete_repository(@project, "/Projects/#{@project[:projectname]}/Jupyter/#{@user[:username]}_livy-chef")
       end
       it 'should retrieve repository by its id' do
         clone_config = get_clone_config("GitHub", @project[:projectname], url="https://github.com/logicalclocks/livy-chef.git")

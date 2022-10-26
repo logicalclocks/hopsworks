@@ -2318,7 +2318,9 @@ public class RESTCodes {
     INVALID_BRANCH_AND_COMMIT_CHECKOUT_COMBINATION(33, "Branch and Hash are mutually exclusive.",
         Response.Status.BAD_REQUEST),
     INVALID_GIT_COMMAND_CONFIGURATION(34, "Invalid git command operation",
-        Response.Status.INTERNAL_SERVER_ERROR);
+        Response.Status.INTERNAL_SERVER_ERROR),
+    USER_IS_NOT_REPOSITORY_OWNER(35, "User not allowed to perform operation in repository",
+            Response.Status.FORBIDDEN);
 
     private Integer code;
     private String message;

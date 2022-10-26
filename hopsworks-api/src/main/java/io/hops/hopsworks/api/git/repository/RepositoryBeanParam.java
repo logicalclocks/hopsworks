@@ -30,8 +30,7 @@ public class RepositoryBeanParam {
   private final Set<SortBy> sortBySet;
 
   @QueryParam("filter")
-  @ApiParam(value = "ex. filter=name:myetl&filter=user:username", allowableValues = "filter=name:myetl," +
-      "filter=user:username", allowMultiple = true)
+  @ApiParam(value = "ex. filter=name:myetl", allowableValues = "filter=name:myetl", allowMultiple = true)
   private Set<FilterBy> filter;
 
   @BeanParam

@@ -129,13 +129,14 @@ public class GitResource {
                                   @Context HttpServletRequest req,
                                   @BeanParam Pagination pagination,
                                   @BeanParam RepositoryBeanParam repositoryBeanParam) {
+    Users hopsworksUser = jWTHelper.getUserPrincipal(sc);
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.REPOSITORY);
     resourceRequest.setExpansions(repositoryBeanParam.getExpansions().getResources());
     resourceRequest.setOffset(pagination.getOffset());
     resourceRequest.setLimit(pagination.getLimit());
     resourceRequest.setFilter(repositoryBeanParam.getFilter());
     resourceRequest.setSort(repositoryBeanParam.getSortBySet());
-    GitRepositoryDTO repositories = gitRepositoryBuilder.build(uriInfo, resourceRequest, project);
+    GitRepositoryDTO repositories = gitRepositoryBuilder.build(uriInfo, resourceRequest, project, hopsworksUser);
     return Response.ok().entity(repositories).build();
   }
 
@@ -153,7 +154,8 @@ public class GitResource {
                                 @BeanParam RepositoryBeanParam repositoryBeanParam) throws GitOpException {
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.REPOSITORY);
     resourceRequest.setExpansions(repositoryBeanParam.getExpansions().getResources());
-    GitRepository gitRepository = commandConfigurationValidator.verifyRepository(project, repositoryId);
+    Users hopsworksUser = jWTHelper.getUserPrincipal(sc);
+    GitRepository gitRepository = commandConfigurationValidator.verifyRepository(project, hopsworksUser, repositoryId);
     GitRepositoryDTO dto = gitRepositoryBuilder.build(uriInfo, resourceRequest, project, gitRepository);
     return Response.ok().entity(dto).build();
   }
@@ -218,7 +220,8 @@ public class GitResource {
                                         @Context HttpServletRequest req,
                                         @BeanParam Pagination pagination,
                                         @PathParam("repositoryId") Integer repositoryId) throws GitOpException {
-    GitRepository repository = commandConfigurationValidator.verifyRepository(project, repositoryId);
+    Users hopsworksUser = jWTHelper.getUserPrincipal(sc);
+    GitRepository repository = commandConfigurationValidator.verifyRepository(project, hopsworksUser, repositoryId);
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.BRANCH);
     resourceRequest.setOffset(pagination.getOffset());
     resourceRequest.setLimit(pagination.getLimit());
@@ -272,7 +275,8 @@ public class GitResource {
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.COMMIT);
     resourceRequest.setOffset(pagination.getOffset());
     resourceRequest.setLimit(pagination.getLimit());
-    GitRepository repository = commandConfigurationValidator.verifyRepository(project, repositoryId);
+    Users hopsworksUser = jWTHelper.getUserPrincipal(sc);
+    GitRepository repository = commandConfigurationValidator.verifyRepository(project, hopsworksUser, repositoryId);
     GitCommitDTO commits = gitCommitsBuilder.build(uriInfo, resourceRequest, project, repository, branchName);
     return Response.ok().entity(commits).build();
   }
@@ -290,7 +294,8 @@ public class GitResource {
                                       BranchCommits commits,
                                       @Context HttpServletRequest req,
                                       @Context SecurityContext sc) throws GitOpException {
-    gitController.updateBranchCommits(project, commits, repositoryId, branchName);
+    Users hopsworksUser = jWTHelper.getUserPrincipal(sc);
+    gitController.updateBranchCommits(project, hopsworksUser, commits, repositoryId, branchName);
     return Response.ok().build();
   }
 
@@ -333,7 +338,8 @@ public class GitResource {
                                        @Context SecurityContext sc,
                                        @PathParam("repositoryId") Integer repositoryId)
       throws GitOpException {
-    GitRepository repository = commandConfigurationValidator.verifyRepository(project, repositoryId);
+    Users hopsworksUser = jWTHelper.getUserPrincipal(sc);
+    GitRepository repository = commandConfigurationValidator.verifyRepository(project, hopsworksUser, repositoryId);
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.REMOTE);
     GitRepositoryRemoteDTO dto = gitRepositoryRemoteBuilder.build(uriInfo, resourceRequest, project, repository);
     return Response.ok().entity(dto).build();
@@ -354,7 +360,8 @@ public class GitResource {
     if (Strings.isNullOrEmpty(remoteName)) {
       throw new IllegalArgumentException("Remote name is empty");
     }
-    GitRepository repository = commandConfigurationValidator.verifyRepository(project, repositoryId);
+    Users hopsworksUser = jWTHelper.getUserPrincipal(sc);
+    GitRepository repository = commandConfigurationValidator.verifyRepository(project, hopsworksUser, repositoryId);
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.REMOTE);
     GitRepositoryRemoteDTO dto = gitRepositoryRemoteBuilder.build(uriInfo, resourceRequest, project, repository,
         remoteName);
