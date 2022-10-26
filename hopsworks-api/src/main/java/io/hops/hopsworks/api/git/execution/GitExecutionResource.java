@@ -23,6 +23,7 @@ import io.hops.hopsworks.api.util.Pagination;
 import io.hops.hopsworks.common.api.ResourceRequest;
 import io.hops.hopsworks.common.git.GitCommandExecutionStateUpdateDTO;
 import io.hops.hopsworks.common.git.GitExecutionController;
+import io.hops.hopsworks.common.git.util.GitCommandConfigurationValidator;
 import io.hops.hopsworks.exceptions.GitOpException;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
 import io.hops.hopsworks.persistence.entity.git.GitOpExecution;
@@ -60,6 +61,8 @@ public class GitExecutionResource {
   private GitOpExecutionBuilder gitOpExecutionBuilder;
   @EJB
   private JWTHelper jwtHelper;
+  @EJB
+  private GitCommandConfigurationValidator gitCommandConfigurationValidator;
 
   private GitRepository gitRepository;
   private Project project;
@@ -79,7 +82,9 @@ public class GitExecutionResource {
   public Response getRepositoryExecutions(@Context UriInfo uriInfo,
                                           @Context SecurityContext sc,
                                           @BeanParam ExecutionBeanParam executionBeanParam,
-                                          @BeanParam Pagination pagination) {
+                                          @BeanParam Pagination pagination) throws GitOpException {
+    Users hopsworksUser = jwtHelper.getUserPrincipal(sc);
+    gitCommandConfigurationValidator.verifyRepository(project, hopsworksUser, gitRepository.getId());
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.EXECUTION);
     resourceRequest.setExpansions(executionBeanParam.getExpansions().getResources());
     resourceRequest.setLimit(pagination.getLimit());
@@ -98,6 +103,8 @@ public class GitExecutionResource {
   public Response getExecution(@PathParam("executionId") Integer executionId, @Context SecurityContext sc,
                                @Context UriInfo uriInfo,
                                @BeanParam ExecutionBeanParam executionBeanParam) throws GitOpException {
+    Users hopsworksUser = jwtHelper.getUserPrincipal(sc);
+    gitCommandConfigurationValidator.verifyRepository(project, hopsworksUser, gitRepository.getId());
     GitOpExecution executionObj = executionController.getExecutionInRepository(gitRepository, executionId);
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.EXECUTION);
     resourceRequest.setExpansions(executionBeanParam.getExpansions().getResources());

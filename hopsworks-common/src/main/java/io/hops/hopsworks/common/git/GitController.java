@@ -57,6 +57,7 @@ import java.util.logging.Logger;
 @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
 public class GitController {
   private static final Logger LOGGER = Logger.getLogger(GitController.class.getName());
+  private static final String REPO_NAME_DELIMETER = "_";
 
   @EJB
   private InodeController inodeController;
@@ -81,8 +82,8 @@ public class GitController {
       throws IllegalArgumentException, GitOpException, HopsSecurityException, DatasetException {
     commandConfigurationValidator.verifyCloneOptions(cloneConfigurationDTO);
     //create the repository dir. The go-git does not create a directory, so we need to create it before
-    String fullRepoDirPath = cloneConfigurationDTO.getPath() + File.separator +
-            commandConfigurationValidator.getRepositoryName(cloneConfigurationDTO.getUrl());
+    String fullRepoDirPath = cloneConfigurationDTO.getPath() + File.separator + hopsworksUser.getUsername()
+            + REPO_NAME_DELIMETER + commandConfigurationValidator.getRepositoryName(cloneConfigurationDTO.getUrl());
     DistributedFileSystemOps udfso = dfsService.getDfsOps(hdfsUsersController.getHdfsUserName(project, hopsworksUser));
     try {
       datasetController.createSubDirectory(project, new Path(fullRepoDirPath), udfso);
@@ -128,7 +129,7 @@ public class GitController {
       GitOpException, HopsSecurityException {
     commandConfigurationValidator.verifyCommitOptions(commitConfigurationDTO);
     String userFullName = hopsworksUser.getFname() + " " + hopsworksUser.getLname();
-    GitRepository repository = commandConfigurationValidator.verifyRepository(project, repositoryId);
+    GitRepository repository = commandConfigurationValidator.verifyRepository(project, hopsworksUser, repositoryId);
     String repositoryFullPath = inodeController.getPath(repository.getInode());
     GitCommandConfiguration commandConfiguration =
         new GitCommandConfigurationBuilder().setCommandType(GitCommandType.COMMIT)
@@ -144,7 +145,7 @@ public class GitController {
   public GitOpExecution executeBranchAction(GitBranchAction action, Project project, Users hopsworksUser,
                                             Integer repositoryId, String branchName, String commit) 
       throws GitOpException, HopsSecurityException, IllegalArgumentException {
-    GitRepository repository = commandConfigurationValidator.verifyRepository(project, repositoryId);
+    GitRepository repository = commandConfigurationValidator.verifyRepository(project, hopsworksUser, repositoryId);
     String repositoryFullPath = inodeController.getPath(repository.getInode());
     GitCommandConfigurationBuilder builder = new GitCommandConfigurationBuilder();
     builder.setBranchName(branchName);
@@ -191,7 +192,7 @@ public class GitController {
     if (Strings.isNullOrEmpty(remoteName)) {
       throw new IllegalArgumentException(RESTCodes.GitOpErrorCode.INVALID_REMOTE_NAME.getMessage());
     }
-    GitRepository repository = commandConfigurationValidator.verifyRepository(project, repositoryId);
+    GitRepository repository = commandConfigurationValidator.verifyRepository(project, hopsworksUser, repositoryId);
     String repositoryFullPath = inodeController.getPath(repository.getInode());
     GitCommandConfigurationBuilder builder = new GitCommandConfigurationBuilder().setPath(repositoryFullPath)
         .setRemoteName(remoteName);
@@ -216,7 +217,7 @@ public class GitController {
       IllegalArgumentException {
     commandConfigurationValidator.verifyRemoteNameAndBranch(configurationDTO.getRemoteName(),
         configurationDTO.getBranchName());
-    GitRepository repository = commandConfigurationValidator.verifyRepository(project, repositoryId);
+    GitRepository repository = commandConfigurationValidator.verifyRepository(project, hopsworksUser, repositoryId);
     String repositoryFullPath = inodeController.getPath(repository.getInode());
     GitCommandConfiguration pushCommandConfiguration = new GitCommandConfigurationBuilder()
         .setCommandType(GitCommandType.PUSH)
@@ -233,7 +234,7 @@ public class GitController {
       IllegalArgumentException {
     String userFullName = hopsworksUser.getFname() + " " + hopsworksUser.getLname();
     commandConfigurationValidator.verifyRemoteNameAndBranch(configDTO.getRemoteName(), configDTO.getBranchName());
-    GitRepository repository = commandConfigurationValidator.verifyRepository(project, repositoryId);
+    GitRepository repository = commandConfigurationValidator.verifyRepository(project, hopsworksUser, repositoryId);
     String repositoryFullPath = inodeController.getPath(repository.getInode());
     GitCommandConfiguration pullCommandConfiguration =
         new GitCommandConfigurationBuilder().setCommandType(GitCommandType.PULL)
@@ -248,7 +249,7 @@ public class GitController {
 
   public GitOpExecution status(Project project, Users hopsworksUser, Integer repositoryId)
       throws GitOpException, HopsSecurityException {
-    GitRepository repository = commandConfigurationValidator.verifyRepository(project, repositoryId);
+    GitRepository repository = commandConfigurationValidator.verifyRepository(project, hopsworksUser, repositoryId);
     String repositoryFullPath = inodeController.getPath(repository.getInode());
     GitCommandConfiguration statusCommandConfig =
         new GitCommandConfigurationBuilder()
@@ -263,7 +264,7 @@ public class GitController {
     if (filePaths.isEmpty()) {
       throw new IllegalArgumentException("File paths are empty.");
     }
-    GitRepository repository = commandConfigurationValidator.verifyRepository(project, repositoryId);
+    GitRepository repository = commandConfigurationValidator.verifyRepository(project, hopsworksUser, repositoryId);
     String repositoryFullPath = inodeController.getPath(repository.getInode());
     GitCommandConfiguration fileCheckoutConfiguration =
         new GitCommandConfigurationBuilder()
@@ -275,12 +276,12 @@ public class GitController {
   }
 
   @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
-  public void updateBranchCommits(Project project, BranchCommits commits, Integer repositoryId,
+  public void updateBranchCommits(Project project, Users user, BranchCommits commits, Integer repositoryId,
                                   String branchName) throws GitOpException {
     if (Strings.isNullOrEmpty(branchName)) {
       throw new IllegalArgumentException("Branch name cannot be null");
     }
-    GitRepository repository = commandConfigurationValidator.verifyRepository(project, repositoryId);
+    GitRepository repository = commandConfigurationValidator.verifyRepository(project, user, repositoryId);
     //delete all
     gitCommitsFacade.deleteAllInBranchAndRepository(branchName, repository);
     //create new entries

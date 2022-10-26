@@ -61,15 +61,20 @@ public class GitRepositoryFacade extends AbstractFacade<GitRepository> {
     }
   }
 
-  public CollectionInfo<GitRepository> getAllInProject(Project project, Set<? extends FilterBy> filters,
-                                                       Set<? extends AbstractFacade.SortBy> sorts, Integer limit,
-                                                       Integer offset) {
+  public CollectionInfo<GitRepository> getAllInProjectForUser(Project project, Users user,
+                                                              Set<? extends FilterBy> filters,
+                                                              Set<? extends AbstractFacade.SortBy> sorts, Integer limit,
+                                                              Integer offset) {
     String repoQueryStr = buildQuery("SELECT r FROM GitRepository r ", filters, sorts,
-        "r.project = :project ");
+        "r.project = :project AND r.creator = :creator");
     String countQueryStr = buildQuery("SELECT COUNT(r.id) FROM GitRepository r ", filters, sorts,
-        "r.project = :project ");
-    Query countQuery = em.createQuery(countQueryStr, GitRepository.class).setParameter("project", project);
-    Query repoQuery = em.createQuery(repoQueryStr, GitRepository.class).setParameter("project", project);
+        "r.project = :project AND r.creator = :creator");
+    Query countQuery = em.createQuery(countQueryStr, GitRepository.class);
+    countQuery.setParameter("project", project);
+    countQuery.setParameter("creator",  user);
+    Query repoQuery = em.createQuery(repoQueryStr, GitRepository.class);
+    repoQuery.setParameter("project", project);
+    repoQuery.setParameter("creator",  user);
     setFilter(filters, countQuery);
     setFilter(filters, repoQuery);
     setOffsetAndLim(offset, limit, repoQuery);

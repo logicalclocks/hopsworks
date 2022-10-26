@@ -183,7 +183,7 @@ public class GitExecutionController {
       throw new IllegalArgumentException("Invalid git execution state. Execution state cannot be null.");
     }
     LOGGER.log(Level.INFO, "Updating execution, Id = " + executionId + " to " + newState.getExecutionState());
-    GitRepository repository = commandConfigurationValidator.verifyRepository(project, repositoryId);
+    GitRepository repository = commandConfigurationValidator.verifyRepository(project, hopsworksUser, repositoryId);
     GitOpExecution exec = getExecutionInRepository(repository, executionId);
     exec.setCommandResultMessage(stateDTO.getMessage());
     if (newState.isFinalState()) {
