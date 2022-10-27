@@ -42,6 +42,8 @@ jobs:
         with:
           fetch-depth: 0
           ref: ${{ steps.vars.outputs.branch }}
+          repository: ${{github.event.pull_request.head.repo.full_name}}
+          token: ${{ secrets.UNIT_TESTS_ACCESS_TOKEN }}
 
       - name: Checkout hops-testing-ee
         uses: actions/checkout@v3
