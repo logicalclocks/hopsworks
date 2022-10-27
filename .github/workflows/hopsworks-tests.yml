@@ -1,0 +1,84 @@
+name: pre-commit tests
+
+on:
+  pull_request_review:
+    types: [submitted]
+
+jobs:
+  hopsworks-unit-tests:
+    name: Hopsworks Unit Tests
+    runs-on: ubuntu-18.04
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Set up JDK 8
+        uses: actions/setup-java@v3
+        with:
+          java-version: '8'
+          distribution: 'adopt'
+          cache: 'maven'
+
+      - name: Set up .m2 settings.xml
+        run: mkdir -p ~/.m2 && echo "<settings><servers><server><id>HopsEE</id><username>${{ secrets.NEXUS_USER }}</username><password>${{ secrets.NEXUS_PASS }}</password><configuration></configuration></server></servers></settings>" > ~/.m2/settings.xml
+
+      - name: Run unit tests
+        run: mvn --batch-mode test -Pmanaged-cloud,cloud,remote-user-auth,noSeleniumTest,kube,swagger-ui
+
+  hopsworks-license-checker:
+    name: Hopsworks License Checker
+    runs-on: ubuntu-18.04
+
+    steps:
+      - name: Get branch name
+        uses: mdecoleman/pr-branch-name@1.2.0
+        id: vars
+        with:
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+          ref: ${{ steps.vars.outputs.branch }}
+
+      - name: Checkout hops-testing-ee
+        uses: actions/checkout@v3
+        with:
+          repository: logicalclocks/hops-testing-ee
+          path: hops-testing-ee
+          token: ${{ secrets.UNIT_TESTS_ACCESS_TOKEN }}
+          fetch-depth: 0
+
+      - name: Install python 3.6
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.6'
+
+      - name: Install gitpython
+        run: pip install gitpython
+
+      - name: Run license checker
+        run: python hops-testing-ee/scripts/license_checker.py --dir . --whitelist_dir hops-testing-ee/licenses_whitelist --branch ${{ steps.vars.outputs.branch }} --fork_commit ccc0d2c5f9a5ac661e60e6eaf138de7889928b8b --parallelism 12
+
+  hopsworks-vulnerability-checker:
+    name: Hopsworks Vulnerability Checker
+    runs-on: ubuntu-18.04
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Set up JDK 8
+        uses: actions/setup-java@v3
+        with:
+          java-version: '8'
+          distribution: 'adopt'
+          cache: 'maven'
+
+      - name: Set up .m2 settings.xml
+        run: mkdir -p ~/.m2 && echo "<settings><servers><server><id>HopsEE</id><username>${{ secrets.NEXUS_USER }}</username><password>${{ secrets.NEXUS_PASS }}</password><configuration></configuration></server></servers></settings>" > ~/.m2/settings.xml
+
+      - name: Run vulnerability checker
+        run: mvn clean install -Pmanaged-cloud,cloud,jupyter-git,noSeleniumTest,remote-user-auth,owasp-dependency-check,kube -DskipTests
