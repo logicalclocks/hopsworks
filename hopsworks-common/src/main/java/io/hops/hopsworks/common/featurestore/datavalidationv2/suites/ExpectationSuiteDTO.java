@@ -44,6 +44,8 @@ public class ExpectationSuiteDTO extends RestDTO<ExpectationSuiteDTO> {
   private String geCloudId = null;
   private ValidationIngestionPolicy validationIngestionPolicy = ValidationIngestionPolicy.ALWAYS;
   private boolean runValidation = true;
+  private Integer featureGroupId;
+  private Integer featureStoreId;
 
   public ExpectationSuiteDTO() {}
 
@@ -55,6 +57,8 @@ public class ExpectationSuiteDTO extends RestDTO<ExpectationSuiteDTO> {
     this.expectationSuiteName = expectationSuite.getName();
     this.validationIngestionPolicy = expectationSuite.getValidationIngestionPolicy();
     this.runValidation = expectationSuite.getRunValidation();
+    this.featureGroupId = expectationSuite.getFeaturegroup().getId();
+    this.featureStoreId = expectationSuite.getFeaturegroup().getFeaturestore().getId();
     
     ArrayList<ExpectationDTO> expectationDTOs = new ArrayList<>();
     for(Expectation expectation: expectationSuite.getExpectations()) {
@@ -80,6 +84,21 @@ public class ExpectationSuiteDTO extends RestDTO<ExpectationSuiteDTO> {
     this.id = id;
   }
 
+  public Integer getFeatureGroupId() {
+    return featureGroupId;
+  }
+
+  public void setFeatureGroupId(Integer featureGroupId) {
+    this.featureGroupId = featureGroupId;
+  }
+
+  public Integer getFeatureStoreId() {
+    return featureStoreId;
+  }
+
+  public void setFeatureStoreId(Integer featureStoreId) {
+    this.featureStoreId = featureStoreId;
+  }
 
   public String getDataAssetType() {
     return dataAssetType;
