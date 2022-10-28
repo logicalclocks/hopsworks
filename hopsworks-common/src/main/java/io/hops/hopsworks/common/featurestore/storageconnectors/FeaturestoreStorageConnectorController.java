@@ -40,6 +40,7 @@ import io.hops.hopsworks.common.featurestore.storageconnectors.s3.FeaturestoreS3
 import io.hops.hopsworks.common.featurestore.storageconnectors.s3.FeaturestoreS3ConnectorDTO;
 import io.hops.hopsworks.common.featurestore.storageconnectors.snowflake.FeaturestoreSnowflakeConnectorController;
 import io.hops.hopsworks.common.featurestore.storageconnectors.snowflake.FeaturestoreSnowflakeConnectorDTO;
+import io.hops.hopsworks.common.hdfs.inode.InodeController;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.exceptions.ProjectException;
 import io.hops.hopsworks.exceptions.UserException;
@@ -93,6 +94,11 @@ public class FeaturestoreStorageConnectorController {
   private ActivityFacade activityFacade;
   @EJB
   private FeatureStoreGcsConnectorController gcsConnectorController;
+  @EJB
+  private  InodeController inodeController;
+  @EJB
+  private StorageConnectorUtil storageConnectorUtil;
+
 
   /**
    * Returns a list with DTOs of all storage connectors for a featurestore
@@ -322,7 +328,7 @@ public class FeaturestoreStorageConnectorController {
   // The transaction here is required otherwise when calling the remove the entity is not going to be managed anymore
   @TransactionAttribute(TransactionAttributeType.REQUIRED)
   public void deleteConnectorWithName(Users user, Project project, String connectorName, Featurestore featurestore)
-      throws UserException{
+    throws UserException, FeaturestoreException {
     validateUser(user, featurestore);
     Optional<FeaturestoreConnector> featurestoreConnectorOptional =
         featurestoreConnectorFacade.findByFeaturestoreName(featurestore, connectorName);
@@ -330,6 +336,9 @@ public class FeaturestoreStorageConnectorController {
       return;
     }
     FeaturestoreConnector featurestoreConnector = featurestoreConnectorOptional.get();
+    // delete key files for KAKFA,GCS,BIGQUERY
+    cleanKeyFile(project, user, featurestoreConnector);
+    
     featurestoreConnectorFacade.remove(featurestoreConnector);
     activityFacade.persistActivity(
         ActivityFacade.REMOVED_FEATURESTORE_STORAGE_CONNECTOR + featurestoreConnector.getName(),
@@ -384,6 +393,34 @@ public class FeaturestoreStorageConnectorController {
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_STORAGE_CONNECTOR_ARG, Level.FINE,
           RESTCodes.FeaturestoreErrorCode.ILLEGAL_FEATURE_DESCRIPTION + ", the description should be less than: " +
               FeaturestoreConstants.STORAGE_CONNECTOR_DESCRIPTION_MAX_LENGTH);
+    }
+  }
+  
+  public void cleanKeyFile(Project project, Users user, FeaturestoreConnector featurestoreConnector)
+    throws FeaturestoreException {
+    switch (featurestoreConnector.getConnectorType()) {
+      case GCS:
+        storageConnectorUtil.removeHdfsFile(project, user, inodeController.getPath(
+          featurestoreConnector.getGcsConnector().getKeyInode())
+        );
+        break;
+      case BIGQUERY:
+        storageConnectorUtil.removeHdfsFile(project, user, inodeController.getPath(
+          featurestoreConnector.getBigqueryConnector().getKeyInode())
+        );
+        break;
+      case KAFKA:
+        if (featurestoreConnector.getKafkaConnector().getKeystoreInode() != null) {
+          storageConnectorUtil.removeHdfsFile(project, user, inodeController.getPath(
+            featurestoreConnector.getKafkaConnector().getKeystoreInode())
+          );
+        }
+        if (featurestoreConnector.getKafkaConnector().getTruststoreInode() != null) {
+          storageConnectorUtil.removeHdfsFile(project, user, inodeController.getPath(
+            featurestoreConnector.getKafkaConnector().getTruststoreInode())
+          );
+        }
+        break;
     }
   }
 }
