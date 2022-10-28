@@ -230,7 +230,8 @@ public class FeaturestoreStorageConnectorService {
   public Response deleteStorageConnector(@Context SecurityContext sc,
                                          @Context HttpServletRequest req,
                                          @ApiParam(value = "name of the storage connector", required = true)
-                                         @PathParam("connectorName") String connectorName) throws UserException {
+                                         @PathParam("connectorName") String connectorName)
+    throws UserException, FeaturestoreException {
     Users user = jWTHelper.getUserPrincipal(sc);
     storageConnectorController.deleteConnectorWithName(user, project, connectorName, featurestore);
     return Response.ok().build();

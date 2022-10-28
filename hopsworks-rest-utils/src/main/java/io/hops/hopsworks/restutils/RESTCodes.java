@@ -1635,6 +1635,9 @@ public class RESTCodes {
     EXPECTATION_SUITE_ALREADY_EXISTS(208, "An expectation suite is already attached to this " +
       "feature group. Either update the existing suite via the update endpoint or delete it first.",
       Response.Status.CONFLICT);
+        Response.Status.BAD_REQUEST),
+    FAILURE_HDFS_USER_OPERATION(209, "HDFS user operation failure",
+      Response.Status.INTERNAL_SERVER_ERROR);
 
     private int code;
     private String message;
