@@ -67,6 +67,8 @@ public class ExpectationSuiteBuilder {
     dto.setId(expectationSuite.getId());
     dto.setMeta(expectationSuite.getMeta());
     dto.setExpectationSuiteName(expectationSuite.getName());
+    dto.setFeatureGroupId(featureGroup.getId());
+    dto.setFeatureStoreId(featureGroup.getFeaturestore().getId());
 
     List<ExpectationDTO> expectationDTOs = new ArrayList<ExpectationDTO>();
 

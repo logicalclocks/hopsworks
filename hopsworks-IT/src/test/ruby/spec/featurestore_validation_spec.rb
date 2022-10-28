@@ -38,6 +38,8 @@ describe "On #{ENV['OS']}" do
           expect_status_details(200)
           parsed_suite = JSON.parse(fetched_suite)
           expect(parsed_suite["expectationSuiteName"]).to eq(json_expectation_suite[:expectationSuiteName])
+          expect(parsed_suite["featureGroupId"]).to eq(parsed_json["id"])
+          expect(parsed_suite["featureStoreId"]).to eql(featurestore_id)
         end
       end
     end
@@ -60,6 +62,8 @@ describe "On #{ENV['OS']}" do
 	        expect_status_details(201)
 	        dto_parsed = JSON.parse(dto)
 	        expect(dto_parsed["expectationSuiteName"]).to eq(template_suite[:expectationSuiteName])
+          expect(dto_parsed["featureGroupId"]).to eq(fg_json["id"])
+          expect(dto_parsed["featureStoreId"]).to eql(featurestore_id)
         end
 
         it "should be able to get an expectation suite attached to a feature group" do
@@ -82,6 +86,8 @@ describe "On #{ENV['OS']}" do
           expect(stored_expectation_suite["dataAssetType"]).to eq(template_expectation_suite[:dataAssetType])
           expect(stored_expectation_suite["expectations"][0]["expectationType"]).to eq(template_expectation_suite[:expectations][0][:expectationType])
           expect(stored_expectation_suite["expectations"][0]["kwargs"]).to eq(template_expectation_suite[:expectations][0][:kwargs])
+          expect(stored_expectation_suite["featureGroupId"]).to eq(fg_json["id"])
+          expect(stored_expectation_suite["featureStoreId"]).to eql(featurestore_id)
           # Do not compare meta field as it contains an additional expectationId field in principle
 	        # expect(stored_expectation_suite["expectations"][0]["meta"]).to eq(template_expectation_suite[:expectations][0][:meta])
         end
@@ -148,6 +154,8 @@ describe "On #{ENV['OS']}" do
           expect(parsed_suite["meta"]).to eq(edited_meta)
           expect(parsed_suite["validationIngestionPolicy"]).to eq("STRICT")
           expect(parsed_suite["runValidation"]).to eq(false)
+          expect(parsed_suite["featureGroupId"]).to eq(fg_json["id"])
+          expect(parsed_suite["featureStoreId"]).to eql(featurestore_id)
         end
 
         # Split the three functions of create, update and delete to avoid over-complicated testing
