@@ -22,6 +22,9 @@ import com.google.common.base.Strings;
 import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.dao.user.security.secrets.SecretPlaintext;
 import io.hops.hopsworks.common.featurestore.OptionDTO;
+import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
+import io.hops.hopsworks.common.hdfs.DistributedFsService;
+import io.hops.hopsworks.common.hdfs.HdfsUsersController;
 import io.hops.hopsworks.common.security.secrets.SecretsController;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.exceptions.ProjectException;
@@ -29,6 +32,7 @@ import io.hops.hopsworks.exceptions.ServiceException;
 import io.hops.hopsworks.exceptions.UserException;
 import io.hops.hopsworks.persistence.entity.featurestore.Featurestore;
 import io.hops.hopsworks.persistence.entity.featurestore.storageconnector.FeaturestoreConnectorType;
+import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.persistence.entity.user.security.secrets.Secret;
 import io.hops.hopsworks.restutils.RESTCodes;
@@ -49,6 +53,10 @@ public class StorageConnectorUtil {
   private SecretsController secretsController;
   @EJB
   private UserFacade userFacade;
+  @EJB
+  private DistributedFsService dfs;
+  @EJB
+  private HdfsUsersController hdfsUsersController;
   
   private ObjectMapper objectMapper = new ObjectMapper();
   
@@ -160,5 +168,20 @@ public class StorageConnectorUtil {
 
   public String getValueOrNull(String val) {
     return isNullOrWhitespace(val)? null : val.trim();
+  }
+  
+  public void removeHdfsFile(Project project, Users user, String keyPath) throws FeaturestoreException {
+    if (Strings.isNullOrEmpty(keyPath)){
+      throw new IllegalArgumentException("File Path to delete cannot be null or empty");
+    }
+    DistributedFileSystemOps udfso = dfs.getDfsOps(hdfsUsersController.getHdfsUserName(project, user));
+    try {
+      udfso.rm(keyPath, false);
+    } catch (IOException e) {
+      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.  FAILURE_HDFS_USER_OPERATION, Level.SEVERE,
+        "Error deleting file", e.getMessage());
+    } finally {
+      dfs.closeDfsClient(udfso);
+    }
   }
 }

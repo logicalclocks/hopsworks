@@ -180,14 +180,6 @@ describe "On #{ENV['OS']}" do
     expect(parsed_result_update['errorCode']).to eql(error_code)
   end
 
-  it 'should delete bigquery connector' do
-    parsed_json,connector_name = create_connector_materializationDataset
-    expect_status_details(201)
-    project=get_project
-    result=delete_connector(project.id, get_featurestore_id(project.id), connector_name)
-    expect_status_details(200)
-  end
-
   it 'should get bigquery connector' do
     parsed_json,connector_name = create_connector_materializationDataset
     expect_status_details(201)
@@ -199,4 +191,12 @@ describe "On #{ENV['OS']}" do
     expect(parsed_result['name']).to eql(connector_name)
   end
 
+  it 'should delete bigquery connector' do
+    parsed_json,connector_name = create_connector_materializationDataset
+    expect_status_details(201)
+    project=get_project
+    delete_connector(project.id, get_featurestore_id(project.id), connector_name)
+    expect_status_details(200)
+    expect(test_file(parsed_json["keyPath"])).to be false
+  end
 end
