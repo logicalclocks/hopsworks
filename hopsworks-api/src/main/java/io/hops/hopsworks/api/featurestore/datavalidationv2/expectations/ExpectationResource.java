@@ -19,6 +19,7 @@ package io.hops.hopsworks.api.featurestore.datavalidationv2.expectations;
 import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.api.filter.Audience;
 import io.hops.hopsworks.api.filter.apiKey.ApiKeyRequired;
+import io.hops.hopsworks.api.jwt.JWTHelper;
 import io.hops.hopsworks.audit.logger.LogLevel;
 import io.hops.hopsworks.audit.logger.annotation.Logged;
 import io.hops.hopsworks.common.api.ResourceRequest;
@@ -33,6 +34,7 @@ import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.Featuregro
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.datavalidationv2.Expectation;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.datavalidationv2.ExpectationSuite;
 import io.hops.hopsworks.persistence.entity.project.Project;
+import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.persistence.entity.user.security.apiKey.ApiScope;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -70,6 +72,8 @@ public class ExpectationResource {
   private ExpectationBuilder expectationBuilder;
   @EJB
   private ExpectationController expectationController;
+  @EJB
+  private JWTHelper jWTHelper;
 
   private Project project;
   private Featurestore featurestore;
@@ -151,8 +155,11 @@ public class ExpectationResource {
       UriInfo uriInfo,
     ExpectationDTO expectationDTO) throws FeaturestoreException {
 
+    Users user = jWTHelper.getUserPrincipal(sc);
+
+    // When modifying single expectation via the API we log the activity
     Expectation expectation = expectationController.createOrUpdateExpectation(
-      expectationSuite, expectationDTO);
+      user, expectationSuite, expectationDTO, true);
 
     ExpectationDTO dto = expectationBuilder.build(uriInfo, project, featuregroup, expectationSuite, expectation);
 
@@ -188,7 +195,11 @@ public class ExpectationResource {
       Integer expectationId,
     ExpectationDTO expectationDTO) throws FeaturestoreException {
 
-    Expectation expectation = expectationController.createOrUpdateExpectation(expectationSuite, expectationDTO);
+    Users user = jWTHelper.getUserPrincipal(sc);
+
+    // When modifying single expectation via the API we log the activity
+    Expectation expectation = expectationController.createOrUpdateExpectation(
+      user, expectationSuite, expectationDTO, true);
 
     ExpectationDTO dto = expectationBuilder.build(uriInfo, project, featuregroup, expectationSuite, expectation);
 
@@ -218,8 +229,10 @@ public class ExpectationResource {
       UriInfo uriInfo,
     @PathParam("expectationId")
       Integer expectationId) throws FeaturestoreException {
+    
+    Users user = jWTHelper.getUserPrincipal(sc);
 
-    expectationController.deleteExpectation(expectationId);
+    expectationController.deleteExpectation(user, expectationId, true);
 
     return Response.noContent().build();
   }

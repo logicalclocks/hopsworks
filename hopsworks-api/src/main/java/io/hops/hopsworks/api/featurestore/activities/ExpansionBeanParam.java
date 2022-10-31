@@ -26,7 +26,8 @@ import java.util.stream.Collectors;
 public class ExpansionBeanParam {
   @QueryParam("expand")
   @ApiParam(value = "ex. expand=executions",
-      allowableValues = "expand=users,expand=executions,expand=jobs,expand=statistics,expand=commits")
+      allowableValues = "expand=users,expand=executions,expand=jobs,expand=statistics,expand=commits" + 
+      "expand=expectationsuite,expand=validationreport")
   private Set<ActivityExpansions> expansions;
 
   public ExpansionBeanParam(@QueryParam("expand") Set<ActivityExpansions> expansions) {

@@ -21,6 +21,8 @@ import io.hops.hopsworks.api.featurestore.statistics.StatisticsDTO;
 import io.hops.hopsworks.api.jobs.JobDTO;
 import io.hops.hopsworks.api.user.UserDTO;
 import io.hops.hopsworks.common.api.RestDTO;
+import io.hops.hopsworks.common.featurestore.datavalidationv2.reports.ValidationReportDTO;
+import io.hops.hopsworks.common.featurestore.datavalidationv2.suites.ExpectationSuiteDTO;
 import io.hops.hopsworks.persistence.entity.featurestore.activity.ActivityType;
 
 public class ActivityDTO extends RestDTO<ActivityDTO> {
@@ -33,6 +35,8 @@ public class ActivityDTO extends RestDTO<ActivityDTO> {
   private JobDTO job;
   private StatisticsDTO statistics;
   private CommitDTO commit;
+  private ValidationReportDTO validationReport;
+  private ExpectationSuiteDTO expectationSuite;
 
   public ActivityDTO() { }
 
@@ -90,5 +94,21 @@ public class ActivityDTO extends RestDTO<ActivityDTO> {
 
   public void setCommit(CommitDTO commit) {
     this.commit = commit;
+  }
+
+  public ExpectationSuiteDTO getExpectationSuite() { 
+    return expectationSuite; 
+  }
+
+  public void setExpectationSuite(ExpectationSuiteDTO expectationSuite) { 
+    this.expectationSuite = expectationSuite; 
+  }
+
+  public ValidationReportDTO getValidationReport() {
+    return validationReport;
+  }
+
+  public void setValidationReport(ValidationReportDTO validationReport) { 
+    this.validationReport = validationReport; 
   }
 }

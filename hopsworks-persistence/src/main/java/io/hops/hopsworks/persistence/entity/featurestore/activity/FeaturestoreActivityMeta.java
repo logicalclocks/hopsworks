@@ -23,7 +23,12 @@ public enum FeaturestoreActivityMeta {
   ONLINE_ENABLED("Feature group available online"),
   ONLINE_DISABLED("Feature group not available online"),
   TD_CREATED("The training dataset was created"),
-  FV_CREATED("The feature view was created");
+  FV_CREATED("The feature view was created"),
+  EXPECTATION_SUITE_ATTACHED("An Expectation Suite was attached to the Feature Group."),
+  EXPECTATION_SUITE_UPDATED("The Expectation Suite was updated."),
+  EXPECTATION_SUITE_DELETED("The Expectation Suite was deleted."),
+  EXPECTATION_SUITE_METADATA_UPDATED("The Expectation Suite metadata was updated."),
+  VALIDATION_REPORT_UPLOADED("A Validation Report was uploaded.");
 
   private String value;
 

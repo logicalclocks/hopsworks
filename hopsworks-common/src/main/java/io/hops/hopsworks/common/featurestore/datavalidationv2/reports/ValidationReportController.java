@@ -23,6 +23,7 @@ import io.hops.hopsworks.common.dao.AbstractFacade.FilterBy;
 import io.hops.hopsworks.common.dao.AbstractFacade.SortBy;
 import io.hops.hopsworks.common.dataset.DatasetController;
 import io.hops.hopsworks.common.featurestore.FeaturestoreFacade;
+import io.hops.hopsworks.common.featurestore.activity.FeaturestoreActivityFacade;
 import io.hops.hopsworks.common.featurestore.datavalidationv2.expectations.ExpectationFacade;
 import io.hops.hopsworks.common.featurestore.datavalidationv2.results.ValidationResultDTO;
 import io.hops.hopsworks.common.featurestore.datavalidationv2.suites.ExpectationSuiteController;
@@ -101,6 +102,8 @@ public class ValidationReportController {
   private AlertController alertController;
   @EJB
   private FeaturestoreFacade featurestoreFacade;
+  @EJB
+  private FeaturestoreActivityFacade fsActivityFacade;
 
   /////////////////////////////////////////////////////
   ////// VALIDATION REPORT CRUD
@@ -130,6 +133,8 @@ public class ValidationReportController {
 
     ValidationReport validationReport = convertReportDTOToPersistent(user, featuregroup, reportDTO);
     validationReportFacade.persist(validationReport);
+
+    fsActivityFacade.logValidationReportActivity(user, validationReport);
     
     // trigger alerts if any
     triggerAlerts(featuregroup, validationReport);
