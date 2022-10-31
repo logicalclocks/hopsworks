@@ -201,18 +201,6 @@ describe "On #{ENV['OS']}" do
     expect(parsed_result_update["errorCode"]).to eql(270136)
   end
 
-  it "should delete gcs connector" do
-    project = get_project
-    featurestore_id = get_featurestore_id(project.id)
-    key_path = "/Projects/#{@project['projectname']}/Resources/sampleKey.json"
-    bucket = 'testbucket'
-    _, connector_name = create_gcs_connector(project.id, featurestore_id, key_path, bucket)
-    expect_status_details(201)
-
-    delete_connector(project.id, featurestore_id, connector_name)
-    expect_status_details(200)
-  end
-
   it "should get gcs connector" do
     project = get_project
     featurestore_id = get_featurestore_id(project.id)
@@ -262,6 +250,19 @@ describe "On #{ENV['OS']}" do
     expect(parsed_result_update.key?("encryptionKey")).to be false
     expect(parsed_result_update.key?("encryptionKeyHash")).to be false
     expect(parsed_result_update.key?("algorithm")).to be false
+  end
+
+  it "should delete gcs connector" do
+    project = get_project
+    featurestore_id = get_featurestore_id(project.id)
+    key_path = "/Projects/#{@project['projectname']}/Resources/sampleKey.json"
+    bucket = 'testbucket'
+    _, connector_name = create_gcs_connector(project.id, featurestore_id, key_path, bucket)
+    expect_status_details(201)
+
+    delete_connector(project.id, featurestore_id, connector_name)
+    expect_status_details(200)
+    expect(test_file(key_path)).to be false
   end
 
 end

@@ -18,14 +18,17 @@ package io.hops.hopsworks.common.featurestore.datavalidationv2.suites;
 
 import com.google.common.base.Strings;
 import io.hops.hopsworks.common.dao.AbstractFacade.CollectionInfo;
+import io.hops.hopsworks.common.featurestore.activity.FeaturestoreActivityFacade;
 import io.hops.hopsworks.common.featurestore.datavalidationv2.expectations.ExpectationController;
 import io.hops.hopsworks.common.featurestore.datavalidationv2.expectations.ExpectationDTO;
 import io.hops.hopsworks.common.featurestore.datavalidationv2.greatexpectations.GreatExpectationFacade;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
+import io.hops.hopsworks.persistence.entity.featurestore.activity.FeaturestoreActivityMeta;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.Featuregroup;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.datavalidationv2.Expectation;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.datavalidationv2.ExpectationSuite;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.datavalidationv2.GreatExpectation;
+import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.restutils.RESTCodes;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -59,6 +62,8 @@ public class ExpectationSuiteController {
   GreatExpectationFacade greatExpectationFacade;
   @EJB
   ExpectationController expectationController;
+  @EJB
+  FeaturestoreActivityFacade fsActivityFacade;
 
   ///////////////////////////////////////////////////
   ////// Great Expectations
@@ -84,17 +89,26 @@ public class ExpectationSuiteController {
     return e.orElse(null);
   }
 
-  public ExpectationSuite createExpectationSuite(Featuregroup featureGroup, ExpectationSuiteDTO expectationSuiteDTO)
+  public ExpectationSuite createExpectationSuite(Users user, Featuregroup featureGroup, 
+    ExpectationSuiteDTO expectationSuiteDTO)
     throws FeaturestoreException {
     verifyExpectationSuite(expectationSuiteDTO);
     ExpectationSuite expectationSuite = convertExpectationSuiteDTOToPersistent(featureGroup, expectationSuiteDTO);
     expectationSuiteFacade.persist(expectationSuite);
 
+    fsActivityFacade.logExpectationSuiteActivity(
+      user, featureGroup, expectationSuite, FeaturestoreActivityMeta.EXPECTATION_SUITE_ATTACHED, "");
+
     return expectationSuite;
   }
 
-  public void deleteExpectationSuite(Featuregroup featureGroup) throws FeaturestoreException {
-    expectationSuiteFacade.remove(getExpectationSuite(featureGroup));
+  public void deleteExpectationSuite(Users user, Featuregroup featureGroup) throws FeaturestoreException {
+    ExpectationSuite expectationSuite = getExpectationSuite(featureGroup);
+    if (expectationSuite != null) {
+      expectationSuiteFacade.remove(expectationSuite);
+      fsActivityFacade.logExpectationSuiteActivity(
+        user, featureGroup, null, FeaturestoreActivityMeta.EXPECTATION_SUITE_DELETED, "");
+    }
   }
 
 
@@ -236,36 +250,46 @@ public class ExpectationSuiteController {
   //// Smart update to preserve expectations and associated result
   ////////////////////////////////////////////////////////
 
-  public ExpectationSuite updateExpectationSuite(Featuregroup featuregroup,
+  public ExpectationSuite updateExpectationSuite(Users user, Featuregroup featuregroup,
     ExpectationSuiteDTO expectationSuiteDTO) throws FeaturestoreException {
     verifyExpectationSuite(expectationSuiteDTO);
 
     Optional<ExpectationSuite> optionalOldExpectationSuite = expectationSuiteFacade.findByFeaturegroup(featuregroup);
 
     if (!optionalOldExpectationSuite.isPresent()) {
-      return createExpectationSuite(featuregroup, expectationSuiteDTO);
+      return createExpectationSuite(user, featuregroup, expectationSuiteDTO);
     } else {
       // Smart update to preserve reports/results history
-      return smartUpdateExpectationSuite(featuregroup, expectationSuiteDTO, optionalOldExpectationSuite.get());
+      return smartUpdateExpectationSuite(user, featuregroup, expectationSuiteDTO, optionalOldExpectationSuite.get());
     }
   }
 
   @TransactionAttribute(TransactionAttributeType.REQUIRED)
   @Transactional(rollbackOn = {FeaturestoreException.class})
-  public ExpectationSuite smartUpdateExpectationSuite(Featuregroup featuregroup,
+  public ExpectationSuite smartUpdateExpectationSuite(Users user, Featuregroup featuregroup,
     ExpectationSuiteDTO expectationSuiteDTO, ExpectationSuite oldExpectationSuite) throws FeaturestoreException {
-    ExpectationSuite newExpectationSuite = updateMetadataExpectationSuite(featuregroup, expectationSuiteDTO);
+    ExpectationSuite newExpectationSuite = updateMetadataExpectationSuite(
+      user, featuregroup, expectationSuiteDTO, false);
 
     ArrayList<Expectation> newExpectationList = new ArrayList<>();
 
     for (ExpectationDTO expectationDTO : expectationSuiteDTO.getExpectations()) {
       newExpectationList.add(
-        expectationController.createOrUpdateExpectation(newExpectationSuite, expectationDTO));
+        expectationController.createOrUpdateExpectation(
+          user, 
+          newExpectationSuite, 
+          expectationDTO,
+          // Don't log the activity 
+          false));
     }
 
     newExpectationSuite.setExpectations(newExpectationList);
 
-    deleteMissingExpectations(newExpectationList, oldExpectationSuite.getExpectations());
+    deleteMissingExpectations(user, newExpectationList, oldExpectationSuite.getExpectations());
+
+    // Activity message could be reworked to add more detail about the update
+    fsActivityFacade.logExpectationSuiteActivity(
+      user, featuregroup, newExpectationSuite, FeaturestoreActivityMeta.EXPECTATION_SUITE_UPDATED, "");
 
     return newExpectationSuite;
   }
@@ -275,8 +299,8 @@ public class ExpectationSuiteController {
   ////////////////////////////////////////////////////////
 
   // Update only metadata of the ExpectationSuite (everything but Expectation list)
-  public ExpectationSuite updateMetadataExpectationSuite(Featuregroup featuregroup,
-    ExpectationSuiteDTO expectationSuiteDTO) throws FeaturestoreException {
+  public ExpectationSuite updateMetadataExpectationSuite(Users user, Featuregroup featuregroup,
+    ExpectationSuiteDTO expectationSuiteDTO, boolean logActivity) throws FeaturestoreException {
     verifyExpectationSuite(expectationSuiteDTO);
 
     ExpectationSuite oldExpectationSuite = getExpectationSuite(featuregroup);
@@ -290,10 +314,15 @@ public class ExpectationSuiteController {
 
     expectationSuiteFacade.updateExpectationSuite(expectationSuite);
 
+    if (logActivity) {
+      fsActivityFacade.logExpectationSuiteActivity(user, featuregroup, expectationSuite,
+        FeaturestoreActivityMeta.EXPECTATION_SUITE_METADATA_UPDATED, "");
+    }
+
     return expectationSuite;
   }
 
-  private void deleteMissingExpectations(ArrayList<Expectation> newExpectations,
+  private void deleteMissingExpectations(Users user, ArrayList<Expectation> newExpectations,
     Collection<Expectation> oldExpectations) throws FeaturestoreException {
     List<Integer> newAndPreservedExpectationIds =
       newExpectations.stream().map(Expectation::getId).collect(Collectors.toList());
@@ -306,7 +335,8 @@ public class ExpectationSuiteController {
     }
 
     for (Integer expectationId : missingExpectationIds) {
-      expectationController.deleteExpectation(expectationId);
+      // Don't log the activity for every single deletion
+      expectationController.deleteExpectation(user, expectationId, false);
     }
   }
 

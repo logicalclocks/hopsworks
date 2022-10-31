@@ -18,9 +18,12 @@ package io.hops.hopsworks.common.featurestore.datavalidationv2.expectations;
 
 
 import io.hops.hopsworks.common.dao.AbstractFacade.CollectionInfo;
+import io.hops.hopsworks.common.featurestore.activity.FeaturestoreActivityFacade;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
+import io.hops.hopsworks.persistence.entity.featurestore.activity.FeaturestoreActivityMeta;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.datavalidationv2.Expectation;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.datavalidationv2.ExpectationSuite;
+import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.restutils.RESTCodes;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -46,6 +49,8 @@ public class ExpectationController {
 
   @EJB
   ExpectationFacade expectationFacade;
+  @EJB
+  FeaturestoreActivityFacade fsActivityFacade;  
 
   public Expectation getExpectationById(Integer expectationId) throws FeaturestoreException {
     Optional<Expectation> expectation = expectationFacade.findById(expectationId);
@@ -69,8 +74,8 @@ public class ExpectationController {
     expectationFacade.updateExpectation(expectation);
   }
 
-  public Expectation createOrUpdateExpectation(ExpectationSuite expectationSuite, ExpectationDTO expectationDTO)
-    throws FeaturestoreException {
+  public Expectation createOrUpdateExpectation(Users user, ExpectationSuite expectationSuite, 
+    ExpectationDTO expectationDTO, boolean logActivity) throws FeaturestoreException {
     verifyExpectationFields(expectationDTO);
     // Existing expectation can be sent with id in id field or as key-value in meta field.
     Integer expectationId = null;
@@ -83,19 +88,40 @@ public class ExpectationController {
 
     Expectation expectation = convertExpectationDTOToPersistent(expectationSuite, expectationDTO);
 
+    String activityMessage = null;    
     // If it has an id try to update it, otherwise create it
     if (expectation.getId() == null) {
       createExpectation(expectation);
+      activityMessage = String.format("Created expectation with id: %d.", expectation.getId());
     } else {
       updateExpectation(expectation);
+      activityMessage = String.format("Updated expectation with id: %d.", expectation.getId());
+    }
+
+    if (logActivity) {
+      FeaturestoreActivityMeta activityMeta = FeaturestoreActivityMeta.EXPECTATION_SUITE_UPDATED;
+      fsActivityFacade.logExpectationSuiteActivity(
+        user, expectationSuite.getFeaturegroup(), expectationSuite, activityMeta, activityMessage);
     }
 
     return expectation;
   }
 
-  public void deleteExpectation(Integer expectationId) throws FeaturestoreException {
+  public void deleteExpectation(Users user, Integer expectationId, boolean logActivity) throws FeaturestoreException {
     Expectation expectation = expectationFacade.findById(expectationId).orElse(null);
+    ExpectationSuite expectationSuite = null;
+    String activityMessage = null;
+    if (expectation != null) {
+      expectationSuite = expectation.getExpectationSuite(); 
+      activityMessage = String.format("Deleted expectation with id: %d.", expectation.getId());
+    }
     expectationFacade.remove(expectation);
+    if (expectation != null && logActivity) {
+      FeaturestoreActivityMeta activityMeta = FeaturestoreActivityMeta.EXPECTATION_SUITE_UPDATED;
+      fsActivityFacade.logExpectationSuiteActivity(user, expectationSuite.getFeaturegroup(), expectationSuite,
+        activityMeta,
+        activityMessage);
+    }
   }
 
   public CollectionInfo<Expectation> getExpectationsByExpectationSuite(ExpectationSuite expectationSuite) {

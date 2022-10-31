@@ -713,6 +713,31 @@ describe "On #{ENV['OS']}" do
         expect(parsed_json["sslKeystorePassword"]).to eql("ks_pw")
         expect(parsed_json["sslKeyPassword"]).to eql("pw")
       end
+
+      it "should delete kafka connector" do
+        project = get_project
+        featurestore_id = get_featurestore_id(project.id)
+
+        additional_data = {
+          bootstrapServers: "localhost:9091",
+          securityProtocol: "SSL",
+          sslTruststoreLocation: "/Projects/#{@project['projectname']}/Resources/sampleTrustStore.jks",
+          sslTruststorePassword: "ts_pw",
+          sslKeystoreLocation: "Projects/#{@project['projectname']}/Resources/sampleKeyStore.jks",
+          sslKeystorePassword: "ks_pw",
+          sslKeyPassword: "pw",
+          sslEndpointIdentificationAlgorithm: "",
+          options: [{name: "option1", value: "value1"}]
+        }
+
+        json_result, connector_name = create_kafka_connector(project.id, featurestore_id, additional_data)
+        parsed_json = JSON.parse(json_result)
+        expect_status_details(201)
+        delete_connector(project.id,featurestore_id,connector_name)
+        expect_status_details(200)
+        expect(test_file(parsed_json["sslTruststoreLocation"])).to be false
+        expect(test_file(parsed_json["sslKeystoreLocation"])).to be false
+      end
     end
   end
 end
