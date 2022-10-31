@@ -98,7 +98,7 @@ public class CloudManager {
   @EJB
   private YarnClientService yarnClientService;
   @EJB
-  private Settings settings;
+  protected Settings settings;
   @EJB
   private DistributedFsService dfsService;
   @EJB

@@ -13,6 +13,7 @@ import io.hops.hopsworks.common.dao.host.HostsFacade;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.hosts.HostsController;
 import io.hops.hopsworks.common.proxies.CAProxy;
+import io.hops.hopsworks.common.util.Settings;
 import java.io.IOException;
 import java.time.Instant;
 import java.util.*;
@@ -108,6 +109,8 @@ public class TestCloudManager {
     cloudManager = Mockito.spy(CloudManager.class);
     Mockito.doNothing().when(cloudManager).execute(Mockito.any(RMAdminCLI.class), Mockito.any(String[].class));
     Mockito.doReturn(Instant.now()).when(cloudManager).getBeginningOfHeartbeat();
+    cloudManager.settings = Mockito.mock(Settings.class);
+    Mockito.when(cloudManager.settings.getCloudType()).thenReturn(Settings.CLOUD_TYPES.AWS);
     
     status = cloudManager.setAndGetDecommission(new ArrayList<>(), workers, yarnClient, dfsOps, conf, caProxy,
         hostsController, new ArrayList<>());
