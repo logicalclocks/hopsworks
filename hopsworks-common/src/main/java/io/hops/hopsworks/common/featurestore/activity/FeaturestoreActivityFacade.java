@@ -22,6 +22,8 @@ import io.hops.hopsworks.persistence.entity.featurestore.activity.FeaturestoreAc
 import io.hops.hopsworks.persistence.entity.featurestore.activity.FeaturestoreActivityMeta;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.Featuregroup;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.cached.FeatureGroupCommit;
+import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.datavalidationv2.ExpectationSuite;
+import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.datavalidationv2.ValidationReport;
 import io.hops.hopsworks.persistence.entity.featurestore.featureview.FeatureView;
 import io.hops.hopsworks.persistence.entity.featurestore.statistics.FeaturestoreStatistic;
 import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.TrainingDataset;
@@ -126,6 +128,32 @@ public class FeaturestoreActivityFacade extends AbstractFacade<FeaturestoreActiv
     fsActivity.setEventTime(execution.getSubmissionTime());
     fsActivity.setExecution(execution);
     em.merge(fsActivity);
+  }
+
+  public void logValidationReportActivity(Users user, ValidationReport validationReport) {
+    FeaturestoreActivity fsActivity = new FeaturestoreActivity();
+    fsActivity.setUser(user);
+    fsActivity.setValidationReport(validationReport);
+    fsActivity.setType(ActivityType.VALIDATIONS);
+    fsActivity.setActivityMeta(FeaturestoreActivityMeta.VALIDATION_REPORT_UPLOADED);
+    fsActivity.setEventTime(validationReport.getValidationTime());
+    fsActivity.setFeatureGroup(validationReport.getFeaturegroup());
+
+    em.persist(fsActivity);
+  }
+
+  public void logExpectationSuiteActivity(Users user, Featuregroup featureGroup, ExpectationSuite expectationSuite,
+    FeaturestoreActivityMeta fsActivityMeta, String activityMessage) {
+    FeaturestoreActivity fsActivity = new FeaturestoreActivity();
+    fsActivity.setUser(user);
+    fsActivity.setExpectationSuite(expectationSuite);
+    fsActivity.setType(ActivityType.EXPECTATIONS);
+    fsActivity.setActivityMeta(fsActivityMeta);
+    fsActivity.setEventTime(new Date());
+    fsActivity.setFeatureGroup(featureGroup);
+    fsActivity.setActivityMetaMsg(activityMessage);
+
+    em.persist(fsActivity);
   }
 
   public CollectionInfo<FeaturestoreActivity> findByFeaturegroup(Featuregroup featuregroup, Integer offset,

@@ -160,8 +160,10 @@ public class ExpectationSuiteResource {
         Level.WARNING);
     }
 
+    Users user = jWTHelper.getUserPrincipal(sc); 
+
     ExpectationSuite expectationSuite = expectationSuiteController.createExpectationSuite(
-      featuregroup, expectationSuiteDTO);
+      user, featuregroup, expectationSuiteDTO);
 
     ExpectationSuiteDTO dto = expectationSuiteBuilder.build(
       uriInfo, project, featuregroup, expectationSuite);
@@ -197,9 +199,11 @@ public class ExpectationSuiteResource {
     @PathParam("expectationSuiteId")
       Integer expectationSuiteId,
     ExpectationSuiteDTO expectationSuiteDTO) throws FeaturestoreException {
+    
+    Users user = jWTHelper.getUserPrincipal(sc); 
 
     ExpectationSuite expectationSuite = expectationSuiteController.updateExpectationSuite(
-      featuregroup, expectationSuiteDTO);
+      user, featuregroup, expectationSuiteDTO);
 
     ExpectationSuiteDTO dto = expectationSuiteBuilder.build(
       uriInfo, project, featuregroup, expectationSuite);
@@ -236,10 +240,12 @@ public class ExpectationSuiteResource {
     @PathParam("expectationSuiteId")
       Integer expectationSuiteId,
     ExpectationSuiteDTO expectationSuiteDTO) throws FeaturestoreException {
+    
+    Users user = jWTHelper.getUserPrincipal(sc);
 
     // Expectations list of the DTO is discarded
     ExpectationSuite expectationSuite = expectationSuiteController.updateMetadataExpectationSuite(
-      featuregroup, expectationSuiteDTO);
+      user, featuregroup, expectationSuiteDTO, true);
 
     ExpectationSuiteDTO dto = expectationSuiteBuilder.build(
       uriInfo, project, featuregroup, expectationSuite);
@@ -270,7 +276,9 @@ public class ExpectationSuiteResource {
     @PathParam("expectationSuiteId")
       Integer expectationSuiteId) throws FeaturestoreException {
 
-    expectationSuiteController.deleteExpectationSuite(featuregroup);
+    Users user = jWTHelper.getUserPrincipal(sc); 
+
+    expectationSuiteController.deleteExpectationSuite(user, featuregroup);
 
     return Response.noContent().build();
   }

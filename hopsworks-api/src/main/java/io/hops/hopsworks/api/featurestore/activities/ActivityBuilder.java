@@ -17,6 +17,8 @@
 package io.hops.hopsworks.api.featurestore.activities;
 
 import io.hops.hopsworks.api.featurestore.commit.CommitBuilder;
+import io.hops.hopsworks.api.featurestore.datavalidationv2.reports.ValidationReportBuilder;
+import io.hops.hopsworks.api.featurestore.datavalidationv2.suites.ExpectationSuiteBuilder;
 import io.hops.hopsworks.api.featurestore.statistics.StatisticsBuilder;
 import io.hops.hopsworks.api.jobs.JobsBuilder;
 import io.hops.hopsworks.api.user.UsersBuilder;
@@ -55,6 +57,10 @@ public class ActivityBuilder {
   private StatisticsBuilder statisticsBuilder;
   @EJB
   private UsersBuilder usersBuilder;
+  @EJB
+  private ExpectationSuiteBuilder expectationSuiteBuilder;
+  @EJB
+  private ValidationReportBuilder validationReportBuilder;
 
   private UriBuilder uri(UriInfo uriInfo, Project project, Featurestore featurestore) {
     return uriInfo.getBaseUriBuilder().path(ResourceRequest.Name.PROJECT.toString().toLowerCase())
@@ -116,8 +122,23 @@ public class ActivityBuilder {
       } else if (featurestoreActivity.getType() == ActivityType.STATISTICS) {
         dto.setStatistics(statisticsBuilder.build(uriInfo, resourceRequest, project, user,
             featuregroup, featurestoreActivity.getStatistics()));
+      } else if (featurestoreActivity.getType() == ActivityType.EXPECTATIONS) {
+        if (featurestoreActivity.getExpectationSuite() != null) {
+          dto.setExpectationSuite(expectationSuiteBuilder.build(
+            uriInfo, project, featuregroup, featurestoreActivity.getExpectationSuite()));
+        }
+        // Metadata message
+        String metadataMsg = featurestoreActivity.getActivityMeta().getValue();
+        if (featurestoreActivity.getActivityMetaMsg() != null) {
+          metadataMsg += " " + featurestoreActivity.getActivityMetaMsg();
+        }
+        dto.setMetadata(metadataMsg);
       } else if (featurestoreActivity.getType() == ActivityType.VALIDATIONS) {
-        // HOPSWORKS-3180 should add back validation activity for GE
+        if (featurestoreActivity.getValidationReport() != null) {
+          dto.setValidationReport(validationReportBuilder.build(
+            uriInfo, project, featuregroup, featurestoreActivity.getValidationReport()));
+        }
+        dto.setMetadata(featurestoreActivity.getActivityMeta().getValue());
       } else {
         // Metadata change
         String metadataMsg = featurestoreActivity.getActivityMeta().getValue();

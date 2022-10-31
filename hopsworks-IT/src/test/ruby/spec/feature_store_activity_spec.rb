@@ -64,7 +64,6 @@ describe "On #{ENV['OS']}" do
       parsed_json = JSON.parse(json_result)
       expect_status_details(201)
       enable_cached_featuregroup_online(@project[:id], featurestore_id, parsed_json["id"])
-
       get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/featurestores/#{featurestore_id}/featuregroups/#{parsed_json["id"]}/activity?sort_by=timestamp:desc"
       expect_status_details(200)
       activity = JSON.parse(response.body)
@@ -103,7 +102,6 @@ describe "On #{ENV['OS']}" do
       parsed_json = JSON.parse(json_result)
       create_statistics_commit(@project[:id], featurestore_id, "featuregroups", parsed_json["id"])
       expect_status_details(200)
-
       get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/featurestores/#{featurestore_id}/featuregroups/#{parsed_json["id"]}/activity?filter_by=type:statistics&expand=statistics"
       expect_status_details(200)
       activity = JSON.parse(response.body)
@@ -111,18 +109,169 @@ describe "On #{ENV['OS']}" do
       expect(activity["items"][0]["statistics"]["commitTime"]).to eql(1597903688000)
     end
 
-    it "should be able to retrieve validation events" do
+    it "should be able to retrieve activity related to creation of an expectation suite" do
       featurestore_id = get_featurestore_id(@project[:id])
       json_result, _ = create_cached_featuregroup(@project[:id], featurestore_id)
-      parsed_json = JSON.parse(json_result)
-      # Method does not exist HOPSWORKS-3180(Add Great Expectations Validation Activity)
-      # create_validation(@project[:id], featurestore_id, parsed_json["id"])
+      fg_json = JSON.parse(json_result)
+      expectation_suite = generate_template_expectation_suite()
+      suite_dto = create_expectation_suite(@project[:id], featurestore_id, fg_json["id"], expectation_suite)
+      expect_status_details(201)
+      suite_json = JSON.parse(suite_dto)
+      get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/featurestores/#{featurestore_id}/featuregroups/#{fg_json["id"]}/activity?filter_by=type:expectations&expand=expectationsuite"
+      expect_status_details(200)
+      activity = JSON.parse(response.body)
+      expect(activity["items"][0]["type"]).to eql("EXPECTATIONS")
+      expect(activity["items"][0]["metadata"]).to eql("An Expectation Suite was attached to the Feature Group. ")
+      expect(activity["items"][0]["expectationSuite"]["expectationSuiteName"]).to eql(suite_json["expectationSuiteName"])
+      expect(activity["items"][0]["expectationSuite"]["expectations"][0]["expectationType"]).to eql(suite_json["expectations"][0]["expectationType"])
+      expect(activity["items"][0]["expectationSuite"]["expectations"][0]["meta"]["expectationId"]).to eql(suite_json["expectations"][0]["meta"]["expectationId"])
+    end
 
-      get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/featurestores/#{featurestore_id}/featuregroups/#{parsed_json["id"]}/activity?filter_by=type:validations&expand=validations"
+    it "should be able to retrieve activity related to the update of an expectation suite" do
+      featurestore_id = get_featurestore_id(@project[:id])
+      json_result, _ = create_cached_featuregroup(@project[:id], featurestore_id)
+      fg_json = JSON.parse(json_result)
+      expectation_suite = generate_template_expectation_suite()
+      suite_dto = create_expectation_suite(@project[:id], featurestore_id, fg_json["id"], expectation_suite)
+      expect_status_details(201)
+      suite_json = JSON.parse(suite_dto)
+      template_expectation = generate_template_expectation()
+      template_expectation["expectationType"] = "expect_column_std_to_be_between"
+      suite_json["expectations"].append(template_expectation)
+      suite_json["expectationSuiteName"] = "updated_suite"
+      sleep 1
+      update_expectation_suite(@project[:id], featurestore_id, fg_json["id"], suite_json)
+      expect_status_details(200)
+      get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/featurestores/#{featurestore_id}/featuregroups/#{fg_json["id"]}/activity?filter_by=type:expectations&expand=expectationsuite&sort_by=timestamp:desc"
+      expect_status_details(200)
+      activity = JSON.parse(response.body)
+      expect(activity["items"][0]["type"]).to eql("EXPECTATIONS")
+      expect(activity["items"][0]["metadata"]).to eql("The Expectation Suite was updated. ")
+      expect(activity["items"][0]["expectationSuite"]["expectationSuiteName"]).to eql("updated_suite")
+      expect(activity["items"][0]["expectationSuite"]["expectations"].length).to eql(2)
+    end
+
+    it "should be able to retrieve activity related to the metadata update of an expectation suite" do
+      featurestore_id = get_featurestore_id(@project[:id])
+      json_result, _ = create_cached_featuregroup(@project[:id], featurestore_id)
+      fg_json = JSON.parse(json_result)
+      expectation_suite = generate_template_expectation_suite()
+      suite_dto = create_expectation_suite(@project[:id], featurestore_id, fg_json["id"], expectation_suite)
+      expect_status_details(201)
+      suite_json = JSON.parse(suite_dto)
+      suite_json["expectationSuiteName"] = "updated_suite"
+      sleep 1
+      update_metadata_expectation_suite(@project[:id], featurestore_id, fg_json["id"], suite_json)
+      expect_status_details(200)
+      get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/featurestores/#{featurestore_id}/featuregroups/#{fg_json["id"]}/activity?filter_by=type:expectations&expand=expectationsuite&sort_by=timestamp:desc"
+      expect_status_details(200)
+      activity = JSON.parse(response.body)
+      expect(activity["items"][0]["type"]).to eql("EXPECTATIONS")
+      expect(activity["items"][0]["metadata"]).to eql("The Expectation Suite metadata was updated. ")
+      expect(activity["items"][0]["expectationSuite"]["expectationSuiteName"]).to eql("updated_suite")
+    end
+
+    it "should be able to retrieve activity related to deletion of an expectation suite" do
+      featurestore_id = get_featurestore_id(@project[:id])
+      json_result, _ = create_cached_featuregroup(@project[:id], featurestore_id)
+      fg_json = JSON.parse(json_result)
+      expectation_suite = generate_template_expectation_suite()
+      suite_dto = create_expectation_suite(@project[:id], featurestore_id, fg_json["id"], expectation_suite)
+      expect_status_details(201)
+      suite_json = JSON.parse(suite_dto)
+      sleep 1
+      delete_expectation_suite(@project[:id], featurestore_id, fg_json["id"], suite_json["id"])
+      expect_status_details(204)
+      get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/featurestores/#{featurestore_id}/featuregroups/#{fg_json["id"]}/activity?filter_by=type:expectations&expand=expectationsuite&sort_by=timestamp:desc"
+      expect_status_details(200)
+      activity = JSON.parse(response.body)
+      expect(activity["items"][0]["type"]).to eql("EXPECTATIONS")
+      expect(activity["items"][0]["metadata"]).to eql("The Expectation Suite was deleted. ")
+    end
+
+    it "should be able to retrieve activity related to append of an expectation" do
+      featurestore_id = get_featurestore_id(@project[:id])
+      json_result, _ = create_cached_featuregroup(@project[:id], featurestore_id)
+      fg_json = JSON.parse(json_result)
+      expectation_suite = generate_template_expectation_suite()
+      suite_dto = create_expectation_suite(@project[:id], featurestore_id, fg_json["id"], expectation_suite)
+      expect_status_details(201)
+      suite_json = JSON.parse(suite_dto)
+      template_expectation = generate_template_expectation()
+      template_expectation["expectationType"] = "expect_column_std_to_be_between"
+      sleep 1
+      dto_expectation = create_expectation(@project[:id], featurestore_id, fg_json["id"], suite_json["id"], template_expectation)
+      expect_status_details(201)
+      json_expectation = JSON.parse(dto_expectation)
+      get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/featurestores/#{featurestore_id}/featuregroups/#{fg_json["id"]}/activity?filter_by=type:expectations&expand=expectationsuite&sort_by=timestamp:desc"
+      expect_status_details(200)
+      activity = JSON.parse(response.body)
+      expect(activity["items"][0]["type"]).to eql("EXPECTATIONS")
+      expect(activity["items"][0]["metadata"]).to eql("The Expectation Suite was updated. Created expectation with id: #{json_expectation["id"]}.")
+      expect(activity["items"][0]["expectationSuite"]["expectations"].length).to eql(2)
+    end
+
+    it "should be able to retrieve activity related to the update of a single expectation" do
+      featurestore_id = get_featurestore_id(@project[:id])
+      json_result, _ = create_cached_featuregroup(@project[:id], featurestore_id)
+      fg_json = JSON.parse(json_result)
+      expectation_suite = generate_template_expectation_suite()
+      suite_dto = create_expectation_suite(@project[:id], featurestore_id, fg_json["id"], expectation_suite)
+      expect_status_details(201)
+      suite_json = JSON.parse(suite_dto)
+      template_expectation = generate_template_expectation()
+      template_expectation["meta"] = "{\"whoAmI\": \"updated_expectation\"}"
+      template_expectation["id"] = suite_json["expectations"][0]["id"]
+      sleep 1
+      update_expectation(@project[:id], featurestore_id, fg_json["id"], suite_json["id"], template_expectation["id"], template_expectation)
+      expect_status_details(200)
+      get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/featurestores/#{featurestore_id}/featuregroups/#{fg_json["id"]}/activity?filter_by=type:expectations&expand=expectationsuite&sort_by=timestamp:desc"
+      expect_status_details(200)
+      activity = JSON.parse(response.body)
+      expect(activity["items"][0]["type"]).to eql("EXPECTATIONS")
+      expect(activity["items"][0]["metadata"]).to eql("The Expectation Suite was updated. Updated expectation with id: #{template_expectation["id"]}.")
+      expect(activity["items"][0]["expectationSuite"]["expectations"].length).to eql(1)
+      updated_meta = JSON.parse(activity["items"][0]["expectationSuite"]["expectations"][0]["meta"])
+      expect(updated_meta["whoAmI"]).to eql("updated_expectation")
+    end
+
+    it "should be able to retrieve activity related to deletion of an expectation" do
+      featurestore_id = get_featurestore_id(@project[:id])
+      json_result, _ = create_cached_featuregroup(@project[:id], featurestore_id)
+      fg_json = JSON.parse(json_result)
+      expectation_suite = generate_template_expectation_suite()
+      suite_dto = create_expectation_suite(@project[:id], featurestore_id, fg_json["id"], expectation_suite)
+      suite_json = JSON.parse(suite_dto)
+      sleep 1
+      delete_expectation(@project[:id], featurestore_id, fg_json["id"], suite_json["id"], suite_json["expectations"][0]["id"])
+      get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/featurestores/#{featurestore_id}/featuregroups/#{fg_json["id"]}/activity?filter_by=type:expectations&expand=expectationsuite&sort_by=timestamp:desc"
+      expect_status_details(200)
+      activity = JSON.parse(response.body)
+      expect(activity["items"][0]["type"]).to eql("EXPECTATIONS")
+      expect(activity["items"][0]["metadata"]).to eql("The Expectation Suite was updated. Deleted expectation with id: #{suite_json["expectations"][0]["id"]}.")
+      expect(activity["items"][0]["expectationSuite"]["expectations"].length).to eql(0)
+    end
+
+    it "should be able to retrieve activity related to upload of a validation report" do
+      featurestore_id = get_featurestore_id(@project[:id])
+      json_result, _ = create_cached_featuregroup(@project[:id], featurestore_id)
+      fg_json = JSON.parse(json_result)
+      expectation_suite = generate_template_expectation_suite()
+      suite_dto = create_expectation_suite(@project[:id], featurestore_id, fg_json["id"], expectation_suite)
+      expect_status_details(201)
+      suite_json = JSON.parse(suite_dto)
+      report = generate_template_validation_report()
+      report_dto = create_validation_report(@project[:id], featurestore_id, fg_json["id"], report)
+      expect_status_details(201)
+      get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/featurestores/#{featurestore_id}/featuregroups/#{fg_json["id"]}/activity?filter_by=type:validations&expand=validationreport"
       expect_status_details(200)
       activity = JSON.parse(response.body)
       expect(activity["items"][0]["type"]).to eql("VALIDATIONS")
-      expect(activity["items"][0]["validations"]["status"]).to eql("SUCCESS")
+      expect(activity["items"][0]["metadata"]).to eql("A Validation Report was uploaded.")
+      expect(activity["items"][0]["validationReport"]["success"]).to eql(report[:success])
+      expect(activity["items"][0]["validationReport"]["exceptionInfo"]).to eql(report[:exceptionInfo])
+      expect(activity["items"][0]["validationReport"]["statistics"]).to eql(report[:statistics])
+      expect(activity["items"][0]["validationReport"]["meta"]).to eql(report[:meta])
     end
 
     it "should be able to retrieve a limited set of events" do

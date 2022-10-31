@@ -21,5 +21,6 @@ public enum ActivityType {
   METADATA,
   COMMIT,
   STATISTICS,
-  VALIDATIONS
+  VALIDATIONS,
+  EXPECTATIONS,
 }
