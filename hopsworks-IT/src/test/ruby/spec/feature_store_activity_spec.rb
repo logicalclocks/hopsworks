@@ -63,6 +63,7 @@ describe "On #{ENV['OS']}" do
       json_result, _ = create_cached_featuregroup(@project[:id], featurestore_id)
       parsed_json = JSON.parse(json_result)
       expect_status_details(201)
+      sleep 1
       enable_cached_featuregroup_online(@project[:id], featurestore_id, parsed_json["id"])
       get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/featurestores/#{featurestore_id}/featuregroups/#{parsed_json["id"]}/activity?sort_by=timestamp:desc"
       expect_status_details(200)
