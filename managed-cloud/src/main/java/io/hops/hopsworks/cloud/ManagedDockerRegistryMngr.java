@@ -44,7 +44,7 @@ public class ManagedDockerRegistryMngr extends DockerRegistryMngrImpl implements
               settings.getBaseNonPythonDockerImageWithNoTag();
       
       final String projectNameTagPrefix =
-          projectUtils.getProjectNameFromDockerImageName(projectDockerImage) + "_";
+          projectUtils.getProjectNameFromDockerImageName(projectDockerImage) + "__";
 
       if (settings.getKubeType() == Settings.KubeType.AKS) {
         return acrClient.deleteImagesWithTagPrefix(repoName, projectNameTagPrefix);
