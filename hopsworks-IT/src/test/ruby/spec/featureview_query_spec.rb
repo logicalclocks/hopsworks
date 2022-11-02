@@ -56,7 +56,7 @@ describe "On #{ENV['OS']}" do
           expect(parsed_query_result["filter"]["leftLogic"]["rightLogic"]["leftFilter"]["value"]).to eql("1234")
           # ts >= 4321
           expect(parsed_query_result["filter"]["rightLogic"]["leftFilter"]["feature"]["name"]).to eql("ts")
-          expect(parsed_query_result["filter"]["rightLogic"]["leftFilter"]["condition"]).to eql("LESS_THAN_OR_EQUAL")
+          expect(parsed_query_result["filter"]["rightLogic"]["leftFilter"]["condition"]).to eql("LESS_THAN")
           expect(parsed_query_result["filter"]["rightLogic"]["leftFilter"]["value"]).to eql("4321")
         end
 
@@ -126,7 +126,7 @@ describe "On #{ENV['OS']}" do
           expect(parsed_query_result["filter"]["leftLogic"]["rightLogic"]["leftFilter"]["value"]).to eql("1234")
           # ts >= 4321
           expect(parsed_query_result["filter"]["rightLogic"]["leftFilter"]["feature"]["name"]).to eql("ts")
-          expect(parsed_query_result["filter"]["rightLogic"]["leftFilter"]["condition"]).to eql("LESS_THAN_OR_EQUAL")
+          expect(parsed_query_result["filter"]["rightLogic"]["leftFilter"]["condition"]).to eql("LESS_THAN")
           expect(parsed_query_result["filter"]["rightLogic"]["leftFilter"]["value"]).to eql("4321")
         end
 
