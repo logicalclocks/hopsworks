@@ -50,7 +50,6 @@ import io.hops.hopsworks.persistence.entity.jobs.configuration.JobConfiguration;
 import io.hops.hopsworks.persistence.entity.jobs.configuration.flink.FlinkJobConfiguration;
 import io.hops.hopsworks.persistence.entity.jobs.configuration.python.PythonJobConfiguration;
 import io.hops.hopsworks.persistence.entity.jobs.configuration.spark.SparkJobConfiguration;
-import io.hops.hopsworks.persistence.entity.jobs.description.Jobs;
 import io.hops.hopsworks.persistence.entity.jobs.history.Execution;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
@@ -733,53 +732,40 @@ public class HopsUtils {
   
   public static String prepJupyterNotebookConversion(Execution execution, String hdfsUser, DistributedFsService dfs)
       throws JobException {
-    DistributedFileSystemOps udfso = null;
-    try {
-      udfso = dfs.getDfsOps(hdfsUser);
-      return prepJupyterNotebookConversion(execution, udfso);
-    } finally {
-      if (udfso != null) {
-        dfs.closeDfsClient(udfso);
-      }
-    }
-  }
-  
-  public static String prepJupyterNotebookConversion(Execution execution, DistributedFileSystemOps udfso)
-    throws JobException {
     String outPath =
-      "hdfs://" + Utils.getProjectPath(execution.getJob().getProject().getName()) + Settings.PROJECT_STAGING_DIR;
+        "hdfs://" + Utils.getProjectPath(execution.getJob().getProject().getName()) + Settings.PROJECT_STAGING_DIR;
     String pyJobPath = outPath + "/jobs/" + execution.getJob().getName();
     String pyAppPath = pyJobPath + "/" + execution.getId() + ".py";
-    Path pyJobDir = new Path(pyJobPath);
+    createDirectory(dfs, hdfsUser, pyJobPath);
+    return pyAppPath;
+  }
+
+  public static String createDirectory(DistributedFsService dfs, String hdfsUser, String directory)
+      throws JobException {
+    DistributedFileSystemOps udfso = null;
+    Path path = new Path(directory);
     try {
-      if (udfso.exists(pyJobDir)) {
-        FileStatus fileStatus = udfso.getFileStatus(pyJobDir);
+      udfso = dfs.getDfsOps(hdfsUser);
+      if (udfso.exists(path)) {
+        FileStatus fileStatus = udfso.getFileStatus(path);
         if (!fileStatus.isDirectory()) {
           throw new JobException(RESTCodes.JobErrorCode.JOB_CREATION_ERROR, Level.INFO,
-            "Failed to convert notebook - Job Directory name is used by a file");
+              "Job Directory name is used by a file.");
         }
       } else {
-        udfso.mkdirs(new org.apache.hadoop.fs.Path(pyJobPath), udfso.getParentPermission(pyJobDir));
+        udfso.mkdirs(new org.apache.hadoop.fs.Path(directory), udfso.getParentPermission(path));
       }
     } catch (IOException e) {
       throw new JobException(RESTCodes.JobErrorCode.JOB_CREATION_ERROR, Level.INFO,
-        "Failed to convert notebook.", "HopsFS write failure.", e);
+          "Failed to create the job folder.");
+    } finally {
+      if (null != udfso) {
+        dfs.closeDfsClient(udfso);
+      }
     }
-    return pyAppPath;
+    return directory;
   }
-  
-  public static void cleanupJobDatasetResources(Jobs job, String hdfsUsername, DistributedFsService dfs)
-      throws JobException {
-    String outPath = "hdfs://" + Utils.getProjectPath(job.getProject().getName()) + Settings.PROJECT_STAGING_DIR;
-    String pyJobPath = outPath + "/jobs/" + job.getName();
-    try {
-      removeFiles(pyJobPath, hdfsUsername, dfs);
-    } catch (DatasetException e) {
-      String msg = "failed to cleanup job dataset resoureces";
-      throw new JobException(RESTCodes.JobErrorCode.JOB_DELETION_ERROR, Level.INFO, msg, msg, e);
-    }
-  }
-  
+
   public static void cleanupExecutionDatasetResources(Execution execution, String hdfsUsername,
                                                       DistributedFsService dfs)
       throws JobException {
@@ -795,7 +781,7 @@ public class HopsUtils {
     }
   }
   
-  private static void removeFiles(String path, String hdfsUsername, DistributedFsService dfs)
+  public static void removeFiles(String path, String hdfsUsername, DistributedFsService dfs)
     throws DatasetException {
     DistributedFileSystemOps udfso = null;
     try {

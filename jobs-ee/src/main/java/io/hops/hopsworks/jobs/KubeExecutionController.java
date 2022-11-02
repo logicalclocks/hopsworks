@@ -179,7 +179,7 @@ public class KubeExecutionController extends AbstractExecutionController impleme
             String appPath = ((PythonJobConfiguration) job.getJobConfig()).getAppPath();
             if (appPath.endsWith(".ipynb")) {
               executionFacade.updateState(execution, JobState.CONVERTING_NOTEBOOK);
-              String pyAppPath = HopsUtils.prepJupyterNotebookConversion(execution, udfso);
+              String pyAppPath = HopsUtils.prepJupyterNotebookConversion(execution, hdfsUser, dfs);
               ((PythonJobConfiguration) job.getJobConfig()).setAppPath(pyAppPath);
               jupyterController.convertIPythonNotebook(hdfsUser, appPath, job.getProject(), pyAppPath,
                 JupyterController.NotebookConversion.PY_JOB);

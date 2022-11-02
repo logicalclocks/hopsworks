@@ -19,7 +19,8 @@ package io.hops.hopsworks.common.featurestore.app;
 public enum JobEntityType {
   
   TD("td"),
-  FG("fg");
+  FG("fg"),
+  FV("fv");
   
   public final String label;
   
