@@ -42,10 +42,12 @@ package io.hops.hopsworks.common.jobs;
 import com.google.common.base.Strings;
 import io.hops.hopsworks.common.dao.jobhistory.ExecutionFacade;
 import io.hops.hopsworks.common.dao.jobs.description.JobFacade;
+import io.hops.hopsworks.common.hdfs.Utils;
 import io.hops.hopsworks.common.util.HopsUtils;
 import io.hops.hopsworks.common.util.ProjectUtils;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.common.util.SparkConfigurationUtil;
+import io.hops.hopsworks.exceptions.DatasetException;
 import io.hops.hopsworks.persistence.entity.jobs.configuration.flink.FlinkJobConfiguration;
 import io.hops.hopsworks.persistence.entity.jobs.description.Jobs;
 import io.hops.hopsworks.persistence.entity.jobs.history.Execution;
@@ -109,7 +111,20 @@ public class JobController {
   private ProjectUtils projectUtils;
 
   private static final Logger LOGGER = Logger.getLogger(JobController.class.getName());
-  
+
+  private String getJobRootFolder(String projectName) {
+    return "hdfs://" + Utils.getProjectPath(projectName) + Settings.PROJECT_STAGING_DIR + "/jobs";
+  }
+
+  public String getJobFolder(String projectName, String jobName) {
+    return getJobRootFolder(projectName)  + "/" + jobName;
+  }
+
+  public String createJobFolder(Project project, Users user, String jobName) throws JobException {
+    String jobUri = getJobFolder(project.getName(), jobName);
+    return HopsUtils.createDirectory(dfs, hdfsUsersController.getHdfsUserName(project, user), jobUri);
+  }
+
   public Jobs putJob(Users user, Project project, Jobs job, JobConfiguration config) throws JobException {
     try {
       if(config.getJobType() == JobType.SPARK || config.getJobType() == JobType.PYSPARK) {
@@ -195,7 +210,7 @@ public class JobController {
         new Object[]{job.getName(), job.getId()});
       jobFacade.removeJob(job);
       String username = hdfsUsersBean.getHdfsUserName(job.getProject(), user);
-      HopsUtils.cleanupJobDatasetResources(job, username, dfs);
+      cleanupJobDatasetResources(job, username, dfs);
       LOGGER.log(Level.FINE, "Deleted job name ={0} job id ={1}", new Object[]{job.getName(), job.getId()});
       String activityMessage = ActivityFacade.DELETED_JOB + job.getName();
       if (!nonFinishedExecutions.isEmpty()) {
@@ -326,5 +341,16 @@ public class JobController {
       activityJobMsg = jobName.substring(0, 60) + "...";
     }
     return activityJobMsg;
+  }
+
+  private void cleanupJobDatasetResources(Jobs job, String hdfsUsername, DistributedFsService dfs)
+      throws JobException {
+    String jobPath = getJobFolder(job.getProject().getName(), job.getName());
+    try {
+      HopsUtils.removeFiles(jobPath, hdfsUsername, dfs);
+    } catch (DatasetException e) {
+      String msg = "failed to cleanup job dataset resources";
+      throw new JobException(RESTCodes.JobErrorCode.JOB_DELETION_ERROR, Level.INFO, msg, msg, e);
+    }
   }
 }
