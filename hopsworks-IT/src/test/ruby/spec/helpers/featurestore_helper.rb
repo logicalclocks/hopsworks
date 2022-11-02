@@ -980,7 +980,7 @@ module FeaturestoreHelper
               \"module_imports\": \"import numpy as np\\nimport pandas as pd\\nfrom datetime import datetime\",
               \"transformer_code\": \"def plus_one(value):\\n    return value + 1\\n\"
             }",
-            "outputType": "FloatType()"
+            "outputType": "FLOAT"
       }
 
       transformation_fn_metadata = transformation_fn_metadata == nil ? plus_one : transformation_fn_metadata

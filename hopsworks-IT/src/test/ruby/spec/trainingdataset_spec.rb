@@ -2207,11 +2207,11 @@ describe "On #{ENV['OS']}" do
           parsed_json = JSON.parse(json_result)
           feature_transformation = parsed_json["items"].first["transformationFunction"]
           expect(feature_transformation["name"]).to eql("plus_one")
-          expect(feature_transformation["outputType"]).to eql("FloatType()")
+          expect(feature_transformation["outputType"]).to eql("FLOAT")
 
           feature_transformation = parsed_json["items"].second["transformationFunction"]
           expect(feature_transformation["name"]).to eql("plus_one")
-          expect(feature_transformation["outputType"]).to eql("FloatType()")
+          expect(feature_transformation["outputType"]).to eql("FLOAT")
         end
 
         it "should be able to create training dataset with prefixed join" do
