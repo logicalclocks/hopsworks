@@ -92,13 +92,43 @@ describe "On #{ENV['OS']}" do
         expect_status_details(201)
         featuregroup_id = parsed_json["id"]
 
+        # Check if job and job config exists
+        job_name =  featuregroup_name + "_" + parsed_json["version"].to_s + "_" + "offline_fg_backfill"
+        expect(job_exists(project.id, job_name)).to be true
+        expect(job_config_exists(project[:projectname], job_name)).to be true
+
+
         delete_featuregroup_endpoint = "#{ENV['HOPSWORKS_API']}/project/" + project.id.to_s + "/featurestores/" + featurestore_id.to_s + "/featuregroups/" + featuregroup_id.to_s
         delete delete_featuregroup_endpoint
+        expect_status_details(200)
 
+        expect(job_exists(project.id, job_name)).to be false
+        expect(job_config_exists(project[:projectname], job_name)).to be false
+      end
+
+      it "should delete associated delta streamer job when deleting stream feature group even when the config file does not exist" do
+        project = get_project
+        featurestore_id = get_featurestore_id(project.id)
+        json_result, featuregroup_name = create_stream_featuregroup(project.id, featurestore_id)
+        parsed_json = JSON.parse(json_result)
+        expect_status_details(201)
+        featuregroup_id = parsed_json["id"]
+
+        # Check if job and job config exists
         job_name =  featuregroup_name + "_" + parsed_json["version"].to_s + "_" + "offline_fg_backfill"
-        job_json_result = get_job(project.id, job_name, expected_status: 404)
-        job_parsed_json = JSON.parse(job_json_result)
-        expect(job_parsed_json["name"]).to eql(nil)
+        expect(job_exists(project.id, job_name)).to be true
+        expect(job_config_exists(project[:projectname], job_name)).to be true
+
+        # delete config file (for testing backward compatibility)
+        # On 26-10-2022 fs job configs move from Resource to Resource/jobs
+        remove_job_config(project[:projectname], job_name)
+
+        delete_featuregroup_endpoint = "#{ENV['HOPSWORKS_API']}/project/" + project.id.to_s + "/featurestores/" + featurestore_id.to_s + "/featuregroups/" + featuregroup_id.to_s
+        delete delete_featuregroup_endpoint
+        expect_status_details(200)
+
+        expect(job_exists(project.id, job_name)).to be false
+        expect(job_config_exists(project[:projectname], job_name)).to be false
       end
 
       it "should create the kafka topic and avro schema for a stream feature group" do

@@ -125,8 +125,6 @@ public class FsJobManagerController {
 
     try {
       String dataPath = getIngestionPath(project, user, featureGroup, udfso);
-      String jobConfigurationPath = getJobConfigurationPath(project, featureGroup.getName(),
-          featureGroup.getVersion(), "ingestion");
 
       Map<String, Object> jobConfiguration = new HashMap<>();
       jobConfiguration.put("feature_store",
@@ -139,10 +137,11 @@ public class FsJobManagerController {
       jobConfiguration.put("write_options", writeOptions);
 
       String jobConfigurationStr = objectMapper.writeValueAsString(jobConfiguration);
+      String jobName = getJobName(INSERT_FG_OP, JobEntityType.FG, Utils.getFeaturegroupName(featureGroup), true);
+      String jobFolder = createJobFolder(project, user, jobName);
+      String jobConfigurationPath = getJobConfigurationPath(jobFolder);
       writeToHDFS(jobConfigurationPath, jobConfigurationStr, udfso);
-
-      Jobs ingestionJob = configureJob(user, project, sparkJobConfiguration,
-          getJobName(INSERT_FG_OP, Utils.getFeaturegroupName(featureGroup), true),
+      Jobs ingestionJob = configureJob(user, project, sparkJobConfiguration, jobName,
           getJobArgs(INSERT_FG_OP, jobConfigurationPath), JobType.PYSPARK);
 
       // For ingestion we cannot start the job directly, as the client needs to upload the data in the directory
@@ -191,14 +190,16 @@ public class FsJobManagerController {
   }
   
   private Jobs setupAndStartJob(Project project, Users user, Featurestore featurestore, String entityName,
-                                Integer entityVersion, JobEntityType type, String op, String configPrefix)
+      Integer entityVersion, JobEntityType type, String op, String configPrefix, boolean nameIncludeTimestamp)
       throws FeaturestoreException, JobException, GenericException, ProjectException, ServiceException {
     DistributedFileSystemOps udfso = dfs.getDfsOps(hdfsUsersController.getHdfsUserName(project, user));
     Map<String, String> jobConfiguration = new HashMap<>();
 
     try {
-      String jobConfigurationPath = getJobConfigurationPath(project, entityName,
-        entityVersion, configPrefix);
+      String jobName = getJobName(op, type, Utils.getFeatureStoreEntityName(entityName, entityVersion),
+          nameIncludeTimestamp);
+      String jobFolder = createJobFolder(project, user, jobName);
+      String jobConfigurationPath = getJobConfigurationPath(jobFolder);
 
       jobConfiguration.put("feature_store",
         featurestoreController.getOfflineFeaturestoreDbName(featurestore.getProject()));
@@ -211,8 +212,7 @@ public class FsJobManagerController {
 
       String jobArgs = getJobArgs(op, jobConfigurationPath);
 
-      Jobs job = configureJob(user, project, null,
-        getJobName(op, Utils.getFeatureStoreEntityName(entityName, entityVersion), false),
+      Jobs job = configureJob(user, project, null, jobName,
         jobArgs, JobType.PYSPARK);
 
       // Differently from the ingestion job. At this stage, no other action is required by the client.
@@ -253,7 +253,8 @@ public class FsJobManagerController {
     
     DistributedFileSystemOps udfso = dfs.getDfsOps(hdfsUsersController.getHdfsUserName(project, user));
     try {
-      String jobConfigurationPath = getJobConfigurationPath(project, entityName, entityVersion, configPrefix);
+      String jobName = getJobName(op, type, Utils.getFeatureStoreEntityName(entityName, entityVersion), false);
+      String jobConfigurationPath = createJobFolder(project, user, jobName);
       jobConfiguration.put("feature_store",
         featurestoreController.getOfflineFeaturestoreDbName(featurestore.getProject()));
       jobConfiguration.put("type", type.toString());
@@ -261,8 +262,7 @@ public class FsJobManagerController {
       writeToHDFS(jobConfigurationPath, jobConfigurationStr, udfso);
       
       String jobArgs = getJobArgs(op, jobConfigurationPath);
-      Jobs job = configureJob(user, project, null,
-              getJobName(op, Utils.getFeatureStoreEntityName(entityName, entityVersion), false),
+      Jobs job = configureJob(user, project, null, jobName,
               jobArgs, JobType.PYSPARK);
 
       executionController.start(job, jobArgs, user);
@@ -291,13 +291,13 @@ public class FsJobManagerController {
     }
     
     return setupAndStartJob(project, user, featurestore, entityName, entityVersion, type, COMPUTE_STATS_OP,
-      "statistics");
+      "statistics", true);
   }
 
   public Jobs setupValidationJob(Project project, Users user, Featurestore featurestore, Featuregroup featureGroup)
       throws FeaturestoreException, JobException, GenericException, ProjectException, ServiceException {
     return setupAndStartJob(project, user, featurestore, featureGroup.getName(), featureGroup.getVersion(),
-      JobEntityType.FG, GE_VALIDATE_OP, "validation");
+      JobEntityType.FG, GE_VALIDATE_OP, "validation", false);
   }
 
   public Jobs setupTrainingDatasetJob(Project project, Users user, FeatureView featureView,
@@ -330,6 +330,7 @@ public class FsJobManagerController {
 
       String jobConfigurationPath;
       Map<String, Object> jobConfiguration = new HashMap<>();
+      String jobName = null;
       jobConfiguration.put("feature_store",
           featurestoreController.getOfflineFeaturestoreDbName(trainingDataset.getFeaturestore().getProject()));
       if (trainingDataset.getFeatureView() != null) {
@@ -338,15 +339,18 @@ public class FsJobManagerController {
         jobConfiguration.put("name", featureViewName);
         jobConfiguration.put("version", String.valueOf(featureViewVersion));
         jobConfiguration.put("td_version", String.valueOf(trainingDataset.getVersion()));
-        jobConfigurationPath =
-            getJobConfigurationPath(project, featureViewName + "_" + featureViewVersion,
-                trainingDataset.getVersion(), "fv_td");
+        jobName = getJobName(jobType, JobEntityType.FV,
+            Utils.getFeatureStoreEntityName(featureViewName, featureViewVersion), true);
+        String jobFolder = createJobFolder(project, user, jobName);
+        jobConfigurationPath = getJobConfigurationPath(jobFolder);
       } else {
         jobConfiguration.put("name", trainingDataset.getName());
         jobConfiguration.put("version", String.valueOf(trainingDataset.getVersion()));
-        jobConfigurationPath =
-            getJobConfigurationPath(project, trainingDataset.getName(), trainingDataset.getVersion(), "td");
+        jobName = getJobName(jobType, JobEntityType.TD, Utils.getFeatureStoreEntityName(trainingDataset.getName(),
+                trainingDataset.getVersion()), true);
+        String jobFolder = createJobFolder(project, user, jobName);
         // For FeatureView, query is constructed from scratch when launching the job.
+        jobConfigurationPath = getJobConfigurationPath(jobFolder);
         jobConfiguration.put("query", queryDTO);
       }
       jobConfiguration.put("write_options", writeOptions);
@@ -358,8 +362,7 @@ public class FsJobManagerController {
       String jobArgs = getJobArgs(jobType, jobConfigurationPath);
 
       Jobs trainingDatasetJob = configureJob(user, project, sparkJobConfiguration,
-          getJobName(jobType, Utils.getTrainingDatasetName(trainingDataset), true),
-          jobArgs, JobType.PYSPARK);
+          jobName, jobArgs, JobType.PYSPARK);
 
       executionController.start(trainingDatasetJob, jobArgs, user);
 
@@ -388,8 +391,9 @@ public class FsJobManagerController {
     }
   
     try {
-      String jobConfigurationPath = getJobConfigurationPath(project, featuregroup.getName(), featuregroup.getVersion(),
-        "deltaStreamer");
+      String jobName = getJobName(DELTA_STREAMER_OP, JobEntityType.FG, Utils.getFeaturegroupName(featuregroup), false);
+      String jobFolder = createJobFolder(project, user, jobName);
+      String jobConfigurationPath = getJobConfigurationPath(jobFolder);
       Map<String, Object> jobConfiguration = new HashMap<>();
       jobConfiguration.put("feature_store",
         featurestoreController.getOfflineFeaturestoreDbName(featuregroup.getFeaturestore().getProject()));
@@ -402,9 +406,7 @@ public class FsJobManagerController {
       String jobArgs = getJobArgs(DELTA_STREAMER_OP, jobConfigurationPath);
   
       //setup job
-      return configureJob(user, project, sparkJobConfiguration,
-        getJobName(DELTA_STREAMER_OP, Utils.getFeaturegroupName(featuregroup), false),
-        jobArgs, JobType.SPARK);
+      return configureJob(user, project, sparkJobConfiguration, jobName, jobArgs, JobType.SPARK);
     } catch (IOException e) {
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ERROR_JOB_SETUP, Level.SEVERE,
         "Error setting up delta streamer job", e.getMessage(), e);
@@ -413,16 +415,17 @@ public class FsJobManagerController {
     }
   }
   
-  public String getJobConfigurationPath(Project project, String entityName, Integer entityVersion,
-    String prefix) {
-    
-    return Paths.get(Utils.getProjectPath(project.getName()), Settings.BaseDataset.RESOURCES.getName(),
-        String.join("_", new String[]{prefix, entityName, String.valueOf(entityVersion),
-          String.valueOf(System.currentTimeMillis())})).toString();
+  private String createJobFolder(Project project, Users user, String jobName) throws JobException{
+    return jobController.createJobFolder(project, user, jobName);
+  }
+
+  private String getJobConfigurationPath(String jobFolder) {
+    return jobFolder + "/config_" + System.currentTimeMillis();
   }
   
-  private String getJobName(String op, String entity, boolean withTimeStamp) {
-    String name = entity + "_" + op;
+  private String getJobName(String op, JobEntityType entityType, String entityName, boolean withTimeStamp) {
+    // TODO: add entity type: entityType.label + "_"
+    String name = entityName + "_" + op;
     if (withTimeStamp) {
       name = name + "_" + formatter.format(new Date());
     }
@@ -460,9 +463,10 @@ public class FsJobManagerController {
     return jobController.putJob(user, project, job, sparkJobConfiguration);
   }
   
-  public void deleteDeltaStreamerJob(Project project, Users user, Featuregroup featuregroup) throws JobException {
+  public void deleteDeltaStreamerJob(Project project, Users user, Featuregroup featuregroup)
+      throws JobException {
     jobController.deleteJob(jobController.getJob(project,
-      getJobName(DELTA_STREAMER_OP, Utils.getFeaturegroupName(featuregroup), false)), user);
+      getJobName(DELTA_STREAMER_OP, JobEntityType.FG, Utils.getFeaturegroupName(featuregroup), false)), user);
   }
 
   public Jobs setupImportFgJob(Project project, Users user, Featurestore featurestore, ImportFgJobConf importFgJobConf)

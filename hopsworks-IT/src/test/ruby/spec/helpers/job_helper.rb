@@ -277,6 +277,16 @@ module JobHelper
     end
   end
 
+  def job_config_exists(project_name, job_name)
+    job_path = "/Projects/#{project_name}/Resources/jobs/#{job_name}"
+    test_dir(job_path)
+  end
+
+  def remove_job_config(project_name, job_name)
+    job_path = "/Projects/#{project_name}/Resources/jobs/#{job_name}"
+    rmdir(job_path)
+  end
+
   def prepare_spark_job(project, username, job_name, job_type, job_config: nil, src_dir: "#{ENV['PROJECT_DIR']}/hopsworks-IT/src/test/ruby/spec/auxiliary")
     src = "#{src_dir}/#{job_name}.#{job_type}"
     dst = "/Projects/#{project[:projectname]}/Resources/#{job_name}.#{job_type}"
