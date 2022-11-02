@@ -46,15 +46,15 @@ describe "On #{ENV['OS']}" do
           feature_view_version = parsed_json["version"]
 
           # endpoint to attach transformation functions
-          json_result = get "#{ENV['HOPSWORKS_API']}/project/#{@project.id}/featurestores/#{featurestore_id}/featureview/#{feature_view_name}/version/#{feature_view_version}/transformation/functions"
+          json_result = get "#{ENV['HOPSWORKS_API']}/project/#{@project.id}/featurestores/#{featurestore_id}/featureview/#{feature_view_name}/version/#{feature_view_version}/transformation"
           parsed_json = JSON.parse(json_result)
           feature_transformation = parsed_json["items"].first["transformationFunction"]
           expect(feature_transformation["name"]).to eql("plus_one")
-          expect(feature_transformation["outputType"]).to eql("FloatType()")
+          expect(feature_transformation["outputType"]).to eql("FLOAT")
 
           feature_transformation = parsed_json["items"].second["transformationFunction"]
           expect(feature_transformation["name"]).to eql("plus_one")
-          expect(feature_transformation["outputType"]).to eql("FloatType()")
+          expect(feature_transformation["outputType"]).to eql("FLOAT")
         end
 
       end
