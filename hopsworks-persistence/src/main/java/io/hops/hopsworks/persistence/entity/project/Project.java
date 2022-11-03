@@ -211,6 +211,12 @@ public class Project implements Serializable {
   @Size(max = 255)
   @Column(name = "docker_image")
   private String dockerImage;
+  
+  @Basic(optional = false)
+  @NotNull
+  @Enumerated(EnumType.ORDINAL)
+  @Column(name = "creation_status")
+  private CreationStatus creationStatus;
 
   @JoinColumns({
     @JoinColumn(name = "inode_pid",
@@ -349,7 +355,15 @@ public class Project implements Serializable {
   public String getPaymentTypeString() {
     return paymentType.name();
   }
-
+  
+  public CreationStatus getCreationStatus() {
+    return creationStatus;
+  }
+  
+  public void setCreationStatus(CreationStatus creationStatus) {
+    this.creationStatus = creationStatus;
+  }
+  
   @Override
   public int hashCode() {
     int hash = 0;

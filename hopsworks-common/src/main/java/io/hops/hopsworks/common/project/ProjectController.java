@@ -141,6 +141,7 @@ import io.hops.hopsworks.persistence.entity.kafka.ProjectTopics;
 import io.hops.hopsworks.persistence.entity.kafka.schemas.SchemaCompatibility;
 import io.hops.hopsworks.persistence.entity.log.operation.OperationType;
 import io.hops.hopsworks.persistence.entity.log.operation.OperationsLog;
+import io.hops.hopsworks.persistence.entity.project.CreationStatus;
 import io.hops.hopsworks.persistence.entity.project.PaymentType;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.project.jobs.DefaultJobConfiguration;
@@ -533,6 +534,11 @@ public class ProjectController {
         throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_ANACONDA_ENABLE_ERROR, Level.SEVERE,
           "project: " + projectName, ex.getMessage(), ex);
       }
+      
+      // set project creation status to done
+      project.setCreationStatus(CreationStatus.DONE);
+      projectFacade.update(project);
+      
       LOGGER.log(Level.FINE, "PROJECT CREATION TIME. Step 10 (env): {0}", System.currentTimeMillis() - startTime);
 
       return project;
@@ -600,6 +606,7 @@ public class ProjectController {
     Project project = new Project(projectName, user, now, settings.getDefaultPaymentType());
     project.setKafkaMaxNumTopics(settings.getKafkaMaxNumTopics());
     project.setDescription(projectDescription);
+    project.setCreationStatus(CreationStatus.ONGOING);
 
     // set retention period to next 10 years by default
     Calendar cal = Calendar.getInstance();

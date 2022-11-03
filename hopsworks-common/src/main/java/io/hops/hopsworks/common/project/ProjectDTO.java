@@ -42,6 +42,8 @@ package io.hops.hopsworks.common.project;
 import java.util.Date;
 import java.util.List;
 import javax.xml.bind.annotation.XmlRootElement;
+
+import io.hops.hopsworks.persistence.entity.project.CreationStatus;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.project.team.ProjectTeam;
 import io.hops.hopsworks.persistence.entity.hdfs.inode.InodeView;
@@ -65,6 +67,7 @@ public class ProjectDTO {
   private String hopsExamples;
   private boolean isPreinstalledDockerImage;
   private boolean isOldDockerImage;
+  private CreationStatus creationStatus;
 
   public ProjectDTO() {
   }
@@ -93,6 +96,7 @@ public class ProjectDTO {
     this.hopsExamples = hopsExamples;
     this.isPreinstalledDockerImage = isPreinstalledDockerImage;
     this.isOldDockerImage = isOldDockerImage;
+    this.creationStatus = project.getCreationStatus();
   }
 
   public ProjectDTO(Project project, Long inodeid, List<String> services,
@@ -113,6 +117,7 @@ public class ProjectDTO {
     this.datasets = datasets;
     this.isPreinstalledDockerImage = isPreinstalledDockerImage;
     this.isOldDockerImage = isOldDockerImage;
+    this.creationStatus = project.getCreationStatus();
   }
 
   public ProjectDTO(Integer projectId, String projectName, String owner,
@@ -258,7 +263,15 @@ public class ProjectDTO {
   public void setIsOldDockerImage(boolean isOldDockerImage) {
     this.isOldDockerImage = isOldDockerImage;
   }
-
+  
+  public CreationStatus getCreationStatus() {
+    return creationStatus;
+  }
+  
+  public void setCreationStatus(CreationStatus creationStatus) {
+    this.creationStatus = creationStatus;
+  }
+  
   @Override
   public String toString() {
     return "ProjectDTO{" + "projectName=" + projectName + ", owner=" + owner
