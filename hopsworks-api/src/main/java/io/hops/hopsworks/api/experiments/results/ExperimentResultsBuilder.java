@@ -132,7 +132,7 @@ public class ExperimentResultsBuilder {
     AbstractFacade.SortBy sortByKey = null;
     String sortKeyName = null;
     String sortKeyOrder = null;
-    if(resourceRequest.getSort() != null) {
+    if(resourceRequest.getSort() != null && !resourceRequest.getSort().isEmpty()) {
       sortByKey = resourceRequest.getSort().iterator().next();
       sortKeyName = sortByKey.getValue();
       sortKeyOrder = sortByKey.getParam().getValue();

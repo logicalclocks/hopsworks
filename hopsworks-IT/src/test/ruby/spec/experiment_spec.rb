@@ -406,7 +406,7 @@ describe "On #{ENV['OS']}" do
           "jobName": "create_#{model}",
           "duration": 376663,
           "appId": app_id,
-          "environment": "Experiments/#{app_id}/environment_16002310123.yml",
+          "environment": ["Experiments/#{app_id}/environment_16002310123.yml"],
           "program": "Experiments/#{app_id}_#{run_id}/program.py"
       }
       experiment_internal(project[:id], app_id, run_id, "FULL_UPDATE", experiment_dto_3)
