@@ -250,8 +250,10 @@ public class ExpectationSuiteResource {
     Users user = jWTHelper.getUserPrincipal(sc);
 
     // Expectations list of the DTO is discarded
+    boolean verifyInput = true;
+    boolean logActivity = true;
     ExpectationSuite expectationSuite = expectationSuiteController.updateMetadataExpectationSuite(
-      user, featuregroup, expectationSuiteDTO, true);
+      user, featuregroup, expectationSuiteDTO, logActivity, verifyInput);
 
     ExpectationSuiteDTO dto = expectationSuiteBuilder.build(
       uriInfo, project, featuregroup, expectationSuite);

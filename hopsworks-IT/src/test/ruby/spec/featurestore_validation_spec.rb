@@ -30,6 +30,7 @@ describe "On #{ENV['OS']}" do
           project = get_project
           featurestore_id = get_featurestore_id(project.id)
           json_expectation_suite = generate_template_expectation_suite
+          json_expectation_suite[:expectations][0][:kwargs] = "{\"min_value\": 0, \"max_value\": 1, \"column\":\"testfeature\" }"
           json_result, featuregroup_name = create_cached_featuregroup(project.id, featurestore_id, expectation_suite: json_expectation_suite)
           expect_status_details(201)
 	        parsed_json = JSON.parse(json_result)
@@ -40,6 +41,22 @@ describe "On #{ENV['OS']}" do
           expect(parsed_suite["expectationSuiteName"]).to eq(json_expectation_suite[:expectationSuiteName])
           expect(parsed_suite["featureGroupId"]).to eq(parsed_json["id"])
           expect(parsed_suite["featureStoreId"]).to eql(featurestore_id)
+        end
+
+
+        it "should fail to create cached feature group with expectation suite when feature in expectation does not exist" do
+          project = get_project
+          featurestore_id = get_featurestore_id(project.id)
+          json_expectation_suite = generate_template_expectation_suite
+          json_expectation_suite[:expectations][0][:kwargs] = "{\"min_value\": 0, \"max_value\": 1, \"column\":\"notAFeature\" }"
+          json_result, featuregroup_name = create_cached_featuregroup(project.id, featurestore_id, expectation_suite: json_expectation_suite)
+          expect_status_details(400)
+	        error_json = JSON.parse(json_result)
+          expected_error_message = "The Feature Name was not found in this version of the Feature Group."
+          expect(error_json["errorCode"]).to eq(270210) 
+          expect(error_json["errorMsg"]).to eq(expected_error_message)
+          expect(error_json["usrMsg"]).to include("testfeature")
+          expect(error_json["usrMsg"]).to include("notAFeature")
         end
       end
     end
@@ -311,7 +328,6 @@ describe "On #{ENV['OS']}" do
 
     describe "CRUD expectation" do
       context 'with valid project, featurestore service enabled, a feature group and an expectation suite' do
-        fg_json = {}
         before :all do
           with_valid_project
         end
@@ -410,6 +426,16 @@ describe "On #{ENV['OS']}" do
           expect(parsed_meta["whoAmI"]).to eq("edited_expectation")
         end
 
+        
+      end
+    end
+
+    describe "Expectation Various" do
+      context 'with valid project, featurestore service enabled, a feature group and an expectation suite' do
+        before :all do
+          with_valid_project
+        end
+
         it "should trigger an error to change expectation_type for existing expectation" do
           project = get_project
           featurestore_id = get_featurestore_id(project.id)
@@ -430,8 +456,86 @@ describe "On #{ENV['OS']}" do
           expect(parsed_error.key?("usrMsg")).to be true
           expect(parsed_error["errorCode"] == 270207).to be true
         end
+
+        it "expectation creation should fail when kwargs contain column args and feature does not exist" do
+          expected_error_message = "The Feature Name was not found in this version of the Feature Group."
+          project = get_project
+          featurestore_id = get_featurestore_id(project.id)
+          fg_dto, fg_name = create_cached_featuregroup(project.id, featurestore_id)
+          expect_status_details(201)
+          fg_json = JSON.parse(fg_dto)
+          expectation_suite = generate_template_expectation_suite()
+          suite_dto = create_expectation_suite(project.id, featurestore_id, fg_json["id"], expectation_suite)
+          expect_status_details(201)
+          suite_json = JSON.parse(suite_dto)
+          expectation = generate_template_expectation()
+          expectation[:kwargs] = "{\"column\" :\"notAFeature\"}"
+          error_dto = create_expectation(project.id, featurestore_id, fg_json["id"], suite_json["id"], expectation)
+          expect_status_details(400)
+          error_json = JSON.parse(error_dto)
+          expect(error_json["errorCode"]).to eq(270210) 
+          expect(error_json["errorMsg"]).to eq(expected_error_message)
+          expect(error_json["usrMsg"]).to include("testfeature")
+          expect(error_json["usrMsg"]).to include("notAFeature")
+          expectation = generate_template_expectation()
+          expectation[:kwargs] = "{\"columnA\" :\"notAFeature\", \"columnB\":\"testfeature\"}"
+          error_dto = create_expectation(project.id, featurestore_id, fg_json["id"], suite_json["id"], expectation)
+          expect_status_details(400)
+          error_json = JSON.parse(error_dto)
+          expect(error_json["errorCode"]).to eq(270210) 
+          expect(error_json["errorMsg"]).to eq(expected_error_message)
+          expect(error_json["usrMsg"]).to include("testfeature")
+          expect(error_json["usrMsg"]).to include("notAFeature")
+          expectation = generate_template_expectation()
+          expectation[:kwargs] = "{\"column_list\" :[\"notAFeature\"]}"
+          expectation_dto = create_expectation(project.id, featurestore_id, fg_json["id"], suite_json["id"], expectation)
+          expect_status_details(400)
+          error_json = JSON.parse(error_dto)
+          expect(error_json["errorCode"]).to eq(270210) 
+          expect(error_json["errorMsg"]).to eq(expected_error_message)
+          expect(error_json["usrMsg"]).to include("testfeature")
+          expect(error_json["usrMsg"]).to include("notAFeature")
+          expectation = generate_template_expectation()
+          expectation[:kwargs] = "{\"column_set\" :[\"notAFeature\"]}"
+          expectation_dto = create_expectation(project.id, featurestore_id, fg_json["id"], suite_json["id"], expectation)
+          expect_status_details(400)
+          error_json = JSON.parse(error_dto)
+          expect(error_json["errorCode"]).to eq(270210) 
+          expect(error_json["errorMsg"]).to eq(expected_error_message)
+          expect(error_json["usrMsg"]).to include("testfeature")
+          expect(error_json["usrMsg"]).to include("notAFeature")
+        end
+
+        it "expectation creation should succeed when kwargs contain column args and feature exists" do
+          project = get_project
+          featurestore_id = get_featurestore_id(project.id)
+          fg_dto, fg_name = create_cached_featuregroup(project.id, featurestore_id)
+          expect_status_details(201)
+          fg_json = JSON.parse(fg_dto)
+          expectation_suite = generate_template_expectation_suite()
+          suite_dto = create_expectation_suite(project.id, featurestore_id, fg_json["id"], expectation_suite)
+          expect_status_details(201)
+          suite_json = JSON.parse(suite_dto)
+          expectation = generate_template_expectation()
+          expectation[:kwargs] = "{\"column\" :\"testfeature\"}"
+          expectation_dto = create_expectation(project.id, featurestore_id, fg_json["id"], suite_json["id"], expectation)
+          expect_status_details(201)
+          expectation = generate_template_expectation()
+          expectation[:kwargs] = "{\"columnA\" :\"testfeature\", \"columnB\":\"testfeature\"}"
+          expectation_dto = create_expectation(project.id, featurestore_id, fg_json["id"], suite_json["id"], expectation)
+          expect_status_details(201)
+          expectation = generate_template_expectation()
+          expectation[:kwargs] = "{\"column_list\" :[\"testfeature\"]}"
+          expectation_dto = create_expectation(project.id, featurestore_id, fg_json["id"], suite_json["id"], expectation)
+          expect_status_details(201)
+          expectation = generate_template_expectation()
+          expectation[:kwargs] = "{\"column_set\" :[\"testfeature\"]}"
+          expectation_dto = create_expectation(project.id, featurestore_id, fg_json["id"], suite_json["id"], expectation)
+          expect_status_details(201)
+        end
       end
     end
+
 
     describe "CRUD validation report" do
       context 'with valid project, featurestore service enabled, a feature group and an expectation suite' do

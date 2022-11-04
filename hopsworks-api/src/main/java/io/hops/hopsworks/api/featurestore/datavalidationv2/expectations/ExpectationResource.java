@@ -157,9 +157,10 @@ public class ExpectationResource {
 
     Users user = jWTHelper.getUserPrincipal(sc);
 
-    // When modifying single expectation via the API we log the activity
+    boolean logActivity = true;
+    boolean verifyInput = true;
     Expectation expectation = expectationController.createOrUpdateExpectation(
-      user, expectationSuite, expectationDTO, true);
+      user, expectationSuite, expectationDTO, logActivity, verifyInput);
 
     ExpectationDTO dto = expectationBuilder.build(uriInfo, project, featuregroup, expectationSuite, expectation);
 
@@ -197,9 +198,10 @@ public class ExpectationResource {
 
     Users user = jWTHelper.getUserPrincipal(sc);
 
-    // When modifying single expectation via the API we log the activity
+    boolean logActivity = true;
+    boolean verifyInput = true;
     Expectation expectation = expectationController.createOrUpdateExpectation(
-      user, expectationSuite, expectationDTO, true);
+      user, expectationSuite, expectationDTO, logActivity, verifyInput);
 
     ExpectationDTO dto = expectationBuilder.build(uriInfo, project, featuregroup, expectationSuite, expectation);
 

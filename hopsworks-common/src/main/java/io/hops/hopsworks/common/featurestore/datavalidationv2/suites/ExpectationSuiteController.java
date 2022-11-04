@@ -22,6 +22,7 @@ import io.hops.hopsworks.common.featurestore.activity.FeaturestoreActivityFacade
 import io.hops.hopsworks.common.featurestore.datavalidationv2.expectations.ExpectationController;
 import io.hops.hopsworks.common.featurestore.datavalidationv2.expectations.ExpectationDTO;
 import io.hops.hopsworks.common.featurestore.datavalidationv2.greatexpectations.GreatExpectationFacade;
+import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupController;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.persistence.entity.featurestore.activity.FeaturestoreActivityMeta;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.Featuregroup;
@@ -64,6 +65,8 @@ public class ExpectationSuiteController {
   ExpectationController expectationController;
   @EJB
   FeaturestoreActivityFacade fsActivityFacade;
+  @EJB
+  FeaturegroupController featuregroupController;
 
   ///////////////////////////////////////////////////
   ////// Great Expectations
@@ -92,7 +95,11 @@ public class ExpectationSuiteController {
   public ExpectationSuite createExpectationSuite(Users user, Featuregroup featureGroup, 
     ExpectationSuiteDTO expectationSuiteDTO)
     throws FeaturestoreException {
-    verifyExpectationSuite(expectationSuiteDTO);
+    verifyExpectationSuite(
+      expectationSuiteDTO, 
+      featuregroupController.getFeatureNames(
+        featureGroup, featureGroup.getFeaturestore().getProject(), user));
+
     ExpectationSuite expectationSuite = convertExpectationSuiteDTOToPersistent(featureGroup, expectationSuiteDTO);
     expectationSuiteFacade.persist(expectationSuite);
 
@@ -155,13 +162,13 @@ public class ExpectationSuiteController {
   //// Input Verification
   ///////////////////////////////////////
 
-  public void verifyExpectationSuite(ExpectationSuiteDTO dto) throws FeaturestoreException {
+  public void verifyExpectationSuite(ExpectationSuiteDTO dto, List<String> featureNames) throws FeaturestoreException {
     if (dto == null) {
       return;
     }
     verifyExpectationSuiteFields(dto);
     for (ExpectationDTO expectationDTO : dto.getExpectations()) {
-      expectationController.verifyExpectationFields(expectationDTO);
+      expectationController.verifyExpectationFields(expectationDTO, featureNames);
     }
   }
 
@@ -252,7 +259,10 @@ public class ExpectationSuiteController {
 
   public ExpectationSuite updateExpectationSuite(Users user, Featuregroup featuregroup,
     ExpectationSuiteDTO expectationSuiteDTO) throws FeaturestoreException {
-    verifyExpectationSuite(expectationSuiteDTO);
+    verifyExpectationSuite(
+      expectationSuiteDTO, 
+      featuregroupController.getFeatureNames(
+        featuregroup, featuregroup.getFeaturestore().getProject(), user));
 
     Optional<ExpectationSuite> optionalOldExpectationSuite = expectationSuiteFacade.findByFeaturegroup(featuregroup);
 
@@ -268,21 +278,19 @@ public class ExpectationSuiteController {
   @Transactional(rollbackOn = {FeaturestoreException.class})
   public ExpectationSuite smartUpdateExpectationSuite(Users user, Featuregroup featuregroup,
     ExpectationSuiteDTO expectationSuiteDTO, ExpectationSuite oldExpectationSuite) throws FeaturestoreException {
+    boolean logActivity = false;
+    boolean verifyInput = true;
     ExpectationSuite newExpectationSuite = updateMetadataExpectationSuite(
-      user, featuregroup, expectationSuiteDTO, false);
+      user, featuregroup, expectationSuiteDTO, logActivity, verifyInput);
 
     ArrayList<Expectation> newExpectationList = new ArrayList<>();
-
+    
+    verifyInput = false;
     for (ExpectationDTO expectationDTO : expectationSuiteDTO.getExpectations()) {
       newExpectationList.add(
         expectationController.createOrUpdateExpectation(
-          user, 
-          newExpectationSuite, 
-          expectationDTO,
-          // Don't log the activity 
-          false));
+          user, newExpectationSuite, expectationDTO, logActivity, verifyInput));
     }
-
     newExpectationSuite.setExpectations(newExpectationList);
 
     deleteMissingExpectations(user, newExpectationList, oldExpectationSuite.getExpectations());
@@ -300,8 +308,13 @@ public class ExpectationSuiteController {
 
   // Update only metadata of the ExpectationSuite (everything but Expectation list)
   public ExpectationSuite updateMetadataExpectationSuite(Users user, Featuregroup featuregroup,
-    ExpectationSuiteDTO expectationSuiteDTO, boolean logActivity) throws FeaturestoreException {
-    verifyExpectationSuite(expectationSuiteDTO);
+    ExpectationSuiteDTO expectationSuiteDTO, boolean logActivity, boolean verifyInput) throws FeaturestoreException {
+    if (verifyInput) {
+      verifyExpectationSuite(
+        expectationSuiteDTO, 
+        featuregroupController.getFeatureNames(
+          featuregroup, featuregroup.getFeaturestore().getProject(), user));
+    }
 
     ExpectationSuite oldExpectationSuite = getExpectationSuite(featuregroup);
 

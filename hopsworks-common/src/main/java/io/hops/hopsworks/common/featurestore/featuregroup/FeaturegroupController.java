@@ -222,7 +222,11 @@ public class FeaturegroupController {
 
     verifyFeatureGroupInput(featuregroupDTO);
     verifyFeaturesNoDefaultValue(featuregroupDTO.getFeatures());
-    expectationSuiteController.verifyExpectationSuite(featuregroupDTO.getExpectationSuite());
+    if (featuregroupDTO.getExpectationSuite() != null) {
+      List<String> featureNames = featuregroupDTO.getFeatures().stream().map(
+        FeatureGroupFeatureDTO::getName).collect(Collectors.toList());
+      expectationSuiteController.verifyExpectationSuite(featuregroupDTO.getExpectationSuite(), featureNames);
+    }
     return createFeaturegroupNoValidation(featurestore, featuregroupDTO, project, user);
   }
 
@@ -734,6 +738,13 @@ public class FeaturegroupController {
     }
     return new ArrayList<>();
   }
+
+  public List<String> getFeatureNames(Featuregroup featuregroup, Project project, Users user)
+    throws FeaturestoreException {
+    return getFeatures(featuregroup, project, user).stream()
+      .map(FeatureGroupFeatureDTO::getName).collect(Collectors.toList());
+  }
+
 
   public String getFeatureGroupLocation(Featuregroup featureGroup) {
     // Cached feature groups also have a `location` field.

@@ -1636,7 +1636,9 @@ public class RESTCodes {
       "feature group. Either update the existing suite via the update endpoint or delete it first.",
       Response.Status.CONFLICT),
     FAILURE_HDFS_USER_OPERATION(209, "HDFS user operation failure",
-      Response.Status.INTERNAL_SERVER_ERROR);
+      Response.Status.INTERNAL_SERVER_ERROR),
+    FEATURE_NAME_NOT_FOUND(210, "The Feature Name was not found in this version of the Feature Group.",
+        Response.Status.BAD_REQUEST);
 
     private int code;
     private String message;

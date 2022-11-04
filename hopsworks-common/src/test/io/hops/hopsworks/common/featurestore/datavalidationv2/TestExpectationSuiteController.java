@@ -22,9 +22,11 @@ import io.hops.hopsworks.common.featurestore.datavalidationv2.suites.Expectation
 import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.datavalidationv2.ValidationIngestionPolicy;
 import org.apache.commons.lang3.StringUtils;
+import org.junit.Before;
 import org.junit.Test;
 
 import java.util.ArrayList;
+import java.util.List;
 
 import static io.hops.hopsworks.common.featurestore.FeaturestoreConstants.MAX_CHARACTERS_IN_DATA_ASSET_TYPE;
 import static io.hops.hopsworks.common.featurestore.FeaturestoreConstants.MAX_CHARACTERS_IN_EXPECTATION_SUITE_META;
@@ -36,25 +38,33 @@ import static org.junit.Assert.assertThrows;
 public class TestExpectationSuiteController {
 
   private ExpectationSuiteController expectationSuiteController = new ExpectationSuiteController();
+  private List<String> featureNames;
+  private ExpectationSuiteDTO expectationSuiteDTO;
 
-  private ExpectationSuiteDTO makeValidExpectationSuiteDTO() {
-    ExpectationSuiteDTO dto = new ExpectationSuiteDTO();
-
-    dto.setValidationIngestionPolicy(ValidationIngestionPolicy.STRICT);
-    dto.setRunValidation(true);
-    dto.setExpectationSuiteName("default");
-    dto.setGeCloudId("blue");
-    dto.setDataAssetType("DATASET");
-    dto.setMeta(
+  @Before
+  public void setup() {
+    expectationSuiteDTO = new ExpectationSuiteDTO();
+    expectationSuiteDTO.setValidationIngestionPolicy(ValidationIngestionPolicy.STRICT);
+    expectationSuiteDTO.setRunValidation(true);
+    expectationSuiteDTO.setExpectationSuiteName("default");
+    expectationSuiteDTO.setGeCloudId("blue");
+    expectationSuiteDTO.setDataAssetType("DATASET");
+    expectationSuiteDTO.setMeta(
       "{\"randomKey\": \"randomValue\"}"
     );
 
     ArrayList<ExpectationDTO> expectations = new ArrayList<>();
+    
     expectations.add(makeValidExpectationDTO());
     expectations.add(makeValidExpectationDTO());
-    dto.setExpectations(expectations);
+    expectationSuiteDTO.setExpectations(expectations);
 
-    return dto;
+    featureNames = new ArrayList<String>() {
+      {
+        add("featureA");
+        add("featureB");
+      }
+    };
   }
 
   private ExpectationDTO makeValidExpectationDTO() {
@@ -70,13 +80,11 @@ public class TestExpectationSuiteController {
 
   @Test
   public void testVerifyExpectationSuiteMeta() {
-    ExpectationSuiteDTO expectationSuiteDTO = makeValidExpectationSuiteDTO();
-
      // Null
     expectationSuiteDTO.setMeta(null);
     FeaturestoreException nullInputException = assertThrows(
       FeaturestoreException.class,
-      () -> expectationSuiteController.verifyExpectationSuite(expectationSuiteDTO)
+      () -> expectationSuiteController.verifyExpectationSuite(expectationSuiteDTO, featureNames)
     );
     assertEquals("Rest code error corresponding to null input error: ", 202,
       nullInputException.getErrorCode().getCode() - nullInputException.getErrorCode().getRange());
@@ -87,7 +95,7 @@ public class TestExpectationSuiteController {
     expectationSuiteDTO.setMeta(longInput);
     FeaturestoreException longInputException = assertThrows(
       FeaturestoreException.class,
-      () -> expectationSuiteController.verifyExpectationSuite(expectationSuiteDTO)
+      () -> expectationSuiteController.verifyExpectationSuite(expectationSuiteDTO, featureNames)
     );
     assertEquals("Rest code error corresponding to exceed max character error", 200,
       longInputException.getErrorCode().getCode() - longInputException.getErrorCode().getRange());
@@ -97,7 +105,7 @@ public class TestExpectationSuiteController {
     expectationSuiteDTO.setMeta(notAJsonInput);
     FeaturestoreException notAJsonException = assertThrows(
       FeaturestoreException.class,
-      () -> expectationSuiteController.verifyExpectationSuite(expectationSuiteDTO)
+      () -> expectationSuiteController.verifyExpectationSuite(expectationSuiteDTO, featureNames)
     );
     assertEquals("Rest code error corresponding to json parse failure: ", 201,
       notAJsonException.getErrorCode().getCode() - notAJsonException.getErrorCode().getRange());
@@ -105,13 +113,11 @@ public class TestExpectationSuiteController {
 
     @Test
     public void testVerifyExpectationSuiteName() {
-      ExpectationSuiteDTO expectationSuiteDTO = makeValidExpectationSuiteDTO();
-
       // Null
       expectationSuiteDTO.setExpectationSuiteName(null);
       FeaturestoreException nullInputException = assertThrows(
         FeaturestoreException.class,
-        () -> expectationSuiteController.verifyExpectationSuite(expectationSuiteDTO)
+        () -> expectationSuiteController.verifyExpectationSuite(expectationSuiteDTO, featureNames)
       );
       assertEquals("Rest code error corresponding to null input error: ", 202,
         nullInputException.getErrorCode().getCode() - nullInputException.getErrorCode().getRange());
@@ -121,7 +127,7 @@ public class TestExpectationSuiteController {
       expectationSuiteDTO.setExpectationSuiteName(longInput);
       FeaturestoreException longInputException = assertThrows(
         FeaturestoreException.class,
-        () -> expectationSuiteController.verifyExpectationSuite(expectationSuiteDTO)
+        () -> expectationSuiteController.verifyExpectationSuite(expectationSuiteDTO, featureNames)
       );
       assertEquals("Rest code error corresponding to exceed max character error: ", 200,
         longInputException.getErrorCode().getCode() - longInputException.getErrorCode().getRange());
@@ -129,14 +135,12 @@ public class TestExpectationSuiteController {
 
     @Test
     public void testVerifyExpectationGeCloudId() {
-      ExpectationSuiteDTO expectationSuiteDTO = makeValidExpectationSuiteDTO();
-
       // Long input
       String longInput = StringUtils.repeat("A", MAX_CHARACTERS_IN_GE_CLOUD_ID + 10);
       expectationSuiteDTO.setGeCloudId(longInput);
       FeaturestoreException longInputException = assertThrows(
         FeaturestoreException.class,
-        () -> expectationSuiteController.verifyExpectationSuite(expectationSuiteDTO)
+        () -> expectationSuiteController.verifyExpectationSuite(expectationSuiteDTO, featureNames)
       );
       assertEquals("Rest code error corresponding to exceed max character error: ", 200,
         longInputException.getErrorCode().getCode() - longInputException.getErrorCode().getRange());
@@ -144,14 +148,12 @@ public class TestExpectationSuiteController {
 
     @Test
     public void testVerifyExpectationDataAssetType() {
-      ExpectationSuiteDTO expectationSuiteDTO = makeValidExpectationSuiteDTO();
-
       // Long input
       String longInput = StringUtils.repeat("A", MAX_CHARACTERS_IN_DATA_ASSET_TYPE + 10);
       expectationSuiteDTO.setDataAssetType(longInput);
       FeaturestoreException longInputException = assertThrows(
         FeaturestoreException.class,
-        () -> expectationSuiteController.verifyExpectationSuite(expectationSuiteDTO)
+        () -> expectationSuiteController.verifyExpectationSuite(expectationSuiteDTO, featureNames)
       );
       assertEquals("Rest code error corresponding to exceed max character error: ", 200,
         longInputException.getErrorCode().getCode() - longInputException.getErrorCode().getRange());
