@@ -19,12 +19,15 @@ package io.hops.hopsworks.common.featurestore.datavalidationv2.expectations;
 
 import io.hops.hopsworks.common.dao.AbstractFacade.CollectionInfo;
 import io.hops.hopsworks.common.featurestore.activity.FeaturestoreActivityFacade;
+import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupController;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.persistence.entity.featurestore.activity.FeaturestoreActivityMeta;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.datavalidationv2.Expectation;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.datavalidationv2.ExpectationSuite;
 import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.restutils.RESTCodes;
+
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -33,6 +36,8 @@ import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -50,7 +55,9 @@ public class ExpectationController {
   @EJB
   ExpectationFacade expectationFacade;
   @EJB
-  FeaturestoreActivityFacade fsActivityFacade;  
+  FeaturestoreActivityFacade fsActivityFacade;
+  @EJB  
+  FeaturegroupController featuregroupController;
 
   public Expectation getExpectationById(Integer expectationId) throws FeaturestoreException {
     Optional<Expectation> expectation = expectationFacade.findById(expectationId);
@@ -75,8 +82,18 @@ public class ExpectationController {
   }
 
   public Expectation createOrUpdateExpectation(Users user, ExpectationSuite expectationSuite, 
-    ExpectationDTO expectationDTO, boolean logActivity) throws FeaturestoreException {
-    verifyExpectationFields(expectationDTO);
+    ExpectationDTO expectationDTO, boolean logActivity, boolean verifyInput) throws FeaturestoreException {
+    if (verifyInput) {
+      verifyExpectationFields(
+        expectationDTO, 
+        featuregroupController.getFeatureNames(
+          expectationSuite.getFeaturegroup(),
+          expectationSuite.getFeaturegroup().getFeaturestore().getProject(),
+          user
+        )
+      );
+    }
+    
     // Existing expectation can be sent with id in id field or as key-value in meta field.
     Integer expectationId = null;
     if (expectationDTO.getId() == null) {
@@ -118,9 +135,8 @@ public class ExpectationController {
     expectationFacade.remove(expectation);
     if (expectation != null && logActivity) {
       FeaturestoreActivityMeta activityMeta = FeaturestoreActivityMeta.EXPECTATION_SUITE_UPDATED;
-      fsActivityFacade.logExpectationSuiteActivity(user, expectationSuite.getFeaturegroup(), expectationSuite,
-        activityMeta,
-        activityMessage);
+      fsActivityFacade.logExpectationSuiteActivity(
+        user, expectationSuite.getFeaturegroup(), expectationSuite, activityMeta, activityMessage);
     }
   }
 
@@ -160,9 +176,9 @@ public class ExpectationController {
   //// Input Verification
   //////////////////////////////////////////
 
-  public void verifyExpectationFields(ExpectationDTO dto) throws FeaturestoreException {
+  public void verifyExpectationFields(ExpectationDTO dto, List<String> featureNames) throws FeaturestoreException {
     verifyExpectationExpectationType(dto);
-    verifyExpectationKwargs(dto);
+    verifyExpectationKwargs(dto, featureNames);
     verifyExpectationMeta(dto);
   }
 
@@ -197,7 +213,7 @@ public class ExpectationController {
     }
   }
 
-  private void verifyExpectationKwargs(ExpectationDTO dto) throws FeaturestoreException {
+  private void verifyExpectationKwargs(ExpectationDTO dto, List<String> featureNames) throws FeaturestoreException {
     String kwargs = dto.getKwargs();
     if (kwargs == null) {
       throw new FeaturestoreException(
@@ -215,9 +231,9 @@ public class ExpectationController {
           kwargs, MAX_CHARACTERS_IN_EXPECTATION_KWARGS)
       );
     }
-
+    JSONObject jsonKwargs;
     try {
-      new JSONObject(kwargs);
+      jsonKwargs = new JSONObject(kwargs);
     } catch (JSONException e) {
       throw new FeaturestoreException(
         RESTCodes.FeaturestoreErrorCode.INPUT_FIELD_IS_NOT_VALID_JSON,
@@ -226,6 +242,8 @@ public class ExpectationController {
         e.getMessage()
       );
     }
+
+    verifyKwargsColumnExistence(featureNames, jsonKwargs);
   }
 
   private void verifyExpectationExpectationType(ExpectationDTO dto) throws FeaturestoreException {
@@ -247,6 +265,43 @@ public class ExpectationController {
       );
     }
   }
+
+  private void verifyKwargsColumnExistence(List<String> featureNames, JSONObject jsonKwargs)
+    throws FeaturestoreException {
+    // Check if kwargs has column type key, if so check that value corresponds to a feature name
+    // which exist for this featuregroup version
+    ArrayList<String> possibleFeatureNames = new ArrayList<>();
+
+    if (jsonKwargs.has("column")) {
+      possibleFeatureNames.add(jsonKwargs.getString("column"));
+    } else if (jsonKwargs.has("columnA") && jsonKwargs.has("columnB")) {
+      possibleFeatureNames.add(jsonKwargs.getString("columnA"));
+      possibleFeatureNames.add(jsonKwargs.getString("columnB"));
+    } else if (jsonKwargs.has("column_list")) {
+      JSONArray columns = jsonKwargs.getJSONArray("column_list");
+      // It is ugly to use for loop with indexing but seems like anything else is throwing error
+      for(int index = 0; index < columns.length(); index++) {
+        possibleFeatureNames.add(columns.getString(index));
+      }
+    } else if (jsonKwargs.has("column_set")) {
+      JSONArray columns = jsonKwargs.getJSONArray("column_set");
+      // It is ugly to use for loop with indexing but seems like anything else is throwing error
+      for(int index = 0; index < columns.length(); index++) {
+        possibleFeatureNames.add(columns.getString(index));
+      }
+    } else {
+      return;
+    }
+
+    for (String name : possibleFeatureNames) {
+      if (!featureNames.contains(name)) {
+        throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.FEATURE_NAME_NOT_FOUND, Level.SEVERE,
+          String.format("Expectation Kwargs contains name %s which has not been found in this group's feature:\n%s.",
+            name, featureNames));
+      }
+    }
+  }
+
 
   // Additional check to ensure compatibility to preserve an expectation
   private void preserveTypeAndColumn(Expectation oldExpectation, Expectation newExpectation)

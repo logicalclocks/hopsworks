@@ -25,6 +25,9 @@ import org.apache.commons.lang3.StringUtils;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThrows;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.junit.Before;
 import org.junit.Test;
 
@@ -36,6 +39,7 @@ public class TestExpectationController {
   // Expectation Input Validation
   private ExpectationController expectationController = new ExpectationController();
   private ExpectationDTO expectationDTO;
+  private List<String> featureNames;
 
   @Before
   public void setup() {
@@ -43,6 +47,10 @@ public class TestExpectationController {
     expectationDTO.setExpectationType("expect_column_max_to_be_between");
     expectationDTO.setMeta("{\"expectationId\": 12}");
     expectationDTO.setKwargs("{\"min_value\": 0, \"max_value\": 1}");
+
+    featureNames = new ArrayList<String>();
+    featureNames.add("featureA");
+    featureNames.add("featureB");
   }
   
   @Test
@@ -51,7 +59,7 @@ public class TestExpectationController {
     expectationDTO.setMeta(null);
     FeaturestoreException nullInputException = assertThrows(
       FeaturestoreException.class,
-      () -> expectationController.verifyExpectationFields(expectationDTO)
+      () -> expectationController.verifyExpectationFields(expectationDTO, featureNames)
     );
     assertEquals("Rest code error corresponding to null input error: ", 202,
       nullInputException.getErrorCode().getCode() - nullInputException.getErrorCode().getRange());
@@ -62,7 +70,7 @@ public class TestExpectationController {
     expectationDTO.setMeta(longInput);
     FeaturestoreException longInputException = assertThrows(
       FeaturestoreException.class,
-      () -> expectationController.verifyExpectationFields(expectationDTO)
+      () -> expectationController.verifyExpectationFields(expectationDTO, featureNames)
     );
     assertEquals("Rest code error corresponding to exceed max character error: ", 200,
       longInputException.getErrorCode().getCode() - longInputException.getErrorCode().getRange());
@@ -72,7 +80,7 @@ public class TestExpectationController {
     expectationDTO.setMeta(notAJsonInput);
     FeaturestoreException notAJsonException = assertThrows(
       FeaturestoreException.class,
-      () -> expectationController.verifyExpectationFields(expectationDTO)
+      () -> expectationController.verifyExpectationFields(expectationDTO, featureNames)
     );
     assertEquals("Rest code error corresponding to json parse failure: ", 201,
       notAJsonException.getErrorCode().getCode() - notAJsonException.getErrorCode().getRange());
@@ -84,7 +92,7 @@ public class TestExpectationController {
     expectationDTO.setKwargs(null);
     FeaturestoreException nullInputException = assertThrows(
       FeaturestoreException.class,
-      () -> expectationController.verifyExpectationFields(expectationDTO)
+      () -> expectationController.verifyExpectationFields(expectationDTO, featureNames)
     );
     assertEquals("Rest code error corresponding to null input error: ", 202,
       nullInputException.getErrorCode().getCode() - nullInputException.getErrorCode().getRange());
@@ -95,7 +103,7 @@ public class TestExpectationController {
     expectationDTO.setKwargs(longInput);
     FeaturestoreException longInputException = assertThrows(
       FeaturestoreException.class,
-      () -> expectationController.verifyExpectationFields(expectationDTO)
+      () -> expectationController.verifyExpectationFields(expectationDTO, featureNames)
     );
     assertEquals("Rest code error corresponding to exceed max character error: ", 200,
       longInputException.getErrorCode().getCode() - longInputException.getErrorCode().getRange());
@@ -105,7 +113,7 @@ public class TestExpectationController {
     expectationDTO.setKwargs(notAJsonInput);
     FeaturestoreException notAJsonException = assertThrows(
       FeaturestoreException.class,
-      () -> expectationController.verifyExpectationFields(expectationDTO)
+      () -> expectationController.verifyExpectationFields(expectationDTO, featureNames)
     );
     assertEquals("Rest code error corresponding to json parse failure: ", 201,
       notAJsonException.getErrorCode().getCode() - notAJsonException.getErrorCode().getRange());
@@ -117,7 +125,7 @@ public class TestExpectationController {
     expectationDTO.setExpectationType(null);
     FeaturestoreException nullInputException = assertThrows(
       FeaturestoreException.class,
-      () -> expectationController.verifyExpectationFields(expectationDTO)
+      () -> expectationController.verifyExpectationFields(expectationDTO, featureNames)
     );
     assertEquals("Rest code error corresponding to null input error: ", 202,
       (int) nullInputException.getErrorCode().getCode() - nullInputException.getErrorCode().getRange());
@@ -127,9 +135,45 @@ public class TestExpectationController {
     expectationDTO.setExpectationType(longInput);
     FeaturestoreException longInputException = assertThrows(
       FeaturestoreException.class,
-      () -> expectationController.verifyExpectationFields(expectationDTO)
+      () -> expectationController.verifyExpectationFields(expectationDTO, featureNames)
     );
     assertEquals("Rest code error corresponding to exceed max character error: ", 200,
       longInputException.getErrorCode().getCode() - longInputException.getErrorCode().getRange());
   }
+
+  @Test
+  public void testVerifyExpectationKwargsColumn() {
+    expectationDTO.setKwargs("{\"column\":\"feature\"}");
+    FeaturestoreException featureNameNotFoundException = assertThrows(
+      FeaturestoreException.class, 
+      () -> expectationController.verifyExpectationFields(expectationDTO, featureNames)
+    );
+    assertEquals("Rest code error corresponding to feature not found error: ", 210,
+    (int) featureNameNotFoundException.getErrorCode().getCode() - featureNameNotFoundException.getErrorCode().getRange());
+
+    expectationDTO.setKwargs("{\"columnA\":\"feature\", \"columnB\":\"featureB\"}");
+    FeaturestoreException featureNameNotFoundExceptionBiColumn = assertThrows(
+      FeaturestoreException.class, 
+      () -> expectationController.verifyExpectationFields(expectationDTO, featureNames)
+    );
+    assertEquals("Rest code error corresponding to feature not found error: ", 210,
+    (int) featureNameNotFoundExceptionBiColumn.getErrorCode().getCode() - featureNameNotFoundExceptionBiColumn.getErrorCode().getRange());
+
+    expectationDTO.setKwargs("{\"column_list\":[\"feature\"]}");
+    FeaturestoreException featureNameNotFoundExceptionListColumn = assertThrows(
+      FeaturestoreException.class, 
+      () -> expectationController.verifyExpectationFields(expectationDTO, featureNames)
+    );
+    assertEquals("Rest code error corresponding to feature not found error: ", 210,
+    (int) featureNameNotFoundExceptionListColumn.getErrorCode().getCode() - featureNameNotFoundExceptionListColumn.getErrorCode().getRange());
+  
+    expectationDTO.setKwargs("{\"column_set\":[\"feature\"]}");
+    FeaturestoreException featureNameNotFoundExceptionSetColumn = assertThrows(
+      FeaturestoreException.class, 
+      () -> expectationController.verifyExpectationFields(expectationDTO, featureNames)
+    );
+    assertEquals("Rest code error corresponding to feature not found error: ", 210,
+    (int) featureNameNotFoundExceptionSetColumn.getErrorCode().getCode() - featureNameNotFoundExceptionSetColumn.getErrorCode().getRange());
+  }
+
 }
