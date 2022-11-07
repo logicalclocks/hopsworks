@@ -82,11 +82,20 @@ public class GitController {
       throws IllegalArgumentException, GitOpException, HopsSecurityException, DatasetException {
     commandConfigurationValidator.verifyCloneOptions(cloneConfigurationDTO);
     //create the repository dir. The go-git does not create a directory, so we need to create it before
-    String fullRepoDirPath = cloneConfigurationDTO.getPath() + File.separator + hopsworksUser.getUsername()
-            + REPO_NAME_DELIMETER + commandConfigurationValidator.getRepositoryName(cloneConfigurationDTO.getUrl());
+    String fullRepoDirPath = cloneConfigurationDTO.getPath() + File.separator
+            + commandConfigurationValidator.getRepositoryName(cloneConfigurationDTO.getUrl());
     DistributedFileSystemOps udfso = dfsService.getDfsOps(hdfsUsersController.getHdfsUserName(project, hopsworksUser));
     try {
       datasetController.createSubDirectory(project, new Path(fullRepoDirPath), udfso);
+    } catch (DatasetException e) {
+      if (e.getErrorCode() == RESTCodes.DatasetErrorCode.DATASET_SUBDIR_ALREADY_EXISTS) {
+        throw new DatasetException(RESTCodes.DatasetErrorCode.DATASET_SUBDIR_ALREADY_EXISTS, Level.FINE,
+                "The folder: " + commandConfigurationValidator.getRepositoryName(cloneConfigurationDTO.getUrl())
+                        + ", already exists in " + cloneConfigurationDTO.getPath()
+                        + ". Please clone the repository in a different path.");
+      } else {
+        throw e;
+      }
     } finally {
       //Close the udfso
       dfsService.closeDfsClient(udfso);
