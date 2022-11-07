@@ -321,20 +321,6 @@ describe "On #{ENV['OS']}" do
         expect_status_details(404)
       end
 
-      it "should be able to get the hive schema of a cached offline featuregroup in the featurestore" do
-        project = get_project
-        featurestore_id = get_featurestore_id(project.id)
-        json_result, featuregroup_name = create_cached_featuregroup(project.id, featurestore_id)
-        parsed_json = JSON.parse(json_result)
-        expect_status_details(201)
-        featuregroup_id = parsed_json["id"]
-        get_featuregroup_schema_endpoint = "#{ENV['HOPSWORKS_API']}/project/" + project.id.to_s + "/featurestores/" + featurestore_id.to_s + "/featuregroups/" + featuregroup_id.to_s + "/details"
-        get get_featuregroup_schema_endpoint
-        parsed_json = JSON.parse(response.body)
-        expect_status_details(200)
-        expect(parsed_json.key?("schema")).to be true
-      end
-
       it "should be able to delete a cached featuregroup from the featurestore" do
         project = get_project
         featurestore_id = get_featurestore_id(project.id)
@@ -735,11 +721,6 @@ describe "On #{ENV['OS']}" do
         expect(parsed_json["type"] == "cachedFeaturegroupDTO").to be true
         expect(parsed_json["timeTravelFormat"] == "HUDI").to be true
 
-        json_result = get "#{ENV['HOPSWORKS_API']}/project/#{@project['id']}/featurestores/#{featurestore_id}/featuregroups/#{parsed_json['id']}/details"
-        expect_status_details(200)
-        fg_details = JSON.parse(json_result)
-        expect(fg_details["inputFormat"]).to eql("org.apache.hudi.hadoop.HoodieParquetInputFormat")
-
         # The location should contain the IP not the consul domain name of the namenode
         uri = URI(parsed_json["location"])
         expect(uri.host).not_to eql("namenode.service.consul")
@@ -1036,7 +1017,7 @@ describe "On #{ENV['OS']}" do
               id: fg_1_id,
               type: fg_1_type
             },
-            leftFeatures: fg_1_features, leftFeatureGroupStartTime: 1603577485000, leftFeatureGroupEndTime: 1603577485000,
+            leftFeatures: fg_1_features, leftFeatureGroupStartTime: 1603577485000, leftFeatureGroupEndTime: 1603633554000,
             joins: [{
                 query: {
                   leftFeatureGroup: {
@@ -1571,24 +1552,6 @@ describe "On #{ENV['OS']}" do
         create_session(@user2[:email], @user2_params[:password])
         fs = get_featurestore(@project2[:id], fs_project_id: @project1[:id])
         create_cached_featuregroup_checked(@project2[:id], fs["featurestoreId"], "shared_fg")
-      end
-
-      it "should be able to get schema of shared feature group" do
-        create_session(@user1[:email], "Pass123")
-        # create FG in first project
-        featurestore_id = get_featurestore_id(@project1.id)
-        json_result, featuregroup_name = create_cached_featuregroup(@project1.id, featurestore_id)
-        featuregroup_id = JSON.parse(json_result)['id']
-
-        # featurestore in project1 is shared already with project2 and user2 therein
-        create_session(@user2[:email], "Pass123")
-
-        # user2 should be able to fetch the schema from Hive
-        result =
-            get "#{ENV['HOPSWORKS_API']}/project/#{@project2.id}/featurestores/#{featurestore_id}/featuregroups/#{featuregroup_id}/details"
-        expect_status_details(200)
-        parsed_json = JSON.parse(result)
-        expect(parsed_json['schema']).to start_with "CREATE TABLE"
       end
 
       it "should be able to get a data preview of a shared feature group" do
@@ -2452,19 +2415,6 @@ describe "On #{ENV['OS']}" do
         expect(parsed_json['items'][0]['storage']).to eql "ONLINE"
       end
 
-      it "should be able to get the MySQL schema of a cached online featuregroup in the featurestore" do
-        project = get_project
-        featurestore_id = get_featurestore_id(project.id)
-        json_result, _ = create_cached_featuregroup(project.id, featurestore_id, online:true)
-        parsed_json = JSON.parse(json_result)
-        expect_status_details(201)
-        featuregroup_id = parsed_json["id"]
-        get "#{ENV['HOPSWORKS_API']}/project/" + project.id.to_s + "/featurestores/" + featurestore_id.to_s + "/featuregroups/" + featuregroup_id.to_s + "/details"
-        expect_status_details(200)
-        parsed_json = JSON.parse(response.body)
-        expect(parsed_json.key?("schema")).to be true
-      end
-
       it "should be able to delete a cached online featuregroup from the featurestore" do
         project = get_project
         featurestore_id = get_featurestore_id(project.id)
@@ -2772,7 +2722,7 @@ describe "On #{ENV['OS']}" do
         expect_status_details(200)
       end
 
-      it "should delete kafka topic and schema when disabling online serving for a feature group" do
+      it "should not delete kafka topic and schema when disabling online serving for a feature group" do
         project = get_project
         featurestore_id = get_featurestore_id(project.id)
         json_result, featuregroup_name = create_cached_featuregroup(project.id, featurestore_id, online:true)
@@ -2791,10 +2741,10 @@ describe "On #{ENV['OS']}" do
         else
           topic = []
         end
-        expect(topic.length).to eq(0)
+        expect(topic.length).to eq(1)
         get_subject_schema(project, topic_name, 1)
-        expect_status_details(404)
-        expect(json_body[:error_code]).to eql(40401)
+        expect_status_details(200)
+        expect(json_body[:error_code]).to eql(nil)
       end
 
        it "should update avro schema when features are appended to existing online feature group" do
