@@ -215,7 +215,7 @@ describe "On #{ENV['OS']}" do
     end
     describe "Perform operations on the cloned repositories" do
       after :each do
-        delete_repository(@project, "/Projects/#{@project[:projectname]}/Jupyter/#{@user[:username]}_livy-chef")
+        delete_repository(@project, "/Projects/#{@project[:projectname]}/Jupyter/livy-chef")
       end
       it 'should retrieve repository by its id' do
         clone_config = get_clone_config("GitHub", @project[:projectname], url="https://github.com/logicalclocks/livy-chef.git")
